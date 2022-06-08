@@ -1,0 +1,38 @@
+channels:
+  - conda-forge
+  - rapidsai
+  - nvidia
+  - rapidsai-nightly
+dependencies:
+  - autoconf>=2.69
+  - benchmark=1.6.0
+  - boost-cpp=1.74
+  - ccache
+  - cmake>=3.22
+  - cython=0.29.24
+  - doxygen=1.9.2
+  - flatbuffers=2.0
+  - gflags=2.2
+  - git>=2.35.3 # Needed for wildcards on safe.directory
+  - glog=0.5
+  - gmock=1.10
+  - graphviz=3.0
+  - grpc-cpp=1.43
+  - gtest=1.10
+  - libhwloc=2.5
+  - librmm=21.10
+  - ninja=1.10
+  - nlohmann_json=3.9
+  - pkg-config=0.29
+  - python=3.8
+  - scikit-build>=0.12
+  - spdlog=1.8.5
+  - ucx=1.12
+  - xtensor=0.24
+  - pip:
+    - cython
+    - flake8
+    - isort
+    - pytest
+    - pytest-timeout
+    - yapf

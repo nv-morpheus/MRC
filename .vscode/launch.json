@@ -1,0 +1,217 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            // This is needed to allow C++ Test Explorer to debug tests. It searches for the 1st available launch config with cppdbg
+            "name": "Debug Tests Runner",
+            "type": "cppdbg",
+            "request": "launch",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    "name": "GLOG_v",
+                    "value": "10",
+                }
+            ],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                },
+                // {
+                //     "description": "Set GLOG_v Environment Variable",
+                //     "text": "-interpreter-exec console \"set environment GLOG_v=10\""
+                // },
+                {
+                    "description": "Skip stdio-common files",
+                    "text": "-interpreter-exec console \"skip -gfi **/bits/*.h\""
+                },
+                // {
+                //     "description": "Stay on same thread when debugging",
+                //     "text": "-interpreter-exec console \"set scheduler-locking step\""
+                // }
+            ],
+            "miDebuggerPath": "gdb"
+        },
+        {
+            "name": "debug extension",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/examples/30_Extension/30_extension.x.x",
+            "args": [
+                "--iterations=3",
+                "--cpuset='0-1'"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "GLOG_v": "1",
+            },
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "miDebuggerPath": "/usr/bin/gdb"
+        },
+        {
+            "name": "Debug Examples",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/examples/20_SrfSingleSegment/srf_single_segment.x",
+            "args": [
+                "--cpu_strategy=1",
+                "--iterations=2",
+                "--cpuset='0-0'"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Skip stdio-common files",
+                    "text": "-interpreter-exec console \"skip -gfi **/bits/*.h\""
+                },
+            ],
+            "miDebuggerPath": "gdb"
+        },
+        {
+            "name": "debug test_srf.x",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/srf/tests/test_srf",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "C/C++: g++ build active file",
+            "miDebuggerPath": "/usr/bin/gdb"
+        },
+        {
+            "name": "debug bench_srf.x",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/benchmarks/bench_srf",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "C/C++: g++ build active file",
+            "miDebuggerPath": "/usr/bin/gdb"
+        },
+        {
+            "name": "Python: Test Python Pipeline",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/python/tests/test_morpheus_fil-cpp.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/python",
+            "justMyCode": false,
+        },
+        {
+            "name": "Debug SRF from Python",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "python",
+            "args": [
+                "-m",
+                "pytest",
+                "-s",
+                "python/tests/test_node.py::test_launch_options_source[iterator-3-1]"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    "name": "UCX_ERROR_SIGNALS",
+                    "value": ""
+                },
+                {
+                    "name": "GLOG_v",
+                    "value": "10"
+                },
+                {
+                    "name": "GLOG_logtostderr",
+                    "value": "1"
+                }
+            ],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Skip stdio-common files",
+                    "text": "-interpreter-exec console \"skip -gfi **/bits/*.h\""
+                },
+            ],
+            "symbolLoadInfo": {
+                "loadAll": false,
+                "exceptionList": "libsrf*.so;cudf_helpers.*;executor.*;morpheus.*;node.*;options.*;pipeline.*;segment.*;subscriber.*;test_edges_cpp.*"
+            },
+            "miDebuggerPath": "gdb",
+            "sourceFileMap": {
+                "${workspaceFolder}": {
+                    "editorPath": "${workspaceFolder}",
+                    "useForBreakpoints": "true"
+                },
+            },
+        },
+        {
+            "name": "Python: Testing Configuration (Used by test runner in debug mode)",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "purpose": [
+                "debug-in-terminal",
+                "debug-test"
+            ],
+            "env": {
+                "GLOG_v": "10",
+                "GLOG_logtostderr": "1",
+                "UCX_ERROR_SIGNALS": "",
+            },
+        },
+    ]
+}

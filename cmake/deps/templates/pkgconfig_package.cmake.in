@@ -1,0 +1,13 @@
+#=============================================================================
+# pkg-config Search for @name@
+#
+find_package(PkgConfig)
+
+pkg_check_modules(@name@ IMPORTED_TARGET GLOBAL @name@)
+
+if(@name@_FOUND)
+  # Add an alias to the imported target
+  add_library(@name@::@name@ ALIAS PkgConfig::@name@)
+endif()
+
+#=============================================================================

@@ -1,0 +1,8 @@
+.cache
+build*
+*.engine
+models
+@eaDir
+__pycache__
+bazel-*
+./vcpkg_installed
