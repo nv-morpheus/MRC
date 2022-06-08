@@ -30,6 +30,7 @@ python:
   - 3.9
 
 rapids_version:
+  - 21.10 # 22.06 is final release with support for RAPIDS 21.10
   - 22.04 # Keep around compatibility with current version -1
   - 22.06
 
