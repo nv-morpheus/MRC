@@ -11,11 +11,16 @@
 # or implied. See the License for the specific language governing permissions and limitations under
 # the License.
 # =============================================================================
+find_package(Python 3.8 REQUIRED COMPONENTS Development Interpreter)
 find_package(pybind11 REQUIRED)
 find_package(prometheus-cpp REQUIRED)
 
 add_library(pysrf
   src/executor.cpp
+  src/module_wrappers/pickle.cpp
+  src/module_wrappers/shared_memory.cpp
+  src/node.cpp
+  src/operators.cpp
   src/logging.cpp
   src/options.cpp
   src/pipeline.cpp
@@ -25,6 +30,9 @@ add_library(pysrf
   src/operators.cpp
   src/subscriber.cpp
   src/types.cpp
+  src/utilities/deserializers.cpp
+  src/utilities/serializers.cpp
+  src/utilities/object_cache.cpp
   src/utils.cpp
   src/watchers.cpp
 )
@@ -36,12 +44,15 @@ target_link_libraries(pysrf
     ${PROJECT_NAME}::libsrf
     pybind11::pybind11
     prometheus-cpp::core
+    ${Python_LIBRARIES}
   )
 
 target_include_directories(pysrf
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
+  PRIVATE
+    ${Python_INCLUDE_DIR}
   )
 
 set_target_properties(pysrf PROPERTIES OUTPUT_NAME ${PROJECT_NAME}_pysrf)

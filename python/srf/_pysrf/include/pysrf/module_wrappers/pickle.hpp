@@ -17,35 +17,31 @@
 
 #pragma once
 
-namespace srf::codable {
+#include <pysrf/utilities/object_cache.hpp>
 
-class EncodingOptions final
-{
+#include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
+
+namespace srf::pysrf {
+#pragma GCC visibility push(default)
+/****** PythonPickleInterface****************************************/
+/**
+ * @brief Light wrapper around the python pickle module.
+ */
+
+class PythonPickleInterface {
   public:
-    EncodingOptions() = default;
-    EncodingOptions(const bool& force_copy, const bool& use_shm) :
-      m_force_copy{force_copy}, m_use_shm{use_shm} {};
+    ~PythonPickleInterface();
+    PythonPickleInterface();
 
-    const bool& force_copy() const
-    {
-        return m_force_copy;
-    }
-
-    void force_copy(const bool& flag) {
-        m_force_copy = flag;
-    }
-
-    const bool& use_shm() const {
-        return m_use_shm;
-    }
-
-    void use_shm(const bool& flag) {
-        m_use_shm = flag;
-    }
+    pybind11::bytes pickle(pybind11::object obj);
+    pybind11::object unpickle(pybind11::bytes bytes);
 
   private:
-    bool m_use_shm{false};
-    bool m_force_copy{false};
-};
+    PythonObjectCache& pycache;
 
-}  // namespace srf::codable
+    pybind11::function m_func_loads{};
+    pybind11::function m_func_dumps{};
+};
+#pragma GCC visibility pop
+}  // namespace srf::pysrf

@@ -129,3 +129,212 @@ TEST_F(TestPipeline, Execute)
 
     EXPECT_EQ(counter, 3);
 }
+
+TEST_F(TestPipeline, DynamicPortConstructionGood)
+{
+    std::string name                                 = "xyz";
+    std::function<void(srf::segment::Builder&)> init = [](srf::segment::Builder& builder) {
+        std::cerr << "Builder called" << std::endl;
+    };
+
+    std::vector<std::vector<std::string>> ingress_id_vec;
+    std::vector<std::vector<std::string>> egress_id_vec;
+
+    for (int i = 0; i <= SRF_MAX_INGRESS_PORTS; ++i)
+    {
+        std::vector<std::string> isubvec;
+        for (int j = 0; j <= i; ++j)
+        {
+            std::stringstream sstream;
+            sstream << "i" << i << j;
+            isubvec.push_back(sstream.str());
+        }
+    }
+
+    for (int i = 0; i <= SRF_MAX_EGRESS_PORTS; ++i)
+    {
+        std::vector<std::string> esubvec;
+        for (int j = 0; j <= i; ++j)
+        {
+            std::stringstream sstream;
+            sstream << "i" << i << j;
+            esubvec.push_back(sstream.str());
+        }
+    }
+
+    for (auto ivec : ingress_id_vec)
+    {
+        for (auto evec : egress_id_vec)
+        {
+            pysrf::Pipeline pipe;
+            pipe.make_segment(name, ivec, evec, init);
+        }
+    }
+}
+
+/*
+TEST_F(TestPipeline, DynamicPortsBuildIngressEgress)
+{
+    std::vector<std::string> ingress_port_ids{"a", "b", "c", "d"};
+    std::vector<std::string> egress_port_ids{"w", "x", "y", "z"};
+
+    std::function<void(srf::segment::Builder&)> seg1_init = [ingress_port_ids, egress_port_ids](srf::segment::Builder& builder) {
+        for (auto ingress_it : ingress_port_ids) {
+            auto egress_test = builder.get_egress<py::object>("test321");
+            EXPECT_TRUE(std::string("test321") == egress_test->name());
+            EXPECT_TRUE(egress_test->is_sink());
+        }
+    };
+
+    pysrf::Pipeline seg1_pipe;
+
+    seg1_pipe.make_segment("TestSegment1", ingress_port_ids, egress_port_ids, seg1_init);
+
+    auto opt1 = std::make_shared<srf::Options>();
+    opt1->topology().user_cpuset("0");
+
+    srf::Executor exec1{opt1};
+
+    exec1.register_pipeline(seg1_pipe.swap());
+
+    py::gil_scoped_release release;
+    exec1.start();
+    exec1.stop();
+    exec1.join();
+}*/
+
+/*
+TEST_F(TestPipeline, DynamicPortsGetEgressGood)
+{
+    std::vector<std::string> ingress_port_ids{};
+    std::vector<std::string> egress_port_ids{"test321"};
+
+    std::function<void(srf::segment::Builder&)> seg1_init = [](srf::segment::Builder& builder) {
+        auto src = builder.make_source<py::object>("src", [](rxcpp::subscriber<py::object>& s) {
+            if (s.is_subscribed())
+            {
+                for (int i = 0; i < 3; ++i)
+                {
+                    py::gil_scoped_acquire acquire;
+                    py::int_ data{1};
+                    py::print("Created data object");
+                    {
+                        py::gil_scoped_release nogil;
+                        s.on_next(std::move(data));
+                    }
+                }
+            }
+
+            s.on_completed();
+        });
+
+      auto egress_test = builder.get_egress<py::object>("test321");
+      EXPECT_TRUE(std::string("test321") == egress_test->name());
+      EXPECT_TRUE(egress_test->is_sink());
+
+      builder.make_edge(src, egress_test);
+    };
+
+    std::function<void(srf::segment::Builder&)> seg2_init = [](srf::segment::Builder& builder) {
+        auto sink =
+            builder.make_sink<py::object>("sink", rxcpp::make_observer_dynamic<py::object>([](py::object data) {
+                                              // Write to the log
+                                              std::cerr << "Got object!" << std::endl;
+                                              py::gil_scoped_acquire gil;
+                                              py::print(data);
+                                          }));
+
+        auto ingress_test = builder.get_ingress<py::object>("test321");
+        EXPECT_TRUE(std::string("test321") == ingress_test->name());
+        EXPECT_TRUE(ingress_test->is_source());
+        builder.make_edge(ingress_test, sink);
+    };
+
+    pysrf::Pipeline seg1_pipe;
+    pysrf::Pipeline seg2_pipe;
+
+    seg1_pipe.make_segment("TestSegment1", ingress_port_ids, egress_port_ids, seg1_init);
+    seg2_pipe.make_segment("TestSegment2", egress_port_ids, ingress_port_ids, seg2_init);
+
+    auto opt1 = std::make_shared<srf::Options>();
+    auto opt2 = std::make_shared<srf::Options>();
+    opt1->architect_url("127.0.0.1:13337");
+    opt1->topology().user_cpuset("0-8");
+    opt1->enable_server(true);
+    opt1->topology().restrict_gpus(true);
+    opt1->config_request("TestSegment1");
+
+    opt2->architect_url("127.0.0.1:13337");
+    opt2->topology().user_cpuset("9-16");
+    opt2->topology().restrict_gpus(true);
+    opt2->config_request("TestSegment2");
+
+    srf::Executor exec1{opt1};
+    srf::Executor exec2{opt2};
+
+    exec1.register_pipeline(seg1_pipe.swap());
+    exec2.register_pipeline(seg2_pipe.swap());
+
+    py::gil_scoped_release release;
+    auto start_1 = boost::fibers::async([&] { exec1.start(); });
+    auto start_2 = boost::fibers::async([&] { exec2.start(); });
+
+    start_1.get();
+    start_2.get();
+
+    exec1.stop();
+    exec2.stop();
+
+    exec1.join();
+    exec2.join();
+}*/
+
+TEST_F(TestPipeline, DynamicPortConstructionTooManyPorts)
+{
+    std::string name                                 = "xyz";
+    std::function<void(srf::segment::Builder&)> init = [](srf::segment::Builder& builder) {
+        std::cerr << "Builder called" << std::endl;
+    };
+
+    std::vector<std::vector<std::string>> ingress_id_vec;
+    std::vector<std::vector<std::string>> egress_id_vec;
+
+    for (int i = 0; i <= SRF_MAX_INGRESS_PORTS; ++i)
+    {
+        std::vector<std::string> isubvec;
+        for (int j = 0; j <= i; ++j)
+        {
+            std::stringstream sstream;
+            sstream << "i" << i << j;
+            isubvec.push_back(sstream.str());
+        }
+        ingress_id_vec.push_back(isubvec);
+    }
+
+    for (int i = 0; i <= SRF_MAX_EGRESS_PORTS; ++i)
+    {
+        std::vector<std::string> esubvec;
+        for (int j = 0; j <= i; ++j)
+        {
+            std::stringstream sstream;
+            sstream << "e" << i << j;
+            esubvec.push_back(sstream.str());
+        }
+        egress_id_vec.push_back(esubvec);
+    }
+
+    std::vector<std::string> too_many_ports = {
+        "_01", "_02", "_03", "_04", "_05", "_06", "_07", "_08", "_09", "_10", "_11"};
+
+    for (auto ivec : ingress_id_vec)
+    {
+        pysrf::Pipeline pipe;
+        EXPECT_THROW(pipe.make_segment(name, ivec, too_many_ports, init), std::runtime_error);
+    }
+
+    for (auto evec : egress_id_vec)
+    {
+        pysrf::Pipeline pipe;
+        EXPECT_THROW(pipe.make_segment(name, too_many_ports, evec, init), std::runtime_error);
+    }
+}

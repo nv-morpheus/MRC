@@ -146,6 +146,10 @@ PYBIND11_MODULE(segment, m)
 
     Builder.def("make_edge", &SegmentProxy::make_edge);
 
+    Builder.def("get_ingress", &SegmentProxy::get_ingress);
+
+    Builder.def("get_egress", &SegmentProxy::get_egress);
+
     // /**
     //  * @brief create specialized file reader that emits c++ strings, avoids py::object conversion
     //  */

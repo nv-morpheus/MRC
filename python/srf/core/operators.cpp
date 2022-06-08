@@ -32,13 +32,8 @@ namespace py = pybind11;
 PYBIND11_MODULE(operators, m)
 {
     m.doc() = R"pbdoc(
-        Pybind11 example plugin
         -----------------------
-        .. currentmodule:: scikit_build_example
-        .. autosummary::
-           :toctree: _generate
-           add
-           subtract
+        .. currentmodule:: srf.operators
     )pbdoc";
 
     // Common must be first in every module

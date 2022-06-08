@@ -17,9 +17,14 @@
 
 #pragma once
 
+#include <srf/memory/memory_kind.hpp>
+#include <srf/memory/resources/device/cuda_malloc_resource.hpp>  // IWYU pragma: export
+#include <srf/memory/resources/host/pinned_memory_resource.hpp>  // IWYU pragma: export
+
 #include <gtest/gtest.h>
 #include <pybind11/embed.h>
 
+using namespace srf;
 // Essentially the same macro from test_srf.hpp but with an embedded python interpreter.
 // The attribute visibility bit avoids a compiler warning about the test class being
 // declared with greater visibility than the interpreter attribute
@@ -28,3 +33,28 @@
     {                                                                                \
         py::scoped_interpreter m_interpreter;                                        \
     }
+
+/*
+class TestCoreResorucesImpl : public core::Resources
+{
+  public:
+    TestCoreResorucesImpl() :
+      m_host_view(std::make_shared<memory::pinned_memory_resource>()),
+      m_device_view(std::make_shared<memory::cuda_malloc_resource>(0))
+    {}
+    ~TestCoreResorucesImpl() override = default;
+
+    host_view_t host_resource_view() override
+    {
+        return m_host_view;
+    }
+    device_view_t device_resource_view() override
+    {
+        return m_device_view;
+    }
+
+  private:
+    host_view_t m_host_view;
+    device_view_t m_device_view;
+};
+*/
