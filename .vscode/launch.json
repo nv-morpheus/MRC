@@ -25,10 +25,6 @@
                     "description": "Enable pretty-printing for gdb",
                     "text": "-enable-pretty-printing",
                 },
-                // {
-                //     "description": "Set GLOG_v Environment Variable",
-                //     "text": "-interpreter-exec console \"set environment GLOG_v=10\""
-                // },
                 {
                     "description": "Skip stdio-common files",
                     "text": "-interpreter-exec console \"skip -gfi **/bits/*.h\""
