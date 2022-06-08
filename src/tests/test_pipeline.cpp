@@ -31,6 +31,7 @@
 #include "srf/core/executor.hpp"
 #include "srf/internal/pipeline/ipipeline.hpp"
 #include "srf/internal/segment/idefinition.hpp"
+#include "srf/node/queue.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
 #include "srf/node/sink_properties.hpp"
@@ -189,6 +190,21 @@ TEST_F(TestPipeline, LifeCycleStop)
         auto rx_source = s.make_object("rx_source", test::nodes::infinite_int_rx_source());
         auto rx_sink   = s.make_object("rx_sink", test::nodes::int_sink());
         s.make_edge(rx_source, rx_sink);
+    });
+
+    run_manager(std::move(pipeline), true);
+}
+
+TEST_F(TestPipeline, Queue)
+{
+    auto pipeline = srf::make_pipeline();
+
+    auto segment = pipeline->make_segment("seg_1", [](segment::Builder& s) {
+        auto source = s.make_object("source", test::nodes::infinite_int_rx_source());
+        auto queue  = s.make_object("queue", std::make_unique<node::Queue<int>>());
+        auto sink   = s.make_object("sink", test::nodes::int_sink());
+        s.make_edge(source, queue);
+        s.make_edge(queue, sink);
     });
 
     run_manager(std::move(pipeline), true);

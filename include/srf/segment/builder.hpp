@@ -28,6 +28,7 @@
 #include <srf/segment/egress_port.hpp>
 #include <srf/segment/forward.hpp>
 #include <srf/segment/object.hpp>
+#include <srf/segment/resource.hpp>
 #include <srf/segment/runnable.hpp>
 #include <srf/utils/macros.hpp>
 #include "srf/internal/segment/ibuilder.hpp"
@@ -206,9 +207,12 @@ std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::uni
     }
     else
     {
-        LOG(FATAL) << "unable to create non-launchable segment object at this time";
+        auto segment_node = std::make_shared<Resource<ObjectT>>(std::move(node));
+        add_object(name, segment_node);
+        segment_object = segment_node;
     }
 
+    CHECK(segment_object);
     return segment_object;
 }
 
