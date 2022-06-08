@@ -172,7 +172,6 @@ TEST_F(TestPipeline, DynamicPortConstructionGood)
     }
 }
 
-/*
 TEST_F(TestPipeline, DynamicPortsBuildIngressEgress)
 {
     std::vector<std::string> ingress_port_ids{"a", "b", "c", "d"};
@@ -180,8 +179,13 @@ TEST_F(TestPipeline, DynamicPortsBuildIngressEgress)
 
     std::function<void(srf::segment::Builder&)> seg1_init = [ingress_port_ids, egress_port_ids](srf::segment::Builder& builder) {
         for (auto ingress_it : ingress_port_ids) {
-            auto egress_test = builder.get_egress<py::object>("test321");
-            EXPECT_TRUE(std::string("test321") == egress_test->name());
+            auto ingress_test = builder.get_ingress<py::object>(ingress_it);
+            EXPECT_TRUE(ingress_it == ingress_test->name());
+            EXPECT_TRUE(ingress_test->is_source());
+        }
+        for (auto egress_it : egress_port_ids) {
+            auto egress_test = builder.get_egress<py::object>(egress_it);
+            EXPECT_TRUE(egress_it == egress_test->name());
             EXPECT_TRUE(egress_test->is_sink());
         }
     };
@@ -201,7 +205,7 @@ TEST_F(TestPipeline, DynamicPortsBuildIngressEgress)
     exec1.start();
     exec1.stop();
     exec1.join();
-}*/
+}
 
 /*
 TEST_F(TestPipeline, DynamicPortsGetEgressGood)
