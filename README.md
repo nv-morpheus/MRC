@@ -1,3 +1,9 @@
+### !!! Work In Progress !!!
+
+While were close to our public release, we still have a few things to finalize before the repository is ready for public use. Check back in a few days for more details.
+
+---
+
 # Streaming Reactive Framework (SRF)
 
 The Streaming Reactive Framework (SRF) library (pronounced "surf") is designed to build high throughput, low latency pipelines.
