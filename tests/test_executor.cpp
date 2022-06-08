@@ -15,13 +15,12 @@
  * limitations under the License.
  */
 
-#include "srf/node/operators/muxer.hpp"
 #include "test_srf.hpp"  // IWYU pragma: associated
 
-#include <mutex>
 #include <srf/channel/status.hpp>
 #include <srf/core/executor.hpp>
 #include <srf/core/runtime.hpp>
+#include <srf/node/operators/muxer.hpp>
 #include <srf/options/options.hpp>
 #include <srf/options/topology.hpp>
 #include <srf/pipeline/pipeline.hpp>
@@ -46,6 +45,7 @@
 
 #include <chrono>
 #include <memory>
+#include <mutex>
 #include <ostream>
 #include <string>
 #include <thread>
@@ -396,8 +396,6 @@ TEST_F(TestExecutor, LifeCycleSingleSegmentConcurrentSourceWithStaggeredShutdown
 
 TEST_F(TestExecutor, LifeCycle)
 {
-    GTEST_SKIP() << "#185";
-
     Executor executor(make_options());
     executor.register_pipeline(make_pipeline());
 
