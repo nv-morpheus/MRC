@@ -26,7 +26,6 @@ add_executable(test_srf
   test_metrics.cpp
   test_pipeline.cpp
 # test_remote_descriptor.cpp
-# test_runnable.cpp ==> internal
 # test_rx.cpp
 # test_segment_components.cpp ==> internal
 # test_segment.cpp
