@@ -109,6 +109,16 @@ function(protobuf_generate_grpc_cpp target)
       $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
   )
 
+  # We must always compile protobufs with `NDEBUG` defined due to an issue with
+  # libprotobuf>=3.20. Their header files can change between Debug/Release which
+  # causes undefined symbol errors when building and running in Debug. Setting
+  # this definition gets around this issue by ensuring a consistent value for
+  # `NDEBUG`. See this issue for more info:
+  # https://github.com/protocolbuffers/protobuf/issues/9947
+  target_compile_definitions(${target}
+    PRIVATE NDEBUG
+  )
+
   if (protobuf_generate_grpc_cpp_HDRS)
     set(${protobuf_generate_grpc_cpp_HDRS} ${${protobuf_generate_grpc_cpp_HDRS}} PARENT_SCOPE)
     set_target_properties(${target} PROPERTIES PUBLIC_HEADER "${${protobuf_generate_grpc_cpp_HDRS}}")
