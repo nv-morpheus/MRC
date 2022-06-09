@@ -63,6 +63,7 @@ requirements:
     - grpc-cpp
     - gtest 1.10.*
     - libhwloc 2.5.*
+    - libprotobuf {{ libprotobuf }}
     - librmm {{ rapids_version }}
     - nlohmann_json 3.9.1
     - pybind11-abi # See: https://conda-forge.org/docs/maintainer/knowledge_base.html#pybind11-abi-constraints
@@ -98,7 +99,7 @@ outputs:
         - glog
         - grpc-cpp
         - libhwloc 2.5.*
-        - libprotobuf # Needed for transitive run_exports from grpc-cpp. Does not need a version
+        - libprotobuf {{ libprotobuf }} # Needed for transitive run_exports from grpc-cpp. Does not need a version
         - librmm {{ rapids_version }}
         - nlohmann_json 3.9.*
         - ucx
