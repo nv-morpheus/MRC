@@ -72,7 +72,6 @@ requirements:
     - spdlog 1.8.5
     - ucx
     - xtensor 0.24.*
-    - cudf {{ rapids_version }}
 
 outputs:
   - name: libsrf
@@ -105,7 +104,6 @@ outputs:
         - nlohmann_json 3.9.*
         - ucx
         - xtensor 0.24.*
-        - cudf {{ rapids_version }}
       run:
         # Manually add any packages necessary for run that do not have run_exports. Keep sorted!
         - {{ pin_compatible('flatbuffers', max_pin='x.x')}}
