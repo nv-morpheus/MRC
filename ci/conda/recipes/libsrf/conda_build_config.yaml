@@ -34,6 +34,21 @@ rapids_version:
   - 22.04 # Keep around compatibility with current version -1
   - 22.06
 
+glog:
+  - 0.5
+  - 0.5
+  - 0.6
+
+grpc_cpp:
+  - 1.43
+  - 1.43
+  - 1.45
+
+zip_keys:
+  - rapids_version
+  - glog
+  - grpc_cpp
+
 # The following mimic what is available in the pinning feedstock:
 # https://github.com/conda-forge/conda-forge-pinning-feedstock/blob/main/recipe/conda_build_config.yaml
 boost:
@@ -44,8 +59,6 @@ gflags:
   - 2.2
 glog:
   - 0.5
-grpc_cpp:
-  - 1.43
 ucx:
   - 1.12
 
