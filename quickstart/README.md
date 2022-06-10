@@ -23,7 +23,12 @@ Coming soon...
 
 ### Conda Build
 
-- Clone the repository
+- Clone the repository and navigate to the quickstart folder
+
+```
+git clone https://github.com/nv-morpheus/srf.git
+cd srf/quickstart
+```
 
 - Install the Conda Environment
 
