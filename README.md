@@ -20,7 +20,7 @@ Major features include:
 
 ## Quickstart
 
-To get started with SRF, see the SRF Quickstart Repository located [here](https://github.com/nv-morpheus/srf-quickstart).
+To get started with SRF, see the SRF Quickstart Repository located [here](/quickstart/README.md).
 
 ## Contributing
 SRF is licensed under the Apache v2.0 license. All new source files including CMake and other build scripts should contain the Apache v2.0 license header. Any edits to existing source code should update the date range of the copyright to the current year. The format for the license header is:
