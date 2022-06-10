@@ -57,8 +57,6 @@ boost_cpp:
   - 1.74.0
 gflags:
   - 2.2
-glog:
-  - 0.5
 ucx:
   - 1.12
 
