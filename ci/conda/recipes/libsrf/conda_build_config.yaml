@@ -34,22 +34,6 @@ rapids_version:
   - 22.04 # Keep around compatibility with current version -1
   - 22.06
 
-# RAPIDS 21.10 requires libprotobuf=3.19 and abseil-cpp=20210324.2. Zip these versions to the RAPDIS version
-abseil_cpp:
-  - '20210324.2'
-  - '20211102.0'
-  - '20211102.0'
-
-libprotobuf:
-  - 3.19
-  - 3.20
-  - 3.20
-
-zip_keys:
-  - rapids_version
-  - abseil_cpp
-  - libprotobuf
-
 # The following mimic what is available in the pinning feedstock:
 # https://github.com/conda-forge/conda-forge-pinning-feedstock/blob/main/recipe/conda_build_config.yaml
 boost:
@@ -64,6 +48,7 @@ grpc_cpp:
   - 1.43
 ucx:
   - 1.12
+
 
 pin_run_as_build:
   boost-cpp:
