@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2018-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,7 @@
 cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
 
 project(srf-quickstart
-  VERSION 22.04.00
+  VERSION 22.06.00
   LANGUAGES C CXX
 )
 
