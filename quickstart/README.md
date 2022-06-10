@@ -1,4 +1,4 @@
-# srf Quickstart
+# SRF Quickstart
 
 There are two basic ways to get started with SRF:
 - install from the conda repositories
