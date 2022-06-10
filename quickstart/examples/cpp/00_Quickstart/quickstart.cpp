@@ -41,12 +41,7 @@ int main(int argc, char* argv[])
     // create a segment - a pipeline can consist of multiple segments
     auto seg = segment::Definition::create("quickstart", [&counter](segment::Builder& s) {
         // this is where data is produced - from a file, from the network, from a sensor, etc.
-        auto src = s.make_source<int>("int_source", [](rxcpp::subscriber<int> s) {
-            s.on_next(1);
-            s.on_next(2);
-            s.on_next(3);
-            s.on_completed();
-        });
+        auto src = s.make_object("int_source", std::make_unique<ext::quickstart::IntSource>());
 
         auto sink =
             s.make_sink<int>("int_sink", rxcpp::make_observer_dynamic<int>([&counter](int data) { counter++; }));
