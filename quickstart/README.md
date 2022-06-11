@@ -15,9 +15,30 @@ There are two basic ways to get started with SRF:
 
 ## Python Quickstart
 
+To get started with the SRF Python Runtime, there are several examples located in the `quickstart/examples/python` directory. These examples are organized into separate folders each showing a different topic. Each example directory has a name with the format, `XX_${EXAMPLE_NAME}`, where `XX` represents the example number (in increasing difficulty) and `${EXAMPLE_NAME}` is the example name. Below is a list of the available examples and a brief description:
+
+| #      | Name | Description |
+| ----------- | ----------- | --- |
+| 00 | SimplePipeline | A small, basic pipeline with only a single source and single sink |
+| 01 | ThreeNodePipeline | |
+| 02 | CustomTypes | |
+
+### Setup
+
+Install the SRF Python Libraries via Conda using the following:
+
+```bash
+conda install -c nvidia/label/dev srf
 ```
-Coming soon...
-````
+
+### Running the Examples
+
+Each example directory contains a `README.md` file with information about the example and a `run.py` python file. To run any of the examples, simply launch the `run.py` file from python:
+
+```bash
+python quickstart/examples/python/XX_ExampleName/run.py
+```
+
 
 ## C++ Quickstart
 
@@ -34,7 +55,7 @@ cd srf/quickstart
 
 ```
 conda env create -n srf-quickstart -f environment_cpp.yml
-conda activate  srf-quickstart
+conda activate srf-quickstart
 ```
 
 - Build
