@@ -32,6 +32,7 @@
 #include <gtest/gtest.h>
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx-includes.hpp>
 #include <rxcpp/rx-observer.hpp>
@@ -51,6 +52,7 @@
 namespace py    = pybind11;
 namespace pysrf = srf::pysrf;
 using namespace std::string_literals;
+using namespace py::literals;
 
 PYSRF_TEST_CLASS(Pipeline);
 
@@ -172,126 +174,138 @@ TEST_F(TestPipeline, DynamicPortConstructionGood)
     }
 }
 
-TEST_F(TestPipeline, DynamicPortsBuildIngressEgress)
+TEST_F(TestPipeline, DynamicPortsBuildEgress)
 {
-    std::vector<std::string> ingress_port_ids{"a", "b", "c", "d"};
-    std::vector<std::string> egress_port_ids{"w", "x", "y", "z"};
+    std::vector<std::string> egress_port_ids{"x", "y", "z", "w"};
 
-    std::function<void(srf::segment::Builder&)> seg1_init = [ingress_port_ids, egress_port_ids](srf::segment::Builder& builder) {
-        for (auto ingress_it : ingress_port_ids) {
-            auto ingress_test = builder.get_ingress<py::object>(ingress_it);
-            EXPECT_TRUE(ingress_it == ingress_test->name());
-            EXPECT_TRUE(ingress_test->is_source());
-        }
-        for (auto egress_it : egress_port_ids) {
-            auto egress_test = builder.get_egress<py::object>(egress_it);
-            EXPECT_TRUE(egress_it == egress_test->name());
+    std::function<void(srf::segment::Builder&)> seg1_init = [egress_port_ids](srf::segment::Builder& builder) {
+        for (int i = 0; i < egress_port_ids.size(); i++)
+        {
+            auto src = builder.make_source<py::object>("source_" + std::to_string(i),
+                                                       [](rxcpp::subscriber<py::object>& s) { s.on_completed(); });
+
+            py::gil_scoped_acquire gil;
+            auto egress_test = builder.get_egress<py::object>(egress_port_ids[i]);
+            EXPECT_TRUE(egress_port_ids[i] == egress_test->name());
             EXPECT_TRUE(egress_test->is_sink());
+            builder.make_edge(src, egress_test);
         }
     };
 
-    pysrf::Pipeline seg1_pipe;
+    pysrf::Pipeline pipe;
 
-    seg1_pipe.make_segment("TestSegment1", ingress_port_ids, egress_port_ids, seg1_init);
+    pipe.make_segment("TestSegment1", {}, egress_port_ids, seg1_init);
 
     auto opt1 = std::make_shared<srf::Options>();
     opt1->topology().user_cpuset("0");
+    opt1->topology().restrict_gpus(true);
 
     srf::Executor exec1{opt1};
 
-    exec1.register_pipeline(seg1_pipe.swap());
+    exec1.register_pipeline(pipe.swap());
 
     py::gil_scoped_release release;
+
     exec1.start();
-    exec1.stop();
     exec1.join();
 }
 
-/*
-TEST_F(TestPipeline, DynamicPortsGetEgressGood)
+TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
 {
-    std::vector<std::string> ingress_port_ids{};
-    std::vector<std::string> egress_port_ids{"test321"};
+    const std::size_t object_count{10};
+    const std::size_t source_count{4};
+    std::atomic<std::size_t> sink_count{0};
+    std::vector<std::string> source_segment_egress_ids{"source_1", "source_2", "source_3", "source_4"};
+    std::vector<std::string> intermediate_segment_egress_ids{"internal_1", "internal_2", "internal_3", "internal_4"};
 
-    std::function<void(srf::segment::Builder&)> seg1_init = [](srf::segment::Builder& builder) {
-        auto src = builder.make_source<py::object>("src", [](rxcpp::subscriber<py::object>& s) {
-            if (s.is_subscribed())
+    std::function<void(srf::segment::Builder&)> seg1_init =
+        [source_segment_egress_ids](srf::segment::Builder& builder) {
+            for (int i = 0; i < source_segment_egress_ids.size(); i++)
             {
-                for (int i = 0; i < 3; ++i)
-                {
-                    py::gil_scoped_acquire acquire;
-                    py::int_ data{1};
-                    py::print("Created data object");
-                    {
-                        py::gil_scoped_release nogil;
-                        s.on_next(std::move(data));
-                    }
-                }
+                auto src = builder.make_source<py::object>(
+                    "stage1_source_" + std::to_string(i), [](rxcpp::subscriber<py::object>& s) {
+                        if (s.is_subscribed())
+                        {
+                            py::gil_scoped_acquire gil;
+                            for (int i = 0; i < object_count; ++i)
+                            {
+                                py::object object = py::dict("prop1"_a = "abc", "prop2"_a = 1, "prop3"_a = 8910);
+                                {
+                                    py::gil_scoped_release nogil;
+                                    s.on_next(std::move(object));
+                                }
+                            }
+                        }
+                        s.on_completed();
+                    });
+
+                py::gil_scoped_acquire gil;
+                auto egress_test = builder.get_egress<py::object>(source_segment_egress_ids[i]);
+                EXPECT_TRUE(source_segment_egress_ids[i] == egress_test->name());
+                EXPECT_TRUE(egress_test->is_sink());
+                builder.make_edge(src, egress_test);
             }
 
-            s.on_completed();
-        });
+            LOG(INFO) << "Finished TestSegment1 Initialization";
+        };
 
-      auto egress_test = builder.get_egress<py::object>("test321");
-      EXPECT_TRUE(std::string("test321") == egress_test->name());
-      EXPECT_TRUE(egress_test->is_sink());
+    std::function<void(srf::segment::Builder&)> seg2_init =
+        [source_segment_egress_ids, intermediate_segment_egress_ids](srf::segment::Builder& builder) {
+            for (auto ingress_it : source_segment_egress_ids)
+            {
+                auto ingress_test = builder.get_ingress<py::object>(ingress_it);
+                EXPECT_TRUE(ingress_it == ingress_test->name());
+                EXPECT_TRUE(ingress_test->is_source());
+            }
 
-      builder.make_edge(src, egress_test);
-    };
+            for (int i = 0; i < source_segment_egress_ids.size(); ++i)
+            {
+                auto ingress = builder.get_ingress<py::object>(source_segment_egress_ids[i]);
+                auto egress  = builder.get_egress<py::object>(intermediate_segment_egress_ids[i]);
 
-    std::function<void(srf::segment::Builder&)> seg2_init = [](srf::segment::Builder& builder) {
-        auto sink =
-            builder.make_sink<py::object>("sink", rxcpp::make_observer_dynamic<py::object>([](py::object data) {
-                                              // Write to the log
-                                              std::cerr << "Got object!" << std::endl;
-                                              py::gil_scoped_acquire gil;
-                                              py::print(data);
-                                          }));
+                builder.make_edge(ingress, egress);
+            }
+            LOG(INFO) << "Finished TestSegment2 Initialization";
+        };
 
-        auto ingress_test = builder.get_ingress<py::object>("test321");
-        EXPECT_TRUE(std::string("test321") == ingress_test->name());
-        EXPECT_TRUE(ingress_test->is_source());
-        builder.make_edge(ingress_test, sink);
-    };
+    std::function<void(srf::segment::Builder&)> seg3_init =
+        [&sink_count, intermediate_segment_egress_ids](srf::segment::Builder& builder) {
+            for (int i = 0; i < intermediate_segment_egress_ids.size(); ++i)
+            {
+                auto ingress = builder.get_ingress<py::object>(intermediate_segment_egress_ids[i]);
 
-    pysrf::Pipeline seg1_pipe;
-    pysrf::Pipeline seg2_pipe;
+                auto sink =
+                    builder.make_sink<py::object>("local_sink_" + std::to_string(i), [&sink_count](py::object object) {
+                        py::gil_scoped_acquire gil;
+                        object.release().dec_ref();
+                        sink_count++;
+                    });
 
-    seg1_pipe.make_segment("TestSegment1", ingress_port_ids, egress_port_ids, seg1_init);
-    seg2_pipe.make_segment("TestSegment2", egress_port_ids, ingress_port_ids, seg2_init);
+                builder.make_edge(ingress, sink);
+            }
+            LOG(INFO) << "Finished TestSegment3 Initialization";
+        };
+
+    pysrf::Pipeline pipe;
+
+    pipe.make_segment("TestSegment1", {}, source_segment_egress_ids, seg1_init);
+    pipe.make_segment("TestSegment2", source_segment_egress_ids, intermediate_segment_egress_ids, seg2_init);
+    pipe.make_segment("TestSegment3", intermediate_segment_egress_ids, {}, seg3_init);
 
     auto opt1 = std::make_shared<srf::Options>();
-    auto opt2 = std::make_shared<srf::Options>();
-    opt1->architect_url("127.0.0.1:13337");
-    opt1->topology().user_cpuset("0-8");
-    opt1->enable_server(true);
+    opt1->topology().user_cpuset("0");
     opt1->topology().restrict_gpus(true);
-    opt1->config_request("TestSegment1");
-
-    opt2->architect_url("127.0.0.1:13337");
-    opt2->topology().user_cpuset("9-16");
-    opt2->topology().restrict_gpus(true);
-    opt2->config_request("TestSegment2");
 
     srf::Executor exec1{opt1};
-    srf::Executor exec2{opt2};
 
-    exec1.register_pipeline(seg1_pipe.swap());
-    exec2.register_pipeline(seg2_pipe.swap());
+    exec1.register_pipeline(pipe.swap());
 
     py::gil_scoped_release release;
-    auto start_1 = boost::fibers::async([&] { exec1.start(); });
-    auto start_2 = boost::fibers::async([&] { exec2.start(); });
 
-    start_1.get();
-    start_2.get();
-
-    exec1.stop();
-    exec2.stop();
-
+    exec1.start();
     exec1.join();
-    exec2.join();
-}*/
+    EXPECT_EQ(sink_count, source_count * object_count);
+}
 
 TEST_F(TestPipeline, DynamicPortConstructionTooManyPorts)
 {
