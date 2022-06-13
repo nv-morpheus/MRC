@@ -40,6 +40,41 @@ pipeline {
                     environment {
                         PARALLEL_LEVEL = '10'
                         USE_SCCACHE = '1'
+                        USE_GCC = '1'
+                        HOME = "${WORKSPACE}"
+                    }
+                    agent {
+                        docker {
+                            image 'gpuci/rapidsai:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
+                            label 'driver-495'
+                            args '--runtime "nvidia" -e "NVIDIA_VISIBLE_DEVICES=$EXECUTOR_NUMBER"'
+                        }
+                    }
+                    steps {
+                        cleanWs(
+                            deleteDirs: true,
+                            externalDelete: 'sudo rm -rf %s'
+                        )
+                        checkout scm
+                        withCredentials([[
+                            $class: 'AmazonWebServicesCredentialsBinding',
+                            credentialsId: "aws-s3-gpuci",
+                            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                        ]])
+                        {
+                            sh "${WORKSPACE}/ci/scripts/jenkins/build.sh"
+                        }
+                    }
+                }
+                stage('Build:linux:x86_64:clang') {
+                    options {
+                        timeout(time: 4, unit: 'HOURS')
+                    }
+                    environment {
+                        PARALLEL_LEVEL = '10'
+                        USE_SCCACHE = '1'
+                        USE_GCC = '0'
                         HOME = "${WORKSPACE}"
                     }
                     agent {
