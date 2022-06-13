@@ -40,11 +40,6 @@ abseil_cpp:
   - 20211102.0
   - 20210324.2
 
-# glog:
-#   - 0.5
-#   - 0.5
-#   - 0.6 # 0.6 is needed for cudf>=22.06
-
 grpc_cpp:
   - 1.46
   - 1.45
@@ -57,8 +52,6 @@ zip_keys:
 
 # The following mimic what is available in the pinning feedstock:
 # https://github.com/conda-forge/conda-forge-pinning-feedstock/blob/main/recipe/conda_build_config.yaml
-# abseil_cpp:
-#   - 20210324.2
 boost:
   - 1.74.0
 boost_cpp:

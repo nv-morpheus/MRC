@@ -101,7 +101,7 @@ rapids_find_package(gflags REQUIRED
 # ====
 # - link against shared
 # - todo: compile with -DWITH_GFLAGS=OFF and remove gflags dependency
-set(GLOG_VERSION "0.5" CACHE STRING "Version of glog to use")
+set(GLOG_VERSION "0.6" CACHE STRING "Version of glog to use")
 include(deps/Configure_glog)
 
 
