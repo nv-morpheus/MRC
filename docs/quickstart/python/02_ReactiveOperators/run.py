@@ -49,7 +49,7 @@ def run_pipeline():
 
                 return MyCustomClass(value_sum / value_count, "Mean")
 
-            input.pipe(ops.map(update_obj), ops.filter(lambda x: x.value % 2 == 0),
+            input.pipe(ops.filter(lambda x: x.value % 2 == 0), ops.map(update_obj),
                        ops.on_completed(on_completed)).subscribe(output)
 
         # Make an intermediate node

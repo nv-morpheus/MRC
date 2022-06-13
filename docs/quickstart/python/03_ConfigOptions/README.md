@@ -1,11 +1,5 @@
-# Simple Pipeline
+# Configuration Options
 
-This example illustrates how to create a simple pipeline with a single source and a single sink connected together.
+This example shows how altering the configuration options of a SRF pipeline can change its behavior.
 
 ## Running the Example
-
-```bash
-$ python quickstart/examples/python/00_SimplePipeline/run.py
-srf pipeline starting...
-srf pipeline complete: counter should be 3; counter=3
-```

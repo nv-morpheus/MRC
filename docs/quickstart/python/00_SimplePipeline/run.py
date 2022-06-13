@@ -42,7 +42,7 @@ def run_pipeline():
         # Build the sink object
         sink = seg.make_sink("int_sink", sink_on_next, None, None)
 
-        # Connect the source to the sink
+        # Connect the source to the sink. You can also connect nodes by name
         seg.make_edge(node, sink)
 
     # Create the pipeline object

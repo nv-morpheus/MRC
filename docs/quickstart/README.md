@@ -19,13 +19,14 @@ To get started with the SRF Python Runtime, there are several examples located i
 
 | #      | Name | Description |
 | ----------- | ----------- | --- |
-| 00 | SimplePipeline | A small, basic pipeline with only a single source and single sink |
-| 01 | ThreeNodePipeline | |
-| 02 | CustomTypes | |
+| 00 | SimplePipeline | A small, basic pipeline with only a single source, node and sink |
+| 01 | CustomData | Similar to SimplePipeline, but passes a custom data type between nodes |
+| 02 | ReactiveOperators | Demonstrates how to use Reactive style operators inside of nodes for more complex functionality |
+| 03 | ConfigOptions | Illustrates how thread and buffer options can alter performance |
 
 ## Setup
 
-Install the SRF Python Libraries via Conda using the following:
+Before starting with any of the examples, it's necessary to install the SRF Python library. The easiest way to install SRF is via Conda using the following:
 
 ```bash
 conda install -c nvidia/label/dev srf
@@ -36,7 +37,23 @@ conda install -c nvidia/label/dev srf
 Each example directory contains a `README.md` file with information about the example and a `run.py` python file. To run any of the examples, simply launch the `run.py` file from python:
 
 ```bash
-python quickstart/examples/python/XX_ExampleName/run.py
+python docs/quickstart/examples/python/<XX_ExampleName>/run.py
+```
+
+Some examples have configurable options to alter the behavior of the example. To see what options are available, pass `--help` to the example's `run.py` file. For example:
+
+```bash
+$ python ./docs/quickstart/python/03_ConfigOptions/run.py --help
+usage: run.py [-h] [--count COUNT] [--channel_size CHANNEL_SIZE] [--threads THREADS]
+
+ConfigOptions Example.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --count COUNT         The number of items for the source to emit
+  --channel_size CHANNEL_SIZE
+                        The size of the inter-node buffers. Must be a power of 2
+  --threads THREADS     The number of threads to use.
 ```
 
 
@@ -72,5 +89,3 @@ cd build
 cmake ..
 make
 ```
-
-
