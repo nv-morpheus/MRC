@@ -35,19 +35,19 @@ rapids_version:
   - 22.04 # Keep around compatibility with current version -1
   - 22.06
 
-glog:
-  - 0.5
-  - 0.5
-  - 0.6 # 0.6 is needed for cudf>=22.06
+abseil_cpp:
+  - 20211102.0
+  - 20211102.0
+  - 20210324.2
 
 grpc_cpp:
-  - 1.43
-  - 1.43
+  - 1.46
+  - 1.45
   - 1.45 # 1.45 is needed for cudf>=22.06
 
 zip_keys:
   - rapids_version
-  - glog
+  - abseil_cpp
   - grpc_cpp
 
 # The following mimic what is available in the pinning feedstock:
@@ -58,6 +58,8 @@ boost_cpp:
   - 1.74.0
 gflags:
   - 2.2
+glog:
+  - 0.6
 ucx:
   - 1.12
 
