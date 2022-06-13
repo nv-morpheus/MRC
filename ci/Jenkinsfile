@@ -7,6 +7,7 @@ pipeline {
     }
     environment {
         HOME = "${WORKSPACE}"
+        BUILD_CC = 'gcc'
         GH_TOKEN = credentials('gputester-github-token')
         BUILD_TYPE = sh(returnStdout: true, script: 'rapids-build-type')
     }
@@ -40,7 +41,6 @@ pipeline {
                     environment {
                         PARALLEL_LEVEL = '10'
                         USE_SCCACHE = '1'
-                        USE_GCC = '1'
                         HOME = "${WORKSPACE}"
                     }
                     agent {
@@ -74,7 +74,7 @@ pipeline {
                     environment {
                         PARALLEL_LEVEL = '10'
                         USE_SCCACHE = '1'
-                        USE_GCC = '0'
+                        BUILD_CC = 'clang'
                         HOME = "${WORKSPACE}"
                     }
                     agent {
@@ -150,7 +150,6 @@ pipeline {
                     }
                     environment {
                         HOME = "${WORKSPACE}"
-                        MORPHEUS_NO_CPP = '1'
                     }
                     steps {
                         cleanWs(

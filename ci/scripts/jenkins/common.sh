@@ -54,11 +54,11 @@ gpuci_logger "Base branch: ${BASE_BRANCH}"
 # S3 vars
 export S3_URL="s3://rapids-downloads/ci/srf"
 export DISPLAY_URL="https://downloads.rapids.ai/ci/srf"
-export ARTIFACT_URL="${S3_URL}/pull-request/${CHANGE_ID}/${GIT_COMMIT}/${NVARCH}"
-export DISPLAY_ARTIFACT_URL="${DISPLAY_URL}/pull-request/${CHANGE_ID}/${GIT_COMMIT}/${NVARCH}/"
+export ARTIFACT_URL="${S3_URL}/pull-request/${CHANGE_ID}/${GIT_COMMIT}/${NVARCH}/${BUILD_CC}"
+export DISPLAY_ARTIFACT_URL="${DISPLAY_URL}/pull-request/${CHANGE_ID}/${GIT_COMMIT}/${NVARCH}/${BUILD_CC}/"
 
 # Set sccache env vars
-export SCCACHE_S3_KEY_PREFIX=srf-${NVARCH}
+export SCCACHE_S3_KEY_PREFIX=srf-${NVARCH}-${BUILD_CC}
 export SCCACHE_BUCKET=rapids-sccache
 export SCCACHE_REGION=us-west-2
 export SCCACHE_IDLE_TIMEOUT=32768

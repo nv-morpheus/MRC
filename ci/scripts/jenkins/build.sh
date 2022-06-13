@@ -20,7 +20,7 @@ source ${WORKSPACE}/ci/scripts/jenkins/common.sh
 
 rm -rf ${SRF_ROOT}/.cache/ ${SRF_ROOT}/build/
 
-if [[ "${USE_GCC}" == "1" ]]; then
+if [[ "${BUILD_CC}" == "gcc" ]]; then
     gpuci_logger "Building with GCC"
     CONDA_ENV_YML="${SRF_ROOT}/ci/conda/environments/dev_env.yml"
     CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES} -DSRF_USE_IWYU=ON"
@@ -39,8 +39,14 @@ mamba env update -q -n srf --file ${SRF_ROOT}/ci/conda/environments/ci_env.yml
 
 gpuci_logger "Check versions"
 python3 --version
-gcc --version
-g++ --version
+if [[ "${BUILD_CC}" == "gcc" ]]; then
+    gcc --version
+    g++ --version
+else
+    clang --version
+    clang++ --version
+fi
+
 cmake --version
 ninja --version
 
