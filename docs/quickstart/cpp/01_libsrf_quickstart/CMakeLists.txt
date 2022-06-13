@@ -13,4 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_subdirectory(00_Quickstart)
+
+add_library(srf_quickstart SHARED
+  src/quickstart.cpp
+)
+
+target_include_directories(srf_quickstart
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_link_libraries(srf_quickstart
+  PUBLIC
+    srf::libsrf
+)

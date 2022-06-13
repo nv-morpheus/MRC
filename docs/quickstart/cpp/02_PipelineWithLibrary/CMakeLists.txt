@@ -13,12 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_executable(quickstart.x
-   quickstart.cpp
+add_executable(pipeline_with_library.x
+   pipeline_with_library.cpp
 )
 
-target_link_libraries(quickstart.x
+target_link_libraries(pipeline_with_library.x
  PUBLIC
    srf::libsrf
-   srf_ext_quickstart
+   srf_quickstart
 )

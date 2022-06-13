@@ -25,24 +25,8 @@ list(PREPEND CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}")
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-
 find_package(srf REQUIRED)
 
-add_library(srf_ext_quickstart SHARED
-  src/sources.cpp
-)
-
-target_include_directories(srf_ext_quickstart
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-  PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
-
-target_link_libraries(srf_ext_quickstart
-  PUBLIC
-    srf::libsrf
-)
-
-add_subdirectory(examples/cpp)
+add_subdirectory(00_SimplePipeline)
+add_subdirectory(01_libsrf_quickstart)
+add_subdirectory(02_PipelineWithLibrary)
