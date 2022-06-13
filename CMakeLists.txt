@@ -329,7 +329,7 @@ set(rapids_project_version_compat SameMinorVersion)
 rapids_export(INSTALL ${PROJECT_NAME}
   EXPORT_SET ${PROJECT_NAME}-core-exports
   GLOBAL_TARGETS libsrf
-  VERSION
+  VERSION 22.06.00
   NAMESPACE srf::
   DOCUMENTATION doc_string
   FINAL_CODE_BLOCK code_string
@@ -341,7 +341,7 @@ rapids_export(INSTALL ${PROJECT_NAME}
 rapids_export(BUILD ${PROJECT_NAME}
   EXPORT_SET ${PROJECT_NAME}-core-exports
   GLOBAL_TARGETS libsrf
-  VERSION
+  VERSION 22.06.00
   LANGUAGES C CXX CUDA
   NAMESPACE srf::
   DOCUMENTATION doc_string
