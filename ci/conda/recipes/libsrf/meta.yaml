@@ -50,6 +50,7 @@ requirements:
     - sysroot_linux-64 >=2.17
   host:
     # Libraries necessary to build. Keep sorted!
+    - abseil-cpp
     - boost-cpp
     - cuda-nvml-dev {{ cuda_version }}.*
     - cudatoolkit {{ cuda_version }}.*
@@ -62,6 +63,7 @@ requirements:
     - grpc-cpp
     - gtest 1.10.*
     - libhwloc 2.5.*
+    - libprotobuf
     - librmm {{ rapids_version }}
     - nlohmann_json 3.9.1
     - pybind11-abi # See: https://conda-forge.org/docs/maintainer/knowledge_base.html#pybind11-abi-constraints
