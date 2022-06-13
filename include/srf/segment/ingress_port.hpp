@@ -57,7 +57,7 @@ class IngressPort : public Object<node::SourceProperties<T>>, public IngressPort
       m_port_name(std::move(name)),
       m_source(std::make_unique<node::RxNode<T>>())
     {
-        this->m_name = m_port_name;
+        this->set_name(m_port_name);
     }
 
   private:

@@ -170,12 +170,12 @@ class Object : public virtual ObjectProperties
         }
         return m_launch_options;
     }
-
   protected:
-    // Protected name to allow derived classes to set property
-    std::string m_name{};
+    void set_name(const std::string& name);
 
   private:
+    std::string m_name{};
+
     virtual ObjectT* get_object() const = 0;
     runnable::LaunchOptions m_launch_options;
 };
@@ -192,6 +192,12 @@ ObjectT& Object<ObjectT>::object()
         throw exceptions::SrfRuntimeError("Object API is unavailable - expected if the Pipeline is running.");
     }
     return *node;
+}
+
+template <typename ObjectT>
+void Object<ObjectT>::set_name(const std::string& name)
+{
+    m_name = name;
 }
 
 template <typename ObjectT>

@@ -41,7 +41,7 @@ class Runnable : public Object<NodeT>, public runnable::Launchable
     Runnable(std::string name, ArgsT&&... args) : m_node(std::make_unique<NodeT>(std::forward<ArgsT>(args)...))
     {
         // Set the name in the Object class
-        this->m_name = std::move(name);
+        this->set_name(std::move(name));
     }
 
     Runnable(std::string name, std::unique_ptr<NodeT> node) : m_node(std::move(node))
@@ -49,7 +49,7 @@ class Runnable : public Object<NodeT>, public runnable::Launchable
         CHECK(m_node);
 
         // Set the name in the Object class
-        this->m_name = std::move(name);
+        this->set_name(std::move(name));
     }
 
   private:
