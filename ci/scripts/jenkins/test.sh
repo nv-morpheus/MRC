@@ -19,59 +19,47 @@ set -e
 source ${WORKSPACE}/ci/scripts/jenkins/common.sh
 /usr/bin/nvidia-smi
 
-gpuci_logger "Check versions"
-python3 --version
-gcc --version
-g++ --version
+restore_conda_env
 
-gpuci_logger "Check conda environment"
-conda info
-conda config --show-sources
-conda list --show-channel-urls
+gpuci_logger "Fetching Build artifacts from ${DISPLAY_URL}"
+fetch_s3 "${ARTIFACT_ENDPOINT}/cpp_tests.tar.bz" "${WORKSPACE_TMP}/cpp_tests.tar.bz"
+fetch_s3 "${ARTIFACT_ENDPOINT}/dsos.tar.bz" "${WORKSPACE_TMP}/dsos.tar.bz"
+fetch_s3 "${ARTIFACT_ENDPOINT}/python_build.tar.bz" "${WORKSPACE_TMP}/python_build.tar.bz"
 
-gpuci_logger "Downloading build artifacts from ${DISPLAY_ARTIFACT_URL}"
-aws s3 cp --no-progress "${ARTIFACT_URL}/conda_env.tar.gz" "${WORKSPACE_TMP}/conda_env.tar.gz"
-aws s3 cp --no-progress "${ARTIFACT_URL}/workspace.tar.bz" "${WORKSPACE_TMP}/workspace.tar.bz"
+tar xf "${WORKSPACE_TMP}/cpp_tests.tar.bz"
+tar xf "${WORKSPACE_TMP}/dsos.tar.bz"
+tar xf "${WORKSPACE_TMP}/python_build.tar.bz"
+CPP_TESTS=($(tar tf "${WORKSPACE_TMP}/cpp_tests.tar.bz"))
 
-gpuci_logger "Extracting"
-mkdir -p /opt/conda/envs/morpheus
-tar xf "${WORKSPACE_TMP}/conda_env.tar.gz" --no-same-owner --directory /opt/conda/envs/morpheus
-tar xf "${WORKSPACE_TMP}/workspace.tar.bz" --no-same-owner
+REPORTS_DIR="${WORKSPACE_TMP}/reports"
+mkdir -p ${WORKSPACE_TMP}/reports
 
-gpuci_logger "Setting test env"
-conda activate morpheus
-conda-unpack
-conda list --show-channel-urls
+TEST_RESULTS=0
+for cpp_test in "${CPP_TESTS[@]}"; do
+       test_name=$(basename ${cpp_test})
+       gpuci_logger "Running ${test_name}"
+       set +e
 
-npm install --slient -g camouflage-server
-mamba install -q -y -c conda-forge "git-lfs=3.1.4"
+       ${WORKSPACE}/$cpp_test --gtest_output="xml:${REPORTS_DIR}/report_${test_name}.xml"
+       TEST_RESULT=$?
+       TEST_RESULTS=$(($TEST_RESULTS+$TEST_RESULT))
 
-gpuci_logger "Pulling LFS assets"
-cd ${MORPHEUS_ROOT}
-git lfs install
-${MORPHEUS_ROOT}/scripts/fetch_data.py fetch tests validation
+       set -e
+done
 
-pip install -e ${MORPHEUS_ROOT}
-
-# Work-around for issue where libmorpheus_utils.so is not found by libmorpheus.so
-# The build and test nodes have different workspace paths (/jenkins vs. /var/lib/jenkins)
-# Typically these are fixed by conda-unpack but since we did an in-place build we will
-# have to fix this ourselves by setting LD_LIBRARY_PATH
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${MORPHEUS_ROOT}/morpheus/_lib
-
-gpuci_logger "Running tests"
+gpuci_logger "Running Python Tests"
+cd ${SRF_ROOT}/build/python
 set +e
-pytest --run_slow \
-       --junit-xml=${WORKSPACE_TMP}/report_pytest.xml \
-       --cov=morpheus \
-       --cov-report term-missing \
-       --cov-report=xml:${WORKSPACE_TMP}/report_pytest_coverage.xml
-
+pytest -v --junit-xml=${WORKSPACE_TMP}/report_pytest.xml
 PYTEST_RESULTS=$?
+TEST_RESULTS=$(($TEST_RESULTS+$PYTEST_RESULTS))
 set -e
 
-gpuci_logger "Pushing results to ${DISPLAY_ARTIFACT_URL}"
-aws s3 cp ${WORKSPACE_TMP}/report_pytest.xml "${ARTIFACT_URL}/report_pytest.xml"
-aws s3 cp ${WORKSPACE_TMP}/report_pytest_coverage.xml "${ARTIFACT_URL}/report_pytest_coverage.xml"
+gpuci_logger "Archiving test reports"
+cd $(dirname ${REPORTS_DIR})
+tar cfj ${WORKSPACE_TMP}/test_reports.tar.bz $(basename ${REPORTS_DIR})
 
-exit ${PYTEST_RESULTS}
+gpuci_logger "Pushing results to ${DISPLAY_ARTIFACT_URL}"
+aws s3 cp ${WORKSPACE_TMP}/test_reports.tar.bz "${ARTIFACT_URL}/test_reports.tar.bz"
+
+exit ${TEST_RESULTS}

@@ -18,33 +18,30 @@ set -e
 
 source ${WORKSPACE}/ci/scripts/jenkins/common.sh
 
-gpuci_logger "Downloading build artifacts from ${DISPLAY_ARTIFACT_URL}"
-aws s3 cp --no-progress "${ARTIFACT_URL}/conda_env.tar.gz" "${WORKSPACE_TMP}/conda_env.tar.gz"
-aws s3 cp --no-progress "${ARTIFACT_URL}/workspace.tar.bz" "${WORKSPACE_TMP}/workspace.tar.bz"
+rm -rf ${SRF_ROOT}/.cache/ ${SRF_ROOT}/build/
 
-gpuci_logger "Extracting"
-mkdir -p /opt/conda/envs/morpheus
-tar xf "${WORKSPACE_TMP}/conda_env.tar.gz" --no-same-owner --directory /opt/conda/envs/morpheus
-tar xf "${WORKSPACE_TMP}/workspace.tar.bz" --no-same-owner
+gpuci_logger "Creating conda env"
+mamba env create -n srf -q --file ${SRF_ROOT}/ci/conda/environments/dev_env.yml
+conda deactivate
+conda activate srf
 
-gpuci_logger "Setting test env"
-conda activate morpheus
-conda-unpack
+gpuci_logger "Check versions"
+python3 --version
+cmake --version
+ninja --version
+doxygen --version
 
-# Work-around for issue where libmorpheus_utils.so is not found by libmorpheus.so
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${MORPHEUS_ROOT}/morpheus/_lib
+show_conda_info
 
-pip install -e ${MORPHEUS_ROOT}
+gpuci_logger "Configuring for docs"
+cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} -DSRF_BUILD_DOCS=ON .
 
-cd ${MORPHEUS_ROOT}/docs
-gpuci_logger "Installing Documentation dependencies"
-pip install -r requirement.txt
 
 gpuci_logger "Building docs"
-make html
+cmake --build build --target srf_docs
 
 gpuci_logger "Tarring the docs"
-tar cfj "${WORKSPACE_TMP}/docs.tar.bz" build/html
+tar cfj "${WORKSPACE_TMP}/docs.tar.bz" build/docs/html
 
 gpuci_logger "Pushing results to ${DISPLAY_ARTIFACT_URL}"
 aws s3 cp --no-progress "${WORKSPACE_TMP}/docs.tar.bz" "${ARTIFACT_URL}/docs.tar.bz"

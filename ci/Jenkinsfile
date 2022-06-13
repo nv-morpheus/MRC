@@ -12,7 +12,7 @@ pipeline {
         BUILD_TYPE = sh(returnStdout: true, script: 'rapids-build-type')
     }
     stages {
-        stage('Checks & Builds') {
+        stage('Checks') {
             failFast true
             parallel {
                 stage('Check') {
@@ -34,9 +34,14 @@ pipeline {
                         sh "${WORKSPACE}/ci/scripts/jenkins/checks.sh"
                     }
                 }
+            }
+        }
+        stage('Builds') {
+            failFast true
+            parallel {
                 stage('Build:linux:x86_64:gcc') {
                     options {
-                        timeout(time: 4, unit: 'HOURS')
+                        timeout(time: 1, unit: 'HOURS')
                     }
                     environment {
                         PARALLEL_LEVEL = '10'
@@ -69,7 +74,7 @@ pipeline {
                 }
                 stage('Build:linux:x86_64:clang') {
                     options {
-                        timeout(time: 4, unit: 'HOURS')
+                        timeout(time: 1, unit: 'HOURS')
                     }
                     environment {
                         PARALLEL_LEVEL = '10'
@@ -101,6 +106,38 @@ pipeline {
                         }
                     }
                 }
+                stage('Build:Documentation') {
+                    options {
+                        timeout(time: 1, unit: 'HOURS')
+                    }
+                    agent {
+                        docker {
+                            image 'gpuci/rapidsai:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
+                            label 'driver-495'
+                            args '--runtime "nvidia" -e "NVIDIA_VISIBLE_DEVICES=$EXECUTOR_NUMBER"'
+                        }
+                    }
+                    environment {
+                        HOME = "${WORKSPACE}"
+                    }
+                    steps {
+                        cleanWs(
+                            deleteDirs: true,
+                            externalDelete: 'sudo rm -rf %s'
+                        )
+                        checkout scm
+                        withCredentials([[
+                            $class: 'AmazonWebServicesCredentialsBinding',
+                            credentialsId: "aws-s3-gpuci",
+                            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                        ]])
+                        {
+                            sh "${WORKSPACE}/ci/scripts/jenkins/docs.sh"
+                        }
+                    }
+                }
+
             }
         }
         stage('Post Build Stages') {
@@ -134,37 +171,6 @@ pipeline {
                         ]])
                         {
                             sh "${WORKSPACE}/ci/scripts/jenkins/test.sh"
-                        }
-                    }
-                }
-                stage('Documentation') {
-                    options {
-                        timeout(time: 1, unit: 'HOURS')
-                    }
-                    agent {
-                        docker {
-                            image 'gpuci/rapidsai:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
-                            label 'driver-495'
-                            args '--runtime "nvidia" -e "NVIDIA_VISIBLE_DEVICES=$EXECUTOR_NUMBER"'
-                        }
-                    }
-                    environment {
-                        HOME = "${WORKSPACE}"
-                    }
-                    steps {
-                        cleanWs(
-                            deleteDirs: true,
-                            externalDelete: 'sudo rm -rf %s'
-                        )
-                        checkout scm
-                        withCredentials([[
-                            $class: 'AmazonWebServicesCredentialsBinding',
-                            credentialsId: "aws-s3-gpuci",
-                            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
-                        ]])
-                        {
-                            sh "${WORKSPACE}/ci/scripts/jenkins/docs.sh"
                         }
                     }
                 }

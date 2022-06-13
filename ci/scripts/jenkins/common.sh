@@ -66,3 +66,42 @@ export SCCACHE_IDLE_TIMEOUT=32768
 
 gpuci_logger "Environ:"
 env | sort
+
+function fetch_s3() {
+    ENDPOINT=$1
+    DESTINATION=$2
+    if [[ "${USE_S3_CURL}" == "1" ]]; then
+        curl -f "${DISPLAY_URL}${ENDPOINT}" -o "${DESTINATION}"
+        FETCH_STATUS=$?
+    else
+        aws s3 cp --no-progress "${S3_URL}${ENDPOINT}" "${DESTINATION}"
+        FETCH_STATUS=$?
+    fi
+}
+
+function show_conda_info() {
+
+    gpuci_logger "Check Conda info"
+    conda info
+    conda config --show-sources
+    conda list --show-channel-urls
+}
+
+function restore_conda_env() {
+
+    gpuci_logger "Downloading build artifacts from ${DISPLAY_ARTIFACT_URL}"
+    fetch_s3 "${ARTIFACT_ENDPOINT}/conda_env.tar.gz" "${WORKSPACE_TMP}/conda_env.tar.gz"
+
+    gpuci_logger "Extracting"
+    mkdir -p /opt/conda/envs/srf
+
+    # We are using the --no-same-owner flag since user id & group id's are inconsistent between nodes in our CI pool
+    tar xf "${WORKSPACE_TMP}/conda_env.tar.gz" --no-same-owner --directory /opt/conda/envs/srf
+
+    gpuci_logger "Setting conda env"
+    conda activate srf
+    conda-unpack
+
+    show_conda_info
+}
+

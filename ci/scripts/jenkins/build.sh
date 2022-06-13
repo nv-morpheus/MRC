@@ -50,10 +50,7 @@ fi
 cmake --version
 ninja --version
 
-gpuci_logger "Check conda environment"
-conda info
-conda config --show-sources
-conda list --show-channel-urls
+show_conda_info
 
 gpuci_logger "Configuring for build and test"
 cmake -B build -G Ninja ${CMAKE_FLAGS} .
@@ -69,11 +66,17 @@ cmake -P ${SRF_ROOT}/build/cmake_install.cmake
 pip install ${SRF_ROOT}/build/python
 
 gpuci_logger "Archiving results"
-mamba pack --quiet --force --ignore-editable-packages --ignore-missing-files --n-threads ${PARALLEL_LEVEL} -n srf -o ${WORKSPACE_TMP}/conda_env.tar.gz
+mamba pack --quiet --force --ignore-missing-files --n-threads ${PARALLEL_LEVEL} -n srf -o ${WORKSPACE_TMP}/conda_env.tar.gz
+tar cfj "${WORKSPACE_TMP}/cpp_tests.tar.bz" $(find ${SRF_ROOT}/build/ -name "*.x")
+tar cfj "${WORKSPACE_TMP}/dsos.tar.bz" $(find ${SRF_ROOT}/build/ -name "*.so")
+tar cfj "${WORKSPACE_TMP}/python_build.tar.bz" ${SRF_ROOT}/build/python
 ls -lh ${WORKSPACE_TMP}/
 
 gpuci_logger "Pushing results to ${DISPLAY_ARTIFACT_URL}"
 aws s3 cp --no-progress "${WORKSPACE_TMP}/conda_env.tar.gz" "${ARTIFACT_URL}/conda_env.tar.gz"
+aws s3 cp --no-progress "${WORKSPACE_TMP}/cpp_tests.tar.bz" "${ARTIFACT_URL}/cpp_tests.tar.bz"
+aws s3 cp --no-progress "${WORKSPACE_TMP}/dsos.tar.bz" "${ARTIFACT_URL}/dsos.tar.bz"
+aws s3 cp --no-progress "${WORKSPACE_TMP}/python_build.tar.bz" "${ARTIFACT_URL}/python_build.tar.bz"
 
 gpuci_logger "Success"
 exit 0
