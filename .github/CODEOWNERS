@@ -1,0 +1,14 @@
+# Default Approval rule if one of the later sections does not apply
+* @nv-morpheus/srf-codeowners
+
+# Approval from Python codeowners is required for these files
+/python/     @nv-morpheus/srf-codeowners-python
+
+# Approval from C++ codeowners is required for these files
+/benchmarks/ @nv-morpheus/srf-codeowners-cpp
+/cmake/      @nv-morpheus/srf-codeowners-cpp
+/include/    @nv-morpheus/srf-codeowners-cpp
+/protos/     @nv-morpheus/srf-codeowners-cpp
+/src/        @nv-morpheus/srf-codeowners-cpp
+/tests/      @nv-morpheus/srf-codeowners-cpp
+/tools/      @nv-morpheus/srf-codeowners-cpp

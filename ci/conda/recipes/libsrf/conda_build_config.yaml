@@ -29,32 +29,35 @@ python:
   - 3.8
   - 3.9
 
+# Setup the dependencies to build with multiple versions of RAPIDS
 rapids_version:
-  - 21.10 # Keep around for compatibility with cuDF 21.10
-  - 22.04
+  - 21.10 # 22.06 is final release with support for RAPIDS 21.10
+  - 22.04 # Keep around compatibility with current version -1
+  - 22.06
 
-# We must pin protobuf to 3.19 until either of these are fixed:
-# Issue with gxx_linux-64: https://github.com/conda-forge/ctng-compiler-activation-feedstock/issues/73
-# Issue with protobuf(which they refuse to fix): https://github.com/protocolbuffers/protobuf/issues/9947
-libprotobuf:
-  - 3.19
-protobuf:
-  - 3.19
+glog:
+  - 0.5
+  - 0.5
+  - 0.6 # 0.6 is needed for cudf>=22.06
+
+grpc_cpp:
+  - 1.43
+  - 1.43
+  - 1.45 # 1.45 is needed for cudf>=22.06
+
+zip_keys:
+  - rapids_version
+  - glog
+  - grpc_cpp
 
 # The following mimic what is available in the pinning feedstock:
 # https://github.com/conda-forge/conda-forge-pinning-feedstock/blob/main/recipe/conda_build_config.yaml
-abseil_cpp:
-  - '20210324.2'
 boost:
   - 1.74.0
 boost_cpp:
   - 1.74.0
 gflags:
   - 2.2
-glog:
-  - 0.5
-grpc_cpp:
-  - 1.43
 ucx:
   - 1.12
 
