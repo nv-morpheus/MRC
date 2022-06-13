@@ -72,6 +72,7 @@ requirements:
     - spdlog 1.8.5
     - ucx
     - xtensor 0.24.*
+    - cudf {{ rapids_version }}
 
 outputs:
   - name: libsrf
@@ -104,6 +105,7 @@ outputs:
         - nlohmann_json 3.9.*
         - ucx
         - xtensor 0.24.*
+        - cudf {{ rapids_version }}
       run:
         # Manually add any packages necessary for run that do not have run_exports. Keep sorted!
         - {{ pin_compatible('flatbuffers', max_pin='x.x')}}
@@ -130,6 +132,7 @@ outputs:
         # Only should need libsrf and python. Keep sorted!
         - {{ pin_subpackage('libsrf', exact=True) }}
         - python {{ python }}
+        - cudf {{ rapids_version }}
       run:
         - {{ pin_subpackage('libsrf', exact=True) }}
         - rmm {{ rapids_version }} # This is not necessary but required until this is fixed: https://github.com/mamba-org/boa/issues/232
