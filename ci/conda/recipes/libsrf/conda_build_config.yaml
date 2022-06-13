@@ -52,6 +52,7 @@ grpc_cpp:
 
 zip_keys:
   - rapids_version
+  - abseil_cpp
   - glog
   - grpc_cpp
 
