@@ -35,6 +35,11 @@ rapids_version:
   - 22.04 # Keep around compatibility with current version -1
   - 22.06
 
+abseil_cpp:
+  - 20211102.0
+  - 20211102.0
+  - 20210324.2
+
 glog:
   - 0.5
   - 0.5
