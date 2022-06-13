@@ -1,3 +1,5 @@
+@Library('jenkins_shared_lib') _
+
 pipeline {
     agent any
     options {
@@ -5,6 +7,8 @@ pipeline {
     }
     environment {
         HOME = "${WORKSPACE}"
+        GH_TOKEN = credentials('gputester-github-token')
+        BUILD_TYPE = sh(returnStdout: true, script: 'rapids-build-type')
     }
     stages {
         stage('Checks & Builds') {

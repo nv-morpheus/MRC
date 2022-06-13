@@ -21,7 +21,8 @@ source ${WORKSPACE}/ci/scripts/jenkins/common.sh
 rm -rf ${SRF_ROOT}/.cache/ ${SRF_ROOT}/build/
 
 gpuci_logger "Creating conda env"
-mamba env create -q -y -n srf --file ci/conda/environments/dev_env.yml
+mamba env create -n srf -q --file ${SRF_ROOT}/ci/conda/environments/dev_env.yml
+conda deactivate
 conda activate srf
 
 gpuci_logger "Check versions"
@@ -45,8 +46,8 @@ cmake --build build --parallel ${PARALLEL_LEVEL}
 gpuci_logger "sccache usage for SRF build:"
 sccache --show-stats
 
-gpuci_logger "Installing Morpheus"
-pip install -e ${SRF_ROOT}
+gpuci_logger "Installing SRF"
+pip install ${SRF_ROOT}/build/python
 
 gpuci_logger "Archiving results"
 mamba pack --quiet --force --ignore-editable-packages --ignore-missing-files --n-threads ${PARALLEL_LEVEL} -n morpheus -o ${WORKSPACE_TMP}/conda_env.tar.gz
