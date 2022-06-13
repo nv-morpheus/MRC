@@ -10,24 +10,40 @@ def run_pipeline():
         # Use a generator function as the source
         def source_gen():
 
-            yield 1
-            yield 2
-            yield 3
+            yield int(1)
+            yield int(2)
+            yield int(3)
 
         # Create the source object
         src = seg.make_source("int_source", source_gen())
 
-        # This method will get called each time the sink gets a value
-        def sink_on_next(x):
+        def process_fn(x: int) -> float:
 
+            # Convert the integer to a new float variable y
+            y = x * 2.5
+
+            return y
+
+        # Make an intermediate node that takes the incoming value and multiplies it by 2.5
+        node = seg.make_node("node", process_fn)
+
+        seg.make_edge(src, node)
+
+        # This method will get called each time the sink gets a value
+        def sink_on_next(x: float):
+
+            # nonlocal value is needed since we are modifying a value outside of our scope
             nonlocal counter
+
+            print("Got value: {}, Incrementing counter".format(x))
+
             counter += 1
 
         # Build the sink object
         sink = seg.make_sink("int_sink", sink_on_next, None, None)
 
         # Connect the source to the sink
-        seg.make_edge(src, sink)
+        seg.make_edge(node, sink)
 
     # Create the pipeline object
     pipeline = srf.Pipeline()
