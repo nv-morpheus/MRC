@@ -18,5 +18,6 @@ name: srf
 channels:
     - conda-forge
 dependencies:
+    - boa>=0.1
     - conda-pack=0.7
     - sccache=0.3
