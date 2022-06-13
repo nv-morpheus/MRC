@@ -29,6 +29,7 @@ python:
   - 3.8
   - 3.9
 
+# Setup the dependencies to build with multiple versions of RAPIDS
 rapids_version:
   - 21.10 # 22.06 is final release with support for RAPIDS 21.10
   - 22.04 # Keep around compatibility with current version -1
@@ -37,12 +38,12 @@ rapids_version:
 glog:
   - 0.5
   - 0.5
-  - 0.6
+  - 0.6 # 0.6 is needed for cudf>=22.06
 
 grpc_cpp:
   - 1.43
   - 1.43
-  - 1.45
+  - 1.45 # 1.45 is needed for cudf>=22.06
 
 zip_keys:
   - rapids_version
