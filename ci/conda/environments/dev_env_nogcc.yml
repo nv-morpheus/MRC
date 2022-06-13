@@ -20,7 +20,7 @@ dependencies:
   - grpc-cpp=1.43
   - gtest=1.10
   - libhwloc=2.5
-  - librmm=21.10
+  - librmm=22.06
   - ninja=1.10
   - nlohmann_json=3.9
   - pkg-config=0.29

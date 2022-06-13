@@ -34,7 +34,7 @@ option(SRF_USE_CLANG_TIDY "Enable running clang-tidy as part of the build proces
 option(SRF_USE_CONDA "Enables finding dependencies via conda instead of vcpkg. Note: This will disable vcpkg. All dependencies must be installed first in the conda environment" OFF)
 option(SRF_USE_IWYU "Enable running include-what-you-use as part of the build process" OFF)
 
-set(RAPIDS_VERSION "21.10" CACHE STRING "Which version of RAPIDs to build for. Sets default versions for RAPIDs CMake and RMM.")
+set(RAPIDS_VERSION "22.06" CACHE STRING "Which version of RAPIDs to build for. Sets default versions for RAPIDs CMake and RMM.")
 
 set(SRF_CACHE_DIR "${CMAKE_SOURCE_DIR}/.cache" CACHE PATH "Directory to contain all CPM and CCache data")
 mark_as_advanced(SRF_CACHE_DIR)
