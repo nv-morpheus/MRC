@@ -192,8 +192,9 @@ add_library(libsrf
   src/internal/executor/iexecutor.cpp
   src/internal/pipeline/controller.cpp
   src/internal/pipeline/instance.cpp
-  src/internal/pipeline/pipeline.cpp
   src/internal/pipeline/ipipeline.cpp
+  src/internal/pipeline/pipeline.cpp
+  src/internal/pipeline/port_graph.cpp
   src/internal/pipeline/manager.cpp
   src/internal/pipeline/resources.cpp
   src/internal/resources/device_resources.cpp
