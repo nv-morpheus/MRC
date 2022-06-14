@@ -20,16 +20,6 @@ source ${WORKSPACE}/ci/scripts/jenkins/common.sh
 
 rm -rf ${SRF_ROOT}/.cache/ ${SRF_ROOT}/build/
 
-if [[ "${BUILD_CC}" == "gcc" ]]; then
-    gpuci_logger "Building with GCC"
-    CONDA_ENV_YML="${SRF_ROOT}/ci/conda/environments/dev_env.yml"
-    CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES} -DSRF_USE_IWYU=ON"
-else
-    gpuci_logger "Building with Clang"
-    CONDA_ENV_YML="${SRF_ROOT}/ci/conda/environments/dev_env_nogcc.yml"
-    CMAKE_FLAGS="${CMAKE_CLANG_OPTIONS} ${CMAKE_BUILD_ALL_FEATURES} -DSRF_USE_IWYU=ON"
-fi
-
 gpuci_logger "Creating conda env"
 mamba env create -n srf -q --file ${CONDA_ENV_YML}
 conda deactivate
@@ -40,9 +30,11 @@ mamba env update -q -n srf --file ${SRF_ROOT}/ci/conda/environments/ci_env.yml
 gpuci_logger "Check versions"
 python3 --version
 if [[ "${BUILD_CC}" == "gcc" ]]; then
+    gpuci_logger "Building with GCC"
     gcc --version
     g++ --version
 else
+    gpuci_logger "Building with Clang"
     clang --version
     clang++ --version
 fi

@@ -18,10 +18,12 @@ set -e
 
 source ${WORKSPACE}/ci/scripts/jenkins/common.sh
 
-conda activate rapids
+rm -rf ${SRF_ROOT}/.cache/ ${SRF_ROOT}/build/
 
-gpuci_logger "Installing CI dependencies"
-mamba install -q -y -c conda-forge "yapf=0.32"
+gpuci_logger "Creating conda env"
+mamba env create -n srf -q --file ${CONDA_ENV_YML}
+conda deactivate
+conda activate srf
 
 show_conda_info
 

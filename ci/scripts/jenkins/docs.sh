@@ -21,7 +21,7 @@ source ${WORKSPACE}/ci/scripts/jenkins/common.sh
 rm -rf ${SRF_ROOT}/.cache/ ${SRF_ROOT}/build/
 
 gpuci_logger "Creating conda env"
-mamba env create -n srf -q --file ${SRF_ROOT}/ci/conda/environments/dev_env.yml
+mamba env create -n srf -q --file ${CONDA_ENV_YML}
 conda deactivate
 conda activate srf
 
