@@ -58,7 +58,7 @@ gpuci_logger "Base branch: ${BASE_BRANCH}"
 # S3 vars
 export S3_URL="s3://rapids-downloads/ci/srf"
 export DISPLAY_URL="https://downloads.rapids.ai/ci/srf"
-export ARTIFACT_ENDPOINT="/pull-request/${CHANGE_ID}/${GIT_COMMIT}/${NVARCH}/${BUILD_CC}"
+export ARTIFACT_ENDPOINT="/pull-request/${PR_NUM}/${GIT_COMMIT}/${NVARCH}/${BUILD_CC}"
 export ARTIFACT_URL="${S3_URL}${ARTIFACT_ENDPOINT}"
 export DISPLAY_ARTIFACT_URL="${DISPLAY_URL}${ARTIFACT_ENDPOINT}"
 
