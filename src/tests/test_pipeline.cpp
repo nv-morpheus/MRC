@@ -63,6 +63,7 @@
 #include <memory>
 #include <mutex>
 #include <ostream>
+#include <stdexcept>
 #include <string>
 #include <system_error>
 #include <thread>
@@ -192,6 +193,13 @@ TEST_F(TestPipeline, LifeCycleStop)
     });
 
     run_manager(std::move(pipeline), true);
+}
+
+TEST_F(TestPipeline, InitializerThrows)
+{
+    auto pipeline = srf::make_pipeline();
+    auto segment  = pipeline->make_segment("seg_1", [](segment::Builder& s) { throw std::runtime_error("no bueno"); });
+    EXPECT_ANY_THROW(run_manager(std::move(pipeline)));
 }
 
 TEST_F(TestPipeline, DuplicateNameInSegment)
