@@ -29,18 +29,23 @@ mamba env update -q -n srf --file ${SRF_ROOT}/ci/conda/environments/ci_env.yml
 
 gpuci_logger "Check versions"
 python3 --version
+cmake --version
+ninja --version
+
 if [[ "${BUILD_CC}" == "gcc" ]]; then
     gpuci_logger "Building with GCC"
     gcc --version
     g++ --version
+    CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES} -DSRF_USE_IWYU=ON"
 else
+    gpuci_logger "Installing Clang"
+    mamba install -q -y -c conda-forge "clang=12" "clangxx=12" "libclang=12"
     gpuci_logger "Building with Clang"
     clang --version
     clang++ --version
+    CMAKE_CLANG_OPTIONS="-DCMAKE_C_COMPILER:FILEPATH=$(which clang) -DCMAKE_CXX_COMPILER:FILEPATH=$(which clang++) -DCMAKE_CUDA_COMPILER:FILEPATH=/usr/local/cuda/bin/nvcc"
+    CMAKE_FLAGS="${CMAKE_CLANG_OPTIONS} ${CMAKE_BUILD_ALL_FEATURES} -DSRF_USE_IWYU=ON"
 fi
-
-cmake --version
-ninja --version
 
 show_conda_info
 
