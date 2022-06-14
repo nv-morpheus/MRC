@@ -326,10 +326,12 @@ set(code_string "")
 
 set(rapids_project_version_compat SameMinorVersion)
 
+# Need to explicitly set VERSION ${PROJECT_VERSION} here since rapids_cmake gets
+# confused with the `RAPIDS_VERSION` variable we use
 rapids_export(INSTALL ${PROJECT_NAME}
   EXPORT_SET ${PROJECT_NAME}-core-exports
   GLOBAL_TARGETS libsrf
-  VERSION 22.06.00
+  VERSION ${PROJECT_VERSION}
   NAMESPACE srf::
   DOCUMENTATION doc_string
   FINAL_CODE_BLOCK code_string
@@ -341,7 +343,7 @@ rapids_export(INSTALL ${PROJECT_NAME}
 rapids_export(BUILD ${PROJECT_NAME}
   EXPORT_SET ${PROJECT_NAME}-core-exports
   GLOBAL_TARGETS libsrf
-  VERSION 22.06.00
+  VERSION ${PROJECT_VERSION}
   LANGUAGES C CXX CUDA
   NAMESPACE srf::
   DOCUMENTATION doc_string
