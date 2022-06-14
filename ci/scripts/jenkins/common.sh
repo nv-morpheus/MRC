@@ -26,12 +26,7 @@ gpuci_logger "user info"
 id
 
 export CMAKE_BUILD_ALL_FEATURES="-DCMAKE_MESSAGE_CONTEXT_SHOW=ON -DSRF_BUILD_BENCHMARKS=ON -DSRF_BUILD_EXAMPLES=ON -DSRF_BUILD_PYTHON=ON -DSRF_BUILD_TESTS=ON -DSRF_USE_CONDA=ON"
-
-if [[ "${BUILD_CC}" == "gcc" ]]; then
-    CONDA_ENV_YML="${SRF_ROOT}/ci/conda/environments/dev_env.yml"
-else
-    CONDA_ENV_YML="${SRF_ROOT}/ci/conda/environments/dev_env_nogcc.yml"
-fi
+CONDA_ENV_YML="${SRF_ROOT}/ci/conda/environments/dev_env.yml"
 
 # Set the depth to allow git describe to work
 export GIT_DEPTH=1000
