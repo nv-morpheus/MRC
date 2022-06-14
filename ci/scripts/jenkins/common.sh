@@ -25,8 +25,12 @@ gpuci_logger "Memory"
 gpuci_logger "user info"
 id
 
+# NUM_PROC is used by some of the other scripts
+export NUM_PROC=${PARALLEL_LEVEL:-$(nproc)}
+
+export CONDA_ENV_YML="${SRF_ROOT}/ci/conda/environments/dev_env.yml"
+
 export CMAKE_BUILD_ALL_FEATURES="-DCMAKE_MESSAGE_CONTEXT_SHOW=ON -DSRF_BUILD_BENCHMARKS=ON -DSRF_BUILD_EXAMPLES=ON -DSRF_BUILD_PYTHON=ON -DSRF_BUILD_TESTS=ON -DSRF_USE_CONDA=ON"
-CONDA_ENV_YML="${SRF_ROOT}/ci/conda/environments/dev_env.yml"
 
 # Set the depth to allow git describe to work
 export GIT_DEPTH=1000
@@ -54,8 +58,9 @@ gpuci_logger "Base branch: ${BASE_BRANCH}"
 # S3 vars
 export S3_URL="s3://rapids-downloads/ci/srf"
 export DISPLAY_URL="https://downloads.rapids.ai/ci/srf"
-export ARTIFACT_URL="${S3_URL}/pull-request/${CHANGE_ID}/${GIT_COMMIT}/${NVARCH}/${BUILD_CC}"
-export DISPLAY_ARTIFACT_URL="${DISPLAY_URL}/pull-request/${CHANGE_ID}/${GIT_COMMIT}/${NVARCH}/${BUILD_CC}/"
+export ARTIFACT_ENDPOINT="/pull-request/${CHANGE_ID}/${GIT_COMMIT}/${NVARCH}/${BUILD_CC}"
+export ARTIFACT_URL="${S3_URL}${ARTIFACT_ENDPOINT}"
+export DISPLAY_ARTIFACT_URL="${DISPLAY_URL}${ARTIFACT_ENDPOINT}"
 
 # Set sccache env vars
 export SCCACHE_S3_KEY_PREFIX=srf-${NVARCH}-${BUILD_CC}
