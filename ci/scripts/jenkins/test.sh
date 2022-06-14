@@ -33,6 +33,9 @@ tar xf "${WORKSPACE_TMP}/python_build.tar.bz"
 REPORTS_DIR="${WORKSPACE_TMP}/reports"
 mkdir -p ${WORKSPACE_TMP}/reports
 
+# ctest requires cmake to be configured in order to locate tests
+cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} .
+
 gpuci_logger "Running C++ Tests"
 cd ${SRF_ROOT}/build
 set +e

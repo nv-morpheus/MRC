@@ -170,6 +170,38 @@ pipeline {
                 }
             }
         }
+        stage('package:conda') {
+            options {
+                timeout(time: 1, unit: 'HOURS')
+            }
+            agent {
+                docker {
+                    image 'gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
+                    label 'cpu'
+                }
+            }
+            environment {
+                HOME = "${WORKSPACE}"
+		        PARALLEL_LEVEL = '4'
+                CONDA_PKG_LABEL = 'dev-ci'
+            }
+            steps {
+                cleanWs(
+                    deleteDirs: true,
+                    externalDelete: 'sudo rm -rf %s'
+                )
+                checkout scm
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: "aws-s3-gpuci",
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                ]])
+                {
+                    sh "${WORKSPACE}/ci/scripts/jenkins/conda.sh"
+                }
+            }
+        }
     }
     post {
         always {
