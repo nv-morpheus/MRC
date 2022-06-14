@@ -29,30 +29,23 @@ fetch_s3 "${ARTIFACT_ENDPOINT}/python_build.tar.bz" "${WORKSPACE_TMP}/python_bui
 tar xf "${WORKSPACE_TMP}/cpp_tests.tar.bz"
 tar xf "${WORKSPACE_TMP}/dsos.tar.bz"
 tar xf "${WORKSPACE_TMP}/python_build.tar.bz"
-CPP_TESTS=($(tar tf "${WORKSPACE_TMP}/cpp_tests.tar.bz"))
 
 REPORTS_DIR="${WORKSPACE_TMP}/reports"
 mkdir -p ${WORKSPACE_TMP}/reports
 
-TEST_RESULTS=0
-for cpp_test in "${CPP_TESTS[@]}"; do
-       test_name=$(basename ${cpp_test})
-       gpuci_logger "Running ${test_name}"
-       set +e
-
-       ${WORKSPACE}/$cpp_test --gtest_output="xml:${REPORTS_DIR}/report_${test_name}.xml"
-       TEST_RESULT=$?
-       TEST_RESULTS=$(($TEST_RESULTS+$TEST_RESULT))
-
-       set -e
-done
+gpuci_logger "Running C++ Tests"
+cd ${SRF_ROOT}/build
+set +e
+ctest --output-on-failure --output-junit ${REPORTS_DIR}/report_ctest.xml
+CTEST_RESULTS=$?
+set -e
+cd ${SRF_ROOT}
 
 gpuci_logger "Running Python Tests"
 cd ${SRF_ROOT}/build/python
 set +e
 pytest -v --junit-xml=${WORKSPACE_TMP}/report_pytest.xml
 PYTEST_RESULTS=$?
-TEST_RESULTS=$(($TEST_RESULTS+$PYTEST_RESULTS))
 set -e
 
 gpuci_logger "Archiving test reports"
@@ -62,4 +55,6 @@ tar cfj ${WORKSPACE_TMP}/test_reports.tar.bz $(basename ${REPORTS_DIR})
 gpuci_logger "Pushing results to ${DISPLAY_ARTIFACT_URL}"
 aws s3 cp ${WORKSPACE_TMP}/test_reports.tar.bz "${ARTIFACT_URL}/test_reports.tar.bz"
 
+
+TEST_RESULTS=$(($CTEST_RESULTS+$PYTEST_RESULTS))
 exit ${TEST_RESULTS}
