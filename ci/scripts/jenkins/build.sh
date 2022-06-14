@@ -64,9 +64,9 @@ pip install ${SRF_ROOT}/build/python
 
 gpuci_logger "Archiving results"
 mamba pack --quiet --force --ignore-missing-files --n-threads ${PARALLEL_LEVEL} -n srf -o ${WORKSPACE_TMP}/conda_env.tar.gz
-tar cfj "${WORKSPACE_TMP}/cpp_tests.tar.bz" $(find ${SRF_ROOT}/build/ -name "*.x")
-tar cfj "${WORKSPACE_TMP}/dsos.tar.bz" $(find ${SRF_ROOT}/build/ -name "*.so")
-tar cfj "${WORKSPACE_TMP}/python_build.tar.bz" ${SRF_ROOT}/build/python
+tar cfj "${WORKSPACE_TMP}/cpp_tests.tar.bz" $(find ./build/ -name "*.x")
+tar cfj "${WORKSPACE_TMP}/dsos.tar.bz" $(find ./build/ -name "*.so")
+tar cfj "${WORKSPACE_TMP}/python_build.tar.bz" ./build/python
 ls -lh ${WORKSPACE_TMP}/
 
 gpuci_logger "Pushing results to ${DISPLAY_ARTIFACT_URL}"
