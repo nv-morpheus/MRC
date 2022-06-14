@@ -29,11 +29,9 @@ export CMAKE_BUILD_ALL_FEATURES="-DCMAKE_MESSAGE_CONTEXT_SHOW=ON -DSRF_BUILD_BEN
 export CMAKE_CLANG_OPTIONS="-DCMAKE_C_COMPILER:FILEPATH=/usr/bin/clang-12 -DCMAKE_CXX_COMPILER:FILEPATH=/usr/bin/clang++-12 -DCMAKE_CUDA_COMPILER:FILEPATH=/usr/local/cuda/bin/nvcc"
 
 if [[ "${BUILD_CC}" == "gcc" ]]; then
-    gpuci_logger "Building with GCC"
     CONDA_ENV_YML="${SRF_ROOT}/ci/conda/environments/dev_env.yml"
     CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES} -DSRF_USE_IWYU=ON"
 else
-    gpuci_logger "Building with Clang"
     CONDA_ENV_YML="${SRF_ROOT}/ci/conda/environments/dev_env_nogcc.yml"
     CMAKE_FLAGS="${CMAKE_CLANG_OPTIONS} ${CMAKE_BUILD_ALL_FEATURES} -DSRF_USE_IWYU=ON"
 fi
