@@ -34,7 +34,7 @@ option(SRF_USE_CLANG_TIDY "Enable running clang-tidy as part of the build proces
 option(SRF_USE_CONDA "Enables finding dependencies via conda instead of vcpkg. Note: This will disable vcpkg. All dependencies must be installed first in the conda environment" OFF)
 option(SRF_USE_IWYU "Enable running include-what-you-use as part of the build process" OFF)
 
-set(RAPIDS_VERSION "22.06" CACHE STRING "Which version of RAPIDs to build for. Sets default versions for RAPIDs CMake and RMM.")
+set(RAPIDS_VERSION "21.10" CACHE STRING "Which version of RAPIDs to build for. Sets default versions for RAPIDs CMake and RMM.")
 
 set(SRF_CACHE_DIR "${CMAKE_SOURCE_DIR}/.cache" CACHE PATH "Directory to contain all CPM and CCache data")
 mark_as_advanced(SRF_CACHE_DIR)
@@ -192,9 +192,8 @@ add_library(libsrf
   src/internal/executor/iexecutor.cpp
   src/internal/pipeline/controller.cpp
   src/internal/pipeline/instance.cpp
-  src/internal/pipeline/ipipeline.cpp
   src/internal/pipeline/pipeline.cpp
-  src/internal/pipeline/port_graph.cpp
+  src/internal/pipeline/ipipeline.cpp
   src/internal/pipeline/manager.cpp
   src/internal/pipeline/resources.cpp
   src/internal/resources/device_resources.cpp
@@ -327,12 +326,10 @@ set(code_string "")
 
 set(rapids_project_version_compat SameMinorVersion)
 
-# Need to explicitly set VERSION ${PROJECT_VERSION} here since rapids_cmake gets
-# confused with the `RAPIDS_VERSION` variable we use
 rapids_export(INSTALL ${PROJECT_NAME}
   EXPORT_SET ${PROJECT_NAME}-core-exports
   GLOBAL_TARGETS libsrf
-  VERSION ${PROJECT_VERSION}
+  VERSION
   NAMESPACE srf::
   DOCUMENTATION doc_string
   FINAL_CODE_BLOCK code_string
@@ -344,7 +341,7 @@ rapids_export(INSTALL ${PROJECT_NAME}
 rapids_export(BUILD ${PROJECT_NAME}
   EXPORT_SET ${PROJECT_NAME}-core-exports
   GLOBAL_TARGETS libsrf
-  VERSION ${PROJECT_VERSION}
+  VERSION
   LANGUAGES C CXX CUDA
   NAMESPACE srf::
   DOCUMENTATION doc_string

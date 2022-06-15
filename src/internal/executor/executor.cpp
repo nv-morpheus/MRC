@@ -19,13 +19,10 @@
 
 #include "internal/pipeline/manager.hpp"
 #include "internal/pipeline/pipeline.hpp"
-#include "internal/pipeline/port_graph.hpp"
 #include "internal/pipeline/types.hpp"
 #include "internal/resources/resource_partitions.hpp"
 #include "internal/system/system.hpp"
-#include "internal/utils/contains.hpp"
 #include "srf/core/addresses.hpp"
-#include "srf/exceptions/runtime_error.hpp"
 #include "srf/internal/pipeline/ipipeline.hpp"
 #include "srf/options/options.hpp"
 #include "srf/types.hpp"
@@ -35,8 +32,6 @@
 #include <map>
 
 namespace srf::internal::executor {
-
-static bool valid_pipeline(const pipeline::Pipeline& pipeline);
 
 Executor::Executor(Handle<Options> options) :
   m_system(system::make_system(std::move(options))),
@@ -58,13 +53,7 @@ void Executor::register_pipeline(std::unique_ptr<pipeline::IPipeline> ipipeline)
     CHECK(ipipeline);
     CHECK(m_pipeline_manager == nullptr);
 
-    auto pipeline = pipeline::Pipeline::unwrap(*ipipeline);
-
-    if (!valid_pipeline(*pipeline))
-    {
-        throw exceptions::SrfRuntimeError("pipeline validation failed");
-    }
-
+    auto pipeline      = pipeline::Pipeline::unwrap(*ipipeline);
     m_pipeline_manager = std::make_unique<pipeline::Manager>(pipeline, m_resources);
 
     pipeline::SegmentAddresses initial_segments;
@@ -100,43 +89,6 @@ void Executor::do_service_await_join()
 {
     CHECK(m_pipeline_manager);
     m_pipeline_manager->service_await_join();
-}
-
-// convert to std::expect
-bool valid_pipeline(const pipeline::Pipeline& pipeline)
-{
-    bool valid = true;
-    pipeline::PortGraph pg(pipeline);
-
-    for (const auto& [name, connections] : pg.port_map())
-    {
-        // first validate all port names have at least one:
-        // - segment using that port as an ingress, and
-        // - segment using that port as an egress
-        if (connections.egress_segments.empty() or connections.ingress_segments.empty())
-        {
-            valid = false;
-            // todo - print list of segments names for ingress/egres connections to this port
-            LOG(WARNING) << "port: " << name << " has incomplete connections - used as ingress on "
-                         << connections.ingress_segments.size() << " segments; used as egress on "
-                         << connections.egress_segments.size() << " segments";
-        }
-
-        // we currently only have an load-balancer manifold
-        // it doesn't make sense to connect segments of different types to a load-balancer, they should probably be
-        // broadcast
-        // in general, if there are more than one type of segments writing to or reading from a manifold, then that port
-        // should have an explicit manifold type specified
-        if (connections.egress_segments.size() > 1 or connections.ingress_segments.size() > 1)
-        {
-            valid = false;
-            LOG(WARNING) << "port: " << name
-                         << " has more than 1 segment type connected to an ingress or egress port; this is currently "
-                            "an invalid configuration as there are no manifold available to handle this condition";
-        }
-    }
-
-    return valid;
 }
 
 }  // namespace srf::internal::executor
