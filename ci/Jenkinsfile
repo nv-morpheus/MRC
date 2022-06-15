@@ -6,7 +6,6 @@ pipeline {
         disableConcurrentBuilds(abortPrevious: true)
     }
     environment {
-        HOME = "${WORKSPACE}"
         BUILD_CC = 'gcc'
         BUILD_TYPE = sh(returnStdout: true, script: 'rapids-build-type')
     }
