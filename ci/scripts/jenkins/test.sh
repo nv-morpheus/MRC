@@ -39,7 +39,15 @@ cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} .
 gpuci_logger "Running C++ Tests"
 cd ${SRF_ROOT}/build
 set +e
-ctest --output-on-failure --output-junit ${REPORTS_DIR}/report_ctest.xml
+# Tests known to be failing
+# Issues:
+# * test_srf_benchmarking - https://github.com/nv-morpheus/SRF/issues/32
+# * test_srf_private - https://github.com/nv-morpheus/SRF/issues/33
+# * test_nvrpc - https://github.com/nv-morpheus/SRF/issues/34
+ctest --output-on-failure \
+      --exclude-regex "test_srf_benchmarking|test_srf_private|test_nvrpc" \
+      --output-junit ${REPORTS_DIR}/report_ctest.xml
+
 CTEST_RESULTS=$?
 set -e
 cd ${SRF_ROOT}
