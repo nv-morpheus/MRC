@@ -1,4 +1,4 @@
-#!//usr/bin/bash
+#!/usr/bin/bash
 # SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
