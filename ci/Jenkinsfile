@@ -44,7 +44,6 @@ pipeline {
                     }
                     environment {
                         PARALLEL_LEVEL = '16'
-                        USE_SCCACHE = '1'
                         HOME = "${WORKSPACE}"
                     }
                     agent {
@@ -76,7 +75,6 @@ pipeline {
                     }
                     environment {
                         PARALLEL_LEVEL = '16'
-                        USE_SCCACHE = '1'
                         BUILD_CC = 'clang'
                         HOME = "${WORKSPACE}"
                     }
