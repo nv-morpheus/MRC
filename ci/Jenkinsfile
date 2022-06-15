@@ -43,15 +43,14 @@ pipeline {
                         timeout(time: 1, unit: 'HOURS')
                     }
                     environment {
-                        PARALLEL_LEVEL = '10'
+                        PARALLEL_LEVEL = '16'
                         USE_SCCACHE = '1'
                         HOME = "${WORKSPACE}"
                     }
                     agent {
                         docker {
-                            image 'gpuci/rapidsai:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
-                            label 'driver-495'
-                            args '--runtime "nvidia" -e "NVIDIA_VISIBLE_DEVICES=$EXECUTOR_NUMBER"'
+                            image 'gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
+                            label 'cpu4'
                         }
                     }
                     steps {
@@ -76,16 +75,15 @@ pipeline {
                         timeout(time: 1, unit: 'HOURS')
                     }
                     environment {
-                        PARALLEL_LEVEL = '10'
+                        PARALLEL_LEVEL = '16'
                         USE_SCCACHE = '1'
                         BUILD_CC = 'clang'
                         HOME = "${WORKSPACE}"
                     }
                     agent {
                         docker {
-                            image 'gpuci/rapidsai:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
-                            label 'driver-495'
-                            args '--runtime "nvidia" -e "NVIDIA_VISIBLE_DEVICES=$EXECUTOR_NUMBER"'
+                            image 'gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
+                            label 'cpu4'
                         }
                     }
                     steps {
@@ -109,11 +107,14 @@ pipeline {
                     options {
                         timeout(time: 1, unit: 'HOURS')
                     }
+                    environment {
+                        PARALLEL_LEVEL = '4'
+                        HOME = "${WORKSPACE}"
+                    }
                     agent {
                         docker {
-                            image 'gpuci/rapidsai:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
-                            label 'driver-495'
-                            args '--runtime "nvidia" -e "NVIDIA_VISIBLE_DEVICES=$EXECUTOR_NUMBER"'
+                            image 'gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
+                            label 'cpu'
                         }
                     }
                     environment {
@@ -177,12 +178,12 @@ pipeline {
             agent {
                 docker {
                     image 'gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
-                    label 'cpu'
+                    label 'cpu4'
                 }
             }
             environment {
                 HOME = "${WORKSPACE}"
-		        PARALLEL_LEVEL = '4'
+		        PARALLEL_LEVEL = '16'
                 CONDA_PKG_LABEL = 'dev-ci'
             }
             steps {
