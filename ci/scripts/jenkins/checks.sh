@@ -20,6 +20,8 @@ source ${WORKSPACE}/ci/scripts/jenkins/common.sh
 
 rm -rf ${SRF_ROOT}/.cache/ ${SRF_ROOT}/build/
 
+fetch_base_branch
+
 gpuci_logger "Creating conda env"
 mamba env create -n srf -q --file ${CONDA_ENV_YML}
 conda deactivate
