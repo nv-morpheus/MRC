@@ -117,9 +117,6 @@ pipeline {
                             label 'cpu'
                         }
                     }
-                    environment {
-                        HOME = "${WORKSPACE}"
-                    }
                     steps {
                         cleanWs(
                             deleteDirs: true,
@@ -183,7 +180,7 @@ pipeline {
             }
             environment {
                 HOME = "${WORKSPACE}"
-		        PARALLEL_LEVEL = '16'
+                PARALLEL_LEVEL = '16'
                 CONDA_PKG_LABEL = 'dev-ci'
             }
             steps {
