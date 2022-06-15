@@ -13,6 +13,7 @@ pipeline {
     }
     stages {
         stage('Checks') {
+            when { environment name: 'BUILD_TYPE', value: 'pull-request' }
             options {
                 timeout(time: 1, unit: 'HOURS')
             }
@@ -169,6 +170,12 @@ pipeline {
             }
         }
         stage('package:conda') {
+            when {
+                anyOf {
+                    environment name: 'BUILD_TYPE', value: 'branch'
+                    environment name: 'BUILD_TYPE', value: 'nightly'
+                }
+            }
             options {
                 timeout(time: 1, unit: 'HOURS')
             }
