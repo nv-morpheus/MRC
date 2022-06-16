@@ -76,7 +76,8 @@ def test_launch_options_source(source_type: str, pe_count: int, engines_per_pe: 
     options = srf.Options()
 
     # Set to 1 thread
-    options.topology.user_cpuset = "0-{}".format(pe_count)
+    # TODO(#38)
+    # options.topology.user_cpuset = "0-{}".format(pe_count)
 
     executor = srf.Executor(options)
 
@@ -125,7 +126,8 @@ def test_launch_options_iterable():
     options = srf.Options()
 
     # Set to 1 thread
-    options.topology.user_cpuset = "0-{}".format(pe_count)
+    # TODO(#38)
+    # options.topology.user_cpuset = "0-{}".format(pe_count)
 
     executor = srf.Executor(options)
 
