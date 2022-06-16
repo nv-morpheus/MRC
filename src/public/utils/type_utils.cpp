@@ -94,7 +94,7 @@ std::string DataType::name() const
 
 std::string DataType::type_str() const
 {
-    return CONCAT_STR("<" << this->type_char() << this->item_size());
+    return SRF_CONCAT_STR("<" << this->type_char() << this->item_size());
 }
 
 bool DataType::operator==(const DataType& other) const
