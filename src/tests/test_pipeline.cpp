@@ -20,8 +20,9 @@
 #include "internal/pipeline/manager.hpp"
 #include "internal/pipeline/pipeline.hpp"
 #include "internal/pipeline/types.hpp"
-#include "internal/resources/resource_partitions.hpp"
+#include "internal/resources/manager.hpp"
 #include "internal/system/system.hpp"
+#include "internal/system/system_provider.hpp"
 #include "internal/utils/collision_detector.hpp"
 
 #include "nodes/common_nodes.hpp"
@@ -97,10 +98,10 @@ static void run_custom_manager(std::unique_ptr<internal::pipeline::IPipeline> pi
                                internal::pipeline::SegmentAddresses&& update,
                                bool delayed_stop = false)
 {
-    auto resources = internal::resources::make_resource_partitions(make_system([](Options& options) {
+    auto resources = internal::resources::Manager(internal::system::SystemProvider(make_system([](Options& options) {
         options.topology().user_cpuset("0-1");
         options.topology().restrict_gpus(true);
-    }));
+    })));
 
     auto manager = std::make_unique<internal::pipeline::Manager>(unwrap(*pipeline), resources);
 
@@ -121,10 +122,10 @@ static void run_custom_manager(std::unique_ptr<internal::pipeline::IPipeline> pi
 
 static void run_manager(std::unique_ptr<internal::pipeline::IPipeline> pipeline, bool delayed_stop = false)
 {
-    auto resources = internal::resources::make_resource_partitions(make_system([](Options& options) {
+    auto resources = internal::resources::Manager(internal::system::SystemProvider(make_system([](Options& options) {
         options.topology().user_cpuset("0-1");
         options.topology().restrict_gpus(true);
-    }));
+    })));
 
     auto manager = std::make_unique<internal::pipeline::Manager>(unwrap(*pipeline), resources);
 

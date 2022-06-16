@@ -16,8 +16,6 @@
  */
 
 #include "internal/pipeline/types.hpp"
-#include "internal/resources/resource_partitions.hpp"
-#include "internal/resources/system_resources.hpp"
 #include "internal/system/system.hpp"
 #include "srf/channel/forward.hpp"
 #include "srf/options/options.hpp"
