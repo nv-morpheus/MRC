@@ -44,11 +44,11 @@ add_custom_target(copy_fixture_files ALL
 # Keep all source files sorted
 add_executable(test_srf_private
   test_main.cpp
-# pipelines/single_segment.cpp
-# pipelines/multi_segment.cpp
-# segments/common_segments.cpp
-# nodes/common_sources.cpp
-# nodes/common_sinks.cpp
+  pipelines/single_segment.cpp
+  pipelines/multi_segment.cpp
+  segments/common_segments.cpp
+  nodes/common_sources.cpp
+  nodes/common_sinks.cpp
 # test_assignment_manager.cpp
 # test_architect.cpp
 # test_options.cpp
@@ -58,7 +58,7 @@ add_executable(test_srf_private
 # test_pipeline.cpp
   test_ranges.cpp
 # test_resources.cpp
-# test_runnable.cpp
+  test_runnable.cpp
   test_system.cpp
   test_topology.cpp
   test_ucx.cpp
