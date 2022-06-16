@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <srf/api.hpp>
 #include <srf/core/bitmap.hpp>
 #include <srf/core/task_queue.hpp>
 #include <srf/types.hpp>
@@ -29,7 +30,7 @@
 
 namespace srf::core {
 
-class FiberPool
+class SRF_API FiberPool
 {
   public:
     virtual ~FiberPool() = default;
@@ -55,37 +56,6 @@ class FiberPool
 
   private:
     virtual FiberTaskQueue& task_queue(const std::size_t& index) = 0;
-};
-
-class RoundRobinFiberPool
-{
-  public:
-    RoundRobinFiberPool(std::shared_ptr<FiberPool> fiber_pool);
-
-    template <class F, class... ArgsT>
-    auto enqueue(F&& f, ArgsT&&... args) -> Future<typename std::result_of<F(ArgsT...)>::type>
-    {
-        auto index = m_provider.next_index();
-        return m_queues->enqueue(index, f, std::forward<ArgsT>(args)...);
-    }
-
-    template <class MetaDataT, class F, class... ArgsT>
-    auto enqueue(MetaDataT&& md, F&& f, ArgsT&&... args) -> Future<typename std::result_of<F(ArgsT...)>::type>
-    {
-        auto index = m_provider.next_index();
-        return m_queues->enqueue(index, std::forward<MetaDataT>(md), std::forward<F>(f), std::forward<ArgsT>(args)...);
-    }
-
-    // std::shared_ptr<FiberTaskQueue> next_task_queue();
-
-    void reset();
-    std::size_t thread_count() const;
-
-    FiberPool& pool();
-
-  private:
-    std::shared_ptr<FiberPool> m_queues;
-    RoundRobinCpuSet m_provider;
 };
 
 }  // namespace srf::core

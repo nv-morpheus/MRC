@@ -18,7 +18,7 @@
 #include "internal/system/fiber_task_queue.hpp"
 
 #include "internal/system/fiber_priority_scheduler.hpp"
-#include "internal/system/system.hpp"
+#include "internal/system/resources.hpp"
 #include "srf/core/fiber_meta_data.hpp"
 #include "srf/core/task_queue.hpp"
 #include "srf/types.hpp"
@@ -37,10 +37,10 @@
 
 namespace srf::internal::system {
 
-FiberTaskQueue::FiberTaskQueue(const System& system, CpuSet cpu_affinity, std::size_t channel_size) :
+FiberTaskQueue::FiberTaskQueue(const Resources& resources, CpuSet cpu_affinity, std::size_t channel_size) :
   m_queue(channel_size),
   m_cpu_affinity(std::move(cpu_affinity)),
-  m_thread(system.make_thread("fiberq", m_cpu_affinity, [this] { main(); }))
+  m_thread(resources.make_thread("fiberq", m_cpu_affinity, [this] { main(); }))
 {
     DVLOG(10) << "awaiting fiber task queue worker thread running on cpus " << m_cpu_affinity;
     enqueue([] {}).get();
@@ -50,7 +50,6 @@ FiberTaskQueue::FiberTaskQueue(const System& system, CpuSet cpu_affinity, std::s
 FiberTaskQueue::~FiberTaskQueue()
 {
     shutdown();
-    m_thread.join();
 }
 
 const CpuSet& FiberTaskQueue::affinity() const
@@ -111,11 +110,13 @@ std::ostream& operator<<(std::ostream& os, const FiberTaskQueue& ftq)
 {
     if (ftq.affinity().weight() == 1)
     {
-        os << "[fiber_task_queue: cpu_id: " << ftq.affinity().first() << "; tid: " << ftq.m_thread.get_id() << "]";
+        os << "[fiber_task_queue: cpu_id: " << ftq.affinity().first() << "; tid: " << ftq.m_thread.thread().get_id()
+           << "]";
     }
     else
     {
-        os << "[fiber_task_queue: on cpus: " << ftq.affinity().str() << "; tid: " << ftq.m_thread.get_id() << "]";
+        os << "[fiber_task_queue: on cpus: " << ftq.affinity().str() << "; tid: " << ftq.m_thread.thread().get_id()
+           << "]";
     }
     return os;
 }

@@ -85,7 +85,7 @@ static std::shared_ptr<internal::system::System> make_system(std::function<void(
         updater(*options);
     }
 
-    return internal::system::System::make_system(std::move(options));
+    return internal::system::make_system(std::move(options));
 }
 
 static std::shared_ptr<internal::pipeline::Pipeline> unwrap(internal::pipeline::IPipeline& pipeline)

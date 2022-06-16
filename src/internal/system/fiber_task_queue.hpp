@@ -17,9 +17,12 @@
 
 #pragma once
 
-#include <srf/core/task_queue.hpp>
+#include "internal/system/thread.hpp"
+#include "srf/utils/macros.hpp"
 
-#include "srf/core/bitmap.hpp"
+#include <srf/api.hpp>
+#include <srf/core/bitmap.hpp>
+#include <srf/core/task_queue.hpp>
 
 #include <boost/fiber/buffered_channel.hpp>
 
@@ -29,13 +32,16 @@
 
 namespace srf::internal::system {
 
-class System;
+class Resources;
 
 class FiberTaskQueue final : public core::FiberTaskQueue
 {
   public:
-    FiberTaskQueue(const System& system, CpuSet cpu_affinity, std::size_t channel_size = 64);
+    FiberTaskQueue(const Resources& resources, CpuSet cpu_affinity, std::size_t channel_size = 64);
     ~FiberTaskQueue() final;
+
+    DELETE_COPYABILITY(FiberTaskQueue);
+    DELETE_MOVEABILITY(FiberTaskQueue);
 
     const CpuSet& affinity() const final;
 
@@ -51,7 +57,7 @@ class FiberTaskQueue final : public core::FiberTaskQueue
 
     boost::fibers::buffered_channel<task_pkg_t> m_queue;
     CpuSet m_cpu_affinity;
-    std::thread m_thread;
+    Thread m_thread;
 };
 
 }  // namespace srf::internal::system

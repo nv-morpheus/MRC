@@ -17,7 +17,7 @@
 
 #include "internal/system/fiber_manager.hpp"
 #include "internal/system/fiber_pool.hpp"
-#include "internal/system/system.hpp"
+#include "internal/system/resources.hpp"
 #include "internal/system/topology.hpp"
 #include "srf/core/bitmap.hpp"
 #include "srf/exceptions/runtime_error.hpp"
@@ -28,17 +28,19 @@
 
 namespace srf::internal::system {
 
-FiberManager::FiberManager(const System& system) : m_cpu_set(system.topology().cpu_set())
+FiberManager::FiberManager(const Resources& resources) : m_cpu_set(resources.system().topology().cpu_set())
 {
-    auto cpu_count = system.topology().cpu_set().weight();
+    auto cpu_count       = m_cpu_set.weight();
+    const auto& options  = resources.system().options();
+    const auto& topology = resources.system().topology();
 
     VLOG(1) << "creating fiber task queues on " << cpu_count << " threads";
-    VLOG(1) << "thread_binding : " << (system.options().fiber_pool().enable_thread_binding() ? " TRUE" : "FALSE");
-    VLOG(1) << "memory_binding : " << (system.options().fiber_pool().enable_memory_binding() ? " TRUE" : "FALSE");
+    VLOG(1) << "thread_binding : " << (options.fiber_pool().enable_thread_binding() ? " TRUE" : "FALSE");
+    VLOG(1) << "memory_binding : " << (options.fiber_pool().enable_memory_binding() ? " TRUE" : "FALSE");
 
-    system.topology().cpu_set().for_each_bit([&](std::int32_t idx, std::int32_t cpu_id) {
+    topology.cpu_set().for_each_bit([&](std::int32_t idx, std::int32_t cpu_id) {
         DVLOG(10) << "initializing fiber queue " << idx << " of " << cpu_count << " on cpu_id " << cpu_id;
-        m_queues[cpu_id] = std::make_shared<FiberTaskQueue>(system, cpu_id);
+        m_queues[cpu_id] = std::make_unique<FiberTaskQueue>(resources, cpu_id);
     });
 }
 
@@ -48,7 +50,7 @@ FiberManager::~FiberManager()
     join();
 }
 
-std::shared_ptr<FiberPool> FiberManager::make_pool(CpuSet cpu_set)
+FiberPool FiberManager::make_pool(CpuSet cpu_set) const
 {
     // valididate that cpu_set is a subset of topology->cpu_set()
     if (!m_cpu_set.contains(cpu_set))
@@ -56,12 +58,12 @@ std::shared_ptr<FiberPool> FiberManager::make_pool(CpuSet cpu_set)
         throw exceptions::SrfRuntimeError("cpu_set must be a subset of the initial topology to create a fiber pool");
     }
     auto cpus = cpu_set.vec();
-    std::vector<std::shared_ptr<FiberTaskQueue>> queues;
+    std::vector<std::reference_wrapper<FiberTaskQueue>> queues;
     for (auto& cpu : cpus)
     {
-        queues.push_back(m_queues.at(cpu));
+        queues.emplace_back(*m_queues.at(cpu));
     }
-    return std::make_shared<FiberPool>(std::move(cpu_set), std::move(queues));
+    return FiberPool(std::move(cpu_set), std::move(queues));
 }
 
 void FiberManager::stop()
@@ -81,11 +83,11 @@ void FiberManager::join()
     }
 }
 
-std::shared_ptr<FiberTaskQueue> FiberManager::task_queue(std::uint32_t cpu_id)
+FiberTaskQueue& FiberManager::task_queue(std::uint32_t cpu_id) const
 {
     auto search = m_queues.find(cpu_id);
     CHECK(search != m_queues.end()) << "unable to find cpu_id " << cpu_id << " in set of task queue";
-    return search->second;
+    return *search->second;
 }
 
 }  // namespace srf::internal::system

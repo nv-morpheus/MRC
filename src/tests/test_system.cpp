@@ -19,6 +19,7 @@
 #include <srf/types.hpp>
 #include "internal/system/fiber_pool.hpp"
 #include "internal/system/fiber_task_queue.hpp"
+#include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/thread_pool.hpp"
 #include "internal/system/topology.hpp"
@@ -70,12 +71,12 @@ class TestSystem : public ::testing::Test
 
 TEST_F(TestSystem, LifeCycle)
 {
-    auto system = System::make_system(make_options());
+    auto system = system::make_system(make_options());
 }
 
 TEST_F(TestSystem, FiberPool)
 {
-    auto system = System::make_system(make_options([](Options& options) {
+    auto system = system::make_system(make_options([](Options& options) {
         // ensure we have 4 logical cpus
         options.topology().user_cpuset("0-3");
     }));
@@ -85,9 +86,11 @@ TEST_F(TestSystem, FiberPool)
     cpu_set.on(2);
     EXPECT_EQ(cpu_set.weight(), 2);
 
-    auto pool = system->make_fiber_pool(cpu_set);
+    system::Resources resources((system::SystemProvider(system)));
 
-    EXPECT_EQ(pool->thread_count(), 2);
+    auto pool = resources.make_fiber_pool(cpu_set);
+
+    EXPECT_EQ(pool.thread_count(), 2);
 
     // now we need to ensure that all fibers on each thread
     // stay pinned in their respective threads
@@ -103,7 +106,7 @@ TEST_F(TestSystem, FiberPool)
     // are not migrating.
     for (int i = 0; i < 10; i++)
     {
-        t0.push_back(pool->enqueue(0, [] {
+        t0.push_back(pool.enqueue(0, [] {
             std::vector<Future<std::thread::id>> fs;
             for (int j = 0; j < 10; j++)
             {
@@ -135,7 +138,7 @@ TEST_F(TestSystem, FiberPool)
 
 TEST_F(TestSystem, ImpossibleCoreCount)
 {
-    auto system = System::make_system(make_options([](Options& options) {
+    auto system = system::make_system(make_options([](Options& options) {
         // ensure we have 2 logical cpus
         options.topology().user_cpuset("0,1");
     }));
@@ -145,73 +148,33 @@ TEST_F(TestSystem, ImpossibleCoreCount)
     cpu_set.on(99999999);
     EXPECT_EQ(cpu_set.weight(), 2);
 
-    EXPECT_ANY_THROW(auto pool = system->make_fiber_pool(cpu_set));
-}
+    system::Resources resources((system::SystemProvider(system)));
 
-TEST_F(TestSystem, RoundRobinFiberPool)
-{
-    auto system = System::make_system(make_options([](Options& options) {
-        // ensure we have 2 logical cpus
-        options.topology().user_cpuset("0,1,2");
-    }));
-
-    if (system->topology().cpu_set().weight() < 3)
-    {
-        GTEST_SKIP() << "At least three threads are required to test the RoundRobinFiberPool";
-    }
-
-    CpuSet cpu_set;
-    cpu_set.on(0);
-    cpu_set.on(2);
-    EXPECT_EQ(cpu_set.weight(), 2);
-
-    auto pool = std::make_shared<core::RoundRobinFiberPool>(system->make_fiber_pool(cpu_set));
-
-    std::vector<Future<std::uint32_t>> futures;
-
-    for (int i = 0; i < 10; i++)
-    {
-        futures.push_back(pool->enqueue([system] {
-            auto cpu_set = system->get_current_thread_affinity();
-            EXPECT_EQ(cpu_set.weight(), 1);
-            return cpu_set.first();
-        }));
-    }
-
-    for (int i = 0; i < 10; i++)
-    {
-        auto& f = futures.at(i);
-        if (i % 2 == 0)
-        {
-            EXPECT_EQ(f.get(), 0);
-        }
-        else
-        {
-            EXPECT_EQ(f.get(), 2);
-        }
-    }
+    EXPECT_ANY_THROW(auto pool = resources.make_fiber_pool(cpu_set));
 }
 
 TEST_F(TestSystem, ThreadLocalResource)
 {
-    auto system = System::make_system(make_options());
+    auto system = system::make_system(make_options());
 
-    auto pool0 = system->make_fiber_pool(CpuSet("0,1"));
-    auto pool1 = system->make_fiber_pool(CpuSet("2,3"));
+    system::Resources resources((system::SystemProvider(system)));
+
+    auto pool0 = resources.make_fiber_pool(CpuSet("0,1"));
+    auto pool1 = resources.make_fiber_pool(CpuSet("2,3"));
 
     auto i0 = std::make_shared<int>(0);
     auto i1 = std::make_shared<int>(2);
 
-    pool0->enqueue(0, [] { EXPECT_ANY_THROW(utils::ThreadLocalSharedPointer<int>::get()); }).get();
-    pool0->enqueue(1, [] { EXPECT_ANY_THROW(utils::ThreadLocalSharedPointer<int>::get()); }).get();
-    pool1->enqueue(0, [] { EXPECT_ANY_THROW(utils::ThreadLocalSharedPointer<int>::get()); }).get();
-    pool1->enqueue(1, [] { EXPECT_ANY_THROW(utils::ThreadLocalSharedPointer<int>::get()); }).get();
+    pool0.enqueue(0, [] { EXPECT_ANY_THROW(utils::ThreadLocalSharedPointer<int>::get()); }).get();
+    pool0.enqueue(1, [] { EXPECT_ANY_THROW(utils::ThreadLocalSharedPointer<int>::get()); }).get();
+    pool1.enqueue(0, [] { EXPECT_ANY_THROW(utils::ThreadLocalSharedPointer<int>::get()); }).get();
+    pool1.enqueue(1, [] { EXPECT_ANY_THROW(utils::ThreadLocalSharedPointer<int>::get()); }).get();
 
-    pool0->set_thread_local_resource(i0);
-    pool1->set_thread_local_resource(i1);
+    pool0.set_thread_local_resource(i0);
+    pool1.set_thread_local_resource(i1);
 
-    auto j0 = pool0->enqueue(0, [] { return *utils::ThreadLocalSharedPointer<int>::get(); }).get();
-    auto j1 = pool1->enqueue(0, [] { return *utils::ThreadLocalSharedPointer<int>::get(); }).get();
+    auto j0 = pool0.enqueue(0, [] { return *utils::ThreadLocalSharedPointer<int>::get(); }).get();
+    auto j1 = pool1.enqueue(0, [] { return *utils::ThreadLocalSharedPointer<int>::get(); }).get();
 
     EXPECT_EQ(j0, 0);
     EXPECT_EQ(j1, 2);
@@ -219,27 +182,29 @@ TEST_F(TestSystem, ThreadLocalResource)
 
 TEST_F(TestSystem, ThreadInitializersAndFinalizers)
 {
-    auto system = System::make_system(make_options([](Options& options) {
+    auto system = system::make_system(make_options([](Options& options) {
         options.topology().user_cpuset("0-1");
         options.topology().restrict_gpus(true);
     }));
 
+    auto resources = std::make_unique<system::Resources>((system::SystemProvider(system)));
+
     std::atomic<std::size_t> init_counter = 0;
     std::atomic<std::size_t> fini_counter = 0;
 
-    system->register_thread_local_initializer(system->topology().cpu_set(), [&init_counter] { init_counter++; });
+    resources->register_thread_local_initializer(system->topology().cpu_set(), [&init_counter] { init_counter++; });
 
     EXPECT_EQ(init_counter, 2);
     EXPECT_EQ(fini_counter, 0);
 
-    system->register_thread_local_finalizer(system->topology().cpu_set(), [&fini_counter] { fini_counter++; });
+    resources->register_thread_local_finalizer(system->topology().cpu_set(), [&fini_counter] { fini_counter++; });
 
-    system->make_thread(CpuSet("0"), [] { VLOG(10) << "test thread"; }).join();
+    std::make_unique<system::Thread>(resources->make_thread(CpuSet("0"), [] { VLOG(10) << "test thread"; }))->join();
 
     EXPECT_EQ(init_counter, 3);
     EXPECT_EQ(fini_counter, 1);
 
-    system.reset();
+    resources.reset();
 
     EXPECT_EQ(init_counter, 3);
     EXPECT_EQ(fini_counter, 3);
@@ -247,14 +212,16 @@ TEST_F(TestSystem, ThreadInitializersAndFinalizers)
 
 TEST_F(TestSystem, ThreadPool)
 {
-    auto system = System::make_system(make_options([](Options& options) {
+    auto system = system::make_system(make_options([](Options& options) {
         options.topology().user_cpuset("0-3");
         options.topology().restrict_gpus(true);
     }));
 
     std::atomic<std::size_t> counter = 0;
 
-    auto thread_pool = std::make_unique<ThreadPool>(system, CpuSet("2-3"), 2);
+    system::Resources resources((system::SystemProvider(system)));
+
+    auto thread_pool = std::make_unique<ThreadPool>(resources, CpuSet("2-3"), 2);
 
     auto f = [&counter] {
         ++counter;

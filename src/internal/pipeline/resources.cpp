@@ -23,28 +23,20 @@
 
 namespace srf::internal::pipeline {
 
-Resources::Resources(std::shared_ptr<resources::ResourcePartitions> resources) :
-  m_resources(std::move(resources)),
+Resources::Resources(resources::Manager& resources) :
+  m_resources(resources),
   m_metrics_registry(std::make_unique<metrics::Registry>())
 {}
-resources::ResourcePartitions& Resources::resources() const
+
+resources::Manager& Resources::resources() const
 {
-    DCHECK(m_resources);
-    return *m_resources;
+    return m_resources;
 }
+
 metrics::Registry& Resources::metrics_registry() const
 {
     DCHECK(m_metrics_registry);
     return *m_metrics_registry;
 }
-resources::PartitionResources& Resources::partition(std::size_t partition_id) const
-{
-    CHECK(m_resources);
-    return m_resources->partition(partition_id);
-}
-std::shared_ptr<resources::PartitionResources> Resources::partition_shared(std::size_t partition_id) const
-{
-    CHECK(m_resources);
-    return m_resources->partition_shared(partition_id);
-}
+
 }  // namespace srf::internal::pipeline

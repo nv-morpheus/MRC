@@ -196,16 +196,17 @@ add_library(libsrf
   src/internal/pipeline/ipipeline.cpp
   src/internal/pipeline/manager.cpp
   src/internal/pipeline/resources.cpp
-  src/internal/resources/device_resources.cpp
-  src/internal/resources/host_resources.cpp
-  src/internal/resources/partition_resources.cpp
-  src/internal/resources/resource_partitions.cpp
-  src/internal/resources/system_resources.cpp
+  src/internal/resources/manager.cpp
+# src/internal/resources/host_resources.cpp
+# src/internal/resources/partition_resources.cpp
+# src/internal/resources/resource_partitions.cpp
+# src/internal/resources/system_resources.cpp
   src/internal/runnable/engine_factory.cpp
   src/internal/runnable/engine.cpp
   src/internal/runnable/engines.cpp
   src/internal/runnable/fiber_engine.cpp
   src/internal/runnable/fiber_engines.cpp
+  src/internal/runnable/resources.cpp
   src/internal/runnable/thread_engine.cpp
   src/internal/runnable/thread_engines.cpp
   src/internal/segment/builder.cpp
@@ -222,8 +223,12 @@ add_library(libsrf
   src/internal/system/gpu_info.cpp
   src/internal/system/host_partition.cpp
   src/internal/system/isystem.cpp
+  src/internal/system/partition.cpp
   src/internal/system/partitions.cpp
+  src/internal/system/resources.cpp
   src/internal/system/system.cpp
+  src/internal/system/system_provider.cpp
+  src/internal/system/thread.cpp
   src/internal/system/thread_pool.cpp
   src/internal/system/topology.cpp
   src/internal/ucx/context.cpp

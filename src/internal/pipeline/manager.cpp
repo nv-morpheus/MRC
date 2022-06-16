@@ -20,8 +20,6 @@
 #include "internal/pipeline/instance.hpp"
 #include "internal/pipeline/pipeline.hpp"
 #include "internal/resources/host_resources.hpp"
-#include "internal/resources/partition_resources.hpp"
-#include "internal/resources/resource_partitions.hpp"
 #include "srf/internal/pipeline/ipipeline.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/source_channel.hpp"
@@ -39,13 +37,12 @@
 
 namespace srf::internal::pipeline {
 
-Manager::Manager(std::shared_ptr<Pipeline> pipeline, std::shared_ptr<resources::ResourcePartitions> resources) :
+Manager::Manager(std::shared_ptr<Pipeline> pipeline, resources::Manager& resources) :
   m_pipeline(std::move(pipeline)),
-  m_resources(std::move(resources))
+  m_resources(resources)
 {
     CHECK(m_pipeline);
-    CHECK(m_resources);
-    CHECK_GE(m_resources->host_resources().size(), 1);
+    CHECK_GE(m_resources.partition_count(), 1);
     service_start();
 }
 
@@ -63,7 +60,7 @@ void Manager::push_updates(SegmentAddresses&& segment_addresses)
 
 void Manager::do_service_start()
 {
-    runnable::LaunchOptions main;
+    srf::runnable::LaunchOptions main;
     main.engine_factory_name = "main";
     main.pe_count            = 1;
     main.engines_per_pe      = 1;
@@ -76,10 +73,10 @@ void Manager::do_service_start()
     node::make_edge(*m_update_channel, *controller);
 
     // launch controller
-    auto launcher = resources().partition(0).host().launch_control().prepare_launcher(main, std::move(controller));
+    auto launcher = resources().runnable(0).launch_control().prepare_launcher(main, std::move(controller));
 
     // explicit capture and rethrow the error
-    launcher->apply([this](runnable::Runner& runner) {
+    launcher->apply([this](srf::runnable::Runner& runner) {
         runner.on_completion_callback([this](bool ok) {
             if (!ok)
             {
@@ -125,10 +122,9 @@ void Manager::do_service_await_join()
     }
 }
 
-resources::ResourcePartitions& Manager::resources()
+resources::Manager& Manager::resources()
 {
-    DCHECK(m_resources);
-    return *m_resources;
+    return m_resources;
 }
 
 const Pipeline& Manager::pipeline() const

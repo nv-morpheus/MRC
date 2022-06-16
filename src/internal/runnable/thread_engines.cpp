@@ -45,11 +45,11 @@ void ThreadEngines::initialize_launchers()
     });
 }
 
-ThreadEngines::ThreadEngines(CpuSet cpu_set, std::shared_ptr<system::System> system) :
+ThreadEngines::ThreadEngines(CpuSet cpu_set, const system::Resources& system) :
   ThreadEngines(LaunchOptions("custom_options", cpu_set.weight()), cpu_set, std::move(system))
 {}
 
-ThreadEngines::ThreadEngines(LaunchOptions launch_options, CpuSet cpu_set, std::shared_ptr<system::System> system) :
+ThreadEngines::ThreadEngines(LaunchOptions launch_options, CpuSet cpu_set, const system::Resources& system) :
   Engines(std::move(launch_options)),
   m_cpu_set(std::move(cpu_set)),
   m_system(std::move(system))

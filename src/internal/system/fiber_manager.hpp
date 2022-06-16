@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <srf/api.hpp>
 #include <srf/core/bitmap.hpp>
 #include <srf/types.hpp>
 #include <srf/utils/macros.hpp>
@@ -36,17 +37,19 @@
 
 namespace srf::internal::system {
 
+class Resources;
+
 class FiberManager final
 {
   public:
-    FiberManager(const System& system);
+    FiberManager(const Resources& resources);
     ~FiberManager();
 
     DELETE_COPYABILITY(FiberManager);
     DELETE_MOVEABILITY(FiberManager)
 
-    [[nodiscard]] std::shared_ptr<FiberTaskQueue> task_queue(std::uint32_t cpu_id);
-    [[nodiscard]] std::shared_ptr<FiberPool> make_pool(CpuSet cpu_set);
+    [[nodiscard]] FiberTaskQueue& task_queue(std::uint32_t cpu_id) const;
+    [[nodiscard]] FiberPool make_pool(CpuSet cpu_set) const;
 
     template <class F>
     [[nodiscard]] auto enqueue_fiber(std::uint32_t queue_idx, const F& to_enqueue) const
@@ -59,6 +62,7 @@ class FiberManager final
 
         CHECK(found != m_queues.end()) << "Index is not in list of queues. Queue Index: " << queue_idx;
 
+        CHECK(found->second);
         future = found->second->enqueue([to_enqueue, queue_idx]() {
             // Call the user supplied function
             return to_enqueue(queue_idx);
@@ -89,6 +93,7 @@ class FiberManager final
             std::uint32_t idx = x.first;
             if (cpu_set.is_set(idx))
             {
+                CHECK(x.second);
                 futures.push_back(x.second->enqueue([to_enqueue, idx]() {
                     // Call the user supplied function
                     return to_enqueue(idx);
@@ -104,7 +109,7 @@ class FiberManager final
     void join();
 
     const CpuSet m_cpu_set;
-    std::map<std::uint32_t, std::shared_ptr<FiberTaskQueue>> m_queues;
+    std::map<std::uint32_t, std::unique_ptr<FiberTaskQueue>> m_queues;
 };
 
 }  // namespace srf::internal::system

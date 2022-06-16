@@ -18,43 +18,40 @@
 #pragma once
 
 #include "internal/system/device_partition.hpp"
-#include "internal/system/gpu_info.hpp"
+#include "internal/system/engine_factory_cpu_sets.hpp"
 #include "internal/system/host_partition.hpp"
-#include "internal/system/partition.hpp"
 #include "srf/core/bitmap.hpp"
 #include "srf/options/options.hpp"
-#include "srf/options/placement.hpp"
+#include "srf/utils/macros.hpp"
 
+#include <cstddef>
+#include <functional>
+#include <optional>
 #include <vector>
+
+namespace srf {
+class Options;  // IWYU pragma: keep
+}
 
 namespace srf::internal::system {
 
-class System;
-class Topology;  // IWYU pragma: keep
-
-// TODO: flatten partition here
-
-class Partitions
+class Partition final
 {
   public:
-    Partitions(const Topology& topology, const Options& options);
-    Partitions(const System& system);
+    Partition(std::size_t host_partition_id,
+              std::shared_ptr<const HostPartition> host,
+              std::shared_ptr<const DevicePartition> device);
 
-    const std::vector<Partition>& flattened() const;
+    const HostPartition& host() const;
+    const DevicePartition& device() const;
 
-    const std::vector<HostPartition>& host_partitions() const;
-    const std::vector<DevicePartition>& device_partitions() const;
-
-    const PlacementStrategy& cpu_strategy() const;
-    const PlacementResources& device_to_host_strategy() const;
+    size_t host_partition_id() const;
+    bool has_device() const;
 
   private:
-    std::vector<Partition> m_partitions;
-    std::vector<HostPartition> m_host_partitions;
-    std::vector<DevicePartition> m_device_partitions;
-
-    PlacementStrategy m_cpu_strategy;
-    PlacementResources m_device_to_host_strategy;
+    std::size_t m_host_partition_id;
+    std::shared_ptr<const HostPartition> m_host;
+    std::shared_ptr<const DevicePartition> m_device;
 };
 
 }  // namespace srf::internal::system

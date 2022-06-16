@@ -17,8 +17,6 @@
 
 #include "internal/segment/instance.hpp"
 
-#include "internal/resources/host_resources.hpp"
-#include "internal/resources/partition_resources.hpp"
 #include "internal/segment/builder.hpp"
 #include "internal/segment/definition.hpp"
 
@@ -61,8 +59,8 @@ Instance::Instance(std::shared_ptr<const Definition> definition,
   m_default_partition_id(partition_id)
 {
     // construct the segment definition on the intended numa node
-    m_builder = m_resources.partition(m_default_partition_id)
-                    .host()
+    m_builder = m_resources.resources()
+                    .runnable(m_default_partition_id)
                     .main()
                     .enqueue([&]() mutable {
                         return std::make_unique<Builder>(definition, rank, m_resources, m_default_partition_id);
@@ -93,12 +91,12 @@ const SegmentAddress& Instance::address() const
 void Instance::do_service_start()
 {
     // prepare launchers from m_builder
-    std::map<std::string, std::unique_ptr<runnable::Launcher>> m_launchers;
-    std::map<std::string, std::unique_ptr<runnable::Launcher>> m_egress_launchers;
-    std::map<std::string, std::unique_ptr<runnable::Launcher>> m_ingress_launchers;
+    std::map<std::string, std::unique_ptr<srf::runnable::Launcher>> m_launchers;
+    std::map<std::string, std::unique_ptr<srf::runnable::Launcher>> m_egress_launchers;
+    std::map<std::string, std::unique_ptr<srf::runnable::Launcher>> m_ingress_launchers;
 
-    auto apply_callback = [this](std::unique_ptr<runnable::Launcher>& launcher, std::string name) {
-        launcher->apply([this, n = std::move(name)](runnable::Runner& runner) {
+    auto apply_callback = [this](std::unique_ptr<srf::runnable::Launcher>& launcher, std::string name) {
+        launcher->apply([this, n = std::move(name)](srf::runnable::Runner& runner) {
             runner.on_completion_callback([this, n](bool ok) {
                 if (!ok)
                 {
@@ -113,7 +111,7 @@ void Instance::do_service_start()
     {
         DVLOG(10) << info() << " constructing launcher for " << name;
         m_launchers[name] =
-            node->prepare_launcher(m_resources.partition(m_default_partition_id).host().launch_control());
+            node->prepare_launcher(m_resources.resources().runnable(m_default_partition_id).launch_control());
         apply_callback(m_launchers[name], name);
     }
 
@@ -121,7 +119,7 @@ void Instance::do_service_start()
     {
         DVLOG(10) << info() << " constructing launcher egress port " << name;
         m_egress_launchers[name] =
-            node->prepare_launcher(m_resources.partition(m_default_partition_id).host().launch_control());
+            node->prepare_launcher(m_resources.resources().runnable(m_default_partition_id).launch_control());
         apply_callback(m_egress_launchers[name], name);
     }
 
@@ -129,7 +127,7 @@ void Instance::do_service_start()
     {
         DVLOG(10) << info() << " constructing launcher ingress port " << name;
         m_ingress_launchers[name] =
-            node->prepare_launcher(m_resources.partition(m_default_partition_id).host().launch_control());
+            node->prepare_launcher(m_resources.resources().runnable(m_default_partition_id).launch_control());
         apply_callback(m_ingress_launchers[name], name);
     }
 
@@ -226,7 +224,7 @@ void Instance::do_service_await_join()
     DVLOG(10) << info() << " join started";
     std::exception_ptr first_exception = nullptr;
 
-    auto check = [&first_exception](runnable::Runner& runner) {
+    auto check = [&first_exception](srf::runnable::Runner& runner) {
         try
         {
             runner.await_join();
@@ -303,14 +301,14 @@ std::shared_ptr<manifold::Interface> Instance::create_manifold(const PortName& n
         auto search = m_builder->egress_ports().find(name);
         if (search != m_builder->egress_ports().end())
         {
-            return search->second->make_manifold(m_resources.partition(m_default_partition_id).host());
+            return search->second->make_manifold(m_resources.resources().runnable(m_default_partition_id));
         }
     }
     {
         auto search = m_builder->ingress_ports().find(name);
         if (search != m_builder->ingress_ports().end())
         {
-            return search->second->make_manifold(m_resources.partition(m_default_partition_id).host());
+            return search->second->make_manifold(m_resources.resources().runnable(m_default_partition_id));
         }
     }
     LOG(FATAL) << info() << " unable to match ingress or egress port name";

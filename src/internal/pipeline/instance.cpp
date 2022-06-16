@@ -19,8 +19,6 @@
 
 #include "internal/pipeline/pipeline.hpp"
 #include "internal/pipeline/resources.hpp"
-#include "internal/resources/host_resources.hpp"
-#include "internal/resources/partition_resources.hpp"
 #include "internal/segment/definition.hpp"
 #include "internal/segment/instance.hpp"
 
@@ -41,9 +39,8 @@
 
 namespace srf::internal::pipeline {
 
-Instance::Instance(std::shared_ptr<const Pipeline> definition,
-                   std::shared_ptr<resources::ResourcePartitions> resources) :
-  Resources(std::move(resources)),
+Instance::Instance(std::shared_ptr<const Pipeline> definition, resources::Manager& resources) :
+  Resources(resources),
   m_definition(std::move(definition))
 {
     CHECK(m_definition);
@@ -101,9 +98,9 @@ void Instance::create_segment(const SegmentAddress& address, std::uint32_t parti
 {
     // perform our allocations on the numa domain of the intended target
     // CHECK_LT(partition_id, m_resources->host_resources().size());
-    CHECK_LT(partition_id, resources().partitions());
-    partition(partition_id)
-        .host()
+    CHECK_LT(partition_id, resources().partition_count());
+    resources()
+        .runnable(partition_id)
         .main()
         .enqueue([this, address, partition_id] {
             auto search = m_segments.find(address);

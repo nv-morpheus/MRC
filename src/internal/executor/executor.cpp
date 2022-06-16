@@ -20,7 +20,7 @@
 #include "internal/pipeline/manager.hpp"
 #include "internal/pipeline/pipeline.hpp"
 #include "internal/pipeline/types.hpp"
-#include "internal/resources/resource_partitions.hpp"
+#include "internal/resources/manager.hpp"
 #include "internal/system/system.hpp"
 #include "srf/core/addresses.hpp"
 #include "srf/internal/pipeline/ipipeline.hpp"
@@ -34,13 +34,13 @@
 namespace srf::internal::executor {
 
 Executor::Executor(Handle<Options> options) :
-  m_system(system::make_system(std::move(options))),
-  m_resources(resources::make_resource_partitions(m_system))
+  SystemProvider(system::make_system(std::move(options))),
+  m_resources_manager(std::make_unique<resources::Manager>(*this))
 {}
 
 Executor::Executor(Handle<system::System> system) :
-  m_system(std::move(system)),
-  m_resources(resources::make_resource_partitions(m_system))
+  SystemProvider(std::move(system)),
+  m_resources_manager(std::make_unique<resources::Manager>(*this))
 {}
 
 Executor::~Executor()
@@ -54,7 +54,7 @@ void Executor::register_pipeline(std::unique_ptr<pipeline::IPipeline> ipipeline)
     CHECK(m_pipeline_manager == nullptr);
 
     auto pipeline      = pipeline::Pipeline::unwrap(*ipipeline);
-    m_pipeline_manager = std::make_unique<pipeline::Manager>(pipeline, m_resources);
+    m_pipeline_manager = std::make_unique<pipeline::Manager>(pipeline, *m_resources_manager);
 
     pipeline::SegmentAddresses initial_segments;
     for (const auto& [id, segment] : pipeline->segments())

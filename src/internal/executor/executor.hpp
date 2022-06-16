@@ -19,8 +19,10 @@
 
 #include "internal/pipeline/forward.hpp"
 #include "internal/resources/forward.hpp"
+#include "internal/resources/manager.hpp"
 #include "internal/service.hpp"
 #include "internal/system/forward.hpp"
+#include "internal/system/system_provider.hpp"
 #include "srf/internal/pipeline/ipipeline.hpp"
 #include "srf/options/options.hpp"
 #include "srf/types.hpp"
@@ -35,7 +37,7 @@ namespace srf::internal::executor {
  *
  * Issues #149 will begin to separate some of the functionality of ExeuctorBase into individual components.
  */
-class Executor : public Service
+class Executor : public Service, public system::SystemProvider
 {
   public:
     Executor(Handle<Options> options);
@@ -51,9 +53,7 @@ class Executor : public Service
     void do_service_await_live() final;
     void do_service_await_join() final;
 
-    Handle<system::System> m_system;
-    Handle<resources::ResourcePartitions> m_resources;
-
+    std::unique_ptr<resources::Manager> m_resources_manager;
     std::unique_ptr<pipeline::Manager> m_pipeline_manager;
 };
 

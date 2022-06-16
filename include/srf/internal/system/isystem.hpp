@@ -33,8 +33,8 @@ class ISystem
     virtual ~ISystem() = 0;
 
   protected:
-    void add_thread_initializer(std::function<void()> initializer_fn);
-    void add_thread_finalizer(std::function<void()> finalizer_fn);
+    // void add_thread_initializer(std::function<void()> initializer_fn);
+    // void add_thread_finalizer(std::function<void()> finalizer_fn);
 
   private:
     std::shared_ptr<System> m_impl;

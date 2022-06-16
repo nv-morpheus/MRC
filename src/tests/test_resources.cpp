@@ -45,16 +45,6 @@ class TestResources : public ::testing::Test
             updater(*options);
         }
 
-        return system::System::make_system(std::move(options));
+        return system::make_system(std::move(options));
     }
 };
-
-TEST_F(TestResources, LifeCycleSystemResources)
-{
-    auto system_resources = resources::make_system_resources(make_system());
-}
-
-TEST_F(TestResources, LifeCycleResourcePartitions)
-{
-    auto resource_partitions = resources::make_resource_partitions(make_system());
-}

@@ -33,8 +33,8 @@ namespace srf::internal::runnable {
 class FiberEngine final : public Engine
 {
   public:
-    FiberEngine(std::shared_ptr<core::FiberTaskQueue> task_queue, int priority = SRF_DEFAULT_FIBER_PRIORITY);
-    FiberEngine(std::shared_ptr<core::FiberTaskQueue> task_queue, const FiberMetaData& meta);
+    FiberEngine(core::FiberTaskQueue& task_queue, int priority = SRF_DEFAULT_FIBER_PRIORITY);
+    FiberEngine(core::FiberTaskQueue& task_queue, const FiberMetaData& meta);
 
     ~FiberEngine() final = default;
 
@@ -43,7 +43,7 @@ class FiberEngine final : public Engine
   private:
     Future<void> do_launch_task(std::function<void()> task) final;
 
-    std::shared_ptr<core::FiberTaskQueue> m_task_queue;
+    core::FiberTaskQueue& m_task_queue;
     FiberMetaData m_meta;
 };
 

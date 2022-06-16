@@ -28,7 +28,7 @@
 
 namespace srf::internal::runnable {
 
-std::shared_ptr<::srf::runnable::EngineFactory> make_engine_factory(std::shared_ptr<system::System> system,
+std::shared_ptr<::srf::runnable::EngineFactory> make_engine_factory(const system::Resources& system,
                                                                     EngineType engine_type,
                                                                     const CpuSet& cpu_set,
                                                                     bool reusable);

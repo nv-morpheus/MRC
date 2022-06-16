@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,27 +17,24 @@
 
 #pragma once
 
-#include "internal/resources/manager.hpp"
-#include "internal/runnable/resources.hpp"
+#include <srf/api.hpp>
 
-#include "srf/metrics/registry.hpp"
-
-#include <cstddef>
 #include <memory>
 
-namespace srf::internal::pipeline {
+namespace srf::internal::system {
 
-class Resources
+class System;
+
+class SystemProvider
 {
   public:
-    Resources(resources::Manager& resources);
+    SystemProvider(std::shared_ptr<const System> system);
+    virtual ~SystemProvider() = default;
 
-    resources::Manager& resources() const;
-    metrics::Registry& metrics_registry() const;
+    const System& system() const;
 
   private:
-    resources::Manager& m_resources;
-    std::unique_ptr<metrics::Registry> m_metrics_registry;
+    std::shared_ptr<const System> m_system;
 };
 
-}  // namespace srf::internal::pipeline
+}  // namespace srf::internal::system

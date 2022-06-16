@@ -17,20 +17,19 @@
 
 #include "internal/system/thread_pool.hpp"
 
-#include "internal/system/system.hpp"
+#include "internal/system/resources.hpp"
 #include "srf/core/bitmap.hpp"
 
 #include <cstdint>
 
 namespace srf::internal::system {
 
-ThreadPool::ThreadPool(std::shared_ptr<System> system, CpuSet cpuset, std::size_t channel_size) :
-  m_system(std::move(system)),
+ThreadPool::ThreadPool(const system::Resources& resources, CpuSet cpuset, std::size_t channel_size) :
   m_cpuset(std::move(cpuset)),
   m_channel(channel_size)
 {
-    m_cpuset.for_each_bit([this](std::uint32_t idx, std::uint32_t bit) {
-        m_threads.emplace_back(m_system->make_thread("thread_pool", CpuSet(bit), [this] {
+    m_cpuset.for_each_bit([this, &resources](std::uint32_t idx, std::uint32_t bit) {
+        m_threads.emplace_back(resources.make_thread("thread_pool", CpuSet(bit), [this] {
             boost::fibers::channel_op_status status;
             do
             {
@@ -55,12 +54,7 @@ ThreadPool::~ThreadPool()
     {
         this->shutdown();
     }
-    for (auto& thread : m_threads)
-    {
-        DVLOG(10) << "[thread_pool]: joining tid: " << thread.get_id();
-        thread.join();
-        DVLOG(10) << "[thread_pool]: joined tid: " << thread.get_id();
-    }
+    DVLOG(10) << "[thread_pool]: joining threads";
 }
 
 void ThreadPool::shutdown()

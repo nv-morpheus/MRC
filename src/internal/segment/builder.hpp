@@ -45,9 +45,9 @@ class Builder final : public IBuilder
 
     const Definition& definition() const;
 
-    const std::map<std::string, std::shared_ptr<runnable::Launchable>>& nodes() const;
-    const std::map<std::string, std::shared_ptr<::srf::segment::EgressPortBase>>& egress_ports() const;
-    const std::map<std::string, std::shared_ptr<::srf::segment::IngressPortBase>>& ingress_ports() const;
+    const std::map<std::string, std::shared_ptr<srf::runnable::Launchable>>& nodes() const;
+    const std::map<std::string, std::shared_ptr<srf::segment::EgressPortBase>>& egress_ports() const;
+    const std::map<std::string, std::shared_ptr<srf::segment::IngressPortBase>>& ingress_ports() const;
 
   private:
     const std::string& name() const final;
@@ -56,7 +56,7 @@ class Builder final : public IBuilder
     ::srf::segment::ObjectProperties& find_object(const std::string& name) final;
 
     void add_object(const std::string& name, std::shared_ptr<::srf::segment::ObjectProperties> object) final;
-    void add_runnable(const std::string& name, std::shared_ptr<runnable::Launchable> runnable) final;
+    void add_runnable(const std::string& name, std::shared_ptr<srf::runnable::Launchable> runnable) final;
 
     std::shared_ptr<::srf::segment::IngressPortBase> get_ingress_base(const std::string& name) final;
     std::shared_ptr<::srf::segment::EgressPortBase> get_egress_base(const std::string& name) final;
@@ -71,7 +71,7 @@ class Builder final : public IBuilder
     std::map<std::string, std::shared_ptr<::srf::segment::ObjectProperties>> m_objects;
 
     // only runnables
-    std::map<std::string, std::shared_ptr<runnable::Launchable>> m_nodes;
+    std::map<std::string, std::shared_ptr<srf::runnable::Launchable>> m_nodes;
 
     // ingress/egress - these are also nodes/objects
     std::map<std::string, std::shared_ptr<::srf::segment::IngressPortBase>> m_ingress_ports;

@@ -15,6 +15,10 @@
  * limitations under the License.
  */
 
+#include "internal/system/forward.hpp"
+#include "internal/system/thread.hpp"
+
+#include <srf/api.hpp>
 #include <srf/core/bitmap.hpp>
 #include <srf/exceptions/runtime_error.hpp>
 
@@ -35,8 +39,6 @@
 #include <vector>
 
 namespace srf::internal::system {
-
-class System;
 
 /**
  * @brief Fiber-friendly ThreadPool
@@ -59,7 +61,7 @@ class System;
 class ThreadPool final
 {
   public:
-    ThreadPool(std::shared_ptr<System> system, CpuSet cpuset, std::size_t channel_size = 128);
+    ThreadPool(const system::Resources&, CpuSet cpuset, std::size_t channel_size = 128);
     ~ThreadPool();
 
     template <class F, class... ArgsT>
@@ -85,10 +87,9 @@ class ThreadPool final
     void shutdown();
 
   private:
-    std::shared_ptr<System> m_system;
     const CpuSet m_cpuset;
     boost::fibers::buffered_channel<std::packaged_task<void()>> m_channel;
-    std::vector<std::thread> m_threads;
+    std::vector<system::Thread> m_threads;
 };
 
 }  // namespace srf::internal::system

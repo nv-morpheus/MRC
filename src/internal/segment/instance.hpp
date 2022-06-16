@@ -61,7 +61,7 @@ class Instance final : public Service
     void do_service_kill() final;
     void do_service_await_join() final;
 
-    void callback_on_state_change(const std::string& name, const runnable::Runner::State& new_state);
+    void callback_on_state_change(const std::string& name, const srf::runnable::Runner::State& new_state);
 
     std::string m_name;
     SegmentID m_id;
@@ -73,9 +73,9 @@ class Instance final : public Service
     pipeline::Resources& m_resources;
     const std::size_t m_default_partition_id;
 
-    std::map<std::string, std::unique_ptr<runnable::Runner>> m_runners;
-    std::map<std::string, std::unique_ptr<runnable::Runner>> m_egress_runners;
-    std::map<std::string, std::unique_ptr<runnable::Runner>> m_ingress_runners;
+    std::map<std::string, std::unique_ptr<srf::runnable::Runner>> m_runners;
+    std::map<std::string, std::unique_ptr<srf::runnable::Runner>> m_egress_runners;
+    std::map<std::string, std::unique_ptr<srf::runnable::Runner>> m_ingress_runners;
 
     mutable std::mutex m_mutex;
 };
