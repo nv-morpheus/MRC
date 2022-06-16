@@ -83,7 +83,7 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, pysrf::PyHolder>>>
         using namespace srf::pysrf;
         VLOG(8) << "Serializing PyHolder object";
         pybind11::gil_scoped_acquire gil;
-        pybind11::object py_object = pyholder_object.copy_obj(); // Not a deep copy, just inc_ref the pointer.
+        pybind11::object py_object = pyholder_object.copy_obj();  // Not a deep copy, just inc_ref the pointer.
         pybind11::buffer_info py_bytebuffer;
         std::tuple<char*, std::size_t> serialized_obj;
 
@@ -111,6 +111,5 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, pysrf::PyHolder>>>
         return Deserializer::deserialize(data, buffer.bytes());
     }
 };
-
 
 }  // namespace srf::codable

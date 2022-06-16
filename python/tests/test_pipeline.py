@@ -20,7 +20,7 @@
 
 # import numpy as np
 # import pytest
-
+import pytest
 import srf
 
 
@@ -288,7 +288,6 @@ def test_dynamic_port_creation_good():
 
     ingress = [f"{chr(i)}" for i in range(65, 76)]
     egress = [f"{chr(i)}" for i in range(97, 108)]
-    too_long = [f"{chr(i)}" for i in range(108, 120)]
 
     for i in range(len(ingress)):
         for j in range(len(egress)):
@@ -379,6 +378,6 @@ if (__name__ in ("__main__",)):
     test_dynamic_port_get_ingress_egress()
 #     test_homogenous_string_usage()
 #     test_cxx_string_source_to_python_chain()
-#     # test_heterogenous_string_usage()
-#     # test_heterogenous_double_pipeline()
-#     # test_list_flatten_test()
+#     test_heterogenous_string_usage()
+#     test_heterogenous_double_pipeline()
+#     test_list_flatten_test()
