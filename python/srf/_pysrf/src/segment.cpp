@@ -216,14 +216,16 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_ingress(
     srf::segment::Builder& self,
     const std::string& name)
 {
-    return self.get_ingress<py::object>(name);
+    return self.get_ingress<PyHolder>(name);
 }
 
 std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_egress(
     srf::segment::Builder& self,
     const std::string& name)
 {
-   return self.get_egress<py::object>(name);
+    // Here we have Object<node::SinkProperties<py::object>>
+
+   return self.get_egress<PyHolder>(name);
 }
 
 /*

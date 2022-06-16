@@ -16,6 +16,7 @@
  */
 
 #include <pysrf/pipeline.hpp>
+#include <pysrf/types.hpp>
 
 #include <srf/pipeline/pipeline.hpp>
 #include <srf/segment/builder.hpp>
@@ -31,9 +32,10 @@
 
 namespace {
 namespace py = pybind11;
+using namespace srf::pysrf;
 
 template <std::size_t Count, template <class...> class PortClass, typename... ArgsT>
-struct Pipeline__PortBuilder : Pipeline__PortBuilder<Count - 1, PortClass, py::object, ArgsT...>
+struct Pipeline__PortBuilder : Pipeline__PortBuilder<Count - 1, PortClass, PyHolder, ArgsT...>
 {};
 
 template <template <class...> class PortClass, typename... ArgsT>
