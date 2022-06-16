@@ -18,6 +18,7 @@
 #include "test_pysrf.hpp"
 
 #include <pysrf/pipeline.hpp>
+#include <pysrf/types.hpp>
 
 #include <srf/channel/status.hpp>
 #include <srf/core/executor.hpp>
@@ -174,42 +175,6 @@ TEST_F(TestPipeline, DynamicPortConstructionGood)
     }
 }
 
-TEST_F(TestPipeline, DynamicPortsBuildEgress)
-{
-    std::vector<std::string> egress_port_ids{"x", "y", "z", "w"};
-
-    std::function<void(srf::segment::Builder&)> seg1_init = [egress_port_ids](srf::segment::Builder& builder) {
-        for (int i = 0; i < egress_port_ids.size(); i++)
-        {
-            auto src = builder.make_source<py::object>("source_" + std::to_string(i),
-                                                       [](rxcpp::subscriber<py::object>& s) { s.on_completed(); });
-
-            py::gil_scoped_acquire gil;
-            auto egress_test = builder.get_egress<py::object>(egress_port_ids[i]);
-            EXPECT_TRUE(egress_port_ids[i] == egress_test->name());
-            EXPECT_TRUE(egress_test->is_sink());
-            builder.make_edge(src, egress_test);
-        }
-    };
-
-    pysrf::Pipeline pipe;
-
-    pipe.make_segment("TestSegment1", {}, egress_port_ids, seg1_init);
-
-    auto opt1 = std::make_shared<srf::Options>();
-    opt1->topology().user_cpuset("0");
-    opt1->topology().restrict_gpus(true);
-
-    srf::Executor exec1{opt1};
-
-    exec1.register_pipeline(pipe.swap());
-
-    py::gil_scoped_release release;
-
-    exec1.start();
-    exec1.join();
-}
-
 TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
 {
     const std::size_t object_count{10};
@@ -222,25 +187,25 @@ TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
         [source_segment_egress_ids](srf::segment::Builder& builder) {
             for (int i = 0; i < source_segment_egress_ids.size(); i++)
             {
-                auto src = builder.make_source<py::object>(
-                    "stage1_source_" + std::to_string(i), [](rxcpp::subscriber<py::object>& s) {
-                        if (s.is_subscribed())
+                auto src = builder.make_source<pysrf::PyHolder>(
+                    "stage1_source_" + std::to_string(i), [](rxcpp::subscriber<pysrf::PyHolder>& subscriber) {
+                        if (subscriber.is_subscribed())
                         {
                             py::gil_scoped_acquire gil;
                             for (int i = 0; i < object_count; ++i)
                             {
-                                py::object object = py::dict("prop1"_a = "abc", "prop2"_a = 1, "prop3"_a = 8910);
+                                pysrf::PyHolder object = py::dict("prop1"_a = "abc", "prop2"_a = 1, "prop3"_a = 8910);
                                 {
                                     py::gil_scoped_release nogil;
-                                    s.on_next(std::move(object));
+                                    subscriber.on_next(std::move(object));
                                 }
                             }
                         }
-                        s.on_completed();
+                        subscriber.on_completed();
                     });
 
                 py::gil_scoped_acquire gil;
-                auto egress_test = builder.get_egress<py::object>(source_segment_egress_ids[i]);
+                auto egress_test = builder.get_egress<pysrf::PyHolder>(source_segment_egress_ids[i]);
                 EXPECT_TRUE(source_segment_egress_ids[i] == egress_test->name());
                 EXPECT_TRUE(egress_test->is_sink());
                 builder.make_edge(src, egress_test);
@@ -253,15 +218,15 @@ TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
         [source_segment_egress_ids, intermediate_segment_egress_ids](srf::segment::Builder& builder) {
             for (auto ingress_it : source_segment_egress_ids)
             {
-                auto ingress_test = builder.get_ingress<py::object>(ingress_it);
+                auto ingress_test = builder.get_ingress<pysrf::PyHolder>(ingress_it);
                 EXPECT_TRUE(ingress_it == ingress_test->name());
                 EXPECT_TRUE(ingress_test->is_source());
             }
 
             for (int i = 0; i < source_segment_egress_ids.size(); ++i)
             {
-                auto ingress = builder.get_ingress<py::object>(source_segment_egress_ids[i]);
-                auto egress  = builder.get_egress<py::object>(intermediate_segment_egress_ids[i]);
+                auto ingress = builder.get_ingress<pysrf::PyHolder>(source_segment_egress_ids[i]);
+                auto egress  = builder.get_egress<pysrf::PyHolder>(intermediate_segment_egress_ids[i]);
 
                 builder.make_edge(ingress, egress);
             }
@@ -272,12 +237,11 @@ TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
         [&sink_count, intermediate_segment_egress_ids](srf::segment::Builder& builder) {
             for (int i = 0; i < intermediate_segment_egress_ids.size(); ++i)
             {
-                auto ingress = builder.get_ingress<py::object>(intermediate_segment_egress_ids[i]);
+                auto ingress = builder.get_ingress<pysrf::PyHolder>(intermediate_segment_egress_ids[i]);
 
                 auto sink =
-                    builder.make_sink<py::object>("local_sink_" + std::to_string(i), [&sink_count](py::object object) {
+                    builder.make_sink<pysrf::PyHolder>("local_sink_" + std::to_string(i), [&sink_count](pysrf::PyHolder object) {
                         py::gil_scoped_acquire gil;
-                        object.release().dec_ref();
                         sink_count++;
                     });
 
