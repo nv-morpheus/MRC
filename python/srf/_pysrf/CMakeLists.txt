@@ -19,22 +19,22 @@ add_library(pysrf
   src/egress_port.cpp
   src/executor.cpp
   src/ingress_port.cpp
+  src/logging.cpp
   src/module_wrappers/pickle.cpp
   src/module_wrappers/shared_memory.cpp
   src/node.cpp
+  src/node.cpp
   src/operators.cpp
-  src/logging.cpp
+  src/operators.cpp
   src/options.cpp
   src/pipeline.cpp
   src/segment.cpp
-  src/system.cpp
-  src/node.cpp
-  src/operators.cpp
   src/subscriber.cpp
+  src/system.cpp
   src/types.cpp
   src/utilities/deserializers.cpp
-  src/utilities/serializers.cpp
   src/utilities/object_cache.cpp
+  src/utilities/serializers.cpp
   src/utils.cpp
   src/watchers.cpp
 )
