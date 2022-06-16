@@ -280,6 +280,8 @@ Test that the python bindings for segment creation with ingress and/or egress po
 Since this is a runtime operator and all IngressCount X EgressCount pairs will generate a new class instance that is
 explciitly defined, we check all of them.
 """
+
+
 def test_dynamic_port_creation_good():
     def init(seg):
         pass
