@@ -1,4 +1,5 @@
 import argparse
+import os
 import threading
 
 import srf
@@ -51,6 +52,7 @@ def run_pipeline(count: int, channel_size: int, threads: int):
     # Create a segment
     pipeline.make_segment("my_seg", segment_init)
 
+
     # Build executor options
     options = srf.Options()
 
@@ -75,13 +77,13 @@ def run_pipeline(count: int, channel_size: int, threads: int):
 
 
 if (__name__ == "__main__"):
-    parser = argparse.ArgumentParser(description='ConfigOptions Example.')
+    parser = argparse.ArgumentParser(description='ConfigOptions Example.', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--count', type=int, default=10, help="The number of items for the source to emit")
     parser.add_argument('--channel_size',
                         type=int,
-                        default=4,
+                        default=srf.Config.default_channel_size,
                         help="The size of the inter-node buffers. Must be a power of 2")
-    parser.add_argument('--threads', type=int, default=1, help="The number of threads to use.")
+    parser.add_argument('--threads', type=int, default=os.cpu_count(), help="The number of threads to use.")
 
     args = parser.parse_args()
 
