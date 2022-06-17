@@ -1,10 +1,15 @@
+import logging
 import os
 
 import srf
 from srf_qs_hybrid.ex00_wrap_data_objects import MyDataObject
 
 # Setup logging
-srf.logging.init_logging(os.path.dirname(__file__))
+srf.logging.init_logging(os.path.split(os.path.dirname(__file__))[1], logging.INFO)
+
+logger = logging.getLogger()
+logger.addHandler(srf.core.log_handler.SrfHandler())
+logger.setLevel(logging.INFO)
 
 
 def run_pipeline():
