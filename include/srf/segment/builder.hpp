@@ -47,13 +47,11 @@
 
 namespace srf::segment {
 
-class Builder final : private internal::segment::IBuilder
+class Builder final
 {
-    Builder(internal::segment::IBuilder& backend);
+    Builder(internal::segment::IBuilder& backend) : m_backend(backend) {}
 
   public:
-    ~Builder() final = default;
-
     DELETE_COPYABILITY(Builder);
     DELETE_MOVEABILITY(Builder);
 
@@ -133,8 +131,8 @@ class Builder final : private internal::segment::IBuilder
     template <typename SourceNodeTypeT, typename SinkNodeTypeT = SourceNodeTypeT>
     void make_dynamic_edge(const std::string& source_name, const std::string& sink_name)
     {
-        auto& source_obj = find_object(source_name);
-        auto& sink_obj   = find_object(sink_name);
+        auto& source_obj = m_backend.find_object(source_name);
+        auto& sink_obj   = m_backend.find_object(sink_name);
         node::make_edge(source_obj.source_typed<SourceNodeTypeT>(), sink_obj.sink_typed<SinkNodeTypeT>());
     }
 
@@ -152,7 +150,7 @@ class Builder final : private internal::segment::IBuilder
         CHECK(runnable);
         CHECK(segment_object->is_source());
         using source_type_t = typename ObjectT::source_type_t;
-        auto counter        = make_throughput_counter(runnable->name());
+        auto counter        = m_backend.make_throughput_counter(runnable->name());
         runnable->object().add_epilogue_tap([counter](const source_type_t& data) { counter(1); });
     }
 
@@ -165,21 +163,11 @@ class Builder final : private internal::segment::IBuilder
         using source_type_t = typename ObjectT::source_type_t;
         using tick_fn_t     = std::function<std::int64_t(const source_type_t&)>;
         tick_fn_t tick_fn   = callable;
-        auto counter        = make_throughput_counter(runnable->name());
+        auto counter        = m_backend.make_throughput_counter(runnable->name());
         runnable->object().add_epilogue_tap([counter, tick_fn](const source_type_t& data) { counter(tick_fn(data)); });
     }
 
   private:
-    const std::string& name() const final;
-    bool has_object(const std::string& name) const final;
-    ::srf::segment::ObjectProperties& find_object(const std::string& name) final;
-    void add_object(const std::string& name, std::shared_ptr<::srf::segment::ObjectProperties> object) final;
-    void add_runnable(const std::string& name, std::shared_ptr<runnable::Launchable> runnable) final;
-    std::shared_ptr<::srf::segment::IngressPortBase> get_ingress_base(const std::string& name) final;
-    std::shared_ptr<::srf::segment::EgressPortBase> get_egress_base(const std::string& name) final;
-
-    std::function<void(std::int64_t)> make_throughput_counter(const std::string& name) final;
-
     internal::segment::IBuilder& m_backend;
 
     friend Definition;
@@ -188,7 +176,7 @@ class Builder final : private internal::segment::IBuilder
 template <typename ObjectT>
 std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::unique_ptr<ObjectT> node)
 {
-    if (has_object(name))
+    if (m_backend.has_object(name))
     {
         LOG(ERROR) << "A Object named " << name << " is already registered";
         throw exceptions::SrfRuntimeError("duplicate name detected - name owned by a node");
@@ -198,10 +186,10 @@ std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::uni
 
     if constexpr (std::is_base_of_v<runnable::Runnable, ObjectT>)
     {
-        auto segment_name = this->name() + "/" + name;
+        auto segment_name = m_backend.name() + "/" + name;
         auto segment_node = std::make_shared<Runnable<ObjectT>>(segment_name, std::move(node));
-        add_runnable(name, segment_node);
-        add_object(name, segment_node);
+        m_backend.add_runnable(name, segment_node);
+        m_backend.add_object(name, segment_node);
         segment_object = segment_node;
     }
     else
@@ -215,7 +203,7 @@ std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::uni
 template <typename T>
 std::shared_ptr<Object<node::SinkProperties<T>>> Builder::get_egress(std::string name)
 {
-    auto base = get_egress_base(name);
+    auto base = m_backend.get_egress_base(name);
     if (!base)
     {
         throw exceptions::SrfRuntimeError("egress port name not found: " + name);
@@ -233,7 +221,7 @@ std::shared_ptr<Object<node::SinkProperties<T>>> Builder::get_egress(std::string
 template <typename T>
 std::shared_ptr<Object<node::SourceProperties<T>>> Builder::get_ingress(std::string name)
 {
-    auto base = get_ingress_base(name);
+    auto base = m_backend.get_ingress_base(name);
     if (!base)
     {
         throw exceptions::SrfRuntimeError("ingress port name not found: " + name);
