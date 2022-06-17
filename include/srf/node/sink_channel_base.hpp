@@ -222,9 +222,7 @@ void SinkChannelBase<T>::enable_persistence()
         return;
     }
     // Get and hold onto the input channel
-    auto persistent = ingress_channel();
-    CHECK(persistent);
-    m_persistent_ingress = std::move(persistent);
+    CHECK(m_persistent_ingress = ingress_channel());
 }
 
 }  // namespace srf::node
