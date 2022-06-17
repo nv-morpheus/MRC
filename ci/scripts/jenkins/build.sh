@@ -41,7 +41,7 @@ if [[ "${BUILD_CC}" == "gcc" ]]; then
     CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES} ${CMAKE_CACHE_FLAGS}"
 else
     gpuci_logger "Installing Clang"
-    mamba install -q -y -c conda-forge "clang=12" "clangxx=12" "libclang=12"
+    mamba env update -q -n srf --file ${SRF_ROOT}/ci/conda/environments/clang_env.yml
     gpuci_logger "Building with Clang"
     clang --version
     clang++ --version
