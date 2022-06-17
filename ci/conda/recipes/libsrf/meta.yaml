@@ -92,7 +92,7 @@ outputs:
         - sysroot_linux-64 2.17
       host:
         # Any libraries with weak run_exports need to go here to be added to the run. Keep sorted!
-        - abseil-cpp  {{ abseil_cpp }} # Needed for transitive run_exports from grpc-cpp
+        - abseil-cpp {{ abseil_cpp }} # Needed for transitive run_exports from grpc-cpp
         - boost-cpp
         - flatbuffers 2.0.*
         - gflags

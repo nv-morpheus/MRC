@@ -13,6 +13,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_subdirectory(00_SimplePipeline)
-add_subdirectory(01_libsrf_quickstart)
-add_subdirectory(02_PipelineWithLibrary)
+add_pybind11_library(
+  data
+  MODULE_ROOT
+    ${QUICKSTART_HYBRID_HOME}
+  SOURCE_FILES
+    data.cpp
+  LINK_TARGETS
+    srf::pysrf
+  OUTPUT_TARGET
+    common_data_target
+)
+
+message(STATUS "common_data_target: ${common_data_target}")
+
+target_include_directories(${common_data_target}
+  PUBLIC
+    ./include
+)
+
+inplace_build_copy(${common_data_target} ${CMAKE_CURRENT_SOURCE_DIR})
+
+# Set this variable in the parent scope so other examples can link to it
+set(common_data_target ${common_data_target} PARENT_SCOPE)

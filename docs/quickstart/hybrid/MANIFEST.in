@@ -1,0 +1,1 @@
+recursive-include srf_qs_hybrid *.so
