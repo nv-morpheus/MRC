@@ -13,6 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_subdirectory(00_SimplePipeline)
-add_subdirectory(01_libsrf_quickstart)
-add_subdirectory(02_PipelineWithLibrary)
+# morpheus_add_pybind11_module(
+#   wrap_data_objects
+#   MODULE_ROOT
+#     ${CMAKE_CURRENT_SOURCE_DIR}
+#   SOURCE_FILES
+#     wrap_data_objects.cpp
+#   LINK_TARGETS
+#     srf::pysrf
+#   OUTPUT_TARGET
+#     wrap_data_objects_target
+# )
+
+# inplace_build_copy(${wrap_data_objects_target} ${CMAKE_CURRENT_SOURCE_DIR})

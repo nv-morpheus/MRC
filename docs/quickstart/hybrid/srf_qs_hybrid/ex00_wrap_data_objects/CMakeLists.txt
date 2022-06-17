@@ -13,6 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_subdirectory(00_SimplePipeline)
-add_subdirectory(01_libsrf_quickstart)
-add_subdirectory(02_PipelineWithLibrary)
+add_pybind11_module(
+  data
+  MODULE_ROOT
+    ${QUICKSTART_HYBRID_HOME}
+  SOURCE_FILES
+    data.cpp
+  LINK_TARGETS
+    ${common_data_target}
+  OUTPUT_TARGET
+    data_target
+)
+
+inplace_build_copy(${data_target} ${CMAKE_CURRENT_SOURCE_DIR})

@@ -1,4 +1,5 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/bin/bash
+# SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_subdirectory(00_SimplePipeline)
-add_subdirectory(01_libsrf_quickstart)
-add_subdirectory(02_PipelineWithLibrary)
+set -x
+set -e
+
+# Optionally can set INSTALL_PREFIX to build and install to a specific directory. Also causes cmake install to run
+BUILD_DIR=${BUILD_DIR:-"build"}
+
+echo "Runing CMake configure..."
+cmake -B ${BUILD_DIR} -GNinja \
+   -DCMAKE_MESSAGE_CONTEXT_SHOW=ON \
+   ${CMAKE_CONFIGURE_EXTRA_ARGS:-""} .
+
+echo "Running CMake build..."
+cmake --build ${BUILD_DIR} -j "$@"

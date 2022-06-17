@@ -20,27 +20,27 @@ option(SRF_PYTHON_INPLACE_BUILD "Whether or not to copy built python modules bac
 set(Python3_FIND_VIRTUALENV "FIRST")
 set(Python3_FIND_STRATEGY "LOCATION")
 
-message(VERBOSE "Python_EXECUTABLE (before find_package): ${Python_EXECUTABLE}")
-message(VERBOSE "Python_ROOT_DIR (before find_package): ${Python_ROOT_DIR}")
+message(VERBOSE "Python3_EXECUTABLE (before find_package): ${Python3_EXECUTABLE}")
+message(VERBOSE "Python3_ROOT_DIR (before find_package): ${Python3_ROOT_DIR}")
 message(VERBOSE "FIND_PYTHON_STRATEGY (before find_package): ${FIND_PYTHON_STRATEGY}")
 
 find_package(Python3 REQUIRED COMPONENTS Development Interpreter)
 
-message(VERBOSE "Python_FOUND: " ${Python_FOUND})
-message(VERBOSE "Python_EXECUTABLE: ${Python_EXECUTABLE}")
-message(VERBOSE "Python_INTERPRETER_ID: " ${Python_INTERPRETER_ID})
-message(VERBOSE "Python_STDLIB: " ${Python_STDLIB})
-message(VERBOSE "Python_STDARCH: " ${Python_STDARCH})
-message(VERBOSE "Python_SITELIB: " ${Python_SITELIB})
-message(VERBOSE "Python_SITEARCH: " ${Python_SITEARCH})
-message(VERBOSE "Python_SOABI: " ${Python_SOABI})
-message(VERBOSE "Python_INCLUDE_DIRS: " ${Python_INCLUDE_DIRS})
-message(VERBOSE "Python_LIBRARIES: " ${Python_LIBRARIES})
-message(VERBOSE "Python_LIBRARY_DIRS: " ${Python_LIBRARY_DIRS})
-message(VERBOSE "Python_VERSION: " ${Python_VERSION})
-message(VERBOSE "Python_NumPy_FOUND: " ${Python_NumPy_FOUND})
-message(VERBOSE "Python_NumPy_INCLUDE_DIRS: " ${Python_NumPy_INCLUDE_DIRS})
-message(VERBOSE "Python_NumPy_VERSION: " ${Python_NumPy_VERSION})
+message(VERBOSE "Python3_FOUND: " ${Python3_FOUND})
+message(VERBOSE "Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
+message(VERBOSE "Python3_INTERPRETER_ID: " ${Python3_INTERPRETER_ID})
+message(VERBOSE "Python3_STDLIB: " ${Python3_STDLIB})
+message(VERBOSE "Python3_STDARCH: " ${Python3_STDARCH})
+message(VERBOSE "Python3_SITELIB: " ${Python3_SITELIB})
+message(VERBOSE "Python3_SITEARCH: " ${Python3_SITEARCH})
+message(VERBOSE "Python3_SOABI: " ${Python3_SOABI})
+message(VERBOSE "Python3_INCLUDE_DIRS: " ${Python3_INCLUDE_DIRS})
+message(VERBOSE "Python3_LIBRARIES: " ${Python3_LIBRARIES})
+message(VERBOSE "Python3_LIBRARY_DIRS: " ${Python3_LIBRARY_DIRS})
+message(VERBOSE "Python3_VERSION: " ${Python3_VERSION})
+message(VERBOSE "Python3_NumPy_FOUND: " ${Python3_NumPy_FOUND})
+message(VERBOSE "Python3_NumPy_INCLUDE_DIRS: " ${Python3_NumPy_INCLUDE_DIRS})
+message(VERBOSE "Python3_NumPy_VERSION: " ${Python3_NumPy_VERSION})
 
 # After finding python, now find pybind11
 
@@ -49,7 +49,7 @@ message(VERBOSE "Python_NumPy_VERSION: " ${Python_NumPy_VERSION})
 set(PYBIND11_VERSION "2.8.1" CACHE STRING "Version of Pybind11 to use")
 include(deps/Configure_pybind11)
 
-if (NOT EXISTS ${Python_SITELIB}/skbuild)
+if (NOT EXISTS ${Python3_SITELIB}/skbuild)
     # In case this is messed up by `/usr/local/python/site-packages` vs `/usr/python/site-packages`, check pip itself.
     execute_process(
         COMMAND bash "-c" "${Python3_EXECUTABLE} -m pip show scikit-build | sed -n -e 's/Location: //p'"
@@ -63,7 +63,7 @@ if (NOT EXISTS ${Python_SITELIB}/skbuild)
         list(APPEND CMAKE_MODULE_PATH "${PYTHON_SITE_PACKAGES}/skbuild/resources/cmake")
     endif()
 else ()
-    list(APPEND CMAKE_MODULE_PATH "${Python_SITELIB}/skbuild/resources/cmake")
+    list(APPEND CMAKE_MODULE_PATH "${Python3_SITELIB}/skbuild/resources/cmake")
 endif ()
 
 # Now we can find pybind11

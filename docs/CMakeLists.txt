@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+list(APPEND CMAKE_MESSAGE_CONTEXT "docs")
+
 find_package(Doxygen REQUIRED dot doxygen)
 
 set(DOXYGEN_GENERATE_HTML YES)
@@ -47,3 +49,11 @@ doxygen_add_docs(
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     COMMENT "Generate html documentation"
 )
+
+
+# Add the binary dir before including quickstart
+list(PREPEND CMAKE_PREFIX_PATH "${PROJECT_BINARY_DIR}")
+
+add_subdirectory(quickstart)
+
+list(POP_BACK CMAKE_MESSAGE_CONTEXT)
