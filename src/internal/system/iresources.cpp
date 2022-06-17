@@ -31,14 +31,14 @@ IResources::IResources(std::shared_ptr<ISystem> system) :
 {}
 IResources::~IResources() = default;
 
-// void IResources::add_thread_initializer(std::function<void()> initializer_fn)
-// {
-//     m_impl->register_thread_local_initializer(m_impl->topology().cpu_set(), std::move(initializer_fn));
-// }
+void IResources::add_thread_initializer(std::function<void()> initializer_fn)
+{
+    m_impl->register_thread_local_initializer(m_impl->system().topology().cpu_set(), std::move(initializer_fn));
+}
 
-// void IResources::add_thread_finalizer(std::function<void()> finalizer_fn)
-// {
-//     m_impl->register_thread_local_finalizer(m_impl->topology().cpu_set(), std::move(finalizer_fn));
-// }
+void IResources::add_thread_finalizer(std::function<void()> finalizer_fn)
+{
+    m_impl->register_thread_local_finalizer(m_impl->system().topology().cpu_set(), std::move(finalizer_fn));
+}
 
 }  // namespace srf::internal::system
