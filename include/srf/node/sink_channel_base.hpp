@@ -105,8 +105,6 @@ class SinkChannelBase
     [[nodiscard]] std::shared_ptr<channel::Ingress<T>> ingress_channel();
 
   private:
-    [[nodiscard]] std::shared_ptr<channel::Ingress<T>> ingress_channel_unsafe();
-
     // holds the original channel passed into the constructor or set via update_channel
     std::shared_ptr<Channel<T>> m_channel;
 
@@ -124,7 +122,7 @@ class SinkChannelBase
     bool m_unique_channel{true};
 
     // recursive mutex to protect ingress creation; recursion required for persistence
-    mutable std::mutex m_mutex;
+    mutable std::recursive_mutex m_mutex;
 };
 
 template <typename T>
@@ -143,12 +141,7 @@ template <typename T>
 std::shared_ptr<channel::Ingress<T>> SinkChannelBase<T>::ingress_channel()
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    return ingress_channel_unsafe();
-}
 
-template <typename T>
-std::shared_ptr<channel::Ingress<T>> SinkChannelBase<T>::ingress_channel_unsafe()
-{
     CHECK(m_channel);
     CHECK(m_unique_channel);
     std::shared_ptr<Edge<T>> ingress;
@@ -229,7 +222,7 @@ void SinkChannelBase<T>::enable_persistence()
         return;
     }
     // Get and hold onto the input channel
-    auto persistent = ingress_channel_unsafe();
+    auto persistent = ingress_channel();
     CHECK(persistent);
     m_persistent_ingress = std::move(persistent);
 }
