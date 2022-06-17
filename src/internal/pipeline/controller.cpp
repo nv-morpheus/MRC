@@ -33,6 +33,7 @@
 #include <glog/logging.h>
 
 #include <algorithm>
+#include <exception>
 #include <iterator>
 #include <map>
 #include <memory>
@@ -57,7 +58,15 @@ void Controller::on_data(ControlMessage&& message)
     switch (message.type)
     {
     case ControlMessageType::Update:
-        update(std::move(message.addresses));
+        try
+        {
+            update(std::move(message.addresses));
+        } catch (...)
+        {
+            LOG(ERROR) << "exception caught while performing update - this is fatal - issuing kill";
+            kill();
+            std::rethrow_exception(std::current_exception());
+        }
         break;
     case ControlMessageType::Stop:
         stop();
