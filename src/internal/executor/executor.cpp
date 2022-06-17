@@ -33,14 +33,14 @@
 
 namespace srf::internal::executor {
 
-Executor::Executor(Handle<Options> options) :
+Executor::Executor(std::shared_ptr<Options> options) :
   SystemProvider(system::make_system(std::move(options))),
   m_resources_manager(std::make_unique<resources::Manager>(*this))
 {}
 
-Executor::Executor(Handle<system::System> system) :
-  SystemProvider(std::move(system)),
-  m_resources_manager(std::make_unique<resources::Manager>(*this))
+Executor::Executor(std::unique_ptr<system::Resources> resources) :
+  SystemProvider(*resources),
+  m_resources_manager(std::make_unique<resources::Manager>(std::move(resources)))
 {}
 
 Executor::~Executor()

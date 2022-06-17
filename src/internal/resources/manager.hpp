@@ -29,6 +29,7 @@ class Manager final : public system::SystemProvider
 {
   public:
     Manager(const system::SystemProvider& system);
+    Manager(std::unique_ptr<system::Resources> resources);
 
     std::size_t device_count() const;
     std::size_t partition_count() const;
@@ -36,7 +37,7 @@ class Manager final : public system::SystemProvider
     runnable::Resources& runnable(std::size_t partition_id);
 
   private:
-    system::Resources m_system;
+    std::unique_ptr<system::Resources> m_system;
     std::vector<runnable::Resources> m_runnable;
 };
 

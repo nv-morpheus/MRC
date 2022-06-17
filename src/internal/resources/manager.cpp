@@ -16,15 +16,20 @@
  */
 
 #include "internal/resources/manager.hpp"
+#include "srf/internal/system/iresources.hpp"
 
 namespace srf::internal::resources {
 
-Manager::Manager(const system::SystemProvider& system) : SystemProvider(system), m_system(*this)
+Manager::Manager(const system::SystemProvider& system) : Manager(std::make_unique<system::Resources>(system)) {}
+
+Manager::Manager(std::unique_ptr<system::Resources> resources) :
+  SystemProvider(*resources),
+  m_system(std::move(resources))
 {
     // for each host partition, construct the runnable resources
     for (std::size_t i = 0; i < this->system().partitions().host_partitions().size(); ++i)
     {
-        m_runnable.emplace_back(m_system, i);
+        m_runnable.emplace_back(*m_system, i);
     }
 
     // if network, then for each flattened partition

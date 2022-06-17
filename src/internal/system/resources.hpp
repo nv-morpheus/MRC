@@ -18,6 +18,7 @@
 #pragma once
 
 #include <srf/api.hpp>
+#include <srf/internal/system/iresources.hpp>
 
 #include "internal/system/fiber_manager.hpp"
 #include "internal/system/fiber_pool.hpp"
@@ -31,6 +32,10 @@ namespace srf::internal::system {
 class Resources final : public SystemProvider
 {
   public:
+    static std::unique_ptr<Resources> unwrap(IResources& resources);
+    static std::unique_ptr<Resources> create(const SystemProvider& system);
+    static std::unique_ptr<Resources> create(std::shared_ptr<const SystemProvider> system);
+
     Resources(SystemProvider system);
 
     template <typename CallableT>

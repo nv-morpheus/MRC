@@ -15,32 +15,30 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "srf/internal/system/iresources.hpp"
+#include "srf/internal/system/isystem.hpp"
+#include "srf/options/options.hpp"
 
-#include <srf/options/options.hpp>
+#include "internal/system/resources.hpp"
 
 #include <memory>
+#include <utility>
 
 namespace srf::internal::system {
 
-class System;
+IResources::IResources(std::shared_ptr<ISystem> system) :
+  m_impl(std::make_unique<Resources>(SystemProvider(System::unwrap(*system))))
+{}
+IResources::~IResources() = default;
 
-/**
- * @brief System object
- *
- * Core class that could be used to transfer Topology and Partition information from the SRF runtime.
- *
- * Currently, this is only an opaque handle for constructing a system::IResource.
- */
-class ISystem
-{
-  public:
-    ISystem(std::shared_ptr<Options> options);
-    virtual ~ISystem() = 0;
+// void IResources::add_thread_initializer(std::function<void()> initializer_fn)
+// {
+//     m_impl->register_thread_local_initializer(m_impl->topology().cpu_set(), std::move(initializer_fn));
+// }
 
-  private:
-    std::shared_ptr<System> m_impl;
-    friend System;
-};
+// void IResources::add_thread_finalizer(std::function<void()> finalizer_fn)
+// {
+//     m_impl->register_thread_local_finalizer(m_impl->topology().cpu_set(), std::move(finalizer_fn));
+// }
 
 }  // namespace srf::internal::system

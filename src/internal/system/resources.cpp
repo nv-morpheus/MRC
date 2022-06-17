@@ -45,4 +45,8 @@ void Resources::register_thread_local_finalizer(const CpuSet& cpu_set, std::func
     m_thread_resources->register_finalizer(cpu_set, finalizer);
 }
 
+std::unique_ptr<Resources> Resources::unwrap(IResources& resources)
+{
+    return std::move(resources.m_impl);
+}
 }  // namespace srf::internal::system

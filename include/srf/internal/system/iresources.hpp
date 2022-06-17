@@ -15,18 +15,29 @@
  * limitations under the License.
  */
 
-#include <srf/core/executor.hpp>
+#pragma once
 
-#include <srf/options/options.hpp>
+#include <functional>
+#include <memory>
 
-#include <utility>  // for move
+namespace srf::internal::system {
 
-namespace srf {
+class ISystem;
+class Resources;
 
-Executor::Executor() : internal::executor::IExecutor(std::make_shared<Options>()) {}
-Executor::Executor(std::shared_ptr<Options> options) : internal::executor::IExecutor(std::move(options)) {}
-Executor::Executor(std::unique_ptr<internal::system::IResources> resources) :
-  internal::executor::IExecutor(std::move(resources))
-{}
+class IResources
+{
+  public:
+    IResources(std::shared_ptr<ISystem> system);
+    virtual ~IResources() = 0;
 
-}  // namespace srf
+  protected:
+    void add_thread_initializer(std::function<void()> initializer_fn);
+    void add_thread_finalizer(std::function<void()> finalizer_fn);
+
+  private:
+    std::unique_ptr<Resources> m_impl;
+    friend Resources;
+};
+
+}  // namespace srf::internal::system

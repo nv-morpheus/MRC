@@ -222,6 +222,7 @@ add_library(libsrf
   src/internal/system/fiber_task_queue.cpp
   src/internal/system/gpu_info.cpp
   src/internal/system/host_partition.cpp
+  src/internal/system/iresources.cpp
   src/internal/system/isystem.cpp
   src/internal/system/partition.cpp
   src/internal/system/partitions.cpp

@@ -40,8 +40,8 @@ namespace srf::internal::executor {
 class Executor : public Service, public system::SystemProvider
 {
   public:
-    Executor(Handle<Options> options);
-    Executor(Handle<system::System> system);
+    Executor(std::shared_ptr<Options> options);
+    Executor(std::unique_ptr<system::Resources> resources);
     ~Executor() override;
 
     void register_pipeline(std::unique_ptr<pipeline::IPipeline> ipipeline);
@@ -57,14 +57,14 @@ class Executor : public Service, public system::SystemProvider
     std::unique_ptr<pipeline::Manager> m_pipeline_manager;
 };
 
-inline std::unique_ptr<Executor> make_executor(Handle<Options> options)
+inline std::unique_ptr<Executor> make_executor(std::shared_ptr<Options> options)
 {
     return std::make_unique<Executor>(std::move(options));
 }
 
-inline std::unique_ptr<Executor> make_executor(Handle<system::System> sytem)
+inline std::unique_ptr<Executor> make_executor(std::unique_ptr<system::Resources> resources)
 {
-    return std::make_unique<Executor>(std::move(sytem));
+    return std::make_unique<Executor>(std::move(resources));
 }
 
 }  // namespace srf::internal::executor
