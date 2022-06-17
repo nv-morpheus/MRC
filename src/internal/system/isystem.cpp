@@ -26,14 +26,4 @@ namespace srf::internal::system {
 ISystem::ISystem(std::shared_ptr<Options> options) : m_impl(make_system(std::move(options))) {}
 ISystem::~ISystem() = default;
 
-// void ISystem::add_thread_initializer(std::function<void()> initializer_fn)
-// {
-//     m_impl->register_thread_local_initializer(m_impl->topology().cpu_set(), std::move(initializer_fn));
-// }
-
-// void ISystem::add_thread_finalizer(std::function<void()> finalizer_fn)
-// {
-//     m_impl->register_thread_local_finalizer(m_impl->topology().cpu_set(), std::move(finalizer_fn));
-// }
-
 }  // namespace srf::internal::system
