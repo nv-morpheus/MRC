@@ -1,15 +1,16 @@
-import os
-
-import srf
+from srf_qs_hybrid.common import setup_logger
 from srf_qs_hybrid.ex01_wrap_nodes import DataObjectNode
 from srf_qs_hybrid.ex01_wrap_nodes import DataObjectSink
 from srf_qs_hybrid.ex01_wrap_nodes import DataObjectSource
 
+import srf
+
 # Setup logging
-srf.logging.init_logging(os.path.dirname(__file__))
+logger = setup_logger(__file__)
 
 
 def run_pipeline():
+
     def segment_init(seg: srf.Builder):
 
         # Create the source object

@@ -35,8 +35,6 @@ struct MyDataObject
 
 PYBIND11_MODULE(data, m)
 {
-    // google::InitGoogleLogging("quickstart");
-
     m.doc() = R"pbdoc(
         -----------------------
         .. currentmodule:: quickstart

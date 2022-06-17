@@ -1,15 +1,9 @@
-import logging
-import os
-
 import srf
+from srf_qs_hybrid.common import setup_logger
 from srf_qs_hybrid.ex00_wrap_data_objects import MyDataObject
 
 # Setup logging
-srf.logging.init_logging(os.path.split(os.path.dirname(__file__))[1], logging.INFO)
-
-logger = logging.getLogger()
-logger.addHandler(srf.core.log_handler.SrfHandler())
-logger.setLevel(logging.INFO)
+logger = setup_logger(__file__)
 
 
 def run_pipeline():
@@ -32,7 +26,7 @@ def run_pipeline():
 
         def update_obj(x: MyDataObject):
 
-            print("Processing '{}'".format(x.name))
+            logger.info("Processing '{}'".format(x.name))
 
             # Alter the value property of the class
             x.value = x.value * 2
@@ -48,7 +42,7 @@ def run_pipeline():
         def sink_on_next(x: MyDataObject):
 
             # nonlocal value is needed since we are modifying a value outside of our scope
-            print("Got value: {}, Incrementing counter".format(x))
+            logger.info("Got value: {}, Incrementing counter".format(x))
 
             nonlocal total_sum
             total_sum += x.value
@@ -77,7 +71,7 @@ def run_pipeline():
     # Register pipeline to tell executor what to run
     executor.register_pipeline(pipeline)
 
-    print("srf pipeline starting...")
+    logger.info("srf pipeline starting...")
 
     # This will start the pipeline and return immediately
     executor.start()
@@ -85,7 +79,7 @@ def run_pipeline():
     # Wait for the pipeline to exit on its own
     executor.join()
 
-    print("srf pipeline complete: total_sum should be 6; total_sum={}".format(total_sum))
+    logger.info("srf pipeline complete: total_sum should be 6; total_sum={}".format(total_sum))
 
 
 if (__name__ == "__main__"):
