@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include <srf/api.hpp>
 #include <srf/core/bitmap.hpp>
 #include <srf/types.hpp>
 #include <srf/utils/macros.hpp>
@@ -37,7 +36,7 @@
 
 namespace srf::internal::system {
 
-class Resources;
+class Resources;  // IWYU pragma: keep
 
 class FiberManager final
 {

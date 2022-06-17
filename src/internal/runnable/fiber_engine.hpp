@@ -26,7 +26,6 @@
 #include "srf/types.hpp"
 
 #include <functional>
-#include <memory>
 
 namespace srf::internal::runnable {
 

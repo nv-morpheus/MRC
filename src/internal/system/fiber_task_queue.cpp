@@ -19,6 +19,7 @@
 
 #include "internal/system/fiber_priority_scheduler.hpp"
 #include "internal/system/resources.hpp"
+#include "srf/core/bitmap.hpp"
 #include "srf/core/fiber_meta_data.hpp"
 #include "srf/core/task_queue.hpp"
 #include "srf/types.hpp"
@@ -32,6 +33,7 @@
 
 #include <ostream>
 #include <string>
+#include <thread>
 #include <type_traits>
 #include <utility>
 

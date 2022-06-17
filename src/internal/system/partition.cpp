@@ -17,8 +17,12 @@
 
 #include "internal/system/partition.hpp"
 
-#include <glog/logging.h>
 #include "srf/exceptions/runtime_error.hpp"
+
+#include <glog/logging.h>
+
+#include <ostream>
+#include <utility>
 
 namespace srf::internal::system {
 

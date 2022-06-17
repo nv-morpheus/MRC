@@ -21,9 +21,8 @@
 #include "internal/system/host_partition.hpp"
 
 #include <cstddef>
-#include <cstdint>
+#include <memory>
 #include <string>
-#include <vector>
 
 namespace srf::internal::system {
 

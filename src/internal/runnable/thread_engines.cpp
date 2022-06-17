@@ -18,11 +18,11 @@
 #include "internal/runnable/thread_engines.hpp"
 
 #include "internal/runnable/thread_engine.hpp"
-#include "internal/system/system.hpp"
 
 #include <glog/logging.h>
 
 #include <cstdint>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <utility>

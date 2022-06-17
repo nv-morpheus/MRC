@@ -17,6 +17,4 @@
 
 #include <srf/core/fiber_pool.hpp>
 
-#include <srf/core/bitmap.hpp>
-
 namespace srf::core {}  // namespace srf::core

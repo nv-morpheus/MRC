@@ -19,6 +19,8 @@
 
 #include <glog/logging.h>
 
+#include <utility>
+
 namespace srf::internal::system {
 
 SystemProvider::SystemProvider(std::shared_ptr<const System> system) : m_system(std::move(system))

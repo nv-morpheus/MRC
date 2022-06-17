@@ -20,7 +20,6 @@
 #include "internal/system/thread.hpp"
 #include "srf/utils/macros.hpp"
 
-#include <srf/api.hpp>
 #include <srf/core/bitmap.hpp>
 #include <srf/core/task_queue.hpp>
 
@@ -28,7 +27,6 @@
 
 #include <cstddef>
 #include <iosfwd>
-#include <thread>
 
 namespace srf::internal::system {
 

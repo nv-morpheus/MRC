@@ -19,6 +19,7 @@
 
 #include "internal/pipeline/pipeline.hpp"
 #include "internal/pipeline/resources.hpp"
+#include "internal/resources/manager.hpp"
 #include "internal/segment/instance.hpp"
 #include "internal/service.hpp"
 

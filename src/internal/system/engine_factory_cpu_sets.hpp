@@ -20,6 +20,7 @@
 #include <srf/core/bitmap.hpp>
 #include <srf/options/options.hpp>
 
+#include <cstddef>
 #include <map>
 #include <string>
 

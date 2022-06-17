@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include <srf/api.hpp>
-
 #include <memory>
 
 namespace srf::internal::system {

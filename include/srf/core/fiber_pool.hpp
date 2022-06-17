@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include <srf/api.hpp>
 #include <srf/core/bitmap.hpp>
 #include <srf/core/task_queue.hpp>
 #include <srf/types.hpp>
@@ -30,7 +29,7 @@
 
 namespace srf::core {
 
-class SRF_API FiberPool
+class FiberPool
 {
   public:
     virtual ~FiberPool() = default;

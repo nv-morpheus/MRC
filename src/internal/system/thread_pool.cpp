@@ -21,6 +21,8 @@
 #include "srf/core/bitmap.hpp"
 
 #include <cstdint>
+#include <memory>
+#include <thread>
 
 namespace srf::internal::system {
 

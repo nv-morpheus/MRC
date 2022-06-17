@@ -17,9 +17,9 @@
 
 #include "internal/runnable/fiber_engine.hpp"
 
-#include <glog/logging.h>
 #include <boost/fiber/future/future.hpp>
 
+#include <type_traits>
 #include <utility>
 
 namespace srf::internal::runnable {

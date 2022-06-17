@@ -17,8 +17,11 @@
 
 #pragma once
 
-#include <srf/api.hpp>
-#include <srf/internal/system/iresources.hpp>
+#include "internal/system/topology.hpp"
+
+#include "srf/core/bitmap.hpp"
+#include "srf/internal/system/iresources.hpp"
+#include "srf/utils/thread_local_shared_pointer.hpp"
 
 #include "internal/system/fiber_manager.hpp"
 #include "internal/system/fiber_pool.hpp"
@@ -26,6 +29,14 @@
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 #include "internal/system/thread.hpp"
+
+#include <glog/logging.h>
+
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <string>
+#include <utility>
 
 namespace srf::internal::system {
 

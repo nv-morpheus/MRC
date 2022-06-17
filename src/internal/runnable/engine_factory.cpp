@@ -21,8 +21,7 @@
 #include "internal/runnable/thread_engines.hpp"
 #include "internal/system/fiber_pool.hpp"
 #include "internal/system/resources.hpp"
-#include "internal/system/system.hpp"
-#include "srf/api.hpp"
+
 #include "srf/constants.hpp"
 #include "srf/core/task_queue.hpp"
 #include "srf/exceptions/runtime_error.hpp"
@@ -34,6 +33,7 @@
 #include <glog/logging.h>
 
 #include <cstddef>
+#include <functional>
 #include <ostream>
 #include <utility>
 #include <vector>

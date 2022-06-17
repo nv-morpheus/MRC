@@ -5,6 +5,12 @@
 
 #include "internal/system/fiber_manager.hpp"
 
+#include <boost/fiber/future/future.hpp>
+
+#include <algorithm>
+#include <map>
+#include <vector>
+
 namespace srf::internal::system {
 
 Resources::Resources(SystemProvider system) :

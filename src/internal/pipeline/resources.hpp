@@ -18,11 +18,9 @@
 #pragma once
 
 #include "internal/resources/manager.hpp"
-#include "internal/runnable/resources.hpp"
 
 #include "srf/metrics/registry.hpp"
 
-#include <cstddef>
 #include <memory>
 
 namespace srf::internal::pipeline {

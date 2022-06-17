@@ -28,7 +28,6 @@
 #include <srf/runnable/launch_control.hpp>
 #include <srf/runnable/runner.hpp>
 #include <srf/types.hpp>
-#include "internal/resources/partition_resources.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/worker.hpp"

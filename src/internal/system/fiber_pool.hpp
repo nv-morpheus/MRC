@@ -20,7 +20,7 @@
 #include "internal/system/fiber_task_queue.hpp"
 
 #include <functional>
-#include <srf/api.hpp>
+
 #include <srf/core/bitmap.hpp>
 #include <srf/core/fiber_pool.hpp>
 #include "srf/core/task_queue.hpp"

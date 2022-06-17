@@ -20,9 +20,17 @@
 #include "internal/system/system.hpp"
 #include "internal/system/topology.hpp"
 #include "public/utils/thread_utils.hpp"
+
+#include "srf/core/bitmap.hpp"
+#include "srf/options/fiber_pool.hpp"
+#include "srf/options/options.hpp"
 #include "srf/utils/string_utils.hpp"
 
 #include <glog/logging.h>
+#include <hwloc.h>
+
+#include <cstdint>
+#include <type_traits>
 
 namespace srf::internal::system {
 

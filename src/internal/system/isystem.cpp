@@ -17,7 +17,6 @@
 
 #include "srf/internal/system/isystem.hpp"
 #include "internal/system/system.hpp"
-#include "internal/system/topology.hpp"
 #include "srf/options/options.hpp"
 
 #include <utility>

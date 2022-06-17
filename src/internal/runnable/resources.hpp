@@ -17,21 +17,16 @@
 
 #pragma once
 
-#include "internal/system/host_partition.hpp"
-
 #include "internal/system/fiber_task_queue.hpp"
-#include "internal/system/forward.hpp"
+#include "internal/system/partition.hpp"
 #include "internal/system/resources.hpp"
 #include "internal/system/system_provider.hpp"
 
-#include "srf/api.hpp"
 #include "srf/core/task_queue.hpp"
-#include "srf/memory/resource_view.hpp"
-#include "srf/memory/resources/callback_resource.hpp"
 #include "srf/pipeline/resources.hpp"
 #include "srf/runnable/launch_control.hpp"
 
-#include <functional>
+#include <cstddef>
 #include <memory>
 
 namespace srf::internal::runnable {

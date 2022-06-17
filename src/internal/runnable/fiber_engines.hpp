@@ -26,7 +26,7 @@
 #include "srf/runnable/launch_options.hpp"
 #include "srf/runnable/types.hpp"
 
-#include <memory>
+#include <functional>
 #include <vector>
 
 namespace srf::internal::runnable {

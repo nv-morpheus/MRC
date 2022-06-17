@@ -18,12 +18,15 @@
 #include "internal/system/fiber_manager.hpp"
 #include "internal/system/fiber_pool.hpp"
 #include "internal/system/resources.hpp"
+#include "internal/system/system.hpp"
 #include "internal/system/topology.hpp"
+
 #include "srf/core/bitmap.hpp"
 #include "srf/exceptions/runtime_error.hpp"
 #include "srf/options/fiber_pool.hpp"
 #include "srf/options/options.hpp"
 
+#include <functional>
 #include <memory>
 
 namespace srf::internal::system {

@@ -17,21 +17,13 @@
 
 #include "internal/system/system.hpp"
 
-#include "internal/system/fiber_task_queue.hpp"
 #include "internal/system/partitions.hpp"
 
 #include "srf/internal/system/isystem.hpp"
-#include "srf/options/fiber_pool.hpp"
 #include "srf/options/options.hpp"
-#include "srf/types.hpp"
 
 #include <glog/logging.h>
 #include <hwloc.h>
-#include <boost/fiber/future/future.hpp>
-
-#include <map>
-#include <thread>
-#include <vector>
 
 namespace srf::internal::system {
 

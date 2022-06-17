@@ -16,9 +16,9 @@
  */
 
 #include "internal/system/forward.hpp"
+#include "internal/system/resources.hpp"
 #include "internal/system/thread.hpp"
 
-#include <srf/api.hpp>
 #include <srf/core/bitmap.hpp>
 #include <srf/exceptions/runtime_error.hpp>
 
@@ -31,9 +31,7 @@
 #include <cstddef>
 #include <functional>
 #include <future>
-#include <memory>
 #include <ostream>
-#include <thread>
 #include <type_traits>
 #include <utility>
 #include <vector>

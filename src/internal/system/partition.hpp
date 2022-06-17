@@ -18,20 +18,10 @@
 #pragma once
 
 #include "internal/system/device_partition.hpp"
-#include "internal/system/engine_factory_cpu_sets.hpp"
 #include "internal/system/host_partition.hpp"
-#include "srf/core/bitmap.hpp"
-#include "srf/options/options.hpp"
-#include "srf/utils/macros.hpp"
 
 #include <cstddef>
-#include <functional>
-#include <optional>
-#include <vector>
-
-namespace srf {
-class Options;  // IWYU pragma: keep
-}
+#include <memory>
 
 namespace srf::internal::system {
 

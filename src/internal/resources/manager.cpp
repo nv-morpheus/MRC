@@ -16,7 +16,15 @@
  */
 
 #include "internal/resources/manager.hpp"
+
+#include "internal/system/partitions.hpp"
+#include "internal/system/system.hpp"
+
 #include "srf/internal/system/iresources.hpp"
+
+#include <glog/logging.h>
+
+#include <utility>
 
 namespace srf::internal::resources {
 

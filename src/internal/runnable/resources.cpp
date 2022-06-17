@@ -20,23 +20,28 @@
 #include <srf/runnable/launch_control_config.hpp>
 
 #include "internal/runnable/engine_factory.hpp"
+#include "internal/runnable/engines.hpp"
 #include "internal/system/engine_factory_cpu_sets.hpp"
+#include "internal/system/host_partition.hpp"
+#include "internal/system/partitions.hpp"
 #include "internal/system/system.hpp"
+
 #include "srf/core/bitmap.hpp"
-#include "srf/memory/resources/host/malloc_memory_resource.hpp"
-#include "srf/memory/resources/host/pinned_memory_resource.hpp"
+// #include "srf/memory/resources/host/malloc_memory_resource.hpp"
+// #include "srf/memory/resources/host/pinned_memory_resource.hpp"
 #include "srf/runnable/types.hpp"
 #include "srf/types.hpp"
 
 #include <glog/logging.h>
 #include <boost/fiber/future/future.hpp>
-#include <cuda/memory_resource>
+// #include <cuda/memory_resource>
 
 #include <map>
 #include <ostream>
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 namespace srf::internal::runnable {
 

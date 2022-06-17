@@ -17,9 +17,11 @@
 
 #include "srf/internal/system/iresources.hpp"
 #include "srf/internal/system/isystem.hpp"
-#include "srf/options/options.hpp"
 
 #include "internal/system/resources.hpp"
+#include "internal/system/system.hpp"
+#include "internal/system/system_provider.hpp"
+#include "internal/system/topology.hpp"
 
 #include <memory>
 #include <utility>

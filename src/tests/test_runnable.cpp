@@ -16,11 +16,11 @@
  */
 
 #include "internal/runnable/resources.hpp"
-#include "internal/system/fiber_task_queue.hpp"
-#include "internal/system/forward.hpp"
 #include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
+#include "internal/system/system_provider.hpp"
 
+#include "srf/core/bitmap.hpp"
 #include "srf/options/engine_groups.hpp"
 #include "srf/options/options.hpp"
 #include "srf/runnable/launch_options.hpp"

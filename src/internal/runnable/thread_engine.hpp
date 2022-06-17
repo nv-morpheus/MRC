@@ -20,9 +20,9 @@
 #include "internal/runnable/engine.hpp"
 
 #include "internal/system/forward.hpp"
+#include "internal/system/resources.hpp"
 #include "internal/system/thread.hpp"
 
-#include "srf/api.hpp"
 #include "srf/core/bitmap.hpp"
 #include "srf/runnable/types.hpp"
 #include "srf/types.hpp"

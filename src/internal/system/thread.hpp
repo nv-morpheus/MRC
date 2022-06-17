@@ -19,10 +19,9 @@
 
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
+#include "internal/system/topology.hpp"
 
-#include <srf/api.hpp>
 #include <srf/core/bitmap.hpp>
-#include <srf/core/thread_barrier.hpp>
 
 #include <glog/logging.h>
 
@@ -30,7 +29,10 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <ostream>
+#include <string>
 #include <thread>
+#include <utility>
 
 namespace srf::internal::system {
 

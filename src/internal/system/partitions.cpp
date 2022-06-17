@@ -21,6 +21,8 @@
 #include "internal/system/system.hpp"
 #include "internal/system/topology.hpp"
 #include "internal/utils/shared_resource_bit_map.hpp"
+
+#include "srf/core/bitmap.hpp"
 #include "srf/options/placement.hpp"
 #include "srf/utils/bytes_to_string.hpp"
 
@@ -30,6 +32,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <ext/alloc_traits.h>
 #include <map>
 #include <memory>
 #include <ostream>

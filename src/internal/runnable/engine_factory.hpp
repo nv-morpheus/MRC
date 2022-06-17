@@ -21,6 +21,8 @@
 
 #include "internal/runnable/engines.hpp"
 #include "internal/system/forward.hpp"
+#include "internal/system/resources.hpp"
+
 #include "srf/core/bitmap.hpp"
 #include "srf/runnable/types.hpp"
 
