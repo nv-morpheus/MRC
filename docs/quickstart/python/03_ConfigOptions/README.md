@@ -1,6 +1,10 @@
 # Configuration Options
 
-This example shows how altering the configuration options of a SRF pipeline can change its behavior. Again, we are using a very simple pipeline with a single source, node and sink. However, for this example, the logging information is designed to show how messages move through the pipeline. For each of the 3 stages, they will output logs in the format:
+This example shows how altering two common configuration options (number of threads and channel size) of a SRF pipeline can change its behavior. By default SRF will set the thread count to match the number of cores in a system and will use a channel size of `128`. The channel size is expressed in number of elements regardless of the byte size of the objects.
+
+In our previous examples the pipelines were quite simple. However in non-trivial pipelines it is quite likely that some nodes will execute faster than other nodes. When a reletively faster upstream source node emits data faster than they are able to be processed by a downstream sink node, it is possible that the channel will hit it's max channel size. When this happens the source node will block on the next write until there is room in the channel. Increasing the size of the channel would allow the source to emit as quickly as it is able to but potentially at the cost of increased memory consumption.
+
+For this example the logging information is designed to show how messages move through the pipeline. For each of the 3 stages, they will output logs in the format:
 
 ```bash
 ${NODE_NAME}: ${LOG_MESSAGE} ${MESSAGE_ID}, TID: [${THREAD_NAME}]
@@ -15,6 +19,9 @@ Node  : Processing ${MESSAGE_ID}, TID: [${THREAD_NAME}]
 ...
 Sink  : Got value  ${MESSAGE_ID}, TID: [${THREAD_NAME}]
 ```
+
+### Note:
+The threads will be created by SRF's underlying C++ implementation. Python's threading library will always return a thread name in the form of "Dummy-*" for any threads not created by Python.
 
 In this example, it will be important to pay attention to the ordering of the messages, and the thread that they were executed on.
 
@@ -60,9 +67,9 @@ Sink  : Got value  09, TID: [Dummy-1]
 srf pipeline complete.
 ```
 
-By default, we run with 1 thread and a buffer of size 4 between the nodes.
+By default, we run with 1 thread and a channel of size 4 between the nodes.
 
-If we up the buffer size to 8 we get the following:
+If we up the channel size to 8 we get the following:
 
 ```bash
 $ python ./docs/quickstart/python/03_ConfigOptions/run.py --channel_size 8
