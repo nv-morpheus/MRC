@@ -14,7 +14,7 @@ def run_pipeline(count: int, channel_size: int, threads: int):
             for i in range(count):
 
                 yield i
-                print("Source: Emitted    {:02d}, TID: [{}]".format(i, threading.current_thread().getName()))
+                print("Source: Emitted    {:02d}, TID: [{}]".format(i, threading.current_thread().name))
 
             print("Source: Complete")
 
@@ -23,7 +23,7 @@ def run_pipeline(count: int, channel_size: int, threads: int):
 
         def update_obj(x: int):
 
-            print("Node  : Processing {:02d}, TID: [{}]".format(x, threading.current_thread().getName()))
+            print("Node  : Processing {:02d}, TID: [{}]".format(x, threading.current_thread().name))
             return x
 
         # Make an intermediate node
@@ -35,7 +35,7 @@ def run_pipeline(count: int, channel_size: int, threads: int):
         # This method will get called each time the sink gets a value
         def sink_on_next(x: int):
 
-            print("Sink  : Got value  {:02d}, TID: [{}]".format(x, threading.current_thread().getName()))
+            print("Sink  : Got value  {:02d}, TID: [{}]".format(x, threading.current_thread().name))
 
         # Build the sink object
         sink = seg.make_sink("int_sink", sink_on_next, None, None)
