@@ -1,34 +1,19 @@
 # Simple Pipeline
 
-This example illustrates how to create a simple pipeline with a single source, node, and sink connected together. Each of the nodes in the segment ("node" here refers to either a source, sink or an object that is both a source and sink) is responsible for a simple task:
-
-- Source: Creates 3 integers in the sequence 1, 2, 3
-- Node: Transforms the integer by multiplying it by 2.5, resulting in a float
-- Sink: Prints any received value and sums the total number of items
-
-Each of the objects in the Segment is created using the `Segment.make_XXX(NAME, ...)` function where `XXX` is replace with either `source`, `sink` or `node`.
-
-Once each object is created, they can be linked together using `Segment.make_edge(SOURCE, SINK)`. There are a few rules when making edges:
-
-- Source objects can only appear in the left-hand argument
-- Sink objects can only appear in the right-hand argument
-- Node objects can appear in either side
-- Sources can only be connected to one downstream sink
-  - To use multiple downstream sinks with broadcast or round-robin functionality, see the guide on operators
-- Sinks can accept multiple upstream sources
-  - Its possible to connect two sources to a single sink. The sink will process the messages in the order that they are received in
+This example illustrates how to wrap C++ objects in python and then pass these C++ objects between python nodes in a pipeline.
 
 ## Running the Example
 
 We can see this simple pipeline in action by running the python script:
 
 ```bash
-$ python ./docs/quickstart/python/00_SimplePipeline/run.py
-srf pipeline starting...
-Got value: 2.5, Incrementing counter
-Got value: 5.0, Incrementing counter
-Got value: 7.5, Incrementing counter
-srf pipeline complete: counter should be 3; counter=3
+$ python ./docs/quickstart/hybrid/srf_qs_hybrid/ex00_wrap_data_objects/run.py
+I20220617 00:29:21.517798 32164 run.py:75] srf pipeline starting...
+I20220617 00:29:21.519217 32171 run.py:30] Processing 'Instance-0'
+I20220617 00:29:21.519305 32171 run.py:30] Processing 'Instance-1'
+I20220617 00:29:21.519374 32171 run.py:30] Processing 'Instance-2'
+I20220617 00:29:21.519484 32171 run.py:46] Got value: {Name: 'Instance-0', Value: 0}, Incrementing counter
+I20220617 00:29:21.519575 32171 run.py:46] Got value: {Name: 'Instance-1', Value: 2}, Incrementing counter
+I20220617 00:29:21.519649 32171 run.py:46] Got value: {Name: 'Instance-2', Value: 4}, Incrementing counter
+I20220617 00:29:21.519997 32164 run.py:83] srf pipeline complete: total_sum should be 6; total_sum=6
 ```
-
-We can see that the sink function was called 3 times, one for each value emitted by the source. What happens if you change the number of `yield` statements in the source object?

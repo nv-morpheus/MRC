@@ -73,64 +73,70 @@ find_package(Cython REQUIRED)
 
 set(CYTHON_FLAGS "--directive binding=True,boundscheck=False,wraparound=False,embedsignature=True,always_allow_keywords=True" CACHE STRING "The directives for Cython compilation.")
 
+include(python_module_tools)
+
+create_python_package(srf)
+
 # First, lets find all python source files
 # set(SRF_PYTHON_FILES "")
 
-# Get glob all of the python files
-file(GLOB_RECURSE SRF_PYTHON_FILES
-    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    CONFIGURE_DEPENDS
-    "*.py")
+# # Get glob all of the python files
+# file(GLOB_RECURSE SRF_PYTHON_FILES
+#     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+#     CONFIGURE_DEPENDS
+#     "*.py")
 
-# Manually install the below files. install(DIRECTORY) doesnt work well and
-# makes it impossible to get these files and srf/*.py in one command.
-list(PREPEND SRF_PYTHON_FILES
-    "pyproject.toml"
-    "setup.cfg"
-    "pytest.ini"
-    "tests/string_reader_input.txt"
-    # "setup.py"
-    # "versioneer.py"
-)
+# # Manually install the below files. install(DIRECTORY) doesnt work well and
+# # makes it impossible to get these files and srf/*.py in one command.
+# list(PREPEND SRF_PYTHON_FILES
+#     "pyproject.toml"
+#     "setup.cfg"
+#     "pytest.ini"
+#     "tests/string_reader_input.txt"
+#     # "setup.py"
+#     # "versioneer.py"
+# )
 
-set(OUTPUT_PYTHON_FILES "")
+add_python_sources("pytest.ini" "tests/string_reader_input.txt")
 
-# For each file, copy if its different
-foreach(py_file ${SRF_PYTHON_FILES})
+# set(OUTPUT_PYTHON_FILES "")
 
-    message(STATUS "Copying ${py_file} to ${CMAKE_CURRENT_BINARY_DIR}/${py_file}")
+# # For each file, copy if its different
+# foreach(py_file ${SRF_PYTHON_FILES})
 
-    # Use configure file which will rerun if the input file changes
-    configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/${py_file}
-        ${CMAKE_CURRENT_BINARY_DIR}/${py_file}
-        COPYONLY
-    )
+#     message(STATUS "Copying ${py_file} to ${CMAKE_CURRENT_BINARY_DIR}/${py_file}")
 
-    # add_custom_command(
-    #     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${py_file}
-    #     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/${py_file} ${CMAKE_CURRENT_BINARY_DIR}
-    #     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${py_file}
-    #     COMMAND "Copying ${py_file} to ${CMAKE_CURRENT_BINARY_DIR}/${py_file}"
-    # )
+#     # Use configure file which will rerun if the input file changes
+#     configure_file(
+#         ${CMAKE_CURRENT_SOURCE_DIR}/${py_file}
+#         ${CMAKE_CURRENT_BINARY_DIR}/${py_file}
+#         COPYONLY
+#     )
 
-    list(APPEND OUTPUT_PYTHON_FILES ${CMAKE_CURRENT_BINARY_DIR}/${py_file})
+#     # add_custom_command(
+#     #     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${py_file}
+#     #     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/${py_file} ${CMAKE_CURRENT_BINARY_DIR}
+#     #     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${py_file}
+#     #     COMMAND "Copying ${py_file} to ${CMAKE_CURRENT_BINARY_DIR}/${py_file}"
+#     # )
 
-endforeach()
+#     list(APPEND OUTPUT_PYTHON_FILES ${CMAKE_CURRENT_BINARY_DIR}/${py_file})
 
-add_custom_target(srf_python_libraries
-    COMMENT "Running srf_python_libraries"
-    COMMAND ${CMAKE_COMMAND} -E echo "Running cmake srf_python_libraries")
+# endforeach()
 
-set(PYTHON_LIBRARY_STAMP ${CMAKE_CURRENT_BINARY_DIR}/library.stamp)
+# add_custom_target(srf_python_libraries
+#     COMMENT "Running srf_python_libraries"
+#     COMMAND ${CMAKE_COMMAND} -E echo "Running cmake srf_python_libraries")
 
-add_custom_command(
-    COMMAND ${CMAKE_COMMAND} -E echo "Touching library stamp"
-    COMMAND ${CMAKE_COMMAND} -E touch ${PYTHON_LIBRARY_STAMP}
-    OUTPUT ${PYTHON_LIBRARY_STAMP}
-)
+# set(PYTHON_LIBRARY_STAMP ${CMAKE_CURRENT_BINARY_DIR}/library.stamp)
 
-add_custom_target(dest ALL DEPENDS ${PYTHON_LIBRARY_STAMP})
+# add_custom_command(
+#     COMMAND ${CMAKE_COMMAND} -E echo "Touching library stamp"
+#     COMMAND ${CMAKE_COMMAND} -E touch ${PYTHON_LIBRARY_STAMP}
+#     OUTPUT ${PYTHON_LIBRARY_STAMP}
+# )
+
+# add_custom_target(dest ALL DEPENDS ${PYTHON_LIBRARY_STAMP})
 
 # Command to copy the python files to the build folder
 # add_custom_target(srf_python_rebuild ALL
@@ -147,133 +153,133 @@ if (SRF_PYTHON_INPLACE_BUILD)
     message(STATUS "Performing inplace build for Python modules. Use `pip install -e .` from the python folder to install Srf.")
 endif ()
 
-function(srf_get_python_module_name TARGET_NAME MODULE_NAME MODULE)
-    #get_filename_component(py_module_name ${CPP_FILENAME} NAME_WLE)
+# function(srf_get_python_module_name TARGET_NAME MODULE_NAME MODULE)
+#     #get_filename_component(py_module_name ${CPP_FILENAME} NAME_WLE)
 
-    set(py_module_name ${MODULE})
-    # Get the relative path from the py root
-    file(RELATIVE_PATH py_rel_path ${SRF_PY_ROOT} ${CMAKE_CURRENT_SOURCE_DIR})
-    set(py_module_path ${py_rel_path})
+#     set(py_module_name ${MODULE})
+#     # Get the relative path from the py root
+#     file(RELATIVE_PATH py_rel_path ${SRF_PY_ROOT} ${CMAKE_CURRENT_SOURCE_DIR})
+#     set(py_module_path ${py_rel_path})
 
-    # Convert the relative path to a namespace. i.e. `cuml/package/module` -> `cuml::package::module
-    string(REPLACE "/" "." py_module_namespace ${py_module_path})
+#     # Convert the relative path to a namespace. i.e. `cuml/package/module` -> `cuml::package::module
+#     string(REPLACE "/" "." py_module_namespace ${py_module_path})
 
-    set(${TARGET_NAME} "${py_module_namespace}.${py_module_name}" PARENT_SCOPE)
-    set(${MODULE_NAME} "${py_module_name}" PARENT_SCOPE)
-    #message("${py_module_namespace}.${py_module_name}")
-endfunction()
+#     set(${TARGET_NAME} "${py_module_namespace}.${py_module_name}" PARENT_SCOPE)
+#     set(${MODULE_NAME} "${py_module_name}" PARENT_SCOPE)
+#     #message("${py_module_namespace}.${py_module_name}")
+# endfunction()
 
-function(srf_add_cython_libraries SOURCE_GLOB)
+# function(srf_add_cython_libraries SOURCE_GLOB)
 
-    # Set the list of Cython files to build
-    file(GLOB cython_sources ${SOURCE_GLOB})
+#     # Set the list of Cython files to build
+#     file(GLOB cython_sources ${SOURCE_GLOB})
 
-    # Build all of the Cython targets
-    foreach (cpp_file ${cython_sources})
-        srf_get_python_module_name(TARGET_NAME MODULE_NAME ${cpp_file})
+#     # Build all of the Cython targets
+#     foreach (cpp_file ${cython_sources})
+#         srf_get_python_module_name(TARGET_NAME MODULE_NAME ${cpp_file})
 
-        # Add the target and library
-        add_cython_target(${MODULE_NAME} "${cpp_file}" CXX PY3)
-        add_library(${TARGET_NAME} SHARED ${MODULE_NAME})
+#         # Add the target and library
+#         add_cython_target(${MODULE_NAME} "${cpp_file}" CXX PY3)
+#         add_library(${TARGET_NAME} SHARED ${MODULE_NAME})
 
-        set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME "${cython_module_name}")
+#         set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME "${cython_module_name}")
 
-        # Set props, include and link
-        set_target_properties(${TARGET_NAME} PROPERTIES PREFIX "")
-        set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME "${MODULE_NAME}")
-        target_link_libraries(${TARGET_NAME} PUBLIC pysrf)
-        target_include_directories(${TARGET_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+#         # Set props, include and link
+#         set_target_properties(${TARGET_NAME} PROPERTIES PREFIX "")
+#         set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME "${MODULE_NAME}")
+#         target_link_libraries(${TARGET_NAME} PUBLIC pysrf)
+#         target_include_directories(${TARGET_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 
-        if (SRF_PYTHON_INPLACE_BUILD)
-            # Get the source directory for the target
-            get_filename_component(cpp_source_dir ${cpp_file} DIRECTORY)
+#         if (SRF_PYTHON_INPLACE_BUILD)
+#             # Get the source directory for the target
+#             get_filename_component(cpp_source_dir ${cpp_file} DIRECTORY)
 
-            # If specified, copy files back to source for inplace build
-            add_custom_command(TARGET ${TARGET_NAME}
-                POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${TARGET_NAME}> ${cpp_source_dir}
-                COMMENT "Moving python target ${TARGET_NAME} to ${cpp_source_dir} for inplace build"
-                # BYPRODUCTS "${cpp_source_dir}/$<TARGET_FILE_NAME:${TARGET_NAME}>" # Uncomment if genex can be used in BYPRODUCTS. See https://gitlab.kitware.com/cmake/cmake/-/issues/21364
-            )
-        else()
-            # If we arent doing an inplace build, allow relocatable python build tree
-            set_target_properties(${TARGET_NAME} PROPERTIES BUILD_RPATH_USE_ORIGIN ON)
-        endif ()
+#             # If specified, copy files back to source for inplace build
+#             add_custom_command(TARGET ${TARGET_NAME}
+#                 POST_BUILD
+#                 COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${TARGET_NAME}> ${cpp_source_dir}
+#                 COMMENT "Moving python target ${TARGET_NAME} to ${cpp_source_dir} for inplace build"
+#                 # BYPRODUCTS "${cpp_source_dir}/$<TARGET_FILE_NAME:${TARGET_NAME}>" # Uncomment if genex can be used in BYPRODUCTS. See https://gitlab.kitware.com/cmake/cmake/-/issues/21364
+#             )
+#         else()
+#             # If we arent doing an inplace build, allow relocatable python build tree
+#             set_target_properties(${TARGET_NAME} PROPERTIES BUILD_RPATH_USE_ORIGIN ON)
+#         endif ()
 
 
-        # Install
-        # install(TARGETS ${TARGET_NAME} LIBRARY DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-    endforeach (cpp_file ${cython_sources})
+#         # Install
+#         # install(TARGETS ${TARGET_NAME} LIBRARY DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+#     endforeach (cpp_file ${cython_sources})
 
-endfunction()
+# endfunction()
 
-function(srf_add_pybind11_module)
-    set(moduleArg NAME)
-    set(sourceArgs SOURCE)
-    cmake_parse_arguments(ARGS "" "${moduleArg}" "${sourceArgs}" ${ARGN})
+# function(srf_add_pybind11_module)
+#     set(moduleArg NAME)
+#     set(sourceArgs SOURCE)
+#     cmake_parse_arguments(ARGS "" "${moduleArg}" "${sourceArgs}" ${ARGN})
 
-    #message("=> ${ARGS_NAME}: ${ARGS_SOURCE}")
+#     #message("=> ${ARGS_NAME}: ${ARGS_SOURCE}")
 
-    # Get the full module path
-    srf_get_python_module_name(TARGET_NAME MODULE_NAME ${ARGS_NAME})
+#     # Get the full module path
+#     srf_get_python_module_name(TARGET_NAME MODULE_NAME ${ARGS_NAME})
 
-    # Add all globbed sources to the module sources
-    pybind11_add_module(${TARGET_NAME} MODULE "${ARGS_SOURCE}")
+#     # Add all globbed sources to the module sources
+#     pybind11_add_module(${TARGET_NAME} MODULE "${ARGS_SOURCE}")
 
-    set_target_properties(${TARGET_NAME} PROPERTIES PREFIX "")
-    set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME "${MODULE_NAME}")
-    target_link_libraries(${TARGET_NAME} PUBLIC pysrf)
+#     set_target_properties(${TARGET_NAME} PROPERTIES PREFIX "")
+#     set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME "${MODULE_NAME}")
+#     target_link_libraries(${TARGET_NAME} PUBLIC pysrf)
 
-    if (SRF_PYTHON_INPLACE_BUILD)
-        foreach (source_file ${ARGS_SOURCE})
+#     if (SRF_PYTHON_INPLACE_BUILD)
+#         foreach (source_file ${ARGS_SOURCE})
 
-            # Get the full path to the cpp file
-            file(REAL_PATH ${source_file} cpp_file)
+#             # Get the full path to the cpp file
+#             file(REAL_PATH ${source_file} cpp_file)
 
-            # Get the source directory for the target
-            get_filename_component(cpp_source_dir ${cpp_file} DIRECTORY)
+#             # Get the source directory for the target
+#             get_filename_component(cpp_source_dir ${cpp_file} DIRECTORY)
 
-            # If specified, copy files back to source for inplace build
-            add_custom_command(TARGET ${TARGET_NAME}
-                POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${TARGET_NAME}> ${cpp_source_dir}
-                COMMENT "Moving python target ${TARGET_NAME} to ${cpp_source_dir} for inplace build"
-                # BYPRODUCTS "${cpp_source_dir}/$<TARGET_FILE_NAME:${TARGET_NAME}>" # Uncomment if genex can be used in BYPRODUCTS. See https://gitlab.kitware.com/cmake/cmake/-/issues/21364
-            )
-        endforeach ()
-    else()
-        # If we arent doing an inplace build, allow relocatable python build tree
-        set_target_properties(${TARGET_NAME} PROPERTIES BUILD_RPATH_USE_ORIGIN ON)
-    endif ()
+#             # If specified, copy files back to source for inplace build
+#             add_custom_command(TARGET ${TARGET_NAME}
+#                 POST_BUILD
+#                 COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${TARGET_NAME}> ${cpp_source_dir}
+#                 COMMENT "Moving python target ${TARGET_NAME} to ${cpp_source_dir} for inplace build"
+#                 # BYPRODUCTS "${cpp_source_dir}/$<TARGET_FILE_NAME:${TARGET_NAME}>" # Uncomment if genex can be used in BYPRODUCTS. See https://gitlab.kitware.com/cmake/cmake/-/issues/21364
+#             )
+#         endforeach ()
+#     else()
+#         # If we arent doing an inplace build, allow relocatable python build tree
+#         set_target_properties(${TARGET_NAME} PROPERTIES BUILD_RPATH_USE_ORIGIN ON)
+#     endif ()
 
-    # install(TARGETS ${TARGET_NAME} LIBRARY DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+#     # install(TARGETS ${TARGET_NAME} LIBRARY DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 
-    add_dependencies(srf_python_libraries ${TARGET_NAME})
+#     add_dependencies(srf_python_libraries ${TARGET_NAME})
 
-    # add_custom_command(OUTPUT ${PYTHON_LIBRARY_STAMP} DEPENDS ${TARGET_NAME} APPEND)
-endfunction()
+#     # add_custom_command(OUTPUT ${PYTHON_LIBRARY_STAMP} DEPENDS ${TARGET_NAME} APPEND)
+# endfunction()
 
 add_subdirectory(srf/_pysrf)
 add_subdirectory(srf/core)
 add_subdirectory(srf/benchmarking)
 
-# After all modules have been created
-set(PYTHON_WHEEL_STAMP ${CMAKE_CURRENT_BINARY_DIR}/wheel.stamp)
+# # After all modules have been created
+# set(PYTHON_WHEEL_STAMP ${CMAKE_CURRENT_BINARY_DIR}/wheel.stamp)
 
-# Create a custom command that depends on the srf_python_libraries and all .py files
-add_custom_command(
-    COMMAND python setup.py bdist_wheel
-    COMMAND ${CMAKE_COMMAND} -E touch ${PYTHON_WHEEL_STAMP}
-    OUTPUT ${PYTHON_WHEEL_STAMP}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    # Depend on any of the output python files
-    DEPENDS ${OUTPUT_PYTHON_FILES} srf_python_libraries
-)
+# # Create a custom command that depends on the srf_python_libraries and all .py files
+# add_custom_command(
+#     COMMAND python setup.py bdist_wheel
+#     COMMAND ${CMAKE_COMMAND} -E touch ${PYTHON_WHEEL_STAMP}
+#     OUTPUT ${PYTHON_WHEEL_STAMP}
+#     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+#     # Depend on any of the output python files
+#     DEPENDS ${OUTPUT_PYTHON_FILES} srf_python_libraries
+# )
 
-# Create a dummy target to ensure the above custom command is always run
-add_custom_target(srf_python_rebuild ALL DEPENDS ${PYTHON_WHEEL_STAMP}
-    COMMENT "Running srf_python_rebuild"
-    COMMAND ${CMAKE_COMMAND} -E echo "Running cmake srf_python_rebuild")
+# # Create a dummy target to ensure the above custom command is always run
+# add_custom_target(srf_python_rebuild ALL DEPENDS ${PYTHON_WHEEL_STAMP}
+#     COMMENT "Running srf_python_rebuild"
+#     COMMAND ${CMAKE_COMMAND} -E echo "Running cmake srf_python_rebuild")
 
 ###################################################################################################
 # - tests -----------------------------------------------------------------------------------------
@@ -281,5 +287,7 @@ add_custom_target(srf_python_rebuild ALL DEPENDS ${PYTHON_WHEEL_STAMP}
 if (SRF_BUILD_TESTS)
     add_subdirectory(srf/tests)
 endif ()
+
+build_python_package(srf INSTALL_WHEEL $<$<BOOL:${SRF_PYTHON_INPLACE_BUILD}>:IS_INPLACE>)
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

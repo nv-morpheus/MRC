@@ -1,6 +1,7 @@
-import srf
 from srf_qs_hybrid.common import setup_logger
 from srf_qs_hybrid.ex00_wrap_data_objects import MyDataObject
+
+import srf
 
 # Setup logging
 logger = setup_logger(__file__)
@@ -83,4 +84,5 @@ def run_pipeline():
 
 
 if (__name__ == "__main__"):
+
     run_pipeline()

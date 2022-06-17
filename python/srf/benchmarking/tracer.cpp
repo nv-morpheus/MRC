@@ -21,6 +21,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
+#include <pybind11/stl.h>
 
 #include <cstddef>  // for size_t
 #include <memory>
@@ -55,21 +56,21 @@ PYBIND11_MODULE(tracers, m)
      * @brief Tracer objects are packaged into tracer ensembles; we'll just support tracer's with py::object payloads
      *  for now.
      */
-    auto LatencyTracer = py::class_<latency_tracer_t>(m, "LatencyTracer");
+    auto LatencyTracer = py::class_<latency_tracer_t, std::shared_ptr<latency_tracer_t>>(m, "LatencyTracer");
     LatencyTracer.def(py::init<std::size_t>());
 
     // TODO(devin)
     // LatencyTracer.def("add_counters", &srf::LatencyTracer::add_counters);
-    LatencyTracer.def_static(
-        "aggregate", [](latency_tracer_t& self, std::vector<std::shared_ptr<latency_tracer_t>> ensemble_tracers) {
-            // Something is broken with calling static members
-        });
+    LatencyTracer.def_static("aggregate", [](py::object& obj_type, py::list ensemble_tracers) {
+        // Something is broken with calling static members
+    });
     LatencyTracer.def("emit", &latency_tracer_t::emit);
 
     /**
      * @brief ThroughputTracer
      */
-    auto ThroughputTracer = py::class_<throughput_tracer_t>(m, "ThroughputTracer");
+    auto ThroughputTracer =
+        py::class_<throughput_tracer_t, std::shared_ptr<throughput_tracer_t>>(m, "ThroughputTracer");
     ThroughputTracer.def(py::init<std::size_t>());
     // ThroughputTracer.def("add_counters", &ThroughputTracerT::add_counters);
     // ThroughputTracer.def("aggregate", &ThroughputTracerT::aggregate);

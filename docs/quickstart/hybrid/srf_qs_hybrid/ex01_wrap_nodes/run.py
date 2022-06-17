@@ -1,7 +1,7 @@
 from srf_qs_hybrid.common import setup_logger
-from srf_qs_hybrid.ex01_wrap_nodes import DataObjectNode
-from srf_qs_hybrid.ex01_wrap_nodes import DataObjectSink
-from srf_qs_hybrid.ex01_wrap_nodes import DataObjectSource
+from srf_qs_hybrid.ex01_wrap_nodes import MyDataObjectNode
+from srf_qs_hybrid.ex01_wrap_nodes import MyDataObjectSink
+from srf_qs_hybrid.ex01_wrap_nodes import MyDataObjectSource
 
 import srf
 
@@ -14,13 +14,13 @@ def run_pipeline():
     def segment_init(seg: srf.Builder):
 
         # Create the source object
-        src = DataObjectSource(seg, "src", count=3)
+        src = MyDataObjectSource(seg, "src", count=3)
 
-        node = DataObjectNode(seg, "node")
+        node = MyDataObjectNode(seg, "node")
 
         seg.make_edge(src, node)
 
-        sink = DataObjectSink(seg, "sink")
+        sink = MyDataObjectSink(seg, "sink")
 
         # Connect the source to the sink. You can also connect nodes by name
         seg.make_edge(node, sink)
@@ -43,7 +43,7 @@ def run_pipeline():
     # Register pipeline to tell executor what to run
     executor.register_pipeline(pipeline)
 
-    print("srf pipeline starting...")
+    logger.info("srf pipeline starting...")
 
     # This will start the pipeline and return immediately
     executor.start()
@@ -51,7 +51,7 @@ def run_pipeline():
     # Wait for the pipeline to exit on its own
     executor.join()
 
-    print("srf pipeline complete")
+    logger.info("srf pipeline complete")
 
 
 if (__name__ == "__main__"):

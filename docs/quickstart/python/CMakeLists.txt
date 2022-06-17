@@ -17,6 +17,8 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "python")
 
 set(QUICKSTART_PYTHON_HOME "${CMAKE_CURRENT_SOURCE_DIR}")
 
+create_python_package(srf_qs_python)
+
 # add_subdirectory(srf_qs_python/common)
 
 # add_subdirectory(srf_qs_python/ex00_wrap_data_objects)
@@ -24,17 +26,19 @@ set(QUICKSTART_PYTHON_HOME "${CMAKE_CURRENT_SOURCE_DIR}")
 # add_subdirectory(srf_qs_python/ex02_mixed_execution)
 
 
-# Get all of the python files to copy to the build directory
-file(GLOB_RECURSE SRF_QUICKSTART_PYTHON_PYTHON_FILES
-  LIST_DIRECTORIES FALSE
-  CONFIGURE_DEPENDS
-  "*.py"
-  "py.typed"
-  "pyproject.toml"
-  "setup.cfg"
-  "MANIFEST.in"
-)
+# # Get all of the python files to copy to the build directory
+# file(GLOB_RECURSE SRF_QUICKSTART_PYTHON_PYTHON_FILES
+#   LIST_DIRECTORIES FALSE
+#   CONFIGURE_DEPENDS
+#   "*.py"
+#   "py.typed"
+#   "pyproject.toml"
+#   "setup.cfg"
+#   "MANIFEST.in"
+# )
 
-add_python_sources(${SRF_QUICKSTART_PYTHON_PYTHON_FILES})
+# add_python_sources(${SRF_QUICKSTART_PYTHON_PYTHON_FILES})
+
+build_python_package(srf_qs_python)
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

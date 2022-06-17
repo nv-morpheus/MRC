@@ -15,8 +15,8 @@
 
 add_pybind11_library(
   data
-  MODULE_ROOT
-    ${QUICKSTART_HYBRID_HOME}
+  # MODULE_ROOT
+  #   ${QUICKSTART_HYBRID_HOME}
   SOURCE_FILES
     data.cpp
   LINK_TARGETS
@@ -25,8 +25,6 @@ add_pybind11_library(
     common_data_target
 )
 
-message(STATUS "common_data_target: ${common_data_target}")
-
 target_include_directories(${common_data_target}
   PUBLIC
     ./include
@@ -34,5 +32,18 @@ target_include_directories(${common_data_target}
 
 inplace_build_copy(${common_data_target} ${CMAKE_CURRENT_SOURCE_DIR})
 
+add_pybind11_library(
+  nodes
+  SOURCE_FILES
+    nodes.cpp
+  LINK_TARGETS
+    ${common_data_target}
+  OUTPUT_TARGET
+    nodes_data_target
+)
+
+inplace_build_copy(${nodes_data_target} ${CMAKE_CURRENT_SOURCE_DIR})
+
 # Set this variable in the parent scope so other examples can link to it
 set(common_data_target ${common_data_target} PARENT_SCOPE)
+set(nodes_data_target ${nodes_data_target} PARENT_SCOPE)

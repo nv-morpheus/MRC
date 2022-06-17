@@ -46,7 +46,4 @@ add_subdirectory(cpp)
 add_subdirectory(hybrid)
 add_subdirectory(python)
 
-# Finally, at the end, copy any sources that need to move to the binary directory
-copy_python_sources()
-
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

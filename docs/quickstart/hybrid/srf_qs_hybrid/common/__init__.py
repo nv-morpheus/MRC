@@ -6,6 +6,7 @@ from srf.core.log_handler import SrfHandler
 
 # Intentionally import everything from the pybind11 module into this package
 from .data import *  # NOQA
+from .nodes import *  # NOQA
 
 
 def setup_logger(example_file: str):

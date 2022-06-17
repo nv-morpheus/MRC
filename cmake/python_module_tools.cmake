@@ -13,10 +13,54 @@
 # =============================================================================
 
 ## TODO: these need to be extracted to a cmake utilities repo
-add_custom_target(all_python_targets ALL)
 
-# This target is used to store all python files that need to be copied to the build directory as resources
-add_custom_target(python_sources_target ALL)
+# # This target is used to store all python files that need to be copied to the build directory as resources
+# add_custom_target(python_sources_target ALL)
+
+# # Create a target that depends on all of the sources and post python steps can depend on
+# add_custom_target(all_python_targets ALL
+#   DEPENDS python_sources_target
+# )
+
+function(create_python_package PACKAGE_NAME)
+
+  if(PYTHON_ACTIVE_PACKAGE_NAME)
+    message(FATAL_ERROR "An active wheel has already been created. Must call create_python_package/build_python_package in pairs")
+  endif()
+
+  # Set the active wheel in the parent scipe
+  set(PYTHON_ACTIVE_PACKAGE_NAME ${PACKAGE_NAME}-package)
+
+  # Create a dummy source that holds all of the source files as resources
+  add_custom_target(${PYTHON_ACTIVE_PACKAGE_NAME}-sources ALL)
+
+  # Make it depend on the sources
+  add_custom_target(${PYTHON_ACTIVE_PACKAGE_NAME}-modules ALL
+    DEPENDS ${PYTHON_ACTIVE_PACKAGE_NAME}-sources
+  )
+
+  # Outputs target depends on all sources, generated files, and modules
+  add_custom_target(${PYTHON_ACTIVE_PACKAGE_NAME}-outputs ALL
+    DEPENDS ${PYTHON_ACTIVE_PACKAGE_NAME}-modules
+  )
+
+  # Now setup some simple globbing for common files to move to the build directory
+  file(GLOB_RECURSE wheel_python_files
+    LIST_DIRECTORIES FALSE
+    CONFIGURE_DEPENDS
+    "*.py"
+    "py.typed"
+    "pyproject.toml"
+    "setup.cfg"
+    "MANIFEST.in"
+  )
+
+  add_python_sources(${wheel_python_files})
+
+  # Set the active wheel in the parent scope so it will appear in any subdirectories
+  set(PYTHON_ACTIVE_PACKAGE_NAME ${PYTHON_ACTIVE_PACKAGE_NAME} PARENT_SCOPE)
+
+endfunction()
 
 function(add_target_resources)
 
@@ -58,8 +102,12 @@ endfunction()
 
 function(add_python_sources)
 
+  if(NOT PYTHON_ACTIVE_PACKAGE_NAME)
+    message(FATAL_ERROR "Must call create_python_wheel() before calling add_python_sources")
+  endif()
+
   # Append any arguments to the python_sources_target
-  add_target_resources(TARGET_NAME python_sources_target ${ARGN})
+  add_target_resources(TARGET_NAME ${PYTHON_ACTIVE_PACKAGE_NAME}-sources ${ARGN})
 
 endfunction()
 
@@ -97,8 +145,6 @@ function(copy_target_resources TARGET_NAME COPY_DIRECTORY)
 
       message(VERBOSE "Copying ${resource} to ${resource_output}")
 
-      set(daf ${PROJECT_IS_TOP_LEVEL})
-
       # Pretty up the output message
       set(top_level_source_dir ${${CMAKE_PROJECT_NAME}_SOURCE_DIR})
       cmake_path(RELATIVE_PATH resource BASE_DIRECTORY "${top_level_source_dir}" OUTPUT_VARIABLE resource_source_relative)
@@ -110,6 +156,7 @@ function(copy_target_resources TARGET_NAME COPY_DIRECTORY)
         DEPENDS ${resource}
         COMMENT "Copying \${SOURCE_DIR}/${resource_source_relative} to \${SOURCE_DIR}/${resource_output_source_relative}"
       )
+
       list(APPEND resource_outputs ${resource_output})
     endforeach()
 
@@ -134,10 +181,100 @@ function(inplace_build_copy TARGET_NAME INPLACE_DIR)
 
 endfunction()
 
+function(build_python_package PACKAGE_NAME)
 
-function(copy_python_sources)
+  if(NOT PYTHON_ACTIVE_PACKAGE_NAME)
+    message(FATAL_ERROR "Must call create_python_package() before calling add_python_sources")
+  endif()
 
-  copy_target_resources(python_sources_target ${PROJECT_BINARY_DIR})
+  if(NOT "${PACKAGE_NAME}-package" STREQUAL "${PYTHON_ACTIVE_PACKAGE_NAME}")
+    message(FATAL_ERROR "Mismatched package name supplied to create_python_package/build_python_package")
+  endif()
+
+  set(flags BUILD_WHEEL INSTALL_WHEEL IS_INPLACE)
+  set(singleValues "")
+  set(multiValues PYTHON_DEPENDENCIES)
+
+  include(CMakeParseArguments)
+  cmake_parse_arguments(_ARGS
+    "${flags}"
+    "${singleValues}"
+    "${multiValues}"
+    ${ARGN}
+  )
+
+  # First copy the source files
+  copy_target_resources(${PYTHON_ACTIVE_PACKAGE_NAME}-sources ${PROJECT_BINARY_DIR})
+
+  set(module_dependencies ${PYTHON_ACTIVE_PACKAGE_NAME}-sources-copy-resources)
+
+  if(_ARGS_PYTHON_DEPENDENCIES)
+    list(APPEND module_dependencies ${_ARGS_PYTHON_DEPENDENCIES})
+  endif()
+
+  # Now ensure that the targets only get built after the files have been copied
+  add_dependencies(${PYTHON_ACTIVE_PACKAGE_NAME}-modules ${module_dependencies})
+
+  # Next step is to build the wheel file
+  if(_ARGS_BUILD_WHEEL)
+    set(wheel_stamp ${CMAKE_CURRENT_BINARY_DIR}/${PYTHON_ACTIVE_PACKAGE_NAME}-wheel.stamp)
+
+    # The command to actually generate the wheel
+    add_custom_command(
+      OUTPUT ${wheel_stamp}
+      COMMAND python setup.py bdist_wheel
+      COMMAND ${CMAKE_COMMAND} -E touch ${wheel_stamp}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      # Depend on any of the output python files
+      DEPENDS ${PYTHON_ACTIVE_PACKAGE_NAME}-outputs
+      COMMENT "Building ${PYTHON_ACTIVE_PACKAGE_NAME} wheel"
+    )
+
+    # Create a dummy target to ensure the above custom command is always run
+    add_custom_target(${PYTHON_ACTIVE_PACKAGE_NAME}-wheel ALL
+      DEPENDS ${install_stamp}
+    )
+  endif()
+
+  if(_ARGS_INSTALL_WHEEL)
+    # Now actually install the package
+    find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
+    # detect virtualenv and set Pip args accordingly
+    if(DEFINED ENV{VIRTUAL_ENV} OR DEFINED ENV{CONDA_PREFIX})
+      set(_pip_args)
+    else()
+      set(_pip_args "--user")
+    endif()
+
+    if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+      list(APPEND _pip_args "-e")
+    endif()
+
+    set(install_stamp ${CMAKE_CURRENT_BINARY_DIR}/${PYTHON_ACTIVE_PACKAGE_NAME}-install.stamp)
+
+    set(setup_dir ${CMAKE_CURRENT_SOURCE_DIR})
+
+    # Change which setup we use if we are using inplace
+    if(_ARGS_IS_INPLACE)
+      set(setup_dir ${CMAKE_CURRENT_SOURCE_DIR})
+    endif()
+
+    add_custom_command(
+      OUTPUT ${install_stamp}
+      COMMAND ${Python3_EXECUTABLE} -m pip install ${_pip_args} ${setup_dir}
+      COMMAND ${CMAKE_COMMAND} -E touch ${install_stamp}
+      DEPENDS ${PYTHON_ACTIVE_PACKAGE_NAME}-outputs
+      COMMENT "Installing ${PACKAGE_NAME} python package"
+    )
+
+    add_custom_target(${PYTHON_ACTIVE_PACKAGE_NAME}-install ALL
+      DEPENDS ${install_stamp}
+    )
+  endif()
+
+  # Finally, unset the active package
+  unset(PYTHON_ACTIVE_PACKAGE_NAME PARENT_SCOPE)
 
 endfunction()
 
@@ -212,6 +349,11 @@ add_python_module
 
 #]=======================================================================]
 macro(_create_python_library MODULE_NAME)
+
+  if(NOT PYTHON_ACTIVE_PACKAGE_NAME)
+    message(FATAL_ERROR "Must call create_python_wheel() before calling add_python_sources")
+  endif()
+
   set(prefix PYMOD)
   set(flags IS_PYBIND11 IS_CYTHON IS_MODULE)
   set(singleValues INSTALL_DEST OUTPUT_TARGET MODULE_ROOT PYX_FILE)
@@ -224,9 +366,12 @@ macro(_create_python_library MODULE_NAME)
       "${multiValues}"
       ${ARGN})
 
-  if(PYMOD_MODULE_ROOT)
-    cmake_path(SET PYMOD_MODULE_ROOT "${PYMOD_MODULE_ROOT}")
+  if(NOT PYMOD_MODULE_ROOT)
+    get_target_property(PYMOD_MODULE_ROOT ${PYTHON_ACTIVE_PACKAGE_NAME}-modules SOURCE_DIR)
   endif()
+
+  # Normalize the module root
+  cmake_path(SET PYMOD_MODULE_ROOT "${PYMOD_MODULE_ROOT}")
 
   resolve_python_module_name(${MODULE_NAME}
     MODULE_ROOT ${PYMOD_MODULE_ROOT}
@@ -235,10 +380,10 @@ macro(_create_python_library MODULE_NAME)
     OUTPUT_RELATIVE_PATH SOURCE_RELATIVE_PATH
   )
 
-  # Ensure the custom target all_python_targets has been created
-  if (NOT TARGET all_python_targets)
-    message(FATAL_ERROR "You must call `add_custom_target(all_python_targets)` before the first call to add_python_module")
-  endif()
+  # # Ensure the custom target all_python_targets has been created
+  # if (NOT TARGET all_python_targets)
+  #   message(FATAL_ERROR "You must call `add_custom_target(all_python_targets)` before the first call to add_python_module")
+  # endif()
 
   set(lib_type SHARED)
 
@@ -297,7 +442,7 @@ macro(_create_python_library MODULE_NAME)
   # Set all_python_targets to depend on this module. This ensures that all python targets have been built before any
   # post build actions are taken. This is often necessary to allow post build actions that load the python modules to
   # succeed
-  add_dependencies(all_python_targets ${TARGET_NAME})
+  add_dependencies(${PYTHON_ACTIVE_PACKAGE_NAME}-modules ${TARGET_NAME})
 
   # Get the relative path from the project source to the module root
   cmake_path(RELATIVE_PATH PYMOD_MODULE_ROOT BASE_DIRECTORY ${PROJECT_SOURCE_DIR} OUTPUT_VARIABLE module_root_relative)
@@ -309,7 +454,7 @@ macro(_create_python_library MODULE_NAME)
   add_custom_command(
     OUTPUT  ${module_binary_stub_file}
     COMMAND ${Python3_EXECUTABLE} -m pybind11_stubgen ${TARGET_NAME} --no-setup-py --log-level WARN -o ./ --root-module-suffix \"\"
-    DEPENDS ${TARGET_NAME} all_python_targets
+    DEPENDS ${PYTHON_ACTIVE_PACKAGE_NAME}-modules
     COMMENT "Building stub for python module ${TARGET_NAME}..."
     WORKING_DIRECTORY ${module_root_binary_dir}
   )
@@ -319,9 +464,11 @@ macro(_create_python_library MODULE_NAME)
     DEPENDS ${module_binary_stub_file}
   )
 
+  # Make the outputs depend on the stub
+  add_dependencies(${PYTHON_ACTIVE_PACKAGE_NAME}-outputs ${TARGET_NAME}-stubs)
+
   # Save the output as a target property
   add_target_resources(TARGET_NAME ${TARGET_NAME} "${module_binary_stub_file}")
-  # set_target_properties(${TARGET_NAME} PROPERTIES RESOURCE "${module_binary_stub_file}")
 
   unset(module_binary_stub_file)
 

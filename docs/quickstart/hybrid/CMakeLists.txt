@@ -17,24 +17,35 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "hybrid")
 
 set(QUICKSTART_HYBRID_HOME "${CMAKE_CURRENT_SOURCE_DIR}")
 
+create_python_package(srf_qs_hybrid)
+
 add_subdirectory(srf_qs_hybrid/common)
 
 add_subdirectory(srf_qs_hybrid/ex00_wrap_data_objects)
 add_subdirectory(srf_qs_hybrid/ex01_wrap_nodes)
 add_subdirectory(srf_qs_hybrid/ex02_mixed_execution)
 
-# Get all of the python files to copy to the build directory
-file(GLOB_RECURSE SRF_QUICKSTART_HYBRID_PYTHON_FILES
-  # RELATIVE ${PROJECT_SOURCE_DIR}
-  LIST_DIRECTORIES FALSE
-  CONFIGURE_DEPENDS
-  "*.py"
-  "py.typed"
-  "pyproject.toml"
-  "setup.cfg"
-  "MANIFEST.in"
-)
+# # Get all of the python files to copy to the build directory
+# file(GLOB_RECURSE SRF_QUICKSTART_HYBRID_PYTHON_FILES
+#   # RELATIVE ${PROJECT_SOURCE_DIR}
+#   LIST_DIRECTORIES FALSE
+#   CONFIGURE_DEPENDS
+#   "*.py"
+#   "py.typed"
+#   "pyproject.toml"
+#   "setup.cfg"
+#   "MANIFEST.in"
+# )
 
-add_python_sources(${SRF_QUICKSTART_HYBRID_PYTHON_FILES})
+# add_python_sources(${SRF_QUICKSTART_HYBRID_PYTHON_FILES})
+
+set(extra_deps "")
+
+if(TARGET srf-package-install)
+  set(extra_deps srf-package-install)
+endif()
+
+message(STATUS "extra_deps: ${extra_deps}")
+build_python_package(srf_qs_hybrid INSTALL_WHEEL PYTHON_DEPENDENCIES "${extra_deps}")
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

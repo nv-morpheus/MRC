@@ -13,4 +13,9 @@
 # the License.
 # =============================================================================
 
-srf_add_pybind11_module(NAME test_edges_cpp SOURCE ./test_edges.cpp)
+# srf_add_pybind11_module(NAME test_edges_cpp SOURCE ./test_edges.cpp)
+add_pybind11_module(test_edges_cpp SOURCE_FILES test_edges.cpp LINK_TARGETS pysrf OUTPUT_TARGET test_edges_cpp_target)
+
+if(SRF_PYTHON_INPLACE_BUILD)
+  inplace_build_copy(${test_edges_cpp_target} ${CMAKE_CURRENT_SOURCE_DIR})
+endif()
