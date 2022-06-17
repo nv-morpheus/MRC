@@ -17,15 +17,14 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "python")
 
 option(SRF_PYTHON_INPLACE_BUILD "Whether or not to copy built python modules back to the source tree for debug purposes." OFF)
 
-set(Python_FIND_VIRTUALENV "FIRST")
-
-cmake_policy(GET CMP0094 FIND_PYTHON_STRATEGY)
+set(Python3_FIND_VIRTUALENV "FIRST")
+set(Python3_FIND_STRATEGY "LOCATION")
 
 message(VERBOSE "Python_EXECUTABLE (before find_package): ${Python_EXECUTABLE}")
 message(VERBOSE "Python_ROOT_DIR (before find_package): ${Python_ROOT_DIR}")
 message(VERBOSE "FIND_PYTHON_STRATEGY (before find_package): ${FIND_PYTHON_STRATEGY}")
 
-find_package(Python 3.8 REQUIRED COMPONENTS Development Interpreter)
+find_package(Python3 REQUIRED COMPONENTS Development Interpreter)
 
 message(VERBOSE "Python_FOUND: " ${Python_FOUND})
 message(VERBOSE "Python_EXECUTABLE: ${Python_EXECUTABLE}")
@@ -53,7 +52,7 @@ include(deps/Configure_pybind11)
 if (NOT EXISTS ${Python_SITELIB}/skbuild)
     # In case this is messed up by `/usr/local/python/site-packages` vs `/usr/python/site-packages`, check pip itself.
     execute_process(
-        COMMAND bash "-c" "${Python_EXECUTABLE} -m pip show scikit-build | sed -n -e 's/Location: //p'"
+        COMMAND bash "-c" "${Python3_EXECUTABLE} -m pip show scikit-build | sed -n -e 's/Location: //p'"
         OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )

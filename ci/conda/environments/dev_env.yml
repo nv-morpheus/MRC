@@ -16,15 +16,14 @@ dependencies:
   - gcc_linux-64=9.4
   - gflags=2.2
   - git>=2.35.3 # Needed for wildcards on safe.directory
-  - glog=0.5
+  - glog=0.6
   - gmock=1.10
   - graphviz=3.0
-  - grpc-cpp=1.43
+  - grpc-cpp=1.45
   - gtest=1.10
   - gxx_linux-64=9.4
   - libhwloc=2.5
-  - libprotobuf=3.19
-  - librmm=21.10
+  - librmm=22.06
   - libtool
   - ninja=1.10
   - nlohmann_json=3.9
@@ -32,7 +31,6 @@ dependencies:
   - numpy=1.21.2
   - nvcc_linux-64=11.4
   - pkg-config=0.29
-  - protobuf=3.19
   - python=3.8
   - scikit-build>=0.12
   - spdlog=1.8.5
