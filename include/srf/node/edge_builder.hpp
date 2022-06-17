@@ -73,9 +73,9 @@ struct EdgeBuilder final
         source.complete_edge(edge);
     }
 
-    static void make_edge_typeless(SourceTypeErased& source, SinkTypeErased& sink, bool allow_narrowing = true)
+    static void make_edge_typeless(SourcePropertiesBase& source, SinkPropertiesBase& sink, bool allow_narrowing = true)
     {
-        source.complete_edge(source.ingress_adaptor_for_sink(sink));
+        source.complete_edge(source.get_dynamic_ingress(sink));
     }
 };
 

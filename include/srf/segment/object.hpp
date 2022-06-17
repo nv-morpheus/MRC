@@ -64,38 +64,6 @@ struct ObjectProperties
 
 inline ObjectProperties::~ObjectProperties() = default;
 
-inline node::SinkTypeErased& ObjectProperties::sink_typeless()
-{
-    auto& base = sink_base();
-    auto* sink = dynamic_cast<node::SinkTypeErased*>(&base);
-
-    if (sink == nullptr)
-    {
-        LOG(ERROR) << "Failed to cast " << type_name() << " to "
-                   << "SinkTypeErased from "
-                   << "SinkProperties<" << base.sink_type_name() << ">; typeless edges not supported for this type";
-        throw exceptions::SrfRuntimeError("Failed to cast Sink to requested SinkTypeless");
-    }
-
-    return *sink;
-}
-
-inline node::SourceTypeErased& ObjectProperties::source_typeless()
-{
-    auto& base   = source_base();
-    auto* source = dynamic_cast<node::SourceTypeErased*>(&base);
-
-    if (source == nullptr)
-    {
-        LOG(ERROR) << "Failed to cast " << type_name() << " to "
-                   << "SourceTypeErased from "
-                   << "SourceProperties<" << base.source_type_name() << ">; typeless edges not support for this type";
-        throw exceptions::SrfRuntimeError("Failed to cast Source to requested SourceTypeless");
-    }
-
-    return *source;
-}
-
 template <typename T>
 node::SinkProperties<T>& ObjectProperties::sink_typed()
 {
@@ -161,6 +129,7 @@ class Object : public virtual ObjectProperties
         }
         return m_launch_options;
     }
+
     const runnable::LaunchOptions& launch_options() const final
     {
         if (!is_runnable())
