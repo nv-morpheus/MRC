@@ -25,10 +25,10 @@
 #include <srf/node/sink_properties.hpp>
 #include <srf/node/source_properties.hpp>
 #include <srf/runnable/launchable.hpp>
+#include <srf/segment/component.hpp>
 #include <srf/segment/egress_port.hpp>
 #include <srf/segment/forward.hpp>
 #include <srf/segment/object.hpp>
-#include <srf/segment/resource.hpp>
 #include <srf/segment/runnable.hpp>
 #include <srf/utils/macros.hpp>
 #include "srf/internal/segment/ibuilder.hpp"
@@ -207,7 +207,7 @@ std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::uni
     }
     else
     {
-        auto segment_node = std::make_shared<Resource<ObjectT>>(std::move(node));
+        auto segment_node = std::make_shared<Component<ObjectT>>(std::move(node));
         add_object(name, segment_node);
         segment_object = segment_node;
     }

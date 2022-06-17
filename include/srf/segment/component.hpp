@@ -28,11 +28,11 @@
 namespace srf::segment {
 
 template <typename ResourceT>
-class Resource final : public Object<ResourceT>
+class Component final : public Object<ResourceT>
 {
   public:
-    Resource(std::unique_ptr<ResourceT> resource) : m_resource(std::move(resource)) {}
-    ~Resource() final = default;
+    Component(std::unique_ptr<ResourceT> resource) : m_resource(std::move(resource)) {}
+    ~Component() final = default;
 
   private:
     ResourceT* get_object() const final
