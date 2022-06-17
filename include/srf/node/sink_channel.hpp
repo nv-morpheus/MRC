@@ -17,16 +17,19 @@
 
 #pragma once
 
-#include <mutex>
 #include <srf/channel/buffered_channel.hpp>
+#include <srf/channel/egress.hpp>
 #include <srf/channel/ingress.hpp>
 #include <srf/constants.hpp>
 #include <srf/exceptions/runtime_error.hpp>
 #include <srf/node/edge.hpp>
+#include <srf/node/edge_properties.hpp>
 #include <srf/node/forward.hpp>
+#include <srf/node/sink_channel_base.hpp>
 #include <srf/node/sink_properties.hpp>
 #include <srf/utils/type_utils.hpp>
-#include "srf/channel/egress.hpp"
+
+#include <mutex>
 
 namespace srf::node {
 
@@ -36,171 +39,33 @@ namespace srf::node {
  * @tparam T
  */
 template <typename T>
-class SinkChannel : public SinkProperties<T>
+class SinkChannel : public SinkChannelBase<T>, public SinkProperties<T>, public ChannelAcceptor<T>
 {
   protected:
-    SinkChannel();
-
-  public:
-    ~SinkChannel() override = default;
-
-    /**
-     * @brief Enables persistence of the Channel.
-     *
-     * The default behavior is to close the owned Channel after all Ingress objects created from channel_ingress have
-     * been destroyed. The persistent option keeps an internal Ingress object live preventing channel closure.
-     *
-     * Invoking stop on the Runner which owns the Runnable explicitly disables persistence.
-     */
-    void enable_persistence();
-
-    /**
-     * @brief Disables persistence of the Channel
-     */
-    void disable_persistence();
-
-    /**
-     * @brief Determine if the Channel is persistent or not.
-     *
-     * @return true
-     * @return false
-     */
-    bool is_persistent() const;
-
-    /**
-     * @brief Replace the current Channel.
-     *
-     * An update can only occur if persistence has not be been requested and no external entities have acquired an
-     * Ingress.
-     *
-     * @param channel
-     */
-    void update_channel(std::unique_ptr<Channel<T>> channel);
-
-    /**
-     * @brief The number of outstanding edge connections from this SinkChannel to SourceChannels
-     *
-     * @return std::size_t
-     */
-    std::size_t use_count()
-    {
-        return m_ingress.use_count();
-    }
-
-    // TODO(#151) - Add property for limiting the number of upstream edges to SourceChannels
-
-  protected:
-    /**
-     * @brief Enable derived classes to access the reader interface to of the channel
-     *
-     * @return channel::Egress<T>&
-     */
-    inline channel::Egress<T>& egress();
+    SinkChannel() = default;
 
   private:
+    using SinkChannelBase<T>::channel;
+    using SinkChannelBase<T>::ingress_channel;
+    using SinkChannelBase<T>::set_shared_channel;
+
     // implement virtual method from SinkProperties<T>
     [[nodiscard]] std::shared_ptr<channel::Ingress<T>> channel_ingress() final;
 
-    // holds the original channel passed into the constructor or set via update_channel
-    std::shared_ptr<Channel<T>> m_channel;
-
-    // holder for the specialized ingress
-    std::weak_ptr<Edge<T>> m_ingress;
-
-    // used to make the channel reader persistent by explicitly holding shared_ptr created from calling weak_ptr::lock
-    std::shared_ptr<Edge<T>> m_persistent_ingress{nullptr};
-
-    // indicates whether or not a channel connection was ever made
-    bool m_ingress_initialized{false};
-
-    // recursive mutex to protect ingress creation; recursion required for persistence
-    mutable std::recursive_mutex m_mutex;
+    // implement virtual method from ChannelAcceptor<T>
+    void set_channel(std::shared_ptr<channel::Channel<T>> channel) final;
 };
-
-template <typename T>
-SinkChannel<T>::SinkChannel() : m_channel(std::make_unique<channel::BufferedChannel<T>>())
-{}
-
-template <typename T>
-channel::Egress<T>& SinkChannel<T>::egress()
-{
-    DCHECK(m_channel);
-    return *m_channel;
-}
 
 template <typename T>
 std::shared_ptr<channel::Ingress<T>> SinkChannel<T>::channel_ingress()
 {
-    std::shared_ptr<Edge<T>> ingress;
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-
-    CHECK(m_channel);
-    if (m_channel->is_channel_closed())
-    {
-        throw exceptions::SrfRuntimeError("attempting to acquire an Ingress to a closed channel");
-    }
-
-    // the last holder that owns a shared_ptr<Ingress> will close the channel
-    // when the final instance of the shared_ptr is either reset or goes out of scope
-    if ((ingress = m_ingress.lock()))
-    {
-        return ingress;
-    }
-
-    // make a copy of the shared_ptr to the Channel so we can capture it in the deleter
-    auto channel_holder = m_channel;
-
-    // create the first shared pointer of this input channel and capture the shared_ptr as part of the deleter
-    ingress = std::shared_ptr<Edge<T>>(new Edge<T>(m_channel), [channel_holder](Edge<T>* ptr) {
-        channel_holder->close_channel();
-        delete ptr;
-    });
-
-    // assign the weak_ptr
-    m_ingress             = ingress;
-    m_ingress_initialized = true;
-
-    return ingress;
+    return SinkChannelBase<T>::ingress_channel();
 }
 
 template <typename T>
-void SinkChannel<T>::update_channel(std::unique_ptr<Channel<T>> channel)
+void SinkChannel<T>::set_channel(std::shared_ptr<Channel<T>> channel)
 {
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-
-    CHECK(channel);
-    CHECK_EQ(m_channel.use_count(), 1) << "can not modify the input channel after it has been shared or is persistent";
-
-    m_channel             = std::move(channel);
-    m_ingress_initialized = false;
-}
-
-template <typename T>
-bool SinkChannel<T>::is_persistent() const
-{
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    return (m_persistent_ingress != nullptr);
-}
-
-template <typename T>
-void SinkChannel<T>::disable_persistence()
-{
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    m_persistent_ingress = nullptr;
-}
-
-template <typename T>
-void SinkChannel<T>::enable_persistence()
-{
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    if (m_persistent_ingress)
-    {
-        return;
-    }
-    // Get and hold onto the input channel
-    auto persistent = channel_ingress();
-    CHECK(persistent);
-    m_persistent_ingress = std::move(persistent);
+    SinkChannelBase<T>::set_shared_channel(std::move(channel));
 }
 
 }  // namespace srf::node
