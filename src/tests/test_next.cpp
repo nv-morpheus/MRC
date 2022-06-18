@@ -29,9 +29,12 @@
 #include "srf/segment/object.hpp"
 #include "srf/utils/macros.hpp"
 
+#include <iterator>
 #include <srf/channel/egress.hpp>
 #include <srf/channel/ingress.hpp>
 #include <srf/channel/status.hpp>
+
+#include <srf/core/reusable_pool.hpp>
 #include <srf/node/edge_builder.hpp>
 #include <srf/node/generic_node.hpp>
 #include <srf/node/generic_sink.hpp>
@@ -545,6 +548,37 @@ TEST_F(TestNext, TapUniquePtr)
         [](std::unique_ptr<int>&& int_ptr) { LOG(INFO) << "in observer: " << *int_ptr; });
 
     observable.subscribe([](std::unique_ptr<int> data) { LOG(INFO) << "in subscriber: " << *data; });
+    observable.subscribe(observer);
+}
+
+TEST_F(TestNext, RxWithReusableOnNextAndOnError)
+{
+    auto pool = core::ReusablePool<int>::create(32);
+
+    EXPECT_EQ(pool->size(), 0);
+
+    for (int i = 0; i < 10; i++)
+    {
+        pool->emplace(42);
+    }
+
+    using data_t = core::Reusable<int>;
+
+    auto observable = rxcpp::observable<>::create<data_t>([pool](rxcpp::subscriber<data_t> s) {
+        for (int i = 0; i < 100; i++)
+        {
+            auto item = pool->await_item();
+            s.on_next(std::move(item));
+        }
+        s.on_completed();
+    });
+
+    static_assert(rxcpp::detail::is_on_next_of<data_t, std::function<void(data_t)>>::value, " ");
+    static_assert(rxcpp::detail::is_on_next_of<data_t, std::function<void(data_t &&)>>::value, " ");
+
+    auto observer = rxcpp::make_observer_dynamic<data_t>([](data_t&& int_ptr) { EXPECT_EQ(int_ptr.get(), 42); },
+                                                         [](std::exception_ptr ptr) { std::rethrow_exception(ptr); });
+
     observable.subscribe(observer);
 }
 

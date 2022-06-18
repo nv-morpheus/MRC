@@ -29,6 +29,7 @@
 #include "srf/channel/status.hpp"
 #include "srf/core/addresses.hpp"
 #include "srf/core/executor.hpp"
+#include "srf/core/reusable_pool.hpp"
 #include "srf/internal/pipeline/ipipeline.hpp"
 #include "srf/internal/segment/idefinition.hpp"
 #include "srf/node/queue.hpp"
@@ -355,4 +356,100 @@ TEST_F(TestPipeline, RequiresMoreManifolds)
     srf::Executor exec1{opt1};
 
     EXPECT_ANY_THROW(exec1.register_pipeline(std::move(pipe)));
+}
+
+class Buffer
+{
+  public:
+    Buffer() = default;
+
+    DELETE_COPYABILITY(Buffer);
+
+    float* data()
+    {
+        return m_buffer.data();
+    }
+
+    const float* data() const
+    {
+        return m_buffer.data();
+    }
+
+    std::size_t size() const
+    {
+        return m_buffer.size();
+    }
+
+  private:
+    std::array<float, 1024> m_buffer;
+};
+
+TEST_F(TestPipeline, ReusablePool)
+{
+    auto pool = core::ReusablePool<Buffer>::create(32);
+
+    EXPECT_EQ(pool->size(), 0);
+
+    for (int i = 0; i < 10; i++)
+    {
+        pool->add_item(std::make_unique<Buffer>());
+    }
+
+    EXPECT_EQ(pool->size(), 10);
+
+    auto item = pool->await_item();
+
+    EXPECT_EQ(pool->size(), 10);
+
+    item->data()[0] = 42.0;
+}
+
+TEST_F(TestPipeline, ReusableSource)
+{
+    auto pipe = pipeline::make_pipeline();
+    auto pool = core::ReusablePool<Buffer>::create(32);
+
+    auto opt = std::make_shared<srf::Options>();
+    opt->topology().user_cpuset("0");
+    opt->topology().restrict_gpus(true);
+
+    srf::Executor exec{opt};
+
+    EXPECT_EQ(pool->size(), 0);
+
+    for (int i = 0; i < 10; i++)
+    {
+        pool->add_item(std::make_unique<Buffer>());
+    }
+
+    auto init = [&exec, pool](segment::Builder& segment) {
+        auto src =
+            segment.make_source<core::Reusable<Buffer>>("src", [pool](rxcpp::subscriber<core::Reusable<Buffer>> s) {
+                while (s.is_subscribed())
+                {
+                    auto buffer = pool->await_item();
+                    s.on_next(std::move(buffer));
+                }
+                s.on_completed();
+            });
+
+        auto sink = segment.make_sink<core::Reusable<Buffer>>("sink", [&exec](core::Reusable<Buffer> buffer) {
+            static std::size_t counter = 0;
+            if (counter++ > 100)
+            {
+                exec.stop();
+            }
+        });
+
+        EXPECT_TRUE(src->is_runnable());
+        EXPECT_TRUE(sink->is_runnable());
+
+        segment.make_edge(src, sink);
+    };
+
+    pipe->make_segment("TestSegment1", init);
+    exec.register_pipeline(std::move(pipe));
+
+    exec.start();
+    exec.join();
 }
