@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2021-2022,NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,18 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-list(APPEND CMAKE_MESSAGE_CONTEXT "python")
-
-set(QUICKSTART_PYTHON_HOME "${CMAKE_CURRENT_SOURCE_DIR}")
-
-create_python_package(srf_qs_python)
-
-set(extra_deps "")
-
-if(TARGET srf-package-install)
-  set(extra_deps srf-package-install)
-endif()
-
-build_python_package(srf_qs_python INSTALL_WHEEL PYTHON_DEPENDENCIES "${extra_deps}")
-
-list(POP_BACK CMAKE_MESSAGE_CONTEXT)
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
