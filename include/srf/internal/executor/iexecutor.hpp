@@ -34,7 +34,6 @@ class Executor;
 class IExecutor
 {
   public:
-    IExecutor();
     IExecutor(std::shared_ptr<Options>);
     IExecutor(std::unique_ptr<system::ISystem>);
     virtual ~IExecutor() = 0;
@@ -50,7 +49,6 @@ class IExecutor
 
   private:
     std::shared_ptr<Executor> m_impl;
-    friend Executor;
 };
 
 }  // namespace srf::internal::executor

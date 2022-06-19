@@ -30,32 +30,27 @@ namespace srf::internal::executor {
 IExecutor::IExecutor(std::shared_ptr<Options> options) : m_impl(make_executor(std::move(options))) {}
 IExecutor::IExecutor(std::unique_ptr<system::ISystem> system) : m_impl(make_executor(system::System::unwrap(*system)))
 {
-    CHECK(m_impl);
 }
 
 IExecutor::~IExecutor() = default;
 
 void IExecutor::register_pipeline(std::unique_ptr<internal::pipeline::IPipeline> pipeline)
 {
-    CHECK(m_impl);
     m_impl->register_pipeline(std::move(pipeline));
 }
 
 void IExecutor::start()
 {
-    CHECK(m_impl);
     m_impl->service_start();
 }
 
 void IExecutor::stop()
 {
-    CHECK(m_impl);
     m_impl->service_stop();
 }
 
 void IExecutor::join()
 {
-    CHECK(m_impl);
     m_impl->service_await_join();
 }
 
