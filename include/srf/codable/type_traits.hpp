@@ -30,19 +30,19 @@ namespace srf::codable {
 namespace detail {
 
 template <typename T>
-auto serialize(sfinae::full_concept concept, const T& t, Encoded<T>& enc, const EncodingOptions& opts)
+auto serialize(sfinae::full_concept c, const T& t, Encoded<T>& enc, const EncodingOptions& opts)
     -> SRF_AUTO_RETURN_TYPE(codable_protocol<T>::serialize(t, enc, opts), void);
 
 template <typename T>
-auto serialize(sfinae::l4_concept concept, const T& t, Encoded<T>& enc, const EncodingOptions& opts)
+auto serialize(sfinae::l4_concept c, const T& t, Encoded<T>& enc, const EncodingOptions& opts)
     -> SRF_AUTO_RETURN_TYPE(codable_protocol<T>::serialize(t, enc), void);
 
 template <typename T>
-auto serialize(sfinae::l3_concept concept, const T& t, Encoded<T>& enc, const EncodingOptions& opts)
+auto serialize(sfinae::l3_concept c, const T& t, Encoded<T>& enc, const EncodingOptions& opts)
     -> SRF_AUTO_RETURN_TYPE(t.serialize(enc, opts), void);
 
 template <typename T>
-auto serialize(sfinae::l2_concept concept, const T& t, Encoded<T>& enc, const EncodingOptions& opts)
+auto serialize(sfinae::l2_concept c, const T& t, Encoded<T>& enc, const EncodingOptions& opts)
     -> SRF_AUTO_RETURN_TYPE(t.serialize(enc), void);
 
 template <typename T>
@@ -52,11 +52,11 @@ void serialize(sfinae::error error, const T& t, Encoded<T>& enc, const EncodingO
 }
 
 template <typename T>
-auto deserialize(sfinae::full_concept concept, const EncodedObject& encoding, std::size_t object_idx)
+auto deserialize(sfinae::full_concept c, const EncodedObject& encoding, std::size_t object_idx)
     -> SRF_AUTO_RETURN_TYPE(codable_protocol<T>::deserialize(encoding, object_idx), T);
 
 template <typename T>
-auto deserialize(sfinae::l4_concept concept, const EncodedObject& encoding, std::size_t object_idx)
+auto deserialize(sfinae::l4_concept c, const EncodedObject& encoding, std::size_t object_idx)
     -> SRF_AUTO_RETURN_TYPE(T::deserialize(encoding, object_idx), T);
 
 template <typename T>
