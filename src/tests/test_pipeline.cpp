@@ -29,7 +29,7 @@
 #include "srf/channel/status.hpp"
 #include "srf/core/addresses.hpp"
 #include "srf/core/executor.hpp"
-#include "srf/core/reusable_pool.hpp"
+#include "srf/data/reusable_pool.hpp"
 #include "srf/internal/pipeline/ipipeline.hpp"
 #include "srf/internal/segment/idefinition.hpp"
 #include "srf/node/queue.hpp"
@@ -365,12 +365,12 @@ class Buffer
 
     DELETE_COPYABILITY(Buffer);
 
-    float* data()
+    std::size_t* data()
     {
         return m_buffer.data();
     }
 
-    const float* data() const
+    const std::size_t* data() const
     {
         return m_buffer.data();
     }
@@ -381,12 +381,12 @@ class Buffer
     }
 
   private:
-    std::array<float, 1024> m_buffer;
+    std::array<std::size_t, 1024> m_buffer;
 };
 
 TEST_F(TestPipeline, ReusablePool)
 {
-    auto pool = core::ReusablePool<Buffer>::create(32);
+    auto pool = data::ReusablePool<Buffer>::create(32);
 
     EXPECT_EQ(pool->size(), 0);
 
@@ -407,7 +407,7 @@ TEST_F(TestPipeline, ReusablePool)
 TEST_F(TestPipeline, ReusableSource)
 {
     auto pipe = pipeline::make_pipeline();
-    auto pool = core::ReusablePool<Buffer>::create(32);
+    auto pool = data::ReusablePool<Buffer>::create(32);
 
     auto opt = std::make_shared<srf::Options>();
     opt->topology().user_cpuset("0");
@@ -424,7 +424,7 @@ TEST_F(TestPipeline, ReusableSource)
 
     auto init = [&exec, pool](segment::Builder& segment) {
         auto src =
-            segment.make_source<core::Reusable<Buffer>>("src", [pool](rxcpp::subscriber<core::Reusable<Buffer>> s) {
+            segment.make_source<data::Reusable<Buffer>>("src", [pool](rxcpp::subscriber<data::Reusable<Buffer>> s) {
                 while (s.is_subscribed())
                 {
                     auto buffer = pool->await_item();
@@ -433,13 +433,14 @@ TEST_F(TestPipeline, ReusableSource)
                 s.on_completed();
             });
 
-        auto sink = segment.make_sink<core::Reusable<Buffer>>("sink", [&exec](core::Reusable<Buffer> buffer) {
-            static std::size_t counter = 0;
-            if (counter++ > 100)
-            {
-                exec.stop();
-            }
-        });
+        auto sink =
+            segment.make_sink<data::SharedReusable<Buffer>>("sink", [&exec](data::SharedReusable<Buffer> buffer) {
+                static std::size_t counter = 0;
+                if (counter++ > 100)
+                {
+                    exec.stop();
+                }
+            });
 
         EXPECT_TRUE(src->is_runnable());
         EXPECT_TRUE(sink->is_runnable());

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "srf/core/reusable_pool.hpp"
+#include "srf/data/reusable_pool.hpp"
 #include "srf/memory/literals.hpp"
 #include "srf/node/generic_source.hpp"
 #include "srf/node/rx_sink.hpp"
@@ -55,14 +55,14 @@ class Buffer
 };
 
 template <std::size_t Bytes>
-class BufferSource final : public srf::node::GenericSource<srf::core::Reusable<Buffer<Bytes>>>
+class BufferSource final : public srf::node::GenericSource<srf::data::Reusable<Buffer<Bytes>>>
 {
   public:
-    using data_t = srf::core::Reusable<Buffer<Bytes>>;
+    using data_t = srf::data::Reusable<Buffer<Bytes>>;
 
-    BufferSource(std::size_t capacity) : m_pool(srf::core::ReusablePool<Buffer<Bytes>>::create(capacity)) {}
+    BufferSource(std::size_t capacity) : m_pool(srf::data::ReusablePool<Buffer<Bytes>>::create(capacity)) {}
 
-    srf::core::ReusablePool<Buffer<Bytes>>& pool()
+    srf::data::ReusablePool<Buffer<Bytes>>& pool()
     {
         CHECK(m_pool);
         return *m_pool;
@@ -76,7 +76,7 @@ class BufferSource final : public srf::node::GenericSource<srf::core::Reusable<B
         s.on_next(std::move(buffer));
     }
 
-    std::shared_ptr<srf::core::ReusablePool<Buffer<Bytes>>> m_pool;
+    std::shared_ptr<srf::data::ReusablePool<Buffer<Bytes>>> m_pool;
 };
 
 std::unique_ptr<srf::node::RxSource<int>> finite_int_rx_source(int count = 3);

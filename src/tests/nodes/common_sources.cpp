@@ -18,7 +18,7 @@
 #include "common_nodes.hpp"
 
 #include "srf/channel/status.hpp"
-#include "srf/core/reusable_pool.hpp"
+#include "srf/data/reusable_pool.hpp"
 #include "srf/memory/literals.hpp"
 #include "srf/node/generic_source.hpp"
 #include "srf/node/rx_source.hpp"

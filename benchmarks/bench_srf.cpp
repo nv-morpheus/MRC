@@ -17,7 +17,7 @@
 
 #include <benchmark/benchmark.h>
 
-#include <srf/core/reusable_pool.hpp>
+#include <srf/data/reusable_pool.hpp>
 
 using namespace srf;
 
@@ -51,7 +51,7 @@ class Buffer
 
 static void srf_core_reusable(benchmark::State& state)
 {
-    auto pool = core::ReusablePool<Buffer>::create(32);
+    auto pool = data::ReusablePool<Buffer>::create(32);
     pool->add_item(std::make_unique<Buffer>());
     pool->add_item(std::make_unique<Buffer>());
 

@@ -34,7 +34,7 @@
 #include <srf/channel/ingress.hpp>
 #include <srf/channel/status.hpp>
 
-#include <srf/core/reusable_pool.hpp>
+#include <srf/data/reusable_pool.hpp>
 #include <srf/node/edge_builder.hpp>
 #include <srf/node/generic_node.hpp>
 #include <srf/node/generic_sink.hpp>
@@ -553,7 +553,7 @@ TEST_F(TestNext, TapUniquePtr)
 
 TEST_F(TestNext, RxWithReusableOnNextAndOnError)
 {
-    auto pool = core::ReusablePool<int>::create(32);
+    auto pool = data::ReusablePool<int>::create(32);
 
     EXPECT_EQ(pool->size(), 0);
 
@@ -562,7 +562,7 @@ TEST_F(TestNext, RxWithReusableOnNextAndOnError)
         pool->emplace(42);
     }
 
-    using data_t = core::Reusable<int>;
+    using data_t = data::Reusable<int>;
 
     auto observable = rxcpp::observable<>::create<data_t>([pool](rxcpp::subscriber<data_t> s) {
         for (int i = 0; i < 100; i++)
@@ -576,7 +576,7 @@ TEST_F(TestNext, RxWithReusableOnNextAndOnError)
     static_assert(rxcpp::detail::is_on_next_of<data_t, std::function<void(data_t)>>::value, " ");
     static_assert(rxcpp::detail::is_on_next_of<data_t, std::function<void(data_t &&)>>::value, " ");
 
-    auto observer = rxcpp::make_observer_dynamic<data_t>([](data_t&& int_ptr) { EXPECT_EQ(int_ptr.get(), 42); },
+    auto observer = rxcpp::make_observer_dynamic<data_t>([](data_t&& int_ptr) { EXPECT_EQ(*int_ptr, 42); },
                                                          [](std::exception_ptr ptr) { std::rethrow_exception(ptr); });
 
     observable.subscribe(observer);
