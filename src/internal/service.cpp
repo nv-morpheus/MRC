@@ -44,16 +44,7 @@ void Service::service_await_live()
 
 void Service::service_stop()
 {
-    bool execute = false;
-    {
-        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        if (m_state < ServiceState::Stopping)
-        {
-            execute = (m_state < ServiceState::Stopping);
-            m_state = ServiceState::Stopping;
-        }
-    }
-    if (execute)
+    if (forward_state(ServiceState::Stopping))
     {
         do_service_stop();
     }
@@ -61,16 +52,7 @@ void Service::service_stop()
 
 void Service::service_kill()
 {
-    bool execute = false;
-    {
-        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        if (m_state < ServiceState::Killing)
-        {
-            execute = (m_state < ServiceState::Killing);
-            m_state = ServiceState::Killing;
-        }
-    }
-    if (execute)
+    if (forward_state(ServiceState::Killing))
     {
         do_service_kill();
     }
@@ -78,16 +60,7 @@ void Service::service_kill()
 
 void Service::service_await_join()
 {
-    bool execute = false;
-    {
-        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        if (m_state < ServiceState::Completed)
-        {
-            execute = (m_state < ServiceState::Completed);
-            m_state = ServiceState::Awaiting;
-        }
-    }
-    if (execute)
+    if (forward_state(ServiceState::Awaiting))
     {
         do_service_await_join();
         forward_state(ServiceState::Completed);
@@ -115,19 +88,22 @@ bool Service::forward_state(ServiceState new_state)
 void Service::call_in_destructor()
 {
     auto state = this->state();
-    if (state > ServiceState::Initialized)
-    {
-        if (state == ServiceState::Running)
-        {
-            LOG(ERROR) << "service was not stopped/killed before being destructed; issuing kill";
-            service_kill();
-        }
 
-        if (state != ServiceState::Completed)
-        {
-            LOG(ERROR) << "service was not joined before being destructed; issuing join";
-            service_await_join();
-        }
+    if (state <= ServiceState::Initialized)
+    {
+      return;
+    }
+
+    if (state == ServiceState::Running)
+    {
+        LOG(ERROR) << "service was not stopped/killed before being destructed; issuing kill";
+        service_kill();
+    }
+
+    if (state != ServiceState::Completed)
+    {
+        LOG(ERROR) << "service was not joined before being destructed; issuing join";
+        service_await_join();
     }
 }
 

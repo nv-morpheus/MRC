@@ -25,9 +25,9 @@ enum class ServiceState
 {
     Initialized,
     Running,
-    Awaiting,
     Stopping,
     Killing,
+    Awaiting,
     Completed,
 };
 
