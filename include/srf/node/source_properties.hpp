@@ -30,14 +30,6 @@
 
 namespace srf::node {
 
-struct SourceTestHelper
-{
-    // PythonSourceTypeErased overrides this.
-    static std::shared_ptr<channel::IngressHandle> doit(std::type_index source_type, SinkPropertiesBase& sink) {
-        return sink.get_dynamic_ingress(source_type);
-    }
-};
-
 /**
  * @brief Type erased base class for the formation of all edges to a source
  */
@@ -63,21 +55,6 @@ class SourcePropertiesBase
      */
     virtual std::string source_type_name() const = 0;
 
-    std::shared_ptr<channel::IngressHandle> get_dynamic_ingress(SinkPropertiesBase& sink)
-    {
-        if (m_get_ingress_adaptor)
-        {
-            return m_get_ingress_adaptor(this->source_type(), sink);
-        }
-
-        throw(std::runtime_error("No registered ingress port conversion routine"));
-    }
-
-    void set_dynamic_ingress_f(ftype f)
-    {
-        m_get_ingress_adaptor = f;
-    }
-
     /**
      * @brief UINT64 hash of source type
      * @return std::size_t
@@ -91,8 +68,6 @@ class SourcePropertiesBase
     SourcePropertiesBase() = default;
 
   private:
-    ftype m_get_ingress_adaptor{SourceTestHelper::doit};
-
     /**
      * @brief Interface to the Channel Writer to accept an Edge from the Builder
      */

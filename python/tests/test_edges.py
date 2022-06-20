@@ -191,4 +191,9 @@ def test_edge_wrapper():
 
 
 if (__name__ == "__main__"):
+    test_connect_cpp_edges()
+    test_edge_cpp_to_cpp_same()
+    test_edge_cpp_to_py_same()
     test_edge_py_to_cpp_same()
+    test_edge_wrapper()
+    #test_multi_segment()

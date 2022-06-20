@@ -17,10 +17,10 @@
 
 #include <pysrf/segment.hpp>
 
+#include <pysrf/edge_adaptor.hpp>
 #include <pysrf/node.hpp>
 #include <pysrf/types.hpp>
 #include <pysrf/utils.hpp>
-#include <pysrf/dynamic_edge_finder.hpp>
 #include <srf/channel/status.hpp>
 #include <srf/node/edge_builder.hpp>
 #include <srf/node/sink_properties.hpp>
@@ -117,7 +117,7 @@ std::shared_ptr<srf::segment::ObjectProperties> build_source(srf::segment::Build
 
     // TODO(Devin)
     auto& source_base = node->source_base();
-    source_base.set_dynamic_ingress_f(SourceHelper::f_builder<PyHolder>(source_base));
+    //source_base.set_dynamic_ingress_f(SourceHelper::f_builder<PyHolder>(source_base));
 
     return node;
 }
@@ -218,7 +218,7 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_sink(srf::seg
         name, rxcpp::make_observer<PyHolder>(on_next_w, on_error_w, on_completed_w));
 
     auto& sink_base = node->sink_base();
-    node->sink_base().set_dynamic_ingress_f(SinkHelper::f_builder<PyHolder>(sink_base));
+    //node->sink_base().set_dynamic_ingress_f(SinkHelper::f_builder<PyHolder>(sink_base));
 
     return node;
 }
@@ -305,10 +305,10 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node(
 
     // TODO(Devin)
     auto& source_base = node->source_base();
-    source_base.set_dynamic_ingress_f(SourceHelper::f_builder<PyHolder>(source_base));
+    //source_base.set_dynamic_ingress_f(SourceHelper::f_builder<PyHolder>(source_base));
 
     auto& sink_base = node->sink_base();
-    node->sink_base().set_dynamic_ingress_f(SinkHelper::f_builder<PyHolder>(sink_base));
+    //node->sink_base().set_dynamic_ingress_f(SinkHelper::f_builder<PyHolder>(sink_base));
 
     return node;
 }
@@ -347,10 +347,10 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node_full(
 
     // TODO(Devin)
     auto& source_base = node->source_base();
-    source_base.set_dynamic_ingress_f(SourceHelper::f_builder<PyHolder>(source_base));
+    //source_base.set_dynamic_ingress_f(SourceHelper::f_builder<PyHolder>(source_base));
 
     auto& sink_base = node->sink_base();
-    node->sink_base().set_dynamic_ingress_f(SinkHelper::f_builder<PyHolder>(sink_base));
+    //node->sink_base().set_dynamic_ingress_f(SinkHelper::f_builder<PyHolder>(sink_base));
 
     return node;
 }
@@ -496,8 +496,8 @@ void SegmentProxy::make_edge(srf::segment::Builder& self,
                              std::shared_ptr<srf::segment::ObjectProperties> source,
                              std::shared_ptr<srf::segment::ObjectProperties> sink)
 {
-    // node::EdgeBuilder::make_edge_typeless(source->source_typeless(), sink->sink_typeless());
-    node::EdgeBuilder::make_edge_typeless(source->source_base(), sink->sink_base());
+    // TODO(devin): have make_edge_typeless try all available edge adaptors if one isn't specified.
+    node::EdgeBuilder::make_edge_typeless(source->source_base(), sink->sink_base(), "pysrf");
 }
 
 // std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_file_reader(srf::segment::Builder& self,

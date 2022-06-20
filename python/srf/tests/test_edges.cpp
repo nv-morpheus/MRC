@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include <pysrf/edge_adaptor.hpp>
 #include <pysrf/forward.hpp>
 #include <pysrf/node.hpp>
 #include <pysrf/utils.hpp>

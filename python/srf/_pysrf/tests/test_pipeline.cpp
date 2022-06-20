@@ -18,6 +18,7 @@
 #include "test_pysrf.hpp"
 
 #include <pysrf/pipeline.hpp>
+#include <pysrf/types.hpp>
 
 #include <srf/channel/status.hpp>
 #include <srf/core/executor.hpp>
@@ -32,6 +33,7 @@
 #include <gtest/gtest.h>
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx-includes.hpp>
 #include <rxcpp/rx-observer.hpp>
@@ -51,6 +53,7 @@
 namespace py    = pybind11;
 namespace pysrf = srf::pysrf;
 using namespace std::string_literals;
+using namespace py::literals;
 
 PYSRF_TEST_CLASS(Pipeline);
 

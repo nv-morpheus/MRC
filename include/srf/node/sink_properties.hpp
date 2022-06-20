@@ -28,19 +28,6 @@
 
 namespace srf::node {
 
-struct SinkTestHelper
-{
-    static std::shared_ptr<channel::IngressHandle> ingress_for_source_type(
-        std::type_index source_type, std::type_index sink_type, std::shared_ptr<channel::IngressHandle> ingress_handle)
-    {
-        // Get the converter function
-        auto converter_fn = EdgeRegistry::find_converter(source_type, sink_type);
-
-        // Build the edge from our channel
-        return converter_fn(ingress_handle);
-    }
-};
-
 /**
  * @brief Type erased base class for the formation of all edges to a sink
  */
@@ -67,25 +54,6 @@ class SinkPropertiesBase
     virtual std::string sink_type_name() const = 0;
 
     /**
-     * TODO(Devin)
-     * @param source_type
-     * @return
-     */
-    std::shared_ptr<channel::IngressHandle> get_dynamic_ingress(std::type_index source_type)
-    {
-        if (m_get_dynamic_ingress)
-        {
-            return m_get_dynamic_ingress(source_type, this->sink_type(), this->ingress_handle());
-        }
-
-        throw(std::runtime_error("No registered ingress port conversion routine"));
-    }
-
-    void set_dynamic_ingress_f(ftype f) {
-        m_get_dynamic_ingress = f;
-    }
-
-    /**
      * @brief UINT64 hash of sink type
      * @return std::size_t
      */
@@ -94,18 +62,13 @@ class SinkPropertiesBase
         return sink_type().hash_code();
     }
 
-    // TODO
-    virtual std::shared_ptr<channel::IngressHandle> ingress_handle() = 0;
-
   protected:
     SinkPropertiesBase() = default;
 
   private:
-    ftype m_get_dynamic_ingress{SinkTestHelper::ingress_for_source_type};
+    virtual std::shared_ptr<channel::IngressHandle> ingress_handle() = 0;
 
-    //virtual std::shared_ptr<channel::IngressHandle> ingress_handle() = 0;
-
-    friend SinkTypeErased;
+    friend EdgeBuilder;
 };
 
 inline SinkPropertiesBase::~SinkPropertiesBase() = default;
