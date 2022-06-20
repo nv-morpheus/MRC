@@ -32,26 +32,53 @@
 
 namespace srf::data {
 
+/**
+ * @brief A move-only holder of an object of T that is acquired from a ReusablePool<T> and will be returned to the same
+ * pool when it goes out of scope or is released.
+ */
 template <typename T>
 class Reusable;
 
+/**
+ * @brief An object that is transformed from a Resusable<T> such that the resulting object is copyable; however, access
+ * to the value of T is readonly.
+ */
 template <typename T>
 class SharedReusable;
 
+/**
+ * @brief A resource pool which holds upto capacity of unique_ptr<T> which are provided to the requesting callers as
+ * Reusable<T> instead of unique_ptr<T>. Reusable objects are returned to the pool when destroyed.
+ *
+ * An optional on return lambda can be called on a ref of T being returned to the pool. This allows the returning object
+ * to be reset to a known state before being added back to the resource pool.
+ *
+ * Items can be added up to the predefined capacity which must be a power of 2. The add_item and return_item should
+ * never block the caller because the channel should never be full.
+ *
+ * It is possible for the caller of await_item to block on when the pool is empty and all avaiable items are in use.
+ *
+ * @tparam T
+ */
 template <typename T>
 class ReusablePool final : public std::enable_shared_from_this<ReusablePool<T>>
 {
-    ReusablePool(std::size_t capacity) : m_size(0), m_capacity(capacity), m_channel(capacity) {}
-
   public:
-    using item_t = std::unique_ptr<T>;
+    using item_t      = std::unique_ptr<T>;
+    using on_return_t = std::function<void(T&)>;
+
+    ~ReusablePool()
+    {
+        // this will prevent items from being returned to the pool
+        m_channel.close();
+    }
 
     DELETE_COPYABILITY(ReusablePool);
     DELETE_MOVEABILITY(ReusablePool);
 
-    static std::shared_ptr<ReusablePool<T>> create(std::size_t capacity)
+    static std::shared_ptr<ReusablePool<T>> create(std::size_t capacity, on_return_t on_return_fn = nullptr)
     {
-        return std::shared_ptr<ReusablePool>(new ReusablePool(capacity));
+        return std::shared_ptr<ReusablePool>(new ReusablePool(capacity, std::move(on_return_fn)));
     }
 
     void add_item(item_t item)
@@ -87,9 +114,26 @@ class ReusablePool final : public std::enable_shared_from_this<ReusablePool<T>>
     }
 
   private:
+    ReusablePool(std::size_t capacity, on_return_t on_return_fn) :
+      m_size(0),
+      m_capacity(capacity),
+      m_on_return_fn(std::move(on_return_fn)),
+      m_channel(capacity)
+    {}
+
+    void return_item(std::unique_ptr<T> item)
+    {
+        if (m_on_return_fn)
+        {
+            m_on_return_fn(*item);
+        }
+        m_channel.push(std::move(item));
+    }
+
     std::mutex m_mutex;
     std::size_t m_size;
     const std::size_t m_capacity;
+    std::function<void(T&)> m_on_return_fn{nullptr};
     boost::fibers::buffered_channel<item_t> m_channel;
 
     friend Reusable<T>;
@@ -114,10 +158,7 @@ class Reusable final
 
     ~Reusable()
     {
-        if (m_data)
-        {
-            m_pool->m_channel.push(std::move(m_data));
-        }
+        release();
     }
 
     T& operator*()
@@ -130,6 +171,14 @@ class Reusable final
     {
         CHECK(m_data);
         return m_data.get();
+    }
+
+    void release()
+    {
+        if (m_data)
+        {
+            m_pool->return_item(std::move(m_data));
+        }
     }
 
   private:
@@ -149,7 +198,7 @@ class SharedReusable final
       m_data(data.release(),
              [pool](T* ptr) {
                  std::unique_ptr<T> unique(ptr);
-                 pool->m_channel.push(std::move(unique));
+                 pool->return_item(std::move(unique));
              }),
       m_pool(std::move(pool))
     {}
