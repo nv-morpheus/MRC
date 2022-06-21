@@ -29,7 +29,7 @@ for benchmark in "${BENCHMARKS[@]}"; do
        gpuci_logger "Running ${bench_name}"
        set +e
 
-       numactl --physcpubind=0 ${benchmark} --benchmark_out_format=json --benchmark_out="${REPORTS_DIR}/${bench_name}.json"
+       taskset -c 0 ${benchmark} --benchmark_out_format=json --benchmark_out="${REPORTS_DIR}/${bench_name}.json"
        BENCH_RESULT=$?
        BENCH_RESULTS=$(($BENCH_RESULTS+$BENCH_RESULT))
 
