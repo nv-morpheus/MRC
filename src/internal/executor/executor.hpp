@@ -24,6 +24,7 @@
 #include "srf/internal/pipeline/ipipeline.hpp"
 #include "srf/options/options.hpp"
 #include "srf/types.hpp"
+#include <srf/utils/macros.hpp>
 
 #include <memory>
 #include <utility>
@@ -41,6 +42,10 @@ class Executor : public Service
     Executor(Handle<Options> options);
     Executor(Handle<system::System> system);
     ~Executor() override;
+
+
+    DELETE_COPYABILITY(Executor);
+    DELETE_MOVEABILITY(Executor);
 
     void register_pipeline(std::unique_ptr<pipeline::IPipeline> ipipeline);
 
