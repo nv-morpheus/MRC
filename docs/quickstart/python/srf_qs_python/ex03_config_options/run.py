@@ -1,3 +1,18 @@
+# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import argparse
 import os
 import threading
@@ -6,6 +21,7 @@ import srf
 
 
 def run_pipeline(count: int, channel_size: int, threads: int):
+
     def segment_init(seg: srf.Builder):
 
         # Use a generator function as the source
@@ -52,7 +68,6 @@ def run_pipeline(count: int, channel_size: int, threads: int):
     # Create a segment
     pipeline.make_segment("my_seg", segment_init)
 
-
     # Build executor options
     options = srf.Options()
 
@@ -77,7 +92,8 @@ def run_pipeline(count: int, channel_size: int, threads: int):
 
 
 if (__name__ == "__main__"):
-    parser = argparse.ArgumentParser(description='ConfigOptions Example.', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(description='ConfigOptions Example.',
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--count', type=int, default=10, help="The number of items for the source to emit")
     parser.add_argument('--channel_size',
                         type=int,
