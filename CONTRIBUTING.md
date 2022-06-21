@@ -47,20 +47,20 @@ Look at the unassigned issues, and find an issue to which you are comfortable co
 ### Build in a Conda Environment
 
 #### Clone SRF repository
-```
+```bash
 export $SRF_HOME=$(pwd)/srf
 git clone git@github.com:nv-morpheus/srf.git $SRF_HOME
 cd $SRF_HOME
 ```
 
 #### Create SRF Conda environment
-```
-mamba env create -n srf --file $SRF_HOME/ci/conda/environments/dev_env.yml
+```bash
+# note: `mamba` may be used in place of `conda` for better performance.
+conda env create -n srf --file $SRF_HOME/ci/conda/environments/dev_env.yml
 conda activate srf
 ```
-
 #### Build SRF
-```
+```bash
 mkdir $SRF_HOME/build
 cd $SRF_HOME/build
 cmake ..
@@ -68,25 +68,27 @@ make -j $(nproc)
 ```
 
 #### Run SRF C++ Tests
-```
+```bash
+export SRF_TEST_INTERNAL_DATA_PATH=$SRF_HOME/src/tests
+$SRF_HOME/build/src/tests/test_srf_private.x
 $SRF_HOME/build/tests/test_srf.x
 $SRF_HOME/build/tests/logging/test_srf_logging.x
 ```
 
 ### Install SRF Python
-```
+```bash
 pip install -e $SRF_HOME/python
 ```
 
 #### Run SRF Python Tests
-```
+```bash
 pytest $SRF_HOME/python
 ```
 
 ## Licensing
 SRF is licensed under the Apache v2.0 license. All new source files including CMake and other build scripts should contain the Apache v2.0 license header. Any edits to existing source code should update the date range of the copyright to the current year. The format for the license header is:
 
-```
+```c++
 /*
  * SPDX-FileCopyrightText: Copyright (c) <year>, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
@@ -109,7 +111,7 @@ SRF is licensed under the Apache v2.0 license. All new source files including CM
 Thirdparty code included in the source tree (that is not pulled in as an external dependency) must be compatible with the Apache v2.0 license and should retain the original license along with a url to the source. If this code is modified, it should contain both the Apache v2.0 license followed by the original license of the code and the url to the original code.
 
 Ex:
-```
+```c++
 /**
  * SPDX-FileCopyrightText: Copyright (c) 2018-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
