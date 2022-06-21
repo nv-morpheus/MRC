@@ -18,17 +18,7 @@ set -e
 
 source ${WORKSPACE}/ci/scripts/jenkins/common.sh
 
-restore_conda_env
-
-gpuci_logger "Fetching Build artifacts from ${DISPLAY_URL}"
-fetch_s3 "${ARTIFACT_ENDPOINT}/cpp_tests.tar.bz" "${WORKSPACE_TMP}/cpp_tests.tar.bz"
-fetch_s3 "${ARTIFACT_ENDPOINT}/dsos.tar.bz" "${WORKSPACE_TMP}/dsos.tar.bz"
-
-tar xf "${WORKSPACE_TMP}/cpp_tests.tar.bz"
-tar xf "${WORKSPACE_TMP}/dsos.tar.bz"
-
-REPORTS_DIR="${WORKSPACE_TMP}/reports"
-mkdir -p ${WORKSPACE_TMP}/reports
+conda activate srf
 
 BENCHMARKS=($(find ${SRF_ROOT}/build/benchmarks -name "*.x"))
 
