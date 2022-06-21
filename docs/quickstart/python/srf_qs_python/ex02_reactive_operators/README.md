@@ -75,7 +75,7 @@ In combination, these operators perform a higher level functionality to modify t
 If we run the example, we will see the following output:
 
 ```bash
-$ python ./docs/quickstart/python/02_ReactiveOperators/run.py
+$ python ./docs/quickstart/python/srf_qs_python/ex02_reactive_operators/run.py
 srf pipeline starting...
 Sink: Got Obj Name: Instance-0, Value: 0
 Sink: Got Obj Name: Instance-2, Value: 4

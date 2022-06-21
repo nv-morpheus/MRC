@@ -44,7 +44,7 @@ def sink_on_next(x: MyCustomClass):
 Running the example yields the following:
 
 ```bash
-$ python ./docs/quickstart/python/01_CustomData/run.py
+$ python ./docs/quickstart/python/srf_qs_python/ex01_custom_data/run.py
 srf pipeline starting...
 Processing 'Instance-0'
 Processing 'Instance-1'
