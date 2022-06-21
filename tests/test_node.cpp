@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include "srf/options/placement.hpp"
 #include "test_srf.hpp"  // IWYU pragma: associated
 
+#include <srf/options/placement.hpp>
 #include <srf/channel/status.hpp>
 #include <srf/core/addresses.hpp>
 #include <srf/core/executor.hpp>

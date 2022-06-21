@@ -172,7 +172,7 @@ TEST_F(TestPipeline, LifeCycleWithException)
 
 TEST_F(TestPipeline, LifeCycleWithExceptionAndInfiniteSource)
 {
-    auto pipeline = srf::make_pipeline();
+    auto pipeline = pipeline::make_pipeline();
 
     auto segment = pipeline->make_segment("seg_1", [](segment::Builder& s) {
         auto rx_source = s.make_object("rx_source", test::nodes::infinite_int_rx_source());
@@ -185,7 +185,7 @@ TEST_F(TestPipeline, LifeCycleWithExceptionAndInfiniteSource)
 
 TEST_F(TestPipeline, LifeCycleStop)
 {
-    auto pipeline = srf::make_pipeline();
+    auto pipeline = pipeline::make_pipeline();
 
     auto segment = pipeline->make_segment("seg_1", [](segment::Builder& s) {
         auto rx_source = s.make_object("rx_source", test::nodes::infinite_int_rx_source());
@@ -198,7 +198,7 @@ TEST_F(TestPipeline, LifeCycleStop)
 
 TEST_F(TestPipeline, Queue)
 {
-    auto pipeline = srf::make_pipeline();
+    auto pipeline = pipeline::make_pipeline();
 
     auto segment = pipeline->make_segment("seg_1", [](segment::Builder& s) {
         auto source = s.make_object("source", test::nodes::infinite_int_rx_source());
@@ -213,14 +213,14 @@ TEST_F(TestPipeline, Queue)
 
 TEST_F(TestPipeline, InitializerThrows)
 {
-    auto pipeline = srf::make_pipeline();
+    auto pipeline = pipeline::make_pipeline();
     auto segment  = pipeline->make_segment("seg_1", [](segment::Builder& s) { throw std::runtime_error("no bueno"); });
     EXPECT_ANY_THROW(run_manager(std::move(pipeline)));
 }
 
 TEST_F(TestPipeline, DuplicateNameInSegment)
 {
-    auto pipeline = srf::make_pipeline();
+    auto pipeline = pipeline::make_pipeline();
 
     // this should fail to register the int_sink because of a duplicate name
     auto segment = pipeline->make_segment("seg_1", [](segment::Builder& s) {
@@ -263,7 +263,7 @@ TEST_F(TestPipeline, MultiSegmentLoadBalancer)
     // we collect the fiber id for the sink runnable processing each data element,
     // then we count the unique fiber ids collected
 
-    auto pipeline = srf::make_pipeline();
+    auto pipeline = pipeline::make_pipeline();
 
     int count = 1000;
     std::mutex mutex;
