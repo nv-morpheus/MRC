@@ -17,13 +17,8 @@
 
 #pragma once
 
+// Forward declaration of public API
 #include <srf/forward.hpp>
-
-// todo
-// - revert adding tasks directly to operators
-// - create a OpTask where each node owns a taskflow for its operations
-// - auto op_graph = node.op_graph(); // op_graph owns the task handle for the data node
-// - OpTask owns the task and the unique_ptr<Operator<T>>
 
 #include <srf/core/context.hpp>
 #include <srf/core/executor.hpp>
@@ -33,12 +28,3 @@
 #include <srf/segment/definition.hpp>
 #include <srf/segment/egress_ports.hpp>
 #include <srf/segment/ingress_ports.hpp>
-
-namespace srf {
-
-inline std::unique_ptr<pipeline::Pipeline> make_pipeline()
-{
-    return pipeline::Pipeline::create();
-}
-
-}  // namespace srf

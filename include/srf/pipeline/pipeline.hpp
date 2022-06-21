@@ -33,7 +33,8 @@
 // https://github.com/include-what-you-use/include-what-you-use/issues/908
 // IWYU pragma: no_include <algorithm>
 
-namespace srf::pipeline {
+namespace srf {
+namespace pipeline {
 
 class Pipeline final : public internal::pipeline::IPipeline
 {
@@ -162,9 +163,11 @@ class Pipeline final : public internal::pipeline::IPipeline
     };
 };
 
-inline std::unique_ptr<Pipeline> make_pipeline()
+}  // namespace pipeline
+
+inline std::unique_ptr<pipeline::Pipeline> make_pipeline()
 {
-    return Pipeline::create();
+    return pipeline::Pipeline::create();
 }
 
-}  // namespace srf::pipeline
+}  // namespace srf
