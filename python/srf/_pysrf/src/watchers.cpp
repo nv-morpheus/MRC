@@ -62,9 +62,6 @@ LatencyWatcher::LatencyWatcher(std::shared_ptr<pysrf::Executor> executor) :
   latency_watcher_t(executor->get_executor()),
   m_executor(executor)
 {
-    // using latency_ensemble_t_t = srf::benchmarking::TracerEnsemble<pybind11::object,
-    // srf::benchmarking::LatencyTracer>;
-
     auto payload_initializer = [](latency_ensemble_t& latency_ensemble) {
         py::gil_scoped_acquire gil;
         latency_ensemble = py::none();

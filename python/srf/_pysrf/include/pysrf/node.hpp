@@ -309,28 +309,6 @@ class PythonNode : public node::RxNode<InputT, OutputT>,
 
     using node::RxNode<InputT, OutputT>::RxNode;
 
-    // template <typename FirstArgT,
-    //           typename... ArgsT,
-    //           typename std::enable_if<
-    //               (std::is_invocable_v<FirstArgT, rxcpp::observable<InputT>, rxcpp::subscriber<OutputT>> &&
-    //                1 == sizeof...(ArgsT)),
-    //               int>::type = 0>
-    // PythonNode(const srf::segment::Builder& parent, const std::string& name, FirstArgT first_arg, ArgsT... args) :
-    //   base_t(parent, name)
-    // {
-    //     this->make_stream(operator_fn_to_op(std::move(first_arg)));
-    // }
-
-    // template <typename FirstArgT,
-    //           typename... ArgsT,
-    //           typename std::enable_if<
-    //               (!std::is_invocable_v<FirstArgT, rxcpp::observable<InputT>, rxcpp::subscriber<OutputT>> ||
-    //                sizeof...(ArgsT) > 1),
-    //               int>::type = 0>
-    // PythonNode(const srf::segment::Builder& parent, const std::string& name, FirstArgT first_arg, ArgsT... args) :
-    //   base_t(parent, name, std::move(first_arg), (args, ...))
-    // {}
-
   protected:
     static auto op_factory_from_sub_fn(subscribe_fn_t sub_fn)
     {

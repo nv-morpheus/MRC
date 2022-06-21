@@ -67,8 +67,6 @@ class SourceDerivedB : public pysrf::PythonSource<std::shared_ptr<DerivedB>>
   public:
     using base_t = pysrf::PythonSource<std::shared_ptr<DerivedB>>;
     using typename base_t::subscriber_fn_t;
-    // using base_t::reader_type_t;
-    // using base_t::writer_type_t;
 
     SourceDerivedB() : PythonSource(build()) {}
 
@@ -89,8 +87,6 @@ class SourcePyHolder : public pysrf::PythonSource<pysrf::PyObjectHolder>
   public:
     using base_t = pysrf::PythonSource<pysrf::PyObjectHolder>;
     using typename base_t::subscriber_fn_t;
-    // using base_t::reader_type_t;
-    // using base_t::writer_type_t;
 
     SourcePyHolder() : PythonSource(build()) {}
 

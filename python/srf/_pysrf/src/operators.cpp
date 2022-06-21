@@ -83,8 +83,8 @@ PythonOperator OperatorsProxy::flatten()
 
                 for (const auto& item : l)
                 {
-                    //   This increases the ref count by one but thats fine since the list will go out of
-                    //   scope and deref all its elements
+                    // This increases the ref count by one but thats fine since the list will go out of
+                    // scope and deref all its elements
                     obj_list.emplace_back(std::move(py::reinterpret_borrow<py::object>(item)));
                 }
             }

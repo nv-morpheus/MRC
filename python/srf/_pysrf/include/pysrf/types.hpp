@@ -34,17 +34,12 @@ namespace srf::pysrf {
 
 using PyHolder = PyObjectHolder;  // NOLINT
 
-// using PySubscription     = srf::Subscription;                  // NOLINT(readability-identifier-naming)
-// using PyObjectSubscriber = srf::Subscriber<pybind11::object>;  // NOLINT(readability-identifier-naming)
-// using PyObjectObserver   = srf::Observer<pybind11::object>;    // NOLINT(readability-identifier-naming)
-// using PyObjectObservable = srf::Observable<pybind11::object>;  // NOLINT(readability-identifier-naming)
 using PySubscription     = rxcpp::subscription;                                // NOLINT(readability-identifier-naming)
 using PyObjectObserver   = rxcpp::observer<PyHolder, void, void, void, void>;  // NOLINT(readability-identifier-naming)
 using PyObjectSubscriber = rxcpp::subscriber<PyHolder, PyObjectObserver>;      // NOLINT(readability-identifier-naming)
 using PyObjectObservable = rxcpp::observable<PyHolder>;                        // NOLINT(readability-identifier-naming)
 using PyNode             = srf::segment::ObjectProperties;                     // NOLINT(readability-identifier-naming)
 // NOLINTNEXTLINE(readability-identifier-naming)
-// using PyObjectOperateFn = std::function<PySubscription(PyObjectObservable& source, PyObjectSubscriber& subscriber)>;
-using PyObjectOperateFn = std::function<PyObjectObservable(PyObjectObservable source)>;  // NOLINT
+using PyObjectOperateFn = std::function<PyObjectObservable(PyObjectObservable source)>;
 
 }  // namespace srf::pysrf

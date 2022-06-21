@@ -109,7 +109,6 @@ void System::add_gil_finalizer()
     }
 
     // Ensure we dont have the GIL here otherwise this deadlocks.
-
     internal::system::ISystem::add_thread_finalizer([] {
         bool python_finalizing = _Py_IsFinalizing() != 0;
 
