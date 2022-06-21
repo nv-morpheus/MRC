@@ -6,6 +6,7 @@ import srf
 
 
 def run_pipeline(count: int, channel_size: int, threads: int):
+
     def segment_init(seg: srf.Builder):
 
         # Use a generator function as the source
@@ -52,7 +53,6 @@ def run_pipeline(count: int, channel_size: int, threads: int):
     # Create a segment
     pipeline.make_segment("my_seg", segment_init)
 
-
     # Build executor options
     options = srf.Options()
 
@@ -77,7 +77,8 @@ def run_pipeline(count: int, channel_size: int, threads: int):
 
 
 if (__name__ == "__main__"):
-    parser = argparse.ArgumentParser(description='ConfigOptions Example.', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(description='ConfigOptions Example.',
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--count', type=int, default=10, help="The number of items for the source to emit")
     parser.add_argument('--channel_size',
                         type=int,
