@@ -4,6 +4,8 @@ This example shows how altering two common configuration options (number of thre
 
 In our previous examples the pipelines were quite simple. However in non-trivial pipelines it is quite likely that some nodes will execute faster than other nodes. When a reletively faster upstream source node emits data faster than they are able to be processed by a downstream sink node, it is possible that the channel will hit it's max channel size. When this happens the source node will block on the next write until there is room in the channel. Increasing the size of the channel would allow the source to emit as quickly as it is able to but at the cost of increased memory consumption.
 
+In an ideal situation we have more cores and threads available than we have nodes in the pipeline, allowing for each node to run in their own thread without the need for a context switch. In more complex pipelines this may not always be be the case, and nodes will be scheduled as needed.
+
 For this example the logging information is designed to show how messages move through the pipeline. For each of the 3 stages, they will output logs in the format:
 
 ```bash
