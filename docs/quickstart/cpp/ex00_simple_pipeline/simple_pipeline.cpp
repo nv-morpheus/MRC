@@ -53,8 +53,10 @@ int main(int argc, char* argv[])
         // A Node is both a Source and a Sink, it connects to an upstream provider/source and a downstream
         // subscriber/sink. This examples accects an upstream int and provides a downstream float which is the input
         // value scaled by 2.
-        auto node = s.make_node<int, float>("int_x2_to_float",
-                                            rxcpp::operators::map([](const int& data) { return float(2 * data); }));
+        auto node = s.make_node<int, float>("int_to_float_node", rxcpp::operators::map([](const int& data) {
+                                                // Multiple the input value returning a float
+                                                return float(2.5f * data);
+                                            }));
 
         // Sink
         // Sinks are terminators. They only accept upstream connections and do not provide the ability to pass data on.
@@ -69,10 +71,10 @@ int main(int argc, char* argv[])
         // a policy defined by Channel objects. The default channel is a yielding buffered channel which yields upstream
         // writers when the channel is full of data.
 
-        // source -> node
+        // int_source -> int_to_float_node
         s.make_edge(source, node);
 
-        // node -> sink
+        // int_to_float_node -> float_sink
         s.make_edge(node, sink);
     });
 
