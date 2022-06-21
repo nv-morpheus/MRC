@@ -13,11 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_executable(pipeline_with_library.x
+add_executable(pipeline_with_library
    pipeline_with_library.cpp
 )
 
-target_link_libraries(pipeline_with_library.x
+target_link_libraries(pipeline_with_library
  PUBLIC
    srf::libsrf
    srf_quickstart

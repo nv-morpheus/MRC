@@ -13,11 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_executable(simple_pipeline.x
+add_executable(simple_pipeline
    simple_pipeline.cpp
 )
 
-target_link_libraries(simple_pipeline.x
+target_link_libraries(simple_pipeline
  PUBLIC
    srf::libsrf
 )
