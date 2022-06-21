@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/system/resources.hpp"
 #include "internal/system/system_provider.hpp"
@@ -41,6 +42,7 @@ class Manager final : public system::SystemProvider
   private:
     std::unique_ptr<system::Resources> m_system;
     std::vector<runnable::Resources> m_runnable;
+    std::vector<PartitionResources> m_partitions;
 };
 
 }  // namespace srf::internal::resources

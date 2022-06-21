@@ -42,7 +42,11 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
         m_runnable.emplace_back(*m_system, i);
     }
 
-    // if network, then for each flattened partition
+    for (std::size_t i = 0; i < this->system().partitions().flattened().size(); ++i)
+    {
+        auto host_partition_id = this->system().partitions().flattened().at(i).host_partition_id();
+        m_partitions.emplace(m_runnable.at(this->))
+    }
 }
 
 runnable::Resources& Manager::runnable(std::size_t partition_id)
