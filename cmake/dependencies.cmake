@@ -148,13 +148,6 @@ include(deps/Configure_prometheus)
 set(LIBCUDACXX_VERSION "1.6.0" CACHE STRING "Version of libcudacxx to use")
 include(deps/Configure_libcudacxx)
 
-# matx
-# ====
-if(SRF_ENABLE_MATX)
-  set(MATX_VERSION "0.1.0" CACHE STRING "Version of MatX to use")
-  include(deps/Configure_matx)
-endif()
-
 # xtensor
 # =======
 if(SRF_ENABLE_XTENSOR)
