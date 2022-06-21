@@ -127,6 +127,9 @@ function(copy_target_resources TARGET_NAME COPY_DIRECTORY)
     # Create the copy command for each resource
     foreach(resource ${target_resources})
 
+      # Get the absolute path of the resource in case its relative.
+      cmake_path(ABSOLUTE_PATH resource NORMALIZE)
+
       cmake_path(IS_PREFIX target_source_dir "${resource}" NORMALIZE is_source_relative)
       cmake_path(IS_PREFIX target_binary_dir "${resource}" NORMALIZE is_binary_relative)
 
@@ -203,8 +206,11 @@ function(build_python_package PACKAGE_NAME)
     ${ARGN}
   )
 
+  get_target_property(sources_source_dir ${PYTHON_ACTIVE_PACKAGE_NAME}-sources SOURCE_DIR)
+  get_target_property(sources_binary_dir ${PYTHON_ACTIVE_PACKAGE_NAME}-sources BINARY_DIR)
+
   # First copy the source files
-  copy_target_resources(${PYTHON_ACTIVE_PACKAGE_NAME}-sources ${PROJECT_BINARY_DIR})
+  copy_target_resources(${PYTHON_ACTIVE_PACKAGE_NAME}-sources ${sources_binary_dir})
 
   set(module_dependencies ${PYTHON_ACTIVE_PACKAGE_NAME}-sources-copy-resources)
 
@@ -217,14 +223,14 @@ function(build_python_package PACKAGE_NAME)
 
   # Next step is to build the wheel file
   if(_ARGS_BUILD_WHEEL)
-    set(wheel_stamp ${CMAKE_CURRENT_BINARY_DIR}/${PYTHON_ACTIVE_PACKAGE_NAME}-wheel.stamp)
+    set(wheel_stamp ${sources_binary_dir}/${PYTHON_ACTIVE_PACKAGE_NAME}-wheel.stamp)
 
     # The command to actually generate the wheel
     add_custom_command(
       OUTPUT ${wheel_stamp}
       COMMAND python setup.py bdist_wheel
       COMMAND ${CMAKE_COMMAND} -E touch ${wheel_stamp}
-      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      WORKING_DIRECTORY ${sources_binary_dir}
       # Depend on any of the output python files
       DEPENDS ${PYTHON_ACTIVE_PACKAGE_NAME}-outputs
       COMMENT "Building ${PYTHON_ACTIVE_PACKAGE_NAME} wheel"
@@ -251,13 +257,13 @@ function(build_python_package PACKAGE_NAME)
       list(APPEND _pip_args "-e")
     endif()
 
-    set(install_stamp ${CMAKE_CURRENT_BINARY_DIR}/${PYTHON_ACTIVE_PACKAGE_NAME}-install.stamp)
+    set(install_stamp ${sources_binary_dir}/${PYTHON_ACTIVE_PACKAGE_NAME}-install.stamp)
 
-    set(setup_dir ${CMAKE_CURRENT_SOURCE_DIR})
+    set(setup_dir ${sources_binary_dir})
 
     # Change which setup we use if we are using inplace
     if(_ARGS_IS_INPLACE)
-      set(setup_dir ${CMAKE_CURRENT_SOURCE_DIR})
+      set(setup_dir ${sources_source_dir})
     endif()
 
     add_custom_command(

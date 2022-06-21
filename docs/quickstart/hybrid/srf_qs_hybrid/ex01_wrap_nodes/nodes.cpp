@@ -34,10 +34,6 @@ namespace py = pybind11;
 
 class MyDataObjectSource : public srf::pysrf::PythonSource<std::shared_ptr<common::DataObject>>
 {
-    // using base_t = srf::pysrf::PythonSource<std::shared_ptr<common::DataObject>>;
-    // using typename base_t::source_type_t;
-    // using typename base_t::subscriber_fn_t;
-
   public:
     MyDataObjectSource(size_t count) : PythonSource(build()), m_count(count) {}
 
@@ -88,9 +84,6 @@ class MyDataObjectNode
 
 class MyDataObjectSink : public srf::pysrf::PythonSink<std::shared_ptr<common::DataObject>>
 {
-    // using base_t = srf::pysrf::PythonSink<std::shared_ptr<common::DataObject>>;
-    // using typename base_t::sink_type_t;
-
   public:
     MyDataObjectSink() : PythonSink(build_on_next(), build_on_complete()) {}
 
