@@ -69,23 +69,20 @@ optional arguments:
 
 ### Clone the repository and navigate to the quickstart folder
 
-```
+```bash
 git clone https://github.com/nv-morpheus/srf.git
-cd srf/docs/quickstart/cpp
+cd srf/docs/quickstart
 ```
 
 ### Install the Conda Environment
 
-```
+```bash
 conda env create -n srf-quickstart -f environment_cpp.yml
 conda activate srf-quickstart
 ```
 
 ### Build
 
-```
-mkdir build
-cd build
-cmake ..
-make
+```bash
+./compile.sh
 ```
