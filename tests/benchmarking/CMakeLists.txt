@@ -15,13 +15,10 @@
 
 # Keep all source files sorted!!!
 add_executable(test_srf_benchmarking
+  test_benchmarking.cpp
+  test_main.cpp
   test_stat_gather.cpp
   test_utils.cpp
-)
-
-target_sources(test_srf_benchmarking
-  PRIVATE
-    test_benchmarking.cpp
 )
 
 target_link_libraries(test_srf_benchmarking
