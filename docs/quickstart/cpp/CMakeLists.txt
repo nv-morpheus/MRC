@@ -13,6 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_subdirectory(00_SimplePipeline)
-add_subdirectory(01_libsrf_quickstart)
-add_subdirectory(02_PipelineWithLibrary)
+list(APPEND CMAKE_MESSAGE_CONTEXT "hybrid")
+
+add_subdirectory(ex00_simple_pipeline)
+add_subdirectory(ex01_libsrf_quickstart)
+add_subdirectory(ex02_pipeline_with_library)
+
+list(POP_BACK CMAKE_MESSAGE_CONTEXT)
