@@ -28,10 +28,6 @@
 #include <utility>
 
 namespace srf::internal::system {
-class Partitions;
-}
-
-namespace srf::internal::system {
 
 class ISystem;
 

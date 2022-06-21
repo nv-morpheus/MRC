@@ -17,31 +17,30 @@
 
 #pragma once
 
-#include "internal/runnable/engines.hpp"
+#include <srf/segment/object.hpp>
 
-#include "internal/system/forward.hpp"
-#include "internal/system/resources.hpp"
+#include <glog/logging.h>
 
-#include "srf/core/bitmap.hpp"
-#include "srf/runnable/launch_options.hpp"
-#include "srf/runnable/types.hpp"
+#include <memory>
+#include <ostream>
+#include <utility>
 
-namespace srf::internal::runnable {
+namespace srf::segment {
 
-class ThreadEngines final : public Engines
+template <typename ResourceT>
+class Component final : public Object<ResourceT>
 {
   public:
-    ThreadEngines(CpuSet cpu_set, const system::Resources& system);
-    ThreadEngines(LaunchOptions launch_options, CpuSet cpu_set, const system::Resources& system);
-    ~ThreadEngines() final = default;
-
-    EngineType engine_type() const final;
+    Component(std::unique_ptr<ResourceT> resource) : m_resource(std::move(resource)) {}
+    ~Component() final = default;
 
   private:
-    void initialize_launchers();
-
-    CpuSet m_cpu_set;
-    const system::Resources& m_system;
+    ResourceT* get_object() const final
+    {
+        CHECK(m_resource);
+        return m_resource.get();
+    }
+    std::unique_ptr<ResourceT> m_resource;
 };
 
-}  // namespace srf::internal::runnable
+}  // namespace srf::segment

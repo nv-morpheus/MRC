@@ -19,7 +19,6 @@
 
 #include "internal/runnable/engine.hpp"
 
-#include "internal/system/forward.hpp"
 #include "internal/system/resources.hpp"
 #include "internal/system/thread.hpp"
 

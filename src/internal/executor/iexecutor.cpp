@@ -24,6 +24,7 @@
 
 #include <glog/logging.h>
 
+#include <memory>
 #include <utility>
 
 namespace srf::internal::executor {

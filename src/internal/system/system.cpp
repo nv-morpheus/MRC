@@ -19,6 +19,7 @@
 
 #include "internal/system/partitions.hpp"
 
+#include "srf/core/bitmap.hpp"
 #include "srf/internal/system/isystem.hpp"
 #include "srf/options/options.hpp"
 

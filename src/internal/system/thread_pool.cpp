@@ -20,8 +20,8 @@
 #include "internal/system/resources.hpp"
 #include "srf/core/bitmap.hpp"
 
+#include <algorithm>
 #include <cstdint>
-#include <memory>
 #include <thread>
 
 namespace srf::internal::system {

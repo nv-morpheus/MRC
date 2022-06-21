@@ -20,6 +20,10 @@
 #include "internal/pipeline/pipeline.hpp"
 #include "internal/segment/definition.hpp"
 
+#include <memory>
+#include <utility>
+#include <vector>
+
 namespace srf::internal::pipeline {
 
 PortGraph::PortGraph(const Pipeline& pipeline)

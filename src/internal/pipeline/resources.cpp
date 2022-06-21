@@ -19,8 +19,6 @@
 
 #include <glog/logging.h>
 
-#include <utility>
-
 namespace srf::internal::pipeline {
 
 Resources::Resources(resources::Manager& resources) :

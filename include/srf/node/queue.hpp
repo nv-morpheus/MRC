@@ -17,31 +17,32 @@
 
 #pragma once
 
-#include "internal/runnable/engines.hpp"
+#include "srf/channel/ingress.hpp"
+#include "srf/node/edge_properties.hpp"
+#include "srf/node/forward.hpp"
+#include "srf/node/sink_channel_base.hpp"
 
-#include "internal/system/forward.hpp"
-#include "internal/system/resources.hpp"
+namespace srf::node {
 
-#include "srf/core/bitmap.hpp"
-#include "srf/runnable/launch_options.hpp"
-#include "srf/runnable/types.hpp"
-
-namespace srf::internal::runnable {
-
-class ThreadEngines final : public Engines
+template <typename T>
+class Queue final : public SinkChannelBase<T>, public SinkProperties<T>, public ChannelProvider<T>
 {
   public:
-    ThreadEngines(CpuSet cpu_set, const system::Resources& system);
-    ThreadEngines(LaunchOptions launch_options, CpuSet cpu_set, const system::Resources& system);
-    ~ThreadEngines() final = default;
-
-    EngineType engine_type() const final;
+    Queue()        = default;
+    ~Queue() final = default;
 
   private:
-    void initialize_launchers();
+    // SinkProperties<T> - aka IngressProvider
+    std::shared_ptr<channel::Ingress<T>> channel_ingress() final
+    {
+        return SinkChannelBase<T>::ingress_channel();
+    }
 
-    CpuSet m_cpu_set;
-    const system::Resources& m_system;
+    // ChannelProvider
+    std::shared_ptr<channel::Channel<T>> channel() final
+    {
+        return SinkChannelBase<T>::channel();
+    }
 };
 
-}  // namespace srf::internal::runnable
+}  // namespace srf::node

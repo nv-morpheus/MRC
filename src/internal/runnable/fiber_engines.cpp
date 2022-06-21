@@ -20,6 +20,7 @@
 #include "internal/runnable/fiber_engine.hpp"
 
 #include <glog/logging.h>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <utility>
