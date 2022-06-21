@@ -15,14 +15,14 @@ There are two basic ways to get started with SRF:
 
 # Python Quickstart
 
-To get started with the SRF Python Runtime, there are several examples located in the `quickstart/examples/python` directory. These examples are organized into separate folders each showing a different topic. Each example directory has a name with the format, `XX_${EXAMPLE_NAME}`, where `XX` represents the example number (in increasing difficulty) and `${EXAMPLE_NAME}` is the example name. Below is a list of the available examples and a brief description:
+To get started with the SRF Python Runtime, there are several examples located in the `quickstart/python/python/srf_qs_python` directory. These examples are organized into separate folders each showing a different topic. Each example directory has a name with the format, `exXX_${EXAMPLE_NAME}`, where `XX` represents the example number (in increasing difficulty) and `${EXAMPLE_NAME}` is the example name. Below is a list of the available examples and a brief description:
 
 | #      | Name | Description |
 | ----------- | ----------- | --- |
-| 00 | SimplePipeline | A small, basic pipeline with only a single source, node and sink |
-| 01 | CustomData | Similar to SimplePipeline, but passes a custom data type between nodes |
-| 02 | ReactiveOperators | Demonstrates how to use Reactive style operators inside of nodes for more complex functionality |
-| 03 | ConfigOptions | Illustrates how thread and buffer options can alter performance |
+| 00 | simple_pipeline | A small, basic pipeline with only a single source, node and sink |
+| 01 | custom_data | Similar to simple_pipeline, but passes a custom data type between nodes |
+| 02 | reactive_operators | Demonstrates how to use Reactive style operators inside of nodes for more complex functionality |
+| 03 | config_options | Illustrates how thread and buffer options can alter performance |
 
 ## Setup
 
@@ -37,13 +37,13 @@ conda install -c nvidia/label/dev srf
 Each example directory contains a `README.md` file with information about the example and a `run.py` python file. To run any of the examples, simply launch the `run.py` file from python:
 
 ```bash
-python docs/quickstart/examples/python/<XX_ExampleName>/run.py
+python docs/quickstart/python/python/srf_qs_python/<exXX_ExampleName>/run.py
 ```
 
 Some examples have configurable options to alter the behavior of the example. To see what options are available, pass `--help` to the example's `run.py` file. For example:
 
 ```bash
-$ python ./docs/quickstart/python/03_ConfigOptions/run.py --help
+$ python docs/quickstart/python/srf_qs_python/ex03_config_options/run.py --help
 usage: run.py [-h] [--count COUNT] [--channel_size CHANNEL_SIZE] [--threads THREADS]
 
 ConfigOptions Example.
