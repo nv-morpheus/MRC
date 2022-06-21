@@ -34,6 +34,7 @@ class Executor;
 class IExecutor
 {
   public:
+    IExecutor(std::unique_ptr<Executor>);
     IExecutor(std::shared_ptr<Options>);
     IExecutor(std::unique_ptr<system::ISystem>);
     virtual ~IExecutor() = 0;
@@ -48,7 +49,7 @@ class IExecutor
     // this method will be applied
 
   private:
-    std::shared_ptr<Executor> m_impl;
+    std::unique_ptr<Executor> m_impl;
 };
 
 }  // namespace srf::internal::executor
