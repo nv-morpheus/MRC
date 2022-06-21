@@ -23,7 +23,7 @@ Once each object is created, they can be linked together using `Segment.make_edg
 We can see this simple pipeline in action by running the python script:
 
 ```bash
-$ python ./docs/quickstart/python/00_SimplePipeline/run.py
+$ python docs/quickstart/python/srf_qs_python/ex00_simple_pipeline/run.py
 srf pipeline starting...
 Got value: 2.5, Incrementing counter
 Got value: 5.0, Incrementing counter
