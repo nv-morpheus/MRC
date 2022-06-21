@@ -32,7 +32,8 @@ IExecutor::IExecutor(std::unique_ptr<Executor> impl) : m_impl(std::move(impl))
     CHECK(m_impl);
 }
 IExecutor::IExecutor(std::shared_ptr<Options> options) : IExecutor(make_executor(std::move(options))) {}
-IExecutor::IExecutor(std::unique_ptr<system::ISystem> system) : IExecutor(make_executor(system::System::unwrap(*system)))
+IExecutor::IExecutor(std::unique_ptr<system::ISystem> system) :
+  IExecutor(make_executor(system::System::unwrap(*system)))
 {}
 
 IExecutor::~IExecutor() = default;
