@@ -35,6 +35,8 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
   m_system(std::move(resources))
 {
     // for each host partition, construct the runnable resources
+    VLOG(1) << "building runnable/launch_control resources on " << this->system().partitions().host_partitions().size()
+            << " unique host partitions";
     for (std::size_t i = 0; i < this->system().partitions().host_partitions().size(); ++i)
     {
         m_runnable.emplace_back(*m_system, i);
