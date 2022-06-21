@@ -5,7 +5,7 @@ If we look at the previous example, `01_CustomData`, we might see one potential 
 This is where the Reactive-style operators come in to use. SRF's Reactive-style operators make it easy to perform common tasks like: 
 * filtering: `srf.core.operators.filter`
 * mapping: `srf.core.operators.map`
-* combining: `srf.core.operators.to_list`
+* combining: `srf.core.operators.to_list` & `srf.core.operators.pairwise`
 * flattening: `srf.core.operators.flatten`
 
 To use these operators, we first need to use a different function instead of `make_node`. We will be using the more verbose `make_node_full` function which takes a lambda function with the signature: `def lambda_fn(src: srf.Observable, dst: srf.Suscriber)`.
