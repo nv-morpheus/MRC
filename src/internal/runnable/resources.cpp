@@ -27,14 +27,11 @@
 #include "internal/system/system.hpp"
 
 #include "srf/core/bitmap.hpp"
-// #include "srf/memory/resources/host/malloc_memory_resource.hpp"
-// #include "srf/memory/resources/host/pinned_memory_resource.hpp"
 #include "srf/runnable/types.hpp"
 #include "srf/types.hpp"
 
 #include <glog/logging.h>
 #include <boost/fiber/future/future.hpp>
-// #include <cuda/memory_resource>
 
 #include <map>
 #include <ostream>
@@ -108,4 +105,8 @@ const system::Partition& Resources::partition() const
     return system().partitions().flattened().at(m_partition_id);
 }
 
+std::size_t Resources::partition_id() const
+{
+    return m_partition_id;
+}
 }  // namespace srf::internal::runnable
