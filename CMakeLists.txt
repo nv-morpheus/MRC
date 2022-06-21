@@ -187,9 +187,10 @@ add_library(libsrf
 # src/internal/data_plane/client_worker.cpp
 # src/internal/data_plane/client.cpp
 # src/internal/data_plane/instance.cpp
-# src/internal/data_plane/server.cpp
+  src/internal/data_plane/server.cpp
   src/internal/executor/executor.cpp
   src/internal/executor/iexecutor.cpp
+  src/internal/network/resources.cpp
   src/internal/pipeline/controller.cpp
   src/internal/pipeline/instance.cpp
   src/internal/pipeline/ipipeline.cpp
