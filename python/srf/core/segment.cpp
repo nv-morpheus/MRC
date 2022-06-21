@@ -24,8 +24,8 @@
 
 #include <srf/channel/status.hpp>
 
-#include <srf/node/edge_connector.hpp>
 #include <srf/node/edge_builder.hpp>
+#include <srf/node/edge_connector.hpp>
 #include <srf/segment/builder.hpp>
 #include <srf/segment/definition.hpp>
 #include <srf/segment/object.hpp>
@@ -83,9 +83,9 @@ PYBIND11_MODULE(segment, m)
     node::EdgeConnector<std::string, PyHolder>::register_converter();
     node::EdgeConnector<PyHolder, std::string>::register_converter();
 
-
     // Register python ingress adaptor
-    node::EdgeBuilder::register_edge_adaptor<PysrfEdgeAdaptor>("pysrf");
+    node::EdgeAdaptorRegistry::register_source_adaptor(typeid(PyHolder), SourceAdapterUtil::f_builder<PyHolder>());
+    node::EdgeAdaptorRegistry::register_sink_adaptor(typeid(PyHolder), SinkAdapterUtil::f_builder<PyHolder>());
 
     auto Definition = py::class_<srf::segment::Definition>(m, "Definition");
     auto Builder    = py::class_<srf::segment::Builder>(m, "Builder");

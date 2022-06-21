@@ -19,7 +19,7 @@
 
 #include <srf/channel/ingress.hpp>
 #include <srf/node/edge.hpp>
-#include <srf/node/edge_adaptor.hpp>
+#include <srf/node/edge_adaptor_registry.hpp>
 #include <srf/node/sink_properties.hpp>
 #include <srf/node/source_properties.hpp>
 #include <srf/utils/type_utils.hpp>
@@ -30,31 +30,61 @@
 #include <type_traits>
 #include <typeindex>
 #include <typeinfo>
+#include <unordered_map>
 
 namespace srf::node {
 
 struct EdgeBuilder final
 {
-    static std::mutex s_edge_adaptor_mutex;
-    static std::map<std::string, std::shared_ptr<EdgeAdaptorBase>> s_edge_adaptors;
+    /**
+     *
+     * @param source
+     * @param sink
+     * @param ingress_handle
+     * @return
+     */
+    static std::shared_ptr<channel::IngressHandle> default_ingress_adaptor_for_sink(
+        srf::node::SourcePropertiesBase& source,
+        srf::node::SinkPropertiesBase& sink,
+        std::shared_ptr<channel::IngressHandle> ingress_handle);
 
-    template <typename EdgeAdaptorT>
-    static void register_edge_adaptor(const std::string& constructor_id)
-    {
-        static_assert(std::is_base_of_v<EdgeAdaptorBase, EdgeAdaptorT>);
+    /**
+     *
+     * @param source
+     * @param sink
+     * @param ingress_handle
+     * @return
+     */
+    static std::shared_ptr<channel::IngressHandle> ingress_adaptor_for_sink(
+        srf::node::SourcePropertiesBase& source,
+        srf::node::SinkPropertiesBase& sink,
+        std::shared_ptr<channel::IngressHandle> ingress_handle);
 
-        std::lock_guard<std::mutex> lock(s_edge_adaptor_mutex);
-        if (s_edge_adaptors.find(constructor_id) != s_edge_adaptors.end())
-        {
-            std::stringstream sstream;
-            sstream << "Attempted to register existing edge adaptor: " + constructor_id;
+    /**
+     *
+     * @param source
+     * @param sink
+     * @param ingress_handle
+     * @return
+     */
+    static std::shared_ptr<channel::IngressHandle> default_ingress_for_source_type(
+        std::type_index source_type,
+        srf::node::SinkPropertiesBase& sink,
+        std::shared_ptr<channel::IngressHandle> ingress_handle);
 
-            LOG(WARNING) << sstream.str();
-            throw std::runtime_error(sstream.str());
-        }
+    /**
+     *
+     * @param source
+     * @param sink
+     * @param ingress_handle
+     * @return
+     */
+    static std::shared_ptr<channel::IngressHandle> ingress_for_source_type(
+        std::type_index source_type,
+        srf::node::SinkPropertiesBase& sink,
+        std::shared_ptr<channel::IngressHandle> ingress_handle);
 
-        s_edge_adaptors[constructor_id] = std::make_shared<EdgeAdaptorT>();
-    }
+    static void make_edge_typeless(SourcePropertiesBase& source, SinkPropertiesBase& sink, bool allow_narrowing = true);
 
     template <typename SourceT, typename SinkT = SourceT, bool AllowNarrowingV = true>
     static void make_edge(SourceProperties<SourceT>& source, SinkProperties<SinkT>& sink)
@@ -96,11 +126,6 @@ struct EdgeBuilder final
 
         source.complete_edge(edge);
     }
-
-    static void make_edge_typeless(SourcePropertiesBase& source,
-                                   SinkPropertiesBase& sink,
-                                   const std::string& constructor_id = "default",
-                                   bool allow_narrowing              = true);
 };
 
 template <typename SourceT, typename SinkT = SourceT>

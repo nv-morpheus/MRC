@@ -15,8 +15,7 @@ find_package(pybind11 REQUIRED)
 find_package(prometheus-cpp REQUIRED)
 
 add_library(pysrf
-  src/edge_adaptor.cpp
-  src/executor.cpp
+    src/executor.cpp
   src/logging.cpp
   src/options.cpp
   src/pipeline.cpp

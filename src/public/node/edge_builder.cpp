@@ -15,33 +15,62 @@
  * limitations under the License.
  */
 
+#include <srf/node/edge_adaptor_registry.hpp>
 #include <srf/node/edge_builder.hpp>
-
-#include <srf/node/edge_adaptor.hpp>
 #include <srf/node/edge_registry.hpp>
 
-#include <mutex>
-
 namespace srf::node {
-std::mutex EdgeBuilder::s_edge_adaptor_mutex{};
-std::map<std::string, std::shared_ptr<EdgeAdaptorBase>> EdgeBuilder::s_edge_adaptors{
-    {"default", std::make_shared<DefaultEdgeAdaptor>()}};
-
-void EdgeBuilder::make_edge_typeless(SourcePropertiesBase& source,
-                                     SinkPropertiesBase& sink,
-                                     const std::string& constructor_id,
-                                     bool allow_narrowing)
+void EdgeBuilder::make_edge_typeless(SourcePropertiesBase& source, SinkPropertiesBase& sink, bool allow_narrowing)
 {
-    auto iter_adaptors = s_edge_adaptors.find(constructor_id);
-    if (iter_adaptors == s_edge_adaptors.end())
-    {
-        std::stringstream sstream;
-        sstream << "Specified unkown edge adaptor: " + constructor_id;
+    source.complete_edge(EdgeBuilder::ingress_adaptor_for_sink(source, sink, sink.ingress_handle()));
+}
 
-        LOG(ERROR) << sstream.str();
-        throw std::runtime_error(sstream.str());
+std::shared_ptr<channel::IngressHandle> EdgeBuilder::ingress_adaptor_for_sink(
+    srf::node::SourcePropertiesBase& source,
+    srf::node::SinkPropertiesBase& sink,
+    std::shared_ptr<channel::IngressHandle> ingress_handle)
+{
+    if (EdgeAdaptorRegistry::has_source_adaptor(source.source_type()))
+    {
+        auto adaptor = EdgeAdaptorRegistry::find_source_adaptor(source.source_type());
+        return adaptor(source, sink, sink.ingress_handle());
     }
 
-    source.complete_edge(iter_adaptors->second->try_construct_ingress(source, sink, sink.ingress_handle()));
+    return default_ingress_adaptor_for_sink(source, sink, ingress_handle);
 }
+
+std::shared_ptr<channel::IngressHandle> EdgeBuilder::default_ingress_adaptor_for_sink(
+    srf::node::SourcePropertiesBase& source,
+    srf::node::SinkPropertiesBase& sink,
+    std::shared_ptr<channel::IngressHandle> ingress_handle)
+
+{
+    auto fn_converter = srf::node::EdgeRegistry::find_converter(source.source_type(), sink.sink_type());
+    return fn_converter(ingress_handle);
+}
+
+std::shared_ptr<channel::IngressHandle> EdgeBuilder::default_ingress_for_source_type(
+    std::type_index source_type,
+    srf::node::SinkPropertiesBase& sink,
+    std::shared_ptr<channel::IngressHandle> ingress_handle)
+{
+    // Do dynamic lookup before fallback.
+    auto fn_converter = srf::node::EdgeRegistry::find_converter(source_type, sink.sink_type());
+    return fn_converter(ingress_handle);
+}
+
+std::shared_ptr<channel::IngressHandle> EdgeBuilder::ingress_for_source_type(
+    std::type_index source_type,
+    srf::node::SinkPropertiesBase& sink,
+    std::shared_ptr<channel::IngressHandle> ingress_handle)
+{
+    if (EdgeAdaptorRegistry::has_sink_adaptor(sink.sink_type()))
+    {
+        auto adaptor = EdgeAdaptorRegistry::find_sink_adaptor(sink.sink_type());
+        return adaptor(source_type, sink, sink.ingress_handle());
+    }
+
+    return default_ingress_for_source_type(source_type, sink, ingress_handle);
+}
+
 }  // namespace srf::node
