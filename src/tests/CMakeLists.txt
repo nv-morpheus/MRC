@@ -41,7 +41,7 @@ add_custom_target(copy_fixture_files ALL
 )
 
 
-# Keep all source files sorted
+# Keep all source files sorted!!!
 add_executable(test_srf_private
   test_main.cpp
   pipelines/single_segment.cpp

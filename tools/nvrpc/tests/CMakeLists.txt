@@ -39,10 +39,11 @@ set_target_properties(nvrpc-testing-protos
     EXPORT_COMPILE_COMMANDS OFF
 )
 
+# Keep all source files sorted!!!
 add_executable(test_nvrpc
   test_main.cc
-  test_resources.cc
   test_pingpong.cc
+  test_resources.cc
   test_server.cc
 )
 

@@ -13,23 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Keep all source files sorted
+# Keep all source files sorted!!!
 add_executable(test_srf
   test_channel.cpp
   test_codable.cpp
   test_executor.cpp
-# test_next.cpp
   test_main.cpp
-# test_memory.cpp ==> internal
-  test_srf.cpp
-  test_node.cpp
   test_metrics.cpp
+  test_node.cpp
   test_pipeline.cpp
-# test_remote_descriptor.cpp
-# test_runnable.cpp ==> internal
-# test_rx.cpp
-# test_segment_components.cpp ==> internal
-# test_segment.cpp
+  test_srf.cpp
   test_type_utils.cpp
 )
 
