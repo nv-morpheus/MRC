@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#pragma once
+
 #include <glog/logging.h>
 
 #include <string>
@@ -34,14 +36,14 @@ enum class LogLevels
 };
 
 /**
- * @brief Initializes Srf's logger, calling this function a second time has
+ * @brief Initializes SRF's logger, calling this function a second time has
  * no impact. The return value inidicates if the logger was initialized,
  * which will be `true` on the first call, and `false` for all subsequant calls.
  */
 bool init_logging(const std::string& logname, LogLevels level = LogLevels::INFO, bool log_to_stderr = true);
 
 /**
- * @brief Checks if Srf's logger has been initialized via `init_logging`
+ * @brief Checks if SRF's logger has been initialized via `init_logging`
  *
  * @return true
  * @return false
@@ -55,7 +57,7 @@ bool is_initialized();
 LogLevels get_log_level();
 
 /**
- * @brief Adjusts the log level of Srf's logger.
+ * @brief Adjusts the log level of SRF's logger.
  * Calling this prior to calling `init_logging` has no impact as `init_logging` will set the log level.
  */
 void set_log_level(LogLevels level);

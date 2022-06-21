@@ -25,6 +25,7 @@
 #include <srf/node/sink_properties.hpp>
 #include <srf/node/source_properties.hpp>
 #include <srf/runnable/launchable.hpp>
+#include <srf/segment/component.hpp>
 #include <srf/segment/egress_port.hpp>
 #include <srf/segment/forward.hpp>
 #include <srf/segment/object.hpp>
@@ -206,9 +207,12 @@ std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::uni
     }
     else
     {
-        LOG(FATAL) << "unable to create non-launchable segment object at this time";
+        auto segment_node = std::make_shared<Component<ObjectT>>(std::move(node));
+        add_object(name, segment_node);
+        segment_object = segment_node;
     }
 
+    CHECK(segment_object);
     return segment_object;
 }
 

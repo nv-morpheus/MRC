@@ -24,7 +24,7 @@
 #include <stdexcept>
 
 // NOLINTNEXTLINE(readability-identifier-naming)
-void TestFailuresThrowExceptions()
+__attribute__((noreturn)) void TestFailuresThrowExceptions()
 {
     throw std::runtime_error("exception rather than std::abort");
 }
