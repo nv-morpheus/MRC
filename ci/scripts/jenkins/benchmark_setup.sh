@@ -27,5 +27,4 @@ fetch_s3 "${ARTIFACT_ENDPOINT}/dsos.tar.bz" "${WORKSPACE_TMP}/dsos.tar.bz"
 tar xf "${WORKSPACE_TMP}/cpp_tests.tar.bz"
 tar xf "${WORKSPACE_TMP}/dsos.tar.bz"
 
-REPORTS_DIR="${WORKSPACE_TMP}/reports"
 mkdir -p ${WORKSPACE_TMP}/reports

@@ -197,6 +197,7 @@ pipeline {
                         {
                             sh "${WORKSPACE}/ci/scripts/jenkins/benchmark_setup.sh"
                             sh "${WORKSPACE}/ci/scripts/jenkins/benchmark.sh"
+                            sh "${WORKSPACE}/ci/scripts/jenkins/benchmark_archive.sh"
                         }
                     }
                 }
