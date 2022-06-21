@@ -84,7 +84,28 @@ void recv_completion_handler(void* request, ucs_status_t status, const ucp_tag_r
 
 }  // namespace
 
-Server::Server(std::shared_ptr<ucx::Context> context, std::shared_ptr<resources::PartitionResources> resources) :
+class DataPlaneServerWorker final : public node::GenericSource<network_event_t>
+{
+  public:
+    DataPlaneServerWorker(Handle<ucx::Worker> worker);
+
+  private:
+    void data_source(rxcpp::subscriber<network_event_t>& s) final;
+
+    void on_tagged_msg(rxcpp::subscriber<network_event_t>& subscriber,
+                       ucp_tag_message_h msg,
+                       const ucp_tag_recv_info_t& msg_info);
+
+    Handle<ucx::Worker> m_worker;
+
+    // modify these to adjust the tag matching
+    // 0/0 is the equivalent of match all tags
+    ucp_tag_t m_tag{0};
+    ucp_tag_t m_tag_mask{0};
+};
+
+Server::Server(std::shared_ptr<ucx::Context> context, runnable::Resources& runnable_resources) :
+  m_runnable_resources(runnable_resources),
   m_worker(std::make_shared<ucx::Worker>(context))
 {}
 
@@ -104,9 +125,8 @@ void Server::do_service_start()
     // all network runnables use the `srf_network` engine factory
     DVLOG(10) << "launch network event mananger progress engine";
     LOG(FATAL) << "get launch control from partition resources";
-    m_progress_engine = m_resources->host()
-                            .launch_control()
-                            .prepare_launcher(runnable::LaunchOptions("srf_network"), std::move(progress_engine))
+    m_progress_engine = m_runnable_resources.launch_control()
+                            .prepare_launcher(srf::runnable::LaunchOptions("srf_network"), std::move(progress_engine))
                             ->ignition();
 }
 

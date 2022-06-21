@@ -28,6 +28,8 @@
 #include <srf/runnable/launch_control.hpp>
 #include <srf/runnable/runner.hpp>
 #include <srf/types.hpp>
+
+#include "internal/runnable/resources.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/worker.hpp"
@@ -67,7 +69,7 @@ using network_event_t = std::pair<PortAddress, memory::block>;
 class Server final : public Service
 {
   public:
-    Server(std::shared_ptr<ucx::Context> context, std::shared_ptr<resources::PartitionResources> resources);
+    Server(std::shared_ptr<ucx::Context> context, runnable::Resources& resources);
     ~Server() final;
 
     ucx::WorkerAddress worker_address() const;
@@ -81,7 +83,7 @@ class Server final : public Service
     void do_service_kill() final;
     void do_service_await_join() final;
 
-    std::shared_ptr<resources::PartitionResources> m_resources;
+    runnable::Resources& m_runnable_resources;
 
     // deserialization nodes will connect to this source wtih their port id
     // the source for this router is the private GenericSoruce of this object
@@ -95,29 +97,9 @@ class Server final : public Service
     Handle<ucx::Worker> m_worker;
 
     // runner for the ucx progress engine event source
-    std::unique_ptr<runnable::Runner> m_progress_engine;
+    std::unique_ptr<srf::runnable::Runner> m_progress_engine;
 
     // host resources - probably should be
-};
-
-class DataPlaneServerWorker final : public node::GenericSource<network_event_t>
-{
-  public:
-    DataPlaneServerWorker(Handle<ucx::Worker> worker);
-
-  private:
-    void data_source(rxcpp::subscriber<network_event_t>& s) final;
-
-    void on_tagged_msg(rxcpp::subscriber<network_event_t>& subscriber,
-                       ucp_tag_message_h msg,
-                       const ucp_tag_recv_info_t& msg_info);
-
-    Handle<ucx::Worker> m_worker;
-
-    // modify these to adjust the tag matching
-    // 0/0 is the equivalent of match all tags
-    ucp_tag_t m_tag{0};
-    ucp_tag_t m_tag_mask{0};
 };
 
 }  // namespace srf::internal::data_plane
