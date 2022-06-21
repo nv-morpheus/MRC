@@ -1,5 +1,7 @@
 # Contributing to SRF
 
+test
+
 Contributions to SRF fall into the following three categories.
 
 1. To report a bug, request a new feature, or report a problem with
