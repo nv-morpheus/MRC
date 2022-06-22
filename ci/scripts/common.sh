@@ -65,7 +65,7 @@ function get_modified_files() {
    local GIT_DIFF_BASE=${GIT_DIFF_BASE:-$(get_merge_base)}
 
    # If invoked by a git-commit-hook, this will be populated
-   local result=( $(git diff ${GIT_DIFF_ARGS} $(get_merge_base) | grep -P ${1:-'.*'} | sed -e '/\/architect\//d' -e '/test_/d'))
+   local result=( $(git diff ${GIT_DIFF_ARGS} $(get_merge_base) | grep -P ${1:-'.*'} ))
 
    if [[ "$__resultvar" ]]; then
       eval $__resultvar="( ${result[@]} )"
