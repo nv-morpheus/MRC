@@ -84,8 +84,22 @@ struct EdgeBuilder final
         srf::node::SinkPropertiesBase& sink,
         std::shared_ptr<channel::IngressHandle> ingress_handle);
 
+    /**
+     *
+     * @param source
+     * @param sink
+     * @param allow_narrowing
+     */
     static void make_edge_typeless(SourcePropertiesBase& source, SinkPropertiesBase& sink, bool allow_narrowing = true);
 
+    /**
+     *
+     * @tparam SourceT
+     * @tparam SinkT
+     * @tparam AllowNarrowingV
+     * @param source
+     * @param sink
+     */
     template <typename SourceT, typename SinkT = SourceT, bool AllowNarrowingV = true>
     static void make_edge(SourceProperties<SourceT>& source, SinkProperties<SinkT>& sink)
     {

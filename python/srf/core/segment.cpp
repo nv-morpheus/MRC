@@ -17,7 +17,6 @@
 
 #include <pysrf/segment.hpp>
 
-#include <pysrf/edge_adaptor.hpp>
 #include <pysrf/node.hpp>  // IWYU pragma: keep
 #include <pysrf/types.hpp>
 #include <pysrf/utils.hpp>
@@ -45,7 +44,13 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(segment, m)
 {
-    m.doc() = R"pbdoc()pbdoc";
+    m.doc() = R"pbdoc(
+        Python bindings for SRF Segments
+        -------------------------------
+        .. currentmodule:: segment
+        .. autosummary::
+           :toctree: _generate
+    )pbdoc";
 
     // Common must be first in every module
     pysrf::import(m, "srf.core.common");
@@ -83,9 +88,6 @@ PYBIND11_MODULE(segment, m)
     node::EdgeConnector<std::string, PyHolder>::register_converter();
     node::EdgeConnector<PyHolder, std::string>::register_converter();
 
-    // Register python ingress adaptor
-    node::EdgeAdaptorRegistry::register_source_adaptor(typeid(PyHolder), SourceAdapterUtil::f_builder<PyHolder>());
-    node::EdgeAdaptorRegistry::register_sink_adaptor(typeid(PyHolder), SinkAdapterUtil::f_builder<PyHolder>());
 
     auto Definition = py::class_<srf::segment::Definition>(m, "Definition");
     auto Builder    = py::class_<srf::segment::Builder>(m, "Builder");
@@ -93,7 +95,6 @@ PYBIND11_MODULE(segment, m)
     /*
      * @brief Make a source node that generates py::object values
      */
-
     Builder.def("make_source",
                 static_cast<std::shared_ptr<srf::segment::ObjectProperties> (*)(
                     srf::segment::Builder&, const std::string&, py::iterator)>(&SegmentProxy::make_source));

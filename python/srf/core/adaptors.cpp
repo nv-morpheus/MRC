@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 
-#include <pysrf/utils.hpp>
+#include <pysrf/edge_adaptor.hpp>
+#include <pysrf/types.hpp>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
@@ -25,19 +26,17 @@ namespace srf::pysrf {
 namespace py = pybind11;
 using namespace py::literals;
 
-PYBIND11_MODULE(common, m)
+PYBIND11_MODULE(adaptors, m)
 {
     m.doc() = R"pbdoc(
-        Python bindings for SRF common functionality / utilities
-        -------------------------------
-        .. currentmodule:: common
-        .. autosummary::
-           :toctree: _generate
+        Force register edge adaptors.
     )pbdoc";
 
-
-    // Force pysrf edge adaptors to be registered.
-    pysrf::import(m, "srf.core.adaptors");
+    // Register pysrf adaptors
+    node::EdgeAdaptorRegistry::register_source_adaptor(typeid(PyHolder),
+                                                       PysrfEdgeAdapterUtil::build_source_adaptor<PyHolder>());
+    node::EdgeAdaptorRegistry::register_sink_adaptor(typeid(PyHolder),
+                                                     PysrfEdgeAdapterUtil::build_sink_adaptor<PyHolder>());
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

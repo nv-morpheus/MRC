@@ -36,15 +36,15 @@
 
 namespace srf::pysrf {
 
-struct SinkAdapterUtil
+struct PysrfEdgeAdapterUtil
 {
-    using ftype =
-        std::function<std::shared_ptr<channel::IngressHandle>(std::type_index,
-                                                              srf::node::SinkPropertiesBase&,
-                                                              std::shared_ptr<channel::IngressHandle> ingress_handle)>;
+    using source_adaptor_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(
+        srf::node::SourcePropertiesBase&, srf::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle>)>;
+    using sink_adaptor_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(
+        std::type_index, srf::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle> ingress_handle)>;
 
     template <typename InputT>
-    static ftype f_builder()
+    static sink_adaptor_fn_t build_sink_adaptor()
     {
         return [](std::type_index source_type,
                   srf::node::SinkPropertiesBase& sink,
@@ -70,28 +70,9 @@ struct SinkAdapterUtil
             return srf::node::EdgeBuilder::default_ingress_for_source_type(source_type, sink, ingress_handle);
         };
     }
-};
-// Sanity check:
-// Source Normal, Sink Normal:
-// (virtual:base impl)                      (virtual:base impl)
-// source.ingress_adaptor_for_sink(sink) -> sink.ingress_for_source_type
-//
-// Source is PythonNode, Sink is Normal
-// (virtual:PythonTypeErased impl)
-// source.ingress_adaptor_for_sink(sink)
-//  - Converter exists:
-//      - EdgeBuilder::ingress_adaptor_for_sink
-//  - source.source_type() == sink.sink_type():
-//      - create identiy edge connector
-//      - EdgeBuilder::ingress_adaptor_for_sink_default
-//  - source is pybind11::object
-//      - EdgeBuilder::ingress_adaptor_for_sink_default
-struct SourceAdapterUtil
-{
-    using ftype = std::function<std::shared_ptr<channel::IngressHandle>(
-        srf::node::SourcePropertiesBase&, srf::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle>)>;
+
     template <typename OutputT>
-    static ftype f_builder()
+    static source_adaptor_fn_t build_source_adaptor()
     {
         return [](srf::node::SourcePropertiesBase& source,
                   srf::node::SinkPropertiesBase& sink,

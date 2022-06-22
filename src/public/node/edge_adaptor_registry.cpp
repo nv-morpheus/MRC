@@ -23,10 +23,10 @@
 
 namespace srf::node {
 
-std::map<std::type_index, EdgeAdaptorRegistry::adaptor_fn_t> EdgeAdaptorRegistry::registered_source_adaptors{};
+std::map<std::type_index, EdgeAdaptorRegistry::source_adaptor_fn_t> EdgeAdaptorRegistry::registered_source_adaptors{};
 std::map<std::type_index, EdgeAdaptorRegistry::sink_adaptor_fn_t> EdgeAdaptorRegistry::registered_sink_adaptors{};
 
-void EdgeAdaptorRegistry::register_source_adaptor(std::type_index source_type, adaptor_fn_t adaptor)
+void EdgeAdaptorRegistry::register_source_adaptor(std::type_index source_type, source_adaptor_fn_t adaptor)
 {
     auto iter_source = EdgeAdaptorRegistry::registered_source_adaptors.find(source_type);
     if (iter_source != EdgeAdaptorRegistry::registered_source_adaptors.end())
@@ -60,7 +60,7 @@ bool EdgeAdaptorRegistry::has_sink_adaptor(std::type_index sink_type)
             EdgeAdaptorRegistry::registered_sink_adaptors.end());
 }
 
-EdgeAdaptorRegistry::adaptor_fn_t EdgeAdaptorRegistry::find_source_adaptor(std::type_index source_type)
+EdgeAdaptorRegistry::source_adaptor_fn_t EdgeAdaptorRegistry::find_source_adaptor(std::type_index source_type)
 {
     auto iter_source = EdgeAdaptorRegistry::registered_source_adaptors.find(source_type);
     if (iter_source == EdgeAdaptorRegistry::registered_source_adaptors.end())

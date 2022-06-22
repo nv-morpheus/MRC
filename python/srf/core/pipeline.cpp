@@ -32,13 +32,11 @@ namespace py = pybind11;
 PYBIND11_MODULE(pipeline, m)
 {
     m.doc() = R"pbdoc(
-        Pybind11 example plugin
-        -----------------------
-        .. currentmodule:: scikit_build_example
+        Python bindings for SRF pipelines
+        -------------------------------
+        .. currentmodule:: pipeline
         .. autosummary::
            :toctree: _generate
-           add
-           subtract
     )pbdoc";
 
     // Common must be first in every module

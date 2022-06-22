@@ -30,7 +30,13 @@ namespace py = pybind11;
 // Define the pybind11 module m, as 'pipeline'.
 PYBIND11_MODULE(segment_definition, m)
 {
-    m.doc() = R"pbdoc()pbdoc";
+    m.doc() = R"pbdoc(
+        Python bindings for SRF segment definitions
+        -------------------------------
+        .. currentmodule:: segment_definition
+        .. autosummary::
+           :toctree: _generate
+    )pbdoc";
 
     // Common must be first in every module
     pysrf::import(m, "srf.core.common");

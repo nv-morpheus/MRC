@@ -35,26 +35,42 @@ namespace srf::node {
 struct EdgeAdaptorRegistry
 {
     // Function to create the adaptor function
-    using adaptor_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(
+    using source_adaptor_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(
         srf::node::SourcePropertiesBase&, srf::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle>)>;
-
 
     using sink_adaptor_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(
         std::type_index, srf::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle>)>;
 
     EdgeAdaptorRegistry() = delete;
 
-    // To register a converter, supply the reader/writer types and a function for creating the converter
-    static void register_source_adaptor(std::type_index source_type, adaptor_fn_t adaptor_fn);
+    /**
+     *
+     * @param source_type
+     * @param adaptor_fn
+     */
+    static void register_source_adaptor(std::type_index source_type, source_adaptor_fn_t adaptor_fn);
     static void register_sink_adaptor(std::type_index sink_type, sink_adaptor_fn_t adaptor_fn);
 
+    /**
+     *
+     * @param source_type
+     * @return
+     */
     static bool has_source_adaptor(std::type_index source_type);
     static bool has_sink_adaptor(std::type_index sink_type);
 
-    static adaptor_fn_t find_source_adaptor(std::type_index source_type);
+    /**
+     *
+     * @param source_type
+     * @return
+     */
+    static source_adaptor_fn_t find_source_adaptor(std::type_index source_type);
     static sink_adaptor_fn_t find_sink_adaptor(std::type_index sink_type);
 
-    static std::map<std::type_index, adaptor_fn_t> registered_source_adaptors;
+    /**
+     *
+     */
+    static std::map<std::type_index, source_adaptor_fn_t> registered_source_adaptors;
     static std::map<std::type_index, sink_adaptor_fn_t> registered_sink_adaptors;
 };
 
