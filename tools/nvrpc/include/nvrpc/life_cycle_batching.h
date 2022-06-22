@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "nvrpc/interfaces.h"
-#include "nvrpc/life_cycle_streaming.h"
+#include <nvrpc/interfaces.h>
+#include <nvrpc/life_cycle_streaming.h>
 
 namespace nvrpc {
 

@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "nvrpc/interfaces.h"
-#include "nvrpc/life_cycle_batching.h"
-#include "nvrpc/life_cycle_bidirectional.h"
-#include "nvrpc/life_cycle_streaming.h"
-#include "nvrpc/life_cycle_unary.h"
+#include <nvrpc/interfaces.h>
+#include <nvrpc/life_cycle_batching.h>
+#include <nvrpc/life_cycle_bidirectional.h>
+#include <nvrpc/life_cycle_streaming.h>
+#include <nvrpc/life_cycle_unary.h>
 
 #ifdef NVRPC_METRICS_ENABLED
 #include "YAIS/Metrics.h"

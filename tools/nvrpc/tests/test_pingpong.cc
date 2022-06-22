@@ -20,11 +20,10 @@
 #include "test_build_client.h"
 #include "test_build_server.h"
 
-#include "nvrpc/client/client_unary.h"
-#include "nvrpc/life_cycle_streaming.h"
-#include "nvrpc/server.h"
-
+#include <nvrpc/client/client_unary.h>
 #include <nvrpc/fiber/executor.h>
+#include <nvrpc/life_cycle_streaming.h>
+#include <nvrpc/server.h>
 #include <nvrpc/thread_pool.h>
 
 #include <boost/fiber/algo/shared_work.hpp>    // for shared_work
@@ -32,9 +31,7 @@
 #include <boost/fiber/operations.hpp>          // for use_scheduling_algorithm
 
 #include <glog/logging.h>
-
 #include <grpcpp/grpcpp.h>  // for Status
-
 #include <gtest/gtest.h>
 
 #include <chrono>  // for seconds

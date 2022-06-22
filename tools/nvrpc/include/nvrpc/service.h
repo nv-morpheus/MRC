@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "nvrpc/interfaces.h"
-#include "nvrpc/rpc.h"
+#include <nvrpc/interfaces.h>
+#include <nvrpc/rpc.h>
 
 namespace nvrpc {
 
