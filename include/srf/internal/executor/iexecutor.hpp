@@ -49,7 +49,7 @@ class IExecutor
     // this method will be applied
 
   private:
-    std::unique_ptr<Executor> m_impl;
+    std::unique_ptr<Executor> const m_impl;
 };
 
 }  // namespace srf::internal::executor
