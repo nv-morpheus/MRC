@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#pragma once
+
 #ifndef NVIS_INTERFACES_H_
 #define NVIS_INTERFACES_H_
 

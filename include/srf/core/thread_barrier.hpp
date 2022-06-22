@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#pragma once
+
 //
 // Original Source: https://github.com/boostorg/fiber
 //

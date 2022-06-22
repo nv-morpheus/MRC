@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#pragma once
+
 #ifndef NVIS_RPC_H_
 #define NVIS_RPC_H_
 

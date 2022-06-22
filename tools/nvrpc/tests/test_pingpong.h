@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#pragma once
+
 #include "test_resources.h"
 #include "testing.pb.h"
 

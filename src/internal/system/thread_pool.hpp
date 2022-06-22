@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#pragma once
+
 #include <srf/core/bitmap.hpp>
 #include <srf/exceptions/runtime_error.hpp>
 

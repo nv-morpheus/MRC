@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#pragma once
+
 #include <srf/node/sink_properties.hpp>
 #include <srf/node/source_properties.hpp>
 
