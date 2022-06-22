@@ -177,6 +177,7 @@ pipeline {
                         docker {
                             image 'gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
                             label 'cpu'
+                            args '--cap-add=sys_nice'
                         }
                     }
                     environment {
