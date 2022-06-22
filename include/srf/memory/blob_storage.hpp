@@ -21,10 +21,10 @@
 #include <srf/memory/memory_kind.hpp>
 #include <srf/utils/macros.hpp>
 
+#include <rmm/cuda_stream_view.hpp>
 #include <rmm/device_buffer.hpp>
 
 #include <cstdint>
-#include "rmm/cuda_stream_view.hpp"
 
 namespace srf::memory {
 

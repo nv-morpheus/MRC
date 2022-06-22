@@ -20,10 +20,10 @@
 #include <srf/node/forward.hpp>
 
 #include <glog/logging.h>
+#include <rxcpp/rx-subscription.hpp>
 #include <rxcpp/rx.hpp>
 
 #include <memory>
-#include "rxcpp/rx-subscription.hpp"
 
 namespace srf::node {
 
