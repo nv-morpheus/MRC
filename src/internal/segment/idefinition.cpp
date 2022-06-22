@@ -32,4 +32,8 @@ IDefinition::IDefinition(std::string name,
 {}
 IDefinition::~IDefinition() = default;
 
+const std::string& IDefinition::name() const
+{
+    return m_impl->name();
+}
 }  // namespace srf::internal::segment
