@@ -17,7 +17,7 @@
 
 #include <pysrf/system.hpp>
 
-#include "srf/options/options.hpp"
+#include <srf/options/options.hpp>
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>

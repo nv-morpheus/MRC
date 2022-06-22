@@ -16,7 +16,8 @@
  */
 
 #include "internal/resources/partition_resources.hpp"
-#include "srf/exceptions/runtime_error.hpp"
+
+#include <srf/exceptions/runtime_error.hpp>
 
 #include <glog/logging.h>
 

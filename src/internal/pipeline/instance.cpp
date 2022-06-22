@@ -24,11 +24,11 @@
 #include "internal/segment/definition.hpp"
 #include "internal/segment/instance.hpp"
 
-#include "srf/core/addresses.hpp"
-#include "srf/core/task_queue.hpp"
-#include "srf/manifold/interface.hpp"
-#include "srf/segment/utils.hpp"
-#include "srf/types.hpp"
+#include <srf/core/addresses.hpp>
+#include <srf/core/task_queue.hpp>
+#include <srf/manifold/interface.hpp>
+#include <srf/segment/utils.hpp>
+#include <srf/types.hpp>
 
 #include <glog/logging.h>
 #include <boost/fiber/future/future.hpp>

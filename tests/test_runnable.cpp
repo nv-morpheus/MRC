@@ -15,20 +15,18 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
 #include "./test_srf.hpp"  // IWYU pragma: associated
-#include "srf/node/forward.hpp"
-#include "srf/node/operators/muxer.hpp"
-#include "srf/node/operators/operator.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/source_channel.hpp"
 
 #include <srf/core/bitmap.hpp>
 #include <srf/core/fiber_pool.hpp>
 #include <srf/node/edge_builder.hpp>
+#include <srf/node/forward.hpp>
+#include <srf/node/operators/muxer.hpp>
+#include <srf/node/operators/operator.hpp>
 #include <srf/node/rx_node.hpp>
 #include <srf/node/rx_sink.hpp>
 #include <srf/node/rx_source.hpp>
+#include <srf/node/source_channel.hpp>
 #include <srf/options/fiber_pool.hpp>
 #include <srf/options/topology.hpp>
 #include <srf/runnable/context.hpp>
@@ -39,6 +37,7 @@
 #include <srf/runnable/type_traits.hpp>
 #include "internal/system/topology.hpp"
 
+#include <gtest/gtest.h>
 #include <boost/fiber/operations.hpp>
 
 #include <chrono>

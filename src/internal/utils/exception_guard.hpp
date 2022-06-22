@@ -17,9 +17,10 @@
 
 #pragma once
 
+#include <srf/utils/macros.hpp>
+
 #include <exception>
 #include <functional>
-#include "srf/utils/macros.hpp"
 
 namespace srf::internal::utils {
 

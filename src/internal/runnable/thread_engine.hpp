@@ -21,9 +21,9 @@
 
 #include "internal/system/forward.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/runnable/types.hpp"
-#include "srf/types.hpp"
+#include <srf/core/bitmap.hpp>
+#include <srf/runnable/types.hpp>
+#include <srf/types.hpp>
 
 #include <functional>
 #include <memory>

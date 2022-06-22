@@ -21,9 +21,10 @@
 #include "internal/pipeline/types.hpp"
 #include "internal/resources/resource_partitions.hpp"
 #include "internal/service.hpp"
-#include "srf/channel/status.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/runnable/runner.hpp"
+
+#include <srf/channel/status.hpp>
+#include <srf/node/source_channel.hpp>
+#include <srf/runnable/runner.hpp>
 
 #include <memory>
 

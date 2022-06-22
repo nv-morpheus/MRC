@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-#include "srf/segment/definition.hpp"
+#include <srf/segment/definition.hpp>
 
-#include "srf/internal/segment/ibuilder.hpp"
-#include "srf/segment/builder.hpp"
+#include <srf/internal/segment/ibuilder.hpp>
+#include <srf/segment/builder.hpp>
 
 namespace srf::segment {
 

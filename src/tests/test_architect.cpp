@@ -20,9 +20,9 @@
 #include "internal/control_plane/server.hpp"
 #include "internal/executor.hpp"
 
-#include "srf/forward.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/topology.hpp"
+#include <srf/forward.hpp>
+#include <srf/options/options.hpp>
+#include <srf/options/topology.hpp>
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>

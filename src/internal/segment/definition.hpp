@@ -17,9 +17,8 @@
 
 #pragma once
 
-#include "srf/internal/segment/idefinition.hpp"
-
-#include "srf/types.hpp"
+#include <srf/internal/segment/idefinition.hpp>
+#include <srf/types.hpp>
 
 #include <map>
 #include <string>

@@ -17,14 +17,14 @@
 
 #pragma once
 
-#include "srf/internal/segment/ibuilder.hpp"
-
 #include "internal/pipeline/resources.hpp"
 #include "internal/segment/definition.hpp"
-#include "srf/runnable/forward.hpp"
-#include "srf/segment/forward.hpp"
-#include "srf/segment/object.hpp"
-#include "srf/types.hpp"
+
+#include <srf/internal/segment/ibuilder.hpp>
+#include <srf/runnable/forward.hpp>
+#include <srf/segment/forward.hpp>
+#include <srf/segment/object.hpp>
+#include <srf/types.hpp>
 
 #include <cstddef>
 #include <cstdint>

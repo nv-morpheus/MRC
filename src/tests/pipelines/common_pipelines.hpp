@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include "srf/pipeline/pipeline.hpp"
-
 #pragma once
+
+#include <srf/pipeline/pipeline.hpp>
 
 namespace test::pipelines {
 

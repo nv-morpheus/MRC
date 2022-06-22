@@ -17,13 +17,13 @@
 
 #include "internal/segment/builder.hpp"
 
-#include "srf/core/addresses.hpp"
-#include "srf/exceptions/runtime_error.hpp"
-#include "srf/metrics/counter.hpp"
-#include "srf/metrics/registry.hpp"
-#include "srf/runnable/launchable.hpp"
-#include "srf/segment/egress_port.hpp"
-#include "srf/segment/ingress_port.hpp"
+#include <srf/core/addresses.hpp>
+#include <srf/exceptions/runtime_error.hpp>
+#include <srf/metrics/counter.hpp>
+#include <srf/metrics/registry.hpp>
+#include <srf/runnable/launchable.hpp>
+#include <srf/segment/egress_port.hpp>
+#include <srf/segment/ingress_port.hpp>
 
 #include <glog/logging.h>
 

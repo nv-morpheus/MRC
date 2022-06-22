@@ -18,19 +18,19 @@
 #include "internal/pipeline/controller.hpp"
 
 #include "internal/pipeline/types.hpp"
-#include "srf/channel/status.hpp"
-#include "srf/core/utils.hpp"
-#include "srf/runnable/context.hpp"
-#include "srf/segment/utils.hpp"
-#include "srf/types.hpp"
 
-#include "rxcpp/rx-includes.hpp"
-#include "rxcpp/rx-observer.hpp"
-#include "rxcpp/rx-operators.hpp"
-#include "rxcpp/rx-predef.hpp"
-#include "rxcpp/rx-subscriber.hpp"
+#include <srf/channel/status.hpp>
+#include <srf/core/utils.hpp>
+#include <srf/runnable/context.hpp>
+#include <srf/segment/utils.hpp>
+#include <srf/types.hpp>
 
 #include <glog/logging.h>
+#include <rxcpp/rx-includes.hpp>
+#include <rxcpp/rx-observer.hpp>
+#include <rxcpp/rx-operators.hpp>
+#include <rxcpp/rx-predef.hpp>
+#include <rxcpp/rx-subscriber.hpp>
 
 #include <algorithm>
 #include <exception>

@@ -21,14 +21,6 @@
 #include "internal/system/forward.hpp"
 #include "internal/system/system.hpp"
 
-#include "srf/node/source_properties.hpp"
-#include "srf/options/placement.hpp"
-#include "srf/runnable/launch_control.hpp"
-#include "srf/runnable/launch_options.hpp"
-#include "srf/runnable/launcher.hpp"
-#include "srf/segment/object.hpp"
-#include "srf/utils/macros.hpp"
-
 #include <srf/channel/egress.hpp>
 #include <srf/channel/ingress.hpp>
 #include <srf/channel/status.hpp>
@@ -44,28 +36,35 @@
 #include <srf/node/rx_subscribable.hpp>
 #include <srf/node/sink_channel.hpp>
 #include <srf/node/source_channel.hpp>
+#include <srf/node/source_properties.hpp>
 #include <srf/options/options.hpp>
+#include <srf/options/placement.hpp>
 #include <srf/options/topology.hpp>
 #include <srf/runnable/context.hpp>
+#include <srf/runnable/launch_control.hpp>
+#include <srf/runnable/launch_options.hpp>
+#include <srf/runnable/launcher.hpp>
 #include <srf/runnable/runner.hpp>
 #include <srf/segment/builder.hpp>
 #include <srf/segment/definition.hpp>
 #include <srf/segment/egress_ports.hpp>
+#include <srf/segment/object.hpp>
 #include <srf/segment/runnable.hpp>
 #include <srf/segment/segment.hpp>
 #include <srf/type_traits.hpp>
+#include <srf/utils/macros.hpp>
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <boost/fiber/operations.hpp>
+#include <rxcpp/operators/rx-map.hpp>
+#include <rxcpp/rx-includes.hpp>
+#include <rxcpp/rx-observable.hpp>
 #include <rxcpp/rx-observer.hpp>
+#include <rxcpp/rx-operators.hpp>
 #include <rxcpp/rx-predef.hpp>
 #include <rxcpp/rx-subscriber.hpp>
-#include "rxcpp/operators/rx-map.hpp"
-#include "rxcpp/rx-includes.hpp"
-#include "rxcpp/rx-observable.hpp"
-#include "rxcpp/rx-operators.hpp"
-#include "rxcpp/sources/rx-iterate.hpp"
+#include <rxcpp/sources/rx-iterate.hpp>
 
 #include <atomic>
 #include <chrono>

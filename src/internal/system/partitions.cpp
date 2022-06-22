@@ -20,8 +20,9 @@
 #include "internal/system/system.hpp"
 #include "internal/system/topology.hpp"
 #include "internal/utils/shared_resource_bit_map.hpp"
-#include "srf/options/placement.hpp"
-#include "srf/utils/bytes_to_string.hpp"
+
+#include <srf/options/placement.hpp>
+#include <srf/utils/bytes_to_string.hpp>
 
 #include <glog/logging.h>
 #include <hwloc.h>

@@ -17,10 +17,11 @@
 
 #pragma once
 
-#include <srf/types.hpp>
 #include "internal/utils/collision_detector.hpp"
-#include "srf/internal/pipeline/ipipeline.hpp"
-#include "srf/internal/segment/forward.hpp"
+
+#include <srf/internal/pipeline/ipipeline.hpp>
+#include <srf/internal/segment/forward.hpp>
+#include <srf/types.hpp>
 
 #include <map>
 #include <memory>

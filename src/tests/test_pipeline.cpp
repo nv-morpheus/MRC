@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include "nodes/common_nodes.hpp"
 #include "pipelines/common_pipelines.hpp"
 
 #include "internal/pipeline/manager.hpp"
@@ -24,38 +25,36 @@
 #include "internal/system/system.hpp"
 #include "internal/utils/collision_detector.hpp"
 
-#include "nodes/common_nodes.hpp"
-#include "srf/channel/forward.hpp"
-#include "srf/channel/status.hpp"
-#include "srf/core/addresses.hpp"
-#include "srf/core/executor.hpp"
-#include "srf/internal/pipeline/ipipeline.hpp"
-#include "srf/internal/segment/idefinition.hpp"
-#include "srf/node/queue.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/rx_source.hpp"
-#include "srf/node/sink_properties.hpp"
-#include "srf/node/source_properties.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/topology.hpp"
-#include "srf/pipeline/pipeline.hpp"
-#include "srf/runnable/context.hpp"
-#include "srf/segment/builder.hpp"
-#include "srf/segment/egress_ports.hpp"
-#include "srf/segment/ingress_ports.hpp"
-#include "srf/segment/object.hpp"
-#include "srf/srf.hpp"
-
-#include "rxcpp/rx-includes.hpp"
-#include "rxcpp/rx-observer.hpp"
-#include "rxcpp/rx-operators.hpp"
-#include "rxcpp/rx-predef.hpp"
-#include "rxcpp/rx-subscriber.hpp"
+#include <srf/channel/forward.hpp>
+#include <srf/channel/status.hpp>
+#include <srf/core/addresses.hpp>
+#include <srf/core/executor.hpp>
+#include <srf/internal/pipeline/ipipeline.hpp>
+#include <srf/internal/segment/idefinition.hpp>
+#include <srf/node/queue.hpp>
+#include <srf/node/rx_sink.hpp>
+#include <srf/node/rx_source.hpp>
+#include <srf/node/sink_properties.hpp>
+#include <srf/node/source_properties.hpp>
+#include <srf/options/options.hpp>
+#include <srf/options/topology.hpp>
+#include <srf/pipeline/pipeline.hpp>
+#include <srf/runnable/context.hpp>
+#include <srf/segment/builder.hpp>
+#include <srf/segment/egress_ports.hpp>
+#include <srf/segment/ingress_ports.hpp>
+#include <srf/segment/object.hpp>
+#include <srf/srf.hpp>
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <boost/fiber/fiber.hpp>
 #include <boost/fiber/operations.hpp>
+#include <rxcpp/rx-includes.hpp>
+#include <rxcpp/rx-observer.hpp>
+#include <rxcpp/rx-operators.hpp>
+#include <rxcpp/rx-predef.hpp>
+#include <rxcpp/rx-subscriber.hpp>
 
 #include <chrono>
 #include <functional>

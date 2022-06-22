@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include "srf/segment/definition.hpp"
-
 #pragma once
+
+#include <srf/segment/definition.hpp>
 
 namespace test::segments {
 

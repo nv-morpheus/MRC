@@ -17,16 +17,16 @@
 
 #include "common_nodes.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/runnable/context.hpp"
+#include <srf/channel/status.hpp>
+#include <srf/node/rx_sink.hpp>
+#include <srf/runnable/context.hpp>
 
 #include <glog/logging.h>
-#include "rxcpp/rx-includes.hpp"
-#include "rxcpp/rx-observer.hpp"
-#include "rxcpp/rx-operators.hpp"
-#include "rxcpp/rx-predef.hpp"
-#include "rxcpp/rx-subscriber.hpp"
+#include <rxcpp/rx-includes.hpp>
+#include <rxcpp/rx-observer.hpp>
+#include <rxcpp/rx-operators.hpp>
+#include <rxcpp/rx-predef.hpp>
+#include <rxcpp/rx-subscriber.hpp>
 
 #include <memory>
 #include <ostream>

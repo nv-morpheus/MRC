@@ -15,13 +15,12 @@
  * limitations under the License.
  */
 
-#include "srf/node/operators/muxer.hpp"
 #include "test_srf.hpp"  // IWYU pragma: associated
 
-#include <mutex>
 #include <srf/channel/status.hpp>
 #include <srf/core/executor.hpp>
 #include <srf/core/runtime.hpp>
+#include <srf/node/operators/muxer.hpp>
 #include <srf/options/options.hpp>
 #include <srf/options/topology.hpp>
 #include <srf/pipeline/pipeline.hpp>
@@ -33,19 +32,19 @@
 #include <srf/segment/segment.hpp>
 #include <srf/types.hpp>
 
+#include <boost/fiber/buffered_channel.hpp>
+#include <boost/fiber/channel_op_status.hpp>
+#include <boost/fiber/future/async.hpp>
+#include <boost/fiber/future/future.hpp>
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx-includes.hpp>
 #include <rxcpp/rx-observer.hpp>
 #include <rxcpp/rx-predef.hpp>
 #include <rxcpp/rx-subscriber.hpp>
 
-#include <boost/fiber/buffered_channel.hpp>
-#include <boost/fiber/channel_op_status.hpp>
-#include <boost/fiber/future/async.hpp>
-#include <boost/fiber/future/future.hpp>
-
 #include <chrono>
 #include <memory>
+#include <mutex>
 #include <ostream>
 #include <string>
 #include <thread>
