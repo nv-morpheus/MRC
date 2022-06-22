@@ -14,13 +14,72 @@
 
 ## TODO: these need to be extracted to a cmake utilities repo
 
-# # This target is used to store all python files that need to be copied to the build directory as resources
-# add_custom_target(python_sources_target ALL)
+# Ensure we only include this once
+include_guard(DIRECTORY)
 
-# # Create a target that depends on all of the sources and post python steps can depend on
-# add_custom_target(all_python_targets ALL
-#   DEPENDS python_sources_target
-# )
+# Get the project name in uppercase if OPTION_PREFIX is not defined
+if(NOT DEFINED OPTION_PREFIX)
+  string(TOUPPER "${PROJECT_NAME}" OPTION_PREFIX)
+endif()
+
+option(${OPTION_PREFIX}_PYTHON_INPLACE_BUILD "Whether or not to copy built python modules back to the source tree for debug purposes." OFF)
+option(${OPTION_PREFIX}_PYTHON_PERFORM_INSTALL "Whether or not to automatically `pip install` any built python library. WARNING: This may overwrite any existing installation of the same name." OFF)
+
+set(Python3_FIND_VIRTUALENV "FIRST")
+set(Python3_FIND_STRATEGY "LOCATION")
+
+message(VERBOSE "Python3_EXECUTABLE (before find_package): ${Python3_EXECUTABLE}")
+message(VERBOSE "Python3_ROOT_DIR (before find_package): ${Python3_ROOT_DIR}")
+message(VERBOSE "FIND_PYTHON_STRATEGY (before find_package): ${FIND_PYTHON_STRATEGY}")
+
+find_package(Python3 REQUIRED COMPONENTS Development Interpreter)
+
+message(VERBOSE "Python3_FOUND: " ${Python3_FOUND})
+message(VERBOSE "Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
+message(VERBOSE "Python3_INTERPRETER_ID: " ${Python3_INTERPRETER_ID})
+message(VERBOSE "Python3_STDLIB: " ${Python3_STDLIB})
+message(VERBOSE "Python3_STDARCH: " ${Python3_STDARCH})
+message(VERBOSE "Python3_SITELIB: " ${Python3_SITELIB})
+message(VERBOSE "Python3_SITEARCH: " ${Python3_SITEARCH})
+message(VERBOSE "Python3_SOABI: " ${Python3_SOABI})
+message(VERBOSE "Python3_INCLUDE_DIRS: " ${Python3_INCLUDE_DIRS})
+message(VERBOSE "Python3_LIBRARIES: " ${Python3_LIBRARIES})
+message(VERBOSE "Python3_LIBRARY_DIRS: " ${Python3_LIBRARY_DIRS})
+message(VERBOSE "Python3_VERSION: " ${Python3_VERSION})
+message(VERBOSE "Python3_NumPy_FOUND: " ${Python3_NumPy_FOUND})
+message(VERBOSE "Python3_NumPy_INCLUDE_DIRS: " ${Python3_NumPy_INCLUDE_DIRS})
+message(VERBOSE "Python3_NumPy_VERSION: " ${Python3_NumPy_VERSION})
+
+# After finding python, now find pybind11
+
+# pybind11
+# =========
+set(PYBIND11_VERSION "2.8.1" CACHE STRING "Version of Pybind11 to use")
+include(deps/Configure_pybind11)
+
+if (NOT EXISTS ${Python3_SITELIB}/skbuild)
+    # In case this is messed up by `/usr/local/python/site-packages` vs `/usr/python/site-packages`, check pip itself.
+    execute_process(
+        COMMAND bash "-c" "${Python3_EXECUTABLE} -m pip show scikit-build | sed -n -e 's/Location: //p'"
+        OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    if (NOT EXISTS ${PYTHON_SITE_PACKAGES}/skbuild)
+        message(SEND_ERROR "Scikit-build is not installed. CMake may not be able to find Cython. Install scikit-build with `pip install scikit-build`")
+    else()
+        list(APPEND CMAKE_MODULE_PATH "${PYTHON_SITE_PACKAGES}/skbuild/resources/cmake")
+    endif()
+else ()
+    list(APPEND CMAKE_MODULE_PATH "${Python3_SITELIB}/skbuild/resources/cmake")
+endif ()
+
+set(CYTHON_FLAGS "--directive binding=True,boundscheck=False,wraparound=False,embedsignature=True,always_allow_keywords=True" CACHE STRING "The directives for Cython compilation.")
+
+# Now we can find pybind11
+find_package(pybind11 REQUIRED)
+find_package(Cython REQUIRED)
+
 
 function(create_python_package PACKAGE_NAME)
 
@@ -206,6 +265,11 @@ function(build_python_package PACKAGE_NAME)
     ${ARGN}
   )
 
+  message(STATUS "_ARGS_IS_INPLACE: ${_ARGS_IS_INPLACE}")
+  message(STATUS "_ARGS_BUILD_WHEEL: ${_ARGS_BUILD_WHEEL}")
+  message(STATUS "_ARGS_INSTALL_WHEEL: ${_ARGS_INSTALL_WHEEL}")
+  message(STATUS "_ARGS_UNPARSED_ARGUMENTS: ${_ARGS_UNPARSED_ARGUMENTS}")
+
   get_target_property(sources_source_dir ${PYTHON_ACTIVE_PACKAGE_NAME}-sources SOURCE_DIR)
   get_target_property(sources_binary_dir ${PYTHON_ACTIVE_PACKAGE_NAME}-sources BINARY_DIR)
 
@@ -243,6 +307,8 @@ function(build_python_package PACKAGE_NAME)
   endif()
 
   if(_ARGS_INSTALL_WHEEL)
+    message(STATUS "Installing wheel")
+
     # Now actually install the package
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
 

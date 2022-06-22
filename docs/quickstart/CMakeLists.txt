@@ -26,11 +26,6 @@ project(srf-quickstart
 list(PREPEND CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}")
 list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake")
 
-# Setup dependencies
-set(Python3_FIND_VIRTUALENV "FIRST")
-set(Python3_FIND_STRATEGY "LOCATION")
-find_package(Python3 REQUIRED COMPONENTS Development Interpreter NumPy)
-
 find_package(srf REQUIRED)
 
 # To make it easier for CI to find output files, set the default executable suffix to .x if not set
@@ -38,6 +33,8 @@ if("${CMAKE_EXECUTABLE_SUFFIX}" STREQUAL "")
   set(CMAKE_EXECUTABLE_SUFFIX ".x")
 endif()
 
+# Set the option prefix to match the outer project before including
+set(OPTION_PREFIX "SRF")
 include(python_module_tools)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)

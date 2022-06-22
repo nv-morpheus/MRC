@@ -25,12 +25,16 @@ add_subdirectory(srf_qs_hybrid/ex00_wrap_data_objects)
 add_subdirectory(srf_qs_hybrid/ex01_wrap_nodes)
 add_subdirectory(srf_qs_hybrid/ex02_mixed_execution)
 
-set(extra_deps "")
+set(extra_args "IS_INPLACE")
 
-if(TARGET srf-package-install)
-  set(extra_deps srf-package-install)
+if(SRF_PYTHON_PERFORM_INSTALL)
+  list(APPEND extra_args "INSTALL_WHEEL")
 endif()
 
-build_python_package(srf_qs_hybrid INSTALL_WHEEL PYTHON_DEPENDENCIES "${extra_deps}")
+if(TARGET srf-package-install)
+  list(APPEND extra_args "PYTHON_DEPENDENCIES" "srf-package-install")
+endif()
+
+build_python_package(srf_qs_hybrid ${extra_args})
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

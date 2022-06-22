@@ -1,10 +1,8 @@
-# SRF Quickstart
+# SRF Quick Start Guide (QSG)
 
-There are two basic ways to get started with SRF:
-- install from the conda repositories
-- pull the NGC container (available next release)
+The SRF Quick Start Guide (QSG) provides examples on how to start using SRF via the Python bindings, C++ bindings or both.
 
-#### Prerequisites
+## Prerequisites
 
 - Pascal architecture or better
 - NVIDIA driver `450.80.02` or higher
@@ -13,31 +11,74 @@ There are two basic ways to get started with SRF:
   - [Docker](https://docs.docker.com/get-docker/)
   - [The NVIDIA container toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker)
 
-# Python Quickstart
+## Getting Started
 
-To get started with the SRF Python Runtime, there are several examples located in the `quickstart/python/python/srf_qs_python` directory. These examples are organized into separate folders each showing a different topic. Each example directory has a name with the format, `ex##_${EXAMPLE_NAME}`, where `XX` represents the example number (in increasing difficulty) and `${EXAMPLE_NAME}` is the example name. Below is a list of the available examples and a brief description:
+To get started with the QSG, it necessary to get the required SRF components before running any of the examples. The QSG supports two methods for getting the SRF components:
+
+1. Installing via Conda
+   1. Installing via Conda is the easiest method for getting the SRF components and supports both the Python and C++ bindings
+   2. To install SRF via Conda run:
+      ```bash
+      mamba install -c nvidia -c nvidia/label/dev srf
+      ```
+2. Building from Source
+   1. Installing via the source is for more advanced users and is necessary to try SRF features before an official release.
+   2. To install SRF from source, it will be necessary to run CMake at the root of the repository:
+      ```bash
+      # Change directory to the repo root
+      cd ${SRF_HOME}
+
+      # If needed, create a new conda environment
+      conda env create -n srf-quickstart -f docs/quickstart/environment_cpp.yml/environment_cpp.yml
+      conda activate srf-quickstart
+
+      # Or if reusing a conda environment, ensure all dependencies are installed
+      mamba env update -n srf-quickstart -f docs/quickstart/environment_cpp.yml/environment_cpp.yml
+      conda activate srf-quickstart
+
+      # Run the CMake configure step
+      cmake -DSRF_PYTHON_INPLACE_BUILD:BOOL=ON -DSRF_PYTHON_PERFORM_INSTALL:BOOL=ON -DSRF_BUILD_DOCS:BOOL=ON -B build -G Ninja .
+
+      # Run the CMake build step
+      cmake --build build -j
+      ```
+      1. Note: When building with this method, the CMake configure option `-DSRF_BUILD_DOCS:BOOL=ON` will build and install all of the necessary packages to run every example in the QSG. If this option is used, the "Setup" steps in the Python, C++ and Hybrid sections below can be skipped.
+
+## Python Quickstart
+
+For users interested in using SRF from Python, the QSG provides several examples in the `docs/quickstart/python/srf_qs_python` directory. These examples are organized into separate folders each showing a different topic. Each example directory has a name with the format, `ex##_${EXAMPLE_NAME}`, where `XX` represents the example number (in increasing difficulty) and `${EXAMPLE_NAME}` is the example name. Below is a list of the available examples and a brief description:
 
 | #      | Name | Description |
 | ----------- | ----------- | --- |
-| 00 | simple_pipeline | A small, basic pipeline with only a single source, node and sink |
-| 01 | custom_data | Similar to simple_pipeline, but passes a custom data type between nodes |
-| 02 | reactive_operators | Demonstrates how to use Reactive style operators inside of nodes for more complex functionality |
-| 03 | config_options | Illustrates how thread and buffer options can alter performance |
+| 00 | [simple_pipeline](./python/srf_qs_python/ex00_simple_pipeline/README.md) | A small, basic pipeline with only a single source, node and sink |
+| 01 | [custom_data](./python/srf_qs_python/ex01_custom_data/README.md) | Similar to simple_pipeline, but passes a custom data type between nodes |
+| 02 | [reactive_operators](./python/srf_qs_python/ex02_reactive_operators/README.md) | Demonstrates how to use Reactive style operators inside of nodes for more complex functionality |
+| 03 | [config_options](./python/srf_qs_python/ex03_config_options/README.md) | Illustrates how thread and buffer options can alter performance |
 
-## Setup
+### Setup
 
-Before starting with any of the examples, it's necessary to install the SRF Python library. The easiest way to install SRF is via Conda using the following:
+Before starting with any of the examples, it's necessary to install the `srf_qs_python` package into your current conda environment.
+
+Note: This section can be skipped if `-DSRF_BUILD_DOCS:BOOL=ON` was included in the "Getting Started" -> "Build from Source" section.
+
+To install the python `srf_qs_python` package, run the following command:
 
 ```bash
-conda install -c nvidia/label/dev srf
+# Change directory to the repo root
+cd ${SRF_HOME}
+
+# Pip install the package
+pip install -e docs/quickstart/python
 ```
 
-## Running the Examples
+Once installed, the examples can be run from any directory.
+
+### Running the Examples
 
 Each example directory contains a `README.md` file with information about the example and a `run.py` python file. To run any of the examples, simply launch the `run.py` file from python:
 
 ```bash
-python docs/quickstart/python/python/srf_qs_python/<ex##_ExampleName>/run.py
+python docs/quickstart/python/srf_qs_python/<ex##_ExampleName>/run.py
 ```
 
 Some examples have configurable options to alter the behavior of the example. To see what options are available, pass `--help` to the example's `run.py` file. For example:
@@ -57,32 +98,85 @@ optional arguments:
 ```
 
 
-# C++ Quickstart
+## C++ Quickstart
+
+For users interested in using SRF with C++, the QSG provides several examples in the `docs/quickstart/cpp` directory. These examples are organized into separate folders each showing a different topic. Each example directory has a name with the format, `ex##_${EXAMPLE_NAME}`, where `XX` represents the example number (in increasing difficulty) and `${EXAMPLE_NAME}` is the example name. Below is a list of the available examples and a brief description:
 
 | #      | Name | Description |
 | ----------- | ----------- | --- |
-| 00 | SimplePipeline | A small, basic pipeline with a source, a node and a sink |
-| 01 | libsrf_quickstart | A library with predefined C++ SRF nodes |
-| 02 | PipelineWithLibrary | Pipeline using both library defined and locally defined nodes |
+| 00 | [simple_pipeline](./cpp/ex00_simple_pipeline/README.md) | A small, basic pipeline with only a single source, node and sink |
+| 01 | [libsrf_quickstart](./cpp/ex01_libsrf_quickstart/README.md) | Illustrates hopw to create SRF components in a reusable library |
+| 02 | [pipeline_with_library](./cpp/ex02_pipeline_with_library/README.md) | Demonstrates how to use the SRF components from Example #01 in a SRF Pipeline |
 
-## Conda Build
+### Setup
 
-### Clone the repository and navigate to the quickstart folder
+Before starting with any of the examples, it's necessary to build the C++ examples.
 
-```bash
-git clone https://github.com/nv-morpheus/srf.git
-cd srf/docs/quickstart
-```
+Note: This section can be skipped if `-DSRF_BUILD_DOCS:BOOL=ON` was included in the "Getting Started" -> "Build from Source" section.
 
-### Install the Conda Environment
+To build the C++ examples, run the following command:
 
 ```bash
-conda env create -n srf-quickstart -f environment_cpp.yml
-conda activate srf-quickstart
-```
+# Change directory to the repo root
+cd ${SRF_HOME}/docs/quickstart
 
-### Build
-
-```bash
+# Compile the C++ examples
 ./compile.sh
+```
+
+This will output all built C++ examples in the `${SRF_HOME}/docs/quickstart/build` folder which will be referred to as `BUILD_DIR`.
+
+### Running the Examples
+
+Each example directory contains a `README.md` file with information about the example. To run any of the examples, follow the instructions in the `README.md` for launching the example.
+
+## Hybrid Quickstart
+
+For users interested in using SRF in a hybrid environment with both C++ and Python, the QSG provides several examples in the `docs/quickstart/hybrid/srf_qs_hybrid` directory. These examples are organized into separate folders each showing a different topic. Each example directory has a name with the format, `ex##_${EXAMPLE_NAME}`, where `XX` represents the example number (in increasing difficulty) and `${EXAMPLE_NAME}` is the example name. Below is a list of the available examples and a brief description:
+
+| #      | Name | Description |
+| ----------- | ----------- | --- |
+| 00 | [wrap_data_objects](./hybrid/srf_qs_hybrid/ex00_wrap_data_objects/README.md) | How to run a pipeline in Python using C++ data objects |
+| 01 | [wrap_nodes](./hybrid/srf_qs_hybrid/ex01_wrap_nodes/README.md) | How to run a pipeline in Python using sources, sinks, and nodes defined in C++ |
+| 02 | [mixed_execution](./hybrid/srf_qs_hybrid/ex02_mixed_execution/README.md) | How to run a pipeline with some nodes in python and others in C++ |
+
+### Setup
+
+Before starting with any of the examples, it's necessary to install the `srf_qs_hybrid` package into your current conda environment.
+
+Note: This section can be skipped if `-DSRF_BUILD_DOCS:BOOL=ON` was included in the "Getting Started" -> "Build from Source" section.
+
+To install the python `srf_qs_hybrid` package, run the following command:
+
+```bash
+# Change directory to the repo root
+cd ${SRF_HOME}/docs/quickstart
+
+# Compile the C++ examples
+./compile.sh
+```
+
+Once installed, the examples can be run from any directory.
+
+### Running the Examples
+
+Each example directory contains a `README.md` file with information about the example and a `run.py` python file. To run any of the examples, simply launch the `run.py` file from python:
+
+```bash
+python docs/quickstart/hybrid/srf_qs_python/<ex##_ExampleName>/run.py
+```
+
+Some examples have configurable options to alter the behavior of the example. To see what options are available, pass `--help` to the example's `run.py` file. For example:
+
+```bash
+$ python docs/quickstart/hybrid/srf_qs_hybrid/ex02_mixed_execution/run.py --help
+usage: run.py [-h] [--python_source] [--python_node] [--python_sink]
+
+mixed_execution Example.
+
+optional arguments:
+  -h, --help       show this help message and exit
+  --python_source  Specifying this argument will run the pipeline with a python source
+  --python_node    Specifying this argument will run the pipeline with a python node
+  --python_sink    Specifying this argument will run the pipeline with a python sink
 ```
