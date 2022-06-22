@@ -22,7 +22,6 @@
 #include <pysrf/system.hpp>
 
 #include <srf/core/executor.hpp>
-#include <srf/core/utils.hpp>  // for SRF_UNWIND_AUTO, Unwinder
 #include <srf/options/options.hpp>
 #include <srf/types.hpp>  // for Future, SharedFuture
 
@@ -35,12 +34,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
-#include <sys/prctl.h>
-
-#include <atomic>
 #include <chrono>     // for milliseconds
 #include <csignal>    // for siginfo_t
-#include <ctime>      // for timespec
 #include <exception>  // for exception, exception_ptr
 #include <future>
 #include <memory>

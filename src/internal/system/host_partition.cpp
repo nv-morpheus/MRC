@@ -17,6 +17,7 @@
 
 #include "internal/system/host_partition.hpp"
 
+#include <srf/core/bitmap.hpp>
 #include <srf/options/options.hpp>
 
 #include <utility>

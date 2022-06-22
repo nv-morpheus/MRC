@@ -15,10 +15,11 @@
  * limitations under the License.
  */
 
+#include <srf/internal/executor/iexecutor.hpp>
+
 #include "internal/executor/executor.hpp"
 #include "internal/system/system.hpp"
 
-#include <srf/internal/executor/iexecutor.hpp>
 #include <srf/internal/system/isystem.hpp>
 #include <srf/options/options.hpp>
 

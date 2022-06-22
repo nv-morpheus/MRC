@@ -23,7 +23,6 @@
 #include "internal/pipeline/types.hpp"
 #include "internal/resources/resource_partitions.hpp"
 #include "internal/system/system.hpp"
-#include "internal/utils/contains.hpp"
 
 #include <srf/core/addresses.hpp>
 #include <srf/exceptions/runtime_error.hpp>
@@ -34,6 +33,10 @@
 #include <glog/logging.h>
 
 #include <map>
+#include <ostream>
+#include <set>
+#include <string>
+#include <type_traits>
 
 namespace srf::internal::executor {
 

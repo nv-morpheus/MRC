@@ -18,7 +18,6 @@
 #pragma once
 
 #include <srf/exceptions/runtime_error.hpp>
-#include <srf/internal/segment/ibuilder.hpp>  // IWYU pragma: keep
 #include <srf/internal/segment/ibuilder.hpp>
 #include <srf/node/edge_builder.hpp>
 #include <srf/node/rx_node.hpp>

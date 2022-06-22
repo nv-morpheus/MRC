@@ -25,12 +25,9 @@
 #include "internal/system/system.hpp"
 #include "internal/utils/collision_detector.hpp"
 
-#include <srf/channel/forward.hpp>
 #include <srf/channel/status.hpp>
 #include <srf/core/addresses.hpp>
 #include <srf/core/executor.hpp>
-#include <srf/internal/pipeline/ipipeline.hpp>
-#include <srf/internal/segment/idefinition.hpp>
 #include <srf/node/queue.hpp>
 #include <srf/node/rx_sink.hpp>
 #include <srf/node/rx_source.hpp>
@@ -44,7 +41,6 @@
 #include <srf/segment/egress_ports.hpp>
 #include <srf/segment/ingress_ports.hpp>
 #include <srf/segment/object.hpp>
-#include <srf/srf.hpp>
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>

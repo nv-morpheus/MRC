@@ -24,6 +24,8 @@
 #include <srf/runnable/launchable.hpp>
 #include <srf/segment/egress_port.hpp>
 #include <srf/segment/ingress_port.hpp>
+#include <srf/segment/object.hpp>
+#include <srf/types.hpp>
 
 #include <glog/logging.h>
 

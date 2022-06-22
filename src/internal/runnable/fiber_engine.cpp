@@ -17,6 +17,11 @@
 
 #include "internal/runnable/fiber_engine.hpp"
 
+#include <srf/core/fiber_meta_data.hpp>
+#include <srf/core/task_queue.hpp>
+#include <srf/runnable/types.hpp>
+#include <srf/types.hpp>
+
 #include <glog/logging.h>
 #include <boost/fiber/future/future.hpp>
 

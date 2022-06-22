@@ -19,20 +19,25 @@
 
 #include <srf/channel/status.hpp>
 #include <srf/node/rx_sink.hpp>
+#include <srf/node/rx_source.hpp>
 #include <srf/runnable/context.hpp>
 
 #include <glog/logging.h>
 #include <boost/fiber/operations.hpp>
 #include <rxcpp/rx-includes.hpp>
+#include <rxcpp/rx-observable.hpp>
 #include <rxcpp/rx-observer.hpp>
 #include <rxcpp/rx-operators.hpp>
 #include <rxcpp/rx-predef.hpp>
 #include <rxcpp/rx-subscriber.hpp>
+#include <rxcpp/sources/rx-iterate.hpp>
 
+#include <chrono>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace srf;

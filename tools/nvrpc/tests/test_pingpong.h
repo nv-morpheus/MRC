@@ -20,7 +20,7 @@
 #include "test_resources.h"
 #include "testing.pb.h"
 
-#include "nvrpc/context.h"
+#include <nvrpc/context.h>
 
 #include <cstddef>  // for size_t
 #include <memory>   // for shared_ptr

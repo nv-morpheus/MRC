@@ -17,6 +17,8 @@
 
 #include <nvrpc/server.h>
 
+#include <nvrpc/interfaces.h>
+
 #include <glog/logging.h>
 #include <grpcpp/security/server_credentials.h>  // for InsecureServerCreden...
 

@@ -17,6 +17,7 @@
 
 #include <nvrpc/executor.h>
 
+#include <nvrpc/interfaces.h>
 #include <nvrpc/thread_pool.h>
 
 #include <glog/logging.h>
