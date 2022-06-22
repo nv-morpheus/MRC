@@ -21,6 +21,7 @@
 
 #include <srf/channel/status.hpp>
 #include <srf/core/executor.hpp>
+#include <srf/engine/pipeline/ipipeline.hpp>
 #include <srf/node/rx_node.hpp>
 #include <srf/node/rx_sink.hpp>
 #include <srf/node/rx_source.hpp>

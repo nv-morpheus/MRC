@@ -19,8 +19,8 @@
 
 #include "internal/utils/collision_detector.hpp"
 
-#include <srf/internal/pipeline/ipipeline.hpp>
-#include <srf/internal/segment/forward.hpp>
+#include <srf/engine/pipeline/ipipeline.hpp>
+#include <srf/engine/segment/forward.hpp>
 #include <srf/types.hpp>
 
 #include <map>

@@ -17,6 +17,8 @@
 
 #include <srf/core/executor.hpp>
 
+#include <srf/engine/executor/iexecutor.hpp>
+#include <srf/engine/system/isystem.hpp>
 #include <srf/options/options.hpp>
 
 #include <utility>  // for move

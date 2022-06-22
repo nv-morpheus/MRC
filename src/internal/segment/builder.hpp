@@ -20,7 +20,7 @@
 #include "internal/pipeline/resources.hpp"
 #include "internal/segment/definition.hpp"
 
-#include <srf/internal/segment/ibuilder.hpp>
+#include <srf/engine/segment/ibuilder.hpp>
 #include <srf/runnable/forward.hpp>
 #include <srf/segment/forward.hpp>
 #include <srf/segment/object.hpp>

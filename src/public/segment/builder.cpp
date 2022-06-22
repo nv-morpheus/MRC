@@ -1,5 +1,6 @@
 #include <srf/segment/builder.hpp>
 
+#include <srf/engine/segment/ibuilder.hpp>
 #include <srf/runnable/launchable.hpp>
 #include <srf/segment/egress_port.hpp>
 #include <srf/segment/object.hpp>

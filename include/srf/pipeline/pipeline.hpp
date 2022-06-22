@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <srf/internal/pipeline/ipipeline.hpp>
+#include <srf/engine/pipeline/ipipeline.hpp>
 
 #include <srf/segment/definition.hpp>
 #include <srf/types.hpp>

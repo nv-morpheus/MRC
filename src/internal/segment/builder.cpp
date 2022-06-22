@@ -18,6 +18,7 @@
 #include "internal/segment/builder.hpp"
 
 #include <srf/core/addresses.hpp>
+#include <srf/engine/segment/idefinition.hpp>
 #include <srf/exceptions/runtime_error.hpp>
 #include <srf/metrics/counter.hpp>
 #include <srf/metrics/registry.hpp>

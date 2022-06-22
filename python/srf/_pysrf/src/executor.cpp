@@ -22,6 +22,7 @@
 #include <pysrf/system.hpp>
 
 #include <srf/core/executor.hpp>
+#include <srf/engine/pipeline/ipipeline.hpp>
 #include <srf/options/options.hpp>
 #include <srf/types.hpp>  // for Future, SharedFuture
 

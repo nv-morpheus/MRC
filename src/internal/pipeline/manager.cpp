@@ -25,7 +25,6 @@
 #include "internal/resources/resource_partitions.hpp"
 
 #include <srf/channel/status.hpp>
-#include <srf/internal/pipeline/ipipeline.hpp>
 #include <srf/node/edge_builder.hpp>
 #include <srf/node/source_channel.hpp>
 #include <srf/runnable/launch_control.hpp>

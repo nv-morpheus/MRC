@@ -17,39 +17,30 @@
 
 #pragma once
 
-#include <srf/internal/pipeline/ipipeline.hpp>
-#include <srf/options/options.hpp>
+#include <srf/engine/segment/forward.hpp>
 
 #include <memory>
 
-namespace srf::internal::system {
-class ISystem;
+namespace srf::internal::pipeline {
+class Pipeline;
 }
 
-namespace srf::internal::executor {
+namespace srf::internal::pipeline {
 
-class Executor;
-
-class IExecutor
+class IPipeline
 {
   public:
-    IExecutor();
-    IExecutor(std::shared_ptr<Options>);
-    IExecutor(std::unique_ptr<system::ISystem>);
-    virtual ~IExecutor() = 0;
-
-    void register_pipeline(std::unique_ptr<internal::pipeline::IPipeline> pipeline);
-
-    void start();
-    void stop();
-    void join();
+    IPipeline();
+    virtual ~IPipeline() = 0;
 
   protected:
-    // this method will be applied
+    void register_segment(std::shared_ptr<const segment::IDefinition> segment);
 
   private:
-    std::shared_ptr<Executor> m_impl;
-    friend Executor;
+    void add_segment(std::shared_ptr<const segment::Definition> segment);
+
+    std::shared_ptr<Pipeline> m_impl;
+    friend Pipeline;
 };
 
-}  // namespace srf::internal::executor
+}  // namespace srf::internal::pipeline

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <srf/internal/segment/idefinition.hpp>
+#include <srf/engine/segment/idefinition.hpp>
 
 #include "internal/segment/definition.hpp"
 
