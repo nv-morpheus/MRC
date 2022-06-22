@@ -30,7 +30,6 @@
 #include <type_traits>
 #include <typeindex>
 #include <typeinfo>
-#include <unordered_map>
 
 namespace srf::node {
 

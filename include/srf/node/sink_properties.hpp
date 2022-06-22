@@ -33,9 +33,6 @@ namespace srf::node {
  */
 class SinkPropertiesBase
 {
-    using ftype = std::function<std::shared_ptr<channel::IngressHandle>(
-        std::type_index, std::type_index, std::shared_ptr<channel::IngressHandle>)>;
-
   public:
     virtual ~SinkPropertiesBase() = 0;
 

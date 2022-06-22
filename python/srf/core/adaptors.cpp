@@ -29,7 +29,12 @@ using namespace py::literals;
 PYBIND11_MODULE(adaptors, m)
 {
     m.doc() = R"pbdoc(
-        Force register edge adaptors.
+        Python bindings for SRF edge adaptors
+        - Register source/sink adaptors for PyHolder objects
+        -------------------------------
+        .. currentmodule:: adaptors
+        .. autosummary::
+           :toctree: _generate
     )pbdoc";
 
     // Register pysrf adaptors

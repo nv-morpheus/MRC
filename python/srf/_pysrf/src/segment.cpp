@@ -21,6 +21,7 @@
 #include <pysrf/node.hpp>
 #include <pysrf/types.hpp>
 #include <pysrf/utils.hpp>
+
 #include <srf/channel/status.hpp>
 #include <srf/node/edge_builder.hpp>
 #include <srf/node/sink_properties.hpp>
@@ -113,9 +114,7 @@ std::shared_ptr<srf::segment::ObjectProperties> build_source(srf::segment::Build
         DVLOG(10) << ctx.info() << " Source complete";
     };
 
-    auto node = self.construct_object<PythonSource<PyHolder>>(name, wrapper);
-
-    return node;
+    return self.construct_object<PythonSource<PyHolder>>(name, wrapper);
 }
 
 std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_source(srf::segment::Builder& self,
@@ -210,10 +209,8 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_sink(srf::seg
         on_completed();
     };
 
-    auto node = self.construct_object<PythonSink<PyHolder>>(
+    return self.construct_object<PythonSink<PyHolder>>(
         name, rxcpp::make_observer<PyHolder>(on_next_w, on_error_w, on_completed_w));
-
-    return node;
 }
 
 /*
