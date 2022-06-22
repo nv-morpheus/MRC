@@ -104,9 +104,9 @@ class DataPlaneServerWorker final : public node::GenericSource<network_event_t>
     ucp_tag_t m_tag_mask{0};
 };
 
-Server::Server(std::shared_ptr<ucx::Context> context, runnable::Resources& runnable_resources) :
-  m_runnable_resources(runnable_resources),
-  m_worker(std::make_shared<ucx::Worker>(context))
+Server::Server(const resources::RunnableProvider& provider, std::shared_ptr<ucx::Worker> worker) :
+  resources::RunnableProvider(provider),
+  m_worker(std::move(worker))
 {}
 
 Server::~Server()
@@ -125,7 +125,8 @@ void Server::do_service_start()
     // all network runnables use the `srf_network` engine factory
     DVLOG(10) << "launch network event mananger progress engine";
     LOG(FATAL) << "get launch control from partition resources";
-    m_progress_engine = m_runnable_resources.launch_control()
+    m_progress_engine = runnable()
+                            .launch_control()
                             .prepare_launcher(srf::runnable::LaunchOptions("srf_network"), std::move(progress_engine))
                             ->ignition();
 }

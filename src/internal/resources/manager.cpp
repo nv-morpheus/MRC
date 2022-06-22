@@ -35,27 +35,24 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
   m_system(std::move(resources))
 {
     // for each host partition, construct the runnable resources
-    VLOG(1) << "building runnable/launch_control resources on " << this->system().partitions().host_partitions().size()
-            << " unique host partitions";
-    for (std::size_t i = 0; i < this->system().partitions().host_partitions().size(); ++i)
+    const auto& host_partitions = this->system().partitions().host_partitions();
+
+    for (std::size_t i = 0; i < host_partitions.size(); ++i)
     {
+        VLOG(1) << "building runnable/launch_control resources on host_partition: " << i;
         m_runnable.emplace_back(*m_system, i);
     }
 
-    for (std::size_t i = 0; i < this->system().partitions().flattened().size(); ++i)
-    {
-        auto host_partition_id = this->system().partitions().flattened().at(i).host_partition_id();
-        m_partitions.emplace(m_runnable.at(this->))
-    }
-}
+    const auto& partitions = this->system().partitions().flattened();
 
-runnable::Resources& Manager::runnable(std::size_t partition_id)
-{
-    const auto& partitions = system().partitions().flattened();
-    CHECK_LT(partition_id, partitions.size());
-    const auto host_id = partitions.at(partition_id).host_partition_id();
-    CHECK_LT(host_id, m_runnable.size());
-    return m_runnable.at(host_id);
+    // for each partition, construct the partition resources
+    // this is the object where most new resources will be added
+    for (std::size_t i = 0; i < partitions.size(); ++i)
+    {
+        VLOG(1) << "building resources for partition " << i;
+        auto host_partition_id = partitions.at(i).host_partition_id();
+        m_partitions.emplace_back(m_runnable.at(host_partition_id), i);
+    }
 }
 
 std::size_t Manager::partition_count() const
@@ -68,4 +65,9 @@ std::size_t Manager::device_count() const
     return system().partitions().device_partitions().size();
 };
 
+PartitionResources& Manager::partition(std::size_t partition_id)
+{
+    CHECK_LT(partition_id, m_partitions.size());
+    return m_partitions.at(partition_id);
+}
 }  // namespace srf::internal::resources

@@ -29,6 +29,7 @@
 #include <srf/runnable/runner.hpp>
 #include <srf/types.hpp>
 
+#include "internal/resources/runnable_provider.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/context.hpp"
@@ -66,10 +67,10 @@ namespace srf::internal::data_plane {
 
 using network_event_t = std::pair<PortAddress, memory::block>;
 
-class Server final : public Service
+class Server final : public Service, public resources::RunnableProvider
 {
   public:
-    Server(std::shared_ptr<ucx::Context> context, runnable::Resources& resources);
+    Server(const resources::RunnableProvider& provider, std::shared_ptr<ucx::Worker> worker);
     ~Server() final;
 
     ucx::WorkerAddress worker_address() const;
@@ -82,8 +83,6 @@ class Server final : public Service
     void do_service_stop() final;
     void do_service_kill() final;
     void do_service_await_join() final;
-
-    runnable::Resources& m_runnable_resources;
 
     // deserialization nodes will connect to this source wtih their port id
     // the source for this router is the private GenericSoruce of this object

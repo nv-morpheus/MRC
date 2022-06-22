@@ -52,7 +52,7 @@ add_executable(test_srf_private
 # test_assignment_manager.cpp
 # test_architect.cpp
 # test_options.cpp
-# test_network.cpp
+  test_network.cpp
 # test_next.cpp
   test_partitions.cpp
   test_pipeline.cpp

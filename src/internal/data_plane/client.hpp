@@ -27,6 +27,7 @@
 #include <srf/runnable/runner.hpp>
 #include <srf/types.hpp>
 
+#include "internal/resources/runnable_provider.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/endpoint.hpp"
@@ -41,10 +42,10 @@
 
 namespace srf::internal::data_plane {
 
-class Client final : public Service
+class Client final : public Service, public resources::RunnableProvider
 {
   public:
-    Client(std::shared_ptr<ucx::Context> context, std::shared_ptr<resources::PartitionResources> resources);
+    Client(const resources::RunnableProvider& provider, std::shared_ptr<ucx::Worker> worker);
     ~Client() final;
 
     /**
@@ -96,9 +97,8 @@ class Client final : public Service
     void do_service_await_join() final;
 
     std::shared_ptr<ucx::Worker> m_worker;
-    std::shared_ptr<resources::PartitionResources> m_resources;
     std::unique_ptr<node::SourceChannelWriteable<void*>> m_ucx_request_channel;
-    std::unique_ptr<runnable::Runner> m_progress_engine;
+    std::unique_ptr<srf::runnable::Runner> m_progress_engine;
 
     std::map<InstanceID, ucx::WorkerAddress> m_workers;
     mutable std::map<InstanceID, std::shared_ptr<ucx::Endpoint>> m_endpoints;

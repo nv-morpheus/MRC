@@ -18,20 +18,19 @@
 #pragma once
 
 #include "internal/data_plane/server.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/resources/runnable_provider.hpp"
 #include "internal/ucx/context.hpp"
 
 #include <srf/cuda/common.hpp>
 
 namespace srf::internal::network {
 
-class Resources final
+class Resources final : public resources::RunnableProvider
 {
   public:
-    Resources(runnable::Resources& runnable_resources);
+    Resources(const resources::RunnableProvider& partition_provider);
 
   private:
-    runnable::Resources& m_runnable;
     std::shared_ptr<ucx::Context> m_ucx_context;
     std::unique_ptr<data_plane::Server> m_server;
 };

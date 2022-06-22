@@ -15,30 +15,18 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include "internal/network/resources.hpp"
 #include "internal/resources/runnable_provider.hpp"
-#include "internal/runnable/resources.hpp"
-
-#include <glog/logging.h>
-
-#include <optional>
 
 namespace srf::internal::resources {
 
-/**
- * @brief Owner of most resources assigned to a specific partition.
- */
-class PartitionResources : public RunnableProvider
+RunnableProvider::RunnableProvider(runnable::Resources& runnable, std::size_t partition_id) :
+  system::PartitionProvider(runnable, partition_id),
+  m_runnable(runnable)
 {
-  public:
-    PartitionResources(runnable::Resources& runnable_resources, std::size_t partition_id);
-
-    std::optional<network::Resources>& network();
-
-  private:
-    std::optional<network::Resources> m_network{std::nullopt};
-};
-
+    CHECK_EQ(m_runnable.host_partition_id(), partition().host_partition_id());
+}
+runnable::Resources& RunnableProvider::runnable()
+{
+    return m_runnable;
+}
 }  // namespace srf::internal::resources

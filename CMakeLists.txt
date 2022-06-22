@@ -199,10 +199,8 @@ add_library(libsrf
   src/internal/pipeline/manager.cpp
   src/internal/pipeline/resources.cpp
   src/internal/resources/manager.cpp
-# src/internal/resources/host_resources.cpp
-# src/internal/resources/partition_resources.cpp
-# src/internal/resources/resource_partitions.cpp
-# src/internal/resources/system_resources.cpp
+  src/internal/resources/runnable_provider.cpp
+  src/internal/resources/partition_resources.cpp
   src/internal/runnable/engine_factory.cpp
   src/internal/runnable/engine.cpp
   src/internal/runnable/engines.cpp
@@ -227,6 +225,7 @@ add_library(libsrf
   src/internal/system/iresources.cpp
   src/internal/system/isystem.cpp
   src/internal/system/partition.cpp
+  src/internal/system/partition_provider.cpp
   src/internal/system/partitions.cpp
   src/internal/system/resources.cpp
   src/internal/system/system.cpp

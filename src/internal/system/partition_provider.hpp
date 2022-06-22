@@ -17,28 +17,21 @@
 
 #pragma once
 
-#include "internal/network/resources.hpp"
-#include "internal/resources/runnable_provider.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/system/partition.hpp"
+#include "internal/system/system_provider.hpp"
 
-#include <glog/logging.h>
+namespace srf::internal::system {
 
-#include <optional>
-
-namespace srf::internal::resources {
-
-/**
- * @brief Owner of most resources assigned to a specific partition.
- */
-class PartitionResources : public RunnableProvider
+class PartitionProvider : public SystemProvider
 {
   public:
-    PartitionResources(runnable::Resources& runnable_resources, std::size_t partition_id);
+    PartitionProvider(const SystemProvider& system, std::size_t partition_id);
 
-    std::optional<network::Resources>& network();
+    std::size_t partition_id() const;
+    const Partition& partition() const;
 
   private:
-    std::optional<network::Resources> m_network{std::nullopt};
+    const std::size_t m_partition_id;
 };
 
-}  // namespace srf::internal::resources
+}  // namespace srf::internal::system
