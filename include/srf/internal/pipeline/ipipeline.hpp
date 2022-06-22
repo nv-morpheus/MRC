@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "srf/internal/segment/forward.hpp"
-#include "srf/internal/segment/idefinition.hpp"
+#include <srf/internal/segment/forward.hpp>
+#include <srf/internal/segment/idefinition.hpp>
 
 #include <memory>
 

@@ -21,6 +21,7 @@
 #include <srf/manifold/factory.hpp>
 #include <srf/manifold/interface.hpp>
 #include <srf/node/edge_builder.hpp>
+#include <srf/node/forward.hpp>
 #include <srf/node/generic_node.hpp>
 #include <srf/node/operators/muxer.hpp>
 #include <srf/node/rx_node.hpp>
@@ -28,7 +29,6 @@
 #include <srf/node/source_channel.hpp>
 #include <srf/runnable/launchable.hpp>
 #include <srf/segment/object.hpp>
-#include "srf/node/forward.hpp"
 
 #include <condition_variable>
 #include <memory>

@@ -25,8 +25,10 @@
 #include <srf/node/operators/muxer.hpp>
 #include <srf/node/rx_node.hpp>
 #include <srf/node/sink_channel.hpp>
+#include <srf/node/sink_properties.hpp>
 #include <srf/node/source_channel.hpp>
 #include <srf/node/source_properties.hpp>
+#include <srf/runnable/launch_options.hpp>
 #include <srf/runnable/launchable.hpp>
 #include <srf/segment/object.hpp>
 
@@ -34,8 +36,6 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include "srf/node/sink_properties.hpp"
-#include "srf/runnable/launch_options.hpp"
 
 namespace srf::segment {
 

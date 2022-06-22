@@ -19,6 +19,7 @@
 
 #include <srf/channel/buffered_channel.hpp>
 #include <srf/channel/channel.hpp>
+#include <srf/channel/status.hpp>
 #include <srf/constants.hpp>
 #include <srf/core/utils.hpp>
 #include <srf/core/watcher.hpp>
@@ -34,7 +35,6 @@
 #include <exception>
 #include <memory>
 #include <mutex>
-#include "srf/channel/status.hpp"
 
 namespace srf::node {
 

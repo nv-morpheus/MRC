@@ -17,8 +17,7 @@
 
 #pragma once
 
-#include "srf/internal/segment/idefinition.hpp"
-
+#include <srf/internal/segment/idefinition.hpp>
 #include <srf/segment/egress_ports.hpp>
 #include <srf/segment/forward.hpp>
 #include <srf/segment/ingress_ports.hpp>

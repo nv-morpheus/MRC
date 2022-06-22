@@ -17,7 +17,8 @@
 
 #pragma once
 
-#include "srf/internal/segment/idefinition.hpp"
+#include <srf/internal/segment/idefinition.hpp>
+
 namespace srf::internal::segment {
 
 class Definition;

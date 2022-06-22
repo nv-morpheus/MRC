@@ -17,20 +17,19 @@
 
 #pragma once
 
+#include <srf/core/addresses.hpp>
+#include <srf/manifold/composite_manifold.hpp>
 #include <srf/manifold/interface.hpp>
-
-#include "srf/core/addresses.hpp"
-#include "srf/manifold/composite_manifold.hpp"
-#include "srf/node/edge_builder.hpp"
-#include "srf/node/generic_sink.hpp"
-#include "srf/node/operators/muxer.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/pipeline/resources.hpp"
-#include "srf/runnable/launch_options.hpp"
-#include "srf/runnable/launchable.hpp"
-#include "srf/runnable/types.hpp"
-#include "srf/types.hpp"
+#include <srf/node/edge_builder.hpp>
+#include <srf/node/generic_sink.hpp>
+#include <srf/node/operators/muxer.hpp>
+#include <srf/node/rx_sink.hpp>
+#include <srf/node/source_channel.hpp>
+#include <srf/pipeline/resources.hpp>
+#include <srf/runnable/launch_options.hpp>
+#include <srf/runnable/launchable.hpp>
+#include <srf/runnable/types.hpp>
+#include <srf/types.hpp>
 
 #include <memory>
 #include <unordered_map>

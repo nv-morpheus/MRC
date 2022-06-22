@@ -17,12 +17,12 @@
 
 #pragma once
 
+#include <srf/core/addresses.hpp>
 #include <srf/segment/builder.hpp>
 #include <srf/segment/definition.hpp>
 #include <srf/segment/egress_ports.hpp>
+#include <srf/segment/forward.hpp>
 #include <srf/segment/ingress_ports.hpp>
-#include "srf/core/addresses.hpp"
-#include "srf/segment/forward.hpp"
 
 namespace srf {
 

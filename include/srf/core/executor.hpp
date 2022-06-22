@@ -17,9 +17,8 @@
 
 #pragma once
 
-#include "srf/internal/executor/iexecutor.hpp"
-#include "srf/internal/system/isystem.hpp"
-
+#include <srf/internal/executor/iexecutor.hpp>
+#include <srf/internal/system/isystem.hpp>
 #include <srf/options/options.hpp>
 
 #include <memory>
