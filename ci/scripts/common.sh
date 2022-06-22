@@ -30,6 +30,7 @@ export PYTHON_FILE_REGEX='^(\.\/)?(?!\.|build).*\.(py|pyx|pxd)$'
 
 # Use these options to skip any of the checks
 export SKIP_COPYRIGHT=${SKIP_COPYRIGHT:-""}
+export SKIP_PRAGMA_CHECK=${SKIP_PRAGMA_CHECK:-""}
 export SKIP_CLANG_FORMAT=${SKIP_CLANG_FORMAT:-""}
 export SKIP_CLANG_TIDY=${SKIP_CLANG_TIDY:-""}
 export SKIP_IWYU=${SKIP_IWYU:-""}
