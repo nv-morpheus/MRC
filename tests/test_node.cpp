@@ -17,12 +17,12 @@
 
 #include "test_srf.hpp"  // IWYU pragma: associated
 
-#include <srf/options/placement.hpp>
 #include <srf/channel/status.hpp>
 #include <srf/core/addresses.hpp>
 #include <srf/core/executor.hpp>
 #include <srf/node/rx_subscribable.hpp>
 #include <srf/options/options.hpp>
+#include <srf/options/placement.hpp>
 #include <srf/options/topology.hpp>
 #include <srf/pipeline/pipeline.hpp>
 #include <srf/segment/builder.hpp>
