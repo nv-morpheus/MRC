@@ -68,4 +68,5 @@ void log(const std::string& msg,
          const std::string& filename = std::string(),
          int line                    = 0);
 
+#pragma GCC visibility pop
 }  // namespace srf::pysrf
