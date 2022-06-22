@@ -195,9 +195,9 @@ pipeline {
                             secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
                         ]])
                         {
-                            sh "${WORKSPACE}/ci/scripts/jenkins/benchmark_setup.sh"
+                            sh "${WORKSPACE}/ci/scripts/jenkins/pre_benchmark.sh"
                             sh "${WORKSPACE}/ci/scripts/jenkins/benchmark.sh"
-                            sh "${WORKSPACE}/ci/scripts/jenkins/benchmark_archive.sh"
+                            sh "${WORKSPACE}/ci/scripts/jenkins/post_benchmark.sh"
                         }
                     }
                 }

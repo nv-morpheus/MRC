@@ -33,6 +33,7 @@ for benchmark in "${BENCHMARKS[@]}"; do
 
        taskset -c 0 ${benchmark} --benchmark_out_format=json --benchmark_out="${REPORTS_DIR}/${bench_name}.json"
        BENCH_RESULT=$?
+       gpuci_logger "${bench_name} completed with an exit status of ${BENCH_RESULT}"
        BENCH_RESULTS=$(($BENCH_RESULTS+$BENCH_RESULT))
 
        set -e
@@ -40,3 +41,5 @@ done
 
 # We want the archive step to run, even if we failed, save our exit status, which the next step can use
 echo ${BENCH_RESULTS} > ${WORKSPACE_TMP}/exit_status
+
+gpuci_logger "Done"
