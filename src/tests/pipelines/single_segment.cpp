@@ -19,7 +19,7 @@
 
 #include "../segments/common_segments.hpp"
 
-#include <srf/channel/forward.hpp>
+#include <srf/engine/pipeline/ipipeline.hpp>
 #include <srf/pipeline/pipeline.hpp>
 
 #include <memory>

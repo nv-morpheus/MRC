@@ -17,8 +17,8 @@
 
 #include "common_pipelines.hpp"
 
-#include <srf/channel/forward.hpp>
 #include <srf/channel/status.hpp>
+#include <srf/engine/pipeline/ipipeline.hpp>
 #include <srf/node/rx_sink.hpp>
 #include <srf/node/rx_source.hpp>
 #include <srf/node/sink_properties.hpp>
