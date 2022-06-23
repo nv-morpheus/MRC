@@ -13,6 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Ensure this is only run once
+include_guard(GLOBAL)
+
 set(RAPIDS_CMAKE_VERSION "21.12" CACHE STRING "Version of rapids-cmake to use")
 
 # Download and load the repo according to the rapids-cmake instructions if it does not exist
