@@ -15,26 +15,8 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "tests")
 
-# Build up the common arguments for add_pybind11_module
-set(_common_args)
-list(APPEND _common_args "LINK_TARGETS" "pysrf")
-
-if(SRF_PYTHON_INPLACE_BUILD)
-  list(APPEND _common_args "COPY_INPLACE")
-endif()
-
-# add_pybind11_module(test_edges_cpp
-#   SOURCE_FILES test_edges.cpp
-#   OUTPUT_TARGET test_edges_cpp_target
-#   ${_common_args}
-# )
-
 srf_add_pybind11_module(test_edges_cpp
   SOURCE_FILES test_edges.cpp
 )
-
-# if(SRF_PYTHON_INPLACE_BUILD)
-#   inplace_build_copy(${test_edges_cpp_target} ${CMAKE_CURRENT_SOURCE_DIR})
-# endif()
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)
