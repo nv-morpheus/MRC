@@ -24,7 +24,7 @@ conda activate srf
 
 BENCHMARKS=($(find ${SRF_ROOT}/build/benchmarks -name "*.x"))
 
-gpuci_logger "Running Benchmarks"
+gpuci_logger "Running Benchmarks..."
 BENCH_RESULTS=0
 for benchmark in "${BENCHMARKS[@]}"; do
        bench_name=$(basename ${benchmark})
