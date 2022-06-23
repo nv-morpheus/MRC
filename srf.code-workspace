@@ -272,6 +272,7 @@
       "--rcfile=${workspaceFolder}/python/.pylintrc"
     ],
     "python.linting.pylintEnabled": true,
+    "python.sortImports.args": ["--settings-file=${workspaceFolder}/python/setup.cfg"],
     "python.testing.cwd": "${workspaceFolder}/python",
     "python.testing.pytestArgs": [
       "-s"
