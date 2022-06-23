@@ -17,14 +17,20 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "quickstart")
 
 cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
 
+# Add the Conda environment to the prefix path and add the CMake files
+list(PREPEND CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}")
+list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake")
+
+# Add the RAPIDS cmake helper scripts
+include(import_rapids_cmake)
+
 project(srf-quickstart
   VERSION 22.06.00
   LANGUAGES C CXX
 )
 
-# Add the Conda environment to the prefix path and add the CMake files
-list(PREPEND CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}")
-list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake")
+# Ensure CPM is initialized
+rapids_cpm_init()
 
 find_package(srf REQUIRED)
 
