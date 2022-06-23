@@ -42,4 +42,4 @@ done
 # We want the archive step to run, even if we failed, save our exit status, which the next step can use
 echo ${BENCH_RESULTS} > ${WORKSPACE_TMP}/exit_status
 
-gpuci_logger "Done"
+gpuci_logger "Running Benchmarks... Done"
