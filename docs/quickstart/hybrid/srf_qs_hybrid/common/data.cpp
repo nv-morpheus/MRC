@@ -47,7 +47,21 @@ PYBIND11_MODULE(data, m)
         .def_readwrite("value", &DataObject::value)
         .def("__repr__", [](DataObject& self) {
             return SRF_CONCAT_STR("{Name: '" << self.name << "', Value: " << self.value << "}");
-        });
+        })
+        .def(py::pickle(
+            [](const DataObject& data_object) {  // __getstate__
+               return py::make_tuple(data_object.name, data_object.value);
+            },
+            [](py::tuple pickled_data_object) {  // __setstate__
+                if (info.size() != 2)
+                {
+                    throw std::runtime_error{"Invalid pickle state -- failed to restore object"};
+                }
+                DataObject data_object(pickled_data_object[0].cast<std::string>(), pickled_data_object[1].cast<int>());
+
+                return data_object;
+            }
+       ));
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

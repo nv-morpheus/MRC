@@ -13,7 +13,7 @@ The SRF Quick Start Guide (QSG) provides examples on how to start using SRF via 
 
 ## Getting Started
 
-To get started with the QSG, it necessary to get the required SRF components before running any of the examples. The QSG supports two methods for getting the SRF components:
+To get started with the QSG, it is necessary to get the required SRF components before running any of the examples. The QSG supports two methods for getting the SRF components:
 
 1. Installing via Conda
    1. Installing via Conda is the easiest method for getting the SRF components and supports both the Python and C++ bindings
@@ -62,7 +62,7 @@ To get started with the QSG, it necessary to get the required SRF components bef
 
 ## Python Quickstart
 
-For users interested in using SRF from Python, the QSG provides several examples in the `docs/quickstart/python/srf_qs_python` directory. These examples are organized into separate folders each showing a different topic. Each example directory has a name with the format, `ex##_${EXAMPLE_NAME}`, where `XX` represents the example number (in increasing difficulty) and `${EXAMPLE_NAME}` is the example name. Below is a list of the available examples and a brief description:
+For users interested in using SRF from Python, the QSG provides several examples in the `docs/quickstart/python/srf_qs_python` directory. These examples are organized into separate folders each showing a different topic. Each example directory has a name with the format, `ex##_${EXAMPLE_NAME}`, where `XX` represents the example number (in increasing complexity) and `${EXAMPLE_NAME}` is the example name. Below is a list of the available examples and a brief description:
 
 | #      | Name | Description |
 | ----------- | ----------- | --- |
@@ -94,7 +94,7 @@ Once installed, the examples can be run from any directory.
 Each example directory contains a `README.md` file with information about the example and a `run.py` python file. To run any of the examples, simply launch the `run.py` file from python:
 
 ```bash
-python docs/quickstart/python/srf_qs_python/<ex##_ExampleName>/run.py
+python docs/quickstart/python/srf_qs_python/**ex##_ExampleName**/run.py
 ```
 
 Some examples have configurable options to alter the behavior of the example. To see what options are available, pass `--help` to the example's `run.py` file. For example:
@@ -116,7 +116,7 @@ optional arguments:
 
 ## C++ Quickstart
 
-For users interested in using SRF with C++, the QSG provides several examples in the `docs/quickstart/cpp` directory. These examples are organized into separate folders each showing a different topic. Each example directory has a name with the format, `ex##_${EXAMPLE_NAME}`, where `XX` represents the example number (in increasing difficulty) and `${EXAMPLE_NAME}` is the example name. Below is a list of the available examples and a brief description:
+For users interested in using SRF with C++, the QSG provides several examples in the `docs/quickstart/cpp` directory. These examples are organized into separate folders each showing a different topic. Each example directory has a name with the format, `ex##_${EXAMPLE_NAME}`, where `XX` represents the example number (in increasing complexity) and `${EXAMPLE_NAME}` is the example name. Below is a list of the available examples and a brief description:
 
 | #      | Name | Description |
 | ----------- | ----------- | --- |
@@ -148,7 +148,7 @@ Each example directory contains a `README.md` file with information about the ex
 
 ## Hybrid Quickstart
 
-For users interested in using SRF in a hybrid environment with both C++ and Python, the QSG provides several examples in the `docs/quickstart/hybrid/srf_qs_hybrid` directory. These examples are organized into separate folders each showing a different topic. Each example directory has a name with the format, `ex##_${EXAMPLE_NAME}`, where `XX` represents the example number (in increasing difficulty) and `${EXAMPLE_NAME}` is the example name. Below is a list of the available examples and a brief description:
+For users interested in using SRF in a hybrid environment with both C++ and Python, the QSG provides several examples in the `docs/quickstart/hybrid/srf_qs_hybrid` directory. These examples are organized into separate folders each showing a different topic. Each example directory has a name with the format, `ex##_${EXAMPLE_NAME}`, where `XX` represents the example number (in increasing complexity) and `${EXAMPLE_NAME}` is the example name. Below is a list of the available examples and a brief description:
 
 | #      | Name | Description |
 | ----------- | ----------- | --- |
