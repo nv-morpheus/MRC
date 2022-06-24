@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,4 +15,22 @@
  * limitations under the License.
  */
 
-namespace srf::segment {}  // namespace srf::segment
+#include "internal/system/system_provider.hpp"
+
+#include <glog/logging.h>
+
+#include <utility>
+
+namespace srf::internal::system {
+
+SystemProvider::SystemProvider(std::shared_ptr<const System> system) : m_system(std::move(system))
+{
+    CHECK(m_system);
+}
+const System& srf::internal::system::SystemProvider::system() const
+{
+    DCHECK(m_system);
+    return *m_system;
+}
+
+}  // namespace srf::internal::system

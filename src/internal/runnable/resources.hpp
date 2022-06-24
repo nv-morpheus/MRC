@@ -17,39 +17,35 @@
 
 #pragma once
 
-#include "internal/runnable/engine.hpp"
-
+#include "internal/system/fiber_task_queue.hpp"
+#include "internal/system/partition.hpp"
 #include "internal/system/resources.hpp"
-#include "internal/system/thread.hpp"
+#include "internal/system/system_provider.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/runnable/types.hpp"
-#include "srf/types.hpp"
+#include "srf/core/task_queue.hpp"
+#include "srf/pipeline/resources.hpp"
+#include "srf/runnable/launch_control.hpp"
 
-#include <functional>
+#include <cstddef>
 #include <memory>
-#include <optional>
-#include <thread>
 
 namespace srf::internal::runnable {
 
-class ThreadEngine final : public Engine
+class Resources final : public system::SystemProvider, public srf::pipeline::Resources
 {
   public:
-    explicit ThreadEngine(CpuSet cpu_set, const system::Resources& system);
-    ~ThreadEngine() final;
+    Resources(const system::Resources& system_resources, std::size_t partition_id);
 
-    EngineType engine_type() const final;
+    srf::core::FiberTaskQueue& main() final;
+    srf::runnable::LaunchControl& launch_control() final;
 
-  protected:
-    std::optional<std::thread::id> get_id() const;
+    std::size_t partition_id() const;
+    const system::Partition& partition() const;
 
   private:
-    Future<void> do_launch_task(std::function<void()> task) final;
-
-    CpuSet m_cpu_set;
-    const system::Resources& m_system;
-    std::unique_ptr<system::Thread> m_thread;
+    const std::size_t m_partition_id;
+    system::FiberTaskQueue& m_main;
+    std::unique_ptr<srf::runnable::LaunchControl> m_launch_control;
 };
 
 }  // namespace srf::internal::runnable

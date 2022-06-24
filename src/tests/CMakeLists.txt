@@ -53,7 +53,7 @@ add_executable(test_srf_private
 # test_architect.cpp
 # test_options.cpp
 # test_network.cpp
-  test_next.cpp
+# test_next.cpp
   test_partitions.cpp
   test_pipeline.cpp
   test_ranges.cpp
@@ -72,6 +72,7 @@ target_link_libraries(test_srf_private
     hwloc::hwloc
     ucx::ucs
     ucx::ucp
+    pthread
 )
 
 # Necessary include to prevent IWYU from showing absolute paths

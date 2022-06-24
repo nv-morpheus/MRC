@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-#include "internal/resources/host_resources.hpp"
-#include "internal/resources/partition_resources.hpp"
-#include "internal/resources/resource_partitions.hpp"
-#include "internal/system/forward.hpp"
+#include "internal/runnable/resources.hpp"
+#include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
+#include "internal/system/system_provider.hpp"
 
+#include "srf/core/bitmap.hpp"
 #include "srf/options/engine_groups.hpp"
 #include "srf/options/options.hpp"
 #include "srf/runnable/launch_options.hpp"
@@ -62,7 +62,7 @@ static std::shared_ptr<internal::system::System> make_system(std::function<void(
         updater(*options);
     }
 
-    return internal::system::System::make_system(std::move(options));
+    return internal::system::make_system(std::move(options));
 }
 
 class TestRunnable : public ::testing::Test
@@ -70,21 +70,28 @@ class TestRunnable : public ::testing::Test
   protected:
     void SetUp() override
     {
-        m_resources = internal::resources::make_resource_partitions(make_system([](Options& options) {
-            options.topology().user_cpuset("0-3");
-            options.topology().restrict_gpus(true);
-            options.engine_factories().set_engine_factory_options("thread_pool", [](EngineFactoryOptions& options) {
-                options.engine_type   = runnable::EngineType::Thread;
-                options.allow_overlap = false;
-                options.cpu_count     = 2;
-            });
-        }));
+        m_system_resources = std::make_unique<internal::system::Resources>(
+            internal::system::SystemProvider(make_system([](Options& options) {
+                options.topology().user_cpuset("0-3");
+                options.topology().restrict_gpus(true);
+                options.engine_factories().set_engine_factory_options("thread_pool", [](EngineFactoryOptions& options) {
+                    options.engine_type   = runnable::EngineType::Thread;
+                    options.allow_overlap = false;
+                    options.cpu_count     = 2;
+                });
+            })));
+
+        m_resources = std::make_unique<internal::runnable::Resources>(*m_system_resources, 0);
     }
 
-    void TearDown() override {}
+    void TearDown() override
+    {
+        m_resources.reset();
+        m_system_resources.reset();
+    }
 
-    TopologyOptions m_topology_options;
-    std::shared_ptr<internal::resources::ResourcePartitions> m_resources;
+    std::unique_ptr<internal::system::Resources> m_system_resources;
+    std::unique_ptr<internal::runnable::Resources> m_resources;
 };
 
 class TestGenericRunnable final : public runnable::RunnableWithContext<>
@@ -172,7 +179,7 @@ TEST_F(TestRunnable, GenericRunnableRunWithFiber)
     main.engines_per_pe      = 1;
 
     auto runnable = std::make_unique<TestGenericRunnable>();
-    auto launcher = m_resources->partition(0).host().launch_control().prepare_launcher(main, std::move(runnable));
+    auto launcher = m_resources->launch_control().prepare_launcher(main, std::move(runnable));
 
     launcher->apply([&counter](runnable::Runner& runner) {
         runner.on_instance_state_change_callback([&counter](const runnable::Runnable& runnable,
@@ -197,7 +204,7 @@ TEST_F(TestRunnable, GenericRunnableRunWithLaunchControl)
 {
     auto runnable = std::make_unique<TestGenericRunnable>();
 
-    auto runner = m_resources->partition(0).host().launch_control().prepare_launcher(std::move(runnable))->ignition();
+    auto runner = m_resources->launch_control().prepare_launcher(std::move(runnable))->ignition();
 
     runner->await_live();
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -212,11 +219,7 @@ TEST_F(TestRunnable, GenericRunnableRunWithThread)
     thread_pool.pe_count            = 2;
 
     auto runnable = std::make_unique<TestGenericRunnable>();
-    auto runner   = m_resources->partition(0)
-                      .host()
-                      .launch_control()
-                      .prepare_launcher(thread_pool, std::move(runnable))
-                      ->ignition();
+    auto runner   = m_resources->launch_control().prepare_launcher(thread_pool, std::move(runnable))->ignition();
 
     runner->await_live();
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -231,8 +234,7 @@ TEST_F(TestRunnable, FiberRunnable)
     factory.pe_count            = 2;
 
     auto runnable = std::make_unique<TestFiberRunnable>();
-    auto runner =
-        m_resources->partition(0).host().launch_control().prepare_launcher(factory, std::move(runnable))->ignition();
+    auto runner   = m_resources->launch_control().prepare_launcher(factory, std::move(runnable))->ignition();
 
     runner->await_live();
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -249,9 +251,7 @@ TEST_F(TestRunnable, FiberRunnableMisMatch)
     auto runnable = std::make_unique<TestFiberRunnable>();
 
     // todo(#188) - this should throw an exception rather than abort
-    EXPECT_DEATH(auto launcher =
-                     m_resources->partition(0).host().launch_control().prepare_launcher(factory, std::move(runnable)),
-                 "");
+    EXPECT_DEATH(auto launcher = m_resources->launch_control().prepare_launcher(factory, std::move(runnable)), "");
 }
 
 TEST_F(TestRunnable, RunnerOutOfScope)
@@ -261,8 +261,7 @@ TEST_F(TestRunnable, RunnerOutOfScope)
     factory.pe_count            = 2;
 
     auto runnable = std::make_unique<TestFiberRunnable>();
-    auto runner =
-        m_resources->partition(0).host().launch_control().prepare_launcher(factory, std::move(runnable))->ignition();
+    auto runner   = m_resources->launch_control().prepare_launcher(factory, std::move(runnable))->ignition();
 
     runner->await_live();
 }

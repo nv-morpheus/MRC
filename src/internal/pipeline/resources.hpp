@@ -17,12 +17,10 @@
 
 #pragma once
 
-#include "internal/resources/partition_resources.hpp"
-#include "internal/resources/resource_partitions.hpp"
+#include "internal/resources/manager.hpp"
 
 #include "srf/metrics/registry.hpp"
 
-#include <cstddef>
 #include <memory>
 
 namespace srf::internal::pipeline {
@@ -30,16 +28,13 @@ namespace srf::internal::pipeline {
 class Resources
 {
   public:
-    Resources(std::shared_ptr<resources::ResourcePartitions> resources);
+    Resources(resources::Manager& resources);
 
-    resources::PartitionResources& partition(std::size_t partition_id) const;
-    std::shared_ptr<resources::PartitionResources> partition_shared(std::size_t partition_id) const;
-
-    resources::ResourcePartitions& resources() const;
+    resources::Manager& resources() const;
     metrics::Registry& metrics_registry() const;
 
   private:
-    std::shared_ptr<resources::ResourcePartitions> m_resources;
+    resources::Manager& m_resources;
     std::unique_ptr<metrics::Registry> m_metrics_registry;
 };
 

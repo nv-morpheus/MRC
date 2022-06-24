@@ -24,19 +24,29 @@
 #include <memory>
 
 namespace srf::internal::system {
-class ISystem;
+class IResources;
 }
 
 namespace srf::internal::executor {
 
 class Executor;
 
+/**
+ * @brief The I-classes in srf/internal enable the building and customization of an Executor.
+ *
+ * The build order should be:
+ * - ISystem
+ * - ISystemResources
+ * - IExecutor
+ *
+ * Over time, new customization points will be added between ISystemResources and IExecutor.
+ */
 class IExecutor
 {
   public:
     IExecutor();
     IExecutor(std::shared_ptr<Options>);
-    IExecutor(std::unique_ptr<system::ISystem>);
+    IExecutor(std::unique_ptr<system::IResources>);
     virtual ~IExecutor() = 0;
 
     void register_pipeline(std::unique_ptr<internal::pipeline::IPipeline> pipeline);

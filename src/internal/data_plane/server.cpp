@@ -104,9 +104,10 @@ void Server::do_service_start()
     // all network runnables use the `srf_network` engine factory
     DVLOG(10) << "launch network event mananger progress engine";
     LOG(FATAL) << "get launch control from partition resources";
-    //  m_progress_engine =
-    //        launch_control.prepare_launcher(runnable::LaunchOptions("srf_network"),
-    //        std::move(progress_engine))->ignition();
+    m_progress_engine = m_resources->host()
+                            .launch_control()
+                            .prepare_launcher(runnable::LaunchOptions("srf_network"), std::move(progress_engine))
+                            ->ignition();
 }
 
 void Server::do_service_await_live()

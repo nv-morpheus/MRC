@@ -48,8 +48,6 @@ class SegmentConfiguration;
 class PipelineAssignment;
 class SegmentAssignment;
 
-class RoundRobinFiberPool;
-
 class Cpuset;
 class NumaSet;
 
