@@ -22,11 +22,11 @@
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
+#include <nlohmann/json.hpp>
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
-#include <nlohmann/json.hpp>
 
 #include <array>
 #include <cfloat>

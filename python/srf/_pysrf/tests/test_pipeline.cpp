@@ -17,6 +17,8 @@
 
 #include "test_pysrf.hpp"
 
+#include "pysrf/pipeline.hpp"
+
 #include "srf/channel/status.hpp"
 #include "srf/core/executor.hpp"
 #include "srf/engine/pipeline/ipipeline.hpp"
@@ -31,7 +33,6 @@
 #include <gtest/gtest.h>
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
-#include "pysrf/pipeline.hpp"
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx-includes.hpp>
 #include <rxcpp/rx-observer.hpp>

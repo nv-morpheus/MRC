@@ -19,7 +19,6 @@
 #include "srf/benchmarking/util.hpp"
 
 #include <benchmark/benchmark.h>
-
 #include <nlohmann/json.hpp>
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/operators/rx-tap.hpp>

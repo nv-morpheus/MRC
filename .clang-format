@@ -67,24 +67,36 @@ ForEachMacros:
   - BOOST_FOREACH
 IncludeBlocks: Regroup
 IncludeCategories:
-  # First find any headers in internal or public
+  # The order of the groups is
+  # 0 - Main include file for .cpp
+  # 1 - source relative files `#include "./some_header.hpp"` (Grouped with 2)
+  # 2 - source relative files starting with internal/public `#include "internal/some_header.hpp"`
+  # 3 - Python SRF public API files `#include "pysrf/srf_header.hpp"`
+  # 4 - SRF public API files `#include "srf/srf_header.hpp"`
+  # 5 - NVRPC public API files `#include "nvrpc/some_header.hpp"`
+  # 6 - External installed libraries `#include <external_lib/some_header.hpp>`
+  # 7 - System includes `#include <string>`
+  # First match any Python SRF public API headers with quotes
+  - Regex:           '^"pysrf\/.*\.(h|hpp)"'
+    Priority:        3
+  # Next match any SRF public API headers with quotes
+  - Regex:           '^"srf\/.*\.(h|hpp)"'
+    Priority:        4
+  # Next match public NVRPC headers with quotes
+  - Regex:           '^<nvrpc\/.*\.(h|hpp)>'
+    Priority:        5
+  # Next find any headers in internal or public
   - Regex:           '^"(internal|public)\/.*\.(h|hpp)"'
     Priority:        2
-  # Any other quoted includes need to be first (local to source)
+  # Any other quoted includes need to be with internal/public but on top (Thats why this group is last)
   - Regex:           '^".*\.(h|hpp)"'
     Priority:        1
-  # Public SRF headers
-  - Regex:           '^<srf\/.*\.(h|hpp)>'
-    Priority:        3
-  # Public NVRPC headers
-  - Regex:           '^<nvrpc\/.*\.(h|hpp)>'
-    Priority:        4
   # Last is system includes which dont have a '/' like <string> or <mutex>
   - Regex:           '<([a-z_])+>'
-    Priority:        6
+    Priority:        7
   # Finally, put all 3rd party includes before the system includes
   - Regex:           '^<.*'
-    Priority:        5
+    Priority:        6
 # IncludeIsMainSourceRegex: '$?'
 IncludeIsMainRegex: '([-_](test|unittest))?$'
 IndentCaseBlocks: false

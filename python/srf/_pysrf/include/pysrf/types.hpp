@@ -21,12 +21,11 @@
 
 #include "srf/segment/object.hpp"
 
-#include <rxcpp/rx.hpp>  // IWYU pragma: keep
-
 #include <rxcpp/rx-observable.hpp>
 #include <rxcpp/rx-observer.hpp>
 #include <rxcpp/rx-subscriber.hpp>
 #include <rxcpp/rx-subscription.hpp>
+#include <rxcpp/rx.hpp>  // IWYU pragma: keep
 
 #include <functional>
 

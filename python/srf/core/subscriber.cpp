@@ -16,6 +16,7 @@
  */
 
 #include "pysrf/subscriber.hpp"
+
 #include "pysrf/types.hpp"  // for PyObjectObserver, PyObjectSubscriber, PyObjectObservable, PySubscription
 #include "pysrf/utils.hpp"
 

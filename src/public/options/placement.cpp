@@ -17,7 +17,6 @@
 
 #include "srf/options/placement.hpp"
 
-
 namespace srf {
 
 PlacementStrategy PlacementOptions::cpu_strategy() const

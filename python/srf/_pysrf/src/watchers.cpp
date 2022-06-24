@@ -29,10 +29,10 @@
 #include "srf/segment/builder.hpp"
 #include "srf/segment/object.hpp"
 
+#include <nlohmann/json.hpp>
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>  // IWYU pragma: keep
 #include <pybind11/pytypes.h>
-#include <nlohmann/json.hpp>
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/operators/rx-tap.hpp>
 #include <rxcpp/rx-includes.hpp>

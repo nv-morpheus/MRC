@@ -15,6 +15,11 @@
  * limitations under the License.
  */
 
+#include "pysrf/executor.hpp"
+
+#include "pysrf/pipeline.hpp"
+#include "pysrf/system.hpp"
+
 #include "srf/core/executor.hpp"
 #include "srf/engine/pipeline/ipipeline.hpp"
 #include "srf/options/options.hpp"
@@ -27,9 +32,6 @@
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include "pysrf/executor.hpp"
-#include "pysrf/pipeline.hpp"
-#include "pysrf/system.hpp"
 
 #include <chrono>     // for milliseconds
 #include <csignal>    // for siginfo_t
