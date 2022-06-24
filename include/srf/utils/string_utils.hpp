@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <ostream>
+#include <sstream>
 #include <string>
 
 // Concats multiple strings together using ostringstream. Use with SRF_CONCAT_STR("Start [" << my_int << "]")
