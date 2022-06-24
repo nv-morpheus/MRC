@@ -15,9 +15,8 @@ The SRF Quick Start Guide (QSG) provides examples on how to start using SRF via 
 
 To get started with the QSG, it is necessary to get the required SRF components before running any of the examples. The QSG supports two methods for getting the SRF components:
 
-1. Installing via Conda
-   1. Installing via Conda is the easiest method for getting the SRF components and supports both the Python and C++ bindings
-   2. To install SRF via Conda run:
+### Installing via Conda [preferred method]
+Installing via Conda is the easiest method for getting the SRF components and supports both the Python and C++ bindings.
       ```bash
       # Change directory to the quickstart root
       cd ${SRF_HOME}/docs/quickstart/
@@ -33,7 +32,7 @@ To get started with the QSG, it is necessary to get the required SRF components 
       # Compile the QSG. This will build the C++ and Hybrid components in ./build. And install the Python and Hybrid libraries
       ./compile.sh
       ```
-2. Building from Source
+### Building from Source [advanced]
    1. Installing via the source is for more advanced users and is necessary to try SRF features before an official release.
    2. To install SRF from source, it will be necessary to run CMake at the root of the repository:
       ```bash
@@ -58,6 +57,7 @@ To get started with the QSG, it is necessary to get the required SRF components 
       # Run the CMake build step
       cmake --build build -j
       ```
+Conda performance can be improved by using [Mamba](https://github.com/mamba-org/mamba). If you have `mamba` installed, simply replace `conda`  with `mamba`.
       1. Note: When building with this method, the CMake configure option `-DSRF_BUILD_DOCS:BOOL=ON` will build and install all of the necessary packages to run every example in the QSG. If this option is used, the "Setup" steps in the Python, C++ and Hybrid sections below can be skipped.
 
 ## Python Quickstart
