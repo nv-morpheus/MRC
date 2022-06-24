@@ -20,8 +20,6 @@
 #include <nvrpc/client/base_context.h>
 #include <nvrpc/client/executor.h>
 
-#include <srf/core/async_compute.h>
-
 #include <glog/logging.h>
 #include <grpcpp/grpcpp.h>
 

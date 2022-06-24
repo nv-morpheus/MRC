@@ -54,7 +54,6 @@ target_link_libraries(test_nvrpc
     nvrpc-testing-protos
     GTest::gtest
     ${PROJECT_NAME}::libsrf
-
 )
 
 # Finally, add this to the style check dependencies

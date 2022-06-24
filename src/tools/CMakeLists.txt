@@ -14,7 +14,7 @@
 # limitations under the License.
 
 
-# Keep all source files sorted!!!!!!
+# Keep all source files sorted!!!
 add_executable(topology_exporter
   topology_exporter.cpp
 )
