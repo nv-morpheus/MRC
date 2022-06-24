@@ -17,6 +17,7 @@
 
 #include <srf/segment/definition.hpp>
 
+// Non-main includes
 #include <srf/engine/segment/ibuilder.hpp>
 #include <srf/engine/segment/idefinition.hpp>
 #include <srf/segment/builder.hpp>

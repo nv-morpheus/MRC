@@ -16,11 +16,13 @@
  */
 
 #include <srf/runnable/context.hpp>
+
+// Non-main includes
 #include <srf/runnable/runner.hpp>
 #include <srf/runnable/types.hpp>
 
-#include <glog/logging.h>
 #include <boost/fiber/fss.hpp>
+#include <glog/logging.h>
 
 #include <cstddef>
 #include <exception>

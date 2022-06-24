@@ -16,6 +16,8 @@
  */
 
 #include <srf/core/addresses.hpp>
+
+// Non-main includes
 #include <srf/types.hpp>
 
 #include <glog/logging.h>

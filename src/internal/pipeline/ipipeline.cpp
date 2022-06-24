@@ -17,6 +17,7 @@
 
 #include <srf/engine/pipeline/ipipeline.hpp>
 
+// Non-main includes
 #include "internal/pipeline/pipeline.hpp"
 
 #include <srf/engine/segment/idefinition.hpp>

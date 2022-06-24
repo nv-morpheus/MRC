@@ -21,13 +21,13 @@
 #include <srf/channel/forward.hpp>
 #include <srf/types.hpp>
 
+#include <boost/fiber/future/future.hpp>
+#include <boost/fiber/future/future_status.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <ucp/api/ucp.h>
 #include <ucp/api/ucp_def.h>
 #include <ucs/type/status.h>
-#include <boost/fiber/future/future.hpp>
-#include <boost/fiber/future/future_status.hpp>
 
 #include <chrono>
 #include <cstdint>

@@ -17,12 +17,13 @@
 
 #include <srf/benchmarking/util.hpp>
 
+// Non-main includes
 #include <glog/logging.h>
+#include <nlohmann/json.hpp>
 #include <prometheus/counter.h>
 #include <prometheus/family.h>
 #include <prometheus/labels.h>
 #include <prometheus/registry.h>
-#include <nlohmann/json.hpp>
 
 #include <chrono>
 #include <map>

@@ -20,11 +20,11 @@
 #include <srf/core/bitmap.hpp>
 #include <srf/exceptions/runtime_error.hpp>
 
-#include <glog/logging.h>
 #include <boost/fiber/buffered_channel.hpp>
 #include <boost/fiber/channel_op_status.hpp>
 #include <boost/fiber/future/future.hpp>
 #include <boost/fiber/future/packaged_task.hpp>
+#include <glog/logging.h>
 
 #include <cstddef>
 #include <functional>

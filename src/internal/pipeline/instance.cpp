@@ -30,8 +30,8 @@
 #include <srf/segment/utils.hpp>
 #include <srf/types.hpp>
 
-#include <glog/logging.h>
 #include <boost/fiber/future/future.hpp>
+#include <glog/logging.h>
 
 #include <exception>
 #include <ostream>

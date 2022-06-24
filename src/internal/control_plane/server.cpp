@@ -31,7 +31,6 @@
 #include <nvrpc/service.h>
 
 #include <glog/logging.h>
-
 #include <google/protobuf/any.pb.h>
 
 #include <algorithm>

@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <srf/protos/architect.pb.h>
 #include <srf/core/bitmap.hpp>
+#include <srf/protos/architect.pb.h>
 #include <srf/utils/bytes_to_string.hpp>
 
 #include <cstdint>

@@ -28,9 +28,9 @@
 #include <srf/types.hpp>
 #include <srf/utils/string_utils.hpp>
 
+#include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 #include <hwloc.h>
-#include <boost/fiber/future/future.hpp>
 
 #include <map>
 #include <thread>

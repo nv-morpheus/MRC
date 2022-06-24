@@ -17,10 +17,11 @@
 
 #pragma once
 
+#include "internal/ucx/worker.hpp"
+
 #include <srf/channel/status.hpp>
 #include <srf/node/generic_sink.hpp>
 #include <srf/runnable/context.hpp>
-#include "internal/ucx/worker.hpp"
 
 #include <rxcpp/rx-predef.hpp>
 #include <rxcpp/rx-subscriber.hpp>

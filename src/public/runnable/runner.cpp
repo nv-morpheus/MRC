@@ -15,21 +15,22 @@
  * limitations under the License.
  */
 
-#include <exception>
 #include <srf/runnable/runner.hpp>
 
+// Non-main includes
 #include <srf/exceptions/runtime_error.hpp>
 #include <srf/runnable/context.hpp>
 #include <srf/runnable/engine.hpp>
 #include <srf/runnable/runnable.hpp>
 #include <srf/types.hpp>
 
-#include <glog/logging.h>
 #include <boost/fiber/future/future.hpp>
+#include <ext/alloc_traits.h>
+#include <glog/logging.h>
 
 #include <atomic>
 #include <cstddef>
-#include <ext/alloc_traits.h>
+#include <exception>
 #include <functional>
 #include <memory>
 #include <mutex>

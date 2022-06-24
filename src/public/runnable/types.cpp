@@ -17,6 +17,7 @@
 
 #include <srf/runnable/types.hpp>
 
+// Non-main includes
 #include <glog/logging.h>
 
 #include <ostream>

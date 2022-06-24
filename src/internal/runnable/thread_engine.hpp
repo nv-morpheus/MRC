@@ -18,7 +18,6 @@
 #pragma once
 
 #include "internal/runnable/engine.hpp"
-
 #include "internal/system/forward.hpp"
 
 #include <srf/core/bitmap.hpp>

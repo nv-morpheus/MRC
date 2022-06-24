@@ -65,20 +65,31 @@ ForEachMacros:
   - foreach
   - Q_FOREACH
   - BOOST_FOREACH
-IncludeBlocks: Preserve
+IncludeBlocks: Regroup
 IncludeCategories:
-  - Regex:           '^<ext/.*\.h>'
+  # First find any headers in internal or public
+  - Regex:           '^"(internal|public)\/.*\.(h|hpp)"'
     Priority:        2
-  - Regex:           '^<.*\.h>'
+  # Any other quoted includes need to be first (local to source)
+  - Regex:           '^".*\.(h|hpp)"'
     Priority:        1
-  - Regex:           '^<.*'
-    Priority:        2
-  - Regex:           '.*'
+  # Public SRF headers
+  - Regex:           '^<srf\/.*\.(h|hpp)>'
     Priority:        3
+  # Public NVRPC headers
+  - Regex:           '^<nvrpc\/.*\.(h|hpp)>'
+    Priority:        4
+  # Last is system includes which dont have a '/' like <string> or <mutex>
+  - Regex:           '<([a-z_])+>'
+    Priority:        6
+  # Finally, put all 3rd party includes before the system includes
+  - Regex:           '^<.*'
+    Priority:        5
+# IncludeIsMainSourceRegex: '$?'
 IncludeIsMainRegex: '([-_](test|unittest))?$'
 IndentCaseBlocks: false
 IndentCaseLabels: false
-IndentPPDirectives: None
+IndentPPDirectives: BeforeHash
 IndentWidth:     4
 IndentWrappedFunctionNames: false
 JavaScriptQuotes: Leave
@@ -147,7 +158,7 @@ SpacesInContainerLiterals: true
 SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
-Standard: Cpp11
+Standard: c++17
 StatementMacros:
   - Q_UNUSED
   - QT_REQUIRE_VERSION

@@ -16,6 +16,8 @@
  */
 
 #include <srf/metrics/counter.hpp>
+
+// Non-main includes
 #include <srf/metrics/registry.hpp>
 
 #include <glog/logging.h>

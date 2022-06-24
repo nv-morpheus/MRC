@@ -22,8 +22,8 @@
 #include <srf/node/rx_source.hpp>
 #include <srf/runnable/context.hpp>
 
-#include <glog/logging.h>
 #include <boost/fiber/operations.hpp>
+#include <glog/logging.h>
 #include <rxcpp/rx-includes.hpp>
 #include <rxcpp/rx-observable.hpp>
 #include <rxcpp/rx-observer.hpp>

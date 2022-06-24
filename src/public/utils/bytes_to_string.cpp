@@ -17,6 +17,7 @@
 
 #include <srf/utils/bytes_to_string.hpp>
 
+// Non-main includes
 #include <glog/logging.h>
 
 // cmath for std::log & std::pow

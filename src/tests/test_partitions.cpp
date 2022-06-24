@@ -20,11 +20,11 @@
 #include "internal/system/partitions.hpp"
 #include "internal/system/topology.hpp"
 
-#include <srf/protos/architect.pb.h>
 #include <srf/core/bitmap.hpp>
 #include <srf/options/options.hpp>
 #include <srf/options/placement.hpp>
 #include <srf/options/topology.hpp>
+#include <srf/protos/architect.pb.h>
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>

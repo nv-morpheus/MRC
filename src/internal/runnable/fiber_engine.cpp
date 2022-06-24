@@ -22,8 +22,8 @@
 #include <srf/runnable/types.hpp>
 #include <srf/types.hpp>
 
-#include <glog/logging.h>
 #include <boost/fiber/future/future.hpp>
+#include <glog/logging.h>
 
 #include <utility>
 

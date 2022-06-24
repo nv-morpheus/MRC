@@ -16,12 +16,12 @@
  */
 
 #include <srf/benchmarking/trace_statistics.hpp>
-#include <srf/benchmarking/util.hpp>
 
+// Non-main includes
+#include <srf/benchmarking/util.hpp>
 #include <srf/core/watcher.hpp>  // for WatchableEvent
 
 #include <glog/logging.h>
-
 #include <nlohmann/json.hpp>
 
 #include <chrono>

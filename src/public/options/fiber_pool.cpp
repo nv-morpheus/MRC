@@ -17,6 +17,8 @@
 
 #include <srf/options/fiber_pool.hpp>
 
+// Non-main includes
+
 namespace srf {
 
 FiberPoolOptions& FiberPoolOptions::enable_memory_binding(bool default_true)

@@ -43,10 +43,10 @@
 #include <srf/segment/ingress_ports.hpp>
 #include <srf/segment/object.hpp>
 
-#include <glog/logging.h>
-#include <gtest/gtest.h>
 #include <boost/fiber/fiber.hpp>
 #include <boost/fiber/operations.hpp>
+#include <glog/logging.h>
+#include <gtest/gtest.h>
 #include <rxcpp/rx-includes.hpp>
 #include <rxcpp/rx-observer.hpp>
 #include <rxcpp/rx-operators.hpp>

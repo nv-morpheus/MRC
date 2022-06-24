@@ -17,6 +17,7 @@
 
 #include <srf/core/logging.hpp>
 
+// Non-main includes
 #include <atomic>
 
 namespace {

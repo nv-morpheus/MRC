@@ -54,9 +54,9 @@
 #include <srf/type_traits.hpp>
 #include <srf/utils/macros.hpp>
 
+#include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
-#include <boost/fiber/operations.hpp>
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx-includes.hpp>
 #include <rxcpp/rx-observable.hpp>

@@ -17,7 +17,11 @@
 
 #pragma once
 
+#include "internal/resources/partition_resources.hpp"
 #include "internal/service.hpp"
+#include "internal/ucx/common.hpp"
+#include "internal/ucx/context.hpp"
+#include "internal/ucx/worker.hpp"
 
 #include <srf/channel/status.hpp>
 #include <srf/memory/block.hpp>
@@ -28,14 +32,10 @@
 #include <srf/runnable/launch_control.hpp>
 #include <srf/runnable/runner.hpp>
 #include <srf/types.hpp>
-#include "internal/resources/partition_resources.hpp"
-#include "internal/ucx/common.hpp"
-#include "internal/ucx/context.hpp"
-#include "internal/ucx/worker.hpp"
 
-#include <ucp/api/ucp_def.h>
 #include <rxcpp/rx-predef.hpp>
 #include <rxcpp/rx-subscriber.hpp>
+#include <ucp/api/ucp_def.h>
 
 #include <memory>
 #include <utility>

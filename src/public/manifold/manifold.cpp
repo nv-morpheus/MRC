@@ -17,6 +17,7 @@
 
 #include <srf/manifold/manifold.hpp>
 
+// Non-main includes
 #include <srf/node/sink_properties.hpp>
 #include <srf/node/source_properties.hpp>
 #include <srf/pipeline/resources.hpp>

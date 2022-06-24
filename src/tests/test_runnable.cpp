@@ -34,9 +34,9 @@
 #include <srf/runnable/type_traits.hpp>
 #include <srf/runnable/types.hpp>
 
+#include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
-#include <boost/fiber/operations.hpp>
 
 #include <atomic>
 #include <chrono>

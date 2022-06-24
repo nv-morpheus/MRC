@@ -15,8 +15,10 @@
  * limitations under the License.
  */
 
-#include <srf/runnable/context.hpp>
 #include <srf/runnable/runnable.hpp>
+
+// Non-main includes
+#include <srf/runnable/context.hpp>
 
 #include <atomic>
 #include <sstream>
@@ -24,7 +26,7 @@
 #include <typeinfo>
 
 #ifndef NDEBUG
-#include <cxxabi.h>
+    #include <cxxabi.h>
 #endif
 
 namespace {

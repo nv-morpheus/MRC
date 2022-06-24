@@ -17,10 +17,10 @@
 
 #include <srf/cuda/device_guard.hpp>
 
+// Non-main includes
 #include <srf/cuda/common.hpp>
 
 #include <cuda_runtime.h>
-
 #include <glog/logging.h>
 // IWYU thinks we need std::allocator for the debug macros (and only in debug builds)
 // IWYU pragma: no_include <memory>

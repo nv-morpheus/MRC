@@ -16,6 +16,7 @@
  */
 
 #include "internal/system/engine_factory_cpu_sets.hpp"
+#include "internal/system/topology.hpp"
 
 #include <srf/core/bitmap.hpp>
 #include <srf/options/engine_groups.hpp>
@@ -23,7 +24,6 @@
 #include <srf/options/placement.hpp>
 #include <srf/options/topology.hpp>
 #include <srf/runnable/types.hpp>
-#include "internal/system/topology.hpp"
 
 #include <gtest/gtest.h>
 

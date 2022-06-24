@@ -28,11 +28,11 @@
 #include <srf/types.hpp>
 #include <srf/utils/thread_local_shared_pointer.hpp>
 
-#include <glog/logging.h>
-#include <gtest/gtest.h>
 #include <boost/fiber/future/async.hpp>
 #include <boost/fiber/future/future.hpp>
 #include <boost/fiber/operations.hpp>
+#include <glog/logging.h>
+#include <gtest/gtest.h>
 
 #include <atomic>
 #include <chrono>

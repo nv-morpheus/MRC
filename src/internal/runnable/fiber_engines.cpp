@@ -25,6 +25,7 @@
 #include <srf/runnable/types.hpp>
 
 #include <glog/logging.h>
+
 #include <ostream>
 #include <string>
 #include <utility>

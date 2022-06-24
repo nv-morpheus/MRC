@@ -17,6 +17,7 @@
 
 #include <srf/core/executor.hpp>
 
+// Non-main includes
 #include <srf/engine/executor/iexecutor.hpp>
 #include <srf/engine/system/isystem.hpp>
 #include <srf/options/options.hpp>

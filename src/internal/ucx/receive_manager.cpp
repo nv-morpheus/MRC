@@ -26,8 +26,7 @@
 #include <boost/fiber/future/future.hpp>
 #include <boost/fiber/operations.hpp>
 #include <boost/fiber/policy.hpp>  // for launch, launch::post
-
-#include <ucp/api/ucp.h>  // for ucp_tag_probe_nb, ucp_tag_recv_info
+#include <ucp/api/ucp.h>           // for ucp_tag_probe_nb, ucp_tag_recv_info
 
 #include <chrono>   // for nanoseconds
 #include <cstdint>  // for uint32_t

@@ -29,6 +29,7 @@
 #include <srf/utils/thread_local_shared_pointer.hpp>
 
 #include <glog/logging.h>
+
 #include <atomic>
 #include <cstdint>
 #include <functional>
