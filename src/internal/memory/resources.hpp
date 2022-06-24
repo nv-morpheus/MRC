@@ -20,7 +20,7 @@
 #include "internal/memory/block_manager.hpp"
 #include "internal/memory/ucx_memory_block.hpp"
 #include "internal/memory/ucx_registered_resource.hpp"
-#include "internal/resources/runnable_provider.hpp"
+#include "internal/resources/partition_resources_base.hpp"
 #include "internal/ucx/resources.hpp"
 
 #include <srf/memory/resources/device/cuda_malloc_resource.hpp>

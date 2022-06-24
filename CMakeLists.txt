@@ -162,7 +162,6 @@ add_library(libsrf
   src/public/manifold/manifold.cpp
   src/public/metrics/counter.cpp
   src/public/metrics/registry.cpp
-  src/public/memory/blob.cpp
   src/public/memory/block.cpp
   src/public/node/edge_registry.cpp
   src/public/options/engine_groups.cpp
@@ -190,7 +189,8 @@ add_library(libsrf
   src/internal/data_plane/server.cpp
   src/internal/executor/executor.cpp
   src/internal/executor/iexecutor.cpp
-  src/internal/network/resources.cpp
+  src/internal/memory/resources.cpp
+# src/internal/network/resources.cpp
   src/internal/pipeline/controller.cpp
   src/internal/pipeline/instance.cpp
   src/internal/pipeline/ipipeline.cpp
@@ -199,8 +199,8 @@ add_library(libsrf
   src/internal/pipeline/manager.cpp
   src/internal/pipeline/resources.cpp
   src/internal/resources/manager.cpp
-  src/internal/resources/runnable_provider.cpp
   src/internal/resources/partition_resources.cpp
+  src/internal/resources/partition_resources_base.cpp
   src/internal/runnable/engine_factory.cpp
   src/internal/runnable/engine.cpp
   src/internal/runnable/engines.cpp
@@ -236,6 +236,7 @@ add_library(libsrf
   src/internal/ucx/context.cpp
   src/internal/ucx/endpoint.cpp
   src/internal/ucx/receive_manager.cpp
+  src/internal/ucx/resources.cpp
   src/internal/ucx/worker.cpp
   src/internal/utils/collision_detector.cpp
   src/internal/utils/exception_guard.cpp

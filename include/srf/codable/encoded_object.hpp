@@ -22,7 +22,6 @@
 #include <srf/exceptions/runtime_error.hpp>
 #include <srf/memory/block.hpp>
 #include <srf/memory/buffer.hpp>
-#include <srf/memory/resource_view.hpp>
 #include <srf/utils/macros.hpp>
 
 #include <glog/logging.h>
@@ -213,8 +212,7 @@ class EncodedObject
      * @param bytes
      * @return std::size_t
      */
-    template <typename... PropertiesT>
-    std::size_t add_buffer(memory::resource_view<PropertiesT...> view, std::size_t bytes);
+    std::size_t add_buffer(memory::memory_resource& mr, std::size_t bytes);
 
     /**
      * @brief Used to push a Object message with the starting descriptor index and type_index to the main proto
@@ -267,14 +265,13 @@ MetaDataT EncodedObject::meta_data(std::size_t idx) const
     return meta_data;
 }
 
-template <typename... PropertiesT>
-std::size_t EncodedObject::add_buffer(memory::resource_view<PropertiesT...> view, std::size_t bytes)
+std::size_t EncodedObject::add_buffer(memory::memory_resource& mr, std::size_t bytes)
 {
     CHECK(m_context_acquired);
-    memory::buffer<PropertiesT...> buff(bytes, view);
-    memory::blob blob(std::move(buff));
-    auto index       = add_memory_block(blob);
-    m_buffers[index] = std::move(blob);
+    memory::buffer buff(bytes, &mr);
+    // memory::blob blob(std::move(buff));
+    auto index       = add_memory_block(buff);
+    m_buffers[index] = std::move(buff);
     return index;
 }
 

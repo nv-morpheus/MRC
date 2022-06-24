@@ -77,7 +77,7 @@ void recv_completion_handler(void* request, ucs_status_t status, const ucp_tag_r
     }
     auto port_address = tag_decode_user_tag(msg_info->sender_tag);
     DCHECK(static_subscriber && static_subscriber->is_subscribed());
-    auto msg = std::make_pair(port_address, memory::block(user_data, msg_info->length, memory::memory_kind_type::host));
+    auto msg = std::make_pair(port_address, memory::block(user_data, msg_info->length, memory::memory_kind::host));
     static_subscriber->on_next(std::move(msg));
     ucp_request_free(request);
 }

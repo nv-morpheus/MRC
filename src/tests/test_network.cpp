@@ -25,9 +25,6 @@
 #include <gtest/gtest.h>
 #include <boost/fiber/barrier.hpp>
 #include <boost/fiber/future/future.hpp>
-#include <cuda/memory_resource>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
 
 #include <atomic>
 #include <cstdlib>

@@ -32,36 +32,36 @@
 
 namespace srf::codable {
 
-static memory::memory_kind_type decode_memory_type(const protos::MemoryKind& proto_kind)
+static memory::memory_kind decode_memory_type(const protos::MemoryKind& proto_kind)
 {
     switch (proto_kind)
     {
     case protos::MemoryKind::Host:
-        return memory::memory_kind_type::host;
+        return memory::memory_kind::host;
     case protos::MemoryKind::Pinned:
-        return memory::memory_kind_type::pinned;
+        return memory::memory_kind::pinned;
     case protos::MemoryKind::Device:
-        return memory::memory_kind_type::device;
+        return memory::memory_kind::device;
     case protos::MemoryKind::Managed:
-        return memory::memory_kind_type::managed;
+        return memory::memory_kind::managed;
     default:
         LOG(FATAL) << "unhandled protos::MemoryKind";
     };
 
-    return memory::memory_kind_type::none;
+    return memory::memory_kind::none;
 }
 
-static protos::MemoryKind encode_memory_type(memory::memory_kind_type mem_kind)
+static protos::MemoryKind encode_memory_type(memory::memory_kind mem_kind)
 {
     switch (mem_kind)
     {
-    case memory::memory_kind_type::host:
+    case memory::memory_kind::host:
         return protos::MemoryKind::Host;
-    case memory::memory_kind_type::pinned:
+    case memory::memory_kind::pinned:
         return protos::MemoryKind::Pinned;
-    case memory::memory_kind_type::device:
+    case memory::memory_kind::device:
         return protos::MemoryKind::Device;
-    case memory::memory_kind_type::managed:
+    case memory::memory_kind::managed:
         return protos::MemoryKind::Managed;
     default:
         LOG(FATAL) << "unhandled protos::MemoryKind";
@@ -156,15 +156,17 @@ std::size_t EncodedObject::add_memory_block(memory::const_block view)
 std::size_t EncodedObject::add_host_buffer(std::size_t bytes)
 {
     CHECK(m_context_acquired);
-    auto view = utils::ThreadLocalSharedPointer<codable::MemoryResources>::get()->host_resource_view();
-    return add_buffer(view, bytes);
+    LOG(FATAL) << "disabled path - awaiting runtime resources";
+    // auto view = utils::ThreadLocalSharedPointer<codable::MemoryResources>::get()->host_resource_view();
+    // return add_buffer(view, bytes);
 }
 
 std::size_t EncodedObject::add_device_buffer(std::size_t bytes)
 {
     CHECK(m_context_acquired);
-    auto view = utils::ThreadLocalSharedPointer<codable::MemoryResources>::get()->device_resource_view();
-    return add_buffer(view, bytes);
+    LOG(FATAL) << "disabled path - awaiting runtime resources";
+    // auto view = utils::ThreadLocalSharedPointer<codable::MemoryResources>::get()->device_resource_view();
+    // return add_buffer(view, bytes);
 }
 
 std::size_t EncodedObject::add_eager_buffer(const void* data, std::size_t bytes)

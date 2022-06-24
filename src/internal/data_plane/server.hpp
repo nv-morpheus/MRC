@@ -29,7 +29,7 @@
 #include <srf/runnable/runner.hpp>
 #include <srf/types.hpp>
 
-#include "internal/resources/runnable_provider.hpp"
+#include "internal/resources/partition_resources_base.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/context.hpp"

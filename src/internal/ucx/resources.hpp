@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "internal/resources/runnable_provider.hpp"
+#include "internal/resources/partition_resources_base.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/worker.hpp"
 

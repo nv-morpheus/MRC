@@ -20,13 +20,13 @@
 
 namespace srf::memory {
 
-const_block::const_block(void* data, std::size_t bytes, memory_kind_type kind) :
+const_block::const_block(void* data, std::size_t bytes, memory_kind kind) :
   m_data(data),
   m_bytes(bytes),
   m_kind(kind)
 {}
 
-const_block::const_block(const void* data, std::size_t bytes, memory_kind_type kind) :
+const_block::const_block(const void* data, std::size_t bytes, memory_kind kind) :
   m_data(const_cast<void*>(data)),
   m_bytes(bytes),
   m_kind(kind)
@@ -42,7 +42,7 @@ std::size_t const_block::bytes() const
     return m_bytes;
 }
 
-memory_kind_type const_block::kind() const
+memory_kind const_block::kind() const
 {
     return m_kind;
 }
@@ -54,7 +54,7 @@ bool const_block::empty() const
 
 const_block::operator bool() const
 {
-    return (m_data != nullptr) && (m_bytes != 0U) && (m_kind != memory_kind_type::none);
+    return (m_data != nullptr) && (m_bytes != 0U) && (m_kind != memory_kind::none);
 }
 
 void* block::data()

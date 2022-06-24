@@ -32,7 +32,7 @@ PartitionResources::PartitionResources(runnable::Resources& runnable_resources,
     }
 
     // construct memory resources
-    m_memory = std::make_unique<memory::Resources>(*this, m_ucx);
+    // m_memory = std::make_unique<memory::Resources>(*this, m_ucx);
 
     // construct data plane
     if (m_ucx) {}

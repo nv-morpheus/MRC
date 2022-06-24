@@ -86,7 +86,7 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
     {
         VLOG(1) << "building resources for partition " << i;
         auto host_partition_id = partitions.at(i).host_partition_id();
-        m_partitions.emplace_back(m_runnable.at(host_partition_id), i);
+        m_partitions.emplace_back(m_runnable.at(host_partition_id), i, host_mrs.at(host_partition_id));
     }
 }
 

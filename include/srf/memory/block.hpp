@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include <srf/memory/blob.hpp>
 #include <srf/memory/buffer.hpp>
 #include <srf/memory/memory_kind.hpp>
 
@@ -65,10 +64,10 @@ class const_block  // NOLINT
      *
      * @param blob
      */
-    const_block(const blob& blob) : m_data(const_cast<void*>(blob.data())), m_bytes(blob.bytes()), m_kind(blob.kind())
-    {
-        CHECK(operator bool());
-    }
+    // const_block(const blob& blob) : m_data(const_cast<void*>(blob.data())), m_bytes(blob.bytes()), m_kind(blob.kind())
+    // {
+    //     CHECK(operator bool());
+    // }
 
     /**
      * @brief Construct a const_block from a buffer

@@ -17,22 +17,6 @@
 
 #pragma once
 
-#include <srf/memory/resource_view.hpp>
-
 #include <cuda/memory_resource>
 
-namespace srf::codable {
-
-struct MemoryResources
-{
-    virtual ~MemoryResources() = default;
-
-    using host_view_t = memory::resource_view<::cuda::memory_location::host>;
-    using device_view_t =
-        memory::resource_view<::cuda::memory_access::device, ::cuda::memory_location::device, ::cuda::resident>;
-
-    virtual host_view_t host_resource_view()     = 0;
-    virtual device_view_t device_resource_view() = 0;
-};
-
-}  // namespace srf::codable
+namespace srf::codable {}  // namespace srf::codable
