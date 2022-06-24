@@ -21,9 +21,8 @@
 #include <srf/type_traits.hpp>
 
 #include <cuda/memory_resource>
-#include <rmm/mr/device/device_memory_resource.hpp>
-
 #include <glog/logging.h>
+#include <rmm/mr/device/device_memory_resource.hpp>
 
 #include <cstddef>
 

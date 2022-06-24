@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include <memory>
 #include <srf/channel/ingress.hpp>
 #include <srf/channel/status.hpp>
 #include <srf/constants.hpp>
@@ -26,6 +25,8 @@
 #include <srf/node/forward.hpp>
 #include <srf/node/source_properties.hpp>
 #include <srf/utils/type_utils.hpp>
+
+#include <memory>
 
 namespace srf::node {
 

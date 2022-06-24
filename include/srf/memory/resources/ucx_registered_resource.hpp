@@ -20,10 +20,8 @@
 #include <srf/memory/adaptors.hpp>
 #include <srf/memory/core/block_manager.hpp>
 #include <srf/memory/core/ucx_memory_block.hpp>
-#include "internal/ucx/context.hpp"
 
 #include <cuda/memory_resource>
-
 #include <glog/logging.h>
 
 #include <memory>

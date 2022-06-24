@@ -29,7 +29,6 @@
 #include <srf/node/generic_sink.hpp>
 #include <srf/node/rx_node.hpp>
 #include <srf/node/sink_channel.hpp>
-
 #include <srf/utils/type_utils.hpp>
 
 #include <glog/logging.h>

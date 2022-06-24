@@ -21,9 +21,9 @@
 #include <srf/benchmarking/tracer.hpp>
 #include <srf/core/executor.hpp>
 
-#include <glog/logging.h>
 #include <boost/fiber/barrier.hpp>
 #include <boost/fiber/condition_variable.hpp>
+#include <glog/logging.h>
 #include <nlohmann/json.hpp>
 #include <rxcpp/rx.hpp>
 

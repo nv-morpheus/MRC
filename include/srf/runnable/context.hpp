@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include <exception>
 #include <srf/runnable/types.hpp>
 
 #include <glog/logging.h>
 
 #include <cstddef>
+#include <exception>
 #include <sstream>
 #include <string>
 

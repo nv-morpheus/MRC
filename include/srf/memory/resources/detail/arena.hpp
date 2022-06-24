@@ -17,14 +17,13 @@
 
 #pragma once
 
-#include <spdlog/common.h>
-#include <spdlog/fmt/bundled/ostream.h>
-
 #include <cuda_runtime_api.h>
 #include <rmm/cuda_stream_view.hpp>
 #include <rmm/detail/aligned.hpp>
 #include <rmm/detail/error.hpp>
 #include <rmm/logger.hpp>
+#include <spdlog/common.h>
+#include <spdlog/fmt/bundled/ostream.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -343,9 +342,9 @@ class global_arena final
     }
 
     // Disable copy (and move) semantics.
-    global_arena(global_arena const&) = delete;
-    global_arena& operator=(global_arena const&) = delete;
-    global_arena(global_arena&&) noexcept        = delete;
+    global_arena(global_arena const&)                = delete;
+    global_arena& operator=(global_arena const&)     = delete;
+    global_arena(global_arena&&) noexcept            = delete;
     global_arena& operator=(global_arena&&) noexcept = delete;
 
     /**
@@ -519,9 +518,9 @@ class arena
     ~arena() = default;
 
     // Disable copy (and move) semantics.
-    arena(arena const&) = delete;
-    arena& operator=(arena const&) = delete;
-    arena(arena&&) noexcept        = delete;
+    arena(arena const&)                = delete;
+    arena& operator=(arena const&)     = delete;
+    arena(arena&&) noexcept            = delete;
     arena& operator=(arena&&) noexcept = delete;
 
     /**
@@ -664,10 +663,10 @@ class arena_cleaner
     explicit arena_cleaner(std::shared_ptr<arena<Upstream>> const& arena) : arena_(arena) {}
 
     // Disable copy (and move) semantics.
-    arena_cleaner(arena_cleaner const&) = delete;
+    arena_cleaner(arena_cleaner const&)            = delete;
     arena_cleaner& operator=(arena_cleaner const&) = delete;
     arena_cleaner(arena_cleaner&&) noexcept        = delete;
-    arena_cleaner& operator=(arena_cleaner&&) = delete;
+    arena_cleaner& operator=(arena_cleaner&&)      = delete;
 
     ~arena_cleaner()
     {

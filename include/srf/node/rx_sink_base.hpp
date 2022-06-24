@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include <iomanip>
 #include <srf/channel/buffered_channel.hpp>
 #include <srf/channel/channel.hpp>
 #include <srf/channel/status.hpp>
@@ -34,6 +33,7 @@
 #include <rxcpp/rx.hpp>
 
 #include <exception>
+#include <iomanip>
 #include <memory>
 #include <mutex>
 #include <string>

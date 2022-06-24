@@ -19,10 +19,9 @@
 
 #include <srf/benchmarking/util.hpp>
 
+#include <ext/new_allocator.h>
 #include <glog/logging.h>
 #include <nlohmann/json.hpp>
-
-#include <ext/new_allocator.h>
 
 #include <array>
 #include <chrono>

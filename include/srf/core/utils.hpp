@@ -108,8 +108,8 @@ class Unwinder
         m_function = nullptr;
     }
 
-    Unwinder()                = delete;
-    Unwinder(const Unwinder&) = delete;
+    Unwinder()                           = delete;
+    Unwinder(const Unwinder&)            = delete;
     Unwinder& operator=(const Unwinder&) = delete;
 
   private:

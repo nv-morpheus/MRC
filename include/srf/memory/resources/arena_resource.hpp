@@ -21,10 +21,9 @@
 #include <srf/utils/bytes_to_string.hpp>
 
 #include <cuda_runtime_api.h>
+#include <glog/logging.h>
 #include <rmm/detail/error.hpp>
 #include <rmm/logger.hpp>
-
-#include <glog/logging.h>
 #include <spdlog/common.h>
 #include <spdlog/fmt/bundled/ostream.h>
 
@@ -120,9 +119,9 @@ class arena_resource final : public upstream_resource<Upstream>
     ~arena_resource() override = default;
 
     // Disable copy (and move) semantics.
-    arena_resource(arena_resource const&) = delete;
-    arena_resource& operator=(arena_resource const&) = delete;
-    arena_resource(arena_resource&&) noexcept        = delete;
+    arena_resource(arena_resource const&)                = delete;
+    arena_resource& operator=(arena_resource const&)     = delete;
+    arena_resource(arena_resource&&) noexcept            = delete;
     arena_resource& operator=(arena_resource&&) noexcept = delete;
 
   private:

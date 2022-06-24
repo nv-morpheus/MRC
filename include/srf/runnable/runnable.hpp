@@ -18,7 +18,6 @@
 #pragma once
 
 #include <srf/runnable/context.hpp>
-
 #include <srf/utils/macros.hpp>
 
 #include <atomic>

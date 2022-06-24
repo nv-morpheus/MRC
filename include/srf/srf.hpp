@@ -20,6 +20,7 @@
 // Forward declaration of public API
 #include <srf/forward.hpp>
 
+// Then the rest of the includes
 #include <srf/core/context.hpp>
 #include <srf/core/executor.hpp>
 #include <srf/options/options.hpp>
