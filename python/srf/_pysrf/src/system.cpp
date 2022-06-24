@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-#include <pysrf/system.hpp>
-
 #include <srf/engine/system/isystem.hpp>
 #include <srf/options/options.hpp>
 
@@ -25,6 +23,7 @@
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
+#include <pysrf/system.hpp>
 
 #include <array>
 #include <ostream>

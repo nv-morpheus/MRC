@@ -29,6 +29,7 @@
 #include <srf/types.hpp>  // for Future, Tags
 
 #include <glog/logging.h>
+#include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 #include <rxcpp/operators/rx-concat_map.hpp>  // for concat_map
 #include <rxcpp/operators/rx-map.hpp>         // for map
@@ -118,6 +119,8 @@ TEST_F(SegmentTests, InitializeSegmentIngressEgressFromDefinition)
 
 TEST_F(SegmentTests, UserLambdaIsCalled)
 {
+    GTEST_SKIP() << "Skipping until issue #59 is resolved";
+
     EXPECT_EQ(m_initializer_called, false);
 
     auto segdef = segment::Definition::create("segment_test", m_ingress_multi_port, m_egress_multi_port, m_initializer);

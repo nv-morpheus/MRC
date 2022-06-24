@@ -15,25 +15,21 @@
  * limitations under the License.
  */
 
-#include <boost/fiber/future/async.hpp>
-#include <pysrf/executor.hpp>
-
-#include <pysrf/pipeline.hpp>
-#include <pysrf/system.hpp>
-
 #include <srf/core/executor.hpp>
 #include <srf/engine/pipeline/ipipeline.hpp>
 #include <srf/options/options.hpp>
 #include <srf/types.hpp>  // for Future, SharedFuture
 
+#include <boost/fiber/future/async.hpp>
 #include <boost/fiber/future/future.hpp>         // for task_base<>::ptr_type, future
 #include <boost/fiber/future/future_status.hpp>  // for future_status, future_status::ready
-
 #include <glog/logging.h>
-
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
+#include <pysrf/executor.hpp>
+#include <pysrf/pipeline.hpp>
+#include <pysrf/system.hpp>
 
 #include <chrono>     // for milliseconds
 #include <csignal>    // for siginfo_t
