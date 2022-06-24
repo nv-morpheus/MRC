@@ -17,17 +17,17 @@
 
 #pragma once
 
-#include <srf/channel/buffered_channel.hpp>
-#include <srf/channel/egress.hpp>
-#include <srf/channel/ingress.hpp>
-#include <srf/constants.hpp>
-#include <srf/exceptions/runtime_error.hpp>
-#include <srf/node/edge.hpp>
-#include <srf/node/edge_properties.hpp>
-#include <srf/node/forward.hpp>
-#include <srf/node/sink_channel_base.hpp>
-#include <srf/node/sink_properties.hpp>
-#include <srf/utils/type_utils.hpp>
+#include "srf/channel/buffered_channel.hpp"
+#include "srf/channel/egress.hpp"
+#include "srf/channel/ingress.hpp"
+#include "srf/constants.hpp"
+#include "srf/exceptions/runtime_error.hpp"
+#include "srf/node/edge.hpp"
+#include "srf/node/edge_properties.hpp"
+#include "srf/node/forward.hpp"
+#include "srf/node/sink_channel_base.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/utils/type_utils.hpp"
 
 #include <mutex>
 

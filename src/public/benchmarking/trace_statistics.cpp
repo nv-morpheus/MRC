@@ -15,13 +15,12 @@
  * limitations under the License.
  */
 
-#include <srf/benchmarking/trace_statistics.hpp>
-#include <srf/benchmarking/util.hpp>
+#include "srf/benchmarking/trace_statistics.hpp"
 
-#include <srf/core/watcher.hpp>  // for WatchableEvent
+#include "srf/benchmarking/util.hpp"
+#include "srf/core/watcher.hpp"  // for WatchableEvent
 
 #include <glog/logging.h>
-
 #include <nlohmann/json.hpp>
 
 #include <chrono>

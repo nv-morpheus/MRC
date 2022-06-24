@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include <srf/runnable/forward.hpp>
-#include <srf/types.hpp>
-#include <srf/utils/macros.hpp>
+#include "srf/runnable/forward.hpp"
+#include "srf/utils/macros.hpp"
 
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>

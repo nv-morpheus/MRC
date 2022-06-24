@@ -17,7 +17,7 @@
 
 #include "internal/system/partition.hpp"
 
-#include <srf/exceptions/runtime_error.hpp>
+#include "srf/exceptions/runtime_error.hpp"
 
 #include <glog/logging.h>
 

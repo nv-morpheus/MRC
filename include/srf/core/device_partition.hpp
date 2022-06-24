@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <srf/core/bitmap.hpp>
-#include <srf/core/host_partition.hpp>
+#include "srf/core/bitmap.hpp"
+#include "srf/core/host_partition.hpp"
 
 namespace srf::core {
 

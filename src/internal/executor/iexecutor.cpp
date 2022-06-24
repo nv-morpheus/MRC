@@ -15,11 +15,12 @@
  * limitations under the License.
  */
 
+#include "srf/engine/executor/iexecutor.hpp"
+
 #include "internal/executor/executor.hpp"
 #include "internal/system/resources.hpp"
 
-#include "srf/internal/executor/iexecutor.hpp"
-#include "srf/internal/system/isystem.hpp"
+#include "srf/engine/system/iresources.hpp"
 #include "srf/options/options.hpp"
 
 #include <glog/logging.h>

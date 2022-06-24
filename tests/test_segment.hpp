@@ -17,20 +17,20 @@
 
 #pragma once
 
-#include "srf/forward.hpp"
 #include "test_srf.hpp"  // IWYU pragma: keep
 
-#include <srf/channel/status.hpp>
-#include <srf/core/addresses.hpp>
-#include <srf/core/executor.hpp>
-#include <srf/core/fiber_pool.hpp>
-#include <srf/core/utils.hpp>
-#include <srf/pipeline/pipeline.hpp>
-#include <srf/pipeline/resources.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/definition.hpp>
-#include <srf/segment/segment.hpp>
-#include <srf/types.hpp>
+#include "srf/channel/status.hpp"
+#include "srf/core/addresses.hpp"
+#include "srf/core/executor.hpp"
+#include "srf/core/fiber_pool.hpp"
+#include "srf/core/utils.hpp"
+#include "srf/forward.hpp"
+#include "srf/pipeline/pipeline.hpp"
+#include "srf/pipeline/resources.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/definition.hpp"
+#include "srf/segment/segment.hpp"
+#include "srf/types.hpp"
 
 #include <gtest/gtest.h>
 

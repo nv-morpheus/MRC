@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <srf/channel/status.hpp>
-#include <srf/channel/types.hpp>
+#include "srf/channel/status.hpp"
+#include "srf/channel/types.hpp"
 
 namespace srf::channel {
 

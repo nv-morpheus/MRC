@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include "nodes/common_nodes.hpp"
 #include "pipelines/common_pipelines.hpp"
 
 #include "internal/pipeline/manager.hpp"
@@ -25,13 +26,10 @@
 #include "internal/system/system_provider.hpp"
 #include "internal/utils/collision_detector.hpp"
 
-#include "nodes/common_nodes.hpp"
-#include "srf/channel/forward.hpp"
 #include "srf/channel/status.hpp"
 #include "srf/core/addresses.hpp"
 #include "srf/core/executor.hpp"
-#include "srf/internal/pipeline/ipipeline.hpp"
-#include "srf/internal/segment/idefinition.hpp"
+#include "srf/engine/pipeline/ipipeline.hpp"
 #include "srf/node/queue.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
@@ -45,18 +43,12 @@
 #include "srf/segment/egress_ports.hpp"
 #include "srf/segment/ingress_ports.hpp"
 #include "srf/segment/object.hpp"
-#include "srf/srf.hpp"
 
-#include "rxcpp/rx-includes.hpp"
-#include "rxcpp/rx-observer.hpp"
-#include "rxcpp/rx-operators.hpp"
-#include "rxcpp/rx-predef.hpp"
-#include "rxcpp/rx-subscriber.hpp"
-
-#include <glog/logging.h>
-#include <gtest/gtest.h>
 #include <boost/fiber/fiber.hpp>
 #include <boost/fiber/operations.hpp>
+#include <glog/logging.h>
+#include <gtest/gtest.h>
+#include <rxcpp/rx.hpp>
 
 #include <chrono>
 #include <functional>
@@ -173,7 +165,7 @@ TEST_F(TestPipeline, LifeCycleWithException)
 
 TEST_F(TestPipeline, LifeCycleWithExceptionAndInfiniteSource)
 {
-    auto pipeline = srf::make_pipeline();
+    auto pipeline = pipeline::make_pipeline();
 
     auto segment = pipeline->make_segment("seg_1", [](segment::Builder& s) {
         auto rx_source = s.make_object("rx_source", test::nodes::infinite_int_rx_source());
@@ -186,7 +178,7 @@ TEST_F(TestPipeline, LifeCycleWithExceptionAndInfiniteSource)
 
 TEST_F(TestPipeline, LifeCycleStop)
 {
-    auto pipeline = srf::make_pipeline();
+    auto pipeline = pipeline::make_pipeline();
 
     auto segment = pipeline->make_segment("seg_1", [](segment::Builder& s) {
         auto rx_source = s.make_object("rx_source", test::nodes::infinite_int_rx_source());
@@ -199,7 +191,7 @@ TEST_F(TestPipeline, LifeCycleStop)
 
 TEST_F(TestPipeline, Queue)
 {
-    auto pipeline = srf::make_pipeline();
+    auto pipeline = pipeline::make_pipeline();
 
     auto segment = pipeline->make_segment("seg_1", [](segment::Builder& s) {
         auto source = s.make_object("source", test::nodes::infinite_int_rx_source());
@@ -214,14 +206,14 @@ TEST_F(TestPipeline, Queue)
 
 TEST_F(TestPipeline, InitializerThrows)
 {
-    auto pipeline = srf::make_pipeline();
+    auto pipeline = pipeline::make_pipeline();
     auto segment  = pipeline->make_segment("seg_1", [](segment::Builder& s) { throw std::runtime_error("no bueno"); });
     EXPECT_ANY_THROW(run_manager(std::move(pipeline)));
 }
 
 TEST_F(TestPipeline, DuplicateNameInSegment)
 {
-    auto pipeline = srf::make_pipeline();
+    auto pipeline = pipeline::make_pipeline();
 
     // this should fail to register the int_sink because of a duplicate name
     auto segment = pipeline->make_segment("seg_1", [](segment::Builder& s) {
@@ -264,7 +256,7 @@ TEST_F(TestPipeline, MultiSegmentLoadBalancer)
     // we collect the fiber id for the sink runnable processing each data element,
     // then we count the unique fiber ids collected
 
-    auto pipeline = srf::make_pipeline();
+    auto pipeline = pipeline::make_pipeline();
 
     int count = 1000;
     std::mutex mutex;

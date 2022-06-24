@@ -17,16 +17,16 @@
 
 #pragma once
 
-#include "srf/internal/segment/forward.hpp"
-#include "srf/internal/segment/idefinition.hpp"
-
 #include <memory>
 
-namespace srf::internal::pipeline {
-class Pipeline;
-}
+namespace srf::internal::segment {
+class IDefinition;
+class Definition;
+}  // namespace srf::internal::segment
 
 namespace srf::internal::pipeline {
+
+class Pipeline;
 
 class IPipeline
 {

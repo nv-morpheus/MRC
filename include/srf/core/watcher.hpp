@@ -23,13 +23,13 @@
 namespace srf {
 
 #ifdef SRF_TRACING_DISABLED
-#define WATCHER_PROLOGUE(event)
-#define WATCHER_EPILOGUE(event, rc)
-#define WATCHER_EPILOGUE(event, rc)
+    #define WATCHER_PROLOGUE(event)
+    #define WATCHER_EPILOGUE(event, rc)
+    #define WATCHER_EPILOGUE(event, rc)
 #else
-#define WATCHER_PROLOGUE(event) Watchable::watcher_prologue((event), this)
-#define WATCHER_EPILOGUE(event, rc) Watchable::watcher_epilogue((event), (rc), this)
-#define WATCHER_EPILOGUE(event, rc) Watchable::watcher_epilogue((event), (rc), this)
+    #define WATCHER_PROLOGUE(event) Watchable::watcher_prologue((event), this)
+    #define WATCHER_EPILOGUE(event, rc) Watchable::watcher_epilogue((event), (rc), this)
+    #define WATCHER_EPILOGUE(event, rc) Watchable::watcher_epilogue((event), (rc), this)
 #endif
 
 enum class WatchableEvent

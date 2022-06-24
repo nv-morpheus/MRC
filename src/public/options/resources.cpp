@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include <srf/options/resources.hpp>
+#include "srf/options/resources.hpp"
 
-#include <srf/memory/literals.hpp>
+#include "srf/memory/literals.hpp"
 
 namespace srf {
 

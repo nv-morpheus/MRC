@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <srf/segment/egress_port.hpp>
-#include <srf/segment/ports.hpp>
+#include "srf/segment/egress_port.hpp"
+#include "srf/segment/ports.hpp"
 
 namespace srf::segment {
 

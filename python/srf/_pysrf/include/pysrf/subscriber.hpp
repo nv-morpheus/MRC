@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <pysrf/types.hpp>
+#include "pysrf/types.hpp"
 
 #include <pybind11/pytypes.h>  // for pybind11::object
 

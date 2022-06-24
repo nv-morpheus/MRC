@@ -19,8 +19,8 @@
 
 #include "../test_segment.hpp"
 
-#include <srf/benchmarking/segment_watcher.hpp>
-#include <srf/benchmarking/tracer.hpp>
+#include "srf/benchmarking/segment_watcher.hpp"
+#include "srf/benchmarking/tracer.hpp"
 
 class LatencyBenchmarkTests : public ::testing::Test
 {

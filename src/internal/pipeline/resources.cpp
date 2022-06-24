@@ -17,6 +17,8 @@
 
 #include "internal/pipeline/resources.hpp"
 
+#include "srf/metrics/registry.hpp"
+
 #include <glog/logging.h>
 
 namespace srf::internal::pipeline {

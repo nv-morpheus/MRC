@@ -15,17 +15,17 @@
  * limitations under the License.
  */
 
-#include <pysrf/forward.hpp>
-#include <pysrf/node.hpp>
-#include <pysrf/utils.hpp>
+#include "pysrf/forward.hpp"
+#include "pysrf/node.hpp"
+#include "pysrf/utils.hpp"
 
-#include <srf/channel/status.hpp>
-#include <srf/node/edge_connector.hpp>
-#include <srf/node/rx_sink.hpp>
-#include <srf/node/sink_properties.hpp>
-#include <srf/node/source_properties.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/object.hpp>
+#include "srf/channel/status.hpp"
+#include "srf/node/edge_connector.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_properties.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/object.hpp"
 
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>

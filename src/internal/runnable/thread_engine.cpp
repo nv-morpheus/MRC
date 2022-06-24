@@ -19,6 +19,10 @@
 
 #include "internal/system/resources.hpp"
 
+#include "srf/core/bitmap.hpp"
+#include "srf/runnable/types.hpp"
+#include "srf/types.hpp"
+
 #include <boost/fiber/future/future.hpp>
 #include <boost/fiber/future/packaged_task.hpp>
 

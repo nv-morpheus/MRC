@@ -17,30 +17,12 @@
 
 #pragma once
 
-#include <srf/options/options.hpp>
+#include "srf/engine/segment/idefinition.hpp"
 
-#include <memory>
+namespace srf::internal::segment {
 
-namespace srf::internal::system {
+class Definition;
+class IDefinition;
+class IBuilder;
 
-class System;
-
-/**
- * @brief System object
- *
- * Core class that could be used to transfer Topology and Partition information from the SRF runtime.
- *
- * Currently, this is only an opaque handle for constructing a system::IResource.
- */
-class ISystem
-{
-  public:
-    ISystem(std::shared_ptr<Options> options);
-    virtual ~ISystem() = 0;
-
-  private:
-    std::shared_ptr<System> m_impl;
-    friend System;
-};
-
-}  // namespace srf::internal::system
+}  // namespace srf::internal::segment
