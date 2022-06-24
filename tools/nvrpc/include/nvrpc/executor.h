@@ -17,11 +17,10 @@
 
 #pragma once
 
-#include "nvrpc/interfaces.h"
-#include "nvrpc/thread_pool.h"
+#include <nvrpc/interfaces.h>
+#include <nvrpc/thread_pool.h>
 
 #include <glog/logging.h>
-
 #include <grpcpp/grpcpp.h>
 
 #include <cstddef>  // for size_t

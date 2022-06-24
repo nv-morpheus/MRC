@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <srf/memory/adaptors.hpp>
-#include <srf/memory/resources/host/pinned_memory_resource.hpp>
+#include "srf/memory/adaptors.hpp"
+#include "srf/memory/resources/host/pinned_memory_resource.hpp"
 
 #include <cuda/memory_resource>
 

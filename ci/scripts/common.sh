@@ -21,9 +21,6 @@ export PY_ROOT="python"
 export PY_CFG="${PY_ROOT}/setup.cfg"
 export PY_DIRS="${PY_ROOT} ci/scripts"
 
-# work-around for known yapf issue https://github.com/google/yapf/issues/984
-export YAPF_EXCLUDE_FLAGS="-e ${PY_ROOT}/versioneer.py -e ${PY_ROOT}/srf/_version.py"
-
 # Determine the commits to compare against. If running in CI, these will be set. Otherwise, diff with main
 export BASE_SHA=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-${BASE_SHA:-main}}
 export COMMIT_SHA=${CI_COMMIT_SHA:-${COMMIT_SHA:-HEAD}}
@@ -33,6 +30,7 @@ export PYTHON_FILE_REGEX='^(\.\/)?(?!\.|build).*\.(py|pyx|pxd)$'
 
 # Use these options to skip any of the checks
 export SKIP_COPYRIGHT=${SKIP_COPYRIGHT:-""}
+export SKIP_PRAGMA_CHECK=${SKIP_PRAGMA_CHECK:-""}
 export SKIP_CLANG_FORMAT=${SKIP_CLANG_FORMAT:-""}
 export SKIP_CLANG_TIDY=${SKIP_CLANG_TIDY:-""}
 export SKIP_IWYU=${SKIP_IWYU:-""}
@@ -68,7 +66,9 @@ function get_modified_files() {
    local GIT_DIFF_BASE=${GIT_DIFF_BASE:-$(get_merge_base)}
 
    # If invoked by a git-commit-hook, this will be populated
-   local result=( $(git diff ${GIT_DIFF_ARGS} $(get_merge_base) | grep -P ${1:-'.*'} | sed -e '/\/architect\//d' -e '/test_/d'))
+   # First filter only those that exist
+   # Next filter by provided regex
+   local result=( $(git diff ${GIT_DIFF_ARGS} $(get_merge_base) | xargs ls -1df 2>/dev/null | grep -P ${1:-'.*'} ))
 
    if [[ "$__resultvar" ]]; then
       eval $__resultvar="( ${result[@]} )"

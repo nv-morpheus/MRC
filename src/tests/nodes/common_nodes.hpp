@@ -20,6 +20,8 @@
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
 
+#include <memory>
+
 namespace test::nodes {
 
 std::unique_ptr<srf::node::RxSource<int>> finite_int_rx_source(int count = 3);

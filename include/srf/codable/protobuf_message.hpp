@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include <srf/codable/codable_protocol.hpp>
-#include <srf/codable/encoded_object.hpp>
-#include <srf/codable/encoding_options.hpp>
-#include <srf/memory/block.hpp>
-#include <srf/memory/memory_kind.hpp>
+#include "srf/codable/codable_protocol.hpp"
+#include "srf/codable/encoded_object.hpp"
+#include "srf/codable/encoding_options.hpp"
+#include "srf/memory/block.hpp"
+#include "srf/memory/memory_kind.hpp"
 
 #include <google/protobuf/message.h>
 

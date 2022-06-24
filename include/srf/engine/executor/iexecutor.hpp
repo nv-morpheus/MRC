@@ -17,9 +17,8 @@
 
 #pragma once
 
-#include "srf/internal/pipeline/ipipeline.hpp"
-
-#include <srf/options/options.hpp>
+#include "srf/engine/pipeline/ipipeline.hpp"
+#include "srf/options/options.hpp"
 
 #include <memory>
 

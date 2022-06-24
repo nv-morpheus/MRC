@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include <srf/node/forward.hpp>
-#include <srf/node/rx_execute.hpp>
-#include <srf/node/rx_subscribable.hpp>
-#include <srf/runnable/runnable.hpp>
+#include "srf/node/forward.hpp"
+#include "srf/node/rx_execute.hpp"
+#include "srf/node/rx_subscribable.hpp"
+#include "srf/runnable/runnable.hpp"
 
 namespace srf::node {
 

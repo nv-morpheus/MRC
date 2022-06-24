@@ -27,11 +27,9 @@ option(SRF_BUILD_DOCS "Enable building the python bindings for Srf" OFF)
 option(SRF_BUILD_LIBRARY "Whether the entire SRF library should be built. If set to OFF, only the pieces needed for a target will be built. Set to ON if installing the library" ON)
 option(SRF_BUILD_PYTHON "Enable building the python bindings for Srf" ON)
 option(SRF_BUILD_TESTS "Whether or not to build SRF tests" ON)
-option(SRF_ENABLE_MATX "Enables the header only library MatX. Requires CUDA 11.4." OFF)
-option(SRF_ENABLE_XTENSOR "Enables the xtensor library." OFF)
 option(SRF_USE_CCACHE "Enable caching compilation results with ccache" OFF)
 option(SRF_USE_CLANG_TIDY "Enable running clang-tidy as part of the build process" OFF)
-option(SRF_USE_CONDA "Enables finding dependencies via conda instead of vcpkg. Note: This will disable vcpkg. All dependencies must be installed first in the conda environment" OFF)
+option(SRF_USE_CONDA "Enables finding dependencies via conda instead of vcpkg. Note: This will disable vcpkg. All dependencies must be installed first in the conda environment" ON)
 option(SRF_USE_IWYU "Enable running include-what-you-use as part of the build process" OFF)
 
 set(RAPIDS_VERSION "22.06" CACHE STRING "Which version of RAPIDs to build for. Sets default versions for RAPIDs CMake and RMM.")
@@ -144,7 +142,7 @@ include(cmake/setup_iwyu.cmake)
 ####################################
 # - Begin SRF Targets --------------
 
-# Keep all source files sorted
+# Keep all source files sorted!!!
 add_library(libsrf
   src/internal/executor/executor.cpp
   src/internal/executor/iexecutor.cpp

@@ -16,55 +16,51 @@
  */
 
 #include "internal/runnable/resources.hpp"
-#include "internal/system/forward.hpp"
 #include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
+#include "internal/system/system_provider.hpp"
 
+#include "srf/channel/egress.hpp"
+#include "srf/channel/ingress.hpp"
+#include "srf/channel/status.hpp"
+#include "srf/core/bitmap.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/node/generic_node.hpp"
+#include "srf/node/generic_sink.hpp"
+#include "srf/node/generic_source.hpp"
+#include "srf/node/operators/conditional.hpp"
+#include "srf/node/rx_execute.hpp"
+#include "srf/node/rx_node.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/rx_source.hpp"
+#include "srf/node/rx_subscribable.hpp"
+#include "srf/node/sink_channel.hpp"
+#include "srf/node/source_channel.hpp"
 #include "srf/node/source_properties.hpp"
-#include "srf/options/placement.hpp"
+#include "srf/options/engine_groups.hpp"
+#include "srf/options/options.hpp"
+#include "srf/options/topology.hpp"
+#include "srf/runnable/context.hpp"
 #include "srf/runnable/launch_control.hpp"
 #include "srf/runnable/launch_options.hpp"
 #include "srf/runnable/launcher.hpp"
+#include "srf/runnable/runner.hpp"
+#include "srf/runnable/types.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/definition.hpp"
+#include "srf/segment/egress_ports.hpp"
 #include "srf/segment/object.hpp"
+#include "srf/segment/runnable.hpp"
+#include "srf/segment/segment.hpp"
+#include "srf/type_traits.hpp"
 #include "srf/utils/macros.hpp"
 
-#include <srf/channel/egress.hpp>
-#include <srf/channel/ingress.hpp>
-#include <srf/channel/status.hpp>
-#include <srf/node/edge_builder.hpp>
-#include <srf/node/generic_node.hpp>
-#include <srf/node/generic_sink.hpp>
-#include <srf/node/generic_source.hpp>
-#include <srf/node/operators/conditional.hpp>
-#include <srf/node/rx_execute.hpp>
-#include <srf/node/rx_node.hpp>
-#include <srf/node/rx_sink.hpp>
-#include <srf/node/rx_source.hpp>
-#include <srf/node/rx_subscribable.hpp>
-#include <srf/node/sink_channel.hpp>
-#include <srf/node/source_channel.hpp>
-#include <srf/options/options.hpp>
-#include <srf/options/topology.hpp>
-#include <srf/runnable/context.hpp>
-#include <srf/runnable/runner.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/definition.hpp>
-#include <srf/segment/egress_ports.hpp>
-#include <srf/segment/runnable.hpp>
-#include <srf/segment/segment.hpp>
-#include <srf/type_traits.hpp>
-
+#include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
-#include <boost/fiber/operations.hpp>
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
-#include "rxcpp/operators/rx-map.hpp"
-#include "rxcpp/rx-includes.hpp"
-#include "rxcpp/rx-observable.hpp"
-#include "rxcpp/rx-operators.hpp"
-#include "rxcpp/sources/rx-iterate.hpp"
+#include <rxcpp/operators/rx-map.hpp>
+#include <rxcpp/rx.hpp>
+#include <rxcpp/sources/rx-iterate.hpp>
 
 #include <atomic>
 #include <chrono>
@@ -95,15 +91,16 @@ class TestNext : public ::testing::Test
   protected:
     void SetUp() override
     {
-        m_system_resources = std::make_unique<internal::system::Resources>(make_system([](Options& options) {
-            options.topology().user_cpuset("0-3");
-            options.topology().restrict_gpus(true);
-            options.engine_factories().set_engine_factory_options("thread_pool", [](EngineFactoryOptions& options) {
-                options.engine_type   = runnable::EngineType::Thread;
-                options.allow_overlap = false;
-                options.cpu_count     = 2;
-            });
-        }));
+        m_system_resources = std::make_unique<internal::system::Resources>(
+            internal::system::SystemProvider(make_system([](Options& options) {
+                options.topology().user_cpuset("0-3");
+                options.topology().restrict_gpus(true);
+                options.engine_factories().set_engine_factory_options("thread_pool", [](EngineFactoryOptions& options) {
+                    options.engine_type   = runnable::EngineType::Thread;
+                    options.allow_overlap = false;
+                    options.cpu_count     = 2;
+                });
+            })));
 
         m_resources = std::make_unique<internal::runnable::Resources>(*m_system_resources, 0);
     }

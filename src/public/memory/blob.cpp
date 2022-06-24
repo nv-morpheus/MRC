@@ -15,9 +15,10 @@
  * limitations under the License.
  */
 
-#include <srf/memory/blob.hpp>
-#include <srf/memory/blob_storage.hpp>  // for IBlobStorage
-#include <srf/memory/memory_kind.hpp>
+#include "srf/memory/blob.hpp"
+
+#include "srf/memory/blob_storage.hpp"  // for IBlobStorage
+#include "srf/memory/memory_kind.hpp"
 
 #include <utility>  // for move
 

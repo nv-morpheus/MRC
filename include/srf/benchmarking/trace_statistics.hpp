@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <srf/benchmarking/util.hpp>
-#include <srf/core/watcher.hpp>
+#include "srf/benchmarking/util.hpp"
+#include "srf/core/watcher.hpp"
 
 #include <nlohmann/json_fwd.hpp>
 

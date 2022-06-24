@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <srf/channel/channel.hpp>
-#include <srf/types.hpp>  // for CondV & Mutex
+#include "srf/channel/channel.hpp"
+#include "srf/types.hpp"  // for CondV & Mutex
 
 #include <boost/fiber/mutex.hpp>
 

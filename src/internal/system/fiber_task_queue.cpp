@@ -19,17 +19,18 @@
 
 #include "internal/system/fiber_priority_scheduler.hpp"
 #include "internal/system/resources.hpp"
+
 #include "srf/core/bitmap.hpp"
 #include "srf/core/fiber_meta_data.hpp"
 #include "srf/core/task_queue.hpp"
 #include "srf/types.hpp"
 
-#include <glog/logging.h>
 #include <boost/fiber/channel_op_status.hpp>
 #include <boost/fiber/context.hpp>
 #include <boost/fiber/fiber.hpp>
 #include <boost/fiber/future/future.hpp>
 #include <boost/fiber/operations.hpp>
+#include <glog/logging.h>
 
 #include <ostream>
 #include <string>

@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include <srf/core/bitmap.hpp>
-#include <srf/options/options.hpp>
-#include <srf/utils/macros.hpp>
-
 #include "internal/system/partitions.hpp"
 #include "internal/system/topology.hpp"
+
+#include "srf/core/bitmap.hpp"
+#include "srf/options/options.hpp"
+#include "srf/utils/macros.hpp"
 
 #include <memory>
 #include <utility>

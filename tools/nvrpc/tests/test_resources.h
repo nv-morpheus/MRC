@@ -20,9 +20,9 @@
 #include "testing.grpc.pb.h"  // IWYU pragma: keep
 #include "testing.pb.h"
 
-#include "nvrpc/interfaces.h"
-#include "nvrpc/life_cycle_streaming.h"
-#include "nvrpc/thread_pool.h"
+#include <nvrpc/interfaces.h>
+#include <nvrpc/life_cycle_streaming.h>
+#include <nvrpc/thread_pool.h>
 
 #include <cstddef>  // for size_t
 #include <map>      // for map

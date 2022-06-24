@@ -24,19 +24,19 @@
 #define SRF_UNIQUE_VAR_NAME(prefix) SRF_CONCAT_EVAL(prefix, __COUNTER__)
 
 #ifndef DELETE_COPYABILITY
-#define DELETE_COPYABILITY(foo) \
-    foo(const foo&) = delete;   \
-    foo& operator=(const foo& other) = delete;
+    #define DELETE_COPYABILITY(foo) \
+        foo(const foo&) = delete;   \
+        foo& operator=(const foo& other) = delete;
 #endif
 
 #ifndef DELETE_MOVEABILITY
-#define DELETE_MOVEABILITY(foo)   \
-    foo(foo&&) noexcept = delete; \
-    foo& operator=(foo&& other) noexcept = delete;
+    #define DELETE_MOVEABILITY(foo)   \
+        foo(foo&&) noexcept = delete; \
+        foo& operator=(foo&& other) noexcept = delete;
 #endif
 
 #ifndef DEFAULT_MOVEABILITY
-#define DEFAULT_MOVEABILITY(foo)   \
-    foo(foo&&) noexcept = default; \
-    foo& operator=(foo&& other) noexcept = default;
+    #define DEFAULT_MOVEABILITY(foo)   \
+        foo(foo&&) noexcept = default; \
+        foo& operator=(foo&& other) noexcept = default;
 #endif
