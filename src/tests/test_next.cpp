@@ -89,15 +89,16 @@ class TestNext : public ::testing::Test
   protected:
     void SetUp() override
     {
-        m_system_resources = std::make_unique<internal::system::Resources>(make_system([](Options& options) {
-            options.topology().user_cpuset("0-3");
-            options.topology().restrict_gpus(true);
-            options.engine_factories().set_engine_factory_options("thread_pool", [](EngineFactoryOptions& options) {
-                options.engine_type   = runnable::EngineType::Thread;
-                options.allow_overlap = false;
-                options.cpu_count     = 2;
-            });
-        }));
+        m_system_resources = std::make_unique<internal::system::Resources>(
+            internal::system::SystemProvider(make_system([](Options& options) {
+                options.topology().user_cpuset("0-3");
+                options.topology().restrict_gpus(true);
+                options.engine_factories().set_engine_factory_options("thread_pool", [](EngineFactoryOptions& options) {
+                    options.engine_type   = runnable::EngineType::Thread;
+                    options.allow_overlap = false;
+                    options.cpu_count     = 2;
+                });
+            })));
 
         m_resources = std::make_unique<internal::runnable::Resources>(*m_system_resources, 0);
     }

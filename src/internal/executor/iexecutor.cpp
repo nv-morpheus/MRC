@@ -15,10 +15,11 @@
  * limitations under the License.
  */
 
-#include "internal/executor/executor.hpp"
-#include "internal/system/system.hpp"
+#include "srf/engine/executor/iexecutor.hpp"
 
-#include "srf/engine/pipeline/ipipeline.hpp"
+#include "internal/executor/executor.hpp"
+#include "internal/system/resources.hpp"
+
 #include "srf/engine/system/isystem.hpp"
 #include "srf/options/options.hpp"
 
@@ -26,6 +27,8 @@
 
 #include <memory>
 #include <utility>
+
+namespace srf::internal::executor {
 
 IExecutor::IExecutor(std::shared_ptr<Options> options) : m_impl(make_executor(std::move(options))) {}
 IExecutor::IExecutor(std::unique_ptr<system::IResources> resources) :

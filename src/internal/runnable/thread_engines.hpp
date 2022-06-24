@@ -18,7 +18,8 @@
 #pragma once
 
 #include "internal/runnable/engines.hpp"
-#include "internal/system/system.hpp"
+#include "internal/system/forward.hpp"
+#include "internal/system/resources.hpp"
 
 #include "srf/core/bitmap.hpp"
 #include "srf/runnable/launch_options.hpp"

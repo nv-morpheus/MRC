@@ -20,7 +20,7 @@
 #include "internal/runnable/fiber_engines.hpp"
 #include "internal/runnable/thread_engines.hpp"
 #include "internal/system/fiber_pool.hpp"
-#include "internal/system/system.hpp"
+#include "internal/system/resources.hpp"
 
 #include "srf/constants.hpp"
 #include "srf/core/bitmap.hpp"
