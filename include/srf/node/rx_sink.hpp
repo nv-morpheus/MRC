@@ -40,6 +40,7 @@
 #include <rxcpp/rx.hpp>
 
 #include <exception>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>

@@ -24,6 +24,7 @@ endif()
 
 option(${OPTION_PREFIX}_PYTHON_INPLACE_BUILD "Whether or not to copy built python modules back to the source tree for debug purposes." OFF)
 option(${OPTION_PREFIX}_PYTHON_PERFORM_INSTALL "Whether or not to automatically `pip install` any built python library. WARNING: This may overwrite any existing installation of the same name." OFF)
+option(${OPTION_PREFIX}_PYTHON_BUILD_STUBS "Whether or not to generated .pyi stub files for C++ Python modules. Disable to avoid requiring loading the NVIDIA GPU Driver during build" ON)
 
 set(Python3_FIND_VIRTUALENV "FIRST")
 set(Python3_FIND_STRATEGY "LOCATION")
@@ -83,9 +84,14 @@ find_package(Cython REQUIRED)
 
 function(create_python_package PACKAGE_NAME)
 
+  list(APPEND CMAKE_MESSAGE_CONTEXT "${PACKAGE_NAME}")
+  set(CMAKE_MESSAGE_CONTEXT ${CMAKE_MESSAGE_CONTEXT} PARENT_SCOPE)
+
   if(PYTHON_ACTIVE_PACKAGE_NAME)
     message(FATAL_ERROR "An active wheel has already been created. Must call create_python_package/build_python_package in pairs")
   endif()
+
+  message(STATUS "Creating python package '${PACKAGE_NAME}'")
 
   # Set the active wheel in the parent scipe
   set(PYTHON_ACTIVE_PACKAGE_NAME ${PACKAGE_NAME}-package)
@@ -231,7 +237,7 @@ function(copy_target_resources TARGET_NAME COPY_DIRECTORY)
 endfunction()
 
 function(inplace_build_copy TARGET_NAME INPLACE_DIR)
-  message(STATUS " Inplace build: (${TARGET_NAME}) ${INPLACE_DIR}")
+  message(VERBOSE "Inplace build: (${TARGET_NAME}) ${INPLACE_DIR}")
 
   add_custom_command(
     TARGET ${TARGET_NAME} POST_BUILD
@@ -265,10 +271,7 @@ function(build_python_package PACKAGE_NAME)
     ${ARGN}
   )
 
-  message(STATUS "_ARGS_IS_INPLACE: ${_ARGS_IS_INPLACE}")
-  message(STATUS "_ARGS_BUILD_WHEEL: ${_ARGS_BUILD_WHEEL}")
-  message(STATUS "_ARGS_INSTALL_WHEEL: ${_ARGS_INSTALL_WHEEL}")
-  message(STATUS "_ARGS_UNPARSED_ARGUMENTS: ${_ARGS_UNPARSED_ARGUMENTS}")
+  message(STATUS "Finalizing python package '${PACKAGE_NAME}'")
 
   get_target_property(sources_source_dir ${PYTHON_ACTIVE_PACKAGE_NAME}-sources SOURCE_DIR)
   get_target_property(sources_binary_dir ${PYTHON_ACTIVE_PACKAGE_NAME}-sources BINARY_DIR)
@@ -297,44 +300,47 @@ function(build_python_package PACKAGE_NAME)
       WORKING_DIRECTORY ${sources_binary_dir}
       # Depend on any of the output python files
       DEPENDS ${PYTHON_ACTIVE_PACKAGE_NAME}-outputs
-      COMMENT "Building ${PYTHON_ACTIVE_PACKAGE_NAME} wheel"
+      COMMENT "Building ${PACKAGE_NAME} wheel"
     )
 
     # Create a dummy target to ensure the above custom command is always run
     add_custom_target(${PYTHON_ACTIVE_PACKAGE_NAME}-wheel ALL
       DEPENDS ${install_stamp}
     )
+
+    message(STATUS "Creating python wheel for library '${PACKAGE_NAME}'")
+  endif()
+
+  # Now build up the pip arguments to either install the package or print a message with the install command
+  set(_pip_command)
+
+  list(APPEND _pip_command  "${Python3_EXECUTABLE}" "-m" "pip" "install")
+
+  # detect virtualenv and set Pip args accordingly
+  if(NOT DEFINED ENV{VIRTUAL_ENV} AND NOT DEFINED ENV{CONDA_PREFIX})
+    list(APPEND _pip_command  "--user")
+  endif()
+
+  if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+    list(APPEND _pip_command "-e")
+  endif()
+
+  # Change which setup we use if we are using inplace
+  if(_ARGS_IS_INPLACE)
+    list(APPEND _pip_command "${sources_source_dir}")
+  else()
+    list(APPEND _pip_command "${sources_binary_dir}")
   endif()
 
   if(_ARGS_INSTALL_WHEEL)
-    message(STATUS "Installing wheel")
+    message(STATUS "Automatically installing Python package '${PACKAGE_NAME}' into current python environment. This may overwrite any existing library with the same name")
 
     # Now actually install the package
-    find_package(Python3 COMPONENTS Interpreter REQUIRED)
-
-    # detect virtualenv and set Pip args accordingly
-    if(DEFINED ENV{VIRTUAL_ENV} OR DEFINED ENV{CONDA_PREFIX})
-      set(_pip_args)
-    else()
-      set(_pip_args "--user")
-    endif()
-
-    if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-      list(APPEND _pip_args "-e")
-    endif()
-
     set(install_stamp ${sources_binary_dir}/${PYTHON_ACTIVE_PACKAGE_NAME}-install.stamp)
-
-    set(setup_dir ${sources_binary_dir})
-
-    # Change which setup we use if we are using inplace
-    if(_ARGS_IS_INPLACE)
-      set(setup_dir ${sources_source_dir})
-    endif()
 
     add_custom_command(
       OUTPUT ${install_stamp}
-      COMMAND ${Python3_EXECUTABLE} -m pip install ${_pip_args} ${setup_dir}
+      COMMAND ${_pip_command}
       COMMAND ${CMAKE_COMMAND} -E touch ${install_stamp}
       DEPENDS ${PYTHON_ACTIVE_PACKAGE_NAME}-outputs
       COMMENT "Installing ${PACKAGE_NAME} python package"
@@ -343,10 +349,16 @@ function(build_python_package PACKAGE_NAME)
     add_custom_target(${PYTHON_ACTIVE_PACKAGE_NAME}-install ALL
       DEPENDS ${install_stamp}
     )
+  else()
+    list(JOIN _pip_command " " _pip_command_str)
+    message(STATUS "Python package '${PACKAGE_NAME}' has been built but has not been installed. Use `${_pip_command_str}` to install the library manually")
   endif()
 
   # Finally, unset the active package
   unset(PYTHON_ACTIVE_PACKAGE_NAME PARENT_SCOPE)
+
+  list(POP_BACK CMAKE_MESSAGE_CONTEXT)
+  set(CMAKE_MESSAGE_CONTEXT ${CMAKE_MESSAGE_CONTEXT} PARENT_SCOPE)
 
 endfunction()
 
@@ -371,7 +383,7 @@ resolve_python_module_name <MODULE_NAME>
 #]=======================================================================]
 
 function(resolve_python_module_name MODULE_NAME)
-  set(prefix PYMOD) # Prefix parsed args
+  set(prefix _ARGS) # Prefix parsed args
   set(flags "")
   set(singleValues
       MODULE_ROOT
@@ -391,8 +403,8 @@ function(resolve_python_module_name MODULE_NAME)
   set(py_module_namespace "")
   set(py_module_path "")
 
-  if(PYMOD_MODULE_ROOT)
-    file(RELATIVE_PATH py_module_path ${PYMOD_MODULE_ROOT} ${CMAKE_CURRENT_SOURCE_DIR})
+  if(_ARGS_MODULE_ROOT)
+    file(RELATIVE_PATH py_module_path ${_ARGS_MODULE_ROOT} ${CMAKE_CURRENT_SOURCE_DIR})
 
     if(NOT ${py_module_path} STREQUAL "")
       # Convert the relative path to a namespace. i.e. `cuml/package/module` -> `cuml::package::module
@@ -401,14 +413,14 @@ function(resolve_python_module_name MODULE_NAME)
     endif()
   endif()
 
-  if (PYMOD_OUTPUT_TARGET_NAME)
-    set(${PYMOD_OUTPUT_TARGET_NAME} "${py_module_namespace}${py_module_name}" PARENT_SCOPE)
+  if (_ARGS_OUTPUT_TARGET_NAME)
+    set(${_ARGS_OUTPUT_TARGET_NAME} "${py_module_namespace}${py_module_name}" PARENT_SCOPE)
   endif()
-  if (PYMOD_OUTPUT_MODULE_NAME)
-    set(${PYMOD_OUTPUT_MODULE_NAME} "${py_module_name}" PARENT_SCOPE)
+  if (_ARGS_OUTPUT_MODULE_NAME)
+    set(${_ARGS_OUTPUT_MODULE_NAME} "${py_module_name}" PARENT_SCOPE)
   endif()
-  if (PYMOD_OUTPUT_RELATIVE_PATH)
-    set(${PYMOD_OUTPUT_RELATIVE_PATH} "${py_module_path}" PARENT_SCOPE)
+  if (_ARGS_OUTPUT_RELATIVE_PATH)
+    set(${_ARGS_OUTPUT_RELATIVE_PATH} "${py_module_path}" PARENT_SCOPE)
   endif()
 endfunction()
 
@@ -422,12 +434,14 @@ add_python_module
 #]=======================================================================]
 macro(_create_python_library MODULE_NAME)
 
+  list(APPEND CMAKE_MESSAGE_CONTEXT "${MODULE_NAME}")
+
   if(NOT PYTHON_ACTIVE_PACKAGE_NAME)
     message(FATAL_ERROR "Must call create_python_wheel() before calling add_python_sources")
   endif()
 
-  set(prefix PYMOD)
-  set(flags IS_PYBIND11 IS_CYTHON IS_MODULE)
+  set(prefix _ARGS)
+  set(flags IS_PYBIND11 IS_CYTHON IS_MODULE COPY_INPLACE BUILD_STUBS)
   set(singleValues INSTALL_DEST OUTPUT_TARGET MODULE_ROOT PYX_FILE)
   set(multiValues INCLUDE_DIRS LINK_TARGETS SOURCE_FILES)
 
@@ -438,39 +452,34 @@ macro(_create_python_library MODULE_NAME)
       "${multiValues}"
       ${ARGN})
 
-  if(NOT PYMOD_MODULE_ROOT)
-    get_target_property(PYMOD_MODULE_ROOT ${PYTHON_ACTIVE_PACKAGE_NAME}-modules SOURCE_DIR)
+  if(NOT _ARGS_MODULE_ROOT)
+    get_target_property(_ARGS_MODULE_ROOT ${PYTHON_ACTIVE_PACKAGE_NAME}-modules SOURCE_DIR)
   endif()
 
   # Normalize the module root
-  cmake_path(SET PYMOD_MODULE_ROOT "${PYMOD_MODULE_ROOT}")
+  cmake_path(SET _ARGS_MODULE_ROOT "${_ARGS_MODULE_ROOT}")
 
   resolve_python_module_name(${MODULE_NAME}
-    MODULE_ROOT ${PYMOD_MODULE_ROOT}
+    MODULE_ROOT ${_ARGS_MODULE_ROOT}
     OUTPUT_TARGET_NAME TARGET_NAME
     OUTPUT_MODULE_NAME MODULE_NAME
     OUTPUT_RELATIVE_PATH SOURCE_RELATIVE_PATH
   )
 
-  # # Ensure the custom target all_python_targets has been created
-  # if (NOT TARGET all_python_targets)
-  #   message(FATAL_ERROR "You must call `add_custom_target(all_python_targets)` before the first call to add_python_module")
-  # endif()
-
   set(lib_type SHARED)
 
-  if(PYMOD_IS_MODULE)
+  if(_ARGS_IS_MODULE)
     set(lib_type MODULE)
   endif()
 
   # Create the module target
-  if (PYMOD_IS_PYBIND11)
-    message(STATUS "Adding Pybind11 Module: ${TARGET_NAME}")
-    pybind11_add_module(${TARGET_NAME} ${lib_type} ${PYMOD_SOURCE_FILES})
-  elseif(PYMOD_IS_CYTHON)
-    message(STATUS "Adding Cython Module: ${TARGET_NAME}")
-    add_cython_target(${MODULE_NAME} "${PYMOD_PYX_FILE}" CXX PY3)
-    add_library(${TARGET_NAME} ${lib_type} ${${MODULE_NAME}} ${PYMOD_SOURCE_FILES})
+  if(_ARGS_IS_PYBIND11)
+    message(VERBOSE "Adding Pybind11 Module: ${TARGET_NAME}")
+    pybind11_add_module(${TARGET_NAME} ${lib_type} ${_ARGS_SOURCE_FILES})
+  elseif(_ARGS_IS_CYTHON)
+    message(VERBOSE "Adding Cython Module: ${TARGET_NAME}")
+    add_cython_target(${MODULE_NAME} "${_ARGS_PYX_FILE}" CXX PY3)
+    add_library(${TARGET_NAME} ${lib_type} ${${MODULE_NAME}} ${_ARGS_SOURCE_FILES})
 
     # Need to set -fvisibility=hidden for cython according to https://pybind11.readthedocs.io/en/stable/faq.html
     # set_target_properties(${TARGET_NAME} PROPERTIES CXX_VISIBILITY_PRESET hidden)
@@ -481,30 +490,30 @@ macro(_create_python_library MODULE_NAME)
   set_target_properties(${TARGET_NAME} PROPERTIES PREFIX "")
   set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME "${MODULE_NAME}")
 
-  set(pymod_link_libs "")
-  if (PYMOD_LINK_TARGETS)
-    foreach(target IN LISTS PYMOD_LINK_TARGETS)
-      list(APPEND pymod_link_libs ${target})
+  set(_link_libs "")
+  if(_ARGS_LINK_TARGETS)
+    foreach(target IN LISTS _ARGS_LINK_TARGETS)
+      list(APPEND _link_libs ${target})
     endforeach()
   endif()
 
   target_link_libraries(${TARGET_NAME}
     PUBLIC
-      ${pymod_link_libs}
+      ${_link_libs}
   )
 
   # Tell CMake to use relative paths in the build directory. This is necessary for relocatable packages
   set_target_properties(${TARGET_NAME} PROPERTIES INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:\$ORIGIN")
 
-  if (PYMOD_INCLUDE_DIRS)
+  if(_ARGS_INCLUDE_DIRS)
     target_include_directories(${TARGET_NAME}
       PRIVATE
-        "${PYMOD_INCLUDE_DIRS}"
+        "${_ARGS_INCLUDE_DIRS}"
     )
   endif()
 
   # Cython targets need the current dir for generated files
-  if(PYMOD_IS_CYTHON)
+  if(_ARGS_IS_CYTHON)
     target_include_directories(${TARGET_NAME}
       PUBLIC
         "${CMAKE_CURRENT_BINARY_DIR}"
@@ -516,36 +525,36 @@ macro(_create_python_library MODULE_NAME)
   # succeed
   add_dependencies(${PYTHON_ACTIVE_PACKAGE_NAME}-modules ${TARGET_NAME})
 
-  # Get the relative path from the project source to the module root
-  cmake_path(RELATIVE_PATH PYMOD_MODULE_ROOT BASE_DIRECTORY ${PROJECT_SOURCE_DIR} OUTPUT_VARIABLE module_root_relative)
+  if(_ARGS_BUILD_STUBS)
+    # Get the relative path from the project source to the module root
+    cmake_path(RELATIVE_PATH _ARGS_MODULE_ROOT BASE_DIRECTORY ${PROJECT_SOURCE_DIR} OUTPUT_VARIABLE module_root_relative)
 
-  cmake_path(APPEND PROJECT_BINARY_DIR ${module_root_relative} OUTPUT_VARIABLE module_root_binary_dir)
-  cmake_path(APPEND module_root_binary_dir ${SOURCE_RELATIVE_PATH} ${MODULE_NAME} "__init__.pyi" OUTPUT_VARIABLE module_binary_stub_file)
+    cmake_path(APPEND PROJECT_BINARY_DIR ${module_root_relative} OUTPUT_VARIABLE module_root_binary_dir)
+    cmake_path(APPEND module_root_binary_dir ${SOURCE_RELATIVE_PATH} ${MODULE_NAME} "__init__.pyi" OUTPUT_VARIABLE module_binary_stub_file)
 
-  # Before installing, create the custom command to generate the stubs
-  add_custom_command(
-    OUTPUT  ${module_binary_stub_file}
-    COMMAND ${Python3_EXECUTABLE} -m pybind11_stubgen ${TARGET_NAME} --no-setup-py --log-level WARN -o ./ --root-module-suffix \"\"
-    DEPENDS ${PYTHON_ACTIVE_PACKAGE_NAME}-modules
-    COMMENT "Building stub for python module ${TARGET_NAME}..."
-    WORKING_DIRECTORY ${module_root_binary_dir}
-  )
+    # Before installing, create the custom command to generate the stubs
+    add_custom_command(
+      OUTPUT  ${module_binary_stub_file}
+      COMMAND ${Python3_EXECUTABLE} -m pybind11_stubgen ${TARGET_NAME} --no-setup-py --log-level WARN -o ./ --root-module-suffix \"\"
+      DEPENDS ${PYTHON_ACTIVE_PACKAGE_NAME}-modules
+      COMMENT "Building stub for python module ${TARGET_NAME}..."
+      WORKING_DIRECTORY ${module_root_binary_dir}
+    )
 
-  # Add a custom target to ensure the stub generation runs
-  add_custom_target(${TARGET_NAME}-stubs ALL
-    DEPENDS ${module_binary_stub_file}
-  )
+    # Add a custom target to ensure the stub generation runs
+    add_custom_target(${TARGET_NAME}-stubs ALL
+      DEPENDS ${module_binary_stub_file}
+    )
 
-  # Make the outputs depend on the stub
-  add_dependencies(${PYTHON_ACTIVE_PACKAGE_NAME}-outputs ${TARGET_NAME}-stubs)
+    # Make the outputs depend on the stub
+    add_dependencies(${PYTHON_ACTIVE_PACKAGE_NAME}-outputs ${TARGET_NAME}-stubs)
 
-  # Save the output as a target property
-  add_target_resources(TARGET_NAME ${TARGET_NAME} "${module_binary_stub_file}")
+    # Save the output as a target property
+    add_target_resources(TARGET_NAME ${TARGET_NAME} "${module_binary_stub_file}")
+  endif()
 
-  unset(module_binary_stub_file)
-
-  if (PYMOD_INSTALL_DEST)
-    message(STATUS " Install dest: (${TARGET_NAME}) ${PYMOD_INSTALL_DEST}")
+  if(_ARGS_INSTALL_DEST)
+    message(VERBOSE "Install dest: (${TARGET_NAME}) ${_ARGS_INSTALL_DEST}")
     install(
       TARGETS
         ${TARGET_NAME}
@@ -553,19 +562,26 @@ macro(_create_python_library MODULE_NAME)
         ${PROJECT_NAME}-exports
       LIBRARY
         DESTINATION
-          "${PYMOD_INSTALL_DEST}"
+          "${_ARGS_INSTALL_DEST}"
         COMPONENT Wheel
       RESOURCE
         DESTINATION
-          "${PYMOD_INSTALL_DEST}/${MODULE_NAME}"
+          "${_ARGS_INSTALL_DEST}/${MODULE_NAME}"
         COMPONENT Wheel
     )
   endif()
 
   # Set the output target
-  if (PYMOD_OUTPUT_TARGET)
-    set(${PYMOD_OUTPUT_TARGET} "${TARGET_NAME}" PARENT_SCOPE)
+  if(_ARGS_OUTPUT_TARGET)
+    set(${_ARGS_OUTPUT_TARGET} "${TARGET_NAME}" PARENT_SCOPE)
   endif()
+
+  if(_ARGS_COPY_INPLACE)
+    # Copy the target inplace
+    inplace_build_copy(${TARGET_NAME} ${CMAKE_CURRENT_SOURCE_DIR})
+  endif()
+
+  list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 
 endmacro()
 
