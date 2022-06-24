@@ -15,9 +15,6 @@
  * limitations under the License.
  */
 
-#include <srf/options/topology.hpp>
-#include <srf/types.hpp>
-
 #include "internal/system/fiber_pool.hpp"
 #include "internal/system/forward.hpp"
 #include "internal/system/gpu_info.hpp"
@@ -30,13 +27,15 @@
 
 #include "srf/core/bitmap.hpp"
 #include "srf/options/options.hpp"
+#include "srf/options/topology.hpp"
+#include "srf/types.hpp"
 #include "srf/utils/thread_local_shared_pointer.hpp"
 
-#include <glog/logging.h>
-#include <gtest/gtest.h>
 #include <boost/fiber/future/async.hpp>
 #include <boost/fiber/future/future.hpp>
 #include <boost/fiber/operations.hpp>
+#include <glog/logging.h>
+#include <gtest/gtest.h>
 
 #include <atomic>
 #include <chrono>

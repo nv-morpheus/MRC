@@ -16,6 +16,7 @@
  */
 
 #include "internal/system/fiber_manager.hpp"
+
 #include "internal/system/fiber_pool.hpp"
 #include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"

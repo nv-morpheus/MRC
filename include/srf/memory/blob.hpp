@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <srf/memory/blob_storage.hpp>
-#include <srf/memory/memory_kind.hpp>
+#include "srf/memory/blob_storage.hpp"
+#include "srf/memory/memory_kind.hpp"
 
 #include <cstddef>  // for size_t
 #include <memory>

@@ -15,10 +15,9 @@
  * limitations under the License.
  */
 
-#include "nvrpc/client/executor.h"  // IWYU pragma: associated
+#include <nvrpc/client/executor.h>  // IWYU pragma: associated
 
-#include "nvrpc/client/base_context.h"
-
+#include <nvrpc/client/base_context.h>
 #include <nvrpc/thread_pool.h>
 
 #include <glog/logging.h>

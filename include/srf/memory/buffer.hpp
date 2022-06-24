@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include <srf/memory/adaptors.hpp>
-#include <srf/memory/resource_view.hpp>
-#include <srf/memory/resources/memory_resource.hpp>
+#include "srf/memory/adaptors.hpp"
+#include "srf/memory/resource_view.hpp"
+#include "srf/memory/resources/memory_resource.hpp"
 
 #include <cuda/memory_resource>
 #include <rmm/device_buffer.hpp>

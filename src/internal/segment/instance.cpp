@@ -22,23 +22,22 @@
 #include "internal/segment/builder.hpp"
 #include "internal/segment/definition.hpp"
 
-#include <exception>
-#include <srf/segment/utils.hpp>
+#include "srf/core/addresses.hpp"
+#include "srf/core/task_queue.hpp"
+#include "srf/exceptions/runtime_error.hpp"
+#include "srf/manifold/interface.hpp"
+#include "srf/runnable/launchable.hpp"
+#include "srf/runnable/launcher.hpp"
+#include "srf/runnable/runner.hpp"
+#include "srf/segment/egress_port.hpp"
+#include "srf/segment/ingress_port.hpp"
+#include "srf/segment/utils.hpp"
+#include "srf/types.hpp"
 
-#include <srf/core/addresses.hpp>
-#include <srf/core/task_queue.hpp>
-#include <srf/exceptions/runtime_error.hpp>
-#include <srf/manifold/interface.hpp>
-#include <srf/runnable/launchable.hpp>
-#include <srf/runnable/launcher.hpp>
-#include <srf/runnable/runner.hpp>
-#include <srf/segment/egress_port.hpp>
-#include <srf/segment/ingress_port.hpp>
-#include <srf/types.hpp>
-
-#include <glog/logging.h>
 #include <boost/fiber/future/future.hpp>
+#include <glog/logging.h>
 
+#include <exception>
 #include <map>
 #include <memory>
 #include <mutex>

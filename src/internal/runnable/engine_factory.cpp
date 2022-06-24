@@ -23,6 +23,7 @@
 #include "internal/system/resources.hpp"
 
 #include "srf/constants.hpp"
+#include "srf/core/bitmap.hpp"
 #include "srf/core/task_queue.hpp"
 #include "srf/exceptions/runtime_error.hpp"
 #include "srf/runnable/engine.hpp"

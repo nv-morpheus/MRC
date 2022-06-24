@@ -15,23 +15,17 @@
  * limitations under the License.
  */
 
-#include <pysrf/operators.hpp>
+#include "pysrf/operators.hpp"
 
-#include <pysrf/types.hpp>
-#include <pysrf/utils.hpp>
+#include "pysrf/types.hpp"
+#include "pysrf/utils.hpp"
 
 #include <pybind11/cast.h>
 #include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>  // IWYU pragma: keep
 #include <pybind11/pytypes.h>
-#include <rxcpp/rx-includes.hpp>
-#include <rxcpp/rx-observable.hpp>
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-operators.hpp>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
-#include <rxcpp/rx-subscription.hpp>
+#include <rxcpp/rx.hpp>
 
 #include <functional>
 #include <iterator>
@@ -83,8 +77,8 @@ PythonOperator OperatorsProxy::flatten()
 
                 for (const auto& item : l)
                 {
-                    //   This increases the ref count by one but thats fine since the list will go out of
-                    //   scope and deref all its elements
+                    // This increases the ref count by one but thats fine since the list will go out of
+                    // scope and deref all its elements
                     obj_list.emplace_back(std::move(py::reinterpret_borrow<py::object>(item)));
                 }
             }

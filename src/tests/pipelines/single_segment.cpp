@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
+#include "../segments/common_segments.hpp"
 #include "common_pipelines.hpp"
 
-#include "../segments/common_segments.hpp"
-
-#include "srf/channel/forward.hpp"
 #include "srf/pipeline/pipeline.hpp"
 
 #include <memory>
+
+// IWYU pragma: no_include "srf/channel/forward.hpp"
 
 using namespace srf;
 

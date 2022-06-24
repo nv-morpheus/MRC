@@ -17,10 +17,9 @@
 
 #pragma once
 
+#include "srf/runnable/engine.hpp"
 #include "srf/runnable/types.hpp"
-
-#include <srf/runnable/engine.hpp>
-#include <srf/types.hpp>
+#include "srf/types.hpp"
 
 #include <functional>
 #include <mutex>

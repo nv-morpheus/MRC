@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-#include <srf/manifold/manifold.hpp>
+#include "srf/manifold/manifold.hpp"
 
-#include <srf/node/sink_properties.hpp>
-#include <srf/node/source_properties.hpp>
-#include <srf/pipeline/resources.hpp>
-#include <srf/segment/utils.hpp>
-#include <srf/types.hpp>
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_properties.hpp"
+#include "srf/pipeline/resources.hpp"
+#include "srf/segment/utils.hpp"
+#include "srf/types.hpp"
 
 #include <glog/logging.h>
 

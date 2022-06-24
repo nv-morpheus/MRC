@@ -19,19 +19,20 @@
 
 #include "srf/channel/status.hpp"
 #include "srf/node/rx_sink.hpp"
+#include "srf/node/rx_source.hpp"
 #include "srf/runnable/context.hpp"
 
+#include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
-#include "rxcpp/rx-includes.hpp"
-#include "rxcpp/rx-observer.hpp"
-#include "rxcpp/rx-operators.hpp"
-#include "rxcpp/rx-predef.hpp"
-#include "rxcpp/rx-subscriber.hpp"
+#include <rxcpp/rx.hpp>
+#include <rxcpp/sources/rx-iterate.hpp>
 
+#include <chrono>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace srf;
@@ -53,6 +54,32 @@ std::unique_ptr<node::RxSink<int>> int_sink_throw_on_even()
             throw std::runtime_error("odds only");
         }
     });
+}
+
+std::unique_ptr<node::RxSource<int>> infinite_int_rx_source()
+{
+    return std::make_unique<node::RxSource<int>>(rxcpp::observable<>::create<int>([](rxcpp::subscriber<int> s) {
+        int i = 1;
+        while (s.is_subscribed())
+        {
+            VLOG(1) << runnable::Context::get_runtime_context().info() << "; emitting " << i;
+            s.on_next(i++);
+            boost::this_fiber::sleep_for(std::chrono::milliseconds(10));
+        }
+        s.on_completed();
+    }));
+}
+
+std::unique_ptr<node::RxSource<int>> finite_int_rx_source(int count)
+{
+    return std::make_unique<node::RxSource<int>>(rxcpp::observable<>::create<int>([count](rxcpp::subscriber<int> s) {
+        VLOG(1) << runnable::Context::get_runtime_context().info();
+        for (int i = 0; i < count; i++)
+        {
+            s.on_next(i);
+        }
+        s.on_completed();
+    }));
 }
 
 }  // namespace test::nodes

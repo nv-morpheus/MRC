@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <srf/node/operators/operator.hpp>
-#include <srf/node/operators/router.hpp>
+#include "srf/node/operators/operator.hpp"
+#include "srf/node/operators/router.hpp"
 
 namespace srf::node {
 
