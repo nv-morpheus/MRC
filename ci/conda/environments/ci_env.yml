@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,16 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .core import logging
-from .core import operators
-from .core.executor import Executor
-from .core.executor import Future
-from .core.node import SegmentObject
-from .core.options import Config
-from .core.options import Options
-from .core.pipeline import Pipeline
-from .core.segment import Builder
-from .core.subscriber import Observable
-from .core.subscriber import Observer
-from .core.subscriber import Subscriber
-from .core.subscriber import Subscription
+# Additional dependencies only needed during a CI build
+name: srf
+channels:
+    - conda-forge
+dependencies:
+    - boa>=0.1
+    - conda-pack=0.7
+    - sccache=0.3
