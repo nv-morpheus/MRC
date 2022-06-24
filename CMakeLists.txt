@@ -146,62 +146,16 @@ include(cmake/setup_iwyu.cmake)
 
 # Keep all source files sorted
 add_library(libsrf
-  src/public/benchmarking/trace_statistics.cpp
-  src/public/benchmarking/tracer.cpp
-  src/public/benchmarking/util.cpp
-  src/public/channel/channel.cpp
-  src/public/codable/encoded_object.cpp
-  src/public/core/addresses.cpp
-  src/public/core/bitmap.cpp
-  src/public/core/executor.cpp
-  src/public/core/fiber_pool.cpp
-  src/public/core/logging.cpp
-  src/public/cuda/device_guard.cpp
-  src/public/cuda/sync.cpp
-  src/public/manifold/manifold.cpp
-  src/public/metrics/counter.cpp
-  src/public/metrics/registry.cpp
-  src/public/memory/blob.cpp
-  src/public/memory/block.cpp
-  src/public/node/edge_registry.cpp
-  src/public/options/engine_groups.cpp
-  src/public/options/fiber_pool.cpp
-  src/public/options/options.cpp
-  src/public/options/placement.cpp
-  src/public/options/resources.cpp
-  src/public/options/services.cpp
-  src/public/options/topology.cpp
-  src/public/runnable/context.cpp
-  src/public/runnable/launcher.cpp
-  src/public/runnable/runnable.cpp
-  src/public/runnable/runner.cpp
-  src/public/segment/definition.cpp
-  src/public/segment/builder.cpp
-  src/public/runnable/types.cpp
-  src/public/utils/bytes_to_string.cpp
-  src/public/utils/thread_utils.cpp
-  src/public/utils/type_utils.cpp
-
-# todo(#63) - Enable UCX Context/Workers and UCX Registered Memory Resources
-# src/internal/data_plane/client_worker.cpp
-# src/internal/data_plane/client.cpp
-# src/internal/data_plane/instance.cpp
-# src/internal/data_plane/server.cpp
   src/internal/executor/executor.cpp
   src/internal/executor/iexecutor.cpp
   src/internal/pipeline/controller.cpp
   src/internal/pipeline/instance.cpp
   src/internal/pipeline/ipipeline.cpp
+  src/internal/pipeline/manager.cpp
   src/internal/pipeline/pipeline.cpp
   src/internal/pipeline/port_graph.cpp
-  src/internal/pipeline/manager.cpp
   src/internal/pipeline/resources.cpp
   src/internal/resources/manager.cpp
-# todo(#63) - Enable UCX Context/Workers and UCX Registered Memory Resources
-# src/internal/resources/host_resources.cpp
-# src/internal/resources/partition_resources.cpp
-# src/internal/resources/resource_partitions.cpp
-# src/internal/resources/system_resources.cpp
   src/internal/runnable/engine_factory.cpp
   src/internal/runnable/engine.cpp
   src/internal/runnable/engines.cpp
@@ -212,6 +166,7 @@ add_library(libsrf
   src/internal/runnable/thread_engines.cpp
   src/internal/segment/builder.cpp
   src/internal/segment/definition.cpp
+  src/internal/segment/ibuilder.cpp
   src/internal/segment/idefinition.cpp
   src/internal/segment/instance.cpp
   src/internal/service.cpp
@@ -228,10 +183,10 @@ add_library(libsrf
   src/internal/system/partition.cpp
   src/internal/system/partitions.cpp
   src/internal/system/resources.cpp
-  src/internal/system/system.cpp
   src/internal/system/system_provider.cpp
-  src/internal/system/thread.cpp
+  src/internal/system/system.cpp
   src/internal/system/thread_pool.cpp
+  src/internal/system/thread.cpp
   src/internal/system/topology.cpp
   src/internal/ucx/context.cpp
   src/internal/ucx/endpoint.cpp
@@ -242,6 +197,50 @@ add_library(libsrf
   src/internal/utils/parse_config.cpp
   src/internal/utils/parse_ints.cpp
   src/internal/utils/shared_resource_bit_map.cpp
+  src/public/benchmarking/trace_statistics.cpp
+  src/public/benchmarking/tracer.cpp
+  src/public/benchmarking/util.cpp
+  src/public/channel/channel.cpp
+  src/public/codable/encoded_object.cpp
+  src/public/core/addresses.cpp
+  src/public/core/bitmap.cpp
+  src/public/core/executor.cpp
+  src/public/core/fiber_pool.cpp
+  src/public/core/logging.cpp
+  src/public/cuda/device_guard.cpp
+  src/public/cuda/sync.cpp
+  src/public/manifold/manifold.cpp
+  src/public/memory/blob.cpp
+  src/public/memory/block.cpp
+  src/public/metrics/counter.cpp
+  src/public/metrics/registry.cpp
+  src/public/node/edge_registry.cpp
+  src/public/options/engine_groups.cpp
+  src/public/options/fiber_pool.cpp
+  src/public/options/options.cpp
+  src/public/options/placement.cpp
+  src/public/options/resources.cpp
+  src/public/options/services.cpp
+  src/public/options/topology.cpp
+  src/public/runnable/context.cpp
+  src/public/runnable/launcher.cpp
+  src/public/runnable/runnable.cpp
+  src/public/runnable/runner.cpp
+  src/public/runnable/types.cpp
+  src/public/segment/definition.cpp
+  src/public/utils/bytes_to_string.cpp
+  src/public/utils/thread_utils.cpp
+  src/public/utils/type_utils.cpp
+
+  # todo(#63) - Enable UCX Context/Workers and UCX Registered Memory Resources
+  # src/internal/data_plane/client_worker.cpp
+  # src/internal/data_plane/client.cpp
+  # src/internal/data_plane/instance.cpp
+  # src/internal/data_plane/server.cpp
+  # src/internal/resources/host_resources.cpp
+  # src/internal/resources/partition_resources.cpp
+  # src/internal/resources/resource_partitions.cpp
+  # src/internal/resources/system_resources.cpp
 )
 
 add_library(${PROJECT_NAME}::libsrf ALIAS libsrf)
