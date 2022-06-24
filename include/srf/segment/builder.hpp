@@ -196,7 +196,7 @@ std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::uni
     else
     {
         auto segment_node = std::make_shared<Component<ObjectT>>(std::move(node));
-        add_object(name, segment_node);
+        m_backend.add_object(name, segment_node);
         segment_object = segment_node;
     }
 
