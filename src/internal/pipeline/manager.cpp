@@ -20,7 +20,7 @@
 #include "internal/pipeline/controller.hpp"
 #include "internal/pipeline/instance.hpp"
 #include "internal/pipeline/pipeline.hpp"
-#include "internal/resources/host_resources.hpp"
+#include "internal/runnable/resources.hpp"
 
 #include "srf/channel/status.hpp"
 #include "srf/node/edge_builder.hpp"

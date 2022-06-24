@@ -20,8 +20,6 @@
 #include "internal/system/partitions.hpp"
 #include "internal/system/system.hpp"
 
-#include "srf/engine/system/iresources.hpp"
-
 #include <glog/logging.h>
 
 #include <utility>

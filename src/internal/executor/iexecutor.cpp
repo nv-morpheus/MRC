@@ -20,7 +20,7 @@
 #include "internal/executor/executor.hpp"
 #include "internal/system/resources.hpp"
 
-#include "srf/engine/system/isystem.hpp"
+#include "srf/engine/system/iresources.hpp"
 #include "srf/options/options.hpp"
 
 #include <glog/logging.h>

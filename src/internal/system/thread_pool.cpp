@@ -21,7 +21,6 @@
 
 #include "srf/core/bitmap.hpp"
 
-#include <algorithm>
 #include <cstdint>
 #include <thread>
 

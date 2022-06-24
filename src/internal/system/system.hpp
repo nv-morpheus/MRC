@@ -24,16 +24,7 @@
 #include "srf/options/options.hpp"
 #include "srf/utils/macros.hpp"
 
-#include <glog/logging.h>
-
-#include <atomic>
-#include <cstdint>
-#include <functional>
-#include <map>
 #include <memory>
-#include <ostream>
-#include <string>
-#include <thread>
 #include <utility>
 
 namespace srf::internal::system {

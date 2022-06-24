@@ -22,7 +22,6 @@
 #include "internal/system/host_partition.hpp"
 #include "internal/system/partition.hpp"
 
-#include "srf/core/bitmap.hpp"
 #include "srf/options/options.hpp"
 #include "srf/options/placement.hpp"
 

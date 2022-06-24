@@ -23,9 +23,7 @@
 #include "srf/types.hpp"
 
 #include <boost/fiber/future/future.hpp>
-#include <glog/logging.h>
 
-#include <type_traits>
 #include <utility>
 
 namespace srf::internal::runnable {

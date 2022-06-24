@@ -21,17 +21,10 @@
 
 #include "srf/core/bitmap.hpp"
 #include "srf/engine/system/isystem.hpp"
-#include "srf/options/fiber_pool.hpp"
 #include "srf/options/options.hpp"
 
-#include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 #include <hwloc.h>
-
-#include <map>
-#include <thread>
-#include <type_traits>
-#include <vector>
 
 namespace srf::internal::system {
 

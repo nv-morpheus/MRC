@@ -19,7 +19,6 @@
 
 #include "internal/data_plane/client.hpp"
 #include "internal/data_plane/server.hpp"
-
 #include "internal/service.hpp"
 #include "internal/ucx/context.hpp"
 
