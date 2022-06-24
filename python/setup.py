@@ -38,7 +38,6 @@ setup(
     include_package_data=True,
     packages=find_packages(include=['srf', 'srf.*'], exclude=['tests']),
     package_data={
-        "": ["*.so"],
         "srf": ["_pysrf/*.so"]  # Add the pysrf library for the root package
     },
     license="Apache",

@@ -137,7 +137,7 @@ PYBIND11_MODULE(segment, m)
 
     Builder.def("make_cxx2py_edge_adapter", &SegmentProxy::make_cxx2py_edge_adapter);
 
-    Builder.def("make_edge", &SegmentProxy::make_edge);
+    Builder.def("make_edge", &SegmentProxy::make_edge, py::arg("source"), py::arg("sink"));
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

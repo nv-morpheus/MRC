@@ -61,7 +61,8 @@ Builder::Builder(std::shared_ptr<const Definition> segdef,
         m_objects[name]      = m_egress_ports[name];
     }
 
-    definition().initializer_fn()(*this);
+    IBuilder builder(this);
+    definition().initializer_fn()(builder);
 }
 
 const std::string& Builder::name() const
