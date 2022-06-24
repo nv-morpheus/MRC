@@ -41,6 +41,7 @@ dependencies:
     - flake8
     - isort
     - numpy==1.21.2
+    - pybind11-stubgen==0.10.5
     - pytest
     - pytest-timeout
     - yapf
