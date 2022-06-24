@@ -26,7 +26,7 @@
 #include "srf/channel/status.hpp"
 #include "srf/codable/encoded_object.hpp"
 #include "srf/node/source_channel.hpp"
-#include <srf/protos/remote_descriptor.pb.h>
+#include "srf/protos/remote_descriptor.pb.h"
 #include "srf/runnable/launch_control.hpp"
 #include "srf/runnable/runner.hpp"
 #include "srf/types.hpp"

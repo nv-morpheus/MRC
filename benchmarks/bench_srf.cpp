@@ -18,7 +18,7 @@
 /* TODO commenting out to get it to compile
 #include <benchmark/benchmark.h>
 
-#include <srf/core/affinity.h>
+#include "srf/core/affinity.h"
 #include "srf/channel/buffered_channel.hpp"
 #include "srf/core/base_node.hpp"
 

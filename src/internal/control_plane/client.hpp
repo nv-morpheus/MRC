@@ -19,8 +19,8 @@
 
 #include "srf/channel/status.hpp"
 #include "srf/node/source_channel.hpp"
-#include <srf/protos/architect.grpc.pb.h>
-#include <srf/protos/architect.pb.h>
+#include "srf/protos/architect.grpc.pb.h"
+#include "srf/protos/architect.pb.h"
 #include "srf/runnable/runner.hpp"
 #include "srf/types.hpp"
 

@@ -36,7 +36,7 @@
 #include "srf/memory/memory_kind.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/source_channel.hpp"
-#include <srf/protos/codable.pb.h>
+#include "srf/protos/codable.pb.h"
 #include "srf/runnable/launch_control.hpp"
 #include "srf/runnable/launcher.hpp"
 #include "srf/runnable/runner.hpp"

@@ -20,7 +20,7 @@
 
 #include "srf/core/bitmap.hpp"
 #include "srf/options/options.hpp"
-#include <srf/protos/architect.pb.h>
+#include "srf/protos/architect.pb.h"
 
 #include <glog/logging.h>
 

@@ -23,7 +23,7 @@
 #include "srf/memory/block.hpp"
 #include "srf/memory/buffer.hpp"
 #include "srf/memory/resource_view.hpp"
-#include <srf/protos/codable.pb.h>
+#include "srf/protos/codable.pb.h"
 #include "srf/utils/macros.hpp"
 
 #include <glog/logging.h>

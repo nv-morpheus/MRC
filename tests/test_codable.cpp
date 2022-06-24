@@ -17,7 +17,7 @@
 
 #include "test_srf.hpp"  // IWYU pragma: associated
 
-#include <srf/protos/codable.pb.h>
+#include "srf/protos/codable.pb.h"
 #include "srf/codable/codable_protocol.hpp"
 #include "srf/codable/decode.hpp"
 #include "srf/codable/encode.hpp"

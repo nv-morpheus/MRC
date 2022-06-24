@@ -21,7 +21,7 @@
 
 #include "srf/core/bitmap.hpp"
 #include "srf/options/topology.hpp"
-#include <srf/protos/architect.pb.h>
+#include "srf/protos/architect.pb.h"
 #include "srf/utils/macros.hpp"
 
 #include <glog/logging.h>

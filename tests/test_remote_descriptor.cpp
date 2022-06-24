@@ -17,8 +17,8 @@
 
 #include "./test_srf.hpp"  // IWYU pragma: associated
 
-#include <srf/protos/remote_descriptor.pb.h>
-#include <srf/protos/tensor_meta_data.pb.h>
+#include "srf/protos/remote_descriptor.pb.h"
+#include "srf/protos/tensor_meta_data.pb.h"
 #include "srf/codable/codable_protocol.hpp"
 #include "srf/codable/encode.hpp"
 #include "srf/codable/encoded_object.hpp"

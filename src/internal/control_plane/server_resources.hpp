@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <srf/protos/architect.pb.h>
+#include "srf/protos/architect.pb.h"
 #include "srf/types.hpp"  // for MachineID, InstanceID
 
 #include <nvrpc/context.h>

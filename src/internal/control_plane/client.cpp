@@ -23,7 +23,7 @@
 // #include "internal/data_plane/server.hpp"
 // #include "internal/pipeline.hpp"
 
-// #include <srf/protos/architect.grpc.pb.h>
+// #include "srf/protos/architect.grpc.pb.h"
 // #include "srf/channel/status.hpp"
 // #include "srf/node/generic_sink.hpp"
 // #include "srf/node/source_channel.hpp"

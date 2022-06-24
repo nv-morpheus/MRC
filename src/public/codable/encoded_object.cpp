@@ -20,7 +20,7 @@
 #include "srf/codable/memory_resources.hpp"
 #include "srf/memory/block.hpp"
 #include "srf/memory/memory_kind.hpp"
-#include <srf/protos/codable.pb.h>
+#include "srf/protos/codable.pb.h"
 #include "srf/utils/thread_local_shared_pointer.hpp"
 
 #include <google/protobuf/any.pb.h>

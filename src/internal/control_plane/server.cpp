@@ -19,8 +19,8 @@
 
 #include "internal/control_plane/server_resources.hpp"
 
-#include <srf/protos/architect.grpc.pb.h>
-#include <srf/protos/architect.pb.h>
+#include "srf/protos/architect.grpc.pb.h"
+#include "srf/protos/architect.pb.h"
 
 #include <nvrpc/context.h>
 #include <nvrpc/executor.h>
