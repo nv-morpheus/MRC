@@ -19,13 +19,11 @@
 #include "test_srf.hpp"      // IWYU pragma: associated
 
 #include "srf/channel/status.hpp"
-
 #include "srf/core/egress_node.hpp"
 #include "srf/core/executor.hpp"
 #include "srf/core/ingress_node.hpp"
 #include "srf/core/utils.hpp"
 #include "srf/pipeline/pipeline.hpp"
-
 #include "srf/segment/egress_ports.hpp"
 #include "srf/segment/ingress_ports.hpp"
 #include "srf/segment/segment.hpp"

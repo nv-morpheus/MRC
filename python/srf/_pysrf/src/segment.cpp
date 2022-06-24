@@ -34,12 +34,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <rxcpp/operators/rx-map.hpp>
-#include <rxcpp/rx-includes.hpp>
-#include <rxcpp/rx-observable.hpp>
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-operators.hpp>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx.hpp>  // IWYU pragma: keep
+#include <rxcpp/rx.hpp>
 
 #include <exception>
 #include <fstream>  // IWYU pragma: keep

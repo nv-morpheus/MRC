@@ -24,12 +24,7 @@
 
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
-#include <rxcpp/rx-includes.hpp>
-#include <rxcpp/rx-observable.hpp>
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-operators.hpp>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
+#include <rxcpp/rx.hpp>
 #include <rxcpp/sources/rx-iterate.hpp>
 
 #include <chrono>

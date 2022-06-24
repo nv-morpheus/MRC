@@ -36,8 +36,8 @@
 // #include "srf/memory/resources/ucx_registered_resource.hpp"
 #include "internal/ucx/context.hpp"
 
-#include <cuda_runtime.h>  // for cudaStreamCreate, cudaStreamDestroy, cudaStreamSynchronize, CUstream_st, cudaStream_t
 #include <cuda/memory_resource>
+#include <cuda_runtime.h>  // for cudaStreamCreate, cudaStreamDestroy, cudaStreamSynchronize, CUstream_st, cudaStream_t
 
 #include <memory>
 #include <ostream>      // for logging

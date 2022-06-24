@@ -34,6 +34,7 @@
 
 #include <map>
 #include <thread>
+#include <type_traits>
 #include <vector>
 
 namespace srf::internal::system {

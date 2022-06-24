@@ -19,16 +19,20 @@
 
 #include "srf/metrics/counter.hpp"
 
-#include <functional>
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
+
+// IWYU pragma: no_include "prometheus/family.h"
 
 namespace prometheus {
 class Registry;
 
 template <typename T>
-class Family;
+class Family;  // IWYU pragma: keep
 
 }  // namespace prometheus
 

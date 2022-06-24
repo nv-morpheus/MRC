@@ -21,11 +21,10 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <pybind11/stl.h>
+#include <pybind11/stl.h>  // IWYU pragma: keep
 
 #include <cstddef>  // for size_t
 #include <memory>
-#include <vector>
 
 namespace srf::pysrf {
 

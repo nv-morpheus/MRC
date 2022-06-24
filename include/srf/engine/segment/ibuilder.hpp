@@ -18,9 +18,9 @@
 #pragma once
 
 #include "srf/runnable/forward.hpp"
-#include "srf/types.hpp"
 #include "srf/utils/macros.hpp"
 
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
@@ -51,7 +51,7 @@ class IBuilder final
     bool has_object(const std::string& name) const;
     ::srf::segment::ObjectProperties& find_object(const std::string& name);
     void add_object(const std::string& name, std::shared_ptr<::srf::segment::ObjectProperties> object);
-    void add_runnable(const std::string& name, std::shared_ptr<runnable::Launchable> runnable);
+    void add_runnable(const std::string& name, std::shared_ptr<srf::runnable::Launchable> runnable);
     std::shared_ptr<::srf::segment::IngressPortBase> get_ingress_base(const std::string& name);
     std::shared_ptr<::srf::segment::EgressPortBase> get_egress_base(const std::string& name);
     std::function<void(std::int64_t)> make_throughput_counter(const std::string& name);

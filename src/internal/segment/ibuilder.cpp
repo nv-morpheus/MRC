@@ -19,7 +19,11 @@
 
 #include "internal/segment/builder.hpp"
 
+#include "srf/segment/object.hpp"
+
 #include <glog/logging.h>
+
+#include <utility>
 
 namespace srf::internal::segment {
 

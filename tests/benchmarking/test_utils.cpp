@@ -21,8 +21,8 @@
 #include "srf/benchmarking/trace_statistics.hpp"
 #include "srf/benchmarking/util.hpp"
 
-#include <prometheus/registry.h>
 #include <nlohmann/json.hpp>
+#include <prometheus/registry.h>
 
 using namespace srf::benchmarking;
 

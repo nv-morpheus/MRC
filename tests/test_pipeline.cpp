@@ -34,7 +34,6 @@
 #include "srf/segment/segment.hpp"
 
 #include <gtest/gtest.h>
-
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx-includes.hpp>
 #include <rxcpp/rx-observable.hpp>

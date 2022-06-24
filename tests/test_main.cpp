@@ -18,8 +18,7 @@
 #include "srf/core/logging.hpp"
 
 #include <gflags/gflags.h>  // for ParseCommandLineFlags
-
-#include <gtest/gtest.h>  // IWYU pragma: keep
+#include <gtest/gtest.h>    // IWYU pragma: keep
 
 // NOLINTNEXTLINE(readability-identifier-naming)
 // void TestFailuresThrowExceptions()
