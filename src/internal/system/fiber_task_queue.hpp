@@ -18,8 +18,8 @@
 #pragma once
 
 #include "internal/system/thread.hpp"
-#include "srf/utils/macros.hpp"
 
+#include <srf/utils/macros.hpp>
 #include <srf/core/bitmap.hpp>
 #include <srf/core/task_queue.hpp>
 
