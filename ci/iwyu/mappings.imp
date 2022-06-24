@@ -90,9 +90,6 @@
 # spdlog
 { "symbol": ["spdlog::details::file_helper::~file_helper", "private", "<spdlog/sinks/basic_file_sink.h>", "public"] },
 
-# xtensor
-{ "symbol": ["xt::no_ownership", "private", "<xtensor/xadapt.hpp>", "public"] },
-
 # srf
 { "symbol": ["std::__decay_and_strip<std::shared_ptr<srf::TraceStatistics> &>::__type" , "private", "<srf/benchmarking/trace_statistics.hpp>", "public"] },
 

@@ -148,16 +148,6 @@ include(deps/Configure_prometheus)
 set(LIBCUDACXX_VERSION "1.6.0" CACHE STRING "Version of libcudacxx to use")
 include(deps/Configure_libcudacxx)
 
-# xtensor
-# =======
-if(SRF_ENABLE_XTENSOR)
-  set(XTL_VERSION "0.7.3" CACHE STRING "Version of xtensor-stack/xtl to use")
-  include(deps/Configure_xtl)
-
-  set(XTENSOR_VERSION "0.24.0" CACHE STRING "Version of xtensor to use")
-  include(deps/Configure_xtensor)
-endif()
-
 if(SRF_BUILD_BENCHMARKS)
   # google benchmark
   # ================

@@ -71,7 +71,6 @@ requirements:
     - scikit-build >=0.12
     - spdlog 1.8.5
     - ucx
-    - xtensor 0.24.*
 
 outputs:
   - name: libsrf
@@ -103,12 +102,10 @@ outputs:
         - librmm {{ rapids_version }}
         - nlohmann_json 3.9.*
         - ucx
-        - xtensor 0.24.*
       run:
         # Manually add any packages necessary for run that do not have run_exports. Keep sorted!
         - {{ pin_compatible('flatbuffers', max_pin='x.x')}}
         - {{ pin_compatible('nlohmann_json', max_pin='x.x')}}
-        - {{ pin_compatible('xtensor', max_pin='x.x')}}
         - {{ pin_compatible('ucx', max_pin='x.x')}}
         - boost-cpp # Needed to use pin_run_as_build
     test:
