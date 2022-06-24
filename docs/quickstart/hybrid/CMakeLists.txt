@@ -23,7 +23,6 @@ add_subdirectory(srf_qs_hybrid/common)
 
 add_subdirectory(srf_qs_hybrid/ex00_wrap_data_objects)
 add_subdirectory(srf_qs_hybrid/ex01_wrap_nodes)
-add_subdirectory(srf_qs_hybrid/ex02_mixed_execution)
 
 set(extra_args "IS_INPLACE")
 

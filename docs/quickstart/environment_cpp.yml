@@ -8,41 +8,30 @@ channels:
   - nvidia/label/dev
 
 dependencies:
-  - srf=22.06
   - autoconf>=2.69
   - benchmark=1.6.0
-  - boost-cpp=1.74
   - ccache
   - cmake=3.22
+  - cuda-nvml-dev=11.4
   - cudatoolkit=11.4
   - cython=0.29.24
   - doxygen=1.9.2
-  - flatbuffers=2.0
   - gcc_linux-64=9.4
-  - gflags=2.2
-  - git>=2.35.3 # Needed for wildcards on safe.directory
-  - glog=0.5
   - gmock=1.10
   - graphviz=3.0
-  - grpc-cpp=1.43
   - gtest=1.10
   - gxx_linux-64=9.4
-  - libhwloc=2.5
-  - libprotobuf=3.19
-  - librmm=21.10
   - libtool
   - ninja=1.10
-  - nlohmann_json=3.9
   - numactl-libs-cos7-x86_64
   - numpy=1.21.2
   - nvcc_linux-64=11.4
   - pkg-config=0.29
-  - protobuf=3.19
   - python=3.8
   - scikit-build>=0.12
   - spdlog=1.8.5
+  - srf=22.06
   - sysroot_linux-64=2.17
-  - ucx=1.12
   - pip:
     - cython
     - flake8
@@ -51,4 +40,3 @@ dependencies:
     - pytest
     - pytest-timeout
     - yapf
-

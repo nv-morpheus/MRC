@@ -19,7 +19,19 @@ To get started with the QSG, it necessary to get the required SRF components bef
    1. Installing via Conda is the easiest method for getting the SRF components and supports both the Python and C++ bindings
    2. To install SRF via Conda run:
       ```bash
-      mamba install -c nvidia -c nvidia/label/dev srf
+      # Change directory to the quickstart root
+      cd ${SRF_HOME}/docs/quickstart/
+
+      # If needed, create a new conda environment
+      conda env create -n srf-quickstart -f environment_cpp.yml
+      conda activate srf-quickstart
+
+      # Or if reusing a conda environment, ensure all dependencies are installed
+      mamba env update -n srf-quickstart -f environment_cpp.yml
+      conda activate srf-quickstart
+
+      # Compile the QSG. This will build the C++ and Hybrid components in ./build. And install the Python and Hybrid libraries
+      ./compile.sh
       ```
 2. Building from Source
    1. Installing via the source is for more advanced users and is necessary to try SRF features before an official release.
@@ -29,15 +41,19 @@ To get started with the QSG, it necessary to get the required SRF components bef
       cd ${SRF_HOME}
 
       # If needed, create a new conda environment
-      conda env create -n srf-quickstart -f docs/quickstart/environment_cpp.yml/environment_cpp.yml
+      conda env create -n srf-quickstart -f ci/conda/environments/dev_env.yml
       conda activate srf-quickstart
 
       # Or if reusing a conda environment, ensure all dependencies are installed
-      mamba env update -n srf-quickstart -f docs/quickstart/environment_cpp.yml/environment_cpp.yml
+      mamba env update -n srf-quickstart -f ci/conda/environments/dev_env.yml
       conda activate srf-quickstart
 
       # Run the CMake configure step
-      cmake -DSRF_PYTHON_INPLACE_BUILD:BOOL=ON -DSRF_PYTHON_PERFORM_INSTALL:BOOL=ON -DSRF_BUILD_DOCS:BOOL=ON -B build -G Ninja .
+      cmake -DSRF_USE_CONDA:BOOL=ON \
+            -DSRF_PYTHON_INPLACE_BUILD:BOOL=ON \
+            -DSRF_PYTHON_PERFORM_INSTALL:BOOL=ON \
+            -DSRF_BUILD_DOCS:BOOL=ON \
+            -B build -G Ninja .
 
       # Run the CMake build step
       cmake --build build -j

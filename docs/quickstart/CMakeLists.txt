@@ -32,7 +32,8 @@ project(srf-quickstart
 # Ensure CPM is initialized
 rapids_cpm_init()
 
-find_package(srf REQUIRED)
+rapids_find_package(srf REQUIRED)
+rapids_find_package(CUDAToolkit REQUIRED)
 
 # To make it easier for CI to find output files, set the default executable suffix to .x if not set
 if("${CMAKE_EXECUTABLE_SUFFIX}" STREQUAL "")
