@@ -32,8 +32,6 @@ namespace srf::internal::system {
 class System;
 class Topology;  // IWYU pragma: keep
 
-// TODO(unknown): flatten partition here
-
 class Partitions
 {
   public:

@@ -156,7 +156,6 @@ add_library(libsrf
   src/public/core/executor.cpp
   src/public/core/fiber_pool.cpp
   src/public/core/logging.cpp
-# src/public/core/port_registry.cpp
   src/public/cuda/device_guard.cpp
   src/public/cuda/sync.cpp
   src/public/manifold/manifold.cpp
@@ -178,12 +177,12 @@ add_library(libsrf
   src/public/runnable/runner.cpp
   src/public/segment/definition.cpp
   src/public/segment/builder.cpp
-# src/public/segment/runnable.cpp
   src/public/runnable/types.cpp
   src/public/utils/bytes_to_string.cpp
   src/public/utils/thread_utils.cpp
   src/public/utils/type_utils.cpp
 
+# todo(#63) - Enable UCX Context/Workers and UCX Registered Memory Resources
 # src/internal/data_plane/client_worker.cpp
 # src/internal/data_plane/client.cpp
 # src/internal/data_plane/instance.cpp
@@ -198,6 +197,7 @@ add_library(libsrf
   src/internal/pipeline/manager.cpp
   src/internal/pipeline/resources.cpp
   src/internal/resources/manager.cpp
+# todo(#63) - Enable UCX Context/Workers and UCX Registered Memory Resources
 # src/internal/resources/host_resources.cpp
 # src/internal/resources/partition_resources.cpp
 # src/internal/resources/resource_partitions.cpp
