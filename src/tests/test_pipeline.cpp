@@ -31,6 +31,7 @@
 #include "srf/core/executor.hpp"
 #include "srf/internal/pipeline/ipipeline.hpp"
 #include "srf/internal/segment/idefinition.hpp"
+#include "srf/node/queue.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
 #include "srf/node/sink_properties.hpp"
@@ -63,6 +64,7 @@
 #include <memory>
 #include <mutex>
 #include <ostream>
+#include <stdexcept>
 #include <string>
 #include <system_error>
 #include <thread>
@@ -194,6 +196,28 @@ TEST_F(TestPipeline, LifeCycleStop)
     run_manager(std::move(pipeline), true);
 }
 
+TEST_F(TestPipeline, Queue)
+{
+    auto pipeline = srf::make_pipeline();
+
+    auto segment = pipeline->make_segment("seg_1", [](segment::Builder& s) {
+        auto source = s.make_object("source", test::nodes::infinite_int_rx_source());
+        auto queue  = s.make_object("queue", std::make_unique<node::Queue<int>>());
+        auto sink   = s.make_object("sink", test::nodes::int_sink());
+        s.make_edge(source, queue);
+        s.make_edge(queue, sink);
+    });
+
+    run_manager(std::move(pipeline), true);
+}
+
+TEST_F(TestPipeline, InitializerThrows)
+{
+    auto pipeline = srf::make_pipeline();
+    auto segment  = pipeline->make_segment("seg_1", [](segment::Builder& s) { throw std::runtime_error("no bueno"); });
+    EXPECT_ANY_THROW(run_manager(std::move(pipeline)));
+}
+
 TEST_F(TestPipeline, DuplicateNameInSegment)
 {
     auto pipeline = srf::make_pipeline();
@@ -278,4 +302,57 @@ TEST_F(TestPipeline, MultiSegmentLoadBalancer)
 
     EXPECT_EQ(ranks.size(), count);
     EXPECT_EQ(count_by_rank.size(), 2);
+}
+
+TEST_F(TestPipeline, UnmatchedIngress)
+{
+    std::function<void(srf::segment::Builder&)> init = [](srf::segment::Builder& builder) {};
+
+    auto pipe = pipeline::make_pipeline();
+
+    pipe->make_segment("TestSegment1", segment::IngressPorts<int>({"some_port"}), init);
+
+    auto opt1 = std::make_shared<srf::Options>();
+    opt1->topology().user_cpuset("0");
+    opt1->topology().restrict_gpus(true);
+
+    srf::Executor exec1{opt1};
+
+    EXPECT_ANY_THROW(exec1.register_pipeline(std::move(pipe)));
+}
+
+TEST_F(TestPipeline, UnmatchedEgress)
+{
+    std::function<void(srf::segment::Builder&)> init = [](srf::segment::Builder& builder) {};
+
+    auto pipe = pipeline::make_pipeline();
+
+    pipe->make_segment("TestSegment1", segment::EgressPorts<int>({"some_port"}), init);
+
+    auto opt1 = std::make_shared<srf::Options>();
+    opt1->topology().user_cpuset("0");
+    opt1->topology().restrict_gpus(true);
+
+    srf::Executor exec1{opt1};
+
+    EXPECT_ANY_THROW(exec1.register_pipeline(std::move(pipe)));
+}
+
+TEST_F(TestPipeline, RequiresMoreManifolds)
+{
+    std::function<void(srf::segment::Builder&)> init = [](srf::segment::Builder& builder) {};
+
+    auto pipe = pipeline::make_pipeline();
+
+    pipe->make_segment("TestSegment1", segment::EgressPorts<int>({"some_port"}), init);
+    pipe->make_segment("TestSegment2", segment::IngressPorts<int>({"some_port"}), init);
+    pipe->make_segment("TestSegment3", segment::IngressPorts<int>({"some_port"}), init);
+
+    auto opt1 = std::make_shared<srf::Options>();
+    opt1->topology().user_cpuset("0");
+    opt1->topology().restrict_gpus(true);
+
+    srf::Executor exec1{opt1};
+
+    EXPECT_ANY_THROW(exec1.register_pipeline(std::move(pipe)));
 }

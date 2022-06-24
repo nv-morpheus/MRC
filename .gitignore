@@ -3,8 +3,16 @@
 .Dockerfile
 .gitignore
 /vcpkg_installed
-trtlab/neo/python/_skbuild/*
-*conda-bld/
+/*conda-bld*/
+
+# Ignore generated pyi files for pybind and cython modules
+python/**/*.pyi
+
+# Ignore all vscode options that are in the workspace file
+.vscode/extensions.json
+.vscode/launch.json
+.vscode/settings.json
+.vscode/tasks.json
 
 # Created by https://www.gitignore.io/api/vim,c++,cmake,python,synology
 

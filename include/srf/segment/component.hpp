@@ -15,32 +15,32 @@
  * limitations under the License.
  */
 
-#include <pysrf/utils.hpp>
+#pragma once
 
-#include <srf/segment/definition.hpp>
+#include <srf/segment/object.hpp>
 
-#include <pybind11/pybind11.h>
+#include <glog/logging.h>
 
 #include <memory>
+#include <ostream>
+#include <utility>
 
-namespace srf::pysrf {
+namespace srf::segment {
 
-namespace py = pybind11;
-
-// Define the pybind11 module m, as 'pipeline'.
-PYBIND11_MODULE(segment_definition, m)
+template <typename ResourceT>
+class Component final : public Object<ResourceT>
 {
-    m.doc() = R"pbdoc()pbdoc";
+  public:
+    Component(std::unique_ptr<ResourceT> resource) : m_resource(std::move(resource)) {}
+    ~Component() final = default;
 
-    // Common must be first in every module
-    pysrf::import(m, "srf.core.common");
+  private:
+    ResourceT* get_object() const final
+    {
+        CHECK(m_resource);
+        return m_resource.get();
+    }
+    std::unique_ptr<ResourceT> m_resource;
+};
 
-    py::class_<srf::segment::Definition>(m, "segment::Definition");
-
-#ifdef VERSION_INFO
-    m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
-#else
-    m.attr("__version__") = "dev";
-#endif
-}
-}  // namespace srf::pysrf
+}  // namespace srf::segment
