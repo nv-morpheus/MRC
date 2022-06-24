@@ -161,39 +161,43 @@ struct EdgeAdaptorUtil
 template <typename SourceT>
 struct AutoRegSourceAdaptor
 {
+    static bool s_initialized;
+
     AutoRegSourceAdaptor()
     {
-        auto _auto_register = Registered;
+        // force register_adaptor to be called by anyone who inherits.
+        auto _initialized = s_initialized;
     }
 
-    static bool initialize()
+    static bool register_adaptor()
     {
         if (!srf::node::EdgeAdaptorRegistry::has_source_adaptor(typeid(SourceT)))
         {
-            std::type_index x = typeid(SourceT);
-            VLOG(2) << "Registering PySRF source adaptor for: " << type_name<SourceT>() << " " << x.hash_code();
+            std::type_index source_type = typeid(SourceT);
+            VLOG(2) << "Registering PySRF source adaptor for: " << type_name<SourceT>() << " " << source_type.hash_code();
             node::EdgeAdaptorRegistry::register_source_adaptor(typeid(SourceT),
                                                                EdgeAdaptorUtil::build_source_adaptor<SourceT>());
         }
-        // Emit warning of a duplicate source type register?
+
         return true;
     }
-    static bool Registered;
 };
 
 template <typename SourceT>
-bool AutoRegSourceAdaptor<SourceT>::Registered = AutoRegSourceAdaptor<SourceT>::initialize();
+bool AutoRegSourceAdaptor<SourceT>::s_initialized = AutoRegSourceAdaptor<SourceT>::register_adaptor();
 
 template <typename SinkT>
 struct AutoRegSinkAdaptor
 {
+    static bool s_initialized;
+
     AutoRegSinkAdaptor()
     {
-        auto _auto_register = Registered;
+        // force register_adaptor to be called by anyone who inherits.
+        auto _initialized = s_initialized;
     }
 
-    static bool Registered;
-    static bool initialize()
+    static bool register_adaptor()
     {
         if (!srf::node::EdgeAdaptorRegistry::has_sink_adaptor(typeid(SinkT)))
         {
@@ -202,12 +206,12 @@ struct AutoRegSinkAdaptor
             node::EdgeAdaptorRegistry::register_sink_adaptor(typeid(SinkT),
                                                              EdgeAdaptorUtil::build_sink_adaptor<SinkT>());
         }
-        // Emit warning of a duplicate source type register?
+
         return true;
     }
 };
 
 template <typename SinkT>
-bool AutoRegSinkAdaptor<SinkT>::Registered = AutoRegSinkAdaptor<SinkT>::initialize();
+bool AutoRegSinkAdaptor<SinkT>::s_initialized = AutoRegSinkAdaptor<SinkT>::register_adaptor();
 
 }  // namespace srf::pysrf
