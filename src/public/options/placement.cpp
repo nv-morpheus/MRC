@@ -17,7 +17,6 @@
 
 #include "srf/options/placement.hpp"
 
-// Non-main includes
 
 namespace srf {
 

@@ -17,7 +17,6 @@
 
 #include "srf/runnable/runnable.hpp"
 
-// Non-main includes
 #include "srf/runnable/context.hpp"
 
 #include <atomic>

@@ -17,7 +17,6 @@
 
 #include "srf/memory/block.hpp"
 
-// Non-main includes
 #include "srf/memory/memory_kind.hpp"
 
 namespace srf::memory {

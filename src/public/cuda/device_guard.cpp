@@ -17,7 +17,6 @@
 
 #include "srf/cuda/device_guard.hpp"
 
-// Non-main includes
 #include "srf/cuda/common.hpp"
 
 #include <cuda_runtime.h>

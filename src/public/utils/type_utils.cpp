@@ -17,7 +17,6 @@
 
 #include "srf/utils/type_utils.hpp"
 
-// Non-main includes
 #include "srf/utils/string_utils.hpp"
 
 #include <glog/logging.h>

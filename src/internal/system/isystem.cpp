@@ -17,7 +17,6 @@
 
 #include "srf/engine/system/isystem.hpp"
 
-// Non-main includes
 #include "internal/system/system.hpp"
 #include "internal/system/topology.hpp"
 

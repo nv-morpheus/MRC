@@ -17,7 +17,6 @@
 
 #include "srf/options/topology.hpp"
 
-// Non-main includes
 #include "srf/core/bitmap.hpp"  // for CpuSet
 
 #include <utility>  // for move

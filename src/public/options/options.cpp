@@ -17,7 +17,6 @@
 
 #include "srf/options/options.hpp"
 
-// Non-main includes
 #include "srf/options/engine_groups.hpp"
 #include "srf/options/fiber_pool.hpp"
 #include "srf/options/placement.hpp"

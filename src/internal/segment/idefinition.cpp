@@ -17,7 +17,6 @@
 
 #include "srf/engine/segment/idefinition.hpp"
 
-// Non-main includes
 #include "internal/segment/definition.hpp"
 
 #include <utility>

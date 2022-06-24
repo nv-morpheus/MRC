@@ -17,7 +17,6 @@
 
 #include "srf/benchmarking/tracer.hpp"
 
-// Non-main includes
 #include "srf/benchmarking/util.hpp"
 
 #include <nlohmann/json.hpp>

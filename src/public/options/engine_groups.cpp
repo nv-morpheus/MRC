@@ -16,7 +16,6 @@
  */
 #include "srf/options/engine_groups.hpp"
 
-// Non-main includes
 #include "srf/exceptions/runtime_error.hpp"
 #include "srf/runnable/types.hpp"
 

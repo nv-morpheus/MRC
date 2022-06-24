@@ -17,7 +17,6 @@
 
 #include "srf/benchmarking/util.hpp"
 
-// Non-main includes
 #include <glog/logging.h>
 #include <nlohmann/json.hpp>
 #include <prometheus/counter.h>

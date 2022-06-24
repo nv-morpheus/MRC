@@ -17,7 +17,6 @@
 
 #include "srf/runnable/context.hpp"
 
-// Non-main includes
 #include "srf/runnable/runner.hpp"
 #include "srf/runnable/types.hpp"
 

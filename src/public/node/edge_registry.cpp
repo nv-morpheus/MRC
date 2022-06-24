@@ -17,7 +17,6 @@
 
 #include "srf/node/edge_registry.hpp"
 
-// Non-main includes
 #include <map>
 #include <stdexcept>
 #include <typeindex>

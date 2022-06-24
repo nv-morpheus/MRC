@@ -17,7 +17,6 @@
 
 #include "srf/memory/blob.hpp"
 
-// Non-main includes
 #include "srf/memory/blob_storage.hpp"  // for IBlobStorage
 #include "srf/memory/memory_kind.hpp"
 

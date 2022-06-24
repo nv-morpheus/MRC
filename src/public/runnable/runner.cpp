@@ -17,7 +17,6 @@
 
 #include "srf/runnable/runner.hpp"
 
-// Non-main includes
 #include "srf/exceptions/runtime_error.hpp"
 #include "srf/runnable/context.hpp"
 #include "srf/runnable/engine.hpp"

@@ -17,7 +17,6 @@
 
 #include "srf/benchmarking/trace_statistics.hpp"
 
-// Non-main includes
 #include "srf/benchmarking/util.hpp"
 #include "srf/core/watcher.hpp"  // for WatchableEvent
 

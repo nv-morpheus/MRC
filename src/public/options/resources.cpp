@@ -17,7 +17,6 @@
 
 #include "srf/options/resources.hpp"
 
-// Non-main includes
 #include "srf/memory/literals.hpp"
 
 namespace srf {

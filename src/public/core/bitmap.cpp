@@ -17,7 +17,6 @@
 
 #include "srf/core/bitmap.hpp"
 
-// Non-main includes
 #include "internal/utils/parse_ints.hpp"
 #include "internal/utils/ranges.hpp"
 

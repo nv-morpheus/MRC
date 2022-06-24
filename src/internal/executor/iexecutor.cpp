@@ -17,7 +17,6 @@
 
 #include "srf/engine/executor/iexecutor.hpp"
 
-// Non-main includes
 #include "internal/executor/executor.hpp"
 #include "internal/system/system.hpp"
 

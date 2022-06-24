@@ -17,7 +17,6 @@
 
 #include "srf/options/fiber_pool.hpp"
 
-// Non-main includes
 
 namespace srf {
 

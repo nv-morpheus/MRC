@@ -17,7 +17,6 @@
 
 #include "srf/metrics/counter.hpp"
 
-// Non-main includes
 #include <prometheus/counter.h>
 
 namespace srf::metrics {

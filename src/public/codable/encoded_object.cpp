@@ -17,7 +17,6 @@
 
 #include "srf/codable/encoded_object.hpp"
 
-// Non-main includes
 #include "srf/codable/memory_resources.hpp"
 #include "srf/memory/block.hpp"
 #include "srf/memory/memory_kind.hpp"
