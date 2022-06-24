@@ -137,7 +137,7 @@ template <typename... Properties>
 class resource_view final
 {
   public:
-    resource_view() = delete;
+    resource_view() = default;
 
     template <typename ResourcePointer, typename = std::enable_if_t<std::is_pointer_v<ResourcePointer>>>
     resource_view(ResourcePointer pointer) :
@@ -170,6 +170,11 @@ class resource_view final
     std::shared_ptr<polymorphic_resource_view> prv() const
     {
         return m_storage;
+    }
+
+    explicit operator bool() const
+    {
+        return bool(m_storage);
     }
 
   private:

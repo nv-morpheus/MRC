@@ -17,21 +17,27 @@
 
 #pragma once
 
-#include "srf/engine/executor/iexecutor.hpp"
-#include "srf/engine/system/isystem.hpp"
-#include "srf/options/options.hpp"
-
+#include <functional>
 #include <memory>
 
-namespace srf {
+namespace srf::internal::system {
 
-class Executor final : public internal::executor::IExecutor
+class ISystem;
+class Resources;
+
+class IResources
 {
   public:
-    Executor();
-    Executor(std::shared_ptr<Options> options);
-    Executor(std::unique_ptr<internal::system::IResources> resources);
-    ~Executor() final = default;
+    IResources(std::shared_ptr<ISystem> system);
+    virtual ~IResources() = 0;
+
+  protected:
+    void add_thread_initializer(std::function<void()> initializer_fn);
+    void add_thread_finalizer(std::function<void()> finalizer_fn);
+
+  private:
+    std::unique_ptr<Resources> m_impl;
+    friend Resources;
 };
 
-}  // namespace srf
+}  // namespace srf::internal::system

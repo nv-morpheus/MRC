@@ -21,18 +21,15 @@
 #include "internal/system/host_partition.hpp"
 
 #include <cstddef>
-#include <cstdint>
+#include <memory>
 #include <string>
-#include <vector>
 
 namespace srf::internal::system {
 
 class DevicePartition final : private GpuInfo
 {
   public:
-    DevicePartition(const GpuInfo& gpu_info,
-                    const std::vector<system::HostPartition>& host_partition,
-                    std::uint32_t host_partition_id);
+    DevicePartition(const GpuInfo& gpu_info, std::shared_ptr<const HostPartition> host_partition);
     virtual ~DevicePartition() = default;
 
     int cuda_device_id() const;
@@ -48,8 +45,7 @@ class DevicePartition final : private GpuInfo
     // virtual memory::resource memory_resource() = 0;
 
   private:
-    const std::vector<system::HostPartition>& m_host_partitions;
-    std::uint32_t m_host_partition_id;
+    std::shared_ptr<const HostPartition> m_host_partition;
 };
 
 }  // namespace srf::internal::system

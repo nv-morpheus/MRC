@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-#include "srf/engine/executor/iexecutor.hpp"
-
 #include "internal/executor/executor.hpp"
 #include "internal/system/system.hpp"
 
@@ -26,12 +24,12 @@
 
 #include <glog/logging.h>
 
+#include <memory>
 #include <utility>
 
-namespace srf::internal::executor {
-
 IExecutor::IExecutor(std::shared_ptr<Options> options) : m_impl(make_executor(std::move(options))) {}
-IExecutor::IExecutor(std::unique_ptr<system::ISystem> system) : m_impl(make_executor(system::System::unwrap(*system)))
+IExecutor::IExecutor(std::unique_ptr<system::IResources> resources) :
+  m_impl(make_executor(system::Resources::unwrap(*resources)))
 {
     CHECK(m_impl);
 }

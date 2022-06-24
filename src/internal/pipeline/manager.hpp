@@ -19,7 +19,7 @@
 
 #include "internal/pipeline/pipeline.hpp"
 #include "internal/pipeline/types.hpp"
-#include "internal/resources/resource_partitions.hpp"
+#include "internal/resources/manager.hpp"
 #include "internal/service.hpp"
 
 #include "srf/channel/status.hpp"
@@ -40,7 +40,7 @@ namespace srf::internal::pipeline {
 class Manager : public Service
 {
   public:
-    Manager(std::shared_ptr<Pipeline> pipeline, std::shared_ptr<resources::ResourcePartitions> resources);
+    Manager(std::shared_ptr<Pipeline> pipeline, resources::Manager& resources);
     ~Manager() override;
 
     const Pipeline& pipeline() const;
@@ -48,7 +48,7 @@ class Manager : public Service
     void push_updates(SegmentAddresses&& segment_addresses);
 
   protected:
-    resources::ResourcePartitions& resources();
+    resources::Manager& resources();
 
   private:
     void do_service_start() final;
@@ -57,10 +57,10 @@ class Manager : public Service
     void do_service_kill() final;
     void do_service_await_join() final;
 
-    std::shared_ptr<resources::ResourcePartitions> m_resources;
+    resources::Manager& m_resources;
     std::shared_ptr<Pipeline> m_pipeline;
     std::unique_ptr<node::SourceChannelWriteable<ControlMessage>> m_update_channel;
-    std::unique_ptr<runnable::Runner> m_controller;
+    std::unique_ptr<srf::runnable::Runner> m_controller;
 };
 
 }  // namespace srf::internal::pipeline

@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,23 +15,22 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "internal/system/system_provider.hpp"
 
-#include "srf/engine/executor/iexecutor.hpp"
-#include "srf/engine/system/isystem.hpp"
-#include "srf/options/options.hpp"
+#include <glog/logging.h>
 
-#include <memory>
+#include <utility>
 
-namespace srf {
+namespace srf::internal::system {
 
-class Executor final : public internal::executor::IExecutor
+SystemProvider::SystemProvider(std::shared_ptr<const System> system) : m_system(std::move(system))
 {
-  public:
-    Executor();
-    Executor(std::shared_ptr<Options> options);
-    Executor(std::unique_ptr<internal::system::IResources> resources);
-    ~Executor() final = default;
-};
+    CHECK(m_system);
+}
+const System& srf::internal::system::SystemProvider::system() const
+{
+    DCHECK(m_system);
+    return *m_system;
+}
 
-}  // namespace srf
+}  // namespace srf::internal::system

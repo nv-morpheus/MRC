@@ -48,7 +48,7 @@ Controller::Controller(std::unique_ptr<Instance> pipeline) : m_pipeline(std::mov
 
 void Controller::on_data(ControlMessage&& message)
 {
-    auto& ctx = runnable::Context::get_runtime_context();
+    auto& ctx = srf::runnable::Context::get_runtime_context();
     DCHECK_EQ(ctx.size(), 1);
 
     switch (message.type)

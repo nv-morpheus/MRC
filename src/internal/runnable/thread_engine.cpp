@@ -17,7 +17,7 @@
 
 #include "internal/runnable/thread_engine.hpp"
 
-#include "internal/system/system.hpp"
+#include "internal/system/resources.hpp"
 
 #include "srf/core/bitmap.hpp"
 #include "srf/runnable/types.hpp"
@@ -26,31 +26,33 @@
 #include <boost/fiber/future/future.hpp>
 #include <boost/fiber/future/packaged_task.hpp>
 
+#include <optional>
 #include <type_traits>
 #include <utility>
 
 namespace srf::internal::runnable {
 
-ThreadEngine::ThreadEngine(CpuSet cpu_set, std::shared_ptr<system::System> system) :
+ThreadEngine::ThreadEngine(CpuSet cpu_set, const system::Resources& system) :
   m_cpu_set(std::move(cpu_set)),
-  m_system(std::move(system))
+  m_system(system)
 {}
 
-ThreadEngine::~ThreadEngine()
-{
-    m_thread->join();
-}
+ThreadEngine::~ThreadEngine() = default;
 
-std::thread::id ThreadEngine::get_id() const
+std::optional<std::thread::id> ThreadEngine::get_id() const
 {
-    return m_thread->get_id();
+    if (m_thread)
+    {
+        return m_thread->thread().get_id();
+    }
+    return std::nullopt;
 }
 
 Future<void> ThreadEngine::do_launch_task(std::function<void()> task)
 {
     boost::fibers::packaged_task<void()> pkg_task(std::move(task));
     auto future = pkg_task.get_future();
-    m_thread    = std::make_unique<std::thread>(m_system->make_thread("thread_engine", m_cpu_set, std::move(pkg_task)));
+    m_thread = std::make_unique<system::Thread>(m_system.make_thread("thread_engine", m_cpu_set, std::move(pkg_task)));
     return std::move(future);
 }
 

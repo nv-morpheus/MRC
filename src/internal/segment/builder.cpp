@@ -118,7 +118,7 @@ void Builder::add_object(const std::string& name, std::shared_ptr<::srf::segment
     m_objects[name] = std::move(object);
 }
 
-void Builder::add_runnable(const std::string& name, std::shared_ptr<runnable::Launchable> runnable)
+void Builder::add_runnable(const std::string& name, std::shared_ptr<srf::runnable::Launchable> runnable)
 {
     if (has_object(name))
     {
@@ -143,7 +143,7 @@ const Definition& Builder::definition() const
     CHECK(m_definition);
     return *m_definition;
 }
-const std::map<std::string, std::shared_ptr<runnable::Launchable>>& Builder::nodes() const
+const std::map<std::string, std::shared_ptr<srf::runnable::Launchable>>& Builder::nodes() const
 {
     return m_nodes;
 }

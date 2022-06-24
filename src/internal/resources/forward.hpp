@@ -19,10 +19,8 @@
 
 namespace srf::internal::resources {
 
+class Manager;
 class HostResources;
 class DeviceResources;
-class SystemResources;
-class ResourcePartitions;
-class Resources;
 
 }  // namespace srf::internal::resources

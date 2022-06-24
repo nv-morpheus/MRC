@@ -153,16 +153,13 @@ add_library(libsrf
   src/internal/pipeline/pipeline.cpp
   src/internal/pipeline/port_graph.cpp
   src/internal/pipeline/resources.cpp
-  src/internal/resources/device_resources.cpp
-  src/internal/resources/host_resources.cpp
-  src/internal/resources/partition_resources.cpp
-  src/internal/resources/resource_partitions.cpp
-  src/internal/resources/system_resources.cpp
+  src/internal/resources/manager.cpp
   src/internal/runnable/engine_factory.cpp
   src/internal/runnable/engine.cpp
   src/internal/runnable/engines.cpp
   src/internal/runnable/fiber_engine.cpp
   src/internal/runnable/fiber_engines.cpp
+  src/internal/runnable/resources.cpp
   src/internal/runnable/thread_engine.cpp
   src/internal/runnable/thread_engines.cpp
   src/internal/segment/builder.cpp
@@ -179,10 +176,15 @@ add_library(libsrf
   src/internal/system/fiber_task_queue.cpp
   src/internal/system/gpu_info.cpp
   src/internal/system/host_partition.cpp
+  src/internal/system/iresources.cpp
   src/internal/system/isystem.cpp
+  src/internal/system/partition.cpp
   src/internal/system/partitions.cpp
+  src/internal/system/resources.cpp
+  src/internal/system/system_provider.cpp
   src/internal/system/system.cpp
   src/internal/system/thread_pool.cpp
+  src/internal/system/thread.cpp
   src/internal/system/topology.cpp
   src/internal/ucx/context.cpp
   src/internal/ucx/endpoint.cpp
@@ -227,6 +229,16 @@ add_library(libsrf
   src/public/utils/bytes_to_string.cpp
   src/public/utils/thread_utils.cpp
   src/public/utils/type_utils.cpp
+
+  # todo(#63) - Enable UCX Context/Workers and UCX Registered Memory Resources
+  # src/internal/data_plane/client_worker.cpp
+  # src/internal/data_plane/client.cpp
+  # src/internal/data_plane/instance.cpp
+  # src/internal/data_plane/server.cpp
+  # src/internal/resources/host_resources.cpp
+  # src/internal/resources/partition_resources.cpp
+  # src/internal/resources/resource_partitions.cpp
+  # src/internal/resources/system_resources.cpp
 )
 
 add_library(${PROJECT_NAME}::libsrf ALIAS libsrf)

@@ -28,6 +28,13 @@ class System final : public internal::system::ISystem
   public:
     System(std::shared_ptr<Options> options);
     ~System() final = default;
+};
+
+class SystemResources final : public internal::system::IResources
+{
+  public:
+    SystemResources(std::shared_ptr<System> system);
+    ~SystemResources() final = default;
 
   private:
     void add_gil_initializer();

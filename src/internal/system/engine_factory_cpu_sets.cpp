@@ -220,4 +220,12 @@ EngineFactoryCpuSets generate_engine_factory_cpu_sets(const Options& options, co
     return config;
 }
 
+std::size_t EngineFactoryCpuSets::main_cpu_id() const
+{
+    auto search = fiber_cpu_sets.find("main");
+    CHECK(search != fiber_cpu_sets.end()) << "unable to lookup cpuset for main";
+    CHECK_EQ(search->second.weight(), 1);
+    return search->second.first();
+}
+
 }  // namespace srf::internal::system

@@ -17,21 +17,31 @@
 
 #pragma once
 
-#include "srf/engine/executor/iexecutor.hpp"
-#include "srf/engine/system/isystem.hpp"
-#include "srf/options/options.hpp"
+#include "internal/system/device_partition.hpp"
+#include "internal/system/host_partition.hpp"
 
+#include <cstddef>
 #include <memory>
 
-namespace srf {
+namespace srf::internal::system {
 
-class Executor final : public internal::executor::IExecutor
+class Partition final
 {
   public:
-    Executor();
-    Executor(std::shared_ptr<Options> options);
-    Executor(std::unique_ptr<internal::system::IResources> resources);
-    ~Executor() final = default;
+    Partition(std::size_t host_partition_id,
+              std::shared_ptr<const HostPartition> host,
+              std::shared_ptr<const DevicePartition> device);
+
+    const HostPartition& host() const;
+    const DevicePartition& device() const;
+
+    size_t host_partition_id() const;
+    bool has_device() const;
+
+  private:
+    std::size_t m_host_partition_id;
+    std::shared_ptr<const HostPartition> m_host;
+    std::shared_ptr<const DevicePartition> m_device;
 };
 
-}  // namespace srf
+}  // namespace srf::internal::system

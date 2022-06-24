@@ -15,40 +15,33 @@
  * limitations under the License.
  */
 
-#include "internal/system/fiber_pool.hpp"
+#include "srf/engine/system/iresources.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/core/task_queue.hpp"
+#include "internal/system/resources.hpp"
+#include "internal/system/system.hpp"
+#include "internal/system/system_provider.hpp"
+#include "internal/system/topology.hpp"
 
-#include <ext/alloc_traits.h>
-#include <glog/logging.h>
+#include "srf/engine/system/isystem.hpp"
 
-#include <cstddef>
 #include <memory>
 #include <utility>
-#include <vector>
 
 namespace srf::internal::system {
 
-FiberPool::FiberPool(CpuSet cpu_set, std::vector<std::reference_wrapper<FiberTaskQueue>>&& queues) :
-  m_cpu_set(std::move(cpu_set)),
-  m_queues(std::move(queues))
+IResources::IResources(std::shared_ptr<ISystem> system) :
+  m_impl(std::make_unique<Resources>(SystemProvider(System::unwrap(*system))))
 {}
+IResources::~IResources() = default;
 
-const CpuSet& FiberPool::cpu_set() const
+void IResources::add_thread_initializer(std::function<void()> initializer_fn)
 {
-    return m_cpu_set;
+    m_impl->register_thread_local_initializer(m_impl->system().topology().cpu_set(), std::move(initializer_fn));
 }
 
-std::size_t FiberPool::thread_count() const
+void IResources::add_thread_finalizer(std::function<void()> finalizer_fn)
 {
-    return m_queues.size();
-}
-
-core::FiberTaskQueue& FiberPool::task_queue(const std::size_t& index)
-{
-    CHECK_LT(index, m_queues.size());
-    return m_queues.at(index);
+    m_impl->register_thread_local_finalizer(m_impl->system().topology().cpu_set(), std::move(finalizer_fn));
 }
 
 }  // namespace srf::internal::system

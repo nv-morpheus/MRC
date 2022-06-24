@@ -58,7 +58,7 @@ void IBuilder::add_object(const std::string& name, std::shared_ptr<::srf::segmen
     return m_impl->add_object(name, std::move(object));
 }
 
-void IBuilder::add_runnable(const std::string& name, std::shared_ptr<runnable::Launchable> runnable)
+void IBuilder::add_runnable(const std::string& name, std::shared_ptr<srf::runnable::Launchable> runnable)
 {
     CHECK(m_impl);
     return m_impl->add_runnable(name, std::move(runnable));

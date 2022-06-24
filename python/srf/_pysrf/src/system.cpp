@@ -33,13 +33,15 @@
 
 namespace srf::pysrf {
 
-System::System(std::shared_ptr<Options> options) : internal::system::ISystem(std::move(options))
+System::System(std::shared_ptr<Options> options) : internal::system::ISystem(std::move(options)) {}
+
+SystemResources::SystemResources(std::shared_ptr<System> system) : internal::system::IResources(std::move(system))
 {
     add_gil_initializer();
     add_gil_finalizer();
 }
 
-void System::add_gil_initializer()
+void SystemResources::add_gil_initializer()
 {
     bool has_pydevd_trace = false;
 
@@ -64,7 +66,7 @@ void System::add_gil_initializer()
     // Release the GIL for the remainder
     pybind11::gil_scoped_release nogil;
 
-    internal::system::ISystem::add_thread_initializer([has_pydevd_trace] {
+    internal::system::IResources::add_thread_initializer([has_pydevd_trace] {
         pybind11::gil_scoped_acquire gil;
 
         // Increment the ref once to prevent creating and destroying the thread state constantly
@@ -100,7 +102,7 @@ void System::add_gil_initializer()
     });
 }
 
-void System::add_gil_finalizer()
+void SystemResources::add_gil_finalizer()
 {
     bool python_finalizing = _Py_IsFinalizing() != 0;
 
@@ -111,7 +113,8 @@ void System::add_gil_finalizer()
     }
 
     // Ensure we dont have the GIL here otherwise this deadlocks.
-    internal::system::ISystem::add_thread_finalizer([] {
+
+    internal::system::IResources::add_thread_finalizer([] {
         bool python_finalizing = _Py_IsFinalizing() != 0;
 
         if (python_finalizing)

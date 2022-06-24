@@ -20,6 +20,7 @@
 #include "srf/core/bitmap.hpp"
 #include "srf/options/options.hpp"
 
+#include <cstddef>
 #include <map>
 #include <string>
 
@@ -28,6 +29,7 @@ namespace srf::internal::system {
 struct EngineFactoryCpuSets
 {
     bool is_resuable(const std::string& name) const;
+    std::size_t main_cpu_id() const;
 
     std::map<std::string, Bitmap> fiber_cpu_sets;
     std::map<std::string, Bitmap> thread_cpu_sets;

@@ -21,8 +21,9 @@
 #include "internal/pipeline/manager.hpp"
 #include "internal/pipeline/pipeline.hpp"
 #include "internal/pipeline/types.hpp"
-#include "internal/resources/resource_partitions.hpp"
+#include "internal/resources/manager.hpp"
 #include "internal/system/system.hpp"
+#include "internal/system/system_provider.hpp"
 #include "internal/utils/collision_detector.hpp"
 
 #include "srf/channel/status.hpp"
@@ -79,7 +80,7 @@ static std::shared_ptr<internal::system::System> make_system(std::function<void(
         updater(*options);
     }
 
-    return internal::system::System::make_system(std::move(options));
+    return internal::system::make_system(std::move(options));
 }
 
 static std::shared_ptr<internal::pipeline::Pipeline> unwrap(internal::pipeline::IPipeline& pipeline)
@@ -91,10 +92,10 @@ static void run_custom_manager(std::unique_ptr<internal::pipeline::IPipeline> pi
                                internal::pipeline::SegmentAddresses&& update,
                                bool delayed_stop = false)
 {
-    auto resources = internal::resources::make_resource_partitions(make_system([](Options& options) {
+    auto resources = internal::resources::Manager(internal::system::SystemProvider(make_system([](Options& options) {
         options.topology().user_cpuset("0-1");
         options.topology().restrict_gpus(true);
-    }));
+    })));
 
     auto manager = std::make_unique<internal::pipeline::Manager>(unwrap(*pipeline), resources);
 
@@ -115,10 +116,10 @@ static void run_custom_manager(std::unique_ptr<internal::pipeline::IPipeline> pi
 
 static void run_manager(std::unique_ptr<internal::pipeline::IPipeline> pipeline, bool delayed_stop = false)
 {
-    auto resources = internal::resources::make_resource_partitions(make_system([](Options& options) {
+    auto resources = internal::resources::Manager(internal::system::SystemProvider(make_system([](Options& options) {
         options.topology().user_cpuset("0-1");
         options.topology().restrict_gpus(true);
-    }));
+    })));
 
     auto manager = std::make_unique<internal::pipeline::Manager>(unwrap(*pipeline), resources);
 

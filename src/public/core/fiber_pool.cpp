@@ -17,33 +17,4 @@
 
 #include "srf/core/fiber_pool.hpp"
 
-#include "srf/core/bitmap.hpp"
-
-namespace srf::core {
-
-RoundRobinFiberPool::RoundRobinFiberPool(std::shared_ptr<FiberPool> fiber_pool) :
-  m_queues(fiber_pool),
-  m_provider(fiber_pool->cpu_set())
-{}
-
-// std::shared_ptr<core::FiberTaskQueue> RoundRobinFiberPool::next_task_queue()
-// {
-//     auto index = m_provider.next_index();
-//     return m_queues->task_queue_shared(index);
-// }
-
-void RoundRobinFiberPool::reset()
-{
-    m_provider.reset();
-}
-
-std::size_t RoundRobinFiberPool::thread_count() const
-{
-    return m_queues->thread_count();
-}
-
-FiberPool& RoundRobinFiberPool::pool()
-{
-    return *m_queues;
-}
-}  // namespace srf::core
+namespace srf::core {}  // namespace srf::core

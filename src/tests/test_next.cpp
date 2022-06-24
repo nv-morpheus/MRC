@@ -15,10 +15,9 @@
  * limitations under the License.
  */
 
-#include "internal/resources/host_resources.hpp"
-#include "internal/resources/partition_resources.hpp"
-#include "internal/resources/resource_partitions.hpp"
+#include "internal/runnable/resources.hpp"
 #include "internal/system/forward.hpp"
+#include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
 
 #include "srf/channel/egress.hpp"
@@ -82,7 +81,7 @@ static std::shared_ptr<internal::system::System> make_system(std::function<void(
         updater(*options);
     }
 
-    return internal::system::System::make_system(std::move(options));
+    return internal::system::make_system(std::move(options));
 }
 
 class TestNext : public ::testing::Test
@@ -90,16 +89,27 @@ class TestNext : public ::testing::Test
   protected:
     void SetUp() override
     {
-        m_resources = internal::resources::make_resource_partitions(make_system([](Options& options) {
+        m_system_resources = std::make_unique<internal::system::Resources>(make_system([](Options& options) {
             options.topology().user_cpuset("0-3");
             options.topology().restrict_gpus(true);
-            options.placement().resources_strategy(PlacementResources::Shared);
+            options.engine_factories().set_engine_factory_options("thread_pool", [](EngineFactoryOptions& options) {
+                options.engine_type   = runnable::EngineType::Thread;
+                options.allow_overlap = false;
+                options.cpu_count     = 2;
+            });
         }));
+
+        m_resources = std::make_unique<internal::runnable::Resources>(*m_system_resources, 0);
     }
 
-    void TearDown() override {}
+    void TearDown() override
+    {
+        m_resources.reset();
+        m_system_resources.reset();
+    }
 
-    std::shared_ptr<internal::resources::ResourcePartitions> m_resources;
+    std::unique_ptr<internal::system::Resources> m_system_resources;
+    std::unique_ptr<internal::runnable::Resources> m_resources;
 };
 
 template <typename T>
@@ -284,7 +294,7 @@ TEST_F(TestNext, MakeEdgeConvertibleFromSinkRxRunnable)
         ++counter;
     });
 
-    auto runner = m_resources->partition(0).host().launch_control().prepare_launcher(std::move(sink))->ignition();
+    auto runner = m_resources->launch_control().prepare_launcher(std::move(sink))->ignition();
     runner->await_join();
 
     EXPECT_EQ(counter, 1);
@@ -338,8 +348,8 @@ TEST_F(TestNext, GenericNodeAndSink)
     source->ingress().await_write(input);
     source.reset();
 
-    auto runner_node = m_resources->partition(0).host().launch_control().prepare_launcher(std::move(node))->ignition();
-    auto runner_sink = m_resources->partition(0).host().launch_control().prepare_launcher(std::move(sink))->ignition();
+    auto runner_node = m_resources->launch_control().prepare_launcher(std::move(node))->ignition();
+    auto runner_sink = m_resources->launch_control().prepare_launcher(std::move(sink))->ignition();
 
     // auto runner_node   = runnable::make_runner(std::move(node));
     // auto runner_sink   = runnable::make_runner(std::move(sink));
@@ -398,8 +408,7 @@ TEST_F(TestNext, ConcurrentSinkRxRunnable)
     runnable::LaunchOptions options;
     options.pe_count = 2;
 
-    auto runner =
-        m_resources->partition(0).host().launch_control().prepare_launcher(options, std::move(sink))->ignition();
+    auto runner = m_resources->launch_control().prepare_launcher(options, std::move(sink))->ignition();
     runner->await_join();
 
     EXPECT_EQ(counter_0, 1);
@@ -425,8 +434,8 @@ TEST_F(TestNext, SourceNodeSink)
     }));
     sink->set_observer([](output_t o) { LOG(INFO) << "output: " << o; });
 
-    auto runner_sink = m_resources->partition(0).host().launch_control().prepare_launcher(std::move(sink))->ignition();
-    auto runner_node = m_resources->partition(0).host().launch_control().prepare_launcher(std::move(node))->ignition();
+    auto runner_sink = m_resources->launch_control().prepare_launcher(std::move(sink))->ignition();
+    auto runner_node = m_resources->launch_control().prepare_launcher(std::move(node))->ignition();
 
     source->ingress().await_write(3.14);
     source->ingress().await_write(42.);

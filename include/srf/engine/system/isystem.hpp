@@ -19,22 +19,24 @@
 
 #include "srf/options/options.hpp"
 
-#include <functional>
 #include <memory>
 
 namespace srf::internal::system {
 
 class System;
 
+/**
+ * @brief System object
+ *
+ * Core class that could be used to transfer Topology and Partition information from the SRF runtime.
+ *
+ * Currently, this is only an opaque handle for constructing a system::IResource.
+ */
 class ISystem
 {
   public:
     ISystem(std::shared_ptr<Options> options);
     virtual ~ISystem() = 0;
-
-  protected:
-    void add_thread_initializer(std::function<void()> initializer_fn);
-    void add_thread_finalizer(std::function<void()> finalizer_fn);
 
   private:
     std::shared_ptr<System> m_impl;

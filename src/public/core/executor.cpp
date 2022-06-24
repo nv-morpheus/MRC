@@ -18,7 +18,7 @@
 #include "srf/core/executor.hpp"
 
 #include "srf/engine/executor/iexecutor.hpp"
-#include "srf/engine/system/isystem.hpp"
+#include "srf/engine/system/iresources.hpp"
 #include "srf/options/options.hpp"
 
 #include <utility>  // for move
@@ -27,7 +27,8 @@ namespace srf {
 
 Executor::Executor() : internal::executor::IExecutor(std::make_shared<Options>()) {}
 Executor::Executor(std::shared_ptr<Options> options) : internal::executor::IExecutor(std::move(options)) {}
-Executor::Executor(std::unique_ptr<internal::system::ISystem> system) : internal::executor::IExecutor(std::move(system))
+Executor::Executor(std::unique_ptr<internal::system::IResources> resources) :
+  internal::executor::IExecutor(std::move(resources))
 {}
 
 }  // namespace srf
