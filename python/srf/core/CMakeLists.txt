@@ -13,7 +13,6 @@
 # the License.
 # =============================================================================
 
-srf_add_pybind11_module(NAME adaptors SOURCE adaptors.cpp)
 srf_add_pybind11_module(NAME common SOURCE common.cpp)
 srf_add_pybind11_module(NAME executor SOURCE executor.cpp)
 srf_add_pybind11_module(NAME logging SOURCE logging.cpp)

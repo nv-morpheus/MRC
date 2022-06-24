@@ -110,7 +110,7 @@ class SegmentProxy
      *      sink = segment.make_sink("test", my_on_next, my_on_error, my_on_completed)
      *  ```
      */
-    static std::shared_ptr<srf::segment::ObjectProperties> make_sink(srf::segment::Builder& self,
+    static std::shared_ptr<srf::segment::ObjectProperties> make_sink(srf::segment::Builder& object,
                                                                      const std::string& name,
                                                                      std::function<void(pybind11::object x)> on_next,
                                                                      std::function<void(pybind11::object x)> on_error,

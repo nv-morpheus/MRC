@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-#include <pysrf/utils.hpp>
-
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
@@ -34,10 +32,6 @@ PYBIND11_MODULE(common, m)
         .. autosummary::
            :toctree: _generate
     )pbdoc";
-
-
-    // Force pysrf edge adaptors to be registered.
-    pysrf::import(m, "srf.core.adaptors");
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

@@ -13,4 +13,4 @@
 # the License.
 # =============================================================================
 
-srf_add_pybind11_module(NAME test_edges_cpp SOURCE ./test_edges.cpp)
+srf_add_pybind11_module(NAME test_edges_cpp SOURCE test_edges.cpp)

@@ -9,6 +9,7 @@
 #include <srf/channel/ingress.hpp>
 #include <srf/channel/status.hpp>
 #include <srf/node/edge.hpp>
+#include <srf/node/edge_adaptor_registry.hpp>
 #include <srf/node/edge_builder.hpp>
 #include <srf/node/edge_connector.hpp>
 #include <srf/node/edge_registry.hpp>
@@ -31,16 +32,17 @@
 #include <functional>  // for function, ref
 #include <memory>      // for shared_ptr, __shared_ptr_access, dynamic_pointer_cast, allocator, make_shared
 #include <ostream>     // for operator<<
-#include <typeindex>   // for type_index
-#include <utility>     // for move, forward
+#include <type_traits>
+#include <typeindex>  // for type_index
+#include <utility>    // for move, forward
 
 namespace srf::pysrf {
 
-struct PysrfEdgeAdapterUtil
+struct EdgeAdaptorUtil
 {
     using source_adaptor_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(
         srf::node::SourcePropertiesBase&, srf::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle>)>;
-    using sink_adaptor_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(
+    using sink_adaptor_fn_t   = std::function<std::shared_ptr<channel::IngressHandle>(
         std::type_index, srf::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle> ingress_handle)>;
 
     template <typename InputT>
@@ -155,4 +157,57 @@ struct PysrfEdgeAdapterUtil
         };
     }
 };
+
+template <typename SourceT>
+struct AutoRegSourceAdaptor
+{
+    AutoRegSourceAdaptor()
+    {
+        auto _auto_register = Registered;
+    }
+
+    static bool initialize()
+    {
+        if (!srf::node::EdgeAdaptorRegistry::has_source_adaptor(typeid(SourceT)))
+        {
+            std::type_index x = typeid(SourceT);
+            VLOG(2) << "Registering PySRF source adaptor for: " << type_name<SourceT>() << " " << x.hash_code();
+            node::EdgeAdaptorRegistry::register_source_adaptor(typeid(SourceT),
+                                                               EdgeAdaptorUtil::build_source_adaptor<SourceT>());
+        }
+        // Emit warning of a duplicate source type register?
+        return true;
+    }
+    static bool Registered;
+};
+
+template <typename SourceT>
+bool AutoRegSourceAdaptor<SourceT>::Registered = AutoRegSourceAdaptor<SourceT>::initialize();
+
+template <typename SinkT>
+struct AutoRegSinkAdaptor
+{
+    AutoRegSinkAdaptor()
+    {
+        auto _auto_register = Registered;
+    }
+
+    static bool Registered;
+    static bool initialize()
+    {
+        if (!srf::node::EdgeAdaptorRegistry::has_sink_adaptor(typeid(SinkT)))
+        {
+            std::type_index x = typeid(SinkT);
+            VLOG(2) << "Registering PySRF sink adaptor for: " << type_name<SinkT>() << " " << x.hash_code();
+            node::EdgeAdaptorRegistry::register_sink_adaptor(typeid(SinkT),
+                                                             EdgeAdaptorUtil::build_sink_adaptor<SinkT>());
+        }
+        // Emit warning of a duplicate source type register?
+        return true;
+    }
+};
+
+template <typename SinkT>
+bool AutoRegSinkAdaptor<SinkT>::Registered = AutoRegSinkAdaptor<SinkT>::initialize();
+
 }  // namespace srf::pysrf

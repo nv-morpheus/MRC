@@ -29,8 +29,12 @@
 namespace srf::node {
 
 /**
- * @brief EdgeRegistry is an IngressHandle which contains the necessary conversion method to facilitate the creation an
- * Ingress from the type_index of the reader and writer.
+ * @brief EdgeAdaptorRegistry used for the registry of adaptor routines which allow for customized runtime
+ * edge construction and type deduction.
+ *
+ * Generally speaking, where an EdgeConverter defines a specific instance used to connect a compatible
+ * source and sink, an EdgeAdaptor defines a process for identifying or creating an appropriate
+ * EdgeConverter or set of EdgeConverters to make a source sink connection possible.
  */
 struct EdgeAdaptorRegistry
 {
@@ -44,15 +48,15 @@ struct EdgeAdaptorRegistry
     EdgeAdaptorRegistry() = delete;
 
     /**
-     *
-     * @param source_type
-     * @param adaptor_fn
+     * @brief Registers an adaptor function to be used for a given `(source|sink)_type`
+     * @param source_type type index of the data type which will use `adaptor_fn`
+     * @param adaptor_fn adaptor function used to attempt to adapt a given source and sink
      */
     static void register_source_adaptor(std::type_index source_type, source_adaptor_fn_t adaptor_fn);
     static void register_sink_adaptor(std::type_index sink_type, sink_adaptor_fn_t adaptor_fn);
 
     /**
-     *
+     * @brief Checks to see if an adaptor is registered for a given type index
      * @param source_type
      * @return
      */
@@ -60,18 +64,14 @@ struct EdgeAdaptorRegistry
     static bool has_sink_adaptor(std::type_index sink_type);
 
     /**
-     *
+     * @brief Attempts to retrieve a source/sink adaptor for a given type index
      * @param source_type
      * @return
      */
     static source_adaptor_fn_t find_source_adaptor(std::type_index source_type);
     static sink_adaptor_fn_t find_sink_adaptor(std::type_index sink_type);
 
-    /**
-     *
-     */
     static std::map<std::type_index, source_adaptor_fn_t> registered_source_adaptors;
     static std::map<std::type_index, sink_adaptor_fn_t> registered_sink_adaptors;
 };
-
 }  // namespace srf::node

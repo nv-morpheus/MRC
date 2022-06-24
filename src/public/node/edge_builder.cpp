@@ -30,6 +30,8 @@ std::shared_ptr<channel::IngressHandle> EdgeBuilder::ingress_adaptor_for_sink(
     srf::node::SinkPropertiesBase& sink,
     std::shared_ptr<channel::IngressHandle> ingress_handle)
 {
+    VLOG(2) << "Looking for edge adaptor: (" << source.source_type_name() << ", " << sink.sink_type_name() << ")";
+    VLOG(2) << "- (" << source.source_type_hash() << ", " << sink.sink_type_hash() << ")";
     if (EdgeAdaptorRegistry::has_source_adaptor(source.source_type()))
     {
         auto adaptor = EdgeAdaptorRegistry::find_source_adaptor(source.source_type());
@@ -54,7 +56,6 @@ std::shared_ptr<channel::IngressHandle> EdgeBuilder::default_ingress_for_source_
     srf::node::SinkPropertiesBase& sink,
     std::shared_ptr<channel::IngressHandle> ingress_handle)
 {
-    // Do dynamic lookup before fallback.
     auto fn_converter = srf::node::EdgeRegistry::find_converter(source_type, sink.sink_type());
     return fn_converter(ingress_handle);
 }
