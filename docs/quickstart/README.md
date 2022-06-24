@@ -101,7 +101,7 @@ For users interested in using SRF with C++, the QSG provides several examples in
 | #      | Name | Description |
 | ----------- | ----------- | --- |
 | 00 | [simple_pipeline](./cpp/ex00_simple_pipeline/README.md) | A small, basic pipeline with only a single source, node and sink |
-| 01 | [libsrf_quickstart](./cpp/ex01_libsrf_quickstart/README.md) | Illustrates hopw to create SRF components in a reusable library |
+| 01 | [node_library](./cpp/ex01_node_library/README.md) | Illustrates hopw to create SRF components in a reusable library |
 | 02 | [pipeline_with_library](./cpp/ex02_pipeline_with_library/README.md) | Demonstrates how to use the SRF components from Example #01 in a SRF Pipeline |
 
 ### Setup

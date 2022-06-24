@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-#include "quickstart.hpp"
+#include "nodes.hpp"
 
 #include <rxcpp/rx.hpp>
 
-namespace quickstart {
+namespace srf::quickstart::cpp::ex01_node_library {
 
 IntSource::IntSource() :
   srf::node::RxSource<int>(rxcpp::observable<>::create<int>([](rxcpp::subscriber<int> s) {
@@ -30,4 +30,4 @@ IntSource::IntSource() :
   }))
 {}
 
-}  // namespace quickstart
+}  // namespace srf::quickstart::cpp::ex01_node_library

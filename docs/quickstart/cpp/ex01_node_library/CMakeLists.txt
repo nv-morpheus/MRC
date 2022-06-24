@@ -13,11 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_library(srf_quickstart SHARED
-  src/quickstart.cpp
+add_library(ex01_node_library SHARED
+  src/nodes.cpp
 )
 
-target_include_directories(srf_quickstart
+target_include_directories(ex01_node_library
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
@@ -25,7 +25,7 @@ target_include_directories(srf_quickstart
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_link_libraries(srf_quickstart
+target_link_libraries(ex01_node_library
   PUBLIC
     srf::libsrf
 )

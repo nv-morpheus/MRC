@@ -15,8 +15,10 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "hybrid")
 
+add_subdirectory(common)
+
 add_subdirectory(ex00_simple_pipeline)
-add_subdirectory(ex01_libsrf_quickstart)
+add_subdirectory(ex01_node_library)
 add_subdirectory(ex02_pipeline_with_library)
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

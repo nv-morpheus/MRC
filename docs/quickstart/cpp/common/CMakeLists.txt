@@ -13,11 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_executable(ex02_pipeline_with_library
-  pipeline_with_library.cpp
+add_library(common SHARED
+  src/nodes.cpp
 )
 
-target_link_libraries(ex02_pipeline_with_library
+target_include_directories(common
   PUBLIC
-    common
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_link_libraries(common
+  PUBLIC
+    srf::libsrf
 )

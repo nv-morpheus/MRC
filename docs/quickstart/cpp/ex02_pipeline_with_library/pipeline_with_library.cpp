@@ -21,9 +21,10 @@
 #include <srf/pipeline/pipeline.hpp>
 #include <srf/srf.hpp>
 
-#include "quickstart.hpp"
+#include "nodes.hpp"
 
 using namespace srf;
+using namespace srf::quickstart::cpp::common;
 
 int main(int argc, char* argv[])
 {
@@ -44,7 +45,7 @@ int main(int argc, char* argv[])
         // This first "node" is a source node which has no upstream dependencies. It is responsible for producing data
         // to be consume by downstream nodes
         // Here we are constructing the IntSource from the libsrf_quicstart library
-        auto source = s.construct_object<quickstart::IntSource>("int_source");
+        auto source = s.construct_object<IntSource>("int_source");
 
         // Node
         // A Node is both a Source and a Sink, it connects to an upstream provider/source and a downstream

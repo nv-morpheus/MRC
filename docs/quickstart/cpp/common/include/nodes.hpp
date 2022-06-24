@@ -19,7 +19,7 @@
 
 #include <srf/node/rx_source.hpp>
 
-namespace quickstart {
+namespace srf::quickstart::cpp::common {
 
 class IntSource : public srf::node::RxSource<int>
 {
@@ -27,4 +27,4 @@ class IntSource : public srf::node::RxSource<int>
     IntSource();
 };
 
-}  // namespace quickstart
+}  // namespace srf::quickstart::cpp::common
