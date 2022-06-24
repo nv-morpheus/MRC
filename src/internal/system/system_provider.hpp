@@ -14,33 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
-
-#include <srf/options/options.hpp>
-
-#include "srf/internal/system/iresources.hpp"
-#include "srf/internal/system/isystem.hpp"
 
 #include <memory>
 
-namespace srf::pysrf {
+namespace srf::internal::system {
 
-class System final : public internal::system::ISystem
+class System;
+
+class SystemProvider
 {
   public:
-    System(std::shared_ptr<Options> options);
-    ~System() final = default;
-};
+    SystemProvider(std::shared_ptr<const System> system);
+    virtual ~SystemProvider() = default;
 
-class SystemResources final : public internal::system::IResources
-{
-  public:
-    SystemResources(std::shared_ptr<System> system);
-    ~SystemResources() final = default;
+    const System& system() const;
 
   private:
-    void add_gil_initializer();
-    void add_gil_finalizer();
+    std::shared_ptr<const System> m_system;
 };
 
-}  // namespace srf::pysrf
+}  // namespace srf::internal::system

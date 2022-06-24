@@ -19,6 +19,7 @@
 
 #include <srf/runnable/forward.hpp>
 #include <srf/types.hpp>
+#include <srf/utils/macros.hpp>
 
 #include <functional>
 #include <memory>
@@ -35,18 +36,28 @@ class IngressPortBase;
 
 namespace srf::internal::segment {
 
-struct IBuilder
-{
-    virtual ~IBuilder() = default;
+class Builder;
 
-    virtual const std::string& name() const                                                                    = 0;
-    virtual bool has_object(const std::string& name) const                                                     = 0;
-    virtual ::srf::segment::ObjectProperties& find_object(const std::string& name)                             = 0;
-    virtual void add_object(const std::string& name, std::shared_ptr<::srf::segment::ObjectProperties> object) = 0;
-    virtual void add_runnable(const std::string& name, std::shared_ptr<runnable::Launchable> runnable)         = 0;
-    virtual std::shared_ptr<::srf::segment::IngressPortBase> get_ingress_base(const std::string& name)         = 0;
-    virtual std::shared_ptr<::srf::segment::EgressPortBase> get_egress_base(const std::string& name)           = 0;
-    virtual std::function<void(std::int64_t)> make_throughput_counter(const std::string& name)                 = 0;
+class IBuilder final
+{
+  public:
+    IBuilder(Builder* impl);
+    ~IBuilder();
+
+    DELETE_COPYABILITY(IBuilder);
+    DELETE_MOVEABILITY(IBuilder);
+
+    const std::string& name() const;
+    bool has_object(const std::string& name) const;
+    ::srf::segment::ObjectProperties& find_object(const std::string& name);
+    void add_object(const std::string& name, std::shared_ptr<::srf::segment::ObjectProperties> object);
+    void add_runnable(const std::string& name, std::shared_ptr<srf::runnable::Launchable> runnable);
+    std::shared_ptr<::srf::segment::IngressPortBase> get_ingress_base(const std::string& name);
+    std::shared_ptr<::srf::segment::EgressPortBase> get_egress_base(const std::string& name);
+    std::function<void(std::int64_t)> make_throughput_counter(const std::string& name);
+
+  private:
+    Builder* m_impl;
 };
 
 }  // namespace srf::internal::segment

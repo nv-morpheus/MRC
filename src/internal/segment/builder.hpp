@@ -34,35 +34,34 @@
 #include <string>
 
 namespace srf::internal::segment {
-class Builder final : public IBuilder
+class Builder final
 {
   public:
     Builder(std::shared_ptr<const Definition> segdef,
             SegmentRank rank,
             pipeline::Resources& resources,
             std::size_t default_partition_id);
-    ~Builder() override = default;
 
     const Definition& definition() const;
 
-    const std::map<std::string, std::shared_ptr<runnable::Launchable>>& nodes() const;
-    const std::map<std::string, std::shared_ptr<::srf::segment::EgressPortBase>>& egress_ports() const;
-    const std::map<std::string, std::shared_ptr<::srf::segment::IngressPortBase>>& ingress_ports() const;
+    const std::map<std::string, std::shared_ptr<srf::runnable::Launchable>>& nodes() const;
+    const std::map<std::string, std::shared_ptr<srf::segment::EgressPortBase>>& egress_ports() const;
+    const std::map<std::string, std::shared_ptr<srf::segment::IngressPortBase>>& ingress_ports() const;
 
   private:
-    const std::string& name() const final;
+    const std::string& name() const;
 
-    bool has_object(const std::string& name) const final;
-    ::srf::segment::ObjectProperties& find_object(const std::string& name) final;
+    bool has_object(const std::string& name) const;
+    ::srf::segment::ObjectProperties& find_object(const std::string& name);
 
-    void add_object(const std::string& name, std::shared_ptr<::srf::segment::ObjectProperties> object) final;
-    void add_runnable(const std::string& name, std::shared_ptr<runnable::Launchable> runnable) final;
+    void add_object(const std::string& name, std::shared_ptr<::srf::segment::ObjectProperties> object);
+    void add_runnable(const std::string& name, std::shared_ptr<srf::runnable::Launchable> runnable);
 
-    std::shared_ptr<::srf::segment::IngressPortBase> get_ingress_base(const std::string& name) final;
-    std::shared_ptr<::srf::segment::EgressPortBase> get_egress_base(const std::string& name) final;
+    std::shared_ptr<::srf::segment::IngressPortBase> get_ingress_base(const std::string& name);
+    std::shared_ptr<::srf::segment::EgressPortBase> get_egress_base(const std::string& name);
 
     // temporary metrics interface
-    std::function<void(std::int64_t)> make_throughput_counter(const std::string& name) final;
+    std::function<void(std::int64_t)> make_throughput_counter(const std::string& name);
 
     // definition
     std::shared_ptr<const Definition> m_definition;
@@ -71,7 +70,7 @@ class Builder final : public IBuilder
     std::map<std::string, std::shared_ptr<::srf::segment::ObjectProperties>> m_objects;
 
     // only runnables
-    std::map<std::string, std::shared_ptr<runnable::Launchable>> m_nodes;
+    std::map<std::string, std::shared_ptr<srf::runnable::Launchable>> m_nodes;
 
     // ingress/egress - these are also nodes/objects
     std::map<std::string, std::shared_ptr<::srf::segment::IngressPortBase>> m_ingress_ports;
@@ -79,6 +78,8 @@ class Builder final : public IBuilder
 
     pipeline::Resources& m_resources;
     const std::size_t m_default_partition_id;
+
+    friend IBuilder;
 };
 
 }  // namespace srf::internal::segment

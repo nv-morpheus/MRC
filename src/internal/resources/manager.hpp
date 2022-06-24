@@ -17,35 +17,30 @@
 
 #pragma once
 
-#include "internal/resources/device_resources.hpp"
-#include "internal/resources/host_resources.hpp"
+#include "internal/runnable/resources.hpp"
+#include "internal/system/resources.hpp"
+#include "internal/system/system_provider.hpp"
 
-#include <cstdint>
+#include <cstddef>
 #include <memory>
+#include <vector>
 
 namespace srf::internal::resources {
 
-/**
- * @brief Set of Resources assigned to a specific parition.
- *
- * PartitionResources constructs a flat list of Resources from SystemResources.
- */
-class PartitionResources
+class Manager final : public system::SystemProvider
 {
   public:
-    PartitionResources(std::uint32_t partition_id,
-                       std::shared_ptr<HostResources> host,
-                       std::shared_ptr<DeviceResources> device);
+    Manager(const system::SystemProvider& system);
+    Manager(std::unique_ptr<system::Resources> resources);
 
-    const std::uint32_t& partition_id() const;
+    std::size_t device_count() const;
+    std::size_t partition_count() const;
 
-    HostResources& host() const;
-    DeviceResources& device() const;
+    runnable::Resources& runnable(std::size_t partition_id);
 
   private:
-    std::uint32_t m_partition_id;
-    std::shared_ptr<HostResources> m_host_resources;
-    std::shared_ptr<DeviceResources> m_device_resources;
+    std::unique_ptr<system::Resources> m_system;
+    std::vector<runnable::Resources> m_runnable;
 };
 
 }  // namespace srf::internal::resources

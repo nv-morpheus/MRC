@@ -149,8 +149,9 @@ Executor::Executor(std::shared_ptr<Options> options)
     auto result = pthread_sigmask(SIG_BLOCK, &sigset, &pysigset);
 
     // Now create the executor
-    auto system = std::make_unique<System>(options);
-    m_exec      = std::make_shared<srf::Executor>(std::move(system));
+    auto system    = std::make_unique<System>(options);
+    auto resources = std::make_unique<SystemResources>(std::move(system));
+    m_exec         = std::make_shared<srf::Executor>(std::move(resources));
 }
 
 Executor::~Executor()
