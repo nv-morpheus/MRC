@@ -17,8 +17,8 @@
 
 #include "test_pysrf.hpp"
 
-#include <pysrf/forward.hpp>
-#include <pysrf/utils.hpp>
+#include "pysrf/forward.hpp"
+#include "pysrf/utils.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>

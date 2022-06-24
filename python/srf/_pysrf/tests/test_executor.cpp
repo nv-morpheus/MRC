@@ -17,8 +17,8 @@
 
 #include "test_pysrf.hpp"
 
-#include <pysrf/executor.hpp>
-#include <pysrf/pipeline.hpp>
+#include "pysrf/executor.hpp"
+#include "pysrf/pipeline.hpp"
 
 #include "srf/channel/status.hpp"
 #include "srf/node/rx_node.hpp"

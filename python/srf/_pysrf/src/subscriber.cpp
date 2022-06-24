@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-#include <pysrf/subscriber.hpp>
+#include "pysrf/subscriber.hpp"
 
-#include <pysrf/operators.hpp>
-#include <pysrf/types.hpp>
+#include "pysrf/operators.hpp"
+#include "pysrf/types.hpp"
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>

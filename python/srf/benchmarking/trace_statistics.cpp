@@ -17,8 +17,8 @@
 
 #include "srf/benchmarking/trace_statistics.hpp"
 
-#include <pysrf/types.hpp>  // IWYU pragma: keep
-#include <pysrf/utils.hpp>
+#include "pysrf/types.hpp"  // IWYU pragma: keep
+#include "pysrf/utils.hpp"
 
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>  // IYWU pragma: keep

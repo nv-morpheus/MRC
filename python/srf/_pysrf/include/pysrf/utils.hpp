@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <pysrf/forward.hpp>  // IWYU pragma: keep
+#include "pysrf/forward.hpp"  // IWYU pragma: keep
 
 #include <pybind11/detail/common.h>
 #include <pybind11/gil.h>

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <pysrf/pipeline.hpp>
+#include "pysrf/pipeline.hpp"
 
 #include "srf/pipeline/pipeline.hpp"
 #include "srf/segment/builder.hpp"

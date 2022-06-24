@@ -16,8 +16,8 @@
  */
 #pragma once
 
-#include <pysrf/pipeline.hpp>
-#include <pysrf/types.hpp>  // IWYU pragma: keep
+#include "pysrf/pipeline.hpp"
+#include "pysrf/types.hpp"  // IWYU pragma: keep
 
 #include "srf/core/executor.hpp"
 #include "srf/core/runtime.hpp"  // IWYU pragma: keep

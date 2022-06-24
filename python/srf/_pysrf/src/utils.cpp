@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include <pysrf/utils.hpp>
+#include "pysrf/utils.hpp"
 
-#include <pysrf/types.hpp>  // IWYU pragma: keep
+#include "pysrf/types.hpp"  // IWYU pragma: keep
 
 #include "srf/exceptions/runtime_error.hpp"
 

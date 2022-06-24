@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include <pysrf/subscriber.hpp>
-#include <pysrf/types.hpp>  // for PyObjectObserver, PyObjectSubscriber, PyObjectObservable, PySubscription
-#include <pysrf/utils.hpp>
+#include "pysrf/subscriber.hpp"
+#include "pysrf/types.hpp"  // for PyObjectObserver, PyObjectSubscriber, PyObjectObservable, PySubscription
+#include "pysrf/utils.hpp"
 
 #include <pybind11/attr.h>
 #include <pybind11/functional.h>  // IWYU pragma: keep

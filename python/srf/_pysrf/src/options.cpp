@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <pysrf/options.hpp>  // IWYU pragma: associated
+#include "pysrf/options.hpp"  // IWYU pragma: associated
 
 #include "srf/channel/channel.hpp"
 #include "srf/core/bitmap.hpp"

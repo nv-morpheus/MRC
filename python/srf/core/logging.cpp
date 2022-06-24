@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <pysrf/logging.hpp>
+#include "pysrf/logging.hpp"
 
 #include "srf/core/logging.hpp"
 

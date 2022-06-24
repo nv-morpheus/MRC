@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <pysrf/types.hpp>  // IWYU pragma: keep
-#include <pysrf/utils.hpp>
+#include "pysrf/types.hpp"  // IWYU pragma: keep
+#include "pysrf/utils.hpp"
 
 #include "srf/channel/forward.hpp"
 #include "srf/channel/ingress.hpp"

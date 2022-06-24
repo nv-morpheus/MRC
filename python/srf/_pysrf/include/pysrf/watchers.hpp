@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <pysrf/executor.hpp>
+#include "pysrf/executor.hpp"
 
 #include "srf/benchmarking/segment_watcher.hpp"
 #include "srf/benchmarking/tracer.hpp"

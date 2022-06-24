@@ -31,7 +31,7 @@
 #include <gtest/gtest.h>
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
-#include <pysrf/pipeline.hpp>
+#include "pysrf/pipeline.hpp"
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx-includes.hpp>
 #include <rxcpp/rx-observer.hpp>

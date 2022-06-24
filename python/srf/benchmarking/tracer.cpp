@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <pysrf/types.hpp>  // IWYU pragma: keep
+#include "pysrf/types.hpp"  // IWYU pragma: keep
 
 #include "srf/benchmarking/tracer.hpp"
 

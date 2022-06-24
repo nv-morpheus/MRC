@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include <pysrf/forward.hpp>
-#include <pysrf/node.hpp>
-#include <pysrf/utils.hpp>
+#include "pysrf/forward.hpp"
+#include "pysrf/node.hpp"
+#include "pysrf/utils.hpp"
 
 #include "srf/channel/status.hpp"
 #include "srf/node/edge_connector.hpp"

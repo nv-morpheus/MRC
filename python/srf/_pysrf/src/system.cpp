@@ -23,7 +23,7 @@
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <pysrf/system.hpp>
+#include "pysrf/system.hpp"
 
 #include <array>
 #include <memory>
