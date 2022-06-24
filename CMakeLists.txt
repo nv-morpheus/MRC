@@ -177,7 +177,6 @@ add_library(libsrf
   src/public/runnable/runnable.cpp
   src/public/runnable/runner.cpp
   src/public/segment/definition.cpp
-  src/public/segment/builder.cpp
 # src/public/segment/runnable.cpp
   src/public/runnable/types.cpp
   src/public/utils/bytes_to_string.cpp
@@ -211,6 +210,7 @@ add_library(libsrf
   src/internal/runnable/thread_engines.cpp
   src/internal/segment/builder.cpp
   src/internal/segment/definition.cpp
+  src/internal/segment/ibuilder.cpp
   src/internal/segment/idefinition.cpp
   src/internal/segment/instance.cpp
   src/internal/service.cpp
