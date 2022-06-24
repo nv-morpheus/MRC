@@ -67,10 +67,10 @@ namespace srf::internal::data_plane {
 
 using network_event_t = std::pair<PortAddress, memory::block>;
 
-class Server final : public Service, public resources::RunnableProvider
+class Server final : public Service, public resources::PartitionResourceBase
 {
   public:
-    Server(const resources::RunnableProvider& provider, std::shared_ptr<ucx::Worker> worker);
+    Server(resources::PartitionResourceBase& provider, std::shared_ptr<ucx::Worker> worker);
     ~Server() final;
 
     ucx::WorkerAddress worker_address() const;

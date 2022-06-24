@@ -42,6 +42,7 @@ class Manager final : public system::SystemProvider
   private:
     std::unique_ptr<system::Resources> m_system;
     std::vector<runnable::Resources> m_runnable;
+    std::vector<std::shared_ptr<srf::memory::memory_resource>> m_raw_host_memory_resources;
     std::vector<PartitionResources> m_partitions;
 };
 

@@ -26,45 +26,32 @@
 
 namespace srf::memory {
 
-template <typename MemoryKind>
-class memory_resource : public ::cuda::memory_resource<MemoryKind>
+struct memory_resource
 {
-  public:
-    memory_resource(std::string tag)
+    virtual ~memory_resource() = default;
+
+    void* allocate(std::size_t bytes)
     {
-        add_tag(tag);
+        return do_allocate(bytes);
     }
 
-    const std::string& tag() const
+    void deallocate(void* ptr, std::size_t bytes)
     {
-        return m_tags[m_tags.size() - 1];
+        if (ptr != nullptr)
+        {
+            do_deallocate(ptr, bytes);
+        }
     }
 
-    const std::vector<std::string>& tags() const
-    {
-        return m_tags;
-    }
-
-    memory_kind_type kind() const
+    memory_kind kind() const
     {
         return do_kind();
     }
 
-  protected:
-    void add_tag(const std::string& tag)
-    {
-        m_tags.insert(m_tags.begin(), tag);
-    }
-
-    void add_tags(const std::vector<std::string>& tags)
-    {
-        m_tags.insert(m_tags.begin(), tags.begin(), tags.end());
-    }
-
   private:
-    virtual memory_kind_type do_kind() const = 0;
-
-    std::vector<std::string> m_tags;
+    virtual void* do_allocate(std::size_t bytes)             = 0;
+    virtual void do_deallocate(void* ptr, std::size_t bytes) = 0;
+    virtual memory_kind do_kind() const                      = 0;
 };
 
 }  // namespace srf::memory

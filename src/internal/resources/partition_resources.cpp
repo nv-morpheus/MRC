@@ -19,18 +19,28 @@
 
 namespace srf::internal::resources {
 
-PartitionResources::PartitionResources(runnable::Resources& runnable_resources, std::size_t partition_id) :
-  RunnableProvider(runnable_resources, partition_id)
+PartitionResources::PartitionResources(runnable::Resources& runnable_resources,
+                                       std::size_t partition_id,
+                                       std::shared_ptr<srf::memory::memory_resource> host_mr) :
+  PartitionResourceBase(runnable_resources, partition_id),
+  m_raw_host_mr(std::move(host_mr))
 {
+    // construct network resources - ucx context and workers
     if (!system().options().architect_url().empty())
     {
-        m_network.emplace(*this);
+        m_ucx.emplace(*this);
     }
+
+    // construct memory resources
+    m_memory = std::make_unique<memory::Resources>(*this, m_ucx);
+
+    // construct data plane
+    if (m_ucx) {}
 }
 
-std::optional<network::Resources>& PartitionResources::network()
+std::optional<ucx::Resources>& PartitionResources::ucx()
 {
-    return m_network;
+    return m_ucx;
 }
 
 }  // namespace srf::internal::resources

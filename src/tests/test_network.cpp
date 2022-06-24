@@ -50,29 +50,6 @@ static std::shared_ptr<internal::system::System> make_system(std::function<void(
     return internal::system::make_system(std::move(options));
 }
 
-// class EncodedObjectMemoryResources : public core::Resources
-// {
-//   public:
-//     EncodedObjectMemoryResources() :
-//       m_host_view(std::make_shared<memory::pinned_memory_resource>()),
-//       m_device_view(std::make_shared<memory::cuda_malloc_resource>(0))
-//     {}
-//     ~EncodedObjectMemoryResources() override = default;
-
-//     host_view_t host_resource_view() override
-//     {
-//         return m_host_view;
-//     }
-//     device_view_t device_resource_view() override
-//     {
-//         return m_device_view;
-//     }
-
-//   private:
-//     host_view_t m_host_view;
-//     device_view_t m_device_view;
-// };
-
 class TestNetwork : public ::testing::Test
 {
   protected:

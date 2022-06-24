@@ -42,10 +42,10 @@
 
 namespace srf::internal::data_plane {
 
-class Client final : public Service, public resources::RunnableProvider
+class Client final : public Service, public resources::PartitionResourceBase
 {
   public:
-    Client(const resources::RunnableProvider& provider, std::shared_ptr<ucx::Worker> worker);
+    Client(resources::PartitionResourceBase& provider, std::shared_ptr<ucx::Worker> worker);
     ~Client() final;
 
     /**

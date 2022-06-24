@@ -20,7 +20,6 @@
 #include <srf/protos/codable.pb.h>
 #include <srf/codable/codable_protocol.hpp>
 #include <srf/exceptions/runtime_error.hpp>
-#include <srf/memory/blob.hpp>
 #include <srf/memory/block.hpp>
 #include <srf/memory/buffer.hpp>
 #include <srf/memory/resource_view.hpp>
@@ -224,7 +223,7 @@ class EncodedObject
     void add_type_index(std::type_index type_index);
 
     protos::EncodedObject m_proto;
-    std::map<std::size_t, memory::blob> m_buffers;
+    std::map<std::size_t, memory::buffer> m_buffers;
     std::vector<std::pair<int, std::type_index>> m_object_info;  // typeindex and starting descriptor index
     bool m_context_acquired{false};
     friend ContextGuard;

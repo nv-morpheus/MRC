@@ -25,19 +25,19 @@
 namespace srf::memory {
 
 template <typename Upstream>
-class logging_resource final : public upstream_resource<Upstream>
+class logging_resource final : public adaptor<Upstream>
 {
   public:
-    logging_resource(Upstream upstream, std::string prefix = "") :
-      upstream_resource<Upstream>(std::move(upstream), "logger"),
+    logging_resource(Upstream upstream, std::string prefix) :
+      adaptor<Upstream>(std::move(upstream)),
       m_prefix(std::move(prefix))
     {}
     ~logging_resource() override = default;
 
   private:
-    void* do_allocate(std::size_t bytes, std::size_t alignment) final
+    void* do_allocate(std::size_t bytes) final
     {
-        auto ptr = this->resource()->allocate(bytes, alignment);
+        auto ptr = this->resource()->allocate(bytes);
         LOG(INFO) << m_prefix << ": allocated " << ptr << "; size=" << bytes_to_string(bytes);
         return ptr;
     }

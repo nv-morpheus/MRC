@@ -20,6 +20,8 @@
 #include "internal/runnable/resources.hpp"
 #include "internal/system/partition_provider.hpp"
 
+#include <srf/memory/resources/memory_resource.hpp>
+
 #include <glog/logging.h>
 
 namespace srf::internal::resources {
@@ -30,11 +32,11 @@ namespace srf::internal::resources {
  * This provider avoids significant code duplication since virtually every type of of partition resource need both
  * partition information as well an the runnable resources.
  */
-class RunnableProvider : public system::PartitionProvider
+class PartitionResourceBase : public system::PartitionProvider
 {
   public:
-    RunnableProvider(runnable::Resources& runnable, std::size_t partition_id);
-    RunnableProvider(const RunnableProvider& other) = default;
+    PartitionResourceBase(runnable::Resources& runnable, std::size_t partition_id);
+    PartitionResourceBase(const PartitionResourceBase& other) = default;
 
     runnable::Resources& runnable();
 

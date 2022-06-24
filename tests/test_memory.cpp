@@ -19,7 +19,6 @@
 
 #include <srf/cuda/common.hpp>  // for SRF_CHECK_CUDA
 #include <srf/memory/adaptors.hpp>
-#include <srf/memory/blob.hpp>
 #include <srf/memory/block.hpp>
 #include <srf/memory/buffer.hpp>
 #include <srf/memory/buffer_utils.hpp>

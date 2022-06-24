@@ -19,14 +19,24 @@
 
 namespace srf::internal::resources {
 
-RunnableProvider::RunnableProvider(runnable::Resources& runnable, std::size_t partition_id) :
+PartitionResourceBase::PartitionResourceBase(runnable::Resources& runnable,
+                                             std::size_t partition_id,
+                                             std::shared_ptr<srf::memory::memory_resource> host_mr) :
   system::PartitionProvider(runnable, partition_id),
-  m_runnable(runnable)
+  m_runnable(runnable),
+  m_raw_host_memory_resource(std::move(host_mr))
 {
     CHECK_EQ(m_runnable.host_partition_id(), partition().host_partition_id());
+    CHECK(m_raw_host_memory_resource);
 }
-runnable::Resources& RunnableProvider::runnable()
+runnable::Resources& PartitionResourceBase::runnable()
 {
     return m_runnable;
 }
+
+std::shared_ptr<srf::memory::memory_resource> PartitionResourceBase::raw_host_mr() const
+{
+    return m_raw_host_memory_resource;
+}
+
 }  // namespace srf::internal::resources

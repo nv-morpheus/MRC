@@ -15,13 +15,16 @@
  * limitations under the License.
  */
 
-#include "internal/network/resources.hpp"
+#include "internal/ucx/resources.hpp"
 #include "internal/system/system_provider.hpp"
+#include "internal/ucx/worker.hpp"
 
-namespace srf::internal::network {
+#include <srf/cuda/common.hpp>
 
-Resources::Resources(const resources::RunnableProvider& partition_provider) :
-  resources::RunnableProvider(partition_provider)
+namespace srf::internal::ucx {
+
+Resources::Resources(resources::PartitionResourceBase& partition_provider) :
+  resources::PartitionResourceBase(partition_provider)
 {
     VLOG(1) << "constructing network resources for partition: " << partition_id() << " on partitions main task queue";
     runnable()
@@ -40,13 +43,23 @@ Resources::Resources(const resources::RunnableProvider& partition_provider) :
             DVLOG(10) << "initializing ucx context";
             m_ucx_context = std::make_shared<ucx::Context>();
 
-            DVLOG(10) << "initialize a ucx data_plane server to handle incoming events";
-            m_server = std::make_unique<data_plane::Server>(*this, std::make_shared<ucx::Worker>(m_ucx_context));
+            DVLOG(10) << "initialize a ucx data_plane worker for server";
+            m_worker_server = std::make_shared<ucx::Worker>(m_ucx_context);
 
-            DVLOG(10) << "initialize a ucx data_plane client to make network requests";
-            DVLOG(10) << "initialize a grpc control_plane client to make network requests";
+            DVLOG(10) << "initialize a ucx data_plane worker for client";
+            m_worker_client = std::make_shared<ucx::Worker>(m_ucx_context);
+
+            // flush any work that needs to be done by the workers
+            while (m_worker_server->progress() != 0) {}
+            while (m_worker_client->progress() != 0) {}
         })
         .get();
 }
 
-}  // namespace srf::internal::network
+Context& Resources::context()
+{
+    CHECK(m_ucx_context);
+    return *m_ucx_context;
+}
+
+}  // namespace srf::internal::ucx

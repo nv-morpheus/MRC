@@ -25,7 +25,7 @@ namespace srf::internal::system {
 class PartitionProvider : public SystemProvider
 {
   public:
-    PartitionProvider(const SystemProvider& system, std::size_t partition_id);
+    PartitionProvider(SystemProvider& system, std::size_t partition_id);
 
     std::size_t partition_id() const;
     const Partition& partition() const;

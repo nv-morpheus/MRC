@@ -24,7 +24,7 @@
 
 namespace srf::internal::system {
 
-PartitionProvider::PartitionProvider(const SystemProvider& system, std::size_t partition_id) :
+PartitionProvider::PartitionProvider(SystemProvider& system, std::size_t partition_id) :
   SystemProvider(system),
   m_partition_id(partition_id)
 {

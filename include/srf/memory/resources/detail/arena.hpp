@@ -547,7 +547,7 @@ class arena
      * that was passed to the `allocate` call that returned `p`.
      * @param stream Stream on which to perform deallocation.
      */
-    void deallocate(void* ptr, std::size_t bytes, std::size_t alignment)
+    void deallocate(void* ptr, std::size_t bytes)
     {
         lock_guard lock(mtx_);
         block const blk{ptr, bytes};

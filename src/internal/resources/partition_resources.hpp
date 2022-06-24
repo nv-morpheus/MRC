@@ -17,9 +17,10 @@
 
 #pragma once
 
-#include "internal/network/resources.hpp"
+#include "internal/memory/resources.hpp"
 #include "internal/resources/runnable_provider.hpp"
 #include "internal/runnable/resources.hpp"
+#include "internal/ucx/resources.hpp"
 
 #include <glog/logging.h>
 
@@ -30,15 +31,20 @@ namespace srf::internal::resources {
 /**
  * @brief Owner of most resources assigned to a specific partition.
  */
-class PartitionResources : public RunnableProvider
+class PartitionResources final : public PartitionResourceBase
 {
   public:
-    PartitionResources(runnable::Resources& runnable_resources, std::size_t partition_id);
+    PartitionResources(runnable::Resources& runnable_resources,
+                       std::size_t partition_id,
+                       std::shared_ptr<srf::memory::memory_resource> host_mr);
 
-    std::optional<network::Resources>& network();
+    std::optional<ucx::Resources>& ucx();
 
   private:
-    std::optional<network::Resources> m_network{std::nullopt};
+    // the raw host memory resource could be shared across multiple
+    const std::shared_ptr<srf::memory::memory_resource> m_raw_host_mr;
+    std::optional<ucx::Resources> m_ucx{std::nullopt};
+    std::unique_ptr<memory::Resources> m_memory;
 };
 
 }  // namespace srf::internal::resources

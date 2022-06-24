@@ -49,7 +49,7 @@ class const_block  // NOLINT
      * @param bytes
      * @param kind
      */
-    const_block(void* data, std::size_t bytes, memory_kind_type kind);
+    const_block(void* data, std::size_t bytes, memory_kind kind);
 
     /**
      * @brief Construct a new const_block object from a const raw pointer and details
@@ -58,7 +58,7 @@ class const_block  // NOLINT
      * @param bytes
      * @param kind
      */
-    const_block(const void* data, std::size_t bytes, memory_kind_type kind);
+    const_block(const void* data, std::size_t bytes, memory_kind kind);
 
     /**
      * @brief Construct a const_block from a blob
@@ -76,8 +76,7 @@ class const_block  // NOLINT
      * @tparam Properties
      * @param buffer
      */
-    template <typename... PropertiesT>
-    const_block(const buffer<PropertiesT...>& buffer) :
+    const_block(const buffer& buffer) :
       m_data(const_cast<void*>(buffer.data())),
       m_bytes(buffer.bytes()),
       m_kind(buffer.kind())
@@ -102,9 +101,9 @@ class const_block  // NOLINT
     /**
      * @brief Type of memory described by the block
      *
-     * @return memory_kind_type
+     * @return memory_kind
      */
-    memory_kind_type kind() const;
+    memory_kind kind() const;
 
     /**
      * @brief Returns true if the memory block is empty
@@ -129,7 +128,7 @@ class const_block  // NOLINT
   private:
     void* m_data{nullptr};
     std::size_t m_bytes{0UL};
-    memory_kind_type m_kind{memory_kind_type::none};
+    memory_kind m_kind{memory_kind::none};
 
     friend block;
 };
