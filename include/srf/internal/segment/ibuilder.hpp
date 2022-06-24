@@ -19,11 +19,11 @@
 
 #include <srf/runnable/forward.hpp>
 #include <srf/types.hpp>
+#include <srf/utils/macros.hpp>
 
 #include <functional>
 #include <memory>
 #include <string>
-#include "srf/utils/macros.hpp"
 
 // todo(ryan) - most base classes that will be owned by the engine will need to be moved to engine api/lib
 namespace srf::segment {
