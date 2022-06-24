@@ -17,7 +17,7 @@
 
 #include <pysrf/logging.hpp>
 
-#include <srf/core/logging.hpp>
+#include "srf/core/logging.hpp"
 
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <srf/pipeline/pipeline.hpp>
+#include "srf/pipeline/pipeline.hpp"
 
 namespace test::pipelines {
 

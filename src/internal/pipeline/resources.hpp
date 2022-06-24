@@ -20,7 +20,7 @@
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/resource_partitions.hpp"
 
-#include <srf/metrics/registry.hpp>
+#include "srf/metrics/registry.hpp"
 
 #include <cstddef>
 #include <memory>

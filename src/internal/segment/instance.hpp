@@ -22,9 +22,9 @@
 #include "internal/segment/definition.hpp"
 #include "internal/service.hpp"
 
-#include <srf/manifold/interface.hpp>
-#include <srf/runnable/runner.hpp>
-#include <srf/types.hpp>
+#include "srf/manifold/interface.hpp"
+#include "srf/runnable/runner.hpp"
+#include "srf/types.hpp"
 
 #include <cstddef>
 #include <map>

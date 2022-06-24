@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include <srf/channel/ingress.hpp>
-#include <srf/node/edge_properties.hpp>
-#include <srf/node/forward.hpp>
-#include <srf/node/sink_channel_base.hpp>
+#include "srf/channel/ingress.hpp"
+#include "srf/node/edge_properties.hpp"
+#include "srf/node/forward.hpp"
+#include "srf/node/sink_channel_base.hpp"
 
 namespace srf::node {
 

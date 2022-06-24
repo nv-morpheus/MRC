@@ -17,20 +17,20 @@
 
 #include "test_srf.hpp"  // IWYU pragma: associated
 
-#include <srf/channel/status.hpp>
-#include <srf/core/executor.hpp>
-#include <srf/core/runtime.hpp>
-#include <srf/node/operators/muxer.hpp>
-#include <srf/options/options.hpp>
-#include <srf/options/topology.hpp>
-#include <srf/pipeline/pipeline.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/context.hpp>
-#include <srf/segment/definition.hpp>
-#include <srf/segment/egress_ports.hpp>
-#include <srf/segment/ingress_ports.hpp>
-#include <srf/segment/segment.hpp>
-#include <srf/types.hpp>
+#include "srf/channel/status.hpp"
+#include "srf/core/executor.hpp"
+#include "srf/core/runtime.hpp"
+#include "srf/node/operators/muxer.hpp"
+#include "srf/options/options.hpp"
+#include "srf/options/topology.hpp"
+#include "srf/pipeline/pipeline.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/context.hpp"
+#include "srf/segment/definition.hpp"
+#include "srf/segment/egress_ports.hpp"
+#include "srf/segment/ingress_ports.hpp"
+#include "srf/segment/segment.hpp"
+#include "srf/types.hpp"
 
 #include <boost/fiber/buffered_channel.hpp>
 #include <boost/fiber/channel_op_status.hpp>

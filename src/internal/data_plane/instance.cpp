@@ -21,7 +21,7 @@
 #include "internal/data_plane/server.hpp"
 #include "internal/ucx/context.hpp"
 
-#include <srf/runnable/launch_control.hpp>
+#include "srf/runnable/launch_control.hpp"
 
 #include <glog/logging.h>
 

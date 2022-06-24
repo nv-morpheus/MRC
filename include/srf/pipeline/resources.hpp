@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include <srf/core/fiber_meta_data.hpp>
-#include <srf/core/task_queue.hpp>
-#include <srf/metrics/registry.hpp>
-#include <srf/runnable/launch_control.hpp>
+#include "srf/core/fiber_meta_data.hpp"
+#include "srf/core/task_queue.hpp"
+#include "srf/metrics/registry.hpp"
+#include "srf/runnable/launch_control.hpp"
 
 namespace srf::pipeline {
 

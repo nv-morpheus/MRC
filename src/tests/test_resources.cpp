@@ -20,8 +20,8 @@
 #include "internal/resources/system_resources.hpp"
 #include "internal/system/system.hpp"
 
-#include <srf/channel/forward.hpp>
-#include <srf/options/options.hpp>
+#include "srf/channel/forward.hpp"
+#include "srf/options/options.hpp"
 
 #include <gtest/gtest.h>
 

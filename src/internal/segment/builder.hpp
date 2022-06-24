@@ -20,11 +20,11 @@
 #include "internal/pipeline/resources.hpp"
 #include "internal/segment/definition.hpp"
 
-#include <srf/engine/segment/ibuilder.hpp>
-#include <srf/runnable/forward.hpp>
-#include <srf/segment/forward.hpp>
-#include <srf/segment/object.hpp>
-#include <srf/types.hpp>
+#include "srf/engine/segment/ibuilder.hpp"
+#include "srf/runnable/forward.hpp"
+#include "srf/segment/forward.hpp"
+#include "srf/segment/object.hpp"
+#include "srf/types.hpp"
 
 #include <cstddef>
 #include <cstdint>

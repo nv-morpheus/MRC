@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-#include <srf/metrics/counter.hpp>
+#include "srf/metrics/counter.hpp"
 
 // Non-main includes
-#include <srf/metrics/registry.hpp>
+#include "srf/metrics/registry.hpp"
 
 #include <glog/logging.h>
 #include <prometheus/client_metric.h>

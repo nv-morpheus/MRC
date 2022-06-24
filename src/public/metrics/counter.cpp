@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <srf/metrics/counter.hpp>
+#include "srf/metrics/counter.hpp"
 
 // Non-main includes
 #include <prometheus/counter.h>

@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <srf/node/forward.hpp>
-#include <srf/node/rx_subscribable.hpp>
+#include "srf/node/forward.hpp"
+#include "srf/node/rx_subscribable.hpp"
 
 #include <glog/logging.h>
 #include <rxcpp/rx-subscription.hpp>

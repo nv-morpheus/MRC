@@ -20,7 +20,7 @@
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include <srf/types.hpp>
+#include "srf/types.hpp"
 
 #include <glog/logging.h>
 #include <ucp/api/ucp.h>      // for ucp_ep_close_nb, ucp_ep_create, UCP_EP_...

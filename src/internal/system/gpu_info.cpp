@@ -17,7 +17,7 @@
 
 #include "internal/system/gpu_info.hpp"
 
-#include <srf/core/bitmap.hpp>
+#include "srf/core/bitmap.hpp"
 
 namespace srf::internal::system {
 

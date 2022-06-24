@@ -19,20 +19,20 @@
 
 #include <srf/protos/remote_descriptor.pb.h>
 #include <srf/protos/tensor_meta_data.pb.h>
-#include <srf/codable/codable_protocol.hpp>
-#include <srf/codable/encode.hpp>
-#include <srf/codable/encoded_object.hpp>
-#include <srf/codable/encoding_options.hpp>
-#include <srf/codable/type_traits.hpp>
+#include "srf/codable/codable_protocol.hpp"
+#include "srf/codable/encode.hpp"
+#include "srf/codable/encoded_object.hpp"
+#include "srf/codable/encoding_options.hpp"
+#include "srf/codable/type_traits.hpp"
 
-#include <srf/core/resources.hpp>
-#include <srf/core/tensor.hpp>
-#include <srf/memory/block.hpp>
-#include <srf/memory/memory_kind.hpp>
-#include <srf/memory/resources/device/cuda_malloc_resource.hpp>
-#include <srf/memory/resources/host/pinned_memory_resource.hpp>
-#include <srf/utils/thread_local_shared_pointer.hpp>
-#include <srf/utils/type_utils.hpp>
+#include "srf/core/resources.hpp"
+#include "srf/core/tensor.hpp"
+#include "srf/memory/block.hpp"
+#include "srf/memory/memory_kind.hpp"
+#include "srf/memory/resources/device/cuda_malloc_resource.hpp"
+#include "srf/memory/resources/host/pinned_memory_resource.hpp"
+#include "srf/utils/thread_local_shared_pointer.hpp"
+#include "srf/utils/type_utils.hpp"
 
 #include <cuda/memory_resource>
 

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <srf/benchmarking/util.hpp>
+#include "srf/benchmarking/util.hpp"
 
 #include <ext/new_allocator.h>
 #include <glog/logging.h>

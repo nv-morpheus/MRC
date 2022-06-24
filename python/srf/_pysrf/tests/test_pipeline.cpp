@@ -17,16 +17,16 @@
 
 #include "test_pysrf.hpp"
 
-#include <srf/channel/status.hpp>
-#include <srf/core/executor.hpp>
-#include <srf/engine/pipeline/ipipeline.hpp>
-#include <srf/node/rx_node.hpp>
-#include <srf/node/rx_sink.hpp>
-#include <srf/node/rx_source.hpp>
-#include <srf/options/options.hpp>
-#include <srf/options/topology.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/object.hpp>
+#include "srf/channel/status.hpp"
+#include "srf/core/executor.hpp"
+#include "srf/engine/pipeline/ipipeline.hpp"
+#include "srf/node/rx_node.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/rx_source.hpp"
+#include "srf/options/options.hpp"
+#include "srf/options/topology.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/object.hpp"
 
 #include <gtest/gtest.h>
 #include <pybind11/gil.h>

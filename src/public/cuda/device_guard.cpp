@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-#include <srf/cuda/device_guard.hpp>
+#include "srf/cuda/device_guard.hpp"
 
 // Non-main includes
-#include <srf/cuda/common.hpp>
+#include "srf/cuda/common.hpp"
 
 #include <cuda_runtime.h>
 #include <glog/logging.h>

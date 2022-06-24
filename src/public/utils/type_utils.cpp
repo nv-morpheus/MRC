@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-#include <srf/utils/type_utils.hpp>
+#include "srf/utils/type_utils.hpp"
 
 // Non-main includes
-#include <srf/utils/string_utils.hpp>
+#include "srf/utils/string_utils.hpp"
 
 #include <glog/logging.h>
 

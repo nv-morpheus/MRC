@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include <srf/memory/buffer.hpp>
-#include <srf/memory/memory_kind.hpp>
-#include <srf/utils/macros.hpp>
+#include "srf/memory/buffer.hpp"
+#include "srf/memory/memory_kind.hpp"
+#include "srf/utils/macros.hpp"
 
 #include <rmm/cuda_stream_view.hpp>
 #include <rmm/device_buffer.hpp>

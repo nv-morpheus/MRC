@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <srf/memory/resources/memory_resource.hpp>
-#include <srf/type_traits.hpp>
+#include "srf/memory/resources/memory_resource.hpp"
+#include "srf/type_traits.hpp"
 
 #include <cuda/memory_resource>
 #include <glog/logging.h>

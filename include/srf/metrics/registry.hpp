@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <srf/metrics/counter.hpp>
+#include "srf/metrics/counter.hpp"
 
 #include <functional>
 #include <map>

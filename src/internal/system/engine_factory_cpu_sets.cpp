@@ -17,11 +17,11 @@
 
 #include "internal/system/engine_factory_cpu_sets.hpp"
 
-#include <srf/core/bitmap.hpp>
-#include <srf/exceptions/runtime_error.hpp>
-#include <srf/options/engine_groups.hpp>
-#include <srf/options/options.hpp>
-#include <srf/runnable/types.hpp>
+#include "srf/core/bitmap.hpp"
+#include "srf/exceptions/runtime_error.hpp"
+#include "srf/options/engine_groups.hpp"
+#include "srf/options/options.hpp"
+#include "srf/runnable/types.hpp"
 
 #include <glog/logging.h>
 

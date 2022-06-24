@@ -17,18 +17,18 @@
 
 #include "common_pipelines.hpp"
 
-#include <srf/channel/status.hpp>
-#include <srf/engine/pipeline/ipipeline.hpp>
-#include <srf/node/rx_sink.hpp>
-#include <srf/node/rx_source.hpp>
-#include <srf/node/sink_properties.hpp>
-#include <srf/node/source_properties.hpp>
-#include <srf/pipeline/pipeline.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/definition.hpp>
-#include <srf/segment/egress_ports.hpp>
-#include <srf/segment/ingress_ports.hpp>
-#include <srf/segment/object.hpp>
+#include "srf/channel/status.hpp"
+#include "srf/engine/pipeline/ipipeline.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/rx_source.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_properties.hpp"
+#include "srf/pipeline/pipeline.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/definition.hpp"
+#include "srf/segment/egress_ports.hpp"
+#include "srf/segment/ingress_ports.hpp"
+#include "srf/segment/object.hpp"
 
 #include <glog/logging.h>
 #include <rxcpp/rx-includes.hpp>

@@ -19,7 +19,7 @@
 
 #include "internal/system/system.hpp"
 
-#include <srf/core/bitmap.hpp>
+#include "srf/core/bitmap.hpp"
 
 #include <cstdint>
 

@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-#include <srf/codable/encoded_object.hpp>
+#include "srf/codable/encoded_object.hpp"
 
 // Non-main includes
-#include <srf/codable/memory_resources.hpp>
-#include <srf/memory/block.hpp>
-#include <srf/memory/memory_kind.hpp>
+#include "srf/codable/memory_resources.hpp"
+#include "srf/memory/block.hpp"
+#include "srf/memory/memory_kind.hpp"
 #include <srf/protos/codable.pb.h>
-#include <srf/utils/thread_local_shared_pointer.hpp>
+#include "srf/utils/thread_local_shared_pointer.hpp"
 
 #include <google/protobuf/any.pb.h>
 #include <google/protobuf/message.h>

@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include <srf/channel/status.hpp>
-#include <srf/node/operators/operator.hpp>
-#include <srf/node/source_channel.hpp>
-#include <srf/type_traits.hpp>
+#include "srf/channel/status.hpp"
+#include "srf/node/operators/operator.hpp"
+#include "srf/node/source_channel.hpp"
+#include "srf/type_traits.hpp"
 
 namespace srf::node {
 

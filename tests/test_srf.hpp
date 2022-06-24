@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include <srf/memory/memory_kind.hpp>
-#include <srf/memory/resources/device/cuda_malloc_resource.hpp>  // IWYU pragma: export
-#include <srf/memory/resources/host/pinned_memory_resource.hpp>  // IWYU pragma: export
+#include "srf/memory/memory_kind.hpp"
+#include "srf/memory/resources/device/cuda_malloc_resource.hpp"  // IWYU pragma: export
+#include "srf/memory/resources/host/pinned_memory_resource.hpp"  // IWYU pragma: export
 
 #include <glog/logging.h>  // IWYU pragma: keep
 #include <gtest/gtest.h>   // IWYU pragma: keep

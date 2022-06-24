@@ -21,9 +21,9 @@
 #include "internal/system/gpu_info.hpp"
 #include "internal/system/host_partition.hpp"
 
-#include <srf/core/bitmap.hpp>
-#include <srf/options/options.hpp>
-#include <srf/options/placement.hpp>
+#include "srf/core/bitmap.hpp"
+#include "srf/options/options.hpp"
+#include "srf/options/placement.hpp"
 
 #include <vector>
 

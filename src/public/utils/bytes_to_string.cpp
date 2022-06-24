@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <srf/utils/bytes_to_string.hpp>
+#include "srf/utils/bytes_to_string.hpp"
 
 // Non-main includes
 #include <glog/logging.h>

@@ -17,22 +17,22 @@
 
 #pragma once
 
-#include <srf/engine/segment/ibuilder.hpp>
-#include <srf/exceptions/runtime_error.hpp>
-#include <srf/node/edge_builder.hpp>
-#include <srf/node/rx_node.hpp>
-#include <srf/node/rx_sink.hpp>
-#include <srf/node/rx_source.hpp>
-#include <srf/node/sink_properties.hpp>
-#include <srf/node/source_properties.hpp>
-#include <srf/runnable/launchable.hpp>
-#include <srf/runnable/runnable.hpp>
-#include <srf/segment/component.hpp>
-#include <srf/segment/egress_port.hpp>
-#include <srf/segment/forward.hpp>
-#include <srf/segment/object.hpp>
-#include <srf/segment/runnable.hpp>
-#include <srf/utils/macros.hpp>
+#include "srf/engine/segment/ibuilder.hpp"
+#include "srf/exceptions/runtime_error.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/node/rx_node.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/rx_source.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_properties.hpp"
+#include "srf/runnable/launchable.hpp"
+#include "srf/runnable/runnable.hpp"
+#include "srf/segment/component.hpp"
+#include "srf/segment/egress_port.hpp"
+#include "srf/segment/forward.hpp"
+#include "srf/segment/object.hpp"
+#include "srf/segment/runnable.hpp"
+#include "srf/utils/macros.hpp"
 
 #include <glog/logging.h>
 #include <rxcpp/rx-observable.hpp>

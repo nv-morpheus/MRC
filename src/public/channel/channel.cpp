@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-#include <srf/channel/channel.hpp>
+#include "srf/channel/channel.hpp"
 
 // Non-main includes
-#include <srf/constants.hpp>
+#include "srf/constants.hpp"
 
 #include <cstddef>
 #include <stdexcept>

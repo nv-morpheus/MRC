@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-#include <srf/runnable/context.hpp>
+#include "srf/runnable/context.hpp"
 
 // Non-main includes
-#include <srf/runnable/runner.hpp>
-#include <srf/runnable/types.hpp>
+#include "srf/runnable/runner.hpp"
+#include "srf/runnable/types.hpp"
 
 #include <boost/fiber/fss.hpp>
 #include <glog/logging.h>

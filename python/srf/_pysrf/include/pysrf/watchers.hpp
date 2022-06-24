@@ -19,10 +19,10 @@
 
 #include <pysrf/executor.hpp>
 
-#include <srf/benchmarking/segment_watcher.hpp>
-#include <srf/benchmarking/tracer.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/object.hpp>
+#include "srf/benchmarking/segment_watcher.hpp"
+#include "srf/benchmarking/tracer.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/object.hpp"
 
 #include <pybind11/pytypes.h>  // for object, dict
 

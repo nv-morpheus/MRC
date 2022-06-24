@@ -17,20 +17,20 @@
 
 #pragma once
 
-#include <srf/manifold/connectable.hpp>
-#include <srf/manifold/factory.hpp>
-#include <srf/manifold/interface.hpp>
-#include <srf/node/edge_builder.hpp>
-#include <srf/node/generic_sink.hpp>
-#include <srf/node/operators/muxer.hpp>
-#include <srf/node/rx_node.hpp>
-#include <srf/node/sink_channel.hpp>
-#include <srf/node/sink_properties.hpp>
-#include <srf/node/source_channel.hpp>
-#include <srf/node/source_properties.hpp>
-#include <srf/runnable/launch_options.hpp>
-#include <srf/runnable/launchable.hpp>
-#include <srf/segment/object.hpp>
+#include "srf/manifold/connectable.hpp"
+#include "srf/manifold/factory.hpp"
+#include "srf/manifold/interface.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/node/generic_sink.hpp"
+#include "srf/node/operators/muxer.hpp"
+#include "srf/node/rx_node.hpp"
+#include "srf/node/sink_channel.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_channel.hpp"
+#include "srf/node/source_properties.hpp"
+#include "srf/runnable/launch_options.hpp"
+#include "srf/runnable/launchable.hpp"
+#include "srf/segment/object.hpp"
 
 #include <condition_variable>
 #include <memory>

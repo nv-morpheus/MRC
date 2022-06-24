@@ -21,13 +21,13 @@
 #include <pysrf/pipeline.hpp>
 #include <pysrf/utils.hpp>
 
-#include <srf/benchmarking/tracer.hpp>
-#include <srf/channel/status.hpp>
-#include <srf/node/rx_node.hpp>
-#include <srf/node/rx_sink.hpp>
-#include <srf/node/rx_source.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/object.hpp>
+#include "srf/benchmarking/tracer.hpp"
+#include "srf/channel/status.hpp"
+#include "srf/node/rx_node.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/rx_source.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/object.hpp"
 
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>  // IWYU pragma: keep

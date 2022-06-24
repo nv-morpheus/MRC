@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include <srf/memory/blob.hpp>
-#include <srf/memory/buffer.hpp>
-#include <srf/memory/memory_kind.hpp>
+#include "srf/memory/blob.hpp"
+#include "srf/memory/buffer.hpp"
+#include "srf/memory/memory_kind.hpp"
 
 #include <glog/logging.h>
 

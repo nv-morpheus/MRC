@@ -19,11 +19,11 @@
 
 #include <pysrf/forward.hpp>
 
-#include <srf/options/engine_groups.hpp>
-#include <srf/options/options.hpp>
-#include <srf/options/placement.hpp>
-#include <srf/options/topology.hpp>
-#include <srf/runnable/types.hpp>
+#include "srf/options/engine_groups.hpp"
+#include "srf/options/options.hpp"
+#include "srf/options/placement.hpp"
+#include "srf/options/topology.hpp"
+#include "srf/runnable/types.hpp"
 
 #include <cstddef>  // for size_t
 #include <string>

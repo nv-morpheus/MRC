@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-#include <srf/cuda/sync.hpp>
+#include "srf/cuda/sync.hpp"
 
 // Non-main includes
-#include <srf/cuda/common.hpp>  // IWYU pragma: associated
-#include <srf/types.hpp>        // for Promise, Future
+#include "srf/cuda/common.hpp"  // IWYU pragma: associated
+#include "srf/types.hpp"        // for Promise, Future
 
 #include <boost/fiber/future/promise.hpp>
 

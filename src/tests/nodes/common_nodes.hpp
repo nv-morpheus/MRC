@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <srf/node/rx_sink.hpp>
-#include <srf/node/rx_source.hpp>
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/rx_source.hpp"
 
 #include <memory>
 

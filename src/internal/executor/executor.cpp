@@ -24,11 +24,11 @@
 #include "internal/resources/resource_partitions.hpp"
 #include "internal/system/system.hpp"
 
-#include <srf/core/addresses.hpp>
-#include <srf/engine/pipeline/ipipeline.hpp>
-#include <srf/exceptions/runtime_error.hpp>
-#include <srf/options/options.hpp>
-#include <srf/types.hpp>
+#include "srf/core/addresses.hpp"
+#include "srf/engine/pipeline/ipipeline.hpp"
+#include "srf/exceptions/runtime_error.hpp"
+#include "srf/options/options.hpp"
+#include "srf/types.hpp"
 
 #include <glog/logging.h>
 

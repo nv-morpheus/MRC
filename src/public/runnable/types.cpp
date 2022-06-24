@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <srf/runnable/types.hpp>
+#include "srf/runnable/types.hpp"
 
 // Non-main includes
 #include <glog/logging.h>

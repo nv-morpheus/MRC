@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-#include <srf/core/addresses.hpp>
+#include "srf/core/addresses.hpp"
 
 // Non-main includes
-#include <srf/types.hpp>
+#include "srf/types.hpp"
 
 #include <glog/logging.h>
 

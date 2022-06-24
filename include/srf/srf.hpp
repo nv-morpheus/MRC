@@ -18,14 +18,14 @@
 #pragma once
 
 // Forward declaration of public API
-#include <srf/forward.hpp>
+#include "srf/forward.hpp"
 
 // Then the rest of the includes
-#include <srf/core/context.hpp>
-#include <srf/core/executor.hpp>
-#include <srf/options/options.hpp>
-#include <srf/pipeline/pipeline.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/definition.hpp>
-#include <srf/segment/egress_ports.hpp>
-#include <srf/segment/ingress_ports.hpp>
+#include "srf/core/context.hpp"
+#include "srf/core/executor.hpp"
+#include "srf/options/options.hpp"
+#include "srf/pipeline/pipeline.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/definition.hpp"
+#include "srf/segment/egress_ports.hpp"
+#include "srf/segment/ingress_ports.hpp"

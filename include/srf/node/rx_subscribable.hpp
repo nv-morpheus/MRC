@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <srf/node/forward.hpp>
+#include "srf/node/forward.hpp"
 
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>

@@ -17,7 +17,7 @@
 
 #include <pysrf/types.hpp>  // IWYU pragma: keep
 
-#include <srf/benchmarking/tracer.hpp>
+#include "srf/benchmarking/tracer.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>

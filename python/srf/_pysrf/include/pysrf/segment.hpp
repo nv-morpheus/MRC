@@ -19,8 +19,8 @@
 
 #include <pysrf/types.hpp>
 
-#include <srf/segment/builder.hpp>
-#include <srf/segment/object.hpp>
+#include "srf/segment/builder.hpp"
+#include "srf/segment/object.hpp"
 
 // pybind11/functional.h is necessary so calls to wrap_segment_init_callback can use type converter
 #include <pybind11/functional.h>  // IWYU pragma: keep

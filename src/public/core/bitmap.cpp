@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <srf/core/bitmap.hpp>
+#include "srf/core/bitmap.hpp"
 
 // Non-main includes
 #include "internal/utils/parse_ints.hpp"

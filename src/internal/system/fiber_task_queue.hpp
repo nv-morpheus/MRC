@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <srf/core/bitmap.hpp>
-#include <srf/core/task_queue.hpp>
+#include "srf/core/bitmap.hpp"
+#include "srf/core/task_queue.hpp"
 
 #include <boost/fiber/buffered_channel.hpp>
 

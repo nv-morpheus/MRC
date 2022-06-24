@@ -17,10 +17,10 @@
 
 #include "common_nodes.hpp"
 
-#include <srf/channel/status.hpp>
-#include <srf/node/rx_sink.hpp>
-#include <srf/node/rx_source.hpp>
-#include <srf/runnable/context.hpp>
+#include "srf/channel/status.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/rx_source.hpp"
+#include "srf/runnable/context.hpp"
 
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>

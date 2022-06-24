@@ -20,11 +20,11 @@
 #include <pysrf/node.hpp>
 #include <pysrf/types.hpp>
 #include <pysrf/utils.hpp>
-#include <srf/channel/status.hpp>
-#include <srf/node/edge_builder.hpp>
-#include <srf/runnable/context.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/object.hpp>
+#include "srf/channel/status.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/runnable/context.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/object.hpp"
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>

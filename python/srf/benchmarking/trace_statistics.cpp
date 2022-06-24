@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <srf/benchmarking/trace_statistics.hpp>
+#include "srf/benchmarking/trace_statistics.hpp"
 
 #include <pysrf/types.hpp>  // IWYU pragma: keep
 #include <pysrf/utils.hpp>

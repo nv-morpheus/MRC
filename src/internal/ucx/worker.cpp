@@ -21,7 +21,7 @@
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/endpoint.hpp"
 
-#include <srf/types.hpp>
+#include "srf/types.hpp"
 
 #include <glog/logging.h>
 #include <ucp/api/ucp.h>           // for ucp_*

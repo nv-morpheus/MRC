@@ -17,16 +17,16 @@
 
 #include "test_segment.hpp"
 
-#include <srf/benchmarking/trace_statistics.hpp>
-#include <srf/channel/status.hpp>
-#include <srf/core/executor.hpp>
-#include <srf/node/edge_builder.hpp>
-#include <srf/node/operators/broadcast.hpp>
-#include <srf/options/options.hpp>
-#include <srf/options/topology.hpp>
-#include <srf/pipeline/pipeline.hpp>
-#include <srf/segment/segment.hpp>
-#include <srf/types.hpp>  // for Future, Tags
+#include "srf/benchmarking/trace_statistics.hpp"
+#include "srf/channel/status.hpp"
+#include "srf/core/executor.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/node/operators/broadcast.hpp"
+#include "srf/options/options.hpp"
+#include "srf/options/topology.hpp"
+#include "srf/pipeline/pipeline.hpp"
+#include "srf/segment/segment.hpp"
+#include "srf/types.hpp"  // for Future, Tags
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>

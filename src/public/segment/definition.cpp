@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-#include <srf/segment/definition.hpp>
+#include "srf/segment/definition.hpp"
 
 // Non-main includes
-#include <srf/engine/segment/ibuilder.hpp>
-#include <srf/engine/segment/idefinition.hpp>
-#include <srf/segment/builder.hpp>
+#include "srf/engine/segment/ibuilder.hpp"
+#include "srf/engine/segment/idefinition.hpp"
+#include "srf/segment/builder.hpp"
 
 namespace srf::segment {
 

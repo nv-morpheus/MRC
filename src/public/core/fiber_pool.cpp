@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-#include <srf/core/fiber_pool.hpp>
+#include "srf/core/fiber_pool.hpp"
 
 // Non-main includes
-#include <srf/core/bitmap.hpp>
+#include "srf/core/bitmap.hpp"
 
 namespace srf::core {
 

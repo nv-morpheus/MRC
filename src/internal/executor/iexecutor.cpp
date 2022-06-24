@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-#include <srf/engine/executor/iexecutor.hpp>
+#include "srf/engine/executor/iexecutor.hpp"
 
 // Non-main includes
 #include "internal/executor/executor.hpp"
 #include "internal/system/system.hpp"
 
-#include <srf/engine/pipeline/ipipeline.hpp>
-#include <srf/engine/system/isystem.hpp>
-#include <srf/options/options.hpp>
+#include "srf/engine/pipeline/ipipeline.hpp"
+#include "srf/engine/system/isystem.hpp"
+#include "srf/options/options.hpp"
 
 #include <glog/logging.h>
 

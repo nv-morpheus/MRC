@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <srf/memory/memory_kind.hpp>
+#include "srf/memory/memory_kind.hpp"
 
 #include <cuda/memory_resource>
 

@@ -20,9 +20,9 @@
 #include "internal/system/forward.hpp"
 #include "internal/system/host_partition.hpp"
 
-#include <srf/core/task_queue.hpp>
-#include <srf/pipeline/resources.hpp>
-#include <srf/runnable/launch_control.hpp>
+#include "srf/core/task_queue.hpp"
+#include "srf/pipeline/resources.hpp"
+#include "srf/runnable/launch_control.hpp"
 
 #include <memory>
 

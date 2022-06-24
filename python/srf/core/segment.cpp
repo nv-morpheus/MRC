@@ -20,12 +20,12 @@
 #include <pysrf/types.hpp>
 #include <pysrf/utils.hpp>
 
-#include <srf/channel/status.hpp>
+#include "srf/channel/status.hpp"
 
-#include <srf/node/edge_connector.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/definition.hpp>
-#include <srf/segment/object.hpp>
+#include "srf/node/edge_connector.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/definition.hpp"
+#include "srf/segment/object.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
