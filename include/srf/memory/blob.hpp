@@ -43,10 +43,10 @@ class blob
     blob();
     virtual ~blob();
 
-    blob(blob&&) noexcept            = default;
+    blob(blob&&) noexcept = default;
     blob& operator=(blob&&) noexcept = default;
 
-    blob(const blob&)            = default;
+    blob(const blob&) = default;
     blob& operator=(const blob&) = default;
 
     /**

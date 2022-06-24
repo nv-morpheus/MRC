@@ -26,6 +26,7 @@
 #include <pysrf/system.hpp>
 
 #include <array>
+#include <memory>
 #include <ostream>
 #include <utility>
 

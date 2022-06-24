@@ -59,7 +59,7 @@ class thread_barrier  // NOLINT
         BOOST_ASSERT(0 != initial);
     }
 
-    thread_barrier(thread_barrier const&)            = delete;
+    thread_barrier(thread_barrier const&) = delete;
     thread_barrier& operator=(thread_barrier const&) = delete;
 
     bool wait()
