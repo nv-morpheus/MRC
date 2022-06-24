@@ -4,61 +4,41 @@ The SRF Quick Start Guide (QSG) provides examples on how to start using SRF via 
 
 ## Prerequisites
 
-- Pascal architecture or better
+- Pascal architecture (Compute capability 6.0) or better
 - NVIDIA driver `450.80.02` or higher
 - [conda or miniconda](https://conda.io/projects/conda/en/latest/user-guide/install/linux.html)
+  - **Note:** Conda performance can be improved by using [Mamba](https://github.com/mamba-org/mamba) and is recommended for the QSG. If you have `mamba` installed, simply replace `conda`  with `mamba` in the installation instructions.
 - if using docker:
   - [Docker](https://docs.docker.com/get-docker/)
   - [The NVIDIA container toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker)
 
 ## Getting Started
 
-To get started with the QSG, it is necessary to get the required SRF components before running any of the examples. The QSG supports two methods for getting the SRF components:
+To get started with the QSG, it is necessary to get the required SRF components before running any of the examples. The QSG supports two methods for getting the SRF components: installing via Conda and building from source.
 
-### Installing via Conda [preferred method]
-Installing via Conda is the easiest method for getting the SRF components and supports both the Python and C++ bindings.
-      ```bash
-      # Change directory to the quickstart root
-      cd ${SRF_HOME}/docs/quickstart/
+### Installing via Conda [preferred]
+Installing via Conda is the easiest method for getting the SRF components and supports both the Python and C++ bindings. To install the SRF conda package and build the C++ and Hybrid components, follow the steps below:
 
-      # If needed, create a new conda environment
-      conda env create -n srf-quickstart -f environment_cpp.yml
-      conda activate srf-quickstart
+```bash
+# Change directory to the quickstart root
+cd ${SRF_HOME}/docs/quickstart/
 
-      # Or if reusing a conda environment, ensure all dependencies are installed
-      mamba env update -n srf-quickstart -f environment_cpp.yml
-      conda activate srf-quickstart
+# If needed, create a new conda environment
+conda env create -n srf-quickstart -f environment_cpp.yml
+conda activate srf-quickstart
 
-      # Compile the QSG. This will build the C++ and Hybrid components in ./build. And install the Python and Hybrid libraries
-      ./compile.sh
-      ```
+# Or if reusing a conda environment, ensure all dependencies are installed
+conda env update -n srf-quickstart -f environment_cpp.yml
+conda activate srf-quickstart
+
+# Compile the QSG. This will build the C++ and Hybrid components in ./build. And install the Python and Hybrid libraries
+./compile.sh
+```
+
 ### Building from Source [advanced]
-   1. Installing via the source is for more advanced users and is necessary to try SRF features before an official release.
-   2. To install SRF from source, it will be necessary to run CMake at the root of the repository:
-      ```bash
-      # Change directory to the repo root
-      cd ${SRF_HOME}
+Installing via the source is for more advanced users and is necessary to try SRF features before an official release. To install SRF from source, follow the [build instructions](../../CONTRIBUTING.md#setting-up-your-build-environment) in the [CONTRIBUTING](./../CONTRIBUTING.md) guide.
 
-      # If needed, create a new conda environment
-      conda env create -n srf-quickstart -f ci/conda/environments/dev_env.yml
-      conda activate srf-quickstart
-
-      # Or if reusing a conda environment, ensure all dependencies are installed
-      mamba env update -n srf-quickstart -f ci/conda/environments/dev_env.yml
-      conda activate srf-quickstart
-
-      # Run the CMake configure step
-      cmake -DSRF_USE_CONDA:BOOL=ON \
-            -DSRF_PYTHON_INPLACE_BUILD:BOOL=ON \
-            -DSRF_PYTHON_PERFORM_INSTALL:BOOL=ON \
-            -DSRF_BUILD_DOCS:BOOL=ON \
-            -B build -G Ninja .
-
-      # Run the CMake build step
-      cmake --build build -j
-      ```
-Conda performance can be improved by using [Mamba](https://github.com/mamba-org/mamba). If you have `mamba` installed, simply replace `conda`  with `mamba`.
-      1. Note: When building with this method, the CMake configure option `-DSRF_BUILD_DOCS:BOOL=ON` will build and install all of the necessary packages to run every example in the QSG. If this option is used, the "Setup" steps in the Python, C++ and Hybrid sections below can be skipped.
+**Note:** When building with this method, the CMake configure option `-DSRF_BUILD_DOCS:BOOL=ON` will build and install all of the necessary packages to run every example in the QSG during the source file compilation. If this option is used, the "Setup" steps in the Python, C++ and Hybrid sections below can be skipped.
 
 ## Python Quickstart
 
