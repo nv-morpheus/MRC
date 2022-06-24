@@ -17,13 +17,13 @@
 
 #pragma once
 
-#include "srf/channel/buffered_channel.hpp"
-#include "srf/utils/macros.hpp"
+#include <srf/channel/buffered_channel.hpp>
+#include <srf/utils/macros.hpp>
 
 #include <glog/logging.h>
+#include <boost/fiber/buffered_channel.hpp>
 
 #include <atomic>
-#include <boost/fiber/buffered_channel.hpp>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -54,7 +54,8 @@ class SharedReusable;
  * to be reset to a known state before being added back to the resource pool.
  *
  * Items can be added up to the predefined capacity which must be a power of 2. The add_item and return_item should
- * never block the caller because the channel should never be full.
+ * never block the caller because the channel should never be full. The number of items actively managed by the pool
+ * must be less than the capacity.
  *
  * It is possible for the caller of await_item to block on when the pool is empty and all avaiable items are in use.
  *
@@ -84,12 +85,13 @@ class ReusablePool final : public std::enable_shared_from_this<ReusablePool<T>>
     void add_item(item_t item)
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        if (m_size >= m_capacity)
+        if (m_size + 1 < m_capacity) /* [[likely]] */  // todo(#54) - cpp20
         {
-            throw std::length_error("pool capacity exceeded");
+            m_channel.push(std::move(item));
+            m_size++;
+            return;
         }
-        m_channel.push(std::move(item));
-        m_size++;
+        throw std::length_error("pool capacity exceeded");
     }
 
     template <typename... ArgsT>
@@ -231,6 +233,11 @@ class SharedReusable final
     {
         CHECK(m_data);
         return m_data.get();
+    }
+
+    void release()
+    {
+        m_data.reset();
     }
 
   private:
