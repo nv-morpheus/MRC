@@ -26,6 +26,7 @@
 #include <srf/runnable/launch_control.hpp>
 #include <srf/runnable/runner.hpp>
 #include <srf/types.hpp>
+
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/endpoint.hpp"
@@ -40,12 +41,10 @@
 
 namespace srf::internal::data_plane {
 
-// todo(ryan) - rename NetworkSendManager -> DataPlaneAPI
-
 class Client final : public Service
 {
   public:
-    Client(std::shared_ptr<ucx::Context> context);
+    Client(std::shared_ptr<ucx::Context> context, std::shared_ptr<resources::PartitionResources> resources);
     ~Client() final;
 
     /**
@@ -97,6 +96,7 @@ class Client final : public Service
     void do_service_await_join() final;
 
     std::shared_ptr<ucx::Worker> m_worker;
+    std::shared_ptr<resources::PartitionResources> m_resources;
     std::unique_ptr<node::SourceChannelWriteable<void*>> m_ucx_request_channel;
     std::unique_ptr<runnable::Runner> m_progress_engine;
 

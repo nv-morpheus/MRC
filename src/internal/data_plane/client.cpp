@@ -78,11 +78,14 @@ static void send_completion_handler_with_future(void* request, ucs_status_t stat
     // we could optimize this a bit more
 }
 
-Client::Client(std::shared_ptr<ucx::Context> context) : m_worker(std::make_shared<ucx::Worker>(std::move(context))) {}
+Client::Client(std::shared_ptr<ucx::Context> context, std::shared_ptr<resources::PartitionResources> resources) :
+  m_worker(std::make_shared<ucx::Worker>(std::move(context))),
+  m_resources(std::move(resources))
+{}
 
 Client::~Client()
 {
-    call_in_destructor();
+    Service::call_in_destructor();
 }
 
 void Client::do_service_start()

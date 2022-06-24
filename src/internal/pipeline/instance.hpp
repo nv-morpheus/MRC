@@ -19,7 +19,7 @@
 
 #include "internal/pipeline/pipeline.hpp"
 #include "internal/pipeline/resources.hpp"
-#include "internal/resources/resource_partitions.hpp"
+#include "internal/resources/manager.hpp"
 #include "internal/segment/instance.hpp"
 #include "internal/service.hpp"
 
@@ -35,7 +35,7 @@ namespace srf::internal::pipeline {
 class Instance final : public Service, public Resources
 {
   public:
-    Instance(std::shared_ptr<const Pipeline> definition, std::shared_ptr<resources::ResourcePartitions> resources);
+    Instance(std::shared_ptr<const Pipeline> definition, resources::Manager& resources);
 
     // currently we are passing the instance back to the executor
     // we should own the instance here in the pipeline instance

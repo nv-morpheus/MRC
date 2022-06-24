@@ -17,39 +17,27 @@
 
 #pragma once
 
-#include "internal/runnable/engine.hpp"
-
-#include "internal/system/resources.hpp"
-#include "internal/system/thread.hpp"
-
-#include "srf/core/bitmap.hpp"
-#include "srf/runnable/types.hpp"
-#include "srf/types.hpp"
-
 #include <functional>
 #include <memory>
-#include <optional>
-#include <thread>
 
-namespace srf::internal::runnable {
+namespace srf::internal::system {
 
-class ThreadEngine final : public Engine
+class ISystem;
+class Resources;
+
+class IResources
 {
   public:
-    explicit ThreadEngine(CpuSet cpu_set, const system::Resources& system);
-    ~ThreadEngine() final;
-
-    EngineType engine_type() const final;
+    IResources(std::shared_ptr<ISystem> system);
+    virtual ~IResources() = 0;
 
   protected:
-    std::optional<std::thread::id> get_id() const;
+    void add_thread_initializer(std::function<void()> initializer_fn);
+    void add_thread_finalizer(std::function<void()> finalizer_fn);
 
   private:
-    Future<void> do_launch_task(std::function<void()> task) final;
-
-    CpuSet m_cpu_set;
-    const system::Resources& m_system;
-    std::unique_ptr<system::Thread> m_thread;
+    std::unique_ptr<Resources> m_impl;
+    friend Resources;
 };
 
-}  // namespace srf::internal::runnable
+}  // namespace srf::internal::system

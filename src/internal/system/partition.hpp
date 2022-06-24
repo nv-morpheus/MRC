@@ -17,39 +17,31 @@
 
 #pragma once
 
-#include "internal/runnable/engine.hpp"
+#include "internal/system/device_partition.hpp"
+#include "internal/system/host_partition.hpp"
 
-#include "internal/system/resources.hpp"
-#include "internal/system/thread.hpp"
-
-#include "srf/core/bitmap.hpp"
-#include "srf/runnable/types.hpp"
-#include "srf/types.hpp"
-
-#include <functional>
+#include <cstddef>
 #include <memory>
-#include <optional>
-#include <thread>
 
-namespace srf::internal::runnable {
+namespace srf::internal::system {
 
-class ThreadEngine final : public Engine
+class Partition final
 {
   public:
-    explicit ThreadEngine(CpuSet cpu_set, const system::Resources& system);
-    ~ThreadEngine() final;
+    Partition(std::size_t host_partition_id,
+              std::shared_ptr<const HostPartition> host,
+              std::shared_ptr<const DevicePartition> device);
 
-    EngineType engine_type() const final;
+    const HostPartition& host() const;
+    const DevicePartition& device() const;
 
-  protected:
-    std::optional<std::thread::id> get_id() const;
+    size_t host_partition_id() const;
+    bool has_device() const;
 
   private:
-    Future<void> do_launch_task(std::function<void()> task) final;
-
-    CpuSet m_cpu_set;
-    const system::Resources& m_system;
-    std::unique_ptr<system::Thread> m_thread;
+    std::size_t m_host_partition_id;
+    std::shared_ptr<const HostPartition> m_host;
+    std::shared_ptr<const DevicePartition> m_device;
 };
 
-}  // namespace srf::internal::runnable
+}  // namespace srf::internal::system
