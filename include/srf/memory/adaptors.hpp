@@ -28,17 +28,34 @@
 
 namespace srf::memory {
 
-template <typename Upstream>
+// template <typename PointerT, typename = void>
+// class adaptor;
+
+// template <typename PointerT, typename BaseT, typename = void>
+// struct is_pointer_base_of : std::false_type
+// {};
+
+// template <typename PointerT, typename BaseT>
+// struct is_pointer_base_of<
+//     PointerT,
+//     BaseT,
+//     std::enable_if_t<std::is_base_of_v<BaseT, std::remove_reference_t<decltype(&*std::declval<PointerT>())>>>>
+//   : std::true_type
+// {};
+
+// template <typename PointerT, typename BaseT>
+// inline constexpr bool is_pointer_base_of_v = is_pointer_base_of<PointerT, BaseT>::value;  // NOLINT
+
+template <typename PointerT>
 class adaptor : public memory_resource
 {
   public:
-    using reference_type = std::add_lvalue_reference_t<decltype(*std::declval<Upstream>())>;
-    using pointer_type   = std::remove_reference_t<decltype(&*std::declval<Upstream>())>;
+    using reference_type = std::add_lvalue_reference_t<decltype(*std::declval<PointerT>())>;
+    using pointer_type   = std::remove_reference_t<decltype(&*std::declval<PointerT>())>;
 
-    adaptor(Upstream upstream) : m_upstream(std::move(upstream)) {}
+    adaptor(PointerT upstream) : m_upstream(std::move(upstream)) {}
 
-  protected:
-    reference_type upstream()
+    reference_type resource()
     {
         CHECK(m_upstream);
         return *m_upstream;
@@ -50,45 +67,61 @@ class adaptor : public memory_resource
         return m_upstream->kind();
     }
 
-    Upstream m_upstream;
+    PointerT m_upstream;
 };
 
-class rmm_adaptor final : public memory_resource
+class rmm_adaptor : public memory_resource
 {
   public:
-    using pointer_type = typename std::add_pointer_t<rmm::mr::device_memory_resource>;
-
-    rmm_adaptor(rmm::mr::device_memory_resource* upstream) : m_upstream(upstream) {}
+    virtual rmm::mr::device_memory_resource& rmm_memory_resource() = 0;
 
   private:
     void* do_allocate(std::size_t bytes) final
     {
-        return m_upstream->allocate(bytes, rmm::cuda_stream_per_thread);
+        return rmm_memory_resource().allocate(bytes, rmm::cuda_stream_per_thread);
     }
 
     void do_deallocate(void* ptr, std::size_t bytes) final
     {
-        m_upstream->deallocate(ptr, bytes, rmm::cuda_stream_per_thread);
+        rmm_memory_resource().deallocate(ptr, bytes, rmm::cuda_stream_per_thread);
     }
 
     memory_kind do_kind() const final
     {
         return memory_kind::device;
     }
-
-    rmm::mr::device_memory_resource* m_upstream;
 };
 
-template <template <class> class Resource, typename Upstream, typename... Args>
-auto make_shared_resource(Upstream upstream, Args&&... args)
+template <typename PointerT>
+class rmm_adaptor_typed final : public rmm_adaptor
 {
-    return std::make_shared<Resource<Upstream>>(std::move(upstream), std::forward<Args>(args)...);
+  public:
+    using reference_type = std::add_lvalue_reference_t<decltype(*std::declval<PointerT>())>;
+    using pointer_type   = std::remove_reference_t<decltype(&*std::declval<PointerT>())>;
+
+    rmm_adaptor_typed(rmm::mr::device_memory_resource* upstream) : m_upstream(upstream) {}
+
+    // rmm::mr::device_memory_resource& rmm_memory_resource() final
+    reference_type rmm_memory_resource() final
+    {
+        CHECK(m_upstream);
+        return *m_upstream;
+    }
+
+  private:
+    PointerT m_upstream;
+};
+
+template <template <class> class Resource, typename PointerT, typename... Args>
+auto make_shared_resource(PointerT upstream, Args&&... args)
+{
+    return std::make_shared<Resource<PointerT>>(std::move(upstream), std::forward<Args>(args)...);
 }
 
-template <template <class> class Resource, typename Upstream, typename... Args>
-auto make_unique_resource(Upstream upstream, Args&&... args)
+template <template <class> class Resource, typename PointerT, typename... Args>
+auto make_unique_resource(PointerT upstream, Args&&... args)
 {
-    return std::make_unique<Resource<Upstream>>(std::move(upstream), std::forward<Args>(args)...);
+    return std::make_unique<Resource<PointerT>>(std::move(upstream), std::forward<Args>(args)...);
 }
 
 }  // namespace srf::memory

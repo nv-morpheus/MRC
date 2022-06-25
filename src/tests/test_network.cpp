@@ -20,6 +20,10 @@
 #include "internal/system/topology.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/worker.hpp"
+#include "srf/memory/literals.hpp"
+#include "srf/memory/resources/arena_resource.hpp"
+#include "srf/memory/resources/host/pinned_memory_resource.hpp"
+#include "srf/memory/resources/logging_resource.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
@@ -35,6 +39,7 @@
 #include <utility>
 
 using namespace srf;
+using namespace srf::memory::literals;
 
 static std::shared_ptr<internal::system::System> make_system(std::function<void(Options&)> updater = nullptr)
 {
@@ -70,6 +75,24 @@ class TestNetwork : public ::testing::Test
 
     std::unique_ptr<internal::resources::Manager> m_resources;
 };
+
+class TestNetworkMemory : public ::testing::Test
+{
+  protected:
+};
+
+TEST_F(TestNetworkMemory, Arena)
+{
+    std::shared_ptr<srf::memory::memory_resource> mr;
+    auto pinned  = std::make_shared<srf::memory::pinned_memory_resource>();
+    mr           = pinned;
+    auto logging = srf::memory::make_shared_resource<srf::memory::logging_resource>(mr, "pinned", 10);
+    auto arena   = srf::memory::make_shared_resource<srf::memory::arena_resource>(logging, 128_MiB, 512_MiB);
+    auto f       = srf::memory::make_shared_resource<srf::memory::logging_resource>(arena, "arena", 10);
+
+    auto* ptr = f->allocate(1024);
+    f->deallocate(ptr, 1024);
+}
 
 TEST_F(TestNetwork, LifeCycle) {}
 

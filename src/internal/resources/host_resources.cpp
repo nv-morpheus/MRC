@@ -15,86 +15,71 @@
  * limitations under the License.
  */
 
-#include <srf/runnable/launch_control_config.hpp>
-
 #include "internal/resources/host_resources.hpp"
+#include <memory>
 
-#include "internal/runnable/engine_factory.hpp"
-#include "internal/system/engine_factory_cpu_sets.hpp"
-#include "internal/system/system.hpp"
-#include "srf/core/bitmap.hpp"
-#include "srf/runnable/types.hpp"
-#include "srf/types.hpp"
-
-#include <glog/logging.h>
-#include <boost/fiber/future/future.hpp>
-
-#include <map>
-#include <ostream>
-#include <string>
-#include <type_traits>
-#include <utility>
+#include "internal/memory/callback_adaptor.hpp"
+#include "srf/memory/adaptors.hpp"
+#include "srf/memory/resources/arena_resource.hpp"
+#include "srf/memory/resources/host/malloc_memory_resource.hpp"
+#include "srf/memory/resources/host/pinned_memory_resource.hpp"
+#include "srf/memory/resources/logging_resource.hpp"
+#include "srf/memory/resources/memory_resource.hpp"
+#include "srf/utils/bytes_to_string.hpp"
 
 namespace srf::internal::resources {
 
-HostResources::HostResources(std::shared_ptr<system::System> system, const system::HostPartition& partition) :
-  m_partition(partition)
+HostResources::HostResources(runnable::Resources& runnable, ucx::RegistrationCallbackBuilder&& callbacks) :
+  system::HostPartitionProvider(runnable)
 {
-    DVLOG(10) << "constructing main task queue for host partition " << partition.cpu_set().str();
-    auto search = partition.engine_factory_cpu_sets().fiber_cpu_sets.find("main");
-    CHECK(search != partition.engine_factory_cpu_sets().fiber_cpu_sets.end()) << "unable to lookup cpuset for main";
-    CHECK_EQ(search->second.weight(), 1);
-    m_main = system->get_task_queue(search->second.first());
+    runnable.main()
+        .enqueue([this, &callbacks] {
+            // logging prefix
+            std::stringstream prefix;
 
-    // construct all other resources on main
-    m_main
-        ->enqueue([this, system, &partition]() mutable {
-            DVLOG(10) << "constructing engine factories on main for host partition " << partition.cpu_set().str();
-            ::srf::runnable::LaunchControlConfig config;
-
-            for (const auto& [name, cpu_set] : partition.engine_factory_cpu_sets().fiber_cpu_sets)
+            // construct raw memory_resource from malloc or pinned if device(s) present
+            if (host_partition().device_partition_ids().empty())
             {
-                auto reusable = partition.engine_factory_cpu_sets().is_resuable(name);
-                DVLOG(10) << "fiber engine factory: " << name << " using " << cpu_set.str() << " is "
-                          << (reusable ? "resuable" : "not reusable");
-                config.resource_groups[name] =
-                    runnable::make_engine_factory(system, runnable::EngineType::Fiber, cpu_set, reusable);
+                m_raw = std::make_shared<srf::memory::malloc_memory_resource>();
+                prefix << "malloc";
+            }
+            else
+            {
+                m_raw = std::make_shared<srf::memory::pinned_memory_resource>();
+                prefix << "cuda_pinned";
             }
 
-            for (const auto& [name, cpu_set] : partition.engine_factory_cpu_sets().thread_cpu_sets)
+            prefix << ":" << host_partition_id();
+            m_raw = srf::memory::make_shared_resource<srf::memory::logging_resource>(std::move(m_raw), prefix.str());
+
+            // adapt to callback resource if we have callbacks
+            if (callbacks.size() == 0)
             {
-                auto reusable = partition.engine_factory_cpu_sets().is_resuable(name);
-                DVLOG(10) << "thread engine factory: " << name << " using " << cpu_set.str() << " is "
-                          << (reusable ? "resuable" : "not reusable");
-                config.resource_groups[name] =
-                    runnable::make_engine_factory(system, runnable::EngineType::Thread, cpu_set, reusable);
+                m_registered = m_raw;
+            }
+            else
+            {
+                m_registered = srf::memory::make_shared_resource<memory::CallbackAdaptor>(m_raw, std::move(callbacks));
             }
 
-            // construct launch control
-            DVLOG(10) << "constructing launch control on main for host partition " << partition.cpu_set().str();
-            m_launch_control = std::make_shared<::srf::runnable::LaunchControl>(std::move(config));
+            // adapt to arena
+            if (system().options().resources().enable_host_memory_pool())
+            {
+                const auto& opts = system().options().resources().host_memory_pool();
 
-            // construct host memory resource
-            DVLOG(10) << "constructing memory_resource on main for host partition " << partition.cpu_set().str()
-                      << " - not yet implemeted";
+                VLOG(10) << "host_partition_id: " << host_partition_id()
+                         << " constructing arena memory_resource with initial=" << bytes_to_string(opts.block_size())
+                         << "; max bytes=" << bytes_to_string(opts.max_aggreate_bytes());
+
+                m_arena = srf::memory::make_shared_resource<srf::memory::arena_resource>(
+                    m_registered, opts.block_size(), opts.max_aggreate_bytes());
+            }
+            else
+            {
+                m_arena = m_registered;
+            }
         })
         .get();
 }
 
-core::FiberTaskQueue& HostResources::main()
-{
-    CHECK(m_main);
-    return *m_main;
-}
-
-::srf::runnable::LaunchControl& HostResources::launch_control()
-{
-    CHECK(m_launch_control);
-    return *m_launch_control;
-}
-
-const system::HostPartition& HostResources::partition() const
-{
-    return m_partition;
-}
 }  // namespace srf::internal::resources

@@ -18,9 +18,9 @@
 #pragma once
 
 #include "internal/system/fiber_task_queue.hpp"
+#include "internal/system/host_partition_provider.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/system/resources.hpp"
-#include "internal/system/system_provider.hpp"
 
 #include "srf/core/task_queue.hpp"
 #include "srf/pipeline/resources.hpp"
@@ -31,19 +31,15 @@
 
 namespace srf::internal::runnable {
 
-class Resources final : public system::SystemProvider, public srf::pipeline::Resources
+class Resources final : public system::HostPartitionProvider, public srf::pipeline::Resources
 {
   public:
-    Resources(const system::Resources& system_resources, std::size_t host_partition_id);
+    Resources(const system::Resources& system_resources, std::size_t _host_partition_id);
 
     srf::core::FiberTaskQueue& main() final;
     srf::runnable::LaunchControl& launch_control() final;
 
-    std::size_t host_partition_id() const;
-    const system::HostPartition& host_partition() const;
-
   private:
-    const std::size_t m_host_partition_id;
     system::FiberTaskQueue& m_main;
     std::unique_ptr<srf::runnable::LaunchControl> m_launch_control;
 };

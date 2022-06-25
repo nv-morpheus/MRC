@@ -62,7 +62,7 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, std::string>>>
         else
         {
             // not registered
-            encoded.add_memory_block(memory::const_block(str.data(), str.size(), memory::memory_kind_type::host));
+            encoded.add_memory_block(memory::const_block(str.data(), str.size(), memory::memory_kind::host));
         }
     }
 

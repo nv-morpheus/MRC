@@ -17,11 +17,7 @@
 
 #pragma once
 
-#include "internal/memory/block_manager.hpp"
-#include "internal/memory/ucx_memory_block.hpp"
-#include "internal/memory/ucx_registered_resource.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/ucx/resources.hpp"
 
 #include <srf/memory/resources/device/cuda_malloc_resource.hpp>
 #include <srf/memory/resources/host/malloc_memory_resource.hpp>
@@ -35,17 +31,7 @@ namespace srf::internal::memory {
 class Resources final : public resources::PartitionResourceBase
 {
   public:
-    Resources(resources::PartitionResourceBase& base, std::optional<ucx::Resources>& ucx_resources);
-
-  private:
-    std::unique_ptr<srf::memory::memory_resource> m_host_raw;
-    std::unique_ptr<srf::memory::memory_resource> m_device_raw;
-
-    std::shared_ptr<UcxRegistrationCache> m_host_reg_cache;
-    std::shared_ptr<UcxRegistrationCache> m_device_reg_cache;
-
-    std::unique_ptr<srf::memory::memory_resource> m_host_resource;
-    std::unique_ptr<srf::memory::memory_resource> m_device_resource;
+    Resources(resources::PartitionResourceBase& base);
 };
 
 }  // namespace srf::internal::memory

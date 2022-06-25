@@ -22,16 +22,16 @@
 
 #include <glog/logging.h>
 
-namespace srf::internal::memory {
+namespace srf::internal::ucx {
 
-struct UcxMemoryBlock : public MemoryBlock
+struct MemoryBlock : public memory::MemoryBlock
 {
   public:
-    UcxMemoryBlock() = default;
-    UcxMemoryBlock(void* data, std::size_t bytes) : MemoryBlock(data, bytes) {}
-    UcxMemoryBlock(
+    MemoryBlock() = default;
+    MemoryBlock(void* data, std::size_t bytes) : memory::MemoryBlock(data, bytes) {}
+    MemoryBlock(
         void* data, std::size_t bytes, ucp_mem_h local_handle, void* remote_handle, std::size_t remote_handle_size) :
-      MemoryBlock(data, bytes),
+      memory::MemoryBlock(data, bytes),
       m_local_handle(local_handle),
       m_remote_handle(remote_handle),
       m_remote_handle_size(remote_handle_size)
@@ -42,11 +42,8 @@ struct UcxMemoryBlock : public MemoryBlock
             CHECK(m_remote_handle && m_remote_handle_size);
         }
     }
-    UcxMemoryBlock(const UcxMemoryBlock& block,
-                   ucp_mem_h local_handle,
-                   void* remote_handle,
-                   std::size_t remote_handle_size) :
-      MemoryBlock(block),
+    MemoryBlock(const MemoryBlock& block, ucp_mem_h local_handle, void* remote_handle, std::size_t remote_handle_size) :
+      memory::MemoryBlock(block),
       m_local_handle(local_handle),
       m_remote_handle(remote_handle),
       m_remote_handle_size(remote_handle_size)
@@ -56,7 +53,7 @@ struct UcxMemoryBlock : public MemoryBlock
             CHECK(m_remote_handle && m_remote_handle_size);
         }
     }
-    ~UcxMemoryBlock() override = default;
+    ~MemoryBlock() override = default;
 
     ucp_mem_h local_handle() const
     {
@@ -77,4 +74,4 @@ struct UcxMemoryBlock : public MemoryBlock
     std::size_t m_remote_handle_size{0};
 };
 
-}  // namespace srf::internal::memory
+}  // namespace srf::internal::ucx

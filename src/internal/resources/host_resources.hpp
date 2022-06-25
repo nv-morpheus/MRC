@@ -17,29 +17,25 @@
 
 #pragma once
 
-#include "internal/system/forward.hpp"
-#include "internal/system/host_partition.hpp"
-#include "srf/core/task_queue.hpp"
-#include "srf/pipeline/resources.hpp"
-#include "srf/runnable/launch_control.hpp"
+#include "internal/runnable/resources.hpp"
+#include "internal/system/host_partition_provider.hpp"
+#include "internal/ucx/registation_callback_builder.hpp"
+
+#include <srf/memory/resources/memory_resource.hpp>
 
 #include <memory>
 
 namespace srf::internal::resources {
 
-class HostResources : public ::srf::pipeline::Resources
+class HostResources final : public system::HostPartitionProvider
 {
   public:
-    HostResources(std::shared_ptr<system::System> system, const system::HostPartition& partition);
-
-    const system::HostPartition& partition() const;
-    ::srf::core::FiberTaskQueue& main() final;
-    ::srf::runnable::LaunchControl& launch_control() final;
+    HostResources(runnable::Resources& runnable, ucx::RegistrationCallbackBuilder&& callbacks);
 
   private:
-    const system::HostPartition& m_partition;
-    std::shared_ptr<::srf::core::FiberTaskQueue> m_main;
-    std::shared_ptr<::srf::runnable::LaunchControl> m_launch_control;
+    std::shared_ptr<srf::memory::memory_resource> m_raw;
+    std::shared_ptr<srf::memory::memory_resource> m_registered;
+    std::shared_ptr<srf::memory::memory_resource> m_arena;
 };
 
 }  // namespace srf::internal::resources

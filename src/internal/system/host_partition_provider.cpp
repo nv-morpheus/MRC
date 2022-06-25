@@ -15,12 +15,25 @@
  * limitations under the License.
  */
 
-#include "internal/resources/partition_resources.hpp"
+#include "internal/system/host_partition_provider.hpp"
 
-namespace srf::internal::resources {
+#include "internal/system/system.hpp"
 
-PartitionResources::PartitionResources(runnable::Resources& runnable_resources, std::size_t partition_id) :
-  PartitionResourceBase(runnable_resources, partition_id)
+namespace srf::internal::system {
+
+HostPartitionProvider::HostPartitionProvider(const SystemProvider& _system, std::size_t _host_partition_id) :
+  SystemProvider(_system),
+  m_host_partition_id(_host_partition_id)
 {}
 
-}  // namespace srf::internal::resources
+std::size_t HostPartitionProvider::host_partition_id() const
+{
+    return m_host_partition_id;
+}
+
+const HostPartition& HostPartitionProvider::host_partition() const
+{
+    CHECK_LT(m_host_partition_id, system().partitions().host_partitions().size());
+    return system().partitions().host_partitions().at(m_host_partition_id);
+}
+}  // namespace srf::internal::system

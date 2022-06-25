@@ -17,30 +17,31 @@
 
 #pragma once
 
-#include "internal/resources/host_resources.hpp"
+#include "internal/resources/partition_resources_base.hpp"
 #include "internal/system/device_partition.hpp"
+
+#include <srf/memory/adaptors.hpp>
 
 #include <memory>
 
 namespace srf::internal::resources {
 
-class DeviceResources
+class DeviceResources : public resources::PartitionResourceBase
 {
   public:
-    DeviceResources(const system::DevicePartition& partition, std::shared_ptr<HostResources>);
+    DeviceResources(resources::PartitionResourceBase& base) : resources::PartitionResourceBase(base)
+    {
+        // runnable().main().enqueue([this] {
+        //     m_raw = std::make_shared<memory::rmm_adaptor>()
+        // }).get()
+    }
 
     int cuda_device_id() const;
-    const system::DevicePartition& partition() const;
-
-    HostResources& host() const;
-    std::shared_ptr<HostResources> host_shared() const;
 
   private:
-    const system::DevicePartition& m_partition;
-    std::shared_ptr<HostResources> m_host_resources;
-
-    // todo(update) - with cuda::memory_resource when ready
-    // rmm::device_memory_resource
+    std::shared_ptr<srf::memory::rmm_adaptor> m_raw;
+    std::shared_ptr<srf::memory::rmm_adaptor> m_registered;
+    std::shared_ptr<srf::memory::rmm_adaptor> m_arena;
 };
 
 }  // namespace srf::internal::resources

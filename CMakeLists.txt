@@ -199,6 +199,7 @@ add_library(libsrf
   src/internal/pipeline/manager.cpp
   src/internal/pipeline/resources.cpp
   src/internal/resources/manager.cpp
+  src/internal/resources/host_resources.cpp
   src/internal/resources/partition_resources.cpp
   src/internal/resources/partition_resources_base.cpp
   src/internal/runnable/engine_factory.cpp
@@ -222,6 +223,7 @@ add_library(libsrf
   src/internal/system/fiber_task_queue.cpp
   src/internal/system/gpu_info.cpp
   src/internal/system/host_partition.cpp
+  src/internal/system/host_partition_provider.cpp
   src/internal/system/iresources.cpp
   src/internal/system/isystem.cpp
   src/internal/system/partition.cpp

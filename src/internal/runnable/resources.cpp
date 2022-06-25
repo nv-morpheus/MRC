@@ -42,14 +42,13 @@
 
 namespace srf::internal::runnable {
 
-Resources::Resources(const system::Resources& system_resources, std::size_t host_partition_id) :
-  SystemProvider(system_resources),
-  m_host_partition_id(host_partition_id),
+Resources::Resources(const system::Resources& system_resources, std::size_t _host_partition_id) :
+  HostPartitionProvider(system_resources, _host_partition_id),
   m_main(system_resources.get_task_queue(host_partition().engine_factory_cpu_sets().main_cpu_id()))
 {
     const auto& host_partition = this->host_partition();
 
-    DVLOG(10) << "main fiber task queue for host partition " << m_host_partition_id << " assigned to cpu_id "
+    DVLOG(10) << "main fiber task queue for host partition " << host_partition_id() << " assigned to cpu_id "
               << host_partition.engine_factory_cpu_sets().main_cpu_id();
 
     // construct all other resources on main
@@ -79,10 +78,6 @@ Resources::Resources(const system::Resources& system_resources, std::size_t host
             // construct launch control
             DVLOG(10) << "constructing launch control on main for host partition " << host_partition.cpu_set().str();
             m_launch_control = std::make_unique<::srf::runnable::LaunchControl>(std::move(config));
-
-            // construct host memory resource
-            DVLOG(10) << "constructing memory_resource on main for host partition " << host_partition.cpu_set().str()
-                      << " - not yet implemeted";
         })
         .get();
 }
@@ -98,14 +93,4 @@ srf::runnable::LaunchControl& Resources::launch_control()
     return *m_launch_control;
 }
 
-const system::HostPartition& Resources::host_partition() const
-{
-    CHECK_LT(m_host_partition_id, system().partitions().host_partitions().size());
-    return system().partitions().host_partitions().at(m_host_partition_id);
-}
-
-std::size_t Resources::host_partition_id() const
-{
-    return m_host_partition_id;
-}
 }  // namespace srf::internal::runnable

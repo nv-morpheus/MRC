@@ -17,10 +17,12 @@
 
 #pragma once
 
+#include "internal/resources/host_resources.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/system/resources.hpp"
 #include "internal/system/system_provider.hpp"
+#include "internal/ucx/registation_callback_builder.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -41,9 +43,10 @@ class Manager final : public system::SystemProvider
 
   private:
     std::unique_ptr<system::Resources> m_system;
-    std::vector<runnable::Resources> m_runnable;
-    std::vector<std::shared_ptr<srf::memory::memory_resource>> m_raw_host_memory_resources;
-    std::vector<PartitionResources> m_partitions;
+    std::vector<runnable::Resources> m_runnable;   // one per host partition
+    std::vector<ucx::Resources> m_ucx;             // one per flattened partition if network is enabled
+    std::vector<HostResources> m_host_partitions;  // one per host partition
+    std::vector<PartitionResources> m_partitions;  // one per flattened partition
 };
 
 }  // namespace srf::internal::resources

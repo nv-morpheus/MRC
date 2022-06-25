@@ -23,8 +23,8 @@
 
 namespace srf::internal::ucx {
 
-Resources::Resources(resources::PartitionResourceBase& partition_provider) :
-  resources::PartitionResourceBase(partition_provider)
+Resources::Resources(runnable::Resources& _runnable_resources, std::size_t _partition_id) :
+  resources::PartitionResourceBase(_runnable_resources, _partition_id)
 {
     VLOG(1) << "constructing network resources for partition: " << partition_id() << " on partitions main task queue";
     runnable()
@@ -41,13 +41,16 @@ Resources::Resources(resources::PartitionResourceBase& partition_provider) :
             }
 
             DVLOG(10) << "initializing ucx context";
-            m_ucx_context = std::make_shared<ucx::Context>();
+            m_ucx_context = std::make_shared<Context>();
 
             DVLOG(10) << "initialize a ucx data_plane worker for server";
-            m_worker_server = std::make_shared<ucx::Worker>(m_ucx_context);
+            m_worker_server = std::make_shared<Worker>(m_ucx_context);
 
             DVLOG(10) << "initialize a ucx data_plane worker for client";
-            m_worker_client = std::make_shared<ucx::Worker>(m_ucx_context);
+            m_worker_client = std::make_shared<Worker>(m_ucx_context);
+
+            DVLOG(10) << "initialize the registration cache for this context";
+            m_registration_cache = std::make_shared<RegistrationCache>(m_ucx_context);
 
             // flush any work that needs to be done by the workers
             while (m_worker_server->progress() != 0) {}
@@ -62,4 +65,8 @@ Context& Resources::context()
     return *m_ucx_context;
 }
 
+void Resources::add_registration_cache_to_builder(RegistrationCallbackBuilder& builder)
+{
+    builder.add_registration_cache(m_registration_cache);
+}
 }  // namespace srf::internal::ucx

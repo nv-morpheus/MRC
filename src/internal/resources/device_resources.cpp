@@ -21,32 +21,4 @@
 
 #include <utility>
 
-namespace srf::internal::resources {
-
-DeviceResources::DeviceResources(const system::DevicePartition& partition,
-                                 std::shared_ptr<HostResources> host_resources) :
-  m_partition(partition),
-  m_host_resources(std::move(host_resources))
-{}
-
-HostResources& DeviceResources::host() const
-{
-    CHECK(m_host_resources);
-    return *m_host_resources;
-}
-
-const system::DevicePartition& DeviceResources::partition() const
-{
-    return m_partition;
-}
-
-int DeviceResources::cuda_device_id() const
-{
-    return m_partition.cuda_device_id();
-}
-std::shared_ptr<HostResources> DeviceResources::host_shared() const
-{
-    CHECK(m_host_resources);
-    return m_host_resources;
-}
-}  // namespace srf::internal::resources
+namespace srf::internal::resources {}  // namespace srf::internal::resources

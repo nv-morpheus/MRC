@@ -23,33 +23,55 @@
 namespace srf::internal::memory {
 
 template <typename UpstreamT>
-class CallbackAdaptor : public srf::memory::adaptor<UpstreamT>
+class CallbackAdaptor;
+
+class CallbackBuilder
 {
   public:
+    virtual ~CallbackBuilder() = default;
+
     using allocate_callback_t   = std::function<void(void* ptr, std::size_t bytes)>;
     using deallocate_callback_t = std::function<void(void* ptr, std::size_t bytes)>;
 
-    CallbackAdaptor(UpstreamT upstream, std::size_t callback_slots) :
-      srf::memory::adaptor<UpstreamT>(std::move(upstream)),
-      m_callback_slots(callback_slots)
-    {}
-
     void register_callbacks(allocate_callback_t allocate_cb, deallocate_callback_t deallocate_cb)
     {
-        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        CHECK_LT(m_allocate_callbacks.size(), m_callback_slots);
-        CHECK_LT(m_deallocate_callbacks.size(), m_callback_slots);
+        CHECK(allocate_cb && deallocate_cb);
         m_allocate_callbacks.push_back(allocate_cb);
         m_deallocate_callbacks.push_back(deallocate_cb);
     }
 
+    std::size_t size() const
+    {
+        return m_allocate_callbacks.size();
+    }
+
+  private:
+    std::vector<allocate_callback_t> m_allocate_callbacks;
+    std::vector<deallocate_callback_t> m_deallocate_callbacks;
+
+    template <typename UpstreamT>
+    friend class CallbackAdaptor;
+};
+
+template <typename UpstreamT>
+class CallbackAdaptor final : public srf::memory::adaptor<UpstreamT>
+{
+  public:
+    using allocate_callback_t   = CallbackBuilder::allocate_callback_t;
+    using deallocate_callback_t = CallbackBuilder::deallocate_callback_t;
+
+    CallbackAdaptor(UpstreamT upstream, CallbackBuilder&& builder) :
+      srf::memory::adaptor<UpstreamT>(std::move(upstream)),
+      m_allocate_callbacks(std::move(builder.m_allocate_callbacks)),
+      m_deallocate_callbacks(std::move(builder.m_deallocate_callbacks))
+    {}
+
   private:
     void* do_allocate(std::size_t bytes) final
     {
-        void* ptr = this->upstream().allocate(bytes);
+        void* ptr = this->resource().allocate(bytes);
 
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        DCHECK_EQ(m_allocate_callbacks.size(), m_callback_slots);
         for (auto& cb : m_allocate_callbacks)
         {
             cb(ptr, bytes);
@@ -65,11 +87,10 @@ class CallbackAdaptor : public srf::memory::adaptor<UpstreamT>
         {
             cb(ptr, bytes);
         }
-        this->upstream().deallocate(ptr, bytes);
+        this->resource().deallocate(ptr, bytes);
     }
 
     std::mutex m_mutex;
-    std::size_t m_callback_slots;
     std::vector<allocate_callback_t> m_allocate_callbacks;
     std::vector<deallocate_callback_t> m_deallocate_callbacks;
 };

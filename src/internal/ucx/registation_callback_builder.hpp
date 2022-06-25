@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,28 +17,28 @@
 
 #pragma once
 
-#include "internal/resources/partition_resources_base.hpp"
-#include "internal/ucx/context.hpp"
-#include "internal/ucx/registation_callback_builder.hpp"
+#include "internal/memory/callback_adaptor.hpp"
 #include "internal/ucx/registration_cache.hpp"
-#include "internal/ucx/worker.hpp"
+
+#include <glog/logging.h>
+
+#include <memory>
+#include <mutex>
 
 namespace srf::internal::ucx {
 
-class Resources final : public resources::PartitionResourceBase
+class RegistrationCallbackBuilder final : public memory::CallbackBuilder
 {
   public:
-    Resources(runnable::Resources& _runnable_resources, std::size_t _partition_id);
-
-    Context& context();
-
-    void add_registration_cache_to_builder(RegistrationCallbackBuilder& builder);
+    void add_registration_cache(std::shared_ptr<RegistrationCache> registration_cache)
+    {
+        register_callbacks(
+            [registration_cache](void* addr, std::size_t bytes) { registration_cache->add_block(addr, bytes); },
+            [registration_cache](void* addr, std::size_t bytes) { registration_cache->drop_block(addr, bytes); });
+    }
 
   private:
-    std::shared_ptr<Context> m_ucx_context;
-    std::shared_ptr<Worker> m_worker_server;
-    std::shared_ptr<Worker> m_worker_client;
-    std::shared_ptr<RegistrationCache> m_registration_cache;
+    using CallbackBuilder::register_callbacks;
 };
 
 }  // namespace srf::internal::ucx

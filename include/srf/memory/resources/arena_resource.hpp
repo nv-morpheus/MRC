@@ -106,8 +106,8 @@ class arena_resource final : public adaptor<Upstream>
                             std::size_t initial_size = global_arena::default_initial_size,
                             std::size_t maximum_size = global_arena::default_maximum_size,
                             bool dump_log_on_failure = false) :
-      adaptor<Upstream>(std::move(upstream_mr), "arena"),
-      global_arena_(std::make_shared<global_arena>(this->resource(), initial_size, maximum_size)),
+      adaptor<Upstream>(std::move(upstream_mr)),
+      global_arena_(std::make_shared<global_arena>(&this->resource(), initial_size, maximum_size)),
       dump_log_on_failure_(dump_log_on_failure)
     {
         if (dump_log_on_failure_)

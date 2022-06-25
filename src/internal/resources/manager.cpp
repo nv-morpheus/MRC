@@ -38,55 +38,44 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
   SystemProvider(*resources),
   m_system(std::move(resources))
 {
-    // for each host partition, construct
-    // - runnable resources
-    // - raw host memory resource (pinned if gpu present; malloc otherwise)
+    const auto& partitions      = system().partitions().flattened();
     const auto& host_partitions = system().partitions().host_partitions();
+    const bool network_enabled  = !system().options().architect_url().empty();
 
-    std::vector<std::shared_ptr<srf::memory::memory_resource>> host_mrs;
-
+    // construct the runnable resources on each host_partition - launch control and main
     for (std::size_t i = 0; i < host_partitions.size(); ++i)
     {
         VLOG(1) << "building runnable/launch_control resources on host_partition: " << i;
         m_runnable.emplace_back(*m_system, i);
-
-        const auto& host_partition = m_runnable.back().host_partition();
-
-        // in the case that a host parition is shared over multiple devices, we must construct the host partitions prior
-        // to the partition resources.
-        std::shared_ptr<srf::memory::memory_resource> mr;
-
-        if (host_partition.device_partition_ids().empty())
-        {
-            DVLOG(10) << "using malloc as the backer for host memory on host_partition_id: " << i;
-            mr = std::make_shared<srf::memory::malloc_memory_resource>();
-        }
-        else
-        {
-            DVLOG(10) << "using cudaMallocHost as the backer for host memory on host_partition_id: " << i;
-            mr = std::make_shared<srf::memory::pinned_memory_resource>();
-        }
-
-        if (!system().options().architect_url().empty())
-        {
-            mr = srf::memory::make_shared_resource<memory::CallbackAdaptor>(
-                std::move(mr), host_partition.device_partition_ids().size());
-        }
-
-        // delay construction of the pull until the partitions have a chance to apply their callbacks
-        // we use the callback to registry the allocated memory with each ucx context - 1 per partition
-        host_mrs.push_back(mr);
     }
 
-    const auto& partitions = system().partitions().flattened();
-
-    // for each partition, construct the partition resources
-    // this is the object where most new resources will be added
-    for (std::size_t i = 0; i < partitions.size(); ++i)
+    if (network_enabled)
     {
-        VLOG(1) << "building resources for partition " << i;
-        auto host_partition_id = partitions.at(i).host_partition_id();
-        m_partitions.emplace_back(m_runnable.at(host_partition_id), i, host_mrs.at(host_partition_id));
+        // construct ucx resources on each flattened partition
+        // this provides a ucx context, 2x workers and registration cache per partition
+        for (std::size_t i = 0; i < partitions.size(); ++i)
+        {
+            VLOG(1) << "building ucx resources for partition " << i;
+            auto host_partition_id = partitions.at(i).host_partition_id();
+            m_ucx.emplace_back(m_runnable.at(host_partition_id), i);
+        }
+    }
+
+    // construct the host memory resources for each host_partition
+    for (std::size_t i = 0; i < host_partitions.size(); ++i)
+    {
+        ucx::RegistrationCallbackBuilder builder;
+        for (auto& ucx : m_ucx)
+        {
+            if (ucx.partition().host_partition_id() == i)
+            {
+                ucx.add_registration_cache_to_builder(builder);
+            }
+        }
+        for (auto& runnable : m_runnable)
+        {
+            m_host_partitions.emplace_back(runnable, std::move(builder));
+        }
     }
 }
 
