@@ -18,31 +18,31 @@
 #include "internal/data_plane/server.hpp"
 
 #include "internal/data_plane/tags.hpp"
-
-#include <srf/channel/status.hpp>
-#include <srf/memory/block.hpp>
-#include <srf/memory/memory_kind.hpp>
-#include <srf/node/edge_builder.hpp>
-#include <srf/node/operators/router.hpp>
-#include <srf/node/source_channel.hpp>
-#include <srf/runnable/context.hpp>
-#include <srf/runnable/launch_control.hpp>
-#include <srf/runnable/launch_options.hpp>
-#include <srf/runnable/launcher.hpp>
-#include <srf/runnable/runner.hpp>
-#include <srf/types.hpp>
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include <glog/logging.h>
-#include <ucp/api/ucp.h>
-#include <ucs/type/status.h>
+#include "srf/channel/status.hpp"
+#include "srf/memory/block.hpp"
+#include "srf/memory/memory_kind.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/node/operators/router.hpp"
+#include "srf/node/source_channel.hpp"
+#include "srf/runnable/context.hpp"
+#include "srf/runnable/launch_control.hpp"
+#include "srf/runnable/launch_options.hpp"
+#include "srf/runnable/launcher.hpp"
+#include "srf/runnable/runner.hpp"
+#include "srf/types.hpp"
+
 #include <boost/fiber/operations.hpp>
+#include <glog/logging.h>
 #include <rxcpp/rx-observer.hpp>
 #include <rxcpp/rx-predef.hpp>
 #include <rxcpp/rx-subscriber.hpp>
 #include <rxcpp/rx.hpp>  // IWYU pragma: keep
+#include <ucp/api/ucp.h>
+#include <ucs/type/status.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -77,7 +77,8 @@ void recv_completion_handler(void* request, ucs_status_t status, const ucp_tag_r
     }
     auto port_address = tag_decode_user_tag(msg_info->sender_tag);
     DCHECK(static_subscriber && static_subscriber->is_subscribed());
-    auto msg = std::make_pair(port_address, memory::block(user_data, msg_info->length, memory::memory_kind::host));
+    auto msg =
+        std::make_pair(port_address, srf::memory::block(user_data, msg_info->length, srf::memory::memory_kind::host));
     static_subscriber->on_next(std::move(msg));
     ucp_request_free(request);
 }
@@ -116,7 +117,7 @@ Server::~Server()
 
 void Server::do_service_start()
 {
-    m_deserialize_source = std::make_shared<node::Router<PortAddress, memory::block>>();
+    m_deserialize_source = std::make_shared<node::Router<PortAddress, srf::memory::block>>();
     m_rd_source          = std::make_unique<node::SourceChannelWriteable<ucp_tag_t>>();
 
     auto progress_engine = std::make_unique<DataPlaneServerWorker>(m_worker);
@@ -159,7 +160,7 @@ ucx::WorkerAddress Server::worker_address() const
     return m_worker->address();
 }
 
-node::Router<PortAddress, memory::block>& Server::deserialize_source()
+node::Router<PortAddress, srf::memory::block>& Server::deserialize_source()
 {
     CHECK(m_deserialize_source);
     return *m_deserialize_source;

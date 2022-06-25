@@ -20,7 +20,7 @@
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/system/device_partition.hpp"
 
-#include <srf/memory/adaptors.hpp>
+#include "srf/memory/adaptors.hpp"
 
 #include <memory>
 

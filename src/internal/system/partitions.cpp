@@ -23,9 +23,11 @@
 #include "internal/utils/shared_resource_bit_map.hpp"
 
 #include "srf/core/bitmap.hpp"
+#include "srf/options/options.hpp"
 #include "srf/options/placement.hpp"
 #include "srf/utils/bytes_to_string.hpp"
 
+#include <ext/alloc_traits.h>
 #include <glog/logging.h>
 #include <hwloc.h>
 

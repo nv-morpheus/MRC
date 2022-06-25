@@ -14,19 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <pysrf/segment.hpp>
+#include "pysrf/segment.hpp"
 
-#include <pysrf/node.hpp>  // IWYU pragma: keep
-#include <pysrf/types.hpp>
-#include <pysrf/utils.hpp>
+#include "pysrf/node.hpp"  // IWYU pragma: keep
+#include "pysrf/types.hpp"
+#include "pysrf/utils.hpp"
 
-#include <srf/channel/status.hpp>
+#include "srf/channel/status.hpp"
+#include "srf/node/edge_connector.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/definition.hpp"
+#include "srf/segment/object.hpp"
 
-#include <srf/node/edge_connector.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/definition.hpp>
-#include <srf/segment/object.hpp>
-
+#include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
@@ -86,7 +86,6 @@ PYBIND11_MODULE(segment, m)
     /*
      * @brief Make a source node that generates py::object values
      */
-
     Builder.def("make_source",
                 static_cast<std::shared_ptr<srf::segment::ObjectProperties> (*)(
                     srf::segment::Builder&, const std::string&, py::iterator)>(&SegmentProxy::make_source));
@@ -99,12 +98,6 @@ PYBIND11_MODULE(segment, m)
     Builder.def("make_source",
                 static_cast<std::shared_ptr<srf::segment::ObjectProperties> (*)(
                     srf::segment::Builder&, const std::string&, py::function)>(&SegmentProxy::make_source));
-
-    // Builder.def("make_source",
-    //             static_cast<std::shared_ptr<srf::segment::ObjectProperties> (*)(
-    //                 srf::segment::Builder&, const std::string&, const std::function<void(PyObjectSubscriber&)>&)>(
-    //                 &SegmentProxy::make_source),
-    //             py::return_value_policy::reference_internal);
 
     /**
      * Construct a new py::object sink.
@@ -137,44 +130,14 @@ PYBIND11_MODULE(segment, m)
      * python-function which will be called on each data element as it flows through the node.
      */
     Builder.def("make_node", &SegmentProxy::make_node, py::return_value_policy::reference_internal);
+
     Builder.def("make_node_full", &SegmentProxy::make_node_full, py::return_value_policy::reference_internal);
-    // Builder.def("test_fn", &SegmentProxy::test_fn);
 
     Builder.def("make_py2cxx_edge_adapter", &SegmentProxy::make_py2cxx_edge_adapter);
 
     Builder.def("make_cxx2py_edge_adapter", &SegmentProxy::make_cxx2py_edge_adapter);
 
-    Builder.def("make_edge", &SegmentProxy::make_edge);
-
-    // /**
-    //  * @brief create specialized file reader that emits c++ strings, avoids py::object conversion
-    //  */
-    // Builder.def("make_file_reader", &SegmentProxy::make_file_reader, py::return_value_policy::reference_internal);
-
-    // /**
-    //  * @brief Debugging source, emits a number of floats equal to 'iterations'
-    //  */
-    // Builder.def("debug_float_source", &SegmentProxy::debug_float_source,
-    // py::return_value_policy::reference_internal);
-
-    // /*
-    //  * @brief Debugging identity function for doubles - used for checking py->c++, c++->py edge connections
-    //  */
-    // Builder.def(
-    //     "debug_float_passthrough", &SegmentProxy::debug_float_passthrough,
-    //     py::return_value_policy::reference_internal);
-
-    // /*
-    //  * @brief Debugging identity function for doubles - used for checking py->c++, c++->py edge connections
-    //  */
-    // Builder.def("debug_string_passthrough",
-    //             &SegmentProxy::debug_string_passthrough,
-    //             py::return_value_policy::reference_internal);
-
-    // /*
-    //  * @brief Debugging sink for c++ doubles
-    //  */
-    // Builder.def("debug_float_sink", &SegmentProxy::debug_float_sink, py::return_value_policy::reference_internal);
+    Builder.def("make_edge", &SegmentProxy::make_edge, py::arg("source"), py::arg("sink"));
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

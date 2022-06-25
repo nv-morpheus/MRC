@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include <srf/cuda/common.hpp>
-#include <srf/cuda/device_guard.hpp>
-#include <srf/memory/resources/memory_resource.hpp>
+#include "srf/cuda/common.hpp"
+#include "srf/cuda/device_guard.hpp"
+#include "srf/memory/resources/memory_resource.hpp"
 
 #include <cuda.h>
 #include <cuda_runtime.h>

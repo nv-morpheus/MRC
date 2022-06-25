@@ -17,24 +17,24 @@
 
 #pragma once
 
-#include "internal/service.hpp"
-
-#include <srf/protos/remote_descriptor.pb.h>
-#include <srf/channel/status.hpp>
-#include <srf/codable/encoded_object.hpp>
-#include <srf/node/source_channel.hpp>
-#include <srf/runnable/launch_control.hpp>
-#include <srf/runnable/runner.hpp>
-#include <srf/types.hpp>
-
+#include "internal/resources/partition_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
+#include "internal/service.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/endpoint.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include <ucp/api/ucp_def.h>
+#include "srf/channel/status.hpp"
+#include "srf/codable/encoded_object.hpp"
+#include "srf/node/source_channel.hpp"
+#include "srf/protos/remote_descriptor.pb.h"
+#include "srf/runnable/launch_control.hpp"
+#include "srf/runnable/runner.hpp"
+#include "srf/types.hpp"
+
 #include <rxcpp/rx.hpp>  // IWYU pragma: keep
+#include <ucp/api/ucp_def.h>
 
 #include <cstddef>
 #include <map>
@@ -97,6 +97,7 @@ class Client final : public Service, public resources::PartitionResourceBase
     void do_service_await_join() final;
 
     std::shared_ptr<ucx::Worker> m_worker;
+    std::shared_ptr<resources::PartitionResources> m_resources;
     std::unique_ptr<node::SourceChannelWriteable<void*>> m_ucx_request_channel;
     std::unique_ptr<srf::runnable::Runner> m_progress_engine;
 

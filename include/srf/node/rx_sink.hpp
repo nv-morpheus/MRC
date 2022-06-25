@@ -17,21 +17,21 @@
 
 #pragma once
 
-#include <srf/channel/buffered_channel.hpp>
-#include <srf/channel/channel.hpp>
-#include <srf/channel/status.hpp>
-#include <srf/constants.hpp>
-#include <srf/core/utils.hpp>
-#include <srf/core/watcher.hpp>
-#include <srf/exceptions/runtime_error.hpp>
-#include <srf/node/edge.hpp>
-#include <srf/node/forward.hpp>
-#include <srf/node/rx_prologue_tap.hpp>
-#include <srf/node/rx_runnable.hpp>
-#include <srf/node/rx_sink_base.hpp>
-#include <srf/node/rx_subscribable.hpp>
-#include <srf/node/sink_channel.hpp>
-#include <srf/utils/type_utils.hpp>
+#include "srf/channel/buffered_channel.hpp"
+#include "srf/channel/channel.hpp"
+#include "srf/channel/status.hpp"
+#include "srf/constants.hpp"
+#include "srf/core/utils.hpp"
+#include "srf/core/watcher.hpp"
+#include "srf/exceptions/runtime_error.hpp"
+#include "srf/node/edge.hpp"
+#include "srf/node/forward.hpp"
+#include "srf/node/rx_prologue_tap.hpp"
+#include "srf/node/rx_runnable.hpp"
+#include "srf/node/rx_sink_base.hpp"
+#include "srf/node/rx_subscribable.hpp"
+#include "srf/node/sink_channel.hpp"
+#include "srf/utils/type_utils.hpp"
 
 #include <glog/logging.h>
 #include <rxcpp/rx-observer.hpp>
@@ -39,6 +39,7 @@
 #include <rxcpp/rx.hpp>
 
 #include <exception>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -49,7 +50,10 @@ template <typename T, typename ContextT>
 class RxSink : public RxSinkBase<T>, public RxRunnable<ContextT>, public RxPrologueTap<T>
 {
   public:
-    using observer_t = rxcpp::observer<T>;
+    using observer_t       = rxcpp::observer<T>;
+    using on_next_fn_t     = std::function<void(T)>;
+    using on_error_fn_t    = std::function<void(std::exception_ptr)>;
+    using on_complete_fn_t = std::function<void()>;
 
     RxSink()           = default;
     ~RxSink() override = default;

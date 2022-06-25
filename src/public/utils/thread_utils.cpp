@@ -52,7 +52,7 @@ void set_thread_name(const std::thread& t, const std::string& thread_name)
 }
 
 #elif defined(__linux__)
-#include <sys/prctl.h>
+    #include <sys/prctl.h>
 void set_current_thread_name(const std::string& thread_name)
 {
     prctl(PR_SET_NAME, thread_name.c_str(), 0, 0, 0);

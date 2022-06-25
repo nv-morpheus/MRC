@@ -17,8 +17,6 @@
 
 #include "internal/runnable/resources.hpp"
 
-#include <srf/runnable/launch_control_config.hpp>
-
 #include "internal/runnable/engine_factory.hpp"
 #include "internal/runnable/engines.hpp"
 #include "internal/system/engine_factory_cpu_sets.hpp"
@@ -27,11 +25,12 @@
 #include "internal/system/system.hpp"
 
 #include "srf/core/bitmap.hpp"
+#include "srf/runnable/launch_control_config.hpp"
 #include "srf/runnable/types.hpp"
 #include "srf/types.hpp"
 
-#include <glog/logging.h>
 #include <boost/fiber/future/future.hpp>
+#include <glog/logging.h>
 
 #include <map>
 #include <ostream>

@@ -21,6 +21,7 @@
 #include "internal/pipeline/types.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/service.hpp"
+
 #include "srf/channel/status.hpp"
 #include "srf/node/source_channel.hpp"
 #include "srf/runnable/runner.hpp"

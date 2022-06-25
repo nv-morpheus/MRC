@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <srf/memory/buffer.hpp>
-#include <srf/memory/memory_kind.hpp>
+#include "srf/memory/buffer.hpp"
+#include "srf/memory/memory_kind.hpp"
 
 #include <glog/logging.h>
 
@@ -64,7 +64,8 @@ class const_block  // NOLINT
      *
      * @param blob
      */
-    // const_block(const blob& blob) : m_data(const_cast<void*>(blob.data())), m_bytes(blob.bytes()), m_kind(blob.kind())
+    // const_block(const blob& blob) : m_data(const_cast<void*>(blob.data())), m_bytes(blob.bytes()),
+    // m_kind(blob.kind())
     // {
     //     CHECK(operator bool());
     // }

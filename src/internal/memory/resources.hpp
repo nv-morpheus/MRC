@@ -19,10 +19,10 @@
 
 #include "internal/resources/partition_resources_base.hpp"
 
-#include <srf/memory/resources/device/cuda_malloc_resource.hpp>
-#include <srf/memory/resources/host/malloc_memory_resource.hpp>
-#include <srf/memory/resources/host/pinned_memory_resource.hpp>
-#include <srf/memory/resources/memory_resource.hpp>
+#include "srf/memory/resources/device/cuda_malloc_resource.hpp"
+#include "srf/memory/resources/host/malloc_memory_resource.hpp"
+#include "srf/memory/resources/host/pinned_memory_resource.hpp"
+#include "srf/memory/resources/memory_resource.hpp"
 
 #include <memory>
 

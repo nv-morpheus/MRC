@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include <srf/manifold/egress.hpp>
-#include <srf/manifold/ingress.hpp>
-#include <srf/manifold/manifold.hpp>
-#include <srf/segment/utils.hpp>
+#include "srf/manifold/egress.hpp"
+#include "srf/manifold/ingress.hpp"
+#include "srf/manifold/manifold.hpp"
+#include "srf/segment/utils.hpp"
 
 namespace srf::manifold {
 

@@ -16,17 +16,19 @@
  */
 
 #include "internal/pipeline/manager.hpp"
+
 #include "internal/pipeline/controller.hpp"
 #include "internal/pipeline/instance.hpp"
 #include "internal/pipeline/pipeline.hpp"
 #include "internal/runnable/resources.hpp"
 
-#include "srf/internal/pipeline/ipipeline.hpp"
+#include "srf/channel/status.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/source_channel.hpp"
 #include "srf/runnable/launch_control.hpp"
 #include "srf/runnable/launch_options.hpp"
 #include "srf/runnable/launcher.hpp"
+#include "srf/runnable/runner.hpp"
 
 #include <glog/logging.h>
 

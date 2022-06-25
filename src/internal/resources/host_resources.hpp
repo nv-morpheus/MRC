@@ -21,7 +21,7 @@
 #include "internal/system/host_partition_provider.hpp"
 #include "internal/ucx/registation_callback_builder.hpp"
 
-#include <srf/memory/resources/memory_resource.hpp>
+#include "srf/memory/resources/memory_resource.hpp"
 
 #include <memory>
 

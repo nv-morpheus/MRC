@@ -15,10 +15,12 @@
  * limitations under the License.
  */
 
-#include <srf/protos/architect.pb.h>
 #include "internal/system/gpu_info.hpp"
 #include "internal/system/topology.hpp"
+
+#include "srf/core/bitmap.hpp"
 #include "srf/options/options.hpp"
+#include "srf/protos/architect.pb.h"
 
 #include <glog/logging.h>
 

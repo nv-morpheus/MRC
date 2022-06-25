@@ -17,13 +17,13 @@
 
 #include "test_srf.hpp"  // IWYU pragma: associated
 
-#include <srf/channel/buffered_channel.hpp>
-#include <srf/channel/egress.hpp>
-#include <srf/channel/ingress.hpp>
-#include <srf/channel/null_channel.hpp>
-#include <srf/channel/recent_channel.hpp>
-#include <srf/core/userspace_threads.hpp>
-#include <srf/core/watcher.hpp>
+#include "srf/channel/buffered_channel.hpp"
+#include "srf/channel/egress.hpp"
+#include "srf/channel/ingress.hpp"
+#include "srf/channel/null_channel.hpp"
+#include "srf/channel/recent_channel.hpp"
+#include "srf/core/userspace_threads.hpp"
+#include "srf/core/watcher.hpp"
 
 #include <boost/fiber/buffered_channel.hpp>
 #include <boost/fiber/channel_op_status.hpp>

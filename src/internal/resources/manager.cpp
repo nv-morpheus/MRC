@@ -21,10 +21,8 @@
 #include "internal/system/partitions.hpp"
 #include "internal/system/system.hpp"
 
-#include "srf/internal/system/iresources.hpp"
-
-#include <srf/memory/resources/host/malloc_memory_resource.hpp>
-#include <srf/memory/resources/host/pinned_memory_resource.hpp>
+#include "srf/memory/resources/host/malloc_memory_resource.hpp"
+#include "srf/memory/resources/host/pinned_memory_resource.hpp"
 
 #include <glog/logging.h>
 
@@ -76,6 +74,14 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
         {
             m_host_partitions.emplace_back(runnable, std::move(builder));
         }
+    }
+
+    // finally
+    for (std::size_t i = 0; i < partitions.size(); ++i)
+    {
+        VLOG(1) << "building partition_resources for partition: " << i;
+        auto host_partition_id = partitions.at(i).host_partition_id();
+        m_partitions.emplace_back(m_runnable.at(host_partition_id), i);
     }
 }
 

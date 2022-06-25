@@ -16,13 +16,12 @@
  */
 
 #include "internal/system/resources.hpp"
-#include "internal/system/fiber_task_queue.hpp"
 
 #include "internal/system/fiber_manager.hpp"
+#include "internal/system/fiber_task_queue.hpp"
 
 #include <boost/fiber/future/future.hpp>
 
-#include <algorithm>
 #include <map>
 #include <vector>
 

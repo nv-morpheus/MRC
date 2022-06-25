@@ -18,6 +18,7 @@
 #include "test_build_server.h"  // IWYU pragma: associated
 #include "test_pingpong.h"
 
+#include <nvrpc/server.h>
 #include <nvrpc/thread_pool.h>
 
 #include <gtest/gtest.h>

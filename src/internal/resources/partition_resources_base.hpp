@@ -20,7 +20,7 @@
 #include "internal/runnable/resources.hpp"
 #include "internal/system/partition_provider.hpp"
 
-#include <srf/memory/resources/memory_resource.hpp>
+#include "srf/memory/resources/memory_resource.hpp"
 
 #include <glog/logging.h>
 

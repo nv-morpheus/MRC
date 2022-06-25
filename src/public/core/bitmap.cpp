@@ -15,10 +15,9 @@
  * limitations under the License.
  */
 
-#include <srf/core/bitmap.hpp>
+#include "srf/core/bitmap.hpp"
 
 #include "internal/utils/parse_ints.hpp"
-
 #include "internal/utils/ranges.hpp"
 
 #include <glog/logging.h>

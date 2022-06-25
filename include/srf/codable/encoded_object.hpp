@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include <srf/protos/codable.pb.h>
-#include <srf/codable/codable_protocol.hpp>
-#include <srf/exceptions/runtime_error.hpp>
-#include <srf/memory/block.hpp>
-#include <srf/memory/buffer.hpp>
-#include <srf/utils/macros.hpp>
+#include "srf/codable/codable_protocol.hpp"
+#include "srf/exceptions/runtime_error.hpp"
+#include "srf/memory/block.hpp"
+#include "srf/memory/buffer.hpp"
+#include "srf/protos/codable.pb.h"
+#include "srf/utils/macros.hpp"
 
 #include <glog/logging.h>
 #include <google/protobuf/message.h>

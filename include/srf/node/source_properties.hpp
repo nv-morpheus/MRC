@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include <srf/channel/ingress.hpp>
-#include <srf/core/utils.hpp>
-#include <srf/node/edge.hpp>
-#include <srf/node/forward.hpp>
-#include <srf/node/sink_properties.hpp>
-#include <srf/type_traits.hpp>
+#include "srf/channel/ingress.hpp"
+#include "srf/core/utils.hpp"
+#include "srf/node/edge.hpp"
+#include "srf/node/forward.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/type_traits.hpp"
 
 #include <memory>
 #include <string>

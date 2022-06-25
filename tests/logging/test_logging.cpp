@@ -17,7 +17,7 @@
 
 #include "../test_srf.hpp"  // IWYU pragma: associated
 
-#include <srf/core/logging.hpp>
+#include "srf/core/logging.hpp"
 
 #include <glog/logging.h>
 

@@ -17,8 +17,9 @@
 
 #pragma once
 
+#include "srf/memory/adaptors.hpp"
+
 #include <atomic>
-#include <srf/memory/adaptors.hpp>
 
 namespace srf::internal::memory {
 

@@ -16,15 +16,14 @@
  */
 #pragma once
 
-#include <srf/memory/adaptors.hpp>
-#include <srf/memory/resources/detail/arena.hpp>
-#include <srf/utils/bytes_to_string.hpp>
+#include "srf/memory/adaptors.hpp"
+#include "srf/memory/resources/detail/arena.hpp"
+#include "srf/utils/bytes_to_string.hpp"
 
 #include <cuda_runtime_api.h>
+#include <glog/logging.h>
 #include <rmm/detail/error.hpp>
 #include <rmm/logger.hpp>
-
-#include <glog/logging.h>
 #include <spdlog/common.h>
 #include <spdlog/fmt/bundled/ostream.h>
 

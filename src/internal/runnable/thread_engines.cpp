@@ -19,6 +19,10 @@
 
 #include "internal/runnable/thread_engine.hpp"
 
+#include "srf/core/bitmap.hpp"
+#include "srf/runnable/launch_options.hpp"
+#include "srf/runnable/types.hpp"
+
 #include <glog/logging.h>
 
 #include <cstdint>

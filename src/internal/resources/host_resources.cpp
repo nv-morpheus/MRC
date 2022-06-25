@@ -16,9 +16,9 @@
  */
 
 #include "internal/resources/host_resources.hpp"
-#include <memory>
 
 #include "internal/memory/callback_adaptor.hpp"
+
 #include "srf/memory/adaptors.hpp"
 #include "srf/memory/resources/arena_resource.hpp"
 #include "srf/memory/resources/host/malloc_memory_resource.hpp"
@@ -26,6 +26,8 @@
 #include "srf/memory/resources/logging_resource.hpp"
 #include "srf/memory/resources/memory_resource.hpp"
 #include "srf/utils/bytes_to_string.hpp"
+
+#include <memory>
 
 namespace srf::internal::resources {
 

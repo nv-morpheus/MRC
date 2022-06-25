@@ -23,7 +23,7 @@
 #include "internal/system/resources.hpp"
 #include "internal/system/system_provider.hpp"
 
-#include "srf/internal/pipeline/ipipeline.hpp"
+#include "srf/engine/pipeline/ipipeline.hpp"
 #include "srf/options/options.hpp"
 
 #include <memory>

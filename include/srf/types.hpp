@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include <srf/channel/forward.hpp>
-#include <srf/core/userspace_threads.hpp>
-#include <srf/options/resources.hpp>
-#include <srf/options/topology.hpp>
+#include "srf/channel/forward.hpp"
+#include "srf/core/userspace_threads.hpp"
+#include "srf/options/resources.hpp"
+#include "srf/options/topology.hpp"
 
 namespace srf {
 

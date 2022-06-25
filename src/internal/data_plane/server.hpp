@@ -17,27 +17,27 @@
 
 #pragma once
 
-#include "internal/service.hpp"
-
-#include <srf/channel/status.hpp>
-#include <srf/memory/block.hpp>
-#include <srf/node/generic_source.hpp>
-#include <srf/node/operators/router.hpp>
-#include <srf/node/source_channel.hpp>
-#include <srf/runnable/context.hpp>
-#include <srf/runnable/launch_control.hpp>
-#include <srf/runnable/runner.hpp>
-#include <srf/types.hpp>
-
+#include "internal/resources/partition_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/runnable/resources.hpp"
+#include "internal/service.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include <ucp/api/ucp_def.h>
+#include "srf/channel/status.hpp"
+#include "srf/memory/block.hpp"
+#include "srf/node/generic_source.hpp"
+#include "srf/node/operators/router.hpp"
+#include "srf/node/source_channel.hpp"
+#include "srf/runnable/context.hpp"
+#include "srf/runnable/launch_control.hpp"
+#include "srf/runnable/runner.hpp"
+#include "srf/types.hpp"
+
 #include <rxcpp/rx-predef.hpp>
 #include <rxcpp/rx-subscriber.hpp>
+#include <ucp/api/ucp_def.h>
 
 #include <memory>
 #include <utility>
@@ -65,7 +65,7 @@
 
 namespace srf::internal::data_plane {
 
-using network_event_t = std::pair<PortAddress, memory::block>;
+using network_event_t = std::pair<PortAddress, srf::memory::block>;
 
 class Server final : public Service, public resources::PartitionResourceBase
 {
@@ -75,7 +75,7 @@ class Server final : public Service, public resources::PartitionResourceBase
 
     ucx::WorkerAddress worker_address() const;
 
-    node::Router<PortAddress, memory::block>& deserialize_source();
+    node::Router<PortAddress, srf::memory::block>& deserialize_source();
 
   private:
     void do_service_start() final;
@@ -84,9 +84,11 @@ class Server final : public Service, public resources::PartitionResourceBase
     void do_service_kill() final;
     void do_service_await_join() final;
 
+    std::shared_ptr<resources::PartitionResources> m_resources;
+
     // deserialization nodes will connect to this source wtih their port id
     // the source for this router is the private GenericSoruce of this object
-    std::shared_ptr<node::Router<PortAddress, memory::block>> m_deserialize_source;
+    std::shared_ptr<node::Router<PortAddress, srf::memory::block>> m_deserialize_source;
 
     // the remote descriptor manager will connect to this source
     // data will be emitted on this source as a conditional branch of data source
