@@ -55,7 +55,7 @@ class BlockManager final
         auto key = reinterpret_cast<std::uintptr_t>(block.data()) + block.bytes();
         DCHECK(!owns(block.data()) && !owns(reinterpret_cast<void*>(key - 1)))
             << "block manager already owns a block with an overlapping address";
-        DVLOG(1) << "adding block: " << key << " - " << block.data() << "; " << block.bytes();
+        DVLOG(10) << "adding block: " << key << " - " << block.data() << "; " << block.bytes();
         m_block_map[key] = std::move(block);
         return m_block_map[key];
     }
@@ -65,20 +65,20 @@ class BlockManager final
         auto search = find_entry(ptr);
         if (search != m_block_map.end() && search->second.contains(ptr))
         {
-            DVLOG(3) << this << ": block found";
+            DVLOG(20) << this << ": block found";
             return &search->second;
         }
-        DVLOG(3) << this << ": no block found for " << ptr;
+        DVLOG(20) << this << ": no block found for " << ptr;
         return nullptr;
     }
 
     void drop_block(void* ptr)
     {
-        DVLOG(1) << "dropping block: " << ptr;
+        DVLOG(10) << "dropping block: " << ptr;
         auto search = find_entry(ptr);
         if (search != m_block_map.end() && search->second.contains(ptr))
         {
-            DVLOG(3) << "found block; dropping block: " << search->first << "; " << search->second.data();
+            DVLOG(20) << "found block; dropping block: " << search->first << "; " << search->second.data();
             m_block_map.erase(search);
         }
     }
@@ -90,13 +90,13 @@ class BlockManager final
 
     void clear() noexcept
     {
-        DVLOG(2) << "clearing block map";
+        DVLOG(10) << "clearing block map";
         m_block_map.clear();
     }
 
     std::vector<BlockTypeT> blocks() const noexcept
     {
-        DVLOG(2) << "getting a vector of blocks - " << m_block_map.size();
+        DVLOG(20) << "getting a vector of blocks - " << m_block_map.size();
         std::vector<BlockTypeT> v;
         v.reserve(m_block_map.size());
         for (const auto& it : m_block_map)
@@ -115,7 +115,7 @@ class BlockManager final
   private:
     inline auto find_entry(const void* ptr) const
     {
-        DVLOG(3) << "looking for block containing: " << ptr;
+        DVLOG(20) << "looking for block containing: " << ptr;
         auto key = reinterpret_cast<std::uintptr_t>(ptr);
         return m_block_map.upper_bound(key);
     }
