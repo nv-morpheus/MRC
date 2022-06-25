@@ -23,6 +23,8 @@
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
 
+#include <memory>
+
 namespace test::nodes {
 
 using namespace srf::memory::literals;

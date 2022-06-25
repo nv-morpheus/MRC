@@ -17,10 +17,11 @@
 
 #pragma once
 
-#include <queue>
-#include "nvrpc/interfaces.h"
+#include <nvrpc/interfaces.h>
 
 #include <glog/logging.h>
+
+#include <queue>
 
 namespace nvrpc {
 /**

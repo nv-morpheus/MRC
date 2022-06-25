@@ -19,8 +19,8 @@
 
 #include "internal/ucx/worker.hpp"
 
-#include <ucp/api/ucp_compat.h>
 #include <boost/fiber/operations.hpp>
+#include <ucp/api/ucp_compat.h>
 
 namespace srf::internal::data_plane {
 

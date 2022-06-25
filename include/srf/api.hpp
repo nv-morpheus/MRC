@@ -39,19 +39,19 @@
 // library thoroughly afterwards, including that all exceptions correctly traverse shared object boundaries.
 
 #if defined _WIN32 || defined __CYGWIN__
-#define SRF_HELPER_DLL_IMPORT __declspec(dllimport)
-#define SRF_HELPER_DLL_EXPORT __declspec(dllexport)
-#define SRF_HELPER_DLL_LOCAL
+    #define SRF_HELPER_DLL_IMPORT __declspec(dllimport)
+    #define SRF_HELPER_DLL_EXPORT __declspec(dllexport)
+    #define SRF_HELPER_DLL_LOCAL
 #else
-#if __GNUC__ >= 4
-#define SRF_HELPER_DLL_IMPORT __attribute__((visibility("default")))
-#define SRF_HELPER_DLL_EXPORT __attribute__((visibility("default")))
-#define SRF_HELPER_DLL_LOCAL __attribute__((visibility("hidden")))
-#else
-#define SRF_HELPER_DLL_IMPORT
-#define SRF_HELPER_DLL_EXPORT
-#define SRF_HELPER_DLL_LOCAL
-#endif
+    #if __GNUC__ >= 4
+        #define SRF_HELPER_DLL_IMPORT __attribute__((visibility("default")))
+        #define SRF_HELPER_DLL_EXPORT __attribute__((visibility("default")))
+        #define SRF_HELPER_DLL_LOCAL __attribute__((visibility("hidden")))
+    #else
+        #define SRF_HELPER_DLL_IMPORT
+        #define SRF_HELPER_DLL_EXPORT
+        #define SRF_HELPER_DLL_LOCAL
+    #endif
 #endif
 
 // Now we use the generic helper definitions above to define SRF_API and SRF_LOCAL.
@@ -60,18 +60,18 @@
 
 #define SRF_DLL  // we alway build the .so/.dll
 #ifdef libsrf_EXPORTS
-#define SRF_DLL_EXPORTS
+    #define SRF_DLL_EXPORTS
 #endif
 
-#ifdef SRF_DLL          // defined if SRF is compiled as a DLL
-#ifdef SRF_DLL_EXPORTS  // defined if we are building the SRF DLL (instead of using it)
-#define SRF_API SRF_HELPER_DLL_EXPORT
-#else
-#define SRF_API SRF_HELPER_DLL_IMPORT
-#endif  // SRF_DLL_EXPORTS
-#define SRF_LOCAL SRF_HELPER_DLL_LOCAL
+#ifdef SRF_DLL              // defined if SRF is compiled as a DLL
+    #ifdef SRF_DLL_EXPORTS  // defined if we are building the SRF DLL (instead of using it)
+        #define SRF_API SRF_HELPER_DLL_EXPORT
+    #else
+        #define SRF_API SRF_HELPER_DLL_IMPORT
+    #endif  // SRF_DLL_EXPORTS
+    #define SRF_LOCAL SRF_HELPER_DLL_LOCAL
 #else  // SRF_DLL is not defined: this means SRF is a static lib.
-#define SRF_API
-#define SRF_LOCAL
+    #define SRF_API
+    #define SRF_LOCAL
 static_assert(false, "always build the .so/.dll")
 #endif  // SRF_DLL

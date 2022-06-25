@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <srf/channel/ingress.hpp>
+#include "srf/channel/ingress.hpp"
 
 #include <functional>
 #include <map>

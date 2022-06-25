@@ -19,16 +19,15 @@
 
 #include <glog/logging.h>
 
+#include <utility>
+
 namespace srf::internal::system {
 
-DevicePartition::DevicePartition(const GpuInfo& gpu_info,
-                                 const std::vector<system::HostPartition>& host_partition,
-                                 std::uint32_t host_partition_id) :
+DevicePartition::DevicePartition(const GpuInfo& gpu_info, std::shared_ptr<const HostPartition> host_partition) :
   GpuInfo(gpu_info),
-  m_host_partitions(host_partition),
-  m_host_partition_id(host_partition_id)
+  m_host_partition(std::move(host_partition))
 {
-    CHECK_LT(m_host_partition_id, m_host_partitions.size());
+    CHECK(m_host_partition);
 }
 
 int DevicePartition::cuda_device_id() const
@@ -53,7 +52,7 @@ const std::string& DevicePartition::pcie_bus_id() const
 }
 const HostPartition& DevicePartition::host() const
 {
-    DCHECK_LT(m_host_partition_id, m_host_partitions.size());
-    return m_host_partitions.at(m_host_partition_id);
+    CHECK(m_host_partition);
+    return *m_host_partition;
 }
 }  // namespace srf::internal::system

@@ -17,11 +17,10 @@
 
 #pragma once
 
-#include <srf/internal/pipeline/ipipeline.hpp>
-
-#include <srf/segment/definition.hpp>
-#include <srf/types.hpp>
-#include <srf/utils/macros.hpp>
+#include "srf/engine/pipeline/ipipeline.hpp"
+#include "srf/segment/definition.hpp"
+#include "srf/types.hpp"
+#include "srf/utils/macros.hpp"
 
 #include <cstddef>
 #include <functional>

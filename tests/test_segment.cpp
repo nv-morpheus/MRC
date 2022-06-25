@@ -17,19 +17,20 @@
 
 #include "test_segment.hpp"
 
-#include <srf/benchmarking/trace_statistics.hpp>
-#include <srf/channel/status.hpp>
-// for tag_set_t
-#include <srf/core/executor.hpp>
-#include <srf/node/operators/broadcast.hpp>
-#include <srf/options/options.hpp>
-#include <srf/options/topology.hpp>
-#include <srf/pipeline/pipeline.hpp>
-#include <srf/segment/segment.hpp>
-#include <srf/types.hpp>  // for Future, Tags
+#include "srf/benchmarking/trace_statistics.hpp"
+#include "srf/channel/status.hpp"
+#include "srf/core/executor.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/node/operators/broadcast.hpp"
+#include "srf/options/options.hpp"
+#include "srf/options/topology.hpp"
+#include "srf/pipeline/pipeline.hpp"
+#include "srf/segment/segment.hpp"
+#include "srf/types.hpp"  // for Future, Tags
 
+#include <glog/logging.h>
+#include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
-
 #include <rxcpp/operators/rx-concat_map.hpp>  // for concat_map
 #include <rxcpp/operators/rx-map.hpp>         // for map
 #include <rxcpp/operators/rx-tap.hpp>         // for tap
@@ -42,8 +43,6 @@
 #include <rxcpp/rx-subscription.hpp>          // for make_subscription
 #include <rxcpp/sources/rx-iterate.hpp>       // for from
 
-#include <glog/logging.h>
-
 #include <array>
 #include <atomic>
 #include <cstdlib>
@@ -55,7 +54,6 @@
 #include <type_traits>  // for remove_reference<>::type
 #include <utility>      // for move
 #include <vector>
-#include "srf/node/edge_builder.hpp"
 // IWYU thinks we need map for segment::Definition::create
 // IWYU pragma: no_include <map>
 
@@ -121,6 +119,8 @@ TEST_F(SegmentTests, InitializeSegmentIngressEgressFromDefinition)
 
 TEST_F(SegmentTests, UserLambdaIsCalled)
 {
+    GTEST_SKIP() << "Skipping until issue #59 is resolved";
+
     EXPECT_EQ(m_initializer_called, false);
 
     auto segdef = segment::Definition::create("segment_test", m_ingress_multi_port, m_egress_multi_port, m_initializer);

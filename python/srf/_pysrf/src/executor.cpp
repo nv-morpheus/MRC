@@ -15,32 +15,26 @@
  * limitations under the License.
  */
 
+#include "pysrf/executor.hpp"
+
+#include "pysrf/pipeline.hpp"
+#include "pysrf/system.hpp"
+
+#include "srf/core/executor.hpp"
+#include "srf/engine/pipeline/ipipeline.hpp"
+#include "srf/options/options.hpp"
+#include "srf/types.hpp"  // for Future, SharedFuture
+
 #include <boost/fiber/future/async.hpp>
-#include <pysrf/executor.hpp>
-
-#include <pysrf/pipeline.hpp>
-#include <pysrf/system.hpp>
-
-#include <srf/core/executor.hpp>
-#include <srf/core/utils.hpp>  // for SRF_UNWIND_AUTO, Unwinder
-#include <srf/options/options.hpp>
-#include <srf/types.hpp>  // for Future, SharedFuture
-
 #include <boost/fiber/future/future.hpp>         // for task_base<>::ptr_type, future
 #include <boost/fiber/future/future_status.hpp>  // for future_status, future_status::ready
-
 #include <glog/logging.h>
-
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
-#include <sys/prctl.h>
-
-#include <atomic>
 #include <chrono>     // for milliseconds
 #include <csignal>    // for siginfo_t
-#include <ctime>      // for timespec
 #include <exception>  // for exception, exception_ptr
 #include <future>
 #include <memory>
@@ -149,8 +143,9 @@ Executor::Executor(std::shared_ptr<Options> options)
     auto result = pthread_sigmask(SIG_BLOCK, &sigset, &pysigset);
 
     // Now create the executor
-    auto system = std::make_unique<System>(options);
-    m_exec      = std::make_shared<srf::Executor>(std::move(system));
+    auto system    = std::make_unique<System>(options);
+    auto resources = std::make_unique<SystemResources>(std::move(system));
+    m_exec         = std::make_shared<srf::Executor>(std::move(resources));
 }
 
 Executor::~Executor()
@@ -196,158 +191,15 @@ void Executor::stop()
 
 void Executor::join()
 {
-    // this might be all we need here
-    // py::gil_scoped_release nogil;
-    // m_join_future.get();
-    // below this could go
-
-    // Ensure we have the GIL
-    py::gil_scoped_acquire gil;
-
-    // block signals in this thread and subsequently
-    // spawned threads
-    sigset_t sigset;
-    sigset_t pysigset;
-    sigemptyset(&sigset);
-    sigaddset(&sigset, SIGINT);
-    sigaddset(&sigset, SIGTERM);
-    auto result = pthread_sigmask(SIG_BLOCK, &sigset, &pysigset);
-
-    // Before we exit, we must reset the signal state
-    SRF_UNWIND_AUTO(([&pysigset]() {
-        // Restore the mask
-        pthread_sigmask(SIG_SETMASK, &pysigset, nullptr);
-    }));
-
-    std::atomic<bool> executor_running(true);
-    std::mutex cv_mutex;
-
-    auto signal_handler = [&executor_running, &cv_mutex, &sigset, this]() {
-        prctl(PR_SET_NAME, "SignalHandler", 0, 0, 0);
-
-        // lock prevents modifying value while in body of loop
-        std::unique_lock lock(cv_mutex);
-
-        int signal_value = -1;
-        int signal_count = 0;
-
-        siginfo_t info;
-        // Timeout of 100ms
-        struct timespec ts = {0, 100000};
-
-        while (executor_running.load())
-        {
-            {
-                // Release the lock while we wait for the signal
-                UniqueLockRelease nolock(lock);
-
-                // Get the signal value and immediately reacquire the lock
-                signal_value = sigtimedwait(&sigset, &info, &ts);
-            }
-
-            // Check if we received the signal
-            if (signal_value >= 0)
-            {
-                signal_count++;
-
-                // Get the GIL here since we always will print something
-                py::gil_scoped_acquire gil;
-
-                if (signal_count == 1)
-                {
-                    // First signal, stop the executor to allow nice shutdown
-                    py::print("Stopping Executor. Waiting for safe shutdown... Press Ctrl+C again to exit");
-
-                    this->stop();
-                }
-                else
-                {
-                    // Second time its been hit
-                    py::print("Stopping Executor. Waiting for safe shutdown... Press Ctrl+C again to exit");
-
-                    // TODO(MDD): Call kill()
-
-                    // Important part is to stop both loops here
-                    executor_running.store(false);
-                }
-            }
-        }
-    };
-
-    auto ft_signal_handler = std::async(std::launch::async, signal_handler);
-
-    boost::fibers::future_status status;
-
-    // This is to hold any error that gets caught from a signal
-    std::exception_ptr exc_ptr;
-
+    // Release the GIL before blocking
     py::gil_scoped_release nogil;
 
-    {
-        // lock prevents modifying value while in body of loop
-        std::unique_lock lock(cv_mutex);
-
-        // Only way to exit this loop is by setting executor_running = false
-        while (executor_running.load())
-        {
-            {
-                // Release the lock while we wait for the signal
-                UniqueLockRelease nolock(lock);
-
-                // Get the result and immedately reacquire the lock
-                status = this->m_join_future.wait_for(std::chrono::milliseconds(100));
-            }
-
-            if (status == boost::fibers::future_status::ready)
-            {
-                // Set the running flag to false
-                executor_running.store(false);
-            }
-        }
-    }
-
-    // Now wait on the started thread. Must not hold lock!
-    ft_signal_handler.wait();
-
-    // do
-    // {
-    //     // Check for a signal
-    //     if (PyErr_CheckSignals() != 0)
-    //     {
-    //         if (!exc_ptr)
-    //         {
-    //             py::print("Stopping Executor. Waiting for safe shutdown... Press Ctrl+C again to exit");
-
-    //             exc_ptr = std::make_exception_ptr(py::error_already_set());
-
-    //             // Stop
-    //             this->stop();
-    //         }
-    //         else
-    //         {
-    //             // Second time its been hit
-    //             py::print("Stopping Executor. Waiting for safe shutdown... Press Ctrl+C again to exit");
-
-    //             // TODO(MDD): Call kill()
-    //             break;
-    //         }
-    //     }
-
-    //     py::gil_scoped_release nogil;
-
-    //     status = this->m_join_future.wait_for(std::chrono::milliseconds(100));
-    // } while (status != boost::fibers::future_status::ready);
-
-    // if (exc_ptr)
-    // {
-    //     std::rethrow_exception(exc_ptr);
-    // }
+    m_join_future.get();
 }
 
 std::shared_ptr<Awaitable> Executor::join_async()
 {
     // No gil here
-
     Future<py::object> py_fiber_future = boost::fibers::async([this]() -> py::object {
         // Wait for the join future
         this->m_join_future.wait();

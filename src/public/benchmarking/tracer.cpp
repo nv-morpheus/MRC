@@ -15,8 +15,9 @@
  * limitations under the License.
  */
 
-#include <srf/benchmarking/tracer.hpp>
-#include <srf/benchmarking/util.hpp>
+#include "srf/benchmarking/tracer.hpp"
+
+#include "srf/benchmarking/util.hpp"
 
 #include <nlohmann/json.hpp>
 

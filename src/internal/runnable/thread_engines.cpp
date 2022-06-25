@@ -18,11 +18,15 @@
 #include "internal/runnable/thread_engines.hpp"
 
 #include "internal/runnable/thread_engine.hpp"
-#include "internal/system/system.hpp"
+
+#include "srf/core/bitmap.hpp"
+#include "srf/runnable/launch_options.hpp"
+#include "srf/runnable/types.hpp"
 
 #include <glog/logging.h>
 
 #include <cstdint>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <utility>
@@ -45,11 +49,11 @@ void ThreadEngines::initialize_launchers()
     });
 }
 
-ThreadEngines::ThreadEngines(CpuSet cpu_set, std::shared_ptr<system::System> system) :
+ThreadEngines::ThreadEngines(CpuSet cpu_set, const system::Resources& system) :
   ThreadEngines(LaunchOptions("custom_options", cpu_set.weight()), cpu_set, std::move(system))
 {}
 
-ThreadEngines::ThreadEngines(LaunchOptions launch_options, CpuSet cpu_set, std::shared_ptr<system::System> system) :
+ThreadEngines::ThreadEngines(LaunchOptions launch_options, CpuSet cpu_set, const system::Resources& system) :
   Engines(std::move(launch_options)),
   m_cpu_set(std::move(cpu_set)),
   m_system(std::move(system))

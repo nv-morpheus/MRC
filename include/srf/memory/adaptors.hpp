@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <srf/memory/resources/memory_resource.hpp>
+#include "srf/memory/resources/memory_resource.hpp"
 
 #include <cuda/memory_resource>
 #include <rmm/cuda_stream_view.hpp>

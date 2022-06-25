@@ -17,13 +17,12 @@
 
 #pragma once
 
-#include <srf/memory/resources/memory_resource.hpp>
-#include <srf/type_traits.hpp>
+#include "srf/memory/resources/memory_resource.hpp"
+#include "srf/type_traits.hpp"
 
 #include <cuda/memory_resource>
-#include <rmm/mr/device/device_memory_resource.hpp>
-
 #include <glog/logging.h>
+#include <rmm/mr/device/device_memory_resource.hpp>
 
 #include <cstddef>
 
@@ -138,7 +137,7 @@ template <typename... Properties>
 class resource_view final
 {
   public:
-    resource_view() = delete;
+    resource_view() = default;
 
     template <typename ResourcePointer, typename = std::enable_if_t<std::is_pointer_v<ResourcePointer>>>
     resource_view(ResourcePointer pointer) :
@@ -171,6 +170,11 @@ class resource_view final
     std::shared_ptr<polymorphic_resource_view> prv() const
     {
         return m_storage;
+    }
+
+    explicit operator bool() const
+    {
+        return bool(m_storage);
     }
 
   private:

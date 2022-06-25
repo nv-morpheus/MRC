@@ -17,10 +17,8 @@
 
 #pragma once
 
-#include "srf/internal/executor/iexecutor.hpp"
-#include "srf/internal/system/isystem.hpp"
-
-#include <srf/options/options.hpp>
+#include "srf/engine/executor/iexecutor.hpp"
+#include "srf/options/options.hpp"
 
 #include <memory>
 
@@ -31,7 +29,7 @@ class Executor final : public internal::executor::IExecutor
   public:
     Executor();
     Executor(std::shared_ptr<Options> options);
-    Executor(std::unique_ptr<internal::system::ISystem> system);
+    Executor(std::unique_ptr<internal::system::IResources> resources);
     ~Executor() final = default;
 };
 

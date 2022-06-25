@@ -15,9 +15,11 @@
  * limitations under the License.
  */
 
-#include <benchmark/benchmark.h>
+#include "srf/channel/buffered_channel.hpp"
+#include "srf/core/affinity.h"
+#include "srf/core/base_node.hpp"
 
-#include <srf/data/reusable_pool.hpp>
+#include <benchmark/benchmark.h>
 
 using namespace srf;
 

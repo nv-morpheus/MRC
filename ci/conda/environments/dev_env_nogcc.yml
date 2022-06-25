@@ -28,7 +28,6 @@ dependencies:
   - scikit-build>=0.12
   - spdlog=1.8.5
   - ucx=1.12
-  - xtensor=0.24
   - pip:
     - cython
     - flake8

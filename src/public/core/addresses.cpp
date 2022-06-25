@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 
-#include <srf/core/addresses.hpp>
+#include "srf/core/addresses.hpp"
+
 #include "srf/types.hpp"
 
 #include <glog/logging.h>

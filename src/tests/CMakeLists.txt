@@ -40,19 +40,13 @@ add_custom_target(copy_fixture_files ALL
   DEPENDS ${SRF_INTERNAL_TEST_BINARY_FILES}
 )
 
-
-# Keep all source files sorted
+# Keep all source files sorted!!!
 add_executable(test_srf_private
-  test_main.cpp
-  pipelines/single_segment.cpp
+  nodes/common_nodes.cpp
   pipelines/multi_segment.cpp
+  pipelines/single_segment.cpp
   segments/common_segments.cpp
-  nodes/common_sources.cpp
-  nodes/common_sinks.cpp
-# test_assignment_manager.cpp
-# test_architect.cpp
-# test_options.cpp
-# test_network.cpp
+  test_main.cpp
   test_next.cpp
   test_partitions.cpp
   test_pipeline.cpp
@@ -73,6 +67,7 @@ target_link_libraries(test_srf_private
     hwloc::hwloc
     ucx::ucs
     ucx::ucp
+    pthread
 )
 
 # Necessary include to prevent IWYU from showing absolute paths
