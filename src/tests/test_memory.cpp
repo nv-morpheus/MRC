@@ -32,7 +32,6 @@
 #include "srf/memory/resources/host/pinned_memory_resource.hpp"
 #include "srf/memory/resources/logging_resource.hpp"
 
-#include <cuda/memory_resource>
 #include <cuda_runtime.h>
 #include <glog/logging.h>
 #include <gtest/gtest.h>

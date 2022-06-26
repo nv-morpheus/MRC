@@ -19,8 +19,6 @@
 
 #include "srf/memory/memory_kind.hpp"
 
-#include <cuda/memory_resource>
-
 #include <string>
 #include <vector>
 

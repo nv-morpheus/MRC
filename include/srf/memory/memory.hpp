@@ -20,8 +20,6 @@
 #include "srf/memory/memory_kind.hpp"
 #include "srf/memory/resource_view.hpp"
 
-#include <cuda/memory_resource>
-
 namespace srf::memory {
 
 using HostResourceView   = resource_view<::cuda::memory_access::host,  // NOLINT

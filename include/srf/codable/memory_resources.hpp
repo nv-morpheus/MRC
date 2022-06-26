@@ -17,6 +17,4 @@
 
 #pragma once
 
-#include <cuda/memory_resource>
-
 namespace srf::codable {}  // namespace srf::codable

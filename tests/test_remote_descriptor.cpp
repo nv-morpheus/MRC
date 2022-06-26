@@ -33,7 +33,6 @@
 #include "srf/utils/thread_local_shared_pointer.hpp"
 #include "srf/utils/type_utils.hpp"
 
-#include <cuda/memory_resource>
 #include <glog/logging.h>
 #include <google/protobuf/any.pb.h>
 #include <gtest/gtest.h>

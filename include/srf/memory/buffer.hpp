@@ -20,7 +20,6 @@
 #include "srf/memory/adaptors.hpp"
 #include "srf/memory/resources/memory_resource.hpp"
 
-#include <cuda/memory_resource>
 #include <rmm/device_buffer.hpp>
 
 #include <cstddef>
@@ -107,5 +106,5 @@ class buffer
     std::size_t m_bytes{0};
     void* m_buffer{nullptr};
 };
- 
+
 }  // namespace srf::memory
