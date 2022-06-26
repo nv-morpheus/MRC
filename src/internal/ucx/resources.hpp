@@ -21,7 +21,10 @@
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/registation_callback_builder.hpp"
 #include "internal/ucx/registration_cache.hpp"
+#include "internal/ucx/registration_resource.hpp"
 #include "internal/ucx/worker.hpp"
+
+#include "srf/memory/adaptors.hpp"
 
 namespace srf::internal::ucx {
 
@@ -33,6 +36,12 @@ class Resources final : public resources::PartitionResourceBase
     Context& context();
 
     void add_registration_cache_to_builder(RegistrationCallbackBuilder& builder);
+
+    template <typename UpstreamT>
+    auto adapt_to_registered_resource(UpstreamT upstream)
+    {
+        return srf::memory::make_unique_resource<RegistrationResource>(std::move(upstream), m_registration_cache);
+    }
 
   private:
     std::shared_ptr<Context> m_ucx_context;

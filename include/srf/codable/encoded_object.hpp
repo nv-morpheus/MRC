@@ -212,7 +212,7 @@ class EncodedObject
      * @param bytes
      * @return std::size_t
      */
-    std::size_t add_buffer(memory::memory_resource& mr, std::size_t bytes);
+    std::size_t add_buffer(std::shared_ptr<memory::memory_resource> mr, std::size_t bytes);
 
     /**
      * @brief Used to push a Object message with the starting descriptor index and type_index to the main proto
@@ -265,11 +265,10 @@ MetaDataT EncodedObject::meta_data(std::size_t idx) const
     return meta_data;
 }
 
-std::size_t EncodedObject::add_buffer(memory::memory_resource& mr, std::size_t bytes)
+std::size_t EncodedObject::add_buffer(std::shared_ptr<memory::memory_resource> mr, std::size_t bytes)
 {
     CHECK(m_context_acquired);
-    memory::buffer buff(bytes, &mr);
-    // memory::blob blob(std::move(buff));
+    memory::buffer buff(bytes, mr);
     auto index       = add_memory_block(buff);
     m_buffers[index] = std::move(buff);
     return index;

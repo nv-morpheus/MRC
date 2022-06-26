@@ -32,8 +32,9 @@ class buffer
 {
   public:
     buffer() = default;
-    buffer(std::size_t bytes, memory_resource* mr) :
-      m_mr(mr),
+
+    explicit buffer(std::size_t bytes, std::shared_ptr<memory_resource> mr) :
+      m_mr(std::move(mr)),
       m_bytes(std::move(bytes)),
       m_buffer(m_mr->allocate(m_bytes))
     {}
@@ -64,6 +65,7 @@ class buffer
     {
         if (m_buffer != nullptr)
         {
+            CHECK(m_mr);
             m_mr->deallocate(m_buffer, m_bytes);
             m_buffer = nullptr;
             m_bytes  = 0;
@@ -86,6 +88,7 @@ class buffer
 
     memory_kind kind() const noexcept
     {
+        DCHECK(m_mr);
         return m_mr->kind();
     }
 
@@ -100,9 +103,9 @@ class buffer
     }
 
   private:
-    memory_resource* m_mr;
+    std::shared_ptr<memory_resource> m_mr;
     std::size_t m_bytes{0};
     void* m_buffer{nullptr};
 };
-
+ 
 }  // namespace srf::memory
