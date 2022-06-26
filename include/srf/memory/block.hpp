@@ -60,17 +60,6 @@ class const_block  // NOLINT
     const_block(const void* data, std::size_t bytes, memory_kind kind);
 
     /**
-     * @brief Construct a const_block from a blob
-     *
-     * @param blob
-     */
-    // const_block(const blob& blob) : m_data(const_cast<void*>(blob.data())), m_bytes(blob.bytes()),
-    // m_kind(blob.kind())
-    // {
-    //     CHECK(operator bool());
-    // }
-
-    /**
      * @brief Construct a const_block from a buffer
      *
      * @tparam Properties
