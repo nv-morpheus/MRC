@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "internal/resources/host_resources.hpp"
+#include "internal/memory/host_resources.hpp"
 
 #include "internal/memory/callback_adaptor.hpp"
 
@@ -29,7 +29,7 @@
 
 #include <memory>
 
-namespace srf::internal::resources {
+namespace srf::internal::memory {
 
 HostResources::HostResources(runnable::Resources& runnable, ucx::RegistrationCallbackBuilder&& callbacks) :
   system::HostPartitionProvider(runnable)
@@ -42,26 +42,28 @@ HostResources::HostResources(runnable::Resources& runnable, ucx::RegistrationCal
             // construct raw memory_resource from malloc or pinned if device(s) present
             if (host_partition().device_partition_ids().empty())
             {
-                m_raw = std::make_shared<srf::memory::malloc_memory_resource>();
+                m_system = std::make_shared<srf::memory::malloc_memory_resource>();
                 prefix << "malloc";
             }
             else
             {
-                m_raw = std::make_shared<srf::memory::pinned_memory_resource>();
+                m_system = std::make_shared<srf::memory::pinned_memory_resource>();
                 prefix << "cuda_pinned";
             }
 
             prefix << ":" << host_partition_id();
-            m_raw = srf::memory::make_shared_resource<srf::memory::logging_resource>(std::move(m_raw), prefix.str());
+            m_system =
+                srf::memory::make_shared_resource<srf::memory::logging_resource>(std::move(m_system), prefix.str());
 
             // adapt to callback resource if we have callbacks
             if (callbacks.size() == 0)
             {
-                m_registered = m_raw;
+                m_registered = m_system;
             }
             else
             {
-                m_registered = srf::memory::make_shared_resource<memory::CallbackAdaptor>(m_raw, std::move(callbacks));
+                m_registered =
+                    srf::memory::make_shared_resource<memory::CallbackAdaptor>(m_system, std::move(callbacks));
             }
 
             // adapt to arena

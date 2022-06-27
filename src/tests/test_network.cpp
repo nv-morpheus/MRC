@@ -82,16 +82,16 @@ TEST_F(TestNetwork, ResourceManager)
             options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
         })));
 
-    if (resources->partition_count() != 2 && resources->device_count() != 2)
+    if (resources->partition_count() < 2 && resources->device_count() < 2)
     {
         GTEST_SKIP() << "this test only works with 2 device partitions";
     }
 
-    EXPECT_TRUE(resources->partition(0).ucx());
-    EXPECT_TRUE(resources->partition(1).ucx());
-
     EXPECT_TRUE(resources->partition(0).device());
     EXPECT_TRUE(resources->partition(1).device());
+
+    EXPECT_TRUE(resources->partition(0).network());
+    EXPECT_TRUE(resources->partition(1).network());
 }
 
 // TEST_F(TestNetwork, NetworkEventsManagerLifeCycle)

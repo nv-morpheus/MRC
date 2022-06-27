@@ -17,8 +17,9 @@
 
 #pragma once
 
-#include "internal/resources/device_resources.hpp"
-#include "internal/resources/host_resources.hpp"
+#include "internal/memory/device_resources.hpp"
+#include "internal/memory/host_resources.hpp"
+#include "internal/network/resources.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/system/resources.hpp"
@@ -45,11 +46,12 @@ class Manager final : public system::SystemProvider
 
   private:
     const std::unique_ptr<system::Resources> m_system;
-    std::vector<runnable::Resources> m_runnable;           // one per host partition
-    std::vector<std::optional<ucx::Resources>> m_ucx;      // one per flattened partition if network is enabled
-    std::vector<HostResources> m_host;                     // one per host partition
-    std::vector<std::optional<DeviceResources>> m_device;  // one per flattened partition upto device_count
-    std::vector<PartitionResources> m_partitions;          // one per flattened partition
+    std::vector<runnable::Resources> m_runnable;                   // one per host partition
+    std::vector<std::optional<ucx::Resources>> m_ucx;              // one per flattened partition if network is enabled
+    std::vector<memory::HostResources> m_host;                     // one per host partition
+    std::vector<std::optional<memory::DeviceResources>> m_device;  // one per flattened partition upto device_count
+    std::vector<std::optional<network::Resources>> m_network;      // one per flattened partition
+    std::vector<PartitionResources> m_partitions;                  // one per flattened partition
 };
 
 }  // namespace srf::internal::resources

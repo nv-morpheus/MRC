@@ -145,9 +145,10 @@ include(cmake/setup_iwyu.cmake)
 add_library(libsrf
   src/internal/executor/executor.cpp
   src/internal/executor/iexecutor.cpp
+  src/internal/memory/device_resources.cpp
+  src/internal/memory/host_resources.cpp
   src/internal/memory/resources.cpp
-
-  # src/internal/network/resources.cpp
+  src/internal/network/resources.cpp
   src/internal/pipeline/controller.cpp
   src/internal/pipeline/instance.cpp
   src/internal/pipeline/ipipeline.cpp
@@ -156,8 +157,6 @@ add_library(libsrf
   src/internal/pipeline/port_graph.cpp
   src/internal/pipeline/resources.cpp
   src/internal/resources/manager.cpp
-  src/internal/resources/device_resources.cpp
-  src/internal/resources/host_resources.cpp
   src/internal/resources/partition_resources.cpp
   src/internal/resources/partition_resources_base.cpp
   src/internal/runnable/engine_factory.cpp

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "internal/resources/device_resources.hpp"
+#include "internal/memory/device_resources.hpp"
 
 #include "internal/ucx/resources.hpp"
 
@@ -28,7 +28,7 @@
 #include <sstream>
 #include <utility>
 
-namespace srf::internal::resources {
+namespace srf::internal::memory {
 
 DeviceResources::DeviceResources(runnable::Resources& runnable,
                                  std::size_t partition_id,
@@ -79,4 +79,4 @@ int DeviceResources::cuda_device_id() const
     return partition().device().cuda_device_id();
 }
 
-}  // namespace srf::internal::resources
+}  // namespace srf::internal::memory

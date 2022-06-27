@@ -17,25 +17,20 @@
 
 #pragma once
 
-#include "internal/resources/partition_resources_base.hpp"
-#include "internal/system/device_partition.hpp"
+#include "internal/runnable/resources.hpp"
+#include "internal/system/host_partition_provider.hpp"
+#include "internal/ucx/registation_callback_builder.hpp"
 
-#include "srf/memory/adaptors.hpp"
+#include "srf/memory/resources/memory_resource.hpp"
 
 #include <memory>
 
-namespace srf::internal::ucx {
-class Resources;
-}
+namespace srf::internal::memory {
 
-namespace srf::internal::resources {
-
-class DeviceResources : private resources::PartitionResourceBase
+class HostResources final : private system::HostPartitionProvider
 {
   public:
-    DeviceResources(runnable::Resources& runnable, std::size_t partition_id, std::optional<ucx::Resources>& ucx);
-
-    int cuda_device_id() const;
+    HostResources(runnable::Resources& runnable, ucx::RegistrationCallbackBuilder&& callbacks);
 
   private:
     std::shared_ptr<srf::memory::memory_resource> m_system;

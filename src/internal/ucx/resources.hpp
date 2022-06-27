@@ -36,6 +36,12 @@ class Resources final : private resources::PartitionResourceBase
 
     Context& context();
 
+    const RegistrationCache& registration_cache() const
+    {
+        CHECK(m_registration_cache);
+        return *m_registration_cache;
+    }
+
     void add_registration_cache_to_builder(RegistrationCallbackBuilder& builder);
 
     template <typename UpstreamT>

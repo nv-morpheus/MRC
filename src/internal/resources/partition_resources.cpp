@@ -21,25 +21,27 @@ namespace srf::internal::resources {
 
 PartitionResources::PartitionResources(runnable::Resources& runnable_resources,
                                        std::size_t partition_id,
-                                       HostResources& host,
-                                       std::optional<ucx::Resources>& ucx,
-                                       std::optional<DeviceResources>& device) :
+                                       memory::HostResources& host,
+                                       std::optional<memory::DeviceResources>& device,
+                                       std::optional<network::Resources>& network) :
   PartitionResourceBase(runnable_resources, partition_id),
   m_host(host),
-  m_ucx(ucx),
-  m_device(device)
+  m_device(device),
+  m_network(network)
 {}
 
-HostResources& PartitionResources::host()
+memory::HostResources& PartitionResources::host()
 {
     return m_host;
 }
-std::optional<ucx::Resources>& PartitionResources::ucx()
-{
-    return m_ucx;
-}
-std::optional<DeviceResources>& PartitionResources::device()
+
+std::optional<memory::DeviceResources>& PartitionResources::device()
 {
     return m_device;
+}
+
+std::optional<network::Resources>& PartitionResources::network()
+{
+    return m_network;
 }
 }  // namespace srf::internal::resources

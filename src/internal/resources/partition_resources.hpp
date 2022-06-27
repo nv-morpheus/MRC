@@ -17,7 +17,9 @@
 
 #pragma once
 
-#include "internal/memory/resources.hpp"
+#include "internal/memory/device_resources.hpp"
+#include "internal/memory/host_resources.hpp"
+#include "internal/network/resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/ucx/resources.hpp"
@@ -30,9 +32,6 @@
 
 namespace srf::internal::resources {
 
-class HostResources;
-class DeviceResources;
-
 /**
  * @brief Partition Resources define the set of Resources available to a given Partition
  *
@@ -44,18 +43,18 @@ class PartitionResources final : public PartitionResourceBase
   public:
     PartitionResources(runnable::Resources& runnable_resources,
                        std::size_t partition_id,
-                       HostResources& host,
-                       std::optional<ucx::Resources>& ucx,
-                       std::optional<DeviceResources>& device);
+                       memory::HostResources& host,
+                       std::optional<memory::DeviceResources>& device,
+                       std::optional<network::Resources>& network);
 
-    HostResources& host();
-    std::optional<ucx::Resources>& ucx();
-    std::optional<DeviceResources>& device();
+    memory::HostResources& host();
+    std::optional<memory::DeviceResources>& device();
+    std::optional<network::Resources>& network();
 
   private:
-    HostResources& m_host;
-    std::optional<ucx::Resources>& m_ucx;
-    std::optional<DeviceResources>& m_device;
+    memory::HostResources& m_host;
+    std::optional<memory::DeviceResources>& m_device;
+    std::optional<network::Resources>& m_network;
 };
 
 }  // namespace srf::internal::resources

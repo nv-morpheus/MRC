@@ -92,7 +92,7 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
 
         if (i < device_count())
         {
-            std::optional<DeviceResources> device;
+            std::optional<memory::DeviceResources> device;
             device.emplace(m_runnable.at(host_partition_id), i, m_ucx.at(i));
             m_device.emplace_back(std::move(device));
         }
@@ -102,13 +102,32 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
         }
     }
 
+    // network resources
+    // partition resources
+    for (std::size_t i = 0; i < partition_count(); ++i)
+    {
+        if (network_enabled)
+        {
+            VLOG(1) << "building network resources for partition: " << i;
+            CHECK(m_ucx.at(i));
+            auto host_partition_id = partitions.at(i).host_partition_id();
+            std::optional<network::Resources> network;
+            network.emplace(m_runnable.at(host_partition_id), i, *m_ucx.at(i));
+            m_network.emplace_back(std::move(network));
+        }
+        else
+        {
+            m_network.emplace_back(std::nullopt);
+        }
+    }
+
     // partition resources
     for (std::size_t i = 0; i < partition_count(); ++i)
     {
         VLOG(1) << "building partition_resources for partition: " << i;
         auto host_partition_id = partitions.at(i).host_partition_id();
         m_partitions.emplace_back(
-            m_runnable.at(host_partition_id), i, m_host.at(host_partition_id), m_ucx.at(i), m_device.at(i));
+            m_runnable.at(host_partition_id), i, m_host.at(host_partition_id), m_device.at(i), m_network.at(i));
     }
 }
 

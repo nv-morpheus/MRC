@@ -17,25 +17,27 @@
 
 #pragma once
 
-#include "internal/runnable/resources.hpp"
-#include "internal/system/host_partition_provider.hpp"
-#include "internal/ucx/registation_callback_builder.hpp"
+#include "internal/resources/partition_resources_base.hpp"
+#include "internal/ucx/registration_cache.hpp"
 
-#include "srf/memory/resources/memory_resource.hpp"
-
+#include <cstddef>
 #include <memory>
 
-namespace srf::internal::resources {
+namespace srf::internal::ucx {
+class Resources;
+}  // namespace srf::internal::ucx
 
-class HostResources final : private system::HostPartitionProvider
+namespace srf::internal::network {
+
+class Resources final : private resources::PartitionResourceBase
 {
   public:
-    HostResources(runnable::Resources& runnable, ucx::RegistrationCallbackBuilder&& callbacks);
+    Resources(runnable::Resources& _runnable_resources, std::size_t _partition_id, ucx::Resources& ucx);
+
+    const ucx::RegistrationCache& registration_cache() const;
 
   private:
-    std::shared_ptr<srf::memory::memory_resource> m_raw;
-    std::shared_ptr<srf::memory::memory_resource> m_registered;
-    std::shared_ptr<srf::memory::memory_resource> m_arena;
+    ucx::Resources& m_ucx;
 };
 
-}  // namespace srf::internal::resources
+}  // namespace srf::internal::network
