@@ -53,6 +53,10 @@
 
 namespace srf::pysrf {
 
+/**
+ * @brief Utility struct which supports building pySRF source/sink adapter functions which can be registered with
+ * the EdgeAdapterRegistry.
+ */
 struct EdgeAdapterUtil
 {
     using source_adapter_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(
@@ -173,6 +177,11 @@ struct EdgeAdapterUtil
     }
 };
 
+/**
+ * @brief Sources which inherit this object will automatically attempt to a pySRF adapter for their data type with the
+ * EdgeAdaptorRegistry
+ * @tparam SourceT Data type the inheriting source emits
+ */
 template <typename SourceT>
 struct AutoRegSourceAdapter
 {
@@ -202,6 +211,11 @@ struct AutoRegSourceAdapter
 template <typename SourceT>
 bool AutoRegSourceAdapter<SourceT>::s_initialized = AutoRegSourceAdapter<SourceT>::register_adapter();
 
+/**
+ * @brief Sinks which inherit this object will automatically attempt to a pySRF adapter for their data type with the
+ * EdgeAdaptorRegistry
+ * @tparam SinkT Data type the inheriting sink receives
+ */
 template <typename SinkT>
 struct AutoRegSinkAdapter
 {

@@ -25,7 +25,6 @@
 #include <srf/utils/type_utils.hpp>
 
 #include <memory>
-#include <mutex>
 #include <sstream>
 #include <type_traits>
 #include <typeindex>
