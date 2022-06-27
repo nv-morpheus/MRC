@@ -15,7 +15,7 @@ The **Streaming Reactive Framework** (SRF) library (proununced "surf") is a **re
 <!-- omit in toc -->
 ### Anatomy of a SRF Pipeline
 
-![SRF Pipeline](docs/imgs/srf_pipeline.png)
+![SRF Pipeline](docs/imgs/srf_pipeline.jpg)
 
 <!-- omit in toc -->
 ## Table of Contents
