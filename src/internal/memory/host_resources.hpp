@@ -21,6 +21,7 @@
 #include "internal/system/host_partition_provider.hpp"
 #include "internal/ucx/registation_callback_builder.hpp"
 
+#include "srf/memory/buffer.hpp"
 #include "srf/memory/resources/memory_resource.hpp"
 
 #include <memory>
@@ -32,10 +33,12 @@ class HostResources final : private system::HostPartitionProvider
   public:
     HostResources(runnable::Resources& runnable, ucx::RegistrationCallbackBuilder&& callbacks);
 
+    srf::memory::buffer make_buffer(std::size_t bytes);
+
   private:
     std::shared_ptr<srf::memory::memory_resource> m_system;
     std::shared_ptr<srf::memory::memory_resource> m_registered;
     std::shared_ptr<srf::memory::memory_resource> m_arena;
 };
 
-}  // namespace srf::internal::resources
+}  // namespace srf::internal::memory

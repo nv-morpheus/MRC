@@ -21,6 +21,7 @@
 #include "internal/system/device_partition.hpp"
 
 #include "srf/memory/adaptors.hpp"
+#include "srf/memory/buffer.hpp"
 
 #include <memory>
 
@@ -36,6 +37,8 @@ class DeviceResources : private resources::PartitionResourceBase
     DeviceResources(runnable::Resources& runnable, std::size_t partition_id, std::optional<ucx::Resources>& ucx);
 
     int cuda_device_id() const;
+
+    srf::memory::buffer make_buffer(std::size_t bytes);
 
   private:
     std::shared_ptr<srf::memory::memory_resource> m_system;

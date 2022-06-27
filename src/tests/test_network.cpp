@@ -78,7 +78,7 @@ TEST_F(TestNetwork, ResourceManager)
             options.resources().enable_host_memory_pool(true);
             options.resources().host_memory_pool().block_size(32_MiB);
             options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
-            options.resources().device_memory_pool().block_size(32_MiB);
+            options.resources().device_memory_pool().block_size(64_MiB);
             options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
         })));
 
@@ -92,6 +92,32 @@ TEST_F(TestNetwork, ResourceManager)
 
     EXPECT_TRUE(resources->partition(0).network());
     EXPECT_TRUE(resources->partition(1).network());
+
+    auto h_buffer_0 = resources->partition(0).host().make_buffer(1_MiB);
+    auto d_buffer_0 = resources->partition(0).device()->make_buffer(1_MiB);
+
+    auto h_ucx_block = resources->partition(0).network()->registration_cache().lookup(h_buffer_0.data());
+    auto d_ucx_block = resources->partition(0).network()->registration_cache().lookup(d_buffer_0.data());
+
+    EXPECT_EQ(h_ucx_block.bytes(), 32_MiB);
+    EXPECT_EQ(d_ucx_block.bytes(), 64_MiB);
+
+    EXPECT_TRUE(h_ucx_block.local_handle());
+    EXPECT_TRUE(h_ucx_block.remote_handle());
+    EXPECT_TRUE(h_ucx_block.remote_handle_size());
+
+    EXPECT_TRUE(d_ucx_block.local_handle());
+    EXPECT_TRUE(d_ucx_block.remote_handle());
+    EXPECT_TRUE(d_ucx_block.remote_handle_size());
+
+    // this is generally true, but perhaps we should not count on it
+    EXPECT_LE(h_ucx_block.remote_handle_size(), d_ucx_block.remote_handle_size());
+
+    // expect that the buffers are allowed to survive pass the resource manager
+    resources.reset();
+
+    h_buffer_0.release();
+    d_buffer_0.release();
 }
 
 // TEST_F(TestNetwork, NetworkEventsManagerLifeCycle)

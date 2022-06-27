@@ -86,4 +86,8 @@ HostResources::HostResources(runnable::Resources& runnable, ucx::RegistrationCal
         .get();
 }
 
-}  // namespace srf::internal::resources
+srf::memory::buffer HostResources::make_buffer(std::size_t bytes)
+{
+    return srf::memory::buffer(bytes, m_arena);
+}
+}  // namespace srf::internal::memory

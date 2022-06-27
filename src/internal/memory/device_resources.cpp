@@ -79,4 +79,8 @@ int DeviceResources::cuda_device_id() const
     return partition().device().cuda_device_id();
 }
 
+srf::memory::buffer DeviceResources::make_buffer(std::size_t bytes)
+{
+    return srf::memory::buffer(bytes, m_arena);
+}
 }  // namespace srf::internal::memory
