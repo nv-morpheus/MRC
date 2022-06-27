@@ -16,8 +16,8 @@
  */
 
 #include "srf/channel/buffered_channel.hpp"
-#include "srf/core/affinity.h"
-#include "srf/core/base_node.hpp"
+#include "srf/data/reusable_pool.hpp"
+#include "srf/utils/macros.hpp"
 
 #include <benchmark/benchmark.h>
 
