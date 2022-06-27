@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include "internal/memory/callback_adaptor.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/memory_block.hpp"
 #include "internal/ucx/registration_cache.hpp"
@@ -58,7 +59,7 @@ class TestMemory : public ::testing::Test
   protected:
 };
 
-TEST_F(TestMemory, ucx_registration_resource)
+TEST_F(TestMemory, UcxRegisterePinnedMemoryArena)
 {
     auto context  = std::make_shared<internal::ucx::Context>();
     auto regcache = std::make_shared<internal::ucx::RegistrationCache>(context);
@@ -80,7 +81,7 @@ TEST_F(TestMemory, ucx_registration_resource)
     VLOG(1) << "ucx rbuffer size: " << ucx_block.remote_handle_size();
 }
 
-TEST_F(TestMemory, ucx_registration_resource_cuda)
+TEST_F(TestMemory, UcxRegisteredCudaMemoryArena)
 {
     auto context  = std::make_shared<internal::ucx::Context>();
     auto regcache = std::make_shared<internal::ucx::RegistrationCache>(context);
@@ -99,7 +100,38 @@ TEST_F(TestMemory, ucx_registration_resource_cuda)
     CHECK(ucx_block.remote_handle());
     CHECK(ucx_block.remote_handle_size());
 
-    LOG(INFO) << "ucx rbuffer size: " << ucx_block.remote_handle_size();
+    VLOG(1) << "ucx rbuffer size: " << ucx_block.remote_handle_size();
+}
+
+TEST_F(TestMemory, CallbackAdaptor)
+{
+    internal::memory::CallbackBuilder builder;
+
+    std::atomic_size_t calls = 0;
+    std::atomic_size_t bytes = 0;
+
+    builder.register_callbacks([&calls](void* ptr, std::size_t _bytes) { calls++; },
+                               [](void* ptr, std::size_t bytes) {});
+    builder.register_callbacks([&bytes](void* ptr, std::size_t _bytes) { bytes += _bytes; },
+                               [&bytes](void* ptr, std::size_t _bytes) { bytes -= bytes; });
+
+    auto malloc = std::make_unique<srf::memory::malloc_memory_resource>();
+    auto logger = srf::memory::make_unique_resource<srf::memory::logging_resource>(std::move(malloc), "malloc");
+    auto callback =
+        srf::memory::make_shared_resource<internal::memory::CallbackAdaptor>(std::move(logger), std::move(builder));
+
+    EXPECT_EQ(calls, 0);
+    EXPECT_EQ(bytes, 0);
+
+    auto buffer = srf::memory::buffer(1_MiB, callback);
+
+    EXPECT_EQ(calls, 1);
+    EXPECT_EQ(bytes, 1_MiB);
+
+    buffer.release();
+
+    EXPECT_EQ(calls, 1);
+    EXPECT_EQ(bytes, 0);
 }
 
 // TEST_F(TestMemory, Copy)
