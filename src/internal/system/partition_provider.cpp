@@ -22,6 +22,8 @@
 
 #include <glog/logging.h>
 
+#include <vector>
+
 namespace srf::internal::system {
 
 PartitionProvider::PartitionProvider(SystemProvider& system, std::size_t partition_id) :

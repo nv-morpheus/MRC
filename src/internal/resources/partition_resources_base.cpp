@@ -17,6 +17,10 @@
 
 #include "internal/resources/partition_resources_base.hpp"
 
+#include "internal/system/partition.hpp"
+
+#include <glog/logging.h>
+
 namespace srf::internal::resources {
 
 PartitionResourceBase::PartitionResourceBase(runnable::Resources& runnable, std::size_t partition_id) :

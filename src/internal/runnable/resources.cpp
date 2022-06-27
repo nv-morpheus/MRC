@@ -21,8 +21,6 @@
 #include "internal/runnable/engines.hpp"
 #include "internal/system/engine_factory_cpu_sets.hpp"
 #include "internal/system/host_partition.hpp"
-#include "internal/system/partitions.hpp"
-#include "internal/system/system.hpp"
 
 #include "srf/core/bitmap.hpp"
 #include "srf/runnable/launch_control_config.hpp"
@@ -37,7 +35,6 @@
 #include <string>
 #include <type_traits>
 #include <utility>
-#include <vector>
 
 namespace srf::internal::runnable {
 

@@ -17,7 +17,12 @@
 
 #include "internal/system/host_partition_provider.hpp"
 
+#include "internal/system/partitions.hpp"
 #include "internal/system/system.hpp"
+
+#include <glog/logging.h>
+
+#include <vector>
 
 namespace srf::internal::system {
 

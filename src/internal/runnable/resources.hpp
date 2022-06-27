@@ -19,7 +19,6 @@
 
 #include "internal/system/fiber_task_queue.hpp"
 #include "internal/system/host_partition_provider.hpp"
-#include "internal/system/partition.hpp"
 #include "internal/system/resources.hpp"
 
 #include "srf/core/task_queue.hpp"

@@ -21,10 +21,8 @@
 #include "internal/ucx/registration_cache.hpp"
 #include "internal/ucx/registration_resource.hpp"
 
-#include "srf/cuda/common.hpp"
 #include "srf/memory/adaptors.hpp"
 #include "srf/memory/buffer.hpp"
-#include "srf/memory/buffer_view.hpp"
 #include "srf/memory/literals.hpp"
 #include "srf/memory/memory_kind.hpp"
 #include "srf/memory/resources/arena_resource.hpp"
@@ -33,13 +31,13 @@
 #include "srf/memory/resources/host/pinned_memory_resource.hpp"
 #include "srf/memory/resources/logging_resource.hpp"
 
-#include <cuda_runtime.h>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 
+#include <atomic>
+#include <cstddef>
 #include <memory>
 #include <ostream>
-#include <type_traits>
 #include <utility>
 
 // iwyu thinks spdlog, map, set, thread & vector are needed for arena_resource

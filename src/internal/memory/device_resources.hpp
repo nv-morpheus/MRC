@@ -18,12 +18,14 @@
 #pragma once
 
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/system/device_partition.hpp"
+#include "internal/runnable/resources.hpp"
 
-#include "srf/memory/adaptors.hpp"
 #include "srf/memory/buffer.hpp"
+#include "srf/memory/resources/memory_resource.hpp"
 
+#include <cstddef>
 #include <memory>
+#include <optional>
 
 namespace srf::internal::ucx {
 class Resources;

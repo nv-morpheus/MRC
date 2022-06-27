@@ -24,7 +24,7 @@
 #include "internal/runnable/resources.hpp"
 #include "internal/system/resources.hpp"
 #include "internal/system/system_provider.hpp"
-#include "internal/ucx/registation_callback_builder.hpp"
+#include "internal/ucx/resources.hpp"
 
 #include <cstddef>
 #include <memory>

@@ -17,18 +17,15 @@
 
 #include "srf/codable/encoded_object.hpp"
 
-#include "srf/codable/memory_resources.hpp"
 #include "srf/memory/buffer_view.hpp"
 #include "srf/memory/memory_kind.hpp"
 #include "srf/protos/codable.pb.h"
-#include "srf/utils/thread_local_shared_pointer.hpp"
 
 #include <google/protobuf/any.pb.h>
 #include <google/protobuf/message.h>
 
-#include <cstdint>  // for uint64_t
-#include <memory>   // for __shared_ptr_access, shared_ptr
-#include <ostream>  // for operator<<
+#include <cstdint>
+#include <ostream>
 
 namespace srf::codable {
 

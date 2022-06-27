@@ -22,12 +22,8 @@
 #include "internal/network/resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/runnable/resources.hpp"
-#include "internal/ucx/resources.hpp"
 
-#include "srf/memory/resources/memory_resource.hpp"
-
-#include <glog/logging.h>
-
+#include <cstddef>
 #include <optional>
 
 namespace srf::internal::resources {

@@ -34,7 +34,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <ext/alloc_traits.h>
 #include <map>
 #include <memory>
 #include <ostream>

@@ -18,7 +18,7 @@
 #pragma once
 
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/system/system_provider.hpp"
+#include "internal/runnable/resources.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/registation_callback_builder.hpp"
 #include "internal/ucx/registration_cache.hpp"
@@ -26,6 +26,11 @@
 #include "internal/ucx/worker.hpp"
 
 #include "srf/memory/adaptors.hpp"
+
+#include <glog/logging.h>
+
+#include <cstddef>
+#include <memory>
 
 namespace srf::internal::ucx {
 

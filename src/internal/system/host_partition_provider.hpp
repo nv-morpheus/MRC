@@ -18,8 +18,9 @@
 #pragma once
 
 #include "internal/system/host_partition.hpp"
-#include "internal/system/partition.hpp"
 #include "internal/system/system_provider.hpp"
+
+#include <cstddef>
 
 namespace srf::internal::system {
 

@@ -18,14 +18,14 @@
 #pragma once
 
 #include "internal/resources/partition_resources_base.hpp"
+#include "internal/runnable/resources.hpp"
 #include "internal/ucx/registration_cache.hpp"
 
 #include <cstddef>
-#include <memory>
 
 namespace srf::internal::ucx {
 class Resources;
-}  // namespace srf::internal::ucx
+}
 
 namespace srf::internal::network {
 
