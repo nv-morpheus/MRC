@@ -1,7 +1,7 @@
 <!-- omit in toc -->
 # Streaming Reactive Framework (SRF)
 
-The **Streaming Reactive Framework** (SRF) library (proununced "surf") is a **reactive, network-aware, flexible, and performance-oriented streaming data framework** that standardizes building modular and reusable pipelines with both C++ and Python​. The goal of SRF is to serve as a common streaming data layer in which all personas of developers - ranging from Data Scientists to DevOps and Performance Engineers can find value.
+The **Streaming Reactive Framework** (SRF) library (proununced "surf") is a **reactive, network-aware, flexible, and performance-oriented streaming data framework** that standardizes building modular and reusable pipelines with both C++ and Python​. The goal of SRF is to serve as a common high-performance streaming data layer in which all personas of developers - ranging from Data Scientists to DevOps and Performance Engineers can find value.
 
 <!-- omit in toc -->
 ### Major features and differentiators
@@ -21,42 +21,115 @@ The **Streaming Reactive Framework** (SRF) library (proununced "surf") is a **re
 ## Table of Contents
 - [Installation](#installation)
   - [Prerequisites](#prerequisites)
-  - [Python and C++ Bindings with Conda](#python-and-c-bindings-with-conda)
+  - [Conda Installation](#conda-installation)
+    - [Python Bindings](#python-bindings)
+    - [C++ Bindings](#c-bindings)
+    - [Python and C++ Bindings](#python-and-c-bindings)
+  - [Source Installation](#source-installation)
 - [Quickstart](#quickstart)
 - [Contributing](#contributing)
   - [Thirdparty code](#thirdparty-code)
 
 
 ## Installation
-SRF includes both Python and C++ bindings and supports installation via [conda](https://docs.conda.io/en/latest/), Docker, or source.]
+SRF includes both Python and C++ bindings and supports installation via [conda](https://docs.conda.io/en/latest/), Docker, or from source.]
 
 ### Prerequisites
 
 - Pascal architecture (Compute capability 6.0) or better
 - NVIDIA driver `450.80.02` or higher
 - [conda or miniconda](https://conda.io/projects/conda/en/latest/user-guide/install/linux.html)
-  - **Note:** Conda performance can be improved by using [Mamba](https://github.com/mamba-org/mamba) and is recommended for the QSG. If you have `mamba` installed, simply replace `conda`  with `mamba` in the installation instructions.
-- if using docker:
+- If using Docker:
   - [Docker](https://docs.docker.com/get-docker/)
   - [The NVIDIA container toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker)
 
-### Python and C++ Bindings with Conda
-Installing via Conda is the easiest method for getting the SRF components and supports both the Python and C++ bindings. To install the SRF conda package and build the C++ and hybrid components, follow the steps below:
+### Conda Installation
+Installing via Conda is the easiest method for getting the SRF components and supports both the Python and C++ bindings. To install the SRF conda package and build the C++ and hybrid components, follow the steps below. Please note, Conda performance can be greatly increased via [Mamba](https://github.com/mamba-org/mamba). To install Mamba in an existing Conda environment, simply run:
 
 ```bash
-# Change directory to the quickstart root
-cd ${SRF_HOME}/docs/quickstart/
+conda install -c conda-forge mamba
+```
 
+If you choose to use Mamba rather than Conda, simply replace `conda` with `mamba` in the instructions below.
+
+#### Python Bindings
+```bash
 # If needed, create a new conda environment
-conda env create -n srf-quickstart -f environment_cpp.yml
-conda activate srf-quickstart
+conda create --name srf python=3.8
 
-# Or if reusing a conda environment, ensure all dependencies are installed
-conda env update -n srf-quickstart -f environment_cpp.yml
-conda activate srf-quickstart
+# Activate the newly created conda environment
+conda activate srf
 
-# Compile the QSG. This will build the C++ and Hybrid components in ./build. And install the Python and Hybrid libraries
-./compile.sh
+# Install SRF Python bindings
+conda install -c rapidsai -c nvidia -c conda-forge srf
+```
+
+#### C++ Bindings
+```bash
+# If needed, create a new conda environment
+conda create --name srf python=3.8
+
+# Activate the newly created conda environment
+conda activate srf
+
+# Install SRF Python bindings
+conda install -c rapidsai -c nvidia -c conda-forge libsrf
+```
+
+#### Python and C++ Bindings
+```bash
+# If needed, create a new conda environment
+conda create --name srf python=3.8
+
+# Activate the newly created conda environment
+conda activate srf
+
+# Install SRF Python bindings
+conda install -c rapidsai -c nvidia -c conda-forge srf libsrf
+```
+
+### Source Installation
+Installing via source is for more advanced users and is necessary to try SRF features before an official release. 
+
+<!-- omit in toc -->
+#### Clone SRF repository
+```bash
+export $SRF_HOME=$(pwd)/srf
+git clone git@github.com:nv-morpheus/srf.git $SRF_HOME
+cd $SRF_HOME
+```
+<!-- omit in toc -->
+#### Create SRF Conda Environment
+```bash
+# note: `mamba` may be used in place of `conda` for better performance.
+conda env create -n srf-dev --file $SRF_HOME/ci/conda/environments/dev_env.yml
+conda activate srf-dev
+```
+<!-- omit in toc -->
+#### Build SRF
+```bash
+mkdir $SRF_HOME/build
+cd $SRF_HOME/build
+cmake ..
+make -j $(nproc)
+```
+<!-- omit in toc -->
+#### Run SRF C++ Tests
+```bash
+export SRF_TEST_INTERNAL_DATA_PATH=$SRF_HOME/src/tests
+$SRF_HOME/build/src/tests/test_srf_private.x
+$SRF_HOME/build/tests/test_srf.x
+$SRF_HOME/build/tests/logging/test_srf_logging.x
+```
+<!-- omit in toc -->
+#### Install SRF Python Bindings
+```bash
+pip install -e $SRF_HOME/python
+```
+<!-- omit in toc -->
+#### Run SRF Python Tests
+```bash
+pytest $SRF_HOME/python
 ```
 
 ## Quickstart
