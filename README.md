@@ -1,7 +1,9 @@
+<!-- omit in toc -->
 # Streaming Reactive Framework (SRF)
 
 The **Streaming Reactive Framework** (SRF) library (proununced "surf") is a **reactive, network-aware, flexible, and performance-oriented streaming data framework** that standardizes building modular and reusable pipelines with both C++ and Python​. The goal of SRF is to serve as a common streaming data layer in which all personas of developers - ranging from Data Scientists to DevOps and Performance Engineers can find value.
 
+<!-- omit in toc -->
 ### Major features and differentiators
  - Built in C++ for performance, with Python bindings for ease of use and rapid prototyping, with options for maximizing performance
  - Distributed computation with message transfers over RMDA using UCX
@@ -10,22 +12,20 @@ The **Streaming Reactive Framework** (SRF) library (proununced "surf") is a **re
  - Built from the ground up with asynchronous computation for mitigation of I/O and GPU blocking
  - Automatically handles backpressure (when the sender is operating faster than the receiver can keep up) and reschedules computation as needed
 
+<!-- omit in toc -->
 ### Anatomy of a SRF Pipeline
 
 ![SRF Pipeline](docs/imgs/srf_pipeline.png)
 
 
 ## Table of Contents
-- [Streaming Reactive Framework (SRF)](#streaming-reactive-framework-srf)
-    - [Major features and differentiators](#major-features-and-differentiators)
-    - [Anatomy of a SRF Pipeline](#anatomy-of-a-srf-pipeline)
-  - [Table of Contents](#table-of-contents)
-  - [Installation](#installation)
-    - [Prerequisites](#prerequisites)
-    - [Python and C++ Bindings with Conda](#python-and-c-bindings-with-conda)
-  - [Quickstart](#quickstart)
-  - [Contributing](#contributing)
-    - [Thirdparty code](#thirdparty-code)
+- [Table of Contents](#table-of-contents)
+- [Installation](#installation)
+  - [Prerequisites](#prerequisites)
+  - [Python and C++ Bindings with Conda](#python-and-c-bindings-with-conda)
+- [Quickstart](#quickstart)
+- [Contributing](#contributing)
+  - [Thirdparty code](#thirdparty-code)
 
 
 ## Installation
