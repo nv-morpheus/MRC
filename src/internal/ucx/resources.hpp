@@ -18,6 +18,7 @@
 #pragma once
 
 #include "internal/resources/partition_resources_base.hpp"
+#include "internal/system/system_provider.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/registation_callback_builder.hpp"
 #include "internal/ucx/registration_cache.hpp"
@@ -28,7 +29,7 @@
 
 namespace srf::internal::ucx {
 
-class Resources final : public resources::PartitionResourceBase
+class Resources final : private resources::PartitionResourceBase
 {
   public:
     Resources(runnable::Resources& _runnable_resources, std::size_t _partition_id);
@@ -42,6 +43,8 @@ class Resources final : public resources::PartitionResourceBase
     {
         return srf::memory::make_unique_resource<RegistrationResource>(std::move(upstream), m_registration_cache);
     }
+
+    using resources::PartitionResourceBase::partition;
 
   private:
     std::shared_ptr<Context> m_ucx_context;

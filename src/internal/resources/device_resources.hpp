@@ -30,7 +30,7 @@ class Resources;
 
 namespace srf::internal::resources {
 
-class DeviceResources : public resources::PartitionResourceBase
+class DeviceResources : private resources::PartitionResourceBase
 {
   public:
     DeviceResources(runnable::Resources& runnable, std::size_t partition_id, std::optional<ucx::Resources>& ucx);

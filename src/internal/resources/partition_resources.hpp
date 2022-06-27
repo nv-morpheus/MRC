@@ -34,7 +34,10 @@ class HostResources;
 class DeviceResources;
 
 /**
- * @brief Owner of most resources assigned to a specific partition.
+ * @brief Partition Resources define the set of Resources available to a given Partition
+ *
+ * This class does not own the actual resources, that honor is bestowed on the resources::Manager. This class is
+ * constructed and owned by the resources::Manager to ensure validity of the references.
  */
 class PartitionResources final : public PartitionResourceBase
 {

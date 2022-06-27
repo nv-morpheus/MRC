@@ -27,7 +27,7 @@
 
 namespace srf::internal::resources {
 
-class HostResources final : public system::HostPartitionProvider
+class HostResources final : private system::HostPartitionProvider
 {
   public:
     HostResources(runnable::Resources& runnable, ucx::RegistrationCallbackBuilder&& callbacks);
