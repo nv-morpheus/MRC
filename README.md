@@ -145,7 +145,7 @@ A Dockerfile is provided at `$SRF_HOME` and can be built with
 ```bash
 docker build -t srf:latest .
 ```
-To run the build container, run
+To run the container
 ```bash
 docker run --gpus all --rm -it srf:latest /bin/bash
 ```
