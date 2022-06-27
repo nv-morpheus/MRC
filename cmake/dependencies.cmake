@@ -84,7 +84,7 @@ include(deps/Configure_hwloc)
 
 # NVIDIA RAPIDS RMM
 # =================
-set(RMM_VERSION "\${RAPIDS_VERSION}" CACHE STRING "Version of RMM to use. Defaults to \${RAPIDS_VERSION}")
+set(RMM_VERSION "\${SRF_RAPIDS_VERSION}" CACHE STRING "Version of RMM to use. Defaults to \${SRF_RAPIDS_VERSION}")
 include(deps/Configure_RMM)
 
 # gflags
