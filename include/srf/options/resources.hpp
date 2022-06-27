@@ -78,8 +78,8 @@ class ResourceOptions
     const MemoryPoolOptions& device_memory_pool() const;
 
   private:
-    bool m_enable_host_memory_pool{true};
-    bool m_enable_device_memory_pool{true};
+    bool m_enable_host_memory_pool{false};
+    bool m_enable_device_memory_pool{false};
     MemoryPoolOptions m_host_memory_pool;
     MemoryPoolOptions m_device_memory_pool;
 };
