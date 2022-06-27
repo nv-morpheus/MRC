@@ -17,9 +17,8 @@ The **Streaming Reactive Framework** (SRF) library (proununced "surf") is a **re
 
 ![SRF Pipeline](docs/imgs/srf_pipeline.png)
 
-
+<!-- omit in toc -->
 ## Table of Contents
-- [Table of Contents](#table-of-contents)
 - [Installation](#installation)
   - [Prerequisites](#prerequisites)
   - [Python and C++ Bindings with Conda](#python-and-c-bindings-with-conda)
