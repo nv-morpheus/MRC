@@ -19,7 +19,7 @@
 
 #include <srf/channel/ingress.hpp>
 #include <srf/node/edge.hpp>
-#include <srf/node/edge_adaptor_registry.hpp>
+#include <srf/node/edge_adapter_registry.hpp>
 #include <srf/node/sink_properties.hpp>
 #include <srf/node/source_properties.hpp>
 #include <srf/utils/type_utils.hpp>
@@ -42,7 +42,7 @@ struct EdgeBuilder final
      * @param ingress_handle
      * @return
      */
-    static std::shared_ptr<channel::IngressHandle> default_ingress_adaptor_for_sink(
+    static std::shared_ptr<channel::IngressHandle> default_ingress_adapter_for_sink(
         srf::node::SourcePropertiesBase& source,
         srf::node::SinkPropertiesBase& sink,
         std::shared_ptr<channel::IngressHandle> ingress_handle);
@@ -54,7 +54,7 @@ struct EdgeBuilder final
      * @param ingress_handle
      * @return
      */
-    static std::shared_ptr<channel::IngressHandle> ingress_adaptor_for_sink(
+    static std::shared_ptr<channel::IngressHandle> ingress_adapter_for_sink(
         srf::node::SourcePropertiesBase& source,
         srf::node::SinkPropertiesBase& sink,
         std::shared_ptr<channel::IngressHandle> ingress_handle);

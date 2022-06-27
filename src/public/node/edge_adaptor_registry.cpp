@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <srf/node/edge_adaptor_registry.hpp>
+#include <srf/node/edge_adapter_registry.hpp>
 
 #include <map>
 #include <stdexcept>
@@ -23,60 +23,60 @@
 
 namespace srf::node {
 
-std::map<std::type_index, EdgeAdaptorRegistry::source_adaptor_fn_t> EdgeAdaptorRegistry::registered_source_adaptors{};
-std::map<std::type_index, EdgeAdaptorRegistry::sink_adaptor_fn_t> EdgeAdaptorRegistry::registered_sink_adaptors{};
+std::map<std::type_index, EdgeAdapterRegistry::source_adapter_fn_t> EdgeAdapterRegistry::registered_source_adapters{};
+std::map<std::type_index, EdgeAdapterRegistry::sink_adapter_fn_t> EdgeAdapterRegistry::registered_sink_adapters{};
 
-void EdgeAdaptorRegistry::register_source_adaptor(std::type_index source_type, source_adaptor_fn_t adaptor)
+void EdgeAdapterRegistry::register_source_adapter(std::type_index source_type, source_adapter_fn_t adapter_fn)
 {
-    auto iter_source = EdgeAdaptorRegistry::registered_source_adaptors.find(source_type);
-    if (iter_source != EdgeAdaptorRegistry::registered_source_adaptors.end())
+    auto iter_source = EdgeAdapterRegistry::registered_source_adapters.find(source_type);
+    if (iter_source != EdgeAdapterRegistry::registered_source_adapters.end())
     {
-        throw std::runtime_error("Duplicate edge adaptor already registered");
+        throw std::runtime_error("Duplicate edge adapter already registered");
     }
 
-    EdgeAdaptorRegistry::registered_source_adaptors[source_type] = adaptor;
+    EdgeAdapterRegistry::registered_source_adapters[source_type] = adapter_fn;
 }
 
-void EdgeAdaptorRegistry::register_sink_adaptor(std::type_index sink_type, sink_adaptor_fn_t adaptor)
+void EdgeAdapterRegistry::register_sink_adapter(std::type_index sink_type, sink_adapter_fn_t adapter_fn)
 {
-    auto iter_sink = EdgeAdaptorRegistry::registered_sink_adaptors.find(sink_type);
-    if (iter_sink != EdgeAdaptorRegistry::registered_sink_adaptors.end())
+    auto iter_sink = EdgeAdapterRegistry::registered_sink_adapters.find(sink_type);
+    if (iter_sink != EdgeAdapterRegistry::registered_sink_adapters.end())
     {
-        throw std::runtime_error("Duplicate edge adaptor already registered");
+        throw std::runtime_error("Duplicate edge adapter already registered");
     }
 
-    EdgeAdaptorRegistry::registered_sink_adaptors[sink_type] = adaptor;
+    EdgeAdapterRegistry::registered_sink_adapters[sink_type] = adapter_fn;
 }
 
-bool EdgeAdaptorRegistry::has_source_adaptor(std::type_index source_type)
+bool EdgeAdapterRegistry::has_source_adapter(std::type_index source_type)
 {
-    return (EdgeAdaptorRegistry::registered_source_adaptors.find(source_type) !=
-            EdgeAdaptorRegistry::registered_source_adaptors.end());
+    return (EdgeAdapterRegistry::registered_source_adapters.find(source_type) !=
+            EdgeAdapterRegistry::registered_source_adapters.end());
 }
 
-bool EdgeAdaptorRegistry::has_sink_adaptor(std::type_index sink_type)
+bool EdgeAdapterRegistry::has_sink_adapter(std::type_index sink_type)
 {
-    return (EdgeAdaptorRegistry::registered_sink_adaptors.find(sink_type) !=
-            EdgeAdaptorRegistry::registered_sink_adaptors.end());
+    return (EdgeAdapterRegistry::registered_sink_adapters.find(sink_type) !=
+            EdgeAdapterRegistry::registered_sink_adapters.end());
 }
 
-EdgeAdaptorRegistry::source_adaptor_fn_t EdgeAdaptorRegistry::find_source_adaptor(std::type_index source_type)
+EdgeAdapterRegistry::source_adapter_fn_t EdgeAdapterRegistry::find_source_adapter(std::type_index source_type)
 {
-    auto iter_source = EdgeAdaptorRegistry::registered_source_adaptors.find(source_type);
-    if (iter_source == EdgeAdaptorRegistry::registered_source_adaptors.end())
+    auto iter_source = EdgeAdapterRegistry::registered_source_adapters.find(source_type);
+    if (iter_source == EdgeAdapterRegistry::registered_source_adapters.end())
     {
-        throw std::runtime_error("Could not find adaptor type");
+        throw std::runtime_error("Could not find adapter type");
     }
 
     return iter_source->second;
 }
 
-EdgeAdaptorRegistry::sink_adaptor_fn_t EdgeAdaptorRegistry::find_sink_adaptor(std::type_index sink_type)
+EdgeAdapterRegistry::sink_adapter_fn_t EdgeAdapterRegistry::find_sink_adapter(std::type_index sink_type)
 {
-    auto iter_sink = EdgeAdaptorRegistry::registered_sink_adaptors.find(sink_type);
-    if (iter_sink == EdgeAdaptorRegistry::registered_sink_adaptors.end())
+    auto iter_sink = EdgeAdapterRegistry::registered_sink_adapters.find(sink_type);
+    if (iter_sink == EdgeAdapterRegistry::registered_sink_adapters.end())
     {
-        throw std::runtime_error("Could not find adaptor type");
+        throw std::runtime_error("Could not find adapter type");
     }
 
     return iter_sink->second;

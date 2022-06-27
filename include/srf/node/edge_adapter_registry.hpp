@@ -29,49 +29,49 @@
 namespace srf::node {
 
 /**
- * @brief EdgeAdaptorRegistry used for the registry of adaptor routines which allow for customized runtime
+ * @brief EdgeAdaptorRegistry used for the registry of adapter routines which allow for customized runtime
  * edge construction and type deduction.
  *
  * Generally speaking, where an EdgeConverter defines a specific instance used to connect a compatible
  * source and sink, an EdgeAdaptor defines a process for identifying or creating an appropriate
  * EdgeConverter or set of EdgeConverters to make a source sink connection possible.
  */
-struct EdgeAdaptorRegistry
+struct EdgeAdapterRegistry
 {
-    // Function to create the adaptor function
-    using source_adaptor_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(
+    // Function to create the adapter function
+    using source_adapter_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(
         srf::node::SourcePropertiesBase&, srf::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle>)>;
 
-    using sink_adaptor_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(
+    using sink_adapter_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(
         std::type_index, srf::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle>)>;
 
-    EdgeAdaptorRegistry() = delete;
+    EdgeAdapterRegistry() = delete;
 
     /**
-     * @brief Registers an adaptor function to be used for a given `(source|sink)_type`
-     * @param source_type type index of the data type which will use `adaptor_fn`
-     * @param adaptor_fn adaptor function used to attempt to adapt a given source and sink
+     * @brief Registers an adapter function to be used for a given `(source|sink)_type`
+     * @param source_type type index of the data type which will use `adapter_fn`
+     * @param adapter_fn adapter function used to attempt to adapt a given source and sink
      */
-    static void register_source_adaptor(std::type_index source_type, source_adaptor_fn_t adaptor_fn);
-    static void register_sink_adaptor(std::type_index sink_type, sink_adaptor_fn_t adaptor_fn);
+    static void register_source_adapter(std::type_index source_type, source_adapter_fn_t adapter_fn);
+    static void register_sink_adapter(std::type_index sink_type, sink_adapter_fn_t adapter_fn);
 
     /**
-     * @brief Checks to see if an adaptor is registered for a given type index
+     * @brief Checks to see if an adapter is registered for a given type index
      * @param source_type
      * @return
      */
-    static bool has_source_adaptor(std::type_index source_type);
-    static bool has_sink_adaptor(std::type_index sink_type);
+    static bool has_source_adapter(std::type_index source_type);
+    static bool has_sink_adapter(std::type_index sink_type);
 
     /**
-     * @brief Attempts to retrieve a source/sink adaptor for a given type index
+     * @brief Attempts to retrieve a source/sink adapter for a given type index
      * @param source_type
-     * @return
+     * @return:
      */
-    static source_adaptor_fn_t find_source_adaptor(std::type_index source_type);
-    static sink_adaptor_fn_t find_sink_adaptor(std::type_index sink_type);
+    static source_adapter_fn_t find_source_adapter(std::type_index source_type);
+    static sink_adapter_fn_t find_sink_adapter(std::type_index sink_type);
 
-    static std::map<std::type_index, source_adaptor_fn_t> registered_source_adaptors;
-    static std::map<std::type_index, sink_adaptor_fn_t> registered_sink_adaptors;
+    static std::map<std::type_index, source_adapter_fn_t> registered_source_adapters;
+    static std::map<std::type_index, sink_adapter_fn_t> registered_sink_adapters;
 };
 }  // namespace srf::node

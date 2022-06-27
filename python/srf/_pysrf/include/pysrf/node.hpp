@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <pysrf/edge_adaptor.hpp>
+#include <pysrf/edge_adapter.hpp>
 #include <pysrf/types.hpp>  // IWYU pragma: keep
 #include <pysrf/utils.hpp>
 
@@ -175,7 +175,7 @@ namespace pysrf {
 
 template <typename InputT>
 class PythonSink : public node::RxSink<InputT>,
-                   public pysrf::AutoRegSinkAdaptor<InputT>
+                   public pysrf::AutoRegSinkAdapter<InputT>
 {
     using base_t = node::RxSink<InputT>;
 
@@ -187,8 +187,8 @@ class PythonSink : public node::RxSink<InputT>,
 
 template <typename InputT, typename OutputT>
 class PythonNode : public node::RxNode<InputT, OutputT>,
-                   public pysrf::AutoRegSourceAdaptor<OutputT>,
-                   public pysrf::AutoRegSinkAdaptor<InputT>
+                   public pysrf::AutoRegSourceAdapter<OutputT>,
+                   public pysrf::AutoRegSinkAdapter<InputT>
 {
     using base_t = node::RxNode<InputT, OutputT>;
 
@@ -252,7 +252,7 @@ class PythonNode : public node::RxNode<InputT, OutputT>,
 
 template <typename OutputT>
 class PythonSource : public node::RxSource<OutputT>,
-                     public pysrf::AutoRegSourceAdaptor<OutputT>
+                     public pysrf::AutoRegSourceAdapter<OutputT>
 {
     using base_t = node::RxSource<OutputT>;
 
