@@ -24,9 +24,10 @@ The **Streaming Reactive Framework** (SRF) library (proununced "surf") is a **re
   - [Conda Installation](#conda-installation)
     - [Python Bindings](#python-bindings)
     - [C++ Bindings](#c-bindings)
-    - [Python and C++ Bindings](#python-and-c-bindings)
+    - [Full SRF Library](#full-srf-library)
   - [Source Installation](#source-installation)
-- [Quickstart](#quickstart)
+  - [Docker Installation](#docker-installation)
+- [Quickstart Guide](#quickstart-guide)
 - [Contributing](#contributing)
   - [Thirdparty code](#thirdparty-code)
 
@@ -52,6 +53,13 @@ conda install -c conda-forge mamba
 
 If you choose to use Mamba rather than Conda, simply replace `conda` with `mamba` in the instructions below.
 
+To avoid specifying the channels in the Conda commands below:
+```bash
+conda config --env --add channels conda-forge &&\
+conda config --env --add channels nvidia &&\
+conda config --env --add channels rapidsai
+```
+
 #### Python Bindings
 ```bash
 # If needed, create a new conda environment
@@ -76,7 +84,7 @@ conda activate srf
 conda install -c rapidsai -c nvidia -c conda-forge libsrf
 ```
 
-#### Python and C++ Bindings
+#### Full SRF Library
 ```bash
 # If needed, create a new conda environment
 conda create --name srf python=3.8
@@ -132,9 +140,24 @@ pip install -e $SRF_HOME/python
 pytest $SRF_HOME/python
 ```
 
-## Quickstart
+### Docker Installation
+A Dockerfile is provided at `$SRF_HOME` and can be built with
+```bash
+docker build -t srf:latest .
+```
+To run the build container, run
+```bash
+docker run --gpus all --rm -it srf:latest /bin/bash
+```
 
-To get started with SRF, see the SRF Quickstart Repository located [here](/docs/quickstart/README.md).
+## Quickstart Guide
+
+To quickly learn about both the C++ and Python SRF APIs, including following along with various complexity examples, we recommend following the SRF Quickstart Repository located [here](/docs/quickstart/README.md). This tutorial walks new users through topics like
+- Creating a simple SRF pipeline
+- Using a custom datatype between SRF nodes
+- Using Reactive-style operators inside nodes for complex functionality
+- Understand how threads and buffers can effect performance
+- Mixing C++ and Python, for example - defining compute nodes in C++ and calling them from Python
 
 ## Contributing
 SRF is licensed under the Apache v2.0 license. All new source files including CMake and other build scripts should contain the Apache v2.0 license header. Any edits to existing source code should update the date range of the copyright to the current year. The format for the license header is:
