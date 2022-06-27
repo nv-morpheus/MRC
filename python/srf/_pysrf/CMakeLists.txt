@@ -16,10 +16,8 @@ find_package(pybind11 REQUIRED)
 find_package(prometheus-cpp REQUIRED)
 
 add_library(pysrf
-  src/egress_port.cpp
-  src/executor.cpp
-  src/ingress_port.cpp
-  src/logging.cpp
+    src/executor.cpp
+    src/logging.cpp
   src/module_wrappers/pickle.cpp
   src/module_wrappers/shared_memory.cpp
   src/node.cpp
