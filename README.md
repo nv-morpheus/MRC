@@ -1,22 +1,64 @@
-### !!! Work In Progress !!!
-
-While were close to our public release, we still have a few things to finalize before the repository is ready for public use. Check back in a few days for more details.
-
----
-
 # Streaming Reactive Framework (SRF)
 
-The Streaming Reactive Framework (SRF) library (pronounced "surf") is designed to build high throughput, low latency pipelines.
+The **Streaming Reactive Framework** (SRF) library (proununced "surf") is a **reactive, network-aware, flexible, and performance-oriented streaming data framework** that standardizes building modular and reusable pipelines with both C++ and Python​. The goal of SRF is to serve as a common streaming data layer in which all personas of developers - ranging from Data Scientists to DevOps and Performance Engineers can find value.
 
-Major features include:
- - Built in C++ for performance, with Python bindings for ease of use
- - Code-first pipeline design
+### Major features and differentiators
+ - Built in C++ for performance, with Python bindings for ease of use and rapid prototyping, with options for maximizing performance
  - Distributed computation with message transfers over RMDA using UCX
- - Dynamic reconfiguration to scale up and out at runtime​. Requires no changes to pipeline configuration
- - Unopinionated data model. Messages of any type can be used in the pipeline
+ - Dynamic reconfiguration to scale up and out at runtime​; requires no changes to pipeline configuration
+ - Unopinionated data model: messages of any type can be used in the pipeline
  - Built from the ground up with asynchronous computation for mitigation of I/O and GPU blocking
- - Automatically handles backpressure and reschedules computation as needed
- - Focused on rapid pipeline development, with options for maximizing performance
+ - Automatically handles backpressure (when the sender is operating faster than the receiver can keep up) and reschedules computation as needed
+
+### Anatomy of a SRF Pipeline
+
+![SRF Pipeline](docs/imgs/srf_pipeline.png)
+
+
+## Table of Contents
+- [Streaming Reactive Framework (SRF)](#streaming-reactive-framework-srf)
+    - [Major features and differentiators](#major-features-and-differentiators)
+    - [Anatomy of a SRF Pipeline](#anatomy-of-a-srf-pipeline)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+    - [Prerequisites](#prerequisites)
+    - [Python and C++ Bindings with Conda](#python-and-c-bindings-with-conda)
+  - [Quickstart](#quickstart)
+  - [Contributing](#contributing)
+    - [Thirdparty code](#thirdparty-code)
+
+
+## Installation
+SRF includes both Python and C++ bindings and supports installation via [conda](https://docs.conda.io/en/latest/), Docker, or source.]
+
+### Prerequisites
+
+- Pascal architecture (Compute capability 6.0) or better
+- NVIDIA driver `450.80.02` or higher
+- [conda or miniconda](https://conda.io/projects/conda/en/latest/user-guide/install/linux.html)
+  - **Note:** Conda performance can be improved by using [Mamba](https://github.com/mamba-org/mamba) and is recommended for the QSG. If you have `mamba` installed, simply replace `conda`  with `mamba` in the installation instructions.
+- if using docker:
+  - [Docker](https://docs.docker.com/get-docker/)
+  - [The NVIDIA container toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker)
+
+### Python and C++ Bindings with Conda
+Installing via Conda is the easiest method for getting the SRF components and supports both the Python and C++ bindings. To install the SRF conda package and build the C++ and hybrid components, follow the steps below:
+
+```bash
+# Change directory to the quickstart root
+cd ${SRF_HOME}/docs/quickstart/
+
+# If needed, create a new conda environment
+conda env create -n srf-quickstart -f environment_cpp.yml
+conda activate srf-quickstart
+
+# Or if reusing a conda environment, ensure all dependencies are installed
+conda env update -n srf-quickstart -f environment_cpp.yml
+conda activate srf-quickstart
+
+# Compile the QSG. This will build the C++ and Hybrid components in ./build. And install the Python and Hybrid libraries
+./compile.sh
+```
 
 ## Quickstart
 
