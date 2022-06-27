@@ -281,19 +281,19 @@ Partitions::Partitions(const Topology& topology, const Options& options)
         return lhs.host().cpu_set().first() < rhs.host().cpu_set().first();
     };
 
-    for (std::size_t i = 0, p = 0; i < host_partitions.size(); ++i)
+    for (std::size_t i = 0; i < host_partitions.size(); ++i)
     {
         auto host = host_partitions.at(i);
 
         if (host->device_partition_ids().empty())
         {
-            m_partitions.emplace_back(p++, host, nullptr);
+            m_partitions.emplace_back(i, host, nullptr);
         }
         else
         {
             for (const auto& device_id : host->device_partition_ids())
             {
-                m_partitions.emplace_back(p++, host, device_partitions.at(device_id));
+                m_partitions.emplace_back(i, host, device_partitions.at(device_id));
             }
         }
     }
