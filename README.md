@@ -29,7 +29,7 @@ The **Streaming Reactive Framework** (SRF) library (proununced "surf") is a **re
   - [Docker Installation](#docker-installation)
 - [Quickstart Guide](#quickstart-guide)
 - [Contributing](#contributing)
-  - [Thirdparty code](#thirdparty-code)
+  - [Third-Party code](#third-party-code)
 
 
 ## Installation
@@ -160,6 +160,8 @@ To quickly learn about both the C++ and Python SRF APIs, including following alo
 - Mixing C++ and Python, for example - defining compute nodes in C++ and calling them from Python
 
 ## Contributing
+To learn how to contribute to SRF, please read the [Contribution Guide](CONTRIBUTING.md).
+
 SRF is licensed under the Apache v2.0 license. All new source files including CMake and other build scripts should contain the Apache v2.0 license header. Any edits to existing source code should update the date range of the copyright to the current year. The format for the license header is:
 
 ```
@@ -181,7 +183,7 @@ SRF is licensed under the Apache v2.0 license. All new source files including CM
  */
  ```
 
-### Thirdparty code
+### Third-Party code
 Thirdparty code included in the source tree (that is not pulled in as an external dependency) must be compatible with the Apache v2.0 license and should retain the original license along with a url to the source. If this code is modified, it should contain both the Apache v2.0 license followed by the original license of the code and the url to the original code.
 
 Ex:
