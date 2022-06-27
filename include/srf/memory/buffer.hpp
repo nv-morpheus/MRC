@@ -20,8 +20,6 @@
 #include "srf/memory/adaptors.hpp"
 #include "srf/memory/resources/memory_resource.hpp"
 
-#include <rmm/device_buffer.hpp>
-
 #include <cstddef>
 #include <utility>
 

@@ -28,24 +28,6 @@
 
 namespace srf::memory {
 
-// template <typename PointerT, typename = void>
-// class adaptor;
-
-// template <typename PointerT, typename BaseT, typename = void>
-// struct is_pointer_base_of : std::false_type
-// {};
-
-// template <typename PointerT, typename BaseT>
-// struct is_pointer_base_of<
-//     PointerT,
-//     BaseT,
-//     std::enable_if_t<std::is_base_of_v<BaseT, std::remove_reference_t<decltype(&*std::declval<PointerT>())>>>>
-//   : std::true_type
-// {};
-
-// template <typename PointerT, typename BaseT>
-// inline constexpr bool is_pointer_base_of_v = is_pointer_base_of<PointerT, BaseT>::value;  // NOLINT
-
 template <typename PointerT>
 class adaptor : public memory_resource
 {
@@ -99,7 +81,7 @@ class rmm_adaptor_typed final : public rmm_adaptor
     using reference_type = std::add_lvalue_reference_t<decltype(*std::declval<PointerT>())>;
     using pointer_type   = std::remove_reference_t<decltype(&*std::declval<PointerT>())>;
 
-    rmm_adaptor_typed(rmm::mr::device_memory_resource* upstream) : m_upstream(upstream) {}
+    rmm_adaptor_typed(PointerT upstream) : m_upstream(upstream) {}
 
     // rmm::mr::device_memory_resource& rmm_memory_resource() final
     reference_type rmm_memory_resource() final
