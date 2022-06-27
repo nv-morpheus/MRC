@@ -24,24 +24,23 @@
 
 #include <memory>
 
+namespace srf::internal::ucx {
+class Resources;
+}
+
 namespace srf::internal::resources {
 
 class DeviceResources : public resources::PartitionResourceBase
 {
   public:
-    DeviceResources(resources::PartitionResourceBase& base) : resources::PartitionResourceBase(base)
-    {
-        // runnable().main().enqueue([this] {
-        //     m_raw = std::make_shared<memory::rmm_adaptor>()
-        // }).get()
-    }
+    DeviceResources(runnable::Resources& runnable, std::size_t partition_id, std::optional<ucx::Resources>& ucx);
 
     int cuda_device_id() const;
 
   private:
-    std::shared_ptr<srf::memory::rmm_adaptor> m_raw;
-    std::shared_ptr<srf::memory::rmm_adaptor> m_registered;
-    std::shared_ptr<srf::memory::rmm_adaptor> m_arena;
+    std::shared_ptr<srf::memory::memory_resource> m_system;
+    std::shared_ptr<srf::memory::memory_resource> m_registered;
+    std::shared_ptr<srf::memory::memory_resource> m_arena;
 };
 
 }  // namespace srf::internal::resources

@@ -30,13 +30,29 @@
 
 namespace srf::internal::resources {
 
+class HostResources;
+class DeviceResources;
+
 /**
  * @brief Owner of most resources assigned to a specific partition.
  */
 class PartitionResources final : public PartitionResourceBase
 {
   public:
-    PartitionResources(runnable::Resources& runnable_resources, std::size_t partition_id);
+    PartitionResources(runnable::Resources& runnable_resources,
+                       std::size_t partition_id,
+                       HostResources& host,
+                       std::optional<ucx::Resources>& ucx,
+                       std::optional<DeviceResources>& device);
+
+    HostResources& host();
+    std::optional<ucx::Resources>& ucx();
+    std::optional<DeviceResources>& device();
+
+  private:
+    HostResources& m_host;
+    std::optional<ucx::Resources>& m_ucx;
+    std::optional<DeviceResources>& m_device;
 };
 
 }  // namespace srf::internal::resources

@@ -20,15 +20,16 @@
 #include "internal/system/topology.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/worker.hpp"
+
 #include "srf/memory/literals.hpp"
 #include "srf/memory/resources/arena_resource.hpp"
 #include "srf/memory/resources/host/pinned_memory_resource.hpp"
 #include "srf/memory/resources/logging_resource.hpp"
 
-#include <glog/logging.h>
-#include <gtest/gtest.h>
 #include <boost/fiber/barrier.hpp>
 #include <boost/fiber/future/future.hpp>
+#include <glog/logging.h>
+#include <gtest/gtest.h>
 
 #include <atomic>
 #include <cstdlib>
@@ -53,35 +54,9 @@ static std::shared_ptr<internal::system::System> make_system(std::function<void(
 }
 
 class TestNetwork : public ::testing::Test
-{
-  protected:
-    void SetUp() override
-    {
-        m_resources = std::make_unique<internal::resources::Manager>(internal::system::SystemProvider(
-            make_system([](Options& options) { options.architect_url("localhost:13337"); })));
+{};
 
-        // options.topology().user_cpuset("0-3");
-        // options.topology().restrict_gpus(true);
-        // options.engine_factories().set_engine_factory_options("thread_pool", [](EngineFactoryOptions& options) {
-        // options.engine_type   = runnable::EngineType::Thread;
-        // options.allow_overlap = false;
-        // options.cpu_count     = 2;
-    }
-
-    void TearDown() override
-    {
-        m_resources.reset();
-    }
-
-    std::unique_ptr<internal::resources::Manager> m_resources;
-};
-
-class TestNetworkMemory : public ::testing::Test
-{
-  protected:
-};
-
-TEST_F(TestNetworkMemory, Arena)
+TEST_F(TestNetwork, Arena)
 {
     std::shared_ptr<srf::memory::memory_resource> mr;
     auto pinned  = std::make_shared<srf::memory::pinned_memory_resource>();
@@ -94,7 +69,30 @@ TEST_F(TestNetworkMemory, Arena)
     f->deallocate(ptr, 1024);
 }
 
-TEST_F(TestNetwork, LifeCycle) {}
+TEST_F(TestNetwork, ResourceManager)
+{
+    auto resources = std::make_unique<internal::resources::Manager>(
+        internal::system::SystemProvider(make_system([](Options& options) {
+            options.architect_url("localhost:13337");
+            options.resources().enable_device_memory_pool(true);
+            options.resources().enable_host_memory_pool(true);
+            options.resources().host_memory_pool().block_size(32_MiB);
+            options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
+            options.resources().device_memory_pool().block_size(32_MiB);
+            options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
+        })));
+
+    if (resources->partition_count() != 2 && resources->device_count() != 2)
+    {
+        GTEST_SKIP() << "this test only works with 2 device partitions";
+    }
+
+    EXPECT_TRUE(resources->partition(0).ucx());
+    EXPECT_TRUE(resources->partition(1).ucx());
+
+    EXPECT_TRUE(resources->partition(0).device());
+    EXPECT_TRUE(resources->partition(1).device());
+}
 
 // TEST_F(TestNetwork, NetworkEventsManagerLifeCycle)
 // {

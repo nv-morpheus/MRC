@@ -26,8 +26,16 @@ class MemoryPoolOptions
   public:
     MemoryPoolOptions(std::size_t block_size, std::size_t max_aggregate_bytes);
 
-    MemoryPoolOptions& block_size(std::size_t size);
-    MemoryPoolOptions& max_aggregate_bytes(std::size_t count);
+    MemoryPoolOptions& block_size(std::size_t size)
+    {
+        m_block_size = size;
+        return *this;
+    }
+    MemoryPoolOptions& max_aggregate_bytes(std::size_t count)
+    {
+        m_max_aggregate_bytes = count;
+        return *this;
+    }
 
     [[nodiscard]] std::size_t block_size() const
     {

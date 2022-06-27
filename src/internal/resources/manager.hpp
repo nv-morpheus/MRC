@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "internal/resources/device_resources.hpp"
 #include "internal/resources/host_resources.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
@@ -26,6 +27,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace srf::internal::resources {
@@ -42,11 +44,12 @@ class Manager final : public system::SystemProvider
     PartitionResources& partition(std::size_t partition_id);
 
   private:
-    std::unique_ptr<system::Resources> m_system;
-    std::vector<runnable::Resources> m_runnable;   // one per host partition
-    std::vector<ucx::Resources> m_ucx;             // one per flattened partition if network is enabled
-    std::vector<HostResources> m_host_partitions;  // one per host partition
-    std::vector<PartitionResources> m_partitions;  // one per flattened partition
+    const std::unique_ptr<system::Resources> m_system;
+    std::vector<runnable::Resources> m_runnable;           // one per host partition
+    std::vector<std::optional<ucx::Resources>> m_ucx;      // one per flattened partition if network is enabled
+    std::vector<HostResources> m_host;                     // one per host partition
+    std::vector<std::optional<DeviceResources>> m_device;  // one per flattened partition upto device_count
+    std::vector<PartitionResources> m_partitions;          // one per flattened partition
 };
 
 }  // namespace srf::internal::resources

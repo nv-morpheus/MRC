@@ -26,6 +26,7 @@
 
 #include <glog/logging.h>
 
+#include <optional>
 #include <utility>
 
 namespace srf::internal::resources {
@@ -47,15 +48,21 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
         m_runnable.emplace_back(*m_system, i);
     }
 
-    if (network_enabled)
+    // construct ucx resources on each flattened partition
+    // this provides a ucx context, 2x workers and registration cache per partition
+    for (std::size_t i = 0; i < partitions.size(); ++i)
     {
-        // construct ucx resources on each flattened partition
-        // this provides a ucx context, 2x workers and registration cache per partition
-        for (std::size_t i = 0; i < partitions.size(); ++i)
+        auto host_partition_id = partitions.at(i).host_partition_id();
+        if (network_enabled)
         {
             VLOG(1) << "building ucx resources for partition " << i;
-            auto host_partition_id = partitions.at(i).host_partition_id();
-            m_ucx.emplace_back(m_runnable.at(host_partition_id), i);
+            std::optional<ucx::Resources> ucx;
+            ucx.emplace(m_runnable.at(host_partition_id), i);
+            m_ucx.push_back(std::move(ucx));
+        }
+        else
+        {
+            m_ucx.emplace_back(std::nullopt);
         }
     }
 
@@ -65,23 +72,43 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
         ucx::RegistrationCallbackBuilder builder;
         for (auto& ucx : m_ucx)
         {
-            if (ucx.partition().host_partition_id() == i)
+            if (ucx)
             {
-                ucx.add_registration_cache_to_builder(builder);
+                if (ucx->partition().host_partition_id() == i)
+                {
+                    ucx->add_registration_cache_to_builder(builder);
+                }
             }
         }
-        for (auto& runnable : m_runnable)
+        VLOG(1) << "building host resources for host_partition: " << i;
+        m_host.emplace_back(m_runnable.at(i), std::move(builder));
+    }
+
+    // devices
+    for (std::size_t i = 0; i < partition_count(); ++i)
+    {
+        VLOG(1) << "building device resources for partition: " << i;
+        auto host_partition_id = partitions.at(i).host_partition_id();
+
+        if (i < device_count())
         {
-            m_host_partitions.emplace_back(runnable, std::move(builder));
+            std::optional<DeviceResources> device;
+            device.emplace(m_runnable.at(host_partition_id), i, m_ucx.at(i));
+            m_device.emplace_back(std::move(device));
+        }
+        else
+        {
+            m_device.emplace_back(std::nullopt);
         }
     }
 
-    // finally
-    for (std::size_t i = 0; i < partitions.size(); ++i)
+    // partition resources
+    for (std::size_t i = 0; i < partition_count(); ++i)
     {
         VLOG(1) << "building partition_resources for partition: " << i;
         auto host_partition_id = partitions.at(i).host_partition_id();
-        m_partitions.emplace_back(m_runnable.at(host_partition_id), i);
+        m_partitions.emplace_back(
+            m_runnable.at(host_partition_id), i, m_host.at(host_partition_id), m_ucx.at(i), m_device.at(i));
     }
 }
 
