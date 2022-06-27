@@ -119,7 +119,7 @@ class PlacementOptions
 
   private:
     PlacementStrategy m_cpu_strategy{PlacementStrategy::PerMachine};
-    PlacementResources m_resources_strategy{PlacementResources::Dedicated};
+    PlacementResources m_resources_strategy{PlacementResources::Shared};
 };
 
 }  // namespace srf
