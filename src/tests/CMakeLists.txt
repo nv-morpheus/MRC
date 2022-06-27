@@ -52,6 +52,7 @@ add_executable(test_srf_private
   test_pipeline.cpp
   test_ranges.cpp
   test_resources.cpp
+  test_reusable_pool.cpp
   test_runnable.cpp
   test_system.cpp
   test_topology.cpp
