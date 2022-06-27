@@ -103,23 +103,4 @@ class SourceProperties : public virtual SourcePropertiesBase
         return std::string(type_name<T>());
     }
 };
-
-class SourceTypeErased : public virtual SourcePropertiesBase
-{
-  protected:
-    // allows derived classes to call ingress_for_source_type on a node::SinkPropertiesBase
-    static std::shared_ptr<channel::IngressHandle> sink_ingress_adaptor_for_source_type(SinkTypeErased& sink,
-                                                                                        std::type_index source_type)
-    {
-        return sink.ingress_for_source_type(source_type);
-    }
-
-    virtual std::shared_ptr<channel::IngressHandle> ingress_adaptor_for_sink(SinkTypeErased& sink)
-    {
-        return sink_ingress_adaptor_for_source_type(sink, this->source_type());
-    }
-
-    friend EdgeBuilder;
-};
-
 }  // namespace srf::node

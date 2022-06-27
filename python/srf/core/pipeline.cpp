@@ -16,6 +16,7 @@
  */
 
 #include <pysrf/pipeline.hpp>
+
 #include <pysrf/segment.hpp>
 #include <pysrf/utils.hpp>
 
@@ -31,14 +32,18 @@ namespace py = pybind11;
 // Define the pybind11 module m, as 'pipeline'.
 PYBIND11_MODULE(pipeline, m)
 {
-    pysrf::import(m, "srf.core.segment");
 
     m.doc() = R"pbdoc(
-        SRF Pipeline interface bindings
-        -----------------------
-        .. currentmodule:: srf.pipeline
+        Python bindings for SRF pipelines
+        -------------------------------
+        .. currentmodule:: pipeline
+        .. autosummary::
+           :toctree: _generate
     )pbdoc";
 
+    // Common must be first in every module
+    pysrf::import(m, "srf.core.common");
+    pysrf::import(m, "srf.core.segment");
 
     m.attr("SRF_MAX_INGRESS_PORTS") = SRF_MAX_INGRESS_PORTS;
     m.attr("SRF_MAX_EGRESS_PORTS") = SRF_MAX_EGRESS_PORTS;

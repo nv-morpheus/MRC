@@ -24,9 +24,11 @@ def test_connect_cpp_edges():
         source = m.SourceDerivedB(seg, "source")
 
         node = m.NodeBase(seg, "node")
+        print("Makeing edge between source and node")
         seg.make_edge(source, node)
 
         sink = m.SinkBase(seg, "sink")
+        print("Makeing edge between node and sink")
         seg.make_edge(node, sink)
 
     pipeline = srf.Pipeline()
@@ -261,4 +263,8 @@ def test_multi_segment():
 
 
 if (__name__ == "__main__"):
+    test_connect_cpp_edges()
+    test_edge_cpp_to_cpp_same()
+    test_edge_cpp_to_py_same()
     test_edge_py_to_cpp_same()
+    test_edge_wrapper()

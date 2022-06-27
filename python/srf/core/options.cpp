@@ -39,14 +39,13 @@ class Config
 PYBIND11_MODULE(options, m)
 {
     m.doc() = R"pbdoc(
-        Pybind11 example plugin
-        -----------------------
-        .. currentmodule:: scikit_build_example
+        Python bindings for SRF options
+        -------------------------------
+        .. currentmodule:: options
         .. autosummary::
            :toctree: _generate
-           add
-           subtract
     )pbdoc";
+
 
     // Common must be first in every module
     pysrf::import(m, "srf.core.common");

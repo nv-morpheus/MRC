@@ -164,6 +164,8 @@ add_library(libsrf
   src/public/metrics/registry.cpp
   src/public/memory/blob.cpp
   src/public/memory/block.cpp
+  src/public/node/edge_adaptor_registry.cpp
+  src/public/node/edge_builder.cpp
   src/public/node/edge_registry.cpp
   src/public/options/engine_groups.cpp
   src/public/options/fiber_pool.cpp

@@ -32,9 +32,13 @@ namespace py = pybind11;
 PYBIND11_MODULE(operators, m)
 {
     m.doc() = R"pbdoc(
-        -----------------------
-        .. currentmodule:: srf.operators
+        Python bindings for SRF operators
+        -------------------------------
+        .. currentmodule:: operators
+        .. autosummary::
+           :toctree: _generate
     )pbdoc";
+
 
     // Common must be first in every module
     pysrf::import(m, "srf.core.common");

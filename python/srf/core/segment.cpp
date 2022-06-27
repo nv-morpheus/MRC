@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include <pysrf/segment.hpp>
 
 #include <pysrf/node.hpp>  // IWYU pragma: keep
@@ -22,6 +23,7 @@
 
 #include <srf/channel/status.hpp>
 
+#include <srf/node/edge_builder.hpp>
 #include <srf/node/edge_connector.hpp>
 #include <srf/segment/builder.hpp>
 #include <srf/segment/definition.hpp>
@@ -42,7 +44,13 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(segment, m)
 {
-    m.doc() = R"pbdoc()pbdoc";
+    m.doc() = R"pbdoc(
+        Python bindings for SRF Segments
+        -------------------------------
+        .. currentmodule:: segment
+        .. autosummary::
+           :toctree: _generate
+    )pbdoc";
 
     // Common must be first in every module
     pysrf::import(m, "srf.core.common");
@@ -80,13 +88,13 @@ PYBIND11_MODULE(segment, m)
     node::EdgeConnector<std::string, PyHolder>::register_converter();
     node::EdgeConnector<PyHolder, std::string>::register_converter();
 
+
     auto Definition = py::class_<srf::segment::Definition>(m, "Definition");
     auto Builder    = py::class_<srf::segment::Builder>(m, "Builder");
 
     /*
      * @brief Make a source node that generates py::object values
      */
-
     Builder.def("make_source",
                 static_cast<std::shared_ptr<srf::segment::ObjectProperties> (*)(
                     srf::segment::Builder&, const std::string&, py::iterator)>(&SegmentProxy::make_source));

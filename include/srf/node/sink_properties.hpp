@@ -66,7 +66,7 @@ class SinkPropertiesBase
   private:
     virtual std::shared_ptr<channel::IngressHandle> ingress_handle() = 0;
 
-    friend SinkTypeErased;
+    friend EdgeBuilder;
 };
 
 inline SinkPropertiesBase::~SinkPropertiesBase() = default;
@@ -106,23 +106,6 @@ class SinkProperties : public virtual SinkPropertiesBase
     virtual std::shared_ptr<channel::Ingress<T>> channel_ingress() = 0;
 
     friend EdgeBuilder;
-};
-
-class SinkTypeErased : public virtual SinkPropertiesBase
-{
-  protected:
-    using SinkPropertiesBase::ingress_handle;
-
-    virtual std::shared_ptr<channel::IngressHandle> ingress_for_source_type(std::type_index source_type)
-    {
-        // Get the converter function
-        auto converter_fn = EdgeRegistry::find_converter(source_type, sink_type());
-
-        // Build the edge from our channel
-        return converter_fn(this->ingress_handle());
-    }
-
-    friend SourceTypeErased;
 };
 
 }  // namespace srf::node
