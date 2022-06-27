@@ -18,7 +18,7 @@
 #include "srf/codable/encoded_object.hpp"
 
 #include "srf/codable/memory_resources.hpp"
-#include "srf/memory/block.hpp"
+#include "srf/memory/buffer_view.hpp"
 #include "srf/memory/memory_kind.hpp"
 #include "srf/protos/codable.pb.h"
 #include "srf/utils/thread_local_shared_pointer.hpp"
@@ -70,13 +70,13 @@ static protos::MemoryKind encode_memory_type(memory::memory_kind mem_kind)
     return protos::MemoryKind::None;
 }
 
-memory::block EncodedObject::decode_descriptor(const protos::RemoteDescriptor& desc)
+memory::buffer_view EncodedObject::decode_descriptor(const protos::RemoteDescriptor& desc)
 {
-    return memory::block(
+    return memory::buffer_view(
         reinterpret_cast<void*>(desc.remote_address()), desc.remote_bytes(), decode_memory_type(desc.memory_kind()));
 }
 
-protos::RemoteDescriptor EncodedObject::encode_descriptor(memory::const_block view)
+protos::RemoteDescriptor EncodedObject::encode_descriptor(memory::const_buffer_view view)
 {
     protos::RemoteDescriptor desc;
     desc.set_remote_address(reinterpret_cast<std::uint64_t>(view.data()));
@@ -91,7 +91,7 @@ const protos::EncodedObject& EncodedObject::proto() const
     return m_proto;
 }
 
-memory::const_block EncodedObject::memory_block(std::size_t idx) const
+memory::const_buffer_view EncodedObject::memory_block(std::size_t idx) const
 {
     DCHECK_LT(idx, descriptor_count());
     CHECK(m_proto.descriptors().at(idx).has_remote_desc());
@@ -105,7 +105,7 @@ const protos::EagerDescriptor& EncodedObject::eager_descriptor(std::size_t idx) 
     return m_proto.descriptors().at(idx).eager_desc();
 }
 
-memory::block EncodedObject::mutable_memory_block(std::size_t idx) const
+memory::buffer_view EncodedObject::mutable_memory_block(std::size_t idx) const
 {
     CHECK(m_context_acquired);
     DCHECK_LT(idx, descriptor_count());
@@ -144,7 +144,7 @@ std::size_t EncodedObject::add_meta_data(const google::protobuf::Message& meta_d
     return index;
 }
 
-std::size_t EncodedObject::add_memory_block(memory::const_block view)
+std::size_t EncodedObject::add_memory_block(memory::const_buffer_view view)
 {
     CHECK(m_context_acquired);
     auto count = descriptor_count();

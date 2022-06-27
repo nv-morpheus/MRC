@@ -19,8 +19,8 @@
 
 #include "srf/codable/codable_protocol.hpp"
 #include "srf/exceptions/runtime_error.hpp"
-#include "srf/memory/block.hpp"
 #include "srf/memory/buffer.hpp"
+#include "srf/memory/buffer_view.hpp"
 #include "srf/protos/codable.pb.h"
 #include "srf/utils/macros.hpp"
 
@@ -59,10 +59,10 @@ class EncodedObject
     const protos::EncodedObject& proto() const;
 
     /**
-     * @brief Access const memory::block of the RemoteDescriptor at the required index
-     * @return memory::const_block
+     * @brief Access const memory::buffer_view of the RemoteDescriptor at the required index
+     * @return memory::const_buffer_view
      */
-    memory::const_block memory_block(std::size_t idx) const;
+    memory::const_buffer_view memory_block(std::size_t idx) const;
 
     /**
      * @brief Decode meta data associated the MetaDataDescriptor at the requested index.
@@ -110,12 +110,12 @@ class EncodedObject
 
   protected:
     /**
-     * @brief Access a mutable const_block at the requested index
+     * @brief Access a mutable const_buffer_view at the requested index
      *
      * @param idx
-     * @return memory::const_block
+     * @return memory::const_buffer_view
      */
-    memory::block mutable_memory_block(std::size_t idx) const;
+    memory::buffer_view mutable_memory_block(std::size_t idx) const;
 
     /**
      * @brief Converts a memory block to a RemoteDescriptor proto
@@ -123,15 +123,15 @@ class EncodedObject
      * @param view
      * @return protos::RemoteDescriptor
      */
-    static protos::RemoteDescriptor encode_descriptor(memory::const_block view);
+    static protos::RemoteDescriptor encode_descriptor(memory::const_buffer_view view);
 
     /**
      * @brief Converts a RemoteDescriptor proto to a mutable memory block
      *
      * @param desc
-     * @return memory::block
+     * @return memory::buffer_view
      */
-    static memory::block decode_descriptor(const protos::RemoteDescriptor& desc);
+    static memory::buffer_view decode_descriptor(const protos::RemoteDescriptor& desc);
 
     /**
      * @brief Add a custom protobuf meta data to the descriptor list
@@ -148,12 +148,12 @@ class EncodedObject
      * @param meta_data
      * @return std::size_t
      */
-    std::size_t add_memory_block(memory::const_block view);
+    std::size_t add_memory_block(memory::const_buffer_view view);
 
     /**
      * @brief Add a buffer, owned by EncodedObject, that can be used to hold a contiguous block of data.
      *
-     * After creation, the const_block can be accessed by calling view with the index returned.
+     * After creation, the const_buffer_view can be accessed by calling view with the index returned.
      *
      * @note The memory_resource backing the creation of the buffer<> comes from the SRF Runtime's thread local resource
      * object.
@@ -167,7 +167,7 @@ class EncodedObject
     /**
      * @brief Add a buffer, owned by EncodedObject, that can be used to hold a contiguous block of data.
      *
-     * After creation, the const_block can be accessed by calling view on the index returned.
+     * After creation, the const_buffer_view can be accessed by calling view on the index returned.
      *
      * @note The memory_resource backing the creation of the buffer<> comes from the SRF Runtime's thread local resource
      * object.

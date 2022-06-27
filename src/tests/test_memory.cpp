@@ -22,8 +22,8 @@
 
 #include "srf/cuda/common.hpp"
 #include "srf/memory/adaptors.hpp"
-#include "srf/memory/block.hpp"
 #include "srf/memory/buffer.hpp"
+#include "srf/memory/buffer_view.hpp"
 #include "srf/memory/literals.hpp"
 #include "srf/memory/memory_kind.hpp"
 #include "srf/memory/resources/arena_resource.hpp"
@@ -131,11 +131,11 @@ TEST_F(TestMemory, ucx_registration_resource)
 //     pinned_memory_resource pinned;
 
 //     buffer<cuda::memory_access::host> b(1_MiB, &pinned);
-//     const_block view_from_buffer(b);
+//     const_buffer_view view_from_buffer(b);
 //     block mv(b);
 
 //     blob mblob(std::move(b));
-//     const_block view_from_blob(mblob);
+//     const_buffer_view view_from_blob(mblob);
 
 //     auto oblob = mblob.allocate(2_MiB);
 // }
@@ -145,7 +145,7 @@ TEST_F(TestMemory, ucx_registration_resource)
 //     auto pinned = std::make_shared<pinned_memory_resource>();
 //     buffer<cuda::memory_access::host> b(1_MiB, pinned);
 
-//     const_block blob(b);
+//     const_buffer_view blob(b);
 // }
 
 // TEST_F(TestMemory, OldAPI)

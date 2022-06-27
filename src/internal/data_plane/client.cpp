@@ -32,7 +32,7 @@
 #include "srf/codable/encoded_object.hpp"
 #include "srf/codable/protobuf_message.hpp"  // IWYU pragma: keep
 #include "srf/exceptions/runtime_error.hpp"
-#include "srf/memory/block.hpp"
+#include "srf/memory/buffer_view.hpp"
 #include "srf/memory/memory_kind.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/source_channel.hpp"

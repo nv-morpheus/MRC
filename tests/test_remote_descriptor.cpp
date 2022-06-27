@@ -24,7 +24,7 @@
 #include "srf/codable/type_traits.hpp"
 #include "srf/core/resources.hpp"
 #include "srf/core/tensor.hpp"
-#include "srf/memory/block.hpp"
+#include "srf/memory/buffer_view.hpp"
 #include "srf/memory/memory_kind.hpp"
 #include "srf/memory/resources/device/cuda_malloc_resource.hpp"
 #include "srf/memory/resources/host/pinned_memory_resource.hpp"
@@ -58,7 +58,7 @@ class TensorDescriptorTestObject
 
   private:
     DataType m_dtype;
-    memory::block m_block;
+    memory::buffer_view m_block;
     std::vector<TensorIndex> m_shape;
     std::vector<TensorIndex> m_stride;
 
@@ -207,7 +207,7 @@ TEST_F(TestRemoteDescriptor, v2_EncodedObjectStaticMethods)
     shape->Add(320);
     shape->Add(320);
     tmd.set_dtype("f8");
-    memory::const_block block(reinterpret_cast<void*>(0xDEADBEEF), 1024, memory::memory_kind_type::device);
+    memory::const_buffer_view block(reinterpret_cast<void*>(0xDEADBEEF), 1024, memory::memory_kind_type::device);
 
     obj.add_memory_block(block);
     obj.add_meta_data(tmd);
