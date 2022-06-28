@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <srf/node/operators/operator.hpp>
 #include "srf/channel/status.hpp"
+#include "srf/node/operators/operator.hpp"
 #include "srf/node/source_channel.hpp"
 #include "srf/type_traits.hpp"
 

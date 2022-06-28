@@ -17,11 +17,11 @@
 
 #include "internal/system/engine_factory_cpu_sets.hpp"
 
-#include <srf/core/bitmap.hpp>
-#include <srf/exceptions/runtime_error.hpp>
-#include <srf/options/engine_groups.hpp>
-#include <srf/options/options.hpp>
-#include <srf/runnable/types.hpp>
+#include "srf/core/bitmap.hpp"
+#include "srf/exceptions/runtime_error.hpp"
+#include "srf/options/engine_groups.hpp"
+#include "srf/options/options.hpp"
+#include "srf/runnable/types.hpp"
 
 #include <glog/logging.h>
 
@@ -218,6 +218,14 @@ EngineFactoryCpuSets generate_engine_factory_cpu_sets(const Options& options, co
     }
 
     return config;
+}
+
+std::size_t EngineFactoryCpuSets::main_cpu_id() const
+{
+    auto search = fiber_cpu_sets.find("main");
+    CHECK(search != fiber_cpu_sets.end()) << "unable to lookup cpuset for main";
+    CHECK_EQ(search->second.weight(), 1);
+    return search->second.first();
 }
 
 }  // namespace srf::internal::system

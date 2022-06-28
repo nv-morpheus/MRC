@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#pragma once
+
 //
 // Original Source: https://github.com/boostorg/fiber
 //
@@ -25,20 +27,19 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #ifndef BOOST_FIBER_DETAIL_THREAD_BARRIER_H
-#define BOOST_FIBER_DETAIL_THREAD_BARRIER_H
+    #define BOOST_FIBER_DETAIL_THREAD_BARRIER_H
 
-#include <condition_variable>
-#include <cstddef>
-#include <mutex>
+    #include <boost/assert.hpp>
+    #include <boost/config.hpp>
+    #include <boost/fiber/detail/config.hpp>
 
-#include <boost/assert.hpp>
-#include <boost/config.hpp>
+    #include <condition_variable>
+    #include <cstddef>
+    #include <mutex>
 
-#include <boost/fiber/detail/config.hpp>
-
-#ifdef BOOST_HAS_ABI_HEADERS
-#include BOOST_ABI_PREFIX
-#endif
+    #ifdef BOOST_HAS_ABI_HEADERS
+        #include BOOST_ABI_PREFIX
+    #endif
 
 // modification from original - namespace
 namespace srf {

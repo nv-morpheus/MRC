@@ -17,25 +17,25 @@
 
 #pragma once
 
-#include "internal/service.hpp"
-
-#include <srf/channel/status.hpp>
-#include <srf/memory/block.hpp>
-#include <srf/node/generic_source.hpp>
-#include <srf/node/operators/router.hpp>
-#include <srf/node/source_channel.hpp>
-#include <srf/runnable/context.hpp>
-#include <srf/runnable/launch_control.hpp>
-#include <srf/runnable/runner.hpp>
-#include <srf/types.hpp>
 #include "internal/resources/partition_resources.hpp"
+#include "internal/service.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include <ucp/api/ucp_def.h>
+#include "srf/channel/status.hpp"
+#include "srf/memory/block.hpp"
+#include "srf/node/generic_source.hpp"
+#include "srf/node/operators/router.hpp"
+#include "srf/node/source_channel.hpp"
+#include "srf/runnable/context.hpp"
+#include "srf/runnable/launch_control.hpp"
+#include "srf/runnable/runner.hpp"
+#include "srf/types.hpp"
+
 #include <rxcpp/rx-predef.hpp>
 #include <rxcpp/rx-subscriber.hpp>
+#include <ucp/api/ucp_def.h>
 
 #include <memory>
 #include <utility>
@@ -81,6 +81,8 @@ class Server final : public Service
     void do_service_stop() final;
     void do_service_kill() final;
     void do_service_await_join() final;
+
+    std::shared_ptr<resources::PartitionResources> m_resources;
 
     // deserialization nodes will connect to this source wtih their port id
     // the source for this router is the private GenericSoruce of this object

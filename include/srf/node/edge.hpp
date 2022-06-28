@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include <srf/channel/channel.hpp>
-#include <srf/channel/forward.hpp>
-#include <srf/channel/ingress.hpp>
-#include <srf/channel/status.hpp>
-#include <srf/node/forward.hpp>
+#include "srf/channel/channel.hpp"
+#include "srf/channel/forward.hpp"
+#include "srf/channel/ingress.hpp"
+#include "srf/channel/status.hpp"
+#include "srf/node/forward.hpp"
 
 #include <glog/logging.h>
 

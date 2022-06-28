@@ -17,10 +17,9 @@
 
 #pragma once
 
-#include <srf/manifold/interface.hpp>
-
 #include "srf/core/addresses.hpp"
 #include "srf/manifold/composite_manifold.hpp"
+#include "srf/manifold/interface.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/generic_sink.hpp"
 #include "srf/node/operators/muxer.hpp"

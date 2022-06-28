@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Keep all source files sorted!!!
 add_executable(test_srf_logging
   test_logging.cpp
   test_main.cpp
@@ -20,8 +21,8 @@ add_executable(test_srf_logging
 
 target_link_libraries(test_srf_logging
   PRIVATE
-  ${PROJECT_NAME}::libsrf
-  GTest::gtest
+    ${PROJECT_NAME}::libsrf
+    GTest::gtest
 )
 
 add_test(

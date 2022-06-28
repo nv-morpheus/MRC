@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include <srf/forward.hpp>
-#include <srf/runnable/context.hpp>
-#include <srf/runnable/detail/type_traits.hpp>
-#include <srf/utils/macros.hpp>
+#include "srf/forward.hpp"
+#include "srf/runnable/context.hpp"
+#include "srf/runnable/detail/type_traits.hpp"
+#include "srf/utils/macros.hpp"
 
 namespace srf::runnable {
 

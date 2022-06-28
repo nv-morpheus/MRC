@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <srf/exceptions/runtime_error.hpp>
-#include <srf/segment/egress_port.hpp>
+#include "srf/exceptions/runtime_error.hpp"
+#include "srf/segment/egress_port.hpp"
 
 #include <memory>
 #include <set>

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <srf/memory/resources/memory_resource.hpp>
+#include "srf/memory/resources/memory_resource.hpp"
 
 namespace srf::memory {
 

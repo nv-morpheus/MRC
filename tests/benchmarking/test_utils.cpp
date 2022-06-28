@@ -18,11 +18,11 @@
 #include "test_benchmarking.hpp"
 #include "test_stat_gather.hpp"
 
-#include <srf/benchmarking/trace_statistics.hpp>
-#include <srf/benchmarking/util.hpp>
+#include "srf/benchmarking/trace_statistics.hpp"
+#include "srf/benchmarking/util.hpp"
 
-#include <prometheus/registry.h>
 #include <nlohmann/json.hpp>
+#include <prometheus/registry.h>
 
 using namespace srf::benchmarking;
 

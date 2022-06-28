@@ -20,7 +20,8 @@
 #include "internal/system/device_partition.hpp"
 #include "internal/system/gpu_info.hpp"
 #include "internal/system/host_partition.hpp"
-#include "srf/core/bitmap.hpp"
+#include "internal/system/partition.hpp"
+
 #include "srf/options/options.hpp"
 #include "srf/options/placement.hpp"
 
@@ -37,17 +38,30 @@ class Partitions
     Partitions(const Topology& topology, const Options& options);
     Partitions(const System& system);
 
+    // The host and device partitions are hierarchical where there is a possibility, depending on options provided
+    // where more than one cuda device shares the same host partition, so those host resources are shared.
+    //
+    // However, each device defines an entry in the flattened partition list since it will have its own unique network
+    // and device resources.
+    //
+    // We flatten the partitions such that it is an ordered list where the first N partitions correspond to N cuda
+    // devices, sorted by cuda_device_id. If there are more than N partition, those partitions do not have devices
+    // attached.
+    //
+    // The flattened partitions provide the view of what's available to a given GPU.
+
     const std::vector<HostPartition>& host_partitions() const;
     const std::vector<DevicePartition>& device_partitions() const;
-
-    const HostPartition& host_partition_containing(const CpuSet& cpu_set) const;
+    const std::vector<Partition>& flattened() const;
 
     const PlacementStrategy& cpu_strategy() const;
     const PlacementResources& device_to_host_strategy() const;
 
   private:
+    std::vector<Partition> m_partitions;
     std::vector<HostPartition> m_host_partitions;
     std::vector<DevicePartition> m_device_partitions;
+
     PlacementStrategy m_cpu_strategy;
     PlacementResources m_device_to_host_strategy;
 };

@@ -11,18 +11,18 @@
 # or implied. See the License for the specific language governing permissions and limitations under
 # the License.
 # =============================================================================
+
 find_package(Python 3.8 REQUIRED COMPONENTS Development Interpreter)
 find_package(pybind11 REQUIRED)
 find_package(prometheus-cpp REQUIRED)
 
+# Keep all source files sorted!!!
 add_library(pysrf
-    src/executor.cpp
-    src/logging.cpp
+  src/executor.cpp
+  src/logging.cpp
   src/module_wrappers/pickle.cpp
   src/module_wrappers/shared_memory.cpp
   src/node.cpp
-  src/node.cpp
-  src/operators.cpp
   src/operators.cpp
   src/options.cpp
   src/pipeline.cpp
@@ -42,9 +42,9 @@ add_library(${PROJECT_NAME}::pysrf ALIAS pysrf)
 target_link_libraries(pysrf
   PUBLIC
     ${PROJECT_NAME}::libsrf
-    pybind11::pybind11
-    prometheus-cpp::core
     ${Python_LIBRARIES}
+    prometheus-cpp::core
+    pybind11::pybind11
   )
 
 target_include_directories(pysrf

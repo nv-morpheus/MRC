@@ -17,31 +17,29 @@
 
 #pragma once
 
-#include <pysrf/edge_adapter.hpp>
-#include <pysrf/types.hpp>  // IWYU pragma: keep
-#include <pysrf/utils.hpp>
+#include "pysrf/edge_adapter.hpp"
+#include "pysrf/types.hpp"  // IWYU pragma: keep
+#include "pysrf/utils.hpp"
 
-#include <srf/channel/forward.hpp>
-#include <srf/channel/ingress.hpp>
-#include <srf/channel/status.hpp>
-#include <srf/node/edge.hpp>
-#include <srf/node/edge_connector.hpp>
-#include <srf/node/edge_registry.hpp>
-#include <srf/node/forward.hpp>
-#include <srf/node/rx_node.hpp>
-#include <srf/node/rx_sink.hpp>
-#include <srf/node/rx_source.hpp>
-#include <srf/node/sink_properties.hpp>
-#include <srf/node/source_properties.hpp>
+#include "srf/channel/forward.hpp"
+#include "srf/channel/ingress.hpp"
+#include "srf/channel/status.hpp"
+#include "srf/node/edge.hpp"
+#include "srf/node/edge_connector.hpp"
+#include "srf/node/edge_registry.hpp"
+#include "srf/node/forward.hpp"
+#include "srf/node/rx_node.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/rx_source.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_properties.hpp"
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>  // IWYU pragma: keep
 #include <pybind11/pytypes.h>
-#include <rxcpp/rx-observable.hpp>
-#include <rxcpp/rx-subscriber.hpp>
-#include <rxcpp/rx-subscription.hpp>
+#include <rxcpp/rx.hpp>
 
 #include <functional>  // for function, ref
 #include <memory>      // for shared_ptr, __shared_ptr_access, dynamic_pointer_cast, allocator, make_shared
@@ -197,28 +195,6 @@ class PythonNode : public node::RxNode<InputT, OutputT>,
     using subscribe_fn_t = std::function<rxcpp::subscription(rxcpp::observable<InputT>, rxcpp::subscriber<OutputT>)>;
 
     using node::RxNode<InputT, OutputT>::RxNode;
-
-    // template <typename FirstArgT,
-    //           typename... ArgsT,
-    //           typename std::enable_if<
-    //               (std::is_invocable_v<FirstArgT, rxcpp::observable<InputT>, rxcpp::subscriber<OutputT>> &&
-    //                1 == sizeof...(ArgsT)),
-    //               int>::type = 0>
-    // PythonNode(const srf::segment::Builder& parent, const std::string& name, FirstArgT first_arg, ArgsT... args) :
-    //   base_t(parent, name)
-    // {
-    //     this->make_stream(operator_fn_to_op(std::move(first_arg)));
-    // }
-
-    // template <typename FirstArgT,
-    //           typename... ArgsT,
-    //           typename std::enable_if<
-    //               (!std::is_invocable_v<FirstArgT, rxcpp::observable<InputT>, rxcpp::subscriber<OutputT>> ||
-    //                sizeof...(ArgsT) > 1),
-    //               int>::type = 0>
-    // PythonNode(const srf::segment::Builder& parent, const std::string& name, FirstArgT first_arg, ArgsT... args) :
-    //   base_t(parent, name, std::move(first_arg), (args, ...))
-    // {}
 
   protected:
     static auto op_factory_from_sub_fn(subscribe_fn_t sub_fn)

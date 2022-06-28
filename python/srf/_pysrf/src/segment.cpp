@@ -15,19 +15,19 @@
  * limitations under the License.
  */
 
-#include <pysrf/segment.hpp>
+#include "pysrf/segment.hpp"
 
-#include <pysrf/node.hpp>
-#include <pysrf/types.hpp>
-#include <pysrf/utils.hpp>
-
-#include <srf/node/edge_builder.hpp>
-#include <srf/node/sink_properties.hpp>
-#include <srf/runnable/context.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/egress_port.hpp> // Included because we do a dynamic cast on get_egress
-#include <srf/segment/ingress_port.hpp>
-#include <srf/segment/object.hpp>
+#include "pysrf/node.hpp"
+#include "pysrf/types.hpp"
+#include "pysrf/utils.hpp"
+#include "srf/channel/status.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/runnable/context.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/egress_port.hpp" // Included because we do a dynamic cast on get_egress
+#include "srf/segment/ingress_port.hpp"
+#include "srf/segment/object.hpp"
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>
@@ -36,9 +36,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <rxcpp/operators/rx-map.hpp>
-#include <rxcpp/rx-observable.hpp>
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-predef.hpp>
 #include <rxcpp/rx.hpp>  // IWYU pragma: keep
 
 #include <exception>
@@ -450,5 +447,4 @@ void SegmentProxy::make_edge(srf::segment::Builder& self,
 {
     node::EdgeBuilder::make_edge_typeless(source->source_base(), sink->sink_base());
 }
-
 }  // namespace srf::pysrf

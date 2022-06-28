@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-#include <pysrf/pipeline.hpp>
+#include "pysrf/pipeline.hpp"
 
-#include <pysrf/segment.hpp>
-#include <pysrf/utils.hpp>
+#include "pysrf/segment.hpp"
+#include "pysrf/utils.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>

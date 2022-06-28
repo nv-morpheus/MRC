@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2018-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2018-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,7 @@
 
 #include <queue>
 
-#include "nvrpc/interfaces.h"
+#include <nvrpc/interfaces.h>
 
 #include <glog/logging.h>
 
@@ -30,15 +30,17 @@ namespace nvrpc {
 // arbitrary call order of ServerReaderWriter::Read() and
 // ServerReaderWriter::Write(), so we are able to handle
 // reading request and writing response seperately.
-template<class Request, class Response>
+template <class Request, class Response>
 class BidirectionalLifeCycleStreaming : public IContextLifeCycle
 {
   public:
-    using RequestType = Request;
-    using ResponseType = Response;
-    using ServiceQueueFuncType =
-        std::function<void(::grpc::ServerContext*, ::grpc::ServerAsyncReaderWriter<ResponseType, RequestType>*,
-                           ::grpc::CompletionQueue*, ::grpc::ServerCompletionQueue*, void*)>;
+    using RequestType          = Request;
+    using ResponseType         = Response;
+    using ServiceQueueFuncType = std::function<void(::grpc::ServerContext*,
+                                                    ::grpc::ServerAsyncReaderWriter<ResponseType, RequestType>*,
+                                                    ::grpc::CompletionQueue*,
+                                                    ::grpc::ServerCompletionQueue*,
+                                                    void*)>;
     using ExecutorQueueFuncType =
         std::function<void(::grpc::ServerContext*, ::grpc::ServerAsyncReaderWriter<ResponseType, RequestType>*, void*)>;
 
@@ -49,7 +51,7 @@ class BidirectionalLifeCycleStreaming : public IContextLifeCycle
     // different tags while referencing to the same Context.
     // Executor Detag() the tag, which points to the StateContext, which contains
     // a pointer to the actual context (master context).
-    template<class RequestType, class ResponseType>
+    template <class RequestType, class ResponseType>
     class StateContext : public IContext
     {
       public:
@@ -61,7 +63,10 @@ class BidirectionalLifeCycleStreaming : public IContextLifeCycle
         {
             return static_cast<BidirectionalLifeCycleStreaming*>(m_PrimaryContext)->RunNextState(m_NextState, ok);
         }
-        void Reset() final override { LOG(FATAL) << "ooops; call reset on master"; }
+        void Reset() final override
+        {
+            LOG(FATAL) << "ooops; call reset on master";
+        }
 
         bool (BidirectionalLifeCycleStreaming<RequestType, ResponseType>::*m_NextState)(bool);
 
@@ -119,7 +124,7 @@ class BidirectionalLifeCycleStreaming : public IContextLifeCycle
     friend class StateContext<RequestType, ResponseType>;
 
   public:
-    template<class RequestFuncType, class ServiceType>
+    template <class RequestFuncType, class ServiceType>
     static ServiceQueueFuncType BindServiceQueueFunc(
         /*
         std::function<void(
@@ -127,14 +132,16 @@ class BidirectionalLifeCycleStreaming : public IContextLifeCycle
             ::grpc_impl::ServerAsyncReaderWriter<ResponseType, RequestType>*,
             ::grpc::CompletionQueue *, ::grpc::ServerCompletionQueue *, void *)>
         */
-        RequestFuncType request_fn, ServiceType* service_type)
+        RequestFuncType request_fn,
+        ServiceType* service_type)
     {
-        return std::bind(request_fn, service_type,
-                         std::placeholders::_1, // ServerContext*
-                         std::placeholders::_2, // AsyncReaderWriter<OutputType, InputType>
-                         std::placeholders::_3, // CQ
-                         std::placeholders::_4, // ServerCQ
-                         std::placeholders::_5 // Tag
+        return std::bind(request_fn,
+                         service_type,
+                         std::placeholders::_1,  // ServerContext*
+                         std::placeholders::_2,  // AsyncReaderWriter<OutputType, InputType>
+                         std::placeholders::_3,  // CQ
+                         std::placeholders::_4,  // ServerCQ
+                         std::placeholders::_5   // Tag
         );
     }
 
@@ -142,38 +149,43 @@ class BidirectionalLifeCycleStreaming : public IContextLifeCycle
                                                        ::grpc::ServerCompletionQueue* cq)
     {
         return std::bind(service_q_fn,
-                         std::placeholders::_1, // ServerContext*
-                         std::placeholders::_2, // AsyncReaderWriter<Response, Request> *
-                         cq, cq,
-                         std::placeholders::_3 // Tag
+                         std::placeholders::_1,  // ServerContext*
+                         std::placeholders::_2,  // AsyncReaderWriter<Response, Request> *
+                         cq,
+                         cq,
+                         std::placeholders::_3  // Tag
         );
     }
 };
 
 // Implementation
-template<class Request, class Response>
+template <class Request, class Response>
 bool BidirectionalLifeCycleStreaming<Request, Response>::RunNextState(bool ok)
 {
     return (this->*m_NextState)(ok);
 }
 
-template<class Request, class Response>
+template <class Request, class Response>
 bool BidirectionalLifeCycleStreaming<Request, Response>::RunNextState(
     bool (BidirectionalLifeCycleStreaming<Request, Response>::*state_fn)(bool), bool ok)
 {
     return (this->*state_fn)(ok);
 }
 
-template<class Request, class Response>
-BidirectionalLifeCycleStreaming<Request, Response>::BidirectionalLifeCycleStreaming()
-    : m_ReadStateContext(static_cast<IContext*>(this)), m_WriteStateContext(static_cast<IContext*>(this)),
-      m_WritesDone(false), m_Writing(false), m_Executing(false), m_Finishing(false)
+template <class Request, class Response>
+BidirectionalLifeCycleStreaming<Request, Response>::BidirectionalLifeCycleStreaming() :
+  m_ReadStateContext(static_cast<IContext*>(this)),
+  m_WriteStateContext(static_cast<IContext*>(this)),
+  m_WritesDone(false),
+  m_Writing(false),
+  m_Executing(false),
+  m_Finishing(false)
 {
-    m_ReadStateContext.m_NextState = &BidirectionalLifeCycleStreaming<RequestType, ResponseType>::StateRequestDone;
+    m_ReadStateContext.m_NextState  = &BidirectionalLifeCycleStreaming<RequestType, ResponseType>::StateRequestDone;
     m_WriteStateContext.m_NextState = &BidirectionalLifeCycleStreaming<RequestType, ResponseType>::StateResponseDone;
 }
 
-template<class Request, class Response>
+template <class Request, class Response>
 void BidirectionalLifeCycleStreaming<Request, Response>::Reset()
 {
     std::queue<RequestType> empty_request_queue;
@@ -182,10 +194,10 @@ void BidirectionalLifeCycleStreaming<Request, Response>::Reset()
     OnLifeCycleReset();
     {
         std::lock_guard<std::mutex> lock(m_QueueMutex);
-        m_Writing = false;
-        m_Executing = false;
+        m_Writing    = false;
+        m_Executing  = false;
         m_WritesDone = false;
-        m_Finishing = false;
+        m_Finishing  = false;
         m_RequestQueue.swap(empty_request_queue);
         m_ResponseQueue.swap(empty_response_queue);
         m_ResponseWriteBackQueue.swap(empty_response_write_back_queue);
@@ -197,30 +209,30 @@ void BidirectionalLifeCycleStreaming<Request, Response>::Reset()
     m_QueuingFunc(m_Context.get(), m_ReaderWriter.get(), IContext::Tag());
 }
 
-template<class Request, class Response>
+template <class Request, class Response>
 std::tuple<bool, bool, bool> BidirectionalLifeCycleStreaming<Request, Response>::EvaluateState()
 {
-    bool should_write = false;
+    bool should_write   = false;
     bool should_execute = false;
-    bool should_finish = false;
+    bool should_finish  = false;
 
-    if(!m_Executing && !m_ResponseQueue.empty())
+    if (!m_Executing && !m_ResponseQueue.empty())
     {
         should_execute = true;
-        m_Executing = true;
+        m_Executing    = true;
     }
 
-    if(!m_Writing && !m_ResponseWriteBackQueue.empty())
+    if (!m_Writing && !m_ResponseWriteBackQueue.empty())
     {
         should_write = true;
-        m_Writing = true;
+        m_Writing    = true;
     }
 
-    if(!should_write && !should_execute && !m_Writing && !m_Executing && !m_Finishing && m_WritesDone)
+    if (!should_write && !should_execute && !m_Writing && !m_Executing && !m_Finishing && m_WritesDone)
     {
         should_finish = true;
-        m_Finishing = true;
-        m_NextState = &BidirectionalLifeCycleStreaming<RequestType, ResponseType>::StateFinishDone;
+        m_Finishing   = true;
+        m_NextState   = &BidirectionalLifeCycleStreaming<RequestType, ResponseType>::StateFinishDone;
     }
 
     DLOG(INFO) << should_write << "; " << should_execute << "; " << should_finish << " -- " << m_Writing << "; "
@@ -229,21 +241,22 @@ std::tuple<bool, bool, bool> BidirectionalLifeCycleStreaming<Request, Response>:
     return std::make_tuple(should_write, should_execute, should_finish);
 }
 
-template<class Request, class Response>
-void BidirectionalLifeCycleStreaming<Request, Response>::ProgressState(bool should_write, bool should_execute,
+template <class Request, class Response>
+void BidirectionalLifeCycleStreaming<Request, Response>::ProgressState(bool should_write,
+                                                                       bool should_execute,
                                                                        bool should_finish)
 {
-    if(should_write)
+    if (should_write)
     {
         DLOG(INFO) << "Writing response";
         m_ReaderWriter->Write(m_ResponseWriteBackQueue.front(), m_WriteStateContext.IContext::Tag());
     }
-    if(should_execute)
+    if (should_execute)
     {
         DLOG(INFO) << "Executing";
         ExecuteRPC(m_RequestQueue.front(), m_ResponseQueue.front());
     }
-    if(should_finish)
+    if (should_finish)
     {
         DLOG(INFO) << "Triggering Finish";
         m_ReaderWriter->Finish(::grpc::Status::OK, IContext::Tag());
@@ -252,10 +265,10 @@ void BidirectionalLifeCycleStreaming<Request, Response>::ProgressState(bool shou
 
 // The following are a set of functions used as function pointers
 // to keep track of the state of the context.
-template<class Request, class Response>
+template <class Request, class Response>
 bool BidirectionalLifeCycleStreaming<Request, Response>::StateInitializedDone(bool ok)
 {
-    if(!ok)
+    if (!ok)
     {
         return false;
     }
@@ -274,7 +287,7 @@ bool BidirectionalLifeCycleStreaming<Request, Response>::StateInitializedDone(bo
 // If the Context.m_NextState is at this state or at StateResponseDone state,
 // it will keep reading requests from the stream until no more requests will
 // be read (Read() brings back status ok==false)
-template<class Request, class Response>
+template <class Request, class Response>
 bool BidirectionalLifeCycleStreaming<Request, Response>::StateRequestDone(bool ok)
 {
     // No more message to be read from this stream, however, if it is executing
@@ -287,7 +300,7 @@ bool BidirectionalLifeCycleStreaming<Request, Response>::StateRequestDone(bool o
         std::lock_guard<std::mutex> lock(m_QueueMutex);
         DLOG(INFO) << "RequestDone Triggered";
 
-        if(!ok)
+        if (!ok)
         {
             {
                 // Client called WritesDone
@@ -298,18 +311,18 @@ bool BidirectionalLifeCycleStreaming<Request, Response>::StateRequestDone(bool o
 
         // Successfully receive request
         should_read = !m_WritesDone;
-        if(should_read)
+        if (should_read)
         {
-            m_ResponseQueue.emplace(); // add a response object which will be written on execution
-            m_RequestQueue.emplace(); // post a read/recv on a new request object
+            m_ResponseQueue.emplace();  // add a response object which will be written on execution
+            m_RequestQueue.emplace();   // post a read/recv on a new request object
         }
 
         auto should_wef = EvaluateState();
-        should_write = std::get<0>(should_wef);
-        should_execute = std::get<1>(should_wef);
-        should_finish = std::get<2>(should_wef);
+        should_write    = std::get<0>(should_wef);
+        should_execute  = std::get<1>(should_wef);
+        should_finish   = std::get<2>(should_wef);
     }
-    if(should_read)
+    if (should_read)
     {
         // Post Read/Receive
         m_ReaderWriter->Read(&m_RequestQueue.back(), m_ReadStateContext.IContext::Tag());
@@ -321,11 +334,11 @@ bool BidirectionalLifeCycleStreaming<Request, Response>::StateRequestDone(bool o
 // If the Context.m_NextState is at this state or at StateResponseDone state,
 // it will keep writing completed response to the stream until it is closed
 // (Write() brings back status ok==false)
-template<class Request, class Response>
+template <class Request, class Response>
 bool BidirectionalLifeCycleStreaming<Request, Response>::StateResponseDone(bool ok)
 {
     // If write didn't go through, then the call is dead. Start reseting
-    if(!ok)
+    if (!ok)
     {
         // this is likely an unrecoverable error on the client
         // i think we should return a false without trying to cancel;
@@ -344,29 +357,29 @@ bool BidirectionalLifeCycleStreaming<Request, Response>::StateResponseDone(bool 
         m_ResponseWriteBackQueue.pop();
 
         auto should_wef = EvaluateState();
-        should_write = std::get<0>(should_wef);
-        should_execute = std::get<1>(should_wef);
-        should_finish = std::get<2>(should_wef);
+        should_write    = std::get<0>(should_wef);
+        should_execute  = std::get<1>(should_wef);
+        should_finish   = std::get<2>(should_wef);
     }
     ProgressState(should_write, should_execute, should_finish);
     return true;
 }
 
-template<class Request, class Response>
+template <class Request, class Response>
 bool BidirectionalLifeCycleStreaming<Request, Response>::StateFinishDone(bool ok)
 {
     DLOG(INFO) << "Server closed Write stream - FinishedDone";
     return false;
 }
 
-template<class Request, class Response>
+template <class Request, class Response>
 bool BidirectionalLifeCycleStreaming<Request, Response>::StateInvalid(bool ok)
 {
     throw std::runtime_error("invalid state");
     return false;
 }
 
-template<class Request, class Response>
+template <class Request, class Response>
 void BidirectionalLifeCycleStreaming<Request, Response>::FinishResponse()
 {
     bool should_write, should_execute, should_finish;
@@ -380,14 +393,14 @@ void BidirectionalLifeCycleStreaming<Request, Response>::FinishResponse()
         m_ResponseQueue.pop();
 
         auto should_wef = EvaluateState();
-        should_write = std::get<0>(should_wef);
-        should_execute = std::get<1>(should_wef);
-        should_finish = std::get<2>(should_wef);
+        should_write    = std::get<0>(should_wef);
+        should_execute  = std::get<1>(should_wef);
+        should_finish   = std::get<2>(should_wef);
     }
     ProgressState(should_write, should_execute, should_finish);
 }
 
-template<class Request, class Response>
+template <class Request, class Response>
 void BidirectionalLifeCycleStreaming<Request, Response>::CancelResponse()
 {
     bool reset_ready = false;
@@ -398,17 +411,17 @@ void BidirectionalLifeCycleStreaming<Request, Response>::CancelResponse()
     }
     // Only call Finish() when no RPC is being executed to avoid clearing
     // request and response while they are being referenced in the RPC
-    if(reset_ready)
+    if (reset_ready)
     {
         DLOG(INFO) << "Closing Server Writes";
         m_ReaderWriter->Finish(::grpc::Status::CANCELLED, IContext::Tag());
     }
 }
 
-template<class Request, class Response>
+template <class Request, class Response>
 void BidirectionalLifeCycleStreaming<Request, Response>::SetQueueFunc(ExecutorQueueFuncType queue_fn)
 {
     m_QueuingFunc = queue_fn;
 }
 
-} // namespace nvrpc
+}  // namespace nvrpc

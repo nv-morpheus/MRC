@@ -24,6 +24,8 @@ class Topology;
 class Partition;
 class HostPartition;
 class DevicePartition;
+class Resources;
+class Thread;
 class FiberTaskQueue;
 class FiberPool;
 class FiberManager;

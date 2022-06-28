@@ -17,12 +17,11 @@
 
 #pragma once
 
-#include "srf/internal/segment/idefinition.hpp"
-
-#include <srf/segment/egress_ports.hpp>
-#include <srf/segment/forward.hpp>
-#include <srf/segment/ingress_ports.hpp>
-#include <srf/utils/macros.hpp>
+#include "srf/engine/segment/idefinition.hpp"
+#include "srf/segment/egress_ports.hpp"
+#include "srf/segment/forward.hpp"
+#include "srf/segment/ingress_ports.hpp"
+#include "srf/utils/macros.hpp"
 
 #include <functional>
 #include <map>

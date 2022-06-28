@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <srf/pipeline/pipeline.hpp>
-#include <srf/segment/builder.hpp>
+#include "srf/pipeline/pipeline.hpp"
+#include "srf/segment/builder.hpp"
 
 #include <functional>
 #include <memory>

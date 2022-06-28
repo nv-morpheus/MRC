@@ -17,7 +17,7 @@
 
 #include "./shared_resource_bit_map.hpp"
 
-#include <srf/core/bitmap.hpp>
+#include "srf/core/bitmap.hpp"
 
 #include <cstdint>  // for uint32_t
 #include <utility>  // for pair

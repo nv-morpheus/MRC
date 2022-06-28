@@ -16,9 +16,9 @@
  */
 #pragma once
 
-#include <srf/options/options.hpp>
-
-#include "srf/internal/system/isystem.hpp"
+#include "srf/engine/system/iresources.hpp"
+#include "srf/engine/system/isystem.hpp"
+#include "srf/options/options.hpp"
 
 #include <memory>
 
@@ -29,6 +29,13 @@ class System final : public internal::system::ISystem
   public:
     System(std::shared_ptr<Options> options);
     ~System() final = default;
+};
+
+class SystemResources final : public internal::system::IResources
+{
+  public:
+    SystemResources(std::shared_ptr<System> system);
+    ~SystemResources() final = default;
 
   private:
     void add_gil_initializer();

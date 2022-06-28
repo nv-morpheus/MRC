@@ -15,20 +15,14 @@
  * limitations under the License.
  */
 
-#include <srf/benchmarking/tracer.hpp>
-#include <srf/benchmarking/util.hpp>
+#include "srf/benchmarking/tracer.hpp"
+#include "srf/benchmarking/util.hpp"
 
 #include <benchmark/benchmark.h>
-
 #include <nlohmann/json.hpp>
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/operators/rx-tap.hpp>
-#include <rxcpp/rx-includes.hpp>
-#include <rxcpp/rx-observable.hpp>
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-operators.hpp>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
+#include <rxcpp/rx.hpp>
 #include <rxcpp/sources/rx-create.hpp>
 #include <rxcpp/sources/rx-iterate.hpp>
 

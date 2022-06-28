@@ -15,22 +15,23 @@
  * limitations under the License.
  */
 
+#include "nodes/common_nodes.hpp"
 #include "pipelines/common_pipelines.hpp"
 
 #include "internal/pipeline/manager.hpp"
 #include "internal/pipeline/pipeline.hpp"
 #include "internal/pipeline/types.hpp"
-#include "internal/resources/resource_partitions.hpp"
+#include "internal/resources/manager.hpp"
 #include "internal/system/system.hpp"
+#include "internal/system/system_provider.hpp"
 #include "internal/utils/collision_detector.hpp"
 
-#include "nodes/common_nodes.hpp"
-#include "srf/channel/forward.hpp"
 #include "srf/channel/status.hpp"
 #include "srf/core/addresses.hpp"
 #include "srf/core/executor.hpp"
-#include "srf/internal/pipeline/ipipeline.hpp"
-#include "srf/internal/segment/idefinition.hpp"
+#include "srf/data/reusable_pool.hpp"
+#include "srf/engine/pipeline/ipipeline.hpp"
+#include "srf/node/queue.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
 #include "srf/node/sink_properties.hpp"
@@ -43,18 +44,12 @@
 #include "srf/segment/egress_ports.hpp"
 #include "srf/segment/ingress_ports.hpp"
 #include "srf/segment/object.hpp"
-#include "srf/srf.hpp"
 
-#include "rxcpp/rx-includes.hpp"
-#include "rxcpp/rx-observer.hpp"
-#include "rxcpp/rx-operators.hpp"
-#include "rxcpp/rx-predef.hpp"
-#include "rxcpp/rx-subscriber.hpp"
-
-#include <glog/logging.h>
-#include <gtest/gtest.h>
 #include <boost/fiber/fiber.hpp>
 #include <boost/fiber/operations.hpp>
+#include <glog/logging.h>
+#include <gtest/gtest.h>
+#include <rxcpp/rx.hpp>
 
 #include <chrono>
 #include <functional>
@@ -86,7 +81,7 @@ static std::shared_ptr<internal::system::System> make_system(std::function<void(
         updater(*options);
     }
 
-    return internal::system::System::make_system(std::move(options));
+    return internal::system::make_system(std::move(options));
 }
 
 static std::shared_ptr<internal::pipeline::Pipeline> unwrap(internal::pipeline::IPipeline& pipeline)
@@ -98,10 +93,10 @@ static void run_custom_manager(std::unique_ptr<internal::pipeline::IPipeline> pi
                                internal::pipeline::SegmentAddresses&& update,
                                bool delayed_stop = false)
 {
-    auto resources = internal::resources::make_resource_partitions(make_system([](Options& options) {
+    auto resources = internal::resources::Manager(internal::system::SystemProvider(make_system([](Options& options) {
         options.topology().user_cpuset("0-1");
         options.topology().restrict_gpus(true);
-    }));
+    })));
 
     auto manager = std::make_unique<internal::pipeline::Manager>(unwrap(*pipeline), resources);
 
@@ -122,10 +117,10 @@ static void run_custom_manager(std::unique_ptr<internal::pipeline::IPipeline> pi
 
 static void run_manager(std::unique_ptr<internal::pipeline::IPipeline> pipeline, bool delayed_stop = false)
 {
-    auto resources = internal::resources::make_resource_partitions(make_system([](Options& options) {
+    auto resources = internal::resources::Manager(internal::system::SystemProvider(make_system([](Options& options) {
         options.topology().user_cpuset("0-1");
         options.topology().restrict_gpus(true);
-    }));
+    })));
 
     auto manager = std::make_unique<internal::pipeline::Manager>(unwrap(*pipeline), resources);
 
@@ -171,7 +166,7 @@ TEST_F(TestPipeline, LifeCycleWithException)
 
 TEST_F(TestPipeline, LifeCycleWithExceptionAndInfiniteSource)
 {
-    auto pipeline = srf::make_pipeline();
+    auto pipeline = pipeline::make_pipeline();
 
     auto segment = pipeline->make_segment("seg_1", [](segment::Builder& s) {
         auto rx_source = s.make_object("rx_source", test::nodes::infinite_int_rx_source());
@@ -184,7 +179,7 @@ TEST_F(TestPipeline, LifeCycleWithExceptionAndInfiniteSource)
 
 TEST_F(TestPipeline, LifeCycleStop)
 {
-    auto pipeline = srf::make_pipeline();
+    auto pipeline = pipeline::make_pipeline();
 
     auto segment = pipeline->make_segment("seg_1", [](segment::Builder& s) {
         auto rx_source = s.make_object("rx_source", test::nodes::infinite_int_rx_source());
@@ -195,16 +190,31 @@ TEST_F(TestPipeline, LifeCycleStop)
     run_manager(std::move(pipeline), true);
 }
 
+TEST_F(TestPipeline, Queue)
+{
+    auto pipeline = pipeline::make_pipeline();
+
+    auto segment = pipeline->make_segment("seg_1", [](segment::Builder& s) {
+        auto source = s.make_object("source", test::nodes::infinite_int_rx_source());
+        auto queue  = s.make_object("queue", std::make_unique<node::Queue<int>>());
+        auto sink   = s.make_object("sink", test::nodes::int_sink());
+        s.make_edge(source, queue);
+        s.make_edge(queue, sink);
+    });
+
+    run_manager(std::move(pipeline), true);
+}
+
 TEST_F(TestPipeline, InitializerThrows)
 {
-    auto pipeline = srf::make_pipeline();
+    auto pipeline = pipeline::make_pipeline();
     auto segment  = pipeline->make_segment("seg_1", [](segment::Builder& s) { throw std::runtime_error("no bueno"); });
     EXPECT_ANY_THROW(run_manager(std::move(pipeline)));
 }
 
 TEST_F(TestPipeline, DuplicateNameInSegment)
 {
-    auto pipeline = srf::make_pipeline();
+    auto pipeline = pipeline::make_pipeline();
 
     // this should fail to register the int_sink because of a duplicate name
     auto segment = pipeline->make_segment("seg_1", [](segment::Builder& s) {
@@ -247,7 +257,7 @@ TEST_F(TestPipeline, MultiSegmentLoadBalancer)
     // we collect the fiber id for the sink runnable processing each data element,
     // then we count the unique fiber ids collected
 
-    auto pipeline = srf::make_pipeline();
+    auto pipeline = pipeline::make_pipeline();
 
     int count = 1000;
     std::mutex mutex;
@@ -339,4 +349,101 @@ TEST_F(TestPipeline, RequiresMoreManifolds)
     srf::Executor exec1{opt1};
 
     EXPECT_ANY_THROW(exec1.register_pipeline(std::move(pipe)));
+}
+
+class Buffer
+{
+  public:
+    Buffer() = default;
+
+    DELETE_COPYABILITY(Buffer);
+
+    std::size_t* data()
+    {
+        return m_buffer.data();
+    }
+
+    const std::size_t* data() const
+    {
+        return m_buffer.data();
+    }
+
+    std::size_t size() const
+    {
+        return m_buffer.size();
+    }
+
+  private:
+    std::array<std::size_t, 1024> m_buffer;
+};
+
+TEST_F(TestPipeline, ReusablePool)
+{
+    auto pool = data::ReusablePool<Buffer>::create(32);
+
+    EXPECT_EQ(pool->size(), 0);
+
+    for (int i = 0; i < 10; i++)
+    {
+        pool->add_item(std::make_unique<Buffer>());
+    }
+
+    EXPECT_EQ(pool->size(), 10);
+
+    auto item = pool->await_item();
+
+    EXPECT_EQ(pool->size(), 10);
+
+    item->data()[0] = 42.0;
+}
+
+TEST_F(TestPipeline, ReusableSource)
+{
+    auto pipe = pipeline::make_pipeline();
+    auto pool = data::ReusablePool<Buffer>::create(32);
+
+    auto opt = std::make_shared<srf::Options>();
+    opt->topology().user_cpuset("0");
+    opt->topology().restrict_gpus(true);
+
+    srf::Executor exec{opt};
+
+    EXPECT_EQ(pool->size(), 0);
+
+    for (int i = 0; i < 10; i++)
+    {
+        pool->add_item(std::make_unique<Buffer>());
+    }
+
+    auto init = [&exec, pool](segment::Builder& segment) {
+        auto src =
+            segment.make_source<data::Reusable<Buffer>>("src", [pool](rxcpp::subscriber<data::Reusable<Buffer>> s) {
+                while (s.is_subscribed())
+                {
+                    auto buffer = pool->await_item();
+                    s.on_next(std::move(buffer));
+                }
+                s.on_completed();
+            });
+
+        auto sink =
+            segment.make_sink<data::SharedReusable<Buffer>>("sink", [&exec](data::SharedReusable<Buffer> buffer) {
+                static std::size_t counter = 0;
+                if (counter++ > 100)
+                {
+                    exec.stop();
+                }
+            });
+
+        EXPECT_TRUE(src->is_runnable());
+        EXPECT_TRUE(sink->is_runnable());
+
+        segment.make_edge(src, sink);
+    };
+
+    pipe->make_segment("TestSegment1", init);
+    exec.register_pipeline(std::move(pipe));
+
+    exec.start();
+    exec.join();
 }

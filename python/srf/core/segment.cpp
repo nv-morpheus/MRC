@@ -15,20 +15,18 @@
  * limitations under the License.
  */
 
-#include <pysrf/segment.hpp>
+#include "pysrf/segment.hpp"
 
-#include <pysrf/node.hpp>  // IWYU pragma: keep
-#include <pysrf/types.hpp>
-#include <pysrf/utils.hpp>
+#include "pysrf/node.hpp"  // IWYU pragma: keep
+#include "pysrf/types.hpp"
+#include "pysrf/utils.hpp"
 
-#include <srf/channel/status.hpp>
+#include "srf/node/edge_connector.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/definition.hpp"
+#include "srf/segment/object.hpp"
 
-#include <srf/node/edge_builder.hpp>
-#include <srf/node/edge_connector.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/definition.hpp>
-#include <srf/segment/object.hpp>
-
+#include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
@@ -108,12 +106,6 @@ PYBIND11_MODULE(segment, m)
                 static_cast<std::shared_ptr<srf::segment::ObjectProperties> (*)(
                     srf::segment::Builder&, const std::string&, py::function)>(&SegmentProxy::make_source));
 
-    // Builder.def("make_source",
-    //             static_cast<std::shared_ptr<srf::segment::ObjectProperties> (*)(
-    //                 srf::segment::Builder&, const std::string&, const std::function<void(PyObjectSubscriber&)>&)>(
-    //                 &SegmentProxy::make_source),
-    //             py::return_value_policy::reference_internal);
-
     /**
      * Construct a new py::object sink.
      * Create and return a Segment node used to sink python objects following out of the Segment.
@@ -145,8 +137,8 @@ PYBIND11_MODULE(segment, m)
      * python-function which will be called on each data element as it flows through the node.
      */
     Builder.def("make_node", &SegmentProxy::make_node, py::return_value_policy::reference_internal);
+
     Builder.def("make_node_full", &SegmentProxy::make_node_full, py::return_value_policy::reference_internal);
-    // Builder.def("test_fn", &SegmentProxy::test_fn);
 
     Builder.def("make_py2cxx_edge_adapter", &SegmentProxy::make_py2cxx_edge_adapter);
 
@@ -187,6 +179,7 @@ PYBIND11_MODULE(segment, m)
     //  * @brief Debugging sink for c++ doubles
     //  */
     // Builder.def("debug_float_sink", &SegmentProxy::debug_float_sink, py::return_value_policy::reference_internal);
+    Builder.def("make_edge", &SegmentProxy::make_edge, py::arg("source"), py::arg("sink"));
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

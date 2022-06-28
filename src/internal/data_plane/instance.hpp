@@ -19,9 +19,9 @@
 
 #include "internal/data_plane/client.hpp"
 #include "internal/data_plane/server.hpp"
-#include "internal/resources/partition_resources.hpp"
 #include "internal/service.hpp"
 #include "internal/ucx/context.hpp"
+
 #include "srf/runnable/launch_control.hpp"
 
 #include <memory>
@@ -35,15 +35,15 @@ namespace srf::internal::data_plane {
 class Instance final : public Service
 {
   public:
-    Instance(std::unique_ptr<resources::PartitionResources> resources);
+    Instance(std::shared_ptr<resources::PartitionResources> resources);
     ~Instance() final;
 
-    Client& comms_manager() const;
-    Server& events_manager() const;
+    Client& client() const;
+    Server& server() const;
 
   private:
-    Service& iclient();
-    Service& iserver();
+    Service& client_service();
+    Service& server_service();
 
     void do_service_start() final;
     void do_service_await_live() final;
@@ -51,7 +51,7 @@ class Instance final : public Service
     void do_service_kill() final;
     void do_service_await_join() final;
 
-    std::unique_ptr<resources::PartitionResources> m_resources;
+    std::shared_ptr<resources::PartitionResources> m_resources;
     std::shared_ptr<ucx::Context> m_context;
     std::unique_ptr<Client> m_client;
     std::unique_ptr<Server> m_server;

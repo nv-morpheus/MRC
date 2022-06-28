@@ -17,20 +17,19 @@
 
 #include "test_pysrf.hpp"
 
-#include <pysrf/pipeline.hpp>
+#include "pysrf/pipeline.hpp"
 
-#include <pysrf/types.hpp>
-
-#include <srf/core/executor.hpp>
-#include <srf/options/options.hpp>
-#include <srf/options/topology.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/object.hpp>
+#include "srf/core/executor.hpp"
+#include "srf/options/options.hpp"
+#include "srf/options/topology.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/object.hpp"
 
 #include <gtest/gtest.h>
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
+#include <pysrf/types.hpp>
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx-observer.hpp>
 #include <rxcpp/rx-subscriber.hpp>

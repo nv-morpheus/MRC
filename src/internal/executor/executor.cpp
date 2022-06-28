@@ -21,31 +21,34 @@
 #include "internal/pipeline/pipeline.hpp"
 #include "internal/pipeline/port_graph.hpp"
 #include "internal/pipeline/types.hpp"
-#include "internal/resources/resource_partitions.hpp"
+#include "internal/resources/manager.hpp"
 #include "internal/system/system.hpp"
-#include "internal/utils/contains.hpp"
+
 #include "srf/core/addresses.hpp"
+#include "srf/engine/pipeline/ipipeline.hpp"
 #include "srf/exceptions/runtime_error.hpp"
-#include "srf/internal/pipeline/ipipeline.hpp"
 #include "srf/options/options.hpp"
-#include "srf/types.hpp"
 
 #include <glog/logging.h>
 
 #include <map>
+#include <ostream>
+#include <set>
+#include <string>
+#include <type_traits>
 
 namespace srf::internal::executor {
 
 static bool valid_pipeline(const pipeline::Pipeline& pipeline);
 
-Executor::Executor(Handle<Options> options) :
-  m_system(system::make_system(std::move(options))),
-  m_resources(resources::make_resource_partitions(m_system))
+Executor::Executor(std::shared_ptr<Options> options) :
+  SystemProvider(system::make_system(std::move(options))),
+  m_resources_manager(std::make_unique<resources::Manager>(*this))
 {}
 
-Executor::Executor(Handle<system::System> system) :
-  m_system(std::move(system)),
-  m_resources(resources::make_resource_partitions(m_system))
+Executor::Executor(std::unique_ptr<system::Resources> resources) :
+  SystemProvider(*resources),
+  m_resources_manager(std::make_unique<resources::Manager>(std::move(resources)))
 {}
 
 Executor::~Executor()
@@ -65,10 +68,16 @@ void Executor::register_pipeline(std::unique_ptr<pipeline::IPipeline> ipipeline)
         throw exceptions::SrfRuntimeError("pipeline validation failed");
     }
 
-    m_pipeline_manager = std::make_unique<pipeline::Manager>(pipeline, m_resources);
+    m_pipeline_manager = std::make_unique<pipeline::Manager>(pipeline, *m_resources_manager);
+}
+
+void Executor::do_service_start()
+{
+    CHECK(m_pipeline_manager);
+    m_pipeline_manager->service_start();
 
     pipeline::SegmentAddresses initial_segments;
-    for (const auto& [id, segment] : pipeline->segments())
+    for (const auto& [id, segment] : m_pipeline_manager->pipeline().segments())
     {
         auto address              = segment_address_encode(id, 0);  // rank 0
         initial_segments[address] = 0;                              // partition 0;
@@ -76,11 +85,6 @@ void Executor::register_pipeline(std::unique_ptr<pipeline::IPipeline> ipipeline)
     m_pipeline_manager->push_updates(std::move(initial_segments));
 }
 
-void Executor::do_service_start()
-{
-    CHECK(m_pipeline_manager);
-    m_pipeline_manager->service_start();
-}
 void Executor::do_service_stop()
 {
     CHECK(m_pipeline_manager);

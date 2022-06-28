@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-#include <pysrf/pipeline.hpp>
-#include <pysrf/types.hpp>
+#include "pysrf/pipeline.hpp"
 
-#include <srf/pipeline/pipeline.hpp>
-#include <srf/segment/builder.hpp>
+#include "pysrf/types.hpp"
+#include "srf/pipeline/pipeline.hpp"
+#include "srf/segment/builder.hpp"
 
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
