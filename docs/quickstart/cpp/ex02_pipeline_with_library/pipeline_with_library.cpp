@@ -17,9 +17,9 @@
 
 #include <glog/logging.h>
 
-#include "srf/node/rx_sink.hpp"
-#include "srf/pipeline/pipeline.hpp"
-#include "srf/srf.hpp"
+#include <srf/node/rx_sink.hpp>
+#include <srf/pipeline/pipeline.hpp>
+#include <srf/srf.hpp>
 
 #include "nodes.hpp"
 

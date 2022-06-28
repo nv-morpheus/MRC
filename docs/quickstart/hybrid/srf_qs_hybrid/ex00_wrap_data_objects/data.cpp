@@ -17,7 +17,7 @@
 
 #include <glog/logging.h>
 #include <pybind11/pybind11.h>
-#include "srf/utils/string_utils.hpp"
+#include <srf/utils/string_utils.hpp>
 
 #include <memory>
 #include <sstream>
