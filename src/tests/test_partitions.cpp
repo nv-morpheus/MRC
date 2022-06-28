@@ -333,6 +333,8 @@ TEST_P(TestPartitions, SingleCore4GPU)
 // 3: default engines, dedicated network
 // 4: default engines, multi-node, main/network queues are the same fiber queue
 // 5: default engines, multi-node, dedicated main, dedicated network
+// 6: 6 core - default engines + services, dedicated_threads, dedicated_fibers (from test_options.cpp)
+// 7: 8 core - default engines + services, dedicated_threads, dedicated_fibers (from test_options.cpp)
 
 TEST_P(TestPartitions, EngineFactoryScenario1)
 {
@@ -521,16 +523,21 @@ TEST_P(TestPartitions, EngineFactoryScenario5)
     EXPECT_NE(cpu_sets.fiber_cpu_sets.at("main").first(), cpu_sets.fiber_cpu_sets.at("srf_network").first());
 }
 
-TEST_P(TestPartitions, EngineFactoryScenarioN)
+TEST_P(TestPartitions, EngineFactoryScenario6)
 {
-    auto options = make_options([](Options& options) {
+    auto focus = [](Options& options) {
+        // options that are the foucs of this test
         options.topology().user_cpuset("0-5");
-        options.topology().restrict_gpus(true);
-        options.placement().cpu_strategy(PlacementStrategy::PerMachine);
-        options.placement().resources_strategy(PlacementResources::Shared);
         add_engine_factory_services(options);
         add_engine_factory_dedicated_threads(options);
         add_engine_factory_dedicated_fibers(options);
+    };
+
+    auto options = make_options([&focus](Options& options) {
+        options.topology().restrict_gpus(true);
+        options.placement().cpu_strategy(PlacementStrategy::PerMachine);
+        options.placement().resources_strategy(PlacementResources::Shared);
+        focus(options);
     });
 
     auto partitions = make_partitions(options);
@@ -546,6 +553,39 @@ TEST_P(TestPartitions, EngineFactoryScenarioN)
     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("dedicated_fibers").weight(), 2);
     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("services").weight(), 1);
     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("default").weight(), 1);
+    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("main").weight(), 1);
+
+    EXPECT_EQ(cpu_sets.thread_cpu_sets.at("dedicated_threads").weight(), 2);
+
+    EXPECT_EQ(cpu_sets.shared_cpus_set.weight(), 0);
+}
+
+TEST_P(TestPartitions, EngineFactoryScenario7)
+{
+    auto focus = [](Options& options) {
+        // options that are the foucs of this test
+        options.topology().user_cpuset("0-7");
+        add_engine_factory_services(options);
+        add_engine_factory_dedicated_threads(options);
+        add_engine_factory_dedicated_fibers(options);
+    };
+
+    auto options = make_options([&focus](Options& options) {
+        options.topology().restrict_gpus(true);
+        options.placement().cpu_strategy(PlacementStrategy::PerMachine);
+        options.placement().resources_strategy(PlacementResources::Shared);
+        focus(options);
+    });
+
+    auto partitions     = make_partitions(options);
+    const auto cpu_sets = partitions->host_partitions().at(0).engine_factory_cpu_sets();
+
+    EXPECT_EQ(cpu_sets.fiber_cpu_sets.size(), 4);
+    EXPECT_EQ(cpu_sets.thread_cpu_sets.size(), 1);
+
+    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("dedicated_fibers").weight(), 2);
+    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("services").weight(), 1);
+    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("default").weight(), 3);
     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("main").weight(), 1);
 
     EXPECT_EQ(cpu_sets.thread_cpu_sets.at("dedicated_threads").weight(), 2);
