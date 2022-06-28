@@ -15,6 +15,6 @@
  * limitations under the License.
  */
 
-#include <pysrf/node.hpp>
+#include "pysrf/node.hpp"
 
 namespace srf::pysrf {}  // namespace srf::pysrf

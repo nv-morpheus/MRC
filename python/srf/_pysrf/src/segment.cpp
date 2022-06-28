@@ -15,17 +15,17 @@
  * limitations under the License.
  */
 
-#include <pysrf/segment.hpp>
+#include "pysrf/segment.hpp"
 
-#include <pysrf/node.hpp>
-#include <pysrf/types.hpp>
-#include <pysrf/utils.hpp>
-
-#include <srf/node/edge_builder.hpp>
-#include <srf/node/sink_properties.hpp>
-#include <srf/runnable/context.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/object.hpp>
+#include "pysrf/node.hpp"
+#include "pysrf/types.hpp"
+#include "pysrf/utils.hpp"
+#include "srf/channel/status.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/runnable/context.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/object.hpp"
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>
@@ -34,10 +34,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <rxcpp/operators/rx-map.hpp>
-#include <rxcpp/rx-observable.hpp>
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx.hpp>  // IWYU pragma: keep
+#include <rxcpp/rx.hpp>
 
 #include <exception>
 #include <fstream>  // IWYU pragma: keep

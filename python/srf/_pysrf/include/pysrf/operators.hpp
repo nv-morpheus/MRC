@@ -15,7 +15,9 @@
  * limitations under the License.
  */
 
-#include <pysrf/types.hpp>
+#pragma once
+
+#include "pysrf/types.hpp"
 
 #include <pybind11/pytypes.h>
 

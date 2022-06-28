@@ -272,6 +272,7 @@
       "--rcfile=${workspaceFolder}/python/.pylintrc"
     ],
     "python.linting.pylintEnabled": true,
+    "python.sortImports.args": ["--settings-file=${workspaceFolder}/python/setup.cfg"],
     "python.testing.cwd": "${workspaceFolder}/python",
     "python.testing.pytestArgs": [
       "-s"
@@ -322,7 +323,7 @@
       }
     },
     "testMate.cpp.log.logpanel": true,
-    "testMate.cpp.test.executables": "{build,Build,BUILD,out,Out,OUT}/**/*{test,Test,TEST}_*.x"
+    "testMate.cpp.test.executables": "{build,Build,BUILD,out,Out,OUT}/**/*{test,Test,TEST}_*.x",
   },
   "extensions": {
     // See https://go.microsoft.com/fwlink/?LinkId=827846 to learn about workspace recommendations.

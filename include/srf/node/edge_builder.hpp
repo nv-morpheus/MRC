@@ -17,18 +17,20 @@
 
 #pragma once
 
-#include <srf/channel/ingress.hpp>
-#include <srf/node/edge.hpp>
-#include <srf/node/edge_adapter_registry.hpp>
-#include <srf/node/sink_properties.hpp>
-#include <srf/node/source_properties.hpp>
+#include "srf/channel/ingress.hpp"
+#include "srf/node/edge_adapter_registry.hpp"
+#include "srf/node/edge.hpp"
+#include "srf/node/edge_properties.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_properties.hpp"
+#include "srf/utils/type_utils.hpp"
 #include <srf/utils/type_utils.hpp>
 
 #include <memory>
 #include <sstream>
-#include <type_traits>
 #include <typeindex>
 #include <typeinfo>
+#include <type_traits>
 
 namespace srf::node {
 
@@ -138,10 +140,22 @@ struct EdgeBuilder final
 
         source.complete_edge(edge);
     }
+
+    template <typename T>
+    static void make_edge(ChannelProvider<T>& source, ChannelAcceptor<T>& sink)
+    {
+        sink.set_channel(source.channel());
+    }
 };
 
 template <typename SourceT, typename SinkT = SourceT>
 void make_edge(SourceProperties<SourceT>& source, SinkProperties<SinkT>& sink)
+{
+    EdgeBuilder::make_edge(source, sink);
+}
+
+template <typename SourceT, typename SinkT = SourceT>
+void make_edge(ChannelProvider<SourceT>& source, ChannelAcceptor<SinkT>& sink)
 {
     EdgeBuilder::make_edge(source, sink);
 }

@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include <srf/exceptions/runtime_error.hpp>
-#include <srf/node/forward.hpp>
-#include <srf/node/operators/operator.hpp>
-#include <srf/node/sink_properties.hpp>
-#include <srf/node/source_channel.hpp>
-#include <srf/node/source_properties.hpp>
+#include "srf/exceptions/runtime_error.hpp"
+#include "srf/node/forward.hpp"
+#include "srf/node/operators/operator.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_channel.hpp"
+#include "srf/node/source_properties.hpp"
 
 #include <map>
 #include <memory>

@@ -11,19 +11,21 @@
 # or implied. See the License for the specific language governing permissions and limitations under
 # the License.
 # =============================================================================
+
 find_package(pybind11 REQUIRED)
 find_package(prometheus-cpp REQUIRED)
 
+# Keep all source files sorted!!!
 add_library(pysrf
   src/executor.cpp
   src/logging.cpp
+  src/node.cpp
+  src/operators.cpp
   src/options.cpp
   src/pipeline.cpp
   src/segment.cpp
-  src/system.cpp
-  src/node.cpp
-  src/operators.cpp
   src/subscriber.cpp
+  src/system.cpp
   src/types.cpp
   src/utils.cpp
   src/watchers.cpp

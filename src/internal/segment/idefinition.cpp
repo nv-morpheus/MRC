@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 
-#include "srf/internal/segment/idefinition.hpp"
+#include "srf/engine/segment/idefinition.hpp"
+
 #include "internal/segment/definition.hpp"
 
 #include <utility>
@@ -31,4 +32,8 @@ IDefinition::IDefinition(std::string name,
 {}
 IDefinition::~IDefinition() = default;
 
+const std::string& IDefinition::name() const
+{
+    return m_impl->name();
+}
 }  // namespace srf::internal::segment

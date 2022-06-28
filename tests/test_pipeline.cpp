@@ -17,24 +17,23 @@
 
 #include "test_srf.hpp"  // IWYU pragma: associated
 
-#include <srf/channel/status.hpp>
-#include <srf/core/executor.hpp>
-#include <srf/memory/memory_kind.hpp>
-#include <srf/node/edge_builder.hpp>
-#include <srf/node/rx_node.hpp>
-#include <srf/node/rx_sink.hpp>
-#include <srf/node/rx_source.hpp>
-#include <srf/options/options.hpp>
-#include <srf/options/topology.hpp>
-#include <srf/pipeline/pipeline.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/definition.hpp>
-#include <srf/segment/egress_ports.hpp>
-#include <srf/segment/ingress_ports.hpp>
-#include <srf/segment/segment.hpp>
+#include "srf/channel/status.hpp"
+#include "srf/core/executor.hpp"
+#include "srf/memory/memory_kind.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/node/rx_node.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/rx_source.hpp"
+#include "srf/options/options.hpp"
+#include "srf/options/topology.hpp"
+#include "srf/pipeline/pipeline.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/definition.hpp"
+#include "srf/segment/egress_ports.hpp"
+#include "srf/segment/ingress_ports.hpp"
+#include "srf/segment/segment.hpp"
 
 #include <gtest/gtest.h>
-
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx-includes.hpp>
 #include <rxcpp/rx-observable.hpp>

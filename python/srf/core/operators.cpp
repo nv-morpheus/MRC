@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include <pysrf/operators.hpp>
+#include "pysrf/operators.hpp"
 
-#include <pysrf/utils.hpp>
+#include "pysrf/utils.hpp"
 
 #include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/pybind11.h>

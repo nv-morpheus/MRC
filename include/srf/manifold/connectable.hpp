@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <srf/manifold/interface.hpp>
-#include <srf/pipeline/resources.hpp>
+#include "srf/manifold/interface.hpp"
+#include "srf/pipeline/resources.hpp"
 
 namespace srf::manifold {
 

@@ -17,9 +17,8 @@
 
 #pragma once
 
-#include <srf/channel/channel.hpp>
-
-#include <srf/types.hpp>  // for Mutex & CondV
+#include "srf/channel/channel.hpp"
+#include "srf/types.hpp"  // for Mutex & CondV
 
 #include <memory>  // for lock_guard
 

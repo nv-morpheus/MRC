@@ -13,13 +13,16 @@
 # the License.
 # =============================================================================
 
-srf_add_pybind11_module(NAME common SOURCE common.cpp)
-srf_add_pybind11_module(NAME executor SOURCE executor.cpp)
-srf_add_pybind11_module(NAME logging SOURCE logging.cpp)
-srf_add_pybind11_module(NAME node SOURCE node.cpp)
-srf_add_pybind11_module(NAME operators SOURCE operators.cpp)
-srf_add_pybind11_module(NAME options SOURCE options.cpp)
-srf_add_pybind11_module(NAME pipeline SOURCE pipeline.cpp)
-srf_add_pybind11_module(NAME segment_definition SOURCE segment_definition.cpp)
-srf_add_pybind11_module(NAME segment SOURCE segment.cpp)
-srf_add_pybind11_module(NAME subscriber SOURCE subscriber.cpp)
+list(APPEND CMAKE_MESSAGE_CONTEXT "core")
+
+srf_add_pybind11_module(common     SOURCE_FILES common.cpp)
+srf_add_pybind11_module(executor   SOURCE_FILES executor.cpp)
+srf_add_pybind11_module(logging    SOURCE_FILES logging.cpp)
+srf_add_pybind11_module(node       SOURCE_FILES node.cpp)
+srf_add_pybind11_module(operators  SOURCE_FILES operators.cpp)
+srf_add_pybind11_module(options    SOURCE_FILES options.cpp)
+srf_add_pybind11_module(pipeline   SOURCE_FILES pipeline.cpp)
+srf_add_pybind11_module(segment    SOURCE_FILES segment.cpp)
+srf_add_pybind11_module(subscriber SOURCE_FILES subscriber.cpp)
+
+list(POP_BACK CMAKE_MESSAGE_CONTEXT)

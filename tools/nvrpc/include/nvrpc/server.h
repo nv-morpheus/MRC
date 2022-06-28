@@ -15,10 +15,17 @@
  * limitations under the License.
  */
 
-#ifndef NVIS_SERVER_H_
-#define NVIS_SERVER_H_
 #pragma once
 
+#ifndef NVIS_SERVER_H_
+#define NVIS_SERVER_H_
+
+#include <nvrpc/interfaces.h>  // for IExecutor, IService
+#include <nvrpc/service.h>
+
+#include <grpcpp/grpcpp.h>  // for Server, ServerBuilder
+
+#include <algorithm>
 #include <chrono>
 #include <condition_variable>
 #include <functional>  // for function
@@ -27,11 +34,6 @@
 #include <stdexcept>  // for runtime_error
 #include <string>
 #include <vector>
-
-#include <grpcpp/grpcpp.h>  // for Server, ServerBuilder
-
-#include "nvrpc/interfaces.h"  // for IExecutor, IService
-#include "nvrpc/service.h"
 
 namespace nvrpc {
 

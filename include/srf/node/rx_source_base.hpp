@@ -17,16 +17,17 @@
 
 #pragma once
 
-#include <srf/channel/buffered_channel.hpp>
-#include <srf/channel/channel.hpp>
-#include <srf/constants.hpp>
-#include <srf/core/utils.hpp>
-#include <srf/core/watcher.hpp>
-#include <srf/exceptions/runtime_error.hpp>
-#include <srf/node/edge.hpp>
-#include <srf/node/source_channel.hpp>
-#include <srf/runnable/context.hpp>
-#include <srf/utils/type_utils.hpp>
+#include "srf/channel/buffered_channel.hpp"
+#include "srf/channel/channel.hpp"
+#include "srf/channel/status.hpp"
+#include "srf/constants.hpp"
+#include "srf/core/utils.hpp"
+#include "srf/core/watcher.hpp"
+#include "srf/exceptions/runtime_error.hpp"
+#include "srf/node/edge.hpp"
+#include "srf/node/source_channel.hpp"
+#include "srf/runnable/context.hpp"
+#include "srf/utils/type_utils.hpp"
 
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>
@@ -34,7 +35,6 @@
 #include <exception>
 #include <memory>
 #include <mutex>
-#include "srf/channel/status.hpp"
 
 namespace srf::node {
 

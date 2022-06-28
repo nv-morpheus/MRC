@@ -17,7 +17,8 @@
 
 #include "srf/segment/definition.hpp"
 
-#include "srf/internal/segment/ibuilder.hpp"
+#include "srf/engine/segment/ibuilder.hpp"
+#include "srf/engine/segment/idefinition.hpp"
 #include "srf/segment/builder.hpp"
 
 namespace srf::segment {

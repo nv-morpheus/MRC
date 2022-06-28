@@ -18,18 +18,16 @@
 #include "test_segment.hpp"  // IWYU pragma: associated
 #include "test_srf.hpp"      // IWYU pragma: associated
 
-#include <srf/channel/status.hpp>
-
-#include <srf/core/egress_node.hpp>
-#include <srf/core/executor.hpp>
-#include <srf/core/ingress_node.hpp>
-#include <srf/core/utils.hpp>
-#include <srf/pipeline/pipeline.hpp>
-
-#include <srf/segment/egress_ports.hpp>
-#include <srf/segment/ingress_ports.hpp>
-#include <srf/segment/segment.hpp>
-#include <srf/types.hpp>
+#include "srf/channel/status.hpp"
+#include "srf/core/egress_node.hpp"
+#include "srf/core/executor.hpp"
+#include "srf/core/ingress_node.hpp"
+#include "srf/core/utils.hpp"
+#include "srf/pipeline/pipeline.hpp"
+#include "srf/segment/egress_ports.hpp"
+#include "srf/segment/ingress_ports.hpp"
+#include "srf/segment/segment.hpp"
+#include "srf/types.hpp"
 
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/operators/rx-tap.hpp>

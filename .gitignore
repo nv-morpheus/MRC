@@ -5,6 +5,10 @@
 /vcpkg_installed
 /*conda-bld*/
 
+# Ignore generated pyi files for pybind and cython modules
+docs/quickstart/**/*.pyi
+python/**/*.pyi
+
 # Ignore all vscode options that are in the workspace file
 .vscode/extensions.json
 .vscode/launch.json

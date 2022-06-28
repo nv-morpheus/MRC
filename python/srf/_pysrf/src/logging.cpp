@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include <pysrf/logging.hpp>
+#include "pysrf/logging.hpp"
 
-#include <srf/core/logging.hpp>
+#include "srf/core/logging.hpp"
 
 #include <glog/logging.h>  // needs to be included prior to log_severity
 

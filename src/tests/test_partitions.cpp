@@ -15,16 +15,15 @@
  * limitations under the License.
  */
 
-#include <srf/protos/architect.pb.h>
-#include <srf/options/topology.hpp>
-
 #include "internal/system/gpu_info.hpp"
 #include "internal/system/host_partition.hpp"
 #include "internal/system/partitions.hpp"
 #include "internal/system/topology.hpp"
+
 #include "srf/core/bitmap.hpp"
 #include "srf/options/options.hpp"
 #include "srf/options/placement.hpp"
+#include "srf/options/topology.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
@@ -84,7 +83,8 @@ class TestPartitions : public testing::TestWithParam<const char*>
 
 TEST_P(TestPartitions, Scenario1)
 {
-    auto options    = make_options();
+    auto options =
+        make_options([](Options& options) { options.placement().resources_strategy(PlacementResources::Dedicated); });
     auto partitions = make_partitions(options);
 
     EXPECT_EQ(partitions->device_partitions().size(), 4);
@@ -103,7 +103,10 @@ TEST_P(TestPartitions, Scenario1)
 
 TEST_P(TestPartitions, Scenario2)
 {
-    auto options    = make_options([](Options& options) { options.topology().ignore_dgx_display(false); });
+    auto options    = make_options([](Options& options) {
+        options.topology().ignore_dgx_display(false);
+        options.placement().resources_strategy(PlacementResources::Dedicated);
+    });
     auto partitions = make_partitions(options);
 
     // todo(ryan) - coded loop based on json structure of fixture
@@ -126,6 +129,7 @@ TEST_P(TestPartitions, Scenario3)
     auto options    = make_options([](Options& options) {
         options.topology().ignore_dgx_display(false);
         options.placement().cpu_strategy(PlacementStrategy::PerNumaNode);
+        options.placement().resources_strategy(PlacementResources::Dedicated);
     });
     auto partitions = make_partitions(options);
 
@@ -153,6 +157,7 @@ TEST_P(TestPartitions, Scenario4)
         options.topology().restrict_gpus(true);
         options.topology().ignore_dgx_display(false);
         options.placement().cpu_strategy(PlacementStrategy::PerNumaNode);
+        options.placement().resources_strategy(PlacementResources::Dedicated);
     });
     auto partitions = make_partitions(options);
 

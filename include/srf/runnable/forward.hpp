@@ -48,9 +48,7 @@ using ThreadRunnable = RunnableWithContext<ThreadContext<ContextT>>;  // NOLINT
 class Runner;
 
 class LaunchControl;
-
 class Launcher;
-
 class Launchable;
 
 template <typename T>
