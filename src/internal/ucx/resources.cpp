@@ -68,14 +68,9 @@ Resources::Resources(runnable::Resources& _runnable_resources, std::size_t _part
         .get();
 }
 
-Context& Resources::context()
-{
-    CHECK(m_ucx_context);
-    return *m_ucx_context;
-}
-
 void Resources::add_registration_cache_to_builder(RegistrationCallbackBuilder& builder)
 {
     builder.add_registration_cache(m_registration_cache);
 }
+
 }  // namespace srf::internal::ucx

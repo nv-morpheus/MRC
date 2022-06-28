@@ -39,8 +39,6 @@ class Resources final : private resources::PartitionResourceBase
   public:
     Resources(runnable::Resources& _runnable_resources, std::size_t _partition_id);
 
-    Context& context();
-
     const RegistrationCache& registration_cache() const
     {
         CHECK(m_registration_cache);
