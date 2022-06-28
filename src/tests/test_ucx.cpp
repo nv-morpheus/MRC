@@ -33,6 +33,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <list>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
@@ -213,8 +214,11 @@ static void recv_get_callback(void* request, ucs_status_t status, const ucp_tag_
     {
         LOG(FATAL) << "zero_bytes_completion_handler observed " << ucs_status_string(status);
     }
-    auto* promise = static_cast<std::promise<ucp_tag_t>*>(user_data);
-    promise->set_value(msg_info->sender_tag);
+    if (user_data != nullptr)
+    {
+        auto* promise = static_cast<std::promise<ucp_tag_t>*>(user_data);
+        promise->set_value(msg_info->sender_tag);
+    }
     ucp_request_free(request);
 }
 
@@ -230,6 +234,14 @@ static void send_callback(void* request, ucs_status_t status, void* user_data)
     promise->set_value();
     ucp_request_free(request);
 }
+
+class SendRecvManager
+{
+  private:
+    bool m_is_subscribed{true};
+    std::list<void*> m_send_requests;
+    std::list<void*> m_recv_requests;
+};
 
 TEST_F(TestUCX, Recv)
 {
@@ -289,4 +301,16 @@ TEST_F(TestUCX, Recv)
     auto tag = recv_future.get();
 
     EXPECT_EQ(tag, 42);
+
+    // note: uncommenting this code will push a recv request but the worker and ep will shutdown
+    // resulting in a ucx working message
+    // if we have pre-posted recvs, we will need a way to cancel them to prevent these warnings
+    // {
+    //     ucp_request_param_t params;
+    //     params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA |
+    //     UCP_OP_ATTR_FLAG_NO_IMM_CMPL; params.cb.recv      = recv_get_callback; params.user_data    = nullptr;
+
+    //     void* status_ptr_1 = ucp_tag_recv_nbx(worker_dst->handle(), nullptr, 0, 0, 0, &params);
+    //     EXPECT_NE(status_ptr_1, nullptr);
+    // }
 }
