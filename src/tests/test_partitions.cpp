@@ -685,13 +685,49 @@ TEST_P(TestPartitions, EngineFactoryScenario10)
     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("dedicated_fibers").weight(), 2);
     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("services").weight(), 1);
     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("default").weight(), 1);
-    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("srf_network").weight(), 1);
 
     EXPECT_EQ(cpu_sets.thread_cpu_sets.at("dedicated_threads").weight(), 2);
 
     EXPECT_EQ(cpu_sets.shared_cpus_set.weight(), 2);
 
-    EXPECT_TRUE(cpu_sets.shared_cpus_has_fibers);
+    EXPECT_FALSE(cpu_sets.shared_cpus_has_fibers);
+}
+
+TEST_P(TestPartitions, EngineFactoryScenario11)
+{
+    auto focus = [](Options& options) {
+        // options that are the foucs of this test
+        options.topology().user_cpuset("0-7");
+        options.engine_factories().set_default_engine_type(runnable::EngineType::Thread);
+        add_engine_factory_services(options);
+        add_engine_factory_dedicated_threads(options);
+        add_engine_factory_dedicated_fibers(options);
+        add_engine_factory_shared_threads_x1(options);
+        add_engine_factory_shared_threads_x2(options);
+    };
+
+    auto options = make_options([&focus](Options& options) {
+        options.topology().restrict_gpus(true);
+        options.placement().cpu_strategy(PlacementStrategy::PerMachine);
+        options.placement().resources_strategy(PlacementResources::Shared);
+        focus(options);
+    });
+
+    auto partitions     = make_partitions(options);
+    const auto cpu_sets = partitions->host_partitions().at(0).engine_factory_cpu_sets();
+
+    EXPECT_EQ(cpu_sets.fiber_cpu_sets.size(), 3);
+    EXPECT_EQ(cpu_sets.thread_cpu_sets.size(), 4);
+
+    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("services").weight(), 1);
+    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("dedicated_fibers").weight(), 2);
+
+    EXPECT_EQ(cpu_sets.thread_cpu_sets.at("default").weight(), 1);
+    EXPECT_EQ(cpu_sets.thread_cpu_sets.at("dedicated_threads").weight(), 2);
+
+    EXPECT_EQ(cpu_sets.shared_cpus_set.weight(), 2);
+
+    EXPECT_FALSE(cpu_sets.shared_cpus_has_fibers);
 }
 
 INSTANTIATE_TEST_SUITE_P(Topos, TestPartitions, testing::Values("dgx_a100_station_topology"));
