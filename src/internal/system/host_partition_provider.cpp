@@ -29,7 +29,9 @@ namespace srf::internal::system {
 HostPartitionProvider::HostPartitionProvider(const SystemProvider& _system, std::size_t _host_partition_id) :
   SystemProvider(_system),
   m_host_partition_id(_host_partition_id)
-{}
+{
+    CHECK_LT(m_host_partition_id, this->system().partitions().host_partitions().size());
+}
 
 std::size_t HostPartitionProvider::host_partition_id() const
 {
