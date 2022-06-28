@@ -37,7 +37,7 @@ Resources::Resources(runnable::Resources& _runnable_resources, std::size_t _part
 {
     VLOG(1) << "constructing network resources for partition: " << partition_id() << " on partitions main task queue";
     runnable()
-        .main()
+        .main()  // this should happen on srf_network if a dedicated network thread is enabled
         .enqueue([this] {
             if (partition().has_device())
             {
@@ -48,6 +48,8 @@ Resources::Resources(runnable::Resources& _runnable_resources, std::size_t _part
                 SRF_CHECK_CUDA(cudaMalloc(&tmp, 1024));
                 SRF_CHECK_CUDA(cudaFree(tmp));
             }
+
+            // we need to create both the context and the workers to ensure ucx and cuda are aligned
 
             DVLOG(10) << "initializing ucx context";
             m_ucx_context = std::make_shared<Context>();

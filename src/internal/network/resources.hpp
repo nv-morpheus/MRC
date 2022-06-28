@@ -37,7 +37,7 @@ class Resources final : private resources::PartitionResourceBase
     const ucx::RegistrationCache& registration_cache() const;
 
   private:
-    ucx::Resources& m_ucx;
+    const ucx::Resources& m_ucx;
 };
 
 }  // namespace srf::internal::network

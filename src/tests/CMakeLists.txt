@@ -48,6 +48,7 @@ add_executable(test_srf_private
   test_memory.cpp
   test_network.cpp
   test_next.cpp
+  test_options.cpp
   test_partitions.cpp
   test_pipeline.cpp
   test_ranges.cpp

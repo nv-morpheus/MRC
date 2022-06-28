@@ -32,12 +32,18 @@
 #include <cstddef>
 #include <memory>
 
+namespace srf::internal::network {
+class Resources;
+}
+
 namespace srf::internal::ucx {
 
 class Resources final : private resources::PartitionResourceBase
 {
   public:
     Resources(runnable::Resources& _runnable_resources, std::size_t _partition_id);
+
+    using resources::PartitionResourceBase::partition;
 
     const RegistrationCache& registration_cache() const
     {
@@ -53,13 +59,14 @@ class Resources final : private resources::PartitionResourceBase
         return srf::memory::make_unique_resource<RegistrationResource>(std::move(upstream), m_registration_cache);
     }
 
-    using resources::PartitionResourceBase::partition;
-
   private:
     std::shared_ptr<Context> m_ucx_context;
     std::shared_ptr<Worker> m_worker_server;
     std::shared_ptr<Worker> m_worker_client;
     std::shared_ptr<RegistrationCache> m_registration_cache;
+
+    // enable direct access to context and workers
+    friend network::Resources;
 };
 
 }  // namespace srf::internal::ucx
