@@ -35,11 +35,12 @@ namespace srf::node {
 struct EdgeBuilder final
 {
     /**
-     *
+     * @brief Default ingress adapter lookup -- only checks to see if a registered edge conversion exists and if so
+     * uses it.
      * @param source
      * @param sink
-     * @param ingress_handle
-     * @return
+     * @param ingress_handle Ingress handle for the sink object
+     * @return Ingress handle constructed by the adapter
      */
     static std::shared_ptr<channel::IngressHandle> default_ingress_adapter_for_sink(
         srf::node::SourcePropertiesBase& source,
@@ -47,11 +48,12 @@ struct EdgeBuilder final
         std::shared_ptr<channel::IngressHandle> ingress_handle);
 
     /**
-     *
+     * @brief Attempt to look-up a registered ingress adapter given the source and sink properties. If one exists
+     * use it, otherwise fall back to the default adapter lookup.
      * @param source
      * @param sink
      * @param ingress_handle
-     * @return
+     * @return Ingress handle constructed by the adapter
      */
     static std::shared_ptr<channel::IngressHandle> ingress_adapter_for_sink(
         srf::node::SourcePropertiesBase& source,
@@ -59,7 +61,7 @@ struct EdgeBuilder final
         std::shared_ptr<channel::IngressHandle> ingress_handle);
 
     /**
-     *
+     * @brief Default ingress adapter lookup -- only checks to see if a registered edge conversion exists and if so
      * @param source
      * @param sink
      * @param ingress_handle
@@ -71,7 +73,8 @@ struct EdgeBuilder final
         std::shared_ptr<channel::IngressHandle> ingress_handle);
 
     /**
-     *
+     * @brief Attempt to look-up a registered ingress adapter for the given source type and sink properties. If one
+     * exists, use it, otherwise fall back to default.
      * @param source
      * @param sink
      * @param ingress_handle

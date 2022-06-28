@@ -185,12 +185,10 @@ struct EdgeAdapterUtil
 template <typename SourceT>
 struct AutoRegSourceAdapter
 {
-    static bool s_initialized;
-
     AutoRegSourceAdapter()
     {
-        // force register_adapter to be called by anyone who inherits.
-        auto _initialized = s_initialized;
+        // force register_adapter to be called, once, the first time a derived object is constructed.
+        static bool _init = register_adapter();
     }
 
     static bool register_adapter()
@@ -208,9 +206,6 @@ struct AutoRegSourceAdapter
     }
 };
 
-template <typename SourceT>
-bool AutoRegSourceAdapter<SourceT>::s_initialized = AutoRegSourceAdapter<SourceT>::register_adapter();
-
 /**
  * @brief Sinks which inherit this object will automatically attempt to a pySRF adapter for their data type with the
  * EdgeAdaptorRegistry
@@ -219,20 +214,18 @@ bool AutoRegSourceAdapter<SourceT>::s_initialized = AutoRegSourceAdapter<SourceT
 template <typename SinkT>
 struct AutoRegSinkAdapter
 {
-    static bool s_initialized;
-
     AutoRegSinkAdapter()
     {
-        // force register_adapter to be called by anyone who inherits.
-        auto _initialized = s_initialized;
+        // force register_adapter to be called, once, the first time a derived object is constructed.
+        static bool _init = register_adapter();
     }
 
     static bool register_adapter()
     {
         if (!srf::node::EdgeAdapterRegistry::has_sink_adapter(typeid(SinkT)))
         {
-            std::type_index x = typeid(SinkT);
-            VLOG(2) << "Registering PySRF sink adapter for: " << type_name<SinkT>() << " " << x.hash_code();
+            std::type_index sink_type = typeid(SinkT);
+            VLOG(2) << "Registering PySRF sink adapter for: " << type_name<SinkT>() << " " << sink_type.hash_code();
             node::EdgeAdapterRegistry::register_sink_adapter(typeid(SinkT),
                                                              EdgeAdapterUtil::build_sink_adapter<SinkT>());
         }
@@ -240,8 +233,4 @@ struct AutoRegSinkAdapter
         return true;
     }
 };
-
-template <typename SinkT>
-bool AutoRegSinkAdapter<SinkT>::s_initialized = AutoRegSinkAdapter<SinkT>::register_adapter();
-
 }  // namespace srf::pysrf
