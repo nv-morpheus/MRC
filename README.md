@@ -25,6 +25,7 @@ The **Streaming Reactive Framework** (SRF) library (proununced "surf") is a **re
     - [Python Bindings](#python-bindings)
     - [C++ Bindings](#c-bindings)
     - [Full SRF Library](#full-srf-library)
+    - [Optional Settings](#optional-settings)
   - [Source Installation](#source-installation)
   - [Docker Installation](#docker-installation)
 - [Quickstart Guide](#quickstart-guide)
@@ -33,7 +34,7 @@ The **Streaming Reactive Framework** (SRF) library (proununced "surf") is a **re
 
 
 ## Installation
-SRF includes both Python and C++ bindings and supports installation via [conda](https://docs.conda.io/en/latest/), Docker, or from source.]
+SRF includes both Python and C++ bindings and supports installation via [conda](https://docs.conda.io/en/latest/), Docker, or from source.
 
 ### Prerequisites
 
@@ -52,13 +53,6 @@ conda install -c conda-forge mamba
 ```
 
 If you choose to use Mamba rather than Conda, simply replace `conda` with `mamba` in the instructions below.
-
-To avoid specifying the channels in the Conda commands below:
-```bash
-conda config --env --add channels conda-forge &&\
-conda config --env --add channels nvidia &&\
-conda config --env --add channels rapidsai
-```
 
 #### Python Bindings
 ```bash
@@ -94,6 +88,20 @@ conda activate srf
 
 # Install SRF Python bindings
 conda install -c rapidsai -c nvidia -c conda-forge srf libsrf
+```
+
+#### Optional Settings
+To avoid specifying the channels in the Conda commands above:
+```bash
+conda config --env --add channels conda-forge &&\
+conda config --env --add channels nvidia &&\
+conda config --env --add channels rapidsai
+```
+
+And to opt-in to nightly releases:
+```bash
+conda config --env --add channels nvidia/label/dev &&
+conda config --env --add channels rapidsai-nightly
 ```
 
 ### Source Installation
