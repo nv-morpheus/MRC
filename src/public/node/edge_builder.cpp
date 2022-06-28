@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include <srf/node/edge_adapter_registry.hpp>
-#include <srf/node/edge_builder.hpp>
-#include <srf/node/edge_registry.hpp>
+#include "srf/node/edge_adapter_registry.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/node/edge_registry.hpp"
 
 namespace srf::node {
 void EdgeBuilder::make_edge_typeless(SourcePropertiesBase& source, SinkPropertiesBase& sink, bool allow_narrowing)

@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include <srf/channel/ingress.hpp>
-#include <srf/node/sink_properties.hpp>
-#include <srf/node/source_properties.hpp>
+#include "srf/channel/ingress.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_properties.hpp"
 
 #include <functional>
 #include <map>

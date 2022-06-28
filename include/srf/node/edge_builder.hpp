@@ -24,7 +24,7 @@
 #include "srf/node/sink_properties.hpp"
 #include "srf/node/source_properties.hpp"
 #include "srf/utils/type_utils.hpp"
-#include <srf/utils/type_utils.hpp>
+#include "srf/utils/type_utils.hpp"
 
 #include <memory>
 #include <sstream>

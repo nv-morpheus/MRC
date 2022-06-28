@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <srf/node/edge_adapter_registry.hpp>
+#include "srf/node/edge_adapter_registry.hpp"
 
 #include <map>
 #include <stdexcept>
