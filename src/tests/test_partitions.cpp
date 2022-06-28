@@ -335,6 +335,7 @@ TEST_P(TestPartitions, SingleCore4GPU)
 // 5: default engines, multi-node, dedicated main, dedicated network
 // 6: 6 core - default engines + services, dedicated_threads, dedicated_fibers (from test_options.cpp)
 // 7: 8 core - default engines + services, dedicated_threads, dedicated_fibers (from test_options.cpp)
+// 7: 4 core - default engines + services, dedicated_threads, dedicated_fibers (from test_options.cpp)
 
 TEST_P(TestPartitions, EngineFactoryScenario1)
 {
@@ -591,6 +592,26 @@ TEST_P(TestPartitions, EngineFactoryScenario7)
     EXPECT_EQ(cpu_sets.thread_cpu_sets.at("dedicated_threads").weight(), 2);
 
     EXPECT_EQ(cpu_sets.shared_cpus_set.weight(), 0);
+}
+
+TEST_P(TestPartitions, EngineFactoryScenario8)
+{
+    auto focus = [](Options& options) {
+        // options that are the foucs of this test
+        options.topology().user_cpuset("0-3");
+        add_engine_factory_services(options);
+        add_engine_factory_dedicated_threads(options);
+        add_engine_factory_dedicated_fibers(options);
+    };
+
+    auto options = make_options([&focus](Options& options) {
+        options.topology().restrict_gpus(true);
+        options.placement().cpu_strategy(PlacementStrategy::PerMachine);
+        options.placement().resources_strategy(PlacementResources::Shared);
+        focus(options);
+    });
+
+    EXPECT_ANY_THROW(make_partitions(options));
 }
 
 INSTANTIATE_TEST_SUITE_P(Topos, TestPartitions, testing::Values("dgx_a100_station_topology"));

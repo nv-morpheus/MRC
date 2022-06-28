@@ -80,66 +80,6 @@ class TestOptions : public ::testing::Test
 
 // TODO(ryan) - load topologies from files rather than from whatever hardware the CI runner is executing on
 
-TEST_F(TestOptions, ResourceManager6Cpus)
-{
-    auto system = make_system([](Options& options) {
-        options.topology().user_cpuset("0-5");
-        options.placement().cpu_strategy(PlacementStrategy::PerMachine);
-        options.placement().resources_strategy(PlacementResources::Shared);
-        add_engine_factory_services(options);
-        add_engine_factory_dedicated_threads(options);
-        add_engine_factory_dedicated_fibers(options);
-    });
-
-    // const auto cpu_sets = generate_launch_control_placement_cpu_sets(options(), m_placement->group(0).cpu_set());
-    const auto cpu_sets = system->partitions().host_partitions().at(0).engine_factory_cpu_sets();
-
-    EXPECT_EQ(cpu_sets.fiber_cpu_sets.size(), 4);
-    EXPECT_EQ(cpu_sets.thread_cpu_sets.size(), 1);
-
-    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("dedicated_fibers").weight(), 2);
-    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("services").weight(), 1);
-    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("default").weight(), 1);
-    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("main").weight(), 1);
-
-    EXPECT_EQ(cpu_sets.thread_cpu_sets.at("dedicated_threads").weight(), 2);
-
-    EXPECT_EQ(cpu_sets.shared_cpus_set.weight(), 0);
-}
-
-// TEST_F(TestOptions, ResourceManager8Cpus)
-// {
-//     m_options.topology().user_cpuset("0-7");
-//     m_options.placement().cpu_strategy(PlacementStrategy::PerMachine);
-
-//     initialize();
-
-//     const auto cpu_sets = generate_launch_control_placement_cpu_sets(options(), m_placement->group(0).cpu_set());
-
-//     EXPECT_EQ(cpu_sets.fiber_cpu_sets.size(), 4);
-//     EXPECT_EQ(cpu_sets.thread_cpu_sets.size(), 1);
-
-//     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("dedicated_fibers").weight(), 2);
-//     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("services").weight(), 1);
-//     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("default").weight(), 3);
-//     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("main").weight(), 1);
-
-//     EXPECT_EQ(cpu_sets.thread_cpu_sets.at("dedicated_threads").weight(), 2);
-
-//     EXPECT_EQ(cpu_sets.shared_cpus_set.weight(), 0);
-// }
-
-// TEST_F(TestOptions, ResourceManagerNotEnoughCpus)
-// {
-//     m_options.topology().user_cpuset("0-3");
-//     m_options.placement().cpu_strategy(PlacementStrategy::PerMachine);
-
-//     initialize();
-
-//     EXPECT_ANY_THROW(const auto cpu_sets =
-//                          generate_launch_control_placement_cpu_sets(options(), m_placement->group(0).cpu_set()));
-// }
-
 // TEST_F(TestOptions, ResourceManagerAddOverlappableGroups)
 // {
 //     m_options.topology().user_cpuset("0-7");
