@@ -331,7 +331,8 @@ TEST_P(TestPartitions, SingleCore4GPU)
 // 1: default engines
 // 2: default engines, dedicated main
 // 3: default engines, dedicated network
-// 3: default engines, multi-node, main/network queues are the same fiber queue
+// 4: default engines, multi-node, main/network queues are the same fiber queue
+// 5: default engines, multi-node, dedicated main, dedicated network
 
 TEST_P(TestPartitions, EngineFactoryScenario1)
 {
@@ -484,6 +485,40 @@ TEST_P(TestPartitions, EngineFactoryScenario4)
     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("main").weight(), 1);
     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("srf_network").weight(), 1);
     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("main").first(), cpu_sets.fiber_cpu_sets.at("srf_network").first());
+}
+
+TEST_P(TestPartitions, EngineFactoryScenario5)
+{
+    auto focus = [](Options& options) {
+        // options that are the foucs of this test
+        options.architect_url("localhost:13337");
+        options.engine_factories().set_dedicated_main_thread(true);
+        options.engine_factories().set_dedicated_network_thread(true);
+    };
+
+    auto common = [&focus](Options& options) {
+        options.topology().restrict_gpus(true);
+        options.placement().cpu_strategy(PlacementStrategy::PerMachine);
+        options.placement().resources_strategy(PlacementResources::Shared);
+        focus(options);
+    };
+
+    auto options = make_options([&common](Options& options) {
+        common(options);
+        options.topology().user_cpuset("0-2");
+    });
+
+    auto partitions     = make_partitions(options);
+    const auto cpu_sets = partitions->host_partitions().at(0).engine_factory_cpu_sets();
+
+    EXPECT_EQ(cpu_sets.fiber_cpu_sets.size(), 3);
+    EXPECT_EQ(cpu_sets.thread_cpu_sets.size(), 0);
+    EXPECT_EQ(cpu_sets.shared_cpus_set.weight(), 0);
+
+    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("default").weight(), 1);
+    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("main").weight(), 1);
+    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("srf_network").weight(), 1);
+    EXPECT_NE(cpu_sets.fiber_cpu_sets.at("main").first(), cpu_sets.fiber_cpu_sets.at("srf_network").first());
 }
 
 TEST_P(TestPartitions, EngineFactoryScenarioN)
