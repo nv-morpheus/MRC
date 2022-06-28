@@ -32,6 +32,10 @@ project(srf-quickstart
 # Ensure CPM is initialized
 rapids_cpm_init()
 
+# Set the option prefix to match the outer project before including. Must be before find_package(srf)
+set(OPTION_PREFIX "SRF")
+include(python_module_tools)
+
 rapids_find_package(srf REQUIRED)
 rapids_find_package(CUDAToolkit REQUIRED)
 
@@ -39,10 +43,6 @@ rapids_find_package(CUDAToolkit REQUIRED)
 if("${CMAKE_EXECUTABLE_SUFFIX}" STREQUAL "")
   set(CMAKE_EXECUTABLE_SUFFIX ".x")
 endif()
-
-# Set the option prefix to match the outer project before including
-set(OPTION_PREFIX "SRF")
-include(python_module_tools)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
