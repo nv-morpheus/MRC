@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#include <pysrf/utilities/object_cache.hpp>
-#include <pysrf/module_wrappers/shared_memory.hpp>
+#include "pysrf/utilities/object_cache.hpp"
+#include "pysrf/module_wrappers/shared_memory.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>

@@ -17,7 +17,7 @@
 
 #include "test_pysrf.hpp"
 
-#include <pysrf/module_wrappers/pickle.hpp>
+#include "pysrf/module_wrappers/pickle.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>

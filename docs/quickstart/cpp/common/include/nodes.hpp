@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <srf/node/rx_source.hpp>
+#include "srf/node/rx_source.hpp"
 
 namespace srf::quickstart::cpp::common {
 

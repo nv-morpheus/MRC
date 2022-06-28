@@ -19,11 +19,11 @@
 
 #include <glog/logging.h>
 #include <pybind11/pybind11.h>
-#include <pysrf/node.hpp>
-#include <srf/runnable/context.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/object.hpp>
-#include <srf/utils/string_utils.hpp>
+#include "pysrf/node.hpp"
+#include "srf/runnable/context.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/object.hpp"
+#include "srf/utils/string_utils.hpp"
 
 #include <memory>
 #include <sstream>

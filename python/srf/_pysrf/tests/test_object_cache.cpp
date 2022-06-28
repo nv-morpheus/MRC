@@ -17,7 +17,7 @@
 
 #include "test_pysrf.hpp"
 
-#include <pysrf/utilities/object_cache.hpp>
+#include "pysrf/utilities/object_cache.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>

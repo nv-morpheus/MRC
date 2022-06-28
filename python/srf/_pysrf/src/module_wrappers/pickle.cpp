@@ -18,8 +18,8 @@
  * limitations under the License.
  */
 
-#include <pysrf/utilities/object_cache.hpp>
-#include <pysrf/module_wrappers/pickle.hpp>
+#include "pysrf/utilities/object_cache.hpp"
+#include "pysrf/module_wrappers/pickle.hpp"
 
 #include <pybind11/pybind11.h>
 

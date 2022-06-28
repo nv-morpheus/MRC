@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <pysrf/utilities/object_cache.hpp>
+#include "pysrf/utilities/object_cache.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>

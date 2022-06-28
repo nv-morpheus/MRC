@@ -17,16 +17,16 @@
 
 #include "test_pysrf.hpp"
 
-#include <pysrf/codable_object.hpp>
-#include <pysrf/types.hpp>
-#include <pysrf/utilities/deserializers.hpp>
-#include <pysrf/utilities/serializers.hpp>
+#include "pysrf/codable_object.hpp"
+#include "pysrf/types.hpp"
+#include "pysrf/utilities/deserializers.hpp"
+#include "pysrf/utilities/serializers.hpp"
 
-#include <srf/codable/decode.hpp>
-#include <srf/codable/encode.hpp>
-#include <srf/codable/encoded_object.hpp>
-#include <srf/codable/encoding_options.hpp>
-#include <srf/codable/type_traits.hpp>
+#include "srf/codable/decode.hpp"
+#include "srf/codable/encode.hpp"
+#include "srf/codable/encoded_object.hpp"
+#include "srf/codable/encoding_options.hpp"
+#include "srf/codable/type_traits.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>

@@ -17,7 +17,7 @@
 
 #include "test_pysrf.hpp"
 
-#include <pysrf/module_wrappers/shared_memory.hpp>
+#include "pysrf/module_wrappers/shared_memory.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
