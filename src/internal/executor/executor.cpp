@@ -69,9 +69,15 @@ void Executor::register_pipeline(std::unique_ptr<pipeline::IPipeline> ipipeline)
     }
 
     m_pipeline_manager = std::make_unique<pipeline::Manager>(pipeline, *m_resources_manager);
+}
+
+void Executor::do_service_start()
+{
+    CHECK(m_pipeline_manager);
+    m_pipeline_manager->service_start();
 
     pipeline::SegmentAddresses initial_segments;
-    for (const auto& [id, segment] : pipeline->segments())
+    for (const auto& [id, segment] : m_pipeline_manager->pipeline().segments())
     {
         auto address              = segment_address_encode(id, 0);  // rank 0
         initial_segments[address] = 0;                              // partition 0;
@@ -79,11 +85,6 @@ void Executor::register_pipeline(std::unique_ptr<pipeline::IPipeline> ipipeline)
     m_pipeline_manager->push_updates(std::move(initial_segments));
 }
 
-void Executor::do_service_start()
-{
-    CHECK(m_pipeline_manager);
-    m_pipeline_manager->service_start();
-}
 void Executor::do_service_stop()
 {
     CHECK(m_pipeline_manager);
