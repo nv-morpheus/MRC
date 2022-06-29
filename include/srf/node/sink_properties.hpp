@@ -75,7 +75,7 @@ inline SinkPropertiesBase::~SinkPropertiesBase() = default;
  * @brief Typed SinkProperties provides default implementations dependent only on the type T.
  */
 template <typename T>
-class SinkProperties : public virtual SinkPropertiesBase
+class SinkProperties : public SinkPropertiesBase
 {
   public:
     using sink_type_t = T;

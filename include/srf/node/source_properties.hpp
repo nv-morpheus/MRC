@@ -81,7 +81,7 @@ inline SourcePropertiesBase::~SourcePropertiesBase() = default;
  * @brief Typed SourceProperties provides default implementations dependent only on the type T.
  */
 template <typename T>
-class SourceProperties : public virtual SourcePropertiesBase
+class SourceProperties : public SourcePropertiesBase
 {
   public:
     using source_type_t = T;
