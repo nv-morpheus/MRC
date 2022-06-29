@@ -1,16 +1,9 @@
-# SRF Quick Start Guide (QSG)
+# SRF Quick Start Guide
+:surfer: Learn to SRF and Catch the Wave to Accelerating Streaming Pipelines :surfer:
 
-The SRF Quick Start Guide (QSG) provides examples on how to start using SRF via the Python bindings, C++ bindings or both.
+The SRF Quick Start Guide (QSG) provides examples on how to get started using SRF. The goal of this tutorial is to provide a gentle on-ramp to building applications with SRF and is targeted towards a wide person of developers - ranging from data scientists to performance engineers.
 
-## Prerequisites
-
-- Pascal architecture (Compute capability 6.0) or better
-- NVIDIA driver `450.80.02` or higher
-- [conda or miniconda](https://conda.io/projects/conda/en/latest/user-guide/install/linux.html)
-  - **Note:** Conda performance can be improved by using [Mamba](https://github.com/mamba-org/mamba) and is recommended for the QSG. If you have `mamba` installed, simply replace `conda`  with `mamba` in the installation instructions.
-- if using docker:
-  - [Docker](https://docs.docker.com/get-docker/)
-  - [The NVIDIA container toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker)
+## Table of Contents
 
 ## Getting Started
 
