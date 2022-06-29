@@ -18,6 +18,7 @@
 #include "internal/ucx/resources.hpp"
 
 #include "internal/system/device_partition.hpp"
+#include "internal/system/fiber_task_queue.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/ucx/worker.hpp"
 
@@ -32,12 +33,14 @@
 
 namespace srf::internal::ucx {
 
-Resources::Resources(runnable::Resources& _runnable_resources, std::size_t _partition_id) :
-  resources::PartitionResourceBase(_runnable_resources, _partition_id)
+Resources::Resources(runnable::Resources& _runnable_resources,
+                     std::size_t _partition_id,
+                     system::FiberTaskQueue& network_task_queue) :
+  resources::PartitionResourceBase(_runnable_resources, _partition_id),
+  m_network_task_queue(network_task_queue)
 {
     VLOG(1) << "constructing network resources for partition: " << partition_id() << " on partitions main task queue";
-    runnable()
-        .main()  // this should happen on srf_network if a dedicated network thread is enabled
+    m_network_task_queue
         .enqueue([this] {
             if (partition().has_device())
             {
@@ -75,4 +78,13 @@ void Resources::add_registration_cache_to_builder(RegistrationCallbackBuilder& b
     builder.add_registration_cache(m_registration_cache);
 }
 
+srf::core::FiberTaskQueue& Resources::network_task_queue()
+{
+    return m_network_task_queue;
+}
+const RegistrationCache& Resources::registration_cache() const
+{
+    CHECK(m_registration_cache);
+    return *m_registration_cache;
+}
 }  // namespace srf::internal::ucx

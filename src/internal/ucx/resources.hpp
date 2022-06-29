@@ -19,6 +19,7 @@
 
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/runnable/resources.hpp"
+#include "internal/system/fiber_task_queue.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/registation_callback_builder.hpp"
 #include "internal/ucx/registration_cache.hpp"
@@ -41,25 +42,26 @@ namespace srf::internal::ucx {
 class Resources final : private resources::PartitionResourceBase
 {
   public:
-    Resources(runnable::Resources& _runnable_resources, std::size_t _partition_id);
+    Resources(runnable::Resources& _runnable_resources,
+              std::size_t _partition_id,
+              system::FiberTaskQueue& network_task_queue);
 
     using resources::PartitionResourceBase::partition;
 
-    const RegistrationCache& registration_cache() const
-    {
-        CHECK(m_registration_cache);
-        return *m_registration_cache;
-    }
+    srf::core::FiberTaskQueue& network_task_queue();
+    const RegistrationCache& registration_cache() const;
 
     void add_registration_cache_to_builder(RegistrationCallbackBuilder& builder);
 
     template <typename UpstreamT>
-    auto adapt_to_registered_resource(UpstreamT upstream)
+    auto adapt_to_registered_resource(UpstreamT upstream, int cuda_device_id)
     {
-        return srf::memory::make_unique_resource<RegistrationResource>(std::move(upstream), m_registration_cache);
+        return srf::memory::make_unique_resource<RegistrationResource>(
+            std::move(upstream), m_registration_cache, cuda_device_id);
     }
 
   private:
+    system::FiberTaskQueue& m_network_task_queue;
     std::shared_ptr<Context> m_ucx_context;
     std::shared_ptr<Worker> m_worker_server;
     std::shared_ptr<Worker> m_worker_client;

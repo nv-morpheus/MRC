@@ -166,6 +166,7 @@ EngineFactoryCpuSets generate_engine_factory_cpu_sets(const Options& options, co
     {
         config.fiber_cpu_sets["srf_network"] = config.fiber_cpu_sets.at("main");
         config.reusable["srf_network"]       = true;
+        DVLOG(10) << "- cpu_set for `srf_network`: " << config.fiber_cpu_sets["srf_network"];
     }
 
     // get all resources for groups that have overlap disabled

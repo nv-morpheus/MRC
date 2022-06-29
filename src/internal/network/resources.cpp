@@ -17,14 +17,33 @@
 
 #include "internal/network/resources.hpp"
 
+#include "internal/data_plane/server.hpp"
+#include "internal/memory/host_resources.hpp"
+#include "internal/resources/partition_resources_base.hpp"
+#include "internal/ucx/registration_cache.hpp"
 #include "internal/ucx/resources.hpp"
 
 namespace srf::internal::network {
 
-Resources::Resources(runnable::Resources& _runnable_resources, std::size_t _partition_id, ucx::Resources& ucx) :
+Resources::Resources(runnable::Resources& _runnable_resources,
+                     std::size_t _partition_id,
+                     ucx::Resources& ucx,
+                     memory::HostResources& host) :
   resources::PartitionResourceBase(_runnable_resources, _partition_id),
-  m_ucx(ucx)
-{}
+  m_ucx(ucx),
+  m_host(host)
+{
+    // construct resources on the srf_network task queue thread
+    m_ucx.network_task_queue()
+        .enqueue([this] {
+            // initialize data plane services - server / client
+            m_server = std::make_unique<data_plane::Server>(static_cast<resources::PartitionResourceBase&>(*this),
+                                                            m_ucx.m_worker_server);
+        })
+        .get();
+}
+
+Resources::~Resources() = default;
 
 const ucx::RegistrationCache& Resources::registration_cache() const
 {
