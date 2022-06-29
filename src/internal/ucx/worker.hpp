@@ -44,6 +44,8 @@ class Worker : public Primitive<ucp_worker_h>
 
     Handle<Endpoint> create_endpoint(WorkerAddress);
 
+    Context& context();
+
   private:
     Handle<Context> m_context;
     std::string m_address;
