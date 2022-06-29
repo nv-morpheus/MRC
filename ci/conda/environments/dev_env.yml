@@ -14,6 +14,7 @@ dependencies:
   - doxygen=1.9.2
   - flatbuffers=2.0
   - gcc_linux-64=9.4
+  - gcovr=5.1
   - gflags=2.2
   - git>=2.35.3 # Needed for wildcards on safe.directory
   - glog=0.6
@@ -22,6 +23,7 @@ dependencies:
   - grpc-cpp=1.45
   - gtest=1.10
   - gxx_linux-64=9.4
+  - lcov=1.15
   - libhwloc=2.5
   - librmm=22.06
   - libtool

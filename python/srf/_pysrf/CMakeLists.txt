@@ -48,8 +48,13 @@ target_include_directories(pysrf
 
 set_target_properties(pysrf PROPERTIES OUTPUT_NAME ${PROJECT_NAME}_pysrf)
 set_target_properties(pysrf PROPERTIES CXX_VISIBILITY_PRESET hidden)
+
 # Avoid doing this, it causes problems with PyInit being hidden in Cython built code.
 #   target_compile_options(pysrf PUBLIC "-fvisibility=hidden")
+
+if(SRF_WITH_CODECOV)
+  append_coverage_compiler_flags_to_target(pysrf)
+endif()
 
 rapids_cmake_install_lib_dir(lib_dir)
 

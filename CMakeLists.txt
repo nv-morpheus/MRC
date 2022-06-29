@@ -31,8 +31,9 @@ option(SRF_USE_CCACHE "Enable caching compilation results with ccache" OFF)
 option(SRF_USE_CLANG_TIDY "Enable running clang-tidy as part of the build process" OFF)
 option(SRF_USE_CONDA "Enables finding dependencies via conda instead of vcpkg. Note: This will disable vcpkg. All dependencies must be installed first in the conda environment" ON)
 option(SRF_USE_IWYU "Enable running include-what-you-use as part of the build process" OFF)
+option(SRF_WITH_CODECOV "Enable gcov code coverage" OFF)
 
-set(SRF_RAPIDS_VERSION "22.06" CACHE STRING "Which version of RAPIDs to build for. Sets default versions for RAPIDs CMake and RMM.")
+set(SRF_RAPIDS_VERSION "22.06" CACHE STRING "Which version of RAPIDS to build for. Sets default versions for RAPIDS CMake and RMM.")
 
 set(SRF_CACHE_DIR "${CMAKE_SOURCE_DIR}/.cache" CACHE PATH "Directory to contain all CPM and CCache data")
 mark_as_advanced(SRF_CACHE_DIR)
@@ -60,6 +61,7 @@ project(srf
   VERSION 22.06.00
   LANGUAGES C CXX
 )
+
 
 # Delay enabling CUDA until after we have determined our CXX compiler
 if(NOT DEFINED CMAKE_CUDA_HOST_COMPILER)
@@ -138,6 +140,44 @@ include(cmake/setup_compiler.cmake)
 
 # Setup IWYU if enabled
 include(cmake/setup_iwyu.cmake)
+
+# Include coverage tools if enabled
+if(SRF_WITH_CODECOV)
+  include(cmake/setup_codecov.cmake)
+
+  setup_target_for_coverage_lcov(
+      NAME lcov-report
+      EXCLUDE
+        ".cache/*"
+        "tests/*"
+        "python/srf/tests/*"
+        "python/srf/_pysrf/tests/*"
+  )
+
+  setup_target_for_coverage_gcovr_xml(
+      NAME gcovr-xml-report
+      EXCLUDE
+        ".cache/*"
+        "tests/*"
+        "python/srf/tests/*"
+        "python/srf/_pysrf/tests/*"
+  )
+
+  setup_target_for_coverage_gcovr_html(
+      NAME gcovr-html-report
+      EXCLUDE
+        ".cache/*"
+        "tests/*"
+        "python/srf/tests/*"
+        "python/srf/_pysrf/tests/*"
+  )
+
+  # Anaconda doesn't seem to have a fastcov package -- disable for now
+  # setup_target_for_coverage_fastcov(
+  #     NAME fastcov-report
+  #     EXCLUDE ".cache/*"
+  # )
+endif()
 
 ####################################
 # - Begin SRF Targets --------------
@@ -280,6 +320,10 @@ set_target_properties(libsrf PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 # Finally, set the install RPATH to include the stubs folder for CUDA::nvml. If thats made private, this can be removed
 set_target_properties(libsrf PROPERTIES INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:\$ORIGIN:${CMAKE_INSTALL_PREFIX}/lib/stubs")
 
+if(SRF_WITH_CODECOV)
+  append_coverage_compiler_flags_to_target(libsrf)
+endif()
+
 ###################################################################################################
 # - install targets -------------------------------------------------------------------------------
 rapids_cmake_install_lib_dir(lib_dir)
@@ -317,6 +361,7 @@ if (SRF_BUILD_BENCHMARKS)
 endif ()
 
 add_subdirectory(tools/nvrpc)
+
 
 ###################################################################################################
 # - install export --------------------------------------------------------------------------------
