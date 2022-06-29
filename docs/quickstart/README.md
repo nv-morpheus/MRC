@@ -10,13 +10,8 @@ The SRF Quick Start Guide (QSG) provides Python, C++, and Hybrid (Python and C++
   - [Installing Examples via Conda](#installing-examples-via-conda)
   - [Installing Examples via Source](#installing-examples-via-source)
 - [Python SRF Examples](#python-srf-examples)
-  - [Running the Examples](#running-the-examples)
 - [C++ SRF Examples](#c-srf-examples)
-  - [Setup](#setup)
-  - [Running the Examples](#running-the-examples-1)
 - [Hybrid (Python and C++) SRF Examples](#hybrid-python-and-c-srf-examples)
-  - [Setup](#setup-1)
-  - [Running the Examples](#running-the-examples-2)
 
 
 ## Environment Setup
@@ -25,7 +20,7 @@ To get started with the Quick Start Guide, it is necessary to install the requir
 
 ### Installing Examples via Conda
 
-If you've alredy followed the SRF library installation instructions in the [main project README](../../README.md), you've most likely already created a Conda environment from which either `srf` (Python) or `libsrf` (C++) was installed. In this case, you can install the QSG dependencies and build the examples with:
+If you've alredy followed the SRF library installation instructions in the [main project README](../../README.md#installation), you've most likely already created a Conda environment from which either `srf` (Python) or `libsrf` (C++) was installed. In this case, you can install the QSG dependencies and build the examples with:
 
 ```bash
 # Change directory to the quickstart root
@@ -65,7 +60,7 @@ If you encounter errors building the examples, this is mostly likely caused for 
 
 ### Installing Examples via Source
 
-A comprehensive overview of building SRF from source is provided in the [SRF README](../../README.md). To build the Quick Start Guide examples, simply run
+A comprehensive overview of building SRF from source is provided in the [SRF README](../../README.md#source-installation). To build the Quick Start Guide examples, simply run
 
 ```bash
 cd ${SRF_HOME}/docs/quickstart
@@ -90,9 +85,10 @@ For users interested in using SRF from Python, the QSG provides several examples
 
 Once installed, the examples can be run from any directory.
 
-### Running the Examples
+<!-- omit in toc -->
+### Running the Python SRF Examples
 
-Each example directory contains a `README.md` file with information about the example and a `run.py` python file. To run any of the examples, simply launch the `run.py` file from python:
+Each example directory contains a `README.md` file with information about the example and a `run.py` Python file. To run any of the examples, simply launch the `run.py` file from python:
 
 ```bash
 python docs/quickstart/python/srf_qs_python/**ex##_ExampleName**/run.py
@@ -114,7 +110,6 @@ optional arguments:
   --threads THREADS     The number of threads to use.
 ```
 
-
 ## C++ SRF Examples
 
 For users interested in using SRF with C++, the QSG provides several examples in the `docs/quickstart/cpp` directory. These examples are organized into separate folders each showing a different topic. Each example directory has a name with the format, `ex##_${EXAMPLE_NAME}`, where `XX` represents the example number (in increasing complexity) and `${EXAMPLE_NAME}` is the example name. Below is a list of the available examples and a brief description:
@@ -125,25 +120,8 @@ For users interested in using SRF with C++, the QSG provides several examples in
 | 01 | [node_library](./cpp/ex01_node_library/README.md) | Illustrates hopw to create SRF components in a reusable library |
 | 02 | [pipeline_with_library](./cpp/ex02_pipeline_with_library/README.md) | Demonstrates how to use the SRF components from Example #01 in a SRF Pipeline |
 
-### Setup
-
-Before starting with any of the examples, it's necessary to build the C++ examples.
-
-Note: This section can be skipped if `-DSRF_BUILD_DOCS:BOOL=ON` was included in the "Getting Started" -> "Build from Source" section.
-
-To build the C++ examples, run the following command:
-
-```bash
-# Change directory to the repo root
-cd ${SRF_HOME}/docs/quickstart
-
-# Compile the C++ examples
-./compile.sh
-```
-
-This will output all built C++ examples in the `${SRF_HOME}/docs/quickstart/build` folder which will be referred to as `BUILD_DIR`.
-
-### Running the Examples
+<!-- omit in toc -->
+### Running the C++ SRF Examples
 
 Each example directory contains a `README.md` file with information about the example. To run any of the examples, follow the instructions in the `README.md` for launching the example.
 
@@ -157,25 +135,8 @@ For users interested in using SRF in a hybrid environment with both C++ and Pyth
 | 01 | [wrap_nodes](./hybrid/srf_qs_hybrid/ex01_wrap_nodes/README.md) | How to run a pipeline in Python using sources, sinks, and nodes defined in C++ |
 | 02 | [mixed_execution](./hybrid/srf_qs_hybrid/ex02_mixed_execution/README.md) | How to run a pipeline with some nodes in python and others in C++ |
 
-### Setup
-
-Before starting with any of the examples, it's necessary to install the `srf_qs_hybrid` package into your current conda environment.
-
-Note: This section can be skipped if `-DSRF_BUILD_DOCS:BOOL=ON` was included in the "Getting Started" -> "Build from Source" section.
-
-To install the python `srf_qs_hybrid` package, run the following command:
-
-```bash
-# Change directory to the repo root
-cd ${SRF_HOME}/docs/quickstart
-
-# Compile the C++ examples
-./compile.sh
-```
-
-Once installed, the examples can be run from any directory.
-
-### Running the Examples
+<!-- omit in toc -->
+### Running the Hybrid SRF Examples
 
 Each example directory contains a `README.md` file with information about the example and a `run.py` python file. To run any of the examples, simply launch the `run.py` file from python:
 
