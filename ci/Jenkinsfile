@@ -38,7 +38,7 @@ pipeline {
         stage('Builds') {
             failFast true
             parallel {
-                stage('Build:linux:x86_64:gcc') {
+                stage('Build:linux:x86_64:gcc:release') {
                     options {
                         timeout(time: 1, unit: 'HOURS')
                     }
@@ -69,7 +69,7 @@ pipeline {
                         }
                     }
                 }
-                stage('Build:linux:x86_64:gcc:coverage') {
+                stage('Build:linux:x86_64:gcc:debug') {
                     options {
                         timeout(time: 1, unit: 'HOURS')
                     }
@@ -169,7 +169,7 @@ pipeline {
         stage('Tests') {
             failFast true
             parallel {
-                 stage('TestDebug') {
+                stage('TestDebug') {
                      options {
                          timeout(time: 1, unit: 'HOURS')
                      }
