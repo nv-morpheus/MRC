@@ -169,7 +169,39 @@ pipeline {
         stage('Tests') {
             failFast true
             parallel {
-                stage('Test') {
+                 stage('TestDebug') {
+                     options {
+                         timeout(time: 1, unit: 'HOURS')
+                     }
+                     agent {
+                         docker {
+                             image 'gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
+                             label 'cpu'
+                             args '--cap-add=sys_nice'
+                         }
+                     }
+                     environment {
+                         BUILD_TYPE = "Debug"
+                         HOME = "${WORKSPACE}"
+                     }
+                     steps {
+                         cleanWs(
+                             deleteDirs: true,
+                             externalDelete: 'sudo rm -rf %s'
+                         )
+                         checkout scm
+                         withCredentials([[
+                             $class: 'AmazonWebServicesCredentialsBinding',
+                             credentialsId: "aws-s3-gpuci",
+                             accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                             secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                         ]])
+                         {
+                             sh "${WORKSPACE}/ci/scripts/jenkins/test.sh"
+                         }
+                     }
+                }
+                stage('TestRelease') {
                     options {
                         timeout(time: 1, unit: 'HOURS')
                     }
@@ -181,6 +213,7 @@ pipeline {
                         }
                     }
                     environment {
+                        BUILD_TYPE = "Release"
                         HOME = "${WORKSPACE}"
                     }
                     steps {
@@ -201,39 +234,6 @@ pipeline {
                     }
                 }
                 stage('Benchmark') {
-                    options {
-                        timeout(time: 1, unit: 'HOURS')
-                    }
-                    agent {
-                        docker {
-                            image 'gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
-                            label 'cpu'
-                            args '--cap-add=sys_nice'
-                        }
-                    }
-                    environment {
-                        HOME = "${WORKSPACE}"
-                    }
-                    steps {
-                        cleanWs(
-                            deleteDirs: true,
-                            externalDelete: 'sudo rm -rf %s'
-                        )
-                        checkout scm
-                        withCredentials([[
-                            $class: 'AmazonWebServicesCredentialsBinding',
-                            credentialsId: "aws-s3-gpuci",
-                            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
-                        ]])
-                        {
-                            sh "${WORKSPACE}/ci/scripts/jenkins/pre_benchmark.sh"
-                            sh "${WORKSPACE}/ci/scripts/jenkins/benchmark.sh"
-                            sh "${WORKSPACE}/ci/scripts/jenkins/post_benchmark.sh"
-                        }
-                    }
-                }
-                stage('TestCoverage') {
                     options {
                         timeout(time: 1, unit: 'HOURS')
                     }
