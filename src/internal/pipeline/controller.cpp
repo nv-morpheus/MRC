@@ -18,21 +18,18 @@
 #include "internal/pipeline/controller.hpp"
 
 #include "internal/pipeline/types.hpp"
+
 #include "srf/channel/status.hpp"
 #include "srf/core/utils.hpp"
 #include "srf/runnable/context.hpp"
 #include "srf/segment/utils.hpp"
 #include "srf/types.hpp"
 
-#include "rxcpp/rx-includes.hpp"
-#include "rxcpp/rx-observer.hpp"
-#include "rxcpp/rx-operators.hpp"
-#include "rxcpp/rx-predef.hpp"
-#include "rxcpp/rx-subscriber.hpp"
-
 #include <glog/logging.h>
+#include <rxcpp/rx.hpp>
 
 #include <algorithm>
+#include <exception>
 #include <iterator>
 #include <map>
 #include <memory>
@@ -51,13 +48,21 @@ Controller::Controller(std::unique_ptr<Instance> pipeline) : m_pipeline(std::mov
 
 void Controller::on_data(ControlMessage&& message)
 {
-    auto& ctx = runnable::Context::get_runtime_context();
+    auto& ctx = srf::runnable::Context::get_runtime_context();
     DCHECK_EQ(ctx.size(), 1);
 
     switch (message.type)
     {
     case ControlMessageType::Update:
-        update(std::move(message.addresses));
+        try
+        {
+            update(std::move(message.addresses));
+        } catch (...)
+        {
+            LOG(ERROR) << "exception caught while performing update - this is fatal - issuing kill";
+            kill();
+            std::rethrow_exception(std::current_exception());
+        }
         break;
     case ControlMessageType::Stop:
         stop();

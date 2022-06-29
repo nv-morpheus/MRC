@@ -17,16 +17,16 @@
 
 #pragma once
 
-#include <srf/channel/ingress.hpp>
-#include <srf/exceptions/runtime_error.hpp>
-#include <srf/node/edge_builder.hpp>
-#include <srf/node/forward.hpp>
-#include <srf/node/sink_properties.hpp>
-#include <srf/node/source_properties.hpp>
-#include <srf/node/type_traits.hpp>
-#include <srf/runnable/launch_options.hpp>
-#include <srf/runnable/runnable.hpp>
-#include <srf/segment/forward.hpp>
+#include "srf/channel/ingress.hpp"
+#include "srf/exceptions/runtime_error.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/node/forward.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_properties.hpp"
+#include "srf/node/type_traits.hpp"
+#include "srf/runnable/launch_options.hpp"
+#include "srf/runnable/runnable.hpp"
+#include "srf/segment/forward.hpp"
 
 #include <memory>
 #include <string>

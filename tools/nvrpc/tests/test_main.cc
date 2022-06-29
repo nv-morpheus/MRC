@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <srf/core/logging.hpp>
+#include "srf/core/logging.hpp"
 
 #include <gflags/gflags.h>  // for ParseCommandLineFlags
 #include <gtest/gtest.h>

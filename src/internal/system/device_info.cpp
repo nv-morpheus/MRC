@@ -17,12 +17,11 @@
 
 #include "internal/system/device_info.hpp"
 
-#include <srf/cuda/common.hpp>  // IWYU pragma: associated
+#include "srf/cuda/common.hpp"  // IWYU pragma: associated
 
 #include <cuda_runtime.h>
-#include <nvml.h>
-
 #include <glog/logging.h>
+#include <nvml.h>
 
 #include <array>
 #include <cstddef>

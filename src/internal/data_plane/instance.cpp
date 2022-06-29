@@ -19,9 +19,10 @@
 
 #include "internal/data_plane/client.hpp"
 #include "internal/data_plane/server.hpp"
-
-#include <srf/runnable/launch_control.hpp>
 #include "internal/ucx/context.hpp"
+
+#include "srf/cuda/common.hpp"
+#include "srf/runnable/launch_control.hpp"
 
 #include <glog/logging.h>
 
@@ -29,36 +30,20 @@
 
 namespace srf::internal::data_plane {
 
-Instance::Instance(std::unique_ptr<resources::PartitionResources> resources) : m_resources(std::move(resources)) {}
-// m_context(std::make_shared<ucx::Context>()),
-// m_client(std::make_shared<Client>(m_context)),
-// m_server(std::make_shared<Server>(m_context))
-// {}
+Instance::Instance(std::shared_ptr<resources::PartitionResources> resources) : m_resources(std::move(resources)) {}
 
 Instance::~Instance()
 {
     call_in_destructor();
 }
 
-Client& Instance::comms_manager() const
+Client& Instance::client() const
 {
     CHECK(m_client);
     return *m_client;
 }
 
-Server& Instance::events_manager() const
-{
-    CHECK(m_server);
-    return *m_server;
-}
-
-Service& Instance::iclient()
-{
-    CHECK(m_client);
-    return *m_client;
-}
-
-Service& Instance::iserver()
+Server& Instance::server() const
 {
     CHECK(m_server);
     return *m_server;
@@ -66,32 +51,53 @@ Service& Instance::iserver()
 
 void Instance::do_service_start()
 {
-    // iclient().service_start(launch_control);
-    // iserver().service_start(launch_control);
+    m_resources->host()
+        .main()
+        .enqueue([this] {
+            // if the PartitionResource has a GPU, ensure the CUDA context on the main thread is active
+            // before the ucx context is constructed
+            if (m_resources->device())
+            {
+                auto device = m_resources->device()->get();
+                device.activate();
+
+                void* addr = nullptr;
+                SRF_CHECK_CUDA(cudaMalloc(&addr, 1024));
+                SRF_CHECK_CUDA(cudaFree(addr));
+            }
+
+            m_context = std::make_shared<ucx::Context>();
+            m_server  = std::make_unique<Server>(m_context, m_resources);
+            m_client  = std::make_unique<Client>(m_context, m_resources);
+
+            m_server->service_start();
+            m_client->service_start();
+        })
+        .get();
 }
 
 void Instance::do_service_await_live()
 {
-    iclient().service_await_live();
-    iserver().service_await_live();
+    client().service_await_live();
+    server().service_await_live();
 }
 
 void Instance::do_service_stop()
 {
-    iclient().service_stop();
-    iserver().service_stop();
+    client().service_stop();
+    server().service_stop();
 }
 
 void Instance::do_service_kill()
 {
-    iclient().service_kill();
-    iserver().service_kill();
+    client().service_kill();
+    server().service_kill();
 }
 
 void Instance::do_service_await_join()
 {
-    iclient().service_await_join();
-    iserver().service_await_join();
+    client().service_await_join();
+    server().service_await_join();
 }
 
 }  // namespace srf::internal::data_plane

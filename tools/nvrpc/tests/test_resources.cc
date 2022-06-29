@@ -17,8 +17,12 @@
 
 #include "test_resources.h"
 
+#include <nvrpc/life_cycle_streaming.h>
+#include <nvrpc/thread_pool.h>
+
 #include <glog/logging.h>
 
+#include <atomic>
 #include <chrono>   // for microseconds
 #include <future>   // for m_ThreadPool.enqueue
 #include <ostream>  // for logging ostream<<

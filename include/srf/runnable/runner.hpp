@@ -17,17 +17,19 @@
 
 #pragma once
 
-#include <srf/runnable/context.hpp>
-#include <srf/runnable/engine.hpp>
-#include <srf/runnable/fiber_context.hpp>
-#include <srf/runnable/forward.hpp>
-#include <srf/runnable/thread_context.hpp>
-#include <srf/runnable/type_traits.hpp>
-#include <srf/types.hpp>
-#include <srf/utils/macros.hpp>
+#include "srf/runnable/context.hpp"
+#include "srf/runnable/engine.hpp"
+#include "srf/runnable/fiber_context.hpp"
+#include "srf/runnable/forward.hpp"
+#include "srf/runnable/thread_context.hpp"  // IWYU pragma: keep
+#include "srf/runnable/type_traits.hpp"
+#include "srf/runnable/types.hpp"
+#include "srf/types.hpp"
+#include "srf/utils/macros.hpp"
 
 #include <glog/logging.h>
 
+#include <atomic>
 #include <cstddef>
 #include <functional>
 #include <memory>

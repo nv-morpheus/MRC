@@ -27,7 +27,7 @@ function(find_and_configure_rmm version)
   #     INSTALL_EXPORT_SET  ${PROJECT_NAME}-core-exports
   # )
 
-  # Allow setting version to a variable. If so, evaluate that here. Allows for dependent versions, i.e. RMM_VERSION=${RAPIDS_VERSION}
+  # Allow setting version to a variable. If so, evaluate that here. Allows for dependent versions, i.e. RMM_VERSION=${SRF_RAPIDS_VERSION}
   if ("${version}" MATCHES [=[^\${(.+)}$]=])
     set(version "${${CMAKE_MATCH_1}}")
   endif()

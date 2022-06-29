@@ -18,7 +18,6 @@
 #pragma once
 
 #include <cuda_runtime.h>
-
 #include <glog/logging.h>
 
 #include <ostream>  // for logging
@@ -73,25 +72,25 @@ void __check_cuda_errors(T status, const std::string& methodName, const std::str
 
 #if (!defined(NDEBUG) || SRF_CUDA_FORCE_CHECK_ERRORS) && SRF_CUDA_CHECK_ERRORS
 
-// Checks the return value of a cuda function
-#define SRF_CHECK_CUDA(code)                                  \
-    {                                                         \
-        __check_cuda_errors(code, #code, __FILE__, __LINE__); \
-    }
+    // Checks the return value of a cuda function
+    #define SRF_CHECK_CUDA(code)                                  \
+        {                                                         \
+            __check_cuda_errors(code, #code, __FILE__, __LINE__); \
+        }
 
-// Syncronizes the current device and checks the last error via cudaGetLastError()
-#define SRF_CHECK_CUDA_LAST_ERROR()        \
-    {                                      \
-        cudaThreadSynchronize();           \
-        SRF_CHECK_CUDA(cudaGetLastError()) \
-    }
+    // Syncronizes the current device and checks the last error via cudaGetLastError()
+    #define SRF_CHECK_CUDA_LAST_ERROR()        \
+        {                                      \
+            cudaThreadSynchronize();           \
+            SRF_CHECK_CUDA(cudaGetLastError()) \
+        }
 
 #else
 
-// Checks the return value of a cuda function
-#define SRF_CHECK_CUDA(code) code;
+    // Checks the return value of a cuda function
+    #define SRF_CHECK_CUDA(code) code;
 
-// Syncronizes the current device and checks the last error via cudaGetLastError()
-#define SRF_CHECK_CUDA_LAST_ERROR()
+    // Syncronizes the current device and checks the last error via cudaGetLastError()
+    #define SRF_CHECK_CUDA_LAST_ERROR()
 
 #endif

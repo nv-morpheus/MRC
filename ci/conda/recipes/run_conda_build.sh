@@ -15,6 +15,13 @@
 
 set -e
 
+NUMARGS=$#
+ARGS=$*
+
+function hasArg {
+    (( ${NUMARGS} != 0 )) && (echo " ${ARGS} " | grep -q " $1 ")
+}
+
 function get_version() {
    echo "$(git describe --tags | grep -o -E '^([^-]*?)')"
 }
@@ -55,6 +62,31 @@ export CMAKE_CUDA_COMPILER_LAUNCHER="ccache"
 
 # Holds the arguments in an array to allow for complex json objects
 CONDA_ARGS_ARRAY=()
+
+if hasArg upload; then
+   # Set the conda token
+   CONDA_TOKEN=${CONDA_TOKEN:?"CONDA_TOKEN must be set to allow upload"}
+
+   # Get the label to apply to the package
+   CONDA_PKG_LABEL=${CONDA_PKG_LABEL:-"dev"}
+
+   # Ensure we have anaconda-client installed for upload
+   if [[ -z "$(conda list | grep anaconda-client)" ]]; then
+      echo -e "${y}anaconda-client not found and is required for up. Installing...${x}"
+
+      mamba install -y anaconda-client
+   fi
+
+   echo -e "${y}Uploading SRF Conda Package${x}"
+
+   # Add the conda token needed for uploading
+   CONDA_ARGS_ARRAY+=("--token" "${CONDA_TOKEN}")
+
+   if [[ -n "${CONDA_PKG_LABEL}" ]]; then
+      CONDA_ARGS_ARRAY+=("--label" "${CONDA_PKG_LABEL}")
+      echo -e "${y}   Using label: ${CONDA_PKG_LABEL}${x}"
+   fi
+fi
 
 # Some default args
 CONDA_ARGS_ARRAY+=("--use-local")

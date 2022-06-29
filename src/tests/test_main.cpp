@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <srf/core/logging.hpp>
+#include "srf/core/logging.hpp"
 
 #include <gflags/gflags.h>  // for ParseCommandLineFlags
 #include <glog/logging.h>
@@ -24,7 +24,7 @@
 #include <stdexcept>
 
 // NOLINTNEXTLINE(readability-identifier-naming)
-void TestFailuresThrowExceptions()
+__attribute__((noreturn)) void TestFailuresThrowExceptions()
 {
     throw std::runtime_error("exception rather than std::abort");
 }

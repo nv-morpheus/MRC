@@ -15,9 +15,10 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "nvrpc")
 
+# Keep all source files sorted!!!
 add_library(nvrpc
-  src/server.cc
   src/executor.cc
+  src/server.cc
 )
 
 add_library(nvrpc-client

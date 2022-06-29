@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <srf/node/operators/operator.hpp>
+#include "srf/node/operators/operator.hpp"
 #include "srf/node/source_channel.hpp"
 
 namespace srf::node {

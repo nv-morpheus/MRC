@@ -17,8 +17,8 @@
 
 // #include "internal/control_plane/server_resources.hpp"
 
-// #include <srf/protos/architect.grpc.pb.h>  // IWYU pragma: keep
-// #include <srf/types.hpp>                   // for MachineID, InstanceID
+// #include "srf/protos/architect.grpc.pb.h"  // IWYU pragma: keep
+// #include "srf/types.hpp"                   // for MachineID, InstanceID
 
 // #include <nvrpc/life_cycle_streaming.h>  // StreamingContext is an alias for BaseContext<LifeCycleStreaming>
 // #include <nvrpc/thread_pool.h>

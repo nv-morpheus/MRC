@@ -84,7 +84,7 @@ include(deps/Configure_hwloc)
 
 # NVIDIA RAPIDS RMM
 # =================
-set(RMM_VERSION "\${RAPIDS_VERSION}" CACHE STRING "Version of RMM to use. Defaults to \${RAPIDS_VERSION}")
+set(RMM_VERSION "\${SRF_RAPIDS_VERSION}" CACHE STRING "Version of RMM to use. Defaults to \${SRF_RAPIDS_VERSION}")
 include(deps/Configure_RMM)
 
 # gflags
@@ -147,23 +147,6 @@ include(deps/Configure_prometheus)
 # =========
 set(LIBCUDACXX_VERSION "1.6.0" CACHE STRING "Version of libcudacxx to use")
 include(deps/Configure_libcudacxx)
-
-# matx
-# ====
-if(SRF_ENABLE_MATX)
-  set(MATX_VERSION "0.1.0" CACHE STRING "Version of MatX to use")
-  include(deps/Configure_matx)
-endif()
-
-# xtensor
-# =======
-if(SRF_ENABLE_XTENSOR)
-  set(XTL_VERSION "0.7.3" CACHE STRING "Version of xtensor-stack/xtl to use")
-  include(deps/Configure_xtl)
-
-  set(XTENSOR_VERSION "0.24.0" CACHE STRING "Version of xtensor to use")
-  include(deps/Configure_xtensor)
-endif()
 
 if(SRF_BUILD_BENCHMARKS)
   # google benchmark

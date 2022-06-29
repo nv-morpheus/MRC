@@ -18,31 +18,31 @@
 #include "internal/data_plane/server.hpp"
 
 #include "internal/data_plane/tags.hpp"
-
-#include <srf/channel/status.hpp>
-#include <srf/memory/block.hpp>
-#include <srf/memory/memory_kind.hpp>
-#include <srf/node/edge_builder.hpp>
-#include <srf/node/operators/router.hpp>
-#include <srf/node/source_channel.hpp>
-#include <srf/runnable/context.hpp>
-#include <srf/runnable/launch_control.hpp>
-#include <srf/runnable/launch_options.hpp>
-#include <srf/runnable/launcher.hpp>
-#include <srf/runnable/runner.hpp>
-#include <srf/types.hpp>
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include <glog/logging.h>
-#include <ucp/api/ucp.h>
-#include <ucs/type/status.h>
+#include "srf/channel/status.hpp"
+#include "srf/memory/block.hpp"
+#include "srf/memory/memory_kind.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/node/operators/router.hpp"
+#include "srf/node/source_channel.hpp"
+#include "srf/runnable/context.hpp"
+#include "srf/runnable/launch_control.hpp"
+#include "srf/runnable/launch_options.hpp"
+#include "srf/runnable/launcher.hpp"
+#include "srf/runnable/runner.hpp"
+#include "srf/types.hpp"
+
 #include <boost/fiber/operations.hpp>
+#include <glog/logging.h>
 #include <rxcpp/rx-observer.hpp>
 #include <rxcpp/rx-predef.hpp>
 #include <rxcpp/rx-subscriber.hpp>
 #include <rxcpp/rx.hpp>  // IWYU pragma: keep
+#include <ucp/api/ucp.h>
+#include <ucs/type/status.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -104,9 +104,10 @@ void Server::do_service_start()
     // all network runnables use the `srf_network` engine factory
     DVLOG(10) << "launch network event mananger progress engine";
     LOG(FATAL) << "get launch control from partition resources";
-    //  m_progress_engine =
-    //        launch_control.prepare_launcher(runnable::LaunchOptions("srf_network"),
-    //        std::move(progress_engine))->ignition();
+    m_progress_engine = m_resources->host()
+                            .launch_control()
+                            .prepare_launcher(runnable::LaunchOptions("srf_network"), std::move(progress_engine))
+                            ->ignition();
 }
 
 void Server::do_service_await_live()

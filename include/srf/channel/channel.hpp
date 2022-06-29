@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include <srf/channel/egress.hpp>
-#include <srf/channel/ingress.hpp>
-#include <srf/channel/status.hpp>
-#include <srf/channel/types.hpp>
-#include <srf/core/watcher.hpp>
+#include "srf/channel/egress.hpp"
+#include "srf/channel/ingress.hpp"
+#include "srf/channel/status.hpp"
+#include "srf/channel/types.hpp"
+#include "srf/core/watcher.hpp"
 
 #include <cstddef>
 

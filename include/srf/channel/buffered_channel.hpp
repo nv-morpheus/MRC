@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <srf/channel/channel.hpp>
+#include "srf/channel/channel.hpp"
 
 #include <boost/fiber/buffered_channel.hpp>
 #include <boost/fiber/channel_op_status.hpp>

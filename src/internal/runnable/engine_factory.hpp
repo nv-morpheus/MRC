@@ -17,18 +17,18 @@
 
 #pragma once
 
-#include <srf/runnable/engine_factory.hpp>
-
 #include "internal/runnable/engines.hpp"
-#include "internal/system/forward.hpp"
+#include "internal/system/resources.hpp"
+
 #include "srf/core/bitmap.hpp"
+#include "srf/runnable/engine_factory.hpp"
 #include "srf/runnable/types.hpp"
 
 #include <memory>
 
 namespace srf::internal::runnable {
 
-std::shared_ptr<::srf::runnable::EngineFactory> make_engine_factory(std::shared_ptr<system::System> system,
+std::shared_ptr<::srf::runnable::EngineFactory> make_engine_factory(const system::Resources& system,
                                                                     EngineType engine_type,
                                                                     const CpuSet& cpu_set,
                                                                     bool reusable);

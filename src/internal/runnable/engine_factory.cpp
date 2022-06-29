@@ -20,8 +20,10 @@
 #include "internal/runnable/fiber_engines.hpp"
 #include "internal/runnable/thread_engines.hpp"
 #include "internal/system/fiber_pool.hpp"
-#include "internal/system/system.hpp"
+#include "internal/system/resources.hpp"
+
 #include "srf/constants.hpp"
+#include "srf/core/bitmap.hpp"
 #include "srf/core/task_queue.hpp"
 #include "srf/exceptions/runtime_error.hpp"
 #include "srf/runnable/engine.hpp"
@@ -32,6 +34,7 @@
 #include <glog/logging.h>
 
 #include <cstddef>
+#include <functional>
 #include <ostream>
 #include <utility>
 #include <vector>
@@ -61,7 +64,7 @@ class FiberEngineFactory : public ::srf::runnable::EngineFactory
     }
 
   private:
-    virtual std::vector<std::shared_ptr<core::FiberTaskQueue>> get_next_n_queues(std::size_t count) = 0;
+    virtual std::vector<std::reference_wrapper<core::FiberTaskQueue>> get_next_n_queues(std::size_t count) = 0;
 };
 
 /**
@@ -70,19 +73,19 @@ class FiberEngineFactory : public ::srf::runnable::EngineFactory
 class ReusableFiberEngineFactory final : public FiberEngineFactory
 {
   public:
-    ReusableFiberEngineFactory(std::shared_ptr<system::System> system, const CpuSet& cpu_set) :
-      m_pool(system->make_fiber_pool(cpu_set))
+    ReusableFiberEngineFactory(const system::Resources& system_resources, const CpuSet& cpu_set) :
+      m_pool(system_resources.make_fiber_pool(cpu_set))
     {}
     ~ReusableFiberEngineFactory() final = default;
 
-    std::vector<std::shared_ptr<core::FiberTaskQueue>> get_next_n_queues(std::size_t count) final
+    std::vector<std::reference_wrapper<core::FiberTaskQueue>> get_next_n_queues(std::size_t count) final
     {
-        DCHECK_LE(count, m_pool->thread_count());
-        std::vector<std::shared_ptr<core::FiberTaskQueue>> queues;
+        DCHECK_LE(count, m_pool.thread_count());
+        std::vector<std::reference_wrapper<core::FiberTaskQueue>> queues;
 
         for (int i = 0; i < count; ++i)
         {
-            queues.push_back(m_pool->task_queue_shared(next()));
+            queues.emplace_back(m_pool.task_queue(next()));
         }
 
         return std::move(queues);
@@ -92,14 +95,14 @@ class ReusableFiberEngineFactory final : public FiberEngineFactory
     std::size_t next()
     {
         auto n = m_offset++;
-        if (m_offset == m_pool->thread_count())
+        if (m_offset == m_pool.thread_count())
         {
             m_offset = 0;
         }
         return n;
     }
 
-    std::shared_ptr<system::FiberPool> m_pool;
+    system::FiberPool m_pool;
     std::size_t m_offset{0};
 };
 
@@ -109,49 +112,49 @@ class ReusableFiberEngineFactory final : public FiberEngineFactory
 class SingleUseFiberEngineFactory final : public FiberEngineFactory
 {
   public:
-    SingleUseFiberEngineFactory(std::shared_ptr<system::System> system, const CpuSet& cpu_set) :
-      m_pool(system->make_fiber_pool(cpu_set))
+    SingleUseFiberEngineFactory(const system::Resources& system_resources, const CpuSet& cpu_set) :
+      m_pool(system_resources.make_fiber_pool(cpu_set))
     {}
     ~SingleUseFiberEngineFactory() final = default;
 
   protected:
-    std::vector<std::shared_ptr<core::FiberTaskQueue>> get_next_n_queues(std::size_t count) final
+    std::vector<std::reference_wrapper<core::FiberTaskQueue>> get_next_n_queues(std::size_t count) final
     {
-        if (m_offset + count > m_pool->thread_count())
+        if (m_offset + count > m_pool.thread_count())
         {
             LOG(ERROR) << "more dedicated threads/cores than available";
             throw exceptions::SrfRuntimeError("more dedicated threads/cores than available");
         }
 
-        std::vector<std::shared_ptr<core::FiberTaskQueue>> queues;
+        std::vector<std::reference_wrapper<core::FiberTaskQueue>> queues;
 
         for (int i = 0; i < count; ++i)
         {
-            queues.push_back(m_pool->task_queue_shared(m_offset + i));
+            queues.emplace_back(m_pool.task_queue(m_offset + i));
         }
 
         return std::move(queues);
     }
 
   private:
-    std::shared_ptr<system::FiberPool> m_pool;
+    system::FiberPool m_pool;
     std::size_t m_offset{0};
 };
+
 class ThreadEngineFactory : public ::srf::runnable::EngineFactory
 {
   public:
-    ThreadEngineFactory(std::shared_ptr<system::System> system, CpuSet cpu_set) :
-      m_system(std::move(system)),
+    ThreadEngineFactory(const system::Resources& system_resources, CpuSet cpu_set) :
+      m_system_resources(system_resources),
       m_cpu_set(std::move(cpu_set))
     {
         CHECK(!m_cpu_set.empty());
-        CHECK(m_system);
     }
 
     std::shared_ptr<::srf::runnable::Engines> build_engines(const LaunchOptions& launch_options) final
     {
         auto cpu_set = get_next_n_cpus(launch_options.pe_count);
-        return std::make_shared<ThreadEngines>(launch_options, std::move(cpu_set), m_system);
+        return std::make_shared<ThreadEngines>(launch_options, std::move(cpu_set), m_system_resources);
     }
 
   protected:
@@ -169,7 +172,7 @@ class ThreadEngineFactory : public ::srf::runnable::EngineFactory
     virtual CpuSet get_next_n_cpus(std::size_t count) = 0;
 
     CpuSet m_cpu_set;
-    std::shared_ptr<system::System> m_system;
+    const system::Resources& m_system_resources;
 };
 
 /**
@@ -178,8 +181,8 @@ class ThreadEngineFactory : public ::srf::runnable::EngineFactory
 class ReusableThreadEngineFactory final : public ThreadEngineFactory
 {
   public:
-    ReusableThreadEngineFactory(std::shared_ptr<system::System> system, const CpuSet& cpu_set) :
-      ThreadEngineFactory(std::move(system), cpu_set)
+    ReusableThreadEngineFactory(const system::Resources& system_resources, const CpuSet& cpu_set) :
+      ThreadEngineFactory(system_resources, cpu_set)
     {}
 
   protected:
@@ -205,8 +208,8 @@ class ReusableThreadEngineFactory final : public ThreadEngineFactory
 class SingleUseThreadEngineFactory final : public ThreadEngineFactory
 {
   public:
-    SingleUseThreadEngineFactory(std::shared_ptr<system::System> system, const CpuSet& cpu_set) :
-      ThreadEngineFactory(std::move(system), cpu_set)
+    SingleUseThreadEngineFactory(const system::Resources& system_resources, const CpuSet& cpu_set) :
+      ThreadEngineFactory(system_resources, cpu_set)
     {}
 
   protected:
@@ -230,7 +233,7 @@ class SingleUseThreadEngineFactory final : public ThreadEngineFactory
     int m_prev_cpu_idx = -1;
 };
 
-std::shared_ptr<::srf::runnable::EngineFactory> make_engine_factory(std::shared_ptr<system::System> system,
+std::shared_ptr<::srf::runnable::EngineFactory> make_engine_factory(const system::Resources& system_resources,
                                                                     EngineType engine_type,
                                                                     const CpuSet& cpu_set,
                                                                     bool reusable)
@@ -239,18 +242,18 @@ std::shared_ptr<::srf::runnable::EngineFactory> make_engine_factory(std::shared_
     {
         if (reusable)
         {
-            return std::make_shared<ReusableFiberEngineFactory>(system, cpu_set);
+            return std::make_shared<ReusableFiberEngineFactory>(system_resources, cpu_set);
         }
-        return std::make_shared<SingleUseFiberEngineFactory>(system, cpu_set);
+        return std::make_shared<SingleUseFiberEngineFactory>(system_resources, cpu_set);
     }
 
     if (engine_type == EngineType::Thread)
     {
         if (reusable)
         {
-            return std::make_shared<ReusableThreadEngineFactory>(std::move(system), cpu_set);
+            return std::make_shared<ReusableThreadEngineFactory>(system_resources, cpu_set);
         }
-        return std::make_shared<SingleUseThreadEngineFactory>(std::move(system), cpu_set);
+        return std::make_shared<SingleUseThreadEngineFactory>(system_resources, cpu_set);
     }
 
     LOG(FATAL) << "unsupported engine type";
