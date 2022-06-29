@@ -37,13 +37,30 @@ Resources::Resources(runnable::Resources& _runnable_resources,
     m_ucx.network_task_queue()
         .enqueue([this] {
             // initialize data plane services - server / client
-            m_server = std::make_unique<data_plane::Server>(static_cast<resources::PartitionResourceBase&>(*this),
-                                                            m_ucx.m_worker_server);
+            m_server =
+                std::make_unique<data_plane::Server>(static_cast<resources::PartitionResourceBase&>(*this), m_ucx);
         })
         .get();
+
+    // todo(ryan) - make this object a service, then trigger start to server and client in the object's start method
+    // all network services can then be started/stopped/etc from the mananger
+    m_server->service_start();
 }
 
-Resources::~Resources() = default;
+Resources::~Resources()
+{
+    m_ucx.network_task_queue()
+        .enqueue([this] {
+            // we need to cancel all outstanding
+        })
+        .get();
+
+    if (m_server)
+    {
+        m_server->service_stop();
+        m_server->service_await_join();
+    }
+}
 
 const ucx::RegistrationCache& Resources::registration_cache() const
 {

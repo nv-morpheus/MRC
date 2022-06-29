@@ -87,4 +87,9 @@ const RegistrationCache& Resources::registration_cache() const
     CHECK(m_registration_cache);
     return *m_registration_cache;
 }
+Worker& Resources::server_worker()
+{
+    CHECK(m_worker_server);
+    return *m_worker_server;
+}
 }  // namespace srf::internal::ucx

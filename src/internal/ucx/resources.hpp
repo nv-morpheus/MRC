@@ -49,6 +49,9 @@ class Resources final : private resources::PartitionResourceBase
     using resources::PartitionResourceBase::partition;
 
     srf::core::FiberTaskQueue& network_task_queue();
+
+    Worker& server_worker();
+
     const RegistrationCache& registration_cache() const;
 
     void add_registration_cache_to_builder(RegistrationCallbackBuilder& builder);

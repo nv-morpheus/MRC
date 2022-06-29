@@ -20,6 +20,7 @@
 #include "internal/data_plane/tags.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/context.hpp"
+#include "internal/ucx/resources.hpp"
 #include "internal/ucx/worker.hpp"
 
 #include "srf/channel/status.hpp"
@@ -42,6 +43,7 @@
 #include <rxcpp/rx-subscriber.hpp>
 #include <rxcpp/rx.hpp>  // IWYU pragma: keep
 #include <ucp/api/ucp.h>
+#include <ucp/api/ucp_def.h>
 #include <ucs/type/status.h>
 
 #include <cstddef>
@@ -83,12 +85,53 @@ void recv_completion_handler(void* request, ucs_status_t status, const ucp_tag_r
     ucp_request_free(request);
 }
 
+static void pre_post_recv_issue(detail::PrePostedRecvInfo* info);
+
+void pre_posted_recv_callback(void* request, ucs_status_t status, const ucp_tag_recv_info_t* msg_info, void* user_data)
+{
+    DCHECK(user_data);
+    auto* info = static_cast<detail::PrePostedRecvInfo*>(user_data);
+    if (status == UCS_OK)  // cpp20 [[likely]]
+    {
+        // grab tag and free request - not sure if there will be a race condition on msg_info
+        auto tag = msg_info->sender_tag;
+        ucp_request_free(request);
+
+        // repost recv
+        pre_post_recv_issue(info);
+
+        // write tag to channel
+        info->channel->await_write(std::move(tag));
+    }
+    else if (status == UCS_ERR_CANCELED)
+    {
+        ucp_request_free(info->request);
+        info->request = nullptr;  // this ensures than cancel will not be called again if a kill is issued after stop
+    }
+    else
+    {
+        LOG(FATAL) << "data_plane: pre_posted_recv_callback failed with status: " << ucs_status_string(status);
+    }
+}
+
+void pre_post_recv_issue(detail::PrePostedRecvInfo* info)
+{
+    ucp_request_param_t params;
+    params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
+    params.cb.recv      = pre_posted_recv_callback;
+    params.user_data    = info;
+
+    info->request = ucp_tag_recv_nbx(info->worker, nullptr, 0, 0, 0, &params);
+    CHECK(info->request);
+    CHECK(!UCS_PTR_IS_ERR(info->request));
+}
+
 }  // namespace
 
 class DataPlaneServerWorker final : public node::GenericSource<network_event_t>
 {
   public:
-    DataPlaneServerWorker(Handle<ucx::Worker> worker);
+    DataPlaneServerWorker(ucx::Worker& worker);
 
   private:
     void data_source(rxcpp::subscriber<network_event_t>& s) final;
@@ -97,7 +140,7 @@ class DataPlaneServerWorker final : public node::GenericSource<network_event_t>
                        ucp_tag_message_h msg,
                        const ucp_tag_recv_info_t& msg_info);
 
-    Handle<ucx::Worker> m_worker;
+    ucx::Worker& m_worker;
 
     // modify these to adjust the tag matching
     // 0/0 is the equivalent of match all tags
@@ -105,9 +148,9 @@ class DataPlaneServerWorker final : public node::GenericSource<network_event_t>
     ucp_tag_t m_tag_mask{0};
 };
 
-Server::Server(resources::PartitionResourceBase& provider, std::shared_ptr<ucx::Worker> worker) :
+Server::Server(resources::PartitionResourceBase& provider, ucx::Resources& ucx) :
   resources::PartitionResourceBase(provider),
-  m_worker(std::move(worker))
+  m_ucx(ucx)
 {}
 
 Server::~Server()
@@ -117,18 +160,40 @@ Server::~Server()
 
 void Server::do_service_start()
 {
-    m_deserialize_source = std::make_shared<node::Router<PortAddress, srf::memory::buffer_view>>();
-    m_rd_source          = std::make_unique<node::SourceChannelWriteable<ucp_tag_t>>();
+    m_ucx.network_task_queue()
+        .enqueue([this] {
+            // source channel ucx tag recvs masked with the RemoteDescriptor tag
+            // this recv has no recv payload, we simply write the tag to the channel
+            m_rd_source = std::make_unique<node::SourceChannelWriteable<ucp_tag_t>>();
 
-    auto progress_engine = std::make_unique<DataPlaneServerWorker>(m_worker);
-    node::make_edge(*progress_engine, *m_deserialize_source);
+            // pre-post recv for remote descriptors and remote promise/future
+            m_pre_posted_recv_info.resize(m_pre_posted_recv_count);
+            for (auto& info : m_pre_posted_recv_info)
+            {
+                info.worker  = m_ucx.server_worker().handle();
+                info.channel = m_rd_source.get();
 
-    // all network runnables use the `srf_network` engine factory
-    DVLOG(10) << "launch network event mananger progress engine";
-    m_progress_engine = runnable()
-                            .launch_control()
-                            .prepare_launcher(srf::runnable::LaunchOptions("srf_network"), std::move(progress_engine))
-                            ->ignition();
+                pre_post_recv_issue(&info);
+            }
+
+            // source for ucx tag recvs with data
+            auto progress_engine = std::make_unique<DataPlaneServerWorker>(m_ucx.server_worker());
+
+            // router for ucx tag recvs with data
+            m_deserialize_source = std::make_shared<node::Router<PortAddress, srf::memory::buffer_view>>();
+
+            // for edge between source and router - on channel operator driven by the source thread
+            node::make_edge(*progress_engine, *m_deserialize_source);
+
+            // all network runnables use the `srf_network` engine factory
+            DVLOG(10) << "launch network event mananger progress engine";
+            m_progress_engine =
+                runnable()
+                    .launch_control()
+                    .prepare_launcher(srf::runnable::LaunchOptions("srf_network"), std::move(progress_engine))
+                    ->ignition();
+        })
+        .get();
 }
 
 void Server::do_service_await_live()
@@ -138,6 +203,30 @@ void Server::do_service_await_live()
 
 void Server::do_service_stop()
 {
+    DVLOG(10) << "data_plane server: stop issued";
+
+    m_ucx.network_task_queue()
+        .enqueue([this] {
+            // we need to cancel all preposted recvs before shutting down the progress engine
+            DVLOG(10) << "data_plane server: cancelling all outstanding pre-posted recvs";
+            for (auto& info : m_pre_posted_recv_info)
+            {
+                if (info.request != nullptr)
+                {
+                    ucp_request_cancel(m_ucx.server_worker().handle(), info.request);
+                }
+
+                // we are on the network task queue thread, so we can pump the progress engine until
+                // the cancelled request is complete
+                while (info.request != nullptr)
+                {
+                    m_ucx.server_worker().progress();
+                }
+            }
+        })
+        .get();
+
+    DVLOG(10) << "data_plane server: issuing stop to progress engine runnable";
     m_progress_engine->stop();
 }
 
@@ -157,7 +246,7 @@ void Server::do_service_await_join()
 
 ucx::WorkerAddress Server::worker_address() const
 {
-    return m_worker->address();
+    return m_ucx.server_worker().address();
 }
 
 node::Router<PortAddress, srf::memory::buffer_view>& Server::deserialize_source()
@@ -168,7 +257,7 @@ node::Router<PortAddress, srf::memory::buffer_view>& Server::deserialize_source(
 
 // NetworkEventProgressEngine
 
-DataPlaneServerWorker::DataPlaneServerWorker(Handle<ucx::Worker> worker) : m_worker(std::move(worker)) {}
+DataPlaneServerWorker::DataPlaneServerWorker(ucx::Worker& worker) : m_worker(worker) {}
 
 void DataPlaneServerWorker::data_source(rxcpp::subscriber<network_event_t>& s)
 {
@@ -179,20 +268,25 @@ void DataPlaneServerWorker::data_source(rxcpp::subscriber<network_event_t>& s)
     // set static variable for callbacks
     static_subscriber = &s;
 
+    DVLOG(10) << "startin data plane server progress engine loop";
+
     while (true)
     {
         for (;;)
         {
-            msg = ucp_tag_probe_nb(m_worker->handle(), m_tag, m_tag_mask, 1, &msg_info);
+            // probe disabled - this loop now only drive the worker progress method
+
+            // msg = ucp_tag_probe_nb(m_worker->handle(), m_tag, m_tag_mask, 1, &msg_info);
             if (!s.is_subscribed())
             {
+                DVLOG(10) << "exiting data plane server progress engine loop";
                 return;
             }
-            if (msg != nullptr)
-            {
-                break;
-            }
-            while (m_worker->progress() != 0U)
+            // if (msg != nullptr)
+            // {
+            //     break;
+            // }
+            while (m_worker.progress() != 0U)
             {
                 backoff = 1;
             }
@@ -215,8 +309,10 @@ void DataPlaneServerWorker::data_source(rxcpp::subscriber<network_event_t>& s)
             */
         }
 
-        on_tagged_msg(s, msg, msg_info);
-        backoff = 1;
+        // re-enable when msg is able to break the inner for loop
+
+        // on_tagged_msg(s, msg, msg_info);
+        // backoff = 1;
     }
 }
 
@@ -271,7 +367,7 @@ void DataPlaneServerWorker::on_tagged_msg(rxcpp::subscriber<network_event_t>& su
         LOG(FATAL) << "unknown network event received: " << msg_info.sender_tag;
     };
 
-    void* status = ucp_tag_msg_recv_nbx(m_worker->handle(), recv_addr, recv_bytes, msg, &params);
+    void* status = ucp_tag_msg_recv_nbx(m_worker.handle(), recv_addr, recv_bytes, msg, &params);
     if (UCS_PTR_IS_ERR(status))
     {
         LOG(FATAL) << "ucp_tag_msg_recv_nbx for 0-byte event failed";
