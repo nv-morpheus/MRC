@@ -150,35 +150,6 @@ PYBIND11_MODULE(segment, m)
 
     Builder.def("get_egress", &SegmentProxy::get_egress);
 
-    // /**
-    //  * @brief create specialized file reader that emits c++ strings, avoids py::object conversion
-    //  */
-    // Builder.def("make_file_reader", &SegmentProxy::make_file_reader, py::return_value_policy::reference_internal);
-
-    // /**
-    //  * @brief Debugging source, emits a number of floats equal to 'iterations'
-    //  */
-    // Builder.def("debug_float_source", &SegmentProxy::debug_float_source,
-    // py::return_value_policy::reference_internal);
-
-    // /*
-    //  * @brief Debugging identity function for doubles - used for checking py->c++, c++->py edge connections
-    //  */
-    // Builder.def(
-    //     "debug_float_passthrough", &SegmentProxy::debug_float_passthrough,
-    //     py::return_value_policy::reference_internal);
-
-    // /*
-    //  * @brief Debugging identity function for doubles - used for checking py->c++, c++->py edge connections
-    //  */
-    // Builder.def("debug_string_passthrough",
-    //             &SegmentProxy::debug_string_passthrough,
-    //             py::return_value_policy::reference_internal);
-
-    // /*
-    //  * @brief Debugging sink for c++ doubles
-    //  */
-    // Builder.def("debug_float_sink", &SegmentProxy::debug_float_sink, py::return_value_policy::reference_internal);
     Builder.def("make_edge", &SegmentProxy::make_edge, py::arg("source"), py::arg("sink"));
 
 #ifdef VERSION_INFO

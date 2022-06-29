@@ -178,8 +178,8 @@ struct EdgeAdapterUtil
 };
 
 /**
- * @brief Sources which inherit this object will automatically attempt to a pySRF adapter for their data type with the
- * EdgeAdaptorRegistry
+ * @brief Sources which inherit this object will automatically attempt to register a pySRF adapter for their data type
+ * with the EdgeAdaptorRegistry
  * @tparam SourceT Data type the inheriting source emits
  */
 template <typename SourceT>
@@ -207,8 +207,8 @@ struct AutoRegSourceAdapter
 };
 
 /**
- * @brief Sinks which inherit this object will automatically attempt to a pySRF adapter for their data type with the
- * EdgeAdaptorRegistry
+ * @brief Sinks which inherit this object will automatically attempt to register a pySRF adapter for their data type
+ * with the EdgeAdaptorRegistry
  * @tparam SinkT Data type the inheriting sink receives
  */
 template <typename SinkT>
