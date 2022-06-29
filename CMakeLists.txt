@@ -143,7 +143,7 @@ include(cmake/setup_iwyu.cmake)
 
 # Include coverage tools if enabled
 if(SRF_WITH_CODECOV)
-  include(cmake/setup_codecov.cmake)
+  include(cmake/LibCodeCoverage.cmake)
 
   setup_target_for_coverage_lcov(
       NAME lcov-report

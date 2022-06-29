@@ -33,7 +33,7 @@ FilesToCheck = [
     re.compile(r"[.]flake8[.]cython$"),
     re.compile(r"meta[.]yaml$")
 ]
-ExemptFiles = ['.cache', 'build', 'cmake/LibFindMacros.cmake', 'versioneer.py']
+ExemptFiles = ['.cache', 'build', 'cmake/setup_codecov.cmake', 'cmake/LibFindMacros.cmake', 'versioneer.py']
 
 # this will break starting at year 10000, which is probably OK :)
 CheckSimple = re.compile(r"Copyright *(?:\(c\))? *(\d{4}),? *NVIDIA C(?:ORPORATION|orporation)")
