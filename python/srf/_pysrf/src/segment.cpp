@@ -20,12 +20,10 @@
 #include "pysrf/node.hpp"
 #include "pysrf/types.hpp"
 #include "pysrf/utils.hpp"
-#include "srf/channel/status.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/sink_properties.hpp"
 #include "srf/runnable/context.hpp"
 #include "srf/segment/builder.hpp"
-#include "srf/segment/egress_port.hpp" // Included because we do a dynamic cast on get_egress
 #include "srf/segment/ingress_port.hpp"
 #include "srf/segment/object.hpp"
 
@@ -197,61 +195,6 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_egress(
 {
    return self.get_egress<PyHolder>(name);
 }
-
-/*
-std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::construct_object(srf::segment::Builder& self,
-                                                                        const std::string& name,
-                                                                        std::function<py::object(py::object x)> map_f)
-{
-    return self.construct_object<PythonNode<py::object, py::object>>(
-        name, [map_f](srf::Observable<py::object>& input, pysrf::PyObjectSubscriber& output) {
-            return input.subscribe(srf::make_observer<py::object>(
-                [map_f, &output](py::object&& x) {
-                    // Since the argument cant be py::object&&, steal the reference here to
-                    // prevent incrementing the ref count without the GIL auto stolen =
-                    // py::reinterpret_steal<py::object>(x);
-                    py::object returned;
-                    try
-                    {
-                        // Acquire the GIL here
-                        py::gil_scoped_acquire gil;
-
-                        // Call the map function
-                        returned = map_f(std::move(x));
-
-                        // While we have the GIL, check for downstream subscriptions.
-                        if (!output.is_subscribed())
-                        {
-                            // This object needs to lose its ref count while we have the GIL
-                            py::object tmp = std::move(returned);
-                        }
-
-                        // Release the GIL before calling on_next to prevent deadlocks
-                    } catch (py::error_already_set& err)
-                    {
-                        {
-                            // Need the GIL here
-                            py::gil_scoped_acquire gil;
-                            py::print("Error hit!");
-                            py::print(err.what());
-                        }
-
-                        throw;
-                        // caught by python output.on_error(std::current_exception());
-                    }
-
-                    if (returned)
-                    {
-                        // Make sure to move here since we dont have the GIL
-                        output.on_next(std::move(returned));
-                        assert(!returned);
-                    }
-                },
-                [&](std::exception_ptr error_ptr) { output.on_error(error_ptr); },
-                [&]() { output.on_completed(); }));
-        });
-}
-*/
 
 std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node(
     srf::segment::Builder& self, const std::string& name, std::function<pybind11::object(pybind11::object object)> map_f)

@@ -26,8 +26,6 @@
 #include <mutex>
 #include <string>
 
-using namespace pybind11::literals;
-
 namespace srf::pysrf {
 
 #pragma GCC visibility push(default)

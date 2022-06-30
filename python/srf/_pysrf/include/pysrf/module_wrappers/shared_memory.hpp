@@ -27,8 +27,6 @@
 #include <cstddef>
 #include <string>
 
-using namespace pybind11::literals;
-
 namespace srf::pysrf {
 /**
  * @brief Wrapper around the multiprocess.shared_memory class
