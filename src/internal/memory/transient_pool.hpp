@@ -40,6 +40,7 @@ class TransientBuffer
 {
   public:
     TransientBuffer(void* addr, std::size_t bytes, srf::data::SharedReusable<srf::memory::buffer> buffer);
+    ~TransientBuffer();
 
     DELETE_COPYABILITY(TransientBuffer);
     DEFAULT_MOVEABILITY(TransientBuffer);
@@ -75,6 +76,11 @@ class Transient final : private TransientBuffer
         m_data = new (addr) T;
     }
 
+    ~Transient()
+    {
+        release();
+    }
+
     T& operator*()
     {
         CHECK(m_data);
@@ -89,7 +95,7 @@ class Transient final : private TransientBuffer
 
     void release()
     {
-        if (m_data)
+        if (m_data != nullptr)
         {
             m_data->~T();
             m_data = nullptr;

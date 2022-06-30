@@ -27,6 +27,11 @@ TransientBuffer::TransientBuffer(void* addr, std::size_t bytes, srf::data::Share
   m_buffer(std::move(buffer))
 {}
 
+TransientBuffer::~TransientBuffer()
+{
+    release();
+}
+
 void* TransientBuffer::data()
 {
     return m_addr;
@@ -39,9 +44,12 @@ std::size_t TransientBuffer::bytes() const
 
 void TransientBuffer::release()
 {
-    m_addr  = nullptr;
-    m_bytes = 0;
-    m_buffer.release();
+    if (m_addr != nullptr)
+    {
+        m_addr  = nullptr;
+        m_bytes = 0;
+        m_buffer.release();
+    }
 }
 
 TransientPool::TransientPool(std::size_t block_size,
