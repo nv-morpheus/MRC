@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "internal/memory/device_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/ucx/registration_cache.hpp"

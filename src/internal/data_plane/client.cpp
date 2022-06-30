@@ -77,9 +77,9 @@ static void send_completion_handler_with_future(void* request, ucs_status_t stat
     // we could optimize this a bit more
 }
 
-Client::Client(resources::PartitionResourceBase& provider, std::shared_ptr<ucx::Worker> worker) :
+Client::Client(resources::PartitionResourceBase& provider, ucx::Resources& ucx) :
   resources::PartitionResourceBase(provider),
-  m_worker(std::move(worker))
+  m_ucx(ucx)
 {}
 
 Client::~Client()

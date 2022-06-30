@@ -45,7 +45,7 @@ namespace srf::internal::data_plane {
 class Client final : public Service, public resources::PartitionResourceBase
 {
   public:
-    Client(resources::PartitionResourceBase& provider, std::shared_ptr<ucx::Worker> worker);
+    Client(resources::PartitionResourceBase& provider, ucx::Resources& ucx);
     ~Client() final;
 
     /**
@@ -96,8 +96,7 @@ class Client final : public Service, public resources::PartitionResourceBase
     void do_service_kill() final;
     void do_service_await_join() final;
 
-    std::shared_ptr<ucx::Worker> m_worker;
-    std::shared_ptr<resources::PartitionResources> m_resources;
+    ucx::Resources& m_ucx;
     std::unique_ptr<node::SourceChannelWriteable<void*>> m_ucx_request_channel;
     std::unique_ptr<srf::runnable::Runner> m_progress_engine;
 
