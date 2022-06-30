@@ -6,7 +6,7 @@ The **Streaming Reactive Framework** (SRF) library (proununced "surf") is a **re
 <!-- omit in toc -->
 ### Major features and differentiators
  - Built in C++ for performance, with Python bindings for ease of use and rapid prototyping, with options for maximizing performance
- - Distributed computation with message transfers over RMDA using UCX
+ - Distributed computation with message transfers over RDMA using UCX
  - Dynamic reconfiguration to scale up and out at runtime​; requires no changes to pipeline configuration
  - Unopinionated data model: messages of any type can be used in the pipeline
  - Built from the ground up with asynchronous computation for mitigation of I/O and GPU blocking
