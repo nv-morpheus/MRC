@@ -16,6 +16,7 @@
  */
 
 #include "internal/memory/callback_adaptor.hpp"
+#include "internal/memory/transient_pool.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/memory_block.hpp"
 #include "internal/ucx/registration_cache.hpp"
@@ -30,6 +31,7 @@
 #include "srf/memory/resources/host/malloc_memory_resource.hpp"
 #include "srf/memory/resources/host/pinned_memory_resource.hpp"
 #include "srf/memory/resources/logging_resource.hpp"
+#include "srf/memory/resources/memory_resource.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
@@ -130,6 +132,63 @@ TEST_F(TestMemory, CallbackAdaptor)
 
     EXPECT_EQ(calls, 1);
     EXPECT_EQ(bytes, 0);
+}
+
+struct StaticData
+{
+    std::array<std::byte, 4_MiB> array;
+};
+
+TEST_F(TestMemory, TransientPool)
+{
+    internal::memory::CallbackBuilder builder;
+
+    std::atomic_size_t calls = 0;
+    std::atomic_size_t bytes = 0;
+
+    builder.register_callbacks([&calls](void* ptr, std::size_t _bytes) { calls++; },
+                               [](void* ptr, std::size_t bytes) {});
+    builder.register_callbacks([&bytes](void* ptr, std::size_t _bytes) { bytes += _bytes; },
+                               [&bytes](void* ptr, std::size_t _bytes) { bytes -= bytes; });
+
+    auto malloc = std::make_unique<srf::memory::malloc_memory_resource>();
+    auto logger = srf::memory::make_unique_resource<srf::memory::logging_resource>(std::move(malloc), "malloc");
+    auto callback =
+        srf::memory::make_shared_resource<internal::memory::CallbackAdaptor>(std::move(logger), std::move(builder));
+
+    internal::memory::TransientPool pool(10_MiB, 4, 8, callback);
+
+    EXPECT_ANY_THROW(pool.await_buffer(11_MiB));
+
+    // this should get the starting address of each block
+    std::vector<void*> starting_addr;
+    for (int i = 0; i < 4; i++)
+    {
+        auto buffer = pool.await_buffer(6_MiB);
+        starting_addr.push_back(buffer.data());
+    }
+
+    // this should get the starting address of each block
+    // the second pass should have the starting addresses
+    std::vector<void*> addrs;
+    for (int i = 0; i < 4; i++)
+    {
+        auto buffer = pool.await_buffer(6_MiB);
+        addrs.push_back(buffer.data());
+        EXPECT_TRUE(addrs.at(i) == starting_addr.at(i));
+    }
+
+    addrs.clear();
+    for (int i = 0; i < 8; i++)
+    {
+        auto data = pool.await_object<StaticData>();
+        addrs.push_back(data->array.data());
+
+        if (i % 2 == 0)
+        {
+            EXPECT_TRUE(addrs.at(i) == starting_addr.at(i / 2));
+        }
+    }
 }
 
 // TEST_F(TestMemory, Copy)

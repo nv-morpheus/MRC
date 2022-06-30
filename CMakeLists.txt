@@ -147,6 +147,7 @@ add_library(libsrf
   src/internal/executor/iexecutor.cpp
   src/internal/memory/device_resources.cpp
   src/internal/memory/host_resources.cpp
+  src/internal/memory/transient_pool.cpp
   src/internal/network/resources.cpp
   src/internal/pipeline/controller.cpp
   src/internal/pipeline/instance.cpp
