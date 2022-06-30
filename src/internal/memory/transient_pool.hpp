@@ -39,20 +39,37 @@ namespace srf::internal::memory {
 class TransientBuffer
 {
   public:
+    /**
+     * @brief Construct a new Transient Buffer object
+     *
+     * @param addr - starting address of the buffer
+     * @param bytes - number of bytes allocated to this buffer starting at addr
+     * @param buffer - reference counted holder to the SharedReusable, this is held for reference counting only
+     */
     TransientBuffer(void* addr, std::size_t bytes, srf::data::SharedReusable<srf::memory::buffer> buffer);
     ~TransientBuffer();
 
     DELETE_COPYABILITY(TransientBuffer);
     DEFAULT_MOVEABILITY(TransientBuffer);
 
+    /**
+     * @brief Starting address of the TransientBuffer
+     */
     void* data();
+
+    /**
+     * @brief Capacity of TransientBuffer in number of bytes extending from data().
+     */
     std::size_t bytes() const;
 
+    /**
+     * @brief Release the buffer and nullifies the starting address and resets the capacity in bytes to 0.
+     */
     void release();
 
   private:
-    void* m_addr;
-    std::size_t m_bytes;
+    void* m_addr{nullptr};
+    std::size_t m_bytes{0};
     srf::data::SharedReusable<srf::memory::buffer> m_buffer;
 };
 
@@ -68,11 +85,10 @@ class Transient final : private TransientBuffer
   public:
     Transient(TransientBuffer&& buffer) : TransientBuffer(std::move(buffer))
     {
-        CHECK_LT(sizeof(T), bytes());
+        CHECK_LE(sizeof(T) + alignof(T), bytes());
         void* addr       = data();
         std::size_t size = bytes();
-        addr             = std::align(alignof(T), sizeof(T), addr, size);
-        CHECK(addr);
+        CHECK(std::align(alignof(T), sizeof(T), addr, size));
         m_data = new (addr) T;
     }
 
@@ -128,8 +144,24 @@ class TransientPool
                   std::size_t capacity,
                   std::shared_ptr<srf::memory::memory_resource> mr);
 
+    /**
+     * @brief Acquire a TransientBuffer of size bytes.
+     *
+     * Acquiring this object may block and yield the calling fiber.
+     *
+     * @param bytes
+     * @return TransientBuffer
+     */
     TransientBuffer await_buffer(std::size_t bytes);
 
+    /**
+     * @brief Acquire a Transient<T> constructed from a TransientBuffer.
+     *
+     * Acquiring this object may block and yield the calling fiber.
+     *
+     * @tparam T
+     * @return Transient<T>
+     */
     template <typename T>
     Transient<T> await_object()
     {
