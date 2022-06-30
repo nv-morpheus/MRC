@@ -127,7 +127,7 @@ class Transient final : private TransientBuffer
  * @brief ReusablePool of memory::buffers that are used as reusable reference-counted monotonic memory resources
  *
  * TransientPool is a ReusablePool of memory::buffers from which smaller buffers are allocated similar to a monotonic
- * memory resource, i.e. pointer pusing stack; however the TransientBuffer or Transient<T> object pull from the pool
+ * memory resource, i.e. pointer pushing stack; however the TransientBuffer or Transient<T> object pull from the pool
  * hold a SharedReusable<memory::buffer> which keeps the entire monotonic stack from returning to the resuable pool
  * until all objects created on a given stack are deallocated.
  *
