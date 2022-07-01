@@ -23,6 +23,16 @@ namespace srf::internal::system {
 
 class System;
 
+/**
+ * @brief SystemProvider is a base class designed provide access to the System object.
+ *
+ * This is on of the most common base classes in the internal library. It was found that many classes needed some
+ * information from System, either the Options or the Partition information and commonly both. This base class avoids
+ * the repeatitive of taking ownership of a shared_ptr<System> and providing const access to that object.
+ *
+ * Classes like HostPartitionProvider and PartitionProvider extend SystemProvider by adding other common information
+ * needing to be propagated.
+ */
 class SystemProvider
 {
   public:

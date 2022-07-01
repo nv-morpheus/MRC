@@ -28,6 +28,9 @@
 
 namespace srf::internal::memory {
 
+/**
+ * @brief Object that provides access to host memory_resource objects for a given host partition
+ */
 class HostResources final : private system::HostPartitionProvider
 {
   public:
