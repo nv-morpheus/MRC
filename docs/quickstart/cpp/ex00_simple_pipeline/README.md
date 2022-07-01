@@ -17,12 +17,12 @@ Once each object is created, they can be linked together using `segment::Builder
   - To use multiple downstream sinks with broadcast or round-robin functionality, see the guide on operators
 - Sinks can accept multiple upstream sources
   - Its possible to connect two sources to a single sink. The sink will process the messages in the order that they are received in
- 
+
 ## Creating the Source
 
 The first "node" that we will be creating is a source. Source objects have no upstream dependencies and are responsible for producing data to be consume by downstream object.
 
-To create a source, you call `make_source<T>` on the `segment::Builder` object passing a name and a lambda of type `std::function<(rxcpp::subscriber<T>)>` /* Mstack: Is there a link here we could point to more documentaion for the specifics of this type? */ where `T` is the type of object that the source will be producing. In our example, we are creating integers so the source object looks like:
+To create a source, you call `make_source<T>` on the `segment::Builder` object passing a name and a lambda of type `std::function<(rxcpp::subscriber<T>)>` Please see https://reactivex.io/RxCpp/ and navigate to rxcpp::subscriber<T, Observer> for more detail on the lambda type. where `T` is the type of object that the source will be producing. In our example, we are creating integers so the source object looks like:
 
 ```cpp
 auto source = s.make_source<int>("int_source", [](rxcpp::subscriber<int> s) {
@@ -37,7 +37,7 @@ The reason that we pass a lambda to `make_source` is because this function is on
 
 ## Creating the Node
 
-Node objects work as both a source and a sink and are responsible for connecting the upstream source to any downstream sink. Because the upstream source and downstream sink can be different types, `make_node<T, R>` accepts two template arguments for the source type and sink type respectively. To make building nodes easier, SRF supports Reactive operators in the `make_node` function * Mstack: external docs for these? */. These Reactive operators can be used to chain multiple steps together and simplify node creation.
+Node objects work as both a source and a sink and are responsible for connecting the upstream source to any downstream sink. Because the upstream source and downstream sink can be different types, `make_node<T, R>` accepts two template arguments for the source type and sink type respectively. To make building nodes easier, SRF supports Reactive operators in the `make_node` function. Please see https://reactivex.io/RxCpp/ and navigate to Operators for more details on Reactive operators. These Reactive operators can be used to chain multiple steps together and simplify node creation.
 
 For our example, we will only be using a single Reactive operator: `map`. To build the node, we need to call `make_node` and provide the source type, sink type, node name and node operators:
 
@@ -48,7 +48,7 @@ auto node = s.make_node<int, float>("int_to_float", rxcpp::operators::map([](con
                                     }));
 ```
 
-In our example, the `map` operator takes a lambda that will be called for each value that passes through the node. The result returned by this lambda will be passed on to the next downstream node. Our lambda is very simple, only multipling the input value by `2.5` and returning a `float`. * Mstack: Is the template type R better thought of as the "return value" or the node, or the expected input of the following sink, (or both as they mean basically the same thing I guess) */
+In our example, the `map` operator takes a lambda that will be called for each value that passes through the node. The result returned by this lambda will be passed on to the next downstream node. Our lambda is very simple, only multipling the input value by `2.5` and returning a `float`. 
 
 ## Creating the Sink
 
