@@ -34,10 +34,11 @@ target_link_libraries(test_pysrf
     pybind11::embed
 )
 
-
 add_test(
   NAME pysrf
   COMMAND $<TARGET_FILE:test_pysrf>
 )
+
+configure_codecov(test_pysrf)
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

@@ -43,7 +43,6 @@ macro(srf_add_pybind11_module)
   endif()
 
   # Forward all common arguments plus any arguments passed in
-  # TODO(Devin) -- Extend this to allow for code coverage to be propagated to python modules.
   add_pybind11_module(${ARGN} ${_common_args})
 endmacro()
 

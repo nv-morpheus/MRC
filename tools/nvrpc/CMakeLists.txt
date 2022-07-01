@@ -21,17 +21,13 @@ add_library(nvrpc
   src/server.cc
 )
 
-if(SRF_WITH_CODECOV)
-  append_coverage_compiler_flags_to_target(nvrpc)
-endif()
+configure_codecov(nvrpc)
 
 add_library(nvrpc-client
   src/client/client_executor.cc
 )
 
-if(SRF_WITH_CODECOV)
-  append_coverage_compiler_flags_to_target(nvrpc-client)
-endif()
+configure_codecov(nvrpc-client)
 
 add_library(${PROJECT_NAME}::nvrpc ALIAS nvrpc)
 add_library(${PROJECT_NAME}::nvrpc-client ALIAS nvrpc-client)

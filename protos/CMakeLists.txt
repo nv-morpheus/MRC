@@ -19,6 +19,7 @@ add_library(srf_protos)
 
 add_library(${PROJECT_NAME}::srf_protos ALIAS srf_protos)
 
+
 add_library(srf_architect_protos)
 
 add_library(${PROJECT_NAME}::srf_architect_protos ALIAS srf_architect_protos)
@@ -62,6 +63,9 @@ set_target_properties(
       CXX_INCLUDE_WHAT_YOU_USE ""
       EXPORT_COMPILE_COMMANDS OFF
 )
+
+configure_codecov(srf_protos)
+configure_codecov(srf_architect_protos)
 
 # Finally, add this to the style check dependencies
 add_dependencies(style_checks srf_protos-headers-target)

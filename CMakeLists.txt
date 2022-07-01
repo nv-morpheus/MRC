@@ -131,53 +131,21 @@ if("${CMAKE_EXECUTABLE_SUFFIX}" STREQUAL "")
   set(CMAKE_EXECUTABLE_SUFFIX ".x")
 endif()
 
-add_subdirectory(protos)
-
 
 ####################################
 # - Post dependencies setup --------
 include(cmake/setup_compiler.cmake)
 
+# Setup code coverage components
+include(cmake/setup_coverage.cmake)
+
 # Setup IWYU if enabled
 include(cmake/setup_iwyu.cmake)
 
-# Include coverage tools if enabled
-if(SRF_WITH_CODECOV)
-  include(cmake/LibCodeCoverage.cmake)
+####################################
+# - Configure protobufs
+add_subdirectory(protos)
 
-  setup_target_for_coverage_lcov(
-      NAME lcov-report
-      EXCLUDE
-        ".cache/*"
-        "tests/*"
-        "python/srf/tests/*"
-        "python/srf/_pysrf/tests/*"
-  )
-
-  setup_target_for_coverage_gcovr_xml(
-      NAME gcovr-xml-report
-      EXCLUDE
-        ".cache/*"
-        "tests/*"
-        "python/srf/tests/*"
-        "python/srf/_pysrf/tests/*"
-  )
-
-  setup_target_for_coverage_gcovr_html(
-      NAME gcovr-html-report
-      EXCLUDE
-        ".cache/*"
-        "tests/*"
-        "python/srf/tests/*"
-        "python/srf/_pysrf/tests/*"
-  )
-
-  # Anaconda doesn't seem to have a fastcov package -- disable for now
-  # setup_target_for_coverage_fastcov(
-  #     NAME fastcov-report
-  #     EXCLUDE ".cache/*"
-  # )
-endif()
 
 ####################################
 # - Begin SRF Targets --------------
@@ -315,14 +283,12 @@ target_compile_definitions(libsrf
     $<$<BOOL:${SRF_BUILD_BENCHMARKS}>:SRF_ENABLE_BENCHMARKING>
 )
 
+configure_codecov(libsrf)
+
 set_target_properties(libsrf PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 
 # Finally, set the install RPATH to include the stubs folder for CUDA::nvml. If thats made private, this can be removed
 set_target_properties(libsrf PROPERTIES INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:\$ORIGIN:${CMAKE_INSTALL_PREFIX}/lib/stubs")
-
-if(SRF_WITH_CODECOV)
-  append_coverage_compiler_flags_to_target(libsrf)
-endif()
 
 ###################################################################################################
 # - install targets -------------------------------------------------------------------------------
