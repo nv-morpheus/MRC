@@ -32,6 +32,20 @@ TransientBuffer::~TransientBuffer()
     release();
 }
 
+TransientBuffer::TransientBuffer(TransientBuffer&& other) noexcept :
+  m_addr(std::exchange(other.m_addr, nullptr)),
+  m_bytes(std::exchange(other.m_bytes, 0UL)),
+  m_buffer(std::move(other.m_buffer))
+{}
+
+TransientBuffer& TransientBuffer::operator=(TransientBuffer&& other) noexcept
+{
+    m_addr   = std::exchange(other.m_addr, nullptr);
+    m_bytes  = std::exchange(other.m_bytes, 0UL);
+    m_buffer = std::move(other.m_buffer);
+    return *this;
+}
+
 void* TransientBuffer::data()
 {
     return m_addr;

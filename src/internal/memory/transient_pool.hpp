@@ -47,10 +47,14 @@ class TransientBuffer
      * @param buffer - reference counted holder to the SharedReusable, this is held for reference counting only
      */
     TransientBuffer(void* addr, std::size_t bytes, srf::data::SharedReusable<srf::memory::buffer> buffer);
+
+    TransientBuffer() = default;
     ~TransientBuffer();
 
+    TransientBuffer(TransientBuffer&& other) noexcept;
+    TransientBuffer& operator=(TransientBuffer&& other) noexcept;
+
     DELETE_COPYABILITY(TransientBuffer);
-    DEFAULT_MOVEABILITY(TransientBuffer);
 
     /**
      * @brief Starting address of the TransientBuffer
@@ -83,13 +87,26 @@ template <typename T>
 class Transient final : private TransientBuffer
 {
   public:
-    Transient(TransientBuffer&& buffer) : TransientBuffer(std::move(buffer))
+    template <typename... ArgsT>
+    Transient(TransientBuffer&& buffer, ArgsT&&... args) : TransientBuffer(std::move(buffer))
     {
         CHECK_LE(sizeof(T) + alignof(T), bytes());
         void* addr       = data();
         std::size_t size = bytes();
         CHECK(std::align(alignof(T), sizeof(T), addr, size));
-        m_data = new (addr) T;
+        m_data = new (addr) T(std::forward<ArgsT>(args)...);
+    }
+
+    Transient(Transient&& other) noexcept :
+      TransientBuffer(std::move(other)),
+      m_data(std::exchange(other.m_data, nullptr))
+    {}
+
+    Transient& operator=(Transient&& other) noexcept
+    {
+        TransientBuffer::operator=(std::move(other));
+        m_data                   = std::exchange(other.m_data, nullptr);
+        return *this;
     }
 
     ~Transient()
@@ -117,6 +134,11 @@ class Transient final : private TransientBuffer
             m_data = nullptr;
             TransientBuffer::release();
         }
+    }
+
+    operator bool() const
+    {
+        return (static_cast<bool>(m_data));
     }
 
   private:
@@ -162,11 +184,11 @@ class TransientPool
      * @tparam T
      * @return Transient<T>
      */
-    template <typename T>
-    Transient<T> await_object()
+    template <typename T, typename... ArgsT>
+    Transient<T> await_object(ArgsT&&... args)
     {
         auto buffer = await_buffer(sizeof(T) + alignof(T));
-        return Transient<T>(std::move(buffer));
+        return Transient<T>(std::move(buffer), std::forward<ArgsT>(args)...);
     }
 
   private:

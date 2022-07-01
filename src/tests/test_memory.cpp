@@ -139,6 +139,24 @@ struct StaticData
     std::array<std::byte, 4_MiB> array;
 };
 
+class TickOnDestruct
+{
+  public:
+    TickOnDestruct(int& int_ref) : m_int_ref(int_ref) {}
+    ~TickOnDestruct()
+    {
+        m_int_ref = 42;
+    }
+
+    const int& val() const
+    {
+        return m_int_ref;
+    }
+
+  private:
+    int& m_int_ref;
+};
+
 TEST_F(TestMemory, TransientPool)
 {
     internal::memory::CallbackBuilder builder;
@@ -189,6 +207,33 @@ TEST_F(TestMemory, TransientPool)
             EXPECT_TRUE(addrs.at(i) == starting_addr.at(i / 2));
         }
     }
+
+    auto buffer = pool.await_buffer(6_MiB);
+
+    // default constructible
+    internal::memory::TransientBuffer other;
+
+    // move and test void* gets properly nullified
+    other = std::move(buffer);
+    EXPECT_EQ(buffer.data(), nullptr);
+
+    other.release();
+
+    int some_int = 4;
+    auto tick    = pool.await_object<TickOnDestruct>(some_int);
+    EXPECT_TRUE(tick);
+    EXPECT_EQ(some_int, 4);
+    EXPECT_EQ(tick->val(), 4);
+
+    auto other_tick = std::move(tick);
+    EXPECT_FALSE(tick);
+    EXPECT_TRUE(other_tick);
+    EXPECT_EQ(some_int, 4);
+    EXPECT_EQ(other_tick->val(), 4);
+
+    other_tick.release();
+    EXPECT_FALSE(other_tick);
+    EXPECT_EQ(some_int, 42);
 }
 
 // TEST_F(TestMemory, Copy)
