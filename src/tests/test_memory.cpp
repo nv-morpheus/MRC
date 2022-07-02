@@ -216,21 +216,25 @@ TEST_F(TestMemory, TransientPool)
     // move and test void* gets properly nullified
     other = std::move(buffer);
     EXPECT_EQ(buffer.data(), nullptr);
-
     other.release();
 
+    // construct an object TickOnDestruct on the memory backed by a TransientBuffer
     int some_int = 4;
     auto tick    = pool.await_object<TickOnDestruct>(some_int);
     EXPECT_TRUE(tick);
     EXPECT_EQ(some_int, 4);
     EXPECT_EQ(tick->val(), 4);
 
+    // valid move assignment nullifies the original tick
+    // ensure the TickOnDestruct destructor should not have been called
     auto other_tick = std::move(tick);
     EXPECT_FALSE(tick);
     EXPECT_TRUE(other_tick);
     EXPECT_EQ(some_int, 4);
     EXPECT_EQ(other_tick->val(), 4);
 
+    // now we realise the object holding a valid TickOnDestruct,
+    // this time, the destructor should modify the reference it has been holding
     other_tick.release();
     EXPECT_FALSE(other_tick);
     EXPECT_EQ(some_int, 42);
