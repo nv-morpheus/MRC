@@ -97,7 +97,7 @@ function show_conda_info() {
 
 function restore_conda_env() {
 
-    gpuci_logger "Downloading build artifacts from ${DISPLAY_ARTIFACT_URL}"
+    gpuci_logger "Downloading build artifacts from ${DISPLAY_ARTIFACT_URL}/"
     fetch_s3 "${ARTIFACT_ENDPOINT}/conda_env.tar.gz" "${WORKSPACE_TMP}/conda_env.tar.gz"
 
     gpuci_logger "Extracting"

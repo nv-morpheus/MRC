@@ -28,6 +28,13 @@
 
 namespace srf::internal::ucx {
 
+/**
+ * @brief UCX Registration Cache
+ *
+ * UCX memory registration object that will both register/deregister memory as well as cache the set of local and remote
+ * keys for each registration. The cache can be queried for the original memory block by providing any valid address
+ * contained in the contiguous block.
+ */
 class RegistrationCache final
 {
   public:
@@ -36,6 +43,15 @@ class RegistrationCache final
         CHECK(m_context);
     }
 
+    /**
+     * @brief Register a contiguous block of memory starting at addr and spanning `bytes` bytes.
+     *
+     * For each block of memory registered with the RegistrationCache, an entry containing the block information is
+     * storage and can be queried.
+     *
+     * @param addr
+     * @param bytes
+     */
     void add_block(void* addr, std::size_t bytes)
     {
         DCHECK(addr && bytes);
@@ -44,6 +60,13 @@ class RegistrationCache final
         m_blocks.add_block({addr, bytes, lkey, rkey, rkey_size});
     }
 
+    /**
+     * @brief Deregister a contiguous block of memory from the ucx context and remove the cache entry
+     *
+     * @param addr
+     * @param bytes
+     * @return std::size_t
+     */
     std::size_t drop_block(void* addr, std::size_t bytes)
     {
         const auto* block = m_blocks.find_block(addr);
@@ -54,6 +77,17 @@ class RegistrationCache final
         return bytes;
     }
 
+    /**
+     * @brief Look up the memory registration details for a given address.
+     *
+     * This method queries the registration cache to find the UcxMemoryBlock containing the original address and size as
+     * well as the local and remote keys associated with the memory block.
+     *
+     * Any address contained within a registered block can be used to query the UcxMemoryBlock
+     *
+     * @param addr
+     * @return const MemoryBlock&
+     */
     const MemoryBlock& lookup(void* addr) const noexcept
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);

@@ -33,6 +33,9 @@ class Resources;
 
 namespace srf::internal::memory {
 
+/**
+ * @brief Object that provides access to device memory_resource objects for a "flattened" partition
+ */
 class DeviceResources : private resources::PartitionResourceBase
 {
   public:

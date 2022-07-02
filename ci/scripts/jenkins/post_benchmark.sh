@@ -18,21 +18,13 @@ set -e
 
 source ${WORKSPACE}/ci/scripts/jenkins/common.sh
 
+REPORTS_DIR="${WORKSPACE_TMP}/reports"
 
-restore_conda_env
-
-gpuci_logger "Building Conda Package"
-CONDA_BLD_OUTPUT="${WORKSPACE_TMP}/conda-bld"
-mkdir -p ${CONDA_BLD_OUTPUT}
-
-CONDA_ARGS=()
-CONDA_ARGS+=("--output-folder=${CONDA_BLD_OUTPUT}")
-CONDA_ARGS+=("--label" "${CONDA_PKG_LABEL}")
-CONDA_ARGS="${CONDA_ARGS[@]}" ${SRF_ROOT}/ci/conda/recipes/run_conda_build.sh
-
-gpuci_logger "Archiving Conda Package"
-cd $(dirname ${CONDA_BLD_OUTPUT})
-tar cfj ${WORKSPACE_TMP}/conda_pkg.tar.bz $(basename ${CONDA_BLD_OUTPUT})
+gpuci_logger "Archiving benchmark reports"
+cd $(dirname ${REPORTS_DIR})
+tar cfj ${WORKSPACE_TMP}/benchmark_reports.tar.bz $(basename ${REPORTS_DIR})
 
 gpuci_logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
-aws s3 cp ${WORKSPACE_TMP}/conda_pkg.tar.bz "${ARTIFACT_URL}/conda_pkg.tar.bz"
+aws s3 cp ${WORKSPACE_TMP}/benchmark_reports.tar.bz "${ARTIFACT_URL}/benchmark_reports.tar.bz"
+
+exit $(cat ${WORKSPACE_TMP}/exit_status)

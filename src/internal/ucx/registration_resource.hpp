@@ -27,6 +27,11 @@
 
 namespace srf::internal::ucx {
 
+/**
+ * @brief Memory Resource Adaptor that registers allocated memory with the UCX via the ucx::RegistrationCache
+ *
+ * @tparam PointerT
+ */
 template <typename PointerT>
 class RegistrationResource : public srf::memory::adaptor<PointerT>
 {

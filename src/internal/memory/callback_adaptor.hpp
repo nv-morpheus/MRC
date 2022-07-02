@@ -26,6 +26,14 @@ namespace srf::internal::memory {
 template <typename UpstreamT>
 class CallbackAdaptor;
 
+/**
+ * @brief Object used to collect a set of callbacks used to construct a CallbackAdaptor
+ *
+ * Each set of callback consists of an allocate and deallocate pair. Each are called with a pointer (ptr) to the start
+ * of the memory region which was allocated or will be deallocated and the size of the memory region.
+ *
+ * This object simply collects a set of callback pairs and is required for the construction of a CallbackAdaptor.
+ */
 class CallbackBuilder
 {
   public:
@@ -54,6 +62,10 @@ class CallbackBuilder
     friend class CallbackAdaptor;
 };
 
+/**
+ * @brief A memory resource adaptor that extended a downstream resource by issues callbacks after allocation and before
+ * deallocation.
+ */
 template <typename UpstreamT>
 class CallbackAdaptor final : public srf::memory::adaptor<UpstreamT>
 {

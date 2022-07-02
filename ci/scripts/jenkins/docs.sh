@@ -43,7 +43,7 @@ cmake --build build --target srf_docs
 gpuci_logger "Tarring the docs"
 tar cfj "${WORKSPACE_TMP}/docs.tar.bz" build/docs/html
 
-gpuci_logger "Pushing results to ${DISPLAY_ARTIFACT_URL}"
+gpuci_logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
 aws s3 cp --no-progress "${WORKSPACE_TMP}/docs.tar.bz" "${ARTIFACT_URL}/docs.tar.bz"
 
 gpuci_logger "Success"
