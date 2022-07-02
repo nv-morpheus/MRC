@@ -24,6 +24,14 @@
 
 namespace srf::internal::system {
 
+/**
+ * @brief Extends SystemProvider to provide access to partition_id and partition details.
+ *
+ * This is a common base classes to resources that are tied to the flattened partitions list, e.g. cuda devices memory
+ * resources.
+ *
+ * @note See Partitions for a more detailed description for the information contained.
+ */
 class PartitionProvider : public SystemProvider
 {
   public:

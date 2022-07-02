@@ -21,7 +21,7 @@ source ${WORKSPACE}/ci/scripts/jenkins/common.sh
 
 restore_conda_env
 
-gpuci_logger "Fetching Build artifacts from ${DISPLAY_URL}"
+gpuci_logger "Fetching Build artifacts from ${DISPLAY_ARTIFACT_URL}/"
 fetch_s3 "${ARTIFACT_ENDPOINT}/cpp_tests.tar.bz" "${WORKSPACE_TMP}/cpp_tests.tar.bz"
 fetch_s3 "${ARTIFACT_ENDPOINT}/dsos.tar.bz" "${WORKSPACE_TMP}/dsos.tar.bz"
 fetch_s3 "${ARTIFACT_ENDPOINT}/python_build.tar.bz" "${WORKSPACE_TMP}/python_build.tar.bz"
@@ -63,7 +63,7 @@ gpuci_logger "Archiving test reports"
 cd $(dirname ${REPORTS_DIR})
 tar cfj ${WORKSPACE_TMP}/test_reports.tar.bz $(basename ${REPORTS_DIR})
 
-gpuci_logger "Pushing results to ${DISPLAY_ARTIFACT_URL}"
+gpuci_logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
 aws s3 cp ${WORKSPACE_TMP}/test_reports.tar.bz "${ARTIFACT_URL}/test_reports.tar.bz"
 
 

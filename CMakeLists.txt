@@ -196,6 +196,7 @@ add_library(libsrf
   src/internal/system/topology.cpp
   src/internal/ucx/context.cpp
   src/internal/ucx/endpoint.cpp
+  src/internal/ucx/memory_block.cpp
   src/internal/ucx/receive_manager.cpp
   src/internal/ucx/resources.cpp
   src/internal/ucx/worker.cpp
