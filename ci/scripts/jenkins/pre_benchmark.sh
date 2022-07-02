@@ -18,21 +18,13 @@ set -e
 
 source ${WORKSPACE}/ci/scripts/jenkins/common.sh
 
-
 restore_conda_env
 
-gpuci_logger "Building Conda Package"
-CONDA_BLD_OUTPUT="${WORKSPACE_TMP}/conda-bld"
-mkdir -p ${CONDA_BLD_OUTPUT}
+gpuci_logger "Fetching Build artifacts from ${DISPLAY_ARTIFACT_URL}/"
+fetch_s3 "${ARTIFACT_ENDPOINT}/cpp_tests.tar.bz" "${WORKSPACE_TMP}/cpp_tests.tar.bz"
+fetch_s3 "${ARTIFACT_ENDPOINT}/dsos.tar.bz" "${WORKSPACE_TMP}/dsos.tar.bz"
 
-CONDA_ARGS=()
-CONDA_ARGS+=("--output-folder=${CONDA_BLD_OUTPUT}")
-CONDA_ARGS+=("--label" "${CONDA_PKG_LABEL}")
-CONDA_ARGS="${CONDA_ARGS[@]}" ${SRF_ROOT}/ci/conda/recipes/run_conda_build.sh
+tar xf "${WORKSPACE_TMP}/cpp_tests.tar.bz"
+tar xf "${WORKSPACE_TMP}/dsos.tar.bz"
 
-gpuci_logger "Archiving Conda Package"
-cd $(dirname ${CONDA_BLD_OUTPUT})
-tar cfj ${WORKSPACE_TMP}/conda_pkg.tar.bz $(basename ${CONDA_BLD_OUTPUT})
-
-gpuci_logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
-aws s3 cp ${WORKSPACE_TMP}/conda_pkg.tar.bz "${ARTIFACT_URL}/conda_pkg.tar.bz"
+mkdir -p ${WORKSPACE_TMP}/reports

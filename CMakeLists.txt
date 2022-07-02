@@ -148,6 +148,7 @@ add_library(libsrf
   src/internal/executor/iexecutor.cpp
   src/internal/memory/device_resources.cpp
   src/internal/memory/host_resources.cpp
+  src/internal/memory/transient_pool.cpp
   src/internal/network/resources.cpp
   src/internal/pipeline/controller.cpp
   src/internal/pipeline/instance.cpp
@@ -196,6 +197,7 @@ add_library(libsrf
   src/internal/system/topology.cpp
   src/internal/ucx/context.cpp
   src/internal/ucx/endpoint.cpp
+  src/internal/ucx/memory_block.cpp
   src/internal/ucx/receive_manager.cpp
   src/internal/ucx/resources.cpp
   src/internal/ucx/worker.cpp

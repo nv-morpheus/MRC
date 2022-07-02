@@ -24,49 +24,36 @@
 
 namespace srf::internal::ucx {
 
+/**
+ * @brief Extends memory::MemoryBlock to add UCX memory registration information
+ */
 struct MemoryBlock : public memory::MemoryBlock
 {
   public:
     MemoryBlock() = default;
-    MemoryBlock(void* data, std::size_t bytes) : memory::MemoryBlock(data, bytes) {}
+    MemoryBlock(void* data, std::size_t bytes);
     MemoryBlock(
-        void* data, std::size_t bytes, ucp_mem_h local_handle, void* remote_handle, std::size_t remote_handle_size) :
-      memory::MemoryBlock(data, bytes),
-      m_local_handle(local_handle),
-      m_remote_handle(remote_handle),
-      m_remote_handle_size(remote_handle_size)
-    {
-        // if either remote handle or size are set, both have to be valid
-        if ((m_remote_handle != nullptr) || (m_remote_handle_size != 0U))
-        {
-            CHECK(m_remote_handle && m_remote_handle_size);
-        }
-    }
-    MemoryBlock(const MemoryBlock& block, ucp_mem_h local_handle, void* remote_handle, std::size_t remote_handle_size) :
-      memory::MemoryBlock(block),
-      m_local_handle(local_handle),
-      m_remote_handle(remote_handle),
-      m_remote_handle_size(remote_handle_size)
-    {
-        if ((m_remote_handle != nullptr) || (m_remote_handle_size != 0U))
-        {
-            CHECK(m_remote_handle && m_remote_handle_size);
-        }
-    }
+        void* data, std::size_t bytes, ucp_mem_h local_handle, void* remote_handle, std::size_t remote_handle_size);
+    MemoryBlock(const MemoryBlock& block, ucp_mem_h local_handle, void* remote_handle, std::size_t remote_handle_size);
     ~MemoryBlock() override = default;
 
-    ucp_mem_h local_handle() const
-    {
-        return m_local_handle;
-    }
-    void* remote_handle() const
-    {
-        return m_remote_handle;
-    }
-    std::size_t remote_handle_size() const
-    {
-        return m_remote_handle_size;
-    }
+    /**
+     * @brief UCX local memory handle / access key
+     */
+    ucp_mem_h local_handle() const;
+
+    /**
+     * @brief Starting address to the UCX remote memory handle / access key
+     *
+     * The remote handle / remote keys can vary in length based on the transports in use. Use `remote_handle_size` to
+     * query the size of the contiguous buffer started with the returned address.
+     */
+    void* remote_handle() const;
+
+    /**
+     * @brief Size in bytes of the contiguous memory buffer pointed to by `remote_handle()`
+     */
+    std::size_t remote_handle_size() const;
 
   private:
     ucp_mem_h m_local_handle{nullptr};

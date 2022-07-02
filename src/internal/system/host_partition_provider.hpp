@@ -24,6 +24,11 @@
 
 namespace srf::internal::system {
 
+/**
+ * @brief Extends SystemProvider to add host_partition_id and host_partition info.
+ *
+ * This is a common base class for resources that are tied to HostPartitions.
+ */
 class HostPartitionProvider : public SystemProvider
 {
   public:

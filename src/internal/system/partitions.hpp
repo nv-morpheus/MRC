@@ -32,15 +32,13 @@ namespace srf::internal::system {
 class System;
 class Topology;  // IWYU pragma: keep
 
-// TODO(unknown): flatten partition here
-
 class Partitions
 {
   public:
     Partitions(const Topology& topology, const Options& options);
     Partitions(const System& system);
 
-    // The host and device partitions are hierarchical where there is a possibility, depending on options provided
+    // The host and device partitions are hierarchical where there is a possibility, depending on options provided,
     // where more than one cuda device shares the same host partition, so those host resources are shared.
     //
     // However, each device defines an entry in the flattened partition list since it will have its own unique network

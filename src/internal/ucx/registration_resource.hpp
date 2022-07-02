@@ -35,7 +35,6 @@ namespace srf::internal::ucx {
  *
  * @tparam PointerT
  */
-
 template <typename PointerT>
 class RegistrationResource : public srf::memory::adaptor<PointerT>
 {
