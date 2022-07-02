@@ -17,12 +17,9 @@
 
 #pragma once
 
-#include "internal/data_plane/client.hpp"
+// #include "internal/data_plane/client.hpp"
 #include "internal/data_plane/server.hpp"
 #include "internal/service.hpp"
-#include "internal/ucx/context.hpp"
-
-#include "srf/runnable/launch_control.hpp"
 
 #include <memory>
 
@@ -32,10 +29,10 @@ namespace srf::internal::data_plane {
  * @brief ArchitectResources hold and is responsible for constructing any object that depending the UCX data plane
  *
  */
-class Instance final : public Service
+class Instance final : public Service, private resources::PartitionResourceBase
 {
   public:
-    Instance(std::shared_ptr<resources::PartitionResources> resources);
+    Instance(resources::PartitionResourceBase& base);
     ~Instance() final;
 
     Client& client() const;
@@ -51,8 +48,7 @@ class Instance final : public Service
     void do_service_kill() final;
     void do_service_await_join() final;
 
-    std::shared_ptr<resources::PartitionResources> m_resources;
-    std::shared_ptr<ucx::Context> m_context;
+
     std::unique_ptr<Client> m_client;
     std::unique_ptr<Server> m_server;
 };

@@ -17,6 +17,7 @@
 
 #include "internal/ucx/resources.hpp"
 
+#include "internal/resources/partition_resources_base.hpp"
 #include "internal/system/device_partition.hpp"
 #include "internal/system/fiber_task_queue.hpp"
 #include "internal/system/partition.hpp"
@@ -33,10 +34,8 @@
 
 namespace srf::internal::ucx {
 
-Resources::Resources(runnable::Resources& _runnable_resources,
-                     std::size_t _partition_id,
-                     system::FiberTaskQueue& network_task_queue) :
-  resources::PartitionResourceBase(_runnable_resources, _partition_id),
+Resources::Resources(resources::PartitionResourceBase& base, system::FiberTaskQueue& network_task_queue) :
+  resources::PartitionResourceBase(base),
   m_network_task_queue(network_task_queue)
 {
     VLOG(1) << "constructing network resources for partition: " << partition_id() << " on partitions main task queue";
@@ -57,18 +56,14 @@ Resources::Resources(runnable::Resources& _runnable_resources,
             DVLOG(10) << "initializing ucx context";
             m_ucx_context = std::make_shared<Context>();
 
-            DVLOG(10) << "initialize a ucx data_plane worker for server";
-            m_worker_server = std::make_shared<Worker>(m_ucx_context);
-
-            DVLOG(10) << "initialize a ucx data_plane worker for client";
-            m_worker_client = std::make_shared<Worker>(m_ucx_context);
+            DVLOG(10) << "initialize a ucx data_plane worker";
+            m_worker = std::make_shared<Worker>(m_ucx_context);
 
             DVLOG(10) << "initialize the registration cache for this context";
             m_registration_cache = std::make_shared<RegistrationCache>(m_ucx_context);
 
             // flush any work that needs to be done by the workers
-            while (m_worker_server->progress() != 0) {}
-            while (m_worker_client->progress() != 0) {}
+            while (m_worker->progress() != 0) {}
         })
         .get();
 }
@@ -87,9 +82,9 @@ const RegistrationCache& Resources::registration_cache() const
     CHECK(m_registration_cache);
     return *m_registration_cache;
 }
-Worker& Resources::server_worker()
+Worker& Resources::worker()
 {
-    CHECK(m_worker_server);
-    return *m_worker_server;
+    CHECK(m_worker);
+    return *m_worker;
 }
 }  // namespace srf::internal::ucx

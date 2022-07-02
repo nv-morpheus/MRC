@@ -39,7 +39,7 @@ namespace srf::internal::memory {
 class DeviceResources : private resources::PartitionResourceBase
 {
   public:
-    DeviceResources(runnable::Resources& runnable, std::size_t partition_id, std::optional<ucx::Resources>& ucx);
+    DeviceResources(resources::PartitionResourceBase& base, std::optional<ucx::Resources>& ucx);
 
     int cuda_device_id() const;
 

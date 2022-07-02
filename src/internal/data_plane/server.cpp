@@ -170,14 +170,13 @@ void Server::do_service_start()
             m_pre_posted_recv_info.resize(m_pre_posted_recv_count);
             for (auto& info : m_pre_posted_recv_info)
             {
-                info.worker  = m_ucx.server_worker().handle();
+                info.worker  = m_ucx.worker().handle();
                 info.channel = m_rd_source.get();
-
                 pre_post_recv_issue(&info);
             }
 
             // source for ucx tag recvs with data
-            auto progress_engine = std::make_unique<DataPlaneServerWorker>(m_ucx.server_worker());
+            auto progress_engine = std::make_unique<DataPlaneServerWorker>(m_ucx.worker());
 
             // router for ucx tag recvs with data
             m_deserialize_source = std::make_shared<node::Router<PortAddress, srf::memory::buffer_view>>();
@@ -213,14 +212,14 @@ void Server::do_service_stop()
             {
                 if (info.request != nullptr)
                 {
-                    ucp_request_cancel(m_ucx.server_worker().handle(), info.request);
+                    ucp_request_cancel(m_ucx.worker().handle(), info.request);
                 }
 
                 // we are on the network task queue thread, so we can pump the progress engine until
                 // the cancelled request is complete
                 while (info.request != nullptr)
                 {
-                    m_ucx.server_worker().progress();
+                    m_ucx.worker().progress();
                 }
             }
         })
@@ -246,7 +245,7 @@ void Server::do_service_await_join()
 
 ucx::WorkerAddress Server::worker_address() const
 {
-    return m_ucx.server_worker().address();
+    return m_ucx.worker().address();
 }
 
 node::Router<PortAddress, srf::memory::buffer_view>& Server::deserialize_source()
@@ -270,12 +269,14 @@ void DataPlaneServerWorker::data_source(rxcpp::subscriber<network_event_t>& s)
 
     DVLOG(10) << "startin data plane server progress engine loop";
 
+    // the progress loop has tag_probe_nb disabled
+    // this should be re-enabled to accept tagged messages that have payloads
+    // larger than the pre-posted recv buffers
+
     while (true)
     {
         for (;;)
         {
-            // probe disabled - this loop now only drive the worker progress method
-
             // msg = ucp_tag_probe_nb(m_worker->handle(), m_tag, m_tag_mask, 1, &msg_info);
             if (!s.is_subscribed())
             {
@@ -292,24 +293,7 @@ void DataPlaneServerWorker::data_source(rxcpp::subscriber<network_event_t>& s)
             }
 
             boost::this_fiber::yield();
-
-            /*
-            if (backoff < 1048576)
-            {
-                backoff = backoff << 1;
-            }
-            if (backoff < 32768)
-            {
-                boost::this_fiber::yield();
-            }
-            else
-            {
-                boost::this_fiber::sleep_for(std::chrono::nanoseconds(backoff));
-            }
-            */
         }
-
-        // re-enable when msg is able to break the inner for loop
 
         // on_tagged_msg(s, msg, msg_info);
         // backoff = 1;

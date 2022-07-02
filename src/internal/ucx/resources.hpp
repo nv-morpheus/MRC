@@ -39,23 +39,29 @@ class Resources;
 
 namespace srf::internal::ucx {
 
+/**
+ * @brief UCX Resources - if networking is enabled, there should be 1 UCX Resource per "flattened" partition
+ */
 class Resources final : private resources::PartitionResourceBase
 {
   public:
-    Resources(runnable::Resources& _runnable_resources,
-              std::size_t _partition_id,
-              system::FiberTaskQueue& network_task_queue);
+    Resources(resources::PartitionResourceBase& base, system::FiberTaskQueue& network_task_queue);
 
     using resources::PartitionResourceBase::partition;
 
+    // ucx worker associated with this partitions ucx context
+    Worker& worker();
+
+    // task queue used to run the data plane's progress engine
     srf::core::FiberTaskQueue& network_task_queue();
 
-    Worker& server_worker();
-
+    // registration cache to look up local/remote keys for registered blocks of memory
     const RegistrationCache& registration_cache() const;
 
+    // used to build a callback adaptor memory resource for host memory resources
     void add_registration_cache_to_builder(RegistrationCallbackBuilder& builder);
 
+    // used to build device memory resources that are registered with the ucx context
     template <typename UpstreamT>
     auto adapt_to_registered_resource(UpstreamT upstream, int cuda_device_id)
     {
@@ -66,12 +72,8 @@ class Resources final : private resources::PartitionResourceBase
   private:
     system::FiberTaskQueue& m_network_task_queue;
     std::shared_ptr<Context> m_ucx_context;
-    std::shared_ptr<Worker> m_worker_server;
-    std::shared_ptr<Worker> m_worker_client;
+    std::shared_ptr<Worker> m_worker;
     std::shared_ptr<RegistrationCache> m_registration_cache;
-
-    // enable direct access to context and workers
-    friend network::Resources;
 };
 
 }  // namespace srf::internal::ucx
