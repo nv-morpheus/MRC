@@ -17,30 +17,31 @@
 
 #pragma once
 
-#include "internal/system/fiber_task_queue.hpp"
+#include "internal/runnable/resources.hpp"
 #include "internal/system/host_partition_provider.hpp"
-#include "internal/system/resources.hpp"
+#include "internal/ucx/registation_callback_builder.hpp"
 
-#include "srf/core/task_queue.hpp"
-#include "srf/pipeline/resources.hpp"
-#include "srf/runnable/launch_control.hpp"
+#include "srf/memory/buffer.hpp"
+#include "srf/memory/resources/memory_resource.hpp"
 
-#include <cstddef>
 #include <memory>
 
-namespace srf::internal::runnable {
+namespace srf::internal::memory {
 
-class Resources final : public system::HostPartitionProvider, public srf::pipeline::Resources
+/**
+ * @brief Object that provides access to host memory_resource objects for a given host partition
+ */
+class HostResources final : private system::HostPartitionProvider
 {
   public:
-    Resources(const system::Resources& system_resources, std::size_t _host_partition_id);
+    HostResources(runnable::Resources& runnable, ucx::RegistrationCallbackBuilder&& callbacks);
 
-    srf::core::FiberTaskQueue& main() final;
-    srf::runnable::LaunchControl& launch_control() final;
+    srf::memory::buffer make_buffer(std::size_t bytes);
 
   private:
-    system::FiberTaskQueue& m_main;
-    std::unique_ptr<srf::runnable::LaunchControl> m_launch_control;
+    std::shared_ptr<srf::memory::memory_resource> m_system;
+    std::shared_ptr<srf::memory::memory_resource> m_registered;
+    std::shared_ptr<srf::memory::memory_resource> m_arena;
 };
 
-}  // namespace srf::internal::runnable
+}  // namespace srf::internal::memory

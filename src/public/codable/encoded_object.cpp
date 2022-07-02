@@ -17,51 +17,48 @@
 
 #include "srf/codable/encoded_object.hpp"
 
-#include "srf/codable/memory_resources.hpp"
-#include "srf/memory/block.hpp"
+#include "srf/memory/buffer_view.hpp"
 #include "srf/memory/memory_kind.hpp"
 #include "srf/protos/codable.pb.h"
-#include "srf/utils/thread_local_shared_pointer.hpp"
 
 #include <google/protobuf/any.pb.h>
 #include <google/protobuf/message.h>
 
-#include <cstdint>  // for uint64_t
-#include <memory>   // for __shared_ptr_access, shared_ptr
-#include <ostream>  // for operator<<
+#include <cstdint>
+#include <ostream>
 
 namespace srf::codable {
 
-static memory::memory_kind_type decode_memory_type(const protos::MemoryKind& proto_kind)
+static memory::memory_kind decode_memory_type(const protos::MemoryKind& proto_kind)
 {
     switch (proto_kind)
     {
     case protos::MemoryKind::Host:
-        return memory::memory_kind_type::host;
+        return memory::memory_kind::host;
     case protos::MemoryKind::Pinned:
-        return memory::memory_kind_type::pinned;
+        return memory::memory_kind::pinned;
     case protos::MemoryKind::Device:
-        return memory::memory_kind_type::device;
+        return memory::memory_kind::device;
     case protos::MemoryKind::Managed:
-        return memory::memory_kind_type::managed;
+        return memory::memory_kind::managed;
     default:
         LOG(FATAL) << "unhandled protos::MemoryKind";
     };
 
-    return memory::memory_kind_type::none;
+    return memory::memory_kind::none;
 }
 
-static protos::MemoryKind encode_memory_type(memory::memory_kind_type mem_kind)
+static protos::MemoryKind encode_memory_type(memory::memory_kind mem_kind)
 {
     switch (mem_kind)
     {
-    case memory::memory_kind_type::host:
+    case memory::memory_kind::host:
         return protos::MemoryKind::Host;
-    case memory::memory_kind_type::pinned:
+    case memory::memory_kind::pinned:
         return protos::MemoryKind::Pinned;
-    case memory::memory_kind_type::device:
+    case memory::memory_kind::device:
         return protos::MemoryKind::Device;
-    case memory::memory_kind_type::managed:
+    case memory::memory_kind::managed:
         return protos::MemoryKind::Managed;
     default:
         LOG(FATAL) << "unhandled protos::MemoryKind";
@@ -70,13 +67,13 @@ static protos::MemoryKind encode_memory_type(memory::memory_kind_type mem_kind)
     return protos::MemoryKind::None;
 }
 
-memory::block EncodedObject::decode_descriptor(const protos::RemoteDescriptor& desc)
+memory::buffer_view EncodedObject::decode_descriptor(const protos::RemoteDescriptor& desc)
 {
-    return memory::block(
+    return memory::buffer_view(
         reinterpret_cast<void*>(desc.remote_address()), desc.remote_bytes(), decode_memory_type(desc.memory_kind()));
 }
 
-protos::RemoteDescriptor EncodedObject::encode_descriptor(memory::const_block view)
+protos::RemoteDescriptor EncodedObject::encode_descriptor(memory::const_buffer_view view)
 {
     protos::RemoteDescriptor desc;
     desc.set_remote_address(reinterpret_cast<std::uint64_t>(view.data()));
@@ -91,7 +88,7 @@ const protos::EncodedObject& EncodedObject::proto() const
     return m_proto;
 }
 
-memory::const_block EncodedObject::memory_block(std::size_t idx) const
+memory::const_buffer_view EncodedObject::memory_block(std::size_t idx) const
 {
     DCHECK_LT(idx, descriptor_count());
     CHECK(m_proto.descriptors().at(idx).has_remote_desc());
@@ -105,7 +102,7 @@ const protos::EagerDescriptor& EncodedObject::eager_descriptor(std::size_t idx) 
     return m_proto.descriptors().at(idx).eager_desc();
 }
 
-memory::block EncodedObject::mutable_memory_block(std::size_t idx) const
+memory::buffer_view EncodedObject::mutable_memory_block(std::size_t idx) const
 {
     CHECK(m_context_acquired);
     DCHECK_LT(idx, descriptor_count());
@@ -144,7 +141,7 @@ std::size_t EncodedObject::add_meta_data(const google::protobuf::Message& meta_d
     return index;
 }
 
-std::size_t EncodedObject::add_memory_block(memory::const_block view)
+std::size_t EncodedObject::add_memory_block(memory::const_buffer_view view)
 {
     CHECK(m_context_acquired);
     auto count = descriptor_count();
@@ -156,15 +153,17 @@ std::size_t EncodedObject::add_memory_block(memory::const_block view)
 std::size_t EncodedObject::add_host_buffer(std::size_t bytes)
 {
     CHECK(m_context_acquired);
-    auto view = utils::ThreadLocalSharedPointer<codable::MemoryResources>::get()->host_resource_view();
-    return add_buffer(view, bytes);
+    LOG(FATAL) << "disabled path - awaiting runtime resources";
+    // auto view = utils::ThreadLocalSharedPointer<codable::MemoryResources>::get()->host_resource_view();
+    // return add_buffer(view, bytes);
 }
 
 std::size_t EncodedObject::add_device_buffer(std::size_t bytes)
 {
     CHECK(m_context_acquired);
-    auto view = utils::ThreadLocalSharedPointer<codable::MemoryResources>::get()->device_resource_view();
-    return add_buffer(view, bytes);
+    LOG(FATAL) << "disabled path - awaiting runtime resources";
+    // auto view = utils::ThreadLocalSharedPointer<codable::MemoryResources>::get()->device_resource_view();
+    // return add_buffer(view, bytes);
 }
 
 std::size_t EncodedObject::add_eager_buffer(const void* data, std::size_t bytes)

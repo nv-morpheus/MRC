@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "internal/resources/partition_resources.hpp"
+#include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/context.hpp"
@@ -40,10 +42,10 @@
 
 namespace srf::internal::data_plane {
 
-class Client final : public Service
+class Client final : public Service, public resources::PartitionResourceBase
 {
   public:
-    Client(std::shared_ptr<ucx::Context> context, std::shared_ptr<resources::PartitionResources> resources);
+    Client(resources::PartitionResourceBase& provider, std::shared_ptr<ucx::Worker> worker);
     ~Client() final;
 
     /**
@@ -97,7 +99,7 @@ class Client final : public Service
     std::shared_ptr<ucx::Worker> m_worker;
     std::shared_ptr<resources::PartitionResources> m_resources;
     std::unique_ptr<node::SourceChannelWriteable<void*>> m_ucx_request_channel;
-    std::unique_ptr<runnable::Runner> m_progress_engine;
+    std::unique_ptr<srf::runnable::Runner> m_progress_engine;
 
     std::map<InstanceID, ucx::WorkerAddress> m_workers;
     mutable std::map<InstanceID, std::shared_ptr<ucx::Endpoint>> m_endpoints;

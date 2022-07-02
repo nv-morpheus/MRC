@@ -75,7 +75,7 @@ void Manager::do_service_start()
     node::make_edge(*m_update_channel, *controller);
 
     // launch controller
-    auto launcher = resources().runnable(0).launch_control().prepare_launcher(main, std::move(controller));
+    auto launcher = resources().partition(0).runnable().launch_control().prepare_launcher(main, std::move(controller));
 
     // explicit capture and rethrow the error
     launcher->apply([this](srf::runnable::Runner& runner) {

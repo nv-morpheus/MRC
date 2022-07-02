@@ -32,7 +32,7 @@
 #include "srf/codable/encoded_object.hpp"
 #include "srf/codable/protobuf_message.hpp"  // IWYU pragma: keep
 #include "srf/exceptions/runtime_error.hpp"
-#include "srf/memory/block.hpp"
+#include "srf/memory/buffer_view.hpp"
 #include "srf/memory/memory_kind.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/source_channel.hpp"
@@ -77,9 +77,9 @@ static void send_completion_handler_with_future(void* request, ucs_status_t stat
     // we could optimize this a bit more
 }
 
-Client::Client(std::shared_ptr<ucx::Context> context, std::shared_ptr<resources::PartitionResources> resources) :
-  m_worker(std::make_shared<ucx::Worker>(std::move(context))),
-  m_resources(std::move(resources))
+Client::Client(resources::PartitionResourceBase& provider, std::shared_ptr<ucx::Worker> worker) :
+  resources::PartitionResourceBase(provider),
+  m_worker(std::move(worker))
 {}
 
 Client::~Client()
@@ -94,8 +94,7 @@ void Client::do_service_start()
     sink->update_channel(std::make_unique<channel::BufferedChannel<void*>>(256));
     node::make_edge(*m_ucx_request_channel, *sink);
     LOG(FATAL) << "get launch control from partition resources";
-    // auto launcher     = launch_control.prepare_launcher(std::move(sink));
-    // m_progress_engine = launcher->ignition();
+    m_progress_engine = runnable().launch_control().prepare_launcher(std::move(sink))->ignition();
 }
 
 void Client::do_service_await_live()

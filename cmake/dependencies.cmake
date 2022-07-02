@@ -145,7 +145,7 @@ include(deps/Configure_prometheus)
 
 # libcudacxx
 # =========
-set(LIBCUDACXX_VERSION "1.6.0" CACHE STRING "Version of libcudacxx to use")
+set(LIBCUDACXX_VERSION "1.8.0" CACHE STRING "Version of libcudacxx to use")
 include(deps/Configure_libcudacxx)
 
 if(SRF_BUILD_BENCHMARKS)

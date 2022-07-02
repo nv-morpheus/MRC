@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "srf/memory/core/memory_block.hpp"
+#include "internal/memory/memory_block.hpp"
 
 #include <glog/logging.h>
 
@@ -26,36 +26,36 @@
 #include <queue>
 #include <utility>
 
-namespace srf::memory {
+namespace srf::internal::memory {
 
-template <typename BlockType>
-class block_manager final
+template <typename BlockTypeT>
+class BlockManager final
 {
-    static_assert(std::is_base_of<memory_block, BlockType>::value, "should be derived from memory_block");
+    static_assert(std::is_base_of<MemoryBlock, BlockTypeT>::value, "should be derived from MemoryBlock");
 
   public:
-    using block_type = BlockType;
+    using block_type = BlockTypeT;  // NOLINT
 
-    block_manager()  = default;
-    ~block_manager() = default;
+    BlockManager()  = default;
+    ~BlockManager() = default;
 
-    block_manager(block_manager&& other) noexcept : m_block_map(std::move(other.m_block_map)) {}
+    BlockManager(BlockManager&& other) noexcept : m_block_map(std::move(other.m_block_map)) {}
 
-    block_manager& operator=(block_manager&& other)
+    BlockManager& operator=(BlockManager&& other)
     {
         m_block_map = std::move(other.m_block_map);
         return *this;
     }
 
-    block_manager(const block_manager&) = delete;
-    block_manager& operator=(const block_manager&) = delete;
+    BlockManager(const BlockManager&) = delete;
+    BlockManager& operator=(const BlockManager&) = delete;
 
     const block_type& add_block(block_type&& block)
     {
         auto key = reinterpret_cast<std::uintptr_t>(block.data()) + block.bytes();
         DCHECK(!owns(block.data()) && !owns(reinterpret_cast<void*>(key - 1)))
             << "block manager already owns a block with an overlapping address";
-        DVLOG(1) << "adding block: " << key << " - " << block.data() << "; " << block.bytes();
+        DVLOG(10) << "adding block: " << key << " - " << block.data() << "; " << block.bytes();
         m_block_map[key] = std::move(block);
         return m_block_map[key];
     }
@@ -65,20 +65,20 @@ class block_manager final
         auto search = find_entry(ptr);
         if (search != m_block_map.end() && search->second.contains(ptr))
         {
-            DVLOG(3) << this << ": block found";
+            DVLOG(20) << this << ": block found";
             return &search->second;
         }
-        DVLOG(3) << this << ": no block found for " << ptr;
+        DVLOG(20) << this << ": no block found for " << ptr;
         return nullptr;
     }
 
     void drop_block(void* ptr)
     {
-        DVLOG(1) << "dropping block: " << ptr;
+        DVLOG(10) << "dropping block: " << ptr;
         auto search = find_entry(ptr);
         if (search != m_block_map.end() && search->second.contains(ptr))
         {
-            DVLOG(3) << "found block; dropping block: " << search->first << "; " << search->second.data();
+            DVLOG(20) << "found block; dropping block: " << search->first << "; " << search->second.data();
             m_block_map.erase(search);
         }
     }
@@ -90,14 +90,14 @@ class block_manager final
 
     void clear() noexcept
     {
-        DVLOG(2) << "clearing block map";
+        DVLOG(10) << "clearing block map";
         m_block_map.clear();
     }
 
-    std::vector<BlockType> blocks() const noexcept
+    std::vector<BlockTypeT> blocks() const noexcept
     {
-        DVLOG(2) << "getting a vector of blocks - " << m_block_map.size();
-        std::vector<BlockType> v;
+        DVLOG(20) << "getting a vector of blocks - " << m_block_map.size();
+        std::vector<BlockTypeT> v;
         v.reserve(m_block_map.size());
         for (const auto& it : m_block_map)
         {
@@ -108,14 +108,14 @@ class block_manager final
 
     bool owns(void* addr)
     {
-        auto block = find_block(addr);
+        const auto* block = find_block(addr);
         return (block && block->contains(addr));
     }
 
   private:
     inline auto find_entry(const void* ptr) const
     {
-        DVLOG(3) << "looking for block containing: " << ptr;
+        DVLOG(20) << "looking for block containing: " << ptr;
         auto key = reinterpret_cast<std::uintptr_t>(ptr);
         return m_block_map.upper_bound(key);
     }
@@ -124,4 +124,4 @@ class block_manager final
     std::map<std::uintptr_t, block_type> m_block_map;
 };
 
-}  // namespace srf::memory
+}  // namespace srf::internal::memory

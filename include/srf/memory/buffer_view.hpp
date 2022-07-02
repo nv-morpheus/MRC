@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "srf/memory/blob.hpp"
 #include "srf/memory/buffer.hpp"
 #include "srf/memory/memory_kind.hpp"
 
@@ -27,57 +26,46 @@
 
 namespace srf::memory {
 
-class block;
+class buffer_view;
 
 /**
- * @brief Generic container for holding the address to a const memory block.
+ * @brief Generic container for holding the address to a const memory buffer_view.
  *
- * Minimum description of a block of contiguous memory / bytes with a specified type of memory.
+ * Minimum description of a buffer_view of contiguous memory / bytes with a specified type of memory.
  *
- * const_block is a copyable and does not own the described memory block.
+ * const_buffer_view is a copyable and does not own the described memory buffer_view.
  */
-class const_block  // NOLINT
+class const_buffer_view  // NOLINT
 {
   public:
-    const_block()          = default;
-    virtual ~const_block() = default;
+    const_buffer_view()          = default;
+    virtual ~const_buffer_view() = default;
 
     /**
-     * @brief Construct a new const_block object from a raw pointer and details
+     * @brief Construct a new const_buffer_view object from a raw pointer and details
      *
      * @param data
      * @param bytes
      * @param kind
      */
-    const_block(void* data, std::size_t bytes, memory_kind_type kind);
+    const_buffer_view(void* data, std::size_t bytes, memory_kind kind);
 
     /**
-     * @brief Construct a new const_block object from a const raw pointer and details
+     * @brief Construct a new const_buffer_view object from a const raw pointer and details
      *
      * @param data
      * @param bytes
      * @param kind
      */
-    const_block(const void* data, std::size_t bytes, memory_kind_type kind);
+    const_buffer_view(const void* data, std::size_t bytes, memory_kind kind);
 
     /**
-     * @brief Construct a const_block from a blob
-     *
-     * @param blob
-     */
-    const_block(const blob& blob) : m_data(const_cast<void*>(blob.data())), m_bytes(blob.bytes()), m_kind(blob.kind())
-    {
-        CHECK(operator bool());
-    }
-
-    /**
-     * @brief Construct a const_block from a buffer
+     * @brief Construct a const_buffer_view from a buffer
      *
      * @tparam Properties
      * @param buffer
      */
-    template <typename... PropertiesT>
-    const_block(const buffer<PropertiesT...>& buffer) :
+    const_buffer_view(const buffer& buffer) :
       m_data(const_cast<void*>(buffer.data())),
       m_bytes(buffer.bytes()),
       m_kind(buffer.kind())
@@ -86,30 +74,30 @@ class const_block  // NOLINT
     }
 
     /**
-     * @brief Constant pointer to the start of the memory block
+     * @brief Constant pointer to the start of the memory buffer_view
      *
      * @return const void*
      */
     const void* data() const;
 
     /**
-     * @brief Number of bytes, i.e. the capacity of the memory block
+     * @brief Number of bytes, i.e. the capacity of the memory buffer_view
      *
      * @return std::size_t
      */
     std::size_t bytes() const;
 
     /**
-     * @brief Type of memory described by the block
+     * @brief Type of memory described by the buffer_view
      *
-     * @return memory_kind_type
+     * @return memory_kind
      */
-    memory_kind_type kind() const;
+    memory_kind kind() const;
 
     /**
-     * @brief Returns true if the memory block is empty
+     * @brief Returns true if the memory buffer_view is empty
      *
-     * A memory block is empty if it does not hold a backing storage object or
+     * A memory buffer_view is empty if it does not hold a backing storage object or
      * if that backing storage object points to nullptr and is of size zero.
      *
      * @return true
@@ -119,7 +107,7 @@ class const_block  // NOLINT
 
     /**
      * @brief bool operator, returns true if the view is backed by some storage whose
-     *        block has a valid starting address and a specified size.
+     *        buffer_view has a valid starting address and a specified size.
      *
      * @return true
      * @return false
@@ -129,22 +117,22 @@ class const_block  // NOLINT
   private:
     void* m_data{nullptr};
     std::size_t m_bytes{0UL};
-    memory_kind_type m_kind{memory_kind_type::none};
+    memory_kind m_kind{memory_kind::none};
 
-    friend block;
+    friend buffer_view;
 };
 
 /**
- * @brief Generic container for holding the address to a mutable memory block.
+ * @brief Generic container for holding the address to a mutable memory buffer_view.
  *
- * Minimum description of a block of contiguous memory / bytes with a specified type of memory.
+ * Minimum description of a buffer_view of contiguous memory / bytes with a specified type of memory.
  *
- * block is a copyable and does not own the described memory block.
+ * buffer_view is a copyable and does not own the described memory buffer_view.
  */
-class block : public const_block
+class buffer_view : public const_buffer_view
 {
   public:
-    using const_block::const_block;
+    using const_buffer_view::const_buffer_view;
 
     /**
      * @brief

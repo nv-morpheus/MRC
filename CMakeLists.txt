@@ -131,21 +131,23 @@ endif()
 
 add_subdirectory(protos)
 
-
-####################################
+# ###################################
 # - Post dependencies setup --------
 include(cmake/setup_compiler.cmake)
 
 # Setup IWYU if enabled
 include(cmake/setup_iwyu.cmake)
 
-####################################
+# ###################################
 # - Begin SRF Targets --------------
 
 # Keep all source files sorted!!!
 add_library(libsrf
   src/internal/executor/executor.cpp
   src/internal/executor/iexecutor.cpp
+  src/internal/memory/device_resources.cpp
+  src/internal/memory/host_resources.cpp
+  src/internal/network/resources.cpp
   src/internal/pipeline/controller.cpp
   src/internal/pipeline/instance.cpp
   src/internal/pipeline/ipipeline.cpp
@@ -154,6 +156,8 @@ add_library(libsrf
   src/internal/pipeline/port_graph.cpp
   src/internal/pipeline/resources.cpp
   src/internal/resources/manager.cpp
+  src/internal/resources/partition_resources.cpp
+  src/internal/resources/partition_resources_base.cpp
   src/internal/runnable/engine_factory.cpp
   src/internal/runnable/engine.cpp
   src/internal/runnable/engines.cpp
@@ -176,19 +180,24 @@ add_library(libsrf
   src/internal/system/fiber_task_queue.cpp
   src/internal/system/gpu_info.cpp
   src/internal/system/host_partition.cpp
+  src/internal/system/host_partition_provider.cpp
   src/internal/system/iresources.cpp
   src/internal/system/isystem.cpp
   src/internal/system/partition.cpp
+  src/internal/system/partition_provider.cpp
   src/internal/system/partitions.cpp
   src/internal/system/resources.cpp
-  src/internal/system/system_provider.cpp
   src/internal/system/system.cpp
+  src/internal/system/system_provider.cpp
+  src/internal/system/thread.cpp
   src/internal/system/thread_pool.cpp
   src/internal/system/thread.cpp
   src/internal/system/topology.cpp
   src/internal/ucx/context.cpp
   src/internal/ucx/endpoint.cpp
+  src/internal/ucx/memory_block.cpp
   src/internal/ucx/receive_manager.cpp
+  src/internal/ucx/resources.cpp
   src/internal/ucx/worker.cpp
   src/internal/utils/collision_detector.cpp
   src/internal/utils/exception_guard.cpp
@@ -208,8 +217,7 @@ add_library(libsrf
   src/public/cuda/device_guard.cpp
   src/public/cuda/sync.cpp
   src/public/manifold/manifold.cpp
-  src/public/memory/blob.cpp
-  src/public/memory/block.cpp
+  src/public/memory/buffer_view.cpp
   src/public/metrics/counter.cpp
   src/public/metrics/registry.cpp
   src/public/node/edge_registry.cpp
@@ -245,34 +253,34 @@ add_library(${PROJECT_NAME}::libsrf ALIAS libsrf)
 
 target_link_libraries(libsrf
   PUBLIC
-    srf_protos
-    srf_architect_protos
-    rmm::rmm
-    CUDA::nvml
-    CUDA::cudart
-    rxcpp::rxcpp
-    glog::glog
-    libcudacxx::libcudacxx
+  srf_protos
+  srf_architect_protos
+  rmm::rmm
+  CUDA::nvml
+  CUDA::cudart
+  rxcpp::rxcpp
+  glog::glog
+  libcudacxx::libcudacxx
   PRIVATE
-    nvrpc
-    nvrpc-client
-    hwloc::hwloc
-    prometheus-cpp::core # private in MR !199
-    ucx::ucs
-    ucx::ucp
+  nvrpc
+  nvrpc-client
+  hwloc::hwloc
+  prometheus-cpp::core # private in MR !199
+  ucx::ucs
+  ucx::ucp
 )
 
 target_include_directories(libsrf
   PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 target_compile_definitions(libsrf
   PUBLIC
-    $<$<BOOL:${SRF_BUILD_BENCHMARKS}>:SRF_ENABLE_BENCHMARKING>
+  $<$<BOOL:${SRF_BUILD_BENCHMARKS}>:SRF_ENABLE_BENCHMARKING>
 )
 
 set_target_properties(libsrf PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
@@ -280,7 +288,7 @@ set_target_properties(libsrf PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 # Finally, set the install RPATH to include the stubs folder for CUDA::nvml. If thats made private, this can be removed
 set_target_properties(libsrf PROPERTIES INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:\$ORIGIN:${CMAKE_INSTALL_PREFIX}/lib/stubs")
 
-###################################################################################################
+# ##################################################################################################
 # - install targets -------------------------------------------------------------------------------
 rapids_cmake_install_lib_dir(lib_dir)
 include(CPack)
@@ -299,30 +307,28 @@ install(
   COMPONENT Core
 )
 
-###################################################################################################
+# ##################################################################################################
 # - subdirectories --------------------------------------------------------------------------------
-
-if (SRF_BUILD_PYTHON)
+if(SRF_BUILD_PYTHON)
   add_subdirectory(python)
-endif ()
+endif()
 
-if (SRF_BUILD_TESTS)
+if(SRF_BUILD_TESTS)
   add_subdirectory(tests)
 
   add_subdirectory(src/tests)
-endif ()
+endif()
 
-if (SRF_BUILD_BENCHMARKS)
+if(SRF_BUILD_BENCHMARKS)
   add_subdirectory(benchmarks)
-endif ()
+endif()
 
 add_subdirectory(tools/nvrpc)
 
-###################################################################################################
+# ##################################################################################################
 # - install export --------------------------------------------------------------------------------
-
 set(doc_string
-[=[
+  [=[
 Provide targets for srf.
 ]=])
 
@@ -341,9 +347,8 @@ rapids_export(INSTALL ${PROJECT_NAME}
   FINAL_CODE_BLOCK code_string
 )
 
-###################################################################################################
+# ##################################################################################################
 # - build export ----------------------------------------------------------------------------------
-
 rapids_export(BUILD ${PROJECT_NAME}
   EXPORT_SET ${PROJECT_NAME}-core-exports
   GLOBAL_TARGETS libsrf
@@ -363,5 +368,4 @@ add_subdirectory(src/tools)
 # Uncomment the following to print all available targets
 # include(debug_utils)
 # print_all_targets()
-
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

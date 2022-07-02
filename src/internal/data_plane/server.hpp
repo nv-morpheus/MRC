@@ -18,13 +18,15 @@
 #pragma once
 
 #include "internal/resources/partition_resources.hpp"
+#include "internal/resources/partition_resources_base.hpp"
+#include "internal/runnable/resources.hpp"
 #include "internal/service.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/worker.hpp"
 
 #include "srf/channel/status.hpp"
-#include "srf/memory/block.hpp"
+#include "srf/memory/buffer_view.hpp"
 #include "srf/node/generic_source.hpp"
 #include "srf/node/operators/router.hpp"
 #include "srf/node/source_channel.hpp"
@@ -63,17 +65,17 @@
 
 namespace srf::internal::data_plane {
 
-using network_event_t = std::pair<PortAddress, memory::block>;
+using network_event_t = std::pair<PortAddress, srf::memory::buffer_view>;
 
-class Server final : public Service
+class Server final : public Service, public resources::PartitionResourceBase
 {
   public:
-    Server(std::shared_ptr<ucx::Context> context, std::shared_ptr<resources::PartitionResources> resources);
+    Server(resources::PartitionResourceBase& provider, std::shared_ptr<ucx::Worker> worker);
     ~Server() final;
 
     ucx::WorkerAddress worker_address() const;
 
-    node::Router<PortAddress, memory::block>& deserialize_source();
+    node::Router<PortAddress, srf::memory::buffer_view>& deserialize_source();
 
   private:
     void do_service_start() final;
@@ -86,7 +88,7 @@ class Server final : public Service
 
     // deserialization nodes will connect to this source wtih their port id
     // the source for this router is the private GenericSoruce of this object
-    std::shared_ptr<node::Router<PortAddress, memory::block>> m_deserialize_source;
+    std::shared_ptr<node::Router<PortAddress, srf::memory::buffer_view>> m_deserialize_source;
 
     // the remote descriptor manager will connect to this source
     // data will be emitted on this source as a conditional branch of data source
@@ -96,29 +98,9 @@ class Server final : public Service
     Handle<ucx::Worker> m_worker;
 
     // runner for the ucx progress engine event source
-    std::unique_ptr<runnable::Runner> m_progress_engine;
+    std::unique_ptr<srf::runnable::Runner> m_progress_engine;
 
     // host resources - probably should be
-};
-
-class DataPlaneServerWorker final : public node::GenericSource<network_event_t>
-{
-  public:
-    DataPlaneServerWorker(Handle<ucx::Worker> worker);
-
-  private:
-    void data_source(rxcpp::subscriber<network_event_t>& s) final;
-
-    void on_tagged_msg(rxcpp::subscriber<network_event_t>& subscriber,
-                       ucp_tag_message_h msg,
-                       const ucp_tag_recv_info_t& msg_info);
-
-    Handle<ucx::Worker> m_worker;
-
-    // modify these to adjust the tag matching
-    // 0/0 is the equivalent of match all tags
-    ucp_tag_t m_tag{0};
-    ucp_tag_t m_tag_mask{0};
 };
 
 }  // namespace srf::internal::data_plane

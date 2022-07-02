@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022,NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,17 +15,20 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "internal/network/resources.hpp"
 
-namespace srf::memory {
+#include "internal/ucx/resources.hpp"
 
-enum class memory_kind
+namespace srf::internal::network {
+
+Resources::Resources(runnable::Resources& _runnable_resources, std::size_t _partition_id, ucx::Resources& ucx) :
+  resources::PartitionResourceBase(_runnable_resources, _partition_id),
+  m_ucx(ucx)
+{}
+
+const ucx::RegistrationCache& Resources::registration_cache() const
 {
-    none,
-    host,
-    pinned,
-    device,
-    managed,
-};
+    return m_ucx.registration_cache();
+}
 
-}  // namespace srf::memory
+}  // namespace srf::internal::network
