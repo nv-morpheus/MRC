@@ -115,15 +115,14 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
     }
 
     // network resources
-    for (std::size_t i = 0; i < partition_count(); ++i)
+    for (auto& base : base_partition_resources)
     {
         if (network_enabled)
         {
-            VLOG(1) << "building network resources for partition: " << i;
-            CHECK(m_ucx.at(i));
-            auto host_partition_id = partitions.at(i).host_partition_id();
+            VLOG(1) << "building network resources for partition: " << base.partition_id();
+            CHECK(m_ucx.at(base.partition_id()));
             std::optional<network::Resources> network;
-            network.emplace(m_runnable.at(host_partition_id), i, *m_ucx.at(i), m_host.at(host_partition_id));
+            network.emplace(base, *m_ucx.at(base.partition_id()), m_host.at(base.partition().host_partition_id()));
             m_network.emplace_back(std::move(network));
         }
         else

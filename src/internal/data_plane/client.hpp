@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "internal/data_plane/request.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
@@ -42,10 +43,10 @@
 
 namespace srf::internal::data_plane {
 
-class Client final : public Service, public resources::PartitionResourceBase
+class Client final : public resources::PartitionResourceBase
 {
   public:
-    Client(resources::PartitionResourceBase& provider, ucx::Resources& ucx);
+    Client(resources::PartitionResourceBase& base, ucx::Resources& ucx);
     ~Client() final;
 
     /**
@@ -65,41 +66,35 @@ class Client final : public Service, public resources::PartitionResourceBase
      * @param port_address
      * @param encoded_object
      */
-    void await_send(const InstanceID& instance_id,
-                    const PortAddress& port_address,
-                    const codable::EncodedObject& encoded_object);
+    // void await_send(const InstanceID& instance_id,
+    //                 const PortAddress& port_address,
+    //                 const codable::EncodedObject& encoded_object);
 
     // number of established remote instances
     std::size_t connections() const;
 
-    // determine if connected to a given remote instance
-    bool is_connected_to(InstanceID) const;
+    void async_recv(void* addr, std::size_t bytes, InstanceID instance_id, std::uint16_t tag, Request& request);
+    void async_senv(void* addr, std::size_t bytes, InstanceID instance_id, std::uint16_t tag, Request& request);
 
-    void decrement_remote_descriptor(InstanceID, ObjectID);
+    // // determine if connected to a given remote instance
+    // bool is_connected_to(InstanceID) const;
+
+    // void decrement_remote_descriptor(InstanceID, ObjectID);
 
     // void get(const protos::RemoteDescriptor&, void*, size_t);
     // void get(const protos::RemoteDescriptor&, Descriptor&);
 
   protected:
-    // issue tag only send - no payload data
-    void issue_network_event(InstanceID, ucp_tag_t);
+    // // issue tag only send - no payload data
+    // void issue_network_event(InstanceID, ucp_tag_t);
 
     // get endpoint for instance id
     const ucx::Endpoint& endpoint(InstanceID) const;
 
-    void push_request(void* request);
+    // void push_request(void* request);
 
   private:
-    void do_service_start() final;
-    void do_service_await_live() final;
-    void do_service_stop() final;
-    void do_service_kill() final;
-    void do_service_await_join() final;
-
     ucx::Resources& m_ucx;
-    std::unique_ptr<node::SourceChannelWriteable<void*>> m_ucx_request_channel;
-    std::unique_ptr<srf::runnable::Runner> m_progress_engine;
-
     std::map<InstanceID, ucx::WorkerAddress> m_workers;
     mutable std::map<InstanceID, std::shared_ptr<ucx::Endpoint>> m_endpoints;
 };

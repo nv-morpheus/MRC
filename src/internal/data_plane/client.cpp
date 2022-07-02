@@ -22,6 +22,7 @@
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/endpoint.hpp"
+#include "internal/ucx/resources.hpp"
 #include "internal/ucx/worker.hpp"
 #include "internal/utils/contains.hpp"
 
@@ -77,46 +78,12 @@ static void send_completion_handler_with_future(void* request, ucs_status_t stat
     // we could optimize this a bit more
 }
 
-Client::Client(resources::PartitionResourceBase& provider, ucx::Resources& ucx) :
-  resources::PartitionResourceBase(provider),
+Client::Client(resources::PartitionResourceBase& base, ucx::Resources& ucx) :
+  resources::PartitionResourceBase(base),
   m_ucx(ucx)
 {}
 
-Client::~Client()
-{
-    Service::call_in_destructor();
-}
-
-void Client::do_service_start()
-{
-    m_ucx_request_channel = std::make_unique<node::SourceChannelWriteable<void*>>();
-    auto sink             = std::make_unique<DataPlaneClientWorker>(m_worker);
-    sink->update_channel(std::make_unique<channel::BufferedChannel<void*>>(256));
-    node::make_edge(*m_ucx_request_channel, *sink);
-    LOG(FATAL) << "get launch control from partition resources";
-    m_progress_engine = runnable().launch_control().prepare_launcher(std::move(sink))->ignition();
-}
-
-void Client::do_service_await_live()
-{
-    m_progress_engine->await_live();
-}
-
-void Client::do_service_stop()
-{
-    m_ucx_request_channel.reset();
-}
-
-void Client::do_service_kill()
-{
-    m_ucx_request_channel.reset();
-    m_progress_engine->kill();
-}
-
-void Client::do_service_await_join()
-{
-    m_progress_engine->await_join();
-}
+Client::~Client() = default;
 
 void Client::register_instance(InstanceID instance_id, ucx::WorkerAddress worker_address)
 {
@@ -142,8 +109,7 @@ const ucx::Endpoint& Client::endpoint(InstanceID id) const
         }
         // lazy instantiation of the endpoint
         DVLOG(10) << "creating endpoint to instance_id: " << id;
-        auto endpoint = std::make_shared<ucx::Endpoint>(m_worker, search_workers->second);
-        m_worker->progress();
+        auto endpoint   = m_ucx.make_ep(search_workers->second);
         m_endpoints[id] = endpoint;
         return *endpoint;
     }
@@ -151,66 +117,71 @@ const ucx::Endpoint& Client::endpoint(InstanceID id) const
     return *search_endpoints->second;
 }
 
-void Client::push_request(void* request)
+std::size_t Client::connections() const
 {
-    DCHECK(m_ucx_request_channel);
-    m_ucx_request_channel->await_write(std::move(request));
+    return m_endpoints.size();
 }
 
-bool Client::is_connected_to(InstanceID instance_id) const
-{
-    return contains(m_workers, instance_id);
-}
+// void Client::push_request(void* request)
+// {
+//     DCHECK(m_ucx_request_channel);
+//     m_ucx_request_channel->await_write(std::move(request));
+// }
 
-void Client::decrement_remote_descriptor(InstanceID id, ObjectID obj_id)
-{
-    ucp_tag_t tag = obj_id | DESCRIPTOR_TAG;
-    issue_network_event(id, tag);
-}
+// bool Client::is_connected_to(InstanceID instance_id) const
+// {
+//     return contains(m_workers, instance_id);
+// }
 
-void Client::issue_network_event(InstanceID id, ucp_tag_t tag)
-{
-    ucp_request_param_t params;
-    std::memset(&params, 0, sizeof(params));
+// void Client::decrement_remote_descriptor(InstanceID id, ObjectID obj_id)
+// {
+//     ucp_tag_t tag = obj_id | DESCRIPTOR_TAG;
+//     issue_network_event(id, tag);
+// }
 
-    auto* request = ucp_tag_send_nbx(endpoint(id).handle(), nullptr, 0, tag, &params);
+// void Client::issue_network_event(InstanceID id, ucp_tag_t tag)
+// {
+//     ucp_request_param_t params;
+//     std::memset(&params, 0, sizeof(params));
 
-    if (request == nullptr /* UCS_OK */)
-    {
-        // send completed successfully
-        return;
-    }
-    if (UCS_PTR_IS_ERR(request))
-    {
-        LOG(ERROR) << "send failed";
-        throw std::runtime_error("send failed");
-    }
+//     auto* request = ucp_tag_send_nbx(endpoint(id).handle(), nullptr, 0, tag, &params);
 
-    // send operation was scheduled by the ucx runtime
-    // adding requests to the channel will ensure the progress engine
-    // will work to make forward progress on queued network requests
-    push_request(std::move(request));
-}
+//     if (request == nullptr /* UCS_OK */)
+//     {
+//         // send completed successfully
+//         return;
+//     }
+//     if (UCS_PTR_IS_ERR(request))
+//     {
+//         LOG(ERROR) << "send failed";
+//         throw std::runtime_error("send failed");
+//     }
 
-struct GetUserData
-{
-    Promise<void> promise;
-    ucp_rkey_h rkey;
-};
+//     // send operation was scheduled by the ucx runtime
+//     // adding requests to the channel will ensure the progress engine
+//     // will work to make forward progress on queued network requests
+//     push_request(std::move(request));
+// }
 
-static void rdma_get_callback(void* request, ucs_status_t status, void* user_data)
-{
-    DVLOG(1) << "rdma get callback start for request " << request;
-    auto* data = static_cast<GetUserData*>(user_data);
-    if (status != UCS_OK)
-    {
-        LOG(FATAL) << "rdma get failure occurred";
-        // data->promise.set_exception();
-    }
-    data->promise.set_value();
-    ucp_request_free(request);
-    ucp_rkey_destroy(data->rkey);
-}
+// struct GetUserData
+// {
+//     Promise<void> promise;
+//     ucp_rkey_h rkey;
+// };
+
+// static void rdma_get_callback(void* request, ucs_status_t status, void* user_data)
+// {
+//     DVLOG(1) << "rdma get callback start for request " << request;
+//     auto* data = static_cast<GetUserData*>(user_data);
+//     if (status != UCS_OK)
+//     {
+//         LOG(FATAL) << "rdma get failure occurred";
+//         // data->promise.set_exception();
+//     }
+//     data->promise.set_value();
+//     ucp_request_free(request);
+//     ucp_rkey_destroy(data->rkey);
+// }
 
 /*
 void Client::get(const protos::RemoteDescriptor& remote_md, Descriptor& buffer)
@@ -274,64 +245,59 @@ void Client::get(const protos::RemoteDescriptor& remote_md, Descriptor& buffer)
 }
 */
 
-void Client::await_send(const InstanceID& instance_id,
-                        const PortAddress& port_address,
-                        const codable::EncodedObject& encoded_object)
-{
-    Promise<void> promise;
-    auto future = promise.get_future();
+// void Client::await_send(const InstanceID& instance_id,
+//                         const PortAddress& port_address,
+//                         const codable::EncodedObject& encoded_object)
+// {
+//     Promise<void> promise;
+//     auto future = promise.get_future();
 
-    ucp_tag_t tag = port_address | INGRESS_TAG;
-    ucp_request_param_t params;
+//     ucp_tag_t tag = port_address | INGRESS_TAG;
+//     ucp_request_param_t params;
 
-    params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA;
-    params.cb.send      = send_completion_handler_with_future;
-    params.user_data    = &promise;
+//     params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA;
+//     params.cb.send      = send_completion_handler_with_future;
+//     params.user_data    = &promise;
 
-    // serialize the proto of the encoded object into it's own encoded object
-    // dogfooding at its best
-    codable::EncodedObject msg;
-    codable::encode(encoded_object.proto(), msg);
+//     // serialize the proto of the encoded object into it's own encoded object
+//     // dogfooding at its best
+//     codable::EncodedObject msg;
+//     codable::encode(encoded_object.proto(), msg);
 
-    // sanity check
-    // 1) there should be only 1 descriptor, and
-    // 2) the size of the memory block should be the size of the protos requested
-    DCHECK_EQ(msg.descriptor_count(), 1);
-    auto block = msg.memory_block(0);
-    DCHECK_EQ(block.bytes(), encoded_object.proto().ByteSizeLong());
+//     // sanity check
+//     // 1) there should be only 1 descriptor, and
+//     // 2) the size of the memory block should be the size of the protos requested
+//     DCHECK_EQ(msg.descriptor_count(), 1);
+//     auto block = msg.memory_block(0);
+//     DCHECK_EQ(block.bytes(), encoded_object.proto().ByteSizeLong());
 
-    // all encoded_objects are serialized to host memory
-    // these are small packed remote descriptors, not the actual payload data
-    params.op_attr_mask |= UCP_OP_ATTR_FIELD_MEMORY_TYPE;
-    params.memory_type = UCS_MEMORY_TYPE_HOST;
+//     // all encoded_objects are serialized to host memory
+//     // these are small packed remote descriptors, not the actual payload data
+//     params.op_attr_mask |= UCP_OP_ATTR_FIELD_MEMORY_TYPE;
+//     params.memory_type = UCS_MEMORY_TYPE_HOST;
 
-    // issue send
-    ucs_status_ptr_t request =
-        ucp_tag_send_nbx(endpoint(instance_id).handle(), block.data(), block.bytes(), tag, &params);
+//     // issue send
+//     ucs_status_ptr_t request =
+//         ucp_tag_send_nbx(endpoint(instance_id).handle(), block.data(), block.bytes(), tag, &params);
 
-    if (request == nullptr /* UCS_OK */)
-    {
-        return;
-    }
-    if (UCS_PTR_IS_ERR(request))
-    {
-        LOG(ERROR) << "send failed - ";
-        throw std::runtime_error("send failed");
-    }
+//     if (request == nullptr /* UCS_OK */)
+//     {
+//         return;
+//     }
+//     if (UCS_PTR_IS_ERR(request))
+//     {
+//         LOG(ERROR) << "send failed - ";
+//         throw std::runtime_error("send failed");
+//     }
 
-    // if we didn't complete immediate or throw an error, then the message
-    // is in flight. push the request to the progress engine which will
-    // wake up a progress fiber to complete the send
-    push_request(std::move(request));
+//     // if we didn't complete immediate or throw an error, then the message
+//     // is in flight. push the request to the progress engine which will
+//     // wake up a progress fiber to complete the send
+//     push_request(std::move(request));
 
-    // the caller of this await_send method will block and yield the fiber here
-    // the caller is calling an "await" method so blocking and yielding is implied
-    future.get();
-}
-
-std::size_t Client::connections() const
-{
-    return m_endpoints.size();
-}
+//     // the caller of this await_send method will block and yield the fiber here
+//     // the caller is calling an "await" method so blocking and yielding is implied
+//     future.get();
+// }
 
 }  // namespace srf::internal::data_plane

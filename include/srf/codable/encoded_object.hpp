@@ -266,7 +266,7 @@ MetaDataT EncodedObject::meta_data(std::size_t idx) const
     return meta_data;
 }
 
-std::size_t EncodedObject::add_buffer(std::shared_ptr<memory::memory_resource> mr, std::size_t bytes)
+inline std::size_t EncodedObject::add_buffer(std::shared_ptr<memory::memory_resource> mr, std::size_t bytes)
 {
     CHECK(m_context_acquired);
     memory::buffer buff(bytes, mr);

@@ -15,35 +15,22 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "internal/data_plane/request.hpp"
 
-namespace srf::internal {
+#include <glog/logging.h>
 
-namespace resources {
-class Manager;
-class PartitionResourceBase;
-}  // namespace resources
+namespace srf::internal::data_plane {
 
-namespace runnable {
-class Resources;
-}  // namespace runnable
+Request::Request() : m_future(m_promise.get_future()) {}
 
-namespace memory {
-class HostResources;
-class DeviceResources;
-}  // namespace memory
+Request::~Request()
+{
+    CHECK(m_request) << "error: Requests must be completed before they can be destroyed";
+}
 
-// control plane and data plane
-namespace network {
-class Resources;
-}  // namespace network
+Status Request::await_complete()
+{
+    return m_future.get();
+}
 
-namespace ucx {
-class Resources;
-}  // namespace ucx
-
-namespace data_plane {
-class Resources;
-}  // namespace data_plane
-
-}  // namespace srf::internal
+}  // namespace srf::internal::data_plane

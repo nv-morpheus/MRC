@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#include "internal/data_plane/client.hpp"
+#include "internal/data_plane/resources.hpp"
 #include "internal/memory/device_resources.hpp"
 #include "internal/memory/host_resources.hpp"
 #include "internal/network/resources.hpp"
@@ -132,6 +134,48 @@ TEST_F(TestNetwork, ResourceManager)
 
     h_buffer_0.release();
     d_buffer_0.release();
+}
+
+TEST_F(TestNetwork, CommsSendRecv)
+{
+    // using options.placement().resources_strategy(PlacementResources::Shared)
+    // will test if cudaSetDevice is being properly called by the network services
+    // since all network services for potentially multiple devices are colocated on a single thread
+    auto resources = std::make_unique<internal::resources::Manager>(
+        internal::system::SystemProvider(make_system([](Options& options) {
+            options.architect_url("localhost:13337");
+            options.placement().resources_strategy(PlacementResources::Dedicated);
+            options.resources().enable_device_memory_pool(true);
+            options.resources().enable_host_memory_pool(true);
+            options.resources().host_memory_pool().block_size(32_MiB);
+            options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
+            options.resources().device_memory_pool().block_size(64_MiB);
+            options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
+        })));
+
+    if (resources->partition_count() < 2 && resources->device_count() < 2)
+    {
+        GTEST_SKIP() << "this test only works with 2 device partitions";
+    }
+
+    EXPECT_TRUE(resources->partition(0).device());
+    EXPECT_TRUE(resources->partition(1).device());
+
+    EXPECT_TRUE(resources->partition(0).network());
+    EXPECT_TRUE(resources->partition(1).network());
+
+    auto& r0 = resources->partition(0);
+    auto& r1 = resources->partition(1);
+
+    auto h_buffer_0 = r0.host().make_buffer(1_MiB);
+    auto d_buffer_0 = r0.device()->make_buffer(1_MiB);
+
+    // here we are exchanging internal ucx worker addresses without the need of the control plane
+    r0.network()->data_plane().client().register_instance(1, r1.network()->data_plane().ucx_address());
+    r1.network()->data_plane().client().register_instance(0, r0.network()->data_plane().ucx_address());
+
+    // expect that the buffers are allowed to survive pass the resource manager
+    resources.reset();
 }
 
 // TEST_F(TestNetwork, NetworkEventsManagerLifeCycle)

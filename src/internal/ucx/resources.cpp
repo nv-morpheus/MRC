@@ -21,6 +21,7 @@
 #include "internal/system/device_partition.hpp"
 #include "internal/system/fiber_task_queue.hpp"
 #include "internal/system/partition.hpp"
+#include "internal/ucx/endpoint.hpp"
 #include "internal/ucx/worker.hpp"
 
 #include "srf/core/task_queue.hpp"
@@ -87,4 +88,9 @@ Worker& Resources::worker()
     CHECK(m_worker);
     return *m_worker;
 }
+std::shared_ptr<ucx::Endpoint> Resources::make_ep(const std::string& worker_address) const
+{
+    return std::make_shared<ucx::Endpoint>(m_worker, worker_address);
+}
+
 }  // namespace srf::internal::ucx

@@ -143,6 +143,9 @@ include(cmake/setup_iwyu.cmake)
 
 # Keep all source files sorted!!!
 add_library(libsrf
+  src/internal/data_plane/client.cpp
+  src/internal/data_plane/resources.cpp
+  src/internal/data_plane/request.cpp
   src/internal/data_plane/server.cpp
   src/internal/executor/executor.cpp
   src/internal/executor/iexecutor.cpp

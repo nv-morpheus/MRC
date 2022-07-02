@@ -15,44 +15,76 @@
  * limitations under the License.
  */
 
-#include "internal/network/resources.hpp"
-
 #include "internal/data_plane/resources.hpp"
+
+#include "internal/data_plane/client.hpp"
 #include "internal/data_plane/server.hpp"
-#include "internal/memory/host_resources.hpp"
-#include "internal/resources/forward.hpp"
-#include "internal/resources/partition_resources_base.hpp"
-#include "internal/ucx/registration_cache.hpp"
 #include "internal/ucx/resources.hpp"
 
-namespace srf::internal::network {
+#include "srf/cuda/common.hpp"
+#include "srf/runnable/launch_control.hpp"
+
+#include <glog/logging.h>
+
+#include <memory>
+
+namespace srf::internal::data_plane {
 
 Resources::Resources(resources::PartitionResourceBase& base, ucx::Resources& ucx, memory::HostResources& host) :
   resources::PartitionResourceBase(base),
   m_ucx(ucx),
-  m_host(host)
+  m_host(host),
+  m_server(base, ucx, host),
+  m_client(base, ucx)
 {
-    // construct resources on the srf_network task queue thread
-    m_ucx.network_task_queue()
-        .enqueue([this, &base] {
-            // initialize data plane services - server / client
-            m_data_plane = std::make_shared<data_plane::Resources>(base, m_ucx, m_host);
-        })
-        .get();
+    // ensure the data plane progress engine is up and running
+    m_server.service_start();
+    m_server.service_await_live();
 }
 
 Resources::~Resources()
 {
-    if (m_data_plane)
-    {
-        m_data_plane->service_stop();
-        m_data_plane->service_await_join();
-    }
+    call_in_destructor();
 }
 
-const ucx::RegistrationCache& Resources::registration_cache() const
+Client& Resources::client()
 {
-    return m_ucx.registration_cache();
+    return m_client;
 }
 
-}  // namespace srf::internal::network
+// Server& Resources::server()
+// {
+//     return m_server;
+// }
+
+std::string Resources::ucx_address() const
+{
+    return m_ucx.worker().address();
+}
+
+void Resources::do_service_start()
+{
+    m_server.service_start();
+}
+
+void Resources::do_service_await_live()
+{
+    m_server.service_await_live();
+}
+
+void Resources::do_service_stop()
+{
+    m_server.service_stop();
+}
+
+void Resources::do_service_kill()
+{
+    m_server.service_kill();
+}
+
+void Resources::do_service_await_join()
+{
+    m_server.service_await_join();
+}
+
+}  // namespace srf::internal::data_plane

@@ -17,33 +17,16 @@
 
 #pragma once
 
-namespace srf::internal {
+#include <ucp/api/ucp.h>
+#include <ucs/memory/memory_type.h>
+#include <ucs/type/status.h>
 
-namespace resources {
-class Manager;
-class PartitionResourceBase;
-}  // namespace resources
+namespace srf::internal::data_plane {
 
-namespace runnable {
-class Resources;
-}  // namespace runnable
+struct Callbacks final
+{
+    // internal point-to-point
+    static void p2p_send(void* request, ucs_status_t status, void* user_data);
+};
 
-namespace memory {
-class HostResources;
-class DeviceResources;
-}  // namespace memory
-
-// control plane and data plane
-namespace network {
-class Resources;
-}  // namespace network
-
-namespace ucx {
-class Resources;
-}  // namespace ucx
-
-namespace data_plane {
-class Resources;
-}  // namespace data_plane
-
-}  // namespace srf::internal
+}  // namespace srf::internal::data_plane
