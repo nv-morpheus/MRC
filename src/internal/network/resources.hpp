@@ -22,6 +22,8 @@
 #include "internal/runnable/resources.hpp"
 #include "internal/ucx/registration_cache.hpp"
 
+#include "srf/utils/macros.hpp"
+
 #include <cstddef>
 
 namespace srf::internal::network {
@@ -31,6 +33,12 @@ class Resources final : private resources::PartitionResourceBase
   public:
     Resources(resources::PartitionResourceBase& base, ucx::Resources& ucx, memory::HostResources& host);
     ~Resources() final;
+
+    DELETE_COPYABILITY(Resources);
+
+    Resources(Resources&& other) noexcept;
+
+    Resources& operator=(Resources&&) noexcept = delete;
 
     const ucx::RegistrationCache& registration_cache() const;
 
@@ -43,7 +51,7 @@ class Resources final : private resources::PartitionResourceBase
   private:
     ucx::Resources& m_ucx;
     memory::HostResources& m_host;
-    std::shared_ptr<data_plane::Resources> m_data_plane;
+    std::unique_ptr<data_plane::Resources> m_data_plane;
 };
 
 }  // namespace srf::internal::network

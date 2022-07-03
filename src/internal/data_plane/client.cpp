@@ -17,6 +17,7 @@
 
 #include "internal/data_plane/client.hpp"
 
+#include "internal/data_plane/callbacks.hpp"
 #include "internal/data_plane/client_worker.hpp"
 #include "internal/data_plane/tags.hpp"
 #include "internal/ucx/common.hpp"
@@ -61,23 +62,6 @@
 
 namespace srf::internal::data_plane {
 
-static void send_completion_handler_with_future(void* request, ucs_status_t status, void* user_data)
-{
-    auto* promise = static_cast<Promise<void>*>(user_data);
-
-    if (status == UCS_OK)
-    {
-        promise->set_value();
-    }
-    else
-    {
-        promise->set_exception(std::make_exception_ptr(std::runtime_error(ucs_status_string(status))));
-    }
-
-    // the request will be released by the progress engine
-    // we could optimize this a bit more
-}
-
 Client::Client(resources::PartitionResourceBase& base, ucx::Resources& ucx) :
   resources::PartitionResourceBase(base),
   m_ucx(ucx)
@@ -120,6 +104,48 @@ const ucx::Endpoint& Client::endpoint(InstanceID id) const
 std::size_t Client::connections() const
 {
     return m_endpoints.size();
+}
+
+void Client::async_recv(void* addr, std::size_t bytes, std::uint64_t tag, Request& request)
+{
+    static constexpr std::uint64_t mask = P2P_TAG & TAG_USER_MASK;  // NOLINT
+
+    CHECK_EQ(request.m_request, nullptr);
+    CHECK(request.m_state == Request::State::Init);
+    request.m_state = Request::State::Running;
+
+    ucp_request_param_t params;
+    params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
+    params.cb.recv      = Callbacks::recv;
+    params.user_data    = &request;
+
+    // build tag
+    CHECK_LE(tag, TAG_USER_MASK);
+    tag |= P2P_TAG;
+
+    request.m_request = ucp_tag_recv_nbx(m_ucx.worker().handle(), addr, bytes, tag, mask, &params);
+    CHECK(request.m_request);
+    CHECK(!UCS_PTR_IS_ERR(request.m_request));
+}
+
+void Client::async_send(void* addr, std::size_t bytes, std::uint64_t tag, InstanceID instance_id, Request& request)
+{
+    CHECK_EQ(request.m_request, nullptr);
+    CHECK(request.m_state == Request::State::Init);
+    request.m_state = Request::State::Running;
+
+    CHECK_LE(tag, TAG_USER_MASK);
+    tag |= P2P_TAG;
+    const auto& ep = endpoint(instance_id);
+
+    ucp_request_param_t send_params;
+    send_params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
+    send_params.cb.send      = Callbacks::send;
+    send_params.user_data    = &request;
+
+    request.m_request = ucp_tag_send_nbx(ep.handle(), addr, bytes, tag, &send_params);
+    CHECK(request.m_request);
+    CHECK(!UCS_PTR_IS_ERR(request.m_request));
 }
 
 // void Client::push_request(void* request)

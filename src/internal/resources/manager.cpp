@@ -17,6 +17,7 @@
 
 #include "internal/resources/manager.hpp"
 
+#include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/system/partitions.hpp"
@@ -28,6 +29,7 @@
 #include <ext/alloc_traits.h>
 #include <glog/logging.h>
 
+#include <functional>
 #include <optional>
 #include <ostream>
 #include <string>
@@ -123,7 +125,7 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
             CHECK(m_ucx.at(base.partition_id()));
             std::optional<network::Resources> network;
             network.emplace(base, *m_ucx.at(base.partition_id()), m_host.at(base.partition().host_partition_id()));
-            m_network.emplace_back(std::move(network));
+            m_network.push_back(std::move(network));
         }
         else
         {

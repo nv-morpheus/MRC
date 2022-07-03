@@ -17,20 +17,45 @@
 
 #include "internal/data_plane/request.hpp"
 
+#include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 
 namespace srf::internal::data_plane {
 
-Request::Request() : m_future(m_promise.get_future()) {}
+Request::Request() = default;
 
 Request::~Request()
 {
-    CHECK(m_request) << "error: Requests must be completed before they can be destroyed";
+    CHECK(m_state == State::Init) << "A Request that is in use is being destroyed";
 }
 
-Status Request::await_complete()
+void Request::reset()
 {
-    return m_future.get();
+    m_state   = State::Init;
+    m_request = nullptr;
+}
+
+bool Request::await_complete()
+{
+    CHECK(m_state > State::Init);
+    while (m_state == State::Running)
+    {
+        boost::this_fiber::yield();
+    }
+
+    if (m_state == State::OK)
+    {
+        reset();
+        return true;
+    }
+
+    if (m_state == State::Cancelled)
+    {
+        reset();
+        return false;
+    }
+
+    LOG(FATAL) << "error in ucx callback";
 }
 
 }  // namespace srf::internal::data_plane

@@ -170,9 +170,28 @@ TEST_F(TestNetwork, CommsSendRecv)
     auto h_buffer_0 = r0.host().make_buffer(1_MiB);
     auto d_buffer_0 = r0.device()->make_buffer(1_MiB);
 
+    auto& d0 = r0.network()->data_plane();
+    auto& d1 = r1.network()->data_plane();
+
     // here we are exchanging internal ucx worker addresses without the need of the control plane
-    r0.network()->data_plane().client().register_instance(1, r1.network()->data_plane().ucx_address());
-    r1.network()->data_plane().client().register_instance(0, r0.network()->data_plane().ucx_address());
+    d0.client().register_instance(1, d1.ucx_address());
+    d1.client().register_instance(0, d0.ucx_address());
+
+    int src = 42;
+    int dst = -1;
+
+    internal::data_plane::Request send_req;
+    internal::data_plane::Request recv_req;
+
+    d1.client().async_recv(&dst, sizeof(int), 0, recv_req);
+    d0.client().async_send(&src, sizeof(int), 0, 1, send_req);
+
+    LOG(INFO) << "await recv";
+    recv_req.await_complete();
+    LOG(INFO) << "await send";
+    send_req.await_complete();
+
+    EXPECT_EQ(src, dst);
 
     // expect that the buffers are allowed to survive pass the resource manager
     resources.reset();

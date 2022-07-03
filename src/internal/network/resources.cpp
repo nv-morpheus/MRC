@@ -36,7 +36,7 @@ Resources::Resources(resources::PartitionResourceBase& base, ucx::Resources& ucx
     m_ucx.network_task_queue()
         .enqueue([this, &base] {
             // initialize data plane services - server / client
-            m_data_plane = std::make_shared<data_plane::Resources>(base, m_ucx, m_host);
+            m_data_plane = std::make_unique<data_plane::Resources>(base, m_ucx, m_host);
         })
         .get();
 }
@@ -55,4 +55,10 @@ const ucx::RegistrationCache& Resources::registration_cache() const
     return m_ucx.registration_cache();
 }
 
+Resources::Resources(Resources&& other) noexcept :
+  resources::PartitionResourceBase(other),
+  m_ucx(other.m_ucx),
+  m_host(other.m_host),
+  m_data_plane(std::exchange(other.m_data_plane, nullptr))
+{}
 }  // namespace srf::internal::network

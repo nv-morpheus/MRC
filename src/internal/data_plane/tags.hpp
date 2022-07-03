@@ -33,7 +33,10 @@ static constexpr ucp_tag_t MSG_TYPE_MASK  = 0xF000000000000000;  // leading 4 bi
 static constexpr ucp_tag_t INGRESS_TAG    = 0x8000000000000000;  // leading 4 bits are 1000  // NOLINT
 static constexpr ucp_tag_t DESCRIPTOR_TAG = 0x4000000000000000;  // leading 4 bits are 0100  // NOLINT
 static constexpr ucp_tag_t FUTURE_TAG     = 0x2000000000000000;  // leading 4 bits are 0010  // NOLINT
+static constexpr ucp_tag_t P2P_TAG        = 0x1000000000000000;  // leading 4 bits are 0010  // NOLINT
 
+static constexpr ucp_tag_t TAG_CTRL_MASK = 0xFFFF000000000000;  // 48-bits  // NOLINT
+static constexpr ucp_tag_t TAG_USER_MASK = 0x0000FFFFFFFFFFFF;  // 48-bits  // NOLINT
 static constexpr ucp_tag_t USR_TYPE_MASK = 0x0000FFFFFFFFFFFF;  // 48-bits  // NOLINT
 
 static ucp_tag_t tag_decode_msg_type(const ucp_tag_t& tag)

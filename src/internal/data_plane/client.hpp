@@ -73,8 +73,8 @@ class Client final : public resources::PartitionResourceBase
     // number of established remote instances
     std::size_t connections() const;
 
-    void async_recv(void* addr, std::size_t bytes, InstanceID instance_id, std::uint16_t tag, Request& request);
-    void async_senv(void* addr, std::size_t bytes, InstanceID instance_id, std::uint16_t tag, Request& request);
+    void async_recv(void* addr, std::size_t bytes, std::uint64_t tag, Request& request);
+    void async_send(void* addr, std::size_t bytes, std::uint64_t tag, InstanceID instance_id, Request& request);
 
     // // determine if connected to a given remote instance
     // bool is_connected_to(InstanceID) const;

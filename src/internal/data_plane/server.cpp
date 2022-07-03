@@ -168,13 +168,13 @@ void Server::do_service_start()
             m_rd_source = std::make_unique<node::SourceChannelWriteable<ucp_tag_t>>();
 
             // pre-post recv for remote descriptors and remote promise/future
-            m_pre_posted_recv_info.resize(m_pre_posted_recv_count);
-            for (auto& info : m_pre_posted_recv_info)
-            {
-                info.worker  = m_ucx.worker().handle();
-                info.channel = m_rd_source.get();
-                pre_post_recv_issue(&info);
-            }
+            // m_pre_posted_recv_info.resize(m_pre_posted_recv_count);
+            // for (auto& info : m_pre_posted_recv_info)
+            // {
+            //     info.worker  = m_ucx.worker().handle();
+            //     info.channel = m_rd_source.get();
+            //     pre_post_recv_issue(&info);
+            // }
 
             // source for ucx tag recvs with data
             auto progress_engine = std::make_unique<DataPlaneServerWorker>(m_ucx.worker());

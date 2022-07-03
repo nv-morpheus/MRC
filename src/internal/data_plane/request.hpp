@@ -24,33 +24,12 @@
 #include <ucs/memory/memory_type.h>
 #include <ucs/type/status.h>
 
+#include <atomic>
+
 namespace srf::internal::data_plane {
 
 class Callbacks;
 class Client;
-
-class Status
-{
-  public:
-    Status(bool status);
-
-    static Status make_ok()
-    {
-        return Status(true);
-    }
-    static Status make_cancelled()
-    {
-        return Status(false);
-    }
-
-    const bool& ok() const
-    {
-        return m_ok;
-    }
-
-  private:
-    bool m_ok;
-};
 
 class Request final
 {
@@ -62,15 +41,24 @@ class Request final
     DELETE_MOVEABILITY(Request);
 
     // std::optional<Status> is_complete();
-    Status await_complete();
+    bool await_complete();
 
     // attempts to cancel the request
     // the request will either be cancelled or completed
     // void try_cancel();
 
   private:
-    boost::fibers::promise<Status> m_promise;
-    boost::fibers::future<Status> m_future;
+    void reset();
+
+    enum class State
+    {
+        Init,
+        Running,
+        OK,
+        Cancelled,
+        Error
+    };
+    std::atomic<State> m_state{State::Init};
     void* m_request{nullptr};
 
     friend Client;
