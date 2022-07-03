@@ -30,7 +30,7 @@ enum MemoryKind
     None = 99;
 }
 
-message RemoteDescriptor
+message RemoteMemoryDescriptor
 {
     uint32 instance_id = 1;
     uint32 object_id = 2;
@@ -63,7 +63,7 @@ message Descriptor
 {
     oneof desc
     {
-        RemoteDescriptor   remote_desc    = 1;
+        RemoteMemoryDescriptor   remote_desc    = 1;
         PackedDescriptor   packed_desc    = 2;
         EagerDescriptor    eager_desc     = 3;
         MetaDataDescriptor meta_data_desc = 4;

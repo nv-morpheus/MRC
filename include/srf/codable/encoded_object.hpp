@@ -34,6 +34,7 @@
 #include <typeindex>
 #include <utility>
 #include <vector>
+
 namespace srf::codable {
 
 /**
@@ -60,7 +61,7 @@ class EncodedObject
     const protos::EncodedObject& proto() const;
 
     /**
-     * @brief Access const memory::buffer_view of the RemoteDescriptor at the required index
+     * @brief Access const memory::buffer_view of the RemoteMemoryDescriptor at the required index
      * @return memory::const_buffer_view
      */
     memory::const_buffer_view memory_block(std::size_t idx) const;
@@ -119,20 +120,20 @@ class EncodedObject
     memory::buffer_view mutable_memory_block(std::size_t idx) const;
 
     /**
-     * @brief Converts a memory block to a RemoteDescriptor proto
+     * @brief Converts a memory block to a RemoteMemoryDescriptor proto
      *
      * @param view
-     * @return protos::RemoteDescriptor
+     * @return protos::RemoteMemoryDescriptor
      */
-    static protos::RemoteDescriptor encode_descriptor(memory::const_buffer_view view);
+    static protos::RemoteMemoryDescriptor encode_descriptor(memory::const_buffer_view view);
 
     /**
-     * @brief Converts a RemoteDescriptor proto to a mutable memory block
+     * @brief Converts a RemoteMemoryDescriptor proto to a mutable memory block
      *
      * @param desc
      * @return memory::buffer_view
      */
-    static memory::buffer_view decode_descriptor(const protos::RemoteDescriptor& desc);
+    static memory::buffer_view decode_descriptor(const protos::RemoteMemoryDescriptor& desc);
 
     /**
      * @brief Add a custom protobuf meta data to the descriptor list
@@ -264,15 +265,6 @@ MetaDataT EncodedObject::meta_data(std::size_t idx) const
         throw exceptions::SrfRuntimeError("unable to decode meta data to the requestd message type");
     }
     return meta_data;
-}
-
-inline std::size_t EncodedObject::add_buffer(std::shared_ptr<memory::memory_resource> mr, std::size_t bytes)
-{
-    CHECK(m_context_acquired);
-    memory::buffer buff(bytes, mr);
-    auto index       = add_memory_block(buff);
-    m_buffers[index] = std::move(buff);
-    return index;
 }
 
 }  // namespace srf::codable

@@ -135,14 +135,13 @@ void Client::async_send(void* addr, std::size_t bytes, std::uint64_t tag, Instan
 
     CHECK_LE(tag, TAG_USER_MASK);
     tag |= P2P_TAG;
-    const auto& ep = endpoint(instance_id);
 
     ucp_request_param_t send_params;
     send_params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
     send_params.cb.send      = Callbacks::send;
     send_params.user_data    = &request;
 
-    request.m_request = ucp_tag_send_nbx(ep.handle(), addr, bytes, tag, &send_params);
+    request.m_request = ucp_tag_send_nbx(endpoint(instance_id).handle(), addr, bytes, tag, &send_params);
     CHECK(request.m_request);
     CHECK(!UCS_PTR_IS_ERR(request.m_request));
 }

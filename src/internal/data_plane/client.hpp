@@ -76,6 +76,16 @@ class Client final : public resources::PartitionResourceBase
     void async_recv(void* addr, std::size_t bytes, std::uint64_t tag, Request& request);
     void async_send(void* addr, std::size_t bytes, std::uint64_t tag, InstanceID instance_id, Request& request);
 
+    /**
+     * @brief Perform an asynchronous one-side GET from a contiguous block of memory starting at remote_addr on remote
+     * instance_id.
+     *
+     * @param addr
+     * @param bytes
+     * @param instance_id
+     */
+    // void async_get(void *addr, std::size_t bytes, InstanceID instance_id, )
+
     // // determine if connected to a given remote instance
     // bool is_connected_to(InstanceID) const;
 
