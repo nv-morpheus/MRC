@@ -18,7 +18,6 @@
 #include "internal/data_plane/client.hpp"
 
 #include "internal/data_plane/callbacks.hpp"
-#include "internal/data_plane/client_worker.hpp"
 #include "internal/data_plane/tags.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/context.hpp"
