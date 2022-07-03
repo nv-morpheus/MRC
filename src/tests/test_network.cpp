@@ -158,24 +158,15 @@ TEST_F(TestNetwork, CommsSendRecv)
         GTEST_SKIP() << "this test only works with 2 device partitions";
     }
 
-    EXPECT_TRUE(resources->partition(0).device());
-    EXPECT_TRUE(resources->partition(1).device());
-
     EXPECT_TRUE(resources->partition(0).network());
     EXPECT_TRUE(resources->partition(1).network());
 
-    auto& r0 = resources->partition(0);
-    auto& r1 = resources->partition(1);
-
-    auto h_buffer_0 = r0.host().make_buffer(1_MiB);
-    auto d_buffer_0 = r0.device()->make_buffer(1_MiB);
-
-    auto& d0 = r0.network()->data_plane();
-    auto& d1 = r1.network()->data_plane();
+    auto& r0 = resources->partition(0).network()->data_plane();
+    auto& r1 = resources->partition(1).network()->data_plane();
 
     // here we are exchanging internal ucx worker addresses without the need of the control plane
-    d0.client().register_instance(1, d1.ucx_address());
-    d1.client().register_instance(0, d0.ucx_address());
+    r0.client().register_instance(1, r1.ucx_address());  // register r1 as instance_id 1
+    r1.client().register_instance(0, r0.ucx_address());  // register r0 as instance_id 0
 
     int src = 42;
     int dst = -1;
@@ -183,8 +174,8 @@ TEST_F(TestNetwork, CommsSendRecv)
     internal::data_plane::Request send_req;
     internal::data_plane::Request recv_req;
 
-    d1.client().async_recv(&dst, sizeof(int), 0, recv_req);
-    d0.client().async_send(&src, sizeof(int), 0, 1, send_req);
+    r1.client().async_recv(&dst, sizeof(int), 0, recv_req);
+    r0.client().async_send(&src, sizeof(int), 0, 1, send_req);
 
     LOG(INFO) << "await recv";
     recv_req.await_complete();
