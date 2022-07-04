@@ -39,6 +39,9 @@ class Manager final : public system::SystemProvider
     Manager(const system::SystemProvider& system);
     Manager(std::unique_ptr<system::Resources> resources);
 
+    static Manager& get_resources();
+    static PartitionResources& get_partition();
+
     std::size_t device_count() const;
     std::size_t partition_count() const;
 
@@ -52,6 +55,9 @@ class Manager final : public system::SystemProvider
     std::vector<std::optional<memory::DeviceResources>> m_device;  // one per flattened partition upto device_count
     std::vector<std::optional<network::Resources>> m_network;      // one per flattened partition
     std::vector<PartitionResources> m_partitions;                  // one per flattened partition
+
+    static thread_local PartitionResources* m_thread_partition;
+    static thread_local Manager* m_thread_resources;
 };
 
 }  // namespace srf::internal::resources

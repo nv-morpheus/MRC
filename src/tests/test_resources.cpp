@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#include "internal/pipeline/types.hpp"
-#include "internal/system/system.hpp"
+#include "internal/resources/forward.hpp"
+#include "internal/resources/manager.hpp"
 
 #include "srf/channel/forward.hpp"
 #include "srf/options/options.hpp"
@@ -47,3 +47,58 @@ class TestResources : public ::testing::Test
         return system::make_system(std::move(options));
     }
 };
+
+TEST_F(TestResources, GetRuntime)
+{
+    auto resources = std::make_unique<internal::resources::Manager>(
+        internal::system::SystemProvider(make_system([](Options& options) {
+            // options.architect_url("localhost:13337");
+            options.placement().resources_strategy(PlacementResources::Dedicated);
+            // options.resources().enable_device_memory_pool(true);
+            // options.resources().enable_host_memory_pool(true);
+            // options.resources().host_memory_pool().block_size(32_MiB);
+            // options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
+            // options.resources().device_memory_pool().block_size(64_MiB);
+            // options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
+        })));
+
+    EXPECT_ANY_THROW(internal::resources::Manager::get_resources());
+    EXPECT_ANY_THROW(internal::resources::Manager::get_partition());
+
+    resources->partition(0)
+        .runnable()
+        .main()
+        .enqueue([] {
+            auto& resources = internal::resources::Manager::get_resources();
+            auto& partition = internal::resources::Manager::get_partition();
+            EXPECT_EQ(partition.partition_id(), 0);
+        })
+        .get();
+}
+
+TEST_F(TestResources, GetRuntimeShared)
+{
+    auto resources = std::make_unique<internal::resources::Manager>(
+        internal::system::SystemProvider(make_system([](Options& options) {
+            // options.architect_url("localhost:13337");
+            options.placement().resources_strategy(PlacementResources::Shared);
+            // options.resources().enable_device_memory_pool(true);
+            // options.resources().enable_host_memory_pool(true);
+            // options.resources().host_memory_pool().block_size(32_MiB);
+            // options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
+            // options.resources().device_memory_pool().block_size(64_MiB);
+            // options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
+        })));
+
+    EXPECT_ANY_THROW(internal::resources::Manager::get_resources());
+    EXPECT_ANY_THROW(internal::resources::Manager::get_partition());
+
+    resources->partition(0)
+        .runnable()
+        .main()
+        .enqueue([] {
+            auto& resources = internal::resources::Manager::get_resources();
+            EXPECT_ANY_THROW(internal::resources::Manager::get_partition());
+        })
+        .get();
+}
