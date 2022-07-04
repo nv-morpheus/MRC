@@ -60,7 +60,7 @@ class BlockManager final
         return m_block_map[key];
     }
 
-    const block_type* find_block(void* ptr) const
+    const block_type* find_block(const void* ptr) const
     {
         auto search = find_entry(ptr);
         if (search != m_block_map.end() && search->second.contains(ptr))
@@ -72,7 +72,7 @@ class BlockManager final
         return nullptr;
     }
 
-    void drop_block(void* ptr)
+    void drop_block(const void* ptr)
     {
         DVLOG(10) << "dropping block: " << ptr;
         auto search = find_entry(ptr);

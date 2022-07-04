@@ -214,7 +214,7 @@ class EncodedObject
      * @param bytes
      * @return std::size_t
      */
-    std::size_t add_buffer(std::shared_ptr<memory::memory_resource> mr, std::size_t bytes);
+    std::size_t add_buffer(memory::buffer&& buffer);
 
     /**
      * @brief Used to push a Object message with the starting descriptor index and type_index to the main proto

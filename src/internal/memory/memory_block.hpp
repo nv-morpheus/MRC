@@ -42,11 +42,11 @@ struct MemoryBlock
         return m_bytes;
     }
 
-    bool contains(void* ptr) const
+    bool contains(const void* ptr) const
     {
-        auto* p = static_cast<std::byte*>(ptr);
-        auto* s = static_cast<std::byte*>(m_data);
-        auto* e = s + m_bytes;
+        const auto* p = static_cast<const std::byte*>(ptr);
+        auto* s       = static_cast<std::byte*>(m_data);
+        auto* e       = s + m_bytes;
         return (m_data != nullptr && s <= p && p < e);
     }
 

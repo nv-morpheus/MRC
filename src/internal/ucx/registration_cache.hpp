@@ -67,7 +67,7 @@ class RegistrationCache final
      * @param bytes
      * @return std::size_t
      */
-    std::size_t drop_block(void* addr, std::size_t bytes)
+    std::size_t drop_block(const void* addr, std::size_t bytes)
     {
         const auto* block = m_blocks.find_block(addr);
         CHECK(block);
@@ -88,7 +88,7 @@ class RegistrationCache final
      * @param addr
      * @return const MemoryBlock&
      */
-    const MemoryBlock& lookup(void* addr) const noexcept
+    const MemoryBlock& lookup(const void* addr) const noexcept
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         const auto* ptr = m_blocks.find_block(addr);
