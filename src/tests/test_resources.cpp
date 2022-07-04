@@ -52,14 +52,8 @@ TEST_F(TestResources, GetRuntime)
 {
     auto resources = std::make_unique<internal::resources::Manager>(
         internal::system::SystemProvider(make_system([](Options& options) {
-            // options.architect_url("localhost:13337");
+            // todo(#114) - propose: this is the default and only option
             options.placement().resources_strategy(PlacementResources::Dedicated);
-            // options.resources().enable_device_memory_pool(true);
-            // options.resources().enable_host_memory_pool(true);
-            // options.resources().host_memory_pool().block_size(32_MiB);
-            // options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
-            // options.resources().device_memory_pool().block_size(64_MiB);
-            // options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
         })));
 
     EXPECT_ANY_THROW(internal::resources::Manager::get_resources());
@@ -80,14 +74,8 @@ TEST_F(TestResources, GetRuntimeShared)
 {
     auto resources = std::make_unique<internal::resources::Manager>(
         internal::system::SystemProvider(make_system([](Options& options) {
-            // options.architect_url("localhost:13337");
+            // todo(#114) - propose: remove this option entirely
             options.placement().resources_strategy(PlacementResources::Shared);
-            // options.resources().enable_device_memory_pool(true);
-            // options.resources().enable_host_memory_pool(true);
-            // options.resources().host_memory_pool().block_size(32_MiB);
-            // options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
-            // options.resources().device_memory_pool().block_size(64_MiB);
-            // options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
         })));
 
     EXPECT_ANY_THROW(internal::resources::Manager::get_resources());
