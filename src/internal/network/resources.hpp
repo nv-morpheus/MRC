@@ -35,22 +35,11 @@ class Resources final : private resources::PartitionResourceBase
     ~Resources() final;
 
     DELETE_COPYABILITY(Resources);
+    DEFAULT_MOVEABILITY(Resources);
 
-    Resources(Resources&& other) noexcept;
-
-    Resources& operator=(Resources&&) noexcept = delete;
-
-    const ucx::RegistrationCache& registration_cache() const;
-
-    data_plane::Resources& data_plane()
-    {
-        CHECK(m_data_plane);
-        return *m_data_plane;
-    }
+    data_plane::Resources& data_plane();
 
   private:
-    ucx::Resources& m_ucx;
-    memory::HostResources& m_host;
     std::unique_ptr<data_plane::Resources> m_data_plane;
 };
 

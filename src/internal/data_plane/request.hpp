@@ -60,6 +60,7 @@ class Request final
     };
     std::atomic<State> m_state{State::Init};
     void* m_request{nullptr};
+    void* m_rkey{nullptr};
 
     friend Client;
     friend Callbacks;

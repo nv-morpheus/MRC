@@ -23,6 +23,8 @@
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
 
+#include "srf/protos/codable.pb.h"
+
 #include <memory>
 
 namespace srf::internal::data_plane {
@@ -40,6 +42,7 @@ class Resources final : private Service, private resources::PartitionResourceBas
     Client& client();
 
     std::string ucx_address() const;
+    const ucx::RegistrationCache& registration_cache() const;
 
   private:
     void do_service_start() final;

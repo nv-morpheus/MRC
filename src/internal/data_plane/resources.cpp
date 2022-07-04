@@ -62,6 +62,11 @@ std::string Resources::ucx_address() const
     return m_ucx.worker().address();
 }
 
+const ucx::RegistrationCache& Resources::registration_cache() const
+{
+    return m_ucx.registration_cache();
+}
+
 void Resources::do_service_start()
 {
     m_server.service_start();

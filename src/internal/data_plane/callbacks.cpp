@@ -20,6 +20,7 @@
 #include "internal/data_plane/request.hpp"
 
 #include <glog/logging.h>
+#include <ucp/api/ucp.h>
 
 namespace srf::internal::data_plane {
 
@@ -30,6 +31,11 @@ void Callbacks::send(void* request, ucs_status_t status, void* user_data)
     DCHECK(user_data);
     auto* user_req = static_cast<Request*>(user_data);
     DCHECK(user_req->m_state == Request::State::Running);
+
+    if (user_req->m_rkey != nullptr)
+    {
+        ucp_rkey_destroy(reinterpret_cast<ucp_rkey_h>(user_req->m_rkey));
+    }
 
     if (status == UCS_OK)
     {

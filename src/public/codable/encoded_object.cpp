@@ -79,7 +79,7 @@ protos::RemoteMemoryDescriptor EncodedObject::encode_descriptor(memory::const_bu
     desc.set_remote_address(reinterpret_cast<std::uint64_t>(view.data()));
     desc.set_remote_bytes(view.bytes());
     desc.set_memory_kind(encode_memory_type(view.kind()));
-
+    // get ucx registration if applicable
     return desc;
 }
 

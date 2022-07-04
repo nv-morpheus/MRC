@@ -17,6 +17,7 @@
 
 #include "internal/resources/manager.hpp"
 
+#include "internal/data_plane/resources.hpp"
 #include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/system/partition.hpp"

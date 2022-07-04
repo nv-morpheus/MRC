@@ -112,8 +112,8 @@ TEST_F(TestNetwork, ResourceManager)
     auto h_buffer_0 = resources->partition(0).host().make_buffer(1_MiB);
     auto d_buffer_0 = resources->partition(0).device()->make_buffer(1_MiB);
 
-    auto h_ucx_block = resources->partition(0).network()->registration_cache().lookup(h_buffer_0.data());
-    auto d_ucx_block = resources->partition(0).network()->registration_cache().lookup(d_buffer_0.data());
+    auto h_ucx_block = resources->partition(0).network()->data_plane().registration_cache().lookup(h_buffer_0.data());
+    auto d_ucx_block = resources->partition(0).network()->data_plane().registration_cache().lookup(d_buffer_0.data());
 
     EXPECT_EQ(h_ucx_block.bytes(), 32_MiB);
     EXPECT_EQ(d_ucx_block.bytes(), 64_MiB);
@@ -183,6 +183,68 @@ TEST_F(TestNetwork, CommsSendRecv)
     send_req.await_complete();
 
     EXPECT_EQ(src, dst);
+
+    // expect that the buffers are allowed to survive pass the resource manager
+    resources.reset();
+}
+
+TEST_F(TestNetwork, CommsGet)
+{
+    // using options.placement().resources_strategy(PlacementResources::Shared)
+    // will test if cudaSetDevice is being properly called by the network services
+    // since all network services for potentially multiple devices are colocated on a single thread
+    auto resources = std::make_unique<internal::resources::Manager>(
+        internal::system::SystemProvider(make_system([](Options& options) {
+            options.architect_url("localhost:13337");
+            options.placement().resources_strategy(PlacementResources::Dedicated);
+            options.resources().enable_device_memory_pool(true);
+            options.resources().enable_host_memory_pool(true);
+            options.resources().host_memory_pool().block_size(32_MiB);
+            options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
+            options.resources().device_memory_pool().block_size(64_MiB);
+            options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
+        })));
+
+    if (resources->partition_count() < 2 && resources->device_count() < 2)
+    {
+        GTEST_SKIP() << "this test only works with 2 device partitions";
+    }
+
+    EXPECT_TRUE(resources->partition(0).network());
+    EXPECT_TRUE(resources->partition(1).network());
+
+    auto src = resources->partition(0).host().make_buffer(1_MiB);
+    auto dst = resources->partition(1).host().make_buffer(1_MiB);
+
+    auto src_keys =
+        resources->partition(0).network()->data_plane().registration_cache().lookup(src.data()).packed_remote_keys();
+
+    auto* src_data    = static_cast<std::size_t*>(src.data());
+    std::size_t count = 1_MiB / sizeof(std::size_t);
+    for (std::size_t i = 0; i < count; ++i)
+    {
+        src_data[i] = 42;
+    }
+
+    auto& r0 = resources->partition(0).network()->data_plane();
+    auto& r1 = resources->partition(1).network()->data_plane();
+
+    // here we are exchanging internal ucx worker addresses without the need of the control plane
+    r0.client().register_instance(1, r1.ucx_address());  // register r1 as instance_id 1
+    r1.client().register_instance(0, r0.ucx_address());  // register r0 as instance_id 0
+
+    internal::data_plane::Request get_req;
+
+    r1.client().async_get(dst.data(), 1_MiB, 0, src.data(), src_keys, get_req);
+
+    LOG(INFO) << "await get";
+    get_req.await_complete();
+
+    auto* dst_data = static_cast<std::size_t*>(dst.data());
+    for (std::size_t i = 0; i < count; ++i)
+    {
+        EXPECT_EQ(dst_data[i], 42);
+    }
 
     // expect that the buffers are allowed to survive pass the resource manager
     resources.reset();

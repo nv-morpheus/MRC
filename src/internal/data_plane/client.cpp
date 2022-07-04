@@ -47,6 +47,7 @@
 #include <boost/fiber/future/promise.hpp>
 #include <glog/logging.h>
 #include <ucp/api/ucp.h>
+#include <ucp/api/ucp_def.h>
 #include <ucs/memory/memory_type.h>
 #include <ucs/type/status.h>
 
@@ -142,6 +143,44 @@ void Client::async_send(void* addr, std::size_t bytes, std::uint64_t tag, Instan
     send_params.user_data    = &request;
 
     request.m_request = ucp_tag_send_nbx(endpoint(instance_id).handle(), addr, bytes, tag, &send_params);
+    CHECK(request.m_request);
+    CHECK(!UCS_PTR_IS_ERR(request.m_request));
+}
+
+void Client::async_get(void* addr,
+                       std::size_t bytes,
+                       InstanceID instance_id,
+                       void* remote_addr,
+                       const std::string& packed_remote_key,
+                       Request& request)
+{
+    CHECK_EQ(request.m_request, nullptr);
+    CHECK(request.m_state == Request::State::Init);
+    request.m_state = Request::State::Running;
+
+    const auto& ep = endpoint(instance_id);
+
+    ucp_request_param_t params;
+    params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
+    params.cb.send      = Callbacks::send;
+    params.user_data    = &request;
+
+    {
+        auto rc =
+            ucp_ep_rkey_unpack(ep.handle(), packed_remote_key.data(), reinterpret_cast<ucp_rkey_h*>(&request.m_rkey));
+        if (rc != UCS_OK)
+        {
+            LOG(ERROR) << "ucp_ep_rkey_unpack failed - " << ucs_status_string(rc);
+            throw std::runtime_error("ucp_ep_rkey_unpack failed");
+        }
+    }
+
+    request.m_request = ucp_get_nbx(ep.handle(),
+                                    addr,
+                                    bytes,
+                                    reinterpret_cast<std::uint64_t>(remote_addr),
+                                    reinterpret_cast<ucp_rkey_h>(request.m_rkey),
+                                    &params);
     CHECK(request.m_request);
     CHECK(!UCS_PTR_IS_ERR(request.m_request));
 }

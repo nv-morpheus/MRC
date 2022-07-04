@@ -24,6 +24,7 @@
 #include "internal/service.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/context.hpp"
+#include "internal/ucx/registration_cache.hpp"
 #include "internal/ucx/worker.hpp"
 
 #include "srf/channel/status.hpp"

@@ -41,7 +41,7 @@ class PartitionProvider : public SystemProvider
     const Partition& partition() const;
 
   private:
-    const std::size_t m_partition_id;
+    std::size_t m_partition_id;
 };
 
 }  // namespace srf::internal::system

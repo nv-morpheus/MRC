@@ -28,15 +28,13 @@
 namespace srf::internal::network {
 
 Resources::Resources(resources::PartitionResourceBase& base, ucx::Resources& ucx, memory::HostResources& host) :
-  resources::PartitionResourceBase(base),
-  m_ucx(ucx),
-  m_host(host)
+  resources::PartitionResourceBase(base)
 {
     // construct resources on the srf_network task queue thread
-    m_ucx.network_task_queue()
-        .enqueue([this, &base] {
+    ucx.network_task_queue()
+        .enqueue([this, &base, &ucx, &host] {
             // initialize data plane services - server / client
-            m_data_plane = std::make_unique<data_plane::Resources>(base, m_ucx, m_host);
+            m_data_plane = std::make_unique<data_plane::Resources>(base, ucx, host);
         })
         .get();
 }
@@ -50,15 +48,9 @@ Resources::~Resources()
     }
 }
 
-const ucx::RegistrationCache& Resources::registration_cache() const
+data_plane::Resources& Resources::data_plane()
 {
-    return m_ucx.registration_cache();
+    CHECK(m_data_plane);
+    return *m_data_plane;
 }
-
-Resources::Resources(Resources&& other) noexcept :
-  resources::PartitionResourceBase(other),
-  m_ucx(other.m_ucx),
-  m_host(other.m_host),
-  m_data_plane(std::exchange(other.m_data_plane, nullptr))
-{}
 }  // namespace srf::internal::network
