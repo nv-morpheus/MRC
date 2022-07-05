@@ -17,6 +17,7 @@
 
 #include "common.hpp"
 
+#include "internal/data_plane/resources.hpp"
 #include "internal/resources/manager.hpp"
 
 #include "srf/codable/codable_protocol.hpp"
@@ -136,11 +137,20 @@ TEST_F(TestCodable, String)
     m_resources->partition(0)
         .runnable()
         .main()
-        .enqueue([] {
+        .enqueue([this] {
             std::string str = "Hello SRF";
-            auto encoding   = encode(str);
-            auto decoding   = decode<std::string>(*encoding);
+            auto str_block  = m_resources->partition(0).network()->data_plane().registration_cache().lookup(str.data());
+            EXPECT_FALSE(str_block);
+
+            auto encoding = encode(str);
+            auto decoding = decode<std::string>(*encoding);
             EXPECT_STREQ(str.c_str(), decoding.c_str());
+
+            // test to ensure that the unregistered string got copied to an internal registered buffer
+            auto view = encoding->memory_block(0);
+            auto view_block =
+                m_resources->partition(0).network()->data_plane().registration_cache().lookup(view.data());
+            EXPECT_TRUE(view_block);
         })
         .get();
 }
