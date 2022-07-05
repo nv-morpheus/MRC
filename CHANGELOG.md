@@ -1,3 +1,9 @@
+# SRF 22.06.01 (4 Jul 2022)
+
+## 🐛 Bug Fixes
+
+- Fix `flatten()` Operator With Infinite Sources ([#117](https://github.com/nv-morpheus/SRF/pull/117)) [@mdemoret-nv](https://github.com/mdemoret-nv)
+
 # SRF 22.06.00 (28 Jun 2022)
 
 ## 🐛 Bug Fixes
