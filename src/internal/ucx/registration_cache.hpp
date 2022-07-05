@@ -25,6 +25,7 @@
 
 #include <memory>
 #include <mutex>
+#include <optional>
 
 namespace srf::internal::ucx {
 
@@ -88,12 +89,15 @@ class RegistrationCache final
      * @param addr
      * @return const MemoryBlock&
      */
-    const MemoryBlock& lookup(const void* addr) const noexcept
+    std::optional<ucx::MemoryBlock> lookup(const void* addr) const noexcept
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         const auto* ptr = m_blocks.find_block(addr);
-        CHECK(ptr);
-        return *ptr;
+        if (ptr == nullptr)
+        {
+            return std::nullopt;
+        }
+        return {*ptr};
     }
 
   private:
