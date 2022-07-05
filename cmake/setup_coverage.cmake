@@ -34,10 +34,10 @@ if(SRF_WITH_CODECOV)
       "src/tests/*"
       )
 
-  setup_target_for_coverage_lcov(
-      NAME lcov-report
-      EXCLUDE ${CODECOV_REPORT_EXCLUSIONS}
-  )
+  # setup_target_for_coverage_lcov(
+  #     NAME lcov-report
+  #     EXCLUDE ${CODECOV_REPORT_EXCLUSIONS}
+  # )
 
   setup_target_for_coverage_gcovr_xml(
       NAME gcovr-xml-report
