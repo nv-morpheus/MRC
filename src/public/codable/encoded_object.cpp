@@ -78,18 +78,14 @@ memory::buffer_view EncodedObject::decode_descriptor(const protos::RemoteMemoryD
         reinterpret_cast<void*>(desc.remote_address()), desc.remote_bytes(), decode_memory_type(desc.memory_kind()));
 }
 
-protos::RemoteMemoryDescriptor EncodedObject::encode_descriptor(memory::const_buffer_view view)
+protos::RemoteMemoryDescriptor EncodedObject::encode_descriptor(memory::const_buffer_view view, std::string keys)
 {
     protos::RemoteMemoryDescriptor desc;
+
     desc.set_remote_address(reinterpret_cast<std::uint64_t>(view.data()));
     desc.set_remote_bytes(view.bytes());
     desc.set_memory_kind(encode_memory_type(view.kind()));
-
-    auto& resources = internal::resources::Manager::get_partition();
-    CHECK(resources.network());
-    resources.network()->data_plane().registration_cache().lookup(view.data());
-
-    // get ucx registration if applicable
+    desc.set_remote_key(std::move(keys));
     return desc;
 }
 
@@ -153,11 +149,29 @@ std::size_t EncodedObject::add_meta_data(const google::protobuf::Message& meta_d
 
 std::size_t EncodedObject::add_memory_block(memory::const_buffer_view view)
 {
-    CHECK(m_context_acquired);
-    auto count = descriptor_count();
-    auto* desc = m_proto.add_descriptors()->mutable_remote_desc();
-    *desc      = encode_descriptor(view);
-    return count;
+    auto& resources = internal::resources::Manager::get_partition();
+    CHECK(resources.network());
+    auto ucx_block = resources.network()->data_plane().registration_cache().lookup(view.data());
+
+    if (ucx_block)
+    {
+        CHECK(m_context_acquired);
+        auto count = descriptor_count();
+        auto* desc = m_proto.add_descriptors()->mutable_remote_desc();
+        *desc      = encode_descriptor(view, ucx_block->packed_remote_keys());
+        return count;
+    }
+
+    if (view.kind() == srf::memory::memory_kind::host)
+    {
+        DVLOG(10) << "unregistered host memory buffer view detected - a copy will be made";
+        auto count = add_host_buffer(view.bytes());
+        auto block = mutable_memory_block(count);
+        std::memcpy(block.data(), view.data(), view.bytes());
+        return count;
+    }
+
+    LOG(FATAL) << "unregistered device buffer is not supported at this time";
 }
 
 std::size_t EncodedObject::add_host_buffer(std::size_t bytes)

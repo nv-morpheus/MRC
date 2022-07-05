@@ -125,7 +125,7 @@ class EncodedObject
      * @param view
      * @return protos::RemoteMemoryDescriptor
      */
-    static protos::RemoteMemoryDescriptor encode_descriptor(memory::const_buffer_view view);
+    static protos::RemoteMemoryDescriptor encode_descriptor(memory::const_buffer_view view, std::string keys);
 
     /**
      * @brief Converts a RemoteMemoryDescriptor proto to a mutable memory block
