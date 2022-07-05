@@ -53,6 +53,7 @@ add_executable(test_srf_private
   test_partitions.cpp
   test_pipeline.cpp
   test_ranges.cpp
+  test_remote_descriptor.cpp
   test_resources.cpp
   test_runnable.cpp
   test_system.cpp

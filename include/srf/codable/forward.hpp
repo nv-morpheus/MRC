@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022,NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +15,15 @@
  * limitations under the License.
  */
 
-syntax = "proto3";
+#pragma once
 
-import "google/protobuf/any.proto";
+namespace srf::codable {
+
+class EncodedObject;
+
+namespace protos {
+class EncodedObject;
+class RemoteDescriptor;
+}  // namespace protos
+
+}  // namespace srf::codable

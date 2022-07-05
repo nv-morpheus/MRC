@@ -82,3 +82,11 @@ message EncodedObject
     repeated Object     objects     = 2;
     google.protobuf.Any meta_data   = 3;
 }
+
+message RemoteDescriptor
+{
+    uint32 instance_id = 1;
+    uint64 object_id = 2;
+    uint32 tokens = 3;
+    EncodedObject encoded_object = 4;
+}

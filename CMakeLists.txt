@@ -161,6 +161,9 @@ add_library(libsrf
   src/internal/pipeline/pipeline.cpp
   src/internal/pipeline/port_graph.cpp
   src/internal/pipeline/resources.cpp
+  src/internal/remote_descriptor/manager.cpp
+  src/internal/remote_descriptor/remote_descriptor.cpp
+  src/internal/remote_descriptor/storage.cpp
   src/internal/resources/manager.cpp
   src/internal/resources/partition_resources.cpp
   src/internal/resources/partition_resources_base.cpp
