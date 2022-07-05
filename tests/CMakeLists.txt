@@ -16,7 +16,6 @@
 # Keep all source files sorted!!!
 add_executable(test_srf
   test_channel.cpp
-  test_codable.cpp
   test_executor.cpp
   test_main.cpp
   test_metrics.cpp
