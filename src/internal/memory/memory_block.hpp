@@ -19,13 +19,13 @@
 
 #include <stdexcept>
 
-namespace srf::memory {
+namespace srf::internal::memory {
 
-struct memory_block
+struct MemoryBlock
 {
-    memory_block() = default;
-    memory_block(void* data, std::size_t bytes) : m_data(data), m_bytes(bytes) {}
-    virtual ~memory_block() = default;
+    MemoryBlock() = default;
+    MemoryBlock(void* data, std::size_t bytes) : m_data(data), m_bytes(bytes) {}
+    virtual ~MemoryBlock() = default;
 
     void* data()
     {
@@ -76,22 +76,22 @@ struct memory_block
     std::size_t m_bytes{0};
 };
 
-template <typename Compare = std::less<>>
-struct memory_block_compare_size
+template <typename CompareT = std::less<>>
+struct MemoryBlockCompareSize
 {
-    using is_transparent = void;
+    using is_transparent = void;  // NOLINT
 
-    constexpr bool operator()(std::size_t size, const memory_block& block, Compare compare = Compare()) const
+    constexpr bool operator()(std::size_t size, const MemoryBlock& block, CompareT compare = CompareT()) const
     {
         return compare(size, block.bytes());
     }
 
-    constexpr bool operator()(const memory_block& block, std::size_t size, Compare compare = Compare()) const
+    constexpr bool operator()(const MemoryBlock& block, std::size_t size, CompareT compare = CompareT()) const
     {
         return compare(block.bytes(), size);
     }
 
-    constexpr bool operator()(const memory_block& lhs, const memory_block& rhs, Compare compare = Compare()) const
+    constexpr bool operator()(const MemoryBlock& lhs, const MemoryBlock& rhs, CompareT compare = CompareT()) const
     {
         if (compare(lhs.bytes(), rhs.bytes()))
         {
@@ -105,25 +105,25 @@ struct memory_block_compare_size
     }
 };
 
-template <typename Compare = std::less<>>
-struct memory_block_compare_addr
+template <typename CompareT = std::less<>>
+struct MemoryBlockCompareAddr
 {
-    using is_transparent = void;
+    using is_transparent = void;  // NOLINT
 
-    constexpr bool operator()(void* addr, const memory_block& block, Compare compare = Compare()) const
+    constexpr bool operator()(void* addr, const MemoryBlock& block, CompareT compare = CompareT()) const
     {
         return compare(reinterpret_cast<std::byte*>(addr), block.data());
     }
 
-    constexpr bool operator()(const memory_block& block, void* addr, Compare compare = Compare()) const
+    constexpr bool operator()(const MemoryBlock& block, void* addr, CompareT compare = CompareT()) const
     {
         return compare(block.data(), reinterpret_cast<std::byte*>(addr));
     }
 
-    constexpr bool operator()(const memory_block& lhs, const memory_block& rhs, Compare compare = Compare()) const
+    constexpr bool operator()(const MemoryBlock& lhs, const MemoryBlock& rhs, CompareT compare = CompareT()) const
     {
         return compare(lhs.data(), rhs.data());
     }
 };
 
-}  // namespace srf::memory
+}  // namespace srf::internal::memory

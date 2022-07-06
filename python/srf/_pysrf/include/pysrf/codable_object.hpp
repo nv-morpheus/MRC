@@ -24,7 +24,6 @@
 #include "srf/codable/codable_protocol.hpp"
 #include "srf/codable/encoded_object.hpp"
 #include "srf/codable/encoding_options.hpp"
-#include "srf/memory/block.hpp"
 #include "srf/memory/memory_kind.hpp"
 
 #include <Python.h>
@@ -56,8 +55,8 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, pybind11::object>>
         serialized_obj = Serializer::serialize(py_object, opts.use_shm(), !opts.force_copy());
 
         // Copy it or not.
-        encoded.add_memory_block(memory::const_block(
-            std::get<0>(serialized_obj), std::get<1>(serialized_obj), memory::memory_kind_type::host));
+        encoded.add_memory_block(memory::const_buffer_view(
+            std::get<0>(serialized_obj), std::get<1>(serialized_obj), memory::memory_kind::host));
     }
 
     static T deserialize(const EncodedObject& encoded, std::size_t object_idx)
@@ -93,8 +92,8 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, pysrf::PyHolder>>>
         serialized_obj = Serializer::serialize(py_object, opts.use_shm(), !opts.force_copy());
 
         // Copy it or not.
-        encoded.add_memory_block(memory::const_block(
-            std::get<0>(serialized_obj), std::get<1>(serialized_obj), memory::memory_kind_type::host));
+        encoded.add_memory_block(memory::buffer_view(
+            std::get<0>(serialized_obj), std::get<1>(serialized_obj), memory::memory_kind::host));
     }
 
     static T deserialize(const EncodedObject& encoded, std::size_t object_idx)

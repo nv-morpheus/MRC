@@ -18,9 +18,9 @@
 #include "internal/system/thread_pool.hpp"
 
 #include "internal/system/resources.hpp"
-
 #include "srf/core/bitmap.hpp"
 
+#include <algorithm>
 #include <cstdint>
 #include <thread>
 

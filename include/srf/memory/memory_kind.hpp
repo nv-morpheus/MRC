@@ -19,7 +19,7 @@
 
 namespace srf::memory {
 
-enum class memory_kind_type
+enum class memory_kind
 {
     none,
     host,

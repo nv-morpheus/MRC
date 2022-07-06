@@ -34,5 +34,5 @@ gpuci_logger "Archiving Conda Package"
 cd $(dirname ${CONDA_BLD_OUTPUT})
 tar cfj ${WORKSPACE_TMP}/conda_pkg.tar.bz $(basename ${CONDA_BLD_OUTPUT})
 
-gpuci_logger "Pushing results to ${DISPLAY_ARTIFACT_URL}"
+gpuci_logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
 aws s3 cp ${WORKSPACE_TMP}/conda_pkg.tar.bz "${ARTIFACT_URL}/conda_pkg.tar.bz"

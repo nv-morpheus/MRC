@@ -20,8 +20,6 @@
 #include "srf/memory/adaptors.hpp"
 #include "srf/memory/resources/host/pinned_memory_resource.hpp"
 
-#include <cuda/memory_resource>
-
 namespace srf::memory {
 
 using numa_node_id_t = std::uint32_t;
