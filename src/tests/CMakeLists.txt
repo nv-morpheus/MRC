@@ -46,6 +46,7 @@ add_executable(test_srf_private
   pipelines/single_segment.cpp
   segments/common_segments.cpp
   test_codable.cpp
+  test_grpc.cpp
   test_main.cpp
   test_memory.cpp
   test_network.cpp

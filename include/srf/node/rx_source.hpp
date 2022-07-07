@@ -61,7 +61,7 @@ class RxSource : public RxSourceBase<T>, public RxRunnable<ContextT>, public RxE
   private:
     void on_shutdown_critical_section() final;
     void do_subscribe(rxcpp::composite_subscription& subscription) final;
-    void on_stop(const rxcpp::subscription& subscription) const final;
+    void on_stop(const rxcpp::subscription& subscription) const override;
     void on_kill(const rxcpp::subscription& subscription) const final;
 
     rxcpp::observable<T> m_observable;

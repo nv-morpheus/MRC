@@ -150,6 +150,8 @@ add_library(libsrf
   src/internal/data_plane/server.cpp
   src/internal/executor/executor.cpp
   src/internal/executor/iexecutor.cpp
+  src/internal/grpc/progress_engine.cpp
+  src/internal/grpc/server/server.cpp
   src/internal/memory/device_resources.cpp
   src/internal/memory/host_resources.cpp
   src/internal/memory/transient_pool.cpp
