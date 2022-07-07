@@ -18,7 +18,6 @@
 #pragma once
 
 #include "srf/cuda/common.hpp"
-#include "srf/memory/blob.hpp"
 
 namespace srf::memory {
 

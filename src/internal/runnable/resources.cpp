@@ -21,8 +21,6 @@
 #include "internal/runnable/engines.hpp"
 #include "internal/system/engine_factory_cpu_sets.hpp"
 #include "internal/system/host_partition.hpp"
-#include "internal/system/partitions.hpp"
-#include "internal/system/system.hpp"
 
 #include "srf/core/bitmap.hpp"
 #include "srf/runnable/launch_control_config.hpp"
@@ -37,40 +35,36 @@
 #include <string>
 #include <type_traits>
 #include <utility>
-#include <vector>
 
 namespace srf::internal::runnable {
 
-Resources::Resources(const system::Resources& system_resources, std::size_t partition_id) :
-  SystemProvider(system_resources),
-  m_partition_id(partition_id),
-  m_main(system_resources.get_task_queue(this->partition().host().engine_factory_cpu_sets().main_cpu_id()))
+Resources::Resources(const system::Resources& system_resources, std::size_t _host_partition_id) :
+  HostPartitionProvider(system_resources, _host_partition_id),
+  m_main(system_resources.get_task_queue(host_partition().engine_factory_cpu_sets().main_cpu_id()))
 {
-    CHECK_LT(partition_id, system().partitions().flattened().size());
-    const auto& partition = this->partition();
+    const auto& host_partition = this->host_partition();
 
-    DVLOG(10) << "main fiber task queue for host partition " << m_partition_id << " assigned to cpu_id "
-              << partition.host().engine_factory_cpu_sets().main_cpu_id();
+    DVLOG(10) << "main fiber task queue for host partition " << host_partition_id() << " assigned to cpu_id "
+              << host_partition.engine_factory_cpu_sets().main_cpu_id();
 
     // construct all other resources on main
     main()
-        .enqueue([this, &system_resources, &partition]() mutable {
-            DVLOG(10) << "constructing engine factories on main for host partition "
-                      << partition.host().cpu_set().str();
-            ::srf::runnable::LaunchControlConfig config;
+        .enqueue([this, &system_resources, &host_partition]() mutable {
+            DVLOG(10) << "constructing engine factories on main for host partition " << host_partition.cpu_set().str();
+            srf::runnable::LaunchControlConfig config;
 
-            for (const auto& [name, cpu_set] : partition.host().engine_factory_cpu_sets().fiber_cpu_sets)
+            for (const auto& [name, cpu_set] : host_partition.engine_factory_cpu_sets().fiber_cpu_sets)
             {
-                auto reusable = partition.host().engine_factory_cpu_sets().is_resuable(name);
+                auto reusable = host_partition.engine_factory_cpu_sets().is_resuable(name);
                 DVLOG(10) << "fiber engine factory: " << name << " using " << cpu_set.str() << " is "
                           << (reusable ? "resuable" : "not reusable");
                 config.resource_groups[name] =
                     runnable::make_engine_factory(system_resources, runnable::EngineType::Fiber, cpu_set, reusable);
             }
 
-            for (const auto& [name, cpu_set] : partition.host().engine_factory_cpu_sets().thread_cpu_sets)
+            for (const auto& [name, cpu_set] : host_partition.engine_factory_cpu_sets().thread_cpu_sets)
             {
-                auto reusable = partition.host().engine_factory_cpu_sets().is_resuable(name);
+                auto reusable = host_partition.engine_factory_cpu_sets().is_resuable(name);
                 DVLOG(10) << "thread engine factory: " << name << " using " << cpu_set.str() << " is "
                           << (reusable ? "resuable" : "not reusable");
                 config.resource_groups[name] =
@@ -78,12 +72,8 @@ Resources::Resources(const system::Resources& system_resources, std::size_t part
             }
 
             // construct launch control
-            DVLOG(10) << "constructing launch control on main for host partition " << partition.host().cpu_set().str();
+            DVLOG(10) << "constructing launch control on main for host partition " << host_partition.cpu_set().str();
             m_launch_control = std::make_unique<::srf::runnable::LaunchControl>(std::move(config));
-
-            // construct host memory resource
-            DVLOG(10) << "constructing memory_resource on main for host partition " << partition.host().cpu_set().str()
-                      << " - not yet implemeted";
         })
         .get();
 }
@@ -99,13 +89,4 @@ srf::runnable::LaunchControl& Resources::launch_control()
     return *m_launch_control;
 }
 
-const system::Partition& Resources::partition() const
-{
-    return system().partitions().flattened().at(m_partition_id);
-}
-
-std::size_t Resources::partition_id() const
-{
-    return m_partition_id;
-}
 }  // namespace srf::internal::runnable

@@ -20,7 +20,7 @@
 #include "srf/codable/codable_protocol.hpp"
 #include "srf/codable/encoded_object.hpp"
 #include "srf/codable/encoding_options.hpp"
-#include "srf/memory/block.hpp"
+#include "srf/memory/buffer_view.hpp"
 #include "srf/memory/memory_kind.hpp"
 
 #include <type_traits>
@@ -62,7 +62,7 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, std::string>>>
         else
         {
             // not registered
-            encoded.add_memory_block(memory::const_block(str.data(), str.size(), memory::memory_kind_type::host));
+            encoded.add_memory_block(memory::const_buffer_view(str.data(), str.size(), memory::memory_kind::host));
         }
     }
 

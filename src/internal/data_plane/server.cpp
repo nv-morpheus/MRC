@@ -23,7 +23,7 @@
 #include "internal/ucx/worker.hpp"
 
 #include "srf/channel/status.hpp"
-#include "srf/memory/block.hpp"
+#include "srf/memory/buffer_view.hpp"
 #include "srf/memory/memory_kind.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/operators/router.hpp"
@@ -77,15 +77,37 @@ void recv_completion_handler(void* request, ucs_status_t status, const ucp_tag_r
     }
     auto port_address = tag_decode_user_tag(msg_info->sender_tag);
     DCHECK(static_subscriber && static_subscriber->is_subscribed());
-    auto msg = std::make_pair(port_address, memory::block(user_data, msg_info->length, memory::memory_kind_type::host));
+    auto msg = std::make_pair(port_address,
+                              srf::memory::buffer_view(user_data, msg_info->length, srf::memory::memory_kind::host));
     static_subscriber->on_next(std::move(msg));
     ucp_request_free(request);
 }
 
 }  // namespace
 
-Server::Server(std::shared_ptr<ucx::Context> context, std::shared_ptr<resources::PartitionResources> resources) :
-  m_worker(std::make_shared<ucx::Worker>(context))
+class DataPlaneServerWorker final : public node::GenericSource<network_event_t>
+{
+  public:
+    DataPlaneServerWorker(Handle<ucx::Worker> worker);
+
+  private:
+    void data_source(rxcpp::subscriber<network_event_t>& s) final;
+
+    void on_tagged_msg(rxcpp::subscriber<network_event_t>& subscriber,
+                       ucp_tag_message_h msg,
+                       const ucp_tag_recv_info_t& msg_info);
+
+    Handle<ucx::Worker> m_worker;
+
+    // modify these to adjust the tag matching
+    // 0/0 is the equivalent of match all tags
+    ucp_tag_t m_tag{0};
+    ucp_tag_t m_tag_mask{0};
+};
+
+Server::Server(resources::PartitionResourceBase& provider, std::shared_ptr<ucx::Worker> worker) :
+  resources::PartitionResourceBase(provider),
+  m_worker(std::move(worker))
 {}
 
 Server::~Server()
@@ -95,7 +117,7 @@ Server::~Server()
 
 void Server::do_service_start()
 {
-    m_deserialize_source = std::make_shared<node::Router<PortAddress, memory::block>>();
+    m_deserialize_source = std::make_shared<node::Router<PortAddress, srf::memory::buffer_view>>();
     m_rd_source          = std::make_unique<node::SourceChannelWriteable<ucp_tag_t>>();
 
     auto progress_engine = std::make_unique<DataPlaneServerWorker>(m_worker);
@@ -103,10 +125,9 @@ void Server::do_service_start()
 
     // all network runnables use the `srf_network` engine factory
     DVLOG(10) << "launch network event mananger progress engine";
-    LOG(FATAL) << "get launch control from partition resources";
-    m_progress_engine = m_resources->host()
+    m_progress_engine = runnable()
                             .launch_control()
-                            .prepare_launcher(runnable::LaunchOptions("srf_network"), std::move(progress_engine))
+                            .prepare_launcher(srf::runnable::LaunchOptions("srf_network"), std::move(progress_engine))
                             ->ignition();
 }
 
@@ -139,7 +160,7 @@ ucx::WorkerAddress Server::worker_address() const
     return m_worker->address();
 }
 
-node::Router<PortAddress, memory::block>& Server::deserialize_source()
+node::Router<PortAddress, srf::memory::buffer_view>& Server::deserialize_source()
 {
     CHECK(m_deserialize_source);
     return *m_deserialize_source;

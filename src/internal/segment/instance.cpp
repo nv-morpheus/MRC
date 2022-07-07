@@ -61,7 +61,8 @@ Instance::Instance(std::shared_ptr<const Definition> definition,
 {
     // construct the segment definition on the intended numa node
     m_builder = m_resources.resources()
-                    .runnable(m_default_partition_id)
+                    .partition(m_default_partition_id)
+                    .runnable()
                     .main()
                     .enqueue([&]() mutable {
                         return std::make_unique<Builder>(definition, rank, m_resources, m_default_partition_id);
@@ -111,24 +112,24 @@ void Instance::do_service_start()
     for (const auto& [name, node] : m_builder->nodes())
     {
         DVLOG(10) << info() << " constructing launcher for " << name;
-        m_launchers[name] =
-            node->prepare_launcher(m_resources.resources().runnable(m_default_partition_id).launch_control());
+        m_launchers[name] = node->prepare_launcher(
+            m_resources.resources().partition(m_default_partition_id).runnable().launch_control());
         apply_callback(m_launchers[name], name);
     }
 
     for (const auto& [name, node] : m_builder->egress_ports())
     {
         DVLOG(10) << info() << " constructing launcher egress port " << name;
-        m_egress_launchers[name] =
-            node->prepare_launcher(m_resources.resources().runnable(m_default_partition_id).launch_control());
+        m_egress_launchers[name] = node->prepare_launcher(
+            m_resources.resources().partition(m_default_partition_id).runnable().launch_control());
         apply_callback(m_egress_launchers[name], name);
     }
 
     for (const auto& [name, node] : m_builder->ingress_ports())
     {
         DVLOG(10) << info() << " constructing launcher ingress port " << name;
-        m_ingress_launchers[name] =
-            node->prepare_launcher(m_resources.resources().runnable(m_default_partition_id).launch_control());
+        m_ingress_launchers[name] = node->prepare_launcher(
+            m_resources.resources().partition(m_default_partition_id).runnable().launch_control());
         apply_callback(m_ingress_launchers[name], name);
     }
 
@@ -302,14 +303,14 @@ std::shared_ptr<manifold::Interface> Instance::create_manifold(const PortName& n
         auto search = m_builder->egress_ports().find(name);
         if (search != m_builder->egress_ports().end())
         {
-            return search->second->make_manifold(m_resources.resources().runnable(m_default_partition_id));
+            return search->second->make_manifold(m_resources.resources().partition(m_default_partition_id).runnable());
         }
     }
     {
         auto search = m_builder->ingress_ports().find(name);
         if (search != m_builder->ingress_ports().end())
         {
-            return search->second->make_manifold(m_resources.resources().runnable(m_default_partition_id));
+            return search->second->make_manifold(m_resources.resources().partition(m_default_partition_id).runnable());
         }
     }
     LOG(FATAL) << info() << " unable to match ingress or egress port name";

@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,12 +17,18 @@
 
 #pragma once
 
+#include "internal/memory/device_resources.hpp"
+#include "internal/memory/host_resources.hpp"
+#include "internal/network/resources.hpp"
+#include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/system/resources.hpp"
 #include "internal/system/system_provider.hpp"
+#include "internal/ucx/resources.hpp"
 
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace srf::internal::resources {
@@ -36,11 +42,16 @@ class Manager final : public system::SystemProvider
     std::size_t device_count() const;
     std::size_t partition_count() const;
 
-    runnable::Resources& runnable(std::size_t partition_id);
+    PartitionResources& partition(std::size_t partition_id);
 
   private:
-    std::unique_ptr<system::Resources> m_system;
-    std::vector<runnable::Resources> m_runnable;
+    const std::unique_ptr<system::Resources> m_system;
+    std::vector<runnable::Resources> m_runnable;                   // one per host partition
+    std::vector<std::optional<ucx::Resources>> m_ucx;              // one per flattened partition if network is enabled
+    std::vector<memory::HostResources> m_host;                     // one per host partition
+    std::vector<std::optional<memory::DeviceResources>> m_device;  // one per flattened partition upto device_count
+    std::vector<std::optional<network::Resources>> m_network;      // one per flattened partition
+    std::vector<PartitionResources> m_partitions;                  // one per flattened partition
 };
 
 }  // namespace srf::internal::resources

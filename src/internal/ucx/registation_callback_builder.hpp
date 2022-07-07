@@ -17,30 +17,28 @@
 
 #pragma once
 
-#include "internal/system/forward.hpp"
-#include "internal/system/host_partition.hpp"
+#include "internal/memory/callback_adaptor.hpp"
+#include "internal/ucx/registration_cache.hpp"
 
-#include "srf/core/task_queue.hpp"
-#include "srf/pipeline/resources.hpp"
-#include "srf/runnable/launch_control.hpp"
+#include <glog/logging.h>
 
 #include <memory>
+#include <mutex>
 
-namespace srf::internal::resources {
+namespace srf::internal::ucx {
 
-class HostResources : public ::srf::pipeline::Resources
+class RegistrationCallbackBuilder final : public memory::CallbackBuilder
 {
   public:
-    HostResources(std::shared_ptr<system::System> system, const system::HostPartition& partition);
-
-    const system::HostPartition& partition() const;
-    ::srf::core::FiberTaskQueue& main() final;
-    ::srf::runnable::LaunchControl& launch_control() final;
+    void add_registration_cache(std::shared_ptr<RegistrationCache> registration_cache)
+    {
+        register_callbacks(
+            [registration_cache](void* addr, std::size_t bytes) { registration_cache->add_block(addr, bytes); },
+            [registration_cache](void* addr, std::size_t bytes) { registration_cache->drop_block(addr, bytes); });
+    }
 
   private:
-    const system::HostPartition& m_partition;
-    std::shared_ptr<::srf::core::FiberTaskQueue> m_main;
-    std::shared_ptr<::srf::runnable::LaunchControl> m_launch_control;
+    using CallbackBuilder::register_callbacks;
 };
 
-}  // namespace srf::internal::resources
+}  // namespace srf::internal::ucx

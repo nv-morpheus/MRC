@@ -101,7 +101,8 @@ void Instance::create_segment(const SegmentAddress& address, std::uint32_t parti
     // CHECK_LT(partition_id, m_resources->host_resources().size());
     CHECK_LT(partition_id, resources().partition_count());
     resources()
-        .runnable(partition_id)
+        .partition(partition_id)
+        .runnable()
         .main()
         .enqueue([this, address, partition_id] {
             auto search = m_segments.find(address);

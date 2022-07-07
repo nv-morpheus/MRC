@@ -17,30 +17,27 @@
 
 #pragma once
 
-#include "internal/resources/host_resources.hpp"
-#include "internal/system/device_partition.hpp"
+#include "internal/resources/partition_resources_base.hpp"
+#include "internal/runnable/resources.hpp"
+#include "internal/ucx/registration_cache.hpp"
 
-#include <memory>
+#include <cstddef>
 
-namespace srf::internal::resources {
+namespace srf::internal::ucx {
+class Resources;
+}
 
-class DeviceResources
+namespace srf::internal::network {
+
+class Resources final : private resources::PartitionResourceBase
 {
   public:
-    DeviceResources(const system::DevicePartition& partition, std::shared_ptr<HostResources>);
+    Resources(runnable::Resources& _runnable_resources, std::size_t _partition_id, ucx::Resources& ucx);
 
-    int cuda_device_id() const;
-    const system::DevicePartition& partition() const;
-
-    HostResources& host() const;
-    std::shared_ptr<HostResources> host_shared() const;
+    const ucx::RegistrationCache& registration_cache() const;
 
   private:
-    const system::DevicePartition& m_partition;
-    std::shared_ptr<HostResources> m_host_resources;
-
-    // todo(update) - with cuda::memory_resource when ready
-    // rmm::device_memory_resource
+    ucx::Resources& m_ucx;
 };
 
-}  // namespace srf::internal::resources
+}  // namespace srf::internal::network
