@@ -69,6 +69,20 @@ TEST_F(TestRPC, ServerLifeCycle)
     // server.register_service(service);
 }
 
+class TestStream : internal::rpc::server::StreamContext<srf::protos::Event, srf::protos::Event>
+{
+    using base_t = internal::rpc::server::StreamContext<srf::protos::Event, srf::protos::Event>;
+
+    void handler(srf::protos::Event&& event, const Stream& stream) final {}
+
+    void on_initialized() final {}
+    void on_write_done() final {}
+    void on_write_fail() final {}
+
+  public:
+    using base_t::base_t;
+};
+
 TEST_F(TestRPC, StreamLifeCycle)
 {
     internal::rpc::server::Server server(m_resources->partition(0).runnable());
@@ -83,17 +97,13 @@ TEST_F(TestRPC, StreamLifeCycle)
         service->RequestEventStream(context, stream, cq.get(), cq.get(), tag);
     };
 
-    auto stream = std::make_shared<internal::rpc::server::Stream<srf::protos::Event, srf::protos::Event>>(
-        service_init, m_resources->partition(0).runnable());
+    auto stream = std::make_shared<TestStream>(service_init, m_resources->partition(0).runnable());
 
     server.service_start();
     server.service_await_live();
 
-    stream->service_start();
-    stream->service_await_live();
-
     server.service_stop();
     server.service_await_join();
 
-    stream->service_await_join();
+    stream.reset();
 }
