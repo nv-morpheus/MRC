@@ -304,6 +304,16 @@ TEST_F(TestNext, MakeEdgeConvertibleFromSinkRxRunnable)
     EXPECT_EQ(counter, 1);
 }
 
+class Node : public srf::node::GenericNode<int, double>
+{
+    void on_data(int&& input, rxcpp::subscriber<double>& subscriber) final {}
+};
+
+TEST_F(TestNext, Node)
+{
+    auto node = std::make_unique<Node>();
+}
+
 class ExampleGenericNode : public node::GenericNode<int, int>
 {
     void on_data(int&& data, rxcpp::subscriber<int>& output) final
