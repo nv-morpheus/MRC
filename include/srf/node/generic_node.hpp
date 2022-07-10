@@ -48,13 +48,15 @@ class GenericNode : public RxNode<InputT, OutputT, ContextT>
     GenericNode() :
       RxNode<InputT, OutputT, ContextT>([this](const rxcpp::observable<InputT>& input) {
           return rxcpp::observable<>::create<OutputT>([this, input](rxcpp::subscriber<OutputT> output) {
-              input.subscribe([this, &output](InputT i) { on_data(std::move(i), output); });
+              input.subscribe([this, &output](InputT i) { on_data(std::move(i), output); },
+                              [this, &output] { on_completed(output); });
           });
       })
     {}
 
   private:
     virtual void on_data(InputT&& data, rxcpp::subscriber<OutputT>& subscriber) = 0;
+    virtual void on_completed(rxcpp::subscriber<OutputT>& subscriber) {}
 };
 
 }  // namespace srf::node

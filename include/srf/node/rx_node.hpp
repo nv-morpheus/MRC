@@ -75,7 +75,7 @@ class RxNode : public RxSinkBase<InputT>,
     void do_subscribe(rxcpp::composite_subscription& subscription) final;
     void on_shutdown_critical_section() final;
 
-    void on_stop(const rxcpp::subscription& subscription) const final;
+    void on_stop(const rxcpp::subscription& subscription) const override;
     void on_kill(const rxcpp::subscription& subscription) const final;
 
     // m_stream works like an operator. It is a function taking an observable and returning an observable. Allows

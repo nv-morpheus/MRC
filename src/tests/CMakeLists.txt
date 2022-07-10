@@ -71,6 +71,7 @@ target_link_libraries(test_srf_private
   ucx::ucs
   ucx::ucp
   pthread
+  srf_test_protos
 )
 
 # Necessary include to prevent IWYU from showing absolute paths

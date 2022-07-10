@@ -32,6 +32,7 @@ namespace srf::internal::rpc::server {
 Server::Server(runnable::Resources& runnable) : m_runnable(runnable)
 {
     m_cq = m_builder.AddCompletionQueue();
+    m_builder.AddListeningPort("0.0.0.0:13337", grpc::InsecureServerCredentials());
 }
 
 Server::~Server()

@@ -46,10 +46,8 @@
 
 namespace srf::internal::rpc::server {
 
-using engine_callback_t = std::function<void(bool)>;
-
 template <typename RequestT, typename ResponseT>
-class StreamContext : public Service
+class StreamContext : private Service
 {
   public:
     // it is the users responsiblity to ensure the StreamContext outlives the Stream child
@@ -75,7 +73,7 @@ class StreamContext : public Service
   private:
     using init_fn_t = std::function<void(void* tag)>;
 
-    virtual void handler(RequestT&& request, const Stream& stream) = 0;
+    virtual void on_request(RequestT&& request, Stream& stream) = 0;
 
     virtual void on_initialized() {}
     virtual void on_write_done() {}
@@ -149,7 +147,7 @@ class StreamContext : public Service
       private:
         void on_data(RequestT&& data, rxcpp::subscriber<ResponseT>& subscriber) final
         {
-            m_parent.handler(std::move(data), m_stream);
+            // m_parent.on_request(std::move(data), m_stream);
         }
 
         StreamContext& m_parent;
@@ -189,9 +187,11 @@ class StreamContext : public Service
             srf::node::make_edge(*channel, *writer);
 
             // start runnables to manage stream
-            m_parent.m_writer  = m_parent.m_runnable.launch_control().prepare_launcher(std::move(writer))->ignition();
-            m_parent.m_handler = m_parent.m_runnable.launch_control().prepare_launcher(std::move(handler))->ignition();
-            m_parent.m_reader  = m_parent.m_runnable.launch_control().prepare_launcher(std::move(reader))->ignition();
+            m_parent.m_writer  =
+            m_parent.m_runnable.launch_control().prepare_launcher(std::move(writer))->ignition(); m_parent.m_handler
+            = m_parent.m_runnable.launch_control().prepare_launcher(std::move(handler))->ignition();
+            m_parent.m_reader  =
+            m_parent.m_runnable.launch_control().prepare_launcher(std::move(reader))->ignition();
 
             DVLOG(10) << "stream initialized";
             m_parent.on_initialized();
@@ -220,11 +220,11 @@ class StreamContext : public Service
 
   public:
     using request_fn_t = std::function<void(
-        grpc::ServerContext* context, grpc::ServerAsyncReaderWriter<RequestT, ResponseT>* stream, void* tag)>;
+        grpc::ServerContext* context, grpc::ServerAsyncReaderWriter<ResponseT, RequestT>* stream, void* tag)>;
 
     StreamContext(request_fn_t request_fn, runnable::Resources& runnable) :
       m_runnable(runnable),
-      m_stream(std::make_unique<grpc::ServerAsyncReaderWriter<RequestT, ResponseT>>(&m_context))
+      m_stream(std::make_unique<grpc::ServerAsyncReaderWriter<ResponseT, RequestT>>(&m_context))
     {
         m_init_fn = [this, request_fn](void* tag) { request_fn(&m_context, m_stream.get(), tag); };
         service_start();
@@ -271,7 +271,7 @@ class StreamContext : public Service
 
     grpc::ServerContext m_context;
 
-    std::unique_ptr<grpc::ServerAsyncReaderWriter<RequestT, ResponseT>> m_stream;
+    std::unique_ptr<grpc::ServerAsyncReaderWriter<ResponseT, RequestT>> m_stream;
 
     init_fn_t m_init_fn;
 
