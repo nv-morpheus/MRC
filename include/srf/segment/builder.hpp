@@ -68,9 +68,7 @@ class Builder final
     template <typename ObjectT, typename... ArgsT>
     std::shared_ptr<Object<ObjectT>> construct_object(std::string name, ArgsT&&... args)
     {
-        auto uptr = std::make_unique<ObjectT>(std::forward<ArgsT>(args)...);
-
-        return make_object(std::move(name), std::move(uptr));
+        return make_object(std::move(name), std::make_unique<ObjectT>(std::forward<ArgsT>(args)...));
     }
 
     template <typename SourceTypeT, typename CreateFnT>
