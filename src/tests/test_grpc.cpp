@@ -18,14 +18,14 @@
 #include "common.hpp"
 
 #include "internal/grpc/client_streaming.hpp"
-#include "internal/grpc/server/server.hpp"
-#include "internal/grpc/server/stream.hpp"
+#include "internal/grpc/server.hpp"
 #include "internal/grpc/server_streaming.hpp"
 #include "internal/resources/manager.hpp"
 
 #include "srf/codable/codable_protocol.hpp"
 #include "srf/codable/fundamental_types.hpp"
 #include "srf/node/forward.hpp"
+#include "srf/node/generic_sink.hpp"
 #include "srf/protos/architect.grpc.pb.h"
 #include "srf/protos/architect.pb.h"
 #include "srf/protos/test.grpc.pb.h"

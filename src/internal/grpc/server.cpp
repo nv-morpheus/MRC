@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "internal/grpc/server/server.hpp"
+#include "internal/grpc/server.hpp"
 
 #include "internal/grpc/progress_engine.hpp"
 #include "internal/grpc/promise_handler.hpp"
