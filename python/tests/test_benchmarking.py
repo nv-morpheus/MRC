@@ -14,51 +14,50 @@
 # limitations under the License.
 # ===========================================================================
 
-# import pathlib
-# import random
+import pathlib
+import random
 
-# import pytest
+import pytest
 
-# import srf
-# #import srf.benchmarking
-# from srf.core.options import PlacementStrategy
+import srf
+import srf.benchmarking
+from srf.core.options import PlacementStrategy
 
-# whereami = pathlib.Path(__file__).parent.resolve()
+whereami = pathlib.Path(__file__).parent.resolve()
 
-# # Add a little jitter to testing
-# TEST_ITERATIONS = random.randint(10, 250)
+# Add a little jitter to testing
+TEST_ITERATIONS = random.randint(10, 250)
 
-# def tracer_test_f(x):
-#     return x
+def tracer_test_f(x):
+    return x
 
-# @pytest.mark.xfail  # issue#161
-# def init_tracer_segment(seg: srf.Builder, watcher: srf.benchmarking.LatencyWatcher):
-#     ## CXX double source with heterogesrfus segment node composition
-#     ## print("Made it into init_tracer_segment\n", flush=True)
-#     python_tracer_source = watcher.make_tracer_source(seg, "tracer_source", False)
-#     python_node_1 = watcher.make_traced_node(seg, "python_traced_1", tracer_test_f)
-#     seg.make_edge(python_tracer_source, python_node_1)
+#@pytest.mark.xfail  # issue#161
+def init_tracer_segment(seg: srf.Builder, watcher: srf.benchmarking.LatencyWatcher):
+    ## CXX double source with heterogesrfus segment node composition
+    ## print("Made it into init_tracer_segment\n", flush=True)
+    python_tracer_source = watcher.make_tracer_source(seg, "tracer_source", False)
+    python_node_1 = watcher.make_traced_node(seg, "python_traced_1", tracer_test_f)
+    seg.make_edge(python_tracer_source, python_node_1)
 
-#     python_tracer_sink = watcher.make_tracer_sink(seg, "tracer_sink", lambda x: x)
-#     seg.make_edge(python_node_1, python_tracer_sink)
+    python_tracer_sink = watcher.make_tracer_sink(seg, "tracer_sink", lambda x: x)
+    seg.make_edge(python_node_1, python_tracer_sink)
 
-# @pytest.mark.xfail  # issue#161
-# def test_tracer_creation():
-#     options = srf.Options()
-#     options.placement.cpu_strategy = PlacementStrategy.PerMachine
-#     executor = srf.Executor(options)
-
-#     latency_watcher = srf.benchmarking.LatencyWatcher(executor)
-#     latency_watcher.make_segment("tracer_segment", init_tracer_segment)
-
-#     latency_watcher.tracer_count(TEST_ITERATIONS)
-#     latency_watcher.trace_until_notified()
-#     latency_watcher.shutdown()
-
-#     tracer_metrics = latency_watcher.aggregate_tracers()
-#     # print(json.dumps(tracer_metrics, indent=2))
-#     metadata = tracer_metrics["metadata"]
-#     assert (metadata["tracer_count"] == TEST_ITERATIONS)
+#@pytest.mark.xfail  # issue#161
+#def test_tracer_creation():
+#    options = srf.Options()
+#    executor = srf.Executor(options)
+#
+#    latency_watcher = srf.benchmarking.LatencyWatcher(executor)
+#    latency_watcher.make_segment("tracer_segment", init_tracer_segment)
+#
+#    latency_watcher.tracer_count(TEST_ITERATIONS)
+#    latency_watcher.trace_until_notified()
+#    latency_watcher.shutdown()
+#
+#    tracer_metrics = latency_watcher.aggregate_tracers()
+#    # print(json.dumps(tracer_metrics, indent=2))
+#    metadata = tracer_metrics["metadata"]
+#    assert (metadata["tracer_count"] == TEST_ITERATIONS)
 
 # @pytest.mark.xfail  # issue#161
 # def test_latency_tracer_counts_match_framework_stats():
@@ -170,7 +169,9 @@
 
 #     srf.benchmarking.reset_tracing_stats()
 
-# if (__name__ in ("__main__", )):
-#     test_tracer_creation()
-#     test_latency_tracer_counts_match_framework_stats()
-#     test_throughput_tracer_counts_match_framework_stats()
+if (__name__ in ("__main__", )):
+    #init_tracer_segment()
+    #test_tracer_creation()
+    #test_latency_tracer_counts_match_framework_stats()
+    #test_throughput_tracer_counts_match_framework_stats()
+    pass

@@ -106,7 +106,11 @@ std::shared_ptr<srf::segment::ObjectProperties> build_source(srf::segment::Build
         DVLOG(10) << ctx.info() << " Source complete";
     };
 
-    return self.construct_object<PythonSource<PyHolder>>(name, wrapper);
+    auto uptr = std::make_unique<PythonSource<PyHolder>>(wrapper);
+    auto trace_stats = benchmarking::TraceStatistics::get_or_create(name);
+    uptr->source_add_watcher(trace_stats);
+
+    return self.make_object(std::move(name), std::move(uptr));
 }
 
 std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_source(srf::segment::Builder& self,
@@ -180,15 +184,19 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_sink(srf::seg
         on_completed();
     };
 
-    return self.construct_object<PythonSink<PyHolder>>(
-        name, rxcpp::make_observer<PyHolder>(on_next_w, on_error_w, on_completed_w));
+    auto uptr = std::make_unique<PythonSink<PyHolder>>(
+        rxcpp::make_observer<PyHolder>(on_next_w, on_error_w, on_completed_w));
+    auto trace_stats = benchmarking::TraceStatistics::get_or_create(name);
+    uptr->sink_add_watcher(trace_stats);
+
+    return self.make_object(std::move(name), std::move(uptr));
 }
 
 std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node(
     srf::segment::Builder& self, const std::string& name, std::function<pybind11::object(pybind11::object x)> map_f)
 {
-    auto node = self.construct_object<PythonNode<PyHolder, PyHolder>>(
-        name, rxcpp::operators::map([map_f](PyHolder data_object) -> PyHolder {
+    auto uptr = std::make_unique<PythonNode<PyHolder, PyHolder>>(
+        rxcpp::operators::map([map_f](PyHolder data_object) -> PyHolder {
             try
             {
                 py::gil_scoped_acquire gil;
@@ -209,7 +217,12 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node(
             }
         }));
 
-    return node;
+
+    auto trace_stats = benchmarking::TraceStatistics::get_or_create(name);
+    uptr->source_add_watcher(trace_stats);
+    uptr->sink_add_watcher(trace_stats);
+
+    return self.make_object(std::move(name), std::move(uptr));
 }
 
 std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node_full(
@@ -217,8 +230,13 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node_full(
     const std::string& name,
     std::function<void(const pysrf::PyObjectObservable& obs, pysrf::PyObjectSubscriber& sub)> sub_fn)
 {
-    auto node = self.construct_object<PythonNode<PyHolder, PyHolder>>(name);
+    auto uptr = std::make_unique<PythonNode<PyHolder, PyHolder>>();
 
+    auto trace_stats = benchmarking::TraceStatistics::get_or_create(name);
+    uptr->source_add_watcher(trace_stats);
+    uptr->sink_add_watcher(trace_stats);
+
+    auto node = self.make_object(name, std::move(uptr));
     node->object().make_stream([sub_fn](const PyObjectObservable& input) -> PyObjectObservable {
         return rxcpp::observable<>::create<PyHolder>([input, sub_fn](pysrf::PyObjectSubscriber output) {
             try
