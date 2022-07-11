@@ -38,7 +38,5 @@ add_test(
   COMMAND $<TARGET_FILE:test_srf>
 )
 
-configure_codecov(test_srf)
-
 add_subdirectory(benchmarking)
 add_subdirectory(logging)

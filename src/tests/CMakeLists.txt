@@ -80,5 +80,3 @@ add_test(
   NAME test_srf_private
   COMMAND $<TARGET_FILE:test_srf_private>
 )
-
-configure_codecov(test_srf_private)

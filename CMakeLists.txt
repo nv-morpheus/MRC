@@ -291,8 +291,6 @@ target_compile_definitions(libsrf
   $<$<BOOL:${SRF_BUILD_BENCHMARKS}>:SRF_ENABLE_BENCHMARKING>
 )
 
-configure_codecov(libsrf)
-
 set_target_properties(libsrf PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 
 # Finally, set the install RPATH to include the stubs folder for CUDA::nvml. If thats made private, this can be removed

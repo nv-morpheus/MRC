@@ -29,5 +29,3 @@ add_test(
   NAME test_srf_logging
   COMMAND $<TARGET_FILE:test_srf_logging>
 )
-
-configure_codecov(test_srf_logging)

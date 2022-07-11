@@ -52,8 +52,6 @@ set_target_properties(pysrf PROPERTIES CXX_VISIBILITY_PRESET hidden)
 # Avoid doing this, it causes problems with PyInit being hidden in Cython built code.
 #   target_compile_options(pysrf PUBLIC "-fvisibility=hidden")
 
-configure_codecov(pysrf)
-
 rapids_cmake_install_lib_dir(lib_dir)
 
 install(

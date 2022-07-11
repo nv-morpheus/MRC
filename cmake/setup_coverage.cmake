@@ -22,16 +22,18 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "coverage")
 
 # Include coverage tools if enabled
 if(SRF_ENABLE_CODECOV)
-  include(cmake/Configure_gcov.cmake)
+  include(cmake/deps/Configure_gcov.cmake)
 
   message(STATUS "SRF_ENABLE_CODECOV is ON, configuring report exclusions and setting up coverage build targets")
   set(CODECOV_REPORT_EXCLUSIONS
-      ".cache/*"
-      "tests/*"
       "${CMAKE_BINARY_DIR}/protos/*" # Remove this if/when we get protobuf code unit tested.
-      "python/srf/tests/*"
+      "benchmarks/*" # Remove this if/when we get protobuf code unit tested.
+      ".cache/*"
+      "docs/*" # Remove this if/when we get protobuf code unit tested.
       "python/srf/_pysrf/tests/*"
+      "python/srf/tests/*"
       "src/tests/*"
+      "tests/*"
       )
 
   setup_target_for_coverage_gcovr_xml(
@@ -43,6 +45,8 @@ if(SRF_ENABLE_CODECOV)
       NAME gcovr-html-report
       EXCLUDE ${CODECOV_REPORT_EXCLUSIONS}
   )
+
+  append_coverage_compiler_flags()
 endif()
 
 
@@ -50,12 +54,12 @@ endif()
 @brief : Given a target, configure the target with appropriate gcov if
 SRF_ENABLE_CODECOV is enabled.
 
-ex. configure_codecov(target_name)
+ex. #configure_codecov(target_name)
 results --
 
-configure_codecov <TARGET_NAME>
+#configure_codecov <TARGET_NAME>
 #]=======================================================================]
-function(configure_codecov target)
+function(configure_codecov_target target)
   if (${SRF_ENABLE_CODECOV} STREQUAL "ON")
     message(STATUS "Configuring target <${target}> for code coverage.")
     append_coverage_compiler_flags_to_target("${target}")

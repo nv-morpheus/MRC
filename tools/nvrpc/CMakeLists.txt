@@ -21,13 +21,9 @@ add_library(nvrpc
   src/server.cc
 )
 
-configure_codecov(nvrpc)
-
 add_library(nvrpc-client
   src/client/client_executor.cc
 )
-
-configure_codecov(nvrpc-client)
 
 add_library(${PROJECT_NAME}::nvrpc ALIAS nvrpc)
 add_library(${PROJECT_NAME}::nvrpc-client ALIAS nvrpc-client)

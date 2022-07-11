@@ -30,5 +30,3 @@ target_include_directories(topology_exporter
     ${CMAKE_CURRENT_SOURCE_DIR}../
     ${SRF_ROOT_DIR}/src
 )
-
-configure_codecov(topology_exporter)

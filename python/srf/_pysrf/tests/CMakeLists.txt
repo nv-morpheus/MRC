@@ -39,6 +39,4 @@ add_test(
   COMMAND $<TARGET_FILE:test_pysrf>
 )
 
-configure_codecov(test_pysrf)
-
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

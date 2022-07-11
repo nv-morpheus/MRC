@@ -64,9 +64,6 @@ set_target_properties(
       EXPORT_COMPILE_COMMANDS OFF
 )
 
-configure_codecov(srf_protos)
-configure_codecov(srf_architect_protos)
-
 # Finally, add this to the style check dependencies
 add_dependencies(style_checks srf_protos-headers-target)
 
