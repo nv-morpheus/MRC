@@ -35,9 +35,9 @@ class RxRunnable : public runnable::RunnableWithContext<ContextT>, public RxSubs
 
   private:
     // implemented by node objects and will be final
-    virtual void on_shutdown_critical_section()            = 0;
-    virtual void on_stop(const rxcpp::subscription&) const = 0;
-    virtual void on_kill(const rxcpp::subscription&) const = 0;
+    virtual void on_shutdown_critical_section()      = 0;
+    virtual void on_stop(const rxcpp::subscription&) = 0;
+    virtual void on_kill(const rxcpp::subscription&) = 0;
 
     // users can override these virtual method
 

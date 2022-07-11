@@ -79,8 +79,8 @@ class RxSink : public RxSinkBase<T>, public RxRunnable<ContextT>, public RxProlo
     void on_shutdown_critical_section() final;
     void do_subscribe(rxcpp::composite_subscription& subscription) final;
 
-    void on_stop(const rxcpp::subscription& subscription) const final;
-    void on_kill(const rxcpp::subscription& subscription) const final;
+    void on_stop(const rxcpp::subscription& subscription) final;
+    void on_kill(const rxcpp::subscription& subscription) final;
 
     observer_t m_observer;
 };
@@ -114,12 +114,15 @@ void RxSink<T, ContextT>::do_subscribe(rxcpp::composite_subscription& subscripti
 }
 
 template <typename T, typename ContextT>
-void RxSink<T, ContextT>::on_stop(const rxcpp::subscription& subscription) const
-{}
+void RxSink<T, ContextT>::on_stop(const rxcpp::subscription& subscription)
+{
+    this->disable_persistence();
+}
 
 template <typename T, typename ContextT>
-void RxSink<T, ContextT>::on_kill(const rxcpp::subscription& subscription) const
+void RxSink<T, ContextT>::on_kill(const rxcpp::subscription& subscription)
 {
+    this->disable_persistence();
     subscription.unsubscribe();
 }
 
