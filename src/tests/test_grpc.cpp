@@ -17,9 +17,10 @@
 
 #include "common.hpp"
 
-#include "internal/grpc/client/stream.hpp"
+#include "internal/grpc/client_streaming.hpp"
 #include "internal/grpc/server/server.hpp"
 #include "internal/grpc/server/stream.hpp"
+#include "internal/grpc/server_streaming.hpp"
 #include "internal/resources/manager.hpp"
 
 #include "srf/codable/codable_protocol.hpp"
@@ -35,6 +36,8 @@
 #include <grpcpp/server_context.h>
 #include <gtest/gtest.h>
 
+#include <chrono>
+#include <optional>
 #include <set>
 #include <thread>
 
@@ -50,7 +53,7 @@ class TestRPC : public ::testing::Test
             internal::system::SystemProvider(make_system([](Options& options) {
                 // todo(#114) - propose: remove this option entirely
                 // options.architect_url("localhost:13337");
-                options.topology().user_cpuset("0-3");
+                options.topology().user_cpuset("0-8");
                 options.topology().restrict_gpus(true);
                 options.placement().resources_strategy(PlacementResources::Dedicated);
             })));
@@ -86,33 +89,10 @@ TEST_F(TestRPC, ServerLifeCycle)
     // server.register_service(service);
 }
 
-class PingPongServerContext : internal::rpc::server::StreamContext<srf::testing::Input, srf::testing::Output>
-{
-    using base_t = internal::rpc::server::StreamContext<srf::testing::Input, srf::testing::Output>;
+using stream_server_t = internal::rpc::ServerStreaming<srf::testing::Input, srf::testing::Output>;
+using stream_client_t = internal::rpc::ClientStreaming<srf::testing::Input, srf::testing::Output>;
 
-    void on_request(srf::testing::Input&& input, Stream& stream) final
-    {
-        srf::testing::Output output;
-        if (input.batch_id() == 42)
-        {
-            return;
-        }
-        output.set_batch_id(input.batch_id());
-        stream.await_write(std::move(output));
-    }
-
-    void on_initialized() final
-    {
-        LOG(INFO) << "server steaming context initialized";
-    }
-    void on_write_done() final {}
-    void on_write_fail() final {}
-
-  public:
-    using base_t::base_t;
-};
-
-TEST_F(TestRPC, ServerStreamShutdownBeforeStreamInit)
+TEST_F(TestRPC, Alternative)
 {
     auto service = std::make_shared<srf::testing::TestService::AsyncService>();
     m_server->register_service(service);
@@ -127,57 +107,36 @@ TEST_F(TestRPC, ServerStreamShutdownBeforeStreamInit)
     m_server->service_start();
     m_server->service_await_live();
 
-    auto stream = std::make_shared<PingPongServerContext>(service_init, m_resources->partition(0).runnable());
+    auto stream = std::make_shared<stream_server_t>(service_init, m_resources->partition(0).runnable());
+
+    auto f_writer = m_resources->partition(0).runnable().main().enqueue([stream] { return stream->await_init(); });
+    m_resources->partition(0).runnable().main().enqueue([] {}).get();
 
     m_server->service_stop();
     m_server->service_await_join();
 
-    stream.reset();
+    auto writer = f_writer.get();
+    EXPECT_TRUE(writer == nullptr);
+
+    auto status = stream->await_fini();
+    EXPECT_FALSE(status);
 }
 
-template <typename WriteT>
-struct Callbacks
+class ServerHandler : public srf::node::GenericSink<typename stream_server_t::IncomingData>
 {
-    std::function<void(bool)> on_reader_complete;
-    std::function<void(bool)> on_fini;
-    std::function<void(std::optional<internal::rpc::Stream<WriteT>>)> on_init;
+    void on_data(typename stream_server_t::IncomingData&& data) final
+    {
+        if (data.ok)
+        {
+            srf::testing::Output response;
+            response.set_batch_id(data.msg.batch_id());
+            data.stream->await_write(std::move(response));
+        }
+    }
 };
 
-class PingPongClientContext : public internal::rpc::client::StreamContext<srf::testing::Input, srf::testing::Output>
+TEST_F(TestRPC, StreamingServerWithHandler)
 {
-  public:
-    PingPongClientContext(std::unique_ptr<Callbacks<srf::testing::Input>> callbacks,
-                          prepare_fn_t prepare_fn,
-                          internal::runnable::Resources& runnable) :
-      internal::rpc::client::StreamContext<srf::testing::Input, srf::testing::Output>(prepare_fn, runnable),
-      m_callbacks(std::move(callbacks))
-    {
-        CHECK(m_callbacks);
-    }
-
-  private:
-    void on_read(srf::testing::Output&& request, const internal::rpc::Stream<srf::testing::Input>& stream) final {}
-
-    void on_reader_complete(bool ok) final
-    {
-        m_callbacks->on_reader_complete(ok);
-    }
-    void on_init(std::optional<internal::rpc::Stream<srf::testing::Input>> stream) final
-    {
-        m_callbacks->on_init(std::move(stream));
-    }
-    void on_fini(bool ok) final
-    {
-        m_callbacks->on_fini(ok);
-    }
-
-    const std::unique_ptr<Callbacks<srf::testing::Input>> m_callbacks;
-};
-
-TEST_F(TestRPC, PingPong)
-{
-    GTEST_SKIP() << "currently hangs";
-
     auto service = std::make_shared<srf::testing::TestService::AsyncService>();
     m_server->register_service(service);
 
@@ -188,31 +147,206 @@ TEST_F(TestRPC, PingPong)
         service->RequestStreaming(context, stream, cq.get(), cq.get(), tag);
     };
 
+    auto stream  = std::make_shared<stream_server_t>(service_init, m_resources->partition(0).runnable());
+    auto handler = std::make_unique<ServerHandler>();
+    handler->enable_persistence();
+    stream->attach_to(*handler);
+
+    auto handler_runner =
+        m_resources->partition(0).runnable().launch_control().prepare_launcher(std::move(handler))->ignition();
+    handler_runner->await_live();
+
     m_server->service_start();
     m_server->service_await_live();
 
-    auto server_stream_ctx =
-        std::make_shared<PingPongServerContext>(service_init, m_resources->partition(0).runnable());
+    auto f_writer = m_resources->partition(0).runnable().main().enqueue([stream] { return stream->await_init(); });
+    m_resources->partition(0).runnable().main().enqueue([] {}).get();  // this is a fence
 
+    // put client here
+
+    // ensure client is done before shutting down server
+
+    m_server->service_stop();
+    m_server->service_await_join();
+
+    auto writer = f_writer.get();
+    EXPECT_TRUE(writer == nullptr);
+
+    auto status = stream->await_fini();
+    EXPECT_FALSE(status);
+
+    handler_runner->stop();
+    handler_runner->await_join();
+}
+
+TEST_F(TestRPC, StreamingPingPong)
+{
+    auto service = std::make_shared<srf::testing::TestService::AsyncService>();
+    m_server->register_service(service);
+
+    auto cq           = m_server->get_cq();
+    auto service_init = [service, cq](grpc::ServerContext* context,
+                                      grpc::ServerAsyncReaderWriter<srf::testing::Output, srf::testing::Input>* stream,
+                                      void* tag) {
+        service->RequestStreaming(context, stream, cq.get(), cq.get(), tag);
+    };
+
+    auto stream  = std::make_shared<stream_server_t>(service_init, m_resources->partition(0).runnable());
+    auto handler = std::make_unique<ServerHandler>();
+    handler->enable_persistence();
+    stream->attach_to(*handler);
+
+    auto handler_runner =
+        m_resources->partition(0).runnable().launch_control().prepare_launcher(std::move(handler))->ignition();
+    handler_runner->await_live();
+
+    m_server->service_start();
+    m_server->service_await_live();
+
+    m_resources->partition(0).runnable().main().enqueue([stream] { return stream->await_init(); });
+    m_resources->partition(0).runnable().main().enqueue([] {}).get();  // this is a fence
+
+    // put client here
     auto prepare_fn = [this, cq](grpc::ClientContext* context) {
         return m_stub->PrepareAsyncStreaming(context, cq.get());
     };
 
-    auto callbacks = std::make_unique<Callbacks<srf::testing::Input>>();
+    auto client = std::make_shared<stream_client_t>(prepare_fn, m_resources->partition(0).runnable());
+    srf::node::SinkChannelReadable<typename stream_client_t::IncomingData> client_handler;
+    client->attach_to(client_handler);
 
-    callbacks->on_init = [](std::optional<internal::rpc::Stream<srf::testing::Input>> stream) { EXPECT_TRUE(stream); };
+    auto client_writer = client->await_init();
+    ASSERT_TRUE(client_writer);
+    for (int i = 0; i < 10; i++)
+    {
+        VLOG(1) << "sending request " << i;
+        srf::testing::Input request;
+        request.set_batch_id(i);
+        client_writer->await_write(std::move(request));
 
-    auto client_stream_ctx =
-        std::make_shared<PingPongClientContext>(std::move(callbacks), prepare_fn, m_resources->partition(0).runnable());
+        typename stream_client_t::IncomingData response;
+        VLOG(1) << "awaiting response " << i;
+        client_handler.egress().await_read(response);
+        VLOG(1) << "got response " << i;
 
-    client_stream_ctx->service_start();
-    client_stream_ctx->service_await_live();
+        EXPECT_EQ(response.response.batch_id(), i);
+    }
 
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    client_writer->finish();
+    client_writer.reset();  // this should issue writes done to the server and begin shutdown
+
+    auto client_status = client->await_fini();
+    EXPECT_TRUE(client_status.ok());
+
+    // ensure client is done before shutting down server
 
     m_server->service_stop();
     m_server->service_await_join();
 
-    client_stream_ctx->service_await_join();
-    server_stream_ctx.reset();
+    auto status = stream->await_fini();
+    EXPECT_TRUE(status);
+
+    handler_runner->stop();
+    handler_runner->await_join();
 }
+
+// template <typename WriteT>
+// struct Callbacks
+// {
+//     std::function<void(bool)> on_reader_complete;
+//     std::function<void(bool)> on_fini;
+//     std::function<void(std::optional<internal::rpc::AsyncStream<WriteT>>)> on_init;
+// };
+
+// class PingPongClientContext
+//   : public internal::rpc::client::ClientAsyncStreamingContext<srf::testing::Input, srf::testing::Output>
+// {
+//   public:
+//     PingPongClientContext(std::unique_ptr<Callbacks<srf::testing::Input>> callbacks,
+//                           prepare_fn_t prepare_fn,
+//                           internal::runnable::Resources& runnable) :
+//       internal::rpc::client::ClientAsyncStreamingContext<srf::testing::Input, srf::testing::Output>(prepare_fn,
+//                                                                                                     runnable),
+//       m_callbacks(std::move(callbacks))
+//     {
+//         CHECK(m_callbacks);
+//     }
+
+//   private:
+//     void on_read(srf::testing::Output&& request, const internal::rpc::AsyncStream<srf::testing::Input>& stream) final
+//     {}
+
+//     void on_reader_complete(bool ok) final
+//     {
+//         if (m_callbacks->on_reader_complete)
+//         {
+//             m_callbacks->on_reader_complete(ok);
+//         }
+//     }
+//     void on_init(std::optional<internal::rpc::AsyncStream<srf::testing::Input>> stream) final
+//     {
+//         if (m_callbacks->on_init)
+//         {
+//             DVLOG(10) << "client stream context: on_init";
+//             m_callbacks->on_init(std::move(stream));
+//         }
+//     }
+//     void on_fini(bool ok) final
+//     {
+//         if (m_callbacks->on_fini)
+//         {
+//             DVLOG(10) << "client stream context: on_fini";
+//             m_callbacks->on_fini(ok);
+//         }
+//     }
+
+//     const std::unique_ptr<Callbacks<srf::testing::Input>> m_callbacks;
+// };
+
+// TEST_F(TestRPC, PingPong)
+// {
+//     auto service = std::make_shared<srf::testing::TestService::AsyncService>();
+//     m_server->register_service(service);
+
+//     auto cq           = m_server->get_cq();
+//     auto service_init = [service, cq](grpc::ServerContext* context,
+//                                       grpc::ServerAsyncReaderWriter<srf::testing::Output, srf::testing::Input>*
+//                                       stream, void* tag) {
+//         service->RequestStreaming(context, stream, cq.get(), cq.get(), tag);
+//     };
+
+//     m_server->service_start();
+//     m_server->service_await_live();
+
+//     auto server_stream_ctx =
+//         std::make_shared<PingPongServerContext>(service_init, m_resources->partition(0).runnable());
+
+//     auto prepare_fn = [this, cq](grpc::ClientContext* context) {
+//         return m_stub->PrepareAsyncStreaming(context, cq.get());
+//     };
+
+//     std::optional<internal::rpc::AsyncStream<srf::testing::Input>> stream;
+
+//     auto callbacks = std::make_unique<Callbacks<srf::testing::Input>>();
+
+//     callbacks->on_init = [&stream](std::optional<internal::rpc::AsyncStream<srf::testing::Input>> async_stream) {
+//         EXPECT_TRUE(async_stream);
+//         stream = std::move(async_stream);
+//     };
+//     callbacks->on_fini = [](bool ok) { EXPECT_FALSE(ok); };
+
+//     auto client_stream_ctx =
+//         std::make_shared<PingPongClientContext>(std::move(callbacks), prepare_fn,
+//         m_resources->partition(0).runnable());
+
+//     client_stream_ctx->service_start();
+//     client_stream_ctx->service_await_live();
+
+//     std::this_thread::sleep_for(std::chrono::seconds(1));
+
+//     m_server->service_stop();
+//     m_server->service_await_join();
+
+//     client_stream_ctx->service_await_join();
+//     server_stream_ctx.reset();
+// }

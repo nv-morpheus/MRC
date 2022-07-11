@@ -54,6 +54,6 @@ void ProgressEngine::data_source(rxcpp::subscriber<ProgressEvent>& s)
     }
 }
 
-void ProgressEngine::on_stop(const rxcpp::subscription& subscription) const {}
+void ProgressEngine::on_stop(const rxcpp::subscription& subscription) {}
 
 }  // namespace srf::internal::rpc

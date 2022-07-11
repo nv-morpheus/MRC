@@ -57,19 +57,30 @@ template <typename RequestT, typename ResponseT>
 class ClientAsyncStreamingContext : public AsyncStreamingContext<ResponseT, RequestT>
 {
     using init_fn_t = std::function<void(void* tag)>;
-    using base_t  = AsyncStreamingContext<ResponseT, RequestT>;
+    using base_t    = AsyncStreamingContext<ResponseT, RequestT>;
 
   public:
     using prepare_fn_t = std::function<std::unique_ptr<grpc::ClientAsyncReaderWriter<RequestT, ResponseT>>(
         grpc::ClientContext* context)>;
 
-    ClientAsyncStreamingContext(prepare_fn_t prepare_fn, runnable::Resources& runnable) : base_t(runnable), m_prepare_fn(prepare_fn)
+    ClientAsyncStreamingContext(prepare_fn_t prepare_fn, runnable::Resources& runnable) :
+      base_t(runnable),
+      m_prepare_fn(prepare_fn)
     {}
 
     ~ClientAsyncStreamingContext() override {}
 
+    std::optional<AsyncStream<RequestT>> await_init()
+    {
+        base_t::service_start();
+        base_t::service_await_live();
+    }
+
   private:
-    void do_service_start() final
+    void
+
+        void
+        do_service_start() final
     {
         m_stream = m_prepare_fn(&m_context);
         m_stream->StartCall(this->init_tag());

@@ -43,7 +43,7 @@ class ProgressEngine final : public srf::node::GenericSource<ProgressEvent>
 
     // disabling stop on this source
     // the proper way to stop this source is to issue a CompletionQueue::Shutdown()
-    void on_stop(const rxcpp::subscription& subscription) const final;
+    void on_stop(const rxcpp::subscription& subscription) final;
 
     std::shared_ptr<grpc::CompletionQueue> m_cq;
 };
