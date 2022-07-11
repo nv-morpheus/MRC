@@ -21,10 +21,10 @@
 list(APPEND CMAKE_MESSAGE_CONTEXT "coverage")
 
 # Include coverage tools if enabled
-if(SRF_WITH_CODECOV)
-  include(cmake/LibCodeCoverage.cmake)
+if(SRF_ENABLE_CODECOV)
+  include(cmake/Configure_gcov.cmake)
 
-  message("SRF_WITH_CODECOV is ON, configuring report exclusions and setting up coverage build targets")
+  message(STATUS "SRF_ENABLE_CODECOV is ON, configuring report exclusions and setting up coverage build targets")
   set(CODECOV_REPORT_EXCLUSIONS
       ".cache/*"
       "tests/*"
@@ -33,11 +33,6 @@ if(SRF_WITH_CODECOV)
       "python/srf/_pysrf/tests/*"
       "src/tests/*"
       )
-
-  # setup_target_for_coverage_lcov(
-  #     NAME lcov-report
-  #     EXCLUDE ${CODECOV_REPORT_EXCLUSIONS}
-  # )
 
   setup_target_for_coverage_gcovr_xml(
       NAME gcovr-xml-report
@@ -48,18 +43,12 @@ if(SRF_WITH_CODECOV)
       NAME gcovr-html-report
       EXCLUDE ${CODECOV_REPORT_EXCLUSIONS}
   )
-
-  # Anaconda doesn't seem to have a fastcov package -- disable for now
-  # setup_target_for_coverage_fastcov(
-  #     NAME fastcov-report
-  #     EXCLUDE ".cache/*"
-  # )
 endif()
 
 
 #[=======================================================================[
 @brief : Given a target, configure the target with appropriate gcov if
-SRF_WITH_CODECOV is enabled.
+SRF_ENABLE_CODECOV is enabled.
 
 ex. configure_codecov(target_name)
 results --
@@ -67,8 +56,8 @@ results --
 configure_codecov <TARGET_NAME>
 #]=======================================================================]
 function(configure_codecov target)
-  if (${SRF_WITH_CODECOV} STREQUAL "ON")
-    message("Configuring target <${target}> for code coverage.")
+  if (${SRF_ENABLE_CODECOV} STREQUAL "ON")
+    message(STATUS "Configuring target <${target}> for code coverage.")
     append_coverage_compiler_flags_to_target("${target}")
   endif()
 endfunction()
