@@ -54,6 +54,7 @@ class FiberEngineFactory : public ::srf::runnable::EngineFactory
      */
     std::shared_ptr<::srf::runnable::Engines> build_engines(const LaunchOptions& launch_options) final
     {
+        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         return std::make_shared<FiberEngines>(
             launch_options, get_next_n_queues(launch_options.pe_count), SRF_DEFAULT_FIBER_PRIORITY);
     }
@@ -65,6 +66,7 @@ class FiberEngineFactory : public ::srf::runnable::EngineFactory
 
   private:
     virtual std::vector<std::reference_wrapper<core::FiberTaskQueue>> get_next_n_queues(std::size_t count) = 0;
+    std::mutex m_mutex;
 };
 
 /**
@@ -153,6 +155,7 @@ class ThreadEngineFactory : public ::srf::runnable::EngineFactory
 
     std::shared_ptr<::srf::runnable::Engines> build_engines(const LaunchOptions& launch_options) final
     {
+        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         auto cpu_set = get_next_n_cpus(launch_options.pe_count);
         return std::make_shared<ThreadEngines>(launch_options, std::move(cpu_set), m_system_resources);
     }
@@ -173,6 +176,7 @@ class ThreadEngineFactory : public ::srf::runnable::EngineFactory
 
     CpuSet m_cpu_set;
     const system::Resources& m_system_resources;
+    std::mutex m_mutex;
 };
 
 /**
