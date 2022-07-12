@@ -48,7 +48,7 @@ Look at the unassigned issues, and find an issue to which you are comfortable co
 
 #### Clone SRF repository
 ```bash
-export $SRF_HOME=$(pwd)/srf
+export SRF_HOME=$(pwd)/srf
 git clone git@github.com:nv-morpheus/srf.git $SRF_HOME
 cd $SRF_HOME
 ```
