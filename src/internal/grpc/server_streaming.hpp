@@ -127,6 +127,7 @@ class ServerStreaming : private Service, public std::enable_shared_from_this<Ser
 
         void cancel() final
         {
+            m_parent->m_status.emplace(grpc::Status::CANCELLED);
             m_parent->m_context.TryCancel();
         }
 
@@ -175,10 +176,11 @@ class ServerStreaming : private Service, public std::enable_shared_from_this<Ser
         return m_stream_writer;
     }
 
-    std::optional<grpc::Status> await_fini()
+    grpc::Status await_fini()
     {
         service_await_join();
-        return m_status;
+        CHECK(m_status);
+        return *m_status;
     }
 
     // must be called before await_init()
@@ -245,8 +247,12 @@ class ServerStreaming : private Service, public std::enable_shared_from_this<Ser
     {
         if (m_can_write)
         {
+            if (!m_status)
+            {
+                m_status.emplace(grpc::Status::OK);
+            }
+
             DVLOG(10) << "server issuing finish";
-            m_status.emplace(grpc::Status::OK);
             Promise<bool> finish;
             m_stream->Finish(*m_status, &finish);
             auto ok = finish.get_future().get();
