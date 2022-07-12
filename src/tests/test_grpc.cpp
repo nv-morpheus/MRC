@@ -93,8 +93,8 @@ TEST_F(TestRPC, ServerLifeCycle)
     // server.register_service(service);
 }
 
-using stream_server_t = internal::rpc::ServerStreaming<srf::testing::Input, srf::testing::Output>;
-using stream_client_t = internal::rpc::ClientStreaming<srf::testing::Input, srf::testing::Output>;
+using stream_server_t = internal::rpc::ServerStream<srf::testing::Input, srf::testing::Output>;
+using stream_client_t = internal::rpc::ClientStream<srf::testing::Input, srf::testing::Output>;
 
 TEST_F(TestRPC, Alternative)
 {

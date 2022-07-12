@@ -56,13 +56,13 @@ namespace srf::internal::rpc {
  * The client mimics the server with both reader and writer runnables, but its StreamWriter (ClientStreamWriter)
  * lifespan controls issues a WritesDone on destruction.
  *
- * Similar to ServerStreaming, ClientStreaming operates in three phases:
+ * Similar to ServerStream, ClientStream operates in three phases:
  * 1) On construction and upto calling await_init, a Node/Sink<IncomingData> can be attached to the reader. On
- * await_init, if the stream fails to initialize a nullptr is returned and the ClientStreaming object can be destroyed.
+ * await_init, if the stream fails to initialize a nullptr is returned and the ClientStream object can be destroyed.
  * 2) Otherwise, await_init returns a share_ptr to a StreamWriter who lifecycle is tied to the gRPC async writer. When
  * the final StreamWriter is release, a WritesDone is issues to the server and no more writes can be issued. At this
  * point the Writer runnable will be completed.
- * Similar to ServerStreaming, incoming ResponseT messages from the server will be routed to the connected Handler
+ * Similar to ServerStream, incoming ResponseT messages from the server will be routed to the connected Handler
  * with a IncomingData object that contains both the response message and an instance of the StreamWriter.
  * 3) Finally, after a WritesDone is issued, the Reader will stay alive until the server closes it; at which the Finish
  * method will be observed on await_fini.
@@ -71,7 +71,7 @@ namespace srf::internal::rpc {
  * able to access the parent or the write channel.
  */
 template <typename RequestT, typename ResponseT>
-class ClientStreaming : private Service, public std::enable_shared_from_this<ClientStreaming<RequestT, ResponseT>>
+class ClientStream : private Service, public std::enable_shared_from_this<ClientStream<RequestT, ResponseT>>
 {
     using init_fn_t     = std::function<void(void* tag)>;
     using callback_fn_t = std::function<void(const bool&)>;
@@ -84,7 +84,7 @@ class ClientStreaming : private Service, public std::enable_shared_from_this<Cli
     {
       public:
         ClientStreamWriter(std::shared_ptr<srf::node::SourceChannelWriteable<writer_t>> channel,
-                           std::shared_ptr<ClientStreaming> parent) :
+                           std::shared_ptr<ClientStream> parent) :
           m_parent(parent),
           m_channel(channel)
         {
@@ -126,7 +126,7 @@ class ClientStreaming : private Service, public std::enable_shared_from_this<Cli
         }
 
       private:
-        std::weak_ptr<ClientStreaming> m_parent;
+        std::weak_ptr<ClientStream> m_parent;
         std::weak_ptr<srf::node::SourceChannelWriteable<writer_t>> m_channel;
     };
 
@@ -140,7 +140,7 @@ class ClientStreaming : private Service, public std::enable_shared_from_this<Cli
     using prepare_fn_t = std::function<std::unique_ptr<grpc::ClientAsyncReaderWriter<RequestT, ResponseT>>(
         grpc::ClientContext* context)>;
 
-    ClientStreaming(prepare_fn_t prepare_fn, runnable::Resources& runnable) :
+    ClientStream(prepare_fn_t prepare_fn, runnable::Resources& runnable) :
       m_prepare_fn(prepare_fn),
       m_runnable(runnable),
       m_reader_source(std::make_unique<srf::node::RxSource<IncomingData>>(
@@ -150,7 +150,7 @@ class ClientStreaming : private Service, public std::enable_shared_from_this<Cli
           })))
     {}
 
-    ~ClientStreaming() override
+    ~ClientStream() override
     {
         Service::call_in_destructor();
     }

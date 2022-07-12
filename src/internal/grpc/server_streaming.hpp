@@ -55,7 +55,7 @@ namespace srf::internal::rpc {
 /**
  * @brief Implementation of a gRPC bidirectional streaming server using SRF primitives
  *
- * ServerStreaming as three-phases:
+ * ServerStream as three-phases:
  *
  * 1) After construction with a request_fn_t, the ServerStream is "enqueued" with the server by calling `await_init()`.
  *    If `nullptr` is returned, then the stream was not initialized by the server and the object can be destroyed.
@@ -81,14 +81,14 @@ namespace srf::internal::rpc {
  *    mentioned above, the StreamWriter::expired is one way to check. The other indication is that the Handler will
  *    receive an IncomingData object with `ok == false`, this will indicate this is the last IncomingData object that
  *    the Handler will process from a given stream. This can be used a direct trigger to any server side logic that the
- *    client has gone quiet. ServerStreaming::await_fini can be called to ensure the stream is completed on the server
+ *    client has gone quiet. ServerStream::await_fini can be called to ensure the stream is completed on the server
  *    side before being destroyed.
  *
  * @tparam RequestT
  * @tparam ResponseT
  */
 template <typename RequestT, typename ResponseT>
-class ServerStreaming : private Service, public std::enable_shared_from_this<ServerStreaming<RequestT, ResponseT>>
+class ServerStream : private Service, public std::enable_shared_from_this<ServerStream<RequestT, ResponseT>>
 {
     using init_fn_t = std::function<void(void* tag)>;
 
@@ -97,13 +97,13 @@ class ServerStreaming : private Service, public std::enable_shared_from_this<Ser
     using stream_writer_t = StreamWriter<writer_t>;
 
     /**
-     * @brief Specialization of StreamWriter for ServerStreaming
+     * @brief Specialization of StreamWriter for ServerStream
      */
     class ServerStreamWriter final : public stream_writer_t
     {
       public:
         ServerStreamWriter(std::shared_ptr<srf::node::SourceChannelWriteable<writer_t>> channel,
-                           std::shared_ptr<ServerStreaming> parent) :
+                           std::shared_ptr<ServerStream> parent) :
           m_parent(parent),
           m_channel(channel)
         {
@@ -137,7 +137,7 @@ class ServerStreaming : private Service, public std::enable_shared_from_this<Ser
         }
 
       private:
-        const std::shared_ptr<ServerStreaming<RequestT, ResponseT>> m_parent;
+        const std::shared_ptr<ServerStream<RequestT, ResponseT>> m_parent;
         std::weak_ptr<srf::node::SourceChannelWriteable<writer_t>> m_channel;
     };
 
@@ -152,7 +152,7 @@ class ServerStreaming : private Service, public std::enable_shared_from_this<Ser
     using request_fn_t = std::function<void(
         grpc::ServerContext* context, grpc::ServerAsyncReaderWriter<ResponseT, RequestT>* stream, void* tag)>;
 
-    ServerStreaming(request_fn_t request_fn, runnable::Resources& runnable) :
+    ServerStream(request_fn_t request_fn, runnable::Resources& runnable) :
       m_runnable(runnable),
       m_stream(std::make_unique<grpc::ServerAsyncReaderWriter<ResponseT, RequestT>>(&m_context)),
       m_reader_source(std::make_unique<srf::node::RxSource<IncomingData>>(
@@ -164,7 +164,7 @@ class ServerStreaming : private Service, public std::enable_shared_from_this<Ser
         m_init_fn = [this, request_fn](void* tag) { request_fn(&m_context, m_stream.get(), tag); };
     }
 
-    ~ServerStreaming() override
+    ~ServerStream() override
     {
         Service::call_in_destructor();
     }
