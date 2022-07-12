@@ -24,11 +24,9 @@ def test_connect_cpp_edges():
         source = m.SourceDerivedB(seg, "source")
 
         node = m.NodeBase(seg, "node")
-        print("Makeing edge between source and node")
         seg.make_edge(source, node)
 
         sink = m.SinkBase(seg, "sink")
-        print("Makeing edge between node and sink")
         seg.make_edge(node, sink)
 
     pipeline = srf.Pipeline()
@@ -202,12 +200,9 @@ def test_multi_segment():
     def segment_source(seg: srf.Builder):
         # Use a generator function as the source
         def source_gen():
-            print("Source: Starting")
             for i in range(5):
                 yield MyCustomClass(i, "Instance-{}".format(i))
                 # yield m.DerivedA()
-
-            print("Source: Complete")
 
         # Create the source object
         # source = seg.make_source("source", source_gen)
@@ -245,7 +240,7 @@ def test_multi_segment():
     options = srf.Options()
 
     # Set to 1 thread
-    options.topology.user_cpuset = "0-1"
+    options.topology.user_cpuset = "0-0"
 
     # Create the executor
     executor = srf.Executor(options)
@@ -258,9 +253,6 @@ def test_multi_segment():
 
     # Wait for the pipeline to exit on its own
     executor.join()
-
-    print("Pipeline exited!")
-
 
 if (__name__ == "__main__"):
     test_connect_cpp_edges()

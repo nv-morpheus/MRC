@@ -221,14 +221,6 @@ pybind11::object&& PyObjectWrapper::move_obj() &&
 
 PyObjectWrapper::operator const pybind11::handle&() const&
 {
-    // TODO(MDD): Do we need the GIL here? -- (DVN) No; will result in a py::handle to m_obj's m_ptr,
-    //  but the handle only lives as long as m_obj has a non-zero ref count. Does seem dangerous to do
-    //  this via operator though, seems like somewhat unexpected behavior.
-    // if (PyGILState_Check() == 0)
-    // {
-    //     throw srf::exceptions::SrfRuntimeError("Must have the GIL copying to py::object");
-    // }
-
     return m_obj;
 }
 

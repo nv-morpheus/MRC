@@ -28,12 +28,9 @@ def test_launch_options_source(source_type: str, pe_count: int, engines_per_pe: 
     source = None
 
     def source_gen():
-
-        print("Starting source")
         yield int(1)
         yield int(2)
         yield int(3)
-        print("Source done")
 
     if (source_type == "iterator"):
         if (pe_count > 0 or engines_per_pe > 0):
@@ -76,8 +73,7 @@ def test_launch_options_source(source_type: str, pe_count: int, engines_per_pe: 
     options = srf.Options()
 
     # Set to 1 thread
-    # TODO(#38)
-    # options.topology.user_cpuset = "0-{}".format(pe_count)
+    options.topology.user_cpuset = "0-{}".format(pe_count)
 
     executor = srf.Executor(options)
 
@@ -126,8 +122,7 @@ def test_launch_options_iterable():
     options = srf.Options()
 
     # Set to 1 thread
-    # TODO(#38)
-    # options.topology.user_cpuset = "0-{}".format(pe_count)
+    options.topology.user_cpuset = "0-{}".format(pe_count)
 
     executor = srf.Executor(options)
 

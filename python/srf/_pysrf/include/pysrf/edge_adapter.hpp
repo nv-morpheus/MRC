@@ -83,12 +83,12 @@ struct EdgeAdapterUtil
                     // ingress_for_source_type
                     std::shared_ptr<channel::IngressHandle> handle =
                         std::dynamic_pointer_cast<channel::Ingress<PyHolder>>(edge);
-                    CHECK(handle);
+
                     return handle;
                 }
             }
 
-            return srf::node::EdgeBuilder::default_ingress_for_source_type(source_type, sink, ingress_handle);
+            return std::shared_ptr<channel::IngressHandle>(nullptr);
         };
     }
 
@@ -101,7 +101,7 @@ struct EdgeAdapterUtil
             // First check if there was a defined converter
             if (node::EdgeRegistry::has_converter(source.source_type(), sink.sink_type()))
             {
-                return srf::node::EdgeBuilder::default_ingress_adapter_for_sink(source, sink, ingress_handle);
+                return std::shared_ptr<channel::IngressHandle>(nullptr);
             }
 
             // Check here to see if we can short circuit if both of the types are the same
@@ -110,7 +110,7 @@ struct EdgeAdapterUtil
                 // Register an edge identity converter
                 node::IdentityEdgeConnector<OutputT>::register_converter();
 
-                return srf::node::EdgeBuilder::default_ingress_adapter_for_sink(source, sink, ingress_handle);
+                return std::shared_ptr<channel::IngressHandle>(nullptr);
             }
 
             // By this point several things have happened:
@@ -172,7 +172,7 @@ struct EdgeAdapterUtil
             }
 
             // Otherwise return base which most likely will fail
-            return srf::node::EdgeBuilder::default_ingress_adapter_for_sink(source, sink, ingress_handle);
+            return std::shared_ptr<channel::IngressHandle>(nullptr);
         };
     }
 };

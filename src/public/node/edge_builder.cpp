@@ -35,28 +35,16 @@ std::shared_ptr<channel::IngressHandle> EdgeBuilder::ingress_adapter_for_sink(
     if (EdgeAdapterRegistry::has_source_adapter(source.source_type()))
     {
         auto adapter = EdgeAdapterRegistry::find_source_adapter(source.source_type());
-        return adapter(source, sink, sink.ingress_handle());
+
+        // Try and build the handle
+        auto handle = adapter(source, sink, sink.ingress_handle());
+        if (handle) {
+            return handle;
+        }
     }
 
-    return default_ingress_adapter_for_sink(source, sink, ingress_handle);
-}
-
-std::shared_ptr<channel::IngressHandle> EdgeBuilder::default_ingress_adapter_for_sink(
-    srf::node::SourcePropertiesBase& source,
-    srf::node::SinkPropertiesBase& sink,
-    std::shared_ptr<channel::IngressHandle> ingress_handle)
-
-{
+    // Fallback -- probably fail
     auto fn_converter = srf::node::EdgeRegistry::find_converter(source.source_type(), sink.sink_type());
-    return fn_converter(ingress_handle);
-}
-
-std::shared_ptr<channel::IngressHandle> EdgeBuilder::default_ingress_for_source_type(
-    std::type_index source_type,
-    srf::node::SinkPropertiesBase& sink,
-    std::shared_ptr<channel::IngressHandle> ingress_handle)
-{
-    auto fn_converter = srf::node::EdgeRegistry::find_converter(source_type, sink.sink_type());
     return fn_converter(ingress_handle);
 }
 
@@ -68,10 +56,18 @@ std::shared_ptr<channel::IngressHandle> EdgeBuilder::ingress_for_source_type(
     if (EdgeAdapterRegistry::has_sink_adapter(sink.sink_type()))
     {
         auto adapter = EdgeAdapterRegistry::find_sink_adapter(sink.sink_type());
-        return adapter(source_type, sink, sink.ingress_handle());
+
+        // Try and build the handle
+        auto handle = adapter(source_type, sink, sink.ingress_handle());
+        if (handle)
+        {
+            return handle;
+        }
     }
 
-    return default_ingress_for_source_type(source_type, sink, ingress_handle);
+    // Fallback -- probably fail
+    auto fn_converter = srf::node::EdgeRegistry::find_converter(source_type, sink.sink_type());
+    return fn_converter(ingress_handle);
 }
 
 }  // namespace srf::node
