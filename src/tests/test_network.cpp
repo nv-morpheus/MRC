@@ -119,8 +119,9 @@ TEST_F(TestNetwork, ResourceManager)
     EXPECT_TRUE(d_ucx_block.remote_handle());
     EXPECT_TRUE(d_ucx_block.remote_handle_size());
 
-    // this is generally true, but perhaps we should not count on it
-    EXPECT_LE(h_ucx_block.remote_handle_size(), d_ucx_block.remote_handle_size());
+    // the following can not assumed to be true
+    // the remote handle size is proportional to the number and types of ucx transports available in a given domain
+    // EXPECT_LE(h_ucx_block.remote_handle_size(), d_ucx_block.remote_handle_size());
 
     // expect that the buffers are allowed to survive pass the resource manager
     resources.reset();
