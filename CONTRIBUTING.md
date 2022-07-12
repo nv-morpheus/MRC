@@ -61,7 +61,7 @@ conda activate srf
 ```
 #### Build SRF
 ```bash
-mkdir SRF_HOME/build
+mkdir $SRF_HOME/build
 cd $SRF_HOME/build
 cmake ..
 make -j $(nproc)
