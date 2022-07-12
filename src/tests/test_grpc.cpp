@@ -447,3 +447,82 @@ TEST_F(TestRPC, StreamingPingPongEarlyServerCancel)
     handler_runner->stop();
     handler_runner->await_join();
 }
+
+TEST_F(TestRPC, StreamingPingPongClientEarlyTermination)
+{
+    auto service = std::make_shared<srf::testing::TestService::AsyncService>();
+    m_server->register_service(service);
+
+    auto cq           = m_server->get_cq();
+    auto service_init = [service, cq](grpc::ServerContext* context,
+                                      grpc::ServerAsyncReaderWriter<srf::testing::Output, srf::testing::Input>* stream,
+                                      void* tag) {
+        service->RequestStreaming(context, stream, cq.get(), cq.get(), tag);
+    };
+
+    auto stream  = std::make_shared<stream_server_t>(service_init, m_resources->partition(0).runnable());
+    auto handler = std::make_unique<ServerHandler>();
+    handler->enable_persistence();
+    stream->attach_to(*handler);
+
+    auto handler_runner =
+        m_resources->partition(0).runnable().launch_control().prepare_launcher(std::move(handler))->ignition();
+    handler_runner->await_live();
+
+    m_server->service_start();
+    m_server->service_await_live();
+
+    m_resources->partition(0).runnable().main().enqueue([stream] { return stream->await_init(); });
+    m_resources->partition(0).runnable().main().enqueue([] {}).get();  // this is a fence
+
+    // put client here
+    auto prepare_fn = [this, cq](grpc::ClientContext* context) {
+        return m_stub->PrepareAsyncStreaming(context, cq.get());
+    };
+
+    auto client = std::make_shared<stream_client_t>(prepare_fn, m_resources->partition(0).runnable());
+    srf::node::SinkChannelReadable<typename stream_client_t::IncomingData> client_handler;
+    client->attach_to(client_handler);
+
+    auto client_writer = client->await_init();
+    ASSERT_TRUE(client_writer);
+    for (int i = 0; i < 10; i++)
+    {
+        VLOG(1) << "sending request " << i;
+        srf::testing::Input request;
+        request.set_batch_id(i);
+        client_writer->await_write(std::move(request));
+
+        typename stream_client_t::IncomingData response;
+        VLOG(1) << "awaiting response " << i;
+        client_handler.egress().await_read(response);
+        VLOG(1) << "got response " << i;
+
+        EXPECT_EQ(response.response.batch_id(), i);
+    }
+
+    client_writer->cancel();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    client_writer.reset();  // this should issue writes done to the server and begin shutdown
+
+    auto client_status = client->await_fini();
+    EXPECT_FALSE(client_status.ok());
+
+    // the server doesn't really know if the client cancelled or just issued a WritesDone
+    // if the server tries to write to the channel, it will realize that it can not and return
+    // a CANCELLED here, however, if it treats the cancel as a WritesDone and does not issues
+    // any responses to the client, it will finish with OK.
+    // we might be able to construct a test that issues a cancel with the server in a yielding state, then have the
+    // server issue a write after the server side reader is done. in that scenario, we should then see a CANCELLED
+    // this example finishes with OK.
+    auto status = stream->await_fini();
+    EXPECT_TRUE(status.ok());
+
+    m_server->service_stop();
+    m_server->service_await_join();
+
+    handler_runner->stop();
+    handler_runner->await_join();
+}
