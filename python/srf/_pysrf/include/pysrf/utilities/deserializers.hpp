@@ -15,28 +15,31 @@
  * limitations under the License.
  */
 
+#pragma once
+
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
 namespace srf::pysrf {
-
-namespace py = pybind11;
-using namespace py::literals;
-
-PYBIND11_MODULE(common, m)
+#pragma GCC visibility push(default)
+struct Deserializer
 {
-    m.doc() = R"pbdoc(
-        Python bindings for SRF common functionality / utilities
-        -------------------------------
-        .. currentmodule:: common
-        .. autosummary::
-           :toctree: _generate
-    )pbdoc";
+    /**
+     * @brief Deserialize from various formats
+     * @param bytes
+     * @return
+     */
+    static pybind11::object deserialize(pybind11::bytes bytes);
+    static pybind11::object deserialize(pybind11::buffer_info& buffer_info);
+    static pybind11::object deserialize(const char* bytes, std::size_t count);
 
-#ifdef VERSION_INFO
-    m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
-#else
-    m.attr("__version__") = "dev";
-#endif
-}
+    /**
+     * @brief Given a pySRF shmem descriptor, attempt to retrieve the object information from shared memory
+     * and unpickle it.
+     * @param descriptor
+     * @return
+     */
+    static pybind11::object load_from_shared_memory(pybind11::object descriptor);
+};
+#pragma GCC visibility pop
 }  // namespace srf::pysrf
