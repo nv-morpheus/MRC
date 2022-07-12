@@ -14,27 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
-#include "internal/grpc/progress_engine.hpp"
-
-#include "srf/node/generic_sink.hpp"
-
-#include <boost/fiber/all.hpp>
+#include "srf/channel/ingress.hpp"
 
 namespace srf::internal::rpc {
 
-/**
- * @brief SRF Sink to handle ProgressEvents which correspond to Promise<bool> tags
- */
-class PromiseHandler final : public srf::node::GenericSink<ProgressEvent>
+template <typename T>
+struct StreamWriter : public srf::channel::Ingress<T>
 {
-    void on_data(ProgressEvent&& event) final
-    {
-        auto* promise = static_cast<boost::fibers::promise<bool>*>(event.tag);
-        promise->set_value(event.ok);
-    }
+    virtual ~StreamWriter()      = default;
+    virtual void finish()        = 0;
+    virtual void cancel()        = 0;
+    virtual bool expired() const = 0;
 };
 
 }  // namespace srf::internal::rpc

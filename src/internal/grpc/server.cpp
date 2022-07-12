@@ -84,4 +84,17 @@ void Server::do_service_await_join()
     }
 }
 
+runnable::Resources& Server::runnable()
+{
+    return m_runnable;
+}
+std::shared_ptr<grpc::ServerCompletionQueue> Server::get_cq() const
+{
+    return m_cq;
+}
+void Server::register_service(std::shared_ptr<grpc::Service> service)
+{
+    m_builder.RegisterService(service.get());
+    m_services.push_back(service);
+}
 }  // namespace srf::internal::rpc::server

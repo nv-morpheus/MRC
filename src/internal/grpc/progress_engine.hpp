@@ -27,12 +27,27 @@
 
 namespace srf::internal::rpc {
 
+/**
+ * @brief gRPC event data pulled from a CQ
+ *
+ * @param void* tag - pointer to a user-defined specific to a given request
+ * @param bool ok - boolean to indicate if the event pulled from the CQ succeeded or not.
+ */
 struct ProgressEvent
 {
     void* tag;
     bool ok;
 };
 
+/**
+ * @brief gRPC Progress Engine which pulls ProgressEvents off the CompletionQueue
+ *
+ * This is a SRF Source and only emit ProgressEvents which consist of a void* tag and a bool ok. The user must define
+ * what the void* tag means and pair the appropriate handler as a Sink.
+ *
+ * For the majority of the internal gRPC use cases, we will use the PromiseHandler which assumes the void* tag can be
+ * statically cast to a srf::Promise<bool>, which is a fiber yielding promise.
+ */
 class ProgressEngine final : public srf::node::GenericSource<ProgressEvent>
 {
   public:

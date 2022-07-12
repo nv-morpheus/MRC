@@ -34,16 +34,11 @@ class Server : public Service
     Server(runnable::Resources& runnable);
     ~Server() override;
 
-    void register_service(std::shared_ptr<grpc::Service> service)
-    {
-        m_builder.RegisterService(service.get());
-        m_services.push_back(service);
-    }
+    void register_service(std::shared_ptr<grpc::Service> service);
 
-    std::shared_ptr<grpc::ServerCompletionQueue> get_cq() const
-    {
-        return m_cq;
-    }
+    std::shared_ptr<grpc::ServerCompletionQueue> get_cq() const;
+
+    runnable::Resources& runnable();
 
   private:
     void do_service_start() final;

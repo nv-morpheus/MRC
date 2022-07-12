@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "internal/grpc/client_streaming.hpp"
 #include "internal/grpc/progress_engine.hpp"
+#include "internal/grpc/stream_writer.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/service.hpp"
 
@@ -39,15 +39,11 @@
 #include <boost/fiber/future/future_status.hpp>
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
-#include <glog/vlog_is_on.h>
+#include <grpc/grpc_security.h>
 #include <grpc/support/time.h>
-#include <grpcpp/client_context.h>
 #include <grpcpp/completion_queue.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/server_context.h>
-#include <grpcpp/support/status.h>
-#include <grpcpp/support/status_code_enum.h>
-#include <pthread.h>
 
 #include <chrono>
 #include <memory>
@@ -56,8 +52,41 @@
 
 namespace srf::internal::rpc {
 
-using engine_callback_t = std::function<void(bool)>;
-
+/**
+ * @brief Implementation of a gRPC bidirectional streaming server using SRF primitives
+ *
+ * ServerStreaming as three-phases:
+ *
+ * 1) After construction with a request_fn_t, the ServerStream is "enqueued" with the server by calling `await_init()`.
+ *    If `nullptr` is returned, then the stream was not initialized by the server and the object can be destroyed.
+ *    Otherwise a shared_ptr to a StreamWriter is returns and the stream is live.
+ * 2) The initialization of a live stream creates two SRF runnables:
+ *    - A Reader which is a srf::node::RxSource<IncomingData> and,
+ *    - A Writer which is a srf::node::RxSink<ResponseT>.
+ *    These SRF runnables are responsible for pull data off the stream (Reader) and piping IncomingData throught a
+ *    user-defined Handler sink which can be attached via the `attach_to` or `attach_to_queue` methods. Part of
+ *    IncomingData is a shared_ptr to another instance of StreamWriter allowing the Handler to optional write one or
+ *    more responses on to the stream back to the client.
+ *    - The StreamWriter is the object which allows responses to be sent. It's lifecycle also maintains the stream.
+ *    After the server receives a WritesDone from the client, the ServerStream no longer owns a copy of the
+ *    StreamWriter. When the last StreamWriter is destroyed, gRPC issuses a Finish call with a status of OK.
+ *    Alternatively, the StreamWriter can early terminate the stream by calling `cancel` or `finish`. Cancel should
+ *    return a grpc::Status::CANCELLED status to the client, while Finish would early terminate with the OK status.
+ *    - During Phase 2, any holder of StreamWriter can write responses. Typically, the initial StreamWriter from
+ *    await_init is copied and owned by one or more server side logic loops which may write response to the client at at
+ *    time. StreamWriter can use the expired method to determine if the client-side has issued a WritesDone indicating
+ *    that the client has shutdown its sender channel and the server will no longer receieve new client events. This can
+ *    be used as a sign for the server to begin shutting down; however, it's not manditory that it does.
+ * 3) The final phase is the shutdown phase. There are two indicators of when the Client has issued a WritesDone. As
+ *    mentioned above, the StreamWriter::expired is one way to check. The other indication is that the Handler will
+ *    receive an IncomingData object with `ok == false`, this will indicate this is the last IncomingData object that
+ *    the Handler will process from a given stream. This can be used a direct trigger to any server side logic that the
+ *    client has gone quiet. ServerStreaming::await_fini can be called to ensure the stream is completed on the server
+ *    side before being destroyed.
+ *
+ * @tparam RequestT
+ * @tparam ResponseT
+ */
 template <typename RequestT, typename ResponseT>
 class ServerStreaming : private Service, public std::enable_shared_from_this<ServerStreaming<RequestT, ResponseT>>
 {
@@ -67,6 +96,9 @@ class ServerStreaming : private Service, public std::enable_shared_from_this<Ser
     using reader_t        = RequestT;
     using stream_writer_t = StreamWriter<writer_t>;
 
+    /**
+     * @brief Specialization of StreamWriter for ServerStreaming
+     */
     class ServerStreamWriter final : public stream_writer_t
     {
       public:
@@ -122,9 +154,18 @@ class ServerStreaming : private Service, public std::enable_shared_from_this<Ser
     ServerStreaming(request_fn_t request_fn, runnable::Resources& runnable) :
       m_runnable(runnable),
       m_stream(std::make_unique<grpc::ServerAsyncReaderWriter<ResponseT, RequestT>>(&m_context)),
-      m_read_channel(std::make_shared<srf::node::Muxer<IncomingData>>())
+      m_reader_source(std::make_unique<srf::node::RxSource<IncomingData>>(
+          rxcpp::observable<>::create<IncomingData>([this](rxcpp::subscriber<IncomingData> s) {
+              this->do_read(s);
+              s.on_completed();
+          })))
     {
         m_init_fn = [this, request_fn](void* tag) { request_fn(&m_context, m_stream.get(), tag); };
+    }
+
+    ~ServerStreaming() override
+    {
+        Service::call_in_destructor();
     }
 
     std::shared_ptr<stream_writer_t> await_init()
@@ -140,17 +181,22 @@ class ServerStreaming : private Service, public std::enable_shared_from_this<Ser
         return m_status;
     }
 
+    // must be called before await_init()
     void attach_to(srf::node::SinkProperties<IncomingData>& sink)
     {
-        srf::node::make_edge(*m_read_channel, sink);
+        CHECK(m_reader_source);
+        srf::node::make_edge(*m_reader_source, sink);
     }
 
+    // must be called before await_init()
     void attach_to_queue(srf::node::ChannelAcceptor<IncomingData>& sink)
     {
-        srf::node::make_edge(*m_read_channel, sink);
+        CHECK(m_reader_source);
+        srf::node::make_edge(*m_reader_source, sink);
     }
 
   private:
+    // logic executed by the Reader
     void do_read(rxcpp::subscriber<IncomingData>& s)
     {
         while (s.is_subscribed())
@@ -174,6 +220,7 @@ class ServerStreaming : private Service, public std::enable_shared_from_this<Ser
         }
     }
 
+    // logic executed by the Writer's on_next method
     void do_write(const writer_t& request)
     {
         CHECK(m_stream);
@@ -184,6 +231,7 @@ class ServerStreaming : private Service, public std::enable_shared_from_this<Ser
             auto ok = promise.get_future().get();
             if (!ok)
             {
+                DVLOG(10) << "server failed to write to client; disabling writes and beginning shutdown";
                 m_can_write = false;
                 m_write_channel.reset();
                 m_stream_writer.reset();
@@ -192,6 +240,7 @@ class ServerStreaming : private Service, public std::enable_shared_from_this<Ser
         }
     }
 
+    // logic executed in the Writers on_completed
     void do_writes_done()
     {
         if (m_can_write)
@@ -205,17 +254,11 @@ class ServerStreaming : private Service, public std::enable_shared_from_this<Ser
         }
     }
 
-    void init()
+    // this method is executed if the grpc stream is successfully initialized
+    void do_init()
     {
         CHECK(m_stream);
-        CHECK(m_read_channel);
-
-        auto reader = std::make_unique<srf::node::RxSource<IncomingData>>(
-            rxcpp::observable<>::create<IncomingData>([this](rxcpp::subscriber<IncomingData> s) {
-                this->do_read(s);
-                s.on_completed();
-            }));
-        srf::node::make_edge(*reader, *m_read_channel);
+        CHECK(m_reader_source);
 
         // make writer sink
         m_write_channel = std::make_shared<srf::node::SourceChannelWriteable<writer_t>>();
@@ -234,7 +277,7 @@ class ServerStreaming : private Service, public std::enable_shared_from_this<Ser
 
         // launch reader and writer
         m_writer = m_runnable.launch_control().prepare_launcher(std::move(writer))->ignition();
-        m_reader = m_runnable.launch_control().prepare_launcher(std::move(reader))->ignition();
+        m_reader = m_runnable.launch_control().prepare_launcher(std::move(m_reader_source))->ignition();
 
         // await live
         m_writer->await_live();
@@ -251,16 +294,24 @@ class ServerStreaming : private Service, public std::enable_shared_from_this<Ser
         {
             DVLOG(10) << "server stream could not be initialized";
             m_stream.reset();
-            m_read_channel.reset();
+            m_reader_source.reset();
+            // this marks the Service as joined - no need to join it in this state
+            service_await_join();
             return;
         }
 
-        init();
+        do_init();
     }
 
     void do_service_await_live() final {}
-    void do_service_stop() final {}
-    void do_service_kill() final {}
+    void do_service_stop() final
+    {
+        m_context.TryCancel();
+    }
+    void do_service_kill() final
+    {
+        m_context.TryCancel();
+    }
 
     void do_service_await_join() final
     {
@@ -285,15 +336,25 @@ class ServerStreaming : private Service, public std::enable_shared_from_this<Ser
     // prepare fn
     init_fn_t m_init_fn;
 
-    bool m_can_write{false};
+    // state variables
+    bool m_can_write{false};  // false indicates the write stream is not operational
     std::optional<grpc::Status> m_status;
 
+    // reader_source - available for handler connections (attach_to method) prior to await_init
+    std::unique_ptr<srf::node::RxSource<IncomingData>> m_reader_source;
+
+    // channel connected to the writer sink; each ServerStreamWriter will take ownership of a shared_ptr
     std::shared_ptr<srf::node::SourceChannelWriteable<writer_t>> m_write_channel;
-    std::shared_ptr<srf::node::Muxer<IncomingData>> m_read_channel;
+
+    // the destruction of this object also ensures that m_write_channel is reset
+    // this object is nullified after the last IncomingData object is passed to the handler
     std::shared_ptr<stream_writer_t> m_stream_writer;
 
+    // runners to manage the life cycles of the reader / writer runnables
     std::unique_ptr<srf::runnable::Runner> m_writer;
     std::unique_ptr<srf::runnable::Runner> m_reader;
+
+    friend ServerStreamWriter;
 };
 
 }  // namespace srf::internal::rpc
