@@ -17,35 +17,24 @@
 
 #pragma once
 
-namespace srf::codable {
+#include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
 
-class EncodingOptions final
+namespace srf::pysrf {
+#pragma GCC visibility push(default)
+
+struct Serializer
 {
-  public:
-    EncodingOptions() = default;
-    EncodingOptions(const bool& force_copy, const bool& use_shm) :
-      m_force_copy{force_copy}, m_use_shm{use_shm} {};
-
-    const bool& force_copy() const
-    {
-        return m_force_copy;
-    }
-
-    void force_copy(const bool& flag) {
-        m_force_copy = flag;
-    }
-
-    const bool& use_shm() const {
-        return m_use_shm;
-    }
-
-    void use_shm(const bool& flag) {
-        m_use_shm = flag;
-    }
-
-  private:
-    bool m_use_shm{false};
-    bool m_force_copy{false};
+    /**
+     *
+     * @param obj pybind11 object to serialize
+     * @param use_shmem flag indicating whether or not we should put the serialized object into shared memory.
+     * @return
+     */
+    static std::tuple<char*, std::size_t> serialize(pybind11::object obj,
+                                                    bool use_shmem         = false,
+                                                    bool return_raw_buffer = false);
+    static pybind11::object persist_to_shared_memory(pybind11::object obj);
 };
-
-}  // namespace srf::codable
+#pragma GCC visibility pop
+}  // namespace srf::pysrf

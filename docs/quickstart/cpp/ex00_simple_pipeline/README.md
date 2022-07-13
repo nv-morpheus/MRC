@@ -8,10 +8,10 @@ This example illustrates how to create a simple pipeline with a single source, n
 
 Each of the objects in the Segment is created using the `segment::Builder::make_XXX(NAME, ...)` function where `XXX` is replace with either `source`, `sink` or `node`.
 
-Once each object is created, they can be linked together using `segment::Builder::.make_edge(SOURCE, SINK)`. There are a few rules when making edges:
+Once each object is created, they can be linked together using `segment::Builder::make_edge(SOURCE, SINK)`. There are a few rules when making edges:
 
-- Objects deriving from `srf::node::SourceProperties` can only appear in the left-hand argument
-- Objects deriving from `srf::node::SinkProperties` can only appear in the right-hand argument
+- Objects deriving from `srf::node::SourceProperties` can only appear in the left-hand argument of make_edge()
+- Objects deriving from `srf::node::SinkProperties` can only appear in the right-hand argument of make_edge()
 - Node objects can appear in either side since they derive from both `srf::node::SourceProperties` and `srf::node::SinkProperties`
 - Sources can only be connected to one downstream sink
   - To use multiple downstream sinks with broadcast or round-robin functionality, see the guide on operators
@@ -20,9 +20,9 @@ Once each object is created, they can be linked together using `segment::Builder
 
 ## Creating the Source
 
-The first "node" that we will be creating is a source. Source object have no upstream dependencies and are responsible for producing data to be consume by downstream object.
+The first "node" that we will be creating is a source. Source objects have no upstream dependencies and are responsible for producing data to be consume by downstream object.
 
-To create a source, you call `make_source<T>` on the `segment::Builder` object passing a name and a lambda of type `std::function<(rxcpp::subscriber<T>)>` where `T` is the type of object that the source will be producing. In our example, we are creating integers so the source object looks like:
+To create a source, you call `make_source<T>` on the `segment::Builder` object passing a name and a lambda of type `std::function<(rxcpp::subscriber<T>)>` Please see https://reactivex.io/RxCpp/ and navigate to rxcpp::subscriber<T, Observer> for more detail on the lambda type. where `T` is the type of object that the source will be producing. In our example, we are creating integers so the source object looks like:
 
 ```cpp
 auto source = s.make_source<int>("int_source", [](rxcpp::subscriber<int> s) {
@@ -37,7 +37,7 @@ The reason that we pass a lambda to `make_source` is because this function is on
 
 ## Creating the Node
 
-Node object work as both a source and a sink and are responsible for connecting the upstream source to any downstream sink. Because the upstream source and downstream sink can be different types, `make_node<T, R>` accepts two template arguments for the source type and sink type respectively. To make building nodes easier, SRF supports Reactive operators in the `make_node` function. These Reactive operators can be used to chain multiple steps together and simplify node creation.
+Node objects work as both a source and a sink and are responsible for connecting the upstream source to any downstream sink. Because the upstream source and downstream sink can be different types, `make_node<T, R>` accepts two template arguments for the source type and sink type respectively. To make building nodes easier, SRF supports Reactive operators in the `make_node` function. Please see https://reactivex.io/RxCpp/ and navigate to Operators for more details on Reactive operators. These Reactive operators can be used to chain multiple steps together and simplify node creation.
 
 For our example, we will only be using a single Reactive operator: `map`. To build the node, we need to call `make_node` and provide the source type, sink type, node name and node operators:
 
@@ -48,7 +48,7 @@ auto node = s.make_node<int, float>("int_to_float", rxcpp::operators::map([](con
                                     }));
 ```
 
-In our example, the `map` operator takes a lambda that will be called for each value that passes through the node. The result returned by this lambda will be passed on to the next downstream node. Our lambda is very simple, only multipling the input value by `2.5` and returning a `float`.
+In our example, the `map` operator takes a lambda that will be called for each value that passes through the node. The result returned by this lambda will be passed on to the next downstream node. Our lambda is very simple, only multipling the input value by `2.5` and returning a `float`. 
 
 ## Creating the Sink
 
@@ -76,9 +76,9 @@ We can see this simple pipeline in action by running the example in the build fo
 ```bash
 $ ${QSG_BUILD_DIR}/docs/quickstart/cpp/ex00_simple_pipeline/ex00_simple_pipeline.x
 srf pipeline starting...
-sink: 2
-sink: 4
-sink: 6
+sink: 2.5
+sink: 5
+sink: 7.5
 srf pipeline complete: counter should be 3; counter=3
 ```
 
