@@ -35,6 +35,7 @@
 #include "srf/segment/runnable.hpp"
 #include "srf/utils/macros.hpp"
 
+#include <boost/hana.hpp>
 #include <glog/logging.h>
 #include <rxcpp/rx-observable.hpp>
 #include <rxcpp/rx-observer.hpp>
@@ -45,6 +46,44 @@
 #include <ostream>
 #include <string>
 #include <utility>
+
+namespace {
+namespace hana = boost::hana;
+
+template <typename T>
+auto has_source_add_watcher =
+    hana::is_valid([](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).source_add_watcher(
+                                        std::declval<std::shared_ptr<srf::WatcherInterface>>())) {});
+
+template <typename T>
+auto has_sink_add_watcher =
+    hana::is_valid([](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).sink_add_watcher(
+                                        std::declval<std::shared_ptr<srf::WatcherInterface>>())) {});
+
+template <typename T>
+void add_stats_watcher_if_rx_source(T& thing, std::string name)
+{
+    return hana::if_(
+        has_source_add_watcher<T>(thing),
+        [name](auto&& object) {
+            auto trace_stats = srf::benchmarking::TraceStatistics::get_or_create(name);
+            std::forward<decltype(object)>(object).source_add_watcher(trace_stats);
+        },
+        [name](auto&&) {})(thing);
+}
+
+template <typename T>
+void add_stats_watcher_if_rx_sink(T& thing, std::string name)
+{
+    return hana::if_(
+        has_sink_add_watcher<T>(thing),
+        [name](auto&& object) {
+            auto trace_stats = srf::benchmarking::TraceStatistics::get_or_create(name);
+            std::forward<decltype(object)>(object).sink_add_watcher(trace_stats);
+        },
+        [name](auto&&) {})(thing);
+}
+}  // namespace
 
 namespace srf::segment {
 
@@ -68,55 +107,41 @@ class Builder final
     template <typename ObjectT, typename... ArgsT>
     std::shared_ptr<Object<ObjectT>> construct_object(std::string name, ArgsT&&... args)
     {
-        return make_object(std::move(name), std::make_unique<ObjectT>(std::forward<ArgsT>(args)...));
+        auto uptr = std::make_unique<ObjectT>(std::forward<ArgsT>(args)...);
+
+        ::add_stats_watcher_if_rx_source(*uptr, name);
+        ::add_stats_watcher_if_rx_sink(*uptr, name);
+
+        return make_object(std::move(name), std::move(uptr));
     }
 
-    template <typename SourceTypeT, typename CreateFnT>
+    template <typename SourceTypeT, template <typename> class NodeTypeT = node::RxSource, typename CreateFnT>
     auto make_source(std::string name, CreateFnT&& create_fn)
     {
-        auto uptr = std::make_unique<node::RxSource<SourceTypeT>>(
-            rxcpp::observable<>::create<SourceTypeT>(std::forward<CreateFnT>(create_fn)));
-
-        auto trace_stats = benchmarking::TraceStatistics::get_or_create(name);
-        uptr->source_add_watcher(trace_stats);
-
-        return make_object(std::move(name), std::move(uptr));
+        return construct_object<NodeTypeT<SourceTypeT>>(
+            name, rxcpp::observable<>::create<SourceTypeT>(std::forward<CreateFnT>(create_fn)));
     }
 
-    template <typename SinkTypeT, typename... ArgsT>
+    template <typename SinkTypeT, template <typename> class NodeTypeT = node::RxSink, typename... ArgsT>
     auto make_sink(std::string name, ArgsT&&... ops)
     {
-        auto uptr = std::make_unique<node::RxSink<SinkTypeT>>(
-            rxcpp::make_observer_dynamic<SinkTypeT>(std::forward<ArgsT>(ops)...));
-
-        auto trace_stats = benchmarking::TraceStatistics::get_or_create(name);
-        uptr->sink_add_watcher(trace_stats);
-
-        return make_object(std::move(name), std::move(uptr));
+        return construct_object<NodeTypeT<SinkTypeT>>(name,
+                                                      rxcpp::make_observer<SinkTypeT>(std::forward<ArgsT>(ops)...));
     }
 
-    template <typename SinkTypeT, typename... ArgsT>
+    template <typename SinkTypeT, template <typename, typename> class NodeTypeT = node::RxNode, typename... ArgsT>
     auto make_node(std::string name, ArgsT&&... ops)
     {
-        auto uptr = std::make_unique<node::RxNode<SinkTypeT, SinkTypeT>>(std::forward<ArgsT>(ops)...);
-
-        auto trace_stats = benchmarking::TraceStatistics::get_or_create(name);
-        uptr->source_add_watcher(trace_stats);
-        uptr->sink_add_watcher(trace_stats);
-
-        return make_object(std::move(name), std::move(uptr));
+        return construct_object<NodeTypeT<SinkTypeT, SinkTypeT>>(name, std::forward<ArgsT>(ops)...);
     }
 
-    template <typename SinkTypeT, typename SourceTypeT, typename... ArgsT>
+    template <typename SinkTypeT,
+              typename SourceTypeT,
+              template <typename, typename> class NodeTypeT = node::RxNode,
+              typename... ArgsT>
     auto make_node(std::string name, ArgsT&&... ops)
     {
-        auto uptr = std::make_unique<node::RxNode<SinkTypeT, SourceTypeT>>(std::forward<ArgsT>(ops)...);
-
-        auto trace_stats = benchmarking::TraceStatistics::get_or_create(name);
-        uptr->source_add_watcher(trace_stats);
-        uptr->sink_add_watcher(trace_stats);
-
-        return make_object(std::move(name), std::move(uptr));
+        return construct_object<NodeTypeT<SinkTypeT, SourceTypeT>>(name, std::forward<ArgsT>(ops)...);
     }
 
     template <typename SourceNodeTypeT, typename SinkNodeTypeT>
