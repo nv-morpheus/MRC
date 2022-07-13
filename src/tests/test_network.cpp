@@ -34,6 +34,7 @@
 #include "srf/memory/resources/logging_resource.hpp"
 #include "srf/memory/resources/memory_resource.hpp"
 #include "srf/options/options.hpp"
+#include "srf/options/placement.hpp"
 #include "srf/options/resources.hpp"
 
 #include <gtest/gtest.h>
@@ -80,9 +81,13 @@ TEST_F(TestNetwork, Arena)
 
 TEST_F(TestNetwork, ResourceManager)
 {
+    // using options.placement().resources_strategy(PlacementResources::Shared)
+    // will test if cudaSetDevice is being properly called by the network services
+    // since all network services for potentially multiple devices are colocated on a single thread
     auto resources = std::make_unique<internal::resources::Manager>(
         internal::system::SystemProvider(make_system([](Options& options) {
             options.architect_url("localhost:13337");
+            options.placement().resources_strategy(PlacementResources::Dedicated);
             options.resources().enable_device_memory_pool(true);
             options.resources().enable_host_memory_pool(true);
             options.resources().host_memory_pool().block_size(32_MiB);
@@ -119,8 +124,9 @@ TEST_F(TestNetwork, ResourceManager)
     EXPECT_TRUE(d_ucx_block.remote_handle());
     EXPECT_TRUE(d_ucx_block.remote_handle_size());
 
-    // this is generally true, but perhaps we should not count on it
-    EXPECT_LE(h_ucx_block.remote_handle_size(), d_ucx_block.remote_handle_size());
+    // the following can not assumed to be true
+    // the remote handle size is proportional to the number and types of ucx transports available in a given domain
+    // EXPECT_LE(h_ucx_block.remote_handle_size(), d_ucx_block.remote_handle_size());
 
     // expect that the buffers are allowed to survive pass the resource manager
     resources.reset();

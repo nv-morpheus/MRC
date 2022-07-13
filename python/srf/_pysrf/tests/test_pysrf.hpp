@@ -17,9 +17,14 @@
 
 #pragma once
 
+#include "srf/memory/memory_kind.hpp"
+#include "srf/memory/resources/device/cuda_malloc_resource.hpp"  // IWYU pragma: export
+#include "srf/memory/resources/host/pinned_memory_resource.hpp"  // IWYU pragma: export
+
 #include <gtest/gtest.h>
 #include <pybind11/embed.h>
 
+using namespace srf;
 // Essentially the same macro from test_srf.hpp but with an embedded python interpreter.
 // The attribute visibility bit avoids a compiler warning about the test class being
 // declared with greater visibility than the interpreter attribute

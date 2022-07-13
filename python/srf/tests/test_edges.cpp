@@ -15,11 +15,9 @@
  * limitations under the License.
  */
 
-#include "pysrf/forward.hpp"
 #include "pysrf/node.hpp"
 #include "pysrf/utils.hpp"
 
-#include "srf/channel/status.hpp"
 #include "srf/node/edge_connector.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/sink_properties.hpp"
@@ -36,7 +34,6 @@
 #include <exception>
 #include <memory>
 #include <string>
-#include <type_traits>
 #include <utility>
 
 // IWYU thinks we need vector for PythonNode

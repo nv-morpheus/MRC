@@ -17,27 +17,44 @@
 
 #pragma once
 
+#include "internal/memory/device_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/ucx/registration_cache.hpp"
 
 #include <cstddef>
 
-namespace srf::internal::ucx {
+namespace srf::internal {
+namespace ucx {
 class Resources;
-}
+}  // namespace ucx
+namespace memory {
+class HostResources;
+}  // namespace memory
+namespace data_plane {
+class Client;
+class Server;
+}  // namespace data_plane
+}  // namespace srf::internal
 
 namespace srf::internal::network {
 
 class Resources final : private resources::PartitionResourceBase
 {
   public:
-    Resources(runnable::Resources& _runnable_resources, std::size_t _partition_id, ucx::Resources& ucx);
+    Resources(runnable::Resources& _runnable_resources,
+              std::size_t _partition_id,
+              ucx::Resources& ucx,
+              memory::HostResources& host);
+    ~Resources() final;
 
     const ucx::RegistrationCache& registration_cache() const;
 
   private:
     ucx::Resources& m_ucx;
+    memory::HostResources& m_host;
+    std::shared_ptr<data_plane::Server> m_server;
+    std::shared_ptr<data_plane::Client> m_client;
 };
 
 }  // namespace srf::internal::network

@@ -143,10 +143,12 @@ include(cmake/setup_iwyu.cmake)
 
 # Keep all source files sorted!!!
 add_library(libsrf
+  src/internal/data_plane/server.cpp
   src/internal/executor/executor.cpp
   src/internal/executor/iexecutor.cpp
   src/internal/memory/device_resources.cpp
   src/internal/memory/host_resources.cpp
+  src/internal/memory/transient_pool.cpp
   src/internal/network/resources.cpp
   src/internal/pipeline/controller.cpp
   src/internal/pipeline/instance.cpp
@@ -204,8 +206,6 @@ add_library(libsrf
   src/internal/utils/parse_config.cpp
   src/internal/utils/parse_ints.cpp
   src/internal/utils/shared_resource_bit_map.cpp
-  src/public/benchmarking/trace_statistics.cpp
-  src/public/benchmarking/tracer.cpp
   src/public/benchmarking/util.cpp
   src/public/channel/channel.cpp
   src/public/codable/encoded_object.cpp
@@ -220,6 +220,8 @@ add_library(libsrf
   src/public/memory/buffer_view.cpp
   src/public/metrics/counter.cpp
   src/public/metrics/registry.cpp
+  src/public/node/edge_adapter_registry.cpp
+  src/public/node/edge_builder.cpp
   src/public/node/edge_registry.cpp
   src/public/options/engine_groups.cpp
   src/public/options/fiber_pool.cpp
@@ -234,6 +236,8 @@ add_library(libsrf
   src/public/runnable/runner.cpp
   src/public/runnable/types.cpp
   src/public/segment/definition.cpp
+  src/public/benchmarking/trace_statistics.cpp
+  src/public/benchmarking/tracer.cpp
   src/public/utils/bytes_to_string.cpp
   src/public/utils/thread_utils.cpp
   src/public/utils/type_utils.cpp
@@ -242,7 +246,6 @@ add_library(libsrf
   # src/internal/data_plane/client_worker.cpp
   # src/internal/data_plane/client.cpp
   # src/internal/data_plane/instance.cpp
-  # src/internal/data_plane/server.cpp
   # src/internal/resources/host_resources.cpp
   # src/internal/resources/partition_resources.cpp
   # src/internal/resources/resource_partitions.cpp

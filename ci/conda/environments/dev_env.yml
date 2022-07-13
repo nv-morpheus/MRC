@@ -9,6 +9,7 @@ dependencies:
   - boost-cpp=1.74
   - ccache
   - cmake=3.22
+  - cuda-nvml-dev=11.4
   - cudatoolkit=11.4
   - cython=0.29.24
   - doxygen=1.9.2

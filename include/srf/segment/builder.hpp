@@ -116,7 +116,7 @@ class Builder final
     }
 
     template <typename SourceTypeT,
-              template <class, class=srf::runnable::Context> class NodeTypeT = node::RxSource,
+              template <class, class = srf::runnable::Context> class NodeTypeT = node::RxSource,
               typename CreateFnT>
     auto make_source(std::string name, CreateFnT&& create_fn)
     {
@@ -124,7 +124,9 @@ class Builder final
             name, rxcpp::observable<>::create<SourceTypeT>(std::forward<CreateFnT>(create_fn)));
     }
 
-    template <typename SinkTypeT, template <class, class=srf::runnable::Context> class NodeTypeT = node::RxSink, typename... ArgsT>
+    template <typename SinkTypeT,
+              template <class, class = srf::runnable::Context> class NodeTypeT = node::RxSink,
+              typename... ArgsT>
     auto make_sink(std::string name, ArgsT&&... ops)
     {
         return construct_object<NodeTypeT<SinkTypeT>>(name,
@@ -132,7 +134,7 @@ class Builder final
     }
 
     template <typename SinkTypeT,
-              template <class, class, class=srf::runnable::Context> class NodeTypeT = node::RxNode,
+              template <class, class, class = srf::runnable::Context> class NodeTypeT = node::RxNode,
               typename... ArgsT>
     auto make_node(std::string name, ArgsT&&... ops)
     {
@@ -141,7 +143,7 @@ class Builder final
 
     template <typename SinkTypeT,
               typename SourceTypeT,
-              template <class, class, class=srf::runnable::Context> class NodeTypeT = node::RxNode,
+              template <class, class, class = srf::runnable::Context> class NodeTypeT = node::RxNode,
               typename... ArgsT>
     auto make_node(std::string name, ArgsT&&... ops)
     {

@@ -110,7 +110,7 @@ Installing via source is for more advanced users and is necessary to try SRF fea
 <!-- omit in toc -->
 #### Clone SRF repository
 ```bash
-export $SRF_HOME=$(pwd)/srf
+export SRF_HOME=$(pwd)/srf
 git clone git@github.com:nv-morpheus/srf.git $SRF_HOME
 cd $SRF_HOME
 ```

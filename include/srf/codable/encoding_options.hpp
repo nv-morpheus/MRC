@@ -23,13 +23,28 @@ class EncodingOptions final
 {
   public:
     EncodingOptions() = default;
+    EncodingOptions(const bool& force_copy, const bool& use_shm) :
+      m_force_copy{force_copy}, m_use_shm{use_shm} {};
 
     const bool& force_copy() const
     {
         return m_force_copy;
     }
 
+    void force_copy(const bool& flag) {
+        m_force_copy = flag;
+    }
+
+    const bool& use_shm() const {
+        return m_use_shm;
+    }
+
+    void use_shm(const bool& flag) {
+        m_use_shm = flag;
+    }
+
   private:
+    bool m_use_shm{false};
     bool m_force_copy{false};
 };
 
