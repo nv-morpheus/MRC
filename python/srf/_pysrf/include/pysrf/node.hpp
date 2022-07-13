@@ -171,8 +171,8 @@ namespace pysrf {
 // Export everything in the srf::pysrf namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
 
-template <typename InputT>
-class PythonSink : public node::RxSink<InputT>,
+template <typename InputT, typename ContextT = srf::runnable::Context>
+class PythonSink : public node::RxSink<InputT, ContextT>,
                    public pysrf::AutoRegSinkAdapter<InputT>
 {
     using base_t = node::RxSink<InputT>;
@@ -183,8 +183,8 @@ class PythonSink : public node::RxSink<InputT>,
     using node::RxSink<InputT>::RxSink;
 };
 
-template <typename InputT, typename OutputT>
-class PythonNode : public node::RxNode<InputT, OutputT>,
+template <typename InputT, typename OutputT, typename ContextT = srf::runnable::Context>
+class PythonNode : public node::RxNode<InputT, OutputT, ContextT>,
                    public pysrf::AutoRegSourceAdapter<OutputT>,
                    public pysrf::AutoRegSinkAdapter<InputT>
 {
@@ -226,8 +226,8 @@ class PythonNode : public node::RxNode<InputT, OutputT>,
     }
 };
 
-template <typename OutputT>
-class PythonSource : public node::RxSource<OutputT>,
+template <typename OutputT, typename ContextT = srf::runnable::Context>
+class PythonSource : public node::RxSource<OutputT, ContextT>,
                      public pysrf::AutoRegSourceAdapter<OutputT>
 {
     using base_t = node::RxSource<OutputT>;
