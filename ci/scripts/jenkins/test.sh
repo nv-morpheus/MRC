@@ -45,7 +45,7 @@ set +e
 # * test_srf_private - https://github.com/nv-morpheus/SRF/issues/33
 # * nvrpc - https://github.com/nv-morpheus/SRF/issues/34
 ctest --output-on-failure \
-      --exclude-regex "test_srf_benchmarking|test_srf_private|nvrpc" \
+      --exclude-regex "test_srf_private|nvrpc" \
       --output-junit ${REPORTS_DIR}/report_ctest.xml
 
 CTEST_RESULTS=$?
