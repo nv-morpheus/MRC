@@ -19,7 +19,6 @@ add_library(srf_protos)
 
 add_library(${PROJECT_NAME}::srf_protos ALIAS srf_protos)
 
-
 add_library(srf_architect_protos)
 
 add_library(${PROJECT_NAME}::srf_architect_protos ALIAS srf_architect_protos)

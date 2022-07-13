@@ -142,10 +142,6 @@ include(cmake/setup_coverage.cmake)
 # Setup IWYU if enabled
 include(cmake/setup_iwyu.cmake)
 
-####################################
-# - Configure protobufs
-
-
 # ###################################
 # - Begin SRF Targets --------------
 
