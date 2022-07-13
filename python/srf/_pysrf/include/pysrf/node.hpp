@@ -283,8 +283,8 @@ class PythonSourceTypeErased : public node::SourceTypeErased
 
 }  // namespace detail
 
-template <typename InputT>
-class PythonSink : public node::RxSink<InputT>, public detail::PythonSinkTypeErased<InputT>
+template <typename InputT, typename ContextT = srf::runnable::Context>
+class PythonSink : public node::RxSink<InputT, ContextT>, public detail::PythonSinkTypeErased<InputT>
 {
     using base_t = node::RxSink<InputT>;
 
@@ -294,8 +294,8 @@ class PythonSink : public node::RxSink<InputT>, public detail::PythonSinkTypeEra
     using node::RxSink<InputT>::RxSink;
 };
 
-template <typename InputT, typename OutputT>
-class PythonNode : public node::RxNode<InputT, OutputT>,
+template <typename InputT, typename OutputT, typename ContextT = srf::runnable::Context>
+class PythonNode : public node::RxNode<InputT, OutputT, ContextT>,
                    public detail::PythonSinkTypeErased<InputT>,
                    public detail::PythonSourceTypeErased<OutputT>
 {
@@ -337,8 +337,8 @@ class PythonNode : public node::RxNode<InputT, OutputT>,
     }
 };
 
-template <typename OutputT>
-class PythonSource : public node::RxSource<OutputT>, public detail::PythonSourceTypeErased<OutputT>
+template <typename OutputT, typename ContextT = srf::runnable::Context>
+class PythonSource : public node::RxSource<OutputT, ContextT>, public detail::PythonSourceTypeErased<OutputT>
 {
     using base_t = node::RxSource<OutputT>;
 

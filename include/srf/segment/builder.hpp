@@ -115,21 +115,25 @@ class Builder final
         return make_object(std::move(name), std::move(uptr));
     }
 
-    template <typename SourceTypeT, template <typename> class NodeTypeT = node::RxSource, typename CreateFnT>
+    template <typename SourceTypeT,
+              template <class, class=srf::runnable::Context> class NodeTypeT = node::RxSource,
+              typename CreateFnT>
     auto make_source(std::string name, CreateFnT&& create_fn)
     {
         return construct_object<NodeTypeT<SourceTypeT>>(
             name, rxcpp::observable<>::create<SourceTypeT>(std::forward<CreateFnT>(create_fn)));
     }
 
-    template <typename SinkTypeT, template <typename> class NodeTypeT = node::RxSink, typename... ArgsT>
+    template <typename SinkTypeT, template <class, class=srf::runnable::Context> class NodeTypeT = node::RxSink, typename... ArgsT>
     auto make_sink(std::string name, ArgsT&&... ops)
     {
         return construct_object<NodeTypeT<SinkTypeT>>(name,
                                                       rxcpp::make_observer<SinkTypeT>(std::forward<ArgsT>(ops)...));
     }
 
-    template <typename SinkTypeT, template <typename, typename> class NodeTypeT = node::RxNode, typename... ArgsT>
+    template <typename SinkTypeT,
+              template <class, class, class=srf::runnable::Context> class NodeTypeT = node::RxNode,
+              typename... ArgsT>
     auto make_node(std::string name, ArgsT&&... ops)
     {
         return construct_object<NodeTypeT<SinkTypeT, SinkTypeT>>(name, std::forward<ArgsT>(ops)...);
@@ -137,7 +141,7 @@ class Builder final
 
     template <typename SinkTypeT,
               typename SourceTypeT,
-              template <typename, typename> class NodeTypeT = node::RxNode,
+              template <class, class, class=srf::runnable::Context> class NodeTypeT = node::RxNode,
               typename... ArgsT>
     auto make_node(std::string name, ArgsT&&... ops)
     {
