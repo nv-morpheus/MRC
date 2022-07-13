@@ -14,13 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "pysrf/segment.hpp"
 
 #include "pysrf/node.hpp"  // IWYU pragma: keep
 #include "pysrf/types.hpp"
 #include "pysrf/utils.hpp"
 
-#include "srf/channel/status.hpp"
 #include "srf/node/edge_connector.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/segment/definition.hpp"
@@ -42,7 +42,13 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(segment, m)
 {
-    m.doc() = R"pbdoc()pbdoc";
+    m.doc() = R"pbdoc(
+        Python bindings for SRF Segments
+        -------------------------------
+        .. currentmodule:: segment
+        .. autosummary::
+           :toctree: _generate
+    )pbdoc";
 
     // Common must be first in every module
     pysrf::import(m, "srf.core.common");
@@ -79,6 +85,7 @@ PYBIND11_MODULE(segment, m)
     // Type 'S' and 'U'
     node::EdgeConnector<std::string, PyHolder>::register_converter();
     node::EdgeConnector<PyHolder, std::string>::register_converter();
+
 
     auto Definition = py::class_<srf::segment::Definition>(m, "Definition");
     auto Builder    = py::class_<srf::segment::Builder>(m, "Builder");
@@ -136,6 +143,12 @@ PYBIND11_MODULE(segment, m)
     Builder.def("make_py2cxx_edge_adapter", &SegmentProxy::make_py2cxx_edge_adapter);
 
     Builder.def("make_cxx2py_edge_adapter", &SegmentProxy::make_cxx2py_edge_adapter);
+
+    Builder.def("make_edge", &SegmentProxy::make_edge);
+
+    Builder.def("get_ingress", &SegmentProxy::get_ingress);
+
+    Builder.def("get_egress", &SegmentProxy::get_egress);
 
     Builder.def("make_edge", &SegmentProxy::make_edge, py::arg("source"), py::arg("sink"));
 
