@@ -130,6 +130,7 @@ if("${CMAKE_EXECUTABLE_SUFFIX}" STREQUAL "")
   set(CMAKE_EXECUTABLE_SUFFIX ".x")
 endif()
 
+add_subdirectory(protos)
 
 ####################################
 # - Post dependencies setup --------
@@ -143,7 +144,6 @@ include(cmake/setup_iwyu.cmake)
 
 ####################################
 # - Configure protobufs
-add_subdirectory(protos)
 
 
 # ###################################
