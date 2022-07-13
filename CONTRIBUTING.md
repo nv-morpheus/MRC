@@ -89,7 +89,7 @@ $SRF_HOME/build/tests/logging/test_srf_logging.x
 
 ### Install SRF Python
 ```bash
-pip install -e $SRF_HOME/python
+pip install -e $SRF_HOME/build/python
 ```
 
 #### Run SRF Python Tests
