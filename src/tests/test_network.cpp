@@ -34,6 +34,7 @@
 #include "srf/memory/resources/logging_resource.hpp"
 #include "srf/memory/resources/memory_resource.hpp"
 #include "srf/options/options.hpp"
+#include "srf/options/placement.hpp"
 #include "srf/options/resources.hpp"
 
 #include <gtest/gtest.h>
@@ -80,9 +81,13 @@ TEST_F(TestNetwork, Arena)
 
 TEST_F(TestNetwork, ResourceManager)
 {
+    // using options.placement().resources_strategy(PlacementResources::Shared)
+    // will test if cudaSetDevice is being properly called by the network services
+    // since all network services for potentially multiple devices are colocated on a single thread
     auto resources = std::make_unique<internal::resources::Manager>(
         internal::system::SystemProvider(make_system([](Options& options) {
             options.architect_url("localhost:13337");
+            options.placement().resources_strategy(PlacementResources::Dedicated);
             options.resources().enable_device_memory_pool(true);
             options.resources().enable_host_memory_pool(true);
             options.resources().host_memory_pool().block_size(32_MiB);

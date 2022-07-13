@@ -56,10 +56,9 @@ EngineFactoryCpuSets generate_engine_factory_cpu_sets(const Options& options, co
     // mutable map
     auto engine_groups_map = options.engine_factories().map();
 
-    const bool specialized_main =
-        options.engine_factories().dedicated_main_thread();  // ||
-                                                             // options.engine_factories().default_engine_type() !=
-                                                             // runnable::EngineType::Fiber;
+    const bool specialized_main = options.engine_factories().dedicated_main_thread();
+    const bool specialized_network =
+        !options.architect_url().empty() && options.engine_factories().dedicated_network_thread();
 
     if (specialized_main)
     {
@@ -73,12 +72,12 @@ EngineFactoryCpuSets generate_engine_factory_cpu_sets(const Options& options, co
         engine_groups_map["main"] = std::move(main);
     }
 
-    if (!options.architect_url().empty())
+    if (specialized_network)
     {
         EngineFactoryOptions net;
         net.engine_type                  = runnable::EngineType::Fiber;
         net.cpu_count                    = 1;
-        net.allow_overlap                = !options.engine_factories().dedicated_network_thread();
+        net.allow_overlap                = false;
         net.reusable                     = true;
         engine_groups_map["srf_network"] = std::move(net);
     }
@@ -161,6 +160,14 @@ EngineFactoryCpuSets generate_engine_factory_cpu_sets(const Options& options, co
 
     config.reusable[default_engine_factory_name()] = true;
     config.reusable["main"]                        = true;
+
+    // if we are not using a dedicated network thread, use the same fiber queue as main for srf_network
+    if (!options.architect_url().empty() && !specialized_network)
+    {
+        config.fiber_cpu_sets["srf_network"] = config.fiber_cpu_sets.at("main");
+        config.reusable["srf_network"]       = true;
+        DVLOG(10) << "- cpu_set for `srf_network`: " << config.fiber_cpu_sets["srf_network"];
+    }
 
     // get all resources for groups that have overlap disabled
     DVLOG(10) << "allocating logical cpus for non-overlapping pools";
