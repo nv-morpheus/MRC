@@ -77,6 +77,9 @@ class Resources final : private resources::PartitionResourceBase
     std::shared_ptr<Context> m_ucx_context;
     std::shared_ptr<Worker> m_worker;
     std::shared_ptr<RegistrationCache> m_registration_cache;
+
+    // enable direct access to context and workers
+    friend network::Resources;
 };
 
 }  // namespace srf::internal::ucx

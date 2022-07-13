@@ -25,7 +25,13 @@ using namespace py::literals;
 
 PYBIND11_MODULE(common, m)
 {
-    m.doc() = R"pbdoc()pbdoc";
+    m.doc() = R"pbdoc(
+        Python bindings for SRF common functionality / utilities
+        -------------------------------
+        .. currentmodule:: common
+        .. autosummary::
+           :toctree: _generate
+    )pbdoc";
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

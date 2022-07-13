@@ -12,6 +12,7 @@
 # the License.
 # =============================================================================
 
+find_package(Python 3.8 REQUIRED COMPONENTS Development Interpreter)
 find_package(pybind11 REQUIRED)
 find_package(prometheus-cpp REQUIRED)
 
@@ -19,6 +20,8 @@ find_package(prometheus-cpp REQUIRED)
 add_library(pysrf
   src/executor.cpp
   src/logging.cpp
+  src/module_wrappers/pickle.cpp
+  src/module_wrappers/shared_memory.cpp
   src/node.cpp
   src/operators.cpp
   src/options.cpp
@@ -27,6 +30,9 @@ add_library(pysrf
   src/subscriber.cpp
   src/system.cpp
   src/types.cpp
+  src/utilities/deserializers.cpp
+  src/utilities/object_cache.cpp
+  src/utilities/serializers.cpp
   src/utils.cpp
   src/watchers.cpp
 )
@@ -36,14 +42,17 @@ add_library(${PROJECT_NAME}::pysrf ALIAS pysrf)
 target_link_libraries(pysrf
   PUBLIC
     ${PROJECT_NAME}::libsrf
-    pybind11::pybind11
+    ${Python_LIBRARIES}
     prometheus-cpp::core
+    pybind11::pybind11
   )
 
 target_include_directories(pysrf
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
+  PRIVATE
+    ${Python_INCLUDE_DIR}
   )
 
 set_target_properties(pysrf PROPERTIES OUTPUT_NAME ${PROJECT_NAME}_pysrf)
