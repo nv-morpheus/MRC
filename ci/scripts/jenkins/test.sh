@@ -34,7 +34,12 @@ REPORTS_DIR="${WORKSPACE_TMP}/reports"
 mkdir -p ${WORKSPACE_TMP}/reports
 
 # ctest requires cmake to be configured in order to locate tests
-cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} .
+
+if [[ "${BUILD_TYPE}" == "Debug" ]]; then
+  cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} ${CMAKE_BUILD_WITH_CODECOV} .
+else
+  cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} .
+fi
 
 gpuci_logger "Running C++ Tests"
 cd ${SRF_ROOT}/build
@@ -59,13 +64,22 @@ pytest -v --junit-xml=${WORKSPACE_TMP}/report_pytest.xml
 PYTEST_RESULTS=$?
 set -e
 
+if [[ "${BUILD_TYPE}" == "Debug" ]]; then
+  gpuci_logger "Generating codecov report"
+  cd ${SRF_ROOT}
+  cmake --build build --target gcovr-html-report
+
+  gpuci_logger "Archiving codecov report"
+  tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${SRF_ROOT}/build/gcovr-html-report
+  aws s3 cp ${WORKSPACE_TMP}/coverage_reports.tar.bz "${ARTIFACT_URL}/coverage_reports.tar.bz"
+fi
+
 gpuci_logger "Archiving test reports"
 cd $(dirname ${REPORTS_DIR})
 tar cfj ${WORKSPACE_TMP}/test_reports.tar.bz $(basename ${REPORTS_DIR})
 
 gpuci_logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
 aws s3 cp ${WORKSPACE_TMP}/test_reports.tar.bz "${ARTIFACT_URL}/test_reports.tar.bz"
-
 
 TEST_RESULTS=$(($CTEST_RESULTS+$PYTEST_RESULTS))
 exit ${TEST_RESULTS}

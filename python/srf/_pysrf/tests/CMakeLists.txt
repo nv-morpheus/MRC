@@ -39,7 +39,6 @@ target_link_libraries(test_pysrf
     pybind11::embed
 )
 
-
 add_test(
   NAME pysrf
   COMMAND $<TARGET_FILE:test_pysrf>

@@ -39,6 +39,11 @@ if [[ "${BUILD_CC}" == "gcc" ]]; then
     gcc --version
     g++ --version
     CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES} ${CMAKE_CACHE_FLAGS}"
+elif [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
+    gpuci_logger "Building with GCC with gcov profile '-g -fprofile-arcs -ftest-coverage"
+    gcc --version
+    g++ --version
+    CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES} ${CMAKE_BUILD_WITH_CODECOV} ${CMAKE_CACHE_FLAGS}"
 else
     gpuci_logger "Installing Clang"
     mamba env update -q -n srf --file ${SRF_ROOT}/ci/conda/environments/clang_env.yml
