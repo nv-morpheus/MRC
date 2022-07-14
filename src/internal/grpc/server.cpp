@@ -27,7 +27,7 @@
 
 #include <memory>
 
-namespace srf::internal::rpc::server {
+namespace srf::internal::rpc {
 
 Server::Server(runnable::Resources& runnable) : m_runnable(runnable)
 {
@@ -97,4 +97,4 @@ void Server::register_service(std::shared_ptr<grpc::Service> service)
     m_builder.RegisterService(service.get());
     m_services.push_back(service);
 }
-}  // namespace srf::internal::rpc::server
+}  // namespace srf::internal::rpc

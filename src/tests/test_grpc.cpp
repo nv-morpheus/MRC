@@ -62,7 +62,7 @@ class TestRPC : public ::testing::Test
                 options.placement().resources_strategy(PlacementResources::Dedicated);
             })));
 
-        m_server = std::make_unique<internal::rpc::server::Server>(m_resources->partition(0).runnable());
+        m_server = std::make_unique<internal::rpc::Server>(m_resources->partition(0).runnable());
 
         m_channel = grpc::CreateChannel("localhost:13337", grpc::InsecureChannelCredentials());
         m_stub    = srf::testing::TestService::NewStub(m_channel);
@@ -79,7 +79,7 @@ class TestRPC : public ::testing::Test
     std::unique_ptr<internal::resources::Manager> m_resources;
     std::shared_ptr<grpc::Channel> m_channel;
     std::shared_ptr<srf::testing::TestService::Stub> m_stub;
-    std::unique_ptr<internal::rpc::server::Server> m_server;
+    std::unique_ptr<internal::rpc::Server> m_server;
 };
 
 TEST_F(TestRPC, ServerLifeCycle)

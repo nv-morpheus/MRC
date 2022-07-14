@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <nvrpc/server.h>
+#include "internal/grpc/server.hpp"
 
 #include <memory>
 #include <string>
@@ -36,7 +36,7 @@ class Server
     void shutdown();
 
   private:
-    std::unique_ptr<nvrpc::Server> m_server;
+    std::unique_ptr<rpc::Server> m_server;
     std::shared_ptr<ServerResources> m_resources;
 };
 

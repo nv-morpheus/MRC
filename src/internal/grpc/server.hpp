@@ -26,7 +26,7 @@
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/server_builder.h>
 
-namespace srf::internal::rpc::server {
+namespace srf::internal::rpc {
 
 class Server : public Service
 {
@@ -56,4 +56,4 @@ class Server : public Service
     std::unique_ptr<srf::runnable::Runner> m_event_hander;
 };
 
-}  // namespace srf::internal::rpc::server
+}  // namespace srf::internal::rpc
