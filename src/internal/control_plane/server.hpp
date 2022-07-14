@@ -36,21 +36,14 @@ namespace srf::internal::control_plane {
 class Server : public Service
 {
   public:
-    using stream_t    = std::shared_ptr<rpc::ServerStream<srf::protos::Event, srf::protos::Event>>;
-    using writer_t    = std::shared_ptr<rpc::StreamWriter<srf::protos::Event>>;
-    using event_t     = stream_t::element_type::IncomingData;
-    using stream_id_t = std::size_t;
+    struct Instance;
 
-    struct InstanceInfo
-    {
-        writer_t stream_writer;
-        std::string worker_address;
-
-        std::size_t instance_id() const
-        {
-            return reinterpret_cast<std::size_t>(this);
-        }
-    };
+    using stream_t      = std::shared_ptr<rpc::ServerStream<srf::protos::Event, srf::protos::Event>>;
+    using writer_t      = std::shared_ptr<rpc::StreamWriter<srf::protos::Event>>;
+    using event_t       = stream_t::element_type::IncomingData;
+    using instance_t    = std::shared_ptr<Instance>;
+    using stream_id_t   = std::size_t;
+    using instance_id_t = std::size_t;
 
     Server(runnable::Resources& runnable);
 
@@ -74,7 +67,8 @@ class Server : public Service
     // connection info
     rpc::Server m_server;
     std::map<stream_id_t, stream_t> m_streams;
-    std::map<stream_id_t, std::vector<std::shared_ptr<InstanceInfo>>> m_instances;
+    std::map<instance_id_t, std::shared_ptr<Instance>> m_instances;
+    std::multimap<stream_id_t, instance_id_t> m_instances_by_stream;
     std::set<std::string> m_ucx_worker_addresses;
 
     // operators / queues

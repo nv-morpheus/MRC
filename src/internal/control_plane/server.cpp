@@ -20,6 +20,7 @@
 #include "rxcpp/rx-subscriber.hpp"
 
 #include "internal/control_plane/server_resources.hpp"
+#include "internal/utils/contains.hpp"
 
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/generic_node.hpp"
@@ -50,6 +51,17 @@ using nvrpc::Context;
 using nvrpc::StreamingContext;
 
 namespace srf::internal::control_plane {
+
+struct Server::Instance
+{
+    writer_t stream_writer;
+    std::string worker_address;
+
+    std::size_t get_id() const
+    {
+        return reinterpret_cast<std::size_t>(this);
+    }
+};
 
 Server::Server(runnable::Resources& runnable) : m_runnable(runnable), m_server(m_runnable) {}
 
@@ -329,27 +341,24 @@ void Server::register_workers(event_t& event)
     // set machine id for the current stream
     resp.set_machine_id(event.stream->get_id());
 
-    std::vector<std::shared_ptr<InstanceInfo>> instances;
-    instances.reserve(req.ucx_worker_addresses_size());
-
     for (const auto& worker_address : req.ucx_worker_addresses())
     {
         m_ucx_worker_addresses.insert(worker_address);
 
-        auto info            = std::make_shared<InstanceInfo>();
-        info->worker_address = worker_address;
-        info->stream_writer  = event.stream;
+        auto instance            = std::make_shared<Instance>();
+        instance->worker_address = worker_address;
+        instance->stream_writer  = event.stream;
 
-        instances.push_back(info);
+        CHECK(!contains(m_instances, instance->get_id()));
+        m_instances[instance->get_id()] = instance;
+        m_instances_by_stream.insert(std::pair{event.stream->get_id(), instance->get_id()});
 
-        DVLOG(10) << "adding instance id to response: " << info->instance_id()
+        DVLOG(10) << "adding instance id to response: " << instance->get_id()
                   << " assigned to unique node: " << event.stream->get_id();
-        resp.add_instance_ids(info->instance_id());
-    }
 
-    auto search = m_instances.find(event.stream->get_id());
-    CHECK(search == m_instances.end());
-    m_instances[event.stream->get_id()] = std::move(instances);
+        // return in order provided a unique instance_id per partition ucx address
+        resp.add_instance_ids(instance->get_id());
+    }
 }
 
 void Server::drop_stream(writer_t writer)
