@@ -42,7 +42,7 @@ enum EventType
 
 message Event
 {
-    uint32 machine_id = 1;
+    uint64 machine_id = 1;
     EventType event = 2;
     google.protobuf.Any message = 3;
     uint64 promise = 4;
@@ -58,8 +58,8 @@ message RegisterWorkersRequest
 
 message RegisterWorkersResponse
 {
-    uint32 machine_id = 1;
-    repeated uint32 instance_ids = 2;
+    uint64 machine_id = 1;
+    repeated uint64 instance_ids = 2;
 }
 
 // Initialization - Step 2

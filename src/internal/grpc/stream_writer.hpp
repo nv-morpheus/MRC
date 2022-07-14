@@ -23,10 +23,11 @@ namespace srf::internal::rpc {
 template <typename T>
 struct StreamWriter : public srf::channel::Ingress<T>
 {
-    virtual ~StreamWriter()      = default;
-    virtual void finish()        = 0;
-    virtual void cancel()        = 0;
-    virtual bool expired() const = 0;
+    virtual ~StreamWriter()            = default;
+    virtual void finish()              = 0;
+    virtual void cancel()              = 0;
+    virtual bool expired() const       = 0;
+    virtual std::size_t get_id() const = 0;
 };
 
 }  // namespace srf::internal::rpc

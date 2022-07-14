@@ -44,6 +44,7 @@
 #include <grpcpp/grpcpp.h>
 
 #include <chrono>
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <tuple>
@@ -123,6 +124,16 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         bool expired() const final
         {
             return m_parent.expired();
+        }
+
+        std::size_t get_id() const final
+        {
+            auto parent = m_parent.lock();
+            if (parent)
+            {
+                return reinterpret_cast<std::size_t>(parent.get());
+            }
+            return 0UL;
         }
 
       private:

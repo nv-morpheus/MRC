@@ -18,26 +18,73 @@
 #pragma once
 
 #include "internal/grpc/server.hpp"
+#include "internal/grpc/server_streaming.hpp"
+#include "internal/runnable/resources.hpp"
+#include "internal/service.hpp"
 
+#include "srf/node/queue.hpp"
+#include "srf/protos/architect.grpc.pb.h"
+#include "srf/protos/architect.pb.h"
+#include "srf/runnable/runner.hpp"
+
+#include <map>
 #include <memory>
 #include <string>
 
 namespace srf::internal::control_plane {
 
-class ServerResources;
-
-class Server
+class Server : public Service
 {
   public:
-    Server(std::string url);
-    Server(int port);
-    ~Server() = default;
+    using stream_t    = std::shared_ptr<rpc::ServerStream<srf::protos::Event, srf::protos::Event>>;
+    using writer_t    = std::shared_ptr<rpc::StreamWriter<srf::protos::Event>>;
+    using event_t     = stream_t::element_type::IncomingData;
+    using stream_id_t = std::size_t;
 
-    void shutdown();
+    struct InstanceInfo
+    {
+        writer_t stream_writer;
+        std::string worker_address;
+
+        std::size_t instance_id() const
+        {
+            return reinterpret_cast<std::size_t>(this);
+        }
+    };
+
+    Server(runnable::Resources& runnable);
 
   private:
-    std::unique_ptr<rpc::Server> m_server;
-    std::shared_ptr<ServerResources> m_resources;
+    void do_service_start() final;
+    void do_service_stop() final;
+    void do_service_kill() final;
+    void do_service_await_live() final;
+    void do_service_await_join() final;
+
+    void do_accept_stream(rxcpp::subscriber<stream_t>& s);
+    void do_handle_event(event_t&& event);
+
+    // top-level event handlers
+    void register_workers(event_t& event);
+    void drop_stream(writer_t writer);
+
+    // srf resources
+    runnable::Resources& m_runnable;
+
+    // connection info
+    rpc::Server m_server;
+    std::map<stream_id_t, stream_t> m_streams;
+    std::map<stream_id_t, std::vector<std::shared_ptr<InstanceInfo>>> m_instances;
+    std::set<std::string> m_ucx_worker_addresses;
+
+    // operators / queues
+    std::unique_ptr<srf::node::Queue<event_t>> m_queue;
+
+    // runners
+    std::unique_ptr<srf::runnable::Runner> m_stream_acceptor;
+    std::unique_ptr<srf::runnable::Runner> m_event_handler;
+
+    mutable Mutex m_mutex;
 };
 
 }  // namespace srf::internal::control_plane

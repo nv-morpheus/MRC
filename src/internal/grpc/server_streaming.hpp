@@ -46,6 +46,7 @@
 #include <grpcpp/server_context.h>
 
 #include <chrono>
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <tuple>
@@ -136,6 +137,11 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
             return false;
         }
 
+        std::size_t get_id() const final
+        {
+            return reinterpret_cast<std::size_t>(m_parent.get());
+        }
+
       private:
         const std::shared_ptr<ServerStream<RequestT, ResponseT>> m_parent;
         std::weak_ptr<srf::node::SourceChannelWriteable<writer_t>> m_channel;
@@ -169,6 +175,11 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
         Service::call_in_destructor();
     }
 
+    std::size_t get_id() const
+    {
+        return reinterpret_cast<std::size_t>(this);
+    }
+
     std::shared_ptr<stream_writer_t> await_init()
     {
         // make this only callable once
@@ -191,10 +202,10 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
     }
 
     // must be called before await_init()
-    void attach_to_queue(srf::node::ChannelAcceptor<IncomingData>& sink)
+    void attach_to_queue(srf::node::ChannelAcceptor<IncomingData>& queue)
     {
         CHECK(m_reader_source);
-        srf::node::make_edge(*m_reader_source, sink);
+        srf::node::make_edge(*m_reader_source, queue);
     }
 
   private:
