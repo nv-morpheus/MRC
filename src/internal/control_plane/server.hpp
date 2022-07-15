@@ -64,8 +64,11 @@ class Server : public Service
     // srf resources
     runnable::Resources& m_runnable;
 
-    // connection info
+    // grpc
     rpc::Server m_server;
+    std::shared_ptr<srf::protos::Architect::AsyncService> m_service;
+
+    // connection info
     std::map<stream_id_t, stream_t> m_streams;
     std::map<instance_id_t, std::shared_ptr<Instance>> m_instances;
     std::multimap<stream_id_t, instance_id_t> m_instances_by_stream;

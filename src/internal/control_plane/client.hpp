@@ -17,22 +17,45 @@
 
 #pragma once
 
+#include "internal/grpc/client_streaming.hpp"
+#include "internal/grpc/progress_engine.hpp"
+#include "internal/grpc/promise_handler.hpp"
+#include "internal/grpc/stream_writer.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/service.hpp"
 
+#include "srf/node/edge_builder.hpp"
+#include "srf/protos/architect.grpc.pb.h"
+#include "srf/protos/architect.pb.h"
 #include "srf/runnable/runner.hpp"
+#include "srf/utils/macros.hpp"
 
 #include <grpcpp/completion_queue.h>
 
 namespace srf::internal::control_plane {
 
-class Client : public Service
+template <typename ResponseT>
+class AsyncStatus;
+
+class Client final : public Service
 {
   public:
-    Client(runnable::Resources& resources);
+    using stream_t = std::shared_ptr<rpc::ClientStream<srf::protos::Event, srf::protos::Event>>;
+    using writer_t = std::shared_ptr<rpc::StreamWriter<srf::protos::Event>>;
+    using event_t  = stream_t::element_type::IncomingData;
 
-    // if we already have an grpc progress engine running, we don't need run another
-    Client(runnable::Resources& resources, std::shared_ptr<grpc::CompletionQueue> cq);
+    Client(runnable::Resources& runnable);
+
+    // if we already have an grpc progress engine running, we don't need run another, just use that cq
+    Client(runnable::Resources& runnable, std::shared_ptr<grpc::CompletionQueue> cq);
+
+    ~Client() final;
+
+    template <typename ResponseT, typename RequestT>
+    ResponseT await_unary(const protos::EventType& event_type, RequestT&& request);
+
+    template <typename ResponseT, typename RequestT>
+    void async_unary(const protos::EventType& event_type, RequestT&& request, AsyncStatus<ResponseT>& status);
 
   private:
     void do_service_start() final;
@@ -40,11 +63,63 @@ class Client : public Service
     void do_service_kill() final;
     void do_service_await_live() final;
     void do_service_await_join() final;
+    void do_handle_event(event_t&& event);
+
+    runnable::Resources& m_runnable;
 
     std::shared_ptr<grpc::CompletionQueue> m_cq;
+    std::shared_ptr<grpc::Channel> m_channel;
+    std::shared_ptr<srf::protos::Architect::Stub> m_stub;
 
+    // if true, then the following runners should not be null
+    // if false, then the following runners must be null
+    bool m_owns_progress_engine;
+    std::unique_ptr<srf::runnable::Runner> m_progress_handler;
     std::unique_ptr<srf::runnable::Runner> m_progress_engine;
     std::unique_ptr<srf::runnable::Runner> m_event_handler;
+
+    stream_t m_stream;
+
+    // StreamWriter acquired from m_stream->await_init()
+    // The customer destruction of this object will cause a gRPC WritesDone to be issued to the server.
+    writer_t m_writer;
 };
+
+template <typename ResponseT>
+class AsyncStatus
+{
+  public:
+    DELETE_COPYABILITY(AsyncStatus);
+    DELETE_MOVEABILITY(AsyncStatus);
+
+    ResponseT await_response()
+    {
+        ResponseT response;
+        CHECK(m_promise.get_future().get().message().UnpackTo(&response));
+        return response;
+    }
+
+  private:
+    Promise<protos::Event> m_promise;
+    friend Client;
+};
+
+template <typename ResponseT, typename RequestT>
+ResponseT Client::await_unary(const protos::EventType& event_type, RequestT&& request)
+{
+    AsyncStatus<ResponseT> status;
+    async_unary(event_type, std::move(request), status);
+    return status.await_response();
+}
+
+template <typename ResponseT, typename RequestT>
+void Client::async_unary(const protos::EventType& event_type, RequestT&& request, AsyncStatus<ResponseT>& status)
+{
+    protos::Event event;
+    event.set_event(event_type);
+    event.set_promise(reinterpret_cast<std::uint64_t>(&status.m_promise));
+    CHECK(event.mutable_message()->PackFrom(request));
+    m_writer->await_write(std::move(event));
+}
 
 }  // namespace srf::internal::control_plane

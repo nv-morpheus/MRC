@@ -248,7 +248,7 @@ TEST_F(TestRPC, StreamingPingPong)
         client_handler.egress().await_read(response);
         VLOG(1) << "got response " << i;
 
-        EXPECT_EQ(response.response.batch_id(), i);
+        EXPECT_EQ(response.msg.batch_id(), i);
     }
 
     client_writer->finish();
@@ -331,7 +331,7 @@ TEST_F(TestRPC, StreamingPingPongEarlyServerFinish)
             if (status == srf::channel::Status::success)
             {
                 VLOG(1) << "got response " << i;
-                EXPECT_EQ(response.response.batch_id(), i);
+                EXPECT_EQ(response.msg.batch_id(), i);
             }
         }
     }
@@ -420,7 +420,7 @@ TEST_F(TestRPC, StreamingPingPongEarlyServerCancel)
             if (status == srf::channel::Status::success)
             {
                 VLOG(1) << "got response " << i;
-                EXPECT_EQ(response.response.batch_id(), i);
+                EXPECT_EQ(response.msg.batch_id(), i);
             }
         }
     }
@@ -498,7 +498,7 @@ TEST_F(TestRPC, StreamingPingPongClientEarlyTermination)
         client_handler.egress().await_read(response);
         VLOG(1) << "got response " << i;
 
-        EXPECT_EQ(response.response.batch_id(), i);
+        EXPECT_EQ(response.msg.batch_id(), i);
     }
 
     client_writer->cancel();

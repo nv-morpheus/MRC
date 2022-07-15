@@ -27,6 +27,7 @@
 #include "srf/node/rx_sink.hpp"
 #include "srf/protos/architect.grpc.pb.h"
 #include "srf/protos/architect.pb.h"
+#include "srf/runnable/launch_options.hpp"
 
 #include <glog/logging.h>
 #include <google/protobuf/any.pb.h>
@@ -52,111 +53,6 @@ struct Server::Instance
 
 Server::Server(runnable::Resources& runnable) : m_runnable(runnable), m_server(m_runnable) {}
 
-// class EventsStreamingContext final : public StreamingContext<protos::Event, protos::Event, ServerResources>
-// {
-//     void StreamInitialized(std::shared_ptr<ServerStream> stream) final  // NOLINT
-//     {
-//         // we don't have the instance id of the connecting stream, so we need to wait for
-//         // the client's first event to introduce itself and associated the server_stream_t
-//         // object with an instance_id
-//         VLOG(1) << "initializing events stream " << stream.get();
-//     }
-
-//     void RequestReceived(protos::Event&& request, std::shared_ptr<ServerStream> stream) final  // NOLINT
-//     {
-//         protos::Event response;
-
-//         VLOG(10) << "Event Received";
-
-//         switch (request.event())
-//         {
-//             // these events will be offloaded and handled by the oracle
-//             // these events will trigger a state update
-//             // these events are batched - all enqueued events will be processed
-//             // before a global state update is issued.
-
-//         case protos::EventType::ClientRegisterPipeline:
-//         case protos::EventType::ControlStop:
-//         case protos::EventType::ClientSegmentsOnComplete:
-//             DCHECK(GetResources()->validate_machine_id(request.machine_id(), stream.get())) << "invalid machine id";
-//             GetResources()->enqueue_event(std::move(request));
-//             break;
-
-//             // the remainder of events will be handled directly by the grpc event thread
-
-//             // the following are one sided message
-//             // response may be issued by the methods
-//             // these methods / events are used to synchronize clients when updates are issued
-
-//         case protos::EventType::ClientUpdateStart:
-//             GetResources()->on_client_update_start(std::move(request));
-//             break;
-//         case protos::EventType::ClientUpdateComplete:
-//             GetResources()->on_client_update_complete(std::move(request));
-//             break;
-
-//             // the following will be handled directly and a response issued
-
-//             // todo(ryan) - move the issue response into the resources method
-//             // this will move the response message, packing and issuing out of the switch
-
-//         case protos::EventType::ClientRegisterWorkers: {
-//             protos::RegisterWorkersRequest connection_request;
-//             protos::RegisterWorkersResponse connection_response;
-//             CHECK(request.message().UnpackTo(&connection_request));
-//             CHECK(GetResources()->register_workers(connection_request, connection_response, stream));
-//             request.set_machine_id(connection_response.machine_id());
-//             GetResources()->issue_response(request, std::move(connection_response));
-//         }
-//         break;
-
-//         case protos::ClientLookupWorkerAddresses: {
-//             protos::LookupWorkersRequest lookup_request;
-//             protos::LookupWorkersResponse lookup_response;
-//             CHECK(request.message().UnpackTo(&lookup_request));
-//             CHECK(GetResources()->lookup_workers(lookup_request, lookup_response));
-//             GetResources()->issue_response(request, std::move(lookup_response));
-//         }
-//         break;
-
-//         default:
-//             LOG(WARNING) << "Unknowned streaming event provided";
-//         }
-//     }
-
-//     void RequestsFinished(std::shared_ptr<ServerStream> stream) final  // NOLINT
-//     {
-//         // todo(ryan) - validate the machine has no assignmnts, then nothing further needs to be done
-//         // otherwise, this close writes signal is from a machine that still has assigned segments, in
-//         // which we need to update the other machines still working. this machine is lost to us, we can
-//         // still send it events, but it will be unable to respond.
-//         GetResources()->remove_machine(stream.get());
-//         stream->FinishStream();
-//     }
-
-//     void StreamFinished(std::shared_ptr<ServerStream> stream) final {}  // NOLINT
-// };
-
-// Server::Server(int port) : Server(std::string("0.0.0.0:") + std::to_string(port)) {}
-
-// Server::Server(std::string url) : m_server(std::make_unique<nvrpc::Server>(url))
-// {
-//     CHECK(m_server);
-//     auto* executor  = m_server->RegisterExecutor(new nvrpc::Executor(1));
-//     auto* architect = m_server->RegisterAsyncService<protos::Architect>();
-//     m_resources     = std::make_shared<ServerResources>();
-//     auto* rpc_event_stream =
-//         architect->RegisterRPC<EventsStreamingContext>(&protos::Architect::AsyncService::RequestEventStream);
-//     executor->RegisterContexts(rpc_event_stream, m_resources, 2);
-//     m_server->AsyncStart();
-// }
-
-// void Server::shutdown()
-// {
-//     m_resources->shutdown();
-//     m_server->Shutdown();
-// }
-
 void Server::do_service_start()
 {
     // create runnables
@@ -172,10 +68,19 @@ void Server::do_service_start()
     // for edges between runnables
     srf::node::make_edge(*m_queue, *handler);
 
+    // grpc service
+    m_service = std::make_shared<srf::protos::Architect::AsyncService>();
+
     // bring up the grpc server and the progress engine
+    m_server.register_service(m_service);
     m_server.service_start();
 
     // start the handler
+    // if required, this is the runnable which most users would want to increase the level of concurrency
+    // srf::runnable::LaunchOptions options;
+    // options.engine_factory_name = "default";
+    // options.pe_count = N;       // number of thread/cores
+    // options.engines_per_pe = M; // number of fibers/user-threads per thread/core
     m_event_handler = m_runnable.launch_control().prepare_launcher(std::move(handler))->ignition();
 
     // start the acceptor - this should be one of the last runnables launch
@@ -235,17 +140,26 @@ void Server::do_service_await_join()
     DVLOG(10) << "finished await_join";
 }
 
+/**
+ * @brief Stream Acceptor
+ *
+ * The while loop of this method says active as long as the grpc server is still accepting connections.
+ * There are multiple way this can be implemented depending the service requirements, one might choose
+ * to preallocate N number of streams and issues them all to the CQ. This is an alternative method which
+ * creates a single stream and waits for it to get initialized, then creates another. The current implementation is
+ * unbounded an upper bound could be added.
+ *
+ * This method works well for the requirements of the SRF control plane where the number of connections is relatively
+ * small and the duration of the connection is long.
+ */
 void Server::do_accept_stream(rxcpp::subscriber<stream_t>& s)
 {
-    auto cq      = m_server.get_cq();
-    auto service = std::make_shared<srf::protos::Architect::AsyncService>();
+    auto cq = m_server.get_cq();
 
-    m_server.register_service(service);
-
-    auto request_fn = [service, cq](grpc::ServerContext* context,
-                                    grpc::ServerAsyncReaderWriter<srf::protos::Event, srf::protos::Event>* stream,
-                                    void* tag) {
-        service->RequestEventStream(context, stream, cq.get(), cq.get(), tag);
+    auto request_fn = [this, cq](grpc::ServerContext* context,
+                                 grpc::ServerAsyncReaderWriter<srf::protos::Event, srf::protos::Event>* stream,
+                                 void* tag) {
+        m_service->RequestEventStream(context, stream, cq.get(), cq.get(), tag);
     };
 
     while (s.is_subscribed())
@@ -386,5 +300,110 @@ void Server::drop_stream(writer_t writer)
     stream->second->await_fini();
     m_streams.erase(stream);
 }
+
+// class EventsStreamingContext final : public StreamingContext<protos::Event, protos::Event, ServerResources>
+// {
+//     void StreamInitialized(std::shared_ptr<ServerStream> stream) final  // NOLINT
+//     {
+//         // we don't have the instance id of the connecting stream, so we need to wait for
+//         // the client's first event to introduce itself and associated the server_stream_t
+//         // object with an instance_id
+//         VLOG(1) << "initializing events stream " << stream.get();
+//     }
+
+//     void RequestReceived(protos::Event&& request, std::shared_ptr<ServerStream> stream) final  // NOLINT
+//     {
+//         protos::Event response;
+
+//         VLOG(10) << "Event Received";
+
+//         switch (request.event())
+//         {
+//             // these events will be offloaded and handled by the oracle
+//             // these events will trigger a state update
+//             // these events are batched - all enqueued events will be processed
+//             // before a global state update is issued.
+
+//         case protos::EventType::ClientRegisterPipeline:
+//         case protos::EventType::ControlStop:
+//         case protos::EventType::ClientSegmentsOnComplete:
+//             DCHECK(GetResources()->validate_machine_id(request.machine_id(), stream.get())) << "invalid machine id";
+//             GetResources()->enqueue_event(std::move(request));
+//             break;
+
+//             // the remainder of events will be handled directly by the grpc event thread
+
+//             // the following are one sided message
+//             // response may be issued by the methods
+//             // these methods / events are used to synchronize clients when updates are issued
+
+//         case protos::EventType::ClientUpdateStart:
+//             GetResources()->on_client_update_start(std::move(request));
+//             break;
+//         case protos::EventType::ClientUpdateComplete:
+//             GetResources()->on_client_update_complete(std::move(request));
+//             break;
+
+//             // the following will be handled directly and a response issued
+
+//             // todo(ryan) - move the issue response into the resources method
+//             // this will move the response message, packing and issuing out of the switch
+
+//         case protos::EventType::ClientRegisterWorkers: {
+//             protos::RegisterWorkersRequest connection_request;
+//             protos::RegisterWorkersResponse connection_response;
+//             CHECK(request.message().UnpackTo(&connection_request));
+//             CHECK(GetResources()->register_workers(connection_request, connection_response, stream));
+//             request.set_machine_id(connection_response.machine_id());
+//             GetResources()->issue_response(request, std::move(connection_response));
+//         }
+//         break;
+
+//         case protos::ClientLookupWorkerAddresses: {
+//             protos::LookupWorkersRequest lookup_request;
+//             protos::LookupWorkersResponse lookup_response;
+//             CHECK(request.message().UnpackTo(&lookup_request));
+//             CHECK(GetResources()->lookup_workers(lookup_request, lookup_response));
+//             GetResources()->issue_response(request, std::move(lookup_response));
+//         }
+//         break;
+
+//         default:
+//             LOG(WARNING) << "Unknowned streaming event provided";
+//         }
+//     }
+
+//     void RequestsFinished(std::shared_ptr<ServerStream> stream) final  // NOLINT
+//     {
+//         // todo(ryan) - validate the machine has no assignmnts, then nothing further needs to be done
+//         // otherwise, this close writes signal is from a machine that still has assigned segments, in
+//         // which we need to update the other machines still working. this machine is lost to us, we can
+//         // still send it events, but it will be unable to respond.
+//         GetResources()->remove_machine(stream.get());
+//         stream->FinishStream();
+//     }
+
+//     void StreamFinished(std::shared_ptr<ServerStream> stream) final {}  // NOLINT
+// };
+
+// Server::Server(int port) : Server(std::string("0.0.0.0:") + std::to_string(port)) {}
+
+// Server::Server(std::string url) : m_server(std::make_unique<nvrpc::Server>(url))
+// {
+//     CHECK(m_server);
+//     auto* executor  = m_server->RegisterExecutor(new nvrpc::Executor(1));
+//     auto* architect = m_server->RegisterAsyncService<protos::Architect>();
+//     m_resources     = std::make_shared<ServerResources>();
+//     auto* rpc_event_stream =
+//         architect->RegisterRPC<EventsStreamingContext>(&protos::Architect::AsyncService::RequestEventStream);
+//     executor->RegisterContexts(rpc_event_stream, m_resources, 2);
+//     m_server->AsyncStart();
+// }
+
+// void Server::shutdown()
+// {
+//     m_resources->shutdown();
+//     m_server->Shutdown();
+// }
 
 }  // namespace srf::internal::control_plane

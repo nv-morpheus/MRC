@@ -33,6 +33,7 @@
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
 #include "srf/node/source_channel.hpp"
+#include "srf/runnable/launch_options.hpp"
 #include "srf/runnable/runner.hpp"
 
 #include <boost/fiber/all.hpp>
@@ -44,6 +45,7 @@
 #include <grpcpp/completion_queue.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/server_context.h>
+#include <grpcpp/support/status.h>
 
 #include <chrono>
 #include <cstddef>
@@ -190,8 +192,11 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
     grpc::Status await_fini()
     {
         service_await_join();
-        CHECK(m_status);
-        return *m_status;
+        if (m_status)
+        {
+            return *m_status;
+        }
+        return grpc::Status::CANCELLED;
     }
 
     // must be called before await_init()

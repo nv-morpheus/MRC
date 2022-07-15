@@ -144,7 +144,7 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
   public:
     struct IncomingData
     {
-        reader_t response;
+        reader_t msg;
         std::weak_ptr<stream_writer_t> stream;
     };
 
@@ -200,7 +200,7 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
             CHECK(m_stream);
             Promise<bool> read;
             IncomingData data;
-            m_stream->Read(&data.response, &read);
+            m_stream->Read(&data.msg, &read);
             auto ok = read.get_future().get();
             if (!ok)
             {

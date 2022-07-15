@@ -17,6 +17,7 @@
 
 #include "common.hpp"
 
+#include "internal/control_plane/client.hpp"
 #include "internal/control_plane/server.hpp"
 #include "internal/grpc/client_streaming.hpp"
 #include "internal/grpc/server.hpp"
@@ -46,7 +47,7 @@ class TestControlPlane : public ::testing::Test
         m_resources = std::make_unique<internal::resources::Manager>(
             internal::system::SystemProvider(make_system([](Options& options) {
                 // todo(#114) - propose: remove this option entirely
-                // options.architect_url("localhost:13337");
+                options.architect_url("localhost:13337");
                 options.topology().user_cpuset("0-8");
                 options.topology().restrict_gpus(true);
                 options.placement().resources_strategy(PlacementResources::Dedicated);
@@ -88,17 +89,11 @@ TEST_F(TestControlPlane, SingleClientConnectDisconnect)
     server->service_start();
     server->service_await_live();
 
-    // convert the following code into control_plane::Client
-    // put client here
-    // auto prepare_fn = [this, cq](grpc::ClientContext* context) {
-    //     return m_stub->PrepareAsyncEventStream(context, cq.get());
-    // };
-
-    // auto client = std::make_shared<stream_client_t>(prepare_fn, m_resources->partition(0).runnable());
-    // srf::node::SinkChannelReadable<typename stream_client_t::IncomingData> client_handler;
-    // client->attach_to(client_handler);
-
-    // auto client_writer = client->await_init();
+    auto client = std::make_unique<internal::control_plane::Client>(m_resources->partition(0).runnable());
+    client->service_start();
+    client->service_await_live();
+    client->service_stop();
+    client->service_await_join();
 
     server->service_stop();
     server->service_await_join();
