@@ -22,7 +22,7 @@ export PY_CFG="${PY_ROOT}/setup.cfg"
 export PY_DIRS="${PY_ROOT} ci/scripts"
 
 # Determine the commits to compare against. If running in CI, these will be set. Otherwise, diff with main
-export BASE_SHA=${CHANGE_TARGET:-${BASE_SHA:-main}
+export BASE_SHA=${CHANGE_TARGET:-${BASE_SHA:-main}}
 export COMMIT_SHA=${GIT_COMMIT:-${COMMIT_SHA:-HEAD}}
 
 export CPP_FILE_REGEX='^(\.\/)?(src|include|tests|benchmarks|python)\/.*\.(cc|cpp|h|hpp)$'
