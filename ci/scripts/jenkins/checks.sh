@@ -27,6 +27,9 @@ mamba env create -n srf -q --file ${CONDA_ENV_YML}
 conda deactivate
 conda activate srf
 
+gpuci_logger "Installing Clang"
+mamba env update -q -n srf --file ${SRF_ROOT}/ci/conda/environments/clang_env.yml
+
 show_conda_info
 
 gpuci_logger "Configuring CMake"
