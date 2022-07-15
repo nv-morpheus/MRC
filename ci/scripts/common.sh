@@ -152,7 +152,7 @@ function find_clang_tidy_diff() {
    # Now find clang-tidy
    export CLANG_TIDY=$(find_clang_tidy)
 
-   echo "${CLANG_TIDY_DIFF} -clang-tidy-binary=${SCRIPT_DIR}/run_clang_tidy_for_ci.sh"
+   echo "${CLANG_TIDY_DIFF} -clang-tidy-binary=${REPO_DIR}/ci/scripts/run_clang_tidy_for_ci.sh"
 }
 
 # Finds the executable iwyu_tool.py.
