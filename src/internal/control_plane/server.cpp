@@ -293,7 +293,8 @@ void Server::drop_stream(writer_t writer)
     CHECK(stream != m_streams.end());
 
     // drop the last writer which is holding the response stream open
-    CHECK_EQ(writer.use_count(), 1);
+    // CHECK_EQ(writer.use_count(), 1);
+    writer->finish();
     writer.reset();
 
     // await completion of the stream connection

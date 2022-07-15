@@ -179,6 +179,8 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         return m_status;
     }
 
+    // todo(ryan) - add a method to trigger a writes done
+
     void attach_to(srf::node::SinkProperties<IncomingData>& sink)
     {
         CHECK(m_reader_source);
@@ -297,9 +299,23 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         do_init();
     }
 
-    void do_service_await_live() final {}
-    void do_service_stop() final {}
-    void do_service_kill() final {}
+    void do_service_await_live() final
+    {
+        m_reader->await_live();
+        m_writer->await_live();
+    }
+
+    void do_service_stop() final
+    {
+        m_stream_writer->finish();
+        m_stream_writer.reset();
+    }
+
+    void do_service_kill() final
+    {
+        m_stream_writer->finish();
+        m_stream_writer.reset();
+    }
 
     void do_service_await_join() final
     {

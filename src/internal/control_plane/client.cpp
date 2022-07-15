@@ -84,6 +84,7 @@ void Client::do_service_start()
 
 void Client::do_service_stop()
 {
+    m_writer->finish();
     m_writer.reset();
 }
 
