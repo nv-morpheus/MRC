@@ -39,7 +39,7 @@ gpuci_logger "Building targets that generate source code"
 cmake --build build --target style_checks --parallel ${PARALLEL_LEVEL}
 
 gpuci_logger "Running C++ style checks"
-SKIP_IWYU=1 ${SRF_ROOT}/ci/scripts/cpp_checks.sh
+${SRF_ROOT}/ci/scripts/cpp_checks.sh
 
 gpuci_logger "Runing Python style checks"
 ${SRF_ROOT}/ci/scripts/python_checks.sh
