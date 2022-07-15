@@ -20,5 +20,6 @@ channels:
     - conda-forge
 dependencies:
     - clang=12
+    - clang-tools=12
     - clangxx=12
     - libclang=12
