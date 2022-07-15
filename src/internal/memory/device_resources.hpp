@@ -21,6 +21,7 @@
 #include "internal/runnable/resources.hpp"
 
 #include "srf/memory/buffer.hpp"
+#include <string>
 #include "srf/memory/resources/memory_resource.hpp"
 
 #include <cstddef>
