@@ -18,6 +18,7 @@
 #pragma once
 
 #include "srf/memory/adaptors.hpp"
+#include <atomic>
 #include "srf/memory/resources/memory_resource.hpp"
 
 #include <cstddef>
