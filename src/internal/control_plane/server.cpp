@@ -28,14 +28,6 @@
 #include "srf/protos/architect.grpc.pb.h"
 #include "srf/protos/architect.pb.h"
 
-#include <nvrpc/context.h>
-#include <nvrpc/executor.h>
-#include <nvrpc/interfaces.h>
-#include <nvrpc/life_cycle_streaming.h>
-#include <nvrpc/rpc.h>
-#include <nvrpc/server.h>
-#include <nvrpc/service.h>
-
 #include <glog/logging.h>
 #include <google/protobuf/any.pb.h>
 
@@ -44,11 +36,6 @@
 #include <ostream>
 #include <type_traits>  // IWYU pragma: keep
 #include <utility>
-
-using nvrpc::AsyncRPC;
-using nvrpc::AsyncService;
-using nvrpc::Context;
-using nvrpc::StreamingContext;
 
 namespace srf::internal::control_plane {
 
@@ -234,9 +221,7 @@ void Server::do_service_kill()
 
     // we keep the event handlers open until the streams are closed
     m_stream_acceptor->kill();
-    m_event_handler->kill();
     m_queue->disable_persistence();
-    m_queue.reset();
 }
 
 void Server::do_service_await_join()
@@ -375,12 +360,21 @@ void Server::drop_stream(writer_t writer)
     //     on_unexpected_disconnect(event.stream);
     // }
 
-    // drop instances
-    auto search = m_instances.find(writer->get_id());
-    CHECK(search != m_instances.end());
-    m_instances.erase(search);
+    // find all instances associated with the writer's stream
+    auto instances = m_instances_by_stream.equal_range(writer->get_id());
 
-    // get stream
+    // drop all instances
+    for (auto i = instances.first; i != instances.second; ++i)
+    {
+        auto search = m_instances.find(i->second);
+        CHECK(search != m_instances.end());
+        m_instances.erase(search);
+    }
+
+    // remove the mapping from stream_id -> instance_ids
+    m_instances_by_stream.erase(writer->get_id());
+
+    // get stream / stream context
     auto stream = m_streams.find(writer->get_id());
     CHECK(stream != m_streams.end());
 
@@ -390,6 +384,7 @@ void Server::drop_stream(writer_t writer)
 
     // await completion of the stream connection
     stream->second->await_fini();
+    m_streams.erase(stream);
 }
 
 }  // namespace srf::internal::control_plane

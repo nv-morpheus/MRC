@@ -80,3 +80,26 @@ TEST_F(TestControlPlane, LifeCycle)
     server->service_stop();
     server->service_await_join();
 }
+
+TEST_F(TestControlPlane, SingleClientConnectDisconnect)
+{
+    auto server = std::make_unique<internal::control_plane::Server>(m_resources->partition(0).runnable());
+
+    server->service_start();
+    server->service_await_live();
+
+    // convert the following code into control_plane::Client
+    // put client here
+    // auto prepare_fn = [this, cq](grpc::ClientContext* context) {
+    //     return m_stub->PrepareAsyncEventStream(context, cq.get());
+    // };
+
+    // auto client = std::make_shared<stream_client_t>(prepare_fn, m_resources->partition(0).runnable());
+    // srf::node::SinkChannelReadable<typename stream_client_t::IncomingData> client_handler;
+    // client->attach_to(client_handler);
+
+    // auto client_writer = client->await_init();
+
+    server->service_stop();
+    server->service_await_join();
+}
