@@ -19,6 +19,7 @@
 
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/server.hpp"
+#include "internal/data_plane/resources.hpp"
 #include "internal/grpc/client_streaming.hpp"
 #include "internal/grpc/server.hpp"
 #include "internal/grpc/server_streaming.hpp"
@@ -92,6 +93,9 @@ TEST_F(TestControlPlane, SingleClientConnectDisconnect)
     auto client = std::make_unique<internal::control_plane::Client>(m_resources->partition(0).runnable());
     client->service_start();
     client->service_await_live();
+
+    client->register_ucx_addresses({m_resources->partition(0).network()->data_plane().ucx_address()});
+
     client->service_stop();
     client->service_await_join();
 

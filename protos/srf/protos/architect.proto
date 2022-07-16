@@ -42,10 +42,9 @@ enum EventType
 
 message Event
 {
-    uint64 machine_id = 1;
-    EventType event = 2;
+    EventType event = 1;
+    uint64 tag = 2;
     google.protobuf.Any message = 3;
-    uint64 promise = 4;
 }
 
 // Initialization - Step 1

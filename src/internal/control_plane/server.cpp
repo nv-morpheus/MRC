@@ -224,7 +224,7 @@ void Server::register_workers(event_t& event)
     protos::RegisterWorkersResponse resp;
     CHECK(event.msg.message().UnpackTo(&req));
 
-    DVLOG(10) << "registering srf instance with " << req.ucx_worker_addresses_size() << " resource groups";
+    DVLOG(10) << "registering srf instance with " << req.ucx_worker_addresses_size() << " partitions groups";
 
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
     // validate that the worker addresses are valid before updating state
@@ -258,6 +258,12 @@ void Server::register_workers(event_t& event)
         // return in order provided a unique instance_id per partition ucx address
         resp.add_instance_ids(instance->get_id());
     }
+
+    srf::protos::Event out;
+    out.set_tag(event.msg.tag());
+    out.set_event(protos::EventType::Response);
+    out.mutable_message()->PackFrom(resp);
+    event.stream->await_write(std::move(out));
 }
 
 void Server::drop_stream(writer_t writer)
@@ -273,6 +279,8 @@ void Server::drop_stream(writer_t writer)
     //     // this may be a fatal condition
     //     on_unexpected_disconnect(event.stream);
     // }
+
+    DVLOG(10) << "dropping stream with machine_id: " << writer->get_id();
 
     // find all instances associated with the writer's stream
     auto instances = m_instances_by_stream.equal_range(writer->get_id());

@@ -23,6 +23,7 @@
 #include "internal/grpc/stream_writer.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/service.hpp"
+#include "internal/ucx/common.hpp"
 
 #include "srf/node/edge_builder.hpp"
 #include "srf/protos/architect.grpc.pb.h"
@@ -51,6 +52,9 @@ class Client final : public Service
 
     ~Client() final;
 
+    void register_ucx_addresses(std::vector<ucx::WorkerAddress> worker_addresses);
+
+  protected:
     template <typename ResponseT, typename RequestT>
     ResponseT await_unary(const protos::EventType& event_type, RequestT&& request);
 
@@ -63,7 +67,10 @@ class Client final : public Service
     void do_service_kill() final;
     void do_service_await_live() final;
     void do_service_await_join() final;
-    void do_handle_event(event_t&& event);
+    static void do_handle_event(event_t&& event);
+
+    MachineID m_machine_id;
+    std::vector<InstanceID> m_instance_ids;
 
     runnable::Resources& m_runnable;
 
@@ -78,6 +85,7 @@ class Client final : public Service
     std::unique_ptr<srf::runnable::Runner> m_progress_engine;
     std::unique_ptr<srf::runnable::Runner> m_event_handler;
 
+    // Stream Context
     stream_t m_stream;
 
     // StreamWriter acquired from m_stream->await_init()
@@ -89,6 +97,8 @@ template <typename ResponseT>
 class AsyncStatus
 {
   public:
+    AsyncStatus() = default;
+
     DELETE_COPYABILITY(AsyncStatus);
     DELETE_MOVEABILITY(AsyncStatus);
 
@@ -117,7 +127,7 @@ void Client::async_unary(const protos::EventType& event_type, RequestT&& request
 {
     protos::Event event;
     event.set_event(event_type);
-    event.set_promise(reinterpret_cast<std::uint64_t>(&status.m_promise));
+    event.set_tag(reinterpret_cast<std::uint64_t>(&status.m_promise));
     CHECK(event.mutable_message()->PackFrom(request));
     m_writer->await_write(std::move(event));
 }

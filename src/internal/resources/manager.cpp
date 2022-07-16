@@ -106,6 +106,9 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
         m_host.emplace_back(m_runnable.at(i), std::move(builder));
     }
 
+    // create control plane and registere worker addresses
+    
+
     // devices
     for (auto& base : base_partition_resources)
     {

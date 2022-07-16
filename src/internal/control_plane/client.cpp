@@ -124,7 +124,7 @@ void Client::do_handle_event(event_t&& event)
         // handle a subset of events directly on the event handler
 
     case protos::EventType::Response: {
-        auto* promise = reinterpret_cast<Promise<protos::Event>*>(event.msg.promise());
+        auto* promise = reinterpret_cast<Promise<protos::Event>*>(event.msg.tag());
         if (promise != nullptr)
         {
             promise->set_value(std::move(event.msg));
@@ -140,4 +140,21 @@ void Client::do_handle_event(event_t&& event)
     }
 }
 
+void Client::register_ucx_addresses(std::vector<ucx::WorkerAddress> worker_addresses)
+{
+    protos::RegisterWorkersRequest req;
+    for (const auto& addr : worker_addresses)
+    {
+        req.add_ucx_worker_addresses(addr);
+    }
+    auto resp = await_unary<protos::RegisterWorkersResponse>(protos::ClientRegisterWorkers, std::move(req));
+
+    m_machine_id = resp.machine_id();
+    for (const auto& id : resp.instance_ids())
+    {
+        m_instance_ids.push_back(id);
+    }
+
+    DVLOG(10) << "control plane - machine_id: " << m_machine_id;
+}
 }  // namespace srf::internal::control_plane
