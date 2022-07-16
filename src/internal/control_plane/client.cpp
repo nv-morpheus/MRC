@@ -78,8 +78,11 @@ void Client::do_service_start()
 
     if (!m_writer)
     {
+        forward_state(State::FailedToConnect);
         LOG(FATAL) << "unable to connect to control plane";
     }
+
+    forward_state(State::Connected);
 }
 
 void Client::do_service_stop()
@@ -142,6 +145,7 @@ void Client::do_handle_event(event_t&& event)
 
 void Client::register_ucx_addresses(std::vector<ucx::WorkerAddress> worker_addresses)
 {
+    forward_state(State::RegisteringWorkers);
     protos::RegisterWorkersRequest req;
     for (const auto& addr : worker_addresses)
     {
@@ -150,11 +154,30 @@ void Client::register_ucx_addresses(std::vector<ucx::WorkerAddress> worker_addre
     auto resp = await_unary<protos::RegisterWorkersResponse>(protos::ClientRegisterWorkers, std::move(req));
 
     m_machine_id = resp.machine_id();
+    CHECK_EQ(resp.instance_ids_size(), worker_addresses.size());
     for (const auto& id : resp.instance_ids())
     {
         m_instance_ids.push_back(id);
     }
 
     DVLOG(10) << "control plane - machine_id: " << m_machine_id;
+    forward_state(State::Operational);
+}
+
+MachineID Client::machine_id() const
+{
+    return m_machine_id;
+}
+
+const std::vector<InstanceID>& Client::instance_ids() const
+{
+    return m_instance_ids;
+}
+
+void Client::forward_state(State state)
+{
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    CHECK(m_state < state);
+    m_state = state;
 }
 }  // namespace srf::internal::control_plane

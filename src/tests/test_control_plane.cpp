@@ -90,11 +90,17 @@ TEST_F(TestControlPlane, SingleClientConnectDisconnect)
     server->service_start();
     server->service_await_live();
 
+    using state_t = internal::control_plane::Client::State;
+
     auto client = std::make_unique<internal::control_plane::Client>(m_resources->partition(0).runnable());
+    EXPECT_EQ(client->state(), state_t::Disconnected);
     client->service_start();
     client->service_await_live();
+    EXPECT_EQ(client->state(), state_t::Connected);
 
     client->register_ucx_addresses({m_resources->partition(0).network()->data_plane().ucx_address()});
+    EXPECT_EQ(client->instance_ids().size(), 1);
+    EXPECT_EQ(client->state(), state_t::Operational);
 
     client->service_stop();
     client->service_await_join();

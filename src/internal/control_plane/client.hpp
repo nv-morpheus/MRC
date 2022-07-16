@@ -25,6 +25,7 @@
 #include "internal/service.hpp"
 #include "internal/ucx/common.hpp"
 
+#include "srf/exceptions/runtime_error.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/protos/architect.grpc.pb.h"
 #include "srf/protos/architect.pb.h"
@@ -41,6 +42,15 @@ class AsyncStatus;
 class Client final : public Service
 {
   public:
+    enum class State
+    {
+        Disconnected,
+        FailedToConnect,
+        Connected,
+        RegisteringWorkers,
+        Operational,
+    };
+
     using stream_t = std::shared_ptr<rpc::ClientStream<srf::protos::Event, srf::protos::Event>>;
     using writer_t = std::shared_ptr<rpc::StreamWriter<srf::protos::Event>>;
     using event_t  = stream_t::element_type::IncomingData;
@@ -53,6 +63,14 @@ class Client final : public Service
     ~Client() final;
 
     void register_ucx_addresses(std::vector<ucx::WorkerAddress> worker_addresses);
+
+    const State& state() const
+    {
+        return m_state;
+    }
+
+    MachineID machine_id() const;
+    const std::vector<InstanceID>& instance_ids() const;
 
   protected:
     template <typename ResponseT, typename RequestT>
@@ -68,6 +86,10 @@ class Client final : public Service
     void do_service_await_live() final;
     void do_service_await_join() final;
     static void do_handle_event(event_t&& event);
+
+    void forward_state(State state);
+
+    State m_state{State::Disconnected};
 
     MachineID m_machine_id;
     std::vector<InstanceID> m_instance_ids;
@@ -91,6 +113,8 @@ class Client final : public Service
     // StreamWriter acquired from m_stream->await_init()
     // The customer destruction of this object will cause a gRPC WritesDone to be issued to the server.
     writer_t m_writer;
+
+    std::mutex m_mutex;
 };
 
 template <typename ResponseT>
