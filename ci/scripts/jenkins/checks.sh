@@ -18,7 +18,7 @@ set -e
 
 source ${WORKSPACE}/ci/scripts/jenkins/common.sh
 
-rm -rf ${SRF_ROOT}/.cache/ ${SRF_ROOT}/build/
+rm -rf ${SRF_ROOT}/.cache/ ${SRF_ROOT}/build/ ${WORKSPACE_TMP}/iwyu
 
 fetch_base_branch
 
