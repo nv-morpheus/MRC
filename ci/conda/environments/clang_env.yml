@@ -21,5 +21,8 @@ channels:
 dependencies:
     - clang=12
     - clang-tools=12
+    - clangdev=12
     - clangxx=12
     - libclang=12
+    - libclang-cpp=12
+    - llvmdev=12

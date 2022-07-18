@@ -24,13 +24,31 @@ fetch_base_branch
 
 gpuci_logger "Creating conda env"
 mamba env create -n srf -q --file ${CONDA_ENV_YML}
-conda deactivate
-conda activate srf
 
 gpuci_logger "Installing Clang"
 mamba env update -q -n srf --file ${SRF_ROOT}/ci/conda/environments/clang_env.yml
 
+conda deactivate
+conda activate srf
+
 show_conda_info
+
+gpuci_logger "Installing IWYU"
+export IWYU_DIR="${WORKSPACE_TMP}/iwyu"
+cd ${WORKSPACE_TMP}
+git clone https://github.com/include-what-you-use/include-what-you-use.git ${IWYU_DIR}
+cd ${IWYU_DIR}
+git checkout clang_12
+cmake -G Ninja \
+    -DCMAKE_PREFIX_PATH=$(llvm-config --cmakedir) \
+    -DCMAKE_C_COMPILER=$(which clang) \
+    -DCMAKE_CXX_COMPILER=$(which clang++) \
+    -DCMAKE_INSTALL_BINDIR="${CONDA_PREFIX}/bin" \
+    .
+
+cmake --build . --parallel ${PARALLEL_LEVEL} --target install
+
+cd ${WORKSPACE}
 
 gpuci_logger "Configuring CMake"
 cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} .
