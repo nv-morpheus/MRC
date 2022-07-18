@@ -43,7 +43,7 @@ cmake -G Ninja \
     -DCMAKE_PREFIX_PATH=$(llvm-config --cmakedir) \
     -DCMAKE_C_COMPILER=$(which clang) \
     -DCMAKE_CXX_COMPILER=$(which clang++) \
-    -DCMAKE_INSTALL_BINDIR="${CONDA_PREFIX}/bin" \
+    -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX} \
     .
 
 cmake --build . --parallel ${PARALLEL_LEVEL} --target install
