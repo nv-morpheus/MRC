@@ -62,8 +62,6 @@ class Client final : public Service
 
     ~Client() final;
 
-    void register_ucx_addresses(std::vector<ucx::WorkerAddress> worker_addresses);
-
     const State& state() const
     {
         return m_state;
@@ -71,6 +69,12 @@ class Client final : public Service
 
     MachineID machine_id() const;
     const std::vector<InstanceID>& instance_ids() const;
+
+    void register_ucx_addresses(std::vector<ucx::WorkerAddress> worker_addresses);
+
+    // void register_port_publisher(InstanceID instance_id, const std::string& port_name);
+    // void register_port_subscriber(InstanceID instance_id, const std::string& port_name);
+    bool get_or_create_subscription_service(std::string name, std::set<std::string> roles);
 
   protected:
     template <typename ResponseT, typename RequestT>

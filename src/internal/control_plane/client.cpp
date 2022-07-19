@@ -18,6 +18,7 @@
 #include "internal/control_plane/client.hpp"
 
 #include "srf/protos/architect.grpc.pb.h"
+#include "srf/protos/architect.pb.h"
 
 namespace srf::internal::control_plane {
 
@@ -162,6 +163,24 @@ void Client::register_ucx_addresses(std::vector<ucx::WorkerAddress> worker_addre
 
     DVLOG(10) << "control plane - machine_id: " << m_machine_id;
     forward_state(State::Operational);
+}
+
+bool Client::get_or_create_subscription_service(std::string name, std::set<std::string> roles)
+{
+    protos::CreateSubscriptionServiceRequest req;
+    req.set_service_name(name);
+    for (const auto& role : roles)
+    {
+        req.add_roles(role);
+    }
+    auto resp = await_unary<protos::Ack>(protos::ClientUnaryCreateSubscriptionService, std::move(req));
+    if (resp.status() != protos::Success)
+    {
+        LOG(ERROR) << resp.msg();
+        return false;
+    }
+    DVLOG(10) << "subscribtion_service: " << name << " is live on the control plane server";
+    return true;
 }
 
 MachineID Client::machine_id() const

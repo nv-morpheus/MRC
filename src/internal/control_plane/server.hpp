@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "internal/control_plane/server/client_instance.hpp"
+#include "internal/control_plane/server/subscription_service.hpp"
 #include "internal/grpc/server.hpp"
 #include "internal/grpc/server_streaming.hpp"
 #include "internal/runnable/resources.hpp"
@@ -36,12 +38,10 @@ namespace srf::internal::control_plane {
 class Server : public Service
 {
   public:
-    struct Instance;
-
     using stream_t      = std::shared_ptr<rpc::ServerStream<srf::protos::Event, srf::protos::Event>>;
     using writer_t      = std::shared_ptr<rpc::StreamWriter<srf::protos::Event>>;
     using event_t       = stream_t::element_type::IncomingData;
-    using instance_t    = std::shared_ptr<Instance>;
+    using instance_t    = std::shared_ptr<server::ClientInstance>;
     using stream_id_t   = std::size_t;
     using instance_id_t = std::size_t;
 
@@ -58,8 +58,16 @@ class Server : public Service
     void do_handle_event(event_t&& event);
 
     // top-level event handlers
-    void register_workers(event_t& event);
+    void unary_register_workers(event_t& event);
+    void unary_create_subscription_service(event_t& event);
+    void register_subscription_service(event_t& event);
     void drop_stream(writer_t writer);
+
+    static void unary_ack(event_t& event, protos::ErrorCode type, std::string msg = "");
+
+    // convenience methods
+    std::shared_ptr<server::ClientInstance> get_instance(const instance_id_t& instance_id) const;
+    bool validate_instance_id(const instance_id_t& instance_id, const event_t& event);
 
     // srf resources
     runnable::Resources& m_runnable;
@@ -70,9 +78,12 @@ class Server : public Service
 
     // connection info
     std::map<stream_id_t, stream_t> m_streams;
-    std::map<instance_id_t, std::shared_ptr<Instance>> m_instances;
+    std::map<instance_id_t, std::shared_ptr<server::ClientInstance>> m_instances;
     std::multimap<stream_id_t, instance_id_t> m_instances_by_stream;
     std::set<std::string> m_ucx_worker_addresses;
+
+    // subscription services
+    std::map<std::string, std::unique_ptr<SubscriptionService>> m_subscription_services;
 
     // operators / queues
     std::unique_ptr<srf::node::Queue<event_t>> m_queue;

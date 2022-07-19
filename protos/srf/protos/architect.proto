@@ -37,7 +37,20 @@ enum EventType
     ClientUpdateComplete = 103;
     ClientLookupWorkerAddresses = 104;
     ClientSegmentsOnComplete = 105;
+    ClientUnaryCreateSubscriptionService = 106;
+    ClientRegisterSubscriptionService = 107;
+    ClientEventWithoutResponse = 200;
+    ClientUnaryWithResponse = 300;
     ServerUpdateAssignments = 1000;
+    ServerUpdateService = 1001;
+}
+
+enum ErrorCode
+{
+    Success = 0;
+    ServerError = 1;
+    ClientError = 2;
+    InstanceError = 3;
 }
 
 message Event
@@ -65,7 +78,7 @@ message RegisterWorkersResponse
 
 message RegisterPipelineRequest
 {
-    uint32 machine_id = 1;
+    // uint32 machine_id = 1;
     Pipeline pipeline = 2;
     repeated PipelineConfiguration requested_config = 3;
 }
@@ -84,6 +97,35 @@ message LookupWorkersResponse
     repeated WorkerAddress worker_addresses = 1;
 }
 
+// Subscription
+
+message CreateSubscriptionServiceRequest
+{
+    string service_name = 1;
+    repeated string roles = 2;
+}
+
+message RegisterSubscriptionServiceRequest
+{
+    string service_name = 1;
+    string role = 2;
+    repeated string subscribe_to_roles = 3;
+    uint64 instance_id = 4;
+}
+
+message SubscriptionServiceUpdate
+{
+    string service_name = 1;
+    string role = 2;
+    uint64 nonce = 3;
+    repeated uint64 instance_ids = 4;
+}
+
+message Ack
+{
+    ErrorCode status = 1;
+    string msg = 2;
+}
 
 // Basic Control message
 

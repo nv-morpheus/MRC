@@ -40,17 +40,6 @@
 
 namespace srf::internal::control_plane {
 
-struct Server::Instance
-{
-    writer_t stream_writer;
-    std::string worker_address;
-
-    std::size_t get_id() const
-    {
-        return reinterpret_cast<std::size_t>(this);
-    }
-};
-
 Server::Server(runnable::Resources& runnable) : m_runnable(runnable), m_server(m_runnable) {}
 
 void Server::do_service_start()
@@ -206,8 +195,17 @@ void Server::do_handle_event(event_t&& event)
         switch (event.msg.event())
         {
         case protos::EventType::ClientRegisterWorkers:
-            register_workers(event);
+            unary_register_workers(event);
             break;
+
+        case protos::EventType::ClientUnaryCreateSubscriptionService:
+            unary_create_subscription_service(event);
+            break;
+
+        case protos::EventType::ClientRegisterSubscriptionService:
+            register_subscription_service(event);
+            break;
+
         default:
             LOG(FATAL) << "event not handled";
         }
@@ -218,7 +216,7 @@ void Server::do_handle_event(event_t&& event)
     }
 }
 
-void Server::register_workers(event_t& event)
+void Server::unary_register_workers(event_t& event)
 {
     protos::RegisterWorkersRequest req;
     protos::RegisterWorkersResponse resp;
@@ -244,7 +242,7 @@ void Server::register_workers(event_t& event)
     {
         m_ucx_worker_addresses.insert(worker_address);
 
-        auto instance            = std::make_shared<Instance>();
+        auto instance            = std::make_shared<server::ClientInstance>();
         instance->worker_address = worker_address;
         instance->stream_writer  = event.stream;
 
@@ -264,6 +262,103 @@ void Server::register_workers(event_t& event)
     out.set_event(protos::EventType::Response);
     out.mutable_message()->PackFrom(resp);
     event.stream->await_write(std::move(out));
+}
+
+void Server::unary_create_subscription_service(event_t& event)
+{
+    protos::CreateSubscriptionServiceRequest req;
+    CHECK(event.msg.message().UnpackTo(&req));
+
+    DVLOG(10) << "[start] create (or get) subscription service: " << req.service_name();
+
+    std::set<std::string> roles;
+    for (const auto& role : req.roles())
+    {
+        roles.insert(role);
+    }
+    CHECK_EQ(roles.size(), req.roles_size()) << "roles must be unique";
+
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    auto search = m_subscription_services.find(req.service_name());
+
+    if (search == m_subscription_services.end())
+    {
+        DVLOG(10) << "subscription_service: " << req.service_name() << " first request - creating subscription service";
+        m_subscription_services[req.service_name()] =
+            std::make_unique<SubscriptionService>(req.service_name(), std::move(roles));
+    }
+    else
+    {
+        if (!search->second->compare_roles(roles))
+        {
+            std::stringstream msg;
+            msg << "failed to create subscription service on the server: requested roles do not match the current "
+                   "instance of "
+                << req.service_name()
+                << "; there may be a binary incompatibililty or service name conflict between one or more clients "
+                   "connecting to this control plane";
+
+            LOG(ERROR) << msg.str();
+            return unary_ack(event, protos::ErrorCode::ClientError, msg.str());
+        }
+    }
+
+    DVLOG(10) << "[success] create (or get) subscription service: " << req.service_name();
+    unary_ack(event, protos::ErrorCode::Success);
+}
+
+void Server::register_subscription_service(event_t& event)
+{
+    protos::RegisterSubscriptionServiceRequest req;
+    CHECK(event.msg.message().UnpackTo(&req));
+
+    DVLOG(10) << "[start] instance_id: [id]; register with subscription service " << req.service_name() << " as a "
+              << req.role() << " from machine " << event.stream->get_id();
+
+    if (!validate_instance_id(req.instance_id(), event))
+    {
+        LOG(FATAL) << "instance_id validation failed when registering subscription service " << req.service_name()
+                   << " on request from " << event.stream->get_id();
+        return;
+    }
+
+    auto search = m_subscription_services.find(req.service_name());
+    if (search == m_subscription_services.end())
+    {
+        LOG(FATAL) << "subscription service " << req.service_name() << " does not exist";
+        return;
+    }
+
+    DCHECK(search->second);
+    auto& service     = *(search->second);
+    bool invalid_role = false;
+
+    // validate roles are valid
+    std::set<std::string> subscribe_to;
+    for (const auto& role : req.subscribe_to_roles())
+    {
+        subscribe_to.insert(role);
+    }
+    CHECK_EQ(req.subscribe_to_roles_size(), subscribe_to.size());
+
+    if (!service.has_role(req.role()))
+    {
+        LOG(ERROR) << "subscription service " << req.service_name() << " does not contain primary role: " << req.role();
+        invalid_role = true;
+    }
+    if (!std::all_of(subscribe_to.begin(), subscribe_to.end(), [&service](const std::string& role) {
+            return service.has_role(role);
+        }))
+    {
+        LOG(ERROR) << "subscription service " << req.service_name() << " one or more subscribe_to_roles were invalid";
+        invalid_role = true;
+    }
+    if (invalid_role)
+    {
+        LOG(FATAL) << "convert to a return message";
+    }
+
+    service.register_instance(req.role(), subscribe_to, get_instance(req.instance_id()));
 }
 
 void Server::drop_stream(writer_t writer)
@@ -308,6 +403,19 @@ void Server::drop_stream(writer_t writer)
     // await completion of the stream connection
     stream->second->await_fini();
     m_streams.erase(stream);
+}
+
+void Server::unary_ack(event_t& event, protos::ErrorCode type, std::string msg)
+{
+    protos::Ack ack;
+    ack.set_status(type);
+    ack.set_msg(msg);
+
+    protos::Event error;
+    error.set_event(protos::EventType::Response);
+    error.set_tag(event.msg.tag());
+    CHECK(error.mutable_message()->PackFrom(ack));
+    event.stream->await_write(std::move(error));
 }
 
 // class EventsStreamingContext final : public StreamingContext<protos::Event, protos::Event, ServerResources>
@@ -415,4 +523,29 @@ void Server::drop_stream(writer_t writer)
 //     m_server->Shutdown();
 // }
 
+bool Server::validate_instance_id(const instance_id_t& instance_id, const event_t& event)
+{
+    auto search = m_instances.find(instance_id);
+    if (search == m_instances.end())
+    {
+        LOG(ERROR) << "client on machine: " << event.stream->get_id() << " provided an unregistered instance_id";
+        return false;
+    }
+    if (event.stream->get_id() != search->second->stream_writer->get_id())
+    {
+        LOG(ERROR) << "client on machine: " << event.stream->get_id()
+                   << " provided an instance_id not associated that machine";
+        return false;
+    }
+    return true;
+}
+std::shared_ptr<server::ClientInstance> Server::get_instance(const instance_id_t& instance_id) const
+{
+    auto search = m_instances.find(instance_id);
+    if (search == m_instances.end())
+    {
+        return nullptr;
+    }
+    return search->second;
+}
 }  // namespace srf::internal::control_plane
