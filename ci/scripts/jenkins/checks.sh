@@ -17,8 +17,9 @@
 set -e
 
 source ${WORKSPACE}/ci/scripts/jenkins/common.sh
+export IWYU_DIR="${WORKSPACE_TMP}/iwyu"
 
-rm -rf ${SRF_ROOT}/.cache/ ${SRF_ROOT}/build/ ${WORKSPACE_TMP}/iwyu
+rm -rf ${SRF_ROOT}/.cache/ ${SRF_ROOT}/build/ ${IWYU_DIR}
 
 fetch_base_branch
 
@@ -34,10 +35,8 @@ conda activate srf
 show_conda_info
 
 gpuci_logger "Installing IWYU"
-export IWYU_DIR="${WORKSPACE_TMP}/iwyu"
-cd ${WORKSPACE_TMP}
 git clone https://github.com/include-what-you-use/include-what-you-use.git ${IWYU_DIR}
-cd ${IWYU_DIR}
+pushd ${IWYU_DIR}
 git checkout clang_12
 cmake -G Ninja \
     -DCMAKE_PREFIX_PATH=$(llvm-config --cmakedir) \
@@ -48,7 +47,7 @@ cmake -G Ninja \
 
 cmake --build . --parallel ${PARALLEL_LEVEL} --target install
 
-cd ${WORKSPACE}
+popd
 
 gpuci_logger "Configuring CMake"
 cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} .
