@@ -55,8 +55,6 @@
 
 namespace srf::internal::data_plane {
 
-static thread_local rxcpp::subscriber<network_event_t>* static_subscriber = nullptr;
-
 namespace {
 
 void zero_bytes_completion_handler(void* request,
@@ -68,20 +66,6 @@ void zero_bytes_completion_handler(void* request,
     {
         LOG(FATAL) << "zero_bytes_completion_handler observed " << ucs_status_string(status);
     }
-    ucp_request_free(request);
-}
-
-void recv_completion_handler(void* request, ucs_status_t status, const ucp_tag_recv_info_t* msg_info, void* user_data)
-{
-    if (status != UCS_OK)
-    {
-        LOG(FATAL) << "recv_completion_handler observed " << ucs_status_string(status);
-    }
-    auto port_address = tag_decode_user_tag(msg_info->sender_tag);
-    DCHECK(static_subscriber && static_subscriber->is_subscribed());
-    auto msg = std::make_pair(port_address,
-                              srf::memory::buffer_view(user_data, msg_info->length, srf::memory::memory_kind::host));
-    static_subscriber->on_next(std::move(msg));
     ucp_request_free(request);
 }
 
@@ -265,9 +249,6 @@ void DataPlaneServerWorker::data_source(rxcpp::subscriber<network_event_t>& s)
     ucp_tag_recv_info_t msg_info;
     std::uint32_t backoff = 1;
 
-    // set static variable for callbacks
-    static_subscriber = &s;
-
     DVLOG(10) << "startin data plane server progress engine loop";
 
     // the progress loop has tag_probe_nb disabled
@@ -335,7 +316,7 @@ void DataPlaneServerWorker::on_tagged_msg(rxcpp::subscriber<network_event_t>& su
         recv_bytes       = msg_info.length;
         recv_addr        = std::malloc(recv_bytes);
         params.user_data = recv_addr;
-        params.cb.recv   = recv_completion_handler;
+        // params.cb.recv   = recv_completion_handler;
         break;
     }
     case DESCRIPTOR_TAG:
