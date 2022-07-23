@@ -30,7 +30,7 @@ function(find_and_configure_boost_true_cmake version)
 
   rapids_cpm_find(Boost ${version}
     GLOBAL_TARGETS
-      Boost::context Boost::fiber Boost::filesystem Boost::system
+      Boost::context Boost::fiber Boost::hana Boost::filesystem Boost::system
     BUILD_EXPORT_SET
       ${PROJECT_NAME}-core-exports
     INSTALL_EXPORT_SET
@@ -55,7 +55,7 @@ function(find_and_configure_boost_boost_cmake version)
 
   rapids_cpm_find(Boost ${version}
     GLOBAL_TARGETS
-      Boost::context Boost::fiber Boost::filesystem Boost::system
+      Boost::context Boost::fiber Boost::hana Boost::filesystem Boost::system
     BUILD_EXPORT_SET
       ${PROJECT_NAME}-core-exports
     INSTALL_EXPORT_SET
@@ -72,7 +72,7 @@ function(find_and_configure_boost_boost_cmake version)
     # Now add it to the list of packages to install
     rapids_export_package(INSTALL Boost
       ${PROJECT_NAME}-core-exports
-      GLOBAL_TARGETS Boost::context Boost::fiber Boost::filesystem Boost::system
+      GLOBAL_TARGETS Boost::context Boost::fiber Boost::hana Boost::filesystem Boost::system
     )
 
     # Overwrite the default package contents

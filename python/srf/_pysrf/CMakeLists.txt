@@ -57,6 +57,7 @@ target_include_directories(pysrf
 
 set_target_properties(pysrf PROPERTIES OUTPUT_NAME ${PROJECT_NAME}_pysrf)
 set_target_properties(pysrf PROPERTIES CXX_VISIBILITY_PRESET hidden)
+
 # Avoid doing this, it causes problems with PyInit being hidden in Cython built code.
 #   target_compile_options(pysrf PUBLIC "-fvisibility=hidden")
 
