@@ -249,7 +249,7 @@ void DataPlaneServerWorker::data_source(rxcpp::subscriber<network_event_t>& s)
     ucp_tag_recv_info_t msg_info;
     std::uint32_t backoff = 1;
 
-    DVLOG(10) << "startin data plane server progress engine loop";
+    DVLOG(10) << "starting data plane server progress engine loop";
 
     // the progress loop has tag_probe_nb disabled
     // this should be re-enabled to accept tagged messages that have payloads
