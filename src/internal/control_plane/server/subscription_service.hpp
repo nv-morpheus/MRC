@@ -38,6 +38,10 @@ class Role
     void add_member(std::shared_ptr<server::ClientInstance> instance);
     void add_subscriber(std::shared_ptr<server::ClientInstance> instance);
 
+    // drop a client instance - this will remove the instaces from both the
+    // members and subscribers list
+    void drop_instance(std::shared_ptr<server::ClientInstance> instance);
+
   private:
     // protos::SubscriptionServiceUpdate make_update();
     protos::SubscriptionServiceUpdate make_update() const;
@@ -62,6 +66,8 @@ class SubscriptionService final
     void register_instance(const std::string& role,
                            const std::set<std::string>& subscribe_to_roles,
                            std::shared_ptr<server::ClientInstance> instance);
+
+    void drop_instance(std::shared_ptr<server::ClientInstance> instance);
 
     bool has_role(const std::string& role) const;
     bool compare_roles(const std::set<std::string>& roles) const;

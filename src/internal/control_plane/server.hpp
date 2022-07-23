@@ -29,6 +29,8 @@
 #include "srf/protos/architect.pb.h"
 #include "srf/runnable/runner.hpp"
 
+#include <boost/fiber/recursive_mutex.hpp>
+
 #include <map>
 #include <memory>
 #include <string>
@@ -57,17 +59,20 @@ class Server : public Service
     void do_accept_stream(rxcpp::subscriber<stream_t>& s);
     void do_handle_event(event_t&& event);
 
-    // top-level event handlers
+    // top-level event handlers - these methods lock internal state
     void unary_register_workers(event_t& event);
     void unary_create_subscription_service(event_t& event);
+    // todo(ryan) - convert to unary service with an ack response
     void register_subscription_service(event_t& event);
+    void unary_drop_from_subscription_service(event_t& event);
     void drop_stream(writer_t writer);
 
     static void unary_ack(event_t& event, protos::ErrorCode type, std::string msg = "");
 
-    // convenience methods
+    // convenience methods - these method do not lock internal state
     std::shared_ptr<server::ClientInstance> get_instance(const instance_id_t& instance_id) const;
-    bool validate_instance_id(const instance_id_t& instance_id, const event_t& event);
+    bool validate_instance_id(const instance_id_t& instance_id, const event_t& event) const;
+    bool has_subscription_service(const std::string& name) const;
 
     // srf resources
     runnable::Resources& m_runnable;
@@ -92,7 +97,7 @@ class Server : public Service
     std::unique_ptr<srf::runnable::Runner> m_stream_acceptor;
     std::unique_ptr<srf::runnable::Runner> m_event_handler;
 
-    mutable Mutex m_mutex;
+    mutable boost::fibers::mutex m_mutex;
 };
 
 }  // namespace srf::internal::control_plane

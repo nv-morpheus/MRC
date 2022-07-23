@@ -122,4 +122,16 @@ protos::SubscriptionServiceUpdate Role::make_update() const
     }
     return update;
 }
+void SubscriptionService::drop_instance(std::shared_ptr<server::ClientInstance> instance)
+{
+    for (auto& [name, role] : m_roles)
+    {
+        role->drop_instance(instance);
+    }
+}
+void Role::drop_instance(std::shared_ptr<server::ClientInstance> instance)
+{
+    m_members.erase(instance);
+    m_subscribers.erase(instance);
+}
 }  // namespace srf::internal::control_plane

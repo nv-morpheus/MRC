@@ -39,6 +39,19 @@ namespace srf::internal::control_plane {
 template <typename ResponseT>
 class AsyncStatus;
 
+/**
+ * @brief Primary Control Plane Client
+ *
+ * A single instance of Client should be instantiated per processes. This class is responsible owning the client side
+ * bidirectional async grpc stream, server event handler, and router used to push server side events to partition client
+ * event handlers. This class may also create a grpc::CompletionQueue and run a progress engine and progress handler if
+ * constructed without an external CQ being passed in. If a CQ is provided, then it is assumed the progress engine and
+ * progress handler are also external.
+ *
+ * The event handler with this class will directly handle ClientErrors, while InstanceErrors will be forward via the
+ * event router to the specific instance handler.
+ *
+ */
 class Client final : public Service
 {
   public:

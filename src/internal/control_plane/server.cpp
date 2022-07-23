@@ -312,6 +312,8 @@ void Server::register_subscription_service(event_t& event)
     protos::RegisterSubscriptionServiceRequest req;
     CHECK(event.msg.message().UnpackTo(&req));
 
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+
     DVLOG(10) << "[start] instance_id: [id]; register with subscription service " << req.service_name() << " as a "
               << req.role() << " from machine " << event.stream->get_id();
 
@@ -418,112 +420,7 @@ void Server::unary_ack(event_t& event, protos::ErrorCode type, std::string msg)
     event.stream->await_write(std::move(error));
 }
 
-// class EventsStreamingContext final : public StreamingContext<protos::Event, protos::Event, ServerResources>
-// {
-//     void StreamInitialized(std::shared_ptr<ServerStream> stream) final  // NOLINT
-//     {
-//         // we don't have the instance id of the connecting stream, so we need to wait for
-//         // the client's first event to introduce itself and associated the server_stream_t
-//         // object with an instance_id
-//         VLOG(1) << "initializing events stream " << stream.get();
-//     }
-
-//     void RequestReceived(protos::Event&& request, std::shared_ptr<ServerStream> stream) final  // NOLINT
-//     {
-//         protos::Event response;
-
-//         VLOG(10) << "Event Received";
-
-//         switch (request.event())
-//         {
-//             // these events will be offloaded and handled by the oracle
-//             // these events will trigger a state update
-//             // these events are batched - all enqueued events will be processed
-//             // before a global state update is issued.
-
-//         case protos::EventType::ClientRegisterPipeline:
-//         case protos::EventType::ControlStop:
-//         case protos::EventType::ClientSegmentsOnComplete:
-//             DCHECK(GetResources()->validate_machine_id(request.machine_id(), stream.get())) << "invalid machine id";
-//             GetResources()->enqueue_event(std::move(request));
-//             break;
-
-//             // the remainder of events will be handled directly by the grpc event thread
-
-//             // the following are one sided message
-//             // response may be issued by the methods
-//             // these methods / events are used to synchronize clients when updates are issued
-
-//         case protos::EventType::ClientUpdateStart:
-//             GetResources()->on_client_update_start(std::move(request));
-//             break;
-//         case protos::EventType::ClientUpdateComplete:
-//             GetResources()->on_client_update_complete(std::move(request));
-//             break;
-
-//             // the following will be handled directly and a response issued
-
-//             // todo(ryan) - move the issue response into the resources method
-//             // this will move the response message, packing and issuing out of the switch
-
-//         case protos::EventType::ClientRegisterWorkers: {
-//             protos::RegisterWorkersRequest connection_request;
-//             protos::RegisterWorkersResponse connection_response;
-//             CHECK(request.message().UnpackTo(&connection_request));
-//             CHECK(GetResources()->register_workers(connection_request, connection_response, stream));
-//             request.set_machine_id(connection_response.machine_id());
-//             GetResources()->issue_response(request, std::move(connection_response));
-//         }
-//         break;
-
-//         case protos::ClientLookupWorkerAddresses: {
-//             protos::LookupWorkersRequest lookup_request;
-//             protos::LookupWorkersResponse lookup_response;
-//             CHECK(request.message().UnpackTo(&lookup_request));
-//             CHECK(GetResources()->lookup_workers(lookup_request, lookup_response));
-//             GetResources()->issue_response(request, std::move(lookup_response));
-//         }
-//         break;
-
-//         default:
-//             LOG(WARNING) << "Unknowned streaming event provided";
-//         }
-//     }
-
-//     void RequestsFinished(std::shared_ptr<ServerStream> stream) final  // NOLINT
-//     {
-//         // todo(ryan) - validate the machine has no assignmnts, then nothing further needs to be done
-//         // otherwise, this close writes signal is from a machine that still has assigned segments, in
-//         // which we need to update the other machines still working. this machine is lost to us, we can
-//         // still send it events, but it will be unable to respond.
-//         GetResources()->remove_machine(stream.get());
-//         stream->FinishStream();
-//     }
-
-//     void StreamFinished(std::shared_ptr<ServerStream> stream) final {}  // NOLINT
-// };
-
-// Server::Server(int port) : Server(std::string("0.0.0.0:") + std::to_string(port)) {}
-
-// Server::Server(std::string url) : m_server(std::make_unique<nvrpc::Server>(url))
-// {
-//     CHECK(m_server);
-//     auto* executor  = m_server->RegisterExecutor(new nvrpc::Executor(1));
-//     auto* architect = m_server->RegisterAsyncService<protos::Architect>();
-//     m_resources     = std::make_shared<ServerResources>();
-//     auto* rpc_event_stream =
-//         architect->RegisterRPC<EventsStreamingContext>(&protos::Architect::AsyncService::RequestEventStream);
-//     executor->RegisterContexts(rpc_event_stream, m_resources, 2);
-//     m_server->AsyncStart();
-// }
-
-// void Server::shutdown()
-// {
-//     m_resources->shutdown();
-//     m_server->Shutdown();
-// }
-
-bool Server::validate_instance_id(const instance_id_t& instance_id, const event_t& event)
+bool Server::validate_instance_id(const instance_id_t& instance_id, const event_t& event) const
 {
     auto search = m_instances.find(instance_id);
     if (search == m_instances.end())
@@ -539,6 +436,7 @@ bool Server::validate_instance_id(const instance_id_t& instance_id, const event_
     }
     return true;
 }
+
 std::shared_ptr<server::ClientInstance> Server::get_instance(const instance_id_t& instance_id) const
 {
     auto search = m_instances.find(instance_id);
@@ -548,4 +446,36 @@ std::shared_ptr<server::ClientInstance> Server::get_instance(const instance_id_t
     }
     return search->second;
 }
+
+void Server::unary_drop_from_subscription_service(event_t& event)
+{
+    protos::SubscriptionServiceUpdate req;
+    CHECK(event.msg.message().UnpackTo(&req));
+
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+
+    auto valid_ids = std::all_of(req.instance_ids().begin(),
+                                 req.instance_ids().end(),
+                                 [this, &event](const instance_id_t& id) { return validate_instance_id(id, event); });
+
+    auto search        = m_subscription_services.find(req.service_name());
+    auto valid_service = (search != m_subscription_services.end());
+
+    if (valid_ids && valid_service)
+    {
+        CHECK(search->second);
+        for (const auto& id : req.instance_ids())
+        {
+            auto instance = get_instance(id);
+            search->second->drop_instance(instance);
+        }
+    }
+}
+
+bool Server::has_subscription_service(const std::string& name) const
+{
+    auto search = m_subscription_services.find(name);
+    return (search != m_subscription_services.end());
+}
+
 }  // namespace srf::internal::control_plane
