@@ -17,6 +17,8 @@
 
 #include "internal/control_plane/client.hpp"
 
+#include "srf/channel/channel.hpp"
+#include "srf/channel/status.hpp"
 #include "srf/protos/architect.grpc.pb.h"
 #include "srf/protos/architect.pb.h"
 
@@ -136,6 +138,10 @@ void Client::do_handle_event(event_t&& event)
     }
     break;
 
+    case protos::EventType::ServerUpdateSubscriptionService:
+        route_subscription_service_update(std::move(event));
+        break;
+
         // some events are routed to handlers on a given partition
         // e.g. pipeline updates are issued per partition and routed directly to the pipeline manager
 
@@ -167,6 +173,19 @@ void Client::register_ucx_addresses(std::vector<ucx::WorkerAddress> worker_addre
 
 bool Client::get_or_create_subscription_service(std::string name, std::set<std::string> roles)
 {
+    // no need to call the server if we have a locally registered subscription service
+    {
+        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+        auto search = m_subscription_services.find(name);
+        if (search != m_subscription_services.end())
+        {
+            // possible match - validate roles
+            CHECK(search->second->roles() == roles);
+            return true;
+        }
+    }
+
+    // issue unary rpc on the bidi stream
     protos::CreateSubscriptionServiceRequest req;
     req.set_service_name(name);
     for (const auto& role : roles)
@@ -180,6 +199,18 @@ bool Client::get_or_create_subscription_service(std::string name, std::set<std::
         return false;
     }
     DVLOG(10) << "subscribtion_service: " << name << " is live on the control plane server";
+
+    // lock state - if not present, add subscriptions service specific update channel to the routing map
+    // we had released the lock, so it's possible that multiple local paritions requested the same service
+    // the first one here will register it
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    auto search = m_subscription_services.find(name);
+    if (search == m_subscription_services.end())
+    {
+        m_subscription_services[name] = std::make_unique<client::SubscriptionService>(name, roles);
+        return true;
+    }
+    DCHECK(search->second->roles() == roles);
     return true;
 }
 
@@ -198,5 +229,18 @@ void Client::forward_state(State state)
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
     CHECK(m_state < state);
     m_state = state;
+}
+
+void Client::route_subscription_service_update(event_t event)
+{
+    protos::SubscriptionServiceUpdate update;
+    CHECK(event.msg.has_message() && event.msg.message().UnpackTo(&update));
+
+    auto search = m_subscription_services.find(update.service_name());
+    CHECK(search != m_subscription_services.end());
+
+    auto state = search->second->await_write(std::move(update));
+    LOG_IF(WARNING, state != srf::channel::Status::success)
+        << "unable to route update for service: " << update.service_name();
 }
 }  // namespace srf::internal::control_plane

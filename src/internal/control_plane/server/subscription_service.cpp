@@ -52,7 +52,7 @@ void Role::await_update(const std::shared_ptr<server::ClientInstance>& instance,
                         const protos::SubscriptionServiceUpdate& update)
 {
     protos::Event event;
-    event.set_event(protos::EventType::ServerUpdateService);
+    event.set_event(protos::EventType::ServerUpdateSubscriptionService);
     event.set_tag(instance->get_id());
     event.mutable_message()->PackFrom(update);
     instance->stream_writer->await_write(std::move(event));
@@ -68,9 +68,9 @@ SubscriptionService::SubscriptionService(std::string name, std::set<std::string>
     DCHECK_EQ(roles.size(), m_roles.size());
 }
 
-void SubscriptionService::register_instance(const std::string& role,
-                                            const std::set<std::string>& subscribe_to_roles,
-                                            std::shared_ptr<server::ClientInstance> instance)
+void SubscriptionService::register_instance(std::shared_ptr<server::ClientInstance> instance,
+                                            const std::string& role,
+                                            const std::set<std::string>& subscribe_to_roles)
 {
     // ensure that role is not subscribing to itself
     CHECK(!contains(subscribe_to_roles, role));  // todo(cpp20) use std::set::contains

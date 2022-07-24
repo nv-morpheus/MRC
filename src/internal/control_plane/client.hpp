@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "internal/control_plane/client/subscription_service.hpp"
 #include "internal/grpc/client_streaming.hpp"
 #include "internal/grpc/progress_engine.hpp"
 #include "internal/grpc/promise_handler.hpp"
@@ -27,6 +28,9 @@
 
 #include "srf/exceptions/runtime_error.hpp"
 #include "srf/node/edge_builder.hpp"
+#include "srf/node/operators/broadcast.hpp"
+#include "srf/node/operators/router.hpp"
+#include "srf/node/source_properties.hpp"
 #include "srf/protos/architect.grpc.pb.h"
 #include "srf/protos/architect.pb.h"
 #include "srf/runnable/runner.hpp"
@@ -89,7 +93,6 @@ class Client final : public Service
     // void register_port_subscriber(InstanceID instance_id, const std::string& port_name);
     bool get_or_create_subscription_service(std::string name, std::set<std::string> roles);
 
-  protected:
     template <typename ResponseT, typename RequestT>
     ResponseT await_unary(const protos::EventType& event_type, RequestT&& request);
 
@@ -97,12 +100,14 @@ class Client final : public Service
     void async_unary(const protos::EventType& event_type, RequestT&& request, AsyncStatus<ResponseT>& status);
 
   private:
+    void route_subscription_service_update(event_t event);
+
     void do_service_start() final;
     void do_service_stop() final;
     void do_service_kill() final;
     void do_service_await_live() final;
     void do_service_await_join() final;
-    static void do_handle_event(event_t&& event);
+    void do_handle_event(event_t&& event);
 
     void forward_state(State state);
 
@@ -123,6 +128,7 @@ class Client final : public Service
     std::unique_ptr<srf::runnable::Runner> m_progress_handler;
     std::unique_ptr<srf::runnable::Runner> m_progress_engine;
     std::unique_ptr<srf::runnable::Runner> m_event_handler;
+    std::map<std::string, std::unique_ptr<client::SubscriptionService>> m_subscription_services;
 
     // Stream Context
     stream_t m_stream;

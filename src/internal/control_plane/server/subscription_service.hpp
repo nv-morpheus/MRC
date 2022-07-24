@@ -63,9 +63,9 @@ class SubscriptionService final
     SubscriptionService(std::string name, std::set<std::string> roles);
     ~SubscriptionService() = default;
 
-    void register_instance(const std::string& role,
-                           const std::set<std::string>& subscribe_to_roles,
-                           std::shared_ptr<server::ClientInstance> instance);
+    void register_instance(std::shared_ptr<server::ClientInstance> instance,
+                           const std::string& role,
+                           const std::set<std::string>& subscribe_to_roles);
 
     void drop_instance(std::shared_ptr<server::ClientInstance> instance);
 

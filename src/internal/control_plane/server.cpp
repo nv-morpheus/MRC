@@ -360,7 +360,7 @@ void Server::register_subscription_service(event_t& event)
         LOG(FATAL) << "convert to a return message";
     }
 
-    service.register_instance(req.role(), subscribe_to, get_instance(req.instance_id()));
+    service.register_instance(get_instance(req.instance_id()), req.role(), subscribe_to);
 }
 
 void Server::drop_stream(writer_t writer)

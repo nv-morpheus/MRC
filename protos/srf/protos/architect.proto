@@ -42,7 +42,7 @@ enum EventType
     ClientEventWithoutResponse = 200;
     ClientUnaryWithResponse = 300;
     ServerUpdateAssignments = 1000;
-    ServerUpdateService = 1001;
+    ServerUpdateSubscriptionService = 1001;
 }
 
 enum ErrorCode
