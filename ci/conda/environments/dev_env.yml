@@ -34,6 +34,7 @@ dependencies:
   - numactl-libs-cos7-x86_64
   - numpy=1.21.2
   - nvcc_linux-64=11.4
+  - pip
   - pkg-config=0.29
   - pybind11-stubgen=0.10
   - python=3.8
