@@ -17,6 +17,9 @@
 
 #include "internal/resources/manager.hpp"
 
+#include "internal/data_plane/resources.hpp"
+#include "internal/resources/forward.hpp"
+#include "internal/resources/partition_resources_base.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/system/partitions.hpp"
 #include "internal/system/system.hpp"
@@ -27,6 +30,7 @@
 #include <ext/alloc_traits.h>
 #include <glog/logging.h>
 
+#include <functional>
 #include <optional>
 #include <ostream>
 #include <string>
@@ -51,19 +55,25 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
         m_runnable.emplace_back(*m_system, i);
     }
 
-    // construct ucx resources on each flattened partition
-    // this provides a ucx context, 2x workers and registration cache per partition
-    for (std::size_t i = 0; i < partitions.size(); ++i)
+    std::vector<PartitionResourceBase> base_partition_resources;
+    for (int i = 0; i < partitions.size(); i++)
     {
         auto host_partition_id = partitions.at(i).host_partition_id();
+        base_partition_resources.emplace_back(m_runnable.at(host_partition_id), i);
+    }
+
+    // construct ucx resources on each flattened partition
+    // this provides a ucx context, ucx worker and registration cache per partition
+    for (auto& base : base_partition_resources)
+    {
         if (network_enabled)
         {
-            VLOG(1) << "building ucx resources for partition " << i;
+            VLOG(1) << "building ucx resources for partition " << base.partition_id();
             auto network_task_queue_cpuset =
-                host_partitions.at(host_partition_id).engine_factory_cpu_sets().fiber_cpu_sets.at("srf_network");
+                base.partition().host().engine_factory_cpu_sets().fiber_cpu_sets.at("srf_network");
             auto& network_fiber_queue = m_system->get_task_queue(network_task_queue_cpuset.first());
             std::optional<ucx::Resources> ucx;
-            ucx.emplace(m_runnable.at(host_partition_id), i, network_fiber_queue);
+            ucx.emplace(base, network_fiber_queue);
             m_ucx.push_back(std::move(ucx));
         }
         else
@@ -91,15 +101,14 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
     }
 
     // devices
-    for (std::size_t i = 0; i < partition_count(); ++i)
+    for (auto& base : base_partition_resources)
     {
-        VLOG(1) << "building device resources for partition: " << i;
-        auto host_partition_id = partitions.at(i).host_partition_id();
-
-        if (i < device_count())
+        VLOG(1) << "building device resources for partition: " << base.partition_id();
+        if (base.partition().has_device())
         {
+            DCHECK_LT(base.partition_id(), device_count());
             std::optional<memory::DeviceResources> device;
-            device.emplace(m_runnable.at(host_partition_id), i, m_ucx.at(i));
+            device.emplace(base, m_ucx.at(base.partition_id()));
             m_device.emplace_back(std::move(device));
         }
         else
@@ -109,16 +118,15 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
     }
 
     // network resources
-    for (std::size_t i = 0; i < partition_count(); ++i)
+    for (auto& base : base_partition_resources)
     {
         if (network_enabled)
         {
-            VLOG(1) << "building network resources for partition: " << i;
-            CHECK(m_ucx.at(i));
-            auto host_partition_id = partitions.at(i).host_partition_id();
+            VLOG(1) << "building network resources for partition: " << base.partition_id();
+            CHECK(m_ucx.at(base.partition_id()));
             std::optional<network::Resources> network;
-            network.emplace(m_runnable.at(host_partition_id), i, *m_ucx.at(i), m_host.at(host_partition_id));
-            m_network.emplace_back(std::move(network));
+            network.emplace(base, *m_ucx.at(base.partition_id()), m_host.at(base.partition().host_partition_id()));
+            m_network.push_back(std::move(network));
         }
         else
         {

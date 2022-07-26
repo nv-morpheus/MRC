@@ -28,7 +28,10 @@
 namespace srf::internal::ucx {
 
 /**
- * @brief Memory Resource Adaptor that registers allocated memory with the UCX via the ucx::RegistrationCache
+ * @brief Memory Resource adaptor to provide UCX registration to allocated blocks.
+ *
+ * This is an internal class and used only for constructing device memory resources. A more general implementation might
+ * separate our the CUDA DeviceID requirement.
  *
  * @tparam PointerT
  */
@@ -60,6 +63,7 @@ class RegistrationResource : public srf::memory::adaptor<PointerT>
 
     void do_deallocate(void* ptr, std::size_t bytes) final
     {
+        DeviceGuard guard(m_cuda_device_id);
         auto size = m_registration_cache->drop_block(ptr, bytes);
         this->resource().deallocate(ptr, size);
     }

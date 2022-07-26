@@ -47,14 +47,13 @@
 
 namespace srf::internal::memory {
 
-DeviceResources::DeviceResources(runnable::Resources& runnable,
-                                 std::size_t partition_id,
-                                 std::optional<ucx::Resources>& ucx) :
-  resources::PartitionResourceBase(runnable, partition_id)
+DeviceResources::DeviceResources(resources::PartitionResourceBase& base, std::optional<ucx::Resources>& ucx) :
+  resources::PartitionResourceBase(base)
 {
     CHECK(partition().has_device());
 
-    runnable.main()
+    runnable()
+        .main()
         .enqueue([this, &ucx] {
             std::stringstream device_prefix;
             device_prefix << "cuda_malloc:" << cuda_device_id();

@@ -27,7 +27,7 @@ PartitionResourceBase::PartitionResourceBase(runnable::Resources& runnable, std:
   system::PartitionProvider(runnable, partition_id),
   m_runnable(runnable)
 {
-    CHECK_EQ(m_runnable.host_partition_id(), partition().host_partition_id());
+    CHECK_EQ(runnable.host_partition_id(), partition().host_partition_id());
 }
 runnable::Resources& PartitionResourceBase::runnable()
 {

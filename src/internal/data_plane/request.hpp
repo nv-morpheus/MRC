@@ -17,29 +17,53 @@
 
 #pragma once
 
-#include "internal/ucx/worker.hpp"
+#include "srf/utils/macros.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/node/generic_sink.hpp"
-#include "srf/runnable/context.hpp"
+#include <boost/fiber/future/promise.hpp>
+#include <ucp/api/ucp.h>
+#include <ucs/memory/memory_type.h>
+#include <ucs/type/status.h>
 
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
-
-#include <memory>
-#include <utility>
+#include <atomic>
 
 namespace srf::internal::data_plane {
 
-class DataPlaneClientWorker : public node::GenericSink<void*>
+class Callbacks;
+class Client;
+
+class Request final
 {
   public:
-    DataPlaneClientWorker(std::shared_ptr<ucx::Worker> worker) : m_worker(std::move(worker)) {}
+    Request();
+    ~Request();
+
+    DELETE_COPYABILITY(Request);
+    DELETE_MOVEABILITY(Request);
+
+    // std::optional<Status> is_complete();
+    bool await_complete();
+
+    // attempts to cancel the request
+    // the request will either be cancelled or completed
+    // void try_cancel();
 
   private:
-    void on_data(void*&& data) final;
+    void reset();
 
-    std::shared_ptr<ucx::Worker> m_worker;
+    enum class State
+    {
+        Init,
+        Running,
+        OK,
+        Cancelled,
+        Error
+    };
+    std::atomic<State> m_state{State::Init};
+    void* m_request{nullptr};
+    void* m_rkey{nullptr};
+
+    friend Client;
+    friend Callbacks;
 };
 
 }  // namespace srf::internal::data_plane

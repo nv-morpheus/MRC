@@ -15,26 +15,19 @@
  * limitations under the License.
  */
 
-#include "internal/data_plane/client_worker.hpp"
+#pragma once
 
-#include "internal/ucx/worker.hpp"
-
-#include <boost/fiber/operations.hpp>
-#include <ucp/api/ucp_compat.h>
+#include <ucp/api/ucp.h>
+#include <ucs/memory/memory_type.h>
+#include <ucs/type/status.h>
 
 namespace srf::internal::data_plane {
 
-void DataPlaneClientWorker::on_data(void*&& data)
+struct Callbacks final
 {
-    while (ucp_request_is_completed(data) == 0)
-    {
-        if (m_worker->progress() != 0U)
-        {
-            continue;
-        }
-        boost::this_fiber::yield();
-    }
-    ucp_request_release(data);
-}
+    // internal point-to-point
+    static void send(void* request, ucs_status_t status, void* user_data);
+    static void recv(void* request, ucs_status_t status, const ucp_tag_recv_info_t* msg_info, void* user_data);
+};
 
 }  // namespace srf::internal::data_plane
