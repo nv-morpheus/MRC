@@ -53,7 +53,7 @@ class Role
     std::string m_role_name;
     std::set<std::shared_ptr<server::ClientInstance>> m_members;
     std::set<std::shared_ptr<server::ClientInstance>> m_subscribers;
-    std::size_t m_nonce{0};
+    std::size_t m_nonce{1};
     Mutex m_mutex;
 };
 

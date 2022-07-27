@@ -91,7 +91,7 @@ class Client final : public Service
 
     // void register_port_publisher(InstanceID instance_id, const std::string& port_name);
     // void register_port_subscriber(InstanceID instance_id, const std::string& port_name);
-    bool get_or_create_subscription_service(std::string name, std::set<std::string> roles);
+    client::SubscriptionService& get_or_create_subscription_service(std::string name, std::set<std::string> roles);
 
     template <typename ResponseT, typename RequestT>
     ResponseT await_unary(const protos::EventType& event_type, RequestT&& request);

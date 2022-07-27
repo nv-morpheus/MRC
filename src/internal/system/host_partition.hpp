@@ -18,6 +18,7 @@
 #pragma once
 
 #include "internal/system/engine_factory_cpu_sets.hpp"
+#include "internal/system/topology.hpp"
 
 #include "srf/core/bitmap.hpp"
 #include "srf/options/options.hpp"
@@ -43,7 +44,7 @@ class HostPartition
     const std::vector<int>& device_partition_ids() const;
 
     void add_device_partition_id(int gpu_id);
-    void set_engine_factory_cpu_sets(const Options& options);
+    void set_engine_factory_cpu_sets(const Topology& topology, const Options& options);
 
     const EngineFactoryCpuSets& engine_factory_cpu_sets() const;
 

@@ -19,6 +19,7 @@
 
 #include "srf/channel/channel.hpp"
 #include "srf/channel/status.hpp"
+#include "srf/exceptions/runtime_error.hpp"
 #include "srf/protos/architect.grpc.pb.h"
 #include "srf/protos/architect.pb.h"
 
@@ -171,7 +172,7 @@ void Client::register_ucx_addresses(std::vector<ucx::WorkerAddress> worker_addre
     forward_state(State::Operational);
 }
 
-bool Client::get_or_create_subscription_service(std::string name, std::set<std::string> roles)
+client::SubscriptionService& Client::get_or_create_subscription_service(std::string name, std::set<std::string> roles)
 {
     // no need to call the server if we have a locally registered subscription service
     {
@@ -181,7 +182,7 @@ bool Client::get_or_create_subscription_service(std::string name, std::set<std::
         {
             // possible match - validate roles
             CHECK(search->second->roles() == roles);
-            return true;
+            return *search->second;
         }
     }
 
@@ -196,7 +197,7 @@ bool Client::get_or_create_subscription_service(std::string name, std::set<std::
     if (resp.status() != protos::Success)
     {
         LOG(ERROR) << resp.msg();
-        return false;
+        throw srf::exceptions::SrfRuntimeError("failed to create subscription service");
     }
     DVLOG(10) << "subscribtion_service: " << name << " is live on the control plane server";
 
@@ -208,10 +209,10 @@ bool Client::get_or_create_subscription_service(std::string name, std::set<std::
     if (search == m_subscription_services.end())
     {
         m_subscription_services[name] = std::make_unique<client::SubscriptionService>(name, roles);
-        return true;
+        return *m_subscription_services.at(name);
     }
     DCHECK(search->second->roles() == roles);
-    return true;
+    return *search->second;
 }
 
 MachineID Client::machine_id() const
@@ -243,4 +244,5 @@ void Client::route_subscription_service_update(event_t event)
     LOG_IF(WARNING, state != srf::channel::Status::success)
         << "unable to route update for service: " << update.service_name();
 }
+
 }  // namespace srf::internal::control_plane

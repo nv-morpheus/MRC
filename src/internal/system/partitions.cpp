@@ -133,6 +133,10 @@ Partitions::Partitions(const Topology& topology, const Options& options)
     {
         host_partition_over_obj = HWLOC_OBJ_NUMANODE;
     }
+    else if (m_cpu_strategy == PlacementStrategy::PerSocket)
+    {
+        host_partition_over_obj = HWLOC_OBJ_SOCKET;
+    }
 
     auto partition_depth   = topology.depth_for_object(host_partition_over_obj);
     auto partition_size    = topology.object_count_at_depth(partition_depth);
@@ -262,7 +266,7 @@ Partitions::Partitions(const Topology& topology, const Options& options)
     for (auto& partition : host_partitions)
     {
         VLOG(10) << "evaluating engine factory cpu sets for host_partition " << partition->cpu_set().str();
-        partition->set_engine_factory_cpu_sets(options);
+        partition->set_engine_factory_cpu_sets(topology, options);
     }
 
     auto partition_sorter = [](const Partition& lhs, const Partition& rhs) -> bool {

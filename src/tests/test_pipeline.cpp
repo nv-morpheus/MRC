@@ -38,6 +38,7 @@
 #include "srf/node/sink_properties.hpp"
 #include "srf/node/source_properties.hpp"
 #include "srf/options/options.hpp"
+#include "srf/options/placement.hpp"
 #include "srf/options/topology.hpp"
 #include "srf/pipeline/pipeline.hpp"
 #include "srf/runnable/context.hpp"
@@ -499,4 +500,36 @@ TEST_F(TestPipeline, Nodes1k)
     run_manager(std::move(pipeline));
 
     LOG(INFO) << " time in us: " << std::chrono::duration<double>(end - start).count();
+}
+
+TEST_F(TestPipeline, EngineFactories)
+{
+    auto options = std::make_shared<Options>();
+    options->placement().resources_strategy(PlacementResources::Dedicated);
+    options->engine_factories().set_ignore_hyper_threads(true);
+    options->engine_factories().set_engine_factory_options("rivermax_threads", [](EngineFactoryOptions& opts) {
+        opts.engine_type   = srf::runnable::EngineType::Thread;
+        opts.cpu_count     = 4;
+        opts.allow_overlap = false;
+        opts.reusable      = false;
+    });
+
+    options->engine_factories().set_engine_factory_options("stage_1", [](EngineFactoryOptions& opts) {
+        opts.engine_type   = srf::runnable::EngineType::Fiber;
+        opts.cpu_count     = 2;
+        opts.allow_overlap = false;
+        opts.reusable      = false;
+    });
+
+    options->engine_factories().set_engine_factory_options("stage_2", [](EngineFactoryOptions& opts) {
+        opts.engine_type   = srf::runnable::EngineType::Fiber;
+        opts.cpu_count     = 2;
+        opts.allow_overlap = false;
+        opts.reusable      = false;
+    });
+
+    Executor executor(options);
+    executor.register_pipeline(test::pipelines::finite_single_segment());
+    executor.start();
+    executor.join();
 }
