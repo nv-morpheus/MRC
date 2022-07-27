@@ -17,7 +17,10 @@
 
 #include "pysrf/pipeline.hpp"
 
+#include "pysrf/port_builders.hpp"
 #include "pysrf/types.hpp"
+#include "pysrf/utils.hpp"
+
 #include "srf/pipeline/pipeline.hpp"
 #include "srf/segment/builder.hpp"
 
@@ -30,30 +33,126 @@
 #include <string>
 #include <utility>  // for move
 
-namespace {
-namespace py = pybind11;
-using namespace srf::pysrf;
-
-template <std::size_t Count, template <class...> class PortClass, typename... ArgsT>
-struct Pipeline__PortBuilder : Pipeline__PortBuilder<Count - 1, PortClass, PyHolder, ArgsT...>
-{};
-
-template <template <class...> class PortClass, typename... ArgsT>
-struct Pipeline__PortBuilder<0, PortClass, ArgsT...>
-{
-    using port_type_t                  = PortClass<ArgsT...>;
-    static constexpr size_t port_count = sizeof...(ArgsT);
-
-    static port_type_t build(const std::vector<std::string>& port_ids)
-    {
-        return port_type_t(port_ids);
-    }
-};
-}  // namespace
-
 namespace srf::pysrf {
-
 namespace py = pybind11;
+
+using ingress_info_t = std::tuple<std::vector<std::string>,
+                                  std::vector<std::type_index>,
+                                  std::vector<srf::node::PortUtil::ingress_builder_fn_t>>;
+
+using egress_info_t = std::tuple<std::vector<std::string>,
+                                 std::vector<std::type_index>,
+                                 std::vector<srf::node::PortUtil::egress_builder_fn_t>>;
+
+ingress_info_t collect_ingress_info(py::list ids)
+{
+    using namespace srf::node;
+    std::vector<std::string> port_ids;
+    std::vector<std::type_index> port_type_indices;
+    std::vector<srf::node::PortUtil::ingress_builder_fn_t> builder_fns;
+
+    for (const auto& item : ids)
+    {
+        if (item.get_type().equal(py::str().get_type()))
+        {
+            port_ids.push_back(item.cast<std::string>());
+            port_type_indices.emplace_back(typeid(PyHolder));
+
+            auto port_util = srf::node::PortRegistry::find_port_util(typeid(PyHolder));
+            builder_fns.push_back(std::get<0>(port_util->m_ingress_builders));
+        }
+        else if (item.get_type().equal(py::tuple().get_type()))
+        {
+            auto py_tuple = item.cast<py::tuple>();
+            CHECK(py::len(py_tuple) >= 2);
+
+            py::str py_name = py_tuple[0];
+            py::type py_type = py_tuple[1];
+            const std::type_info* cpptype = cpptype_info_from_object(py_type);
+
+            port_ids.push_back(py_name.cast<std::string>());
+            if (cpptype != nullptr && srf::node::PortRegistry::has_port_util(*cpptype))
+            {
+                VLOG(2) << "Found Ingress builder";
+
+                port_type_indices.emplace_back(*cpptype);
+
+                auto port_util = srf::node::PortRegistry::find_port_util(*cpptype);
+                builder_fns.push_back(std::get<1>(port_util->m_ingress_builders));
+            }
+            else
+            {
+                VLOG(2) << "Failed to find Ingress builder, defaulting to PyHolder";
+
+                port_type_indices.emplace_back(typeid(PyHolder));
+
+                auto port_util = srf::node::PortRegistry::find_port_util(typeid(PyHolder));
+                builder_fns.push_back(std::get<1>(port_util->m_ingress_builders));
+            }
+        }
+        else
+        {
+            throw std::runtime_error("Bad port specification");
+        }
+    }
+
+    return {port_ids, port_type_indices, builder_fns};
+}
+
+egress_info_t collect_egress_info(py::list ids)
+{
+    using namespace srf::node;
+    std::vector<std::string> port_ids;
+    std::vector<std::type_index> port_type_indices;
+    std::vector<srf::node::PortUtil::egress_builder_fn_t> builder_fns;
+
+    for (const auto& item : ids)
+    {
+        if (item.get_type().equal(py::str().get_type()))
+        {
+            port_ids.push_back(item.cast<std::string>());
+            port_type_indices.emplace_back(typeid(PyHolder));
+
+            auto port_util = srf::node::PortRegistry::find_port_util(typeid(PyHolder));
+            builder_fns.push_back(std::get<0>(port_util->m_egress_builders));
+        }
+        else if (item.get_type().equal(py::tuple().get_type()))
+        {
+            auto py_tuple = item.cast<py::tuple>();
+            CHECK(py::len(py_tuple) >= 2);
+
+            py::str py_name = py_tuple[0];
+            py::type py_type = py_tuple[1];
+            const std::type_info* cpptype = cpptype_info_from_object(py_type);
+
+            port_ids.push_back(py_name.cast<std::string>());
+            if (cpptype != nullptr && srf::node::PortRegistry::has_port_util(*cpptype))
+            {
+                VLOG(2) << "Found Ingress builder";
+
+                port_type_indices.emplace_back(*cpptype);
+
+                auto port_util = srf::node::PortRegistry::find_port_util(*cpptype);
+                builder_fns.push_back(std::get<1>(port_util->m_egress_builders));
+            }
+            else
+            {
+                VLOG(2) << "Failed to find Ingress builder, defaulting to PyHolder";
+
+                port_type_indices.emplace_back(typeid(PyHolder));
+
+                auto port_util = srf::node::PortRegistry::find_port_util(typeid(PyHolder));
+                builder_fns.push_back(std::get<1>(port_util->m_egress_builders));
+            }
+        }
+        else
+        {
+            throw std::runtime_error("Bad port specification");
+        }
+    }
+
+    return {port_ids, port_type_indices, builder_fns};
+}
 
 Pipeline::Pipeline() : m_pipeline(srf::pipeline::make_pipeline()) {}
 
@@ -68,11 +167,11 @@ void Pipeline::make_segment(const std::string& name, const std::function<void(sr
 }
 
 void Pipeline::make_segment(const std::string& name,
-                            const std::vector<std::string>& ingress_port_ids,
-                            const std::vector<std::string>& egress_port_ids,
+                            py::list ingress_port_info,
+                            py::list egress_port_info,
                             const std::function<void(srf::segment::Builder&)>& init)
 {
-    if (ingress_port_ids.empty() && egress_port_ids.empty())
+    if (ingress_port_info.empty() && egress_port_info.empty())
     {
         return make_segment(name, init);
     }
@@ -82,272 +181,15 @@ void Pipeline::make_segment(const std::string& name,
         init(seg);
     };
 
-    if (!ingress_port_ids.empty() && !egress_port_ids.empty())
-    {
-        dynamic_port_config(name, ingress_port_ids, egress_port_ids, init_wrapper);
-    }
-    else if (!ingress_port_ids.empty())
-    {
-        dynamic_port_config_ingress(name, ingress_port_ids, init);
-    }
-    else
-    {
-        dynamic_port_config_egress(name, egress_port_ids, init);
-    }
-}
+    auto ingress_info = collect_ingress_info(ingress_port_info);
+    segment::IngressPortsBase ingress_ports(std::get<0>(ingress_info), std::get<2>(ingress_info));
+    node::PortRegistry::register_name_type_index_pairs(std::get<0>(ingress_info), std::get<1>(ingress_info));
 
-// Need to have all supported cases explicitly enumerated so python bindings work as expected.
-void Pipeline::dynamic_port_config(const std::string& name,
-                                   const std::vector<std::string>& ingress_port_ids,
-                                   const std::vector<std::string>& egress_port_ids,
-                                   const std::function<void(srf::segment::Builder&)>& init)
-{
-    if (ingress_port_ids.empty() || ingress_port_ids.size() > SRF_MAX_INGRESS_PORTS)
-    {
-        throw std::runtime_error("Maximum of 10 egress ports supported via python interface");
-    }
+    auto egress_info = collect_egress_info(egress_port_info);
+    segment::EgressPortsBase egress_ports(std::get<0>(egress_info), std::get<2>(egress_info));
+    node::PortRegistry::register_name_type_index_pairs(std::get<0>(egress_info), std::get<1>(egress_info));
 
-    if (ingress_port_ids.size() == 1)
-    {
-        auto ingress_ports = ::Pipeline__PortBuilder<1, segment::IngressPorts>::build(ingress_port_ids);
-        _dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
-    }
-    else if (ingress_port_ids.size() == 2)
-    {
-        auto ingress_ports = ::Pipeline__PortBuilder<2, segment::IngressPorts>::build(ingress_port_ids);
-        _dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
-    }
-    else if (ingress_port_ids.size() == 3)
-    {
-        auto ingress_ports = ::Pipeline__PortBuilder<3, segment::IngressPorts>::build(ingress_port_ids);
-        _dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
-    }
-    else if (ingress_port_ids.size() == 4)
-    {
-        auto ingress_ports = ::Pipeline__PortBuilder<4, segment::IngressPorts>::build(ingress_port_ids);
-        _dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
-    }
-    else if (ingress_port_ids.size() == 5)
-    {
-        auto ingress_ports = ::Pipeline__PortBuilder<5, segment::IngressPorts>::build(ingress_port_ids);
-        _dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
-    }
-    else if (ingress_port_ids.size() == 6)
-    {
-        auto ingress_ports = ::Pipeline__PortBuilder<6, segment::IngressPorts>::build(ingress_port_ids);
-        _dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
-    }
-    else if (ingress_port_ids.size() == 7)
-    {
-        auto ingress_ports = ::Pipeline__PortBuilder<7, segment::IngressPorts>::build(ingress_port_ids);
-        _dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
-    }
-    else if (ingress_port_ids.size() == 8)
-    {
-        auto ingress_ports = ::Pipeline__PortBuilder<8, segment::IngressPorts>::build(ingress_port_ids);
-        _dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
-    }
-    else if (ingress_port_ids.size() == 9)
-    {
-        auto ingress_ports = ::Pipeline__PortBuilder<9, segment::IngressPorts>::build(ingress_port_ids);
-        _dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
-    }
-    else if (ingress_port_ids.size() == 10)
-    {
-        auto ingress_ports = ::Pipeline__PortBuilder<10, segment::IngressPorts>::build(ingress_port_ids);
-        _dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
-    }
-}
-
-// Need to have all supported cases enumerated for python
-void Pipeline::dynamic_port_config_ingress(const std::string& name,
-                                           const std::vector<std::string>& ingress_port_ids,
-                                           const std::function<void(srf::segment::Builder&)>& init)
-{
-    if (ingress_port_ids.empty() || ingress_port_ids.size() > SRF_MAX_INGRESS_PORTS)
-    {
-        throw std::runtime_error("Maximum of 10 egress ports supported via python interface");
-    }
-
-    if (ingress_port_ids.size() == 1)
-    {
-        auto ingress_ports = ::Pipeline__PortBuilder<1, segment::IngressPorts>::build(ingress_port_ids);
-        m_pipeline->make_segment(name, ingress_ports, init);
-    }
-    else if (ingress_port_ids.size() == 2)
-    {
-        auto ingress_ports = ::Pipeline__PortBuilder<2, segment::IngressPorts>::build(ingress_port_ids);
-        m_pipeline->make_segment(name, ingress_ports, init);
-    }
-    else if (ingress_port_ids.size() == 3)
-    {
-        auto ingress_ports = ::Pipeline__PortBuilder<3, segment::IngressPorts>::build(ingress_port_ids);
-        m_pipeline->make_segment(name, ingress_ports, init);
-    }
-    else if (ingress_port_ids.size() == 4)
-    {
-        auto ingress_ports = ::Pipeline__PortBuilder<4, segment::IngressPorts>::build(ingress_port_ids);
-        m_pipeline->make_segment(name, ingress_ports, init);
-    }
-    else if (ingress_port_ids.size() == 5)
-    {
-        auto ingress_ports = ::Pipeline__PortBuilder<5, segment::IngressPorts>::build(ingress_port_ids);
-        m_pipeline->make_segment(name, ingress_ports, init);
-    }
-    else if (ingress_port_ids.size() == 6)
-    {
-        auto ingress_ports = ::Pipeline__PortBuilder<6, segment::IngressPorts>::build(ingress_port_ids);
-        m_pipeline->make_segment(name, ingress_ports, init);
-    }
-    else if (ingress_port_ids.size() == 7)
-    {
-        auto ingress_ports = ::Pipeline__PortBuilder<7, segment::IngressPorts>::build(ingress_port_ids);
-        m_pipeline->make_segment(name, ingress_ports, init);
-    }
-    else if (ingress_port_ids.size() == 8)
-    {
-        auto ingress_ports = ::Pipeline__PortBuilder<8, segment::IngressPorts>::build(ingress_port_ids);
-        m_pipeline->make_segment(name, ingress_ports, init);
-    }
-    else if (ingress_port_ids.size() == 9)
-    {
-        auto ingress_ports = ::Pipeline__PortBuilder<9, segment::IngressPorts>::build(ingress_port_ids);
-        m_pipeline->make_segment(name, ingress_ports, init);
-    }
-    else if (ingress_port_ids.size() == 10)
-    {
-        auto ingress_ports = ::Pipeline__PortBuilder<10, segment::IngressPorts>::build(ingress_port_ids);
-        m_pipeline->make_segment(name, ingress_ports, init);
-    }
-    else
-    {
-        throw std::runtime_error("Maximum of 10 ingress ports supported via python interface");
-    }
-}
-
-// Need to have all supported cases enumerated for python
-void Pipeline::dynamic_port_config_egress(const std::string& name,
-                                          const std::vector<std::string>& egress_port_ids,
-                                          const std::function<void(srf::segment::Builder&)>& init)
-{
-    if (egress_port_ids.empty() || egress_port_ids.size() > SRF_MAX_EGRESS_PORTS)
-    {
-        throw std::runtime_error("Maximum of 10 egress ports supported via python interface");
-    }
-
-    if (egress_port_ids.size() == 1)
-    {
-        auto egress_ports = ::Pipeline__PortBuilder<1, segment::EgressPorts>::build(egress_port_ids);
-        m_pipeline->make_segment(name, egress_ports, init);
-    }
-    else if (egress_port_ids.size() == 2)
-    {
-        auto egress_ports = ::Pipeline__PortBuilder<2, segment::EgressPorts>::build(egress_port_ids);
-        m_pipeline->make_segment(name, egress_ports, init);
-    }
-    else if (egress_port_ids.size() == 3)
-    {
-        auto egress_ports = ::Pipeline__PortBuilder<3, segment::EgressPorts>::build(egress_port_ids);
-        m_pipeline->make_segment(name, egress_ports, init);
-    }
-    else if (egress_port_ids.size() == 4)
-    {
-        auto egress_ports = ::Pipeline__PortBuilder<4, segment::EgressPorts>::build(egress_port_ids);
-        m_pipeline->make_segment(name, egress_ports, init);
-    }
-    else if (egress_port_ids.size() == 5)
-    {
-        auto egress_ports = ::Pipeline__PortBuilder<5, segment::EgressPorts>::build(egress_port_ids);
-        m_pipeline->make_segment(name, egress_ports, init);
-    }
-    else if (egress_port_ids.size() == 6)
-    {
-        auto egress_ports = ::Pipeline__PortBuilder<6, segment::EgressPorts>::build(egress_port_ids);
-        m_pipeline->make_segment(name, egress_ports, init);
-    }
-    else if (egress_port_ids.size() == 7)
-    {
-        auto egress_ports = ::Pipeline__PortBuilder<7, segment::EgressPorts>::build(egress_port_ids);
-        m_pipeline->make_segment(name, egress_ports, init);
-    }
-    else if (egress_port_ids.size() == 8)
-    {
-        auto egress_ports = ::Pipeline__PortBuilder<8, segment::EgressPorts>::build(egress_port_ids);
-        m_pipeline->make_segment(name, egress_ports, init);
-    }
-    else if (egress_port_ids.size() == 9)
-    {
-        auto egress_ports = ::Pipeline__PortBuilder<9, segment::EgressPorts>::build(egress_port_ids);
-        m_pipeline->make_segment(name, egress_ports, init);
-    }
-    else if (egress_port_ids.size() == 10)
-    {
-        auto egress_ports = ::Pipeline__PortBuilder<10, segment::EgressPorts>::build(egress_port_ids);
-        m_pipeline->make_segment(name, egress_ports, init);
-    }
-}
-
-template <typename... IngressPortTypesT>
-void Pipeline::_dynamic_port_config_egress(const std::string& name,
-                                           const segment::IngressPorts<IngressPortTypesT...>& ingress_ports,
-                                           const std::vector<std::string>& egress_port_ids,
-                                           const std::function<void(srf::segment::Builder&)>& init)
-{
-    if (egress_port_ids.empty() || egress_port_ids.size() > SRF_MAX_EGRESS_PORTS)
-    {
-        throw std::runtime_error("Maximum of 10 egress ports supported via python interface");
-    }
-
-    if (egress_port_ids.size() == 1)
-    {
-        auto egress_ports = ::Pipeline__PortBuilder<1, segment::EgressPorts>::build(egress_port_ids);
-        m_pipeline->template make_segment(name, ingress_ports, egress_ports, init);
-    }
-    else if (egress_port_ids.size() == 2)
-    {
-        auto egress_ports = ::Pipeline__PortBuilder<2, segment::EgressPorts>::build(egress_port_ids);
-        m_pipeline->template make_segment(name, ingress_ports, egress_ports, init);
-    }
-    else if (egress_port_ids.size() == 3)
-    {
-        auto egress_ports = ::Pipeline__PortBuilder<3, segment::EgressPorts>::build(egress_port_ids);
-        m_pipeline->template make_segment(name, ingress_ports, egress_ports, init);
-    }
-    else if (egress_port_ids.size() == 4)
-    {
-        auto egress_ports = ::Pipeline__PortBuilder<4, segment::EgressPorts>::build(egress_port_ids);
-        m_pipeline->template make_segment(name, ingress_ports, egress_ports, init);
-    }
-    else if (egress_port_ids.size() == 5)
-    {
-        auto egress_ports = ::Pipeline__PortBuilder<5, segment::EgressPorts>::build(egress_port_ids);
-        m_pipeline->template make_segment(name, ingress_ports, egress_ports, init);
-    }
-    else if (egress_port_ids.size() == 6)
-    {
-        auto egress_ports = ::Pipeline__PortBuilder<6, segment::EgressPorts>::build(egress_port_ids);
-        m_pipeline->template make_segment(name, ingress_ports, egress_ports, init);
-    }
-    else if (egress_port_ids.size() == 7)
-    {
-        auto egress_ports = ::Pipeline__PortBuilder<7, segment::EgressPorts>::build(egress_port_ids);
-        m_pipeline->template make_segment(name, ingress_ports, egress_ports, init);
-    }
-    else if (egress_port_ids.size() == 8)
-    {
-        auto egress_ports = ::Pipeline__PortBuilder<8, segment::EgressPorts>::build(egress_port_ids);
-        m_pipeline->template make_segment(name, ingress_ports, egress_ports, init);
-    }
-    else if (egress_port_ids.size() == 9)
-    {
-        auto egress_ports = ::Pipeline__PortBuilder<9, segment::EgressPorts>::build(egress_port_ids);
-        m_pipeline->template make_segment(name, ingress_ports, egress_ports, init);
-    }
-    else if (egress_port_ids.size() == 10)
-    {
-        auto egress_ports = ::Pipeline__PortBuilder<10, segment::EgressPorts>::build(egress_port_ids);
-        m_pipeline->template make_segment(name, ingress_ports, egress_ports, init);
-    }
+    m_pipeline->make_segment(name, ingress_ports, egress_ports, init_wrapper);
 }
 
 std::unique_ptr<srf::pipeline::Pipeline> Pipeline::swap()

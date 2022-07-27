@@ -185,6 +185,12 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_ingress(
     srf::segment::Builder& self,
     const std::string& name)
 {
+    auto it_caster= node::PortRegistry::s_port_to_type_index.find(name);
+    if (it_caster != node::PortRegistry::s_port_to_type_index.end()) {
+        VLOG(2) << "Found an ingress port caster for " << name;
+
+        return self.get_ingress_dynamic(name, it_caster->second);
+    }
     return self.get_ingress<PyHolder>(name);
 }
 
@@ -192,7 +198,14 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_egress(
     srf::segment::Builder& self,
     const std::string& name)
 {
-   return self.get_egress<PyHolder>(name);
+    auto it_caster = node::PortRegistry::s_port_to_type_index.find(name);
+    if (it_caster != node::PortRegistry::s_port_to_type_index.end()) {
+        VLOG(2) << "Found an egress port caster for " << name;
+
+        return self.get_egress_dynamic(name, it_caster->second);
+    }
+
+    return self.get_egress<PyHolder>(name);
 }
 
 std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node(

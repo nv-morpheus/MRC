@@ -18,6 +18,7 @@
 #pragma once
 
 #include "pysrf/edge_adapter.hpp"
+#include "pysrf/port_builders.hpp"
 #include "pysrf/types.hpp"  // IWYU pragma: keep
 #include "pysrf/utils.hpp"
 
@@ -173,7 +174,8 @@ namespace pysrf {
 
 template <typename InputT, typename ContextT = srf::runnable::Context>
 class PythonSink : public node::RxSink<InputT, ContextT>,
-                   public pysrf::AutoRegSinkAdapter<InputT>
+                   public pysrf::AutoRegSinkAdapter<InputT>,
+                   public pysrf::AutoRegEgressPort<InputT>
 {
     using base_t = node::RxSink<InputT>;
 
@@ -186,7 +188,9 @@ class PythonSink : public node::RxSink<InputT, ContextT>,
 template <typename InputT, typename OutputT, typename ContextT = srf::runnable::Context>
 class PythonNode : public node::RxNode<InputT, OutputT, ContextT>,
                    public pysrf::AutoRegSourceAdapter<OutputT>,
-                   public pysrf::AutoRegSinkAdapter<InputT>
+                   public pysrf::AutoRegSinkAdapter<InputT>,
+                   public pysrf::AutoRegIngressPort<OutputT>,
+                   public pysrf::AutoRegEgressPort<InputT>
 {
     using base_t = node::RxNode<InputT, OutputT>;
 
@@ -228,7 +232,8 @@ class PythonNode : public node::RxNode<InputT, OutputT, ContextT>,
 
 template <typename OutputT, typename ContextT = srf::runnable::Context>
 class PythonSource : public node::RxSource<OutputT, ContextT>,
-                     public pysrf::AutoRegSourceAdapter<OutputT>
+                     public pysrf::AutoRegSourceAdapter<OutputT>,
+                     public pysrf::AutoRegIngressPort<OutputT>
 {
     using base_t = node::RxSource<OutputT>;
 

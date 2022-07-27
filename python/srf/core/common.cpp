@@ -15,6 +15,11 @@
  * limitations under the License.
  */
 
+#include "pysrf/edge_adapter.hpp"
+#include "pysrf/port_builders.hpp"
+
+#include "srf/node/edge_adapter_registry.hpp"
+
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
@@ -33,6 +38,13 @@ PYBIND11_MODULE(common, m)
            :toctree: _generate
     )pbdoc";
 
+    node::EdgeAdapterRegistry::register_source_adapter(typeid(PyHolder),
+                                                       EdgeAdapterUtil::build_source_adapter<PyHolder>());
+
+    node::EdgeAdapterRegistry::register_sink_adapter(typeid(PyHolder),
+                                                     EdgeAdapterUtil::build_sink_adapter<PyHolder>());
+
+    PortUtilBuilder::register_port_util<PyHolder>();
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
 #else

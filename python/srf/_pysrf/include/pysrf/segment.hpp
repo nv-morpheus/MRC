@@ -104,6 +104,40 @@ auto wrap_segment_init_callback(
     return func;
 }
 
+/**
+ * @brief
+ * @tparam ClassT
+ * @tparam ArgsT
+ * @param method
+ * @return
+ */
+template <typename ClassT, typename... ArgsT>
+auto wrap_segment_init_callback(
+    void (ClassT::*method)(const std::string&,
+                           pybind11::list,
+                           pybind11::list,
+                           const std::function<void(srf::segment::Builder&, ArgsT... args)>&))
+{
+    // Build up the function we're going to return, the signature on this function is what forces python to give us
+    //  a pointer.
+    auto func = [method](ClassT* self,
+                         const std::string& name,
+                         pybind11::list ingress_port_ids,
+                         pybind11::list egress_port_ids,
+                         const std::function<void(srf::segment::Builder*, ArgsT...)>& f_to_wrap) {
+        auto f_wrapped = [f_to_wrap](srf::segment::Builder& t, ArgsT... args) {
+            f_to_wrap(&t, std::forward<ArgsT>(args)...);
+        };
+
+        return (self->*method)(std::forward<const std::string&>(name),
+                               std::forward<pybind11::list>(ingress_port_ids),
+                               std::forward<pybind11::list>(egress_port_ids),
+                               std::forward<decltype(f_wrapped)>(f_wrapped));
+    };
+
+    return func;
+}
+
 class SegmentProxy
 {
   public:

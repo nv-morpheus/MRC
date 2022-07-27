@@ -63,7 +63,18 @@ void from_import_as(py::module_& dest, const std::string& from, const std::strin
     dest.attr(as.c_str()) = py::module_::import(from.c_str()).attr(import.c_str());
 }
 
-py::object cast_from_json(const json& source)
+const std::type_info* cpptype_info_from_object(py::object& obj)
+{
+    py::detail::type_info* tinfo = py::detail::get_type_info((PyTypeObject*)obj.ptr());
+    if (tinfo != nullptr)
+    {
+        return tinfo->cpptype;
+    }
+
+    return nullptr;
+}
+
+    py::object cast_from_json(const json& source)
 {
     if (source.is_null())
     {

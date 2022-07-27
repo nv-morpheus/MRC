@@ -20,9 +20,9 @@
 
 # import numpy as np
 # import pytest
-import pytest
-import srf
 
+import srf
+import srf.tests.test_edges_cpp as m
 
 # from srf.core.options import PlacementStrategy
 
@@ -283,7 +283,7 @@ explciitly defined, we check all of them.
 
 
 def test_dynamic_port_creation_good():
-    def init(seg):
+    def init(builder):
         pass
 
     ingress = [f"{chr(i)}" for i in range(65, 76)]
@@ -294,6 +294,38 @@ def test_dynamic_port_creation_good():
             pipe = srf.Pipeline()
             pipe.make_segment("DynamicPortTestSegment", ingress[0:i], egress[0:j], init)
 
+def test_ingress_egress_list_based_construction():
+    def gen_data():
+        yield 1
+        yield 2
+        yield 3
+
+    def init1(builder: srf.Builder):
+        source = builder.make_source("source", gen_data)
+        egress = builder.get_egress("b")
+
+        builder.make_edge(source, egress)
+
+    def init2(builder: srf.Builder):
+        def on_next(input):
+            pass
+
+        def on_error():
+            pass
+
+        def on_complete():
+            pass
+
+        ingress = builder.get_ingress("b")
+        sink = builder.make_sink("sink", on_next, on_error, on_complete)
+
+        builder.make_edge(ingress, sink)
+
+    pipe = srf.Pipeline()
+
+    pipe.make_segment("TestSegment1", [("c", m.DerivedA)], [("d", m.DerivedA)], init1)
+    pipe.make_segment("TestSegment2", [("a", m.DerivedB)], [("b", m.DerivedB)], init2)
+    pipe.make_segment("TestSegment3", [("e", m.Base)], [("f", m.Base)], init1)
 
 def test_dynamic_port_get_ingress_egress():
     def gen_data():
@@ -309,7 +341,6 @@ def test_dynamic_port_get_ingress_egress():
 
     def init2(builder: srf.Builder):
         def on_next(input):
-            print(f"Got input {input}")
             pass
 
         def on_error():
@@ -376,8 +407,4 @@ if (__name__ in ("__main__",)):
     test_dynamic_port_creation_good()
     test_dynamic_port_creation_bad()
     test_dynamic_port_get_ingress_egress()
-#     test_homogenous_string_usage()
-#     test_cxx_string_source_to_python_chain()
-#     test_heterogenous_string_usage()
-#     test_heterogenous_double_pipeline()
-#     test_list_flatten_test()
+    test_ingress_egress_list_based_construction()

@@ -28,6 +28,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <typeinfo>
 #include <utility>
 
 // IWYU pragma: no_include <object.h>
@@ -51,6 +52,15 @@ void from_import(pybind11::module_& dest, const std::string& mod, const std::str
 
 // Imitates `from {mod} import {attr} as {name}` syntax
 void from_import_as(pybind11::module_& dest, const std::string& from, const std::string& import, const std::string& as);
+
+/**
+ * @brief Given a pybind11 object, attempt to extract its underlying cpp std::type_info* --
+ *  if the wrapped type is something that was registered via pybind, ex: py::class_<...>(...), the return value
+ *  will be non-null;
+ * @param obj : pybind11 object
+ * @return pointer to std::type_info object, or nullptr if none exists.
+ */
+const std::type_info* cpptype_info_from_object(pybind11::object& obj);
 
 /**
  * @brief Wraps a `pybind11::gil_scoped_acquire` with additional functionality to release the GIL before this object

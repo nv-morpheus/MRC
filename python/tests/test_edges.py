@@ -232,9 +232,9 @@ def test_multi_segment():
     pipeline = srf.Pipeline()
 
     # Create a segment
-    pipeline.make_segment("segment_source", [], ["port1"], segment_source)
+    pipeline.make_segment("segment_source", [], [("port1", m.DerivedB)], segment_source)
 
-    pipeline.make_segment("segment_sink", ["port1"], [], segment_sink)
+    pipeline.make_segment("segment_sink", [("port1", m.DerivedB)], [], segment_sink)
 
     # Build executor options
     options = srf.Options()
@@ -260,3 +260,4 @@ if (__name__ == "__main__"):
     test_edge_cpp_to_py_same()
     test_edge_py_to_cpp_same()
     test_edge_wrapper()
+    test_multi_segment()

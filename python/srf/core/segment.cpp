@@ -86,7 +86,6 @@ PYBIND11_MODULE(segment, m)
     node::EdgeConnector<std::string, PyHolder>::register_converter();
     node::EdgeConnector<PyHolder, std::string>::register_converter();
 
-
     auto Definition = py::class_<srf::segment::Definition>(m, "Definition");
     auto Builder    = py::class_<srf::segment::Builder>(m, "Builder");
 

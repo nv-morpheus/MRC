@@ -21,6 +21,7 @@
 #include "srf/engine/segment/ibuilder.hpp"
 #include "srf/exceptions/runtime_error.hpp"
 #include "srf/node/edge_builder.hpp"
+#include "srf/node/port_registry.hpp"
 #include "srf/node/rx_node.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
@@ -94,6 +95,9 @@ class Builder final
   public:
     DELETE_COPYABILITY(Builder);
     DELETE_MOVEABILITY(Builder);
+
+    std::shared_ptr<ObjectProperties> get_ingress_dynamic(std::string name, std::type_index type_index);
+    std::shared_ptr<ObjectProperties> get_egress_dynamic(std::string name, std::type_index type_index);
 
     template <typename T>
     std::shared_ptr<Object<node::SinkProperties<T>>> get_egress(std::string name);
@@ -260,13 +264,13 @@ std::shared_ptr<Object<node::SinkProperties<T>>> Builder::get_egress(std::string
     auto base = m_backend.get_egress_base(name);
     if (!base)
     {
-        throw exceptions::SrfRuntimeError("egress port name not found: " + name);
+        throw exceptions::SrfRuntimeError("Egress port name not found: " + name);
     }
 
-    auto port = std::dynamic_pointer_cast<EgressPort<T>>(base);
+    auto port = std::dynamic_pointer_cast<Object<node::SinkProperties<T>>>(base);
     if (port == nullptr)
     {
-        throw exceptions::SrfRuntimeError("egress port type mismatch: " + name);
+        throw exceptions::SrfRuntimeError("Egress port type mismatch: " + name);
     }
 
     return port;
@@ -278,13 +282,13 @@ std::shared_ptr<Object<node::SourceProperties<T>>> Builder::get_ingress(std::str
     auto base = m_backend.get_ingress_base(name);
     if (!base)
     {
-        throw exceptions::SrfRuntimeError("ingress port name not found: " + name);
+        throw exceptions::SrfRuntimeError("Ingress port name not found: " + name);
     }
 
-    auto port = std::dynamic_pointer_cast<IngressPort<T>>(base);
+    auto port = std::dynamic_pointer_cast<Object<node::SourceProperties<T>>>(base);
     if (port == nullptr)
     {
-        throw exceptions::SrfRuntimeError("ingress port type mismatch: " + name);
+        throw exceptions::SrfRuntimeError("Ingress port type mismatch: " + name);
     }
 
     return port;

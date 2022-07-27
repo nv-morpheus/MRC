@@ -45,8 +45,6 @@ PYBIND11_MODULE(pipeline, m)
     pysrf::import(m, "srf.core.common");
     pysrf::import(m, "srf.core.segment");
 
-    m.attr("SRF_MAX_INGRESS_PORTS") = SRF_MAX_INGRESS_PORTS;
-    m.attr("SRF_MAX_EGRESS_PORTS") = SRF_MAX_EGRESS_PORTS;
     py::class_<Pipeline>(m, "Pipeline")
         .def(py::init<>())
         .def(
@@ -57,8 +55,8 @@ PYBIND11_MODULE(pipeline, m)
         .def("make_segment",
              wrap_segment_init_callback(
                  static_cast<void (Pipeline::*)(const std::string&,
-                                                const std::vector<std::string>&,
-                                                const std::vector<std::string>&,
+                                                py::list,
+                                                py::list,
                                                 const std::function<void(srf::segment::Builder&)>&)>(
                      &Pipeline::make_segment)));
 
