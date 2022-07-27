@@ -340,9 +340,10 @@ def test_ingress_egress_custom_type_construction():
 
     pipe = srf.Pipeline()
 
-    pipe.make_segment("TestSegment1", [("c", m.DerivedA)], [("d", m.DerivedA)], init1)
-    pipe.make_segment("TestSegment2", [("a", m.DerivedB)], [("b", m.DerivedB)], init2)
-    pipe.make_segment("TestSegment3", [("e", m.Base)], [("f", m.Base)], init1)
+    # Create segments with various combinations of type and untyped ports
+    pipe.make_segment("TestSegment1", [("c", m.DerivedA), "c21", ("c31", int, False), "c41"], ["d11", ("d", m.DerivedA)], init1)
+    pipe.make_segment("TestSegment2", [("a", m.DerivedB), "a22", "e32"], [("b21", dict, False), "b22", ("b", m.DerivedB)], init2)
+    pipe.make_segment("TestSegment3", [("e", m.Base), ("e23", list, False), "e33"], ["f11", ("f", m.Base), "f13"], init1)
 
 def test_dynamic_port_get_ingress_egress():
     def gen_data():
