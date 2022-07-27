@@ -87,7 +87,7 @@ ingress_info_t collect_ingress_info(py::list ids)
                 port_type_indices.emplace_back(typeid(PyHolder));
 
                 auto port_util = srf::node::PortRegistry::find_port_util(typeid(PyHolder));
-                builder_fns.push_back(std::get<1>(port_util->m_ingress_builders));
+                builder_fns.push_back(std::get<0>(port_util->m_ingress_builders));
             }
         }
         else
@@ -142,7 +142,7 @@ egress_info_t collect_egress_info(py::list ids)
                 port_type_indices.emplace_back(typeid(PyHolder));
 
                 auto port_util = srf::node::PortRegistry::find_port_util(typeid(PyHolder));
-                builder_fns.push_back(std::get<1>(port_util->m_egress_builders));
+                builder_fns.push_back(std::get<0>(port_util->m_egress_builders));
             }
         }
         else

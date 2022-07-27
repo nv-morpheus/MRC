@@ -261,11 +261,6 @@ import srf.tests.test_edges_cpp as m
 #     for actual in TRACING_DICT["inputs"]:
 #         assert (np.isclose(actual, 34.002060877715685))
 
-def test_srf_pipeline_limits():
-    assert (srf.core.pipeline.SRF_MAX_INGRESS_PORTS == 10)
-    assert (srf.core.pipeline.SRF_MAX_EGRESS_PORTS == 10)
-
-
 def test_pipeline_creation_noports():
     def init(seg):
         pass
@@ -403,7 +398,6 @@ def test_dynamic_port_creation_bad():
 
 
 if (__name__ in ("__main__",)):
-    test_srf_pipeline_limits()
     test_dynamic_port_creation_good()
     test_dynamic_port_creation_bad()
     test_dynamic_port_get_ingress_egress()

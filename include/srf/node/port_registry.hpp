@@ -54,6 +54,14 @@ struct PortUtil
         m_port_data_type(type_index) {}
 
     std::shared_ptr<segment::ObjectProperties> try_cast_ingress_base_to_object(std::shared_ptr<segment::IngressPortBase> base) {
+        if (std::get<0>(m_ingress_casters) != nullptr) {
+            auto obj = std::get<0>(m_ingress_casters)(base);
+
+            if (obj != nullptr) {
+                return obj;
+            }
+        }
+
         if (std::get<1>(m_ingress_casters) != nullptr) {
             return std::get<1>(m_ingress_casters)(base);
         }
@@ -62,6 +70,14 @@ struct PortUtil
     }
 
     std::shared_ptr<segment::ObjectProperties> try_cast_egress_base_to_object(std::shared_ptr<segment::EgressPortBase> base) {
+        if (std::get<0>(m_egress_casters) != nullptr) {
+            auto obj = std::get<0>(m_egress_casters)(base);
+
+            if (obj != nullptr) {
+                return obj;
+            }
+        }
+
         if (std::get<1>(m_egress_casters) != nullptr) {
             return std::get<1>(m_egress_casters)(base);
         }
