@@ -58,7 +58,7 @@ ingress_info_t collect_ingress_info(py::list ids)
             port_ids.push_back(item.cast<std::string>());
             port_type_indices.emplace_back(typeid(PyHolder));
 
-            auto port_util = srf::node::PortRegistry::find_port_util(typeid(PyHolder));
+            auto port_util = PortRegistry::find_port_util(typeid(PyHolder));
             builder_fns.push_back(std::get<0>(port_util->m_ingress_builders));
         }
         else if (item.get_type().equal(py::tuple().get_type()))
@@ -66,29 +66,24 @@ ingress_info_t collect_ingress_info(py::list ids)
             auto py_tuple = item.cast<py::tuple>();
             CHECK(py::len(py_tuple) >= 2);
 
-            py::str py_name = py_tuple[0];
-            py::type py_type = py_tuple[1];
+            // Unpack tuple parameters, must be (name, type, [flag_sp_variant])
+            py::str py_name   = py_tuple[0];
+            py::type py_type  = py_tuple[1];
+            py::bool_ py_bool = (py::len(py_tuple) > 2) ? py_tuple[2] : py::bool_(true);
+
+            bool flag_sp_variant          = py::cast<bool>(py_bool);
             const std::type_info* cpptype = cpptype_info_from_object(py_type);
 
+            bool builder_exists = (cpptype != nullptr && PortRegistry::has_port_util(*cpptype));
+            std::type_index type_index = builder_exists ? *cpptype : typeid(PyHolder);
+
+            auto port_util = PortRegistry::find_port_util(type_index);
+            auto builder_fn =
+                flag_sp_variant ? std::get<1>(port_util->m_ingress_builders) : std::get<0>(port_util->m_ingress_builders);
+
             port_ids.push_back(py_name.cast<std::string>());
-            if (cpptype != nullptr && srf::node::PortRegistry::has_port_util(*cpptype))
-            {
-                VLOG(2) << "Found Ingress builder";
-
-                port_type_indices.emplace_back(*cpptype);
-
-                auto port_util = srf::node::PortRegistry::find_port_util(*cpptype);
-                builder_fns.push_back(std::get<1>(port_util->m_ingress_builders));
-            }
-            else
-            {
-                VLOG(2) << "Failed to find Ingress builder, defaulting to PyHolder";
-
-                port_type_indices.emplace_back(typeid(PyHolder));
-
-                auto port_util = srf::node::PortRegistry::find_port_util(typeid(PyHolder));
-                builder_fns.push_back(std::get<0>(port_util->m_ingress_builders));
-            }
+            port_type_indices.emplace_back(type_index);
+            builder_fns.push_back(builder_fn);
         }
         else
         {
@@ -113,7 +108,7 @@ egress_info_t collect_egress_info(py::list ids)
             port_ids.push_back(item.cast<std::string>());
             port_type_indices.emplace_back(typeid(PyHolder));
 
-            auto port_util = srf::node::PortRegistry::find_port_util(typeid(PyHolder));
+            auto port_util = PortRegistry::find_port_util(typeid(PyHolder));
             builder_fns.push_back(std::get<0>(port_util->m_egress_builders));
         }
         else if (item.get_type().equal(py::tuple().get_type()))
@@ -121,29 +116,24 @@ egress_info_t collect_egress_info(py::list ids)
             auto py_tuple = item.cast<py::tuple>();
             CHECK(py::len(py_tuple) >= 2);
 
-            py::str py_name = py_tuple[0];
-            py::type py_type = py_tuple[1];
+            // Unpack tuple parameters, must be (name, type, [flag_sp_variant])
+            py::str py_name   = py_tuple[0];
+            py::type py_type  = py_tuple[1];
+            py::bool_ py_bool = (py::len(py_tuple) > 2) ? py_tuple[2] : py::bool_(true);
+
+            bool flag_sp_variant          = py::cast<bool>(py_bool);
             const std::type_info* cpptype = cpptype_info_from_object(py_type);
 
+            bool builder_exists = (cpptype != nullptr && PortRegistry::has_port_util(*cpptype));
+            std::type_index type_index = builder_exists ? *cpptype : typeid(PyHolder);
+
+            auto port_util = PortRegistry::find_port_util(type_index);
+            auto builder_fn =
+                flag_sp_variant ? std::get<1>(port_util->m_egress_builders) : std::get<0>(port_util->m_egress_builders);
+
             port_ids.push_back(py_name.cast<std::string>());
-            if (cpptype != nullptr && srf::node::PortRegistry::has_port_util(*cpptype))
-            {
-                VLOG(2) << "Found Ingress builder";
-
-                port_type_indices.emplace_back(*cpptype);
-
-                auto port_util = srf::node::PortRegistry::find_port_util(*cpptype);
-                builder_fns.push_back(std::get<1>(port_util->m_egress_builders));
-            }
-            else
-            {
-                VLOG(2) << "Failed to find Ingress builder, defaulting to PyHolder";
-
-                port_type_indices.emplace_back(typeid(PyHolder));
-
-                auto port_util = srf::node::PortRegistry::find_port_util(typeid(PyHolder));
-                builder_fns.push_back(std::get<0>(port_util->m_egress_builders));
-            }
+            port_type_indices.emplace_back(type_index);
+            builder_fns.push_back(builder_fn);
         }
         else
         {

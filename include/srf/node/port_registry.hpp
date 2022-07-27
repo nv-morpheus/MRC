@@ -110,7 +110,6 @@ struct PortRegistry
 
     static std::map<std::type_index, std::shared_ptr<PortUtil>> s_registered_port_utils;
 
-    // TODO(Devin) This should probably live somewhere else, but has to be accessible to Builder.
     static std::map<std::string, std::type_index> s_port_to_type_index;
 
     static std::recursive_mutex s_mutex;
