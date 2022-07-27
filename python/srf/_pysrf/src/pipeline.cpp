@@ -55,6 +55,7 @@ ingress_info_t collect_ingress_info(py::list ids)
     {
         if (item.get_type().equal(py::str().get_type()))
         {
+            VLOG(2) << "Ingress type unspecified, using PyHolder default";
             port_ids.push_back(item.cast<std::string>());
             port_type_indices.emplace_back(typeid(PyHolder));
 
@@ -65,8 +66,8 @@ ingress_info_t collect_ingress_info(py::list ids)
         {
             auto py_tuple = item.cast<py::tuple>();
             CHECK(py::len(py_tuple) >= 2);
+            VLOG(2) << "Ingress type was specified, looking for registered builders.";
 
-            // Unpack tuple parameters, must be (name, type, [flag_sp_variant])
             py::str py_name   = py_tuple[0];
             py::type py_type  = py_tuple[1];
             py::bool_ py_bool = (py::len(py_tuple) > 2) ? py_tuple[2] : py::bool_(true);
@@ -105,6 +106,7 @@ egress_info_t collect_egress_info(py::list ids)
     {
         if (item.get_type().equal(py::str().get_type()))
         {
+            VLOG(2) << "Egress type unspecified, using PyHolder default";
             port_ids.push_back(item.cast<std::string>());
             port_type_indices.emplace_back(typeid(PyHolder));
 
@@ -115,6 +117,7 @@ egress_info_t collect_egress_info(py::list ids)
         {
             auto py_tuple = item.cast<py::tuple>();
             CHECK(py::len(py_tuple) >= 2);
+            VLOG(2) << "Egress type was specified, looking for registered builders.";
 
             // Unpack tuple parameters, must be (name, type, [flag_sp_variant])
             py::str py_name   = py_tuple[0];

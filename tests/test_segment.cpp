@@ -117,6 +117,30 @@ TEST_F(SegmentTests, InitializeSegmentIngressEgressFromDefinition)
     */
 }
 
+TEST_F(SegmentTests, PortsConstructorBadNameBuilderSizeMismatch)
+{
+    using port_type_t = segment::Ports<segment::IngressPortBase>;
+
+    std::vector<std::string> port_names{"a", "b", "c"};
+    std::vector<port_type_t::port_builder_fn_t> port_builder_fns{};
+
+    EXPECT_THROW(port_type_t BadPorts(port_names, port_builder_fns), exceptions::SrfRuntimeError);
+}
+
+TEST_F(SegmentTests, PortsConstructorBadDuplicateName)
+{
+    using port_type_t = segment::Ports<segment::IngressPortBase>;
+
+    auto port_builder = [](const SegmentAddress& address, const PortName& name) -> std::shared_ptr<segment::IngressPortBase> {
+      return std::make_shared<segment::IngressPort<int>>(address, name);
+    };
+
+    std::vector<std::string> port_names{"a", "b", "a"};
+    std::vector<port_type_t::port_builder_fn_t> port_builder_fns{port_builder, port_builder, port_builder};
+
+    EXPECT_THROW(port_type_t BadPorts(port_names, port_builder_fns), exceptions::SrfRuntimeError);
+}
+
 TEST_F(SegmentTests, UserLambdaIsCalled)
 {
     GTEST_SKIP() << "Skipping until issue #59 is resolved";

@@ -172,6 +172,48 @@ TEST_F(TestPipeline, DynamicPortConstructionGood)
     }
 }
 
+TEST_F(TestPipeline, DynamicPortConstructionBadDuplicatePorts)
+{
+    pysrf::PortUtilBuilder::register_port_util<pysrf::PyHolder>();
+
+    std::string name                                 = "xyz";
+    std::function<void(srf::segment::Builder&)> init = [](srf::segment::Builder& builder) {
+        std::cerr << "Builder called" << std::endl;
+    };
+
+    std::vector<std::vector<std::string>> ingress_id_vec;
+    std::vector<std::vector<std::string>> egress_id_vec;
+
+    for (int i = 0; i <= 5; ++i)
+    {
+        std::vector<std::string> isubvec;
+        for (int j = 0; j <= i; ++j)
+        {
+            std::stringstream sstream;
+            sstream << "i" << i << j;
+            isubvec.push_back(sstream.str());
+        }
+        ingress_id_vec.push_back(isubvec);
+    }
+
+    for (int i = 0; i <= 5; ++i)
+    {
+        std::vector<std::string> esubvec;
+        for (int j = 0; j <= i; ++j)
+        {
+            std::stringstream sstream;
+            sstream << "e" << i << j;
+            esubvec.push_back(sstream.str());
+        }
+        egress_id_vec.push_back(esubvec);
+    }
+
+    pysrf::Pipeline pipe;
+    EXPECT_THROW(pipe.make_segment(name, py::cast(ingress_id_vec), py::list(), init), std::runtime_error);
+    EXPECT_THROW(pipe.make_segment(name, py::list(), py::cast(egress_id_vec), init), std::runtime_error);
+    EXPECT_THROW(pipe.make_segment(name, py::cast(ingress_id_vec), py::cast(egress_id_vec), init), std::runtime_error);
+}
+
 TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
 {
     const std::size_t object_count{10};
