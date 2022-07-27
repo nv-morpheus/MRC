@@ -19,10 +19,11 @@
 
 #include "internal/data_plane/client.hpp"
 #include "internal/data_plane/server.hpp"
+#include "internal/resources/forward.hpp"
+#include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
-#include "internal/ucx/context.hpp"
 
-#include "srf/runnable/launch_control.hpp"
+#include "srf/protos/codable.pb.h"
 
 #include <memory>
 
@@ -32,29 +33,31 @@ namespace srf::internal::data_plane {
  * @brief ArchitectResources hold and is responsible for constructing any object that depending the UCX data plane
  *
  */
-class Instance final : public Service
+class Resources final : private Service, private resources::PartitionResourceBase
 {
   public:
-    Instance(std::shared_ptr<resources::PartitionResources> resources);
-    ~Instance() final;
+    Resources(resources::PartitionResourceBase& base, ucx::Resources& ucx, memory::HostResources& host);
+    ~Resources() final;
 
-    Client& client() const;
-    Server& server() const;
+    Client& client();
+
+    std::string ucx_address() const;
+    const ucx::RegistrationCache& registration_cache() const;
 
   private:
-    Service& client_service();
-    Service& server_service();
-
     void do_service_start() final;
     void do_service_await_live() final;
     void do_service_stop() final;
     void do_service_kill() final;
     void do_service_await_join() final;
 
-    std::shared_ptr<resources::PartitionResources> m_resources;
-    std::shared_ptr<ucx::Context> m_context;
-    std::unique_ptr<Client> m_client;
-    std::unique_ptr<Server> m_server;
+    ucx::Resources& m_ucx;
+    memory::HostResources& m_host;
+
+    Server m_server;
+    Client m_client;
+
+    friend network::Resources;
 };
 
 }  // namespace srf::internal::data_plane

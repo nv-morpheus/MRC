@@ -17,12 +17,14 @@
 
 #pragma once
 
+#include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/service.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/context.hpp"
+#include "internal/ucx/registration_cache.hpp"
 #include "internal/ucx/worker.hpp"
 
 #include "srf/channel/status.hpp"
@@ -65,12 +67,22 @@
 
 namespace srf::internal::data_plane {
 
+namespace detail {
+struct PrePostedRecvInfo
+{
+    ucp_worker_h worker;
+    node::SourceChannelWriteable<ucp_tag_t>* channel;
+    void* request;
+    // std::array<std::byte, 2048> buffer;
+};
+}  // namespace detail
+
 using network_event_t = std::pair<PortAddress, srf::memory::buffer_view>;
 
 class Server final : public Service, public resources::PartitionResourceBase
 {
   public:
-    Server(resources::PartitionResourceBase& provider, std::shared_ptr<ucx::Worker> worker);
+    Server(resources::PartitionResourceBase& provider, ucx::Resources& ucx, memory::HostResources& host);
     ~Server() final;
 
     ucx::WorkerAddress worker_address() const;
@@ -84,8 +96,11 @@ class Server final : public Service, public resources::PartitionResourceBase
     void do_service_kill() final;
     void do_service_await_join() final;
 
-    // host resources
+    const std::size_t m_pre_posted_recv_count{16};
 
+    // ucx resources
+    ucx::Resources& m_ucx;
+    memory::HostResources& m_host;
 
     // deserialization nodes will connect to this source wtih their port id
     // the source for this router is the private GenericSoruce of this object
@@ -95,13 +110,11 @@ class Server final : public Service, public resources::PartitionResourceBase
     // data will be emitted on this source as a conditional branch of data source
     std::unique_ptr<node::SourceChannelWriteable<ucp_tag_t>> m_rd_source;
 
-    // ucx worker
-    Handle<ucx::Worker> m_worker;
+    // pre-posted recv state
+    std::vector<detail::PrePostedRecvInfo> m_pre_posted_recv_info;
 
     // runner for the ucx progress engine event source
     std::unique_ptr<srf::runnable::Runner> m_progress_engine;
-
-    // host resources - probably should be
 };
 
 }  // namespace srf::internal::data_plane

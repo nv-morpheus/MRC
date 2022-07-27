@@ -17,17 +17,37 @@
 set -e
 
 source ${WORKSPACE}/ci/scripts/jenkins/common.sh
+export IWYU_DIR="${WORKSPACE_TMP}/iwyu"
 
-rm -rf ${SRF_ROOT}/.cache/ ${SRF_ROOT}/build/
+rm -rf ${SRF_ROOT}/.cache/ ${SRF_ROOT}/build/ ${IWYU_DIR}
 
 fetch_base_branch
 
 gpuci_logger "Creating conda env"
 mamba env create -n srf -q --file ${CONDA_ENV_YML}
+
+gpuci_logger "Installing Clang"
+mamba env update -q -n srf --file ${SRF_ROOT}/ci/conda/environments/clang_env.yml
+
 conda deactivate
 conda activate srf
 
 show_conda_info
+
+gpuci_logger "Installing IWYU"
+git clone https://github.com/include-what-you-use/include-what-you-use.git ${IWYU_DIR}
+pushd ${IWYU_DIR}
+git checkout clang_12
+cmake -G Ninja \
+    -DCMAKE_PREFIX_PATH=$(llvm-config --cmakedir) \
+    -DCMAKE_C_COMPILER=$(which clang) \
+    -DCMAKE_CXX_COMPILER=$(which clang++) \
+    -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX} \
+    .
+
+cmake --build . --parallel ${PARALLEL_LEVEL} --target install
+
+popd
 
 gpuci_logger "Configuring CMake"
 cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} .

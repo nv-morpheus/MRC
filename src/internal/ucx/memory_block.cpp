@@ -17,9 +17,11 @@
 
 #include "internal/ucx/memory_block.hpp"
 
-namespace srf::internal::memory {}
-srf::internal::ucx::MemoryBlock::MemoryBlock(void* data, std::size_t bytes) : memory::MemoryBlock(data, bytes) {}
-srf::internal::ucx::MemoryBlock::MemoryBlock(
+namespace srf::internal::ucx {
+
+MemoryBlock::MemoryBlock(void* data, std::size_t bytes) : memory::MemoryBlock(data, bytes) {}
+
+MemoryBlock::MemoryBlock(
     void* data, std::size_t bytes, ucp_mem_h local_handle, void* remote_handle, std::size_t remote_handle_size) :
   memory::MemoryBlock(data, bytes),
   m_local_handle(local_handle),
@@ -32,10 +34,11 @@ srf::internal::ucx::MemoryBlock::MemoryBlock(
         CHECK(m_remote_handle && m_remote_handle_size);
     }
 }
-srf::internal::ucx::MemoryBlock::MemoryBlock(const MemoryBlock& block,
-                                             ucp_mem_h local_handle,
-                                             void* remote_handle,
-                                             std::size_t remote_handle_size) :
+
+MemoryBlock::MemoryBlock(const MemoryBlock& block,
+                         ucp_mem_h local_handle,
+                         void* remote_handle,
+                         std::size_t remote_handle_size) :
   memory::MemoryBlock(block),
   m_local_handle(local_handle),
   m_remote_handle(remote_handle),
@@ -46,15 +49,28 @@ srf::internal::ucx::MemoryBlock::MemoryBlock(const MemoryBlock& block,
         CHECK(m_remote_handle && m_remote_handle_size);
     }
 }
-ucp_mem_h srf::internal::ucx::MemoryBlock::local_handle() const
+
+ucp_mem_h MemoryBlock::local_handle() const
 {
     return m_local_handle;
 }
-void* srf::internal::ucx::MemoryBlock::remote_handle() const
+
+void* MemoryBlock::remote_handle() const
 {
     return m_remote_handle;
 }
-std::size_t srf::internal::ucx::MemoryBlock::remote_handle_size() const
+
+std::size_t MemoryBlock::remote_handle_size() const
 {
     return m_remote_handle_size;
 }
+
+std::string MemoryBlock::packed_remote_keys() const
+{
+    std::string keys;
+    keys.resize(m_remote_handle_size);
+    std::memcpy(keys.data(), m_remote_handle, m_remote_handle_size);
+    return keys;
+}
+
+}  // namespace srf::internal::ucx

@@ -20,7 +20,10 @@
 #include "internal/runnable/resources.hpp"
 #include "internal/system/partition_provider.hpp"
 
+#include "srf/utils/macros.hpp"
+
 #include <cstddef>
+#include <functional>
 
 namespace srf::internal::resources {
 
@@ -34,12 +37,11 @@ class PartitionResourceBase : public system::PartitionProvider
 {
   public:
     PartitionResourceBase(runnable::Resources& runnable, std::size_t partition_id);
-    PartitionResourceBase(const PartitionResourceBase& other) = default;
 
     runnable::Resources& runnable();
 
   private:
-    runnable::Resources& m_runnable;
+    std::reference_wrapper<runnable::Resources> m_runnable;
 };
 
 }  // namespace srf::internal::resources

@@ -55,6 +55,8 @@ struct MemoryBlock : public memory::MemoryBlock
      */
     std::size_t remote_handle_size() const;
 
+    std::string packed_remote_keys() const;
+
   private:
     ucp_mem_h m_local_handle{nullptr};
     void* m_remote_handle{nullptr};
