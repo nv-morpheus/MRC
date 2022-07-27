@@ -31,8 +31,9 @@ option(SRF_USE_CCACHE "Enable caching compilation results with ccache" OFF)
 option(SRF_USE_CLANG_TIDY "Enable running clang-tidy as part of the build process" OFF)
 option(SRF_USE_CONDA "Enables finding dependencies via conda instead of vcpkg. Note: This will disable vcpkg. All dependencies must be installed first in the conda environment" ON)
 option(SRF_USE_IWYU "Enable running include-what-you-use as part of the build process" OFF)
+option(SRF_ENABLE_CODECOV "Enable gcov code coverage" OFF)
 
-set(SRF_RAPIDS_VERSION "22.06" CACHE STRING "Which version of RAPIDs to build for. Sets default versions for RAPIDs CMake and RMM.")
+set(SRF_RAPIDS_VERSION "22.06" CACHE STRING "Which version of RAPIDS to build for. Sets default versions for RAPIDS CMake and RMM.")
 
 set(SRF_CACHE_DIR "${CMAKE_SOURCE_DIR}/.cache" CACHE PATH "Directory to contain all CPM and CCache data")
 mark_as_advanced(SRF_CACHE_DIR)
@@ -131,9 +132,12 @@ endif()
 
 add_subdirectory(protos)
 
-# ###################################
+####################################
 # - Post dependencies setup --------
 include(cmake/setup_compiler.cmake)
+
+# Setup code coverage components
+include(cmake/setup_coverage.cmake)
 
 # Setup IWYU if enabled
 include(cmake/setup_iwyu.cmake)

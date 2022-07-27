@@ -178,8 +178,7 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_sink(srf::seg
         on_completed();
     };
 
-    return self.construct_object<PythonSink<PyHolder>>(
-        name, rxcpp::make_observer<PyHolder>(on_next_w, on_error_w, on_completed_w));
+    return self.make_sink<PyHolder, PythonSink>(name, on_next_w, on_error_w, on_completed_w);
 }
 
 std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_ingress(
@@ -199,7 +198,7 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_egress(
 std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node(
     srf::segment::Builder& self, const std::string& name, std::function<pybind11::object(pybind11::object object)> map_f)
 {
-    auto node = self.construct_object<PythonNode<PyHolder, PyHolder>>(
+    return self.make_node<PyHolder, PyHolder, PythonNode>(
         name, rxcpp::operators::map([map_f](PyHolder data_object) -> PyHolder {
             try
             {
@@ -220,8 +219,6 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node(
                 // caught by python output.on_error(std::current_exception());
             }
         }));
-
-    return node;
 }
 
 std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node_full(
@@ -229,7 +226,7 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node_full(
     const std::string& name,
     std::function<void(const pysrf::PyObjectObservable& obs, pysrf::PyObjectSubscriber& sub)> sub_fn)
 {
-    auto node = self.construct_object<PythonNode<PyHolder, PyHolder>>(name);
+    auto node = self.make_node<PyHolder, PyHolder, PythonNode>(name);
 
     node->object().make_stream([sub_fn](const PyObjectObservable& input) -> PyObjectObservable {
         return rxcpp::observable<>::create<PyHolder>([input, sub_fn](pysrf::PyObjectSubscriber output) {

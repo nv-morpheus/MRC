@@ -27,12 +27,24 @@ More information can be found at: [Contributor Code of Conduct](CODE_OF_CONDUCT.
 
 1. Find an issue to work on. The best way is to look for issues with the [good first issue](https://github.com/NVIDIA/SRF/issues) label.
 2. Comment on the issue stating that you are going to work on it.
-3. Code! Make sure to update unit tests! Ensure the [license headers are set properly](#Licensing).
+3. Code! Make sure to update unit tests and confirm that test coverage has not decreased (see below)! Ensure the 
+[license headers are set properly](#Licensing).
 4. When done, [create your pull request](https://github.com/NVIDIA/SRF/compare).
 5. Wait for other developers to review your code and update code as needed.
-6. Once reviewed and approved, a SRF developer will merge your pull request.
+6. Once reviewed and approved, an SRF developer will merge your pull request.
 
 Remember, if you are unsure about anything, don't hesitate to comment on issues and ask for clarifications!
+
+## Unit testing and Code Coverage
+Prior to submitting a pull request, you should ensure that all your contributed code is covered by unit tests, and that
+unit test coverage percentages have not decreased (even better if they've increased). To test, from the SRF root 
+directory:
+
+1. Generate a code coverage report and ensure your additions are covered.
+   1. In some environments you may need to set CUDAToolkit_ROOT
+      1. `export CUDAToolkit_ROOT=[YOUR_CUDA_ROOT]`
+   2. `./scripts/gen_coverage.sh`
+   3. open ./build/gcovr-html-report/index.html
 
 ## Seasoned developers
 
@@ -77,7 +89,7 @@ $SRF_HOME/build/tests/logging/test_srf_logging.x
 
 ### Install SRF Python
 ```bash
-pip install -e $SRF_HOME/python
+pip install -e $SRF_HOME/build/python
 ```
 
 #### Run SRF Python Tests
