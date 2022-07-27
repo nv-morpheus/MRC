@@ -23,6 +23,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <typeindex>
 
 namespace srf::node {
@@ -50,40 +51,11 @@ struct PortUtil
 
     PortUtil() = delete;
 
-    PortUtil(std::type_index type_index) :
-        m_port_data_type(type_index) {}
+    PortUtil(std::type_index type_index);
 
-    std::shared_ptr<segment::ObjectProperties> try_cast_ingress_base_to_object(std::shared_ptr<segment::IngressPortBase> base) {
-        if (std::get<0>(m_ingress_casters) != nullptr) {
-            auto obj = std::get<0>(m_ingress_casters)(base);
+    std::shared_ptr<segment::ObjectProperties> try_cast_ingress_base_to_object(std::shared_ptr<segment::IngressPortBase> base);
 
-            if (obj != nullptr) {
-                return obj;
-            }
-        }
-
-        if (std::get<1>(m_ingress_casters) != nullptr) {
-            return std::get<1>(m_ingress_casters)(base);
-        }
-
-        return nullptr;
-    }
-
-    std::shared_ptr<segment::ObjectProperties> try_cast_egress_base_to_object(std::shared_ptr<segment::EgressPortBase> base) {
-        if (std::get<0>(m_egress_casters) != nullptr) {
-            auto obj = std::get<0>(m_egress_casters)(base);
-
-            if (obj != nullptr) {
-                return obj;
-            }
-        }
-
-        if (std::get<1>(m_egress_casters) != nullptr) {
-            return std::get<1>(m_egress_casters)(base);
-        }
-
-        return nullptr;
-    }
+    std::shared_ptr<segment::ObjectProperties> try_cast_egress_base_to_object(std::shared_ptr<segment::EgressPortBase> base);
 
     const std::type_index m_port_data_type;
 
@@ -140,6 +112,8 @@ struct PortRegistry
 
     // TODO(Devin) This should probably live somewhere else, but has to be accessible to Builder.
     static std::map<std::string, std::type_index> s_port_to_type_index;
+
+    static std::recursive_mutex s_mutex;
 };
 
 }  // namespace srf::node

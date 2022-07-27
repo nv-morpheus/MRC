@@ -24,6 +24,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <typeindex>
 
 namespace srf::node {
@@ -73,5 +74,7 @@ struct EdgeAdapterRegistry
 
     static std::map<std::type_index, source_adapter_fn_t> registered_source_adapters;
     static std::map<std::type_index, sink_adapter_fn_t> registered_sink_adapters;
+
+    static std::recursive_mutex s_mutex;
 };
 }  // namespace srf::node
