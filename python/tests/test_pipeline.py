@@ -261,7 +261,9 @@ import srf.tests.test_edges_cpp as m
 #     for actual in TRACING_DICT["inputs"]:
 #         assert (np.isclose(actual, 34.002060877715685))
 
+
 def test_pipeline_creation_noports():
+
     def init(seg):
         pass
 
@@ -278,6 +280,7 @@ explciitly defined, we check all of them.
 
 
 def test_dynamic_port_creation_good():
+
     def init(builder):
         pass
 
@@ -289,7 +292,9 @@ def test_dynamic_port_creation_good():
             pipe = srf.Pipeline()
             pipe.make_segment("DynamicPortTestSegment", ingress[0:i], egress[0:j], init)
 
+
 def test_dynamic_port_creation_bad():
+
     def init(builder):
         pass
 
@@ -299,19 +304,21 @@ def test_dynamic_port_creation_bad():
     pipe = srf.Pipeline()
     try:
         pipe.make_segment("DynamicPortTestSegmentIngress", ingress, [], init)
-        assert(False)
+        assert (False)
     except Exception as e:
         print(e)
         pass
 
     try:
         pipe.make_segment("DynamicPortTestSegmentEgress", [], egress, init)
-        assert(False)
+        assert (False)
     except Exception as e:
         print(e)
         pass
 
+
 def test_ingress_egress_custom_type_construction():
+
     def gen_data():
         yield 1
         yield 2
@@ -324,6 +331,7 @@ def test_ingress_egress_custom_type_construction():
         builder.make_edge(source, egress)
 
     def init2(builder: srf.Builder):
+
         def on_next(input):
             pass
 
@@ -341,11 +349,18 @@ def test_ingress_egress_custom_type_construction():
     pipe = srf.Pipeline()
 
     # Create segments with various combinations of type and untyped ports
-    pipe.make_segment("TestSegment1", [("c", m.DerivedA), "c21", ("c31", int, False), "c41"], ["d11", ("d", m.DerivedA)], init1)
-    pipe.make_segment("TestSegment2", [("a", m.DerivedB), "a22", "e32"], [("b21", dict, False), "b22", ("b", m.DerivedB)], init2)
-    pipe.make_segment("TestSegment3", [("e", m.Base), ("e23", list, False), "e33"], ["f11", ("f", m.Base), "f13"], init1)
+    pipe.make_segment("TestSegment1", [("c", m.DerivedA), "c21", ("c31", int, False), "c41"],
+                      ["d11", ("d", m.DerivedA)],
+                      init1)
+    pipe.make_segment("TestSegment2", [("a", m.DerivedB), "a22", "e32"],
+                      [("b21", dict, False), "b22", ("b", m.DerivedB)],
+                      init2)
+    pipe.make_segment("TestSegment3", [("e", m.Base), ("e23", list, False), "e33"], ["f11", ("f", m.Base), "f13"],
+                      init1)
+
 
 def test_dynamic_port_get_ingress_egress():
+
     def gen_data():
         yield 1
         yield 2
@@ -358,6 +373,7 @@ def test_dynamic_port_get_ingress_egress():
         builder.make_edge(source, egress)
 
     def init2(builder: srf.Builder):
+
         def on_next(input):
             pass
 
@@ -385,7 +401,9 @@ def test_dynamic_port_get_ingress_egress():
     executor.start()
     executor.join()
 
+
 def test_dynamic_port_with_type_get_ingress_egress():
+
     def gen_data():
         yield 1
         yield 2
@@ -398,6 +416,7 @@ def test_dynamic_port_with_type_get_ingress_egress():
         builder.make_edge(source, egress)
 
     def init2(builder: srf.Builder):
+
         def on_next(input):
             pass
 
@@ -426,7 +445,7 @@ def test_dynamic_port_with_type_get_ingress_egress():
     executor.join()
 
 
-if (__name__ in ("__main__",)):
+if (__name__ in ("__main__", )):
     test_dynamic_port_creation_good()
     test_dynamic_port_creation_bad()
     test_ingress_egress_custom_type_construction()

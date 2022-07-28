@@ -20,6 +20,7 @@ import srf.tests.test_edges_cpp as m
 
 
 def test_connect_cpp_edges():
+
     def segment_init(seg: srf.Builder):
         source = m.SourceDerivedB(seg, "source")
 
@@ -48,6 +49,7 @@ def test_connect_cpp_edges():
 
 
 def test_edge_cpp_to_cpp_same():
+
     def segment_init(seg: srf.Builder):
         source = m.SourceDerivedB(seg, "source")
 
@@ -76,6 +78,7 @@ def test_edge_cpp_to_cpp_same():
 
 
 def test_edge_cpp_to_py_same():
+
     def segment_init(seg: srf.Builder):
         source = m.SourceDerivedB(seg, "source")
 
@@ -110,7 +113,9 @@ def test_edge_cpp_to_py_same():
 
 
 def test_edge_py_to_cpp_same():
+
     def segment_init(seg: srf.Builder):
+
         def source_fn():
             yield m.DerivedB()
             yield m.DerivedB()
@@ -143,6 +148,7 @@ def test_edge_wrapper():
     on_next_count = 0
 
     def segment_init(seg: srf.Builder):
+
         def create_source():
             yield 1
             yield 2
@@ -197,6 +203,7 @@ class MyCustomClass:
 
 
 def test_multi_segment():
+
     def segment_source(seg: srf.Builder):
         # Use a generator function as the source
         def source_gen():
@@ -219,7 +226,6 @@ def test_multi_segment():
         source2 = seg.make_source("source_untyped", source_untyped)
         egress2 = seg.get_egress("port2")
         seg.make_edge(source2, egress2)
-
 
     def segment_sink(seg: srf.Builder):
         ingress = seg.get_ingress("port1")
@@ -274,6 +280,7 @@ def test_multi_segment():
 
     # Wait for the pipeline to exit on its own
     executor.join()
+
 
 if (__name__ == "__main__"):
     test_connect_cpp_edges()

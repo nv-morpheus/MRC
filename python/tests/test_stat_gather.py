@@ -16,9 +16,6 @@
 import pathlib
 import random
 
-import numpy as np
-import pytest
-
 import srf
 import srf.benchmarking
 from srf.core.options import PlacementStrategy
@@ -55,6 +52,7 @@ def double_source():
     global TEST_ITERATIONS
     for d in range(TEST_ITERATIONS):
         yield d
+
 
 def double_float_type1(x):
     return 2 * x
@@ -101,10 +99,8 @@ def test_stat_gather_operators():
     srf.benchmarking.trace_operators(True)
 
     do_stat_gather_test("stat_gather_operators", init_double_segment)
-    required_components = [("python_source_double", "src"),
-                           ("python_node_2x_1", "internal"),
-                           ("python_node_2x_2", "internal"),
-                           ("python_node_2x_3", "internal"),
+    required_components = [("python_source_double", "src"), ("python_node_2x_1", "internal"),
+                           ("python_node_2x_2", "internal"), ("python_node_2x_3", "internal"),
                            ("python_sink_double", "sink")]
 
     framework_stats_info = srf.benchmarking.get_tracing_stats()
@@ -129,10 +125,8 @@ def test_stat_gather_channels():
     srf.benchmarking.trace_channels(True)
 
     do_stat_gather_test("stat_gather_channels", init_double_segment)
-    required_components = [("python_source_double", "src"),
-                           ("python_node_2x_1", "internal"),
-                           ("python_node_2x_2", "internal"),
-                           ("python_node_2x_3", "internal"),
+    required_components = [("python_source_double", "src"), ("python_node_2x_1", "internal"),
+                           ("python_node_2x_2", "internal"), ("python_node_2x_3", "internal"),
                            ("python_sink_double", "sink")]
 
     framework_stats_info = srf.benchmarking.get_tracing_stats()
@@ -157,10 +151,8 @@ def test_stat_gather_full():
     srf.benchmarking.trace_channels(True)
     srf.benchmarking.trace_operators(True)
     do_stat_gather_test("stat_gather_full", init_double_segment)
-    required_components = [("python_source_double", "src"),
-                           ("python_node_2x_1", "internal"),
-                           ("python_node_2x_2", "internal"),
-                           ("python_node_2x_3", "internal"),
+    required_components = [("python_source_double", "src"), ("python_node_2x_1", "internal"),
+                           ("python_node_2x_2", "internal"), ("python_node_2x_3", "internal"),
                            ("python_sink_double", "sink")]
 
     framework_stats_info = srf.benchmarking.get_tracing_stats()
@@ -185,10 +177,8 @@ def test_stat_gather_full_noreset():
     srf.benchmarking.reset_tracing_stats()
     srf.benchmarking.trace_channels(True)
     srf.benchmarking.trace_operators(True)
-    required_components = [("python_source_double", "src"),
-                           ("python_node_2x_1", "internal"),
-                           ("python_node_2x_2", "internal"),
-                           ("python_node_2x_3", "internal"),
+    required_components = [("python_source_double", "src"), ("python_node_2x_1", "internal"),
+                           ("python_node_2x_2", "internal"), ("python_node_2x_3", "internal"),
                            ("python_sink_double", "sink")]
 
     # TODO(devin): If we have two segments in the same binary, with the same node names, they will have their stats
@@ -211,14 +201,13 @@ def test_stat_gather_full_noreset():
 
     srf.benchmarking.reset_tracing_stats()
 
+
 def test_stat_gather_full_noreset_start_stop():
     srf.benchmarking.reset_tracing_stats()
     srf.benchmarking.trace_channels(True)
     srf.benchmarking.trace_operators(True)
-    required_components = [("python_source_double", "src"),
-                           ("python_node_2x_1", "internal"),
-                           ("python_node_2x_2", "internal"),
-                           ("python_node_2x_3", "internal"),
+    required_components = [("python_source_double", "src"), ("python_node_2x_1", "internal"),
+                           ("python_node_2x_2", "internal"), ("python_node_2x_3", "internal"),
                            ("python_sink_double", "sink")]
 
     active_trace_count = 0
