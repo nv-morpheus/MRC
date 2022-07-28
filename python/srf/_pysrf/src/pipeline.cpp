@@ -17,21 +17,34 @@
 
 #include "pysrf/pipeline.hpp"
 
-#include "pysrf/port_builders.hpp"
 #include "pysrf/types.hpp"
 #include "pysrf/utils.hpp"
 
-#include "srf/pipeline/pipeline.hpp"
-#include "srf/segment/builder.hpp"
+#include "srf/node/forward.hpp"
+#include "srf/node/port_registry.hpp"
+#include "srf/segment/builder.hpp"  // IWYU pragma: keep
+#include "srf/segment/egress_ports.hpp"
+#include "srf/segment/ingress_ports.hpp"
+#include "srf/segment/ports.hpp"
 
+#include <glog/logging.h>
+#include <pybind11/cast.h>
 #include <pybind11/gil.h>
-#include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
+#include <tupleobject.h>
 
 #include <functional>
 #include <memory>
+#include <ostream>
+#include <stdexcept>
 #include <string>
+#include <tuple>
+#include <typeindex>
+#include <typeinfo>
 #include <utility>  // for move
+#include <vector>
+
+// IWYU pragma: no_include <pybind11/detail/common.h>
 
 namespace srf::pysrf {
 namespace py = pybind11;
@@ -75,12 +88,12 @@ ingress_info_t collect_ingress_info(py::list ids)
             bool flag_sp_variant          = py::cast<bool>(py_bool);
             const std::type_info* cpptype = cpptype_info_from_object(py_type);
 
-            bool builder_exists = (cpptype != nullptr && PortRegistry::has_port_util(*cpptype));
+            bool builder_exists        = (cpptype != nullptr && PortRegistry::has_port_util(*cpptype));
             std::type_index type_index = builder_exists ? *cpptype : typeid(PyHolder);
 
-            auto port_util = PortRegistry::find_port_util(type_index);
-            auto builder_fn =
-                flag_sp_variant ? std::get<1>(port_util->m_ingress_builders) : std::get<0>(port_util->m_ingress_builders);
+            auto port_util  = PortRegistry::find_port_util(type_index);
+            auto builder_fn = flag_sp_variant ? std::get<1>(port_util->m_ingress_builders)
+                                              : std::get<0>(port_util->m_ingress_builders);
 
             port_ids.push_back(py_name.cast<std::string>());
             port_type_indices.emplace_back(type_index);
@@ -127,7 +140,7 @@ egress_info_t collect_egress_info(py::list ids)
             bool flag_sp_variant          = py::cast<bool>(py_bool);
             const std::type_info* cpptype = cpptype_info_from_object(py_type);
 
-            bool builder_exists = (cpptype != nullptr && PortRegistry::has_port_util(*cpptype));
+            bool builder_exists        = (cpptype != nullptr && PortRegistry::has_port_util(*cpptype));
             std::type_index type_index = builder_exists ? *cpptype : typeid(PyHolder);
 
             auto port_util = PortRegistry::find_port_util(type_index);

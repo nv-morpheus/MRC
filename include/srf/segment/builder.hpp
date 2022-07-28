@@ -21,22 +21,22 @@
 #include "srf/engine/segment/ibuilder.hpp"
 #include "srf/exceptions/runtime_error.hpp"
 #include "srf/node/edge_builder.hpp"
-#include "srf/node/port_registry.hpp"
 #include "srf/node/rx_node.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
-#include "srf/node/sink_properties.hpp"
-#include "srf/node/source_properties.hpp"
-#include "srf/runnable/launchable.hpp"
-#include "srf/runnable/runnable.hpp"
-#include "srf/segment/component.hpp"
-#include "srf/segment/egress_port.hpp"
-#include "srf/segment/forward.hpp"
-#include "srf/segment/object.hpp"
-#include "srf/segment/runnable.hpp"
+#include "srf/node/sink_properties.hpp"    // IWYU pragma: keep
+#include "srf/node/source_properties.hpp"  // IWYU pragma: keep
+#include "srf/runnable/context.hpp"        // IWYU pragma: keep
+#include "srf/runnable/launchable.hpp"     // IWYU pragma: keep
+#include "srf/runnable/runnable.hpp"       // IWYU pragma: keep
+#include "srf/segment/component.hpp"       // IWYU pragma: keep
+#include "srf/segment/egress_port.hpp"     // IWYU pragma: keep
+#include "srf/segment/forward.hpp"         // IWYU pragma: keep
+#include "srf/segment/object.hpp"          // IWYU pragma: keep
+#include "srf/segment/runnable.hpp"        // IWYU pragma: keep
 #include "srf/utils/macros.hpp"
 
-#include <boost/hana.hpp>
+#include <boost/hana.hpp>  // IWYU pragma: keep
 #include <glog/logging.h>
 #include <rxcpp/rx-observable.hpp>
 #include <rxcpp/rx-observer.hpp>
@@ -46,7 +46,21 @@
 #include <memory>
 #include <ostream>
 #include <string>
+#include <type_traits>
+#include <typeindex>
 #include <utility>
+
+// IWYU pragma: no_include <boost/hana/fwd/core/when.hpp>
+// IWYU pragma: no_include <boost/hana/fwd/if.hpp>
+// IWYU pragma: no_include <boost/hana/fwd/type.hpp>
+
+namespace srf::segment {
+class Definition;
+}  // namespace srf::segment
+
+namespace srf {
+class WatcherInterface;
+}
 
 namespace {
 namespace hana = boost::hana;

@@ -17,14 +17,16 @@
 
 #include "pysrf/segment.hpp"
 
+#include "pysrf/forward.hpp"
 #include "pysrf/node.hpp"  // IWYU pragma: keep
 #include "pysrf/types.hpp"
 #include "pysrf/utils.hpp"
 
+#include "srf/channel/status.hpp"
 #include "srf/node/edge_connector.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/segment/definition.hpp"
-#include "srf/segment/object.hpp"
+#include "srf/segment/object.hpp" // IWYU pragma: keep
 
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
@@ -35,6 +37,9 @@
 // IWYU thinks the Segment.def calls need array and vector
 // IWYU pragma: no_include <array>
 // IWYU pragma: no_include <vector>
+// IWYU pragma: no_include <pybind11/detail/common.h>
+// IWYU pragma: no_include <pybind11/detail/descr.h>
+
 
 namespace srf::pysrf {
 

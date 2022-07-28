@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
-#include <glog/logging.h>
-
+#include <cstddef>
+#include <functional>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -43,10 +43,10 @@ class PythonObjectCache
 
     ~PythonObjectCache() = default;
 
-    PythonObjectCache(PythonObjectCache&) = delete;
+    PythonObjectCache(PythonObjectCache&)  = delete;
     PythonObjectCache(PythonObjectCache&&) = delete;
 
-    PythonObjectCache& operator=(PythonObjectCache&) = delete;
+    PythonObjectCache& operator=(PythonObjectCache&)  = delete;
     PythonObjectCache& operator=(PythonObjectCache&&) = delete;
 
     /**

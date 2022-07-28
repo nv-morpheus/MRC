@@ -17,14 +17,17 @@
 
 #pragma once
 
-#include "srf/pipeline/pipeline.hpp"
-#include "srf/segment/builder.hpp"
+#include "srf/pipeline/pipeline.hpp"  // for Pipelin
 
-#include <pybind11/pytypes.h>
+#include <pybind11/pytypes.h>  // for list
 
-#include <functional>
-#include <memory>
-#include <string>
+#include <functional>  // for function
+#include <memory>      // for unique_ptr
+#include <string>      // for string
+
+namespace srf::segment {
+class Builder;
+}  // namespace srf::segment
 
 namespace srf::pysrf {
 

@@ -17,15 +17,20 @@
 
 #pragma once
 
-#include "srf/channel/ingress.hpp"
-#include "srf/node/sink_properties.hpp"
-#include "srf/node/source_properties.hpp"
-
 #include <functional>
 #include <map>
 #include <memory>
 #include <mutex>
 #include <typeindex>
+
+namespace srf::channel {
+struct IngressHandle;
+}
+
+namespace srf::node {
+class SinkPropertiesBase;
+class SourcePropertiesBase;
+}  // namespace srf::node
 
 namespace srf::node {
 

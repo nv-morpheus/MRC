@@ -20,8 +20,15 @@
 #include "pysrf/segment.hpp"
 #include "pysrf/utils.hpp"
 
+#include "srf/segment/builder.hpp" // IWYU pragma: keep
+
+#include <listobject.h>
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#include <pybind11/functional.h> // IWYU pragma: keep
+#include <pybind11/stl.h>  // IWYU pragma: keep
+
+// IWYU pragma: no_include <pybind11/detail/common.h>
+// IWYU pragma: no_include <pybind11/detail/descr.h>
 // IWYU thinks we need array for py::class_<Pipeline>
 // IWYU pragma: no_include <array>
 
@@ -32,7 +39,6 @@ namespace py = pybind11;
 // Define the pybind11 module m, as 'pipeline'.
 PYBIND11_MODULE(pipeline, m)
 {
-
     m.doc() = R"pbdoc(
         Python bindings for SRF pipelines
         -------------------------------
@@ -54,10 +60,8 @@ PYBIND11_MODULE(pipeline, m)
                     &Pipeline::make_segment)))
         .def("make_segment",
              wrap_segment_init_callback(
-                 static_cast<void (Pipeline::*)(const std::string&,
-                                                py::list,
-                                                py::list,
-                                                const std::function<void(srf::segment::Builder&)>&)>(
+                 static_cast<void (Pipeline::*)(
+                     const std::string&, py::list, py::list, const std::function<void(srf::segment::Builder&)>&)>(
                      &Pipeline::make_segment)));
 
 #ifdef VERSION_INFO

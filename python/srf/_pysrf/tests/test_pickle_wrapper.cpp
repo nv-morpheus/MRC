@@ -18,14 +18,24 @@
 #include "test_pysrf.hpp"
 
 #include "pysrf/module_wrappers/pickle.hpp"
+#include "pysrf/utilities/object_cache.hpp"
 
-#include <glog/logging.h>
-#include <gtest/gtest.h>
+#include <bytesobject.h>            // for PyBytes_FromStringAndSize
+#include <gtest/gtest-message.h>    // for Message
+#include <gtest/gtest-test-part.h>  // for TestPartResult
+#include <pybind11/cast.h>
+#include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
+#include <tupleobject.h>   // for PyTuple_New
 
-#include <vector>
+#include <string>
+
+// IWYU pragma: no_include "gtest/gtest_pred_impl.h"
+// IWYU pragma: no_include <pybind11/detail/common.h>
+// IWYU pragma: no_include "rxcpp/sources/rx-iterate.hpp"
+// IWYU pragma: no_include "rx-includes.hpp"
 
 namespace py    = pybind11;
 namespace pysrf = srf::pysrf;
@@ -34,39 +44,43 @@ using namespace pybind11::literals;
 
 PYSRF_TEST_CLASS(PickleWrapper);
 
-TEST_F(TestPickleWrapper, BasicPickle) {
+TEST_F(TestPickleWrapper, BasicPickle)
+{
     py::gil_scoped_acquire gil;
     auto pkl = pysrf::PythonPickleInterface();
 
-    auto dict = py::dict("key1"_a=10, "key2"_a="test string");
+    auto dict  = py::dict("key1"_a = 10, "key2"_a = "test string");
     auto bytes = pkl.pickle(dict);
 
     ASSERT_TRUE(bytes.get_type().equal(py::bytes().get_type()));
 }
 
-TEST_F(TestPickleWrapper, BadPickle) {
+TEST_F(TestPickleWrapper, BadPickle)
+{
     py::gil_scoped_acquire gil;
 
-    auto pkl = pysrf::PythonPickleInterface();
+    auto pkl        = pysrf::PythonPickleInterface();
     py::module_ mod = py::module_::import("os");
     py::dict py_dict("mod"_a = mod);
 
     EXPECT_THROW(pkl.pickle(py_dict), py::error_already_set);
 }
 
-TEST_F(TestPickleWrapper, BasicUnpickle) {
+TEST_F(TestPickleWrapper, BasicUnpickle)
+{
     py::gil_scoped_acquire gil;
     auto pkl = pysrf::PythonPickleInterface();
 
-    auto dict = py::dict("key1"_a=10, "key2"_a="test string");
-    auto bytes = pkl.pickle(dict);
+    auto dict    = py::dict("key1"_a = 10, "key2"_a = "test string");
+    auto bytes   = pkl.pickle(dict);
     auto rebuilt = pkl.unpickle(bytes);
 
     ASSERT_TRUE(rebuilt.get_type().equal(py::dict().get_type()));
     ASSERT_TRUE(rebuilt.equal(dict));
 }
 
-TEST_F(TestPickleWrapper, BadUnpickle){
+TEST_F(TestPickleWrapper, BadUnpickle)
+{
     auto pkl = pysrf::PythonPickleInterface();
 
     char badbytes[] = "123456\0";

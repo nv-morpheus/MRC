@@ -17,14 +17,22 @@
 
 #pragma once
 
-#include "srf/segment/egress_port.hpp"
-#include "srf/segment/ingress_port.hpp"
+#include "srf/types.hpp"
 
 #include <functional>
 #include <map>
 #include <memory>
 #include <mutex>
+#include <string>
+#include <tuple>
 #include <typeindex>
+#include <vector>
+
+namespace srf::segment {
+class EgressPortBase;
+struct IngressPortBase;
+struct ObjectProperties;
+}  // namespace srf::segment
 
 namespace srf::node {
 
@@ -53,9 +61,11 @@ struct PortUtil
 
     PortUtil(std::type_index type_index);
 
-    std::shared_ptr<segment::ObjectProperties> try_cast_ingress_base_to_object(std::shared_ptr<segment::IngressPortBase> base);
+    std::shared_ptr<segment::ObjectProperties> try_cast_ingress_base_to_object(
+        std::shared_ptr<segment::IngressPortBase> base);
 
-    std::shared_ptr<segment::ObjectProperties> try_cast_egress_base_to_object(std::shared_ptr<segment::EgressPortBase> base);
+    std::shared_ptr<segment::ObjectProperties> try_cast_egress_base_to_object(
+        std::shared_ptr<segment::EgressPortBase> base);
 
     const std::type_index m_port_data_type;
 
@@ -96,7 +106,6 @@ struct PortRegistry
      */
     static std::shared_ptr<PortUtil> find_port_util(std::type_index type_index);
 
-
     /**
      * @brief Associate string names with type indices; this can be used to make blind lookup casts when
      *  retrieving ports with dynamic constructors.
@@ -106,7 +115,6 @@ struct PortRegistry
     static void register_name_type_index_pair(std::string name, std::type_index type_index);
     static void register_name_type_index_pairs(std::vector<std::string> names,
                                                std::vector<std::type_index> type_indices);
-
 
     static std::map<std::type_index, std::shared_ptr<PortUtil>> s_registered_port_utils;
 

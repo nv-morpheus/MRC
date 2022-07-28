@@ -17,21 +17,23 @@
 
 #pragma once
 
-#include "pysrf/types.hpp"
+#include "pysrf/types.hpp"  // for PyObjectSubscriber, PyNode, PyObjectOb...
 
-#include "srf/segment/builder.hpp"
-#include "srf/segment/object.hpp"
-
-// pybind11/functional.h is necessary so calls to wrap_segment_init_callback can use type converter
+#include <pybind11/pytypes.h>  // for list, object (ptr only), function, ite...
 #include <pybind11/functional.h>  // IWYU pragma: keep
-#include <pybind11/pybind11.h>    // IWYU pragma: keep
-#include <pybind11/pytypes.h>
+#include <pybind11/stl.h> // IWYU pragma: keep
 
 #include <cstddef>     // for size_t
 #include <functional>  // for function
-#include <memory>
-#include <string>
-#include <utility>  // for forward
+#include <memory>      // for shared_ptr
+#include <string>      // for string
+#include <utility>     // for forward
+#include <vector>      // for vector
+
+namespace srf::segment {
+class Builder;
+struct ObjectProperties;
+}
 
 namespace srf::pysrf {
 

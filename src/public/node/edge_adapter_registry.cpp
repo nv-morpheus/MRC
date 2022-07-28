@@ -20,6 +20,7 @@
 #include <map>
 #include <stdexcept>
 #include <typeindex>
+#include <utility>
 
 namespace srf::node {
 

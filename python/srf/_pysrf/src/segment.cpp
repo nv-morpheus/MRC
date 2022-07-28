@@ -17,34 +17,53 @@
 
 #include "pysrf/segment.hpp"
 
-#include "pysrf/node.hpp"
-#include "pysrf/types.hpp"
-#include "pysrf/utils.hpp"
-#include "srf/node/edge_builder.hpp"
-#include "srf/node/sink_properties.hpp"
-#include "srf/runnable/context.hpp"
-#include "srf/segment/builder.hpp"
-#include "srf/segment/ingress_port.hpp"
-#include "srf/segment/object.hpp"
+#include "pysrf/forward.hpp"  // for pybind11
+#include "pysrf/node.hpp"     // for PythonSource
+#include "pysrf/types.hpp"    // for PyHolder, PyOb...
+#include "pysrf/utils.hpp"    // for PyObjectHolder
 
-#include <glog/logging.h>
-#include <pybind11/cast.h>
-#include <pybind11/detail/internals.h>
-#include <pybind11/gil.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/pytypes.h>
-#include <rxcpp/operators/rx-map.hpp>
-#include <rxcpp/rx.hpp>  // IWYU pragma: keep
+#include "srf/channel/status.hpp"          // for Status
+#include "srf/core/utils.hpp"              // for type_name
+#include "srf/manifold/egress.hpp"         // for MappedEgress<>...
+#include "srf/node/edge_builder.hpp"       // for EdgeBuilder
+#include "srf/node/port_registry.hpp"      // for PortRegistry
+#include "srf/node/sink_properties.hpp"    // for SinkProperties
+#include "srf/node/source_properties.hpp"  // for SourceProperties
+#include "srf/runnable/context.hpp"        // for Context
+#include "srf/segment/builder.hpp"         // for Builder
+#include "srf/segment/object.hpp"          // for ObjectProperties
 
-#include <exception>
-#include <fstream>  // IWYU pragma: keep
-#include <functional>
-#include <stdexcept>
-#include <string>
-#include <utility>
+#include <cxxabi.h>                     // for __forced_unwind
+#include <glog/logging.h>               // for LogMessage, LOG
+#include <pybind11/cast.h>              // for cast, object_a...
+#include <pybind11/detail/internals.h>  // for translate_exce...
+#include <pybind11/gil.h>               // for gil_scoped_acq...
+#include <pybind11/pybind11.h>          // for print, error_a...
+#include <pybind11/pytypes.h>           // for iterator, object
+#include <rxcpp/operators/rx-map.hpp>   // for map
+#include <rxcpp/rx-includes.hpp>        // for apply
+#include <rxcpp/rx-observable.hpp>      // for observable
+#include <rxcpp/rx-observer.hpp>        // for is_on_error<>:...
+#include <rxcpp/rx-operators.hpp>       // for observable_member
+#include <rxcpp/rx-predef.hpp>          // for trace_activity
+#include <rxcpp/rx-subscriber.hpp>      // for make_subscriber
+
+#include <exception>    // for exception, cur...
+#include <fstream>      // for operator<<
+#include <functional>   // for function
+#include <map>          // for operator!=, map
+#include <stdexcept>    // for runtime_error
+#include <string>       // for string, operat...
+#include <type_traits>  // for remove_referen...
+#include <typeindex>    // for type_index
+#include <utility>      // for move, forward
 
 // IWYU thinks we need array for py::print
 // IWYU pragma: no_include <array>
+// IWYU pragma: no_include <boost/fiber/future/detail/shared_state.hpp>
+// IWYU pragma: no_include <boost/fiber/future/detail/task_base.hpp>
+// IWYU pragma: no_include <boost/hana/if.hpp>
+// IWYU pragma: no_include <boost/smart_ptr/detail/operator_bool.hpp>
 
 namespace srf::pysrf {
 
@@ -181,12 +200,12 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_sink(srf::seg
     return self.make_sink<PyHolder, PythonSink>(name, on_next_w, on_error_w, on_completed_w);
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_ingress(
-    srf::segment::Builder& self,
-    const std::string& name)
+std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_ingress(srf::segment::Builder& self,
+                                                                          const std::string& name)
 {
-    auto it_caster= node::PortRegistry::s_port_to_type_index.find(name);
-    if (it_caster != node::PortRegistry::s_port_to_type_index.end()) {
+    auto it_caster = node::PortRegistry::s_port_to_type_index.find(name);
+    if (it_caster != node::PortRegistry::s_port_to_type_index.end())
+    {
         VLOG(2) << "Found an ingress port caster for " << name;
 
         return self.get_ingress_dynamic(name, it_caster->second);
@@ -194,12 +213,12 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_ingress(
     return self.get_ingress<PyHolder>(name);
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_egress(
-    srf::segment::Builder& self,
-    const std::string& name)
+std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_egress(srf::segment::Builder& self,
+                                                                         const std::string& name)
 {
     auto it_caster = node::PortRegistry::s_port_to_type_index.find(name);
-    if (it_caster != node::PortRegistry::s_port_to_type_index.end()) {
+    if (it_caster != node::PortRegistry::s_port_to_type_index.end())
+    {
         VLOG(2) << "Found an egress port caster for " << name;
 
         return self.get_egress_dynamic(name, it_caster->second);
@@ -209,7 +228,9 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_egress(
 }
 
 std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node(
-    srf::segment::Builder& self, const std::string& name, std::function<pybind11::object(pybind11::object object)> map_f)
+    srf::segment::Builder& self,
+    const std::string& name,
+    std::function<pybind11::object(pybind11::object object)> map_f)
 {
     return self.make_node<PyHolder, PyHolder, PythonNode>(
         name, rxcpp::operators::map([map_f](PyHolder data_object) -> PyHolder {

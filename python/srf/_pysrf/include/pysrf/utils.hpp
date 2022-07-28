@@ -31,7 +31,12 @@
 #include <typeinfo>
 #include <utility>
 
+// IWYU pragma: no_include <listobject.h>
+// IWYU pragma: no_include <nlohmann/detail/iterators/iteration_proxy.hpp>
+// IWYU pragma: no_include <nlohmann/detail/iterators/iter_impl.hpp>
 // IWYU pragma: no_include <object.h>
+// IWYU pragma: no_include <pybind11/detail/type_caster_base.h>
+// IWYU pragma: no_include <pystate.h>
 
 namespace srf::pysrf {
 

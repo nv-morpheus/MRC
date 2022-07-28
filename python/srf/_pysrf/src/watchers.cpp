@@ -27,27 +27,31 @@
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
 #include "srf/segment/builder.hpp"
-#include "srf/segment/object.hpp"
 
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 #include <pybind11/gil.h>
-#include <pybind11/pybind11.h>  // IWYU pragma: keep
 #include <pybind11/pytypes.h>
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/operators/rx-tap.hpp>
-#include <rxcpp/rx.hpp>
-#include <rxcpp/sources/rx-iterate.hpp>
+#include <rxcpp/rx-observer.hpp>
+#include <rxcpp/rx-operators.hpp>
+#include <rxcpp/rx-predef.hpp>
+#include <rxcpp/rx-subscriber.hpp>
 
-#include <algorithm>  // IWYU pragma: keep
 #include <functional>
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
-// IWYU thinks we need vector for auto src = seg.make_source<bool>
-// and both move, vector and sometimes exception seg.make_rx_node
-// IWYU pragma: no_include <exception>
-// IWYU pragma: no_include <utility>
-// IWYU pragma: no_include <vector>
+// IWYU pragma: no_include <boost/hana/if.hpp>
+// IWYU pragma: no_include <pybind11/detail/common.h>
+// IWYU pragma: no_include "rxcpp/sources/rx-iterate.hpp"
+// IWYU pragma: no_include "rx-includes.hpp"
+
+namespace srf::segment {
+struct ObjectProperties;
+}
 
 namespace srf::pysrf {
 

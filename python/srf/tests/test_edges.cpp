@@ -15,31 +15,53 @@
  * limitations under the License.
  */
 
+#include "pysrf/forward.hpp"  // for pybind11, pysrf
 #include "pysrf/node.hpp"
-#include "pysrf/port_builders.hpp"
-#include "pysrf/utils.hpp"
+#include "pysrf/port_builders.hpp"  // for PortUtilBuilder
+#include "pysrf/utils.hpp"          // for PyObjectHolder, import
 
-#include "srf/node/edge_connector.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/sink_properties.hpp"
-#include "srf/node/source_properties.hpp"
-#include "srf/segment/builder.hpp"
-#include "srf/segment/object.hpp"
+#include "srf/channel/status.hpp"          // for Status
+#include "srf/core/utils.hpp"              // for type_name
+#include "srf/manifold/egress.hpp"         // for MappedEgress<>...
+#include "srf/node/edge_connector.hpp"     // for EdgeConnector
+#include "srf/node/rx_sink.hpp"            // for RxSink<>::observer_t
+#include "srf/node/sink_properties.hpp"    // for SinkProperties<>::sink...
+#include "srf/node/source_properties.hpp"  // for SourceProperties, Sour...
+#include "srf/runnable/context.hpp"        // for Context
+#include "srf/segment/builder.hpp"         // for Context
+#include "srf/segment/object.hpp"          // for Object, ObjectProperti.
 
+#include <cxxabi.h>  // for __forced_unwind
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <rxcpp/rx.hpp>
+#include <rxcpp/rx-observable.hpp>  // for observable
+#include <rxcpp/rx-observer.hpp>    // for is_on_error<>:...
+#include <rxcpp/rx-operators.hpp>   // for observable_member
+#include <rxcpp/rx-predef.hpp>      // for trace_activity
+#include <rxcpp/rx-subscriber.hpp>  // for make_subscriber
 
-#include <cstddef>
 #include <exception>
+#include <functional>  // for bind
 #include <memory>
 #include <string>
+#include <thread>       // for operator<<
+#include <type_traits>  // for remove_referen...
+#include <cstddef>
 #include <utility>
 
 // IWYU thinks we need vector for PythonNode
 // IWYU pragma: no_include <algorithm>
 // IWYU pragma: no_include <vector>
+// IWYU pragma: no_include <boost/hana/if.hpp>
+// IWYU pragma: no_include <boost/fiber/context.hpp>
+// IWYU pragma: no_include <boost/fiber/future/detail/shared_state.hpp>
+// IWYU pragma: no_include <boost/fiber/future/detail/task_base.hpp>
+// IWYU pragma: no_include <boost/smart_ptr/detail/operator_bool.hpp>
+// IWYU pragma: no_include <pybind11/detail/common.h>
+// IWYU pragma: no_include <pybind11/detail/descr.h>
+// IWYU pragma: no_include <pybind11/detail/type_caster_base.h>
+// IWYU pragma: no_include "rx-includes.hpp"
 
 namespace srf::pytests {
 
@@ -182,8 +204,7 @@ PYBIND11_MODULE(test_edges_cpp, m)
 
     pysrf::import(m, "srf");
 
-    py::class_<Base, std::shared_ptr<Base>>(m, "Base").def(py::init<>([]() {
-        return std::make_shared<Base>(); }));
+    py::class_<Base, std::shared_ptr<Base>>(m, "Base").def(py::init<>([]() { return std::make_shared<Base>(); }));
     srf::pysrf::PortUtilBuilder::register_port_util<Base>();
 
     py::class_<DerivedA, Base, std::shared_ptr<DerivedA>>(m, "DerivedA").def(py::init<>([]() {

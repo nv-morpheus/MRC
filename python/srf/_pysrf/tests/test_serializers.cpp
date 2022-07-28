@@ -15,19 +15,30 @@
  * limitations under the License.
  */
 
-#include "test_pysrf.hpp"
+#include "test_pysrf.hpp"  // for PYSRF_TEST_CLASS
 
-#include "pysrf/utilities/deserializers.hpp"
-#include "pysrf/utilities/serializers.hpp"
+#include "pysrf/utilities/deserializers.hpp"  // for Deserializer, pysrf
+#include "pysrf/utilities/serializers.hpp"    // for Serializer
 
-#include <glog/logging.h>
-#include <gtest/gtest.h>
-#include <pybind11/cast.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/pytypes.h>
-#include <pybind11/stl.h>  // IWYU pragma: keep
+#include <gtest/gtest-message.h>    // for Message
+#include <gtest/gtest-test-part.h>  // for TestPartResult
+#include <pybind11/cast.h>      // for object_api::operator()
+#include <pybind11/embed.h>     // for PYBIND11_EMBEDDED_MODULE
+#include <pybind11/gil.h>       // for gil_scoped_acquire
+#include <pybind11/pybind11.h>  // for module_, class_, init
+#include <pybind11/pytypes.h>   // for object, object_api, str...
+#include <pybind11/stl.h>       // IWYU pragma: keep
+#include <tupleobject.h>        // for PyTuple_New, PyTuple_Ge...
 
-#include <vector>
+#include <array>      // for array
+#include <ostream>    // for operator<<, stringstream
+#include <stdexcept>  // for runtime_error
+#include <string>     // for string, allocator, char...
+#include <tuple>      // for get
+
+// IWYU pragma: no_include "gtest/gtest_pred_impl.h"
+// IWYU pragma: no_include <pybind11/detail/common.h>
+// IWYU pragma: no_include <pybind11/detail/descr.h>
 
 namespace py    = pybind11;
 namespace pysrf = srf::pysrf;
@@ -97,8 +108,8 @@ TEST_F(TestSerializer, SimpleObjectShmem)
 
     pybind11::int_ int_obj(5);
 
-    auto result = pysrf::Serializer::serialize(int_obj, true);
-    auto rebuilt= pysrf::Deserializer::deserialize(std::get<0>(result), std::get<1>(result));
+    auto result  = pysrf::Serializer::serialize(int_obj, true);
+    auto rebuilt = pysrf::Deserializer::deserialize(std::get<0>(result), std::get<1>(result));
 
     ASSERT_TRUE(int_obj.equal(rebuilt));
 }
@@ -111,8 +122,8 @@ TEST_F(TestSerializer, NestedObject)
     pybind11::function func = pybind11::module_::import("os").attr("getuid");
     pybind11::dict py_dict("func"_a = func, "int"_a = int_obj);
 
-    auto result = pysrf::Serializer::serialize(py_dict, false);
-    auto rebuilt= pysrf::Deserializer::deserialize(std::get<0>(result), std::get<1>(result));
+    auto result  = pysrf::Serializer::serialize(py_dict, false);
+    auto rebuilt = pysrf::Deserializer::deserialize(std::get<0>(result), std::get<1>(result));
 
     ASSERT_TRUE(py_dict.equal(rebuilt));
 }
@@ -125,8 +136,8 @@ TEST_F(TestSerializer, NestedObjectShmem)
     pybind11::function func = pybind11::module_::import("os").attr("getuid");
     pybind11::dict py_dict("func"_a = func, "int"_a = int_obj);
 
-    auto result = pysrf::Serializer::serialize(py_dict, true);
-    auto rebuilt= pysrf::Deserializer::deserialize(std::get<0>(result), std::get<1>(result));
+    auto result  = pysrf::Serializer::serialize(py_dict, true);
+    auto rebuilt = pysrf::Deserializer::deserialize(std::get<0>(result), std::get<1>(result));
 
     ASSERT_TRUE(py_dict.equal(rebuilt));
 }
@@ -138,8 +149,8 @@ TEST_F(TestSerializer, Pybind11Simple)
     auto test_mod          = py::module_::import("pysrf_test_module");
     auto simple_pickleable = test_mod.attr("PysrfPickleableSimple")("another string", 42);
 
-    auto result = pysrf::Serializer::serialize(simple_pickleable, false);
-    auto rebuilt= pysrf::Deserializer::deserialize(std::get<0>(result), std::get<1>(result));
+    auto result  = pysrf::Serializer::serialize(simple_pickleable, false);
+    auto rebuilt = pysrf::Deserializer::deserialize(std::get<0>(result), std::get<1>(result));
 
     ASSERT_TRUE(simple_pickleable.attr("string_value")().equal(rebuilt.attr("string_value")()));
     ASSERT_TRUE(simple_pickleable.attr("int_value")().equal(rebuilt.attr("int_value")()));
@@ -152,8 +163,8 @@ TEST_F(TestSerializer, Pybind11SimpleShmem)
     auto test_mod          = py::module_::import("pysrf_test_module");
     auto simple_pickleable = test_mod.attr("PysrfPickleableSimple")("another string", 42);
 
-    auto result = pysrf::Serializer::serialize(simple_pickleable, true);
-    auto rebuilt= pysrf::Deserializer::deserialize(std::get<0>(result), std::get<1>(result));
+    auto result  = pysrf::Serializer::serialize(simple_pickleable, true);
+    auto rebuilt = pysrf::Deserializer::deserialize(std::get<0>(result), std::get<1>(result));
 
     ASSERT_TRUE(simple_pickleable.attr("string_value")().equal(rebuilt.attr("string_value")()));
     ASSERT_TRUE(simple_pickleable.attr("int_value")().equal(rebuilt.attr("int_value")()));
@@ -185,13 +196,12 @@ TEST_F(TestSerializer, cuDFObject)
     auto dataframe = mod_cudf.attr("read_csv")(py_buffer);
 
     auto df_buffer_info = pysrf::Serializer::serialize(dataframe, false);
-    auto df_rebuilt     = pysrf::Deserializer::deserialize(std::get<0>(df_buffer_info),
-                                                           std::get<1>(df_buffer_info));
+    auto df_rebuilt     = pysrf::Deserializer::deserialize(std::get<0>(df_buffer_info), std::get<1>(df_buffer_info));
     ASSERT_TRUE(df_rebuilt.equal(dataframe));
 
     auto df_buffer_info_shmem = pysrf::Serializer::serialize(dataframe, true);
-    auto df_rebuilt_shmem = pysrf::Deserializer::deserialize(std::get<0>(df_buffer_info_shmem),
-                                                                 std::get<1>(df_buffer_info_shmem));
+    auto df_rebuilt_shmem =
+        pysrf::Deserializer::deserialize(std::get<0>(df_buffer_info_shmem), std::get<1>(df_buffer_info_shmem));
     ASSERT_TRUE(df_rebuilt_shmem.equal(dataframe));
 }
 
