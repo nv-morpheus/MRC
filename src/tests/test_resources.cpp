@@ -17,10 +17,17 @@
 
 #include "internal/resources/forward.hpp"
 #include "internal/resources/manager.hpp"
+#include "internal/resources/partition_resources.hpp"
+#include "internal/runnable/resources.hpp"
+#include "internal/system/system.hpp"
+#include "internal/system/system_provider.hpp"
 
-#include "srf/channel/forward.hpp"
+#include "srf/core/task_queue.hpp"
 #include "srf/options/options.hpp"
+#include "srf/options/placement.hpp"
+#include "srf/types.hpp"
 
+#include <boost/fiber/future/future.hpp>
 #include <gtest/gtest.h>
 
 #include <functional>

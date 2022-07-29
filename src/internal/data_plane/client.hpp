@@ -18,28 +18,20 @@
 #pragma once
 
 #include "internal/data_plane/request.hpp"
-#include "internal/resources/partition_resources.hpp"
+#include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/service.hpp"
 #include "internal/ucx/common.hpp"
-#include "internal/ucx/context.hpp"
 #include "internal/ucx/endpoint.hpp"
-#include "internal/ucx/worker.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/codable/encoded_object.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/protos/remote_descriptor.pb.h"
-#include "srf/runnable/launch_control.hpp"
-#include "srf/runnable/runner.hpp"
 #include "srf/types.hpp"
 
-#include <rxcpp/rx.hpp>  // IWYU pragma: keep
-#include <ucp/api/ucp_def.h>
+#include <rxcpp/rx.hpp>
 
 #include <cstddef>
+#include <cstdint>
 #include <map>
 #include <memory>
+#include <string>
 
 namespace srf::internal::data_plane {
 

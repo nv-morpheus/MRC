@@ -31,6 +31,7 @@
 #include "srf/segment/component.hpp"
 #include "srf/segment/egress_port.hpp"
 #include "srf/segment/forward.hpp"
+#include "srf/segment/ingress_port.hpp"
 #include "srf/segment/object.hpp"
 #include "srf/segment/runnable.hpp"
 #include "srf/utils/macros.hpp"

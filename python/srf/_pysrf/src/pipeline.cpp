@@ -18,17 +18,20 @@
 #include "pysrf/pipeline.hpp"
 
 #include "pysrf/types.hpp"
+
 #include "srf/pipeline/pipeline.hpp"
 #include "srf/segment/builder.hpp"
+#include "srf/segment/egress_ports.hpp"
 
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
-#include <pybind11/pytypes.h>
 
+#include <cstddef>
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
-#include <utility>  // for move
+#include <utility>
 
 namespace {
 namespace py = pybind11;

@@ -17,16 +17,20 @@
 
 #include "pysrf/segment.hpp"
 
+#include "rxcpp/sources/rx-iterate.hpp"
+
 #include "pysrf/node.hpp"
 #include "pysrf/types.hpp"
 #include "pysrf/utils.hpp"
+
+#include "srf/channel/status.hpp"
+#include "srf/core/utils.hpp"
 #include "srf/node/edge_builder.hpp"
-#include "srf/node/sink_properties.hpp"
 #include "srf/runnable/context.hpp"
 #include "srf/segment/builder.hpp"
-#include "srf/segment/ingress_port.hpp"
 #include "srf/segment/object.hpp"
 
+#include <boost/hana/if.hpp>
 #include <glog/logging.h>
 #include <pybind11/cast.h>
 #include <pybind11/detail/internals.h>
@@ -34,13 +38,14 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <rxcpp/operators/rx-map.hpp>
-#include <rxcpp/rx.hpp>  // IWYU pragma: keep
+#include <rxcpp/rx.hpp>
 
 #include <exception>
-#include <fstream>  // IWYU pragma: keep
+#include <fstream>
 #include <functional>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 // IWYU thinks we need array for py::print
@@ -181,22 +186,22 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_sink(srf::seg
     return self.make_sink<PyHolder, PythonSink>(name, on_next_w, on_error_w, on_completed_w);
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_ingress(
-    srf::segment::Builder& self,
-    const std::string& name)
+std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_ingress(srf::segment::Builder& self,
+                                                                          const std::string& name)
 {
     return self.get_ingress<PyHolder>(name);
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_egress(
-    srf::segment::Builder& self,
-    const std::string& name)
+std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_egress(srf::segment::Builder& self,
+                                                                         const std::string& name)
 {
-   return self.get_egress<PyHolder>(name);
+    return self.get_egress<PyHolder>(name);
 }
 
 std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node(
-    srf::segment::Builder& self, const std::string& name, std::function<pybind11::object(pybind11::object object)> map_f)
+    srf::segment::Builder& self,
+    const std::string& name,
+    std::function<pybind11::object(pybind11::object object)> map_f)
 {
     return self.make_node<PyHolder, PyHolder, PythonNode>(
         name, rxcpp::operators::map([map_f](PyHolder data_object) -> PyHolder {

@@ -29,6 +29,7 @@
 #include "srf/segment/builder.hpp"
 #include "srf/segment/object.hpp"
 
+#include <boost/hana/if.hpp>
 #include <gtest/gtest.h>
 #include <pybind11/embed.h>
 #include <rxcpp/operators/rx-map.hpp>
