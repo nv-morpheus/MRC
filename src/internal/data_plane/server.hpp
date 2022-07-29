@@ -18,7 +18,6 @@
 #pragma once
 
 #include "internal/resources/forward.hpp"
-#include "internal/resources/partition_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/service.hpp"

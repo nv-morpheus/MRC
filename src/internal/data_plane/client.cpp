@@ -29,7 +29,6 @@
 
 #include <glog/logging.h>
 #include <ucp/api/ucp.h>
-#include <ucp/api/ucp_def.h>
 #include <ucs/type/status.h>
 
 #include <atomic>

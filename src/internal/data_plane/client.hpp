@@ -25,8 +25,6 @@
 
 #include "srf/types.hpp"
 
-#include <rxcpp/rx.hpp>
-
 #include <cstddef>
 #include <cstdint>
 #include <map>
