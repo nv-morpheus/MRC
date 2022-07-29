@@ -18,34 +18,28 @@
 #pragma once
 
 #include "pysrf/edge_adapter.hpp"
-#include "pysrf/types.hpp"  // IWYU pragma: keep
+#include "pysrf/types.hpp"
 #include "pysrf/utils.hpp"
 
-#include "srf/channel/forward.hpp"
 #include "srf/channel/ingress.hpp"
 #include "srf/channel/status.hpp"
 #include "srf/node/edge.hpp"
 #include "srf/node/edge_connector.hpp"
-#include "srf/node/edge_registry.hpp"
 #include "srf/node/forward.hpp"
 #include "srf/node/rx_node.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
-#include "srf/node/sink_properties.hpp"
-#include "srf/node/source_properties.hpp"
+#include "srf/runnable/context.hpp"
 
-#include <glog/logging.h>
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>  // IWYU pragma: keep
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
 
-#include <functional>  // for function, ref
-#include <memory>      // for shared_ptr, __shared_ptr_access, dynamic_pointer_cast, allocator, make_shared
-#include <ostream>     // for operator<<
-#include <typeindex>   // for type_index
-#include <utility>     // for move, forward
+#include <functional>
+#include <memory>
+#include <utility>
 
 namespace srf {
 
@@ -172,8 +166,7 @@ namespace pysrf {
 #pragma GCC visibility push(default)
 
 template <typename InputT, typename ContextT = srf::runnable::Context>
-class PythonSink : public node::RxSink<InputT, ContextT>,
-                   public pysrf::AutoRegSinkAdapter<InputT>
+class PythonSink : public node::RxSink<InputT, ContextT>, public pysrf::AutoRegSinkAdapter<InputT>
 {
     using base_t = node::RxSink<InputT>;
 
@@ -227,8 +220,7 @@ class PythonNode : public node::RxNode<InputT, OutputT, ContextT>,
 };
 
 template <typename OutputT, typename ContextT = srf::runnable::Context>
-class PythonSource : public node::RxSource<OutputT, ContextT>,
-                     public pysrf::AutoRegSourceAdapter<OutputT>
+class PythonSource : public node::RxSource<OutputT, ContextT>, public pysrf::AutoRegSourceAdapter<OutputT>
 {
     using base_t = node::RxSource<OutputT>;
 

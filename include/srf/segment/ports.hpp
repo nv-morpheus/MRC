@@ -59,7 +59,8 @@ class Ports
         std::vector<port_builder_fn_t> builders;
         (builders.push_back([](const SegmentAddress& address, const PortName& name) {
             return std::make_shared<PortT<TypesT>>(address, name);
-        }), ...);
+        }),
+         ...);
 
         if (builders.size() != PortCount)
         {

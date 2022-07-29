@@ -17,13 +17,18 @@
 
 #include "pysrf/utilities/object_cache.hpp"
 
+#include <glog/logging.h>
+#include <pybind11/cast.h>
+#include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
+#include <pylifecycle.h>
 
-#include <glog/logging.h>
-
-#include <exception>
+#include <array>
 #include <mutex>
+#include <ostream>
+#include <stdexcept>
+#include <utility>
 
 namespace py = pybind11;
 namespace srf::pysrf {
@@ -97,8 +102,7 @@ pybind11::object& PythonObjectCache::get_module(const std::string& module_name)
     }
 
     VLOG(8) << "Caching module: " << module_name;
-    m_object_cache[module_name] =
-        pybind11::module_::import(module_name.c_str());
+    m_object_cache[module_name] = pybind11::module_::import(module_name.c_str());
     VLOG(8) << "Done caching module: " << module_name;
     return m_object_cache[module_name];
 }

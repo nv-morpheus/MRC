@@ -21,6 +21,7 @@
 #include "pysrf/types.hpp"
 #include "pysrf/utils.hpp"
 
+#include "srf/channel/status.hpp"
 #include "srf/node/edge_connector.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/segment/definition.hpp"
@@ -85,7 +86,6 @@ PYBIND11_MODULE(segment, m)
     // Type 'S' and 'U'
     node::EdgeConnector<std::string, PyHolder>::register_converter();
     node::EdgeConnector<PyHolder, std::string>::register_converter();
-
 
     auto Definition = py::class_<srf::segment::Definition>(m, "Definition");
     auto Builder    = py::class_<srf::segment::Builder>(m, "Builder");

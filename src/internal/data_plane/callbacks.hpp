@@ -18,7 +18,6 @@
 #pragma once
 
 #include <ucp/api/ucp.h>
-#include <ucs/memory/memory_type.h>
 #include <ucs/type/status.h>
 
 namespace srf::internal::data_plane {

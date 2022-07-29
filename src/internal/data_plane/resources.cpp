@@ -20,13 +20,7 @@
 #include "internal/data_plane/client.hpp"
 #include "internal/data_plane/server.hpp"
 #include "internal/ucx/resources.hpp"
-
-#include "srf/cuda/common.hpp"
-#include "srf/runnable/launch_control.hpp"
-
-#include <glog/logging.h>
-
-#include <memory>
+#include "internal/ucx/worker.hpp"
 
 namespace srf::internal::data_plane {
 

@@ -19,22 +19,37 @@
 
 #include "pysrf/pipeline.hpp"
 #include "pysrf/types.hpp"
+#include "pysrf/utils.hpp"
 
+#include "srf/channel/status.hpp"
 #include "srf/core/executor.hpp"
+#include "srf/engine/pipeline/ipipeline.hpp"
+#include "srf/node/rx_node.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/rx_source.hpp"
 #include "srf/options/options.hpp"
 #include "srf/options/topology.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/segment/object.hpp"
 
+#include <boost/hana/if.hpp>
+#include <ext/alloc_traits.h>
+#include <glog/logging.h>
 #include <gtest/gtest.h>
+#include <pybind11/cast.h>
 #include <pybind11/gil.h>
-#include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx.hpp>
+#include <rxcpp/sources/rx-iterate.hpp>
 
+#include <algorithm>
 #include <atomic>
+#include <cstddef>
+#include <functional>
+#include <iostream>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 // IWYU thinks we need move & vector for auto internal = seg.make_rx_node
@@ -230,11 +245,11 @@ TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
             {
                 auto ingress = builder.get_ingress<pysrf::PyHolder>(intermediate_segment_egress_ids[i]);
 
-                auto sink =
-                    builder.make_sink<pysrf::PyHolder>("local_sink_" + std::to_string(i), [&sink_count](pysrf::PyHolder object) {
-                        py::gil_scoped_acquire gil;
-                        sink_count++;
-                    });
+                auto sink = builder.make_sink<pysrf::PyHolder>("local_sink_" + std::to_string(i),
+                                                               [&sink_count](pysrf::PyHolder object) {
+                                                                   py::gil_scoped_acquire gil;
+                                                                   sink_count++;
+                                                               });
 
                 builder.make_edge(ingress, sink);
             }

@@ -22,6 +22,8 @@
 #include "srf/options/options.hpp"
 
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
+#include <pybind11/stl.h>  // IWYU pragma: keep
 
 #include <memory>
 #include <utility>  // for move
@@ -41,7 +43,6 @@ PYBIND11_MODULE(executor, m)
         .. autosummary::
            :toctree: _generate
     )pbdoc";
-
 
     // Common must be first in every module
     pysrf::import(m, "srf.core.common");

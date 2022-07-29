@@ -17,26 +17,33 @@
 
 #include "internal/resources/manager.hpp"
 
-#include "internal/data_plane/resources.hpp"
-#include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources_base.hpp"
+#include "internal/system/engine_factory_cpu_sets.hpp"
+#include "internal/system/host_partition.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/system/partitions.hpp"
 #include "internal/system/system.hpp"
 #include "internal/ucx/registation_callback_builder.hpp"
 
+#include "srf/core/bitmap.hpp"
+#include "srf/exceptions/runtime_error.hpp"
 #include "srf/options/options.hpp"
+#include "srf/options/placement.hpp"
 
 #include <ext/alloc_traits.h>
 #include <glog/logging.h>
 
-#include <functional>
+#include <map>
 #include <optional>
 #include <ostream>
 #include <string>
+#include <thread>
 #include <utility>
 
 namespace srf::internal::resources {
+
+thread_local Manager* Manager::m_thread_resources{nullptr};
+thread_local PartitionResources* Manager::m_thread_partition{nullptr};
 
 Manager::Manager(const system::SystemProvider& system) : Manager(std::make_unique<system::Resources>(system)) {}
 
@@ -142,6 +149,18 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
         m_partitions.emplace_back(
             m_runnable.at(host_partition_id), i, m_host.at(host_partition_id), m_device.at(i), m_network.at(i));
     }
+
+    // set thread local access to resources on all fiber task queues and any future thread created by the runtime
+    for (auto& partition : m_partitions)
+    {
+        m_system->register_thread_local_initializer(partition.partition().host().cpu_set(), [this, &partition] {
+            m_thread_resources = this;
+            if (system().partitions().device_to_host_strategy() == PlacementResources::Dedicated)
+            {
+                m_thread_partition = &partition;
+            }
+        });
+    }
 }
 
 std::size_t Manager::partition_count() const
@@ -158,5 +177,39 @@ PartitionResources& Manager::partition(std::size_t partition_id)
 {
     CHECK_LT(partition_id, m_partitions.size());
     return m_partitions.at(partition_id);
+}
+
+Manager& Manager::get_resources()
+{
+    if (m_thread_resources == nullptr)  // todo(cpp20) [[unlikely]]
+    {
+        LOG(ERROR) << "thread with id " << std::this_thread::get_id()
+                   << " attempting to access the SRF runtime, but is not a SRF runtime thread";
+        throw exceptions::SrfRuntimeError("can not access runtime resources from outside the runtime");
+    }
+
+    return *m_thread_resources;
+}
+
+PartitionResources& Manager::get_partition()
+{
+    {
+        if (m_thread_partition == nullptr)  // todo(cpp20) [[unlikely]]
+        {
+            auto& resources = Manager::get_resources();
+
+            if (resources.system().partitions().device_to_host_strategy() == PlacementResources::Shared)
+            {
+                LOG(ERROR) << "runtime partition query is disabed when PlacementResources::Shared is in use";
+                throw exceptions::SrfRuntimeError("unable to access runtime parition info");
+            }
+
+            LOG(ERROR) << "thread with id " << std::this_thread::get_id()
+                       << " attempting to access the SRF runtime, but is not a SRF runtime thread";
+            throw exceptions::SrfRuntimeError("can not access runtime resources from outside the runtime");
+        }
+
+        return *m_thread_partition;
+    }
 }
 }  // namespace srf::internal::resources

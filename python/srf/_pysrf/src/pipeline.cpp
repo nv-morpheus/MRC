@@ -18,31 +18,34 @@
 #include "pysrf/pipeline.hpp"
 
 #include "pysrf/types.hpp"
+
 #include "srf/pipeline/pipeline.hpp"
 #include "srf/segment/builder.hpp"
+#include "srf/segment/egress_ports.hpp"
 
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
-#include <pybind11/pytypes.h>
 
+#include <cstddef>
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
-#include <utility>  // for move
+#include <utility>
 
 namespace {
 namespace py = pybind11;
 using namespace srf::pysrf;
 
 template <std::size_t Count, template <class...> class PortClass, typename... ArgsT>
-struct Pipeline__PortBuilder : Pipeline__PortBuilder<Count - 1, PortClass, PyHolder, ArgsT...>
+struct PipelinePortBuilder : PipelinePortBuilder<Count - 1, PortClass, PyHolder, ArgsT...>
 {};
 
 template <template <class...> class PortClass, typename... ArgsT>
-struct Pipeline__PortBuilder<0, PortClass, ArgsT...>
+struct PipelinePortBuilder<0, PortClass, ArgsT...>
 {
-    using port_type_t                  = PortClass<ArgsT...>;
-    static constexpr size_t port_count = sizeof...(ArgsT);
+    using port_type_t                 = PortClass<ArgsT...>;
+    static constexpr size_t PortCount = sizeof...(ArgsT);
 
     static port_type_t build(const std::vector<std::string>& port_ids)
     {
@@ -109,53 +112,53 @@ void Pipeline::dynamic_port_config(const std::string& name,
 
     if (ingress_port_ids.size() == 1)
     {
-        auto ingress_ports = ::Pipeline__PortBuilder<1, segment::IngressPorts>::build(ingress_port_ids);
-        _dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
+        auto ingress_ports = ::PipelinePortBuilder<1, segment::IngressPorts>::build(ingress_port_ids);
+        typed_dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
     }
     else if (ingress_port_ids.size() == 2)
     {
-        auto ingress_ports = ::Pipeline__PortBuilder<2, segment::IngressPorts>::build(ingress_port_ids);
-        _dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
+        auto ingress_ports = ::PipelinePortBuilder<2, segment::IngressPorts>::build(ingress_port_ids);
+        typed_dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
     }
     else if (ingress_port_ids.size() == 3)
     {
-        auto ingress_ports = ::Pipeline__PortBuilder<3, segment::IngressPorts>::build(ingress_port_ids);
-        _dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
+        auto ingress_ports = ::PipelinePortBuilder<3, segment::IngressPorts>::build(ingress_port_ids);
+        typed_dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
     }
     else if (ingress_port_ids.size() == 4)
     {
-        auto ingress_ports = ::Pipeline__PortBuilder<4, segment::IngressPorts>::build(ingress_port_ids);
-        _dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
+        auto ingress_ports = ::PipelinePortBuilder<4, segment::IngressPorts>::build(ingress_port_ids);
+        typed_dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
     }
     else if (ingress_port_ids.size() == 5)
     {
-        auto ingress_ports = ::Pipeline__PortBuilder<5, segment::IngressPorts>::build(ingress_port_ids);
-        _dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
+        auto ingress_ports = ::PipelinePortBuilder<5, segment::IngressPorts>::build(ingress_port_ids);
+        typed_dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
     }
     else if (ingress_port_ids.size() == 6)
     {
-        auto ingress_ports = ::Pipeline__PortBuilder<6, segment::IngressPorts>::build(ingress_port_ids);
-        _dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
+        auto ingress_ports = ::PipelinePortBuilder<6, segment::IngressPorts>::build(ingress_port_ids);
+        typed_dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
     }
     else if (ingress_port_ids.size() == 7)
     {
-        auto ingress_ports = ::Pipeline__PortBuilder<7, segment::IngressPorts>::build(ingress_port_ids);
-        _dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
+        auto ingress_ports = ::PipelinePortBuilder<7, segment::IngressPorts>::build(ingress_port_ids);
+        typed_dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
     }
     else if (ingress_port_ids.size() == 8)
     {
-        auto ingress_ports = ::Pipeline__PortBuilder<8, segment::IngressPorts>::build(ingress_port_ids);
-        _dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
+        auto ingress_ports = ::PipelinePortBuilder<8, segment::IngressPorts>::build(ingress_port_ids);
+        typed_dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
     }
     else if (ingress_port_ids.size() == 9)
     {
-        auto ingress_ports = ::Pipeline__PortBuilder<9, segment::IngressPorts>::build(ingress_port_ids);
-        _dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
+        auto ingress_ports = ::PipelinePortBuilder<9, segment::IngressPorts>::build(ingress_port_ids);
+        typed_dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
     }
     else if (ingress_port_ids.size() == 10)
     {
-        auto ingress_ports = ::Pipeline__PortBuilder<10, segment::IngressPorts>::build(ingress_port_ids);
-        _dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
+        auto ingress_ports = ::PipelinePortBuilder<10, segment::IngressPorts>::build(ingress_port_ids);
+        typed_dynamic_port_config_egress(name, ingress_ports, egress_port_ids, init);
     }
 }
 
@@ -171,52 +174,52 @@ void Pipeline::dynamic_port_config_ingress(const std::string& name,
 
     if (ingress_port_ids.size() == 1)
     {
-        auto ingress_ports = ::Pipeline__PortBuilder<1, segment::IngressPorts>::build(ingress_port_ids);
+        auto ingress_ports = ::PipelinePortBuilder<1, segment::IngressPorts>::build(ingress_port_ids);
         m_pipeline->make_segment(name, ingress_ports, init);
     }
     else if (ingress_port_ids.size() == 2)
     {
-        auto ingress_ports = ::Pipeline__PortBuilder<2, segment::IngressPorts>::build(ingress_port_ids);
+        auto ingress_ports = ::PipelinePortBuilder<2, segment::IngressPorts>::build(ingress_port_ids);
         m_pipeline->make_segment(name, ingress_ports, init);
     }
     else if (ingress_port_ids.size() == 3)
     {
-        auto ingress_ports = ::Pipeline__PortBuilder<3, segment::IngressPorts>::build(ingress_port_ids);
+        auto ingress_ports = ::PipelinePortBuilder<3, segment::IngressPorts>::build(ingress_port_ids);
         m_pipeline->make_segment(name, ingress_ports, init);
     }
     else if (ingress_port_ids.size() == 4)
     {
-        auto ingress_ports = ::Pipeline__PortBuilder<4, segment::IngressPorts>::build(ingress_port_ids);
+        auto ingress_ports = ::PipelinePortBuilder<4, segment::IngressPorts>::build(ingress_port_ids);
         m_pipeline->make_segment(name, ingress_ports, init);
     }
     else if (ingress_port_ids.size() == 5)
     {
-        auto ingress_ports = ::Pipeline__PortBuilder<5, segment::IngressPorts>::build(ingress_port_ids);
+        auto ingress_ports = ::PipelinePortBuilder<5, segment::IngressPorts>::build(ingress_port_ids);
         m_pipeline->make_segment(name, ingress_ports, init);
     }
     else if (ingress_port_ids.size() == 6)
     {
-        auto ingress_ports = ::Pipeline__PortBuilder<6, segment::IngressPorts>::build(ingress_port_ids);
+        auto ingress_ports = ::PipelinePortBuilder<6, segment::IngressPorts>::build(ingress_port_ids);
         m_pipeline->make_segment(name, ingress_ports, init);
     }
     else if (ingress_port_ids.size() == 7)
     {
-        auto ingress_ports = ::Pipeline__PortBuilder<7, segment::IngressPorts>::build(ingress_port_ids);
+        auto ingress_ports = ::PipelinePortBuilder<7, segment::IngressPorts>::build(ingress_port_ids);
         m_pipeline->make_segment(name, ingress_ports, init);
     }
     else if (ingress_port_ids.size() == 8)
     {
-        auto ingress_ports = ::Pipeline__PortBuilder<8, segment::IngressPorts>::build(ingress_port_ids);
+        auto ingress_ports = ::PipelinePortBuilder<8, segment::IngressPorts>::build(ingress_port_ids);
         m_pipeline->make_segment(name, ingress_ports, init);
     }
     else if (ingress_port_ids.size() == 9)
     {
-        auto ingress_ports = ::Pipeline__PortBuilder<9, segment::IngressPorts>::build(ingress_port_ids);
+        auto ingress_ports = ::PipelinePortBuilder<9, segment::IngressPorts>::build(ingress_port_ids);
         m_pipeline->make_segment(name, ingress_ports, init);
     }
     else if (ingress_port_ids.size() == 10)
     {
-        auto ingress_ports = ::Pipeline__PortBuilder<10, segment::IngressPorts>::build(ingress_port_ids);
+        auto ingress_ports = ::PipelinePortBuilder<10, segment::IngressPorts>::build(ingress_port_ids);
         m_pipeline->make_segment(name, ingress_ports, init);
     }
     else
@@ -237,61 +240,61 @@ void Pipeline::dynamic_port_config_egress(const std::string& name,
 
     if (egress_port_ids.size() == 1)
     {
-        auto egress_ports = ::Pipeline__PortBuilder<1, segment::EgressPorts>::build(egress_port_ids);
+        auto egress_ports = ::PipelinePortBuilder<1, segment::EgressPorts>::build(egress_port_ids);
         m_pipeline->make_segment(name, egress_ports, init);
     }
     else if (egress_port_ids.size() == 2)
     {
-        auto egress_ports = ::Pipeline__PortBuilder<2, segment::EgressPorts>::build(egress_port_ids);
+        auto egress_ports = ::PipelinePortBuilder<2, segment::EgressPorts>::build(egress_port_ids);
         m_pipeline->make_segment(name, egress_ports, init);
     }
     else if (egress_port_ids.size() == 3)
     {
-        auto egress_ports = ::Pipeline__PortBuilder<3, segment::EgressPorts>::build(egress_port_ids);
+        auto egress_ports = ::PipelinePortBuilder<3, segment::EgressPorts>::build(egress_port_ids);
         m_pipeline->make_segment(name, egress_ports, init);
     }
     else if (egress_port_ids.size() == 4)
     {
-        auto egress_ports = ::Pipeline__PortBuilder<4, segment::EgressPorts>::build(egress_port_ids);
+        auto egress_ports = ::PipelinePortBuilder<4, segment::EgressPorts>::build(egress_port_ids);
         m_pipeline->make_segment(name, egress_ports, init);
     }
     else if (egress_port_ids.size() == 5)
     {
-        auto egress_ports = ::Pipeline__PortBuilder<5, segment::EgressPorts>::build(egress_port_ids);
+        auto egress_ports = ::PipelinePortBuilder<5, segment::EgressPorts>::build(egress_port_ids);
         m_pipeline->make_segment(name, egress_ports, init);
     }
     else if (egress_port_ids.size() == 6)
     {
-        auto egress_ports = ::Pipeline__PortBuilder<6, segment::EgressPorts>::build(egress_port_ids);
+        auto egress_ports = ::PipelinePortBuilder<6, segment::EgressPorts>::build(egress_port_ids);
         m_pipeline->make_segment(name, egress_ports, init);
     }
     else if (egress_port_ids.size() == 7)
     {
-        auto egress_ports = ::Pipeline__PortBuilder<7, segment::EgressPorts>::build(egress_port_ids);
+        auto egress_ports = ::PipelinePortBuilder<7, segment::EgressPorts>::build(egress_port_ids);
         m_pipeline->make_segment(name, egress_ports, init);
     }
     else if (egress_port_ids.size() == 8)
     {
-        auto egress_ports = ::Pipeline__PortBuilder<8, segment::EgressPorts>::build(egress_port_ids);
+        auto egress_ports = ::PipelinePortBuilder<8, segment::EgressPorts>::build(egress_port_ids);
         m_pipeline->make_segment(name, egress_ports, init);
     }
     else if (egress_port_ids.size() == 9)
     {
-        auto egress_ports = ::Pipeline__PortBuilder<9, segment::EgressPorts>::build(egress_port_ids);
+        auto egress_ports = ::PipelinePortBuilder<9, segment::EgressPorts>::build(egress_port_ids);
         m_pipeline->make_segment(name, egress_ports, init);
     }
     else if (egress_port_ids.size() == 10)
     {
-        auto egress_ports = ::Pipeline__PortBuilder<10, segment::EgressPorts>::build(egress_port_ids);
+        auto egress_ports = ::PipelinePortBuilder<10, segment::EgressPorts>::build(egress_port_ids);
         m_pipeline->make_segment(name, egress_ports, init);
     }
 }
 
 template <typename... IngressPortTypesT>
-void Pipeline::_dynamic_port_config_egress(const std::string& name,
-                                           const segment::IngressPorts<IngressPortTypesT...>& ingress_ports,
-                                           const std::vector<std::string>& egress_port_ids,
-                                           const std::function<void(srf::segment::Builder&)>& init)
+void Pipeline::typed_dynamic_port_config_egress(const std::string& name,
+                                                const segment::IngressPorts<IngressPortTypesT...>& ingress_ports,
+                                                const std::vector<std::string>& egress_port_ids,
+                                                const std::function<void(srf::segment::Builder&)>& init)
 {
     if (egress_port_ids.empty() || egress_port_ids.size() > SRF_MAX_EGRESS_PORTS)
     {
@@ -300,52 +303,52 @@ void Pipeline::_dynamic_port_config_egress(const std::string& name,
 
     if (egress_port_ids.size() == 1)
     {
-        auto egress_ports = ::Pipeline__PortBuilder<1, segment::EgressPorts>::build(egress_port_ids);
+        auto egress_ports = ::PipelinePortBuilder<1, segment::EgressPorts>::build(egress_port_ids);
         m_pipeline->template make_segment(name, ingress_ports, egress_ports, init);
     }
     else if (egress_port_ids.size() == 2)
     {
-        auto egress_ports = ::Pipeline__PortBuilder<2, segment::EgressPorts>::build(egress_port_ids);
+        auto egress_ports = ::PipelinePortBuilder<2, segment::EgressPorts>::build(egress_port_ids);
         m_pipeline->template make_segment(name, ingress_ports, egress_ports, init);
     }
     else if (egress_port_ids.size() == 3)
     {
-        auto egress_ports = ::Pipeline__PortBuilder<3, segment::EgressPorts>::build(egress_port_ids);
+        auto egress_ports = ::PipelinePortBuilder<3, segment::EgressPorts>::build(egress_port_ids);
         m_pipeline->template make_segment(name, ingress_ports, egress_ports, init);
     }
     else if (egress_port_ids.size() == 4)
     {
-        auto egress_ports = ::Pipeline__PortBuilder<4, segment::EgressPorts>::build(egress_port_ids);
+        auto egress_ports = ::PipelinePortBuilder<4, segment::EgressPorts>::build(egress_port_ids);
         m_pipeline->template make_segment(name, ingress_ports, egress_ports, init);
     }
     else if (egress_port_ids.size() == 5)
     {
-        auto egress_ports = ::Pipeline__PortBuilder<5, segment::EgressPorts>::build(egress_port_ids);
+        auto egress_ports = ::PipelinePortBuilder<5, segment::EgressPorts>::build(egress_port_ids);
         m_pipeline->template make_segment(name, ingress_ports, egress_ports, init);
     }
     else if (egress_port_ids.size() == 6)
     {
-        auto egress_ports = ::Pipeline__PortBuilder<6, segment::EgressPorts>::build(egress_port_ids);
+        auto egress_ports = ::PipelinePortBuilder<6, segment::EgressPorts>::build(egress_port_ids);
         m_pipeline->template make_segment(name, ingress_ports, egress_ports, init);
     }
     else if (egress_port_ids.size() == 7)
     {
-        auto egress_ports = ::Pipeline__PortBuilder<7, segment::EgressPorts>::build(egress_port_ids);
+        auto egress_ports = ::PipelinePortBuilder<7, segment::EgressPorts>::build(egress_port_ids);
         m_pipeline->template make_segment(name, ingress_ports, egress_ports, init);
     }
     else if (egress_port_ids.size() == 8)
     {
-        auto egress_ports = ::Pipeline__PortBuilder<8, segment::EgressPorts>::build(egress_port_ids);
+        auto egress_ports = ::PipelinePortBuilder<8, segment::EgressPorts>::build(egress_port_ids);
         m_pipeline->template make_segment(name, ingress_ports, egress_ports, init);
     }
     else if (egress_port_ids.size() == 9)
     {
-        auto egress_ports = ::Pipeline__PortBuilder<9, segment::EgressPorts>::build(egress_port_ids);
+        auto egress_ports = ::PipelinePortBuilder<9, segment::EgressPorts>::build(egress_port_ids);
         m_pipeline->template make_segment(name, ingress_ports, egress_ports, init);
     }
     else if (egress_port_ids.size() == 10)
     {
-        auto egress_ports = ::Pipeline__PortBuilder<10, segment::EgressPorts>::build(egress_port_ids);
+        auto egress_ports = ::PipelinePortBuilder<10, segment::EgressPorts>::build(egress_port_ids);
         m_pipeline->template make_segment(name, ingress_ports, egress_ports, init);
     }
 }

@@ -26,13 +26,13 @@
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <ucp/api/ucp.h>
-#include <ucp/api/ucp_def.h>
 #include <ucs/type/status.h>
 
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <future>
 #include <list>
 #include <memory>
 #include <ostream>

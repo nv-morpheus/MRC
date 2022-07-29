@@ -15,11 +15,15 @@
  * limitations under the License.
  */
 
-#include "srf/channel/buffered_channel.hpp"
+#include "srf/channel/status.hpp"
 #include "srf/data/reusable_pool.hpp"
 #include "srf/utils/macros.hpp"
 
 #include <benchmark/benchmark.h>
+
+#include <array>
+#include <cstddef>
+#include <memory>
 
 using namespace srf;
 

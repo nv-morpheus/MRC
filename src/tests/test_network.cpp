@@ -16,6 +16,7 @@
  */
 
 #include "internal/data_plane/client.hpp"
+#include "internal/data_plane/request.hpp"
 #include "internal/data_plane/resources.hpp"
 #include "internal/memory/device_resources.hpp"
 #include "internal/memory/host_resources.hpp"
@@ -27,7 +28,6 @@
 #include "internal/ucx/memory_block.hpp"
 #include "internal/ucx/registration_cache.hpp"
 
-#include "srf/core/bitmap.hpp"
 #include "srf/memory/adaptors.hpp"
 #include "srf/memory/buffer.hpp"
 #include "srf/memory/literals.hpp"
@@ -39,13 +39,16 @@
 #include "srf/options/placement.hpp"
 #include "srf/options/resources.hpp"
 
+#include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <spdlog/sinks/basic_file_sink.h>
 
+#include <cstddef>
 #include <functional>
 #include <map>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <set>
 #include <thread>
 #include <utility>

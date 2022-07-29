@@ -19,11 +19,6 @@
 
 #include "srf/utils/macros.hpp"
 
-#include <boost/fiber/future/promise.hpp>
-#include <ucp/api/ucp.h>
-#include <ucs/memory/memory_type.h>
-#include <ucs/type/status.h>
-
 #include <atomic>
 
 namespace srf::internal::data_plane {

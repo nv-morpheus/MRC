@@ -20,6 +20,8 @@
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 
+#include <ostream>
+
 namespace srf::internal::data_plane {
 
 Request::Request() = default;

@@ -19,27 +19,27 @@
 
 #include "pysrf/module_wrappers/shared_memory.hpp"
 
-#include <glog/logging.h>
 #include <gtest/gtest.h>
-#include <pybind11/cast.h>
-#include <pybind11/pybind11.h>
+#include <pybind11/buffer_info.h>
 #include <pybind11/pytypes.h>
-#include <pybind11/stl.h>  // IWYU pragma: keep
 
-#include <vector>
+#include <cstring>
+#include <stdexcept>
+#include <string>
 
-namespace py    = pybind11;
+namespace py = pybind11;
 using namespace std::string_literals;
 using namespace pybind11::literals;
 
 PYSRF_TEST_CLASS(ShmemWrapper);
 
-TEST_F(TestShmemWrapper, Construct) {
+TEST_F(TestShmemWrapper, Construct)
+{
     auto shmem = pysrf::PythonSharedMemoryInterface();
 }
 
-
-TEST_F(TestShmemWrapper, Allocate) {
+TEST_F(TestShmemWrapper, Allocate)
+{
     auto shmem = pysrf::PythonSharedMemoryInterface();
     shmem.allocate(128);
 
@@ -51,7 +51,8 @@ TEST_F(TestShmemWrapper, Allocate) {
     shmem.free();
 }
 
-TEST_F(TestShmemWrapper, Attach) {
+TEST_F(TestShmemWrapper, Attach)
+{
     auto shmem1 = pysrf::PythonSharedMemoryInterface();
     auto shmem2 = pysrf::PythonSharedMemoryInterface();
 
@@ -67,17 +68,17 @@ TEST_F(TestShmemWrapper, Attach) {
     ASSERT_TRUE(buf_info2.size == 128);
     ASSERT_TRUE(std::memcmp(buf_info1.ptr, buf_info2.ptr, 128) == 0);
 
-    char byteset[128];
-    char bytesubset[7]{"abc123"};
+    char byteset[128];             // NOLINT
+    char bytesubset[7]{"abc123"};  // NOLINT
     std::memcpy(byteset, bytesubset, 6);
     py::bytes py_byteset(byteset, 128);
 
     shmem1.set(py_byteset);
-    bytes1 = shmem1.get_bytes();
+    bytes1    = shmem1.get_bytes();
     buf_info1 = py::buffer_info(py::buffer(bytes1).request());
     ASSERT_TRUE(std::memcmp(buf_info1.ptr, byteset, 6) == 0);
 
-    bytes2 = shmem2.get_bytes();
+    bytes2    = shmem2.get_bytes();
     buf_info2 = py::buffer_info(py::buffer(bytes2).request());
     ASSERT_TRUE(std::memcmp(buf_info2.ptr, byteset, 6) == 0);
     ASSERT_TRUE(std::memcmp(buf_info1.ptr, buf_info2.ptr, 128) == 0);
@@ -86,11 +87,12 @@ TEST_F(TestShmemWrapper, Attach) {
     shmem2.free();
 }
 
-TEST_F(TestShmemWrapper, CloseUnlink) {
+TEST_F(TestShmemWrapper, CloseUnlink)
+{
     auto shmem = pysrf::PythonSharedMemoryInterface();
     shmem.allocate(128);
 
-    auto block_id = shmem.block_id();
+    auto block_id      = shmem.block_id();
     py::bytes py_bytes = shmem.get_bytes();
     py::buffer_info buf_info(py::buffer(py_bytes).request());
 
@@ -107,4 +109,3 @@ TEST_F(TestShmemWrapper, CloseUnlink) {
     shmem.unlink();
     EXPECT_THROW(shmem.attach(block_id), pybind11::error_already_set);
 }
-

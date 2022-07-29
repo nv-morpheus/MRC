@@ -19,7 +19,6 @@
 
 #include "pysrf/utilities/object_cache.hpp"
 
-#include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
 namespace srf::pysrf {
@@ -29,7 +28,8 @@ namespace srf::pysrf {
  * @brief Light wrapper around the python pickle module.
  */
 
-class PythonPickleInterface {
+class PythonPickleInterface
+{
   public:
     ~PythonPickleInterface();
     PythonPickleInterface();
@@ -38,7 +38,7 @@ class PythonPickleInterface {
     pybind11::object unpickle(pybind11::bytes bytes);
 
   private:
-    PythonObjectCache& pycache;
+    PythonObjectCache& m_pycache;
 
     pybind11::function m_func_loads{};
     pybind11::function m_func_dumps{};
