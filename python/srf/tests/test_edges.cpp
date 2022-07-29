@@ -25,7 +25,6 @@
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/sink_properties.hpp"
 #include "srf/node/source_properties.hpp"
-#include "srf/runnable/context.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/segment/object.hpp"
 

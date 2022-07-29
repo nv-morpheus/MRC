@@ -15,9 +15,20 @@
  * limitations under the License.
  */
 
-#include "srf/node/edge_adapter_registry.hpp"
 #include "srf/node/edge_builder.hpp"
+
+#include "srf/channel/ingress.hpp"
+#include "srf/node/edge_adapter_registry.hpp"
 #include "srf/node/edge_registry.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_properties.hpp"
+
+#include <glog/logging.h>
+
+#include <functional>
+#include <memory>
+#include <string>
+#include <typeindex>
 
 namespace srf::node {
 void EdgeBuilder::make_edge_typeless(SourcePropertiesBase& source, SinkPropertiesBase& sink, bool allow_narrowing)
@@ -38,7 +49,8 @@ std::shared_ptr<channel::IngressHandle> EdgeBuilder::ingress_adapter_for_sink(
 
         // Try and build the handle
         auto handle = adapter(source, sink, sink.ingress_handle());
-        if (handle) {
+        if (handle)
+        {
             return handle;
         }
     }

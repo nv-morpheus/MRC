@@ -21,7 +21,6 @@
 #include "pysrf/utils.hpp"
 
 #include <pybind11/pybind11.h>
-#include <pybind11/pytypes.h>
 
 // IWYU thinks we need array for py::class_<Pipeline>
 // IWYU pragma: no_include <array>

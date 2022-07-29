@@ -15,14 +15,19 @@
  * limitations under the License.
  */
 
-#include "pysrf/module_wrappers/pickle.hpp"
-#include "pysrf/module_wrappers/shared_memory.hpp"
 #include "pysrf/utilities/deserializers.hpp"
 
+#include "pysrf/module_wrappers/pickle.hpp"
+#include "pysrf/module_wrappers/shared_memory.hpp"
+
+#include <glog/logging.h>
+#include <pybind11/buffer_info.h>
+#include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
-#include <glog/logging.h>
+#include <cstddef>
+#include <ostream>
 
 namespace py = pybind11;
 namespace srf::pysrf {
@@ -66,8 +71,8 @@ pybind11::object Deserializer::load_from_shared_memory(pybind11::object descript
 {
     VLOG(8) << "Deserialzing from shared memory descriptor";
 
-    auto pkl = PythonPickleInterface();
-    auto shmem = PythonSharedMemoryInterface();
+    auto pkl       = PythonPickleInterface();
+    auto shmem     = PythonSharedMemoryInterface();
     bool is_shared = pybind11::cast<bool>(descriptor.attr("shared"));
     pybind11::object obj;
 
@@ -75,7 +80,8 @@ pybind11::object Deserializer::load_from_shared_memory(pybind11::object descript
     obj = pkl.unpickle(shmem.get_bytes());
 
     shmem.close();
-    if (!is_shared) {
+    if (!is_shared)
+    {
         shmem.unlink();
     }
 

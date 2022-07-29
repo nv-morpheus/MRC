@@ -16,7 +16,6 @@
  */
 
 #include "internal/system/engine_factory_cpu_sets.hpp"
-#include "internal/system/gpu_info.hpp"
 #include "internal/system/host_partition.hpp"
 #include "internal/system/partitions.hpp"
 #include "internal/system/topology.hpp"

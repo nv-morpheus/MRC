@@ -17,7 +17,7 @@
 
 #include "pysrf/segment.hpp"
 
-#include "pysrf/node.hpp"
+#include "pysrf/node.hpp"  // IWYU pragma: keep
 #include "pysrf/types.hpp"
 #include "pysrf/utils.hpp"
 

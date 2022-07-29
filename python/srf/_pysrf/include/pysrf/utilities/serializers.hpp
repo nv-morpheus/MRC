@@ -17,8 +17,10 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
+
+#include <cstddef>
+#include <tuple>
 
 namespace srf::pysrf {
 #pragma GCC visibility push(default)

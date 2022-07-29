@@ -19,13 +19,9 @@
 
 #include "pysrf/utilities/object_cache.hpp"
 
-#include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
-#include <glog/logging.h>
-
 #include <cstddef>
-#include <string>
 
 namespace srf::pysrf {
 /**
@@ -109,7 +105,8 @@ class PythonSharedMemoryInterface
  * @param flag_is_shared
  * @return Descriptor object for retrieving the shared memory.
  */
-pybind11::object build_shmem_descriptor(const PythonSharedMemoryInterface& shmem_interface, bool flag_is_shared = false);
+pybind11::object build_shmem_descriptor(const PythonSharedMemoryInterface& shmem_interface,
+                                        bool flag_is_shared = false);
 
 #pragma GCC visibility pop
 }  // namespace srf::pysrf
