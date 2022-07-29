@@ -21,7 +21,8 @@
 #include "pysrf/utils.hpp"
 
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#include <pybind11/pytypes.h>
+
 // IWYU thinks we need array for py::class_<Pipeline>
 // IWYU pragma: no_include <array>
 
@@ -32,7 +33,6 @@ namespace py = pybind11;
 // Define the pybind11 module m, as 'pipeline'.
 PYBIND11_MODULE(pipeline, m)
 {
-
     m.doc() = R"pbdoc(
         Python bindings for SRF pipelines
         -------------------------------
@@ -46,7 +46,7 @@ PYBIND11_MODULE(pipeline, m)
     pysrf::import(m, "srf.core.segment");
 
     m.attr("SRF_MAX_INGRESS_PORTS") = SRF_MAX_INGRESS_PORTS;
-    m.attr("SRF_MAX_EGRESS_PORTS") = SRF_MAX_EGRESS_PORTS;
+    m.attr("SRF_MAX_EGRESS_PORTS")  = SRF_MAX_EGRESS_PORTS;
     py::class_<Pipeline>(m, "Pipeline")
         .def(py::init<>())
         .def(

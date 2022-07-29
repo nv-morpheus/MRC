@@ -27,11 +27,12 @@
 #include <pybind11/pybind11.h>    // IWYU pragma: keep
 #include <pybind11/pytypes.h>
 
-#include <cstddef>     // for size_t
-#include <functional>  // for function
+#include <cstddef>
+#include <functional>
 #include <memory>
 #include <string>
-#include <utility>  // for forward
+#include <utility>
+#include <vector>
 
 namespace srf::pysrf {
 

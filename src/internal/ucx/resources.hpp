@@ -18,7 +18,6 @@
 #pragma once
 
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/runnable/resources.hpp"
 #include "internal/system/fiber_task_queue.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/endpoint.hpp"
@@ -27,12 +26,11 @@
 #include "internal/ucx/registration_resource.hpp"
 #include "internal/ucx/worker.hpp"
 
+#include "srf/core/task_queue.hpp"
 #include "srf/memory/adaptors.hpp"
 
-#include <glog/logging.h>
-
-#include <cstddef>
 #include <memory>
+#include <string>
 
 namespace srf::internal::network {
 class Resources;

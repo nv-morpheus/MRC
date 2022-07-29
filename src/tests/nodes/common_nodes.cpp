@@ -18,9 +18,7 @@
 #include "common_nodes.hpp"
 
 #include "srf/channel/status.hpp"
-#include "srf/data/reusable_pool.hpp"
 #include "srf/memory/literals.hpp"
-#include "srf/node/generic_source.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
 #include "srf/runnable/context.hpp"
@@ -31,6 +29,7 @@
 #include <rxcpp/sources/rx-iterate.hpp>
 
 #include <chrono>
+#include <exception>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
