@@ -21,6 +21,7 @@
 #include "pysrf/utils.hpp"
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>  // IWYU pragma: keep
 
 // IWYU thinks we need array for py::class_<Pipeline>
 // IWYU pragma: no_include <array>
