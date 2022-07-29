@@ -25,9 +25,9 @@
 #include <pybind11/cast.h>
 #include <pybind11/detail/common.h>
 #include <pybind11/pytypes.h>
-#include <string.h>
 
 #include <cstdlib>
+#include <cstring>
 #include <ostream>
 #include <stdexcept>
 #include <string>

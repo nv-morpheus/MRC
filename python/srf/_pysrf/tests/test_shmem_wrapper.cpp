@@ -68,8 +68,8 @@ TEST_F(TestShmemWrapper, Attach)
     ASSERT_TRUE(buf_info2.size == 128);
     ASSERT_TRUE(std::memcmp(buf_info1.ptr, buf_info2.ptr, 128) == 0);
 
-    char byteset[128];
-    char bytesubset[7]{"abc123"};
+    char byteset[128];             // NOLINT
+    char bytesubset[7]{"abc123"};  // NOLINT
     std::memcpy(byteset, bytesubset, 6);
     py::bytes py_byteset(byteset, 128);
 

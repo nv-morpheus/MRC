@@ -42,7 +42,6 @@ PYBIND11_MODULE(executor, m)
            :toctree: _generate
     )pbdoc";
 
-
     // Common must be first in every module
     pysrf::import(m, "srf.core.common");
     pysrf::import(m, "srf.core.options");

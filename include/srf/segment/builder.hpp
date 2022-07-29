@@ -70,7 +70,7 @@ void add_stats_watcher_if_rx_source(T& thing, std::string name)
             auto trace_stats = srf::benchmarking::TraceStatistics::get_or_create(name);
             std::forward<decltype(object)>(object).source_add_watcher(trace_stats);
         },
-        [name](auto&&) {})(thing);
+        [name]([[maybe_unused]] auto&& object) {})(thing);
 }
 
 template <typename T>
@@ -82,7 +82,7 @@ void add_stats_watcher_if_rx_sink(T& thing, std::string name)
             auto trace_stats = srf::benchmarking::TraceStatistics::get_or_create(name);
             std::forward<decltype(object)>(object).sink_add_watcher(trace_stats);
         },
-        [name](auto&&) {})(thing);
+        [name]([[maybe_unused]] auto&& object) {})(thing);
 }
 }  // namespace
 

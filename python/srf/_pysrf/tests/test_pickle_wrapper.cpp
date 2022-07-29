@@ -74,7 +74,7 @@ TEST_F(TestPickleWrapper, BadUnpickle)
 {
     auto pkl = pysrf::PythonPickleInterface();
 
-    char badbytes[] = "123456\0";
+    char badbytes[] = "123456\0";  // NOLINT
     py::bytes bad_pybytes(badbytes, 6);
     EXPECT_THROW(pkl.unpickle(bad_pybytes), py::error_already_set);
 }

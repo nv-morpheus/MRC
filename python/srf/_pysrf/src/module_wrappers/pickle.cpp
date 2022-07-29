@@ -33,12 +33,12 @@ namespace srf::pysrf {
 
 PythonPickleInterface::~PythonPickleInterface() = default;
 
-PythonPickleInterface::PythonPickleInterface() : pycache(PythonObjectCache::get_handle())
+PythonPickleInterface::PythonPickleInterface() : m_pycache(PythonObjectCache::get_handle())
 {
-    auto mod = pycache.get_module("pickle");
+    auto mod = m_pycache.get_module("pickle");
 
-    m_func_loads = pycache.get_or_load("PythonPickleInterface.loads", [mod]() { return mod.attr("loads"); });
-    m_func_dumps = pycache.get_or_load("PythonPickleInterface.dumps", [mod]() { return mod.attr("dumps"); });
+    m_func_loads = m_pycache.get_or_load("PythonPickleInterface.loads", [mod]() { return mod.attr("loads"); });
+    m_func_dumps = m_pycache.get_or_load("PythonPickleInterface.dumps", [mod]() { return mod.attr("dumps"); });
 }
 
 pybind11::bytes PythonPickleInterface::pickle(pybind11::object obj)

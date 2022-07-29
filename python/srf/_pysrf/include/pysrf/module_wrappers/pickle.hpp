@@ -38,7 +38,7 @@ class PythonPickleInterface
     pybind11::object unpickle(pybind11::bytes bytes);
 
   private:
-    PythonObjectCache& pycache;
+    PythonObjectCache& m_pycache;
 
     pybind11::function m_func_loads{};
     pybind11::function m_func_dumps{};

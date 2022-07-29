@@ -27,10 +27,9 @@
 #include "srf/memory/memory_kind.hpp"
 
 #include <Python.h>
+#include <glog/logging.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-
-#include <glog/logging.h>
 
 #include <iomanip>
 #include <type_traits>
@@ -92,8 +91,8 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, pysrf::PyHolder>>>
         serialized_obj = Serializer::serialize(py_object, opts.use_shm(), !opts.force_copy());
 
         // Copy it or not.
-        encoded.add_memory_block(memory::buffer_view(
-            std::get<0>(serialized_obj), std::get<1>(serialized_obj), memory::memory_kind::host));
+        encoded.add_memory_block(
+            memory::buffer_view(std::get<0>(serialized_obj), std::get<1>(serialized_obj), memory::memory_kind::host));
     }
 
     static T deserialize(const EncodedObject& encoded, std::size_t object_idx)

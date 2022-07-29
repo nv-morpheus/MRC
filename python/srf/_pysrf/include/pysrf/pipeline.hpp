@@ -82,10 +82,10 @@ class Pipeline
                                     const std::function<void(srf::segment::Builder&)>& init);
 
     template <typename... IngressPortTypesT>
-    void _dynamic_port_config_egress(const std::string& name,
-                                     const segment::IngressPorts<IngressPortTypesT...>& ingress_ports,
-                                     const std::vector<std::string>& egress_port_ids,
-                                     const std::function<void(srf::segment::Builder&)>& init);
+    void typed_dynamic_port_config_egress(const std::string& name,
+                                          const segment::IngressPorts<IngressPortTypesT...>& ingress_ports,
+                                          const std::vector<std::string>& egress_port_ids,
+                                          const std::function<void(srf::segment::Builder&)>& init);
 };
 
 #pragma GCC visibility pop

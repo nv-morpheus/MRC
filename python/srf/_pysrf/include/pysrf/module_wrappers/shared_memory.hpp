@@ -93,7 +93,7 @@ class PythonSharedMemoryInterface
     void unlink();
 
   private:
-    PythonObjectCache& pycache;
+    PythonObjectCache& m_pycache;
 
     pybind11::object m_shmem_interface{};
     pybind11::object m_shmem{pybind11::none()};

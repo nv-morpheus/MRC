@@ -128,12 +128,12 @@ struct is_codable
 {};
 
 template <typename T>
-inline constexpr bool is_encodable_v = is_encodable<T>::value;
+inline constexpr bool is_encodable_v = is_encodable<T>::value;  // NOLINT
 
 template <typename T>
-inline constexpr bool is_decodable_v = is_decodable<T>::value;
+inline constexpr bool is_decodable_v = is_decodable<T>::value;  // NOLINT
 
 template <typename T>
-inline constexpr bool is_codable_v = is_codable<T>::value;
+inline constexpr bool is_codable_v = is_codable<T>::value;  // NOLINT
 
 }  // namespace srf::codable

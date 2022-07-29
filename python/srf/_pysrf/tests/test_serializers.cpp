@@ -32,6 +32,7 @@
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <utility>
 
 namespace py    = pybind11;
 namespace pysrf = srf::pysrf;
@@ -43,7 +44,7 @@ PYSRF_TEST_CLASS(Serializer);
 class PysrfPickleableSimple
 {
   public:
-    PysrfPickleableSimple(const std::string& s, int i) : m_string_val(s), m_int_val(i){};
+    PysrfPickleableSimple(std::string s, int i) : m_string_val(std::move(s)), m_int_val(i){};
     ~PysrfPickleableSimple() = default;
 
     const std::string& string_value() const
@@ -211,7 +212,7 @@ TEST_F(TestSerializer, BadSerializeUnpicklable)
 TEST_F(TestSerializer, BadDeserialize)
 {
     pybind11::gil_scoped_acquire gil;
-    char badbytes[] = "123456\0";
+    char badbytes[] = "123456\0";  // NOLINT
 
     EXPECT_THROW(pysrf::Deserializer::deserialize(badbytes, 4), pybind11::error_already_set);
 }
