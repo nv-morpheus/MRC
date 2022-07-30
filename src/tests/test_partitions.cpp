@@ -15,24 +15,28 @@
  * limitations under the License.
  */
 
-#include "internal/system/gpu_info.hpp"
+#include "internal/system/engine_factory_cpu_sets.hpp"
 #include "internal/system/host_partition.hpp"
 #include "internal/system/partitions.hpp"
 #include "internal/system/topology.hpp"
 
 #include "srf/core/bitmap.hpp"
+#include "srf/options/engine_groups.hpp"
 #include "srf/options/options.hpp"
 #include "srf/options/placement.hpp"
 #include "srf/options/topology.hpp"
+#include "srf/runnable/types.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 
 #include <cstdlib>
 #include <functional>
+#include <map>
 #include <memory>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace srf;

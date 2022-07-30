@@ -21,6 +21,9 @@
 #include "pysrf/utils.hpp"
 
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
+#include <pybind11/stl.h>  // IWYU pragma: keep
+
 // IWYU thinks we need array for py::class_<Pipeline>
 // IWYU pragma: no_include <array>
 
@@ -32,23 +35,33 @@ namespace py = pybind11;
 PYBIND11_MODULE(pipeline, m)
 {
     m.doc() = R"pbdoc(
-        Pybind11 example plugin
-        -----------------------
-        .. currentmodule:: scikit_build_example
+        Python bindings for SRF pipelines
+        -------------------------------
+        .. currentmodule:: pipeline
         .. autosummary::
            :toctree: _generate
-           add
-           subtract
     )pbdoc";
 
     // Common must be first in every module
     pysrf::import(m, "srf.core.common");
-
     pysrf::import(m, "srf.core.segment");
 
+    m.attr("SRF_MAX_INGRESS_PORTS") = SRF_MAX_INGRESS_PORTS;
+    m.attr("SRF_MAX_EGRESS_PORTS")  = SRF_MAX_EGRESS_PORTS;
     py::class_<Pipeline>(m, "Pipeline")
         .def(py::init<>())
-        .def("make_segment", wrap_segment_init_callback(&Pipeline::make_segment));
+        .def(
+            "make_segment",
+            wrap_segment_init_callback(
+                static_cast<void (Pipeline::*)(const std::string&, const std::function<void(srf::segment::Builder&)>&)>(
+                    &Pipeline::make_segment)))
+        .def("make_segment",
+             wrap_segment_init_callback(
+                 static_cast<void (Pipeline::*)(const std::string&,
+                                                const std::vector<std::string>&,
+                                                const std::vector<std::string>&,
+                                                const std::function<void(srf::segment::Builder&)>&)>(
+                     &Pipeline::make_segment)));
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

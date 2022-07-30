@@ -19,9 +19,14 @@ find_package(pybind11 REQUIRED)
 
 # Keep all source files sorted!!!
 add_executable(test_pysrf
+  test_codable_pyobject.cpp
   test_executor.cpp
   test_main.cpp
+  test_object_cache.cpp
+  test_pickle_wrapper.cpp
   test_pipeline.cpp
+  test_serializers.cpp
+  test_shmem_wrapper.cpp
   test_utils.cpp
 )
 
@@ -33,7 +38,6 @@ target_link_libraries(test_pysrf
     GTest::gtest
     pybind11::embed
 )
-
 
 add_test(
   NAME pysrf

@@ -31,8 +31,9 @@ option(SRF_USE_CCACHE "Enable caching compilation results with ccache" OFF)
 option(SRF_USE_CLANG_TIDY "Enable running clang-tidy as part of the build process" OFF)
 option(SRF_USE_CONDA "Enables finding dependencies via conda instead of vcpkg. Note: This will disable vcpkg. All dependencies must be installed first in the conda environment" ON)
 option(SRF_USE_IWYU "Enable running include-what-you-use as part of the build process" OFF)
+option(SRF_ENABLE_CODECOV "Enable gcov code coverage" OFF)
 
-set(SRF_RAPIDS_VERSION "22.06" CACHE STRING "Which version of RAPIDs to build for. Sets default versions for RAPIDs CMake and RMM.")
+set(SRF_RAPIDS_VERSION "22.06" CACHE STRING "Which version of RAPIDS to build for. Sets default versions for RAPIDS CMake and RMM.")
 
 set(SRF_CACHE_DIR "${CMAKE_SOURCE_DIR}/.cache" CACHE PATH "Directory to contain all CPM and CCache data")
 mark_as_advanced(SRF_CACHE_DIR)
@@ -131,9 +132,12 @@ endif()
 
 add_subdirectory(protos)
 
-# ###################################
+####################################
 # - Post dependencies setup --------
 include(cmake/setup_compiler.cmake)
+
+# Setup code coverage components
+include(cmake/setup_coverage.cmake)
 
 # Setup IWYU if enabled
 include(cmake/setup_iwyu.cmake)
@@ -210,8 +214,6 @@ add_library(libsrf
   src/internal/utils/parse_config.cpp
   src/internal/utils/parse_ints.cpp
   src/internal/utils/shared_resource_bit_map.cpp
-  src/public/benchmarking/trace_statistics.cpp
-  src/public/benchmarking/tracer.cpp
   src/public/benchmarking/util.cpp
   src/public/channel/channel.cpp
   src/public/codable/encoded_object.cpp
@@ -226,6 +228,8 @@ add_library(libsrf
   src/public/memory/buffer_view.cpp
   src/public/metrics/counter.cpp
   src/public/metrics/registry.cpp
+  src/public/node/edge_adapter_registry.cpp
+  src/public/node/edge_builder.cpp
   src/public/node/edge_registry.cpp
   src/public/options/engine_groups.cpp
   src/public/options/fiber_pool.cpp
@@ -240,6 +244,8 @@ add_library(libsrf
   src/public/runnable/runner.cpp
   src/public/runnable/types.cpp
   src/public/segment/definition.cpp
+  src/public/benchmarking/trace_statistics.cpp
+  src/public/benchmarking/tracer.cpp
   src/public/utils/bytes_to_string.cpp
   src/public/utils/thread_utils.cpp
   src/public/utils/type_utils.cpp

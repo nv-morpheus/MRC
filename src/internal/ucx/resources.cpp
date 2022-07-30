@@ -30,6 +30,7 @@
 
 #include <boost/fiber/future/future.hpp>
 #include <cuda_runtime.h>
+#include <glog/logging.h>
 
 #include <ostream>
 
@@ -83,11 +84,13 @@ const RegistrationCache& Resources::registration_cache() const
     CHECK(m_registration_cache);
     return *m_registration_cache;
 }
+
 Worker& Resources::worker()
 {
     CHECK(m_worker);
     return *m_worker;
 }
+
 std::shared_ptr<ucx::Endpoint> Resources::make_ep(const std::string& worker_address) const
 {
     return std::make_shared<ucx::Endpoint>(m_worker, worker_address);

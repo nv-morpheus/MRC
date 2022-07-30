@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "pysrf/segment.hpp"
 
 #include "pysrf/node.hpp"  // IWYU pragma: keep
@@ -42,7 +43,13 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(segment, m)
 {
-    m.doc() = R"pbdoc()pbdoc";
+    m.doc() = R"pbdoc(
+        Python bindings for SRF Segments
+        -------------------------------
+        .. currentmodule:: segment
+        .. autosummary::
+           :toctree: _generate
+    )pbdoc";
 
     // Common must be first in every module
     pysrf::import(m, "srf.core.common");
@@ -136,6 +143,12 @@ PYBIND11_MODULE(segment, m)
     Builder.def("make_py2cxx_edge_adapter", &SegmentProxy::make_py2cxx_edge_adapter);
 
     Builder.def("make_cxx2py_edge_adapter", &SegmentProxy::make_cxx2py_edge_adapter);
+
+    Builder.def("make_edge", &SegmentProxy::make_edge);
+
+    Builder.def("get_ingress", &SegmentProxy::get_ingress);
+
+    Builder.def("get_egress", &SegmentProxy::get_egress);
 
     Builder.def("make_edge", &SegmentProxy::make_edge, py::arg("source"), py::arg("sink"));
 

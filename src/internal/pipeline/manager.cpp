@@ -20,6 +20,7 @@
 #include "internal/pipeline/controller.hpp"
 #include "internal/pipeline/instance.hpp"
 #include "internal/pipeline/pipeline.hpp"
+#include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 
 #include "srf/channel/status.hpp"

@@ -21,6 +21,7 @@
 
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>  // IWYU pragma: keep
 
 namespace srf::pysrf {
 

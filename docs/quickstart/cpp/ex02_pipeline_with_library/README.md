@@ -29,9 +29,9 @@ Exactly the same as `ex00_simple_pipeline`, we can run the pipeline and get the 
 ```bash
 $ ${QSG_BUILD_DIR}/docs/quickstart/cpp/ex02_pipeline_with_library/ex02_pipeline_with_library.x
 srf pipeline starting...
-sink: 2
-sink: 4
-sink: 6
+sink: 2.5
+sink: 5
+sink: 7.5
 srf pipeline complete: counter should be 3; counter=3
 ```
 

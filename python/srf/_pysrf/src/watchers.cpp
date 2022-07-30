@@ -29,6 +29,7 @@
 #include "srf/segment/builder.hpp"
 #include "srf/segment/object.hpp"
 
+#include <boost/hana/if.hpp>
 #include <nlohmann/json.hpp>
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>  // IWYU pragma: keep
