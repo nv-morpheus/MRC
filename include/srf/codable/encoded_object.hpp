@@ -21,7 +21,6 @@
 #include "srf/exceptions/runtime_error.hpp"
 #include "srf/memory/buffer.hpp"
 #include "srf/memory/buffer_view.hpp"
-#include "srf/memory/resources/memory_resource.hpp"
 #include "srf/protos/codable.pb.h"
 #include "srf/utils/macros.hpp"
 
@@ -30,7 +29,7 @@
 
 #include <cstddef>
 #include <map>
-#include <memory>
+#include <string>
 #include <typeindex>
 #include <utility>
 #include <vector>

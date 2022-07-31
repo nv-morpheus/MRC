@@ -18,9 +18,13 @@
 #include "srf/codable/encoded_object.hpp"
 
 #include "internal/data_plane/resources.hpp"
+#include "internal/memory/device_resources.hpp"
+#include "internal/memory/host_resources.hpp"
 #include "internal/network/resources.hpp"
-#include "internal/resources/forward.hpp"
 #include "internal/resources/manager.hpp"
+#include "internal/resources/partition_resources.hpp"
+#include "internal/ucx/memory_block.hpp"
+#include "internal/ucx/registration_cache.hpp"
 
 #include "srf/memory/buffer_view.hpp"
 #include "srf/memory/memory_kind.hpp"
@@ -28,9 +32,12 @@
 
 #include <google/protobuf/any.pb.h>
 #include <google/protobuf/message.h>
+#include <string.h>
 
 #include <cstdint>
+#include <optional>
 #include <ostream>
+#include <type_traits>
 
 namespace srf::codable {
 
