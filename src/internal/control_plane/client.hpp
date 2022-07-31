@@ -38,6 +38,8 @@
 
 #include <grpcpp/completion_queue.h>
 
+#include <mutex>
+
 namespace srf::internal::control_plane {
 
 template <typename ResponseT>
@@ -99,6 +101,8 @@ class Client final : public Service
     template <typename ResponseT, typename RequestT>
     void async_unary(const protos::EventType& event_type, RequestT&& request, AsyncStatus<ResponseT>& status);
 
+    bool has_subscription_service(const std::string& name) const;
+
   private:
     void route_subscription_service_update(event_t event);
 
@@ -137,7 +141,7 @@ class Client final : public Service
     // The customer destruction of this object will cause a gRPC WritesDone to be issued to the server.
     writer_t m_writer;
 
-    std::mutex m_mutex;
+    mutable std::mutex m_mutex;
 };
 
 template <typename ResponseT>

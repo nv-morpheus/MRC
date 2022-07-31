@@ -99,9 +99,12 @@ TEST_F(TestControlPlane, SingleClientConnectDisconnect)
     EXPECT_EQ(client->state(), state_t::Connected);
 
     client->register_ucx_addresses({m_resources->partition(0).network()->data_plane().ucx_address()});
-    client->get_or_create_subscription_service("port_knox", {"publisher", "subscriber"});
     EXPECT_EQ(client->instance_ids().size(), 1);
     EXPECT_EQ(client->state(), state_t::Operational);
+
+    EXPECT_FALSE(client->has_subscription_service("port_knox"));
+    client->get_or_create_subscription_service("port_knox", {"publisher", "subscriber"});
+    EXPECT_TRUE(client->has_subscription_service("port_knox"));
 
     client->service_stop();
     client->service_await_join();

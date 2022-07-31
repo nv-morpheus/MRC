@@ -17,6 +17,8 @@
 
 #include "internal/control_plane/client.hpp"
 
+#include "internal/utils/contains.hpp"
+
 #include "srf/channel/channel.hpp"
 #include "srf/channel/status.hpp"
 #include "srf/exceptions/runtime_error.hpp"
@@ -245,4 +247,9 @@ void Client::route_subscription_service_update(event_t event)
         << "unable to route update for service: " << update.service_name();
 }
 
+bool Client::has_subscription_service(const std::string& name) const
+{
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    return contains(m_subscription_services, name);
+}
 }  // namespace srf::internal::control_plane
