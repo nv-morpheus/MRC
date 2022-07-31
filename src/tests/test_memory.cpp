@@ -43,7 +43,6 @@
 #include <ostream>
 #include <type_traits>
 #include <utility>
-
 // iwyu thinks spdlog, map, set, thread & vector are needed for arena_resource
 // IWYU pragma: no_include <spdlog/sinks/basic_file_sink.h>
 // IWYU pragma: no_include "spdlog/sinks/basic_file_sink.h"
