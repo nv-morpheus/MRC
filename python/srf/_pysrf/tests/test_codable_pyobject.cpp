@@ -28,6 +28,7 @@
 #include "srf/codable/encoding_options.hpp"
 #include "srf/codable/type_traits.hpp"
 
+#include <gtest/gtest.h>
 #include <object.h>
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>

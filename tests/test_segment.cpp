@@ -20,49 +20,49 @@
 #include "srf/benchmarking/trace_statistics.hpp"
 #include "srf/channel/status.hpp"
 #include "srf/core/executor.hpp"
-#include "srf/engine/pipeline/ipipeline.hpp"  // for IPipeline
-#include "srf/manifold/egress.hpp"            // for MappedEgress<>...
+#include "srf/engine/pipeline/ipipeline.hpp"
+#include "srf/manifold/egress.hpp"
 #include "srf/node/operators/broadcast.hpp"
-#include "srf/node/rx_node.hpp"            // for RxNode
-#include "srf/node/rx_sink.hpp"            // for RxSink
-#include "srf/node/rx_source.hpp"          // for RxSource
-#include "srf/node/source_channel.hpp"     // for SourceChannel
-#include "srf/node/source_properties.hpp"  // for SourceProperties
+#include "srf/node/rx_node.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/rx_source.hpp"
+#include "srf/node/source_channel.hpp"
+#include "srf/node/source_properties.hpp"
 #include "srf/options/options.hpp"
 #include "srf/options/topology.hpp"
 #include "srf/pipeline/pipeline.hpp"
-#include "srf/segment/builder.hpp"       // for Builder
-#include "srf/segment/definition.hpp"    // for Definition
-#include "srf/segment/ingress_port.hpp"  // for IngressPort
-#include "srf/segment/object.hpp"        // for Object
-#include "srf/segment/ports.hpp"         // for Ports<>::port_...
-#include "srf/types.hpp"  // for Future, Tags
+#include "srf/segment/builder.hpp"
+#include "srf/segment/definition.hpp"
+#include "srf/segment/ingress_port.hpp"
+#include "srf/segment/object.hpp"
+#include "srf/segment/ports.hpp"
+#include "srf/types.hpp"
 
-#include <cxxabi.h>  // for __forced_unwind
+#include <cxxabi.h>
 #include <glog/logging.h>
-#include <gtest/gtest-message.h>    // for Message
-#include <gtest/gtest-test-part.h>  // for TestPartResult
+#include <gtest/gtest-message.h>
+#include <gtest/gtest-test-part.h>
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
-#include <rxcpp/operators/rx-concat_map.hpp>  // for concat_map
-#include <rxcpp/operators/rx-map.hpp>         // for map
-#include <rxcpp/operators/rx-tap.hpp>         // for tap
-#include <rxcpp/rx-includes.hpp>              // for apply, current_exception
-#include <rxcpp/rx-observable.hpp>            // for observable
-#include <rxcpp/rx-observer.hpp>              // for is_on_error<>::not_void, is_on_next_of<>::not_void, observer
-#include <rxcpp/rx-operators.hpp>             // for observable_member
-#include <rxcpp/rx-predef.hpp>                // for trace_activity
-#include <rxcpp/rx-subscriber.hpp>            // for make_subscriber, subscriber
+#include <rxcpp/operators/rx-concat_map.hpp>
+#include <rxcpp/operators/rx-map.hpp>
+#include <rxcpp/operators/rx-tap.hpp>
+#include <rxcpp/rx-includes.hpp>
+#include <rxcpp/rx-observable.hpp>
+#include <rxcpp/rx-observer.hpp>
+#include <rxcpp/rx-operators.hpp>
+#include <rxcpp/rx-predef.hpp>
+#include <rxcpp/rx-subscriber.hpp>
 
-#include <algorithm>  // for max, random_sh...
+#include <algorithm>
 #include <array>
 #include <atomic>
-#include <iostream>  // for glog macros & cout
+#include <iostream>
 #include <mutex>
 #include <set>
 #include <string>
-#include <type_traits>  // for remove_reference<>::type
-#include <utility>      // for move
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 // IWYU pragma: no_include <boost/fiber/future/detail/shared_state.hpp>
@@ -78,11 +78,9 @@
 // IWYU pragma: no_include "gtest/gtest_pred_impl.h"
 // IWYU thinks we need map for segment::Definition::create
 
-namespace srf {
-namespace exceptions {
+namespace srf::exceptions {
 struct SrfRuntimeError;
-}
-}  // namespace srf
+}  // namespace srf::exceptions
 
 using namespace std::literals::string_literals;
 

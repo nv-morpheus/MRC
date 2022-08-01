@@ -31,22 +31,16 @@
 #include "srf/segment/builder.hpp"
 #include "srf/segment/object.hpp"
 
-#include <cxxabi.h>
+#include <boost/fiber/future/future.hpp>
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <rxcpp/rx-observable.hpp>
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-operators.hpp>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
+#include <rxcpp/rx.hpp>
 
 #include <cstddef>
 #include <exception>
-#include <functional>
 #include <memory>
 #include <string>
-#include <thread>
 #include <type_traits>
 #include <utility>
 

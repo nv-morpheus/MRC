@@ -18,29 +18,29 @@
 #pragma once
 
 #include "srf/benchmarking/trace_statistics.hpp"
+#include "srf/core/watcher.hpp"
 #include "srf/engine/segment/ibuilder.hpp"
 #include "srf/exceptions/runtime_error.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/rx_node.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
-#include "srf/runnable/context.hpp"
 #include "srf/node/sink_properties.hpp"    // IWYU pragma: keep
 #include "srf/node/source_properties.hpp"  // IWYU pragma: keep
-#include "srf/runnable/launchable.hpp"     // IWYU pragma: keep
-#include "srf/runnable/runnable.hpp"       // IWYU pragma: keep
-#include "srf/segment/component.hpp"       // IWYU pragma: keep
-#include "srf/segment/egress_port.hpp"     // IWYU pragma: keep
-#include "srf/segment/forward.hpp"         // IWYU pragma: keep
-#include "srf/segment/ingress_port.hpp"    // IWYU pragma: keep
-#include "srf/segment/object.hpp"          // IWYU pragma: keep
-#include "srf/segment/runnable.hpp"        // IWYU pragma: keep
+#include "srf/runnable/context.hpp"
+#include "srf/runnable/launchable.hpp"   // IWYU pragma: keep
+#include "srf/runnable/runnable.hpp"     // IWYU pragma: keep
+#include "srf/segment/component.hpp"     // IWYU pragma: keep
+#include "srf/segment/egress_port.hpp"   // IWYU pragma: keep
+#include "srf/segment/forward.hpp"       // IWYU pragma: keep
+#include "srf/segment/ingress_port.hpp"  // IWYU pragma: keep
+#include "srf/segment/object.hpp"        // IWYU pragma: keep
+#include "srf/segment/runnable.hpp"      // IWYU pragma: keep
 #include "srf/utils/macros.hpp"
 
 #include <boost/hana.hpp>  // IWYU pragma: keep
 #include <glog/logging.h>
-#include <rxcpp/rx-observable.hpp>
-#include <rxcpp/rx-observer.hpp>
+#include <rxcpp/rx.hpp>
 
 #include <cstdint>
 #include <functional>
@@ -54,14 +54,6 @@
 // IWYU pragma: no_include <boost/hana/fwd/core/when.hpp>
 // IWYU pragma: no_include <boost/hana/fwd/if.hpp>
 // IWYU pragma: no_include <boost/hana/fwd/type.hpp>
-
-namespace srf::segment {
-class Definition;
-}  // namespace srf::segment
-
-namespace srf {
-class WatcherInterface;
-}
 
 namespace {
 namespace hana = boost::hana;

@@ -32,7 +32,6 @@
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>  // IWYU pragma: keep
 #include <pybind11/pytypes.h>
-#include <tupleobject.h>
 
 #include <functional>
 #include <memory>

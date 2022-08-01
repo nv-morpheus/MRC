@@ -39,23 +39,16 @@
 #include "srf/segment/object.hpp"
 
 #include <boost/hana/if.hpp>
-#include <cxxabi.h>
 #include <ext/alloc_traits.h>
 #include <glog/logging.h>
-#include <gtest/gtest-message.h>
-#include <gtest/gtest-test-part.h>
-#include <listobject.h>
+#include <gtest/gtest.h>
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
 #include <rxcpp/operators/rx-map.hpp>
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-operators.hpp>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
+#include <rxcpp/rx.hpp>
 #include <rxcpp/sources/rx-iterate.hpp>
-#include <tupleobject.h>
 
 #include <algorithm>
 #include <atomic>

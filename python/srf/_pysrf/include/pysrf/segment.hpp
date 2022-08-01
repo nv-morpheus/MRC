@@ -19,6 +19,9 @@
 
 #include "pysrf/types.hpp"
 
+#include "srf/segment/forward.hpp"
+#include "srf/segment/object.hpp"
+
 #include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
@@ -29,14 +32,6 @@
 #include <string>
 #include <utility>
 #include <vector>  // IWYU pragma: keep
-
-namespace srf::segment {
-class Builder;
-}  // namespace srf::segment
-
-namespace srf::segment {
-struct ObjectProperties;
-}  // namespace srf::segment
 
 namespace srf::pysrf {
 

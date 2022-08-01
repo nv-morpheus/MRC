@@ -16,27 +16,21 @@
  */
 
 #include "pysrf/edge_adapter.hpp"
-#include "pysrf/forward.hpp"
 #include "pysrf/port_builders.hpp"
 #include "pysrf/types.hpp"
 
 #include "srf/channel/status.hpp"
 #include "srf/core/utils.hpp"
 #include "srf/manifold/egress.hpp"
-#include "srf/node/edge_adapter_registry.hpp"
 #include "srf/node/sink_properties.hpp"
 #include "srf/node/source_properties.hpp"
 
-#include <cxxabi.h>
+#include <boost/fiber/future/future.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <rxcpp/rx-observer.hpp>    // for is_on_error<>::not_void
-#include <rxcpp/rx-operators.hpp>   // for observable_member
-#include <rxcpp/rx-predef.hpp>      // for trace_activity
-#include <rxcpp/rx-subscriber.hpp>  // for make_subscriber
+#include <rxcpp/rx.hpp>
 
 #include <algorithm>
-#include <functional>
 #include <memory>
 #include <vector>
 

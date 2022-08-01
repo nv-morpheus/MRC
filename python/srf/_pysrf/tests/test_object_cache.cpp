@@ -19,16 +19,14 @@
 
 #include "pysrf/utilities/object_cache.hpp"
 
-#include <gtest/gtest-message.h>
-#include <gtest/gtest-test-part.h>
+#include <gtest/gtest.h>
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
-#include <tupleobject.h>
 
 #include <cstddef>  // IWYU pragma: keep
-#include <string> // IWYU pragma: keep
+#include <string>   // IWYU pragma: keep
 
 // IWYU pragma: no_include "gtest/gtest_pred_impl.h"
 // IWYU pragma: no_include <pybind11/detail/common.h>

@@ -19,11 +19,8 @@
 
 #include "pysrf/module_wrappers/shared_memory.hpp"
 
-#include <bytesobject.h>
-#include <gtest/gtest-message.h>
-#include <gtest/gtest-test-part.h>
+#include <gtest/gtest.h>
 #include <pybind11/buffer_info.h>
-#include <pybind11/detail/common.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
 

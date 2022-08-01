@@ -22,7 +22,6 @@
 
 #include "srf/segment/builder.hpp"  // IWYU pragma: keep
 
-#include <listobject.h>
 #include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep

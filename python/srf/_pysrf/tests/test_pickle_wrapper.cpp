@@ -20,15 +20,12 @@
 #include "pysrf/module_wrappers/pickle.hpp"
 #include "pysrf/utilities/object_cache.hpp"
 
-#include <bytesobject.h>
-#include <gtest/gtest-message.h>
-#include <gtest/gtest-test-part.h>
+#include <gtest/gtest.h>
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
-#include <tupleobject.h>
 
 #include <string>  // IWYU pragma: keep
 

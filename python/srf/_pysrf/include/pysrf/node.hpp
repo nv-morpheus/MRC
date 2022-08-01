@@ -22,30 +22,25 @@
 #include "pysrf/types.hpp"
 #include "pysrf/utils.hpp"
 
-#include "srf/channel/forward.hpp"
 #include "srf/channel/ingress.hpp"
 #include "srf/channel/status.hpp"
-#include "srf/node/edge_connector.hpp"
 #include "srf/node/edge.hpp"
-#include "srf/node/edge_registry.hpp"
+#include "srf/node/edge_connector.hpp"
 #include "srf/node/forward.hpp"
 #include "srf/node/rx_node.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
-#include "srf/node/sink_properties.hpp"
-#include "srf/node/source_properties.hpp"
+#include "srf/node/sink_properties.hpp"    // IWYU pragma: keep
+#include "srf/node/source_properties.hpp"  // IWYU pragma: keep
 
-#include <glog/logging.h>
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>
-#include <pybind11/pybind11.h>
+#include <pybind11/pybind11.h>  // IWYU pragma: keep
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
 
 #include <functional>
 #include <memory>
-#include <ostream>
-#include <typeindex>
 #include <utility>
 
 namespace srf {

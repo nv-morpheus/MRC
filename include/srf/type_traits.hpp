@@ -32,7 +32,7 @@ struct is_shared_ptr<std::shared_ptr<T>> : std::true_type
 {};
 
 template <typename T>
-inline constexpr bool is_shared_ptr_v = is_shared_ptr<T>::value;
+inline constexpr bool is_shared_ptr_v = is_shared_ptr<T>::value;  // NOLINT
 
 template <typename T>
 struct is_unique_ptr : std::false_type
@@ -43,7 +43,7 @@ struct is_unique_ptr<std::unique_ptr<T>> : std::true_type
 {};
 
 template <typename T>
-inline constexpr bool is_unique_ptr_v = is_unique_ptr<T>::value;
+inline constexpr bool is_unique_ptr_v = is_unique_ptr<T>::value;  // NOLINT
 
 template <typename TargetT, typename SourceT>
 inline std::unique_ptr<TargetT> dynamic_pointer_cast(std::unique_ptr<SourceT>&& source)
@@ -62,7 +62,7 @@ struct is_smart_ptr : std::integral_constant<bool, is_unique_ptr<T>::value or is
 {};
 
 template <typename T>
-inline constexpr bool is_smart_ptr_v = is_smart_ptr<T>::value;
+inline constexpr bool is_smart_ptr_v = is_smart_ptr<T>::value;  // NOLINT
 /*
 template <typename T, typename = void>
 struct is_valid_type : std::false_type

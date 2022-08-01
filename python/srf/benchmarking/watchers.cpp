@@ -23,6 +23,7 @@
 #include "srf/segment/builder.hpp"  // IWYU pragma: keep
 
 #include <pybind11/attr.h>
+#include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 
 #include <array>
@@ -33,10 +34,6 @@
 
 // IWYU pragma: no_include <pybind11/detail/common.h>
 // IWYU pragma: no_include <pybind11/detail/descr.h>
-
-namespace pybind11 {
-class gil_scoped_release;
-}
 
 namespace srf::pysrf {
 

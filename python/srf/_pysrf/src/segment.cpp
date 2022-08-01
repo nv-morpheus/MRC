@@ -17,7 +17,6 @@
 
 #include "pysrf/segment.hpp"
 
-#include "pysrf/forward.hpp"
 #include "pysrf/node.hpp"
 #include "pysrf/types.hpp"
 #include "pysrf/utils.hpp"
@@ -33,7 +32,6 @@
 #include "srf/segment/builder.hpp"
 #include "srf/segment/object.hpp"
 
-#include <cxxabi.h>
 #include <glog/logging.h>
 #include <pybind11/cast.h>
 #include <pybind11/detail/internals.h>
@@ -42,10 +40,7 @@
 #include <pybind11/pytypes.h>
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx-observable.hpp>
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-operators.hpp>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
+#include <rxcpp/rx.hpp>
 
 #include <exception>
 #include <fstream>

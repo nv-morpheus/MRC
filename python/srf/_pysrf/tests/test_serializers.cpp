@@ -20,15 +20,13 @@
 #include "pysrf/utilities/deserializers.hpp"
 #include "pysrf/utilities/serializers.hpp"
 
-#include <gtest/gtest-message.h>
-#include <gtest/gtest-test-part.h>
+#include <gtest/gtest.h>
 #include <pybind11/cast.h>
 #include <pybind11/embed.h>
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <pybind11/stl.h> // IWYU pragma: keep
-#include <tupleobject.h>
+#include <pybind11/stl.h>  // IWYU pragma: keep
 
 #include <array>
 #include <ostream>

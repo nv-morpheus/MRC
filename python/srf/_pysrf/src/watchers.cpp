@@ -27,16 +27,14 @@
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
 #include "srf/segment/builder.hpp"
+#include "srf/segment/object.hpp"
 
 #include <nlohmann/json_fwd.hpp>
 #include <pybind11/gil.h>
 #include <pybind11/pytypes.h>
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/operators/rx-tap.hpp>
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-operators.hpp>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
+#include <rxcpp/rx.hpp>
 
 #include <functional>
 #include <memory>
@@ -48,10 +46,6 @@
 // IWYU pragma: no_include <pybind11/detail/common.h>
 // IWYU pragma: no_include "rxcpp/sources/rx-iterate.hpp"
 // IWYU pragma: no_include "rx-includes.hpp"
-
-namespace srf::segment {
-struct ObjectProperties;
-}
 
 namespace srf::pysrf {
 

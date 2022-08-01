@@ -26,12 +26,6 @@
 #include <typeindex>
 #include <utility>
 
-namespace srf::segment {
-class EgressPortBase;
-struct IngressPortBase;
-struct ObjectProperties;
-}  // namespace srf::segment
-
 namespace srf::node {
 
 std::map<std::type_index, std::shared_ptr<PortUtil>> PortRegistry::s_registered_port_utils{};
