@@ -20,7 +20,7 @@
 #include "srf/node/port_registry.hpp"
 
 namespace srf::segment {
-std::shared_ptr<ObjectProperties> Builder::get_ingress_dynamic(std::string name, std::type_index type_index) {
+std::shared_ptr<ObjectProperties> Builder::get_ingress(std::string name, std::type_index type_index) {
     auto base = m_backend.get_ingress_base(name);
     if (!base)
     {
@@ -37,7 +37,7 @@ std::shared_ptr<ObjectProperties> Builder::get_ingress_dynamic(std::string name,
     return port;
 }
 
-std::shared_ptr<ObjectProperties> Builder::get_egress_dynamic(std::string name, std::type_index type_index) {
+std::shared_ptr<ObjectProperties> Builder::get_egress(std::string name, std::type_index type_index) {
     auto base = m_backend.get_egress_base(name);
     if (!base)
     {

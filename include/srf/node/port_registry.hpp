@@ -51,6 +51,10 @@ struct PortUtil
     using egress_builder_fn_t =
         std::function<std::shared_ptr<segment::EgressPortBase>(const SegmentAddress&, const PortName&)>;
 
+    // We store builder tuples to avoid ambiguities when attempting to construct objects via python.
+    // While we have the ability to extract the underlying c++ type stored by a registered Pybind11 object,
+    // we don't know apriori if we will be constructing a port of that data type or a shared_ptr to that
+    // data type... so we register builders for both scenarios.
     using ingress_tuple_t = std::tuple<ingress_builder_fn_t, ingress_builder_fn_t>;
     using egress_tuple_t  = std::tuple<egress_builder_fn_t, egress_builder_fn_t>;
 

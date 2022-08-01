@@ -49,31 +49,36 @@
 namespace srf::pysrf {
 namespace py = pybind11;
 
-using ingress_info_t = std::tuple<std::vector<std::string>,
-                                  std::vector<std::type_index>,
-                                  std::vector<srf::node::PortUtil::ingress_builder_fn_t>>;
+namespace {
+struct PipelineIngressInfo
+{
+    std::vector<std::string> m_names;
+    std::vector<std::type_index> m_type_indices;
+    std::vector<srf::node::PortUtil::ingress_builder_fn_t> m_ingress_builders;
+};
 
-using egress_info_t = std::tuple<std::vector<std::string>,
-                                 std::vector<std::type_index>,
-                                 std::vector<srf::node::PortUtil::egress_builder_fn_t>>;
+struct PipelineEgressInfo
+{
+    std::vector<std::string> m_names;
+    std::vector<std::type_index> m_type_indices;
+    std::vector<srf::node::PortUtil::egress_builder_fn_t> m_egress_builders;
+};
 
-ingress_info_t collect_ingress_info(py::list ids)
+PipelineIngressInfo collect_ingress_info(py::list ids)
 {
     using namespace srf::node;
-    std::vector<std::string> port_ids;
-    std::vector<std::type_index> port_type_indices;
-    std::vector<srf::node::PortUtil::ingress_builder_fn_t> builder_fns;
+    PipelineIngressInfo ingress_info;
 
     for (const auto& item : ids)
     {
         if (item.get_type().equal(py::str().get_type()))
         {
             VLOG(2) << "Ingress type unspecified, using PyHolder default";
-            port_ids.push_back(item.cast<std::string>());
-            port_type_indices.emplace_back(typeid(PyHolder));
+            ingress_info.m_names.push_back(item.cast<std::string>());
+            ingress_info.m_type_indices.emplace_back(typeid(PyHolder));
 
             auto port_util = PortRegistry::find_port_util(typeid(PyHolder));
-            builder_fns.push_back(std::get<0>(port_util->m_ingress_builders));
+            ingress_info.m_ingress_builders.push_back(std::get<0>(port_util->m_ingress_builders));
         }
         else if (item.get_type().equal(py::tuple().get_type()))
         {
@@ -95,9 +100,9 @@ ingress_info_t collect_ingress_info(py::list ids)
             auto builder_fn = flag_sp_variant ? std::get<1>(port_util->m_ingress_builders)
                                               : std::get<0>(port_util->m_ingress_builders);
 
-            port_ids.push_back(py_name.cast<std::string>());
-            port_type_indices.emplace_back(type_index);
-            builder_fns.push_back(builder_fn);
+            ingress_info.m_names.push_back(py_name.cast<std::string>());
+            ingress_info.m_type_indices.emplace_back(type_index);
+            ingress_info.m_ingress_builders.push_back(builder_fn);
         }
         else
         {
@@ -105,26 +110,25 @@ ingress_info_t collect_ingress_info(py::list ids)
         }
     }
 
-    return {port_ids, port_type_indices, builder_fns};
+    return ingress_info;
 }
 
-egress_info_t collect_egress_info(py::list ids)
+PipelineEgressInfo collect_egress_info(py::list ids)
 {
     using namespace srf::node;
-    std::vector<std::string> port_ids;
-    std::vector<std::type_index> port_type_indices;
-    std::vector<srf::node::PortUtil::egress_builder_fn_t> builder_fns;
+
+    PipelineEgressInfo egress_info;
 
     for (const auto& item : ids)
     {
         if (item.get_type().equal(py::str().get_type()))
         {
             VLOG(2) << "Egress type unspecified, using PyHolder default";
-            port_ids.push_back(item.cast<std::string>());
-            port_type_indices.emplace_back(typeid(PyHolder));
+            egress_info.m_names.push_back(item.cast<std::string>());
+            egress_info.m_type_indices.emplace_back(typeid(PyHolder));
 
             auto port_util = PortRegistry::find_port_util(typeid(PyHolder));
-            builder_fns.push_back(std::get<0>(port_util->m_egress_builders));
+            egress_info.m_egress_builders.push_back(std::get<0>(port_util->m_egress_builders));
         }
         else if (item.get_type().equal(py::tuple().get_type()))
         {
@@ -147,9 +151,9 @@ egress_info_t collect_egress_info(py::list ids)
             auto builder_fn =
                 flag_sp_variant ? std::get<1>(port_util->m_egress_builders) : std::get<0>(port_util->m_egress_builders);
 
-            port_ids.push_back(py_name.cast<std::string>());
-            port_type_indices.emplace_back(type_index);
-            builder_fns.push_back(builder_fn);
+            egress_info.m_names.push_back(py_name.cast<std::string>());
+            egress_info.m_type_indices.emplace_back(type_index);
+            egress_info.m_egress_builders.push_back(builder_fn);
         }
         else
         {
@@ -157,8 +161,9 @@ egress_info_t collect_egress_info(py::list ids)
         }
     }
 
-    return {port_ids, port_type_indices, builder_fns};
+    return egress_info;
 }
+}  // namespace
 
 Pipeline::Pipeline() : m_pipeline(srf::pipeline::make_pipeline()) {}
 
@@ -188,12 +193,12 @@ void Pipeline::make_segment(const std::string& name,
     };
 
     auto ingress_info = collect_ingress_info(ingress_port_info);
-    segment::IngressPortsBase ingress_ports(std::get<0>(ingress_info), std::get<2>(ingress_info));
-    node::PortRegistry::register_name_type_index_pairs(std::get<0>(ingress_info), std::get<1>(ingress_info));
+    segment::IngressPortsBase ingress_ports(ingress_info.m_names, ingress_info.m_ingress_builders);
+    node::PortRegistry::register_name_type_index_pairs(ingress_info.m_names, ingress_info.m_type_indices);
 
     auto egress_info = collect_egress_info(egress_port_info);
-    segment::EgressPortsBase egress_ports(std::get<0>(egress_info), std::get<2>(egress_info));
-    node::PortRegistry::register_name_type_index_pairs(std::get<0>(egress_info), std::get<1>(egress_info));
+    segment::EgressPortsBase egress_ports(egress_info.m_names, egress_info.m_egress_builders);
+    node::PortRegistry::register_name_type_index_pairs(egress_info.m_names, egress_info.m_type_indices);
 
     m_pipeline->make_segment(name, ingress_ports, egress_ports, init_wrapper);
 }

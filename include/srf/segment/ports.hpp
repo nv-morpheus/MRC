@@ -30,12 +30,10 @@ namespace srf::segment {
 
 class Definition;
 
-// template <template <class> class PortT, typename BaseT, typename... TypesT>
 template <typename BaseT>
 class Ports
 {
   public:
-    // static constexpr auto PortCount = sizeof...(TypesT);
     using port_builder_fn_t = std::function<std::shared_ptr<BaseT>(const SegmentAddress&, const PortName&)>;
 
     Ports(std::vector<std::string> names, std::vector<port_builder_fn_t> builder_fns)

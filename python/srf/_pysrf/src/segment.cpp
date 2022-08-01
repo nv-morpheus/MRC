@@ -208,7 +208,7 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_ingress(srf::s
     {
         VLOG(2) << "Found an ingress port caster for " << name;
 
-        return self.get_ingress_dynamic(name, it_caster->second);
+        return self.get_ingress(name, it_caster->second);
     }
     return self.get_ingress<PyHolder>(name);
 }
@@ -221,7 +221,7 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_egress(srf::se
     {
         VLOG(2) << "Found an egress port caster for " << name;
 
-        return self.get_egress_dynamic(name, it_caster->second);
+        return self.get_egress(name, it_caster->second);
     }
 
     return self.get_egress<PyHolder>(name);

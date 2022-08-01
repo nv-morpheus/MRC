@@ -84,7 +84,7 @@ std::shared_ptr<segment::ObjectProperties> PortUtil::try_cast_egress_base_to_obj
 
 void PortRegistry::register_port_util(std::shared_ptr<PortUtil> util)
 {
-    std::lock_guard<std::recursive_mutex> lock(s_mutex);
+    std::lock_guard<decltype(s_mutex)> lock(s_mutex);
 
     auto iter_util = PortRegistry::s_registered_port_utils.find(util->m_port_data_type);
     if (iter_util != PortRegistry::s_registered_port_utils.end())
@@ -96,7 +96,7 @@ void PortRegistry::register_port_util(std::shared_ptr<PortUtil> util)
 
 void PortRegistry::register_name_type_index_pair(std::string name, std::type_index type_index)
 {
-    std::lock_guard<std::recursive_mutex> lock(s_mutex);
+    std::lock_guard<decltype(s_mutex)> lock(s_mutex);
     s_port_to_type_index.insert({name, type_index});
 }
 
@@ -105,7 +105,7 @@ void PortRegistry::register_name_type_index_pairs(std::vector<std::string> names
 {
     CHECK(names.size() == type_indices.size());
 
-    std::lock_guard<std::recursive_mutex> lock(s_mutex);
+    std::lock_guard<decltype(s_mutex)> lock(s_mutex);
     for (std::size_t idx = 0; idx < names.size(); idx++)
     {
         register_name_type_index_pair(names[idx], type_indices[idx]);
@@ -113,11 +113,14 @@ void PortRegistry::register_name_type_index_pairs(std::vector<std::string> names
 }
 bool PortRegistry::has_port_util(std::type_index type_index)
 {
+    std::lock_guard<decltype(s_mutex)> lock(s_mutex);
     return (PortRegistry::s_registered_port_utils.find(type_index) != PortRegistry::s_registered_port_utils.end());
 }
 
 std::shared_ptr<PortUtil> PortRegistry::find_port_util(std::type_index type_index)
 {
+    std::lock_guard<decltype(s_mutex)> lock(s_mutex);
+
     auto iter_util = PortRegistry::s_registered_port_utils.find(type_index);
     if (iter_util == PortRegistry::s_registered_port_utils.end())
     {

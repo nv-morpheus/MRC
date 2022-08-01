@@ -110,8 +110,8 @@ class Builder final
     DELETE_COPYABILITY(Builder);
     DELETE_MOVEABILITY(Builder);
 
-    std::shared_ptr<ObjectProperties> get_ingress_dynamic(std::string name, std::type_index type_index);
-    std::shared_ptr<ObjectProperties> get_egress_dynamic(std::string name, std::type_index type_index);
+    std::shared_ptr<ObjectProperties> get_ingress(std::string name, std::type_index type_index);
+    std::shared_ptr<ObjectProperties> get_egress(std::string name, std::type_index type_index);
 
     template <typename T>
     std::shared_ptr<Object<node::SinkProperties<T>>> get_egress(std::string name);
