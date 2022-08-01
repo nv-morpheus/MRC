@@ -161,7 +161,7 @@ TEST_F(TestPipeline, Execute)
 
 TEST_F(TestPipeline, DynamicPortConstructionGood)
 {
-    pysrf::PortUtilBuilder::register_port_util<pysrf::PyHolder>();
+    pysrf::PortBuilderUtil::register_port_util<pysrf::PyHolder>();
 
     std::string name                                 = "xyz";
     std::function<void(srf::segment::Builder&)> init = [](srf::segment::Builder& builder) {
@@ -207,7 +207,7 @@ TEST_F(TestPipeline, DynamicPortConstructionGood)
 
 TEST_F(TestPipeline, DynamicPortConstructionBadDuplicatePorts)
 {
-    pysrf::PortUtilBuilder::register_port_util<pysrf::PyHolder>();
+    pysrf::PortBuilderUtil::register_port_util<pysrf::PyHolder>();
 
     std::string name                                 = "xyz";
     std::function<void(srf::segment::Builder&)> init = [](srf::segment::Builder& builder) {

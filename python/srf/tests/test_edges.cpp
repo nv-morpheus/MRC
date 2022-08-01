@@ -205,17 +205,17 @@ PYBIND11_MODULE(test_edges_cpp, m)
     pysrf::import(m, "srf");
 
     py::class_<Base, std::shared_ptr<Base>>(m, "Base").def(py::init<>([]() { return std::make_shared<Base>(); }));
-    srf::pysrf::PortUtilBuilder::register_port_util<Base>();
+    srf::pysrf::PortBuilderUtil::register_port_util<Base>();
 
     py::class_<DerivedA, Base, std::shared_ptr<DerivedA>>(m, "DerivedA").def(py::init<>([]() {
         return std::make_shared<DerivedA>();
     }));
-    srf::pysrf::PortUtilBuilder::register_port_util<DerivedA>();
+    srf::pysrf::PortBuilderUtil::register_port_util<DerivedA>();
 
     py::class_<DerivedB, Base, std::shared_ptr<DerivedB>>(m, "DerivedB").def(py::init<>([]() {
         return std::make_shared<DerivedB>();
     }));
-    srf::pysrf::PortUtilBuilder::register_port_util<DerivedB>();
+    srf::pysrf::PortBuilderUtil::register_port_util<DerivedB>();
 
     srf::node::EdgeConnector<py::object, pysrf::PyObjectHolder>::register_converter();
     srf::node::EdgeConnector<pysrf::PyObjectHolder, py::object>::register_converter();

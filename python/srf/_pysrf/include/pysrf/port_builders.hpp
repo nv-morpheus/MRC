@@ -38,7 +38,7 @@ struct WrappedType<T, std::true_type>
     using wrapped_type_t = typename T::element_type;
 };
 
-struct PortUtilBuilder
+struct PortBuilderUtil
 {
     template <typename IngressDataT>
     static node::PortUtil::ingress_tuple_t create_ingress_builders()
@@ -151,7 +151,7 @@ struct AutoRegIngressPort
 
     static bool register_port()
     {
-        PortUtilBuilder::register_port_util<IngressT>();
+        PortBuilderUtil::register_port_util<IngressT>();
 
         return true;
     }
@@ -167,7 +167,7 @@ struct AutoRegEgressPort
 
     static bool register_port()
     {
-        PortUtilBuilder::register_port_util<EgressT>();
+        PortBuilderUtil::register_port_util<EgressT>();
 
         return true;
     }

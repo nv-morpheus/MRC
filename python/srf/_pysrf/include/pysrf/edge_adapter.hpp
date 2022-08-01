@@ -64,6 +64,26 @@ struct EdgeAdapterUtil
     using sink_adapter_fn_t   = std::function<std::shared_ptr<channel::IngressHandle>(
         std::type_index, srf::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle> ingress_handle)>;
 
+    template <typename DataTypeT>
+    static void register_data_adapters() {
+        if (!srf::node::EdgeAdapterRegistry::has_source_adapter(typeid(DataTypeT)))
+        {
+            std::type_index source_type = typeid(DataTypeT);
+            VLOG(2) << "Registering PySRF source adapter for: " << type_name<DataTypeT>() << " "
+                    << source_type.hash_code();
+            node::EdgeAdapterRegistry::register_source_adapter(typeid(DataTypeT),
+                                                               EdgeAdapterUtil::build_source_adapter<DataTypeT>());
+        }
+
+        if (!srf::node::EdgeAdapterRegistry::has_sink_adapter(typeid(DataTypeT)))
+        {
+            std::type_index sink_type = typeid(DataTypeT);
+            VLOG(2) << "Registering PySRF sink adapter for: " << type_name<DataTypeT>() << " " << sink_type.hash_code();
+            node::EdgeAdapterRegistry::register_sink_adapter(typeid(DataTypeT),
+                                                             EdgeAdapterUtil::build_sink_adapter<DataTypeT>());
+        }
+    }
+
     template <typename InputT>
     static sink_adapter_fn_t build_sink_adapter()
     {
