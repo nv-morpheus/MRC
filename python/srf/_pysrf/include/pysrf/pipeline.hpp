@@ -17,17 +17,15 @@
 
 #pragma once
 
-#include "srf/pipeline/pipeline.hpp"  // for Pipelin
+#include "srf/pipeline/pipeline.hpp"      // IWYU pragma: keep
+#include "srf/segment/builder.hpp"        // IWYU pragma: keep
+#include "srf/segment/ingress_ports.hpp"  // IWYU pragma: keep
 
-#include <pybind11/pytypes.h>  // for list
+#include <pybind11/pytypes.h>
 
-#include <functional>  // for function
-#include <memory>      // for unique_ptr
-#include <string>      // for string
-
-namespace srf::segment {
-class Builder;
-}  // namespace srf::segment
+#include <functional>
+#include <memory>
+#include <string>
 
 namespace srf::pysrf {
 

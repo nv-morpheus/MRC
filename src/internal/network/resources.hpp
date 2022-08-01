@@ -17,14 +17,13 @@
 
 #pragma once
 
+#include "internal/data_plane/resources.hpp"
 #include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/runnable/resources.hpp"
-#include "internal/ucx/registration_cache.hpp"
 
 #include "srf/utils/macros.hpp"
 
-#include <cstddef>
+#include <memory>
 
 namespace srf::internal::network {
 

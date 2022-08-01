@@ -15,15 +15,18 @@
  * limitations under the License.
  */
 
-#include "pysrf/utilities/object_cache.hpp"
 #include "pysrf/module_wrappers/shared_memory.hpp"
 
+#include "pysrf/utilities/object_cache.hpp"
+
+#include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
-#include <glog/logging.h>
-
-#include <chrono>
+#include <array>
+#include <cstddef>
+#include <stdexcept>
+#include <string>
 
 using namespace pybind11::literals;
 namespace py = pybind11;
@@ -31,14 +34,11 @@ namespace py = pybind11;
 namespace srf::pysrf {
 PythonSharedMemoryInterface::~PythonSharedMemoryInterface() = default;
 
-PythonSharedMemoryInterface::PythonSharedMemoryInterface() :
-    pycache(PythonObjectCache::get_handle())
+PythonSharedMemoryInterface::PythonSharedMemoryInterface() : m_pycache(PythonObjectCache::get_handle())
 {
-    auto mod = pycache.get_module("multiprocessing.shared_memory");
-    m_shmem_interface = py::cast<py::object>(
-        pycache.get_or_load("PythonSharedMemoryInterface.SharedMemory", [mod](){
-            return mod.attr("SharedMemory");
-    }));
+    auto mod          = m_pycache.get_module("multiprocessing.shared_memory");
+    m_shmem_interface = py::cast<py::object>(m_pycache.get_or_load("PythonSharedMemoryInterface.SharedMemory",
+                                                                   [mod]() { return mod.attr("SharedMemory"); }));
 }
 
 void PythonSharedMemoryInterface::allocate(std::size_t sz_bytes)
@@ -120,12 +120,11 @@ void PythonSharedMemoryInterface::unlink()
 
 }  // namespace srf::pysrf
 
-py::object srf::pysrf::build_shmem_descriptor(const PythonSharedMemoryInterface& shmem_interface,
-                                                    bool flag_is_shared)
+py::object srf::pysrf::build_shmem_descriptor(const PythonSharedMemoryInterface& shmem_interface, bool flag_is_shared)
 {
-    auto& pycache = PythonObjectCache::get_handle();
+    auto& m_pycache = PythonObjectCache::get_handle();
 
-    auto types            = pycache.get_module("types");
+    auto types            = m_pycache.get_module("types");
     auto simple_namespace = types.attr("SimpleNamespace");
     auto ns               = simple_namespace();
 

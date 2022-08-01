@@ -15,57 +15,58 @@
  * limitations under the License.
  */
 
-#include "rxcpp/operators/rx-map.hpp"  // for map
 #include "test_pysrf.hpp"
 
 #include "pysrf/executor.hpp"  // IWYU pragma: keep
 #include "pysrf/pipeline.hpp"
 #include "pysrf/port_builders.hpp"
 #include "pysrf/types.hpp"
-#include "pysrf/utils.hpp"  // for PyObjectHolder
+#include "pysrf/utils.hpp"
 
-#include "srf/channel/status.hpp"             // for Status
-#include "srf/core/executor.hpp"              // for Executor
-#include "srf/core/utils.hpp"                 // for type_name
-#include "srf/engine/pipeline/ipipeline.hpp"  // for IPipeline
-#include "srf/manifold/egress.hpp"            // for MappedEgress<>...
-#include "srf/node/rx_node.hpp"               // for RxNode
-#include "srf/node/rx_sink.hpp"               // for RxSink
-#include "srf/node/rx_source.hpp"             // for RxSource
-#include "srf/node/sink_properties.hpp"       // for SinkProperties
-#include "srf/node/source_properties.hpp"     // for SourceProperties
-#include "srf/options/options.hpp"            // for Options
-#include "srf/options/topology.hpp"           // for TopologyOptions
+#include "srf/channel/status.hpp"
+#include "srf/core/executor.hpp"
+#include "srf/core/utils.hpp"
+#include "srf/engine/pipeline/ipipeline.hpp"
+#include "srf/manifold/egress.hpp"
+#include "srf/node/rx_node.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/rx_source.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_properties.hpp"
+#include "srf/options/options.hpp"
+#include "srf/options/topology.hpp"
 #include "srf/segment/builder.hpp"
-#include "srf/segment/object.hpp"  // for Object
+#include "srf/segment/object.hpp"
 
-#include <boost/hana/if.hpp>                           // for if_t::operator()
-#include <cxxabi.h>                                    // for __forced_unwind
-#include <ext/alloc_traits.h>                          // for __alloc_traits...
-#include <glog/logging.h>                              // for COMPACT_GOOGLE...
-#include <gtest/gtest-message.h>                       // for Message
-#include <gtest/gtest-test-part.h>                     // for TestPartResult
-#include <listobject.h>                                // for PyList_New
+#include <boost/hana/if.hpp>
+#include <cxxabi.h>
+#include <ext/alloc_traits.h>
+#include <glog/logging.h>
+#include <gtest/gtest-message.h>
+#include <gtest/gtest-test-part.h>
+#include <listobject.h>
 #include <pybind11/cast.h>
-#include <pybind11/gil.h>  // for gil_scoped_acq...
+#include <pybind11/gil.h>
 #include <pybind11/pytypes.h>
-#include <pybind11/stl.h>           // IWYU pragma: keep
-#include <rxcpp/rx-observer.hpp>    // for is_on_next_of<...
-#include <rxcpp/rx-operators.hpp>   // for observable_member
-#include <rxcpp/rx-predef.hpp>      // for trace_activity
-#include <rxcpp/rx-subscriber.hpp>  // for make_subscriber
-#include <tupleobject.h>            // for PyTuple_New
+#include <pybind11/stl.h>  // IWYU pragma: keep
+#include <rxcpp/operators/rx-map.hpp>
+#include <rxcpp/rx-observer.hpp>
+#include <rxcpp/rx-operators.hpp>
+#include <rxcpp/rx-predef.hpp>
+#include <rxcpp/rx-subscriber.hpp>
+#include <rxcpp/sources/rx-iterate.hpp>
+#include <tupleobject.h>
 
-#include <algorithm>   // for max, random_sh...
-#include <atomic>      // for atomic, __atom...
-#include <cstddef>     // for size_t
-#include <functional>  // for bind, function
-#include <iostream>    // for operator<<
-#include <memory>      // for shared_ptr
-#include <stdexcept>   // for runtime_error
-#include <string>      // for string, basic_...
-#include <utility>     // for move, forward
-#include <vector>      // for vector
+#include <algorithm>
+#include <atomic>
+#include <cstddef>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
 // IWYU pragma: no_include <boost/fiber/future/detail/shared_state.hpp>
 // IWYU pragma: no_include <boost/fiber/future/detail/task_base.hpp>
@@ -73,7 +74,7 @@
 // IWYU pragma: no_include "gtest/gtest_pred_impl.h"
 // IWYU pragma: no_include <pybind11/detail/common.h>
 // IWYU pragma: no_include "rxcpp/sources/rx-iterate.hpp"
-// IWYU pragma: no_include "../rx-includes.hpp"
+// IWYU pragma: no_include "rx-includes.hpp"
 
 namespace py    = pybind11;
 namespace pysrf = srf::pysrf;

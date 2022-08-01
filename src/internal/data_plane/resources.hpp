@@ -22,10 +22,9 @@
 #include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
+#include "internal/ucx/registration_cache.hpp"
 
-#include "srf/protos/codable.pb.h"
-
-#include <memory>
+#include <string>
 
 namespace srf::internal::data_plane {
 

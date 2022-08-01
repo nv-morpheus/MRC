@@ -17,46 +17,45 @@
 
 #include "pysrf/segment.hpp"
 
-#include "pysrf/forward.hpp"  // for pybind11
-#include "pysrf/node.hpp"     // for PythonSource
-#include "pysrf/types.hpp"    // for PyHolder, PyOb...
-#include "pysrf/utils.hpp"    // for PyObjectHolder
+#include "pysrf/forward.hpp"
+#include "pysrf/node.hpp"
+#include "pysrf/types.hpp"
+#include "pysrf/utils.hpp"
 
-#include "srf/channel/status.hpp"          // for Status
-#include "srf/core/utils.hpp"              // for type_name
-#include "srf/manifold/egress.hpp"         // for MappedEgress<>...
-#include "srf/node/edge_builder.hpp"       // for EdgeBuilder
-#include "srf/node/port_registry.hpp"      // for PortRegistry
-#include "srf/node/sink_properties.hpp"    // for SinkProperties
-#include "srf/node/source_properties.hpp"  // for SourceProperties
-#include "srf/runnable/context.hpp"        // for Context
-#include "srf/segment/builder.hpp"         // for Builder
-#include "srf/segment/object.hpp"          // for ObjectProperties
+#include "srf/channel/status.hpp"
+#include "srf/core/utils.hpp"
+#include "srf/manifold/egress.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/node/port_registry.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_properties.hpp"
+#include "srf/runnable/context.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/object.hpp"
 
-#include <cxxabi.h>                     // for __forced_unwind
-#include <glog/logging.h>               // for LogMessage, LOG
-#include <pybind11/cast.h>              // for cast, object_a...
-#include <pybind11/detail/internals.h>  // for translate_exce...
-#include <pybind11/gil.h>               // for gil_scoped_acq...
-#include <pybind11/pybind11.h>          // for print, error_a...
-#include <pybind11/pytypes.h>           // for iterator, object
-#include <rxcpp/operators/rx-map.hpp>   // for map
-#include <rxcpp/rx-includes.hpp>        // for apply
-#include <rxcpp/rx-observable.hpp>      // for observable
-#include <rxcpp/rx-observer.hpp>        // for is_on_error<>:...
-#include <rxcpp/rx-operators.hpp>       // for observable_member
-#include <rxcpp/rx-predef.hpp>          // for trace_activity
-#include <rxcpp/rx-subscriber.hpp>      // for make_subscriber
+#include <cxxabi.h>
+#include <glog/logging.h>
+#include <pybind11/cast.h>
+#include <pybind11/detail/internals.h>
+#include <pybind11/gil.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
+#include <rxcpp/operators/rx-map.hpp>
+#include <rxcpp/rx-observable.hpp>
+#include <rxcpp/rx-observer.hpp>
+#include <rxcpp/rx-operators.hpp>
+#include <rxcpp/rx-predef.hpp>
+#include <rxcpp/rx-subscriber.hpp>
 
-#include <exception>    // for exception, cur...
-#include <fstream>      // for operator<<
-#include <functional>   // for function
-#include <map>          // for operator!=, map
-#include <stdexcept>    // for runtime_error
-#include <string>       // for string, operat...
-#include <type_traits>  // for remove_referen...
-#include <typeindex>    // for type_index
-#include <utility>      // for move, forward
+#include <exception>
+#include <fstream>
+#include <functional>
+#include <map>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <typeindex>
+#include <utility>
 
 // IWYU thinks we need array for py::print
 // IWYU pragma: no_include <array>
@@ -64,6 +63,7 @@
 // IWYU pragma: no_include <boost/fiber/future/detail/task_base.hpp>
 // IWYU pragma: no_include <boost/hana/if.hpp>
 // IWYU pragma: no_include <boost/smart_ptr/detail/operator_bool.hpp>
+// IWYU pragma: no_include "rx-includes.hpp"
 
 namespace srf::pysrf {
 

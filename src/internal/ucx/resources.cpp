@@ -30,6 +30,7 @@
 
 #include <boost/fiber/future/future.hpp>
 #include <cuda_runtime.h>
+#include <glog/logging.h>
 
 #include <ostream>
 

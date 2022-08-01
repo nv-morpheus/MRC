@@ -15,29 +15,30 @@
  * limitations under the License.
  */
 
-#include "pysrf/utilities/object_cache.hpp"
 #include "pysrf/module_wrappers/pickle.hpp"
 
-#include <pybind11/pybind11.h>
+#include "pysrf/utilities/object_cache.hpp"
 
 #include <glog/logging.h>
+#include <pybind11/cast.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
+
+#include <array>
+#include <memory>
+#include <ostream>
 
 namespace py = pybind11;
 namespace srf::pysrf {
 
 PythonPickleInterface::~PythonPickleInterface() = default;
 
-PythonPickleInterface::PythonPickleInterface():
-  pycache(PythonObjectCache::get_handle())
+PythonPickleInterface::PythonPickleInterface() : m_pycache(PythonObjectCache::get_handle())
 {
-    auto mod = pycache.get_module("pickle");
+    auto mod = m_pycache.get_module("pickle");
 
-    m_func_loads = pycache.get_or_load("PythonPickleInterface.loads", [mod](){
-       return mod.attr("loads");
-    });
-    m_func_dumps = pycache.get_or_load("PythonPickleInterface.dumps", [mod](){
-        return mod.attr("dumps");
-    });
+    m_func_loads = m_pycache.get_or_load("PythonPickleInterface.loads", [mod]() { return mod.attr("loads"); });
+    m_func_dumps = m_pycache.get_or_load("PythonPickleInterface.dumps", [mod]() { return mod.attr("dumps"); });
 }
 
 pybind11::bytes PythonPickleInterface::pickle(pybind11::object obj)
@@ -54,9 +55,11 @@ pybind11::bytes PythonPickleInterface::pickle(pybind11::object obj)
 
 pybind11::object PythonPickleInterface::unpickle(pybind11::bytes bytes)
 {
-    try {
+    try
+    {
         return m_func_loads(bytes);
-    } catch (pybind11::error_already_set err){
+    } catch (pybind11::error_already_set err)
+    {
         LOG(ERROR) << "Object deserialization failed: " << err.what();
         throw;
     }

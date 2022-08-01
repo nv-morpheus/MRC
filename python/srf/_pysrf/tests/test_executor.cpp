@@ -30,8 +30,10 @@
 #include "srf/segment/object.hpp"
 
 #include <boost/hana/if.hpp>
-#include <gtest/gtest-message.h>     // for Message
-#include <gtest/gtest-test-part.h>   // for TestPartResult
+#include <gtest/gtest-message.h>
+#include <gtest/gtest-test-part.h>
+#include <gtest/gtest.h>     // IWYU pragma: keep
+#include <pybind11/embed.h>  // IWYU pragma: keep
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx-observer.hpp>
 #include <rxcpp/rx-operators.hpp>

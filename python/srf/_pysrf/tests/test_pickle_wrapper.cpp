@@ -20,22 +20,23 @@
 #include "pysrf/module_wrappers/pickle.hpp"
 #include "pysrf/utilities/object_cache.hpp"
 
-#include <bytesobject.h>            // for PyBytes_FromStringAndSize
-#include <gtest/gtest-message.h>    // for Message
-#include <gtest/gtest-test-part.h>  // for TestPartResult
+#include <bytesobject.h>
+#include <gtest/gtest-message.h>
+#include <gtest/gtest-test-part.h>
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
-#include <tupleobject.h>   // for PyTuple_New
+#include <tupleobject.h>
 
-#include <string>
+#include <string>  // IWYU pragma: keep
 
 // IWYU pragma: no_include "gtest/gtest_pred_impl.h"
 // IWYU pragma: no_include <pybind11/detail/common.h>
 // IWYU pragma: no_include "rxcpp/sources/rx-iterate.hpp"
 // IWYU pragma: no_include "rx-includes.hpp"
+#include <string>
 
 namespace py    = pybind11;
 namespace pysrf = srf::pysrf;
@@ -83,7 +84,7 @@ TEST_F(TestPickleWrapper, BadUnpickle)
 {
     auto pkl = pysrf::PythonPickleInterface();
 
-    char badbytes[] = "123456\0";
+    char badbytes[] = "123456\0";  // NOLINT
     py::bytes bad_pybytes(badbytes, 6);
     EXPECT_THROW(pkl.unpickle(bad_pybytes), py::error_already_set);
 }

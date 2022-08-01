@@ -17,7 +17,7 @@
 
 #include "test_pysrf.hpp"
 
-#include "pysrf/codable_object.hpp" // IWYU pragma: keep
+#include "pysrf/codable_object.hpp"  // IWYU pragma: keep
 #include "pysrf/forward.hpp"
 #include "pysrf/types.hpp"
 
@@ -33,15 +33,15 @@
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <pybind11/stl.h>  // IWYU pragma: keep
 
-#include <string>
+#include <string>  // IWYU pragma: keep
 
 // IWYU pragma: no_include <gtest/gtest-message.h>
 // IWYU pragma: no_include "gtest/gtest_pred_impl.h"
 // IWYU pragma: no_include <gtest/gtest-test-part.h>
 // IWYU pragma: no_include <pybind11/detail/common.h>
 // IWYU pragma: no_include <tupleobject.h>
+#include <string>
 
 namespace py    = pybind11;
 namespace pysrf = srf::pysrf;

@@ -19,17 +19,17 @@
 
 #include "pysrf/module_wrappers/shared_memory.hpp"
 
-#include <bytesobject.h>             // for PyBytes_FromStrin...
-#include <gtest/gtest-message.h>     // for Message
-#include <gtest/gtest-test-part.h>   // for TestPartResult
-#include <pybind11/buffer_info.h>    // for buffer_info
-#include <pybind11/detail/common.h>  // for pybind11
-#include <pybind11/pytypes.h>        // for bytes, buffer, int_
-#include <pybind11/stl.h>            // IWYU pragma: keep
+#include <bytesobject.h>
+#include <gtest/gtest-message.h>
+#include <gtest/gtest-test-part.h>
+#include <pybind11/buffer_info.h>
+#include <pybind11/detail/common.h>
+#include <pybind11/pytypes.h>
+#include <pybind11/stl.h>  // IWYU pragma: keep
 
 #include <cstring>
-#include <stdexcept>  // for runtime_error
-#include <string>     // for allocator, string...
+#include <stdexcept>
+#include <string>
 
 // IWYU pragma: no_include "gtest/gtest_pred_impl.h"
 
@@ -74,8 +74,8 @@ TEST_F(TestShmemWrapper, Attach)
     ASSERT_TRUE(buf_info2.size == 128);
     ASSERT_TRUE(std::memcmp(buf_info1.ptr, buf_info2.ptr, 128) == 0);
 
-    char byteset[128];
-    char bytesubset[7]{"abc123"};
+    char byteset[128];             // NOLINT
+    char bytesubset[7]{"abc123"};  // NOLINT
     std::memcpy(byteset, bytesubset, 6);
     py::bytes py_byteset(byteset, 128);
 

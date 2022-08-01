@@ -22,11 +22,11 @@
 
 #include "srf/segment/builder.hpp"  // IWYU pragma: keep
 
-#include <pybind11/attr.h>  // for call_guard
+#include <pybind11/attr.h>
 #include <pybind11/pybind11.h>
 
 #include <array>
-#include <cstddef>  // for size_t
+#include <cstddef>
 #include <functional>
 #include <memory>
 #include <vector>

@@ -15,39 +15,39 @@
  * limitations under the License.
  */
 
-#include "pysrf/forward.hpp"  // for pybind11, pysrf
+#include "pysrf/forward.hpp"
 #include "pysrf/node.hpp"
-#include "pysrf/port_builders.hpp"  // for PortUtilBuilder
-#include "pysrf/utils.hpp"          // for PyObjectHolder, import
+#include "pysrf/port_builders.hpp"
+#include "pysrf/utils.hpp"
 
-#include "srf/channel/status.hpp"          // for Status
-#include "srf/core/utils.hpp"              // for type_name
-#include "srf/manifold/egress.hpp"         // for MappedEgress<>...
-#include "srf/node/edge_connector.hpp"     // for EdgeConnector
-#include "srf/node/rx_sink.hpp"            // for RxSink<>::observer_t
-#include "srf/node/sink_properties.hpp"    // for SinkProperties<>::sink...
-#include "srf/node/source_properties.hpp"  // for SourceProperties, Sour...
-#include "srf/runnable/context.hpp"        // for Context
-#include "srf/segment/builder.hpp"         // for Context
-#include "srf/segment/object.hpp"          // for Object, ObjectProperti.
+#include "srf/channel/status.hpp"
+#include "srf/core/utils.hpp"
+#include "srf/manifold/egress.hpp"
+#include "srf/node/edge_connector.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_properties.hpp"
+#include "srf/runnable/context.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/object.hpp"
 
-#include <cxxabi.h>  // for __forced_unwind
+#include <cxxabi.h>
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <rxcpp/rx-observable.hpp>  // for observable
-#include <rxcpp/rx-observer.hpp>    // for is_on_error<>:...
-#include <rxcpp/rx-operators.hpp>   // for observable_member
-#include <rxcpp/rx-predef.hpp>      // for trace_activity
-#include <rxcpp/rx-subscriber.hpp>  // for make_subscriber
+#include <rxcpp/rx-observable.hpp>
+#include <rxcpp/rx-observer.hpp>
+#include <rxcpp/rx-operators.hpp>
+#include <rxcpp/rx-predef.hpp>
+#include <rxcpp/rx-subscriber.hpp>
 
+#include <cstddef>
 #include <exception>
-#include <functional>  // for bind
+#include <functional>
 #include <memory>
 #include <string>
-#include <thread>       // for operator<<
-#include <type_traits>  // for remove_referen...
-#include <cstddef>
+#include <thread>
+#include <type_traits>
 #include <utility>
 
 // IWYU thinks we need vector for PythonNode

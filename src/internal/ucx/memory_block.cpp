@@ -17,6 +17,10 @@
 
 #include "internal/ucx/memory_block.hpp"
 
+#include <glog/logging.h>
+
+#include <cstring>
+
 namespace srf::internal::ucx {
 
 MemoryBlock::MemoryBlock(void* data, std::size_t bytes) : memory::MemoryBlock(data, bytes) {}

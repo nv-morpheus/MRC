@@ -16,6 +16,7 @@
  */
 
 #include "srf/memory/buffer_view.hpp"
+
 #include "srf/memory/memory_kind.hpp"
 
 namespace srf::memory {

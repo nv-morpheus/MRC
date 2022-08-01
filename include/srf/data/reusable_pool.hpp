@@ -20,8 +20,8 @@
 #include "srf/channel/buffered_channel.hpp"
 #include "srf/utils/macros.hpp"
 
-#include <glog/logging.h>
 #include <boost/fiber/buffered_channel.hpp>
+#include <glog/logging.h>
 
 #include <atomic>
 #include <functional>

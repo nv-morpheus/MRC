@@ -19,14 +19,14 @@
 
 #include "pysrf/edge_adapter.hpp"
 #include "pysrf/port_builders.hpp"
-#include "pysrf/types.hpp"  // IWYU pragma: keep
+#include "pysrf/types.hpp"
 #include "pysrf/utils.hpp"
 
 #include "srf/channel/forward.hpp"
 #include "srf/channel/ingress.hpp"
 #include "srf/channel/status.hpp"
-#include "srf/node/edge.hpp"
 #include "srf/node/edge_connector.hpp"
+#include "srf/node/edge.hpp"
 #include "srf/node/edge_registry.hpp"
 #include "srf/node/forward.hpp"
 #include "srf/node/rx_node.hpp"
@@ -38,15 +38,15 @@
 #include <glog/logging.h>
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>
-#include <pybind11/pybind11.h>  // IWYU pragma: keep
+#include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
 
-#include <functional>  // for function, ref
-#include <memory>      // for shared_ptr, __shared_ptr_access, dynamic_pointer_cast, allocator, make_shared
-#include <ostream>     // for operator<<
-#include <typeindex>   // for type_index
-#include <utility>     // for move, forward
+#include <functional>
+#include <memory>
+#include <ostream>
+#include <typeindex>
+#include <utility>
 
 namespace srf {
 

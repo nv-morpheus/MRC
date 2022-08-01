@@ -15,26 +15,27 @@
  * limitations under the License.
  */
 
-#include "test_pysrf.hpp"  // for PYSRF_TEST_CLASS
+#include "test_pysrf.hpp"
 
-#include "pysrf/utilities/deserializers.hpp"  // for Deserializer, pysrf
-#include "pysrf/utilities/serializers.hpp"    // for Serializer
+#include "pysrf/utilities/deserializers.hpp"
+#include "pysrf/utilities/serializers.hpp"
 
-#include <gtest/gtest-message.h>    // for Message
-#include <gtest/gtest-test-part.h>  // for TestPartResult
-#include <pybind11/cast.h>      // for object_api::operator()
-#include <pybind11/embed.h>     // for PYBIND11_EMBEDDED_MODULE
-#include <pybind11/gil.h>       // for gil_scoped_acquire
-#include <pybind11/pybind11.h>  // for module_, class_, init
-#include <pybind11/pytypes.h>   // for object, object_api, str...
-#include <pybind11/stl.h>       // IWYU pragma: keep
-#include <tupleobject.h>        // for PyTuple_New, PyTuple_Ge...
+#include <gtest/gtest-message.h>
+#include <gtest/gtest-test-part.h>
+#include <pybind11/cast.h>
+#include <pybind11/embed.h>
+#include <pybind11/gil.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
+#include <pybind11/stl.h> // IWYU pragma: keep
+#include <tupleobject.h>
 
-#include <array>      // for array
-#include <ostream>    // for operator<<, stringstream
-#include <stdexcept>  // for runtime_error
-#include <string>     // for string, allocator, char...
-#include <tuple>      // for get
+#include <array>
+#include <ostream>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <utility>
 
 // IWYU pragma: no_include "gtest/gtest_pred_impl.h"
 // IWYU pragma: no_include <pybind11/detail/common.h>
@@ -50,7 +51,7 @@ PYSRF_TEST_CLASS(Serializer);
 class PysrfPickleableSimple
 {
   public:
-    PysrfPickleableSimple(const std::string& s, int i) : m_string_val(s), m_int_val(i){};
+    PysrfPickleableSimple(std::string s, int i) : m_string_val(std::move(s)), m_int_val(i){};
     ~PysrfPickleableSimple() = default;
 
     const std::string& string_value() const
@@ -218,7 +219,7 @@ TEST_F(TestSerializer, BadSerializeUnpicklable)
 TEST_F(TestSerializer, BadDeserialize)
 {
     pybind11::gil_scoped_acquire gil;
-    char badbytes[] = "123456\0";
+    char badbytes[] = "123456\0";  // NOLINT
 
     EXPECT_THROW(pysrf::Deserializer::deserialize(badbytes, 4), pybind11::error_already_set);
 }

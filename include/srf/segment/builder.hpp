@@ -24,14 +24,15 @@
 #include "srf/node/rx_node.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
+#include "srf/runnable/context.hpp"
 #include "srf/node/sink_properties.hpp"    // IWYU pragma: keep
 #include "srf/node/source_properties.hpp"  // IWYU pragma: keep
-#include "srf/runnable/context.hpp"        // IWYU pragma: keep
 #include "srf/runnable/launchable.hpp"     // IWYU pragma: keep
 #include "srf/runnable/runnable.hpp"       // IWYU pragma: keep
 #include "srf/segment/component.hpp"       // IWYU pragma: keep
 #include "srf/segment/egress_port.hpp"     // IWYU pragma: keep
 #include "srf/segment/forward.hpp"         // IWYU pragma: keep
+#include "srf/segment/ingress_port.hpp"    // IWYU pragma: keep
 #include "srf/segment/object.hpp"          // IWYU pragma: keep
 #include "srf/segment/runnable.hpp"        // IWYU pragma: keep
 #include "srf/utils/macros.hpp"
@@ -84,7 +85,7 @@ void add_stats_watcher_if_rx_source(T& thing, std::string name)
             auto trace_stats = srf::benchmarking::TraceStatistics::get_or_create(name);
             std::forward<decltype(object)>(object).source_add_watcher(trace_stats);
         },
-        [name](auto&&) {})(thing);
+        [name]([[maybe_unused]] auto&& object) {})(thing);
 }
 
 template <typename T>
@@ -96,7 +97,7 @@ void add_stats_watcher_if_rx_sink(T& thing, std::string name)
             auto trace_stats = srf::benchmarking::TraceStatistics::get_or_create(name);
             std::forward<decltype(object)>(object).sink_add_watcher(trace_stats);
         },
-        [name](auto&&) {})(thing);
+        [name]([[maybe_unused]] auto&& object) {})(thing);
 }
 }  // namespace
 

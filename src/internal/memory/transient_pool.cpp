@@ -19,6 +19,8 @@
 
 #include "srf/memory/resources/memory_resource.hpp"
 
+#include <ostream>
+
 namespace srf::internal::memory {
 
 TransientBuffer::TransientBuffer(void* addr, std::size_t bytes, srf::data::SharedReusable<srf::memory::buffer> buffer) :
