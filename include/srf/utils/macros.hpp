@@ -38,5 +38,11 @@
 #ifndef DEFAULT_MOVEABILITY
     #define DEFAULT_MOVEABILITY(foo)   \
         foo(foo&&) noexcept = default; \
-        foo& operator=(foo&& other) noexcept = default;
+        foo& operator=(foo&&) noexcept = default;
+#endif
+
+#ifndef DEFAULT_COPYABILITY
+    #define DEFAULT_COPYABILITY(foo) \
+        foo(const foo&) = default;   \
+        foo& operator=(const foo&) = default;
 #endif

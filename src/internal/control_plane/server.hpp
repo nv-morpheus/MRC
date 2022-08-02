@@ -19,17 +19,20 @@
 
 #include "internal/control_plane/server/client_instance.hpp"
 #include "internal/control_plane/server/subscription_service.hpp"
+#include "internal/expected.hpp"
 #include "internal/grpc/server.hpp"
 #include "internal/grpc/server_streaming.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/service.hpp"
 
+#include "srf/channel/status.hpp"
 #include "srf/node/queue.hpp"
 #include "srf/protos/architect.grpc.pb.h"
 #include "srf/protos/architect.pb.h"
 #include "srf/runnable/runner.hpp"
 
 #include <boost/fiber/recursive_mutex.hpp>
+#include <google/protobuf/repeated_ptr_field.h>
 
 #include <map>
 #include <memory>
@@ -59,21 +62,6 @@ class Server : public Service
     void do_accept_stream(rxcpp::subscriber<stream_t>& s);
     void do_handle_event(event_t&& event);
 
-    // top-level event handlers - these methods lock internal state
-    void unary_register_workers(event_t& event);
-    void unary_create_subscription_service(event_t& event);
-    // todo(ryan) - convert to unary service with an ack response
-    void register_subscription_service(event_t& event);
-    void unary_drop_from_subscription_service(event_t& event);
-    void drop_stream(writer_t writer);
-
-    static void unary_ack(event_t& event, protos::ErrorCode type, std::string msg = "");
-
-    // convenience methods - these method do not lock internal state
-    std::shared_ptr<server::ClientInstance> get_instance(const instance_id_t& instance_id) const;
-    bool validate_instance_id(const instance_id_t& instance_id, const event_t& event) const;
-    bool has_subscription_service(const std::string& name) const;
-
     // srf resources
     runnable::Resources& m_runnable;
 
@@ -83,7 +71,7 @@ class Server : public Service
 
     // connection info
     std::map<stream_id_t, stream_t> m_streams;
-    std::map<instance_id_t, std::shared_ptr<server::ClientInstance>> m_instances;
+    std::map<instance_id_t, instance_t> m_instances;
     std::multimap<stream_id_t, instance_id_t> m_instances_by_stream;
     std::set<std::string> m_ucx_worker_addresses;
 
@@ -98,6 +86,65 @@ class Server : public Service
     std::unique_ptr<srf::runnable::Runner> m_event_handler;
 
     mutable boost::fibers::mutex m_mutex;
+
+    // top-level event handlers - these methods lock internal state
+    Expected<protos::RegisterWorkersResponse> unary_register_workers(event_t& event);
+    Expected<protos::Ack> unary_create_subscription_service(event_t& event);
+    Expected<protos::Ack> unary_register_subscription_service(event_t& event);
+    Expected<protos::Ack> unary_drop_from_subscription_service(event_t& event);
+    void drop_stream(writer_t writer);
+
+    // methods used to issue responses
+    template <typename MessageT>
+    static Expected<> unary_response(event_t& event, Expected<MessageT>&& message);
+    static Expected<> unary_ack(event_t& event, protos::ErrorCode type, std::string msg = "");
+    static protos::Ack ack_success();
+
+    // convenience methods - these method do not lock internal state
+    Expected<instance_t> get_instance(const instance_id_t& instance_id) const;
+    Expected<instance_t> validate_instance_id(const instance_id_t& instance_id, const event_t& event) const;
+    Expected<decltype(m_subscription_services)::const_iterator> get_subscription_service(const std::string& name) const;
+
+    // protobuf methods
+    template <typename T>
+    static Expected<std::set<T>> check_unique_repeated_field(const google::protobuf::RepeatedPtrField<T>& items)
+    {
+        std::set<T> unique(items.begin(), items.end());
+        if (unique.size() != items.size())
+        {
+            return Error::create("non-unique repeated field; duplicated detected");
+        }
+        return unique;
+    }
+
+    template <typename T>
+    static Expected<T> unpack_request(event_t& event)
+    {
+        T msg;
+        if (event.msg.has_message() && event.msg.message().UnpackTo(&msg))
+        {
+            return msg;
+        }
+        return Error::create("unable to unpack request; possible type mismatch");
+    }
 };
+
+template <typename MessageT>
+Expected<> Server::unary_response(event_t& event, Expected<MessageT>&& message)
+{
+    if (!message)
+    {
+        return unary_ack(event, protos::ErrorCode::InstanceError, message.error().message());
+    }
+    srf::protos::Event out;
+    out.set_tag(event.msg.tag());
+    out.set_event(protos::EventType::Response);
+    out.mutable_message()->PackFrom(*message);
+    if (event.stream->await_write(std::move(out)) != channel::Status::success)
+    {
+        return Error::create("failed to write to channel");
+    }
+    return {};
+}
 
 }  // namespace srf::internal::control_plane

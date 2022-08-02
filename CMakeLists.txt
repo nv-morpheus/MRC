@@ -274,6 +274,7 @@ target_link_libraries(libsrf
   rxcpp::rxcpp
   glog::glog
   libcudacxx::libcudacxx
+  tl::expected
   PRIVATE
   nvrpc
   nvrpc-client

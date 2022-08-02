@@ -161,7 +161,7 @@ void Client::register_ucx_addresses(std::vector<ucx::WorkerAddress> worker_addre
     {
         req.add_ucx_worker_addresses(addr);
     }
-    auto resp = await_unary<protos::RegisterWorkersResponse>(protos::ClientRegisterWorkers, std::move(req));
+    auto resp = await_unary<protos::RegisterWorkersResponse>(protos::ClientUnaryRegisterWorkers, std::move(req));
 
     m_machine_id = resp.machine_id();
     CHECK_EQ(resp.instance_ids_size(), worker_addresses.size());

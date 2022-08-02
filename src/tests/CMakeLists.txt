@@ -47,6 +47,7 @@ add_executable(test_srf_private
   segments/common_segments.cpp
   test_control_plane.cpp
   test_codable.cpp
+  test_expected.cpp
   test_grpc.cpp
   test_main.cpp
   test_memory.cpp

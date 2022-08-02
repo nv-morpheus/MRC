@@ -18,10 +18,12 @@
 #include "internal/control_plane/server.hpp"
 
 #include "rxcpp/rx-subscriber.hpp"
+#include "tl/expected.hpp"
 
 #include "internal/control_plane/server_resources.hpp"
 #include "internal/utils/contains.hpp"
 
+#include "srf/channel/status.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/generic_node.hpp"
 #include "srf/node/rx_sink.hpp"
@@ -37,6 +39,12 @@
 #include <ostream>
 #include <type_traits>  // IWYU pragma: keep
 #include <utility>
+
+#define SRF_EXPECT_TRUE(expected)                          \
+    if (!expected)                                         \
+    {                                                      \
+        return Error::create(std::move(expected.error())); \
+    }
 
 namespace srf::internal::control_plane {
 
@@ -189,21 +197,22 @@ void Server::do_accept_stream(rxcpp::subscriber<stream_t>& s)
 void Server::do_handle_event(event_t&& event)
 {
     DCHECK(event.stream);
+    Expected<> status;
 
     if (event.ok)
     {
         switch (event.msg.event())
         {
-        case protos::EventType::ClientRegisterWorkers:
-            unary_register_workers(event);
+        case protos::EventType::ClientUnaryRegisterWorkers:
+            status = unary_response(event, unary_register_workers(event));
             break;
 
         case protos::EventType::ClientUnaryCreateSubscriptionService:
-            unary_create_subscription_service(event);
+            status = unary_response(event, unary_create_subscription_service(event));
             break;
 
-        case protos::EventType::ClientRegisterSubscriptionService:
-            register_subscription_service(event);
+        case protos::EventType::ClientUnaryRegisterSubscriptionService:
+            status = unary_response(event, unary_register_subscription_service(event));
             break;
 
         default:
@@ -216,29 +225,30 @@ void Server::do_handle_event(event_t&& event)
     }
 }
 
-void Server::unary_register_workers(event_t& event)
+Expected<protos::RegisterWorkersResponse> Server::unary_register_workers(event_t& event)
 {
-    protos::RegisterWorkersRequest req;
-    protos::RegisterWorkersResponse resp;
-    CHECK(event.msg.message().UnpackTo(&req));
+    auto req = unpack_request<protos::RegisterWorkersRequest>(event);
+    SRF_EXPECT_TRUE(req);
 
-    DVLOG(10) << "registering srf instance with " << req.ucx_worker_addresses_size() << " partitions groups";
+    DVLOG(10) << "registering srf instance with " << req->ucx_worker_addresses_size() << " partitions groups";
 
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+
     // validate that the worker addresses are valid before updating state
-    for (const auto& worker_address : req.ucx_worker_addresses())
+    for (const auto& worker_address : req->ucx_worker_addresses())
     {
         auto search = m_ucx_worker_addresses.find(worker_address);
         if (search != m_ucx_worker_addresses.end())
         {
-            LOG(FATAL) << "received a connection request for a ucx worker that is already registered";
+            Error::create("invalid ucx worker address(es) - duplicate registration(s) detected");
         }
     }
 
     // set machine id for the current stream
+    protos::RegisterWorkersResponse resp;
     resp.set_machine_id(event.stream->get_id());
 
-    for (const auto& worker_address : req.ucx_worker_addresses())
+    for (const auto& worker_address : req->ucx_worker_addresses())
     {
         m_ucx_worker_addresses.insert(worker_address);
 
@@ -246,7 +256,10 @@ void Server::unary_register_workers(event_t& event)
         instance->worker_address = worker_address;
         instance->stream_writer  = event.stream;
 
-        CHECK(!contains(m_instances, instance->get_id()));
+        if (contains(m_instances, instance->get_id()))
+        {
+            throw Error::create("non-unique instance_id detected");
+        }
         m_instances[instance->get_id()] = instance;
         m_instances_by_stream.insert(std::pair{event.stream->get_id(), instance->get_id()});
 
@@ -257,35 +270,35 @@ void Server::unary_register_workers(event_t& event)
         resp.add_instance_ids(instance->get_id());
     }
 
-    srf::protos::Event out;
-    out.set_tag(event.msg.tag());
-    out.set_event(protos::EventType::Response);
-    out.mutable_message()->PackFrom(resp);
-    event.stream->await_write(std::move(out));
+    return resp;
 }
 
-void Server::unary_create_subscription_service(event_t& event)
+Expected<protos::Ack> Server::unary_create_subscription_service(event_t& event)
 {
-    protos::CreateSubscriptionServiceRequest req;
-    CHECK(event.msg.message().UnpackTo(&req));
+    auto req = unpack_request<protos::CreateSubscriptionServiceRequest>(event);
+    SRF_EXPECT_TRUE(req);
 
-    DVLOG(10) << "[start] create (or get) subscription service: " << req.service_name();
+    DVLOG(10) << "[start] create (or get) subscription service: " << req->service_name();
 
     std::set<std::string> roles;
-    for (const auto& role : req.roles())
+    for (const auto& role : req->roles())
     {
         roles.insert(role);
     }
-    CHECK_EQ(roles.size(), req.roles_size()) << "roles must be unique";
+    if (roles.size() != req->roles_size())
+    {
+        return Error::create("duplicate roles detected");
+    }
 
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    auto search = m_subscription_services.find(req.service_name());
 
+    auto search = m_subscription_services.find(req->service_name());
     if (search == m_subscription_services.end())
     {
-        DVLOG(10) << "subscription_service: " << req.service_name() << " first request - creating subscription service";
-        m_subscription_services[req.service_name()] =
-            std::make_unique<SubscriptionService>(req.service_name(), std::move(roles));
+        DVLOG(10) << "subscription_service: " << req->service_name()
+                  << " first request - creating subscription service";
+        m_subscription_services[req->service_name()] =
+            std::make_unique<SubscriptionService>(req->service_name(), std::move(roles));
     }
     else
     {
@@ -294,80 +307,93 @@ void Server::unary_create_subscription_service(event_t& event)
             std::stringstream msg;
             msg << "failed to create subscription service on the server: requested roles do not match the current "
                    "instance of "
-                << req.service_name()
+                << req->service_name()
                 << "; there may be a binary incompatibililty or service name conflict between one or more clients "
                    "connecting to this control plane";
 
-            LOG(ERROR) << msg.str();
-            return unary_ack(event, protos::ErrorCode::ClientError, msg.str());
+            return Error::create(msg.str());
         }
     }
 
-    DVLOG(10) << "[success] create (or get) subscription service: " << req.service_name();
-    unary_ack(event, protos::ErrorCode::Success);
+    DVLOG(10) << "[success] create (or get) subscription service: " << req->service_name();
+    return ack_success();
 }
 
-void Server::register_subscription_service(event_t& event)
+Expected<protos::Ack> Server::unary_register_subscription_service(event_t& event)
 {
-    protos::RegisterSubscriptionServiceRequest req;
-    CHECK(event.msg.message().UnpackTo(&req));
+    auto req = unpack_request<protos::RegisterSubscriptionServiceRequest>(event);
+    SRF_EXPECT_TRUE(req);
 
+    // validate message - can be done before locking internal state
+    auto subscribe_to = check_unique_repeated_field(req->subscribe_to_roles());
+    SRF_EXPECT_TRUE(subscribe_to);
+
+    // lock internal state
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-    DVLOG(10) << "[start] instance_id: [id]; register with subscription service " << req.service_name() << " as a "
-              << req.role() << " from machine " << event.stream->get_id();
+    DVLOG(10) << "[start] instance_id: [id]; register with subscription service " << req->service_name() << " as a "
+              << req->role() << " from machine " << event.stream->get_id();
 
-    if (!validate_instance_id(req.instance_id(), event))
-    {
-        LOG(FATAL) << "instance_id validation failed when registering subscription service " << req.service_name()
-                   << " on request from " << event.stream->get_id();
-        return;
-    }
+    auto instance = validate_instance_id(req->instance_id(), event);
+    SRF_EXPECT_TRUE(instance);
 
-    auto search = m_subscription_services.find(req.service_name());
-    if (search == m_subscription_services.end())
-    {
-        LOG(FATAL) << "subscription service " << req.service_name() << " does not exist";
-        return;
-    }
-
-    DCHECK(search->second);
-    auto& service     = *(search->second);
-    bool invalid_role = false;
+    auto service_iter = get_subscription_service(req->service_name());
+    SRF_EXPECT_TRUE(service_iter);
+    auto& service = *(service_iter.value()->second);
 
     // validate roles are valid
-    std::set<std::string> subscribe_to;
-    for (const auto& role : req.subscribe_to_roles())
+    if (!service.has_role(req->role()))
     {
-        subscribe_to.insert(role);
+        return Error::create(SRF_CONCAT_STR(
+            "subscription service " << req->service_name() << " does not contain primary role: " << req->role()));
     }
-    CHECK_EQ(req.subscribe_to_roles_size(), subscribe_to.size());
-
-    if (!service.has_role(req.role()))
-    {
-        LOG(ERROR) << "subscription service " << req.service_name() << " does not contain primary role: " << req.role();
-        invalid_role = true;
-    }
-    if (!std::all_of(subscribe_to.begin(), subscribe_to.end(), [&service](const std::string& role) {
+    if (!std::all_of(subscribe_to.value().begin(), subscribe_to.value().end(), [&service](const std::string& role) {
             return service.has_role(role);
         }))
     {
-        LOG(ERROR) << "subscription service " << req.service_name() << " one or more subscribe_to_roles were invalid";
-        invalid_role = true;
-    }
-    if (invalid_role)
-    {
-        LOG(FATAL) << "convert to a return message";
+        return Error::create(SRF_CONCAT_STR("subscription service " << req->service_name()
+                                                                    << " one or more subscribe_to_roles were invalid"));
     }
 
-    service.register_instance(get_instance(req.instance_id()), req.role(), subscribe_to);
+    // todo(ryan) - need improved error handling
+    service.register_instance(*instance, req->role(), *subscribe_to);
+
+    DVLOG(10) << "[success] register subscription service: " << req->service_name() << "; role: " << req->role();
+    return ack_success();
+}
+
+Expected<protos::Ack> Server::unary_drop_from_subscription_service(event_t& event)
+{
+    auto req = unpack_request<protos::SubscriptionServiceUpdate>(event);
+    SRF_EXPECT_TRUE(req);
+
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+
+    auto valid_ids = std::all_of(req->instance_ids().begin(),
+                                 req->instance_ids().end(),
+                                 [this, &event](const instance_id_t& id) { return validate_instance_id(id, event); });
+
+    auto search        = m_subscription_services.find(req->service_name());
+    auto valid_service = (search != m_subscription_services.end());
+
+    if (valid_ids && valid_service)
+    {
+        CHECK(search->second);
+        for (const auto& id : req->instance_ids())
+        {
+            auto instance = get_instance(id);
+            search->second->drop_instance(*instance);
+        }
+    }
+
+    return ack_success();
 }
 
 void Server::drop_stream(writer_t writer)
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-    // the associated srf instance associated with this stream should be fully disconnected from all services
+    // the srf instance associated with this stream should be fully disconnected from all services
     // auto count = connected_services(event.stream->get_id());
     // if (count)
     // {
@@ -407,7 +433,7 @@ void Server::drop_stream(writer_t writer)
     m_streams.erase(stream);
 }
 
-void Server::unary_ack(event_t& event, protos::ErrorCode type, std::string msg)
+Expected<> Server::unary_ack(event_t& event, protos::ErrorCode type, std::string msg)
 {
     protos::Ack ack;
     ack.set_status(type);
@@ -417,65 +443,51 @@ void Server::unary_ack(event_t& event, protos::ErrorCode type, std::string msg)
     error.set_event(protos::EventType::Response);
     error.set_tag(event.msg.tag());
     CHECK(error.mutable_message()->PackFrom(ack));
-    event.stream->await_write(std::move(error));
+    if (event.stream->await_write(std::move(error)) != channel::Status::success)
+    {
+        return Error::create("failed to write to channel");
+    }
+    return {};
 }
 
-bool Server::validate_instance_id(const instance_id_t& instance_id, const event_t& event) const
+Expected<Server::instance_t> Server::validate_instance_id(const instance_id_t& instance_id, const event_t& event) const
+{
+    return get_instance(instance_id).and_then([&event, &instance_id](auto& i) -> Expected<instance_t> {
+        if (event.stream->get_id() != i->stream_writer->get_id())
+        {
+            return Error::create(SRF_CONCAT_STR(
+                "instance_id (" << instance_id << ") not assocated with machine/stream: " << event.stream->get_id()));
+        }
+        return i;
+    });
+}
+
+Expected<Server::instance_t> Server::get_instance(const instance_id_t& instance_id) const
 {
     auto search = m_instances.find(instance_id);
     if (search == m_instances.end())
     {
-        LOG(ERROR) << "client on machine: " << event.stream->get_id() << " provided an unregistered instance_id";
-        return false;
-    }
-    if (event.stream->get_id() != search->second->stream_writer->get_id())
-    {
-        LOG(ERROR) << "client on machine: " << event.stream->get_id()
-                   << " provided an instance_id not associated that machine";
-        return false;
-    }
-    return true;
-}
-
-std::shared_ptr<server::ClientInstance> Server::get_instance(const instance_id_t& instance_id) const
-{
-    auto search = m_instances.find(instance_id);
-    if (search == m_instances.end())
-    {
-        return nullptr;
+        return Error::create("invalid instance_id");
     }
     return search->second;
 }
 
-void Server::unary_drop_from_subscription_service(event_t& event)
-{
-    protos::SubscriptionServiceUpdate req;
-    CHECK(event.msg.message().UnpackTo(&req));
-
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-
-    auto valid_ids = std::all_of(req.instance_ids().begin(),
-                                 req.instance_ids().end(),
-                                 [this, &event](const instance_id_t& id) { return validate_instance_id(id, event); });
-
-    auto search        = m_subscription_services.find(req.service_name());
-    auto valid_service = (search != m_subscription_services.end());
-
-    if (valid_ids && valid_service)
-    {
-        CHECK(search->second);
-        for (const auto& id : req.instance_ids())
-        {
-            auto instance = get_instance(id);
-            search->second->drop_instance(instance);
-        }
-    }
-}
-
-bool Server::has_subscription_service(const std::string& name) const
+Expected<decltype(Server::m_subscription_services)::const_iterator> Server::get_subscription_service(
+    const std::string& name) const
 {
     auto search = m_subscription_services.find(name);
-    return (search != m_subscription_services.end());
+    if (search == m_subscription_services.end())
+    {
+        return Error::create("invalid subscription_service name");
+    }
+    return search;
+}
+
+protos::Ack Server::ack_success()
+{
+    protos::Ack ack;
+    ack.set_status(protos::Success);
+    return ack;
 }
 
 }  // namespace srf::internal::control_plane

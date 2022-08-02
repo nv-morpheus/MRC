@@ -31,18 +31,23 @@ enum EventType
     Unused = 0;
     Response = 1;
     ControlStop = 2;
-    ClientRegisterWorkers = 100;
-    ClientRegisterPipeline = 101;
     ClientUpdateStart = 102;
     ClientUpdateComplete = 103;
     ClientLookupWorkerAddresses = 104;
     ClientSegmentsOnComplete = 105;
-    ClientUnaryCreateSubscriptionService = 106;
-    ClientRegisterSubscriptionService = 107;
-    ClientEventWithoutResponse = 200;
-    ClientUnaryWithResponse = 300;
-    ServerUpdateAssignments = 1000;
-    ServerUpdateSubscriptionService = 1001;
+
+    // Unary Request with Ack Response
+    ClientUnaryCreateSubscriptionService = 200;
+    ClientUnaryRegisterSubscriptionService = 201;
+
+    // Unary Request with Event-Specific Response Message
+    ClientUnaryRegisterWorkers = 300;
+    ClientUnaryRegisterPipeline = 301;
+
+    // Server Event issues to Client(s)
+    ServerEvent = 1000;
+    ServerUpdateAssignments = 1001;
+    ServerUpdateSubscriptionService = 1002;
 }
 
 enum ErrorCode
