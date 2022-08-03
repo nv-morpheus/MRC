@@ -40,6 +40,20 @@
 
 namespace srf::internal::control_plane {
 
+/**
+ * @brief Control Plane Server
+ *
+ * The Control Plane Server is an asynchronous bi-directional grpc server with persistent stream connections to the
+ * Control Plane Clients. The primary function of the server is to provide global state for all clients and a method
+ * to exchange connection information like UCX worker addresses.
+ *
+ * The server must be resilient to termination, meaning we can not use glog's CHECK statement to validate assumptions.
+ * We will use C++ exceptions that throw a srf::internal::Error to replace the std::abort of a failed CHECK/ASSERT.
+ * To indicate "softer" errors, perhaps configuration errors by the client or mismatched state between client and server
+ * as failed Expected. All top-level event handlers should return an Expected<Message> where message is the type of
+ * message which will be returned to the client. The write methods will check the state of the Expected<Message> and
+ * send back either the Message or an Ack with the proper error code and error message.
+ */
 class Server : public Service
 {
   public:
@@ -93,8 +107,9 @@ class Server : public Service
     Expected<protos::Ack> unary_register_subscription_service(event_t& event);
     Expected<protos::Ack> unary_drop_from_subscription_service(event_t& event);
     void drop_stream(writer_t writer);
+    void on_fatal_exception();
 
-    // methods used to issue responses
+    // methods used to create and issue responses
     template <typename MessageT>
     static Expected<> unary_response(event_t& event, Expected<MessageT>&& message);
     static Expected<> unary_ack(event_t& event, protos::ErrorCode type, std::string msg = "");
@@ -105,7 +120,7 @@ class Server : public Service
     Expected<instance_t> validate_instance_id(const instance_id_t& instance_id, const event_t& event) const;
     Expected<decltype(m_subscription_services)::const_iterator> get_subscription_service(const std::string& name) const;
 
-    // protobuf methods
+    // protobuf convenience methods
     template <typename T>
     static Expected<std::set<T>> check_unique_repeated_field(const google::protobuf::RepeatedPtrField<T>& items)
     {

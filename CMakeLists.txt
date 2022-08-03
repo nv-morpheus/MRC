@@ -146,6 +146,7 @@ add_library(libsrf
   src/internal/control_plane/client.cpp
   src/internal/control_plane/server.cpp
   src/internal/control_plane/server/subscription_service.cpp
+  src/internal/control_plane/server/tagged_service.cpp
   src/internal/data_plane/callbacks.cpp
   src/internal/data_plane/client.cpp
   src/internal/data_plane/resources.cpp

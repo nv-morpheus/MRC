@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 
 using namespace srf;
+using namespace srf::internal;
 
 class TestExpected : public ::testing::Test
 {};

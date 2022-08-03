@@ -35,6 +35,7 @@
 #include <google/protobuf/any.pb.h>
 
 #include <algorithm>
+#include <exception>
 #include <functional>
 #include <ostream>
 #include <type_traits>  // IWYU pragma: keep
@@ -197,32 +198,66 @@ void Server::do_accept_stream(rxcpp::subscriber<stream_t>& s)
 void Server::do_handle_event(event_t&& event)
 {
     DCHECK(event.stream);
-    Expected<> status;
 
-    if (event.ok)
+    try
     {
-        switch (event.msg.event())
+        if (event.ok)
         {
-        case protos::EventType::ClientUnaryRegisterWorkers:
-            status = unary_response(event, unary_register_workers(event));
-            break;
+            Expected<> status;
+            switch (event.msg.event())
+            {
+            case protos::EventType::ClientUnaryRegisterWorkers:
+                status = unary_response(event, unary_register_workers(event));
+                break;
 
-        case protos::EventType::ClientUnaryCreateSubscriptionService:
-            status = unary_response(event, unary_create_subscription_service(event));
-            break;
+            case protos::EventType::ClientUnaryCreateSubscriptionService:
+                status = unary_response(event, unary_create_subscription_service(event));
+                break;
 
-        case protos::EventType::ClientUnaryRegisterSubscriptionService:
-            status = unary_response(event, unary_register_subscription_service(event));
-            break;
+            case protos::EventType::ClientUnaryRegisterSubscriptionService:
+                status = unary_response(event, unary_register_subscription_service(event));
+                break;
 
-        default:
-            LOG(FATAL) << "event not handled";
+            default:
+                throw Error::create("unhandled event type in server handler");
+            }
+
+            if (!status)
+            {
+                throw status.error();
+            }
         }
-    }
-    else
+        else
+        {
+            drop_stream(event.stream);
+        }
+    } catch (const tl::bad_expected_access<Error>& e)
     {
-        drop_stream(event.stream);
+        LOG(ERROR) << "bad_expected_access: " << e.error().message();
+        on_fatal_exception();
+
+    } catch (const std::exception& e)
+    {
+        LOG(ERROR) << "exception: " << e.what();
+        on_fatal_exception();
+
+    } catch (...)
+    {
+        LOG(ERROR) << "unknown acception caught";
+        on_fatal_exception();
     }
+}
+
+void Server::on_fatal_exception()
+{
+    LOG(FATAL) << "fatal error on the control plane server was caught; signal all attached instances to shutdown "
+                  "and disconnect";
+
+    // todo: convert the FATAL to ERROR, then mark the server as shutting down, then issue shutdown requests
+    // to each connected client, then close the client connections with a grpc CANCELLED on the steam.
+    // the clients should receive the shutdown message with the understanding that the server will no longer be
+    // responding to events. this means, the status objects used to hold a fiber promise should never fully block and
+    // instead use a long deadline and a stop token which they must check if the deadline ever times out.
 }
 
 Expected<protos::RegisterWorkersResponse> Server::unary_register_workers(event_t& event)
@@ -364,27 +399,30 @@ Expected<protos::Ack> Server::unary_register_subscription_service(event_t& event
 
 Expected<protos::Ack> Server::unary_drop_from_subscription_service(event_t& event)
 {
-    auto req = unpack_request<protos::SubscriptionServiceUpdate>(event);
-    SRF_EXPECT_TRUE(req);
+    LOG(FATAL) << "not implemented";
 
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    // auto req = unpack_request<protos::SubscriptionServiceUpdate>(event);
+    // SRF_EXPECT_TRUE(req);
 
-    auto valid_ids = std::all_of(req->instance_ids().begin(),
-                                 req->instance_ids().end(),
-                                 [this, &event](const instance_id_t& id) { return validate_instance_id(id, event); });
+    // std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-    auto search        = m_subscription_services.find(req->service_name());
-    auto valid_service = (search != m_subscription_services.end());
+    // auto valid_ids = std::all_of(req->instance_ids().begin(),
+    //                              req->instance_ids().end(),
+    //                              [this, &event](const instance_id_t& id) { return validate_instance_id(id, event);
+    //                              });
 
-    if (valid_ids && valid_service)
-    {
-        CHECK(search->second);
-        for (const auto& id : req->instance_ids())
-        {
-            auto instance = get_instance(id);
-            search->second->drop_instance(*instance);
-        }
-    }
+    // auto search        = m_subscription_services.find(req->service_name());
+    // auto valid_service = (search != m_subscription_services.end());
+
+    // if (valid_ids && valid_service)
+    // {
+    //     CHECK(search->second);
+    //     for (const auto& id : req->instance_ids())
+    //     {
+    //         auto instance = get_instance(id);
+    //         search->second->drop_instance(*instance);
+    //     }
+    // }
 
     return ack_success();
 }

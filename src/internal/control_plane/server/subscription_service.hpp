@@ -18,6 +18,7 @@
 #pragma once
 
 #include "internal/control_plane/server/client_instance.hpp"
+#include "internal/control_plane/server/tagged_service.hpp"
 
 #include "srf/protos/architect.pb.h"
 #include "srf/types.hpp"
@@ -35,12 +36,12 @@ class Role
     {}
 
     // subscribers are notified when new members are added
-    void add_member(std::shared_ptr<server::ClientInstance> instance);
-    void add_subscriber(std::shared_ptr<server::ClientInstance> instance);
+    void add_member(std::uint64_t tag, std::shared_ptr<server::ClientInstance> instance);
+    void add_subscriber(std::uint64_t tag, std::shared_ptr<server::ClientInstance> instance);
 
     // drop a client instance - this will remove the instaces from both the
     // members and subscribers list
-    void drop_instance(std::shared_ptr<server::ClientInstance> instance);
+    void drop_tag(std::uint64_t tag);
 
   private:
     // protos::SubscriptionServiceUpdate make_update();
@@ -51,23 +52,21 @@ class Role
 
     std::string m_service_name;
     std::string m_role_name;
-    std::set<std::shared_ptr<server::ClientInstance>> m_members;
-    std::set<std::shared_ptr<server::ClientInstance>> m_subscribers;
+    std::map<std::uint64_t, std::shared_ptr<server::ClientInstance>> m_members;
+    std::map<std::uint64_t, std::shared_ptr<server::ClientInstance>> m_subscribers;
     std::size_t m_nonce{1};
     Mutex m_mutex;
 };
 
-class SubscriptionService final
+class SubscriptionService final : public server::TaggedService
 {
   public:
     SubscriptionService(std::string name, std::set<std::string> roles);
-    ~SubscriptionService() = default;
+    ~SubscriptionService() final = default;
 
-    void register_instance(std::shared_ptr<server::ClientInstance> instance,
-                           const std::string& role,
-                           const std::set<std::string>& subscribe_to_roles);
-
-    void drop_instance(std::shared_ptr<server::ClientInstance> instance);
+    tag_t register_instance(std::shared_ptr<server::ClientInstance> instance,
+                            const std::string& role,
+                            const std::set<std::string>& subscribe_to_roles);
 
     bool has_role(const std::string& role) const;
     bool compare_roles(const std::set<std::string>& roles) const;
@@ -75,6 +74,8 @@ class SubscriptionService final
   private:
     void add_role(const std::string& name);
     Role& get_role(const std::string& name);
+
+    void do_drop_tag(const tag_t& tag) final;
 
     std::string m_name;
 

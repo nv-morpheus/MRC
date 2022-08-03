@@ -144,6 +144,9 @@ class Client final : public Service
     mutable std::mutex m_mutex;
 };
 
+// todo: create this object from the client which will own the stop_source
+// create this object with a stop_token associated with the client's stop_source
+
 template <typename ResponseT>
 class AsyncStatus
 {
@@ -156,6 +159,7 @@ class AsyncStatus
     ResponseT await_response()
     {
         ResponseT response;
+        // todo(ryan): expand this into a wait_until with a deadline and a stop token
         CHECK(m_promise.get_future().get().message().UnpackTo(&response));
         return response;
     }

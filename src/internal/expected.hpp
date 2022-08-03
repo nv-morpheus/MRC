@@ -20,7 +20,7 @@
 
 #include <tl/expected.hpp>  // IWYU pragma: export
 
-namespace srf {
+namespace srf::internal {
 
 enum class ErrorCode
 {
@@ -69,4 +69,4 @@ class Error final : std::exception
 template <typename T = void>
 using Expected = tl::expected<T, Error>;  // NOLINT
 
-}  // namespace srf
+}  // namespace srf::internal

@@ -118,12 +118,24 @@ message RegisterSubscriptionServiceRequest
     uint64 instance_id = 4;
 }
 
+message DropSubscriptionServiceRequest
+{
+    string service_name = 1;
+    uint64 instance_id = 2;
+}
+
+message TaggedInstance
+{
+    uint64 instance_id = 1;
+    uint64 tag = 2;
+}
+
 message SubscriptionServiceUpdate
 {
     string service_name = 1;
     string role = 2;
     uint64 nonce = 3;
-    repeated uint64 instance_ids = 4;
+    repeated TaggedInstance tagged_instances = 4;
 }
 
 message Ack

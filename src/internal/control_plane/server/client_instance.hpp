@@ -27,12 +27,14 @@ namespace srf::internal::control_plane::server {
 
 struct ClientInstance
 {
+    using instance_id_t = std::uint64_t;
+
     std::shared_ptr<rpc::StreamWriter<srf::protos::Event>> stream_writer;
     std::string worker_address;
 
-    std::size_t get_id() const
+    instance_id_t get_id() const
     {
-        return reinterpret_cast<std::size_t>(this);
+        return reinterpret_cast<instance_id_t>(this);
     }
 };
 
