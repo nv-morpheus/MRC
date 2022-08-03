@@ -354,7 +354,7 @@ Expected<protos::Ack> Server::unary_create_subscription_service(event_t& event)
     return ack_success();
 }
 
-Expected<protos::Ack> Server::unary_register_subscription_service(event_t& event)
+Expected<protos::RegisterSubscriptionServiceResponse> Server::unary_register_subscription_service(event_t& event)
 {
     auto req = unpack_request<protos::RegisterSubscriptionServiceRequest>(event);
     SRF_EXPECT_TRUE(req);
@@ -391,10 +391,15 @@ Expected<protos::Ack> Server::unary_register_subscription_service(event_t& event
     }
 
     // todo(ryan) - need improved error handling
-    service.register_instance(*instance, req->role(), *subscribe_to);
+    auto tag = service.register_instance(*instance, req->role(), *subscribe_to);
 
     DVLOG(10) << "[success] register subscription service: " << req->service_name() << "; role: " << req->role();
-    return ack_success();
+    protos::RegisterSubscriptionServiceResponse resp;
+    resp.set_service_name(req->service_name());
+    resp.set_role(req->role());
+    resp.set_tag(tag);
+
+    return resp;
 }
 
 Expected<protos::Ack> Server::unary_drop_from_subscription_service(event_t& event)
