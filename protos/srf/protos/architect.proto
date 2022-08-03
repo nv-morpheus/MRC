@@ -62,7 +62,16 @@ message Event
 {
     EventType event = 1;
     uint64 tag = 2;
-    google.protobuf.Any message = 3;
+    oneof message_or_error {
+      google.protobuf.Any message = 3;
+      Error error = 4;
+    }
+}
+
+message Error
+{
+    ErrorCode status = 1;
+    string message = 2;
 }
 
 // Initialization - Step 1
@@ -116,6 +125,13 @@ message RegisterSubscriptionServiceRequest
     string role = 2;
     repeated string subscribe_to_roles = 3;
     uint64 instance_id = 4;
+}
+
+message RegisterSubscriptionServiceResponse
+{
+    string service_name = 1;
+    string role = 2;
+    uint64 tag = 3;
 }
 
 message DropSubscriptionServiceRequest

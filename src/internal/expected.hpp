@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#pragma once
+
 #include "srf/utils/macros.hpp"
 #include "srf/utils/string_utils.hpp"  // IWYU pragma: export
 

@@ -18,6 +18,7 @@
 #pragma once
 
 #include "internal/control_plane/client/subscription_service.hpp"
+#include "internal/expected.hpp"
 #include "internal/grpc/client_streaming.hpp"
 #include "internal/grpc/progress_engine.hpp"
 #include "internal/grpc/promise_handler.hpp"
@@ -96,7 +97,7 @@ class Client final : public Service
     client::SubscriptionService& get_or_create_subscription_service(std::string name, std::set<std::string> roles);
 
     template <typename ResponseT, typename RequestT>
-    ResponseT await_unary(const protos::EventType& event_type, RequestT&& request);
+    Expected<ResponseT> await_unary(const protos::EventType& event_type, RequestT&& request);
 
     template <typename ResponseT, typename RequestT>
     void async_unary(const protos::EventType& event_type, RequestT&& request, AsyncStatus<ResponseT>& status);
@@ -156,11 +157,22 @@ class AsyncStatus
     DELETE_COPYABILITY(AsyncStatus);
     DELETE_MOVEABILITY(AsyncStatus);
 
-    ResponseT await_response()
+    Expected<ResponseT> await_response()
     {
-        ResponseT response;
         // todo(ryan): expand this into a wait_until with a deadline and a stop token
-        CHECK(m_promise.get_future().get().message().UnpackTo(&response));
+        auto event = m_promise.get_future().get();
+
+        if (event.has_error())
+        {
+            return Error::create(event.error().message());
+        }
+
+        ResponseT response;
+        if (!event.message().UnpackTo(&response))
+        {
+            throw Error::create("fatal error: unable to unpack message; server sent the wrong message type");
+        }
+
         return response;
     }
 
@@ -170,7 +182,7 @@ class AsyncStatus
 };
 
 template <typename ResponseT, typename RequestT>
-ResponseT Client::await_unary(const protos::EventType& event_type, RequestT&& request)
+Expected<ResponseT> Client::await_unary(const protos::EventType& event_type, RequestT&& request)
 {
     AsyncStatus<ResponseT> status;
     async_unary(event_type, std::move(request), status);

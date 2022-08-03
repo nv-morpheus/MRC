@@ -163,9 +163,9 @@ void Client::register_ucx_addresses(std::vector<ucx::WorkerAddress> worker_addre
     }
     auto resp = await_unary<protos::RegisterWorkersResponse>(protos::ClientUnaryRegisterWorkers, std::move(req));
 
-    m_machine_id = resp.machine_id();
-    CHECK_EQ(resp.instance_ids_size(), worker_addresses.size());
-    for (const auto& id : resp.instance_ids())
+    m_machine_id = resp->machine_id();
+    CHECK_EQ(resp->instance_ids_size(), worker_addresses.size());
+    for (const auto& id : resp->instance_ids())
     {
         m_instance_ids.push_back(id);
     }
@@ -196,9 +196,9 @@ client::SubscriptionService& Client::get_or_create_subscription_service(std::str
         req.add_roles(role);
     }
     auto resp = await_unary<protos::Ack>(protos::ClientUnaryCreateSubscriptionService, std::move(req));
-    if (resp.status() != protos::Success)
+    if (resp->status() != protos::Success)
     {
-        LOG(ERROR) << resp.msg();
+        LOG(ERROR) << resp->msg();
         throw srf::exceptions::SrfRuntimeError("failed to create subscription service");
     }
     DVLOG(10) << "subscribtion_service: " << name << " is live on the control plane server";
