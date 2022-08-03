@@ -70,8 +70,12 @@ message Event
 
 message Error
 {
-    ErrorCode status = 1;
+    ErrorCode code = 1;
     string message = 2;
+}
+
+message Ack
+{
 }
 
 // Initialization - Step 1
@@ -152,12 +156,6 @@ message SubscriptionServiceUpdate
     string role = 2;
     uint64 nonce = 3;
     repeated TaggedInstance tagged_instances = 4;
-}
-
-message Ack
-{
-    ErrorCode status = 1;
-    string msg = 2;
 }
 
 // Basic Control message

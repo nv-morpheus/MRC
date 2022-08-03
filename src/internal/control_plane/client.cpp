@@ -196,10 +196,10 @@ client::SubscriptionService& Client::get_or_create_subscription_service(std::str
         req.add_roles(role);
     }
     auto resp = await_unary<protos::Ack>(protos::ClientUnaryCreateSubscriptionService, std::move(req));
-    if (resp->status() != protos::Success)
+    if (!resp)
     {
-        LOG(ERROR) << resp->msg();
-        throw srf::exceptions::SrfRuntimeError("failed to create subscription service");
+        LOG(ERROR) << "failed to create subscription service: " << resp.error().message();
+        throw resp.error();
     }
     DVLOG(10) << "subscribtion_service: " << name << " is live on the control plane server";
 

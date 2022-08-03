@@ -17,9 +17,6 @@
 
 #include "internal/control_plane/server.hpp"
 
-#include "rxcpp/rx-subscriber.hpp"
-#include "tl/expected.hpp"
-
 #include "internal/control_plane/server_resources.hpp"
 #include "internal/utils/contains.hpp"
 
@@ -33,6 +30,8 @@
 
 #include <glog/logging.h>
 #include <google/protobuf/any.pb.h>
+#include <rxcpp/rx-subscriber.hpp>
+#include <tl/expected.hpp>
 
 #include <algorithm>
 #include <exception>
@@ -351,7 +350,7 @@ Expected<protos::Ack> Server::unary_create_subscription_service(event_t& event)
     }
 
     DVLOG(10) << "[success] create (or get) subscription service: " << req->service_name();
-    return ack_success();
+    return protos::Ack{};
 }
 
 Expected<protos::RegisterSubscriptionServiceResponse> Server::unary_register_subscription_service(event_t& event)
@@ -429,7 +428,7 @@ Expected<protos::Ack> Server::unary_drop_from_subscription_service(event_t& even
     //     }
     // }
 
-    return ack_success();
+    return protos::Ack{};
 }
 
 void Server::drop_stream(writer_t writer)
@@ -476,23 +475,6 @@ void Server::drop_stream(writer_t writer)
     m_streams.erase(stream);
 }
 
-Expected<> Server::unary_ack(event_t& event, protos::ErrorCode type, std::string msg)
-{
-    protos::Ack ack;
-    ack.set_status(type);
-    ack.set_msg(msg);
-
-    protos::Event error;
-    error.set_event(protos::EventType::Response);
-    error.set_tag(event.msg.tag());
-    CHECK(error.mutable_message()->PackFrom(ack));
-    if (event.stream->await_write(std::move(error)) != channel::Status::success)
-    {
-        return Error::create("failed to write to channel");
-    }
-    return {};
-}
-
 Expected<Server::instance_t> Server::validate_instance_id(const instance_id_t& instance_id, const event_t& event) const
 {
     return get_instance(instance_id).and_then([&event, &instance_id](auto& i) -> Expected<instance_t> {
@@ -524,13 +506,6 @@ Expected<decltype(Server::m_subscription_services)::const_iterator> Server::get_
         return Error::create("invalid subscription_service name");
     }
     return search;
-}
-
-protos::Ack Server::ack_success()
-{
-    protos::Ack ack;
-    ack.set_status(protos::Success);
-    return ack;
 }
 
 }  // namespace srf::internal::control_plane

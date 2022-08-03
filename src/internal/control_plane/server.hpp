@@ -112,8 +112,6 @@ class Server : public Service
     // methods used to create and issue responses
     template <typename MessageT>
     static Expected<> unary_response(event_t& event, Expected<MessageT>&& message);
-    static Expected<> unary_ack(event_t& event, protos::ErrorCode type, std::string msg = "");
-    static protos::Ack ack_success();
 
     // convenience methods - these method do not lock internal state
     Expected<instance_t> get_instance(const instance_id_t& instance_id) const;
@@ -140,7 +138,11 @@ class Server : public Service
         {
             return msg;
         }
-        return Error::create("unable to unpack request; possible type mismatch");
+        if (event.msg.has_error())
+        {
+            return Error::create(event.msg.error().message());
+        }
+        return Error::create("unable to unpack request; client an unexpected message type");
     }
 };
 
@@ -149,7 +151,10 @@ Expected<> Server::unary_response(event_t& event, Expected<MessageT>&& message)
 {
     if (!message)
     {
-        return unary_ack(event, protos::ErrorCode::InstanceError, message.error().message());
+        protos::Error error;
+        error.set_code(protos::ErrorCode::InstanceError);
+        error.set_message(message.error().message());
+        return unary_response<protos::Error>(event, std::move(error));
     }
     srf::protos::Event out;
     out.set_tag(event.msg.tag());
