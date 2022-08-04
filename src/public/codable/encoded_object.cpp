@@ -32,9 +32,9 @@
 
 #include <google/protobuf/any.pb.h>
 #include <google/protobuf/message.h>
-#include <string.h>
 
 #include <cstdint>
+#include <cstring>
 #include <optional>
 #include <ostream>
 #include <type_traits>
