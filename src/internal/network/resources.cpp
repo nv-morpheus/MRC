@@ -44,7 +44,7 @@ Resources::Resources(resources::PartitionResourceBase& base,
     ucx.network_task_queue()
         .enqueue([this, &base, &ucx, &host] {
             // initialize data plane services - server / client
-            m_data_plane = std::make_unique<data_plane::Resources>(base, ucx, host);
+            m_data_plane = std::make_unique<data_plane::Resources>(base, ucx, host, m_instance_id);
         })
         .get();
 }

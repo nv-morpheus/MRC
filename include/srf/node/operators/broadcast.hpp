@@ -37,17 +37,6 @@ class Broadcast : public Operator<T>, public SourceProperties<T>
     Broadcast(bool deep_copy = false) : m_deep_copy(deep_copy) {}
     ~Broadcast() = default;
 
-    /**
-     * @brief Provides a reference to a SourceChannel<T>; this should be captured or used immediately with
-     * node::make_edge
-     *
-     * @return SourceChannel<T>&
-     */
-    [[nodiscard]] SourceProperties<T>& make_source()
-    {
-        return m_output_channels.emplace_back();
-    }
-
   protected:
     // Operator::on_next
     channel::Status on_next(T&& data) override

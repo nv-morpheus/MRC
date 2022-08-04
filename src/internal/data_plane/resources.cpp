@@ -30,11 +30,15 @@
 
 namespace srf::internal::data_plane {
 
-Resources::Resources(resources::PartitionResourceBase& base, ucx::Resources& ucx, memory::HostResources& host) :
+Resources::Resources(resources::PartitionResourceBase& base,
+                     ucx::Resources& ucx,
+                     memory::HostResources& host,
+                     InstanceID instance_id) :
   resources::PartitionResourceBase(base),
   m_ucx(ucx),
   m_host(host),
-  m_server(base, ucx, host),
+  m_instance_id(instance_id),
+  m_server(base, ucx, host, instance_id),
   m_client(base, ucx)
 {
     // ensure the data plane progress engine is up and running

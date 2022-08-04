@@ -36,7 +36,10 @@ namespace srf::internal::data_plane {
 class Resources final : private Service, private resources::PartitionResourceBase
 {
   public:
-    Resources(resources::PartitionResourceBase& base, ucx::Resources& ucx, memory::HostResources& host);
+    Resources(resources::PartitionResourceBase& base,
+              ucx::Resources& ucx,
+              memory::HostResources& host,
+              InstanceID instance_id);
     ~Resources() final;
 
     Client& client();
@@ -53,6 +56,7 @@ class Resources final : private Service, private resources::PartitionResourceBas
 
     ucx::Resources& m_ucx;
     memory::HostResources& m_host;
+    InstanceID m_instance_id;
 
     Server m_server;
     Client m_client;

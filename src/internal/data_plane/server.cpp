@@ -148,10 +148,14 @@ class DataPlaneServerWorker final : public node::GenericSource<network_event_t>
     ucp_tag_t m_tag_mask{0};
 };
 
-Server::Server(resources::PartitionResourceBase& provider, ucx::Resources& ucx, memory::HostResources& host) :
+Server::Server(resources::PartitionResourceBase& provider,
+               ucx::Resources& ucx,
+               memory::HostResources& host,
+               InstanceID instance_id) :
   resources::PartitionResourceBase(provider),
   m_ucx(ucx),
-  m_host(host)
+  m_host(host),
+  m_instance_id(instance_id)
 {}
 
 Server::~Server()

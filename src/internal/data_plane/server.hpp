@@ -82,7 +82,10 @@ using network_event_t = std::pair<PortAddress, srf::memory::buffer_view>;
 class Server final : public Service, public resources::PartitionResourceBase
 {
   public:
-    Server(resources::PartitionResourceBase& provider, ucx::Resources& ucx, memory::HostResources& host);
+    Server(resources::PartitionResourceBase& provider,
+           ucx::Resources& ucx,
+           memory::HostResources& host,
+           InstanceID instance_id);
     ~Server() final;
 
     ucx::WorkerAddress worker_address() const;
@@ -101,6 +104,7 @@ class Server final : public Service, public resources::PartitionResourceBase
     // ucx resources
     ucx::Resources& m_ucx;
     memory::HostResources& m_host;
+    InstanceID m_instance_id;
 
     // deserialization nodes will connect to this source wtih their port id
     // the source for this router is the private GenericSoruce of this object
