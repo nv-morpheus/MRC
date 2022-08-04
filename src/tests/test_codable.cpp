@@ -30,6 +30,8 @@
 #include "srf/codable/encode.hpp"
 #include "srf/codable/encoded_object.hpp"
 #include "srf/codable/encoding_options.hpp"
+#include "srf/codable/fundamental_types.hpp"  // IWYU pragma: keep
+#include "srf/codable/protobuf_message.hpp"   // IWYU pragma: keep
 #include "srf/codable/type_traits.hpp"
 #include "srf/core/bitmap.hpp"
 #include "srf/core/task_queue.hpp"
