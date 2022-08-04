@@ -21,6 +21,7 @@
 
 #include "srf/options/options.hpp"
 
+#include <functional>
 #include <memory>
 
 std::shared_ptr<srf::internal::system::System> make_system(std::function<void(srf::Options&)> updater = nullptr);

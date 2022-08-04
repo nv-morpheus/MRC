@@ -18,23 +18,34 @@
 #include "common.hpp"
 
 #include "internal/data_plane/resources.hpp"
+#include "internal/network/resources.hpp"
 #include "internal/resources/manager.hpp"
+#include "internal/resources/partition_resources.hpp"
+#include "internal/runnable/resources.hpp"
+#include "internal/system/system_provider.hpp"
+#include "internal/ucx/registration_cache.hpp"
 
 #include "srf/codable/codable_protocol.hpp"
 #include "srf/codable/decode.hpp"
 #include "srf/codable/encode.hpp"
 #include "srf/codable/encoded_object.hpp"
 #include "srf/codable/encoding_options.hpp"
-#include "srf/codable/fundamental_types.hpp"
-#include "srf/codable/protobuf_message.hpp"
 #include "srf/codable/type_traits.hpp"
+#include "srf/core/bitmap.hpp"
+#include "srf/core/task_queue.hpp"
+#include "srf/memory/buffer_view.hpp"
+#include "srf/options/options.hpp"
+#include "srf/options/placement.hpp"
 #include "srf/protos/codable.pb.h"
+#include "srf/types.hpp"
 
-#include <glog/logging.h>
+#include <boost/fiber/future/future.hpp>
 #include <gtest/gtest.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <type_traits>
 
