@@ -27,6 +27,12 @@
 
 namespace srf::internal::control_plane::server {
 
+/**
+ * @brief Creates masked tags.
+ *
+ * Limit UINT32_MAX tagged object can be created in a given process before reaching the overflow limit.
+ * Each tagged object can issues UINT16_MAX unique tags.
+ */
 class Tagged
 {
   public:
@@ -55,9 +61,23 @@ class Tagged
     std::uint16_t m_uid{1};
 };
 
+/**
+ * @brief Server-side Service class that ensures each registered instance has a unique tag and that all tags are
+ * assocated with an instance_id
+ *
+ * This is the primary base class for a control plane server-side stateful service which can be updated by the client
+ * and state updates driven independently via the issue_update() method.
+ *
+ * TaggedService is not thread-safe or protected in anyway. The global state mutex should protect all TaggedServices.
+ *
+ * In most scenarios, the service side will have a batched updated which will periodically visit each TaggedService and
+ * call issue_update(); however, depending on the service request/update message, the call may also require an immediate
+ * update.
+ */
 class TaggedService : public Tagged
 {
     virtual void do_drop_tag(const tag_t& tag) = 0;
+    virtual void do_issue_update()             = 0;
 
   public:
     ~TaggedService() override;
@@ -66,6 +86,8 @@ class TaggedService : public Tagged
     void drop_instance(ClientInstance::instance_id_t instance_id);
     void drop_tag(tag_t tag);
     void drop_all();
+
+    void issue_update();
 
     std::size_t tag_count() const;
     std::size_t tag_count_for_instance_id(ClientInstance::instance_id_t instance_id) const;

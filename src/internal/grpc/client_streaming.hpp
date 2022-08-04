@@ -293,6 +293,7 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
             m_stream.reset();
             m_reader_source.reset();
             service_await_join();
+            return;
         }
 
         DVLOG(10) << "grpc bidi client stream - initialized";

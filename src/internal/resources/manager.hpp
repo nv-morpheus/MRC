@@ -51,6 +51,7 @@ class Manager final : public system::SystemProvider
     const std::unique_ptr<system::Resources> m_system;
     std::vector<runnable::Resources> m_runnable;                   // one per host partition
     std::vector<std::optional<ucx::Resources>> m_ucx;              // one per flattened partition if network is enabled
+    std::shared_ptr<control_plane::Resources> m_control_plane;     // one per instance of resources::Manager
     std::vector<memory::HostResources> m_host;                     // one per host partition
     std::vector<std::optional<memory::DeviceResources>> m_device;  // one per flattened partition upto device_count
     std::vector<std::optional<network::Resources>> m_network;      // one per flattened partition

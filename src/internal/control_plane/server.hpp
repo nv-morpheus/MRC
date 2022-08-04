@@ -31,9 +31,11 @@
 #include "srf/protos/architect.pb.h"
 #include "srf/runnable/runner.hpp"
 
+#include <boost/fiber/condition_variable.hpp>
 #include <boost/fiber/recursive_mutex.hpp>
 #include <google/protobuf/repeated_ptr_field.h>
 
+#include <chrono>
 #include <map>
 #include <memory>
 #include <string>
@@ -52,7 +54,7 @@ namespace srf::internal::control_plane {
  * To indicate "softer" errors, perhaps configuration errors by the client or mismatched state between client and server
  * as failed Expected. All top-level event handlers should return an Expected<Message> where message is the type of
  * message which will be returned to the client. The write methods will check the state of the Expected<Message> and
- * send back either the Message or an Ack with the proper error code and error message.
+ * send back either the Message or an Error with the proper error code and error message.
  */
 class Server : public Service
 {
@@ -75,6 +77,7 @@ class Server : public Service
 
     void do_accept_stream(rxcpp::subscriber<stream_t>& s);
     void do_handle_event(event_t&& event);
+    void do_issue_update(rxcpp::subscriber<void*>& s);
 
     // srf resources
     runnable::Resources& m_runnable;
@@ -90,7 +93,7 @@ class Server : public Service
     std::set<std::string> m_ucx_worker_addresses;
 
     // subscription services
-    std::map<std::string, std::unique_ptr<SubscriptionService>> m_subscription_services;
+    std::map<std::string, std::unique_ptr<server::SubscriptionService>> m_subscription_services;
 
     // operators / queues
     std::unique_ptr<srf::node::Queue<event_t>> m_queue;
@@ -98,8 +101,12 @@ class Server : public Service
     // runners
     std::unique_ptr<srf::runnable::Runner> m_stream_acceptor;
     std::unique_ptr<srf::runnable::Runner> m_event_handler;
+    std::unique_ptr<srf::runnable::Runner> m_update_handler;
 
+    // state mutex/cv/timeout
     mutable boost::fibers::mutex m_mutex;
+    boost::fibers::condition_variable m_update_cv;
+    std::chrono::milliseconds m_update_period{30000};
 
     // top-level event handlers - these methods lock internal state
     Expected<protos::RegisterWorkersResponse> unary_register_workers(event_t& event);

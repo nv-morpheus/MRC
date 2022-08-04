@@ -42,6 +42,10 @@ namespace ucx {
 class Resources;
 }  // namespace ucx
 
+namespace control_plane {
+class Resources;
+}
+
 namespace data_plane {
 class Resources;
 }  // namespace data_plane

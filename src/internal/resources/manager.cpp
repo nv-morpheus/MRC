@@ -17,12 +17,15 @@
 
 #include "internal/resources/manager.hpp"
 
+#include "internal/control_plane/client.hpp"
+#include "internal/control_plane/resources.hpp"
 #include "internal/data_plane/resources.hpp"
 #include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/system/partitions.hpp"
 #include "internal/system/system.hpp"
+#include "internal/ucx/common.hpp"
 #include "internal/ucx/registation_callback_builder.hpp"
 
 #include "srf/exceptions/runtime_error.hpp"
@@ -88,6 +91,21 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
         }
     }
 
+    // create control plane and register worker addresses
+    if (network_enabled)
+    {
+        m_control_plane = std::make_shared<control_plane::Resources>(base_partition_resources.at(0));
+
+        std::vector<ucx::WorkerAddress> workers;
+        for (auto& ucx : m_ucx)
+        {
+            workers.push_back(ucx->worker().address());
+        }
+
+        m_control_plane->client().register_ucx_addresses(std::move(workers));
+        CHECK_EQ(m_control_plane->client().instance_ids().size(), m_ucx.size());
+    }
+
     // construct the host memory resources for each host_partition
     for (std::size_t i = 0; i < host_partitions.size(); ++i)
     {
@@ -105,9 +123,6 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
         VLOG(1) << "building host resources for host_partition: " << i;
         m_host.emplace_back(m_runnable.at(i), std::move(builder));
     }
-
-    // create control plane and registere worker addresses
-    
 
     // devices
     for (auto& base : base_partition_resources)
@@ -134,7 +149,8 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
             VLOG(1) << "building network resources for partition: " << base.partition_id();
             CHECK(m_ucx.at(base.partition_id()));
             std::optional<network::Resources> network;
-            network.emplace(base, *m_ucx.at(base.partition_id()), m_host.at(base.partition().host_partition_id()));
+            network.emplace(
+                base, *m_ucx.at(base.partition_id()), m_host.at(base.partition().host_partition_id()), m_control_plane);
             m_network.push_back(std::move(network));
         }
         else

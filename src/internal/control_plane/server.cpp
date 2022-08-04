@@ -17,7 +17,6 @@
 
 #include "internal/control_plane/server.hpp"
 
-#include "internal/control_plane/server_resources.hpp"
 #include "internal/utils/contains.hpp"
 
 #include "srf/channel/status.hpp"
@@ -28,6 +27,8 @@
 #include "srf/protos/architect.pb.h"
 #include "srf/runnable/launch_options.hpp"
 
+#include <boost/fiber/condition_variable.hpp>
+#include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 #include <google/protobuf/any.pb.h>
 #include <rxcpp/rx-subscriber.hpp>
@@ -52,17 +53,27 @@ Server::Server(runnable::Resources& runnable) : m_runnable(runnable), m_server(m
 
 void Server::do_service_start()
 {
-    // create runnables
+    // node to accept connections
     auto acceptor = std::make_unique<srf::node::RxSource<stream_t>>(
         rxcpp::observable<>::create<stream_t>([this](rxcpp::subscriber<stream_t>& s) { do_accept_stream(s); }));
 
+    // node to periodically issue updates
+
+    // create external queue for incoming events
+    // as new grpc streams are initialized by the acceptor, they attach as sources to the queue (stream >> queue)
+    // these streams issue event (event_t) object which encapsulate the stream_writer for the originating stream
     m_queue = std::make_unique<srf::node::Queue<event_t>>();
     m_queue->enable_persistence();
 
+    // the queue is attached to the event handler which will update the internal state of the server
     auto handler =
         std::make_unique<srf::node::RxSink<event_t>>([this](event_t event) { do_handle_event(std::move(event)); });
 
-    // for edges between runnables
+    // node to periodically issue update of the server state to connected clients via the grpc bidi streams
+    auto updater = std::make_unique<srf::node::RxSource<void*>>(
+        rxcpp::observable<>::create<void*>([this](rxcpp::subscriber<void*>& s) { do_issue_update(s); }));
+
+    // edge: queue >> handler
     srf::node::make_edge(*m_queue, *handler);
 
     // grpc service
@@ -79,6 +90,9 @@ void Server::do_service_start()
     // options.pe_count = N;       // number of thread/cores
     // options.engines_per_pe = M; // number of fibers/user-threads per thread/core
     m_event_handler = m_runnable.launch_control().prepare_launcher(std::move(handler))->ignition();
+
+    // periodic updater
+    m_update_handler = m_runnable.launch_control().prepare_launcher(std::move(updater))->ignition();
 
     // start the acceptor - this should be one of the last runnables launch
     // once this goes live, connections will be accepted and data/events can be coming in
@@ -101,6 +115,10 @@ void Server::do_service_stop()
     // shutdown the server and the cq immeditately.
     // this is future work, for now we will be hard killing the server which will be hard killing the streams, the
     // clients will not gracefully shutdown and enter a kill mode.
+    m_stream_acceptor->stop();
+    m_update_handler->stop();
+    m_update_cv.notify_all();
+
     service_kill();
 }
 
@@ -108,6 +126,9 @@ void Server::do_service_kill()
 {
     // this is a hard stop, we are shutting everything down in the proper sequence to ensure clients get the kill
     // signal.
+    m_stream_acceptor->kill();
+    m_update_handler->kill();
+    m_update_cv.notify_all();
 
     // shutdown server and cqs
     m_server.service_kill();
@@ -122,7 +143,6 @@ void Server::do_service_kill()
     }
 
     // we keep the event handlers open until the streams are closed
-    m_stream_acceptor->kill();
     m_queue->disable_persistence();
 }
 
@@ -132,6 +152,8 @@ void Server::do_service_await_join()
     m_server.service_await_join();
     DVLOG(10) << "awaiting acceptor join";
     m_stream_acceptor->await_join();
+    DVLOG(10) << "awaiting updater join";
+    m_update_handler->await_join();
     DVLOG(10) << "awaiting event handler join";
     m_event_handler->await_join();
     DVLOG(10) << "finished await_join";
@@ -247,6 +269,34 @@ void Server::do_handle_event(event_t&& event)
     }
 }
 
+void Server::do_issue_update(rxcpp::subscriber<void*>& s)
+{
+    std::unique_lock<decltype(m_mutex)> lock(m_mutex);
+
+    for (;;)
+    {
+        auto status = m_update_cv.wait_for(lock, m_update_period);
+        if (!s.is_subscribed())
+        {
+            s.on_completed();
+            return;
+        }
+
+        DVLOG(10) << "starting - control plane update";
+
+        // issue worker updates
+
+        // issue subscription service updates
+        for (auto& [name, service] : m_subscription_services)
+        {
+            DVLOG(10) << "issue update for subscription service: " << name;
+            service->issue_update();
+        }
+
+        DVLOG(10) << "finished - control plane update";
+    }
+}
+
 void Server::on_fatal_exception()
 {
     LOG(FATAL) << "fatal error on the control plane server was caught; signal all attached instances to shutdown "
@@ -332,7 +382,7 @@ Expected<protos::Ack> Server::unary_create_subscription_service(event_t& event)
         DVLOG(10) << "subscription_service: " << req->service_name()
                   << " first request - creating subscription service";
         m_subscription_services[req->service_name()] =
-            std::make_unique<SubscriptionService>(req->service_name(), std::move(roles));
+            std::make_unique<server::SubscriptionService>(req->service_name(), std::move(roles));
     }
     else
     {

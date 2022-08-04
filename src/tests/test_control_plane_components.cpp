@@ -52,6 +52,8 @@ class TaggedService : public server::TaggedService
         EXPECT_TRUE(m_on_drop);
         m_on_drop(tag);
     };
+
+    void do_issue_update() final {}
 };
 
 TEST_F(TestControlPlaneComponents, Tagged)

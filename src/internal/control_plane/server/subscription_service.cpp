@@ -21,49 +21,48 @@
 
 #include <glog/logging.h>
 
-namespace srf::internal::control_plane {
+namespace srf::internal::control_plane::server {
 
 void Role::add_member(std::uint64_t tag, std::shared_ptr<server::ClientInstance> instance)
 {
-    protos::SubscriptionServiceUpdate update;
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
     DCHECK(!contains(m_members, tag));
     m_members[tag] = instance;
     m_nonce++;
-    update = make_update();
+}
+
+void Role::add_subscriber(std::uint64_t tag, std::shared_ptr<server::ClientInstance> instance)
+{
+    DCHECK(!contains(m_subscribers, tag));
+    m_subscribers[tag] = instance;
+}
+
+void Role::drop_tag(std::uint64_t tag)
+{
+    int count = 0;
+    count += m_members.erase(tag);
+    count += m_subscribers.erase(tag);
+    if (count != 0)
+    {
+        m_nonce++;
+    }
+}
+
+void Role::issue_update()
+{
+    if (m_last_update == m_nonce)
+    {
+        return;
+    }
+
+    DVLOG(10) << "issue_update for " << m_service_name << "/" << m_role_name;
+
+    m_last_update = m_nonce;
+    auto update   = make_update();
 
     for (const auto& [tag, instance] : m_subscribers)
     {
         await_update(instance, update);
     }
-}
-
-void Role::add_subscriber(std::uint64_t tag, std::shared_ptr<server::ClientInstance> instance)
-{
-    protos::SubscriptionServiceUpdate update;
-    {
-        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        DCHECK(!contains(m_subscribers, tag));
-        m_subscribers[tag] = instance;
-        update             = make_update();
-    }
-    await_update(instance, update);
-}
-
-void Role::await_update(const std::shared_ptr<server::ClientInstance>& instance,
-                        const protos::SubscriptionServiceUpdate& update)
-{
-    protos::Event event;
-    event.set_event(protos::EventType::ServerUpdateSubscriptionService);
-    event.set_tag(instance->get_id());
-    event.mutable_message()->PackFrom(update);
-    instance->stream_writer->await_write(std::move(event));
-}
-
-void Role::drop_tag(std::uint64_t tag)
-{
-    m_members.erase(tag);
-    m_subscribers.erase(tag);
 }
 
 protos::SubscriptionServiceUpdate Role::make_update() const
@@ -81,13 +80,24 @@ protos::SubscriptionServiceUpdate Role::make_update() const
     return update;
 }
 
+void Role::await_update(const std::shared_ptr<server::ClientInstance>& instance,
+                        const protos::SubscriptionServiceUpdate& update)
+{
+    protos::Event event;
+    event.set_event(protos::EventType::ServerUpdateSubscriptionService);
+    event.set_tag(instance->get_id());
+    event.mutable_message()->PackFrom(update);
+    instance->stream_writer->await_write(std::move(event));
+}
+
+// SubscriptionService
+
 SubscriptionService::SubscriptionService(std::string name, std::set<std::string> roles) : m_name(std::move(name))
 {
     for (const auto& name : roles)
     {
         m_roles[name] = std::make_unique<Role>(m_name, name);
     }
-
     DCHECK_EQ(roles.size(), m_roles.size());
 }
 
@@ -95,8 +105,11 @@ SubscriptionService::tag_t SubscriptionService::register_instance(std::shared_pt
                                                                   const std::string& role,
                                                                   const std::set<std::string>& subscribe_to_roles)
 {
-    // ensure that role is not subscribing to itself
-    CHECK(!contains(subscribe_to_roles, role));  // todo(cpp20) use std::set::contains
+    // ensure that role is not subscribing to itself for multi-role
+    if (m_roles.size() > 1)
+    {
+        CHECK(!contains(subscribe_to_roles, role));  // todo(cpp20) use std::set::contains
+    }
 
     // ensure all roles and subscribe_to_roles are valid
     CHECK(contains(m_roles, role));
@@ -110,7 +123,7 @@ SubscriptionService::tag_t SubscriptionService::register_instance(std::shared_pt
     get_role(role).add_member(tag, instance);
     for (const auto& s2r : subscribe_to_roles)
     {
-        get_role(s2r).add_member(tag, instance);
+        get_role(s2r).add_subscriber(tag, instance);
     }
 
     return tag;
@@ -146,6 +159,20 @@ Role& SubscriptionService::get_role(const std::string& name)
 //     }
 // }
 
-void SubscriptionService::do_drop_tag(const tag_t& tag) {}
+void SubscriptionService::do_drop_tag(const tag_t& tag)
+{
+    for (auto& [name, role] : m_roles)
+    {
+        role->drop_tag(tag);
+    }
+}
 
-}  // namespace srf::internal::control_plane
+void SubscriptionService::do_issue_update()
+{
+    for (auto& [name, role] : m_roles)
+    {
+        role->issue_update();
+    }
+}
+
+}  // namespace srf::internal::control_plane::server

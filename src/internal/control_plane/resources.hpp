@@ -19,36 +19,28 @@
 
 #include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/runnable/resources.hpp"
-#include "internal/ucx/registration_cache.hpp"
 
-#include "srf/utils/macros.hpp"
+namespace srf::internal::control_plane {
 
-#include <cstddef>
-
-namespace srf::internal::network {
+class Client;
+class Server;
 
 class Resources final : private resources::PartitionResourceBase
 {
   public:
-    Resources(resources::PartitionResourceBase& base,
-              ucx::Resources& ucx,
-              memory::HostResources& host,
-              std::shared_ptr<control_plane::Resources> control_plane);
+    Resources(resources::PartitionResourceBase& base);
     ~Resources() final;
 
-    DELETE_COPYABILITY(Resources);
-    DEFAULT_MOVEABILITY(Resources);
-
-    control_plane::Resources& control_plane();
-    data_plane::Resources& data_plane();
-
-    InstanceID instance_id() const;
+    Client& client()
+    {
+        return *m_client;
+    }
 
   private:
-    std::shared_ptr<control_plane::Resources> m_control_plane;
-    std::unique_ptr<data_plane::Resources> m_data_plane;
-    InstanceID m_instance_id;
+    std::unique_ptr<Server> m_server;
+    const std::unique_ptr<Client> m_client;
+
+    friend network::Resources;
 };
 
-}  // namespace srf::internal::network
+}  // namespace srf::internal::control_plane

@@ -18,14 +18,17 @@
 #include "common.hpp"
 
 #include "internal/control_plane/client.hpp"
+#include "internal/control_plane/resources.hpp"
 #include "internal/control_plane/server.hpp"
 #include "internal/data_plane/resources.hpp"
 #include "internal/grpc/client_streaming.hpp"
 #include "internal/grpc/server.hpp"
 #include "internal/grpc/server_streaming.hpp"
+#include "internal/network/resources.hpp"
 #include "internal/resources/manager.hpp"
 
 #include "srf/node/sink_properties.hpp"
+#include "srf/options/placement.hpp"
 #include "srf/protos/architect.grpc.pb.h"
 #include "srf/protos/architect.pb.h"
 
@@ -40,39 +43,29 @@
 
 using namespace srf;
 
+static auto make_resources(std::function<void(Options& options)> options_lambda = [](Options& options) {})
+{
+    return std::make_unique<internal::resources::Manager>(
+        internal::system::SystemProvider(make_system([&](Options& options) {
+            options.topology().user_cpuset("0-8");
+            options.topology().restrict_gpus(true);
+            options.placement().resources_strategy(PlacementResources::Dedicated);
+            options.placement().cpu_strategy(PlacementStrategy::PerMachine);
+            options_lambda(options);
+        })));
+}
+
 class TestControlPlane : public ::testing::Test
 {
   protected:
-    void SetUp() override
-    {
-        m_resources = std::make_unique<internal::resources::Manager>(
-            internal::system::SystemProvider(make_system([](Options& options) {
-                // todo(#114) - propose: remove this option entirely
-                options.architect_url("localhost:13337");
-                options.topology().user_cpuset("0-8");
-                options.topology().restrict_gpus(true);
-                options.placement().resources_strategy(PlacementResources::Dedicated);
-            })));
-
-        m_channel = grpc::CreateChannel("localhost:13337", grpc::InsecureChannelCredentials());
-        m_stub    = srf::protos::Architect::NewStub(m_channel);
-    }
-
-    void TearDown() override
-    {
-        m_stub.reset();
-        m_channel.reset();
-        m_resources.reset();
-    }
-
-    std::unique_ptr<internal::resources::Manager> m_resources;
-    std::shared_ptr<grpc::Channel> m_channel;
-    std::shared_ptr<srf::protos::Architect::Stub> m_stub;
+    void SetUp() override {}
+    void TearDown() override {}
 };
 
 TEST_F(TestControlPlane, LifeCycle)
 {
-    auto server = std::make_unique<internal::control_plane::Server>(m_resources->partition(0).runnable());
+    auto sr     = make_resources();
+    auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).runnable());
 
     server->service_start();
     server->service_await_live();
@@ -85,29 +78,37 @@ TEST_F(TestControlPlane, LifeCycle)
 
 TEST_F(TestControlPlane, SingleClientConnectDisconnect)
 {
-    auto server = std::make_unique<internal::control_plane::Server>(m_resources->partition(0).runnable());
+    auto sr     = make_resources();
+    auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).runnable());
 
     server->service_start();
     server->service_await_live();
 
-    using state_t = internal::control_plane::Client::State;
+    auto cr = make_resources([](Options& options) { options.architect_url("localhost:13337"); });
 
-    auto client = std::make_unique<internal::control_plane::Client>(m_resources->partition(0).runnable());
-    EXPECT_EQ(client->state(), state_t::Disconnected);
-    client->service_start();
-    client->service_await_live();
-    EXPECT_EQ(client->state(), state_t::Connected);
+    // the total number of partition is system dependent
+    auto expected_partitions = cr->system().partitions().flattened().size();
+    EXPECT_EQ(cr->partition(0).network()->control_plane().client().instance_ids().size(), expected_partitions);
 
-    client->register_ucx_addresses({m_resources->partition(0).network()->data_plane().ucx_address()});
-    EXPECT_EQ(client->instance_ids().size(), 1);
-    EXPECT_EQ(client->state(), state_t::Operational);
+    // destroying the resources should gracefully shutdown the data plane and the control plane.
+    cr.reset();
 
-    EXPECT_FALSE(client->has_subscription_service("port_knox"));
-    client->get_or_create_subscription_service("port_knox", {"publisher", "subscriber"});
-    EXPECT_TRUE(client->has_subscription_service("port_knox"));
+    // auto client = std::make_unique<internal::control_plane::Client>(m_resources->partition(0).runnable());
+    // EXPECT_EQ(client->state(), state_t::Disconnected);
+    // client->service_start();
+    // client->service_await_live();
+    // EXPECT_EQ(client->state(), state_t::Connected);
 
-    client->service_stop();
-    client->service_await_join();
+    // client->register_ucx_addresses({m_resources->partition(0).network()->data_plane().ucx_address()});
+    // EXPECT_EQ(client->instance_ids().size(), 1);
+    // EXPECT_EQ(client->state(), state_t::Operational);
+
+    // EXPECT_FALSE(client->has_subscription_service("port_knox"));
+    // client->get_or_create_subscription_service("port_knox", {"publisher", "subscriber"});
+    // EXPECT_TRUE(client->has_subscription_service("port_knox"));
+
+    // client->service_stop();
+    // client->service_await_join();
 
     server->service_stop();
     server->service_await_join();

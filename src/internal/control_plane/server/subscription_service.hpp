@@ -25,40 +25,21 @@
 
 #include <string>
 
-namespace srf::internal::control_plane {
+namespace srf::internal::control_plane::server {
 
-class Role
-{
-  public:
-    Role(std::string service_name, std::string role_name) :
-      m_service_name(std::move(service_name)),
-      m_role_name(std::move(role_name))
-    {}
+class Role;
 
-    // subscribers are notified when new members are added
-    void add_member(std::uint64_t tag, std::shared_ptr<server::ClientInstance> instance);
-    void add_subscriber(std::uint64_t tag, std::shared_ptr<server::ClientInstance> instance);
-
-    // drop a client instance - this will remove the instaces from both the
-    // members and subscribers list
-    void drop_tag(std::uint64_t tag);
-
-  private:
-    // protos::SubscriptionServiceUpdate make_update();
-    protos::SubscriptionServiceUpdate make_update() const;
-
-    static void await_update(const std::shared_ptr<server::ClientInstance>& instance,
-                             const protos::SubscriptionServiceUpdate& update);
-
-    std::string m_service_name;
-    std::string m_role_name;
-    std::map<std::uint64_t, std::shared_ptr<server::ClientInstance>> m_members;
-    std::map<std::uint64_t, std::shared_ptr<server::ClientInstance>> m_subscribers;
-    std::size_t m_nonce{1};
-    Mutex m_mutex;
-};
-
-class SubscriptionService final : public server::TaggedService
+/**
+ * @brief A specialize TaggedService to synchronize tag and instance_id information across between a collection of
+ * client-side objects with common linkages, e.g. the Publisher/Subscriber services which form the building blocks for
+ * Ingress/EgressPorts use instances of SubscriptionService for Publishers to get control plane updates to the list of
+ * Subscribers.
+ *
+ * The PubSub example is specialzied example of the more generic SubscriptionService. This example has two roles:
+ * {"publisher", "subscriber"}, where the publisher gets updates on the subscriber role, but the subscribers only
+ * register as members and do not receive publisher updates.
+ */
+class SubscriptionService final : public TaggedService
 {
   public:
     SubscriptionService(std::string name, std::set<std::string> roles);
@@ -76,6 +57,7 @@ class SubscriptionService final : public server::TaggedService
     Role& get_role(const std::string& name);
 
     void do_drop_tag(const tag_t& tag) final;
+    void do_issue_update() final;
 
     std::string m_name;
 
@@ -84,4 +66,46 @@ class SubscriptionService final : public server::TaggedService
     std::map<std::string, std::unique_ptr<Role>> m_roles;
 };
 
-}  // namespace srf::internal::control_plane
+/**
+ * @brief Component of SubscriptionService that holds state for each Role
+ *
+ * A Role has a set of members and subscribers. When either list is updated, the Role's nonce is incremented. When the
+ * nonce is greater than the value of the nonce on last update, an update can be issued by calling issue_update.
+ *
+ * An issue_update will send a protos::SubscriptionServiceUpdate to all subscribers containing the (tag, instance_id)
+ * tuple for each item in the members list.
+ */
+class Role
+{
+  public:
+    Role(std::string service_name, std::string role_name) :
+      m_service_name(std::move(service_name)),
+      m_role_name(std::move(role_name))
+    {}
+
+    // subscribers are notified when new members are added
+    void add_member(std::uint64_t tag, std::shared_ptr<server::ClientInstance> instance);
+    void add_subscriber(std::uint64_t tag, std::shared_ptr<server::ClientInstance> instance);
+
+    // drop a client instance - this will remove the instaces from both the
+    // members and subscribers list
+    void drop_tag(std::uint64_t tag);
+
+    // if dirty, issue update
+    void issue_update();
+
+  private:
+    protos::SubscriptionServiceUpdate make_update() const;
+
+    static void await_update(const std::shared_ptr<server::ClientInstance>& instance,
+                             const protos::SubscriptionServiceUpdate& update);
+
+    std::string m_service_name;
+    std::string m_role_name;
+    std::map<std::uint64_t, std::shared_ptr<server::ClientInstance>> m_members;
+    std::map<std::uint64_t, std::shared_ptr<server::ClientInstance>> m_subscribers;
+    std::size_t m_nonce{1};
+    std::size_t m_last_update{1};
+};
+
+}  // namespace srf::internal::control_plane::server

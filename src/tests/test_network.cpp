@@ -88,6 +88,7 @@ TEST_F(TestNetwork, ResourceManager)
     // since all network services for potentially multiple devices are colocated on a single thread
     auto resources = std::make_unique<internal::resources::Manager>(
         internal::system::SystemProvider(make_system([](Options& options) {
+            options.enable_server(true);
             options.architect_url("localhost:13337");
             options.placement().resources_strategy(PlacementResources::Dedicated);
             options.resources().enable_device_memory_pool(true);
@@ -146,6 +147,7 @@ TEST_F(TestNetwork, CommsSendRecv)
     // since all network services for potentially multiple devices are colocated on a single thread
     auto resources = std::make_unique<internal::resources::Manager>(
         internal::system::SystemProvider(make_system([](Options& options) {
+            options.enable_server(true);
             options.architect_url("localhost:13337");
             options.placement().resources_strategy(PlacementResources::Dedicated);
             options.resources().enable_device_memory_pool(true);
@@ -198,6 +200,7 @@ TEST_F(TestNetwork, CommsGet)
     // since all network services for potentially multiple devices are colocated on a single thread
     auto resources = std::make_unique<internal::resources::Manager>(
         internal::system::SystemProvider(make_system([](Options& options) {
+            options.enable_server(true);
             options.architect_url("localhost:13337");
             options.placement().resources_strategy(PlacementResources::Dedicated);
             options.resources().enable_device_memory_pool(true);
