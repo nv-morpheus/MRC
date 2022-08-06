@@ -36,7 +36,6 @@
 #include <rxcpp/rx.hpp>  // IWYU pragma: keep
 #include <rxcpp/sources/rx-iterate.hpp>
 
-#include <algorithm>
 #include <chrono>
 #include <cstddef>
 #include <iostream>

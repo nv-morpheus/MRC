@@ -26,6 +26,9 @@
 
 #include <utility>
 
+// IWYU cannot decided if it should be included or not
+// IWYU pragma: no_include <type_traits>
+
 namespace srf::internal::runnable {
 
 FiberEngine::FiberEngine(core::FiberTaskQueue& task_queue, int priority) : m_task_queue(task_queue), m_meta{priority} {}

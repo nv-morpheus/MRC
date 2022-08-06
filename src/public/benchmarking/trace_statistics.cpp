@@ -24,6 +24,7 @@
 #include <nlohmann/json.hpp>
 
 #include <chrono>
+#include <compare>
 #include <cstdlib>
 #include <iostream>
 #include <map>

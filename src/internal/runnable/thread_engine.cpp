@@ -29,6 +29,9 @@
 #include <optional>
 #include <utility>
 
+// IWYU cannot decided if it should be included or not
+// IWYU pragma: no_include <type_traits>
+
 namespace srf::internal::runnable {
 
 ThreadEngine::ThreadEngine(CpuSet cpu_set, const system::Resources& system) :

@@ -40,8 +40,8 @@
 #include <cstddef>
 #include <memory>
 #include <ostream>
-#include <type_traits>
 #include <utility>
+
 // iwyu thinks spdlog, map, set, thread & vector are needed for arena_resource
 // IWYU pragma: no_include <spdlog/sinks/basic_file_sink.h>
 // IWYU pragma: no_include "spdlog/sinks/basic_file_sink.h"
@@ -49,6 +49,7 @@
 // IWYU pragma: no_include <set>
 // IWYU pragma: no_include <thread>
 // IWYU pragma: no_include <vector>
+// IWYU pragma: no_include <type_traits>
 
 using namespace srf;
 using namespace memory;

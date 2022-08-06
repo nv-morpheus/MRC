@@ -30,6 +30,7 @@
 #include <hwloc.h>
 
 #include <cstdint>
+#include <sstream>
 #include <type_traits>
 
 namespace srf::internal::system {

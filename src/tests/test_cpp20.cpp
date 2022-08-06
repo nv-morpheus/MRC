@@ -17,8 +17,9 @@
 
 #if __cplusplus >= 202002L
 
-    #include <concepts>
+    #include <concepts>  // IWYU pragma: keep
     #include <memory>
+    #include <type_traits>
     #include <vector>
 
 template <typename T>
