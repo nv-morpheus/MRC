@@ -117,7 +117,6 @@ class ReusablePool final : public std::enable_shared_from_this<ReusablePool<T>>
 
   private:
     ReusablePool(std::size_t capacity, on_return_t on_return_fn) :
-      m_size(0),
       m_capacity(capacity),
       m_on_return_fn(std::move(on_return_fn)),
       m_channel(capacity)
@@ -133,7 +132,7 @@ class ReusablePool final : public std::enable_shared_from_this<ReusablePool<T>>
     }
 
     std::mutex m_mutex;
-    std::size_t m_size;
+    std::size_t m_size{0};
     const std::size_t m_capacity;
     std::function<void(T&)> m_on_return_fn{nullptr};
     boost::fibers::buffered_channel<item_t> m_channel;

@@ -37,7 +37,7 @@ show_conda_info
 gpuci_logger "Installing IWYU"
 git clone https://github.com/include-what-you-use/include-what-you-use.git ${IWYU_DIR}
 pushd ${IWYU_DIR}
-git checkout clang_12
+git checkout clang_14
 cmake -G Ninja \
     -DCMAKE_PREFIX_PATH=$(llvm-config --cmakedir) \
     -DCMAKE_C_COMPILER=$(which clang) \

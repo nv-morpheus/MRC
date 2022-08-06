@@ -14,6 +14,7 @@ Checks: >
   modernize-*,
   -modernize-use-trailing-return-type,
   -modernize-use-nodiscard,
+  -modernize-return-braced-init-list,
   google-readability-todo
 
 #WarningsAsErrors: '*'
@@ -55,6 +56,14 @@ CheckOptions:
     value: llvm
   - key: modernize-use-nullptr.NullMacros
     value: 'NULL'
+  - key: readability-identifier-length.MinimumVariableNameLength
+    value: 0
+  - key: readability-identifier-length.MinimumParameterNameLength
+    value: 0
+  - key: readability-identifier-length.MinimumLoopCounterNameLength
+    value: 0
+  - key: readability-identifier-length.MinimumExceptionNameLength
+    value: 0
   - key: readability-identifier-naming.AggressiveDependentMemberLookup
     value: 'true'
   - key: readability-identifier-naming.ClassCase
@@ -195,12 +204,23 @@ CheckOptions:
     value: ''
   - key: readability-identifier-naming.TypeTemplateParameterCase
     value: CamelCase
+  # workaround for https://github.com/llvm/llvm-project/issues/46097
+  #- key: readability-identifier-naming.TypeTemplateParameterIgnoredRegexp
+  #  value: expr-type
   - key: readability-identifier-naming.TypeTemplateParameterIgnoredRegexp
-    value: ^[A-Z_]\w{0,2}$
+    value: ^[A-Z_]\w{0,2}$|expr-type
   - key: readability-identifier-naming.TypeTemplateParameterPrefix
     value: ''
   - key: readability-identifier-naming.TypeTemplateParameterSuffix
     value: T
+  - key: readability-identifier-naming.TemplateTemplateParameterCase
+    value: CamelCase
+  - key: readability-identifier-naming.TemplateTemplateParameterIgnoredRegexp
+    value: ^[A-Z_]\w{0,2}$
+  - key: readability-identifier-naming.TemplateTemplateParameterPrefix
+    value: ''
+  - key: readability-identifier-naming.TemplateTemplateParameterSuffix
+    value: ''
   - key: readability-identifier-naming.ValueTemplateParameterCase
     value: CamelCase
   - key: readability-identifier-naming.ValueTemplateParameterIgnoredRegexp
