@@ -242,7 +242,7 @@ void Client::route_subscription_service_update(event_t event)
     auto search = m_subscription_services.find(update.service_name());
     CHECK(search != m_subscription_services.end());
 
-    auto state = search->second->await_write(std::move(update));
+    auto state = search->second->await_write(event.msg.tag(), std::move(update));
     LOG_IF(WARNING, state != srf::channel::Status::success)
         << "unable to route update for service: " << update.service_name();
 }

@@ -129,9 +129,4 @@ std::size_t TaggedService::tag_count() const
     return m_instance_tags.size();
 }
 
-void TaggedService::issue_update()
-{
-    do_issue_update();
-}
-
 }  // namespace srf::internal::control_plane::server
