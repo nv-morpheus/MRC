@@ -24,7 +24,6 @@
 
 #include <boost/fiber/future/future.hpp>
 
-#include <type_traits>
 #include <utility>
 
 namespace srf::internal::runnable {

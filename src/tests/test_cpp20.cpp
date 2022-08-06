@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-#include <concepts>
-#include <memory>
-#include <vector>
-
 #if __cplusplus >= 202002L
+
+    #include <concepts>
+    #include <memory>
+    #include <vector>
 
 template <typename T>
 concept vector_like = requires(T t)

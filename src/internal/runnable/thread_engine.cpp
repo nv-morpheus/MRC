@@ -27,7 +27,6 @@
 #include <boost/fiber/future/packaged_task.hpp>
 
 #include <optional>
-#include <type_traits>
 #include <utility>
 
 namespace srf::internal::runnable {

@@ -43,7 +43,7 @@
 #include <rxcpp/rx.hpp>
 #include <rxcpp/sources/rx-iterate.hpp>
 
-#include <algorithm>
+#include <algorithm>  // IWYU pragma: keep
 #include <atomic>
 #include <cstddef>
 #include <functional>

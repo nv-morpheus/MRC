@@ -25,7 +25,6 @@
 
 #include <grpcpp/grpcpp.h>  // for Server, ServerBuilder
 
-#include <algorithm>
 #include <chrono>
 #include <condition_variable>
 #include <functional>  // for function
