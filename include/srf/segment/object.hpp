@@ -17,16 +17,16 @@
 
 #pragma once
 
-#include <srf/channel/ingress.hpp>
-#include <srf/exceptions/runtime_error.hpp>
-#include <srf/node/edge_builder.hpp>
-#include <srf/node/forward.hpp>
-#include <srf/node/sink_properties.hpp>
-#include <srf/node/source_properties.hpp>
-#include <srf/node/type_traits.hpp>
-#include <srf/runnable/launch_options.hpp>
-#include <srf/runnable/runnable.hpp>
-#include <srf/segment/forward.hpp>
+#include "srf/channel/ingress.hpp"
+#include "srf/exceptions/runtime_error.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/node/forward.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_properties.hpp"
+#include "srf/node/type_traits.hpp"
+#include "srf/runnable/launch_options.hpp"
+#include "srf/runnable/runnable.hpp"
+#include "srf/segment/forward.hpp"
 
 #include <memory>
 #include <string>
@@ -63,38 +63,6 @@ struct ObjectProperties
 };
 
 inline ObjectProperties::~ObjectProperties() = default;
-
-inline node::SinkTypeErased& ObjectProperties::sink_typeless()
-{
-    auto& base = sink_base();
-    auto* sink = dynamic_cast<node::SinkTypeErased*>(&base);
-
-    if (sink == nullptr)
-    {
-        LOG(ERROR) << "Failed to cast " << type_name() << " to "
-                   << "SinkTypeErased from "
-                   << "SinkProperties<" << base.sink_type_name() << ">; typeless edges not supported for this type";
-        throw exceptions::SrfRuntimeError("Failed to cast Sink to requested SinkTypeless");
-    }
-
-    return *sink;
-}
-
-inline node::SourceTypeErased& ObjectProperties::source_typeless()
-{
-    auto& base   = source_base();
-    auto* source = dynamic_cast<node::SourceTypeErased*>(&base);
-
-    if (source == nullptr)
-    {
-        LOG(ERROR) << "Failed to cast " << type_name() << " to "
-                   << "SourceTypeErased from "
-                   << "SourceProperties<" << base.source_type_name() << ">; typeless edges not support for this type";
-        throw exceptions::SrfRuntimeError("Failed to cast Source to requested SourceTypeless");
-    }
-
-    return *source;
-}
 
 template <typename T>
 node::SinkProperties<T>& ObjectProperties::sink_typed()
@@ -161,6 +129,7 @@ class Object : public virtual ObjectProperties
         }
         return m_launch_options;
     }
+
     const runnable::LaunchOptions& launch_options() const final
     {
         if (!is_runnable())
@@ -170,12 +139,12 @@ class Object : public virtual ObjectProperties
         }
         return m_launch_options;
     }
-
   protected:
-    // Protected name to allow derived classes to set property
-    std::string m_name{};
+    void set_name(const std::string& name);
 
   private:
+    std::string m_name{};
+
     virtual ObjectT* get_object() const = 0;
     runnable::LaunchOptions m_launch_options;
 };
@@ -192,6 +161,12 @@ ObjectT& Object<ObjectT>::object()
         throw exceptions::SrfRuntimeError("Object API is unavailable - expected if the Pipeline is running.");
     }
     return *node;
+}
+
+template <typename ObjectT>
+void Object<ObjectT>::set_name(const std::string& name)
+{
+    m_name = name;
 }
 
 template <typename ObjectT>

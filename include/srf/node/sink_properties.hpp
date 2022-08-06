@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include <srf/channel/ingress.hpp>
-#include <srf/core/utils.hpp>
-#include <srf/node/edge.hpp>
-#include <srf/node/edge_registry.hpp>
-#include <srf/node/forward.hpp>
-#include <srf/type_traits.hpp>
+#include "srf/channel/ingress.hpp"
+#include "srf/core/utils.hpp"
+#include "srf/node/edge.hpp"
+#include "srf/node/edge_registry.hpp"
+#include "srf/node/forward.hpp"
+#include "srf/type_traits.hpp"
 
 #include <typeindex>
 
@@ -66,7 +66,7 @@ class SinkPropertiesBase
   private:
     virtual std::shared_ptr<channel::IngressHandle> ingress_handle() = 0;
 
-    friend SinkTypeErased;
+    friend EdgeBuilder;
 };
 
 inline SinkPropertiesBase::~SinkPropertiesBase() = default;
@@ -75,7 +75,7 @@ inline SinkPropertiesBase::~SinkPropertiesBase() = default;
  * @brief Typed SinkProperties provides default implementations dependent only on the type T.
  */
 template <typename T>
-class SinkProperties : public virtual SinkPropertiesBase
+class SinkProperties : public SinkPropertiesBase
 {
   public:
     using sink_type_t = T;
@@ -106,23 +106,6 @@ class SinkProperties : public virtual SinkPropertiesBase
     virtual std::shared_ptr<channel::Ingress<T>> channel_ingress() = 0;
 
     friend EdgeBuilder;
-};
-
-class SinkTypeErased : public virtual SinkPropertiesBase
-{
-  protected:
-    using SinkPropertiesBase::ingress_handle;
-
-    virtual std::shared_ptr<channel::IngressHandle> ingress_for_source_type(std::type_index source_type)
-    {
-        // Get the converter function
-        auto converter_fn = EdgeRegistry::find_converter(source_type, sink_type());
-
-        // Build the edge from our channel
-        return converter_fn(this->ingress_handle());
-    }
-
-    friend SourceTypeErased;
 };
 
 }  // namespace srf::node

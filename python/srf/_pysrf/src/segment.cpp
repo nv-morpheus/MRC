@@ -15,17 +15,22 @@
  * limitations under the License.
  */
 
-#include <pysrf/segment.hpp>
+#include "pysrf/segment.hpp"
 
-#include <pysrf/node.hpp>
-#include <pysrf/types.hpp>
-#include <pysrf/utils.hpp>
-#include <srf/channel/status.hpp>
-#include <srf/node/edge_builder.hpp>
-#include <srf/runnable/context.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/object.hpp>
+#include "rxcpp/sources/rx-iterate.hpp"
 
+#include "pysrf/node.hpp"
+#include "pysrf/types.hpp"
+#include "pysrf/utils.hpp"
+
+#include "srf/channel/status.hpp"
+#include "srf/core/utils.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/runnable/context.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/object.hpp"
+
+#include <boost/hana/if.hpp>
 #include <glog/logging.h>
 #include <pybind11/cast.h>
 #include <pybind11/detail/internals.h>
@@ -33,21 +38,15 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <rxcpp/operators/rx-map.hpp>
-#include <rxcpp/rx-includes.hpp>
-#include <rxcpp/rx-observable.hpp>
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-operators.hpp>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx.hpp>  // IWYU pragma: keep
+#include <rxcpp/rx.hpp>
 
 #include <exception>
-#include <fstream>  // IWYU pragma: keep
+#include <fstream>
 #include <functional>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
-#include <vector>
 
 // IWYU thinks we need array for py::print
 // IWYU pragma: no_include <array>
@@ -60,7 +59,7 @@ std::shared_ptr<srf::segment::ObjectProperties> build_source(srf::segment::Build
                                                              const std::string& name,
                                                              std::function<py::iterator()> iter_factory)
 {
-    auto wrapper = [iter_factory](PyObjectSubscriber& s) mutable {
+    auto wrapper = [iter_factory](PyObjectSubscriber& subscriber) mutable {
         auto& ctx = runnable::Context::get_runtime_context();
 
         AcquireGIL gil;
@@ -70,25 +69,25 @@ std::shared_ptr<srf::segment::ObjectProperties> build_source(srf::segment::Build
             DVLOG(10) << ctx.info() << " Starting source";
 
             // Get the iterator from the factory
-            auto it = iter_factory();
+            auto iter = iter_factory();
 
             // Loop over the iterator
-            while (it != py::iterator::sentinel())
+            while (iter != py::iterator::sentinel())
             {
                 // Get the next value
-                auto next_val = py::cast<py::object>(*it);
+                auto next_val = py::cast<py::object>(*iter);
 
                 // Increment it for next loop
-                ++it;
+                ++iter;
 
                 {
                     // Release the GIL to call on_next
                     pybind11::gil_scoped_release nogil;
 
                     //  Only send if its subscribed. Very important to ensure the object has been moved!
-                    if (s.is_subscribed())
+                    if (subscriber.is_subscribed())
                     {
-                        s.on_next(std::move(next_val));
+                        subscriber.on_next(std::move(next_val));
                     }
                 }
             }
@@ -98,14 +97,14 @@ std::shared_ptr<srf::segment::ObjectProperties> build_source(srf::segment::Build
             LOG(ERROR) << ctx.info() << "Error occurred in source. Error msg: " << e.what();
 
             gil.release();
-            s.on_error(std::current_exception());
+            subscriber.on_error(std::current_exception());
             return;
         }
 
         // Release the GIL to call on_complete
         gil.release();
 
-        s.on_completed();
+        subscriber.on_completed();
 
         DVLOG(10) << ctx.info() << " Source complete";
     };
@@ -155,43 +154,22 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_source(srf::s
     });
 }
 
-// std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_source(
-//     srf::segment::Builder& self, const std::string& name, const std::function<void(pysrf::PyObjectSubscriber& sub)>&
-//     f)
-// {
-//     auto wrapper = [f](pysrf::PyObjectSubscriber& s) {
-//         py::gil_scoped_acquire gil;
-
-//         try
-//         {
-//             f(s);
-//         } catch (py::error_already_set& err)
-//         {
-//             py::print("Error hit!");
-//             py::print(err.what());
-//             throw;  // Rethrow to propagate back to python
-//         }
-//     };
-
-//     return self.construct_object<PythonSource<py::object>>(name, wrapper);
-// }
-
 std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_sink(srf::segment::Builder& self,
                                                                         const std::string& name,
-                                                                        std::function<void(py::object x)> on_next,
-                                                                        std::function<void(py::object x)> on_error,
+                                                                        std::function<void(py::object object)> on_next,
+                                                                        std::function<void(py::object object)> on_error,
                                                                         std::function<void()> on_completed)
 {
-    auto on_next_w = [on_next](PyHolder x) {
+    auto on_next_w = [on_next](PyHolder object) {
         pybind11::gil_scoped_acquire gil;
-        on_next(std::move(x));  // Move the object into a temporary
+        on_next(std::move(object));  // Move the object into a temporary
     };
 
-    auto on_error_w = [on_error](std::exception_ptr x) {
+    auto on_error_w = [on_error](std::exception_ptr ptr) {
         pybind11::gil_scoped_acquire gil;
 
         // First, translate the exception setting the python exception value
-        py::detail::translate_exception(x);
+        py::detail::translate_exception(ptr);
 
         // Creating py::error_already_set will clear the exception and retrieve the value
         py::error_already_set active_ex;
@@ -205,69 +183,27 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_sink(srf::seg
         on_completed();
     };
 
-    return self.construct_object<PythonSink<PyHolder>>(
-        name, rxcpp::make_observer<PyHolder>(on_next_w, on_error_w, on_completed_w));
+    return self.make_sink<PyHolder, PythonSink>(name, on_next_w, on_error_w, on_completed_w);
 }
 
-/*
-std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::construct_object(srf::segment::Builder& self,
-                                                                        const std::string& name,
-                                                                        std::function<py::object(py::object x)> map_f)
+std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_ingress(srf::segment::Builder& self,
+                                                                          const std::string& name)
 {
-    return self.construct_object<PythonNode<py::object, py::object>>(
-        name, [map_f](srf::Observable<py::object>& input, pysrf::PyObjectSubscriber& output) {
-            return input.subscribe(srf::make_observer<py::object>(
-                [map_f, &output](py::object&& x) {
-                    // Since the argument cant be py::object&&, steal the reference here to
-                    // prevent incrementing the ref count without the GIL auto stolen =
-                    // py::reinterpret_steal<py::object>(x);
-                    py::object returned;
-                    try
-                    {
-                        // Acquire the GIL here
-                        py::gil_scoped_acquire gil;
-
-                        // Call the map function
-                        returned = map_f(std::move(x));
-
-                        // While we have the GIL, check for downstream subscriptions.
-                        if (!output.is_subscribed())
-                        {
-                            // This object needs to lose its ref count while we have the GIL
-                            py::object tmp = std::move(returned);
-                        }
-
-                        // Release the GIL before calling on_next to prevent deadlocks
-                    } catch (py::error_already_set& err)
-                    {
-                        {
-                            // Need the GIL here
-                            py::gil_scoped_acquire gil;
-                            py::print("Error hit!");
-                            py::print(err.what());
-                        }
-
-                        throw;
-                        // caught by python output.on_error(std::current_exception());
-                    }
-
-                    if (returned)
-                    {
-                        // Make sure to move here since we dont have the GIL
-                        output.on_next(std::move(returned));
-                        assert(!returned);
-                    }
-                },
-                [&](std::exception_ptr error_ptr) { output.on_error(error_ptr); },
-                [&]() { output.on_completed(); }));
-        });
+    return self.get_ingress<PyHolder>(name);
 }
-*/
+
+std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_egress(srf::segment::Builder& self,
+                                                                         const std::string& name)
+{
+    return self.get_egress<PyHolder>(name);
+}
 
 std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node(
-    srf::segment::Builder& self, const std::string& name, std::function<pybind11::object(pybind11::object x)> map_f)
+    srf::segment::Builder& self,
+    const std::string& name,
+    std::function<pybind11::object(pybind11::object object)> map_f)
 {
-    auto node = self.construct_object<PythonNode<PyHolder, PyHolder>>(
+    return self.make_node<PyHolder, PyHolder, PythonNode>(
         name, rxcpp::operators::map([map_f](PyHolder data_object) -> PyHolder {
             try
             {
@@ -288,8 +224,6 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node(
                 // caught by python output.on_error(std::current_exception());
             }
         }));
-
-    return node;
 }
 
 std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node_full(
@@ -297,7 +231,7 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node_full(
     const std::string& name,
     std::function<void(const pysrf::PyObjectObservable& obs, pysrf::PyObjectSubscriber& sub)> sub_fn)
 {
-    auto node = self.construct_object<PythonNode<PyHolder, PyHolder>>(name);
+    auto node = self.make_node<PyHolder, PyHolder, PythonNode>(name);
 
     node->object().make_stream([sub_fn](const PyObjectObservable& input) -> PyObjectObservable {
         return rxcpp::observable<>::create<PyHolder>([input, sub_fn](pysrf::PyObjectSubscriber output) {
@@ -326,18 +260,6 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node_full(
 
     return node;
 }
-
-// void SegmentProxy::test_fn(srf::segment::Builder& self, py::function py_func)
-// {
-//     auto inspect = py::module_::import("inspect");
-
-//     auto fn_sig = inspect.attr("signature")(py_func);
-
-//     auto return_annotation = fn_sig.attr("return_annotation")();
-
-//     // Debug print
-//     py::print("in test_fn");
-// }
 
 void SegmentProxy::make_py2cxx_edge_adapter(srf::segment::Builder& self,
                                             std::shared_ptr<srf::segment::ObjectProperties> source,
@@ -468,115 +390,6 @@ void SegmentProxy::make_edge(srf::segment::Builder& self,
                              std::shared_ptr<srf::segment::ObjectProperties> source,
                              std::shared_ptr<srf::segment::ObjectProperties> sink)
 {
-    node::EdgeBuilder::make_edge_typeless(source->source_typeless(), sink->sink_typeless());
+    node::EdgeBuilder::make_edge_typeless(source->source_base(), sink->sink_base());
 }
-
-// std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_file_reader(srf::segment::Builder& self,
-//                                                                                const std::string& name,
-//                                                                                const std::string& filename)
-// {
-//     return self.construct_object<PythonSource<std::string>>(name, [filename](rxcpp::subscriber<std::string>& s) {
-//         std::ifstream file(filename);
-//         std::string line;
-
-//         // While we are running and there are still lines to read in
-//         // the file
-//         try
-//         {
-//             while (s.is_subscribed() && std::getline(file, line))
-//             {
-//                 // Push to downstream
-//                 s.on_next(line);
-//             }
-//         } catch (...)
-//         {
-//             s.on_error(std::current_exception());
-//         }
-
-//         DVLOG(5) << "Input file complete" << std::endl;
-//         s.on_completed();
-//     });
-// }
-
-// std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::debug_float_source(srf::segment::Builder& self,
-//                                                                                  const std::string& name,
-//                                                                                  std::size_t iterations)
-// {
-//     return self.make_source<double>(name, [iterations](rxcpp::subscriber<double> sub) {
-//         auto i = 0;
-//         while (sub.is_subscribed() && i < iterations)
-//         {
-//             sub.on_next(std::atan(1) * 4);
-//             i++;
-//         }
-
-//         sub.on_completed();
-//     });
-// }
-
-/*
-std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::debug_float_passthrough(srf::segment::Builder& self,
-                                                                                      const std::string& name)
-{
-    return self.construct_object<PythonNode, double, double>(name, rxcpp::operators::map<double>([](double d) { return
-d; }));
-}
-*/
-
-// std::shared_ptr<PyNode> SegmentProxy::flatten_list(srf::segment::Builder& self, const std::string& name)
-// {
-//     auto flatten_node = self.make_node<py::object, std::string>(
-//         name,
-//         rxcpp::operators::concat_map([](py::object wrapper_thing) {
-//             py::gil_scoped_acquire gil;
-//             auto info = py::str("Concat map got object: ") + py::str(wrapper_thing);
-//             py::print(info);
-//             info = py::str("concat map Object ref count: ") + py::str(std::to_string(wrapper_thing.ref_count()));
-//             py::print(info);
-
-//             return rxcpp::observable<>::create<std::string>([wrapper_thing](rxcpp::subscriber<std::string> sub) {
-//                 pybind11::gil_scoped_acquire gil;
-//                 py::print("Entering concat map");
-//                 try
-//                 {
-//                     std::cerr << "Moving vector value" << std::endl;
-//                     // sub.on_next(std::move(x.m_vector_str.back()));
-//                     auto s = pybind11::cast<std::string>(wrapper_thing);
-//                     {
-//                         pybind11::gil_scoped_release rel;
-//                         sub.on_next(std::move(s));
-//                     }
-//                 } catch (...)
-//                 {
-//                     std::cerr << "Caught exception" << std::endl;
-//                     sub.on_error(rxcpp::util::current_exception());
-//                 }
-
-//                 {
-//                     // Release the GIL to call on_complete
-//                     std::cerr << "Calling concat_map on complete" << std::endl;
-//                     sub.on_completed();
-//                     std::cerr << "On_completed call finished." << std::endl;
-//                 }
-//             });
-//         }),
-//         rxcpp::operators::map([](const std::string& s) { return s; }));
-
-//     return std::static_pointer_cast<PyNode>(flatten_node);
-// }
-
-/*
-std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::debug_string_passthrough(srf::segment::Builder& self,
-                                                                                       const std::string& name)
-{
-    return self.construct_object<PythonNode, std::string, std::string>(
-        name, srf::operators::map<std::string, std::string>([](std::string s) { return s; }));
-}
-*/
-
-// std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::debug_float_sink(srf::segment::Builder& self,
-//                                                                                const std::string& name)
-// {
-//     return self.construct_object<PythonSink<double>>(std::move(name), [](double d) {});
-// }
 }  // namespace srf::pysrf

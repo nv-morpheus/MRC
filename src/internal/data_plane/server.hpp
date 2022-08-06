@@ -17,28 +17,24 @@
 
 #pragma once
 
+#include "internal/resources/forward.hpp"
+#include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
-
-#include <srf/channel/status.hpp>
-#include <srf/memory/block.hpp>
-#include <srf/node/generic_source.hpp>
-#include <srf/node/operators/router.hpp>
-#include <srf/node/source_channel.hpp>
-#include <srf/runnable/context.hpp>
-#include <srf/runnable/launch_control.hpp>
-#include <srf/runnable/runner.hpp>
-#include <srf/types.hpp>
-#include "internal/resources/partition_resources.hpp"
 #include "internal/ucx/common.hpp"
-#include "internal/ucx/context.hpp"
-#include "internal/ucx/worker.hpp"
+
+#include "srf/channel/status.hpp"
+#include "srf/memory/buffer_view.hpp"
+#include "srf/node/operators/router.hpp"
+#include "srf/node/source_channel.hpp"
+#include "srf/runnable/runner.hpp"
+#include "srf/types.hpp"
 
 #include <ucp/api/ucp_def.h>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
 
+#include <cstddef>
 #include <memory>
 #include <utility>
+#include <vector>
 
 // this node gets ucx tagged messages from ucp_tag_probe_nb
 // events which do not required a recv get pushed immediately to their downstream
@@ -63,17 +59,27 @@
 
 namespace srf::internal::data_plane {
 
-using network_event_t = std::pair<PortAddress, memory::block>;
+namespace detail {
+struct PrePostedRecvInfo
+{
+    ucp_worker_h worker;
+    node::SourceChannelWriteable<ucp_tag_t>* channel;
+    void* request;
+    // std::array<std::byte, 2048> buffer;
+};
+}  // namespace detail
 
-class Server final : public Service
+using network_event_t = std::pair<PortAddress, srf::memory::buffer_view>;
+
+class Server final : public Service, public resources::PartitionResourceBase
 {
   public:
-    Server(std::shared_ptr<ucx::Context> context, std::shared_ptr<resources::PartitionResources> resources);
+    Server(resources::PartitionResourceBase& provider, ucx::Resources& ucx, memory::HostResources& host);
     ~Server() final;
 
     ucx::WorkerAddress worker_address() const;
 
-    node::Router<PortAddress, memory::block>& deserialize_source();
+    node::Router<PortAddress, srf::memory::buffer_view>& deserialize_source();
 
   private:
     void do_service_start() final;
@@ -82,41 +88,25 @@ class Server final : public Service
     void do_service_kill() final;
     void do_service_await_join() final;
 
+    const std::size_t m_pre_posted_recv_count{16};
+
+    // ucx resources
+    ucx::Resources& m_ucx;
+    memory::HostResources& m_host;
+
     // deserialization nodes will connect to this source wtih their port id
     // the source for this router is the private GenericSoruce of this object
-    std::shared_ptr<node::Router<PortAddress, memory::block>> m_deserialize_source;
+    std::shared_ptr<node::Router<PortAddress, srf::memory::buffer_view>> m_deserialize_source;
 
     // the remote descriptor manager will connect to this source
     // data will be emitted on this source as a conditional branch of data source
     std::unique_ptr<node::SourceChannelWriteable<ucp_tag_t>> m_rd_source;
 
-    // ucx worker
-    Handle<ucx::Worker> m_worker;
+    // pre-posted recv state
+    std::vector<detail::PrePostedRecvInfo> m_pre_posted_recv_info;
 
     // runner for the ucx progress engine event source
-    std::unique_ptr<runnable::Runner> m_progress_engine;
-
-    // host resources - probably should be
-};
-
-class DataPlaneServerWorker final : public node::GenericSource<network_event_t>
-{
-  public:
-    DataPlaneServerWorker(Handle<ucx::Worker> worker);
-
-  private:
-    void data_source(rxcpp::subscriber<network_event_t>& s) final;
-
-    void on_tagged_msg(rxcpp::subscriber<network_event_t>& subscriber,
-                       ucp_tag_message_h msg,
-                       const ucp_tag_recv_info_t& msg_info);
-
-    Handle<ucx::Worker> m_worker;
-
-    // modify these to adjust the tag matching
-    // 0/0 is the equivalent of match all tags
-    ucp_tag_t m_tag{0};
-    ucp_tag_t m_tag_mask{0};
+    std::unique_ptr<srf::runnable::Runner> m_progress_engine;
 };
 
 }  // namespace srf::internal::data_plane

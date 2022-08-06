@@ -17,38 +17,40 @@
 
 #pragma once
 
-#include <srf/memory/adaptors.hpp>
-#include <srf/utils/bytes_to_string.hpp>
+#include "srf/memory/adaptors.hpp"
+#include "srf/utils/bytes_to_string.hpp"
 
 #include <glog/logging.h>
 
 namespace srf::memory {
 
 template <typename Upstream>
-class logging_resource final : public upstream_resource<Upstream>
+class logging_resource final : public adaptor<Upstream>
 {
   public:
-    logging_resource(Upstream upstream, std::string prefix = "") :
-      upstream_resource<Upstream>(std::move(upstream), "logger"),
-      m_prefix(std::move(prefix))
+    logging_resource(Upstream upstream, std::string prefix, int verbosity = 10) :
+      adaptor<Upstream>(std::move(upstream)),
+      m_prefix(std::move(prefix)),
+      m_verbosity(verbosity)
     {}
     ~logging_resource() override = default;
 
   private:
-    void* do_allocate(std::size_t bytes, std::size_t alignment) final
+    void* do_allocate(std::size_t bytes) final
     {
-        auto ptr = this->resource()->allocate(bytes, alignment);
-        LOG(INFO) << m_prefix << ": allocated " << ptr << "; size=" << bytes_to_string(bytes);
+        auto ptr = this->resource().allocate(bytes);
+        VLOG(m_verbosity) << m_prefix << ": allocated " << ptr << "; size=" << bytes_to_string(bytes);
         return ptr;
     }
 
-    void do_deallocate(void* ptr, std::size_t bytes, std::size_t alignment) final
+    void do_deallocate(void* ptr, std::size_t bytes) final
     {
-        LOG(INFO) << m_prefix << ": deallocating " << ptr << "; size=" << bytes_to_string(bytes);
-        this->resource()->deallocate(ptr, bytes, alignment);
+        VLOG(m_verbosity) << m_prefix << ": deallocating " << ptr << "; size=" << bytes_to_string(bytes);
+        this->resource().deallocate(ptr, bytes);
     }
 
     std::string m_prefix;
+    const int m_verbosity;
 };
 
 }  // namespace srf::memory

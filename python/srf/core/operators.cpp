@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include <pysrf/operators.hpp>
+#include "pysrf/operators.hpp"
 
-#include <pysrf/utils.hpp>
+#include "pysrf/utils.hpp"
 
 #include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/pybind11.h>
@@ -32,13 +32,11 @@ namespace py = pybind11;
 PYBIND11_MODULE(operators, m)
 {
     m.doc() = R"pbdoc(
-        Pybind11 example plugin
-        -----------------------
-        .. currentmodule:: scikit_build_example
+        Python bindings for SRF operators
+        -------------------------------
+        .. currentmodule:: operators
         .. autosummary::
            :toctree: _generate
-           add
-           subtract
     )pbdoc";
 
     // Common must be first in every module

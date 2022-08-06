@@ -18,8 +18,8 @@
 #pragma once
 
 #include "internal/runnable/engine.hpp"
-
-#include "internal/system/forward.hpp"
+#include "internal/system/resources.hpp"
+#include "internal/system/thread.hpp"
 
 #include "srf/core/bitmap.hpp"
 #include "srf/runnable/types.hpp"
@@ -27,6 +27,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <thread>
 
 namespace srf::internal::runnable {
@@ -34,20 +35,20 @@ namespace srf::internal::runnable {
 class ThreadEngine final : public Engine
 {
   public:
-    explicit ThreadEngine(CpuSet cpu_set, std::shared_ptr<system::System> system);
+    explicit ThreadEngine(CpuSet cpu_set, const system::Resources& system);
     ~ThreadEngine() final;
 
     EngineType engine_type() const final;
 
   protected:
-    std::thread::id get_id() const;
+    std::optional<std::thread::id> get_id() const;
 
   private:
     Future<void> do_launch_task(std::function<void()> task) final;
 
     CpuSet m_cpu_set;
-    std::shared_ptr<system::System> m_system;
-    std::unique_ptr<std::thread> m_thread{nullptr};
+    const system::Resources& m_system;
+    std::unique_ptr<system::Thread> m_thread;
 };
 
 }  // namespace srf::internal::runnable

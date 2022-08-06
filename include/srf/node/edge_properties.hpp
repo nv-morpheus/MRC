@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <srf/channel/channel.hpp>
-#include <srf/channel/ingress.hpp>
+#include "srf/channel/channel.hpp"
+#include "srf/channel/ingress.hpp"
 
 #include <memory>
 

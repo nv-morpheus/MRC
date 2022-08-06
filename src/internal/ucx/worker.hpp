@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include "srf/types.hpp"
-
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/endpoint.hpp"
 #include "internal/ucx/primitive.hpp"
+
+#include "srf/types.hpp"
 
 #include <ucp/api/ucp_def.h>  // for ucp_worker_h, ucp_address_t
 
@@ -43,6 +43,8 @@ class Worker : public Primitive<ucp_worker_h>
     void release_address();
 
     Handle<Endpoint> create_endpoint(WorkerAddress);
+
+    Context& context();
 
   private:
     Handle<Context> m_context;

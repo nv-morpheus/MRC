@@ -15,12 +15,11 @@
  * limitations under the License.
  */
 
-#include <srf/cuda/device_guard.hpp>
+#include "srf/cuda/device_guard.hpp"
 
-#include <srf/cuda/common.hpp>
+#include "srf/cuda/common.hpp"
 
 #include <cuda_runtime.h>
-
 #include <glog/logging.h>
 // IWYU thinks we need std::allocator for the debug macros (and only in debug builds)
 // IWYU pragma: no_include <memory>

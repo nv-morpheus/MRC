@@ -20,8 +20,10 @@
 
 # import numpy as np
 # import pytest
+import pytest
+import srf
 
-# import srf
+
 # from srf.core.options import PlacementStrategy
 
 # whereami = pathlib.Path(__file__).parent.resolve()
@@ -259,9 +261,123 @@
 #     for actual in TRACING_DICT["inputs"]:
 #         assert (np.isclose(actual, 34.002060877715685))
 
-# if (__name__ in ("__main__", )):
+def test_srf_pipeline_limits():
+    assert (srf.core.pipeline.SRF_MAX_INGRESS_PORTS == 10)
+    assert (srf.core.pipeline.SRF_MAX_EGRESS_PORTS == 10)
+
+
+def test_pipeline_creation_noports():
+    def init(seg):
+        pass
+
+    pipe = srf.Pipeline()
+    pipe.make_segment("TestSegment1", init)
+    pipe.make_segment("TestSegment2", [], [], init)
+
+
+"""
+Test that the python bindings for segment creation with ingress and/or egress ports works as expected.
+Since this is a runtime operator and all IngressCount X EgressCount pairs will generate a new class instance that is
+explciitly defined, we check all of them.
+"""
+
+
+def test_dynamic_port_creation_good():
+    def init(seg):
+        pass
+
+    ingress = [f"{chr(i)}" for i in range(65, 76)]
+    egress = [f"{chr(i)}" for i in range(97, 108)]
+
+    for i in range(len(ingress)):
+        for j in range(len(egress)):
+            pipe = srf.Pipeline()
+            pipe.make_segment("DynamicPortTestSegment", ingress[0:i], egress[0:j], init)
+
+
+def test_dynamic_port_get_ingress_egress():
+    def gen_data():
+        yield 1
+        yield 2
+        yield 3
+
+    def init1(builder: srf.Builder):
+        source = builder.make_source("source", gen_data)
+        egress = builder.get_egress("b")
+
+        builder.make_edge(source, egress)
+
+    def init2(builder: srf.Builder):
+        def on_next(input):
+            print(f"Got input {input}")
+            pass
+
+        def on_error():
+            pass
+
+        def on_complete():
+            pass
+
+        ingress = builder.get_ingress("b")
+        sink = builder.make_sink("sink", on_next, on_error, on_complete)
+
+        builder.make_edge(ingress, sink)
+
+    pipe = srf.Pipeline()
+
+    pipe.make_segment("TestSegment11", [], ["b"], init1)
+    pipe.make_segment("TestSegment22", ["b"], [], init2)
+
+    options = srf.Options()
+
+    executor = srf.Executor(options)
+    executor.register_pipeline(pipe)
+
+    executor.start()
+    executor.join()
+
+
+"""
+Test that the python bindings for segment creation with ingress and/or egress ports works as expected.
+
+:: Check that we always fail when specifying more than SRF_MAX_EGRESS_PORTS or SRF_MAX_INGRESS_PORTS
+"""
+
+
+def test_dynamic_port_creation_bad():
+    def init(seg):
+        pass
+
+    ingress = [f"{chr(i)}" for i in range(65, 76)]
+    egress = [f"{chr(i)}" for i in range(97, 108)]
+    too_long = [f"{chr(i)}" for i in range(108, 120)]
+
+    for i in range(len(ingress)):
+        try:
+            pipe = srf.Pipeline()
+            pipe.make_segment("DynamicPortTestSegment", ingress[0:i], too_long, init)
+            assert (False)
+        except Exception as e:
+            # print(e)
+            pass
+
+    for j in range(len(egress)):
+        try:
+            pipe = srf.Pipeline()
+            pipe.make_segment("DynamicPortTestSegment", too_long, egress[0:j], init)
+            assert (False)
+        except Exception as e:
+            # print(e)
+            pass
+
+
+if (__name__ in ("__main__",)):
+    test_srf_pipeline_limits()
+    test_dynamic_port_creation_good()
+    test_dynamic_port_creation_bad()
+    test_dynamic_port_get_ingress_egress()
 #     test_homogenous_string_usage()
 #     test_cxx_string_source_to_python_chain()
-#     # test_heterogenous_string_usage()
-#     # test_heterogenous_double_pipeline()
-#     # test_list_flatten_test()
+#     test_heterogenous_string_usage()
+#     test_heterogenous_double_pipeline()
+#     test_list_flatten_test()

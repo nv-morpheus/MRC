@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <srf/channel/ingress.hpp>
-#include <srf/node/sink_properties.hpp>
+#include "srf/channel/ingress.hpp"
+#include "srf/node/sink_properties.hpp"
 
 namespace srf::node {
 

@@ -15,32 +15,28 @@
  * limitations under the License.
  */
 
-#include <pysrf/watchers.hpp>
+#include "pysrf/watchers.hpp"
 
-#include <pysrf/executor.hpp>
-#include <pysrf/pipeline.hpp>
-#include <pysrf/utils.hpp>
+#include "pysrf/executor.hpp"
+#include "pysrf/pipeline.hpp"
+#include "pysrf/utils.hpp"
 
-#include <srf/benchmarking/tracer.hpp>
-#include <srf/channel/status.hpp>
-#include <srf/node/rx_node.hpp>
-#include <srf/node/rx_sink.hpp>
-#include <srf/node/rx_source.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/object.hpp>
+#include "srf/benchmarking/tracer.hpp"
+#include "srf/channel/status.hpp"
+#include "srf/node/rx_node.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/rx_source.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/object.hpp"
 
+#include <boost/hana/if.hpp>
+#include <nlohmann/json.hpp>
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>  // IWYU pragma: keep
 #include <pybind11/pytypes.h>
-#include <nlohmann/json.hpp>
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/operators/rx-tap.hpp>
-#include <rxcpp/rx-includes.hpp>
-#include <rxcpp/rx-observable.hpp>  // IWYU pragma: keep
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-operators.hpp>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
+#include <rxcpp/rx.hpp>
 #include <rxcpp/sources/rx-iterate.hpp>
 
 #include <algorithm>  // IWYU pragma: keep
@@ -62,9 +58,6 @@ LatencyWatcher::LatencyWatcher(std::shared_ptr<pysrf::Executor> executor) :
   latency_watcher_t(executor->get_executor()),
   m_executor(executor)
 {
-    // using latency_ensemble_t_t = srf::benchmarking::TracerEnsemble<pybind11::object,
-    // srf::benchmarking::LatencyTracer>;
-
     auto payload_initializer = [](latency_ensemble_t& latency_ensemble) {
         py::gil_scoped_acquire gil;
         latency_ensemble = py::none();

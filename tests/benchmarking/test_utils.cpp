@@ -18,11 +18,11 @@
 #include "test_benchmarking.hpp"
 #include "test_stat_gather.hpp"
 
-#include <srf/benchmarking/trace_statistics.hpp>
-#include <srf/benchmarking/util.hpp>
+#include "srf/benchmarking/trace_statistics.hpp"
+#include "srf/benchmarking/util.hpp"
 
-#include <prometheus/registry.h>
 #include <nlohmann/json.hpp>
+#include <prometheus/registry.h>
 
 using namespace srf::benchmarking;
 
@@ -99,7 +99,7 @@ TEST_F(StatGatherTest, TestPrometheusConversionForFrameworkStats)
                     EXPECT_EQ(metric.counter.value, 0);
                 }
             }
-            else  // internal nodes
+            else if (component_id == "internal_1" || component_id == "internal_2")
             {
                 if (metric_family.name == "component_channel_read_total")
                 {
@@ -181,7 +181,7 @@ TEST_F(LatencyBenchmarkTests, TestPrometheusConversionForWatcherTraces)
                     EXPECT_EQ(metric.counter.value, 0);
                 }
             }
-            else  // internal nodes
+            else if (component_id == "internal_1" || component_id == "internal_2")
             {
                 if (metric_family.name == "component_channel_read_total")
                 {

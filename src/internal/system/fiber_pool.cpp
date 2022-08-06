@@ -20,17 +20,17 @@
 #include "srf/core/bitmap.hpp"
 #include "srf/core/task_queue.hpp"
 
+#include <ext/alloc_traits.h>
 #include <glog/logging.h>
 
 #include <cstddef>
-#include <ext/alloc_traits.h>
 #include <memory>
 #include <utility>
 #include <vector>
 
 namespace srf::internal::system {
 
-FiberPool::FiberPool(CpuSet cpu_set, std::vector<std::shared_ptr<FiberTaskQueue>>&& queues) :
+FiberPool::FiberPool(CpuSet cpu_set, std::vector<std::reference_wrapper<FiberTaskQueue>>&& queues) :
   m_cpu_set(std::move(cpu_set)),
   m_queues(std::move(queues))
 {}
@@ -48,15 +48,7 @@ std::size_t FiberPool::thread_count() const
 core::FiberTaskQueue& FiberPool::task_queue(const std::size_t& index)
 {
     CHECK_LT(index, m_queues.size());
-    CHECK(m_queues.at(index));
-    return *m_queues.at(index);
-}
-
-std::shared_ptr<core::FiberTaskQueue> FiberPool::task_queue_shared(std::size_t index) const
-{
-    CHECK_LT(index, m_queues.size());
-    CHECK(m_queues.at(index));
-    return m_queues[index];
+    return m_queues.at(index);
 }
 
 }  // namespace srf::internal::system

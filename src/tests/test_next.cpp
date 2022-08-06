@@ -15,57 +15,54 @@
  * limitations under the License.
  */
 
-#include "internal/resources/host_resources.hpp"
-#include "internal/resources/partition_resources.hpp"
-#include "internal/resources/resource_partitions.hpp"
-#include "internal/system/forward.hpp"
+#include "internal/runnable/resources.hpp"
+#include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
+#include "internal/system/system_provider.hpp"
 
+#include "srf/channel/egress.hpp"
+#include "srf/channel/ingress.hpp"
+#include "srf/channel/status.hpp"
+#include "srf/core/bitmap.hpp"
+#include "srf/data/reusable_pool.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/node/generic_node.hpp"
+#include "srf/node/generic_sink.hpp"
+#include "srf/node/generic_source.hpp"
+#include "srf/node/operators/conditional.hpp"
+#include "srf/node/rx_execute.hpp"
+#include "srf/node/rx_node.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/rx_source.hpp"
+#include "srf/node/rx_subscribable.hpp"
+#include "srf/node/sink_channel.hpp"
+#include "srf/node/source_channel.hpp"
 #include "srf/node/source_properties.hpp"
-#include "srf/options/placement.hpp"
+#include "srf/options/engine_groups.hpp"
+#include "srf/options/options.hpp"
+#include "srf/options/topology.hpp"
+#include "srf/runnable/context.hpp"
 #include "srf/runnable/launch_control.hpp"
 #include "srf/runnable/launch_options.hpp"
 #include "srf/runnable/launcher.hpp"
+#include "srf/runnable/runner.hpp"
+#include "srf/runnable/types.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/definition.hpp"
+#include "srf/segment/egress_ports.hpp"
 #include "srf/segment/object.hpp"
+#include "srf/segment/runnable.hpp"
+#include "srf/segment/segment.hpp"
+#include "srf/type_traits.hpp"
 #include "srf/utils/macros.hpp"
 
-#include <srf/channel/egress.hpp>
-#include <srf/channel/ingress.hpp>
-#include <srf/channel/status.hpp>
-#include <srf/node/edge_builder.hpp>
-#include <srf/node/generic_node.hpp>
-#include <srf/node/generic_sink.hpp>
-#include <srf/node/generic_source.hpp>
-#include <srf/node/operators/conditional.hpp>
-#include <srf/node/rx_execute.hpp>
-#include <srf/node/rx_node.hpp>
-#include <srf/node/rx_sink.hpp>
-#include <srf/node/rx_source.hpp>
-#include <srf/node/rx_subscribable.hpp>
-#include <srf/node/sink_channel.hpp>
-#include <srf/node/source_channel.hpp>
-#include <srf/options/options.hpp>
-#include <srf/options/topology.hpp>
-#include <srf/runnable/context.hpp>
-#include <srf/runnable/runner.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/definition.hpp>
-#include <srf/segment/egress_ports.hpp>
-#include <srf/segment/runnable.hpp>
-#include <srf/segment/segment.hpp>
-#include <srf/type_traits.hpp>
-
+#include <boost/fiber/operations.hpp>
+#include <boost/hana/if.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
-#include <boost/fiber/operations.hpp>
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
-#include "rxcpp/operators/rx-map.hpp"
-#include "rxcpp/rx-includes.hpp"
-#include "rxcpp/rx-observable.hpp"
-#include "rxcpp/rx-operators.hpp"
-#include "rxcpp/sources/rx-iterate.hpp"
+#include <rxcpp/operators/rx-map.hpp>
+#include <rxcpp/rx.hpp>
+#include <rxcpp/sources/rx-iterate.hpp>
 
 #include <atomic>
 #include <chrono>
@@ -88,7 +85,7 @@ static std::shared_ptr<internal::system::System> make_system(std::function<void(
         updater(*options);
     }
 
-    return internal::system::System::make_system(std::move(options));
+    return internal::system::make_system(std::move(options));
 }
 
 class TestNext : public ::testing::Test
@@ -96,16 +93,28 @@ class TestNext : public ::testing::Test
   protected:
     void SetUp() override
     {
-        m_resources = internal::resources::make_resource_partitions(make_system([](Options& options) {
-            options.topology().user_cpuset("0-3");
-            options.topology().restrict_gpus(true);
-            options.placement().resources_strategy(PlacementResources::Shared);
-        }));
+        m_system_resources = std::make_unique<internal::system::Resources>(
+            internal::system::SystemProvider(make_system([](Options& options) {
+                options.topology().user_cpuset("0-3");
+                options.topology().restrict_gpus(true);
+                options.engine_factories().set_engine_factory_options("thread_pool", [](EngineFactoryOptions& options) {
+                    options.engine_type   = runnable::EngineType::Thread;
+                    options.allow_overlap = false;
+                    options.cpu_count     = 2;
+                });
+            })));
+
+        m_resources = std::make_unique<internal::runnable::Resources>(*m_system_resources, 0);
     }
 
-    void TearDown() override {}
+    void TearDown() override
+    {
+        m_resources.reset();
+        m_system_resources.reset();
+    }
 
-    std::shared_ptr<internal::resources::ResourcePartitions> m_resources;
+    std::unique_ptr<internal::system::Resources> m_system_resources;
+    std::unique_ptr<internal::runnable::Resources> m_resources;
 };
 
 template <typename T>
@@ -290,7 +299,7 @@ TEST_F(TestNext, MakeEdgeConvertibleFromSinkRxRunnable)
         ++counter;
     });
 
-    auto runner = m_resources->partition(0).host().launch_control().prepare_launcher(std::move(sink))->ignition();
+    auto runner = m_resources->launch_control().prepare_launcher(std::move(sink))->ignition();
     runner->await_join();
 
     EXPECT_EQ(counter, 1);
@@ -344,8 +353,8 @@ TEST_F(TestNext, GenericNodeAndSink)
     source->ingress().await_write(input);
     source.reset();
 
-    auto runner_node = m_resources->partition(0).host().launch_control().prepare_launcher(std::move(node))->ignition();
-    auto runner_sink = m_resources->partition(0).host().launch_control().prepare_launcher(std::move(sink))->ignition();
+    auto runner_node = m_resources->launch_control().prepare_launcher(std::move(node))->ignition();
+    auto runner_sink = m_resources->launch_control().prepare_launcher(std::move(sink))->ignition();
 
     // auto runner_node   = runnable::make_runner(std::move(node));
     // auto runner_sink   = runnable::make_runner(std::move(sink));
@@ -404,8 +413,7 @@ TEST_F(TestNext, ConcurrentSinkRxRunnable)
     runnable::LaunchOptions options;
     options.pe_count = 2;
 
-    auto runner =
-        m_resources->partition(0).host().launch_control().prepare_launcher(options, std::move(sink))->ignition();
+    auto runner = m_resources->launch_control().prepare_launcher(options, std::move(sink))->ignition();
     runner->await_join();
 
     EXPECT_EQ(counter_0, 1);
@@ -431,8 +439,8 @@ TEST_F(TestNext, SourceNodeSink)
     }));
     sink->set_observer([](output_t o) { LOG(INFO) << "output: " << o; });
 
-    auto runner_sink = m_resources->partition(0).host().launch_control().prepare_launcher(std::move(sink))->ignition();
-    auto runner_node = m_resources->partition(0).host().launch_control().prepare_launcher(std::move(node))->ignition();
+    auto runner_sink = m_resources->launch_control().prepare_launcher(std::move(sink))->ignition();
+    auto runner_node = m_resources->launch_control().prepare_launcher(std::move(node))->ignition();
 
     source->ingress().await_write(3.14);
     source->ingress().await_write(42.);
@@ -545,6 +553,37 @@ TEST_F(TestNext, TapUniquePtr)
         [](std::unique_ptr<int>&& int_ptr) { LOG(INFO) << "in observer: " << *int_ptr; });
 
     observable.subscribe([](std::unique_ptr<int> data) { LOG(INFO) << "in subscriber: " << *data; });
+    observable.subscribe(observer);
+}
+
+TEST_F(TestNext, RxWithReusableOnNextAndOnError)
+{
+    auto pool = data::ReusablePool<int>::create(32);
+
+    EXPECT_EQ(pool->size(), 0);
+
+    for (int i = 0; i < 10; i++)
+    {
+        pool->emplace(42);
+    }
+
+    using data_t = data::Reusable<int>;
+
+    auto observable = rxcpp::observable<>::create<data_t>([pool](rxcpp::subscriber<data_t> s) {
+        for (int i = 0; i < 100; i++)
+        {
+            auto item = pool->await_item();
+            s.on_next(std::move(item));
+        }
+        s.on_completed();
+    });
+
+    static_assert(rxcpp::detail::is_on_next_of<data_t, std::function<void(data_t)>>::value, " ");
+    static_assert(rxcpp::detail::is_on_next_of<data_t, std::function<void(data_t &&)>>::value, " ");
+
+    auto observer = rxcpp::make_observer_dynamic<data_t>([](data_t&& int_ptr) { EXPECT_EQ(*int_ptr, 42); },
+                                                         [](std::exception_ptr ptr) { std::rethrow_exception(ptr); });
+
     observable.subscribe(observer);
 }
 

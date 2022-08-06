@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,43 +16,32 @@
  */
 
 #include "internal/resources/partition_resources.hpp"
-#include "srf/exceptions/runtime_error.hpp"
-
-#include <glog/logging.h>
-
-#include <utility>
 
 namespace srf::internal::resources {
 
-PartitionResources::PartitionResources(std::uint32_t partition_id,
-                                       std::shared_ptr<HostResources> host,
-                                       std::shared_ptr<DeviceResources> device) :
-  m_partition_id(partition_id),
-  m_host_resources(std::move(host)),
-  m_device_resources(std::move(device))
+PartitionResources::PartitionResources(runnable::Resources& runnable_resources,
+                                       std::size_t partition_id,
+                                       memory::HostResources& host,
+                                       std::optional<memory::DeviceResources>& device,
+                                       std::optional<network::Resources>& network) :
+  PartitionResourceBase(runnable_resources, partition_id),
+  m_host(host),
+  m_device(device),
+  m_network(network)
 {}
 
-HostResources& PartitionResources::host() const
+memory::HostResources& PartitionResources::host()
 {
-    if (m_device_resources)
-    {
-        return m_device_resources->host();
-    }
-    CHECK(m_host_resources);
-    return *m_host_resources;
+    return m_host;
 }
 
-DeviceResources& PartitionResources::device() const
+std::optional<memory::DeviceResources>& PartitionResources::device()
 {
-    if (m_device_resources)
-    {
-        return *m_device_resources;
-    }
-    throw exceptions::SrfRuntimeError("no device associated with this partition");
+    return m_device;
 }
-const std::uint32_t& PartitionResources::partition_id() const
-{
-    return m_partition_id;
-};
 
+std::optional<network::Resources>& PartitionResources::network()
+{
+    return m_network;
+}
 }  // namespace srf::internal::resources

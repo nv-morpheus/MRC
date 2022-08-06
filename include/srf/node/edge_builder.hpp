@@ -17,22 +17,64 @@
 
 #pragma once
 
-#include <srf/channel/ingress.hpp>
-#include <srf/node/edge.hpp>
-#include <srf/node/edge_properties.hpp>
-#include <srf/node/sink_properties.hpp>
-#include <srf/node/source_properties.hpp>
-#include <srf/utils/type_utils.hpp>
+#include "srf/channel/ingress.hpp"
+#include "srf/node/edge_properties.hpp"
+#include "srf/node/forward.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_properties.hpp"
+
+#include <glog/logging.h>
 
 #include <memory>
-#include <type_traits>
+#include <sstream>
 #include <typeindex>
-#include <typeinfo>
 
 namespace srf::node {
 
 struct EdgeBuilder final
 {
+    /**
+     * @brief Attempt to look-up a registered ingress adapter given the source and sink properties. If one exists
+     * use it, otherwise fall back to the default adapter lookup.
+     * @param source
+     * @param sink
+     * @param ingress_handle
+     * @return Ingress handle constructed by the adapter
+     */
+    static std::shared_ptr<channel::IngressHandle> ingress_adapter_for_sink(
+        srf::node::SourcePropertiesBase& source,
+        srf::node::SinkPropertiesBase& sink,
+        std::shared_ptr<channel::IngressHandle> ingress_handle);
+
+    /**
+     * @brief Attempt to look-up a registered ingress adapter for the given source type and sink properties. If one
+     * exists, use it, otherwise fall back to default.
+     * @param source
+     * @param sink
+     * @param ingress_handle
+     * @return
+     */
+    static std::shared_ptr<channel::IngressHandle> ingress_for_source_type(
+        std::type_index source_type,
+        srf::node::SinkPropertiesBase& sink,
+        std::shared_ptr<channel::IngressHandle> ingress_handle);
+
+    /**
+     *
+     * @param source
+     * @param sink
+     * @param allow_narrowing
+     */
+    static void make_edge_typeless(SourcePropertiesBase& source, SinkPropertiesBase& sink, bool allow_narrowing = true);
+
+    /**
+     *
+     * @tparam SourceT
+     * @tparam SinkT
+     * @tparam AllowNarrowingV
+     * @param source
+     * @param sink
+     */
     template <typename SourceT, typename SinkT = SourceT, bool AllowNarrowingV = true>
     static void make_edge(SourceProperties<SourceT>& source, SinkProperties<SinkT>& sink)
     {
@@ -79,11 +121,6 @@ struct EdgeBuilder final
     {
         sink.set_channel(source.channel());
     }
-
-    static void make_edge_typeless(SourceTypeErased& source, SinkTypeErased& sink, bool allow_narrowing = true)
-    {
-        source.complete_edge(source.ingress_adaptor_for_sink(sink));
-    }
 };
 
 template <typename SourceT, typename SinkT = SourceT>
@@ -102,7 +139,6 @@ template <typename SourceT, typename SinkT>
 void operator|(SourceProperties<SourceT>& source, SinkProperties<SinkT>& sink)
 {
     EdgeBuilder::make_edge(source, sink);
-    // return sink;
 }
 
 }  // namespace srf::node

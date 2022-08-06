@@ -16,9 +16,8 @@
  */
 
 #include "test_stat_gather.hpp"
-#include "test_main.hpp"
 
-#include <srf/benchmarking/trace_statistics.hpp>
+#include "srf/benchmarking/trace_statistics.hpp"
 
 #include <nlohmann/json.hpp>
 

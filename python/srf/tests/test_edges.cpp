@@ -15,27 +15,24 @@
  * limitations under the License.
  */
 
-#include <pysrf/forward.hpp>
-#include <pysrf/node.hpp>
-#include <pysrf/utils.hpp>
+#include "pysrf/forward.hpp"
+#include "pysrf/node.hpp"
+#include "pysrf/utils.hpp"
 
-#include <srf/channel/status.hpp>
-#include <srf/node/edge_connector.hpp>
-#include <srf/node/rx_sink.hpp>
-#include <srf/node/sink_properties.hpp>
-#include <srf/node/source_properties.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/object.hpp>
+#include "srf/channel/status.hpp"
+#include "srf/core/utils.hpp"
+#include "srf/node/edge_connector.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_properties.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/object.hpp"
 
+#include <boost/hana/if.hpp>
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <rxcpp/rx-includes.hpp>
-#include <rxcpp/rx-observable.hpp>
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-operators.hpp>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
+#include <rxcpp/rx.hpp>
 
 #include <cstddef>
 #include <exception>
@@ -67,8 +64,6 @@ class SourceDerivedB : public pysrf::PythonSource<std::shared_ptr<DerivedB>>
   public:
     using base_t = pysrf::PythonSource<std::shared_ptr<DerivedB>>;
     using typename base_t::subscriber_fn_t;
-    // using base_t::reader_type_t;
-    // using base_t::writer_type_t;
 
     SourceDerivedB() : PythonSource(build()) {}
 
@@ -89,8 +84,6 @@ class SourcePyHolder : public pysrf::PythonSource<pysrf::PyObjectHolder>
   public:
     using base_t = pysrf::PythonSource<pysrf::PyObjectHolder>;
     using typename base_t::subscriber_fn_t;
-    // using base_t::reader_type_t;
-    // using base_t::writer_type_t;
 
     SourcePyHolder() : PythonSource(build()) {}
 

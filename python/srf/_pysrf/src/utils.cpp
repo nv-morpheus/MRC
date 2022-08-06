@@ -15,16 +15,16 @@
  * limitations under the License.
  */
 
-#include <pysrf/utils.hpp>
+#include "pysrf/utils.hpp"
 
-#include <pysrf/types.hpp>  // IWYU pragma: keep
+#include "pysrf/types.hpp"  // IWYU pragma: keep
 
-#include <srf/exceptions/runtime_error.hpp>
+#include "srf/exceptions/runtime_error.hpp"
 
+#include <nlohmann/json.hpp>
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <nlohmann/json.hpp>
 
 #include <cassert>
 #include <string>
@@ -221,12 +221,6 @@ pybind11::object&& PyObjectWrapper::move_obj() &&
 
 PyObjectWrapper::operator const pybind11::handle&() const&
 {
-    // TODO(MDD): Do we need the GIL here?
-    if (PyGILState_Check() == 0)
-    {
-        throw srf::exceptions::SrfRuntimeError("Must have the GIL copying to py::object");
-    }
-
     return m_obj;
 }
 

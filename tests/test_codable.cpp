@@ -17,15 +17,15 @@
 
 #include "test_srf.hpp"  // IWYU pragma: associated
 
-#include <srf/protos/codable.pb.h>
-#include <srf/codable/codable_protocol.hpp>
-#include <srf/codable/decode.hpp>
-#include <srf/codable/encode.hpp>
-#include <srf/codable/encoded_object.hpp>
-#include <srf/codable/encoding_options.hpp>
-#include <srf/codable/fundamental_types.hpp>
-#include <srf/codable/protobuf_message.hpp>
-#include <srf/codable/type_traits.hpp>
+#include "srf/codable/codable_protocol.hpp"
+#include "srf/codable/decode.hpp"
+#include "srf/codable/encode.hpp"
+#include "srf/codable/encoded_object.hpp"
+#include "srf/codable/encoding_options.hpp"
+#include "srf/codable/fundamental_types.hpp"
+#include "srf/codable/protobuf_message.hpp"
+#include "srf/codable/type_traits.hpp"
+#include "srf/protos/codable.pb.h"
 
 #include <cstdint>
 #include <memory>
@@ -40,12 +40,12 @@ class CodableObject
     CodableObject()  = default;
     ~CodableObject() = default;
 
-    static CodableObject deserialize(const EncodedObject& buffer, std::size_t)
+    static CodableObject deserialize(const EncodedObject& buffer, std::size_t /*unused*/)
     {
         return CodableObject();
     }
 
-    void serialize(Encoded<CodableObject>&) {}
+    void serialize(Encoded<CodableObject>& /*unused*/) {}
 };
 
 class CodableObjectWithOptions
@@ -54,12 +54,12 @@ class CodableObjectWithOptions
     CodableObjectWithOptions()  = default;
     ~CodableObjectWithOptions() = default;
 
-    static CodableObjectWithOptions deserialize(const EncodedObject& encoding, std::size_t)
+    static CodableObjectWithOptions deserialize(const EncodedObject& encoding, std::size_t /*unused*/)
     {
         return CodableObjectWithOptions();
     }
 
-    void serialize(Encoded<CodableObjectWithOptions>&, const EncodingOptions& opts) {}
+    void serialize(Encoded<CodableObjectWithOptions>& /*unused*/, const EncodingOptions& opts) {}
 };
 
 class CodableViaExternalStruct
@@ -70,7 +70,7 @@ namespace srf::codable {
 template <>
 struct codable_protocol<CodableViaExternalStruct>
 {
-    void serialize(const CodableViaExternalStruct&, Encoded<CodableViaExternalStruct>&) {}
+    void serialize(const CodableViaExternalStruct& /*unused*/, Encoded<CodableViaExternalStruct>& /*unused*/) {}
 };
 
 };  // namespace srf::codable

@@ -15,200 +15,312 @@
  * limitations under the License.
  */
 
-#include "../internal/architect/network_comms_manager.hpp"
-#include "../internal/architect/network_events_manager.hpp"
+#include "internal/data_plane/client.hpp"
+#include "internal/data_plane/request.hpp"
+#include "internal/data_plane/resources.hpp"
+#include "internal/memory/device_resources.hpp"
+#include "internal/memory/host_resources.hpp"
+#include "internal/network/resources.hpp"
+#include "internal/resources/manager.hpp"
+#include "internal/resources/partition_resources.hpp"
+#include "internal/system/system.hpp"
+#include "internal/system/system_provider.hpp"
+#include "internal/ucx/memory_block.hpp"
+#include "internal/ucx/registration_cache.hpp"
 
-#include <srf/channel/status.hpp>
-#include <srf/codable/encode.hpp>
-#include <srf/codable/encoded_object.hpp>
-#include <srf/codable/fundamental_types.hpp>  // IWYU pragma: keep
-#include <srf/core/bitmap.hpp>
-#include <srf/core/fiber_pool.hpp>
-#include <srf/core/resources.hpp>
-#include <srf/memory/block.hpp>
-#include <srf/memory/resources/device/cuda_malloc_resource.hpp>
-#include <srf/memory/resources/host/pinned_memory_resource.hpp>
-#include <srf/node/edge_builder.hpp>
-#include <srf/node/operators/router.hpp>
-#include <srf/node/rx_sink.hpp>
-#include <srf/node/source_channel.hpp>
-#include <srf/options/fiber_pool.hpp>
-#include <srf/options/services.hpp>
-#include <srf/options/topology.hpp>
-#include <srf/runnable/engine.hpp>
-#include <srf/runnable/engine_factory.hpp>
-#include <srf/runnable/launch_control.hpp>
-#include <srf/runnable/launch_control_config.hpp>
-#include <srf/runnable/launch_options.hpp>
-#include <srf/runnable/launcher.hpp>
-#include <srf/runnable/runner.hpp>
-#include <srf/utils/thread_local_shared_pointer.hpp>
-#include "internal/system/topology.hpp"
-#include "internal/ucx/context.hpp"
-#include "internal/ucx/worker.hpp"
+#include "srf/memory/adaptors.hpp"
+#include "srf/memory/buffer.hpp"
+#include "srf/memory/literals.hpp"
+#include "srf/memory/resources/arena_resource.hpp"
+#include "srf/memory/resources/host/pinned_memory_resource.hpp"
+#include "srf/memory/resources/logging_resource.hpp"
+#include "srf/memory/resources/memory_resource.hpp"
+#include "srf/options/options.hpp"
+#include "srf/options/placement.hpp"
+#include "srf/options/resources.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
-#include <boost/fiber/barrier.hpp>
-#include <boost/fiber/future/future.hpp>
-#include <cuda/memory_resource>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
+#include <spdlog/sinks/basic_file_sink.h>
 
-#include <atomic>
-#include <cstdlib>
-#include <exception>
+#include <cstddef>
+#include <functional>
 #include <map>
 #include <memory>
-#include <string>
+#include <optional>
+#include <ostream>
+#include <set>
+#include <thread>
 #include <utility>
+#include <vector>
 
 using namespace srf;
+using namespace srf::memory::literals;
 
-class EncodedObjectMemoryResources : public core::Resources
+static std::shared_ptr<internal::system::System> make_system(std::function<void(Options&)> updater = nullptr)
 {
-  public:
-    EncodedObjectMemoryResources() :
-      m_host_view(std::make_shared<memory::pinned_memory_resource>()),
-      m_device_view(std::make_shared<memory::cuda_malloc_resource>(0))
-    {}
-    ~EncodedObjectMemoryResources() override = default;
-
-    host_view_t host_resource_view() override
+    auto options = std::make_shared<Options>();
+    if (updater)
     {
-        return m_host_view;
-    }
-    device_view_t device_resource_view() override
-    {
-        return m_device_view;
+        updater(*options);
     }
 
-  private:
-    host_view_t m_host_view;
-    device_view_t m_device_view;
-};
-
-class NetworkTests : public ::testing::Test
-{
-  protected:
-    void SetUp() override
-    {
-        m_topology_options.user_cpuset("0-3");
-        m_topology       = Topology::Create(m_topology_options);
-        m_fiber_pool_mgr = FiberPoolManager::Create(m_topology);
-        m_context        = std::make_shared<ucx::Context>();
-        m_mutable_nem    = std::make_unique<data_plane::Server>(m_context);
-
-        auto memory_resources =
-            std::dynamic_pointer_cast<core::Resources>(std::make_shared<EncodedObjectMemoryResources>());
-        CHECK(memory_resources);
-
-        // set up the main thread too
-        utils::ThreadLocalSharedPointer<core::Resources>::set(memory_resources);
-
-        runnable::LaunchControlConfig config;
-
-        auto default_pool = m_fiber_pool_mgr->make_pool(CpuSet("0-2"));
-        auto mgmt_pool    = m_fiber_pool_mgr->make_pool(CpuSet("3"));
-
-        default_pool->set_thread_local_resource(memory_resources);
-        mgmt_pool->set_thread_local_resource(memory_resources);
-
-        auto default_resources = std::make_shared<runnable::FiberGroup>(default_pool);
-        auto mgmt_resources    = std::make_shared<runnable::FiberGroup>(mgmt_pool);
-
-        config.resource_groups[default_engine_factory_name()] = default_resources;
-        config.resource_groups["mgmt"]                        = mgmt_resources;
-
-        runnable::LaunchOptions default_service_options;
-        default_service_options.resource_group = "mgmt";
-        config.services.set_default_options(default_service_options);
-
-        m_launch_control = std::make_shared<runnable::LaunchControl>(std::move(config));
-    }
-
-    void TearDown() override {}
-
-    FiberPoolOptions m_fiber_pool_options;
-    TopologyOptions m_topology_options;
-    std::shared_ptr<Topology> m_topology;
-    std::shared_ptr<FiberPoolManager> m_fiber_pool_mgr;
-    std::shared_ptr<ucx::Context> m_context;
-    std::shared_ptr<FiberPool> m_pool;
-    std::shared_ptr<runnable::FiberEngines> m_launcher;
-    std::unique_ptr<data_plane::Server> m_mutable_nem;
-    std::shared_ptr<const data_plane::Server> m_nem;
-
-    std::shared_ptr<runnable::LaunchControl> m_launch_control;
-};
-
-TEST_F(NetworkTests, NetworkEventsManagerLifeCycle)
-{
-    auto launcher = m_launch_control->prepare_launcher(std::move(m_mutable_nem));
-
-    // auto& service = m_launch_control->service(runnable::SrfService::data_plane::Server);
-    // service.stop();
-    // service.await_join();
+    return internal::system::make_system(std::move(options));
 }
 
-TEST_F(NetworkTests, data_plane::Server)
+class TestNetwork : public ::testing::Test
+{};
+
+TEST_F(TestNetwork, Arena)
 {
-    GTEST_SKIP() << "blocked by #121";
+    std::shared_ptr<srf::memory::memory_resource> mr;
+    auto pinned  = std::make_shared<srf::memory::pinned_memory_resource>();
+    mr           = pinned;
+    auto logging = srf::memory::make_shared_resource<srf::memory::logging_resource>(mr, "pinned", 10);
+    auto arena   = srf::memory::make_shared_resource<srf::memory::arena_resource>(logging, 128_MiB, 512_MiB);
+    auto f       = srf::memory::make_shared_resource<srf::memory::logging_resource>(arena, "arena", 10);
 
-    std::atomic<std::size_t> counter_0 = 0;
-    std::atomic<std::size_t> counter_1 = 0;
-
-    boost::fibers::barrier barrier(2);
-
-    // create a deserialize sink which access a memory::block
-    auto sink_0 = std::make_unique<node::RxSink<memory::block>>();
-    sink_0->set_observer([&counter_0, &barrier](memory::block block) {
-        std::free(block.data());
-        ++counter_0;
-        barrier.wait();
-    });
-
-    auto sink_1 = std::make_unique<node::RxSink<memory::block>>();
-    sink_1->set_observer([&counter_1, &barrier](memory::block block) {
-        std::free(block.data());
-        ++counter_1;
-        barrier.wait();
-    });
-
-    node::make_edge(m_mutable_nem->deserialize_source().source(0), *sink_0);
-    node::make_edge(m_mutable_nem->deserialize_source().source(1), *sink_1);
-
-    auto nem_worker_address = m_mutable_nem->worker_address();
-
-    auto runner_0 = m_launch_control->prepare_launcher(std::move(sink_0))->ignition();
-    auto runner_1 = m_launch_control->prepare_launcher(std::move(sink_1))->ignition();
-    auto service  = m_launch_control->prepare_launcher(std::move(m_mutable_nem))->ignition();
-
-    // NEM is running along with two Sinks attached to the deserialization router
-    auto comm = std::make_unique<data_plane::Client>(std::make_shared<ucx::Worker>(m_context), *m_launch_control);
-    comm->register_instance(0, nem_worker_address);
-
-    double val = 3.14;
-    codable::EncodedObject encoded_val;
-    codable::encode(val, encoded_val);
-
-    // send a ucx tagged message with a memory block of a fixed sized with a destination port address of 0
-    comm->await_send(0, 0, encoded_val);
-    barrier.wait();
-    EXPECT_EQ(counter_0, 1);
-    EXPECT_EQ(counter_1, 0);
-
-    // send a ucx tagged message with a memory block of a fixed sized with a destination port address of 1
-    comm->await_send(0, 1, encoded_val);
-    barrier.wait();
-    EXPECT_EQ(counter_0, 1);
-    EXPECT_EQ(counter_1, 1);
-
-    service->stop();
-    service->await_join();
-
-    runner_0->await_join();
-    runner_1->await_join();
-
-    comm.reset();
+    auto* ptr = f->allocate(1024);
+    f->deallocate(ptr, 1024);
 }
+
+TEST_F(TestNetwork, ResourceManager)
+{
+    // using options.placement().resources_strategy(PlacementResources::Shared)
+    // will test if cudaSetDevice is being properly called by the network services
+    // since all network services for potentially multiple devices are colocated on a single thread
+    auto resources = std::make_unique<internal::resources::Manager>(
+        internal::system::SystemProvider(make_system([](Options& options) {
+            options.architect_url("localhost:13337");
+            options.placement().resources_strategy(PlacementResources::Dedicated);
+            options.resources().enable_device_memory_pool(true);
+            options.resources().enable_host_memory_pool(true);
+            options.resources().host_memory_pool().block_size(32_MiB);
+            options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
+            options.resources().device_memory_pool().block_size(64_MiB);
+            options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
+        })));
+
+    if (resources->partition_count() < 2 && resources->device_count() < 2)
+    {
+        GTEST_SKIP() << "this test only works with 2 device partitions";
+    }
+
+    EXPECT_TRUE(resources->partition(0).device());
+    EXPECT_TRUE(resources->partition(1).device());
+
+    EXPECT_TRUE(resources->partition(0).network());
+    EXPECT_TRUE(resources->partition(1).network());
+
+    auto h_buffer_0 = resources->partition(0).host().make_buffer(1_MiB);
+    auto d_buffer_0 = resources->partition(0).device()->make_buffer(1_MiB);
+
+    auto h_ucx_block = resources->partition(0).network()->data_plane().registration_cache().lookup(h_buffer_0.data());
+    auto d_ucx_block = resources->partition(0).network()->data_plane().registration_cache().lookup(d_buffer_0.data());
+
+    EXPECT_EQ(h_ucx_block.bytes(), 32_MiB);
+    EXPECT_EQ(d_ucx_block.bytes(), 64_MiB);
+
+    EXPECT_TRUE(h_ucx_block.local_handle());
+    EXPECT_TRUE(h_ucx_block.remote_handle());
+    EXPECT_TRUE(h_ucx_block.remote_handle_size());
+
+    EXPECT_TRUE(d_ucx_block.local_handle());
+    EXPECT_TRUE(d_ucx_block.remote_handle());
+    EXPECT_TRUE(d_ucx_block.remote_handle_size());
+
+    // the following can not assumed to be true
+    // the remote handle size is proportional to the number and types of ucx transports available in a given domain
+    // EXPECT_LE(h_ucx_block.remote_handle_size(), d_ucx_block.remote_handle_size());
+
+    // expect that the buffers are allowed to survive pass the resource manager
+    resources.reset();
+
+    h_buffer_0.release();
+    d_buffer_0.release();
+}
+
+TEST_F(TestNetwork, CommsSendRecv)
+{
+    // using options.placement().resources_strategy(PlacementResources::Shared)
+    // will test if cudaSetDevice is being properly called by the network services
+    // since all network services for potentially multiple devices are colocated on a single thread
+    auto resources = std::make_unique<internal::resources::Manager>(
+        internal::system::SystemProvider(make_system([](Options& options) {
+            options.architect_url("localhost:13337");
+            options.placement().resources_strategy(PlacementResources::Dedicated);
+            options.resources().enable_device_memory_pool(true);
+            options.resources().enable_host_memory_pool(true);
+            options.resources().host_memory_pool().block_size(32_MiB);
+            options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
+            options.resources().device_memory_pool().block_size(64_MiB);
+            options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
+        })));
+
+    if (resources->partition_count() < 2 && resources->device_count() < 2)
+    {
+        GTEST_SKIP() << "this test only works with 2 device partitions";
+    }
+
+    EXPECT_TRUE(resources->partition(0).network());
+    EXPECT_TRUE(resources->partition(1).network());
+
+    auto& r0 = resources->partition(0).network()->data_plane();
+    auto& r1 = resources->partition(1).network()->data_plane();
+
+    // here we are exchanging internal ucx worker addresses without the need of the control plane
+    r0.client().register_instance(1, r1.ucx_address());  // register r1 as instance_id 1
+    r1.client().register_instance(0, r0.ucx_address());  // register r0 as instance_id 0
+
+    int src = 42;
+    int dst = -1;
+
+    internal::data_plane::Request send_req;
+    internal::data_plane::Request recv_req;
+
+    r1.client().async_recv(&dst, sizeof(int), 0, recv_req);
+    r0.client().async_send(&src, sizeof(int), 0, 1, send_req);
+
+    LOG(INFO) << "await recv";
+    recv_req.await_complete();
+    LOG(INFO) << "await send";
+    send_req.await_complete();
+
+    EXPECT_EQ(src, dst);
+
+    // expect that the buffers are allowed to survive pass the resource manager
+    resources.reset();
+}
+
+TEST_F(TestNetwork, CommsGet)
+{
+    // using options.placement().resources_strategy(PlacementResources::Shared)
+    // will test if cudaSetDevice is being properly called by the network services
+    // since all network services for potentially multiple devices are colocated on a single thread
+    auto resources = std::make_unique<internal::resources::Manager>(
+        internal::system::SystemProvider(make_system([](Options& options) {
+            options.architect_url("localhost:13337");
+            options.placement().resources_strategy(PlacementResources::Dedicated);
+            options.resources().enable_device_memory_pool(true);
+            options.resources().enable_host_memory_pool(true);
+            options.resources().host_memory_pool().block_size(32_MiB);
+            options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
+            options.resources().device_memory_pool().block_size(64_MiB);
+            options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
+        })));
+
+    if (resources->partition_count() < 2 && resources->device_count() < 2)
+    {
+        GTEST_SKIP() << "this test only works with 2 device partitions";
+    }
+
+    EXPECT_TRUE(resources->partition(0).network());
+    EXPECT_TRUE(resources->partition(1).network());
+
+    auto src = resources->partition(0).host().make_buffer(1_MiB);
+    auto dst = resources->partition(1).host().make_buffer(1_MiB);
+
+    auto src_keys =
+        resources->partition(0).network()->data_plane().registration_cache().lookup(src.data()).packed_remote_keys();
+
+    auto* src_data    = static_cast<std::size_t*>(src.data());
+    std::size_t count = 1_MiB / sizeof(std::size_t);
+    for (std::size_t i = 0; i < count; ++i)
+    {
+        src_data[i] = 42;
+    }
+
+    auto& r0 = resources->partition(0).network()->data_plane();
+    auto& r1 = resources->partition(1).network()->data_plane();
+
+    // here we are exchanging internal ucx worker addresses without the need of the control plane
+    r0.client().register_instance(1, r1.ucx_address());  // register r1 as instance_id 1
+    r1.client().register_instance(0, r0.ucx_address());  // register r0 as instance_id 0
+
+    internal::data_plane::Request get_req;
+
+    r1.client().async_get(dst.data(), 1_MiB, 0, src.data(), src_keys, get_req);
+
+    LOG(INFO) << "await get";
+    get_req.await_complete();
+
+    auto* dst_data = static_cast<std::size_t*>(dst.data());
+    for (std::size_t i = 0; i < count; ++i)
+    {
+        EXPECT_EQ(dst_data[i], 42);
+    }
+
+    // expect that the buffers are allowed to survive pass the resource manager
+    resources.reset();
+}
+
+// TEST_F(TestNetwork, NetworkEventsManagerLifeCycle)
+// {
+//     auto launcher = m_launch_control->prepare_launcher(std::move(m_mutable_nem));
+
+//     // auto& service = m_launch_control->service(runnable::SrfService::data_plane::Server);
+//     // service.stop();
+//     // service.await_join();
+// }
+
+// TEST_F(TestNetwork, data_plane::Server)
+// {
+//     GTEST_SKIP() << "blocked by #121";
+
+//     std::atomic<std::size_t> counter_0 = 0;
+//     std::atomic<std::size_t> counter_1 = 0;
+
+//     boost::fibers::barrier barrier(2);
+
+//     // create a deserialize sink which access a memory::block
+//     auto sink_0 = std::make_unique<node::RxSink<memory::block>>();
+//     sink_0->set_observer([&counter_0, &barrier](memory::block block) {
+//         std::free(block.data());
+//         ++counter_0;
+//         barrier.wait();
+//     });
+
+//     auto sink_1 = std::make_unique<node::RxSink<memory::block>>();
+//     sink_1->set_observer([&counter_1, &barrier](memory::block block) {
+//         std::free(block.data());
+//         ++counter_1;
+//         barrier.wait();
+//     });
+
+//     node::make_edge(m_mutable_nem->deserialize_source().source(0), *sink_0);
+//     node::make_edge(m_mutable_nem->deserialize_source().source(1), *sink_1);
+
+//     auto nem_worker_address = m_mutable_nem->worker_address();
+
+//     auto runner_0 = m_launch_control->prepare_launcher(std::move(sink_0))->ignition();
+//     auto runner_1 = m_launch_control->prepare_launcher(std::move(sink_1))->ignition();
+//     auto service  = m_launch_control->prepare_launcher(std::move(m_mutable_nem))->ignition();
+
+//     // NEM is running along with two Sinks attached to the deserialization router
+//     auto comm = std::make_unique<data_plane::Client>(std::make_shared<ucx::Worker>(m_context),
+//     *m_launch_control); comm->register_instance(0, nem_worker_address);
+
+//     double val = 3.14;
+//     codable::EncodedObject encoded_val;
+//     codable::encode(val, encoded_val);
+
+//     // send a ucx tagged message with a memory block of a fixed sized with a destination port address of 0
+//     comm->await_send(0, 0, encoded_val);
+//     barrier.wait();
+//     EXPECT_EQ(counter_0, 1);
+//     EXPECT_EQ(counter_1, 0);
+
+//     // send a ucx tagged message with a memory block of a fixed sized with a destination port address of 1
+//     comm->await_send(0, 1, encoded_val);
+//     barrier.wait();
+//     EXPECT_EQ(counter_0, 1);
+//     EXPECT_EQ(counter_1, 1);
+
+//     service->stop();
+//     service->await_join();
+
+//     runner_0->await_join();
+//     runner_1->await_join();
+
+//     comm.reset();
+// }

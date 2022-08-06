@@ -17,13 +17,13 @@
 
 #pragma once
 
-#include <srf/channel/channel.hpp>
-#include <srf/channel/forward.hpp>
-#include <srf/channel/ingress.hpp>
-#include <srf/channel/status.hpp>
-#include <srf/core/watcher.hpp>
-#include <srf/node/edge.hpp>
-#include <srf/node/edge_registry.hpp>
+#include "srf/channel/channel.hpp"
+#include "srf/channel/forward.hpp"
+#include "srf/channel/ingress.hpp"
+#include "srf/channel/status.hpp"
+#include "srf/core/watcher.hpp"
+#include "srf/node/edge.hpp"
+#include "srf/node/edge_registry.hpp"
 
 #include <glog/logging.h>
 

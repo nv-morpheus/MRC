@@ -15,13 +15,15 @@
  * limitations under the License.
  */
 
-#include <pysrf/executor.hpp>
+#include "pysrf/executor.hpp"
 
-#include <pysrf/utils.hpp>
+#include "pysrf/utils.hpp"
 
-#include <srf/options/options.hpp>
+#include "srf/options/options.hpp"
 
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
+#include <pybind11/stl.h>  // IWYU pragma: keep
 
 #include <memory>
 #include <utility>  // for move
@@ -34,11 +36,16 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(executor, m)
 {
-    m.doc() = R"pbdoc()pbdoc";
+    m.doc() = R"pbdoc(
+        Python bindings for SRF executors
+        -------------------------------
+        .. currentmodule:: executor
+        .. autosummary::
+           :toctree: _generate
+    )pbdoc";
 
     // Common must be first in every module
     pysrf::import(m, "srf.core.common");
-
     pysrf::import(m, "srf.core.options");
     pysrf::import(m, "srf.core.pipeline");
 

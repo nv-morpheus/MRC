@@ -1,0 +1,318 @@
+@Library('jenkins_shared_lib') _
+
+pipeline {
+    agent any
+    options {
+        disableConcurrentBuilds(abortPrevious: true)
+    }
+    environment {
+        BUILD_CC = 'gcc'
+        BUILD_TYPE = sh(returnStdout: true, script: 'rapids-build-type')
+    }
+    stages {
+        stage('Checks') {
+            when { environment name: 'BUILD_TYPE', value: 'pull-request' }
+            options {
+                timeout(time: 1, unit: 'HOURS')
+            }
+            environment {
+                PARALLEL_LEVEL = '4'
+                HOME = "${WORKSPACE}"
+                GH_TOKEN = credentials('gputester-github-token')
+            }
+            agent {
+                docker {
+                    image 'gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
+                    label 'cpu'
+                }
+            }
+            steps {
+                cleanWs(
+                    deleteDirs: true,
+                    externalDelete: 'sudo rm -rf %s'
+                )
+                checkout scm
+                sh "${WORKSPACE}/ci/scripts/jenkins/checks.sh"
+            }
+        }
+        stage('Builds') {
+            failFast true
+            parallel {
+                stage('Build:linux:x86_64:gcc:release') {
+                    options {
+                        timeout(time: 1, unit: 'HOURS')
+                    }
+                    environment {
+                        PARALLEL_LEVEL = '16'
+                        HOME = "${WORKSPACE}"
+                    }
+                    agent {
+                        docker {
+                            image 'gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
+                            label 'cpu4'
+                        }
+                    }
+                    steps {
+                        cleanWs(
+                            deleteDirs: true,
+                            externalDelete: 'sudo rm -rf %s'
+                        )
+                        checkout scm
+                        withCredentials([[
+                            $class: 'AmazonWebServicesCredentialsBinding',
+                            credentialsId: "aws-s3-gpuci",
+                            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                        ]])
+                        {
+                            sh "${WORKSPACE}/ci/scripts/jenkins/build.sh"
+                        }
+                    }
+                }
+                stage('Build:linux:x86_64:gcc:debug') {
+                    options {
+                        timeout(time: 1, unit: 'HOURS')
+                    }
+                    environment {
+                        BUILD_CC= "gcc-coverage"
+                        PARALLEL_LEVEL = '16'
+                        HOME = "${WORKSPACE}"
+                    }
+                    agent {
+                        docker {
+                            image 'gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
+                            label 'cpu4'
+                        }
+                    }
+                    steps {
+                        cleanWs(
+                            deleteDirs: true,
+                            externalDelete: 'sudo rm -rf %s'
+                        )
+                        checkout scm
+                        withCredentials([[
+                            $class: 'AmazonWebServicesCredentialsBinding',
+                            credentialsId: "aws-s3-gpuci",
+                            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                        ]])
+                        {
+                            sh "${WORKSPACE}/ci/scripts/jenkins/build.sh"
+                        }
+                    }
+                }
+                stage('Build:linux:x86_64:clang') {
+                    options {
+                        timeout(time: 1, unit: 'HOURS')
+                    }
+                    environment {
+                        PARALLEL_LEVEL = '16'
+                        BUILD_CC = 'clang'
+                        HOME = "${WORKSPACE}"
+                    }
+                    agent {
+                        docker {
+                            image 'gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
+                            label 'cpu4'
+                        }
+                    }
+                    steps {
+                        cleanWs(
+                            deleteDirs: true,
+                            externalDelete: 'sudo rm -rf %s'
+                        )
+                        checkout scm
+                        withCredentials([[
+                            $class: 'AmazonWebServicesCredentialsBinding',
+                            credentialsId: "aws-s3-gpuci",
+                            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                        ]])
+                        {
+                            sh "${WORKSPACE}/ci/scripts/jenkins/build.sh"
+                        }
+                    }
+                }
+                stage('Build:Documentation') {
+                    options {
+                        timeout(time: 1, unit: 'HOURS')
+                    }
+                    environment {
+                        PARALLEL_LEVEL = '4'
+                        HOME = "${WORKSPACE}"
+                    }
+                    agent {
+                        docker {
+                            image 'gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
+                            label 'cpu'
+                        }
+                    }
+                    steps {
+                        cleanWs(
+                            deleteDirs: true,
+                            externalDelete: 'sudo rm -rf %s'
+                        )
+                        checkout scm
+                        withCredentials([[
+                            $class: 'AmazonWebServicesCredentialsBinding',
+                            credentialsId: "aws-s3-gpuci",
+                            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                        ]])
+                        {
+                            sh "${WORKSPACE}/ci/scripts/jenkins/docs.sh"
+                        }
+                    }
+                }
+            }
+        }
+        stage('Tests') {
+            failFast true
+            parallel {
+                stage('TestDebug') {
+                     options {
+                         timeout(time: 1, unit: 'HOURS')
+                     }
+                     agent {
+                         docker {
+                             image 'gpuci/rapidsai:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
+                             label 'driver-495'
+                             args '--cap-add=sys_nice --runtime "nvidia" -e "NVIDIA_VISIBLE_DEVICES=$EXECUTOR_NUMBER"'
+                         }
+                     }
+                     environment {
+                         BUILD_TYPE = "Debug"
+                         HOME = "${WORKSPACE}"
+                     }
+                     steps {
+                         cleanWs(
+                             deleteDirs: true,
+                             externalDelete: 'sudo rm -rf %s'
+                         )
+                         checkout scm
+                         withCredentials([[
+                             $class: 'AmazonWebServicesCredentialsBinding',
+                             credentialsId: "aws-s3-gpuci",
+                             accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                             secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                         ]])
+                         {
+                             sh "${WORKSPACE}/ci/scripts/jenkins/test.sh"
+                         }
+                     }
+                }
+                stage('TestRelease') {
+                    options {
+                        timeout(time: 1, unit: 'HOURS')
+                    }
+                    agent {
+                        docker {
+                            image 'gpuci/rapidsai:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
+                            label 'driver-495'
+                            args '--cap-add=sys_nice --runtime "nvidia" -e "NVIDIA_VISIBLE_DEVICES=$EXECUTOR_NUMBER"'
+                        }
+                    }
+                    environment {
+                        BUILD_TYPE = "Release"
+                        HOME = "${WORKSPACE}"
+                    }
+                    steps {
+                        cleanWs(
+                            deleteDirs: true,
+                            externalDelete: 'sudo rm -rf %s'
+                        )
+                        checkout scm
+                        withCredentials([[
+                            $class: 'AmazonWebServicesCredentialsBinding',
+                            credentialsId: "aws-s3-gpuci",
+                            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                        ]])
+                        {
+                            sh "${WORKSPACE}/ci/scripts/jenkins/test.sh"
+                        }
+                    }
+                }
+                stage('Benchmark') {
+                    options {
+                        timeout(time: 1, unit: 'HOURS')
+                    }
+                    agent {
+                        docker {
+                            image 'gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
+                            label 'cpu'
+                            args '--cap-add=sys_nice'
+                        }
+                    }
+                    environment {
+                        HOME = "${WORKSPACE}"
+                    }
+                    steps {
+                        cleanWs(
+                            deleteDirs: true,
+                            externalDelete: 'sudo rm -rf %s'
+                        )
+                        checkout scm
+                        withCredentials([[
+                            $class: 'AmazonWebServicesCredentialsBinding',
+                            credentialsId: "aws-s3-gpuci",
+                            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                        ]])
+                        {
+                            sh "${WORKSPACE}/ci/scripts/jenkins/pre_benchmark.sh"
+                            sh "${WORKSPACE}/ci/scripts/jenkins/benchmark.sh"
+                            sh "${WORKSPACE}/ci/scripts/jenkins/post_benchmark.sh"
+                        }
+                    }
+                }
+            }
+        }
+        stage('package:conda') {
+            when {
+                anyOf {
+                    environment name: 'BUILD_TYPE', value: 'branch'
+                    environment name: 'BUILD_TYPE', value: 'nightly'
+                }
+            }
+            options {
+                timeout(time: 1, unit: 'HOURS')
+            }
+            agent {
+                docker {
+                    image 'gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8'
+                    label 'cpu4'
+                }
+            }
+            environment {
+                HOME = "${WORKSPACE}"
+                PARALLEL_LEVEL = '16'
+                CONDA_PKG_LABEL = 'dev-ci'
+            }
+            steps {
+                cleanWs(
+                    deleteDirs: true,
+                    externalDelete: 'sudo rm -rf %s'
+                )
+                checkout scm
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: "aws-s3-gpuci",
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                ]])
+                {
+                    sh "${WORKSPACE}/ci/scripts/jenkins/conda.sh"
+                }
+            }
+        }
+    }
+    post {
+        always {
+                cleanWs(
+                    deleteDirs: true,
+                    externalDelete: 'sudo rm -rf %s'
+                )
+        }
+    }
+}

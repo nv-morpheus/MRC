@@ -33,7 +33,7 @@ FilesToCheck = [
     re.compile(r"[.]flake8[.]cython$"),
     re.compile(r"meta[.]yaml$")
 ]
-ExemptFiles = ['.cache', 'build', 'cmake/LibFindMacros.cmake']
+ExemptFiles = ['.cache', 'build', 'cmake/deps/Configure_gcov.cmake', 'cmake/LibFindMacros.cmake', 'versioneer.py']
 
 # this will break starting at year 10000, which is probably OK :)
 CheckSimple = re.compile(r"Copyright *(?:\(c\))? *(\d{4}),? *NVIDIA C(?:ORPORATION|orporation)")
@@ -146,10 +146,12 @@ def checkCopyright(f,
                 continue
 
         if start > end:
-            e = [f, lineNum, "First year after second year in the copyright " "header (manual fix required)", None]
+            e = [f, lineNum, "First year after second year in the copyright "
+                 "header (manual fix required)", None]
             errs.append(e)
         if thisYear < start or thisYear > end:
-            e = [f, lineNum, "Current year not included in the " "copyright header", None]
+            e = [f, lineNum, "Current year not included in the "
+                 "copyright header", None]
             if thisYear < start:
                 e[-1] = replaceCurrentYear(line, thisYear, end)
             if thisYear > end:
@@ -177,7 +179,8 @@ def checkCopyright(f,
 
     # copyright header itself not found
     if not crFound:
-        e = [f, 0, "Copyright header missing or formatted incorrectly " "(manual fix required)", None]
+        e = [f, 0, "Copyright header missing or formatted incorrectly "
+             "(manual fix required)", None]
         errs.append(e)
 
     # even if the year matches a copyright header, make the check pass

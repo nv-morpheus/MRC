@@ -17,26 +17,23 @@
 
 #include "test_pysrf.hpp"
 
-#include <pysrf/executor.hpp>
-#include <pysrf/pipeline.hpp>
+#include "pysrf/executor.hpp"
+#include "pysrf/pipeline.hpp"
 
-#include <srf/channel/status.hpp>
-#include <srf/node/rx_node.hpp>
-#include <srf/node/rx_sink.hpp>
-#include <srf/node/rx_source.hpp>
-#include <srf/options/options.hpp>
-#include <srf/options/topology.hpp>
-#include <srf/segment/builder.hpp>
-#include <srf/segment/object.hpp>
+#include "srf/channel/status.hpp"
+#include "srf/node/rx_node.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/rx_source.hpp"
+#include "srf/options/options.hpp"
+#include "srf/options/topology.hpp"
+#include "srf/segment/builder.hpp"
+#include "srf/segment/object.hpp"
 
+#include <boost/hana/if.hpp>
 #include <gtest/gtest.h>
 #include <pybind11/embed.h>
 #include <rxcpp/operators/rx-map.hpp>
-#include <rxcpp/rx-includes.hpp>
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-operators.hpp>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
+#include <rxcpp/rx.hpp>
 #include <rxcpp/sources/rx-iterate.hpp>
 
 #include <atomic>

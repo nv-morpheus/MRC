@@ -17,8 +17,8 @@
 
 #include "common_pipelines.hpp"
 
-#include "srf/channel/forward.hpp"
 #include "srf/channel/status.hpp"
+#include "srf/engine/pipeline/ipipeline.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
 #include "srf/node/sink_properties.hpp"
@@ -30,13 +30,9 @@
 #include "srf/segment/ingress_ports.hpp"
 #include "srf/segment/object.hpp"
 
+#include <boost/hana/if.hpp>
 #include <glog/logging.h>
-#include "rxcpp/rx-includes.hpp"
-#include "rxcpp/rx-observer.hpp"
-#include "rxcpp/rx-operators.hpp"
-#include "rxcpp/rx-predef.hpp"
-#include "rxcpp/rx-subscriber.hpp"
-#include "rxcpp/sources/rx-iterate.hpp"
+#include <rxcpp/rx.hpp>
 
 #include <memory>
 #include <ostream>

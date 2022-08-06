@@ -15,9 +15,12 @@
  * limitations under the License.
  */
 
-#include <srf/node/edge_registry.hpp>
+#include "srf/node/edge_registry.hpp"
+
+#include <glog/logging.h>
 
 #include <map>
+#include <ostream>
 #include <stdexcept>
 #include <typeindex>
 #include <utility>
@@ -26,6 +29,7 @@ namespace srf::node {
 
 void EdgeRegistry::register_converter(std::type_index writer_type, std::type_index reader_type, build_fn_t converter)
 {
+    VLOG(2) << "Registering converter for " << writer_type.hash_code() << " " << reader_type.hash_code();
     auto readers_map = EdgeRegistry::registered_converters[writer_type];
 
     auto reader_found = readers_map.find(reader_type);

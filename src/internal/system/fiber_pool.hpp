@@ -19,13 +19,15 @@
 
 #include "internal/system/fiber_task_queue.hpp"
 
-#include <srf/core/bitmap.hpp>
-#include <srf/core/fiber_pool.hpp>
+#include "srf/core/bitmap.hpp"
+#include "srf/core/fiber_pool.hpp"
 #include "srf/core/task_queue.hpp"
+#include "srf/utils/macros.hpp"
 #include "srf/utils/thread_local_shared_pointer.hpp"
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -34,14 +36,16 @@ namespace srf::internal::system {
 class FiberPool final : public core::FiberPool
 {
   public:
-    FiberPool(CpuSet cpu_set, std::vector<std::shared_ptr<FiberTaskQueue>>&& queues);
+    FiberPool(CpuSet cpu_set, std::vector<std::reference_wrapper<FiberTaskQueue>>&& queues);
     ~FiberPool() final = default;
+
+    DELETE_COPYABILITY(FiberPool);
+    DELETE_MOVEABILITY(FiberPool);
 
     const CpuSet& cpu_set() const final;
     std::size_t thread_count() const final;
 
     core::FiberTaskQueue& task_queue(const std::size_t& index) final;
-    std::shared_ptr<core::FiberTaskQueue> task_queue_shared(std::size_t index) const;
 
     template <typename ResourceT>
     void set_thread_local_resource(std::shared_ptr<ResourceT> resource)
@@ -62,7 +66,7 @@ class FiberPool final : public core::FiberPool
 
   private:
     CpuSet m_cpu_set;
-    std::vector<std::shared_ptr<FiberTaskQueue>> m_queues;
+    std::vector<std::reference_wrapper<FiberTaskQueue>> m_queues;
 };
 
 }  // namespace srf::internal::system

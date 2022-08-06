@@ -17,18 +17,18 @@
 
 #pragma once
 
-#include <srf/manifold/connectable.hpp>
-#include <srf/manifold/factory.hpp>
-#include <srf/manifold/interface.hpp>
-#include <srf/node/edge_builder.hpp>
-#include <srf/node/generic_node.hpp>
-#include <srf/node/operators/muxer.hpp>
-#include <srf/node/rx_node.hpp>
-#include <srf/node/sink_channel.hpp>
-#include <srf/node/source_channel.hpp>
-#include <srf/runnable/launchable.hpp>
-#include <srf/segment/object.hpp>
+#include "srf/manifold/connectable.hpp"
+#include "srf/manifold/factory.hpp"
+#include "srf/manifold/interface.hpp"
+#include "srf/node/edge_builder.hpp"
 #include "srf/node/forward.hpp"
+#include "srf/node/generic_node.hpp"
+#include "srf/node/operators/muxer.hpp"
+#include "srf/node/rx_node.hpp"
+#include "srf/node/sink_channel.hpp"
+#include "srf/node/source_channel.hpp"
+#include "srf/runnable/launchable.hpp"
+#include "srf/segment/object.hpp"
 
 #include <condition_variable>
 #include <memory>
@@ -56,7 +56,9 @@ class IngressPort : public Object<node::SourceProperties<T>>, public IngressPort
       m_segment_address(address),
       m_port_name(std::move(name)),
       m_source(std::make_unique<node::RxNode<T>>())
-    {}
+    {
+        this->set_name(m_port_name);
+    }
 
   private:
     node::SourceProperties<T>* get_object() const final

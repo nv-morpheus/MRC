@@ -17,13 +17,13 @@
 
 #pragma once
 
-#include <srf/runnable/launch_control.hpp>
-#include <srf/runnable/launch_options.hpp>
-#include <srf/runnable/launchable.hpp>
-#include <srf/runnable/launcher.hpp>
-#include <srf/runnable/runnable.hpp>
-#include <srf/segment/context.hpp>
-#include <srf/segment/object.hpp>
+#include "srf/runnable/launch_control.hpp"
+#include "srf/runnable/launch_options.hpp"
+#include "srf/runnable/launchable.hpp"
+#include "srf/runnable/launcher.hpp"
+#include "srf/runnable/runnable.hpp"
+#include "srf/segment/context.hpp"
+#include "srf/segment/object.hpp"
 
 #include <glog/logging.h>
 
@@ -41,7 +41,7 @@ class Runnable : public Object<NodeT>, public runnable::Launchable
     Runnable(std::string name, ArgsT&&... args) : m_node(std::make_unique<NodeT>(std::forward<ArgsT>(args)...))
     {
         // Set the name in the Object class
-        this->m_name = std::move(name);
+        this->set_name(std::move(name));
     }
 
     Runnable(std::string name, std::unique_ptr<NodeT> node) : m_node(std::move(node))
@@ -49,7 +49,7 @@ class Runnable : public Object<NodeT>, public runnable::Launchable
         CHECK(m_node);
 
         // Set the name in the Object class
-        this->m_name = std::move(name);
+        this->set_name(std::move(name));
     }
 
   private:

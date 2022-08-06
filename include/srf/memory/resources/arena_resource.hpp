@@ -16,15 +16,14 @@
  */
 #pragma once
 
-#include <srf/memory/adaptors.hpp>
-#include <srf/memory/resources/detail/arena.hpp>
-#include <srf/utils/bytes_to_string.hpp>
+#include "srf/memory/adaptors.hpp"
+#include "srf/memory/resources/detail/arena.hpp"
+#include "srf/utils/bytes_to_string.hpp"
 
 #include <cuda_runtime_api.h>
+#include <glog/logging.h>
 #include <rmm/detail/error.hpp>
 #include <rmm/logger.hpp>
-
-#include <glog/logging.h>
 #include <spdlog/common.h>
 #include <spdlog/fmt/bundled/ostream.h>
 
@@ -77,10 +76,9 @@ namespace srf::memory {
  * rmm::mr::device_memory_resource interface.
  */
 template <typename Upstream>
-class arena_resource final : public upstream_resource<Upstream>
+class arena_resource final : public adaptor<Upstream>
 {
-    using resource_type = typename upstream_resource<Upstream>::resource_type;
-    using pointer_type  = typename upstream_resource<Upstream>::pointer_type;
+    using pointer_type = typename adaptor<Upstream>::pointer_type;
 
     using global_arena = detail::arena::global_arena<pointer_type>;
     using arena        = detail::arena::arena<pointer_type>;
@@ -107,8 +105,8 @@ class arena_resource final : public upstream_resource<Upstream>
                             std::size_t initial_size = global_arena::default_initial_size,
                             std::size_t maximum_size = global_arena::default_maximum_size,
                             bool dump_log_on_failure = false) :
-      upstream_resource<Upstream>(std::move(upstream_mr), "arena"),
-      global_arena_(std::make_shared<global_arena>(this->resource(), initial_size, maximum_size)),
+      adaptor<Upstream>(std::move(upstream_mr)),
+      global_arena_(std::make_shared<global_arena>(&this->resource(), initial_size, maximum_size)),
       dump_log_on_failure_(dump_log_on_failure)
     {
         if (dump_log_on_failure_)
@@ -137,7 +135,7 @@ class arena_resource final : public upstream_resource<Upstream>
      * @param stream The stream to associate this allocation with.
      * @return void* Pointer to the newly allocated memory.
      */
-    void* do_allocate(std::size_t bytes, std::size_t alignment) final
+    void* do_allocate(std::size_t bytes) final
     {
         if (bytes <= 0)
         {
@@ -175,7 +173,7 @@ class arena_resource final : public upstream_resource<Upstream>
      * value of `bytes` that was passed to the `allocate` call that returned `p`.
      * @param stream Stream on which to perform deallocation.
      */
-    void do_deallocate(void* ptr, std::size_t bytes, std::size_t alignment) final
+    void do_deallocate(void* ptr, std::size_t bytes) final
     {
         if (ptr == nullptr || bytes <= 0)
         {
@@ -183,7 +181,7 @@ class arena_resource final : public upstream_resource<Upstream>
         }
 
         bytes = detail::arena::align_up(bytes);
-        get_thread_arena().deallocate(ptr, bytes, alignment);
+        get_thread_arena().deallocate(ptr, bytes);
     }
 
     /**

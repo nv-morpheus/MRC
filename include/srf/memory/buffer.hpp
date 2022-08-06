@@ -17,34 +17,25 @@
 
 #pragma once
 
-#include <srf/memory/adaptors.hpp>
-#include <srf/memory/resource_view.hpp>
-#include <srf/memory/resources/memory_resource.hpp>
-
-#include <cuda/memory_resource>
-#include <rmm/device_buffer.hpp>
+#include "srf/memory/adaptors.hpp"
+#include "srf/memory/resources/memory_resource.hpp"
 
 #include <cstddef>
 #include <utility>
 
 namespace srf::memory {
 
-template <typename... Properties>
 class buffer
 {
   public:
-    template <typename Property>
-    struct contains : std::bool_constant<(std::is_same<Property, Properties>{} || ...)>
-    {};
-
-    using view_type = resource_view<Properties...>;
-
     buffer() = default;
-    buffer(std::size_t bytes, view_type view) :
-      m_view(std::move(view)),
+
+    explicit buffer(std::size_t bytes, std::shared_ptr<memory_resource> mr) :
+      m_mr(std::move(mr)),
       m_bytes(std::move(bytes)),
-      m_buffer(m_view.allocate(m_bytes))
+      m_buffer(m_mr->allocate(m_bytes))
     {}
+
     virtual ~buffer()
     {
         release();
@@ -54,14 +45,14 @@ class buffer
     buffer& operator=(const buffer&) = delete;
 
     buffer(buffer&& other) noexcept :
-      m_view(std::move(other.m_view)),
+      m_mr(std::exchange(other.m_mr, nullptr)),
       m_bytes(std::exchange(other.m_bytes, 0)),
       m_buffer(std::exchange(other.m_buffer, nullptr))
     {}
 
     buffer& operator=(buffer&& other) noexcept
     {
-        m_view   = std::move(other.m_view);
+        m_mr     = std::exchange(other.m_mr, nullptr);
         m_bytes  = std::exchange(other.m_bytes, 0);
         m_buffer = std::exchange(other.m_buffer, nullptr);
         return *this;
@@ -71,16 +62,11 @@ class buffer
     {
         if (m_buffer != nullptr)
         {
-            m_view.deallocate(m_buffer, m_bytes, alignof(std::max_align_t));
+            CHECK(m_mr);
+            m_mr->deallocate(m_buffer, m_bytes);
             m_buffer = nullptr;
             m_bytes  = 0;
         }
-    }
-
-    template <typename P>
-    static constexpr bool has_property()
-    {
-        return std::bool_constant<(std::is_same<P, Properties>{} || ...)>::value;
     }
 
     void* data() noexcept
@@ -97,14 +83,10 @@ class buffer
         return m_bytes;
     }
 
-    memory_kind_type kind() const noexcept
+    memory_kind kind() const noexcept
     {
-        return m_view.kind();
-    }
-
-    const view_type& view() const noexcept
-    {
-        return m_view;
+        DCHECK(m_mr);
+        return m_mr->kind();
     }
 
     bool empty() const
@@ -118,7 +100,7 @@ class buffer
     }
 
   private:
-    view_type m_view;
+    std::shared_ptr<memory_resource> m_mr;
     std::size_t m_bytes{0};
     void* m_buffer{nullptr};
 };

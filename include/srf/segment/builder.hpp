@@ -17,27 +17,29 @@
 
 #pragma once
 
-#include <srf/exceptions/runtime_error.hpp>
-#include <srf/internal/segment/ibuilder.hpp>  // IWYU pragma: keep
-#include <srf/node/rx_node.hpp>
-#include <srf/node/rx_sink.hpp>
-#include <srf/node/rx_source.hpp>
-#include <srf/node/sink_properties.hpp>
-#include <srf/node/source_properties.hpp>
-#include <srf/runnable/launchable.hpp>
-#include <srf/segment/component.hpp>
-#include <srf/segment/egress_port.hpp>
-#include <srf/segment/forward.hpp>
-#include <srf/segment/object.hpp>
-#include <srf/segment/runnable.hpp>
-#include <srf/utils/macros.hpp>
-#include "srf/internal/segment/ibuilder.hpp"
+#include "srf/benchmarking/trace_statistics.hpp"
+#include "srf/engine/segment/ibuilder.hpp"
+#include "srf/exceptions/runtime_error.hpp"
 #include "srf/node/edge_builder.hpp"
+#include "srf/node/rx_node.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/rx_source.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_properties.hpp"
+#include "srf/runnable/launchable.hpp"
 #include "srf/runnable/runnable.hpp"
+#include "srf/segment/component.hpp"
+#include "srf/segment/egress_port.hpp"
+#include "srf/segment/forward.hpp"
+#include "srf/segment/ingress_port.hpp"
+#include "srf/segment/object.hpp"
+#include "srf/segment/runnable.hpp"
+#include "srf/utils/macros.hpp"
 
+#include <boost/hana.hpp>
 #include <glog/logging.h>
-#include "rxcpp/rx-observable.hpp"
-#include "rxcpp/rx-observer.hpp"
+#include <rxcpp/rx-observable.hpp>
+#include <rxcpp/rx-observer.hpp>
 
 #include <cstdint>
 #include <functional>
@@ -46,15 +48,51 @@
 #include <string>
 #include <utility>
 
+namespace {
+namespace hana = boost::hana;
+
+template <typename T>
+auto has_source_add_watcher =
+    hana::is_valid([](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).source_add_watcher(
+                                        std::declval<std::shared_ptr<srf::WatcherInterface>>())) {});
+
+template <typename T>
+auto has_sink_add_watcher =
+    hana::is_valid([](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).sink_add_watcher(
+                                        std::declval<std::shared_ptr<srf::WatcherInterface>>())) {});
+
+template <typename T>
+void add_stats_watcher_if_rx_source(T& thing, std::string name)
+{
+    return hana::if_(
+        has_source_add_watcher<T>(thing),
+        [name](auto&& object) {
+            auto trace_stats = srf::benchmarking::TraceStatistics::get_or_create(name);
+            std::forward<decltype(object)>(object).source_add_watcher(trace_stats);
+        },
+        [name]([[maybe_unused]] auto&& object) {})(thing);
+}
+
+template <typename T>
+void add_stats_watcher_if_rx_sink(T& thing, std::string name)
+{
+    return hana::if_(
+        has_sink_add_watcher<T>(thing),
+        [name](auto&& object) {
+            auto trace_stats = srf::benchmarking::TraceStatistics::get_or_create(name);
+            std::forward<decltype(object)>(object).sink_add_watcher(trace_stats);
+        },
+        [name]([[maybe_unused]] auto&& object) {})(thing);
+}
+}  // namespace
+
 namespace srf::segment {
 
-class Builder final : private internal::segment::IBuilder
+class Builder final
 {
-    Builder(internal::segment::IBuilder& backend);
+    Builder(internal::segment::IBuilder& backend) : m_backend(backend) {}
 
   public:
-    ~Builder() final = default;
-
     DELETE_COPYABILITY(Builder);
     DELETE_MOVEABILITY(Builder);
 
@@ -70,37 +108,47 @@ class Builder final : private internal::segment::IBuilder
     template <typename ObjectT, typename... ArgsT>
     std::shared_ptr<Object<ObjectT>> construct_object(std::string name, ArgsT&&... args)
     {
-        return make_object(std::move(name), std::make_unique<ObjectT>(std::forward<ArgsT>(args)...));
+        auto uptr = std::make_unique<ObjectT>(std::forward<ArgsT>(args)...);
+
+        ::add_stats_watcher_if_rx_source(*uptr, name);
+        ::add_stats_watcher_if_rx_sink(*uptr, name);
+
+        return make_object(std::move(name), std::move(uptr));
     }
 
-    template <typename SourceTypeT, typename CreateFnT>
+    template <typename SourceTypeT,
+              template <class, class = srf::runnable::Context> class NodeTypeT = node::RxSource,
+              typename CreateFnT>
     auto make_source(std::string name, CreateFnT&& create_fn)
     {
-        return make_object(std::move(name),
-                           std::make_unique<node::RxSource<SourceTypeT>>(
-                               rxcpp::observable<>::create<SourceTypeT>(std::forward<CreateFnT>(create_fn))));
+        return construct_object<NodeTypeT<SourceTypeT>>(
+            name, rxcpp::observable<>::create<SourceTypeT>(std::forward<CreateFnT>(create_fn)));
     }
 
-    template <typename SinkTypeT, typename... ArgsT>
+    template <typename SinkTypeT,
+              template <class, class = srf::runnable::Context> class NodeTypeT = node::RxSink,
+              typename... ArgsT>
     auto make_sink(std::string name, ArgsT&&... ops)
     {
-        return make_object(std::move(name),
-                           std::make_unique<node::RxSink<SinkTypeT>>(
-                               rxcpp::make_observer_dynamic<SinkTypeT>(std::forward<ArgsT>(ops)...)));
+        return construct_object<NodeTypeT<SinkTypeT>>(name,
+                                                      rxcpp::make_observer<SinkTypeT>(std::forward<ArgsT>(ops)...));
     }
 
-    template <typename SinkTypeT, typename... ArgsT>
+    template <typename SinkTypeT,
+              template <class, class, class = srf::runnable::Context> class NodeTypeT = node::RxNode,
+              typename... ArgsT>
     auto make_node(std::string name, ArgsT&&... ops)
     {
-        return make_object(std::move(name),
-                           std::make_unique<node::RxNode<SinkTypeT, SinkTypeT>>(std::forward<ArgsT>(ops)...));
+        return construct_object<NodeTypeT<SinkTypeT, SinkTypeT>>(name, std::forward<ArgsT>(ops)...);
     }
 
-    template <typename SinkTypeT, typename SourceTypeT, typename... ArgsT>
+    template <typename SinkTypeT,
+              typename SourceTypeT,
+              template <class, class, class = srf::runnable::Context> class NodeTypeT = node::RxNode,
+              typename... ArgsT>
     auto make_node(std::string name, ArgsT&&... ops)
     {
-        return make_object(std::move(name),
-                           std::make_unique<node::RxNode<SinkTypeT, SourceTypeT>>(std::forward<ArgsT>(ops)...));
+        return construct_object<NodeTypeT<SinkTypeT, SourceTypeT>>(name, std::forward<ArgsT>(ops)...);
     }
 
     template <typename SourceNodeTypeT, typename SinkNodeTypeT>
@@ -134,8 +182,8 @@ class Builder final : private internal::segment::IBuilder
     template <typename SourceNodeTypeT, typename SinkNodeTypeT = SourceNodeTypeT>
     void make_dynamic_edge(const std::string& source_name, const std::string& sink_name)
     {
-        auto& source_obj = find_object(source_name);
-        auto& sink_obj   = find_object(sink_name);
+        auto& source_obj = m_backend.find_object(source_name);
+        auto& sink_obj   = m_backend.find_object(sink_name);
         node::make_edge(source_obj.source_typed<SourceNodeTypeT>(), sink_obj.sink_typed<SinkNodeTypeT>());
     }
 
@@ -153,7 +201,7 @@ class Builder final : private internal::segment::IBuilder
         CHECK(runnable);
         CHECK(segment_object->is_source());
         using source_type_t = typename ObjectT::source_type_t;
-        auto counter        = make_throughput_counter(runnable->name());
+        auto counter        = m_backend.make_throughput_counter(runnable->name());
         runnable->object().add_epilogue_tap([counter](const source_type_t& data) { counter(1); });
     }
 
@@ -166,21 +214,11 @@ class Builder final : private internal::segment::IBuilder
         using source_type_t = typename ObjectT::source_type_t;
         using tick_fn_t     = std::function<std::int64_t(const source_type_t&)>;
         tick_fn_t tick_fn   = callable;
-        auto counter        = make_throughput_counter(runnable->name());
+        auto counter        = m_backend.make_throughput_counter(runnable->name());
         runnable->object().add_epilogue_tap([counter, tick_fn](const source_type_t& data) { counter(tick_fn(data)); });
     }
 
   private:
-    const std::string& name() const final;
-    bool has_object(const std::string& name) const final;
-    ::srf::segment::ObjectProperties& find_object(const std::string& name) final;
-    void add_object(const std::string& name, std::shared_ptr<::srf::segment::ObjectProperties> object) final;
-    void add_runnable(const std::string& name, std::shared_ptr<runnable::Launchable> runnable) final;
-    std::shared_ptr<::srf::segment::IngressPortBase> get_ingress_base(const std::string& name) final;
-    std::shared_ptr<::srf::segment::EgressPortBase> get_egress_base(const std::string& name) final;
-
-    std::function<void(std::int64_t)> make_throughput_counter(const std::string& name) final;
-
     internal::segment::IBuilder& m_backend;
 
     friend Definition;
@@ -189,7 +227,7 @@ class Builder final : private internal::segment::IBuilder
 template <typename ObjectT>
 std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::unique_ptr<ObjectT> node)
 {
-    if (has_object(name))
+    if (m_backend.has_object(name))
     {
         LOG(ERROR) << "A Object named " << name << " is already registered";
         throw exceptions::SrfRuntimeError("duplicate name detected - name owned by a node");
@@ -199,16 +237,17 @@ std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::uni
 
     if constexpr (std::is_base_of_v<runnable::Runnable, ObjectT>)
     {
-        auto segment_name = this->name() + "/" + name;
+        auto segment_name = m_backend.name() + "/" + name;
         auto segment_node = std::make_shared<Runnable<ObjectT>>(segment_name, std::move(node));
-        add_runnable(name, segment_node);
-        add_object(name, segment_node);
+
+        m_backend.add_runnable(name, segment_node);
+        m_backend.add_object(name, segment_node);
         segment_object = segment_node;
     }
     else
     {
         auto segment_node = std::make_shared<Component<ObjectT>>(std::move(node));
-        add_object(name, segment_node);
+        m_backend.add_object(name, segment_node);
         segment_object = segment_node;
     }
 
@@ -219,7 +258,7 @@ std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::uni
 template <typename T>
 std::shared_ptr<Object<node::SinkProperties<T>>> Builder::get_egress(std::string name)
 {
-    auto base = get_egress_base(name);
+    auto base = m_backend.get_egress_base(name);
     if (!base)
     {
         throw exceptions::SrfRuntimeError("egress port name not found: " + name);
@@ -237,7 +276,7 @@ std::shared_ptr<Object<node::SinkProperties<T>>> Builder::get_egress(std::string
 template <typename T>
 std::shared_ptr<Object<node::SourceProperties<T>>> Builder::get_ingress(std::string name)
 {
-    auto base = get_ingress_base(name);
+    auto base = m_backend.get_ingress_base(name);
     if (!base)
     {
         throw exceptions::SrfRuntimeError("ingress port name not found: " + name);

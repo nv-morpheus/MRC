@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-#include <pysrf/subscriber.hpp>
+#include "pysrf/subscriber.hpp"
 
-#include <pysrf/operators.hpp>
-#include <pysrf/types.hpp>
+#include "pysrf/operators.hpp"
+#include "pysrf/types.hpp"
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>
@@ -26,13 +26,7 @@
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>  // IWYU pragma: keep
 #include <pybind11/pytypes.h>
-#include <rxcpp/rx-includes.hpp>
-#include <rxcpp/rx-observable.hpp>
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-operators.hpp>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
-#include <rxcpp/rx-subscription.hpp>
+#include <rxcpp/rx.hpp>
 
 #include <array>
 #include <exception>

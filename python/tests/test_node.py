@@ -28,12 +28,9 @@ def test_launch_options_source(source_type: str, pe_count: int, engines_per_pe: 
     source = None
 
     def source_gen():
-
-        print("Starting source")
         yield int(1)
         yield int(2)
         yield int(3)
-        print("Source done")
 
     if (source_type == "iterator"):
         if (pe_count > 0 or engines_per_pe > 0):

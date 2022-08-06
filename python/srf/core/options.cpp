@@ -15,14 +15,15 @@
  * limitations under the License.
  */
 
-#include <pysrf/options.hpp>
-#include <pysrf/utils.hpp>
+#include "pysrf/options.hpp"
 
-#include <srf/options/engine_groups.hpp>
-#include <srf/options/options.hpp>
-#include <srf/options/placement.hpp>
-#include <srf/options/topology.hpp>
-#include <srf/runnable/types.hpp>
+#include "pysrf/utils.hpp"
+
+#include "srf/options/engine_groups.hpp"
+#include "srf/options/options.hpp"
+#include "srf/options/placement.hpp"
+#include "srf/options/topology.hpp"
+#include "srf/runnable/types.hpp"
 
 #include <pybind11/pybind11.h>
 
@@ -39,13 +40,11 @@ class Config
 PYBIND11_MODULE(options, m)
 {
     m.doc() = R"pbdoc(
-        Pybind11 example plugin
-        -----------------------
-        .. currentmodule:: scikit_build_example
+        Python bindings for SRF options
+        -------------------------------
+        .. currentmodule:: options
         .. autosummary::
            :toctree: _generate
-           add
-           subtract
     )pbdoc";
 
     // Common must be first in every module

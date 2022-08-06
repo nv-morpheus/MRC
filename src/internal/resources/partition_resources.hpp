@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,35 +17,40 @@
 
 #pragma once
 
-#include "internal/resources/device_resources.hpp"
-#include "internal/resources/host_resources.hpp"
+#include "internal/memory/device_resources.hpp"
+#include "internal/memory/host_resources.hpp"
+#include "internal/network/resources.hpp"
+#include "internal/resources/partition_resources_base.hpp"
+#include "internal/runnable/resources.hpp"
 
-#include <cstdint>
-#include <memory>
+#include <cstddef>
+#include <optional>
 
 namespace srf::internal::resources {
 
 /**
- * @brief Set of Resources assigned to a specific parition.
+ * @brief Partition Resources define the set of Resources available to a given Partition
  *
- * PartitionResources constructs a flat list of Resources from SystemResources.
+ * This class does not own the actual resources, that honor is bestowed on the resources::Manager. This class is
+ * constructed and owned by the resources::Manager to ensure validity of the references.
  */
-class PartitionResources
+class PartitionResources final : public PartitionResourceBase
 {
   public:
-    PartitionResources(std::uint32_t partition_id,
-                       std::shared_ptr<HostResources> host,
-                       std::shared_ptr<DeviceResources> device);
+    PartitionResources(runnable::Resources& runnable_resources,
+                       std::size_t partition_id,
+                       memory::HostResources& host,
+                       std::optional<memory::DeviceResources>& device,
+                       std::optional<network::Resources>& network);
 
-    const std::uint32_t& partition_id() const;
-
-    HostResources& host() const;
-    DeviceResources& device() const;
+    memory::HostResources& host();
+    std::optional<memory::DeviceResources>& device();
+    std::optional<network::Resources>& network();
 
   private:
-    std::uint32_t m_partition_id;
-    std::shared_ptr<HostResources> m_host_resources;
-    std::shared_ptr<DeviceResources> m_device_resources;
+    memory::HostResources& m_host;
+    std::optional<memory::DeviceResources>& m_device;
+    std::optional<network::Resources>& m_network;
 };
 
 }  // namespace srf::internal::resources

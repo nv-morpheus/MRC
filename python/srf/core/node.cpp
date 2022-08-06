@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-#include <pysrf/types.hpp>
-#include <pysrf/utils.hpp>
+#include "pysrf/types.hpp"
+#include "pysrf/utils.hpp"
 
-#include <srf/runnable/launch_options.hpp>
-#include <srf/segment/object.hpp>
+#include "srf/runnable/launch_options.hpp"
+#include "srf/segment/object.hpp"
 
 #include <pybind11/pybind11.h>  // IWYU pragma: keep
 
@@ -32,7 +32,13 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(node, m)
 {
-    m.doc() = R"pbdoc()pbdoc";
+    m.doc() = R"pbdoc(
+        Python bindings for SRF nodes
+        -------------------------------
+        .. currentmodule:: node
+        .. autosummary::
+           :toctree: _generate
+    )pbdoc";
 
     // Common must be first in every module
     pysrf::import(m, "srf.core.common");

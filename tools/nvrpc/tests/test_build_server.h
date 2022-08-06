@@ -22,8 +22,8 @@
 #include "testing.grpc.pb.h"
 #include "testing.pb.h"  // IWYU pragma: keep
 
-#include "nvrpc/executor.h"
-#include "nvrpc/server.h"
+#include <nvrpc/executor.h>
+#include <nvrpc/server.h>
 
 #include <memory>   // for unique_ptr, make_shared, make_unique
 #include <utility>  // for move

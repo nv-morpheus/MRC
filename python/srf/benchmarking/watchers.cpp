@@ -15,9 +15,10 @@
  * limitations under the License.
  */
 
-#include <pysrf/executor.hpp>
-#include <pysrf/segment.hpp>
-#include <pysrf/watchers.hpp>
+#include "pysrf/watchers.hpp"
+
+#include "pysrf/executor.hpp"
+#include "pysrf/segment.hpp"
 
 #include <pybind11/attr.h>  // for call_guard
 #include <pybind11/gil.h>

@@ -17,13 +17,13 @@
 
 #pragma once
 
+#include "srf/protos/architect.pb.h"
+#include "srf/types.hpp"  // for MachineID, InstanceID
+
 #include <nvrpc/context.h>
 #include <nvrpc/interfaces.h>            // for Resources
 #include <nvrpc/life_cycle_streaming.h>  // StreamingContext is an alias for BaseContext<LifeCycleStreaming>
 #include <nvrpc/thread_pool.h>
-
-#include <srf/protos/architect.pb.h>
-#include <srf/types.hpp>  // for MachineID, InstanceID
 
 #include <glog/logging.h>
 
