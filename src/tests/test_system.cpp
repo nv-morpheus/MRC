@@ -246,39 +246,3 @@ TEST_F(TestSystem, ThreadPool)
     EXPECT_EQ(counter, 3);
     EXPECT_EQ(ids.size(), 2);
 }
-
-#if __cplusplus >= 202002L
-
-template <typename T>
-concept vector_like = requires(T t)
-{
-    t.begin();
-    t.reserve(1);
-    t.data();
-};
-
-static_assert(vector_like<std::vector<int>>);
-static_assert(!vector_like<int>);
-
-template <typename T>
-concept smart_ptr_like = requires(T t)
-{
-    t.operator*();
-    t.operator->();
-    t.release();
-    t.reset();
-    typename T::element_type;
-
-    requires !std::copyable<T>;
-
-    // clang-format off
-    { t.operator->() } -> std::same_as<typename std::add_pointer<typename T::element_type>::type>;
-    { *t } -> std::same_as<typename std::add_lvalue_reference<typename T::element_type>::type>;
-    // clang-format on
-};
-
-static_assert(smart_ptr_like<std::unique_ptr<int>>);
-static_assert(!smart_ptr_like<std::shared_ptr<int>>);
-static_assert(!smart_ptr_like<int>);
-
-#endif
