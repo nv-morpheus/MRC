@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "internal/control_plane/server/tagged_service.hpp"
+#include "internal/control_plane/server/tagged_issuer.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
@@ -34,16 +34,16 @@ struct TaggedObject : public server::Tagged
     using server::Tagged::next_tag;
 };
 
-class TaggedService : public server::TaggedService
+class TaggedIssuer : public server::TaggedIssuer
 {
   public:
-    TaggedService(std::function<void(const tag_t& tag)> on_drop) : m_on_drop(std::move(on_drop)) {}
-    ~TaggedService() override
+    TaggedIssuer(std::function<void(const tag_t& tag)> on_drop) : m_on_drop(std::move(on_drop)) {}
+    ~TaggedIssuer() override
     {
         this->drop_all();
     }
 
-    using server::TaggedService::register_instance_id;
+    using server::TaggedIssuer::register_instance_id;
 
   private:
     std::function<void(const tag_t& tag)> m_on_drop;
@@ -54,6 +54,12 @@ class TaggedService : public server::TaggedService
     };
 
     void do_issue_update() final {}
+
+    const std::string& service_name() const final
+    {
+        static std::string name = "TestTaggedIssuer";
+        return name;
+    }
 };
 
 TEST_F(TestControlPlaneComponents, Tagged)
@@ -74,12 +80,12 @@ TEST_F(TestControlPlaneComponents, Tagged)
     EXPECT_ANY_THROW(tagged1.next_tag());
 }
 
-TEST_F(TestControlPlaneComponents, TaggedService)
+TEST_F(TestControlPlaneComponents, TaggedIssuer)
 {
     std::atomic<std::size_t> counter = 0;
-    auto service = std::make_unique<TaggedService>([&counter](const TaggedService::tag_t& tag) { ++counter; });
+    auto service = std::make_unique<TaggedIssuer>([&counter](const TaggedIssuer::tag_t& tag) { ++counter; });
 
-    std::vector<TaggedService::tag_t> tags;
+    std::vector<TaggedIssuer::tag_t> tags;
     tags.push_back(service->register_instance_id(1));
     tags.push_back(service->register_instance_id(2));
     tags.push_back(service->register_instance_id(2));

@@ -15,12 +15,12 @@
 # limitations under the License.
 # =============================================================================
 
-function(find_and_configure_expected version)
+function(find_and_configure_tl_expected version)
   list(APPEND CMAKE_MESSAGE_CONTEXT "tl-expected")
 
   rapids_cpm_find(tl-expected ${version}
     GLOBAL_TARGETS
-    tl tl::expected
+    expected tl::expected
     BUILD_EXPORT_SET
     ${PROJECT_NAME}-core-exports
     INSTALL_EXPORT_SET
@@ -29,8 +29,8 @@ function(find_and_configure_expected version)
     GIT_REPOSITORY https://github.com/ryanolson/expected.git
     GIT_TAG "5f4b7d2987658cc2a555ce7f4f5b81196461d953"
     GIT_SHALLOW TRUE
-    OPTIONS "EXPECTED_BUILD_PACKAGE OFF"
+    OPTIONS "EXPECTED_BUILD_PACKAGE ON"
   )
 endfunction()
 
-find_and_configure_expected(${RXCPP_VERSION})
+find_and_configure_tl_expected(${EXPECTED_VERSION})

@@ -17,6 +17,8 @@
 
 #include "internal/control_plane/server.hpp"
 
+#include "internal/control_plane/proto_helpers.hpp"
+#include "internal/control_plane/server/subscription_manager.hpp"
 #include "internal/utils/contains.hpp"
 
 #include "srf/channel/status.hpp"
@@ -48,6 +50,41 @@
     }
 
 namespace srf::internal::control_plane {
+
+template <typename T>
+static Expected<T> unpack_request(Server::event_t& event)
+{
+    if (event.msg.has_message())
+    {
+        return unpack<T>(event.msg.message());
+    }
+    if (event.msg.has_error())
+    {
+        return Error::create(event.msg.error().message());
+    }
+    return Error::create("client request has neither a message, nor an error - invalid request");
+}
+
+template <typename MessageT>
+static Expected<> unary_response(Server::event_t& event, Expected<MessageT>&& message)
+{
+    if (!message)
+    {
+        protos::Error error;
+        error.set_code(protos::ErrorCode::InstanceError);
+        error.set_message(message.error().message());
+        return unary_response<protos::Error>(event, std::move(error));
+    }
+    srf::protos::Event out;
+    out.set_tag(event.msg.tag());
+    out.set_event(protos::EventType::Response);
+    out.mutable_message()->PackFrom(*message);
+    if (event.stream->await_write(std::move(out)) != channel::Status::success)
+    {
+        return Error::create("failed to write to channel");
+    }
+    return {};
+}
 
 Server::Server(runnable::Resources& runnable) : m_runnable(runnable), m_server(m_runnable) {}
 
@@ -132,22 +169,17 @@ void Server::do_service_kill()
 
     // shutdown server and cqs
     m_server.service_kill();
-
-    // clear all instances which drops their held stream writers
-    m_instances.clear();
-
-    // await all streams
-    for (auto& [id, stream] : m_streams)
-    {
-        stream->await_fini();
-    }
-
-    // we keep the event handlers open until the streams are closed
-    m_queue->disable_persistence();
 }
 
 void Server::do_service_await_join()
 {
+    // clear all instances which drops their held stream writers
+    DVLOG(10) << "awaiting all streams";
+    m_connections.drop_all_streams();
+
+    // we keep the event handlers open until the streams are closed
+    m_queue->disable_persistence();
+
     DVLOG(10) << "awaiting grpc server join";
     m_server.service_await_join();
     DVLOG(10) << "awaiting acceptor join";
@@ -198,19 +230,12 @@ void Server::do_accept_stream(rxcpp::subscriber<stream_t>& s)
             break;
         }
 
+        // contract validation
+        DCHECK_EQ(stream->get_id(), writer->get_id());
+
         // save new stream
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        CHECK_EQ(stream->get_id(), writer->get_id());
-        auto search = m_streams.find(stream->get_id());
-        CHECK(search == m_streams.end());
-        m_streams[stream->get_id()] = stream;
-    }
-
-    // await and finish all streams
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    for (auto& [ptr, stream] : m_streams)
-    {
-        stream->await_fini();
+        m_connections.add_stream(stream);
     }
 
     s.on_completed();
@@ -314,47 +339,9 @@ Expected<protos::RegisterWorkersResponse> Server::unary_register_workers(event_t
     auto req = unpack_request<protos::RegisterWorkersRequest>(event);
     SRF_EXPECT_TRUE(req);
 
-    DVLOG(10) << "registering srf instance with " << req->ucx_worker_addresses_size() << " partitions groups";
-
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-
-    // validate that the worker addresses are valid before updating state
-    for (const auto& worker_address : req->ucx_worker_addresses())
-    {
-        auto search = m_ucx_worker_addresses.find(worker_address);
-        if (search != m_ucx_worker_addresses.end())
-        {
-            Error::create("invalid ucx worker address(es) - duplicate registration(s) detected");
-        }
-    }
-
-    // set machine id for the current stream
-    protos::RegisterWorkersResponse resp;
-    resp.set_machine_id(event.stream->get_id());
-
-    for (const auto& worker_address : req->ucx_worker_addresses())
-    {
-        m_ucx_worker_addresses.insert(worker_address);
-
-        auto instance            = std::make_shared<server::ClientInstance>();
-        instance->worker_address = worker_address;
-        instance->stream_writer  = event.stream;
-
-        if (contains(m_instances, instance->get_id()))
-        {
-            throw Error::create("non-unique instance_id detected");
-        }
-        m_instances[instance->get_id()] = instance;
-        m_instances_by_stream.insert(std::pair{event.stream->get_id(), instance->get_id()});
-
-        DVLOG(10) << "adding instance id to response: " << instance->get_id()
-                  << " assigned to unique node: " << event.stream->get_id();
-
-        // return in order provided a unique instance_id per partition ucx address
-        resp.add_instance_ids(instance->get_id());
-    }
-
-    return resp;
+    DVLOG(10) << "registering srf instance with " << req->ucx_worker_addresses_size() << " partitions groups";
+    return m_connections.register_instances(event.stream, *req);
 }
 
 Expected<protos::Ack> Server::unary_create_subscription_service(event_t& event)
@@ -455,7 +442,7 @@ Expected<protos::Ack> Server::unary_drop_from_subscription_service(event_t& even
 {
     LOG(FATAL) << "not implemented";
 
-    // auto req = unpack_request<protos::SubscriptionServiceUpdate>(event);
+    // auto req = unpack_request<protos::TaggedManagerUpdate>(event);
     // SRF_EXPECT_TRUE(req);
 
     // std::lock_guard<decltype(m_mutex)> lock(m_mutex);
@@ -481,54 +468,34 @@ Expected<protos::Ack> Server::unary_drop_from_subscription_service(event_t& even
     return protos::Ack{};
 }
 
-void Server::drop_stream(writer_t writer)
+void Server::drop_stream(writer_t& writer)
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-    // the srf instance associated with this stream should be fully disconnected from all services
-    // auto count = connected_services(event.stream->get_id());
-    // if (count)
-    // {
-    //     // this is an unexpected disconnect
-    //     // we need to detatch the currenet stream from every service
-    //     // this may be a fatal condition
-    //     on_unexpected_disconnect(event.stream);
-    // }
+    const auto stream_id = writer->get_id();
+    DVLOG(10) << "dropping stream with machine_id: " << stream_id;
 
-    DVLOG(10) << "dropping stream with machine_id: " << writer->get_id();
-
-    // find all instances associated with the writer's stream
-    auto instances = m_instances_by_stream.equal_range(writer->get_id());
-
-    // drop all instances
-    for (auto i = instances.first; i != instances.second; ++i)
+    // for each instance - iterate over state machines and drop the instance id
+    for (const auto& instance_id : m_connections.get_instance_ids(stream_id))
     {
-        auto search = m_instances.find(i->second);
-        CHECK(search != m_instances.end());
-        m_instances.erase(search);
+        // add any future state machine, e.g. pipeline, segment, manifold, etc. here
+        for (auto& [service_name, service] : m_subscription_services)
+        {
+            service->drop_instance(instance_id);
+        }
     }
 
-    // remove the mapping from stream_id -> instance_ids
-    m_instances_by_stream.erase(writer->get_id());
-
-    // get stream / stream context
-    auto stream = m_streams.find(writer->get_id());
-    CHECK(stream != m_streams.end());
-
-    // drop the last writer which is holding the response stream open
-    // CHECK_EQ(writer.use_count(), 1);
+    // close stream - finish is a noop if the stream was previously cancelled
     writer->finish();
     writer.reset();
 
-    // await completion of the stream connection
-    stream->second->await_fini();
-    m_streams.erase(stream);
+    m_connections.drop_stream(stream_id);
 }
 
 Expected<Server::instance_t> Server::validate_instance_id(const instance_id_t& instance_id, const event_t& event) const
 {
-    return get_instance(instance_id).and_then([&event, &instance_id](auto& i) -> Expected<instance_t> {
-        if (event.stream->get_id() != i->stream_writer->get_id())
+    return m_connections.get_instance(instance_id).and_then([&event, &instance_id](auto& i) -> Expected<instance_t> {
+        if (event.stream->get_id() != i->stream_writer().get_id())
         {
             return Error::create(SRF_CONCAT_STR(
                 "instance_id (" << instance_id << ") not assocated with machine/stream: " << event.stream->get_id()));
@@ -539,12 +506,7 @@ Expected<Server::instance_t> Server::validate_instance_id(const instance_id_t& i
 
 Expected<Server::instance_t> Server::get_instance(const instance_id_t& instance_id) const
 {
-    auto search = m_instances.find(instance_id);
-    if (search == m_instances.end())
-    {
-        return Error::create("invalid instance_id");
-    }
-    return search->second;
+    return m_connections.get_instance(instance_id);
 }
 
 Expected<decltype(Server::m_subscription_services)::const_iterator> Server::get_subscription_service(

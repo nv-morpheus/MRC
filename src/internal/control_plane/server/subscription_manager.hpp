@@ -18,7 +18,8 @@
 #pragma once
 
 #include "internal/control_plane/server/client_instance.hpp"
-#include "internal/control_plane/server/tagged_service.hpp"
+#include "internal/control_plane/server/tagged_issuer.hpp"
+#include "internal/control_plane/server/versioned_issuer.hpp"
 
 #include "srf/protos/architect.pb.h"
 #include "srf/types.hpp"
@@ -30,7 +31,7 @@ namespace srf::internal::control_plane::server {
 class Role;
 
 /**
- * @brief A specialize TaggedService to synchronize tag and instance_id information across between a collection of
+ * @brief A specialize TaggedManager to synchronize tag and instance_id information across between a collection of
  * client-side objects with common linkages, e.g. the Publisher/Subscriber services which form the building blocks for
  * Ingress/EgressPorts use instances of SubscriptionService for Publishers to get control plane updates to the list of
  * Subscribers.
@@ -39,25 +40,27 @@ class Role;
  * {"publisher", "subscriber"}, where the publisher gets updates on the subscriber role, but the subscribers only
  * register as members and do not receive publisher updates.
  */
-class SubscriptionService final : public TaggedService
+class SubscriptionService final : public TaggedIssuer
 {
   public:
     SubscriptionService(std::string name, std::set<std::string> roles);
     ~SubscriptionService() final = default;
 
-    tag_t register_instance(std::shared_ptr<server::ClientInstance> instance,
-                            const std::string& role,
-                            const std::set<std::string>& subscribe_to_roles);
+    const std::string& service_name() const final;
 
     bool has_role(const std::string& role) const;
     bool compare_roles(const std::set<std::string>& roles) const;
+
+    tag_t register_instance(std::shared_ptr<server::ClientInstance> instance,
+                            const std::string& role,
+                            const std::set<std::string>& subscribe_to_roles);
 
   private:
     void add_role(const std::string& name);
     Role& get_role(const std::string& name);
 
-    void do_drop_tag(const tag_t& tag) final;
     void do_issue_update() final;
+    void do_drop_tag(const tag_t& tag) final;
 
     std::string m_name;
 
@@ -75,7 +78,7 @@ class SubscriptionService final : public TaggedService
  * An issue_update will send a protos::SubscriptionServiceUpdate to all subscribers containing the (tag, instance_id)
  * tuple for each item in the members list.
  */
-class Role
+class Role final : public VersionedIssuer
 {
   public:
     Role(std::string service_name, std::string role_name) :
@@ -91,21 +94,22 @@ class Role
     // members and subscribers list
     void drop_tag(std::uint64_t tag);
 
-    // if dirty, issue update
-    void issue_update();
+    const std::string& service_name() const final;
+    const std::string& role_name() const;
 
   private:
-    protos::SubscriptionServiceUpdate make_update() const;
+    void do_make_update(protos::ServiceUpdate& update) const final;
+    void do_issue_update(const protos::ServiceUpdate& update) final;
+
+    protos::ServiceUpdate make_update() const;
 
     static void await_update(const std::shared_ptr<server::ClientInstance>& instance,
-                             const protos::SubscriptionServiceUpdate& update);
+                             const protos::ServiceUpdate& update);
 
     std::string m_service_name;
     std::string m_role_name;
     std::map<std::uint64_t, std::shared_ptr<server::ClientInstance>> m_members;
     std::map<std::uint64_t, std::shared_ptr<server::ClientInstance>> m_subscribers;
-    std::size_t m_nonce{1};
-    std::size_t m_last_update{1};
 };
 
 }  // namespace srf::internal::control_plane::server

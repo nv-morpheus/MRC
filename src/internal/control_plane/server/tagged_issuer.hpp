@@ -18,7 +18,7 @@
 #pragma once
 
 #include "internal/control_plane/server/client_instance.hpp"
-#include "internal/control_plane/server/update_service.hpp"
+#include "internal/control_plane/server/update_issuer.hpp"
 
 #include "srf/utils/macros.hpp"
 #include "srf/utils/string_utils.hpp"
@@ -69,18 +69,19 @@ class Tagged
  * This is the primary base class for a control plane server-side stateful service which can be updated by the client
  * and state updates driven independently via the issue_update() method.
  *
- * TaggedService is not thread-safe or protected in anyway. The global state mutex should protect all TaggedServices.
+ * TaggedManager is not thread-safe or protected in anyway. The global state mutex should protect all TaggedManagers.
  *
- * In most scenarios, the service side will have a batched updated which will periodically visit each TaggedService and
+ * In most scenarios, the service side will have a batched updated which will periodically visit each TaggedManager and
  * call issue_update(); however, depending on the service request/update message, the call may also require an immediate
  * update.
  */
-class TaggedService : public Tagged, public UpdateService
+class TaggedIssuer : public Tagged, public UpdateIssuer
 {
+    virtual void do_issue_update()             = 0;
     virtual void do_drop_tag(const tag_t& tag) = 0;
 
   public:
-    ~TaggedService() override;
+    ~TaggedIssuer() override;
 
     void drop_instance(std::shared_ptr<ClientInstance> instance);
     void drop_instance(ClientInstance::instance_id_t instance_id);
@@ -89,6 +90,8 @@ class TaggedService : public Tagged, public UpdateService
 
     std::size_t tag_count() const;
     std::size_t tag_count_for_instance_id(ClientInstance::instance_id_t instance_id) const;
+
+    void issue_update() final;
 
   protected:
     tag_t register_instance_id(ClientInstance::instance_id_t instance_id);

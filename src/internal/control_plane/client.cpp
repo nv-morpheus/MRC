@@ -236,15 +236,29 @@ void Client::forward_state(State state)
 
 void Client::route_subscription_service_update(event_t event)
 {
-    protos::SubscriptionServiceUpdate update;
+    protos::ServiceUpdate update;
     CHECK(event.msg.has_message() && event.msg.message().UnpackTo(&update));
 
     auto search = m_subscription_services.find(update.service_name());
     CHECK(search != m_subscription_services.end());
 
-    auto state = search->second->await_write(event.msg.tag(), std::move(update));
-    LOG_IF(WARNING, state != srf::channel::Status::success)
-        << "unable to route update for service: " << update.service_name();
+    if (event.msg.tag() == 0)
+    {
+        DVLOG(10) << "broadcasting " << update.service_name() << " update to all instances";
+        for (const auto& instance_id : m_instance_ids)
+        {
+            auto copy  = update;
+            auto state = search->second->await_write(event.msg.tag(), std::move(copy));
+            LOG_IF(WARNING, state != srf::channel::Status::success)
+                << "unable to route update for service: " << update.service_name();
+        }
+    }
+    else
+    {
+        auto state = search->second->await_write(event.msg.tag(), std::move(update));
+        LOG_IF(WARNING, state != srf::channel::Status::success)
+            << "unable to route update for service: " << update.service_name();
+    }
 }
 
 bool Client::has_subscription_service(const std::string& name) const

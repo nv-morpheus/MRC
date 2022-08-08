@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "internal/control_plane/server/tagged_service.hpp"
+#include "internal/control_plane/server/tagged_issuer.hpp"
 
 #include <glog/logging.h>
 
@@ -57,19 +57,19 @@ Tagged::tag_t Tagged::next()
     throw std::overflow_error("limit of Taggable objects reached; fatal error");
 }
 
-TaggedService::~TaggedService()
+TaggedIssuer::~TaggedIssuer()
 {
     if (!m_instance_tags.empty())
     {
-        LOG(FATAL) << "TaggedService destructor called before all tagged instances were released";
+        LOG(FATAL) << "TaggedIssuer destructor called before all tagged instances were released";
     }
 }
 
-void TaggedService::drop_all()
+void TaggedIssuer::drop_all()
 {
     if (!m_instance_tags.empty())
     {
-        DVLOG(10) << "TaggedService: dropping remaining tags";
+        DVLOG(10) << "TaggedIssuer: dropping remaining tags";
         for (auto i = m_instance_tags.begin(); i != m_instance_tags.end();)
         {
             i = drop_tag(i);
@@ -77,11 +77,11 @@ void TaggedService::drop_all()
     }
 }
 
-void TaggedService::drop_instance(std::shared_ptr<ClientInstance> instance)
+void TaggedIssuer::drop_instance(std::shared_ptr<ClientInstance> instance)
 {
     drop_instance(instance->get_id());
 }
-void TaggedService::drop_instance(ClientInstance::instance_id_t instance_id)
+void TaggedIssuer::drop_instance(ClientInstance::instance_id_t instance_id)
 {
     DVLOG(10) << "dropping all tags for instance_id: " << instance_id;
     auto tags = m_instance_tags.equal_range(instance_id);
@@ -90,7 +90,7 @@ void TaggedService::drop_instance(ClientInstance::instance_id_t instance_id)
         i = drop_tag(i);
     }
 }
-void TaggedService::drop_tag(tag_t tag)
+void TaggedIssuer::drop_tag(tag_t tag)
 {
     for (auto i = m_instance_tags.begin(); i != m_instance_tags.end(); i++)
     {
@@ -102,19 +102,19 @@ void TaggedService::drop_tag(tag_t tag)
     }
     throw std::invalid_argument(SRF_CONCAT_STR("tag " << tag << " not registered"));
 }
-Tagged::tag_t TaggedService::register_instance_id(ClientInstance::instance_id_t instance_id)
+Tagged::tag_t TaggedIssuer::register_instance_id(ClientInstance::instance_id_t instance_id)
 {
     auto tag = next_tag();
     m_instance_tags.emplace(instance_id, tag);
     return tag;
 }
-decltype(TaggedService::m_instance_tags)::iterator TaggedService::drop_tag(decltype(m_instance_tags)::iterator it)
+decltype(TaggedIssuer::m_instance_tags)::iterator TaggedIssuer::drop_tag(decltype(m_instance_tags)::iterator it)
 {
     DVLOG(10) << "dropping tag: " << it->second;
     do_drop_tag(it->second);
     return m_instance_tags.erase(it);
 }
-std::size_t TaggedService::tag_count_for_instance_id(ClientInstance::instance_id_t instance_id) const
+std::size_t TaggedIssuer::tag_count_for_instance_id(ClientInstance::instance_id_t instance_id) const
 {
     auto tags         = m_instance_tags.equal_range(instance_id);
     std::size_t count = 0;
@@ -124,9 +124,13 @@ std::size_t TaggedService::tag_count_for_instance_id(ClientInstance::instance_id
     }
     return count;
 }
-std::size_t TaggedService::tag_count() const
+std::size_t TaggedIssuer::tag_count() const
 {
     return m_instance_tags.size();
 }
 
+void TaggedIssuer::issue_update()
+{
+    do_issue_update();
+}
 }  // namespace srf::internal::control_plane::server

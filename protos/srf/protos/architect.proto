@@ -33,7 +33,6 @@ enum EventType
     ControlStop = 2;
     ClientUpdateStart = 102;
     ClientUpdateComplete = 103;
-    ClientLookupWorkerAddresses = 104;
     ClientSegmentsOnComplete = 105;
 
     // Unary Request with Ack Response
@@ -43,10 +42,11 @@ enum EventType
     // Unary Request with Event-Specific Response Message
     ClientUnaryRegisterWorkers = 300;
     ClientUnaryRegisterPipeline = 301;
+    ClientUnaryLookupWorkerAddresses = 302;
 
     // Server Event issues to Client(s)
     ServerEvent = 1000;
-    ServerUpdateAssignments = 1001;
+    ServerUpdateConnections = 1001;
     ServerUpdateSubscriptionService = 1002;
 }
 
@@ -112,7 +112,8 @@ message LookupWorkersRequest
 
 message LookupWorkersResponse
 {
-    repeated WorkerAddress worker_addresses = 1;
+    repeated uint32 instance_ids = 1;
+    repeated WorkerAddress worker_addresses = 2;
 }
 
 // Subscription
@@ -150,12 +151,26 @@ message TaggedInstance
     uint64 tag = 2;
 }
 
-message SubscriptionServiceUpdate
+// message sent by an UpdateManager
+message ServiceUpdate
 {
     string service_name = 1;
-    string role = 2;
-    uint64 nonce = 3;
-    repeated TaggedInstance tagged_instances = 4;
+    uint64 nonce = 2;
+    oneof update_service {
+        RegisteredWorkersUpdate registered_workers = 3;
+        SubscriptionServiceUpdate subscription_service = 4;
+    }
+}
+
+message RegisteredWorkersUpdate
+{
+    repeated TaggedInstance tagged_instances = 1;
+}
+
+message SubscriptionServiceUpdate
+{
+    string role = 1;
+    repeated TaggedInstance tagged_instances = 2;
 }
 
 // Basic Control message

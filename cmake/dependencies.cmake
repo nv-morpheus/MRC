@@ -71,7 +71,7 @@ set(HWLOC_VERSION "2.5" CACHE STRING "Version of hwloc to use")
 include(deps/Configure_hwloc)
 
 # expected
-set(EXPECTED_VERSION "main" CACHE STRING "Version of expected to use")
+set(EXPECTED_VERSION "1.0.0" CACHE STRING "Version of expected to use")
 include(deps/Configure_expected)
 
 # FlatBuffers

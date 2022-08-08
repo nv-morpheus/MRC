@@ -15,9 +15,11 @@
  * limitations under the License.
  */
 
-#include "internal/control_plane/server/subscription_service.hpp"
+#include "internal/control_plane/server/subscription_manager.hpp"
 
 #include "internal/utils/contains.hpp"
+
+#include "srf/protos/architect.pb.h"
 
 #include <glog/logging.h>
 
@@ -27,67 +29,64 @@ void Role::add_member(std::uint64_t tag, std::shared_ptr<server::ClientInstance>
 {
     DCHECK(!contains(m_members, tag));
     m_members[tag] = instance;
-    m_nonce++;
+    mark_as_modified();
 }
 
 void Role::add_subscriber(std::uint64_t tag, std::shared_ptr<server::ClientInstance> instance)
 {
     DCHECK(!contains(m_subscribers, tag));
     m_subscribers[tag] = instance;
+
+    // issue one off update to new subscriber; no need to mark_as_modified since the list of entries
+    // watched by the subscribers has not changed
 }
 
 void Role::drop_tag(std::uint64_t tag)
 {
-    int count = 0;
-    count += m_members.erase(tag);
-    count += m_subscribers.erase(tag);
-    if (count != 0)
+    if (m_members.erase(tag) != 0)
     {
-        m_nonce++;
+        mark_as_modified();
     }
+    m_subscribers.erase(tag);
 }
 
-void Role::issue_update()
+void Role::do_issue_update(const protos::ServiceUpdate& update)
 {
-    if (m_last_update == m_nonce)
-    {
-        return;
-    }
-
     DVLOG(10) << "issue_update for " << m_service_name << "/" << m_role_name;
-
-    m_last_update = m_nonce;
-    auto update   = make_update();
-
     for (const auto& [tag, instance] : m_subscribers)
     {
         await_update(instance, update);
     }
 }
 
-protos::SubscriptionServiceUpdate Role::make_update() const
+void Role::do_make_update(protos::ServiceUpdate& update) const
 {
-    protos::SubscriptionServiceUpdate update;
-    update.set_service_name(m_service_name);
-    update.set_role(m_role_name);
-    update.set_nonce(m_nonce);
+    auto* service = update.mutable_subscription_service();
+    service->set_role(m_role_name);
     for (const auto& [tag, instance] : m_members)
     {
-        auto* tagged_instance = update.add_tagged_instances();
+        auto* tagged_instance = service->add_tagged_instances();
         tagged_instance->set_tag(tag);
         tagged_instance->set_instance_id(instance->get_id());
     }
-    return update;
 }
 
-void Role::await_update(const std::shared_ptr<server::ClientInstance>& instance,
-                        const protos::SubscriptionServiceUpdate& update)
+void Role::await_update(const std::shared_ptr<server::ClientInstance>& instance, const protos::ServiceUpdate& update)
 {
     protos::Event event;
     event.set_event(protos::EventType::ServerUpdateSubscriptionService);
     event.set_tag(instance->get_id());
     event.mutable_message()->PackFrom(update);
-    instance->stream_writer->await_write(std::move(event));
+    instance->stream_writer().await_write(std::move(event));
+}
+
+const std::string& Role::service_name() const
+{
+    return m_service_name;
+}
+const std::string& Role::role_name() const
+{
+    return m_role_name;
 }
 
 // SubscriptionService
@@ -175,4 +174,8 @@ void SubscriptionService::do_issue_update()
     }
 }
 
+const std::string& SubscriptionService::service_name() const
+{
+    return m_name;
+}
 }  // namespace srf::internal::control_plane::server

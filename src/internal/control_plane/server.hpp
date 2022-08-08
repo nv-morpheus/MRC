@@ -18,7 +18,8 @@
 #pragma once
 
 #include "internal/control_plane/server/client_instance.hpp"
-#include "internal/control_plane/server/subscription_service.hpp"
+#include "internal/control_plane/server/connection_manager.hpp"
+#include "internal/control_plane/server/subscription_manager.hpp"
 #include "internal/expected.hpp"
 #include "internal/grpc/server.hpp"
 #include "internal/grpc/server_streaming.hpp"
@@ -79,6 +80,8 @@ class Server : public Service
     void do_handle_event(event_t&& event);
     void do_issue_update(rxcpp::subscriber<void*>& s);
 
+    protos::RegisteredWorkersUpdate make_registered_workers_update();
+
     // srf resources
     runnable::Resources& m_runnable;
 
@@ -87,12 +90,14 @@ class Server : public Service
     std::shared_ptr<srf::protos::Architect::AsyncService> m_service;
 
     // connection info
-    std::map<stream_id_t, stream_t> m_streams;
-    std::map<instance_id_t, instance_t> m_instances;
-    std::multimap<stream_id_t, instance_id_t> m_instances_by_stream;
-    std::set<std::string> m_ucx_worker_addresses;
+    // std::map<stream_id_t, stream_t> m_streams;
+    // std::map<instance_id_t, instance_t> m_instances;
+    // std::multimap<stream_id_t, instance_id_t> m_instances_by_stream;
+    // std::set<std::string> m_ucx_worker_addresses;
+    // std::atomic<bool> m_registered_workers_updated{false};
 
     // subscription services
+    server::ConnectionManager m_connections;
     std::map<std::string, std::unique_ptr<server::SubscriptionService>> m_subscription_services;
 
     // operators / queues
@@ -113,65 +118,13 @@ class Server : public Service
     Expected<protos::Ack> unary_create_subscription_service(event_t& event);
     Expected<protos::RegisterSubscriptionServiceResponse> unary_register_subscription_service(event_t& event);
     Expected<protos::Ack> unary_drop_from_subscription_service(event_t& event);
-    void drop_stream(writer_t writer);
+    void drop_stream(writer_t& writer);
     void on_fatal_exception();
-
-    // methods used to create and issue responses
-    template <typename MessageT>
-    static Expected<> unary_response(event_t& event, Expected<MessageT>&& message);
 
     // convenience methods - these method do not lock internal state
     Expected<instance_t> get_instance(const instance_id_t& instance_id) const;
     Expected<instance_t> validate_instance_id(const instance_id_t& instance_id, const event_t& event) const;
     Expected<decltype(m_subscription_services)::const_iterator> get_subscription_service(const std::string& name) const;
-
-    // protobuf convenience methods
-    template <typename T>
-    static Expected<std::set<T>> check_unique_repeated_field(const google::protobuf::RepeatedPtrField<T>& items)
-    {
-        std::set<T> unique(items.begin(), items.end());
-        if (unique.size() != items.size())
-        {
-            return Error::create("non-unique repeated field; duplicated detected");
-        }
-        return unique;
-    }
-
-    template <typename T>
-    static Expected<T> unpack_request(event_t& event)
-    {
-        T msg;
-        if (event.msg.has_message() && event.msg.message().UnpackTo(&msg))
-        {
-            return msg;
-        }
-        if (event.msg.has_error())
-        {
-            return Error::create(event.msg.error().message());
-        }
-        return Error::create("unable to unpack request; client an unexpected message type");
-    }
 };
-
-template <typename MessageT>
-Expected<> Server::unary_response(event_t& event, Expected<MessageT>&& message)
-{
-    if (!message)
-    {
-        protos::Error error;
-        error.set_code(protos::ErrorCode::InstanceError);
-        error.set_message(message.error().message());
-        return unary_response<protos::Error>(event, std::move(error));
-    }
-    srf::protos::Event out;
-    out.set_tag(event.msg.tag());
-    out.set_event(protos::EventType::Response);
-    out.mutable_message()->PackFrom(*message);
-    if (event.stream->await_write(std::move(out)) != channel::Status::success)
-    {
-        return Error::create("failed to write to channel");
-    }
-    return {};
-}
 
 }  // namespace srf::internal::control_plane

@@ -125,11 +125,13 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
 
         void finish()
         {
+            // todo(ryan) - emplace OK to parent status - possible race condition - might need a mutex
             m_parent->m_write_channel.reset();
         }
 
         void cancel() final
         {
+            // todo(ryan) - emplace only if empty
             m_parent->m_status.emplace(grpc::Status::CANCELLED);
             m_parent->m_context.TryCancel();
         }
@@ -182,11 +184,16 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
         return reinterpret_cast<std::size_t>(this);
     }
 
+    std::shared_ptr<stream_writer_t> writer() const
+    {
+        return m_weak_stream_writer.lock();
+    }
+
     std::shared_ptr<stream_writer_t> await_init()
     {
         // make this only callable once
         service_start();
-        return m_stream_writer;
+        return writer();
     }
 
     grpc::Status await_fini()
@@ -219,13 +226,16 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
     {
         while (s.is_subscribed())
         {
+            // todo(ryan) - the following condition might not be guaranteed if the stream writer issues a cancel
             CHECK(m_stream);
             Promise<bool> read;
             IncomingData data;
             m_stream->Read(&data.msg, &read);
-            auto ok     = read.get_future().get();
-            data.ok     = ok;
+            auto ok = read.get_future().get();
+            data.ok = ok;
+            // todo(ryan) - use the weak ptr lock to get the writer
             data.stream = m_stream_writer;
+            // todo(ryan) - move this to after the conditional if(!ok || !writer)
             s.on_next(std::move(data));
             if (!ok)
             {
@@ -296,6 +306,7 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
                 m_stream_writer.reset();
                 m_write_channel.reset();
             });
+        m_weak_stream_writer = m_stream_writer;
 
         // launch reader and writer
         m_writer = m_runnable.launch_control().prepare_launcher(std::move(writer))->ignition();
@@ -371,6 +382,7 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
     // the destruction of this object also ensures that m_write_channel is reset
     // this object is nullified after the last IncomingData object is passed to the handler
     std::shared_ptr<stream_writer_t> m_stream_writer;
+    std::weak_ptr<stream_writer_t> m_weak_stream_writer;
 
     // runners to manage the life cycles of the reader / writer runnables
     std::unique_ptr<srf::runnable::Runner> m_writer;

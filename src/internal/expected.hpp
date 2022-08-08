@@ -27,6 +27,7 @@ namespace srf::internal {
 enum class ErrorCode
 {
     Internal,
+    Fatal,
 };
 
 class Error;
