@@ -184,7 +184,7 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
         return reinterpret_cast<std::size_t>(this);
     }
 
-    std::shared_ptr<stream_writer_t> writer() const
+    inline std::shared_ptr<stream_writer_t> writer() const
     {
         return m_weak_stream_writer.lock();
     }
@@ -226,16 +226,13 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
     {
         while (s.is_subscribed())
         {
-            // todo(ryan) - the following condition might not be guaranteed if the stream writer issues a cancel
             CHECK(m_stream);
             Promise<bool> read;
             IncomingData data;
             m_stream->Read(&data.msg, &read);
-            auto ok = read.get_future().get();
-            data.ok = ok;
-            // todo(ryan) - use the weak ptr lock to get the writer
-            data.stream = m_stream_writer;
-            // todo(ryan) - move this to after the conditional if(!ok || !writer)
+            auto ok     = read.get_future().get();
+            data.ok     = ok;
+            data.stream = writer();
             s.on_next(std::move(data));
             if (!ok)
             {
@@ -303,7 +300,6 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
         m_stream_writer = std::shared_ptr<ServerStreamWriter>(
             new ServerStreamWriter(m_write_channel, this->shared_from_this()), [this](ServerStreamWriter* ptr) {
                 delete ptr;
-                m_stream_writer.reset();
                 m_write_channel.reset();
             });
         m_weak_stream_writer = m_stream_writer;
