@@ -46,7 +46,7 @@ class PythonObjectCache
     PythonObjectCache(PythonObjectCache&)  = delete;
     PythonObjectCache(PythonObjectCache&&) = delete;
 
-    PythonObjectCache& operator=(PythonObjectCache&)  = delete;
+    PythonObjectCache& operator=(PythonObjectCache&) = delete;
     PythonObjectCache& operator=(PythonObjectCache&&) = delete;
 
     /**

@@ -51,6 +51,7 @@
 #include <type_traits>
 #include <typeindex>
 #include <utility>
+#include <vector>
 
 // IWYU thinks we need array for py::print
 // IWYU pragma: no_include <array>
