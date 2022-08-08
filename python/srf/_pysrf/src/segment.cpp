@@ -32,6 +32,7 @@
 #include "srf/segment/builder.hpp"
 #include "srf/segment/object.hpp"
 
+#include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 #include <pybind11/cast.h>
 #include <pybind11/detail/internals.h>
@@ -39,7 +40,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <rxcpp/operators/rx-map.hpp>
-#include <rxcpp/rx-observable.hpp>
 #include <rxcpp/rx.hpp>
 
 #include <exception>

@@ -31,7 +31,6 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>  // IWYU pragma: keep
 
 namespace srf::pysrf {
 

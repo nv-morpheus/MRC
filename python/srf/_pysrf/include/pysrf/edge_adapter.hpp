@@ -65,7 +65,8 @@ struct EdgeAdapterUtil
         std::type_index, srf::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle> ingress_handle)>;
 
     template <typename DataTypeT>
-    static void register_data_adapters() {
+    static void register_data_adapters()
+    {
         if (!srf::node::EdgeAdapterRegistry::has_source_adapter(typeid(DataTypeT)))
         {
             std::type_index source_type = typeid(DataTypeT);

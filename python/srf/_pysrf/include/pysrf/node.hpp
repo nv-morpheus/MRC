@@ -32,6 +32,7 @@
 #include "srf/node/rx_source.hpp"
 #include "srf/node/sink_properties.hpp"    // IWYU pragma: keep
 #include "srf/node/source_properties.hpp"  // IWYU pragma: keep
+#include "srf/runnable/context.hpp"
 
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>
