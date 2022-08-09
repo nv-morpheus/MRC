@@ -177,13 +177,14 @@ std::map<InstanceID, std::unique_ptr<client::Instance>> Client::register_ucx_add
     for (int i = 0; i < resp->instance_ids_size(); i++)
     {
         auto id = resp->instance_ids().at(i);
+        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         m_instance_ids.push_back(id);
         m_update_channels[id] = std::make_unique<update_channel_t>();
         instances[id] = std::make_unique<client::Instance>(*this, id, *ucx_resources.at(i), *m_update_channels.at(id));
     }
 
     // issue activate event - connection events from the server will
-    issue_event(protos::ClientEventActivateStream, std::move(*resp));
+    await_unary<protos::Ack>(protos::ClientUnaryActivateStream, std::move(*resp));
 
     DVLOG(10) << "control plane - machine_id: " << m_machine_id;
     forward_state(State::Operational);
@@ -196,7 +197,8 @@ void Client::drop_instance(const InstanceID& instance_id)
     msg.set_instance_id(instance_id);
     msg.set_tag(m_machine_id);
     await_unary<protos::Ack>(protos::ClientUnaryDropWorker, std::move(msg));
-    // DCHECK(contains(m_update_channels, instance_id));
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    DCHECK(contains(m_update_channels, instance_id));
     m_update_channels.erase(instance_id);
 }
 
@@ -250,6 +252,7 @@ MachineID Client::machine_id() const
 
 const std::vector<InstanceID>& Client::instance_ids() const
 {
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
     return m_instance_ids;
 }
 
@@ -265,6 +268,9 @@ void Client::route_state_update(event_t event)
     protos::StateUpdate update;
     DCHECK(event.msg.event() == protos::ServerStateUpdate);
     CHECK(event.msg.has_message() && event.msg.message().UnpackTo(&update));
+
+    // protect m_update_channels
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
     if (event.msg.tag() == 0)
     {

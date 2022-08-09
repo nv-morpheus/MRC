@@ -71,7 +71,7 @@ class ConnectionManager : public VersionedState
 
     Expected<protos::RegisterWorkersResponse> register_instances(const writer_t& writer,
                                                                  const protos::RegisterWorkersRequest& req);
-    Expected<> activate_stream(const protos::RegisterWorkersResponse& message);
+    Expected<protos::Ack> activate_stream(const writer_t& writer, const protos::RegisterWorkersResponse& message);
     Expected<protos::Ack> drop_instance(const writer_t& writer, const protos::TaggedInstance& req);
 
     // Expected<protos::FetchWorkerAddressesResponse> fetch_worker_addresses(

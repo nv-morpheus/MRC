@@ -33,15 +33,15 @@ enum EventType
     ControlStop = 2;
 
     // Client Events - No Response
-    ClientEventActivateStream = 100;
 
     ClientUnaryCreateSubscriptionService = 201;
     ClientUnaryRegisterSubscriptionService = 202;
 
     // Connection Management
     ClientUnaryRegisterWorkers = 300;
-    ClientUnaryLookupWorkerAddresses = 301;
-    ClientUnaryDropWorker = 302;
+    ClientUnaryActivateStream = 301;
+    ClientUnaryLookupWorkerAddresses = 302;
+    ClientUnaryDropWorker = 303;
 
     // Server Event issues to Client(s)
     ServerEvent = 1000;

@@ -107,7 +107,7 @@ class Server : public Service
     // top-level event handlers - these methods lock internal state
     Expected<> unary_register_workers(event_t& event);
     Expected<> unary_drop_worker(event_t& event);
-    Expected<> event_activate_stream(event_t& event);
+    Expected<> unary_activate_stream(event_t& event);
 
     Expected<protos::Ack> unary_create_subscription_service(event_t& event);
     Expected<protos::RegisterSubscriptionServiceResponse> unary_register_subscription_service(event_t& event);

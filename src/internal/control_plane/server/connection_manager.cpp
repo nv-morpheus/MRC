@@ -185,9 +185,10 @@ Expected<protos::Ack> ConnectionManager::drop_instance(const writer_t& writer, c
     return protos::Ack{};
 }
 
-Expected<> ConnectionManager::activate_stream(const protos::RegisterWorkersResponse& message)
+Expected<protos::Ack> ConnectionManager::activate_stream(const writer_t& writer,
+                                                         const protos::RegisterWorkersResponse& message)
 {
-    auto stream_id = message.machine_id();
+    auto stream_id = writer->get_id();
     for (const auto& instance_id : message.instance_ids())
     {
         m_instances_by_stream.insert(std::pair{stream_id, instance_id});

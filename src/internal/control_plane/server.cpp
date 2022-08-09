@@ -256,8 +256,8 @@ void Server::do_handle_event(event_t&& event)
                 status = unary_register_workers(event);
                 break;
 
-            case protos::EventType::ClientEventActivateStream:
-                status = event_activate_stream(event);
+            case protos::EventType::ClientUnaryActivateStream:
+                status = unary_activate_stream(event);
                 break;
 
             case protos::EventType::ClientUnaryDropWorker:
@@ -321,6 +321,7 @@ void Server::do_issue_update(rxcpp::subscriber<void*>& s)
         DVLOG(10) << "starting - control plane update";
 
         // issue worker updates
+        m_connections.issue_update();
 
         // issue subscription service updates
         for (auto& [name, service] : m_subscription_services)
@@ -371,14 +372,14 @@ Expected<> Server::unary_drop_worker(event_t& event)
     return unary_response(event, m_connections.drop_instance(event.stream, *req));
 }
 
-Expected<> Server::event_activate_stream(event_t& event)
+Expected<> Server::unary_activate_stream(event_t& event)
 {
     auto message = unpack_request<protos::RegisterWorkersResponse>(event);
     SRF_EXPECT_TRUE(message);
     DVLOG(10) << "activating stream " << message->machine_id() << " with " << message->instance_ids_size()
               << " instances/partitions";
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    return m_connections.activate_stream(*message);
+    return unary_response(event, m_connections.activate_stream(event.stream, *message));
 }
 
 Expected<protos::Ack> Server::unary_create_subscription_service(event_t& event)
