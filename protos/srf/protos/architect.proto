@@ -31,23 +31,21 @@ enum EventType
     Unused = 0;
     Response = 1;
     ControlStop = 2;
-    ClientUpdateStart = 102;
-    ClientUpdateComplete = 103;
-    ClientSegmentsOnComplete = 105;
 
-    // Unary Request with Ack Response
-    ClientUnaryCreateSubscriptionService = 200;
-    ClientUnaryRegisterSubscriptionService = 201;
+    // Client Events - No Response
+    ClientEventActivateStream = 100;
 
-    // Unary Request with Event-Specific Response Message
+    ClientUnaryCreateSubscriptionService = 201;
+    ClientUnaryRegisterSubscriptionService = 202;
+
+    // Connection Management
     ClientUnaryRegisterWorkers = 300;
-    ClientUnaryRegisterPipeline = 301;
-    ClientUnaryLookupWorkerAddresses = 302;
+    ClientUnaryLookupWorkerAddresses = 301;
+    ClientUnaryDropWorker = 302;
 
     // Server Event issues to Client(s)
     ServerEvent = 1000;
-    ServerUpdateConnections = 1001;
-    ServerUpdateSubscriptionService = 1002;
+    ServerStateUpdate = 1001;
 }
 
 enum ErrorCode
@@ -152,22 +150,22 @@ message TaggedInstance
 }
 
 // message sent by an UpdateManager
-message ServiceUpdate
+message StateUpdate
 {
     string service_name = 1;
     uint64 nonce = 2;
-    oneof update_service {
-        RegisteredWorkersUpdate registered_workers = 3;
-        SubscriptionServiceUpdate subscription_service = 4;
+    oneof update_state {
+        ConnectionsState connections = 3;
+        SubscriptionServiceState subscription_service = 4;
     }
 }
 
-message RegisteredWorkersUpdate
+message ConnectionsState
 {
     repeated TaggedInstance tagged_instances = 1;
 }
 
-message SubscriptionServiceUpdate
+message SubscriptionServiceState
 {
     string role = 1;
     repeated TaggedInstance tagged_instances = 2;

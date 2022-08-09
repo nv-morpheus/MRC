@@ -43,7 +43,7 @@ namespace srf::internal::ucx {
 /**
  * @brief UCX Resources - if networking is enabled, there should be 1 UCX Resource per "flattened" partition
  */
-class Resources final : private resources::PartitionResourceBase
+class Resources final : public resources::PartitionResourceBase
 {
   public:
     Resources(resources::PartitionResourceBase& base, system::FiberTaskQueue& network_task_queue);

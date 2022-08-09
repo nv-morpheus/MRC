@@ -80,8 +80,6 @@ class Server : public Service
     void do_handle_event(event_t&& event);
     void do_issue_update(rxcpp::subscriber<void*>& s);
 
-    protos::RegisteredWorkersUpdate make_registered_workers_update();
-
     // srf resources
     runnable::Resources& m_runnable;
 
@@ -89,14 +87,7 @@ class Server : public Service
     rpc::Server m_server;
     std::shared_ptr<srf::protos::Architect::AsyncService> m_service;
 
-    // connection info
-    // std::map<stream_id_t, stream_t> m_streams;
-    // std::map<instance_id_t, instance_t> m_instances;
-    // std::multimap<stream_id_t, instance_id_t> m_instances_by_stream;
-    // std::set<std::string> m_ucx_worker_addresses;
-    // std::atomic<bool> m_registered_workers_updated{false};
-
-    // subscription services
+    // client state
     server::ConnectionManager m_connections;
     std::map<std::string, std::unique_ptr<server::SubscriptionService>> m_subscription_services;
 
@@ -114,10 +105,14 @@ class Server : public Service
     std::chrono::milliseconds m_update_period{30000};
 
     // top-level event handlers - these methods lock internal state
-    Expected<protos::RegisterWorkersResponse> unary_register_workers(event_t& event);
+    Expected<> unary_register_workers(event_t& event);
+    Expected<> unary_drop_worker(event_t& event);
+    Expected<> event_activate_stream(event_t& event);
+
     Expected<protos::Ack> unary_create_subscription_service(event_t& event);
     Expected<protos::RegisterSubscriptionServiceResponse> unary_register_subscription_service(event_t& event);
     Expected<protos::Ack> unary_drop_from_subscription_service(event_t& event);
+    void drop_instance(const instance_id_t& instance_id);
     void drop_stream(writer_t& writer);
     void on_fatal_exception();
 

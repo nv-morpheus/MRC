@@ -50,7 +50,7 @@ void Role::drop_tag(std::uint64_t tag)
     m_subscribers.erase(tag);
 }
 
-void Role::do_issue_update(const protos::ServiceUpdate& update)
+void Role::do_issue_update(const protos::StateUpdate& update)
 {
     DVLOG(10) << "issue_update for " << m_service_name << "/" << m_role_name;
     for (const auto& [tag, instance] : m_subscribers)
@@ -59,7 +59,7 @@ void Role::do_issue_update(const protos::ServiceUpdate& update)
     }
 }
 
-void Role::do_make_update(protos::ServiceUpdate& update) const
+void Role::do_make_update(protos::StateUpdate& update) const
 {
     auto* service = update.mutable_subscription_service();
     service->set_role(m_role_name);
@@ -71,10 +71,10 @@ void Role::do_make_update(protos::ServiceUpdate& update) const
     }
 }
 
-void Role::await_update(const std::shared_ptr<server::ClientInstance>& instance, const protos::ServiceUpdate& update)
+void Role::await_update(const std::shared_ptr<server::ClientInstance>& instance, const protos::StateUpdate& update)
 {
     protos::Event event;
-    event.set_event(protos::EventType::ServerUpdateSubscriptionService);
+    event.set_event(protos::EventType::ServerStateUpdate);
     event.set_tag(instance->get_id());
     event.mutable_message()->PackFrom(update);
     instance->stream_writer().await_write(std::move(event));

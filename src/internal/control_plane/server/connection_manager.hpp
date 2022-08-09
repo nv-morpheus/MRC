@@ -30,7 +30,28 @@
 
 namespace srf::internal::control_plane::server {
 
-class ConnectionManager : public VersionedIssuer
+/**
+ * @brief Control Plane Connection Manager
+ *
+ * Manages each gRPC bidirectional stream via the srf::internal::rpc::ServerStream connection.
+ *
+ * Each stream/connection is allowed a one-time registration of client instances (client-side partitions) to be
+ * associated with the stream.
+ *
+ * The ConnectionManager is a VersionedState. When requested, ConnectionManager will issue a single
+ * protos::ServerUpdate to all connected stream with the protos::Event::tag() value set to 0, which means that update
+ * message will be broadcast to all partition subscribers on the client.
+ *
+ * The ServerUpdate event will be composed of a protos::ServerUpdateConnections which is a list of TaggedInstances,
+ * where the tag is the stream_id (unique machine_id).
+ *
+ * The protos::ServerUpdateConnections will not send the UCX worker addresses. It is up to the client to determine the
+ * set of UCX worker addresses missing from its local registar and issue an unary rpc to fetch worker addresses request
+ * to the control plane.
+ *
+ * @note This object is not thread-safe. It is assumed the owner of this object will properly control exclusive access.
+ */
+class ConnectionManager : public VersionedState
 {
   public:
     using stream_t      = std::shared_ptr<rpc::ServerStream<srf::protos::Event, srf::protos::Event>>;
@@ -50,6 +71,8 @@ class ConnectionManager : public VersionedIssuer
 
     Expected<protos::RegisterWorkersResponse> register_instances(const writer_t& writer,
                                                                  const protos::RegisterWorkersRequest& req);
+    Expected<> activate_stream(const protos::RegisterWorkersResponse& message);
+    Expected<protos::Ack> drop_instance(const writer_t& writer, const protos::TaggedInstance& req);
 
     // Expected<protos::FetchWorkerAddressesResponse> fetch_worker_addresses(
     //     const protos::protos::FetchWorkerAddressesRequest& req) const;
@@ -57,13 +80,16 @@ class ConnectionManager : public VersionedIssuer
   protected:
   private:
     const std::string& service_name() const final;
-    void do_make_update(protos::ServiceUpdate& update) const final;
-    void do_issue_update(const protos::ServiceUpdate& update) final;
+    void do_make_update(protos::StateUpdate& update) const final;
+    void do_issue_update(const protos::StateUpdate& update) final;
 
+    // populated on registration
     std::map<stream_id_t, stream_t> m_streams;
     std::map<instance_id_t, instance_t> m_instances;
-    std::multimap<stream_id_t, instance_id_t> m_instances_by_stream;
     std::set<std::string> m_ucx_worker_addresses;
+
+    // populated on activation - updates issued from this map
+    std::multimap<stream_id_t, instance_id_t> m_instances_by_stream;
 };
 
 }  // namespace srf::internal::control_plane::server

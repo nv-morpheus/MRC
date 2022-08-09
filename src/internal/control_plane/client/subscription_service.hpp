@@ -32,7 +32,7 @@ namespace srf::internal::control_plane::client {
 
 class SubscriptionService final
 {
-    using router_t = srf::node::Router<InstanceID, protos::ServiceUpdate>;
+    using router_t = srf::node::Router<InstanceID, protos::StateUpdate>;
 
   public:
     SubscriptionService(std::string name, std::set<std::string> roles) :
@@ -53,7 +53,7 @@ class SubscriptionService final
         return m_roles;
     }
 
-    srf::channel::Status await_write(const InstanceID& instance_id, protos::ServiceUpdate&& message)
+    srf::channel::Status await_write(const InstanceID& instance_id, protos::StateUpdate&& message)
     {
         if (m_router->has_edge(instance_id))
         {
@@ -62,8 +62,7 @@ class SubscriptionService final
         return channel::Status::error;
     }
 
-    void add_instance(const InstanceID& instance_id,
-                      srf::node::SinkChannel<protos::SubscriptionServiceUpdate>& subscriber)
+    void add_instance(const InstanceID& instance_id, srf::node::SinkChannel<protos::StateUpdate>& subscriber)
     {
         CHECK(!m_router->has_edge(instance_id));
         srf::node::make_edge(m_router->source(instance_id), subscriber);

@@ -253,7 +253,15 @@ void Server::do_handle_event(event_t&& event)
             switch (event.msg.event())
             {
             case protos::EventType::ClientUnaryRegisterWorkers:
-                status = unary_response(event, unary_register_workers(event));
+                status = unary_register_workers(event);
+                break;
+
+            case protos::EventType::ClientEventActivateStream:
+                status = event_activate_stream(event);
+                break;
+
+            case protos::EventType::ClientUnaryDropWorker:
+                status = unary_drop_worker(event);
                 break;
 
             case protos::EventType::ClientUnaryCreateSubscriptionService:
@@ -265,6 +273,7 @@ void Server::do_handle_event(event_t&& event)
                 break;
 
             default:
+                LOG(ERROR) << "unhandled event type in server handler";
                 throw Error::create("unhandled event type in server handler");
             }
 
@@ -281,15 +290,17 @@ void Server::do_handle_event(event_t&& event)
     {
         LOG(ERROR) << "bad_expected_access: " << e.error().message();
         on_fatal_exception();
-
+    } catch (const UnexpectedError& e)
+    {
+        LOG(ERROR) << "unexpected: " << e.value().message();
+        on_fatal_exception();
     } catch (const std::exception& e)
     {
         LOG(ERROR) << "exception: " << e.what();
         on_fatal_exception();
-
     } catch (...)
     {
-        LOG(ERROR) << "unknown acception caught";
+        LOG(ERROR) << "unknown exception caught";
         on_fatal_exception();
     }
 }
@@ -334,14 +345,40 @@ void Server::on_fatal_exception()
     // instead use a long deadline and a stop token which they must check if the deadline ever times out.
 }
 
-Expected<protos::RegisterWorkersResponse> Server::unary_register_workers(event_t& event)
+Expected<> Server::unary_register_workers(event_t& event)
 {
     auto req = unpack_request<protos::RegisterWorkersRequest>(event);
     SRF_EXPECT_TRUE(req);
 
+    DVLOG(10) << "registering stream " << event.stream->get_id() << " with " << req->ucx_worker_addresses_size()
+              << " partitions groups";
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    DVLOG(10) << "registering srf instance with " << req->ucx_worker_addresses_size() << " partitions groups";
-    return m_connections.register_instances(event.stream, *req);
+    return unary_response(event, m_connections.register_instances(event.stream, *req));
+}
+
+Expected<> Server::unary_drop_worker(event_t& event)
+{
+    auto req = unpack_request<protos::TaggedInstance>(event);
+    SRF_EXPECT_TRUE(req);
+
+    DVLOG(10) << "dropping instance " << req->instance_id() << " from stream " << event.stream->get_id();
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+
+    // ensure all server-side state machines have dropped the requested instance_id
+    drop_instance(req->instance_id());
+
+    // drop the instance id from the connection manager
+    return unary_response(event, m_connections.drop_instance(event.stream, *req));
+}
+
+Expected<> Server::event_activate_stream(event_t& event)
+{
+    auto message = unpack_request<protos::RegisterWorkersResponse>(event);
+    SRF_EXPECT_TRUE(message);
+    DVLOG(10) << "activating stream " << message->machine_id() << " with " << message->instance_ids_size()
+              << " instances/partitions";
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    return m_connections.activate_stream(*message);
 }
 
 Expected<protos::Ack> Server::unary_create_subscription_service(event_t& event)
@@ -468,6 +505,15 @@ Expected<protos::Ack> Server::unary_drop_from_subscription_service(event_t& even
     return protos::Ack{};
 }
 
+void Server::drop_instance(const instance_id_t& instance_id)
+{
+    // add any future state machine, e.g. pipeline, segment, manifold, etc. here
+    for (auto& [service_name, service] : m_subscription_services)
+    {
+        service->drop_instance(instance_id);
+    }
+}
+
 void Server::drop_stream(writer_t& writer)
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
@@ -478,11 +524,7 @@ void Server::drop_stream(writer_t& writer)
     // for each instance - iterate over state machines and drop the instance id
     for (const auto& instance_id : m_connections.get_instance_ids(stream_id))
     {
-        // add any future state machine, e.g. pipeline, segment, manifold, etc. here
-        for (auto& [service_name, service] : m_subscription_services)
-        {
-            service->drop_instance(instance_id);
-        }
+        drop_instance(instance_id);
     }
 
     // close stream - finish is a noop if the stream was previously cancelled

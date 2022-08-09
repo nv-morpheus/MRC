@@ -27,6 +27,7 @@
 #include "internal/system/system.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/registation_callback_builder.hpp"
+#include "internal/utils/contains.hpp"
 
 #include "srf/exceptions/runtime_error.hpp"
 #include "srf/options/options.hpp"
@@ -92,17 +93,11 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
     }
 
     // create control plane and register worker addresses
+    std::map<InstanceID, std::unique_ptr<control_plane::client::Instance>> control_instances;
     if (network_enabled)
     {
-        m_control_plane = std::make_shared<control_plane::Resources>(base_partition_resources.at(0));
-
-        std::vector<ucx::WorkerAddress> workers;
-        for (auto& ucx : m_ucx)
-        {
-            workers.push_back(ucx->worker().address());
-        }
-
-        m_control_plane->client().register_ucx_addresses(std::move(workers));
+        m_control_plane   = std::make_shared<control_plane::Resources>(base_partition_resources.at(0));
+        control_instances = m_control_plane->client().register_ucx_addresses(m_ucx);
         CHECK_EQ(m_control_plane->client().instance_ids().size(), m_ucx.size());
     }
 
@@ -124,7 +119,7 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
         m_host.emplace_back(m_runnable.at(i), std::move(builder));
     }
 
-    // devices
+    // devices resources
     for (auto& base : base_partition_resources)
     {
         VLOG(1) << "building device resources for partition: " << base.partition_id();
@@ -149,8 +144,13 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
             VLOG(1) << "building network resources for partition: " << base.partition_id();
             CHECK(m_ucx.at(base.partition_id()));
             std::optional<network::Resources> network;
-            network.emplace(
-                base, *m_ucx.at(base.partition_id()), m_host.at(base.partition().host_partition_id()), m_control_plane);
+            auto instance_id = m_control_plane->client().instance_ids().at(base.partition_id());
+            DCHECK(contains(control_instances, instance_id));  // todo(cpp20) contains
+            auto instance = std::move(control_instances.at(instance_id));
+            network.emplace(base,
+                            *m_ucx.at(base.partition_id()),
+                            m_host.at(base.partition().host_partition_id()),
+                            std::move(instance));
             m_network.push_back(std::move(network));
         }
         else

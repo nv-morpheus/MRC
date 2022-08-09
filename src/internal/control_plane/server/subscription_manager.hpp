@@ -78,7 +78,7 @@ class SubscriptionService final : public TaggedIssuer
  * An issue_update will send a protos::SubscriptionServiceUpdate to all subscribers containing the (tag, instance_id)
  * tuple for each item in the members list.
  */
-class Role final : public VersionedIssuer
+class Role final : public VersionedState
 {
   public:
     Role(std::string service_name, std::string role_name) :
@@ -98,13 +98,13 @@ class Role final : public VersionedIssuer
     const std::string& role_name() const;
 
   private:
-    void do_make_update(protos::ServiceUpdate& update) const final;
-    void do_issue_update(const protos::ServiceUpdate& update) final;
+    void do_make_update(protos::StateUpdate& update) const final;
+    void do_issue_update(const protos::StateUpdate& update) final;
 
-    protos::ServiceUpdate make_update() const;
+    protos::StateUpdate make_update() const;
 
     static void await_update(const std::shared_ptr<server::ClientInstance>& instance,
-                             const protos::ServiceUpdate& update);
+                             const protos::StateUpdate& update);
 
     std::string m_service_name;
     std::string m_role_name;

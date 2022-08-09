@@ -32,13 +32,13 @@ namespace srf::internal::network {
 Resources::Resources(resources::PartitionResourceBase& base,
                      ucx::Resources& ucx,
                      memory::HostResources& host,
-                     std::shared_ptr<control_plane::Resources> control_plane) :
+                     std::unique_ptr<control_plane::client::Instance> control_plane) :
   resources::PartitionResourceBase(base),
   m_control_plane(std::move(control_plane))
 {
     CHECK(m_control_plane);
     CHECK_LT(partition_id(), m_control_plane->client().instance_ids().size());
-    m_instance_id = m_control_plane->client().instance_ids().at(partition_id());
+    CHECK_EQ(m_control_plane->instance_id(), m_control_plane->client().instance_ids().at(partition_id()));
 
     // construct resources on the srf_network task queue thread
     ucx.network_task_queue()
@@ -51,10 +51,9 @@ Resources::Resources(resources::PartitionResourceBase& base,
 
 Resources::~Resources()
 {
-    // todo(ryan)
-    // inform control plane that the data plane for the current instance id will be shutting down
-    // we should block on this control plane update which should ensure that all outstanding data plane
-    // services will no longer receive any new mesasges
+    // this will sync with the control plane server to drop the instance
+    // when this completes, we can disable the data plane
+    m_control_plane.reset();
 
     if (m_data_plane)
     {
@@ -69,7 +68,7 @@ data_plane::Resources& Resources::data_plane()
     return *m_data_plane;
 }
 
-control_plane::Resources& Resources::control_plane()
+control_plane::client::Instance& Resources::control_plane()
 {
     CHECK(m_control_plane);
     return *m_control_plane;

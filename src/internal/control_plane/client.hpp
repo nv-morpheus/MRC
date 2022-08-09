@@ -17,12 +17,15 @@
 
 #pragma once
 
+#include "internal/control_plane/client/instance.hpp"
 #include "internal/control_plane/client/subscription_service.hpp"
 #include "internal/expected.hpp"
 #include "internal/grpc/client_streaming.hpp"
 #include "internal/grpc/progress_engine.hpp"
 #include "internal/grpc/promise_handler.hpp"
 #include "internal/grpc/stream_writer.hpp"
+#include "internal/resources/forward.hpp"
+#include "internal/runnable/engines.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/service.hpp"
 #include "internal/ucx/common.hpp"
@@ -35,6 +38,7 @@
 #include "srf/protos/architect.grpc.pb.h"
 #include "srf/protos/architect.pb.h"
 #include "srf/runnable/runner.hpp"
+#include "srf/types.hpp"
 #include "srf/utils/macros.hpp"
 
 #include <grpcpp/completion_queue.h>
@@ -71,9 +75,10 @@ class Client final : public Service
         Operational,
     };
 
-    using stream_t = std::shared_ptr<rpc::ClientStream<srf::protos::Event, srf::protos::Event>>;
-    using writer_t = std::shared_ptr<rpc::StreamWriter<srf::protos::Event>>;
-    using event_t  = stream_t::element_type::IncomingData;
+    using stream_t         = std::shared_ptr<rpc::ClientStream<srf::protos::Event, srf::protos::Event>>;
+    using writer_t         = std::shared_ptr<rpc::StreamWriter<srf::protos::Event>>;
+    using event_t          = stream_t::element_type::IncomingData;
+    using update_channel_t = srf::node::SourceChannelWriteable<protos::StateUpdate>;
 
     Client(runnable::Resources& runnable);
 
@@ -90,7 +95,8 @@ class Client final : public Service
     MachineID machine_id() const;
     const std::vector<InstanceID>& instance_ids() const;
 
-    void register_ucx_addresses(std::vector<ucx::WorkerAddress> worker_addresses);
+    std::map<InstanceID, std::unique_ptr<client::Instance>> register_ucx_addresses(
+        std::vector<std::optional<ucx::Resources>>& ucx_resources);
 
     // void register_port_publisher(InstanceID instance_id, const std::string& port_name);
     // void register_port_subscriber(InstanceID instance_id, const std::string& port_name);
@@ -102,10 +108,17 @@ class Client final : public Service
     template <typename ResponseT, typename RequestT>
     void async_unary(const protos::EventType& event_type, RequestT&& request, AsyncStatus<ResponseT>& status);
 
+    template <typename MessageT>
+    void issue_event(const protos::EventType& event_type, MessageT&& message);
+
     bool has_subscription_service(const std::string& name) const;
 
+    const runnable::LaunchOptions& launch_options() const;
+
+    void drop_instance(const InstanceID& instance_id);
+
   private:
-    void route_subscription_service_update(event_t event);
+    void route_state_update(event_t event);
 
     void do_service_start() final;
     void do_service_stop() final;
@@ -120,6 +133,8 @@ class Client final : public Service
 
     MachineID m_machine_id;
     std::vector<InstanceID> m_instance_ids;
+    std::map<InstanceID, std::unique_ptr<update_channel_t>> m_update_channels;
+    // std::map<InstanceID, std::shared_ptr<client::Instance>> m_instances;
 
     runnable::Resources& m_runnable;
 
@@ -142,7 +157,11 @@ class Client final : public Service
     // The customer destruction of this object will cause a gRPC WritesDone to be issued to the server.
     writer_t m_writer;
 
+    runnable::LaunchOptions m_launch_options;
+
     mutable std::mutex m_mutex;
+
+    friend network::Resources;
 };
 
 // todo: create this object from the client which will own the stop_source
@@ -196,6 +215,15 @@ void Client::async_unary(const protos::EventType& event_type, RequestT&& request
     event.set_event(event_type);
     event.set_tag(reinterpret_cast<std::uint64_t>(&status.m_promise));
     CHECK(event.mutable_message()->PackFrom(request));
+    m_writer->await_write(std::move(event));
+}
+
+template <typename MessageT>
+void Client::issue_event(const protos::EventType& event_type, MessageT&& message)
+{
+    protos::Event event;
+    event.set_event(event_type);
+    CHECK(event.mutable_message()->PackFrom(message));
     m_writer->await_write(std::move(event));
 }
 

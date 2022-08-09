@@ -34,19 +34,19 @@ class Resources final : private resources::PartitionResourceBase
     Resources(resources::PartitionResourceBase& base,
               ucx::Resources& ucx,
               memory::HostResources& host,
-              std::shared_ptr<control_plane::Resources> control_plane);
+              std::unique_ptr<control_plane::client::Instance> control_plane);
     ~Resources() final;
 
     DELETE_COPYABILITY(Resources);
     DEFAULT_MOVEABILITY(Resources);
 
-    control_plane::Resources& control_plane();
+    control_plane::client::Instance& control_plane();
     data_plane::Resources& data_plane();
 
     InstanceID instance_id() const;
 
   private:
-    std::shared_ptr<control_plane::Resources> m_control_plane;
+    std::unique_ptr<control_plane::client::Instance> m_control_plane;
     std::unique_ptr<data_plane::Resources> m_data_plane;
     InstanceID m_instance_id;
 };

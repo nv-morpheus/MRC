@@ -17,11 +17,13 @@
 
 #include "internal/control_plane/client.hpp"
 
+#include "internal/ucx/resources.hpp"
 #include "internal/utils/contains.hpp"
 
 #include "srf/channel/channel.hpp"
 #include "srf/channel/status.hpp"
 #include "srf/exceptions/runtime_error.hpp"
+#include "srf/node/source_channel.hpp"
 #include "srf/protos/architect.grpc.pb.h"
 #include "srf/protos/architect.pb.h"
 
@@ -46,6 +48,10 @@ Client::~Client()
 
 void Client::do_service_start()
 {
+    m_launch_options.engine_factory_name = "main";
+    m_launch_options.pe_count            = 1;
+    m_launch_options.engines_per_pe      = 1;
+
     auto url = m_runnable.system().options().architect_url();
     CHECK(!url.empty());
     auto channel = grpc::CreateChannel(url, grpc::InsecureChannelCredentials());
@@ -59,8 +65,10 @@ void Client::do_service_start()
 
         srf::node::make_edge(*progress_engine, *progress_handler);
 
-        m_progress_handler = m_runnable.launch_control().prepare_launcher(std::move(progress_handler))->ignition();
-        m_progress_engine  = m_runnable.launch_control().prepare_launcher(std::move(progress_engine))->ignition();
+        m_progress_handler =
+            m_runnable.launch_control().prepare_launcher(launch_options(), std::move(progress_handler))->ignition();
+        m_progress_engine =
+            m_runnable.launch_control().prepare_launcher(launch_options(), std::move(progress_engine))->ignition();
     }
 
     auto prepare_fn = [this](grpc::ClientContext* context) {
@@ -77,7 +85,8 @@ void Client::do_service_start()
     m_stream->attach_to(*event_handler);
 
     // launch runnables
-    m_event_handler = m_runnable.launch_control().prepare_launcher(std::move(event_handler))->ignition();
+    m_event_handler =
+        m_runnable.launch_control().prepare_launcher(launch_options(), std::move(event_handler))->ignition();
 
     // await initialization
     m_writer = m_stream->await_init();
@@ -141,37 +150,54 @@ void Client::do_handle_event(event_t&& event)
     }
     break;
 
-    case protos::EventType::ServerUpdateSubscriptionService:
-        route_subscription_service_update(std::move(event));
+    case protos::EventType::ServerStateUpdate:
+        route_state_update(std::move(event));
         break;
-
-        // some events are routed to handlers on a given partition
-        // e.g. pipeline updates are issued per partition and routed directly to the pipeline manager
 
     default:
         LOG(FATAL) << "event channel not implemented";
     }
 }
 
-void Client::register_ucx_addresses(std::vector<ucx::WorkerAddress> worker_addresses)
+std::map<InstanceID, std::unique_ptr<client::Instance>> Client::register_ucx_addresses(
+    std::vector<std::optional<ucx::Resources>>& ucx_resources)
 {
     forward_state(State::RegisteringWorkers);
     protos::RegisterWorkersRequest req;
-    for (const auto& addr : worker_addresses)
+    for (auto& ucx : ucx_resources)
     {
-        req.add_ucx_worker_addresses(addr);
+        DCHECK(ucx);
+        req.add_ucx_worker_addresses(ucx->worker().address());
     }
     auto resp = await_unary<protos::RegisterWorkersResponse>(protos::ClientUnaryRegisterWorkers, std::move(req));
 
     m_machine_id = resp->machine_id();
-    CHECK_EQ(resp->instance_ids_size(), worker_addresses.size());
-    for (const auto& id : resp->instance_ids())
+    CHECK_EQ(resp->instance_ids_size(), ucx_resources.size());
+    std::map<InstanceID, std::unique_ptr<client::Instance>> instances;
+    for (int i = 0; i < resp->instance_ids_size(); i++)
     {
+        auto id = resp->instance_ids().at(i);
         m_instance_ids.push_back(id);
+        m_update_channels[id] = std::make_unique<update_channel_t>();
+        instances[id] = std::make_unique<client::Instance>(*this, id, *ucx_resources.at(i), *m_update_channels.at(id));
     }
+
+    // issue activate event - connection events from the server will
+    issue_event(protos::ClientEventActivateStream, std::move(*resp));
 
     DVLOG(10) << "control plane - machine_id: " << m_machine_id;
     forward_state(State::Operational);
+    return instances;
+}
+
+void Client::drop_instance(const InstanceID& instance_id)
+{
+    protos::TaggedInstance msg;
+    msg.set_instance_id(instance_id);
+    msg.set_tag(m_machine_id);
+    await_unary<protos::Ack>(protos::ClientUnaryDropWorker, std::move(msg));
+    // DCHECK(contains(m_update_channels, instance_id));
+    m_update_channels.erase(instance_id);
 }
 
 client::SubscriptionService& Client::get_or_create_subscription_service(std::string name, std::set<std::string> roles)
@@ -234,29 +260,29 @@ void Client::forward_state(State state)
     m_state = state;
 }
 
-void Client::route_subscription_service_update(event_t event)
+void Client::route_state_update(event_t event)
 {
-    protos::ServiceUpdate update;
+    protos::StateUpdate update;
+    DCHECK(event.msg.event() == protos::ServerStateUpdate);
     CHECK(event.msg.has_message() && event.msg.message().UnpackTo(&update));
-
-    auto search = m_subscription_services.find(update.service_name());
-    CHECK(search != m_subscription_services.end());
 
     if (event.msg.tag() == 0)
     {
         DVLOG(10) << "broadcasting " << update.service_name() << " update to all instances";
-        for (const auto& instance_id : m_instance_ids)
+        for (const auto& [id, instance] : m_update_channels)
         {
-            auto copy  = update;
-            auto state = search->second->await_write(event.msg.tag(), std::move(copy));
-            LOG_IF(WARNING, state != srf::channel::Status::success)
+            auto copy   = update;
+            auto status = instance->await_write(std::move(copy));
+            LOG_IF(WARNING, status != srf::channel::Status::success)
                 << "unable to route update for service: " << update.service_name();
         }
     }
     else
     {
-        auto state = search->second->await_write(event.msg.tag(), std::move(update));
-        LOG_IF(WARNING, state != srf::channel::Status::success)
+        auto instance = m_update_channels.find(event.msg.tag());
+        CHECK(instance != m_update_channels.end());
+        auto status = instance->second->await_write(std::move(update));
+        LOG_IF(WARNING, status != srf::channel::Status::success)
             << "unable to route update for service: " << update.service_name();
     }
 }
@@ -266,4 +292,10 @@ bool Client::has_subscription_service(const std::string& name) const
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
     return contains(m_subscription_services, name);
 }
+
+const runnable::LaunchOptions& Client::launch_options() const
+{
+    return m_launch_options;
+}
+
 }  // namespace srf::internal::control_plane

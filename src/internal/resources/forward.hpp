@@ -44,7 +44,10 @@ class Resources;
 
 namespace control_plane {
 class Resources;
+namespace client {
+class Instance;
 }
+}  // namespace control_plane
 
 namespace data_plane {
 class Resources;

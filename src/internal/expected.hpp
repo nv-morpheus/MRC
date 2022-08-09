@@ -34,7 +34,7 @@ class Error;
 
 using UnexpectedError = tl::unexpected<Error>;  // NOLINT
 
-class Error final : std::exception
+class Error final
 {
     Error(ErrorCode type) : m_code(type) {}
     Error(std::string message) : Error(ErrorCode::Internal, std::move(message)) {}
@@ -57,11 +57,6 @@ class Error final : std::exception
     const std::string& message() const
     {
         return m_message;
-    }
-
-    const char* what() const noexcept final
-    {
-        return m_message.c_str();
     }
 
   private:

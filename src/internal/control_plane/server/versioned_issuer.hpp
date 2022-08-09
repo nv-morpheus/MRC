@@ -26,13 +26,13 @@
 
 namespace srf::internal::control_plane::server {
 
-class VersionedIssuer : public UpdateIssuer
+class VersionedState : public UpdateIssuer
 {
   public:
-    VersionedIssuer() = default;
+    VersionedState() = default;
 
-    DELETE_MOVEABILITY(VersionedIssuer);
-    DELETE_COPYABILITY(VersionedIssuer);
+    DELETE_MOVEABILITY(VersionedState);
+    DELETE_COPYABILITY(VersionedState);
 
     void issue_update() final
     {
@@ -50,9 +50,9 @@ class VersionedIssuer : public UpdateIssuer
         m_current_nonce++;
     }
 
-    protos::ServiceUpdate make_update() const
+    protos::StateUpdate make_update() const
     {
-        protos::ServiceUpdate update;
+        protos::StateUpdate update;
         update.set_service_name(this->service_name());
         update.set_nonce(m_current_nonce);
         do_make_update(update);
@@ -60,8 +60,8 @@ class VersionedIssuer : public UpdateIssuer
     }
 
   private:
-    virtual void do_make_update(protos::ServiceUpdate& update) const  = 0;
-    virtual void do_issue_update(const protos::ServiceUpdate& update) = 0;
+    virtual void do_make_update(protos::StateUpdate& update) const  = 0;
+    virtual void do_issue_update(const protos::StateUpdate& update) = 0;
 
     std::size_t m_current_nonce{1};
     std::size_t m_issued_nonce{1};

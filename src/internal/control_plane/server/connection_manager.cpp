@@ -19,7 +19,15 @@
 
 #include "internal/utils/contains.hpp"
 
+#include "srf/protos/architect.pb.h"
+
 #include <glog/logging.h>
+
+#define SRF_EXPECT_TRUE(expected)                          \
+    if (!expected)                                         \
+    {                                                      \
+        return Error::create(std::move(expected.error())); \
+    }
 
 namespace srf::internal::control_plane::server {
 
@@ -65,7 +73,7 @@ void ConnectionManager::drop_stream(const stream_id_t& stream_id) noexcept
 
     // finally drop the drop stream from the map
     m_streams.erase(stream_id);
-    this->mark_as_modified();
+    mark_as_modified();
 }
 
 void ConnectionManager::drop_all_streams() noexcept
@@ -111,9 +119,7 @@ Expected<protos::RegisterWorkersResponse> ConnectionManager::register_instances(
     // validate that the worker addresses are valid before updating state
     for (const auto& worker_address : req.ucx_worker_addresses())
     {
-        // todo(cpp20) - contains
-        auto search = m_ucx_worker_addresses.find(worker_address);
-        if (search != m_ucx_worker_addresses.end())
+        if (contains(m_ucx_worker_addresses, worker_address))  // todo(cpp20) - contains
         {
             return Error::create("invalid ucx worker address(es) - duplicate registration(s) detected");
         }
@@ -140,34 +146,70 @@ Expected<protos::RegisterWorkersResponse> ConnectionManager::register_instances(
             throw Error::create(ErrorCode::Fatal, "non-unique instance_id detected");
         }
 
-        DVLOG(10) << "registered instance_id: " << instance->get_id() << " on stream " << stream_id;
+        DVLOG(10) << "registered instance_id: " << instance->get_id() << " on stream_id: " << stream_id;
         m_ucx_worker_addresses.insert(worker_address);
         m_instances[instance->get_id()] = instance;
-        m_instances_by_stream.insert(std::pair{stream_id, instance->get_id()});
         response.add_instance_ids(instance->get_id());
     }
 
     // mark worked as updated
-    this->mark_as_modified();
+    mark_as_modified();
 
     return response;
 }
 
-void ConnectionManager::do_make_update(protos::ServiceUpdate& update) const
+Expected<protos::Ack> ConnectionManager::drop_instance(const writer_t& writer, const protos::TaggedInstance& req)
 {
-    auto* worker = update.mutable_registered_workers();
+    const auto stream_id = writer->get_id();
+    auto instance        = get_instance(req.instance_id());
+    SRF_EXPECT_TRUE(instance);
+
+    DCHECK(contains(m_ucx_worker_addresses, instance.value()->worker_address()));
+    m_ucx_worker_addresses.erase(instance.value()->worker_address());
+
+    auto range = m_instances_by_stream.equal_range(stream_id);
+    for (auto i = range.first; i != range.second; i++)
+    {
+        if (i->second == req.instance_id())
+        {
+            m_instances_by_stream.erase(i);
+            break;
+        }
+    }
+
+    m_instances.erase(req.instance_id());
+
+    mark_as_modified();
+
+    DVLOG(10) << "instance " << req.instance_id() << " dropped";
+    return protos::Ack{};
+}
+
+Expected<> ConnectionManager::activate_stream(const protos::RegisterWorkersResponse& message)
+{
+    auto stream_id = message.machine_id();
+    for (const auto& instance_id : message.instance_ids())
+    {
+        m_instances_by_stream.insert(std::pair{stream_id, instance_id});
+    }
+    return {};
+}
+
+void ConnectionManager::do_make_update(protos::StateUpdate& update) const
+{
+    auto* connections = update.mutable_connections();
     for (const auto& [machine_id, instance_id] : m_instances_by_stream)
     {
-        auto* msg = worker->add_tagged_instances();
+        auto* msg = connections->add_tagged_instances();
         msg->set_instance_id(instance_id);
         msg->set_tag(machine_id);
     }
 }
 
-void ConnectionManager::do_issue_update(const protos::ServiceUpdate& update)
+void ConnectionManager::do_issue_update(const protos::StateUpdate& update)
 {
     protos::Event event;
-    event.set_event(protos::EventType::ServerUpdateConnections);
+    event.set_event(protos::EventType::ServerStateUpdate);
     event.set_tag(0);  // explicit broadcast to all partitions
     event.mutable_message()->PackFrom(update);
 
