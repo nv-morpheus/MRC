@@ -231,6 +231,7 @@ add_library(libsrf
   src/public/node/edge_adapter_registry.cpp
   src/public/node/edge_builder.cpp
   src/public/node/edge_registry.cpp
+  src/public/node/port_registry.cpp
   src/public/options/engine_groups.cpp
   src/public/options/fiber_pool.cpp
   src/public/options/options.cpp
@@ -243,6 +244,7 @@ add_library(libsrf
   src/public/runnable/runnable.cpp
   src/public/runnable/runner.cpp
   src/public/runnable/types.cpp
+  src/public/segment/builder.cpp
   src/public/segment/definition.cpp
   src/public/benchmarking/trace_statistics.cpp
   src/public/benchmarking/tracer.cpp

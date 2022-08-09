@@ -30,20 +30,21 @@
 #include "srf/segment/object.hpp"
 
 #include <boost/hana/if.hpp>
-#include <gtest/gtest.h>
-#include <pybind11/embed.h>
+#include <gtest/gtest.h>     // IWYU pragma: keep
+#include <pybind11/embed.h>  // IWYU pragma: keep
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx.hpp>
-#include <rxcpp/sources/rx-iterate.hpp>
 
 #include <atomic>
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
-// IWYU thinks we need vector for auto src = seg.make_source<bool>
-// and both move and vector for auto internal = seg.make_rx_node
-// IWYU pragma: no_include <utility>
-// IWYU pragma: no_include <vector>
+// IWYU pragma: no_include "gtest/gtest_pred_impl.h"
+// IWYU pragma: no_include <pybind11/detail/common.h>
+// IWYU pragma: no_include "rxcpp/sources/rx-iterate.hpp"
+// IWYU pragma: no_include "rx-includes.hpp"
 
 namespace py    = pybind11;
 namespace pysrf = srf::pysrf;

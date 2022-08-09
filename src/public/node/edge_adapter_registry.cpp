@@ -27,8 +27,11 @@ namespace srf::node {
 std::map<std::type_index, EdgeAdapterRegistry::source_adapter_fn_t> EdgeAdapterRegistry::registered_source_adapters{};
 std::map<std::type_index, EdgeAdapterRegistry::sink_adapter_fn_t> EdgeAdapterRegistry::registered_sink_adapters{};
 
+std::recursive_mutex EdgeAdapterRegistry::s_mutex{};
+
 void EdgeAdapterRegistry::register_source_adapter(std::type_index source_type, source_adapter_fn_t adapter_fn)
 {
+    std::lock_guard<std::recursive_mutex> lock(s_mutex);
     auto iter_source = EdgeAdapterRegistry::registered_source_adapters.find(source_type);
     if (iter_source != EdgeAdapterRegistry::registered_source_adapters.end())
     {
@@ -40,6 +43,7 @@ void EdgeAdapterRegistry::register_source_adapter(std::type_index source_type, s
 
 void EdgeAdapterRegistry::register_sink_adapter(std::type_index sink_type, sink_adapter_fn_t adapter_fn)
 {
+    std::lock_guard<std::recursive_mutex> lock(s_mutex);
     auto iter_sink = EdgeAdapterRegistry::registered_sink_adapters.find(sink_type);
     if (iter_sink != EdgeAdapterRegistry::registered_sink_adapters.end())
     {

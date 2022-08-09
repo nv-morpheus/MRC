@@ -17,18 +17,23 @@
 
 #include "pysrf/watchers.hpp"
 
-#include "pysrf/executor.hpp"
+#include "pysrf/executor.hpp"  // IWYU pragma: keep
 #include "pysrf/segment.hpp"
 
-#include <pybind11/attr.h>  // for call_guard
+#include "srf/segment/builder.hpp"  // IWYU pragma: keep
+
+#include <pybind11/attr.h>
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 
 #include <array>
-#include <cstddef>  // for size_t
+#include <cstddef>
 #include <functional>
 #include <memory>
 #include <vector>
+
+// IWYU pragma: no_include <pybind11/detail/common.h>
+// IWYU pragma: no_include <pybind11/detail/descr.h>
 
 namespace srf::pysrf {
 

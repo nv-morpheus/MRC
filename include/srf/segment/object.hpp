@@ -47,9 +47,6 @@ struct ObjectProperties
     virtual node::SinkPropertiesBase& sink_base()     = 0;
     virtual node::SourcePropertiesBase& source_base() = 0;
 
-    node::SinkTypeErased& sink_typeless();
-    node::SourceTypeErased& source_typeless();
-
     template <typename T>
     node::SinkProperties<T>& sink_typed();
 

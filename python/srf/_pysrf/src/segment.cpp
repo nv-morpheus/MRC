@@ -17,20 +17,22 @@
 
 #include "pysrf/segment.hpp"
 
-#include "rxcpp/sources/rx-iterate.hpp"
-
 #include "pysrf/node.hpp"
 #include "pysrf/types.hpp"
 #include "pysrf/utils.hpp"
 
 #include "srf/channel/status.hpp"
 #include "srf/core/utils.hpp"
+#include "srf/manifold/egress.hpp"
 #include "srf/node/edge_builder.hpp"
+#include "srf/node/port_registry.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_properties.hpp"
 #include "srf/runnable/context.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/segment/object.hpp"
 
-#include <boost/hana/if.hpp>
+#include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 #include <pybind11/cast.h>
 #include <pybind11/detail/internals.h>
@@ -43,13 +45,21 @@
 #include <exception>
 #include <fstream>
 #include <functional>
+#include <map>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <typeindex>
 #include <utility>
+#include <vector>
 
 // IWYU thinks we need array for py::print
 // IWYU pragma: no_include <array>
+// IWYU pragma: no_include <boost/fiber/future/detail/shared_state.hpp>
+// IWYU pragma: no_include <boost/fiber/future/detail/task_base.hpp>
+// IWYU pragma: no_include <boost/hana/if.hpp>
+// IWYU pragma: no_include <boost/smart_ptr/detail/operator_bool.hpp>
+// IWYU pragma: no_include "rx-includes.hpp"
 
 namespace srf::pysrf {
 
@@ -189,12 +199,27 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_sink(srf::seg
 std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_ingress(srf::segment::Builder& self,
                                                                           const std::string& name)
 {
+    auto it_caster = node::PortRegistry::s_port_to_type_index.find(name);
+    if (it_caster != node::PortRegistry::s_port_to_type_index.end())
+    {
+        VLOG(2) << "Found an ingress port caster for " << name;
+
+        return self.get_ingress(name, it_caster->second);
+    }
     return self.get_ingress<PyHolder>(name);
 }
 
 std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_egress(srf::segment::Builder& self,
                                                                          const std::string& name)
 {
+    auto it_caster = node::PortRegistry::s_port_to_type_index.find(name);
+    if (it_caster != node::PortRegistry::s_port_to_type_index.end())
+    {
+        VLOG(2) << "Found an egress port caster for " << name;
+
+        return self.get_egress(name, it_caster->second);
+    }
+
     return self.get_egress<PyHolder>(name);
 }
 

@@ -17,19 +17,26 @@
 
 #include "pysrf/utils.hpp"
 
-#include "pysrf/types.hpp"  // IWYU pragma: keep
-
 #include "srf/exceptions/runtime_error.hpp"
 
 #include <nlohmann/json.hpp>
 #include <pybind11/cast.h>
+#include <pybind11/detail/internals.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
 #include <cassert>
 #include <string>
-#include <type_traits>  // for remove_reference<>::type needed for std::move(list_)
-#include <utility>      // for move & pair
+#include <type_traits>
+#include <utility>
+
+// IWYU pragma: no_include <listobject.h>
+// IWYU pragma: no_include <map>
+// IWYU pragma: no_include <nlohmann/detail/iterators/iteration_proxy.hpp>
+// IWYU pragma: no_include <nlohmann/detail/iterators/iter_impl.hpp>
+// IWYU pragma: no_include "object.h"
+// IWYU pragma: no_include <pybind11/detail/type_caster_base.h>
+// IWYU pragma: no_include "pystate.h"
 
 namespace srf::pysrf {
 
@@ -61,6 +68,17 @@ void from_import(pybind11::module_& dest, const std::string& mod, const std::str
 void from_import_as(py::module_& dest, const std::string& from, const std::string& import, const std::string& as)
 {
     dest.attr(as.c_str()) = py::module_::import(from.c_str()).attr(import.c_str());
+}
+
+const std::type_info* cpptype_info_from_object(py::object& obj)
+{
+    py::detail::type_info* tinfo = py::detail::get_type_info((PyTypeObject*)obj.ptr());
+    if (tinfo != nullptr)
+    {
+        return tinfo->cpptype;
+    }
+
+    return nullptr;
 }
 
 py::object cast_from_json(const json& source)
