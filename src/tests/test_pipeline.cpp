@@ -26,11 +26,9 @@
 #include "internal/system/system_provider.hpp"
 #include "internal/utils/collision_detector.hpp"
 
-#include "srf/channel/channel.hpp"
 #include "srf/channel/status.hpp"
 #include "srf/core/addresses.hpp"
 #include "srf/core/executor.hpp"
-#include "srf/core/thread_barrier.hpp"
 #include "srf/data/reusable_pool.hpp"
 #include "srf/engine/pipeline/ipipeline.hpp"
 #include "srf/node/queue.hpp"
@@ -51,7 +49,6 @@
 #include "srf/segment/object.hpp"
 #include "srf/utils/macros.hpp"
 
-#include <boost/fiber/barrier.hpp>
 #include <boost/fiber/fiber.hpp>
 #include <boost/fiber/operations.hpp>
 #include <boost/hana/if.hpp>
@@ -68,7 +65,6 @@
 #include <memory>
 #include <mutex>
 #include <ostream>
-#include <ratio>
 #include <stdexcept>
 #include <string>
 #include <system_error>
