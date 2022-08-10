@@ -132,6 +132,15 @@ TEST_F(TestControlPlane, DoubleClientConnectExchangeDisconnect)
     f1.get();
     f2.get();
 
+    // todo - wire up the connection/worker updater which will
+    // - determine the set of new connections
+    // - request ucx worker addresses for new connections
+    // - update the data plane client with worker addresses for new connections
+    // - drop any active endpoint / worker addresses for dropped connections
+    // - enable the following test -
+    // EXPECT_EQ(client_1->partition(0).network()->data_plane().client().connections(),
+    //           expected_partitions_1 + expected_partitions_2 - 1);  // -1 because we don't connect to ourself
+
     // destroying the resources should gracefully shutdown the data plane and the control plane.
     client_1.reset();
     client_2.reset();
