@@ -23,6 +23,7 @@
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/generic_sink.hpp"
 #include "srf/node/operators/muxer.hpp"
+#include "srf/node/queue.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/source_channel.hpp"
 #include "srf/pipeline/resources.hpp"
@@ -63,67 +64,22 @@ class Balancer : public node::GenericSink<T>
 }  // namespace detail
 
 template <typename T>
-class LoadBalancer : public CompositeManifold<MuxedIngress<T>, RoundRobinEgress<T>>
+class LoadBalancer : public CompositeManifold<MuxedIngress<T>, QueueEgress<T>>
 {
-    using base_t = CompositeManifold<MuxedIngress<T>, RoundRobinEgress<T>>;
+    using base_t = CompositeManifold<MuxedIngress<T>, QueueEgress<T>>;
 
   public:
     LoadBalancer(PortName port_name, pipeline::Resources& resources) : base_t(std::move(port_name), resources)
     {
-        m_launch_options.engine_factory_name = "main";
-        m_launch_options.pe_count            = 1;
-        m_launch_options.engines_per_pe      = 8;
-
-        // construct any resources
         this->resources()
             .main()
-            .enqueue([this] {
-                m_balancer = std::make_unique<detail::Balancer<T>>(this->egress());
-                node::make_edge(this->ingress().source(), *m_balancer);
-            })
+            .enqueue([this] { node::make_edge(this->ingress().source(), this->egress().queue()); })
             .get();
     }
 
-    void start() final
-    {
-        this->resources()
-            .main()
-            .enqueue([this] {
-                if (m_runner)
-                {
-                    // todo(#179) - validate this fix and improve test coverage
-                    // this will be handled now by the default behavior of SourceChannel::no_channel method
-                    // CHECK(!this->egress().output_channels().empty()) << "no egress channels on manifold";
-                    return;
-                }
-                CHECK(m_balancer);
-                m_runner = this->resources()
-                               .launch_control()
-                               .prepare_launcher(launch_options(), std::move(m_balancer))
-                               ->ignition();
-            })
-            .get();
-    }
+    void start() final {}
 
-    void join() final
-    {
-        m_runner->await_join();
-    }
-
-    const runnable::LaunchOptions& launch_options() const
-    {
-        return m_launch_options;
-    }
-
-  private:
-    // launch options
-    runnable::LaunchOptions m_launch_options;
-
-    // this is the progress engine that will drive the load balancer
-    std::unique_ptr<node::GenericSink<T>> m_balancer;
-
-    // runner
-    std::unique_ptr<runnable::Runner> m_runner{nullptr};
+    void join() final {}
 };
 
 }  // namespace srf::manifold

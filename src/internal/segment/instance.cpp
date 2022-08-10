@@ -219,7 +219,7 @@ void Instance::do_service_await_live()
         DVLOG(10) << info() << " awaiting on egress port " << name;
         runner->await_live();
     }
-    DVLOG(10) << info() << " join complete";
+    DVLOG(10) << info() << " await_live complete";
 }
 
 void Instance::do_service_await_join()
@@ -255,7 +255,7 @@ void Instance::do_service_await_join()
         DVLOG(10) << info() << " awaiting on egress port join to " << name;
         check(*runner);
     }
-    DVLOG(10) << info() << " join complete";
+    DVLOG(10) << info() << " await_join complete";
     if (first_exception)
     {
         LOG(ERROR) << "segment::Instance - an exception was caught while awaiting on one or more nodes - rethrowing";

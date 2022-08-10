@@ -19,7 +19,10 @@
 
 #include "srf/manifold/interface.hpp"
 #include "srf/node/edge_builder.hpp"
+#include "srf/node/forward.hpp"
 #include "srf/node/operators/muxer.hpp"
+#include "srf/node/queue.hpp"
+#include "srf/node/sink_channel.hpp"
 #include "srf/node/sink_properties.hpp"
 #include "srf/node/source_properties.hpp"
 
@@ -34,7 +37,7 @@ struct EgressDelegate
 };
 
 template <typename T>
-class TypedEngress : public EgressDelegate
+class TypedEgress : public EgressDelegate
 {
   public:
     void add_output(const SegmentAddress& address, node::SinkPropertiesBase* output_sink) final
@@ -49,7 +52,7 @@ class TypedEngress : public EgressDelegate
 };
 
 template <typename T>
-class MappedEgress : public TypedEngress<T>
+class MappedEgress : public TypedEgress<T>
 {
   public:
     using channel_map_t = std::unordered_map<SegmentAddress, std::unique_ptr<node::SourceChannelWriteable<T>>>;
@@ -76,6 +79,26 @@ class MappedEgress : public TypedEngress<T>
 
   private:
     std::unordered_map<SegmentAddress, std::unique_ptr<node::SourceChannelWriteable<T>>> m_outputs;
+};
+
+template <typename T>
+class QueueEgress final : public TypedEgress<T>
+{
+  public:
+    void do_add_output(const SegmentAddress& address, node::SinkProperties<T>& output_sink) final
+    {
+        auto channel = dynamic_cast<node::SinkChannel<T>*>(&output_sink);
+        CHECK(channel);
+        node::make_edge(m_queue, *channel);
+    }
+
+    srf::node::Queue<T>& queue()
+    {
+        return m_queue;
+    }
+
+  private:
+    srf::node::Queue<T> m_queue;
 };
 
 template <typename T>

@@ -26,9 +26,11 @@
 #include "internal/system/system_provider.hpp"
 #include "internal/utils/collision_detector.hpp"
 
+#include "srf/channel/channel.hpp"
 #include "srf/channel/status.hpp"
 #include "srf/core/addresses.hpp"
 #include "srf/core/executor.hpp"
+#include "srf/core/thread_barrier.hpp"
 #include "srf/data/reusable_pool.hpp"
 #include "srf/engine/pipeline/ipipeline.hpp"
 #include "srf/node/queue.hpp"
@@ -36,16 +38,20 @@
 #include "srf/node/rx_source.hpp"
 #include "srf/node/sink_properties.hpp"
 #include "srf/node/source_properties.hpp"
+#include "srf/options/engine_groups.hpp"
 #include "srf/options/options.hpp"
 #include "srf/options/topology.hpp"
 #include "srf/pipeline/pipeline.hpp"
 #include "srf/runnable/context.hpp"
+#include "srf/runnable/launch_options.hpp"
+#include "srf/runnable/types.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/segment/egress_ports.hpp"
 #include "srf/segment/ingress_ports.hpp"
 #include "srf/segment/object.hpp"
 #include "srf/utils/macros.hpp"
 
+#include <boost/fiber/barrier.hpp>
 #include <boost/fiber/fiber.hpp>
 #include <boost/fiber/operations.hpp>
 #include <boost/hana/if.hpp>
@@ -62,6 +68,7 @@
 #include <memory>
 #include <mutex>
 #include <ostream>
+#include <ratio>
 #include <stdexcept>
 #include <string>
 #include <system_error>
@@ -95,12 +102,15 @@ static std::shared_ptr<internal::pipeline::Pipeline> unwrap(internal::pipeline::
 
 static void run_custom_manager(std::unique_ptr<internal::pipeline::IPipeline> pipeline,
                                internal::pipeline::SegmentAddresses&& update,
+                               std::function<void(Options& options)> options_lambda,
                                bool delayed_stop = false)
 {
-    auto resources = internal::resources::Manager(internal::system::SystemProvider(make_system([](Options& options) {
-        options.topology().user_cpuset("0-1");
-        options.topology().restrict_gpus(true);
-    })));
+    auto resources =
+        internal::resources::Manager(internal::system::SystemProvider(make_system([&options_lambda](Options& options) {
+            options.topology().user_cpuset("0-1");
+            options.topology().restrict_gpus(true);
+            options_lambda(options);
+        })));
 
     auto manager = std::make_unique<internal::pipeline::Manager>(unwrap(*pipeline), resources);
 
@@ -263,7 +273,7 @@ TEST_F(TestPipeline, MultiSegmentLoadBalancer)
 
     auto pipeline = pipeline::make_pipeline();
 
-    int count = 1000;
+    int count = 100;
     std::mutex mutex;
     std::vector<boost::fibers::fiber::id> ranks;
 
@@ -274,11 +284,14 @@ TEST_F(TestPipeline, MultiSegmentLoadBalancer)
     });
 
     pipeline->make_segment("seg_2", segment::IngressPorts<int>({"i"}), [&mutex, &ranks](segment::Builder& s) mutable {
-        auto sink    = s.make_sink<int>("sink", [&](int x) {
+        auto sink                                  = s.make_sink<int>("sink", [&](int x) {
             VLOG(1) << runnable::Context::get_runtime_context().info() << ": data=" << x;
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
             std::lock_guard<decltype(mutex)> lock(mutex);
             ranks.push_back(boost::this_fiber::get_id());
         });
+        sink->launch_options().engine_factory_name = "dedicated_threads";
+
         auto ingress = s.get_ingress<int>("i");
         s.make_edge(ingress, sink);
     });
@@ -289,7 +302,15 @@ TEST_F(TestPipeline, MultiSegmentLoadBalancer)
     update[segment_address_encode(segment_name_hash("seg_2"), 0)] = 0;
     update[segment_address_encode(segment_name_hash("seg_2"), 1)] = 0;
 
-    run_custom_manager(std::move(pipeline), std::move(update));
+    run_custom_manager(std::move(pipeline), std::move(update), [](Options& options) {
+        options.topology().user_cpuset("0-6");
+        options.engine_factories().set_engine_factory_options("dedicated_threads", [](EngineFactoryOptions& engine) {
+            engine.cpu_count     = 3;
+            engine.allow_overlap = false;
+            engine.reusable      = false;
+            engine.engine_type   = runnable::EngineType::Thread;
+        });
+    });
 
     std::map<boost::fibers::fiber::id, int> count_by_rank;
 

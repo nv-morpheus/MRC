@@ -30,6 +30,7 @@
 #include "srf/node/generic_sink.hpp"
 #include "srf/node/generic_source.hpp"
 #include "srf/node/operators/conditional.hpp"
+#include "srf/node/queue.hpp"
 #include "srf/node/rx_execute.hpp"
 #include "srf/node/rx_node.hpp"
 #include "srf/node/rx_sink.hpp"
@@ -726,4 +727,28 @@ TEST_F(TestNext, SegmentBuilder)
     };
 
     auto definition = Segment::create("segment_test", init);
+}
+
+TEST_F(TestNext, Queue)
+{
+    auto source = std::make_unique<node::SourceChannelWriteable<int>>();
+    auto sink1  = std::make_unique<node::SinkChannelReadable<int>>();
+    auto sink2  = std::make_unique<node::SinkChannelReadable<int>>();
+    auto queue  = srf::node::Queue<int>();
+
+    node::make_edge(*source, queue);
+    node::make_edge(queue, *sink1);
+    node::make_edge(queue, *sink2);
+
+    source->await_write(1);
+    source->await_write(2);
+
+    int int1 = 0;
+    int int2 = 0;
+
+    sink1->egress().await_read(int1);
+    sink2->egress().await_read(int2);
+
+    EXPECT_EQ(int1, 1);
+    EXPECT_EQ(int2, 2);
 }
