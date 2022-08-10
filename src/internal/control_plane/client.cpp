@@ -160,6 +160,7 @@ void Client::do_handle_event(event_t&& event)
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         m_update_in_progress = false;
         m_update_requested   = false;
+        // todo(ryan) - if our stream is dropped we need to complete these promises with exceptions
         for (auto& p : m_update_promises)
         {
             p.set_value();
