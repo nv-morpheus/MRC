@@ -278,7 +278,6 @@ target_link_libraries(libsrf
   rxcpp::rxcpp
   glog::glog
   libcudacxx::libcudacxx
-  tl::expected
   PRIVATE
   nvrpc
   nvrpc-client
@@ -286,6 +285,7 @@ target_link_libraries(libsrf
   prometheus-cpp::core # private in MR !199
   ucx::ucs
   ucx::ucp
+  tl::expected
 )
 
 target_include_directories(libsrf

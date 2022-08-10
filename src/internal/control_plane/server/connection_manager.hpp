@@ -65,6 +65,7 @@ class ConnectionManager : public VersionedState
     void drop_stream(const stream_id_t& stream_id) noexcept;
     void drop_all_streams() noexcept;
 
+    const std::map<stream_id_t, stream_t>& streams() const;
     Expected<instance_t> get_instance(const instance_id_t& instance_id) const;
 
     std::vector<instance_id_t> get_instance_ids(const stream_id_t& stream_id) const;

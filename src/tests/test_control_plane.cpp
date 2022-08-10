@@ -47,7 +47,7 @@ static auto make_resources(std::function<void(Options& options)> options_lambda 
 {
     return std::make_unique<internal::resources::Manager>(
         internal::system::SystemProvider(make_system([&](Options& options) {
-            options.topology().user_cpuset("0-8");
+            options.topology().user_cpuset("0-3");
             options.topology().restrict_gpus(true);
             options.placement().resources_strategy(PlacementResources::Dedicated);
             options.placement().cpu_strategy(PlacementStrategy::PerMachine);
@@ -93,22 +93,48 @@ TEST_F(TestControlPlane, SingleClientConnectDisconnect)
     // destroying the resources should gracefully shutdown the data plane and the control plane.
     cr.reset();
 
-    // auto client = std::make_unique<internal::control_plane::Client>(m_resources->partition(0).runnable());
-    // EXPECT_EQ(client->state(), state_t::Disconnected);
-    // client->service_start();
-    // client->service_await_live();
-    // EXPECT_EQ(client->state(), state_t::Connected);
+    server->service_stop();
+    server->service_await_join();
+}
 
-    // client->register_ucx_addresses({m_resources->partition(0).network()->data_plane().ucx_address()});
-    // EXPECT_EQ(client->instance_ids().size(), 1);
-    // EXPECT_EQ(client->state(), state_t::Operational);
+TEST_F(TestControlPlane, DoubleClientConnectExchangeDisconnect)
+{
+    auto sr     = make_resources();
+    auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).runnable());
 
-    // EXPECT_FALSE(client->has_subscription_service("port_knox"));
-    // client->get_or_create_subscription_service("port_knox", {"publisher", "subscriber"});
-    // EXPECT_TRUE(client->has_subscription_service("port_knox"));
+    server->service_start();
+    server->service_await_live();
 
-    // client->service_stop();
-    // client->service_await_join();
+    auto client_1 = make_resources([](Options& options) {
+        options.topology().user_cpuset("0-3");
+        options.topology().restrict_gpus(true);
+        options.architect_url("localhost:13337");
+    });
+
+    auto client_2 = make_resources([](Options& options) {
+        options.topology().user_cpuset("4-7");
+        options.topology().restrict_gpus(true);
+        options.architect_url("localhost:13337");
+    });
+
+    // the total number of partition is system dependent
+    auto expected_partitions_1 = client_1->system().partitions().flattened().size();
+    EXPECT_EQ(client_1->partition(0).network()->control_plane().client().instance_ids().size(), expected_partitions_1);
+
+    auto expected_partitions_2 = client_2->system().partitions().flattened().size();
+    EXPECT_EQ(client_2->partition(0).network()->control_plane().client().instance_ids().size(), expected_partitions_2);
+
+    auto f1 = client_1->partition(0).network()->control_plane().client().await_update();
+    auto f2 = client_2->partition(0).network()->control_plane().client().await_update();
+
+    client_1->partition(0).network()->control_plane().client().request_update();
+
+    f1.get();
+    f2.get();
+
+    // destroying the resources should gracefully shutdown the data plane and the control plane.
+    client_1.reset();
+    client_2.reset();
 
     server->service_stop();
     server->service_await_join();

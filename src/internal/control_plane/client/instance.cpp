@@ -49,7 +49,11 @@ Instance::~Instance()
     DVLOG(10) << "client instance " << m_instance_id << " completed";
 }
 
-void Instance::do_handle_state_update(const protos::StateUpdate& update) {}
+void Instance::do_handle_state_update(const protos::StateUpdate& update) {
+
+    DVLOG(1) << "client instance got server update for " << update.update_state_case();
+
+}
 
 const InstanceID& Instance::instance_id() const
 {

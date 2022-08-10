@@ -33,6 +33,7 @@ enum EventType
     ControlStop = 2;
 
     // Client Events - No Response
+    ClientEventRequestStateUpdate = 100;
 
     ClientUnaryCreateSubscriptionService = 201;
     ClientUnaryRegisterSubscriptionService = 202;
@@ -46,6 +47,8 @@ enum EventType
     // Server Event issues to Client(s)
     ServerEvent = 1000;
     ServerStateUpdate = 1001;
+    ServerStateUpdateStart = 1002;
+    ServerStateUpdateFinish = 1003;
 }
 
 enum ErrorCode

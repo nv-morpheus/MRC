@@ -150,6 +150,24 @@ void Client::do_handle_event(event_t&& event)
     }
     break;
 
+    case protos::EventType::ServerStateUpdateStart: {
+        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+        m_update_in_progress = true;
+    }
+    break;
+
+    case protos::EventType::ServerStateUpdateFinish: {
+        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+        m_update_in_progress = false;
+        m_update_requested   = false;
+        for (auto& p : m_update_promises)
+        {
+            p.set_value();
+        }
+        m_update_promises.clear();
+    }
+    break;
+
     case protos::EventType::ServerStateUpdate:
         route_state_update(std::move(event));
         break;
@@ -304,4 +322,24 @@ const runnable::LaunchOptions& Client::launch_options() const
     return m_launch_options;
 }
 
+void Client::issue_event(const protos::EventType& event_type)
+{
+    protos::Event event;
+    event.set_event(event_type);
+    m_writer->await_write(std::move(event));
+}
+void Client::request_update()
+{
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    if (!m_update_in_progress && !m_update_requested)
+    {
+        m_update_requested = true;
+        issue_event(protos::ClientEventRequestStateUpdate);
+    }
+}
+Future<void> Client::await_update()
+{
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    return m_update_promises.emplace_back().get_future();
+}
 }  // namespace srf::internal::control_plane

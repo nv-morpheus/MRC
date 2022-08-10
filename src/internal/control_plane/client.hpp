@@ -111,11 +111,19 @@ class Client final : public Service
     template <typename MessageT>
     void issue_event(const protos::EventType& event_type, MessageT&& message);
 
+    void issue_event(const protos::EventType& event_type);
+
     bool has_subscription_service(const std::string& name) const;
 
     const runnable::LaunchOptions& launch_options() const;
 
     void drop_instance(const InstanceID& instance_id);
+
+    // request that the server start an update
+    void request_update();
+
+    // returns a future which will be completed on the next server update
+    Future<void> await_update();
 
   private:
     void route_state_update(event_t event);
@@ -158,6 +166,16 @@ class Client final : public Service
     writer_t m_writer;
 
     runnable::LaunchOptions m_launch_options;
+
+    // when the server starts an update epoch, it will start by sending a proto::ServerStateUpdateStart event
+    // and conclude by sending a protos::ServerStateUpdateFinish
+    // after receiving a start and before a finish, this value should be true
+    // this value, in conjunction with the awaiting_update, can be used to determine if a request update
+    // message should be sent to the server
+    // todo(ryan) - move to a separate class/state machine to decouple logic from client
+    bool m_update_in_progress{false};
+    bool m_update_requested{false};
+    std::vector<Promise<void>> m_update_promises;
 
     mutable std::mutex m_mutex;
 

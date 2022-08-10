@@ -252,6 +252,13 @@ void Server::do_handle_event(event_t&& event)
             Expected<> status;
             switch (event.msg.event())
             {
+            case protos::EventType::ClientEventRequestStateUpdate:
+                DVLOG(10) << "client requested a server update";
+                // todo: add a backoff so if a bunch of clients issue update requests
+                // we don't just keep firing them server side
+                m_update_cv.notify_one();
+                break;
+
             case protos::EventType::ClientUnaryRegisterWorkers:
                 status = unary_register_workers(event);
                 break;
@@ -319,6 +326,12 @@ void Server::do_issue_update(rxcpp::subscriber<void*>& s)
         }
 
         DVLOG(10) << "starting - control plane update";
+        protos::Event event;
+        event.set_event(protos::ServerStateUpdateStart);
+        for (const auto& [id, stream] : m_connections.streams())
+        {
+            stream->writer()->await_write(event);
+        }
 
         // issue worker updates
         m_connections.issue_update();
@@ -331,6 +344,11 @@ void Server::do_issue_update(rxcpp::subscriber<void*>& s)
         }
 
         DVLOG(10) << "finished - control plane update";
+        event.set_event(protos::ServerStateUpdateFinish);
+        for (const auto& [id, stream] : m_connections.streams())
+        {
+            stream->writer()->await_write(event);
+        }
     }
 }
 

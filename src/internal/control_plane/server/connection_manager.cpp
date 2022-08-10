@@ -232,4 +232,8 @@ const std::string& ConnectionManager::service_name() const
     return name;
 }
 
+const std::map<ConnectionManager::stream_id_t, ConnectionManager::stream_t>& ConnectionManager::streams() const
+{
+    return m_streams;
+}
 }  // namespace srf::internal::control_plane::server
