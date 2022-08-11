@@ -66,19 +66,20 @@ class ConnectionManager : public VersionedState
     void drop_all_streams() noexcept;
 
     const std::map<stream_id_t, stream_t>& streams() const;
+
     Expected<instance_t> get_instance(const instance_id_t& instance_id) const;
 
     std::vector<instance_id_t> get_instance_ids(const stream_id_t& stream_id) const;
 
     Expected<protos::RegisterWorkersResponse> register_instances(const writer_t& writer,
                                                                  const protos::RegisterWorkersRequest& req);
-    Expected<protos::Ack> activate_stream(const writer_t& writer, const protos::RegisterWorkersResponse& message);
+
     Expected<protos::LookupWorkersResponse> lookup_workers(const writer_t& writer,
                                                            const protos::LookupWorkersRequest& req) const;
-    Expected<protos::Ack> drop_instance(const writer_t& writer, const protos::TaggedInstance& req);
 
-    // Expected<protos::FetchWorkerAddressesResponse> fetch_worker_addresses(
-    //     const protos::protos::FetchWorkerAddressesRequest& req) const;
+    Expected<protos::Ack> activate_stream(const writer_t& writer, const protos::RegisterWorkersResponse& message);
+
+    Expected<protos::Ack> drop_instance(const writer_t& writer, const protos::TaggedInstance& req);
 
   protected:
   private:
