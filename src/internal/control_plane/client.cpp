@@ -153,6 +153,10 @@ void Client::do_handle_event(event_t&& event)
     case protos::EventType::ServerStateUpdateStart: {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         m_update_in_progress = true;
+        protos::StateUpdate update;
+        update.set_service_name("Update - Start");
+        update.set_update(true);
+        route_state_update(0, std::move(update));
     }
     break;
 
@@ -160,17 +164,15 @@ void Client::do_handle_event(event_t&& event)
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         m_update_in_progress = false;
         m_update_requested   = false;
-        // todo(ryan) - if our stream is dropped we need to complete these promises with exceptions
-        for (auto& p : m_update_promises)
-        {
-            p.set_value();
-        }
-        m_update_promises.clear();
+        protos::StateUpdate update;
+        update.set_service_name("Update - Finish");
+        update.set_update(false);
+        route_state_update(0, std::move(update));
     }
     break;
 
     case protos::EventType::ServerStateUpdate:
-        route_state_update(std::move(event));
+        route_state_update_event(std::move(event));
         break;
 
     default:
@@ -282,7 +284,7 @@ void Client::forward_state(State state)
     m_state = state;
 }
 
-void Client::route_state_update(event_t event)
+void Client::route_state_update_event(const event_t& event)
 {
     protos::StateUpdate update;
     DCHECK(event.msg.event() == protos::ServerStateUpdate);
@@ -290,8 +292,12 @@ void Client::route_state_update(event_t event)
 
     // protect m_update_channels
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    route_state_update(event.msg.tag(), std::move(update));
+}
 
-    if (event.msg.tag() == 0)
+void Client::route_state_update(std::uint64_t tag, protos::StateUpdate&& update)
+{
+    if (tag == 0)
     {
         DVLOG(10) << "broadcasting " << update.service_name() << " update to all instances";
         for (const auto& [id, instance] : m_update_channels)
@@ -304,7 +310,7 @@ void Client::route_state_update(event_t event)
     }
     else
     {
-        auto instance = m_update_channels.find(event.msg.tag());
+        auto instance = m_update_channels.find(tag);
         CHECK(instance != m_update_channels.end());
         auto status = instance->second->await_write(std::move(update));
         LOG_IF(WARNING, status != srf::channel::Status::success)
@@ -338,9 +344,9 @@ void Client::request_update()
         issue_event(protos::ClientEventRequestStateUpdate);
     }
 }
-Future<void> Client::await_update()
-{
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    return m_update_promises.emplace_back().get_future();
-}
+// Future<void> Client::await_update()
+// {
+//     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+//     return m_update_promises.emplace_back().get_future();
+// }
 }  // namespace srf::internal::control_plane

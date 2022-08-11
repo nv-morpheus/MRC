@@ -54,6 +54,8 @@ class Client final : public resources::PartitionResourceBase
      */
     void register_instance(InstanceID instance_id, ucx::WorkerAddress worker_address);
 
+    void drop_connection(const InstanceID& instance_id);
+
     /**
      * @brief Send an EncodedObject to the PortAddress at InstanceID
      *

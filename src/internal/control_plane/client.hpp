@@ -123,10 +123,11 @@ class Client final : public Service
     void request_update();
 
     // returns a future which will be completed on the next server update
-    Future<void> await_update();
+    // Future<void> await_update();
 
   private:
-    void route_state_update(event_t event);
+    void route_state_update_event(const event_t& event);
+    void route_state_update(std::uint64_t tag, protos::StateUpdate&& update);
 
     void do_service_start() final;
     void do_service_stop() final;
@@ -175,7 +176,6 @@ class Client final : public Service
     // todo(ryan) - move to a separate class/state machine to decouple logic from client
     bool m_update_in_progress{false};
     bool m_update_requested{false};
-    std::vector<Promise<void>> m_update_promises;
 
     mutable std::mutex m_mutex;
 

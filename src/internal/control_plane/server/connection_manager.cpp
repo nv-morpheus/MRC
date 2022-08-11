@@ -196,6 +196,28 @@ Expected<protos::Ack> ConnectionManager::activate_stream(const writer_t& writer,
     return {};
 }
 
+Expected<protos::LookupWorkersResponse> ConnectionManager::lookup_workers(const writer_t& writer,
+                                                                          const protos::LookupWorkersRequest& req) const
+{
+    protos::LookupWorkersResponse resp;
+    for (const auto& id : req.instance_ids())
+    {
+        auto instance = get_instance(id);
+        if (instance)
+        {
+            auto* worker = resp.add_worker_addresses();
+            worker->set_instance_id(id);
+            worker->set_machine_id(instance.value()->stream_writer().get_id());
+            worker->set_worker_address(instance.value()->worker_address());
+        }
+        else
+        {
+            LOG(WARNING) << "unable to lookup instance_id: " << id;
+        }
+    }
+    return resp;
+}
+
 void ConnectionManager::do_make_update(protos::StateUpdate& update) const
 {
     auto* connections = update.mutable_connections();

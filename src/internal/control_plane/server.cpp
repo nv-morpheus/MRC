@@ -267,6 +267,10 @@ void Server::do_handle_event(event_t&& event)
                 status = unary_activate_stream(event);
                 break;
 
+            case protos::EventType::ClientUnaryLookupWorkerAddresses:
+                status = unary_lookup_workers(event);
+                break;
+
             case protos::EventType::ClientUnaryDropWorker:
                 status = unary_drop_worker(event);
                 break;
@@ -398,6 +402,15 @@ Expected<> Server::unary_activate_stream(event_t& event)
               << " instances/partitions";
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
     return unary_response(event, m_connections.activate_stream(event.stream, *message));
+}
+
+Expected<> Server::unary_lookup_workers(event_t& event)
+{
+    auto message = unpack_request<protos::LookupWorkersRequest>(event);
+    SRF_EXPECT_TRUE(message);
+    DVLOG(10) << "looking up worker addresses for " << message->instance_ids_size() << " instances";
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    return unary_response(event, m_connections.lookup_workers(event.stream, *message));
 }
 
 Expected<protos::Ack> Server::unary_create_subscription_service(event_t& event)

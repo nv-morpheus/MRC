@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <iterator>
+
 namespace srf {
 
 template <typename Container, typename Key>
@@ -24,6 +26,76 @@ bool contains(const Container& container, const Key& key)
 {
     auto search = container.find(key);
     return (search == container.end() ? false : true);
+}
+
+template <typename C>
+class KeyIterator : public std::iterator<std::bidirectional_iterator_tag,
+                                          typename C::key_type,
+                                          typename C::difference_type,
+                                          typename C::pointer,
+                                          typename C::reference>
+{
+  public:
+    KeyIterator() = default;
+    explicit KeyIterator(typename C::const_iterator it) : m_iter(it) {}
+
+    const typename C::key_type& operator*() const
+    {
+        return m_iter->first;
+    }
+    const typename C::key_type* operator->() const
+    {
+        return &m_iter->first;
+    }
+
+    KeyIterator& operator++()
+    {
+        ++m_iter;
+        return *this;
+    }
+    KeyIterator operator++(int)
+    {
+        KeyIterator it(*this);
+        ++*this;
+        return it;
+    }
+
+    KeyIterator& operator--()
+    {
+        --m_iter;
+        return *this;
+    }
+    KeyIterator operator--(int)
+    {
+        KeyIterator it(*this);
+        --*this;
+        return it;
+    }
+
+    friend bool operator==(const KeyIterator& lhs, const KeyIterator& rhs)
+    {
+        return lhs.m_iter == rhs.m_iter;
+    }
+
+    friend bool operator!=(const KeyIterator& lhs, const KeyIterator& rhs)
+    {
+        return !(lhs == rhs);
+    }
+
+  private:
+    typename C::const_iterator m_iter;
+};
+
+template <typename C>
+KeyIterator<C> begin_keys(const C& c)
+{
+    return KeyIterator<C>(c.begin());
+}
+
+template <typename C>
+KeyIterator<C> end_keys(const C& c)
+{
+    return KeyIterator<C>(c.end());
 }
 
 }  // namespace srf

@@ -363,4 +363,8 @@ void Client::get(const protos::RemoteDescriptor& remote_md, Descriptor& buffer)
 //     future.get();
 // }
 
+void Client::drop_connection(const InstanceID& instance_id)
+{
+    m_endpoints.erase(instance_id);
+}
 }  // namespace srf::internal::data_plane

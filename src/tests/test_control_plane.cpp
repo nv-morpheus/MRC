@@ -124,22 +124,16 @@ TEST_F(TestControlPlane, DoubleClientConnectExchangeDisconnect)
     auto expected_partitions_2 = client_2->system().partitions().flattened().size();
     EXPECT_EQ(client_2->partition(0).network()->control_plane().client().instance_ids().size(), expected_partitions_2);
 
-    auto f1 = client_1->partition(0).network()->control_plane().client().await_update();
-    auto f2 = client_2->partition(0).network()->control_plane().client().await_update();
+    auto f1 = client_1->partition(0).network()->control_plane().fence_update();
+    auto f2 = client_2->partition(0).network()->control_plane().fence_update();
 
     client_1->partition(0).network()->control_plane().client().request_update();
 
     f1.get();
     f2.get();
 
-    // todo - wire up the connection/worker updater which will
-    // - determine the set of new connections
-    // - request ucx worker addresses for new connections
-    // - update the data plane client with worker addresses for new connections
-    // - drop any active endpoint / worker addresses for dropped connections
-    // - enable the following test -
-    // EXPECT_EQ(client_1->partition(0).network()->data_plane().client().connections(),
-    //           expected_partitions_1 + expected_partitions_2 - 1);  // -1 because we don't connect to ourself
+    EXPECT_EQ(client_1->partition(0).network()->control_plane().ucx_worker_address_count(),
+              expected_partitions_1 + expected_partitions_2);
 
     // destroying the resources should gracefully shutdown the data plane and the control plane.
     client_1.reset();
