@@ -330,12 +330,6 @@ void Server::do_issue_update(rxcpp::subscriber<void*>& s)
         }
 
         DVLOG(10) << "starting - control plane update";
-        protos::Event event;
-        event.set_event(protos::ServerStateUpdateStart);
-        for (const auto& [id, stream] : m_connections.streams())
-        {
-            stream->writer()->await_write(event);
-        }
 
         // issue worker updates
         m_connections.issue_update();
@@ -348,11 +342,6 @@ void Server::do_issue_update(rxcpp::subscriber<void*>& s)
         }
 
         DVLOG(10) << "finished - control plane update";
-        event.set_event(protos::ServerStateUpdateFinish);
-        for (const auto& [id, stream] : m_connections.streams())
-        {
-            stream->writer()->await_write(event);
-        }
     }
 }
 

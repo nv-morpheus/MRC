@@ -47,8 +47,6 @@ enum EventType
     // Server Event issues to Client(s)
     ServerEvent = 1000;
     ServerStateUpdate = 1001;
-    ServerStateUpdateStart = 1002;
-    ServerStateUpdateFinish = 1003;
 }
 
 enum ErrorCode
@@ -156,10 +154,10 @@ message StateUpdate
 {
     string service_name = 1;
     uint64 nonce = 2;
+    uint64 instance_id = 3;
     oneof update_state {
-        bool update = 5;
-        ConnectionsState connections = 3;
-        SubscriptionServiceState subscription_service = 4;
+        ConnectionsState connections = 4;
+        SubscriptionServiceState subscription_service = 5;
     }
 }
 

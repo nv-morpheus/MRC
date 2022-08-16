@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "internal/service.hpp"
+
 #include "srf/channel/status.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/operators/router.hpp"
@@ -30,7 +32,9 @@
 
 namespace srf::internal::control_plane::client {
 
-class SubscriptionService final
+class Instance;
+
+class SubscriptionService
 {
     using router_t = srf::node::Router<InstanceID, protos::StateUpdate>;
 
@@ -38,10 +42,8 @@ class SubscriptionService final
     SubscriptionService(std::string name, std::set<std::string> roles) :
       m_name(std::move(name)),
       m_roles(std::move(roles))
-    {
-        m_router = std::make_shared<router_t>();
-        srf::node::make_edge(m_channel, *m_router);
-    }
+    {}
+    virtual ~SubscriptionService() = default;
 
     const std::string& name() const
     {
@@ -53,31 +55,46 @@ class SubscriptionService final
         return m_roles;
     }
 
-    srf::channel::Status await_write(const InstanceID& instance_id, protos::StateUpdate&& message)
-    {
-        if (m_router->has_edge(instance_id))
-        {
-            return m_channel.await_write(std::make_pair(instance_id, std::move(message)));
-        }
-        return channel::Status::error;
-    }
-
-    void add_instance(const InstanceID& instance_id, srf::node::SinkChannel<protos::StateUpdate>& subscriber)
-    {
-        CHECK(!m_router->has_edge(instance_id));
-        srf::node::make_edge(m_router->source(instance_id), subscriber);
-    }
-
-    void drop_instance(const InstanceID& instance_id)
-    {
-        m_router->drop_edge(instance_id);
-    }
-
   private:
     std::string m_name;
     std::set<std::string> m_roles;
-    srf::node::SourceChannelWriteable<router_t::source_data_t> m_channel;
-    std::shared_ptr<router_t> m_router;
+};
+
+class SubscriptionServiceUpdater : public SubscriptionService, private Service
+{
+  public:
+    using SubscriptionService::SubscriptionService;
+
+    Future<void> fence_update()
+    {
+        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+        return m_update_promises.emplace_back().get_future();
+    }
+
+  private:
+    void update(const protos::StateUpdate& update_msg)
+    {
+        CHECK(update_msg.has_subscription_service());
+        if (m_nonce < update_msg.nonce())
+        {
+            m_nonce = update_msg.nonce();
+            do_update(update_msg.subscription_service());
+            std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+            for (auto& p : m_update_promises)
+            {
+                p.set_value();
+            }
+            m_update_promises.clear();
+        }
+    }
+
+    virtual void do_update(const protos::SubscriptionServiceState& update_msg) = 0;
+
+    std::size_t m_nonce{1};
+    std::vector<Promise<void>> m_update_promises;
+    std::mutex m_mutex;
+
+    friend Instance;
 };
 
 }  // namespace srf::internal::control_plane::client

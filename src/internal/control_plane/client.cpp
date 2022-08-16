@@ -17,6 +17,8 @@
 
 #include "internal/control_plane/client.hpp"
 
+#include "internal/control_plane/client/connections_manager.hpp"
+#include "internal/runnable/resources.hpp"
 #include "internal/ucx/resources.hpp"
 #include "internal/utils/contains.hpp"
 
@@ -29,14 +31,14 @@
 
 namespace srf::internal::control_plane {
 
-Client::Client(runnable::Resources& runnable, std::shared_ptr<grpc::CompletionQueue> cq) :
-  m_runnable(runnable),
+Client::Client(resources::PartitionResourceBase& base, std::shared_ptr<grpc::CompletionQueue> cq) :
+  resources::PartitionResourceBase(base),
   m_cq(std::move(cq)),
   m_owns_progress_engine(false)
 {}
 
-Client::Client(runnable::Resources& runnable) :
-  m_runnable(runnable),
+Client::Client(resources::PartitionResourceBase& base) :
+  resources::PartitionResourceBase(base),
   m_cq(std::make_shared<grpc::CompletionQueue>()),
   m_owns_progress_engine(true)
 {}
@@ -52,7 +54,7 @@ void Client::do_service_start()
     m_launch_options.pe_count            = 1;
     m_launch_options.engines_per_pe      = 1;
 
-    auto url = m_runnable.system().options().architect_url();
+    auto url = runnable().system().options().architect_url();
     CHECK(!url.empty());
     auto channel = grpc::CreateChannel(url, grpc::InsecureChannelCredentials());
     m_stub       = srf::protos::Architect::NewStub(channel);
@@ -66,9 +68,9 @@ void Client::do_service_start()
         srf::node::make_edge(*progress_engine, *progress_handler);
 
         m_progress_handler =
-            m_runnable.launch_control().prepare_launcher(launch_options(), std::move(progress_handler))->ignition();
+            runnable().launch_control().prepare_launcher(launch_options(), std::move(progress_handler))->ignition();
         m_progress_engine =
-            m_runnable.launch_control().prepare_launcher(launch_options(), std::move(progress_engine))->ignition();
+            runnable().launch_control().prepare_launcher(launch_options(), std::move(progress_engine))->ignition();
     }
 
     auto prepare_fn = [this](grpc::ClientContext* context) {
@@ -81,12 +83,16 @@ void Client::do_service_start()
         std::make_unique<node::RxSink<event_t>>([this](event_t event) { do_handle_event(std::move(event)); });
 
     // make stream and attach event handler
-    m_stream = std::make_shared<stream_t::element_type>(prepare_fn, m_runnable);
+    m_stream = std::make_shared<stream_t::element_type>(prepare_fn, runnable());
     m_stream->attach_to(*event_handler);
+
+    // ensure all downstream event handlers are constructed before constructing and starting the event handler
+    m_update_channel      = std::make_unique<srf::node::SourceChannelWriteable<const protos::StateUpdate>>();
+    m_connections_manager = std::make_unique<client::ConnectionsManager>(*this, *m_update_channel);
 
     // launch runnables
     m_event_handler =
-        m_runnable.launch_control().prepare_launcher(launch_options(), std::move(event_handler))->ignition();
+        runnable().launch_control().prepare_launcher(launch_options(), std::move(event_handler))->ignition();
 
     // await initialization
     m_writer = m_stream->await_init();
@@ -126,6 +132,7 @@ void Client::do_service_await_join()
 {
     auto status = m_stream->await_fini();
     m_event_handler->await_join();
+    m_update_channel.reset();
 
     if (m_owns_progress_engine)
     {
@@ -150,30 +157,13 @@ void Client::do_handle_event(event_t&& event)
     }
     break;
 
-    case protos::EventType::ServerStateUpdateStart: {
-        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        m_update_in_progress = true;
+    case protos::EventType::ServerStateUpdate: {
         protos::StateUpdate update;
-        update.set_service_name("Update - Start");
-        update.set_update(true);
-        route_state_update(0, std::move(update));
+        CHECK(event.msg.has_message() && event.msg.message().UnpackTo(&update));
+        DCHECK(m_update_channel);
+        CHECK(m_update_channel->await_write(std::move(update)) == channel::Status::success);
     }
     break;
-
-    case protos::EventType::ServerStateUpdateFinish: {
-        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        m_update_in_progress = false;
-        m_update_requested   = false;
-        protos::StateUpdate update;
-        update.set_service_name("Update - Finish");
-        update.set_update(false);
-        route_state_update(0, std::move(update));
-    }
-    break;
-
-    case protos::EventType::ServerStateUpdate:
-        route_state_update_event(std::move(event));
-        break;
 
     default:
         LOG(FATAL) << "event channel not implemented";
@@ -184,98 +174,67 @@ std::map<InstanceID, std::unique_ptr<client::Instance>> Client::register_ucx_add
     std::vector<std::optional<ucx::Resources>>& ucx_resources)
 {
     forward_state(State::RegisteringWorkers);
-    protos::RegisterWorkersRequest req;
-    for (auto& ucx : ucx_resources)
-    {
-        DCHECK(ucx);
-        req.add_ucx_worker_addresses(ucx->worker().address());
-    }
-    auto resp = await_unary<protos::RegisterWorkersResponse>(protos::ClientUnaryRegisterWorkers, std::move(req));
-
-    m_machine_id = resp->machine_id();
-    CHECK_EQ(resp->instance_ids_size(), ucx_resources.size());
-    std::map<InstanceID, std::unique_ptr<client::Instance>> instances;
-    for (int i = 0; i < resp->instance_ids_size(); i++)
-    {
-        auto id = resp->instance_ids().at(i);
-        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        m_instance_ids.push_back(id);
-        m_update_channels[id] = std::make_unique<update_channel_t>();
-        instances[id] = std::make_unique<client::Instance>(*this, id, *ucx_resources.at(i), *m_update_channels.at(id));
-    }
-
-    // issue activate event - connection events from the server will
-    await_unary<protos::Ack>(protos::ClientUnaryActivateStream, std::move(*resp));
-
-    DVLOG(10) << "control plane - machine_id: " << m_machine_id;
+    auto instances = m_connections_manager->register_ucx_addresses(ucx_resources);
     forward_state(State::Operational);
     return instances;
 }
 
-void Client::drop_instance(const InstanceID& instance_id)
-{
-    protos::TaggedInstance msg;
-    msg.set_instance_id(instance_id);
-    msg.set_tag(m_machine_id);
-    await_unary<protos::Ack>(protos::ClientUnaryDropWorker, std::move(msg));
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    DCHECK(contains(m_update_channels, instance_id));
-    m_update_channels.erase(instance_id);
-}
+// client::SubscriptionService& Client::get_or_create_subscription_service(std::string name, std::set<std::string>
+// roles)
+// {
+//     // no need to call the server if we have a locally registered subscription service
+//     CHECK(runnable().main().caller_on_same_thread());
 
-client::SubscriptionService& Client::get_or_create_subscription_service(std::string name, std::set<std::string> roles)
-{
-    // no need to call the server if we have a locally registered subscription service
-    {
-        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        auto search = m_subscription_services.find(name);
-        if (search != m_subscription_services.end())
-        {
-            // possible match - validate roles
-            CHECK(search->second->roles() == roles);
-            return *search->second;
-        }
-    }
+//     {
+//         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+//         auto search = m_subscription_services.find(name);
+//         if (search != m_subscription_services.end())
+//         {
+//             // possible match - validate roles
+//             CHECK(search->second->roles() == roles);
+//             return *search->second;
+//         }
+//     }
 
-    // issue unary rpc on the bidi stream
-    protos::CreateSubscriptionServiceRequest req;
-    req.set_service_name(name);
-    for (const auto& role : roles)
-    {
-        req.add_roles(role);
-    }
-    auto resp = await_unary<protos::Ack>(protos::ClientUnaryCreateSubscriptionService, std::move(req));
-    if (!resp)
-    {
-        LOG(ERROR) << "failed to create subscription service: " << resp.error().message();
-        throw resp.error();
-    }
-    DVLOG(10) << "subscribtion_service: " << name << " is live on the control plane server";
+//     // issue unary rpc on the bidi stream
+//     protos::CreateSubscriptionServiceRequest req;
+//     req.set_service_name(name);
+//     for (const auto& role : roles)
+//     {
+//         req.add_roles(role);
+//     }
+//     auto resp = await_unary<protos::Ack>(protos::ClientUnaryCreateSubscriptionService, std::move(req));
+//     if (!resp)
+//     {
+//         LOG(ERROR) << "failed to create subscription service: " << resp.error().message();
+//         throw resp.error();
+//     }
+//     DVLOG(10) << "subscribtion_service: " << name << " is live on the control plane server";
 
-    // lock state - if not present, add subscriptions service specific update channel to the routing map
-    // we had released the lock, so it's possible that multiple local paritions requested the same service
-    // the first one here will register it
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    auto search = m_subscription_services.find(name);
-    if (search == m_subscription_services.end())
-    {
-        m_subscription_services[name] = std::make_unique<client::SubscriptionService>(name, roles);
-        return *m_subscription_services.at(name);
-    }
-    DCHECK(search->second->roles() == roles);
-    return *search->second;
-}
+//     // lock state - if not present, add subscriptions service specific update channel to the routing map
+//     // we had released the lock, so it's possible that multiple local paritions requested the same service
+//     // the first one here will register it
+//     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+//     auto search = m_subscription_services.find(name);
+//     if (search == m_subscription_services.end())
+//     {
+//         m_subscription_services[name] = std::make_unique<client::SubscriptionService>(name, roles);
+//         return *m_subscription_services.at(name);
+//     }
+//     DCHECK(search->second->roles() == roles);
+//     return *search->second;
+// }
 
-MachineID Client::machine_id() const
-{
-    return m_machine_id;
-}
+// MachineID Client::machine_id() const
+// {
+//     return m_machine_id;
+// }
 
-const std::vector<InstanceID>& Client::instance_ids() const
-{
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    return m_instance_ids;
-}
+// const std::vector<InstanceID>& Client::instance_ids() const
+// {
+//     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+//     return m_instance_ids;
+// }
 
 void Client::forward_state(State state)
 {
@@ -284,45 +243,53 @@ void Client::forward_state(State state)
     m_state = state;
 }
 
-void Client::route_state_update_event(const event_t& event)
-{
-    protos::StateUpdate update;
-    DCHECK(event.msg.event() == protos::ServerStateUpdate);
-    CHECK(event.msg.has_message() && event.msg.message().UnpackTo(&update));
+// void Client::route_state_update_event(const event_t& event)
+// {
+//     protos::StateUpdate update;
+//     DCHECK(event.msg.event() == protos::ServerStateUpdate);
+//     CHECK(event.msg.has_message() && event.msg.message().UnpackTo(&update));
 
-    // protect m_update_channels
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    route_state_update(event.msg.tag(), std::move(update));
-}
+//     // check for connections
+//     if (update.has_connections())
+//     {
+//         // m_connections_manager.update(std::move(update));
+//     }
+//     else
+//     {
+//         // protect m_update_channels
+//         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+//         route_state_update(event.msg.tag(), std::move(update));
+//     }
+// }
 
-void Client::route_state_update(std::uint64_t tag, protos::StateUpdate&& update)
-{
-    if (tag == 0)
-    {
-        DVLOG(10) << "broadcasting " << update.service_name() << " update to all instances";
-        for (const auto& [id, instance] : m_update_channels)
-        {
-            auto copy   = update;
-            auto status = instance->await_write(std::move(copy));
-            LOG_IF(WARNING, status != srf::channel::Status::success)
-                << "unable to route update for service: " << update.service_name();
-        }
-    }
-    else
-    {
-        auto instance = m_update_channels.find(tag);
-        CHECK(instance != m_update_channels.end());
-        auto status = instance->second->await_write(std::move(update));
-        LOG_IF(WARNING, status != srf::channel::Status::success)
-            << "unable to route update for service: " << update.service_name();
-    }
-}
+// void Client::route_state_update(std::uint64_t tag, protos::StateUpdate&& update)
+// {
+//     if (tag == 0)
+//     {
+//         DVLOG(10) << "broadcasting " << update.service_name() << " update to all instances";
+//         for (const auto& [id, instance] : m_update_channels)
+//         {
+//             auto copy   = update;
+//             auto status = instance->await_write(std::move(copy));
+//             LOG_IF(WARNING, status != srf::channel::Status::success)
+//                 << "unable to route update for service: " << update.service_name();
+//         }
+//     }
+//     else
+//     {
+//         auto instance = m_update_channels.find(tag);
+//         CHECK(instance != m_update_channels.end());
+//         auto status = instance->second->await_write(std::move(update));
+//         LOG_IF(WARNING, status != srf::channel::Status::success)
+//             << "unable to route update for service: " << update.service_name();
+//     }
+// }
 
-bool Client::has_subscription_service(const std::string& name) const
-{
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    return contains(m_subscription_services, name);
-}
+// bool Client::has_subscription_service(const std::string& name) const
+// {
+//     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+//     return contains(m_subscription_services, name);
+// }
 
 const runnable::LaunchOptions& Client::launch_options() const
 {
@@ -335,18 +302,16 @@ void Client::issue_event(const protos::EventType& event_type)
     event.set_event(event_type);
     m_writer->await_write(std::move(event));
 }
+
 void Client::request_update()
 {
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    if (!m_update_in_progress && !m_update_requested)
-    {
-        m_update_requested = true;
-        issue_event(protos::ClientEventRequestStateUpdate);
-    }
+    issue_event(protos::ClientEventRequestStateUpdate);
+    // std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    // if (!m_update_in_progress && !m_update_requested)
+    // {
+    //     m_update_requested = true;
+    //     issue_event(protos::ClientEventRequestStateUpdate);
+    // }
 }
-// Future<void> Client::await_update()
-// {
-//     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-//     return m_update_promises.emplace_back().get_future();
-// }
+
 }  // namespace srf::internal::control_plane

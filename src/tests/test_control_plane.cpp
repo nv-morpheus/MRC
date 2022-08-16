@@ -18,6 +18,7 @@
 #include "common.hpp"
 
 #include "internal/control_plane/client.hpp"
+#include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/control_plane/resources.hpp"
 #include "internal/control_plane/server.hpp"
 #include "internal/data_plane/resources.hpp"
@@ -25,6 +26,7 @@
 #include "internal/grpc/server.hpp"
 #include "internal/grpc/server_streaming.hpp"
 #include "internal/network/resources.hpp"
+#include "internal/pubsub/publisher.hpp"
 #include "internal/resources/manager.hpp"
 
 #include "srf/node/sink_properties.hpp"
@@ -88,7 +90,8 @@ TEST_F(TestControlPlane, SingleClientConnectDisconnect)
 
     // the total number of partition is system dependent
     auto expected_partitions = cr->system().partitions().flattened().size();
-    EXPECT_EQ(cr->partition(0).network()->control_plane().client().instance_ids().size(), expected_partitions);
+    EXPECT_EQ(cr->partition(0).network()->control_plane().client().connections().instance_ids().size(),
+              expected_partitions);
 
     // destroying the resources should gracefully shutdown the data plane and the control plane.
     cr.reset();
@@ -119,21 +122,91 @@ TEST_F(TestControlPlane, DoubleClientConnectExchangeDisconnect)
 
     // the total number of partition is system dependent
     auto expected_partitions_1 = client_1->system().partitions().flattened().size();
-    EXPECT_EQ(client_1->partition(0).network()->control_plane().client().instance_ids().size(), expected_partitions_1);
+    EXPECT_EQ(client_1->partition(0).network()->control_plane().client().connections().instance_ids().size(),
+              expected_partitions_1);
 
     auto expected_partitions_2 = client_2->system().partitions().flattened().size();
-    EXPECT_EQ(client_2->partition(0).network()->control_plane().client().instance_ids().size(), expected_partitions_2);
+    EXPECT_EQ(client_2->partition(0).network()->control_plane().client().connections().instance_ids().size(),
+              expected_partitions_2);
 
-    auto f1 = client_1->partition(0).network()->control_plane().fence_update();
-    auto f2 = client_2->partition(0).network()->control_plane().fence_update();
+    auto f1 = client_1->partition(0).network()->control_plane().client().connections().update_future();
+    auto f2 = client_2->partition(0).network()->control_plane().client().connections().update_future();
 
     client_1->partition(0).network()->control_plane().client().request_update();
 
     f1.get();
     f2.get();
 
-    EXPECT_EQ(client_1->partition(0).network()->control_plane().ucx_worker_address_count(),
-              expected_partitions_1 + expected_partitions_2);
+    client_1->partition(0)
+        .runnable()
+        .main()
+        .enqueue([&] {
+            auto worker_count =
+                client_1->partition(0).network()->control_plane().client().connections().worker_addresses().size();
+            EXPECT_EQ(worker_count, expected_partitions_1 + expected_partitions_2);
+        })
+        .get();
+
+    // destroying the resources should gracefully shutdown the data plane and the control plane.
+    client_1.reset();
+    client_2.reset();
+
+    server->service_stop();
+    server->service_await_join();
+}
+
+TEST_F(TestControlPlane, DoubleClientPubSub)
+{
+    auto sr     = make_resources();
+    auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).runnable());
+
+    server->service_start();
+    server->service_await_live();
+
+    auto client_1 = make_resources([](Options& options) {
+        options.topology().user_cpuset("0-3");
+        options.topology().restrict_gpus(true);
+        options.architect_url("localhost:13337");
+    });
+
+    auto client_2 = make_resources([](Options& options) {
+        options.topology().user_cpuset("4-7");
+        options.topology().restrict_gpus(true);
+        options.architect_url("localhost:13337");
+    });
+
+    // the total number of partition is system dependent
+    auto expected_partitions_1 = client_1->system().partitions().flattened().size();
+    EXPECT_EQ(client_1->partition(0).network()->control_plane().client().connections().instance_ids().size(),
+              expected_partitions_1);
+
+    auto expected_partitions_2 = client_2->system().partitions().flattened().size();
+    EXPECT_EQ(client_2->partition(0).network()->control_plane().client().connections().instance_ids().size(),
+              expected_partitions_2);
+
+    auto f1 = client_1->partition(0).network()->control_plane().client().connections().update_future();
+    auto f2 = client_2->partition(0).network()->control_plane().client().connections().update_future();
+
+    client_1->partition(0).network()->control_plane().client().request_update();
+
+    f1.get();
+    f2.get();
+
+    client_1->partition(0)
+        .runnable()
+        .main()
+        .enqueue([&] {
+            auto worker_count =
+                client_1->partition(0).network()->control_plane().client().connections().worker_addresses().size();
+            EXPECT_EQ(worker_count, expected_partitions_1 + expected_partitions_2);
+        })
+        .get();
+
+    // auto publisher = std::make_unique<internal::pubsub::PublisherRoundRobin<int>>("my_int", client_1->partition(0));
+
+    // f1 = client_1->partition(0).network()->control_plane().client().connections().update_future();
+    // client_1->partition(0).network()->control_plane().client().request_update();
+    // f1.get();
 
     // destroying the resources should gracefully shutdown the data plane and the control plane.
     client_1.reset();

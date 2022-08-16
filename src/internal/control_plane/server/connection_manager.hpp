@@ -61,6 +61,8 @@ class ConnectionManager : public VersionedState
     using stream_id_t   = std::size_t;
     using instance_id_t = std::size_t;
 
+
+
     void add_stream(const stream_t& stream);
     void drop_stream(const stream_id_t& stream_id) noexcept;
     void drop_all_streams() noexcept;
@@ -81,11 +83,15 @@ class ConnectionManager : public VersionedState
 
     Expected<protos::Ack> drop_instance(const writer_t& writer, const protos::TaggedInstance& req);
 
+    const std::string& service_name() const final;
+
   protected:
   private:
-    const std::string& service_name() const final;
     void do_make_update(protos::StateUpdate& update) const final;
     void do_issue_update(const protos::StateUpdate& update) final;
+
+    MachineID m_machine_id;
+    std::vector<InstanceID> m_instance_ids;
 
     // populated on registration
     std::map<stream_id_t, stream_t> m_streams;

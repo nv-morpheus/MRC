@@ -27,6 +27,7 @@
 
 #include <cstddef>
 #include <iosfwd>
+#include <thread>
 
 namespace srf::internal::system {
 
@@ -42,6 +43,9 @@ class FiberTaskQueue final : public core::FiberTaskQueue
     DELETE_MOVEABILITY(FiberTaskQueue);
 
     const CpuSet& affinity() const final;
+
+    std::thread::id thread_id() const final;
+    bool caller_on_same_thread() const final;
 
     void shutdown();
 

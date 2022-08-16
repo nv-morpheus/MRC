@@ -98,7 +98,7 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
     {
         m_control_plane   = std::make_shared<control_plane::Resources>(base_partition_resources.at(0));
         control_instances = m_control_plane->client().register_ucx_addresses(m_ucx);
-        CHECK_EQ(m_control_plane->client().instance_ids().size(), m_ucx.size());
+        CHECK_EQ(m_control_plane->client().connections().instance_ids().size(), m_ucx.size());
     }
 
     // construct the host memory resources for each host_partition
@@ -144,7 +144,7 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
             VLOG(1) << "building network resources for partition: " << base.partition_id();
             CHECK(m_ucx.at(base.partition_id()));
             std::optional<network::Resources> network;
-            auto instance_id = m_control_plane->client().instance_ids().at(base.partition_id());
+            auto instance_id = m_control_plane->client().connections().instance_ids().at(base.partition_id());
             DCHECK(contains(control_instances, instance_id));  // todo(cpp20) contains
             auto instance = std::move(control_instances.at(instance_id));
             network.emplace(base,

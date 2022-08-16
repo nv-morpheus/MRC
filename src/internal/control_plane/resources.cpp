@@ -29,7 +29,7 @@ namespace srf::internal::control_plane {
 
 Resources::Resources(resources::PartitionResourceBase& base) :
   resources::PartitionResourceBase(base),
-  m_client(std::make_unique<internal::control_plane::Client>(runnable()))
+  m_client(std::make_unique<internal::control_plane::Client>(base))
 {
     if (system().options().enable_server())
     {

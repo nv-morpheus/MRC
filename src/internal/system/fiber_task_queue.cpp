@@ -124,4 +124,12 @@ std::ostream& operator<<(std::ostream& os, const FiberTaskQueue& ftq)
     return os;
 }
 
+std::thread::id FiberTaskQueue::thread_id() const
+{
+    return m_thread.thread().get_id();
+}
+bool FiberTaskQueue::caller_on_same_thread() const
+{
+    return std::this_thread::get_id() == m_thread.thread().get_id();
+}
 }  // namespace srf::internal::system

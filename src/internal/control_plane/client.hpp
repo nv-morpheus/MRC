@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/control_plane/client/instance.hpp"
 #include "internal/control_plane/client/subscription_service.hpp"
 #include "internal/expected.hpp"
@@ -25,6 +26,7 @@
 #include "internal/grpc/promise_handler.hpp"
 #include "internal/grpc/stream_writer.hpp"
 #include "internal/resources/forward.hpp"
+#include "internal/resources/partition_resources_base.hpp"
 #include "internal/runnable/engines.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/service.hpp"
@@ -34,6 +36,7 @@
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/operators/broadcast.hpp"
 #include "srf/node/operators/router.hpp"
+#include "srf/node/source_channel.hpp"
 #include "srf/node/source_properties.hpp"
 #include "srf/protos/architect.grpc.pb.h"
 #include "srf/protos/architect.pb.h"
@@ -63,7 +66,10 @@ class AsyncStatus;
  * event router to the specific instance handler.
  *
  */
-class Client final : public Service
+
+// todo: client should be a holder of the stream (private) and the connection manager (public)
+
+class Client final : public resources::PartitionResourceBase, public Service
 {
   public:
     enum class State
@@ -80,10 +86,10 @@ class Client final : public Service
     using event_t          = stream_t::element_type::IncomingData;
     using update_channel_t = srf::node::SourceChannelWriteable<protos::StateUpdate>;
 
-    Client(runnable::Resources& runnable);
+    Client(resources::PartitionResourceBase& base);
 
     // if we already have an grpc progress engine running, we don't need run another, just use that cq
-    Client(runnable::Resources& runnable, std::shared_ptr<grpc::CompletionQueue> cq);
+    Client(resources::PartitionResourceBase& base, std::shared_ptr<grpc::CompletionQueue> cq);
 
     ~Client() final;
 
@@ -92,8 +98,8 @@ class Client final : public Service
         return m_state;
     }
 
-    MachineID machine_id() const;
-    const std::vector<InstanceID>& instance_ids() const;
+    // MachineID machine_id() const;
+    // const std::vector<InstanceID>& instance_ids() const;
 
     std::map<InstanceID, std::unique_ptr<client::Instance>> register_ucx_addresses(
         std::vector<std::optional<ucx::Resources>>& ucx_resources);
@@ -117,13 +123,14 @@ class Client final : public Service
 
     const runnable::LaunchOptions& launch_options() const;
 
-    void drop_instance(const InstanceID& instance_id);
+    client::ConnectionsManager& connections() const
+    {
+        CHECK(m_connections_manager);
+        return *m_connections_manager;
+    }
 
     // request that the server start an update
     void request_update();
-
-    // returns a future which will be completed on the next server update
-    // Future<void> await_update();
 
   private:
     void route_state_update_event(const event_t& event);
@@ -140,12 +147,10 @@ class Client final : public Service
 
     State m_state{State::Disconnected};
 
-    MachineID m_machine_id;
-    std::vector<InstanceID> m_instance_ids;
-    std::map<InstanceID, std::unique_ptr<update_channel_t>> m_update_channels;
+    // MachineID m_machine_id;
+    // std::vector<InstanceID> m_instance_ids;
+    // std::map<InstanceID, std::unique_ptr<update_channel_t>> m_update_channels;
     // std::map<InstanceID, std::shared_ptr<client::Instance>> m_instances;
-
-    runnable::Resources& m_runnable;
 
     std::shared_ptr<grpc::CompletionQueue> m_cq;
     std::shared_ptr<grpc::Channel> m_channel;
@@ -153,11 +158,20 @@ class Client final : public Service
 
     // if true, then the following runners should not be null
     // if false, then the following runners must be null
-    bool m_owns_progress_engine;
+    const bool m_owns_progress_engine;
     std::unique_ptr<srf::runnable::Runner> m_progress_handler;
     std::unique_ptr<srf::runnable::Runner> m_progress_engine;
     std::unique_ptr<srf::runnable::Runner> m_event_handler;
-    std::map<std::string, std::unique_ptr<client::SubscriptionService>> m_subscription_services;
+
+    // std::map<std::string, std::unique_ptr<node::SourceChannelWriteable<protos::StateUpdate>>> m_update_channels;
+    // std::unique_ptr<client::ConnectionsManager> m_connections_manager;
+    // std::map<std::string, std::unique_ptr<client::SubscriptionService>> m_subscription_services;
+
+    // connection manager - connected to the update channel
+    std::unique_ptr<client::ConnectionsManager> m_connections_manager;
+
+    // update channel
+    std::unique_ptr<srf::node::SourceChannelWriteable<const protos::StateUpdate>> m_update_channel;
 
     // Stream Context
     stream_t m_stream;
@@ -168,16 +182,7 @@ class Client final : public Service
 
     runnable::LaunchOptions m_launch_options;
 
-    // when the server starts an update epoch, it will start by sending a proto::ServerStateUpdateStart event
-    // and conclude by sending a protos::ServerStateUpdateFinish
-    // after receiving a start and before a finish, this value should be true
-    // this value, in conjunction with the awaiting_update, can be used to determine if a request update
-    // message should be sent to the server
-    // todo(ryan) - move to a separate class/state machine to decouple logic from client
-    bool m_update_in_progress{false};
-    bool m_update_requested{false};
-
-    mutable std::mutex m_mutex;
+    std::mutex m_mutex;
 
     friend network::Resources;
 };

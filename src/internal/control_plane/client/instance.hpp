@@ -47,32 +47,19 @@ class Instance final : private resources::PartitionResourceBase
     Instance(Client& client,
              InstanceID instance_id,
              resources::PartitionResourceBase& base,
-             srf::node::SourceChannel<protos::StateUpdate>& update_channel);
+             srf::node::SourceChannel<const protos::StateUpdate>& update_channel);
     ~Instance() final;
 
     Client& client();
     const InstanceID& instance_id() const;
 
-    Future<void> fence_update();
-
-    std::size_t ucx_worker_address_count() const;
-
   private:
     void do_handle_state_update(const protos::StateUpdate& update);
-    void do_connections_update(const protos::ConnectionsState& connections);
-    void attach_data_plane_client(data_plane::Client* data_plane);
 
     Client& m_client;
     data_plane::Client* m_data_plane{nullptr};
     const InstanceID m_instance_id;
     std::unique_ptr<srf::runnable::Runner> m_update_handler;
-
-    mutable std::mutex m_mutex;
-    bool m_update_in_progress{false};
-    std::vector<Promise<void>> m_update_promises;
-
-    std::map<InstanceID, MachineID> m_instance_locality;
-    std::map<InstanceID, ucx::WorkerAddress> m_worker_addresses;
 
     friend network::Resources;
 };

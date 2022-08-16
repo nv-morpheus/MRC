@@ -258,4 +258,5 @@ const std::map<ConnectionManager::stream_id_t, ConnectionManager::stream_t>& Con
 {
     return m_streams;
 }
+
 }  // namespace srf::internal::control_plane::server

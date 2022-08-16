@@ -37,15 +37,15 @@ Resources::Resources(resources::PartitionResourceBase& base,
   m_control_plane(std::move(control_plane))
 {
     CHECK(m_control_plane);
-    CHECK_LT(partition_id(), m_control_plane->client().instance_ids().size());
-    CHECK_EQ(m_control_plane->instance_id(), m_control_plane->client().instance_ids().at(partition_id()));
+    CHECK_LT(partition_id(), m_control_plane->client().connections().instance_ids().size());
+    CHECK_EQ(m_control_plane->instance_id(), m_control_plane->client().connections().instance_ids().at(partition_id()));
 
     // construct resources on the srf_network task queue thread
     ucx.network_task_queue()
         .enqueue([this, &base, &ucx, &host] {
             // initialize data plane services - server / client
             m_data_plane = std::make_unique<data_plane::Resources>(base, ucx, host, m_instance_id);
-            m_control_plane->attach_data_plane_client(&m_data_plane->client());
+            // m_control_plane->attach_data_plane_client(&m_data_plane->client());
         })
         .get();
 }
