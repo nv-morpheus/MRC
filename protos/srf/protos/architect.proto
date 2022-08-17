@@ -35,14 +35,17 @@ enum EventType
     // Client Events - No Response
     ClientEventRequestStateUpdate = 100;
 
-    ClientUnaryCreateSubscriptionService = 201;
-    ClientUnaryRegisterSubscriptionService = 202;
-
     // Connection Management
-    ClientUnaryRegisterWorkers = 300;
-    ClientUnaryActivateStream = 301;
-    ClientUnaryLookupWorkerAddresses = 302;
-    ClientUnaryDropWorker = 303;
+    ClientUnaryRegisterWorkers = 201;
+    ClientUnaryActivateStream = 202;
+    ClientUnaryLookupWorkerAddresses = 203;
+    ClientUnaryDropWorker = 204;
+
+    // SubscriptionService
+    ClientUnaryCreateSubscriptionService = 301;
+    ClientUnaryRegisterSubscriptionService = 302;
+    ClientUnaryActivateSubscriptionService = 303;
+    ClientUnaryDropSubscriptionService = 304;
 
     // Server Event issues to Client(s)
     ServerEvent = 1000;
@@ -137,10 +140,20 @@ message RegisterSubscriptionServiceResponse
     uint64 tag = 3;
 }
 
+message ActivateSubscriptionServiceRequest
+{
+    string service_name = 1;
+    string role = 2;
+    repeated string subscribe_to_roles = 3;
+    uint64 instance_id = 4;
+    uint64 tag = 5;
+}
+
 message DropSubscriptionServiceRequest
 {
     string service_name = 1;
     uint64 instance_id = 2;
+    uint64 tag = 3;
 }
 
 message TaggedInstance

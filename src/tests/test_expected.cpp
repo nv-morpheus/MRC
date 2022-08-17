@@ -116,5 +116,12 @@ TEST_F(TestExpected, UniquePointer)
     auto ptr = std::move(rc.value());
 
     EXPECT_EQ(*ptr, 42);
+    EXPECT_TRUE(rc);
     EXPECT_FALSE(rc.value());
+}
+
+TEST_F(TestExpected, VoidChain)
+{
+    EXPECT_TRUE(make_void().and_then(make_void));
+    EXPECT_TRUE(make_void().transform([] { return make_int(1); }));
 }

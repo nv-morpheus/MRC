@@ -20,6 +20,7 @@
 #include "internal/control_plane/server/client_instance.hpp"
 #include "internal/control_plane/server/tagged_issuer.hpp"
 #include "internal/control_plane/server/versioned_issuer.hpp"
+#include "internal/expected.hpp"
 
 #include "srf/protos/architect.pb.h"
 #include "srf/types.hpp"
@@ -51,9 +52,14 @@ class SubscriptionService final : public TaggedIssuer
     bool has_role(const std::string& role) const;
     bool compare_roles(const std::set<std::string>& roles) const;
 
-    tag_t register_instance(std::shared_ptr<server::ClientInstance> instance,
-                            const std::string& role,
-                            const std::set<std::string>& subscribe_to_roles);
+    Expected<tag_t> register_instance(std::shared_ptr<server::ClientInstance> instance,
+                                      const std::string& role,
+                                      const std::set<std::string>& subscribe_to_roles);
+
+    Expected<> activate_instance(std::shared_ptr<server::ClientInstance> instance,
+                                 const std::string& role,
+                                 const std::set<std::string>& subscribe_to_roles,
+                                 tag_t tag);
 
   private:
     void add_role(const std::string& name);

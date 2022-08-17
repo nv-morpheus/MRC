@@ -100,32 +100,43 @@ SubscriptionService::SubscriptionService(std::string name, std::set<std::string>
     DCHECK_EQ(roles.size(), m_roles.size());
 }
 
-SubscriptionService::tag_t SubscriptionService::register_instance(std::shared_ptr<server::ClientInstance> instance,
-                                                                  const std::string& role,
-                                                                  const std::set<std::string>& subscribe_to_roles)
+Expected<SubscriptionService::tag_t> SubscriptionService::register_instance(
+    std::shared_ptr<server::ClientInstance> instance,
+    const std::string& role,
+    const std::set<std::string>& subscribe_to_roles)
 {
-    // ensure that role is not subscribing to itself for multi-role
-    if (m_roles.size() > 1)
-    {
-        CHECK(!contains(subscribe_to_roles, role));  // todo(cpp20) use std::set::contains
-    }
-
     // ensure all roles and subscribe_to_roles are valid
-    CHECK(contains(m_roles, role));
+    SRF_CHECK(contains(m_roles, role));
     for (const auto& s2r : subscribe_to_roles)
     {
-        CHECK(contains(m_roles, s2r));
+        SRF_CHECK(contains(m_roles, s2r));
     }
 
     auto tag = register_instance_id(instance->get_id());
+
+    return tag;
+}
+
+Expected<> SubscriptionService::activate_instance(std::shared_ptr<server::ClientInstance> instance,
+                                                  const std::string& role,
+                                                  const std::set<std::string>& subscribe_to_roles,
+                                                  tag_t tag)
+{
+    // ensure all roles and subscribe_to_roles are valid
+    SRF_CHECK(contains(m_roles, role));
+    for (const auto& s2r : subscribe_to_roles)
+    {
+        SRF_CHECK(contains(m_roles, s2r));
+    }
+
+    SRF_CHECK(is_issued_tag(tag));
 
     get_role(role).add_member(tag, instance);
     for (const auto& s2r : subscribe_to_roles)
     {
         get_role(s2r).add_subscriber(tag, instance);
     }
-
-    return tag;
+    return {};
 }
 
 bool SubscriptionService::compare_roles(const std::set<std::string>& roles) const
@@ -149,14 +160,6 @@ Role& SubscriptionService::get_role(const std::string& name)
     CHECK(search->second);
     return *(search->second);
 }
-
-// void SubscriptionService::drop_instance(std::shared_ptr<server::ClientInstance> instance)
-// {
-//     for (auto& [name, role] : m_roles)
-//     {
-//         role->drop_instance(instance);
-//     }
-// }
 
 void SubscriptionService::do_drop_tag(const tag_t& tag)
 {

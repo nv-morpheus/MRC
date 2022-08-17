@@ -47,7 +47,8 @@ class Tagged
 
     // a valid tag masks out both the upper and lower 16-bits
     // and compares the value against the instances tag() value
-    bool valid_tag(const tag_t& tag) const;
+    bool is_valid_tag(const tag_t& tag) const;
+    bool is_issued_tag(const tag_t& tag) const;
 
     tag_t upper_bound() const;
     tag_t lower_bound() const;

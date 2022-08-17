@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "internal/control_plane/client/state_manager.hpp"
 #include "internal/service.hpp"
 
 #include "srf/channel/status.hpp"
@@ -36,18 +37,16 @@ class Instance;
 
 class SubscriptionService
 {
-    using router_t = srf::node::Router<InstanceID, protos::StateUpdate>;
-
   public:
-    SubscriptionService(std::string name, std::set<std::string> roles) :
-      m_name(std::move(name)),
+    SubscriptionService(std::string service_name, std::set<std::string> roles) :
+      m_service_name(std::move(service_name)),
       m_roles(std::move(roles))
     {}
     virtual ~SubscriptionService() = default;
 
-    const std::string& name() const
+    const std::string& service_name() const
     {
-        return m_name;
+        return m_service_name;
     }
 
     const std::set<std::string>& roles() const
@@ -55,46 +54,48 @@ class SubscriptionService
         return m_roles;
     }
 
+  protected:
+    enum class State
+    {
+        Initialzed,
+        Created,
+        Registered,
+        Activated,
+        Operational,
+        Completed
+    };
+
+    void forward_state(const State& new_state)
+    {
+        CHECK(m_state < new_state);
+        m_state = new_state;
+    }
+
+    const State& state() const
+    {
+        return m_state;
+    }
+
   private:
-    std::string m_name;
+    std::string m_service_name;
     std::set<std::string> m_roles;
+    State m_state{State::Initialzed};
 };
 
-class SubscriptionServiceUpdater : public SubscriptionService, private Service
+class SubscriptionServiceUpdater : public SubscriptionService, public StateManager
 {
   public:
-    using SubscriptionService::SubscriptionService;
-
-    Future<void> fence_update()
-    {
-        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        return m_update_promises.emplace_back().get_future();
-    }
+    SubscriptionServiceUpdater(std::string name,
+                               std::set<std::string> roles,
+                               Client& client,
+                               node::SourceChannel<const protos::StateUpdate>& update_channel) :
+      SubscriptionService(std::move(name), std::move(roles)),
+      StateManager(client, update_channel)
+    {}
 
   private:
-    void update(const protos::StateUpdate& update_msg)
-    {
-        CHECK(update_msg.has_subscription_service());
-        if (m_nonce < update_msg.nonce())
-        {
-            m_nonce = update_msg.nonce();
-            do_update(update_msg.subscription_service());
-            std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-            for (auto& p : m_update_promises)
-            {
-                p.set_value();
-            }
-            m_update_promises.clear();
-        }
-    }
-
-    virtual void do_update(const protos::SubscriptionServiceState& update_msg) = 0;
-
-    std::size_t m_nonce{1};
-    std::vector<Promise<void>> m_update_promises;
-    std::mutex m_mutex;
-
-    friend Instance;
+    void do_update(const protos::StateUpdate&& update_msg) final;
+    virtual void do_subscription_service_update(const protos::SubscriptionServiceState& update_msg) = 0;
 };
 
 }  // namespace srf::internal::control_plane::client

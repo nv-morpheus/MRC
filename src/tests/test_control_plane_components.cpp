@@ -72,7 +72,8 @@ TEST_F(TestControlPlaneComponents, Tagged)
     for (int i = 1; i < UINT16_MAX; i++)
     {
         auto tag = tagged1.next_tag();
-        EXPECT_TRUE(tagged1.valid_tag(tag));
+        EXPECT_TRUE(tagged1.is_valid_tag(tag));
+        EXPECT_FALSE(tagged1.is_issued_tag(tag + 1));
     }
 
     // we can create UINT16_MAX tags per tagged object

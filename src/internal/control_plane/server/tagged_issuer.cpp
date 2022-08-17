@@ -31,10 +31,14 @@ Tagged::tag_t Tagged::lower_bound() const
 {
     return m_tag;
 }
-bool Tagged::valid_tag(const tag_t& tag) const
+bool Tagged::is_valid_tag(const tag_t& tag) const
 {
     static constexpr std::uint64_t Mask = 0x0000FFFFFFFF0000;
     return ((tag & Mask) == m_tag);
+}
+bool Tagged::is_issued_tag(const tag_t& tag) const
+{
+    return (tag > lower_bound() && tag < (m_tag + m_uid));
 }
 Tagged::tag_t Tagged::next_tag()
 {
@@ -133,4 +137,5 @@ void TaggedIssuer::issue_update()
 {
     do_issue_update();
 }
+
 }  // namespace srf::internal::control_plane::server
