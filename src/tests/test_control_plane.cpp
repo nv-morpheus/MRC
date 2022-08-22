@@ -27,6 +27,7 @@
 #include "internal/grpc/server_streaming.hpp"
 #include "internal/network/resources.hpp"
 #include "internal/pubsub/publisher.hpp"
+#include "internal/pubsub/publisher_manager.hpp"
 #include "internal/resources/manager.hpp"
 
 #include "srf/node/sink_properties.hpp"

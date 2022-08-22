@@ -52,7 +52,10 @@ Instance::Instance(Client& client,
 
 Instance::~Instance()
 {
-    CHECK(m_subscription_services.empty());
+    while (!m_subscription_services.empty())
+    {
+        boost::this_fiber::sleep_for(std::chrono::milliseconds(100));
+    }
 
     DVLOG(10) << "client instance: " << m_instance_id << " issuing drop request";
     protos::TaggedInstance msg;

@@ -38,7 +38,7 @@ void Role::add_member(std::uint64_t tag, std::shared_ptr<server::ClientInstance>
 void Role::add_subscriber(std::uint64_t tag, std::shared_ptr<server::ClientInstance> instance)
 {
     DCHECK(!contains(m_subscribers, tag));
-    DVLOG(10) << "service: " << service_name() << "; role: " << role_name() << "; subscriber member with tag: " << tag;
+    DVLOG(10) << "service: " << service_name() << "; role: " << role_name() << "; adding subscriber with tag: " << tag;
     m_subscribers[tag] = instance;
 
     // issue one off update to new subscriber; no need to mark_as_modified since the list of entries

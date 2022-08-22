@@ -19,7 +19,7 @@
 
 #include "internal/control_plane/client/subscription_service.hpp"
 
-#include "srf/node/source_channel.hpp"
+#include "srf/node/rx_source.hpp"
 #include "srf/utils/macros.hpp"
 
 #include <cstddef>
@@ -30,33 +30,9 @@
 namespace srf::internal::pubsub {
 
 template <typename T>
-class PublisherManager;
-
-template <typename T>
-class Publisher final : public srf::node::SourceChannelWriteable<T>
+class Subscriber : public node::RxSource<T>
 {
-    Publisher(std::string service_name, std::uint64_t tag) : m_service_name(std::move(service_name)), m_tag(tag) {}
-
   public:
-    ~Publisher() = default;
-
-    DELETE_COPYABILITY(Publisher);
-    DELETE_MOVEABILITY(Publisher);
-
-    const std::string& service_name()
-    {
-        return m_service_name;
-    }
-    const std::uint64_t& tag()
-    {
-        return m_tag;
-    }
-
-  private:
-    const std::string m_service_name;
-    const std::uint64_t m_tag;
-
-    friend PublisherManager<T>;
 };
 
 }  // namespace srf::internal::pubsub

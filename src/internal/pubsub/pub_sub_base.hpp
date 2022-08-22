@@ -19,44 +19,37 @@
 
 #include "internal/control_plane/client/subscription_service.hpp"
 
-#include "srf/node/source_channel.hpp"
-#include "srf/utils/macros.hpp"
-
-#include <cstddef>
-#include <cstdint>
 #include <string>
-#include <utility>
 
 namespace srf::internal::pubsub {
 
-template <typename T>
-class PublisherManager;
-
-template <typename T>
-class Publisher final : public srf::node::SourceChannelWriteable<T>
+/**
+ * @brief PubSub is a specialization of the generic SubscriptionService
+ *
+ * This class defines the set of allowed roles.
+ */
+class PubSubBase : public control_plane::client::SubscriptionService
 {
-    Publisher(std::string service_name, std::uint64_t tag) : m_service_name(std::move(service_name)), m_tag(tag) {}
-
   public:
-    ~Publisher() = default;
+    using SubscriptionService::SubscriptionService;
 
-    DELETE_COPYABILITY(Publisher);
-    DELETE_MOVEABILITY(Publisher);
-
-    const std::string& service_name()
+    static const std::string& role_publisher()
     {
-        return m_service_name;
-    }
-    const std::uint64_t& tag()
-    {
-        return m_tag;
+        static std::string name = "publisher";
+        return name;
     }
 
-  private:
-    const std::string m_service_name;
-    const std::uint64_t m_tag;
+    static const std::string& role_subscriber()
+    {
+        static std::string name = "subscriber";
+        return name;
+    }
 
-    friend PublisherManager<T>;
+    const std::set<std::string>& roles() const final
+    {
+        static std::set<std::string> r = {role_publisher(), role_subscriber()};
+        return r;
+    }
 };
 
 }  // namespace srf::internal::pubsub
