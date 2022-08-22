@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "internal/expected.hpp"
 #include "internal/network/resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/ucx/common.hpp"
@@ -41,6 +42,8 @@ class Client;
 
 namespace srf::internal::control_plane::client {
 
+class SubscriptionService;
+
 class Instance final : private resources::PartitionResourceBase
 {
   public:
@@ -53,13 +56,22 @@ class Instance final : private resources::PartitionResourceBase
     Client& client();
     const InstanceID& instance_id() const;
 
+    void register_subscription_service(std::unique_ptr<SubscriptionService> service);
+
   private:
     void do_handle_state_update(const protos::StateUpdate& update);
+    void do_update_subscription_state(const std::string& service_name,
+                                      const std::uint64_t& nonce,
+                                      const protos::UpdateSubscriptionServiceState& update);
+    void do_drop_subscription_state(const std::string& service_name,
+                                    const protos::DropSubscriptionServiceState& update);
 
     Client& m_client;
     data_plane::Client* m_data_plane{nullptr};
     const InstanceID m_instance_id;
     std::unique_ptr<srf::runnable::Runner> m_update_handler;
+
+    std::multimap<std::string, std::unique_ptr<SubscriptionService>> m_subscription_services;
 
     friend network::Resources;
 };

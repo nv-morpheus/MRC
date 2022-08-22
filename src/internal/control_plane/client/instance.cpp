@@ -18,12 +18,18 @@
 #include "internal/control_plane/client/instance.hpp"
 
 #include "internal/control_plane/client.hpp"
+#include "internal/control_plane/client/subscription_service.hpp"
 #include "internal/data_plane/client.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/utils/contains.hpp"
 
 #include "srf/node/edge_builder.hpp"
 #include "srf/protos/architect.pb.h"
+#include "srf/types.hpp"
+
+#include <boost/fiber/operations.hpp>
+
+#include <chrono>
 
 namespace srf::internal::control_plane::client {
 
@@ -46,6 +52,8 @@ Instance::Instance(Client& client,
 
 Instance::~Instance()
 {
+    CHECK(m_subscription_services.empty());
+
     DVLOG(10) << "client instance: " << m_instance_id << " issuing drop request";
     protos::TaggedInstance msg;
     msg.set_instance_id(m_instance_id);
@@ -59,16 +67,89 @@ Instance::~Instance()
     DVLOG(10) << "client instance: " << m_instance_id << " dropped by server - shutting down client-side";
 }
 
+void Instance::register_subscription_service(std::unique_ptr<SubscriptionService> subscription_service)
+{
+    auto it = m_subscription_services.emplace(subscription_service->service_name(), std::move(subscription_service));
+    it->second->service_start();
+    DCHECK(!m_subscription_services.empty());
+}
+
 void Instance::do_handle_state_update(const protos::StateUpdate& update)
 {
-    DVLOG(10) << "control plane instance on partition " << partition_id() << " got an update for "
-              << update.service_name();
-
-    // std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-
-    if (update.has_subscription_service())
+    if (update.has_update_subscription_service())
     {
-        // do subscription update
+        DVLOG(10) << "control plane instance on partition " << partition_id() << " got an update msg for "
+                  << update.service_name();
+        return do_update_subscription_state(
+            update.service_name(), update.nonce(), update.update_subscription_service());
+    }
+
+    if (update.has_drop_subscription_service())
+    {
+        DCHECK_GT(m_subscription_services.count(update.service_name()), 0)
+            << "failed to find active subscription service with name: " << update.service_name();
+
+        DVLOG(10) << "client::instance [" << partition_id()
+                  << "] dropping tag: " << update.drop_subscription_service().tag()
+                  << "; for role: " << update.drop_subscription_service().role();
+
+        auto range = m_subscription_services.equal_range(update.service_name());
+        for (auto it = range.first; it != range.second;)
+        {
+            auto& service = *it->second;
+            if (service.role() == update.drop_subscription_service().role() &&
+                service.tag() == update.drop_subscription_service().tag())
+            {
+                DVLOG(10) << "client dropping subscription service: " << update.service_name()
+                          << "; role: " << service.role() << "; tag: " << service.tag();
+
+                service.service_stop();
+                service.service_await_join();
+                it = m_subscription_services.erase(it);
+            }
+            else
+            {
+                it++;
+            }
+        }
+    }
+}
+
+void Instance::do_update_subscription_state(const std::string& service_name,
+                                            const std::uint64_t& nonce,
+                                            const protos::UpdateSubscriptionServiceState& update)
+{
+    auto range = m_subscription_services.equal_range(service_name);
+    std::vector<std::uint64_t> tags;
+    std::unordered_map<std::uint64_t, InstanceID> tagged_instances;
+    for (auto it = range.first; it != range.second; it++)
+    {
+        auto& service = *it->second;
+        if (contains(service.subscribe_to_roles(), update.role()))
+        {
+            // lazy populate
+            if (tagged_instances.empty())
+            {
+                for (const auto& ti : update.tagged_instances())
+                {
+                    tagged_instances[ti.tag()] = ti.instance_id();
+                }
+            }
+            service.subscriptions(update.role()).update_tagged_instances(tagged_instances);
+            tags.push_back(service.tag());
+        }
+    }
+    if (!tags.empty())
+    {
+        protos::UpdateSubscriptionServiceRequest req;
+        req.set_service_name(service_name);
+        req.set_role(update.role());
+        req.set_nonce(nonce);
+        for (const auto& tag : tags)
+        {
+            req.add_tags(tag);
+        }
+        client().issue_event(protos::ClientEventUpdateSubscriptionService, std::move(req));
     }
 }
 

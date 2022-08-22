@@ -38,7 +38,7 @@ bool Tagged::is_valid_tag(const tag_t& tag) const
 }
 bool Tagged::is_issued_tag(const tag_t& tag) const
 {
-    return (tag > lower_bound() && tag < (m_tag + m_uid));
+    return (tag > lower_bound() && tag <= (m_tag + m_uid));
 }
 Tagged::tag_t Tagged::next_tag()
 {
@@ -120,13 +120,7 @@ decltype(TaggedIssuer::m_instance_tags)::iterator TaggedIssuer::drop_tag(decltyp
 }
 std::size_t TaggedIssuer::tag_count_for_instance_id(ClientInstance::instance_id_t instance_id) const
 {
-    auto tags         = m_instance_tags.equal_range(instance_id);
-    std::size_t count = 0;
-    for (auto i = tags.first; i != tags.second; ++i)
-    {
-        count++;
-    }
-    return count;
+    return m_instance_tags.count(instance_id);
 }
 std::size_t TaggedIssuer::tag_count() const
 {

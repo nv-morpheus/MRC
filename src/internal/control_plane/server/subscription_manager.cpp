@@ -23,11 +23,14 @@
 
 #include <glog/logging.h>
 
+#include <algorithm>
+
 namespace srf::internal::control_plane::server {
 
 void Role::add_member(std::uint64_t tag, std::shared_ptr<server::ClientInstance> instance)
 {
     DCHECK(!contains(m_members, tag));
+    DVLOG(10) << "service: " << service_name() << "; role: " << role_name() << "; adding member with tag: " << tag;
     m_members[tag] = instance;
     mark_as_modified();
 }
@@ -35,6 +38,7 @@ void Role::add_member(std::uint64_t tag, std::shared_ptr<server::ClientInstance>
 void Role::add_subscriber(std::uint64_t tag, std::shared_ptr<server::ClientInstance> instance)
 {
     DCHECK(!contains(m_subscribers, tag));
+    DVLOG(10) << "service: " << service_name() << "; role: " << role_name() << "; subscriber member with tag: " << tag;
     m_subscribers[tag] = instance;
 
     // issue one off update to new subscriber; no need to mark_as_modified since the list of entries
@@ -43,31 +47,94 @@ void Role::add_subscriber(std::uint64_t tag, std::shared_ptr<server::ClientInsta
 
 void Role::drop_tag(std::uint64_t tag)
 {
-    if (m_members.erase(tag) != 0)
+    if (m_subscribers.erase(tag) != 0)
+    {
+        DVLOG(10) << "service: " << service_name() << "; role: " << role_name()
+                  << "; dropping subscriber with tag: " << tag;
+    }
+    m_subscriber_nonces.erase(tag);
+
+    // if a member is dropped, we mark the state as dirty and issue an updated membership list to all subscribers
+    if (contains(m_members, tag))
     {
         mark_as_modified();
+        m_subscriber_latches[current_nonce()] = std::make_pair(tag, m_members.at(tag));
+        m_members.erase(tag);
+        // note: the dropped tag instance is still "latched" to the service, i.e. no drop request from the server will
+        // be issued until all subscribers have synchronized on the membership update
+        DVLOG(10) << "service: " << service_name() << "; role: " << role_name()
+                  << "; dropping member with tag: " << tag;
     }
-    m_subscribers.erase(tag);
+    evaluate_latches();
 }
 
-void Role::do_issue_update(const protos::StateUpdate& update)
+void Role::update_subscriber_nonce(const std::uint64_t& tag, const std::uint64_t& nonce)
 {
-    DVLOG(10) << "issue_update for " << m_service_name << "/" << m_role_name;
-    for (const auto& [tag, instance] : m_subscribers)
+    auto search = m_subscriber_nonces.find(tag);
+    if (search != m_subscriber_nonces.end())
     {
-        await_update(instance, update);
+        DVLOG(10) << "updating subscriber with tag: " << tag << " with nonce: " << nonce;
+        search->second = nonce;
     }
+    evaluate_latches();
+}
+
+void Role::evaluate_latches()
+{
+    for (const auto& nti : m_subscriber_latches)
+    {
+        // nti => <nonce, <tag, instance>>
+        // evalute the nonce of dropped tags (tagged instances) against the current set of subscriber nonces, i.e. the
+        // state of the subscribers
+        if (std::all_of(m_subscriber_nonces.begin(), m_subscriber_nonces.end(), [&](const auto& tn) {
+                // tn => <tag, nonce>
+                return nti.first <= tn.second;
+            }))
+        {
+            // if the nonce of the dropped tag is less than or equal to the nonces of all current subscribers, then we
+            // can safely drop the tagged instance
+            DVLOG(10) << "issuing drop request for former member with tag: " << nti.second.first
+                      << "; nonce: " << nti.first;
+
+            protos::StateUpdate update;
+            update.set_service_name(service_name());
+            update.set_instance_id(nti.second.second->get_id());
+            auto* dropped = update.mutable_drop_subscription_service();
+            dropped->set_role(role_name());
+            dropped->set_tag(nti.second.first);
+            await_update(nti.second.second, update);
+        }
+    }
+}
+
+bool Role::has_update() const
+{
+    return (!m_subscribers.empty() && !m_members.empty());
 }
 
 void Role::do_make_update(protos::StateUpdate& update) const
 {
-    auto* service = update.mutable_subscription_service();
+    auto* service = update.mutable_update_subscription_service();
     service->set_role(m_role_name);
     for (const auto& [tag, instance] : m_members)
     {
         auto* tagged_instance = service->add_tagged_instances();
         tagged_instance->set_tag(tag);
         tagged_instance->set_instance_id(instance->get_id());
+    }
+}
+
+void Role::do_issue_update(const protos::StateUpdate& update)
+{
+    DVLOG(10) << "issue_update for " << m_service_name << "/" << m_role_name;
+    std::set<std::uint64_t> unique_instances;
+    for (const auto& [tag, instance] : m_subscribers)
+    {
+        if (!contains(unique_instances, instance->get_id()))
+        {
+            await_update(instance, update);
+            unique_instances.insert(instance->get_id());
+        }
     }
 }
 
@@ -165,6 +232,7 @@ void SubscriptionService::do_drop_tag(const tag_t& tag)
 {
     for (auto& [name, role] : m_roles)
     {
+        DVLOG(10) << "do_drop_tag: " << tag << "; for " << name;
         role->drop_tag(tag);
     }
 }
@@ -181,4 +249,17 @@ const std::string& SubscriptionService::service_name() const
 {
     return m_name;
 }
+
+Expected<> SubscriptionService::update_role(const protos::UpdateSubscriptionServiceRequest& update_req)
+{
+    SRF_CHECK(update_req.service_name() == service_name());
+    auto search = m_roles.find(update_req.role());
+    SRF_CHECK(search != m_roles.end());
+    for (const auto& tag : update_req.tags())
+    {
+        search->second->update_subscriber_nonce(tag, update_req.nonce());
+    }
+    return {};
+}
+
 }  // namespace srf::internal::control_plane::server

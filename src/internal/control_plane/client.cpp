@@ -87,8 +87,8 @@ void Client::do_service_start()
     m_stream->attach_to(*event_handler);
 
     // ensure all downstream event handlers are constructed before constructing and starting the event handler
-    m_update_channel      = std::make_unique<srf::node::SourceChannelWriteable<const protos::StateUpdate>>();
-    m_connections_manager = std::make_unique<client::ConnectionsManager>(*this, *m_update_channel);
+    m_connections_update_channel = std::make_unique<srf::node::SourceChannelWriteable<const protos::StateUpdate>>();
+    m_connections_manager        = std::make_unique<client::ConnectionsManager>(*this, *m_connections_update_channel);
 
     // launch runnables
     m_event_handler =
@@ -132,7 +132,7 @@ void Client::do_service_await_join()
 {
     auto status = m_stream->await_fini();
     m_event_handler->await_join();
-    m_update_channel.reset();
+    m_connections_update_channel.reset();
 
     if (m_owns_progress_engine)
     {
@@ -160,8 +160,16 @@ void Client::do_handle_event(event_t&& event)
     case protos::EventType::ServerStateUpdate: {
         protos::StateUpdate update;
         CHECK(event.msg.has_message() && event.msg.message().UnpackTo(&update));
-        DCHECK(m_update_channel);
-        CHECK(m_update_channel->await_write(std::move(update)) == channel::Status::success);
+
+        if (update.has_connections())
+        {
+            DCHECK(m_connections_update_channel);
+            CHECK(m_connections_update_channel->await_write(std::move(update)) == channel::Status::success);
+        }
+        else
+        {
+            route_state_update(event.msg.tag(), std::move(update));
+        }
     }
     break;
 
@@ -179,63 +187,6 @@ std::map<InstanceID, std::unique_ptr<client::Instance>> Client::register_ucx_add
     return instances;
 }
 
-// client::SubscriptionService& Client::get_or_create_subscription_service(std::string name, std::set<std::string>
-// roles)
-// {
-//     // no need to call the server if we have a locally registered subscription service
-//     CHECK(runnable().main().caller_on_same_thread());
-
-//     {
-//         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-//         auto search = m_subscription_services.find(name);
-//         if (search != m_subscription_services.end())
-//         {
-//             // possible match - validate roles
-//             CHECK(search->second->roles() == roles);
-//             return *search->second;
-//         }
-//     }
-
-//     // issue unary rpc on the bidi stream
-//     protos::CreateSubscriptionServiceRequest req;
-//     req.set_service_name(name);
-//     for (const auto& role : roles)
-//     {
-//         req.add_roles(role);
-//     }
-//     auto resp = await_unary<protos::Ack>(protos::ClientUnaryCreateSubscriptionService, std::move(req));
-//     if (!resp)
-//     {
-//         LOG(ERROR) << "failed to create subscription service: " << resp.error().message();
-//         throw resp.error();
-//     }
-//     DVLOG(10) << "subscribtion_service: " << name << " is live on the control plane server";
-
-//     // lock state - if not present, add subscriptions service specific update channel to the routing map
-//     // we had released the lock, so it's possible that multiple local paritions requested the same service
-//     // the first one here will register it
-//     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-//     auto search = m_subscription_services.find(name);
-//     if (search == m_subscription_services.end())
-//     {
-//         m_subscription_services[name] = std::make_unique<client::SubscriptionService>(name, roles);
-//         return *m_subscription_services.at(name);
-//     }
-//     DCHECK(search->second->roles() == roles);
-//     return *search->second;
-// }
-
-// MachineID Client::machine_id() const
-// {
-//     return m_machine_id;
-// }
-
-// const std::vector<InstanceID>& Client::instance_ids() const
-// {
-//     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-//     return m_instance_ids;
-// }
-
 void Client::forward_state(State state)
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
@@ -243,47 +194,30 @@ void Client::forward_state(State state)
     m_state = state;
 }
 
-// void Client::route_state_update_event(const event_t& event)
-// {
-//     protos::StateUpdate update;
-//     DCHECK(event.msg.event() == protos::ServerStateUpdate);
-//     CHECK(event.msg.has_message() && event.msg.message().UnpackTo(&update));
+void Client::route_state_update(std::uint64_t tag, protos::StateUpdate&& update)
+{
+    DCHECK(!m_connections_manager->instance_channels().empty());
 
-//     // check for connections
-//     if (update.has_connections())
-//     {
-//         // m_connections_manager.update(std::move(update));
-//     }
-//     else
-//     {
-//         // protect m_update_channels
-//         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-//         route_state_update(event.msg.tag(), std::move(update));
-//     }
-// }
-
-// void Client::route_state_update(std::uint64_t tag, protos::StateUpdate&& update)
-// {
-//     if (tag == 0)
-//     {
-//         DVLOG(10) << "broadcasting " << update.service_name() << " update to all instances";
-//         for (const auto& [id, instance] : m_update_channels)
-//         {
-//             auto copy   = update;
-//             auto status = instance->await_write(std::move(copy));
-//             LOG_IF(WARNING, status != srf::channel::Status::success)
-//                 << "unable to route update for service: " << update.service_name();
-//         }
-//     }
-//     else
-//     {
-//         auto instance = m_update_channels.find(tag);
-//         CHECK(instance != m_update_channels.end());
-//         auto status = instance->second->await_write(std::move(update));
-//         LOG_IF(WARNING, status != srf::channel::Status::success)
-//             << "unable to route update for service: " << update.service_name();
-//     }
-// }
+    if (tag == 0)
+    {
+        DVLOG(10) << "broadcasting " << update.service_name() << " update to all instances";
+        for (const auto& [id, instance] : m_connections_manager->instance_channels())
+        {
+            auto copy   = update;
+            auto status = instance->await_write(std::move(copy));
+            LOG_IF(WARNING, status != srf::channel::Status::success)
+                << "unable to route update for service: " << update.service_name();
+        }
+    }
+    else
+    {
+        auto instance = m_connections_manager->instance_channels().find(tag);
+        CHECK(instance != m_connections_manager->instance_channels().end());
+        auto status = instance->second->await_write(std::move(update));
+        LOG_IF(WARNING, status != srf::channel::Status::success)
+            << "unable to route update for service: " << update.service_name();
+    }
+}
 
 // bool Client::has_subscription_service(const std::string& name) const
 // {

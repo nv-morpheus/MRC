@@ -285,6 +285,10 @@ void Server::do_handle_event(event_t&& event)
                 status = unary_response(event, unary_drop_subscription_service(event));
                 break;
 
+            case protos::EventType::ClientEventUpdateSubscriptionService:
+                status = event_update_subscription_service(event);
+                break;
+
             default:
                 LOG(ERROR) << "unhandled event type in server handler";
                 throw Error::create("unhandled event type in server handler");
@@ -339,7 +343,6 @@ void Server::do_issue_update(rxcpp::subscriber<void*>& s)
         // issue subscription service updates
         for (auto& [name, service] : m_subscription_services)
         {
-            DVLOG(10) << "issue update for subscription service: " << name;
             service->issue_update();
         }
 
@@ -462,8 +465,8 @@ Expected<protos::RegisterSubscriptionServiceResponse> Server::unary_register_sub
     // lock internal state
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-    DVLOG(10) << "[start] instance_id: [id]; register with subscription service " << req->service_name() << " as a "
-              << req->role() << " from machine " << event.stream->get_id();
+    DVLOG(10) << "[start] register with subscription service " << req->service_name() << " as a " << req->role()
+              << " from machine " << event.stream->get_id();
 
     auto instance = validate_instance_id(req->instance_id(), event);
     SRF_EXPECT(instance);
@@ -555,6 +558,20 @@ Expected<protos::Ack> Server::unary_drop_subscription_service(event_t& event)
 
     service.drop_tag(req->tag());
     return {};
+}
+
+Expected<> Server::event_update_subscription_service(event_t& event)
+{
+    auto req = unpack_request<protos::UpdateSubscriptionServiceRequest>(event);
+    SRF_EXPECT(req);
+
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+
+    auto service_iter = get_subscription_service(req->service_name());
+    SRF_EXPECT(service_iter);
+    auto& service = *(service_iter.value()->second);
+
+    return service.update_role(*req);
 }
 
 void Server::drop_instance(const instance_id_t& instance_id)

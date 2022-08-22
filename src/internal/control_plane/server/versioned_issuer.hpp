@@ -39,8 +39,11 @@ class VersionedState : public UpdateIssuer
         if (m_issued_nonce < m_current_nonce)
         {
             m_issued_nonce = m_current_nonce;
-            auto update    = make_update();
-            do_issue_update(update);
+            if (has_update())
+            {
+                auto update = make_update();
+                do_issue_update(update);
+            }
         }
     }
 
@@ -48,6 +51,11 @@ class VersionedState : public UpdateIssuer
     void mark_as_modified()
     {
         m_current_nonce++;
+    }
+
+    const std::size_t& current_nonce() const
+    {
+        return m_current_nonce;
     }
 
     protos::StateUpdate make_update() const
@@ -60,6 +68,7 @@ class VersionedState : public UpdateIssuer
     }
 
   private:
+    virtual bool has_update() const                                 = 0;
     virtual void do_make_update(protos::StateUpdate& update) const  = 0;
     virtual void do_issue_update(const protos::StateUpdate& update) = 0;
 

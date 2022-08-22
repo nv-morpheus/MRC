@@ -212,6 +212,11 @@ Expected<protos::LookupWorkersResponse> ConnectionManager::lookup_workers(const 
     return resp;
 }
 
+bool ConnectionManager::has_update() const
+{
+    return true;
+}
+
 void ConnectionManager::do_make_update(protos::StateUpdate& update) const
 {
     auto* connections = update.mutable_connections();

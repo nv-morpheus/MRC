@@ -61,6 +61,8 @@ class SubscriptionService final : public TaggedIssuer
                                  const std::set<std::string>& subscribe_to_roles,
                                  tag_t tag);
 
+    Expected<> update_role(const protos::UpdateSubscriptionServiceRequest& update_req);
+
   private:
     void add_role(const std::string& name);
     Role& get_role(const std::string& name);
@@ -100,12 +102,21 @@ class Role final : public VersionedState
     // members and subscribers list
     void drop_tag(std::uint64_t tag);
 
+    // subscribers will report when they have completed an update for a given nonce
+    // this will enable us to fence on that update, meaning if we drop a tagged member resulting in the
+    // server-side nonce being incremented to X, we can fence that value X with the subscribers so that at some point in
+    // the future, all m_subscriber_nonces should be X or greater.
+    // todo: update drop_tag to return the nonce value on which a client could request a fence update
+    void update_subscriber_nonce(const std::uint64_t& tag, const std::uint64_t& nonce);
+
     const std::string& service_name() const final;
     const std::string& role_name() const;
 
   private:
+    bool has_update() const final;
     void do_make_update(protos::StateUpdate& update) const final;
     void do_issue_update(const protos::StateUpdate& update) final;
+    void evaluate_latches();
 
     protos::StateUpdate make_update() const;
 
@@ -116,6 +127,12 @@ class Role final : public VersionedState
     std::string m_role_name;
     std::map<std::uint64_t, std::shared_ptr<server::ClientInstance>> m_members;
     std::map<std::uint64_t, std::shared_ptr<server::ClientInstance>> m_subscribers;
+
+    // <tag, nonce>
+    std::map<std::uint64_t, std::uint64_t> m_subscriber_nonces;
+
+    // <nonce, <tag, instance>> - when all m_subscriber_nonces are >= nonce issue drop event
+    std::map<std::uint64_t, std::pair<std::uint64_t, std::shared_ptr<server::ClientInstance>>> m_subscriber_latches;
 };
 
 }  // namespace srf::internal::control_plane::server

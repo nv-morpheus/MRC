@@ -61,8 +61,6 @@ class ConnectionManager : public VersionedState
     using stream_id_t   = std::size_t;
     using instance_id_t = std::size_t;
 
-
-
     void add_stream(const stream_t& stream);
     void drop_stream(const stream_id_t& stream_id) noexcept;
     void drop_all_streams() noexcept;
@@ -87,6 +85,7 @@ class ConnectionManager : public VersionedState
 
   protected:
   private:
+    bool has_update() const final;
     void do_make_update(protos::StateUpdate& update) const final;
     void do_issue_update(const protos::StateUpdate& update) final;
 

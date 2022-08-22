@@ -31,16 +31,7 @@
 
 namespace srf::internal::control_plane::client {
 
-StateManager::StateManager(Client& client, node::SourceChannel<const protos::StateUpdate>& update_channel) :
-  m_client(client)
-{
-    auto sink = std::make_unique<node::RxSink<protos::StateUpdate>>(
-        [this](protos::StateUpdate update_msg) { update(std::move(update_msg)); });
-    // sink->update_channel(std::make_unique<channel::RecentChannel<protos::StateUpdate>>(1));
-    node::make_edge(update_channel, *sink);
-    m_runner =
-        client.runnable().launch_control().prepare_launcher(client.launch_options(), std::move(sink))->ignition();
-}
+StateManager::StateManager(Client& client) : m_client(client) {}
 
 StateManager::~StateManager()
 {
@@ -85,6 +76,16 @@ const Client& StateManager::client() const
 Client& StateManager::client()
 {
     return m_client;
+}
+
+void StateManager::start_with_channel(node::SourceChannel<const protos::StateUpdate>& update_channel)
+{
+    auto sink = std::make_unique<node::RxSink<protos::StateUpdate>>(
+        [this](protos::StateUpdate update_msg) { update(std::move(update_msg)); });
+    // sink->update_channel(std::make_unique<channel::RecentChannel<protos::StateUpdate>>(1));
+    node::make_edge(update_channel, *sink);
+    m_runner =
+        client().runnable().launch_control().prepare_launcher(client().launch_options(), std::move(sink))->ignition();
 }
 
 }  // namespace srf::internal::control_plane::client

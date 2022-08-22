@@ -54,10 +54,14 @@ class ConnectionsManager : public StateManager
 
     const std::map<InstanceID, MachineID>& locality_map();
     const std::map<InstanceID, ucx::WorkerAddress>& worker_addresses();
+    const std::map<InstanceID, std::unique_ptr<update_channel_t>>& instance_channels() const
+    {
+        return m_update_channels;
+    }
 
   private:
     void do_update(const protos::StateUpdate&& update_msg) final;
-    void do_connections_update(const protos::ConnectionsState& connections);
+    void do_connections_update(const protos::UpdateConnectionsState& connections);
     void do_route_state_update(const protos::StateUpdate&& update_msg);
 
     MachineID m_machine_id;

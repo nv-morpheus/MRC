@@ -17,6 +17,7 @@
 
 #include "internal/expected.hpp"
 
+#include <glog/logging.h>
 #include <gtest/gtest.h>
 
 using namespace srf;
@@ -120,8 +121,37 @@ TEST_F(TestExpected, UniquePointer)
     EXPECT_FALSE(rc.value());
 }
 
-TEST_F(TestExpected, VoidChain)
+TEST_F(TestExpected, Examples)
 {
     EXPECT_TRUE(make_void().and_then(make_void));
-    EXPECT_TRUE(make_void().transform([] { return make_int(1); }));
+    EXPECT_EQ(make_void().transform([] { return make_int(1); }).value(), 1);
+
+    auto mul2 = [](int a) { return a * 2; };
+    auto inc1 = [](int a) { return a + 1; };
+
+    {
+        Expected<int> e = 21;
+        auto ret        = e.map(mul2);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(ret.value(), 42);
+    }
+
+    {
+        auto ret = make_int(21).map(mul2).map(inc1);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(ret.value(), 43);
+    }
+
+    {
+        Expected<int> e = 21;
+        auto ret        = e.map(mul2).map(mul2);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(ret.value(), 84);
+    }
+}
+
+TEST_F(TestExpected, OrElse)
+{
+    auto status = make_int_fail(42).or_else([](auto& e) { LOG(INFO) << e.message(); });
+    EXPECT_FALSE(status);
 }

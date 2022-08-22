@@ -80,7 +80,7 @@ TEST_F(TestSystem, FiberPool)
 {
     auto system = system::make_system(make_options([](Options& options) {
         // ensure we have 4 logical cpus
-        options.topology().user_cpuset("0-3");
+        options.topology().user_cpuset("0-255");
     }));
 
     CpuSet cpu_set;

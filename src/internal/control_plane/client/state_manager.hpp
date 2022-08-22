@@ -41,7 +41,7 @@ namespace client {
 class StateManager
 {
   public:
-    StateManager(Client& client, node::SourceChannel<const protos::StateUpdate>& update_channel);
+    StateManager(Client& client);
     virtual ~StateManager();
 
     DELETE_COPYABILITY(StateManager);
@@ -61,6 +61,8 @@ class StateManager
   protected:
     const Client& client() const;
     Client& client();
+
+    void start_with_channel(node::SourceChannel<const protos::StateUpdate>& update_channel);
 
   private:
     /**

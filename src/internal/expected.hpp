@@ -72,11 +72,10 @@ class Error final : public std::exception
 template <typename T = void>
 using Expected = tl::expected<T, Error>;  // NOLINT
 
-#define SRF_CHECK(condition)                                   \
-    if (!(condition))                                          \
-    {                                                          \
-        return Error::create(SRF_CONCAT_STR("Expect failed: "  \
-                                            << "#condition")); \
+#define SRF_CHECK(condition)                                                  \
+    if (!(condition))                                                         \
+    {                                                                         \
+        return Error::create(SRF_CONCAT_STR("CHECK failed: " #condition "")); \
     }
 
 #define SRF_EXPECT(expected)                                          \
@@ -84,6 +83,13 @@ using Expected = tl::expected<T, Error>;  // NOLINT
     {                                                                 \
         DVLOG(10) << "expect failed: " << expected.error().message(); \
         return Error::create(std::move(expected.error()));            \
+    }
+
+#define SRF_THROW_ON_ERROR(expected)                                  \
+    if (!(expected))                                                  \
+    {                                                                 \
+        DVLOG(10) << "expect failed: " << expected.error().message(); \
+        throw expected.error();                                       \
     }
 
 }  // namespace srf::internal

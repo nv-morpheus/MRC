@@ -133,7 +133,6 @@ class Client final : public resources::PartitionResourceBase, public Service
     void request_update();
 
   private:
-    void route_state_update_event(const event_t& event);
     void route_state_update(std::uint64_t tag, protos::StateUpdate&& update);
 
     void do_service_start() final;
@@ -171,7 +170,8 @@ class Client final : public resources::PartitionResourceBase, public Service
     std::unique_ptr<client::ConnectionsManager> m_connections_manager;
 
     // update channel
-    std::unique_ptr<srf::node::SourceChannelWriteable<const protos::StateUpdate>> m_update_channel;
+    std::unique_ptr<srf::node::SourceChannelWriteable<const protos::StateUpdate>> m_connections_update_channel;
+    std::map<InstanceID, srf::node::SourceChannelWriteable<const protos::StateUpdate>> m_instance_update_channels;
 
     // Stream Context
     stream_t m_stream;

@@ -114,6 +114,7 @@ class Server : public Service
     Expected<protos::RegisterSubscriptionServiceResponse> unary_register_subscription_service(event_t& event);
     Expected<protos::Ack> unary_activate_subscription_service(event_t& event);
     Expected<protos::Ack> unary_drop_subscription_service(event_t& event);
+    Expected<> event_update_subscription_service(event_t& event);
 
     void drop_instance(const instance_id_t& instance_id);
     void drop_stream(writer_t& writer);

@@ -27,75 +27,82 @@
 #include "srf/node/source_channel.hpp"
 #include "srf/protos/architect.pb.h"
 #include "srf/types.hpp"
+#include "srf/utils/macros.hpp"
 
 #include <set>
 #include <string>
+#include <utility>
 
 namespace srf::internal::control_plane::client {
 
 class Instance;
+class SubscriptionService;
+class Role;
 
-class SubscriptionService
+class SubscriptionService : public Service
 {
   public:
-    SubscriptionService(std::string service_name, std::set<std::string> roles) :
-      m_service_name(std::move(service_name)),
-      m_roles(std::move(roles))
-    {}
-    virtual ~SubscriptionService() = default;
+    SubscriptionService(const std::string& service_name, Instance& instance);
 
-    const std::string& service_name() const
-    {
-        return m_service_name;
-    }
+    ~SubscriptionService() override;
 
-    const std::set<std::string>& roles() const
-    {
-        return m_roles;
-    }
+    const std::string& service_name() const;
+
+    virtual const std::string& role() const                         = 0;
+    virtual const std::set<std::string>& roles() const              = 0;
+    virtual const std::set<std::string>& subscribe_to_roles() const = 0;
+
+    // can only be accessed after start
+    Role& subscriptions(const std::string& role);
+    const std::uint64_t& tag() const;
 
   protected:
-    enum class State
-    {
-        Initialzed,
-        Created,
-        Registered,
-        Activated,
-        Operational,
-        Completed
-    };
-
-    void forward_state(const State& new_state)
-    {
-        CHECK(m_state < new_state);
-        m_state = new_state;
-    }
-
-    const State& state() const
-    {
-        return m_state;
-    }
+    void do_service_start() override;
+    void drop_subscription_service() noexcept;
+    Expected<> activate_subscription_service();
 
   private:
-    std::string m_service_name;
-    std::set<std::string> m_roles;
-    State m_state{State::Initialzed};
+    virtual void update_tagged_instances(const std::string& role,
+                                         const std::unordered_map<std::uint64_t, InstanceID>& tagged_instances) = 0;
+
+    Expected<> get_or_create_subscription_service();
+    Expected<> register_subscription_service();
+
+    const std::string m_service_name;
+    std::uint64_t m_tag{0};
+    Instance& m_instance;
+    std::map<std::string, std::unique_ptr<Role>> m_subscriptions;
+
+    friend Role;
 };
 
-class SubscriptionServiceUpdater : public SubscriptionService, public StateManager
+class Role final
 {
   public:
-    SubscriptionServiceUpdater(std::string name,
-                               std::set<std::string> roles,
-                               Client& client,
-                               node::SourceChannel<const protos::StateUpdate>& update_channel) :
-      SubscriptionService(std::move(name), std::move(roles)),
-      StateManager(client, update_channel)
-    {}
+    Role(SubscriptionService& subscription_service, std::string role_name);
+    virtual ~Role() = default;
+
+    DELETE_COPYABILITY(Role);
+    DELETE_MOVEABILITY(Role);
 
   private:
-    void do_update(const protos::StateUpdate&& update_msg) final;
-    virtual void do_subscription_service_update(const protos::SubscriptionServiceState& update_msg) = 0;
+    void update_tagged_instances(const std::unordered_map<std::uint64_t, InstanceID>& tagged_instances)
+    {
+        m_subscription_service.update_tagged_instances(m_role_name, tagged_instances);
+        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+        for (auto& p : m_update_promises)
+        {
+            p.set_value();
+        }
+        m_update_promises.clear();
+    }
+
+    SubscriptionService& m_subscription_service;
+    const std::string m_role_name;
+    std::vector<Promise<void>> m_update_promises;
+    std::mutex m_mutex;
+
+    friend Instance;
 };
 
 }  // namespace srf::internal::control_plane::client

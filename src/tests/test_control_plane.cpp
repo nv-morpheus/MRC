@@ -202,7 +202,13 @@ TEST_F(TestControlPlane, DoubleClientPubSub)
         })
         .get();
 
-    // auto publisher = std::make_unique<internal::pubsub::PublisherRoundRobin<int>>("my_int", client_1->partition(0));
+    LOG(INFO) << "MAKE PUBLISHER";
+
+    auto publisher = internal::pubsub::make_publisher<int>(
+        "my_int", internal::pubsub::PublisherType::RoundRobin, client_1->partition(0));
+
+    LOG(INFO) << "DELETE PUBLISHER";
+    publisher.reset();
 
     // f1 = client_1->partition(0).network()->control_plane().client().connections().update_future();
     // client_1->partition(0).network()->control_plane().client().request_update();

@@ -27,9 +27,10 @@
 
 namespace srf::internal::control_plane::client {
 
-ConnectionsManager::ConnectionsManager(Client& client, update_channel_t& update_channel) :
-  StateManager(client, update_channel)
-{}
+ConnectionsManager::ConnectionsManager(Client& client, update_channel_t& update_channel) : StateManager(client)
+{
+    this->start_with_channel(update_channel);
+}
 
 const std::vector<InstanceID>& ConnectionsManager::instance_ids() const
 {
@@ -82,15 +83,10 @@ void ConnectionsManager::do_update(const protos::StateUpdate&& update_msg)
         return do_connections_update(update_msg.connections());
     }
 
-    if (update_msg.has_subscription_service())
-    {
-        return do_route_state_update(std::move(update_msg));
-    }
-
     LOG(FATAL) << "unhandled update";
 }
 
-void ConnectionsManager::do_connections_update(const protos::ConnectionsState& connections)
+void ConnectionsManager::do_connections_update(const protos::UpdateConnectionsState& connections)
 {
     std::set<InstanceID> new_instance_ids;
     for (const auto& tagged_instance : connections.tagged_instances())
@@ -150,32 +146,6 @@ void ConnectionsManager::do_connections_update(const protos::ConnectionsState& c
             DVLOG(10) << "registering ucx worker address for instance_id: " << worker.instance_id();
             m_worker_addresses[worker.instance_id()] = worker.worker_address();
         }
-    }
-}
-
-void ConnectionsManager::do_route_state_update(const protos::StateUpdate&& update_msg)
-{
-    LOG(FATAL) << "implement me";
-
-    if (update_msg.instance_id() == 0)
-    {
-        DVLOG(10) << "broadcasting " << update_msg.service_name() << " update to all instances";
-        for (const auto& [id, instance] : m_update_channels)
-        {
-            auto copy   = update_msg;
-            auto status = instance->await_write(std::move(copy));
-            LOG_IF(WARNING, status != srf::channel::Status::success)
-                << "unable to route update for service: " << update_msg.service_name();
-        }
-    }
-    else
-    {
-        // route to specific instance
-        auto instance = m_update_channels.find(update_msg.instance_id());
-        CHECK(instance != m_update_channels.end());
-        auto status = instance->second->await_write(std::move(update_msg));
-        LOG_IF(WARNING, status != srf::channel::Status::success)
-            << "unable to route update for service: " << update_msg.service_name();
     }
 }
 
