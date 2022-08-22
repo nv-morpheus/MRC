@@ -31,19 +31,19 @@ python:
 
 # Setup the dependencies to build with multiple versions of RAPIDS
 rapids_version:
-  - 21.10 # 22.06 is final release with support for RAPIDS 21.10
   - 22.04 # Keep around compatibility with current version -1
   - 22.06
+  - 22.08
 
 abseil_cpp:
   - 20211102.0
-  - 20211102.0
+  - 20210324.2
   - 20210324.2
 
 grpc_cpp:
-  - 1.46
   - 1.45
   - 1.45 # 1.45 is needed for cudf>=22.06
+  - 1.45
 
 zip_keys:
   - rapids_version
