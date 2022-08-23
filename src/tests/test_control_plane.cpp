@@ -203,20 +203,32 @@ TEST_F(TestControlPlane, DoubleClientPubSub)
         })
         .get();
 
-    // LOG(INFO) << "MAKE PUBLISHER";
+    LOG(INFO) << "MAKE PUBLISHER";
 
-    // auto publisher = internal::pubsub::make_publisher<int>(
-    //     "my_int", internal::pubsub::PublisherType::RoundRobin, client_1->partition(0));
-
-    // LOG(INFO) << "DELETE PUBLISHER";
-    // publisher.reset();
+    auto publisher = internal::pubsub::make_publisher<int>(
+        "my_int", internal::pubsub::PublisherType::RoundRobin, client_1->partition(0));
 
     LOG(INFO) << "MAKE SUBSCRIBER";
     auto subscriber = internal::pubsub::make_subscriber<int>("my_int", client_2->partition(0));
 
+    client_1->partition(0).network()->control_plane().client().request_update();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    LOG(INFO) << "AFTER SLEEP 1 - publisher should have 1 subscriber";
+
     LOG(INFO) << "[START] DELETE SUBSCRIBER";
     subscriber.reset();
     LOG(INFO) << "[FINISH] DELETE SUBSCRIBER";
+
+    client_1->partition(0).network()->control_plane().client().request_update();
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    LOG(INFO) << "AFTER SLEEP 2 - publisher should have 0 subscribers";
+
+    LOG(INFO) << "[START] DELETE PUBLISHER";
+    publisher.reset();
+    LOG(INFO) << "[FINISH] DELETE PUBLISHER";
+
+    client_1->partition(0).network()->control_plane().client().request_update();
 
     // destroying the resources should gracefully shutdown the data plane and the control plane.
     client_1.reset();

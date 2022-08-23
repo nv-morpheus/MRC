@@ -116,17 +116,28 @@ Expected<> SubscriptionService::activate_subscription_service()
     return {};
 }
 
-void SubscriptionService::drop_subscription_service() noexcept
+std::function<void()> SubscriptionService::drop_subscription_service() const
 {
-    DVLOG(10) << "[start] drop subscription service: " << service_name() << "; role: " << role() << "; tag: " << tag();
-    protos::DropSubscriptionServiceRequest req;
-    req.set_service_name(this->service_name());
-    req.set_instance_id(m_instance.instance_id());
-    req.set_tag(this->tag());
-    auto resp =
-        m_instance.client().await_unary<protos::Ack>(protos::ClientUnaryDropSubscriptionService, std::move(req));
-    LOG_IF(ERROR, !resp) << resp.error().message();
-    DVLOG(10) << "[finish] drop subscription service: " << service_name() << "; role: " << role() << "; tag: " << tag();
+    auto service_name = this->service_name();
+    auto role         = this->role();
+    auto tag          = this->tag();
+    auto& instance    = m_instance;
+
+    // note we are capturing this a lambda because the moment we issue the drop subscription request
+    // this object becomes volatile. using the lambda, we don't have to capture this as part of the
+    // handles custom deleter, instead, we only capture the lambda
+
+    return [service_name, role, tag, &instance] {
+        DVLOG(10) << "[start] drop subscription service: " << service_name << "; role: " << role << "; tag: " << tag;
+        protos::DropSubscriptionServiceRequest req;
+        req.set_service_name(service_name);
+        req.set_instance_id(instance.instance_id());
+        req.set_tag(tag);
+        auto resp =
+            instance.client().await_unary<protos::Ack>(protos::ClientUnaryDropSubscriptionService, std::move(req));
+        LOG_IF(ERROR, !resp) << resp.error().message();
+        DVLOG(10) << "[finish] drop subscription service: " << service_name << "; role: " << role << "; tag: " << tag;
+    };
 }
 
 const std::uint64_t& SubscriptionService::tag() const
@@ -141,15 +152,5 @@ Role::Role(SubscriptionService& subscription_service, std::string role_name) :
 {
     DCHECK(contains(m_subscription_service.subscribe_to_roles(), m_role_name));
 }
-
-// Future<void> Role::update_future()
-// {
-//     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-//     return m_update_promises.emplace_back().get_future();
-// }
-// void Role::request_update()
-// {
-//     m_instance.client().request_update();
-// }
 
 }  // namespace srf::internal::control_plane::client

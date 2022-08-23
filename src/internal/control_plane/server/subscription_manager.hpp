@@ -131,7 +131,8 @@ class Role final : public VersionedState
     // <tag, nonce>
     std::map<std::uint64_t, std::uint64_t> m_subscriber_nonces;
 
-    // <nonce, <tag, instance>> - when all m_subscriber_nonces are >= nonce issue drop event
+    // <tag, <nonce, instance>> - when all m_subscriber_nonces are >= nonce issue drop event
+    // key off tag because it is unique
     std::map<std::uint64_t, std::pair<std::uint64_t, std::shared_ptr<server::ClientInstance>>> m_subscriber_latches;
 };
 

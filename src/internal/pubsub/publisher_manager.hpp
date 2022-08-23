@@ -122,12 +122,14 @@ class PublisherManager : public PublisherManagerBase
 
         CHECK(this->tag() != 0);
 
-        auto publisher =
-            std::shared_ptr<Publisher<T>>(new Publisher<T>(service_name(), this->tag()), [this](Publisher<T>* ptr) {
-                drop_subscription_service();
-                delete ptr;
-            });
-        auto sink = std::make_unique<srf::node::RxSink<T>>([this](T data) { write(std::move(data)); });
+        auto drop_subscription_service_lambda = drop_subscription_service();
+
+        auto publisher = std::shared_ptr<Publisher<T>>(new Publisher<T>(service_name(), this->tag()),
+                                                       [drop_subscription_service_lambda](Publisher<T>* ptr) {
+                                                           drop_subscription_service_lambda();
+                                                           delete ptr;
+                                                       });
+        auto sink      = std::make_unique<srf::node::RxSink<T>>([this](T data) { write(std::move(data)); });
         srf::node::make_edge(*publisher, *sink);
 
         auto launch_options = resources().network()->control_plane().client().launch_options();

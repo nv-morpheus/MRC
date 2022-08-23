@@ -117,11 +117,13 @@ class SubscriberManager : public SubscriberManagerBase
 
         CHECK(this->tag() != 0);
 
-        auto subscriber =
-            std::shared_ptr<Subscriber<T>>(new Subscriber<T>(service_name(), this->tag()), [this](Subscriber<T>* ptr) {
-                drop_subscription_service();
-                delete ptr;
-            });
+        auto drop_subscription_service_lambda = drop_subscription_service();
+
+        auto subscriber = std::shared_ptr<Subscriber<T>>(new Subscriber<T>(service_name(), this->tag()),
+                                                         [drop_subscription_service_lambda](Subscriber<T>* ptr) {
+                                                             drop_subscription_service_lambda();
+                                                             delete ptr;
+                                                         });
 
         auto network_reader = std::make_unique<node::RxSink<srf::memory::buffer_view>>(
             [](srf::memory::buffer_view event) { LOG(FATAL) << "SubscriberManager network_reader - implement me"; });

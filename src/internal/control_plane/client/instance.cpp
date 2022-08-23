@@ -138,6 +138,9 @@ void Instance::do_update_subscription_state(const std::string& service_name,
                     tagged_instances[ti.tag()] = ti.instance_id();
                 }
             }
+            DVLOG(10) << "client::Instance[" << partition_id() << "]: updating service: " << service.service_name()
+                      << "; role: " << service.role() << "; tag: " << service.tag() << "; with "
+                      << tagged_instances.size() << " tagged instances";
             service.subscriptions(update.role()).update_tagged_instances(tagged_instances);
             tags.push_back(service.tag());
         }

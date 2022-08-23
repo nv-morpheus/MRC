@@ -58,7 +58,7 @@ class SubscriptionService : public Service
 
   protected:
     void do_service_start() override;
-    void drop_subscription_service() noexcept;
+    std::function<void()> drop_subscription_service() const;
     Expected<> activate_subscription_service();
 
   private:

@@ -39,7 +39,8 @@ void Role::add_subscriber(std::uint64_t tag, std::shared_ptr<server::ClientInsta
 {
     DCHECK(!contains(m_subscribers, tag));
     DVLOG(10) << "service: " << service_name() << "; role: " << role_name() << "; adding subscriber with tag: " << tag;
-    m_subscribers[tag] = instance;
+    m_subscribers[tag]       = instance;
+    m_subscriber_nonces[tag] = 0;
 
     // issue one off update to new subscriber; no need to mark_as_modified since the list of entries
     // watched by the subscribers has not changed
@@ -58,7 +59,7 @@ void Role::drop_tag(std::uint64_t tag)
     if (contains(m_members, tag))
     {
         mark_as_modified();
-        m_subscriber_latches[current_nonce()] = std::make_pair(tag, m_members.at(tag));
+        m_subscriber_latches[tag] = std::make_pair(current_nonce(), m_members.at(tag));
         m_members.erase(tag);
         // note: the dropped tag instance is still "latched" to the service, i.e. no drop request from the server will
         // be issued until all subscribers have synchronized on the membership update
@@ -81,35 +82,45 @@ void Role::update_subscriber_nonce(const std::uint64_t& tag, const std::uint64_t
 
 void Role::evaluate_latches()
 {
-    for (const auto& nti : m_subscriber_latches)
+    std::set<std::uint64_t> tags_to_remove;
+    for (const auto& t_ni : m_subscriber_latches)
     {
-        // nti => <nonce, <tag, instance>>
+        // t_ni => <tag, <nonce, instance>>
         // evalute the nonce of dropped tags (tagged instances) against the current set of subscriber nonces, i.e. the
         // state of the subscribers
         if (std::all_of(m_subscriber_nonces.begin(), m_subscriber_nonces.end(), [&](const auto& tn) {
                 // tn => <tag, nonce>
-                return nti.first <= tn.second;
+                return t_ni.second.first <= tn.second;
             }))
         {
             // if the nonce of the dropped tag is less than or equal to the nonces of all current subscribers, then we
             // can safely drop the tagged instance
-            DVLOG(10) << "issuing drop request for former member with tag: " << nti.second.first
-                      << "; nonce: " << nti.first;
+            DVLOG(10) << "issuing drop request for former member with tag: " << t_ni.first
+                      << "; nonce: " << t_ni.second.first;
+
+            tags_to_remove.insert(t_ni.first);
 
             protos::StateUpdate update;
             update.set_service_name(service_name());
-            update.set_instance_id(nti.second.second->get_id());
+            update.set_instance_id(t_ni.second.second->get_id());
             auto* dropped = update.mutable_drop_subscription_service();
             dropped->set_role(role_name());
-            dropped->set_tag(nti.second.first);
-            await_update(nti.second.second, update);
+            dropped->set_tag(t_ni.first);
+            await_update(t_ni.second.second, update);
         }
+    }
+
+    DVLOG(10) << "server service: " << service_name() << "; role: " << role_name() << "; dropping "
+              << tags_to_remove.size() << " latched members";
+    for (const auto& tag : tags_to_remove)
+    {
+        m_subscriber_latches.erase(tag);
     }
 }
 
 bool Role::has_update() const
 {
-    return (!m_subscribers.empty() && !m_members.empty());
+    return true;
 }
 
 void Role::do_make_update(protos::StateUpdate& update) const
