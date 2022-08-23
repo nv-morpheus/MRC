@@ -108,6 +108,12 @@ PYBIND11_MODULE(segment, m)
                 static_cast<std::shared_ptr<srf::segment::ObjectProperties> (*)(
                     srf::segment::Builder&, const std::string&, py::function)>(&SegmentProxy::make_source));
 
+    Builder.def("make_source",
+                static_cast<std::shared_ptr<srf::segment::ObjectProperties> (*)(
+                    srf::segment::Builder&, const std::string&, const std::function<void(PyObjectSubscriber&)>&)>(
+                    &SegmentProxy::make_source),
+                py::return_value_policy::reference_internal);
+
     /**
      * Construct a new py::object sink.
      * Create and return a Segment node used to sink python objects following out of the Segment.
