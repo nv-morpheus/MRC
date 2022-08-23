@@ -149,16 +149,22 @@ void ConnectionsManager::do_connections_update(const protos::UpdateConnectionsSt
     }
 }
 
-const std::map<InstanceID, MachineID>& ConnectionsManager::locality_map()
+const std::map<InstanceID, MachineID>& ConnectionsManager::locality_map() const
 {
-    CHECK(client().runnable().main().caller_on_same_thread());
+    DCHECK(client().runnable().main().caller_on_same_thread());
     return m_locality_map;
 }
 
-const std::map<InstanceID, ucx::WorkerAddress>& ConnectionsManager::worker_addresses()
+const std::map<InstanceID, ucx::WorkerAddress>& ConnectionsManager::worker_addresses() const
 {
-    CHECK(client().runnable().main().caller_on_same_thread());
+    // DCHECK(client().runnable().main().caller_on_same_thread());
     return m_worker_addresses;
 }
 
+const std::map<InstanceID, std::unique_ptr<ConnectionsManager::update_channel_t>>&
+ConnectionsManager::instance_channels() const
+{
+    DCHECK(client().runnable().main().caller_on_same_thread());
+    return m_update_channels;
+}
 }  // namespace srf::internal::control_plane::client

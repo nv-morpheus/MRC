@@ -15,6 +15,9 @@
  * limitations under the License.
  */
 
+#include "internal/control_plane/client.hpp"
+#include "internal/control_plane/client/connections_manager.hpp"
+#include "internal/control_plane/client/instance.hpp"
 #include "internal/data_plane/client.hpp"
 #include "internal/data_plane/resources.hpp"
 #include "internal/memory/device_resources.hpp"
@@ -170,8 +173,17 @@ TEST_F(TestNetwork, CommsSendRecv)
     auto& r1 = resources->partition(1).network()->data_plane();
 
     // here we are exchanging internal ucx worker addresses without the need of the control plane
-    r0.client().register_instance(1, r1.ucx_address());  // register r1 as instance_id 1
-    r1.client().register_instance(0, r0.ucx_address());  // register r0 as instance_id 0
+    // r0.client().register_instance(1, r1.ucx_address());  // register r1 as instance_id 1
+    // r1.client().register_instance(0, r0.ucx_address());  // register r0 as instance_id 0
+
+    auto f1 = resources->partition(0).network()->control_plane().client().connections().update_future();
+    auto f2 = resources->partition(1).network()->control_plane().client().connections().update_future();
+    resources->partition(0).network()->control_plane().client().request_update();
+    f1.get();
+    f2.get();
+
+    auto id_0 = resources->partition(0).network()->control_plane().instance_id();
+    auto id_1 = resources->partition(1).network()->control_plane().instance_id();
 
     int src = 42;
     int dst = -1;
@@ -180,7 +192,7 @@ TEST_F(TestNetwork, CommsSendRecv)
     internal::data_plane::Request recv_req;
 
     r1.client().async_recv(&dst, sizeof(int), 0, recv_req);
-    r0.client().async_send(&src, sizeof(int), 0, 1, send_req);
+    r0.client().async_send(&src, sizeof(int), 0, id_1, send_req);
 
     LOG(INFO) << "await recv";
     recv_req.await_complete();
@@ -238,12 +250,18 @@ TEST_F(TestNetwork, CommsGet)
     auto& r1 = resources->partition(1).network()->data_plane();
 
     // here we are exchanging internal ucx worker addresses without the need of the control plane
-    r0.client().register_instance(1, r1.ucx_address());  // register r1 as instance_id 1
-    r1.client().register_instance(0, r0.ucx_address());  // register r0 as instance_id 0
+    auto f1 = resources->partition(0).network()->control_plane().client().connections().update_future();
+    auto f2 = resources->partition(1).network()->control_plane().client().connections().update_future();
+    resources->partition(0).network()->control_plane().client().request_update();
+    f1.get();
+    f2.get();
+
+    auto id_0 = resources->partition(0).network()->control_plane().instance_id();
+    auto id_1 = resources->partition(1).network()->control_plane().instance_id();
 
     internal::data_plane::Request get_req;
 
-    r1.client().async_get(dst.data(), 1_MiB, 0, src.data(), src_keys, get_req);
+    r1.client().async_get(dst.data(), 1_MiB, id_0, src.data(), src_keys, get_req);
 
     LOG(INFO) << "await get";
     get_req.await_complete();

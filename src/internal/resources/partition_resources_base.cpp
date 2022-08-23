@@ -34,4 +34,8 @@ runnable::Resources& PartitionResourceBase::runnable()
     return m_runnable;
 }
 
+const runnable::Resources& PartitionResourceBase::runnable() const
+{
+    return m_runnable;
+}
 }  // namespace srf::internal::resources

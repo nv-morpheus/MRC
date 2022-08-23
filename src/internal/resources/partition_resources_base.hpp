@@ -39,6 +39,7 @@ class PartitionResourceBase : public system::PartitionProvider
     PartitionResourceBase(runnable::Resources& runnable, std::size_t partition_id);
 
     runnable::Resources& runnable();
+    const runnable::Resources& runnable() const;
 
   private:
     std::reference_wrapper<runnable::Resources> m_runnable;

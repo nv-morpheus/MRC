@@ -40,7 +40,7 @@ class Resources final : private Service, private resources::PartitionResourceBas
     Resources(resources::PartitionResourceBase& base,
               ucx::Resources& ucx,
               memory::HostResources& host,
-              InstanceID instance_id);
+              control_plane::client::Instance& control_plane);
     ~Resources() final;
 
     Client& client();
@@ -60,6 +60,7 @@ class Resources final : private Service, private resources::PartitionResourceBas
 
     ucx::Resources& m_ucx;
     memory::HostResources& m_host;
+    control_plane::client::Instance& m_control_plane;
     InstanceID m_instance_id;
 
     Server m_server;

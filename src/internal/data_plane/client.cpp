@@ -41,6 +41,7 @@
 #include "srf/runnable/launch_control.hpp"
 #include "srf/runnable/launcher.hpp"
 #include "srf/runnable/runner.hpp"
+#include "srf/runnable/type_traits.hpp"
 #include "srf/types.hpp"
 
 #include <boost/fiber/future/future.hpp>
@@ -62,31 +63,29 @@
 
 namespace srf::internal::data_plane {
 
-Client::Client(resources::PartitionResourceBase& base, ucx::Resources& ucx) :
+Client::Client(resources::PartitionResourceBase& base,
+               ucx::Resources& ucx,
+               control_plane::client::ConnectionsManager& connections_manager) :
   resources::PartitionResourceBase(base),
-  m_ucx(ucx)
+  m_ucx(ucx),
+  m_connnection_manager(connections_manager)
 {}
 
 Client::~Client() = default;
 
-void Client::register_instance(InstanceID instance_id, ucx::WorkerAddress worker_address)
-{
-    auto search = m_workers.find(instance_id);
-    if (search != m_workers.end())
-    {
-        LOG(ERROR) << "instance_id: " << instance_id << " was already registered";
-        throw std::runtime_error("instance_id already registered");
-    }
-    m_workers[instance_id] = std::move(worker_address);
-}
+// std::shared_ptr<ucx::Endpoint> Client::endpoint_shared(const InstanceID& instance_id) {
+//     DCHECK(resources().runnable().main)
 
-const ucx::Endpoint& Client::endpoint(InstanceID id) const
+// }
+
+std::shared_ptr<ucx::Endpoint> Client::endpoint_shared(const InstanceID& id) const
 {
     auto search_endpoints = m_endpoints.find(id);
     if (search_endpoints == m_endpoints.end())
     {
-        auto search_workers = m_workers.find(id);
-        if (search_workers == m_workers.end())
+        const auto& workers = m_connnection_manager.worker_addresses();
+        auto search_workers = workers.find(id);
+        if (search_workers == workers.end())
         {
             LOG(ERROR) << "no endpoint or worker addresss was found for instance_id: " << id;
             throw std::runtime_error("could not acquire ucx endpoint");
@@ -95,13 +94,23 @@ const ucx::Endpoint& Client::endpoint(InstanceID id) const
         DVLOG(10) << "creating endpoint to instance_id: " << id;
         auto endpoint   = m_ucx.make_ep(search_workers->second);
         m_endpoints[id] = endpoint;
-        return *endpoint;
+        return endpoint;
     }
     DCHECK(search_endpoints->second);
-    return *search_endpoints->second;
+    return search_endpoints->second;
 }
 
-std::size_t Client::connections() const
+const ucx::Endpoint& Client::endpoint(const InstanceID& instance_id) const
+{
+    return *endpoint_shared(instance_id);
+}
+
+void Client::drop_endpoint(const InstanceID& instance_id)
+{
+    m_endpoints.erase(instance_id);
+}
+
+std::size_t Client::endpoint_count() const
 {
     return m_endpoints.size();
 }
@@ -363,8 +372,4 @@ void Client::get(const protos::RemoteDescriptor& remote_md, Descriptor& buffer)
 //     future.get();
 // }
 
-void Client::drop_connection(const InstanceID& instance_id)
-{
-    m_endpoints.erase(instance_id);
-}
 }  // namespace srf::internal::data_plane

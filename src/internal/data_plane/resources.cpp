@@ -17,8 +17,11 @@
 
 #include "internal/data_plane/resources.hpp"
 
+#include "internal/control_plane/client.hpp"
+#include "internal/control_plane/client/instance.hpp"
 #include "internal/data_plane/client.hpp"
 #include "internal/data_plane/server.hpp"
+#include "internal/resources/forward.hpp"
 #include "internal/ucx/resources.hpp"
 
 #include "srf/cuda/common.hpp"
@@ -33,13 +36,14 @@ namespace srf::internal::data_plane {
 Resources::Resources(resources::PartitionResourceBase& base,
                      ucx::Resources& ucx,
                      memory::HostResources& host,
-                     InstanceID instance_id) :
+                     control_plane::client::Instance& control_plane) :
   resources::PartitionResourceBase(base),
   m_ucx(ucx),
   m_host(host),
-  m_instance_id(instance_id),
-  m_server(base, ucx, host, instance_id),
-  m_client(base, ucx)
+  m_control_plane(control_plane),
+  m_instance_id(control_plane.instance_id()),
+  m_server(base, ucx, host, m_instance_id),
+  m_client(base, ucx, m_control_plane.client().connections())
 {
     // ensure the data plane progress engine is up and running
     m_server.service_start();

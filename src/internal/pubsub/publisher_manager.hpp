@@ -112,6 +112,8 @@ class PublisherManager : public PublisherManagerBase
                                  const std::unordered_map<std::uint64_t, InstanceID>& tagged_instances) final
     {
         DCHECK_EQ(role, role_subscriber());
+
+        // todo - convert tagged instances -> tagged endpoints
         m_tagged_instances = tagged_instances;
         on_update();
     }
