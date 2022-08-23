@@ -310,7 +310,6 @@ void DataPlaneServerWorker::on_tagged_msg(rxcpp::subscriber<network_event_t>& su
                                           const ucp_tag_recv_info_t& msg_info)
 {
     ucp_request_param_t params;
-    // std::memset(&params, 0, sizeof(params));
     params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK;
     params.cb.recv      = zero_bytes_completion_handler;
     params.user_data    = nullptr;

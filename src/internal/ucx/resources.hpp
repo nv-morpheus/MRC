@@ -18,6 +18,7 @@
 #pragma once
 
 #include "internal/resources/partition_resources_base.hpp"
+#include "internal/runnable/engines.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/system/fiber_task_queue.hpp"
 #include "internal/ucx/context.hpp"
@@ -71,6 +72,8 @@ class Resources final : public resources::PartitionResourceBase
     }
 
     std::shared_ptr<ucx::Endpoint> make_ep(const std::string& worker_address) const;
+
+    static runnable::LaunchOptions launch_options(std::uint64_t concurrency);
 
   private:
     system::FiberTaskQueue& m_network_task_queue;

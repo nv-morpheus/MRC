@@ -26,8 +26,8 @@
 #include "internal/grpc/server.hpp"
 #include "internal/grpc/server_streaming.hpp"
 #include "internal/network/resources.hpp"
-#include "internal/pubsub/publisher.hpp"
 #include "internal/pubsub/publisher_manager.hpp"
+#include "internal/pubsub/subscriber_manager.hpp"
 #include "internal/resources/manager.hpp"
 
 #include "srf/node/sink_properties.hpp"
@@ -203,17 +203,20 @@ TEST_F(TestControlPlane, DoubleClientPubSub)
         })
         .get();
 
-    LOG(INFO) << "MAKE PUBLISHER";
+    // LOG(INFO) << "MAKE PUBLISHER";
 
-    auto publisher = internal::pubsub::make_publisher<int>(
-        "my_int", internal::pubsub::PublisherType::RoundRobin, client_1->partition(0));
+    // auto publisher = internal::pubsub::make_publisher<int>(
+    //     "my_int", internal::pubsub::PublisherType::RoundRobin, client_1->partition(0));
 
-    LOG(INFO) << "DELETE PUBLISHER";
-    publisher.reset();
+    // LOG(INFO) << "DELETE PUBLISHER";
+    // publisher.reset();
 
-    // f1 = client_1->partition(0).network()->control_plane().client().connections().update_future();
-    // client_1->partition(0).network()->control_plane().client().request_update();
-    // f1.get();
+    LOG(INFO) << "MAKE SUBSCRIBER";
+    auto subscriber = internal::pubsub::make_subscriber<int>("my_int", client_2->partition(0));
+
+    LOG(INFO) << "[START] DELETE SUBSCRIBER";
+    subscriber.reset();
+    LOG(INFO) << "[FINISH] DELETE SUBSCRIBER";
 
     // destroying the resources should gracefully shutdown the data plane and the control plane.
     client_1.reset();

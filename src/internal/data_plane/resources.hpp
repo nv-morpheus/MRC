@@ -21,6 +21,7 @@
 #include "internal/data_plane/server.hpp"
 #include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources_base.hpp"
+#include "internal/runnable/engines.hpp"
 #include "internal/service.hpp"
 
 #include "srf/protos/codable.pb.h"
@@ -43,9 +44,12 @@ class Resources final : private Service, private resources::PartitionResourceBas
     ~Resources() final;
 
     Client& client();
+    Server& server();
 
     std::string ucx_address() const;
     const ucx::RegistrationCache& registration_cache() const;
+
+    static runnable::LaunchOptions launch_options(std::size_t concurrency);
 
   private:
     void do_service_start() final;

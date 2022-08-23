@@ -30,9 +30,33 @@
 namespace srf::internal::pubsub {
 
 template <typename T>
-class Subscriber : public node::RxSource<T>
+class SubscriberManager;
+
+template <typename T>
+class Subscriber
 {
+    Subscriber(std::string service_name, std::uint64_t tag) : m_service_name(std::move(service_name)), m_tag(tag) {}
+
   public:
+    ~Subscriber() = default;
+
+    DELETE_COPYABILITY(Subscriber);
+    DELETE_MOVEABILITY(Subscriber);
+
+    const std::string& service_name()
+    {
+        return m_service_name;
+    }
+    const std::uint64_t& tag()
+    {
+        return m_tag;
+    }
+
+  private:
+    const std::string m_service_name;
+    const std::uint64_t m_tag;
+
+    friend SubscriberManager<T>;
 };
 
 }  // namespace srf::internal::pubsub

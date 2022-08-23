@@ -128,6 +128,7 @@ void SubscriptionService::drop_subscription_service() noexcept
     LOG_IF(ERROR, !resp) << resp.error().message();
     DVLOG(10) << "[finish] drop subscription service: " << service_name() << "; role: " << role() << "; tag: " << tag();
 }
+
 const std::uint64_t& SubscriptionService::tag() const
 {
     DCHECK(m_tag != 0);

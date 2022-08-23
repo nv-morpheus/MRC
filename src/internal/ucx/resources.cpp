@@ -93,4 +93,12 @@ std::shared_ptr<ucx::Endpoint> Resources::make_ep(const std::string& worker_addr
     return std::make_shared<ucx::Endpoint>(m_worker, worker_address);
 }
 
+runnable::LaunchOptions Resources::launch_options(std::uint64_t concurrency)
+{
+    runnable::LaunchOptions launch_options;
+    launch_options.engine_factory_name = "srf_network";
+    launch_options.engines_per_pe      = concurrency;
+    launch_options.pe_count            = 1;
+    return launch_options;
+}
 }  // namespace srf::internal::ucx

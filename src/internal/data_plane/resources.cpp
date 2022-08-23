@@ -96,4 +96,14 @@ void Resources::do_service_await_join()
     m_server.service_await_join();
 }
 
+Server& Resources::server()
+{
+    return m_server;
+}
+
+runnable::LaunchOptions Resources::launch_options(std::size_t concurrency)
+{
+    return ucx::Resources::launch_options(concurrency);
+}
+
 }  // namespace srf::internal::data_plane
