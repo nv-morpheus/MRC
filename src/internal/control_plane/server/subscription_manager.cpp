@@ -85,28 +85,33 @@ void Role::evaluate_latches()
     std::set<std::uint64_t> tags_to_remove;
     for (const auto& t_ni : m_subscriber_latches)
     {
+        const auto nonce = t_ni.second.first;
         // t_ni => <tag, <nonce, instance>>
-        // evalute the nonce of dropped tags (tagged instances) against the current set of subscriber nonces, i.e. the
+        // evalute the nonce of latched tagged instances against the current set of subscriber nonces, i.e. the
         // state of the subscribers
-        if (std::all_of(m_subscriber_nonces.begin(), m_subscriber_nonces.end(), [&](const auto& tn) {
+        if (std::all_of(m_subscriber_nonces.begin(), m_subscriber_nonces.end(), [&nonce](const auto& tn) {
                 // tn => <tag, nonce>
-                return t_ni.second.first <= tn.second;
+                return nonce <= tn.second;
             }))
         {
-            // if the nonce of the dropped tag is less than or equal to the nonces of all current subscribers, then we
-            // can safely drop the tagged instance
-            DVLOG(10) << "issuing drop request for former member with tag: " << t_ni.first
-                      << "; nonce: " << t_ni.second.first;
+            const auto tag      = t_ni.first;
+            const auto instance = t_ni.second.second;
 
-            tags_to_remove.insert(t_ni.first);
+            // if the nonce of the latched tag is less than or equal to the nonces of all current subscribers,
+            // then we can safely drop the latched instance
+            DVLOG(10) << "issuing drop request for former member with tag: " << tag << "; nonce: " << nonce;
 
+            // issue drop request to client
             protos::StateUpdate update;
             update.set_service_name(service_name());
-            update.set_instance_id(t_ni.second.second->get_id());
+            update.set_instance_id(instance->get_id());
             auto* dropped = update.mutable_drop_subscription_service();
             dropped->set_role(role_name());
-            dropped->set_tag(t_ni.first);
-            await_update(t_ni.second.second, update);
+            dropped->set_tag(tag);
+            await_update(instance, update);
+
+            // remove tag after issue drop requests
+            tags_to_remove.insert(tag);
         }
     }
 
