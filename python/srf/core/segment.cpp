@@ -108,7 +108,7 @@ PYBIND11_MODULE(segment, m)
                 static_cast<std::shared_ptr<srf::segment::ObjectProperties> (*)(
                     srf::segment::Builder&, const std::string&, py::function)>(&SegmentProxy::make_source));
 
-    Builder.def("make_source",
+    Builder.def("make_source_full",
                 static_cast<std::shared_ptr<srf::segment::ObjectProperties> (*)(
                     srf::segment::Builder&, const std::string&, const std::function<void(PyObjectSubscriber&)>&)>(
                     &SegmentProxy::make_source),
