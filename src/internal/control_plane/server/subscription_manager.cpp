@@ -42,8 +42,10 @@ void Role::add_subscriber(std::uint64_t tag, std::shared_ptr<server::ClientInsta
     m_subscribers[tag]       = instance;
     m_subscriber_nonces[tag] = 0;
 
-    // issue one off update to new subscriber; no need to mark_as_modified since the list of entries
-    // watched by the subscribers has not changed
+    // optional: issue one off update to new subscriber
+    // note: the global state will eventual become consistent when the server periodically evaluates and issues updates
+    // auto update = make_update();
+    // await_update(instance, update);
 }
 
 void Role::drop_tag(std::uint64_t tag)

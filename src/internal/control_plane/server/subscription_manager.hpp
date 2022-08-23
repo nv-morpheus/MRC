@@ -40,6 +40,18 @@ class Role;
  * The PubSub example is specialzied example of the more generic SubscriptionService. This example has two roles:
  * {"publisher", "subscriber"}, where the publisher gets updates on the subscriber role, but the subscribers only
  * register as members and do not receive publisher updates.
+ *
+ * The client must create a subscription service with the globally unique service_name and the set of roles. Once
+ * created, instances of Role (e.g. Publisher/Subscriber) can be registered. Registration provides a globally unique
+ * 64-bit tag to uniquely identify the instance of the particular Role.
+ *
+ * Registered instances are not live until they are activated. This allows the client-side to attach any listeners on
+ * the provided registration tag. Once activated, updates will be issued periodically or on a client request.
+ *
+ * To provide consensus, issued updates must report back after the update is applied client-side. This enables the
+ * server to track the state of the clients. Using the PubSub as an example, this client-side state tracking is
+ * necessary to ensure that a Subscriber is not deactivated until all Publishers have updated their internal states to
+ * reflect the removal of the Subscriber. When a Subscriber requests to be dropped, it enters a latched state.
  */
 class SubscriptionService final : public TaggedIssuer
 {
@@ -106,7 +118,6 @@ class Role final : public VersionedState
     // this will enable us to fence on that update, meaning if we drop a tagged member resulting in the
     // server-side nonce being incremented to X, we can fence that value X with the subscribers so that at some point in
     // the future, all m_subscriber_nonces should be X or greater.
-    // todo: update drop_tag to return the nonce value on which a client could request a fence update
     void update_subscriber_nonce(const std::uint64_t& tag, const std::uint64_t& nonce);
 
     const std::string& service_name() const final;
@@ -116,23 +127,28 @@ class Role final : public VersionedState
     bool has_update() const final;
     void do_make_update(protos::StateUpdate& update) const final;
     void do_issue_update(const protos::StateUpdate& update) final;
+
+    // this method evaluates the state of the latched tags with respect to the state of the subscribers
+    // once all subscribers are sufficiently up-to-date, latched tags can be dropped.
     void evaluate_latches();
 
-    protos::StateUpdate make_update() const;
-
+    // enqueue the state update to be written to the client
     static void await_update(const std::shared_ptr<server::ClientInstance>& instance,
                              const protos::StateUpdate& update);
 
     std::string m_service_name;
     std::string m_role_name;
+
+    // <tag, instance> - set of tagged instances will will be sent to subscribers on update
     std::map<std::uint64_t, std::shared_ptr<server::ClientInstance>> m_members;
+
+    // <tag, instance> - set of tagged instances to receive updates of the member map
     std::map<std::uint64_t, std::shared_ptr<server::ClientInstance>> m_subscribers;
 
-    // <tag, nonce>
+    // <tag, nonce> - holds the current nonce/state of the client - updated on update_subscriber_nonce
     std::map<std::uint64_t, std::uint64_t> m_subscriber_nonces;
 
     // <tag, <nonce, instance>> - when all m_subscriber_nonces are >= nonce issue drop event
-    // key off tag because it is unique
     std::map<std::uint64_t, std::pair<std::uint64_t, std::shared_ptr<server::ClientInstance>>> m_subscriber_latches;
 };
 
