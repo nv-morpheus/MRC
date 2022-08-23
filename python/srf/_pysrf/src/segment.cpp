@@ -164,6 +164,26 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_source(srf::s
     });
 }
 
+std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_source(
+    srf::segment::Builder& self, const std::string& name, const std::function<void(pysrf::PyObjectSubscriber& sub)>& f)
+{
+    auto wrapper = [f](pysrf::PyObjectSubscriber& s) {
+        py::gil_scoped_acquire gil;
+
+        try
+        {
+            f(s);
+        } catch (py::error_already_set& err)
+        {
+            py::print("Error hit!");
+            py::print(err.what());
+            throw;  // Rethrow to propagate back to python
+        }
+    };
+
+    return self.construct_object<PythonSource<PyHolder>>(name, wrapper);
+}
+
 std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_sink(srf::segment::Builder& self,
                                                                         const std::string& name,
                                                                         std::function<void(py::object object)> on_next,
