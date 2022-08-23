@@ -149,7 +149,7 @@ class Role final : public VersionedState
     std::map<std::uint64_t, std::uint64_t> m_subscriber_nonces;
 
     // <tag, <nonce, instance>> - when all m_subscriber_nonces are >= nonce issue drop event
-    std::map<std::uint64_t, std::pair<std::uint64_t, std::shared_ptr<server::ClientInstance>>> m_subscriber_latches;
+    std::map<std::uint64_t, std::pair<std::uint64_t, std::shared_ptr<server::ClientInstance>>> m_latched_members;
 };
 
 }  // namespace srf::internal::control_plane::server

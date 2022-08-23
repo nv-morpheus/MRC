@@ -61,12 +61,12 @@ void Role::drop_tag(std::uint64_t tag)
     if (contains(m_members, tag))
     {
         mark_as_modified();
-        m_subscriber_latches[tag] = std::make_pair(current_nonce(), m_members.at(tag));
+        m_latched_members[tag] = std::make_pair(current_nonce(), m_members.at(tag));
         m_members.erase(tag);
         // note: the dropped tag instance is still "latched" to the service, i.e. no drop request from the server will
         // be issued until all subscribers have synchronized on the membership update
         DVLOG(10) << "service: " << service_name() << "; role: " << role_name()
-                  << "; dropping member with tag: " << tag;
+                  << "; latching member with tag: " << tag;
     }
     evaluate_latches();
 }
@@ -85,7 +85,7 @@ void Role::update_subscriber_nonce(const std::uint64_t& tag, const std::uint64_t
 void Role::evaluate_latches()
 {
     std::set<std::uint64_t> tags_to_remove;
-    for (const auto& t_ni : m_subscriber_latches)
+    for (const auto& t_ni : m_latched_members)
     {
         const auto nonce = t_ni.second.first;
         // t_ni => <tag, <nonce, instance>>
@@ -121,7 +121,7 @@ void Role::evaluate_latches()
               << tags_to_remove.size() << " latched members";
     for (const auto& tag : tags_to_remove)
     {
-        m_subscriber_latches.erase(tag);
+        m_latched_members.erase(tag);
     }
 }
 
