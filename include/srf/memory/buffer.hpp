@@ -99,6 +99,14 @@ class buffer
         return (m_buffer != nullptr) && (m_bytes != 0U);
     }
 
+    bool contains(const void* ptr) const
+    {
+        const auto* p = static_cast<const std::byte*>(ptr);
+        auto* s       = static_cast<std::byte*>(m_buffer);
+        auto* e       = s + m_bytes;
+        return (m_buffer != nullptr && s <= p && p < e);
+    }
+
   private:
     std::shared_ptr<memory_resource> m_mr;
     std::size_t m_bytes{0};

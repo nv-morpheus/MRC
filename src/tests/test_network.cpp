@@ -20,8 +20,10 @@
 #include "internal/control_plane/client/instance.hpp"
 #include "internal/data_plane/client.hpp"
 #include "internal/data_plane/resources.hpp"
+#include "internal/data_plane/tags.hpp"
 #include "internal/memory/device_resources.hpp"
 #include "internal/memory/host_resources.hpp"
+#include "internal/memory/transient_pool.hpp"
 #include "internal/network/resources.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
@@ -191,8 +193,8 @@ TEST_F(TestNetwork, CommsSendRecv)
     internal::data_plane::Request send_req;
     internal::data_plane::Request recv_req;
 
-    r1.client().async_recv(&dst, sizeof(int), 0, recv_req);
-    r0.client().async_send(&src, sizeof(int), 0, id_1, send_req);
+    r1.client().async_p2p_recv(&dst, sizeof(int), 0, recv_req);
+    r0.client().async_p2p_send(&src, sizeof(int), 0, id_1, send_req);
 
     LOG(INFO) << "await recv";
     recv_req.await_complete();
@@ -276,6 +278,75 @@ TEST_F(TestNetwork, CommsGet)
     resources.reset();
 }
 
+TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
+{
+    // using options.placement().resources_strategy(PlacementResources::Shared)
+    // will test if cudaSetDevice is being properly called by the network services
+    // since all network services for potentially multiple devices are colocated on a single thread
+    auto resources = std::make_unique<internal::resources::Manager>(
+        internal::system::SystemProvider(make_system([](Options& options) {
+            options.enable_server(true);
+            options.architect_url("localhost:13337");
+            options.placement().resources_strategy(PlacementResources::Dedicated);
+            options.resources().enable_device_memory_pool(true);
+            options.resources().enable_host_memory_pool(true);
+            options.resources().host_memory_pool().block_size(32_MiB);
+            options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
+            options.resources().device_memory_pool().block_size(64_MiB);
+            options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
+        })));
+
+    if (resources->partition_count() < 2 && resources->device_count() < 2)
+    {
+        GTEST_SKIP() << "this test only works with 2 device partitions";
+    }
+
+    // here we are exchanging internal ucx worker addresses without the need of the control plane
+    auto f1 = resources->partition(0).network()->control_plane().client().connections().update_future();
+    auto f2 = resources->partition(1).network()->control_plane().client().connections().update_future();
+    resources->partition(0).network()->control_plane().client().request_update();
+    f1.get();
+    f2.get();
+
+    EXPECT_TRUE(resources->partition(0).network());
+    EXPECT_TRUE(resources->partition(1).network());
+
+    auto& r0 = resources->partition(0).network()->data_plane();
+    auto& r1 = resources->partition(1).network()->data_plane();
+
+    const std::uint64_t tag          = 20919;
+    std::atomic<std::size_t> counter = 0;
+
+    auto recv_sink = std::make_unique<node::RxSink<internal::memory::TransientBuffer>>(
+        [&](internal::memory::TransientBuffer buffer) {
+            EXPECT_EQ(buffer.bytes(), 128);
+            counter++;
+            r0.server().deserialize_source().drop_edge(tag);
+        });
+
+    srf::node::make_edge(r0.server().deserialize_source().source(tag), *recv_sink);
+
+    auto launch_opts = resources->partition(0).network()->data_plane().launch_options(1);
+    auto recv_runner = resources->partition(0)
+                           .runnable()
+                           .launch_control()
+                           .prepare_launcher(launch_opts, std::move(recv_sink))
+                           ->ignition();
+
+    auto endpoint = r1.client().endpoint_shared(r0.instance_id());
+
+    internal::data_plane::Request req;
+    auto buffer   = resources->partition(1).host().make_buffer(128);
+    auto send_tag = tag | TAG_EGR_MSG;
+    r1.client().async_send(buffer.data(), buffer.bytes(), send_tag, *endpoint, req);
+    EXPECT_TRUE(req.await_complete());
+
+    // the channel will be dropped when the first message goes thru
+    recv_runner->await_join();
+    EXPECT_EQ(counter, 1);
+
+    resources.reset();
+}
 // TEST_F(TestNetwork, NetworkEventsManagerLifeCycle)
 // {
 //     auto launcher = m_launch_control->prepare_launcher(std::move(m_mutable_nem));

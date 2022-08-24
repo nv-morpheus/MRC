@@ -73,11 +73,6 @@ Client::Client(resources::PartitionResourceBase& base,
 
 Client::~Client() = default;
 
-// std::shared_ptr<ucx::Endpoint> Client::endpoint_shared(const InstanceID& instance_id) {
-//     DCHECK(resources().runnable().main)
-
-// }
-
 std::shared_ptr<ucx::Endpoint> Client::endpoint_shared(const InstanceID& id) const
 {
     auto search_endpoints = m_endpoints.find(id);
@@ -115,10 +110,9 @@ std::size_t Client::endpoint_count() const
     return m_endpoints.size();
 }
 
-void Client::async_recv(void* addr, std::size_t bytes, std::uint64_t tag, Request& request)
+void Client::async_recv(
+    void* addr, std::size_t bytes, std::uint64_t tag, std::uint64_t mask, const ucx::Worker& worker, Request& request)
 {
-    static constexpr std::uint64_t mask = P2P_TAG & TAG_USER_MASK;  // NOLINT
-
     CHECK_EQ(request.m_request, nullptr);
     CHECK(request.m_state == Request::State::Init);
     request.m_state = Request::State::Running;
@@ -128,32 +122,46 @@ void Client::async_recv(void* addr, std::size_t bytes, std::uint64_t tag, Reques
     params.cb.recv      = Callbacks::recv;
     params.user_data    = &request;
 
-    // build tag
-    CHECK_LE(tag, TAG_USER_MASK);
-    tag |= P2P_TAG;
-
-    request.m_request = ucp_tag_recv_nbx(m_ucx.worker().handle(), addr, bytes, tag, mask, &params);
+    request.m_request = ucp_tag_recv_nbx(worker.handle(), addr, bytes, tag, mask, &params);
     CHECK(request.m_request);
     CHECK(!UCS_PTR_IS_ERR(request.m_request));
 }
 
-void Client::async_send(void* addr, std::size_t bytes, std::uint64_t tag, InstanceID instance_id, Request& request)
+void Client::async_p2p_recv(void* addr, std::size_t bytes, std::uint64_t tag, Request& request)
+{
+    static constexpr std::uint64_t mask = TAG_P2P_MSG & TAG_USER_MASK;  // NOLINT
+
+    // build tag
+    CHECK_LE(tag, TAG_USER_MASK);
+    tag |= TAG_P2P_MSG;
+
+    async_recv(addr, bytes, tag, mask, m_ucx.worker(), request);
+}
+
+void Client::async_send(
+    void* addr, std::size_t bytes, std::uint64_t tag, const ucx::Endpoint& endpoint, Request& request)
 {
     CHECK_EQ(request.m_request, nullptr);
     CHECK(request.m_state == Request::State::Init);
     request.m_state = Request::State::Running;
-
-    CHECK_LE(tag, TAG_USER_MASK);
-    tag |= P2P_TAG;
 
     ucp_request_param_t send_params;
     send_params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
     send_params.cb.send      = Callbacks::send;
     send_params.user_data    = &request;
 
-    request.m_request = ucp_tag_send_nbx(endpoint(instance_id).handle(), addr, bytes, tag, &send_params);
+    request.m_request = ucp_tag_send_nbx(endpoint.handle(), addr, bytes, tag, &send_params);
     CHECK(request.m_request);
     CHECK(!UCS_PTR_IS_ERR(request.m_request));
+}
+
+void Client::async_p2p_send(
+    void* addr, std::size_t bytes, std::uint64_t tag, InstanceID instance_id, Request& request) const
+{
+    CHECK_LE(tag, TAG_USER_MASK);
+    tag |= TAG_P2P_MSG;
+
+    async_send(addr, bytes, tag, endpoint(instance_id), request);
 }
 
 void Client::async_get(void* addr,
@@ -161,7 +169,7 @@ void Client::async_get(void* addr,
                        InstanceID instance_id,
                        void* remote_addr,
                        const std::string& packed_remote_key,
-                       Request& request)
+                       Request& request) const
 {
     CHECK_EQ(request.m_request, nullptr);
     CHECK(request.m_state == Request::State::Init);

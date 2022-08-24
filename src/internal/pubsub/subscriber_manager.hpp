@@ -125,8 +125,8 @@ class SubscriberManager : public SubscriberManagerBase
                                                              delete ptr;
                                                          });
 
-        auto network_reader = std::make_unique<node::RxSink<srf::memory::buffer_view>>(
-            [](srf::memory::buffer_view event) { LOG(FATAL) << "SubscriberManager network_reader - implement me"; });
+        auto network_reader = std::make_unique<node::RxSink<memory::TransientBuffer>>(
+            [](memory::TransientBuffer buffer) { LOG(FATAL) << "SubscriberManager network_reader - implement me"; });
         node::make_edge(resources().network()->data_plane().server().deserialize_source().source(this->tag()),
                         *network_reader);
 

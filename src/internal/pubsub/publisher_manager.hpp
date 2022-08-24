@@ -204,7 +204,7 @@ class PublisherRoundRobin : public PublisherManager<T>
         std::size_t val = 42;
         LOG(FATAL) << "implement me";
         // data_plane::Request request;
-        // this->resources().network()->data_plane().async_send(&val, sizeof(val), tag, request);
+        // this->resources().network()->data_plane().async_p2p_send(&val, sizeof(val), tag, request);
         // request.await_complete();
 
         // encode object

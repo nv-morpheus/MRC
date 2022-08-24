@@ -47,6 +47,7 @@ class TransientBuffer
      * @param buffer - reference counted holder to the SharedReusable, this is held for reference counting only
      */
     TransientBuffer(void* addr, std::size_t bytes, srf::data::SharedReusable<srf::memory::buffer> buffer);
+    TransientBuffer(void* addr, std::size_t bytes, const TransientBuffer& buffer);
 
     TransientBuffer() = default;
     ~TransientBuffer();
@@ -60,6 +61,7 @@ class TransientBuffer
      * @brief Starting address of the TransientBuffer
      */
     void* data();
+    const void* data() const;
 
     /**
      * @brief Capacity of TransientBuffer in number of bytes extending from data().
@@ -163,8 +165,8 @@ class TransientPool
   public:
     TransientPool(std::size_t block_size,
                   std::size_t block_count,
-                  std::size_t capacity,
-                  std::shared_ptr<srf::memory::memory_resource> mr);
+                  std::shared_ptr<srf::memory::memory_resource> mr,
+                  std::size_t capacity = 64);
 
     /**
      * @brief Acquire a TransientBuffer of size bytes.

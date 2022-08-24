@@ -27,6 +27,7 @@
 #include "srf/protos/codable.pb.h"
 
 #include <memory>
+#include <utility>
 
 namespace srf::internal::data_plane {
 
@@ -46,6 +47,7 @@ class Resources final : private Service, private resources::PartitionResourceBas
     Client& client();
     Server& server();
 
+    const InstanceID& instance_id() const;
     std::string ucx_address() const;
     const ucx::RegistrationCache& registration_cache() const;
 

@@ -176,7 +176,7 @@ TEST_F(TestMemory, TransientPool)
     auto callback =
         srf::memory::make_shared_resource<internal::memory::CallbackAdaptor>(std::move(logger), std::move(builder));
 
-    internal::memory::TransientPool pool(10_MiB, 4, 8, callback);
+    internal::memory::TransientPool pool(10_MiB, 4, callback);
 
     EXPECT_ANY_THROW(pool.await_buffer(11_MiB));
 
@@ -218,7 +218,11 @@ TEST_F(TestMemory, TransientPool)
     // move and test void* gets properly nullified
     other = std::move(buffer);
     EXPECT_EQ(buffer.data(), nullptr);
+
+    std::byte* start = static_cast<std::byte*>(other.data()) + 1;
+    internal::memory::TransientBuffer offset_buffer(start, other.bytes() - 1, other);
     other.release();
+    offset_buffer.release();
 
     // construct an object TickOnDestruct on the memory backed by a TransientBuffer
     int some_int = 4;
