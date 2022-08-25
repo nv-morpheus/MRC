@@ -65,6 +65,7 @@ class Resources final : private Service, private resources::PartitionResourceBas
     control_plane::client::Instance& m_control_plane;
     InstanceID m_instance_id;
 
+    memory::TransientPool m_transient_pool;
     Server m_server;
     Client m_client;
 

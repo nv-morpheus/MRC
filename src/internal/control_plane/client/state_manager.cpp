@@ -88,4 +88,9 @@ void StateManager::start_with_channel(node::SourceChannel<const protos::StateUpd
         client().runnable().launch_control().prepare_launcher(client().launch_options(), std::move(sink))->ignition();
 }
 
+void StateManager::await_join()
+{
+    CHECK(m_runner);
+    m_runner->await_join();
+}
 }  // namespace srf::internal::control_plane::client

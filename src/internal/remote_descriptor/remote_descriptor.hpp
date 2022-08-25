@@ -18,6 +18,8 @@
 #pragma once
 
 #include "srf/codable/forward.hpp"
+#include "srf/protos/codable.pb.h"
+#include "srf/utils/macros.hpp"
 
 #include <memory>
 
@@ -30,12 +32,15 @@ class RemoteDescriptor final
     RemoteDescriptor(std::shared_ptr<Manager> manager, std::unique_ptr<srf::codable::protos::RemoteDescriptor> rd);
 
   public:
+    RemoteDescriptor() = default;
+    DELETE_COPYABILITY(RemoteDescriptor);
+    DEFAULT_MOVEABILITY(RemoteDescriptor);
+
     ~RemoteDescriptor();
 
-    operator bool() const
-    {
-        return bool(m_descriptor);
-    }
+    operator bool() const;
+
+    std::unique_ptr<const srf::codable::protos::RemoteDescriptor> release_ownership();
 
     void release();
 

@@ -32,6 +32,11 @@ ConnectionsManager::ConnectionsManager(Client& client, update_channel_t& update_
     this->start_with_channel(update_channel);
 }
 
+ConnectionsManager::~ConnectionsManager()
+{
+    this->await_join();
+}
+
 const std::vector<InstanceID>& ConnectionsManager::instance_ids() const
 {
     DCHECK(client().state() == Client::State::Operational);
@@ -167,4 +172,5 @@ ConnectionsManager::instance_channels() const
     DCHECK(client().runnable().main().caller_on_same_thread());
     return m_update_channels;
 }
+
 }  // namespace srf::internal::control_plane::client

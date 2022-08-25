@@ -129,6 +129,7 @@ void pre_post_recv(detail::PrePostedRecvInfo* info)
     params.cb.recv      = pre_posted_recv_callback;
     params.user_data    = info;
 
+    // match upper 16 bits instead of only upper 4 bits
     info->request =
         ucp_tag_recv_nbx(info->worker, info->buffer.data(), info->buffer.bytes(), TAG_EGR_MSG, TAG_MSG_MASK, &params);
     CHECK(info->request);
@@ -162,12 +163,13 @@ class DataPlaneServerWorker final : public node::GenericSource<network_event_t>
 Server::Server(resources::PartitionResourceBase& provider,
                ucx::Resources& ucx,
                memory::HostResources& host,
+               memory::TransientPool& transient_pool,
                InstanceID instance_id) :
   resources::PartitionResourceBase(provider),
   m_ucx(ucx),
   m_host(host),
   m_instance_id(instance_id),
-  m_transient_pool(16_MiB, 4, m_host.registered_memory_resource())
+  m_transient_pool(transient_pool)
 {}
 
 Server::~Server()

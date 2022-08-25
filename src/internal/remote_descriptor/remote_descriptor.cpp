@@ -21,6 +21,12 @@
 
 namespace srf::internal::remote_descriptor {
 
+RemoteDescriptor::RemoteDescriptor(std::shared_ptr<Manager> manager,
+                                   std::unique_ptr<srf::codable::protos::RemoteDescriptor> rd) :
+  m_manager(std::move(manager)),
+  m_descriptor(std::move(rd))
+{}
+
 RemoteDescriptor::~RemoteDescriptor()
 {
     release();
@@ -31,14 +37,20 @@ void RemoteDescriptor::release()
     if (m_descriptor)
     {
         CHECK(m_manager);
-        m_manager->decrement_tokens(m_descriptor->object_id(), m_descriptor->tokens());
+        m_manager->decrement_tokens(std::move(m_descriptor));
         m_manager.reset();
-        m_descriptor.reset();
     }
 }
-RemoteDescriptor::RemoteDescriptor(std::shared_ptr<Manager> manager,
-                                   std::unique_ptr<srf::codable::protos::RemoteDescriptor> rd) :
-  m_manager(std::move(manager)),
-  m_descriptor(std::move(rd))
-{}
+
+RemoteDescriptor::operator bool() const
+{
+    return bool(m_descriptor);
+}
+
+std::unique_ptr<const srf::codable::protos::RemoteDescriptor> RemoteDescriptor::release_ownership()
+{
+    m_manager.reset();
+    return std::move(m_descriptor);
+}
+
 }  // namespace srf::internal::remote_descriptor

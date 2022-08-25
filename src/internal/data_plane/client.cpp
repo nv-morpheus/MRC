@@ -18,6 +18,7 @@
 #include "internal/data_plane/client.hpp"
 
 #include "internal/data_plane/callbacks.hpp"
+#include "internal/data_plane/resources.hpp"
 #include "internal/data_plane/tags.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/context.hpp"
@@ -34,8 +35,10 @@
 #include "srf/codable/protobuf_message.hpp"  // IWYU pragma: keep
 #include "srf/exceptions/runtime_error.hpp"
 #include "srf/memory/buffer_view.hpp"
+#include "srf/memory/literals.hpp"
 #include "srf/memory/memory_kind.hpp"
 #include "srf/node/edge_builder.hpp"
+#include "srf/node/rx_sink.hpp"
 #include "srf/node/source_channel.hpp"
 #include "srf/protos/codable.pb.h"
 #include "srf/runnable/launch_control.hpp"
@@ -63,12 +66,17 @@
 
 namespace srf::internal::data_plane {
 
+using namespace srf::memory::literals;
+
 Client::Client(resources::PartitionResourceBase& base,
                ucx::Resources& ucx,
-               control_plane::client::ConnectionsManager& connections_manager) :
+               control_plane::client::ConnectionsManager& connections_manager,
+               memory::TransientPool& transient_pool) :
   resources::PartitionResourceBase(base),
   m_ucx(ucx),
-  m_connnection_manager(connections_manager)
+  m_connnection_manager(connections_manager),
+  m_transient_pool(transient_pool),
+  m_rd_channel(std::make_unique<node::SourceChannelWriteable<RemoteDescriptorMessage>>())
 {}
 
 Client::~Client() = default;
@@ -379,5 +387,78 @@ void Client::get(const protos::RemoteDescriptor& remote_md, Descriptor& buffer)
 //     // the caller is calling an "await" method so blocking and yielding is implied
 //     future.get();
 // }
+
+void Client::issue_remote_descriptor(RemoteDescriptorMessage&& msg)
+{
+    DCHECK(msg.rd);
+    DCHECK(msg.endpoint);
+    DCHECK_GT(msg.tag, 0);
+    DCHECK_LE(msg.tag, TAG_USER_MASK);
+
+    auto handle     = msg.rd.release_ownership();
+    auto msg_length = handle->ByteSizeLong();
+
+    // todo(ryan) - parameterize srf::data_plane::client::max_remote_descriptor_eager_size
+    if (msg_length <= 1_MiB)
+    {
+        auto buffer = m_transient_pool.await_buffer(msg_length);
+        CHECK(handle->SerializeToArray(buffer.data(), buffer.bytes()));
+
+        Request request;
+        async_send(buffer.data(), buffer.bytes(), msg.tag, *msg.endpoint, request);
+        CHECK(request.await_complete());
+    }
+    else
+    {
+        LOG(FATAL) << "implement the rendez-vous path (nb_probe) on the server side";
+    }
+}
+
+node::SourceChannelWriteable<RemoteDescriptorMessage>& Client::remote_descriptor_channel()
+{
+    CHECK(m_rd_channel);
+    return *m_rd_channel;
+}
+
+void Client::do_service_start()
+{
+    CHECK(m_rd_channel);
+
+    auto rd_writer = std::make_unique<node::RxSink<RemoteDescriptorMessage>>(
+        [this](RemoteDescriptorMessage msg) { issue_remote_descriptor(std::move(msg)); });
+
+    // todo(ryan) - parameterize srf::data_plane::client::max_queued_remote_descriptor_sends
+    rd_writer->update_channel(std::make_unique<channel::BufferedChannel<RemoteDescriptorMessage>>(128));
+
+    // form edge
+    srf::node::make_edge(*m_rd_channel, *rd_writer);
+
+    // todo(ryan) - parameterize srf::data_plane::client::max_inflight_remote_descriptor_sends
+    auto launch_options = Resources::launch_options(16);
+
+    // launch rd_writer
+    m_rd_writer = runnable().launch_control().prepare_launcher(launch_options, std::move(rd_writer))->ignition();
+}
+
+void Client::do_service_await_live()
+{
+    m_rd_writer->await_live();
+}
+
+void Client::do_service_stop()
+{
+    m_rd_channel.reset();
+}
+
+void Client::do_service_kill()
+{
+    m_rd_channel.reset();
+    m_rd_writer->kill();
+}
+
+void Client::do_service_await_join()
+{
+    m_rd_writer->await_join();
+}
 
 }  // namespace srf::internal::data_plane

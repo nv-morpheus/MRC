@@ -138,7 +138,7 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
 
         bool expired() const final
         {
-            return false;
+            return false; // todo(ryan) - could be m_channel.expired();
         }
 
         std::size_t get_id() const final

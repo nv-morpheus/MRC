@@ -20,17 +20,29 @@
 #include "internal/remote_descriptor/remote_descriptor.hpp"
 #include "internal/remote_descriptor/storage.hpp"
 
+#include "srf/types.hpp"
+
 #include <map>
+#include <memory>
 
 namespace srf::internal::remote_descriptor {
 
 class Manager final : public std::enable_shared_from_this<Manager>
 {
   public:
+    Manager(const InstanceID& instance_id) : m_instance_id(instance_id) {}
+
     template <typename T>
     RemoteDescriptor register_object(T&& object)
     {
         return store_object(TypedStorage<T>::create(std::move(object)));
+    }
+
+    RemoteDescriptor take_ownership(std::unique_ptr<const srf::codable::protos::RemoteDescriptor> rd)
+    {
+        auto non_const_rd = std::unique_ptr<srf::codable::protos::RemoteDescriptor>(
+            const_cast<srf::codable::protos::RemoteDescriptor*>(rd.release()));
+        return RemoteDescriptor(shared_from_this(), std::move(non_const_rd));
     }
 
     std::size_t size() const;
@@ -38,9 +50,12 @@ class Manager final : public std::enable_shared_from_this<Manager>
   private:
     RemoteDescriptor store_object(std::unique_ptr<Storage> object);
 
+    void decrement_tokens(std::unique_ptr<const srf::codable::protos::RemoteDescriptor> rd);
     void decrement_tokens(std::size_t object_id, std::size_t token_count);
 
+    // <object_id, storage>
     std::map<std::size_t, std::unique_ptr<Storage>> m_stored_objects;
+    InstanceID m_instance_id;
 
     friend RemoteDescriptor;
 };

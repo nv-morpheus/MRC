@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "internal/remote_descriptor/manager.hpp"
+#include "internal/remote_descriptor/remote_descriptor.hpp"
 #include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/runnable/resources.hpp"
@@ -40,15 +42,17 @@ class Resources final : private resources::PartitionResourceBase
     DELETE_COPYABILITY(Resources);
     DEFAULT_MOVEABILITY(Resources);
 
+    const InstanceID& instance_id() const;
+
     control_plane::client::Instance& control_plane();
     data_plane::Resources& data_plane();
-
-    InstanceID instance_id() const;
+    remote_descriptor::Manager& remote_descriptor_manager();
 
   private:
+    InstanceID m_instance_id;
     std::unique_ptr<control_plane::client::Instance> m_control_plane;
     std::unique_ptr<data_plane::Resources> m_data_plane;
-    InstanceID m_instance_id;
+    std::shared_ptr<remote_descriptor::Manager> m_remote_descriptors;
 };
 
 }  // namespace srf::internal::network

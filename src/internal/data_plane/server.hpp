@@ -87,6 +87,7 @@ class Server final : public Service, public resources::PartitionResourceBase
     Server(resources::PartitionResourceBase& provider,
            ucx::Resources& ucx,
            memory::HostResources& host,
+           memory::TransientPool& transient_pool,
            InstanceID instance_id);
     ~Server() final;
 
@@ -109,7 +110,7 @@ class Server final : public Service, public resources::PartitionResourceBase
     InstanceID m_instance_id;
 
     // transient memory pool
-    memory::TransientPool m_transient_pool;
+    memory::TransientPool& m_transient_pool;
 
     // deserialization nodes will connect to this source wtih their port id
     // the source for this router is the private GenericSoruce of this object

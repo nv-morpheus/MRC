@@ -38,6 +38,13 @@ class Client;
 
 namespace client {
 
+/**
+ * todo(ryan) - we can probably remove this class as only ConnectionManager inherits from it
+ * @note - it would be nice if we could improve the consensus model to enable more synchronous behavior to enable better
+ * testing scenarios. for how, the update_future on this class is too valuable and it allows us to wait until all KNOWN
+ * clients have connected and exchanged information
+ */
+
 class StateManager
 {
   public:
@@ -63,6 +70,7 @@ class StateManager
     Client& client();
 
     void start_with_channel(node::SourceChannel<const protos::StateUpdate>& update_channel);
+    void await_join();
 
   private:
     /**

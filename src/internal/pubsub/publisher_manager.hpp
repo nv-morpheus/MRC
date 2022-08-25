@@ -20,6 +20,7 @@
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/client/instance.hpp"
 #include "internal/control_plane/client/subscription_service.hpp"
+#include "internal/data_plane/client.hpp"
 #include "internal/data_plane/request.hpp"
 #include "internal/expected.hpp"
 #include "internal/network/resources.hpp"
@@ -28,6 +29,7 @@
 #include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/service.hpp"
+#include "internal/ucx/common.hpp"
 
 #include "srf/channel/channel.hpp"
 #include "srf/channel/ingress.hpp"
@@ -104,6 +106,11 @@ class PublisherManager : public PublisherManagerBase
         return m_tagged_instances;
     }
 
+    const std::unordered_map<std::uint64_t, std::shared_ptr<ucx::Endpoint>>& tagged_endpoints() const
+    {
+        return m_tagged_endpoints;
+    }
+
   private:
     virtual void write(T&& object) = 0;
     virtual void on_update()       = 0;
@@ -115,6 +122,10 @@ class PublisherManager : public PublisherManagerBase
 
         // todo - convert tagged instances -> tagged endpoints
         m_tagged_instances = tagged_instances;
+        for (const auto& [tag, instance_id] : m_tagged_instances)
+        {
+            m_tagged_endpoints[tag] = resources().network()->data_plane().client().endpoint_shared(instance_id);
+        }
         on_update();
     }
 
@@ -167,6 +178,7 @@ class PublisherManager : public PublisherManagerBase
     std::weak_ptr<Publisher<T>> m_publisher;
     std::unique_ptr<srf::runnable::Runner> m_writer;
     std::unordered_map<std::uint64_t, InstanceID> m_tagged_instances;
+    std::unordered_map<std::uint64_t, std::shared_ptr<ucx::Endpoint>> m_tagged_endpoints;
     std::unordered_map<std::uint64_t, InstanceID>::const_iterator m_next;
     Promise<std::shared_ptr<Publisher<T>>> m_publisher_promise;
 };
@@ -180,12 +192,13 @@ class PublisherRoundRobin : public PublisherManager<T>
   private:
     void on_update() final
     {
-        m_next = this->tagged_instances().cbegin();
+        m_next = this->tagged_endpoints().cbegin();
     }
 
     void write(T&& object) final
     {
         DCHECK(this->resources().runnable().main().caller_on_same_thread());
+
         while (this->tagged_instances().empty())
         {
             // await subscribers
@@ -193,28 +206,24 @@ class PublisherRoundRobin : public PublisherManager<T>
             return;
         }
 
-        auto tag         = m_next->first;
-        auto instance_id = m_next->second;
+        data_plane::RemoteDescriptorMessage msg;
 
-        if (++m_next == this->tagged_instances().cend())
+        msg.tag      = m_next->first;
+        msg.endpoint = m_next->second;
+
+        if (++m_next == this->tagged_endpoints().cend())
         {
-            m_next = this->tagged_instances().cbegin();
+            m_next = this->tagged_endpoints().cbegin();
         }
 
         std::size_t val = 42;
-        LOG(FATAL) << "implement me";
-        // data_plane::Request request;
-        // this->resources().network()->data_plane().async_p2p_send(&val, sizeof(val), tag, request);
-        // request.await_complete();
 
-        // encode object
-        // auto rd = this->resources().make_remote_descriptor(std::move(object));
-
-        // write object tagged endpoint
-        // this->resources().network().data_plane().
+        msg.rd = this->resources().network()->remote_descriptor_manager().register_object(std::move(object));
+        CHECK(this->resources().network()->data_plane().client().remote_descriptor_channel().await_write(
+                  std::move(msg)) == channel::Status::success);
     }
 
-    std::unordered_map<std::uint64_t, InstanceID>::const_iterator m_next;
+    std::unordered_map<std::uint64_t, std::shared_ptr<ucx::Endpoint>>::const_iterator m_next;
 };
 
 enum class PublisherType

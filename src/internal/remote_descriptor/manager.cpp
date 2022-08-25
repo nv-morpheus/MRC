@@ -24,6 +24,42 @@
 
 namespace srf::internal::remote_descriptor {
 
+RemoteDescriptor Manager::store_object(std::unique_ptr<Storage> object)
+{
+    CHECK(object);
+
+    auto object_id = reinterpret_cast<std::size_t>(object.get());
+    auto rd        = std::make_unique<srf::codable::protos::RemoteDescriptor>();
+
+    DVLOG(10) << "storing object_id: " << object_id << " with " << object->tokens_count() << " tokens";
+
+    rd->set_instance_id(m_instance_id);
+    rd->set_object_id(object_id);
+    rd->set_tokens(object->tokens_count());
+    *(rd->mutable_encoded_object()) = object->encoded_object().proto();
+    m_stored_objects[object_id]     = std::move(object);
+
+    return RemoteDescriptor(shared_from_this(), std::move(rd));
+}
+
+std::size_t Manager::size() const
+{
+    return m_stored_objects.size();
+}
+
+void Manager::decrement_tokens(std::unique_ptr<const srf::codable::protos::RemoteDescriptor> rd)
+{
+    if (rd->instance_id() == m_instance_id)
+    {
+        decrement_tokens(rd->object_id(), rd->tokens());
+    }
+    else
+    {
+        // issue active message to remote instance_id to decrement tokens on remote object_id
+        LOG(FATAL) << "implement me";
+    }
+}
+
 void Manager::decrement_tokens(std::size_t object_id, std::size_t token_count)
 {
     DVLOG(10) << "decrementing " << token_count << " tokens from object_id: " << object_id;
@@ -37,26 +73,4 @@ void Manager::decrement_tokens(std::size_t object_id, std::size_t token_count)
     }
 }
 
-RemoteDescriptor Manager::store_object(std::unique_ptr<Storage> object)
-{
-    CHECK(object);
-
-    auto object_id = reinterpret_cast<std::size_t>(object.get());
-    auto rd        = std::make_unique<srf::codable::protos::RemoteDescriptor>();
-
-    DVLOG(10) << "storing object_id: " << object_id << " with " << object->tokens_count() << " tokens";
-
-    // rd->set_instance_id(/* todo */);
-    rd->set_object_id(object_id);
-    rd->set_tokens(object->tokens_count());
-    *(rd->mutable_encoded_object()) = object->encoded_object().proto();
-    m_stored_objects[object_id]     = std::move(object);
-
-    return RemoteDescriptor(shared_from_this(), std::move(rd));
-}
-
-std::size_t Manager::size() const
-{
-    return m_stored_objects.size();
-}
 }  // namespace srf::internal::remote_descriptor

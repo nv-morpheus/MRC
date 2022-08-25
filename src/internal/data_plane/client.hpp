@@ -20,6 +20,7 @@
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/control_plane/client/state_manager.hpp"
 #include "internal/data_plane/request.hpp"
+#include "internal/memory/transient_pool.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
@@ -35,6 +36,7 @@
 #include "srf/runnable/launch_control.hpp"
 #include "srf/runnable/runner.hpp"
 #include "srf/types.hpp"
+#include "srf/utils/macros.hpp"
 
 #include <rxcpp/rx.hpp>  // IWYU pragma: keep
 #include <ucp/api/ucp_def.h>
@@ -45,12 +47,23 @@
 
 namespace srf::internal::data_plane {
 
-class Client final : public resources::PartitionResourceBase
+struct RemoteDescriptorMessage
+{
+    // DELETE_COPYABILITY(RemoteDescriptorMessage);
+    // DEFAULT_MOVEABILITY(RemoteDescriptorMessage);
+
+    remote_descriptor::RemoteDescriptor rd;
+    std::shared_ptr<ucx::Endpoint> endpoint;
+    std::uint64_t tag;
+};
+
+class Client final : public resources::PartitionResourceBase, private Service
 {
   public:
     Client(resources::PartitionResourceBase& base,
            ucx::Resources& ucx,
-           control_plane::client::ConnectionsManager& connections_manager);
+           control_plane::client::ConnectionsManager& connections_manager,
+           memory::TransientPool& transient_pool);
     ~Client() final;
 
     std::shared_ptr<ucx::Endpoint> endpoint_shared(const InstanceID& instance_id) const;
@@ -64,6 +77,10 @@ class Client final : public resources::PartitionResourceBase
     void async_p2p_recv(void* addr, std::size_t bytes, std::uint64_t tag, Request& request);
     void async_p2p_send(
         void* addr, std::size_t bytes, std::uint64_t tag, InstanceID instance_id, Request& request) const;
+
+    node::SourceChannelWriteable<RemoteDescriptorMessage>& remote_descriptor_channel();
+
+    // primitive rdma and send/recv call
 
     void async_get(void* addr,
                    std::size_t bytes,
@@ -84,9 +101,23 @@ class Client final : public resources::PartitionResourceBase
     const ucx::Endpoint& endpoint(const InstanceID& instance_id) const;
 
   private:
+    void issue_remote_descriptor(RemoteDescriptorMessage&& msg);
+
+    void do_service_start() final;
+    void do_service_await_live() final;
+    void do_service_stop() final;
+    void do_service_kill() final;
+    void do_service_await_join() final;
+
     ucx::Resources& m_ucx;
     control_plane::client::ConnectionsManager& m_connnection_manager;
+    memory::TransientPool& m_transient_pool;
     mutable std::map<InstanceID, std::shared_ptr<ucx::Endpoint>> m_endpoints;
+
+    std::unique_ptr<srf::runnable::Runner> m_rd_writer;
+    std::unique_ptr<node::SourceChannelWriteable<RemoteDescriptorMessage>> m_rd_channel;
+
+    friend Resources;
 };
 
 }  // namespace srf::internal::data_plane

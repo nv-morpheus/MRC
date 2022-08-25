@@ -44,7 +44,7 @@ class ConnectionsManager : public StateManager
     using update_channel_t = srf::node::SourceChannelWriteable<const protos::StateUpdate>;
 
     ConnectionsManager(Client& client, update_channel_t& update_channel);
-    ~ConnectionsManager() override = default;
+    ~ConnectionsManager() override;
 
     std::map<InstanceID, std::unique_ptr<client::Instance>> register_ucx_addresses(
         std::vector<std::optional<ucx::Resources>>& ucx_resources);

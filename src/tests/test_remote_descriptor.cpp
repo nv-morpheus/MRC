@@ -43,7 +43,7 @@ class TestRD : public ::testing::Test
                 options.placement().resources_strategy(PlacementResources::Dedicated);
             })));
 
-        m_rd_manager = std::make_shared<internal::remote_descriptor::Manager>();
+        m_rd_manager = std::make_shared<internal::remote_descriptor::Manager>(42);
     }
 
     void TearDown() override
@@ -67,7 +67,14 @@ TEST_F(TestRD, LifeCycle)
             auto rd = m_rd_manager->register_object(std::move(test));
             EXPECT_EQ(m_rd_manager->size(), 1);
 
+            auto handle = rd.release_ownership();
+            EXPECT_FALSE(rd);
+
+            auto rd2 = m_rd_manager->take_ownership(std::move(handle));
+            EXPECT_TRUE(rd2);
+
             rd.release();
+            rd2.release();
             EXPECT_EQ(m_rd_manager->size(), 0);
         })
         .get();

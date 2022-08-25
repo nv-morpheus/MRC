@@ -22,6 +22,7 @@
 #include "internal/data_plane/resources.hpp"
 #include "internal/data_plane/server.hpp"
 #include "internal/memory/host_resources.hpp"
+#include "internal/remote_descriptor/remote_descriptor.hpp"
 #include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/ucx/registration_cache.hpp"
@@ -34,7 +35,8 @@ Resources::Resources(resources::PartitionResourceBase& base,
                      memory::HostResources& host,
                      std::unique_ptr<control_plane::client::Instance> control_plane) :
   resources::PartitionResourceBase(base),
-  m_control_plane(std::move(control_plane))
+  m_control_plane(std::move(control_plane)),
+  m_remote_descriptors(std::make_shared<remote_descriptor::Manager>(m_control_plane->instance_id()))
 {
     CHECK(m_control_plane);
     CHECK_LT(partition_id(), m_control_plane->client().connections().instance_ids().size());
@@ -75,9 +77,14 @@ control_plane::client::Instance& Resources::control_plane()
     return *m_control_plane;
 }
 
-InstanceID Resources::instance_id() const
+const InstanceID& Resources::instance_id() const
 {
     return m_instance_id;
 }
 
+remote_descriptor::Manager& Resources::remote_descriptor_manager()
+{
+    CHECK(m_remote_descriptors);
+    return *m_remote_descriptors;
+}
 }  // namespace srf::internal::network

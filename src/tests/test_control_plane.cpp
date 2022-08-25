@@ -30,6 +30,7 @@
 #include "internal/pubsub/subscriber_manager.hpp"
 #include "internal/resources/manager.hpp"
 
+#include "srf/codable/fundamental_types.hpp"  // IWYU pragma: keep
 #include "srf/node/sink_properties.hpp"
 #include "srf/options/placement.hpp"
 #include "srf/protos/architect.grpc.pb.h"
@@ -215,6 +216,8 @@ TEST_F(TestControlPlane, DoubleClientPubSub)
 
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     LOG(INFO) << "AFTER SLEEP 1 - publisher should have 1 subscriber";
+    // client-side: publisher manager should have 1 tagged instance in it write list
+    // server-side: publisher member list: 1, subscriber member list: 1, subscriber subscribe_to list: 1
 
     LOG(INFO) << "[START] DELETE SUBSCRIBER";
     subscriber.reset();
