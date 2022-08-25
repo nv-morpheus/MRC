@@ -48,6 +48,28 @@ ucs_status_t active_message_callback(
 
 }  // namespace
 
+Manager::Manager(const InstanceID& instance_id, ucx::Resources& ucx, data_plane::Client& client) :
+  resources::PartitionResourceBase(ucx),
+  m_instance_id(instance_id),
+  m_ucx(ucx),
+  m_client(client)
+{
+    service_start();
+    service_await_live();
+}
+
+Manager::~Manager()
+{
+    Service::call_in_destructor();
+}
+
+RemoteDescriptor Manager::take_ownership(std::unique_ptr<const srf::codable::protos::RemoteDescriptor> rd)
+{
+    auto non_const_rd = std::unique_ptr<srf::codable::protos::RemoteDescriptor>(
+        const_cast<srf::codable::protos::RemoteDescriptor*>(rd.release()));
+    return RemoteDescriptor(shared_from_this(), std::move(non_const_rd));
+}
+
 RemoteDescriptor Manager::store_object(std::unique_ptr<Storage> object)
 {
     CHECK(object);
@@ -174,4 +196,5 @@ std::uint32_t Manager::active_message_id()
 {
     return 10000;
 }
+
 }  // namespace srf::internal::remote_descriptor

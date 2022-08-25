@@ -62,20 +62,9 @@ class Manager final : private resources::PartitionResourceBase,
                       public std::enable_shared_from_this<Manager>
 {
   public:
-    Manager(const InstanceID& instance_id, ucx::Resources& ucx, data_plane::Client& client) :
-      resources::PartitionResourceBase(ucx),
-      m_instance_id(instance_id),
-      m_ucx(ucx),
-      m_client(client)
-    {
-        service_start();
-        service_await_live();
-    }
+    Manager(const InstanceID& instance_id, ucx::Resources& ucx, data_plane::Client& client);
 
-    ~Manager()
-    {
-        Service::call_in_destructor();
-    }
+    ~Manager() override;
 
     template <typename T>
     RemoteDescriptor register_object(T&& object)
@@ -83,12 +72,7 @@ class Manager final : private resources::PartitionResourceBase,
         return store_object(TypedStorage<T>::create(std::move(object)));
     }
 
-    RemoteDescriptor take_ownership(std::unique_ptr<const srf::codable::protos::RemoteDescriptor> rd)
-    {
-        auto non_const_rd = std::unique_ptr<srf::codable::protos::RemoteDescriptor>(
-            const_cast<srf::codable::protos::RemoteDescriptor*>(rd.release()));
-        return RemoteDescriptor(shared_from_this(), std::move(non_const_rd));
-    }
+    RemoteDescriptor take_ownership(std::unique_ptr<const srf::codable::protos::RemoteDescriptor> rd);
 
     std::size_t size() const;
 
