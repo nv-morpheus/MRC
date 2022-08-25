@@ -32,8 +32,8 @@ enum MemoryKind
 
 message RemoteMemoryDescriptor
 {
-    uint32 instance_id = 1;
-    uint32 object_id = 2;
+    uint64 instance_id = 1;
+    uint64 object_id = 2;
     uint64 remote_address = 3;
     uint64 remote_bytes = 4;
     bytes remote_key = 5;
@@ -63,10 +63,10 @@ message Descriptor
 {
     oneof desc
     {
-        RemoteMemoryDescriptor   remote_desc    = 1;
-        PackedDescriptor   packed_desc    = 2;
-        EagerDescriptor    eager_desc     = 3;
-        MetaDataDescriptor meta_data_desc = 4;
+        RemoteMemoryDescriptor remote_desc    = 1;
+        PackedDescriptor       packed_desc    = 2;
+        EagerDescriptor        eager_desc     = 3;
+        MetaDataDescriptor     meta_data_desc = 4;
     }
 }
 
@@ -85,8 +85,8 @@ message EncodedObject
 
 message RemoteDescriptor
 {
-    uint32 instance_id = 1;
+    uint64 instance_id = 1;
     uint64 object_id = 2;
-    uint32 tokens = 3;
+    uint64 tokens = 3;
     EncodedObject encoded_object = 4;
 }

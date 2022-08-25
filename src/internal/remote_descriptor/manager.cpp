@@ -17,12 +17,36 @@
 
 #include "internal/remote_descriptor/manager.hpp"
 
+#include "internal/control_plane/client/connections_manager.hpp"
+#include "internal/data_plane/request.hpp"
 #include "internal/remote_descriptor/remote_descriptor.hpp"
 #include "internal/remote_descriptor/storage.hpp"
 
+#include "srf/channel/status.hpp"
+#include "srf/node/source_channel.hpp"
 #include "srf/protos/codable.pb.h"
 
 namespace srf::internal::remote_descriptor {
+
+namespace {
+
+ucs_status_t active_message_callback(
+    void* arg, const void* header, size_t header_length, void* data, size_t length, const ucp_am_recv_param_t* param)
+{
+    DCHECK_EQ(header_length, sizeof(RemoteDescriptorDecrementMessage));
+
+    const auto* const_msg   = static_cast<const RemoteDescriptorDecrementMessage*>(header);
+    auto* decrement_channel = static_cast<node::SourceChannelWriteable<RemoteDescriptorDecrementMessage>*>(arg);
+
+    // make a copy of the message and write it to the channel
+    auto msg = *const_msg;
+    CHECK(decrement_channel->await_write(std::move(msg)) == channel::Status::success);
+
+    // we are done and data will not be used
+    return UCS_OK;
+}
+
+}  // namespace
 
 RemoteDescriptor Manager::store_object(std::unique_ptr<Storage> object)
 {
@@ -37,7 +61,12 @@ RemoteDescriptor Manager::store_object(std::unique_ptr<Storage> object)
     rd->set_object_id(object_id);
     rd->set_tokens(object->tokens_count());
     *(rd->mutable_encoded_object()) = object->encoded_object().proto();
-    m_stored_objects[object_id]     = std::move(object);
+
+    {
+        // lock when modifying the map
+        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+        m_stored_objects[object_id] = std::move(object);
+    }
 
     return RemoteDescriptor(shared_from_this(), std::move(rd));
 }
@@ -56,12 +85,20 @@ void Manager::decrement_tokens(std::unique_ptr<const srf::codable::protos::Remot
     else
     {
         // issue active message to remote instance_id to decrement tokens on remote object_id
-        LOG(FATAL) << "implement me";
+        RemoteDescriptorDecrementMessage msg;
+        msg.object_id = rd->object_id();
+        msg.tokens    = rd->tokens();
+        auto endpoint = m_client.endpoint_shared(rd->instance_id());
+
+        data_plane::Request request;
+        data_plane::Client::async_am_send(active_message_id(), &msg, sizeof(msg), *endpoint, request);
+        CHECK(request.await_complete());
     }
 }
 
 void Manager::decrement_tokens(std::size_t object_id, std::size_t token_count)
 {
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
     DVLOG(10) << "decrementing " << token_count << " tokens from object_id: " << object_id;
     auto search = m_stored_objects.find(object_id);
     CHECK(search != m_stored_objects.end());
@@ -73,4 +110,66 @@ void Manager::decrement_tokens(std::size_t object_id, std::size_t token_count)
     }
 }
 
+void Manager::do_service_start()
+{
+    m_decrement_channel    = std::make_unique<node::SourceChannelWriteable<RemoteDescriptorDecrementMessage>>();
+    auto decrement_handler = std::make_unique<node::RxSink<RemoteDescriptorDecrementMessage>>(
+        [this](RemoteDescriptorDecrementMessage msg) { decrement_tokens(msg.object_id, msg.tokens); });
+    decrement_handler->update_channel(
+        std::make_unique<channel::BufferedChannel<RemoteDescriptorDecrementMessage>>(128));
+    node::make_edge(*m_decrement_channel, *decrement_handler);
+
+    runnable::LaunchOptions launch_options;
+    launch_options.engine_factory_name = "main";
+
+    m_decrement_handler =
+        runnable().launch_control().prepare_launcher(launch_options, std::move(decrement_handler))->ignition();
+
+    // register active message handler
+    ucp_am_handler_param params;
+    params.field_mask = UCP_AM_HANDLER_PARAM_FIELD_ID | UCP_AM_HANDLER_PARAM_FIELD_FLAGS |
+                        UCP_AM_HANDLER_PARAM_FIELD_CB | UCP_AM_HANDLER_PARAM_FIELD_ARG;
+    params.id    = active_message_id();
+    params.flags = UCP_AM_FLAG_WHOLE_MSG;
+    params.cb    = active_message_callback;
+    params.arg   = m_decrement_channel.get();
+
+    CHECK_EQ(ucp_worker_set_am_recv_handler(m_ucx.worker().handle(), &params), UCS_OK);
+}
+
+void Manager::do_service_stop()
+{
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+
+    CHECK(m_decrement_channel);
+    CHECK(m_decrement_handler);
+
+    // deregister active message handler
+    ucp_am_handler_param params;
+    params.field_mask = UCP_AM_HANDLER_PARAM_FIELD_ID | UCP_AM_HANDLER_PARAM_FIELD_CB;
+    params.id         = active_message_id();
+    params.cb         = nullptr;
+    CHECK_EQ(ucp_worker_set_am_recv_handler(m_ucx.worker().handle(), &params), UCS_OK);
+
+    // close channel
+    m_decrement_channel.reset();
+}
+void Manager::do_service_kill()
+{
+    do_service_stop();
+}
+void Manager::do_service_await_live()
+{
+    CHECK(m_decrement_handler);
+    m_decrement_handler->await_live();
+}
+void Manager::do_service_await_join()
+{
+    CHECK(m_decrement_handler);
+    m_decrement_handler->await_join();
+}
+std::uint32_t Manager::active_message_id()
+{
+    return 10000;
+}
 }  // namespace srf::internal::remote_descriptor

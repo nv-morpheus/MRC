@@ -21,6 +21,7 @@
 #include "internal/control_plane/client/state_manager.hpp"
 #include "internal/data_plane/request.hpp"
 #include "internal/memory/transient_pool.hpp"
+#include "internal/remote_descriptor/remote_descriptor.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
@@ -97,6 +98,12 @@ class Client final : public resources::PartitionResourceBase, private Service
                            Request& request);
     static void async_send(
         void* addr, std::size_t bytes, std::uint64_t tag, const ucx::Endpoint& endpoint, Request& request);
+
+    static void async_am_send(std::uint32_t id,
+                              const void* header,
+                              std::size_t header_length,
+                              const ucx::Endpoint& endpoint,
+                              Request& request);
 
     const ucx::Endpoint& endpoint(const InstanceID& instance_id) const;
 

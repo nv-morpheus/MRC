@@ -47,10 +47,10 @@
 
 namespace srf {
 
-class TensorDescriptorTestObject
+class TensorDescriptor
 {
   public:
-    TensorDescriptorTestObject() :
+    TensorDescriptor() :
       m_dtype(DataType::create<float>()),
       m_block({reinterpret_cast<void*>(0xDEADBEEF), 1024 * 1024 * 1024, memory::memory_kind_type::device}),
       m_shape({3, 100, 100})
@@ -89,7 +89,7 @@ class TestThreadLocalResources : public core::Resources
 };
 
 template <typename T>
-struct codable::codable_protocol<T, std::enable_if_t<std::is_same_v<T, TensorDescriptorTestObject>>>
+struct codable::codable_protocol<T, std::enable_if_t<std::is_same_v<T, TensorDescriptor>>>
 {
     static void serialize(const T& t, Encoded<T>& encoded, const EncodingOptions& opts)
     {

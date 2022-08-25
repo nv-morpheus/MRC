@@ -17,9 +17,19 @@
 
 #pragma once
 
+#include "internal/data_plane/client.hpp"
+#include "internal/remote_descriptor/messages.hpp"
 #include "internal/remote_descriptor/remote_descriptor.hpp"
 #include "internal/remote_descriptor/storage.hpp"
+#include "internal/resources/partition_resources_base.hpp"
+#include "internal/runnable/engines.hpp"
+#include "internal/service.hpp"
+#include "internal/ucx/resources.hpp"
 
+#include "srf/channel/buffered_channel.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/source_channel.hpp"
 #include "srf/types.hpp"
 
 #include <map>
@@ -27,10 +37,40 @@
 
 namespace srf::internal::remote_descriptor {
 
-class Manager final : public std::enable_shared_from_this<Manager>
+/**
+ * @brief Manages RemoteDescriptors
+ *
+ *
+ * This object will register an active message handler with the data plane's ucx worker. The registered callback will be
+ * triggered and executed by the thread running the ucx worker progress engine, i.e. the data plane's io thread. To
+ * avoid any potentially latency heavy operations occurring on the data plane io thread will push a message over a
+ * channel back to a handler running on the main task queue to perform the decrement and any potential release of the
+ * storaged object.
+ *
+ * The shutdown sequence should be:
+ *  1. detatch the active message handler function from the ucx runtime
+ *  2. close the decrement channel
+ *  3. await on the decrement handler executing on main
+ */
+class Manager final : private resources::PartitionResourceBase,
+                      private Service,
+                      public std::enable_shared_from_this<Manager>
 {
   public:
-    Manager(const InstanceID& instance_id) : m_instance_id(instance_id) {}
+    Manager(const InstanceID& instance_id, ucx::Resources& ucx, data_plane::Client& client) :
+      resources::PartitionResourceBase(ucx),
+      m_instance_id(instance_id),
+      m_ucx(ucx),
+      m_client(client)
+    {
+        service_start();
+        service_await_live();
+    }
+
+    ~Manager()
+    {
+        Service::call_in_destructor();
+    }
 
     template <typename T>
     RemoteDescriptor register_object(T&& object)
@@ -48,16 +88,32 @@ class Manager final : public std::enable_shared_from_this<Manager>
     std::size_t size() const;
 
   private:
+    static std::uint32_t active_message_id();
+
     RemoteDescriptor store_object(std::unique_ptr<Storage> object);
 
     void decrement_tokens(std::unique_ptr<const srf::codable::protos::RemoteDescriptor> rd);
     void decrement_tokens(std::size_t object_id, std::size_t token_count);
 
+    void do_service_start() final;
+    void do_service_stop() final;
+    void do_service_kill() final;
+    void do_service_await_live() final;
+    void do_service_await_join() final;
+
     // <object_id, storage>
     std::map<std::size_t, std::unique_ptr<Storage>> m_stored_objects;
-    InstanceID m_instance_id;
+    const InstanceID m_instance_id;
+
+    ucx::Resources& m_ucx;
+    data_plane::Client& m_client;
+    std::unique_ptr<srf::runnable::Runner> m_decrement_handler;
+    std::unique_ptr<srf::node::SourceChannelWriteable<RemoteDescriptorDecrementMessage>> m_decrement_channel;
+
+    std::mutex m_mutex;
 
     friend RemoteDescriptor;
+    friend network::Resources;
 };
 
 }  // namespace srf::internal::remote_descriptor

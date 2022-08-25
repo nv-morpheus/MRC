@@ -210,6 +210,23 @@ void Client::async_get(void* addr,
     CHECK(!UCS_PTR_IS_ERR(request.m_request));
 }
 
+void Client::async_am_send(
+    std::uint32_t id, const void* header, std::size_t header_length, const ucx::Endpoint& endpoint, Request& request)
+{
+    CHECK_EQ(request.m_request, nullptr);
+    CHECK(request.m_state == Request::State::Init);
+    request.m_state = Request::State::Running;
+
+    ucp_request_param_t params;
+    params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
+    params.cb.send      = Callbacks::send;
+    params.user_data    = &request;
+
+    request.m_request = ucp_am_send_nbx(endpoint.handle(), id, header, header_length, nullptr, 0, &params);
+    CHECK(request.m_request);
+    CHECK(!UCS_PTR_IS_ERR(request.m_request));
+}
+
 // void Client::push_request(void* request)
 // {
 //     DCHECK(m_ucx_request_channel);
@@ -404,8 +421,13 @@ void Client::issue_remote_descriptor(RemoteDescriptorMessage&& msg)
         auto buffer = m_transient_pool.await_buffer(msg_length);
         CHECK(handle->SerializeToArray(buffer.data(), buffer.bytes()));
 
+        // the message fits into the size of the preposted recvs issued by the data plane
+        msg.tag |= TAG_EGR_MSG;
+
         Request request;
         async_send(buffer.data(), buffer.bytes(), msg.tag, *msg.endpoint, request);
+
+        // await and yield the userspace thread until completed
         CHECK(request.await_complete());
     }
     else
