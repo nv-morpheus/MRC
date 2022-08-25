@@ -121,6 +121,7 @@ void Manager::decrement_tokens(std::unique_ptr<const srf::codable::protos::Remot
 void Manager::decrement_tokens(std::size_t object_id, std::size_t token_count)
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    LOG(INFO) << "decrementing " << token_count << " tokens from object_id: " << object_id;
     DVLOG(10) << "decrementing " << token_count << " tokens from object_id: " << object_id;
     auto search = m_stored_objects.find(object_id);
     CHECK(search != m_stored_objects.end());

@@ -23,9 +23,11 @@
 #include "internal/data_plane/request.hpp"
 #include "internal/data_plane/server.hpp"
 #include "internal/expected.hpp"
+#include "internal/memory/transient_pool.hpp"
 #include "internal/network/resources.hpp"
 #include "internal/pubsub/pub_sub_base.hpp"
 #include "internal/pubsub/subscriber.hpp"
+#include "internal/remote_descriptor/remote_descriptor.hpp"
 #include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/service.hpp"
@@ -42,6 +44,7 @@
 #include "srf/node/source_channel.hpp"
 #include "srf/node/source_properties.hpp"
 #include "srf/protos/architect.pb.h"
+#include "srf/protos/codable.pb.h"
 #include "srf/utils/macros.hpp"
 
 #include <cstddef>
@@ -111,6 +114,21 @@ class SubscriberManager : public SubscriberManagerBase
         LOG(FATAL) << "pubsub::Subscriber should never get TaggedInstance updates";
     }
 
+    void handle_network_buffers(memory::TransientBuffer&& buffer)
+    {
+        // deserialize remote descriptor handle/proto from transient buffer
+        auto handle = std::make_unique<srf::codable::protos::RemoteDescriptor>();
+        CHECK(handle->ParseFromArray(buffer.data(), buffer.bytes()));
+
+        // release transient buffer so it can be reused
+        buffer.release();
+
+        // create a remote descriptor via the local RD manager taking ownership of the handle
+        auto rd = resources().network()->remote_descriptor_manager().take_ownership(std::move(handle));
+
+        LOG(INFO) << "subscriber " << service_name() << " got a object";
+    }
+
     void do_service_start() override
     {
         SubscriptionService::do_service_start();
@@ -126,12 +144,12 @@ class SubscriberManager : public SubscriberManagerBase
                                                          });
 
         auto network_reader = std::make_unique<node::RxSink<memory::TransientBuffer>>(
-            [](memory::TransientBuffer buffer) { LOG(FATAL) << "SubscriberManager network_reader - implement me"; });
+            [this](memory::TransientBuffer buffer) { handle_network_buffers(std::move(buffer)); });
 
         node::make_edge(resources().network()->data_plane().server().deserialize_source().source(this->tag()),
                         *network_reader);
 
-        auto launch_options = resources().network()->control_plane().client().launch_options();
+        auto launch_options = resources().network()->data_plane().launch_options(1);
 
         m_reader = resources()
                        .runnable()

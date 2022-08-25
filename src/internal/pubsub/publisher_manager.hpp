@@ -199,11 +199,13 @@ class PublisherRoundRobin : public PublisherManager<T>
     {
         DCHECK(this->resources().runnable().main().caller_on_same_thread());
 
+        LOG(INFO) << "publisher writing object";
+
         while (this->tagged_instances().empty())
         {
             // await subscribers
             // for now just return and drop the object
-            return;
+            boost::this_fiber::yield();
         }
 
         data_plane::RemoteDescriptorMessage msg;

@@ -214,6 +214,9 @@ TEST_F(TestControlPlane, DoubleClientPubSub)
 
     client_1->partition(0).network()->control_plane().client().request_update();
 
+    publisher->await_write(42);
+    publisher->await_write(15);
+
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     LOG(INFO) << "AFTER SLEEP 1 - publisher should have 1 subscriber";
     // client-side: publisher manager should have 1 tagged instance in it write list
