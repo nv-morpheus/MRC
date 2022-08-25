@@ -141,6 +141,8 @@ void Manager::do_service_stop()
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
+    DCHECK_EQ(m_stored_objects.size(), 0);
+
     CHECK(m_decrement_channel);
     CHECK(m_decrement_handler);
 

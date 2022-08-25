@@ -38,8 +38,13 @@
 namespace srf::internal::remote_descriptor {
 
 /**
- * @brief Manages RemoteDescriptors
+ * @brief Creates and Manages RemoteDescriptors
  *
+ * The remote descriptor Manager is responsible for transforming an object to a remote descriptor. The Manager will take
+ * ownership of the object and hold it until the all RemoteDescriptor (RD) reference count tokens are released.
+ *
+ * The manager is also responsible for decrement the global reference count when a remote descriptor is released. This
+ * is done via a ucx active message.
  *
  * This object will register an active message handler with the data plane's ucx worker. The registered callback will be
  * triggered and executed by the thread running the ucx worker progress engine, i.e. the data plane's io thread. To
