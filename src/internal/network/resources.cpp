@@ -88,4 +88,10 @@ ucx::Resources& Resources::ucx()
 {
     return m_ucx;
 }
+
+Future<void> Resources::shutdown()
+{
+    return m_control_plane->shutdown();
+}
+
 }  // namespace srf::internal::network

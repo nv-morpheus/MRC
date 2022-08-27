@@ -80,6 +80,14 @@ class RuntimeManager
         }
     }
 
+    ~RuntimeManager()
+    {
+        // the problem is that m_partitions goes away, then m_resources is destroyed
+        // when not all Publishers/Subscribers which were created with a ref to a Runtime
+        // might not yet be finished
+        m_resources->shutdown().get();
+    }
+
     resources::Manager& resources()
     {
         CHECK(m_resources);

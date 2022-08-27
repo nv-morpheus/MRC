@@ -48,9 +48,24 @@ Instance::Instance(Client& client,
 
     m_update_handler =
         runnable().launch_control().prepare_launcher(client.launch_options(), std::move(update_handler))->ignition();
+
+    service_start();
+    service_await_live();
 }
 
 Instance::~Instance()
+{
+    service_kill();
+    service_await_join();
+    Service::call_in_destructor();
+}
+
+void Instance::do_service_start() {}
+void Instance::do_service_stop()
+{
+    service_kill();
+}
+void Instance::do_service_kill()
 {
     while (!m_subscription_services.empty())
     {
@@ -68,6 +83,19 @@ Instance::~Instance()
     // this should block until an update is issued by the server for the client to finalize the instance drop
     m_update_handler->await_join();
     DVLOG(10) << "client instance: " << m_instance_id << " dropped by server - shutting down client-side";
+
+    m_shutdown_promise.set_value();
+}
+void Instance::do_service_await_live()
+{
+    m_update_handler->await_live();
+}
+void Instance::do_service_await_join() {}
+
+Future<void> Instance::shutdown()
+{
+    service_stop();
+    return m_shutdown_promise.get_future();
 }
 
 void Instance::register_subscription_service(std::unique_ptr<SubscriptionService> subscription_service)

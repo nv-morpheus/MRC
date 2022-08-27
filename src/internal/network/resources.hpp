@@ -53,11 +53,17 @@ class Resources final : private resources::PartitionResourceBase
     data_plane::Resources& data_plane();
 
   private:
+    Future<void> shutdown();
+
     InstanceID m_instance_id;
     ucx::Resources& m_ucx;
     control_plane::Client& m_control_plane_client;
     std::unique_ptr<data_plane::Resources> m_data_plane;
+
+    // this must be the first variable destroyed
     std::unique_ptr<control_plane::client::Instance> m_control_plane;
+
+    friend resources::Manager;
 };
 
 }  // namespace srf::internal::network

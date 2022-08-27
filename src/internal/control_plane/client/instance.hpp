@@ -44,7 +44,7 @@ namespace srf::internal::control_plane::client {
 
 class SubscriptionService;
 
-class Instance final : private resources::PartitionResourceBase
+class Instance final : private resources::PartitionResourceBase, private Service
 {
   public:
     Instance(Client& client,
@@ -59,6 +59,14 @@ class Instance final : private resources::PartitionResourceBase
     void register_subscription_service(std::unique_ptr<SubscriptionService> service);
 
   private:
+    void do_service_start() final;
+    void do_service_stop() final;
+    void do_service_kill() final;
+    void do_service_await_live() final;
+    void do_service_await_join() final;
+
+    Future<void> shutdown();
+
     void do_handle_state_update(const protos::StateUpdate& update);
     void do_update_subscription_state(const std::string& service_name,
                                       const std::uint64_t& nonce,
@@ -67,11 +75,10 @@ class Instance final : private resources::PartitionResourceBase
                                     const protos::DropSubscriptionServiceState& update);
 
     Client& m_client;
-    data_plane::Client* m_data_plane{nullptr};
     const InstanceID m_instance_id;
-    std::unique_ptr<srf::runnable::Runner> m_update_handler;
-
+    Promise<void> m_shutdown_promise;
     std::multimap<std::string, std::unique_ptr<SubscriptionService>> m_subscription_services;
+    std::unique_ptr<srf::runnable::Runner> m_update_handler;
 
     friend network::Resources;
 };

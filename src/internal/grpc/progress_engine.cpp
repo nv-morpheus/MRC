@@ -33,13 +33,14 @@ void ProgressEngine::data_source(rxcpp::subscriber<ProgressEvent>& s)
         switch (m_cq->AsyncNext<gpr_timespec>(&event.tag, &event.ok, gpr_time_0(GPR_CLOCK_REALTIME)))
         {
         case grpc::CompletionQueue::NextStatus::GOT_EVENT: {
-            backoff = 128;
+            backoff = 1;
             DVLOG(20) << "progress engine got event";
             s.on_next(event);
         }
         break;
         case grpc::CompletionQueue::NextStatus::TIMEOUT: {
-            if (backoff < 1048576)
+            // if (backoff < 1048576)
+            if (backoff < 1024)
             {
                 backoff = (backoff << 1);
             }
