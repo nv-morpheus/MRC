@@ -53,7 +53,7 @@ class RegistrationCache final
      * @param addr
      * @param bytes
      */
-    void add_block(void* addr, std::size_t bytes)
+    void add_block(const void* addr, std::size_t bytes)
     {
         DCHECK(addr && bytes);
         auto [lkey, rkey, rkey_size] = m_context->register_memory_with_rkey(addr, bytes);

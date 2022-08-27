@@ -39,15 +39,16 @@ using namespace srf::memory::literals;
 Resources::Resources(resources::PartitionResourceBase& base,
                      ucx::Resources& ucx,
                      memory::HostResources& host,
-                     control_plane::client::Instance& control_plane) :
+                     const InstanceID& instance_id,
+                     control_plane::Client& control_plane_client) :
   resources::PartitionResourceBase(base),
   m_ucx(ucx),
   m_host(host),
-  m_control_plane(control_plane),
-  m_instance_id(control_plane.instance_id()),
+  m_control_plane_client(control_plane_client),
+  m_instance_id(instance_id),
   m_transient_pool(32_MiB, 4, m_host.registered_memory_resource()),
   m_server(base, ucx, host, m_transient_pool, m_instance_id),
-  m_client(base, ucx, m_control_plane.client().connections(), m_transient_pool)
+  m_client(base, ucx, m_control_plane_client.connections(), m_transient_pool)
 {
     // ensure the data plane progress engine is up and running
     service_start();
@@ -56,7 +57,7 @@ Resources::Resources(resources::PartitionResourceBase& base,
 
 Resources::~Resources()
 {
-    call_in_destructor();
+    Service::call_in_destructor();
 }
 
 Client& Resources::client()
@@ -93,7 +94,7 @@ void Resources::do_service_await_live()
 
 void Resources::do_service_stop()
 {
-    // we only issue 
+    // we only issue
     m_client.service_stop();
 }
 

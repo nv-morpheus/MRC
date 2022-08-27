@@ -17,12 +17,14 @@
 
 #pragma once
 
+#include "internal/control_plane/client/state_manager.hpp"
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/remote_descriptor/remote_descriptor.hpp"
 #include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/ucx/registration_cache.hpp"
+#include "internal/ucx/resources.hpp"
 
 #include "srf/utils/macros.hpp"
 
@@ -40,19 +42,22 @@ class Resources final : private resources::PartitionResourceBase
     ~Resources() final;
 
     DELETE_COPYABILITY(Resources);
-    DEFAULT_MOVEABILITY(Resources);
+
+    Resources(Resources&&) noexcept = default;
+    Resources& operator=(Resources&&) noexcept = delete;
 
     const InstanceID& instance_id() const;
 
+    ucx::Resources& ucx();
     control_plane::client::Instance& control_plane();
     data_plane::Resources& data_plane();
-    remote_descriptor::Manager& remote_descriptor_manager();
 
   private:
     InstanceID m_instance_id;
-    std::unique_ptr<control_plane::client::Instance> m_control_plane;
+    ucx::Resources& m_ucx;
+    control_plane::Client& m_control_plane_client;
     std::unique_ptr<data_plane::Resources> m_data_plane;
-    std::shared_ptr<remote_descriptor::Manager> m_remote_descriptors;
+    std::unique_ptr<control_plane::client::Instance> m_control_plane;
 };
 
 }  // namespace srf::internal::network

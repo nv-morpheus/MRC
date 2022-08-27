@@ -31,13 +31,13 @@ namespace srf::codable {
 template <typename T>
 struct codable_protocol<T, std::enable_if_t<std::is_fundamental_v<T>>>
 {
-    static void serialize(const T& t, Encoded<T>& encoded, const EncodingOptions& opts)
+    static void serialize(const T& t, EncodableObject<T>& encoded, const EncodingOptions& opts)
     {
         auto guard = encoded.acquire_encoding_context();
-        auto index = encoded.add_eager_buffer(&t, sizeof(t));
+        auto index = encoded.copy_to_eager_descriptor({&t, sizeof(t), memory::memory_kind::host});
     }
 
-    static T deserialize(const EncodedObject& encoded, std::size_t object_idx)
+    static T deserialize(const DecodableObject<T>& encoded, std::size_t object_idx)
     {
         DCHECK_EQ(std::type_index(typeid(T)).hash_code(), encoded.type_index_hash_for_object(object_idx));
         auto idx          = encoded.start_idx_for_object(object_idx);
@@ -50,31 +50,31 @@ struct codable_protocol<T, std::enable_if_t<std::is_fundamental_v<T>>>
 template <typename T>
 struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, std::string>>>
 {
-    static void serialize(const T& str, Encoded<T>& encoded, const EncodingOptions& opts)
+    static void serialize(const T& str, EncodableObject<T>& encoded, const EncodingOptions& opts)
     {
         auto guard = encoded.acquire_encoding_context();
         if (opts.force_copy())
         {
-            auto index = encoded.add_host_buffer(str.size());
-            auto block = encoded.mutable_memory_block(index);
-            std::memcpy(block.data(), str.data(), str.size());
+            auto index  = encoded.create_memory_buffer(str.size());
+            auto buffer = encoded.mutable_memory_buffer(index);
+            std::memcpy(buffer.data(), str.data(), str.size());
         }
         else
         {
-            // not registered
-            encoded.add_memory_block(memory::const_buffer_view(str.data(), str.size(), memory::memory_kind::host));
+            encoded.register_memory_view({str.data(), str.size(), memory::memory_kind::host});
         }
     }
 
-    static T deserialize(const EncodedObject& encoded, std::size_t object_idx)
+    static T deserialize(const DecodableObject<T>& encoded, std::size_t object_idx)
     {
         DCHECK_EQ(std::type_index(typeid(T)).hash_code(), encoded.type_index_hash_for_object(object_idx));
         T str;
-        auto idx           = encoded.start_idx_for_object(object_idx);
-        const auto& buffer = encoded.memory_block(idx);
+        auto idx                = encoded.start_idx_for_object(object_idx);
+        const auto& buffer_info = encoded.memory_block(idx);
 
-        str.resize(buffer.bytes());
-        std::memcpy(str.data(), buffer.data(), buffer.bytes());
+        str.resize(buffer_info.bytes());
+
+        encoded.copy_from_buffer(idx, str.data(), buffer_info.data(), buffer_info.bytes());
 
         return str;
     }

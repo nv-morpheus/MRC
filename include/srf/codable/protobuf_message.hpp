@@ -32,7 +32,7 @@ namespace srf::codable {
 template <typename T>
 struct codable_protocol<T, std::enable_if_t<std::is_base_of_v<::google::protobuf::Message, T>>>
 {
-    static void serialize(const T& msg, Encoded<T>& encoded, const EncodingOptions& opts)
+    static void serialize(const T& msg, EncodableObject<T>& encoded, const EncodingOptions& opts)
     {
         auto guard = encoded.acquire_encoding_context();
         auto index = encoded.add_host_buffer(msg.ByteSizeLong());
@@ -40,7 +40,7 @@ struct codable_protocol<T, std::enable_if_t<std::is_base_of_v<::google::protobuf
         msg.SerializeToArray(block.data(), block.bytes());
     }
 
-    static T deserialize(const EncodedObject& encoded, std::size_t object_idx)
+    static T deserialize(const DecodableObject<T>& encoded, std::size_t object_idx)
     {
         T msg;
         auto idx          = encoded.start_idx_for_object(object_idx);

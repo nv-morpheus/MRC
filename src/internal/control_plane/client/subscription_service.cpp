@@ -30,7 +30,10 @@ namespace srf::internal::control_plane::client {
 SubscriptionService::SubscriptionService(const std::string& service_name, Instance& instance) :
   m_service_name(std::move(service_name)),
   m_instance(instance)
-{}
+{
+    service_set_description(
+        SRF_CONCAT_STR("subscription_service " << m_service_name << "[" << instance.instance_id() << "]"));
+}
 
 SubscriptionService::~SubscriptionService()
 {

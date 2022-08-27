@@ -17,45 +17,15 @@
 
 #pragma once
 
-namespace srf::internal {
+#include "srf/memory/memory_kind.hpp"
+#include "srf/protos/codable.pb.h"
 
-namespace runtime {
-class Runtime;
-}
+namespace srf::codable {
 
-namespace resources {
-class Manager;
-class PartitionResourceBase;
-class PartitionResources;
-}  // namespace resources
+// convert srf::memory::memory_kind enum to srf::codable::protos::MemoryKind
+protos::MemoryKind encode_memory_type(memory::memory_kind mem_kind);
 
-namespace runnable {
-class Resources;
-}  // namespace runnable
+// convert srf::codable::protos::MemoryKind to srf::memory::memory_kind
+memory::memory_kind decode_memory_type(const protos::MemoryKind& proto_kind);
 
-namespace memory {
-class HostResources;
-class DeviceResources;
-}  // namespace memory
-
-// control plane and data plane
-namespace network {
-class Resources;
-}  // namespace network
-
-namespace ucx {
-class Resources;
-}  // namespace ucx
-
-namespace control_plane {
-class Resources;
-namespace client {
-class Instance;
-}
-}  // namespace control_plane
-
-namespace data_plane {
-class Resources;
-}  // namespace data_plane
-
-}  // namespace srf::internal
+}  // namespace srf::codable

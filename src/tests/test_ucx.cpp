@@ -85,49 +85,6 @@ TEST_F(TestUCX, EndpointsInProcess)
     worker_2->progress();
 }
 
-/*
-TEST_F(TestUCX, ReceiveManager)
-{
-    FiberGroup fibers(2);
-    auto worker = UCX::global().create_worker();
-    auto host_allocator = memory::make_allocator(memory::malloc_allocator()).shared();
-    auto device_allocator = memory::make_allocator(memory::cuda_malloc_allocator(0)).shared();
-    auto recv_mgr = std::make_shared<ReceiveManager>(worker, host_allocator, device_allocator);
-
-    recv_mgr->shutdown();
-}
-*/
-
-/*
-TEST_F(TestUCX, UCXTaggedMessages)
-{
-    FiberGroup fibers(2);
-    auto recv_worker = UCX::global().create_worker();
-    auto send_worker = UCX::global().create_worker();
-    auto host_allocator = memory::make_allocator(memory::malloc_allocator()).shared();
-    auto device_allocator = memory::make_allocator(memory::cuda_malloc_allocator(0)).shared();
-    auto recv_mgr = std::make_shared<ReceiveManager>(recv_worker, host_allocator, device_allocator);
-    auto send_mgr = std::make_shared<SendManager>(send_worker);
-
-    auto recv_address = recv_mgr->local_address();
-
-    send_mgr->create_endpoint(42, recv_address);
-
-    auto md = host_allocator->allocate_descriptor(sizeof(std::uint64_t));
-
-    auto fs = send_mgr->async_write(42, 4, std::move(md));
-
-    auto [tag, buff] = recv_mgr->await_read();
-
-    fs.get();
-
-    EXPECT_EQ(tag, 4);
-    EXPECT_EQ(buff.size(), sizeof(std::uint64_t));
-
-    recv_mgr->shutdown();
-}
-*/
-
 // RDMA
 
 struct GetUserData

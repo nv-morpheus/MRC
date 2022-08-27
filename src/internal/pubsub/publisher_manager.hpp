@@ -28,6 +28,7 @@
 #include "internal/pubsub/publisher.hpp"
 #include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources.hpp"
+#include "internal/runtime/runtime.hpp"
 #include "internal/service.hpp"
 #include "internal/ucx/common.hpp"
 
@@ -54,10 +55,7 @@ namespace srf::internal::pubsub {
 class PublisherManagerBase : public PubSubBase
 {
   public:
-    PublisherManagerBase(std::string name, resources::PartitionResources& resources) :
-      PubSubBase(std::move(name), resources.network()->control_plane()),
-      m_resources(resources)
-    {}
+    PublisherManagerBase(std::string name, runtime::Runtime& runtime) : PubSubBase(std::move(name), runtime) {}
 
     ~PublisherManagerBase() override = default;
 
@@ -71,24 +69,13 @@ class PublisherManagerBase : public PubSubBase
         static std::set<std::string> r = {role_subscriber()};
         return r;
     }
-
-  protected:
-    inline resources::PartitionResources& resources()
-    {
-        return m_resources;
-    }
-
-  private:
-    resources::PartitionResources& m_resources;
 };
 
 template <typename T>
 class PublisherManager : public PublisherManagerBase
 {
   public:
-    PublisherManager(std::string name, resources::PartitionResources& resources) :
-      PublisherManagerBase(std::move(name), resources)
-    {}
+    PublisherManager(std::string name, runtime::Runtime& runtime) : PublisherManagerBase(std::move(name), runtime) {}
 
     ~PublisherManager() override
     {
@@ -220,7 +207,7 @@ class PublisherRoundRobin : public PublisherManager<T>
 
         std::size_t val = 42;
 
-        msg.rd = this->resources().network()->remote_descriptor_manager().register_object(std::move(object));
+        msg.rd = this->runtime().remote_descriptor_manager().register_object(std::move(object));
         CHECK(this->resources().network()->data_plane().client().remote_descriptor_channel().await_write(
                   std::move(msg)) == channel::Status::success);
     }
@@ -234,15 +221,13 @@ enum class PublisherType
 };
 
 template <typename T>
-std::shared_ptr<Publisher<T>> make_publisher(const std::string& name,
-                                             PublisherType type,
-                                             resources::PartitionResources& resources)
+std::shared_ptr<Publisher<T>> make_publisher(const std::string& name, PublisherType type, runtime::Runtime& runtime)
 {
     std::unique_ptr<PublisherManager<T>> manager;
     switch (type)
     {
     case PublisherType::RoundRobin:
-        manager = std::make_unique<PublisherRoundRobin<T>>(name, resources);
+        manager = std::make_unique<PublisherRoundRobin<T>>(name, runtime);
         break;
     default:
         LOG(FATAL) << "unknown publisher type";
@@ -250,7 +235,7 @@ std::shared_ptr<Publisher<T>> make_publisher(const std::string& name,
     CHECK(manager);
 
     auto future = manager->make_publisher();
-    resources.network()->control_plane().register_subscription_service(std::move(manager));
+    runtime.resources().network()->control_plane().register_subscription_service(std::move(manager));
     return future.get();
 }
 

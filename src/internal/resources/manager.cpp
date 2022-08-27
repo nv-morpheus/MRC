@@ -181,6 +181,11 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
     }
 }
 
+Manager::~Manager()
+{
+    m_network.clear();
+}
+
 std::size_t Manager::partition_count() const
 {
     return system().partitions().flattened().size();

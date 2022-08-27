@@ -58,7 +58,7 @@ class Resources final : public resources::PartitionResourceBase
     srf::core::FiberTaskQueue& network_task_queue();
 
     // registration cache to look up local/remote keys for registered blocks of memory
-    const RegistrationCache& registration_cache() const;
+    RegistrationCache& registration_cache();
 
     // used to build a callback adaptor memory resource for host memory resources
     void add_registration_cache_to_builder(RegistrationCallbackBuilder& builder);

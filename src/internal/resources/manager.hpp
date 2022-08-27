@@ -38,6 +38,7 @@ class Manager final : public system::SystemProvider
   public:
     Manager(const system::SystemProvider& system);
     Manager(std::unique_ptr<system::Resources> resources);
+    ~Manager();
 
     static Manager& get_resources();
     static PartitionResources& get_partition();

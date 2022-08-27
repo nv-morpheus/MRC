@@ -22,6 +22,7 @@
 #include "srf/utils/macros.hpp"
 
 #include <memory>
+#include <stdexcept>
 
 namespace srf::internal::remote_descriptor {
 
@@ -43,6 +44,17 @@ class RemoteDescriptor final
     std::unique_ptr<const srf::codable::protos::RemoteDescriptor> release_ownership();
 
     void release();
+
+    // template <typename T>
+    // T decode()
+    // {
+    //     if (!m_descriptor)
+    //     {
+    //         throw std::runtime_error("unable decode empty descriptor");
+    //     }
+
+    //     codable::decode<T>(m_descriptor->encoded_object());
+    // }
 
   private:
     std::unique_ptr<srf::codable::protos::RemoteDescriptor> m_descriptor;

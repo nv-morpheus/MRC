@@ -31,9 +31,9 @@ struct MemoryBlock : public memory::MemoryBlock
 {
   public:
     MemoryBlock() = default;
-    MemoryBlock(void* data, std::size_t bytes);
+    MemoryBlock(const void* data, std::size_t bytes);
     MemoryBlock(
-        void* data, std::size_t bytes, ucp_mem_h local_handle, void* remote_handle, std::size_t remote_handle_size);
+        const void* data, std::size_t bytes, ucp_mem_h local_handle, void* remote_handle, std::size_t remote_handle_size);
     MemoryBlock(const MemoryBlock& block, ucp_mem_h local_handle, void* remote_handle, std::size_t remote_handle_size);
     ~MemoryBlock() override = default;
 

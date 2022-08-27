@@ -24,7 +24,7 @@ namespace srf::internal::memory {
 struct MemoryBlock
 {
     MemoryBlock() = default;
-    MemoryBlock(void* data, std::size_t bytes) : m_data(data), m_bytes(bytes) {}
+    MemoryBlock(const void* data, std::size_t bytes) : m_data(const_cast<void*>(data)), m_bytes(bytes) {}
     virtual ~MemoryBlock() = default;
 
     void* data()

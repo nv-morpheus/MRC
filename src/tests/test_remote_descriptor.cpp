@@ -21,6 +21,7 @@
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/remote_descriptor/remote_descriptor.hpp"
 #include "internal/resources/manager.hpp"
+#include "internal/runtime/runtime.hpp"
 
 #include "srf/codable/codable_protocol.hpp"
 #include "srf/codable/fundamental_types.hpp"
@@ -37,30 +38,33 @@ class TestRD : public ::testing::Test
   protected:
     void SetUp() override
     {
-        m_resources = std::make_unique<internal::resources::Manager>(
+        auto resources = std::make_unique<internal::resources::Manager>(
             internal::system::SystemProvider(make_system([](Options& options) {
                 // todo(#114) - propose: remove this option entirely
                 options.enable_server(true);
                 options.architect_url("localhost:13337");
                 options.placement().resources_strategy(PlacementResources::Dedicated);
             })));
+
+        m_runtime_manager = std::make_unique<internal::runtime::RuntimeManager>(std::move(resources));
     }
 
     void TearDown() override
     {
-        m_resources.reset();
+        m_runtime_manager.reset();
     }
 
-    std::unique_ptr<internal::resources::Manager> m_resources;
+    std::unique_ptr<internal::runtime::RuntimeManager> m_runtime_manager;
 };
 
 TEST_F(TestRD, LifeCycle)
 {
-    m_resources->partition(0)
+    m_runtime_manager->runtime(0)
+        .resources()
         .runnable()
         .main()
         .enqueue([this] {
-            auto& rd_manager = m_resources->partition(0).network()->remote_descriptor_manager();
+            auto& rd_manager = m_runtime_manager->runtime(0).remote_descriptor_manager();
 
             EXPECT_EQ(rd_manager.size(), 0);
 
@@ -84,20 +88,22 @@ TEST_F(TestRD, LifeCycle)
 
 TEST_F(TestRD, RemoteRelease)
 {
-    if (m_resources->partition_count() < 2)
+    if (m_runtime_manager->resources().partition_count() < 2)
     {
         GTEST_SKIP() << "this test only works with 2 or more partitions";
     }
 
-    auto f1 = m_resources->partition(0).network()->control_plane().client().connections().update_future();
-    m_resources->partition(0).network()->control_plane().client().request_update();
+    auto f1 =
+        m_runtime_manager->runtime(0).resources().network()->control_plane().client().connections().update_future();
+    m_runtime_manager->runtime(0).resources().network()->control_plane().client().request_update();
 
-    m_resources->partition(0)
+    m_runtime_manager->runtime(0)
+        .resources()
         .runnable()
         .main()
         .enqueue([this] {
-            auto& rd_manager_0 = m_resources->partition(0).network()->remote_descriptor_manager();
-            auto& rd_manager_1 = m_resources->partition(1).network()->remote_descriptor_manager();
+            auto& rd_manager_0 = m_runtime_manager->runtime(0).remote_descriptor_manager();
+            auto& rd_manager_1 = m_runtime_manager->runtime(1).remote_descriptor_manager();
 
             EXPECT_EQ(rd_manager_0.size(), 0);
             EXPECT_EQ(rd_manager_1.size(), 0);

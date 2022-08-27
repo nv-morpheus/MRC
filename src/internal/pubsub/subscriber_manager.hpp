@@ -30,6 +30,7 @@
 #include "internal/remote_descriptor/remote_descriptor.hpp"
 #include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources.hpp"
+#include "internal/runtime/runtime.hpp"
 #include "internal/service.hpp"
 
 #include "srf/channel/channel.hpp"
@@ -57,10 +58,7 @@ namespace srf::internal::pubsub {
 class SubscriberManagerBase : public PubSubBase
 {
   public:
-    SubscriberManagerBase(std::string name, resources::PartitionResources& resources) :
-      PubSubBase(std::move(name), resources.network()->control_plane()),
-      m_resources(resources)
-    {}
+    SubscriberManagerBase(std::string name, runtime::Runtime& runtime) : PubSubBase(std::move(name), runtime) {}
 
     ~SubscriberManagerBase() override = default;
 
@@ -74,15 +72,6 @@ class SubscriberManagerBase : public PubSubBase
         static std::set<std::string> r = {};
         return r;
     }
-
-  protected:
-    inline resources::PartitionResources& resources()
-    {
-        return m_resources;
-    }
-
-  private:
-    resources::PartitionResources& m_resources;
 };
 
 template <typename T>
@@ -92,14 +81,11 @@ template <typename T>
 class SubscriberManager : public SubscriberManagerBase
 {
   public:
-    SubscriberManager(std::string name, resources::PartitionResources& resources) :
-      SubscriberManagerBase(std::move(name), resources)
-    {}
+    SubscriberManager(std::string name, runtime::Runtime& runtime) : SubscriberManagerBase(std::move(name), runtime) {}
 
     ~SubscriberManager() override
     {
-        service_stop();
-        service_await_join();
+        Service::call_in_destructor();
     }
 
     Future<std::shared_ptr<Subscriber<T>>> make_subscriber()
@@ -124,7 +110,7 @@ class SubscriberManager : public SubscriberManagerBase
         buffer.release();
 
         // create a remote descriptor via the local RD manager taking ownership of the handle
-        auto rd = resources().network()->remote_descriptor_manager().take_ownership(std::move(handle));
+        auto rd = runtime().remote_descriptor_manager().take_ownership(std::move(handle));
 
         LOG(INFO) << "subscriber " << service_name() << " got a object";
     }
@@ -171,7 +157,6 @@ class SubscriberManager : public SubscriberManagerBase
     void do_service_stop() override
     {
         resources().network()->data_plane().server().deserialize_source().drop_edge(this->tag());
-        m_reader->stop();
     }
 
     void do_service_kill() override
@@ -191,11 +176,11 @@ class SubscriberManager : public SubscriberManagerBase
 };
 
 template <typename T>
-std::shared_ptr<Subscriber<T>> make_subscriber(const std::string& name, resources::PartitionResources& resources)
+std::shared_ptr<Subscriber<T>> make_subscriber(const std::string& name, runtime::Runtime& runtime)
 {
-    auto manager = std::make_unique<SubscriberManager<T>>(name, resources);
+    auto manager = std::make_unique<SubscriberManager<T>>(name, runtime);
     auto future  = manager->make_subscriber();
-    resources.network()->control_plane().register_subscription_service(std::move(manager));
+    runtime.resources().network()->control_plane().register_subscription_service(std::move(manager));
     return future.get();
 }
 

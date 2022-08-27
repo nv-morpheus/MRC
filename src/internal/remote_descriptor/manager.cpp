@@ -19,12 +19,17 @@
 
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/data_plane/request.hpp"
+#include "internal/data_plane/resources.hpp"
 #include "internal/remote_descriptor/remote_descriptor.hpp"
 #include "internal/remote_descriptor/storage.hpp"
+#include "internal/resources/forward.hpp"
 
 #include "srf/channel/status.hpp"
 #include "srf/node/source_channel.hpp"
 #include "srf/protos/codable.pb.h"
+
+#include <boost/fiber/operations.hpp>
+#include <glog/logging.h>
 
 namespace srf::internal::remote_descriptor {
 
@@ -48,12 +53,11 @@ ucs_status_t active_message_callback(
 
 }  // namespace
 
-Manager::Manager(const InstanceID& instance_id, ucx::Resources& ucx, data_plane::Client& client) :
-  resources::PartitionResourceBase(ucx),
+Manager::Manager(const InstanceID& instance_id, resources::PartitionResources& resources) :
   m_instance_id(instance_id),
-  m_ucx(ucx),
-  m_client(client)
+  m_resources(resources)
 {
+    service_set_description(SRF_CONCAT_STR("srf::remote_description_manager[" << instance_id << "]"));
     service_start();
     service_await_live();
 }
@@ -77,6 +81,7 @@ RemoteDescriptor Manager::store_object(std::unique_ptr<Storage> object)
     auto object_id = reinterpret_cast<std::size_t>(object.get());
     auto rd        = std::make_unique<srf::codable::protos::RemoteDescriptor>();
 
+    LOG(INFO) << "storing object_id: " << object_id << " with " << object->tokens_count() << " tokens";
     DVLOG(10) << "storing object_id: " << object_id << " with " << object->tokens_count() << " tokens";
 
     rd->set_instance_id(m_instance_id);
@@ -110,7 +115,7 @@ void Manager::decrement_tokens(std::unique_ptr<const srf::codable::protos::Remot
         RemoteDescriptorDecrementMessage msg;
         msg.object_id = rd->object_id();
         msg.tokens    = rd->tokens();
-        auto endpoint = m_client.endpoint_shared(rd->instance_id());
+        auto endpoint = m_resources.network()->data_plane().client().endpoint_shared(rd->instance_id());
 
         data_plane::Request request;
         data_plane::Client::async_am_send(active_message_id(), &msg, sizeof(msg), *endpoint, request);
@@ -145,8 +150,10 @@ void Manager::do_service_start()
     runnable::LaunchOptions launch_options;
     launch_options.engine_factory_name = "main";
 
-    m_decrement_handler =
-        runnable().launch_control().prepare_launcher(launch_options, std::move(decrement_handler))->ignition();
+    m_decrement_handler = m_resources.runnable()
+                              .launch_control()
+                              .prepare_launcher(launch_options, std::move(decrement_handler))
+                              ->ignition();
 
     // register active message handler
     ucp_am_handler_param params;
@@ -157,11 +164,17 @@ void Manager::do_service_start()
     params.cb    = active_message_callback;
     params.arg   = m_decrement_channel.get();
 
-    CHECK_EQ(ucp_worker_set_am_recv_handler(m_ucx.worker().handle(), &params), UCS_OK);
+    CHECK_EQ(ucp_worker_set_am_recv_handler(m_resources.network()->ucx().worker().handle(), &params), UCS_OK);
 }
 
 void Manager::do_service_stop()
 {
+    while (!m_stored_objects.empty())
+    {
+        LOG_EVERY_N(WARNING, INT32_MAX) << "awaiting release of remote descriptors";  // NOLINT
+        boost::this_fiber::yield();
+    }
+
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
     DCHECK_EQ(m_stored_objects.size(), 0);
@@ -174,7 +187,7 @@ void Manager::do_service_stop()
     params.field_mask = UCP_AM_HANDLER_PARAM_FIELD_ID | UCP_AM_HANDLER_PARAM_FIELD_CB;
     params.id         = active_message_id();
     params.cb         = nullptr;
-    CHECK_EQ(ucp_worker_set_am_recv_handler(m_ucx.worker().handle(), &params), UCS_OK);
+    CHECK_EQ(ucp_worker_set_am_recv_handler(m_resources.network()->ucx().worker().handle(), &params), UCS_OK);
 
     // close channel
     m_decrement_channel.reset();

@@ -17,45 +17,11 @@
 
 #pragma once
 
-namespace srf::internal {
+#include <cstdint>
 
-namespace runtime {
-class Runtime;
-}
+namespace srf::codable {
 
-namespace resources {
-class Manager;
-class PartitionResourceBase;
-class PartitionResources;
-}  // namespace resources
+using idx_t     = std::uint32_t;
+using obj_idx_t = std::uint32_t;
 
-namespace runnable {
-class Resources;
-}  // namespace runnable
-
-namespace memory {
-class HostResources;
-class DeviceResources;
-}  // namespace memory
-
-// control plane and data plane
-namespace network {
-class Resources;
-}  // namespace network
-
-namespace ucx {
-class Resources;
-}  // namespace ucx
-
-namespace control_plane {
-class Resources;
-namespace client {
-class Instance;
-}
-}  // namespace control_plane
-
-namespace data_plane {
-class Resources;
-}  // namespace data_plane
-
-}  // namespace srf::internal
+}  // namespace srf::codable

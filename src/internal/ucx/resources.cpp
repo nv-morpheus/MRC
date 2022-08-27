@@ -78,7 +78,7 @@ srf::core::FiberTaskQueue& Resources::network_task_queue()
 {
     return m_network_task_queue;
 }
-const RegistrationCache& Resources::registration_cache() const
+RegistrationCache& Resources::registration_cache()
 {
     CHECK(m_registration_cache);
     return *m_registration_cache;

@@ -28,35 +28,27 @@ namespace srf::codable {
 template <typename T>
 struct Encoder
 {
-    static void serialize(const T& t, Encoded<T>& enc, const EncodingOptions& opts = {})
+    static void serialize(const T& t, EncodableObject<T>& enc, const EncodingOptions& opts = {})
     {
         return detail::serialize(sfinae::full_concept{}, t, enc, opts);
     }
 };
 
 template <typename T>
-auto encode(const T& t, EncodingOptions opts = {})
-{
-    auto encoded = std::make_unique<Encoded<T>>();
-    Encoder<T>::serialize(t, *encoded, std::move(opts));
-    return std::move(encoded);
-}
-
-template <typename T>
 void encode(const T& t, EncodedObject& encoding, EncodingOptions opts = {})
 {
-    auto enc = reinterpret_cast<Encoded<T>*>(&encoding);
+    auto enc = reinterpret_cast<EncodableObject<T>*>(&encoding);
     Encoder<T>::serialize(t, *enc, std::move(opts));
 }
 
 template <typename T>
-void encode(const T& t, Encoded<T>& enc, EncodingOptions opts = {})
+void encode(const T& t, EncodableObject<T>& enc, EncodingOptions opts = {})
 {
     Encoder<T>::serialize(t, enc, std::move(opts));
 }
 
 template <typename T>
-void encode(const T& t, Encoded<T>* enc, EncodingOptions opts = {})
+void encode(const T& t, EncodableObject<T>* enc, EncodingOptions opts = {})
 {
     CHECK(enc);
     Encoder<T>::serialize(t, *enc, std::move(opts));

@@ -18,6 +18,8 @@
 #pragma once
 
 #include "internal/control_plane/client/subscription_service.hpp"
+#include "internal/resources/partition_resources.hpp"
+#include "internal/runtime/runtime.hpp"
 
 #include <string>
 
@@ -31,6 +33,10 @@ namespace srf::internal::pubsub {
 class PubSubBase : public control_plane::client::SubscriptionService
 {
   public:
+    PubSubBase(std::string name, runtime::Runtime& runtime) :
+      SubscriptionService(std::move(name), runtime.resources().network()->control_plane()),
+      m_runtime(runtime)
+    {}
     using SubscriptionService::SubscriptionService;
 
     static const std::string& role_publisher()
@@ -50,6 +56,20 @@ class PubSubBase : public control_plane::client::SubscriptionService
         static std::set<std::string> r = {role_publisher(), role_subscriber()};
         return r;
     }
+
+  protected:
+    inline runtime::Runtime& runtime()
+    {
+        return m_runtime;
+    }
+
+    inline resources::PartitionResources& resources()
+    {
+        return m_runtime.resources();
+    }
+
+  private:
+    runtime::Runtime& m_runtime;
 };
 
 }  // namespace srf::internal::pubsub

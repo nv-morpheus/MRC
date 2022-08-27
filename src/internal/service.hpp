@@ -57,6 +57,7 @@ class Service  // : public IService
 
   protected:
     void call_in_destructor();
+    void service_set_description(std::string description);
 
   private:
     bool forward_state(ServiceState new_state);
@@ -68,6 +69,7 @@ class Service  // : public IService
     virtual void do_service_await_join() = 0;
 
     ServiceState m_state{ServiceState::Initialized};
+    std::string m_description{"srf::internal::service"};
     mutable std::mutex m_mutex;
 };
 

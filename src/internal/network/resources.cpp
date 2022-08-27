@@ -35,29 +35,27 @@ Resources::Resources(resources::PartitionResourceBase& base,
                      memory::HostResources& host,
                      std::unique_ptr<control_plane::client::Instance> control_plane) :
   resources::PartitionResourceBase(base),
+  m_instance_id(control_plane->instance_id()),
+  m_ucx(ucx),
+  m_control_plane_client(control_plane->client()),
   m_control_plane(std::move(control_plane))
 {
     CHECK(m_control_plane);
+    DCHECK_NE(m_instance_id, 0);
     CHECK_LT(partition_id(), m_control_plane->client().connections().instance_ids().size());
     CHECK_EQ(m_control_plane->instance_id(), m_control_plane->client().connections().instance_ids().at(partition_id()));
 
     // construct resources on the srf_network task queue thread
     ucx.network_task_queue()
         .enqueue([this, &base, &ucx, &host] {
-            m_data_plane         = std::make_unique<data_plane::Resources>(base, ucx, host, *m_control_plane);
-            m_remote_descriptors = std::make_shared<remote_descriptor::Manager>(
-                m_control_plane->instance_id(), ucx, m_data_plane->client());
+            m_data_plane =
+                std::make_unique<data_plane::Resources>(base, ucx, host, m_instance_id, m_control_plane_client);
         })
         .get();
 }
 
 Resources::~Resources()
 {
-    if (m_remote_descriptors)
-    {
-        m_remote_descriptors->service_stop();
-        m_remote_descriptors->service_await_join();
-    }
     // this will sync with the control plane server to drop the instance
     // when this completes, we can disable the data plane
     m_control_plane.reset();
@@ -86,9 +84,8 @@ const InstanceID& Resources::instance_id() const
     return m_instance_id;
 }
 
-remote_descriptor::Manager& Resources::remote_descriptor_manager()
+ucx::Resources& Resources::ucx()
 {
-    CHECK(m_remote_descriptors);
-    return *m_remote_descriptors;
+    return m_ucx;
 }
 }  // namespace srf::internal::network

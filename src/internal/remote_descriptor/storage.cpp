@@ -22,7 +22,7 @@
 
 namespace srf::internal::remote_descriptor {
 
-const srf::codable::EncodedObject& Storage::encoded_object() const
+const EncodedObject& Storage::encoded_object() const
 {
     return m_encoding;
 }
@@ -36,5 +36,5 @@ std::size_t Storage::tokens_count() const
 {
     return m_tokens;
 }
-Storage::Storage(srf::codable::EncodedObject&& encoding) : m_encoding(std::move(encoding)) {}
+Storage::Storage(EncodedObject&& encoding) : m_encoding(std::move(encoding)) {}
 }  // namespace srf::internal::remote_descriptor

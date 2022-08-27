@@ -21,6 +21,7 @@
 #include "internal/remote_descriptor/messages.hpp"
 #include "internal/remote_descriptor/remote_descriptor.hpp"
 #include "internal/remote_descriptor/storage.hpp"
+#include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/runnable/engines.hpp"
 #include "internal/service.hpp"
@@ -57,19 +58,17 @@ namespace srf::internal::remote_descriptor {
  *  2. close the decrement channel
  *  3. await on the decrement handler executing on main
  */
-class Manager final : private resources::PartitionResourceBase,
-                      private Service,
-                      public std::enable_shared_from_this<Manager>
+class Manager final : private Service, public std::enable_shared_from_this<Manager>
 {
   public:
-    Manager(const InstanceID& instance_id, ucx::Resources& ucx, data_plane::Client& client);
+    Manager(const InstanceID& instance_id, resources::PartitionResources& resources);
 
     ~Manager() override;
 
     template <typename T>
     RemoteDescriptor register_object(T&& object)
     {
-        return store_object(TypedStorage<T>::create(std::move(object)));
+        return store_object(TypedStorage<T>::create(std::move(object), {m_resources}));
     }
 
     RemoteDescriptor take_ownership(std::unique_ptr<const srf::codable::protos::RemoteDescriptor> rd);
@@ -94,15 +93,14 @@ class Manager final : private resources::PartitionResourceBase,
     std::map<std::size_t, std::unique_ptr<Storage>> m_stored_objects;
     const InstanceID m_instance_id;
 
-    ucx::Resources& m_ucx;
-    data_plane::Client& m_client;
+    resources::PartitionResources& m_resources;
     std::unique_ptr<srf::runnable::Runner> m_decrement_handler;
     std::unique_ptr<srf::node::SourceChannelWriteable<RemoteDescriptorDecrementMessage>> m_decrement_channel;
 
     std::mutex m_mutex;
 
+    friend internal::runtime::Runtime;
     friend RemoteDescriptor;
-    friend network::Resources;
 };
 
 }  // namespace srf::internal::remote_descriptor

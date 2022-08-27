@@ -28,7 +28,7 @@ namespace srf::codable {
 template <typename T>
 struct Decoder
 {
-    static T deserialize(const EncodedObject& encoding, std::size_t object_idx)
+    static T deserialize(const DecodableObject<T>& encoding, std::size_t object_idx)
     {
         return detail::deserialize<T>(sfinae::full_concept{}, encoding, object_idx);
     }
@@ -37,7 +37,8 @@ struct Decoder
 template <typename T>
 auto decode(const EncodedObject& encoding, std::size_t object_idx = 0)
 {
-    return Decoder<T>::deserialize(encoding, object_idx);
+    auto enc = reinterpret_cast<DecodableObject<T>*>(&encoding);
+    return Decoder<T>::deserialize(enc, object_idx);
 }
 
 }  // namespace srf::codable

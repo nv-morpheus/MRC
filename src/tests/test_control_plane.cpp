@@ -29,6 +29,7 @@
 #include "internal/pubsub/publisher_manager.hpp"
 #include "internal/pubsub/subscriber_manager.hpp"
 #include "internal/resources/manager.hpp"
+#include "internal/runtime/runtime.hpp"
 
 #include "srf/codable/fundamental_types.hpp"  // IWYU pragma: keep
 #include "srf/node/sink_properties.hpp"
@@ -47,9 +48,9 @@
 
 using namespace srf;
 
-static auto make_resources(std::function<void(Options& options)> options_lambda = [](Options& options) {})
+static auto make_runtime(std::function<void(Options& options)> options_lambda = [](Options& options) {})
 {
-    return std::make_unique<internal::resources::Manager>(
+    auto resources = std::make_unique<internal::resources::Manager>(
         internal::system::SystemProvider(make_system([&](Options& options) {
             options.topology().user_cpuset("0-3");
             options.topology().restrict_gpus(true);
@@ -57,6 +58,8 @@ static auto make_resources(std::function<void(Options& options)> options_lambda 
             options.placement().cpu_strategy(PlacementStrategy::PerMachine);
             options_lambda(options);
         })));
+
+    return std::make_unique<internal::runtime::RuntimeManager>(std::move(resources));
 }
 
 class TestControlPlane : public ::testing::Test
@@ -68,8 +71,8 @@ class TestControlPlane : public ::testing::Test
 
 TEST_F(TestControlPlane, LifeCycle)
 {
-    auto sr     = make_resources();
-    auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).runnable());
+    auto sr     = make_runtime();
+    auto server = std::make_unique<internal::control_plane::Server>(sr->runtime(0).resources().runnable());
 
     server->service_start();
     server->service_await_live();
@@ -82,17 +85,17 @@ TEST_F(TestControlPlane, LifeCycle)
 
 TEST_F(TestControlPlane, SingleClientConnectDisconnect)
 {
-    auto sr     = make_resources();
-    auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).runnable());
+    auto sr     = make_runtime();
+    auto server = std::make_unique<internal::control_plane::Server>(sr->runtime(0).resources().runnable());
 
     server->service_start();
     server->service_await_live();
 
-    auto cr = make_resources([](Options& options) { options.architect_url("localhost:13337"); });
+    auto cr = make_runtime([](Options& options) { options.architect_url("localhost:13337"); });
 
     // the total number of partition is system dependent
-    auto expected_partitions = cr->system().partitions().flattened().size();
-    EXPECT_EQ(cr->partition(0).network()->control_plane().client().connections().instance_ids().size(),
+    auto expected_partitions = cr->resources().system().partitions().flattened().size();
+    EXPECT_EQ(cr->runtime(0).resources().network()->control_plane().client().connections().instance_ids().size(),
               expected_partitions);
 
     // destroying the resources should gracefully shutdown the data plane and the control plane.
@@ -104,47 +107,54 @@ TEST_F(TestControlPlane, SingleClientConnectDisconnect)
 
 TEST_F(TestControlPlane, DoubleClientConnectExchangeDisconnect)
 {
-    auto sr     = make_resources();
-    auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).runnable());
+    auto sr     = make_runtime();
+    auto server = std::make_unique<internal::control_plane::Server>(sr->runtime(0).resources().runnable());
 
     server->service_start();
     server->service_await_live();
 
-    auto client_1 = make_resources([](Options& options) {
+    auto client_1 = make_runtime([](Options& options) {
         options.topology().user_cpuset("0-3");
         options.topology().restrict_gpus(true);
         options.architect_url("localhost:13337");
     });
 
-    auto client_2 = make_resources([](Options& options) {
+    auto client_2 = make_runtime([](Options& options) {
         options.topology().user_cpuset("4-7");
         options.topology().restrict_gpus(true);
         options.architect_url("localhost:13337");
     });
 
     // the total number of partition is system dependent
-    auto expected_partitions_1 = client_1->system().partitions().flattened().size();
-    EXPECT_EQ(client_1->partition(0).network()->control_plane().client().connections().instance_ids().size(),
+    auto expected_partitions_1 = client_1->resources().system().partitions().flattened().size();
+    EXPECT_EQ(client_1->runtime(0).resources().network()->control_plane().client().connections().instance_ids().size(),
               expected_partitions_1);
 
-    auto expected_partitions_2 = client_2->system().partitions().flattened().size();
-    EXPECT_EQ(client_2->partition(0).network()->control_plane().client().connections().instance_ids().size(),
+    auto expected_partitions_2 = client_2->resources().system().partitions().flattened().size();
+    EXPECT_EQ(client_2->runtime(0).resources().network()->control_plane().client().connections().instance_ids().size(),
               expected_partitions_2);
 
-    auto f1 = client_1->partition(0).network()->control_plane().client().connections().update_future();
-    auto f2 = client_2->partition(0).network()->control_plane().client().connections().update_future();
+    auto f1 = client_1->runtime(0).resources().network()->control_plane().client().connections().update_future();
+    auto f2 = client_2->runtime(0).resources().network()->control_plane().client().connections().update_future();
 
-    client_1->partition(0).network()->control_plane().client().request_update();
+    client_1->runtime(0).resources().network()->control_plane().client().request_update();
 
     f1.get();
     f2.get();
 
-    client_1->partition(0)
+    client_1->runtime(0)
+        .resources()
         .runnable()
         .main()
         .enqueue([&] {
-            auto worker_count =
-                client_1->partition(0).network()->control_plane().client().connections().worker_addresses().size();
+            auto worker_count = client_1->runtime(0)
+                                    .resources()
+                                    .network()
+                                    ->control_plane()
+                                    .client()
+                                    .connections()
+                                    .worker_addresses()
+                                    .size();
             EXPECT_EQ(worker_count, expected_partitions_1 + expected_partitions_2);
         })
         .get();
@@ -159,47 +169,54 @@ TEST_F(TestControlPlane, DoubleClientConnectExchangeDisconnect)
 
 TEST_F(TestControlPlane, DoubleClientPubSub)
 {
-    auto sr     = make_resources();
-    auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).runnable());
+    auto sr     = make_runtime();
+    auto server = std::make_unique<internal::control_plane::Server>(sr->runtime(0).resources().runnable());
 
     server->service_start();
     server->service_await_live();
 
-    auto client_1 = make_resources([](Options& options) {
+    auto client_1 = make_runtime([](Options& options) {
         options.topology().user_cpuset("0-3");
         options.topology().restrict_gpus(true);
         options.architect_url("localhost:13337");
     });
 
-    auto client_2 = make_resources([](Options& options) {
+    auto client_2 = make_runtime([](Options& options) {
         options.topology().user_cpuset("4-7");
         options.topology().restrict_gpus(true);
         options.architect_url("localhost:13337");
     });
 
     // the total number of partition is system dependent
-    auto expected_partitions_1 = client_1->system().partitions().flattened().size();
-    EXPECT_EQ(client_1->partition(0).network()->control_plane().client().connections().instance_ids().size(),
+    auto expected_partitions_1 = client_1->resources().system().partitions().flattened().size();
+    EXPECT_EQ(client_1->runtime(0).resources().network()->control_plane().client().connections().instance_ids().size(),
               expected_partitions_1);
 
-    auto expected_partitions_2 = client_2->system().partitions().flattened().size();
-    EXPECT_EQ(client_2->partition(0).network()->control_plane().client().connections().instance_ids().size(),
+    auto expected_partitions_2 = client_2->resources().system().partitions().flattened().size();
+    EXPECT_EQ(client_2->runtime(0).resources().network()->control_plane().client().connections().instance_ids().size(),
               expected_partitions_2);
 
-    auto f1 = client_1->partition(0).network()->control_plane().client().connections().update_future();
-    auto f2 = client_2->partition(0).network()->control_plane().client().connections().update_future();
+    auto f1 = client_1->runtime(0).resources().network()->control_plane().client().connections().update_future();
+    auto f2 = client_2->runtime(0).resources().network()->control_plane().client().connections().update_future();
 
-    client_1->partition(0).network()->control_plane().client().request_update();
+    client_1->runtime(0).resources().network()->control_plane().client().request_update();
 
     f1.get();
     f2.get();
 
-    client_1->partition(0)
+    client_1->runtime(0)
+        .resources()
         .runnable()
         .main()
         .enqueue([&] {
-            auto worker_count =
-                client_1->partition(0).network()->control_plane().client().connections().worker_addresses().size();
+            auto worker_count = client_1->runtime(0)
+                                    .resources()
+                                    .network()
+                                    ->control_plane()
+                                    .client()
+                                    .connections()
+                                    .worker_addresses()
+                                    .size();
             EXPECT_EQ(worker_count, expected_partitions_1 + expected_partitions_2);
         })
         .get();
@@ -207,12 +224,12 @@ TEST_F(TestControlPlane, DoubleClientPubSub)
     LOG(INFO) << "MAKE PUBLISHER";
 
     auto publisher = internal::pubsub::make_publisher<int>(
-        "my_int", internal::pubsub::PublisherType::RoundRobin, client_1->partition(0));
+        "my_int", internal::pubsub::PublisherType::RoundRobin, client_1->runtime(0));
 
     LOG(INFO) << "MAKE SUBSCRIBER";
-    auto subscriber = internal::pubsub::make_subscriber<int>("my_int", client_2->partition(0));
+    auto subscriber = internal::pubsub::make_subscriber<int>("my_int", client_2->runtime(0));
 
-    client_1->partition(0).network()->control_plane().client().request_update();
+    client_1->runtime(0).resources().network()->control_plane().client().request_update();
 
     publisher->await_write(42);
     publisher->await_write(15);
@@ -226,7 +243,7 @@ TEST_F(TestControlPlane, DoubleClientPubSub)
     subscriber.reset();
     LOG(INFO) << "[FINISH] DELETE SUBSCRIBER";
 
-    client_1->partition(0).network()->control_plane().client().request_update();
+    client_1->runtime(0).resources().network()->control_plane().client().request_update();
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     LOG(INFO) << "AFTER SLEEP 2 - publisher should have 0 subscribers";
 
@@ -234,7 +251,7 @@ TEST_F(TestControlPlane, DoubleClientPubSub)
     publisher.reset();
     LOG(INFO) << "[FINISH] DELETE PUBLISHER";
 
-    client_1->partition(0).network()->control_plane().client().request_update();
+    client_1->runtime(0).resources().network()->control_plane().client().request_update();
 
     // destroying the resources should gracefully shutdown the data plane and the control plane.
     client_1.reset();

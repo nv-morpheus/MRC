@@ -41,7 +41,8 @@ class Resources final : private Service, private resources::PartitionResourceBas
     Resources(resources::PartitionResourceBase& base,
               ucx::Resources& ucx,
               memory::HostResources& host,
-              control_plane::client::Instance& control_plane);
+              const InstanceID& instance_id,
+              control_plane::Client& control_plane_client);
     ~Resources() final;
 
     Client& client();
@@ -62,7 +63,7 @@ class Resources final : private Service, private resources::PartitionResourceBas
 
     ucx::Resources& m_ucx;
     memory::HostResources& m_host;
-    control_plane::client::Instance& m_control_plane;
+    control_plane::Client& m_control_plane_client;
     InstanceID m_instance_id;
 
     memory::TransientPool m_transient_pool;

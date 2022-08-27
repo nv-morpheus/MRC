@@ -17,11 +17,6 @@
 
 #include "srf/codable/encoded_object.hpp"
 
-#include "internal/data_plane/resources.hpp"
-#include "internal/network/resources.hpp"
-#include "internal/resources/forward.hpp"
-#include "internal/resources/manager.hpp"
-
 #include "srf/memory/buffer_view.hpp"
 #include "srf/memory/memory_kind.hpp"
 #include "srf/protos/codable.pb.h"
@@ -34,7 +29,7 @@
 
 namespace srf::codable {
 
-static memory::memory_kind decode_memory_type(const protos::MemoryKind& proto_kind)
+memory::memory_kind decode_memory_type(const protos::MemoryKind& proto_kind)
 {
     switch (proto_kind)
     {
@@ -53,7 +48,7 @@ static memory::memory_kind decode_memory_type(const protos::MemoryKind& proto_ki
     return memory::memory_kind::none;
 }
 
-static protos::MemoryKind encode_memory_type(memory::memory_kind mem_kind)
+protos::MemoryKind encode_memory_type(memory::memory_kind mem_kind)
 {
     switch (mem_kind)
     {
@@ -72,70 +67,68 @@ static protos::MemoryKind encode_memory_type(memory::memory_kind mem_kind)
     return protos::MemoryKind::None;
 }
 
-memory::buffer_view EncodedObject::decode_descriptor(const protos::RemoteMemoryDescriptor& desc)
-{
-    return memory::buffer_view(
-        reinterpret_cast<void*>(desc.remote_address()), desc.remote_bytes(), decode_memory_type(desc.memory_kind()));
-}
+// EncodedObjectView
 
-protos::RemoteMemoryDescriptor EncodedObject::encode_descriptor(memory::const_buffer_view view, std::string keys)
-{
-    protos::RemoteMemoryDescriptor desc;
-
-    desc.set_remote_address(reinterpret_cast<std::uint64_t>(view.data()));
-    desc.set_remote_bytes(view.bytes());
-    desc.set_memory_kind(encode_memory_type(view.kind()));
-    desc.set_remote_key(std::move(keys));
-    return desc;
-}
-
-const protos::EncodedObject& EncodedObject::proto() const
-{
-    return m_proto;
-}
-
-memory::const_buffer_view EncodedObject::memory_block(std::size_t idx) const
-{
-    DCHECK_LT(idx, descriptor_count());
-    CHECK(m_proto.descriptors().at(idx).has_remote_desc());
-    return decode_descriptor(m_proto.descriptors().at(idx).remote_desc());
-}
-
-const protos::EagerDescriptor& EncodedObject::eager_descriptor(std::size_t idx) const
-{
-    DCHECK_LT(idx, descriptor_count());
-    CHECK(m_proto.descriptors().at(idx).has_eager_desc());
-    return m_proto.descriptors().at(idx).eager_desc();
-}
-
-memory::buffer_view EncodedObject::mutable_memory_block(std::size_t idx) const
-{
-    CHECK(m_context_acquired);
-    DCHECK_LT(idx, descriptor_count());
-    CHECK(m_proto.descriptors().at(idx).has_remote_desc());
-    return decode_descriptor(m_proto.descriptors().at(idx).remote_desc());
-}
-
-std::size_t EncodedObject::descriptor_count() const
+std::size_t EncodedObjectView::descriptor_count() const
 {
     return m_proto.descriptors_size();
 }
 
-std::size_t EncodedObject::object_count() const
+std::size_t EncodedObjectView::object_count() const
 {
     return m_proto.objects_size();
 }
 
-std::size_t EncodedObject::type_index_hash_for_object(std::size_t idx) const
+std::size_t EncodedObjectView::type_index_hash_for_object(const obj_idx_t& object_idx) const
 {
-    DCHECK_LT(idx, object_count());
-    return m_proto.objects().at(idx).type_index_hash();
+    DCHECK_LT(object_idx, object_count());
+    return m_proto.objects().at(object_idx).type_index_hash();
 }
 
-std::size_t EncodedObject::start_idx_for_object(std::size_t idx) const
+idx_t EncodedObjectView::start_idx_for_object(const obj_idx_t& object_idx) const
 {
-    DCHECK_LT(idx, object_count());
-    return m_proto.objects().at(idx).desc_id();
+    DCHECK_LT(object_idx, object_count());
+    return m_proto.objects().at(object_idx).desc_id();
+}
+
+// EncodedObject
+
+EncodedObject::EncodedObject() : m_view(m_proto) {}
+
+EncodedObject::EncodedObject(protos::EncodedObject proto) : m_view(m_proto) {}
+
+const protos::EncodedObject& EncodedObjectView::proto() const
+{
+    return m_proto;
+}
+
+protos::EncodedObject& EncodedObject::proto()
+{
+    return m_proto;
+}
+const bool& EncodedObject::context_acquired() const
+{
+    return m_context_acquired;
+}
+const protos::EncodedObject& EncodedObject::proto() const
+{
+    return m_view.proto();
+}
+std::size_t EncodedObject::descriptor_count() const
+{
+    return m_view.descriptor_count();
+}
+std::size_t EncodedObject::object_count() const
+{
+    return m_view.object_count();
+}
+std::size_t EncodedObject::type_index_hash_for_object(const obj_idx_t& object_idx) const
+{
+    return m_view.type_index_hash_for_object(object_idx);
+}
+idx_t EncodedObject::start_idx_for_object(const obj_idx_t& object_idx) const
+{
+    return m_view.start_idx_for_object(object_idx);
 }
 
 std::size_t EncodedObject::add_meta_data(const google::protobuf::Message& meta_data)
@@ -147,56 +140,24 @@ std::size_t EncodedObject::add_meta_data(const google::protobuf::Message& meta_d
     return index;
 }
 
-std::size_t EncodedObject::add_memory_block(memory::const_buffer_view view)
-{
-    auto& resources = internal::resources::Manager::get_partition();
-    CHECK(resources.network());
-    auto ucx_block = resources.network()->data_plane().registration_cache().lookup(view.data());
-
-    if (ucx_block)
-    {
-        CHECK(m_context_acquired);
-        auto count = descriptor_count();
-        auto* desc = m_proto.add_descriptors()->mutable_remote_desc();
-        *desc      = encode_descriptor(view, ucx_block->packed_remote_keys());
-        return count;
-    }
-
-    if (view.kind() == srf::memory::memory_kind::host)
-    {
-        DVLOG(10) << "unregistered host memory buffer view detected - a copy will be made";
-        auto count = add_host_buffer(view.bytes());
-        auto block = mutable_memory_block(count);
-        std::memcpy(block.data(), view.data(), view.bytes());
-        return count;
-    }
-
-    LOG(FATAL) << "unregistered device buffer is not supported at this time";
-}
-
-std::size_t EncodedObject::add_host_buffer(std::size_t bytes)
-{
-    CHECK(m_context_acquired);
-    auto& resources = internal::resources::Manager::get_partition();
-    return add_buffer(resources.host().make_buffer(bytes));
-}
-
-std::size_t EncodedObject::add_device_buffer(std::size_t bytes)
-{
-    CHECK(m_context_acquired);
-    auto& resources = internal::resources::Manager::get_partition();
-    CHECK(resources.device());
-    return add_buffer(resources.device()->make_buffer(bytes));
-}
-
-std::size_t EncodedObject::add_eager_buffer(const void* data, std::size_t bytes)
+idx_t EncodedObject::copy_to_eager_descriptor(memory::const_buffer_view view)
 {
     CHECK(m_context_acquired);
     auto count                    = descriptor_count();
     protos::EagerDescriptor* desc = m_proto.add_descriptors()->mutable_eager_desc();
-    desc->set_data(data, bytes);
+    desc->set_data(view.data(), view.bytes());
     return count;
 }
+
+void EncodedObject::add_type_index(std::type_index type_index)
+{
+    CHECK(m_context_acquired);
+    auto* obj = m_proto.add_objects();
+    obj->set_type_index_hash(type_index.hash_code());
+    obj->set_desc_id(descriptor_count());
+}
+
+// EncodedObject::ContextGuard
 
 EncodedObject::ContextGuard::ContextGuard(EncodedObject& encoded_object, std::type_index type_index) :
   m_encoded_object(encoded_object)
@@ -210,22 +171,6 @@ EncodedObject::ContextGuard::~ContextGuard()
 {
     CHECK(m_encoded_object.m_context_acquired);
     m_encoded_object.m_context_acquired = false;
-}
-
-void EncodedObject::add_type_index(std::type_index type_index)
-{
-    CHECK(m_context_acquired);
-    auto* obj = m_proto.add_objects();
-    obj->set_type_index_hash(type_index.hash_code());
-    obj->set_desc_id(descriptor_count());
-}
-
-std::size_t EncodedObject::add_buffer(memory::buffer&& buffer)
-{
-    CHECK(m_context_acquired);
-    auto index       = add_memory_block(buffer);
-    m_buffers[index] = std::move(buffer);
-    return index;
 }
 
 }  // namespace srf::codable
