@@ -133,6 +133,7 @@ void EncodedObject::copy_from_registered_buffer(const codable::idx_t& idx, srf::
     else
     {
         bool cached_registration{false};
+        ucp_rkey_h rkey;
         data_plane::Request request;
         data_plane::Client& client = m_resources.network()->data_plane().client();
 
@@ -141,14 +142,15 @@ void EncodedObject::copy_from_registered_buffer(const codable::idx_t& idx, srf::
 
         const void* remote_address = reinterpret_cast<const void*>(remote.address());
 
-        // determine if remote memory region is in the remote memory cache
+        // determine if remote memory region is in the remote memory cache on this endpoint
         auto block = ep->registration_cache().lookup(remote_address);
 
         // rkey from cache
-        ucp_rkey_h rkey = block->remote_key_handle();
-
-        // if not, unpack the remote keys on the endpoint
-        if (!block)
+        if (block)
+        {
+            rkey = block->remote_key_handle();
+        }
+        else
         {
             cached_registration = true;
             auto block = ep->registration_cache().add_block(remote_address, remote.bytes(), remote.remote_key());
