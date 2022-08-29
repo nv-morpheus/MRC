@@ -83,6 +83,13 @@ class Client final : public resources::PartitionResourceBase, private Service
 
     // primitive rdma and send/recv call
 
+    static void async_get(void* addr,
+                          std::size_t bytes,
+                          const ucx::Endpoint& ep,
+                          std::uint64_t remote_addr,
+                          ucp_rkey_h rkey,
+                          Request& request);
+
     void async_get(void* addr,
                    std::size_t bytes,
                    InstanceID instance_id,

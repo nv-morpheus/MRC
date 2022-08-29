@@ -23,6 +23,7 @@
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/ucx/memory_block.hpp"
+#include "internal/ucx/remote_registration_cache.hpp"
 
 #include "srf/codable/memory.hpp"
 #include "srf/memory/buffer_view.hpp"
@@ -131,19 +132,42 @@ void EncodedObject::copy_from_registered_buffer(const codable::idx_t& idx, srf::
     }
     else
     {
+        bool cached_registration{false};
+        data_plane::Request request;
+        data_plane::Client& client = m_resources.network()->data_plane().client();
+
         // get endpoint to remote instance_id
+        auto ep = client.endpoint_shared(remote.instance_id());
+
+        const void* remote_address = reinterpret_cast<const void*>(remote.address());
 
         // determine if remote memory region is in the remote memory cache
+        auto block = ep->registration_cache().lookup(remote_address);
+
+        // rkey from cache
+        ucp_rkey_h rkey = block->remote_key_handle();
 
         // if not, unpack the remote keys on the endpoint
-        // - if marked as cacheable, register the entire remote region in the cache
-        // - if not, add the remote keys to the request object do be deleted after the rdma get
+        if (!block)
+        {
+            cached_registration = true;
+            auto block = ep->registration_cache().add_block(remote_address, remote.bytes(), remote.remote_key());
+            rkey       = block.remote_key_handle();
+        }
 
-        // issue the rdma get on the remote region targeting the local dst_view
+        // issue rdma get
+        client.async_get(dst_view.data(), dst_view.bytes(), *ep, remote.address(), rkey, request);
 
-        LOG(FATAL) << "implement remote copy";
+        // await and yield on get
+        request.await_complete();
+
+        if (cached_registration && !remote.should_cache())
+        {
+            ep->registration_cache().drop_block(remote_address);
+        }
     }
 }
+
 void EncodedObject::copy_from_eager_buffer(const codable::idx_t& idx, srf::memory::buffer_view& dst_view) const
 {
     const auto& eager_buffer = proto().descriptors().at(idx).eager_desc();

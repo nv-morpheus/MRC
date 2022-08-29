@@ -22,6 +22,7 @@
 #include <glog/logging.h>
 
 #include <cstddef>
+#include <functional>
 #include <map>
 #include <queue>
 #include <utility>
@@ -50,7 +51,7 @@ class BlockManager final
     BlockManager(const BlockManager&) = delete;
     BlockManager& operator=(const BlockManager&) = delete;
 
-    const block_type& add_block(block_type&& block)
+    const block_type& add_block(block_type block)
     {
         auto key = reinterpret_cast<std::uintptr_t>(block.data()) + block.bytes();
         DCHECK(!owns(block.data()) && !owns(reinterpret_cast<void*>(key - 1)))
@@ -110,6 +111,14 @@ class BlockManager final
     {
         const auto* block = find_block(addr);
         return (block && block->contains(addr));
+    }
+
+    void for_each_block(std::function<void(const block_type& block)> lambda)
+    {
+        for (const auto& [key, block] : m_block_map)
+        {
+            lambda(block);
+        }
     }
 
   private:
