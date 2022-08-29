@@ -40,9 +40,11 @@ struct codable_protocol<T, std::enable_if_t<std::is_fundamental_v<T>>>
     static T deserialize(const DecodableObject<T>& encoded, std::size_t object_idx)
     {
         DCHECK_EQ(std::type_index(typeid(T)).hash_code(), encoded.type_index_hash_for_object(object_idx));
-        auto idx          = encoded.start_idx_for_object(object_idx);
-        const auto& eager = encoded.eager_descriptor(idx);
-        T val             = *(reinterpret_cast<const T*>(eager.data().data()));
+        auto idx = encoded.start_idx_for_object(object_idx);
+
+        T val;
+        encoded.copy_from_buffer(object_idx, {&val, sizeof(T), memory::memory_kind::host});
+
         return val;
     }
 };
@@ -61,20 +63,23 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, std::string>>>
         }
         else
         {
-            encoded.register_memory_view({str.data(), str.size(), memory::memory_kind::host});
+            auto idx = encoded.register_memory_view({str.data(), str.size(), memory::memory_kind::host});
+            if (!idx)
+            {
+                encoded.copy_to_eager_descriptor({str.data(), str.size(), memory::memory_kind::host});
+            }
         }
     }
 
     static T deserialize(const DecodableObject<T>& encoded, std::size_t object_idx)
     {
         DCHECK_EQ(std::type_index(typeid(T)).hash_code(), encoded.type_index_hash_for_object(object_idx));
+        auto idx   = encoded.start_idx_for_object(object_idx);
+        auto bytes = encoded.buffer_size(idx);
+
         T str;
-        auto idx                = encoded.start_idx_for_object(object_idx);
-        const auto& buffer_info = encoded.memory_block(idx);
-
-        str.resize(buffer_info.bytes());
-
-        encoded.copy_from_buffer(idx, str.data(), buffer_info.data(), buffer_info.bytes());
+        str.resize(bytes);
+        encoded.copy_from_buffer(idx, {str.data(), str.size(), memory::memory_kind::host});
 
         return str;
     }

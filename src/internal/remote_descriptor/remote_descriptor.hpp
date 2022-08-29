@@ -17,6 +17,9 @@
 
 #pragma once
 
+#include "internal/remote_descriptor/encoded_object.hpp"
+#include "internal/resources/forward.hpp"
+
 #include "srf/codable/forward.hpp"
 #include "srf/protos/codable.pb.h"
 #include "srf/utils/macros.hpp"
@@ -30,7 +33,9 @@ class Manager;
 
 class RemoteDescriptor final
 {
-    RemoteDescriptor(std::shared_ptr<Manager> manager, std::unique_ptr<srf::codable::protos::RemoteDescriptor> rd);
+    RemoteDescriptor(std::shared_ptr<Manager> manager,
+                     std::unique_ptr<srf::codable::protos::RemoteDescriptor> rd,
+                     resources::PartitionResources& resources);
 
   public:
     RemoteDescriptor() = default;
@@ -44,6 +49,8 @@ class RemoteDescriptor final
     std::unique_ptr<const srf::codable::protos::RemoteDescriptor> release_ownership();
 
     void release();
+
+    const EncodedObject& encoded_object() const;
 
     // template <typename T>
     // T decode()
@@ -59,6 +66,7 @@ class RemoteDescriptor final
   private:
     std::unique_ptr<srf::codable::protos::RemoteDescriptor> m_descriptor;
     std::shared_ptr<Manager> m_manager;
+    std::unique_ptr<EncodedObject> m_encoded_object;
     friend Manager;
 };
 

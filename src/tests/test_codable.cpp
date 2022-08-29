@@ -132,30 +132,39 @@ TEST_F(TestCodable, Objects)
     static_assert(!is_codable<NotCodableObject>::value, "not codable");
 }
 
-// TEST_F(TestCodable, String)
-// {
-//     static_assert(is_codable<std::string>::value, "should be codable");
+TEST_F(TestCodable, String)
+{
+    static_assert(is_codable<std::string>::value, "should be codable");
 
-//     m_resources->partition(0)
-//         .runnable()
-//         .main()
-//         .enqueue([this] {
-//             std::string str = "Hello SRF";
-//             auto str_block  = m_resources->partition(0).network()->data_plane().registration_cache().lookup(str.data());
-//             EXPECT_FALSE(str_block);
+    std::string str = "Hello SRF";
+    auto str_block  = m_resources->partition(0).network()->data_plane().registration_cache().lookup(str.data());
+    EXPECT_FALSE(str_block);
 
-//             auto encoding = encode(str);
-//             auto decoding = decode<std::string>(*encoding);
-//             EXPECT_STREQ(str.c_str(), decoding.c_str());
+    internal::remote_descriptor::EncodedObject encoded_object(m_resources->partition(0));
 
-//             // test to ensure that the unregistered string got copied to an internal registered buffer
-//             auto view = encoding->memory_block(0);
-//             auto view_block =
-//                 m_resources->partition(0).network()->data_plane().registration_cache().lookup(view.data());
-//             EXPECT_TRUE(view_block);
-//         })
-//         .get();
-// }
+    encode(str, encoded_object);
+    EXPECT_EQ(encoded_object.descriptor_count(), 1);
+
+    auto decoded_str = decode<std::string>(encoded_object);
+    EXPECT_STREQ(str.c_str(), decoded_str.c_str());
+}
+
+TEST_F(TestCodable, Buffer)
+{
+    // static_assert(is_codable<srf::memory::buffer>::value, "should be codable");
+
+    // std::string str = "Hello SRF";
+    // auto str_block  = m_resources->partition(0).network()->data_plane().registration_cache().lookup(str.data());
+    // EXPECT_FALSE(str_block);
+
+    // internal::remote_descriptor::EncodedObject encoded_object(m_resources->partition(0));
+
+    // encode(str, encoded_object);
+    // EXPECT_EQ(encoded_object.descriptor_count(), 1);
+
+    // auto decoded_str = decode<std::string>(encoded_object);
+    // EXPECT_STREQ(str.c_str(), decoded_str.c_str());
+}
 
 // TEST_F(TestCodable, Double)
 // {

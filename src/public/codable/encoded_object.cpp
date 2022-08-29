@@ -61,43 +61,39 @@ protos::MemoryKind encode_memory_type(memory::memory_kind mem_kind)
     case memory::memory_kind::managed:
         return protos::MemoryKind::Managed;
     default:
-        LOG(FATAL) << "unhandled protos::MemoryKind";
+        LOG(FATAL) << "unhandled srf::memory::memory_kind";
     };
 
     return protos::MemoryKind::None;
 }
 
-// EncodedObjectView
+// EncodedObject
 
-std::size_t EncodedObjectView::descriptor_count() const
+std::size_t EncodedObject::descriptor_count() const
 {
     return m_proto.descriptors_size();
 }
 
-std::size_t EncodedObjectView::object_count() const
+std::size_t EncodedObject::object_count() const
 {
     return m_proto.objects_size();
 }
 
-std::size_t EncodedObjectView::type_index_hash_for_object(const obj_idx_t& object_idx) const
+std::size_t EncodedObject::type_index_hash_for_object(const obj_idx_t& object_idx) const
 {
     DCHECK_LT(object_idx, object_count());
     return m_proto.objects().at(object_idx).type_index_hash();
 }
 
-idx_t EncodedObjectView::start_idx_for_object(const obj_idx_t& object_idx) const
+idx_t EncodedObject::start_idx_for_object(const obj_idx_t& object_idx) const
 {
     DCHECK_LT(object_idx, object_count());
     return m_proto.objects().at(object_idx).desc_id();
 }
 
-// EncodedObject
+EncodedObject::EncodedObject(protos::EncodedObject proto) : m_proto(std::move(proto)) {}
 
-EncodedObject::EncodedObject() : m_view(m_proto) {}
-
-EncodedObject::EncodedObject(protos::EncodedObject proto) : m_view(m_proto) {}
-
-const protos::EncodedObject& EncodedObjectView::proto() const
+const protos::EncodedObject& EncodedObject::proto() const
 {
     return m_proto;
 }
@@ -106,29 +102,10 @@ protos::EncodedObject& EncodedObject::proto()
 {
     return m_proto;
 }
+
 const bool& EncodedObject::context_acquired() const
 {
     return m_context_acquired;
-}
-const protos::EncodedObject& EncodedObject::proto() const
-{
-    return m_view.proto();
-}
-std::size_t EncodedObject::descriptor_count() const
-{
-    return m_view.descriptor_count();
-}
-std::size_t EncodedObject::object_count() const
-{
-    return m_view.object_count();
-}
-std::size_t EncodedObject::type_index_hash_for_object(const obj_idx_t& object_idx) const
-{
-    return m_view.type_index_hash_for_object(object_idx);
-}
-idx_t EncodedObject::start_idx_for_object(const obj_idx_t& object_idx) const
-{
-    return m_view.start_idx_for_object(object_idx);
 }
 
 std::size_t EncodedObject::add_meta_data(const google::protobuf::Message& meta_data)
@@ -173,4 +150,23 @@ EncodedObject::ContextGuard::~ContextGuard()
     m_encoded_object.m_context_acquired = false;
 }
 
+std::size_t EncodedObject::buffer_size(const idx_t& idx) const
+{
+    DCHECK_LT(idx, descriptor_count());
+    const auto& desc = proto().descriptors().at(idx);
+
+    CHECK(desc.has_eager_desc() || desc.has_remote_desc());
+
+    if (desc.has_eager_desc())
+    {
+        return desc.eager_desc().data().size();
+    }
+
+    if (desc.has_remote_desc())
+    {
+        return desc.remote_desc().bytes();
+    }
+
+    return 0;
+}
 }  // namespace srf::codable

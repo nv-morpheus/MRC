@@ -38,13 +38,14 @@ message RemoteMemoryDescriptor
     // the remote registration cache will associated the remote_key with the entire memory region, thus for
     // for the pool/slab allocators, we should increase our cache hits and avoid the expensive key upacking
 
-    uint64 memory_region_addr = 1;
-    uint64 memory_region_bytes = 2;
-    uint64 remote_address = 3;
-    uint64 remote_bytes = 4;
-    bytes remote_key = 5;
-    MemoryKind memory_kind = 6;
-    bool should_cache = 7;
+    uint64 instance_id = 1;
+    uint64 address = 2;
+    uint64 bytes = 3;
+    uint64 memory_block_address = 4;
+    uint64 memory_block_size = 5;
+    bytes remote_key = 6;
+    MemoryKind memory_kind = 7;
+    bool should_cache = 8;
 }
 
 message PackedDescriptor

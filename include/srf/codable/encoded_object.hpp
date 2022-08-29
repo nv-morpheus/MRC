@@ -23,6 +23,7 @@
 #include "srf/exceptions/runtime_error.hpp"
 #include "srf/memory/buffer.hpp"
 #include "srf/memory/buffer_view.hpp"
+#include "srf/memory/memory_kind.hpp"
 #include "srf/memory/resources/memory_resource.hpp"
 #include "srf/protos/codable.pb.h"
 #include "srf/types.hpp"
@@ -39,49 +40,6 @@
 #include <vector>
 
 namespace srf::codable {
-
-class EncodedObjectView
-{
-  public:
-    EncodedObjectView(const protos::EncodedObject& proto) : m_proto(proto) {}
-
-    /**
-     * @brief ObjectDescriptor describing the encoded object.
-     * @return const protos::ObjectDescriptor&
-     */
-    const protos::EncodedObject& proto() const;
-
-    /**
-     * @brief The number of unique memory regions contained in the multiple part descriptor.
-     * @return std::size_t
-     */
-    std::size_t descriptor_count() const;
-
-    /**
-     * @brief The number of unqiue objects described by the encoded object
-     * @return std::size_t
-     */
-    std::size_t object_count() const;
-
-    /**
-     * @brief Hash of std::type_index for the object at idx
-     *
-     * @param object_idx
-     * @return std::type_index
-     */
-    std::size_t type_index_hash_for_object(const obj_idx_t& object_idx) const;
-
-    /**
-     * @brief Starting index of object at idx
-     *
-     * @param object_idx
-     * @return std::size_t
-     */
-    idx_t start_idx_for_object(const obj_idx_t& object_idx) const;
-
-  private:
-    const protos::EncodedObject& m_proto;
-};
 
 /**
  * @brief Defines the sequence of memory regions (blobs) and meta data to encode an object.
@@ -100,7 +58,7 @@ class EncodedObjectView
 class EncodedObject
 {
   public:
-    EncodedObject();
+    EncodedObject() = default;
     EncodedObject(protos::EncodedObject proto);
     virtual ~EncodedObject() = default;
 
@@ -213,6 +171,42 @@ class EncodedObject
      */
     virtual memory::buffer_view mutable_memory_buffer(const idx_t& idx) const = 0;
 
+    // DECODE operations
+
+    virtual void copy_from_buffer(const idx_t& idx, memory::buffer_view dst_view) const = 0;
+
+    /**
+     * @brief Decode meta data associated the MetaDataDescriptor at the requested index.
+     *
+     * Provides an unpacked MetaDataT protobuf message to the caller.
+     *
+     * @tparam MetaDataT
+     * @return MetaDataT
+     */
+    template <typename MetaDataT>
+    MetaDataT meta_data(const idx_t& idx) const
+    {
+        DCHECK_LT(idx, descriptor_count());
+        const auto& desc = proto().descriptors().at(idx);
+        CHECK(desc.has_meta_data_desc());
+
+        MetaDataT meta_data;
+        auto ok = desc.meta_data_desc().meta_data().UnpackTo(&meta_data);
+        if (!ok)
+        {
+            throw exceptions::SrfRuntimeError("unable to decode meta data to the requestd message type");
+        }
+        return meta_data;
+    }
+
+    /**
+     * @brief Size in bytes of a given descriptor index
+     *
+     * @param idx
+     * @return std::size_t
+     */
+    std::size_t buffer_size(const idx_t& idx) const;
+
     /**
      * @brief Basic guard object that must be acquried before being able to access the add_* or mutable_* methods
      */
@@ -246,7 +240,6 @@ class EncodedObject
     void add_type_index(std::type_index type_index);
 
     protos::EncodedObject m_proto;
-    EncodedObjectView m_view;
     bool m_context_acquired{false};
 
     friend ContextGuard;
@@ -273,64 +266,10 @@ class EncodableObject final : public EncodedObject
 };
 
 template <typename T>
-class DecodableObject : public EncodedObjectView
+class DecodableObject : public EncodedObject
 {
-  public:
-    DecodableObject(const EncodedObject& object) : EncodedObjectView(object.proto()) {}
-    DecodableObject(const protos::EncodedObject& proto) : EncodedObjectView(proto) {}
-
-  private:
-    /**
-     * @brief Asynchronous call to copy data from the encoded registered buffer to a local buffer view.
-     *
-     * The source location may be local or remote.
-     * The destination location maybe host or device memory.
-     *
-     * @param idx
-     * @param dst_view
-     */
-    virtual Future<void> copy_from_registered_buffer(const idx_t& idx, memory::buffer_view& dst_view) = 0;
-
-    /**
-     * @brief Asynchronous call to copy data from a local eager buffer to a local buffer view.
-     *
-     * The source location is local and storaged in the protobuf message.
-     * The destination maybe host or device memory.
-     *
-     * @param idx
-     * @param dst_view
-     * @return Future<void>
-     */
-    virtual Future<void> copy_from_eager_buffer(const idx_t& idx, memory::buffer_view& dst_view) = 0;
-
-    /**
-     * @brief Decode meta data associated the MetaDataDescriptor at the requested index.
-     *
-     * Provides an unpacked MetaDataT protobuf message to the caller.
-     *
-     * @tparam MetaDataT
-     * @return MetaDataT
-     */
-    template <typename MetaDataT>
-    MetaDataT meta_data(const idx_t& idx) const
-    {
-        DCHECK_LT(idx, descriptor_count());
-        const auto& desc = proto().descriptors().at(idx);
-        CHECK(desc.has_meta_data_desc());
-
-        MetaDataT meta_data;
-        auto ok = desc.meta_data_desc().meta_data().UnpackTo(&meta_data);
-        if (!ok)
-        {
-            throw exceptions::SrfRuntimeError("unable to decode meta data to the requestd message type");
-        }
-        return meta_data;
-    }
-
     friend T;
     friend codable_protocol<T>;
-
-    // const protos::EncodedObject& m_proto;
 };
 
 }  // namespace srf::codable

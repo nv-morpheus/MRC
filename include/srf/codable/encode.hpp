@@ -35,10 +35,10 @@ struct Encoder
 };
 
 template <typename T>
-void encode(const T& t, EncodedObject& encoding, EncodingOptions opts = {})
+void encode(const T& t, EncodedObject& encoded, EncodingOptions opts = {})
 {
-    auto enc = reinterpret_cast<EncodableObject<T>*>(&encoding);
-    Encoder<T>::serialize(t, *enc, std::move(opts));
+    auto obj = reinterpret_cast<EncodableObject<T>*>(&encoded);
+    Encoder<T>::serialize(t, *obj, std::move(opts));
 }
 
 template <typename T>

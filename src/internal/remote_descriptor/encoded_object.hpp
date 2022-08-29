@@ -23,6 +23,7 @@
 #include "srf/codable/encoded_object.hpp"
 #include "srf/memory/buffer.hpp"
 #include "srf/memory/buffer_view.hpp"
+#include "srf/memory/memory_kind.hpp"
 
 #include <glog/logging.h>
 
@@ -54,17 +55,40 @@ class EncodedObject : public srf::codable::EncodedObject
     srf::memory::buffer_view mutable_memory_buffer(const codable::idx_t& idx) const final;
 
   protected:
+    void copy_from_buffer(const codable::idx_t& idx, srf::memory::buffer_view dst_view) const final
+    {
+        CHECK_LT(idx, descriptor_count());
+        const auto& desc = proto().descriptors().at(idx);
+
+        if (desc.has_eager_desc())
+        {
+            return copy_from_eager_buffer(idx, dst_view);
+        }
+
+        if (desc.has_remote_desc())
+        {
+            return copy_from_registered_buffer(idx, dst_view);
+        }
+
+        LOG(FATAL) << "descriptor " << idx << " not backed by a buffered resource";
+    }
+
+  private:
+    void copy_from_registered_buffer(const codable::idx_t& idx, srf::memory::buffer_view& dst_view) const;
+
+    void copy_from_eager_buffer(const codable::idx_t& idx, srf::memory::buffer_view& dst_view) const;
+
     /**
      * @brief Converts a memory block to a RemoteMemoryDescriptor proto
      */
-    static void encode_descriptor(codable::protos::RemoteMemoryDescriptor& desc,
+    static void encode_descriptor(const InstanceID& instance_id,
+                                  codable::protos::RemoteMemoryDescriptor& desc,
                                   srf::memory::const_buffer_view view,
                                   const ucx::MemoryBlock& ucx_block,
                                   bool should_cache = false);
 
     static srf::memory::buffer_view decode_descriptor(const codable::protos::RemoteMemoryDescriptor& desc);
 
-  private:
     resources::PartitionResources& m_resources;
     std::map<codable::idx_t, srf::memory::buffer> m_buffers;
     std::vector<srf::memory::const_buffer_view> m_temporary_registrations;

@@ -36,6 +36,7 @@
 #include "srf/channel/channel.hpp"
 #include "srf/channel/ingress.hpp"
 #include "srf/channel/status.hpp"
+#include "srf/codable/decode.hpp"
 #include "srf/codable/encode.hpp"
 #include "srf/codable/encoded_object.hpp"
 #include "srf/node/edge_builder.hpp"
@@ -112,7 +113,8 @@ class SubscriberManager : public SubscriberManagerBase
         // create a remote descriptor via the local RD manager taking ownership of the handle
         auto rd = runtime().remote_descriptor_manager().take_ownership(std::move(handle));
 
-        LOG(INFO) << "subscriber " << service_name() << " got a object";
+        auto val = codable::decode<T>(rd.encoded_object());
+        LOG(INFO) << "subscriber " << service_name() << " got a object with value: " << val;
     }
 
     void do_service_start() override

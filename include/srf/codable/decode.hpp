@@ -28,17 +28,17 @@ namespace srf::codable {
 template <typename T>
 struct Decoder
 {
-    static T deserialize(const DecodableObject<T>& encoding, std::size_t object_idx)
+    static T deserialize(const DecodableObject<T>& decodable, std::size_t object_idx)
     {
-        return detail::deserialize<T>(sfinae::full_concept{}, encoding, object_idx);
+        return detail::deserialize<T>(sfinae::full_concept{}, decodable, object_idx);
     }
 };
 
 template <typename T>
-auto decode(const EncodedObject& encoding, std::size_t object_idx = 0)
+auto decode(const EncodedObject& encoded, std::size_t object_idx = 0)
 {
-    auto enc = reinterpret_cast<DecodableObject<T>*>(&encoding);
-    return Decoder<T>::deserialize(enc, object_idx);
+    auto obj = reinterpret_cast<const DecodableObject<T>*>(&encoded);
+    return Decoder<T>::deserialize(*obj, object_idx);
 }
 
 }  // namespace srf::codable

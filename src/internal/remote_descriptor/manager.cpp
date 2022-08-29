@@ -71,7 +71,7 @@ RemoteDescriptor Manager::take_ownership(std::unique_ptr<const srf::codable::pro
 {
     auto non_const_rd = std::unique_ptr<srf::codable::protos::RemoteDescriptor>(
         const_cast<srf::codable::protos::RemoteDescriptor*>(rd.release()));
-    return RemoteDescriptor(shared_from_this(), std::move(non_const_rd));
+    return RemoteDescriptor(shared_from_this(), std::move(non_const_rd), m_resources);
 }
 
 RemoteDescriptor Manager::store_object(std::unique_ptr<Storage> object)
@@ -95,7 +95,7 @@ RemoteDescriptor Manager::store_object(std::unique_ptr<Storage> object)
         m_stored_objects[object_id] = std::move(object);
     }
 
-    return RemoteDescriptor(shared_from_this(), std::move(rd));
+    return RemoteDescriptor(shared_from_this(), std::move(rd), m_resources);
 }
 
 std::size_t Manager::size() const
