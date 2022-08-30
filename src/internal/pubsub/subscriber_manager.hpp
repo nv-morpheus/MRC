@@ -47,6 +47,7 @@
 #include "srf/node/source_properties.hpp"
 #include "srf/protos/architect.pb.h"
 #include "srf/protos/codable.pb.h"
+#include "srf/utils/bytes_to_string.hpp"
 #include "srf/utils/macros.hpp"
 
 #include <cstddef>
@@ -107,14 +108,19 @@ class SubscriberManager : public SubscriberManagerBase
         auto handle = std::make_unique<srf::codable::protos::RemoteDescriptor>();
         CHECK(handle->ParseFromArray(buffer.data(), buffer.bytes()));
 
+        LOG(INFO) << "transient buffer holding the rd: " << srf::bytes_to_string(buffer.bytes());
+
         // release transient buffer so it can be reused
         buffer.release();
 
         // create a remote descriptor via the local RD manager taking ownership of the handle
         auto rd = runtime().remote_descriptor_manager().take_ownership(std::move(handle));
 
+        // deserialize T
         auto val = codable::decode<T>(rd.encoded_object());
-        LOG(INFO) << "subscriber " << service_name() << " got a object with value: " << val;
+
+        // pass T on to the pipeline
+        m_subcriber_channel.await_write(std::move(val));
     }
 
     void do_service_start() override
@@ -175,6 +181,7 @@ class SubscriberManager : public SubscriberManagerBase
     std::weak_ptr<Subscriber<T>> m_subscriber;
     std::unique_ptr<srf::runnable::Runner> m_reader;
     Promise<std::shared_ptr<Subscriber<T>>> m_subscriber_promise;
+    srf::node::SourceChannelWriteable<T> m_subcriber_channel;
 };
 
 template <typename T>

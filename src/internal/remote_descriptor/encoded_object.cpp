@@ -37,6 +37,7 @@
 #include <google/protobuf/message.h>
 
 #include <cstdint>
+#include <optional>
 #include <ostream>
 
 using namespace srf::memory::literals;
@@ -132,6 +133,7 @@ void EncodedObject::copy_from_registered_buffer(const codable::idx_t& idx, srf::
     }
     else
     {
+        LOG(INFO) << "performing rmda get ";
         bool cached_registration{false};
         ucp_rkey_h rkey;
         data_plane::Request request;
@@ -148,13 +150,17 @@ void EncodedObject::copy_from_registered_buffer(const codable::idx_t& idx, srf::
         // rkey from cache
         if (block)
         {
+            LOG(INFO) << "remote memory region in cache";
             rkey = block->remote_key_handle();
         }
         else
         {
             cached_registration = true;
-            auto block = ep->registration_cache().add_block(remote_address, remote.bytes(), remote.remote_key());
-            rkey       = block.remote_key_handle();
+            auto block =
+                ep->registration_cache().add_block(reinterpret_cast<const void*>(remote.memory_block_address()),
+                                                   remote.memory_block_size(),
+                                                   remote.remote_key());
+            rkey = block.remote_key_handle();
         }
 
         // issue rdma get
@@ -165,7 +171,7 @@ void EncodedObject::copy_from_registered_buffer(const codable::idx_t& idx, srf::
 
         if (cached_registration && !remote.should_cache())
         {
-            ep->registration_cache().drop_block(remote_address);
+            ep->registration_cache().drop_block(reinterpret_cast<const void*>(remote.memory_block_address()));
         }
     }
 }
@@ -185,5 +191,17 @@ void EncodedObject::copy_from_eager_buffer(const codable::idx_t& idx, srf::memor
         LOG(WARNING) << "got a memory::kind::none";
     }
     std::memcpy(dst_view.data(), eager_buffer.data().data(), dst_view.bytes());
+}
+std::shared_ptr<srf::memory::memory_resource> EncodedObject::host_memory_resource() const
+{
+    return m_resources.host().arena_memory_resource();
+}
+std::shared_ptr<srf::memory::memory_resource> EncodedObject::device_memory_resource() const
+{
+    if (m_resources.device())
+    {
+        return m_resources.device()->arena_memory_resource();
+    }
+    return nullptr;
 }
 }  // namespace srf::internal::remote_descriptor

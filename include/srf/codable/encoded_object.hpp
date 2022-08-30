@@ -207,6 +207,9 @@ class EncodedObject
      */
     std::size_t buffer_size(const idx_t& idx) const;
 
+    virtual std::shared_ptr<srf::memory::memory_resource> host_memory_resource() const   = 0;
+    virtual std::shared_ptr<srf::memory::memory_resource> device_memory_resource() const = 0;
+
     /**
      * @brief Basic guard object that must be acquried before being able to access the add_* or mutable_* methods
      */

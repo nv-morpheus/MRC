@@ -19,6 +19,7 @@
 
 #include "internal/control_plane/client/subscription_service.hpp"
 
+#include "srf/node/queue.hpp"
 #include "srf/node/rx_source.hpp"
 #include "srf/utils/macros.hpp"
 

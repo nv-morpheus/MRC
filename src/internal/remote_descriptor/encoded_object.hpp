@@ -24,6 +24,7 @@
 #include "srf/memory/buffer.hpp"
 #include "srf/memory/buffer_view.hpp"
 #include "srf/memory/memory_kind.hpp"
+#include "srf/memory/resources/memory_resource.hpp"
 
 #include <glog/logging.h>
 
@@ -72,6 +73,9 @@ class EncodedObject : public srf::codable::EncodedObject
 
         LOG(FATAL) << "descriptor " << idx << " not backed by a buffered resource";
     }
+
+    std::shared_ptr<srf::memory::memory_resource> host_memory_resource() const final;
+    std::shared_ptr<srf::memory::memory_resource> device_memory_resource() const final;
 
   private:
     void copy_from_registered_buffer(const codable::idx_t& idx, srf::memory::buffer_view& dst_view) const;

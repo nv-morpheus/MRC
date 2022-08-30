@@ -184,9 +184,10 @@ class PublisherRoundRobin : public PublisherManager<T>
 
     void write(T&& object) final
     {
+        LOG(INFO) << "publisher writing object";
+
         DCHECK(this->resources().runnable().main().caller_on_same_thread());
 
-        LOG(INFO) << "publisher writing object";
 
         while (this->tagged_instances().empty())
         {
@@ -204,8 +205,6 @@ class PublisherRoundRobin : public PublisherManager<T>
         {
             m_next = this->tagged_endpoints().cbegin();
         }
-
-        std::size_t val = 42;
 
         msg.rd = this->runtime().remote_descriptor_manager().register_object(std::move(object));
         CHECK(this->resources().network()->data_plane().client().remote_descriptor_channel().await_write(

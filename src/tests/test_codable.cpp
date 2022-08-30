@@ -28,6 +28,7 @@
 #include "srf/codable/fundamental_types.hpp"
 #include "srf/codable/protobuf_message.hpp"
 #include "srf/codable/type_traits.hpp"
+#include "srf/memory/codable/buffer.hpp"
 #include "srf/protos/codable.pb.h"
 
 #include <glog/logging.h>
@@ -151,7 +152,7 @@ TEST_F(TestCodable, String)
 
 TEST_F(TestCodable, Buffer)
 {
-    // static_assert(is_codable<srf::memory::buffer>::value, "should be codable");
+    static_assert(is_codable<srf::memory::buffer>::value, "should be codable");
 
     // std::string str = "Hello SRF";
     // auto str_block  = m_resources->partition(0).network()->data_plane().registration_cache().lookup(str.data());
