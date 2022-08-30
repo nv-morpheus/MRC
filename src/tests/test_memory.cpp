@@ -72,6 +72,14 @@ TEST_F(TestMemory, UcxRegisterePinnedMemoryArena)
 
     auto md = buffer(1_MiB, arena_log);
 
+    VLOG(1) << md;
+    std::stringstream ss;
+    ss << md;
+    auto first     = ss.str().find("bytes=1.0 MiB; kind= pinned");
+    auto not_found = ss.str().find("some string");
+    EXPECT_TRUE(first != std::string::npos);
+    EXPECT_TRUE(not_found == std::string::npos);
+
     auto ucx_block = ucx->registration_cache().lookup(md.data());
 
     EXPECT_TRUE(ucx_block);

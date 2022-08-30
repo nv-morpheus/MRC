@@ -19,6 +19,7 @@
 
 #include "srf/memory/adaptors.hpp"
 #include "srf/memory/resources/memory_resource.hpp"
+#include "srf/utils/bytes_to_string.hpp"
 
 #include <cstddef>
 #include <utility>
@@ -111,6 +112,15 @@ class buffer
     std::shared_ptr<memory_resource> m_mr;
     std::size_t m_bytes{0};
     void* m_buffer{nullptr};
+
+    friend std::ostream& operator<<(std::ostream& os, const buffer& buffer);
 };
+
+inline std::ostream& operator<<(std::ostream& os, const srf::memory::buffer& buffer)
+{
+    os << "[memory::buffer " << buffer.data() << "; bytes=" << srf::bytes_to_string(buffer.bytes())
+       << "; kind= " << srf::memory::kind_string(buffer.kind()) << "]";
+    return os;
+}
 
 }  // namespace srf::memory

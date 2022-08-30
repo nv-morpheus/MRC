@@ -17,6 +17,10 @@
 
 #pragma once
 
+#include <glog/logging.h>
+
+#include <string>
+
 namespace srf::memory {
 
 enum class memory_kind
@@ -27,5 +31,40 @@ enum class memory_kind
     device,
     managed,
 };
+
+static const std::string& kind_string(const memory_kind& kind)
+{
+    switch (kind)
+    {
+    case memory_kind::none:
+        static std::string none = "none";
+        return none;
+        break;
+
+    case memory_kind::host:
+        static std::string host = "host";
+        return host;
+        break;
+
+    case memory_kind::pinned:
+        static std::string pinned = "pinned";
+        return pinned;
+        break;
+
+    case memory_kind::device:
+        static std::string device = "device";
+        return device;
+        break;
+
+    case memory_kind::managed:
+        static std::string managed = "managed";
+        return managed;
+        break;
+    }
+
+    static std::string error = "error";
+    LOG(FATAL) << "uknown memory_kind";
+    return error;
+}
 
 }  // namespace srf::memory
