@@ -1,6 +1,6 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION &
- * AFFILIATES. All rights reserved. SPDX-License-Identifier: Apache-2.0
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,21 +65,13 @@ struct PortBuilderUtil
         }
         else
         {
-            return node::PortUtil::ingress_tuple_t(
-                [](SegmentAddress address, PortName name) {
-                    LOG(ERROR) << "The type " << type_name<IngressDataT>()
-                               << " does not have a default constructor which prevents the port from compiling. Either "
-                                  "add a default constructor or use std::shared_ptr<"
-                               << type_name<IngressDataT>() << "> for the port type";
-                    return nullptr;
-                },
-                [](SegmentAddress address, PortName name) {
-                    VLOG(2) << "Building sp wrapped ingress port: " << type_name<IngressDataT>();
-                    auto ingress_port =
-                        std::make_shared<segment::IngressPort<std::shared_ptr<IngressDataT>>>(address, name);
+            return node::PortUtil::ingress_tuple_t(nullptr, [](SegmentAddress address, PortName name) {
+                VLOG(2) << "Building sp wrapped ingress port: " << type_name<IngressDataT>();
+                auto ingress_port =
+                    std::make_shared<segment::IngressPort<std::shared_ptr<IngressDataT>>>(address, name);
 
-                    return ingress_port;
-                });
+                return ingress_port;
+            });
         }
     }
 
@@ -107,21 +99,12 @@ struct PortBuilderUtil
         }
         else
         {
-            return node::PortUtil::egress_tuple_t(
-                [](SegmentAddress address, PortName name) {
-                    LOG(ERROR) << "The type " << type_name<EgressDataT>()
-                               << " does not have a default constructor which prevents the port from compiling. Either "
-                                  "add a default constructor or use std::shared_ptr<"
-                               << type_name<EgressDataT>() << "> for the port type";
-                    return nullptr;
-                },
-                [](SegmentAddress address, PortName name) {
-                    VLOG(2) << "Building sp wrapped egress port: " << type_name<EgressDataT>();
-                    auto egress_port =
-                        std::make_shared<segment::EgressPort<std::shared_ptr<EgressDataT>>>(address, name);
+            return node::PortUtil::egress_tuple_t(nullptr, [](SegmentAddress address, PortName name) {
+                VLOG(2) << "Building sp wrapped egress port: " << type_name<EgressDataT>();
+                auto egress_port = std::make_shared<segment::EgressPort<std::shared_ptr<EgressDataT>>>(address, name);
 
-                    return egress_port;
-                });
+                return egress_port;
+            });
         }
     }
 
@@ -177,7 +160,7 @@ struct PortBuilderUtil
             VLOG(2) << "Registering PySRF port util for: " << type_name<port_type_t>() << " "
                     << "=> " << type_name<port_dtype_t>() << " " << type_idx.hash_code();
 
-            auto port_util = std::make_shared<srf::node::PortUtil>(typeid(PortDataTypeT));
+            auto port_util = std::make_shared<srf::node::PortUtil>(typeid(port_dtype_t));
 
             port_util->m_ingress_builders = create_ingress_builders<port_dtype_t>();
             port_util->m_egress_builders  = create_egress_builders<port_dtype_t>();
