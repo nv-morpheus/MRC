@@ -17,33 +17,26 @@
 
 #pragma once
 
-#include "internal/service.hpp"
+#include "internal/data_plane/request.hpp"
+#include "internal/resources/forward.hpp"
+#include "internal/resources/partition_resources_base.hpp"
 #include "internal/ucx/common.hpp"
-#include "internal/ucx/context.hpp"
 #include "internal/ucx/endpoint.hpp"
-#include "internal/ucx/worker.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/codable/encoded_object.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/protos/remote_descriptor.pb.h"
-#include "srf/runnable/launch_control.hpp"
-#include "srf/runnable/runner.hpp"
 #include "srf/types.hpp"
 
-#include <rxcpp/rx.hpp>  // IWYU pragma: keep
-#include <ucp/api/ucp_def.h>
-
 #include <cstddef>
+#include <cstdint>
 #include <map>
 #include <memory>
+#include <string>
 
 namespace srf::internal::data_plane {
 
-class Client final : public Service
+class Client final : public resources::PartitionResourceBase
 {
   public:
-    Client(std::shared_ptr<ucx::Context> context, std::shared_ptr<resources::PartitionResources> resources);
+    Client(resources::PartitionResourceBase& base, ucx::Resources& ucx);
     ~Client() final;
 
     /**
@@ -63,42 +56,46 @@ class Client final : public Service
      * @param port_address
      * @param encoded_object
      */
-    void await_send(const InstanceID& instance_id,
-                    const PortAddress& port_address,
-                    const codable::EncodedObject& encoded_object);
+    // void await_send(const InstanceID& instance_id,
+    //                 const PortAddress& port_address,
+    //                 const codable::EncodedObject& encoded_object);
 
     // number of established remote instances
     std::size_t connections() const;
 
-    // determine if connected to a given remote instance
-    bool is_connected_to(InstanceID) const;
+    void async_recv(void* addr, std::size_t bytes, std::uint64_t tag, Request& request);
+    void async_send(void* addr, std::size_t bytes, std::uint64_t tag, InstanceID instance_id, Request& request);
 
-    void decrement_remote_descriptor(InstanceID, ObjectID);
+    /**
+     * @brief Perform an asynchronous one-side GET from a contiguous block of memory starting at remote_addr on remote
+     * instance_id.
+     */
+    void async_get(void* addr,
+                   std::size_t bytes,
+                   InstanceID instance_id,
+                   void* remote_addr,
+                   const std::string& packed_remote_key,
+                   Request& request);
+
+    // // determine if connected to a given remote instance
+    // bool is_connected_to(InstanceID) const;
+
+    // void decrement_remote_descriptor(InstanceID, ObjectID);
 
     // void get(const protos::RemoteDescriptor&, void*, size_t);
     // void get(const protos::RemoteDescriptor&, Descriptor&);
 
   protected:
-    // issue tag only send - no payload data
-    void issue_network_event(InstanceID, ucp_tag_t);
+    // // issue tag only send - no payload data
+    // void issue_network_event(InstanceID, ucp_tag_t);
 
     // get endpoint for instance id
     const ucx::Endpoint& endpoint(InstanceID) const;
 
-    void push_request(void* request);
+    // void push_request(void* request);
 
   private:
-    void do_service_start() final;
-    void do_service_await_live() final;
-    void do_service_stop() final;
-    void do_service_kill() final;
-    void do_service_await_join() final;
-
-    std::shared_ptr<ucx::Worker> m_worker;
-    std::shared_ptr<resources::PartitionResources> m_resources;
-    std::unique_ptr<node::SourceChannelWriteable<void*>> m_ucx_request_channel;
-    std::unique_ptr<runnable::Runner> m_progress_engine;
-
+    ucx::Resources& m_ucx;
     std::map<InstanceID, ucx::WorkerAddress> m_workers;
     mutable std::map<InstanceID, std::shared_ptr<ucx::Endpoint>> m_endpoints;
 };

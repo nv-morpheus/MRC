@@ -17,9 +17,12 @@
 
 #include "pysrf/forward.hpp"
 #include "pysrf/node.hpp"
+#include "pysrf/port_builders.hpp"
 #include "pysrf/utils.hpp"
 
 #include "srf/channel/status.hpp"
+#include "srf/core/utils.hpp"
+#include "srf/manifold/egress.hpp"
 #include "srf/node/edge_connector.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/sink_properties.hpp"
@@ -27,6 +30,7 @@
 #include "srf/segment/builder.hpp"
 #include "srf/segment/object.hpp"
 
+#include <boost/fiber/future/future.hpp>
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
@@ -42,6 +46,15 @@
 // IWYU thinks we need vector for PythonNode
 // IWYU pragma: no_include <algorithm>
 // IWYU pragma: no_include <vector>
+// IWYU pragma: no_include <boost/hana/if.hpp>
+// IWYU pragma: no_include <boost/fiber/context.hpp>
+// IWYU pragma: no_include <boost/fiber/future/detail/shared_state.hpp>
+// IWYU pragma: no_include <boost/fiber/future/detail/task_base.hpp>
+// IWYU pragma: no_include <boost/smart_ptr/detail/operator_bool.hpp>
+// IWYU pragma: no_include <pybind11/detail/common.h>
+// IWYU pragma: no_include <pybind11/detail/descr.h>
+// IWYU pragma: no_include <pybind11/detail/type_caster_base.h>
+// IWYU pragma: no_include "rx-includes.hpp"
 
 namespace srf::pytests {
 
@@ -185,14 +198,17 @@ PYBIND11_MODULE(test_edges_cpp, m)
     pysrf::import(m, "srf");
 
     py::class_<Base, std::shared_ptr<Base>>(m, "Base").def(py::init<>([]() { return std::make_shared<Base>(); }));
+    srf::pysrf::PortBuilderUtil::register_port_util<Base>();
 
     py::class_<DerivedA, Base, std::shared_ptr<DerivedA>>(m, "DerivedA").def(py::init<>([]() {
         return std::make_shared<DerivedA>();
     }));
+    srf::pysrf::PortBuilderUtil::register_port_util<DerivedA>();
 
     py::class_<DerivedB, Base, std::shared_ptr<DerivedB>>(m, "DerivedB").def(py::init<>([]() {
         return std::make_shared<DerivedB>();
     }));
+    srf::pysrf::PortBuilderUtil::register_port_util<DerivedB>();
 
     srf::node::EdgeConnector<py::object, pysrf::PyObjectHolder>::register_converter();
     srf::node::EdgeConnector<pysrf::PyObjectHolder, py::object>::register_converter();

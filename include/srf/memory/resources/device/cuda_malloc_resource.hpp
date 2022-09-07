@@ -28,14 +28,14 @@
 
 namespace srf::memory {
 
-class cuda_malloc_resource final : public memory_resource<::cuda::memory_kind::device>
+class cuda_malloc_resource final : public memory_resource
 {
   public:
-    cuda_malloc_resource(int device_id) : memory_resource("cuda_malloc"), m_device_id(device_id) {}
+    cuda_malloc_resource(int device_id) : m_device_id(device_id) {}
     ~cuda_malloc_resource() override = default;
 
   private:
-    void* do_allocate(std::size_t bytes, std::size_t /*__alignment*/) final
+    void* do_allocate(std::size_t bytes) final
     {
         void* ptr = nullptr;
         DeviceGuard guard(m_device_id);
@@ -43,18 +43,18 @@ class cuda_malloc_resource final : public memory_resource<::cuda::memory_kind::d
         return ptr;
     }
 
-    void do_deallocate(void* ptr, std::size_t /*__bytes*/, std::size_t /*__alignment*/) final
+    void do_deallocate(void* ptr, std::size_t /*__bytes*/) final
     {
         DeviceGuard guard(m_device_id);
         SRF_CHECK_CUDA(cudaFree(ptr));
     }
 
-    memory_kind_type do_kind() const final
+    memory_kind do_kind() const final
     {
-        return memory_kind_type::device;
+        return memory_kind::device;
     }
 
-    int m_device_id;
+    const int m_device_id;
 };
 
 }  // namespace srf::memory

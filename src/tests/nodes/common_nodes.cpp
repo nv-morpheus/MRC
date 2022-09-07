@@ -18,6 +18,7 @@
 #include "common_nodes.hpp"
 
 #include "srf/channel/status.hpp"
+#include "srf/memory/literals.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
 #include "srf/runnable/context.hpp"
@@ -28,6 +29,7 @@
 #include <rxcpp/sources/rx-iterate.hpp>
 
 #include <chrono>
+#include <exception>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
@@ -36,6 +38,7 @@
 #include <vector>
 
 using namespace srf;
+using namespace srf::memory::literals;
 
 namespace test::nodes {
 
@@ -80,6 +83,11 @@ std::unique_ptr<node::RxSource<int>> finite_int_rx_source(int count)
         }
         s.on_completed();
     }));
+}
+
+std::unique_ptr<BufferSource<1_MiB>> infinte_buffer_source(std::size_t capacity)
+{
+    return std::make_unique<BufferSource<1_MiB>>(capacity);
 }
 
 }  // namespace test::nodes

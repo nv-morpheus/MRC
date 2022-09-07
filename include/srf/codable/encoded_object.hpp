@@ -19,10 +19,9 @@
 
 #include "srf/codable/codable_protocol.hpp"
 #include "srf/exceptions/runtime_error.hpp"
-#include "srf/memory/blob.hpp"
-#include "srf/memory/block.hpp"
 #include "srf/memory/buffer.hpp"
-#include "srf/memory/resource_view.hpp"
+#include "srf/memory/buffer_view.hpp"
+#include "srf/memory/resources/memory_resource.hpp"
 #include "srf/protos/codable.pb.h"
 #include "srf/utils/macros.hpp"
 
@@ -31,6 +30,7 @@
 
 #include <cstddef>
 #include <map>
+#include <memory>
 #include <typeindex>
 #include <utility>
 #include <vector>
@@ -61,10 +61,10 @@ class EncodedObject
     const protos::EncodedObject& proto() const;
 
     /**
-     * @brief Access const memory::block of the RemoteDescriptor at the required index
-     * @return memory::const_block
+     * @brief Access const memory::buffer_view of the RemoteMemoryDescriptor at the required index
+     * @return memory::const_buffer_view
      */
-    memory::const_block memory_block(std::size_t idx) const;
+    memory::const_buffer_view memory_block(std::size_t idx) const;
 
     /**
      * @brief Decode meta data associated the MetaDataDescriptor at the requested index.
@@ -112,28 +112,28 @@ class EncodedObject
 
   protected:
     /**
-     * @brief Access a mutable const_block at the requested index
+     * @brief Access a mutable const_buffer_view at the requested index
      *
      * @param idx
-     * @return memory::const_block
+     * @return memory::const_buffer_view
      */
-    memory::block mutable_memory_block(std::size_t idx) const;
+    memory::buffer_view mutable_memory_block(std::size_t idx) const;
 
     /**
-     * @brief Converts a memory block to a RemoteDescriptor proto
+     * @brief Converts a memory block to a RemoteMemoryDescriptor proto
      *
      * @param view
-     * @return protos::RemoteDescriptor
+     * @return protos::RemoteMemoryDescriptor
      */
-    static protos::RemoteDescriptor encode_descriptor(memory::const_block view);
+    static protos::RemoteMemoryDescriptor encode_descriptor(memory::const_buffer_view view);
 
     /**
-     * @brief Converts a RemoteDescriptor proto to a mutable memory block
+     * @brief Converts a RemoteMemoryDescriptor proto to a mutable memory block
      *
      * @param desc
-     * @return memory::block
+     * @return memory::buffer_view
      */
-    static memory::block decode_descriptor(const protos::RemoteDescriptor& desc);
+    static memory::buffer_view decode_descriptor(const protos::RemoteMemoryDescriptor& desc);
 
     /**
      * @brief Add a custom protobuf meta data to the descriptor list
@@ -150,12 +150,12 @@ class EncodedObject
      * @param meta_data
      * @return std::size_t
      */
-    std::size_t add_memory_block(memory::const_block view);
+    std::size_t add_memory_block(memory::const_buffer_view view);
 
     /**
      * @brief Add a buffer, owned by EncodedObject, that can be used to hold a contiguous block of data.
      *
-     * After creation, the const_block can be accessed by calling view with the index returned.
+     * After creation, the const_buffer_view can be accessed by calling view with the index returned.
      *
      * @note The memory_resource backing the creation of the buffer<> comes from the SRF Runtime's thread local resource
      * object.
@@ -169,7 +169,7 @@ class EncodedObject
     /**
      * @brief Add a buffer, owned by EncodedObject, that can be used to hold a contiguous block of data.
      *
-     * After creation, the const_block can be accessed by calling view on the index returned.
+     * After creation, the const_buffer_view can be accessed by calling view on the index returned.
      *
      * @note The memory_resource backing the creation of the buffer<> comes from the SRF Runtime's thread local resource
      * object.
@@ -214,8 +214,7 @@ class EncodedObject
      * @param bytes
      * @return std::size_t
      */
-    template <typename... PropertiesT>
-    std::size_t add_buffer(memory::resource_view<PropertiesT...> view, std::size_t bytes);
+    std::size_t add_buffer(std::shared_ptr<memory::memory_resource> mr, std::size_t bytes);
 
     /**
      * @brief Used to push a Object message with the starting descriptor index and type_index to the main proto
@@ -224,7 +223,7 @@ class EncodedObject
     void add_type_index(std::type_index type_index);
 
     protos::EncodedObject m_proto;
-    std::map<std::size_t, memory::blob> m_buffers;
+    std::map<std::size_t, memory::buffer> m_buffers;
     std::vector<std::pair<int, std::type_index>> m_object_info;  // typeindex and starting descriptor index
     bool m_context_acquired{false};
     friend ContextGuard;
@@ -266,17 +265,6 @@ MetaDataT EncodedObject::meta_data(std::size_t idx) const
         throw exceptions::SrfRuntimeError("unable to decode meta data to the requestd message type");
     }
     return meta_data;
-}
-
-template <typename... PropertiesT>
-std::size_t EncodedObject::add_buffer(memory::resource_view<PropertiesT...> view, std::size_t bytes)
-{
-    CHECK(m_context_acquired);
-    memory::buffer<PropertiesT...> buff(bytes, view);
-    memory::blob blob(std::move(buff));
-    auto index       = add_memory_block(blob);
-    m_buffers[index] = std::move(blob);
-    return index;
 }
 
 }  // namespace srf::codable

@@ -22,10 +22,28 @@
 
 namespace srf::segment {
 
-template <typename... TypesT>
-struct EgressPorts : public Ports<EgressPort, EgressPortBase, TypesT...>
+struct EgressPortsBase : public Ports<EgressPortBase>
 {
-    using Ports<EgressPort, EgressPortBase, TypesT...>::Ports;
+    using Ports<EgressPortBase>::Ports;
 };
 
+template <typename... TypesT>
+struct EgressPorts : public EgressPortsBase
+{
+    using port_builder_fn_t = typename EgressPortsBase::port_builder_fn_t;
+
+    EgressPorts(std::vector<std::string> names) : EgressPortsBase(std::move(names), get_builders()) {}
+
+  private:
+    static std::vector<port_builder_fn_t> get_builders()
+    {
+        std::vector<port_builder_fn_t> builders;
+        (builders.push_back([](const SegmentAddress& address, const PortName& name) {
+            return std::make_shared<EgressPort<TypesT>>(address, name);
+        }),
+         ...);
+
+        return builders;
+    }
+};
 }  // namespace srf::segment

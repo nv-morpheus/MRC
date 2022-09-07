@@ -23,7 +23,6 @@
 
 #include <glog/logging.h>
 
-#include <ostream>
 #include <utility>
 
 namespace srf::runnable {
@@ -36,10 +35,7 @@ Launcher::Launcher(std::unique_ptr<Runner> runner,
   m_engines(std::move(engines))
 {}
 
-Launcher::~Launcher()
-{
-    LOG_IF(WARNING, m_runner) << "destroying unused launcher";
-}
+Launcher::~Launcher() = default;
 
 std::unique_ptr<Runner> Launcher::ignition()
 {

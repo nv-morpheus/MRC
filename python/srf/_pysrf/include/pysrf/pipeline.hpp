@@ -17,8 +17,11 @@
 
 #pragma once
 
-#include "srf/pipeline/pipeline.hpp"
-#include "srf/segment/builder.hpp"
+#include "srf/pipeline/pipeline.hpp"      // IWYU pragma: keep
+#include "srf/segment/builder.hpp"        // IWYU pragma: keep
+#include "srf/segment/ingress_ports.hpp"  // IWYU pragma: keep
+
+#include <pybind11/pytypes.h>
 
 #include <functional>
 #include <memory>
@@ -34,7 +37,26 @@ class Pipeline
   public:
     Pipeline();
 
+    /**
+     * @brief Create a new SRF segment
+     * @param name Segment name
+     * @param init initializer used to define segment internals
+     */
     void make_segment(const std::string& name, const std::function<void(srf::segment::Builder&)>& init);
+
+    /**
+     * @brief
+     * @param name Segment name
+     * @param ingress_port_info Vector of strings with unique segment ingress port names
+     *  note: these must also be unique with respect to egress port ids.
+     * @param egress_port_info Vector of strings with unique segment egress port names.
+     *  note: these must also be unique with respect to ingress port ids.
+     * @param init
+     */
+    void make_segment(const std::string& name,
+                      pybind11::list ingress_port_info,
+                      pybind11::list egress_port_info,
+                      const std::function<void(srf::segment::Builder&)>& init);
 
     std::unique_ptr<srf::pipeline::Pipeline> swap();
 

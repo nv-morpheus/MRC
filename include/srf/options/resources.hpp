@@ -26,8 +26,16 @@ class MemoryPoolOptions
   public:
     MemoryPoolOptions(std::size_t block_size, std::size_t max_aggregate_bytes);
 
-    MemoryPoolOptions& block_size(std::size_t size);
-    MemoryPoolOptions& max_aggregate_bytes(std::size_t count);
+    MemoryPoolOptions& block_size(std::size_t size)
+    {
+        m_block_size = size;
+        return *this;
+    }
+    MemoryPoolOptions& max_aggregate_bytes(std::size_t count)
+    {
+        m_max_aggregate_bytes = count;
+        return *this;
+    }
 
     [[nodiscard]] std::size_t block_size() const
     {
@@ -78,8 +86,8 @@ class ResourceOptions
     const MemoryPoolOptions& device_memory_pool() const;
 
   private:
-    bool m_enable_host_memory_pool{true};
-    bool m_enable_device_memory_pool{true};
+    bool m_enable_host_memory_pool{false};
+    bool m_enable_device_memory_pool{false};
     MemoryPoolOptions m_host_memory_pool;
     MemoryPoolOptions m_device_memory_pool;
 };

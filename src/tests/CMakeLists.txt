@@ -24,7 +24,6 @@ file(GLOB_RECURSE SRF_INTERNAL_TEST_SOURCE_FILES
 
 # For each file, copy if its different
 foreach(file ${SRF_INTERNAL_TEST_SOURCE_FILES})
-
   add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${file}
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/${file} ${CMAKE_CURRENT_BINARY_DIR}/${file}
@@ -33,7 +32,6 @@ foreach(file ${SRF_INTERNAL_TEST_SOURCE_FILES})
   )
 
   list(APPEND SRF_INTERNAL_TEST_BINARY_FILES ${CMAKE_CURRENT_BINARY_DIR}/${file})
-
 endforeach()
 
 add_custom_target(copy_fixture_files ALL
@@ -47,6 +45,8 @@ add_executable(test_srf_private
   pipelines/single_segment.cpp
   segments/common_segments.cpp
   test_main.cpp
+  test_memory.cpp
+  test_network.cpp
   test_next.cpp
   test_partitions.cpp
   test_pipeline.cpp
@@ -60,20 +60,20 @@ add_executable(test_srf_private
 
 target_link_libraries(test_srf_private
   PRIVATE
-    ${PROJECT_NAME}::libsrf
-    nvrpc-client
-    GTest::gtest
-    hwloc::hwloc
-    ucx::ucs
-    ucx::ucp
-    pthread
+  ${PROJECT_NAME}::libsrf
+  nvrpc-client
+  GTest::gtest
+  hwloc::hwloc
+  ucx::ucs
+  ucx::ucp
+  pthread
 )
 
 # Necessary include to prevent IWYU from showing absolute paths
 target_include_directories(test_srf_private
   PRIVATE
-    ${SRF_ROOT_DIR}/src
-    copy_fixture_files
+  ${SRF_ROOT_DIR}/src
+  copy_fixture_files
 )
 
 add_test(

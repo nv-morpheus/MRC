@@ -19,29 +19,25 @@
 
 #include "test_srf.hpp"  // IWYU pragma: keep
 
-#include "srf/channel/status.hpp"
-#include "srf/core/addresses.hpp"
-#include "srf/core/executor.hpp"
-#include "srf/core/fiber_pool.hpp"
-#include "srf/core/utils.hpp"
-#include "srf/forward.hpp"
+#include "srf/core/executor.hpp"  // IWYU pragma: keep
+#include "srf/options/options.hpp"
+#include "srf/options/topology.hpp"
 #include "srf/pipeline/pipeline.hpp"
-#include "srf/pipeline/resources.hpp"
-#include "srf/segment/builder.hpp"
-#include "srf/segment/definition.hpp"
-#include "srf/segment/segment.hpp"
-#include "srf/types.hpp"
+#include "srf/segment/builder.hpp"  // IWYU pragma: keep
+#include "srf/segment/egress_ports.hpp"
+#include "srf/segment/ingress_ports.hpp"
+#include "srf/segment/segment.hpp"  // IWYU pragma: keep
 
-#include <gtest/gtest.h>
-
-#include <algorithm>
 #include <cstddef>
-#include <cstdint>
 #include <functional>
-#include <iterator>
 #include <memory>
-#include <set>
 #include <string>
+
+// IWYU pragma: no_include "gtest/gtest_pred_impl.h"
+
+namespace srf::segment {
+struct ObjectProperties;
+}
 
 class TestSegmentResources
 {

@@ -19,14 +19,14 @@
 
 #include "srf/memory/resources/memory_resource.hpp"
 
-#include <cuda.h>
+#include <cuda_runtime.h>
 #include <glog/logging.h>
 
 namespace srf::memory {
 
-class pinned_memory_resource final : public memory_resource<::cuda::memory_kind::pinned>
+class pinned_memory_resource final : public memory_resource
 {
-    void* do_allocate(std::size_t bytes, std::size_t alignment = alignof(std::max_align_t)) final
+    void* do_allocate(std::size_t bytes) final
     {
         // don't allocate anything if the user requested zero bytes
         if (0 == bytes)
@@ -47,24 +47,16 @@ class pinned_memory_resource final : public memory_resource<::cuda::memory_kind:
         return ptr;
     }
 
-    void do_deallocate(void* ptr, std::size_t bytes, std::size_t alignment = alignof(std::max_align_t)) final
+    void do_deallocate(void* ptr, std::size_t bytes) final
     {
-        if (nullptr == ptr)
-        {
-            return;
-        }
         auto status = cudaFreeHost(ptr);
         CHECK(status == cudaSuccess);
     }
 
-    memory_kind_type do_kind() const final
+    memory_kind do_kind() const final
     {
-        return memory_kind_type::pinned;
+        return memory_kind::pinned;
     }
-
-  public:
-    pinned_memory_resource() : memory_resource("pinned") {}
-    ~pinned_memory_resource() override = default;
 };
 
 };  // namespace srf::memory

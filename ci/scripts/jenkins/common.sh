@@ -31,6 +31,7 @@ export NUM_PROC=${PARALLEL_LEVEL:-$(nproc)}
 export CONDA_ENV_YML="${SRF_ROOT}/ci/conda/environments/dev_env.yml"
 
 export CMAKE_BUILD_ALL_FEATURES="-DCMAKE_MESSAGE_CONTEXT_SHOW=ON -DSRF_BUILD_BENCHMARKS=ON -DSRF_BUILD_EXAMPLES=ON -DSRF_BUILD_PYTHON=ON -DSRF_BUILD_TESTS=ON -DSRF_USE_CONDA=ON"
+export CMAKE_BUILD_WITH_CODECOV="-DCMAKE_BUILD_TYPE=Debug -DSRF_ENABLE_CODECOV=ON"
 
 # Set the depth to allow git describe to work
 export GIT_DEPTH=1000
@@ -97,7 +98,7 @@ function show_conda_info() {
 
 function restore_conda_env() {
 
-    gpuci_logger "Downloading build artifacts from ${DISPLAY_ARTIFACT_URL}"
+    gpuci_logger "Downloading build artifacts from ${DISPLAY_ARTIFACT_URL}/"
     fetch_s3 "${ARTIFACT_ENDPOINT}/conda_env.tar.gz" "${WORKSPACE_TMP}/conda_env.tar.gz"
 
     gpuci_logger "Extracting"

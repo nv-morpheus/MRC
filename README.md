@@ -6,7 +6,7 @@ The **Streaming Reactive Framework** (SRF) library (proununced "surf") is a **re
 <!-- omit in toc -->
 ### Major features and differentiators
  - Built in C++ for performance, with Python bindings for ease of use and rapid prototyping, with options for maximizing performance
- - Distributed computation with message transfers over RMDA using UCX
+ - Distributed computation with message transfers over RDMA using UCX
  - Dynamic reconfiguration to scale up and out at runtime​; requires no changes to pipeline configuration
  - Unopinionated data model: messages of any type can be used in the pipeline
  - Built from the ground up with asynchronous computation for mitigation of I/O and GPU blocking
@@ -110,7 +110,7 @@ Installing via source is for more advanced users and is necessary to try SRF fea
 <!-- omit in toc -->
 #### Clone SRF repository
 ```bash
-export $SRF_HOME=$(pwd)/srf
+export SRF_HOME=$(pwd)/srf
 git clone git@github.com:nv-morpheus/srf.git $SRF_HOME
 cd $SRF_HOME
 ```
@@ -140,7 +140,7 @@ $SRF_HOME/build/tests/logging/test_srf_logging.x
 <!-- omit in toc -->
 #### Install SRF Python Bindings
 ```bash
-pip install -e $SRF_HOME/python
+pip install -e $SRF_HOME/build/python
 ```
 <!-- omit in toc -->
 #### Run SRF Python Tests

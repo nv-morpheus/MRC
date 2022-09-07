@@ -17,10 +17,33 @@
 
 #pragma once
 
-namespace srf::internal::resources {
+namespace srf::internal {
 
+namespace resources {
 class Manager;
+class PartitionResourceBase;
+}  // namespace resources
+
+namespace runnable {
+class Resources;
+}  // namespace runnable
+
+namespace memory {
 class HostResources;
 class DeviceResources;
+}  // namespace memory
 
-}  // namespace srf::internal::resources
+// control plane and data plane
+namespace network {
+class Resources;
+}  // namespace network
+
+namespace ucx {
+class Resources;
+}  // namespace ucx
+
+namespace data_plane {
+class Resources;
+}  // namespace data_plane
+
+}  // namespace srf::internal

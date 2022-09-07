@@ -108,4 +108,10 @@ void Worker::release_address()
     }
 }
 
+Context& Worker::context()
+{
+    CHECK(m_context);
+    return *m_context;
+}
+
 }  // namespace srf::internal::ucx
