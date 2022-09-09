@@ -16,7 +16,7 @@
 # Ensure this is only run once
 include_guard(GLOBAL)
 
-set(RAPIDS_CMAKE_VERSION "22.08" CACHE STRING "Version of rapids-cmake to use")
+set(RAPIDS_CMAKE_VERSION "${SRF_RAPIDS_VERSION}" CACHE STRING "Version of rapids-cmake to use")
 
 # Download and load the repo according to the rapids-cmake instructions if it does not exist
 if(NOT EXISTS ${CMAKE_BINARY_DIR}/RAPIDS_CMAKE.cmake)
