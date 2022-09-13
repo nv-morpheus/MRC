@@ -70,7 +70,7 @@ Some options:
   - This option is good for overriding the value set in `PATH` if you have multiple installs
   - This will also get rid of the warning messages when activating conda
 
-- Set the CMake CUDA variable -DCUDAToolkit_ROOT
+- Set the CMake CUDA variable `-DCUDAToolkit_ROOT`
   - For example, you can set `-DCUDAToolkit_ROOT=/usr/local/cuda-11.5` to tell CMake to use that install
   - This will work even if the nvcc_linux-64 conda package is uninstalled
 
