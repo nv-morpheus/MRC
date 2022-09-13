@@ -41,7 +41,7 @@ unit test coverage percentages have not decreased (even better if they've increa
 directory:
 
 1. Generate a code coverage report and ensure your additions are covered.
-   1. take note of the CUDAToolkit setup in the Build section below
+   1. take note of the CUDA Toolkit setup in the Build section below
    2. `./scripts/gen_coverage.sh`
    3. open `./build/gcovr-html-report/index.html`
 
