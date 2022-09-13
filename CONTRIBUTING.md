@@ -69,6 +69,7 @@ Some options:
 - Set the variable `CUDA_HOME` to the desired CUDA install
   - This option is good for overriding the value set in `PATH` if you have multiple installs
   - This will also get rid of the warning messages when activating conda
+  - Note: This must be set before calling `conda activate` and will only work for the lifetime of that shell session. For that reason, it's best to configure this in your `.bashrc` or similar configuration file.
 
 - Set the CMake CUDA variable `-DCUDAToolkit_ROOT`
   - For example, you can set `-DCUDAToolkit_ROOT=/usr/local/cuda-11.5` to tell CMake to use your CUDA 11.5 install
