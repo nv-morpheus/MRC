@@ -66,7 +66,7 @@ For example, you may see the following error when activating the srf conda envir
 
 Some options:
 
-- Set the variable CUDA_HOME to the desired CUDA install
+- Set the variable `CUDA_HOME` to the desired CUDA install
   - This option is good for overriding the value set in PATH if you have multiple installs
   - This will also get rid of the warning messages when activating conda
 
