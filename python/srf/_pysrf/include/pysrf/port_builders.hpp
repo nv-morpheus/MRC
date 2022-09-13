@@ -22,6 +22,7 @@
 #include "srf/segment/ingress_port.hpp"
 #include "srf/segment/object.hpp"
 
+#include <type_traits>
 #include <typeinfo>
 
 namespace srf::pysrf {
@@ -43,38 +44,68 @@ struct PortBuilderUtil
     template <typename IngressDataT>
     static node::PortUtil::ingress_tuple_t create_ingress_builders()
     {
-        return std::tuple(
-            [](SegmentAddress address, PortName name) {
-                VLOG(2) << "Building raw ingress port: " << type_name<IngressDataT>();
-                auto ingress_port = std::make_shared<segment::IngressPort<IngressDataT>>(address, name);
+        // Check if we are default constructible. If not, we cannot register the port since channels need to create
+        // objects
+        if constexpr (std::is_default_constructible_v<IngressDataT>)
+        {
+            return node::PortUtil::ingress_tuple_t(
+                [](SegmentAddress address, PortName name) {
+                    VLOG(2) << "Building raw ingress port: " << type_name<IngressDataT>();
+                    auto ingress_port = std::make_shared<segment::IngressPort<IngressDataT>>(address, name);
 
-                return ingress_port;
-            },
-            [](SegmentAddress address, PortName name) {
+                    return ingress_port;
+                },
+                [](SegmentAddress address, PortName name) {
+                    VLOG(2) << "Building sp wrapped ingress port: " << type_name<IngressDataT>();
+                    auto ingress_port =
+                        std::make_shared<segment::IngressPort<std::shared_ptr<IngressDataT>>>(address, name);
+
+                    return ingress_port;
+                });
+        }
+        else
+        {
+            return node::PortUtil::ingress_tuple_t(nullptr, [](SegmentAddress address, PortName name) {
                 VLOG(2) << "Building sp wrapped ingress port: " << type_name<IngressDataT>();
                 auto ingress_port =
                     std::make_shared<segment::IngressPort<std::shared_ptr<IngressDataT>>>(address, name);
 
                 return ingress_port;
             });
+        }
     }
 
     template <typename EgressDataT>
     static node::PortUtil::egress_tuple_t create_egress_builders()
     {
-        return std::tuple(
-            [](SegmentAddress address, PortName name) {
-                VLOG(2) << "Building raw egress port: " << type_name<EgressDataT>();
-                auto egress_port = std::make_shared<segment::EgressPort<EgressDataT>>(address, name);
+        // Check if we are default constructible. If not, we cannot register the port since channels need to create
+        // objects
+        if constexpr (std::is_default_constructible_v<EgressDataT>)
+        {
+            return node::PortUtil::egress_tuple_t(
+                [](SegmentAddress address, PortName name) {
+                    VLOG(2) << "Building raw egress port: " << type_name<EgressDataT>();
+                    auto egress_port = std::make_shared<segment::EgressPort<EgressDataT>>(address, name);
 
-                return egress_port;
-            },
-            [](SegmentAddress address, PortName name) {
+                    return egress_port;
+                },
+                [](SegmentAddress address, PortName name) {
+                    VLOG(2) << "Building sp wrapped egress port: " << type_name<EgressDataT>();
+                    auto egress_port =
+                        std::make_shared<segment::EgressPort<std::shared_ptr<EgressDataT>>>(address, name);
+
+                    return egress_port;
+                });
+        }
+        else
+        {
+            return node::PortUtil::egress_tuple_t(nullptr, [](SegmentAddress address, PortName name) {
                 VLOG(2) << "Building sp wrapped egress port: " << type_name<EgressDataT>();
                 auto egress_port = std::make_shared<segment::EgressPort<std::shared_ptr<EgressDataT>>>(address, name);
 
                 return egress_port;
             });
+        }
     }
 
     template <typename IngressDataT>
@@ -129,7 +160,7 @@ struct PortBuilderUtil
             VLOG(2) << "Registering PySRF port util for: " << type_name<port_type_t>() << " "
                     << "=> " << type_name<port_dtype_t>() << " " << type_idx.hash_code();
 
-            auto port_util = std::make_shared<srf::node::PortUtil>(typeid(PortDataTypeT));
+            auto port_util = std::make_shared<srf::node::PortUtil>(typeid(port_dtype_t));
 
             port_util->m_ingress_builders = create_ingress_builders<port_dtype_t>();
             port_util->m_egress_builders  = create_egress_builders<port_dtype_t>();

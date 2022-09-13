@@ -20,7 +20,8 @@ dependencies:
   - grpc-cpp=1.45
   - gtest=1.10
   - libhwloc=2.5
-  - librmm=22.06
+  - libprotobuf=3.20
+  - librmm=22.08
   - ninja=1.10
   - nlohmann_json=3.9
   - pkg-config=0.29
