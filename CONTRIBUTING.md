@@ -71,7 +71,7 @@ Some options:
   - This will also get rid of the warning messages when activating conda
 
 - Set the CMake CUDA variable `-DCUDAToolkit_ROOT`
-  - For example, you can set `-DCUDAToolkit_ROOT=/usr/local/cuda-11.5` to tell CMake to use that install
+  - For example, you can set `-DCUDAToolkit_ROOT=/usr/local/cuda-11.5` to tell CMake to use your CUDA 11.5 install
   - This will work even if the `nvcc_linux-64` conda package is uninstalled
 
 #### Clone SRF repository
