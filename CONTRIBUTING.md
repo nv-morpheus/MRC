@@ -72,7 +72,7 @@ Some options:
 
 - Set the CMake CUDA variable `-DCUDAToolkit_ROOT`
   - For example, you can set `-DCUDAToolkit_ROOT=/usr/local/cuda-11.5` to tell CMake to use that install
-  - This will work even if the nvcc_linux-64 conda package is uninstalled
+  - This will work even if the `nvcc_linux-64` conda package is uninstalled
 
 #### Clone SRF repository
 ```bash
