@@ -58,7 +58,7 @@ endif()
 rapids_cuda_init_architectures(srf)
 
 project(srf
-  VERSION 22.08.00
+  VERSION 22.09.00
   LANGUAGES C CXX
 )
 
@@ -115,7 +115,7 @@ endif()
 set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
 
 # Create a custom target to allow preparing for style checks
-add_custom_target(style_checks
+add_custom_target(${PROJECT_NAME}_style_checks
   COMMENT "Building dependencies for style checks"
 )
 

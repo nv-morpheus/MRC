@@ -25,7 +25,7 @@ list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake")
 include(import_rapids_cmake)
 
 project(srf-quickstart
-  VERSION 22.08.00
+  VERSION 22.09.00
   LANGUAGES C CXX
 )
 

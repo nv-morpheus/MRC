@@ -57,7 +57,7 @@ target_link_libraries(test_nvrpc
 )
 
 # Finally, add this to the style check dependencies
-add_dependencies(style_checks nvrpc-testing-protos-headers-target)
+add_dependencies(${PROJECT_NAME}_style_checks nvrpc-testing-protos-headers-target)
 
 add_test(
   NAME nvrpc
