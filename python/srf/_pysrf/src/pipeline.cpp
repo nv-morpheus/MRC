@@ -95,6 +95,12 @@ PipelineIngressInfo collect_ingress_info(py::list ids)
 
             bool builder_exists        = (cpptype != nullptr && PortRegistry::has_port_util(*cpptype));
             std::type_index type_index = builder_exists ? *cpptype : typeid(PyHolder);
+            if (builder_exists)
+            {
+                VLOG(2) << "Ingress builder exists";
+            } else {
+                VLOG(2) << "Ingress builder does not exist, defaulting to PyHolder";
+            }
 
             auto port_util  = PortRegistry::find_port_util(type_index);
             auto builder_fn = flag_sp_variant ? std::get<1>(port_util->m_ingress_builders)
@@ -146,6 +152,12 @@ PipelineEgressInfo collect_egress_info(py::list ids)
 
             bool builder_exists        = (cpptype != nullptr && PortRegistry::has_port_util(*cpptype));
             std::type_index type_index = builder_exists ? *cpptype : typeid(PyHolder);
+            if (builder_exists)
+            {
+                VLOG(2) << "Egress builder exists";
+            } else {
+                VLOG(2) << "Egress builder does not exist, defaulting to PyHolder";
+            }
 
             auto port_util = PortRegistry::find_port_util(type_index);
             auto builder_fn =

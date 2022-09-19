@@ -239,6 +239,7 @@ add_library(libsrf
   src/public/options/resources.cpp
   src/public/options/services.cpp
   src/public/options/topology.cpp
+  src/public/experimental/modules/segment_modules.cpp
   src/public/runnable/context.cpp
   src/public/runnable/launcher.cpp
   src/public/runnable/runnable.cpp

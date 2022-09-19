@@ -21,6 +21,7 @@
 #include "srf/core/watcher.hpp"
 #include "srf/engine/segment/ibuilder.hpp"
 #include "srf/exceptions/runtime_error.hpp"
+#include "srf/experimental/modules/segment_modules.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/rx_node.hpp"
 #include "srf/node/rx_sink.hpp"
@@ -161,6 +162,15 @@ class Builder final
         return construct_object<NodeTypeT<SinkTypeT, SourceTypeT>>(name, std::forward<ArgsT>(ops)...);
     }
 
+    template<typename ModuleTypeT>
+    ModuleTypeT make_module(std::string module_name) {
+        ModuleTypeT module = ModuleTypeT(std::move(module_name));
+
+        module.initialize(*this);
+
+        return module;
+    }
+
     template <typename SourceNodeTypeT, typename SinkNodeTypeT>
     void make_edge(std::shared_ptr<Object<SourceNodeTypeT>> source, std::shared_ptr<Object<SinkNodeTypeT>> sink)
     {
@@ -187,6 +197,70 @@ class Builder final
     {
         DVLOG(10) << "forming segment edge between two node objects";
         node::make_edge(source, sink);
+    }
+
+    /**
+     * Given a typed source and a typeless sink, attempt to construct an edge between them -- assumes that source and
+     * sink types are convertible.
+     *
+     * @tparam InputT
+     * @param source
+     * @param sink
+     */
+    template <typename InputT>
+    void make_edge(node::SourceProperties<InputT>& source, std::shared_ptr<segment::ObjectProperties> sink)
+    {
+        DVLOG(10) << "forming segment edge between two node objects";
+        node::make_edge(source, sink->template sink_typed<InputT>());
+    }
+
+    /**
+     * Partial dynamic edge construction:
+     *
+     * Create edge using a fully constructed Object and a type erased Object
+     *  We extract the underlying node object (Likely an RxNode) and call make_edge with it and the type erased
+     *  object. This works via a cascaded type extraction process.
+     * @tparam SourceNodeTypeT
+     * @param source Fully typed, wrapped, object
+     * @param sink Type erased object -- assumed to be convertible to source type
+     */
+    template <typename SourceNodeTypeT>
+    void make_edge(std::shared_ptr<Object<SourceNodeTypeT>>& source, std::shared_ptr<segment::ObjectProperties> sink)
+    {
+        DVLOG(10) << "forming segment edge between a segment source and typeless Object";
+        this->make_edge(source->object(), sink);
+    }
+
+    /**
+     * Given a typeless source and a typed sink, attempt to construct an edge between them -- assumes that
+     * source and sink type's are convertible.
+     *
+     * @tparam OutputT
+     * @param source
+     * @param sink
+     */
+    template <typename OutputT>
+    void make_edge(std::shared_ptr<segment::ObjectProperties> source, node::SinkProperties<OutputT>& sink)
+    {
+        DVLOG(10) << "forming segment edge between two node objects";
+        node::make_edge(source->template source_typed<OutputT>(), sink);
+    }
+
+    /**
+     * Partial dynamic edge construction:
+     *
+     * Create edge using a fully constructed Object and a type erased Object
+     *  We extract the underlying node object (Likely an RxNode) and call make_edge with it and the type erased
+     *  object. This works via a cascaded type extraction process.
+     * @tparam SinkNodeTypeT
+     * @param source Fully typed, wrapped, object
+     * @param sink Fully typed, wrapped, object
+     */
+    template <typename SinkNodeTypeT>
+    void make_edge(std::shared_ptr<segment::ObjectProperties> source, std::shared_ptr<Object<SinkNodeTypeT>>& sink)
+    {
+        DVLOG(10) << "forming segment edge between a typeless object and a segment sink";
+        this->make_edge(source, sink->object());
     }
 
     template <typename SourceNodeTypeT, typename SinkNodeTypeT = SourceNodeTypeT>
