@@ -53,7 +53,7 @@ gpuci_logger "Configuring CMake"
 cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} .
 
 gpuci_logger "Building targets that generate source code"
-cmake --build build --target style_checks --parallel ${PARALLEL_LEVEL}
+cmake --build build --target srf_style_checks --parallel ${PARALLEL_LEVEL}
 
 gpuci_logger "Running C++ style checks"
 ${SRF_ROOT}/ci/scripts/cpp_checks.sh
