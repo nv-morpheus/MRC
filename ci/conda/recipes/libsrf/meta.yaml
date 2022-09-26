@@ -127,6 +127,7 @@ outputs:
       host:
         # Only should need libsrf and python. Keep sorted!
         - {{ pin_subpackage('libsrf', exact=True) }}
+        - abseil-cpp # srf does not require abseil at build time, but see https://github.com/conda-forge/arrow-cpp-feedstock/issues/814
         - python {{ python }}
       run:
         - {{ pin_subpackage('libsrf', exact=True) }}

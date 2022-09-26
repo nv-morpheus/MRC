@@ -31,18 +31,21 @@ python:
 
 # Setup the dependencies to build with multiple versions of RAPIDS
 rapids_version:
-  - 22.04 # Keep around compatibility with current version -1
-  - 22.06
+  - 22.06 # Keep around compatibility with current version -1
   - 22.08
 
 abseil_cpp:
-  - 20211102.0
   - 20210324.2
-  - 20210324.2
+  - 20220623.0
+
+grpc_cpp:
+  - 1.45
+  - 1.46.4
 
 zip_keys:
   - rapids_version
   - abseil_cpp
+  - grpc_cpp
 
 # The following mimic what is available in the pinning feedstock:
 # https://github.com/conda-forge/conda-forge-pinning-feedstock/blob/main/recipe/conda_build_config.yaml
@@ -54,12 +57,10 @@ gflags:
   - 2.2
 glog:
   - 0.6
-grpc_cpp:
-  - 1.45
 libprotobuf:
   - 3.20
 ucx:
-  - 1.12
+  - 1.13
 
 
 pin_run_as_build:
