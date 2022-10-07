@@ -113,7 +113,20 @@ jobs:
         shell: bash
         env:
           BUILD_TYPE: ${{ matrix.build_type }}
+          REPORTS_DIR: "${{ github.workspace }}/tmp/reports"
         run: ./srf/ci/scripts/github/test.sh
+
+      - name: Test Summary
+        uses: test-summary/action@v1
+        with:
+          paths: "${{ github.workspace }}/tmp/reports/**/*.xml"
+        if: always()
+      - name: Upload Test Summary
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.build_type }}-test-summary
+          path: ${{ matrix.build_type }}-test-summary.md
+        if: always()
 
   documentation:
     name: Documentation

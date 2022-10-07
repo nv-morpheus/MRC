@@ -30,8 +30,8 @@ tar xf "${WORKSPACE_TMP}/cpp_tests.tar.bz"
 tar xf "${WORKSPACE_TMP}/dsos.tar.bz"
 tar xf "${WORKSPACE_TMP}/python_build.tar.bz"
 
-REPORTS_DIR="${WORKSPACE_TMP}/reports"
-mkdir -p ${WORKSPACE_TMP}/reports
+REPORTS_DIR=${REPORTS_DIR:-"${WORKSPACE_TMP}/reports"}
+mkdir -p ${REPORTS_DIR}
 
 # ctest requires cmake to be configured in order to locate tests
 
@@ -60,7 +60,7 @@ cd ${SRF_ROOT}
 gpuci_logger "Running Python Tests"
 cd ${SRF_ROOT}/build/python
 set +e
-pytest -v --junit-xml=${WORKSPACE_TMP}/report_pytest.xml
+pytest -v --junit-xml=${REPORTS_DIR}/report_pytest.xml
 PYTEST_RESULTS=$?
 set -e
 
