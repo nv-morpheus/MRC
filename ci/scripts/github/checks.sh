@@ -21,7 +21,7 @@ export IWYU_DIR="${WORKSPACE_TMP}/iwyu"
 
 fetch_base_branch
 
-gpuci_logger "Creating conda env: ${CONDA_ENV_YML}"
+gpuci_logger "Creating conda env"
 mamba env create -n srf -q --file ${CONDA_ENV_YML}
 
 gpuci_logger "Installing Clang"
