@@ -166,6 +166,7 @@ jobs:
 
   package:
     name: Package
+    if: ${{ startsWith(github.ref_name, 'branch-') }}
     needs: [benchmark, documentation, test]
     runs-on: [self-hosted, linux, amd64, cpu16]
     timeout-minutes: 60
