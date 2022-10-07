@@ -20,7 +20,7 @@ function(find_and_configure_ucx version)
   list(APPEND CMAKE_MESSAGE_CONTEXT "ucx")
 
   # Try to find UCX and download from source if not found
-  rapids_cpm_find(ucx 1.12
+  rapids_cpm_find(ucx 1.13
     GLOBAL_TARGETS
       ucx ucx::ucp ucx::uct ucx_ucx ucx::ucp ucx::uct ucx::ucx
     BUILD_EXPORT_SET

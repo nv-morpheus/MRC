@@ -28,7 +28,7 @@ dependencies:
   - python=3.8
   - scikit-build>=0.12
   - spdlog=1.8.5
-  - ucx=1.12
+  - ucx=1.13
   - pip:
     - cython
     - flake8

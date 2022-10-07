@@ -42,7 +42,7 @@ dependencies:
   - scikit-build>=0.12
   - spdlog=1.8.5
   - sysroot_linux-64=2.17
-  - ucx=1.12
+  - ucx=1.13
   - pip:
     - cython
     - flake8
