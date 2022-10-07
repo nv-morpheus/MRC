@@ -62,7 +62,7 @@ jobs:
   build:
     name: Build
     runs-on: [self-hosted, linux, amd64, cpu16]
-    timeout-minutes: 240
+    timeout-minutes: 60
     container:
       image: gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8
     strategy:
@@ -93,6 +93,7 @@ jobs:
       options: --cap-add=sys_nice
       env:
         NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
+        PARALLEL_LEVEL: '10'
     strategy:
       fail-fast: true
       matrix:
