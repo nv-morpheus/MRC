@@ -36,9 +36,8 @@ rapids_version: # Keep around compatibility with current version -1
 
 # Multiple versions of abseil are required to satisfy the solver for some environments
 abseil_cpp:
-  - 20210324.2
   - 20211102.0
-  # - 20220623.0
+  - 20220623.0
 
 # The following mimic what is available in the pinning feedstock:
 # https://github.com/conda-forge/conda-forge-pinning-feedstock/blob/main/recipe/conda_build_config.yaml
@@ -51,7 +50,7 @@ gflags:
 glog:
   - 0.6
 grpc_cpp:
-  - 1.45
+  - 1.46
 libprotobuf:
   - 3.20
 ucx:

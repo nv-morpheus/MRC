@@ -146,6 +146,7 @@ outputs:
         - numpy
         - nvtx
         - pytest
+        - cuml {{ rapids_version }}
 
 about:
   home: https://www.nvidia.com/
