@@ -87,9 +87,6 @@ std::shared_ptr<srf::segment::ObjectProperties> build_source(srf::segment::Build
                 // Get the next value
                 auto next_val = py::cast<py::object>(*iter);
 
-                // Increment it for next loop
-                ++iter;
-
                 {
                     // Release the GIL to call on_next
                     pybind11::gil_scoped_release nogil;
@@ -100,6 +97,9 @@ std::shared_ptr<srf::segment::ObjectProperties> build_source(srf::segment::Build
                         subscriber.on_next(std::move(next_val));
                     }
                 }
+
+                // Increment it for next loop
+                ++iter;
             }
 
         } catch (const std::exception& e)
