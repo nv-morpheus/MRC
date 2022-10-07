@@ -17,7 +17,7 @@ dependencies:
   - glog=0.6
   - gmock=1.10
   - graphviz=3.0
-  - grpc-cpp=1.45
+  - grpc-cpp=1.46
   - gtest=1.10
   - libhwloc=2.5
   - libprotobuf=3.20

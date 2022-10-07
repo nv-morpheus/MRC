@@ -33,11 +33,17 @@ python:
 rapids_version: # Keep around compatibility with current version -1
   - 22.06
   - 22.08
+  - 22.08
 
 # Multiple versions of abseil are required to satisfy the solver for some environments
 abseil_cpp:
   - 20211102.0
+  - 20211102.0
   - 20220623.0
+
+zip_keys:
+  - rapids_version
+  - abseil_cpp
 
 # The following mimic what is available in the pinning feedstock:
 # https://github.com/conda-forge/conda-forge-pinning-feedstock/blob/main/recipe/conda_build_config.yaml
