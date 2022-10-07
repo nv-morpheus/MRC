@@ -19,7 +19,7 @@ on:
   push:
     branches:
       - 'pull-request/**'
-      - $default-branch
+      - "branch-*"
 
 # This allows a subsequently queued workflow run to interrupt previous runs
 concurrency:
@@ -41,7 +41,7 @@ env:
 
 jobs:
   check:
-    if: ${{ github.ref_name != $default-branch }}
+    if: ${{ startsWith(github.ref_name, 'pull-request/') }}
     name: Check
     runs-on: [self-hosted, linux, amd64, cpu4]
     timeout-minutes: 60
