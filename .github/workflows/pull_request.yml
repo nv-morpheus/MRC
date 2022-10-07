@@ -115,6 +115,27 @@ jobs:
           BUILD_TYPE: ${{ matrix.build_type }}
         run: ./srf/ci/scripts/github/test.sh
 
+  documentation:
+    name: Documentation
+    needs: [check, build]
+    runs-on: [self-hosted, linux, amd64, cpu4]
+    timeout-minutes: 60
+    container:
+      image: gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8
+    strategy:
+      fail-fast: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          lfs: false
+          path: 'srf'
+
+      - name: build_docs
+        shell: bash
+        run: ./srf/ci/scripts/github/docs.sh
+
   benchmark:
     name: Benchmark
     needs: [check, build]
@@ -142,30 +163,10 @@ jobs:
         shell: bash
         run: ./srf/ci/scripts/github/benchmark.sh
 
-  documentation:
-    name: Documentation
-    needs: [check, build]
-    runs-on: [self-hosted, linux, amd64, cpu4]
-    timeout-minutes: 60
-    container:
-      image: gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8
-    strategy:
-      fail-fast: true
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          lfs: false
-          path: 'srf'
-
-      - name: build_docs
-        shell: bash
-        run: ./srf/ci/scripts/github/docs.sh
 
   package:
     name: Package
-    needs: [documentation, test]
+    needs: [benchmark, documentation, test]
     runs-on: [self-hosted, linux, amd64, cpu16]
     timeout-minutes: 60
     container:
