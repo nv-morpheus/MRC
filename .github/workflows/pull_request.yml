@@ -19,6 +19,7 @@ on:
   push:
     branches:
       - 'pull-request/**'
+      - $default-branch
 
 # This allows a subsequently queued workflow run to interrupt previous runs
 concurrency:
@@ -40,6 +41,7 @@ env:
 
 jobs:
   check:
+    if: ${{ github.ref_name != $default-branch }}
     name: Check
     runs-on: [self-hosted, linux, amd64, cpu4]
     timeout-minutes: 60
@@ -116,7 +118,7 @@ jobs:
   benchmark:
     name: Benchmark
     needs: [check, build]
-    runs-on: [self-hosted, linux, amd64, cpu4]
+    runs-on: [self-hosted, linux, amd64, cpu16]
     timeout-minutes: 60
     container:
       image: gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8
@@ -160,3 +162,26 @@ jobs:
       - name: build_docs
         shell: bash
         run: ./srf/ci/scripts/github/docs.sh
+
+  package:
+    name: Package
+    needs: [check, build]
+    runs-on: [self-hosted, linux, amd64, cpu16]
+    timeout-minutes: 60
+    container:
+      image: gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8
+    strategy:
+      fail-fast: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          lfs: false
+          path: 'srf'
+
+      - name: conda
+        shell: bash
+        env:
+          CONDA_PKG_LABEL: 'dev-ci'
+        run: ./srf/ci/scripts/github/conda.sh
