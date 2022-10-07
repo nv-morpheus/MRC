@@ -19,11 +19,9 @@ set -e
 source ${WORKSPACE}/ci/scripts/github/common.sh
 export IWYU_DIR="${WORKSPACE_TMP}/iwyu"
 
-rm -rf ${SRF_ROOT}/.cache/ ${SRF_ROOT}/build/ ${IWYU_DIR}
-
 fetch_base_branch
 
-gpuci_logger "Creating conda env"
+gpuci_logger "Creating conda env: ${CONDA_ENV_YML}"
 mamba env create -n srf -q --file ${CONDA_ENV_YML}
 
 gpuci_logger "Installing Clang"
