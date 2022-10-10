@@ -198,5 +198,5 @@ jobs:
       - name: conda
         shell: bash
         env:
-          CONDA_PKG_LABEL: 'dev-ci'
+          CONDA_TOKEN: "${{ secrets.CONDA_TOKEN }}"
         run: ./srf/ci/scripts/github/conda.sh
