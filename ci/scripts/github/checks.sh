@@ -17,7 +17,7 @@
 set -e
 
 source ${WORKSPACE}/ci/scripts/github/common.sh
-export IWYU_DIR="${WORKSPACE_TMP}/iwyu"
+export IWYU_DIR="/opt/iwyu"
 
 fetch_base_branch
 
