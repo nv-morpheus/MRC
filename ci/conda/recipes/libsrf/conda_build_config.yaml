@@ -31,9 +31,9 @@ python:
 
 # Setup the dependencies to build with multiple versions of RAPIDS
 rapids_version: # Keep around compatibility with current version -1
-  - 22.06
   # - 22.06
-  # - 22.08
+  # - 22.06
+  - 22.08
   # - 22.08
 
 # Multiple versions of abseil are required to satisfy the solver for some
@@ -41,15 +41,15 @@ rapids_version: # Keep around compatibility with current version -1
 # 1.46. For each version of gRPC, support 2 abseil versions. Zip all of the keys
 # together to avoid impossible combinations
 abseil_cpp:
-  - 20210324.2
+  # - 20210324.2
   # - 20211102.0
-  # - 20211102.0
+  - 20211102.0
   # - 20220623.0
 
 grpc_cpp:
-  - 1.45
   # - 1.45
-  # - 1.46
+  # - 1.45
+  - 1.46
   # - 1.46
 
 zip_keys:
