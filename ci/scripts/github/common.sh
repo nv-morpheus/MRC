@@ -71,11 +71,6 @@ function print_env_vars() {
 
 print_env_vars
 
-function install_deb_deps() {
-    apt -q -y update
-    apt -q -y install libnuma1
-}
-
 function fetch_base_branch() {
     rapids-logger "Retrieving base branch from GitHub API"
     [[ -n "$GH_TOKEN" ]] && CURL_HEADERS=('-H' "Authorization: token ${GH_TOKEN}")

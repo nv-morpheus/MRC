@@ -17,15 +17,7 @@
 set -e
 
 source ${WORKSPACE}/ci/scripts/github/common.sh
-
-install_deb_deps
-
-rapids-logger "Creating conda env"
-mamba env create -n srf -q --file ${CONDA_ENV_YML}
-conda deactivate
 conda activate srf
-
-mamba env update -q -n srf --file ${SRF_ROOT}/ci/conda/environments/ci_env.yml
 
 CMAKE_CACHE_FLAGS="-DCCACHE_PROGRAM_PATH=$(which sccache) -DSRF_USE_CCACHE=ON"
 
@@ -45,8 +37,6 @@ elif [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
     g++ --version
     CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES} ${CMAKE_BUILD_WITH_CODECOV} ${CMAKE_CACHE_FLAGS}"
 else
-    rapids-logger "Installing Clang"
-    mamba env update -q -n srf --file ${SRF_ROOT}/ci/conda/environments/clang_env.yml
     rapids-logger "Building with Clang"
     clang --version
     clang++ --version
