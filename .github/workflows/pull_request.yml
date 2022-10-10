@@ -92,7 +92,7 @@ jobs:
     runs-on: [self-hosted, linux, amd64, gpu-v100-495-1]
     timeout-minutes: 60
     container:
-      image: gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8
+      image: gpuci/rapidsai:21.10-cuda11.4-devel-ubuntu20.04-py3.8
       options: --cap-add=sys_nice
       env:
         NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
