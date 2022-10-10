@@ -20,7 +20,7 @@ source ${WORKSPACE}/ci/scripts/github/common.sh
 
 restore_conda_env
 
-gpuci_logger "Fetching Build artifacts from ${DISPLAY_ARTIFACT_URL}/"
+rapids-logger "Fetching Build artifacts from ${DISPLAY_ARTIFACT_URL}/"
 fetch_s3 "${ARTIFACT_ENDPOINT}/cpp_tests.tar.bz" "${WORKSPACE_TMP}/cpp_tests.tar.bz"
 fetch_s3 "${ARTIFACT_ENDPOINT}/dsos.tar.bz" "${WORKSPACE_TMP}/dsos.tar.bz"
 

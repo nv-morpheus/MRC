@@ -20,12 +20,12 @@ source ${WORKSPACE}/ci/scripts/github/common.sh
 
 rm -rf ${SRF_ROOT}/.cache/ ${SRF_ROOT}/build/
 
-gpuci_logger "Creating conda env"
+rapids-logger "Creating conda env"
 mamba env create -n srf -q --file ${CONDA_ENV_YML}
 conda deactivate
 conda activate srf
 
-gpuci_logger "Check versions"
+rapids-logger "Check versions"
 python3 --version
 cmake --version
 ninja --version
@@ -33,17 +33,17 @@ doxygen --version
 
 show_conda_info
 
-gpuci_logger "Configuring for docs"
+rapids-logger "Configuring for docs"
 cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} -DSRF_BUILD_DOCS=ON .
 
 
-gpuci_logger "Building docs"
+rapids-logger "Building docs"
 cmake --build build --target srf_docs
 
-gpuci_logger "Tarring the docs"
+rapids-logger "Tarring the docs"
 tar cfj "${WORKSPACE_TMP}/docs.tar.bz" build/docs/html
 
-gpuci_logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
+rapids-logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
 aws s3 cp --no-progress "${WORKSPACE_TMP}/docs.tar.bz" "${ARTIFACT_URL}/docs.tar.bz"
 
-gpuci_logger "Success"
+rapids-logger "Success"

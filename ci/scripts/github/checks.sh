@@ -21,10 +21,10 @@ export IWYU_DIR="${WORKSPACE_TMP}/iwyu"
 
 fetch_base_branch
 
-gpuci_logger "Creating conda env"
+rapids-logger "Creating conda env"
 mamba env create -n srf -q --file ${CONDA_ENV_YML}
 
-gpuci_logger "Installing Clang"
+rapids-logger "Installing Clang"
 mamba env update -q -n srf --file ${SRF_ROOT}/ci/conda/environments/clang_env.yml
 
 conda deactivate
@@ -32,7 +32,7 @@ conda activate srf
 
 show_conda_info
 
-gpuci_logger "Installing IWYU"
+rapids-logger "Installing IWYU"
 git clone https://github.com/include-what-you-use/include-what-you-use.git ${IWYU_DIR}
 pushd ${IWYU_DIR}
 git checkout clang_12
@@ -47,17 +47,17 @@ cmake --build . --parallel ${PARALLEL_LEVEL} --target install
 
 popd
 
-gpuci_logger "Configuring CMake"
+rapids-logger "Configuring CMake"
 cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} .
 
-gpuci_logger "Building targets that generate source code"
+rapids-logger "Building targets that generate source code"
 cmake --build build --target srf_style_checks --parallel ${PARALLEL_LEVEL}
 
-gpuci_logger "Running C++ style checks"
+rapids-logger "Running C++ style checks"
 ${SRF_ROOT}/ci/scripts/cpp_checks.sh
 
-gpuci_logger "Runing Python style checks"
+rapids-logger "Runing Python style checks"
 ${SRF_ROOT}/ci/scripts/python_checks.sh
 
-gpuci_logger "Checking copyright headers"
+rapids-logger "Checking copyright headers"
 python ${SRF_ROOT}/ci/scripts/copyright.py --verify-apache-v2 --git-diff-commits ${CHANGE_TARGET} ${GIT_COMMIT}

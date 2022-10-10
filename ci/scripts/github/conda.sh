@@ -21,6 +21,6 @@ source ${WORKSPACE}/ci/scripts/github/common.sh
 
 restore_conda_env
 
-gpuci_logger "Building Conda Package"
+rapids-logger "Building Conda Package"
 
 ${SRF_ROOT}/ci/conda/recipes/run_conda_build.sh upload
