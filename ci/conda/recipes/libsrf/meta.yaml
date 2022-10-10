@@ -127,7 +127,7 @@ outputs:
       host:
         # Only should need libsrf and python. Keep sorted!
         - {{ pin_subpackage('libsrf', exact=True) }}
-        - abseil-cpp # srf does not require abseil at build time, but see https://github.com/conda-forge/arrow-cpp-feedstock/issues/814
+        - abseil-cpp # srf does not require abseil at build time. See https://github.com/conda-forge/arrow-cpp-feedstock/issues/814
         - python {{ python }}
       run:
         - {{ pin_subpackage('libsrf', exact=True) }}
@@ -146,7 +146,7 @@ outputs:
         - numpy
         - nvtx
         - pytest
-        - cuml {{ rapids_version }}
+        - cuml {{ rapids_version }} # Ensure we can install cuml. This can cause issues solving abseil-cpp
 
 about:
   home: https://www.nvidia.com/
