@@ -66,7 +66,7 @@ mkdir -p ${WORKSPACE_TMP}
 
 function print_env_vars() {
     gpuci_logger "Environ:"
-    env | grep -v -E "AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY|GH_TOKEN" | sort
+    env | grep -v -E "AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY|TOKEN" | sort
 }
 
 print_env_vars
