@@ -16,7 +16,7 @@
 
 set -e
 
-source ${WORKSPACE}/ci/scripts/jenkins/common.sh
+source ${WORKSPACE}/ci/scripts/github/common.sh
 
 REPORTS_DIR="${WORKSPACE_TMP}/reports"
 
