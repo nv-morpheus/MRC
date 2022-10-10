@@ -17,7 +17,8 @@
 set -e
 
 source ${WORKSPACE}/ci/scripts/github/common.sh
-conda activate srf
+
+update_conda_env
 
 CMAKE_CACHE_FLAGS="-DCCACHE_PROGRAM_PATH=$(which sccache) -DSRF_USE_CCACHE=ON"
 

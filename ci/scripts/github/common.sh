@@ -69,6 +69,12 @@ function print_env_vars() {
     env | grep -v -E "AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY|TOKEN" | sort
 }
 
+function update_conda_env() {
+    mamba env update -n srf -q --file ${CONDA_ENV_YML}
+    conda deactivate
+    conda activate srf
+}
+
 print_env_vars
 
 function fetch_base_branch() {

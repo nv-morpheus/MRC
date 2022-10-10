@@ -20,7 +20,7 @@ source ${WORKSPACE}/ci/scripts/github/common.sh
 
 fetch_base_branch
 
-conda activate srf
+update_conda_env
 
 show_conda_info
 
