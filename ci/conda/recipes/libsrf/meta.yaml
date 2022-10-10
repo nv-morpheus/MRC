@@ -131,12 +131,12 @@ outputs:
         - python {{ python }}
       run:
         - {{ pin_subpackage('libsrf', exact=True) }}
-        - rmm {{ rapids_version }} # This is not necessary but required until this is fixed: https://github.com/mamba-org/boa/issues/232
+        - rmm {{ rapids_version }}.* # This is not necessary but required until this is fixed: https://github.com/mamba-org/boa/issues/232
         - python
     test:
       imports:
         - srf
-      script: test_libsrf.sh
+      script: test_srf.sh
       source_files:
         # Copy the pytest source files
         - python/pytest.ini
@@ -146,7 +146,7 @@ outputs:
         - numpy
         - nvtx
         - pytest
-        - cuml {{ rapids_version }} # Ensure we can install cuml. This can cause issues solving abseil-cpp
+        - cuml {{ rapids_version }}.* # Ensure we can install cuml. This can cause issues solving abseil-cpp
 
 about:
   home: https://www.nvidia.com/
