@@ -16,10 +16,8 @@
 
 set -e
 
-source ${WORKSPACE}/ci/scripts/jenkins/common.sh
+source ${WORKSPACE}/ci/scripts/github/common.sh
 export IWYU_DIR="${WORKSPACE_TMP}/iwyu"
-
-rm -rf ${SRF_ROOT}/.cache/ ${SRF_ROOT}/build/ ${IWYU_DIR}
 
 fetch_base_branch
 
