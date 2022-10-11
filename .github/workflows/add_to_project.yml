@@ -17,4 +17,4 @@ jobs:
       - uses: actions/add-to-project@v0.3.0
         with:
           project-url: https://github.com/orgs/nv-morpheus/projects/2
-          github-token: ${{ secrets.ACTIONS_ACCESS_TOKEN }}
+          github-token: ${{ github.token}}
