@@ -48,9 +48,7 @@ RUN CONDA_ALWAYS_YES=true /opt/conda/bin/mamba env create -n srf -q --file /tmp/
 
 
 # Install IWYU
-RUN conda init bash && \
-    conda activate srf &&\
-    git clone https://github.com/include-what-you-use/include-what-you-use.git /tmp/iwyu &&\
+RUN git clone https://github.com/include-what-you-use/include-what-you-use.git /tmp/iwyu &&\
     cd /tmp/iwyu &&\
     git checkout clang_12 &&\
     cmake -G Ninja \
