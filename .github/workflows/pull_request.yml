@@ -88,7 +88,7 @@ jobs:
 
   test:
     name: Test
-    needs: [check, build]
+    needs: [build]
     runs-on: [self-hosted, linux, amd64, gpu-v100-495-1]
     timeout-minutes: 60
     container:
@@ -117,7 +117,7 @@ jobs:
 
   documentation:
     name: Documentation
-    needs: [check, build]
+    needs: [build]
     runs-on: [self-hosted, linux, amd64, cpu4]
     timeout-minutes: 60
     container:
@@ -138,7 +138,7 @@ jobs:
 
   benchmark:
     name: Benchmark
-    needs: [check, build]
+    needs: [build]
     runs-on: [self-hosted, linux, amd64, cpu4]
     timeout-minutes: 60
     container:
