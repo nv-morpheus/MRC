@@ -181,6 +181,7 @@ jobs:
         with:
           lfs: false
           path: 'srf'
+          fetch-depth: 0
 
       - name: conda
         shell: bash
