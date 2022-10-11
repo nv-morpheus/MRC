@@ -57,5 +57,6 @@ RUN source activate srf &&\
         -DCMAKE_C_COMPILER=$(which clang) \
         -DCMAKE_CXX_COMPILER=$(which clang++) \
         -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX}  . && \
-    cmake --build . --parallel $(nproc) --target install &&
-
+    cmake --build . --parallel $(nproc) --target install && \
+    cd - && \
+    rm -rf /tmp/iwyu
