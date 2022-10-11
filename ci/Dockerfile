@@ -39,7 +39,6 @@ COPY ./conda/environments/clang_env.yml /tmp
 
 RUN CONDA_ALWAYS_YES=true /opt/conda/bin/mamba env create -n srf -q --file /tmp/dev_env.yml && \
     mamba env update -q -n srf --file /tmp/clang_env.yml && \
-    conda init bash && \
     # Clean and activate
     # conda clean -afy && \
     sed -i "s/conda activate base/conda activate srf/g" ~/.bashrc && \
@@ -49,7 +48,8 @@ RUN CONDA_ALWAYS_YES=true /opt/conda/bin/mamba env create -n srf -q --file /tmp/
 
 
 # Install IWYU
-RUN conda activate srf &&\
+RUN conda init bash && \
+    conda activate srf &&\
     git clone https://github.com/include-what-you-use/include-what-you-use.git /tmp/iwyu &&\
     cd /tmp/iwyu &&\
     git checkout clang_12 &&\
