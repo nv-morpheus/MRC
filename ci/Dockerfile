@@ -24,10 +24,12 @@ ARG LINUX_DISTRO=ubuntu
 ARG LINUX_VER=20.04
 ARG PYTHON_VER=3.8
 
-# ============ Stage: base ============
-# Configure the base conda environment
+# Configure the base docker img
 FROM ${FROM_IMAGE}:cuda${CUDA_VER}-${LINUX_DISTRO}${LINUX_VER}-py${PYTHON_VER} AS base
 
+SHELL ["/bin/bash",  "-c"]
+
+# OS deps
 RUN apt-get update &&\
     apt-get install --no-install-recommends -y \
         libnuma1 \
@@ -51,6 +53,7 @@ RUN CONDA_ALWAYS_YES=true /opt/conda/bin/mamba env create -n srf -q --file /tmp/
 RUN git clone https://github.com/include-what-you-use/include-what-you-use.git /tmp/iwyu &&\
     cd /tmp/iwyu &&\
     git checkout clang_12 &&\
+    source activate srf && \
     cmake -G Ninja \
         -DCMAKE_PREFIX_PATH=$(llvm-config --cmakedir) \
         -DCMAKE_C_COMPILER=$(which clang) \
