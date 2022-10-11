@@ -70,6 +70,7 @@ function print_env_vars() {
 }
 
 function update_conda_env() {
+    rapids-logger "Checking for updates to conda env"
     mamba env update -n srf -q --file ${CONDA_ENV_YML}
     conda deactivate
     conda activate srf
