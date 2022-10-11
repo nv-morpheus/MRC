@@ -44,7 +44,7 @@ RUN CONDA_ALWAYS_YES=true /opt/conda/bin/mamba env create -n srf -q --file /tmp/
     # Clean and activate
     # conda clean -afy && \
     sed -i "s/conda activate base/conda activate srf/g" ~/.bashrc && \
-    echo -e '#!/bin/sh\n\nexport CUDA_PATH=/usr/local/cuda\nexport LD_LIBRARY_PATH=/usr/local/cuda/compat:${LD_LIBRARY_PATH}' > /opt/conda/envs/srf/etc/conda/activate.d/env_vars.sh && \
+    echo -e '#!/bin/sh\n\nexport CUDA_PATH=/usr/local/cuda\nexport LD_LIBRARY_PATH=/usr/local/cuda-11.4/compat:${LD_LIBRARY_PATH}' > /opt/conda/envs/srf/etc/conda/activate.d/env_vars.sh && \
     conda clean -afy && \
     rm /tmp/dev_env.yml /tmp/clang_env.yml
 
