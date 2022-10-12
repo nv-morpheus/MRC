@@ -100,7 +100,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        build_type: ["Debug", "Release"]
+        build_cc: ["gcc", "gcc-coverage"]
 
     steps:
       - name: Checkout
@@ -109,10 +109,10 @@ jobs:
           lfs: false
           path: 'srf'
 
-      - name: Test:linux:x86_64:gcc
+      - name: Test:linux:x86_64
         shell: bash
         env:
-          BUILD_TYPE: ${{ matrix.build_type }}
+          BUILD_CC: ${{ matrix.build_cc }}
         run: ./srf/ci/scripts/github/test.sh
 
   documentation:
