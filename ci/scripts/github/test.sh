@@ -76,7 +76,7 @@ if [[ "${BUILD_TYPE}" == "Debug" ]]; then
   cmake --build build --target gcovr-html-report
 
   rapids-logger "Archiving codecov report"
-  tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${SRF_ROOT}/build/gcovr-html-report
+  tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${SRF_ROOT}/build/gcovr-html-report5cd0714
   aws s3 cp ${WORKSPACE_TMP}/coverage_reports.tar.bz "${ARTIFACT_URL}/coverage_reports.tar.bz"
 fi
 
