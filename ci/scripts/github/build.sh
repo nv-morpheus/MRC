@@ -56,21 +56,13 @@ cmake --build build --parallel ${PARALLEL_LEVEL}
 rapids-logger "sccache usage for SRF build:"
 sccache --show-stats
 
-rapids-logger "Installing SRF"
-cmake -P ${SRF_ROOT}/build/cmake_install.cmake
-pip install ${SRF_ROOT}/build/python
-
 rapids-logger "Archiving results"
-mamba pack --quiet --force --ignore-missing-files --n-threads ${PARALLEL_LEVEL} -n srf -o ${WORKSPACE_TMP}/conda_env.tar.gz
-tar cfj "${WORKSPACE_TMP}/cpp_tests.tar.bz" $(find build/ -name "*.x")
-tar cfj "${WORKSPACE_TMP}/dsos.tar.bz" $(find build/ -name "*.so")
-tar cfj "${WORKSPACE_TMP}/python_build.tar.bz" build/python
+tar cfj "${WORKSPACE_TMP}/dot_cache.tar.bz" .cache
+tar cfj "${WORKSPACE_TMP}/build.tar.bz" build
 ls -lh ${WORKSPACE_TMP}/
 
 rapids-logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
-aws s3 cp --no-progress "${WORKSPACE_TMP}/conda_env.tar.gz" "${ARTIFACT_URL}/conda_env.tar.gz"
-aws s3 cp --no-progress "${WORKSPACE_TMP}/cpp_tests.tar.bz" "${ARTIFACT_URL}/cpp_tests.tar.bz"
-aws s3 cp --no-progress "${WORKSPACE_TMP}/dsos.tar.bz" "${ARTIFACT_URL}/dsos.tar.bz"
-aws s3 cp --no-progress "${WORKSPACE_TMP}/python_build.tar.bz" "${ARTIFACT_URL}/python_build.tar.bz"
+aws s3 cp --no-progress "${WORKSPACE_TMP}/build.tar.bz" "${ARTIFACT_URL}/build.tar.bz"
+aws s3 cp --no-progress "${WORKSPACE_TMP}/dot_cache.tar.bz" "${ARTIFACT_URL}/dot_cache.tar.bz"
 
 rapids-logger "Success"

@@ -19,27 +19,33 @@ set -e
 source ${WORKSPACE}/ci/scripts/github/common.sh
 /usr/bin/nvidia-smi
 
-restore_conda_env
+update_conda_env
 
 rapids-logger "Fetching Build artifacts from ${DISPLAY_ARTIFACT_URL}/"
-fetch_s3 "${ARTIFACT_ENDPOINT}/cpp_tests.tar.bz" "${WORKSPACE_TMP}/cpp_tests.tar.bz"
-fetch_s3 "${ARTIFACT_ENDPOINT}/dsos.tar.bz" "${WORKSPACE_TMP}/dsos.tar.bz"
-fetch_s3 "${ARTIFACT_ENDPOINT}/python_build.tar.bz" "${WORKSPACE_TMP}/python_build.tar.bz"
+fetch_s3 "${ARTIFACT_ENDPOINT}/dot_cache.tar.bz" "${WORKSPACE_TMP}/dot_cache.tar.bz"
+fetch_s3 "${ARTIFACT_ENDPOINT}/build.tar.bz" "${WORKSPACE_TMP}/build.tar.bz"
 
-tar xf "${WORKSPACE_TMP}/cpp_tests.tar.bz"
-tar xf "${WORKSPACE_TMP}/dsos.tar.bz"
-tar xf "${WORKSPACE_TMP}/python_build.tar.bz"
+tar xf "${WORKSPACE_TMP}/dot_cache.tar.bz"
+tar xf "${WORKSPACE_TMP}/build.tar.bz"
 
 REPORTS_DIR="${WORKSPACE_TMP}/reports"
 mkdir -p ${WORKSPACE_TMP}/reports
 
-# ctest requires cmake to be configured in order to locate tests
-
-if [[ "${BUILD_TYPE}" == "Debug" ]]; then
-  cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} ${CMAKE_BUILD_WITH_CODECOV} .
+if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
+  CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES} ${CMAKE_BUILD_WITH_CODECOV} ${CMAKE_BUILD_PY_STUBS}"
 else
-  cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} .
+  CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES} ${CMAKE_BUILD_PY_STUBS}"
 fi
+
+cmake -B build -G Ninja ${CMAKE_FLAGS} .
+
+# In theory this should only generate the python stubs
+cmake --build build --parallel ${PARALLEL_LEVEL}
+
+rapids-logger "Installing SRF"
+cmake -P ${SRF_ROOT}/build/cmake_install.cmake
+pip install ${SRF_ROOT}/build/python
+
 
 rapids-logger "Running C++ Tests"
 cd ${SRF_ROOT}/build
