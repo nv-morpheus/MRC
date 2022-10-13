@@ -53,9 +53,6 @@ struct NvmlState
         default:
             if (std::getenv("SRF_IGNORE_NO_GPU") != nullptr)
             {
-                LOG(WARNING)
-                    << "NVML: Access to the NVIDIA GPU driver failed; setting DeviceCount to 0, CUDA will not be "
-                       "initialized";
                 return;
             }
 
