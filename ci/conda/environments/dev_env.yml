@@ -21,13 +21,14 @@ dependencies:
   - glog=0.6
   - gmock=1.10
   - graphviz=3.0
-  - grpc-cpp=1.45
+  - grpc-cpp=1.46
   - gtest=1.10
   - gxx_linux-64=11.2
   - jinja2=3.0
   - lcov=1.15
   - libhwloc=2.5
-  - librmm=22.06
+  - libprotobuf=3.20
+  - librmm=22.08
   - libtool
   - ninja=1.10
   - nlohmann_json=3.9
@@ -41,7 +42,7 @@ dependencies:
   - scikit-build>=0.12
   - spdlog=1.8.5
   - sysroot_linux-64=2.17
-  - ucx=1.12
+  - ucx=1.13
   - pip:
     - cython
     - flake8

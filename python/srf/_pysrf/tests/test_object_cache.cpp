@@ -23,7 +23,15 @@
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
+#include <pybind11/stl.h>  // IWYU pragma: keep
 
+#include <cstddef>  // IWYU pragma: keep
+#include <string>   // IWYU pragma: keep
+
+// IWYU pragma: no_include "gtest/gtest_pred_impl.h"
+// IWYU pragma: no_include <pybind11/detail/common.h>
+// IWYU pragma: no_include "rxcpp/sources/rx-iterate.hpp"
+// IWYU pragma: no_include "rx-includes.hpp"
 #include <cstddef>
 #include <string>
 

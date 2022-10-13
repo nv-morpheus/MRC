@@ -23,6 +23,7 @@
 #include <bytesobject.h>
 #include <glog/logging.h>
 #include <pybind11/cast.h>
+#include <pybind11/detail/common.h>
 #include <pybind11/pybind11.h>  // IWYU pragma: keep
 #include <pybind11/pytypes.h>
 

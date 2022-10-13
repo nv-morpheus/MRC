@@ -16,10 +16,8 @@
 
 set -e
 
-source ${WORKSPACE}/ci/scripts/jenkins/common.sh
+source ${WORKSPACE}/ci/scripts/github/common.sh
 export IWYU_DIR="${WORKSPACE_TMP}/iwyu"
-
-rm -rf ${SRF_ROOT}/.cache/ ${SRF_ROOT}/build/ ${IWYU_DIR}
 
 fetch_base_branch
 
@@ -53,7 +51,7 @@ gpuci_logger "Configuring CMake"
 cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} .
 
 gpuci_logger "Building targets that generate source code"
-cmake --build build --target style_checks --parallel ${PARALLEL_LEVEL}
+cmake --build build --target srf_style_checks --parallel ${PARALLEL_LEVEL}
 
 gpuci_logger "Running C++ style checks"
 ${SRF_ROOT}/ci/scripts/cpp_checks.sh

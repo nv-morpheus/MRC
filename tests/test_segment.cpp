@@ -20,42 +20,67 @@
 #include "srf/benchmarking/trace_statistics.hpp"
 #include "srf/channel/status.hpp"
 #include "srf/core/executor.hpp"
-#include "srf/node/edge_builder.hpp"
+#include "srf/engine/pipeline/ipipeline.hpp"
+#include "srf/manifold/egress.hpp"
 #include "srf/node/operators/broadcast.hpp"
+#include "srf/node/rx_node.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/rx_source.hpp"
+#include "srf/node/source_channel.hpp"
+#include "srf/node/source_properties.hpp"
 #include "srf/options/options.hpp"
 #include "srf/options/topology.hpp"
 #include "srf/pipeline/pipeline.hpp"
-#include "srf/segment/segment.hpp"
-#include "srf/types.hpp"  // for Future, Tags
+#include "srf/segment/builder.hpp"
+#include "srf/segment/definition.hpp"
+#include "srf/segment/ingress_port.hpp"
+#include "srf/segment/object.hpp"
+#include "srf/segment/ports.hpp"
+#include "srf/types.hpp"
 
+#include <cxxabi.h>
 #include <glog/logging.h>
-#include <gtest/gtest.h>
+#include <gtest/gtest-message.h>
+#include <gtest/gtest-test-part.h>
 #include <nlohmann/json.hpp>
-#include <rxcpp/operators/rx-concat_map.hpp>  // for concat_map
-#include <rxcpp/operators/rx-map.hpp>         // for map
-#include <rxcpp/operators/rx-tap.hpp>         // for tap
-#include <rxcpp/rx-includes.hpp>              // for apply, current_exception
-#include <rxcpp/rx-observable.hpp>            // for observable
-#include <rxcpp/rx-observer.hpp>              // for is_on_error<>::not_void, is_on_next_of<>::not_void, observer
-#include <rxcpp/rx-operators.hpp>             // for observable_member
-#include <rxcpp/rx-predef.hpp>                // for trace_activity
-#include <rxcpp/rx-subscriber.hpp>            // for make_subscriber, subscriber
-#include <rxcpp/rx-subscription.hpp>          // for make_subscription
-#include <rxcpp/sources/rx-iterate.hpp>       // for from
+#include <nlohmann/json_fwd.hpp>
+#include <rxcpp/operators/rx-concat_map.hpp>
+#include <rxcpp/operators/rx-map.hpp>
+#include <rxcpp/operators/rx-tap.hpp>
+#include <rxcpp/rx-includes.hpp>
+#include <rxcpp/rx-observable.hpp>
+#include <rxcpp/rx-observer.hpp>
+#include <rxcpp/rx-operators.hpp>
+#include <rxcpp/rx-predef.hpp>
+#include <rxcpp/rx-subscriber.hpp>
 
+#include <algorithm>
 #include <array>
 #include <atomic>
-#include <cstdlib>
-#include <exception>
-#include <iostream>  // for glog macros & cout
+#include <iostream>
 #include <mutex>
-#include <stdexcept>  // for runtime_error, invalid_argument
+#include <set>
 #include <string>
-#include <type_traits>  // for remove_reference<>::type
-#include <utility>      // for move
+#include <type_traits>
+#include <utility>
 #include <vector>
-// IWYU thinks we need map for segment::Definition::create
+
+// IWYU pragma: no_include <boost/fiber/future/detail/shared_state.hpp>
+// IWYU pragma: no_include <boost/fiber/future/detail/task_base.hpp>
+// IWYU pragma: no_include <boost/hana/if.hpp>
+// IWYU pragma: no_include <boost/smart_ptr/detail/operator_bool.hpp>
 // IWYU pragma: no_include <map>
+// IWYU pragma: no_include <pybind11/detail/common.h>
+// IWYU pragma: no_include <pybind11/detail/descr.h>
+// IWYU pragma: no_include "rxcpp/sources/rx-iterate.hpp"
+// IWYU pragma: no_include "rx-includes.hpp"
+// IWYU pragma: no_include "rx-includes.hpp"
+// IWYU pragma: no_include "gtest/gtest_pred_impl.h"
+// IWYU thinks we need map for segment::Definition::create
+
+namespace srf::exceptions {
+struct SrfRuntimeError;
+}  // namespace srf::exceptions
 
 using namespace std::literals::string_literals;
 
@@ -115,6 +140,31 @@ TEST_F(SegmentTests, InitializeSegmentIngressEgressFromDefinition)
     EXPECT_EQ(seg->rank(), 15);
     EXPECT_EQ(seg->is_running(), false);
     */
+}
+
+TEST_F(SegmentTests, PortsConstructorBadNameBuilderSizeMismatch)
+{
+    using port_type_t = segment::Ports<segment::IngressPortBase>;
+
+    std::vector<std::string> port_names{"a", "b", "c"};
+    std::vector<port_type_t::port_builder_fn_t> port_builder_fns{};
+
+    EXPECT_THROW(port_type_t BadPorts(port_names, port_builder_fns), exceptions::SrfRuntimeError);
+}
+
+TEST_F(SegmentTests, PortsConstructorBadDuplicateName)
+{
+    using port_type_t = segment::Ports<segment::IngressPortBase>;
+
+    auto port_builder = [](const SegmentAddress& address,
+                           const PortName& name) -> std::shared_ptr<segment::IngressPortBase> {
+        return std::make_shared<segment::IngressPort<int>>(address, name);
+    };
+
+    std::vector<std::string> port_names{"a", "b", "a"};
+    std::vector<port_type_t::port_builder_fn_t> port_builder_fns{port_builder, port_builder, port_builder};
+
+    EXPECT_THROW(port_type_t BadPorts(port_names, port_builder_fns), exceptions::SrfRuntimeError);
 }
 
 TEST_F(SegmentTests, UserLambdaIsCalled)
@@ -897,8 +947,10 @@ TEST_F(SegmentTests, EnsureMoveConstructor)
 TEST_F(SegmentTests, SegmentTestRxcppHigherLevelNodes)
 {
     std::size_t iterations = 5;
-    setenv("SRF_TRACE_OPERATORS", "1", 1);
-    setenv("SRF_TRACE_CHANNELS", "1", 1);
+    using srf::benchmarking::TraceStatistics;
+    TraceStatistics::trace_channels();
+    TraceStatistics::trace_operators();
+
     auto init = [&iterations](segment::Builder& segment) {
         auto src = segment.make_source<std::string>("src", [&iterations](rxcpp::subscriber<std::string> s) {
             for (auto i = 0; i < iterations; ++i)
@@ -950,32 +1002,32 @@ TEST_F(SegmentTests, SegmentTestRxcppHigherLevelNodes)
         segment.make_edge(internal_2, sink);
     };
 
-    // TraceStatistics::reset();
+    TraceStatistics::reset();
 
     auto segdef   = segment::Definition::create("segment_stats_test", init);
     auto pipeline = pipeline::make_pipeline();
     pipeline->register_segment(segdef);
     execute_pipeline(std::move(pipeline));
 
-    /*
     nlohmann::json j = TraceStatistics::aggregate();
-    EXPECT_EQ(j.contains("src"), true);
+    auto _j          = j["aggregations"]["components"]["metrics"];
+    std::cerr << j.dump(2);
+    EXPECT_EQ(_j.contains("src"), true);
     auto src_json = j["src"];
-    stat_check_helper(src_json, 0, 0, iterations, iterations);
+    // stat_check_helper(src_json, 0, 0, iterations, iterations);
 
-    EXPECT_EQ(j.contains("internal_1"), true);
+    EXPECT_EQ(_j.contains("internal_1"), true);
     auto i1_json = j["internal_1"];
-    stat_check_helper(i1_json, iterations, iterations, iterations, iterations);
+    // stat_check_helper(i1_json, iterations, iterations, iterations, iterations);
 
-    EXPECT_EQ(j.contains("internal_2"), true);
+    EXPECT_EQ(_j.contains("internal_2"), true);
     auto i2_json = j["internal_1"];
-    stat_check_helper(i2_json, iterations, iterations, iterations, iterations);
+    // stat_check_helper(i2_json, iterations, iterations, iterations, iterations);
 
-    EXPECT_EQ(j.contains("sink"), true);
+    EXPECT_EQ(_j.contains("sink"), true);
     auto sink_json = j["sink"];
-    stat_check_helper(sink_json, iterations, iterations, 0, 0);
-    */
-    // TraceStatistics::reset();
+    // stat_check_helper(sink_json, iterations, iterations, 0, 0);
+    TraceStatistics::reset();
 }
 
 TEST_F(SegmentTests, SegmentGetEgressError)

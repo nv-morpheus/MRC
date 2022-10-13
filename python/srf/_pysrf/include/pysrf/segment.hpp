@@ -19,20 +19,18 @@
 
 #include "pysrf/types.hpp"
 
-#include "srf/segment/builder.hpp"
+#include "srf/segment/forward.hpp"
 #include "srf/segment/object.hpp"
 
-// pybind11/functional.h is necessary so calls to wrap_segment_init_callback can use type converter
 #include <pybind11/functional.h>  // IWYU pragma: keep
-#include <pybind11/pybind11.h>    // IWYU pragma: keep
 #include <pybind11/pytypes.h>
+#include <pybind11/stl.h>  // IWYU pragma: keep
 
 #include <cstddef>
 #include <functional>
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
 
 namespace srf::pysrf {
 
@@ -72,33 +70,41 @@ auto wrap_segment_init_callback(void (ClassT::*method)(const std::string&,
 }
 
 /**
- * @brief
- * @tparam ClassT
- * @tparam ArgsT
- * @param method
- * @return
+ * [Overload for segment initialization with additional port name + type information store in pybind11::lists.]
+ *
+ * Relates to https://github.com/pybind/pybind11/issues/1241 -- for a general solution see pydrake's WrapFunction
+ *  method.
+ *
+ * We need to force pybind to pass us a function that expects a srf::segment::Builder* not a srf::segment::Builder&. If
+ * not it'll try to make a copy and srf::segment::Builder isnt' copy-constructable. Once we have that, we wrap it with
+ * our reference based function.
+ *
+ * @tparam ClassT Class where the init method binding is defined.
+ * @tparam ArgsT any additional arguments to pass to the initializer function
+ * @param method method of ClassT that we need to wrap.
+ * @return wrapped ClassT::*method function.
  */
 template <typename ClassT, typename... ArgsT>
 auto wrap_segment_init_callback(
     void (ClassT::*method)(const std::string&,
-                           const std::vector<std::string>&,
-                           const std::vector<std::string>&,
+                           pybind11::list,
+                           pybind11::list,
                            const std::function<void(srf::segment::Builder&, ArgsT... args)>&))
 {
     // Build up the function we're going to return, the signature on this function is what forces python to give us
     //  a pointer.
     auto func = [method](ClassT* self,
                          const std::string& name,
-                         const std::vector<std::string>& ingress_port_ids,
-                         const std::vector<std::string>& egress_port_ids,
+                         pybind11::list ingress_port_ids,
+                         pybind11::list egress_port_ids,
                          const std::function<void(srf::segment::Builder*, ArgsT...)>& f_to_wrap) {
         auto f_wrapped = [f_to_wrap](srf::segment::Builder& t, ArgsT... args) {
             f_to_wrap(&t, std::forward<ArgsT>(args)...);
         };
 
         return (self->*method)(std::forward<const std::string&>(name),
-                               std::forward<const std::vector<std::string>>(ingress_port_ids),
-                               std::forward<const std::vector<std::string>>(egress_port_ids),
+                               std::forward<pybind11::list>(ingress_port_ids),
+                               std::forward<pybind11::list>(egress_port_ids),
                                std::forward<decltype(f_wrapped)>(f_wrapped));
     };
 

@@ -18,35 +18,42 @@
 #pragma once
 
 #include "srf/benchmarking/trace_statistics.hpp"
+#include "srf/core/watcher.hpp"
 #include "srf/engine/segment/ibuilder.hpp"
 #include "srf/exceptions/runtime_error.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/rx_node.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
-#include "srf/node/sink_properties.hpp"
-#include "srf/node/source_properties.hpp"
-#include "srf/runnable/launchable.hpp"
-#include "srf/runnable/runnable.hpp"
-#include "srf/segment/component.hpp"
-#include "srf/segment/egress_port.hpp"
-#include "srf/segment/forward.hpp"
-#include "srf/segment/ingress_port.hpp"
-#include "srf/segment/object.hpp"
-#include "srf/segment/runnable.hpp"
+#include "srf/node/sink_properties.hpp"    // IWYU pragma: keep
+#include "srf/node/source_properties.hpp"  // IWYU pragma: keep
+#include "srf/runnable/context.hpp"
+#include "srf/runnable/launchable.hpp"   // IWYU pragma: keep
+#include "srf/runnable/runnable.hpp"     // IWYU pragma: keep
+#include "srf/segment/component.hpp"     // IWYU pragma: keep
+#include "srf/segment/egress_port.hpp"   // IWYU pragma: keep
+#include "srf/segment/forward.hpp"       // IWYU pragma: keep
+#include "srf/segment/ingress_port.hpp"  // IWYU pragma: keep
+#include "srf/segment/object.hpp"        // IWYU pragma: keep
+#include "srf/segment/runnable.hpp"      // IWYU pragma: keep
 #include "srf/utils/macros.hpp"
 
-#include <boost/hana.hpp>
+#include <boost/hana.hpp>  // IWYU pragma: keep
 #include <glog/logging.h>
-#include <rxcpp/rx-observable.hpp>
-#include <rxcpp/rx-observer.hpp>
+#include <rxcpp/rx.hpp>
 
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <ostream>
 #include <string>
+#include <type_traits>
+#include <typeindex>
 #include <utility>
+
+// IWYU pragma: no_include <boost/hana/fwd/core/when.hpp>
+// IWYU pragma: no_include <boost/hana/fwd/if.hpp>
+// IWYU pragma: no_include <boost/hana/fwd/type.hpp>
 
 namespace {
 namespace hana = boost::hana;
@@ -95,6 +102,9 @@ class Builder final
   public:
     DELETE_COPYABILITY(Builder);
     DELETE_MOVEABILITY(Builder);
+
+    std::shared_ptr<ObjectProperties> get_ingress(std::string name, std::type_index type_index);
+    std::shared_ptr<ObjectProperties> get_egress(std::string name, std::type_index type_index);
 
     template <typename T>
     std::shared_ptr<Object<node::SinkProperties<T>>> get_egress(std::string name);
@@ -261,13 +271,13 @@ std::shared_ptr<Object<node::SinkProperties<T>>> Builder::get_egress(std::string
     auto base = m_backend.get_egress_base(name);
     if (!base)
     {
-        throw exceptions::SrfRuntimeError("egress port name not found: " + name);
+        throw exceptions::SrfRuntimeError("Egress port name not found: " + name);
     }
 
-    auto port = std::dynamic_pointer_cast<EgressPort<T>>(base);
+    auto port = std::dynamic_pointer_cast<Object<node::SinkProperties<T>>>(base);
     if (port == nullptr)
     {
-        throw exceptions::SrfRuntimeError("egress port type mismatch: " + name);
+        throw exceptions::SrfRuntimeError("Egress port type mismatch: " + name);
     }
 
     return port;
@@ -279,13 +289,13 @@ std::shared_ptr<Object<node::SourceProperties<T>>> Builder::get_ingress(std::str
     auto base = m_backend.get_ingress_base(name);
     if (!base)
     {
-        throw exceptions::SrfRuntimeError("ingress port name not found: " + name);
+        throw exceptions::SrfRuntimeError("Ingress port name not found: " + name);
     }
 
-    auto port = std::dynamic_pointer_cast<IngressPort<T>>(base);
+    auto port = std::dynamic_pointer_cast<Object<node::SourceProperties<T>>>(base);
     if (port == nullptr)
     {
-        throw exceptions::SrfRuntimeError("ingress port type mismatch: " + name);
+        throw exceptions::SrfRuntimeError("Ingress port type mismatch: " + name);
     }
 
     return port;
