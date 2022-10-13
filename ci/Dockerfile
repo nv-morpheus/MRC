@@ -33,6 +33,7 @@ SHELL ["/bin/bash",  "-c"]
 RUN apt-get update &&\
     apt-get install --no-install-recommends -y \
         libnuma1 \
+        libnvidia-compute-495 \
     && rm -rf /var/lib/apt/lists/*
 
 # Create conda environment
