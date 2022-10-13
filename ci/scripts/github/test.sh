@@ -31,17 +31,6 @@ tar xf "${WORKSPACE_TMP}/build.tar.bz"
 REPORTS_DIR="${WORKSPACE_TMP}/reports"
 mkdir -p ${WORKSPACE_TMP}/reports
 
-if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
-  CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES} ${CMAKE_BUILD_WITH_CODECOV}"
-else
-  CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES}"
-fi
-
-cmake -B build -G Ninja ${CMAKE_FLAGS} .
-
-# In theory this should only generate the python stubs
-cmake --build build --parallel ${PARALLEL_LEVEL}
-
 rapids-logger "Installing SRF"
 cmake -P ${SRF_ROOT}/build/cmake_install.cmake
 pip install ${SRF_ROOT}/build/python
