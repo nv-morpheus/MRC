@@ -204,9 +204,7 @@ CheckOptions:
     value: ''
   - key: readability-identifier-naming.TypeTemplateParameterCase
     value: CamelCase
-  # workaround for https://github.com/llvm/llvm-project/issues/46097
-  #- key: readability-identifier-naming.TypeTemplateParameterIgnoredRegexp
-  #  value: expr-type
+# adding '|expr-type' is a workaround for https://github.com/llvm/llvm-project/issues/46097
   - key: readability-identifier-naming.TypeTemplateParameterIgnoredRegexp
     value: ^[A-Z_]\w{0,2}$|expr-type
   - key: readability-identifier-naming.TypeTemplateParameterPrefix
