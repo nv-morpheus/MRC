@@ -32,9 +32,12 @@ SHELL ["/bin/bash",  "-c"]
 # OS deps
 RUN apt-get update &&\
     apt-get install --no-install-recommends -y \
+        clang-format-12 \
+        clang-tidy-12 \
+        libclang-12-dev \
         libnuma1 \
         libnvidia-compute-495 \
-        clang-tools-12 clang-format-12 clang-tidy-12 clangd-12 libclang-12-dev llvm-12-dev \
+        llvm-12-dev \
     && rm -rf /var/lib/apt/lists/* &&\
     update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 121 \
         --slave /usr/bin/clang-apply-replacements clang-apply-replacements /usr/bin/clang-apply-replacements-12 \
@@ -43,16 +46,12 @@ RUN apt-get update &&\
         --slave /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-12 \
         --slave /usr/bin/clang-tidy-diff.py clang-tidy-diff.py /usr/bin/clang-tidy-diff-12.py \
         --slave /usr/bin/clang++ clang++ /usr/bin/clang++-12 \
-        --slave /usr/bin/clangd clangd /usr/bin/clangd-12 \
         --slave /usr/bin/git-clang-format git-clang-format /usr/bin/git-clang-format-12
 
 # Create conda environment
 COPY ./conda/environments/dev_env.yml /tmp
-#COPY ./conda/environments/clang_env.yml /tmp
 
 RUN CONDA_ALWAYS_YES=true /opt/conda/bin/mamba env create -n srf -q --file /tmp/dev_env.yml && \
-    # Clean and activate
-    # conda clean -afy && \
     sed -i "s/conda activate base/conda activate srf/g" ~/.bashrc && \
     echo -e '#!/bin/sh\n\nexport CUDA_PATH=/usr/local/cuda\nexport LD_LIBRARY_PATH=/usr/local/cuda-11.4/compat:${LD_LIBRARY_PATH}' > /opt/conda/envs/srf/etc/conda/activate.d/env_vars.sh && \
     conda clean -afy && \
