@@ -25,7 +25,6 @@
 
 #include <array>
 #include <cstddef>
-#include <iostream>
 #include <memory>
 #include <ostream>
 #include <set>
@@ -38,9 +37,7 @@ struct NvmlState
 {
     NvmlState()
     {
-        auto ret = nvmlInit_v2();
-        std::cerr << "************ " << ret << std::endl << std::flush;
-        switch (ret)
+        switch (nvmlInit_v2())
         {
         case NVML_SUCCESS:
             break;
