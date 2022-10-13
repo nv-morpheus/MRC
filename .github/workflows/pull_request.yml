@@ -168,13 +168,10 @@ jobs:
     name: Package
     if: ${{ startsWith(github.ref_name, 'branch-') }}
     needs: [benchmark, documentation, test]
-    runs-on: [self-hosted, linux, amd64, gpu-v100-495-1]
+    runs-on: [self-hosted, linux, amd64, cpu16]
     timeout-minutes: 60
     container:
       image: rapidsai/ci:cuda11.4.1-ubuntu20.04-py3.8
-      env:
-        NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
-        PARALLEL_LEVEL: '10'
     strategy:
       fail-fast: true
 
