@@ -18,8 +18,7 @@ set -e
 
 source ${WORKSPACE}/ci/scripts/github/common.sh
 
-rapids-logger "Creating conda env"
-conda activate srf
+update_conda_env
 
 rapids-logger "Check versions"
 python3 --version

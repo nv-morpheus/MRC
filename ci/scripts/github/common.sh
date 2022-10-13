@@ -115,22 +115,3 @@ function show_conda_info() {
     conda config --show-sources
     conda list --show-channel-urls
 }
-
-function restore_conda_env() {
-
-    rapids-logger "Downloading build artifacts from ${DISPLAY_ARTIFACT_URL}/"
-    fetch_s3 "${ARTIFACT_ENDPOINT}/conda_env.tar.gz" "${WORKSPACE_TMP}/conda_env.tar.gz"
-
-    rapids-logger "Extracting"
-    mkdir -p /opt/conda/envs/srf
-
-    # We are using the --no-same-owner flag since user id & group id's are inconsistent between nodes in our CI pool
-    tar xf "${WORKSPACE_TMP}/conda_env.tar.gz" --no-same-owner --directory /opt/conda/envs/srf
-
-    rapids-logger "Setting conda env"
-    conda activate srf
-    conda-unpack
-
-    show_conda_info
-}
-

@@ -18,13 +18,13 @@ set -e
 
 source ${WORKSPACE}/ci/scripts/github/common.sh
 
-restore_conda_env
+update_conda_env
 
 rapids-logger "Fetching Build artifacts from ${DISPLAY_ARTIFACT_URL}/"
-fetch_s3 "${ARTIFACT_ENDPOINT}/cpp_tests.tar.bz" "${WORKSPACE_TMP}/cpp_tests.tar.bz"
-fetch_s3 "${ARTIFACT_ENDPOINT}/dsos.tar.bz" "${WORKSPACE_TMP}/dsos.tar.bz"
+fetch_s3 "${ARTIFACT_ENDPOINT}/dot_cache.tar.bz" "${WORKSPACE_TMP}/dot_cache.tar.bz"
+fetch_s3 "${ARTIFACT_ENDPOINT}/build.tar.bz" "${WORKSPACE_TMP}/build.tar.bz"
 
-tar xf "${WORKSPACE_TMP}/cpp_tests.tar.bz"
-tar xf "${WORKSPACE_TMP}/dsos.tar.bz"
+tar xf "${WORKSPACE_TMP}/dot_cache.tar.bz"
+tar xf "${WORKSPACE_TMP}/build.tar.bz"
 
 mkdir -p ${WORKSPACE_TMP}/reports

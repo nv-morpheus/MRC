@@ -59,13 +59,13 @@ pytest -v --junit-xml=${WORKSPACE_TMP}/report_pytest.xml
 PYTEST_RESULTS=$?
 set -e
 
-if [[ "${BUILD_TYPE}" == "Debug" ]]; then
+if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
   rapids-logger "Generating codecov report"
   cd ${SRF_ROOT}
   cmake --build build --target gcovr-html-report
 
   rapids-logger "Archiving codecov report"
-  tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${SRF_ROOT}/build/gcovr-html-report5cd0714
+  tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${SRF_ROOT}/build/gcovr-html-report
   aws s3 cp ${WORKSPACE_TMP}/coverage_reports.tar.bz "${ARTIFACT_URL}/coverage_reports.tar.bz"
 fi
 

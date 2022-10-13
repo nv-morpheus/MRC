@@ -20,8 +20,6 @@ source ${WORKSPACE}/ci/scripts/github/common.sh
 
 REPORTS_DIR="${WORKSPACE_TMP}/reports"
 
-conda activate srf
-
 BENCHMARKS=($(find ${SRF_ROOT}/build/benchmarks -name "*.x"))
 
 rapids-logger "Running Benchmarks..."
