@@ -25,6 +25,7 @@
 
 #include <array>
 #include <cstddef>
+#include <cstdlib>
 #include <memory>
 #include <ostream>
 #include <set>
@@ -50,6 +51,14 @@ struct NvmlState
                             "initialized";
             return;
         default:
+            if (std::getenv("SRF_IGNORE_NO_GPU") != nullptr)
+            {
+                LOG(WARNING)
+                    << "NVML: Access to the NVIDIA GPU driver failed; setting DeviceCount to 0, CUDA will not be "
+                       "initialized";
+                return;
+            }
+
             LOG(FATAL) << "NVML_ERROR_UNKNOWN: is a hard fail";
         }
 
