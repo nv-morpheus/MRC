@@ -21,7 +21,7 @@ dependencies:
   - glog=0.6
   - gmock=1.10
   - graphviz=3.0
-  - grpc-cpp=1.45
+  - grpc-cpp=1.46
   - gtest=1.10
   - gxx_linux-64=9.4
   - jinja2=3.0
@@ -42,7 +42,7 @@ dependencies:
   - scikit-build>=0.12
   - spdlog=1.8.5
   - sysroot_linux-64=2.17
-  - ucx=1.12
+  - ucx=1.13
   - pip:
     - cython
     - flake8

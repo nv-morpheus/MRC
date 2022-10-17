@@ -40,7 +40,7 @@ RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/
 RUN conda config --set ssl_verify false &&\
     conda config --add pkgs_dirs /opt/conda/pkgs &&\
     conda config --env --add channels conda-forge &&\
-    /opt/conda/bin/conda install -y -n base -c conda-forge "mamba >=0.22" "boa >=0.10" python=${PYTHON_VER}
+    /opt/conda/bin/conda install -y -n base -c conda-forge "mamba >=0.22" "boa >=0.12" python=${PYTHON_VER}
     # conda clean -afy
 
 # All code will be under /work

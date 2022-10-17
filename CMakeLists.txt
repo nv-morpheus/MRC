@@ -58,7 +58,7 @@ endif()
 rapids_cuda_init_architectures(srf)
 
 project(srf
-  VERSION 22.09.00
+  VERSION 22.11.00
   LANGUAGES C CXX
 )
 
