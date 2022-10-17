@@ -40,8 +40,8 @@ struct NvmlState
         auto nvml_status = nvmlInit_v2();
         if (nvml_status != NVML_SUCCESS)
         {
-            LOG(WARNING) << "NVML: Error initializing due to " << nvmlErrorString(nvml_status)
-                         << "setting DeviceCount to 0, CUDA will not be initialized";
+            LOG(WARNING) << "NVML: Error initializing due to '" << nvmlErrorString(nvml_status)
+                         << "'. Setting DeviceCount to 0, CUDA will not be initialized";
             return;
         }
 
