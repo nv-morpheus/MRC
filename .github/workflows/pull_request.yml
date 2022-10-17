@@ -84,7 +84,6 @@ jobs:
         shell: bash
         env:
           BUILD_CC: ${{ matrix.build_cc }}
-          SRF_IGNORE_NO_GPU: 1
         run: ./srf/ci/scripts/github/build.sh
 
   test:
