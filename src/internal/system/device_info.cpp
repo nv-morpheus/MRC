@@ -25,7 +25,6 @@
 
 #include <array>
 #include <cstddef>
-#include <cstdlib>
 #include <memory>
 #include <ostream>
 #include <set>
