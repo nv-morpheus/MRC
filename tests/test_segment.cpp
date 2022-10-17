@@ -1011,7 +1011,7 @@ TEST_F(SegmentTests, SegmentTestRxcppHigherLevelNodes)
 
     nlohmann::json j = TraceStatistics::aggregate();
     auto _j          = j["aggregations"]["components"]["metrics"];
-    std::cerr << j.dump(2);
+    // std::cerr << j.dump(2);
     EXPECT_EQ(_j.contains("src"), true);
     auto src_json = j["src"];
     // stat_check_helper(src_json, 0, 0, iterations, iterations);

@@ -16,10 +16,10 @@
  */
 
 #include "test_segment.hpp"
+#include "test_modules.hpp"
 
 #include "srf/core/executor.hpp"
 #include "srf/engine/pipeline/ipipeline.hpp"
-#include "srf/experimental/modules/my_modules.hpp"
 #include "srf/options/options.hpp"
 #include "srf/segment/builder.hpp"
 
@@ -33,12 +33,39 @@
 #include <utility>
 #include <vector>
 
+
+TEST_F(SegmentTests, InitModuleTest) {
+    using namespace modules;
+
+    auto config_1 = nlohmann::json();
+    auto config_2 = nlohmann::json();
+    config_2["config_key_1"] = true;
+
+    auto mod1 = SimpleModule("module_1");
+    auto mod2 = ConfigurableModule("module_2");
+    auto mod3 = ConfigurableModule("module_3", config_1);
+    auto mod4 = ConfigurableModule("module_4", config_2);
+
+    auto mymod_inputs = mod1.input_ids();
+
+    ASSERT_EQ(mymod_inputs.size(), 2);
+
+    auto othermod_inputs = mod2.input_ids();
+    auto othermod_outputs = mod2.output_ids();
+
+    ASSERT_EQ(othermod_inputs.size(), 1);
+    ASSERT_EQ(othermod_outputs.size(), 1);
+
+    ASSERT_EQ(mod3.m_was_configured, false);
+    ASSERT_EQ(mod4.m_was_configured, true);
+}
+
 TEST_F(SegmentTests, BasicModuleTest)
 {
     using namespace modules;
     auto init_wrapper = [](segment::Builder& builder) {
-        auto my_mod = builder.make_module<MyModule>("Module1");
-        auto my_mod_other = builder.make_module<MyOtherModule>("Module2");
+        auto my_mod = builder.make_module<SimpleModule>("Module1");
+        auto my_mod_other = builder.make_module<ConfigurableModule>("Module2");
 
         auto source1 = builder.make_source<bool>("src1", [](rxcpp::subscriber<bool>& sub) {
             if (sub.is_subscribed())
@@ -82,6 +109,7 @@ TEST_F(SegmentTests, BasicModuleTest)
         auto sink2 = builder.make_sink<std::string>("sink2", [](std::string input){
           std::cout << "Sinking " << input << std::endl;
         });
+
         builder.make_edge(my_mod.output_ports("output2"), sink2);
     };
 

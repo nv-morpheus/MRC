@@ -17,26 +17,27 @@
 
 #pragma once
 
-#include "segment_modules.hpp"
-
+#include "srf/experimental/modules/segment_modules.hpp"
 #include "srf/segment/builder.hpp"
-
 
 namespace srf::modules {
 
-class MyModule : public SegmentModule
+class SimpleModule : public SegmentModule
 {
   public:
-    MyModule(std::string module_name);
+    SimpleModule(std::string module_name);
+    SimpleModule(std::string module_name, const nlohmann::json& config);
 
-    const std::vector<std::string> inputs() const override;
-    const std::vector<std::string> outputs() const override;
+    const std::vector<std::string> input_ids() const override;
+    const std::vector<std::string> output_ids() const override;
 
     segment_module_port_map_t input_ports() override;
     SegmentModulePortT input_ports(const std::string& input_name) override;
 
     segment_module_port_map_t output_ports() override;
     SegmentModulePortT output_ports(const std::string& output_name) override;
+
+    void process_config(const nlohmann::json& config) override{};
 
     void initialize(segment::Builder& builder) override;
 
@@ -50,26 +51,31 @@ class MyModule : public SegmentModule
     segment_module_port_map_t m_output_ports{};
 };
 
-MyModule::MyModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
+SimpleModule::SimpleModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
 
-const std::vector<std::string> MyModule::inputs() const
+SimpleModule::SimpleModule(std::string module_name, const nlohmann::json& config) :
+  SegmentModule(std::move(module_name), config)
+{}
+
+const std::vector<std::string> SimpleModule::input_ids() const
 {
     return m_inputs;
 }
 
-const std::vector<std::string> MyModule::outputs() const
+const std::vector<std::string> SimpleModule::output_ids() const
 {
     return m_outputs;
 }
 
-SegmentModule::segment_module_port_map_t MyModule::input_ports()
+SegmentModule::segment_module_port_map_t SimpleModule::input_ports()
 {
     return segment_module_port_map_t{};
 }
 
-SegmentModule::SegmentModulePortT MyModule::input_ports(const std::string& input_name)
+SegmentModule::SegmentModulePortT SimpleModule::input_ports(const std::string& input_name)
 {
-    if (m_input_ports.find(input_name) != m_input_ports.end()){
+    if (m_input_ports.find(input_name) != m_input_ports.end())
+    {
         return m_input_ports[input_name];
     }
 
@@ -80,14 +86,15 @@ SegmentModule::SegmentModulePortT MyModule::input_ports(const std::string& input
     throw std::invalid_argument(sstream.str());
 }
 
-SegmentModule::segment_module_port_map_t MyModule::output_ports()
+SegmentModule::segment_module_port_map_t SimpleModule::output_ports()
 {
     return m_output_ports;
 }
 
-SegmentModule::SegmentModulePortT MyModule::output_ports(const std::string& output_name)
+SegmentModule::SegmentModulePortT SimpleModule::output_ports(const std::string& output_name)
 {
-    if (m_output_ports.find(output_name) != m_input_ports.end()){
+    if (m_output_ports.find(output_name) != m_input_ports.end())
+    {
         return m_output_ports[output_name];
     }
 
@@ -98,7 +105,7 @@ SegmentModule::SegmentModulePortT MyModule::output_ports(const std::string& outp
     throw std::invalid_argument(sstream.str());
 }
 
-void MyModule::initialize(segment::Builder& builder)
+void SimpleModule::initialize(segment::Builder& builder)
 {
     std::cout << "MyModule::operator() called for '" << this->name() << "'" << std::endl;
 
@@ -153,13 +160,14 @@ void MyModule::initialize(segment::Builder& builder)
     m_output_ports["output2"] = output2;
 }
 
-class MyOtherModule : public SegmentModule
+class ConfigurableModule : public SegmentModule
 {
   public:
-    MyOtherModule(const std::string& module_name);
+    ConfigurableModule(std::string module_name);
+    ConfigurableModule(std::string module_name, const nlohmann::json& config);
 
-    const std::vector<std::string> inputs() const override;
-    const std::vector<std::string> outputs() const override;
+    const std::vector<std::string> input_ids() const override;
+    const std::vector<std::string> output_ids() const override;
 
     segment_module_port_map_t input_ports() override;
     SegmentModulePortT input_ports(const std::string& input_name) override;
@@ -167,9 +175,13 @@ class MyOtherModule : public SegmentModule
     segment_module_port_map_t output_ports() override;
     SegmentModulePortT output_ports(const std::string& output_name) override;
 
+    void process_config(const nlohmann::json& config) override;
     void initialize(segment::Builder& builder) override;
 
+    bool m_was_configured{false};
+
   private:
+
     std::vector<std::string> m_inputs{"other_input_a"};
     std::vector<std::string> m_outputs{"other_output_x"};
 
@@ -177,26 +189,32 @@ class MyOtherModule : public SegmentModule
     segment_module_port_map_t m_output_ports{};
 };
 
-MyOtherModule::MyOtherModule(const std::string& module_name) : SegmentModule(module_name) {}
+ConfigurableModule::ConfigurableModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
+ConfigurableModule::ConfigurableModule(std::string module_name, const nlohmann::json& config) :
+  SegmentModule(std::move(module_name), config)
+{
+    process_config(config);
+}
 
-const std::vector<std::string> MyOtherModule::inputs() const
+const std::vector<std::string> ConfigurableModule::input_ids() const
 {
     return m_inputs;
 }
 
-const std::vector<std::string> MyOtherModule::outputs() const
+const std::vector<std::string> ConfigurableModule::output_ids() const
 {
     return m_outputs;
 }
 
-SegmentModule::segment_module_port_map_t MyOtherModule::input_ports()
+SegmentModule::segment_module_port_map_t ConfigurableModule::input_ports()
 {
     return m_input_ports;
 }
 
-SegmentModule::SegmentModulePortT MyOtherModule::input_ports(const std::string& input_name)
+SegmentModule::SegmentModulePortT ConfigurableModule::input_ports(const std::string& input_name)
 {
-    if (m_input_ports.find(input_name) != m_input_ports.end()){
+    if (m_input_ports.find(input_name) != m_input_ports.end())
+    {
         return m_input_ports[input_name];
     }
 
@@ -207,14 +225,15 @@ SegmentModule::SegmentModulePortT MyOtherModule::input_ports(const std::string& 
     throw std::invalid_argument(sstream.str());
 }
 
-SegmentModule::segment_module_port_map_t MyOtherModule::output_ports()
+SegmentModule::segment_module_port_map_t ConfigurableModule::output_ports()
 {
     return m_output_ports;
 }
 
-SegmentModule::SegmentModulePortT MyOtherModule::output_ports(const std::string& output_name)
+SegmentModule::SegmentModulePortT ConfigurableModule::output_ports(const std::string& output_name)
 {
-    if (m_output_ports.find(output_name) != m_input_ports.end()){
+    if (m_output_ports.find(output_name) != m_input_ports.end())
+    {
         return m_output_ports[output_name];
     }
 
@@ -225,9 +244,17 @@ SegmentModule::SegmentModulePortT MyOtherModule::output_ports(const std::string&
     throw std::invalid_argument(sstream.str());
 }
 
-void MyOtherModule::initialize(segment::Builder& builder)
+void ConfigurableModule::process_config(const nlohmann::json& config)
+{
+    if (config.contains("config_key_1"))
+    {
+        m_was_configured = true;
+    }
+}
+
+void ConfigurableModule::initialize(segment::Builder& builder)
 {
     std::cout << "MyModule::operator() called for '" << this->name() << "'" << std::endl;
 }
 
-}
+}  // namespace srf::modules

@@ -32,17 +32,6 @@ class Builder;
 
 namespace srf::modules {
 
-class SegmentModulePort {
-  public:
-    template<typename AsTypeT>
-    AsTypeT as() {
-        return m_port_object->sink_typed<AsTypeT>;
-    }
-
-  private:
-    std::shared_ptr<segment::ObjectProperties> m_port_object;
-};
-
 class SegmentModule
 {
   public:
@@ -53,6 +42,7 @@ class SegmentModule
 
     SegmentModule() = delete;
     SegmentModule(std::string module_name);
+    SegmentModule(std::string module_name, const nlohmann::json& config);
 
     const std::string& name() const;
     const std::string& component_prefix() const;
@@ -61,11 +51,11 @@ class SegmentModule
      * Retrieve vector of input names -- these are only understood by the SegmentModule,
      * @return
      */
-    virtual const std::vector<std::string> inputs() const  = 0;
-    virtual const std::vector<std::string> outputs() const = 0;
+    virtual const std::vector<std::string> input_ids() const  = 0;
+    virtual const std::vector<std::string> output_ids() const = 0;
 
     /**
-     * Return a set of ObjectProperties for module inputs
+     * Return a set of ObjectProperties for module input_ids
      * @return
      */
     virtual segment_module_port_map_t input_ports() = 0;
@@ -80,12 +70,19 @@ class SegmentModule
 
     /**
      *
+     * Entrypoint for module constructor during build
      * @param builder
      */
     virtual void initialize(segment::Builder& builder) = 0;
 
     /**
-     * Entrypoint for module constructor during build -- this lets us act like a std::function
+     * Allow for customized module initialization with configuration file
+     * @param config
+     */
+    virtual void process_config(const nlohmann::json& config) = 0;
+
+    /**
+     * Functional entrypoint for module constructor during build -- this lets us act like a std::function
      * @param builder
      */
     void operator()(segment::Builder& builder)

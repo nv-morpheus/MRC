@@ -27,6 +27,14 @@ SegmentModule::SegmentModule(std::string module_name) : m_module_name(std::move(
     m_component_prefix = sstream.str();
 }
 
+SegmentModule::SegmentModule(std::string module_name, const nlohmann::json& config)
+{
+    std::stringstream sstream;
+
+    sstream << "segment_module/" << m_module_name << "/";
+    m_component_prefix = sstream.str();
+}
+
 const std::string& SegmentModule::name() const
 {
     return m_module_name;
