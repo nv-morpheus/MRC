@@ -21,6 +21,7 @@
 
 #include <map>
 #include <string>
+#include <typeinfo>
 #include <utility>
 #include <vector>
 
@@ -37,8 +38,9 @@ class SegmentModule
   public:
     friend segment::Builder;
 
-    using SegmentModulePortT        = std::shared_ptr<segment::ObjectProperties>;
-    using segment_module_port_map_t = std::map<std::string, std::shared_ptr<segment::ObjectProperties>>;
+    using segment_module_port_map_t     = std::map<std::string, std::shared_ptr<segment::ObjectProperties>>;
+    using segment_module_port_t         = std::shared_ptr<segment::ObjectProperties>;
+    using segment_module_typeinfo_map_t = std::map<std::string, const std::type_info*>;
 
     SegmentModule() = delete;
     SegmentModule(std::string module_name);
@@ -51,32 +53,67 @@ class SegmentModule
     std::string get_module_component_name(const std::string& component_name) const;
 
     /**
-     * Retrieve vector of input names -- these are only understood by the SegmentModule,
-     * @return
+     * Return vector of input names -- these are only understood by the SegmentModule
+     * @return std::vector
      */
-    virtual std::vector<std::string> input_ids() const  = 0;
-    virtual std::vector<std::string> output_ids() const = 0;
+    const std::vector<std::string> input_ids() const;
+
+    /**
+     * Return a vector of output names -- these are only understood by the SegmentModule class
+     * @return std::vector
+     */
+    const std::vector<std::string> output_ids() const;
 
     /**
      * Return a set of ObjectProperties for module input_ids
-     * @return
+     * @return ObjectProperties
      */
-    virtual segment_module_port_map_t input_ports() = 0;
-    virtual SegmentModulePortT input_ports(const std::string& input_name) = 0;
+    const segment_module_port_map_t input_ports() const;
 
     /**
-     *
-     * @return
+     * Return the ObjectProperties object corresponding to input_name
+     * @param input_name Name of the module port
+     * @return ObjectProperties
      */
-    virtual segment_module_port_map_t output_ports() = 0;
-    virtual SegmentModulePortT output_ports(const std::string& output_name) = 0;
+    segment_module_port_t input_port(const std::string& input_name);
 
     /**
-     *
-     * Entrypoint for module constructor during build
-     * @param builder
+     * Return a map of module port id : type indices
+     * @return std::map
      */
-    virtual void initialize(segment::Builder& builder) = 0;
+    const std::map<std::string, const std::type_info*> input_port_type_ids() const;
+
+    /**
+     * Return the type index of a given input name
+     * @return Type index
+     */
+    const std::type_info* input_port_type_id(const std::string& input_name);
+
+    /**
+     * Return a set of ObjectProperties for module input_ids
+     * @return ObjectProperties
+     */
+    const segment_module_port_map_t output_ports() const;
+
+    /**
+     * Return an ObjectProperties for the module port corresponding to output name
+     * @param output_name Name of the module port to return
+     * @return ObjectProperties
+     */
+    segment_module_port_t output_port(const std::string& output_name);
+
+    /**
+     * Return a map of module port id : type indices
+     * @return std::map
+     */
+    const segment_module_typeinfo_map_t output_port_type_ids() const;
+
+    /**
+     * Return the type index of a given input name
+     * @param input_name Name of the module port to return a type index for
+     * @return Type index
+     */
+    const std::type_info* output_port_type_id(const std::string& output_name);
 
     /**
      * Functional entrypoint for module constructor during build -- this lets us act like a std::function
@@ -87,12 +124,50 @@ class SegmentModule
         this->initialize(builder);
     };
 
+    /* Virtual Functions */
+    /**
+     * Entrypoint for module constructor during build
+     * @param builder
+     */
+    virtual void initialize(segment::Builder& builder) = 0;
+
+  protected:
+    // Derived class interface functions
+
+    /**
+     * Register an input port that should be exposed for the module
+     * @param input_name Port name
+     * @param object ObjectProperties object associated with the port
+     * @param tinfo type_info pointer for the data type expected by the input
+     */
+    void register_input_port(std::string input_name,
+                             std::shared_ptr<segment::ObjectProperties> object,
+                             const std::type_info* tinfo);
+
+    /**
+     * Register an output port that should be exposed for the module
+     * @param input_name Port name
+     * @param object ObjectProperties object assocaited with the port
+     * @param tinfo type_info pointer for the date type emitted by the output
+     */
+    void register_output_port(std::string input_name,
+                              std::shared_ptr<segment::ObjectProperties> object,
+                              const std::type_info* tinfo);
+
   private:
     std::string m_module_name;
     std::string m_component_prefix;
 
+    std::vector<std::string> m_input_port_ids{};
+    std::vector<std::string> m_output_port_ids{};
+
+    segment_module_typeinfo_map_t m_input_port_type_indices{};
+    segment_module_typeinfo_map_t m_output_port_type_indices{};
+
+    segment_module_port_map_t m_input_ports{};
+    segment_module_port_map_t m_output_ports{};
+
     const nlohmann::json m_config;
 };
-
 
 }  // namespace srf::modules

@@ -33,7 +33,7 @@
 #include <utility>
 #include <vector>
 
-TEST_F(SegmentTests, InitModuleTest)
+TEST_F(SegmentTests, ModuleConstructorTest)
 {
     using namespace modules;
 
@@ -46,20 +46,50 @@ TEST_F(SegmentTests, InitModuleTest)
     auto mod3 = ConfigurableModule("InitModuleTest_3", config_1);
     auto mod4 = ConfigurableModule("InitModuleTest_4", config_2);
 
-    auto mod1_inputs = mod1.input_ids();
-
-    ASSERT_EQ(mod1_inputs.size(), 2);
-
-    auto mod2_inputs  = mod2.input_ids();
-    auto mod2_outputs = mod2.output_ids();
-
-    ASSERT_EQ(mod2_inputs.size(), 1);
-    ASSERT_EQ(mod2_outputs.size(), 1);
-
     ASSERT_EQ(mod4.config().contains("config_key_1"), true);
 }
 
-TEST_F(SegmentTests, EndToEndTest)
+TEST_F(SegmentTests, ModuleInitializationTest)
+{
+    using namespace modules;
+
+    auto init_wrapper = [](segment::Builder& builder) {
+        auto config_1            = nlohmann::json();
+        auto config_2            = nlohmann::json();
+        config_2["config_key_1"] = true;
+
+        auto simple_mod          = builder.make_module<SimpleModule>("ModuleInitializationTest_mod1");
+        auto configurable_mod_1  = builder.make_module<ConfigurableModule>("ModuleInitializationTest_mod2", config_1);
+        auto configurable_mod_2  = builder.make_module<ConfigurableModule>("ModuleInitializationTest_mod3", config_2);
+        auto configurable_mod_3  = ConfigurableModule("ModuleInitializationTest_mod4", config_2);
+
+        configurable_mod_3(builder);
+
+        EXPECT_EQ(simple_mod.input_ports().size(), 2);
+        EXPECT_EQ(simple_mod.output_ports().size(), 2);
+
+        EXPECT_EQ(configurable_mod_1.input_ports().size(), 1);
+        EXPECT_EQ(configurable_mod_1.output_ports().size(), 1);
+        EXPECT_EQ(configurable_mod_1.m_was_configured, false);
+
+        EXPECT_EQ(configurable_mod_2.input_ports().size(), 1);
+        EXPECT_EQ(configurable_mod_2.output_ports().size(), 1);
+        EXPECT_EQ(configurable_mod_2.m_was_configured, true);
+    };
+
+    m_pipeline->make_segment("SimpleModule_Segment", init_wrapper);
+
+    auto options = std::make_shared<Options>();
+    options->topology().user_cpuset("0-1");
+    options->topology().restrict_gpus(true);
+
+    Executor executor(options);
+    executor.register_pipeline(std::move(m_pipeline));
+    executor.stop();
+    executor.join();
+}
+
+TEST_F(SegmentTests, ModuleEndToEndTest)
 {
     using namespace modules;
     unsigned int packets_1{0};
@@ -67,8 +97,8 @@ TEST_F(SegmentTests, EndToEndTest)
     unsigned int packets_3{0};
 
     auto init_wrapper = [&packets_1, &packets_2, &packets_3](segment::Builder& builder) {
-        auto simple_mod       = builder.make_module<SimpleModule>("EndToEndTest_mod1");
-        auto configurable_mod = builder.make_module<ConfigurableModule>("EndToEndTest_mod2");
+        auto simple_mod       = builder.make_module<SimpleModule>("ModuleEndToEndTest_mod1");
+        auto configurable_mod = builder.make_module<ConfigurableModule>("ModuleEndToEndTest_mod2");
 
         auto source1 = builder.make_source<bool>("src1", [](rxcpp::subscriber<bool>& sub) {
             if (sub.is_subscribed())
@@ -83,7 +113,7 @@ TEST_F(SegmentTests, EndToEndTest)
         });
 
         // Ex1. Partially dynamic edge construction
-        builder.make_edge(source1, simple_mod.input_ports("input1"));
+        builder.make_edge(source1, simple_mod.input_port("input1"));
 
         auto source2 = builder.make_source<bool>("src2", [](rxcpp::subscriber<bool>& sub) {
             if (sub.is_subscribed())
@@ -100,21 +130,21 @@ TEST_F(SegmentTests, EndToEndTest)
         });
 
         // Ex2. Dynamic edge construction -- requires type specification
-        builder.make_dynamic_edge<bool, bool>(source2, simple_mod.input_ports("input2"));
+        builder.make_dynamic_edge<bool, bool>(source2, simple_mod.input_port("input2"));
 
         auto sink1 = builder.make_sink<std::string>("sink1", [&packets_1](std::string input) {
             packets_1++;
             VLOG(10) << "Sinking " << input << std::endl;
         });
 
-        builder.make_edge(simple_mod.output_ports("output1"), sink1);
+        builder.make_edge(simple_mod.output_port("output1"), sink1);
 
         auto sink2 = builder.make_sink<std::string>("sink2", [&packets_2](std::string input) {
             packets_2++;
             VLOG(10) << "Sinking " << input << std::endl;
         });
 
-        builder.make_edge(simple_mod.output_ports("output2"), sink2);
+        builder.make_edge(simple_mod.output_port("output2"), sink2);
 
         auto source3 = builder.make_source<bool>("src3", [](rxcpp::subscriber<bool>& sub) {
             if (sub.is_subscribed())
@@ -128,14 +158,14 @@ TEST_F(SegmentTests, EndToEndTest)
             sub.on_completed();
         });
 
-        builder.make_edge(source3, configurable_mod.input_ports("configurable_input_a"));
+        builder.make_edge(source3, configurable_mod.input_port("configurable_input_a"));
 
         auto sink3 = builder.make_sink<std::string>("sink3", [&packets_3](std::string input) {
             packets_3++;
             VLOG(10) << "Sinking " << input << std::endl;
         });
 
-        builder.make_edge(configurable_mod.output_ports("configurable_output_x"), sink3);
+        builder.make_edge(configurable_mod.output_port("configurable_output_x"), sink3);
     };
 
     m_pipeline->make_segment("SimpleModule_Segment", init_wrapper);
