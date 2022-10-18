@@ -159,4 +159,119 @@ void ConfigurableModule::initialize(segment::Builder& builder)
     m_initialized = true;
 }
 
+class SourceModule : public SegmentModule {
+  public:
+    SourceModule(std::string module_name);
+    SourceModule(std::string module_name, nlohmann::json config);
+
+    void initialize(segment::Builder& builder) override;
+
+    bool m_was_configured{false};
+
+  private:
+    bool m_initialized;
+};
+
+SourceModule::SourceModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
+SourceModule::SourceModule(std::string module_name, nlohmann::json config) :
+  SegmentModule(std::move(module_name), std::move(config))
+{}
+
+void SourceModule::initialize(segment::Builder& builder)
+{
+    unsigned int count{1};
+
+    if (config().contains("source_count")) {
+        count = config()["source_count"];
+    }
+
+    auto source = builder.make_source<bool>("source", [count](rxcpp::subscriber<bool>& sub) {
+      if (sub.is_subscribed())
+      {
+          for (unsigned int i = 0; i < count; ++i)
+          {
+              sub.on_next(true);
+          }
+      }
+
+      sub.on_completed();
+    });
+
+    // Register the submodules output as one of this module's outputs
+    register_output_port("source", source, &typeid(bool));
+}
+
+class SinkModule : public SegmentModule {
+  public:
+    SinkModule(std::string module_name);
+    SinkModule(std::string module_name, nlohmann::json config);
+
+    void initialize(segment::Builder& builder) override;
+
+    bool m_was_configured{false};
+    unsigned int m_packet_count{0};
+
+  private:
+    bool m_initialized;
+};
+
+SinkModule::SinkModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
+SinkModule::SinkModule(std::string module_name, nlohmann::json config) :
+  SegmentModule(std::move(module_name), std::move(config))
+{}
+
+void SinkModule::initialize(segment::Builder& builder)
+{
+    auto sink = builder.make_sink<bool>("sink", [this](bool input) {
+        m_packet_count++;
+        VLOG(10) << "Sinking " << input << std::endl;
+    });
+
+    // Register the submodules output as one of this module's outputs
+    register_input_port("sink", sink, &typeid(bool));
+}
+
+class NestedModule : public SegmentModule {
+  public:
+    NestedModule(std::string module_name);
+    NestedModule(std::string module_name, nlohmann::json config);
+
+    void initialize(segment::Builder& builder) override;
+
+    bool m_was_configured{false};
+
+  private:
+    bool m_initialized;
+};
+
+NestedModule::NestedModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
+NestedModule::NestedModule(std::string module_name, nlohmann::json config) :
+  SegmentModule(std::move(module_name), std::move(config))
+{}
+
+void NestedModule::initialize(segment::Builder& builder)
+{
+    auto configurable_mod = builder.make_module<ConfigurableModule>(get_module_component_name("NestedModule_submod2"));
+
+    // Create a data source and attach it to our submodule
+    auto source1 = builder.make_source<bool>("src1", [](rxcpp::subscriber<bool>& sub) {
+        if (sub.is_subscribed())
+        {
+            sub.on_next(true);
+            sub.on_next(false);
+            sub.on_next(true);
+            sub.on_next(true);
+        }
+
+        sub.on_completed();
+    });
+
+    builder.make_edge(source1, configurable_mod.input_port("configurable_input_a"));
+
+    // Register the submodules output as one of this module's outputs
+    register_output_port("nested_module_output", configurable_mod.output_port("configurable_output_x"),
+                         configurable_mod.output_port_type_id("configurable_output_x"));
+}
+
+
 }  // namespace srf::modules

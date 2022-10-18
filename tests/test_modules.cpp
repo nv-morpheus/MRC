@@ -58,10 +58,10 @@ TEST_F(SegmentTests, ModuleInitializationTest)
         auto config_2            = nlohmann::json();
         config_2["config_key_1"] = true;
 
-        auto simple_mod          = builder.make_module<SimpleModule>("ModuleInitializationTest_mod1");
-        auto configurable_mod_1  = builder.make_module<ConfigurableModule>("ModuleInitializationTest_mod2", config_1);
-        auto configurable_mod_2  = builder.make_module<ConfigurableModule>("ModuleInitializationTest_mod3", config_2);
-        auto configurable_mod_3  = ConfigurableModule("ModuleInitializationTest_mod4", config_2);
+        auto simple_mod         = builder.make_module<SimpleModule>("ModuleInitializationTest_mod1");
+        auto configurable_mod_1 = builder.make_module<ConfigurableModule>("ModuleInitializationTest_mod2", config_1);
+        auto configurable_mod_2 = builder.make_module<ConfigurableModule>("ModuleInitializationTest_mod3", config_2);
+        auto configurable_mod_3 = ConfigurableModule("ModuleInitializationTest_mod4", config_2);
 
         configurable_mod_3(builder);
 
@@ -77,7 +77,7 @@ TEST_F(SegmentTests, ModuleInitializationTest)
         EXPECT_EQ(configurable_mod_2.m_was_configured, true);
     };
 
-    m_pipeline->make_segment("SimpleModule_Segment", init_wrapper);
+    m_pipeline->make_segment("Initialization_Segment", init_wrapper);
 
     auto options = std::make_shared<Options>();
     options->topology().user_cpuset("0-1");
@@ -168,7 +168,7 @@ TEST_F(SegmentTests, ModuleEndToEndTest)
         builder.make_edge(configurable_mod.output_port("configurable_output_x"), sink3);
     };
 
-    m_pipeline->make_segment("SimpleModule_Segment", init_wrapper);
+    m_pipeline->make_segment("EndToEnd_Segment", init_wrapper);
 
     auto options = std::make_shared<Options>();
     options->topology().user_cpuset("0-1");
@@ -182,4 +182,139 @@ TEST_F(SegmentTests, ModuleEndToEndTest)
     EXPECT_EQ(packets_1, 4);
     EXPECT_EQ(packets_2, 6);
     EXPECT_EQ(packets_3, 4);
+}
+
+TEST_F(SegmentTests, ModuleAsSourceTest){
+    using namespace modules;
+
+    unsigned int packet_count{0};
+
+    auto init_wrapper = [&packet_count](segment::Builder& builder) {
+        auto config = nlohmann::json();
+        unsigned int source_count{42};
+        config["source_count"] = source_count;
+
+        auto source_mod = builder.make_module<SourceModule>("ModuleSourceTest_mod1", config);
+
+        auto sink = builder.make_sink<bool>("sink", [&packet_count](bool input) {
+            packet_count++;
+            VLOG(10) << "Sinking " << input << std::endl;
+        });
+
+        builder.make_edge(source_mod.output_port("source"), sink);
+    };
+
+    m_pipeline->make_segment("SimpleModule_Segment", init_wrapper);
+
+    auto options = std::make_shared<Options>();
+    options->topology().user_cpuset("0-1");
+    options->topology().restrict_gpus(true);
+
+    Executor executor(options);
+    executor.register_pipeline(std::move(m_pipeline));
+    executor.start();
+    executor.join();
+
+    EXPECT_EQ(packet_count, 42);
+}
+
+TEST_F(SegmentTests, ModuleAsSinkTest){
+    using namespace modules;
+
+    unsigned int packet_count{0};
+
+    auto init_wrapper = [&packet_count](segment::Builder& builder) {
+        auto source = builder.make_source<bool>("source", [&packet_count](rxcpp::subscriber<bool>& sub) {
+            if (sub.is_subscribed())
+            {
+                for (unsigned int i = 0; i < 43; ++i)
+                {
+                    sub.on_next(true);
+                    packet_count++;
+                }
+            }
+
+            sub.on_completed();
+        });
+
+        auto sink_mod = builder.make_module<SinkModule>("ModuleSinkTest_mod1");
+
+        builder.make_edge(source, sink_mod.input_port("sink"));
+    };
+
+    m_pipeline->make_segment("SimpleModule_Segment", init_wrapper);
+
+    auto options = std::make_shared<Options>();
+    options->topology().user_cpuset("0-1");
+    options->topology().restrict_gpus(true);
+
+    Executor executor(options);
+    executor.register_pipeline(std::move(m_pipeline));
+    executor.start();
+    executor.join();
+
+    EXPECT_EQ(packet_count, 43);
+}
+
+TEST_F(SegmentTests, ModuleChainingTest){
+    using namespace modules;
+
+    unsigned int packet_count{0};
+
+    auto sink_mod = SinkModule("ModuleChainingTest_mod2");
+    auto init_wrapper = [&sink_mod](segment::Builder& builder) {
+        auto config = nlohmann::json();
+        unsigned int source_count{42};
+        config["source_count"] = source_count;
+
+        auto source_mod = builder.make_module<SourceModule>("ModuleChainingTest_mod1", config);
+        sink_mod.initialize(builder);
+
+        builder.make_dynamic_edge<bool, bool>(source_mod.output_port("source"), sink_mod.input_port("sink"));
+    };
+
+    m_pipeline->make_segment("SimpleModule_Segment", init_wrapper);
+
+    auto options = std::make_shared<Options>();
+    options->topology().user_cpuset("0-1");
+    options->topology().restrict_gpus(true);
+
+    Executor executor(options);
+    executor.register_pipeline(std::move(m_pipeline));
+    executor.start();
+    executor.join();
+
+    EXPECT_EQ(sink_mod.m_packet_count, 42);
+}
+
+
+TEST_F(SegmentTests, ModuleNestingTest)
+{
+    using namespace modules;
+
+    unsigned int packet_count{0};
+
+    auto init_wrapper = [&packet_count](segment::Builder& builder) {
+        auto nested_mod = builder.make_module<NestedModule>("ModuleNestingTest_mod1");
+
+        auto nested_sink = builder.make_sink<std::string>("nested_sink", [&packet_count](std::string input) {
+            packet_count++;
+            VLOG(10) << "Sinking " << input << std::endl;
+        });
+
+        builder.make_edge(nested_mod.output_port("nested_module_output"), nested_sink);
+    };
+
+    m_pipeline->make_segment("SimpleModule_Segment", init_wrapper);
+
+    auto options = std::make_shared<Options>();
+    options->topology().user_cpuset("0-1");
+    options->topology().restrict_gpus(true);
+
+    Executor executor(options);
+    executor.register_pipeline(std::move(m_pipeline));
+    executor.start();
+    executor.join();
+
+    EXPECT_EQ(packet_count, 4);
 }
