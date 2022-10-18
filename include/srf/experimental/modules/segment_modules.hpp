@@ -42,17 +42,20 @@ class SegmentModule
 
     SegmentModule() = delete;
     SegmentModule(std::string module_name);
-    SegmentModule(std::string module_name, const nlohmann::json& config);
+    SegmentModule(std::string module_name, nlohmann::json config);
 
-    const std::string& name() const;
     const std::string& component_prefix() const;
+    const nlohmann::json& config() const;
+    const std::string& name() const;
+
+    std::string get_module_component_name(const std::string& component_name) const;
 
     /**
      * Retrieve vector of input names -- these are only understood by the SegmentModule,
      * @return
      */
-    virtual const std::vector<std::string> input_ids() const  = 0;
-    virtual const std::vector<std::string> output_ids() const = 0;
+    virtual std::vector<std::string> input_ids() const  = 0;
+    virtual std::vector<std::string> output_ids() const = 0;
 
     /**
      * Return a set of ObjectProperties for module input_ids
@@ -76,12 +79,6 @@ class SegmentModule
     virtual void initialize(segment::Builder& builder) = 0;
 
     /**
-     * Allow for customized module initialization with configuration file
-     * @param config
-     */
-    virtual void process_config(const nlohmann::json& config) = 0;
-
-    /**
      * Functional entrypoint for module constructor during build -- this lets us act like a std::function
      * @param builder
      */
@@ -93,6 +90,8 @@ class SegmentModule
   private:
     std::string m_module_name;
     std::string m_component_prefix;
+
+    const nlohmann::json m_config;
 };
 
 

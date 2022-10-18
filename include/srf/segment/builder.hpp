@@ -163,8 +163,8 @@ class Builder final
     }
 
     template<typename ModuleTypeT>
-    ModuleTypeT make_module(std::string module_name) {
-        ModuleTypeT module = ModuleTypeT(std::move(module_name));
+    ModuleTypeT make_module(std::string module_name, nlohmann::json config = {}) {
+        ModuleTypeT module = ModuleTypeT(std::move(module_name), std::move(config));
 
         module.initialize(*this);
 

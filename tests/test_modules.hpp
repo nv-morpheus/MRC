@@ -26,10 +26,10 @@ class SimpleModule : public SegmentModule
 {
   public:
     SimpleModule(std::string module_name);
-    SimpleModule(std::string module_name, const nlohmann::json& config);
+    SimpleModule(std::string module_name, nlohmann::json config);
 
-    const std::vector<std::string> input_ids() const override;
-    const std::vector<std::string> output_ids() const override;
+    std::vector<std::string> input_ids() const override;
+    std::vector<std::string> output_ids() const override;
 
     segment_module_port_map_t input_ports() override;
     SegmentModulePortT input_ports(const std::string& input_name) override;
@@ -37,9 +37,9 @@ class SimpleModule : public SegmentModule
     segment_module_port_map_t output_ports() override;
     SegmentModulePortT output_ports(const std::string& output_name) override;
 
-    void process_config(const nlohmann::json& config) override{};
-
     void initialize(segment::Builder& builder) override;
+
+    bool m_was_configured{false};
 
   private:
     bool m_initialized{false};
@@ -53,16 +53,16 @@ class SimpleModule : public SegmentModule
 
 SimpleModule::SimpleModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
 
-SimpleModule::SimpleModule(std::string module_name, const nlohmann::json& config) :
-  SegmentModule(std::move(module_name), config)
+SimpleModule::SimpleModule(std::string module_name, nlohmann::json config) :
+  SegmentModule(std::move(module_name), std::move(config))
 {}
 
-const std::vector<std::string> SimpleModule::input_ids() const
+std::vector<std::string> SimpleModule::input_ids() const
 {
     return m_inputs;
 }
 
-const std::vector<std::string> SimpleModule::output_ids() const
+std::vector<std::string> SimpleModule::output_ids() const
 {
     return m_outputs;
 }
@@ -107,10 +107,15 @@ SegmentModule::SegmentModulePortT SimpleModule::output_ports(const std::string& 
 
 void SimpleModule::initialize(segment::Builder& builder)
 {
-    std::cout << "MyModule::operator() called for '" << this->name() << "'" << std::endl;
+    VLOG(10) << "MyModule::operator() called for '" << this->name() << "'" << std::endl;
+
+    if (config().contains("simple_key_1"))
+    {
+        m_was_configured = true;
+    }
 
     /** First linear path **/
-    auto input1 = builder.make_node<bool, unsigned int>(this->component_prefix() + "input1",
+    auto input1 = builder.make_node<bool, unsigned int>(this->get_module_component_name("input1"),
                                                         rxcpp::operators::map([this](bool input) {
                                                             unsigned int output = 42;
                                                             return output;
@@ -119,23 +124,23 @@ void SimpleModule::initialize(segment::Builder& builder)
     m_input_ports["input1"] = input1;
 
     auto internal1 = builder.make_node<unsigned int, std::string>(
-        this->component_prefix() + "_internal1_", rxcpp::operators::map([this](unsigned int input) {
+        this->get_module_component_name("_internal1_"), rxcpp::operators::map([this](unsigned int input) {
             auto output = std::to_string(input);
-            std::cout << "Created output1 << " << output << std::endl;
+            VLOG(10) << "Created output1 << " << output << std::endl;
             return output;
         }));
 
     builder.make_edge(input1, internal1);
 
     auto output1 = builder.make_node<std::string, std::string>(
-        this->component_prefix() + "output1", rxcpp::operators::map([this](std::string input) { return input; }));
+        this->get_module_component_name("output1"), rxcpp::operators::map([this](std::string input) { return input; }));
 
     builder.make_edge(internal1, output1);
 
     m_output_ports["output1"] = output1;
 
     /** Second linear path **/
-    auto input2 = builder.make_node<bool, unsigned int>(this->component_prefix() + "input2",
+    auto input2 = builder.make_node<bool, unsigned int>(this->get_module_component_name("input2"),
                                                         rxcpp::operators::map([this](bool input) {
                                                             unsigned int output = 42;
                                                             return output;
@@ -144,30 +149,32 @@ void SimpleModule::initialize(segment::Builder& builder)
     m_input_ports["input2"] = input2;
 
     auto internal2 = builder.make_node<unsigned int, std::string>(
-        this->component_prefix() + "_internal2_", rxcpp::operators::map([this](unsigned int input) {
+        this->get_module_component_name("_internal2_"), rxcpp::operators::map([this](unsigned int input) {
             auto output = std::to_string(input);
-            std::cout << "Created output2: " << output << std::endl;
+            VLOG(10) << "Created output2: " << output << std::endl;
             return output;
         }));
 
     builder.make_edge(input2, internal2);
 
     auto output2 = builder.make_node<std::string, std::string>(
-        this->component_prefix() + "output2", rxcpp::operators::map([this](std::string input) { return input; }));
+        this->get_module_component_name("output2"), rxcpp::operators::map([this](std::string input) { return input; }));
 
     builder.make_edge(internal2, output2);
 
     m_output_ports["output2"] = output2;
+
+    m_initialized = true;
 }
 
 class ConfigurableModule : public SegmentModule
 {
   public:
     ConfigurableModule(std::string module_name);
-    ConfigurableModule(std::string module_name, const nlohmann::json& config);
+    ConfigurableModule(std::string module_name, nlohmann::json config);
 
-    const std::vector<std::string> input_ids() const override;
-    const std::vector<std::string> output_ids() const override;
+    std::vector<std::string> input_ids() const override;
+    std::vector<std::string> output_ids() const override;
 
     segment_module_port_map_t input_ports() override;
     SegmentModulePortT input_ports(const std::string& input_name) override;
@@ -175,33 +182,31 @@ class ConfigurableModule : public SegmentModule
     segment_module_port_map_t output_ports() override;
     SegmentModulePortT output_ports(const std::string& output_name) override;
 
-    void process_config(const nlohmann::json& config) override;
     void initialize(segment::Builder& builder) override;
 
     bool m_was_configured{false};
 
   private:
-
-    std::vector<std::string> m_inputs{"other_input_a"};
-    std::vector<std::string> m_outputs{"other_output_x"};
+    std::vector<std::string> m_inputs{"configurable_input_a"};
+    std::vector<std::string> m_outputs{"configurable_output_x"};
 
     segment_module_port_map_t m_input_ports{};
     segment_module_port_map_t m_output_ports{};
+
+    bool m_initialized;
 };
 
 ConfigurableModule::ConfigurableModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
-ConfigurableModule::ConfigurableModule(std::string module_name, const nlohmann::json& config) :
-  SegmentModule(std::move(module_name), config)
-{
-    process_config(config);
-}
+ConfigurableModule::ConfigurableModule(std::string module_name, nlohmann::json config) :
+  SegmentModule(std::move(module_name), std::move(config))
+{}
 
-const std::vector<std::string> ConfigurableModule::input_ids() const
+std::vector<std::string> ConfigurableModule::input_ids() const
 {
     return m_inputs;
 }
 
-const std::vector<std::string> ConfigurableModule::output_ids() const
+std::vector<std::string> ConfigurableModule::output_ids() const
 {
     return m_outputs;
 }
@@ -244,17 +249,41 @@ SegmentModule::SegmentModulePortT ConfigurableModule::output_ports(const std::st
     throw std::invalid_argument(sstream.str());
 }
 
-void ConfigurableModule::process_config(const nlohmann::json& config)
+void ConfigurableModule::initialize(segment::Builder& builder)
 {
-    if (config.contains("config_key_1"))
+    VLOG(10) << "MyModule::operator() called for '" << this->name() << "'" << std::endl;
+
+    if (config().contains("config_key_1"))
     {
         m_was_configured = true;
     }
-}
 
-void ConfigurableModule::initialize(segment::Builder& builder)
-{
-    std::cout << "MyModule::operator() called for '" << this->name() << "'" << std::endl;
+    auto input1 = builder.make_node<bool, unsigned int>(this->get_module_component_name("configurable_input_a"),
+                                                        rxcpp::operators::map([this](bool input) {
+                                                            unsigned int output = 42;
+                                                            return output;
+                                                        }));
+
+    m_input_ports["configurable_input_a"] = input1;
+
+    auto internal1 = builder.make_node<unsigned int, std::string>(
+        this->get_module_component_name("_internal1_"), rxcpp::operators::map([this](unsigned int input) {
+            auto output = std::to_string(input);
+            VLOG(10) << "Created output1: " << output << std::endl;
+            return output;
+        }));
+
+    builder.make_edge(input1, internal1);
+
+    auto output1 =
+        builder.make_node<std::string, std::string>(this->get_module_component_name("configurable_output_x"),
+                                                    rxcpp::operators::map([this](std::string input) { return input; }));
+
+    builder.make_edge(internal1, output1);
+
+    m_output_ports["configurable_output_x"] = output1;
+
+    m_initialized = true;
 }
 
 }  // namespace srf::modules

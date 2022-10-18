@@ -27,7 +27,9 @@ SegmentModule::SegmentModule(std::string module_name) : m_module_name(std::move(
     m_component_prefix = sstream.str();
 }
 
-SegmentModule::SegmentModule(std::string module_name, const nlohmann::json& config)
+SegmentModule::SegmentModule(std::string module_name, nlohmann::json config) :
+  m_module_name(std::move(module_name)),
+  m_config(std::move(config))
 {
     std::stringstream sstream;
 
@@ -43,6 +45,16 @@ const std::string& SegmentModule::name() const
 const std::string& SegmentModule::component_prefix() const
 {
     return m_component_prefix;
+}
+
+const nlohmann::json& SegmentModule::config() const
+{
+    return m_config;
+}
+
+std::string SegmentModule::get_module_component_name(const std::string& component_name) const
+{
+    return component_prefix() + component_name;
 }
 
 }  // namespace srf::modules
