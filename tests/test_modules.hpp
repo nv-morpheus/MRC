@@ -159,7 +159,8 @@ void ConfigurableModule::initialize(segment::Builder& builder)
     m_initialized = true;
 }
 
-class SourceModule : public SegmentModule {
+class SourceModule : public SegmentModule
+{
   public:
     SourceModule(std::string module_name);
     SourceModule(std::string module_name, nlohmann::json config);
@@ -181,27 +182,29 @@ void SourceModule::initialize(segment::Builder& builder)
 {
     unsigned int count{1};
 
-    if (config().contains("source_count")) {
+    if (config().contains("source_count"))
+    {
         count = config()["source_count"];
     }
 
     auto source = builder.make_source<bool>("source", [count](rxcpp::subscriber<bool>& sub) {
-      if (sub.is_subscribed())
-      {
-          for (unsigned int i = 0; i < count; ++i)
-          {
-              sub.on_next(true);
-          }
-      }
+        if (sub.is_subscribed())
+        {
+            for (unsigned int i = 0; i < count; ++i)
+            {
+                sub.on_next(true);
+            }
+        }
 
-      sub.on_completed();
+        sub.on_completed();
     });
 
     // Register the submodules output as one of this module's outputs
     register_output_port("source", source, &typeid(bool));
 }
 
-class SinkModule : public SegmentModule {
+class SinkModule : public SegmentModule
+{
   public:
     SinkModule(std::string module_name);
     SinkModule(std::string module_name, nlohmann::json config);
@@ -231,7 +234,8 @@ void SinkModule::initialize(segment::Builder& builder)
     register_input_port("sink", sink, &typeid(bool));
 }
 
-class NestedModule : public SegmentModule {
+class NestedModule : public SegmentModule
+{
   public:
     NestedModule(std::string module_name);
     NestedModule(std::string module_name, nlohmann::json config);
@@ -253,25 +257,19 @@ void NestedModule::initialize(segment::Builder& builder)
 {
     auto configurable_mod = builder.make_module<ConfigurableModule>(get_module_component_name("NestedModule_submod2"));
 
+    auto config = nlohmann::json();
+    config["source_count"] = 4;
+
     // Create a data source and attach it to our submodule
-    auto source1 = builder.make_source<bool>("src1", [](rxcpp::subscriber<bool>& sub) {
-        if (sub.is_subscribed())
-        {
-            sub.on_next(true);
-            sub.on_next(false);
-            sub.on_next(true);
-            sub.on_next(true);
-        }
+    auto source1 = builder.make_module<SourceModule>("source", config);
 
-        sub.on_completed();
-    });
-
-    builder.make_edge(source1, configurable_mod.input_port("configurable_input_a"));
+    builder.make_dynamic_edge<bool, bool>(source1.output_port("source"),
+                                          configurable_mod.input_port("configurable_input_a"));
 
     // Register the submodules output as one of this module's outputs
-    register_output_port("nested_module_output", configurable_mod.output_port("configurable_output_x"),
+    register_output_port("nested_module_output",
+                         configurable_mod.output_port("configurable_output_x"),
                          configurable_mod.output_port_type_id("configurable_output_x"));
 }
-
 
 }  // namespace srf::modules
