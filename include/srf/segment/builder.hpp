@@ -119,12 +119,13 @@ class Builder final
     template <typename ObjectT, typename... ArgsT>
     std::shared_ptr<Object<ObjectT>> construct_object(std::string name, ArgsT&&... args)
     {
-        auto uptr = std::make_unique<ObjectT>(std::forward<ArgsT>(args)...);
+        auto ns_name = m_namespace_prefix.empty() ? name : m_namespace_prefix + "/" + name ;
+        auto uptr    = std::make_unique<ObjectT>(std::forward<ArgsT>(args)...);
 
-        ::add_stats_watcher_if_rx_source(*uptr, name);
-        ::add_stats_watcher_if_rx_sink(*uptr, name);
+        ::add_stats_watcher_if_rx_source(*uptr, ns_name);
+        ::add_stats_watcher_if_rx_sink(*uptr, ns_name);
 
-        return make_object(std::move(name), std::move(uptr));
+        return make_object(std::move(ns_name), std::move(uptr));
     }
 
     template <typename SourceTypeT,
@@ -162,11 +163,17 @@ class Builder final
         return construct_object<NodeTypeT<SinkTypeT, SourceTypeT>>(name, std::forward<ArgsT>(ops)...);
     }
 
-    template<typename ModuleTypeT>
-    ModuleTypeT make_module(std::string module_name, nlohmann::json config = {}) {
-        ModuleTypeT module = ModuleTypeT(std::move(module_name), std::move(config));
+    template <typename ModuleTypeT>
+    ModuleTypeT make_module(std::string module_name, nlohmann::json config = {})
+    {
+        static_assert(std::is_base_of_v<modules::SegmentModule, ModuleTypeT>);
 
+        ModuleTypeT module                  = ModuleTypeT(std::move(module_name), std::move(config));
+        modules::SegmentModule& module_base = module;
+
+        ns_push(module_base.component_prefix());
         module.initialize(*this);
+        ns_pop();
 
         return std::move(module);
     }
@@ -303,7 +310,32 @@ class Builder final
     }
 
   private:
+    std::vector<std::string> m_namespace_components{};
+    std::string m_namespace_prefix;
     internal::segment::IBuilder& m_backend;
+
+    static std::string accum_merge(std::string lhs, std::string rhs)
+    {
+        if (lhs.empty()) {
+            return std::move(rhs);
+        }
+
+        return std::move(lhs) + "/" + std::move(rhs);
+    }
+
+    void ns_push(const std::string& component_namespace)
+    {
+        m_namespace_components.push_back(component_namespace);
+        m_namespace_prefix = std::accumulate(
+            m_namespace_components.begin(), m_namespace_components.end(), std::string(""), Builder::accum_merge);
+    }
+
+    void ns_pop()
+    {
+        m_namespace_components.pop_back();
+        m_namespace_prefix = std::accumulate(
+            m_namespace_components.begin(), m_namespace_components.end(), std::string(""), Builder::accum_merge);
+    }
 
     friend Definition;
 };
@@ -311,6 +343,7 @@ class Builder final
 template <typename ObjectT>
 std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::unique_ptr<ObjectT> node)
 {
+    // Note: name should have and prefix modifications done prior to getting here.
     if (m_backend.has_object(name))
     {
         LOG(ERROR) << "A Object named " << name << " is already registered";

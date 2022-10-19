@@ -54,14 +54,14 @@ void SimpleModule::initialize(segment::Builder& builder)
     }
 
     /** First linear path **/
-    auto input1 = builder.make_node<bool, unsigned int>(this->get_module_component_name("input1"),
-                                                        rxcpp::operators::map([this](bool input) {
+    auto input1 = builder.make_node<bool, unsigned int>("input1",
+                                                        rxcpp::operators::map([](bool input) {
                                                             unsigned int output = 42;
                                                             return output;
                                                         }));
 
     auto internal1 = builder.make_node<unsigned int, std::string>(
-        this->get_module_component_name("_internal1_"), rxcpp::operators::map([this](unsigned int input) {
+        "_internal1_", rxcpp::operators::map([](unsigned int input) {
             auto output = std::to_string(input);
             VLOG(10) << "Created output1 << " << output << std::endl;
             return output;
@@ -70,19 +70,19 @@ void SimpleModule::initialize(segment::Builder& builder)
     builder.make_edge(input1, internal1);
 
     auto output1 = builder.make_node<std::string, std::string>(
-        this->get_module_component_name("output1"), rxcpp::operators::map([this](std::string input) { return input; }));
+        "output1", rxcpp::operators::map([](std::string input) { return input; }));
 
     builder.make_edge(internal1, output1);
 
     /** Second linear path **/
-    auto input2 = builder.make_node<bool, unsigned int>(this->get_module_component_name("input2"),
-                                                        rxcpp::operators::map([this](bool input) {
+    auto input2 = builder.make_node<bool, unsigned int>("input2",
+                                                        rxcpp::operators::map([](bool input) {
                                                             unsigned int output = 42;
                                                             return output;
                                                         }));
 
     auto internal2 = builder.make_node<unsigned int, std::string>(
-        this->get_module_component_name("_internal2_"), rxcpp::operators::map([this](unsigned int input) {
+        "_internal2_", rxcpp::operators::map([](unsigned int input) {
             auto output = std::to_string(input);
             VLOG(10) << "Created output2: " << output << std::endl;
             return output;
@@ -91,15 +91,15 @@ void SimpleModule::initialize(segment::Builder& builder)
     builder.make_edge(input2, internal2);
 
     auto output2 = builder.make_node<std::string, std::string>(
-        this->get_module_component_name("output2"), rxcpp::operators::map([this](std::string input) { return input; }));
+        "output2", rxcpp::operators::map([](std::string input) { return input; }));
 
     builder.make_edge(internal2, output2);
 
-    register_input_port("input1", input1, &typeid(bool));
-    register_output_port("output1", output1, &typeid(std::string));
+    register_input_port("input1", input1, typeid(bool));
+    register_output_port("output1", output1, typeid(std::string));
 
-    register_input_port("input2", input2, &typeid(bool));
-    register_output_port("output2", output2, &typeid(std::string));
+    register_input_port("input2", input2, typeid(bool));
+    register_output_port("output2", output2, typeid(std::string));
 
     m_initialized = true;
 }
@@ -132,14 +132,14 @@ void ConfigurableModule::initialize(segment::Builder& builder)
         m_was_configured = true;
     }
 
-    auto input1 = builder.make_node<bool, unsigned int>(this->get_module_component_name("configurable_input_a"),
-                                                        rxcpp::operators::map([this](bool input) {
+    auto input1 = builder.make_node<bool, unsigned int>("configurable_input_a",
+                                                        rxcpp::operators::map([](bool input) {
                                                             unsigned int output = 42;
                                                             return output;
                                                         }));
 
     auto internal1 = builder.make_node<unsigned int, std::string>(
-        this->get_module_component_name("_internal1_"), rxcpp::operators::map([this](unsigned int input) {
+        "_internal1_", rxcpp::operators::map([](unsigned int input) {
             auto output = std::to_string(input);
             VLOG(10) << "Created output1: " << output << std::endl;
             return output;
@@ -148,13 +148,13 @@ void ConfigurableModule::initialize(segment::Builder& builder)
     builder.make_edge(input1, internal1);
 
     auto output1 =
-        builder.make_node<std::string, std::string>(this->get_module_component_name("configurable_output_x"),
-                                                    rxcpp::operators::map([this](std::string input) { return input; }));
+        builder.make_node<std::string, std::string>("configurable_output_x",
+                                                    rxcpp::operators::map([](std::string input) { return input; }));
 
     builder.make_edge(internal1, output1);
 
-    register_input_port("configurable_input_a", input1, &typeid(bool));
-    register_output_port("configurable_output_x", output1, &typeid(std::string));
+    register_input_port("configurable_input_a", input1, typeid(bool));
+    register_output_port("configurable_output_x", output1, typeid(std::string));
 
     m_initialized = true;
 }
@@ -200,7 +200,7 @@ void SourceModule::initialize(segment::Builder& builder)
     });
 
     // Register the submodules output as one of this module's outputs
-    register_output_port("source", source, &typeid(bool));
+    register_output_port("source", source, source->object().source_type());
 }
 
 class SinkModule : public SegmentModule
@@ -231,7 +231,7 @@ void SinkModule::initialize(segment::Builder& builder)
     });
 
     // Register the submodules output as one of this module's outputs
-    register_input_port("sink", sink, &typeid(bool));
+    register_input_port("sink", sink, sink->object().sink_type());
 }
 
 class NestedModule : public SegmentModule
@@ -241,6 +241,8 @@ class NestedModule : public SegmentModule
     NestedModule(std::string module_name, nlohmann::json config);
 
     void initialize(segment::Builder& builder) override;
+
+    std::string module_name() const override;
 
     bool m_was_configured{false};
 
@@ -253,9 +255,14 @@ NestedModule::NestedModule(std::string module_name, nlohmann::json config) :
   SegmentModule(std::move(module_name), std::move(config))
 {}
 
+std::string NestedModule::module_name() const
+{
+    return "[nested_module]";
+}
+
 void NestedModule::initialize(segment::Builder& builder)
 {
-    auto configurable_mod = builder.make_module<ConfigurableModule>(get_module_component_name("NestedModule_submod2"));
+    auto configurable_mod = builder.make_module<ConfigurableModule>("NestedModule_submod2");
 
     auto config = nlohmann::json();
     config["source_count"] = 4;

@@ -19,37 +19,21 @@
 
 namespace srf::modules {
 
-SegmentModule::SegmentModule(std::string module_name) : m_module_name(std::move(module_name))
-{
-    std::stringstream sstream;
-
-    sstream << "segment_module/" << m_module_name << "/";
-    m_component_prefix = sstream.str();
-}
+SegmentModule::SegmentModule(std::string module_name) : m_module_instance_name(std::move(module_name)) {}
 
 SegmentModule::SegmentModule(std::string module_name, nlohmann::json config) :
-  m_module_name(std::move(module_name)),
+  m_module_instance_name(std::move(module_name)),
   m_config(std::move(config))
-{
-    std::stringstream sstream;
+{}
 
-    sstream << "segment_module/" << m_module_name << "/";
-    m_component_prefix = sstream.str();
-}
-
-const std::string& SegmentModule::component_prefix() const
+std::string SegmentModule::component_prefix() const
 {
-    return m_component_prefix;
+    return module_name() + "/" + name();
 }
 
 const nlohmann::json& SegmentModule::config() const
 {
     return m_config;
-}
-
-std::string SegmentModule::get_module_component_name(const std::string& component_name) const
-{
-    return component_prefix() + component_name;
 }
 
 const std::vector<std::string>& SegmentModule::input_ids() const
@@ -72,30 +56,29 @@ SegmentModule::segment_module_port_t SegmentModule::input_port(const std::string
     std::stringstream sstream;
 
     sstream << "Invalid input port: " << input_name;
-
     throw std::invalid_argument(sstream.str());
 }
 
-const std::map<std::string, const std::type_info*>& SegmentModule::input_port_type_ids() const
+const SegmentModule::segment_module_typeindex_map_t& SegmentModule::input_port_type_ids() const
 {
     return m_input_port_type_indices;
 }
 
-const std::type_info* SegmentModule::input_port_type_id(const std::string& input_name)
+std::type_index SegmentModule::input_port_type_id(const std::string& input_name)
 {
-    if (m_input_port_type_indices.find(input_name) != m_input_port_type_indices.end())
+    auto ipt_iter = m_input_port_type_indices.find(input_name);
+    if (ipt_iter != m_input_port_type_indices.end())
     {
-        return m_input_port_type_indices[input_name];
+        return ipt_iter->second;
     }
 
     std::stringstream sstream;
 
     sstream << "Invalid input port: " << input_name;
-
     throw std::invalid_argument(sstream.str());
 }
 
-const SegmentModule::segment_module_port_map_t SegmentModule::output_ports() const
+const SegmentModule::segment_module_port_map_t& SegmentModule::output_ports() const
 {
     return m_output_ports;
 }
@@ -110,26 +93,25 @@ SegmentModule::segment_module_port_t SegmentModule::output_port(const std::strin
     std::stringstream sstream;
 
     sstream << "Invalid output port: " << output_name;
-
     throw std::invalid_argument(sstream.str());
 }
 
-const SegmentModule::segment_module_typeinfo_map_t& SegmentModule::output_port_type_ids() const
+const SegmentModule::segment_module_typeindex_map_t& SegmentModule::output_port_type_ids() const
 {
     return m_output_port_type_indices;
 }
 
-const std::type_info* SegmentModule::output_port_type_id(const std::string& output_name)
+std::type_index SegmentModule::output_port_type_id(const std::string& output_name)
 {
-    if (m_output_port_type_indices.find(output_name) != m_output_port_type_indices.end())
+    auto opt_iter = m_output_port_type_indices.find(output_name);
+    if (opt_iter != m_output_port_type_indices.end())
     {
-        return m_output_port_type_indices[output_name];
+        return opt_iter->second;
     }
 
     std::stringstream sstream;
 
     sstream << "Invalid output port: " << output_name;
-
     throw std::invalid_argument(sstream.str());
 }
 
@@ -140,25 +122,46 @@ const std::vector<std::string>& SegmentModule::output_ids() const
 
 const std::string& SegmentModule::name() const
 {
-    return m_module_name;
+    return m_module_instance_name;
+}
+
+std::string SegmentModule::module_name() const
+{
+    return "[segment_module]";
 }
 
 void SegmentModule::register_input_port(std::string input_name,
                                         std::shared_ptr<segment::ObjectProperties> object,
-                                        const std::type_info* tinfo)
+                                        std::type_index tidx)
 {
+    if (m_input_ports.find(input_name) != m_input_ports.end())
+    {
+        std::stringstream sstream;
+
+        sstream << "Attempt to register duplicate input port for: " + std::move(input_name);
+        throw std::invalid_argument(sstream.str());
+    }
+
     m_input_port_ids.push_back(input_name);
-    m_input_ports[input_name]             = object;
-    m_input_port_type_indices[input_name] = tinfo;
+    m_input_ports[input_name] = object;
+    m_input_port_type_indices.try_emplace(input_name, tidx);
 }
 
 void SegmentModule::register_output_port(std::string output_name,
                                          std::shared_ptr<segment::ObjectProperties> object,
-                                         const std::type_info* tinfo)
+                                         std::type_index tidx)
 {
+    if (m_output_ports.find(output_name) != m_output_ports.end())
+    {
+        std::stringstream sstream;
+
+        sstream << "Attempt to register duplicate output port for: " + std::move(output_name);
+        throw std::invalid_argument(sstream.str());
+    }
+
     m_output_port_ids.push_back(output_name);
-    m_output_ports[output_name]             = object;
-    m_output_port_type_indices[output_name] = tinfo;
+    m_output_ports[output_name] = object;
+    m_output_port_type_indices.try_emplace(output_name, tidx);
 }
 
 }  // namespace srf::modules
