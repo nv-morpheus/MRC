@@ -95,11 +95,11 @@ void SimpleModule::initialize(segment::Builder& builder)
 
     builder.make_edge(internal2, output2);
 
-    register_input_port("input1", input1, typeid(bool));
-    register_output_port("output1", output1, typeid(std::string));
+    register_input_port("input1", input1, input1->object().sink_type());
+    register_output_port("output1", output1, output1->object().source_type());
 
-    register_input_port("input2", input2, typeid(bool));
-    register_output_port("output2", output2, typeid(std::string));
+    register_input_port("input2", input2, input2->object().sink_type());
+    register_output_port("output2", output2, output2->object().source_type());
 
     m_initialized = true;
 }
@@ -153,8 +153,8 @@ void ConfigurableModule::initialize(segment::Builder& builder)
 
     builder.make_edge(internal1, output1);
 
-    register_input_port("configurable_input_a", input1, typeid(bool));
-    register_output_port("configurable_output_x", output1, typeid(std::string));
+    register_input_port("configurable_input_a", input1, input1->object().sink_type());
+    register_output_port("configurable_output_x", output1, output1->object().source_type());
 
     m_initialized = true;
 }
