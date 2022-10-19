@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#pragma once
+
 #include "nlohmann/json.hpp"
 
 #include "srf/segment/object.hpp"
@@ -25,8 +27,6 @@
 #include <utility>
 #include <vector>
 
-#pragma once
-
 namespace srf::segment {
 class Builder;
 }
@@ -36,8 +36,6 @@ namespace srf::modules {
 class SegmentModule
 {
   public:
-    friend segment::Builder;
-
     using segment_module_port_map_t     = std::map<std::string, std::shared_ptr<segment::ObjectProperties>>;
     using segment_module_port_t         = std::shared_ptr<segment::ObjectProperties>;
     using segment_module_typeinfo_map_t = std::map<std::string, const std::type_info*>;
@@ -56,19 +54,19 @@ class SegmentModule
      * Return vector of input names -- these are only understood by the SegmentModule
      * @return std::vector
      */
-    const std::vector<std::string> input_ids() const;
+    const std::vector<std::string>& input_ids() const;
 
     /**
      * Return a vector of output names -- these are only understood by the SegmentModule class
      * @return std::vector
      */
-    const std::vector<std::string> output_ids() const;
+    const std::vector<std::string>& output_ids() const;
 
     /**
      * Return a set of ObjectProperties for module input_ids
      * @return ObjectProperties
      */
-    const segment_module_port_map_t input_ports() const;
+    const segment_module_port_map_t& input_ports() const;
 
     /**
      * Return the ObjectProperties object corresponding to input_name
@@ -81,7 +79,7 @@ class SegmentModule
      * Return a map of module port id : type indices
      * @return std::map
      */
-    const std::map<std::string, const std::type_info*> input_port_type_ids() const;
+    const std::map<std::string, const std::type_info*>& input_port_type_ids() const;
 
     /**
      * Return the type index of a given input name
@@ -106,7 +104,7 @@ class SegmentModule
      * Return a map of module port id : type indices
      * @return std::map
      */
-    const segment_module_typeinfo_map_t output_port_type_ids() const;
+    const segment_module_typeinfo_map_t& output_port_type_ids() const;
 
     /**
      * Return the type index of a given input name

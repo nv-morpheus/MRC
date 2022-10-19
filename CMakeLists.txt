@@ -149,8 +149,8 @@ include(cmake/setup_iwyu.cmake)
 add_library(libsrf
   src/internal/data_plane/callbacks.cpp
   src/internal/data_plane/client.cpp
-  src/internal/data_plane/resources.cpp
   src/internal/data_plane/request.cpp
+  src/internal/data_plane/resources.cpp
   src/internal/data_plane/server.cpp
   src/internal/executor/executor.cpp
   src/internal/executor/iexecutor.cpp
@@ -166,10 +166,10 @@ add_library(libsrf
   src/internal/pipeline/port_graph.cpp
   src/internal/pipeline/resources.cpp
   src/internal/resources/manager.cpp
-  src/internal/resources/partition_resources.cpp
   src/internal/resources/partition_resources_base.cpp
-  src/internal/runnable/engine_factory.cpp
+  src/internal/resources/partition_resources.cpp
   src/internal/runnable/engine.cpp
+  src/internal/runnable/engine_factory.cpp
   src/internal/runnable/engines.cpp
   src/internal/runnable/fiber_engine.cpp
   src/internal/runnable/fiber_engines.cpp
@@ -200,8 +200,8 @@ add_library(libsrf
   src/internal/system/system.cpp
   src/internal/system/system_provider.cpp
   src/internal/system/thread.cpp
-  src/internal/system/thread_pool.cpp
   src/internal/system/thread.cpp
+  src/internal/system/thread_pool.cpp
   src/internal/system/topology.cpp
   src/internal/ucx/context.cpp
   src/internal/ucx/endpoint.cpp
@@ -214,6 +214,8 @@ add_library(libsrf
   src/internal/utils/parse_config.cpp
   src/internal/utils/parse_ints.cpp
   src/internal/utils/shared_resource_bit_map.cpp
+  src/public/benchmarking/tracer.cpp
+  src/public/benchmarking/trace_statistics.cpp
   src/public/benchmarking/util.cpp
   src/public/channel/channel.cpp
   src/public/codable/encoded_object.cpp
@@ -224,6 +226,7 @@ add_library(libsrf
   src/public/core/logging.cpp
   src/public/cuda/device_guard.cpp
   src/public/cuda/sync.cpp
+  src/public/experimental/modules/segment_modules.cpp
   src/public/manifold/manifold.cpp
   src/public/memory/buffer_view.cpp
   src/public/metrics/counter.cpp
@@ -239,7 +242,6 @@ add_library(libsrf
   src/public/options/resources.cpp
   src/public/options/services.cpp
   src/public/options/topology.cpp
-  src/public/experimental/modules/segment_modules.cpp
   src/public/runnable/context.cpp
   src/public/runnable/launcher.cpp
   src/public/runnable/runnable.cpp
@@ -247,8 +249,6 @@ add_library(libsrf
   src/public/runnable/types.cpp
   src/public/segment/builder.cpp
   src/public/segment/definition.cpp
-  src/public/benchmarking/trace_statistics.cpp
-  src/public/benchmarking/tracer.cpp
   src/public/utils/bytes_to_string.cpp
   src/public/utils/thread_utils.cpp
   src/public/utils/type_utils.cpp

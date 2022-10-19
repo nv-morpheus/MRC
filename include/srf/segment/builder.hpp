@@ -168,7 +168,7 @@ class Builder final
 
         module.initialize(*this);
 
-        return module;
+        return std::move(module);
     }
 
     template <typename SourceNodeTypeT, typename SinkNodeTypeT>

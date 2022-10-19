@@ -52,12 +52,12 @@ std::string SegmentModule::get_module_component_name(const std::string& componen
     return component_prefix() + component_name;
 }
 
-const std::vector<std::string> SegmentModule::input_ids() const
+const std::vector<std::string>& SegmentModule::input_ids() const
 {
     return m_input_port_ids;
 }
 
-const SegmentModule::segment_module_port_map_t SegmentModule::input_ports() const
+const SegmentModule::segment_module_port_map_t& SegmentModule::input_ports() const
 {
     return m_input_ports;
 }
@@ -76,7 +76,7 @@ SegmentModule::segment_module_port_t SegmentModule::input_port(const std::string
     throw std::invalid_argument(sstream.str());
 }
 
-const std::map<std::string, const std::type_info*> SegmentModule::input_port_type_ids() const
+const std::map<std::string, const std::type_info*>& SegmentModule::input_port_type_ids() const
 {
     return m_input_port_type_indices;
 }
@@ -114,7 +114,7 @@ SegmentModule::segment_module_port_t SegmentModule::output_port(const std::strin
     throw std::invalid_argument(sstream.str());
 }
 
-const SegmentModule::segment_module_typeinfo_map_t SegmentModule::output_port_type_ids() const
+const SegmentModule::segment_module_typeinfo_map_t& SegmentModule::output_port_type_ids() const
 {
     return m_output_port_type_indices;
 }
@@ -133,7 +133,7 @@ const std::type_info* SegmentModule::output_port_type_id(const std::string& outp
     throw std::invalid_argument(sstream.str());
 }
 
-const std::vector<std::string> SegmentModule::output_ids() const
+const std::vector<std::string>& SegmentModule::output_ids() const
 {
     return m_output_port_ids;
 }
