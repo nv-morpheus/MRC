@@ -15,16 +15,17 @@
 
 # Keep all source files sorted!!!
 add_executable(test_srf
-  test_channel.cpp
-  test_codable.cpp
-  test_executor.cpp
+  # test_channel.cpp
+  # test_codable.cpp
+  test_edges.cpp
+  # test_executor.cpp
   test_main.cpp
-  test_metrics.cpp
-  test_node.cpp
-  test_pipeline.cpp
-  test_segment.cpp
-  test_srf.cpp
-  test_type_utils.cpp
+  # test_metrics.cpp
+  # test_node.cpp
+  # test_pipeline.cpp
+  # test_segment.cpp
+  # test_srf.cpp
+  # test_type_utils.cpp
 )
 
 target_link_libraries(test_srf
