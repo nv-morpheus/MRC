@@ -16,6 +16,8 @@
 # limitations under the License.
 
 # Note this is the Dockerfile for the CI runner not for SRF itself
+# Build from the root of the SRF repo with:
+# docker build --network=host -t srf/ci:runner -f ci/runner/Dockerfile .
 
 # Args used in FROM commands must come first
 ARG FROM_IMAGE="rapidsai/ci"
@@ -49,7 +51,7 @@ RUN apt-get update &&\
         --slave /usr/bin/git-clang-format git-clang-format /usr/bin/git-clang-format-12
 
 # Create conda environment
-COPY ./conda/environments/dev_env.yml /tmp
+COPY ./ci/conda/environments/dev_env.yml /tmp
 
 RUN CONDA_ALWAYS_YES=true /opt/conda/bin/mamba env create -n srf -q --file /tmp/dev_env.yml && \
     sed -i "s/conda activate base/conda activate srf/g" ~/.bashrc && \
