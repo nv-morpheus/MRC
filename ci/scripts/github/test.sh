@@ -35,11 +35,13 @@ mkdir -p ${WORKSPACE_TMP}/reports
 
 # ctest requires cmake to be configured in order to locate tests
 
-if [[ "${BUILD_TYPE}" == "Debug" ]]; then
-  cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} ${CMAKE_BUILD_WITH_CODECOV} .
+if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
+  CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES} ${CMAKE_BUILD_WITH_CODECOV}"
 else
-  cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} .
+  CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES}"
 fi
+
+cmake -B build -G Ninja ${CMAKE_FLAGS} .
 
 gpuci_logger "Running C++ Tests"
 cd ${SRF_ROOT}/build
