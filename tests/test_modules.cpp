@@ -65,8 +65,27 @@ TEST_F(SegmentTests, ModuleInitializationTest)
 
         configurable_mod_3(builder);
 
+        EXPECT_EQ(simple_mod.input_ids().size(), 2);
+        EXPECT_EQ(simple_mod.output_ids().size(), 2);
         EXPECT_EQ(simple_mod.input_ports().size(), 2);
         EXPECT_EQ(simple_mod.output_ports().size(), 2);
+        EXPECT_EQ(simple_mod.input_ports().find("input1") != simple_mod.input_ports().end(), true);
+        EXPECT_EQ(simple_mod.input_ports().find("input2") != simple_mod.input_ports().end(), true);
+        EXPECT_EQ(simple_mod.input_port_type_id("input1"), &typeid(bool));
+        EXPECT_EQ(simple_mod.input_port_type_id("input2"), &typeid(bool));
+        EXPECT_EQ(simple_mod.input_port_type_ids().find("input1")->second, &typeid(bool));
+        EXPECT_EQ(simple_mod.input_port_type_ids().find("input2")->second, &typeid(bool));
+        EXPECT_EQ(simple_mod.output_ports().find("output1") != simple_mod.input_ports().end(), true);
+        EXPECT_EQ(simple_mod.output_ports().find("output2") != simple_mod.input_ports().end(), true);
+        EXPECT_EQ(simple_mod.output_port_type_id("output1"), &typeid(std::string));
+        EXPECT_EQ(simple_mod.output_port_type_id("output2"), &typeid(std::string));
+        EXPECT_EQ(simple_mod.output_port_type_ids().find("output1")->second, &typeid(std::string));
+        EXPECT_EQ(simple_mod.output_port_type_ids().find("output2")->second, &typeid(std::string));
+
+        EXPECT_THROW(simple_mod.input_port("DOES_NOT_EXIST"), std::invalid_argument);
+        EXPECT_THROW(simple_mod.output_port("DOES_NOT_EXIST"), std::invalid_argument);
+        EXPECT_THROW(simple_mod.input_port_type_id("DOES_NOT_EXIST"), std::invalid_argument);
+        EXPECT_THROW(simple_mod.output_port_type_id("DOES_NOT_EXIST"), std::invalid_argument);
 
         EXPECT_EQ(configurable_mod_1.input_ports().size(), 1);
         EXPECT_EQ(configurable_mod_1.output_ports().size(), 1);
