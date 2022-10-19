@@ -119,11 +119,9 @@ jobs:
         if: ${{ matrix.build_cc == 'gcc-coverage' }}
         uses: codecov/codecov-action@v3
         with:
-          directory: ./srf/build/gcovr-html-report
-          flags: unittests # optional
-          name: codecov-umbrella # optional
-          fail_ci_if_error: true # optional (default = false)
-          verbose: true # optional (default = false)
+          files: ./srf/build/build/gcovr-xml-report.xml
+          fail_ci_if_error: true
+          verbose: true
 
   documentation:
     name: Documentation

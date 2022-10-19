@@ -74,9 +74,10 @@ if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
   gpuci_logger "Generating codecov report"
   cd ${SRF_ROOT}
   cmake --build build --target gcovr-html-report
+  cmake --build build --target gcovr-xml-report
 
   gpuci_logger "Archiving codecov report"
-  tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${SRF_ROOT}/build/gcovr-html-report
+  tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${SRF_ROOT}/build/gcovr-html-report ${SRF_ROOT}/build/gcovr-xml-report.xml
   aws s3 cp ${WORKSPACE_TMP}/coverage_reports.tar.bz "${ARTIFACT_URL}/coverage_reports.tar.bz"
 fi
 

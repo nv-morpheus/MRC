@@ -18,8 +18,6 @@ set -e
 
 source ${WORKSPACE}/ci/scripts/github/common.sh
 
-rm -rf ${SRF_ROOT}/.cache/ ${SRF_ROOT}/build/
-
 gpuci_logger "Creating conda env"
 mamba env create -n srf -q --file ${CONDA_ENV_YML}
 conda deactivate
