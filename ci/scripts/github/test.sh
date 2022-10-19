@@ -66,7 +66,7 @@ pytest -v --junit-xml=${WORKSPACE_TMP}/report_pytest.xml
 PYTEST_RESULTS=$?
 set -e
 
-if [[ "${BUILD_TYPE}" == "Debug" ]]; then
+if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
   gpuci_logger "Generating codecov report"
   cd ${SRF_ROOT}
   cmake --build build --target gcovr-html-report
