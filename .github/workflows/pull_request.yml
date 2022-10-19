@@ -116,7 +116,7 @@ jobs:
         run: ./srf/ci/scripts/github/test.sh
 
       - name: Codecov
-        if: ${{ matrix.build_cc == "gcc-coverage" }}
+        if: ${{ matrix.build_cc == 'gcc-coverage' }}
         uses: codecov/codecov-action@v3
         with:
           directory: ./srf/build/gcovr-html-report
