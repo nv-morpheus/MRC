@@ -25,6 +25,10 @@ gpuci_logger "Fetching Build artifacts from ${DISPLAY_ARTIFACT_URL}/"
 fetch_s3 "${ARTIFACT_ENDPOINT}/cpp_tests.tar.bz" "${WORKSPACE_TMP}/cpp_tests.tar.bz"
 fetch_s3 "${ARTIFACT_ENDPOINT}/dsos.tar.bz" "${WORKSPACE_TMP}/dsos.tar.bz"
 fetch_s3 "${ARTIFACT_ENDPOINT}/python_build.tar.bz" "${WORKSPACE_TMP}/python_build.tar.bz"
+if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
+    fetch_s3 "${ARTIFACT_ENDPOINT}/dot_cache.tar.bz" "${WORKSPACE_TMP}/dot_cache.tar.bz"
+    tar xf "${WORKSPACE_TMP}/dot_cache.tar.bz"
+fi
 
 tar xf "${WORKSPACE_TMP}/cpp_tests.tar.bz"
 tar xf "${WORKSPACE_TMP}/dsos.tar.bz"
