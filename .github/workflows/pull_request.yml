@@ -115,6 +115,16 @@ jobs:
           BUILD_CC: ${{ matrix.build_cc }}
         run: ./srf/ci/scripts/github/test.sh
 
+      - name: Codecov
+        if: ${{ matrix.build_cc == "gcc-coverage" }}
+        uses: codecov/codecov-action@v3
+        with:
+          directory: ./srf/build/gcovr-html-report
+          flags: unittests # optional
+          name: codecov-umbrella # optional
+          fail_ci_if_error: true # optional (default = false)
+          verbose: true # optional (default = false)
+
   documentation:
     name: Documentation
     needs: [build]
