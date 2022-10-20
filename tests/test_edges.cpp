@@ -126,6 +126,19 @@ class TestSource : public IngressAcceptor<int>, public EgressProvider<int>, publ
     {
         this->set_channel(std::make_unique<srf::channel::BufferedChannel<int>>());
     }
+
+    void run()
+    {
+        auto output = this->get_writable_edge();
+
+        for (int i = 0; i < 3; i++)
+        {
+            if (output->await_write(int(i)) != channel::Status::success)
+            {
+                break;
+            }
+        }
+    }
 };
 
 class TestNode : public IngressProvider<int>,
@@ -686,6 +699,20 @@ TEST_F(TestEdges, SourceToBroadcastToDifferentSinks)
     node::make_edge2(*source, *broadcast);
     node::make_edge2(*broadcast, *sink1);
     node::make_edge2(*broadcast, *sink2);
+}
+
+TEST_F(TestEdges, SourceToBroadcastToSinkComponents)
+{
+    auto source    = std::make_shared<node::TestSource>();
+    auto broadcast = std::make_shared<node::TestBroadcast>();
+    auto sink1     = std::make_shared<node::TestSinkComponent>();
+    auto sink2     = std::make_shared<node::TestSinkComponent>();
+
+    node::make_edge2(*source, *broadcast);
+    node::make_edge2(*broadcast, *sink1);
+    node::make_edge2(*broadcast, *sink2);
+
+    source->run();
 }
 
 }  // namespace srf
