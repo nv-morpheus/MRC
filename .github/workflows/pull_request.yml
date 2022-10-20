@@ -152,6 +152,7 @@ jobs:
     timeout-minutes: 60
     container:
       image: gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8
+      options: --cap-add=sys_nice
     strategy:
       fail-fast: true
 
