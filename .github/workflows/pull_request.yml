@@ -124,6 +124,7 @@ jobs:
           fail_ci_if_error: false
           gcov: true
           verbose: true
+          working-directory: ./srf
 
   documentation:
     name: Documentation
