@@ -119,7 +119,7 @@ jobs:
         if: ${{ matrix.build_cc == 'gcc-coverage' }}
         uses: codecov/codecov-action@v3
         with:
-          files: ./build/build/gcovr-xml-report.xml
+          files: ./build/gcovr-xml-report.xml
           fail_ci_if_error: true
           verbose: true
 
