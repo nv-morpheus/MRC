@@ -58,7 +58,6 @@ COPY ./ci/conda/environments/dev_env.yml /tmp
 
 RUN CONDA_ALWAYS_YES=true /opt/conda/bin/mamba env create -n ${PROJ_NAME} -q --file /tmp/dev_env.yml && \
     sed -i "s/conda activate base/conda activate ${PROJ_NAME}/g" ~/.bashrc && \
-    echo -e '#!/bin/sh\n\nexport CUDA_PATH=/usr/local/cuda\nexport LD_LIBRARY_PATH=/usr/local/cuda-${CUDA_SHORT_VER}/compat:${LD_LIBRARY_PATH}' > /opt/conda/envs/${PROJ_NAME}/etc/conda/activate.d/env_vars.sh && \
     conda clean -afy && \
     rm /tmp/dev_env.yml
 
