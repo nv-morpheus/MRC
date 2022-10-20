@@ -17,7 +17,7 @@
 
 # Note this is the Dockerfile for the CI runner not for SRF itself
 # Build from the root of the SRF repo with:
-# docker build --network=host -t srf/ci:runner -f ci/runner/Dockerfile .
+# docker build --network=host -t srf/ci:latest -f ci/runner/Dockerfile .
 
 # Args used in FROM commands must come first
 ARG FROM_IMAGE="rapidsai/ci"
@@ -28,6 +28,9 @@ ARG PYTHON_VER=3.8
 
 # Configure the base docker img
 FROM ${FROM_IMAGE}:cuda${CUDA_VER}-${LINUX_DISTRO}${LINUX_VER}-py${PYTHON_VER} AS base
+
+ARG PROJ_NAME=srf
+ARG CUDA_SHORT_VER=11.4
 
 SHELL ["/bin/bash",  "-c"]
 
@@ -53,9 +56,9 @@ RUN apt-get update &&\
 # Create conda environment
 COPY ./ci/conda/environments/dev_env.yml /tmp
 
-RUN CONDA_ALWAYS_YES=true /opt/conda/bin/mamba env create -n srf -q --file /tmp/dev_env.yml && \
-    sed -i "s/conda activate base/conda activate srf/g" ~/.bashrc && \
-    echo -e '#!/bin/sh\n\nexport CUDA_PATH=/usr/local/cuda\nexport LD_LIBRARY_PATH=/usr/local/cuda-11.4/compat:${LD_LIBRARY_PATH}' > /opt/conda/envs/srf/etc/conda/activate.d/env_vars.sh && \
+RUN CONDA_ALWAYS_YES=true /opt/conda/bin/mamba env create -n ${PROJ_NAME} -q --file /tmp/dev_env.yml && \
+    sed -i "s/conda activate base/conda activate ${PROJ_NAME}/g" ~/.bashrc && \
+    echo -e '#!/bin/sh\n\nexport CUDA_PATH=/usr/local/cuda\nexport LD_LIBRARY_PATH=/usr/local/cuda-${CUDA_SHORT_VER}/compat:${LD_LIBRARY_PATH}' > /opt/conda/envs/${PROJ_NAME}/etc/conda/activate.d/env_vars.sh && \
     conda clean -afy && \
     rm /tmp/dev_env.yml
 
@@ -64,7 +67,7 @@ RUN CONDA_ALWAYS_YES=true /opt/conda/bin/mamba env create -n srf -q --file /tmp/
 RUN git clone https://github.com/include-what-you-use/include-what-you-use.git /tmp/iwyu &&\
     cd /tmp/iwyu &&\
     git checkout clang_12 &&\
-    source activate srf && \
+    source activate ${PROJ_NAME} && \
     cmake -G Ninja \
         -DCMAKE_PREFIX_PATH=$(llvm-config --cmakedir) \
         -DCMAKE_C_COMPILER=$(which clang) \
