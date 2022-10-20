@@ -31,27 +31,28 @@ FROM ${FROM_IMAGE}:cuda${CUDA_VER}-${LINUX_DISTRO}${LINUX_VER}-py${PYTHON_VER} A
 
 ARG PROJ_NAME=srf
 ARG CUDA_SHORT_VER=11.4
+ARG CLANG_VER=12
 
 SHELL ["/bin/bash",  "-c"]
 
 # OS deps
 RUN apt-get update &&\
     apt-get install --no-install-recommends -y \
-        clang-format-12 \
-        clang-tidy-12 \
-        libclang-12-dev \
+        clang-format-${CLANG_VER} \
+        clang-tidy-${CLANG_VER} \
+        libclang-${CLANG_VER}-dev \
         libnuma1 \
         libnvidia-compute-495 \
-        llvm-12-dev \
+        llvm-${CLANG_VER}-dev \
     && rm -rf /var/lib/apt/lists/* &&\
-    update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 121 \
-        --slave /usr/bin/clang-apply-replacements clang-apply-replacements /usr/bin/clang-apply-replacements-12 \
-        --slave /usr/bin/clang-format clang-format /usr/bin/clang-format-12 \
-        --slave /usr/bin/clang-format-diff clang-format-diff /usr/bin/clang-format-diff-12 \
-        --slave /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-12 \
-        --slave /usr/bin/clang-tidy-diff.py clang-tidy-diff.py /usr/bin/clang-tidy-diff-12.py \
-        --slave /usr/bin/clang++ clang++ /usr/bin/clang++-12 \
-        --slave /usr/bin/git-clang-format git-clang-format /usr/bin/git-clang-format-12
+    update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${CLANG_VER} 121 \
+        --slave /usr/bin/clang-apply-replacements clang-apply-replacements /usr/bin/clang-apply-replacements-${CLANG_VER} \
+        --slave /usr/bin/clang-format clang-format /usr/bin/clang-format-${CLANG_VER} \
+        --slave /usr/bin/clang-format-diff clang-format-diff /usr/bin/clang-format-diff-${CLANG_VER} \
+        --slave /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-${CLANG_VER} \
+        --slave /usr/bin/clang-tidy-diff.py clang-tidy-diff.py /usr/bin/clang-tidy-diff-${CLANG_VER}.py \
+        --slave /usr/bin/clang++ clang++ /usr/bin/clang++-${CLANG_VER} \
+        --slave /usr/bin/git-clang-format git-clang-format /usr/bin/git-clang-format-${CLANG_VER}
 
 # Create conda environment
 COPY ./ci/conda/environments/dev_env.yml /tmp
@@ -65,10 +66,9 @@ RUN CONDA_ALWAYS_YES=true /opt/conda/bin/mamba env create -n ${PROJ_NAME} -q --f
 # Install IWYU
 RUN git clone https://github.com/include-what-you-use/include-what-you-use.git /tmp/iwyu &&\
     cd /tmp/iwyu &&\
-    git checkout clang_12 &&\
+    git checkout clang_${CLANG_VER} &&\
     source activate ${PROJ_NAME} && \
     cmake -G Ninja \
-        -DCMAKE_PREFIX_PATH=$(llvm-config --cmakedir) \
         -DCMAKE_C_COMPILER=$(which clang) \
         -DCMAKE_CXX_COMPILER=$(which clang++) \
         -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX}  . && \
