@@ -113,18 +113,8 @@ jobs:
         shell: bash
         env:
           BUILD_CC: ${{ matrix.build_cc }}
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         run: ./srf/ci/scripts/github/test.sh
-
-      - name: Codecov
-        if: ${{ matrix.build_cc == 'gcc-coverage' }}
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./srf/build/gcovr-xml-report.xml
-          fail_ci_if_error: false
-          gcov: true
-          verbose: true
-          working-directory: ./srf
 
   documentation:
     name: Documentation
