@@ -46,11 +46,7 @@ jobs:
     runs-on: [self-hosted, linux, amd64, cpu4]
     timeout-minutes: 60
     container:
-<<<<<<< HEAD
       image: rapidsai/ci:cuda11.4.1-ubuntu20.04-py3.8
-=======
-      image: gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8
->>>>>>> branch-22.11
     strategy:
       fail-fast: true
 
@@ -71,11 +67,7 @@ jobs:
     runs-on: [self-hosted, linux, amd64, cpu16]
     timeout-minutes: 60
     container:
-<<<<<<< HEAD
       image: rapidsai/ci:cuda11.4.1-ubuntu20.04-py3.8
-=======
-      image: gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8
->>>>>>> branch-22.11
     strategy:
       fail-fast: true
       matrix:
