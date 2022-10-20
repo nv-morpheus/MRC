@@ -18,8 +18,7 @@ set -e
 
 source ${WORKSPACE}/ci/scripts/github/common.sh
 
-
-restore_conda_env
+update_conda_env
 
 rapids-logger "Building Conda Package"
 

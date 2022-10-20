@@ -22,8 +22,6 @@ fetch_base_branch
 
 update_conda_env
 
-show_conda_info
-
 rapids-logger "Configuring CMake"
 cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} .
 

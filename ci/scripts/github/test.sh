@@ -35,6 +35,13 @@ rapids-logger "Installing SRF"
 cmake -P ${SRF_ROOT}/build/cmake_install.cmake
 pip install ${SRF_ROOT}/build/python
 
+if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
+  CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES} ${CMAKE_BUILD_WITH_CODECOV}"
+else
+  CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES}"
+fi
+
+cmake -B build -G Ninja ${CMAKE_FLAGS} .
 
 rapids-logger "Running C++ Tests"
 cd ${SRF_ROOT}/build

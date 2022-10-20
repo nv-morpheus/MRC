@@ -46,7 +46,11 @@ jobs:
     runs-on: [self-hosted, linux, amd64, cpu4]
     timeout-minutes: 60
     container:
+<<<<<<< HEAD
       image: rapidsai/ci:cuda11.4.1-ubuntu20.04-py3.8
+=======
+      image: gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8
+>>>>>>> branch-22.11
     strategy:
       fail-fast: true
 
@@ -67,7 +71,11 @@ jobs:
     runs-on: [self-hosted, linux, amd64, cpu16]
     timeout-minutes: 60
     container:
+<<<<<<< HEAD
       image: rapidsai/ci:cuda11.4.1-ubuntu20.04-py3.8
+=======
+      image: gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8
+>>>>>>> branch-22.11
     strategy:
       fail-fast: true
       matrix:
@@ -84,12 +92,11 @@ jobs:
         shell: bash
         env:
           BUILD_CC: ${{ matrix.build_cc }}
-          SRF_IGNORE_NO_GPU: 1
         run: ./srf/ci/scripts/github/build.sh
 
   test:
     name: Test
-    needs: [check, build]
+    needs: [build]
     runs-on: [self-hosted, linux, amd64, gpu-v100-495-1]
     timeout-minutes: 60
     container:
@@ -118,7 +125,7 @@ jobs:
 
   documentation:
     name: Documentation
-    needs: [check, build]
+    needs: [build]
     runs-on: [self-hosted, linux, amd64, cpu4]
     timeout-minutes: 60
     container:
@@ -139,7 +146,7 @@ jobs:
 
   benchmark:
     name: Benchmark
-    needs: [check, build]
+    needs: [build]
     runs-on: [self-hosted, linux, amd64, cpu4]
     timeout-minutes: 60
     container:
@@ -182,6 +189,7 @@ jobs:
         with:
           lfs: false
           path: 'srf'
+          fetch-depth: 0
 
       - name: conda
         shell: bash
