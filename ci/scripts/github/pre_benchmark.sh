@@ -21,10 +21,8 @@ source ${WORKSPACE}/ci/scripts/github/common.sh
 update_conda_env
 
 rapids-logger "Fetching Build artifacts from ${DISPLAY_ARTIFACT_URL}/"
-fetch_s3 "${ARTIFACT_ENDPOINT}/dot_cache.tar.bz" "${WORKSPACE_TMP}/dot_cache.tar.bz"
 fetch_s3 "${ARTIFACT_ENDPOINT}/build.tar.bz" "${WORKSPACE_TMP}/build.tar.bz"
 
-tar xf "${WORKSPACE_TMP}/dot_cache.tar.bz"
 tar xf "${WORKSPACE_TMP}/build.tar.bz"
 
 mkdir -p ${WORKSPACE_TMP}/reports
