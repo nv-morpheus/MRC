@@ -162,8 +162,8 @@ class TestQueue : public IngressProvider<int>, public EgressProvider<int>
         // Create a new edge that will close the channel when all
         auto new_edge = std::make_shared<EdgeChannel<int>>(std::move(channel));
 
-        UpstreamEdgeHolder<int>::set_edge(new_edge);
-        DownstreamEdgeHolder<int>::set_edge(new_edge);
+        UpstreamEdgeHolder<int>::init_edge(new_edge);
+        DownstreamEdgeHolder<int>::init_edge(new_edge);
     }
 };
 
@@ -172,7 +172,7 @@ class TestSourceComponent : public EgressProvider<int>
   public:
     TestSourceComponent()
     {
-        this->set_edge(std::make_shared<EdgeReadableLambda<int>>(
+        this->init_edge(std::make_shared<EdgeReadableLambda<int>>(
             [this](int& t) {
                 // Call this object
                 return this->await_read(t);
@@ -200,13 +200,10 @@ class TestNodeComponent : public IngressProvider<int>, public IngressAcceptor<in
   public:
     TestNodeComponent()
     {
-        IngressProvider<int>::set_edge(std::make_shared<EdgeWritableLambda<int>>(
+        IngressProvider<int>::init_edge(std::make_shared<EdgeWritableLambda<int>>(
             [this](int&& t) {
                 // Call this object
-                int returned = this->on_next(std::move(t));
-
-                // Forward on to the downstream
-                return this->get_writable_edge()->await_write(std::move(returned));
+                return this->on_next(std::move(t));
             },
             [this]() {
                 // Call complete, and then drop the downstream edge
@@ -223,11 +220,11 @@ class TestNodeComponent : public IngressProvider<int>, public IngressAcceptor<in
         VLOG(10) << "Destroying TestNodeComponent";
     }
 
-    int on_next(int&& t)
+    channel::Status on_next(int&& t)
     {
         VLOG(10) << "TestNodeComponent got value: " << t;
 
-        return t + 1;
+        return this->get_writable_edge()->await_write(t + 1);
     }
 
     void on_complete()
@@ -241,7 +238,7 @@ class TestSinkComponent : public IngressProvider<int>
   public:
     TestSinkComponent()
     {
-        this->set_edge(std::make_shared<EdgeWritableLambda<int>>(
+        this->init_edge(std::make_shared<EdgeWritableLambda<int>>(
             [this](int&& t) {
                 // Call this object
                 return this->await_write(std::move(t));
@@ -260,6 +257,233 @@ class TestSinkComponent : public IngressProvider<int>
     {
         VLOG(10) << "TestSinkComponent completed";
     }
+};
+
+class TestRouter : public IngressProvider<int>
+{
+    class UpstreamEdge : public EdgeWritable<int>, public DownstreamMultiEdgeHolder<int, std::string>
+    {
+      public:
+        UpstreamEdge(TestRouter& parent) : m_parent(parent) {}
+
+        ~UpstreamEdge()
+        {
+            m_parent.on_complete();
+        }
+
+        channel::Status await_write(int&& t) override
+        {
+            VLOG(10) << "TestRouter got value: " << t;
+
+            // Determine key for value
+            auto key = m_parent.determine_key_for_value(t);
+
+            return this->get_writable_edge(key)->await_write(std::move(t));
+        }
+
+        void add_downstream(std::string key, std::shared_ptr<EdgeWritable<int>> downstream)
+        {
+            this->set_edge(std::move(key), std::move(downstream));
+        }
+
+      private:
+        TestRouter& m_parent;
+    };
+
+    class DownstreamEdge : public IIngressAcceptor<int>
+    {
+      public:
+        DownstreamEdge(std::weak_ptr<UpstreamEdge> upstream, std::string key) :
+          m_upstream(std::move(upstream)),
+          m_key(std::move(key))
+        {}
+
+        void set_ingress(std::shared_ptr<EdgeWritable<int>> ingress) override
+        {
+            // Get a lock to the upstream edge
+            if (auto upstream = m_upstream.lock())
+            {
+                upstream->add_downstream(m_key, ingress);
+            }
+            else
+            {
+                LOG(ERROR) << "Could not set ingress to upstream edge. Upstream edge has been destroyed.";
+            }
+        }
+
+      private:
+        std::weak_ptr<UpstreamEdge> m_upstream;
+        std::string m_key;
+    };
+
+  public:
+    TestRouter()
+    {
+        auto upstream = std::make_shared<UpstreamEdge>(*this);
+
+        // Save it to avoid casting
+        m_upstream = upstream;
+
+        IngressProvider<int>::init_edge(upstream);
+    }
+
+    std::shared_ptr<IIngressAcceptor<int>> get_source(const std::string& key) const
+    {
+        auto found = m_downstream.find(key);
+
+        if (found == m_downstream.end())
+        {
+            auto new_source = std::make_shared<DownstreamEdge>(m_upstream, key);
+
+            const_cast<TestRouter*>(this)->m_downstream[key] = new_source;
+
+            return new_source;
+        }
+
+        return found->second;
+    }
+
+    void on_complete()
+    {
+        VLOG(10) << "TestRouter completed";
+    }
+
+  protected:
+    std::string determine_key_for_value(const int& t)
+    {
+        return "test";
+    }
+
+  private:
+    std::weak_ptr<UpstreamEdge> m_upstream;
+    std::map<std::string, std::shared_ptr<DownstreamEdge>> m_downstream;
+};
+
+class TestConditional : public IngressProvider<int>, public IngressAcceptor<int>
+{
+  public:
+    TestConditional()
+    {
+        IngressProvider<int>::init_edge(std::make_shared<EdgeWritableLambda<int>>(
+            [this](int&& t) {
+                // Call this object
+                return this->on_next(std::move(t));
+            },
+            [this]() {
+                // Call complete, and then drop the downstream edge
+                this->on_complete();
+
+                // TODO(MDD): Release downstream edge
+                DownstreamEdgeHolder<int>::reset_edge();
+            }));
+    }
+
+    ~TestConditional()
+    {
+        // Debug print
+        VLOG(10) << "Destroying TestConditional";
+    }
+
+    channel::Status on_next(int&& t)
+    {
+        VLOG(10) << "TestConditional got value: " << t;
+
+        // Skip on condition
+        if (t % 2 == 0)
+        {
+            return channel::Status::success;
+        }
+
+        return this->get_writable_edge()->await_write(t + 1);
+    }
+
+    void on_complete()
+    {
+        VLOG(10) << "TestConditional completed";
+    }
+};
+
+class TestBroadcast : public IngressProvider<int>, public IIngressAcceptor<int>
+{
+    class BroadcastEdge : public EdgeWritable<int>, public DownstreamMultiEdgeHolder<int, size_t>
+    {
+      public:
+        BroadcastEdge(TestBroadcast& parent) : m_parent(parent) {}
+
+        ~BroadcastEdge()
+        {
+            m_parent.on_complete();
+        }
+
+        channel::Status await_write(int&& t) override
+        {
+            VLOG(10) << "BroadcastEdge got value: " << t;
+
+            for (size_t i = this->edge_count() - 1; i > 0; i--)
+            {
+                // Make a copy
+                int x = t;
+
+                auto response = this->get_writable_edge(i)->await_write(std::move(x));
+
+                if (response != channel::Status::success)
+                {
+                    return response;
+                }
+            }
+
+            // Write index 0 last
+            return this->get_writable_edge(0)->await_write(std::move(t));
+        }
+
+        void add_downstream(std::shared_ptr<EdgeWritable<int>> downstream)
+        {
+            auto edge_count = this->edge_count();
+
+            this->set_edge(edge_count, downstream);
+        }
+
+      private:
+        TestBroadcast& m_parent;
+        // std::vector<std::shared_ptr<EdgeWritable<int>>> m_outputs;
+    };
+
+  public:
+    TestBroadcast()
+    {
+        auto edge = std::make_shared<BroadcastEdge>(*this);
+
+        // Save to avoid casting
+        m_edge = edge;
+
+        IngressProvider<int>::init_edge(edge);
+    }
+
+    ~TestBroadcast()
+    {
+        // Debug print
+        VLOG(10) << "Destroying TestBroadcast";
+    }
+
+    void set_ingress(std::shared_ptr<EdgeWritable<int>> ingress) override
+    {
+        if (auto e = m_edge.lock())
+        {
+            e->add_downstream(ingress);
+        }
+        else
+        {
+            LOG(ERROR) << "Edge was destroyed";
+        }
+    }
+
+    void on_complete()
+    {
+        VLOG(10) << "TestBroadcast completed";
+    }
+
+  private:
+    std::weak_ptr<BroadcastEdge> m_edge;
 };
 
 }  // namespace srf::node
@@ -291,7 +515,7 @@ TEST_F(TestEdges, SourceToSinkMultiFail)
     auto sink2  = std::make_shared<node::TestSink>();
 
     node::make_edge2(*source, *sink1);
-    node::make_edge2(*source, *sink2);
+    EXPECT_THROW(node::make_edge2(*source, *sink2), std::runtime_error);
 }
 
 TEST_F(TestEdges, SourceToSinkComponent)
@@ -391,4 +615,77 @@ TEST_F(TestEdges, SourceToQueueToMultiSink)
     node::make_edge2(*queue, *sink1);
     node::make_edge2(*queue, *sink2);
 }
+
+TEST_F(TestEdges, SourceToQueueToDifferentSinks)
+{
+    auto source = std::make_shared<node::TestSource>();
+    auto queue  = std::make_shared<node::TestQueue>();
+    auto sink1  = std::make_shared<node::TestSink>();
+    auto node   = std::make_shared<node::TestNode>();
+    auto sink2  = std::make_shared<node::TestSink>();
+
+    node::make_edge2(*source, *queue);
+    node::make_edge2(*queue, *sink1);
+    node::make_edge2(*queue, *node);
+    node::make_edge2(*node, *sink2);
+}
+
+TEST_F(TestEdges, SourceToRouterToSinks)
+{
+    auto source = std::make_shared<node::TestSource>();
+    auto router = std::make_shared<node::TestRouter>();
+    auto sink1  = std::make_shared<node::TestSink>();
+    auto sink2  = std::make_shared<node::TestSink>();
+
+    node::make_edge2(*source, *router);
+    node::make_edge2(*router->get_source("odd"), *sink1);
+    node::make_edge2(*router->get_source("even"), *sink2);
+}
+
+TEST_F(TestEdges, SourceToRouterToDifferentSinks)
+{
+    auto source = std::make_shared<node::TestSource>();
+    auto router = std::make_shared<node::TestRouter>();
+    auto sink1  = std::make_shared<node::TestSink>();
+    auto sink2  = std::make_shared<node::TestSinkComponent>();
+
+    node::make_edge2(*source, *router);
+    node::make_edge2(*router->get_source("odd"), *sink1);
+    node::make_edge2(*router->get_source("even"), *sink2);
+}
+
+TEST_F(TestEdges, SourceToBroadcastToSink)
+{
+    auto source    = std::make_shared<node::TestSource>();
+    auto broadcast = std::make_shared<node::TestBroadcast>();
+    auto sink      = std::make_shared<node::TestSink>();
+
+    node::make_edge2(*source, *broadcast);
+    node::make_edge2(*broadcast, *sink);
+}
+
+TEST_F(TestEdges, SourceToBroadcastToMultiSink)
+{
+    auto source    = std::make_shared<node::TestSource>();
+    auto broadcast = std::make_shared<node::TestBroadcast>();
+    auto sink1     = std::make_shared<node::TestSink>();
+    auto sink2     = std::make_shared<node::TestSink>();
+
+    node::make_edge2(*source, *broadcast);
+    node::make_edge2(*broadcast, *sink1);
+    node::make_edge2(*broadcast, *sink2);
+}
+
+TEST_F(TestEdges, SourceToBroadcastToDifferentSinks)
+{
+    auto source    = std::make_shared<node::TestSource>();
+    auto broadcast = std::make_shared<node::TestBroadcast>();
+    auto sink1     = std::make_shared<node::TestSink>();
+    auto sink2     = std::make_shared<node::TestSinkComponent>();
+
+    node::make_edge2(*source, *broadcast);
+    node::make_edge2(*broadcast, *sink1);
+    node::make_edge2(*broadcast, *sink2);
+}
+
 }  // namespace srf
