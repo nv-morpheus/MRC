@@ -63,7 +63,7 @@ static std::string runnable_state_str(const Runner::State& state)
     return "Fatal Error: Unhandled Runner::State value";
 }
 
-Runner::Runner(std::unique_ptr<Runnable> runnable) : m_runnable(std::move(runnable))
+Runner::Runner(std::shared_ptr<Runnable> runnable) : m_runnable(std::move(runnable))
 {
     m_runnable->update_state(Runnable::State::Owned);
 }

@@ -302,18 +302,18 @@ class EdgeHolder : public virtual_enable_shared_from_this<EdgeHolder<T>>
             // Convert to full shared_ptr to avoid edge going out of scope
             if (auto e = weak_edge.lock())
             {
-                this->m_init_edge_lifetime.reset();
+                // this->m_init_edge_lifetime.reset();
 
-                // auto self = this->shared_from_this();
+                auto self = this->shared_from_this();
 
-                // // Release the lifetime on self
-                // self->m_init_edge_lifetime.reset();
+                // Release the lifetime on self
+                self->m_init_edge_lifetime.reset();
 
-                // // Now register a disconnector to keep self alive
-                // e->add_disconnector(EdgeLifetime<T>([self]() {
-                //     self->m_init_edge_lifetime.reset();
-                //     self->m_get_edge.reset();
-                // }));
+                // Now register a disconnector to keep self alive
+                e->add_disconnector(EdgeLifetime<T>([self]() {
+                    self->m_init_edge_lifetime.reset();
+                    self->m_get_edge.reset();
+                }));
             }
             else
             {

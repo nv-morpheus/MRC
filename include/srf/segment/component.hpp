@@ -40,7 +40,9 @@ class Component final : public Object<ResourceT>
         CHECK(m_resource);
         return m_resource.get();
     }
-    std::unique_ptr<ResourceT> m_resource;
+
+    // Stored as a shared_ptr but requires unique_ptr to construct
+    std::shared_ptr<ResourceT> m_resource;
 };
 
 }  // namespace srf::segment

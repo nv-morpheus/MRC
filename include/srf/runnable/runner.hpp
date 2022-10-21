@@ -62,7 +62,7 @@ namespace srf::runnable {
 class Runner
 {
   protected:
-    Runner(std::unique_ptr<Runnable>);
+    Runner(std::shared_ptr<Runnable>);
 
   public:
     enum class State
@@ -194,7 +194,7 @@ class Runner
 
     // the runnable owned by the runner
     // using shared_ptr to allow python access; otherwise a unique_ptr woudld used
-    std::unique_ptr<Runnable> m_runnable;
+    std::shared_ptr<Runnable> m_runnable;
 
     // 1:1 mapping to contexts, but hold the runner specific states for each instance
     mutable std::vector<Instance> m_instances;
@@ -216,7 +216,7 @@ template <typename ContextT>
 class SpecializedRunner : public Runner
 {
   public:
-    SpecializedRunner(std::unique_ptr<RunnableWithContext<ContextT>> runnable) : Runner(std::move(runnable)) {}
+    SpecializedRunner(std::shared_ptr<RunnableWithContext<ContextT>> runnable) : Runner(std::move(runnable)) {}
     ~SpecializedRunner() override = default;
 
     template <typename... ArgsT>
@@ -254,7 +254,7 @@ class SpecializedRunner : public Runner
 };
 
 template <typename RunnableT>
-auto make_runner(std::unique_ptr<RunnableT> runnable)
+auto make_runner(std::shared_ptr<RunnableT> runnable)
 {
     CHECK(runnable);
     using context_t = runnable_context_t<RunnableT>;
