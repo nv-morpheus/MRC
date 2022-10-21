@@ -49,7 +49,7 @@ def test_py_end_to_end():
     #                                   |_______________________________________________________________
     #
 
-    def init1(builder: srf.Builder):
+    def init_wrapper(builder: srf.Builder):
         global packets_1, packets_2, packets_3
         packets_1, packets_2, packets_3 = 0, 0, 0
 
@@ -94,7 +94,7 @@ def test_py_end_to_end():
 
     pipe = srf.Pipeline()
 
-    pipe.make_segment("EndToEnd_Segment", [], [], init1)
+    pipe.make_segment("EndToEnd_Segment", [], [], init_wrapper)
 
     options = srf.Options()
 
