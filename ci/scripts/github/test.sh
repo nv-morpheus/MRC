@@ -80,6 +80,7 @@ if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
   aws s3 cp ${WORKSPACE_TMP}/coverage_reports.tar.bz "${ARTIFACT_URL}/coverage_reports.tar.bz"
 
   fetch_codecov
+  gpuci_logger "Upload codecov report"
   bash ${CODECOVE_SH} -p ${SRF_ROOT} -f ${SRF_ROOT}/build/gcovr-xml-report.xml
 fi
 
