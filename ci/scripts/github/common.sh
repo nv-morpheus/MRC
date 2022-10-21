@@ -101,22 +101,6 @@ function fetch_s3() {
     fi
 }
 
-function fetch_codecov() {
-    gpuci_logger "Downloading codecov uploader"
-    export CODECOVE_SH=${WORKSPACE_TMP}/codecov
-    curl -fLso ${CODECOVE_SH} https://codecov.io/bash
-
-    gpuci_logger "Verifying codecov"
-    VERSION=$(grep -o 'VERSION=\"[0-9\.]*\"' ${CODECOVE_SH} | cut -d'"' -f2);
-
-    pushd ${WORKSPACE_TMP}
-    for i in 1 256 512
-    do
-        shasum -a $i -c --ignore-missing <(curl -s "https://raw.githubusercontent.com/codecov/codecov-bash/${VERSION}/SHA${i}SUM")
-    done
-    popd
-}
-
 function show_conda_info() {
 
     gpuci_logger "Check Conda info"

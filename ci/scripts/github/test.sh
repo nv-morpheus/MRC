@@ -79,9 +79,8 @@ if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
   tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${SRF_ROOT}/build/gcovr-html-report ${SRF_ROOT}/build/gcovr-xml-report.xml
   aws s3 cp ${WORKSPACE_TMP}/coverage_reports.tar.bz "${ARTIFACT_URL}/coverage_reports.tar.bz"
 
-  fetch_codecov
   gpuci_logger "Upload codecov report"
-  bash ${CODECOVE_SH} -p ${SRF_ROOT} -f ${SRF_ROOT}/build/gcovr-xml-report.xml
+  /opt/conda/bin/codecov --root ${SRF_ROOT} -f ${SRF_ROOT}/build/gcovr-xml-report.xml
 fi
 
 gpuci_logger "Archiving test reports"
