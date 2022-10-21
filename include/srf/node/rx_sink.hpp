@@ -158,7 +158,7 @@ class EdgeRxObserver : public EdgeWritable<T>
 };
 
 template <typename T, typename ContextT>
-class RxSink2 : public RxSinkBase<T>, public RxRunnable<ContextT>, public RxPrologueTap<T>
+class RxSink2 : public RxSinkBase2<T>, public RxRunnable<ContextT>, public RxPrologueTap<T>
 {
   public:
     using observer_t       = rxcpp::observer<T>;
@@ -185,7 +185,7 @@ class RxSink2 : public RxSinkBase<T>, public RxRunnable<ContextT>, public RxProl
 
   private:
     // the following methods are moved to private from their original scopes to prevent access from deriving classes
-    using RxSinkBase<T>::observable;
+    using RxSinkBase2<T>::observable;
 
     void on_shutdown_critical_section() final;
     void do_subscribe(rxcpp::composite_subscription& subscription) final;
@@ -195,6 +195,48 @@ class RxSink2 : public RxSinkBase<T>, public RxRunnable<ContextT>, public RxProl
 
     observer_t m_observer;
 };
+
+template <typename T, typename ContextT>
+void RxSink2<T, ContextT>::set_observer(rxcpp::observer<T> observer)
+{
+    m_observer = std::move(observer);
+}
+
+template <typename T, typename ContextT>
+void RxSink2<T, ContextT>::do_subscribe(rxcpp::composite_subscription& subscription)
+{
+    auto observable = RxPrologueTap<T>::apply_prologue_taps(RxSinkBase2<T>::observable());
+
+    auto default_error_handler = rxcpp::make_observer_dynamic<T>(
+        [this](T data) { m_observer.on_next(std::move(data)); },
+        [this](std::exception_ptr ptr) {
+            runnable::Context::get_runtime_context().set_exception(std::move(std::current_exception()));
+            try
+            {
+                m_observer.on_error(std::move(ptr));
+            } catch (...)
+            {
+                runnable::Context::get_runtime_context().set_exception(std::move(std::current_exception()));
+            }
+        },
+        [this] { m_observer.on_completed(); });
+
+    observable.subscribe(subscription, default_error_handler);
+}
+
+template <typename T, typename ContextT>
+void RxSink2<T, ContextT>::on_stop(const rxcpp::subscription& subscription) const
+{}
+
+template <typename T, typename ContextT>
+void RxSink2<T, ContextT>::on_kill(const rxcpp::subscription& subscription) const
+{
+    subscription.unsubscribe();
+}
+
+template <typename T, typename ContextT>
+void RxSink2<T, ContextT>::on_shutdown_critical_section()
+{}
 
 template <typename T>
 class RxSinkComponent : public IngressProvider<T>

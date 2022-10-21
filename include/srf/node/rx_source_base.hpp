@@ -104,7 +104,10 @@ void RxSourceBase<T>::source_remove_watcher(std::shared_ptr<WatcherInterface> wa
  * @tparam T
  */
 template <typename T>
-class RxSourceBase2 : public EgressProvider<T>, private Watchable
+class RxSourceBase2 : public EgressProvider<T>,
+                      public IngressAcceptor<T>,
+                      public DownstreamChannelHolder<T>,
+                      private Watchable
 {
   public:
     void source_add_watcher(std::shared_ptr<WatcherInterface> watcher);
@@ -117,8 +120,8 @@ class RxSourceBase2 : public EgressProvider<T>, private Watchable
     const rxcpp::observer<T>& observer() const;
 
   private:
-    // the following methods are moved to private from their original scopes to prevent access from deriving classes
-    using SourceChannel<T>::await_write;
+    // // the following methods are moved to private from their original scopes to prevent access from deriving classes
+    // using SourceChannel<T>::await_write;
 
     rxcpp::observer<T> m_observer;
 };
@@ -133,7 +136,10 @@ RxSourceBase2<T>::RxSourceBase2() :
           this->watcher_epilogue(WatchableEvent::channel_write, true, &data);
       },
       [](std::exception_ptr ptr) { runnable::Context::get_runtime_context().set_exception(std::move(ptr)); }))
-{}
+{
+    // Set the default channel
+    this->set_channel(std::make_unique<srf::channel::BufferedChannel<T>>());
+}
 
 template <typename T>
 const rxcpp::observer<T>& RxSourceBase2<T>::observer() const

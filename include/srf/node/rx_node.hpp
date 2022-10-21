@@ -33,6 +33,7 @@
 #include "srf/utils/type_utils.hpp"
 
 #include <glog/logging.h>
+#include <rxcpp/rx-observer.hpp>
 #include <rxcpp/rx-subscription.hpp>
 
 #include <exception>
@@ -141,46 +142,150 @@ void RxNode<InputT, OutputT, ContextT>::on_shutdown_critical_section()
     RxSourceBase<OutputT>::release_channel();
 }
 
-// template <typename InputT, typename OutputT>
-// class RxNodeComponent : public IngressProvider<InputT>, public IngressAcceptor<OutputT>
-// {
-//   public:
-//     using stream_fn_t = typename RxNodeBase<InputT, OutputT>::stream_fn_t;
+template <typename InputT, typename OutputT, typename ContextT>
+class RxNode2 : public RxSinkBase2<InputT>,
+                public RxSourceBase2<OutputT>,
+                public RxRunnable<ContextT>,
+                public RxPrologueTap<InputT>,
+                public RxEpilogueTap<OutputT>
+{
+  public:
+    // function defining the stream, i.e. operations linking Sink -> Source
+    using stream_fn_t = std::function<rxcpp::observable<OutputT>(const rxcpp::observable<InputT>&)>;
 
-//     RxNodeComponent() : RxNodeBase<InputT, OutputT>(m_sink_subject.get_observable(),
-//     m_source_subject.get_subscriber())
-//     {}
+    RxNode2();
 
-//     template <typename... OpsT>
-//     RxNodeComponent& pipe(OpsT&&... ops)
-//     {
-//         make_stream([=](auto start) { return (start | ... | ops); });
-//         return *this;
-//     }
+    template <typename... OpsT>
+    RxNode2(OpsT&&... ops);
 
-//     void make_stream(stream_fn_t fn)
-//     {
-//         // Start with the base sinke observable
-//         auto observable_in = RxSinkBase<InputT>::observable();
+    ~RxNode2() override = default;
 
-//         // // Apply prologue taps
-//         // observable_in = this->apply_prologue_taps(observable_in);
+    template <typename... OpsT>
+    RxNode2& pipe(OpsT&&... ops)
+    {
+        make_stream([=](auto start) { return (start | ... | ops); });
+        return *this;
+    }
 
-//         // Apply the specified stream
-//         auto observable_out = fn(observable_in);
+    void make_stream(stream_fn_t fn);
 
-//         // // Apply epilogue taps
-//         // observable_out = this->apply_epilogue_taps(observable_out);
+  private:
+    // the following method(s) are moved to private from their original scopes to prevent access from deriving classes
+    using RxSinkBase2<InputT>::observable;
+    using RxSourceBase2<OutputT>::observer;
 
-//         // Subscribe to the observer
-//         observable_out.subscribe(RxSourceBase<OutputT>::observer());
-//     }
+    void do_subscribe(rxcpp::composite_subscription& subscription) final;
+    void on_shutdown_critical_section() final;
 
-//   private:
-//     rxcpp::subjects::subject<InputT> m_sink_subject;
-//     rxcpp::subscription m_sink_subject_subscription;
-//     rxcpp::subjects::subject<InputT> m_source_subject;
-//     rxcpp::subscription m_source_subject_subscription;
-// };
+    void on_stop(const rxcpp::subscription& subscription) const final;
+    void on_kill(const rxcpp::subscription& subscription) const final;
+
+    // m_stream works like an operator. It is a function taking an observable and returning an observable. Allows
+    // delayed construction of the observable chain for prologue/epilogue
+    stream_fn_t m_stream;
+};
+
+template <typename InputT, typename OutputT, typename ContextT>
+RxNode2<InputT, OutputT, ContextT>::RxNode2() :
+  m_stream([](const rxcpp::observable<InputT>& obs) {
+      // Default to just returning the input
+      return obs;
+  })
+{}
+
+template <typename InputT, typename OutputT, typename ContextT>
+template <typename... OpsT>
+RxNode2<InputT, OutputT, ContextT>::RxNode2(OpsT&&... ops)
+{
+    pipe(std::forward<OpsT>(ops)...);
+}
+
+template <typename InputT, typename OutputT, typename ContextT>
+void RxNode2<InputT, OutputT, ContextT>::make_stream(stream_fn_t fn)
+{
+    m_stream = std::move(fn);
+}
+
+template <typename InputT, typename OutputT, typename ContextT>
+void RxNode2<InputT, OutputT, ContextT>::do_subscribe(rxcpp::composite_subscription& subscription)
+{
+    // Start with the base sinke observable
+    auto observable_in = RxSinkBase2<InputT>::observable();
+
+    // Apply prologue taps
+    observable_in = this->apply_prologue_taps(observable_in);
+
+    // Apply the specified stream
+    auto observable_out = m_stream(observable_in);
+
+    // Apply epilogue taps
+    observable_out = this->apply_epilogue_taps(observable_out);
+
+    // Subscribe to the observer
+    observable_out.subscribe(subscription, RxSourceBase2<OutputT>::observer());
+}
+
+template <typename InputT, typename OutputT, typename ContextT>
+void RxNode2<InputT, OutputT, ContextT>::on_stop(const rxcpp::subscription& subscription) const
+{}
+
+template <typename InputT, typename OutputT, typename ContextT>
+void RxNode2<InputT, OutputT, ContextT>::on_kill(const rxcpp::subscription& subscription) const
+{
+    subscription.unsubscribe();
+}
+
+template <typename InputT, typename OutputT, typename ContextT>
+void RxNode2<InputT, OutputT, ContextT>::on_shutdown_critical_section()
+{
+    DVLOG(10) << runnable::Context::get_runtime_context().info() << " releasing source channel";
+    RxSourceBase2<OutputT>::release_edge();
+}
+
+template <typename InputT, typename OutputT>
+class RxNodeComponent : public IngressProvider<InputT>, public IngressAcceptor<OutputT>
+{
+  public:
+    using stream_fn_t = std::function<rxcpp::observable<OutputT>(const rxcpp::observable<InputT>&)>;
+
+    RxNodeComponent() {}
+
+    template <typename... OpsT>
+    RxNodeComponent& pipe(OpsT&&... ops)
+    {
+        make_stream([=](auto start) { return (start | ... | ops); });
+        return *this;
+    }
+
+    void make_stream(stream_fn_t fn)
+    {
+        if (m_source_subject_subscription.is_subscribed())
+        {
+            m_source_subject_subscription.unsubscribe();
+        }
+
+        // Start with the base sinke observable
+        auto observable_in = m_sink_subject.get_observable();
+
+        // // Apply prologue taps
+        // observable_in = this->apply_prologue_taps(observable_in);
+
+        // Apply the specified stream
+        auto observable_out = fn(observable_in);
+
+        // // Apply epilogue taps
+        // observable_out = this->apply_epilogue_taps(observable_out);
+
+        // Subscribe to the observer
+        m_source_subject_subscription = observable_out.subscribe(rxcpp::make_observer(
+            [this](OutputT message) { this->get_writable_edge()->await_write(std::move(message)); }));
+    }
+
+  private:
+    rxcpp::subjects::subject<InputT> m_sink_subject;
+    rxcpp::subscription m_sink_subject_subscription;
+    rxcpp::subjects::subject<InputT> m_source_subject;
+    rxcpp::subscription m_source_subject_subscription;
+};
 
 }  // namespace srf::node

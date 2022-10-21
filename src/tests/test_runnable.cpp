@@ -21,6 +21,9 @@
 #include "internal/system/system_provider.hpp"
 
 #include "srf/core/bitmap.hpp"
+#include "srf/node/rx_node.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/rx_source.hpp"
 #include "srf/options/engine_groups.hpp"
 #include "srf/options/options.hpp"
 #include "srf/options/topology.hpp"
@@ -37,6 +40,7 @@
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
+#include <rxcpp/rx-observable.hpp>
 
 #include <atomic>
 #include <chrono>
@@ -263,6 +267,38 @@ TEST_F(TestRunnable, RunnerOutOfScope)
     auto runner   = m_resources->launch_control().prepare_launcher(factory, std::move(runnable))->ignition();
 
     runner->await_live();
+}
+
+TEST_F(TestRunnable, RxSourceToRxSink)
+{
+    std::atomic<std::size_t> counter = 0;
+    std::unique_ptr<runnable::Runner> runner_source;
+    std::unique_ptr<runnable::Runner> runner_sink;
+
+    // do the construction in its own scope
+    // only allow the runners to escape the scope
+    // this ensures that the Muxer Operator survives
+    {
+        auto source =
+            std::make_unique<node::RxSource2<float>>(rxcpp::observable<>::create<float>([](rxcpp::subscriber<float> s) {
+                s.on_next(1.0f);
+                s.on_next(2.0f);
+                s.on_next(3.0f);
+                s.on_completed();
+            }));
+        auto sink =
+            std::make_unique<node::RxSink2<float>>(rxcpp::make_observer_dynamic<float>([&](float x) { ++counter; }));
+
+        node::make_edge2(*source, *sink);
+
+        runner_sink   = m_resources->launch_control().prepare_launcher(std::move(sink))->ignition();
+        runner_source = m_resources->launch_control().prepare_launcher(std::move(source))->ignition();
+    }
+
+    runner_source->await_join();
+    runner_sink->await_join();
+
+    EXPECT_EQ(counter, 3);
 }
 
 // Move the remaining tests to TestNode

@@ -105,7 +105,10 @@ void RxSinkBase<T>::sink_remove_watcher(std::shared_ptr<WatcherInterface> watche
 }
 
 template <typename T>
-class RxSinkBase2 : public IngressProvider<T>, private Watchable
+class RxSinkBase2 : public IngressProvider<T>,
+                    public EgressAcceptor<T>,
+                    public UpstreamChannelHolder<T>,
+                    private Watchable
 {
   public:
     void sink_add_watcher(std::shared_ptr<WatcherInterface> watcher);
@@ -118,8 +121,8 @@ class RxSinkBase2 : public IngressProvider<T>, private Watchable
     const rxcpp::observable<T>& observable() const;
 
   private:
-    // the following methods are moved to private from their original scopes to prevent access from deriving classes
-    using SinkChannel<T>::egress;
+    // // the following methods are moved to private from their original scopes to prevent access from deriving classes
+    // using SinkChannel<T>::egress;
 
     // this is our channel reader progress engine
     void progress_engine(rxcpp::subscriber<T>& s);
@@ -131,7 +134,10 @@ class RxSinkBase2 : public IngressProvider<T>, private Watchable
 template <typename T>
 RxSinkBase2<T>::RxSinkBase2() :
   m_observable(rxcpp::observable<>::create<T>([this](rxcpp::subscriber<T> s) { progress_engine(s); }))
-{}
+{
+    // Set the default channel
+    this->set_channel(std::make_unique<srf::channel::BufferedChannel<T>>());
+}
 
 template <typename T>
 const rxcpp::observable<T>& RxSinkBase2<T>::observable() const

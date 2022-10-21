@@ -130,7 +130,7 @@ class RxSource2 : public RxSourceBase2<T>, public RxRunnable<ContextT>, public R
 };
 
 template <typename T, typename ContextT>
-RxSource2<T, ContextT>::RxSource2(rxcpp::observable<T> observable)
+RxSource2<T, ContextT>::RxSource2(rxcpp::observable<T> observable) : RxSourceBase2<T>()
 {
     set_observable(observable);
 }
@@ -139,7 +139,7 @@ template <typename T, typename ContextT>
 void RxSource2<T, ContextT>::on_shutdown_critical_section()
 {
     DVLOG(10) << runnable::Context::get_runtime_context().info() << " releasing source channel";
-    RxSourceBase<T>::release_channel();
+    RxSourceBase2<T>::release_edge();
 }
 
 template <typename T, typename ContextT>
@@ -152,7 +152,7 @@ template <typename T, typename ContextT>
 void RxSource2<T, ContextT>::do_subscribe(rxcpp::composite_subscription& subscription)
 {
     auto observable = this->apply_epilogue_taps(m_observable);
-    observable.subscribe(subscription, RxSourceBase<T>::observer());
+    observable.subscribe(subscription, RxSourceBase2<T>::observer());
 }
 
 template <typename T, typename ContextT>
