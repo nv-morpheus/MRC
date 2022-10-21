@@ -203,7 +203,8 @@ TEST_F(SegmentTests, ModuleEndToEndTest)
     EXPECT_EQ(packets_3, 4);
 }
 
-TEST_F(SegmentTests, ModuleAsSourceTest){
+TEST_F(SegmentTests, ModuleAsSourceTest)
+{
     using namespace modules;
 
     unsigned int packet_count{0};
@@ -237,7 +238,8 @@ TEST_F(SegmentTests, ModuleAsSourceTest){
     EXPECT_EQ(packet_count, 42);
 }
 
-TEST_F(SegmentTests, ModuleAsSinkTest){
+TEST_F(SegmentTests, ModuleAsSinkTest)
+{
     using namespace modules;
 
     unsigned int packet_count{0};
@@ -275,10 +277,11 @@ TEST_F(SegmentTests, ModuleAsSinkTest){
     EXPECT_EQ(packet_count, 43);
 }
 
-TEST_F(SegmentTests, ModuleChainingTest){
+TEST_F(SegmentTests, ModuleChainingTest)
+{
     using namespace modules;
 
-    auto sink_mod = SinkModule("ModuleChainingTest_mod2");
+    auto sink_mod     = SinkModule("ModuleChainingTest_mod2");
     auto init_wrapper = [&sink_mod](segment::Builder& builder) {
         auto config = nlohmann::json();
         unsigned int source_count{42};
@@ -303,7 +306,6 @@ TEST_F(SegmentTests, ModuleChainingTest){
 
     EXPECT_EQ(sink_mod.m_packet_count, 42);
 }
-
 
 TEST_F(SegmentTests, ModuleNestingTest)
 {
@@ -334,4 +336,127 @@ TEST_F(SegmentTests, ModuleNestingTest)
     executor.join();
 
     EXPECT_EQ(packet_count, 4);
+}
+
+TEST_F(SegmentTests, ModuleTemplateTest)
+{
+    using namespace modules;
+
+    unsigned int packet_count_1{0};
+    unsigned int packet_count_2{0};
+
+    auto init_wrapper = [&packet_count_1, &packet_count_2](segment::Builder& builder) {
+        using data_type_1_t = int;
+        using data_type_2_t = std::string;
+
+        auto config_1 = nlohmann::json();
+        auto config_2 = nlohmann::json();
+
+        unsigned int source_count_1{42};
+        unsigned int source_count_2{24};
+
+        config_1["source_count"] = source_count_1;
+        config_2["source_count"] = source_count_2;
+
+        auto source_mod_1 = builder.make_module<TemplateModule<data_type_1_t>>("ModuleTemplateTest_mod1", config_1);
+
+        auto sink_1 = builder.make_sink<data_type_1_t>("sink_1", [&packet_count_1](data_type_1_t input) {
+            packet_count_1++;
+            VLOG(10) << "Sinking " << input << std::endl;
+        });
+
+        builder.make_edge(source_mod_1.output_port("source"), sink_1);
+
+        auto source_mod_2 = builder.make_module<TemplateModule<data_type_2_t>>("ModuleTemplateTest_mod2", config_2);
+
+        auto sink_2 = builder.make_sink<data_type_2_t>("sink_2", [&packet_count_2](data_type_2_t input) {
+            packet_count_2++;
+            VLOG(10) << "Sinking " << input << std::endl;
+        });
+
+        builder.make_edge(source_mod_2.output_port("source"), sink_2);
+    };
+
+    m_pipeline->make_segment("SimpleModule_Segment", init_wrapper);
+
+    auto options = std::make_shared<Options>();
+    options->topology().user_cpuset("0-1");
+    options->topology().restrict_gpus(true);
+
+    Executor executor(options);
+    executor.register_pipeline(std::move(m_pipeline));
+    executor.start();
+    executor.join();
+
+    EXPECT_EQ(packet_count_1, 42);
+    EXPECT_EQ(packet_count_2, 24);
+}
+
+#if !defined(__clang__) && defined(__GNUC__)
+// Work around for GCC : https://gcc.gnu.org/bugzilla/show_bug.cgi?id=83258
+auto F_1 = []() -> int { return 15; };
+auto F_2 = []() -> std::string { return "test string"; };
+#endif
+
+TEST_F(SegmentTests, ModuleTemplateWithInitTest)
+{
+    using namespace modules;
+
+    unsigned int packet_count_1{0};
+    unsigned int packet_count_2{0};
+
+    auto init_wrapper = [&packet_count_1, &packet_count_2](segment::Builder& builder) {
+        using data_type_1_t = int;
+        using data_type_2_t = std::string;
+
+        auto config_1 = nlohmann::json();
+        auto config_2 = nlohmann::json();
+
+        unsigned int source_count_1{42};
+        unsigned int source_count_2{24};
+
+        config_1["source_count"] = source_count_1;
+        config_2["source_count"] = source_count_2;
+
+#if defined(__clang__)
+        auto F_1 = []() -> int { return 15; };
+        auto F_2 = []() -> std::string { return "test string"; };
+#endif
+
+        auto source_mod_1 = builder.make_module<TemplateWithInitModule<data_type_1_t, F_1>>(
+            "ModuleTemplateWithInitTest_mod1", config_1);
+
+        auto sink_1 = builder.make_sink<data_type_1_t>("sink_1", [&packet_count_1](data_type_1_t input) {
+            assert(input == 15);
+            packet_count_1++;
+            VLOG(10) << "Sinking " << input << std::endl;
+        });
+
+        builder.make_edge(source_mod_1.output_port("source"), sink_1);
+
+        auto source_mod_2 = builder.make_module<TemplateWithInitModule<data_type_2_t, F_2>>(
+            "ModuleTemplateWithInitTest_mod2", config_2);
+
+        auto sink_2 = builder.make_sink<data_type_2_t>("sink_2", [&packet_count_2](data_type_2_t input) {
+            assert(input == "test string");
+            packet_count_2++;
+            VLOG(10) << "Sinking " << input << std::endl;
+        });
+
+        builder.make_edge(source_mod_2.output_port("source"), sink_2);
+    };
+
+    m_pipeline->make_segment("SimpleModule_Segment", init_wrapper);
+
+    auto options = std::make_shared<Options>();
+    options->topology().user_cpuset("0-1");
+    options->topology().restrict_gpus(true);
+
+    Executor executor(options);
+    executor.register_pipeline(std::move(m_pipeline));
+    executor.start();
+    executor.join();
+
+    EXPECT_EQ(packet_count_1, 42);
+    EXPECT_EQ(packet_count_2, 24);
 }

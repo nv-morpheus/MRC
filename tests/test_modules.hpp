@@ -54,18 +54,17 @@ void SimpleModule::initialize(segment::Builder& builder)
     }
 
     /** First linear path **/
-    auto input1 = builder.make_node<bool, unsigned int>("input1",
-                                                        rxcpp::operators::map([](bool input) {
+    auto input1 = builder.make_node<bool, unsigned int>("input1", rxcpp::operators::map([](bool input) {
                                                             unsigned int output = 42;
                                                             return output;
                                                         }));
 
-    auto internal1 = builder.make_node<unsigned int, std::string>(
-        "_internal1_", rxcpp::operators::map([](unsigned int input) {
-            auto output = std::to_string(input);
-            VLOG(10) << "Created output1 << " << output << std::endl;
-            return output;
-        }));
+    auto internal1 =
+        builder.make_node<unsigned int, std::string>("_internal1_", rxcpp::operators::map([](unsigned int input) {
+                                                         auto output = std::to_string(input);
+                                                         VLOG(10) << "Created output1 << " << output << std::endl;
+                                                         return output;
+                                                     }));
 
     builder.make_edge(input1, internal1);
 
@@ -75,18 +74,17 @@ void SimpleModule::initialize(segment::Builder& builder)
     builder.make_edge(internal1, output1);
 
     /** Second linear path **/
-    auto input2 = builder.make_node<bool, unsigned int>("input2",
-                                                        rxcpp::operators::map([](bool input) {
+    auto input2 = builder.make_node<bool, unsigned int>("input2", rxcpp::operators::map([](bool input) {
                                                             unsigned int output = 42;
                                                             return output;
                                                         }));
 
-    auto internal2 = builder.make_node<unsigned int, std::string>(
-        "_internal2_", rxcpp::operators::map([](unsigned int input) {
-            auto output = std::to_string(input);
-            VLOG(10) << "Created output2: " << output << std::endl;
-            return output;
-        }));
+    auto internal2 =
+        builder.make_node<unsigned int, std::string>("_internal2_", rxcpp::operators::map([](unsigned int input) {
+                                                         auto output = std::to_string(input);
+                                                         VLOG(10) << "Created output2: " << output << std::endl;
+                                                         return output;
+                                                     }));
 
     builder.make_edge(input2, internal2);
 
@@ -132,24 +130,22 @@ void ConfigurableModule::initialize(segment::Builder& builder)
         m_was_configured = true;
     }
 
-    auto input1 = builder.make_node<bool, unsigned int>("configurable_input_a",
-                                                        rxcpp::operators::map([](bool input) {
+    auto input1 = builder.make_node<bool, unsigned int>("configurable_input_a", rxcpp::operators::map([](bool input) {
                                                             unsigned int output = 42;
                                                             return output;
                                                         }));
 
-    auto internal1 = builder.make_node<unsigned int, std::string>(
-        "_internal1_", rxcpp::operators::map([](unsigned int input) {
-            auto output = std::to_string(input);
-            VLOG(10) << "Created output1: " << output << std::endl;
-            return output;
-        }));
+    auto internal1 =
+        builder.make_node<unsigned int, std::string>("_internal1_", rxcpp::operators::map([](unsigned int input) {
+                                                         auto output = std::to_string(input);
+                                                         VLOG(10) << "Created output1: " << output << std::endl;
+                                                         return output;
+                                                     }));
 
     builder.make_edge(input1, internal1);
 
-    auto output1 =
-        builder.make_node<std::string, std::string>("configurable_output_x",
-                                                    rxcpp::operators::map([](std::string input) { return input; }));
+    auto output1 = builder.make_node<std::string, std::string>(
+        "configurable_output_x", rxcpp::operators::map([](std::string input) { return input; }));
 
     builder.make_edge(internal1, output1);
 
@@ -264,7 +260,7 @@ void NestedModule::initialize(segment::Builder& builder)
 {
     auto configurable_mod = builder.make_module<ConfigurableModule>("NestedModule_submod2");
 
-    auto config = nlohmann::json();
+    auto config            = nlohmann::json();
     config["source_count"] = 4;
 
     // Create a data source and attach it to our submodule
@@ -278,5 +274,124 @@ void NestedModule::initialize(segment::Builder& builder)
                          configurable_mod.output_port("configurable_output_x"),
                          configurable_mod.output_port_type_id("configurable_output_x"));
 }
+
+template <typename OutputTypeT>
+class TemplateModule : public SegmentModule
+{
+  public:
+    TemplateModule(std::string module_name);
+    TemplateModule(std::string module_name, nlohmann::json config);
+
+    void initialize(segment::Builder& builder) override;
+
+    std::string module_name() const override;
+
+    bool m_was_configured{false};
+
+  private:
+    bool m_initialized;
+};
+
+template <typename OutputTypeT>
+TemplateModule<OutputTypeT>::TemplateModule(std::string module_name) : SegmentModule(std::move(module_name))
+{}
+
+template <typename OutputTypeT>
+TemplateModule<OutputTypeT>::TemplateModule(std::string module_name, nlohmann::json config) :
+  SegmentModule(std::move(module_name), std::move(config))
+{}
+
+template <typename OutputTypeT>
+std::string TemplateModule<OutputTypeT>::module_name() const
+{
+    return "[template_module]";
+}
+
+template <typename OutputTypeT>
+void TemplateModule<OutputTypeT>::initialize(segment::Builder& builder)
+{
+    unsigned int count{1};
+
+    if (config().contains("source_count"))
+    {
+        count = config()["source_count"];
+    }
+
+    auto source = builder.make_source<OutputTypeT>("source", [count](rxcpp::subscriber<OutputTypeT>& sub) {
+        if (sub.is_subscribed())
+        {
+            for (unsigned int i = 0; i < count; ++i)
+            {
+                sub.on_next(std::move(OutputTypeT()));
+            }
+        }
+
+        sub.on_completed();
+    });
+
+    // Register the submodules output as one of this module's outputs
+    register_output_port("source", source, source->object().source_type());
+}
+
+template <typename OutputTypeT, OutputTypeT (*initializer)()>
+class TemplateWithInitModule : public SegmentModule
+{
+  public:
+    TemplateWithInitModule(std::string module_name);
+    TemplateWithInitModule(std::string module_name, nlohmann::json config);
+
+    void initialize(segment::Builder& builder) override;
+
+    std::string module_name() const override;
+
+    bool m_was_configured{false};
+
+  private:
+    bool m_initialized;
+};
+
+template <typename OutputTypeT, OutputTypeT (*Initializer)()>
+TemplateWithInitModule<OutputTypeT, Initializer>::TemplateWithInitModule(std::string module_name) : SegmentModule(std::move(module_name))
+{}
+
+template <typename OutputTypeT, OutputTypeT (*Initializer)()>
+TemplateWithInitModule<OutputTypeT, Initializer>::TemplateWithInitModule(std::string module_name, nlohmann::json config) :
+  SegmentModule(std::move(module_name), std::move(config))
+{}
+
+template <typename OutputTypeT, OutputTypeT (*Initializer)()>
+std::string TemplateWithInitModule<OutputTypeT, Initializer>::module_name() const
+{
+    return "[template_module]";
+}
+
+template <typename OutputTypeT, OutputTypeT (*Initializer)()>
+void TemplateWithInitModule<OutputTypeT, Initializer>::initialize(segment::Builder& builder)
+{
+    unsigned int count{1};
+
+    if (config().contains("source_count"))
+    {
+        count = config()["source_count"];
+    }
+
+    auto source = builder.make_source<OutputTypeT>("source", [count](rxcpp::subscriber<OutputTypeT>& sub) {
+        if (sub.is_subscribed())
+        {
+            for (unsigned int i = 0; i < count; ++i)
+            {
+                auto data = Initializer();
+
+                sub.on_next(std::move(data));
+            }
+        }
+
+        sub.on_completed();
+    });
+
+    // Register the submodules output as one of this module's outputs
+    register_output_port("source", source, source->object().source_type());
+}
+
 
 }  // namespace srf::modules
