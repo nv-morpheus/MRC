@@ -40,6 +40,8 @@ class SegmentModule
     using segment_module_port_t          = std::shared_ptr<segment::ObjectProperties>;
     using segment_module_typeindex_map_t = std::map<std::string, const std::type_index>;
 
+    virtual ~SegmentModule() = default;
+
     SegmentModule() = delete;
     SegmentModule(std::string module_name);
     SegmentModule(std::string module_name, nlohmann::json config);

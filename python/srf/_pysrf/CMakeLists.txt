@@ -27,6 +27,7 @@ add_library(pysrf
   src/options.cpp
   src/pipeline.cpp
   src/segment.cpp
+  src/segment_modules.cpp
   src/subscriber.cpp
   src/system.cpp
   src/types.cpp

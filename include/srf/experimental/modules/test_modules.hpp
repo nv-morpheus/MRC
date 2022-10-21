@@ -18,9 +18,10 @@
 #pragma once
 
 #include "srf/experimental/modules/segment_modules.hpp"
+#include "srf/experimental/modules/test_modules.hpp" // TODO: included for testing
 #include "srf/segment/builder.hpp"
 
-#include <typeinfo>
+#include <typeindex>
 
 namespace srf::modules {
 
@@ -266,13 +267,13 @@ void NestedModule::initialize(segment::Builder& builder)
     // Create a data source and attach it to our submodule
     auto source1 = builder.make_module<SourceModule>("source", config);
 
-    builder.make_dynamic_edge<bool, bool>(source1.output_port("source"),
-                                          configurable_mod.input_port("configurable_input_a"));
+    builder.make_dynamic_edge<bool, bool>(source1->output_port("source"),
+                                          configurable_mod->input_port("configurable_input_a"));
 
     // Register the submodules output as one of this module's outputs
     register_output_port("nested_module_output",
-                         configurable_mod.output_port("configurable_output_x"),
-                         configurable_mod.output_port_type_id("configurable_output_x"));
+                         configurable_mod->output_port("configurable_output_x"),
+                         configurable_mod->output_port_type_id("configurable_output_x"));
 }
 
 template <typename OutputTypeT>

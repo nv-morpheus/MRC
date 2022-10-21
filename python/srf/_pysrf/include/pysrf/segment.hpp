@@ -19,6 +19,7 @@
 
 #include "pysrf/types.hpp"
 
+#include "srf/experimental/modules/segment_modules.hpp"
 #include "srf/segment/forward.hpp"
 #include "srf/segment/object.hpp"
 
@@ -111,7 +112,7 @@ auto wrap_segment_init_callback(
     return func;
 }
 
-class SegmentProxy
+class BuilderProxy
 {
   public:
     static std::shared_ptr<srf::segment::ObjectProperties> make_source(srf::segment::Builder& self,
@@ -196,6 +197,11 @@ class SegmentProxy
 
     static std::shared_ptr<srf::segment::ObjectProperties> get_egress(srf::segment::Builder& self,
                                                                       const std::string& name);
+
+    static std::shared_ptr<srf::modules::SegmentModule> make_module(srf::segment::Builder& self,
+                                                                    const std::string& module_name,
+                                                                    const std::string& module_id,
+                                                                    pybind11::dict config = {});
 
     static std::shared_ptr<srf::segment::ObjectProperties> make_file_reader(srf::segment::Builder& self,
                                                                             const std::string& name,

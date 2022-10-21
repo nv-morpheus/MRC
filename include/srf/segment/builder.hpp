@@ -164,15 +164,17 @@ class Builder final
     }
 
     template <typename ModuleTypeT>
-    ModuleTypeT make_module(std::string module_name, nlohmann::json config = {})
+    std::shared_ptr<ModuleTypeT> make_module(std::string module_name, nlohmann::json config = {})
     {
         static_assert(std::is_base_of_v<modules::SegmentModule, ModuleTypeT>);
 
-        ModuleTypeT module                  = ModuleTypeT(std::move(module_name), std::move(config));
-        modules::SegmentModule& module_base = module;
+        //ModuleTypeT module                  = ModuleTypeT(std::move(module_name), std::move(config));
 
-        ns_push(module_base.component_prefix());
-        module.initialize(*this);
+        auto module = std::make_shared<ModuleTypeT>(std::move(module_name), std::move(config));
+        auto module_base = std::static_pointer_cast<modules::SegmentModule>(module);
+
+        ns_push(module_base->component_prefix());
+        module->initialize(*this);
         ns_pop();
 
         return std::move(module);
