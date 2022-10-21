@@ -1,8 +1,28 @@
 #Configuration File for CodeCov
 coverage:
   status:
-    project: off
-    patch: off
+    project:
+      default:
+        informational: true
+        target: auto
+        threshold: 0%
+        base: auto
+        paths:
+          - "include"
+          - "python"
+          - "src"
+          - "tools"
+    patch:
+      default:
+        informational: true
+        target: auto
+        threshold: 0%
+        base: auto
+        paths:
+          - "include"
+          - "python"
+          - "src"
+          - "tools"
 comment:
   behavior: new
 
