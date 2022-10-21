@@ -21,6 +21,8 @@
 #include "internal/system/system_provider.hpp"
 
 #include "srf/core/bitmap.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/node/operators/muxer.hpp"
 #include "srf/node/rx_node.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
@@ -290,6 +292,40 @@ TEST_F(TestRunnable, RxSourceToRxSink)
             std::make_unique<node::RxSink2<float>>(rxcpp::make_observer_dynamic<float>([&](float x) { ++counter; }));
 
         node::make_edge2(*source, *sink);
+
+        runner_sink   = m_resources->launch_control().prepare_launcher(std::move(sink))->ignition();
+        runner_source = m_resources->launch_control().prepare_launcher(std::move(source))->ignition();
+    }
+
+    runner_source->await_join();
+    runner_sink->await_join();
+
+    EXPECT_EQ(counter, 3);
+}
+
+TEST_F(TestRunnable, RxSourceToMuxerToRxSink)
+{
+    std::atomic<std::size_t> counter = 0;
+    std::unique_ptr<runnable::Runner> runner_source;
+    std::unique_ptr<runnable::Runner> runner_sink;
+
+    // do the construction in its own scope
+    // only allow the runners to escape the scope
+    // this ensures that the Muxer Operator survives
+    {
+        auto source =
+            std::make_unique<node::RxSource<float>>(rxcpp::observable<>::create<float>([](rxcpp::subscriber<float> s) {
+                s.on_next(1.0f);
+                s.on_next(2.0f);
+                s.on_next(3.0f);
+                s.on_completed();
+            }));
+        auto muxer = std::make_shared<node::Muxer<float>>();
+        auto sink =
+            std::make_unique<node::RxSink<float>>(rxcpp::make_observer_dynamic<float>([&](float x) { ++counter; }));
+
+        node::make_edge(*source, *muxer);
+        node::make_edge(*muxer, *sink);
 
         runner_sink   = m_resources->launch_control().prepare_launcher(std::move(sink))->ignition();
         runner_source = m_resources->launch_control().prepare_launcher(std::move(source))->ignition();

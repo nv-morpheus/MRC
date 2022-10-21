@@ -302,16 +302,18 @@ class EdgeHolder : public virtual_enable_shared_from_this<EdgeHolder<T>>
             // Convert to full shared_ptr to avoid edge going out of scope
             if (auto e = weak_edge.lock())
             {
-                auto self = this->shared_from_this();
+                this->m_init_edge_lifetime.reset();
 
-                // Release the lifetime on self
-                self->m_init_edge_lifetime.reset();
+                // auto self = this->shared_from_this();
 
-                // Now register a disconnector to keep self alive
-                e->add_disconnector(EdgeLifetime<T>([self]() {
-                    self->m_init_edge_lifetime.reset();
-                    self->m_get_edge.reset();
-                }));
+                // // Release the lifetime on self
+                // self->m_init_edge_lifetime.reset();
+
+                // // Now register a disconnector to keep self alive
+                // e->add_disconnector(EdgeLifetime<T>([self]() {
+                //     self->m_init_edge_lifetime.reset();
+                //     self->m_get_edge.reset();
+                // }));
             }
             else
             {
@@ -734,25 +736,25 @@ class MultiIngressAcceptor : public IIngressAcceptor<T>, public virtual Downstre
     }
 };
 
-template <typename SourceT, typename SinkT = SourceT>
-void make_edge(EgressProvider<SourceT>& source, EgressAcceptor<SinkT>& sink)
-{
-    // Get the egress from the provider
-    auto egress = source.get_egress();
+// template <typename SourceT, typename SinkT = SourceT>
+// void make_edge(EgressProvider<SourceT>& source, EgressAcceptor<SinkT>& sink)
+// {
+//     // Get the egress from the provider
+//     auto egress = source.get_egress();
 
-    // Set the egress to the acceptor
-    sink.set_egress(egress);
-}
+//     // Set the egress to the acceptor
+//     sink.set_egress(egress);
+// }
 
-template <typename SourceT, typename SinkT = SourceT>
-void make_edge(IngressAcceptor<SourceT>& source, IngressProvider<SinkT>& sink)
-{
-    // Get ingress from provider
-    auto ingress = sink.get_ingress();
+// template <typename SourceT, typename SinkT = SourceT>
+// void make_edge(IngressAcceptor<SourceT>& source, IngressProvider<SinkT>& sink)
+// {
+//     // Get ingress from provider
+//     auto ingress = sink.get_ingress();
 
-    // Set to the acceptor
-    source.set_ingress(ingress);
-}
+//     // Set to the acceptor
+//     source.set_ingress(ingress);
+// }
 
 template <template <typename> class SourceT,
           template <typename>
