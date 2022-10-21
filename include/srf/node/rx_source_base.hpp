@@ -24,6 +24,7 @@
 #include "srf/core/utils.hpp"
 #include "srf/core/watcher.hpp"
 #include "srf/exceptions/runtime_error.hpp"
+#include "srf/node/channel_holder.hpp"
 #include "srf/node/edge.hpp"
 #include "srf/node/source_channel.hpp"
 #include "srf/runnable/context.hpp"
@@ -91,6 +92,63 @@ void RxSourceBase<T>::source_add_watcher(std::shared_ptr<WatcherInterface> watch
 
 template <typename T>
 void RxSourceBase<T>::source_remove_watcher(std::shared_ptr<WatcherInterface> watcher)
+{
+    Watchable::remove_watcher(std::move(watcher));
+}
+
+/**
+ * @brief Extends SourceChannel<T> to provide observer responsible for writing data to the channel
+ *
+ * RxSource completes RxSourceBase by providing the observable and subscibable interface.
+ *
+ * @tparam T
+ */
+template <typename T>
+class RxSourceBase2 : public EgressProvider<T>, private Watchable
+{
+  public:
+    void source_add_watcher(std::shared_ptr<WatcherInterface> watcher);
+    void source_remove_watcher(std::shared_ptr<WatcherInterface> watcher);
+
+  protected:
+    RxSourceBase2();
+    ~RxSourceBase2() override = default;
+
+    const rxcpp::observer<T>& observer() const;
+
+  private:
+    // the following methods are moved to private from their original scopes to prevent access from deriving classes
+    using SourceChannel<T>::await_write;
+
+    rxcpp::observer<T> m_observer;
+};
+
+template <typename T>
+RxSourceBase2<T>::RxSourceBase2() :
+  m_observer(rxcpp::make_observer_dynamic<T>(
+      [this](T data) {
+          this->watcher_epilogue(WatchableEvent::sink_on_data, true, &data);
+          this->watcher_prologue(WatchableEvent::channel_write, &data);
+          this->get_writable_edge()->await_write(std::move(data));
+          this->watcher_epilogue(WatchableEvent::channel_write, true, &data);
+      },
+      [](std::exception_ptr ptr) { runnable::Context::get_runtime_context().set_exception(std::move(ptr)); }))
+{}
+
+template <typename T>
+const rxcpp::observer<T>& RxSourceBase2<T>::observer() const
+{
+    return m_observer;
+}
+
+template <typename T>
+void RxSourceBase2<T>::source_add_watcher(std::shared_ptr<WatcherInterface> watcher)
+{
+    Watchable::add_watcher(std::move(watcher));
+}
+
+template <typename T>
+void RxSourceBase2<T>::source_remove_watcher(std::shared_ptr<WatcherInterface> watcher)
 {
     Watchable::remove_watcher(std::move(watcher));
 }

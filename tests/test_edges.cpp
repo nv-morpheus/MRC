@@ -138,18 +138,51 @@ class TestSource : public IngressAcceptor<int>, public EgressProvider<int>, publ
                 break;
             }
         }
+
+        this->release_edge();
     }
 };
 
 class TestNode : public IngressProvider<int>,
                  public EgressAcceptor<int>,
                  public IngressAcceptor<int>,
-                 public UpstreamChannelHolder<int>
+                 public EgressProvider<int>,
+                 public UpstreamChannelHolder<int>,
+                 public DownstreamChannelHolder<int>
 {
   public:
     TestNode()
     {
         this->set_channel(std::make_unique<srf::channel::BufferedChannel<int>>());
+    }
+
+    void set_channel(std::unique_ptr<srf::channel::Channel<int>> channel)
+    {
+        // Convert the unique_ptr to shared
+        std::shared_ptr<srf::channel::Channel<int>> shared_channel = std::move(channel);
+
+        UpstreamChannelHolder<int>::do_set_channel(shared_channel);
+        DownstreamChannelHolder<int>::do_set_channel(shared_channel);
+    }
+
+    void run()
+    {
+        auto input  = this->get_readable_edge();
+        auto output = this->get_writable_edge();
+
+        int t;
+
+        while (input->await_read(t) == channel::Status::success)
+        {
+            VLOG(10) << "Node got value: " << t;
+
+            output->await_write(std::move(t));
+        }
+
+        VLOG(10) << "Node exited run";
+
+        UpstreamChannelHolder<int>::release_edge();
+        DownstreamChannelHolder<int>::release_edge();
     }
 };
 
@@ -159,6 +192,20 @@ class TestSink : public IngressProvider<int>, public EgressAcceptor<int>, public
     TestSink()
     {
         this->set_channel(std::make_unique<srf::channel::BufferedChannel<int>>());
+    }
+
+    void run()
+    {
+        auto input = this->get_readable_edge();
+
+        int t;
+
+        while (input->await_read(t) == channel::Status::success)
+        {
+            VLOG(10) << "Sink got value: " << t;
+        }
+
+        VLOG(10) << "Sink exited run";
     }
 };
 
@@ -172,11 +219,14 @@ class TestQueue : public IngressProvider<int>, public EgressProvider<int>
 
     void set_channel(std::unique_ptr<srf::channel::Channel<int>> channel)
     {
-        // Create a new edge that will close the channel when all
-        auto new_edge = std::make_shared<EdgeChannel<int>>(std::move(channel));
+        std::shared_ptr<srf::channel::Channel<int>> shared_channel = std::move(channel);
 
-        UpstreamEdgeHolder<int>::init_edge(new_edge);
-        DownstreamEdgeHolder<int>::init_edge(new_edge);
+        // Create a new edge that will close the channel when either side disconnects
+        auto channel_reader = std::make_shared<EdgeChannelReader<int>>(shared_channel);
+        auto channel_writer = std::make_shared<EdgeChannelWriter<int>>(shared_channel);
+
+        UpstreamEdgeHolder<int>::init_edge(channel_writer);
+        DownstreamEdgeHolder<int>::init_edge(channel_reader);
     }
 };
 
@@ -223,7 +273,7 @@ class TestNodeComponent : public IngressProvider<int>, public IngressAcceptor<in
                 this->on_complete();
 
                 // TODO(MDD): Release downstream edge
-                DownstreamEdgeHolder<int>::reset_edge();
+                DownstreamEdgeHolder<int>::release_edge();
             }));
     }
 
@@ -279,7 +329,7 @@ class TestRouter : public IngressProvider<int>
       public:
         UpstreamEdge(TestRouter& parent) : m_parent(parent) {}
 
-        ~UpstreamEdge()
+        ~UpstreamEdge() override
         {
             m_parent.on_complete();
         }
@@ -387,7 +437,7 @@ class TestConditional : public IngressProvider<int>, public IngressAcceptor<int>
                 this->on_complete();
 
                 // TODO(MDD): Release downstream edge
-                DownstreamEdgeHolder<int>::reset_edge();
+                DownstreamEdgeHolder<int>::release_edge();
             }));
     }
 
@@ -509,16 +559,31 @@ TEST_F(TestEdges, SourceToSink)
     auto sink   = std::make_shared<node::TestSink>();
 
     node::make_edge2(*source, *sink);
+
+    source->run();
+    sink->run();
 }
 
 TEST_F(TestEdges, SourceToNodeToSink)
 {
     auto source = std::make_shared<node::TestSource>();
-    auto node   = std::make_shared<node::TestNodeComponent>();
+    auto node   = std::make_shared<node::TestNode>();
     auto sink   = std::make_shared<node::TestSink>();
 
     node::make_edge2(*source, *node);
     node::make_edge2(*node, *sink);
+}
+
+TEST_F(TestEdges, SourceToNodeToNodeToSink)
+{
+    auto source = std::make_shared<node::TestSource>();
+    auto node1  = std::make_shared<node::TestNode>();
+    auto node2  = std::make_shared<node::TestNode>();
+    auto sink   = std::make_shared<node::TestSink>();
+
+    node::make_edge2(*source, *node1);
+    node::make_edge2(*node1, *node2);
+    node::make_edge2(*node2, *sink);
 }
 
 TEST_F(TestEdges, SourceToSinkMultiFail)
@@ -597,16 +662,6 @@ TEST_F(TestEdges, SourceComponentToNodeToSinkComponent)
     node::make_edge2(*node, *sink);
 }
 
-// TEST_F(TestEdges, SourceComponentToNodeComponentToSink)
-// {
-//     auto source = std::make_shared<node::TestSourceComponent>();
-//     auto node   = std::make_shared<node::TestNodeComponent>();
-//     auto sink   = std::make_shared<node::TestSink>();
-
-//     node::make_edge2(*source, *node);
-//     node::make_edge2(*node, *sink);
-// }
-
 TEST_F(TestEdges, SourceToQueueToSink)
 {
     auto source = std::make_shared<node::TestSource>();
@@ -615,6 +670,25 @@ TEST_F(TestEdges, SourceToQueueToSink)
 
     node::make_edge2(*source, *queue);
     node::make_edge2(*queue, *sink);
+
+    source->run();
+    sink->run();
+}
+
+TEST_F(TestEdges, SourceToQueueToNodeToSink)
+{
+    auto source = std::make_shared<node::TestSource>();
+    auto queue  = std::make_shared<node::TestQueue>();
+    auto node   = std::make_shared<node::TestNode>();
+    auto sink   = std::make_shared<node::TestSink>();
+
+    node::make_edge2(*source, *queue);
+    node::make_edge2(*queue, *node);
+    node::make_edge2(*node, *sink);
+
+    source->run();
+    node->run();
+    sink->run();
 }
 
 TEST_F(TestEdges, SourceToQueueToMultiSink)

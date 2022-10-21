@@ -23,6 +23,7 @@
 #include "srf/core/utils.hpp"
 #include "srf/core/watcher.hpp"
 #include "srf/exceptions/runtime_error.hpp"
+#include "srf/node/channel_holder.hpp"
 #include "srf/node/edge.hpp"
 #include "srf/node/rx_epilogue_tap.hpp"
 #include "srf/node/rx_prologue_tap.hpp"
@@ -139,5 +140,47 @@ void RxNode<InputT, OutputT, ContextT>::on_shutdown_critical_section()
     DVLOG(10) << runnable::Context::get_runtime_context().info() << " releasing source channel";
     RxSourceBase<OutputT>::release_channel();
 }
+
+// template <typename InputT, typename OutputT>
+// class RxNodeComponent : public IngressProvider<InputT>, public IngressAcceptor<OutputT>
+// {
+//   public:
+//     using stream_fn_t = typename RxNodeBase<InputT, OutputT>::stream_fn_t;
+
+//     RxNodeComponent() : RxNodeBase<InputT, OutputT>(m_sink_subject.get_observable(),
+//     m_source_subject.get_subscriber())
+//     {}
+
+//     template <typename... OpsT>
+//     RxNodeComponent& pipe(OpsT&&... ops)
+//     {
+//         make_stream([=](auto start) { return (start | ... | ops); });
+//         return *this;
+//     }
+
+//     void make_stream(stream_fn_t fn)
+//     {
+//         // Start with the base sinke observable
+//         auto observable_in = RxSinkBase<InputT>::observable();
+
+//         // // Apply prologue taps
+//         // observable_in = this->apply_prologue_taps(observable_in);
+
+//         // Apply the specified stream
+//         auto observable_out = fn(observable_in);
+
+//         // // Apply epilogue taps
+//         // observable_out = this->apply_epilogue_taps(observable_out);
+
+//         // Subscribe to the observer
+//         observable_out.subscribe(RxSourceBase<OutputT>::observer());
+//     }
+
+//   private:
+//     rxcpp::subjects::subject<InputT> m_sink_subject;
+//     rxcpp::subscription m_sink_subject_subscription;
+//     rxcpp::subjects::subject<InputT> m_source_subject;
+//     rxcpp::subscription m_source_subject_subscription;
+// };
 
 }  // namespace srf::node

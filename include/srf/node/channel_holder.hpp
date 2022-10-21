@@ -119,15 +119,6 @@ class EdgeHandle
         return m_is_connected;
     }
 
-  protected:
-    void connect()
-    {
-        m_is_connected = true;
-
-        // Clear the connectors to execute them
-        m_connectors.clear();
-    }
-
     void add_connector(EdgeLifetime<T>&& connector)
     {
         m_connectors.emplace_back(std::move(connector));
@@ -136,6 +127,15 @@ class EdgeHandle
     void add_disconnector(EdgeLifetime<T>&& disconnector)
     {
         m_disconnectors.emplace_back(std::move(disconnector));
+    }
+
+  protected:
+    void connect()
+    {
+        m_is_connected = true;
+
+        // Clear the connectors to execute them
+        m_connectors.clear();
     }
 
     // // Allows keeping a downstream edge holder alive for the lifetime of this edge
@@ -208,6 +208,59 @@ class EdgeChannel : public EdgeReadable<T>, public EdgeWritable<T>
     std::unique_ptr<srf::channel::Channel<T>> m_channel;
 };
 
+template <typename T>
+class EdgeChannelReader : public EdgeReadable<T>
+{
+  public:
+    EdgeChannelReader(std::shared_ptr<srf::channel::Channel<T>> channel) : m_channel(std::move(channel)) {}
+    virtual ~EdgeChannelReader()
+    {
+        if (m_channel)
+        {
+            if (this->is_connected())
+            {
+                VLOG(10) << "Closing channel from EdgeChannelReader";
+            }
+
+            m_channel->close_channel();
+        }
+    }
+
+    virtual channel::Status await_read(T& t)
+    {
+        return m_channel->await_read(t);
+    }
+
+  private:
+    std::shared_ptr<srf::channel::Channel<T>> m_channel;
+};
+
+template <typename T>
+class EdgeChannelWriter : public EdgeWritable<T>
+{
+  public:
+    EdgeChannelWriter(std::shared_ptr<srf::channel::Channel<T>> channel) : m_channel(std::move(channel)) {}
+    virtual ~EdgeChannelWriter()
+    {
+        if (m_channel)
+        {
+            if (this->is_connected())
+            {
+                VLOG(10) << "Closing channel from EdgeChannelWriter";
+            }
+            m_channel->close_channel();
+        }
+    }
+
+    virtual channel::Status await_write(T&& t)
+    {
+        return m_channel->await_write(std::move(t));
+    }
+
+  private:
+    std::shared_ptr<srf::channel::Channel<T>> m_channel;
+};
+
 // EdgeHolder keeps shared pointer of EdgeChannel alive and
 template <typename T>
 class EdgeHolder : public virtual_enable_shared_from_this<EdgeHolder<T>>
@@ -227,21 +280,21 @@ class EdgeHolder : public virtual_enable_shared_from_this<EdgeHolder<T>>
     void init_edge(std::shared_ptr<EdgeHandle<T>> edge)
     {
         // Check if set_edge followed by get_edge has been called
-        if (m_get_edge.lock() && !m_set_edge)
+        if ((m_get_edge.lock() && !m_init_edge_lifetime) || m_set_edge)
         {
             // Then someone is using this edge already, cant be changed
             throw std::runtime_error("Cant change edge after a connection has been made");
         }
 
-        // Check for existing edge
-        if (m_set_edge)
-        {
-            if (m_set_edge->is_connected())
-            {
-                throw std::runtime_error(
-                    "Cannot make multiple connections to the same node. Use dedicated Broadcast node");
-            }
-        }
+        // // Check for existing edge
+        // if (m_set_edge)
+        // {
+        //     if (m_set_edge->is_connected())
+        //     {
+        //         throw std::runtime_error(
+        //             "Cannot make multiple connections to the same node. Use dedicated Broadcast node");
+        //     }
+        // }
 
         std::weak_ptr<EdgeHandle<T>> weak_edge = edge;
 
@@ -251,12 +304,12 @@ class EdgeHolder : public virtual_enable_shared_from_this<EdgeHolder<T>>
             {
                 auto self = this->shared_from_this();
 
-                // Reset the edge on self
-                self->reset_edge();
+                // Release the lifetime on self
+                self->m_init_edge_lifetime.reset();
 
                 // Now register a disconnector to keep self alive
                 e->add_disconnector(EdgeLifetime<T>([self]() {
-                    self->m_set_edge.reset();
+                    self->m_init_edge_lifetime.reset();
                     self->m_get_edge.reset();
                 }));
             }
@@ -267,7 +320,7 @@ class EdgeHolder : public virtual_enable_shared_from_this<EdgeHolder<T>>
         }));
 
         // Set to the temp edge to ensure its alive until get_edge is called
-        m_set_edge = edge;
+        m_init_edge_lifetime = edge;
 
         // Set to the weak ptr as well
         m_get_edge = edge;
@@ -294,7 +347,7 @@ class EdgeHolder : public virtual_enable_shared_from_this<EdgeHolder<T>>
     void set_edge(std::shared_ptr<EdgeHandle<T>> edge)
     {
         // Check if set_edge followed by get_edge has been called
-        if (m_get_edge.lock() && !m_set_edge)
+        if (m_get_edge.lock() && !m_init_edge_lifetime)
         {
             // Then someone is using this edge already, cant be changed
             throw std::runtime_error("Cant change edge after a connection has been made");
@@ -316,19 +369,27 @@ class EdgeHolder : public virtual_enable_shared_from_this<EdgeHolder<T>>
         // Set to the weak ptr as well
         m_get_edge = edge;
 
+        // Remove any init lifetime
+        m_init_edge_lifetime.reset();
+
         // Now indicate that we have a connection
         edge->connect();
     }
 
-    void reset_edge()
+    void release_edge()
     {
+        m_init_edge_lifetime.reset();
         m_set_edge.reset();
     }
 
-    // When calling get_edge, this will be converted to a shared_ptr
+    // Used for retrieving the current edge without altering its lifetime
     std::weak_ptr<EdgeHandle<T>> m_get_edge;
-    // When calling set_edge, this will keep the edge alive until get_edge is called
+
+    // Holds a pointer to any set edge (different from init edge). Maintains lifetime
     std::shared_ptr<EdgeHandle<T>> m_set_edge;
+
+    // This object ensures that any initialized edge is kept alive and is cleared on connection
+    std::shared_ptr<EdgeHandle<T>> m_init_edge_lifetime;
 
   private:
     // Allow edge builder to call set_edge
@@ -536,10 +597,23 @@ class UpstreamChannelHolder : public virtual UpstreamEdgeHolder<T>
   public:
     void set_channel(std::unique_ptr<srf::channel::Channel<T>> channel)
     {
-        // Create a new edge that will close the channel when all
-        auto new_edge = std::make_shared<EdgeChannel<T>>(std::move(channel));
+        this->do_set_channel(std::move(channel));
+    }
 
-        UpstreamEdgeHolder<T>::init_edge(new_edge);
+  protected:
+    void do_set_channel(std::shared_ptr<srf::channel::Channel<T>> shared_channel)
+    {
+        // Create 2 edges, one for reading and writing. On connection, persist the other to allow the node to still use
+        // get_readable+edge
+        auto channel_reader = std::make_shared<EdgeChannelReader<T>>(shared_channel);
+        auto channel_writer = std::make_shared<EdgeChannelWriter<T>>(shared_channel);
+
+        channel_writer->add_connector(EdgeLifetime<T>([this, channel_reader]() {
+            // On connection, save the reader so we can use the channel without it being deleted
+            this->m_set_edge = channel_reader;
+        }));
+
+        UpstreamEdgeHolder<T>::init_edge(channel_writer);
     }
 };
 
@@ -549,10 +623,23 @@ class DownstreamChannelHolder : public virtual DownstreamEdgeHolder<T>
   public:
     void set_channel(std::unique_ptr<srf::channel::Channel<T>> channel)
     {
-        // Create a new edge that will close the channel when all
-        auto new_edge = std::make_shared<EdgeChannel<T>>(std::move(channel));
+        this->do_set_channel(std::move(channel));
+    }
 
-        DownstreamEdgeHolder<T>::init_edge(new_edge);
+  protected:
+    void do_set_channel(std::shared_ptr<srf::channel::Channel<T>> shared_channel)
+    {
+        // Create 2 edges, one for reading and writing. On connection, persist the other to allow the node to still use
+        // get_writable_edge
+        auto channel_reader = std::make_shared<EdgeChannelReader<T>>(shared_channel);
+        auto channel_writer = std::make_shared<EdgeChannelWriter<T>>(shared_channel);
+
+        channel_reader->add_connector(EdgeLifetime<T>([this, channel_writer]() {
+            // On connection, save the writer so we can use the channel without it being deleted
+            this->m_set_edge = channel_writer;
+        }));
+
+        DownstreamEdgeHolder<T>::init_edge(channel_reader);
     }
 };
 
