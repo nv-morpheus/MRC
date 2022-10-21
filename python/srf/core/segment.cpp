@@ -167,9 +167,31 @@ PYBIND11_MODULE(segment, m)
     Builder.def("make_py2cxx_edge_adapter", &BuilderProxy::make_py2cxx_edge_adapter);
 
     /** Segment Module Interface Declarations **/
+    SegmentModule.def("config", &SegmentModuleProxy::config);
+
+    SegmentModule.def("component_prefix", &SegmentModuleProxy::component_prefix);
+
     SegmentModule.def("input_port", &SegmentModuleProxy::input_port, py::arg("input_id"));
 
+    SegmentModule.def("input_ports", &SegmentModuleProxy::input_ports);
+
+    SegmentModule.def("module_name", &SegmentModuleProxy::module_name);
+
+    SegmentModule.def("name", &SegmentModuleProxy::name);
+
     SegmentModule.def("output_port", &SegmentModuleProxy::output_port, py::arg("output_id"));
+
+    SegmentModule.def("output_ports", &SegmentModuleProxy::output_ports);
+
+    SegmentModule.def("input_ids", &SegmentModuleProxy::input_ids);
+
+    SegmentModule.def("output_ids", &SegmentModuleProxy::output_ids);
+
+    // TODO: need to think about if/how we want to expose type_ids to Python... It might allow for some nice flexibility
+    // SegmentModule.def("input_port_type_id", &SegmentModuleProxy::input_port_type_id, py::arg("input_id"))
+    // SegmentModule.def("input_port_type_ids", &SegmentModuleProxy::input_port_type_id)
+    // SegmentModule.def("output_port_type_id", &SegmentModuleProxy::output_port_type_id, py::arg("output_id"))
+    // SegmentModule.def("output_port_type_ids", &SegmentModuleProxy::output_port_type_id)
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

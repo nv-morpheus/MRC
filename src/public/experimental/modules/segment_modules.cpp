@@ -138,7 +138,7 @@ void SegmentModule::register_input_port(std::string input_name,
     {
         std::stringstream sstream;
 
-        sstream << "Attempt to register duplicate input port for: " + std::move(input_name);
+        sstream << "Attempt to register duplicate module input port: " + std::move(input_name);
         throw std::invalid_argument(sstream.str());
     }
 
@@ -155,7 +155,7 @@ void SegmentModule::register_output_port(std::string output_name,
     {
         std::stringstream sstream;
 
-        sstream << "Attempt to register duplicate output port for: " + std::move(output_name);
+        sstream << "Attempt to register duplicate module output port: " + std::move(output_name);
         throw std::invalid_argument(sstream.str());
     }
 

@@ -158,8 +158,8 @@ def test_stat_gather_full():
     framework_stats_info = srf.benchmarking.get_tracing_stats()
     component_metrics = framework_stats_info["aggregations"]["components"]["metrics"]
 
-    import json
-    print(json.dumps(component_metrics, indent=2))
+    #import json
+    #print(json.dumps(component_metrics, indent=2))
     for key, _type in required_components:
         component = component_metrics[key]
         assert (len(component.keys()) > 0)
