@@ -38,32 +38,23 @@ SHELL ["/bin/bash",  "-c"]
 # OS deps
 RUN apt-get update &&\
     apt-get install --no-install-recommends -y \
-        clang-format-${CLANG_VER} \
-        clang-tidy-${CLANG_VER} \
-        libclang-${CLANG_VER}-dev \
         libnuma1 \
-        libnvidia-compute-495 \
-        llvm-${CLANG_VER}-dev \
-    && rm -rf /var/lib/apt/lists/* &&\
-    update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${CLANG_VER} 121 \
-        --slave /usr/bin/clang-apply-replacements clang-apply-replacements /usr/bin/clang-apply-replacements-${CLANG_VER} \
-        --slave /usr/bin/clang-format clang-format /usr/bin/clang-format-${CLANG_VER} \
-        --slave /usr/bin/clang-format-diff clang-format-diff /usr/bin/clang-format-diff-${CLANG_VER} \
-        --slave /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-${CLANG_VER} \
-        --slave /usr/bin/clang-tidy-diff.py clang-tidy-diff.py /usr/bin/clang-tidy-diff-${CLANG_VER}.py \
-        --slave /usr/bin/clang++ clang++ /usr/bin/clang++-${CLANG_VER} \
-        --slave /usr/bin/git-clang-format git-clang-format /usr/bin/git-clang-format-${CLANG_VER}
+        libnvidia-compute-495 &&\
+    apt clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Create conda environment
 COPY ./ci/conda/environments/dev_env.yml /tmp
+COPY ./ci/conda/environments/clang_env.yml /tmp
 
 RUN CONDA_ALWAYS_YES=true /opt/conda/bin/mamba env create -n ${PROJ_NAME} -q --file /tmp/dev_env.yml && \
+    /opt/conda/bin/mamba env update -q -n ${PROJ_NAME} --file /tmp/clang_env.yml && \
     sed -i "s/conda activate base/conda activate ${PROJ_NAME}/g" ~/.bashrc && \
     conda clean -afy && \
-    rm /tmp/dev_env.yml
+    rm /tmp/dev_env.yml  /tmp/clang_env.yml
 
 
-# Install IWYU
+# Install IWYU (remove once we are on clang-14)
 RUN git clone https://github.com/include-what-you-use/include-what-you-use.git /tmp/iwyu &&\
     cd /tmp/iwyu &&\
     git checkout clang_${CLANG_VER} &&\
