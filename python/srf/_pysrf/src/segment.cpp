@@ -294,50 +294,7 @@ std::shared_ptr<srf::modules::SegmentModule> BuilderProxy::make_module(srf::segm
                                                                        py::dict config)
 {
     auto json_config = cast_from_pyobject(config);
-
-    // TODO: Lookup module constructor based on `module_id`
-    if (module_id == "SimpleModule")
-    {
-        auto constructor_fn = [](srf::segment::Builder& self, std::string module_name, nlohmann::json config) {
-            return std::move(self.make_module<srf::modules::SimpleModule>(std::move(module_name), std::move(config)));
-        };
-
-        return std::move(constructor_fn(self, module_name, json_config));
-    }
-    else if (module_id == "ConfigurableModule")
-    {
-        auto constructor_fn = [](srf::segment::Builder& self, std::string module_name, nlohmann::json config) {
-            return std::move(
-                self.make_module<srf::modules::ConfigurableModule>(std::move(module_name), std::move(config)));
-        };
-        return std::move(constructor_fn(self, module_name, json_config));
-    }
-    else if (module_id == "SourceModule")
-    {
-        auto constructor_fn = [](srf::segment::Builder& self, std::string module_name, nlohmann::json config) {
-            return std::move(self.make_module<srf::modules::SourceModule>(std::move(module_name), std::move(config)));
-        };
-
-        return std::move(constructor_fn(self, module_name, json_config));
-    }
-    else if (module_id == "SinkModule")
-    {
-        auto constructor_fn = [](srf::segment::Builder& self, std::string module_name, nlohmann::json config) {
-            return std::move(self.make_module<srf::modules::SinkModule>(std::move(module_name), std::move(config)));
-        };
-
-        return std::move(constructor_fn(self, module_name, json_config));
-    }
-    else if (module_id == "NestedModule")
-    {
-        auto constructor_fn = [](srf::segment::Builder& self, std::string module_name, nlohmann::json config) {
-            return std::move(self.make_module<srf::modules::NestedModule>(std::move(module_name), std::move(config)));
-        };
-
-        return std::move(constructor_fn(self, module_name, json_config));
-    }
-
-    throw std::invalid_argument("Unknown ModuleID: " + module_id);
+    return self.load_module_from_registry(module_id, std::move(module_name), std::move(json_config));
 }
 
 void BuilderProxy::make_py2cxx_edge_adapter(srf::segment::Builder& self,
@@ -471,4 +428,5 @@ void BuilderProxy::make_edge(srf::segment::Builder& self,
 {
     node::EdgeBuilder::make_edge_typeless(source->source_base(), sink->sink_base());
 }
+
 }  // namespace srf::pysrf

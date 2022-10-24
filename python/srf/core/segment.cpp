@@ -23,7 +23,9 @@
 #include "pysrf/utils.hpp"
 
 #include "srf/channel/status.hpp"
+#include "srf/experimental/modules/segment_module_util.hpp"
 #include "srf/experimental/modules/segment_modules.hpp"
+#include "srf/experimental/modules/test_modules.hpp"
 #include "srf/node/edge_connector.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/segment/definition.hpp"
@@ -165,6 +167,13 @@ PYBIND11_MODULE(segment, m)
     Builder.def("make_node_full", &BuilderProxy::make_node_full, py::return_value_policy::reference_internal);
 
     Builder.def("make_py2cxx_edge_adapter", &BuilderProxy::make_py2cxx_edge_adapter);
+
+    /** Register test modules -- necessary for python unit tests**/
+    modules::ModelRegistryUtil::register_module<srf::modules::SimpleModule>("SimpleModule");
+    modules::ModelRegistryUtil::register_module<srf::modules::ConfigurableModule>("ConfigurableModule");
+    modules::ModelRegistryUtil::register_module<srf::modules::SourceModule>("SourceModule");
+    modules::ModelRegistryUtil::register_module<srf::modules::SinkModule>("SinkModule");
+    modules::ModelRegistryUtil::register_module<srf::modules::NestedModule>("NestedModule");
 
     /** Segment Module Interface Declarations **/
     SegmentModule.def("config", &SegmentModuleProxy::config);

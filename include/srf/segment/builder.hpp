@@ -21,6 +21,7 @@
 #include "srf/core/watcher.hpp"
 #include "srf/engine/segment/ibuilder.hpp"
 #include "srf/exceptions/runtime_error.hpp"
+#include "srf/experimental/modules/segment_module_registry.hpp"
 #include "srf/experimental/modules/segment_modules.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/rx_node.hpp"
@@ -119,7 +120,7 @@ class Builder final
     template <typename ObjectT, typename... ArgsT>
     std::shared_ptr<Object<ObjectT>> construct_object(std::string name, ArgsT&&... args)
     {
-        auto ns_name = m_namespace_prefix.empty() ? name : m_namespace_prefix + "/" + name ;
+        auto ns_name = m_namespace_prefix.empty() ? name : m_namespace_prefix + "/" + name;
         auto uptr    = std::make_unique<ObjectT>(std::forward<ArgsT>(args)...);
 
         ::add_stats_watcher_if_rx_source(*uptr, ns_name);
@@ -169,11 +170,20 @@ class Builder final
         static_assert(std::is_base_of_v<modules::SegmentModule, ModuleTypeT>);
 
         auto module = std::make_shared<ModuleTypeT>(std::move(module_name), std::move(config));
-        auto module_base = std::static_pointer_cast<modules::SegmentModule>(module);
 
-        ns_push(module_base->component_prefix());
+        ns_push(module->component_prefix());
         module->initialize(*this);
         ns_pop();
+
+        return std::move(module);
+    }
+
+    std::shared_ptr<srf::modules::SegmentModule> load_module_from_registry(const std::string& module_id,
+                                                                           std::string module_name,
+                                                                           nlohmann::json config = {})
+    {
+        auto fn_module_constructor = srf::modules::ModuleRegistry::find_module(module_id);
+        auto module                = std::move(fn_module_constructor(*this, std::move(module_name), std::move(config)));
 
         return std::move(module);
     }
@@ -316,7 +326,8 @@ class Builder final
 
     static std::string accum_merge(std::string lhs, std::string rhs)
     {
-        if (lhs.empty()) {
+        if (lhs.empty())
+        {
             return std::move(rhs);
         }
 
