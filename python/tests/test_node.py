@@ -61,7 +61,7 @@ def test_launch_options_source(source_type: str, pe_count: int, engines_per_pe: 
 
             hit_count += 1
 
-            print("Hit with value: {}".format(x))
+            #print("Hit with value: {}".format(x))
 
         hit_counter = seg.make_node("hit_counter", node_fn)
         seg.make_edge(src_node, hit_counter)
@@ -110,7 +110,7 @@ def test_launch_options_iterable():
 
             hit_count += 1
 
-            print("Hit with value: {}".format(x))
+            #print("Hit with value: {}".format(x))
 
         hit_counter = seg.make_node("hit_counter", node_fn)
         seg.make_edge(src_node, hit_counter)

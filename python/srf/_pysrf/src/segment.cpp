@@ -23,6 +23,8 @@
 
 #include "srf/channel/status.hpp"
 #include "srf/core/utils.hpp"
+#include "srf/experimental/modules/segment_modules.hpp"
+#include "srf/experimental/modules/test_modules.hpp"
 #include "srf/manifold/egress.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/port_registry.hpp"
@@ -122,7 +124,7 @@ std::shared_ptr<srf::segment::ObjectProperties> build_source(srf::segment::Build
     return self.construct_object<PythonSource<PyHolder>>(name, wrapper);
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_source(srf::segment::Builder& self,
+std::shared_ptr<srf::segment::ObjectProperties> BuilderProxy::make_source(srf::segment::Builder& self,
                                                                           const std::string& name,
                                                                           py::iterator source_iterator)
 {
@@ -142,7 +144,7 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_source(srf::s
     });
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_source(srf::segment::Builder& self,
+std::shared_ptr<srf::segment::ObjectProperties> BuilderProxy::make_source(srf::segment::Builder& self,
                                                                           const std::string& name,
                                                                           py::iterable source_iterable)
 {
@@ -153,7 +155,7 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_source(srf::s
     });
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_source(srf::segment::Builder& self,
+std::shared_ptr<srf::segment::ObjectProperties> BuilderProxy::make_source(srf::segment::Builder& self,
                                                                           const std::string& name,
                                                                           py::function gen_factory)
 {
@@ -164,7 +166,7 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_source(srf::s
     });
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_sink(srf::segment::Builder& self,
+std::shared_ptr<srf::segment::ObjectProperties> BuilderProxy::make_sink(srf::segment::Builder& self,
                                                                         const std::string& name,
                                                                         std::function<void(py::object object)> on_next,
                                                                         std::function<void(py::object object)> on_error,
@@ -196,7 +198,7 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_sink(srf::seg
     return self.make_sink<PyHolder, PythonSink>(name, on_next_w, on_error_w, on_completed_w);
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_ingress(srf::segment::Builder& self,
+std::shared_ptr<srf::segment::ObjectProperties> BuilderProxy::get_ingress(srf::segment::Builder& self,
                                                                           const std::string& name)
 {
     auto it_caster = node::PortRegistry::s_port_to_type_index.find(name);
@@ -209,7 +211,7 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_ingress(srf::s
     return self.get_ingress<PyHolder>(name);
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_egress(srf::segment::Builder& self,
+std::shared_ptr<srf::segment::ObjectProperties> BuilderProxy::get_egress(srf::segment::Builder& self,
                                                                          const std::string& name)
 {
     auto it_caster = node::PortRegistry::s_port_to_type_index.find(name);
@@ -223,7 +225,7 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_egress(srf::se
     return self.get_egress<PyHolder>(name);
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node(
+std::shared_ptr<srf::segment::ObjectProperties> BuilderProxy::make_node(
     srf::segment::Builder& self,
     const std::string& name,
     std::function<pybind11::object(pybind11::object object)> map_f)
@@ -251,7 +253,7 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node(
         }));
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node_full(
+std::shared_ptr<srf::segment::ObjectProperties> BuilderProxy::make_node_full(
     srf::segment::Builder& self,
     const std::string& name,
     std::function<void(const pysrf::PyObjectObservable& obs, pysrf::PyObjectSubscriber& sub)> sub_fn)
@@ -286,7 +288,16 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node_full(
     return node;
 }
 
-void SegmentProxy::make_py2cxx_edge_adapter(srf::segment::Builder& self,
+std::shared_ptr<srf::modules::SegmentModule> BuilderProxy::make_module(srf::segment::Builder& self,
+                                                                       const std::string& module_name,
+                                                                       const std::string& module_id,
+                                                                       py::dict config)
+{
+    auto json_config = cast_from_pyobject(config);
+    return self.load_module_from_registry(module_id, std::move(module_name), std::move(json_config));
+}
+
+void BuilderProxy::make_py2cxx_edge_adapter(srf::segment::Builder& self,
                                             std::shared_ptr<srf::segment::ObjectProperties> source,
                                             std::shared_ptr<srf::segment::ObjectProperties> sink,
                                             py::object& sink_t)
@@ -349,7 +360,7 @@ void SegmentProxy::make_py2cxx_edge_adapter(srf::segment::Builder& self,
     */
 }
 
-void SegmentProxy::make_cxx2py_edge_adapter(srf::segment::Builder& self,
+void BuilderProxy::make_cxx2py_edge_adapter(srf::segment::Builder& self,
                                             std::shared_ptr<srf::segment::ObjectProperties> source,
                                             std::shared_ptr<srf::segment::ObjectProperties> sink,
                                             py::object& source_t)
@@ -411,10 +422,11 @@ void SegmentProxy::make_cxx2py_edge_adapter(srf::segment::Builder& self,
     */
 }
 
-void SegmentProxy::make_edge(srf::segment::Builder& self,
+void BuilderProxy::make_edge(srf::segment::Builder& self,
                              std::shared_ptr<srf::segment::ObjectProperties> source,
                              std::shared_ptr<srf::segment::ObjectProperties> sink)
 {
     node::EdgeBuilder::make_edge_typeless(source->source_base(), sink->sink_base());
 }
+
 }  // namespace srf::pysrf

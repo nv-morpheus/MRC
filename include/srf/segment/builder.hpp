@@ -21,6 +21,8 @@
 #include "srf/core/watcher.hpp"
 #include "srf/engine/segment/ibuilder.hpp"
 #include "srf/exceptions/runtime_error.hpp"
+#include "srf/experimental/modules/segment_module_registry.hpp"
+#include "srf/experimental/modules/segment_modules.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/rx_node.hpp"
 #include "srf/node/rx_sink.hpp"
@@ -118,12 +120,13 @@ class Builder final
     template <typename ObjectT, typename... ArgsT>
     std::shared_ptr<Object<ObjectT>> construct_object(std::string name, ArgsT&&... args)
     {
-        auto uptr = std::make_unique<ObjectT>(std::forward<ArgsT>(args)...);
+        auto ns_name = m_namespace_prefix.empty() ? name : m_namespace_prefix + "/" + name;
+        auto uptr    = std::make_unique<ObjectT>(std::forward<ArgsT>(args)...);
 
-        ::add_stats_watcher_if_rx_source(*uptr, name);
-        ::add_stats_watcher_if_rx_sink(*uptr, name);
+        ::add_stats_watcher_if_rx_source(*uptr, ns_name);
+        ::add_stats_watcher_if_rx_sink(*uptr, ns_name);
 
-        return make_object(std::move(name), std::move(uptr));
+        return make_object(std::move(ns_name), std::move(uptr));
     }
 
     template <typename SourceTypeT,
@@ -161,6 +164,30 @@ class Builder final
         return construct_object<NodeTypeT<SinkTypeT, SourceTypeT>>(name, std::forward<ArgsT>(ops)...);
     }
 
+    template <typename ModuleTypeT>
+    std::shared_ptr<ModuleTypeT> make_module(std::string module_name, nlohmann::json config = {})
+    {
+        static_assert(std::is_base_of_v<modules::SegmentModule, ModuleTypeT>);
+
+        auto module = std::make_shared<ModuleTypeT>(std::move(module_name), std::move(config));
+
+        ns_push(module->component_prefix());
+        module->initialize(*this);
+        ns_pop();
+
+        return std::move(module);
+    }
+
+    std::shared_ptr<srf::modules::SegmentModule> load_module_from_registry(const std::string& module_id,
+                                                                           std::string module_name,
+                                                                           nlohmann::json config = {})
+    {
+        auto fn_module_constructor = srf::modules::ModuleRegistry::find_module(module_id);
+        auto module                = std::move(fn_module_constructor(*this, std::move(module_name), std::move(config)));
+
+        return std::move(module);
+    }
+
     template <typename SourceNodeTypeT, typename SinkNodeTypeT>
     void make_edge(std::shared_ptr<Object<SourceNodeTypeT>> source, std::shared_ptr<Object<SinkNodeTypeT>> sink)
     {
@@ -187,6 +214,70 @@ class Builder final
     {
         DVLOG(10) << "forming segment edge between two node objects";
         node::make_edge(source, sink);
+    }
+
+    /**
+     * Given a typed source and a typeless sink, attempt to construct an edge between them -- assumes that source and
+     * sink types are convertible.
+     *
+     * @tparam InputT
+     * @param source
+     * @param sink
+     */
+    template <typename InputT>
+    void make_edge(node::SourceProperties<InputT>& source, std::shared_ptr<segment::ObjectProperties> sink)
+    {
+        DVLOG(10) << "forming segment edge between two node objects";
+        node::make_edge(source, sink->template sink_typed<InputT>());
+    }
+
+    /**
+     * Partial dynamic edge construction:
+     *
+     * Create edge using a fully constructed Object and a type erased Object
+     *  We extract the underlying node object (Likely an RxNode) and call make_edge with it and the type erased
+     *  object. This works via a cascaded type extraction process.
+     * @tparam SourceNodeTypeT
+     * @param source Fully typed, wrapped, object
+     * @param sink Type erased object -- assumed to be convertible to source type
+     */
+    template <typename SourceNodeTypeT>
+    void make_edge(std::shared_ptr<Object<SourceNodeTypeT>>& source, std::shared_ptr<segment::ObjectProperties> sink)
+    {
+        DVLOG(10) << "forming segment edge between a segment source and typeless Object";
+        this->make_edge(source->object(), sink);
+    }
+
+    /**
+     * Given a typeless source and a typed sink, attempt to construct an edge between them -- assumes that
+     * source and sink type's are convertible.
+     *
+     * @tparam OutputT
+     * @param source
+     * @param sink
+     */
+    template <typename OutputT>
+    void make_edge(std::shared_ptr<segment::ObjectProperties> source, node::SinkProperties<OutputT>& sink)
+    {
+        DVLOG(10) << "forming segment edge between two node objects";
+        node::make_edge(source->template source_typed<OutputT>(), sink);
+    }
+
+    /**
+     * Partial dynamic edge construction:
+     *
+     * Create edge using a fully constructed Object and a type erased Object
+     *  We extract the underlying node object (Likely an RxNode) and call make_edge with it and the type erased
+     *  object. This works via a cascaded type extraction process.
+     * @tparam SinkNodeTypeT
+     * @param source Fully typed, wrapped, object
+     * @param sink Fully typed, wrapped, object
+     */
+    template <typename SinkNodeTypeT>
+    void make_edge(std::shared_ptr<segment::ObjectProperties> source, std::shared_ptr<Object<SinkNodeTypeT>>& sink)
+    {
+        DVLOG(10) << "forming segment edge between a typeless object and a segment sink";
+        this->make_edge(source, sink->object());
     }
 
     template <typename SourceNodeTypeT, typename SinkNodeTypeT = SourceNodeTypeT>
@@ -229,7 +320,33 @@ class Builder final
     }
 
   private:
+    std::vector<std::string> m_namespace_components{};
+    std::string m_namespace_prefix;
     internal::segment::IBuilder& m_backend;
+
+    static std::string accum_merge(std::string lhs, std::string rhs)
+    {
+        if (lhs.empty())
+        {
+            return std::move(rhs);
+        }
+
+        return std::move(lhs) + "/" + std::move(rhs);
+    }
+
+    void ns_push(const std::string& component_namespace)
+    {
+        m_namespace_components.push_back(component_namespace);
+        m_namespace_prefix = std::accumulate(
+            m_namespace_components.begin(), m_namespace_components.end(), std::string(""), Builder::accum_merge);
+    }
+
+    void ns_pop()
+    {
+        m_namespace_components.pop_back();
+        m_namespace_prefix = std::accumulate(
+            m_namespace_components.begin(), m_namespace_components.end(), std::string(""), Builder::accum_merge);
+    }
 
     friend Definition;
 };
@@ -237,6 +354,7 @@ class Builder final
 template <typename ObjectT>
 std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::unique_ptr<ObjectT> node)
 {
+    // Note: name should have and prefix modifications done prior to getting here.
     if (m_backend.has_object(name))
     {
         LOG(ERROR) << "A Object named " << name << " is already registered";
