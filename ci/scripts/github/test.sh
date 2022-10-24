@@ -25,6 +25,10 @@ gpuci_logger "Fetching Build artifacts from ${DISPLAY_ARTIFACT_URL}/"
 fetch_s3 "${ARTIFACT_ENDPOINT}/cpp_tests.tar.bz" "${WORKSPACE_TMP}/cpp_tests.tar.bz"
 fetch_s3 "${ARTIFACT_ENDPOINT}/dsos.tar.bz" "${WORKSPACE_TMP}/dsos.tar.bz"
 fetch_s3 "${ARTIFACT_ENDPOINT}/python_build.tar.bz" "${WORKSPACE_TMP}/python_build.tar.bz"
+if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
+    fetch_s3 "${ARTIFACT_ENDPOINT}/dot_cache.tar.bz" "${WORKSPACE_TMP}/dot_cache.tar.bz"
+    tar xf "${WORKSPACE_TMP}/dot_cache.tar.bz"
+fi
 
 tar xf "${WORKSPACE_TMP}/cpp_tests.tar.bz"
 tar xf "${WORKSPACE_TMP}/dsos.tar.bz"
@@ -66,14 +70,17 @@ pytest -v --junit-xml=${WORKSPACE_TMP}/report_pytest.xml
 PYTEST_RESULTS=$?
 set -e
 
-if [[ "${BUILD_TYPE}" == "Debug" ]]; then
+if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
   gpuci_logger "Generating codecov report"
   cd ${SRF_ROOT}
-  cmake --build build --target gcovr-html-report
+  cmake --build build --target gcovr-html-report gcovr-xml-report
 
   gpuci_logger "Archiving codecov report"
-  tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${SRF_ROOT}/build/gcovr-html-report
+  tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${SRF_ROOT}/build/gcovr-html-report ${SRF_ROOT}/build/gcovr-xml-report.xml
   aws s3 cp ${WORKSPACE_TMP}/coverage_reports.tar.bz "${ARTIFACT_URL}/coverage_reports.tar.bz"
+
+  gpuci_logger "Upload codecov report"
+  /opt/conda/bin/codecov --root ${SRF_ROOT} -f ${SRF_ROOT}/build/gcovr-xml-report.xml
 fi
 
 gpuci_logger "Archiving test reports"
