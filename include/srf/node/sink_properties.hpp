@@ -19,11 +19,13 @@
 
 #include "srf/channel/ingress.hpp"
 #include "srf/core/utils.hpp"
+#include "srf/node/channel_holder.hpp"
 #include "srf/node/edge.hpp"
 #include "srf/node/edge_registry.hpp"
 #include "srf/node/forward.hpp"
 #include "srf/type_traits.hpp"
 
+#include <memory>
 #include <typeindex>
 
 namespace srf::node {
@@ -64,7 +66,7 @@ class SinkPropertiesBase
     SinkPropertiesBase() = default;
 
   private:
-    virtual std::shared_ptr<channel::IngressHandle> ingress_handle() = 0;
+    // virtual std::shared_ptr<channel::IngressHandle> ingress_handle() = 0;
 
     friend EdgeBuilder;
 };
@@ -75,7 +77,7 @@ inline SinkPropertiesBase::~SinkPropertiesBase() = default;
  * @brief Typed SinkProperties provides default implementations dependent only on the type T.
  */
 template <typename T>
-class SinkProperties : public SinkPropertiesBase
+class SinkProperties : public EdgeHolder<T>, public SinkPropertiesBase
 {
   public:
     using sink_type_t = T;
@@ -97,15 +99,90 @@ class SinkProperties : public SinkPropertiesBase
         return std::string(type_name<T>());
     }
 
-  private:
-    inline std::shared_ptr<channel::IngressHandle> ingress_handle() final
+  protected:
+    std::shared_ptr<EdgeReadable<T>> get_readable_edge() const
     {
-        return channel_ingress();
+        return std::dynamic_pointer_cast<EdgeReadable<T>>(this->m_set_edge);
     }
 
-    virtual std::shared_ptr<channel::Ingress<T>> channel_ingress() = 0;
+  private:
+    // inline std::shared_ptr<channel::IngressHandle> ingress_handle() final
+    // {
+    //     return channel_ingress();
+    // }
+
+    // virtual std::shared_ptr<channel::Ingress<T>> channel_ingress() = 0;
 
     friend EdgeBuilder;
+};
+
+template <typename T>
+class EgressAcceptor : public virtual SinkProperties<T>, public IEgressAcceptor<T>
+{
+  public:
+    void set_egress(std::shared_ptr<EdgeReadable<T>> egress) override
+    {
+        SinkProperties<T>::set_edge(egress);
+    }
+
+    void set_egress_typeless(std::shared_ptr<EdgeTag> egress) override
+    {
+        this->set_egress(std::dynamic_pointer_cast<EdgeReadable<T>>(egress));
+    }
+
+  private:
+    using SinkProperties<T>::set_edge;
+};
+
+template <typename T>
+class IngressProvider : public virtual SinkProperties<T>, public IIngressProvider<T>
+{
+  public:
+    std::shared_ptr<EdgeWritable<T>> get_ingress() const override
+    {
+        return std::dynamic_pointer_cast<EdgeWritable<T>>(SinkProperties<T>::get_edge());
+    }
+
+    std::shared_ptr<EdgeTag> get_ingress_typeless() const override
+    {
+        return std::dynamic_pointer_cast<EdgeTag>(this->get_ingress());
+    }
+
+  private:
+    using SinkProperties<T>::set_edge;
+};
+
+template <typename T>
+class ForwardingIngressProvider : public IngressProvider<T>
+{
+  protected:
+    class ForwardingEdge : public EdgeWritable<T>
+    {
+      public:
+        ForwardingEdge(ForwardingIngressProvider<T>& parent) : m_parent(parent) {}
+
+        ~ForwardingEdge()
+        {
+            m_parent.on_complete();
+        }
+
+        channel::Status await_write(T&& t) override
+        {
+            return m_parent.on_next(std::move(t));
+        }
+
+      private:
+        ForwardingIngressProvider<T>& m_parent;
+    };
+
+    ForwardingIngressProvider()
+    {
+        IngressProvider<T>::init_edge(std::make_shared<ForwardingEdge>(*this));
+    }
+
+    virtual channel::Status on_next(T&& t) = 0;
+
+    virtual void on_complete() {}
 };
 
 }  // namespace srf::node

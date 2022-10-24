@@ -26,6 +26,7 @@
 #include "srf/channel/status.hpp"
 #include "srf/core/task_queue.hpp"
 #include "srf/memory/buffer_view.hpp"
+#include "srf/node/channel_holder.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/generic_source.hpp"
 #include "srf/node/operators/router.hpp"
@@ -148,7 +149,7 @@ void Server::do_service_start()
         .enqueue([this] {
             // source channel ucx tag recvs masked with the RemoteDescriptor tag
             // this recv has no recv payload, we simply write the tag to the channel
-            m_rd_source = std::make_unique<node::SourceChannelWriteable<ucp_tag_t>>();
+            // m_rd_source = std::make_unique<node::SourceChannelWriteable<ucp_tag_t>>();
 
             // pre-post recv for remote descriptors and remote promise/future
             // m_pre_posted_recv_info.resize(m_pre_posted_recv_count);

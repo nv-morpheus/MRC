@@ -92,4 +92,27 @@ struct use_object_semantics<
 {};
 */
 
+template <template <typename...> class BaseT, typename DerivedT>
+struct is_base_of_template_impl  // NOLINT(readability-identifier-naming)
+{
+    /*
+      Note: As of c++17, std::is_base_of is not sufficient to test for specialized base classes.
+      Declare a function 'test', with two signature patterns, one for a class of BaseT, and one for anything else. This
+      allows for the subsequent decltype(test(std::declval<DerivedT*>)) pattern, which will return std::true_type if
+      DerivedT has a type that can be converted to BaseT, std::false_type otherwise.
+    */
+    template <typename... ArgsT>
+    static constexpr std::true_type test(const BaseT<ArgsT...>*);
+    static constexpr std::false_type test(...);
+
+    using type = decltype(test(std::declval<DerivedT*>()));  // NOLINT(readability-identifier-naming)
+};
+
+/**
+ * @brief Determines if a type DerivedT is derived from BaseT when both types have template arguments.
+ */
+template <template <typename...> class BaseT, typename DerivedT>
+// NOLINTNEXTLINE(readability-identifier-naming)
+using is_base_of_template = typename is_base_of_template_impl<BaseT, DerivedT>::type;
+
 }  // namespace srf

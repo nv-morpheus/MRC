@@ -24,6 +24,7 @@
 
 #include "srf/channel/status.hpp"
 #include "srf/memory/buffer_view.hpp"
+#include "srf/node/channel_holder.hpp"
 #include "srf/node/operators/router.hpp"
 #include "srf/node/source_channel.hpp"
 #include "srf/runnable/runner.hpp"
@@ -63,7 +64,7 @@ namespace detail {
 struct PrePostedRecvInfo
 {
     ucp_worker_h worker;
-    node::SourceChannelWriteable<ucp_tag_t>* channel;
+    node::EdgeChannelWriter<ucp_tag_t>* channel;
     void* request;
     // std::array<std::byte, 2048> buffer;
 };
@@ -100,7 +101,7 @@ class Server final : public Service, public resources::PartitionResourceBase
 
     // the remote descriptor manager will connect to this source
     // data will be emitted on this source as a conditional branch of data source
-    std::unique_ptr<node::SourceChannelWriteable<ucp_tag_t>> m_rd_source;
+    std::unique_ptr<node::EdgeChannelWriter<ucp_tag_t>> m_rd_source;
 
     // pre-posted recv state
     std::vector<detail::PrePostedRecvInfo> m_pre_posted_recv_info;

@@ -23,7 +23,9 @@
 #include "srf/core/executor.hpp"
 #include "srf/node/channel_holder.hpp"
 #include "srf/node/edge_builder.hpp"
+#include "srf/node/forward.hpp"
 #include "srf/node/rx_subscribable.hpp"
+#include "srf/node/source_properties.hpp"
 #include "srf/options/options.hpp"
 #include "srf/options/placement.hpp"
 #include "srf/options/topology.hpp"
@@ -73,7 +75,7 @@ class EdgeReadableLambda : public EdgeReadable<T>
       m_on_complete(std::move(on_complete))
     {}
 
-    ~EdgeReadableLambda()
+    ~EdgeReadableLambda() override
     {
         if (m_on_complete)
         {
@@ -119,7 +121,7 @@ class EdgeWritableLambda : public EdgeWritable<T>
     std::function<void()> m_on_complete;
 };
 
-class TestSource : public IngressAcceptor<int>, public EgressProvider<int>, public DownstreamChannelHolder<int>
+class TestSource : public IngressAcceptor<int>, public EgressProvider<int>, public SourceChannel<int>
 {
   public:
     TestSource()
@@ -147,8 +149,8 @@ class TestNode : public IngressProvider<int>,
                  public EgressAcceptor<int>,
                  public IngressAcceptor<int>,
                  public EgressProvider<int>,
-                 public UpstreamChannelHolder<int>,
-                 public DownstreamChannelHolder<int>
+                 public SinkChannel<int>,
+                 public SourceChannel<int>
 {
   public:
     TestNode()
@@ -158,11 +160,10 @@ class TestNode : public IngressProvider<int>,
 
     void set_channel(std::unique_ptr<srf::channel::Channel<int>> channel)
     {
-        // Convert the unique_ptr to shared
-        std::shared_ptr<srf::channel::Channel<int>> shared_channel = std::move(channel);
+        EdgeChannel<int> edge_channel(std::move(channel));
 
-        UpstreamChannelHolder<int>::do_set_channel(shared_channel);
-        DownstreamChannelHolder<int>::do_set_channel(shared_channel);
+        SinkChannel<int>::do_set_channel(edge_channel);
+        SourceChannel<int>::do_set_channel(edge_channel);
     }
 
     void run()
@@ -181,12 +182,12 @@ class TestNode : public IngressProvider<int>,
 
         VLOG(10) << "Node exited run";
 
-        UpstreamChannelHolder<int>::release_edge();
-        DownstreamChannelHolder<int>::release_edge();
+        SinkChannel<int>::release_edge();
+        SourceChannel<int>::release_edge();
     }
 };
 
-class TestSink : public IngressProvider<int>, public EgressAcceptor<int>, public UpstreamChannelHolder<int>
+class TestSink : public IngressProvider<int>, public EgressAcceptor<int>, public SinkChannel<int>
 {
   public:
     TestSink()
@@ -225,8 +226,8 @@ class TestQueue : public IngressProvider<int>, public EgressProvider<int>
         auto channel_reader = std::make_shared<EdgeChannelReader<int>>(shared_channel);
         auto channel_writer = std::make_shared<EdgeChannelWriter<int>>(shared_channel);
 
-        UpstreamEdgeHolder<int>::init_edge(channel_writer);
-        DownstreamEdgeHolder<int>::init_edge(channel_reader);
+        SinkProperties<int>::init_edge(channel_writer);
+        SourceProperties<int>::init_edge(channel_reader);
     }
 };
 
@@ -273,7 +274,7 @@ class TestNodeComponent : public IngressProvider<int>, public IngressAcceptor<in
                 this->on_complete();
 
                 // TODO(MDD): Release downstream edge
-                DownstreamEdgeHolder<int>::release_edge();
+                SourceProperties<int>::release_edge();
             }));
     }
 
@@ -324,7 +325,7 @@ class TestSinkComponent : public IngressProvider<int>
 
 class TestRouter : public IngressProvider<int>
 {
-    class UpstreamEdge : public EdgeWritable<int>, public DownstreamMultiEdgeHolder<int, std::string>
+    class UpstreamEdge : public EdgeWritable<int>, public MultiSourceProperties<int, std::string>
     {
       public:
         UpstreamEdge(TestRouter& parent) : m_parent(parent) {}
@@ -437,7 +438,7 @@ class TestConditional : public IngressProvider<int>, public IngressAcceptor<int>
                 this->on_complete();
 
                 // TODO(MDD): Release downstream edge
-                DownstreamEdgeHolder<int>::release_edge();
+                SourceProperties<int>::release_edge();
             }));
     }
 
@@ -468,7 +469,7 @@ class TestConditional : public IngressProvider<int>, public IngressAcceptor<int>
 
 class TestBroadcast : public IngressProvider<int>, public IIngressAcceptor<int>
 {
-    class BroadcastEdge : public EdgeWritable<int>, public DownstreamMultiEdgeHolder<int, size_t>
+    class BroadcastEdge : public EdgeWritable<int>, public MultiSourceProperties<int, size_t>
     {
       public:
         BroadcastEdge(TestBroadcast& parent) : m_parent(parent) {}

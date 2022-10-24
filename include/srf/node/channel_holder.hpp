@@ -4,7 +4,7 @@
 #include "srf/channel/egress.hpp"
 #include "srf/channel/ingress.hpp"
 #include "srf/node/forward.hpp"
-#include "srf/node/type_traits.hpp"
+#include "srf/type_traits.hpp"
 #include "srf/utils/string_utils.hpp"
 
 #include <glog/logging.h>
@@ -12,6 +12,7 @@
 
 #include <exception>
 #include <functional>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
@@ -98,8 +99,14 @@ class EdgeLifetime
     std::function<void()> m_fn;
 };
 
+class EdgeTag
+{
+  public:
+    virtual ~EdgeTag() = default;
+};
+
 template <typename T>
-class EdgeHandle
+class EdgeHandle : public EdgeTag
 {
   public:
     virtual ~EdgeHandle()
@@ -179,87 +186,87 @@ class EdgeReadable : public virtual EdgeHandle<T>
     virtual channel::Status await_read(T& t) = 0;
 };
 
-// EdgeChannel holds an actual channel object and provides interfaces for reading/writing
-template <typename T>
-class EdgeChannel : public EdgeReadable<T>, public EdgeWritable<T>
-{
-  public:
-    EdgeChannel(std::unique_ptr<srf::channel::Channel<T>> channel) : m_channel(std::move(channel)) {}
-    virtual ~EdgeChannel()
-    {
-        if (m_channel)
-        {
-            m_channel->close_channel();
-            m_channel.reset();
-        }
-    }
+// // EdgeChannel holds an actual channel object and provides interfaces for reading/writing
+// template <typename T>
+// class EdgeChannel : public EdgeReadable<T>, public EdgeWritable<T>
+// {
+//   public:
+//     EdgeChannel(std::unique_ptr<srf::channel::Channel<T>> channel) : m_channel(std::move(channel)) {}
+//     virtual ~EdgeChannel()
+//     {
+//         if (m_channel)
+//         {
+//             m_channel->close_channel();
+//             m_channel.reset();
+//         }
+//     }
 
-    virtual channel::Status await_read(T& t)
-    {
-        return m_channel->await_read(t);
-    }
+//     virtual channel::Status await_read(T& t)
+//     {
+//         return m_channel->await_read(t);
+//     }
 
-    virtual channel::Status await_write(T&& t)
-    {
-        return m_channel->await_write(std::move(t));
-    }
+//     virtual channel::Status await_write(T&& t)
+//     {
+//         return m_channel->await_write(std::move(t));
+//     }
 
-  private:
-    std::unique_ptr<srf::channel::Channel<T>> m_channel;
-};
+//   private:
+//     std::unique_ptr<srf::channel::Channel<T>> m_channel;
+// };
 
-template <typename T>
-class EdgeChannelReader : public EdgeReadable<T>
-{
-  public:
-    EdgeChannelReader(std::shared_ptr<srf::channel::Channel<T>> channel) : m_channel(std::move(channel)) {}
-    virtual ~EdgeChannelReader()
-    {
-        if (m_channel)
-        {
-            if (this->is_connected())
-            {
-                VLOG(10) << "Closing channel from EdgeChannelReader";
-            }
+// template <typename T>
+// class EdgeChannelReader : public EdgeReadable<T>
+// {
+//   public:
+//     EdgeChannelReader(std::shared_ptr<srf::channel::Channel<T>> channel) : m_channel(std::move(channel)) {}
+//     virtual ~EdgeChannelReader()
+//     {
+//         if (m_channel)
+//         {
+//             if (this->is_connected())
+//             {
+//                 VLOG(10) << "Closing channel from EdgeChannelReader";
+//             }
 
-            m_channel->close_channel();
-        }
-    }
+//             m_channel->close_channel();
+//         }
+//     }
 
-    virtual channel::Status await_read(T& t)
-    {
-        return m_channel->await_read(t);
-    }
+//     virtual channel::Status await_read(T& t)
+//     {
+//         return m_channel->await_read(t);
+//     }
 
-  private:
-    std::shared_ptr<srf::channel::Channel<T>> m_channel;
-};
+//   private:
+//     std::shared_ptr<srf::channel::Channel<T>> m_channel;
+// };
 
-template <typename T>
-class EdgeChannelWriter : public EdgeWritable<T>
-{
-  public:
-    EdgeChannelWriter(std::shared_ptr<srf::channel::Channel<T>> channel) : m_channel(std::move(channel)) {}
-    virtual ~EdgeChannelWriter()
-    {
-        if (m_channel)
-        {
-            if (this->is_connected())
-            {
-                VLOG(10) << "Closing channel from EdgeChannelWriter";
-            }
-            m_channel->close_channel();
-        }
-    }
+// template <typename T>
+// class EdgeChannelWriter : public EdgeWritable<T>
+// {
+//   public:
+//     EdgeChannelWriter(std::shared_ptr<srf::channel::Channel<T>> channel) : m_channel(std::move(channel)) {}
+//     virtual ~EdgeChannelWriter()
+//     {
+//         if (m_channel)
+//         {
+//             if (this->is_connected())
+//             {
+//                 VLOG(10) << "Closing channel from EdgeChannelWriter";
+//             }
+//             m_channel->close_channel();
+//         }
+//     }
 
-    virtual channel::Status await_write(T&& t)
-    {
-        return m_channel->await_write(std::move(t));
-    }
+//     virtual channel::Status await_write(T&& t)
+//     {
+//         return m_channel->await_write(std::move(t));
+//     }
 
-  private:
-    std::shared_ptr<srf::channel::Channel<T>> m_channel;
-};
+//   private:
+//     std::shared_ptr<srf::channel::Channel<T>> m_channel;
+// };
 
 // EdgeHolder keeps shared pointer of EdgeChannel alive and
 template <typename T>
@@ -398,8 +405,8 @@ class EdgeHolder : public virtual_enable_shared_from_this<EdgeHolder<T>>
     friend EdgeBuilder;
 };
 
-template <typename KeyT, typename T>
-class MultiEdgeHolder : public virtual_enable_shared_from_this<MultiEdgeHolder<KeyT, T>>
+template <typename T, typename KeyT>
+class MultiEdgeHolder : public virtual_enable_shared_from_this<MultiEdgeHolder<T, KeyT>>
 {
   public:
     MultiEdgeHolder()          = default;
@@ -512,10 +519,16 @@ class MultiEdgeHolder : public virtual_enable_shared_from_this<MultiEdgeHolder<K
         edge->connect();
     }
 
-    void reset_edge(const KeyT& key)
+    void release_edge(const KeyT& key)
     {
         auto& edge_pair = this->get_edge_pair(key, true);
+        edge_pair.first.reset();
         edge_pair.second.reset();
+    }
+
+    void release_edges()
+    {
+        m_edges.clear();
     }
 
     size_t edge_count() const
@@ -563,178 +576,205 @@ class MultiEdgeHolder : public virtual_enable_shared_from_this<MultiEdgeHolder<K
     friend EdgeBuilder;
 };
 
-template <typename T>
-class UpstreamEdgeHolder : public EdgeHolder<T>
-{
-  protected:
-    std::shared_ptr<EdgeReadable<T>> get_readable_edge() const
-    {
-        return std::dynamic_pointer_cast<EdgeReadable<T>>(this->m_set_edge);
-    }
-};
+// // Equivalent to SinkProperties
+// template <typename T>
+// class UpstreamEdgeHolder : public EdgeHolder<T>
+// {
+//   protected:
+//     std::shared_ptr<EdgeReadable<T>> get_readable_edge() const
+//     {
+//         return std::dynamic_pointer_cast<EdgeReadable<T>>(this->m_set_edge);
+//     }
+// };
 
-template <typename T>
-class DownstreamEdgeHolder : public EdgeHolder<T>
-{
-  protected:
-    std::shared_ptr<EdgeWritable<T>> get_writable_edge() const
-    {
-        return std::dynamic_pointer_cast<EdgeWritable<T>>(this->m_set_edge);
-    }
-};
+// template <typename T>
+// class DownstreamEdgeHolder : public EdgeHolder<T>
+// {
+//   protected:
+//     std::shared_ptr<EdgeWritable<T>> get_writable_edge() const
+//     {
+//         return std::dynamic_pointer_cast<EdgeWritable<T>>(this->m_set_edge);
+//     }
+// };
 
-template <typename T, typename KeyT>
-class DownstreamMultiEdgeHolder : public MultiEdgeHolder<KeyT, T>
-{
-  protected:
-    std::shared_ptr<EdgeWritable<T>> get_writable_edge(KeyT edge_key) const
-    {
-        return std::dynamic_pointer_cast<EdgeWritable<T>>(this->get_edge_pair(edge_key).second);
-    }
-};
+// template <typename T, typename KeyT>
+// class DownstreamMultiEdgeHolder : public MultiEdgeHolder<T, KeyT>
+// {
+//   protected:
+//     std::shared_ptr<EdgeWritable<T>> get_writable_edge(KeyT edge_key) const
+//     {
+//         return std::dynamic_pointer_cast<EdgeWritable<T>>(this->get_edge_pair(edge_key).second);
+//     }
+// };
 
-template <typename T>
-class UpstreamChannelHolder : public virtual UpstreamEdgeHolder<T>
+// template <typename T>
+// class UpstreamChannelHolder : public virtual UpstreamEdgeHolder<T>
+// {
+//   public:
+//     void set_channel(std::unique_ptr<srf::channel::Channel<T>> channel)
+//     {
+//         this->do_set_channel(std::move(channel));
+//     }
+
+//   protected:
+//     void do_set_channel(std::shared_ptr<srf::channel::Channel<T>> shared_channel)
+//     {
+//         // Create 2 edges, one for reading and writing. On connection, persist the other to allow the node to still
+//         use
+//         // get_readable+edge
+//         auto channel_reader = std::make_shared<EdgeChannelReader<T>>(shared_channel);
+//         auto channel_writer = std::make_shared<EdgeChannelWriter<T>>(shared_channel);
+
+//         channel_writer->add_connector(EdgeLifetime<T>([this, channel_reader]() {
+//             // On connection, save the reader so we can use the channel without it being deleted
+//             this->m_set_edge = channel_reader;
+//         }));
+
+//         UpstreamEdgeHolder<T>::init_edge(channel_writer);
+//     }
+// };
+
+// template <typename T>
+// class DownstreamChannelHolder : public virtual DownstreamEdgeHolder<T>
+// {
+//   public:
+//     void set_channel(std::unique_ptr<srf::channel::Channel<T>> channel)
+//     {
+//         this->do_set_channel(std::move(channel));
+//     }
+
+//   protected:
+//     void do_set_channel(std::shared_ptr<srf::channel::Channel<T>> shared_channel)
+//     {
+//         // Create 2 edges, one for reading and writing. On connection, persist the other to allow the node to still
+//         use
+//         // get_writable_edge
+//         auto channel_reader = std::make_shared<EdgeChannelReader<T>>(shared_channel);
+//         auto channel_writer = std::make_shared<EdgeChannelWriter<T>>(shared_channel);
+
+//         channel_reader->add_connector(EdgeLifetime<T>([this, channel_writer]() {
+//             // On connection, save the writer so we can use the channel without it being deleted
+//             this->m_set_edge = channel_writer;
+//         }));
+
+//         DownstreamEdgeHolder<T>::init_edge(channel_reader);
+//     }
+// };
+
+class IEgressProviderBase
 {
   public:
-    void set_channel(std::unique_ptr<srf::channel::Channel<T>> channel)
-    {
-        this->do_set_channel(std::move(channel));
-    }
-
-  protected:
-    void do_set_channel(std::shared_ptr<srf::channel::Channel<T>> shared_channel)
-    {
-        // Create 2 edges, one for reading and writing. On connection, persist the other to allow the node to still use
-        // get_readable+edge
-        auto channel_reader = std::make_shared<EdgeChannelReader<T>>(shared_channel);
-        auto channel_writer = std::make_shared<EdgeChannelWriter<T>>(shared_channel);
-
-        channel_writer->add_connector(EdgeLifetime<T>([this, channel_reader]() {
-            // On connection, save the reader so we can use the channel without it being deleted
-            this->m_set_edge = channel_reader;
-        }));
-
-        UpstreamEdgeHolder<T>::init_edge(channel_writer);
-    }
+    virtual std::shared_ptr<EdgeTag> get_egress_typeless() const = 0;
 };
 
-template <typename T>
-class DownstreamChannelHolder : public virtual DownstreamEdgeHolder<T>
+class IEgressAcceptorBase
 {
   public:
-    void set_channel(std::unique_ptr<srf::channel::Channel<T>> channel)
-    {
-        this->do_set_channel(std::move(channel));
-    }
+    virtual void set_egress_typeless(std::shared_ptr<EdgeTag> egress) = 0;
+};
 
-  protected:
-    void do_set_channel(std::shared_ptr<srf::channel::Channel<T>> shared_channel)
-    {
-        // Create 2 edges, one for reading and writing. On connection, persist the other to allow the node to still use
-        // get_writable_edge
-        auto channel_reader = std::make_shared<EdgeChannelReader<T>>(shared_channel);
-        auto channel_writer = std::make_shared<EdgeChannelWriter<T>>(shared_channel);
+class IIngressProviderBase
+{
+  public:
+    virtual std::shared_ptr<EdgeTag> get_ingress_typeless() const = 0;
+};
 
-        channel_reader->add_connector(EdgeLifetime<T>([this, channel_writer]() {
-            // On connection, save the writer so we can use the channel without it being deleted
-            this->m_set_edge = channel_writer;
-        }));
-
-        DownstreamEdgeHolder<T>::init_edge(channel_reader);
-    }
+class IIngressAcceptorBase
+{
+  public:
+    virtual void set_ingress_typeless(std::shared_ptr<EdgeTag> ingress) = 0;
 };
 
 template <typename T>
-class IEgressProvider
+class IEgressProvider : public IEgressProviderBase
 {
   public:
     virtual std::shared_ptr<EdgeReadable<T>> get_egress() const = 0;
 };
 
 template <typename T>
-class IEgressAcceptor
+class IEgressAcceptor : public IEgressAcceptorBase
 {
   public:
     virtual void set_egress(std::shared_ptr<EdgeReadable<T>> egress) = 0;
 };
 
 template <typename T>
-class IIngressProvider
+class IIngressProvider : public IIngressProviderBase
 {
   public:
     virtual std::shared_ptr<EdgeWritable<T>> get_ingress() const = 0;
 };
 
 template <typename T>
-class IIngressAcceptor
+class IIngressAcceptor : public IIngressAcceptorBase
 {
   public:
     virtual void set_ingress(std::shared_ptr<EdgeWritable<T>> ingress) = 0;
 };
 
-template <typename T>
-class EgressProvider : public IEgressProvider<T>, public virtual DownstreamEdgeHolder<T>
-{
-  public:
-    std::shared_ptr<EdgeReadable<T>> get_egress() const
-    {
-        return std::dynamic_pointer_cast<EdgeReadable<T>>(DownstreamEdgeHolder<T>::get_edge());
-    }
-    // virtual std::shared_ptr<EdgeReadable<T>> get_egress() const = 0;
-  private:
-    using DownstreamEdgeHolder<T>::set_edge;
-};
+// template <typename T>
+// class EgressProvider : public IEgressProvider<T>, public virtual DownstreamEdgeHolder<T>
+// {
+//   public:
+//     std::shared_ptr<EdgeReadable<T>> get_egress() const
+//     {
+//         return std::dynamic_pointer_cast<EdgeReadable<T>>(DownstreamEdgeHolder<T>::get_edge());
+//     }
+//     // virtual std::shared_ptr<EdgeReadable<T>> get_egress() const = 0;
+//   private:
+//     using DownstreamEdgeHolder<T>::set_edge;
+// };
 
-template <typename T>
-class EgressAcceptor : public IEgressAcceptor<T>, public virtual UpstreamEdgeHolder<T>
-{
-  public:
-    void set_egress(std::shared_ptr<EdgeReadable<T>> egress)
-    {
-        UpstreamEdgeHolder<T>::set_edge(egress);
-    }
+// template <typename T>
+// class EgressAcceptor : public IEgressAcceptor<T>, public virtual UpstreamEdgeHolder<T>
+// {
+//   public:
+//     void set_egress(std::shared_ptr<EdgeReadable<T>> egress)
+//     {
+//         UpstreamEdgeHolder<T>::set_edge(egress);
+//     }
 
-  private:
-    using UpstreamEdgeHolder<T>::set_edge;
-};
+//   private:
+//     using UpstreamEdgeHolder<T>::set_edge;
+// };
 
-template <typename T>
-class IngressProvider : public IIngressProvider<T>, public virtual UpstreamEdgeHolder<T>
-{
-  public:
-    std::shared_ptr<EdgeWritable<T>> get_ingress() const
-    {
-        return std::dynamic_pointer_cast<EdgeWritable<T>>(UpstreamEdgeHolder<T>::get_edge());
-    }
-    // virtual std::shared_ptr<EdgeWritable<T>> get_ingress() const = 0;
-  private:
-    using UpstreamEdgeHolder<T>::set_edge;
-};
+// template <typename T>
+// class IngressProvider : public IIngressProvider<T>, public virtual UpstreamEdgeHolder<T>
+// {
+//   public:
+//     std::shared_ptr<EdgeWritable<T>> get_ingress() const
+//     {
+//         return std::dynamic_pointer_cast<EdgeWritable<T>>(UpstreamEdgeHolder<T>::get_edge());
+//     }
+//     // virtual std::shared_ptr<EdgeWritable<T>> get_ingress() const = 0;
+//   private:
+//     using UpstreamEdgeHolder<T>::set_edge;
+// };
 
-template <typename T>
-class IngressAcceptor : public IIngressAcceptor<T>, public virtual DownstreamEdgeHolder<T>
-{
-  public:
-    void set_ingress(std::shared_ptr<EdgeWritable<T>> ingress)
-    {
-        DownstreamEdgeHolder<T>::set_edge(ingress);
-    }
+// template <typename T>
+// class IngressAcceptor : public IIngressAcceptor<T>, public virtual DownstreamEdgeHolder<T>
+// {
+//   public:
+//     void set_ingress(std::shared_ptr<EdgeWritable<T>> ingress)
+//     {
+//         DownstreamEdgeHolder<T>::set_edge(ingress);
+//     }
 
-  private:
-    using DownstreamEdgeHolder<T>::set_edge;
-};
+//   private:
+//     using DownstreamEdgeHolder<T>::set_edge;
+// };
 
-template <typename T>
-class MultiIngressAcceptor : public IIngressAcceptor<T>, public virtual DownstreamMultiEdgeHolder<T, size_t>
-{
-  public:
-    void set_ingress(std::shared_ptr<EdgeWritable<T>> ingress)
-    {
-        auto count = DownstreamMultiEdgeHolder<T, size_t>::edge_count();
-        DownstreamMultiEdgeHolder<T, size_t>::set_edge(count, ingress);
-    }
-};
+// template <typename T>
+// class MultiIngressAcceptor : public IIngressAcceptor<T>, public virtual DownstreamMultiEdgeHolder<T, size_t>
+// {
+//   public:
+//     void set_ingress(std::shared_ptr<EdgeWritable<T>> ingress)
+//     {
+//         auto count = DownstreamMultiEdgeHolder<T, size_t>::edge_count();
+//         DownstreamMultiEdgeHolder<T, size_t>::set_edge(count, ingress);
+//     }
+// };
 
 // template <typename SourceT, typename SinkT = SourceT>
 // void make_edge(EgressProvider<SourceT>& source, EgressAcceptor<SinkT>& sink)
@@ -756,32 +796,32 @@ class MultiIngressAcceptor : public IIngressAcceptor<T>, public virtual Downstre
 //     source.set_ingress(ingress);
 // }
 
-template <template <typename> class SourceT,
-          template <typename>
-          class SinkT,
-          typename SourceValueT,
-          typename SinkValueT>
-void make_edge2(SourceT<SourceValueT>& source, SinkT<SinkValueT>& sink)
-{
-    using source_full_t = SourceT<SourceValueT>;
-    using sink_full_t   = SinkT<SinkValueT>;
+// template <template <typename> class SourceT,
+//           template <typename>
+//           class SinkT,
+//           typename SourceValueT,
+//           typename SinkValueT>
+// void make_edge2(SourceT<SourceValueT>& source, SinkT<SinkValueT>& sink)
+// {
+//     using source_full_t = SourceT<SourceValueT>;
+//     using sink_full_t   = SinkT<SinkValueT>;
 
-    if constexpr (is_base_of_template<IngressAcceptor, source_full_t>::value &&
-                  is_base_of_template<IngressProvider, sink_full_t>::value)
-    {
-        // Get ingress from provider
-        auto ingress = sink.get_ingress();
+//     if constexpr (is_base_of_template<IngressAcceptor, source_full_t>::value &&
+//                   is_base_of_template<IngressProvider, sink_full_t>::value)
+//     {
+//         // Get ingress from provider
+//         auto ingress = sink.get_ingress();
 
-        // Set to the acceptor
-        source.set_ingress(ingress);
-    }
-    else
-    {
-        static_assert(!sizeof(source_full_t),
-                      "Arguments to make_edge were incorrect. Ensure you are providing either "
-                      "IngressAcceptor->IngressProvider or EgressProvider->EgressAcceptor");
-    }
-}
+//         // Set to the acceptor
+//         source.set_ingress(ingress);
+//     }
+//     else
+//     {
+//         static_assert(!sizeof(source_full_t),
+//                       "Arguments to make_edge were incorrect. Ensure you are providing either "
+//                       "IngressAcceptor->IngressProvider or EgressProvider->EgressAcceptor");
+//     }
+// }
 
 template <typename SourceT, typename SinkT>
 void make_edge2(SourceT& source, SinkT& sink)

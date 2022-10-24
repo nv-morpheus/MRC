@@ -24,6 +24,7 @@
 #include "internal/runnable/resources.hpp"
 
 #include "srf/channel/status.hpp"
+#include "srf/node/channel_holder.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/source_channel.hpp"
 #include "srf/runnable/launch_control.hpp"
@@ -68,12 +69,10 @@ void Manager::do_service_start()
     main.pe_count            = 1;
     main.engines_per_pe      = 1;
 
-    auto instance    = std::make_unique<Instance>(m_pipeline, m_resources);
-    auto controller  = std::make_unique<Controller>(std::move(instance));
-    m_update_channel = std::make_unique<node::SourceChannelWriteable<ControlMessage>>();
+    auto instance   = std::make_unique<Instance>(m_pipeline, m_resources);
+    auto controller = std::make_unique<Controller>(std::move(instance));
 
-    // form edge
-    node::make_edge(*m_update_channel, *controller);
+    m_update_channel = controller->get_ingress();
 
     // launch controller
     auto launcher = resources().partition(0).runnable().launch_control().prepare_launcher(main, std::move(controller));

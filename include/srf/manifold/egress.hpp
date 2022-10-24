@@ -18,10 +18,12 @@
 #pragma once
 
 #include "srf/manifold/interface.hpp"
+#include "srf/node/channel_holder.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/operators/muxer.hpp"
 #include "srf/node/sink_properties.hpp"
 #include "srf/node/source_properties.hpp"
+#include "srf/types.hpp"
 
 #include <memory>
 
@@ -34,7 +36,7 @@ struct EgressDelegate
 };
 
 template <typename T>
-class TypedEngress : public EgressDelegate
+class TypedEngress : public node::MultiSourceProperties<T, SegmentAddress>, public EgressDelegate
 {
   public:
     void add_output(const SegmentAddress& address, node::SinkPropertiesBase* output_sink) final
@@ -51,31 +53,31 @@ class TypedEngress : public EgressDelegate
 template <typename T>
 class MappedEgress : public TypedEngress<T>
 {
-  public:
-    using channel_map_t = std::unordered_map<SegmentAddress, std::unique_ptr<node::SourceChannelWriteable<T>>>;
+    //   public:
+    //     using channel_map_t = std::unordered_map<SegmentAddress, std::shared_ptr<node::EdgeWritable<T>>>;
 
-    const channel_map_t& output_channels() const
-    {
-        return m_outputs;
-    }
+    //     const channel_map_t& output_channels() const
+    //     {
+    //         return m_outputs;
+    //     }
 
-    void clear()
-    {
-        m_outputs.clear();
-    }
+    //     void clear()
+    //     {
+    //         m_outputs.clear();
+    //     }
 
-  protected:
-    void do_add_output(const SegmentAddress& address, node::SinkProperties<T>& sink) override
-    {
-        auto search = m_outputs.find(address);
-        CHECK(search == m_outputs.end());
-        auto output_channel = std::make_unique<node::SourceChannelWriteable<T>>();
-        node::make_edge(*output_channel, sink);
-        m_outputs[address] = std::move(output_channel);
-    }
+    //   protected:
+    //     void do_add_output(const SegmentAddress& address, node::SinkProperties<T>& sink) override
+    //     {
+    //         auto search = m_outputs.find(address);
+    //         CHECK(search == m_outputs.end());
+    //         auto output_channel = std::make_unique<node::SourceChannelWriteable<T>>();
+    //         node::make_edge(*output_channel, sink);
+    //         m_outputs[address] = std::move(output_channel);
+    //     }
 
-  private:
-    std::unordered_map<SegmentAddress, std::unique_ptr<node::SourceChannelWriteable<T>>> m_outputs;
+    //   private:
+    //     std::unordered_map<SegmentAddress, std::unique_ptr<node::SourceChannelWriteable<T>>> m_outputs;
 };
 
 template <typename T>
@@ -115,7 +117,7 @@ class RoundRobinEgress : public MappedEgress<T>
     }
 
     std::size_t m_next{0};
-    std::vector<node::SourceChannelWriteable<T>*> m_pick_list;
+    std::vector<node::EdgeWritable<T>*> m_pick_list;
 };
 
 }  // namespace srf::manifold

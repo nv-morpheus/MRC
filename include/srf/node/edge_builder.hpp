@@ -67,6 +67,10 @@ struct EdgeBuilder final
      */
     static void make_edge_typeless(SourcePropertiesBase& source, SinkPropertiesBase& sink, bool allow_narrowing = true);
 
+    static void make_edge_typeless(IIngressAcceptorBase& source,
+                                   IIngressProviderBase& sink,
+                                   bool allow_narrowing = true);
+
     /**
      *
      * @tparam SourceT
@@ -133,6 +137,38 @@ template <typename SourceT, typename SinkT = SourceT>
 void make_edge(ChannelProvider<SourceT>& source, ChannelAcceptor<SinkT>& sink)
 {
     EdgeBuilder::make_edge(source, sink);
+}
+
+template <typename SourceT, typename SinkT>
+void make_edge(SourceT& source, SinkT& sink)
+{
+    using source_full_t = SourceT;
+    using sink_full_t   = SinkT;
+
+    if constexpr (is_base_of_template<IIngressAcceptor, source_full_t>::value &&
+                  is_base_of_template<IIngressProvider, sink_full_t>::value)
+    {
+        // Get ingress from provider
+        auto ingress = sink.get_ingress();
+
+        // Set to the acceptor
+        source.set_ingress(ingress);
+    }
+    else if constexpr (is_base_of_template<IEgressProvider, source_full_t>::value &&
+                       is_base_of_template<IEgressAcceptor, sink_full_t>::value)
+    {
+        // Get the egress from the provider
+        auto egress = source.get_egress();
+
+        // Set the egress to the acceptor
+        sink.set_egress(egress);
+    }
+    else
+    {
+        static_assert(!sizeof(source_full_t),
+                      "Arguments to make_edge were incorrect. Ensure you are providing either "
+                      "IngressAcceptor->IngressProvider or EgressProvider->EgressAcceptor");
+    }
 }
 
 template <typename SourceT, typename SinkT>

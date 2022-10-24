@@ -41,8 +41,71 @@
 
 namespace srf::node {
 
+// template <typename T>
+// class RxSinkBase : public SinkChannel<T>, private Watchable
+// {
+//   public:
+//     void sink_add_watcher(std::shared_ptr<WatcherInterface> watcher);
+//     void sink_remove_watcher(std::shared_ptr<WatcherInterface> watcher);
+
+//   protected:
+//     RxSinkBase();
+//     ~RxSinkBase() override = default;
+
+//     const rxcpp::observable<T>& observable() const;
+
+//   private:
+//     // the following methods are moved to private from their original scopes to prevent access from deriving classes
+//     // using SinkChannel<T>::egress;
+
+//     // this is our channel reader progress engine
+//     void progress_engine(rxcpp::subscriber<T>& s);
+
+//     // observable
+//     rxcpp::observable<T> m_observable;
+// };
+
+// template <typename T>
+// RxSinkBase<T>::RxSinkBase() :
+//   SinkChannel<T>(),
+//   m_observable(rxcpp::observable<>::create<T>([this](rxcpp::subscriber<T> s) { progress_engine(s); }))
+// {}
+
+// template <typename T>
+// const rxcpp::observable<T>& RxSinkBase<T>::observable() const
+// {
+//     return m_observable;
+// }
+
+// template <typename T>
+// void RxSinkBase<T>::progress_engine(rxcpp::subscriber<T>& s)
+// {
+//     T data;
+//     this->watcher_prologue(WatchableEvent::channel_read, &data);
+//     while (s.is_subscribed() && (SinkChannel<T>::egress().await_read(data) == channel::Status::success))
+//     {
+//         this->watcher_epilogue(WatchableEvent::channel_read, true, &data);
+//         this->watcher_prologue(WatchableEvent::sink_on_data, &data);
+//         s.on_next(std::move(data));
+//         this->watcher_prologue(WatchableEvent::channel_read, &data);
+//     }
+//     s.on_completed();
+// }
+
+// template <typename T>
+// void RxSinkBase<T>::sink_add_watcher(std::shared_ptr<WatcherInterface> watcher)
+// {
+//     Watchable::add_watcher(std::move(watcher));
+// }
+
+// template <typename T>
+// void RxSinkBase<T>::sink_remove_watcher(std::shared_ptr<WatcherInterface> watcher)
+// {
+//     Watchable::remove_watcher(std::move(watcher));
+// }
+
 template <typename T>
-class RxSinkBase : public SinkChannel<T>, private Watchable
+class RxSinkBase : public IngressProvider<T>, public EgressAcceptor<T>, public SinkChannel<T>, private Watchable
 {
   public:
     void sink_add_watcher(std::shared_ptr<WatcherInterface> watcher);
@@ -55,8 +118,8 @@ class RxSinkBase : public SinkChannel<T>, private Watchable
     const rxcpp::observable<T>& observable() const;
 
   private:
-    // the following methods are moved to private from their original scopes to prevent access from deriving classes
-    using SinkChannel<T>::egress;
+    // // the following methods are moved to private from their original scopes to prevent access from deriving classes
+    // using SinkChannel<T>::egress;
 
     // this is our channel reader progress engine
     void progress_engine(rxcpp::subscriber<T>& s);
@@ -67,9 +130,11 @@ class RxSinkBase : public SinkChannel<T>, private Watchable
 
 template <typename T>
 RxSinkBase<T>::RxSinkBase() :
-  SinkChannel<T>(),
   m_observable(rxcpp::observable<>::create<T>([this](rxcpp::subscriber<T> s) { progress_engine(s); }))
-{}
+{
+    // Set the default channel
+    this->set_channel(std::make_unique<srf::channel::BufferedChannel<T>>());
+}
 
 template <typename T>
 const rxcpp::observable<T>& RxSinkBase<T>::observable() const
@@ -82,7 +147,7 @@ void RxSinkBase<T>::progress_engine(rxcpp::subscriber<T>& s)
 {
     T data;
     this->watcher_prologue(WatchableEvent::channel_read, &data);
-    while (s.is_subscribed() && (SinkChannel<T>::egress().await_read(data) == channel::Status::success))
+    while (s.is_subscribed() && (this->get_readable_edge()->await_read(data) == channel::Status::success))
     {
         this->watcher_epilogue(WatchableEvent::channel_read, true, &data);
         this->watcher_prologue(WatchableEvent::sink_on_data, &data);
@@ -100,74 +165,6 @@ void RxSinkBase<T>::sink_add_watcher(std::shared_ptr<WatcherInterface> watcher)
 
 template <typename T>
 void RxSinkBase<T>::sink_remove_watcher(std::shared_ptr<WatcherInterface> watcher)
-{
-    Watchable::remove_watcher(std::move(watcher));
-}
-
-template <typename T>
-class RxSinkBase2 : public IngressProvider<T>,
-                    public EgressAcceptor<T>,
-                    public UpstreamChannelHolder<T>,
-                    private Watchable
-{
-  public:
-    void sink_add_watcher(std::shared_ptr<WatcherInterface> watcher);
-    void sink_remove_watcher(std::shared_ptr<WatcherInterface> watcher);
-
-  protected:
-    RxSinkBase2();
-    ~RxSinkBase2() override = default;
-
-    const rxcpp::observable<T>& observable() const;
-
-  private:
-    // // the following methods are moved to private from their original scopes to prevent access from deriving classes
-    // using SinkChannel<T>::egress;
-
-    // this is our channel reader progress engine
-    void progress_engine(rxcpp::subscriber<T>& s);
-
-    // observable
-    rxcpp::observable<T> m_observable;
-};
-
-template <typename T>
-RxSinkBase2<T>::RxSinkBase2() :
-  m_observable(rxcpp::observable<>::create<T>([this](rxcpp::subscriber<T> s) { progress_engine(s); }))
-{
-    // Set the default channel
-    this->set_channel(std::make_unique<srf::channel::BufferedChannel<T>>());
-}
-
-template <typename T>
-const rxcpp::observable<T>& RxSinkBase2<T>::observable() const
-{
-    return m_observable;
-}
-
-template <typename T>
-void RxSinkBase2<T>::progress_engine(rxcpp::subscriber<T>& s)
-{
-    T data;
-    this->watcher_prologue(WatchableEvent::channel_read, &data);
-    while (s.is_subscribed() && (this->get_readable_edge()->await_read(data) == channel::Status::success))
-    {
-        this->watcher_epilogue(WatchableEvent::channel_read, true, &data);
-        this->watcher_prologue(WatchableEvent::sink_on_data, &data);
-        s.on_next(std::move(data));
-        this->watcher_prologue(WatchableEvent::channel_read, &data);
-    }
-    s.on_completed();
-}
-
-template <typename T>
-void RxSinkBase2<T>::sink_add_watcher(std::shared_ptr<WatcherInterface> watcher)
-{
-    Watchable::add_watcher(std::move(watcher));
-}
-
-template <typename T>
-void RxSinkBase2<T>::sink_remove_watcher(std::shared_ptr<WatcherInterface> watcher)
 {
     Watchable::remove_watcher(std::move(watcher));
 }

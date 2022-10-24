@@ -23,6 +23,7 @@
 #include "internal/service.hpp"
 
 #include "srf/channel/status.hpp"
+#include "srf/node/channel_holder.hpp"
 #include "srf/node/source_channel.hpp"
 #include "srf/runnable/runner.hpp"
 
@@ -59,7 +60,7 @@ class Manager : public Service
 
     resources::Manager& m_resources;
     std::shared_ptr<Pipeline> m_pipeline;
-    std::unique_ptr<node::SourceChannelWriteable<ControlMessage>> m_update_channel;
+    std::shared_ptr<node::EdgeWritable<ControlMessage>> m_update_channel;
     std::unique_ptr<srf::runnable::Runner> m_controller;
 };
 

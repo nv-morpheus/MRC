@@ -17,25 +17,14 @@
 
 #pragma once
 
+#include "srf/node/operators/node_component.hpp"
 #include "srf/node/operators/operator.hpp"
 #include "srf/node/source_channel.hpp"
 
 namespace srf::node {
 
 template <typename T>
-class Muxer : public Operator<T>, public SourceChannelWriteable<T>
-{
-    // Operator::on_next
-    inline channel::Status on_next(T&& data) final
-    {
-        return SourceChannelWriteable<T>::await_write(std::move(data));
-    }
-
-    // Operator::on_complete
-    void on_complete() final
-    {
-        this->release_channel();
-    }
-};
+class Muxer : public NodeComponent<T, T>
+{};
 
 }  // namespace srf::node

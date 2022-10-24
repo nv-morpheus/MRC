@@ -33,7 +33,19 @@
 namespace srf::node {
 void EdgeBuilder::make_edge_typeless(SourcePropertiesBase& source, SinkPropertiesBase& sink, bool allow_narrowing)
 {
-    source.complete_edge(EdgeBuilder::ingress_adapter_for_sink(source, sink, sink.ingress_handle()));
+    // source.complete_edge(EdgeBuilder::ingress_adapter_for_sink(source, sink, sink.ingress_handle()));
+}
+
+void EdgeBuilder::make_edge_typeless(IIngressAcceptorBase& source, IIngressProviderBase& sink, bool allow_narrowing)
+{
+    // // Get the ingress
+    // auto ingress = sink.get_ingress_typeless();
+
+    // // Convert if neccessary
+    // auto ingress_adapted = EdgeBuilder::ingress_adapter_for_sink(source, sink, ingress);
+
+    // // Set to the source
+    // source.set_ingress_typeless(ingress_adapted);
 }
 
 std::shared_ptr<channel::IngressHandle> EdgeBuilder::ingress_adapter_for_sink(
@@ -43,16 +55,17 @@ std::shared_ptr<channel::IngressHandle> EdgeBuilder::ingress_adapter_for_sink(
 {
     VLOG(2) << "Looking for edge adapter: (" << source.source_type_name() << ", " << sink.sink_type_name() << ")";
     VLOG(2) << "- (" << source.source_type_hash() << ", " << sink.sink_type_hash() << ")";
+
     if (EdgeAdapterRegistry::has_source_adapter(source.source_type()))
     {
         auto adapter = EdgeAdapterRegistry::find_source_adapter(source.source_type());
 
-        // Try and build the handle
-        auto handle = adapter(source, sink, sink.ingress_handle());
-        if (handle)
-        {
-            return handle;
-        }
+        // // Try and build the handle
+        // auto handle = adapter(source, sink, sink.ingress_handle());
+        // if (handle)
+        // {
+        //     return handle;
+        // }
     }
 
     // Fallback -- probably fail
@@ -69,12 +82,12 @@ std::shared_ptr<channel::IngressHandle> EdgeBuilder::ingress_for_source_type(
     {
         auto adapter = EdgeAdapterRegistry::find_sink_adapter(sink.sink_type());
 
-        // Try and build the handle
-        auto handle = adapter(source_type, sink, sink.ingress_handle());
-        if (handle)
-        {
-            return handle;
-        }
+        // // Try and build the handle
+        // auto handle = adapter(source_type, sink, sink.ingress_handle());
+        // if (handle)
+        // {
+        //     return handle;
+        // }
     }
 
     // Fallback -- probably fail

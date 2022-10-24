@@ -22,7 +22,9 @@
 #include "srf/channel/ingress.hpp"
 #include "srf/constants.hpp"
 #include "srf/exceptions/runtime_error.hpp"
+#include "srf/node/channel_holder.hpp"
 #include "srf/node/edge.hpp"
+#include "srf/node/edge_channel.hpp"
 #include "srf/node/edge_properties.hpp"
 #include "srf/node/forward.hpp"
 #include "srf/node/sink_channel_base.hpp"
@@ -39,33 +41,56 @@ namespace srf::node {
  * @tparam T
  */
 template <typename T>
-class SinkChannel : public SinkChannelBase<T>, public SinkProperties<T>, public ChannelAcceptor<T>
+class SinkChannel : public virtual SinkProperties<T>
 {
+  public:
+    void set_channel(std::unique_ptr<srf::channel::Channel<T>> channel)
+    {
+        EdgeChannel<T> edge_channel(std::move(channel));
+
+        this->do_set_channel(edge_channel);
+    }
+
   protected:
     SinkChannel() = default;
 
-  private:
-    using SinkChannelBase<T>::channel;
-    using SinkChannelBase<T>::ingress_channel;
-    using SinkChannelBase<T>::set_shared_channel;
+    void do_set_channel(EdgeChannel<T>& edge_channel)
+    {
+        // Create 2 edges, one for reading and writing. On connection, persist the other to allow the node to still use
+        // get_writable_edge
+        auto channel_reader = edge_channel.get_reader();
+        auto channel_writer = edge_channel.get_writer();
 
-    // implement virtual method from SinkProperties<T>
-    [[nodiscard]] std::shared_ptr<channel::Ingress<T>> channel_ingress() final;
+        channel_reader->add_connector(EdgeLifetime<T>([this, channel_writer]() {
+            // On connection, save the writer so we can use the channel without it being deleted
+            this->m_set_edge = channel_writer;
+        }));
 
-    // implement virtual method from ChannelAcceptor<T>
-    void set_channel(std::shared_ptr<channel::Channel<T>> channel) final;
+        SinkProperties<T>::init_edge(channel_reader);
+    }
+
+    //   private:
+    //     using SinkChannelBase<T>::channel;
+    //     using SinkChannelBase<T>::ingress_channel;
+    //     using SinkChannelBase<T>::set_shared_channel;
+
+    //     // implement virtual method from SinkProperties<T>
+    //     [[nodiscard]] std::shared_ptr<channel::Ingress<T>> channel_ingress() final;
+
+    //     // implement virtual method from ChannelAcceptor<T>
+    //     void set_channel(std::shared_ptr<channel::Channel<T>> channel) final;
 };
 
-template <typename T>
-std::shared_ptr<channel::Ingress<T>> SinkChannel<T>::channel_ingress()
-{
-    return SinkChannelBase<T>::ingress_channel();
-}
+// template <typename T>
+// std::shared_ptr<channel::Ingress<T>> SinkChannel<T>::channel_ingress()
+// {
+//     return SinkChannelBase<T>::ingress_channel();
+// }
 
-template <typename T>
-void SinkChannel<T>::set_channel(std::shared_ptr<Channel<T>> channel)
-{
-    SinkChannelBase<T>::set_shared_channel(std::move(channel));
-}
+// template <typename T>
+// void SinkChannel<T>::set_channel(std::shared_ptr<Channel<T>> channel)
+// {
+//     SinkChannelBase<T>::set_shared_channel(std::move(channel));
+// }
 
 }  // namespace srf::node

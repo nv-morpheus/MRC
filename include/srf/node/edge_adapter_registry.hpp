@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "srf/node/channel_holder.hpp"
+
 #include <functional>
 #include <map>
 #include <memory>
@@ -50,6 +52,9 @@ struct EdgeAdapterRegistry
 
     using sink_adapter_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(
         std::type_index, srf::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle>)>;
+
+    using ingress_adapter_fn_t = std::function<std::shared_ptr<EdgeTag>(
+        std::type_index, std::type_index, std::shared_ptr<channel::IngressHandle>)>;
 
     EdgeAdapterRegistry() = delete;
 

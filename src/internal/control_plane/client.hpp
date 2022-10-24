@@ -18,6 +18,7 @@
 #pragma once
 
 #include "srf/channel/status.hpp"
+#include "srf/node/channel_holder.hpp"
 #include "srf/node/source_channel.hpp"
 #include "srf/protos/architect.grpc.pb.h"
 #include "srf/protos/architect.pb.h"
@@ -88,7 +89,7 @@ class Client : private nvrpc::client::fiber::ClientStreaming<protos::Event, prot
     std::vector<InstanceID> m_instance_ids;
     std::string m_info{"streaming_client: uninitialized"};
 
-    std::unique_ptr<node::SourceChannelWriteable<protos::Event>> m_event_channel;
+    std::unique_ptr<node::EdgeWritable<protos::Event>> m_event_channel;
 
     // Completed by CallbackOnInitialized; indicates the bi-directional grpc is live
     Promise<void> m_promise_live;

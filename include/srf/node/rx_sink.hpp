@@ -47,6 +47,116 @@
 
 namespace srf::node {
 
+// template <typename T, typename ContextT>
+// class RxSink : public RxSinkBase<T>, public RxRunnable<ContextT>, public RxPrologueTap<T>
+// {
+//   public:
+//     using observer_t       = rxcpp::observer<T>;
+//     using on_next_fn_t     = std::function<void(T)>;
+//     using on_error_fn_t    = std::function<void(std::exception_ptr)>;
+//     using on_complete_fn_t = std::function<void()>;
+
+//     RxSink()           = default;
+//     ~RxSink() override = default;
+
+//     template <typename... ArgsT>
+//     RxSink(ArgsT&&... args)
+//     {
+//         set_observer(std::forward<ArgsT>(args)...);
+//     }
+
+//     void set_observer(observer_t observer);
+
+//     template <typename... ArgsT>
+//     void set_observer(ArgsT&&... args)
+//     {
+//         set_observer(rxcpp::make_observer_dynamic<T>(std::forward<ArgsT>(args)...));
+//     }
+
+//   private:
+//     // the following methods are moved to private from their original scopes to prevent access from deriving classes
+//     using RxSinkBase<T>::observable;
+
+//     void on_shutdown_critical_section() final;
+//     void do_subscribe(rxcpp::composite_subscription& subscription) final;
+
+//     void on_stop(const rxcpp::subscription& subscription) const final;
+//     void on_kill(const rxcpp::subscription& subscription) const final;
+
+//     observer_t m_observer;
+// };
+
+// template <typename T, typename ContextT>
+// void RxSink<T, ContextT>::set_observer(rxcpp::observer<T> observer)
+// {
+//     m_observer = std::move(observer);
+// }
+
+// template <typename T, typename ContextT>
+// void RxSink<T, ContextT>::do_subscribe(rxcpp::composite_subscription& subscription)
+// {
+//     auto observable = RxPrologueTap<T>::apply_prologue_taps(RxSinkBase<T>::observable());
+
+//     auto default_error_handler = rxcpp::make_observer_dynamic<T>(
+//         [this](T data) { m_observer.on_next(std::move(data)); },
+//         [this](std::exception_ptr ptr) {
+//             runnable::Context::get_runtime_context().set_exception(std::move(std::current_exception()));
+//             try
+//             {
+//                 m_observer.on_error(std::move(ptr));
+//             } catch (...)
+//             {
+//                 runnable::Context::get_runtime_context().set_exception(std::move(std::current_exception()));
+//             }
+//         },
+//         [this] { m_observer.on_completed(); });
+
+//     observable.subscribe(subscription, default_error_handler);
+// }
+
+// template <typename T, typename ContextT>
+// void RxSink<T, ContextT>::on_stop(const rxcpp::subscription& subscription) const
+// {}
+
+// template <typename T, typename ContextT>
+// void RxSink<T, ContextT>::on_kill(const rxcpp::subscription& subscription) const
+// {
+//     subscription.unsubscribe();
+// }
+
+// template <typename T, typename ContextT>
+// void RxSink<T, ContextT>::on_shutdown_critical_section()
+// {}
+
+template <typename T>
+class EdgeRxObserver : public EdgeWritable<T>
+{
+  public:
+    using observer_t = rxcpp::observer<T>;
+
+    EdgeRxObserver() {}
+
+    ~EdgeRxObserver()
+    {
+        m_observer.on_completed();
+    }
+
+    void set_observer(observer_t observer)
+    {
+        m_observer = observer;
+    }
+
+    virtual channel::Status await_write(T&& t)
+    {
+        m_observer.on_next(std::move(t));
+
+        return channel::Status::success;
+    }
+
+  private:
+    observer_t m_observer;
+};
+
 template <typename T, typename ContextT>
 class RxSink : public RxSinkBase<T>, public RxRunnable<ContextT>, public RxPrologueTap<T>
 {
@@ -126,116 +236,6 @@ void RxSink<T, ContextT>::on_kill(const rxcpp::subscription& subscription) const
 
 template <typename T, typename ContextT>
 void RxSink<T, ContextT>::on_shutdown_critical_section()
-{}
-
-template <typename T>
-class EdgeRxObserver : public EdgeWritable<T>
-{
-  public:
-    using observer_t = rxcpp::observer<T>;
-
-    EdgeRxObserver() {}
-
-    ~EdgeRxObserver()
-    {
-        m_observer.on_completed();
-    }
-
-    void set_observer(observer_t observer)
-    {
-        m_observer = observer;
-    }
-
-    virtual channel::Status await_write(T&& t)
-    {
-        m_observer.on_next(std::move(t));
-
-        return channel::Status::success;
-    }
-
-  private:
-    observer_t m_observer;
-};
-
-template <typename T, typename ContextT>
-class RxSink2 : public RxSinkBase2<T>, public RxRunnable<ContextT>, public RxPrologueTap<T>
-{
-  public:
-    using observer_t       = rxcpp::observer<T>;
-    using on_next_fn_t     = std::function<void(T)>;
-    using on_error_fn_t    = std::function<void(std::exception_ptr)>;
-    using on_complete_fn_t = std::function<void()>;
-
-    RxSink2()           = default;
-    ~RxSink2() override = default;
-
-    template <typename... ArgsT>
-    RxSink2(ArgsT&&... args)
-    {
-        set_observer(std::forward<ArgsT>(args)...);
-    }
-
-    void set_observer(observer_t observer);
-
-    template <typename... ArgsT>
-    void set_observer(ArgsT&&... args)
-    {
-        set_observer(rxcpp::make_observer_dynamic<T>(std::forward<ArgsT>(args)...));
-    }
-
-  private:
-    // the following methods are moved to private from their original scopes to prevent access from deriving classes
-    using RxSinkBase2<T>::observable;
-
-    void on_shutdown_critical_section() final;
-    void do_subscribe(rxcpp::composite_subscription& subscription) final;
-
-    void on_stop(const rxcpp::subscription& subscription) const final;
-    void on_kill(const rxcpp::subscription& subscription) const final;
-
-    observer_t m_observer;
-};
-
-template <typename T, typename ContextT>
-void RxSink2<T, ContextT>::set_observer(rxcpp::observer<T> observer)
-{
-    m_observer = std::move(observer);
-}
-
-template <typename T, typename ContextT>
-void RxSink2<T, ContextT>::do_subscribe(rxcpp::composite_subscription& subscription)
-{
-    auto observable = RxPrologueTap<T>::apply_prologue_taps(RxSinkBase2<T>::observable());
-
-    auto default_error_handler = rxcpp::make_observer_dynamic<T>(
-        [this](T data) { m_observer.on_next(std::move(data)); },
-        [this](std::exception_ptr ptr) {
-            runnable::Context::get_runtime_context().set_exception(std::move(std::current_exception()));
-            try
-            {
-                m_observer.on_error(std::move(ptr));
-            } catch (...)
-            {
-                runnable::Context::get_runtime_context().set_exception(std::move(std::current_exception()));
-            }
-        },
-        [this] { m_observer.on_completed(); });
-
-    observable.subscribe(subscription, default_error_handler);
-}
-
-template <typename T, typename ContextT>
-void RxSink2<T, ContextT>::on_stop(const rxcpp::subscription& subscription) const
-{}
-
-template <typename T, typename ContextT>
-void RxSink2<T, ContextT>::on_kill(const rxcpp::subscription& subscription) const
-{
-    subscription.unsubscribe();
-}
-
-template <typename T, typename ContextT>
-void RxSink2<T, ContextT>::on_shutdown_critical_section()
 {}
 
 template <typename T>

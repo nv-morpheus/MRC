@@ -210,7 +210,7 @@ class PythonNode : public node::RxNode<InputT, OutputT, ContextT>,
     }
 
   private:
-    channel::Status no_channel(OutputT&& data) final
+    channel::Status no_channel(OutputT&& data)
     {
         if constexpr (pybind11::detail::is_pyobject<OutputT>::value)
         {
