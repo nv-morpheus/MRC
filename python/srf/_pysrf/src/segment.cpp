@@ -289,7 +289,7 @@ std::shared_ptr<srf::segment::ObjectProperties> BuilderProxy::make_node_full(
 }
 
 std::shared_ptr<srf::modules::SegmentModule> BuilderProxy::make_module(srf::segment::Builder& self,
-                                                                       const std::string& module_name,
+                                                                       std::string module_name,
                                                                        const std::string& module_id,
                                                                        py::dict config)
 {

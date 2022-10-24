@@ -281,16 +281,16 @@ TEST_F(SegmentTests, ModuleChainingTest)
 {
     using namespace modules;
 
-    auto sink_mod     = SinkModule("ModuleChainingTest_mod2");
+    auto sink_mod     = std::make_shared<SinkModule>("ModuleChainingTest_mod2");
     auto init_wrapper = [&sink_mod](segment::Builder& builder) {
         auto config = nlohmann::json();
         unsigned int source_count{42};
         config["source_count"] = source_count;
 
         auto source_mod = builder.make_module<SourceModule>("ModuleChainingTest_mod1", config);
-        sink_mod.initialize(builder);
+        builder.init_module(sink_mod);
 
-        builder.make_dynamic_edge<bool, bool>(source_mod->output_port("source"), sink_mod.input_port("sink"));
+        builder.make_dynamic_edge<bool, bool>(source_mod->output_port("source"), sink_mod->input_port("sink"));
     };
 
     m_pipeline->make_segment("SimpleModule_Segment", init_wrapper);
@@ -304,7 +304,7 @@ TEST_F(SegmentTests, ModuleChainingTest)
     executor.start();
     executor.join();
 
-    EXPECT_EQ(sink_mod.m_packet_count, 42);
+    EXPECT_EQ(sink_mod->m_packet_count, 42);
 }
 
 TEST_F(SegmentTests, ModuleNestingTest)

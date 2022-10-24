@@ -31,9 +31,10 @@ class SimpleModule : public SegmentModule
     SimpleModule(std::string module_name);
     SimpleModule(std::string module_name, nlohmann::json config);
 
-    void initialize(segment::Builder& builder) override;
-
     bool m_was_configured{false};
+
+  protected:
+    void initialize(segment::Builder& builder) override;
 
   private:
     bool m_initialized{false};
@@ -109,9 +110,10 @@ class ConfigurableModule : public SegmentModule
     ConfigurableModule(std::string module_name);
     ConfigurableModule(std::string module_name, nlohmann::json config);
 
-    void initialize(segment::Builder& builder) override;
-
     bool m_was_configured{false};
+
+  protected:
+    void initialize(segment::Builder& builder) override;
 
   private:
     bool m_initialized;
@@ -162,9 +164,10 @@ class SourceModule : public SegmentModule
     SourceModule(std::string module_name);
     SourceModule(std::string module_name, nlohmann::json config);
 
-    void initialize(segment::Builder& builder) override;
-
     bool m_was_configured{false};
+
+  protected:
+    void initialize(segment::Builder& builder) override;
 
   private:
     bool m_initialized;
@@ -206,10 +209,11 @@ class SinkModule : public SegmentModule
     SinkModule(std::string module_name);
     SinkModule(std::string module_name, nlohmann::json config);
 
-    void initialize(segment::Builder& builder) override;
-
     bool m_was_configured{false};
     unsigned int m_packet_count{0};
+
+  protected:
+    void initialize(segment::Builder& builder) override;
 
   private:
     bool m_initialized;
@@ -237,11 +241,12 @@ class NestedModule : public SegmentModule
     NestedModule(std::string module_name);
     NestedModule(std::string module_name, nlohmann::json config);
 
-    void initialize(segment::Builder& builder) override;
-
     std::string module_name() const override;
 
     bool m_was_configured{false};
+
+  protected:
+    void initialize(segment::Builder& builder) override;
 
   private:
     bool m_initialized;

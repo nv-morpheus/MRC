@@ -199,7 +199,7 @@ class BuilderProxy
                                                                       const std::string& name);
 
     static std::shared_ptr<srf::modules::SegmentModule> make_module(srf::segment::Builder& self,
-                                                                    const std::string& module_name,
+                                                                    std::string module_name,
                                                                     const std::string& module_id,
                                                                     pybind11::dict config = {});
 

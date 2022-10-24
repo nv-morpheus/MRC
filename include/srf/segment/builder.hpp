@@ -170,12 +170,15 @@ class Builder final
         static_assert(std::is_base_of_v<modules::SegmentModule, ModuleTypeT>);
 
         auto module = std::make_shared<ModuleTypeT>(std::move(module_name), std::move(config));
+        init_module(module);
 
+        return std::move(module);
+    }
+
+    void init_module(std::shared_ptr<srf::modules::SegmentModule> module) {
         ns_push(module->component_prefix());
         module->initialize(*this);
         ns_pop();
-
-        return std::move(module);
     }
 
     std::shared_ptr<srf::modules::SegmentModule> load_module_from_registry(const std::string& module_id,
