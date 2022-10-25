@@ -35,6 +35,8 @@ namespace srf::modules {
 
 class SegmentModule
 {
+    friend srf::segment::Builder;
+
   public:
     using segment_module_port_map_t      = std::map<std::string, std::shared_ptr<segment::ObjectProperties>>;
     using segment_module_port_t          = std::shared_ptr<segment::ObjectProperties>;
@@ -122,13 +124,6 @@ class SegmentModule
         this->initialize(builder);
     };
 
-    /* Virtual Functions */
-    /**
-     * Entrypoint for module constructor during build
-     * @param builder
-     */
-    virtual void initialize(segment::Builder& builder) = 0;
-
     /**
      * Retrieve the class name for the module, defaults to 'segment_module'
      * @return
@@ -137,6 +132,13 @@ class SegmentModule
 
   protected:
     // Derived class interface functions
+
+    /* Virtual Functions */
+    /**
+     * Entrypoint for module constructor during build
+     * @param builder
+     */
+    virtual void initialize(segment::Builder& builder) = 0;
 
     /**
      * Register an input port that should be exposed for the module

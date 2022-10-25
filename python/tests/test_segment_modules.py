@@ -74,8 +74,8 @@ def test_py_end_to_end():
         def on_complete():
             pass
 
-        simple_mod = builder.make_module("ModuleEndToEndTest_mod1", "SimpleModule", {})
-        configurable_mod = builder.make_module("ModuleEndToEndTest_mod2", "ConfigurableModule", {})
+        simple_mod = builder.load_module("SimpleModule", "srf_unittest", "ModuleEndToEndTest_mod1", {})
+        configurable_mod = builder.load_module("ConfigurableModule", "srf_unittest", "ModuleEndToEndTest_mod2", {})
 
         source1 = builder.make_source("src1", gen_data_1)
         builder.make_edge(source1, simple_mod.input_port("input1"))

@@ -15,58 +15,82 @@
  * limitations under the License.
  */
 
-#include "srf/experimental/modules/segment_modules.hpp"
 #include "srf/experimental/modules/segment_module_registry.hpp"
 
+#include "srf/experimental/modules/segment_modules.hpp"
+
+#include <iostream>
 #include <map>
 #include <mutex>
 
 namespace srf::modules {
 
-void test(){
-    auto test = [](){};
-}
-
-std::map<std::string, ModuleRegistry::module_constructor_t> ModuleRegistry::s_module_registry{};
+ModuleRegistry::module_namespace_map_t ModuleRegistry::s_module_namespace_registry{
+    {"default", ModuleRegistry::module_registry_map_t{}}};
 std::recursive_mutex ModuleRegistry::s_mutex{};
 
-bool ModuleRegistry::contains(const std::string& name)
-{
-    auto iter_reg = s_module_registry.find(name);
-
-    return iter_reg != s_module_registry.end();
-}
-
-ModuleRegistry::module_constructor_t ModuleRegistry::find_module(const std::string& name)
+bool ModuleRegistry::contains(const std::string& name, const std::string& registry_namespace)
 {
     std::lock_guard<decltype(s_mutex)> lock(s_mutex);
 
-    auto iter_mod = s_module_registry.find(name);
-    if (iter_mod != s_module_registry.end())
+    if (!contains_namespace(registry_namespace))
     {
-        return iter_mod->second;
+        return false;
+    }
+
+    auto& module_registry = s_module_namespace_registry[registry_namespace];
+    auto iter_reg         = module_registry.find(name);
+
+    return iter_reg != module_registry.end();
+}
+
+bool ModuleRegistry::contains_namespace(const std::string& registry_namespace)
+{
+    std::lock_guard<decltype(s_mutex)> lock(s_mutex);
+
+    return s_module_namespace_registry.find(registry_namespace) != s_module_namespace_registry.end();
+}
+
+ModuleRegistry::module_constructor_t ModuleRegistry::find_module(const std::string& name,
+                                                                 const std::string& registry_namespace)
+{
+    std::lock_guard<decltype(s_mutex)> lock(s_mutex);
+
+    if (contains(name, registry_namespace))
+    {
+        return s_module_namespace_registry[registry_namespace][name];
     }
 
     std::stringstream sstream;
 
-    sstream << "Module does not exist: " << name;
+    sstream << "Module does not exist -> " << registry_namespace << "::" << name;
     throw std::invalid_argument(sstream.str());
 }
 
 void ModuleRegistry::register_module(std::string name,
-                                     srf::modules::ModuleRegistry::module_constructor_t fn_constructor)
+                                     srf::modules::ModuleRegistry::module_constructor_t fn_constructor,
+                                     std::string registry_namespace)
 {
     std::lock_guard<decltype(s_mutex)> lock(s_mutex);
 
-    if (!ModuleRegistry::contains(name))
+    if (!contains_namespace(registry_namespace))
     {
-        s_module_registry[std::move(name)] = fn_constructor;
+        s_module_namespace_registry[registry_namespace] = ModuleRegistry::module_registry_map_t{};
+        VLOG(2) << "Creating namespace because it does not exist:  " << registry_namespace;
+    }
+
+    if (!contains(name, registry_namespace))
+    {
+        auto& module_registry = s_module_namespace_registry[registry_namespace];
+        module_registry[name] = fn_constructor;
+
+        VLOG(2) << "Registered module: " << registry_namespace << "::" << name << std::endl;
         return;
     }
 
     std::stringstream sstream;
 
-    sstream << "Attempt to register duplicate module: " << name;
+    sstream << "Attempt to register duplicate module -> " << registry_namespace << ":" << name;
     throw std::invalid_argument(sstream.str());
 }
 

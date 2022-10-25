@@ -158,10 +158,11 @@ PYBIND11_MODULE(segment, m)
 
     Builder.def("make_edge", &BuilderProxy::make_edge, py::arg("source"), py::arg("sink"));
 
-    Builder.def("make_module",
-                &BuilderProxy::make_module,
-                py::arg("module_name"),
+    Builder.def("load_module",
+                &BuilderProxy::load_module,
                 py::arg("module_id"),
+                py::arg("registry_namespace"),
+                py::arg("module_name"),
                 py::arg("module_config"),
                 py::return_value_policy::reference_internal);
 
@@ -170,11 +171,14 @@ PYBIND11_MODULE(segment, m)
     Builder.def("make_py2cxx_edge_adapter", &BuilderProxy::make_py2cxx_edge_adapter);
 
     /** Register test modules -- necessary for python unit tests**/
-    modules::ModelRegistryUtil::register_module<srf::modules::SimpleModule>("SimpleModule");
-    modules::ModelRegistryUtil::register_module<srf::modules::ConfigurableModule>("ConfigurableModule");
-    modules::ModelRegistryUtil::register_module<srf::modules::SourceModule>("SourceModule");
-    modules::ModelRegistryUtil::register_module<srf::modules::SinkModule>("SinkModule");
-    modules::ModelRegistryUtil::register_module<srf::modules::NestedModule>("NestedModule");
+    modules::ModelRegistryUtil::register_module<srf::modules::SimpleModule>("SimpleModule", "srf_unittest");
+    modules::ModelRegistryUtil::register_module<srf::modules::ConfigurableModule>("ConfigurableModule", "srf_unittest");
+    modules::ModelRegistryUtil::register_module<srf::modules::SourceModule>("SourceModule", "srf_unittest");
+    modules::ModelRegistryUtil::register_module<srf::modules::SinkModule>("SinkModule", "srf_unittest");
+    modules::ModelRegistryUtil::register_module<srf::modules::NestedModule>("NestedModule", "srf_unittest");
+    modules::ModelRegistryUtil::register_module<srf::modules::TemplateModule<int>>("TemplateModuleInt", "srf_unittest");
+    modules::ModelRegistryUtil::register_module<srf::modules::TemplateModule<std::string>>("TemplateModuleString",
+                                                                                           "srf_unittest");
 
     /** Segment Module Interface Declarations **/
     SegmentModule.def("config", &SegmentModuleProxy::config);

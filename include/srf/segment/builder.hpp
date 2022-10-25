@@ -170,20 +170,27 @@ class Builder final
         static_assert(std::is_base_of_v<modules::SegmentModule, ModuleTypeT>);
 
         auto module = std::make_shared<ModuleTypeT>(std::move(module_name), std::move(config));
-
-        ns_push(module->component_prefix());
-        module->initialize(*this);
-        ns_pop();
+        init_module(module);
 
         return std::move(module);
     }
 
-    std::shared_ptr<srf::modules::SegmentModule> load_module_from_registry(const std::string& module_id,
-                                                                           std::string module_name,
-                                                                           nlohmann::json config = {})
+    void init_module(std::shared_ptr<srf::modules::SegmentModule> module)
     {
-        auto fn_module_constructor = srf::modules::ModuleRegistry::find_module(module_id);
-        auto module                = std::move(fn_module_constructor(*this, std::move(module_name), std::move(config)));
+        ns_push(module->component_prefix());
+        module->initialize(*this);
+        ns_pop();
+    }
+
+    std::shared_ptr<srf::modules::SegmentModule> load_module(const std::string& module_id,
+                                                             const std::string& registry_namespace,
+                                                             std::string module_name,
+                                                             nlohmann::json config = {})
+    {
+        auto fn_module_constructor = srf::modules::ModuleRegistry::find_module(module_id, registry_namespace);
+        auto module                = std::move(fn_module_constructor(std::move(module_name), std::move(config)));
+
+        init_module(module);
 
         return std::move(module);
     }
