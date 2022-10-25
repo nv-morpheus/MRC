@@ -48,8 +48,6 @@ SimpleModule::SimpleModule(std::string module_name, nlohmann::json config) :
 
 void SimpleModule::initialize(segment::Builder& builder)
 {
-    VLOG(10) << "MyModule::operator() called for '" << this->name() << "'" << std::endl;
-
     if (config().contains("simple_key_1"))
     {
         m_was_configured = true;
@@ -126,8 +124,6 @@ ConfigurableModule::ConfigurableModule(std::string module_name, nlohmann::json c
 
 void ConfigurableModule::initialize(segment::Builder& builder)
 {
-    VLOG(10) << "MyModule::operator() called for '" << this->name() << "'" << std::endl;
-
     if (config().contains("config_key_1"))
     {
         m_was_configured = true;

@@ -17,82 +17,68 @@
 
 #pragma once
 
-#include "pysrf/types.hpp"
-#include "pysrf/utils.hpp"
-
 #include "srf/experimental/modules/segment_modules.hpp"
-#include "srf/segment/forward.hpp"
 #include "srf/segment/object.hpp"
 
 #include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
 
-#include <cstddef>
-#include <functional>
-#include <memory>
 #include <string>
-#include <utility>
 
 namespace srf::pysrf {
 
 // Export everything in the srf::pysrf namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
 
+/*
+class PythonModule : public srf::modules::SegmentModule
+{
+  public:
+    PythonModule(std::string module_name);
+    PythonModule(std::string module_name, nlohmann::json config);
+
+  protected:
+    void initialize(segment::Builder& builder) override;
+
+  private:
+    bool m_initialized{false};
+};
+
+PythonModule::PythonModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
+
+PythonModule::PythonModule(std::string module_name, nlohmann::json config) :
+  SegmentModule(std::move(module_name), std::move(config))
+{}
+
+void PythonModule::initialize(segment::Builder& builder) {}
+*/
+
 class SegmentModuleProxy
 {
   public:
-    static std::string component_prefix(srf::modules::SegmentModule& self)
-    {
-        return self.component_prefix();
-    }
+    static std::string component_prefix(srf::modules::SegmentModule& self);
 
-    static pybind11::dict config(srf::modules::SegmentModule& self)
-    {
-        return cast_from_json(self.config());
-    }
+    static pybind11::dict config(srf::modules::SegmentModule& self);
 
-    static const std::string& name(srf::modules::SegmentModule& self)
-    {
-        return self.name();
-    }
+    static const std::string& name(srf::modules::SegmentModule& self);
 
-    static std::string module_name(srf::modules::SegmentModule& self)
-    {
-        return self.module_name();
-    }
+    static std::string module_name(srf::modules::SegmentModule& self);
 
-    static std::vector<std::string> input_ids(srf::modules::SegmentModule& self)
-    {
-        return self.input_ids();
-    }
+    static std::vector<std::string> input_ids(srf::modules::SegmentModule& self);
 
-    static std::vector<std::string> output_ids(srf::modules::SegmentModule& self)
-    {
-        return self.output_ids();
-    }
+    static std::vector<std::string> output_ids(srf::modules::SegmentModule& self);
 
     static std::shared_ptr<srf::segment::ObjectProperties> input_port(srf::modules::SegmentModule& self,
-                                                                      const std::string& input_id)
-    {
-        return self.input_port(input_id);
-    }
+                                                                      const std::string& input_id);
 
-    static const srf::modules::SegmentModule::segment_module_port_map_t& input_ports(srf::modules::SegmentModule& self)
-    {
-        return self.input_ports();
-    }
+    static const srf::modules::SegmentModule::segment_module_port_map_t& input_ports(srf::modules::SegmentModule& self);
 
     static std::shared_ptr<srf::segment::ObjectProperties> output_port(srf::modules::SegmentModule& self,
-                                                                       const std::string& output_id)
-    {
-        return self.output_port(output_id);
-    }
+                                                                       const std::string& output_id);
 
-    static const srf::modules::SegmentModule::segment_module_port_map_t& output_ports(srf::modules::SegmentModule& self)
-    {
-        return self.output_ports();
-    }
+    static const srf::modules::SegmentModule::segment_module_port_map_t& output_ports(
+        srf::modules::SegmentModule& self);
 };
 
 #pragma GCC visibility pop

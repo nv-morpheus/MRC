@@ -182,7 +182,7 @@ class Builder final
         ns_pop();
     }
 
-    std::shared_ptr<srf::modules::SegmentModule> load_module(const std::string& module_id,
+    std::shared_ptr<srf::modules::SegmentModule> load_module_from_registry(const std::string& module_id,
                                                              const std::string& registry_namespace,
                                                              std::string module_name,
                                                              nlohmann::json config = {})

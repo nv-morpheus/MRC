@@ -16,3 +16,73 @@
  */
 
 #include "pysrf/segment_modules.hpp"
+
+#include "pysrf/utils.hpp"
+
+#include "srf/experimental/modules/segment_modules.hpp"
+#include "srf/segment/object.hpp"
+
+#include <pybind11/functional.h>  // IWYU pragma: keep
+#include <pybind11/pytypes.h>
+#include <pybind11/stl.h>  // IWYU pragma: keep
+
+#include <functional>
+#include <memory>
+#include <string>
+
+namespace srf::pysrf {
+std::string SegmentModuleProxy::component_prefix(srf::modules::SegmentModule& self)
+{
+    return self.component_prefix();
+}
+
+pybind11::dict SegmentModuleProxy::config(srf::modules::SegmentModule& self)
+{
+    return cast_from_json(self.config());
+}
+
+const std::string& SegmentModuleProxy::name(srf::modules::SegmentModule& self)
+{
+    return self.name();
+}
+
+std::string SegmentModuleProxy::module_name(srf::modules::SegmentModule& self)
+{
+    return self.module_name();
+}
+
+std::vector<std::string> SegmentModuleProxy::input_ids(srf::modules::SegmentModule& self)
+{
+    return self.input_ids();
+}
+
+std::vector<std::string> SegmentModuleProxy::output_ids(srf::modules::SegmentModule& self)
+{
+    return self.output_ids();
+}
+
+std::shared_ptr<srf::segment::ObjectProperties> SegmentModuleProxy::input_port(srf::modules::SegmentModule& self,
+                                                                               const std::string& input_id)
+{
+    return self.input_port(input_id);
+}
+
+const srf::modules::SegmentModule::segment_module_port_map_t& SegmentModuleProxy::input_ports(
+    srf::modules::SegmentModule& self)
+{
+    return self.input_ports();
+}
+
+std::shared_ptr<srf::segment::ObjectProperties> SegmentModuleProxy::output_port(srf::modules::SegmentModule& self,
+                                                                                const std::string& output_id)
+{
+    return self.output_port(output_id);
+}
+
+const srf::modules::SegmentModule::segment_module_port_map_t& SegmentModuleProxy::output_ports(
+    srf::modules::SegmentModule& self)
+{
+    return self.output_ports();
+}
+
+}  // namespace srf::pysrf

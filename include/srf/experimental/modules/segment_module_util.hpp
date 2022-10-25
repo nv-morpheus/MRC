@@ -31,6 +31,7 @@ struct ModelRegistryUtil
      * module, and build the constructor boiler plate.
      * @tparam ModuleTypeT Module type, must have modules::SegmentModule as a base class
      * @param name Name of the Module
+     * @param registry_namespace Namespace where `name` should be registered.
      */
     template <typename ModuleTypeT>
     static void register_module(std::string name, std::string registry_namespace)
