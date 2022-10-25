@@ -288,13 +288,14 @@ std::shared_ptr<srf::segment::ObjectProperties> BuilderProxy::make_node_full(
     return node;
 }
 
-std::shared_ptr<srf::modules::SegmentModule> BuilderProxy::make_module(srf::segment::Builder& self,
-                                                                       std::string module_name,
+std::shared_ptr<srf::modules::SegmentModule> BuilderProxy::load_module(srf::segment::Builder& self,
                                                                        const std::string& module_id,
+                                                                       const std::string& registry_namespace,
+                                                                       std::string module_name,
                                                                        py::dict config)
 {
     auto json_config = cast_from_pyobject(config);
-    return self.load_module_from_registry(module_id, std::move(module_name), std::move(json_config));
+    return self.load_module(module_id, registry_namespace, std::move(module_name), std::move(json_config));
 }
 
 void BuilderProxy::make_py2cxx_edge_adapter(srf::segment::Builder& self,

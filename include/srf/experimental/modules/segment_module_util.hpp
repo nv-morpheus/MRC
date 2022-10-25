@@ -33,14 +33,14 @@ struct ModelRegistryUtil
      * @param name Name of the Module
      */
     template <typename ModuleTypeT>
-    static void register_module(std::string name)
+    static void register_module(std::string name, std::string registry_namespace)
     {
         static_assert(std::is_base_of_v<modules::SegmentModule, ModuleTypeT>);
 
         ModuleRegistry::register_module(
             name, [](std::string module_name, nlohmann::json config) {
                 return std::make_shared<ModuleTypeT>(std::move(module_name), std::move(config));
-            });
+            }, registry_namespace);
     }
 };
 }  // namespace srf::modules

@@ -44,6 +44,9 @@ class ModuleRegistry
     using module_constructor_t =
         std::function<std::shared_ptr<srf::modules::SegmentModule>(std::string module_name, nlohmann::json config)>;
 
+    using module_registry_map_t = std::map<std::string, module_constructor_t>;
+    using module_namespace_map_t = std::map<std::string, module_registry_map_t>;
+
   public:
     ModuleRegistry() = delete;
 
@@ -52,7 +55,14 @@ class ModuleRegistry
      * @param name Name of the module
      * @return boolean indicating if the registry contains the required module.
      */
-    static bool contains(const std::string& name);
+    static bool contains(const std::string& name, const std::string& registry_namespace = "default");
+
+    /**
+     *
+     * @param registry_namespace
+     * @return
+     */
+    static bool contains_namespace(const std::string& registry_namespace);
 
     /**
      * Attempt to retrieve the module constructor for a given module name; throws an error
@@ -60,7 +70,7 @@ class ModuleRegistry
      * @param name Name of the module
      * @return Module constructor
      */
-    static module_constructor_t find_module(const std::string& name);
+    static module_constructor_t find_module(const std::string& name, const std::string& registry_namespace = "default");
 
     /**
      * Attempt to register the provided module constructor for the given name; throws an error
@@ -68,10 +78,12 @@ class ModuleRegistry
      * @param name Name of the module
      * @param fn_constructor Module constructor
      */
-    static void register_module(std::string name, module_constructor_t fn_constructor);
+    static void register_module(std::string name,
+                                module_constructor_t fn_constructor,
+                                std::string registry_namespace = "default");
 
   private:
-    static std::map<std::string, module_constructor_t> s_module_registry;
+    static module_namespace_map_t s_module_namespace_registry;
     static std::recursive_mutex s_mutex;
 };
 
