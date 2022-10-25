@@ -176,8 +176,6 @@ class BuilderProxy
         const std::string& name,
         std::function<void(const pysrf::PyObjectObservable& obs, pysrf::PyObjectSubscriber& sub)> sub_fn);
 
-    static void test_fn(srf::segment::Builder& self, pybind11::function py_func);
-
     static void make_py2cxx_edge_adapter(srf::segment::Builder& self,
                                          std::shared_ptr<srf::segment::ObjectProperties> source,
                                          std::shared_ptr<srf::segment::ObjectProperties> sink,

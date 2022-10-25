@@ -174,6 +174,8 @@ PYBIND11_MODULE(segment, m)
     modules::ModelRegistryUtil::register_module<srf::modules::SourceModule>("SourceModule");
     modules::ModelRegistryUtil::register_module<srf::modules::SinkModule>("SinkModule");
     modules::ModelRegistryUtil::register_module<srf::modules::NestedModule>("NestedModule");
+    modules::ModelRegistryUtil::register_module<srf::modules::TemplateModule<int>>("TemplateModuleInt");
+    modules::ModelRegistryUtil::register_module<srf::modules::TemplateModule<std::string>>("TemplateModuleInt");
 
     /** Segment Module Interface Declarations **/
     SegmentModule.def("config", &SegmentModuleProxy::config);
