@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+
 import srf
 
 packets_1 = 0
@@ -21,6 +23,7 @@ packets_3 = 0
 
 
 def test_py_end_to_end():
+
     def gen_data_1():
         yield True
         yield False
@@ -109,5 +112,290 @@ def test_py_end_to_end():
     assert (packets_3 == 4)
 
 
-if (__name__ in ("__main__",)):
+# def test_py_constructor():
+
+#     def gen_data():
+#         yield True
+#         yield False
+#         yield True
+#         yield True
+
+#     def init_wrapper(builder: srf.Builder):
+
+#         def on_next(input):
+#             pass
+
+#         def on_error():
+#             pass
+
+#         def on_complete():
+#             pass
+
+#         config_1 = {}
+#         config_2 = {"config_key_1": True}
+
+#         # TODO: Handle unregistered nodes and modules
+#         mod1 = builder.make_module("InitModuleTest_1", "SimpleModule", {})
+#         mod2 = builder.make_module("InitModuleTest_2", "ConfigurableModule", {})
+#         mod3 = builder.make_module("InitModuleTest_3", "ConfigurableModule", config_1)
+#         mod4 = builder.make_module("InitModuleTest_4", "ConfigurableModule", config_2)
+
+#         assert "config_key_1" in mod4.config()
+
+#         source = builder.make_source("source", gen_data)
+#         sink = builder.make_sink("sink", on_next, on_error, on_complete)
+
+#         builder.make_edge(source, sink)
+
+#     pipeline = srf.Pipeline()
+#     pipeline.make_segment("Initialization_Segment", init_wrapper)
+
+#     options = srf.Options()
+#     options.topology.user_cpuset = "0-1"
+
+#     executor = srf.Executor(options)
+#     executor.register_pipeline(pipeline)
+#     executor.start()
+#     executor.join()
+
+# def test_py_module_initialization():
+
+#     def gen_data():
+#         yield True
+#         yield False
+#         yield True
+#         yield True
+
+#     def init_wrapper(builder: srf.Builder):
+
+#         def on_next(input):
+#             pass
+
+#         def on_error():
+#             pass
+
+#         def on_complete():
+#             pass
+
+#         config_1 = {}
+#         config_2 = {"config_key_1": True}
+
+#         # TODO: Handle unregistered nodes and modules
+#         simple_mod = builder.make_module("ModuleInitializationTest_mod1", "SimpleModule", {})
+#         configurable_1_mod = builder.make_module("ModuleInitializationTest_mod2", "ConfigurableModule", config_1)
+#         configurable_2_mod = builder.make_module("ModuleInitializationTest_mod3", "ConfigurableModule", config_2)
+
+#         assert len(simple_mod.input_ids()) == 2
+#         assert len(simple_mod.output_ids()) == 2
+#         assert len(simple_mod.input_ports()) == 2
+#         assert len(simple_mod.output_ports()) == 2
+#         assert ("input1" in simple_mod.input_ports())
+#         assert ("input2" in simple_mod.input_ports())
+#         assert ("output1" in simple_mod.output_ports())
+#         assert ("output2" in simple_mod.output_ports())
+
+#         # assert isinstance(simple_mod.input_port_type_id("input1"), bool)
+#         # assert isinstance(simple_mod.input_port_type_id("input2"), bool)
+#         # assert isinstance(simple_mod.input_port_type_ids()["input1"], bool)
+#         # assert isinstance(simple_mod.input_port_type_ids()["input2"], bool)
+#         # assert isinstance(simple_mod.output_port_type_id("output1"), str)
+#         # assert isinstance(simple_mod.output_port_type_id("output2"), str)
+#         # assert isinstance(simple_mod.output_port_type_ids()["output1"], str)
+#         # assert isinstance(simple_mod.output_port_type_ids()["output2"], str)
+
+#         with pytest.raises(Exception):
+#             simple_mod.input_port("DOES_NOT_EXIST")
+#         with pytest.raises(Exception):
+#             simple_mod.output_port("DOES_NOT_EXIST")
+#         with pytest.raises(Exception):
+#             simple_mod.input_port_type_id("DOES_NOT_EXIST")
+#         with pytest.raises(Exception):
+#             simple_mod.output_port_type_id("DOES_NOT_EXIST")
+
+#         assert len(configurable_1_mod.input_ports()) == 1
+#         assert len(configurable_1_mod.output_ports()) == 1
+#         assert 'config_key_1' not in configurable_1_mod.config()
+
+#         assert len(configurable_2_mod.input_ports()) == 1
+#         assert len(configurable_2_mod.output_ports()) == 1
+#         assert 'config_key_1' in configurable_2_mod.config()
+
+#         source = builder.make_source("source", gen_data)
+#         sink = builder.make_sink("sink", on_next, on_error, on_complete)
+
+#         builder.make_edge(source, sink)
+
+#     pipeline = srf.Pipeline()
+#     pipeline.make_segment("Initialization_Segment", init_wrapper)
+
+#     options = srf.Options()
+#     options.topology.user_cpuset = "0-1"
+
+#     executor = srf.Executor(options)
+#     executor.register_pipeline(pipeline)
+#     executor.start()
+#     executor.join()
+
+
+def test_py_module_as_source():
+
+    def init_wrapper(builder: srf.Builder):
+
+        global packet_count
+        packet_count = 0
+
+        def on_next(input):
+            global packet_count
+            packet_count += 1
+            logging.info("Sinking {}".format(input))
+
+        def on_error():
+            pass
+
+        def on_complete():
+            pass
+
+        config = {}
+        config["source_count"] = 42
+
+        source_mod = builder.make_module("ModuleSourceTest_mod1", "SourceModule", config)
+        sink = builder.make_sink("sink", on_next, on_error, on_complete)
+        builder.make_edge(source_mod.output_port("source"), sink)
+
+    pipeline = srf.Pipeline()
+    pipeline.make_segment("ModuleAsSource_Segment", init_wrapper)
+
+    options = srf.Options()
+    options.topology.user_cpuset = "0-1"
+
+    executor = srf.Executor(options)
+    executor.register_pipeline(pipeline)
+    executor.start()
+    executor.join()
+    assert packet_count == 42
+
+
+def test_py_module_as_sink():
+
+    def gen_data():
+        for i in range(0, 43):
+            yield True
+            global packet_count
+            packet_count += 1
+
+    def init_wrapper(builder: srf.Builder):
+
+        global packet_count
+        packet_count = 0
+
+        source = builder.make_source("source", gen_data())
+        sink_mod = builder.make_module("ModuleSinkTest_mod1", "SinkModule", {})
+
+        builder.make_edge(source, sink_mod.input_port("sink"))
+
+    pipeline = srf.Pipeline()
+    pipeline.make_segment("ModuleAsSink_Segment", init_wrapper)
+
+    options = srf.Options()
+    options.topology.user_cpuset = "0-1"
+
+    executor = srf.Executor(options)
+    executor.register_pipeline(pipeline)
+    executor.start()
+    executor.join()
+
+    assert packet_count == 43
+
+
+def test_py_module_chaining():
+
+    def init_wrapper(builder: srf.Builder):
+
+        global packet_count
+        packet_count = 0
+
+        def on_next(input):
+            global packet_count
+            packet_count += 1
+            logging.info("Sinking {}".format(input))
+
+        def on_error():
+            pass
+
+        def on_complete():
+            pass
+
+        config = {"source_count": 42}
+
+        source_mod = builder.make_module("ModuleChainingTest_mod1", "SourceModule", config)
+        configurable_mod = builder.make_module("ModuleEndToEndTest_mod2", "ConfigurableModule", {})
+        sink = builder.make_sink("sink", on_next, on_error, on_complete)
+
+        builder.make_edge(source_mod.output_port("source"), configurable_mod.input_port("configurable_input_a"))
+        builder.make_edge(configurable_mod.output_port("configurable_output_x"), sink)
+
+    pipeline = srf.Pipeline()
+    pipeline.make_segment("ModuleChaining_Segment", init_wrapper)
+
+    options = srf.Options()
+    options.topology.user_cpuset = "0-1"
+
+    executor = srf.Executor(options)
+    executor.register_pipeline(pipeline)
+    executor.start()
+    executor.join()
+
+    assert packet_count == 42
+
+
+def test_py_module_nesting():
+
+    def gen_data():
+        for i in range(0, 43):
+            yield True
+            global packet_count
+            packet_count += 1
+
+    def init_wrapper(builder: srf.Builder):
+
+        global packet_count
+        packet_count = 0
+
+        def on_next(input):
+            global packet_count
+            packet_count += 1
+            logging.info("Sinking {}".format(input))
+
+        def on_error():
+            pass
+
+        def on_complete():
+            pass
+
+        nested_mod = builder.make_module("ModuleNestingTest_mod1", "NestedModule", {})
+        nested_sink = builder.make_sink("nested_sink", on_next, on_error, on_complete)
+
+        builder.make_edge(nested_mod.output_port("nested_module_output"), nested_sink)
+
+    pipeline = srf.Pipeline()
+    pipeline.make_segment("ModuleNesting_Segment", init_wrapper)
+
+    options = srf.Options()
+    options.topology.user_cpuset = "0-1"
+
+    executor = srf.Executor(options)
+    executor.register_pipeline(pipeline)
+    executor.start()
+    executor.join()
+
+    assert packet_count == 4
+
+
+if (__name__ in ("__main__", )):
     test_py_end_to_end()
+    test_py_module_as_source()
+    test_py_module_as_sink()
+    test_py_module_chaining()
+    test_py_module_nesting()
+    # test_py_constructor()
+    # test_py_module_initialization()
