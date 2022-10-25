@@ -175,7 +175,8 @@ class Builder final
         return std::move(module);
     }
 
-    void init_module(std::shared_ptr<srf::modules::SegmentModule> module) {
+    void init_module(std::shared_ptr<srf::modules::SegmentModule> module)
+    {
         ns_push(module->component_prefix());
         module->initialize(*this);
         ns_pop();
@@ -186,7 +187,9 @@ class Builder final
                                                                            nlohmann::json config = {})
     {
         auto fn_module_constructor = srf::modules::ModuleRegistry::find_module(module_id);
-        auto module                = std::move(fn_module_constructor(*this, std::move(module_name), std::move(config)));
+        auto module                = std::move(fn_module_constructor(std::move(module_name), std::move(config)));
+
+        init_module(module);
 
         return std::move(module);
     }

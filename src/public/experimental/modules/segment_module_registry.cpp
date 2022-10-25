@@ -23,10 +23,6 @@
 
 namespace srf::modules {
 
-void test(){
-    auto test = [](){};
-}
-
 std::map<std::string, ModuleRegistry::module_constructor_t> ModuleRegistry::s_module_registry{};
 std::recursive_mutex ModuleRegistry::s_mutex{};
 

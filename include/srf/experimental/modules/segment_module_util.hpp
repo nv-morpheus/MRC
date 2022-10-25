@@ -38,8 +38,8 @@ struct ModelRegistryUtil
         static_assert(std::is_base_of_v<modules::SegmentModule, ModuleTypeT>);
 
         ModuleRegistry::register_module(
-            name, [](srf::segment::Builder& builder, std::string module_name, nlohmann::json config) {
-                return std::move(builder.make_module<ModuleTypeT>(std::move(module_name), std::move(config)));
+            name, [](std::string module_name, nlohmann::json config) {
+                return std::make_shared<ModuleTypeT>(std::move(module_name), std::move(config));
             });
     }
 };
