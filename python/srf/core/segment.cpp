@@ -22,7 +22,6 @@
 #include "pysrf/types.hpp"
 #include "pysrf/utils.hpp"
 
-#include "srf/channel/status.hpp"
 #include "srf/experimental/modules/segment_module_util.hpp"
 #include "srf/experimental/modules/segment_modules.hpp"
 #include "srf/experimental/modules/test_modules.hpp"
@@ -158,7 +157,7 @@ PYBIND11_MODULE(segment, m)
     Builder.def("make_edge", &BuilderProxy::make_edge, py::arg("source"), py::arg("sink"));
 
     Builder.def("load_module",
-                &BuilderProxy::load_module,
+                &BuilderProxy::load_module_from_registry,
                 py::arg("module_id"),
                 py::arg("registry_namespace"),
                 py::arg("module_name"),

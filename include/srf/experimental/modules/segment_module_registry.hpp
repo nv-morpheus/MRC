@@ -44,7 +44,7 @@ class ModuleRegistry
     using module_constructor_t =
         std::function<std::shared_ptr<srf::modules::SegmentModule>(std::string module_name, nlohmann::json config)>;
 
-    using module_registry_map_t = std::map<std::string, module_constructor_t>;
+    using module_registry_map_t  = std::map<std::string, module_constructor_t>;
     using module_namespace_map_t = std::map<std::string, module_registry_map_t>;
 
   public:
@@ -58,9 +58,9 @@ class ModuleRegistry
     static bool contains(const std::string& name, const std::string& registry_namespace = "default");
 
     /**
-     *
-     * @param registry_namespace
-     * @return
+     * Return true if the registry contains the namespace, else false
+     * @param registry_namespace Namespace name
+     * @return boolean indicating if the registry contains the required namespace.
      */
     static bool contains_namespace(const std::string& registry_namespace);
 
