@@ -135,10 +135,10 @@ def test_py_end_to_end():
 #         config_2 = {"config_key_1": True}
 
 #         # TODO: Handle unregistered nodes and modules
-#         mod1 = builder.make_module("InitModuleTest_1", "SimpleModule", {})
-#         mod2 = builder.make_module("InitModuleTest_2", "ConfigurableModule", {})
-#         mod3 = builder.make_module("InitModuleTest_3", "ConfigurableModule", config_1)
-#         mod4 = builder.make_module("InitModuleTest_4", "ConfigurableModule", config_2)
+#         mod1 = builder.load_module("SimpleModule", "srf_unittest", "InitModuleTest_1", {})
+#         mod2 = builder.load_module("ConfigurableModule", "srf_unittest", "InitModuleTest_2", {})
+#         mod3 = builder.load_module("ConfigurableModule", "srf_unittest", "InitModuleTest_3", config_1)
+#         mod4 = builder.load_module("ConfigurableModule", "srf_unittest", "InitModuleTest_4", config_2)
 
 #         assert "config_key_1" in mod4.config()
 
@@ -181,9 +181,15 @@ def test_py_end_to_end():
 #         config_2 = {"config_key_1": True}
 
 #         # TODO: Handle unregistered nodes and modules
-#         simple_mod = builder.make_module("ModuleInitializationTest_mod1", "SimpleModule", {})
-#         configurable_1_mod = builder.make_module("ModuleInitializationTest_mod2", "ConfigurableModule", config_1)
-#         configurable_2_mod = builder.make_module("ModuleInitializationTest_mod3", "ConfigurableModule", config_2)
+#         simple_mod = builder.load_module("SimpleModule", "srf_unittest", "ModuleInitializationTest_mod1", {})
+#         configurable_1_mod = builder.load_module("ConfigurableModule",
+#                                                  "srf_unittest",
+#                                                  "ModuleInitializationTest_mod2",
+#                                                   config_1)
+#         configurable_2_mod = builder.load_module("ConfigurableModule",
+#                                                  "srf_unittest",
+#                                                  "ModuleInitializationTest_mod3",
+#                                                  config_2)
 
 #         assert len(simple_mod.input_ids()) == 2
 #         assert len(simple_mod.output_ids()) == 2
@@ -258,7 +264,7 @@ def test_py_module_as_source():
         config = {}
         config["source_count"] = 42
 
-        source_mod = builder.make_module("ModuleSourceTest_mod1", "SourceModule", config)
+        source_mod = builder.load_module("SourceModule", "srf_unittest", "ModuleSourceTest_mod1", config)
         sink = builder.make_sink("sink", on_next, on_error, on_complete)
         builder.make_edge(source_mod.output_port("source"), sink)
 
@@ -289,7 +295,7 @@ def test_py_module_as_sink():
         packet_count = 0
 
         source = builder.make_source("source", gen_data())
-        sink_mod = builder.make_module("ModuleSinkTest_mod1", "SinkModule", {})
+        sink_mod = builder.load_module("SinkModule", "srf_unittest", "ModuleSinkTest_mod1", {})
 
         builder.make_edge(source, sink_mod.input_port("sink"))
 
@@ -327,8 +333,8 @@ def test_py_module_chaining():
 
         config = {"source_count": 42}
 
-        source_mod = builder.make_module("ModuleChainingTest_mod1", "SourceModule", config)
-        configurable_mod = builder.make_module("ModuleEndToEndTest_mod2", "ConfigurableModule", {})
+        source_mod = builder.load_module("SourceModule", "srf_unittest", "ModuleChainingTest_mod1", config)
+        configurable_mod = builder.load_module("ConfigurableModule", "srf_unittest", "ModuleEndToEndTest_mod2", {})
         sink = builder.make_sink("sink", on_next, on_error, on_complete)
 
         builder.make_edge(source_mod.output_port("source"), configurable_mod.input_port("configurable_input_a"))
@@ -372,7 +378,7 @@ def test_py_module_nesting():
         def on_complete():
             pass
 
-        nested_mod = builder.make_module("ModuleNestingTest_mod1", "NestedModule", {})
+        nested_mod = builder.load_module("NestedModule", "srf_unittest", "ModuleNestingTest_mod1", {})
         nested_sink = builder.make_sink("nested_sink", on_next, on_error, on_complete)
 
         builder.make_edge(nested_mod.output_port("nested_module_output"), nested_sink)

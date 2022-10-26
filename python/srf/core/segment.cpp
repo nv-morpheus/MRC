@@ -64,7 +64,6 @@ PYBIND11_MODULE(segment, m)
 
     // Register the converters for make_py2cxx_edge_adapter and make_cxx2py_edge_adapter
     // Type 'b'
-    node::EdgeConnector<bool, bool>::register_converter();
     node::EdgeConnector<bool, PyHolder>::register_converter();
     node::EdgeConnector<PyHolder, bool>::register_converter();
 
