@@ -85,7 +85,6 @@ class SinkModule : public SegmentModule
     bool m_initialized;
 };
 
-
 class NestedModule : public SegmentModule
 {
   public:
@@ -102,7 +101,6 @@ class NestedModule : public SegmentModule
   private:
     bool m_initialized;
 };
-
 
 template <typename OutputTypeT>
 class TemplateModule : public SegmentModule
@@ -180,11 +178,13 @@ class TemplateWithInitModule : public SegmentModule
 };
 
 template <typename OutputTypeT, OutputTypeT (*Initializer)()>
-TemplateWithInitModule<OutputTypeT, Initializer>::TemplateWithInitModule(std::string module_name) : SegmentModule(std::move(module_name))
+TemplateWithInitModule<OutputTypeT, Initializer>::TemplateWithInitModule(std::string module_name) :
+  SegmentModule(std::move(module_name))
 {}
 
 template <typename OutputTypeT, OutputTypeT (*Initializer)()>
-TemplateWithInitModule<OutputTypeT, Initializer>::TemplateWithInitModule(std::string module_name, nlohmann::json config) :
+TemplateWithInitModule<OutputTypeT, Initializer>::TemplateWithInitModule(std::string module_name,
+                                                                         nlohmann::json config) :
   SegmentModule(std::move(module_name), std::move(config))
 {}
 
@@ -221,6 +221,5 @@ void TemplateWithInitModule<OutputTypeT, Initializer>::initialize(segment::Build
     // Register the submodules output as one of this module's outputs
     register_output_port("source", source, source->object().source_type());
 }
-
 
 }  // namespace srf::modules
