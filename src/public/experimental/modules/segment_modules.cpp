@@ -130,6 +130,11 @@ std::string SegmentModule::module_name() const
     return "[segment_module]";
 }
 
+void SegmentModule::operator()(segment::Builder& builder)
+{
+    this->initialize(builder);
+}
+
 void SegmentModule::register_input_port(std::string input_name,
                                         std::shared_ptr<segment::ObjectProperties> object,
                                         std::type_index tidx)

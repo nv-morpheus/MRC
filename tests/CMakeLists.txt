@@ -39,5 +39,6 @@ add_test(
   COMMAND $<TARGET_FILE:test_srf>
 )
 
+add_subdirectory(modules)
 add_subdirectory(benchmarking)
 add_subdirectory(logging)
