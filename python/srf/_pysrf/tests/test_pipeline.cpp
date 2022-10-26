@@ -274,7 +274,7 @@ TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
                 auto egress_test = builder.get_egress<pysrf::PyHolder>(source_segment_egress_ids[i]);
                 EXPECT_TRUE(source_segment_egress_ids[i] == egress_test->name());
                 EXPECT_TRUE(egress_test->is_sink());
-                builder.make_edge(src, egress_test);
+                // builder.make_edge(src, egress_test);
             }
 
             LOG(INFO) << "Finished TestSegment1 Initialization";

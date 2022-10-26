@@ -103,6 +103,15 @@ class EdgeTag
 {
   public:
     virtual ~EdgeTag() = default;
+
+    virtual bool is_connected() const = 0;
+
+  protected:
+    virtual void connect() = 0;
+
+    // Friend any type of edge handle to allow calling connect
+    template <typename>
+    friend class EdgeHandle;
 };
 
 template <typename T>
@@ -121,7 +130,7 @@ class EdgeHandle : public EdgeTag
         m_disconnectors.clear();
     };
 
-    bool is_connected() const
+    bool is_connected() const override
     {
         return m_is_connected;
     }
@@ -137,12 +146,23 @@ class EdgeHandle : public EdgeTag
     }
 
   protected:
-    void connect()
+    void connect() override
     {
         m_is_connected = true;
 
         // Clear the connectors to execute them
         m_connectors.clear();
+
+        // For all linked edges, call connect
+        for (auto& linked_edge : m_linked_edges)
+        {
+            linked_edge->connect();
+        }
+    }
+
+    void add_linked_edge(std::shared_ptr<EdgeTag> linked_edge)
+    {
+        m_linked_edges.emplace_back(std::move(linked_edge));
     }
 
     // // Allows keeping a downstream edge holder alive for the lifetime of this edge
@@ -155,8 +175,9 @@ class EdgeHandle : public EdgeTag
     bool m_is_connected{false};
     std::vector<EdgeLifetime<T>> m_connectors;
     std::vector<EdgeLifetime<T>> m_disconnectors;
-    // std::vector<std::shared_ptr<EdgeHolder<T>>> m_keep_alive;
+    std::vector<std::shared_ptr<EdgeTag>> m_linked_edges;
 
+    // Friend the holder classes which are required to setup connections
     template <typename>
     friend class EdgeHolder;
     template <typename, typename>
@@ -184,6 +205,68 @@ class EdgeReadable : public virtual EdgeHandle<T>
 {
   public:
     virtual channel::Status await_read(T& t) = 0;
+};
+
+template <typename SourceT, typename SinkT = SourceT, typename EnableT = void>
+class ConvertingEdgeWritable;
+
+template <typename SourceT, typename SinkT>
+class ConvertingEdgeWritable<SourceT, SinkT, std::enable_if_t<std::is_convertible_v<SourceT, SinkT>>>
+  : public EdgeWritable<SourceT>
+{
+  public:
+    ConvertingEdgeWritable(std::shared_ptr<EdgeWritable<SinkT>> downstream) : m_downstream(downstream)
+    {
+        this->add_linked_edge(downstream);
+    }
+
+    channel::Status await_write(SourceT&& data) override
+    {
+        return this->downstream().await_write(std::move(data));
+    }
+
+  protected:
+    inline EdgeWritable<SinkT>& downstream() const
+    {
+        return *m_downstream;
+    }
+
+  private:
+    std::shared_ptr<EdgeWritable<SinkT>> m_downstream{};
+};
+
+template <typename SourceT, typename SinkT = SourceT, typename EnableT = void>
+class ConvertingEdgeReadable;
+
+template <typename SourceT, typename SinkT>
+class ConvertingEdgeReadable<SourceT, SinkT, std::enable_if_t<std::is_convertible_v<SourceT, SinkT>>>
+  : public EdgeReadable<SinkT>
+{
+  public:
+    ConvertingEdgeReadable(std::shared_ptr<EdgeReadable<SourceT>> upstream) : m_upstream(upstream)
+    {
+        this->add_linked_edge(upstream);
+    }
+
+    channel::Status await_read(SinkT& data) override
+    {
+        SourceT source_data;
+        auto ret_val = this->upstream().await_read(source_data);
+
+        // Convert to the sink type
+        data = source_data;
+
+        return ret_val;
+    }
+
+  protected:
+    inline EdgeReadable<SourceT>& upstream() const
+    {
+        return *m_upstream;
+    }
+
+  private:
+    std::shared_ptr<EdgeReadable<SourceT>> m_upstream{};
 };
 
 // // EdgeChannel holds an actual channel object and provides interfaces for reading/writing
@@ -470,7 +553,7 @@ class MultiEdgeHolder : public virtual_enable_shared_from_this<MultiEdgeHolder<T
 
     std::shared_ptr<EdgeHandle<T>> get_edge(const KeyT& key) const
     {
-        auto& edge_pair = this->get_edge_pair(key, true);
+        auto& edge_pair = this->get_edge_pair(key);
 
         if (auto edge = edge_pair.first.lock())
         {
@@ -534,6 +617,18 @@ class MultiEdgeHolder : public virtual_enable_shared_from_this<MultiEdgeHolder<T
     size_t edge_count() const
     {
         return m_edges.size();
+    }
+
+    std::vector<KeyT> edge_keys() const
+    {
+        std::vector<KeyT> keys;
+
+        for (const auto& [key, _] : m_edges)
+        {
+            keys.push_back(key);
+        }
+
+        return keys;
     }
 
     edge_pair_t& get_edge_pair(KeyT key, bool create_if_missing = false)
@@ -690,6 +785,11 @@ class IEgressProvider : public IEgressProviderBase
 {
   public:
     virtual std::shared_ptr<EdgeReadable<T>> get_egress() const = 0;
+
+    std::shared_ptr<EdgeTag> get_egress_typeless() const override
+    {
+        return this->get_egress();
+    }
 };
 
 template <typename T>
@@ -697,6 +797,11 @@ class IEgressAcceptor : public IEgressAcceptorBase
 {
   public:
     virtual void set_egress(std::shared_ptr<EdgeReadable<T>> egress) = 0;
+
+    void set_egress_typeless(std::shared_ptr<EdgeTag> egress) override
+    {
+        this->set_egress(std::dynamic_pointer_cast<EdgeReadable<T>>(egress));
+    }
 };
 
 template <typename T>
@@ -704,6 +809,11 @@ class IIngressProvider : public IIngressProviderBase
 {
   public:
     virtual std::shared_ptr<EdgeWritable<T>> get_ingress() const = 0;
+
+    std::shared_ptr<EdgeTag> get_ingress_typeless() const override
+    {
+        return std::dynamic_pointer_cast<EdgeTag>(this->get_ingress());
+    }
 };
 
 template <typename T>
@@ -711,6 +821,11 @@ class IIngressAcceptor : public IIngressAcceptorBase
 {
   public:
     virtual void set_ingress(std::shared_ptr<EdgeWritable<T>> ingress) = 0;
+
+    void set_ingress_typeless(std::shared_ptr<EdgeTag> ingress) override
+    {
+        this->set_ingress(std::dynamic_pointer_cast<EdgeWritable<T>>(ingress));
+    }
 };
 
 // template <typename T>

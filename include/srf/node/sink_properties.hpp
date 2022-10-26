@@ -125,10 +125,10 @@ class EgressAcceptor : public virtual SinkProperties<T>, public IEgressAcceptor<
         SinkProperties<T>::set_edge(egress);
     }
 
-    void set_egress_typeless(std::shared_ptr<EdgeTag> egress) override
-    {
-        this->set_egress(std::dynamic_pointer_cast<EdgeReadable<T>>(egress));
-    }
+    // void set_egress_typeless(std::shared_ptr<EdgeTag> egress) override
+    // {
+    //     this->set_egress(std::dynamic_pointer_cast<EdgeReadable<T>>(egress));
+    // }
 
   private:
     using SinkProperties<T>::set_edge;
@@ -143,10 +143,10 @@ class IngressProvider : public virtual SinkProperties<T>, public IIngressProvide
         return std::dynamic_pointer_cast<EdgeWritable<T>>(SinkProperties<T>::get_edge());
     }
 
-    std::shared_ptr<EdgeTag> get_ingress_typeless() const override
-    {
-        return std::dynamic_pointer_cast<EdgeTag>(this->get_ingress());
-    }
+    // std::shared_ptr<EdgeTag> get_ingress_typeless() const override
+    // {
+    //     return std::dynamic_pointer_cast<EdgeTag>(this->get_ingress());
+    // }
 
   private:
     using SinkProperties<T>::set_edge;

@@ -55,16 +55,20 @@ class SourceChannel : public virtual SourceProperties<T>
     void do_set_channel(EdgeChannel<T>& edge_channel)
     {
         // Create 2 edges, one for reading and writing. On connection, persist the other to allow the node to still use
-        // get_readable+edge
+        // get_writable_edge
         auto channel_reader = edge_channel.get_reader();
         auto channel_writer = edge_channel.get_writer();
 
-        channel_writer->add_connector(EdgeLifetime<T>([this, channel_reader]() {
-            // On connection, save the reader so we can use the channel without it being deleted
-            this->m_set_edge = channel_reader;
-        }));
+        // channel_reader->add_connector(EdgeLifetime<T>([this, channel_writer]() {
+        //     // On connection, save the writer so we can use the channel without it being deleted
+        //     this->m_set_edge = channel_writer;
+        // }));
 
-        SourceProperties<T>::init_edge(channel_writer);
+        SourceProperties<T>::init_edge(channel_reader);
+
+        // Finally, set the other half to m_set_edge to allow using the channel without it being deleted. If set_edge()
+        // is called, then this will be overwritten
+        this->m_set_edge = channel_writer;
     }
 
     //     inline channel::Status await_write(T&& data) final

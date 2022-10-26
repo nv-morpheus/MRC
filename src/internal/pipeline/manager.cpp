@@ -20,6 +20,7 @@
 #include "internal/pipeline/controller.hpp"
 #include "internal/pipeline/instance.hpp"
 #include "internal/pipeline/pipeline.hpp"
+#include "internal/pipeline/types.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 
@@ -27,6 +28,7 @@
 #include "srf/node/channel_holder.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/source_channel.hpp"
+#include "srf/node/writable_subject.hpp"
 #include "srf/runnable/launch_control.hpp"
 #include "srf/runnable/launch_options.hpp"
 #include "srf/runnable/launcher.hpp"
@@ -35,6 +37,7 @@
 #include <glog/logging.h>
 
 #include <exception>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <utility>
@@ -70,9 +73,11 @@ void Manager::do_service_start()
     main.engines_per_pe      = 1;
 
     auto instance   = std::make_unique<Instance>(m_pipeline, m_resources);
-    auto controller = std::make_unique<Controller>(std::move(instance));
+    auto controller = std::make_shared<Controller>(std::move(instance));
 
-    m_update_channel = controller->get_ingress();
+    m_update_channel = std::make_shared<node::WritableSubject<ControlMessage>>();
+
+    node::make_edge(*m_update_channel, *controller);
 
     // launch controller
     auto launcher = resources().partition(0).runnable().launch_control().prepare_launcher(main, std::move(controller));

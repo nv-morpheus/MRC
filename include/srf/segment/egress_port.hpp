@@ -21,6 +21,7 @@
 #include "srf/manifold/factory.hpp"
 #include "srf/manifold/interface.hpp"
 #include "srf/node/edge_builder.hpp"
+#include "srf/node/forward.hpp"
 #include "srf/node/generic_sink.hpp"
 #include "srf/node/operators/muxer.hpp"
 #include "srf/node/rx_node.hpp"
@@ -47,7 +48,7 @@ class EgressPortBase : public runnable::Launchable, public manifold::Connectable
 };
 
 template <typename T>
-class EgressPort final : public Object<node::SinkProperties<T>>,
+class EgressPort final : public Object<node::RxSinkBase<T>>,
                          public EgressPortBase,
                          public std::enable_shared_from_this<EgressPort<T>>
 {
@@ -60,13 +61,13 @@ class EgressPort final : public Object<node::SinkProperties<T>>,
     EgressPort(SegmentAddress address, PortName name) :
       m_segment_address(address),
       m_port_name(std::move(name)),
-      m_sink(std::make_unique<node::RxNode<T>>())
+      m_sink(std::make_shared<node::RxNode<T>>())
     {
         this->set_name(m_port_name);
     }
 
   private:
-    node::SinkProperties<T>* get_object() const final
+    node::RxSinkBase<T>* get_object() const final
     {
         CHECK(m_sink) << "failed to acquire backing runnable for egress port " << m_port_name;
         return m_sink.get();
@@ -92,13 +93,13 @@ class EgressPort final : public Object<node::SinkProperties<T>>,
         DCHECK_EQ(manifold->port_name(), m_port_name);
         CHECK(m_sink);
         CHECK(!m_manifold_connected);
-        manifold->add_input(m_segment_address, m_sink.get());
+        manifold->add_input(m_segment_address, m_sink);
         m_manifold_connected = true;
     }
 
     SegmentAddress m_segment_address;
     PortName m_port_name;
-    std::unique_ptr<node::RxNode<T>> m_sink;
+    std::shared_ptr<node::RxNode<T>> m_sink;
     bool m_manifold_connected{false};
     runnable::LaunchOptions m_launch_options;
     std::mutex m_mutex;

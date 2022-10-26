@@ -150,10 +150,10 @@ class EgressProvider : public virtual SourceProperties<T>, public IEgressProvide
         return std::dynamic_pointer_cast<EdgeReadable<T>>(SourceProperties<T>::get_edge());
     }
 
-    std::shared_ptr<EdgeTag> get_egress_typeless() const override
-    {
-        return this->get_egress();
-    }
+    // std::shared_ptr<EdgeTag> get_egress_typeless() const override
+    // {
+    //     return this->get_egress();
+    // }
 
   private:
     using SourceProperties<T>::set_edge;
@@ -168,10 +168,10 @@ class IngressAcceptor : public virtual SourceProperties<T>, public IIngressAccep
         SourceProperties<T>::set_edge(ingress);
     }
 
-    void set_ingress_typeless(std::shared_ptr<EdgeTag> ingress) override
-    {
-        this->set_ingress(std::dynamic_pointer_cast<EdgeWritable<T>>(ingress));
-    }
+    // void set_ingress_typeless(std::shared_ptr<EdgeTag> ingress) override
+    // {
+    //     this->set_ingress(std::dynamic_pointer_cast<EdgeWritable<T>>(ingress));
+    // }
 
   private:
     using SourceProperties<T>::set_edge;

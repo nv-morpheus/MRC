@@ -17,31 +17,28 @@
 
 #pragma once
 
-#include "srf/channel/ingress.hpp"
-#include "srf/node/edge_properties.hpp"
+#include "srf/node/edge_channel.hpp"
 #include "srf/node/forward.hpp"
-#include "srf/node/sink_channel_base.hpp"
+#include "srf/node/source_properties.hpp"
 
 namespace srf::node {
 
 template <typename T>
-class Queue final : public SinkChannelBase<T>, public SinkProperties<T>, public ChannelProvider<T>
+class Queue final : public IngressProvider<int>, public EgressProvider<int>
 {
   public:
-    Queue()        = default;
+    Queue()
+    {
+        this->set_channel(std::make_unique<srf::channel::BufferedChannel<T>>());
+    }
     ~Queue() final = default;
 
-  private:
-    // SinkProperties<T> - aka IngressProvider
-    std::shared_ptr<channel::Ingress<T>> channel_ingress() final
+    void set_channel(std::unique_ptr<srf::channel::Channel<int>> channel)
     {
-        return SinkChannelBase<T>::ingress_channel();
-    }
+        EdgeChannel<int> edge_channel(std::move(channel));
 
-    // ChannelProvider
-    std::shared_ptr<channel::Channel<T>> channel() final
-    {
-        return SinkChannelBase<T>::channel();
+        SinkProperties<int>::init_edge(edge_channel.get_writer());
+        SourceProperties<int>::init_edge(edge_channel.get_reader());
     }
 };
 

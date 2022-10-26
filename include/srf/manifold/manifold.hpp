@@ -18,6 +18,7 @@
 #pragma once
 
 #include "srf/manifold/interface.hpp"
+#include "srf/node/channel_holder.hpp"
 #include "srf/node/sink_properties.hpp"
 #include "srf/node/source_properties.hpp"
 #include "srf/pipeline/resources.hpp"
@@ -43,12 +44,14 @@ class Manifold : public Interface
     }
 
   private:
-    void add_input(const SegmentAddress& address, node::SourcePropertiesBase* input_source) final;
+    void add_input(const SegmentAddress& address, std::shared_ptr<node::IIngressAcceptorBase> input_source) final;
 
-    void add_output(const SegmentAddress& address, node::SinkPropertiesBase* output_sink) final;
+    void add_output(const SegmentAddress& address, std::shared_ptr<node::IIngressProviderBase> output_sink) final;
 
-    virtual void do_add_input(const SegmentAddress& address, node::SourcePropertiesBase* input_source) = 0;
-    virtual void do_add_output(const SegmentAddress& address, node::SinkPropertiesBase* output_sink)   = 0;
+    virtual void do_add_input(const SegmentAddress& address,
+                              std::shared_ptr<node::IIngressAcceptorBase> input_source) = 0;
+    virtual void do_add_output(const SegmentAddress& address,
+                               std::shared_ptr<node::IIngressProviderBase> output_sink) = 0;
 
     PortName m_port_name;
     pipeline::Resources& m_resources;

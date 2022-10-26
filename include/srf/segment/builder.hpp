@@ -22,6 +22,7 @@
 #include "srf/engine/segment/ibuilder.hpp"
 #include "srf/exceptions/runtime_error.hpp"
 #include "srf/node/edge_builder.hpp"
+#include "srf/node/forward.hpp"
 #include "srf/node/rx_node.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
@@ -107,10 +108,10 @@ class Builder final
     std::shared_ptr<ObjectProperties> get_egress(std::string name, std::type_index type_index);
 
     template <typename T>
-    std::shared_ptr<Object<node::SinkProperties<T>>> get_egress(std::string name);
+    std::shared_ptr<Object<node::RxSinkBase<T>>> get_egress(std::string name);
 
     template <typename T>
-    std::shared_ptr<Object<node::SourceProperties<T>>> get_ingress(std::string name);
+    std::shared_ptr<Object<node::RxSourceBase<T>>> get_ingress(std::string name);
 
     template <typename ObjectT>
     std::shared_ptr<Object<ObjectT>> make_object(std::string name, std::unique_ptr<ObjectT> node);
@@ -266,7 +267,7 @@ std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::uni
 }
 
 template <typename T>
-std::shared_ptr<Object<node::SinkProperties<T>>> Builder::get_egress(std::string name)
+std::shared_ptr<Object<node::RxSinkBase<T>>> Builder::get_egress(std::string name)
 {
     auto base = m_backend.get_egress_base(name);
     if (!base)
@@ -274,7 +275,7 @@ std::shared_ptr<Object<node::SinkProperties<T>>> Builder::get_egress(std::string
         throw exceptions::SrfRuntimeError("Egress port name not found: " + name);
     }
 
-    auto port = std::dynamic_pointer_cast<Object<node::SinkProperties<T>>>(base);
+    auto port = std::dynamic_pointer_cast<Object<node::RxSinkBase<T>>>(base);
     if (port == nullptr)
     {
         throw exceptions::SrfRuntimeError("Egress port type mismatch: " + name);
@@ -284,7 +285,7 @@ std::shared_ptr<Object<node::SinkProperties<T>>> Builder::get_egress(std::string
 }
 
 template <typename T>
-std::shared_ptr<Object<node::SourceProperties<T>>> Builder::get_ingress(std::string name)
+std::shared_ptr<Object<node::RxSourceBase<T>>> Builder::get_ingress(std::string name)
 {
     auto base = m_backend.get_ingress_base(name);
     if (!base)
@@ -292,7 +293,7 @@ std::shared_ptr<Object<node::SourceProperties<T>>> Builder::get_ingress(std::str
         throw exceptions::SrfRuntimeError("Ingress port name not found: " + name);
     }
 
-    auto port = std::dynamic_pointer_cast<Object<node::SourceProperties<T>>>(base);
+    auto port = std::dynamic_pointer_cast<Object<node::RxSourceBase<T>>>(base);
     if (port == nullptr)
     {
         throw exceptions::SrfRuntimeError("Ingress port type mismatch: " + name);

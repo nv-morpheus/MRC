@@ -23,6 +23,7 @@
 #include "srf/core/executor.hpp"
 #include "srf/node/channel_holder.hpp"
 #include "srf/node/edge_builder.hpp"
+#include "srf/node/edge_channel.hpp"
 #include "srf/node/forward.hpp"
 #include "srf/node/rx_subscribable.hpp"
 #include "srf/node/source_properties.hpp"
@@ -121,12 +122,13 @@ class EdgeWritableLambda : public EdgeWritable<T>
     std::function<void()> m_on_complete;
 };
 
-class TestSource : public IngressAcceptor<int>, public EgressProvider<int>, public SourceChannel<int>
+template <typename T>
+class TestSource : public IngressAcceptor<T>, public EgressProvider<T>, public SourceChannel<T>
 {
   public:
     TestSource()
     {
-        this->set_channel(std::make_unique<srf::channel::BufferedChannel<int>>());
+        this->set_channel(std::make_unique<srf::channel::BufferedChannel<T>>());
     }
 
     void run()
@@ -135,7 +137,7 @@ class TestSource : public IngressAcceptor<int>, public EgressProvider<int>, publ
 
         for (int i = 0; i < 3; i++)
         {
-            if (output->await_write(int(i)) != channel::Status::success)
+            if (output->await_write(T(i)) != channel::Status::success)
             {
                 break;
             }
@@ -187,19 +189,20 @@ class TestNode : public IngressProvider<int>,
     }
 };
 
-class TestSink : public IngressProvider<int>, public EgressAcceptor<int>, public SinkChannel<int>
+template <typename T>
+class TestSink : public IngressProvider<T>, public EgressAcceptor<T>, public SinkChannel<T>
 {
   public:
     TestSink()
     {
-        this->set_channel(std::make_unique<srf::channel::BufferedChannel<int>>());
+        this->set_channel(std::make_unique<srf::channel::BufferedChannel<T>>());
     }
 
     void run()
     {
         auto input = this->get_readable_edge();
 
-        int t;
+        T t;
 
         while (input->await_read(t) == channel::Status::success)
         {
@@ -220,14 +223,10 @@ class TestQueue : public IngressProvider<int>, public EgressProvider<int>
 
     void set_channel(std::unique_ptr<srf::channel::Channel<int>> channel)
     {
-        std::shared_ptr<srf::channel::Channel<int>> shared_channel = std::move(channel);
+        EdgeChannel<int> edge_channel(std::move(channel));
 
-        // Create a new edge that will close the channel when either side disconnects
-        auto channel_reader = std::make_shared<EdgeChannelReader<int>>(shared_channel);
-        auto channel_writer = std::make_shared<EdgeChannelWriter<int>>(shared_channel);
-
-        SinkProperties<int>::init_edge(channel_writer);
-        SourceProperties<int>::init_edge(channel_reader);
+        SinkProperties<int>::init_edge(edge_channel.get_writer());
+        SourceProperties<int>::init_edge(edge_channel.get_reader());
     }
 };
 
@@ -541,6 +540,11 @@ class TestBroadcast : public IngressProvider<int>, public IIngressAcceptor<int>
         }
     }
 
+    void set_ingress_typeless(std::shared_ptr<EdgeTag> ingress) override
+    {
+        this->set_ingress(std::dynamic_pointer_cast<EdgeWritable<int>>(ingress));
+    }
+
     void on_complete()
     {
         VLOG(10) << "TestBroadcast completed";
@@ -556,10 +560,34 @@ namespace srf {
 
 TEST_F(TestEdges, SourceToSink)
 {
-    auto source = std::make_shared<node::TestSource>();
-    auto sink   = std::make_shared<node::TestSink>();
+    auto source = std::make_shared<node::TestSource<int>>();
+    auto sink   = std::make_shared<node::TestSink<int>>();
 
     node::make_edge2(*source, *sink);
+
+    source->run();
+    sink->run();
+}
+TEST_F(TestEdges, SourceToSinkUpcast)
+{
+    auto source = std::make_shared<node::TestSource<int>>();
+    auto sink   = std::make_shared<node::TestSink<float>>();
+
+    node::make_edge(*source, *sink);
+
+    source->run();
+    sink->run();
+}
+
+TEST_F(TestEdges, SourceToSinkTypeless)
+{
+    auto source = std::make_shared<node::TestSource<int>>();
+    auto sink   = std::make_shared<node::TestSink<int>>();
+
+    std::shared_ptr<node::SourcePropertiesBase> source_typeless = source;
+    std::shared_ptr<node::SinkPropertiesBase> sink_typeless     = sink;
+
+    node::make_edge_typeless(*source, *sink);
 
     source->run();
     sink->run();
@@ -567,9 +595,9 @@ TEST_F(TestEdges, SourceToSink)
 
 TEST_F(TestEdges, SourceToNodeToSink)
 {
-    auto source = std::make_shared<node::TestSource>();
+    auto source = std::make_shared<node::TestSource<int>>();
     auto node   = std::make_shared<node::TestNode>();
-    auto sink   = std::make_shared<node::TestSink>();
+    auto sink   = std::make_shared<node::TestSink<int>>();
 
     node::make_edge2(*source, *node);
     node::make_edge2(*node, *sink);
@@ -577,10 +605,10 @@ TEST_F(TestEdges, SourceToNodeToSink)
 
 TEST_F(TestEdges, SourceToNodeToNodeToSink)
 {
-    auto source = std::make_shared<node::TestSource>();
+    auto source = std::make_shared<node::TestSource<int>>();
     auto node1  = std::make_shared<node::TestNode>();
     auto node2  = std::make_shared<node::TestNode>();
-    auto sink   = std::make_shared<node::TestSink>();
+    auto sink   = std::make_shared<node::TestSink<int>>();
 
     node::make_edge2(*source, *node1);
     node::make_edge2(*node1, *node2);
@@ -589,9 +617,9 @@ TEST_F(TestEdges, SourceToNodeToNodeToSink)
 
 TEST_F(TestEdges, SourceToSinkMultiFail)
 {
-    auto source = std::make_shared<node::TestSource>();
-    auto sink1  = std::make_shared<node::TestSink>();
-    auto sink2  = std::make_shared<node::TestSink>();
+    auto source = std::make_shared<node::TestSource<int>>();
+    auto sink1  = std::make_shared<node::TestSink<int>>();
+    auto sink2  = std::make_shared<node::TestSink<int>>();
 
     node::make_edge2(*source, *sink1);
     EXPECT_THROW(node::make_edge2(*source, *sink2), std::runtime_error);
@@ -599,25 +627,25 @@ TEST_F(TestEdges, SourceToSinkMultiFail)
 
 TEST_F(TestEdges, SourceToSinkComponent)
 {
-    auto source = std::make_shared<node::TestSource>();
-    auto sink   = std::make_shared<node::TestSink>();
+    auto source = std::make_shared<node::TestSource<int>>();
+    auto sink   = std::make_shared<node::TestSink<int>>();
 
     node::make_edge2(*source, *sink);
 }
 
 TEST_F(TestEdges, SourceComponentToSink)
 {
-    auto source = std::make_shared<node::TestSource>();
-    auto sink   = std::make_shared<node::TestSink>();
+    auto source = std::make_shared<node::TestSource<int>>();
+    auto sink   = std::make_shared<node::TestSink<int>>();
 
     node::make_edge2(*source, *sink);
 }
 
 TEST_F(TestEdges, SourceComponentToNodeToSink)
 {
-    auto source = std::make_shared<node::TestSource>();
+    auto source = std::make_shared<node::TestSource<int>>();
     auto node   = std::make_shared<node::TestNodeComponent>();
-    auto sink   = std::make_shared<node::TestSink>();
+    auto sink   = std::make_shared<node::TestSink<int>>();
 
     node::make_edge2(*source, *node);
     node::make_edge2(*node, *sink);
@@ -625,9 +653,9 @@ TEST_F(TestEdges, SourceComponentToNodeToSink)
 
 TEST_F(TestEdges, SourceToNodeComponentToSink)
 {
-    auto source = std::make_shared<node::TestSource>();
+    auto source = std::make_shared<node::TestSource<int>>();
     auto node   = std::make_shared<node::TestNodeComponent>();
-    auto sink   = std::make_shared<node::TestSink>();
+    auto sink   = std::make_shared<node::TestSink<int>>();
 
     node::make_edge2(*source, *node);
     node::make_edge2(*node, *sink);
@@ -635,9 +663,9 @@ TEST_F(TestEdges, SourceToNodeComponentToSink)
 
 TEST_F(TestEdges, SourceToNodeToSinkComponent)
 {
-    auto source = std::make_shared<node::TestSource>();
+    auto source = std::make_shared<node::TestSource<int>>();
     auto node   = std::make_shared<node::TestNodeComponent>();
-    auto sink   = std::make_shared<node::TestSink>();
+    auto sink   = std::make_shared<node::TestSink<int>>();
 
     node::make_edge2(*source, *node);
     node::make_edge2(*node, *sink);
@@ -645,7 +673,7 @@ TEST_F(TestEdges, SourceToNodeToSinkComponent)
 
 TEST_F(TestEdges, SourceToNodeComponentToSinkComponent)
 {
-    auto source = std::make_shared<node::TestSource>();
+    auto source = std::make_shared<node::TestSource<int>>();
     auto node   = std::make_shared<node::TestNodeComponent>();
     auto sink   = std::make_shared<node::TestSinkComponent>();
 
@@ -665,9 +693,9 @@ TEST_F(TestEdges, SourceComponentToNodeToSinkComponent)
 
 TEST_F(TestEdges, SourceToQueueToSink)
 {
-    auto source = std::make_shared<node::TestSource>();
+    auto source = std::make_shared<node::TestSource<int>>();
     auto queue  = std::make_shared<node::TestQueue>();
-    auto sink   = std::make_shared<node::TestSink>();
+    auto sink   = std::make_shared<node::TestSink<int>>();
 
     node::make_edge2(*source, *queue);
     node::make_edge2(*queue, *sink);
@@ -678,10 +706,10 @@ TEST_F(TestEdges, SourceToQueueToSink)
 
 TEST_F(TestEdges, SourceToQueueToNodeToSink)
 {
-    auto source = std::make_shared<node::TestSource>();
+    auto source = std::make_shared<node::TestSource<int>>();
     auto queue  = std::make_shared<node::TestQueue>();
     auto node   = std::make_shared<node::TestNode>();
-    auto sink   = std::make_shared<node::TestSink>();
+    auto sink   = std::make_shared<node::TestSink<int>>();
 
     node::make_edge2(*source, *queue);
     node::make_edge2(*queue, *node);
@@ -694,10 +722,10 @@ TEST_F(TestEdges, SourceToQueueToNodeToSink)
 
 TEST_F(TestEdges, SourceToQueueToMultiSink)
 {
-    auto source = std::make_shared<node::TestSource>();
+    auto source = std::make_shared<node::TestSource<int>>();
     auto queue  = std::make_shared<node::TestQueue>();
-    auto sink1  = std::make_shared<node::TestSink>();
-    auto sink2  = std::make_shared<node::TestSink>();
+    auto sink1  = std::make_shared<node::TestSink<int>>();
+    auto sink2  = std::make_shared<node::TestSink<int>>();
 
     node::make_edge2(*source, *queue);
     node::make_edge2(*queue, *sink1);
@@ -706,11 +734,11 @@ TEST_F(TestEdges, SourceToQueueToMultiSink)
 
 TEST_F(TestEdges, SourceToQueueToDifferentSinks)
 {
-    auto source = std::make_shared<node::TestSource>();
+    auto source = std::make_shared<node::TestSource<int>>();
     auto queue  = std::make_shared<node::TestQueue>();
-    auto sink1  = std::make_shared<node::TestSink>();
+    auto sink1  = std::make_shared<node::TestSink<int>>();
     auto node   = std::make_shared<node::TestNode>();
-    auto sink2  = std::make_shared<node::TestSink>();
+    auto sink2  = std::make_shared<node::TestSink<int>>();
 
     node::make_edge2(*source, *queue);
     node::make_edge2(*queue, *sink1);
@@ -720,10 +748,10 @@ TEST_F(TestEdges, SourceToQueueToDifferentSinks)
 
 TEST_F(TestEdges, SourceToRouterToSinks)
 {
-    auto source = std::make_shared<node::TestSource>();
+    auto source = std::make_shared<node::TestSource<int>>();
     auto router = std::make_shared<node::TestRouter>();
-    auto sink1  = std::make_shared<node::TestSink>();
-    auto sink2  = std::make_shared<node::TestSink>();
+    auto sink1  = std::make_shared<node::TestSink<int>>();
+    auto sink2  = std::make_shared<node::TestSink<int>>();
 
     node::make_edge2(*source, *router);
     node::make_edge2(*router->get_source("odd"), *sink1);
@@ -732,9 +760,9 @@ TEST_F(TestEdges, SourceToRouterToSinks)
 
 TEST_F(TestEdges, SourceToRouterToDifferentSinks)
 {
-    auto source = std::make_shared<node::TestSource>();
+    auto source = std::make_shared<node::TestSource<int>>();
     auto router = std::make_shared<node::TestRouter>();
-    auto sink1  = std::make_shared<node::TestSink>();
+    auto sink1  = std::make_shared<node::TestSink<int>>();
     auto sink2  = std::make_shared<node::TestSinkComponent>();
 
     node::make_edge2(*source, *router);
@@ -744,9 +772,9 @@ TEST_F(TestEdges, SourceToRouterToDifferentSinks)
 
 TEST_F(TestEdges, SourceToBroadcastToSink)
 {
-    auto source    = std::make_shared<node::TestSource>();
+    auto source    = std::make_shared<node::TestSource<int>>();
     auto broadcast = std::make_shared<node::TestBroadcast>();
-    auto sink      = std::make_shared<node::TestSink>();
+    auto sink      = std::make_shared<node::TestSink<int>>();
 
     node::make_edge2(*source, *broadcast);
     node::make_edge2(*broadcast, *sink);
@@ -754,10 +782,10 @@ TEST_F(TestEdges, SourceToBroadcastToSink)
 
 TEST_F(TestEdges, SourceToBroadcastToMultiSink)
 {
-    auto source    = std::make_shared<node::TestSource>();
+    auto source    = std::make_shared<node::TestSource<int>>();
     auto broadcast = std::make_shared<node::TestBroadcast>();
-    auto sink1     = std::make_shared<node::TestSink>();
-    auto sink2     = std::make_shared<node::TestSink>();
+    auto sink1     = std::make_shared<node::TestSink<int>>();
+    auto sink2     = std::make_shared<node::TestSink<int>>();
 
     node::make_edge2(*source, *broadcast);
     node::make_edge2(*broadcast, *sink1);
@@ -766,9 +794,9 @@ TEST_F(TestEdges, SourceToBroadcastToMultiSink)
 
 TEST_F(TestEdges, SourceToBroadcastToDifferentSinks)
 {
-    auto source    = std::make_shared<node::TestSource>();
+    auto source    = std::make_shared<node::TestSource<int>>();
     auto broadcast = std::make_shared<node::TestBroadcast>();
-    auto sink1     = std::make_shared<node::TestSink>();
+    auto sink1     = std::make_shared<node::TestSink<int>>();
     auto sink2     = std::make_shared<node::TestSinkComponent>();
 
     node::make_edge2(*source, *broadcast);
@@ -778,7 +806,7 @@ TEST_F(TestEdges, SourceToBroadcastToDifferentSinks)
 
 TEST_F(TestEdges, SourceToBroadcastToSinkComponents)
 {
-    auto source    = std::make_shared<node::TestSource>();
+    auto source    = std::make_shared<node::TestSource<int>>();
     auto broadcast = std::make_shared<node::TestBroadcast>();
     auto sink1     = std::make_shared<node::TestSinkComponent>();
     auto sink2     = std::make_shared<node::TestSinkComponent>();

@@ -18,6 +18,7 @@
 #pragma once
 
 #include "srf/channel/ingress.hpp"
+#include "srf/node/channel_holder.hpp"
 #include "srf/node/edge_properties.hpp"
 #include "srf/node/forward.hpp"
 #include "srf/node/sink_properties.hpp"
@@ -27,6 +28,7 @@
 
 #include <memory>
 #include <sstream>
+#include <type_traits>
 #include <typeindex>
 
 namespace srf::node {
@@ -99,7 +101,7 @@ struct EdgeBuilder final
         if constexpr (std::is_same_v<SourceT, SinkT>)
         {
             // Easy case, both nodes are the same type, no conversion required.
-            edge = sink.channel_ingress();
+            // edge = sink.channel_ingress();
         }
         else if constexpr (IsConvertable && !RequiresNarrowing)
         {
@@ -117,7 +119,7 @@ struct EdgeBuilder final
             LOG(FATAL) << "No dynamic lookup available for statically typed objects";
         }
 
-        source.complete_edge(edge);
+        // source.complete_edge(edge);
     }
 
     template <typename T>
@@ -139,6 +141,47 @@ void make_edge(ChannelProvider<SourceT>& source, ChannelAcceptor<SinkT>& sink)
     EdgeBuilder::make_edge(source, sink);
 }
 
+template <typename SourceT, typename SinkT = SourceT, bool AllowNarrowingV = true>
+static void make_edge_ingress(IIngressAcceptor<SourceT>& source, IIngressProvider<SinkT>& sink)
+{
+    constexpr bool IsConvertable    = std::is_convertible_v<SourceT, SinkT>;
+    constexpr bool LessBits         = sizeof(SourceT) > sizeof(SinkT);  // Sink requires more bits than source.
+    constexpr bool FloatToInt       = std::is_floating_point_v<SourceT> && std::is_integral_v<SinkT>;  // float -> int
+    constexpr bool SignedToUnsigned = std::is_signed_v<SourceT> && !std::is_signed_v<SinkT>;  // signed -> unsigned
+    constexpr bool UnsignedToSignedLessBits =
+        !std::is_signed_v<SourceT> && std::is_signed_v<SinkT> &&
+        (sizeof(SourceT) == sizeof(SinkT));  // Unsigned component could exceed signed limits
+
+    // If its convertable but may result in loss of data, it requires narrowing
+    constexpr bool RequiresNarrowing =
+        IsConvertable && (LessBits || FloatToInt || SignedToUnsigned || UnsignedToSignedLessBits);
+
+    std::shared_ptr<EdgeWritable<SourceT>> edge;
+
+    if constexpr (std::is_same_v<SourceT, SinkT>)
+    {
+        // Easy case, both nodes are the same type, no conversion required.
+        edge = sink.get_ingress();
+    }
+    else if constexpr (IsConvertable && !RequiresNarrowing)
+    {
+        // Static lookup with implicit conversion. No narrowing required
+        edge = std::make_shared<ConvertingEdgeWritable<SourceT, SinkT>>(sink.get_ingress());
+    }
+    else if constexpr (RequiresNarrowing && AllowNarrowingV)
+    {
+        // Static lookup with implicit conversion. Narrowing required
+        LOG(WARNING) << "WARNING: Automatic edge conversion will result in a narrowing cast.";
+        edge = std::make_shared<ConvertingEdgeWritable<SourceT, SinkT>>(sink.get_ingress());
+    }
+    else
+    {
+        LOG(FATAL) << "No dynamic lookup available for statically typed objects";
+    }
+
+    source.set_ingress(edge);
+}
+
 template <typename SourceT, typename SinkT>
 void make_edge(SourceT& source, SinkT& sink)
 {
@@ -148,11 +191,8 @@ void make_edge(SourceT& source, SinkT& sink)
     if constexpr (is_base_of_template<IIngressAcceptor, source_full_t>::value &&
                   is_base_of_template<IIngressProvider, sink_full_t>::value)
     {
-        // Get ingress from provider
-        auto ingress = sink.get_ingress();
-
-        // Set to the acceptor
-        source.set_ingress(ingress);
+        // Call the typed version for ingress provider/acceptor
+        make_edge_ingress(source, sink);
     }
     else if constexpr (is_base_of_template<IEgressProvider, source_full_t>::value &&
                        is_base_of_template<IEgressAcceptor, sink_full_t>::value)
@@ -162,6 +202,41 @@ void make_edge(SourceT& source, SinkT& sink)
 
         // Set the egress to the acceptor
         sink.set_egress(egress);
+    }
+    else
+    {
+        static_assert(!sizeof(source_full_t),
+                      "Arguments to make_edge were incorrect. Ensure you are providing either "
+                      "IngressAcceptor->IngressProvider or EgressProvider->EgressAcceptor");
+    }
+}
+
+template <typename SourceT, typename SinkT>
+void make_edge_typeless(SourceT& source, SinkT& sink)
+{
+    using source_full_t = SourceT;
+    using sink_full_t   = SinkT;
+
+    if constexpr (std::is_base_of_v<IIngressAcceptorBase, source_full_t> &&
+                  std::is_base_of_v<IIngressProviderBase, sink_full_t>)
+    {
+        // Get the ingress
+        auto ingress = sink.get_ingress_typeless();
+
+        // // Convert if neccessary
+        // auto ingress_adapted = EdgeBuilder::ingress_adapter_for_sink(source, sink, ingress);
+
+        // Set to the source
+        source.set_ingress_typeless(ingress);
+    }
+    else if constexpr (std::is_base_of_v<IEgressProviderBase, source_full_t> &&
+                       std::is_base_of_v<IEgressAcceptorBase, sink_full_t>)
+    {
+        // Get the ingress
+        auto egress = sink.get_egress_typeless();
+
+        // Set the egress to the acceptor
+        sink.set_egress_typeless(egress);
     }
     else
     {

@@ -70,12 +70,6 @@ class RxSink;
 template <typename T, typename ContextT = runnable::Context>
 class RxSource;
 
-template <typename T, typename ContextT = runnable::Context>
-class RxSink2;
-
-template <typename T, typename ContextT = runnable::Context>
-class RxSource2;
-
 template <typename InputT, typename OutputT = InputT, typename ContextT = runnable::Context>
 class RxNode;
 

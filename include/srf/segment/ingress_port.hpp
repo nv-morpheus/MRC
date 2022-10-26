@@ -44,7 +44,7 @@ struct IngressPortBase : public runnable::Launchable, public manifold::Connectab
 };
 
 template <typename T>
-class IngressPort : public Object<node::SourceProperties<T>>, public IngressPortBase
+class IngressPort : public Object<node::RxSourceBase<T>>, public IngressPortBase
 {
     // tap for debugging
     // rxcpp::operators::tap([this](const T& t) {
@@ -55,13 +55,13 @@ class IngressPort : public Object<node::SourceProperties<T>>, public IngressPort
     IngressPort(SegmentAddress address, PortName name) :
       m_segment_address(address),
       m_port_name(std::move(name)),
-      m_source(std::make_unique<node::RxNode<T>>())
+      m_source(std::make_shared<node::RxNode<T>>())
     {
         this->set_name(m_port_name);
     }
 
   private:
-    node::SourceProperties<T>* get_object() const final
+    node::RxSourceBase<T>* get_object() const final
     {
         CHECK(m_source);
         return m_source.get();
@@ -84,12 +84,12 @@ class IngressPort : public Object<node::SourceProperties<T>>, public IngressPort
         // ingress ports connect to manifold outputs
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         CHECK(m_source);
-        manifold->add_output(m_segment_address, m_source.get());
+        manifold->add_output(m_segment_address, m_source);
     }
 
     SegmentAddress m_segment_address;
     PortName m_port_name;
-    std::unique_ptr<node::RxNode<T>> m_source;
+    std::shared_ptr<node::RxNode<T>> m_source;
     std::mutex m_mutex;
 
     friend Instance;

@@ -18,6 +18,7 @@
 #pragma once
 
 #include "srf/manifold/interface.hpp"
+#include "srf/node/channel_holder.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/operators/muxer.hpp"
 #include "srf/node/sink_properties.hpp"
@@ -29,53 +30,53 @@ namespace srf::manifold {
 
 struct IngressDelegate
 {
-    virtual ~IngressDelegate()                                                                      = default;
-    virtual void add_input(const SegmentAddress& address, node::SourcePropertiesBase* input_source) = 0;
+    virtual ~IngressDelegate() = default;
+    virtual void add_input(const SegmentAddress& address, std::shared_ptr<node::IIngressAcceptorBase> input_source) = 0;
 };
 
 template <typename T>
 class TypedIngress : public IngressDelegate
 {
   public:
-    node::SourceProperties<T>& source()
-    {
-        auto sink = dynamic_cast<node::SourceProperties<T>*>(&this->source_base());
-        CHECK(sink);
-        return *sink;
-    }
+    // node::IIngressAcceptor<T>& source()
+    // {
+    //     auto sink = std::dynamic_pointer_cast<node::IIngressAcceptor<T>>(this->source_base());
+    //     CHECK(sink);
+    //     return *sink;
+    // }
 
-    void add_input(const SegmentAddress& address, node::SourcePropertiesBase* input_source) final
+    void add_input(const SegmentAddress& address, std::shared_ptr<node::IIngressAcceptorBase> input_source) final
     {
-        auto source = dynamic_cast<node::SourceProperties<T>*>(input_source);
+        auto source = std::dynamic_pointer_cast<node::IIngressAcceptor<T>>(input_source);
         CHECK(source);
-        do_add_input(address, *source);
+        do_add_input(address, source);
     }
 
   private:
-    virtual node::SinkPropertiesBase& source_base()                                             = 0;
-    virtual void do_add_input(const SegmentAddress& address, node::SourceProperties<T>& source) = 0;
+    // virtual node::IIngressAcceptorBase& source_base()                                                           = 0;
+    virtual void do_add_input(const SegmentAddress& address, std::shared_ptr<node::IIngressAcceptor<T>> source) = 0;
 };
 
 template <typename T>
-class MuxedIngress : public TypedIngress<T>
+class MuxedIngress : public node::Muxer<T>, public TypedIngress<T>
 {
   public:
-    MuxedIngress() : m_muxer(std::make_shared<node::Muxer<T>>()) {}
+    // MuxedIngress() : m_muxer(std::make_shared<node::Muxer<T>>()) {}
 
   protected:
-    void do_add_input(const SegmentAddress& address, node::SourceProperties<T>& source) final
+    void do_add_input(const SegmentAddress& address, std::shared_ptr<node::IIngressAcceptor<T>> source) final
     {
-        CHECK(m_muxer);
-        node::make_edge(source, *m_muxer);
+        // source->set_ingress(this->get)
+        node::make_edge(*source, *this);
     }
 
   private:
-    node::SinkPropertiesBase& source_base() final
-    {
-        return *m_muxer;
-    }
+    // node::IIngressAcceptorBase& source_base() final
+    // {
+    //     return *m_muxer;
+    // }
 
-    std::shared_ptr<node::Muxer<T>> m_muxer;
+    // std::shared_ptr<node::Muxer<T>> m_muxer;
 };
 
 }  // namespace srf::manifold

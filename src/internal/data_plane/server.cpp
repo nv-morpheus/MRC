@@ -161,10 +161,10 @@ void Server::do_service_start()
             // }
 
             // source for ucx tag recvs with data
-            auto progress_engine = std::make_unique<DataPlaneServerWorker>(m_ucx.worker());
+            auto progress_engine = std::make_shared<DataPlaneServerWorker>(m_ucx.worker());
 
             // router for ucx tag recvs with data
-            m_deserialize_source = std::make_shared<node::Router<PortAddress, srf::memory::buffer_view>>();
+            m_deserialize_source = std::make_shared<node::TaggedRouter<PortAddress, srf::memory::buffer_view>>();
 
             // for edge between source and router - on channel operator driven by the source thread
             node::make_edge(*progress_engine, *m_deserialize_source);
@@ -233,7 +233,7 @@ ucx::WorkerAddress Server::worker_address() const
     return m_ucx.worker().address();
 }
 
-node::Router<PortAddress, srf::memory::buffer_view>& Server::deserialize_source()
+node::TaggedRouter<PortAddress, srf::memory::buffer_view>& Server::deserialize_source()
 {
     CHECK(m_deserialize_source);
     return *m_deserialize_source;

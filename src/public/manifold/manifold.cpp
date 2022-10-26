@@ -46,7 +46,7 @@ pipeline::Resources& Manifold::resources()
     return m_resources;
 }
 
-void Manifold::add_input(const SegmentAddress& address, node::SourcePropertiesBase* input_source)
+void Manifold::add_input(const SegmentAddress& address, std::shared_ptr<node::IIngressAcceptorBase> input_source)
 {
     DVLOG(3) << "manifold " << this->port_name() << ": connecting to upstream segment " << segment::info(address);
     do_add_input(address, input_source);
@@ -54,7 +54,7 @@ void Manifold::add_input(const SegmentAddress& address, node::SourcePropertiesBa
               << segment::info(address);
 }
 
-void Manifold::add_output(const SegmentAddress& address, node::SinkPropertiesBase* output_sink)
+void Manifold::add_output(const SegmentAddress& address, std::shared_ptr<node::IIngressProviderBase> output_sink)
 {
     DVLOG(3) << "manifold " << this->port_name() << ": connecting to downstream segment " << segment::info(address);
     do_add_output(address, output_sink);

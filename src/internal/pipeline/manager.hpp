@@ -25,6 +25,7 @@
 #include "srf/channel/status.hpp"
 #include "srf/node/channel_holder.hpp"
 #include "srf/node/source_channel.hpp"
+#include "srf/node/writable_subject.hpp"
 #include "srf/runnable/runner.hpp"
 
 #include <memory>
@@ -60,7 +61,7 @@ class Manager : public Service
 
     resources::Manager& m_resources;
     std::shared_ptr<Pipeline> m_pipeline;
-    std::shared_ptr<node::EdgeWritable<ControlMessage>> m_update_channel;
+    std::shared_ptr<node::WritableSubject<ControlMessage>> m_update_channel;
     std::unique_ptr<srf::runnable::Runner> m_controller;
 };
 

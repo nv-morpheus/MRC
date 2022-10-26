@@ -282,14 +282,14 @@ TEST_F(TestRunnable, RxSourceToRxSink)
     // this ensures that the Muxer Operator survives
     {
         auto source =
-            std::make_shared<node::RxSource2<float>>(rxcpp::observable<>::create<float>([](rxcpp::subscriber<float> s) {
+            std::make_shared<node::RxSource<float>>(rxcpp::observable<>::create<float>([](rxcpp::subscriber<float> s) {
                 s.on_next(1.0f);
                 s.on_next(2.0f);
                 s.on_next(3.0f);
                 s.on_completed();
             }));
         auto sink =
-            std::make_shared<node::RxSink2<float>>(rxcpp::make_observer_dynamic<float>([&](float x) { ++counter; }));
+            std::make_shared<node::RxSink<float>>(rxcpp::make_observer_dynamic<float>([&](float x) { ++counter; }));
 
         node::make_edge2(*source, *sink);
 
