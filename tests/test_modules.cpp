@@ -15,12 +15,11 @@
  * limitations under the License.
  */
 
-#include "srf/experimental/modules/test_modules.hpp"
-
 #include "test_segment.hpp"
 
 #include "srf/core/executor.hpp"
 #include "srf/engine/pipeline/ipipeline.hpp"
+#include "srf/experimental/modules/sample_modules.hpp"
 #include "srf/options/options.hpp"
 #include "srf/segment/builder.hpp"
 

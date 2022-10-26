@@ -23,8 +23,8 @@
 
 #include "srf/channel/status.hpp"
 #include "srf/core/utils.hpp"
+#include "srf/experimental/modules/sample_modules.hpp"
 #include "srf/experimental/modules/segment_modules.hpp"
-#include "srf/experimental/modules/test_modules.hpp"
 #include "srf/manifold/egress.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/port_registry.hpp"
