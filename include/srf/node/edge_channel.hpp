@@ -16,7 +16,7 @@ template <typename T>
 class EdgeChannel;
 
 template <typename T>
-class EdgeChannelReader : public EdgeReadable<T>
+class EdgeChannelReader : public IEdgeReadable<T>
 {
   public:
     virtual ~EdgeChannelReader()
@@ -47,7 +47,7 @@ class EdgeChannelReader : public EdgeReadable<T>
 };
 
 template <typename T>
-class EdgeChannelWriter : public EdgeWritable<T>
+class EdgeChannelWriter : public IEdgeWritable<T>
 {
   public:
     virtual ~EdgeChannelWriter()

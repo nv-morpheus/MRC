@@ -185,7 +185,7 @@ class EdgeHandle : public EdgeTag
 };
 
 template <typename T>
-class EdgeWritable : public virtual EdgeHandle<T>
+class IEdgeWritable : public virtual EdgeHandle<T>
 {
   public:
     virtual channel::Status await_write(T&& t) = 0;
@@ -201,21 +201,21 @@ class EdgeWritable : public virtual EdgeHandle<T>
 // };
 
 template <typename T>
-class EdgeReadable : public virtual EdgeHandle<T>
+class IEdgeReadable : public virtual EdgeHandle<T>
 {
   public:
     virtual channel::Status await_read(T& t) = 0;
 };
 
 template <typename SourceT, typename SinkT = SourceT, typename EnableT = void>
-class ConvertingEdgeWritable;
+class EdgeWritable;
 
 template <typename SourceT, typename SinkT>
-class ConvertingEdgeWritable<SourceT, SinkT, std::enable_if_t<std::is_convertible_v<SourceT, SinkT>>>
-  : public EdgeWritable<SourceT>
+class EdgeWritable<SourceT, SinkT, std::enable_if_t<std::is_convertible_v<SourceT, SinkT>>>
+  : public IEdgeWritable<SourceT>
 {
   public:
-    ConvertingEdgeWritable(std::shared_ptr<EdgeWritable<SinkT>> downstream) : m_downstream(downstream)
+    EdgeWritable(std::shared_ptr<IEdgeWritable<SinkT>> downstream) : m_downstream(downstream)
     {
         this->add_linked_edge(downstream);
     }
@@ -226,13 +226,13 @@ class ConvertingEdgeWritable<SourceT, SinkT, std::enable_if_t<std::is_convertibl
     }
 
   protected:
-    inline EdgeWritable<SinkT>& downstream() const
+    inline IEdgeWritable<SinkT>& downstream() const
     {
         return *m_downstream;
     }
 
   private:
-    std::shared_ptr<EdgeWritable<SinkT>> m_downstream{};
+    std::shared_ptr<IEdgeWritable<SinkT>> m_downstream{};
 };
 
 template <typename SourceT, typename SinkT = SourceT, typename EnableT = void>
@@ -240,10 +240,10 @@ class ConvertingEdgeReadable;
 
 template <typename SourceT, typename SinkT>
 class ConvertingEdgeReadable<SourceT, SinkT, std::enable_if_t<std::is_convertible_v<SourceT, SinkT>>>
-  : public EdgeReadable<SinkT>
+  : public IEdgeReadable<SinkT>
 {
   public:
-    ConvertingEdgeReadable(std::shared_ptr<EdgeReadable<SourceT>> upstream) : m_upstream(upstream)
+    ConvertingEdgeReadable(std::shared_ptr<IEdgeReadable<SourceT>> upstream) : m_upstream(upstream)
     {
         this->add_linked_edge(upstream);
     }
@@ -260,13 +260,13 @@ class ConvertingEdgeReadable<SourceT, SinkT, std::enable_if_t<std::is_convertibl
     }
 
   protected:
-    inline EdgeReadable<SourceT>& upstream() const
+    inline IEdgeReadable<SourceT>& upstream() const
     {
         return *m_upstream;
     }
 
   private:
-    std::shared_ptr<EdgeReadable<SourceT>> m_upstream{};
+    std::shared_ptr<IEdgeReadable<SourceT>> m_upstream{};
 };
 
 // // EdgeChannel holds an actual channel object and provides interfaces for reading/writing
@@ -784,7 +784,7 @@ template <typename T>
 class IEgressProvider : public IEgressProviderBase
 {
   public:
-    virtual std::shared_ptr<EdgeReadable<T>> get_egress() const = 0;
+    virtual std::shared_ptr<IEdgeReadable<T>> get_egress() const = 0;
 
     std::shared_ptr<EdgeTag> get_egress_typeless() const override
     {
@@ -796,11 +796,11 @@ template <typename T>
 class IEgressAcceptor : public IEgressAcceptorBase
 {
   public:
-    virtual void set_egress(std::shared_ptr<EdgeReadable<T>> egress) = 0;
+    virtual void set_egress(std::shared_ptr<IEdgeReadable<T>> egress) = 0;
 
     void set_egress_typeless(std::shared_ptr<EdgeTag> egress) override
     {
-        this->set_egress(std::dynamic_pointer_cast<EdgeReadable<T>>(egress));
+        this->set_egress(std::dynamic_pointer_cast<IEdgeReadable<T>>(egress));
     }
 };
 
@@ -808,7 +808,7 @@ template <typename T>
 class IIngressProvider : public IIngressProviderBase
 {
   public:
-    virtual std::shared_ptr<EdgeWritable<T>> get_ingress() const = 0;
+    virtual std::shared_ptr<IEdgeWritable<T>> get_ingress() const = 0;
 
     std::shared_ptr<EdgeTag> get_ingress_typeless() const override
     {
@@ -820,11 +820,11 @@ template <typename T>
 class IIngressAcceptor : public IIngressAcceptorBase
 {
   public:
-    virtual void set_ingress(std::shared_ptr<EdgeWritable<T>> ingress) = 0;
+    virtual void set_ingress(std::shared_ptr<IEdgeWritable<T>> ingress) = 0;
 
     void set_ingress_typeless(std::shared_ptr<EdgeTag> ingress) override
     {
-        this->set_ingress(std::dynamic_pointer_cast<EdgeWritable<T>>(ingress));
+        this->set_ingress(std::dynamic_pointer_cast<IEdgeWritable<T>>(ingress));
     }
 };
 

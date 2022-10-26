@@ -105,9 +105,9 @@ class SourceProperties : public EdgeHolder<T>, public SourcePropertiesBase
     }
 
   protected:
-    std::shared_ptr<EdgeWritable<T>> get_writable_edge() const
+    std::shared_ptr<IEdgeWritable<T>> get_writable_edge() const
     {
-        return std::dynamic_pointer_cast<EdgeWritable<T>>(this->m_set_edge);
+        return std::dynamic_pointer_cast<IEdgeWritable<T>>(this->m_set_edge);
     }
 };
 
@@ -135,9 +135,9 @@ class MultiSourceProperties : public MultiEdgeHolder<T, KeyT>, public SourceProp
     }
 
   protected:
-    std::shared_ptr<EdgeWritable<T>> get_writable_edge(KeyT edge_key) const
+    std::shared_ptr<IEdgeWritable<T>> get_writable_edge(KeyT edge_key) const
     {
-        return std::dynamic_pointer_cast<EdgeWritable<T>>(this->get_edge_pair(edge_key).second);
+        return std::dynamic_pointer_cast<IEdgeWritable<T>>(this->get_edge_pair(edge_key).second);
     }
 };
 
@@ -145,9 +145,9 @@ template <typename T>
 class EgressProvider : public virtual SourceProperties<T>, public IEgressProvider<T>
 {
   public:
-    std::shared_ptr<EdgeReadable<T>> get_egress() const override
+    std::shared_ptr<IEdgeReadable<T>> get_egress() const override
     {
-        return std::dynamic_pointer_cast<EdgeReadable<T>>(SourceProperties<T>::get_edge());
+        return std::dynamic_pointer_cast<IEdgeReadable<T>>(SourceProperties<T>::get_edge());
     }
 
     // std::shared_ptr<EdgeTag> get_egress_typeless() const override
@@ -163,7 +163,7 @@ template <typename T>
 class IngressAcceptor : public virtual SourceProperties<T>, public IIngressAcceptor<T>
 {
   public:
-    void set_ingress(std::shared_ptr<EdgeWritable<T>> ingress) override
+    void set_ingress(std::shared_ptr<IEdgeWritable<T>> ingress) override
     {
         SourceProperties<T>::set_edge(ingress);
     }

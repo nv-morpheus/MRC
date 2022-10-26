@@ -129,7 +129,7 @@ namespace srf::node {
 // {}
 
 template <typename T>
-class EdgeRxObserver : public EdgeWritable<T>
+class EdgeRxObserver : public IEdgeWritable<T>
 {
   public:
     using observer_t = rxcpp::observer<T>;

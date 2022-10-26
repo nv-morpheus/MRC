@@ -67,7 +67,7 @@ TEST_CLASS(Edges);
 namespace srf::node {
 
 template <typename T>
-class EdgeReadableLambda : public EdgeReadable<T>
+class EdgeReadableLambda : public IEdgeReadable<T>
 {
   public:
     EdgeReadableLambda(std::function<channel::Status(T&)>&& on_await_read,
@@ -95,7 +95,7 @@ class EdgeReadableLambda : public EdgeReadable<T>
 };
 
 template <typename T>
-class EdgeWritableLambda : public EdgeWritable<T>
+class EdgeWritableLambda : public IEdgeWritable<T>
 {
   public:
     EdgeWritableLambda(std::function<channel::Status(T&&)>&& on_await_write,
@@ -324,7 +324,7 @@ class TestSinkComponent : public IngressProvider<int>
 
 class TestRouter : public IngressProvider<int>
 {
-    class UpstreamEdge : public EdgeWritable<int>, public MultiSourceProperties<int, std::string>
+    class UpstreamEdge : public IEdgeWritable<int>, public MultiSourceProperties<int, std::string>
     {
       public:
         UpstreamEdge(TestRouter& parent) : m_parent(parent) {}
@@ -344,7 +344,7 @@ class TestRouter : public IngressProvider<int>
             return this->get_writable_edge(key)->await_write(std::move(t));
         }
 
-        void add_downstream(std::string key, std::shared_ptr<EdgeWritable<int>> downstream)
+        void add_downstream(std::string key, std::shared_ptr<IEdgeWritable<int>> downstream)
         {
             this->set_edge(std::move(key), std::move(downstream));
         }
@@ -361,7 +361,7 @@ class TestRouter : public IngressProvider<int>
           m_key(std::move(key))
         {}
 
-        void set_ingress(std::shared_ptr<EdgeWritable<int>> ingress) override
+        void set_ingress(std::shared_ptr<IEdgeWritable<int>> ingress) override
         {
             // Get a lock to the upstream edge
             if (auto upstream = m_upstream.lock())
@@ -468,7 +468,7 @@ class TestConditional : public IngressProvider<int>, public IngressAcceptor<int>
 
 class TestBroadcast : public IngressProvider<int>, public IIngressAcceptor<int>
 {
-    class BroadcastEdge : public EdgeWritable<int>, public MultiSourceProperties<int, size_t>
+    class BroadcastEdge : public IEdgeWritable<int>, public MultiSourceProperties<int, size_t>
     {
       public:
         BroadcastEdge(TestBroadcast& parent) : m_parent(parent) {}
@@ -499,7 +499,7 @@ class TestBroadcast : public IngressProvider<int>, public IIngressAcceptor<int>
             return this->get_writable_edge(0)->await_write(std::move(t));
         }
 
-        void add_downstream(std::shared_ptr<EdgeWritable<int>> downstream)
+        void add_downstream(std::shared_ptr<IEdgeWritable<int>> downstream)
         {
             auto edge_count = this->edge_count();
 
@@ -528,7 +528,7 @@ class TestBroadcast : public IngressProvider<int>, public IIngressAcceptor<int>
         VLOG(10) << "Destroying TestBroadcast";
     }
 
-    void set_ingress(std::shared_ptr<EdgeWritable<int>> ingress) override
+    void set_ingress(std::shared_ptr<IEdgeWritable<int>> ingress) override
     {
         if (auto e = m_edge.lock())
         {
@@ -542,7 +542,7 @@ class TestBroadcast : public IngressProvider<int>, public IIngressAcceptor<int>
 
     void set_ingress_typeless(std::shared_ptr<EdgeTag> ingress) override
     {
-        this->set_ingress(std::dynamic_pointer_cast<EdgeWritable<int>>(ingress));
+        this->set_ingress(std::dynamic_pointer_cast<IEdgeWritable<int>>(ingress));
     }
 
     void on_complete()

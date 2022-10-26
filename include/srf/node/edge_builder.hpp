@@ -156,7 +156,7 @@ static void make_edge_ingress(IIngressAcceptor<SourceT>& source, IIngressProvide
     constexpr bool RequiresNarrowing =
         IsConvertable && (LessBits || FloatToInt || SignedToUnsigned || UnsignedToSignedLessBits);
 
-    std::shared_ptr<EdgeWritable<SourceT>> edge;
+    std::shared_ptr<IEdgeWritable<SourceT>> edge;
 
     if constexpr (std::is_same_v<SourceT, SinkT>)
     {
@@ -166,13 +166,13 @@ static void make_edge_ingress(IIngressAcceptor<SourceT>& source, IIngressProvide
     else if constexpr (IsConvertable && !RequiresNarrowing)
     {
         // Static lookup with implicit conversion. No narrowing required
-        edge = std::make_shared<ConvertingEdgeWritable<SourceT, SinkT>>(sink.get_ingress());
+        edge = std::make_shared<EdgeWritable<SourceT, SinkT>>(sink.get_ingress());
     }
     else if constexpr (RequiresNarrowing && AllowNarrowingV)
     {
         // Static lookup with implicit conversion. Narrowing required
         LOG(WARNING) << "WARNING: Automatic edge conversion will result in a narrowing cast.";
-        edge = std::make_shared<ConvertingEdgeWritable<SourceT, SinkT>>(sink.get_ingress());
+        edge = std::make_shared<EdgeWritable<SourceT, SinkT>>(sink.get_ingress());
     }
     else
     {

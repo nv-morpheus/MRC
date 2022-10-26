@@ -79,7 +79,7 @@ namespace srf::node {
 template <typename T>
 class Broadcast : public IngressProvider<T>, public IIngressAcceptor<T>
 {
-    class BroadcastEdge : public EdgeWritable<T>, public MultiSourceProperties<T, size_t>
+    class BroadcastEdge : public IEdgeWritable<T>, public MultiSourceProperties<T, size_t>
     {
       public:
         BroadcastEdge(Broadcast& parent, bool deep_copy) : m_parent(parent), m_deep_copy(deep_copy) {}
@@ -111,7 +111,7 @@ class Broadcast : public IngressProvider<T>, public IIngressAcceptor<T>
             return this->get_writable_edge(0).await_write(std::move(data));
         }
 
-        void add_downstream(std::shared_ptr<EdgeWritable<T>> downstream)
+        void add_downstream(std::shared_ptr<IEdgeWritable<T>> downstream)
         {
             auto edge_count = this->edge_count();
 
@@ -140,7 +140,7 @@ class Broadcast : public IngressProvider<T>, public IIngressAcceptor<T>
         VLOG(10) << "Destroying TestBroadcast";
     }
 
-    void set_ingress(std::shared_ptr<EdgeWritable<T>> ingress) override
+    void set_ingress(std::shared_ptr<IEdgeWritable<T>> ingress) override
     {
         if (auto e = m_edge.lock())
         {

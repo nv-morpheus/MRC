@@ -121,7 +121,7 @@ class RouterBase : public ForwardingIngressProvider<InputT>, public MultiSourceP
       public:
         DownstreamEdge(RouterBase& parent, KeyT key) : m_parent(parent), m_key(std::move(key)) {}
 
-        void set_ingress(std::shared_ptr<EdgeWritable<output_data_t>> ingress) override
+        void set_ingress(std::shared_ptr<IEdgeWritable<output_data_t>> ingress) override
         {
             m_parent.MultiSourceProperties<OutputT, KeyT>::set_edge(m_key, std::move(ingress));
         }

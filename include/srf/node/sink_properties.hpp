@@ -100,9 +100,9 @@ class SinkProperties : public EdgeHolder<T>, public SinkPropertiesBase
     }
 
   protected:
-    std::shared_ptr<EdgeReadable<T>> get_readable_edge() const
+    std::shared_ptr<IEdgeReadable<T>> get_readable_edge() const
     {
-        return std::dynamic_pointer_cast<EdgeReadable<T>>(this->m_set_edge);
+        return std::dynamic_pointer_cast<IEdgeReadable<T>>(this->m_set_edge);
     }
 
   private:
@@ -120,7 +120,7 @@ template <typename T>
 class EgressAcceptor : public virtual SinkProperties<T>, public IEgressAcceptor<T>
 {
   public:
-    void set_egress(std::shared_ptr<EdgeReadable<T>> egress) override
+    void set_egress(std::shared_ptr<IEdgeReadable<T>> egress) override
     {
         SinkProperties<T>::set_edge(egress);
     }
@@ -138,9 +138,9 @@ template <typename T>
 class IngressProvider : public virtual SinkProperties<T>, public IIngressProvider<T>
 {
   public:
-    std::shared_ptr<EdgeWritable<T>> get_ingress() const override
+    std::shared_ptr<IEdgeWritable<T>> get_ingress() const override
     {
-        return std::dynamic_pointer_cast<EdgeWritable<T>>(SinkProperties<T>::get_edge());
+        return std::dynamic_pointer_cast<IEdgeWritable<T>>(SinkProperties<T>::get_edge());
     }
 
     // std::shared_ptr<EdgeTag> get_ingress_typeless() const override
@@ -156,7 +156,7 @@ template <typename T>
 class ForwardingIngressProvider : public IngressProvider<T>
 {
   protected:
-    class ForwardingEdge : public EdgeWritable<T>
+    class ForwardingEdge : public IEdgeWritable<T>
     {
       public:
         ForwardingEdge(ForwardingIngressProvider<T>& parent) : m_parent(parent) {}
