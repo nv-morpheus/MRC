@@ -18,7 +18,6 @@
 #pragma once
 
 #include "srf/experimental/modules/segment_modules.hpp"
-#include "srf/experimental/modules/test_modules.hpp" // TODO: included for testing
 #include "srf/segment/builder.hpp"
 
 #include <typeindex>
