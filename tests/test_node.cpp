@@ -25,6 +25,7 @@
 #include "srf/options/placement.hpp"
 #include "srf/options/topology.hpp"
 #include "srf/pipeline/pipeline.hpp"
+#include "srf/runnable/context.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/types.hpp"
 
@@ -112,6 +113,86 @@ TEST_F(TestNode, GenericEndToEnd)
         auto sinkStr = seg.make_sink<std::string>(
             "sink",
             [&](const std::string& x) {
+                // Print value
+                DVLOG(1) << "Sink got value: '" << x << "'" << std::endl;
+                ++next_count;
+            },
+            [&](std::exception_ptr x) { DVLOG(1) << "Sink on_error" << std::endl; },
+            [&]() {
+                ++complete_count;
+                DVLOG(1) << "Sink on_completed" << std::endl;
+            });
+
+        seg.make_edge(sourceStr1, sinkStr);
+    });
+
+    auto options = std::make_unique<Options>();
+    options->topology().user_cpuset("0");
+
+    Executor exec(std::move(options));
+
+    exec.register_pipeline(std::move(p));
+
+    exec.start();
+
+    exec.join();
+
+    EXPECT_EQ(next_count, 6);
+    EXPECT_EQ(complete_count, 2);
+}
+
+TEST_F(TestNode, GenericEndToEndComponent)
+{
+    auto p = pipeline::make_pipeline();
+
+    std::atomic<int> next_count     = 0;
+    std::atomic<int> complete_count = 0;
+
+    auto my_segment = p->make_segment("my_segment", [&](segment::Builder& seg) {
+        DVLOG(1) << "In Initializer" << std::endl;
+
+        auto sourceStr1 = seg.make_source<std::string>("src1", [&](rxcpp::subscriber<std::string>& s) {
+            std::string my_str = "One1";
+            s.on_next(std::move(my_str));
+            s.on_next("Two1");
+            s.on_next("Three1");
+            s.on_completed();
+        });
+
+        auto sourceStr2 = seg.make_source<std::string>("src2", [&](rxcpp::subscriber<std::string>& s) {
+            s.on_next("One2");
+            s.on_next("Two2");
+            s.on_next("Three2");
+            s.on_completed();
+        });
+
+        auto intermediate = seg.make_node<std::string, int>(
+            "intermediate", rxcpp::operators::map([](const std::string& x) -> int { return x.size(); }));
+
+        seg.make_edge(sourceStr2, intermediate);
+
+        auto sinkInt = seg.make_sink<int>(
+            "sinkInt",
+            [&](const int& x) {
+                // Print value
+                DVLOG(1) << "Sink got value: '" << x << "'" << std::endl;
+                ++next_count;
+            },
+            [&]() {
+                ++complete_count;
+                DVLOG(1) << "Sink on_completed" << std::endl;
+            });
+
+        seg.make_edge(intermediate, sinkInt);
+
+        // Create 2 upstream sources and check that on_completed is called after
+        // all sources have been exhausted
+        auto sinkStr = seg.make_sink_component<std::string>(
+            "sink",
+            [&](const std::string& x) {
+                // Get the context. Should be equal to the intermediate context
+                auto& ctx = runnable::Context::get_runtime_context();
+
                 // Print value
                 DVLOG(1) << "Sink got value: '" << x << "'" << std::endl;
                 ++next_count;

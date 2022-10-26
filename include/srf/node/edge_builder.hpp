@@ -73,6 +73,8 @@ struct EdgeBuilder final
                                    IIngressProviderBase& sink,
                                    bool allow_narrowing = true);
 
+    static void make_edge_typeless(IEgressProviderBase& source, IEgressAcceptorBase& sink, bool allow_narrowing = true);
+
     /**
      *
      * @tparam SourceT

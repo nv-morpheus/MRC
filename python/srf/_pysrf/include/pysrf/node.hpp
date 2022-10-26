@@ -181,6 +181,19 @@ class PythonSink : public node::RxSink<InputT, ContextT>,
     using node::RxSink<InputT>::RxSink;
 };
 
+template <typename InputT>
+class PythonSinkComponent : public node::RxSinkComponent<InputT>,
+                            public pysrf::AutoRegSinkAdapter<InputT>,
+                            public pysrf::AutoRegEgressPort<InputT>
+{
+    using base_t = node::RxSinkComponent<InputT>;
+
+  public:
+    using typename base_t::observer_t;
+
+    using base_t::RxSinkComponent;
+};
+
 template <typename InputT, typename OutputT, typename ContextT = srf::runnable::Context>
 class PythonNode : public node::RxNode<InputT, OutputT, ContextT>,
                    public pysrf::AutoRegSourceAdapter<OutputT>,

@@ -259,8 +259,14 @@ class RxSinkComponent : public IngressProvider<T>
     ~RxSinkComponent() = default;
 
     template <typename... ArgsT>
-    RxSinkComponent(ArgsT&&... args)
+    RxSinkComponent(ArgsT&&... args) : RxSinkComponent()
     {
+        // auto edge = std::make_shared<EdgeRxObserver<T>>();
+
+        // m_sink_edge = edge;
+
+        // IngressProvider<T>::init_edge(edge);
+
         set_observer(std::forward<ArgsT>(args)...);
     }
 

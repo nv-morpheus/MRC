@@ -18,6 +18,7 @@
 #include "srf/node/edge_builder.hpp"
 
 #include "srf/channel/ingress.hpp"
+#include "srf/node/channel_holder.hpp"
 #include "srf/node/edge_adapter_registry.hpp"
 #include "srf/node/edge_registry.hpp"
 #include "srf/node/sink_properties.hpp"
@@ -38,14 +39,26 @@ void EdgeBuilder::make_edge_typeless(SourcePropertiesBase& source, SinkPropertie
 
 void EdgeBuilder::make_edge_typeless(IIngressAcceptorBase& source, IIngressProviderBase& sink, bool allow_narrowing)
 {
-    // // Get the ingress
-    // auto ingress = sink.get_ingress_typeless();
+    // Get the ingress
+    auto ingress = sink.get_ingress_typeless();
 
-    // // Convert if neccessary
+    // Convert if neccessary
     // auto ingress_adapted = EdgeBuilder::ingress_adapter_for_sink(source, sink, ingress);
 
-    // // Set to the source
-    // source.set_ingress_typeless(ingress_adapted);
+    // Set to the source
+    source.set_ingress_typeless(ingress);
+}
+
+void EdgeBuilder::make_edge_typeless(IEgressProviderBase& source, IEgressAcceptorBase& sink, bool allow_narrowing)
+{
+    // Get the ingress
+    auto egress = source.get_egress_typeless();
+
+    // Convert if neccessary
+    // auto ingress_adapted = EdgeBuilder::ingress_adapter_for_sink(source, sink, ingress);
+
+    // Set to the source
+    sink.set_egress_typeless(egress);
 }
 
 std::shared_ptr<channel::IngressHandle> EdgeBuilder::ingress_adapter_for_sink(

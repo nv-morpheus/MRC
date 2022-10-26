@@ -196,6 +196,39 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_sink(srf::seg
     return self.make_sink<PyHolder, PythonSink>(name, on_next_w, on_error_w, on_completed_w);
 }
 
+std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_sink_component(
+    srf::segment::Builder& self,
+    const std::string& name,
+    std::function<void(py::object object)> on_next,
+    std::function<void(py::object object)> on_error,
+    std::function<void()> on_completed)
+{
+    auto on_next_w = [on_next](PyHolder object) {
+        pybind11::gil_scoped_acquire gil;
+        on_next(std::move(object));  // Move the object into a temporary
+    };
+
+    auto on_error_w = [on_error](std::exception_ptr ptr) {
+        pybind11::gil_scoped_acquire gil;
+
+        // First, translate the exception setting the python exception value
+        py::detail::translate_exception(ptr);
+
+        // Creating py::error_already_set will clear the exception and retrieve the value
+        py::error_already_set active_ex;
+
+        // Now actually pass the exception to the callback
+        on_error(active_ex.value());
+    };
+
+    auto on_completed_w = [on_completed]() {
+        pybind11::gil_scoped_acquire gil;
+        on_completed();
+    };
+
+    return self.make_sink_component<PyHolder, PythonSinkComponent>(name, on_next_w, on_error_w, on_completed_w);
+}
+
 std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::get_ingress(srf::segment::Builder& self,
                                                                           const std::string& name)
 {
@@ -415,6 +448,19 @@ void SegmentProxy::make_edge(srf::segment::Builder& self,
                              std::shared_ptr<srf::segment::ObjectProperties> source,
                              std::shared_ptr<srf::segment::ObjectProperties> sink)
 {
-    node::EdgeBuilder::make_edge_typeless(source->source_base(), sink->sink_base());
+    if (source->is_ingress_acceptor() && sink->is_ingress_provider())
+    {
+        node::EdgeBuilder::make_edge_typeless(source->ingress_acceptor_base(), sink->ingress_provider_base());
+    }
+    else if (source->is_ingress_acceptor() && sink->is_ingress_provider())
+    {
+        node::EdgeBuilder::make_edge_typeless(source->egress_provider_base(), sink->egress_acceptor_base());
+    }
+    else
+    {
+        throw std::runtime_error(
+            "Invalid edges. Arguments to make_edge were incorrect. Ensure you are providing either "
+            "IngressAcceptor->IngressProvider or EgressProvider->EgressAcceptor");
+    }
 }
 }  // namespace srf::pysrf

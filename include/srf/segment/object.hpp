@@ -19,6 +19,7 @@
 
 #include "srf/channel/ingress.hpp"
 #include "srf/exceptions/runtime_error.hpp"
+#include "srf/node/channel_holder.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/forward.hpp"
 #include "srf/node/sink_properties.hpp"
@@ -44,8 +45,18 @@ struct ObjectProperties
     virtual bool is_sink() const   = 0;
     virtual bool is_source() const = 0;
 
+    virtual bool is_ingress_acceptor() const = 0;
+    virtual bool is_ingress_provider() const = 0;
+    virtual bool is_egress_acceptor() const  = 0;
+    virtual bool is_egress_provider() const  = 0;
+
     virtual node::SinkPropertiesBase& sink_base()     = 0;
     virtual node::SourcePropertiesBase& source_base() = 0;
+
+    virtual node::IIngressAcceptorBase& ingress_acceptor_base() = 0;
+    virtual node::IIngressProviderBase& ingress_provider_base() = 0;
+    virtual node::IEgressAcceptorBase& egress_acceptor_base()   = 0;
+    virtual node::IEgressProviderBase& egress_provider_base()   = 0;
 
     template <typename T>
     node::SinkProperties<T>& sink_typed();
@@ -109,8 +120,18 @@ class Object : public virtual ObjectProperties
     bool is_source() const final;
     bool is_sink() const final;
 
+    bool is_ingress_acceptor() const final;
+    bool is_ingress_provider() const final;
+    bool is_egress_acceptor() const final;
+    bool is_egress_provider() const final;
+
     node::SinkPropertiesBase& sink_base() final;
     node::SourcePropertiesBase& source_base() final;
+
+    node::IIngressAcceptorBase& ingress_acceptor_base() final;
+    node::IIngressProviderBase& ingress_provider_base() final;
+    node::IEgressAcceptorBase& egress_acceptor_base() final;
+    node::IEgressProviderBase& egress_provider_base() final;
 
     bool is_runnable() const final
     {
@@ -136,6 +157,7 @@ class Object : public virtual ObjectProperties
         }
         return m_launch_options;
     }
+
   protected:
     void set_name(const std::string& name);
 
@@ -191,6 +213,30 @@ bool Object<ObjectT>::is_sink() const
 }
 
 template <typename ObjectT>
+bool Object<ObjectT>::is_ingress_acceptor() const
+{
+    return std::is_base_of_v<node::IIngressAcceptorBase, ObjectT>;
+}
+
+template <typename ObjectT>
+bool Object<ObjectT>::is_ingress_provider() const
+{
+    return std::is_base_of_v<node::IIngressProviderBase, ObjectT>;
+}
+
+template <typename ObjectT>
+bool Object<ObjectT>::is_egress_acceptor() const
+{
+    return std::is_base_of_v<node::IEgressAcceptorBase, ObjectT>;
+}
+
+template <typename ObjectT>
+bool Object<ObjectT>::is_egress_provider() const
+{
+    return std::is_base_of_v<node::IEgressProviderBase, ObjectT>;
+}
+
+template <typename ObjectT>
 node::SinkPropertiesBase& Object<ObjectT>::sink_base()
 {
     if constexpr (!std::is_base_of_v<node::SinkPropertiesBase, ObjectT>)
@@ -214,6 +260,62 @@ node::SourcePropertiesBase& Object<ObjectT>::source_base()
     }
 
     auto* base = dynamic_cast<node::SourcePropertiesBase*>(get_object());
+    CHECK(base);
+    return *base;
+}
+
+template <typename ObjectT>
+node::IIngressAcceptorBase& Object<ObjectT>::ingress_acceptor_base()
+{
+    if constexpr (!std::is_base_of_v<node::IIngressAcceptorBase, ObjectT>)
+    {
+        LOG(ERROR) << type_name() << " is not a IIngressAcceptorBase";
+        throw exceptions::SrfRuntimeError("Object is not a IIngressAcceptorBase");
+    }
+
+    auto* base = dynamic_cast<node::IIngressAcceptorBase*>(get_object());
+    CHECK(base);
+    return *base;
+}
+
+template <typename ObjectT>
+node::IIngressProviderBase& Object<ObjectT>::ingress_provider_base()
+{
+    if constexpr (!std::is_base_of_v<node::IIngressProviderBase, ObjectT>)
+    {
+        LOG(ERROR) << type_name() << " is not a IIngressProviderBase";
+        throw exceptions::SrfRuntimeError("Object is not a IIngressProviderBase");
+    }
+
+    auto* base = dynamic_cast<node::IIngressProviderBase*>(get_object());
+    CHECK(base);
+    return *base;
+}
+
+template <typename ObjectT>
+node::IEgressAcceptorBase& Object<ObjectT>::egress_acceptor_base()
+{
+    if constexpr (!std::is_base_of_v<node::IEgressAcceptorBase, ObjectT>)
+    {
+        LOG(ERROR) << type_name() << " is not a IEgressAcceptorBase";
+        throw exceptions::SrfRuntimeError("Object is not a IEgressAcceptorBase");
+    }
+
+    auto* base = dynamic_cast<node::IEgressAcceptorBase*>(get_object());
+    CHECK(base);
+    return *base;
+}
+
+template <typename ObjectT>
+node::IEgressProviderBase& Object<ObjectT>::egress_provider_base()
+{
+    if constexpr (!std::is_base_of_v<node::IEgressProviderBase, ObjectT>)
+    {
+        LOG(ERROR) << type_name() << " is not a IEgressProviderBase";
+        throw exceptions::SrfRuntimeError("Object is not a IEgressProviderBase");
+    }
+
+    auto* base = dynamic_cast<node::IEgressProviderBase*>(get_object());
     CHECK(base);
     return *base;
 }

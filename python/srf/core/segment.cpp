@@ -130,6 +130,8 @@ PYBIND11_MODULE(segment, m)
      */
     Builder.def("make_sink", &SegmentProxy::make_sink, py::return_value_policy::reference_internal);
 
+    Builder.def("make_sink_component", &SegmentProxy::make_sink_component, py::return_value_policy::reference_internal);
+
     /**
      * Construct a new 'pure' python::object -> python::object node
      *

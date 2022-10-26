@@ -157,6 +157,13 @@ class SegmentProxy
                                                                      std::function<void(pybind11::object x)> on_error,
                                                                      std::function<void()> on_completed);
 
+    static std::shared_ptr<srf::segment::ObjectProperties> make_sink_component(
+        srf::segment::Builder& self,
+        const std::string& name,
+        std::function<void(pybind11::object x)> on_next,
+        std::function<void(pybind11::object x)> on_error,
+        std::function<void()> on_completed);
+
     /**
      * Construct a new 'pure' python::object -> python::object node
      *

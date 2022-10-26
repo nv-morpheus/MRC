@@ -145,6 +145,13 @@ class Builder final
                                                       rxcpp::make_observer<SinkTypeT>(std::forward<ArgsT>(ops)...));
     }
 
+    template <typename SinkTypeT, template <class> class NodeTypeT = node::RxSinkComponent, typename... ArgsT>
+    auto make_sink_component(std::string name, ArgsT&&... ops)
+    {
+        return construct_object<NodeTypeT<SinkTypeT>>(name,
+                                                      rxcpp::make_observer<SinkTypeT>(std::forward<ArgsT>(ops)...));
+    }
+
     template <typename SinkTypeT,
               template <class, class, class = srf::runnable::Context> class NodeTypeT = node::RxNode,
               typename... ArgsT>

@@ -196,6 +196,56 @@ def test_edge_wrapper():
     assert on_next_count == 4
 
 
+def test_edge_wrapper_component():
+    on_next_count = 0
+
+    def segment_init(seg: srf.Builder):
+
+        def create_source():
+            yield 1
+            yield 2
+            yield 3
+            yield 4
+
+        source = seg.make_source("source", create_source())
+
+        # source = m.SourcePyHolder(seg, "source")
+
+        def on_next(x: int):
+            nonlocal on_next_count
+            print("Got: {}".format(type(x)))
+
+            on_next_count += 1
+
+        def on_error(e):
+            pass
+
+        def on_complete():
+            print("Complete")
+
+        sink = seg.make_sink_component("sink_component", on_next, on_error, on_complete)
+        seg.make_edge(source, sink)
+
+    pipeline = srf.Pipeline()
+
+    pipeline.make_segment("my_seg", segment_init)
+
+    options = srf.Options()
+
+    # Set to 1 thread
+    options.topology.user_cpuset = "0-0"
+
+    executor = srf.Executor(options)
+
+    executor.register_pipeline(pipeline)
+
+    executor.start()
+
+    executor.join()
+
+    assert on_next_count == 4
+
+
 @dataclasses.dataclass
 class MyCustomClass:
     value: int
