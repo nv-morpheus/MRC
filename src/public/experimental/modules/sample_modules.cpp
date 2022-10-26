@@ -15,30 +15,11 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "srf/experimental/modules/sample_modules.hpp"
 
 #include "srf/experimental/modules/segment_modules.hpp"
-#include "srf/segment/builder.hpp"
-
-#include <typeindex>
 
 namespace srf::modules {
-
-class SimpleModule : public SegmentModule
-{
-  public:
-    SimpleModule(std::string module_name);
-    SimpleModule(std::string module_name, nlohmann::json config);
-
-    bool m_was_configured{false};
-
-  protected:
-    void initialize(segment::Builder& builder) override;
-
-  private:
-    bool m_initialized{false};
-};
-
 SimpleModule::SimpleModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
 
 SimpleModule::SimpleModule(std::string module_name, nlohmann::json config) :
@@ -101,21 +82,6 @@ void SimpleModule::initialize(segment::Builder& builder)
     m_initialized = true;
 }
 
-class ConfigurableModule : public SegmentModule
-{
-  public:
-    ConfigurableModule(std::string module_name);
-    ConfigurableModule(std::string module_name, nlohmann::json config);
-
-    bool m_was_configured{false};
-
-  protected:
-    void initialize(segment::Builder& builder) override;
-
-  private:
-    bool m_initialized;
-};
-
 ConfigurableModule::ConfigurableModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
 ConfigurableModule::ConfigurableModule(std::string module_name, nlohmann::json config) :
   SegmentModule(std::move(module_name), std::move(config))
@@ -153,21 +119,6 @@ void ConfigurableModule::initialize(segment::Builder& builder)
     m_initialized = true;
 }
 
-class SourceModule : public SegmentModule
-{
-  public:
-    SourceModule(std::string module_name);
-    SourceModule(std::string module_name, nlohmann::json config);
-
-    bool m_was_configured{false};
-
-  protected:
-    void initialize(segment::Builder& builder) override;
-
-  private:
-    bool m_initialized;
-};
-
 SourceModule::SourceModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
 SourceModule::SourceModule(std::string module_name, nlohmann::json config) :
   SegmentModule(std::move(module_name), std::move(config))
@@ -198,22 +149,6 @@ void SourceModule::initialize(segment::Builder& builder)
     register_output_port("source", source, source->object().source_type());
 }
 
-class SinkModule : public SegmentModule
-{
-  public:
-    SinkModule(std::string module_name);
-    SinkModule(std::string module_name, nlohmann::json config);
-
-    bool m_was_configured{false};
-    unsigned int m_packet_count{0};
-
-  protected:
-    void initialize(segment::Builder& builder) override;
-
-  private:
-    bool m_initialized;
-};
-
 SinkModule::SinkModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
 SinkModule::SinkModule(std::string module_name, nlohmann::json config) :
   SegmentModule(std::move(module_name), std::move(config))
@@ -229,23 +164,6 @@ void SinkModule::initialize(segment::Builder& builder)
     // Register the submodules output as one of this module's outputs
     register_input_port("sink", sink, sink->object().sink_type());
 }
-
-class NestedModule : public SegmentModule
-{
-  public:
-    NestedModule(std::string module_name);
-    NestedModule(std::string module_name, nlohmann::json config);
-
-    std::string module_name() const override;
-
-    bool m_was_configured{false};
-
-  protected:
-    void initialize(segment::Builder& builder) override;
-
-  private:
-    bool m_initialized;
-};
 
 NestedModule::NestedModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
 NestedModule::NestedModule(std::string module_name, nlohmann::json config) :
@@ -275,124 +193,5 @@ void NestedModule::initialize(segment::Builder& builder)
                          configurable_mod->output_port("configurable_output_x"),
                          configurable_mod->output_port_type_id("configurable_output_x"));
 }
-
-template <typename OutputTypeT>
-class TemplateModule : public SegmentModule
-{
-  public:
-    TemplateModule(std::string module_name);
-    TemplateModule(std::string module_name, nlohmann::json config);
-
-    void initialize(segment::Builder& builder) override;
-
-    std::string module_name() const override;
-
-    bool m_was_configured{false};
-
-  private:
-    bool m_initialized;
-};
-
-template <typename OutputTypeT>
-TemplateModule<OutputTypeT>::TemplateModule(std::string module_name) : SegmentModule(std::move(module_name))
-{}
-
-template <typename OutputTypeT>
-TemplateModule<OutputTypeT>::TemplateModule(std::string module_name, nlohmann::json config) :
-  SegmentModule(std::move(module_name), std::move(config))
-{}
-
-template <typename OutputTypeT>
-std::string TemplateModule<OutputTypeT>::module_name() const
-{
-    return "[template_module]";
-}
-
-template <typename OutputTypeT>
-void TemplateModule<OutputTypeT>::initialize(segment::Builder& builder)
-{
-    unsigned int count{1};
-
-    if (config().contains("source_count"))
-    {
-        count = config()["source_count"];
-    }
-
-    auto source = builder.make_source<OutputTypeT>("source", [count](rxcpp::subscriber<OutputTypeT>& sub) {
-        if (sub.is_subscribed())
-        {
-            for (unsigned int i = 0; i < count; ++i)
-            {
-                sub.on_next(std::move(OutputTypeT()));
-            }
-        }
-
-        sub.on_completed();
-    });
-
-    // Register the submodules output as one of this module's outputs
-    register_output_port("source", source, source->object().source_type());
-}
-
-template <typename OutputTypeT, OutputTypeT (*initializer)()>
-class TemplateWithInitModule : public SegmentModule
-{
-  public:
-    TemplateWithInitModule(std::string module_name);
-    TemplateWithInitModule(std::string module_name, nlohmann::json config);
-
-    void initialize(segment::Builder& builder) override;
-
-    std::string module_name() const override;
-
-    bool m_was_configured{false};
-
-  private:
-    bool m_initialized;
-};
-
-template <typename OutputTypeT, OutputTypeT (*Initializer)()>
-TemplateWithInitModule<OutputTypeT, Initializer>::TemplateWithInitModule(std::string module_name) : SegmentModule(std::move(module_name))
-{}
-
-template <typename OutputTypeT, OutputTypeT (*Initializer)()>
-TemplateWithInitModule<OutputTypeT, Initializer>::TemplateWithInitModule(std::string module_name, nlohmann::json config) :
-  SegmentModule(std::move(module_name), std::move(config))
-{}
-
-template <typename OutputTypeT, OutputTypeT (*Initializer)()>
-std::string TemplateWithInitModule<OutputTypeT, Initializer>::module_name() const
-{
-    return "[template_module]";
-}
-
-template <typename OutputTypeT, OutputTypeT (*Initializer)()>
-void TemplateWithInitModule<OutputTypeT, Initializer>::initialize(segment::Builder& builder)
-{
-    unsigned int count{1};
-
-    if (config().contains("source_count"))
-    {
-        count = config()["source_count"];
-    }
-
-    auto source = builder.make_source<OutputTypeT>("source", [count](rxcpp::subscriber<OutputTypeT>& sub) {
-        if (sub.is_subscribed())
-        {
-            for (unsigned int i = 0; i < count; ++i)
-            {
-                auto data = Initializer();
-
-                sub.on_next(std::move(data));
-            }
-        }
-
-        sub.on_completed();
-    });
-
-    // Register the submodules output as one of this module's outputs
-    register_output_port("source", source, source->object().source_type());
-}
-
 
 }  // namespace srf::modules

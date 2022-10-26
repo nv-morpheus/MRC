@@ -22,9 +22,9 @@
 #include "pysrf/types.hpp"
 #include "pysrf/utils.hpp"
 
+#include "srf/experimental/modules/sample_modules.hpp"
 #include "srf/experimental/modules/segment_module_util.hpp"
 #include "srf/experimental/modules/segment_modules.hpp"
-#include "srf/experimental/modules/test_modules.hpp"
 #include "srf/node/edge_connector.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/segment/definition.hpp"
