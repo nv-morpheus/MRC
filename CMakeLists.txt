@@ -73,6 +73,11 @@ if(NOT DEFINED CMAKE_CUDA_HOST_COMPILER)
   endif()
 endif()
 
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  # Our version of NVCC officially only supports clang versions 3.2 - 13, we are now using 14
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -allow-unsupported-compiler")
+endif()
+
 # Now enable CUDA
 enable_language(CUDA)
 
