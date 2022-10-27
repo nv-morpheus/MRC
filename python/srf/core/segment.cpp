@@ -42,7 +42,6 @@
 // IWYU pragma: no_include <pybind11/detail/common.h>
 // IWYU pragma: no_include <pybind11/detail/descr.h>
 
-
 // TODO(bhargav) -- update this to utilize the new version file
 #define srf_VERSION_MAJOR 22
 #define srf_VERSION_MINOR 11
@@ -183,7 +182,8 @@ PYBIND11_MODULE(segment, m)
         "ConfigurableModule", "srf_unittest", PybindSegmentModuleVersion);
     modules::ModelRegistryUtil::register_module<srf::modules::SourceModule>(
         "SourceModule", "srf_unittest", PybindSegmentModuleVersion);
-    modules::ModelRegistryUtil::register_module<srf::modules::SinkModule>("SinkModule", "srf_unittest", PybindSegmentModuleVersion);
+    modules::ModelRegistryUtil::register_module<srf::modules::SinkModule>(
+        "SinkModule", "srf_unittest", PybindSegmentModuleVersion);
     modules::ModelRegistryUtil::register_module<srf::modules::NestedModule>(
         "NestedModule", "srf_unittest", PybindSegmentModuleVersion);
     modules::ModelRegistryUtil::register_module<srf::modules::TemplateModule<int>>(
