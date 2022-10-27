@@ -178,7 +178,8 @@ PYBIND11_MODULE(segment, m)
         "ConfigurableModule", "srf_unittest", PybindSegmentModuleVersion);
     modules::ModelRegistryUtil::register_module<srf::modules::SourceModule>(
         "SourceModule", "srf_unittest", PybindSegmentModuleVersion);
-    modules::ModelRegistryUtil::register_module<srf::modules::SinkModule>("SinkModule", "srf_unittest", PybindSegmentModuleVersion);
+    modules::ModelRegistryUtil::register_module<srf::modules::SinkModule>(
+        "SinkModule", "srf_unittest", PybindSegmentModuleVersion);
     modules::ModelRegistryUtil::register_module<srf::modules::NestedModule>(
         "NestedModule", "srf_unittest", PybindSegmentModuleVersion);
     modules::ModelRegistryUtil::register_module<srf::modules::TemplateModule<int>>(

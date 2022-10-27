@@ -74,6 +74,7 @@ ModuleRegistry::module_constructor_t ModuleRegistry::find_module(const std::stri
     std::stringstream sstream;
 
     sstream << "Module does not exist -> " << registry_namespace << "::" << name;
+    VLOG(2) << sstream.str();
     throw std::invalid_argument(sstream.str());
 }
 
@@ -97,6 +98,7 @@ void ModuleRegistry::register_module(std::string name,
     std::lock_guard<decltype(s_mutex)> lock(s_mutex);
     // TODO(devin) : Reject modules that are not equal to the current build -- we will need to decide on
     //    better criteria going forward.
+    VLOG(2) << "Registering module: " << registry_namespace << "::" << name;
     if (!is_version_compatible(release_version))
     {
         std::stringstream sstream;
@@ -131,6 +133,7 @@ void ModuleRegistry::register_module(std::string name,
     std::stringstream sstream;
 
     sstream << "Attempt to register duplicate module -> " << registry_namespace << ":" << name;
+    VLOG(2) << sstream.str();
     throw std::invalid_argument(sstream.str());
 }
 
@@ -158,6 +161,7 @@ void ModuleRegistry::unregister_module(const std::string& name, const std::strin
     std::stringstream sstream;
 
     sstream << "Failed to unregister module -> " << registry_namespace << "::" << name << " does not exist.";
+    VLOG(5) << sstream.str();
     throw std::invalid_argument(sstream.str());
 }
 
