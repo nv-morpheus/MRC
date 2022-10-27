@@ -62,6 +62,8 @@ project(srf
   LANGUAGES C CXX
 )
 
+rapids_cmake_write_version_file(include/srf/version.hpp)
+
 # Delay enabling CUDA until after we have determined our CXX compiler
 if(NOT DEFINED CMAKE_CUDA_HOST_COMPILER)
   message(STATUS "Setting CUDA host compiler to match CXX compiler: ${CMAKE_CXX_COMPILER}")
