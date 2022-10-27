@@ -119,10 +119,7 @@ class SegmentModule
      * Functional entrypoint for module constructor during build -- this lets us act like a std::function
      * @param builder
      */
-    void operator()(segment::Builder& builder)
-    {
-        this->initialize(builder);
-    };
+    void operator()(segment::Builder& builder);
 
     /**
      * Retrieve the class name for the module, defaults to 'segment_module'

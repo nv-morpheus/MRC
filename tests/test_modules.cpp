@@ -20,9 +20,12 @@
 #include "srf/core/executor.hpp"
 #include "srf/engine/pipeline/ipipeline.hpp"
 #include "srf/experimental/modules/sample_modules.hpp"
+#include "srf/experimental/modules/segment_module_registry.hpp"
 #include "srf/options/options.hpp"
 #include "srf/segment/builder.hpp"
 
+#include <boost/filesystem.hpp>
+#include <dlfcn.h>
 #include <gtest/gtest-message.h>
 #include <gtest/gtest-test-part.h>
 #include <rxcpp/rx-subscriber.hpp>
@@ -458,4 +461,107 @@ TEST_F(SegmentTests, ModuleTemplateWithInitTest)
 
     EXPECT_EQ(packet_count_1, 42);
     EXPECT_EQ(packet_count_2, 24);
+}
+
+std::string get_modules_path() {
+    int pid = getpid();
+    std::stringstream sstream;
+    sstream << "/proc/" << pid << "/exe";
+
+    std::string link_id = sstream.str();
+    unsigned int sz_path_buffer = 8102;
+    std::vector<char> path_buffer(sz_path_buffer + 1);
+    readlink(link_id.c_str(), path_buffer.data(), sz_path_buffer);
+
+    boost::filesystem::path whereami(path_buffer.data());
+
+    std::string modules_path = whereami.parent_path().string() + "/modules/";
+
+    return modules_path;
+}
+
+TEST_F(SegmentTests, DynamicModuleLoadTest)
+{
+    void* module_handle;
+    bool (*dummy_entrypoint)();
+
+    std::string module_path = get_modules_path() + "libdynamic_module.so";
+
+    module_handle = dlopen(module_path.c_str(), RTLD_NOW | RTLD_LOCAL);
+    if (!module_handle)
+    {
+        std::cerr << "Error: " << dlerror() << std::endl;
+    }
+    EXPECT_TRUE(module_handle);
+
+    dummy_entrypoint        = (bool (*)())dlsym(module_handle, "SRF_MODULE_dummy_entrypoint");
+    const char* dlsym_error = dlerror();
+    if (dlsym_error)
+    {
+        std::cerr << "Error: " << dlsym_error << std::endl;
+    }
+    EXPECT_TRUE(dlsym_error == nullptr);
+    EXPECT_TRUE(dummy_entrypoint());
+}
+
+TEST_F(SegmentTests, DynamicModuleRegistrationTest)
+{
+    using namespace srf::modules;
+    void* module_handle;
+    bool (*entrypoint)();
+
+    std::string module_path = get_modules_path() + "libdynamic_module.so";
+
+    module_handle = dlopen(module_path.c_str(), RTLD_NOW | RTLD_LOCAL);
+    if (!module_handle)
+    {
+        std::cerr << "Error: " << dlerror() << std::endl;
+    }
+    EXPECT_TRUE(module_handle);
+
+    entrypoint              = (bool (*)())dlsym(module_handle, "SRF_MODULE_entrypoint");
+    const char* dlsym_error = dlerror();
+    if (dlsym_error)
+    {
+        std::cerr << "Error: " << dlsym_error << std::endl;
+    }
+    EXPECT_TRUE(dlsym_error == nullptr);
+    EXPECT_TRUE(entrypoint());
+
+    std::string module_namespace{"srf_unittest_cpp_dynamic"};
+    std::string module_name{"DynamicSourceModule"};
+
+    EXPECT_TRUE(ModuleRegistry::contains_namespace(module_namespace));
+    EXPECT_TRUE(ModuleRegistry::contains(module_name, module_namespace));
+
+    unsigned int packet_count{0};
+
+    auto init_wrapper = [&packet_count](segment::Builder& builder) {
+        auto config = nlohmann::json();
+        unsigned int source_count{42};
+        config["source_count"] = source_count;
+
+        auto dynamic_source_mod = builder.load_module_from_registry(
+            "DynamicSourceModule", "srf_unittest_cpp_dynamic", "DynamicModuleSourceTest_mod1", config);
+
+        auto sink = builder.make_sink<bool>("sink", [&packet_count](bool input) {
+            packet_count++;
+            VLOG(10) << "Sinking " << input << std::endl;
+        });
+
+        builder.make_edge(dynamic_source_mod->output_port("source"), sink);
+    };
+
+    m_pipeline->make_segment("DynamicSourceModule_Segment", init_wrapper);
+
+    auto options = std::make_shared<Options>();
+    options->topology().user_cpuset("0-1");
+    options->topology().restrict_gpus(true);
+
+    Executor executor(options);
+    executor.register_pipeline(std::move(m_pipeline));
+    executor.start();
+    executor.join();
+
+    EXPECT_EQ(packet_count, 42);
 }

@@ -27,6 +27,7 @@
 #include <mutex>
 #include <sstream>
 #include <string>
+#include <vector>
 
 namespace srf::segment {
 class Builder;
@@ -46,6 +47,7 @@ class ModuleRegistry
 
     using module_registry_map_t  = std::map<std::string, module_constructor_t>;
     using module_namespace_map_t = std::map<std::string, module_registry_map_t>;
+    using module_name_map_t      = std::map<std::string, std::vector<std::string>>;
 
   public:
     ModuleRegistry() = delete;
@@ -73,6 +75,12 @@ class ModuleRegistry
     static module_constructor_t find_module(const std::string& name, const std::string& registry_namespace = "default");
 
     /**
+     * Retrieve a map of namespace -> registered module name vectors
+     * @return Map of namespace -> registered module vector pairs
+     */
+    static const module_name_map_t& registered_modules();
+
+    /**
      * Attempt to register the provided module constructor for the given name; throws an error
      * if the module already exists.
      * @param name Name of the module
@@ -83,6 +91,7 @@ class ModuleRegistry
                                 std::string registry_namespace = "default");
 
   private:
+    static module_name_map_t s_module_name_map;
     static module_namespace_map_t s_module_namespace_registry;
     static std::recursive_mutex s_mutex;
 };

@@ -22,11 +22,15 @@
 #include <iostream>
 #include <map>
 #include <mutex>
+#include <vector>
 
 namespace srf::modules {
 
 ModuleRegistry::module_namespace_map_t ModuleRegistry::s_module_namespace_registry{
     {"default", ModuleRegistry::module_registry_map_t{}}};
+
+ModuleRegistry::module_name_map_t ModuleRegistry::s_module_name_map{{"default", std::vector<std::string>{}}};
+
 std::recursive_mutex ModuleRegistry::s_mutex{};
 
 bool ModuleRegistry::contains(const std::string& name, const std::string& registry_namespace)
@@ -67,6 +71,11 @@ ModuleRegistry::module_constructor_t ModuleRegistry::find_module(const std::stri
     throw std::invalid_argument(sstream.str());
 }
 
+const ModuleRegistry::module_name_map_t& ModuleRegistry::registered_modules()
+{
+    return ModuleRegistry::s_module_name_map;
+}
+
 void ModuleRegistry::register_module(std::string name,
                                      srf::modules::ModuleRegistry::module_constructor_t fn_constructor,
                                      std::string registry_namespace)
@@ -76,6 +85,8 @@ void ModuleRegistry::register_module(std::string name,
     if (!contains_namespace(registry_namespace))
     {
         s_module_namespace_registry[registry_namespace] = ModuleRegistry::module_registry_map_t{};
+        s_module_name_map[registry_namespace] = std::vector<std::string>();
+
         VLOG(2) << "Creating namespace because it does not exist:  " << registry_namespace;
     }
 
@@ -83,6 +94,11 @@ void ModuleRegistry::register_module(std::string name,
     {
         auto& module_registry = s_module_namespace_registry[registry_namespace];
         module_registry[name] = fn_constructor;
+
+        auto& module_name_map = s_module_name_map[registry_namespace];
+        module_name_map.push_back(name);
+
+        std::sort(module_name_map.begin(), module_name_map.end());
 
         VLOG(2) << "Registered module: " << registry_namespace << "::" << name << std::endl;
         return;
