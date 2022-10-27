@@ -37,20 +37,12 @@ struct NvmlState
 {
     NvmlState()
     {
-        switch (nvmlInit_v2())
+        auto nvml_status = nvmlInit_v2();
+        if (nvml_status != NVML_SUCCESS)
         {
-        case NVML_SUCCESS:
-            break;
-        case NVML_ERROR_DRIVER_NOT_LOADED:
-            LOG(WARNING)
-                << "NVML: No NVIDIA GPU driver was detected; setting DeviceCount to 0, CUDA will not be initialized";
+            LOG(WARNING) << "NVML: Error initializing due to '" << nvmlErrorString(nvml_status)
+                         << "'. Setting DeviceCount to 0, CUDA will not be initialized";
             return;
-        case NVML_ERROR_NO_PERMISSION:
-            LOG(WARNING) << "NVML: Access to the NVIDIA GPU driver failed; setting DeviceCount to 0, CUDA will not be "
-                            "initialized";
-            return;
-        default:
-            LOG(FATAL) << "NVML_ERROR_UNKNOWN: is a hard fail";
         }
 
         unsigned int visible_devices = 0;

@@ -100,7 +100,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        build_type: ["Debug", "Release"]
+        build_cc: ["gcc", "gcc-coverage"]
 
     steps:
       - name: Checkout
@@ -109,10 +109,11 @@ jobs:
           lfs: false
           path: 'srf'
 
-      - name: Test:linux:x86_64:gcc
+      - name: Test:linux:x86_64
         shell: bash
         env:
-          BUILD_TYPE: ${{ matrix.build_type }}
+          BUILD_CC: ${{ matrix.build_cc }}
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         run: ./srf/ci/scripts/github/test.sh
 
   documentation:
@@ -143,6 +144,7 @@ jobs:
     timeout-minutes: 60
     container:
       image: gpuci/rapidsai-driver:21.10-cuda11.4-devel-ubuntu20.04-py3.8
+      options: --cap-add=sys_nice
     strategy:
       fail-fast: true
 
