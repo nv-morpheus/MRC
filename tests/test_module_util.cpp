@@ -15,14 +15,11 @@
  * limitations under the License.
  */
 
+#include "srf/version.hpp"
 #include "srf/experimental/modules/segment_module_util.hpp"
 #include "srf/experimental/modules/sample_modules.hpp"
 
 #include "test_segment.hpp"
-
-#define srf_VERSION_MAJOR 22
-#define srf_VERSION_MINOR 11
-#define srf_VERSION_PATCH 0
 
 TEST_F(SegmentTests, ModuleRegistryUtilTest)
 {

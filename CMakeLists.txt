@@ -62,7 +62,7 @@ project(srf
   LANGUAGES C CXX
 )
 
-rapids_cmake_write_version_file(include/srf/version.hpp)
+rapids_cmake_write_version_file(${CMAKE_CURRENT_SOURCE_DIR}/include/srf/version.hpp)
 
 # Delay enabling CUDA until after we have determined our CXX compiler
 if(NOT DEFINED CMAKE_CUDA_HOST_COMPILER)
