@@ -22,8 +22,8 @@
 #include "pysrf/types.hpp"
 #include "pysrf/utils.hpp"
 
+#include "srf/experimental/modules/module_registry_util.hpp"
 #include "srf/experimental/modules/sample_modules.hpp"
-#include "srf/experimental/modules/segment_module_util.hpp"
 #include "srf/experimental/modules/segment_modules.hpp"
 #include "srf/node/edge_connector.hpp"
 #include "srf/segment/builder.hpp"
@@ -176,19 +176,19 @@ PYBIND11_MODULE(segment, m)
     Builder.def("make_py2cxx_edge_adapter", &BuilderProxy::make_py2cxx_edge_adapter);
 
     /** Register test modules -- necessary for python unit tests**/
-    modules::ModelRegistryUtil::register_module<srf::modules::SimpleModule>(
+    modules::ModelRegistryUtil::create_registered_module<srf::modules::SimpleModule>(
         "SimpleModule", "srf_unittest", PybindSegmentModuleVersion);
-    modules::ModelRegistryUtil::register_module<srf::modules::ConfigurableModule>(
+    modules::ModelRegistryUtil::create_registered_module<srf::modules::ConfigurableModule>(
         "ConfigurableModule", "srf_unittest", PybindSegmentModuleVersion);
-    modules::ModelRegistryUtil::register_module<srf::modules::SourceModule>(
+    modules::ModelRegistryUtil::create_registered_module<srf::modules::SourceModule>(
         "SourceModule", "srf_unittest", PybindSegmentModuleVersion);
-    modules::ModelRegistryUtil::register_module<srf::modules::SinkModule>(
+    modules::ModelRegistryUtil::create_registered_module<srf::modules::SinkModule>(
         "SinkModule", "srf_unittest", PybindSegmentModuleVersion);
-    modules::ModelRegistryUtil::register_module<srf::modules::NestedModule>(
+    modules::ModelRegistryUtil::create_registered_module<srf::modules::NestedModule>(
         "NestedModule", "srf_unittest", PybindSegmentModuleVersion);
-    modules::ModelRegistryUtil::register_module<srf::modules::TemplateModule<int>>(
+    modules::ModelRegistryUtil::create_registered_module<srf::modules::TemplateModule<int>>(
         "TemplateModuleInt", "srf_unittest", PybindSegmentModuleVersion);
-    modules::ModelRegistryUtil::register_module<srf::modules::TemplateModule<std::string>>(
+    modules::ModelRegistryUtil::create_registered_module<srf::modules::TemplateModule<std::string>>(
         "TemplateModuleString", "srf_unittest", PybindSegmentModuleVersion);
 
     /** Segment Module Interface Declarations **/

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "srf/experimental/modules/segment_module_util.hpp"
+#include "srf/experimental/modules/module_registry_util.hpp"
 #include "srf/experimental/modules/segment_modules.hpp"
 #include "srf/segment/builder.hpp"
 
@@ -79,12 +79,18 @@ extern "C" {
 // TODO(bhargav) -- update this to utilize the new version file
 const std::vector<unsigned int> DynamicTestModuleVersion{srf_VERSION_MAJOR, srf_VERSION_MINOR, srf_VERSION_PATCH};
 
+const char *MODULES[] = {
+    "srf_unittest_cpp_dynamic::DynamicSourceModule",
+    "srf_unittest_cpp_dynamic_2::DynamicSourceModule",
+    "srf_unittest_cpp_dynamic_3::DynamicSourceModule"
+};
+
 [[maybe_unused]] bool SRF_MODULE_dummy_entrypoint()  // NOLINT
 {
     return true;
 }
 
-[[maybe_unused]] bool SRF_MODULE_entrypoint()  // NOLINT
+[[maybe_unused]] bool SRF_MODULE_entrypoint_load()  // NOLINT
 {
     using namespace srf::modules;
 
@@ -119,6 +125,30 @@ const std::vector<unsigned int> DynamicTestModuleVersion{srf_VERSION_MAJOR, srf_
     }
 
     return true;
+}
+
+[[maybe_unused]] bool SRF_MODULE_entrypoint_unload()  // NOLINT
+{
+    using namespace srf::modules;
+
+    try
+    {
+        ModuleRegistry::unregister_module("DynamicSourceModule", "srf_unittest_cpp_dynamic");
+        ModuleRegistry::unregister_module("DynamicSourceModule", "srf_unittest_cpp_dynamic_2");
+        ModuleRegistry::unregister_module("DynamicSourceModule", "srf_unittest_cpp_dynamic_3");
+    } catch (...)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+[[maybe_unused]] unsigned int SRF_MODULE_entrypoint_list(const char** result)  // NOLINT
+{
+    // TODO
+
+    return 3;
 }
 
 [[maybe_unused]] bool SRF_MODULE_bad_version_entrypoint()  // NOLINT

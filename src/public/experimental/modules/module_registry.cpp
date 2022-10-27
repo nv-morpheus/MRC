@@ -15,8 +15,7 @@
  * limitations under the License.
  */
 
-#include "srf/experimental/modules/segment_module_registry.hpp"
-
+#include "srf/experimental/modules/module_registry.hpp"
 #include "srf/experimental/modules/segment_modules.hpp"
 
 #include <algorithm>
@@ -101,8 +100,6 @@ void ModuleRegistry::register_module(std::string name,
                                      srf::modules::ModuleRegistry::module_constructor_t fn_constructor)
 {
     std::lock_guard<decltype(s_mutex)> lock(s_mutex);
-    // TODO(devin) : Reject modules that are not equal to the current build -- we will need to decide on
-    //    better criteria going forward.
     VLOG(2) << "Registering module: " << registry_namespace << "::" << name;
     if (!is_version_compatible(release_version))
     {
@@ -146,6 +143,8 @@ void ModuleRegistry::unregister_module(const std::string& name, const std::strin
 {
     std::lock_guard<decltype(s_mutex)> lock(s_mutex);
 
+    VLOG(2) << "Unregistering module " << registry_namespace << "::" << name;
+
     if (contains(name, registry_namespace))
     {
         s_module_namespace_registry[registry_namespace].erase(name);
@@ -154,6 +153,12 @@ void ModuleRegistry::unregister_module(const std::string& name, const std::strin
         auto iter_erase = std::find(name_map.begin(), name_map.end(), name);
 
         name_map.erase(iter_erase);
+
+        if (s_module_namespace_registry[registry_namespace].empty()) {
+            VLOG(2) << "Namespace " << registry_namespace << " is empty, removing.";
+            s_module_namespace_registry.erase(registry_namespace);
+            s_module_name_map.erase(registry_namespace);
+        }
 
         return;
     }
@@ -172,6 +177,7 @@ void ModuleRegistry::unregister_module(const std::string& name, const std::strin
 
 bool ModuleRegistry::is_version_compatible(const std::vector<unsigned int>& release_version)
 {
+    // TODO(devin) improve criteria for module compatibility
     return std::equal(ModuleRegistry::Version.begin(),
                       ModuleRegistry::Version.begin() + ModuleRegistry::VersionElements,
                       release_version.begin());

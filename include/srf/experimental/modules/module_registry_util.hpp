@@ -17,9 +17,10 @@
 
 #pragma once
 
-#include "srf/experimental/modules/segment_module_registry.hpp"
+#include "srf/experimental/modules/module_registry.hpp"
 #include "srf/experimental/modules/segment_modules.hpp"
 
+#include <dlfcn.h>
 #include <nlohmann/json.hpp>
 
 namespace srf::modules {
@@ -33,7 +34,7 @@ struct ModelRegistryUtil
      * @param registry_namespace Namespace where `name` should be registered.
      */
     template <typename ModuleTypeT>
-    static void register_module(std::string name, std::string registry_namespace, const std::vector<unsigned int>& release_version)
+    static void create_registered_module(std::string name, std::string registry_namespace, const std::vector<unsigned int>& release_version)
     {
         static_assert(std::is_base_of_v<modules::SegmentModule, ModuleTypeT>);
 
