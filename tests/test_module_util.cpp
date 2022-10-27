@@ -20,20 +20,26 @@
 
 #include "test_segment.hpp"
 
+#define srf_VERSION_MAJOR 22
+#define srf_VERSION_MINOR 11
+#define srf_VERSION_PATCH 0
+
 TEST_F(SegmentTests, ModuleRegistryUtilTest)
 {
     using namespace modules;
 
     const auto *registry_namespace = "srf_unittest";
 
-    ModelRegistryUtil::register_module<SimpleModule>("SimpleModule", registry_namespace);
-    ModelRegistryUtil::register_module<SourceModule>("SourceModule", registry_namespace);
-    ModelRegistryUtil::register_module<SinkModule>("SinkModule", registry_namespace);
-    ModelRegistryUtil::register_module<NestedModule>("NestedModule", registry_namespace);
-    ModelRegistryUtil::register_module<ConfigurableModule>("ConfigurableModule", registry_namespace);
-    ModelRegistryUtil::register_module<TemplateModule<int>>("TemplateModuleInt", registry_namespace);
-    ModelRegistryUtil::register_module<TemplateModule<std::string>>("TemplateModuleString", registry_namespace);
+    const std::vector<unsigned int> release_version = {srf_VERSION_MAJOR, srf_VERSION_MINOR, srf_VERSION_PATCH};
 
-    EXPECT_THROW(ModelRegistryUtil::register_module<SimpleModule>("SimpleModule", registry_namespace),
+    ModelRegistryUtil::register_module<SimpleModule>("SimpleModule", registry_namespace, release_version);
+    ModelRegistryUtil::register_module<SourceModule>("SourceModule", registry_namespace, release_version);
+    ModelRegistryUtil::register_module<SinkModule>("SinkModule", registry_namespace, release_version);
+    ModelRegistryUtil::register_module<NestedModule>("NestedModule", registry_namespace, release_version);
+    ModelRegistryUtil::register_module<ConfigurableModule>("ConfigurableModule", registry_namespace, release_version);
+    ModelRegistryUtil::register_module<TemplateModule<int>>("TemplateModuleInt", registry_namespace, release_version);
+    ModelRegistryUtil::register_module<TemplateModule<std::string>>("TemplateModuleString", registry_namespace, release_version);
+
+    EXPECT_THROW(ModelRegistryUtil::register_module<SimpleModule>("SimpleModule", registry_namespace, release_version),
                                                                   std::invalid_argument);
 }

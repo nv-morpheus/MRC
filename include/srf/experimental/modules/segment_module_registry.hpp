@@ -81,19 +81,50 @@ class ModuleRegistry
     static const module_name_map_t& registered_modules();
 
     /**
-     * Attempt to register the provided module constructor for the given name; throws an error
-     * if the module already exists.
+     * Simple register call, places the module into the default namespace
      * @param name Name of the module
      * @param fn_constructor Module constructor
      */
     static void register_module(std::string name,
-                                module_constructor_t fn_constructor,
-                                std::string registry_namespace = "default");
+                                const std::vector<unsigned int>& release_version,
+                                module_constructor_t fn_constructor);
+
+    /**
+     * Attempt to register the provided module constructor for the given name; throws an error
+     * if the module already exists.
+     * @param name Name of the module
+     * @param registry_namespace Namespace where the module `name` should be registered.
+     * @param fn_constructor Module constructor
+     */
+    static void register_module(std::string name,
+                                std::string registry_namespace,
+                                const std::vector<unsigned int>& release_version,
+                                module_constructor_t fn_constructor);
+
+    /**
+     * Unregister an existing module
+     * @param name Name of the module to un-register
+     * @param registry_namespace Namespace where module `name` should reside.
+     * @param optional If true, then it is not an error if the module does not exist.
+     */
+    static void unregister_module(const std::string& name, const std::string& registry_namespace, bool optional = true);
+
+    /**
+     * @param release_version vector of unsigned integers corresponding to the version string to check against the
+     * registry version.
+     * @return true if release version is compatible with registry version, false otherwise.
+     */
+    static bool is_version_compatible(const std::vector<unsigned int>& release_version);
 
   private:
+    static const unsigned int VersionElements;
+    static const std::vector<unsigned int> Version;
+
     static module_name_map_t s_module_name_map;
     static module_namespace_map_t s_module_namespace_registry;
     static std::recursive_mutex s_mutex;
+
+    static std::string version_to_string(const std::vector<unsigned int>& release_version);
 };
 
 }  // namespace srf::modules

@@ -19,6 +19,10 @@
 
 #include "test_segment.hpp"
 
+#define srf_VERSION_MAJOR 22
+#define srf_VERSION_MINOR 11
+#define srf_VERSION_PATCH 0
+
 TEST_F(SegmentTests, RegistryModuleTest)
 {
     using namespace modules;
@@ -30,6 +34,8 @@ TEST_F(SegmentTests, RegistryModuleTest)
     auto config = nlohmann::json();
     config["source_count"] = 42;
 
+    const std::vector<unsigned int> release_version = {srf_VERSION_MAJOR, srf_VERSION_MINOR, srf_VERSION_PATCH};
+
     auto simple_mod_func = [](std::string module_name, nlohmann::json config) {
                 return std::make_shared<SimpleModule>(std::move(module_name), std::move(config));
             };
@@ -37,17 +43,17 @@ TEST_F(SegmentTests, RegistryModuleTest)
     auto configurable_mod_func = [](std::string module_name, nlohmann::json config) {
                 return std::make_shared<ConfigurableModule>(std::move(module_name), std::move(config));
             };
-    ModuleRegistry::register_module(simple_mod_name, simple_mod_func);
-    ModuleRegistry::register_module(configurable_mod_name, configurable_mod_func);
-    ModuleRegistry::register_module(simple_mod_name, simple_mod_func, registry_namespace);
-    ModuleRegistry::register_module(configurable_mod_name, configurable_mod_func, registry_namespace);
+    ModuleRegistry::register_module(simple_mod_name, release_version, simple_mod_func);
+    ModuleRegistry::register_module(configurable_mod_name, release_version, configurable_mod_func);
+    ModuleRegistry::register_module(simple_mod_name, registry_namespace, release_version, simple_mod_func);
+    ModuleRegistry::register_module(configurable_mod_name, registry_namespace, release_version, configurable_mod_func);
 
     // Registering duplicate module throws an exception.
-    EXPECT_THROW(ModuleRegistry::register_module(simple_mod_name, simple_mod_func), std::invalid_argument);
-    EXPECT_THROW(ModuleRegistry::register_module(configurable_mod_name, simple_mod_func), std::invalid_argument);
-    EXPECT_THROW(ModuleRegistry::register_module(simple_mod_name, simple_mod_func, registry_namespace),
+    EXPECT_THROW(ModuleRegistry::register_module(simple_mod_name, release_version, simple_mod_func), std::invalid_argument);
+    EXPECT_THROW(ModuleRegistry::register_module(configurable_mod_name, release_version, simple_mod_func), std::invalid_argument);
+    EXPECT_THROW(ModuleRegistry::register_module(simple_mod_name, registry_namespace, release_version, simple_mod_func),
                                                  std::invalid_argument);
-    EXPECT_THROW(ModuleRegistry::register_module(configurable_mod_name, simple_mod_func, registry_namespace),
+    EXPECT_THROW(ModuleRegistry::register_module(configurable_mod_name, registry_namespace, release_version, simple_mod_func),
                                                  std::invalid_argument);
 }
 

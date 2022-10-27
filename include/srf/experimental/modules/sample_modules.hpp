@@ -163,7 +163,7 @@ void TemplateModule<OutputTypeT>::initialize(segment::Builder& builder)
     register_output_port("source", source, source->object().source_type());
 }
 
-template <typename OutputTypeT, OutputTypeT (*initializer)()>
+template <typename OutputTypeT, OutputTypeT (*Initializer)()>
 class TemplateWithInitModule : public SegmentModule
 {
   public:

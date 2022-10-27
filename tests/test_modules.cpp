@@ -463,12 +463,13 @@ TEST_F(SegmentTests, ModuleTemplateWithInitTest)
     EXPECT_EQ(packet_count_2, 24);
 }
 
-std::string get_modules_path() {
+std::string get_modules_path()
+{
     int pid = getpid();
     std::stringstream sstream;
     sstream << "/proc/" << pid << "/exe";
 
-    std::string link_id = sstream.str();
+    std::string link_id         = sstream.str();
     unsigned int sz_path_buffer = 8102;
     std::vector<char> path_buffer(sz_path_buffer + 1);
     readlink(link_id.c_str(), path_buffer.data(), sz_path_buffer);
@@ -485,10 +486,10 @@ TEST_F(SegmentTests, DynamicModuleLoadTest)
     void* module_handle;
     bool (*dummy_entrypoint)();
 
-    std::string module_path = get_modules_path() + "libdynamic_module.so";
+    std::string module_path = get_modules_path() + "libdynamic_test_module.so";
 
     module_handle = dlopen(module_path.c_str(), RTLD_NOW | RTLD_LOCAL);
-    if (!module_handle)
+    if (module_handle == nullptr)
     {
         std::cerr << "Error: " << dlerror() << std::endl;
     }
@@ -496,7 +497,7 @@ TEST_F(SegmentTests, DynamicModuleLoadTest)
 
     dummy_entrypoint        = (bool (*)())dlsym(module_handle, "SRF_MODULE_dummy_entrypoint");
     const char* dlsym_error = dlerror();
-    if (dlsym_error)
+    if (dlsym_error != nullptr)
     {
         std::cerr << "Error: " << dlsym_error << std::endl;
     }
@@ -510,10 +511,10 @@ TEST_F(SegmentTests, DynamicModuleRegistrationTest)
     void* module_handle;
     bool (*entrypoint)();
 
-    std::string module_path = get_modules_path() + "libdynamic_module.so";
+    std::string module_path = get_modules_path() + "libdynamic_test_module.so";
 
     module_handle = dlopen(module_path.c_str(), RTLD_NOW | RTLD_LOCAL);
-    if (!module_handle)
+    if (module_handle == nullptr)
     {
         std::cerr << "Error: " << dlerror() << std::endl;
     }
@@ -521,7 +522,7 @@ TEST_F(SegmentTests, DynamicModuleRegistrationTest)
 
     entrypoint              = (bool (*)())dlsym(module_handle, "SRF_MODULE_entrypoint");
     const char* dlsym_error = dlerror();
-    if (dlsym_error)
+    if (dlsym_error != nullptr)
     {
         std::cerr << "Error: " << dlsym_error << std::endl;
     }
@@ -533,6 +534,34 @@ TEST_F(SegmentTests, DynamicModuleRegistrationTest)
 
     EXPECT_TRUE(ModuleRegistry::contains_namespace(module_namespace));
     EXPECT_TRUE(ModuleRegistry::contains(module_name, module_namespace));
+
+    /*
+     * The dynamic_test_module registers DynamicSourceModule in three test namespaces:
+     * srf_unittest_cpp_dynamic[1|2|3]. Double check this here.
+     */
+    auto registered_modules = ModuleRegistry::registered_modules();
+
+    EXPECT_TRUE(registered_modules.find("srf_unittest_cpp_dynamic") != registered_modules.end());
+    auto& ns_1 = registered_modules["srf_unittest_cpp_dynamic"];
+    EXPECT_TRUE(ns_1[0] == "DynamicSourceModule");
+
+    EXPECT_TRUE(registered_modules.find("srf_unittest_cpp_dynamic_2") != registered_modules.end());
+    auto& ns_2 = registered_modules["srf_unittest_cpp_dynamic_2"];
+    EXPECT_TRUE(ns_2[0] == "DynamicSourceModule");
+
+    EXPECT_TRUE(registered_modules.find("srf_unittest_cpp_dynamic_3") != registered_modules.end());
+    auto& ns_3 = registered_modules["srf_unittest_cpp_dynamic_3"];
+    EXPECT_TRUE(ns_3[0] == "DynamicSourceModule");
+
+    // Unregister a module, failure is an error
+    ModuleRegistry::unregister_module("DynamicSourceModule", "srf_unittest_cpp_dynamic_3", false);
+    // Check that we fail if we try to remove the module again
+    EXPECT_THROW(ModuleRegistry::unregister_module("DynamicSourceModule", "srf_unittest_cpp_dynamic_3", false),
+        std::invalid_argument);
+    // Check that we succeed if the module removal is optional.
+    ModuleRegistry::unregister_module("DynamicSourceModule", "srf_unittest_cpp_dynamic_3");
+    ModuleRegistry::unregister_module("DynamicSourceModule", "srf_unittest_cpp_dynamic_3", true);
+
 
     unsigned int packet_count{0};
 
@@ -564,4 +593,34 @@ TEST_F(SegmentTests, DynamicModuleRegistrationTest)
     executor.join();
 
     EXPECT_EQ(packet_count, 42);
+}
+
+TEST_F(SegmentTests, DynamicModuleBadVersionTest) {
+    using namespace srf::modules;
+    void* module_handle;
+    bool (*entrypoint)();
+
+    std::string module_path = get_modules_path() + "libdynamic_test_module.so";
+
+    module_handle = dlopen(module_path.c_str(), RTLD_NOW | RTLD_LOCAL);
+    if (module_handle == nullptr)
+    {
+        std::cerr << "Error: " << dlerror() << std::endl;
+    }
+    EXPECT_TRUE(module_handle);
+
+    entrypoint              = (bool (*)())dlsym(module_handle, "SRF_MODULE_bad_version_entrypoint");
+    const char* dlsym_error = dlerror();
+    if (dlsym_error != nullptr)
+    {
+        std::cerr << "Error: " << dlsym_error << std::endl;
+    }
+    EXPECT_TRUE(dlsym_error == nullptr);
+    EXPECT_THROW(entrypoint(), std::runtime_error);
+
+    std::string module_namespace{"srf_unittest_cpp_dynamic_BAD"};
+    std::string module_name{"DynamicSourceModule_BAD"};
+
+    EXPECT_FALSE(ModuleRegistry::contains_namespace(module_namespace));
+    EXPECT_FALSE(ModuleRegistry::contains(module_name, module_namespace));
 }

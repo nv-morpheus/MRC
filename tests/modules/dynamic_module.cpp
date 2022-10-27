@@ -71,42 +71,69 @@ void DynamicSourceModule::initialize(segment::Builder& builder)
 }  // namespace srf::modules
 
 extern "C" {
-[[maybe_unused]] bool SRF_MODULE_dummy_entrypoint()
+// TODO(bhargav) -- update this to utilize the new version file
+#define srf_VERSION_MAJOR 22
+#define srf_VERSION_MINOR 11
+#define srf_VERSION_PATCH 0
+
+// TODO(bhargav) -- update this to utilize the new version file
+const std::vector<unsigned int> DynamicTestModuleVersion{srf_VERSION_MAJOR, srf_VERSION_MINOR, srf_VERSION_PATCH};
+
+[[maybe_unused]] bool SRF_MODULE_dummy_entrypoint()  // NOLINT
 {
-    // std::cerr << "Initializing dynamic module test library" << std::endl;
     return true;
 }
 
-[[maybe_unused]] bool SRF_MODULE_entrypoint()
+[[maybe_unused]] bool SRF_MODULE_entrypoint()  // NOLINT
 {
     using namespace srf::modules;
 
     try
     {
-        ModuleRegistry::register_module(
-            "DynamicSourceModule",
-            [](std::string module_name, nlohmann::json config) {
-                return std::make_shared<srf::modules::DynamicSourceModule>(std::move(module_name), std::move(config));
-            },
-            "srf_unittest_cpp_dynamic");
+        ModuleRegistry::register_module("DynamicSourceModule",
+                                        "srf_unittest_cpp_dynamic",
+                                        DynamicTestModuleVersion,
+                                        [](std::string module_name, nlohmann::json config) {
+                                            return std::make_shared<srf::modules::DynamicSourceModule>(
+                                                std::move(module_name), std::move(config));
+                                        });
 
-        ModuleRegistry::register_module(
-            "DynamicSourceModule",
-            [](std::string module_name, nlohmann::json config) {
-                return std::make_shared<srf::modules::DynamicSourceModule>(std::move(module_name), std::move(config));
-            },
-            "srf_unittest_cpp_dynamic_2");
+        ModuleRegistry::register_module("DynamicSourceModule",
+                                        "srf_unittest_cpp_dynamic_2",
+                                        DynamicTestModuleVersion,
+                                        [](std::string module_name, nlohmann::json config) {
+                                            return std::make_shared<srf::modules::DynamicSourceModule>(
+                                                std::move(module_name), std::move(config));
+                                        });
 
-        ModuleRegistry::register_module(
-            "DynamicSourceModule",
-            [](std::string module_name, nlohmann::json config) {
-                return std::make_shared<srf::modules::DynamicSourceModule>(std::move(module_name), std::move(config));
-            },
-            "srf_unittest_cpp_dynamic_3");
+        ModuleRegistry::register_module("DynamicSourceModule",
+                                        "srf_unittest_cpp_dynamic_3",
+                                        DynamicTestModuleVersion,
+                                        [](std::string module_name, nlohmann::json config) {
+                                            return std::make_shared<srf::modules::DynamicSourceModule>(
+                                                std::move(module_name), std::move(config));
+                                        });
     } catch (...)
     {
         return false;
     }
+
+    return true;
+}
+
+[[maybe_unused]] bool SRF_MODULE_bad_version_entrypoint()  // NOLINT
+{
+    using namespace srf::modules;
+
+    auto BadVersion = std::vector<unsigned int>{13, 14, 15};
+
+    ModuleRegistry::register_module("DynamicSourceModule_BAD",
+                                    "srf_unittest_cpp_dynamic_BAD",
+                                    BadVersion,
+                                    [](std::string module_name, nlohmann::json config) {
+                                        return std::make_shared<srf::modules::DynamicSourceModule>(
+                                            std::move(module_name), std::move(config));
+                                    });
 
     return true;
 }

@@ -56,15 +56,16 @@ std::shared_ptr<channel::IngressHandle> EdgeBuilder::ingress_adapter_for_sink(
         }
     }
 
-
     // Fallback -- probably fail
     try
     {
         auto fn_converter = srf::node::EdgeRegistry::find_converter(source.source_type(), sink.sink_type());
         return fn_converter(ingress_handle);
-    } catch (std::runtime_error e) {
+    } catch (std::runtime_error e)
+    {
         // Last attempt, check if types are the same and return ingress handle.
-        if (source.source_type() == sink.sink_type()) {
+        if (source.source_type() == sink.sink_type())
+        {
             return ingress_handle;
         }
 
