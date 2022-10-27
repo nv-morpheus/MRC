@@ -463,12 +463,13 @@ TEST_F(SegmentTests, ModuleTemplateWithInitTest)
     EXPECT_EQ(packet_count_2, 24);
 }
 
-std::string get_modules_path() {
+std::string get_modules_path()
+{
     int pid = getpid();
     std::stringstream sstream;
     sstream << "/proc/" << pid << "/exe";
 
-    std::string link_id = sstream.str();
+    std::string link_id         = sstream.str();
     unsigned int sz_path_buffer = 8102;
     std::vector<char> path_buffer(sz_path_buffer + 1);
     readlink(link_id.c_str(), path_buffer.data(), sz_path_buffer);
@@ -485,7 +486,7 @@ TEST_F(SegmentTests, DynamicModuleLoadTest)
     void* module_handle;
     bool (*dummy_entrypoint)();
 
-    std::string module_path = get_modules_path() + "libdynamic_module.so";
+    std::string module_path = get_modules_path() + "libdynamic_test_module.so";
 
     module_handle = dlopen(module_path.c_str(), RTLD_NOW | RTLD_LOCAL);
     if (!module_handle)
@@ -510,7 +511,7 @@ TEST_F(SegmentTests, DynamicModuleRegistrationTest)
     void* module_handle;
     bool (*entrypoint)();
 
-    std::string module_path = get_modules_path() + "libdynamic_module.so";
+    std::string module_path = get_modules_path() + "libdynamic_test_module.so";
 
     module_handle = dlopen(module_path.c_str(), RTLD_NOW | RTLD_LOCAL);
     if (!module_handle)
@@ -533,6 +534,24 @@ TEST_F(SegmentTests, DynamicModuleRegistrationTest)
 
     EXPECT_TRUE(ModuleRegistry::contains_namespace(module_namespace));
     EXPECT_TRUE(ModuleRegistry::contains(module_name, module_namespace));
+
+    /*
+     * The dynamic_test_module registers DynamicSourceModule in three test namespaces:
+     * srf_unittest_cpp_dynamic[1|2|3]. Double check this here.
+     */
+    auto registered_modules = ModuleRegistry::registered_modules();
+
+    EXPECT_TRUE(registered_modules.find("srf_unittest_cpp_dynamic") != registered_modules.end());
+    auto& ns_1 = registered_modules["srf_unittest_cpp_dynamic"];
+    EXPECT_TRUE(ns_1[0] == "DynamicSourceModule");
+
+    EXPECT_TRUE(registered_modules.find("srf_unittest_cpp_dynamic_2") != registered_modules.end());
+    auto& ns_2 = registered_modules["srf_unittest_cpp_dynamic_2"];
+    EXPECT_TRUE(ns_2[0] == "DynamicSourceModule");
+
+    EXPECT_TRUE(registered_modules.find("srf_unittest_cpp_dynamic_3") != registered_modules.end());
+    auto& ns_3 = registered_modules["srf_unittest_cpp_dynamic_3"];
+    EXPECT_TRUE(ns_3[0] == "DynamicSourceModule");
 
     unsigned int packet_count{0};
 

@@ -15,24 +15,17 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "tests")
 
-add_library(dynamic_module MODULE
+add_library(dynamic_test_module MODULE
     dynamic_module.cpp
 )
 
-include_directories(dynamic_module
+include_directories(dynamic_test_module
   PUBLIC
     ${CMAKE_SOURCE_DIR}/include
 )
 
-target_link_libraries(dynamic_module
+target_link_libraries(dynamic_test_module
     rxcpp::rxcpp
-)
-
-install(
-    TARGETS dynamic_module
-    DESTINATION ${lib_dir}
-    EXPORT ${PROJECT_NAME}-core-exports
-    COMPONENT Core
 )
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

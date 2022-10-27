@@ -85,7 +85,7 @@ void ModuleRegistry::register_module(std::string name,
     if (!contains_namespace(registry_namespace))
     {
         s_module_namespace_registry[registry_namespace] = ModuleRegistry::module_registry_map_t{};
-        s_module_name_map[registry_namespace] = std::vector<std::string>();
+        s_module_name_map[registry_namespace]           = std::vector<std::string>();
 
         VLOG(2) << "Creating namespace because it does not exist:  " << registry_namespace;
     }
