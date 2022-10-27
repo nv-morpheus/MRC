@@ -19,12 +19,23 @@
 
 #include "srf/experimental/modules/segment_modules.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <map>
 #include <mutex>
 #include <vector>
 
+// TODO(bhargav) -- update this to utilize the new version file
+#define srf_VERSION_MAJOR 22
+#define srf_VERSION_MINOR 11
+#define srf_VERSION_PATCH 0
+
 namespace srf::modules {
+
+const unsigned int ModuleRegistry::VersionElements{3};
+
+// TODO(bhargav) -- update this to utilize the new version file
+const std::vector<unsigned int> ModuleRegistry::Version{srf_VERSION_MAJOR, srf_VERSION_MINOR, srf_VERSION_PATCH};
 
 ModuleRegistry::module_namespace_map_t ModuleRegistry::s_module_namespace_registry{
     {"default", ModuleRegistry::module_registry_map_t{}}};
@@ -77,10 +88,28 @@ const ModuleRegistry::module_name_map_t& ModuleRegistry::registered_modules()
 }
 
 void ModuleRegistry::register_module(std::string name,
-                                     srf::modules::ModuleRegistry::module_constructor_t fn_constructor,
-                                     std::string registry_namespace)
+                                     const std::vector<unsigned int>& release_version,
+                                     srf::modules::ModuleRegistry::module_constructor_t fn_constructor)
+{
+    register_module(std::move(name), "default", release_version, fn_constructor);
+}
+
+void ModuleRegistry::register_module(std::string name,
+                                     std::string registry_namespace,
+                                     const std::vector<unsigned int>& release_version,
+                                     srf::modules::ModuleRegistry::module_constructor_t fn_constructor)
 {
     std::lock_guard<decltype(s_mutex)> lock(s_mutex);
+    // TODO(devin) : Reject modules that are not equal to the current build -- we will need to decide on
+    //    better criteria going forward.
+    if (!is_version_compatible(release_version))
+    {
+        std::stringstream sstream;
+        sstream << "Failed to register module -> module version is: '" << version_to_string(release_version)
+                << "' and registry requires: '" << version_to_string(Version);
+
+        throw std::runtime_error(sstream.str());
+    }
 
     if (!contains_namespace(registry_namespace))
     {
@@ -108,6 +137,56 @@ void ModuleRegistry::register_module(std::string name,
 
     sstream << "Attempt to register duplicate module -> " << registry_namespace << ":" << name;
     throw std::invalid_argument(sstream.str());
+}
+
+void ModuleRegistry::unregister_module(const std::string& name, const std::string& registry_namespace, bool optional)
+{
+    std::lock_guard<decltype(s_mutex)> lock(s_mutex);
+
+    if (contains(name, registry_namespace))
+    {
+        s_module_namespace_registry[registry_namespace].erase(name);
+
+        auto& name_map  = s_module_name_map[registry_namespace];
+        auto iter_erase = std::find(name_map.begin(), name_map.end(), name);
+
+        name_map.erase(iter_erase);
+
+        return;
+    }
+
+    if (optional)
+    {
+        return;
+    }
+
+    std::stringstream sstream;
+
+    sstream << "Failed to unregister module -> " << registry_namespace << "::" << name << " does not exist.";
+    throw std::invalid_argument(sstream.str());
+}
+
+bool ModuleRegistry::is_version_compatible(const std::vector<unsigned int>& release_version)
+{
+    return std::equal(ModuleRegistry::Version.begin(),
+                      ModuleRegistry::Version.begin() + ModuleRegistry::VersionElements,
+                      release_version.begin());
+}
+
+std::string ModuleRegistry::version_to_string(const std::vector<unsigned int>& release_version)
+{
+    if (release_version.empty())
+    {
+        return {""};
+    }
+
+    std::stringstream sstream;
+    sstream << release_version[0];
+    std::for_each(release_version.begin() + 1, release_version.end(), [&sstream](unsigned int element) {
+        sstream << "." << element;
+    });
+
+    return sstream.str();
 }
 
 }  // namespace srf::modules

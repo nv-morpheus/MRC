@@ -42,6 +42,14 @@
 // IWYU pragma: no_include <pybind11/detail/common.h>
 // IWYU pragma: no_include <pybind11/detail/descr.h>
 
+
+// TODO(bhargav) -- update this to utilize the new version file
+#define srf_VERSION_MAJOR 22
+#define srf_VERSION_MINOR 11
+#define srf_VERSION_PATCH 0
+
+const std::vector<unsigned int> PybindSegmentModuleVersion{srf_VERSION_MAJOR, srf_VERSION_MINOR, srf_VERSION_PATCH};
+
 namespace srf::pysrf {
 
 namespace py = pybind11;
@@ -169,14 +177,19 @@ PYBIND11_MODULE(segment, m)
     Builder.def("make_py2cxx_edge_adapter", &BuilderProxy::make_py2cxx_edge_adapter);
 
     /** Register test modules -- necessary for python unit tests**/
-    modules::ModelRegistryUtil::register_module<srf::modules::SimpleModule>("SimpleModule", "srf_unittest");
-    modules::ModelRegistryUtil::register_module<srf::modules::ConfigurableModule>("ConfigurableModule", "srf_unittest");
-    modules::ModelRegistryUtil::register_module<srf::modules::SourceModule>("SourceModule", "srf_unittest");
-    modules::ModelRegistryUtil::register_module<srf::modules::SinkModule>("SinkModule", "srf_unittest");
-    modules::ModelRegistryUtil::register_module<srf::modules::NestedModule>("NestedModule", "srf_unittest");
-    modules::ModelRegistryUtil::register_module<srf::modules::TemplateModule<int>>("TemplateModuleInt", "srf_unittest");
-    modules::ModelRegistryUtil::register_module<srf::modules::TemplateModule<std::string>>("TemplateModuleString",
-                                                                                           "srf_unittest");
+    modules::ModelRegistryUtil::register_module<srf::modules::SimpleModule>(
+        "SimpleModule", "srf_unittest", PybindSegmentModuleVersion);
+    modules::ModelRegistryUtil::register_module<srf::modules::ConfigurableModule>(
+        "ConfigurableModule", "srf_unittest", PybindSegmentModuleVersion);
+    modules::ModelRegistryUtil::register_module<srf::modules::SourceModule>(
+        "SourceModule", "srf_unittest", PybindSegmentModuleVersion);
+    modules::ModelRegistryUtil::register_module<srf::modules::SinkModule>("SinkModule", "srf_unittest", PybindSegmentModuleVersion);
+    modules::ModelRegistryUtil::register_module<srf::modules::NestedModule>(
+        "NestedModule", "srf_unittest", PybindSegmentModuleVersion);
+    modules::ModelRegistryUtil::register_module<srf::modules::TemplateModule<int>>(
+        "TemplateModuleInt", "srf_unittest", PybindSegmentModuleVersion);
+    modules::ModelRegistryUtil::register_module<srf::modules::TemplateModule<std::string>>(
+        "TemplateModuleString", "srf_unittest", PybindSegmentModuleVersion);
 
     /** Segment Module Interface Declarations **/
     SegmentModule.def("config", &SegmentModuleProxy::config);
@@ -199,8 +212,8 @@ PYBIND11_MODULE(segment, m)
 
     SegmentModule.def("output_ids", &SegmentModuleProxy::output_ids);
 
-    // TODO: need to think about if/how we want to expose type_ids to Python... It might allow for some nice flexibility
-    // SegmentModule.def("input_port_type_id", &SegmentModuleProxy::input_port_type_id, py::arg("input_id"))
+    // TODO(drobison): need to think about if/how we want to expose type_ids to Python... It might allow for some nice
+    // flexibility SegmentModule.def("input_port_type_id", &SegmentModuleProxy::input_port_type_id, py::arg("input_id"))
     // SegmentModule.def("input_port_type_ids", &SegmentModuleProxy::input_port_type_id)
     // SegmentModule.def("output_port_type_id", &SegmentModuleProxy::output_port_type_id, py::arg("output_id"))
     // SegmentModule.def("output_port_type_ids", &SegmentModuleProxy::output_port_type_id)

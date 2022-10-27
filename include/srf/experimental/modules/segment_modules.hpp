@@ -153,7 +153,7 @@ class SegmentModule
      * @param object ObjectProperties object assocaited with the port
      * @param tidx type_index pointer for the date type emitted by the output
      */
-    void register_output_port(std::string input_name,
+    void register_output_port(std::string output_name,
                               std::shared_ptr<segment::ObjectProperties> object,
                               std::type_index tidx);
 

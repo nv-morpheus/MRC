@@ -288,10 +288,11 @@ std::shared_ptr<srf::segment::ObjectProperties> BuilderProxy::make_node_full(
     return node;
 }
 
-std::shared_ptr<srf::modules::SegmentModule> BuilderProxy::load_module_from_registry(srf::segment::Builder& self,
-                                                                       const std::string& module_id,
-                                                                       const std::string& registry_namespace,
-                                                                       std::string module_name,
+std::shared_ptr<srf::modules::SegmentModule> BuilderProxy::load_module_from_registry(
+    srf::segment::Builder& self,
+    const std::string& module_id,
+    const std::string& registry_namespace,
+    std::string module_name,
     py::dict config)
 {
     auto json_config = cast_from_pyobject(config);

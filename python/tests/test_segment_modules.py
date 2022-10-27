@@ -21,6 +21,7 @@ packets_3 = 0
 
 
 def test_py_end_to_end():
+
     def gen_data_1():
         yield True
         yield False
@@ -109,5 +110,5 @@ def test_py_end_to_end():
     assert (packets_3 == 4)
 
 
-if (__name__ in ("__main__",)):
+if (__name__ in ("__main__", )):
     test_py_end_to_end()

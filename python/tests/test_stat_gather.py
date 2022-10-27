@@ -241,7 +241,7 @@ def test_stat_gather_full_noreset_start_stop():
     srf.benchmarking.reset_tracing_stats()
 
 
-if (__name__ in ("__main__",)):
+if (__name__ in ("__main__", )):
     test_stat_gather_operators()
     test_stat_gather_channels()
     test_stat_gather_full()
