@@ -22,7 +22,7 @@
 namespace srf {
 
 /**
- * @brief Acquire the local context for the current Runnable.
+ * @brief acquire the local context for the current Runnable.
  *
  * Runnable Contexts are available on the thread/fiber that initialized the Runnable. An error will be thrown if trying
  * to acquire a Contexts outside the scope of a Runnable.

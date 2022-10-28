@@ -586,7 +586,7 @@ TEST_F(SegmentTests, DynamicModulePluginRegistrationTest)
     std::string module_path = get_modules_path() + "libdynamic_test_module.so";
 
     auto plugin = std::unique_ptr<ModulePluginLibrary>{};
-    plugin      = ModulePluginLibrary::Acquire(std::move(plugin), module_path);
+    plugin      = ModulePluginLibrary::acquire(std::move(plugin), module_path);
 
     plugin->load();
 

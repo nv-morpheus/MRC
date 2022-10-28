@@ -30,7 +30,7 @@ const std::string ModulePluginLibrary::PluginEntrypointList{"SRF_MODULE_entrypoi
 const std::string ModulePluginLibrary::PluginEntrypointLoad{"SRF_MODULE_entrypoint_load"};
 const std::string ModulePluginLibrary::PluginEntrypointUnload{"SRF_MODULE_entrypoint_unload"};
 
-std::unique_ptr<ModulePluginLibrary> ModulePluginLibrary::Acquire(std::unique_ptr<ModulePluginLibrary> uptr_plugin,
+std::unique_ptr<ModulePluginLibrary> ModulePluginLibrary::acquire(std::unique_ptr<ModulePluginLibrary> uptr_plugin,
                                                                   std::string plugin_library_path)
 {
     std::lock_guard<decltype(s_mutex)> lock(s_mutex);

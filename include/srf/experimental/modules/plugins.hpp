@@ -39,7 +39,7 @@ class ModulePluginLibrary
 
     void operator=(const ModulePluginLibrary&) = delete;
 
-    static std::unique_ptr<ModulePluginLibrary> Acquire(std::unique_ptr<ModulePluginLibrary> uptr_plugin,
+    static std::unique_ptr<ModulePluginLibrary> acquire(std::unique_ptr<ModulePluginLibrary> uptr_plugin,
                                                         std::string plugin_library_path);
 
     // Configuration so that dependent libraries will be searched for in
