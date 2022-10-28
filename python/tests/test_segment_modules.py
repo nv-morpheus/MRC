@@ -112,6 +112,7 @@ def test_py_end_to_end():
     assert (packets_3 == 4)
 
 
+# TODO(bhargav)
 # def test_py_constructor():
 
 #     def gen_data():
@@ -158,6 +159,7 @@ def test_py_end_to_end():
 #     executor.start()
 #     executor.join()
 
+# TODO(bhargav)
 # def test_py_module_initialization():
 
 #     def gen_data():

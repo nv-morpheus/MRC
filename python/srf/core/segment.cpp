@@ -17,6 +17,7 @@
 
 #include "pysrf/segment.hpp"
 
+#include "pysrf/module_registry.hpp"
 #include "pysrf/node.hpp"  // IWYU pragma: keep
 #include "pysrf/segment_modules.hpp"
 #include "pysrf/types.hpp"
@@ -99,6 +100,12 @@ PYBIND11_MODULE(segment, m)
     auto Builder    = py::class_<srf::segment::Builder>(m, "Builder");
     auto SegmentModule =
         py::class_<srf::modules::SegmentModule, std::shared_ptr<srf::modules::SegmentModule>>(m, "SegmentModule");
+    auto SegmentModuleRegistry = py::class_<ModuleRegistryProxy>(m, "ModuleRegistry");
+
+    /**
+     * TODO(bhargav)
+     * srf.segment.ModuleRegistry <--- class
+     */
 
     /** Builder Interface Declarations **/
     /*
@@ -172,6 +179,7 @@ PYBIND11_MODULE(segment, m)
     Builder.def("make_py2cxx_edge_adapter", &BuilderProxy::make_py2cxx_edge_adapter);
 
     /** Register test modules -- necessary for python unit tests**/
+    // TODO(devin) move to its own unittest samples module
     modules::ModelRegistryUtil::create_registered_module<srf::modules::SimpleModule>(
         "SimpleModule", "srf_unittest", PybindSegmentModuleVersion);
     modules::ModelRegistryUtil::create_registered_module<srf::modules::ConfigurableModule>(
@@ -188,6 +196,8 @@ PYBIND11_MODULE(segment, m)
         "TemplateModuleString", "srf_unittest", PybindSegmentModuleVersion);
 
     /** Segment Module Interface Declarations **/
+    // TODO(bhargav): SegmentModule constructor binding
+
     SegmentModule.def("config", &SegmentModuleProxy::config);
 
     SegmentModule.def("component_prefix", &SegmentModuleProxy::component_prefix);
@@ -213,6 +223,19 @@ PYBIND11_MODULE(segment, m)
     // SegmentModule.def("input_port_type_ids", &SegmentModuleProxy::input_port_type_id)
     // SegmentModule.def("output_port_type_id", &SegmentModuleProxy::output_port_type_id, py::arg("output_id"))
     // SegmentModule.def("output_port_type_ids", &SegmentModuleProxy::output_port_type_id)
+
+    /** Module Register Interface Declarations **/
+    SegmentModuleRegistry.def(py::init());
+
+    SegmentModuleRegistry.def("contains_namespace", &ModuleRegistryProxy::contains_namespace,
+                              py::arg("registry_namespace"));
+
+    // TODO(bhargav)
+    // contains
+    // find_module
+    // registered_modules
+    // unregister_module
+    // is_version_compatible
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

@@ -143,7 +143,6 @@ const char *MODULES[] = {
 [[maybe_unused]] unsigned int SRF_MODULE_entrypoint_list(const char** result)  // NOLINT
 {
     // TODO
-
     return 3;
 }
 

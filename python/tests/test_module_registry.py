@@ -13,18 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .core import logging
-from .core import operators
-from .core.executor import Executor
-from .core.executor import Future
-from .core.node import SegmentObject
-from .core.options import Config
-from .core.options import Options
-from .core.pipeline import Pipeline
-from .core.segment import Builder
-from .core.segment import SegmentModule
-from .core.segment import ModuleRegistry
-from .core.subscriber import Observable
-from .core.subscriber import Observer
-from .core.subscriber import Subscriber
-from .core.subscriber import Subscription
+import logging
+
+import srf
+
+
+def test_module_registry_contains():
+    registry = srf.ModuleRegistry()
+
+    print(f"Module registry contains 'xyz': {registry.contains_namespace('xyz')}")
+
+if (__name__ in ("__main__", )):
+    test_module_registry_contains()

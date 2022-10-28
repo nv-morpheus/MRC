@@ -61,7 +61,6 @@ class ModulePluginLibrary
      */
     void unload();
 
-
     /**
      * Return a list of modules published by the plugin
      */

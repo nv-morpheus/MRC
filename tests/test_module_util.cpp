@@ -15,17 +15,17 @@
  * limitations under the License.
  */
 
-#include "srf/version.hpp"
+#include "test_segment.hpp"
+
 #include "srf/experimental/modules/module_registry_util.hpp"
 #include "srf/experimental/modules/sample_modules.hpp"
-
-#include "test_segment.hpp"
+#include "srf/version.hpp"
 
 TEST_F(SegmentTests, ModuleRegistryUtilTest)
 {
     using namespace modules;
 
-    const auto *registry_namespace = "srf_unittest";
+    const auto* registry_namespace = "srf_unittest";
 
     const std::vector<unsigned int> release_version = {srf_VERSION_MAJOR, srf_VERSION_MINOR, srf_VERSION_PATCH};
 
@@ -33,10 +33,14 @@ TEST_F(SegmentTests, ModuleRegistryUtilTest)
     ModelRegistryUtil::create_registered_module<SourceModule>("SourceModule", registry_namespace, release_version);
     ModelRegistryUtil::create_registered_module<SinkModule>("SinkModule", registry_namespace, release_version);
     ModelRegistryUtil::create_registered_module<NestedModule>("NestedModule", registry_namespace, release_version);
-    ModelRegistryUtil::create_registered_module<ConfigurableModule>("ConfigurableModule", registry_namespace, release_version);
-    ModelRegistryUtil::create_registered_module<TemplateModule<int>>("TemplateModuleInt", registry_namespace, release_version);
-    ModelRegistryUtil::create_registered_module<TemplateModule<std::string>>("TemplateModuleString", registry_namespace, release_version);
+    ModelRegistryUtil::create_registered_module<ConfigurableModule>(
+        "ConfigurableModule", registry_namespace, release_version);
+    ModelRegistryUtil::create_registered_module<TemplateModule<int>>(
+        "TemplateModuleInt", registry_namespace, release_version);
+    ModelRegistryUtil::create_registered_module<TemplateModule<std::string>>(
+        "TemplateModuleString", registry_namespace, release_version);
 
-    EXPECT_THROW(ModelRegistryUtil::create_registered_module<SimpleModule>("SimpleModule", registry_namespace, release_version),
-                                                                  std::invalid_argument);
+    EXPECT_THROW(
+        ModelRegistryUtil::create_registered_module<SimpleModule>("SimpleModule", registry_namespace, release_version),
+        std::invalid_argument);
 }
