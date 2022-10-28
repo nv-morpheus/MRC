@@ -91,7 +91,7 @@ class Broadcast : public IngressProvider<T>, public IIngressAcceptor<T>
 
         channel::Status await_write(T&& data) override
         {
-            for (size_t i = this->edge_count() - 1; i > 0; --i)
+            for (size_t i = this->edge_connection_count() - 1; i > 0; --i)
             {
                 if constexpr (is_shared_ptr<T>::value)
                 {
@@ -105,17 +105,17 @@ class Broadcast : public IngressProvider<T>, public IIngressAcceptor<T>
                 }
 
                 T shallow_copy(data);
-                CHECK(this->get_writable_edge(i).await_write(std::move(shallow_copy)) == channel::Status::success);
+                CHECK(this->get_writable_edge(i)->await_write(std::move(shallow_copy)) == channel::Status::success);
             }
 
-            return this->get_writable_edge(0).await_write(std::move(data));
+            return this->get_writable_edge(0)->await_write(std::move(data));
         }
 
-        void add_downstream(std::shared_ptr<IEdgeWritable<T>> downstream)
+        void add_downstream(std::shared_ptr<IngressHandleObj> downstream)
         {
-            auto edge_count = this->edge_count();
+            auto edge_count = this->edge_connection_count();
 
-            this->set_edge(edge_count, downstream);
+            this->make_edge_connection(edge_count, downstream);
         }
 
       private:
@@ -140,7 +140,7 @@ class Broadcast : public IngressProvider<T>, public IIngressAcceptor<T>
         VLOG(10) << "Destroying TestBroadcast";
     }
 
-    void set_ingress(std::shared_ptr<IEdgeWritable<T>> ingress) override
+    void set_ingress_obj(std::shared_ptr<IngressHandleObj> ingress) override
     {
         if (auto e = m_edge.lock())
         {

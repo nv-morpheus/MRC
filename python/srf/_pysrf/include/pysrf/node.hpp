@@ -49,17 +49,17 @@ namespace srf {
 namespace node {
 
 template <typename SourceT>
-struct Edge<SourceT,
-            pysrf::PyHolder,
-            std::enable_if_t<!pybind11::detail::is_pyobject<SourceT>::value &&
-                                 !std::is_convertible_v<SourceT, pybind11::object>,
-                             void>> : public EdgeBase<SourceT, pysrf::PyHolder>
+class ConvertingEdgeWritable<SourceT,
+                             pysrf::PyHolder,
+                             std::enable_if_t<!pybind11::detail::is_pyobject<SourceT>::value &&
+                                                  !std::is_convertible_v<SourceT, pybind11::object>,
+                                              void>> : public ConvertingEdgeWritableBase<SourceT, pysrf::PyHolder>
 {
-    using base_t = EdgeBase<SourceT, pysrf::PyHolder>;
+    using base_t = ConvertingEdgeWritableBase<SourceT, pysrf::PyHolder>;
     using typename base_t::sink_t;
     using typename base_t::source_t;
 
-    using EdgeBase<source_t, sink_t>::EdgeBase;
+    using base_t::ConvertingEdgeWritableBase;
 
     // We need to hold the GIL here, because casting from c++ -> pybind11::object allocates memory with Py_Malloc.
     // Its also important to note that you do not want to hold the GIL when calling m_output->await_write, as
@@ -73,22 +73,22 @@ struct Edge<SourceT,
             py_data = pybind11::cast(std::move(data));
         }
 
-        return this->ingress().await_write(std::move(py_data));
+        return this->downstream().await_write(std::move(py_data));
     };
 };
 
 template <typename SinkT>
-struct Edge<
+struct ConvertingEdgeWritable<
     pysrf::PyHolder,
     SinkT,
     std::enable_if_t<!pybind11::detail::is_pyobject<SinkT>::value && !std::is_convertible_v<pybind11::object, SinkT>,
-                     void>> : public EdgeBase<pysrf::PyHolder, SinkT>
+                     void>> : public ConvertingEdgeWritableBase<pysrf::PyHolder, SinkT>
 {
-    using base_t = EdgeBase<pysrf::PyHolder, SinkT>;
+    using base_t = ConvertingEdgeWritableBase<pysrf::PyHolder, SinkT>;
     using typename base_t::sink_t;
     using typename base_t::source_t;
 
-    using EdgeBase<source_t, sink_t>::EdgeBase;
+    using base_t::ConvertingEdgeWritableBase;
 
     // We don't hold the GIL in any of the *_write because we are explciitly releasing object's pointer, and casting it
     // to a c++ data type.
@@ -101,7 +101,7 @@ struct Edge<
             _data = pybind11::cast<sink_t>(pybind11::object(std::move(data)));
         }
 
-        return this->ingress().await_write(std::move(_data));
+        return this->downstream().await_write(std::move(_data));
     }
 
     static void register_converter()
@@ -111,13 +111,14 @@ struct Edge<
 };
 
 template <>
-struct Edge<pysrf::PyObjectHolder, pybind11::object, void> : public EdgeBase<pysrf::PyObjectHolder, pybind11::object>
+struct ConvertingEdgeWritable<pysrf::PyObjectHolder, pybind11::object, void>
+  : public ConvertingEdgeWritableBase<pysrf::PyObjectHolder, pybind11::object>
 {
-    using base_t = EdgeBase<pysrf::PyObjectHolder, pybind11::object>;
+    using base_t = ConvertingEdgeWritableBase<pysrf::PyObjectHolder, pybind11::object>;
     using typename base_t::sink_t;
     using typename base_t::source_t;
 
-    using EdgeBase<source_t, sink_t>::EdgeBase;
+    using base_t::ConvertingEdgeWritableBase;
 
     // We need to hold the GIL here, because casting from c++ -> pybind11::object allocates memory with Py_Malloc.
     // Its also important to note that you do not want to hold the GIL when calling m_output->await_write, as
@@ -131,18 +132,19 @@ struct Edge<pysrf::PyObjectHolder, pybind11::object, void> : public EdgeBase<pys
 
         gil.release();
 
-        return this->ingress().await_write(std::move(py_data));
+        return this->downstream().await_write(std::move(py_data));
     };
 };
 
 template <>
-struct Edge<pybind11::object, pysrf::PyObjectHolder, void> : public EdgeBase<pybind11::object, pysrf::PyObjectHolder>
+struct ConvertingEdgeWritable<pybind11::object, pysrf::PyObjectHolder, void>
+  : public ConvertingEdgeWritableBase<pybind11::object, pysrf::PyObjectHolder>
 {
-    using base_t = EdgeBase<pybind11::object, pysrf::PyObjectHolder>;
+    using base_t = ConvertingEdgeWritableBase<pybind11::object, pysrf::PyObjectHolder>;
     using typename base_t::sink_t;
     using typename base_t::source_t;
 
-    using EdgeBase<source_t, sink_t>::EdgeBase;
+    using base_t::ConvertingEdgeWritableBase;
 
     // We don't hold the GIL in any of the *_write because we are explciitly releasing object's pointer, and casting it
     // to a c++ data type.
@@ -152,7 +154,7 @@ struct Edge<pybind11::object, pysrf::PyObjectHolder, void> : public EdgeBase<pyb
         // No need for the GIL
         sink_t _data = pysrf::PyObjectHolder(std::move(data));
 
-        return this->ingress().await_write(std::move(_data));
+        return this->downstream().await_write(std::move(_data));
     }
 
     static void register_converter()

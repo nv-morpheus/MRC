@@ -19,6 +19,7 @@
 
 #include "srf/channel/status.hpp"
 #include "srf/exceptions/runtime_error.hpp"
+#include "srf/node/channel_holder.hpp"
 #include "srf/node/forward.hpp"
 #include "srf/node/operators/operator.hpp"
 #include "srf/node/sink_properties.hpp"
@@ -112,7 +113,7 @@ class RouterBase : public ForwardingIngressProvider<InputT>, public MultiSourceP
 
     void drop_edge(const KeyT& key)
     {
-        MultiSourceProperties<output_data_t, KeyT>::release_edge(key);
+        MultiSourceProperties<output_data_t, KeyT>::release_edge_connections(key);
     }
 
   protected:
@@ -121,9 +122,9 @@ class RouterBase : public ForwardingIngressProvider<InputT>, public MultiSourceP
       public:
         DownstreamEdge(RouterBase& parent, KeyT key) : m_parent(parent), m_key(std::move(key)) {}
 
-        void set_ingress(std::shared_ptr<IEdgeWritable<output_data_t>> ingress) override
+        void set_ingress_obj(std::shared_ptr<IngressHandleObj> ingress) override
         {
-            m_parent.MultiSourceProperties<OutputT, KeyT>::set_edge(m_key, std::move(ingress));
+            m_parent.MultiSourceProperties<OutputT, KeyT>::make_edge_connection(m_key, std::move(ingress));
         }
 
       private:
@@ -142,7 +143,7 @@ class RouterBase : public ForwardingIngressProvider<InputT>, public MultiSourceP
 
     void on_complete() override
     {
-        MultiSourceProperties<output_data_t, KeyT>::release_edges();
+        MultiSourceProperties<output_data_t, KeyT>::release_edge_connections();
     }
 
     // virtual KeyT determine_key_for_value(const input_data_t& t) = 0;

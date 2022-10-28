@@ -70,7 +70,7 @@ class SinkChannel : public virtual SinkProperties<T>
 
         // Finally, set the other half to m_set_edge to allow using the channel without it being deleted. If set_edge()
         // is called, then this will be overwritten
-        this->m_set_edge = channel_reader;
+        this->m_edge_connection = channel_reader;
     }
 
     //   private:

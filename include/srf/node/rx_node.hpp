@@ -238,7 +238,7 @@ template <typename InputT, typename OutputT, typename ContextT>
 void RxNode<InputT, OutputT, ContextT>::on_shutdown_critical_section()
 {
     DVLOG(10) << runnable::Context::get_runtime_context().info() << " releasing source channel";
-    RxSourceBase<OutputT>::release_edge();
+    RxSourceBase<OutputT>::release_edge_connection();
 }
 
 template <typename InputT, typename OutputT>
@@ -247,7 +247,7 @@ class RxNodeComponent : public IngressProvider<InputT>, public IngressAcceptor<O
   public:
     using stream_fn_t = std::function<rxcpp::observable<OutputT>(const rxcpp::observable<InputT>&)>;
 
-    RxNodeComponent() {}
+    RxNodeComponent() = default;
 
     template <typename... OpsT>
     RxNodeComponent& pipe(OpsT&&... ops)

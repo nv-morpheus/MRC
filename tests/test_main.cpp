@@ -21,15 +21,17 @@
 #include <gtest/gtest.h>    // IWYU pragma: keep
 
 // NOLINTNEXTLINE(readability-identifier-naming)
-// void TestFailuresThrowExceptions()
-// {
-//     throw std::runtime_error("exception rather than std::abort");
-// }
+[[noreturn]] void TestFailuresThrowExceptions()
+{
+    throw std::runtime_error("exception rather than std::abort");
+
+    std::abort();
+}
 
 int main(int argc, char** argv)
 {
     srf::init_logging("srf::test_srf");
-    // ::google::InstallFailureFunction(&TestFailuresThrowExceptions);
+    ::google::InstallFailureFunction(&TestFailuresThrowExceptions);
     ::testing::InitGoogleTest(&argc, argv);
     ::google::ParseCommandLineFlags(&argc, &argv, true);
     return RUN_ALL_TESTS();

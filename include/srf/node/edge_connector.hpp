@@ -22,6 +22,7 @@
 #include "srf/channel/ingress.hpp"
 #include "srf/channel/status.hpp"
 #include "srf/core/watcher.hpp"
+#include "srf/node/channel_holder.hpp"
 #include "srf/node/edge.hpp"
 #include "srf/node/edge_registry.hpp"
 
@@ -53,14 +54,14 @@ struct EdgeConnector
     static void register_converter()
     {
         EdgeRegistry::register_converter(
-            typeid(SourceT), typeid(SinkT), [](std::shared_ptr<channel::IngressHandle> channel) {
-                std::shared_ptr<channel::Ingress<SinkT>> ingress =
-                    std::dynamic_pointer_cast<channel::Ingress<SinkT>>(channel);
+            typeid(SourceT), typeid(SinkT), [](std::shared_ptr<IEdgeWritableBase> channel) {
+                std::shared_ptr<IEdgeWritable<SinkT>> ingress =
+                    std::dynamic_pointer_cast<IEdgeWritable<SinkT>>(channel);
 
                 DCHECK(ingress) << "Channel is not an ingress of the correct type";
 
                 // Build a new connector
-                return std::make_shared<Edge<SourceT, SinkT>>(std::move(ingress));
+                return std::make_shared<ConvertingEdgeWritable<SourceT, SinkT>>(std::move(ingress));
             });
     }
 };
@@ -77,7 +78,7 @@ struct IdentityEdgeConnector
     static void register_converter()
     {
         EdgeRegistry::register_converter(
-            typeid(T), typeid(T), [](std::shared_ptr<channel::IngressHandle> channel) { return channel; });
+            typeid(T), typeid(T), [](std::shared_ptr<IEdgeWritableBase> channel) { return channel; });
     }
 };
 

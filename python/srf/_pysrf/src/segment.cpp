@@ -450,11 +450,11 @@ void SegmentProxy::make_edge(srf::segment::Builder& self,
 {
     if (source->is_ingress_acceptor() && sink->is_ingress_provider())
     {
-        node::EdgeBuilder::make_edge_typeless(source->ingress_acceptor_base(), sink->ingress_provider_base());
+        node::make_edge_typeless(source->ingress_acceptor_base(), sink->ingress_provider_base());
     }
     else if (source->is_ingress_acceptor() && sink->is_ingress_provider())
     {
-        node::EdgeBuilder::make_edge_typeless(source->egress_provider_base(), sink->egress_acceptor_base());
+        node::make_edge_typeless(source->egress_provider_base(), sink->egress_acceptor_base());
     }
     else
     {

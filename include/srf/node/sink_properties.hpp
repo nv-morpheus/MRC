@@ -18,12 +18,12 @@
 #pragma once
 
 #include "srf/channel/ingress.hpp"
-#include "srf/core/utils.hpp"
 #include "srf/node/channel_holder.hpp"
 #include "srf/node/edge.hpp"
 #include "srf/node/edge_registry.hpp"
 #include "srf/node/forward.hpp"
 #include "srf/type_traits.hpp"
+#include "srf/utils/type_utils.hpp"
 
 #include <memory>
 #include <typeindex>
@@ -102,7 +102,7 @@ class SinkProperties : public EdgeHolder<T>, public SinkPropertiesBase
   protected:
     std::shared_ptr<IEdgeReadable<T>> get_readable_edge() const
     {
-        return std::dynamic_pointer_cast<IEdgeReadable<T>>(this->m_set_edge);
+        return std::dynamic_pointer_cast<IEdgeReadable<T>>(this->m_edge_connection);
     }
 
   private:
@@ -120,10 +120,10 @@ template <typename T>
 class EgressAcceptor : public virtual SinkProperties<T>, public IEgressAcceptor<T>
 {
   public:
-    void set_egress(std::shared_ptr<IEdgeReadable<T>> egress) override
-    {
-        SinkProperties<T>::set_edge(egress);
-    }
+    // void set_egress(std::shared_ptr<IEdgeReadable<T>> egress) override
+    // {
+    //     SinkProperties<T>::set_edge(egress);
+    // }
 
     // void set_egress_typeless(std::shared_ptr<EdgeTag> egress) override
     // {
@@ -131,17 +131,23 @@ class EgressAcceptor : public virtual SinkProperties<T>, public IEgressAcceptor<
     // }
 
   private:
-    using SinkProperties<T>::set_edge;
+    void set_egress_obj(std::shared_ptr<EgressHandleObj> egress) override
+    {
+        SinkProperties<T>::make_edge_connection(egress);
+    }
+
+    //   private:
+    //     using SinkProperties<T>::set_edge;
 };
 
 template <typename T>
 class IngressProvider : public virtual SinkProperties<T>, public IIngressProvider<T>
 {
   public:
-    std::shared_ptr<IEdgeWritable<T>> get_ingress() const override
-    {
-        return std::dynamic_pointer_cast<IEdgeWritable<T>>(SinkProperties<T>::get_edge());
-    }
+    // std::shared_ptr<IEdgeWritable<T>> get_ingress() const override
+    // {
+    //     return std::dynamic_pointer_cast<IEdgeWritable<T>>(SinkProperties<T>::get_edge());
+    // }
 
     // std::shared_ptr<EdgeTag> get_ingress_typeless() const override
     // {
@@ -149,7 +155,13 @@ class IngressProvider : public virtual SinkProperties<T>, public IIngressProvide
     // }
 
   private:
-    using SinkProperties<T>::set_edge;
+    std::shared_ptr<IngressHandleObj> get_ingress_obj() const override
+    {
+        return IngressHandleObj::from_typeless(SinkProperties<T>::get_edge_connection());
+    }
+
+    //   private:
+    //     using SinkProperties<T>::set_edge;
 };
 
 template <typename T>

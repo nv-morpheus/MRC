@@ -139,7 +139,7 @@ template <typename T, typename ContextT>
 void RxSource<T, ContextT>::on_shutdown_critical_section()
 {
     DVLOG(10) << runnable::Context::get_runtime_context().info() << " releasing source channel";
-    RxSourceBase<T>::release_edge();
+    RxSourceBase<T>::release_edge_connection();
 }
 
 template <typename T, typename ContextT>

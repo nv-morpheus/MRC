@@ -14,7 +14,7 @@ class NodeComponent : public ForwardingIngressProvider<InputT>, public IngressAc
   protected:
     void on_complete() override
     {
-        SourceProperties<OutputT>::release_edge();
+        SourceProperties<OutputT>::release_edge_connection();
     }
 };
 
@@ -34,7 +34,7 @@ class NodeComponent<T, T> : public ForwardingIngressProvider<T>, public IngressA
 
     void on_complete()
     {
-        SourceProperties<T>::release_edge();
+        SourceProperties<T>::release_edge_connection();
     }
 };
 

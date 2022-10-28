@@ -291,7 +291,7 @@ TEST_F(TestRunnable, RxSourceToRxSink)
         auto sink =
             std::make_shared<node::RxSink<float>>(rxcpp::make_observer_dynamic<float>([&](float x) { ++counter; }));
 
-        node::make_edge2(*source, *sink);
+        node::make_edge(*source, *sink);
 
         runner_sink   = m_resources->launch_control().prepare_launcher(std::move(sink))->ignition();
         runner_source = m_resources->launch_control().prepare_launcher(std::move(source))->ignition();

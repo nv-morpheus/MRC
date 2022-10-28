@@ -112,7 +112,7 @@ class RoundRobinEgress : public node::Router<SegmentAddress, T>, public TypedEgr
     void update_pick_list()
     {
         // Make a copy of the keys
-        m_pick_list = this->edge_keys();
+        m_pick_list = this->edge_connection_keys();
 
         // Shuffle the keys
         std::shuffle(m_pick_list.begin(), m_pick_list.end(), std::mt19937(std::random_device()()));

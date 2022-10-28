@@ -18,6 +18,7 @@
 #pragma once
 
 #include "srf/channel/ingress.hpp"
+#include "srf/node/channel_holder.hpp"
 
 #include <functional>
 #include <map>
@@ -33,7 +34,7 @@ namespace srf::node {
 struct EdgeRegistry
 {
     // Function to create the edge converter
-    using build_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(std::shared_ptr<channel::IngressHandle>)>;
+    using build_fn_t = std::function<std::shared_ptr<IEdgeWritableBase>(std::shared_ptr<IEdgeWritableBase>)>;
 
     EdgeRegistry() = delete;
 

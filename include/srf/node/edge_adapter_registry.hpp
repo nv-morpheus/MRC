@@ -53,8 +53,8 @@ struct EdgeAdapterRegistry
     using sink_adapter_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(
         std::type_index, srf::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle>)>;
 
-    using ingress_adapter_fn_t = std::function<std::shared_ptr<EdgeTag>(
-        std::type_index, std::type_index, std::shared_ptr<channel::IngressHandle>)>;
+    using ingress_adapter_fn_t = std::function<std::shared_ptr<node::IngressHandleObj>(
+        const node::EdgeTypePair&, std::shared_ptr<node::IEdgeWritableBase>)>;
 
     EdgeAdapterRegistry() = delete;
 
@@ -65,6 +65,8 @@ struct EdgeAdapterRegistry
      */
     static void register_source_adapter(std::type_index source_type, source_adapter_fn_t adapter_fn);
     static void register_sink_adapter(std::type_index sink_type, sink_adapter_fn_t adapter_fn);
+
+    static void register_ingress_adapter(ingress_adapter_fn_t adapter_fn);
 
     /**
      * @brief Checks to see if an adapter is registered for a given type index
@@ -84,6 +86,8 @@ struct EdgeAdapterRegistry
 
     static std::map<std::type_index, source_adapter_fn_t> registered_source_adapters;
     static std::map<std::type_index, sink_adapter_fn_t> registered_sink_adapters;
+
+    static std::vector<ingress_adapter_fn_t> registered_ingress_adapters;
 
     static std::recursive_mutex s_mutex;
 };

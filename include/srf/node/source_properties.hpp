@@ -18,12 +18,12 @@
 #pragma once
 
 #include "srf/channel/ingress.hpp"
-#include "srf/core/utils.hpp"
 #include "srf/node/channel_holder.hpp"
 #include "srf/node/edge.hpp"
 #include "srf/node/forward.hpp"
 #include "srf/node/sink_properties.hpp"
 #include "srf/type_traits.hpp"
+#include "srf/utils/type_utils.hpp"
 
 #include <memory>
 #include <string>
@@ -107,7 +107,7 @@ class SourceProperties : public EdgeHolder<T>, public SourcePropertiesBase
   protected:
     std::shared_ptr<IEdgeWritable<T>> get_writable_edge() const
     {
-        return std::dynamic_pointer_cast<IEdgeWritable<T>>(this->m_set_edge);
+        return std::dynamic_pointer_cast<IEdgeWritable<T>>(this->m_edge_connection);
     }
 };
 
@@ -145,10 +145,10 @@ template <typename T>
 class EgressProvider : public virtual SourceProperties<T>, public IEgressProvider<T>
 {
   public:
-    std::shared_ptr<IEdgeReadable<T>> get_egress() const override
-    {
-        return std::dynamic_pointer_cast<IEdgeReadable<T>>(SourceProperties<T>::get_edge());
-    }
+    // std::shared_ptr<IEdgeReadable<T>> get_egress() const override
+    // {
+    //     return std::dynamic_pointer_cast<IEdgeReadable<T>>(SourceProperties<T>::get_edge());
+    // }
 
     // std::shared_ptr<EdgeTag> get_egress_typeless() const override
     // {
@@ -156,17 +156,23 @@ class EgressProvider : public virtual SourceProperties<T>, public IEgressProvide
     // }
 
   private:
-    using SourceProperties<T>::set_edge;
+    std::shared_ptr<EgressHandleObj> get_egress_obj() const override
+    {
+        return EgressHandleObj::from_typeless(SourceProperties<T>::get_edge_connection());
+    }
+
+    //   private:
+    //     using SourceProperties<T>::set_edge;
 };
 
 template <typename T>
 class IngressAcceptor : public virtual SourceProperties<T>, public IIngressAcceptor<T>
 {
   public:
-    void set_ingress(std::shared_ptr<IEdgeWritable<T>> ingress) override
-    {
-        SourceProperties<T>::set_edge(ingress);
-    }
+    // void set_ingress(std::shared_ptr<IEdgeWritable<T>> ingress) override
+    // {
+    //     SourceProperties<T>::set_edge(ingress);
+    // }
 
     // void set_ingress_typeless(std::shared_ptr<EdgeTag> ingress) override
     // {
@@ -174,7 +180,12 @@ class IngressAcceptor : public virtual SourceProperties<T>, public IIngressAccep
     // }
 
   private:
-    using SourceProperties<T>::set_edge;
+    void set_ingress_obj(std::shared_ptr<IngressHandleObj> ingress) override
+    {
+        SourceProperties<T>::make_edge_connection(ingress);
+    }
+
+    // using SourceProperties<T>::set_edge;
 };
 
 }  // namespace srf::node
