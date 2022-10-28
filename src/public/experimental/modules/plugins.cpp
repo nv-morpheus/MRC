@@ -102,7 +102,7 @@ std::vector<std::string> PluginModule::list_modules()
 
     std::vector<std::string> ret{};
     for (int i = 0; i < module_count; i++) {
-        ret.push_back(module_list[i]);
+        ret.emplace_back(module_list[i]);
     }
 
     return ret;
