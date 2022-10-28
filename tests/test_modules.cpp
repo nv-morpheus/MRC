@@ -19,8 +19,9 @@
 
 #include "srf/core/executor.hpp"
 #include "srf/engine/pipeline/ipipeline.hpp"
+#include "srf/experimental/modules/module_registry.hpp"
+#include "srf/experimental/modules/plugins.hpp"
 #include "srf/experimental/modules/sample_modules.hpp"
-#include "srf/experimental/modules/segment_module_registry.hpp"
 #include "srf/options/options.hpp"
 #include "srf/segment/builder.hpp"
 
@@ -509,7 +510,8 @@ TEST_F(SegmentTests, DynamicModuleRegistrationTest)
 {
     using namespace srf::modules;
     void* module_handle;
-    bool (*entrypoint)();
+    bool (*entrypoint_load)();
+    bool (*entrypoint_unload)();
 
     std::string module_path = get_modules_path() + "libdynamic_test_module.so";
 
@@ -520,14 +522,14 @@ TEST_F(SegmentTests, DynamicModuleRegistrationTest)
     }
     EXPECT_TRUE(module_handle);
 
-    entrypoint              = (bool (*)())dlsym(module_handle, "SRF_MODULE_entrypoint");
+    entrypoint_load         = (bool (*)())dlsym(module_handle, "SRF_MODULE_entrypoint_load");
     const char* dlsym_error = dlerror();
     if (dlsym_error != nullptr)
     {
         std::cerr << "Error: " << dlsym_error << std::endl;
     }
     EXPECT_TRUE(dlsym_error == nullptr);
-    EXPECT_TRUE(entrypoint());
+    EXPECT_TRUE(entrypoint_load());
 
     std::string module_namespace{"srf_unittest_cpp_dynamic"};
     std::string module_name{"DynamicSourceModule"};
@@ -535,33 +537,13 @@ TEST_F(SegmentTests, DynamicModuleRegistrationTest)
     EXPECT_TRUE(ModuleRegistry::contains_namespace(module_namespace));
     EXPECT_TRUE(ModuleRegistry::contains(module_name, module_namespace));
 
-    /*
-     * The dynamic_test_module registers DynamicSourceModule in three test namespaces:
-     * srf_unittest_cpp_dynamic[1|2|3]. Double check this here.
-     */
-    auto registered_modules = ModuleRegistry::registered_modules();
-
-    EXPECT_TRUE(registered_modules.find("srf_unittest_cpp_dynamic") != registered_modules.end());
-    auto& ns_1 = registered_modules["srf_unittest_cpp_dynamic"];
-    EXPECT_TRUE(ns_1[0] == "DynamicSourceModule");
-
-    EXPECT_TRUE(registered_modules.find("srf_unittest_cpp_dynamic_2") != registered_modules.end());
-    auto& ns_2 = registered_modules["srf_unittest_cpp_dynamic_2"];
-    EXPECT_TRUE(ns_2[0] == "DynamicSourceModule");
-
-    EXPECT_TRUE(registered_modules.find("srf_unittest_cpp_dynamic_3") != registered_modules.end());
-    auto& ns_3 = registered_modules["srf_unittest_cpp_dynamic_3"];
-    EXPECT_TRUE(ns_3[0] == "DynamicSourceModule");
-
-    // Unregister a module, failure is an error
-    ModuleRegistry::unregister_module("DynamicSourceModule", "srf_unittest_cpp_dynamic_3", false);
-    // Check that we fail if we try to remove the module again
-    EXPECT_THROW(ModuleRegistry::unregister_module("DynamicSourceModule", "srf_unittest_cpp_dynamic_3", false),
-        std::invalid_argument);
-    // Check that we succeed if the module removal is optional.
-    ModuleRegistry::unregister_module("DynamicSourceModule", "srf_unittest_cpp_dynamic_3");
-    ModuleRegistry::unregister_module("DynamicSourceModule", "srf_unittest_cpp_dynamic_3", true);
-
+    entrypoint_unload              = (bool (*)())dlsym(module_handle, "SRF_MODULE_entrypoint_unload");
+    const char* dlsym_unload_error = dlerror();
+    if (dlsym_unload_error != nullptr)
+    {
+        std::cerr << "Error: " << dlsym_unload_error << std::endl;
+    }
+    EXPECT_TRUE(dlsym_unload_error == nullptr);
 
     unsigned int packet_count{0};
 
@@ -593,9 +575,70 @@ TEST_F(SegmentTests, DynamicModuleRegistrationTest)
     executor.join();
 
     EXPECT_EQ(packet_count, 42);
+    EXPECT_TRUE(entrypoint_unload());
+    dlclose(module_handle);
 }
 
-TEST_F(SegmentTests, DynamicModuleBadVersionTest) {
+TEST_F(SegmentTests, DynamicModulePluginRegistrationTest)
+{
+    using namespace srf::modules;
+
+    std::string module_path = get_modules_path() + "libdynamic_test_module.so";
+
+    auto plugin = std::unique_ptr<ModulePluginLibrary>{};
+    plugin      = ModulePluginLibrary::acquire(std::move(plugin), module_path);
+
+    plugin->load();
+
+    std::string module_namespace{"srf_unittest_cpp_dynamic"};
+    std::string module_name{"DynamicSourceModule"};
+
+    EXPECT_TRUE(ModuleRegistry::contains_namespace(module_namespace));
+    EXPECT_TRUE(ModuleRegistry::contains(module_name, module_namespace));
+
+    /*
+     * The dynamic_test_module registers DynamicSourceModule in three test namespaces:
+     * srf_unittest_cpp_dynamic[1|2|3]. Double check this here.
+     */
+    auto registered_modules = ModuleRegistry::registered_modules();
+
+    EXPECT_TRUE(registered_modules.find("srf_unittest_cpp_dynamic") != registered_modules.end());
+    auto& ns_1 = registered_modules["srf_unittest_cpp_dynamic"];
+    EXPECT_EQ(ns_1.size(), 1);
+    EXPECT_TRUE(ns_1[0] == "DynamicSourceModule");
+
+    EXPECT_TRUE(registered_modules.find("srf_unittest_cpp_dynamic_2") != registered_modules.end());
+    auto& ns_2 = registered_modules["srf_unittest_cpp_dynamic_2"];
+    EXPECT_EQ(ns_2.size(), 1);
+    EXPECT_TRUE(ns_2[0] == "DynamicSourceModule");
+
+    EXPECT_TRUE(registered_modules.find("srf_unittest_cpp_dynamic_3") != registered_modules.end());
+    auto& ns_3 = registered_modules["srf_unittest_cpp_dynamic_3"];
+    EXPECT_EQ(ns_3.size(), 1);
+    EXPECT_TRUE(ns_3[0] == "DynamicSourceModule");
+
+    std::vector<std::string> expected_modules{
+        "srf_unittest_cpp_dynamic::DynamicSourceModule",
+        "srf_unittest_cpp_dynamic_2::DynamicSourceModule",
+        "srf_unittest_cpp_dynamic_3::DynamicSourceModule",
+    };
+
+    const char **module_list;
+    auto module_count = plugin->list_modules(module_list);
+    EXPECT_EQ(module_count, 3);
+
+    //EXPECT_TRUE(std::equal(expected_modules.begin(), expected_modules.begin() + 3, actual_modules.begin()));
+
+    plugin->unload();
+    registered_modules = ModuleRegistry::registered_modules();
+
+    EXPECT_TRUE(registered_modules.find("srf_unittest_cpp_dynamic") == registered_modules.end());
+    EXPECT_TRUE(registered_modules.find("srf_unittest_cpp_dynamic_2") == registered_modules.end());
+    EXPECT_TRUE(registered_modules.find("srf_unittest_cpp_dynamic_3") == registered_modules.end());
+}
+
+TEST_F(SegmentTests, DynamicModuleBadVersionTest)
+{
     using namespace srf::modules;
     void* module_handle;
     bool (*entrypoint)();
