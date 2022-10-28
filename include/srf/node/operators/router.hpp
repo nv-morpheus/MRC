@@ -124,7 +124,10 @@ class RouterBase : public ForwardingIngressProvider<InputT>, public MultiSourceP
 
         void set_ingress_obj(std::shared_ptr<IngressHandleObj> ingress) override
         {
-            m_parent.MultiSourceProperties<OutputT, KeyT>::make_edge_connection(m_key, std::move(ingress));
+            // Make sure we do any type conversions as needed
+            auto adapted_ingress = EdgeBuilder::adapt_ingress<OutputT>(std::move(ingress));
+
+            m_parent.MultiSourceProperties<OutputT, KeyT>::make_edge_connection(m_key, std::move(adapted_ingress));
         }
 
       private:

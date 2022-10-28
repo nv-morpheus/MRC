@@ -61,7 +61,7 @@ class SinkChannel : public virtual SinkProperties<T>
         auto channel_reader = edge_channel.get_reader();
         auto channel_writer = edge_channel.get_writer();
 
-        // channel_writer->add_connector(EdgeLifetime<T>([this, channel_reader]() {
+        // channel_writer->add_connector(EdgeLifetime([this, channel_reader]() {
         //     // On connection, save the reader so we can use the channel without it being deleted
         //     this->m_set_edge = channel_reader;
         // }));

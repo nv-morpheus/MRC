@@ -10,11 +10,13 @@
 #include <glog/logging.h>
 #include <sys/types.h>
 
+#include <cstddef>
 #include <exception>
 #include <functional>
 #include <map>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <stdexcept>
 #include <type_traits>
 #include <typeindex>
@@ -23,14 +25,16 @@
 
 namespace srf::node {
 
-struct virtual_enable_shared_from_this_base : public std::enable_shared_from_this<virtual_enable_shared_from_this_base>
+struct virtual_enable_shared_from_this_base  // NOLINT(readability-identifier-naming)
+  : public std::enable_shared_from_this<virtual_enable_shared_from_this_base>
 {
     virtual ~virtual_enable_shared_from_this_base() = default;
 };
 
 // This class allows enable_shared_from_this to work for virtual inheritance
 template <typename T>
-struct virtual_enable_shared_from_this : public virtual virtual_enable_shared_from_this_base
+struct virtual_enable_shared_from_this  // NOLINT(readability-identifier-naming)
+  : public virtual virtual_enable_shared_from_this_base
 {
     std::shared_ptr<T> shared_from_this()
     {
@@ -69,7 +73,6 @@ class EdgeHandle;
 struct IngressHandleObj;
 struct EgressHandleObj;
 
-template <typename T>
 class EdgeLifetime
 {
   public:
@@ -85,6 +88,8 @@ class EdgeLifetime
     EdgeLifetime& operator=(EdgeLifetime&& other) noexcept
     {
         std::swap(m_fn, other.m_fn);
+
+        return *this;
     }
 
     ~EdgeLifetime()
@@ -107,23 +112,7 @@ class EdgeLifetime
 class EdgeTag
 {
   public:
-    virtual ~EdgeTag() = default;
-
-    virtual bool is_connected() const = 0;
-
-  protected:
-    virtual void connect() = 0;
-
-    // Friend any type of edge handle to allow calling connect
-    template <typename>
-    friend class EdgeHandle;
-};
-
-template <typename T>
-class EdgeHandle : public virtual EdgeTag
-{
-  public:
-    ~EdgeHandle() override
+    virtual ~EdgeTag()
     {
         VLOG(10) << "Destroying EdgeHandle";
 
@@ -135,23 +124,23 @@ class EdgeHandle : public virtual EdgeTag
         m_disconnectors.clear();
     };
 
-    bool is_connected() const override
+    bool is_connected() const
     {
         return m_is_connected;
     }
 
-    void add_connector(EdgeLifetime<T>&& connector)
+    void add_connector(EdgeLifetime&& connector)
     {
         m_connectors.emplace_back(std::move(connector));
     }
 
-    void add_disconnector(EdgeLifetime<T>&& disconnector)
+    void add_disconnector(EdgeLifetime&& disconnector)
     {
         m_disconnectors.emplace_back(std::move(disconnector));
     }
 
   protected:
-    void connect() override
+    void connect()
     {
         m_is_connected = true;
 
@@ -167,6 +156,11 @@ class EdgeHandle : public virtual EdgeTag
 
     void add_linked_edge(std::shared_ptr<EdgeTag> linked_edge)
     {
+        if (m_is_connected)
+        {
+            linked_edge->connect();
+        }
+
         m_linked_edges.emplace_back(std::move(linked_edge));
     }
 
@@ -178,9 +172,82 @@ class EdgeHandle : public virtual EdgeTag
 
   private:
     bool m_is_connected{false};
-    std::vector<EdgeLifetime<T>> m_connectors;
-    std::vector<EdgeLifetime<T>> m_disconnectors;
+    std::vector<EdgeLifetime> m_connectors;
+    std::vector<EdgeLifetime> m_disconnectors;
     std::vector<std::shared_ptr<EdgeTag>> m_linked_edges;
+
+    // Friend any type of edge handle to allow calling connect
+    template <typename>
+    friend class EdgeHandle;
+};
+
+template <typename T>
+class EdgeHandle : public virtual EdgeTag
+{
+  public:
+    // ~EdgeHandle() override
+    // {
+    //     VLOG(10) << "Destroying EdgeHandle";
+
+    //     for (auto& c : m_connectors)
+    //     {
+    //         c.disarm();
+    //     }
+
+    //     m_disconnectors.clear();
+    // };
+
+    // bool is_connected() const override
+    // {
+    //     return m_is_connected;
+    // }
+
+    // void add_connector(EdgeLifetime&& connector)
+    // {
+    //     m_connectors.emplace_back(std::move(connector));
+    // }
+
+    // void add_disconnector(EdgeLifetime&& disconnector)
+    // {
+    //     m_disconnectors.emplace_back(std::move(disconnector));
+    // }
+
+    //   protected:
+    //     void connect() override
+    //     {
+    //         m_is_connected = true;
+
+    //         // Clear the connectors to execute them
+    //         m_connectors.clear();
+
+    //         // For all linked edges, call connect
+    //         for (auto& linked_edge : m_linked_edges)
+    //         {
+    //             linked_edge->connect();
+    //         }
+    //     }
+
+    //     void add_linked_edge(std::shared_ptr<EdgeTag> linked_edge)
+    //     {
+    //         if (m_is_connected)
+    //         {
+    //             linked_edge->connect();
+    //         }
+
+    //         m_linked_edges.emplace_back(std::move(linked_edge));
+    //     }
+
+    //     // // Allows keeping a downstream edge holder alive for the lifetime of this edge
+    //     // void add_lifetime(std::shared_ptr<EdgeHolder<T>> downstream)
+    //     // {
+    //     //     m_keep_alive.push_back(downstream);
+    //     // }
+
+    //   private:
+    //     bool m_is_connected{false};
+    //     std::vector<EdgeLifetime> m_connectors;
+    //     std::vector<EdgeLifetime> m_disconnectors;
+    //     std::vector<std::shared_ptr<EdgeTag>> m_linked_edges;
 
     // Friend the holder classes which are required to setup connections
     template <typename>
@@ -191,23 +258,74 @@ class EdgeHandle : public virtual EdgeTag
 
 struct EdgeTypePair
 {
+  public:
     EdgeTypePair(const EdgeTypePair& other) = default;
 
-    std::type_index full_type;       // Includes any wrappers like shared_ptr
-    std::type_index unwrapped_type;  // Excludes any wrappers like shared_ptr if they exist
+    std::type_index full_type() const
+    {
+        if (m_is_deferred)
+        {
+            throw std::runtime_error("Should not call full_type() for deferred types. Check is_deferred() first.");
+        }
+
+        return m_full_type.value();
+    }
+
+    std::type_index unwrapped_type() const
+    {
+        if (m_is_deferred)
+        {
+            throw std::runtime_error("Should not call unwrapped_type() for deferred types. Check is_deferred() first.");
+        }
+
+        return m_unwrapped_type.value();
+    }
+
+    bool is_deferred() const
+    {
+        return m_is_deferred;
+    }
+
+    bool operator==(const EdgeTypePair& other) const
+    {
+        return m_is_deferred == other.m_is_deferred && m_full_type == other.m_full_type &&
+               m_unwrapped_type == other.m_unwrapped_type;
+    }
 
     template <typename T>
     static EdgeTypePair create()
     {
         if constexpr (is_smart_ptr<T>::value)
         {
-            return EdgeTypePair{typeid(T), typeid(typename T::element_type)};
+            return {typeid(T), typeid(typename T::element_type), false};
         }
         else
         {
-            return EdgeTypePair{typeid(T), typeid(T)};
+            return {typeid(T), typeid(T), false};
         }
     }
+
+    static EdgeTypePair create_deferred()
+    {
+        return {std::nullopt, std::nullopt, true};
+    }
+
+  private:
+    EdgeTypePair(std::optional<std::type_index> full_type,
+                 std::optional<std::type_index> unwrapped_type,
+                 bool is_deferred) :
+      m_full_type(full_type),
+      m_unwrapped_type(unwrapped_type),
+      m_is_deferred(is_deferred)
+    {
+        CHECK((m_is_deferred && !m_full_type.has_value() && !m_unwrapped_type.has_value()) ||
+              (!m_is_deferred && m_full_type.has_value() && m_unwrapped_type.has_value()))
+            << "Inconsistent deferred setting with concrete types";
+    }
+
+    std::optional<std::type_index> m_full_type;       // Includes any wrappers like shared_ptr
+    std::optional<std::type_index> m_unwrapped_type;  // Excludes any wrappers like shared_ptr if they exist
+    bool m_is_deferred{false};                        // Whether or not this type is deferred or concrete
 };
 
 struct EdgeHandleObj
@@ -271,7 +389,7 @@ class IEdgeReadableBase : public virtual EdgeTag
 };
 
 template <typename T>
-class IEdgeWritable : public virtual EdgeHandle<T>, public IEdgeWritableBase
+class IEdgeWritable : public virtual EdgeHandle<T>, public virtual IEdgeWritableBase
 {
   public:
     EdgeTypePair get_type() const override
@@ -506,7 +624,7 @@ class EdgeHolder : public virtual_enable_shared_from_this<EdgeHolder<T>>
 
         std::weak_ptr<EdgeHandle<T>> weak_edge = edge;
 
-        edge->add_connector(EdgeLifetime<T>([this, weak_edge]() {
+        edge->add_connector(EdgeLifetime([this, weak_edge]() {
             // Convert to full shared_ptr to avoid edge going out of scope
             if (auto e = weak_edge.lock())
             {
@@ -518,7 +636,7 @@ class EdgeHolder : public virtual_enable_shared_from_this<EdgeHolder<T>>
                 self->m_owned_edge_lifetime.reset();
 
                 // Now register a disconnector to keep self alive
-                e->add_disconnector(EdgeLifetime<T>([self]() {
+                e->add_disconnector(EdgeLifetime([self]() {
                     self->m_owned_edge_lifetime.reset();
                     self->m_owned_edge.reset();
                 }));
@@ -566,6 +684,11 @@ class EdgeHolder : public virtual_enable_shared_from_this<EdgeHolder<T>>
 
     void make_edge_connection(std::shared_ptr<EdgeHandleObj> edge_obj)
     {
+        CHECK(edge_obj->get_type() == EdgeTypePair::create<T>())
+            << "Incoming edge connection is not the correct type. Make sure to call "
+               "`EdgeBuilder::adapt_ingress<T>(edge)` or `EdgeBuilder::adapt_egress<T>(edge)` before calling "
+               "make_edge_connection";
+
         // Unpack the edge, convert, and call the inner set_edge
         auto unpacked_edge = edge_obj->get_handle_typed<EdgeHandle<T>>();
 
@@ -657,7 +780,7 @@ class MultiEdgeHolder : public virtual_enable_shared_from_this<MultiEdgeHolder<T
 
         std::weak_ptr<EdgeHandle<T>> weak_edge = edge;
 
-        edge->add_connector(EdgeLifetime<T>([this, weak_edge, key]() {
+        edge->add_connector(EdgeLifetime([this, weak_edge, key]() {
             // Convert to full shared_ptr to avoid edge going out of scope
             if (auto e = weak_edge.lock())
             {
@@ -667,7 +790,7 @@ class MultiEdgeHolder : public virtual_enable_shared_from_this<MultiEdgeHolder<T
                 self->reset_edge(key);
 
                 // Now register a disconnector to keep self alive
-                e->add_disconnector(EdgeLifetime<T>([self, key]() {
+                e->add_disconnector(EdgeLifetime([self, key]() {
                     auto& ep = self->get_edge_pair(key);
 
                     ep.first.reset();
@@ -701,6 +824,11 @@ class MultiEdgeHolder : public virtual_enable_shared_from_this<MultiEdgeHolder<T
 
     void make_edge_connection(KeyT key, std::shared_ptr<EdgeHandleObj> edge_obj)
     {
+        CHECK(edge_obj->get_type() == EdgeTypePair::create<T>())
+            << "Incoming edge connection is not the correct type. Make sure to call "
+               "`EdgeBuilder::adapt_ingress<T>(edge)` or `EdgeBuilder::adapt_egress<T>(edge)` before calling "
+               "make_edge_connection";
+
         // Unpack the edge, convert, and call the inner set_edge
         auto unpacked_edge = edge_obj->get_handle_typed<EdgeHandle<T>>();
 
@@ -854,7 +982,7 @@ class MultiEdgeHolder : public virtual_enable_shared_from_this<MultiEdgeHolder<T
 //         auto channel_reader = std::make_shared<EdgeChannelReader<T>>(shared_channel);
 //         auto channel_writer = std::make_shared<EdgeChannelWriter<T>>(shared_channel);
 
-//         channel_writer->add_connector(EdgeLifetime<T>([this, channel_reader]() {
+//         channel_writer->add_connector(EdgeLifetime([this, channel_reader]() {
 //             // On connection, save the reader so we can use the channel without it being deleted
 //             this->m_set_edge = channel_reader;
 //         }));
@@ -881,7 +1009,7 @@ class MultiEdgeHolder : public virtual_enable_shared_from_this<MultiEdgeHolder<T
 //         auto channel_reader = std::make_shared<EdgeChannelReader<T>>(shared_channel);
 //         auto channel_writer = std::make_shared<EdgeChannelWriter<T>>(shared_channel);
 
-//         channel_reader->add_connector(EdgeLifetime<T>([this, channel_writer]() {
+//         channel_reader->add_connector(EdgeLifetime([this, channel_writer]() {
 //             // On connection, save the writer so we can use the channel without it being deleted
 //             this->m_set_edge = channel_writer;
 //         }));
@@ -890,9 +1018,11 @@ class MultiEdgeHolder : public virtual_enable_shared_from_this<MultiEdgeHolder<T
 //     }
 // };
 
+struct DeferredIngressHandleObj;
+
 struct IngressHandleObj : public EdgeHandleObj
 {
-    IngressHandleObj(std::shared_ptr<IEdgeWritableBase> ingress) : EdgeHandleObj(ingress->get_type(), ingress) {}
+    IngressHandleObj(std::shared_ptr<IEdgeWritableBase> ingress) : IngressHandleObj(ingress->get_type(), ingress) {}
 
     static std::shared_ptr<IngressHandleObj> from_typeless(std::shared_ptr<EdgeHandleObj> other)
     {
@@ -902,6 +1032,17 @@ struct IngressHandleObj : public EdgeHandleObj
 
         return std::make_shared<IngressHandleObj>(std::move(typed_ingress));
     }
+
+    virtual bool is_deferred() const
+    {
+        return false;
+    }
+
+  protected:
+    // Allow manually specifying the edge type
+    IngressHandleObj(EdgeTypePair edge_type, std::shared_ptr<IEdgeWritableBase> ingress) :
+      EdgeHandleObj(edge_type, ingress)
+    {}
 
   private:
     std::shared_ptr<IEdgeWritableBase> get_ingress() const
@@ -915,8 +1056,27 @@ struct IngressHandleObj : public EdgeHandleObj
         return std::dynamic_pointer_cast<IEdgeWritable<T>>(this->get_handle());
     }
 
+    void set_ingress_handle(std::shared_ptr<IEdgeWritableBase> ingress)
+    {
+        this->m_type   = ingress->get_type();
+        this->m_handle = ingress;
+    }
+
+    // Allow EdgeBuilder to unpack the edge
     friend EdgeBuilder;
+
+    // Add deferred ingresses to set their deferred type
+    friend DeferredIngressHandleObj;
 };
+
+// class DefaultDeferredEdge : public IEdgeWritableBase
+// {
+//   public:
+//     EdgeTypePair get_type() const override
+//     {
+//         throw std::runtime_error("Not implemented");
+//     }
+// };
 
 struct EgressHandleObj : public EdgeHandleObj
 {
@@ -947,7 +1107,7 @@ class IEgressProviderBase
 
     virtual std::shared_ptr<EgressHandleObj> get_egress_obj() const = 0;
 
-    virtual std::type_index egress_provider_type(bool ignore_holder = false) const = 0;
+    virtual EdgeTypePair egress_provider_type() const = 0;
 };
 
 class IEgressAcceptorBase
@@ -957,7 +1117,7 @@ class IEgressAcceptorBase
 
     virtual void set_egress_obj(std::shared_ptr<EgressHandleObj> egress) = 0;
 
-    virtual std::type_index egress_acceptor_type(bool ignore_holder = false) const = 0;
+    virtual EdgeTypePair egress_acceptor_type() const = 0;
 };
 
 class IIngressProviderBase
@@ -967,7 +1127,7 @@ class IIngressProviderBase
 
     virtual std::shared_ptr<IngressHandleObj> get_ingress_obj() const = 0;
 
-    virtual std::type_index ingress_provider_type(bool ignore_holder = false) const = 0;
+    virtual EdgeTypePair ingress_provider_type() const = 0;
 };
 
 class IIngressAcceptorBase
@@ -977,7 +1137,18 @@ class IIngressAcceptorBase
 
     virtual void set_ingress_obj(std::shared_ptr<IngressHandleObj> ingress) = 0;
 
-    virtual std::type_index ingress_acceptor_type(bool ignore_holder = false) const = 0;
+    virtual EdgeTypePair ingress_acceptor_type() const = 0;
+};
+
+template <typename KeyT>
+class IMultiIngressAcceptorBase
+{
+  public:
+    // virtual void set_ingress_typeless(std::shared_ptr<EdgeTag> ingress) = 0;
+
+    virtual void set_ingress_obj(KeyT key, std::shared_ptr<IngressHandleObj> ingress) = 0;
+
+    // virtual EdgeTypePair ingress_acceptor_type() const = 0;
 };
 
 template <typename T>
@@ -992,16 +1163,9 @@ class IEgressProvider : public IEgressProviderBase
         // return this->get_egress();
     }
 
-    std::type_index egress_provider_type(bool ignore_holder = false) const override
+    EdgeTypePair egress_provider_type() const override
     {
-        if (ignore_holder)
-        {
-            if constexpr (is_smart_ptr<T>::value)
-            {
-                return typeid(typename T::element_type);
-            }
-        }
-        return typeid(T);
+        return EdgeTypePair::create<T>();
     }
 
     // std::shared_ptr<EgressHandleObj> get_egress_obj() const override
@@ -1021,16 +1185,9 @@ class IEgressAcceptor : public IEgressAcceptorBase
         // this->set_egress(std::dynamic_pointer_cast<IEdgeReadable<T>>(egress));
     }
 
-    std::type_index egress_acceptor_type(bool ignore_holder = false) const override
+    EdgeTypePair egress_acceptor_type() const override
     {
-        if (ignore_holder)
-        {
-            if constexpr (is_smart_ptr<T>::value)
-            {
-                return typeid(typename T::element_type);
-            }
-        }
-        return typeid(T);
+        return EdgeTypePair::create<T>();
     }
 };
 
@@ -1044,16 +1201,9 @@ class IIngressProvider : public IIngressProviderBase
         return nullptr;
     }
 
-    std::type_index ingress_provider_type(bool ignore_holder = false) const override
+    EdgeTypePair ingress_provider_type() const override
     {
-        if (ignore_holder)
-        {
-            if constexpr (is_smart_ptr<T>::value)
-            {
-                return typeid(typename T::element_type);
-            }
-        }
-        return typeid(T);
+        return EdgeTypePair::create<T>();
     }
 
     // std::shared_ptr<IngressHandleObj> get_ingress_obj() const override
@@ -1074,21 +1224,18 @@ class IIngressAcceptor : public IIngressAcceptorBase
         // this->set_ingress(std::dynamic_pointer_cast<IEdgeWritable<T>>(ingress));
     }
 
-    std::type_index ingress_acceptor_type(bool ignore_holder = false) const override
+    EdgeTypePair ingress_acceptor_type() const override
     {
-        if (ignore_holder)
-        {
-            if constexpr (is_smart_ptr<T>::value)
-            {
-                return typeid(typename T::element_type);
-            }
-        }
-        return typeid(T);
+        return EdgeTypePair::create<T>();
     }
 
     //   private:
     //     virtual void set_ingress(std::shared_ptr<IEdgeWritable<T>> ingress) = 0;
 };
+
+template <typename T, typename KeyT>
+class IMultiIngressAcceptor : public IMultiIngressAcceptorBase<KeyT>
+{};
 
 // template <typename T>
 // class EgressProvider : public IEgressProvider<T>, public virtual DownstreamEdgeHolder<T>

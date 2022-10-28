@@ -43,31 +43,19 @@ void EdgeBuilder::make_edge_ingress_typeless(IIngressAcceptorBase& source,
                                              IIngressProviderBase& sink,
                                              bool allow_narrowing)
 {
-    EdgeTypePair source_type_pair{source.ingress_acceptor_type(), source.ingress_acceptor_type(true)};
-    EdgeTypePair sink_type_pair{sink.ingress_provider_type(), sink.ingress_provider_type(true)};
-
     // Get the ingress
     auto ingress = sink.get_ingress_obj();
 
-    // Now try and loop over any ingress adaptors for the sink
-    auto adapted_ingress = EdgeBuilder::adapt_ingress(source_type_pair, ingress);
-
-    // Try it again in case we need a sink adaptor then a source adaptor (Short circuits if we are already there)
-    adapted_ingress = EdgeBuilder::adapt_ingress(source_type_pair, adapted_ingress);
-
-    // Convert if neccessary
-    // auto ingress_adapted = EdgeBuilder::ingress_adapter_for_sink(source, sink, ingress);
-
     // Set to the source
-    source.set_ingress_obj(adapted_ingress);
+    source.set_ingress_obj(ingress);
 }
 
 void EdgeBuilder::make_edge_egress_typeless(IEgressProviderBase& source,
                                             IEgressAcceptorBase& sink,
                                             bool allow_narrowing)
 {
-    EdgeTypePair source_type_pair{source.egress_provider_type(), source.egress_provider_type(true)};
-    EdgeTypePair sink_type_pair{sink.egress_acceptor_type(), sink.egress_acceptor_type(true)};
+    EdgeTypePair source_type_pair = source.egress_provider_type();
+    EdgeTypePair sink_type_pair   = sink.egress_acceptor_type();
 
     // Get the ingress
     auto egress = source.get_egress_obj();
@@ -111,29 +99,46 @@ void EdgeBuilder::make_edge_egress_typeless(IEgressProviderBase& source,
 //     return fn_converter(ingress_handle);
 // }
 
-std::shared_ptr<IngressHandleObj> EdgeBuilder::adapt_ingress(const EdgeTypePair& target_type,
-                                                             std::shared_ptr<IngressHandleObj> ingress)
+// std::shared_ptr<IngressHandleObj> EdgeBuilder::adapt_ingress(const EdgeTypePair& target_type,
+//                                                              std::shared_ptr<IngressHandleObj> ingress)
+// {
+//     // Now try and loop over any ingress adaptors for the sink
+//     auto adapted_ingress = EdgeBuilder::do_adapt_ingress(target_type, ingress);
+
+//     // Try it again in case we need a sink adaptor then a source adaptor (Short circuits if we are already there)
+//     adapted_ingress = EdgeBuilder::do_adapt_ingress(target_type, adapted_ingress);
+
+//     // Convert if neccessary
+//     // auto ingress_adapted = EdgeBuilder::ingress_adapter_for_sink(source, sink, ingress);
+
+//     // Set to the source
+//     return adapted_ingress;
+// }
+
+std::shared_ptr<IngressHandleObj> EdgeBuilder::do_adapt_ingress(const EdgeTypePair& target_type,
+                                                                std::shared_ptr<IngressHandleObj> ingress)
 {
     // Short circuit if we are already there
-    if (target_type.full_type == ingress->get_type().full_type)
+    if (target_type.full_type() == ingress->get_type().full_type())
     {
         return ingress;
     }
 
     // Next check the static converters
-    if (srf::node::EdgeRegistry::has_converter(target_type.full_type, ingress->get_type().full_type))
+    if (srf::node::EdgeRegistry::has_converter(target_type.full_type(), ingress->get_type().full_type()))
     {
         auto fn_converter =
-            srf::node::EdgeRegistry::find_converter(target_type.full_type, ingress->get_type().full_type);
+            srf::node::EdgeRegistry::find_converter(target_type.full_type(), ingress->get_type().full_type());
 
         CHECK(false) << "Static lookup not supported yet";
         // return fn_converter(ingress);
     }
 
     // Start dynamic lookup
-    VLOG(2) << "Looking for edge adapter: (" << type_name(target_type.full_type) << ", "
-            << type_name(ingress->get_type().full_type) << ")";
-    VLOG(2) << "- (" << target_type.full_type.hash_code() << ", " << ingress->get_type().full_type.hash_code() << ")";
+    VLOG(2) << "Looking for edge adapter: (" << type_name(target_type.full_type()) << ", "
+            << type_name(ingress->get_type().full_type()) << ")";
+    VLOG(2) << "- (" << target_type.full_type().hash_code() << ", " << ingress->get_type().full_type().hash_code()
+            << ")";
 
     // Loop over the registered adaptors
     const auto& adaptors = EdgeAdapterRegistry::registered_ingress_adapters;
@@ -146,7 +151,7 @@ std::shared_ptr<IngressHandleObj> EdgeBuilder::adapt_ingress(const EdgeTypePair&
         if (adapt_out)
         {
             // Check that the adaptor didnt return the same thing
-            if (adapt_out->get_type().full_type == ingress->get_type().full_type)
+            if (adapt_out->get_type().full_type() == ingress->get_type().full_type())
             {
                 LOG(WARNING) << "Adaptor returned the same type as the input. Adaptors should return nullptr if the "
                                 "conversion is not supported. Skipping this adaptor";

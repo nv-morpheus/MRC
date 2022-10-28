@@ -108,10 +108,10 @@ struct EdgeAdapterUtil
             auto ingress_type = ingress_handle->get_type();
 
             // Check to see if we have a conversion in pybind11
-            if (pybind11::detail::get_type_info(ingress_type.unwrapped_type, false))
+            if (pybind11::detail::get_type_info(ingress_type.unwrapped_type(), false))
             {
                 // Check if we are targeting a python object
-                if (target_type.full_type == typeid(PyHolder))
+                if (target_type.full_type() == typeid(PyHolder))
                 {
                     // Create a conversion from our type to PyHolder
                     auto edge = std::make_shared<node::ConvertingEdgeWritable<PyHolder, InputT>>(typed_ingress);
@@ -120,12 +120,12 @@ struct EdgeAdapterUtil
                 }
 
                 // If that failed, check if our target type is a python object for a potential slow conversion
-                if (pybind11::detail::get_type_info(target_type.unwrapped_type, false))
+                if (pybind11::detail::get_type_info(target_type.unwrapped_type(), false))
                 {
                     // Make the foundation of a slow connection. Show warning here
                     LOG(WARNING)
-                        << "WARNING: A slow edge connection between C++ nodes '" << type_name(target_type.full_type)
-                        << "' and '" << type_name(ingress_type.full_type)
+                        << "WARNING: A slow edge connection between C++ nodes '" << type_name(target_type.full_type())
+                        << "' and '" << type_name(ingress_type.full_type())
                         << "' has been detected. Performance between "
                            "these nodes can be improved by registering an EdgeConverter at compile time. Without "
                            "this, conversion "
@@ -177,10 +177,10 @@ struct EdgeAdapterUtil
             auto ingress_type = ingress_handle->get_type();
 
             // Check to see if we have a conversion in pybind11
-            if (pybind11::detail::get_type_info(target_type.unwrapped_type, false))
+            if (pybind11::detail::get_type_info(target_type.unwrapped_type(), false))
             {
                 // Check if we are coming from a python object
-                if (ingress_type.full_type == typeid(PyHolder))
+                if (ingress_type.full_type() == typeid(PyHolder))
                 {
                     auto py_typed_ingress = std::dynamic_pointer_cast<node::IEdgeWritable<PyHolder>>(ingress_handle);
 

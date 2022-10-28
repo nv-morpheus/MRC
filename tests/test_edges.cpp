@@ -579,6 +579,7 @@ TEST_F(TestEdges, SourceToSink)
     source->run();
     sink->run();
 }
+
 TEST_F(TestEdges, SourceToSinkUpcast)
 {
     auto source = std::make_shared<node::TestSource<int>>();
@@ -786,6 +787,19 @@ TEST_F(TestEdges, SourceToBroadcastToSink)
 
     node::make_edge(*source, *broadcast);
     node::make_edge(*broadcast, *sink);
+}
+
+TEST_F(TestEdges, SourceToBroadcastTypelessToSink)
+{
+    auto source    = std::make_shared<node::TestSource<int>>();
+    auto broadcast = std::make_shared<node::BroadcastTypeless>();
+    auto sink      = std::make_shared<node::TestSink<int>>();
+
+    node::make_edge(*broadcast, *sink);
+    node::make_edge(*source, *broadcast);
+
+    source->run();
+    sink->run();
 }
 
 TEST_F(TestEdges, SourceToBroadcastToMultiSink)

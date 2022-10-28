@@ -20,6 +20,7 @@
 #include "srf/channel/ingress.hpp"
 #include "srf/node/channel_holder.hpp"
 #include "srf/node/edge.hpp"
+#include "srf/node/edge_builder.hpp"
 #include "srf/node/forward.hpp"
 #include "srf/node/sink_properties.hpp"
 #include "srf/type_traits.hpp"
@@ -182,10 +183,65 @@ class IngressAcceptor : public virtual SourceProperties<T>, public IIngressAccep
   private:
     void set_ingress_obj(std::shared_ptr<IngressHandleObj> ingress) override
     {
-        SourceProperties<T>::make_edge_connection(ingress);
+        // Do any conversion to the correct type here
+        auto adapted_ingress = EdgeBuilder::adapt_ingress<T>(ingress);
+
+        SourceProperties<T>::make_edge_connection(adapted_ingress);
     }
 
     // using SourceProperties<T>::set_edge;
+};
+
+template <typename T, typename KeyT>
+class MultiIngressAcceptor : public virtual MultiSourceProperties<T, KeyT>, public IMultiIngressAcceptor<T, KeyT>
+{
+  public:
+    // void set_ingress(std::shared_ptr<IEdgeWritable<T>> ingress) override
+    // {
+    //     SourceProperties<T>::set_edge(ingress);
+    // }
+
+    // void set_ingress_typeless(std::shared_ptr<EdgeTag> ingress) override
+    // {
+    //     this->set_ingress(std::dynamic_pointer_cast<EdgeWritable<T>>(ingress));
+    // }
+
+  private:
+    void set_ingress_obj(KeyT key, std::shared_ptr<IngressHandleObj> ingress) override
+    {
+        // Do any conversion to the correct type here
+        auto adapted_ingress = EdgeBuilder::adapt_ingress<T>(ingress);
+
+        MultiSourceProperties<T, KeyT>::make_edge_connection(key, adapted_ingress);
+    }
+
+    // using SourceProperties<T>::set_edge;
+};
+
+template <typename T>
+class ForwardingIngressEdge : public IngressAcceptor<T>, public IEdgeWritable<T>
+{
+  public:
+    channel::Status await_write(T&& data)
+    {
+        return std::dynamic_pointer_cast<IEdgeWritable<T>>(this->m_edge_connection)->await_write(std::move(data));
+    }
+
+    void set_ingress_typeless(std::shared_ptr<EdgeTag> ingress) override
+    {
+        throw std::runtime_error("Not implemented");
+    }
+
+    // void set_ingress_obj(std::shared_ptr<IngressHandleObj> ingress) override
+    // {
+
+    //     EdgeHolder<T>::make_edge_connection(ingress);
+    // }
+
+    std::type_index ingress_acceptor_type(bool ignore_holder = false) const override
+    {
+        throw std::runtime_error("Not implemented");
+    }
 };
 
 }  // namespace srf::node
