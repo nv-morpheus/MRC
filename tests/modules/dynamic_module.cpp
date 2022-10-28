@@ -18,6 +18,7 @@
 #include "srf/experimental/modules/module_registry_util.hpp"
 #include "srf/experimental/modules/segment_modules.hpp"
 #include "srf/segment/builder.hpp"
+#include "srf/version.hpp"
 
 #include <nlohmann/json.hpp>
 #include <rxcpp/rx-subscriber.hpp>
@@ -71,12 +72,7 @@ void DynamicSourceModule::initialize(segment::Builder& builder)
 }  // namespace srf::modules
 
 extern "C" {
-// TODO(bhargav) -- update this to utilize the new version file
-#define srf_VERSION_MAJOR 22
-#define srf_VERSION_MINOR 11
-#define srf_VERSION_PATCH 0
 
-// TODO(bhargav) -- update this to utilize the new version file
 const std::vector<unsigned int> DynamicTestModuleVersion{srf_VERSION_MAJOR, srf_VERSION_MINOR, srf_VERSION_PATCH};
 
 const char *MODULES[] = {

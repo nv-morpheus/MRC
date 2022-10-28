@@ -21,6 +21,8 @@ add_executable(test_srf
   test_main.cpp
   test_metrics.cpp
   test_modules.cpp
+  test_module_registry.cpp
+  test_module_util.cpp
   test_node.cpp
   test_pipeline.cpp
   test_segment.cpp

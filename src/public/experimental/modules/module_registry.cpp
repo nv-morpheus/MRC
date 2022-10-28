@@ -17,6 +17,7 @@
 
 #include "srf/experimental/modules/module_registry.hpp"
 #include "srf/experimental/modules/segment_modules.hpp"
+#include "srf/version.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -24,16 +25,10 @@
 #include <mutex>
 #include <vector>
 
-// TODO(bhargav) -- update this to utilize the new version file
-#define srf_VERSION_MAJOR 22
-#define srf_VERSION_MINOR 11
-#define srf_VERSION_PATCH 0
-
 namespace srf::modules {
 
 const unsigned int ModuleRegistry::VersionElements{3};
 
-// TODO(bhargav) -- update this to utilize the new version file
 const std::vector<unsigned int> ModuleRegistry::Version{srf_VERSION_MAJOR, srf_VERSION_MINOR, srf_VERSION_PATCH};
 
 ModuleRegistry::module_namespace_map_t ModuleRegistry::s_module_namespace_registry{

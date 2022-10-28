@@ -29,6 +29,7 @@
 #include "srf/segment/builder.hpp"
 #include "srf/segment/definition.hpp"
 #include "srf/segment/object.hpp"  // IWYU pragma: keep
+#include "srf/version.hpp"
 
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
@@ -41,11 +42,6 @@
 // IWYU pragma: no_include <vector>
 // IWYU pragma: no_include <pybind11/detail/common.h>
 // IWYU pragma: no_include <pybind11/detail/descr.h>
-
-// TODO(bhargav) -- update this to utilize the new version file
-#define srf_VERSION_MAJOR 22
-#define srf_VERSION_MINOR 11
-#define srf_VERSION_PATCH 0
 
 const std::vector<unsigned int> PybindSegmentModuleVersion{srf_VERSION_MAJOR, srf_VERSION_MINOR, srf_VERSION_PATCH};
 
