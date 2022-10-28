@@ -100,3 +100,39 @@ TEST_F(SegmentTests, FindModuleTest)
     EXPECT_THROW(ModuleRegistry::find_module(module_name_3), std::invalid_argument);
     EXPECT_THROW(ModuleRegistry::find_module(module_name_3, registry_namespace), std::invalid_argument);
 }
+
+TEST_F(SegmentTests, UnRegistrerModuleTest)
+{
+    using namespace modules;
+
+    std::string period = ".";
+    std::string release_version_str = std::to_string(srf_VERSION_MAJOR) +
+                            period + std::to_string(srf_VERSION_MINOR) +
+                            period + std::to_string(srf_VERSION_PATCH);
+
+    std::string registry_namespace = "module_registry_unittest";
+    std::string simple_mod_name = "SimpleModule";
+
+    ModuleRegistry::unregister_module(simple_mod_name, release_version_str);
+
+    ModuleRegistry::unregister_module(simple_mod_name, release_version_str, true);
+
+    // Throws an exception when there is no registered module.
+    EXPECT_THROW(ModuleRegistry::unregister_module(simple_mod_name, release_version_str, false), std::invalid_argument);
+}
+
+TEST_F(SegmentTests, VersionCompatibleTest)
+{
+    using namespace modules;
+
+    const std::vector<unsigned int> release_version = {srf_VERSION_MAJOR, srf_VERSION_MINOR, srf_VERSION_PATCH};
+    const std::vector<unsigned int> old_release_version = {22, 10, 0};
+    const std::vector<unsigned int> no_version_patch = {22, 10};
+    const std::vector<unsigned int> no_version_minor_and_patch = {22};
+
+    EXPECT_EQ(ModuleRegistry::is_version_compatible(release_version), true);
+    EXPECT_EQ(ModuleRegistry::is_version_compatible(old_release_version), false);
+    EXPECT_EQ(ModuleRegistry::is_version_compatible(no_version_patch), false);
+    EXPECT_EQ(ModuleRegistry::is_version_compatible(no_version_minor_and_patch), false);
+
+}
