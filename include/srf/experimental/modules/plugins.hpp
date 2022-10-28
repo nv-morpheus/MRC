@@ -27,24 +27,29 @@
 
 namespace srf::modules {
 
-class ModulePluginLibrary
+class PluginModule
 {
-    using module_plugin_map_t = std::map<std::string, std::mutex>;
+    using module_plugin_map_t = std::map<std::string, std::shared_ptr<PluginModule>>;
 
   public:
-    ModulePluginLibrary(ModulePluginLibrary&&)      = delete;
-    ModulePluginLibrary(const ModulePluginLibrary&) = delete;
+    PluginModule() = delete;
+    PluginModule(PluginModule&&)      = delete;
+    PluginModule(const PluginModule&) = delete;
 
-    ~ModulePluginLibrary() = default;
+    ~PluginModule() = default;
 
-    void operator=(const ModulePluginLibrary&) = delete;
+    void operator=(const PluginModule&) = delete;
 
-    static std::unique_ptr<ModulePluginLibrary> acquire(std::unique_ptr<ModulePluginLibrary> uptr_plugin,
-                                                        std::string plugin_library_path);
+    /**
+     * Prevent duplicate versions of a plugin library from existing
+     * @param plugin_library_name Path to the library file
+     * @return A shared pointer to an existing or newly created PluginModule
+     */
+    static std::shared_ptr<PluginModule> create_or_acquire(const std::string& plugin_library_name);
 
     // Configuration so that dependent libraries will be searched for in
     // 'path' during OpenLibraryHandle.
-    void set_library_directory(const std::string& path);
+    void set_library_directory(std::string path);
 
     // Reset any configuration done by SetLibraryDirectory.
     void reset_library_directory();
@@ -52,44 +57,57 @@ class ModulePluginLibrary
     /**
      * Load plugin module -- will load the plugin library and call its loader entrypoint to register
      * any modules it contains.
+     * @param throw_on_error Flag indicating if failure to load a library is an error; true by default.
+     * @return true if the library was successfully loaded, false if throw_on_error is false and load failed
      */
-    void load();
+    bool load(bool throw_on_error=true);
 
     /**
      * Unload the plugin module -- this will call the unload entrypoint of the plugin, which will then
      * unload any registered models.
+     * @param throw_on_error Flag indicating if failure to load a library is an error; true by default.
+     * @return true if the library was successfully unloaded, false if throw_on_error is false and unload failed
      */
-    void unload();
+    bool unload(bool throw_on_error=true);
+
+    /**
+     * Unload and re-load the given module
+     */
+    void reload();
 
     /**
      * Return a list of modules published by the plugin
      */
-    unsigned int list_modules(const char** list);
+    std::vector<std::string> list_modules();
 
   private:
-    explicit ModulePluginLibrary() = delete;
-    explicit ModulePluginLibrary(std::string plugin_library_path) :
-      m_plugin_library_path(std::move(plugin_library_path))
-    {}
+    explicit PluginModule(std::string plugin_library_path);
 
-    static std::mutex s_mutex;
+    static std::recursive_mutex s_mutex;
     static module_plugin_map_t s_plugin_map;
 
     static const std::string PluginEntrypointLoad;
     static const std::string PluginEntrypointUnload;
     static const std::string PluginEntrypointList;
 
-    void* m_plugin_handle{nullptr};
+    const std::string m_plugin_library_name;
+    std::string m_plugin_library_dir{};
 
+    void* m_plugin_handle{nullptr};
     bool m_loaded{false};
-    std::string m_plugin_library_path{};
 
     bool (*m_plugin_load)();
     bool (*m_plugin_unload)();
-    unsigned int (*m_plugin_list)(const char**);
+    unsigned int (*m_plugin_list)(const char***);
 
-    void open_library_handle();
-    void get_plugin_entrypoint(const std::string& entrypoint_name, void** entrypoint);
+    bool try_load_plugin(bool throw_on_error=true);
+    bool try_unload_plugin(bool throw_on_error=true);
+    bool try_build_plugin_interface(bool throw_on_error=true);
+    bool try_open_library_handle(bool throw_on_error=true);
+    bool try_close_library_handle(bool throw_on_error=true);
+
+    void get_entrypoint(const std::string& entrypoint_name, void** entrypoint);
+    void clear_plugin_interface();
 };
 
 }  // namespace srf::modules
