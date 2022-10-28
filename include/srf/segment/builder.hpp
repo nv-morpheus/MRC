@@ -361,7 +361,7 @@ class Builder final
 template <typename ObjectT>
 std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::unique_ptr<ObjectT> node)
 {
-    // Note: name should have and prefix modifications done prior to getting here.
+    // Note: name should have any prefix modifications done prior to getting here.
     if (m_backend.has_object(name))
     {
         LOG(ERROR) << "A Object named " << name << " is already registered";
