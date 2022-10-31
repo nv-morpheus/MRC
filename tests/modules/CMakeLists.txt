@@ -25,7 +25,10 @@ include_directories(dynamic_test_module
 )
 
 target_link_libraries(dynamic_test_module
-    rxcpp::rxcpp
+    PUBLIC
+      rxcpp::rxcpp
+    PRIVATE
+      libsrf
 )
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

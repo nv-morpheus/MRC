@@ -34,17 +34,19 @@ struct ModelRegistryUtil
      * @param registry_namespace Namespace where `name` should be registered.
      */
     template <typename ModuleTypeT>
-    static void create_registered_module(std::string name, std::string registry_namespace, const std::vector<unsigned int>& release_version)
+    static void create_registered_module(std::string name,
+                                         std::string registry_namespace,
+                                         const std::vector<unsigned int>& release_version)
     {
         static_assert(std::is_base_of_v<modules::SegmentModule, ModuleTypeT>);
 
-        ModuleRegistry::register_module(
-            std::move(name),
-            std::move(registry_namespace),
-            release_version,
-            [](std::string module_name, nlohmann::json config) {
-                return std::make_shared<ModuleTypeT>(std::move(module_name), std::move(config));
-            });
+        ModuleRegistry::register_module(std::move(name),
+                                        std::move(registry_namespace),
+                                        release_version,
+                                        [](std::string module_name, nlohmann::json config) {
+                                            return std::make_shared<ModuleTypeT>(std::move(module_name),
+                                                                                 std::move(config));
+                                        });
     }
 };
 }  // namespace srf::modules

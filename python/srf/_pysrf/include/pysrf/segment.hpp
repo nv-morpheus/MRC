@@ -77,7 +77,7 @@ auto wrap_segment_init_callback(void (ClassT::*method)(const std::string&,
  *  method.
  *
  * We need to force pybind to pass us a function that expects a srf::segment::Builder* not a srf::segment::Builder&. If
- * not it'll try to make a copy and srf::segment::Builder isnt' copy-constructable. Once we have that, we wrap it with
+ * not it'll try to make a copy and srf::segment::Builder isn't copy-constructable. Once we have that, we wrap it with
  * our reference based function.
  *
  * @tparam ClassT Class where the init method binding is defined.

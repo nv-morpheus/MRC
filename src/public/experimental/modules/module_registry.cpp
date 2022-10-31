@@ -16,6 +16,7 @@
  */
 
 #include "srf/experimental/modules/module_registry.hpp"
+
 #include "srf/experimental/modules/segment_modules.hpp"
 #include "srf/version.hpp"
 
@@ -149,7 +150,8 @@ void ModuleRegistry::unregister_module(const std::string& name, const std::strin
 
         name_map.erase(iter_erase);
 
-        if (s_module_namespace_registry[registry_namespace].empty()) {
+        if (s_module_namespace_registry[registry_namespace].empty())
+        {
             VLOG(2) << "Namespace " << registry_namespace << " is empty, removing.";
             s_module_namespace_registry.erase(registry_namespace);
             s_module_name_map.erase(registry_namespace);

@@ -32,7 +32,7 @@ class PluginModule
     using module_plugin_map_t = std::map<std::string, std::shared_ptr<PluginModule>>;
 
   public:
-    PluginModule() = delete;
+    PluginModule()                    = delete;
     PluginModule(PluginModule&&)      = delete;
     PluginModule(const PluginModule&) = delete;
 
@@ -60,7 +60,7 @@ class PluginModule
      * @param throw_on_error Flag indicating if failure to load a library is an error; true by default.
      * @return true if the library was successfully loaded, false if throw_on_error is false and load failed
      */
-    bool load(bool throw_on_error=true);
+    bool load(bool throw_on_error = true);
 
     /**
      * Unload the plugin module -- this will call the unload entrypoint of the plugin, which will then
@@ -68,7 +68,7 @@ class PluginModule
      * @param throw_on_error Flag indicating if failure to load a library is an error; true by default.
      * @return true if the library was successfully unloaded, false if throw_on_error is false and unload failed
      */
-    bool unload(bool throw_on_error=true);
+    bool unload(bool throw_on_error = true);
 
     /**
      * Unload and re-load the given module
@@ -81,7 +81,7 @@ class PluginModule
     std::vector<std::string> list_modules();
 
   private:
-    explicit PluginModule(std::string plugin_library_path);
+    explicit PluginModule(std::string plugin_library_name);
 
     static std::recursive_mutex s_mutex;
     static module_plugin_map_t s_plugin_map;
@@ -100,11 +100,11 @@ class PluginModule
     bool (*m_plugin_unload)();
     unsigned int (*m_plugin_list)(const char***);
 
-    bool try_load_plugin(bool throw_on_error=true);
-    bool try_unload_plugin(bool throw_on_error=true);
-    bool try_build_plugin_interface(bool throw_on_error=true);
-    bool try_open_library_handle(bool throw_on_error=true);
-    bool try_close_library_handle(bool throw_on_error=true);
+    bool try_load_plugin(bool throw_on_error = true);
+    bool try_unload_plugin(bool throw_on_error = true);
+    bool try_build_plugin_interface(bool throw_on_error = true);
+    bool try_open_library_handle(bool throw_on_error = true);
+    bool try_close_library_handle(bool throw_on_error = true);
 
     void get_entrypoint(const std::string& entrypoint_name, void** entrypoint);
     void clear_plugin_interface();

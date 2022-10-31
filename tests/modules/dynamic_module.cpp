@@ -75,11 +75,9 @@ extern "C" {
 
 const std::vector<unsigned int> DynamicTestModuleVersion{srf_VERSION_MAJOR, srf_VERSION_MINOR, srf_VERSION_PATCH};
 
-const char *MODULES[] = {
-    "srf_unittest_cpp_dynamic::DynamicSourceModule",
-    "srf_unittest_cpp_dynamic_2::DynamicSourceModule",
-    "srf_unittest_cpp_dynamic_3::DynamicSourceModule"
-};
+const char* MODULES[] = {"srf_unittest_cpp_dynamic::DynamicSourceModule",
+                         "srf_unittest_cpp_dynamic_2::DynamicSourceModule",
+                         "srf_unittest_cpp_dynamic_3::DynamicSourceModule"};
 
 [[maybe_unused]] bool SRF_MODULE_dummy_entrypoint()  // NOLINT
 {

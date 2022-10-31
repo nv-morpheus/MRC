@@ -461,4 +461,3 @@ TEST_F(SegmentTests, ModuleTemplateWithInitTest)
     EXPECT_EQ(packet_count_1, 42);
     EXPECT_EQ(packet_count_2, 24);
 }
-

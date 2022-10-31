@@ -101,7 +101,8 @@ std::vector<std::string> PluginModule::list_modules()
     unsigned int module_count = m_plugin_list(&module_list);
 
     std::vector<std::string> ret{};
-    for (int i = 0; i < module_count; i++) {
+    for (int i = 0; i < module_count; i++)
+    {
         ret.emplace_back(module_list[i]);
     }
 
@@ -160,7 +161,7 @@ void PluginModule::reload()
 
 bool PluginModule::try_open_library_handle(bool throw_on_error)
 {
-    if (m_plugin_handle)
+    if (m_plugin_handle != nullptr)
     {
         return true;
     }

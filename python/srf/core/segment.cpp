@@ -227,8 +227,8 @@ PYBIND11_MODULE(segment, m)
     /** Module Register Interface Declarations **/
     SegmentModuleRegistry.def(py::init());
 
-    SegmentModuleRegistry.def("contains_namespace", &ModuleRegistryProxy::contains_namespace,
-                              py::arg("registry_namespace"));
+    SegmentModuleRegistry.def(
+        "contains_namespace", &ModuleRegistryProxy::contains_namespace, py::arg("registry_namespace"));
 
     // TODO(bhargav)
     // contains
