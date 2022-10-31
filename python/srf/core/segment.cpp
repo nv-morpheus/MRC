@@ -17,20 +17,14 @@
 
 #include "pysrf/segment.hpp"
 
-#include "pysrf/module_registry.hpp"
 #include "pysrf/node.hpp"  // IWYU pragma: keep
-#include "pysrf/segment_modules.hpp"
 #include "pysrf/types.hpp"
 #include "pysrf/utils.hpp"
 
-#include "srf/experimental/modules/module_registry_util.hpp"
-#include "srf/experimental/modules/sample_modules.hpp"
-#include "srf/experimental/modules/segment_modules.hpp"
 #include "srf/node/edge_connector.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/segment/definition.hpp"
 #include "srf/segment/object.hpp"  // IWYU pragma: keep
-#include "srf/version.hpp"
 
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
@@ -43,8 +37,6 @@
 // IWYU pragma: no_include <vector>
 // IWYU pragma: no_include <pybind11/detail/common.h>
 // IWYU pragma: no_include <pybind11/detail/descr.h>
-
-const std::vector<unsigned int> PybindSegmentModuleVersion{srf_VERSION_MAJOR, srf_VERSION_MINOR, srf_VERSION_PATCH};
 
 namespace srf::pysrf {
 
@@ -64,6 +56,7 @@ PYBIND11_MODULE(segment, m)
     pysrf::import(m, "srf.core.common");
 
     pysrf::import_module_object(m, "srf.core.node", "SegmentObject");
+    pysrf::import_module_object(m, "srf.core.segment_modules", "SegmentModule");
     pysrf::import(m, "srf.core.subscriber");
 
     // Register the converters for make_py2cxx_edge_adapter and make_cxx2py_edge_adapter
@@ -98,9 +91,6 @@ PYBIND11_MODULE(segment, m)
 
     auto Definition = py::class_<srf::segment::Definition>(m, "Definition");
     auto Builder    = py::class_<srf::segment::Builder>(m, "Builder");
-    auto SegmentModule =
-        py::class_<srf::modules::SegmentModule, std::shared_ptr<srf::modules::SegmentModule>>(m, "SegmentModule");
-    auto SegmentModuleRegistry = py::class_<ModuleRegistryProxy>(m, "ModuleRegistry");
 
     /**
      * TODO(bhargav)
@@ -177,65 +167,6 @@ PYBIND11_MODULE(segment, m)
     Builder.def("make_node_full", &BuilderProxy::make_node_full, py::return_value_policy::reference_internal);
 
     Builder.def("make_py2cxx_edge_adapter", &BuilderProxy::make_py2cxx_edge_adapter);
-
-    /** Register test modules -- necessary for python unit tests**/
-    // TODO(devin) move to its own unittest samples module
-    modules::ModelRegistryUtil::create_registered_module<srf::modules::SimpleModule>(
-        "SimpleModule", "srf_unittest", PybindSegmentModuleVersion);
-    modules::ModelRegistryUtil::create_registered_module<srf::modules::ConfigurableModule>(
-        "ConfigurableModule", "srf_unittest", PybindSegmentModuleVersion);
-    modules::ModelRegistryUtil::create_registered_module<srf::modules::SourceModule>(
-        "SourceModule", "srf_unittest", PybindSegmentModuleVersion);
-    modules::ModelRegistryUtil::create_registered_module<srf::modules::SinkModule>(
-        "SinkModule", "srf_unittest", PybindSegmentModuleVersion);
-    modules::ModelRegistryUtil::create_registered_module<srf::modules::NestedModule>(
-        "NestedModule", "srf_unittest", PybindSegmentModuleVersion);
-    modules::ModelRegistryUtil::create_registered_module<srf::modules::TemplateModule<int>>(
-        "TemplateModuleInt", "srf_unittest", PybindSegmentModuleVersion);
-    modules::ModelRegistryUtil::create_registered_module<srf::modules::TemplateModule<std::string>>(
-        "TemplateModuleString", "srf_unittest", PybindSegmentModuleVersion);
-
-    /** Segment Module Interface Declarations **/
-    // TODO(bhargav): SegmentModule constructor binding
-
-    SegmentModule.def("config", &SegmentModuleProxy::config);
-
-    SegmentModule.def("component_prefix", &SegmentModuleProxy::component_prefix);
-
-    SegmentModule.def("input_port", &SegmentModuleProxy::input_port, py::arg("input_id"));
-
-    SegmentModule.def("input_ports", &SegmentModuleProxy::input_ports);
-
-    SegmentModule.def("module_name", &SegmentModuleProxy::module_name);
-
-    SegmentModule.def("name", &SegmentModuleProxy::name);
-
-    SegmentModule.def("output_port", &SegmentModuleProxy::output_port, py::arg("output_id"));
-
-    SegmentModule.def("output_ports", &SegmentModuleProxy::output_ports);
-
-    SegmentModule.def("input_ids", &SegmentModuleProxy::input_ids);
-
-    SegmentModule.def("output_ids", &SegmentModuleProxy::output_ids);
-
-    // TODO(drobison): need to think about if/how we want to expose type_ids to Python... It might allow for some nice
-    // flexibility SegmentModule.def("input_port_type_id", &SegmentModuleProxy::input_port_type_id, py::arg("input_id"))
-    // SegmentModule.def("input_port_type_ids", &SegmentModuleProxy::input_port_type_id)
-    // SegmentModule.def("output_port_type_id", &SegmentModuleProxy::output_port_type_id, py::arg("output_id"))
-    // SegmentModule.def("output_port_type_ids", &SegmentModuleProxy::output_port_type_id)
-
-    /** Module Register Interface Declarations **/
-    SegmentModuleRegistry.def(py::init());
-
-    SegmentModuleRegistry.def(
-        "contains_namespace", &ModuleRegistryProxy::contains_namespace, py::arg("registry_namespace"));
-
-    // TODO(bhargav)
-    // contains
-    // find_module
-    // registered_modules
-    // unregister_module
-    // is_version_compatible
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

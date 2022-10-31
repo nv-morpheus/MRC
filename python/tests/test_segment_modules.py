@@ -17,13 +17,15 @@ import logging
 
 import srf
 
+# Required to register sample modules with the ModuleRegistry
+import srf.core.unittest_exports
+
 packets_1 = 0
 packets_2 = 0
 packets_3 = 0
 
 
 def test_py_end_to_end():
-
     def gen_data_1():
         yield True
         yield False
@@ -246,9 +248,7 @@ def test_py_end_to_end():
 
 
 def test_py_module_as_source():
-
     def init_wrapper(builder: srf.Builder):
-
         global packet_count
         packet_count = 0
 
@@ -284,7 +284,6 @@ def test_py_module_as_source():
 
 
 def test_py_module_as_sink():
-
     def gen_data():
         for i in range(0, 43):
             yield True
@@ -292,7 +291,6 @@ def test_py_module_as_sink():
             packet_count += 1
 
     def init_wrapper(builder: srf.Builder):
-
         global packet_count
         packet_count = 0
 
@@ -316,9 +314,7 @@ def test_py_module_as_sink():
 
 
 def test_py_module_chaining():
-
     def init_wrapper(builder: srf.Builder):
-
         global packet_count
         packet_count = 0
 
@@ -357,7 +353,6 @@ def test_py_module_chaining():
 
 
 def test_py_module_nesting():
-
     def gen_data():
         for i in range(0, 43):
             yield True
@@ -365,7 +360,6 @@ def test_py_module_nesting():
             packet_count += 1
 
     def init_wrapper(builder: srf.Builder):
-
         global packet_count
         packet_count = 0
 
@@ -399,7 +393,7 @@ def test_py_module_nesting():
     assert packet_count == 4
 
 
-if (__name__ in ("__main__", )):
+if (__name__ in ("__main__",)):
     test_py_end_to_end()
     test_py_module_as_source()
     test_py_module_as_sink()
