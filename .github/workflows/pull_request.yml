@@ -48,7 +48,7 @@ jobs:
     container:
       credentials:
         username: '$oauthtoken'
-        password: ${{ NGC_API_KEY }}
+        password: ${{ secrets.NGC_API_KEY }}
       image: nvcr.io/ea-nvidia-morpheus/morpheus:srf-ci-20221021
     strategy:
       fail-fast: true
@@ -72,7 +72,7 @@ jobs:
     container:
       credentials:
         username: '$oauthtoken'
-        password: ${{ NGC_API_KEY }}
+        password: ${{ secrets.NGC_API_KEY }}
       image: nvcr.io/ea-nvidia-morpheus/morpheus:srf-ci-20221021
     strategy:
       fail-fast: true
@@ -100,7 +100,7 @@ jobs:
     container:
       credentials:
         username: '$oauthtoken'
-        password: ${{ NGC_API_KEY }}
+        password: ${{ secrets.NGC_API_KEY }}
       image: nvcr.io/ea-nvidia-morpheus/morpheus:srf-ci-20221021
       options: --cap-add=sys_nice
       env:
@@ -132,7 +132,7 @@ jobs:
     container:
       credentials:
         username: '$oauthtoken'
-        password: ${{ NGC_API_KEY }}
+        password: ${{ secrets.NGC_API_KEY }}
       image: nvcr.io/ea-nvidia-morpheus/morpheus:srf-ci-20221021
     strategy:
       fail-fast: true
@@ -156,7 +156,7 @@ jobs:
     container:
       credentials:
         username: '$oauthtoken'
-        password: ${{ NGC_API_KEY }}
+        password: ${{ secrets.NGC_API_KEY }}
       image: nvcr.io/ea-nvidia-morpheus/morpheus:srf-ci-20221021
     strategy:
       fail-fast: true
@@ -188,7 +188,7 @@ jobs:
     container:
       credentials:
         username: '$oauthtoken'
-        password: ${{ NGC_API_KEY }}
+        password: ${{ secrets.NGC_API_KEY }}
       image: nvcr.io/ea-nvidia-morpheus/morpheus:srf-ci-20221021
     strategy:
       fail-fast: true
