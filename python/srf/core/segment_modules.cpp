@@ -40,9 +40,9 @@ namespace py = pybind11;
 PYBIND11_MODULE(segment_modules, m)
 {
     m.doc() = R"pbdoc(
-       Python bindings for SRF Unittest Exports
+       Python bindings for SRF Segment Modules
        -------------------------------
-       .. currentmodule:: plugins
+       .. currentmodule:: Segment Modules
        .. autosummary::
           :toctree: _generate
    )pbdoc";
