@@ -272,7 +272,9 @@
       "--rcfile=${workspaceFolder}/python/.pylintrc"
     ],
     "python.linting.pylintEnabled": true,
-    "python.sortImports.args": ["--settings-file=${workspaceFolder}/python/setup.cfg"],
+    "python.sortImports.args": [
+      "--settings-file=${workspaceFolder}/python/setup.cfg"
+    ],
     "python.testing.cwd": "${workspaceFolder}/python",
     "python.testing.pytestArgs": [
       "-s"
@@ -335,6 +337,7 @@
       "matepek.vscode-catch2-test-adapter",
       "ms-vscode.cmake-tools",
       "stkb.rewrap",
+      "formulahendry.terminal",
     ],
     // List of extensions recommended by VS Code that should not be recommended for users of this workspace.
     "unwantedRecommendations": [
