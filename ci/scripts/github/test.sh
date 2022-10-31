@@ -17,8 +17,11 @@
 set -e
 
 unset CUDA_PATH
+unset NVIDIA_REQUIRE_CUDA
 cat /proc/driver/nvidia/version
+echo "----"
 /usr/bin/nvidia-smi -h
+echo "----"
 /usr/bin/nvidia-smi
 source ${WORKSPACE}/ci/scripts/github/common.sh
 /usr/bin/nvidia-smi
