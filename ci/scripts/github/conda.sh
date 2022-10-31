@@ -18,9 +18,8 @@ set -e
 
 source ${WORKSPACE}/ci/scripts/github/common.sh
 
+update_conda_env
 
-restore_conda_env
-
-gpuci_logger "Building Conda Package"
+rapids-logger "Building Conda Package"
 
 ${SRF_ROOT}/ci/conda/recipes/run_conda_build.sh upload
