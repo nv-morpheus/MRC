@@ -16,6 +16,7 @@
 
 set -e
 
+/usr/bin/nvidia-smi
 source ${WORKSPACE}/ci/scripts/github/common.sh
 /usr/bin/nvidia-smi
 
