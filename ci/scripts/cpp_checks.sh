@@ -139,7 +139,7 @@ else
    echo -e "\n\n>>>> PASSED: include-what-you-use check\n\n"
 fi
 
-RETVALS=(${CLANG_TIDY_RETVAL} ${CLANG_FORMAT_RETVAL} ${IWYU_RETVAL})
+RETVALS=(${PRAGMA_CHECK_RETVAL} ${CLANG_TIDY_RETVAL} ${CLANG_FORMAT_RETVAL} ${IWYU_RETVAL})
 IFS=$'\n'
 RETVAL=`echo "${RETVALS[*]}" | sort -nr | head -n1`
 

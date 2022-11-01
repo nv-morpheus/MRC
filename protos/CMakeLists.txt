@@ -64,7 +64,7 @@ set_target_properties(
 )
 
 # Finally, add this to the style check dependencies
-add_dependencies(style_checks srf_protos-headers-target)
+add_dependencies(${PROJECT_NAME}_style_checks srf_protos-headers-target)
 
 install(
   TARGETS srf_protos srf_architect_protos

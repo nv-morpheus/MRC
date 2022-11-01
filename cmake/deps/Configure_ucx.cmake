@@ -20,7 +20,7 @@ function(find_and_configure_ucx version)
   list(APPEND CMAKE_MESSAGE_CONTEXT "ucx")
 
   # Try to find UCX and download from source if not found
-  rapids_cpm_find(ucx 1.12
+  rapids_cpm_find(ucx ${version}
     GLOBAL_TARGETS
       ucx ucx::ucp ucx::uct ucx_ucx ucx::ucp ucx::uct ucx::ucx
     BUILD_EXPORT_SET
@@ -166,7 +166,7 @@ function(find_and_configure_ucx version)
     )
 
     # Finally, add this to the style check dependencies
-    add_dependencies(style_checks ucx-install)
+    add_dependencies(${PROJECT_NAME}_style_checks ucx-install)
   else()
     # Found installed UCX. Make sure to call rapids_export_package without a version.
     # Otherwise CMake fails with trying to add the dependency twice

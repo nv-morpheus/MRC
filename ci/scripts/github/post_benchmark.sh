@@ -16,34 +16,15 @@
 
 set -e
 
-source ${WORKSPACE}/ci/scripts/jenkins/common.sh
+source ${WORKSPACE}/ci/scripts/github/common.sh
 
-rm -rf ${SRF_ROOT}/.cache/ ${SRF_ROOT}/build/
+REPORTS_DIR="${WORKSPACE_TMP}/reports"
 
-gpuci_logger "Creating conda env"
-mamba env create -n srf -q --file ${CONDA_ENV_YML}
-conda deactivate
-conda activate srf
-
-gpuci_logger "Check versions"
-python3 --version
-cmake --version
-ninja --version
-doxygen --version
-
-show_conda_info
-
-gpuci_logger "Configuring for docs"
-cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} -DSRF_BUILD_DOCS=ON .
-
-
-gpuci_logger "Building docs"
-cmake --build build --target srf_docs
-
-gpuci_logger "Tarring the docs"
-tar cfj "${WORKSPACE_TMP}/docs.tar.bz" build/docs/html
+gpuci_logger "Archiving benchmark reports"
+cd $(dirname ${REPORTS_DIR})
+tar cfj ${WORKSPACE_TMP}/benchmark_reports.tar.bz $(basename ${REPORTS_DIR})
 
 gpuci_logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
-aws s3 cp --no-progress "${WORKSPACE_TMP}/docs.tar.bz" "${ARTIFACT_URL}/docs.tar.bz"
+aws s3 cp ${WORKSPACE_TMP}/benchmark_reports.tar.bz "${ARTIFACT_URL}/benchmark_reports.tar.bz"
 
-gpuci_logger "Success"
+exit $(cat ${WORKSPACE_TMP}/exit_status)

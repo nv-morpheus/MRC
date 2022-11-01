@@ -27,7 +27,7 @@ More information can be found at: [Contributor Code of Conduct](CODE_OF_CONDUCT.
 
 1. Find an issue to work on. The best way is to look for issues with the [good first issue](https://github.com/NVIDIA/SRF/issues) label.
 2. Comment on the issue stating that you are going to work on it.
-3. Code! Make sure to update unit tests and confirm that test coverage has not decreased (see below)! Ensure the 
+3. Code! Make sure to update unit tests and confirm that test coverage has not decreased (see below)! Ensure the
 [license headers are set properly](#Licensing).
 4. When done, [create your pull request](https://github.com/NVIDIA/SRF/compare).
 5. Wait for other developers to review your code and update code as needed.
@@ -37,14 +37,13 @@ Remember, if you are unsure about anything, don't hesitate to comment on issues 
 
 ## Unit testing and Code Coverage
 Prior to submitting a pull request, you should ensure that all your contributed code is covered by unit tests, and that
-unit test coverage percentages have not decreased (even better if they've increased). To test, from the SRF root 
+unit test coverage percentages have not decreased (even better if they've increased). To test, from the SRF root
 directory:
 
 1. Generate a code coverage report and ensure your additions are covered.
-   1. In some environments you may need to set CUDAToolkit_ROOT
-      1. `export CUDAToolkit_ROOT=[YOUR_CUDA_ROOT]`
+   1. Take note of the CUDA Toolkit setup in the Build section below
    2. `./scripts/gen_coverage.sh`
-   3. open ./build/gcovr-html-report/index.html
+   3. open `./build/gcovr-html-report/index.html`
 
 ## Seasoned developers
 
@@ -57,6 +56,24 @@ Look at the unassigned issues, and find an issue to which you are comfortable co
 ## Setting Up Your Build Environment
 
 ### Build in a Conda Environment
+
+#### CUDA Toolkit Setup
+
+SRF uses the CUDA Toolkit. If you have multiple versions installed on your host, then some care needs to be taken in your environment.
+For example, you may see the following error when activating the srf conda environment:
+
+`Version of installed CUDA didn't match package`
+
+Some options:
+
+- Set the variable `CUDA_HOME` to the desired CUDA install
+  - This option is good for overriding the value set in `PATH` if you have multiple installs
+  - This will also get rid of the warning messages when activating conda
+  - Note: This must be set before calling `conda activate` and will only work for the lifetime of that shell session. For that reason, it's best to configure this in your `.bashrc` or similar configuration file.
+
+- Set the CMake CUDA variable `-DCUDAToolkit_ROOT`
+  - For example, you can set `-DCUDAToolkit_ROOT=/usr/local/cuda-11.5` to tell CMake to use your CUDA 11.5 install
+  - This will work even if the `nvcc_linux-64` conda package is uninstalled
 
 #### Clone SRF repository
 ```bash
@@ -95,6 +112,13 @@ pip install -e $SRF_HOME/build/python
 #### Run SRF Python Tests
 ```bash
 pytest $SRF_HOME/python
+```
+
+### Building API Documentation
+From the root of the SRF repo, configure CMake with `SRF_BUILD_DOCS=ON` then build the `srf_docs` target. Once built the documentation will be located in the `build/docs/html` directory.
+```bash
+cmake -B build -DSRF_BUILD_DOCS=ON .
+cmake --build build --target srf_docs
 ```
 
 ## Licensing

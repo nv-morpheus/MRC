@@ -22,10 +22,13 @@
 #include <gtest/gtest.h>
 #include <pybind11/buffer_info.h>
 #include <pybind11/pytypes.h>
+#include <pybind11/stl.h>  // IWYU pragma: keep
 
 #include <cstring>
 #include <stdexcept>
 #include <string>
+
+// IWYU pragma: no_include "gtest/gtest_pred_impl.h"
 
 namespace py = pybind11;
 using namespace std::string_literals;

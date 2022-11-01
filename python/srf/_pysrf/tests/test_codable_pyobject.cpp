@@ -35,6 +35,13 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
+#include <string>  // IWYU pragma: keep
+
+// IWYU pragma: no_include <gtest/gtest-message.h>
+// IWYU pragma: no_include "gtest/gtest_pred_impl.h"
+// IWYU pragma: no_include <gtest/gtest-test-part.h>
+// IWYU pragma: no_include <pybind11/detail/common.h>
+// IWYU pragma: no_include <tupleobject.h>
 #include <string>
 
 namespace py    = pybind11;
