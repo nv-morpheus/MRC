@@ -178,6 +178,7 @@ class Builder final
     void init_module(std::shared_ptr<srf::modules::SegmentModule> module)
     {
         ns_push(module->component_prefix());
+        module->m_module_instance_registered_namespace = m_namespace_prefix;
         module->initialize(*this);
         ns_pop();
     }

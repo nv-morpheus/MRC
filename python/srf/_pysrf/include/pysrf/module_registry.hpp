@@ -24,6 +24,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
+#include <memory>
+
 namespace srf::pysrf {
 namespace py = pybind11;
 
@@ -33,8 +35,6 @@ namespace py = pybind11;
 class ModuleRegistryProxy
 {
   public:
-    using test_t = std::function<std::shared_ptr<srf::modules::SegmentModule>(std::string, py::dict)>;
-
     ModuleRegistryProxy() = default;
 
     static bool contains_namespace(ModuleRegistryProxy& self, const std::string& registry_namespace)
@@ -57,7 +57,9 @@ class ModuleRegistryProxy
                                 PythonSegmentModule::py_initializer_t fn_py_initializer)
     {
         VLOG(2) << "Registering python module: " << registry_namespace << "::" << name;
-        auto fn_constructor = [fn_py_initializer](std::string name, nlohmann::json config) {
+        auto fn_constructor = [fn_py_initializer](
+                                  std::string name,
+                                  nlohmann::json config) {
             auto module             = std::make_shared<PythonSegmentModule>(std::move(name), std::move(config));
             module->m_py_initialize = fn_py_initializer;
 

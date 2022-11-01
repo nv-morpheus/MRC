@@ -48,8 +48,7 @@ class PythonSegmentModule : public srf::modules::SegmentModule
     void initialize(segment::Builder& builder) override;
 
   private:
-    std::function<void(segment::Builder&)> m_py_initialize;
-    bool m_initialized{false};
+    py_initializer_t m_py_initialize;
 };
 
 PythonSegmentModule::PythonSegmentModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
@@ -60,8 +59,9 @@ PythonSegmentModule::PythonSegmentModule(std::string module_name, nlohmann::json
 
 void PythonSegmentModule::initialize(segment::Builder& builder)
 {
+    VLOG(2) << "Calling PythonSegmentModule::initialize";
     m_py_initialize(std::forward<segment::Builder&>(builder));
-    m_initialized = true;
+    VLOG(2) << "Calling PythonSegmentModule::initialize -> DONE";
 }
 
 }  // namespace srf::pysrf

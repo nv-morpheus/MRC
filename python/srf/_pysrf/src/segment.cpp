@@ -296,6 +296,7 @@ std::shared_ptr<srf::modules::SegmentModule> BuilderProxy::load_module_from_regi
     py::dict config)
 {
     auto json_config = cast_from_pyobject(config);
+
     return self.load_module_from_registry(
         module_id, registry_namespace, std::move(module_name), std::move(json_config));
 }
