@@ -39,12 +39,69 @@ env:
   WORKSPACE_TMP: "${{ github.workspace }}/tmp"
 
 
-  test:
-    name: Test
-    runs-on: [self-hosted, linux, amd64, gpu-v100-495-1]
+jobs:
+  check:
+    if: ${{ startsWith(github.ref_name, 'pull-request/') }}
+    name: Check
+    runs-on: [self-hosted, linux, amd64, cpu4]
     timeout-minutes: 60
     container:
-      image: rapidsai/ci:cuda11.4.1-ubuntu20.04=py3.8
+      credentials:
+        username: '$oauthtoken'
+        password: ${{ secrets.NGC_API_KEY }}
+      image: nvcr.io/ea-nvidia-morpheus/morpheus:srf-ci-20221021
+    strategy:
+      fail-fast: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          lfs: false
+          path: 'srf'
+          fetch-depth: 0
+
+      - name: Check
+        shell: bash
+        run: ./srf/ci/scripts/github/checks.sh
+
+  build:
+    name: Build
+    runs-on: [self-hosted, linux, amd64, cpu16]
+    timeout-minutes: 60
+    container:
+      credentials:
+        username: '$oauthtoken'
+        password: ${{ secrets.NGC_API_KEY }}
+      image: nvcr.io/ea-nvidia-morpheus/morpheus:srf-ci-20221021
+    strategy:
+      fail-fast: true
+      matrix:
+        build_cc: ["gcc", "gcc-coverage", "clang"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          lfs: false
+          path: 'srf'
+
+      - name: Build:linux:x86_64
+        shell: bash
+        env:
+          BUILD_CC: ${{ matrix.build_cc }}
+        run: ./srf/ci/scripts/github/build.sh
+
+  test:
+    name: Test
+    needs: [build]
+    runs-on: [self-hosted, linux, amd64, gpu-v100-450-1]
+    timeout-minutes: 60
+    container:
+      credentials:
+        username: '$oauthtoken'
+        password: ${{ secrets.NGC_API_KEY }}
+      image: nvcr.io/ea-nvidia-morpheus/morpheus:srf-ci-20221021
       options: --cap-add=sys_nice
       env:
         NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
@@ -67,3 +124,85 @@ env:
           BUILD_CC: ${{ matrix.build_cc }}
         run: ./srf/ci/scripts/github/test.sh
 
+  documentation:
+    name: Documentation
+    needs: [build]
+    runs-on: [self-hosted, linux, amd64, cpu4]
+    timeout-minutes: 60
+    container:
+      credentials:
+        username: '$oauthtoken'
+        password: ${{ secrets.NGC_API_KEY }}
+      image: nvcr.io/ea-nvidia-morpheus/morpheus:srf-ci-20221021
+    strategy:
+      fail-fast: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          lfs: false
+          path: 'srf'
+
+      - name: build_docs
+        shell: bash
+        run: ./srf/ci/scripts/github/docs.sh
+
+  benchmark:
+    name: Benchmark
+    needs: [build]
+    runs-on: [self-hosted, linux, amd64, cpu4]
+    timeout-minutes: 60
+    container:
+      credentials:
+        username: '$oauthtoken'
+        password: ${{ secrets.NGC_API_KEY }}
+      image: nvcr.io/ea-nvidia-morpheus/morpheus:srf-ci-20221021
+    strategy:
+      fail-fast: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          lfs: false
+          path: 'srf'
+
+      - name: pre_benchmark
+        shell: bash
+        run: ./srf/ci/scripts/github/pre_benchmark.sh
+      - name: benchmark
+        shell: bash
+        run: ./srf/ci/scripts/github/benchmark.sh
+      - name: post_benchmark
+        shell: bash
+        run: ./srf/ci/scripts/github/benchmark.sh
+
+
+  package:
+    name: Package
+    if: ${{ startsWith(github.ref_name, 'branch-') }}
+    needs: [benchmark, documentation, test]
+    runs-on: [self-hosted, linux, amd64, cpu16]
+    timeout-minutes: 60
+    container:
+      credentials:
+        username: '$oauthtoken'
+        password: ${{ secrets.NGC_API_KEY }}
+      image: nvcr.io/ea-nvidia-morpheus/morpheus:srf-ci-20221021
+    strategy:
+      fail-fast: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          lfs: false
+          path: 'srf'
+          fetch-depth: 0
+
+      - name: conda
+        shell: bash
+        env:
+          CONDA_TOKEN: "${{ secrets.CONDA_TOKEN }}"
+        run: ./srf/ci/scripts/github/conda.sh
