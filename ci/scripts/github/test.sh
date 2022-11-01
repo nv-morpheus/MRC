@@ -16,13 +16,6 @@
 
 set -e
 
-unset NVIDIA_REQUIRE_CUDA
-
-cat /proc/driver/nvidia/version
-echo "----"
-#/usr/bin/nvidia-smi -h
-#echo "----"
-#/usr/bin/nvidia-smi  v495.29.05
 source ${WORKSPACE}/ci/scripts/github/common.sh
 /usr/bin/nvidia-smi
 
