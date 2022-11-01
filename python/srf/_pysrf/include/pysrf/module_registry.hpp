@@ -47,14 +47,7 @@ class ModuleRegistryProxy
                                 const std::vector<unsigned int>& release_version,
                                 PythonSegmentModule::py_initializer_t fn_py_initializer)
     {
-        auto fn_constructor = [fn_py_initializer](std::string name, nlohmann::json config) {
-            auto module             = std::make_shared<PythonSegmentModule>(std::move(name), std::move(config));
-            module->m_py_initialize = fn_py_initializer;
-
-            return module;
-        };
-
-        srf::modules::ModuleRegistry::register_module(std::move(name), release_version, fn_constructor);
+        register_module(self, name, "default", release_version, fn_py_initializer);
     }
 
     static void register_module(ModuleRegistryProxy&,
@@ -63,19 +56,17 @@ class ModuleRegistryProxy
                                 const std::vector<unsigned int>& release_version,
                                 PythonSegmentModule::py_initializer_t fn_py_initializer)
     {
-        VLOG(2) << "Creation constructor in python register_module proxy";
+        VLOG(2) << "Registering python module: " << registry_namespace << "::" << name;
         auto fn_constructor = [fn_py_initializer](std::string name, nlohmann::json config) {
             auto module             = std::make_shared<PythonSegmentModule>(std::move(name), std::move(config));
             module->m_py_initialize = fn_py_initializer;
 
             return module;
         };
-        VLOG(2) << "done";
 
-        VLOG(2) << "Registering python module";
-        srf::modules::ModuleRegistry::register_module(
-            std::move(name), std::move(registry_namespace), release_version, fn_constructor);
-        VLOG(2) << "done";
+        srf::modules::ModuleRegistry::register_module(name, registry_namespace, release_version, fn_constructor);
+
+        register_module_cleanup_fn(name, registry_namespace);
     }
 
     static void unregister_module(ModuleRegistryProxy& self,
@@ -86,12 +77,26 @@ class ModuleRegistryProxy
         return srf::modules::ModuleRegistry::unregister_module(name, registry_namespace, optional);
     }
 
-    // TODO(bhargav)
-    // contains
-    // find_module
-    // registered_modules
-    // unregister_module
-    // is_version_compatible
+  private:
+    /**
+     * When we register python modules, we have to capture a python-land initializer function, which is in turn
+     * stored in the ModuleRegistry -- a global static struct. If the registered modules that capture a python
+     * function are not unregistered when the python interpreter exits, it will hang, waiting on their ref counts
+     * to drop to zero. To ensure this doesn't happen, we register an atexit callback here that forces all python
+     * modules to be unregistered when the interpreter is shut down.
+     * @param name Name of the module
+     * @param registry_namespace Namespace of the module
+     */
+    static void register_module_cleanup_fn(const std::string& name, const std::string& registry_namespace)
+    {
+        auto at_exit = pybind11::module_::import("atexit");
+        at_exit.attr("register")(pybind11::cpp_function([name, registry_namespace]() {
+            VLOG(2) << "(atexit) Unregistering " << registry_namespace << "::" << name;
+
+            // Try unregister -- ignore if already unregistered
+            srf::modules::ModuleRegistry::unregister_module(name, registry_namespace, true);
+        }));
+    }
 };
 
 #pragma GCC visibility pop

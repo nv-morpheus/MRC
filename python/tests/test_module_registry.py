@@ -41,7 +41,6 @@ def test_module_registry_register_good_version():
     registry = srf.ModuleRegistry()
 
     registry.register_module("a_module", "srf_unittests", [22, 11, 0], module_init_fn)
-    registry.unregister_module("a_module", "srf_unittests")
 
 
 if (__name__ in ("__main__",)):
