@@ -163,4 +163,5 @@ if (__name__ in ("__main__",)):
     test_module_registry_register_bad_version()
     test_module_registry_register_good_version()
     test_module_registry_register_good_version_no_unregister()
-    test_py_registered_nested_module()
+    test_py_registered_nested_modules()
+    test_py_registered_nested_copied_modules()
