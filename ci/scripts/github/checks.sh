@@ -15,7 +15,7 @@
 # limitations under the License.
 
 set -e
-exit 0
+
 source ${WORKSPACE}/ci/scripts/github/common.sh
 
 fetch_base_branch
