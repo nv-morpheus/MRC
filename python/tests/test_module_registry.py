@@ -15,6 +15,7 @@
 
 import logging
 
+import pytest
 import srf
 
 
@@ -23,5 +24,27 @@ def test_module_registry_contains():
 
     print(f"Module registry contains 'xyz': {registry.contains_namespace('xyz')}")
 
-if (__name__ in ("__main__", )):
+
+def module_init_fn(builder: srf.Builder):
+    print("Called module_init_fn")
+    pass
+
+
+def test_module_registry_register_bad_version():
+    registry = srf.ModuleRegistry()
+
+    with pytest.raises(Exception):
+        registry.register_module("a_module", "srf_unittests", [22, 19, 0], module_init_fn)
+
+
+def test_module_registry_register_good_version():
+    registry = srf.ModuleRegistry()
+
+    registry.register_module("a_module", "srf_unittests", [22, 11, 0], module_init_fn)
+    registry.unregister_module("a_module", "srf_unittests")
+
+
+if (__name__ in ("__main__",)):
     test_module_registry_contains()
+    test_module_registry_register_bad_version()
+    test_module_registry_register_good_version()

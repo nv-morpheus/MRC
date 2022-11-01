@@ -175,7 +175,6 @@ class Builder final
         return std::move(module);
     }
 
-    // TODO(bhargav) -> create python binding for this
     void init_module(std::shared_ptr<srf::modules::SegmentModule> module)
     {
         ns_push(module->component_prefix());

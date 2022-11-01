@@ -16,9 +16,16 @@
  */
 
 #pragma once
+#include "pysrf/py_segment_module.hpp"
+#include "pysrf/utils.hpp"
+
 #include "srf/experimental/modules/module_registry.hpp"
 
+#include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
+
 namespace srf::pysrf {
+namespace py = pybind11;
 
 // Export everything in the srf::pysrf namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
@@ -26,6 +33,8 @@ namespace srf::pysrf {
 class ModuleRegistryProxy
 {
   public:
+    using test_t = std::function<std::shared_ptr<srf::modules::SegmentModule>(std::string, py::dict)>;
+
     ModuleRegistryProxy() = default;
 
     static bool contains_namespace(ModuleRegistryProxy& self, const std::string& registry_namespace)
@@ -33,8 +42,49 @@ class ModuleRegistryProxy
         return srf::modules::ModuleRegistry::contains_namespace(registry_namespace);
     }
 
-    // TODO(devin)
-    // register_module
+    static void register_module(ModuleRegistryProxy& self,
+                                std::string name,
+                                const std::vector<unsigned int>& release_version,
+                                PythonSegmentModule::py_initializer_t fn_py_initializer)
+    {
+        auto fn_constructor = [fn_py_initializer](std::string name, nlohmann::json config) {
+            auto module             = std::make_shared<PythonSegmentModule>(std::move(name), std::move(config));
+            module->m_py_initialize = fn_py_initializer;
+
+            return module;
+        };
+
+        srf::modules::ModuleRegistry::register_module(std::move(name), release_version, fn_constructor);
+    }
+
+    static void register_module(ModuleRegistryProxy&,
+                                std::string name,
+                                std::string registry_namespace,
+                                const std::vector<unsigned int>& release_version,
+                                PythonSegmentModule::py_initializer_t fn_py_initializer)
+    {
+        VLOG(2) << "Creation constructor in python register_module proxy";
+        auto fn_constructor = [fn_py_initializer](std::string name, nlohmann::json config) {
+            auto module             = std::make_shared<PythonSegmentModule>(std::move(name), std::move(config));
+            module->m_py_initialize = fn_py_initializer;
+
+            return module;
+        };
+        VLOG(2) << "done";
+
+        VLOG(2) << "Registering python module";
+        srf::modules::ModuleRegistry::register_module(
+            std::move(name), std::move(registry_namespace), release_version, fn_constructor);
+        VLOG(2) << "done";
+    }
+
+    static void unregister_module(ModuleRegistryProxy& self,
+                                  const std::string& name,
+                                  const std::string& registry_namespace,
+                                  bool optional = true)
+    {
+        return srf::modules::ModuleRegistry::unregister_module(name, registry_namespace, optional);
+    }
 
     // TODO(bhargav)
     // contains

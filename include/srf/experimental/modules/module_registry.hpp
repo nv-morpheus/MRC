@@ -42,6 +42,7 @@ class SegmentModule;
  */
 class ModuleRegistry
 {
+  public:
     using module_constructor_t =
         std::function<std::shared_ptr<srf::modules::SegmentModule>(std::string module_name, nlohmann::json config)>;
 
@@ -49,7 +50,6 @@ class ModuleRegistry
     using module_namespace_map_t = std::map<std::string, module_registry_map_t>;
     using module_name_map_t      = std::map<std::string, std::vector<std::string>>;
 
-  public:
     ModuleRegistry() = delete;
 
     /**

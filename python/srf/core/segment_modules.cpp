@@ -88,12 +88,33 @@ PYBIND11_MODULE(segment_modules, m)
     SegmentModuleRegistry.def(
         "contains_namespace", &ModuleRegistryProxy::contains_namespace, py::arg("registry_namespace"));
 
-    // TODO(bhargav)
-    // contains
-    // find_module
-    // registered_modules
-    // unregister_module
-    // is_version_compatible
+    SegmentModuleRegistry.def(
+        "register_module",
+        static_cast<void (*)(ModuleRegistryProxy&,
+                             std::string,
+                             const std::vector<unsigned int>&,
+                             std::function<void(segment::Builder&)>)>(&ModuleRegistryProxy::register_module),
+        py::arg("name"),
+        py::arg("release_version"),
+        py::arg("fn_constructor"));
+
+    SegmentModuleRegistry.def(
+        "register_module",
+        static_cast<void (*)(ModuleRegistryProxy&,
+                             std::string,
+                             std::string,
+                             const std::vector<unsigned int>&,
+                             std::function<void(segment::Builder&)>)>(&ModuleRegistryProxy::register_module),
+        py::arg("name"),
+        py::arg("registry_namespace"),
+        py::arg("release_version"),
+        py::arg("fn_constructor"));
+
+    SegmentModuleRegistry.def("unregister_module",
+                              &ModuleRegistryProxy::unregister_module,
+                              py::arg("name"),
+                              py::arg("registry_namespace"),
+                              py::arg("optional") = true);
 
 #ifdef VERSION_INFO
     plugins_module.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

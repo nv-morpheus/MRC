@@ -28,35 +28,42 @@
 
 namespace srf::pysrf {
 
+namespace py = pybind11;
+
+class ModuleRegistryProxy;
+
 // Export everything in the srf::pysrf namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
 
-class SegmentModuleProxy
+class PythonSegmentModule : public srf::modules::SegmentModule
 {
+    friend ModuleRegistryProxy;
   public:
-    static std::string component_prefix(srf::modules::SegmentModule& self);
+    using py_initializer_t = std::function<void(segment::Builder&)>;
 
-    static pybind11::dict config(srf::modules::SegmentModule& self);
+    PythonSegmentModule(std::string module_name);
+    PythonSegmentModule(std::string module_name, nlohmann::json config);
 
-    static const std::string& name(srf::modules::SegmentModule& self);
+  protected:
+    void initialize(segment::Builder& builder) override;
 
-    static std::string module_name(srf::modules::SegmentModule& self);
-
-    static std::vector<std::string> input_ids(srf::modules::SegmentModule& self);
-
-    static std::vector<std::string> output_ids(srf::modules::SegmentModule& self);
-
-    static std::shared_ptr<srf::segment::ObjectProperties> input_port(srf::modules::SegmentModule& self,
-                                                                      const std::string& input_id);
-
-    static const srf::modules::SegmentModule::segment_module_port_map_t& input_ports(srf::modules::SegmentModule& self);
-
-    static std::shared_ptr<srf::segment::ObjectProperties> output_port(srf::modules::SegmentModule& self,
-                                                                       const std::string& output_id);
-
-    static const srf::modules::SegmentModule::segment_module_port_map_t& output_ports(
-        srf::modules::SegmentModule& self);
+  private:
+    std::function<void(segment::Builder&)> m_py_initialize;
+    bool m_initialized{false};
 };
 
-#pragma GCC visibility pop
+PythonSegmentModule::PythonSegmentModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
+
+PythonSegmentModule::PythonSegmentModule(std::string module_name, nlohmann::json config) :
+  SegmentModule(std::move(module_name), std::move(config))
+{}
+
+void PythonSegmentModule::initialize(segment::Builder& builder)
+{
+    m_py_initialize(std::forward<segment::Builder&>(builder));
+    m_initialized = true;
+}
+
 }  // namespace srf::pysrf
+
+#pragma GCC visibility pop
