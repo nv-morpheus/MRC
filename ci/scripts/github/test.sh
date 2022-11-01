@@ -16,7 +16,6 @@
 
 set -e
 
-unset CUDA_PATH
 unset NVIDIA_REQUIRE_CUDA
 
 cat /proc/driver/nvidia/version
