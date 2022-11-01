@@ -17,8 +17,8 @@
 
 # Note this is the Dockerfile for the CI runner not for SRF itself
 # Build from the root of the SRF repo with:
-# docker build --network=host -t srf/ci:driver-latest -f ci/runner/Dockerfile .
-# docker build --network=host --build-arg NVIDIA_COMPUTE_PKG="" -t srf/ci:latest -f ci/runner/Dockerfile .
+# DOCKER_BUILDKIT=1 docker build --network=host --target base -t srf/ci:latest -f ci/runner/Dockerfile .
+# DOCKER_BUILDKIT=1 docker build --network=host --target driver -t srf/ci:driver-latest -f ci/runner/Dockerfile .
 
 # Args used in FROM commands must come first
 ARG FROM_IMAGE="rapidsai/ci"
@@ -34,16 +34,12 @@ ARG PROJ_NAME=srf
 ARG CUDA_SHORT_VER=11.4
 ARG CLANG_VER=12
 
-# Set this to an empty string when building an image for testing
-ARG NVIDIA_COMPUTE_PKG="libnvidia-compute-495"
-
 SHELL ["/bin/bash",  "-c"]
 
 # OS deps
 RUN apt-get update &&\
     apt-get install --no-install-recommends -y \
-        libnuma1 \
-        ${NVIDIA_COMPUTE_PKG} &&\
+        libnuma1 && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -70,3 +66,12 @@ RUN git clone https://github.com/include-what-you-use/include-what-you-use.git /
     cmake --build . --parallel $(nproc) --target install && \
     cd - && \
     rm -rf /tmp/iwyu
+
+# ============ driver ==================
+FROM base as driver
+
+RUN apt update && \
+    DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC \
+    apt install --no-install-recommends -y libnvidia-compute-495 && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/*
