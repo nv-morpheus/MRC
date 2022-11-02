@@ -20,6 +20,7 @@
 #include "srf/experimental/modules/plugins.hpp"
 
 #include <memory>
+#include <string>
 
 namespace srf::pysrf {
 

@@ -27,7 +27,9 @@
 #include <pybind11/stl.h>  // IWYU pragma: keep
 
 #include <memory>
+#include <ostream>
 #include <utility>  // for move
+
 // IWYU thinks we need vectir for py::class_<Executor, std::shared_ptr<Executor>>
 // IWYU pragma: no_include <vector>
 

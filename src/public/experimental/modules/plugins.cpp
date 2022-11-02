@@ -17,13 +17,19 @@
 
 #include "srf/experimental/modules/plugins.hpp"
 
-#include <boost/filesystem.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/path_traits.hpp>
+#include <dlfcn.h>
 #include <glog/logging.h>
 
-#include <iostream>
+#include <exception>
 #include <memory>
 #include <mutex>
+#include <sstream>
+#include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace fs = boost::filesystem;
 

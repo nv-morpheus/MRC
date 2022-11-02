@@ -27,6 +27,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
 
+#include <ostream>
+
 // IWYU pragma: no_include <pybind11/detail/common.h>
 // IWYU pragma: no_include <pybind11/detail/descr.h>
 // IWYU thinks we need array for py::class_<Pipeline>

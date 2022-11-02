@@ -29,6 +29,7 @@
 
 #include <array>
 #include <memory>
+#include <ostream>
 
 namespace srf::pysrf {
 

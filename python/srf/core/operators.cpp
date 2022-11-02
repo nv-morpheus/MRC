@@ -24,6 +24,9 @@
 #include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/pybind11.h>
 
+#include <array>
+#include <ostream>
+
 namespace srf::pysrf {
 
 namespace py = pybind11;

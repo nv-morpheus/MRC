@@ -18,17 +18,17 @@
 #pragma once
 
 #include "srf/experimental/modules/segment_modules.hpp"
-#include "srf/segment/object.hpp"
+#include "srf/segment/forward.hpp"
 
+#include <nlohmann/json.hpp>
 #include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
 
+#include <functional>
 #include <string>
 
 namespace srf::pysrf {
-
-namespace py = pybind11;
 
 class ModuleRegistryProxy;
 

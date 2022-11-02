@@ -20,13 +20,18 @@
 #include "pysrf/module_registry.hpp"
 #include "pysrf/utils.hpp"
 
+#include "srf/channel/status.hpp"
 #include "srf/experimental/modules/segment_modules.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/version.hpp"
 
+#include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 
+#include <functional>
+#include <map>
 #include <memory>
+#include <ostream>
 
 // IWYU thinks the Segment.def calls need array and vector
 // IWYU pragma: no_include <array>

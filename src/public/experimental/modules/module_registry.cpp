@@ -17,13 +17,16 @@
 
 #include "srf/experimental/modules/module_registry.hpp"
 
-#include "srf/experimental/modules/segment_modules.hpp"
 #include "srf/version.hpp"
 
+#include <glog/logging.h>
+
 #include <algorithm>
-#include <iostream>
 #include <map>
 #include <mutex>
+#include <sstream>
+#include <stdexcept>
+#include <utility>
 #include <vector>
 
 namespace srf::modules {

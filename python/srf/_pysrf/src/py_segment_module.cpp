@@ -17,6 +17,11 @@
 
 #include "pysrf/py_segment_module.hpp"
 
+#include <glog/logging.h>
+
+#include <ostream>
+#include <utility>
+
 namespace srf::pysrf {
 
 PythonSegmentModule::PythonSegmentModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
@@ -28,7 +33,7 @@ PythonSegmentModule::PythonSegmentModule(std::string module_name, nlohmann::json
 void PythonSegmentModule::initialize(segment::Builder& builder)
 {
     VLOG(2) << "Calling PythonSegmentModule::initialize";
-    m_py_initialize(std::forward<segment::Builder&>(builder));
+    m_py_initialize(builder);
     VLOG(2) << "Calling PythonSegmentModule::initialize -> DONE";
 }
 }  // namespace srf::pysrf

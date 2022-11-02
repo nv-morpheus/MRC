@@ -19,6 +19,11 @@
 
 #include "srf/node/port_registry.hpp"
 
+#include <nlohmann/json.hpp>
+
+#include <algorithm>
+#include <numeric>
+
 namespace srf::segment {
 std::shared_ptr<ObjectProperties> Builder::get_ingress(std::string name, std::type_index type_index)
 {
@@ -55,5 +60,51 @@ std::shared_ptr<ObjectProperties> Builder::get_egress(std::string name, std::typ
     }
 
     return port;
+}
+
+void Builder::init_module(std::shared_ptr<srf::modules::SegmentModule> module)
+{
+    ns_push(module->component_prefix());
+    module->m_module_instance_registered_namespace = m_namespace_prefix;
+    module->initialize(*this);
+    ns_pop();
+}
+
+std::shared_ptr<srf::modules::SegmentModule> Builder::load_module_from_registry(const std::string& module_id,
+                                                                                const std::string& registry_namespace,
+                                                                                std::string module_name,
+                                                                                nlohmann::json config)
+{
+    auto fn_module_constructor = srf::modules::ModuleRegistry::find_module(module_id, registry_namespace);
+    auto module                = std::move(fn_module_constructor(std::move(module_name), std::move(config)));
+
+    init_module(module);
+
+    return std::move(module);
+}
+
+/** private implementations **/
+std::string Builder::accum_merge(std::string lhs, std::string rhs)
+{
+    if (lhs.empty())
+    {
+        return std::move(rhs);
+    }
+
+    return std::move(lhs) + "/" + std::move(rhs);
+}
+
+void Builder::ns_push(const std::string& component_namespace)
+{
+    m_namespace_components.push_back(component_namespace);
+    m_namespace_prefix = std::accumulate(
+        m_namespace_components.begin(), m_namespace_components.end(), std::string(""), Builder::accum_merge);
+}
+
+void Builder::ns_pop()
+{
+    m_namespace_components.pop_back();
+    m_namespace_prefix = std::accumulate(
+        m_namespace_components.begin(), m_namespace_components.end(), std::string(""), Builder::accum_merge);
 }
 }  // namespace srf::segment

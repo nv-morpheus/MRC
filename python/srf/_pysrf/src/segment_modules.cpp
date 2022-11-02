@@ -24,7 +24,7 @@
 
 #include <pybind11/pytypes.h>
 
-#include <functional>
+#include <algorithm>
 #include <memory>
 
 namespace srf::pysrf {

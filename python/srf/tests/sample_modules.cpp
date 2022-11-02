@@ -19,12 +19,16 @@
 
 #include "pysrf/utils.hpp"
 
+#include "srf/channel/status.hpp"
 #include "srf/experimental/modules/module_registry_util.hpp"
+#include "srf/node/rx_source.hpp"
 #include "srf/version.hpp"
 
+#include <boost/hana/if.hpp>
 #include <pybind11/pybind11.h>
 
 #include <memory>
+#include <ostream>
 
 // IWYU thinks the Segment.def calls need array and vector
 // IWYU pragma: no_include <array>

@@ -42,16 +42,20 @@
 
 #include <boost/hana.hpp>  // IWYU pragma: keep
 #include <glog/logging.h>
+#include <nlohmann/json.hpp>
 #include <rxcpp/rx.hpp>
 
+#include <algorithm>
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <numeric>
 #include <ostream>
 #include <string>
 #include <type_traits>
 #include <typeindex>
 #include <utility>
+#include <vector>
 
 // IWYU pragma: no_include <boost/hana/fwd/core/when.hpp>
 // IWYU pragma: no_include <boost/hana/fwd/if.hpp>
@@ -175,26 +179,12 @@ class Builder final
         return std::move(module);
     }
 
-    void init_module(std::shared_ptr<srf::modules::SegmentModule> module)
-    {
-        ns_push(module->component_prefix());
-        module->m_module_instance_registered_namespace = m_namespace_prefix;
-        module->initialize(*this);
-        ns_pop();
-    }
+    void init_module(std::shared_ptr<srf::modules::SegmentModule> module);
 
     std::shared_ptr<srf::modules::SegmentModule> load_module_from_registry(const std::string& module_id,
                                                                            const std::string& registry_namespace,
                                                                            std::string module_name,
-                                                                           nlohmann::json config = {})
-    {
-        auto fn_module_constructor = srf::modules::ModuleRegistry::find_module(module_id, registry_namespace);
-        auto module                = std::move(fn_module_constructor(std::move(module_name), std::move(config)));
-
-        init_module(module);
-
-        return std::move(module);
-    }
+                                                                           nlohmann::json config = {});
 
     template <typename SourceNodeTypeT, typename SinkNodeTypeT>
     void make_edge(std::shared_ptr<Object<SourceNodeTypeT>> source, std::shared_ptr<Object<SinkNodeTypeT>> sink)
@@ -332,29 +322,11 @@ class Builder final
     std::string m_namespace_prefix;
     internal::segment::IBuilder& m_backend;
 
-    static std::string accum_merge(std::string lhs, std::string rhs)
-    {
-        if (lhs.empty())
-        {
-            return std::move(rhs);
-        }
+    static std::string accum_merge(std::string lhs, std::string rhs);
 
-        return std::move(lhs) + "/" + std::move(rhs);
-    }
+    void ns_push(const std::string& component_namespace);
 
-    void ns_push(const std::string& component_namespace)
-    {
-        m_namespace_components.push_back(component_namespace);
-        m_namespace_prefix = std::accumulate(
-            m_namespace_components.begin(), m_namespace_components.end(), std::string(""), Builder::accum_merge);
-    }
-
-    void ns_pop()
-    {
-        m_namespace_components.pop_back();
-        m_namespace_prefix = std::accumulate(
-            m_namespace_components.begin(), m_namespace_components.end(), std::string(""), Builder::accum_merge);
-    }
+    void ns_pop();
 
     friend Definition;
 };

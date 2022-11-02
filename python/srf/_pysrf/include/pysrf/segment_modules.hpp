@@ -24,7 +24,9 @@
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
 
+#include <memory>
 #include <string>
+#include <vector>
 
 namespace srf::pysrf {
 

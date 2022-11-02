@@ -18,14 +18,19 @@
 #include "pysrf/module_registry.hpp"
 
 #include "pysrf/py_segment_module.hpp"
-#include "pysrf/utils.hpp"
 
 #include "srf/experimental/modules/module_registry.hpp"
 
+#include <glog/logging.h>
+#include <nlohmann/json.hpp>
+#include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
+#include <array>
 #include <memory>
+#include <ostream>
+#include <utility>
 
 namespace srf::pysrf {
 

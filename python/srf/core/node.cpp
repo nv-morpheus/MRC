@@ -27,6 +27,7 @@
 #include <cstddef>
 #include <memory>
 #include <sstream>
+#include <string>
 
 namespace srf::pysrf {
 namespace py = pybind11;

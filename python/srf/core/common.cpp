@@ -19,14 +19,21 @@
 #include "pysrf/port_builders.hpp"
 #include "pysrf/types.hpp"
 
+#include "srf/channel/status.hpp"
+#include "srf/core/utils.hpp"
+#include "srf/manifold/egress.hpp"
 #include "srf/node/sink_properties.hpp"
+#include "srf/node/source_properties.hpp"
 #include "srf/version.hpp"
 
+#include <boost/fiber/future/future.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
+#include <rxcpp/rx.hpp>
 
 #include <algorithm>
 #include <memory>
+#include <ostream>
 #include <vector>
 
 // IWYU pragma: no_include <boost/fiber/future/detail/shared_state.hpp>

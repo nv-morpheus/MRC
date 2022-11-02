@@ -17,7 +17,22 @@
 
 #include "srf/experimental/modules/sample_modules.hpp"
 
+#include "rxcpp/operators/rx-map.hpp"
+#include "rxcpp/sources/rx-iterate.hpp"
+
+#include "srf/channel/status.hpp"
 #include "srf/experimental/modules/segment_modules.hpp"
+#include "srf/node/rx_node.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/rx_source.hpp"
+#include "srf/segment/object.hpp"
+
+#include <boost/hana/if.hpp>
+#include <glog/logging.h>
+
+#include <memory>
+#include <ostream>
+#include <vector>
 
 namespace srf::modules {
 SimpleModule::SimpleModule(std::string module_name) : SegmentModule(std::move(module_name)) {}

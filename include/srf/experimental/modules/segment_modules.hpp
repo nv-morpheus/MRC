@@ -17,19 +17,16 @@
 
 #pragma once
 
+#include "srf/segment/forward.hpp"
 #include "srf/segment/object.hpp"
 
 #include <nlohmann/json.hpp>
 
 #include <map>
+#include <memory>
 #include <string>
 #include <typeindex>
-#include <utility>
 #include <vector>
-
-namespace srf::segment {
-class Builder;
-}
 
 namespace srf::modules {
 

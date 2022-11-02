@@ -17,6 +17,11 @@
 
 #include "srf/experimental/modules/segment_modules.hpp"
 
+#include <algorithm>
+#include <ostream>
+#include <stdexcept>
+#include <utility>
+
 namespace srf::modules {
 
 SegmentModule::SegmentModule(std::string module_name) : m_module_instance_name(std::move(module_name)) {}

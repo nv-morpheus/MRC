@@ -21,9 +21,10 @@
 #include "srf/segment/builder.hpp"
 
 #include <nlohmann/json.hpp>
+#include <rxcpp/rx.hpp>
 
 #include <string>
-#include <typeindex>
+#include <utility>
 
 namespace srf::modules {
 
