@@ -44,7 +44,7 @@ RUN apt-get update &&\
     rm -rf /var/lib/apt/lists/*
 
 # Create conda environment
-COPY ./docker/conda/environments/* /tmp/conda/
+COPY ./ci/conda/environments/* /tmp/conda/
 
 RUN CONDA_ALWAYS_YES=true /opt/conda/bin/mamba env create -n ${PROJ_NAME} -q --file /tmp/conda/dev_env.yml && \
     /opt/conda/bin/mamba env update -q -n ${PROJ_NAME} --file /tmp/conda/clang_env.yml && \
