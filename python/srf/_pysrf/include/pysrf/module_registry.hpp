@@ -50,7 +50,7 @@ class ModuleRegistryProxy
         register_module(self, name, "default", release_version, fn_py_initializer);
     }
 
-    static void register_module(ModuleRegistryProxy&,
+    static void register_module(ModuleRegistryProxy& self,
                                 std::string name,
                                 std::string registry_namespace,
                                 const std::vector<unsigned int>& release_version,
