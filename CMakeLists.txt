@@ -23,7 +23,7 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "srf")
 # Options of the form: SRF_USE_XXX, enable linting or alter the environment and are OFF by default
 option(BUILD_SHARED_LIBS "Default value for whether or not to build shared or static libraries" ON)
 option(SRF_BUILD_BENCHMARKS "Whether or not to build SRF benchmarks" OFF)
-option(SRF_BUILD_DOCS "Enable building the python bindings for Srf" OFF)
+option(SRF_BUILD_DOCS "Enable building of API documentation" OFF)
 option(SRF_BUILD_LIBRARY "Whether the entire SRF library should be built. If set to OFF, only the pieces needed for a target will be built. Set to ON if installing the library" ON)
 option(SRF_BUILD_PYTHON "Enable building the python bindings for Srf" ON)
 option(SRF_BUILD_TESTS "Whether or not to build SRF tests" ON)

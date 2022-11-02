@@ -35,6 +35,8 @@ on:
         required: true
         type: string
     secrets:
+      CODECOV_TOKEN:
+        required: true
       CONDA_TOKEN:
         required: true
       GHA_AWS_ACCESS_KEY_ID:
@@ -140,6 +142,7 @@ jobs:
         shell: bash
         env:
           BUILD_CC: ${{ matrix.build_cc }}
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         run: ./srf/ci/scripts/github/test.sh
 
   documentation:
@@ -176,6 +179,7 @@ jobs:
         username: '$oauthtoken'
         password: ${{ secrets.NGC_API_KEY }}
       image: ${{ inputs.container }}
+      options: --cap-add=sys_nice
     strategy:
       fail-fast: true
 

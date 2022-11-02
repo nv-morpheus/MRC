@@ -36,6 +36,8 @@ jobs:
       container: nvcr.io/ea-nvidia-morpheus/morpheus:srf-ci-driver-221102
       test_container: nvcr.io/ea-nvidia-morpheus/morpheus:srf-ci-base-221102
     secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      CONDA_TOKEN: ${{ secrets.CONDA_TOKEN }}
       GHA_AWS_ACCESS_KEY_ID: ${{ secrets.GHA_AWS_ACCESS_KEY_ID }}
       GHA_AWS_SECRET_ACCESS_KEY: ${{ secrets.GHA_AWS_SECRET_ACCESS_KEY }}
       NGC_API_KEY: ${{ secrets.NGC_API_KEY }}
