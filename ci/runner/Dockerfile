@@ -44,14 +44,13 @@ RUN apt-get update &&\
     rm -rf /var/lib/apt/lists/*
 
 # Create conda environment
-COPY ./ci/conda/environments/dev_env.yml /tmp
-COPY ./ci/conda/environments/clang_env.yml /tmp
+COPY ./docker/conda/environments/* /tmp/conda/
 
-RUN CONDA_ALWAYS_YES=true /opt/conda/bin/mamba env create -n ${PROJ_NAME} -q --file /tmp/dev_env.yml && \
-    /opt/conda/bin/mamba env update -q -n ${PROJ_NAME} --file /tmp/clang_env.yml && \
+RUN CONDA_ALWAYS_YES=true /opt/conda/bin/mamba env create -n ${PROJ_NAME} -q --file /tmp/conda/dev_env.yml && \
+    /opt/conda/bin/mamba env update -q -n ${PROJ_NAME} --file /tmp/conda/clang_env.yml && \
     sed -i "s/conda activate base/conda activate ${PROJ_NAME}/g" ~/.bashrc && \
     conda clean -afy && \
-    rm /tmp/dev_env.yml  /tmp/clang_env.yml
+    rm -rf /tmp/conda
 
 
 # Install IWYU (remove once we are on clang-14)
