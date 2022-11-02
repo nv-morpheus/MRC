@@ -67,21 +67,12 @@ PYTEST_RESULTS=$?
 set -e
 
 if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
-<<<<<<< HEAD
   rapids-logger "Generating codecov report"
-=======
-  gpuci_logger "Generating codecov report"
->>>>>>> branch-22.11
   cd ${SRF_ROOT}
   cmake --build build --target gcovr-html-report gcovr-xml-report
 
-<<<<<<< HEAD
   rapids-logger "Archiving codecov report"
   tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${SRF_ROOT}/build/gcovr-html-report
-=======
-  gpuci_logger "Archiving codecov report"
-  tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${SRF_ROOT}/build/gcovr-html-report ${SRF_ROOT}/build/gcovr-xml-report.xml
->>>>>>> branch-22.11
   aws s3 cp ${WORKSPACE_TMP}/coverage_reports.tar.bz "${ARTIFACT_URL}/coverage_reports.tar.bz"
 
   gpuci_logger "Upload codecov report"
