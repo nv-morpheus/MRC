@@ -20,8 +20,8 @@
 #include "pysrf/module_registry.hpp"
 #include "pysrf/utils.hpp"
 
-#include "srf/experimental/modules/sample_modules.hpp"
 #include "srf/experimental/modules/segment_modules.hpp"
+#include "srf/segment/builder.hpp"
 
 #include <pybind11/pybind11.h>
 
@@ -48,6 +48,7 @@ PYBIND11_MODULE(segment_modules, m)
    )pbdoc";
 
     pysrf::import(m, "srf.core.common");
+    pysrf::import_module_object(m, "srf.core.segment", "Builder");
 
     auto SegmentModule =
         py::class_<srf::modules::SegmentModule, std::shared_ptr<srf::modules::SegmentModule>>(m, "SegmentModule");
@@ -93,7 +94,7 @@ PYBIND11_MODULE(segment_modules, m)
         static_cast<void (*)(ModuleRegistryProxy&,
                              std::string,
                              const std::vector<unsigned int>&,
-                             std::function<void(segment::Builder&)>)>(&ModuleRegistryProxy::register_module),
+                             std::function<void(srf::segment::Builder&)>)>(&ModuleRegistryProxy::register_module),
         py::arg("name"),
         py::arg("release_version"),
         py::arg("fn_constructor"));
@@ -104,7 +105,7 @@ PYBIND11_MODULE(segment_modules, m)
                              std::string,
                              std::string,
                              const std::vector<unsigned int>&,
-                             std::function<void(segment::Builder&)>)>(&ModuleRegistryProxy::register_module),
+                             std::function<void(srf::segment::Builder&)>)>(&ModuleRegistryProxy::register_module),
         py::arg("name"),
         py::arg("registry_namespace"),
         py::arg("release_version"),

@@ -54,9 +54,7 @@ PYBIND11_MODULE(segment, m)
 
     // Common must be first in every module
     pysrf::import(m, "srf.core.common");
-
     pysrf::import_module_object(m, "srf.core.node", "SegmentObject");
-    pysrf::import_module_object(m, "srf.core.segment_modules", "SegmentModule");
     pysrf::import(m, "srf.core.subscriber");
 
     // Register the converters for make_py2cxx_edge_adapter and make_cxx2py_edge_adapter

@@ -27,7 +27,6 @@
 #include <memory>
 
 namespace srf::pysrf {
-namespace py = pybind11;
 
 // Export everything in the srf::pysrf namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
@@ -45,7 +44,7 @@ class ModuleRegistryProxy
     static void register_module(ModuleRegistryProxy& self,
                                 std::string name,
                                 const std::vector<unsigned int>& release_version,
-                                PythonSegmentModule::py_initializer_t fn_py_initializer)
+                                std::function<void(srf::segment::Builder&)> fn_py_initializer)
     {
         register_module(self, name, "default", release_version, fn_py_initializer);
     }
@@ -54,12 +53,10 @@ class ModuleRegistryProxy
                                 std::string name,
                                 std::string registry_namespace,
                                 const std::vector<unsigned int>& release_version,
-                                PythonSegmentModule::py_initializer_t fn_py_initializer)
+                                std::function<void(srf::segment::Builder&)> fn_py_initializer)
     {
         VLOG(2) << "Registering python module: " << registry_namespace << "::" << name;
-        auto fn_constructor = [fn_py_initializer](
-                                  std::string name,
-                                  nlohmann::json config) {
+        auto fn_constructor = [fn_py_initializer](std::string name, nlohmann::json config) {
             auto module             = std::make_shared<PythonSegmentModule>(std::move(name), std::move(config));
             module->m_py_initialize = fn_py_initializer;
 

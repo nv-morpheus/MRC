@@ -22,13 +22,11 @@
 #include "srf/experimental/modules/segment_modules.hpp"
 #include "srf/segment/object.hpp"
 
-#include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
 
 #include <functional>
 #include <memory>
-#include <string>
 
 namespace srf::pysrf {
 std::string SegmentModuleProxy::component_prefix(srf::modules::SegmentModule& self)

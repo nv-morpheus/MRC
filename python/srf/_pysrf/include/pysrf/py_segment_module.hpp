@@ -39,7 +39,7 @@ class PythonSegmentModule : public srf::modules::SegmentModule
 {
     friend ModuleRegistryProxy;
   public:
-    using py_initializer_t = std::function<void(segment::Builder&)>;
+    using py_initializer_t = std::function<void(srf::segment::Builder&)>;
 
     PythonSegmentModule(std::string module_name);
     PythonSegmentModule(std::string module_name, nlohmann::json config);
