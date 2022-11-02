@@ -15,11 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Note this is the Dockerfile for the CI runner not for SRF itself
-# Build from the root of the SRF repo with:
-# DOCKER_BUILDKIT=1 docker build --network=host --target base -t srf/ci:latest -f ci/runner/Dockerfile .
-# DOCKER_BUILDKIT=1 docker build --network=host --target driver -t srf/ci:driver-latest -f ci/runner/Dockerfile .
-
 # Args used in FROM commands must come first
 ARG FROM_IMAGE="rapidsai/ci"
 ARG CUDA_VER=11.4.1
