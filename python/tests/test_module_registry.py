@@ -18,7 +18,9 @@ import logging
 import pytest
 
 import srf
-import srf.core.unittest_exports
+import srf.tests.sample_modules
+
+VERSION = [int(cmpt) for cmpt in srf.tests.sample_modules.__version__.split('.')]
 
 
 def test_module_registry_contains():
@@ -46,7 +48,8 @@ def test_module_registry_register_bad_version():
 def test_module_registry_register_good_version():
     registry = srf.ModuleRegistry()
 
-    registry.register_module("test_module_registry_register_good_version_module", "srf_unittests", [22, 11, 0],
+    registry.register_module("test_module_registry_register_good_version_module", "srf_unittests",
+                             VERSION,
                              module_init_fn)
     registry.unregister_module("test_module_registry_register_good_version_module", "srf_unittests")
 
@@ -91,7 +94,9 @@ def test_py_registered_nested_modules():
         builder.load_module("test_py_registered_nested_module", "srf_unittests", "my_loaded_module!", {})
 
     registry = srf.ModuleRegistry()
-    registry.register_module("test_py_registered_nested_module", "srf_unittests", [22, 11, 0], init_registered)
+    registry.register_module("test_py_registered_nested_module", "srf_unittests",
+                             VERSION,
+                             init_registered)
 
     pipeline = srf.Pipeline()
     pipeline.make_segment("ModuleAsSource_Segment", init_caller)
@@ -141,7 +146,8 @@ def test_py_registered_nested_copied_modules():
         builder.load_module("test_py_registered_nested_copied_module", "srf_unittests", "my_loaded_module_copy!", {})
 
     registry = srf.ModuleRegistry()
-    registry.register_module("test_py_registered_nested_copied_module", "srf_unittests", [22, 11, 0], init_registered)
+    registry.register_module("test_py_registered_nested_copied_module", "srf_unittests",
+                             VERSION, init_registered)
 
     pipeline = srf.Pipeline()
     pipeline.make_segment("ModuleAsSource_Segment", init_caller)

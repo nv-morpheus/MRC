@@ -18,19 +18,22 @@
 #include "pysrf/logging.hpp"
 
 #include "srf/core/logging.hpp"
+#include "srf/version.hpp"
 
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
+
+#include <sstream>
 
 namespace srf::pysrf {
 
 namespace py = pybind11;
 using namespace std::string_literals;
 
-PYBIND11_MODULE(logging, m)
+PYBIND11_MODULE(logging, module)
 {
-    m.doc() = R"pbdoc(
+    module.doc() = R"pbdoc(
         Python bindings for SRF logging
         -------------------------------
         .. currentmodule:: logging
@@ -38,31 +41,31 @@ PYBIND11_MODULE(logging, m)
            :toctree: _generate
     )pbdoc";
 
-    m.def("init_logging",
-          &init_logging,
-          "Initializes Srf's logger, The return value inidicates if the logger was initialized, which will be `True` "
-          "on the first call, and `False` for all subsequant calls.",
-          py::arg("logname"),
-          py::arg("py_level") = py_log_levels::INFO);
+    module.def(
+        "init_logging",
+        &init_logging,
+        "Initializes SRF's logger, The return value inidicates if the logger was initialized, which will be `True` "
+        "on the first call, and `False` for all subsequant calls.",
+        py::arg("logname"),
+        py::arg("py_level") = py_log_levels::INFO);
 
-    m.def("is_initialized", &srf::is_initialized, "Checks if Srf's logger has been initialized.");
+    module.def("is_initialized", &srf::is_initialized, "Checks if SRF's logger has been initialized.");
 
-    m.def("get_level", &get_level, "Gets the log level for Srf's logger.");
+    module.def("get_level", &get_level, "Gets the log level for SRF's logger.");
 
-    m.def("set_level", &set_level, "Sets the log level for Srf's logger.", py::arg("py_level"));
+    module.def("set_level", &set_level, "Sets the log level for SRF's logger.", py::arg("py_level"));
 
-    m.def("log",
-          &log,
-          "Logs a message to Srf's logger.",
-          py::arg("msg"),
-          py::arg("py_level") = py_log_levels::INFO,
-          py::arg("filename") = ""s,
-          py::arg("line")     = 0);
+    module.def("log",
+               &log,
+               "Logs a message to SRF's logger.",
+               py::arg("msg"),
+               py::arg("py_level") = py_log_levels::INFO,
+               py::arg("filename") = ""s,
+               py::arg("line")     = 0);
 
-#ifdef VERSION_INFO
-    m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
-#else
-    m.attr("__version__") = "dev";
-#endif
+    std::stringstream sstream;
+    sstream << srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH;
+
+    module.attr("__version__") = sstream.str();
 }
 }  // namespace srf::pysrf

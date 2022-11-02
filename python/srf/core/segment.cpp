@@ -25,6 +25,7 @@
 #include "srf/segment/builder.hpp"
 #include "srf/segment/definition.hpp"
 #include "srf/segment/object.hpp"  // IWYU pragma: keep
+#include "srf/version.hpp"
 
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
@@ -42,9 +43,9 @@ namespace srf::pysrf {
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(segment, m)
+PYBIND11_MODULE(segment, module)
 {
-    m.doc() = R"pbdoc(
+    module.doc() = R"pbdoc(
         Python bindings for SRF Segments
         -------------------------------
         .. currentmodule:: segment
@@ -53,9 +54,9 @@ PYBIND11_MODULE(segment, m)
     )pbdoc";
 
     // Common must be first in every module
-    pysrf::import(m, "srf.core.common");
-    pysrf::import_module_object(m, "srf.core.node", "SegmentObject");
-    pysrf::import(m, "srf.core.subscriber");
+    pysrf::import(module, "srf.core.common");
+    pysrf::import_module_object(module, "srf.core.node", "SegmentObject");
+    pysrf::import(module, "srf.core.subscriber");
 
     // Register the converters for make_py2cxx_edge_adapter and make_cxx2py_edge_adapter
     // Type 'b'
@@ -87,8 +88,8 @@ PYBIND11_MODULE(segment, m)
     node::EdgeConnector<std::string, PyHolder>::register_converter();
     node::EdgeConnector<PyHolder, std::string>::register_converter();
 
-    auto Definition = py::class_<srf::segment::Definition>(m, "Definition");
-    auto Builder    = py::class_<srf::segment::Builder>(m, "Builder");
+    auto Definition = py::class_<srf::segment::Definition>(module, "Definition");
+    auto Builder    = py::class_<srf::segment::Builder>(module, "Builder");
 
     /**
      * TODO(bhargav)
@@ -166,10 +167,9 @@ PYBIND11_MODULE(segment, m)
 
     Builder.def("make_py2cxx_edge_adapter", &BuilderProxy::make_py2cxx_edge_adapter);
 
-#ifdef VERSION_INFO
-    m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
-#else
-    m.attr("__version__") = "dev";
-#endif
+    std::stringstream sstream;
+    sstream << srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH;
+
+    module.attr("__version__") = sstream.str();
 }
 }  // namespace srf::pysrf

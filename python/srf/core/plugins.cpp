@@ -27,7 +27,6 @@
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
 
-#include <cstdint>
 #include <memory>
 
 // IWYU thinks the Segment.def calls need array and vector
@@ -42,9 +41,9 @@ namespace srf::pysrf {
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(plugins, plugins_module)
+PYBIND11_MODULE(plugins, module)
 {
-    plugins_module.doc() = R"pbdoc(
+    module.doc() = R"pbdoc(
         Python bindings for SRF Plugins
         -------------------------------
         .. currentmodule:: plugins
@@ -53,10 +52,10 @@ PYBIND11_MODULE(plugins, plugins_module)
     )pbdoc";
 
     // Common must be first in every module
-    pysrf::import(plugins_module, "srf.core.common");
+    pysrf::import(module, "srf.core.common");
 
     auto PluginModule = py::class_<srf::modules::PluginModule, std::shared_ptr<srf::modules::PluginModule>>(
-        plugins_module, "PluginModule");
+        module, "PluginModule");
 
     /** Module Register Interface Declarations **/
     PluginModule.def("create_or_acquire", &PluginProxy::create_or_acquire, py::return_value_policy::reference_internal);
@@ -73,10 +72,10 @@ PYBIND11_MODULE(plugins, plugins_module)
 
     PluginModule.def("unload", &srf::modules::PluginModule::unload, py::arg("throw_on_error") = true);
 
-#ifdef VERSION_INFO
-    plugins_module.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
-#else
-    plugins_module.attr("__version__") = "dev";
-#endif
+    std::stringstream sstream;
+    sstream << srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH;
+
+    module.attr("__version__") = sstream.str();
+
 }
 }  // namespace srf::pysrf

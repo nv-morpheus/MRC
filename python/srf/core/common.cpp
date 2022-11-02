@@ -19,16 +19,11 @@
 #include "pysrf/port_builders.hpp"
 #include "pysrf/types.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/core/utils.hpp"
-#include "srf/manifold/egress.hpp"
 #include "srf/node/sink_properties.hpp"
-#include "srf/node/source_properties.hpp"
+#include "srf/version.hpp"
 
-#include <boost/fiber/future/future.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <rxcpp/rx.hpp>
 
 #include <algorithm>
 #include <memory>
@@ -45,9 +40,9 @@ namespace srf::pysrf {
 namespace py = pybind11;
 using namespace py::literals;
 
-PYBIND11_MODULE(common, m)
+PYBIND11_MODULE(common, module)
 {
-    m.doc() = R"pbdoc(
+    module.doc() = R"pbdoc(
         Python bindings for SRF common functionality / utilities
         -------------------------------
         .. currentmodule:: common
@@ -57,10 +52,10 @@ PYBIND11_MODULE(common, m)
 
     EdgeAdapterUtil::register_data_adapters<PyHolder>();
     PortBuilderUtil::register_port_util<PyHolder>();
-#ifdef VERSION_INFO
-    m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
-#else
-    m.attr("__version__") = "dev";
-#endif
+
+    std::stringstream sstream;
+    sstream << srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH;
+
+    module.attr("__version__") = sstream.str();
 }
 }  // namespace srf::pysrf

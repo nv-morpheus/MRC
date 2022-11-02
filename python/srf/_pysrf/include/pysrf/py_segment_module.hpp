@@ -35,6 +35,11 @@ class ModuleRegistryProxy;
 // Export everything in the srf::pysrf namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
 
+/**
+ * PythonSegmentModule exists to solve one problem: allowing for binding a dynamic initializer for a SegmentModule
+ * This is accomplished by allowing the builder to set m_py_initialize, and subsequently calling it in the overridden
+ * `initialize` method.
+ */
 class PythonSegmentModule : public srf::modules::SegmentModule
 {
     friend ModuleRegistryProxy;
@@ -48,22 +53,8 @@ class PythonSegmentModule : public srf::modules::SegmentModule
     void initialize(segment::Builder& builder) override;
 
   private:
-    py_initializer_t m_py_initialize;
+    py_initializer_t m_py_initialize{};
 };
-
-PythonSegmentModule::PythonSegmentModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
-
-PythonSegmentModule::PythonSegmentModule(std::string module_name, nlohmann::json config) :
-  SegmentModule(std::move(module_name), std::move(config))
-{}
-
-void PythonSegmentModule::initialize(segment::Builder& builder)
-{
-    VLOG(2) << "Calling PythonSegmentModule::initialize";
-    m_py_initialize(std::forward<segment::Builder&>(builder));
-    VLOG(2) << "Calling PythonSegmentModule::initialize -> DONE";
-}
-
 }  // namespace srf::pysrf
 
 #pragma GCC visibility pop

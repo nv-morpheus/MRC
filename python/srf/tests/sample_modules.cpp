@@ -37,9 +37,9 @@ namespace srf::pysrf {
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(unittest_exports, m)
+PYBIND11_MODULE(sample_modules, module)
 {
-    m.doc() = R"pbdoc(
+    module.doc() = R"pbdoc(
        Python bindings for SRF Unittest Exports
        -------------------------------
        .. currentmodule:: plugins
@@ -47,7 +47,7 @@ PYBIND11_MODULE(unittest_exports, m)
           :toctree: _generate
    )pbdoc";
 
-    pysrf::import(m, "srf.core.common");
+    pysrf::import(module, "srf.core.common");
 
     /** Register test modules -- necessary for python unit tests**/
     modules::ModelRegistryUtil::create_registered_module<srf::modules::SimpleModule>(
@@ -65,10 +65,9 @@ PYBIND11_MODULE(unittest_exports, m)
     modules::ModelRegistryUtil::create_registered_module<srf::modules::TemplateModule<std::string>>(
         "TemplateModuleString", "srf_unittest", PybindSegmentModuleVersion);
 
-#ifdef VERSION_INFO
-    plugins_module.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
-#else
-    m.attr("__version__") = "dev";
-#endif
+    std::stringstream sstream;
+    sstream << srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH;
+
+    module.attr("__version__") = sstream.str();
 }
 }  // namespace srf::pysrf

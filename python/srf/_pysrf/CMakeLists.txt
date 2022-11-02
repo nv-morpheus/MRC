@@ -20,6 +20,7 @@ find_package(prometheus-cpp REQUIRED)
 add_library(pysrf
   src/executor.cpp
   src/logging.cpp
+  src/module_registry.cpp
   src/module_wrappers/pickle.cpp
   src/module_wrappers/shared_memory.cpp
   src/node.cpp
@@ -27,6 +28,7 @@ add_library(pysrf
   src/options.cpp
   src/pipeline.cpp
   src/plugins.cpp
+  src/py_segment_module.cpp
   src/segment.cpp
   src/segment_modules.cpp
   src/subscriber.cpp

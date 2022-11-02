@@ -20,6 +20,7 @@
 #include "pysrf/utils.hpp"
 
 #include "srf/options/options.hpp"
+#include "srf/version.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
@@ -34,9 +35,9 @@ namespace srf::pysrf {
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(executor, m)
+PYBIND11_MODULE(executor, module)
 {
-    m.doc() = R"pbdoc(
+    module.doc() = R"pbdoc(
         Python bindings for SRF executors
         -------------------------------
         .. currentmodule:: executor
@@ -45,17 +46,17 @@ PYBIND11_MODULE(executor, m)
     )pbdoc";
 
     // Common must be first in every module
-    pysrf::import(m, "srf.core.common");
-    pysrf::import(m, "srf.core.options");
-    pysrf::import(m, "srf.core.pipeline");
+    pysrf::import(module, "srf.core.common");
+    pysrf::import(module, "srf.core.options");
+    pysrf::import(module, "srf.core.pipeline");
 
-    py::class_<Awaitable, std::shared_ptr<Awaitable>>(m, "Awaitable")
+    py::class_<Awaitable, std::shared_ptr<Awaitable>>(module, "Awaitable")
         .def(py::init<>())
         .def("__iter__", &Awaitable::iter)
         .def("__await__", &Awaitable::await)
         .def("__next__", &Awaitable::next);
 
-    py::class_<Executor, std::shared_ptr<Executor>>(m, "Executor")
+    py::class_<Executor, std::shared_ptr<Executor>>(module, "Executor")
         .def(py::init<>([]() {
             auto options = std::make_shared<srf::Options>();
 
@@ -74,15 +75,14 @@ PYBIND11_MODULE(executor, m)
         .def("join_async", &Executor::join_async)
         .def("register_pipeline", &Executor::register_pipeline);
 
-    py::class_<PyBoostFuture>(m, "Future")
+    py::class_<PyBoostFuture>(module, "Future")
         .def(py::init<>([]() { return PyBoostFuture(); }))
         .def("result", &PyBoostFuture::py_result)
         .def("set_result", &PyBoostFuture::set_result);
 
-#ifdef VERSION_INFO
-    m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
-#else
-    m.attr("__version__") = "dev";
-#endif
+    std::stringstream sstream;
+    sstream << srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH;
+
+    module.attr("__version__") = sstream.str();
 }
 }  // namespace srf::pysrf

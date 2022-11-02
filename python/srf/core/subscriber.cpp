@@ -20,6 +20,8 @@
 #include "pysrf/types.hpp"  // for PyObjectObserver, PyObjectSubscriber, PyObjectObservable, PySubscription
 #include "pysrf/utils.hpp"
 
+#include "srf/version.hpp"
+
 #include <pybind11/attr.h>
 #include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/gil.h>
@@ -33,9 +35,9 @@ namespace srf::pysrf {
 namespace py = pybind11;
 using namespace py::literals;
 
-PYBIND11_MODULE(subscriber, m)
+PYBIND11_MODULE(subscriber, module)
 {
-    m.doc() = R"pbdoc(
+    module.doc() = R"pbdoc(
         Python bindings for SRF subscribers
         -------------------------------
         .. currentmodule:: subscriber
@@ -44,11 +46,11 @@ PYBIND11_MODULE(subscriber, m)
     )pbdoc";
 
     // Common must be first in every module
-    pysrf::import(m, "srf.core.common");
+    pysrf::import(module, "srf.core.common");
 
-    py::class_<PySubscription>(m, "Subscription");
+    py::class_<PySubscription>(module, "Subscription");
 
-    py::class_<PyObjectObserver>(m, "Observer")
+    py::class_<PyObjectObserver>(module, "Observer")
         .def("on_next",
              &ObserverProxy::on_next,
              py::call_guard<py::gil_scoped_release>(),
@@ -57,13 +59,13 @@ PYBIND11_MODULE(subscriber, m)
         .def("on_completed", &PyObjectObserver::on_completed, py::call_guard<py::gil_scoped_release>())
         .def_static("make_observer", &ObserverProxy::make_observer);
 
-    py::class_<PyObjectSubscriber>(m, "Subscriber")
+    py::class_<PyObjectSubscriber>(module, "Subscriber")
         .def("on_next", &SubscriberProxy::on_next, py::call_guard<py::gil_scoped_release>())
         .def("on_error", &SubscriberProxy::on_error)
         .def("on_completed", &PyObjectSubscriber::on_completed, py::call_guard<py::gil_scoped_release>())
         .def("is_subscribed", &SubscriberProxy::is_subscribed, py::call_guard<py::gil_scoped_release>());
 
-    py::class_<PyObjectObservable>(m, "Observable")
+    py::class_<PyObjectObservable>(module, "Observable")
         .def("subscribe",
              py::overload_cast<PyObjectObservable*, PyObjectObserver&>(&ObservableProxy::subscribe),
              py::call_guard<py::gil_scoped_release>())
@@ -72,10 +74,9 @@ PYBIND11_MODULE(subscriber, m)
              py::call_guard<py::gil_scoped_release>())
         .def("pipe", &ObservableProxy::pipe);
 
-#ifdef VERSION_INFO
-    m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
-#else
-    m.attr("__version__") = "dev";
-#endif
+    std::stringstream sstream;
+    sstream << srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH;
+
+    module.attr("__version__") = sstream.str();
 }
 }  // namespace srf::pysrf

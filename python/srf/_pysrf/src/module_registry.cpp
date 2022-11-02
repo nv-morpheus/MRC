@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#include "pysrf/module_registry.hpp"
+
 #include "pysrf/py_segment_module.hpp"
 #include "pysrf/utils.hpp"
 
@@ -27,4 +29,63 @@
 
 namespace srf::pysrf {
 
+bool ModuleRegistryProxy::contains(ModuleRegistryProxy& self,
+                                   const std::string& name,
+                                   const std::string& registry_namespace)
+{
+    return srf::modules::ModuleRegistry::contains(name, registry_namespace);
 }
+
+bool ModuleRegistryProxy::contains_namespace(srf::pysrf::ModuleRegistryProxy& self,
+                                             const std::string& registry_namespace)
+{
+    return srf::modules::ModuleRegistry::contains_namespace(registry_namespace);
+}
+
+void ModuleRegistryProxy::register_module(srf::pysrf::ModuleRegistryProxy& self,
+                                          std::string name,
+                                          const std::vector<unsigned int>& release_version,
+                                          std::function<void(srf::segment::Builder&)> fn_py_initializer)
+{
+    register_module(self, name, "default", release_version, fn_py_initializer);
+}
+
+void ModuleRegistryProxy::register_module(srf::pysrf::ModuleRegistryProxy& self,
+                                          std::string name,
+                                          std::string registry_namespace,
+                                          const std::vector<unsigned int>& release_version,
+                                          std::function<void(srf::segment::Builder&)> fn_py_initializer)
+{
+    VLOG(2) << "Registering python module: " << registry_namespace << "::" << name;
+    auto fn_constructor = [fn_py_initializer](std::string name, nlohmann::json config) {
+        auto module             = std::make_shared<PythonSegmentModule>(std::move(name), std::move(config));
+        module->m_py_initialize = fn_py_initializer;
+
+        return module;
+    };
+
+    srf::modules::ModuleRegistry::register_module(name, registry_namespace, release_version, fn_constructor);
+
+    register_module_cleanup_fn(name, registry_namespace);
+}
+
+void ModuleRegistryProxy::unregister_module(srf::pysrf::ModuleRegistryProxy& self,
+                                            const std::string& name,
+                                            const std::string& registry_namespace,
+                                            bool optional)
+{
+    return srf::modules::ModuleRegistry::unregister_module(name, registry_namespace, optional);
+}
+
+void ModuleRegistryProxy::register_module_cleanup_fn(const std::string& name, const std::string& registry_namespace)
+{
+    auto at_exit = pybind11::module_::import("atexit");
+    at_exit.attr("register")(pybind11::cpp_function([name, registry_namespace]() {
+        VLOG(2) << "(atexit) Unregistering " << registry_namespace << "::" << name;
+
+        // Try unregister -- ignore if already unregistered
+        srf::modules::ModuleRegistry::unregister_module(name, registry_namespace, true);
+    }));
+}
+
+}  // namespace srf::pysrf

@@ -15,8 +15,7 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "tests")
 
-srf_add_pybind11_module(test_edges_cpp
-  SOURCE_FILES test_edges.cpp
-)
+srf_add_pybind11_module(test_edges_cpp  SOURCE_FILES test_edges.cpp )
+srf_add_pybind11_module(sample_modules  SOURCE_FILES sample_modules.cpp)
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

@@ -16,15 +16,15 @@
  */
 
 #pragma once
-#include "pysrf/py_segment_module.hpp"
-#include "pysrf/utils.hpp"
-
-#include "srf/experimental/modules/module_registry.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
 #include <memory>
+
+namespace srf::segment {
+class Builder;
+}
 
 namespace srf::pysrf {
 
@@ -36,45 +36,25 @@ class ModuleRegistryProxy
   public:
     ModuleRegistryProxy() = default;
 
-    static bool contains_namespace(ModuleRegistryProxy& self, const std::string& registry_namespace)
-    {
-        return srf::modules::ModuleRegistry::contains_namespace(registry_namespace);
-    }
+    static bool contains(ModuleRegistryProxy& self, const std::string& name, const std::string& registry_namespace);
+
+    static bool contains_namespace(ModuleRegistryProxy& self, const std::string& registry_namespace);
 
     static void register_module(ModuleRegistryProxy& self,
                                 std::string name,
                                 const std::vector<unsigned int>& release_version,
-                                std::function<void(srf::segment::Builder&)> fn_py_initializer)
-    {
-        register_module(self, name, "default", release_version, fn_py_initializer);
-    }
+                                std::function<void(srf::segment::Builder&)> fn_py_initializer);
 
     static void register_module(ModuleRegistryProxy& self,
                                 std::string name,
                                 std::string registry_namespace,
                                 const std::vector<unsigned int>& release_version,
-                                std::function<void(srf::segment::Builder&)> fn_py_initializer)
-    {
-        VLOG(2) << "Registering python module: " << registry_namespace << "::" << name;
-        auto fn_constructor = [fn_py_initializer](std::string name, nlohmann::json config) {
-            auto module             = std::make_shared<PythonSegmentModule>(std::move(name), std::move(config));
-            module->m_py_initialize = fn_py_initializer;
-
-            return module;
-        };
-
-        srf::modules::ModuleRegistry::register_module(name, registry_namespace, release_version, fn_constructor);
-
-        register_module_cleanup_fn(name, registry_namespace);
-    }
+                                std::function<void(srf::segment::Builder&)> fn_py_initializer);
 
     static void unregister_module(ModuleRegistryProxy& self,
                                   const std::string& name,
                                   const std::string& registry_namespace,
-                                  bool optional = true)
-    {
-        return srf::modules::ModuleRegistry::unregister_module(name, registry_namespace, optional);
-    }
+                                  bool optional = true);
 
   private:
     /**
@@ -86,16 +66,7 @@ class ModuleRegistryProxy
      * @param name Name of the module
      * @param registry_namespace Namespace of the module
      */
-    static void register_module_cleanup_fn(const std::string& name, const std::string& registry_namespace)
-    {
-        auto at_exit = pybind11::module_::import("atexit");
-        at_exit.attr("register")(pybind11::cpp_function([name, registry_namespace]() {
-            VLOG(2) << "(atexit) Unregistering " << registry_namespace << "::" << name;
-
-            // Try unregister -- ignore if already unregistered
-            srf::modules::ModuleRegistry::unregister_module(name, registry_namespace, true);
-        }));
-    }
+    static void register_module_cleanup_fn(const std::string& name, const std::string& registry_namespace);
 };
 
 #pragma GCC visibility pop

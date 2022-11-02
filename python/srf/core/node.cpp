@@ -20,19 +20,20 @@
 
 #include "srf/runnable/launch_options.hpp"
 #include "srf/segment/object.hpp"
+#include "srf/version.hpp"
 
 #include <pybind11/pybind11.h>  // IWYU pragma: keep
 
 #include <cstddef>
 #include <memory>
-#include <string>
+#include <sstream>
 
 namespace srf::pysrf {
 namespace py = pybind11;
 
-PYBIND11_MODULE(node, m)
+PYBIND11_MODULE(node, module)
 {
-    m.doc() = R"pbdoc(
+    module.doc() = R"pbdoc(
         Python bindings for SRF nodes
         -------------------------------
         .. currentmodule:: node
@@ -41,23 +42,22 @@ PYBIND11_MODULE(node, m)
     )pbdoc";
 
     // Common must be first in every module
-    pysrf::import(m, "srf.core.common");
+    pysrf::import(module, "srf.core.common");
 
-    py::class_<srf::runnable::LaunchOptions>(m, "LaunchOptions")
+    py::class_<srf::runnable::LaunchOptions>(module, "LaunchOptions")
         .def_readwrite("pe_count", &srf::runnable::LaunchOptions::pe_count)
         .def_readwrite("engines_per_pe", &srf::runnable::LaunchOptions::engines_per_pe)
         .def_readwrite("engine_factory_name", &srf::runnable::LaunchOptions::engine_factory_name);
 
-    py::class_<srf::segment::ObjectProperties, std::shared_ptr<srf::segment::ObjectProperties>>(m, "SegmentObject")
+    py::class_<srf::segment::ObjectProperties, std::shared_ptr<srf::segment::ObjectProperties>>(module, "SegmentObject")
         .def_property_readonly("name", &PyNode::name)
         .def_property_readonly("launch_options",
                                py::overload_cast<>(&srf::segment::ObjectProperties::launch_options),
                                py::return_value_policy::reference_internal);
 
-#ifdef VERSION_INFO
-    m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
-#else
-    m.attr("__version__") = "dev";
-#endif
+    std::stringstream sstream;
+    sstream << srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH;
+
+    module.attr("__version__") = sstream.str();
 }
 }  // namespace srf::pysrf

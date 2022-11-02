@@ -24,10 +24,12 @@
 #include "srf/options/placement.hpp"
 #include "srf/options/topology.hpp"
 #include "srf/runnable/types.hpp"
+#include "srf/version.hpp"
 
 #include <pybind11/pybind11.h>
 
 #include <memory>
+#include <sstream>
 
 namespace srf::pysrf {
 
@@ -37,9 +39,9 @@ class Config
 {};
 
 // Define the pybind11 module m, as 'pipeline'.
-PYBIND11_MODULE(options, m)
+PYBIND11_MODULE(options, module)
 {
-    m.doc() = R"pbdoc(
+    module.doc() = R"pbdoc(
         Python bindings for SRF options
         -------------------------------
         .. currentmodule:: options
@@ -48,9 +50,9 @@ PYBIND11_MODULE(options, m)
     )pbdoc";
 
     // Common must be first in every module
-    pysrf::import(m, "srf.core.common");
+    pysrf::import(module, "srf.core.common");
 
-    py::class_<Config>(m, "Config")
+    py::class_<Config>(module, "Config")
         .def_property_static("default_channel_size",
                              &ConfigProxy::get_default_channel_size,
                              &ConfigProxy::set_default_channel_size,
@@ -58,26 +60,26 @@ PYBIND11_MODULE(options, m)
                 Sets the default size of the buffers between edges for all newly created edges. Larger size will reduce backpressure at the cost of memory.
             )doc");
 
-    py::enum_<srf::PlacementStrategy>(m, "PlacementStrategy")
+    py::enum_<srf::PlacementStrategy>(module, "PlacementStrategy")
         .value("PerMachine", srf::PlacementStrategy::PerMachine)
         .value("PerNumaNode", srf::PlacementStrategy::PerNumaNode)
         .export_values();
 
-    py::enum_<srf::runnable::EngineType>(m, "EngineType")
+    py::enum_<srf::runnable::EngineType>(module, "EngineType")
         .value("Fiber", srf::runnable::EngineType::Fiber)
         .value("Process", srf::runnable::EngineType::Process)
         .value("Thread", srf::runnable::EngineType::Thread)
         .export_values();
 
-    py::class_<srf::TopologyOptions>(m, "TopologyOptions")
+    py::class_<srf::TopologyOptions>(module, "TopologyOptions")
         .def(py::init<>())
         .def_property("user_cpuset", &OptionsProxy::get_user_cpuset, &OptionsProxy::set_user_cpuset);
 
-    py::class_<srf::PlacementOptions>(m, "PlacementOptions")
+    py::class_<srf::PlacementOptions>(module, "PlacementOptions")
         .def(py::init<>())
         .def_property("cpu_strategy", &OptionsProxy::get_cpu_strategy, &OptionsProxy::set_cpu_strategy);
 
-    py::class_<srf::EngineFactoryOptions>(m, "EngineFactoryOptions")
+    py::class_<srf::EngineFactoryOptions>(module, "EngineFactoryOptions")
         .def(py::init<>())
         .def_property("cpu_count", &EngineFactoryOptionsProxy::get_cpu_count, &EngineFactoryOptionsProxy::set_cpu_count)
         .def_property(
@@ -87,7 +89,7 @@ PYBIND11_MODULE(options, m)
                       &EngineFactoryOptionsProxy::get_allow_overlap,
                       &EngineFactoryOptionsProxy::set_allow_overlap);
 
-    py::class_<srf::EngineGroups>(m, "EngineGroups")
+    py::class_<srf::EngineGroups>(module, "EngineGroups")
         .def(py::init<>())
         .def_property(
             "default_engine_type", &srf::EngineGroups::default_engine_type, &srf::EngineGroups::set_default_engine_type)
@@ -100,7 +102,7 @@ PYBIND11_MODULE(options, m)
              &srf::EngineGroups::engine_group_options,
              py::return_value_policy::reference_internal);
 
-    py::class_<srf::Options, std::shared_ptr<srf::Options>>(m, "Options")
+    py::class_<srf::Options, std::shared_ptr<srf::Options>>(module, "Options")
         .def(py::init<>())
         .def_property_readonly("placement", &OptionsProxy::get_placement, py::return_value_policy::reference_internal)
         .def_property_readonly("topology", &OptionsProxy::get_topology, py::return_value_policy::reference_internal)
@@ -110,10 +112,10 @@ PYBIND11_MODULE(options, m)
                       // return a const str
                       static_cast<std::string const& (srf::Options::*)() const>(&srf::Options::architect_url),
                       static_cast<void (srf::Options::*)(std::string)>(&srf::Options::architect_url));
-#ifdef VERSION_INFO
-    m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
-#else
-    m.attr("__version__") = "dev";
-#endif
+
+    std::stringstream sstream;
+    sstream << srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH;
+
+    module.attr("__version__") = sstream.str();
 }
 }  // namespace srf::pysrf

@@ -19,19 +19,19 @@
 
 #include "pysrf/utils.hpp"
 
+#include "srf/version.hpp"
+
 #include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/pybind11.h>
-
-#include <array>
 
 namespace srf::pysrf {
 
 namespace py = pybind11;
 
 // Define the pybind11 module m, as 'pipeline'.
-PYBIND11_MODULE(operators, m)
+PYBIND11_MODULE(operators, module)
 {
-    m.doc() = R"pbdoc(
+    module.doc() = R"pbdoc(
         Python bindings for SRF operators
         -------------------------------
         .. currentmodule:: operators
@@ -40,21 +40,20 @@ PYBIND11_MODULE(operators, m)
     )pbdoc";
 
     // Common must be first in every module
-    pysrf::import(m, "srf.core.common");
+    pysrf::import(module, "srf.core.common");
 
-    py::class_<PythonOperator>(m, "Operator").def_property_readonly("name", &OperatorProxy::get_name);
+    py::class_<PythonOperator>(module, "Operator").def_property_readonly("name", &OperatorProxy::get_name);
 
-    m.def("filter", &OperatorsProxy::filter);
-    m.def("flatten", &OperatorsProxy::flatten);
-    m.def("map", &OperatorsProxy::map);
-    m.def("on_completed", &OperatorsProxy::on_completed);
-    m.def("pairwise", &OperatorsProxy::pairwise);
-    m.def("to_list", &OperatorsProxy::to_list);
+    module.def("filter", &OperatorsProxy::filter);
+    module.def("flatten", &OperatorsProxy::flatten);
+    module.def("map", &OperatorsProxy::map);
+    module.def("on_completed", &OperatorsProxy::on_completed);
+    module.def("pairwise", &OperatorsProxy::pairwise);
+    module.def("to_list", &OperatorsProxy::to_list);
 
-#ifdef VERSION_INFO
-    m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
-#else
-    m.attr("__version__") = "dev";
-#endif
+    std::stringstream sstream;
+    sstream << srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH;
+
+    module.attr("__version__") = sstream.str();
 }
 }  // namespace srf::pysrf
