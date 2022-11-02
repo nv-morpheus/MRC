@@ -15,10 +15,11 @@
  * limitations under the License.
  */
 
+#include "srf/experimental/modules/sample_modules.hpp"
+
 #include "pysrf/utils.hpp"
 
 #include "srf/experimental/modules/module_registry_util.hpp"
-#include "srf/experimental/modules/sample_modules.hpp"
 #include "srf/version.hpp"
 
 #include <pybind11/pybind11.h>

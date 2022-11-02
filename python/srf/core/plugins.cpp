@@ -54,8 +54,8 @@ PYBIND11_MODULE(plugins, module)
     // Common must be first in every module
     pysrf::import(module, "srf.core.common");
 
-    auto PluginModule = py::class_<srf::modules::PluginModule, std::shared_ptr<srf::modules::PluginModule>>(
-        module, "PluginModule");
+    auto PluginModule =
+        py::class_<srf::modules::PluginModule, std::shared_ptr<srf::modules::PluginModule>>(module, "PluginModule");
 
     /** Module Register Interface Declarations **/
     PluginModule.def("create_or_acquire", &PluginProxy::create_or_acquire, py::return_value_policy::reference_internal);
@@ -76,6 +76,5 @@ PYBIND11_MODULE(plugins, module)
     sstream << srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH;
 
     module.attr("__version__") = sstream.str();
-
 }
 }  // namespace srf::pysrf

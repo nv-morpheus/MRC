@@ -43,6 +43,7 @@ class ModuleRegistryProxy;
 class PythonSegmentModule : public srf::modules::SegmentModule
 {
     friend ModuleRegistryProxy;
+
   public:
     using py_initializer_t = std::function<void(srf::segment::Builder&)>;
 

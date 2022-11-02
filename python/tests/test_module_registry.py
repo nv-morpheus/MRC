@@ -48,7 +48,8 @@ def test_module_registry_register_bad_version():
 def test_module_registry_register_good_version():
     registry = srf.ModuleRegistry()
 
-    registry.register_module("test_module_registry_register_good_version_module", "srf_unittests",
+    registry.register_module("test_module_registry_register_good_version_module",
+                             "srf_unittests",
                              VERSION,
                              module_init_fn)
     registry.unregister_module("test_module_registry_register_good_version_module", "srf_unittests")
@@ -58,8 +59,9 @@ def test_module_registry_register_good_version_no_unregister():
     # Ensure that we don't throw any errors or hang if we don't explicitly unregister the python module
     registry = srf.ModuleRegistry()
 
-    registry.register_module("test_module_registry_register_good_version_no_unregister_module", "srf_unittests",
-                             [22, 11, 0], module_init_fn)
+    registry.register_module("test_module_registry_register_good_version_no_unregister_module",
+                             "srf_unittests", VERSION,
+                             module_init_fn)
 
 
 def test_py_registered_nested_modules():
@@ -94,9 +96,7 @@ def test_py_registered_nested_modules():
         builder.load_module("test_py_registered_nested_module", "srf_unittests", "my_loaded_module!", {})
 
     registry = srf.ModuleRegistry()
-    registry.register_module("test_py_registered_nested_module", "srf_unittests",
-                             VERSION,
-                             init_registered)
+    registry.register_module("test_py_registered_nested_module", "srf_unittests", VERSION, init_registered)
 
     pipeline = srf.Pipeline()
     pipeline.make_segment("ModuleAsSource_Segment", init_caller)
@@ -146,8 +146,7 @@ def test_py_registered_nested_copied_modules():
         builder.load_module("test_py_registered_nested_copied_module", "srf_unittests", "my_loaded_module_copy!", {})
 
     registry = srf.ModuleRegistry()
-    registry.register_module("test_py_registered_nested_copied_module", "srf_unittests",
-                             VERSION, init_registered)
+    registry.register_module("test_py_registered_nested_copied_module", "srf_unittests", VERSION, init_registered)
 
     pipeline = srf.Pipeline()
     pipeline.make_segment("ModuleAsSource_Segment", init_caller)

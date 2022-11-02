@@ -47,6 +47,6 @@ def test_dynamic_module_bad_version_test():
     pass
 
 
-if (__name__ in ("__main__",)):
+if (__name__ in ("__main__", )):
     test_plugin_module_import()
     test_dynamic_module_plugin_interface()
