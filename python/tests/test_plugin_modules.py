@@ -46,6 +46,59 @@ def test_dynamic_module_plugin_interface():
 
 
 @pytest.mark.skipif(not FOUND_DYN_LIB, reason="Missing: libdynamic_test_module.so")
+def test_dynamic_module_registration():
+    plugin_module = srf.PluginModule.create_or_acquire("libdynamic_test_module.so")
+    plugin_module.set_library_directory(f"{DYN_LIB_DIR}")
+    plugin_module.load()
+
+    module_namespace = "srf_unittest_cpp_dynamic"
+    module_name = "DynamicSourceModule"
+
+    registry = srf.ModuleRegistry()
+
+    assert registry.contains_namespace(module_namespace)
+    assert registry.contains(module_name, module_namespace)
+
+    def init_wrapper(builder: srf.Builder):
+        global packet_count
+        packet_count = 0
+
+        def on_next(input):
+            global packet_count
+            packet_count += 1
+
+        def on_error():
+            pass
+
+        def on_complete():
+            pass
+
+        config = {"source_count": 42}
+
+        dynamic_source_mod = builder.load_module("DynamicSourceModule",
+                                                 "srf_unittest_cpp_dynamic",
+                                                 "DynamicModuleSourceTest_mod1",
+                                                 config)
+        sink = builder.make_sink("sink", on_next, on_error, on_complete)
+
+        builder.make_edge(dynamic_source_mod.output_port("source"), sink)
+
+    pipeline = srf.Pipeline()
+    pipeline.make_segment("DynamicSourceModule_Segment", init_wrapper)
+
+    options = srf.Options()
+    options.topology.user_cpuset = "0-1"
+
+    executor = srf.Executor(options)
+    executor.register_pipeline(pipeline)
+    executor.start()
+    executor.join()
+
+    assert packet_count == 42
+    assert plugin_module.unload()
+
+
+@pytest.mark.skipif(not FOUND_DYN_LIB, reason="Missing: libdynamic_test_module.so")
 def test_dynamic_module_plugin_registration():
     plugin_module = srf.PluginModule.create_or_acquire("libdynamic_test_module.so")
     plugin_module.set_library_directory(f"{DYN_LIB_DIR}")
