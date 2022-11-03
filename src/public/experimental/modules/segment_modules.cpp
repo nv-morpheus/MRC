@@ -17,6 +17,9 @@
 
 #include "srf/experimental/modules/segment_modules.hpp"
 
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_properties.hpp"
+
 #include <algorithm>
 #include <ostream>
 #include <stdexcept>
@@ -140,8 +143,7 @@ void SegmentModule::operator()(segment::Builder& builder)
     this->initialize(builder);
 }
 
-void SegmentModule::register_input_port(std::string input_name,
-                                        std::shared_ptr<segment::ObjectProperties> object)
+void SegmentModule::register_input_port(std::string input_name, std::shared_ptr<segment::ObjectProperties> object)
 {
     if (m_input_ports.find(input_name) != m_input_ports.end())
     {
@@ -156,8 +158,7 @@ void SegmentModule::register_input_port(std::string input_name,
     m_input_port_type_indices.try_emplace(input_name, object->sink_base().sink_type());
 }
 
-void SegmentModule::register_output_port(std::string output_name,
-                                         std::shared_ptr<segment::ObjectProperties> object)
+void SegmentModule::register_output_port(std::string output_name, std::shared_ptr<segment::ObjectProperties> object)
 {
     if (m_output_ports.find(output_name) != m_output_ports.end())
     {

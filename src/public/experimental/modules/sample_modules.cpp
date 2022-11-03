@@ -204,8 +204,7 @@ void NestedModule::initialize(segment::Builder& builder)
                                           configurable_mod->input_port("configurable_input_a"));
 
     // Register the submodules output as one of this module's outputs
-    register_output_port("nested_module_output",
-                         configurable_mod->output_port("configurable_output_x"));
+    register_output_port("nested_module_output", configurable_mod->output_port("configurable_output_x"));
 }
 
 }  // namespace srf::modules

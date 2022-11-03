@@ -17,16 +17,18 @@
 
 #include "srf/segment/builder.hpp"
 
+#include "srf/experimental/modules/module_registry.hpp"
 #include "srf/node/port_registry.hpp"
 
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
 #include <numeric>
+#include <stdexcept>
 
 namespace {
 
-static std::string accum_merge(std::string lhs, std::string rhs)
+std::string accum_merge(std::string lhs, std::string rhs)
 {
     if (lhs.empty())
     {

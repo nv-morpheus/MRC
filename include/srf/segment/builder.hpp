@@ -21,7 +21,6 @@
 #include "srf/core/watcher.hpp"
 #include "srf/engine/segment/ibuilder.hpp"
 #include "srf/exceptions/runtime_error.hpp"
-#include "srf/experimental/modules/module_registry.hpp"
 #include "srf/experimental/modules/segment_modules.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/rx_node.hpp"
@@ -45,11 +44,9 @@
 #include <nlohmann/json.hpp>
 #include <rxcpp/rx.hpp>
 
-#include <algorithm>
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <numeric>
 #include <ostream>
 #include <string>
 #include <type_traits>
