@@ -34,6 +34,8 @@ if (len(dyn_lib_candidates) >= 1):
 def test_plugin_module_create_or_acquire():
     mod = srf.PluginModule.create_or_acquire("doesnt_exist.so")
 
+    assert mod is not None
+
 
 @pytest.mark.skipif(not FOUND_DYN_LIB, reason="Missing: libdynamic_test_module.so")
 def test_dynamic_module_plugin_interface():
@@ -43,7 +45,7 @@ def test_dynamic_module_plugin_interface():
     plugin_module.reload()
 
 
-@pytest.mark.skipif(not FOUND_DYN_LIB, reason="Missing: libdynamic_test_module.so")
+#@pytest.mark.skipif(not FOUND_DYN_LIB, reason="Missing: libdynamic_test_module.so")
 def test_dynamic_module_plugin_registration():
     plugin_module = srf.PluginModule.create_or_acquire("libdynamic_test_module.so")
     plugin_module.set_library_directory(f"{DYN_LIB_DIR}")
@@ -52,15 +54,77 @@ def test_dynamic_module_plugin_registration():
     module_namespace = "srf_unittest_cpp_dynamic"
     module_name = "DynamicSourceModule"
 
-    # TODO(bhargav) add tests to ensure that dynamic modules are loaded correctly once registry bindings are in
+    registry = srf.ModuleRegistry()
+
+    assert registry.contains_namespace(module_namespace)
+    assert registry.contains(module_name, module_namespace)
+
+    registered_modules = registry.registered_modules()
+
+    assert "srf_unittest_cpp_dynamic" in registered_modules
+
+    ns_1 = registered_modules["srf_unittest_cpp_dynamic"]
+    assert len(ns_1) == 1
+    assert ns_1[0] == "DynamicSourceModule"
+
+    assert "srf_unittest_cpp_dynamic_2" in registered_modules
+
+    ns_2 = registered_modules["srf_unittest_cpp_dynamic_2"]
+    assert len(ns_2) == 1
+    assert ns_2[0] == "DynamicSourceModule"
+
+    assert "srf_unittest_cpp_dynamic_3" in registered_modules
+
+    ns_3 = registered_modules["srf_unittest_cpp_dynamic_3"]
+    assert len(ns_3) == 1
+    assert ns_3[0] == "DynamicSourceModule"
+
+    actual_modules = plugin_module.list_modules()
+    assert len(actual_modules) == 3
+
+    expected_modules = [
+        "srf_unittest_cpp_dynamic::DynamicSourceModule",
+        "srf_unittest_cpp_dynamic_2::DynamicSourceModule",
+        "srf_unittest_cpp_dynamic_3::DynamicSourceModule"
+    ]
+
+    assert actual_modules == expected_modules
+
+    plugin_module.unload()
+
+    registered_modules = registry.registered_modules()
+
+    assert "srf_unittest_cpp_dynamic" not in registered_modules
+    assert "srf_unittest_cpp_dynamic_2" not in registered_modules
+    assert "srf_unittest_cpp_dynamic_3" not in registered_modules
 
 
 @pytest.mark.skipif(not FOUND_DYN_LIB, reason="Failed to find libdynamic_test_module.so")
 def test_dynamic_module_bad_version_test():
-    pass
+
+    BAD_VERSION = [13, 14, 15]
+    module_name = "DynamicSourceModule_BAD"
+    module_namespace = "srf_unittest_cpp_dynamic_BAD"
+
+    def module_initializer(builder: srf.Builder):
+        config = {"source_count": 42}
+
+        builder.load_module("DynamicSourceModule_BAD",
+                            "srf_unittest_cpp_dynamic_BAD",
+                            "DynamicSourceModule_BAD_Test",
+                            config)
+
+    registry = srf.ModuleRegistry()
+
+    with pytest.raises(Exception):
+        registry.register_module(module_name, module_namespace, BAD_VERSION, module_initializer)
+
+    assert registry.contains_namespace(module_namespace) is not True
+    assert registry.contains(module_namespace, module_namespace) is not True
 
 
 if (__name__ in ("__main__", )):
     test_plugin_module_create_or_acquire()
     test_dynamic_module_plugin_interface()
     test_dynamic_module_plugin_registration()
+    test_dynamic_module_bad_version_test()
