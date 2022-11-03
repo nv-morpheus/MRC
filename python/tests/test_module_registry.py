@@ -23,6 +23,8 @@ import srf.tests.sample_modules
 
 VERSION = [int(cmpt) for cmpt in srf.tests.sample_modules.__version__.split('.')]
 
+packet_count = 0
+
 
 def test_module_registry_contains():
     registry = srf.ModuleRegistry()
@@ -30,11 +32,11 @@ def test_module_registry_contains():
     print(f"Module registry contains 'xyz': {registry.contains_namespace('xyz')}")
 
 
-def module_init_fn(builder: srf.Builder, module: srf.SegmentModule):
+def module_init_fn(builder: srf.Builder):
     pass
 
 
-def module_init_nested_fn(builder: srf.Builder, module: srf.SegmentModule):
+def module_init_nested_fn(builder: srf.Builder):
     pass
 
 
@@ -71,6 +73,8 @@ def test_module_registry_register_good_version_no_unregister():
 # Purpose: Create a self-contained (no input/output ports), nested, dynamic module, and instantiate two copies in our
 # init wrapper
 def test_py_registered_nested_modules():
+    global packet_count
+
     # Stand-alone module, no input or output ports
     # 1. We register a python module definition as being built by 'init_registered'
     # 2. We then create a segment with a separate init function 'init_caller' that loads our python module from
@@ -78,10 +82,10 @@ def test_py_registered_nested_modules():
     def module_initializer(builder: srf.Builder):
         global packet_count
 
-        def on_next(input):
+        def on_next(data):
             global packet_count
             packet_count += 1
-            logging.info("Sinking {}".format(input))
+            logging.info("Sinking {}".format(data))
 
         def on_error():
             pass
@@ -89,8 +93,7 @@ def test_py_registered_nested_modules():
         def on_complete():
             pass
 
-        config = {}
-        config["source_count"] = 42
+        config = {"source_count": 42}
 
         source_mod = builder.load_module("SourceModule", "srf_unittest", "ModuleSourceTest_mod1", config)
         sink = builder.make_sink("sink", on_next, on_error, on_complete)
@@ -122,13 +125,15 @@ def test_py_registered_nested_modules():
 # Purpose: Create a self-contained (no input/output ports), nested, dynamic module, and instantiate two copies in our
 # init wrapper -- since both versions capture our global 'packet_count', we should see double the packets.
 def test_py_registered_nested_copied_modules():
+    global packet_count
+
     def module_initializer(builder: srf.Builder):
         global packet_count
 
-        def on_next(input):
+        def on_next(data):
             global packet_count
             packet_count += 1
-            logging.info("Sinking {}".format(input))
+            logging.info("Sinking {}".format(data))
 
         def on_error():
             pass
@@ -136,8 +141,7 @@ def test_py_registered_nested_copied_modules():
         def on_complete():
             pass
 
-        config = {}
-        config["source_count"] = 42
+        config = {"source_count": 42}
 
         source_mod = builder.load_module("SourceModule", "srf_unittest", "ModuleSourceTest_mod1", config)
         sink = builder.make_sink("sink", on_next, on_error, on_complete)
@@ -172,6 +176,7 @@ def test_py_registered_nested_copied_modules():
 #
 # Purpose: This is intended to check dynamic module creation, registration, and retrieval
 def test_py_dynamic_module_source():
+    global packet_count
     module_name = "test_py_dyn_source"
 
     def module_initializer(builder: srf.Builder):
@@ -189,10 +194,10 @@ def test_py_dynamic_module_source():
         global packet_count
         packet_count = 0
 
-        def on_next(input):
+        def on_next(data):
             global packet_count
             packet_count += 1
-            logging.info("Sinking {}".format(input))
+            logging.info("Sinking {}".format(data))
 
         def on_error():
             pass
@@ -224,13 +229,14 @@ def test_py_dynamic_module_source():
 # Test if we can create a [source_module] -> [sink] configuration, where the source module loads a c++ defined module
 # from the registry and exposes its source as the source for our dynamic module.
 #
-# Purpose: This is intended to check dynamic module creation, registration, and retrieval, in conjunction with module nesting.
+# Purpose: This is intended to check dynamic module creation, registration, and retrieval, in conjunction with module
+# nesting.
 def test_py_dynamic_module_from_cpp_source():
+    global packet_count
     module_name = "test_py_dyn_source_from_cpp"
 
     def module_initializer(builder: srf.Builder):
-        config = {}
-        config["source_count"] = 42
+        config = {"source_count": 42}
 
         source_mod = builder.load_module("SourceModule", "srf_unittest", "ModuleSourceTest_mod1", config)
         builder.register_module_output("source", source_mod.output_port("source"))
@@ -242,10 +248,10 @@ def test_py_dynamic_module_from_cpp_source():
         global packet_count
         packet_count = 0
 
-        def on_next(input):
+        def on_next(data):
             global packet_count
             packet_count += 1
-            logging.info("Sinking {}".format(input))
+            logging.info("Sinking {}".format(data))
 
         def on_error():
             pass
@@ -276,16 +282,17 @@ def test_py_dynamic_module_from_cpp_source():
 
 # Purpose: Test creation of a dynamic module that acts as a sink [source] -> [sink_module]
 def test_py_dynamic_module_sink():
+    global packet_count
     module_name = "test_py_dyn_sink"
 
     def module_initializer(builder: srf.Builder):
         global packet_count
         packet_count = 0
 
-        def on_next(input):
+        def on_next(data):
             global packet_count
             packet_count += 1
-            logging.info("Sinking {}".format(input))
+            logging.info("Sinking {}".format(data))
 
         def on_error():
             pass
@@ -330,11 +337,11 @@ def test_py_dynamic_module_sink():
 # Purpose: Test creation of a dynamic module that acts as a sink [source] -> [sink_module], where sink module loads a
 # c++ defined module from the registry and exposes its sink as the sink for the dynamic module.
 def test_py_dynamic_module_from_cpp_sink():
+    global packet_count
     module_name = "test_py_dyn_sink_from_cpp"
 
     def module_initializer(builder: srf.Builder):
-        config = {}
-        config["source_count"] = 42
+        config = {"source_count": 42}
 
         sink_mod = builder.load_module("SinkModule", "srf_unittest", "ModuleSinkTest_Mod1", config)
         builder.register_module_input("sink", sink_mod.input_port("sink"))
