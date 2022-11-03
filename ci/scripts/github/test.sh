@@ -48,7 +48,6 @@ cd ${SRF_ROOT}/build
 set +e
 # Tests known to be failing
 # Issues:
-# * test_srf_benchmarking - https://github.com/nv-morpheus/SRF/issues/32
 # * test_srf_private - https://github.com/nv-morpheus/SRF/issues/33
 # * nvrpc - https://github.com/nv-morpheus/SRF/issues/34
 ctest --output-on-failure \
