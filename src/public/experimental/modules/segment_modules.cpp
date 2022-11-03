@@ -17,6 +17,9 @@
 
 #include "srf/experimental/modules/segment_modules.hpp"
 
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_properties.hpp"
+
 #include <algorithm>
 #include <ostream>
 #include <stdexcept>

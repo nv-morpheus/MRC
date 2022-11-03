@@ -22,8 +22,7 @@
 
 #include <nlohmann/json.hpp>
 #include <pybind11/functional.h>  // IWYU pragma: keep
-#include <pybind11/pytypes.h>
-#include <pybind11/stl.h>  // IWYU pragma: keep
+#include <pybind11/stl.h>         // IWYU pragma: keep
 
 #include <functional>
 #include <string>
