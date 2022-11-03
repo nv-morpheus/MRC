@@ -45,7 +45,7 @@ def test_dynamic_module_plugin_interface():
     plugin_module.reload()
 
 
-#@pytest.mark.skipif(not FOUND_DYN_LIB, reason="Missing: libdynamic_test_module.so")
+@pytest.mark.skipif(not FOUND_DYN_LIB, reason="Missing: libdynamic_test_module.so")
 def test_dynamic_module_plugin_registration():
     plugin_module = srf.PluginModule.create_or_acquire("libdynamic_test_module.so")
     plugin_module.set_library_directory(f"{DYN_LIB_DIR}")
