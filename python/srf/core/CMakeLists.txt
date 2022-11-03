@@ -23,7 +23,6 @@ srf_add_pybind11_module(operators         SOURCE_FILES operators.cpp)
 srf_add_pybind11_module(options           SOURCE_FILES options.cpp)
 srf_add_pybind11_module(pipeline          SOURCE_FILES pipeline.cpp)
 srf_add_pybind11_module(plugins           SOURCE_FILES plugins.cpp)
-srf_add_pybind11_module(segment_modules   SOURCE_FILES segment_modules.cpp)
 srf_add_pybind11_module(segment           SOURCE_FILES segment.cpp)
 srf_add_pybind11_module(subscriber        SOURCE_FILES subscriber.cpp)
 

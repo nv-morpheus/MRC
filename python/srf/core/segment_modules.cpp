@@ -54,7 +54,6 @@ PYBIND11_MODULE(segment_modules, module)
    )pbdoc";
 
     pysrf::import(module, "srf.core.common");
-    pysrf::import_module_object(module, "srf.core.segment", "Builder");
 
     auto SegmentModule =
         py::class_<srf::modules::SegmentModule, std::shared_ptr<srf::modules::SegmentModule>>(module, "SegmentModule");
