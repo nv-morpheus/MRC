@@ -28,6 +28,7 @@
 
 #include <memory>
 #include <ostream>
+#include <sstream>
 
 // IWYU thinks the Segment.def calls need array and vector
 // IWYU pragma: no_include <array>
