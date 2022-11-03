@@ -155,9 +155,17 @@ PYBIND11_MODULE(segment, module)
      */
     Builder.def("make_node", &BuilderProxy::make_node, py::return_value_policy::reference_internal);
 
-    Builder.def("get_egress", &BuilderProxy::get_egress);
+    /**
+     * Find and return an existing egress port -- throws if `name` does not exist
+     * (py) @param name: Name of the egress port
+     */
+    Builder.def("get_egress", &BuilderProxy::get_egress, py::arg("name"));
 
-    Builder.def("get_ingress", &BuilderProxy::get_ingress);
+    /**
+     * Find and return an existing ingress port -- throws if `name` does not exist
+     * (py) @param name: Name of the ingress port
+     */
+    Builder.def("get_ingress", &BuilderProxy::get_ingress, py::arg("name"));
 
     Builder.def("make_edge", &BuilderProxy::make_edge);
 
