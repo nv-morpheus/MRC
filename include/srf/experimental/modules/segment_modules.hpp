@@ -139,16 +139,14 @@ class SegmentModule
      * @param input_name Port name
      * @param object ObjectProperties object associated with the port
      */
-    void register_input_port(std::string input_name,
-                             std::shared_ptr<segment::ObjectProperties> object);
+    void register_input_port(std::string input_name, std::shared_ptr<segment::ObjectProperties> object);
 
     /**
      * Register an output port that should be exposed for the module
      * @param input_name Port name
      * @param object ObjectProperties object assocaited with the port
      */
-    void register_output_port(std::string output_name,
-                              std::shared_ptr<segment::ObjectProperties> object);
+    void register_output_port(std::string output_name, std::shared_ptr<segment::ObjectProperties> object);
 
   private:
     const std::string m_module_instance_name;

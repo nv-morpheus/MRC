@@ -206,8 +206,8 @@ class BuilderProxy
                                       std::shared_ptr<segment::ObjectProperties> object);
 
     static void register_module_output(srf::segment::Builder& self,
-                                      std::string output_name,
-                                      std::shared_ptr<segment::ObjectProperties> object);
+                                       std::string output_name,
+                                       std::shared_ptr<segment::ObjectProperties> object);
 
     static std::shared_ptr<srf::segment::ObjectProperties> make_file_reader(srf::segment::Builder& self,
                                                                             const std::string& name,

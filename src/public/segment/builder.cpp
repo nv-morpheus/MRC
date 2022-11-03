@@ -26,7 +26,7 @@
 
 namespace {
 
-static std::string accum_merge(std::string lhs, std::string rhs)
+std::string accum_merge(std::string lhs, std::string rhs)
 {
     if (lhs.empty())
     {
