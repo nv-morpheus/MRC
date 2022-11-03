@@ -20,13 +20,74 @@ import pytest
 import srf
 import srf.tests.sample_modules
 
-VERSION = [int(cmpt) for cmpt in srf.tests.sample_modules.__version__.split('.')]
+VERSION = [int(cmpt) for cmpt in srf.tests.sample_modules.__version__.split(".")]
 
 
-def test_module_registry_contains():
+def test_contains_namespace():
     registry = srf.ModuleRegistry()
 
-    print(f"Module registry contains 'xyz': {registry.contains_namespace('xyz')}")
+    assert registry.contains_namespace("xyz") is not True
+    assert registry.contains_namespace("default")
+
+
+def test_contains():
+    registry = srf.ModuleRegistry()
+
+    assert registry.contains("SimpleModule", "srf_unittest")
+    assert registry.contains("SourceModule", "srf_unittest")
+    assert registry.contains("SinkModule", "srf_unittest")
+    assert registry.contains("SimpleModule", "default") is not True
+
+
+def test_find_module():
+
+    config = {"config_key_1": True}
+
+    registry = srf.ModuleRegistry()
+
+    simple_mod = registry.find_module("SimpleModule", "srf_unittest", "ModuleInitializationTest_mod", config)
+
+    assert "config_key_1" in simple_mod.config()
+
+    with pytest.raises(Exception):
+        simple_mod = registry.find_module("SimpleModule", "default", "ModuleInitializationTest_mod", config)
+
+
+def test_is_version_compatible():
+    registry = srf.ModuleRegistry()
+
+    release_version = [22, 11, 0]
+    old_release_version = [22, 10, 0]
+    no_version_patch = [22, 10]
+    no_version_minor_and_patch = [22]
+
+    assert registry.is_version_compatible(release_version)
+    assert registry.is_version_compatible(old_release_version) is not True
+    assert registry.is_version_compatible(no_version_patch) is not True
+    assert registry.is_version_compatible(no_version_minor_and_patch) is not True
+
+
+def test_unregister_module():
+    registry = srf.ModuleRegistry()
+
+    registry_namespace = "srf_unittest2"
+    simple_mod_name = "SimpleModule"
+
+    registry.unregister_module(simple_mod_name, registry_namespace)
+
+    with pytest.raises(Exception):
+        registry.unregister_module(simple_mod_name, registry_namespace, False)
+
+    registry.unregister_module(simple_mod_name, registry_namespace, True)
+
+
+def test_registered_modules():
+    registry = srf.ModuleRegistry()
+    registered_mod_dict = registry.registered_modules()
+
+    assert "default" in registered_mod_dict
+    assert "srf_unittest" in registered_mod_dict
+    assert len(registered_mod_dict) == 2
 
 
 def module_init_fn(builder: srf.Builder, module: srf.SegmentModule):
@@ -56,18 +117,19 @@ def test_module_registry_register_good_version():
 
 
 def test_module_registry_register_good_version_no_unregister():
-    # Ensure that we don't throw any errors or hang if we don't explicitly unregister the python module
+    # Ensure that we don"t throw any errors or hang if we don"t explicitly unregister the python module
     registry = srf.ModuleRegistry()
 
     registry.register_module("test_module_registry_register_good_version_no_unregister_module",
-                             "srf_unittests", VERSION,
+                             "srf_unittests",
+                             VERSION,
                              module_init_fn)
 
 
 def test_py_registered_nested_modules():
     # Stand-alone module, no input or output ports
-    # 1. We register a python module definition as being built by 'init_registered'
-    # 2. We then create a segment with a separate init function 'init_caller' that loads our python module from
+    # 1. We register a python module definition as being built by "init_registered"
+    # 2. We then create a segment with a separate init function "init_caller" that loads our python module from
     #    the registry and initializes it, running
     def init_registered(builder: srf.Builder):
         global packet_count
@@ -115,8 +177,8 @@ def test_py_registered_nested_modules():
 
 def test_py_registered_nested_copied_modules():
     # Stand-alone module, no input or output ports
-    # 1. We register a python module definition as being built by 'init_registered'
-    # 2. We then create a segment with a separate init function 'init_caller' that loads our python module from
+    # 1. We register a python module definition as being built by "init_registered"
+    # 2. We then create a segment with a separate init function "init_caller" that loads our python module from
     #    the registry and initializes it, running
     def init_registered(builder: srf.Builder):
         global packet_count
@@ -163,8 +225,13 @@ def test_py_registered_nested_copied_modules():
     assert packet_count == 84
 
 
-if (__name__ in ("__main__",)):
-    test_module_registry_contains()
+if (__name__ in ("__main__", )):
+    test_contains_namespace()
+    test_contains()
+    test_find_module()
+    test_is_version_compatible()
+    test_unregister_module()
+    test_registered_modules()
     test_module_registry_register_bad_version()
     test_module_registry_register_good_version()
     test_module_registry_register_good_version_no_unregister()

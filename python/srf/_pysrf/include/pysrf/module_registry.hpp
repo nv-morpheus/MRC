@@ -17,6 +17,10 @@
 
 #pragma once
 
+#include "srf/experimental/modules/segment_modules.hpp"
+
+#include <pybind11/pybind11.h>
+
 #include <functional>
 #include <string>
 #include <vector>
@@ -26,6 +30,8 @@ class Builder;
 }
 
 namespace srf::pysrf {
+
+namespace py = pybind11;
 
 // Export everything in the srf::pysrf namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
@@ -38,6 +44,16 @@ class ModuleRegistryProxy
     static bool contains(ModuleRegistryProxy& self, const std::string& name, const std::string& registry_namespace);
 
     static bool contains_namespace(ModuleRegistryProxy& self, const std::string& registry_namespace);
+
+    static std::map<std::string, std::vector<std::string>> registered_modules(ModuleRegistryProxy& self);
+
+    static bool is_version_compatible(ModuleRegistryProxy& self, const std::vector<unsigned int>& release_version);
+
+    static std::shared_ptr<srf::modules::SegmentModule> find_module(ModuleRegistryProxy& self,
+                                                                    const std::string& name,
+                                                                    const std::string& registry_namespace,
+                                                                    const std::string& module_name,
+                                                                    py::dict module_config);
 
     static void register_module(ModuleRegistryProxy& self,
                                 std::string name,

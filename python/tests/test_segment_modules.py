@@ -15,6 +15,8 @@
 
 import logging
 
+import pytest
+
 import srf
 # Required to register sample modules with the ModuleRegistry
 import srf.tests.sample_modules
@@ -114,137 +116,81 @@ def test_py_end_to_end():
     assert (packets_3 == 4)
 
 
-# TODO(bhargav)
-# def test_py_constructor():
+def test_py_constructor():
 
-#     def gen_data():
-#         yield True
-#         yield False
-#         yield True
-#         yield True
+    config = {"config_key_1": True}
 
-#     def init_wrapper(builder: srf.Builder):
+    registry = srf.ModuleRegistry()
 
-#         def on_next(input):
-#             pass
+    simple_mod = registry.find_module("SimpleModule", "srf_unittest", "ModuleInitializationTest_mod", config)
 
-#         def on_error():
-#             pass
+    assert "config_key_1" in simple_mod.config()
 
-#         def on_complete():
-#             pass
 
-#         config_1 = {}
-#         config_2 = {"config_key_1": True}
+def test_py_module_initialization():
 
-#         # TODO: Handle unregistered nodes and modules
-#         mod1 = builder.load_module("SimpleModule", "srf_unittest", "InitModuleTest_1", {})
-#         mod2 = builder.load_module("ConfigurableModule", "srf_unittest", "InitModuleTest_2", {})
-#         mod3 = builder.load_module("ConfigurableModule", "srf_unittest", "InitModuleTest_3", config_1)
-#         mod4 = builder.load_module("ConfigurableModule", "srf_unittest", "InitModuleTest_4", config_2)
+    def gen_data():
+        yield True
+        yield False
+        yield True
+        yield True
 
-#         assert "config_key_1" in mod4.config()
+    def init_wrapper(builder: srf.Builder):
 
-#         source = builder.make_source("source", gen_data)
-#         sink = builder.make_sink("sink", on_next, on_error, on_complete)
+        def on_next(input):
+            pass
 
-#         builder.make_edge(source, sink)
+        def on_error():
+            pass
 
-#     pipeline = srf.Pipeline()
-#     pipeline.make_segment("Initialization_Segment", init_wrapper)
+        def on_complete():
+            pass
 
-#     options = srf.Options()
-#     options.topology.user_cpuset = "0-1"
+        config = {"config_key_1": True}
 
-#     executor = srf.Executor(options)
-#     executor.register_pipeline(pipeline)
-#     executor.start()
-#     executor.join()
+        registry = srf.ModuleRegistry()
 
-# TODO(bhargav)
-# def test_py_module_initialization():
+        source = builder.make_source("source", gen_data)
+        source2 = builder.make_source("source2", gen_data)
+        simple_mod = registry.find_module("SimpleModule", "srf_unittest", "ModuleInitializationTest_mod2", config)
+        sink = builder.make_sink("sink", on_next, on_error, on_complete)
 
-#     def gen_data():
-#         yield True
-#         yield False
-#         yield True
-#         yield True
+        builder.init_module(simple_mod)
 
-#     def init_wrapper(builder: srf.Builder):
+        assert len(simple_mod.input_ids()) == 2
+        assert len(simple_mod.output_ids()) == 2
+        assert len(simple_mod.input_ports()) == 2
+        assert len(simple_mod.output_ports()) == 2
 
-#         def on_next(input):
-#             pass
+        assert ("input1" in simple_mod.input_ports())
+        assert ("input2" in simple_mod.input_ports())
+        assert ("output1" in simple_mod.output_ports())
+        assert ("output2" in simple_mod.output_ports())
 
-#         def on_error():
-#             pass
+        with pytest.raises(Exception):
+            simple_mod.input_port("DOES_NOT_EXIST")
+        with pytest.raises(Exception):
+            simple_mod.output_port("DOES_NOT_EXIST")
+        with pytest.raises(Exception):
+            simple_mod.input_port_type_id("DOES_NOT_EXIST")
+        with pytest.raises(Exception):
+            simple_mod.output_port_type_id("DOES_NOT_EXIST")
 
-#         def on_complete():
-#             pass
+        builder.make_edge(source, simple_mod.input_port("input1"))
+        builder.make_edge(source2, simple_mod.input_port("input2"))
+        builder.make_edge(simple_mod.output_port("output1"), sink)
+        builder.make_edge(simple_mod.output_port("output2"), sink)
 
-#         config_1 = {}
-#         config_2 = {"config_key_1": True}
+    pipeline = srf.Pipeline()
+    pipeline.make_segment("Initialization_Segment", init_wrapper)
 
-#         # TODO: Handle unregistered nodes and modules
-#         simple_mod = builder.load_module("SimpleModule", "srf_unittest", "ModuleInitializationTest_mod1", {})
-#         configurable_1_mod = builder.load_module("ConfigurableModule",
-#                                                  "srf_unittest",
-#                                                  "ModuleInitializationTest_mod2",
-#                                                   config_1)
-#         configurable_2_mod = builder.load_module("ConfigurableModule",
-#                                                  "srf_unittest",
-#                                                  "ModuleInitializationTest_mod3",
-#                                                  config_2)
+    options = srf.Options()
+    options.topology.user_cpuset = "0-1"
 
-#         assert len(simple_mod.input_ids()) == 2
-#         assert len(simple_mod.output_ids()) == 2
-#         assert len(simple_mod.input_ports()) == 2
-#         assert len(simple_mod.output_ports()) == 2
-#         assert ("input1" in simple_mod.input_ports())
-#         assert ("input2" in simple_mod.input_ports())
-#         assert ("output1" in simple_mod.output_ports())
-#         assert ("output2" in simple_mod.output_ports())
-
-#         # assert isinstance(simple_mod.input_port_type_id("input1"), bool)
-#         # assert isinstance(simple_mod.input_port_type_id("input2"), bool)
-#         # assert isinstance(simple_mod.input_port_type_ids()["input1"], bool)
-#         # assert isinstance(simple_mod.input_port_type_ids()["input2"], bool)
-#         # assert isinstance(simple_mod.output_port_type_id("output1"), str)
-#         # assert isinstance(simple_mod.output_port_type_id("output2"), str)
-#         # assert isinstance(simple_mod.output_port_type_ids()["output1"], str)
-#         # assert isinstance(simple_mod.output_port_type_ids()["output2"], str)
-
-#         with pytest.raises(Exception):
-#             simple_mod.input_port("DOES_NOT_EXIST")
-#         with pytest.raises(Exception):
-#             simple_mod.output_port("DOES_NOT_EXIST")
-#         with pytest.raises(Exception):
-#             simple_mod.input_port_type_id("DOES_NOT_EXIST")
-#         with pytest.raises(Exception):
-#             simple_mod.output_port_type_id("DOES_NOT_EXIST")
-
-#         assert len(configurable_1_mod.input_ports()) == 1
-#         assert len(configurable_1_mod.output_ports()) == 1
-#         assert 'config_key_1' not in configurable_1_mod.config()
-
-#         assert len(configurable_2_mod.input_ports()) == 1
-#         assert len(configurable_2_mod.output_ports()) == 1
-#         assert 'config_key_1' in configurable_2_mod.config()
-
-#         source = builder.make_source("source", gen_data)
-#         sink = builder.make_sink("sink", on_next, on_error, on_complete)
-
-#         builder.make_edge(source, sink)
-
-#     pipeline = srf.Pipeline()
-#     pipeline.make_segment("Initialization_Segment", init_wrapper)
-
-#     options = srf.Options()
-#     options.topology.user_cpuset = "0-1"
-
-#     executor = srf.Executor(options)
-#     executor.register_pipeline(pipeline)
-#     executor.start()
-#     executor.join()
+    executor = srf.Executor(options)
+    executor.register_pipeline(pipeline)
+    executor.start()
+    executor.join()
 
 
 def test_py_module_as_source():
@@ -403,5 +349,5 @@ if (__name__ in ("__main__", )):
     test_py_module_as_sink()
     test_py_module_chaining()
     test_py_module_nesting()
-    # test_py_constructor()
-    # test_py_module_initialization()
+    test_py_constructor()
+    test_py_module_initialization()

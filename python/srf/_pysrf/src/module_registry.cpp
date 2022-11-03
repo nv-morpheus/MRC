@@ -18,6 +18,7 @@
 #include "pysrf/module_registry.hpp"
 
 #include "pysrf/py_segment_module.hpp"
+#include "pysrf/utils.hpp"
 
 #include "srf/experimental/modules/module_registry.hpp"
 
@@ -34,6 +35,8 @@
 
 namespace srf::pysrf {
 
+namespace py = pybind11;
+
 bool ModuleRegistryProxy::contains(ModuleRegistryProxy& self,
                                    const std::string& name,
                                    const std::string& registry_namespace)
@@ -45,6 +48,29 @@ bool ModuleRegistryProxy::contains_namespace(srf::pysrf::ModuleRegistryProxy& se
                                              const std::string& registry_namespace)
 {
     return srf::modules::ModuleRegistry::contains_namespace(registry_namespace);
+}
+
+std::map<std::string, std::vector<std::string>> ModuleRegistryProxy::registered_modules(ModuleRegistryProxy& self)
+{
+    return modules::ModuleRegistry::registered_modules();
+}
+
+bool ModuleRegistryProxy::is_version_compatible(ModuleRegistryProxy& self,
+                                                const std::vector<unsigned int>& release_version)
+{
+    return modules::ModuleRegistry::is_version_compatible(release_version);
+}
+
+std::shared_ptr<modules::SegmentModule> ModuleRegistryProxy::find_module(ModuleRegistryProxy& self,
+                                                                         const std::string& name,
+                                                                         const std::string& registry_namespace,
+                                                                         const std::string& module_name,
+                                                                         py::dict module_config)
+{
+    auto json_config           = cast_from_pyobject(module_config);
+    auto fn_module_constructor = modules::ModuleRegistry::find_module(name, registry_namespace);
+    auto module                = std::move(fn_module_constructor(std::move(module_name), std::move(json_config)));
+    return std::move(module);
 }
 
 void ModuleRegistryProxy::register_module(srf::pysrf::ModuleRegistryProxy& self,

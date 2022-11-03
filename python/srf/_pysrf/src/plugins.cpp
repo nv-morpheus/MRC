@@ -26,4 +26,34 @@ std::shared_ptr<srf::modules::PluginModule> PluginProxy::create_or_acquire(const
     return modules::PluginModule::create_or_acquire(plugin_library_name);
 }
 
+std::vector<std::string> PluginProxy::list_modules(srf::modules::PluginModule& self)
+{
+    return self.list_modules();
+}
+
+bool load(srf::modules::PluginModule& self, bool throw_on_error)
+{
+    return self.load(throw_on_error);
+}
+
+bool unload(srf::modules::PluginModule& self, bool throw_on_error)
+{
+    return self.unload(throw_on_error);
+}
+
+void reload(srf::modules::PluginModule& self)
+{
+    return self.reload();
+}
+
+void reset_library_directory(srf::modules::PluginModule& self)
+{
+    return self.reset_library_directory();
+}
+
+void set_library_directory(srf::modules::PluginModule& self, std::string path)
+{
+    return self.set_library_directory(path);
+}
+
 }  // namespace srf::pysrf

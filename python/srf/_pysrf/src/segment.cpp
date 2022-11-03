@@ -300,6 +300,11 @@ std::shared_ptr<srf::modules::SegmentModule> BuilderProxy::load_module_from_regi
         module_id, registry_namespace, std::move(module_name), std::move(json_config));
 }
 
+void BuilderProxy::init_module(srf::segment::Builder& self, std::shared_ptr<srf::modules::SegmentModule> module)
+{
+    self.init_module(module);
+}
+
 void BuilderProxy::make_py2cxx_edge_adapter(srf::segment::Builder& self,
                                             std::shared_ptr<srf::segment::ObjectProperties> source,
                                             std::shared_ptr<srf::segment::ObjectProperties> sink,
