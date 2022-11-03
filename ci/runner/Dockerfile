@@ -43,6 +43,7 @@ COPY ./ci/conda/environments/* /tmp/conda/
 
 RUN CONDA_ALWAYS_YES=true /opt/conda/bin/mamba env create -n ${PROJ_NAME} -q --file /tmp/conda/dev_env.yml && \
     /opt/conda/bin/mamba env update -q -n ${PROJ_NAME} --file /tmp/conda/clang_env.yml && \
+    /opt/conda/bin/mamba env update -q -n ${PROJ_NAME} --file /tmp/conda/ci_env.yml && \
     sed -i "s/conda activate base/conda activate ${PROJ_NAME}/g" ~/.bashrc && \
     conda clean -afy && \
     rm -rf /tmp/conda
