@@ -88,11 +88,11 @@ void SimpleModule::initialize(segment::Builder& builder)
 
     builder.make_edge(internal2, output2);
 
-    register_input_port("input1", input1, input1->object().sink_type());
-    register_output_port("output1", output1, output1->object().source_type());
+    register_input_port("input1", input1);
+    register_output_port("output1", output1);
 
-    register_input_port("input2", input2, input2->object().sink_type());
-    register_output_port("output2", output2, output2->object().source_type());
+    register_input_port("input2", input2);
+    register_output_port("output2", output2);
 
     m_initialized = true;
 }
@@ -128,8 +128,8 @@ void ConfigurableModule::initialize(segment::Builder& builder)
 
     builder.make_edge(internal1, output1);
 
-    register_input_port("configurable_input_a", input1, input1->object().sink_type());
-    register_output_port("configurable_output_x", output1, output1->object().source_type());
+    register_input_port("configurable_input_a", input1);
+    register_output_port("configurable_output_x", output1);
 
     m_initialized = true;
 }
@@ -161,7 +161,7 @@ void SourceModule::initialize(segment::Builder& builder)
     });
 
     // Register the submodules output as one of this module's outputs
-    register_output_port("source", source, source->object().source_type());
+    register_output_port("source", source);
 }
 
 SinkModule::SinkModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
@@ -177,7 +177,7 @@ void SinkModule::initialize(segment::Builder& builder)
     });
 
     // Register the submodules output as one of this module's outputs
-    register_input_port("sink", sink, sink->object().sink_type());
+    register_input_port("sink", sink);
 }
 
 NestedModule::NestedModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
@@ -205,8 +205,7 @@ void NestedModule::initialize(segment::Builder& builder)
 
     // Register the submodules output as one of this module's outputs
     register_output_port("nested_module_output",
-                         configurable_mod->output_port("configurable_output_x"),
-                         configurable_mod->output_port_type_id("configurable_output_x"));
+                         configurable_mod->output_port("configurable_output_x"));
 }
 
 }  // namespace srf::modules

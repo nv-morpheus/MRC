@@ -31,18 +31,6 @@ class PluginProxy
 {
   public:
     static std::shared_ptr<srf::modules::PluginModule> create_or_acquire(const std::string& plugin_library_name);
-
-    static std::vector<std::string> list_modules(modules::PluginModule& self);
-
-    static bool load(modules::PluginModule& self, bool throw_on_error);
-
-    static bool unload(modules::PluginModule& self, bool throw_on_error);
-
-    static void reload(modules::PluginModule& self);
-
-    static void reset_library_directory(modules::PluginModule& self);
-
-    static void set_library_directory(modules::PluginModule& self, std::string path);
 };
 
 #pragma GCC visibility pop

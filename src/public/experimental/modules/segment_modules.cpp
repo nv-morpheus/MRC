@@ -141,8 +141,7 @@ void SegmentModule::operator()(segment::Builder& builder)
 }
 
 void SegmentModule::register_input_port(std::string input_name,
-                                        std::shared_ptr<segment::ObjectProperties> object,
-                                        std::type_index tidx)
+                                        std::shared_ptr<segment::ObjectProperties> object)
 {
     if (m_input_ports.find(input_name) != m_input_ports.end())
     {
@@ -154,12 +153,11 @@ void SegmentModule::register_input_port(std::string input_name,
 
     m_input_port_ids.push_back(input_name);
     m_input_ports[input_name] = object;
-    m_input_port_type_indices.try_emplace(input_name, tidx);
+    m_input_port_type_indices.try_emplace(input_name, object->sink_base().sink_type());
 }
 
 void SegmentModule::register_output_port(std::string output_name,
-                                         std::shared_ptr<segment::ObjectProperties> object,
-                                         std::type_index tidx)
+                                         std::shared_ptr<segment::ObjectProperties> object)
 {
     if (m_output_ports.find(output_name) != m_output_ports.end())
     {
@@ -171,7 +169,7 @@ void SegmentModule::register_output_port(std::string output_name,
 
     m_output_port_ids.push_back(output_name);
     m_output_ports[output_name] = object;
-    m_output_port_type_indices.try_emplace(output_name, tidx);
+    m_output_port_type_indices.try_emplace(output_name, object->source_base().source_type());
 }
 
 }  // namespace srf::modules

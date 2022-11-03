@@ -34,6 +34,5 @@ void PythonSegmentModule::initialize(segment::Builder& builder)
 {
     VLOG(2) << "Calling PythonSegmentModule::initialize";
     m_py_initialize(builder);
-    VLOG(2) << "Calling PythonSegmentModule::initialize -> DONE";
 }
 }  // namespace srf::pysrf

@@ -201,6 +201,14 @@ class BuilderProxy
                                                                                   std::string module_name,
                                                                                   pybind11::dict config = {});
 
+    static void register_module_input(srf::segment::Builder& self,
+                                      std::string input_name,
+                                      std::shared_ptr<segment::ObjectProperties> object);
+
+    static void register_module_output(srf::segment::Builder& self,
+                                       std::string output_name,
+                                       std::shared_ptr<segment::ObjectProperties> object);
+
     static void init_module(srf::segment::Builder& self, std::shared_ptr<srf::modules::SegmentModule> module);
 
     static std::shared_ptr<srf::segment::ObjectProperties> make_file_reader(srf::segment::Builder& self,

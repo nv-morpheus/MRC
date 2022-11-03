@@ -66,7 +66,7 @@ void DynamicSourceModule::initialize(segment::Builder& builder)
     });
 
     // Register the submodules output as one of this module's outputs
-    register_output_port("source", source, source->object().source_type());
+    register_output_port("source", source);
 }
 
 }  // namespace srf::modules

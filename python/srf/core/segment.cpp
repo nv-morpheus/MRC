@@ -71,7 +71,6 @@ PYBIND11_MODULE(segment, module)
 
     pysrf::import_module_object(module, "srf.core.node", "SegmentObject");
 
-    // Register the converters for make_py2cxx_edge_adapter and make_cxx2py_edge_adapter
     // Type 'b'
     node::EdgeConnector<bool, PyHolder>::register_converter();
     node::EdgeConnector<PyHolder, bool>::register_converter();
@@ -156,11 +155,17 @@ PYBIND11_MODULE(segment, module)
      */
     Builder.def("make_node", &BuilderProxy::make_node, py::return_value_policy::reference_internal);
 
-    Builder.def("get_egress", &BuilderProxy::get_egress);
+    /**
+     * Find and return an existing egress port -- throws if `name` does not exist
+     * (py) @param name: Name of the egress port
+     */
+    Builder.def("get_egress", &BuilderProxy::get_egress, py::arg("name"));
 
-    Builder.def("get_ingress", &BuilderProxy::get_ingress);
-
-    Builder.def("make_cxx2py_edge_adapter", &BuilderProxy::make_cxx2py_edge_adapter);
+    /**
+     * Find and return an existing ingress port -- throws if `name` does not exist
+     * (py) @param name: Name of the ingress port
+     */
+    Builder.def("get_ingress", &BuilderProxy::get_ingress, py::arg("name"));
 
     Builder.def("make_edge", &BuilderProxy::make_edge);
 
@@ -176,9 +181,13 @@ PYBIND11_MODULE(segment, module)
 
     Builder.def("init_module", &BuilderProxy::init_module, py::arg("module"));
 
-    Builder.def("make_node_full", &BuilderProxy::make_node_full, py::return_value_policy::reference_internal);
+    Builder.def(
+        "register_module_input", &BuilderProxy::register_module_input, py::arg("input_name"), py::arg("object"));
 
-    Builder.def("make_py2cxx_edge_adapter", &BuilderProxy::make_py2cxx_edge_adapter);
+    Builder.def(
+        "register_module_output", &BuilderProxy::register_module_output, py::arg("output_name"), py::arg("object"));
+
+    Builder.def("make_node_full", &BuilderProxy::make_node_full, py::return_value_policy::reference_internal);
 
     /** Segment Module Interface Declarations **/
     SegmentModule.def("config", &SegmentModuleProxy::config);

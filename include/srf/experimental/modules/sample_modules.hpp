@@ -161,7 +161,7 @@ void TemplateModule<OutputTypeT>::initialize(segment::Builder& builder)
     });
 
     // Register the submodules output as one of this module's outputs
-    register_output_port("source", source, source->object().source_type());
+    register_output_port("source", source);
 }
 
 template <typename OutputTypeT, OutputTypeT (*Initializer)()>
@@ -223,7 +223,7 @@ void TemplateWithInitModule<OutputTypeT, Initializer>::initialize(segment::Build
     });
 
     // Register the submodules output as one of this module's outputs
-    register_output_port("source", source, source->object().source_type());
+    register_output_port("source", source);
 }
 
 }  // namespace srf::modules
