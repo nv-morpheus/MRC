@@ -66,7 +66,8 @@ def test_module_registry_register_good_version_no_unregister():
     registry = srf.ModuleRegistry()
 
     registry.register_module("test_module_registry_register_good_version_no_unregister_module",
-                             "srf_unittests", VERSION,
+                             "srf_unittests",
+                             VERSION,
                              module_init_fn)
 
 
@@ -206,8 +207,7 @@ def test_py_dynamic_module_source():
             pass
 
         # Load our registered module
-        source_mod = builder.load_module(module_name, "srf_unittests",
-                                         "my_loaded_module!", {})
+        source_mod = builder.load_module(module_name, "srf_unittests", "my_loaded_module!", {})
         sink = builder.make_sink("sink", on_next, on_error, on_complete)
 
         builder.make_edge(source_mod.output_port("source"), sink)
@@ -260,8 +260,7 @@ def test_py_dynamic_module_from_cpp_source():
             pass
 
         # Load our registered module
-        source_mod = builder.load_module(module_name, "srf_unittests",
-                                         "my_loaded_module!", {})
+        source_mod = builder.load_module(module_name, "srf_unittests", "my_loaded_module!", {})
         sink = builder.make_sink("sink", on_next, on_error, on_complete)
 
         builder.make_edge(source_mod.output_port("source"), sink)
@@ -315,8 +314,7 @@ def test_py_dynamic_module_sink():
                 yield random.choice([True, False])
 
         source = builder.make_source("source", gen_data)
-        sink_mod = builder.load_module(module_name, "srf_unittests",
-                                       "loaded_sink_module", {})
+        sink_mod = builder.load_module(module_name, "srf_unittests", "loaded_sink_module", {})
 
         builder.make_edge(source, sink_mod.input_port("sink"))
 
@@ -358,8 +356,7 @@ def test_py_dynamic_module_from_cpp_sink():
         packet_count = 0
 
         source = builder.make_source("source", gen_data)
-        sink_mod = builder.load_module(module_name, "srf_unittests",
-                                       "loaded_sink_module", {})
+        sink_mod = builder.load_module(module_name, "srf_unittests", "loaded_sink_module", {})
 
         builder.make_edge(source, sink_mod.input_port("sink"))
 

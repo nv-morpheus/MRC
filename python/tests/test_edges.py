@@ -20,7 +20,6 @@ import srf.tests.test_edges_cpp as m
 
 
 def test_connect_cpp_edges():
-
     def segment_init(seg: srf.Builder):
         source = m.SourceDerivedB(seg, "source")
 
@@ -49,7 +48,6 @@ def test_connect_cpp_edges():
 
 
 def test_edge_cpp_to_cpp_same():
-
     def segment_init(seg: srf.Builder):
         source = m.SourceDerivedB(seg, "source")
 
@@ -78,19 +76,16 @@ def test_edge_cpp_to_cpp_same():
 
 
 def test_edge_cpp_to_py_same():
-
     def segment_init(seg: srf.Builder):
         source = m.SourceDerivedB(seg, "source")
 
         def on_next(x: m.Base):
-            #print("Got: {}".format(type(x)))
             pass
 
         def on_error(e):
             pass
 
         def on_complete():
-            #print("Complete")
             pass
 
         sink = seg.make_sink("sink", on_next, on_error, on_complete)
@@ -115,9 +110,7 @@ def test_edge_cpp_to_py_same():
 
 
 def test_edge_py_to_cpp_same():
-
     def segment_init(seg: srf.Builder):
-
         def source_fn():
             yield m.DerivedB()
             yield m.DerivedB()
@@ -150,7 +143,6 @@ def test_edge_wrapper():
     on_next_count = 0
 
     def segment_init(seg: srf.Builder):
-
         def create_source():
             yield 1
             yield 2
@@ -165,7 +157,6 @@ def test_edge_wrapper():
 
         def on_next(x: int):
             nonlocal on_next_count
-            #print("Got: {}".format(type(x)))
 
             on_next_count += 1
 
@@ -173,7 +164,6 @@ def test_edge_wrapper():
             pass
 
         def on_complete():
-            #print("Complete")
             pass
 
         sink = seg.make_sink("sink", on_next, on_error, on_complete)
@@ -206,7 +196,6 @@ class MyCustomClass:
 
 
 def test_multi_segment():
-
     def segment_source(seg: srf.Builder):
         # Use a generator function as the source
         def source_gen():
@@ -235,7 +224,6 @@ def test_multi_segment():
 
         # This method will get called each time the sink gets a value
         def sink_on_next(x: MyCustomClass):
-            #print("Sink: Got Obj Name: {}, Value: {}".format(x.name, x.value))
             pass
 
         def sink_on_next_untyped(input):
