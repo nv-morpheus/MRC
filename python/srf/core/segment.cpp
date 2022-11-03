@@ -71,7 +71,6 @@ PYBIND11_MODULE(segment, module)
 
     pysrf::import_module_object(module, "srf.core.node", "SegmentObject");
 
-    // Register the converters for make_py2cxx_edge_adapter and make_cxx2py_edge_adapter
     // Type 'b'
     node::EdgeConnector<bool, PyHolder>::register_converter();
     node::EdgeConnector<PyHolder, bool>::register_converter();
@@ -160,8 +159,6 @@ PYBIND11_MODULE(segment, module)
 
     Builder.def("get_ingress", &BuilderProxy::get_ingress);
 
-    Builder.def("make_cxx2py_edge_adapter", &BuilderProxy::make_cxx2py_edge_adapter);
-
     Builder.def("make_edge", &BuilderProxy::make_edge);
 
     Builder.def("make_edge", &BuilderProxy::make_edge, py::arg("source"), py::arg("sink"));
@@ -174,9 +171,13 @@ PYBIND11_MODULE(segment, module)
                 py::arg("module_config"),
                 py::return_value_policy::reference_internal);
 
-    Builder.def("make_node_full", &BuilderProxy::make_node_full, py::return_value_policy::reference_internal);
+    Builder.def(
+        "register_module_input", &BuilderProxy::register_module_input, py::arg("input_name"), py::arg("object"));
 
-    Builder.def("make_py2cxx_edge_adapter", &BuilderProxy::make_py2cxx_edge_adapter);
+    Builder.def(
+        "register_module_output", &BuilderProxy::register_module_output, py::arg("output_name"), py::arg("object"));
+
+    Builder.def("make_node_full", &BuilderProxy::make_node_full, py::return_value_policy::reference_internal);
 
     /** Segment Module Interface Declarations **/
     SegmentModule.def("config", &SegmentModuleProxy::config);

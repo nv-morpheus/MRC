@@ -168,6 +168,13 @@ class Builder final
         return construct_object<NodeTypeT<SinkTypeT, SourceTypeT>>(name, std::forward<ArgsT>(ops)...);
     }
 
+    /**
+     * Instantiate a segment module of `ModuleTypeT`, intialize it, and return it to the caller
+     * @tparam ModuleTypeT Type of module to create
+     * @param module_name Unique name of this instance of the module
+     * @param config Configuration to pass to the module
+     * @return Return a shared pointer to the new module, which is a derived class of SegmentModule
+     */
     template <typename ModuleTypeT>
     std::shared_ptr<ModuleTypeT> make_module(std::string module_name, nlohmann::json config = {})
     {
@@ -179,7 +186,29 @@ class Builder final
         return std::move(module);
     }
 
+    /**
+     * Initialize a SegmentModule that was instantiated outside of the builder.
+     * @param module Module to initialize
+     */
     void init_module(std::shared_ptr<srf::modules::SegmentModule> module);
+
+    /**
+     * Register an input port on the given module -- note: this in generally only necessary for dynamically
+     * created modules that use an alternate initializer function, which is independent of the derived class.
+     * See: PythonSegmentModule
+     * @param input_name Unique name of the input port
+     * @param object shared pointer to type erased Object associated with 'input_name' on this module instance.
+     */
+    void register_module_input(std::string input_name, std::shared_ptr<segment::ObjectProperties> object);
+
+    /**
+     * Register an outputport on the given module -- note: this in generally only necessary for dynamically
+     * created modules that use an alternate initializer function, which is independent of the derived class.
+     * See: PythonSegmentModule
+     * @param output_name Unique name of the output port
+     * @param object shared pointer to type erased Object associated with 'output_name' on this module instance.
+     */
+    void register_module_output(std::string output_name, std::shared_ptr<segment::ObjectProperties> object);
 
     std::shared_ptr<srf::modules::SegmentModule> load_module_from_registry(const std::string& module_id,
                                                                            const std::string& registry_namespace,
@@ -318,14 +347,16 @@ class Builder final
     }
 
   private:
-    std::vector<std::string> m_namespace_components{};
+    using sp_segment_module_t = std::shared_ptr<srf::modules::SegmentModule>;
+    using sp_obj_prop_t       = std::shared_ptr<segment::ObjectProperties>;
+
     std::string m_namespace_prefix;
+    std::vector<std::string> m_namespace_stack{};
+    std::vector<sp_segment_module_t> m_module_stack{};
+
     internal::segment::IBuilder& m_backend;
 
-    static std::string accum_merge(std::string lhs, std::string rhs);
-
-    void ns_push(const std::string& component_namespace);
-
+    void ns_push(sp_segment_module_t module);
     void ns_pop();
 
     friend Definition;

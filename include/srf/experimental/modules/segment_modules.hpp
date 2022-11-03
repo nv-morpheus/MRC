@@ -138,21 +138,17 @@ class SegmentModule
      * Register an input port that should be exposed for the module
      * @param input_name Port name
      * @param object ObjectProperties object associated with the port
-     * @param tidx type_index pointer for the data type expected by the input
      */
     void register_input_port(std::string input_name,
-                             std::shared_ptr<segment::ObjectProperties> object,
-                             std::type_index tidx);
+                             std::shared_ptr<segment::ObjectProperties> object);
 
     /**
      * Register an output port that should be exposed for the module
      * @param input_name Port name
      * @param object ObjectProperties object assocaited with the port
-     * @param tidx type_index pointer for the date type emitted by the output
      */
     void register_output_port(std::string output_name,
-                              std::shared_ptr<segment::ObjectProperties> object,
-                              std::type_index tidx);
+                              std::shared_ptr<segment::ObjectProperties> object);
 
   private:
     const std::string m_module_instance_name;
