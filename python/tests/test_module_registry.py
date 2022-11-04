@@ -42,20 +42,6 @@ def test_contains():
     assert registry.contains("SimpleModule", "default") is not True
 
 
-def test_find_module():
-
-    config = {"config_key_1": True}
-
-    registry = srf.ModuleRegistry()
-
-    simple_mod = registry.find_module("SimpleModule", "srf_unittest", "ModuleInitializationTest_mod", config)
-
-    assert "config_key_1" in simple_mod.config()
-
-    with pytest.raises(Exception):
-        simple_mod = registry.find_module("SimpleModule", "default", "ModuleInitializationTest_mod", config)
-
-
 def test_is_version_compatible():
     registry = srf.ModuleRegistry()
 
@@ -130,6 +116,79 @@ def test_module_registry_register_good_version_no_unregister():
                              "srf_unittests",
                              VERSION,
                              module_init_fn)
+
+
+def test_find_module():
+    registry = srf.ModuleRegistry()
+
+    # Retrieve the module constructor
+    fn_constructor = registry.find_module("SimpleModule", "srf_unittest")
+
+    # Instantiate a version of the module
+    config = {"config_key_1": True}
+    module = fn_constructor("ModuleInitializationTest_mod", config)
+
+    assert "config_key_1" in module.config()
+
+    with pytest.raises(Exception):
+        registry.find_module("SimpleModule", "default")
+
+
+def test_end_to_end():
+
+    module_name = "test_py_source_from_cpp"
+    config = {"source_count": 42}
+
+    def module_initializer(builder: srf.Builder):
+
+        source_mod = builder.load_module("SourceModule", "srf_unittest", "ModuleSourceTest_mod1", config)
+        builder.register_module_output("source", source_mod.output_port("source"))
+
+    def init_wrapper(builder: srf.Builder):
+
+        global packet_count
+        packet_count = 0
+
+        def on_next(data):
+            global packet_count
+            packet_count += 1
+            logging.info("Sinking {}".format(data))
+
+        def on_error():
+            pass
+
+        def on_complete():
+            pass
+
+        registry = srf.ModuleRegistry()
+
+        # Retrieve the module constructor
+        fn_constructor = registry.find_module(module_name, "srf_unittest")
+        # Instantiate a version of the module
+        source_module = fn_constructor("ModuleSourceTest_mod1", config)
+
+        sink = builder.make_sink("sink", on_next, on_error, on_complete)
+
+        builder.init_module(source_module)
+        builder.make_edge(source_module.output_port('source'), sink)
+
+    registry = srf.ModuleRegistry()
+
+    # Register the module
+    registry.register_module(module_name, "srf_unittest", VERSION, module_initializer)
+
+    pipeline = srf.Pipeline()
+    pipeline.make_segment("ModuleAsSource_Segment", init_wrapper)
+
+    options = srf.Options()
+    options.topology.user_cpuset = "0-1"
+
+    executor = srf.Executor(options)
+    executor.register_pipeline(pipeline)
+    executor.start()
+    executor.join()
+
+    assert packet_count == 42
 
 
 # Purpose: Create a self-contained (no input/output ports), nested, dynamic module, and instantiate two copies in our

@@ -35,8 +35,6 @@
 
 namespace srf::pysrf {
 
-namespace py = pybind11;
-
 bool ModuleRegistryProxy::contains(ModuleRegistryProxy& self,
                                    const std::string& name,
                                    const std::string& registry_namespace)
@@ -61,16 +59,17 @@ bool ModuleRegistryProxy::is_version_compatible(ModuleRegistryProxy& self,
     return modules::ModuleRegistry::is_version_compatible(release_version);
 }
 
-std::shared_ptr<modules::SegmentModule> ModuleRegistryProxy::find_module(ModuleRegistryProxy& self,
-                                                                         const std::string& name,
-                                                                         const std::string& registry_namespace,
-                                                                         const std::string& module_name,
-                                                                         py::dict module_config)
+pybind11::cpp_function ModuleRegistryProxy::find_module(srf::pysrf::ModuleRegistryProxy& self,
+                                                        const std::string& name,
+                                                        const std::string& registry_namespace)
 {
-    auto json_config           = cast_from_pyobject(module_config);
-    auto fn_module_constructor = modules::ModuleRegistry::find_module(name, registry_namespace);
-    auto module                = std::move(fn_module_constructor(std::move(module_name), std::move(json_config)));
-    return std::move(module);
+    auto fn_constructor    = modules::ModuleRegistry::find_module(name, registry_namespace);
+    auto py_module_wrapper = [fn_constructor](std::string module_name, pybind11::dict config) {
+        auto json_config = cast_from_pyobject(config);
+        return fn_constructor(std::move(module_name), std::move(json_config));
+    };
+
+    return py_module_wrapper;
 }
 
 void ModuleRegistryProxy::register_module(srf::pysrf::ModuleRegistryProxy& self,

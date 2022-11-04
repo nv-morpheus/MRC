@@ -226,13 +226,8 @@ PYBIND11_MODULE(segment, module)
     SegmentModuleRegistry.def(
         "is_version_compatible", &ModuleRegistryProxy::is_version_compatible, py::arg("release_version"));
 
-    SegmentModuleRegistry.def("find_module",
-                              &ModuleRegistryProxy::find_module,
-                              py::arg("name"),
-                              py::arg("registry_namespace"),
-                              py::arg("module_name"),
-                              py::arg("module_config"),
-                              py::return_value_policy::reference_internal);
+    SegmentModuleRegistry.def(
+        "find_module", &ModuleRegistryProxy::find_module, py::arg("name"), py::arg("registry_namespace"));
 
     SegmentModuleRegistry.def(
         "register_module",
