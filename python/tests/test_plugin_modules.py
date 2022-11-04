@@ -104,8 +104,9 @@ def test_dynamic_module_plugin_registration():
     plugin_module.set_library_directory(f"{DYN_LIB_DIR}")
     plugin_module.load()
 
-    module_namespace = "srf_unittest_cpp_dynamic"
-    module_name = "DynamicSourceModule"
+    # module_namespace = "srf_unittest_cpp_dynamic"
+
+    # module_name = "DynamicSourceModule"
 
     registry = srf.ModuleRegistry()
 

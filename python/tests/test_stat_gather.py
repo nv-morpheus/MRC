@@ -65,7 +65,7 @@ def double_float_type2(x):
 
 
 def init_double_segment(builder: srf.Builder):
-    ## CXX double source with heterogesrfus segment node composition
+    # CXX double source with heterogesrfus segment node composition
     python_source_double = builder.make_source("python_source_double", double_source)
     python_node_2x_1 = builder.make_node("python_node_2x_1", double_float_type1)
     builder.make_edge(python_source_double, python_node_2x_1)
@@ -158,8 +158,6 @@ def test_stat_gather_full():
     framework_stats_info = srf.benchmarking.get_tracing_stats()
     component_metrics = framework_stats_info["aggregations"]["components"]["metrics"]
 
-    #import json
-    #print(json.dumps(component_metrics, indent=2))
     for key, _type in required_components:
         component = component_metrics[key]
         assert (len(component.keys()) > 0)

@@ -21,6 +21,7 @@ from srf.core import operators as ops
 
 @pytest.fixture
 def ex_runner():
+
     def run_exec(segment_init):
         pipeline = srf.Pipeline()
 
@@ -44,6 +45,7 @@ def ex_runner():
 
 @pytest.fixture
 def run_segment(ex_runner):
+
     def run(input_data, node_fn):
 
         actual = []
@@ -149,6 +151,7 @@ def test_on_complete_none(run_segment):
     on_completed_hit = False
 
     def node_fn(input: srf.Observable, output: srf.Subscriber):
+
         def on_completed_fn():
             nonlocal on_completed_hit
             on_completed_hit = True
