@@ -168,7 +168,7 @@ class TransientPool
                   std::shared_ptr<srf::memory::memory_resource> mr);
 
     /**
-     * @brief acquire a TransientBuffer of size bytes.
+     * @brief Acquire a TransientBuffer of size bytes.
      *
      * Acquiring this object may block and yield the calling fiber.
      *
@@ -178,7 +178,7 @@ class TransientPool
     TransientBuffer await_buffer(std::size_t bytes);
 
     /**
-     * @brief acquire a Transient<T> constructed from a TransientBuffer.
+     * @brief Acquire a Transient<T> constructed from a TransientBuffer.
      *
      * Acquiring this object may block and yield the calling fiber.
      *
