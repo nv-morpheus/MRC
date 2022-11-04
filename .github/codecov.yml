@@ -7,22 +7,12 @@ coverage:
         target: auto
         threshold: 0%
         base: auto
-        paths:
-          - "include"
-          - "python"
-          - "src"
-          - "tools"
     patch:
       default:
         informational: true
         target: auto
         threshold: 0%
         base: auto
-        paths:
-          - "include"
-          - "python"
-          - "src"
-          - "tools"
 comment:
   behavior: new
 
