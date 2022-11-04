@@ -130,7 +130,9 @@ def test_launch_options_iterable():
 
 # @pytest.mark.skip(reason="#172 - awaiting multi-pe safe source work around")
 def test_launch_options_properties():
+
     def segment_init(seg: srf.Builder):
+
         def source_gen():
             yield int(1)
 

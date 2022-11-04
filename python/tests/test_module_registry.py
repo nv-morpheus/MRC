@@ -181,6 +181,7 @@ def test_py_dynamic_module_source():
     module_name = "test_py_dyn_source"
 
     def module_initializer(builder: srf.Builder):
+
         def gen_data():
             for x in range(42):
                 yield random.choice([True, False])
@@ -372,7 +373,7 @@ def test_py_dynamic_module_from_cpp_sink():
     executor.join()
 
 
-if (__name__ in ("__main__",)):
+if (__name__ in ("__main__", )):
     test_module_registry_contains()
     test_module_registry_register_bad_version()
     test_module_registry_register_good_version()

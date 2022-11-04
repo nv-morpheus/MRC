@@ -17,6 +17,7 @@ import glob
 import pathlib
 
 import pytest
+
 import srf
 
 whereami = pathlib.Path(__file__).parent.resolve()
@@ -62,7 +63,7 @@ def test_dynamic_module_bad_version_test():
     pass
 
 
-if (__name__ in ("__main__",)):
+if (__name__ in ("__main__", )):
     test_plugin_module_create_or_acquire()
     test_dynamic_module_plugin_interface()
     test_dynamic_module_plugin_registration()
