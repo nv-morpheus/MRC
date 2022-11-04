@@ -134,10 +134,11 @@ def test_find_module():
         registry.find_module("SimpleModule", "default")
 
 
-def test_end_to_end():
+def test_module_intitialize():
 
     module_name = "test_py_source_from_cpp"
     config = {"source_count": 42}
+    registry = srf.ModuleRegistry()
 
     def module_initializer(builder: srf.Builder):
 
@@ -160,8 +161,6 @@ def test_end_to_end():
         def on_complete():
             pass
 
-        registry = srf.ModuleRegistry()
-
         # Retrieve the module constructor
         fn_constructor = registry.find_module(module_name, "srf_unittest")
         # Instantiate a version of the module
@@ -171,8 +170,6 @@ def test_end_to_end():
 
         builder.init_module(source_module)
         builder.make_edge(source_module.output_port('source'), sink)
-
-    registry = srf.ModuleRegistry()
 
     # Register the module
     registry.register_module(module_name, "srf_unittest", VERSION, module_initializer)
@@ -494,6 +491,7 @@ def test_py_dynamic_module_from_cpp_sink():
 
 
 if (__name__ in ("__main__", )):
+    test_module_intitialize()
     test_contains_namespace()
     test_contains()
     test_find_module()
