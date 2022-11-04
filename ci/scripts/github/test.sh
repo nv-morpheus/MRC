@@ -63,6 +63,10 @@ CTEST_RESULTS=$?
 set -e
 cd ${SRF_ROOT}
 
+if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
+  /opt/conda/bin/codecov --root ${SRF_ROOT} -F cpp -g --gcov-root ${SRF_ROOT}
+fi
+
 gpuci_logger "Running Python Tests"
 cd ${SRF_ROOT}/build/python
 set +e
