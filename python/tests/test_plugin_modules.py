@@ -95,7 +95,7 @@ def test_dynamic_module_registration():
     executor.join()
 
     assert packet_count == 42
-    # assert plugin_module.unload()
+    assert plugin_module.unload()
 
 
 @pytest.mark.skipif(not FOUND_DYN_LIB, reason="Missing: libdynamic_test_module.so")
