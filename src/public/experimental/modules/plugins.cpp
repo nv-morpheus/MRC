@@ -151,10 +151,8 @@ bool PluginModule::unload(bool throw_on_error)
         return false;
     }
 
-    if (!try_close_library_handle(throw_on_error))
-    {
-        return false;
-    }
+    // TODO(Devin): If we want to close the library handle here, then we need to implement a tracking mechanism to be
+    // sure that there are no existing SegmentModules which have been created from a Plugin library.
 
     return true;
 }
@@ -162,6 +160,7 @@ bool PluginModule::unload(bool throw_on_error)
 void PluginModule::reload()
 {
     unload();
+    try_close_library_handle();
     load();
 }
 
