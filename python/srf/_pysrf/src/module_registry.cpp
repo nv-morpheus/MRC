@@ -18,6 +18,7 @@
 #include "pysrf/module_registry.hpp"
 
 #include "pysrf/py_segment_module.hpp"
+#include "pysrf/utils.hpp"
 
 #include "srf/experimental/modules/module_registry.hpp"
 
@@ -34,6 +35,8 @@
 
 namespace srf::pysrf {
 
+namespace py = pybind11;
+
 bool ModuleRegistryProxy::contains(ModuleRegistryProxy& self,
                                    const std::string& name,
                                    const std::string& registry_namespace)
@@ -45,6 +48,19 @@ bool ModuleRegistryProxy::contains_namespace(srf::pysrf::ModuleRegistryProxy& se
                                              const std::string& registry_namespace)
 {
     return srf::modules::ModuleRegistry::contains_namespace(registry_namespace);
+}
+
+py::cpp_function ModuleRegistryProxy::find_module(srf::pysrf::ModuleRegistryProxy& self,
+                                                  const std::string& name,
+                                                  const std::string& registry_namespace)
+{
+    auto fn_constructor = modules::ModuleRegistry::find_module(name, registry_namespace);
+    auto py_module_wrapper = [fn_constructor](std::string module_name, py::dict config) {
+        auto json_config = cast_from_pyobject(config);
+        return fn_constructor(std::move(module_name), std::move(json_config));
+    };
+
+    return py_module_wrapper;
 }
 
 void ModuleRegistryProxy::register_module(srf::pysrf::ModuleRegistryProxy& self,

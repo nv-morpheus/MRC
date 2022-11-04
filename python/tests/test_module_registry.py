@@ -70,6 +70,15 @@ def test_module_registry_register_good_version_no_unregister():
                              VERSION,
                              module_init_fn)
 
+def test_find_module():
+    registry = srf.ModuleRegistry()
+
+    # Retrieve the module constructor
+    fn_constructor = registry.find_module("SimpleModule", "srf_unittest")
+
+    # Instantiate a version of the module
+    config = {"config_key_1": True}
+    module = fn_constructor("ModuleInitializationTest_mod", config)
 
 # Purpose: Create a self-contained (no input/output ports), nested, dynamic module, and instantiate two copies in our
 # init wrapper

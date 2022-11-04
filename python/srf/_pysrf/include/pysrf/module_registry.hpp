@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <pybind11/pybind11.h>
+
 #include <functional>
 #include <string>
 #include <vector>
@@ -54,6 +56,10 @@ class ModuleRegistryProxy
                                   const std::string& name,
                                   const std::string& registry_namespace,
                                   bool optional = true);
+
+    static pybind11::cpp_function find_module(ModuleRegistryProxy& self,
+                                              const std::string& name,
+                                              const std::string& registry_namespace);
 
   private:
     /**

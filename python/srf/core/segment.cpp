@@ -220,6 +220,9 @@ PYBIND11_MODULE(segment, module)
         "contains_namespace", &ModuleRegistryProxy::contains_namespace, py::arg("registry_namespace"));
 
     SegmentModuleRegistry.def(
+        "find_module", &ModuleRegistryProxy::find_module, py::arg("name"), py::arg("registry_namespace"));
+
+    SegmentModuleRegistry.def(
         "register_module",
         static_cast<void (*)(ModuleRegistryProxy&,
                              std::string,
