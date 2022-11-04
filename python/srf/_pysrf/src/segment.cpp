@@ -300,6 +300,11 @@ std::shared_ptr<srf::modules::SegmentModule> BuilderProxy::load_module_from_regi
         module_id, registry_namespace, std::move(module_name), std::move(json_config));
 }
 
+void BuilderProxy::init_module(srf::segment::Builder& self, std::shared_ptr<srf::modules::SegmentModule> module)
+{
+    self.init_module(module);
+}
+
 void BuilderProxy::register_module_input(srf::segment::Builder& self,
                                          std::string input_name,
                                          std::shared_ptr<segment::ObjectProperties> object)

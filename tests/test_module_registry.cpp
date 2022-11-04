@@ -141,6 +141,17 @@ TEST_F(SegmentTests, VersionCompatibleTest)
     EXPECT_EQ(ModuleRegistry::is_version_compatible(no_version_minor_and_patch), false);
 }
 
+TEST_F(SegmentTests, RegisteredModulesTest)
+{
+    using namespace modules;
+
+    auto rigestered_mods_map = ModuleRegistry::registered_modules();
+
+    EXPECT_EQ(rigestered_mods_map.size(), 2);
+    EXPECT_EQ(rigestered_mods_map.find("default") != rigestered_mods_map.end(), true);
+    EXPECT_EQ(rigestered_mods_map.find("module_registry_unittest") != rigestered_mods_map.end(), true);
+}
+
 std::string get_modules_path()
 {
     int pid = getpid();

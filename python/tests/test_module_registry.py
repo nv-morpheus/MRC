@@ -21,15 +21,62 @@ import pytest
 import srf
 import srf.tests.sample_modules
 
-VERSION = [int(cmpt) for cmpt in srf.tests.sample_modules.__version__.split('.')]
+VERSION = [int(cmpt) for cmpt in srf.tests.sample_modules.__version__.split(".")]
 
 packet_count = 0
 
 
-def test_module_registry_contains():
+def test_contains_namespace():
     registry = srf.ModuleRegistry()
 
-    print(f"Module registry contains 'xyz': {registry.contains_namespace('xyz')}")
+    assert registry.contains_namespace("xyz") is not True
+    assert registry.contains_namespace("default")
+
+
+def test_contains():
+    registry = srf.ModuleRegistry()
+
+    assert registry.contains("SimpleModule", "srf_unittest")
+    assert registry.contains("SourceModule", "srf_unittest")
+    assert registry.contains("SinkModule", "srf_unittest")
+    assert registry.contains("SimpleModule", "default") is not True
+
+
+def test_is_version_compatible():
+    registry = srf.ModuleRegistry()
+
+    release_version = [22, 11, 0]
+    old_release_version = [22, 10, 0]
+    no_version_patch = [22, 10]
+    no_version_minor_and_patch = [22]
+
+    assert registry.is_version_compatible(release_version)
+    assert registry.is_version_compatible(old_release_version) is not True
+    assert registry.is_version_compatible(no_version_patch) is not True
+    assert registry.is_version_compatible(no_version_minor_and_patch) is not True
+
+
+def test_unregister_module():
+    registry = srf.ModuleRegistry()
+
+    registry_namespace = "srf_unittest2"
+    simple_mod_name = "SimpleModule"
+
+    registry.unregister_module(simple_mod_name, registry_namespace)
+
+    with pytest.raises(Exception):
+        registry.unregister_module(simple_mod_name, registry_namespace, False)
+
+    registry.unregister_module(simple_mod_name, registry_namespace, True)
+
+
+def test_registered_modules():
+    registry = srf.ModuleRegistry()
+    registered_mod_dict = registry.registered_modules()
+
+    assert "default" in registered_mod_dict
+    assert "srf_unittest" in registered_mod_dict
+    assert len(registered_mod_dict) == 2
 
 
 def module_init_fn(builder: srf.Builder):
@@ -62,13 +109,14 @@ def test_module_registry_register_good_version():
 
 # Purpose: Test basic dynamic module registration, and indirectly test correct shutdown/cleanup behavior
 def test_module_registry_register_good_version_no_unregister():
-    # Ensure that we don't throw any errors or hang if we don't explicitly unregister the python module
+    # Ensure that we don"t throw any errors or hang if we don"t explicitly unregister the python module
     registry = srf.ModuleRegistry()
 
     registry.register_module("test_module_registry_register_good_version_no_unregister_module",
                              "srf_unittests",
                              VERSION,
                              module_init_fn)
+
 
 def test_find_module():
     registry = srf.ModuleRegistry()
@@ -80,14 +128,74 @@ def test_find_module():
     config = {"config_key_1": True}
     module = fn_constructor("ModuleInitializationTest_mod", config)
 
+    assert "config_key_1" in module.config()
+
+    with pytest.raises(Exception):
+        registry.find_module("SimpleModule", "default")
+
+
+def test_module_intitialize():
+
+    module_name = "test_py_source_from_cpp"
+    config = {"source_count": 42}
+    registry = srf.ModuleRegistry()
+
+    def module_initializer(builder: srf.Builder):
+
+        source_mod = builder.load_module("SourceModule", "srf_unittest", "ModuleSourceTest_mod1", config)
+        builder.register_module_output("source", source_mod.output_port("source"))
+
+    def init_wrapper(builder: srf.Builder):
+
+        global packet_count
+        packet_count = 0
+
+        def on_next(data):
+            global packet_count
+            packet_count += 1
+            logging.info("Sinking {}".format(data))
+
+        def on_error():
+            pass
+
+        def on_complete():
+            pass
+
+        # Retrieve the module constructor
+        fn_constructor = registry.find_module(module_name, "srf_unittest")
+        # Instantiate a version of the module
+        source_module = fn_constructor("ModuleSourceTest_mod1", config)
+
+        sink = builder.make_sink("sink", on_next, on_error, on_complete)
+
+        builder.init_module(source_module)
+        builder.make_edge(source_module.output_port('source'), sink)
+
+    # Register the module
+    registry.register_module(module_name, "srf_unittest", VERSION, module_initializer)
+
+    pipeline = srf.Pipeline()
+    pipeline.make_segment("ModuleAsSource_Segment", init_wrapper)
+
+    options = srf.Options()
+    options.topology.user_cpuset = "0-1"
+
+    executor = srf.Executor(options)
+    executor.register_pipeline(pipeline)
+    executor.start()
+    executor.join()
+
+    assert packet_count == 42
+
+
 # Purpose: Create a self-contained (no input/output ports), nested, dynamic module, and instantiate two copies in our
 # init wrapper
 def test_py_registered_nested_modules():
     global packet_count
 
     # Stand-alone module, no input or output ports
-    # 1. We register a python module definition as being built by 'init_registered'
-    # 2. We then create a segment with a separate init function 'init_caller' that loads our python module from
+    # 1. We register a python module definition as being built by "init_registered"
+    # 2. We then create a segment with a separate init function "init_caller" that loads our python module from
     #    the registry and initializes it, running
     def module_initializer(builder: srf.Builder):
         global packet_count
@@ -383,7 +491,13 @@ def test_py_dynamic_module_from_cpp_sink():
 
 
 if (__name__ in ("__main__", )):
-    test_module_registry_contains()
+    test_module_intitialize()
+    test_contains_namespace()
+    test_contains()
+    test_find_module()
+    test_is_version_compatible()
+    test_unregister_module()
+    test_registered_modules()
     test_module_registry_register_bad_version()
     test_module_registry_register_good_version()
     test_module_registry_register_good_version_no_unregister()

@@ -175,6 +175,8 @@ PYBIND11_MODULE(segment, module)
                 py::arg("module_config"),
                 py::return_value_policy::reference_internal);
 
+    Builder.def("init_module", &BuilderProxy::init_module, py::arg("module"));
+
     Builder.def(
         "register_module_input", &BuilderProxy::register_module_input, py::arg("input_name"), py::arg("object"));
 
@@ -218,6 +220,11 @@ PYBIND11_MODULE(segment, module)
 
     SegmentModuleRegistry.def(
         "contains_namespace", &ModuleRegistryProxy::contains_namespace, py::arg("registry_namespace"));
+
+    SegmentModuleRegistry.def("registered_modules", &ModuleRegistryProxy::registered_modules);
+
+    SegmentModuleRegistry.def(
+        "is_version_compatible", &ModuleRegistryProxy::is_version_compatible, py::arg("release_version"));
 
     SegmentModuleRegistry.def(
         "find_module", &ModuleRegistryProxy::find_module, py::arg("name"), py::arg("registry_namespace"));

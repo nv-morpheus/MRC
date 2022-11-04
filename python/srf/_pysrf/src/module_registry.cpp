@@ -35,8 +35,6 @@
 
 namespace srf::pysrf {
 
-namespace py = pybind11;
-
 bool ModuleRegistryProxy::contains(ModuleRegistryProxy& self,
                                    const std::string& name,
                                    const std::string& registry_namespace)
@@ -50,12 +48,23 @@ bool ModuleRegistryProxy::contains_namespace(srf::pysrf::ModuleRegistryProxy& se
     return srf::modules::ModuleRegistry::contains_namespace(registry_namespace);
 }
 
-py::cpp_function ModuleRegistryProxy::find_module(srf::pysrf::ModuleRegistryProxy& self,
-                                                  const std::string& name,
-                                                  const std::string& registry_namespace)
+std::map<std::string, std::vector<std::string>> ModuleRegistryProxy::registered_modules(ModuleRegistryProxy& self)
 {
-    auto fn_constructor = modules::ModuleRegistry::find_module(name, registry_namespace);
-    auto py_module_wrapper = [fn_constructor](std::string module_name, py::dict config) {
+    return modules::ModuleRegistry::registered_modules();
+}
+
+bool ModuleRegistryProxy::is_version_compatible(ModuleRegistryProxy& self,
+                                                const std::vector<unsigned int>& release_version)
+{
+    return modules::ModuleRegistry::is_version_compatible(release_version);
+}
+
+pybind11::cpp_function ModuleRegistryProxy::find_module(srf::pysrf::ModuleRegistryProxy& self,
+                                                        const std::string& name,
+                                                        const std::string& registry_namespace)
+{
+    auto fn_constructor    = modules::ModuleRegistry::find_module(name, registry_namespace);
+    auto py_module_wrapper = [fn_constructor](std::string module_name, pybind11::dict config) {
         auto json_config = cast_from_pyobject(config);
         return fn_constructor(std::move(module_name), std::move(json_config));
     };

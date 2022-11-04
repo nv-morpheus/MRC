@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "srf/experimental/modules/segment_modules.hpp"
+
 #include <pybind11/pybind11.h>
 
 #include <functional>
@@ -41,6 +43,14 @@ class ModuleRegistryProxy
 
     static bool contains_namespace(ModuleRegistryProxy& self, const std::string& registry_namespace);
 
+    static std::map<std::string, std::vector<std::string>> registered_modules(ModuleRegistryProxy& self);
+
+    static bool is_version_compatible(ModuleRegistryProxy& self, const std::vector<unsigned int>& release_version);
+
+    static pybind11::cpp_function find_module(ModuleRegistryProxy& self,
+                                              const std::string& name,
+                                              const std::string& registry_namespace);
+
     static void register_module(ModuleRegistryProxy& self,
                                 std::string name,
                                 const std::vector<unsigned int>& release_version,
@@ -56,10 +66,6 @@ class ModuleRegistryProxy
                                   const std::string& name,
                                   const std::string& registry_namespace,
                                   bool optional = true);
-
-    static pybind11::cpp_function find_module(ModuleRegistryProxy& self,
-                                              const std::string& name,
-                                              const std::string& registry_namespace);
 
   private:
     /**
