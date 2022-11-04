@@ -31,8 +31,6 @@ class Builder;
 
 namespace srf::pysrf {
 
-namespace py = pybind11;
-
 // Export everything in the srf::pysrf namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
 
@@ -53,7 +51,7 @@ class ModuleRegistryProxy
                                                                     const std::string& name,
                                                                     const std::string& registry_namespace,
                                                                     const std::string& module_name,
-                                                                    py::dict module_config);
+                                                                    pybind11::dict module_config);
 
     static void register_module(ModuleRegistryProxy& self,
                                 std::string name,
