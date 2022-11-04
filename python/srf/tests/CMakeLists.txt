@@ -19,4 +19,8 @@ srf_add_pybind11_module(test_edges_cpp
   SOURCE_FILES test_edges.cpp
 )
 
+srf_add_pybind11_module(utils
+  SOURCE_FILES utils.cpp
+)
+
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)
