@@ -20,6 +20,8 @@
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 
+#include <stdexcept>
+
 namespace srf::pytests {
 
 namespace py = pybind11;
