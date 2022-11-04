@@ -122,9 +122,17 @@ def test_py_constructor():
 
     registry = srf.ModuleRegistry()
 
-    simple_mod = registry.find_module("SimpleModule", "srf_unittest", "ModuleInitializationTest_mod", config)
+    # Retrieve the module constructor
+    fn_constructor = registry.find_module("SimpleModule", "srf_unittest")
 
-    assert "config_key_1" in simple_mod.config()
+    # Instantiate a version of the module
+    config = {"config_key_1": True}
+    module = fn_constructor("ModuleInitializationTest_mod", config)
+
+    assert "config_key_1" in module.config()
+
+    with pytest.raises(Exception):
+        registry.find_module("SimpleModule", "default")
 
 
 def test_py_module_initialization():
@@ -152,7 +160,8 @@ def test_py_module_initialization():
 
         source = builder.make_source("source", gen_data)
         source2 = builder.make_source("source2", gen_data)
-        simple_mod = registry.find_module("SimpleModule", "srf_unittest", "ModuleInitializationTest_mod2", config)
+        fn_constructor = registry.find_module("SimpleModule", "srf_unittest")
+        simple_mod = fn_constructor("ModuleInitializationTest_mod2", config)
         sink = builder.make_sink("sink", on_next, on_error, on_complete)
 
         builder.init_module(simple_mod)

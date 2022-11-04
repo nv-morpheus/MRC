@@ -95,7 +95,7 @@ def test_dynamic_module_registration():
     executor.join()
 
     assert packet_count == 42
-    assert plugin_module.unload()
+    # assert plugin_module.unload()
 
 
 @pytest.mark.skipif(not FOUND_DYN_LIB, reason="Missing: libdynamic_test_module.so")
@@ -104,9 +104,9 @@ def test_dynamic_module_plugin_registration():
     plugin_module.set_library_directory(f"{DYN_LIB_DIR}")
     plugin_module.load()
 
-    # module_namespace = "srf_unittest_cpp_dynamic"
+    module_namespace = "srf_unittest_cpp_dynamic"
 
-    # module_name = "DynamicSourceModule"
+    module_name = "DynamicSourceModule"
 
     registry = srf.ModuleRegistry()
 
@@ -182,3 +182,4 @@ if (__name__ in ("__main__", )):
     test_dynamic_module_plugin_interface()
     test_dynamic_module_plugin_registration()
     test_dynamic_module_bad_version_test()
+    test_dynamic_module_registration()
