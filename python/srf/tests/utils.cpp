@@ -26,13 +26,13 @@ namespace srf::pytests {
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(utils, m)
+PYBIND11_MODULE(utils, module)
 {
-    m.doc() = R"pbdoc()pbdoc";
+    module.doc() = R"pbdoc()pbdoc";
 
-    pysrf::import(m, "srf");
+    pysrf::import(module, "srf");
 
-    m.def(
+    module.def(
         "throw_cpp_error",
         [](std::string msg = "") {
             if (msg.empty())
@@ -47,7 +47,7 @@ PYBIND11_MODULE(utils, m)
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
 #else
-    m.attr("__version__") = "dev";
+    module.attr("__version__") = "dev";
 #endif
 }
 }  // namespace srf::pytests
