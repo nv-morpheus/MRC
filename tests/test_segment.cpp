@@ -84,12 +84,12 @@ struct SrfRuntimeError;
 
 using namespace std::literals::string_literals;
 
-TEST_F(SegmentTests, CreateSegmentDefinition)
+TEST_F(TestSegment, CreateSegmentDefinition)
 {
     auto segdef = segment::Definition::create("segment_test", m_initializer);
 }
 
-TEST_F(SegmentTests, InitializeSegmentFromDefinition)
+TEST_F(TestSegment, InitializeSegmentFromDefinition)
 {
     auto segdef = segment::Definition::create("segment_test", m_initializer);
     // // auto builder =  std::make_unique<segment::Builder>(segdef, 42);
@@ -97,12 +97,12 @@ TEST_F(SegmentTests, InitializeSegmentFromDefinition)
 
 // --- //
 
-TEST_F(SegmentTests, CreateSegmentDefinitionIngressOnly)
+TEST_F(TestSegment, CreateSegmentDefinitionIngressOnly)
 {
     auto segdef = segment::Definition::create("segment_test", m_ingress_multi_port, m_initializer);
 }
 
-TEST_F(SegmentTests, InitializeSegmentIngressOnlyFromDefinition)
+TEST_F(TestSegment, InitializeSegmentIngressOnlyFromDefinition)
 {
     auto segdef = segment::Definition::create("segment_test", m_ingress_multi_port, m_initializer);
     // // auto builder =  std::make_unique<segment::Builder>(segdef, 42);
@@ -110,12 +110,12 @@ TEST_F(SegmentTests, InitializeSegmentIngressOnlyFromDefinition)
 
 // --- //
 
-TEST_F(SegmentTests, CreateSegmentDefinitionEgressOnly)
+TEST_F(TestSegment, CreateSegmentDefinitionEgressOnly)
 {
     auto segdef = segment::Definition::create("segment_test", m_egress_multi_port, m_initializer);
 }
 
-TEST_F(SegmentTests, InitializeSegmentEgressOnlyFromDefinition)
+TEST_F(TestSegment, InitializeSegmentEgressOnlyFromDefinition)
 {
     auto segdef = segment::Definition::create("segment_test", m_egress_multi_port, m_initializer);
     // // auto builder =  std::make_unique<segment::Builder>(segdef, 42);
@@ -123,12 +123,12 @@ TEST_F(SegmentTests, InitializeSegmentEgressOnlyFromDefinition)
 
 // --- //
 
-TEST_F(SegmentTests, CreateSegmentDefinitionIngressEgress)
+TEST_F(TestSegment, CreateSegmentDefinitionIngressEgress)
 {
     auto segdef = segment::Definition::create("segment_test", m_ingress_multi_port, m_egress_multi_port, m_initializer);
 }
 
-TEST_F(SegmentTests, InitializeSegmentIngressEgressFromDefinition)
+TEST_F(TestSegment, InitializeSegmentIngressEgressFromDefinition)
 {
     auto segdef = segment::Definition::create("segment_test", m_ingress_multi_port, m_egress_multi_port, m_initializer);
     // // auto builder =  std::make_unique<segment::Builder>(segdef, 42);
@@ -142,7 +142,7 @@ TEST_F(SegmentTests, InitializeSegmentIngressEgressFromDefinition)
     */
 }
 
-TEST_F(SegmentTests, PortsConstructorBadNameBuilderSizeMismatch)
+TEST_F(TestSegment, PortsConstructorBadNameBuilderSizeMismatch)
 {
     using port_type_t = segment::Ports<segment::IngressPortBase>;
 
@@ -152,7 +152,7 @@ TEST_F(SegmentTests, PortsConstructorBadNameBuilderSizeMismatch)
     EXPECT_THROW(port_type_t BadPorts(port_names, port_builder_fns), exceptions::SrfRuntimeError);
 }
 
-TEST_F(SegmentTests, PortsConstructorBadDuplicateName)
+TEST_F(TestSegment, PortsConstructorBadDuplicateName)
 {
     using port_type_t = segment::Ports<segment::IngressPortBase>;
 
@@ -167,7 +167,7 @@ TEST_F(SegmentTests, PortsConstructorBadDuplicateName)
     EXPECT_THROW(port_type_t BadPorts(port_names, port_builder_fns), exceptions::SrfRuntimeError);
 }
 
-TEST_F(SegmentTests, UserLambdaIsCalled)
+TEST_F(TestSegment, UserLambdaIsCalled)
 {
     GTEST_SKIP() << "Skipping until issue #59 is resolved";
 
@@ -179,7 +179,7 @@ TEST_F(SegmentTests, UserLambdaIsCalled)
     EXPECT_EQ(m_initializer_called, true);
 }
 
-TEST_F(SegmentTests, SegmentRxSinkCreation)
+TEST_F(TestSegment, SegmentRxSinkCreation)
 {
     auto init = [](segment::Builder& segment) {
         auto x = segment.make_sink<std::string>(
@@ -192,7 +192,7 @@ TEST_F(SegmentTests, SegmentRxSinkCreation)
     // // auto builder =  std::make_unique<segment::Builder>(segdef, 42);
 }
 
-TEST_F(SegmentTests, SegmentRxSourceCreation)
+TEST_F(TestSegment, SegmentRxSourceCreation)
 {
     auto init = [](segment::Builder& segment) {
         auto x = segment.make_source<std::string>("x_src", [&](rxcpp::subscriber<std::string> s) {
@@ -207,7 +207,7 @@ TEST_F(SegmentTests, SegmentRxSourceCreation)
     // // auto builder =  std::make_unique<segment::Builder>(segdef, 42);
 }
 
-TEST_F(SegmentTests, SegmentRxNodeCreation)
+TEST_F(TestSegment, SegmentRxNodeCreation)
 {
     auto init = [](segment::Builder& segment) {
         auto x = segment.make_node<std::string, std::string>("x");
@@ -226,7 +226,7 @@ TEST_F(SegmentTests, SegmentRxNodeCreation)
     // auto builder =  std::make_unique<segment::Builder>(segdef, 42);
 }
 
-TEST_F(SegmentTests, SegmentRxNodeStaticEdges)
+TEST_F(TestSegment, SegmentRxNodeStaticEdges)
 {
     auto init = [this](segment::Builder& segment) {
         auto x = segment.make_node<std::string, std::string>("x");
@@ -251,7 +251,7 @@ TEST_F(SegmentTests, SegmentRxNodeStaticEdges)
     // auto builder =  std::make_unique<segment::Builder>(segdef, 42);
 }
 
-TEST_F(SegmentTests, SegmentRxNodeValidTypeConversionWorks)
+TEST_F(TestSegment, SegmentRxNodeValidTypeConversionWorks)
 {
     auto init = [this](segment::Builder& segment) {
         auto x = segment.make_node<std::string, std::string>("x");
@@ -310,7 +310,7 @@ TEST_F(SegmentTests, SegmentRxNodeDynamicEdges)
 
 */
 
-TEST_F(SegmentTests, SegmentEndToEndTest)
+TEST_F(TestSegment, SegmentEndToEndTest)
 {
     auto init = [](segment::Builder& segment) {
         auto src = segment.make_source<std::string>("src", [&](rxcpp::subscriber<std::string>& s) {
@@ -343,7 +343,7 @@ TEST_F(SegmentTests, SegmentEndToEndTest)
     // // auto builder =  std::make_unique<segment::Builder>(segdef, 42);
 }
 
-TEST_F(SegmentTests, CompileTimeConversionValuesWorkAsExpected)
+TEST_F(TestSegment, CompileTimeConversionValuesWorkAsExpected)
 {
     auto init = [](segment::Builder& segment) {
         auto src = segment.make_source<std::string>("src", [&](rxcpp::subscriber<std::string>& s) {
@@ -397,7 +397,7 @@ TEST_F(SegmentTests, CompileTimeConversionValuesWorkAsExpected)
     // auto builder =  std::make_unique<segment::Builder>(segdef, 42);
 }
 
-TEST_F(SegmentTests, RuntimeConversionValuesWorkAsExpected)
+TEST_F(TestSegment, RuntimeConversionValuesWorkAsExpected)
 {
     auto init = [](segment::Builder& segment) {
         auto src = segment.make_source<std::string>("src", [&](rxcpp::subscriber<std::string>& s) {
@@ -453,7 +453,7 @@ TEST_F(SegmentTests, RuntimeConversionValuesWorkAsExpected)
     // auto builder =  std::make_unique<segment::Builder>(segdef, 42);
 }
 
-TEST_F(SegmentTests, SegmentEndToEndTestRx)
+TEST_F(TestSegment, SegmentEndToEndTestRx)
 {
     auto init = [](segment::Builder& segment) {
         auto src = segment.make_source<std::string>("src", [&](rxcpp::subscriber<std::string> s) {
@@ -491,7 +491,7 @@ void execute_pipeline(std::unique_ptr<pipeline::Pipeline> pipeline)
     exec.join();
 }
 
-TEST_F(SegmentTests, ChannelClose)
+TEST_F(TestSegment, ChannelClose)
 {
     auto p = pipeline::make_pipeline();
 
@@ -539,7 +539,7 @@ TEST_F(SegmentTests, ChannelClose)
     EXPECT_EQ(complete_count, 1);
 }
 
-TEST_F(SegmentTests, SegmentEndToEndTestSinkOutput)
+TEST_F(TestSegment, SegmentEndToEndTestSinkOutput)
 {
     unsigned int iterations{10};
     std::atomic<unsigned int> sink_results{0};
@@ -571,7 +571,7 @@ TEST_F(SegmentTests, SegmentEndToEndTestSinkOutput)
     // auto builder =  std::make_unique<segment::Builder>(segdef, 42);
 }
 
-TEST_F(SegmentTests, SegmentSingleSourceTwoNodesException)
+TEST_F(TestSegment, SegmentSingleSourceTwoNodesException)
 {
     unsigned int iterations{3};
     std::atomic<unsigned int> sink1_results{0};
@@ -624,7 +624,7 @@ TEST_F(SegmentTests, SegmentSingleSourceTwoNodesException)
     // auto builder =  std::make_unique<segment::Builder>(segdef, 42);
 }
 
-TEST_F(SegmentTests, SegmentSingleSourceTwoNodes)
+TEST_F(TestSegment, SegmentSingleSourceTwoNodes)
 {
     unsigned int iterations{3};
     std::atomic<unsigned int> sink1_results{0};
@@ -687,7 +687,7 @@ TEST_F(SegmentTests, SegmentSingleSourceTwoNodes)
     EXPECT_EQ(sink2_results, 5.5F * iterations);
 }
 
-TEST_F(SegmentTests, SegmentSingleSourceMultiNodes)
+TEST_F(TestSegment, SegmentSingleSourceMultiNodes)
 {
     constexpr unsigned int NumChildren{10};
     unsigned int iterations{3};
@@ -746,7 +746,7 @@ TEST_F(SegmentTests, SegmentSingleSourceMultiNodes)
     }
 }
 
-TEST_F(SegmentTests, EnsureMove)
+TEST_F(TestSegment, EnsureMove)
 {
     auto init = [&](segment::Builder& segment) {
         auto src = segment.make_source<std::string>("src", [](rxcpp::subscriber<std::string>& s) {
@@ -778,7 +778,7 @@ TEST_F(SegmentTests, EnsureMove)
     execute_pipeline(std::move(pipeline));
 }
 
-TEST_F(SegmentTests, EnsureMoveMultiChildren)
+TEST_F(TestSegment, EnsureMoveMultiChildren)
 {
     constexpr unsigned int NumChildren{10};
     auto init = [&](segment::Builder& segment) {
@@ -828,7 +828,7 @@ TEST_F(SegmentTests, EnsureMoveMultiChildren)
     execute_pipeline(std::move(pipeline));
 }
 
-TEST_F(SegmentTests, EnsureMoveConstructor)
+TEST_F(TestSegment, EnsureMoveConstructor)
 {
     // First ensure CopyMoveCounter is working as expected
     {
@@ -944,7 +944,7 @@ TEST_F(SegmentTests, EnsureMoveConstructor)
     }
 }
 
-TEST_F(SegmentTests, SegmentTestRxcppHigherLevelNodes)
+TEST_F(TestSegment, SegmentTestRxcppHigherLevelNodes)
 {
     std::size_t iterations = 5;
     using srf::benchmarking::TraceStatistics;
@@ -1030,7 +1030,7 @@ TEST_F(SegmentTests, SegmentTestRxcppHigherLevelNodes)
     TraceStatistics::reset();
 }
 
-TEST_F(SegmentTests, SegmentGetEgressError)
+TEST_F(TestSegment, SegmentGetEgressError)
 {
     auto init   = [](segment::Builder& segment) { segment.get_egress<int>("test"); };
     auto segdef = segment::Definition::create("segment_test", init);
@@ -1050,7 +1050,7 @@ TEST_F(SegmentTests, SegmentGetEgressError)
     */
 }
 
-TEST_F(SegmentTests, SegmentGetEgressNotEgressError)
+TEST_F(TestSegment, SegmentGetEgressNotEgressError)
 {
     auto init = [](segment::Builder& segment) {
         auto src =

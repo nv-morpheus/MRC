@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-#include "test_segment.hpp"
+#include "test_modules.hpp"
 
 #include "srf/experimental/modules/module_registry_util.hpp"
 #include "srf/experimental/modules/sample_modules.hpp"
 #include "srf/version.hpp"
 
-TEST_F(SegmentTests, ModuleRegistryUtilTest)
+TEST_F(TestModuleUtil, ModuleRegistryUtilTest)
 {
     using namespace modules;
 

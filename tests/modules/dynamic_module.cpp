@@ -30,13 +30,8 @@ class DynamicSourceModule : public SegmentModule
     DynamicSourceModule(std::string module_name);
     DynamicSourceModule(std::string module_name, nlohmann::json config);
 
-    bool m_was_configured{false};
-
   protected:
     void initialize(segment::Builder& builder) override;
-
-  private:
-    bool m_initialized{false};
 };
 
 DynamicSourceModule::DynamicSourceModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
