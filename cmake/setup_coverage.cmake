@@ -36,14 +36,36 @@ if(SRF_ENABLE_CODECOV)
       "tests/*"
       )
 
-  setup_target_for_coverage_gcovr_xml(
-      NAME gcovr-xml-report
-      EXCLUDE ${CODECOV_REPORT_EXCLUSIONS}
+  setup_target_for_coverage_gcovr_html(
+    NAME gcovr-html-report-cpp
+    EXCLUDE ${CODECOV_REPORT_EXCLUSIONS}
+    EXECUTABLE "ctest"
+    EXECUTABLE_ARGS "--exclude-regex 'test_srf_private|nvrpc'"
   )
 
   setup_target_for_coverage_gcovr_html(
-      NAME gcovr-html-report
-      EXCLUDE ${CODECOV_REPORT_EXCLUSIONS}
+    NAME gcovr-html-report-python
+    EXCLUDE ${CODECOV_REPORT_EXCLUSIONS}
+    EXECUTABLE "pytest"
+    EXECUTABLE_ARGS "python"
+  )
+
+  # Set this flag to delete the coverage after XML files are created (used by CI)
+  set(GCOVR_ADDITIONAL_ARGS "-d")
+
+  setup_target_for_coverage_gcovr_xml(
+    NAME gcovr-xml-report-cpp
+    EXCLUDE ${CODECOV_REPORT_EXCLUSIONS}
+    EXECUTABLE "ctest"
+    EXECUTABLE_ARGS "--exclude-regex"
+    EXECUTABLE_ARGS "'test_srf_private|nvrpc'"
+  )
+
+  setup_target_for_coverage_gcovr_xml(
+    NAME gcovr-xml-report-python
+    EXCLUDE ${CODECOV_REPORT_EXCLUSIONS}
+    EXECUTABLE "pytest"
+    EXECUTABLE_ARGS "python"
   )
 
   append_coverage_compiler_flags()
