@@ -25,6 +25,15 @@ namespace srf::internal::remote_descriptor {
 
 class Manager;
 
+/**
+ * RemoteDescriptor is an object that points to and maintains a global reference count to an encoded object which owned
+ * by a singular RemoteDescriptorManager within the distributed SRF runtime. The actual object maybe local or remote to
+ * the instance holding the object.
+ *
+ * When a RemoteDescriptor is destructed, it triggers an atomic global decrement of the reference count of the object
+ * equal to the number of tokens held by the RemoteDescriptor. When the global reference count goes to zero, the
+ * remote_descriptor::Manager which owns the EncodedObject will destory the object and release the memory.
+ */
 class RemoteDescriptor final
 {
     RemoteDescriptor(std::shared_ptr<Manager> manager, std::unique_ptr<srf::codable::protos::RemoteDescriptor> rd);
