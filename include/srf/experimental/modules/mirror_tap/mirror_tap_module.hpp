@@ -19,11 +19,15 @@
 
 #include "srf/experimental/modules/module_registry_util.hpp"
 #include "srf/experimental/modules/segment_modules.hpp"
+#include "srf/node/operators/broadcast.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/version.hpp"
 
 #include <nlohmann/json.hpp>
 
+#include <atomic>
+
+// TODO(Devin): Should be connected to a DataBufferModule
 namespace srf::modules {
 template <typename DataTypeT>
 class MirrorTapModule : public SegmentModule
@@ -35,7 +39,14 @@ class MirrorTapModule : public SegmentModule
 
   protected:
     void initialize(segment::Builder& builder) override;
+
+  private:
+    static std::atomic<unsigned int> s_tap_index;
+    std::string m_egress_name{"mirror_tap"};
 };
+
+template <typename DataTypeT>
+std::atomic<unsigned int> MirrorTapModule<DataTypeT>::s_tap_index{0};
 
 template <typename DataTypeT>
 MirrorTapModule<DataTypeT>::MirrorTapModule(std::string module_name) : SegmentModule(std::move(module_name))
@@ -50,17 +61,30 @@ template <typename DataTypeT>
 void MirrorTapModule<DataTypeT>::initialize(segment::Builder& builder)
 {
     // ********** Process config ************ //
+    if (config().contains("mirror_tap_egress"))
+    {
+        m_egress_name = config()["mirror_tap_egress"];
+    }
 
     // ********** Implementation ************ //
-    auto tap_and_forward = builder.template make_node<DataTypeT>("in", rxcpp::operators::map([](DataTypeT input) {
-                                                                     DataTypeT copy = input;
+    auto input =
+        builder.template make_node<DataTypeT>("in", rxcpp::operators::map([](DataTypeT input) { return input; }));
 
-                                                                     return input;
-                                                                 }));
+    // Create deep-copy broadcast node.
+    auto bcast = std::make_shared<node::Broadcast<DataTypeT>>(true);
+
+    builder.make_edge(input, *bcast);
+
+    auto output =
+        builder.template make_node<DataTypeT>("in", rxcpp::operators::map([](DataTypeT input) { return input; }));
+
+    builder.make_edge(bcast->make_source(), output);  // To next stage
+    builder.make_edge(bcast->make_source(),
+                      builder.get_egress<DataTypeT>(m_egress_name));// to mirror tap
 
     // Register the submodules output as one of this module's outputs
-    register_input_port("in", tap_and_forward);
-    register_output_port("out", tap_and_forward);
+    register_input_port("in", input);
+    register_output_port("out", output);
 }
 
 static MirrorTapModule<std::string> tap("test", {});
