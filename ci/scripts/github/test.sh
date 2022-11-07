@@ -61,10 +61,18 @@ ctest --output-on-failure \
 
 CTEST_RESULTS=$?
 set -e
-cd ${SRF_ROOT}
+cd ${SRF_ROOT}/build
 
 if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
-  /opt/conda/bin/codecov --root ${SRF_ROOT} -F cpp -g --gcov-root ${SRF_ROOT}
+
+  gpuci_logger "Compiling coverage for C++ tests"
+
+  # Run gcovr and delete the stats
+  gcovr -j 4 --gcov-executable x86_64-conda-linux-gnu-gcov --xml gcovr-xml-report-cpp.xml -r ${SRF_ROOT} \
+    --object-directory "$PWD" \
+    -e 'build/*' -e 'benchmarks/*' -e '.cache/*' -e 'docs/*' -e 'python/srf/_pysrf/tests/*' -e 'python/srf/tests/*' -e 'src/tests/*' -e 'tests/*' -d
+
+  # /opt/conda/bin/codecov --root ${SRF_ROOT} -F cpp -g --gcov-root ${SRF_ROOT}
 fi
 
 gpuci_logger "Running Python Tests"
@@ -75,16 +83,23 @@ PYTEST_RESULTS=$?
 set -e
 
 if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
-  gpuci_logger "Generating codecov report"
-  cd ${SRF_ROOT}
-  cmake --build build --target gcovr-html-report gcovr-xml-report
+  # Need to rerun gcovr for the python code now
+  gcovr -j 4 --gcov-executable x86_64-conda-linux-gnu-gcov --xml gcovr-xml-report-py.xml -r ${SRF_ROOT} \
+    --object-directory "$PWD" \
+    -e 'build/*' -e 'benchmarks/*' -e '.cache/*' -e 'docs/*' -e 'python/srf/_pysrf/tests/*' -e 'python/srf/tests/*' -e 'src/tests/*' -e 'tests/*' -d
 
-  gpuci_logger "Archiving codecov report"
-  tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${SRF_ROOT}/build/gcovr-html-report ${SRF_ROOT}/build/gcovr-xml-report.xml
-  aws s3 cp ${WORKSPACE_TMP}/coverage_reports.tar.bz "${ARTIFACT_URL}/coverage_reports.tar.bz"
+
+  # gpuci_logger "Generating codecov report"
+  # cd ${SRF_ROOT}
+  # cmake --build build --target gcovr-html-report gcovr-xml-report
+
+  # gpuci_logger "Archiving codecov report"
+  # tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${SRF_ROOT}/build/gcovr-html-report ${SRF_ROOT}/build/gcovr-xml-report.xml
+  # aws s3 cp ${WORKSPACE_TMP}/coverage_reports.tar.bz "${ARTIFACT_URL}/coverage_reports.tar.bz"
 
   gpuci_logger "Upload codecov report"
-  /opt/conda/bin/codecov --root ${SRF_ROOT} -f ${SRF_ROOT}/build/gcovr-xml-report.xml
+  /opt/conda/bin/codecov --root ${SRF_ROOT} -f ${SRF_ROOT}/build/gcovr-xml-report-cpp.xml -F cpp
+  /opt/conda/bin/codecov --root ${SRF_ROOT} -f ${SRF_ROOT}/build/gcovr-xml-report-py.xml -F py
 fi
 
 gpuci_logger "Archiving test reports"
