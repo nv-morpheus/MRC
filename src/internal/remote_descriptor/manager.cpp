@@ -20,12 +20,14 @@
 #include "internal/remote_descriptor/remote_descriptor.hpp"
 #include "internal/remote_descriptor/storage.hpp"
 
+#include "srf/exceptions/runtime_error.hpp"
 #include "srf/protos/codable.pb.h"
 
 namespace srf::internal::remote_descriptor {
 
 void Manager::decrement_tokens(std::size_t object_id, std::size_t token_count)
 {
+    std::lock_guard lock(m_mutex);
     DVLOG(10) << "decrementing " << token_count << " tokens from object_id: " << object_id;
     auto search = m_stored_objects.find(object_id);
     CHECK(search != m_stored_objects.end());
@@ -50,13 +52,24 @@ RemoteDescriptor Manager::store_object(std::unique_ptr<Storage> object)
     rd->set_object_id(object_id);
     rd->set_tokens(object->tokens_count());
     *(rd->mutable_encoded_object()) = object->encoded_object().proto();
-    m_stored_objects[object_id]     = std::move(object);
+
+    {
+        std::lock_guard lock(m_mutex);
+        auto search = m_stored_objects.find(object_id);
+        if (search != m_stored_objects.end())
+        {
+            LOG(FATAL) << "duplicate object_id detected; this is fatal error, please report this as an issue";
+        }
+        m_stored_objects[object_id] = std::move(object);
+    }
 
     return RemoteDescriptor(shared_from_this(), std::move(rd));
 }
 
 std::size_t Manager::size() const
 {
+    std::lock_guard lock(m_mutex);
     return m_stored_objects.size();
 }
+
 }  // namespace srf::internal::remote_descriptor

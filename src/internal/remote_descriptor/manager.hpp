@@ -21,6 +21,7 @@
 #include "internal/remote_descriptor/storage.hpp"
 
 #include <map>
+#include <mutex>
 
 namespace srf::internal::remote_descriptor {
 
@@ -41,6 +42,8 @@ class Manager final : public std::enable_shared_from_this<Manager>
     void decrement_tokens(std::size_t object_id, std::size_t token_count);
 
     std::map<std::size_t, std::unique_ptr<Storage>> m_stored_objects;
+
+    std::mutex m_mutex;
 
     friend RemoteDescriptor;
 };
