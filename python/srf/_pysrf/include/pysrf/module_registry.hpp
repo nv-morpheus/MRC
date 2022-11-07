@@ -17,17 +17,15 @@
 
 #pragma once
 
-#include "srf/experimental/modules/segment_modules.hpp"
+#include "srf/experimental/modules/segment_modules.hpp"  // IWYU pragma: keep
+#include "srf/segment/forward.hpp"
 
 #include <pybind11/pybind11.h>
 
 #include <functional>
+#include <map>
 #include <string>
 #include <vector>
-
-namespace srf::segment {
-class Builder;
-}
 
 namespace srf::pysrf {
 
