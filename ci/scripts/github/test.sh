@@ -70,7 +70,8 @@ if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
   # Run gcovr and delete the stats
   gcovr -j 4 --gcov-executable x86_64-conda-linux-gnu-gcov --xml gcovr-xml-report-cpp.xml -r ${SRF_ROOT} \
     --object-directory "$PWD" \
-    -e 'build/*' -e 'benchmarks/*' -e '.cache/*' -e 'docs/*' -e 'python/srf/_pysrf/tests/*' -e 'python/srf/tests/*' -e 'src/tests/*' -e 'tests/*' -d
+    -e 'build/*' -e 'benchmarks/*' -e '.cache/*' -e 'docs/*' -e 'python/srf/_pysrf/tests/*' -e 'python/srf/tests/*' -e 'src/tests/*' -e 'tests/*' -d \
+    -o gcovr.log
 
   # /opt/conda/bin/codecov --root ${SRF_ROOT} -F cpp -g --gcov-root ${SRF_ROOT}
 fi
@@ -83,10 +84,16 @@ PYTEST_RESULTS=$?
 set -e
 
 if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
+
+  cd ${SRF_ROOT}/build
+
+  gpuci_logger "Compiling coverage for Python tests"
+
   # Need to rerun gcovr for the python code now
   gcovr -j 4 --gcov-executable x86_64-conda-linux-gnu-gcov --xml gcovr-xml-report-py.xml -r ${SRF_ROOT} \
     --object-directory "$PWD" \
-    -e 'build/*' -e 'benchmarks/*' -e '.cache/*' -e 'docs/*' -e 'python/srf/_pysrf/tests/*' -e 'python/srf/tests/*' -e 'src/tests/*' -e 'tests/*' -d
+    -e 'build/*' -e 'benchmarks/*' -e '.cache/*' -e 'docs/*' -e 'python/srf/_pysrf/tests/*' -e 'python/srf/tests/*' -e 'src/tests/*' -e 'tests/*' -d \
+    -o gcovr.log
 
 
   # gpuci_logger "Generating codecov report"
