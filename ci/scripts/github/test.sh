@@ -61,19 +61,18 @@ ctest --output-on-failure \
 
 CTEST_RESULTS=$?
 set -e
-cd ${SRF_ROOT}/build
 
 if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
+
+  cd ${SRF_ROOT}
 
   gpuci_logger "Compiling coverage for C++ tests"
 
   # Run gcovr and delete the stats
-  gcovr -j 4 --gcov-executable x86_64-conda-linux-gnu-gcov --xml gcovr-xml-report-cpp.xml -r ${SRF_ROOT} \
-    --object-directory "$PWD" \
-    -e 'build/*' -e 'benchmarks/*' -e '.cache/*' -e 'docs/*' -e 'python/srf/_pysrf/tests/*' -e 'python/srf/tests/*' -e 'src/tests/*' -e 'tests/*' -d \
-    -o gcovr.log
-
-  # /opt/conda/bin/codecov --root ${SRF_ROOT} -F cpp -g --gcov-root ${SRF_ROOT}
+  gcovr -j 4 --gcov-executable x86_64-conda-linux-gnu-gcov --xml build/gcovr-xml-report-cpp.xml -r ${SRF_ROOT} --object-directory "$PWD/build" \
+    -f '^include/.*' -f '^python/.*' -f '^src/.*' \
+    -e '^python/srf/_pysrf/tests/.*' -e '^python/srf/tests/.*' -e '^src/tests/.*' \
+    -d -o gcovr.log
 fi
 
 gpuci_logger "Running Python Tests"
@@ -85,15 +84,15 @@ set -e
 
 if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
 
-  cd ${SRF_ROOT}/build
+  cd ${SRF_ROOT}
 
   gpuci_logger "Compiling coverage for Python tests"
 
   # Need to rerun gcovr for the python code now
-  gcovr -j 4 --gcov-executable x86_64-conda-linux-gnu-gcov --xml gcovr-xml-report-py.xml -r ${SRF_ROOT} \
-    --object-directory "$PWD" \
-    -e 'build/*' -e 'benchmarks/*' -e '.cache/*' -e 'docs/*' -e 'python/srf/_pysrf/tests/*' -e 'python/srf/tests/*' -e 'src/tests/*' -e 'tests/*' -d \
-    -o gcovr.log
+  gcovr -j 4 --gcov-executable x86_64-conda-linux-gnu-gcov --xml build/gcovr-xml-report-py.xml -r ${SRF_ROOT} --object-directory "$PWD/build" \
+    -f '^include/.*' -f '^python/.*' -f '^src/.*' \
+    -e '^python/srf/_pysrf/tests/.*' -e '^python/srf/tests/.*' -e '^src/tests/.*' \
+    -d -o gcovr.log
 
 
   # gpuci_logger "Generating codecov report"
