@@ -53,6 +53,7 @@ PYBIND11_MODULE(plugins, module)
 
     // Common must be first in every module
     pysrf::import(module, "srf.core.common");
+    pysrf::import_module_object(module, "srf.core.segment", "SegmentModule");
 
     auto PluginModule =
         py::class_<srf::modules::PluginModule, std::shared_ptr<srf::modules::PluginModule>>(module, "PluginModule");
