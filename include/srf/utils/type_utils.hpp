@@ -22,8 +22,9 @@
 #include <cstdint>
 #include <string>
 #include <typeindex>
+#include <utility>
 
-/* Unused code in the global namespace
+namespace srf {
 
 // Utility to wrap all elements of a tuple with another type
 template <size_t N, template <typename...> class WrappingT, typename TupleTypeT>
@@ -34,9 +35,9 @@ struct WrapTupleElems<N, WrappingT, std::tuple<TupleArgsT...>>
 {
     using type_t = typename std::tuple<WrappingT<TupleArgsT>...>;
 };
-*/
 
-namespace srf {
+template <int N, typename... TypesT>
+using NthTypeOf = typename std::tuple_element<N, std::tuple<TypesT...>>::type;  // NOLINT
 
 // Pulled from cuDF
 template <typename T>

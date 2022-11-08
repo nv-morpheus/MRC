@@ -25,6 +25,7 @@
 #include "srf/node/channel_holder.hpp"
 #include "srf/node/edge.hpp"
 #include "srf/node/edge_registry.hpp"
+#include "srf/type_traits.hpp"
 
 #include <glog/logging.h>
 
@@ -62,6 +63,54 @@ struct EdgeConnector
 
                 // Build a new connector
                 return std::make_shared<ConvertingEdgeWritable<SourceT, SinkT>>(std::move(ingress));
+            });
+    }
+
+    static void register_converter(typename LambdaConvertingEdgeWritable<SourceT, SinkT>::lambda_fn_t lambda_fn)
+    {
+        EdgeRegistry::register_converter(
+            typeid(SourceT), typeid(SinkT), [lambda_fn](std::shared_ptr<IEdgeWritableBase> channel) {
+                std::shared_ptr<IEdgeWritable<SinkT>> ingress =
+                    std::dynamic_pointer_cast<IEdgeWritable<SinkT>>(channel);
+
+                DCHECK(ingress) << "Channel is not an ingress of the correct type";
+
+                // Build a new connector
+                return std::make_shared<LambdaConvertingEdgeWritable<SourceT, SinkT>>(lambda_fn, std::move(ingress));
+            });
+    }
+
+    static void register_dynamic_cast_converter()
+    {
+        EdgeRegistry::register_converter(
+            typeid(SourceT), typeid(SinkT), [](std::shared_ptr<IEdgeWritableBase> channel) {
+                std::shared_ptr<IEdgeWritable<SinkT>> ingress =
+                    std::dynamic_pointer_cast<IEdgeWritable<SinkT>>(channel);
+
+                DCHECK(ingress) << "Channel is not an ingress of the correct type";
+
+                if constexpr (is_shared_ptr_v<SourceT> && is_shared_ptr_v<SinkT>)
+                {
+                    using sink_unwrapped_t = typename SinkT::element_type;
+
+                    return std::make_shared<LambdaConvertingEdgeWritable<SourceT, SinkT>>(
+                        [](SourceT&& data) {
+                            // Call dynamic conversion on the shared_ptr
+                            return std::dynamic_pointer_cast<sink_unwrapped_t>(data);
+                        },
+                        std::move(ingress));
+                }
+                else
+                {
+                    return std::make_shared<LambdaConvertingEdgeWritable<SourceT, SinkT>>(
+                        [](SourceT&& data) {
+                            // Normal dynamic_cast
+                            return dynamic_cast<SinkT>(data);
+                        },
+                        std::move(ingress));
+                }
+
+                // Build a new connector
             });
     }
 };

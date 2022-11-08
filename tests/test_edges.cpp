@@ -26,6 +26,7 @@
 #include "srf/node/edge_channel.hpp"
 #include "srf/node/forward.hpp"
 #include "srf/node/operators/broadcast.hpp"
+#include "srf/node/operators/combine_latest.hpp"
 #include "srf/node/operators/router.hpp"
 #include "srf/node/rx_subscribable.hpp"
 #include "srf/node/source_properties.hpp"
@@ -208,7 +209,7 @@ class TestSink : public IngressProvider<T>, public EgressAcceptor<T>, public Sin
 
         while (input->await_read(t) == channel::Status::success)
         {
-            VLOG(10) << "Sink got value: " << t;
+            VLOG(10) << "Sink got value";
         }
 
         VLOG(10) << "Sink exited run";
@@ -789,7 +790,7 @@ TEST_F(TestEdges, SourceToBroadcastToSink)
     node::make_edge(*broadcast, *sink);
 }
 
-TEST_F(TestEdges, SourceToBroadcastTypelessToSink)
+TEST_F(TestEdges, SourceToBroadcastTypelessToSinkSinkFirst)
 {
     auto source    = std::make_shared<node::TestSource<int>>();
     auto broadcast = std::make_shared<node::BroadcastTypeless>();
@@ -800,6 +801,70 @@ TEST_F(TestEdges, SourceToBroadcastTypelessToSink)
 
     source->run();
     sink->run();
+}
+
+TEST_F(TestEdges, SourceToBroadcastTypelessToSinkSourceFirst)
+{
+    auto source    = std::make_shared<node::TestSource<int>>();
+    auto broadcast = std::make_shared<node::BroadcastTypeless>();
+    auto sink      = std::make_shared<node::TestSink<int>>();
+
+    node::make_edge(*source, *broadcast);
+    node::make_edge(*broadcast, *sink);
+
+    source->run();
+    sink->run();
+}
+
+TEST_F(TestEdges, SourceToMultipleBroadcastTypelessToSinkSinkFirst)
+{
+    auto source     = std::make_shared<node::TestSource<int>>();
+    auto broadcast1 = std::make_shared<node::BroadcastTypeless>();
+    auto broadcast2 = std::make_shared<node::BroadcastTypeless>();
+    auto sink       = std::make_shared<node::TestSink<int>>();
+
+    node::make_edge(*broadcast2, *sink);
+    node::make_edge(*broadcast1, *broadcast2);
+    node::make_edge(*source, *broadcast1);
+
+    source->run();
+    sink->run();
+}
+
+TEST_F(TestEdges, SourceToMultipleBroadcastTypelessToSinkSourceFirst)
+{
+    auto source     = std::make_shared<node::TestSource<int>>();
+    auto broadcast1 = std::make_shared<node::BroadcastTypeless>();
+    auto broadcast2 = std::make_shared<node::BroadcastTypeless>();
+    auto sink       = std::make_shared<node::TestSink<int>>();
+
+    node::make_edge(*source, *broadcast1);
+    node::make_edge(*broadcast1, *broadcast2);
+    node::make_edge(*broadcast2, *sink);
+
+    source->run();
+    sink->run();
+}
+
+TEST_F(TestEdges, MultiSourceToMultipleBroadcastTypelessToMultiSink)
+{
+    auto source1    = std::make_shared<node::TestSource<int>>();
+    auto source2    = std::make_shared<node::TestSource<int>>();
+    auto broadcast1 = std::make_shared<node::BroadcastTypeless>();
+    auto broadcast2 = std::make_shared<node::BroadcastTypeless>();
+    auto sink1      = std::make_shared<node::TestSink<int>>();
+    auto sink2      = std::make_shared<node::TestSink<int>>();
+
+    node::make_edge(*source1, *broadcast1);
+    node::make_edge(*source2, *broadcast1);
+    node::make_edge(*broadcast1, *broadcast2);
+    node::make_edge(*broadcast2, *sink1);
+    node::make_edge(*broadcast2, *sink2);
+
+    source1->run();
+    source2->run();
+    sink1->run();
+    sink2->run();
 }
 
 TEST_F(TestEdges, SourceToBroadcastToMultiSink)
@@ -838,6 +903,25 @@ TEST_F(TestEdges, SourceToBroadcastToSinkComponents)
     node::make_edge(*broadcast, *sink2);
 
     source->run();
+}
+
+TEST_F(TestEdges, CombineLatest)
+{
+    auto source1 = std::make_shared<node::TestSource<int>>();
+    auto source2 = std::make_shared<node::TestSource<float>>();
+
+    auto combine_latest = std::make_shared<node::CombineLatest<int, float>>();
+
+    auto sink = std::make_shared<node::TestSink<std::tuple<int, float>>>();
+
+    node::make_edge(*source1, *combine_latest->get_sink<0>());
+    node::make_edge(*source2, *combine_latest->get_sink<1>());
+    node::make_edge(*combine_latest, *sink);
+
+    source1->run();
+    source2->run();
+
+    sink->run();
 }
 
 }  // namespace srf

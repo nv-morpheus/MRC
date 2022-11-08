@@ -23,6 +23,7 @@
 
 #include "srf/channel/status.hpp"
 #include "srf/node/edge_connector.hpp"
+#include "srf/node/operators/broadcast.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/segment/definition.hpp"
 #include "srf/segment/object.hpp"  // IWYU pragma: keep
@@ -32,6 +33,7 @@
 #include <pybind11/pytypes.h>
 
 #include <cstdint>
+#include <memory>
 
 // IWYU thinks the Segment.def calls need array and vector
 // IWYU pragma: no_include <array>
@@ -88,6 +90,18 @@ PYBIND11_MODULE(segment, m)
     // Type 'S' and 'U'
     node::EdgeConnector<std::string, PyHolder>::register_converter();
     node::EdgeConnector<PyHolder, std::string>::register_converter();
+
+    py::class_<srf::runnable::LaunchOptions>(m, "LaunchOptions")
+        .def_readwrite("pe_count", &srf::runnable::LaunchOptions::pe_count)
+        .def_readwrite("engines_per_pe", &srf::runnable::LaunchOptions::engines_per_pe)
+        .def_readwrite("engine_factory_name", &srf::runnable::LaunchOptions::engine_factory_name);
+
+    // Base SegmentObject that all object usually derive from
+    py::class_<srf::segment::ObjectProperties, std::shared_ptr<srf::segment::ObjectProperties>>(m, "SegmentObject")
+        .def_property_readonly("name", &PyNode::name)
+        .def_property_readonly("launch_options",
+                               py::overload_cast<>(&srf::segment::ObjectProperties::launch_options),
+                               py::return_value_policy::reference_internal);
 
     auto Definition = py::class_<srf::segment::Definition>(m, "Definition");
     auto Builder    = py::class_<srf::segment::Builder>(m, "Builder");

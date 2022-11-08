@@ -18,6 +18,30 @@ import pytest
 import srf
 
 
+@pytest.fixture
+def ex_runner():
+
+    def run_exec(segment_init):
+        pipeline = srf.Pipeline()
+
+        pipeline.make_segment("my_seg", segment_init)
+
+        options = srf.Options()
+
+        # Set to 1 thread
+        options.topology.user_cpuset = "0-0"
+
+        executor = srf.Executor(options)
+
+        executor.register_pipeline(pipeline)
+
+        executor.start()
+
+        executor.join()
+
+    return run_exec
+
+
 @pytest.mark.parametrize("engines_per_pe", [1, 2])
 @pytest.mark.parametrize("pe_count", [1, 3])
 @pytest.mark.parametrize("source_type", ["iterator", "iterable", "function"])

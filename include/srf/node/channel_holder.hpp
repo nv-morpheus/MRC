@@ -505,6 +505,29 @@ class ConvertingEdgeReadable<SourceT, SinkT, std::enable_if_t<std::is_convertibl
     std::shared_ptr<IEdgeReadable<SourceT>> m_upstream{};
 };
 
+template <typename SourceT, typename SinkT>
+class LambdaConvertingEdgeWritable : public ConvertingEdgeWritableBase<SourceT, SinkT>
+{
+  public:
+    using base_t = ConvertingEdgeWritableBase<SourceT, SinkT>;
+    using typename base_t::sink_t;
+    using typename base_t::source_t;
+    using lambda_fn_t = std::function<sink_t(source_t&&)>;
+
+    LambdaConvertingEdgeWritable(lambda_fn_t lambda_fn, std::shared_ptr<IEdgeWritable<sink_t>> downstream) :
+      ConvertingEdgeWritableBase<source_t, sink_t>(downstream),
+      m_lambda_fn(std::move(lambda_fn))
+    {}
+
+    channel::Status await_write(source_t&& data) override
+    {
+        return this->downstream().await_write(m_lambda_fn(std::move(data)));
+    }
+
+  private:
+    lambda_fn_t m_lambda_fn{};
+};
+
 // // EdgeChannel holds an actual channel object and provides interfaces for reading/writing
 // template <typename T>
 // class EdgeChannel : public EdgeReadable<T>, public EdgeWritable<T>

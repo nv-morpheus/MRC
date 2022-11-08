@@ -62,13 +62,35 @@ namespace py    = pybind11;
 namespace pysrf = srf::pysrf;
 
 struct Base
-{};
+{
+    virtual ~Base() = default;
+};
 
 struct DerivedA : public Base
 {};
 
 struct DerivedB : public Base
 {};
+
+class SourceBase : public pysrf::PythonSource<std::shared_ptr<Base>>
+{
+  public:
+    using base_t = pysrf::PythonSource<std::shared_ptr<Base>>;
+    using typename base_t::subscriber_fn_t;
+
+    SourceBase() : PythonSource(build()) {}
+
+  private:
+    subscriber_fn_t build()
+    {
+        return [this](rxcpp::subscriber<std::shared_ptr<Base>>& output) {
+            for (size_t i = 0; i < 5; ++i)
+            {
+                output.on_next(std::make_shared<Base>());
+            }
+        };
+    }
+};
 
 class SourceDerivedB : public pysrf::PythonSource<std::shared_ptr<DerivedB>>
 {
@@ -191,6 +213,29 @@ class SinkBase : public pysrf::PythonSink<std::shared_ptr<Base>>
     SinkBase() : PythonSink(build()) {}
 };
 
+class SinkDerivedB : public pysrf::PythonSink<std::shared_ptr<DerivedB>>
+{
+    using base_t = pysrf::PythonSink<std::shared_ptr<DerivedB>>;
+
+    static rxcpp::observer<std::shared_ptr<DerivedB>> build()
+    {
+        return rxcpp::make_observer_dynamic<sink_type_t>(
+            [](sink_type_t x) {
+
+            },
+            [](std::exception_ptr ex) {},
+            []() {
+                // Complete
+            });
+    }
+
+  public:
+    using typename base_t::observer_t;
+    using typename base_t::sink_type_t;
+
+    SinkDerivedB() : PythonSink(build()) {}
+};
+
 PYBIND11_MODULE(test_edges_cpp, m)
 {
     m.doc() = R"pbdoc()pbdoc";
@@ -212,6 +257,23 @@ PYBIND11_MODULE(test_edges_cpp, m)
 
     srf::node::EdgeConnector<py::object, pysrf::PyObjectHolder>::register_converter();
     srf::node::EdgeConnector<pysrf::PyObjectHolder, py::object>::register_converter();
+
+    srf::node::EdgeConnector<std::shared_ptr<DerivedA>, std::shared_ptr<Base>>::register_converter();
+    srf::node::EdgeConnector<std::shared_ptr<DerivedB>, std::shared_ptr<Base>>::register_converter();
+
+    srf::node::EdgeConnector<std::shared_ptr<Base>, std::shared_ptr<DerivedA>>::register_dynamic_cast_converter();
+    srf::node::EdgeConnector<std::shared_ptr<Base>, std::shared_ptr<DerivedB>>::register_dynamic_cast_converter();
+
+    py::class_<segment::Object<SourceBase>,
+               srf::segment::ObjectProperties,
+               std::shared_ptr<segment::Object<SourceBase>>>(m, "SourceBase")
+        .def(py::init<>([](srf::segment::Builder& parent, const std::string& name) {
+                 auto stage = parent.construct_object<SourceBase>(name);
+
+                 return stage;
+             }),
+             py::arg("parent"),
+             py::arg("name"));
 
     py::class_<segment::Object<SourceDerivedB>,
                srf::segment::ObjectProperties,
@@ -260,6 +322,17 @@ PYBIND11_MODULE(test_edges_cpp, m)
         m, "SinkBase")
         .def(py::init<>([](segment::Builder& parent, const std::string& name) {
                  auto stage = parent.construct_object<SinkBase>(name);
+
+                 return stage;
+             }),
+             py::arg("parent"),
+             py::arg("name"));
+
+    py::class_<segment::Object<SinkDerivedB>,
+               segment::ObjectProperties,
+               std::shared_ptr<segment::Object<SinkDerivedB>>>(m, "SinkDerivedB")
+        .def(py::init<>([](segment::Builder& parent, const std::string& name) {
+                 auto stage = parent.construct_object<SinkDerivedB>(name);
 
                  return stage;
              }),

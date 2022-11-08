@@ -15,10 +15,14 @@
  * limitations under the License.
  */
 
+#include "pysrf/node.hpp"
+
 #include "pysrf/types.hpp"
 #include "pysrf/utils.hpp"
 
+#include "srf/node/operators/broadcast.hpp"
 #include "srf/runnable/launch_options.hpp"
+#include "srf/segment/builder.hpp"
 #include "srf/segment/object.hpp"
 
 #include <pybind11/pybind11.h>  // IWYU pragma: keep
@@ -42,17 +46,25 @@ PYBIND11_MODULE(node, m)
 
     // Common must be first in every module
     pysrf::import(m, "srf.core.common");
+    pysrf::import(m, "srf.core.segment");  // Needed for Builder and SegmentObject
 
-    py::class_<srf::runnable::LaunchOptions>(m, "LaunchOptions")
-        .def_readwrite("pe_count", &srf::runnable::LaunchOptions::pe_count)
-        .def_readwrite("engines_per_pe", &srf::runnable::LaunchOptions::engines_per_pe)
-        .def_readwrite("engine_factory_name", &srf::runnable::LaunchOptions::engine_factory_name);
+    // py::class_<srf::segment::Object<PythonNode<PyHolder, PyHolder>>,
+    //            srf::segment::ObjectProperties,
+    //            std::shared_ptr<srf::segment::Object<PythonNode<PyHolder, PyHolder>>>>(m, "Node")
+    //     .def(py::init<>([](srf::segment::Builder& builder, std::string name) {
+    //         auto node = builder.construct_object<node::BroadcastTypeless>(name);
 
-    py::class_<srf::segment::ObjectProperties, std::shared_ptr<srf::segment::ObjectProperties>>(m, "SegmentObject")
-        .def_property_readonly("name", &PyNode::name)
-        .def_property_readonly("launch_options",
-                               py::overload_cast<>(&srf::segment::ObjectProperties::launch_options),
-                               py::return_value_policy::reference_internal);
+    //         return node;
+    //     }));
+
+    py::class_<srf::segment::Object<node::BroadcastTypeless>,
+               srf::segment::ObjectProperties,
+               std::shared_ptr<srf::segment::Object<node::BroadcastTypeless>>>(m, "Broadcast")
+        .def(py::init<>([](srf::segment::Builder& builder, std::string name) {
+            auto node = builder.construct_object<node::BroadcastTypeless>(name);
+
+            return node;
+        }));
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

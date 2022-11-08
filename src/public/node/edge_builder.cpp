@@ -130,8 +130,9 @@ std::shared_ptr<IngressHandleObj> EdgeBuilder::do_adapt_ingress(const EdgeTypePa
         auto fn_converter =
             srf::node::EdgeRegistry::find_converter(target_type.full_type(), ingress->get_type().full_type());
 
-        CHECK(false) << "Static lookup not supported yet";
-        // return fn_converter(ingress);
+        auto converted_edge = fn_converter(ingress->get_ingress());
+
+        return std::make_shared<IngressHandleObj>(converted_edge);
     }
 
     // Start dynamic lookup

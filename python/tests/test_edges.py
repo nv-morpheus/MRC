@@ -16,6 +16,7 @@
 import dataclasses
 
 import srf
+import srf.core.segment
 import srf.tests.test_edges_cpp as m
 
 
@@ -329,6 +330,101 @@ def test_multi_segment():
     executor.start()
 
     # Wait for the pipeline to exit on its own
+    executor.join()
+
+
+def test_broadcast_cpp_to_cpp_same():
+
+    def segment_init(seg: srf.Builder):
+        source = m.SourceDerivedB(seg, "source")
+
+        broadcast = srf.core.segment.Broadcast(seg, "broadcast")
+
+        sink = m.SinkDerivedB(seg, "sink")
+
+        seg.make_edge(source, broadcast)
+        seg.make_edge(broadcast, sink)
+
+    pipeline = srf.Pipeline()
+
+    pipeline.make_segment("my_seg", segment_init)
+
+    options = srf.Options()
+
+    # Set to 1 thread
+    options.topology.user_cpuset = "0-0"
+
+    executor = srf.Executor(options)
+
+    executor.register_pipeline(pipeline)
+
+    executor.start()
+
+    executor.join()
+
+
+def test_broadcast_cpp_to_cpp_different():
+
+    def segment_init(seg: srf.Builder):
+        source = m.SourceDerivedB(seg, "source")
+
+        broadcast = srf.core.segment.Broadcast(seg, "broadcast")
+
+        sink = m.SinkBase(seg, "sink")
+
+        seg.make_edge(source, broadcast)
+        seg.make_edge(broadcast, sink)
+
+    pipeline = srf.Pipeline()
+
+    pipeline.make_segment("my_seg", segment_init)
+
+    options = srf.Options()
+
+    # Set to 1 thread
+    options.topology.user_cpuset = "0-0"
+
+    executor = srf.Executor(options)
+
+    executor.register_pipeline(pipeline)
+
+    executor.start()
+
+    executor.join()
+
+
+def test_broadcast_cpp_to_cpp_multi():
+
+    def segment_init(seg: srf.Builder):
+        source_derived = m.SourceDerivedB(seg, "source_derived")
+        source_base = m.SourceBase(seg, "source_base")
+
+        broadcast = srf.core.segment.Broadcast(seg, "broadcast")
+
+        sink_base = m.SinkBase(seg, "sink_base")
+        sink_derived = m.SinkDerivedB(seg, "sink_derived")
+
+        seg.make_edge(source_derived, broadcast)
+        seg.make_edge(source_base, broadcast)
+
+        seg.make_edge(broadcast, sink_base)
+        seg.make_edge(broadcast, sink_derived)
+
+    pipeline = srf.Pipeline()
+
+    pipeline.make_segment("my_seg", segment_init)
+
+    options = srf.Options()
+
+    # Set to 1 thread
+    options.topology.user_cpuset = "0-0"
+
+    executor = srf.Executor(options)
+
+    executor.register_pipeline(pipeline)
+
+    executor.start()
+
     executor.join()
 
 
