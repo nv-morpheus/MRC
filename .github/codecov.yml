@@ -23,6 +23,6 @@ codecov:
 
 flags:
   cpp:
-    carryforward: true
+    carryforward: false
   py:
-    carryforward: true
+    carryforward: false
