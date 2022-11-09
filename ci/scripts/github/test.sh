@@ -109,8 +109,8 @@ if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
   # aws s3 cp ${WORKSPACE_TMP}/coverage_reports.tar.bz "${ARTIFACT_URL}/coverage_reports.tar.bz"
 
   gpuci_logger "Upload codecov report"
-  /opt/conda/bin/codecov --root ${SRF_ROOT} -f ${SRF_ROOT}/build/gcovr-xml-report-cpp.xml -F cpp
-  /opt/conda/bin/codecov --root ${SRF_ROOT} -f ${SRF_ROOT}/build/gcovr-xml-report-py.xml -F py
+  /opt/conda/bin/codecov --root ${SRF_ROOT} -f ${SRF_ROOT}/build/gcovr-xml-report-cpp.xml -F cpp --no-gcov-out -X gcov
+  /opt/conda/bin/codecov --root ${SRF_ROOT} -f ${SRF_ROOT}/build/gcovr-xml-report-py.xml -F py --no-gcov-out -X gcov
 fi
 
 gpuci_logger "Archiving test reports"
