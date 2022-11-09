@@ -28,6 +28,11 @@
 
 namespace srf::modules {
 
+/**
+ * Create a 2 input 2 output SegmentModule
+ * Inputs: input1:bool, input2:bool
+ * Outputs: output1:std::string, output2:std::string
+ */
 class SimpleModule : public SegmentModule
 {
   public:
@@ -43,6 +48,11 @@ class SimpleModule : public SegmentModule
     bool m_initialized{false};
 };
 
+/**
+ * Create a 1 input 1 output module that sets 'm_was_configured' variable if 'config_key_1' is found in the config.
+ * Inputs: configurable_input_a:bool
+ * Outputs: configureable_output_x:std::string
+ */
 class ConfigurableModule : public SegmentModule
 {
   public:
@@ -58,37 +68,45 @@ class ConfigurableModule : public SegmentModule
     bool m_initialized;
 };
 
+/**
+ * Create a module that acts as a data source with one output
+ * By default emits a single value, configurable by passing 'source_count' in the config.
+ * Outputs: source:bool
+ */
 class SourceModule : public SegmentModule
 {
   public:
     SourceModule(std::string module_name);
     SourceModule(std::string module_name, nlohmann::json config);
 
-    bool m_was_configured{false};
-
   protected:
     void initialize(segment::Builder& builder) override;
-
-  private:
-    bool m_initialized;
 };
 
+/**
+ * Create a module that acts as a data sink with one input
+ * Inputs: sink:bool
+ */
 class SinkModule : public SegmentModule
 {
   public:
     SinkModule(std::string module_name);
     SinkModule(std::string module_name, nlohmann::json config);
 
-    bool m_was_configured{false};
     unsigned int m_packet_count{0};
 
   protected:
     void initialize(segment::Builder& builder) override;
-
-  private:
-    bool m_initialized;
 };
 
+/**
+ * Creates a single output module that:
+ *  - Creates a nested ConfigurableModule
+ *  - Creates a nested SourceModule
+ *  - Creates an edge between the SourceModule's output and the ConfigurableModule's input
+ *  - Publishes the ConfigurableModule's 'configurable_output_x' as NestedModule's 'nested_module_output'
+ *  Outputs: nested_module_output:bool
+ */
 class NestedModule : public SegmentModule
 {
   public:
@@ -97,15 +115,15 @@ class NestedModule : public SegmentModule
 
     std::string module_name() const override;
 
-    bool m_was_configured{false};
-
   protected:
     void initialize(segment::Builder& builder) override;
-
-  private:
-    bool m_initialized;
 };
 
+/**
+ * Creates a data source that emits OutputTypeT data elements
+ * @tparam OutputTypeT Type of data to emit
+ * Outputs: source:OutputTypeT
+ */
 template <typename OutputTypeT>
 class TemplateModule : public SegmentModule
 {
@@ -116,11 +134,6 @@ class TemplateModule : public SegmentModule
     void initialize(segment::Builder& builder) override;
 
     std::string module_name() const override;
-
-    bool m_was_configured{false};
-
-  private:
-    bool m_initialized;
 };
 
 template <typename OutputTypeT>
@@ -164,6 +177,13 @@ void TemplateModule<OutputTypeT>::initialize(segment::Builder& builder)
     register_output_port("source", source);
 }
 
+/**
+ * Creates a data source that emits OutputTypeT data elements, and takes a lambda function used to initialize the
+ * emitted data element.
+ * @tparam OutputTypeT Type of data to emit
+ * @tparam Initializer Lambda function taking no inputs and returning a object of OutputTypeT
+ * Outputs: source:OutputTypeT
+ */
 template <typename OutputTypeT, OutputTypeT (*Initializer)()>
 class TemplateWithInitModule : public SegmentModule
 {
@@ -174,11 +194,6 @@ class TemplateWithInitModule : public SegmentModule
     void initialize(segment::Builder& builder) override;
 
     std::string module_name() const override;
-
-    bool m_was_configured{false};
-
-  private:
-    bool m_initialized;
 };
 
 template <typename OutputTypeT, OutputTypeT (*Initializer)()>

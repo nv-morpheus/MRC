@@ -34,6 +34,8 @@ namespace srf::pysrf {
 
 class ModuleRegistryProxy
 {
+    using registry_version_t = std::vector<unsigned int>;
+
   public:
     ModuleRegistryProxy() = default;
 
@@ -43,7 +45,7 @@ class ModuleRegistryProxy
 
     static std::map<std::string, std::vector<std::string>> registered_modules(ModuleRegistryProxy& self);
 
-    static bool is_version_compatible(ModuleRegistryProxy& self, const std::vector<unsigned int>& release_version);
+    static bool is_version_compatible(ModuleRegistryProxy& self, const registry_version_t& release_version);
 
     static pybind11::cpp_function find_module(ModuleRegistryProxy& self,
                                               const std::string& name,
@@ -51,13 +53,13 @@ class ModuleRegistryProxy
 
     static void register_module(ModuleRegistryProxy& self,
                                 std::string name,
-                                const std::vector<unsigned int>& release_version,
+                                const registry_version_t& release_version,
                                 std::function<void(srf::segment::Builder&)> fn_py_initializer);
 
     static void register_module(ModuleRegistryProxy& self,
                                 std::string name,
                                 std::string registry_namespace,
-                                const std::vector<unsigned int>& release_version,
+                                const registry_version_t& release_version,
                                 std::function<void(srf::segment::Builder&)> fn_py_initializer);
 
     static void unregister_module(ModuleRegistryProxy& self,

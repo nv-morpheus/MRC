@@ -29,11 +29,30 @@
 #include <utility>
 #include <vector>
 
+namespace {
+std::string version_to_string(const srf::modules::ModuleRegistry::registry_version_t& release_version)
+{
+    if (release_version.empty())
+    {
+        return {""};
+    }
+
+    std::stringstream sstream;
+    sstream << release_version[0];
+    std::for_each(release_version.begin() + 1, release_version.end(), [&sstream](unsigned int element) {
+        sstream << "." << element;
+    });
+
+    return sstream.str();
+}
+}  // namespace
+
 namespace srf::modules {
 
 const unsigned int ModuleRegistry::VersionElements{3};
 
-const std::vector<unsigned int> ModuleRegistry::Version{srf_VERSION_MAJOR, srf_VERSION_MINOR, srf_VERSION_PATCH};
+const ModuleRegistry::registry_version_t ModuleRegistry::Version{
+    srf_VERSION_MAJOR, srf_VERSION_MINOR, srf_VERSION_PATCH};
 
 ModuleRegistry::module_namespace_map_t ModuleRegistry::s_module_namespace_registry{
     {"default", ModuleRegistry::module_registry_map_t{}}};
@@ -77,7 +96,7 @@ ModuleRegistry::module_constructor_t ModuleRegistry::find_module(const std::stri
     std::stringstream sstream;
 
     sstream << "Module does not exist -> " << registry_namespace << "::" << name;
-    VLOG(2) << sstream.str();
+    LOG(ERROR) << sstream.str();
     throw std::invalid_argument(sstream.str());
 }
 
@@ -87,7 +106,7 @@ const ModuleRegistry::module_name_map_t& ModuleRegistry::registered_modules()
 }
 
 void ModuleRegistry::register_module(std::string name,
-                                     const std::vector<unsigned int>& release_version,
+                                     const registry_version_t& release_version,
                                      srf::modules::ModuleRegistry::module_constructor_t fn_constructor)
 {
     register_module(std::move(name), "default", release_version, fn_constructor);
@@ -95,7 +114,7 @@ void ModuleRegistry::register_module(std::string name,
 
 void ModuleRegistry::register_module(std::string name,
                                      std::string registry_namespace,
-                                     const std::vector<unsigned int>& release_version,
+                                     const registry_version_t& release_version,
                                      srf::modules::ModuleRegistry::module_constructor_t fn_constructor)
 {
     std::lock_guard<decltype(s_mutex)> lock(s_mutex);
@@ -103,8 +122,8 @@ void ModuleRegistry::register_module(std::string name,
     if (!is_version_compatible(release_version))
     {
         std::stringstream sstream;
-        sstream << "Failed to register module -> module version is: '" << version_to_string(release_version)
-                << "' and registry requires: '" << version_to_string(Version);
+        sstream << "Failed to register module -> module version is: '" << ::version_to_string(release_version)
+                << "' and registry requires: '" << ::version_to_string(Version);
 
         throw std::runtime_error(sstream.str());
     }
@@ -175,28 +194,12 @@ void ModuleRegistry::unregister_module(const std::string& name, const std::strin
     throw std::invalid_argument(sstream.str());
 }
 
-bool ModuleRegistry::is_version_compatible(const std::vector<unsigned int>& release_version)
+bool ModuleRegistry::is_version_compatible(const registry_version_t& release_version)
 {
     // TODO(devin) improve criteria for module compatibility
     return std::equal(ModuleRegistry::Version.begin(),
                       ModuleRegistry::Version.begin() + ModuleRegistry::VersionElements,
                       release_version.begin());
-}
-
-std::string ModuleRegistry::version_to_string(const std::vector<unsigned int>& release_version)
-{
-    if (release_version.empty())
-    {
-        return {""};
-    }
-
-    std::stringstream sstream;
-    sstream << release_version[0];
-    std::for_each(release_version.begin() + 1, release_version.end(), [&sstream](unsigned int element) {
-        sstream << "." << element;
-    });
-
-    return sstream.str();
 }
 
 }  // namespace srf::modules

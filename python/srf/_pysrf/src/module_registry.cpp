@@ -54,7 +54,7 @@ std::map<std::string, std::vector<std::string>> ModuleRegistryProxy::registered_
 }
 
 bool ModuleRegistryProxy::is_version_compatible(ModuleRegistryProxy& self,
-                                                const std::vector<unsigned int>& release_version)
+                                                const registry_version_t& release_version)
 {
     return modules::ModuleRegistry::is_version_compatible(release_version);
 }
@@ -74,7 +74,7 @@ pybind11::cpp_function ModuleRegistryProxy::find_module(srf::pysrf::ModuleRegist
 
 void ModuleRegistryProxy::register_module(srf::pysrf::ModuleRegistryProxy& self,
                                           std::string name,
-                                          const std::vector<unsigned int>& release_version,
+                                          const registry_version_t& release_version,
                                           std::function<void(srf::segment::Builder&)> fn_py_initializer)
 {
     register_module(self, name, "default", release_version, fn_py_initializer);
@@ -83,7 +83,7 @@ void ModuleRegistryProxy::register_module(srf::pysrf::ModuleRegistryProxy& self,
 void ModuleRegistryProxy::register_module(srf::pysrf::ModuleRegistryProxy& self,
                                           std::string name,
                                           std::string registry_namespace,
-                                          const std::vector<unsigned int>& release_version,
+                                          const registry_version_t& release_version,
                                           std::function<void(srf::segment::Builder&)> fn_py_initializer)
 {
     VLOG(2) << "Registering python module: " << registry_namespace << "::" << name;

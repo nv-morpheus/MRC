@@ -38,7 +38,8 @@ struct ModelRegistryUtil
                                          std::string registry_namespace,
                                          const std::vector<unsigned int>& release_version)
     {
-        static_assert(std::is_base_of_v<modules::SegmentModule, ModuleTypeT>);
+        static_assert(std::is_base_of_v<modules::SegmentModule, ModuleTypeT>,
+                      "ModuleTypeT must derive from SegmentModule");
 
         ModuleRegistry::register_module(std::move(name),
                                         std::move(registry_namespace),
