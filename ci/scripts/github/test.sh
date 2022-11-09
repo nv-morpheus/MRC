@@ -47,6 +47,11 @@ fi
 
 cmake -B build -G Ninja ${CMAKE_FLAGS} .
 
+if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
+  # TEMP: Rerun the build
+  cmake --build build --target all
+fi
+
 gpuci_logger "Running C++ Tests"
 cd ${SRF_ROOT}/build
 set +e
@@ -78,6 +83,9 @@ if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
     -f '^include/.*' -f '^python/.*' -f '^src/.*' \
     -e '^python/srf/_pysrf/tests/.*' -e '^python/srf/tests/.*' -e '^src/tests/.*' \
     -d -s
+
+  gpuci_logger "GCOV Report:"
+  cat build/gcovr-xml-report-cpp.xml
 fi
 
 gpuci_logger "Running Python Tests"
@@ -99,14 +107,16 @@ if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
     -e '^python/srf/_pysrf/tests/.*' -e '^python/srf/tests/.*' -e '^src/tests/.*' \
     -d -s
 
+  gpuci_logger "GCOV Report:"
+  build/gcovr-xml-report-py.xml
 
   # gpuci_logger "Generating codecov report"
   # cd ${SRF_ROOT}
   # cmake --build build --target gcovr-html-report gcovr-xml-report
 
-  # gpuci_logger "Archiving codecov report"
-  # tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${SRF_ROOT}/build/gcovr-html-report ${SRF_ROOT}/build/gcovr-xml-report.xml
-  # aws s3 cp ${WORKSPACE_TMP}/coverage_reports.tar.bz "${ARTIFACT_URL}/coverage_reports.tar.bz"
+  gpuci_logger "Archiving codecov report"
+  tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${SRF_ROOT}/build/gcovr-xml-report-*.xml
+  aws s3 cp ${WORKSPACE_TMP}/coverage_reports.tar.bz "${ARTIFACT_URL}/coverage_reports.tar.bz"
 
   gpuci_logger "Upload codecov report"
   /opt/conda/bin/codecov --root ${SRF_ROOT} -f ${SRF_ROOT}/build/gcovr-xml-report-cpp.xml -F cpp --no-gcov-out -X gcov
