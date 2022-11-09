@@ -45,18 +45,18 @@ add_library(${PROJECT_NAME}::pysrf ALIAS pysrf)
 
 target_link_libraries(pysrf
     PUBLIC
-    ${PROJECT_NAME}::libsrf
-    ${Python_LIBRARIES}
-    prometheus-cpp::core
-    pybind11::pybind11
+      ${PROJECT_NAME}::libsrf
+      ${Python_LIBRARIES}
+      prometheus-cpp::core
+      pybind11::pybind11
     )
 
 target_include_directories(pysrf
     PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<INSTALL_INTERFACE:include>
     PRIVATE
-    ${Python_INCLUDE_DIR}
+      ${Python_INCLUDE_DIR}
     )
 
 set_target_properties(pysrf PROPERTIES OUTPUT_NAME ${PROJECT_NAME}_pysrf)

@@ -39,33 +39,26 @@ class ModuleRegistryProxy
   public:
     ModuleRegistryProxy() = default;
 
-    static bool contains(ModuleRegistryProxy& self, const std::string& name, const std::string& registry_namespace);
+    static bool contains(const std::string& name, const std::string& registry_namespace);
 
-    static bool contains_namespace(ModuleRegistryProxy& self, const std::string& registry_namespace);
+    static bool contains_namespace(const std::string& registry_namespace);
 
-    static std::map<std::string, std::vector<std::string>> registered_modules(ModuleRegistryProxy& self);
+    static std::map<std::string, std::vector<std::string>> registered_modules();
 
-    static bool is_version_compatible(ModuleRegistryProxy& self, const registry_version_t& release_version);
+    static bool is_version_compatible(const registry_version_t& release_version);
 
-    static pybind11::cpp_function find_module(ModuleRegistryProxy& self,
-                                              const std::string& name,
-                                              const std::string& registry_namespace);
+    static pybind11::cpp_function find_module(const std::string& name, const std::string& registry_namespace);
 
-    static void register_module(ModuleRegistryProxy& self,
-                                std::string name,
+    static void register_module(std::string name,
                                 const registry_version_t& release_version,
                                 std::function<void(srf::segment::Builder&)> fn_py_initializer);
 
-    static void register_module(ModuleRegistryProxy& self,
-                                std::string name,
+    static void register_module(std::string name,
                                 std::string registry_namespace,
                                 const registry_version_t& release_version,
                                 std::function<void(srf::segment::Builder&)> fn_py_initializer);
 
-    static void unregister_module(ModuleRegistryProxy& self,
-                                  const std::string& name,
-                                  const std::string& registry_namespace,
-                                  bool optional = true);
+    static void unregister_module(const std::string& name, const std::string& registry_namespace, bool optional = true);
 
   private:
     /**
