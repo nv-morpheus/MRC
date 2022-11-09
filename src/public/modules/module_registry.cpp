@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "srf/experimental/modules/module_registry.hpp"
+#include "srf/modules/module_registry.hpp"
 
 #include "srf/version.hpp"
 

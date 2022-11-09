@@ -19,7 +19,7 @@
 
 #include "pysrf/types.hpp"
 
-#include "srf/experimental/modules/segment_modules.hpp"
+#include "srf/modules/segment_modules.hpp"
 #include "srf/segment/forward.hpp"
 #include "srf/segment/object.hpp"
 

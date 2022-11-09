@@ -24,7 +24,7 @@
 #include "pysrf/utils.hpp"
 
 #include "srf/channel/status.hpp"
-#include "srf/experimental/modules/segment_modules.hpp"
+#include "srf/modules/segment_modules.hpp"
 #include "srf/node/edge_connector.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/segment/definition.hpp"

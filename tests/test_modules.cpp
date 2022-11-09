@@ -19,9 +19,9 @@
 
 #include "srf/core/executor.hpp"
 #include "srf/engine/pipeline/ipipeline.hpp"
-#include "srf/experimental/modules/module_registry.hpp"
-#include "srf/experimental/modules/plugins.hpp"
-#include "srf/experimental/modules/sample_modules.hpp"
+#include "srf/modules/module_registry.hpp"
+#include "srf/modules/plugins.hpp"
+#include "srf/modules/sample_modules.hpp"
 #include "srf/options/options.hpp"
 #include "srf/segment/builder.hpp"
 

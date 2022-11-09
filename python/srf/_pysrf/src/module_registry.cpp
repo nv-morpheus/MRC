@@ -20,7 +20,7 @@
 #include "pysrf/py_segment_module.hpp"
 #include "pysrf/utils.hpp"
 
-#include "srf/experimental/modules/module_registry.hpp"
+#include "srf/modules/module_registry.hpp"
 
 #include <glog/logging.h>
 #include <nlohmann/json.hpp>
@@ -53,8 +53,7 @@ std::map<std::string, std::vector<std::string>> ModuleRegistryProxy::registered_
     return modules::ModuleRegistry::registered_modules();
 }
 
-bool ModuleRegistryProxy::is_version_compatible(ModuleRegistryProxy& self,
-                                                const registry_version_t& release_version)
+bool ModuleRegistryProxy::is_version_compatible(ModuleRegistryProxy& self, const registry_version_t& release_version)
 {
     return modules::ModuleRegistry::is_version_compatible(release_version);
 }

@@ -228,14 +228,14 @@ add_library(libsrf
   src/public/core/logging.cpp
   src/public/cuda/device_guard.cpp
   src/public/cuda/sync.cpp
-  src/public/experimental/modules/module_registry.cpp
-  src/public/experimental/modules/plugins.cpp
-  src/public/experimental/modules/sample_modules.cpp
-  src/public/experimental/modules/segment_modules.cpp
   src/public/manifold/manifold.cpp
   src/public/memory/buffer_view.cpp
   src/public/metrics/counter.cpp
   src/public/metrics/registry.cpp
+  src/public/modules/module_registry.cpp
+  src/public/modules/plugins.cpp
+  src/public/modules/sample_modules.cpp
+  src/public/modules/segment_modules.cpp
   src/public/node/edge_adapter_registry.cpp
   src/public/node/edge_builder.cpp
   src/public/node/edge_registry.cpp

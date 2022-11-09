@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-#include "srf/experimental/modules/sample_modules.hpp"
+#include "srf/modules/sample_modules.hpp"
 
 #include "pysrf/utils.hpp"
 
 #include "srf/channel/status.hpp"
-#include "srf/experimental/modules/module_registry_util.hpp"
+#include "srf/modules/module_registry_util.hpp"
 #include "srf/node/rx_source.hpp"
 #include "srf/version.hpp"
 

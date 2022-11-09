@@ -17,9 +17,9 @@
 
 #include "test_segment.hpp"
 
-#include "srf/experimental/modules/module_registry.hpp"
-#include "srf/experimental/modules/plugins.hpp"
-#include "srf/experimental/modules/sample_modules.hpp"
+#include "srf/modules/module_registry.hpp"
+#include "srf/modules/plugins.hpp"
+#include "srf/modules/sample_modules.hpp"
 #include "srf/version.hpp"
 
 #include <boost/filesystem.hpp>

@@ -17,8 +17,8 @@
 
 #include "test_segment.hpp"
 
-#include "srf/experimental/modules/module_registry_util.hpp"
-#include "srf/experimental/modules/sample_modules.hpp"
+#include "srf/modules/module_registry_util.hpp"
+#include "srf/modules/sample_modules.hpp"
 #include "srf/version.hpp"
 
 TEST_F(SegmentTests, ModuleRegistryUtilTest)

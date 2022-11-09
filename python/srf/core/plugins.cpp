@@ -19,7 +19,7 @@
 
 #include "pysrf/utils.hpp"
 
-#include "srf/experimental/modules/plugins.hpp"
+#include "srf/modules/plugins.hpp"
 #include "srf/version.hpp"
 
 #include <pybind11/cast.h>

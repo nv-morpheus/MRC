@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "srf/experimental/modules/module_registry.hpp"
-#include "srf/experimental/modules/segment_modules.hpp"
+#include "srf/modules/module_registry.hpp"
+#include "srf/modules/segment_modules.hpp"
 
 #include <dlfcn.h>
 #include <nlohmann/json.hpp>

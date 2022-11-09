@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "srf/experimental/modules/segment_modules.hpp"  // IWYU pragma: keep
+#include "srf/modules/segment_modules.hpp"  // IWYU pragma: keep
 #include "srf/segment/forward.hpp"
 
 #include <pybind11/pybind11.h>

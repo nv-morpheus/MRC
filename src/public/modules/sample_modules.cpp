@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-#include "srf/experimental/modules/sample_modules.hpp"
+#include "srf/modules/sample_modules.hpp"
 
 #include "rxcpp/operators/rx-map.hpp"
 #include "rxcpp/sources/rx-iterate.hpp"
 
 #include "srf/channel/status.hpp"
-#include "srf/experimental/modules/segment_modules.hpp"
+#include "srf/modules/segment_modules.hpp"
 #include "srf/node/rx_node.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"

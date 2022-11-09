@@ -21,7 +21,7 @@
 #include "srf/core/watcher.hpp"
 #include "srf/engine/segment/ibuilder.hpp"
 #include "srf/exceptions/runtime_error.hpp"
-#include "srf/experimental/modules/segment_modules.hpp"
+#include "srf/modules/segment_modules.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/rx_node.hpp"
 #include "srf/node/rx_sink.hpp"
