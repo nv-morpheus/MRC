@@ -68,11 +68,16 @@ if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
 
   gpuci_logger "Compiling coverage for C++ tests"
 
+  which gcovr
+  whereis gcovr
+  gcovr --version
+  gcovr --help
+
   # Run gcovr and delete the stats
-  gcovr -j 4 --gcov-executable x86_64-conda-linux-gnu-gcov --xml build/gcovr-xml-report-cpp.xml -r ${SRF_ROOT} --object-directory "$PWD/build" \
+  gcovr -j 4 --gcov-executable x86_64-conda-linux-gnu-gcov --xml build/gcovr-xml-report-cpp.xml --xml-pretty -r ${SRF_ROOT} --object-directory "$PWD/build" \
     -f '^include/.*' -f '^python/.*' -f '^src/.*' \
     -e '^python/srf/_pysrf/tests/.*' -e '^python/srf/tests/.*' -e '^src/tests/.*' \
-    -d -o gcovr.log
+    -d -s
 fi
 
 gpuci_logger "Running Python Tests"
@@ -89,10 +94,10 @@ if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
   gpuci_logger "Compiling coverage for Python tests"
 
   # Need to rerun gcovr for the python code now
-  gcovr -j 4 --gcov-executable x86_64-conda-linux-gnu-gcov --xml build/gcovr-xml-report-py.xml -r ${SRF_ROOT} --object-directory "$PWD/build" \
+  gcovr -j 4 --gcov-executable x86_64-conda-linux-gnu-gcov --xml build/gcovr-xml-report-py.xml --xml-pretty -r ${SRF_ROOT} --object-directory "$PWD/build" \
     -f '^include/.*' -f '^python/.*' -f '^src/.*' \
     -e '^python/srf/_pysrf/tests/.*' -e '^python/srf/tests/.*' -e '^src/tests/.*' \
-    -d -o gcovr.log
+    -d -s
 
 
   # gpuci_logger "Generating codecov report"
