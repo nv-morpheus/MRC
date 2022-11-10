@@ -27,14 +27,14 @@ packet_count = 0
 
 
 def test_contains_namespace():
-    registry = srf.ModuleRegistry()
+    registry = srf.ModuleRegistry
 
     assert registry.contains_namespace("xyz") is not True
     assert registry.contains_namespace("default")
 
 
 def test_contains():
-    registry = srf.ModuleRegistry()
+    registry = srf.ModuleRegistry
 
     assert registry.contains("SimpleModule", "srf_unittest")
     assert registry.contains("SourceModule", "srf_unittest")
@@ -43,7 +43,7 @@ def test_contains():
 
 
 def test_is_version_compatible():
-    registry = srf.ModuleRegistry()
+    registry = srf.ModuleRegistry
 
     release_version = [22, 11, 0]
     old_release_version = [22, 10, 0]
@@ -57,7 +57,7 @@ def test_is_version_compatible():
 
 
 def test_unregister_module():
-    registry = srf.ModuleRegistry()
+    registry = srf.ModuleRegistry
 
     registry_namespace = "srf_unittest2"
     simple_mod_name = "SimpleModule"
@@ -71,7 +71,7 @@ def test_unregister_module():
 
 
 def test_registered_modules():
-    registry = srf.ModuleRegistry()
+    registry = srf.ModuleRegistry
     registered_mod_dict = registry.registered_modules()
 
     assert "default" in registered_mod_dict
@@ -89,7 +89,7 @@ def module_init_nested_fn(builder: srf.Builder):
 
 # Purpose: Test basic dynamic module registration fails when given an incompatible version number
 def test_module_registry_register_bad_version():
-    registry = srf.ModuleRegistry()
+    registry = srf.ModuleRegistry
 
     # Bad version should result in a raised exception
     with pytest.raises(Exception):
@@ -98,7 +98,7 @@ def test_module_registry_register_bad_version():
 
 # Purpose: Test basic dynamic module registration and un-registration
 def test_module_registry_register_good_version():
-    registry = srf.ModuleRegistry()
+    registry = srf.ModuleRegistry
 
     registry.register_module("test_module_registry_register_good_version_module",
                              "srf_unittests",
@@ -110,7 +110,7 @@ def test_module_registry_register_good_version():
 # Purpose: Test basic dynamic module registration, and indirectly test correct shutdown/cleanup behavior
 def test_module_registry_register_good_version_no_unregister():
     # Ensure that we don"t throw any errors or hang if we don"t explicitly unregister the python module
-    registry = srf.ModuleRegistry()
+    registry = srf.ModuleRegistry
 
     registry.register_module("test_module_registry_register_good_version_no_unregister_module",
                              "srf_unittests",
@@ -119,7 +119,7 @@ def test_module_registry_register_good_version_no_unregister():
 
 
 def test_find_module():
-    registry = srf.ModuleRegistry()
+    registry = srf.ModuleRegistry
 
     # Retrieve the module constructor
     fn_constructor = registry.find_module("SimpleModule", "srf_unittest")
@@ -138,7 +138,7 @@ def test_module_intitialize():
 
     module_name = "test_py_source_from_cpp"
     config = {"source_count": 42}
-    registry = srf.ModuleRegistry()
+    registry = srf.ModuleRegistry
 
     def module_initializer(builder: srf.Builder):
 
@@ -222,7 +222,7 @@ def test_py_registered_nested_modules():
         packet_count = 0
         builder.load_module("test_py_registered_nested_module", "srf_unittests", "my_loaded_module!", {})
 
-    registry = srf.ModuleRegistry()
+    registry = srf.ModuleRegistry
     registry.register_module("test_py_registered_nested_module", "srf_unittests", VERSION, module_initializer)
 
     pipeline = srf.Pipeline()
@@ -265,7 +265,7 @@ def test_py_registered_nested_copied_modules():
         sink = builder.make_sink("sink", on_next, on_error, on_complete)
         builder.make_edge(source_mod.output_port("source"), sink)
 
-    registry = srf.ModuleRegistry()
+    registry = srf.ModuleRegistry
     registry.register_module("test_py_registered_nested_copied_module", "srf_unittests", VERSION, module_initializer)
 
     def init_wrapper(builder: srf.Builder):
@@ -306,7 +306,7 @@ def test_py_dynamic_module_source():
         source1 = builder.make_source("dynamic_module_source", gen_data)
         builder.register_module_output("source", source1)
 
-    registry = srf.ModuleRegistry()
+    registry = srf.ModuleRegistry
     registry.register_module(module_name, "srf_unittests", VERSION, module_initializer)
 
     def init_wrapper(builder: srf.Builder):
@@ -359,7 +359,7 @@ def test_py_dynamic_module_from_cpp_source():
         source_mod = builder.load_module("SourceModule", "srf_unittest", "ModuleSourceTest_mod1", config)
         builder.register_module_output("source", source_mod.output_port("source"))
 
-    registry = srf.ModuleRegistry()
+    registry = srf.ModuleRegistry
     registry.register_module(module_name, "srf_unittests", VERSION, module_initializer)
 
     def init_wrapper(builder: srf.Builder):
@@ -420,7 +420,7 @@ def test_py_dynamic_module_sink():
         sink = builder.make_sink("sink", on_next, on_error, on_complete)
         builder.register_module_input("sink", sink)
 
-    registry = srf.ModuleRegistry()
+    registry = srf.ModuleRegistry
     registry.register_module(module_name, "srf_unittests", VERSION, module_initializer)
 
     def init_wrapper(builder: srf.Builder):
@@ -462,7 +462,7 @@ def test_py_dynamic_module_from_cpp_sink():
         sink_mod = builder.load_module("SinkModule", "srf_unittest", "ModuleSinkTest_Mod1", config)
         builder.register_module_input("sink", sink_mod.input_port("sink"))
 
-    registry = srf.ModuleRegistry()
+    registry = srf.ModuleRegistry
     registry.register_module(module_name, "srf_unittests", VERSION, module_initializer)
 
     def gen_data():

@@ -214,8 +214,6 @@ PYBIND11_MODULE(segment, module)
     // SegmentModule.def("output_port_type_ids", &SegmentModuleProxy::output_port_type_id)
 
     /** Module Register Interface Declarations **/
-    SegmentModuleRegistry.def(py::init());
-
     SegmentModuleRegistry.def_static(
         "contains", &ModuleRegistryProxy::contains, py::arg("name"), py::arg("registry_namespace"));
 
