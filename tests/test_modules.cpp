@@ -48,6 +48,8 @@ TEST_F(SegmentTests, ModuleConstructorTest)
     auto mod4 = ConfigurableModule("InitModuleTest_4", config_2);
 
     ASSERT_EQ(mod4.config().contains("config_key_1"), true);
+
+    ASSERT_THROW(SimpleModule("bad/module/name"), std::invalid_argument);
 }
 
 TEST_F(SegmentTests, ModuleInitializationTest)
