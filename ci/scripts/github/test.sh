@@ -49,6 +49,7 @@ cmake -B build -G Ninja ${CMAKE_FLAGS} .
 
 if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
   # TEMP: Rerun the build
+  pip uninstall -y srf
   cmake --build build --target all
 fi
 
@@ -79,13 +80,13 @@ if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
   gcovr --help
 
   # Run gcovr and delete the stats
-  gcovr -j 4 --gcov-executable x86_64-conda-linux-gnu-gcov --xml build/gcovr-xml-report-cpp.xml --xml-pretty -r ${SRF_ROOT} --object-directory "$PWD/build" \
+  gcovr -j ${PARALLEL_LEVEL} --gcov-executable x86_64-conda-linux-gnu-gcov --xml build/gcovr-xml-report-cpp.xml --xml-pretty -r ${SRF_ROOT} --object-directory "$PWD/build" \
     -f '^include/.*' -f '^python/.*' -f '^src/.*' \
     -e '^python/srf/_pysrf/tests/.*' -e '^python/srf/tests/.*' -e '^src/tests/.*' \
     -d -s
 
-  gpuci_logger "GCOV Report:"
-  cat build/gcovr-xml-report-cpp.xml
+  # gpuci_logger "GCOV Report:"
+  # cat build/gcovr-xml-report-cpp.xml
 fi
 
 gpuci_logger "Running Python Tests"
@@ -102,13 +103,13 @@ if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
   gpuci_logger "Compiling coverage for Python tests"
 
   # Need to rerun gcovr for the python code now
-  gcovr -j 4 --gcov-executable x86_64-conda-linux-gnu-gcov --xml build/gcovr-xml-report-py.xml --xml-pretty -r ${SRF_ROOT} --object-directory "$PWD/build" \
+  gcovr -j ${PARALLEL_LEVEL} --gcov-executable x86_64-conda-linux-gnu-gcov --xml build/gcovr-xml-report-py.xml --xml-pretty -r ${SRF_ROOT} --object-directory "$PWD/build" \
     -f '^include/.*' -f '^python/.*' -f '^src/.*' \
     -e '^python/srf/_pysrf/tests/.*' -e '^python/srf/tests/.*' -e '^src/tests/.*' \
     -d -s
 
-  gpuci_logger "GCOV Report:"
-  cat build/gcovr-xml-report-py.xml
+  # gpuci_logger "GCOV Report:"
+  # cat build/gcovr-xml-report-py.xml
 
   # gpuci_logger "Generating codecov report"
   # cd ${SRF_ROOT}
