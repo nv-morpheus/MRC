@@ -20,6 +20,7 @@
 #include "pysrf/utils.hpp"
 
 #include "srf/modules/plugins.hpp"
+#include "srf/utils/string_utils.hpp"
 #include "srf/version.hpp"
 
 #include <pybind11/cast.h>
@@ -73,9 +74,7 @@ PYBIND11_MODULE(plugins, module)
 
     PluginModule.def("unload", &srf::modules::PluginModule::unload, py::arg("throw_on_error") = true);
 
-    std::stringstream sstream;
-    sstream << srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH;
-
-    module.attr("__version__") = sstream.str();
+    module.attr("__version__") =
+        SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
 }  // namespace srf::pysrf

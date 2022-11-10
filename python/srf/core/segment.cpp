@@ -29,6 +29,7 @@
 #include "srf/segment/builder.hpp"
 #include "srf/segment/definition.hpp"
 #include "srf/segment/object.hpp"  // IWYU pragma: keep
+#include "srf/utils/string_utils.hpp"
 #include "srf/version.hpp"
 
 #include <pybind11/cast.h>
@@ -254,9 +255,7 @@ PYBIND11_MODULE(segment, module)
                                      py::arg("registry_namespace"),
                                      py::arg("optional") = true);
 
-    std::stringstream sstream;
-    sstream << srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH;
-
-    module.attr("__version__") = sstream.str();
+    module.attr("__version__") =
+        SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
 }  // namespace srf::pysrf

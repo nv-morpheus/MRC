@@ -20,6 +20,7 @@
 #include "pysrf/types.hpp"  // for PyObjectObserver, PyObjectSubscriber, PyObjectObservable, PySubscription
 #include "pysrf/utils.hpp"
 
+#include "srf/utils/string_utils.hpp"
 #include "srf/version.hpp"
 
 #include <pybind11/attr.h>
@@ -75,9 +76,7 @@ PYBIND11_MODULE(subscriber, module)
              py::call_guard<py::gil_scoped_release>())
         .def("pipe", &ObservableProxy::pipe);
 
-    std::stringstream sstream;
-    sstream << srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH;
-
-    module.attr("__version__") = sstream.str();
+    module.attr("__version__") =
+        SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
 }  // namespace srf::pysrf

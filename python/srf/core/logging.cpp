@@ -18,6 +18,7 @@
 #include "pysrf/logging.hpp"
 
 #include "srf/core/logging.hpp"
+#include "srf/utils/string_utils.hpp"
 #include "srf/version.hpp"
 
 #include <pybind11/cast.h>
@@ -63,9 +64,7 @@ PYBIND11_MODULE(logging, module)
                py::arg("filename") = ""s,
                py::arg("line")     = 0);
 
-    std::stringstream sstream;
-    sstream << srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH;
-
-    module.attr("__version__") = sstream.str();
+    module.attr("__version__") =
+        SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
 }  // namespace srf::pysrf

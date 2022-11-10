@@ -21,6 +21,7 @@
 #include "pysrf/utils.hpp"
 
 #include "srf/segment/builder.hpp"  // IWYU pragma: keep
+#include "srf/utils/string_utils.hpp"
 #include "srf/version.hpp"
 
 #include <pybind11/functional.h>  // IWYU pragma: keep
@@ -66,9 +67,7 @@ PYBIND11_MODULE(pipeline, module)
                      const std::string&, py::list, py::list, const std::function<void(srf::segment::Builder&)>&)>(
                      &Pipeline::make_segment)));
 
-    std::stringstream sstream;
-    sstream << srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH;
-
-    module.attr("__version__") = sstream.str();
+    module.attr("__version__") =
+        SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
 }  // namespace srf::pysrf

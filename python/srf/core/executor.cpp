@@ -20,6 +20,7 @@
 #include "pysrf/utils.hpp"
 
 #include "srf/options/options.hpp"
+#include "srf/utils/string_utils.hpp"
 #include "srf/version.hpp"
 
 #include <pybind11/pybind11.h>
@@ -82,9 +83,7 @@ PYBIND11_MODULE(executor, module)
         .def("result", &PyBoostFuture::py_result)
         .def("set_result", &PyBoostFuture::set_result);
 
-    std::stringstream sstream;
-    sstream << srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH;
-
-    module.attr("__version__") = sstream.str();
+    module.attr("__version__") =
+        SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
 }  // namespace srf::pysrf
