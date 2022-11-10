@@ -108,7 +108,7 @@ if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
     -d -s
 
   gpuci_logger "GCOV Report:"
-  build/gcovr-xml-report-py.xml
+  cat build/gcovr-xml-report-py.xml
 
   # gpuci_logger "Generating codecov report"
   # cd ${SRF_ROOT}
