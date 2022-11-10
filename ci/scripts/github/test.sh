@@ -45,12 +45,17 @@ else
   CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES}"
 fi
 
-cmake -B build -G Ninja ${CMAKE_FLAGS} .
 
 if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
-  # TEMP: Rerun the build
+  # TEMP: Delete and rerun the build
   pip uninstall -y srf
+
+  rm -rf build
+
+  cmake -B build -G Ninja ${CMAKE_FLAGS} .
   cmake --build build --target all
+else
+  cmake -B build -G Ninja ${CMAKE_FLAGS} .
 fi
 
 gpuci_logger "Running C++ Tests"
