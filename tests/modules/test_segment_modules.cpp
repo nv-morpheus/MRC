@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "test_segment.hpp"
+#include "test_modules.hpp"
 
 #include "srf/core/executor.hpp"
 #include "srf/engine/pipeline/ipipeline.hpp"
@@ -34,7 +34,7 @@
 #include <utility>
 #include <vector>
 
-TEST_F(SegmentTests, ModuleConstructorTest)
+TEST_F(TestSegmentModules, ModuleConstructorTest)
 {
     using namespace modules;
 
@@ -52,7 +52,7 @@ TEST_F(SegmentTests, ModuleConstructorTest)
     ASSERT_THROW(SimpleModule("bad/module/name"), std::invalid_argument);
 }
 
-TEST_F(SegmentTests, ModuleInitializationTest)
+TEST_F(TestSegmentModules, ModuleInitializationTest)
 {
     using namespace modules;
 
@@ -111,7 +111,7 @@ TEST_F(SegmentTests, ModuleInitializationTest)
     executor.join();
 }
 
-TEST_F(SegmentTests, ModuleEndToEndTest)
+TEST_F(TestSegmentModules, ModuleEndToEndTest)
 {
     using namespace modules;
     unsigned int packets_1{0};
@@ -206,7 +206,7 @@ TEST_F(SegmentTests, ModuleEndToEndTest)
     EXPECT_EQ(packets_3, 4);
 }
 
-TEST_F(SegmentTests, ModuleAsSourceTest)
+TEST_F(TestSegmentModules, ModuleAsSourceTest)
 {
     using namespace modules;
 
@@ -241,7 +241,7 @@ TEST_F(SegmentTests, ModuleAsSourceTest)
     EXPECT_EQ(packet_count, 42);
 }
 
-TEST_F(SegmentTests, ModuleAsSinkTest)
+TEST_F(TestSegmentModules, ModuleAsSinkTest)
 {
     using namespace modules;
 
@@ -280,7 +280,7 @@ TEST_F(SegmentTests, ModuleAsSinkTest)
     EXPECT_EQ(packet_count, 43);
 }
 
-TEST_F(SegmentTests, ModuleChainingTest)
+TEST_F(TestSegmentModules, ModuleChainingTest)
 {
     using namespace modules;
 
@@ -310,7 +310,7 @@ TEST_F(SegmentTests, ModuleChainingTest)
     EXPECT_EQ(sink_mod->m_packet_count, 42);
 }
 
-TEST_F(SegmentTests, ModuleNestingTest)
+TEST_F(TestSegmentModules, ModuleNestingTest)
 {
     using namespace modules;
 
@@ -341,7 +341,7 @@ TEST_F(SegmentTests, ModuleNestingTest)
     EXPECT_EQ(packet_count, 4);
 }
 
-TEST_F(SegmentTests, ModuleTemplateTest)
+TEST_F(TestSegmentModules, ModuleTemplateTest)
 {
     using namespace modules;
 
@@ -401,7 +401,7 @@ auto F_1 = []() -> int { return 15; };
 auto F_2 = []() -> std::string { return "test string"; };
 #endif
 
-TEST_F(SegmentTests, ModuleTemplateWithInitTest)
+TEST_F(TestSegmentModules, ModuleTemplateWithInitTest)
 {
     using namespace modules;
 

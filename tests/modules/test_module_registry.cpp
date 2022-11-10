@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "test_segment.hpp"
+#include "test_modules.hpp"
 
 #include "srf/modules/module_registry.hpp"
 #include "srf/modules/plugins.hpp"
@@ -25,7 +25,7 @@
 #include <boost/filesystem.hpp>
 #include <dlfcn.h>
 
-TEST_F(SegmentTests, RegistryModuleTest)
+TEST_F(TestModuleRegistry, RegistryModuleTest)
 {
     using namespace modules;
 
@@ -62,7 +62,7 @@ TEST_F(SegmentTests, RegistryModuleTest)
         std::invalid_argument);
 }
 
-TEST_F(SegmentTests, ContainsNamespaceTest)
+TEST_F(TestModuleRegistry, ContainsNamespaceTest)
 {
     using namespace modules;
 
@@ -77,7 +77,7 @@ TEST_F(SegmentTests, ContainsNamespaceTest)
     EXPECT_EQ(hasNamespace_2, false);
 }
 
-TEST_F(SegmentTests, ContainsModuleTest)
+TEST_F(TestModuleRegistry, ContainsModuleTest)
 {
     using namespace modules;
 
@@ -92,7 +92,7 @@ TEST_F(SegmentTests, ContainsModuleTest)
     EXPECT_EQ(hasModule_2, false);
 }
 
-TEST_F(SegmentTests, FindModuleTest)
+TEST_F(TestModuleRegistry, FindModuleTest)
 {
     using namespace modules;
 
@@ -107,7 +107,7 @@ TEST_F(SegmentTests, FindModuleTest)
     EXPECT_THROW(ModuleRegistry::find_module(module_name_3, registry_namespace), std::invalid_argument);
 }
 
-TEST_F(SegmentTests, UnRegistrerModuleTest)
+TEST_F(TestModuleRegistry, UnRegistrerModuleTest)
 {
     using namespace modules;
 
@@ -126,7 +126,7 @@ TEST_F(SegmentTests, UnRegistrerModuleTest)
     EXPECT_THROW(ModuleRegistry::unregister_module(simple_mod_name, release_version_str, false), std::invalid_argument);
 }
 
-TEST_F(SegmentTests, VersionCompatibleTest)
+TEST_F(TestModuleRegistry, VersionCompatibleTest)
 {
     using namespace modules;
 
@@ -141,7 +141,7 @@ TEST_F(SegmentTests, VersionCompatibleTest)
     EXPECT_EQ(ModuleRegistry::is_version_compatible(no_version_minor_and_patch), false);
 }
 
-TEST_F(SegmentTests, RegisteredModulesTest)
+TEST_F(TestModuleRegistry, RegisteredModulesTest)
 {
     using namespace modules;
 
@@ -170,7 +170,7 @@ std::string get_modules_path()
     return modules_path;
 }
 
-TEST_F(SegmentTests, DynamicModuleLoadTest)
+TEST_F(TestModuleRegistry, DynamicModuleLoadTest)
 {
     void* module_handle;
     bool (*dummy_entrypoint)();
@@ -194,7 +194,7 @@ TEST_F(SegmentTests, DynamicModuleLoadTest)
     EXPECT_TRUE(dummy_entrypoint());
 }
 
-TEST_F(SegmentTests, DynamicModuleRegistrationTest)
+TEST_F(TestModuleRegistry, DynamicModuleRegistrationTest)
 {
     using namespace srf::modules;
     void* module_handle;
@@ -267,7 +267,7 @@ TEST_F(SegmentTests, DynamicModuleRegistrationTest)
     dlclose(module_handle);
 }
 
-TEST_F(SegmentTests, DynamicModulePluginInterfaceTest)
+TEST_F(TestModuleRegistry, DynamicModulePluginInterfaceTest)
 {
     using namespace srf::modules;
 
@@ -284,7 +284,7 @@ TEST_F(SegmentTests, DynamicModulePluginInterfaceTest)
     EXPECT_TRUE(plugin.use_count() == 2);
 }
 
-TEST_F(SegmentTests, DynamicModulePluginRegistrationTest)
+TEST_F(TestModuleRegistry, DynamicModulePluginRegistrationTest)
 {
     using namespace srf::modules;
 
@@ -339,7 +339,7 @@ TEST_F(SegmentTests, DynamicModulePluginRegistrationTest)
     EXPECT_TRUE(registered_modules.find("srf_unittest_cpp_dynamic_3") == registered_modules.end());
 }
 
-TEST_F(SegmentTests, DynamicModuleBadVersionTest)
+TEST_F(TestModuleRegistry, DynamicModuleBadVersionTest)
 {
     using namespace srf::modules;
     void* module_handle;
