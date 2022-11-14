@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "srf/experimental/modules/segment_modules.hpp"
+#include "srf/modules/segment_modules.hpp"
 
 #include "srf/node/sink_properties.hpp"
 #include "srf/node/source_properties.hpp"
@@ -27,7 +27,13 @@
 
 namespace srf::modules {
 
-SegmentModule::SegmentModule(std::string module_name) : m_module_instance_name(std::move(module_name)) {}
+SegmentModule::SegmentModule(std::string module_name) : m_module_instance_name(std::move(module_name))
+{
+    if (m_module_instance_name.find_first_of("/") != std::string::npos)
+    {
+        throw std::invalid_argument("Module name cannot contain '/' characters");
+    }
+}
 
 SegmentModule::SegmentModule(std::string module_name, nlohmann::json config) :
   m_module_instance_name(std::move(module_name)),

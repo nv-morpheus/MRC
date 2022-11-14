@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "srf/experimental/modules/module_registry_util.hpp"
-#include "srf/experimental/modules/segment_modules.hpp"
+#include "srf/modules/module_registry_util.hpp"
+#include "srf/modules/segment_modules.hpp"
 #include "srf/node/operators/broadcast.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/version.hpp"
@@ -80,7 +80,7 @@ void MirrorTapModule<DataTypeT>::initialize(segment::Builder& builder)
 
     builder.make_edge(bcast->make_source(), output);  // To next stage
     builder.make_edge(bcast->make_source(),
-                      builder.get_egress<DataTypeT>(m_egress_name));// to mirror tap
+                      builder.get_egress<DataTypeT>(m_egress_name));  // to mirror tap
 
     // Register the submodules output as one of this module's outputs
     register_input_port("in", input);

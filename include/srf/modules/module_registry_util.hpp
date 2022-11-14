@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "srf/experimental/modules/module_registry.hpp"
-#include "srf/experimental/modules/segment_modules.hpp"
+#include "srf/modules/module_registry.hpp"
+#include "srf/modules/segment_modules.hpp"
 
 #include <dlfcn.h>
 #include <nlohmann/json.hpp>
@@ -38,7 +38,8 @@ struct ModelRegistryUtil
                                          std::string registry_namespace,
                                          const std::vector<unsigned int>& release_version)
     {
-        static_assert(std::is_base_of_v<modules::SegmentModule, ModuleTypeT>);
+        static_assert(std::is_base_of_v<modules::SegmentModule, ModuleTypeT>,
+                      "ModuleTypeT must derive from SegmentModule");
 
         ModuleRegistry::register_module(std::move(name),
                                         std::move(registry_namespace),

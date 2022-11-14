@@ -19,9 +19,9 @@
 
 #include "srf/core/executor.hpp"
 #include "srf/engine/pipeline/ipipeline.hpp"
-#include "srf/experimental/modules/module_registry.hpp"
-#include "srf/experimental/modules/plugins.hpp"
-#include "srf/experimental/modules/sample_modules.hpp"
+#include "srf/modules/module_registry.hpp"
+#include "srf/modules/plugins.hpp"
+#include "srf/modules/sample_modules.hpp"
 #include "srf/options/options.hpp"
 #include "srf/segment/builder.hpp"
 
@@ -48,6 +48,8 @@ TEST_F(TestSegmentModules, ModuleConstructorTest)
     auto mod4 = ConfigurableModule("InitModuleTest_4", config_2);
 
     ASSERT_EQ(mod4.config().contains("config_key_1"), true);
+
+    ASSERT_THROW(SimpleModule("bad/module/name"), std::invalid_argument);
 }
 
 TEST_F(TestSegmentModules, ModuleInitializationTest)

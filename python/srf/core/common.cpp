@@ -24,6 +24,7 @@
 #include "srf/manifold/egress.hpp"
 #include "srf/node/sink_properties.hpp"
 #include "srf/node/source_properties.hpp"
+#include "srf/utils/string_utils.hpp"
 #include "srf/version.hpp"
 
 #include <boost/fiber/future/future.hpp>
@@ -60,9 +61,7 @@ PYBIND11_MODULE(common, module)
     EdgeAdapterUtil::register_data_adapters<PyHolder>();
     PortBuilderUtil::register_port_util<PyHolder>();
 
-    std::stringstream sstream;
-    sstream << srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH;
-
-    module.attr("__version__") = sstream.str();
+    module.attr("__version__") =
+        SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
 }  // namespace srf::pysrf

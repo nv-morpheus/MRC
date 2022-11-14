@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#include "srf/experimental/modules/module_registry_util.hpp"
-#include "srf/experimental/modules/segment_modules.hpp"
+#include "srf/modules/module_registry_util.hpp"
+#include "srf/modules/segment_modules.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/version.hpp"
 

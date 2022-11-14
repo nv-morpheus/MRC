@@ -42,6 +42,7 @@ class ModuleRegistry
     using module_registry_map_t  = std::map<std::string, module_constructor_t>;
     using module_namespace_map_t = std::map<std::string, module_registry_map_t>;
     using module_name_map_t      = std::map<std::string, std::vector<std::string>>;
+    using registry_version_t     = std::vector<unsigned int>;
 
     ModuleRegistry() = delete;
 
@@ -91,7 +92,7 @@ class ModuleRegistry
      */
     static void register_module(std::string name,
                                 std::string registry_namespace,
-                                const std::vector<unsigned int>& release_version,
+                                const registry_version_t& release_version,
                                 module_constructor_t fn_constructor);
 
     /**
@@ -107,17 +108,15 @@ class ModuleRegistry
      * registry version.
      * @return true if release version is compatible with registry version, false otherwise.
      */
-    static bool is_version_compatible(const std::vector<unsigned int>& release_version);
+    static bool is_version_compatible(const registry_version_t& release_version);
 
   private:
     static const unsigned int VersionElements;
-    static const std::vector<unsigned int> Version;
+    static const registry_version_t Version;
 
     static module_name_map_t s_module_name_map;
     static module_namespace_map_t s_module_namespace_registry;
     static std::recursive_mutex s_mutex;
-
-    static std::string version_to_string(const std::vector<unsigned int>& release_version);
 };
 
 }  // namespace srf::modules

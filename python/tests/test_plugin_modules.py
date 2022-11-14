@@ -54,7 +54,7 @@ def test_dynamic_module_registration():
     module_namespace = "srf_unittest_cpp_dynamic"
     module_name = "DynamicSourceModule"
 
-    registry = srf.ModuleRegistry()
+    registry = srf.ModuleRegistry
 
     assert registry.contains_namespace(module_namespace)
     assert registry.contains(module_name, module_namespace)
@@ -108,7 +108,7 @@ def test_dynamic_module_plugin_registration():
 
     module_name = "DynamicSourceModule"
 
-    registry = srf.ModuleRegistry()
+    registry = srf.ModuleRegistry
 
     assert registry.contains_namespace(module_namespace)
     assert registry.contains(module_name, module_namespace)
@@ -168,7 +168,7 @@ def test_dynamic_module_bad_version_test():
                             "DynamicSourceModule_BAD_Test",
                             config)
 
-    registry = srf.ModuleRegistry()
+    registry = srf.ModuleRegistry
 
     with pytest.raises(Exception):
         registry.register_module(module_name, module_namespace, BAD_VERSION, module_initializer)

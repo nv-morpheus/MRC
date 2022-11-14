@@ -19,8 +19,8 @@
 
 #include "srf/core/executor.hpp"
 #include "srf/engine/pipeline/ipipeline.hpp"
-#include "srf/experimental/modules/mirror_tap/mirror_tap_module.hpp"
-#include "srf/experimental/modules/module_registry.hpp"
+#include "srf/modules/mirror_tap/mirror_tap_module.hpp"
+#include "srf/modules/module_registry.hpp"
 #include "srf/options/options.hpp"
 #include "srf/segment/builder.hpp"
 
@@ -44,7 +44,7 @@ TEST_F(TestMirrorTapModule, InitailizationTest)
     using namespace modules;
 
     auto init_wrapper = [](segment::Builder& builder) {
-        auto config = nlohmann::json();
+        auto config     = nlohmann::json();
         auto mirror_tap = builder.make_module<MirrorTapModule<std::string>>("mirror_tap", config);
     };
 

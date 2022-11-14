@@ -20,7 +20,7 @@
 #include "pysrf/py_segment_module.hpp"
 #include "pysrf/utils.hpp"
 
-#include "srf/experimental/modules/module_registry.hpp"
+#include "srf/modules/module_registry.hpp"
 
 #include <glog/logging.h>
 #include <nlohmann/json.hpp>
@@ -35,33 +35,27 @@
 
 namespace srf::pysrf {
 
-bool ModuleRegistryProxy::contains(ModuleRegistryProxy& self,
-                                   const std::string& name,
-                                   const std::string& registry_namespace)
+bool ModuleRegistryProxy::contains(const std::string& name, const std::string& registry_namespace)
 {
     return srf::modules::ModuleRegistry::contains(name, registry_namespace);
 }
 
-bool ModuleRegistryProxy::contains_namespace(srf::pysrf::ModuleRegistryProxy& self,
-                                             const std::string& registry_namespace)
+bool ModuleRegistryProxy::contains_namespace(const std::string& registry_namespace)
 {
     return srf::modules::ModuleRegistry::contains_namespace(registry_namespace);
 }
 
-std::map<std::string, std::vector<std::string>> ModuleRegistryProxy::registered_modules(ModuleRegistryProxy& self)
+std::map<std::string, std::vector<std::string>> ModuleRegistryProxy::registered_modules()
 {
     return modules::ModuleRegistry::registered_modules();
 }
 
-bool ModuleRegistryProxy::is_version_compatible(ModuleRegistryProxy& self,
-                                                const std::vector<unsigned int>& release_version)
+bool ModuleRegistryProxy::is_version_compatible(const registry_version_t& release_version)
 {
     return modules::ModuleRegistry::is_version_compatible(release_version);
 }
 
-pybind11::cpp_function ModuleRegistryProxy::find_module(srf::pysrf::ModuleRegistryProxy& self,
-                                                        const std::string& name,
-                                                        const std::string& registry_namespace)
+pybind11::cpp_function ModuleRegistryProxy::find_module(const std::string& name, const std::string& registry_namespace)
 {
     auto fn_constructor    = modules::ModuleRegistry::find_module(name, registry_namespace);
     auto py_module_wrapper = [fn_constructor](std::string module_name, pybind11::dict config) {
@@ -72,18 +66,16 @@ pybind11::cpp_function ModuleRegistryProxy::find_module(srf::pysrf::ModuleRegist
     return py_module_wrapper;
 }
 
-void ModuleRegistryProxy::register_module(srf::pysrf::ModuleRegistryProxy& self,
-                                          std::string name,
-                                          const std::vector<unsigned int>& release_version,
+void ModuleRegistryProxy::register_module(std::string name,
+                                          const registry_version_t& release_version,
                                           std::function<void(srf::segment::Builder&)> fn_py_initializer)
 {
-    register_module(self, name, "default", release_version, fn_py_initializer);
+    register_module(name, "default", release_version, fn_py_initializer);
 }
 
-void ModuleRegistryProxy::register_module(srf::pysrf::ModuleRegistryProxy& self,
-                                          std::string name,
+void ModuleRegistryProxy::register_module(std::string name,
                                           std::string registry_namespace,
-                                          const std::vector<unsigned int>& release_version,
+                                          const registry_version_t& release_version,
                                           std::function<void(srf::segment::Builder&)> fn_py_initializer)
 {
     VLOG(2) << "Registering python module: " << registry_namespace << "::" << name;
@@ -99,8 +91,7 @@ void ModuleRegistryProxy::register_module(srf::pysrf::ModuleRegistryProxy& self,
     register_module_cleanup_fn(name, registry_namespace);
 }
 
-void ModuleRegistryProxy::unregister_module(srf::pysrf::ModuleRegistryProxy& self,
-                                            const std::string& name,
+void ModuleRegistryProxy::unregister_module(const std::string& name,
                                             const std::string& registry_namespace,
                                             bool optional)
 {

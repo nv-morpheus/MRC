@@ -17,7 +17,7 @@
 
 #include "srf/segment/builder.hpp"
 
-#include "srf/experimental/modules/module_registry.hpp"
+#include "srf/modules/module_registry.hpp"
 #include "srf/node/port_registry.hpp"
 
 #include <nlohmann/json.hpp>
@@ -92,11 +92,11 @@ std::shared_ptr<srf::modules::SegmentModule> Builder::load_module_from_registry(
                                                                                 nlohmann::json config)
 {
     auto fn_module_constructor = srf::modules::ModuleRegistry::find_module(module_id, registry_namespace);
-    auto module                = std::move(fn_module_constructor(std::move(module_name), std::move(config)));
+    auto module                = fn_module_constructor(std::move(module_name), std::move(config));
 
     init_module(module);
 
-    return std::move(module);
+    return module;
 }
 
 /** private implementations **/

@@ -19,7 +19,8 @@
 
 #include "pysrf/utils.hpp"
 
-#include "srf/experimental/modules/plugins.hpp"
+#include "srf/modules/plugins.hpp"
+#include "srf/utils/string_utils.hpp"
 #include "srf/version.hpp"
 
 #include <pybind11/cast.h>
@@ -53,6 +54,7 @@ PYBIND11_MODULE(plugins, module)
 
     // Common must be first in every module
     pysrf::import(module, "srf.core.common");
+    pysrf::import_module_object(module, "srf.core.segment", "SegmentModule");
 
     auto PluginModule =
         py::class_<srf::modules::PluginModule, std::shared_ptr<srf::modules::PluginModule>>(module, "PluginModule");
@@ -72,9 +74,7 @@ PYBIND11_MODULE(plugins, module)
 
     PluginModule.def("unload", &srf::modules::PluginModule::unload, py::arg("throw_on_error") = true);
 
-    std::stringstream sstream;
-    sstream << srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH;
-
-    module.attr("__version__") = sstream.str();
+    module.attr("__version__") =
+        SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
 }  // namespace srf::pysrf

@@ -24,11 +24,12 @@
 #include "pysrf/utils.hpp"
 
 #include "srf/channel/status.hpp"
-#include "srf/experimental/modules/segment_modules.hpp"
+#include "srf/modules/segment_modules.hpp"
 #include "srf/node/edge_connector.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/segment/definition.hpp"
 #include "srf/segment/object.hpp"  // IWYU pragma: keep
+#include "srf/utils/string_utils.hpp"
 #include "srf/version.hpp"
 
 #include <pybind11/cast.h>
@@ -213,53 +214,46 @@ PYBIND11_MODULE(segment, module)
     // SegmentModule.def("output_port_type_ids", &SegmentModuleProxy::output_port_type_id)
 
     /** Module Register Interface Declarations **/
-    SegmentModuleRegistry.def(py::init());
-
-    SegmentModuleRegistry.def(
+    SegmentModuleRegistry.def_static(
         "contains", &ModuleRegistryProxy::contains, py::arg("name"), py::arg("registry_namespace"));
 
-    SegmentModuleRegistry.def(
+    SegmentModuleRegistry.def_static(
         "contains_namespace", &ModuleRegistryProxy::contains_namespace, py::arg("registry_namespace"));
 
-    SegmentModuleRegistry.def("registered_modules", &ModuleRegistryProxy::registered_modules);
+    SegmentModuleRegistry.def_static("registered_modules", &ModuleRegistryProxy::registered_modules);
 
-    SegmentModuleRegistry.def(
+    SegmentModuleRegistry.def_static(
         "is_version_compatible", &ModuleRegistryProxy::is_version_compatible, py::arg("release_version"));
 
-    SegmentModuleRegistry.def(
+    SegmentModuleRegistry.def_static(
         "find_module", &ModuleRegistryProxy::find_module, py::arg("name"), py::arg("registry_namespace"));
 
-    SegmentModuleRegistry.def(
+    SegmentModuleRegistry.def_static(
         "register_module",
-        static_cast<void (*)(ModuleRegistryProxy&,
-                             std::string,
-                             const std::vector<unsigned int>&,
-                             std::function<void(srf::segment::Builder&)>)>(&ModuleRegistryProxy::register_module),
+        static_cast<void (*)(
+            std::string, const std::vector<unsigned int>&, std::function<void(srf::segment::Builder&)>)>(
+            &ModuleRegistryProxy::register_module),
         py::arg("name"),
         py::arg("release_version"),
         py::arg("fn_constructor"));
 
-    SegmentModuleRegistry.def(
+    SegmentModuleRegistry.def_static(
         "register_module",
-        static_cast<void (*)(ModuleRegistryProxy&,
-                             std::string,
-                             std::string,
-                             const std::vector<unsigned int>&,
-                             std::function<void(srf::segment::Builder&)>)>(&ModuleRegistryProxy::register_module),
+        static_cast<void (*)(
+            std::string, std::string, const std::vector<unsigned int>&, std::function<void(srf::segment::Builder&)>)>(
+            &ModuleRegistryProxy::register_module),
         py::arg("name"),
         py::arg("registry_namespace"),
         py::arg("release_version"),
         py::arg("fn_constructor"));
 
-    SegmentModuleRegistry.def("unregister_module",
-                              &ModuleRegistryProxy::unregister_module,
-                              py::arg("name"),
-                              py::arg("registry_namespace"),
-                              py::arg("optional") = true);
+    SegmentModuleRegistry.def_static("unregister_module",
+                                     &ModuleRegistryProxy::unregister_module,
+                                     py::arg("name"),
+                                     py::arg("registry_namespace"),
+                                     py::arg("optional") = true);
 
-    std::stringstream sstream;
-    sstream << srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH;
-
-    module.attr("__version__") = sstream.str();
+    module.attr("__version__") =
+        SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
 }  // namespace srf::pysrf

@@ -120,7 +120,7 @@ def test_py_constructor():
 
     config = {"config_key_1": True}
 
-    registry = srf.ModuleRegistry()
+    registry = srf.ModuleRegistry
 
     # Retrieve the module constructor
     fn_constructor = registry.find_module("SimpleModule", "srf_unittest")
@@ -156,7 +156,7 @@ def test_py_module_initialization():
 
         config = {"config_key_1": True}
 
-        registry = srf.ModuleRegistry()
+        registry = srf.ModuleRegistry
 
         source = builder.make_source("source", gen_data)
         source2 = builder.make_source("source2", gen_data)

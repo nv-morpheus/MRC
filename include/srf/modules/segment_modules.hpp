@@ -50,13 +50,13 @@ class SegmentModule
     const std::string& name() const;
 
     /**
-     * Return vector of input names -- these are only understood by the SegmentModule
+     * Return vector of input ids -- these are only understood by the SegmentModule
      * @return std::vector
      */
     const std::vector<std::string>& input_ids() const;
 
     /**
-     * Return a vector of output names -- these are only understood by the SegmentModule class
+     * Return a vector of output ids -- these are only understood by the SegmentModule class
      * @return std::vector
      */
     const std::vector<std::string>& output_ids() const;

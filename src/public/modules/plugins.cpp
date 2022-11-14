@@ -15,10 +15,11 @@
  * limitations under the License.
  */
 
-#include "srf/experimental/modules/plugins.hpp"
+#include "srf/modules/plugins.hpp"
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
+#include <boost/filesystem/path_traits.hpp>
 #include <dlfcn.h>
 #include <glog/logging.h>
 

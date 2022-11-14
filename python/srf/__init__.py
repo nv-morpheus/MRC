@@ -15,6 +15,7 @@
 
 from .core import logging
 from .core import operators
+from .core.common import __version__
 from .core.executor import Executor
 from .core.executor import Future
 from .core.node import SegmentObject
