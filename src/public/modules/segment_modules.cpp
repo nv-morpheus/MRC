@@ -27,8 +27,10 @@
 
 namespace srf::modules {
 
-SegmentModule::SegmentModule(std::string module_name) : m_module_instance_name(std::move(module_name)) {
-    if (m_module_instance_name.find_first_of("/") != std::string::npos) {
+SegmentModule::SegmentModule(std::string module_name) : m_module_instance_name(std::move(module_name))
+{
+    if (m_module_instance_name.find_first_of("/") != std::string::npos)
+    {
         throw std::invalid_argument("Module name cannot contain '/' characters");
     }
 }

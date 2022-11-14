@@ -67,7 +67,6 @@ class TestModules : public ::testing::Test
     std::shared_ptr<TestSegmentResources> m_resources;
 };
 
-using TestMirrorTapModule = TestModules;
-using TestModuleRegistry  = TestModules;
-using TestModuleUtil      = TestModules;
-using TestSegmentModules  = TestModules;
+using TestModuleRegistry  = TestModules; // NOLINT
+using TestModuleUtil      = TestModules; // NOLINT
+using TestSegmentModules  = TestModules; // NOLINT
