@@ -67,6 +67,6 @@ class TestModules : public ::testing::Test
     std::shared_ptr<TestSegmentResources> m_resources;
 };
 
-using TestModuleRegistry  = TestModules; // NOLINT
-using TestModuleUtil      = TestModules; // NOLINT
-using TestSegmentModules  = TestModules; // NOLINT
+using TestModuleRegistry = TestModules;  // NOLINT
+using TestModuleUtil     = TestModules;  // NOLINT
+using TestSegmentModules = TestModules;  // NOLINT
