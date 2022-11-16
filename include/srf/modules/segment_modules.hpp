@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "srf/core/utils.hpp"
 #include "srf/segment/forward.hpp"
 #include "srf/segment/object.hpp"
 

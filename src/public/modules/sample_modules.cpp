@@ -33,6 +33,7 @@
 
 #include <memory>
 #include <ostream>
+#include <string_view>
 #include <vector>
 
 namespace srf::modules {
