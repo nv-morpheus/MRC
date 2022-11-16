@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "test_srf.hpp"  // IWYU pragma: keep
+#include "../test_srf.hpp"  // IWYU pragma: keep
 
 #include "srf/core/executor.hpp"  // IWYU pragma: keep
 #include "srf/options/options.hpp"
@@ -52,7 +52,7 @@ class TestSegmentResources
     }
 };
 
-class TestSegment : public ::testing::Test
+class TestModules : public ::testing::Test
 {
   protected:
     void SetUp() override
@@ -63,26 +63,10 @@ class TestSegment : public ::testing::Test
 
     void TearDown() override {}
 
-    using ingress_types_t = segment::IngressPorts<int, int, double, std::string, float, std::size_t>;
-    using egress_types_t  = segment::EgressPorts<float, double, unsigned int, float>;
-
-    bool m_initializer_called = false;
-
-    std::shared_ptr<segment::ObjectProperties> m_w;
-    std::shared_ptr<segment::ObjectProperties> m_z;
-
-    ingress_types_t m_ingress_multi_port = ingress_types_t(
-        {"test_in_int1", "test_in_int2", "test_in_double", "test_in_string", "test_in_float", "test_in_sizet"});
-
-    egress_types_t m_egress_multi_port =
-        egress_types_t({"test_out_float", "test_out_double", "test_out_uint", "test_out_float2"});
-
-    // Sum of nodes created by Ingress Types and Egress Types
-    size_t m_InterfaceNodeCount;
-
-    std::function<void(segment::Builder&)> m_initializer = [this](segment::Builder& s) {
-        this->m_initializer_called = true;
-    };
     std::unique_ptr<pipeline::Pipeline> m_pipeline;
     std::shared_ptr<TestSegmentResources> m_resources;
 };
+
+using TestModuleRegistry = TestModules;  // NOLINT
+using TestModuleUtil     = TestModules;  // NOLINT
+using TestSegmentModules = TestModules;  // NOLINT

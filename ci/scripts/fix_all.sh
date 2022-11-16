@@ -59,7 +59,9 @@ fi
 # Run include-what-you-use
 if [[ "${SKIP_IWYU}" == "" ]]; then
 
-   IWYU_TOOL=$(find_iwyu_tool)
+   if [[ "${IWYU_TOOL}" == "" ]]; then
+      IWYU_TOOL=$(find_iwyu_tool)
+   fi
 
    if [[ -x "${IWYU_TOOL}" ]]; then
       echo "Running include-what-you-use from '${IWYU_TOOL}'..."

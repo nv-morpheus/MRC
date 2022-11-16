@@ -15,11 +15,20 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "tests")
 
-srf_add_pybind11_module(test_edges_cpp  SOURCE_FILES test_edges.cpp )
-srf_add_pybind11_module(sample_modules  SOURCE_FILES sample_modules.cpp)
+add_library(dynamic_test_module MODULE
+    dynamic_module.cpp
+)
 
-srf_add_pybind11_module(utils
-  SOURCE_FILES utils.cpp
+include_directories(dynamic_test_module
+  PUBLIC
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_link_libraries(dynamic_test_module
+    PUBLIC
+      rxcpp::rxcpp
+    PRIVATE
+      libsrf
 )
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

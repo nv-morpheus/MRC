@@ -27,6 +27,7 @@
 
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <typeindex>
 
@@ -43,6 +44,7 @@ std::shared_ptr<channel::IngressHandle> EdgeBuilder::ingress_adapter_for_sink(
 {
     VLOG(2) << "Looking for edge adapter: (" << source.source_type_name() << ", " << sink.sink_type_name() << ")";
     VLOG(2) << "- (" << source.source_type_hash() << ", " << sink.sink_type_hash() << ")";
+
     if (EdgeAdapterRegistry::has_source_adapter(source.source_type()))
     {
         auto adapter = EdgeAdapterRegistry::find_source_adapter(source.source_type());
@@ -56,8 +58,20 @@ std::shared_ptr<channel::IngressHandle> EdgeBuilder::ingress_adapter_for_sink(
     }
 
     // Fallback -- probably fail
-    auto fn_converter = srf::node::EdgeRegistry::find_converter(source.source_type(), sink.sink_type());
-    return fn_converter(ingress_handle);
+    try
+    {
+        auto fn_converter = srf::node::EdgeRegistry::find_converter(source.source_type(), sink.sink_type());
+        return fn_converter(ingress_handle);
+    } catch (std::runtime_error e)
+    {
+        // Last attempt, check if types are the same and return ingress handle.
+        if (source.source_type() == sink.sink_type())
+        {
+            return ingress_handle;
+        }
+
+        throw e;
+    }
 }
 
 std::shared_ptr<channel::IngressHandle> EdgeBuilder::ingress_for_source_type(

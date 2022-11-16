@@ -326,7 +326,7 @@ def test_ingress_egress_custom_type_construction():
 
     def init1(builder: srf.Builder):
         source = builder.make_source("source", gen_data)
-        egress = builder.get_egress("b")
+        egress = builder.get_egress("a")
 
         builder.make_edge(source, egress)
 
@@ -341,7 +341,7 @@ def test_ingress_egress_custom_type_construction():
         def on_complete():
             pass
 
-        ingress = builder.get_ingress("b")
+        ingress = builder.get_ingress("a")
         sink = builder.make_sink("sink", on_next, on_error, on_complete)
 
         builder.make_edge(ingress, sink)

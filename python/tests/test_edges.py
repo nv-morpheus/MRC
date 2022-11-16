@@ -83,13 +83,13 @@ def test_edge_cpp_to_py_same():
         source = m.SourceDerivedB(seg, "source")
 
         def on_next(x: m.Base):
-            print("Got: {}".format(type(x)))
+            pass
 
         def on_error(e):
             pass
 
         def on_complete():
-            print("Complete")
+            pass
 
         sink = seg.make_sink("sink", on_next, on_error, on_complete)
         seg.make_edge(source, sink)
@@ -163,7 +163,6 @@ def test_edge_wrapper():
 
         def on_next(x: int):
             nonlocal on_next_count
-            print("Got: {}".format(type(x)))
 
             on_next_count += 1
 
@@ -171,7 +170,7 @@ def test_edge_wrapper():
             pass
 
         def on_complete():
-            print("Complete")
+            pass
 
         sink = seg.make_sink("sink", on_next, on_error, on_complete)
         seg.make_edge(node, sink)
@@ -232,7 +231,7 @@ def test_multi_segment():
 
         # This method will get called each time the sink gets a value
         def sink_on_next(x: MyCustomClass):
-            print("Sink: Got Obj Name: {}, Value: {}".format(x.name, x.value))
+            pass
 
         def sink_on_next_untyped(input):
             pass
