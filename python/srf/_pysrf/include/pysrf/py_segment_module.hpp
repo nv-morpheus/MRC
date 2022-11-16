@@ -41,6 +41,7 @@ class ModuleRegistryProxy;
  */
 class PythonSegmentModule : public srf::modules::SegmentModule
 {
+    using type_t = PythonSegmentModule;
     friend ModuleRegistryProxy;
 
   public:
@@ -51,6 +52,7 @@ class PythonSegmentModule : public srf::modules::SegmentModule
 
   protected:
     void initialize(segment::Builder& builder) override;
+    std::string module_type_name() const override;
 
   private:
     py_initializer_t m_py_initialize{};

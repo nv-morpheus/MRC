@@ -47,7 +47,8 @@ class ModuleRegistryProxy
 
     static bool is_version_compatible(const registry_version_t& release_version);
 
-    static pybind11::cpp_function find_module(const std::string& name, const std::string& registry_namespace);
+    static pybind11::cpp_function get_module_constructor(const std::string& name,
+                                                         const std::string& registry_namespace);
 
     static void register_module(std::string name,
                                 const registry_version_t& release_version,

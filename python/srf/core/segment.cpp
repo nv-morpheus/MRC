@@ -195,7 +195,7 @@ PYBIND11_MODULE(segment, module)
 
     SegmentModule.def("input_ports", &SegmentModuleProxy::input_ports);
 
-    SegmentModule.def("module_name", &SegmentModuleProxy::module_name);
+    SegmentModule.def("module_type_name", &SegmentModuleProxy::module_type_name);
 
     SegmentModule.def("name", &SegmentModuleProxy::name);
 
@@ -225,8 +225,10 @@ PYBIND11_MODULE(segment, module)
     SegmentModuleRegistry.def_static(
         "is_version_compatible", &ModuleRegistryProxy::is_version_compatible, py::arg("release_version"));
 
-    SegmentModuleRegistry.def_static(
-        "find_module", &ModuleRegistryProxy::find_module, py::arg("name"), py::arg("registry_namespace"));
+    SegmentModuleRegistry.def_static("get_module_constructor",
+                                     &ModuleRegistryProxy::get_module_constructor,
+                                     py::arg("name"),
+                                     py::arg("registry_namespace"));
 
     SegmentModuleRegistry.def_static(
         "register_module",

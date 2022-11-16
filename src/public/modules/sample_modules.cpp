@@ -21,6 +21,7 @@
 #include "rxcpp/sources/rx-iterate.hpp"
 
 #include "srf/channel/status.hpp"
+#include "srf/core/utils.hpp"
 #include "srf/modules/segment_modules.hpp"
 #include "srf/node/rx_node.hpp"
 #include "srf/node/rx_sink.hpp"
@@ -97,6 +98,11 @@ void SimpleModule::initialize(segment::Builder& builder)
     m_initialized = true;
 }
 
+std::string SimpleModule::module_type_name() const
+{
+    return std::string(::srf::type_name<type_t>());
+}
+
 ConfigurableModule::ConfigurableModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
 ConfigurableModule::ConfigurableModule(std::string module_name, nlohmann::json config) :
   SegmentModule(std::move(module_name), std::move(config))
@@ -134,6 +140,11 @@ void ConfigurableModule::initialize(segment::Builder& builder)
     m_initialized = true;
 }
 
+std::string ConfigurableModule::module_type_name() const
+{
+    return std::string(::srf::type_name<type_t>());
+}
+
 SourceModule::SourceModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
 SourceModule::SourceModule(std::string module_name, nlohmann::json config) :
   SegmentModule(std::move(module_name), std::move(config))
@@ -164,6 +175,11 @@ void SourceModule::initialize(segment::Builder& builder)
     register_output_port("source", source);
 }
 
+std::string SourceModule::module_type_name() const
+{
+    return std::string(::srf::type_name<type_t>());
+}
+
 SinkModule::SinkModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
 SinkModule::SinkModule(std::string module_name, nlohmann::json config) :
   SegmentModule(std::move(module_name), std::move(config))
@@ -180,15 +196,15 @@ void SinkModule::initialize(segment::Builder& builder)
     register_input_port("sink", sink);
 }
 
+std::string SinkModule::module_type_name() const
+{
+    return std::string(::srf::type_name<type_t>());
+}
+
 NestedModule::NestedModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
 NestedModule::NestedModule(std::string module_name, nlohmann::json config) :
   SegmentModule(std::move(module_name), std::move(config))
 {}
-
-std::string NestedModule::module_name() const
-{
-    return "[nested_module]";
-}
 
 void NestedModule::initialize(segment::Builder& builder)
 {
@@ -207,4 +223,8 @@ void NestedModule::initialize(segment::Builder& builder)
     register_output_port("nested_module_output", configurable_mod->output_port("configurable_output_x"));
 }
 
+std::string NestedModule::module_type_name() const
+{
+    return std::string(::srf::type_name<type_t>());
+}
 }  // namespace srf::modules

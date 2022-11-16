@@ -42,7 +42,7 @@ class SegmentModuleProxy
 
     static const std::string& name(srf::modules::SegmentModule& self);
 
-    static std::string module_name(srf::modules::SegmentModule& self);
+    static std::string module_type_name(srf::modules::SegmentModule& self);
 
     static std::vector<std::string> input_ids(srf::modules::SegmentModule& self);
 
