@@ -17,9 +17,11 @@
 
 #pragma once
 
+#include "srf/codable/api.hpp"
 #include "srf/pubsub/api.hpp"
 #include "srf/pubsub/publisher.hpp"
 #include "srf/pubsub/publisher_policy.hpp"
+#include "srf/pubsub/subscriber.hpp"
 
 #include <string>
 
@@ -31,14 +33,26 @@ class IResources
     ~IResources() = default;
 
     template <typename T>
-    pubsub::Publisher<T> make_publisher(std::string name, pubsub::PublisherPolicy policy)
+    std::unique_ptr<pubsub::Publisher<T>> make_publisher(std::string name, pubsub::PublisherPolicy policy)
     {
-        return {create_publisher(name, policy)};
+        return {new pubsub::Publisher<T>(await_create_publisher_service(name, policy))};
+    }
+
+    template <typename T>
+    std::unique_ptr<pubsub::Subscriber<T>> make_subscriber(std::string name)
+    {
+        auto subscriber = std::unique_ptr<pubsub::Subscriber<T>>(new pubsub::Subscriber<T>());
+        auto service    = await_create_subscriber_service(subscriber.m_decoder);
+        subscriber->attach_service(std::move(service));
+        return subscriber;
     }
 
   private:
-    virtual std::unique_ptr<pubsub::IPublisher> create_publisher(const std::string& name,
-                                                                 const pubsub::PublisherPolicy& policy) = 0;
+    virtual std::unique_ptr<pubsub::IPublisher> await_create_publisher_service(
+        const std::string& name, const pubsub::PublisherPolicy& policy) = 0;
+
+    virtual std::unique_ptr<pubsub::IPublisher> await_create_subscriber_service(
+        std::function<void(std::unique_ptr<codable::IDecodableStorage>)> decoder) = 0;
 };
 
 }  // namespace srf::runtime

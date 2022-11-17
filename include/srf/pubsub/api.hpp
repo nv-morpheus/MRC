@@ -19,30 +19,43 @@
 
 #include "srf/codable/api.hpp"
 #include "srf/codable/encoded_object.hpp"
+#include "srf/node/sink_channel.hpp"
 #include "srf/node/source_channel.hpp"
 
 #include <string>
 
 namespace srf::pubsub {
 
-struct IService
+struct ISubscriptionService
 {
-    virtual ~IService() = default;
+    virtual ~ISubscriptionService() = default;
 
     virtual const std::string& service_name() const = 0;
     virtual const std::uint64_t& tag() const        = 0;
+
+    virtual bool is_live() const = 0;
+
+    virtual void stop()       = 0;
+    virtual void kill()       = 0;
+    virtual void await_join() = 0;
 };
 
-class IPublisher : public IService, public node::SourceChannelWriteable<std::unique_ptr<srf::codable::EncodedStorage>>
+class IPublisher : public ISubscriptionService, public node::SourceChannelWriteable<std::unique_ptr<srf::codable::EncodedStorage>>
 {
   public:
-    using elemnent_type = std::unique_ptr<srf::codable::EncodedStorage>;
+    using element_type = std::unique_ptr<srf::codable::EncodedStorage>;
 
-    ~IPublisher() override                                             = default;
+    ~IPublisher() override = default;
+
     virtual std::unique_ptr<codable::ICodableStorage> create_storage() = 0;
 };
 
-class ISubscriber : public IService, public node::SinkProperties<std::unique_ptr<codable::IDecodableStorage>>
-{};
+class ISubscriber : public ISubscriptionService
+{
+  public:
+    using element_type = std::unique_ptr<srf::codable::IDecodableStorage>;
+
+    ~ISubscriber() override = default;
+};
 
 }  // namespace srf::pubsub

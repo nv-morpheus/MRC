@@ -17,44 +17,47 @@
 
 #pragma once
 
-#include "srf/channel/ingress.hpp"
-#include "srf/codable/encoded_object.hpp"
 #include "srf/pubsub/api.hpp"
-#include "srf/pubsub/subscription_service.hpp"
-#include "srf/runtime/forward.hpp"
 
 namespace srf::pubsub {
 
-template <typename T>
-class Publisher final : public channel::Ingress<T>, public SubscriptionService
+class SubscriptionService : public ISubscriptionService
 {
   public:
-    ~Publisher() final
+    ~SubscriptionService() override = default;
+
+    const std::string& service_name() const final
     {
-        stop();
-        await_join();
+        return service().service_name();
     }
 
-    inline channel::Status await_write(T&& data) final
+    const std::uint64_t& tag() const final
     {
-        auto encoded_object = codable::EncodedObject<T>::create(std::move(data), m_service->create_storage());
-        return m_service->await_write(std::move(encoded_object));
+        return service().tag();
+    }
+
+    void stop() final
+    {
+        service().stop();
+    }
+
+    void kill() final
+    {
+        service().kill();
+    }
+
+    bool is_live() const final
+    {
+        return service().is_live();
+    }
+
+    void await_join() final
+    {
+        service().await_join();
     }
 
   private:
-    Publisher(std::unique_ptr<IPublisher> publisher) : m_service(std::move(publisher))
-    {
-        CHECK(m_service);
-    }
-
-    ISubscriptionService& service() const final
-    {
-        return *m_service;
-    }
-
-    const std::unique_ptr<IPublisher> m_service;
-
-    friend runtime::IResources;
+    virtual ISubscriptionService& service() const = 0;
 };
 
 }  // namespace srf::pubsub

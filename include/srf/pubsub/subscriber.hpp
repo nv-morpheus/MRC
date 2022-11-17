@@ -17,32 +17,49 @@
 
 #pragma once
 
-#include "srf/channel/ingress.hpp"
+#include "srf/codable/api.hpp"
+#include "srf/codable/decode.hpp"
 #include "srf/codable/encoded_object.hpp"
+#include "srf/node/source_channel.hpp"
 #include "srf/pubsub/api.hpp"
+#include "srf/pubsub/subscription_service.hpp"
 #include "srf/runtime/forward.hpp"
 
 namespace srf::pubsub {
 
 template <typename T>
-class Publisher : public channel::Ingress<T>
+class Subscriber final : public node::SourceChannel<T>, public SubscriptionService
 {
   public:
-    inline channel::Status await_write(T&& data) final
+    ~Subscriber() final
     {
-        if (m_publisher)
-        {
-            auto encoded_object = codable::EncodedObject<T>::create(std::move(data), m_publisher->create_storage());
-            m_publisher->await_write(std::move(encoded_object));
-        }
-
-        return channel::Status::error;
+        stop();
+        await_join();
     }
 
   private:
-    Publisher(std::unique_ptr<IPublisher> publisher);
-    std::unique_ptr<IPublisher> m_publisher;
+    Subscriber()
+    {
+        m_decoder = [this](std::unique_ptr<codable::IDecodableStorage> encoding) {
+            auto obj = codable::Decoder<T>(*encoding).deserialize();
+            this->await_write(std::move(obj));
+        };
+    }
 
+    void attach_service(std::unique_ptr<ISubscriber> service)
+    {
+        CHECK(service && !m_service);
+        m_service = std::move(service);
+    }
+
+    ISubscriptionService& service() const final
+    {
+        CHECK(m_service);
+        return *m_service;
+    }
+
+    std::function<void(std::unique_ptr<codable::IDecodableStorage>)> m_decoder;
+    std::unique_ptr<ISubscriber> m_service;
     friend runtime::IResources;
 };
 

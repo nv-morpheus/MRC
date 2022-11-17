@@ -47,6 +47,26 @@ class Publisher final : public srf::pubsub::IPublisher
     const std::uint64_t& tag() const final;
     std::unique_ptr<srf::codable::ICodableStorage> create_storage() final;
 
+    void stop() final
+    {
+        this->release_channel();
+    }
+
+    void kill() final
+    {
+        this->release_channel();
+    }
+
+    bool is_live() const final
+    {
+        return this->has_channel();
+    }
+
+    void await_join() final
+    {
+        this->release_channel();
+    }
+
   private:
     const std::string m_service_name;
     const std::uint64_t m_tag;
