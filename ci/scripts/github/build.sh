@@ -18,34 +18,27 @@ set -e
 
 source ${WORKSPACE}/ci/scripts/github/common.sh
 
-gpuci_logger "Creating conda env"
-mamba env create -n srf -q --file ${CONDA_ENV_YML}
-conda deactivate
-conda activate srf
-
-mamba env update -q -n srf --file ${SRF_ROOT}/ci/conda/environments/ci_env.yml
+update_conda_env
 
 CMAKE_CACHE_FLAGS="-DCCACHE_PROGRAM_PATH=$(which sccache) -DSRF_USE_CCACHE=ON"
 
-gpuci_logger "Check versions"
+rapids-logger "Check versions"
 python3 --version
 cmake --version
 ninja --version
 
 if [[ "${BUILD_CC}" == "gcc" ]]; then
-    gpuci_logger "Building with GCC"
+    rapids-logger "Building with GCC"
     gcc --version
     g++ --version
     CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES} ${CMAKE_CACHE_FLAGS}"
 elif [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
-    gpuci_logger "Building with GCC with gcov profile '-g -fprofile-arcs -ftest-coverage"
+    rapids-logger "Building with GCC with gcov profile '-g -fprofile-arcs -ftest-coverage"
     gcc --version
     g++ --version
     CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES} ${CMAKE_BUILD_WITH_CODECOV} ${CMAKE_CACHE_FLAGS}"
 else
-    gpuci_logger "Installing Clang"
-    mamba env update -q -n srf --file ${SRF_ROOT}/ci/conda/environments/clang_env.yml
-    gpuci_logger "Building with Clang"
+    rapids-logger "Building with Clang"
     clang --version
     clang++ --version
     CMAKE_CLANG_OPTIONS="-DCMAKE_C_COMPILER:FILEPATH=$(which clang) -DCMAKE_CXX_COMPILER:FILEPATH=$(which clang++) -DCMAKE_CUDA_COMPILER:FILEPATH=$(which nvcc)"
@@ -54,37 +47,22 @@ fi
 
 show_conda_info
 
-gpuci_logger "Configuring for build and test"
+rapids-logger "Configuring for build and test"
 cmake -B build -G Ninja ${CMAKE_FLAGS} .
 
-gpuci_logger "Building SRF"
+rapids-logger "Building SRF"
 cmake --build build --parallel ${PARALLEL_LEVEL}
 
-gpuci_logger "sccache usage for SRF build:"
+rapids-logger "sccache usage for SRF build:"
 sccache --show-stats
 
-gpuci_logger "Installing SRF"
-cmake -P ${SRF_ROOT}/build/cmake_install.cmake
-pip install ${SRF_ROOT}/build/python
-
-gpuci_logger "Archiving results"
-mamba pack --quiet --force --ignore-missing-files --n-threads ${PARALLEL_LEVEL} -n srf -o ${WORKSPACE_TMP}/conda_env.tar.gz
-tar cfj "${WORKSPACE_TMP}/cpp_tests.tar.bz" $(find build/ -name "*.x")
-tar cfj "${WORKSPACE_TMP}/dsos.tar.bz" $(find build/ -name "*.so")
-tar cfj "${WORKSPACE_TMP}/python_build.tar.bz" build/python
-if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
-    tar cfj "${WORKSPACE_TMP}/dot_cache.tar.bz" .cache
-fi
-
+rapids-logger "Archiving results"
+tar cfj "${WORKSPACE_TMP}/dot_cache.tar.bz" .cache
+tar cfj "${WORKSPACE_TMP}/build.tar.bz" build
 ls -lh ${WORKSPACE_TMP}/
 
-gpuci_logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
-aws s3 cp --no-progress "${WORKSPACE_TMP}/conda_env.tar.gz" "${ARTIFACT_URL}/conda_env.tar.gz"
-aws s3 cp --no-progress "${WORKSPACE_TMP}/cpp_tests.tar.bz" "${ARTIFACT_URL}/cpp_tests.tar.bz"
-aws s3 cp --no-progress "${WORKSPACE_TMP}/dsos.tar.bz" "${ARTIFACT_URL}/dsos.tar.bz"
-aws s3 cp --no-progress "${WORKSPACE_TMP}/python_build.tar.bz" "${ARTIFACT_URL}/python_build.tar.bz"
-if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
-    aws s3 cp --no-progress  "${WORKSPACE_TMP}/dot_cache.tar.bz" "${ARTIFACT_URL}/dot_cache.tar.bz"
-fi
+rapids-logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
+aws s3 cp --no-progress "${WORKSPACE_TMP}/build.tar.bz" "${ARTIFACT_URL}/build.tar.bz"
+aws s3 cp --no-progress "${WORKSPACE_TMP}/dot_cache.tar.bz" "${ARTIFACT_URL}/dot_cache.tar.bz"
 
-gpuci_logger "Success"
+rapids-logger "Success"

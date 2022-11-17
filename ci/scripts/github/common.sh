@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-gpuci_logger "Env Setup"
+rapids-logger "Env Setup"
 source /opt/conda/etc/profile.d/conda.sh
 export SRF_ROOT=${SRF_ROOT:-$(git rev-parse --show-toplevel)}
 cd ${SRF_ROOT}
@@ -23,12 +23,12 @@ cd ${SRF_ROOT}
 # will be defined specifying the subset we are allowed to use.
 NUM_CORES=$(nproc)
 export PARALLEL_LEVEL=${PARALLEL_LEVEL:-${NUM_CORES}}
-gpuci_logger "Procs: ${NUM_CORES}"
-gpuci_logger "Memory"
+rapids-logger "Procs: ${NUM_CORES}"
+rapids-logger "Memory"
 
 /usr/bin/free -g
 
-gpuci_logger "user info"
+rapids-logger "user info"
 id
 
 # NUM_PROC is used by some of the other scripts
@@ -36,7 +36,7 @@ export NUM_PROC=${PARALLEL_LEVEL:-$(nproc)}
 
 export CONDA_ENV_YML="${SRF_ROOT}/ci/conda/environments/dev_env.yml"
 
-export CMAKE_BUILD_ALL_FEATURES="-DCMAKE_MESSAGE_CONTEXT_SHOW=ON -DSRF_BUILD_BENCHMARKS=ON -DSRF_BUILD_EXAMPLES=ON -DSRF_BUILD_PYTHON=ON -DSRF_BUILD_TESTS=ON -DSRF_USE_CONDA=ON"
+export CMAKE_BUILD_ALL_FEATURES="-DCMAKE_MESSAGE_CONTEXT_SHOW=ON -DSRF_BUILD_BENCHMARKS=ON -DSRF_BUILD_EXAMPLES=ON -DSRF_BUILD_PYTHON=ON -DSRF_BUILD_TESTS=ON -DSRF_USE_CONDA=ON -DSRF_PYTHON_BUILD_STUBS=ON"
 export CMAKE_BUILD_WITH_CODECOV="-DCMAKE_BUILD_TYPE=Debug -DSRF_ENABLE_CODECOV=ON"
 
 # Set the depth to allow git describe to work
@@ -65,14 +65,21 @@ export SCCACHE_IDLE_TIMEOUT=32768
 mkdir -p ${WORKSPACE_TMP}
 
 function print_env_vars() {
-    gpuci_logger "Environ:"
+    rapids-logger "Environ:"
     env | grep -v -E "AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY|TOKEN" | sort
+}
+
+function update_conda_env() {
+    rapids-logger "Checking for updates to conda env"
+    rapids-mamba-retry env update -n srf -q --file ${CONDA_ENV_YML}
+    conda deactivate
+    conda activate srf
 }
 
 print_env_vars
 
 function fetch_base_branch() {
-    gpuci_logger "Retrieving base branch from GitHub API"
+    rapids-logger "Retrieving base branch from GitHub API"
     [[ -n "$GH_TOKEN" ]] && CURL_HEADERS=('-H' "Authorization: token ${GH_TOKEN}")
     RESP=$(
     curl -s \
@@ -86,7 +93,7 @@ function fetch_base_branch() {
     # Change target is the branch name we are merging into but due to the weird way jenkins does
     # the checkout it isn't recognized by git without the origin/ prefix
     export CHANGE_TARGET="origin/${BASE_BRANCH}"
-    gpuci_logger "Base branch: ${BASE_BRANCH}"
+    rapids-logger "Base branch: ${BASE_BRANCH}"
 }
 
 function fetch_s3() {
@@ -103,27 +110,8 @@ function fetch_s3() {
 
 function show_conda_info() {
 
-    gpuci_logger "Check Conda info"
+    rapids-logger "Check Conda info"
     conda info
     conda config --show-sources
     conda list --show-channel-urls
 }
-
-function restore_conda_env() {
-
-    gpuci_logger "Downloading build artifacts from ${DISPLAY_ARTIFACT_URL}/"
-    fetch_s3 "${ARTIFACT_ENDPOINT}/conda_env.tar.gz" "${WORKSPACE_TMP}/conda_env.tar.gz"
-
-    gpuci_logger "Extracting"
-    mkdir -p /opt/conda/envs/srf
-
-    # We are using the --no-same-owner flag since user id & group id's are inconsistent between nodes in our CI pool
-    tar xf "${WORKSPACE_TMP}/conda_env.tar.gz" --no-same-owner --directory /opt/conda/envs/srf
-
-    gpuci_logger "Setting conda env"
-    conda activate srf
-    conda-unpack
-
-    show_conda_info
-}
-

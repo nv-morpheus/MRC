@@ -20,20 +20,18 @@ source ${WORKSPACE}/ci/scripts/github/common.sh
 
 REPORTS_DIR="${WORKSPACE_TMP}/reports"
 
-conda activate srf
-
 BENCHMARKS=($(find ${SRF_ROOT}/build/benchmarks -name "*.x"))
 
-gpuci_logger "Running Benchmarks..."
+rapids-logger "Running Benchmarks..."
 BENCH_RESULTS=0
 for benchmark in "${BENCHMARKS[@]}"; do
        bench_name=$(basename ${benchmark})
-       gpuci_logger "Running ${bench_name}"
+       rapids-logger "Running ${bench_name}"
        set +e
 
        taskset -c 0 ${benchmark} --benchmark_out_format=json --benchmark_out="${REPORTS_DIR}/${bench_name}.json"
        BENCH_RESULT=$?
-       gpuci_logger "${bench_name} completed with an exit status of ${BENCH_RESULT}"
+       rapids-logger "${bench_name} completed with an exit status of ${BENCH_RESULT}"
        BENCH_RESULTS=$(($BENCH_RESULTS+$BENCH_RESULT))
 
        set -e
@@ -42,4 +40,4 @@ done
 # We want the archive step to run, even if we failed, save our exit status, which the next step can use
 echo ${BENCH_RESULTS} > ${WORKSPACE_TMP}/exit_status
 
-gpuci_logger "Running Benchmarks... Done"
+rapids-logger "Running Benchmarks... Done"
