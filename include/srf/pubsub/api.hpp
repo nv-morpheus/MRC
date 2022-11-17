@@ -19,34 +19,30 @@
 
 #include "srf/codable/api.hpp"
 #include "srf/codable/encoded_object.hpp"
-#include "srf/utils/macros.hpp"
+#include "srf/node/source_channel.hpp"
 
-#include <cstdint>
-#include <memory>
-#include <mutex>
+#include <string>
 
-namespace srf::internal::remote_descriptor {
+namespace srf::pubsub {
 
-class Storage final
+struct IService
 {
-  public:
-    Storage() = default;
-    explicit Storage(std::unique_ptr<srf::codable::EncodedStorage> storage);
+    virtual ~IService() = default;
 
-    ~Storage() = default;
-
-    DELETE_COPYABILITY(Storage);
-    DEFAULT_MOVEABILITY(Storage);
-
-    const srf::codable::IDecodableStorage& encoding() const;
-
-    std::size_t tokens_count() const;
-
-    std::size_t decrement_tokens(std::size_t decrement_count);
-
-  private:
-    std::unique_ptr<srf::codable::EncodedStorage> m_storage;
-    std::int32_t m_tokens{INT32_MAX};
+    virtual const std::string& service_name() const = 0;
+    virtual const std::uint64_t& tag() const        = 0;
 };
 
-}  // namespace srf::internal::remote_descriptor
+class IPublisher : public IService, public node::SourceChannelWriteable<std::unique_ptr<srf::codable::EncodedStorage>>
+{
+  public:
+    using elemnent_type = std::unique_ptr<srf::codable::EncodedStorage>;
+
+    ~IPublisher() override                                             = default;
+    virtual std::unique_ptr<codable::ICodableStorage> create_storage() = 0;
+};
+
+class ISubscriber : public IService, public node::SinkProperties<std::unique_ptr<codable::IDecodableStorage>>
+{};
+
+}  // namespace srf::pubsub

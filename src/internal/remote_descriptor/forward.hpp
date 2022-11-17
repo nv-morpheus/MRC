@@ -15,36 +15,10 @@
  * limitations under the License.
  */
 
-#include "internal/remote_descriptor/storage.hpp"
-
-#include "internal/remote_descriptor/manager.hpp"
-#include "internal/remote_descriptor/remote_descriptor.hpp"
-
-#include <glog/logging.h>
+#pragma once
 
 namespace srf::internal::remote_descriptor {
 
-Storage::Storage(std::unique_ptr<srf::codable::EncodedStorage> storage) : m_storage(std::move(storage))
-{
-    CHECK(m_storage);
-}
-
-const srf::codable::IDecodableStorage& Storage::encoding() const
-{
-    CHECK(m_storage);
-    return m_storage->encoding();
-}
-
-std::size_t Storage::tokens_count() const
-{
-    return m_tokens;
-}
-
-std::size_t Storage::decrement_tokens(std::size_t decrement_count)
-{
-    CHECK_LE(decrement_count, m_tokens);
-    m_tokens -= decrement_count;
-    return m_tokens;
-}
+class Manager;
 
 }  // namespace srf::internal::remote_descriptor

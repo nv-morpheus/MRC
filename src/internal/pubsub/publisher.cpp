@@ -15,13 +15,31 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "internal/pubsub/publisher.hpp"
 
-#include <cstdint>
+#include "internal/codable/codable_storage.hpp"
 
-namespace srf::codable {
+namespace srf::internal::pubsub {
 
-using idx_t     = int;
-using obj_idx_t = int;
+Publisher::Publisher(std::string service_name, std::uint64_t tag, resources::PartitionResources& resources) :
+  m_service_name(std::move(service_name)),
+  m_tag(tag),
+  m_resources(resources)
+{}
 
-}  // namespace srf::codable
+const std::string& Publisher::service_name() const
+{
+    return m_service_name;
+}
+
+const std::uint64_t& Publisher::tag() const
+{
+    return m_tag;
+}
+
+std::unique_ptr<srf::codable::ICodableStorage> Publisher::create_storage()
+{
+    return std::make_unique<codable::CodableStorage>(m_resources);
+}
+
+}  // namespace srf::internal::pubsub

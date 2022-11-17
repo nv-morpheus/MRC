@@ -18,35 +18,18 @@
 #pragma once
 
 #include "srf/codable/api.hpp"
-#include "srf/codable/encoded_object.hpp"
-#include "srf/utils/macros.hpp"
 
-#include <cstdint>
-#include <memory>
-#include <mutex>
+namespace srf::codable::protos {
+class RemoteDescriptor;
+}
 
-namespace srf::internal::remote_descriptor {
+namespace srf::runtime {
 
-class Storage final
+struct IRemoteDescriptorHandle : public virtual codable::IDecodableStorage
 {
-  public:
-    Storage() = default;
-    explicit Storage(std::unique_ptr<srf::codable::EncodedStorage> storage);
+    ~IRemoteDescriptorHandle() override = default;
 
-    ~Storage() = default;
-
-    DELETE_COPYABILITY(Storage);
-    DEFAULT_MOVEABILITY(Storage);
-
-    const srf::codable::IDecodableStorage& encoding() const;
-
-    std::size_t tokens_count() const;
-
-    std::size_t decrement_tokens(std::size_t decrement_count);
-
-  private:
-    std::unique_ptr<srf::codable::EncodedStorage> m_storage;
-    std::int32_t m_tokens{INT32_MAX};
+    virtual const srf::codable::protos::RemoteDescriptor& remote_descriptor_proto() const = 0;
 };
 
-}  // namespace srf::internal::remote_descriptor
+}  // namespace srf::runtime

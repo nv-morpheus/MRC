@@ -18,8 +18,10 @@
 #pragma once
 
 #include "internal/control_plane/client/subscription_service.hpp"
+#include "internal/resources/forward.hpp"
 
 #include "srf/node/source_channel.hpp"
+#include "srf/pubsub/api.hpp"
 #include "srf/utils/macros.hpp"
 
 #include <cstddef>
@@ -29,34 +31,28 @@
 
 namespace srf::internal::pubsub {
 
-template <typename T>
-class PublisherManager;
+class PublisherBackend;
 
-template <typename T>
-class Publisher final : public srf::node::SourceChannelWriteable<T>
+class Publisher final : public srf::pubsub::IPublisher
 {
-    Publisher(std::string service_name, std::uint64_t tag) : m_service_name(std::move(service_name)), m_tag(tag) {}
+    Publisher(std::string service_name, std::uint64_t tag, resources::PartitionResources& resources);
 
   public:
-    ~Publisher() = default;
+    ~Publisher() final = default;
 
     DELETE_COPYABILITY(Publisher);
     DELETE_MOVEABILITY(Publisher);
 
-    const std::string& service_name()
-    {
-        return m_service_name;
-    }
-    const std::uint64_t& tag()
-    {
-        return m_tag;
-    }
+    const std::string& service_name() const final;
+    const std::uint64_t& tag() const final;
+    std::unique_ptr<srf::codable::ICodableStorage> create_storage() final;
 
   private:
     const std::string m_service_name;
     const std::uint64_t m_tag;
+    resources::PartitionResources& m_resources;
 
-    friend PublisherManager<T>;
+    friend PublisherBackend;
 };
 
 }  // namespace srf::internal::pubsub

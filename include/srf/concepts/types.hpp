@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2022,NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,11 +17,15 @@
 
 #pragma once
 
-#include <cstdint>
+#include <concepts>
+#include <type_traits>
 
-namespace srf::codable {
+namespace srf::concepts {
 
-using idx_t     = int;
-using obj_idx_t = int;
+template <typename T>
+concept not_void = requires(T t)
+{
+    requires !std::is_same_v<T, void>;
+};
 
-}  // namespace srf::codable
+}  // namespace srf::concepts

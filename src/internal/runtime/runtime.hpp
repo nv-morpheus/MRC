@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "internal/remote_descriptor/forward.hpp"
 #include "internal/remote_descriptor/remote_descriptor.hpp"
 #include "internal/resources/forward.hpp"
 #include "internal/resources/manager.hpp"
@@ -31,37 +32,15 @@ namespace srf::internal::runtime {
 class Runtime
 {
   public:
-    Runtime(resources::PartitionResources& resources) : m_resources(resources)
-    {
-        if (resources.network())
-        {
-            m_remote_descriptor_manager =
-                std::make_shared<remote_descriptor::Manager>(resources.network()->instance_id(), resources);
-        }
-    }
-
-    ~Runtime()
-    {
-        if (m_remote_descriptor_manager)
-        {
-            m_remote_descriptor_manager->service_stop();
-            m_remote_descriptor_manager->service_await_join();
-        }
-    }
+    Runtime(resources::PartitionResources& resources);
+    ~Runtime();
 
     DELETE_COPYABILITY(Runtime);
     DELETE_MOVEABILITY(Runtime);
 
-    resources::PartitionResources& resources()
-    {
-        return m_resources;
-    }
+    resources::PartitionResources& resources();
 
-    remote_descriptor::Manager& remote_descriptor_manager()
-    {
-        CHECK(m_remote_descriptor_manager);
-        return *m_remote_descriptor_manager;
-    }
+    remote_descriptor::Manager& remote_descriptor_manager();
 
   private:
     resources::PartitionResources& m_resources;

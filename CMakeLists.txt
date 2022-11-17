@@ -143,6 +143,9 @@ include(cmake/setup_iwyu.cmake)
 
 # Keep all source files sorted!!!
 add_library(libsrf
+  src/internal/codable/codable_storage.cpp
+  src/internal/codable/decodable_storage_view.cpp
+  src/internal/codable/storage_view.cpp
   src/internal/control_plane/client/instance.cpp
   src/internal/control_plane/client/connections_manager.cpp
   src/internal/control_plane/client/state_manager.cpp
@@ -173,7 +176,6 @@ add_library(libsrf
   src/internal/pipeline/pipeline.cpp
   src/internal/pipeline/port_graph.cpp
   src/internal/pipeline/resources.cpp
-  src/internal/remote_descriptor/encoded_object.cpp
   src/internal/remote_descriptor/manager.cpp
   src/internal/remote_descriptor/remote_descriptor.cpp
   src/internal/remote_descriptor/storage.cpp
@@ -230,7 +232,7 @@ add_library(libsrf
   src/public/benchmarking/tracer.cpp
   src/public/benchmarking/util.cpp
   src/public/channel/channel.cpp
-  src/public/codable/encoded_object.cpp
+  src/public/codable/memory.cpp
   src/public/core/addresses.cpp
   src/public/core/bitmap.cpp
   src/public/core/executor.cpp
@@ -255,6 +257,7 @@ add_library(libsrf
   src/public/runnable/runnable.cpp
   src/public/runnable/runner.cpp
   src/public/runnable/types.cpp
+  src/public/runtime/remote_descriptor.cpp
   src/public/segment/definition.cpp
   src/public/utils/bytes_to_string.cpp
   src/public/utils/thread_utils.cpp

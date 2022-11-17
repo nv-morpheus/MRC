@@ -17,50 +17,49 @@
 
 #include "internal/remote_descriptor/remote_descriptor.hpp"
 
-#include "internal/remote_descriptor/manager.hpp"
-#include "internal/resources/partition_resources.hpp"
+// #include "internal/remote_descriptor/manager.hpp"
+// #include "internal/resources/partition_resources.hpp"
+
+// #include "srf/codable/api.hpp"
+// #include "srf/protos/codable.pb.h"
 
 namespace srf::internal::remote_descriptor {
 
-RemoteDescriptor::RemoteDescriptor(std::shared_ptr<Manager> manager,
-                                   std::unique_ptr<srf::codable::protos::RemoteDescriptor> rd,
-                                   resources::PartitionResources& resources) :
-  m_manager(std::move(manager)),
-  m_descriptor(std::move(rd)),
-  m_encoded_object(std::make_unique<EncodedObject>(m_descriptor->encoded_object(), resources))
-{}
+// RemoteDescriptor::~RemoteDescriptor()
+// {
+//     release_ownership();
+// }
 
-RemoteDescriptor::~RemoteDescriptor()
-{
-    release();
-}
+// void RemoteDescriptor::release_ownership()
+// {
+//     if (m_manager)
+//     {
+//         m_manager->decrement_tokens(std::move(m_handle));
+//         m_manager.reset();
+//     }
+// }
 
-void RemoteDescriptor::release()
-{
-    if (m_descriptor)
-    {
-        CHECK(m_manager);
-        m_manager->decrement_tokens(std::move(m_descriptor));
-        m_manager.reset();
-        m_encoded_object.reset();
-    }
-}
+// RemoteDescriptor::operator bool() const
+// {
+//     return bool(m_manager);
+// }
 
-RemoteDescriptor::operator bool() const
-{
-    return bool(m_descriptor);
-}
+// Handle RemoteDescriptor::transfer_ownership()
+// {
+//     CHECK(*this);
+//     m_manager.reset();
+//     return std::move(m_handle);
+// }
 
-std::unique_ptr<const srf::codable::protos::RemoteDescriptor> RemoteDescriptor::release_ownership()
-{
-    m_manager.reset();
-    m_encoded_object.reset();
-    return std::move(m_descriptor);
-}
+// // const srf::codable::IDecodableStorage& RemoteDescriptor::encoding() const
+// // {
+// //     CHECK(*this);
+// //     return m_handle.proto().encoded_object();
+// // }
 
-const EncodedObject& RemoteDescriptor::encoded_object() const
-{
-    CHECK(m_encoded_object);
-    return *m_encoded_object;
-}
+// std::unique_ptr<RemoteDescriptor> RemoteDescriptor::unwrap(srf::runtime::RemoteDescriptor&& rd)
+// {
+//     return std::move(rd.m_impl);
+// }
+
 }  // namespace srf::internal::remote_descriptor

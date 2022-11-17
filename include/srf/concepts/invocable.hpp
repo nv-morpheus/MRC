@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2022,NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,11 +17,15 @@
 
 #pragma once
 
-#include <cstdint>
+#include <concepts>
+#include <functional>
 
-namespace srf::codable {
+namespace srf::concepts {
 
-using idx_t     = int;
-using obj_idx_t = int;
+template <typename F, typename... ArgsT>
+concept invocable = requires(F&& f, ArgsT&&... args)
+{
+    std::invoke(std::forward<F>(f), std::forward<ArgsT>(args)...);
+};
 
-}  // namespace srf::codable
+}  // namespace srf::concepts

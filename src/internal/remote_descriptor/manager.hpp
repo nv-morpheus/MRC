@@ -28,13 +28,20 @@
 #include "internal/ucx/resources.hpp"
 
 #include "srf/channel/buffered_channel.hpp"
+#include "srf/codable/api.hpp"
+#include "srf/codable/encoded_object.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/source_channel.hpp"
+#include "srf/protos/codable.pb.h"
+#include "srf/runtime/remote_descriptor.hpp"
+#include "srf/runtime/remote_descriptor_handle.hpp"
+#include "srf/runtime/remote_descriptor_manager.hpp"
 #include "srf/types.hpp"
 
 #include <map>
 #include <memory>
+#include <mutex>
 
 namespace srf::internal::remote_descriptor {
 
@@ -58,29 +65,37 @@ namespace srf::internal::remote_descriptor {
  *  2. close the decrement channel
  *  3. await on the decrement handler executing on main
  */
-class Manager final : private Service, public std::enable_shared_from_this<Manager>
+class Manager final : private Service,
+                      public std::enable_shared_from_this<Manager>,
+                      public srf::runtime::IRemoteDescriptorManager
 {
   public:
     Manager(const InstanceID& instance_id, resources::PartitionResources& resources);
 
     ~Manager() override;
 
-    template <typename T>
-    RemoteDescriptor register_object(T&& object)
-    {
-        return store_object(TypedStorage<T>::create(std::move(object), {m_resources}));
-    }
-
-    RemoteDescriptor take_ownership(std::unique_ptr<const srf::codable::protos::RemoteDescriptor> rd);
+    srf::runtime::RemoteDescriptor make_remote_descriptor(srf::codable::protos::RemoteDescriptor&& proto);
 
     std::size_t size() const;
+
+    InstanceID instance_id() const;
+
+    const srf::codable::IDecodableStorage& encoding(const std::size_t& object_id) const;
+
+    void release_handle(std::unique_ptr<srf::runtime::IRemoteDescriptorHandle> handle) final;
+
+    static std::unique_ptr<srf::runtime::IRemoteDescriptorHandle> unwrap_handle(srf::runtime::RemoteDescriptor&& rd)
+    {
+        return rd.release_handle();
+    }
+
+    srf::runtime::RemoteDescriptor register_encoded_object(std::unique_ptr<srf::codable::EncodedStorage> object) final;
 
   private:
     static std::uint32_t active_message_id();
 
-    RemoteDescriptor store_object(std::unique_ptr<Storage> object);
+    std::unique_ptr<srf::codable::ICodableStorage> create_storage() final;
 
-    void decrement_tokens(std::unique_ptr<const srf::codable::protos::RemoteDescriptor> rd);
     void decrement_tokens(std::size_t object_id, std::size_t token_count);
 
     void do_service_start() final;
@@ -90,17 +105,16 @@ class Manager final : private Service, public std::enable_shared_from_this<Manag
     void do_service_await_join() final;
 
     // <object_id, storage>
-    std::map<std::size_t, std::unique_ptr<Storage>> m_stored_objects;
+    std::map<std::size_t, Storage> m_stored_objects;
     const InstanceID m_instance_id;
 
     resources::PartitionResources& m_resources;
     std::unique_ptr<srf::runnable::Runner> m_decrement_handler;
     std::unique_ptr<srf::node::SourceChannelWriteable<RemoteDescriptorDecrementMessage>> m_decrement_channel;
 
-    std::mutex m_mutex;
+    mutable std::mutex m_mutex;
 
     friend internal::runtime::Runtime;
-    friend RemoteDescriptor;
 };
 
 }  // namespace srf::internal::remote_descriptor

@@ -18,7 +18,6 @@
 #pragma once
 
 #include "internal/control_plane/client/state_manager.hpp"
-#include "internal/remote_descriptor/manager.hpp"
 #include "internal/remote_descriptor/remote_descriptor.hpp"
 #include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources_base.hpp"

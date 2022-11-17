@@ -17,7 +17,8 @@
 
 #pragma once
 
-#include "srf/codable/encoded_object.hpp"
+#include "srf/codable/api.hpp"
+#include "srf/codable/codable_protocol.hpp"
 #include "srf/codable/type_traits.hpp"
 #include "srf/utils/sfinae_concept.hpp"
 
@@ -26,32 +27,74 @@
 namespace srf::codable {
 
 template <typename T>
-struct Encoder
+class Encoder final
 {
-    static void serialize(const T& t, EncodableObject<T>& enc, const EncodingOptions& opts = {})
+  public:
+    Encoder(IEncodableStorage& storage) : m_storage(storage) {}
+
+    void serialize(const T& obj, const EncodingOptions& opts = {})
     {
-        return detail::serialize(sfinae::full_concept{}, t, enc, opts);
+        auto parent = m_storage.push_context(typeid(T));
+        detail::serialize(sfinae::full_concept{}, obj, *this, opts);
+        m_storage.pop_context(parent);
     }
+
+  protected:
+    std::optional<idx_t> register_memory_view(memory::const_buffer_view view, bool force_register = false)
+    {
+        return m_storage.register_memory_view(std::move(view), force_register);
+    }
+
+    idx_t copy_to_eager_descriptor(memory::const_buffer_view view)
+    {
+        return m_storage.copy_to_eager_descriptor(std::move(view));
+    }
+
+    idx_t add_meta_data(const google::protobuf::Message& meta_data)
+    {
+        return m_storage.add_meta_data(meta_data);
+    }
+
+    idx_t create_memory_buffer(std::size_t bytes)
+    {
+        return m_storage.create_memory_buffer(bytes);
+    }
+
+    void copy_to_buffer(idx_t buffer_idx, memory::const_buffer_view view)
+    {
+        m_storage.copy_to_buffer(buffer_idx, std::move(view));
+    }
+
+    template <typename U>
+    Encoder<U> rebind()
+    {
+        return Encoder<U>(m_storage);
+    }
+
+    IEncodableStorage& storage()
+    {
+        return m_storage;
+    }
+
+  private:
+    IEncodableStorage& m_storage;
+
+    friend T;
+    friend codable_protocol<T>;
 };
 
 template <typename T>
-void encode(const T& t, EncodedObject& encoded, EncodingOptions opts = {})
+void encode(const T& obj, IEncodableStorage& storage, EncodingOptions opts = {})
 {
-    auto obj = reinterpret_cast<EncodableObject<T>*>(&encoded);
-    Encoder<T>::serialize(t, *obj, std::move(opts));
+    Encoder<T> encoder(storage);
+    encoder.serialize(obj, std::move(opts));
 }
 
 template <typename T>
-void encode(const T& t, EncodableObject<T>& enc, EncodingOptions opts = {})
+void encode(const T& obj, IEncodableStorage* storage, EncodingOptions opts = {})
 {
-    Encoder<T>::serialize(t, enc, std::move(opts));
-}
-
-template <typename T>
-void encode(const T& t, EncodableObject<T>* enc, EncodingOptions opts = {})
-{
-    CHECK(enc);
-    Encoder<T>::serialize(t, *enc, std::move(opts));
+    Encoder<T> encoder(*storage);
+    encoder.serialize(obj, std::move(opts));
 }
 
 }  // namespace srf::codable

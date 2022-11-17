@@ -17,16 +17,21 @@
 
 #include "internal/remote_descriptor/manager.hpp"
 
+#include "internal/codable/codable_storage.hpp"
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/data_plane/request.hpp"
 #include "internal/data_plane/resources.hpp"
+#include "internal/remote_descriptor/decodable_storage.hpp"
 #include "internal/remote_descriptor/remote_descriptor.hpp"
 #include "internal/remote_descriptor/storage.hpp"
 #include "internal/resources/forward.hpp"
 
 #include "srf/channel/status.hpp"
+#include "srf/codable/api.hpp"
+#include "srf/codable/encoded_object.hpp"
 #include "srf/node/source_channel.hpp"
 #include "srf/protos/codable.pb.h"
+#include "srf/runtime/remote_descriptor_handle.hpp"
 
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
@@ -67,35 +72,43 @@ Manager::~Manager()
     Service::call_in_destructor();
 }
 
-RemoteDescriptor Manager::take_ownership(std::unique_ptr<const srf::codable::protos::RemoteDescriptor> rd)
+srf::runtime::RemoteDescriptor Manager::make_remote_descriptor(srf::codable::protos::RemoteDescriptor&& proto)
 {
-    auto non_const_rd = std::unique_ptr<srf::codable::protos::RemoteDescriptor>(
-        const_cast<srf::codable::protos::RemoteDescriptor*>(rd.release()));
-    return RemoteDescriptor(shared_from_this(), std::move(non_const_rd), m_resources);
+    // attach the resources for the partition in which this manager is operating to the rd's protobuf
+    auto handle = std::make_unique<DecodableStorage>(std::move(proto), m_resources);
+    return {shared_from_this(), std::move(handle)};
 }
 
-RemoteDescriptor Manager::store_object(std::unique_ptr<Storage> object)
+srf::runtime::RemoteDescriptor Manager::register_encoded_object(std::unique_ptr<srf::codable::EncodedStorage> object)
 {
     CHECK(object);
 
     auto object_id = reinterpret_cast<std::size_t>(object.get());
-    auto rd        = std::make_unique<srf::codable::protos::RemoteDescriptor>();
 
-    LOG(INFO) << "storing object_id: " << object_id << " with " << object->tokens_count() << " tokens";
-    DVLOG(10) << "storing object_id: " << object_id << " with " << object->tokens_count() << " tokens";
+    Storage storage(std::move(object));
+    srf::codable::protos::RemoteDescriptor rd;
 
-    rd->set_instance_id(m_instance_id);
-    rd->set_object_id(object_id);
-    rd->set_tokens(object->tokens_count());
-    *(rd->mutable_encoded_object()) = object->encoded_object().proto();
+    DVLOG(10) << "storing object_id: " << object_id << " with " << storage.tokens_count() << " tokens";
+
+    rd.set_instance_id(m_instance_id);
+    rd.set_object_id(object_id);
+    rd.set_tokens(storage.tokens_count());
+    *(rd.mutable_encoded_object()) = storage.encoding().proto();  // copy the proto::EncodedObject
 
     {
         // lock when modifying the map
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        m_stored_objects[object_id] = std::move(object);
+        auto search = m_stored_objects.find(object_id);
+        CHECK(search == m_stored_objects.end());
+        m_stored_objects.emplace(object_id, std::move(storage));
     }
 
-    return RemoteDescriptor(shared_from_this(), std::move(rd), m_resources);
+    return make_remote_descriptor(std::move(rd));
+}
+
+std::unique_ptr<srf::codable::ICodableStorage> Manager::create_storage()
+{
+    return std::make_unique<codable::CodableStorage>(m_resources);
 }
 
 std::size_t Manager::size() const
@@ -103,19 +116,22 @@ std::size_t Manager::size() const
     return m_stored_objects.size();
 }
 
-void Manager::decrement_tokens(std::unique_ptr<const srf::codable::protos::RemoteDescriptor> rd)
+void Manager::release_handle(std::unique_ptr<srf::runtime::IRemoteDescriptorHandle> handle)
 {
-    if (rd->instance_id() == m_instance_id)
+    CHECK(handle);
+    const auto& rd = handle->remote_descriptor_proto();
+
+    if (rd.instance_id() == m_instance_id)
     {
-        decrement_tokens(rd->object_id(), rd->tokens());
+        decrement_tokens(rd.object_id(), rd.tokens());
     }
     else
     {
         // issue active message to remote instance_id to decrement tokens on remote object_id
         RemoteDescriptorDecrementMessage msg;
-        msg.object_id = rd->object_id();
-        msg.tokens    = rd->tokens();
-        auto endpoint = m_resources.network()->data_plane().client().endpoint_shared(rd->instance_id());
+        msg.object_id = rd.object_id();
+        msg.tokens    = rd.tokens();
+        auto endpoint = m_resources.network()->data_plane().client().endpoint_shared(rd.instance_id());
 
         data_plane::Request request;
         data_plane::Client::async_am_send(active_message_id(), &msg, sizeof(msg), *endpoint, request);
@@ -130,7 +146,7 @@ void Manager::decrement_tokens(std::size_t object_id, std::size_t token_count)
     DVLOG(10) << "decrementing " << token_count << " tokens from object_id: " << object_id;
     auto search = m_stored_objects.find(object_id);
     CHECK(search != m_stored_objects.end());
-    auto remaining = search->second->decrement_tokens(token_count);
+    auto remaining = search->second.decrement_tokens(token_count);
     if (remaining == 0)
     {
         DVLOG(10) << "destroying object_id: " << object_id;
@@ -211,4 +227,15 @@ std::uint32_t Manager::active_message_id()
     return 10000;
 }
 
+const srf::codable::IDecodableStorage& Manager::encoding(const std::size_t& object_id) const
+{
+    std::lock_guard lock(m_mutex);
+    auto search = m_stored_objects.find(object_id);
+    CHECK(search != m_stored_objects.end());
+    return search->second.encoding();
+}
+InstanceID Manager::instance_id() const
+{
+    return m_instance_id;
+}
 }  // namespace srf::internal::remote_descriptor

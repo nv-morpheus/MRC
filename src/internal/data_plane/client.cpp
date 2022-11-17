@@ -20,6 +20,7 @@
 #include "internal/data_plane/callbacks.hpp"
 #include "internal/data_plane/resources.hpp"
 #include "internal/data_plane/tags.hpp"
+#include "internal/remote_descriptor/manager.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/endpoint.hpp"
@@ -247,14 +248,19 @@ void Client::issue_remote_descriptor(RemoteDescriptorMessage&& msg)
     DCHECK_GT(msg.tag, 0);
     DCHECK_LE(msg.tag, TAG_USER_MASK);
 
-    auto handle     = msg.rd.release_ownership();
-    auto msg_length = handle->ByteSizeLong();
+    // detach handle from remote descriptor to ensure that the tokens are not decremented
+    auto handle     = remote_descriptor::Manager::unwrap_handle(std::move(msg.rd));
+
+    // gain access to the protobuf backing the handle
+    const auto& proto = handle->proto();
+
+    auto msg_length = proto.ByteSizeLong();
 
     // todo(ryan) - parameterize srf::data_plane::client::max_remote_descriptor_eager_size
     if (msg_length <= 1_MiB)
     {
         auto buffer = m_transient_pool.await_buffer(msg_length);
-        CHECK(handle->SerializeToArray(buffer.data(), buffer.bytes()));
+        CHECK(proto.SerializeToArray(buffer.data(), buffer.bytes()));
 
         // the message fits into the size of the preposted recvs issued by the data plane
         msg.tag |= TAG_EGR_MSG;

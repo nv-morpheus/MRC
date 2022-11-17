@@ -17,36 +17,22 @@
 
 #pragma once
 
-#include "srf/codable/api.hpp"
-#include "srf/codable/encoded_object.hpp"
-#include "srf/utils/macros.hpp"
+#include "srf/runtime/resources.hpp"
 
 #include <cstdint>
-#include <memory>
-#include <mutex>
 
-namespace srf::internal::remote_descriptor {
+namespace srf::runtime {
 
-class Storage final
+class IRuntime
 {
   public:
-    Storage() = default;
-    explicit Storage(std::unique_ptr<srf::codable::EncodedStorage> storage);
+    virtual ~IRuntime() = default;
 
-    ~Storage() = default;
+    virtual std::size_t partition_count() const = 0;
+    virtual std::size_t gpu_count() const       = 0;
 
-    DELETE_COPYABILITY(Storage);
-    DEFAULT_MOVEABILITY(Storage);
-
-    const srf::codable::IDecodableStorage& encoding() const;
-
-    std::size_t tokens_count() const;
-
-    std::size_t decrement_tokens(std::size_t decrement_count);
-
-  private:
-    std::unique_ptr<srf::codable::EncodedStorage> m_storage;
-    std::int32_t m_tokens{INT32_MAX};
+    virtual IResources& default_resources()                           = 0;
+    virtual IResources& partition_resources(std::size_t partition_id) = 0;
 };
 
-}  // namespace srf::internal::remote_descriptor
+}  // namespace srf::runtime

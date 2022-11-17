@@ -21,7 +21,6 @@
 #include "internal/control_plane/client/state_manager.hpp"
 #include "internal/data_plane/request.hpp"
 #include "internal/memory/transient_pool.hpp"
-#include "internal/remote_descriptor/remote_descriptor.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
@@ -31,11 +30,11 @@
 #include "internal/ucx/worker.hpp"
 
 #include "srf/channel/status.hpp"
-#include "srf/codable/encoded_object.hpp"
 #include "srf/node/source_channel.hpp"
 #include "srf/protos/remote_descriptor.pb.h"
 #include "srf/runnable/launch_control.hpp"
 #include "srf/runnable/runner.hpp"
+#include "srf/runtime/remote_descriptor.hpp"
 #include "srf/types.hpp"
 #include "srf/utils/macros.hpp"
 
@@ -50,10 +49,7 @@ namespace srf::internal::data_plane {
 
 struct RemoteDescriptorMessage
 {
-    // DELETE_COPYABILITY(RemoteDescriptorMessage);
-    // DEFAULT_MOVEABILITY(RemoteDescriptorMessage);
-
-    remote_descriptor::RemoteDescriptor rd;
+    srf::runtime::RemoteDescriptor rd;
     std::shared_ptr<ucx::Endpoint> endpoint;
     std::uint64_t tag;
 };

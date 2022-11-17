@@ -17,36 +17,28 @@
 
 #pragma once
 
-#include "srf/codable/api.hpp"
-#include "srf/codable/encoded_object.hpp"
-#include "srf/utils/macros.hpp"
+#include "srf/pubsub/api.hpp"
+#include "srf/pubsub/publisher.hpp"
+#include "srf/pubsub/publisher_policy.hpp"
 
-#include <cstdint>
-#include <memory>
-#include <mutex>
+#include <string>
 
-namespace srf::internal::remote_descriptor {
+namespace srf::runtime {
 
-class Storage final
+class IResources
 {
   public:
-    Storage() = default;
-    explicit Storage(std::unique_ptr<srf::codable::EncodedStorage> storage);
+    ~IResources() = default;
 
-    ~Storage() = default;
-
-    DELETE_COPYABILITY(Storage);
-    DEFAULT_MOVEABILITY(Storage);
-
-    const srf::codable::IDecodableStorage& encoding() const;
-
-    std::size_t tokens_count() const;
-
-    std::size_t decrement_tokens(std::size_t decrement_count);
+    template <typename T>
+    pubsub::Publisher<T> make_publisher(std::string name, pubsub::PublisherPolicy policy)
+    {
+        return {create_publisher(name, policy)};
+    }
 
   private:
-    std::unique_ptr<srf::codable::EncodedStorage> m_storage;
-    std::int32_t m_tokens{INT32_MAX};
+    virtual std::unique_ptr<pubsub::IPublisher> create_publisher(const std::string& name,
+                                                                 const pubsub::PublisherPolicy& policy) = 0;
 };
 
-}  // namespace srf::internal::remote_descriptor
+}  // namespace srf::runtime

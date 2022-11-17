@@ -52,55 +52,32 @@
 
 namespace srf::internal::pubsub {
 
-class PublisherManagerBase : public PubSubBase
+class PublisherBackend : public PubSubBase
 {
   public:
-    PublisherManagerBase(std::string name, runtime::Runtime& runtime) : PubSubBase(std::move(name), runtime) {}
+    using element_type = std::unique_ptr<srf::codable::EncodedStorage>;
 
-    ~PublisherManagerBase() override = default;
+    PublisherBackend(std::string name, runtime::Runtime& runtime);
 
-    const std::string& role() const final
-    {
-        return role_publisher();
-    }
+    ~PublisherBackend() override;
 
-    const std::set<std::string>& subscribe_to_roles() const final
-    {
-        static std::set<std::string> r = {role_subscriber()};
-        return r;
-    }
-};
-
-template <typename T>
-class PublisherManager : public PublisherManagerBase
-{
-  public:
-    PublisherManager(std::string name, runtime::Runtime& runtime) : PublisherManagerBase(std::move(name), runtime) {}
-
-    ~PublisherManager() override
-    {
-        service_await_join();
-    }
-
-    Future<std::shared_ptr<Publisher<T>>> make_publisher()
+    Future<std::unique_ptr<Publisher>> make_publisher()
     {
         return m_publisher_promise.get_future();
     }
 
-  protected:
-    const std::unordered_map<std::uint64_t, InstanceID>& tagged_instances() const
-    {
-        return m_tagged_instances;
-    }
+    const std::string& role() const final;
 
-    const std::unordered_map<std::uint64_t, std::shared_ptr<ucx::Endpoint>>& tagged_endpoints() const
-    {
-        return m_tagged_endpoints;
-    }
+    const std::set<std::string>& subscribe_to_roles() const final;
+
+  protected:
+    const std::unordered_map<std::uint64_t, InstanceID>& tagged_instances() const;
+
+    const std::unordered_map<std::uint64_t, std::shared_ptr<ucx::Endpoint>>& tagged_endpoints() const;
 
   private:
-    virtual void write(T&& object) = 0;
-    virtual void on_update()       = 0;
+    virtual void write(element_type&& data) = 0;
+    virtual void on_update()                = 0;
 
     void update_tagged_instances(const std::string& role,
                                  const std::unordered_map<std::uint64_t, InstanceID>& tagged_instances) final
@@ -111,70 +88,29 @@ class PublisherManager : public PublisherManagerBase
         m_tagged_instances = tagged_instances;
         for (const auto& [tag, instance_id] : m_tagged_instances)
         {
-            m_tagged_endpoints[tag] = resources().network()->data_plane().client().endpoint_shared(instance_id);
+            // m_tagged_endpoints[tag] = resources().network()->data_plane().client().endpoint_shared(instance_id);
         }
         on_update();
     }
 
-    void do_service_start() override
-    {
-        SubscriptionService::do_service_start();
+    void do_service_start() override;
+    void do_service_await_live() override;
+    void do_service_stop() override;
+    void do_service_kill() override;
+    void do_service_await_join() override;
 
-        CHECK(this->tag() != 0);
-
-        auto drop_subscription_service_lambda = drop_subscription_service();
-
-        auto publisher = std::shared_ptr<Publisher<T>>(new Publisher<T>(service_name(), this->tag()),
-                                                       [drop_subscription_service_lambda](Publisher<T>* ptr) {
-                                                           drop_subscription_service_lambda();
-                                                           delete ptr;
-                                                       });
-        auto sink      = std::make_unique<srf::node::RxSink<T>>([this](T data) { write(std::move(data)); });
-        srf::node::make_edge(*publisher, *sink);
-
-        auto launch_options = resources().network()->control_plane().client().launch_options();
-        m_writer =
-            resources().runnable().launch_control().prepare_launcher(launch_options, std::move(sink))->ignition();
-
-        m_publisher = publisher;
-        m_publisher_promise.set_value(std::move(publisher));
-
-        SRF_THROW_ON_ERROR(activate_subscription_service());
-    }
-
-    void do_service_await_live() override
-    {
-        m_writer->await_live();
-    }
-
-    void do_service_stop() override
-    {
-        m_writer->stop();
-    }
-
-    void do_service_kill() override
-    {
-        m_writer->kill();
-    }
-
-    void do_service_await_join() override
-    {
-        m_writer->await_join();
-    }
-
-    std::weak_ptr<Publisher<T>> m_publisher;
     std::unique_ptr<srf::runnable::Runner> m_writer;
     std::unordered_map<std::uint64_t, InstanceID> m_tagged_instances;
     std::unordered_map<std::uint64_t, std::shared_ptr<ucx::Endpoint>> m_tagged_endpoints;
     std::unordered_map<std::uint64_t, InstanceID>::const_iterator m_next;
-    Promise<std::shared_ptr<Publisher<T>>> m_publisher_promise;
+    Promise<std::unique_ptr<Publisher>> m_publisher_promise;
 };
 
 template <typename T>
-class PublisherRoundRobin : public PublisherManager<T>
+class PublisherRoundRobin : public PublisherBackend
 {
   public:
-    using PublisherManager<T>::PublisherManager;
+    using PublisherBackend::PublisherBackend;
 
   private:
     void on_update() final
@@ -187,7 +123,6 @@ class PublisherRoundRobin : public PublisherManager<T>
         LOG(INFO) << "publisher writing object";
 
         DCHECK(this->resources().runnable().main().caller_on_same_thread());
-
 
         while (this->tagged_instances().empty())
         {
@@ -220,21 +155,22 @@ enum class PublisherType
 };
 
 template <typename T>
-std::shared_ptr<Publisher<T>> make_publisher(const std::string& name, PublisherType type, runtime::Runtime& runtime)
+std::unique_ptr<Publisher> make_publisher(const std::string& name, PublisherType type, runtime::Runtime& runtime)
 {
-    std::unique_ptr<PublisherManager<T>> manager;
+    std::unique_ptr<PublisherBackend> backend;
+
     switch (type)
     {
     case PublisherType::RoundRobin:
-        manager = std::make_unique<PublisherRoundRobin<T>>(name, runtime);
+        backend = std::make_unique<PublisherRoundRobin<T>>(name, runtime);
         break;
     default:
         LOG(FATAL) << "unknown publisher type";
     }
-    CHECK(manager);
+    CHECK(backend);
 
-    auto future = manager->make_publisher();
-    runtime.resources().network()->control_plane().register_subscription_service(std::move(manager));
+    auto future = backend->make_publisher();
+    runtime.resources().network()->control_plane().register_subscription_service(std::move(backend));
     return future.get();
 }
 

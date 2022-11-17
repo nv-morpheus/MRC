@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,11 +17,14 @@
 
 #pragma once
 
-#include <cstdint>
+#include "internal/resources/forward.hpp"
 
-namespace srf::codable {
+namespace srf::internal::codable {
 
-using idx_t     = int;
-using obj_idx_t = int;
+struct IStorageResources
+{
+    virtual ~IStorageResources()                             = default;
+    virtual resources::PartitionResources& resources() const = 0;
+};
 
-}  // namespace srf::codable
+}  // namespace srf::internal::codable

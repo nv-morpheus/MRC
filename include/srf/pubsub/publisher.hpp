@@ -17,36 +17,33 @@
 
 #pragma once
 
-#include "srf/codable/api.hpp"
+#include "srf/channel/ingress.hpp"
 #include "srf/codable/encoded_object.hpp"
-#include "srf/utils/macros.hpp"
+#include "srf/pubsub/api.hpp"
+#include "srf/runtime/forward.hpp"
 
-#include <cstdint>
-#include <memory>
-#include <mutex>
+namespace srf::pubsub {
 
-namespace srf::internal::remote_descriptor {
-
-class Storage final
+template <typename T>
+class Publisher : public channel::Ingress<T>
 {
   public:
-    Storage() = default;
-    explicit Storage(std::unique_ptr<srf::codable::EncodedStorage> storage);
+    inline channel::Status await_write(T&& data) final
+    {
+        if (m_publisher)
+        {
+            auto encoded_object = codable::EncodedObject<T>::create(std::move(data), m_publisher->create_storage());
+            m_publisher->await_write(std::move(encoded_object));
+        }
 
-    ~Storage() = default;
-
-    DELETE_COPYABILITY(Storage);
-    DEFAULT_MOVEABILITY(Storage);
-
-    const srf::codable::IDecodableStorage& encoding() const;
-
-    std::size_t tokens_count() const;
-
-    std::size_t decrement_tokens(std::size_t decrement_count);
+        return channel::Status::error;
+    }
 
   private:
-    std::unique_ptr<srf::codable::EncodedStorage> m_storage;
-    std::int32_t m_tokens{INT32_MAX};
+    Publisher(std::unique_ptr<IPublisher> publisher);
+    std::unique_ptr<IPublisher> m_publisher;
+
+    friend runtime::IResources;
 };
 
-}  // namespace srf::internal::remote_descriptor
+}  // namespace srf::pubsub

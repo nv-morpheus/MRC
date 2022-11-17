@@ -17,57 +17,69 @@
 
 #pragma once
 
-#include "internal/remote_descriptor/encoded_object.hpp"
-#include "internal/resources/forward.hpp"
+// #include "internal/remote_descriptor/handle.hpp"
+// #include "internal/resources/forward.hpp"
 
-#include "srf/codable/forward.hpp"
-#include "srf/protos/codable.pb.h"
-#include "srf/utils/macros.hpp"
+// #include "srf/codable/api.hpp"
+// #include "srf/protos/codable.pb.h"
+// #include "srf/runtime/remote_descriptor.hpp"
+// #include "srf/types.hpp"
+// #include "srf/utils/macros.hpp"
 
-#include <memory>
-#include <stdexcept>
+// #include <memory>
+// #include <stdexcept>
+// #include <utility>
 
 namespace srf::internal::remote_descriptor {
 
-class Manager;
+// class Manager;
 
-class RemoteDescriptor final
-{
-    RemoteDescriptor(std::shared_ptr<Manager> manager,
-                     std::unique_ptr<srf::codable::protos::RemoteDescriptor> rd,
-                     resources::PartitionResources& resources);
+// class RemoteDescriptor final
+// {
+//     RemoteDescriptor(std::shared_ptr<Manager> manager, Handle&& handle) :
+//       m_manager(std::move(manager)),
+//       m_handle(std::move(handle))
+//     {}
 
-  public:
-    RemoteDescriptor() = default;
-    DELETE_COPYABILITY(RemoteDescriptor);
-    DEFAULT_MOVEABILITY(RemoteDescriptor);
+//   public:
+//     static std::unique_ptr<RemoteDescriptor> unwrap(srf::remote_descriptor::RemoteDescriptor&& rd);
 
-    ~RemoteDescriptor();
+//     ~RemoteDescriptor();
 
-    operator bool() const;
+//     DELETE_COPYABILITY(RemoteDescriptor);
+//     DEFAULT_MOVEABILITY(RemoteDescriptor);
 
-    std::unique_ptr<const srf::codable::protos::RemoteDescriptor> release_ownership();
+//     /**
+//      * @brief Returns false if the RemoteDescriptor was released or ownership was transfered; otherwise, returns
+//      true.
+//      */
+//     operator bool() const;
 
-    void release();
+//     /**
+//      * @brief Transfer ownership of the RemoteDescriptor and its global tokens to a RemoteDescriptorHandle
+//      *
+//      * @return RemoteDescriptorHandle
+//      */
+//     Handle transfer_ownership();
 
-    const EncodedObject& encoded_object() const;
+//     /**
+//      * @brief Release ownership of the RemoteDescriptor and decrement the global tokens by the number of tokens held
+//      by
+//      * this descriptor.
+//      */
+//     void release_ownership();
 
-    // template <typename T>
-    // T decode()
-    // {
-    //     if (!m_descriptor)
-    //     {
-    //         throw std::runtime_error("unable decode empty descriptor");
-    //     }
+//     /**
+//      * @brief Returns a reference to an IDecodableStorage for decoding a RemoteDescriptor
+//      */
+//     const srf::codable::IDecodableStorage& encoding() const;
 
-    //     codable::decode<T>(m_descriptor->encoded_object());
-    // }
+//   private:
+//     std::shared_ptr<Manager> m_manager;
+//     std::shared_ptr<srf::codable::IDecodableStorage> m_encoding;
+//     InstanceID m_instance_id;
 
-  private:
-    std::unique_ptr<srf::codable::protos::RemoteDescriptor> m_descriptor;
-    std::shared_ptr<Manager> m_manager;
-    std::unique_ptr<EncodedObject> m_encoded_object;
-    friend Manager;
-};
+//     friend Manager;
+// };
 
 }  // namespace srf::internal::remote_descriptor

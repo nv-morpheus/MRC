@@ -80,8 +80,9 @@ message Descriptor
 
 message Object
 {
-    uint32 desc_id  = 1;
-    uint64 type_index_hash = 2;
+    int32 starting_descriptor_idx  = 1;
+    int32 parent_object_idx = 2;
+    uint64 type_index_hash = 3;
 }
 
 message EncodedObject

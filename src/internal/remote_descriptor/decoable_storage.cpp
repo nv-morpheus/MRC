@@ -15,13 +15,23 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "internal/remote_descriptor/decodable_storage.hpp"
 
-#include <cstdint>
+namespace srf::internal::remote_descriptor {
 
-namespace srf::codable {
+DecodableStorage::DecodableStorage(Handle&& handle, resources::PartitionResources& resources) :
+  m_handle(std::move(handle)),
+  m_resources(resources)
+{}
 
-using idx_t     = int;
-using obj_idx_t = int;
+const srf::codable::protos::EncodedObject& DecodableStorage::get_proto() const
+{
+    return m_handle.proto().encoded_object();
+}
 
-}  // namespace srf::codable
+resources::PartitionResources& DecodableStorage::resources() const
+{
+    return m_resources;
+}
+
+}  // namespace srf::internal::remote_descriptor

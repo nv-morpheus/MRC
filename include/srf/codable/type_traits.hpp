@@ -18,7 +18,6 @@
 #pragma once
 
 #include "srf/codable/codable_protocol.hpp"
-#include "srf/codable/encoded_object.hpp"
 #include "srf/codable/encoding_options.hpp"
 #include "srf/utils/sfinae_concept.hpp"
 
@@ -27,40 +26,46 @@
 
 namespace srf::codable {
 
+template <typename T>
+class Encoder;
+
+template <typename T>
+class Decoder;
+
 namespace detail {
 
 template <typename T>
-auto serialize(sfinae::full_concept concept, const T& t, EncodableObject<T>& enc, const EncodingOptions& opts)
-    -> SRF_AUTO_RETURN_TYPE(codable_protocol<T>::serialize(t, enc, opts), void);
+auto serialize(sfinae::full_concept concept, const T& obj, Encoder<T>& enc, const EncodingOptions& opts)
+    -> SRF_AUTO_RETURN_TYPE(codable_protocol<T>::serialize(obj, enc, opts), void);
 
 template <typename T>
-auto serialize(sfinae::l4_concept concept, const T& t, EncodableObject<T>& enc, const EncodingOptions& opts)
-    -> SRF_AUTO_RETURN_TYPE(codable_protocol<T>::serialize(t, enc), void);
+auto serialize(sfinae::l4_concept concept, const T& obj, Encoder<T>& enc, const EncodingOptions& opts)
+    -> SRF_AUTO_RETURN_TYPE(codable_protocol<T>::serialize(obj, enc), void);
 
 template <typename T>
-auto serialize(sfinae::l3_concept concept, const T& t, EncodableObject<T>& enc, const EncodingOptions& opts)
-    -> SRF_AUTO_RETURN_TYPE(t.serialize(enc, opts), void);
+auto serialize(sfinae::l3_concept concept, const T& obj, Encoder<T>& enc, const EncodingOptions& opts)
+    -> SRF_AUTO_RETURN_TYPE(enc.serialize(obj, opts), void);
 
 template <typename T>
-auto serialize(sfinae::l2_concept concept, const T& t, EncodableObject<T>& enc, const EncodingOptions& opts)
-    -> SRF_AUTO_RETURN_TYPE(t.serialize(enc), void);
+auto serialize(sfinae::l2_concept concept, const T& obj, Encoder<T>& enc, const EncodingOptions& opts)
+    -> SRF_AUTO_RETURN_TYPE(enc.serialize(obj), void);
 
 template <typename T>
-void serialize(sfinae::error error, const T& t, EncodableObject<T>& enc, const EncodingOptions& opts)
+void serialize(sfinae::error error, const T& obj, Encoder<T>& enc, const EncodingOptions& opts)
 {
     static_assert(sfinae::invalid_concept<T>::error, "object is not encodable");
 }
 
 template <typename T>
-auto deserialize(sfinae::full_concept concept, const DecodableObject<T>& encoding, std::size_t object_idx)
+auto deserialize(sfinae::full_concept concept, const Decoder<T>& encoding, std::size_t object_idx)
     -> SRF_AUTO_RETURN_TYPE(codable_protocol<T>::deserialize(encoding, object_idx), T);
 
 template <typename T>
-auto deserialize(sfinae::l4_concept concept, const DecodableObject<T>& encoding, std::size_t object_idx)
+auto deserialize(sfinae::l4_concept concept, const Decoder<T>& encoding, std::size_t object_idx)
     -> SRF_AUTO_RETURN_TYPE(T::deserialize(encoding, object_idx), T);
 
 template <typename T>
-sfinae::error deserialize(sfinae::error error, const DecodableObject<T>& encoding, std::size_t object_idx)
+sfinae::error deserialize(sfinae::error error, const Decoder<T>& encoding, std::size_t object_idx)
 {
     static_assert(sfinae::invalid_concept<T>::error, "object is not decodable");
     return {};
@@ -81,21 +86,21 @@ struct is_encodable<
     T,
     std::enable_if_t<std::is_same_v<
         decltype(std::declval<codable_protocol<T>&>().serialize(
-            std::declval<T&>(), std::declval<EncodableObject<T>&>(), std::declval<const EncodingOptions&>())),
+            std::declval<T&>(), std::declval<Encoder<T>&>(), std::declval<const EncodingOptions&>())),
         void>>> : std::true_type
 {};
 
 template <typename T>
 struct is_encodable<T,
                     std::enable_if_t<std::is_same_v<decltype(std::declval<codable_protocol<T>&>().serialize(
-                                                        std::declval<T&>(), std::declval<EncodableObject<T>&>())),
+                                                        std::declval<T&>(), std::declval<Encoder<T>&>())),
                                                     void>>> : std::true_type
 {};
 
 template <typename T>
 struct is_encodable<
     T,
-    std::enable_if_t<std::is_same_v<decltype(std::declval<T&>().serialize(std::declval<EncodableObject<T>&>(),
+    std::enable_if_t<std::is_same_v<decltype(std::declval<T&>().serialize(std::declval<Encoder<T>&>(),
                                                                           std::declval<const EncodingOptions&>())),
                                     void>>> : std::true_type
 {};
@@ -103,7 +108,8 @@ struct is_encodable<
 template <typename T>
 struct is_encodable<
     T,
-    std::enable_if_t<std::is_same_v<decltype(std::declval<T&>().serialize(std::declval<EncodableObject<T>&>())), void>>>
+    std::enable_if_t<
+        std::is_same_v<decltype(std::declval<T&>().serialize(std::declval<Encoder<T>&>())), void>>>
   : std::true_type
 {};
 
@@ -111,13 +117,13 @@ template <typename T>
 struct is_decodable<
     T,
     std::enable_if_t<std::is_same_v<decltype(std::declval<codable_protocol<T>&>().deserialize(
-                                        std::declval<const DecodableObject<T>&>(), std::declval<std::size_t>())),
+                                        std::declval<const Decoder<T>&>(), std::declval<std::size_t>())),
                                     T>>> : std::true_type
 {};
 
 template <typename T>
 struct is_decodable<T,
-                    std::enable_if_t<std::is_same_v<decltype(T::deserialize(std::declval<const DecodableObject<T>&>(),
+                    std::enable_if_t<std::is_same_v<decltype(T::deserialize(std::declval<const Decoder<T>&>(),
                                                                             std::declval<std::size_t>())),
                                                     T>>> : std::true_type
 {};

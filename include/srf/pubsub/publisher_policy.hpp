@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,11 +17,12 @@
 
 #pragma once
 
-#include <cstdint>
+namespace srf::pubsub {
 
-namespace srf::codable {
+enum class PublisherPolicy
+{
+    Broadcast,
+    RoundRobin,
+};
 
-using idx_t     = int;
-using obj_idx_t = int;
-
-}  // namespace srf::codable
+}

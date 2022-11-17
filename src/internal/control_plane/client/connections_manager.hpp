@@ -26,6 +26,7 @@
 #include "srf/protos/architect.pb.h"
 #include "srf/types.hpp"
 
+#include <optional>
 #include <vector>
 
 namespace srf::internal::data_plane {
