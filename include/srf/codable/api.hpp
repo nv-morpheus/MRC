@@ -147,7 +147,8 @@ class IEncodableStorage : public virtual IStorage
      * @param force_register - register the block even if it is smaller than the minimum suggested block size
      * @return std::optional<idx_t>
      */
-    virtual std::optional<idx_t> register_memory_view(memory::const_buffer_view view, bool force_register = false) = 0;
+    [[nodiscard]] virtual std::optional<idx_t> register_memory_view(memory::const_buffer_view view,
+                                                                    bool force_register = false) = 0;
 
     /**
      * @brief Add an eager buffer owned by EncodedObject. This buffer will be serialized and sent as part of the control
@@ -188,6 +189,12 @@ class IEncodableStorage : public virtual IStorage
      * @param view
      */
     virtual void copy_to_buffer(idx_t buffer_idx, memory::const_buffer_view view) = 0;
+
+    /**
+     * @brief Provide a mutable host buffer view into a descriptor.
+     * @note The descriptor must be associated with host memory, not device memory
+     */
+    virtual memory::buffer_view mutable_host_buffer_view(const idx_t& buffer_idx) = 0;
 
     /**
      * @brief Returns true if an external entity is holding a context; otherwise, false.

@@ -180,4 +180,17 @@ srf::codable::protos::EncodedObject& CodableStorage::mutable_proto()
     return get_mutable_proto();
 }
 
+srf::memory::buffer_view CodableStorage::mutable_host_buffer_view(const idx_t& buffer_idx)
+{
+    CHECK_LT(buffer_idx, descriptor_count());
+    const auto& desc = mutable_proto().descriptors().at(buffer_idx);
+
+    CHECK(desc.has_remote_desc());
+    const auto& rd = desc.remote_desc();
+    CHECK(rd.memory_kind() == srf::codable::protos::MemoryKind::Host ||
+          rd.memory_kind() == srf::codable::protos::MemoryKind::Pinned);
+
+    return {reinterpret_cast<void*>(rd.address()), rd.bytes(), srf::codable::decode_memory_type(rd.memory_kind())};
+}
+
 }  // namespace srf::internal::codable

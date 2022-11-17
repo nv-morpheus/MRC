@@ -72,6 +72,9 @@ class CodableStorage final : public srf::codable::ICodableStorage, public Storag
     // copy data to a created buffer
     void copy_to_buffer(idx_t buffer_idx, srf::memory::const_buffer_view view) final;
 
+    // get a mutable view into the memory of a descriptor
+    srf::memory::buffer_view mutable_host_buffer_view(const idx_t& buffer_idx) final;
+
     /**
      * @brief Converts a memory block to a RemoteMemoryDescriptor proto
      */
