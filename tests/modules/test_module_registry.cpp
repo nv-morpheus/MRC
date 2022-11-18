@@ -100,11 +100,11 @@ TEST_F(TestModuleRegistry, FindModuleTest)
     const auto* module_name        = "SimpleModule";
     const auto* module_name_3      = "SimpleModuleTest";
 
-    auto fn_module_constructor = ModuleRegistry::find_module(module_name, registry_namespace);
+    auto fn_module_constructor = ModuleRegistry::get_module_constructor(module_name, registry_namespace);
 
     // Finding a module that does not exists in the registry throws an exception.
-    EXPECT_THROW(ModuleRegistry::find_module(module_name_3), std::invalid_argument);
-    EXPECT_THROW(ModuleRegistry::find_module(module_name_3, registry_namespace), std::invalid_argument);
+    EXPECT_THROW(ModuleRegistry::get_module_constructor(module_name_3), std::invalid_argument);
+    EXPECT_THROW(ModuleRegistry::get_module_constructor(module_name_3, registry_namespace), std::invalid_argument);
 }
 
 TEST_F(TestModuleRegistry, UnRegistrerModuleTest)

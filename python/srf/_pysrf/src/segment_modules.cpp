@@ -43,9 +43,9 @@ const std::string& SegmentModuleProxy::name(srf::modules::SegmentModule& self)
     return self.name();
 }
 
-std::string SegmentModuleProxy::module_name(srf::modules::SegmentModule& self)
+std::string SegmentModuleProxy::module_type_name(srf::modules::SegmentModule& self)
 {
-    return self.module_name();
+    return self.module_type_name();
 }
 
 std::vector<std::string> SegmentModuleProxy::input_ids(srf::modules::SegmentModule& self)

@@ -27,11 +27,12 @@
 
 #include <atomic>
 
-// TODO(Devin): Should be connected to a DataBufferModule
 namespace srf::modules {
 template <typename DataTypeT>
 class MirrorTapModule : public SegmentModule
 {
+    using type_t = MirrorTapModule<DataTypeT>;
+
   public:
     MirrorTapModule(std::string module_name);
 
@@ -39,10 +40,11 @@ class MirrorTapModule : public SegmentModule
 
   protected:
     void initialize(segment::Builder& builder) override;
+    std::string module_type_name() const override;
 
   private:
     static std::atomic<unsigned int> s_tap_index;
-    std::string m_egress_name{"mirror_tap"};
+    std::string m_egress_name;
 };
 
 template <typename DataTypeT>
@@ -85,6 +87,12 @@ void MirrorTapModule<DataTypeT>::initialize(segment::Builder& builder)
     // Register the submodules output as one of this module's outputs
     register_input_port("in", input);
     register_output_port("out", output);
+}
+
+template<typename DataTypeT>
+std::string MirrorTapModule<DataTypeT>::module_type_name() const
+{
+    return std::string(::srf::type_name<type_t>());
 }
 
 static MirrorTapModule<std::string> tap("test", {});

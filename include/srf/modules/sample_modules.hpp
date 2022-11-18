@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "srf/core/utils.hpp"
 #include "srf/modules/segment_modules.hpp"
 #include "srf/segment/builder.hpp"
 
@@ -35,6 +36,8 @@ namespace srf::modules {
  */
 class SimpleModule : public SegmentModule
 {
+    using type_t = SimpleModule;
+
   public:
     SimpleModule(std::string module_name);
     SimpleModule(std::string module_name, nlohmann::json config);
@@ -43,6 +46,7 @@ class SimpleModule : public SegmentModule
 
   protected:
     void initialize(segment::Builder& builder) override;
+    std::string module_type_name() const override;
 
   private:
     bool m_initialized{false};
@@ -55,6 +59,8 @@ class SimpleModule : public SegmentModule
  */
 class ConfigurableModule : public SegmentModule
 {
+    using type_t = ConfigurableModule;
+
   public:
     ConfigurableModule(std::string module_name);
     ConfigurableModule(std::string module_name, nlohmann::json config);
@@ -63,6 +69,7 @@ class ConfigurableModule : public SegmentModule
 
   protected:
     void initialize(segment::Builder& builder) override;
+    std::string module_type_name() const override;
 
   private:
     bool m_initialized;
@@ -75,12 +82,15 @@ class ConfigurableModule : public SegmentModule
  */
 class SourceModule : public SegmentModule
 {
+    using type_t = SourceModule;
+
   public:
     SourceModule(std::string module_name);
     SourceModule(std::string module_name, nlohmann::json config);
 
   protected:
     void initialize(segment::Builder& builder) override;
+    std::string module_type_name() const override;
 };
 
 /**
@@ -89,6 +99,8 @@ class SourceModule : public SegmentModule
  */
 class SinkModule : public SegmentModule
 {
+    using type_t = SinkModule;
+
   public:
     SinkModule(std::string module_name);
     SinkModule(std::string module_name, nlohmann::json config);
@@ -97,6 +109,7 @@ class SinkModule : public SegmentModule
 
   protected:
     void initialize(segment::Builder& builder) override;
+    std::string module_type_name() const override;
 };
 
 /**
@@ -109,14 +122,15 @@ class SinkModule : public SegmentModule
  */
 class NestedModule : public SegmentModule
 {
+    using type_t = NestedModule;
+
   public:
     NestedModule(std::string module_name);
     NestedModule(std::string module_name, nlohmann::json config);
 
-    std::string module_name() const override;
-
   protected:
     void initialize(segment::Builder& builder) override;
+    std::string module_type_name() const override;
 };
 
 /**
@@ -127,13 +141,14 @@ class NestedModule : public SegmentModule
 template <typename OutputTypeT>
 class TemplateModule : public SegmentModule
 {
+    using type_t = TemplateModule<OutputTypeT>;
+
   public:
     TemplateModule(std::string module_name);
     TemplateModule(std::string module_name, nlohmann::json config);
 
     void initialize(segment::Builder& builder) override;
-
-    std::string module_name() const override;
+    std::string module_type_name() const override;
 };
 
 template <typename OutputTypeT>
@@ -144,12 +159,6 @@ template <typename OutputTypeT>
 TemplateModule<OutputTypeT>::TemplateModule(std::string module_name, nlohmann::json config) :
   SegmentModule(std::move(module_name), std::move(config))
 {}
-
-template <typename OutputTypeT>
-std::string TemplateModule<OutputTypeT>::module_name() const
-{
-    return "[template_module]";
-}
 
 template <typename OutputTypeT>
 void TemplateModule<OutputTypeT>::initialize(segment::Builder& builder)
@@ -177,6 +186,12 @@ void TemplateModule<OutputTypeT>::initialize(segment::Builder& builder)
     register_output_port("source", source);
 }
 
+template <typename OutputTypeT>
+std::string TemplateModule<OutputTypeT>::module_type_name() const
+{
+    return std::string(::srf::type_name<type_t>());
+}
+
 /**
  * Creates a data source that emits OutputTypeT data elements, and takes a lambda function used to initialize the
  * emitted data element.
@@ -187,13 +202,14 @@ void TemplateModule<OutputTypeT>::initialize(segment::Builder& builder)
 template <typename OutputTypeT, OutputTypeT (*Initializer)()>
 class TemplateWithInitModule : public SegmentModule
 {
+    using type_t = TemplateWithInitModule<OutputTypeT, Initializer>;
+
   public:
     TemplateWithInitModule(std::string module_name);
     TemplateWithInitModule(std::string module_name, nlohmann::json config);
 
     void initialize(segment::Builder& builder) override;
-
-    std::string module_name() const override;
+    std::string module_type_name() const override;
 };
 
 template <typename OutputTypeT, OutputTypeT (*Initializer)()>
@@ -206,12 +222,6 @@ TemplateWithInitModule<OutputTypeT, Initializer>::TemplateWithInitModule(std::st
                                                                          nlohmann::json config) :
   SegmentModule(std::move(module_name), std::move(config))
 {}
-
-template <typename OutputTypeT, OutputTypeT (*Initializer)()>
-std::string TemplateWithInitModule<OutputTypeT, Initializer>::module_name() const
-{
-    return "[template_module]";
-}
 
 template <typename OutputTypeT, OutputTypeT (*Initializer)()>
 void TemplateWithInitModule<OutputTypeT, Initializer>::initialize(segment::Builder& builder)
@@ -239,6 +249,12 @@ void TemplateWithInitModule<OutputTypeT, Initializer>::initialize(segment::Build
 
     // Register the submodules output as one of this module's outputs
     register_output_port("source", source);
+}
+
+template <typename OutputTypeT, OutputTypeT (*Initializer)()>
+std::string TemplateWithInitModule<OutputTypeT, Initializer>::module_type_name() const
+{
+    return std::string(::srf::type_name<type_t>());
 }
 
 }  // namespace srf::modules

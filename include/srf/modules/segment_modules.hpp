@@ -42,6 +42,7 @@ class SegmentModule
     virtual ~SegmentModule() = default;
 
     SegmentModule() = delete;
+
     SegmentModule(std::string module_name);
     SegmentModule(std::string module_name, nlohmann::json config);
 
@@ -122,11 +123,10 @@ class SegmentModule
      * Retrieve the class name for the module, defaults to 'segment_module'
      * @return
      */
-    virtual std::string module_name() const;
+    virtual std::string module_type_name() const = 0;
 
   protected:
     // Derived class interface functions
-
     /* Virtual Functions */
     /**
      * Entrypoint for module constructor during build
@@ -134,6 +134,7 @@ class SegmentModule
      */
     virtual void initialize(segment::Builder& builder) = 0;
 
+    /* Interface Functions */
     /**
      * Register an input port that should be exposed for the module
      * @param input_name Port name

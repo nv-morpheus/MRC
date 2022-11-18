@@ -17,9 +17,13 @@
 
 #include "pysrf/py_segment_module.hpp"
 
+#include "srf/core/utils.hpp"
+
 #include <glog/logging.h>
 
 #include <ostream>
+#include <string>
+#include <string_view>
 #include <utility>
 
 namespace srf::pysrf {
@@ -35,4 +39,10 @@ void PythonSegmentModule::initialize(segment::Builder& builder)
     VLOG(2) << "Calling PythonSegmentModule::initialize";
     m_py_initialize(builder);
 }
+
+std::string PythonSegmentModule::module_type_name() const
+{
+    return std::string(::srf::type_name<type_t>());
+}
+
 }  // namespace srf::pysrf

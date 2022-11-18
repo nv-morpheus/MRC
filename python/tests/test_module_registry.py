@@ -118,11 +118,11 @@ def test_module_registry_register_good_version_no_unregister():
                              module_init_fn)
 
 
-def test_find_module():
+def test_get_module_constructor():
     registry = srf.ModuleRegistry
 
     # Retrieve the module constructor
-    fn_constructor = registry.find_module("SimpleModule", "srf_unittest")
+    fn_constructor = registry.get_module_constructor("SimpleModule", "srf_unittest")
 
     # Instantiate a version of the module
     config = {"config_key_1": True}
@@ -131,7 +131,7 @@ def test_find_module():
     assert "config_key_1" in module.config()
 
     with pytest.raises(Exception):
-        registry.find_module("SimpleModule", "default")
+        registry.get_module_constructor("SimpleModule", "default")
 
 
 def test_module_intitialize():
@@ -162,7 +162,7 @@ def test_module_intitialize():
             pass
 
         # Retrieve the module constructor
-        fn_constructor = registry.find_module(module_name, "srf_unittest")
+        fn_constructor = registry.get_module_constructor(module_name, "srf_unittest")
         # Instantiate a version of the module
         source_module = fn_constructor("ModuleSourceTest_mod1", config)
 
@@ -494,7 +494,7 @@ if (__name__ in ("__main__", )):
     test_module_intitialize()
     test_contains_namespace()
     test_contains()
-    test_find_module()
+    test_get_module_constructor()
     test_is_version_compatible()
     test_unregister_module()
     test_registered_modules()

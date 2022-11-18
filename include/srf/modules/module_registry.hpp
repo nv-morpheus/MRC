@@ -66,7 +66,8 @@ class ModuleRegistry
      * @param name Name of the module
      * @return Module constructor
      */
-    static module_constructor_t find_module(const std::string& name, const std::string& registry_namespace = "default");
+    static module_constructor_t get_module_constructor(const std::string& name,
+                                                       const std::string& registry_namespace = "default");
 
     /**
      * Retrieve a map of namespace -> registered module name vectors

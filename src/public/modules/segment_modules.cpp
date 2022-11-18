@@ -38,11 +38,16 @@ SegmentModule::SegmentModule(std::string module_name) : m_module_instance_name(s
 SegmentModule::SegmentModule(std::string module_name, nlohmann::json config) :
   m_module_instance_name(std::move(module_name)),
   m_config(std::move(config))
-{}
+{
+    if (m_module_instance_name.find_first_of("/") != std::string::npos)
+    {
+        throw std::invalid_argument("Module name cannot contain '/' characters");
+    }
+}
 
 std::string SegmentModule::component_prefix() const
 {
-    return module_name() + "/" + name();
+    return module_type_name() + "::" + name();
 }
 
 const nlohmann::json& SegmentModule::config() const
@@ -137,11 +142,6 @@ const std::vector<std::string>& SegmentModule::output_ids() const
 const std::string& SegmentModule::name() const
 {
     return m_module_instance_name;
-}
-
-std::string SegmentModule::module_name() const
-{
-    return "[segment_module]";
 }
 
 void SegmentModule::operator()(segment::Builder& builder)

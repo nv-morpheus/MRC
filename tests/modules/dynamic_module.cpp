@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include "srf/core/utils.hpp"
 #include "srf/modules/module_registry_util.hpp"
 #include "srf/modules/segment_modules.hpp"
 #include "srf/segment/builder.hpp"
@@ -26,12 +27,15 @@
 namespace srf::modules {
 class DynamicSourceModule : public SegmentModule
 {
+    using type_t = DynamicSourceModule;
+
   public:
     DynamicSourceModule(std::string module_name);
     DynamicSourceModule(std::string module_name, nlohmann::json config);
 
   protected:
     void initialize(segment::Builder& builder) override;
+    std::string module_type_name() const override;
 };
 
 DynamicSourceModule::DynamicSourceModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
@@ -62,6 +66,11 @@ void DynamicSourceModule::initialize(segment::Builder& builder)
 
     // Register the submodules output as one of this module's outputs
     register_output_port("source", source);
+}
+
+std::string DynamicSourceModule::module_type_name() const
+{
+    return std::string(::srf::type_name<type_t>());
 }
 
 }  // namespace srf::modules

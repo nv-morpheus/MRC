@@ -83,8 +83,8 @@ bool ModuleRegistry::contains_namespace(const std::string& registry_namespace)
     return s_module_namespace_registry.find(registry_namespace) != s_module_namespace_registry.end();
 }
 
-ModuleRegistry::module_constructor_t ModuleRegistry::find_module(const std::string& name,
-                                                                 const std::string& registry_namespace)
+ModuleRegistry::module_constructor_t ModuleRegistry::get_module_constructor(const std::string& name,
+                                                                            const std::string& registry_namespace)
 {
     std::lock_guard<decltype(s_mutex)> lock(s_mutex);
 
