@@ -29,6 +29,7 @@
 #include "srf/node/source_properties.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/segment/object.hpp"
+#include "srf/utils/string_utils.hpp"
 #include "srf/version.hpp"
 
 #include <boost/fiber/future/future.hpp>
@@ -268,9 +269,7 @@ PYBIND11_MODULE(test_edges_cpp, module)
              py::arg("parent"),
              py::arg("name"));
 
-    std::stringstream sstream;
-    sstream << srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH;
-
-    module.attr("__version__") = sstream.str();
+    module.attr("__version__") =
+        SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
 }  // namespace srf::pytests
