@@ -17,6 +17,9 @@
 
 #include "pysrf/utils.hpp"
 
+#include "srf/utils/string_utils.hpp"
+#include "srf/version.hpp"
+
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 
@@ -44,10 +47,7 @@ PYBIND11_MODULE(utils, module)
         },
         py::arg("msg") = "");
 
-#ifdef VERSION_INFO
-    m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
-#else
-    module.attr("__version__") = "dev";
-#endif
+    module.attr("__version__") =
+        SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
 }  // namespace srf::pytests

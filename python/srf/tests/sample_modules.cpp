@@ -22,13 +22,13 @@
 #include "srf/channel/status.hpp"
 #include "srf/modules/module_registry_util.hpp"
 #include "srf/node/rx_source.hpp"
+#include "srf/utils/string_utils.hpp"
 #include "srf/version.hpp"
 
 #include <boost/hana/if.hpp>
 #include <pybind11/pybind11.h>
 
 #include <memory>
-#include <ostream>
 
 // IWYU thinks the Segment.def calls need array and vector
 // IWYU pragma: no_include <array>
@@ -70,9 +70,7 @@ PYBIND11_MODULE(sample_modules, module)
     modules::ModelRegistryUtil::create_registered_module<srf::modules::TemplateModule<std::string>>(
         "TemplateModuleString", "srf_unittest", PybindSegmentModuleVersion);
 
-    std::stringstream sstream;
-    sstream << srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH;
-
-    module.attr("__version__") = sstream.str();
+    module.attr("__version__") =
+        SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
 }  // namespace srf::pysrf
