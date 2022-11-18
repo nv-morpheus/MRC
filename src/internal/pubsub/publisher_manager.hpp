@@ -26,6 +26,7 @@
 #include "internal/network/resources.hpp"
 #include "internal/pubsub/pub_sub_base.hpp"
 #include "internal/pubsub/publisher.hpp"
+#include "internal/remote_descriptor/manager.hpp"
 #include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runtime/runtime.hpp"
@@ -102,7 +103,6 @@ class PublisherBackend : public PubSubBase
     std::unique_ptr<srf::runnable::Runner> m_writer;
     std::unordered_map<std::uint64_t, InstanceID> m_tagged_instances;
     std::unordered_map<std::uint64_t, std::shared_ptr<ucx::Endpoint>> m_tagged_endpoints;
-    std::unordered_map<std::uint64_t, InstanceID>::const_iterator m_next;
     Promise<std::unique_ptr<Publisher>> m_publisher_promise;
 };
 
@@ -141,7 +141,7 @@ class PublisherRoundRobin : public PublisherBackend
             m_next = this->tagged_endpoints().cbegin();
         }
 
-        msg.rd = this->runtime().remote_descriptor_manager().register_object(std::move(object));
+        msg.rd = this->runtime().remote_descriptor_manager().register_encoded_object(std::move(object));
         CHECK(this->resources().network()->data_plane().client().remote_descriptor_channel().await_write(
                   std::move(msg)) == channel::Status::success);
     }

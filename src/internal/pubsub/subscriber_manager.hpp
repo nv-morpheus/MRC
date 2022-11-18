@@ -27,6 +27,7 @@
 #include "internal/network/resources.hpp"
 #include "internal/pubsub/pub_sub_base.hpp"
 #include "internal/pubsub/subscriber.hpp"
+#include "internal/remote_descriptor/manager.hpp"
 #include "internal/remote_descriptor/remote_descriptor.hpp"
 #include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources.hpp"
@@ -104,17 +105,18 @@ class SubscriberManager : public SubscriberManagerBase
 
     void handle_network_buffers(memory::TransientBuffer&& buffer)
     {
-        // deserialize remote descriptor handle/proto from transient buffer
-        auto handle = std::make_unique<srf::codable::protos::RemoteDescriptor>();
-        CHECK(handle->ParseFromArray(buffer.data(), buffer.bytes()));
+        DVLOG(10) << "incoming transient buffer with serialized remote descriptor proto: "
+                  << srf::bytes_to_string(buffer.bytes());
 
-        LOG(INFO) << "transient buffer holding the rd: " << srf::bytes_to_string(buffer.bytes());
+        // deserialize remote descriptor handle/proto from transient buffer
+        srf::codable::protos::RemoteDescriptor proto;
+        CHECK(proto.ParseFromArray(buffer.data(), buffer.bytes()));
 
         // release transient buffer so it can be reused
         buffer.release();
 
         // create a remote descriptor via the local RD manager taking ownership of the handle
-        auto rd = runtime().remote_descriptor_manager().take_ownership(std::move(handle));
+        auto rd = runtime().remote_descriptor_manager().make_remote_descriptor(std::move(proto));
 
         // deserialize T
         auto val = codable::decode<T>(rd.encoded_object());

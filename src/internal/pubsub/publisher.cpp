@@ -18,28 +18,31 @@
 #include "internal/pubsub/publisher.hpp"
 
 #include "internal/codable/codable_storage.hpp"
+#include "internal/control_plane/client.hpp"
+#include "internal/resources/partition_resources.hpp"
 
 namespace srf::internal::pubsub {
 
-Publisher::Publisher(std::string service_name, std::uint64_t tag, resources::PartitionResources& resources) :
-  m_service_name(std::move(service_name)),
-  m_tag(tag),
+Publisher::Publisher(std::string service_name, resources::PartitionResources& resources) :
+  control_plane::client::SubscriptionService(std::move(service_name), resources.network()->control_plane()),
   m_resources(resources)
 {}
-
-const std::string& Publisher::service_name() const
-{
-    return m_service_name;
-}
-
-const std::uint64_t& Publisher::tag() const
-{
-    return m_tag;
-}
 
 std::unique_ptr<srf::codable::ICodableStorage> Publisher::create_storage()
 {
     return std::make_unique<codable::CodableStorage>(m_resources);
 }
 
+void Publisher::stop()
+{
+    this->release_channel();
+}
+bool Publisher::is_live() const
+{
+    return this->has_channel();
+}
+void Publisher::await_join()
+{
+    this->release_channel();
+}
 }  // namespace srf::internal::pubsub

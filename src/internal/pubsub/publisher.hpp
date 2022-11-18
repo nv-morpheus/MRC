@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "internal/control_plane/client/subscription_service.hpp"
+#include "internal/pubsub/pub_sub_base.hpp"
 #include "internal/resources/forward.hpp"
 
 #include "srf/node/source_channel.hpp"
@@ -33,9 +33,9 @@ namespace srf::internal::pubsub {
 
 class PublisherBackend;
 
-class Publisher final : public srf::pubsub::IPublisher
+class Publisher final : public PubSubBase, public srf::pubsub::IPublisher
 {
-    Publisher(std::string service_name, std::uint64_t tag, resources::PartitionResources& resources);
+    Publisher(std::string service_name, resources::PartitionResources& resources);
 
   public:
     ~Publisher() final = default;
@@ -43,34 +43,52 @@ class Publisher final : public srf::pubsub::IPublisher
     DELETE_COPYABILITY(Publisher);
     DELETE_MOVEABILITY(Publisher);
 
-    const std::string& service_name() const final;
-    const std::uint64_t& tag() const final;
+    // ISubscriptionService overrides
+
+    void stop() final;
+    bool is_live() const final;
+    void await_join() final;
+
+    // IPublisher overrides
+
     std::unique_ptr<srf::codable::ICodableStorage> create_storage() final;
 
-    void stop() final
-    {
-        this->release_channel();
-    }
-
-    void kill() final
-    {
-        this->release_channel();
-    }
-
-    bool is_live() const final
-    {
-        return this->has_channel();
-    }
-
-    void await_join() final
-    {
-        this->release_channel();
-    }
-
   private:
-    const std::string m_service_name;
-    const std::uint64_t m_tag;
+    const std::string& role() const final
+    {
+        return role_publisher();
+    }
+    const std::set<std::string>& subscribe_to_roles() const final
+    {
+        static std::set<std::string> r = {role_subscriber()};
+        return r;
+    }
+
+    virtual void on_update()                = 0;
+
+    void update_tagged_instances(const std::string& role,
+                                 const std::unordered_map<std::uint64_t, InstanceID>& tagged_instances) final
+    {
+        DCHECK_EQ(role, role_subscriber());
+
+        // // todo - convert tagged instances -> tagged endpoints
+        // m_tagged_instances = tagged_instances;
+        // for (const auto& [tag, instance_id] : m_tagged_instances)
+        // {
+        //     // m_tagged_endpoints[tag] = resources().network()->data_plane().client().endpoint_shared(instance_id);
+        // }
+        on_update();
+    }
+
+    void do_service_await_live() override;
+    void do_service_stop() override;
+    void do_service_kill() override;
+    void do_service_await_join() override;
+
+    // resources - needs to be a PartitionRuntime
     resources::PartitionResources& m_resources;
+
+    // set of tags
 
     friend PublisherBackend;
 };

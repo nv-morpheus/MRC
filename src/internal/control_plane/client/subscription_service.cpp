@@ -19,6 +19,7 @@
 
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/client/instance.hpp"
+#include "internal/expected.hpp"
 #include "internal/utils/contains.hpp"
 
 #include <glog/logging.h>
@@ -53,7 +54,6 @@ Role& SubscriptionService::subscriptions(const std::string& role)
 
 void SubscriptionService::do_service_start()
 {
-    get_or_create_subscription_service();
     register_subscription_service();
 
     for (const auto& role : subscribe_to_roles())
@@ -62,47 +62,45 @@ void SubscriptionService::do_service_start()
     }
 }
 
-Expected<> SubscriptionService::get_or_create_subscription_service()
+void SubscriptionService::register_subscription_service()
 {
     DVLOG(10) << "get/create subscription service: " << service_name();
-    protos::CreateSubscriptionServiceRequest req;
-    req.set_service_name(service_name());
-    for (const auto& role : roles())
     {
-        req.add_roles(role);
+        protos::CreateSubscriptionServiceRequest req;
+        req.set_service_name(service_name());
+        for (const auto& role : roles())
+        {
+            req.add_roles(role);
+        }
+        auto resp =
+            m_instance.client().await_unary<protos::Ack>(protos::ClientUnaryCreateSubscriptionService, std::move(req));
+        SRF_THROW_ON_ERROR(resp);
     }
-    auto resp =
-        m_instance.client().await_unary<protos::Ack>(protos::ClientUnaryCreateSubscriptionService, std::move(req));
-    SRF_EXPECT(resp);
-
     DVLOG(10) << "subscribtion_service: " << service_name() << " is live on the control plane server";
-    return {};
-}
 
-Expected<> SubscriptionService::register_subscription_service()
-{
     DVLOG(10) << "register subscription service: " << service_name() << "; role: " << role();
-    protos::RegisterSubscriptionServiceRequest req;
-    req.set_instance_id(m_instance.instance_id());
-    req.set_service_name(this->service_name());
-    req.set_role(role());
-    for (const auto& role : subscribe_to_roles())
     {
-        req.add_subscribe_to_roles(role);
+        protos::RegisterSubscriptionServiceRequest req;
+        req.set_instance_id(m_instance.instance_id());
+        req.set_service_name(this->service_name());
+        req.set_role(role());
+        for (const auto& role : subscribe_to_roles())
+        {
+            req.add_subscribe_to_roles(role);
+        }
+        auto resp = m_instance.client().await_unary<protos::RegisterSubscriptionServiceResponse>(
+            protos::ClientUnaryRegisterSubscriptionService, std::move(req));
+        SRF_THROW_ON_ERROR(resp);
+        m_tag = resp->tag();
     }
-    auto resp = m_instance.client().await_unary<protos::RegisterSubscriptionServiceResponse>(
-        protos::ClientUnaryRegisterSubscriptionService, std::move(req));
-    SRF_EXPECT(resp);
-    m_tag = resp->tag();
     DVLOG(10) << "registered subscription_service: " << service_name() << "; role: " << role() << "; tag: " << m_tag;
-    return {};
 }
 
-Expected<> SubscriptionService::activate_subscription_service()
+void SubscriptionService::activate_subscription_service()
 {
     DVLOG(10) << "[start] activate subscription service: " << service_name() << "; role: " << role()
               << "; tag: " << tag();
-    SRF_CHECK(tag() != 0);
+    CHECK(tag() != 0);
     protos::ActivateSubscriptionServiceRequest req;
     req.set_instance_id(m_instance.instance_id());
     req.set_service_name(this->service_name());
@@ -112,11 +110,11 @@ Expected<> SubscriptionService::activate_subscription_service()
     {
         req.add_subscribe_to_roles(role);
     }
-    SRF_EXPECT(m_instance.client().template await_unary<protos::Ack>(protos::ClientUnaryActivateSubscriptionService,
-                                                                     std::move(req)));
+    SRF_THROW_ON_ERROR(m_instance.client().template await_unary<protos::Ack>(
+        protos::ClientUnaryActivateSubscriptionService, std::move(req)));
+
     DVLOG(10) << "[finish] activate subscription service: " << service_name() << "; role: " << role()
               << "; tag: " << tag();
-    return {};
 }
 
 std::function<void()> SubscriptionService::drop_subscription_service() const
@@ -126,7 +124,7 @@ std::function<void()> SubscriptionService::drop_subscription_service() const
     auto tag          = this->tag();
     auto& instance    = m_instance;
 
-    // note we are capturing this a lambda because the moment we issue the drop subscription request
+    // note we are capturing this as a lambda because the moment we issue the drop subscription request
     // this object becomes volatile. using the lambda, we don't have to capture this as part of the
     // handles custom deleter, instead, we only capture the lambda
 

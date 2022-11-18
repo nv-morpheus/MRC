@@ -36,25 +36,21 @@ struct ISubscriptionService
     virtual bool is_live() const = 0;
 
     virtual void stop()       = 0;
-    virtual void kill()       = 0;
     virtual void await_join() = 0;
 };
 
-class IPublisher : public ISubscriptionService, public node::SourceChannelWriteable<std::unique_ptr<srf::codable::EncodedStorage>>
+class IPublisher : public virtual ISubscriptionService,
+                   public node::SourceChannelWriteable<std::unique_ptr<srf::codable::EncodedStorage>>
 {
   public:
-    using element_type = std::unique_ptr<srf::codable::EncodedStorage>;
-
     ~IPublisher() override = default;
 
     virtual std::unique_ptr<codable::ICodableStorage> create_storage() = 0;
 };
 
-class ISubscriber : public ISubscriptionService
+class ISubscriber : public virtual ISubscriptionService
 {
   public:
-    using element_type = std::unique_ptr<srf::codable::IDecodableStorage>;
-
     ~ISubscriber() override = default;
 };
 

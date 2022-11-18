@@ -26,6 +26,7 @@
 #include "srf/node/sink_channel.hpp"
 #include "srf/node/source_channel.hpp"
 #include "srf/protos/architect.pb.h"
+#include "srf/pubsub/api.hpp"
 #include "srf/types.hpp"
 #include "srf/utils/macros.hpp"
 
@@ -39,34 +40,49 @@ class Instance;
 class SubscriptionService;
 class Role;
 
-class SubscriptionService : public Service
+class SubscriptionService : public virtual srf::pubsub::ISubscriptionService, protected Service
 {
   public:
     SubscriptionService(const std::string& service_name, Instance& instance);
-
     ~SubscriptionService() override;
 
-    const std::string& service_name() const;
+    // srf::pubsub::ISubscriptionService overrides
 
-    virtual const std::string& role() const                         = 0;
-    virtual const std::set<std::string>& roles() const              = 0;
+    // name of service
+    const std::string& service_name() const final;
+
+    // globally unique tag for this instance
+    const std::uint64_t& tag() const final;
+
+    // the set of possible roles for this service
+    virtual const std::set<std::string>& roles() const = 0;
+
+    // the specific role of this instance
+    virtual const std::string& role() const = 0;
+
+    // the set of roles for which this instance will receive updates
     virtual const std::set<std::string>& subscribe_to_roles() const = 0;
 
     // can only be accessed after start
     Role& subscriptions(const std::string& role);
-    const std::uint64_t& tag() const;
 
   protected:
-    void do_service_start() override;
+    // this might not have to be a lambda any more
     std::function<void()> drop_subscription_service() const;
-    Expected<> activate_subscription_service();
+
+    // todo - combine the following two methods
+    // activate should call start, then issue the control plane activation request
+    // called by control_plane::client::Instance one the SubscriptionService is able to receive updates
+    void activate_subscription_service();
 
   private:
+    // this method is executed when the control plane client receives an update for this subscription service
+    // the update from the server will container the role and map of tags to instances ids
     virtual void update_tagged_instances(const std::string& role,
                                          const std::unordered_map<std::uint64_t, InstanceID>& tagged_instances) = 0;
 
-    Expected<> get_or_create_subscription_service();
-    Expected<> register_subscription_service();
+    // registers the subscription service with the control plane
+    void register_subscription_service();
 
     const std::string m_service_name;
     std::uint64_t m_tag{0};

@@ -33,15 +33,15 @@ class IResources
     ~IResources() = default;
 
     template <typename T>
-    std::unique_ptr<pubsub::Publisher<T>> make_publisher(std::string name, pubsub::PublisherPolicy policy)
+    std::shared_ptr<pubsub::Publisher<T>> make_publisher(std::string name, pubsub::PublisherPolicy policy)
     {
         return {new pubsub::Publisher<T>(await_create_publisher_service(name, policy))};
     }
 
     template <typename T>
-    std::unique_ptr<pubsub::Subscriber<T>> make_subscriber(std::string name)
+    std::shared_ptr<pubsub::Subscriber<T>> make_subscriber(std::string name)
     {
-        auto subscriber = std::unique_ptr<pubsub::Subscriber<T>>(new pubsub::Subscriber<T>());
+        auto subscriber = std::shared_ptr<pubsub::Subscriber<T>>(new pubsub::Subscriber<T>());
         auto service    = await_create_subscriber_service(subscriber.m_decoder);
         subscriber->attach_service(std::move(service));
         return subscriber;

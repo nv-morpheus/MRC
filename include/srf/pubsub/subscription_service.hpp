@@ -36,22 +36,17 @@ class SubscriptionService : public ISubscriptionService
         return service().tag();
     }
 
-    void stop() final
+    void stop() override
     {
         service().stop();
     }
 
-    void kill() final
-    {
-        service().kill();
-    }
-
-    bool is_live() const final
+    bool is_live() const override
     {
         return service().is_live();
     }
 
-    void await_join() final
+    void await_join() override
     {
         service().await_join();
     }

@@ -21,6 +21,7 @@
 
 #include "srf/node/queue.hpp"
 #include "srf/node/rx_source.hpp"
+#include "srf/pubsub/api.hpp"
 #include "srf/utils/macros.hpp"
 
 #include <cstddef>
@@ -30,13 +31,10 @@
 
 namespace srf::internal::pubsub {
 
-template <typename T>
-class SubscriberManager;
 
-template <typename T>
-class Subscriber
+class Subscriber : public srf::pubsub::ISubscriber
 {
-    Subscriber(std::string service_name, std::uint64_t tag) : m_service_name(std::move(service_name)), m_tag(tag) {}
+    Subscriber(std::string service_name, std::uint64_t tag, std::function<void(std::unique_ptr<codable::IDecodableStorage>)> ) : m_service_name(std::move(service_name)), m_tag(tag) {}
 
   public:
     ~Subscriber() = default;
