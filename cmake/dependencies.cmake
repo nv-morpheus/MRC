@@ -64,7 +64,7 @@ include(deps/Configure_boost)
 
 # UCX
 # ===
-set(UCX_VERSION "1.12" CACHE STRING "Version of ucx to use")
+set(UCX_VERSION "1.13" CACHE STRING "Version of ucx to use")
 include(deps/Configure_ucx)
 
 # hwloc

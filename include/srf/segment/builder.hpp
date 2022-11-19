@@ -21,6 +21,7 @@
 #include "srf/core/watcher.hpp"
 #include "srf/engine/segment/ibuilder.hpp"
 #include "srf/exceptions/runtime_error.hpp"
+#include "srf/modules/segment_modules.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/rx_node.hpp"
 #include "srf/node/rx_sink.hpp"
@@ -40,6 +41,7 @@
 
 #include <boost/hana.hpp>  // IWYU pragma: keep
 #include <glog/logging.h>
+#include <nlohmann/json.hpp>
 #include <rxcpp/rx.hpp>
 
 #include <cstdint>
@@ -50,6 +52,7 @@
 #include <type_traits>
 #include <typeindex>
 #include <utility>
+#include <vector>
 
 // IWYU pragma: no_include <boost/hana/fwd/core/when.hpp>
 // IWYU pragma: no_include <boost/hana/fwd/if.hpp>
@@ -118,12 +121,13 @@ class Builder final
     template <typename ObjectT, typename... ArgsT>
     std::shared_ptr<Object<ObjectT>> construct_object(std::string name, ArgsT&&... args)
     {
-        auto uptr = std::make_unique<ObjectT>(std::forward<ArgsT>(args)...);
+        auto ns_name = m_namespace_prefix.empty() ? name : m_namespace_prefix + "/" + name;
+        auto uptr    = std::make_unique<ObjectT>(std::forward<ArgsT>(args)...);
 
-        ::add_stats_watcher_if_rx_source(*uptr, name);
-        ::add_stats_watcher_if_rx_sink(*uptr, name);
+        ::add_stats_watcher_if_rx_source(*uptr, ns_name);
+        ::add_stats_watcher_if_rx_sink(*uptr, ns_name);
 
-        return make_object(std::move(name), std::move(uptr));
+        return make_object(std::move(ns_name), std::move(uptr));
     }
 
     template <typename SourceTypeT,
@@ -161,6 +165,53 @@ class Builder final
         return construct_object<NodeTypeT<SinkTypeT, SourceTypeT>>(name, std::forward<ArgsT>(ops)...);
     }
 
+    /**
+     * Instantiate a segment module of `ModuleTypeT`, intialize it, and return it to the caller
+     * @tparam ModuleTypeT Type of module to create
+     * @param module_name Unique name of this instance of the module
+     * @param config Configuration to pass to the module
+     * @return Return a shared pointer to the new module, which is a derived class of SegmentModule
+     */
+    template <typename ModuleTypeT>
+    std::shared_ptr<ModuleTypeT> make_module(std::string module_name, nlohmann::json config = {})
+    {
+        static_assert(std::is_base_of_v<modules::SegmentModule, ModuleTypeT>);
+
+        auto module = std::make_shared<ModuleTypeT>(std::move(module_name), std::move(config));
+        init_module(module);
+
+        return std::move(module);
+    }
+
+    /**
+     * Initialize a SegmentModule that was instantiated outside of the builder.
+     * @param module Module to initialize
+     */
+    void init_module(std::shared_ptr<srf::modules::SegmentModule> module);
+
+    /**
+     * Register an input port on the given module -- note: this in generally only necessary for dynamically
+     * created modules that use an alternate initializer function independent of the derived class.
+     * See: PythonSegmentModule
+     * @param input_name Unique name of the input port
+     * @param object shared pointer to type erased Object associated with 'input_name' on this module instance.
+     */
+    void register_module_input(std::string input_name, std::shared_ptr<segment::ObjectProperties> object);
+
+    /**
+     * Register an output port on the given module -- note: this in generally only necessary for dynamically
+     * created modules that use an alternate initializer function independent of the derived class.
+     * See: PythonSegmentModule
+     * @param output_name Unique name of the output port
+     * @param object shared pointer to type erased Object associated with 'output_name' on this module instance.
+     */
+    void register_module_output(std::string output_name, std::shared_ptr<segment::ObjectProperties> object);
+
+    std::shared_ptr<srf::modules::SegmentModule> load_module_from_registry(const std::string& module_id,
+                                                                           const std::string& registry_namespace,
+                                                                           std::string module_name,
+                                                                           nlohmann::json config = {});
+
     template <typename SourceNodeTypeT, typename SinkNodeTypeT>
     void make_edge(std::shared_ptr<Object<SourceNodeTypeT>> source, std::shared_ptr<Object<SinkNodeTypeT>> sink)
     {
@@ -187,6 +238,70 @@ class Builder final
     {
         DVLOG(10) << "forming segment edge between two node objects";
         node::make_edge(source, sink);
+    }
+
+    /**
+     * Given a typed source and a typeless sink, attempt to construct an edge between them -- assumes that source and
+     * sink types are convertible.
+     *
+     * @tparam InputT
+     * @param source
+     * @param sink
+     */
+    template <typename InputT>
+    void make_edge(node::SourceProperties<InputT>& source, std::shared_ptr<segment::ObjectProperties> sink)
+    {
+        DVLOG(10) << "forming segment edge between two node objects";
+        node::make_edge(source, sink->template sink_typed<InputT>());
+    }
+
+    /**
+     * Partial dynamic edge construction:
+     *
+     * Create edge using a fully constructed Object and a type erased Object
+     *  We extract the underlying node object (Likely an RxNode) and call make_edge with it and the type erased
+     *  object. This works via a cascaded type extraction process.
+     * @tparam SourceNodeTypeT
+     * @param source Fully typed, wrapped, object
+     * @param sink Type erased object -- assumed to be convertible to source type
+     */
+    template <typename SourceNodeTypeT>
+    void make_edge(std::shared_ptr<Object<SourceNodeTypeT>>& source, std::shared_ptr<segment::ObjectProperties> sink)
+    {
+        DVLOG(10) << "forming segment edge between a segment source and typeless Object";
+        this->make_edge(source->object(), sink);
+    }
+
+    /**
+     * Given a typeless source and a typed sink, attempt to construct an edge between them -- assumes that
+     * source and sink type's are convertible.
+     *
+     * @tparam OutputT
+     * @param source
+     * @param sink
+     */
+    template <typename OutputT>
+    void make_edge(std::shared_ptr<segment::ObjectProperties> source, node::SinkProperties<OutputT>& sink)
+    {
+        DVLOG(10) << "forming segment edge between two node objects";
+        node::make_edge(source->template source_typed<OutputT>(), sink);
+    }
+
+    /**
+     * Partial dynamic edge construction:
+     *
+     * Create edge using a fully constructed Object and a type erased Object
+     *  We extract the underlying node object (Likely an RxNode) and call make_edge with it and the type erased
+     *  object. This works via a cascaded type extraction process.
+     * @tparam SinkNodeTypeT
+     * @param source Fully typed, wrapped, object
+     * @param sink Fully typed, wrapped, object
+     */
+    template <typename SinkNodeTypeT>
+    void make_edge(std::shared_ptr<segment::ObjectProperties> source, std::shared_ptr<Object<SinkNodeTypeT>>& sink)
+    {
+        DVLOG(10) << "forming segment edge between a typeless object and a segment sink";
+        this->make_edge(source, sink->object());
     }
 
     template <typename SourceNodeTypeT, typename SinkNodeTypeT = SourceNodeTypeT>
@@ -229,7 +344,17 @@ class Builder final
     }
 
   private:
+    using sp_segment_module_t = std::shared_ptr<srf::modules::SegmentModule>;
+    using sp_obj_prop_t       = std::shared_ptr<segment::ObjectProperties>;
+
+    std::string m_namespace_prefix;
+    std::vector<std::string> m_namespace_stack{};
+    std::vector<sp_segment_module_t> m_module_stack{};
+
     internal::segment::IBuilder& m_backend;
+
+    void ns_push(sp_segment_module_t module);
+    void ns_pop();
 
     friend Definition;
 };
@@ -237,6 +362,7 @@ class Builder final
 template <typename ObjectT>
 std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::unique_ptr<ObjectT> node)
 {
+    // Note: name should have any prefix modifications done prior to getting here.
     if (m_backend.has_object(name))
     {
         LOG(ERROR) << "A Object named " << name << " is already registered";

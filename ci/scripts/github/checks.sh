@@ -16,15 +16,23 @@
 
 set -e
 
-source ${WORKSPACE}/ci/scripts/jenkins/common.sh
+source ${WORKSPACE}/ci/scripts/github/common.sh
 
-restore_conda_env
+fetch_base_branch
 
-gpuci_logger "Fetching Build artifacts from ${DISPLAY_ARTIFACT_URL}/"
-fetch_s3 "${ARTIFACT_ENDPOINT}/cpp_tests.tar.bz" "${WORKSPACE_TMP}/cpp_tests.tar.bz"
-fetch_s3 "${ARTIFACT_ENDPOINT}/dsos.tar.bz" "${WORKSPACE_TMP}/dsos.tar.bz"
+update_conda_env
 
-tar xf "${WORKSPACE_TMP}/cpp_tests.tar.bz"
-tar xf "${WORKSPACE_TMP}/dsos.tar.bz"
+rapids-logger "Configuring CMake"
+cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} .
 
-mkdir -p ${WORKSPACE_TMP}/reports
+rapids-logger "Building targets that generate source code"
+cmake --build build --target srf_style_checks --parallel ${PARALLEL_LEVEL}
+
+rapids-logger "Running C++ style checks"
+${SRF_ROOT}/ci/scripts/cpp_checks.sh
+
+rapids-logger "Runing Python style checks"
+${SRF_ROOT}/ci/scripts/python_checks.sh
+
+rapids-logger "Checking copyright headers"
+python ${SRF_ROOT}/ci/scripts/copyright.py --verify-apache-v2 --git-diff-commits ${CHANGE_TARGET} ${GIT_COMMIT}

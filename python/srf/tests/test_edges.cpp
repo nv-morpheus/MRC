@@ -29,6 +29,8 @@
 #include "srf/node/source_properties.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/segment/object.hpp"
+#include "srf/utils/string_utils.hpp"
+#include "srf/version.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <pybind11/cast.h>
@@ -39,6 +41,7 @@
 #include <cstddef>
 #include <exception>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -191,21 +194,21 @@ class SinkBase : public pysrf::PythonSink<std::shared_ptr<Base>>
     SinkBase() : PythonSink(build()) {}
 };
 
-PYBIND11_MODULE(test_edges_cpp, m)
+PYBIND11_MODULE(test_edges_cpp, module)
 {
-    m.doc() = R"pbdoc()pbdoc";
+    module.doc() = R"pbdoc()pbdoc";
 
-    pysrf::import(m, "srf");
+    pysrf::import(module, "srf");
 
-    py::class_<Base, std::shared_ptr<Base>>(m, "Base").def(py::init<>([]() { return std::make_shared<Base>(); }));
+    py::class_<Base, std::shared_ptr<Base>>(module, "Base").def(py::init<>([]() { return std::make_shared<Base>(); }));
     srf::pysrf::PortBuilderUtil::register_port_util<Base>();
 
-    py::class_<DerivedA, Base, std::shared_ptr<DerivedA>>(m, "DerivedA").def(py::init<>([]() {
+    py::class_<DerivedA, Base, std::shared_ptr<DerivedA>>(module, "DerivedA").def(py::init<>([]() {
         return std::make_shared<DerivedA>();
     }));
     srf::pysrf::PortBuilderUtil::register_port_util<DerivedA>();
 
-    py::class_<DerivedB, Base, std::shared_ptr<DerivedB>>(m, "DerivedB").def(py::init<>([]() {
+    py::class_<DerivedB, Base, std::shared_ptr<DerivedB>>(module, "DerivedB").def(py::init<>([]() {
         return std::make_shared<DerivedB>();
     }));
     srf::pysrf::PortBuilderUtil::register_port_util<DerivedB>();
@@ -215,7 +218,7 @@ PYBIND11_MODULE(test_edges_cpp, m)
 
     py::class_<segment::Object<SourceDerivedB>,
                srf::segment::ObjectProperties,
-               std::shared_ptr<segment::Object<SourceDerivedB>>>(m, "SourceDerivedB")
+               std::shared_ptr<segment::Object<SourceDerivedB>>>(module, "SourceDerivedB")
         .def(py::init<>([](srf::segment::Builder& parent, const std::string& name) {
                  auto stage = parent.construct_object<SourceDerivedB>(name);
 
@@ -226,7 +229,7 @@ PYBIND11_MODULE(test_edges_cpp, m)
 
     py::class_<segment::Object<SourcePyHolder>,
                srf::segment::ObjectProperties,
-               std::shared_ptr<segment::Object<SourcePyHolder>>>(m, "SourcePyHolder")
+               std::shared_ptr<segment::Object<SourcePyHolder>>>(module, "SourcePyHolder")
         .def(py::init<>([](srf::segment::Builder& parent, const std::string& name) {
                  auto stage = parent.construct_object<SourcePyHolder>(name);
 
@@ -236,7 +239,7 @@ PYBIND11_MODULE(test_edges_cpp, m)
              py::arg("name"));
 
     py::class_<segment::Object<NodeBase>, srf::segment::ObjectProperties, std::shared_ptr<segment::Object<NodeBase>>>(
-        m, "NodeBase")
+        module, "NodeBase")
         .def(py::init<>([](srf::segment::Builder& parent, const std::string& name) {
                  auto stage = parent.construct_object<NodeBase>(name);
 
@@ -247,7 +250,7 @@ PYBIND11_MODULE(test_edges_cpp, m)
 
     py::class_<segment::Object<NodePyHolder>,
                srf::segment::ObjectProperties,
-               std::shared_ptr<segment::Object<NodePyHolder>>>(m, "NodePyHolder")
+               std::shared_ptr<segment::Object<NodePyHolder>>>(module, "NodePyHolder")
         .def(py::init<>([](srf::segment::Builder& parent, const std::string& name) {
                  auto stage = parent.construct_object<NodePyHolder>(name);
 
@@ -257,7 +260,7 @@ PYBIND11_MODULE(test_edges_cpp, m)
              py::arg("name"));
 
     py::class_<segment::Object<SinkBase>, segment::ObjectProperties, std::shared_ptr<segment::Object<SinkBase>>>(
-        m, "SinkBase")
+        module, "SinkBase")
         .def(py::init<>([](segment::Builder& parent, const std::string& name) {
                  auto stage = parent.construct_object<SinkBase>(name);
 
@@ -266,10 +269,7 @@ PYBIND11_MODULE(test_edges_cpp, m)
              py::arg("parent"),
              py::arg("name"));
 
-#ifdef VERSION_INFO
-    m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
-#else
-    m.attr("__version__") = "dev";
-#endif
+    module.attr("__version__") =
+        SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
 }  // namespace srf::pytests

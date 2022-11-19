@@ -16,23 +16,13 @@
 
 set -e
 
-source ${WORKSPACE}/ci/scripts/jenkins/common.sh
+source ${WORKSPACE}/ci/scripts/github/common.sh
 
+update_conda_env
 
-restore_conda_env
+rapids-logger "Fetching Build artifacts from ${DISPLAY_ARTIFACT_URL}/"
+fetch_s3 "${ARTIFACT_ENDPOINT}/build.tar.bz" "${WORKSPACE_TMP}/build.tar.bz"
 
-gpuci_logger "Building Conda Package"
-CONDA_BLD_OUTPUT="${WORKSPACE_TMP}/conda-bld"
-mkdir -p ${CONDA_BLD_OUTPUT}
+tar xf "${WORKSPACE_TMP}/build.tar.bz"
 
-CONDA_ARGS=()
-CONDA_ARGS+=("--output-folder=${CONDA_BLD_OUTPUT}")
-CONDA_ARGS+=("--label" "${CONDA_PKG_LABEL}")
-CONDA_ARGS="${CONDA_ARGS[@]}" ${SRF_ROOT}/ci/conda/recipes/run_conda_build.sh
-
-gpuci_logger "Archiving Conda Package"
-cd $(dirname ${CONDA_BLD_OUTPUT})
-tar cfj ${WORKSPACE_TMP}/conda_pkg.tar.bz $(basename ${CONDA_BLD_OUTPUT})
-
-gpuci_logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
-aws s3 cp ${WORKSPACE_TMP}/conda_pkg.tar.bz "${ARTIFACT_URL}/conda_pkg.tar.bz"
+mkdir -p ${WORKSPACE_TMP}/reports

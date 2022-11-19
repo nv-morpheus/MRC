@@ -204,6 +204,11 @@ TEST_F(TestUCX, Get)
         worker_get_src->progress();
     }
     future.get();
+
+    // unregister memory
+    ucp_rkey_buffer_release(src_rbuff);
+    context->unregister_memory(src_lkey);
+    context->unregister_memory(dst_lkey);
 }
 
 // Recv

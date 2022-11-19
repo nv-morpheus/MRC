@@ -52,7 +52,7 @@ class TestSegmentResources
     }
 };
 
-class SegmentTests : public ::testing::Test
+class TestSegment : public ::testing::Test
 {
   protected:
     void SetUp() override
