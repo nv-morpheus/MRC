@@ -42,7 +42,7 @@ class Client;
 
 namespace srf::internal::control_plane::client {
 
-class SubscriptionService;
+class ISubscriptionServiceUpdater;
 
 class Instance final : private resources::PartitionResourceBase, private Service
 {
@@ -56,7 +56,7 @@ class Instance final : private resources::PartitionResourceBase, private Service
     Client& client();
     const InstanceID& instance_id() const;
 
-    void register_subscription_service(std::unique_ptr<SubscriptionService> service);
+    void register_subscription_service(std::shared_ptr<ISubscriptionServiceUpdater> service);
 
   private:
     void do_service_start() final;
@@ -77,7 +77,7 @@ class Instance final : private resources::PartitionResourceBase, private Service
     Client& m_client;
     const InstanceID m_instance_id;
     Promise<void> m_shutdown_promise;
-    std::multimap<std::string, std::unique_ptr<SubscriptionService>> m_subscription_services;
+    std::multimap<std::string, std::shared_ptr<ISubscriptionServiceUpdater>> m_subscription_services;
     std::unique_ptr<srf::runnable::Runner> m_update_handler;
 
     friend network::Resources;

@@ -17,26 +17,24 @@
 
 #pragma once
 
-namespace srf::codable {
+#include "internal/pubsub/publisher.hpp"
 
-class IStorage;
-class IEncodableStorage;
-class IDecodableStorage;
+namespace srf::internal::pubsub {
 
-template <typename T>
-class Encoder;
+class PublisherRoundRobin final : public Publisher
+{
+  public:
+    using Publisher::Publisher;
+    ~PublisherRoundRobin() final = default;
 
-template <typename T>
-class Decoder;
+  private:
+    // update local m_next iterator
+    void on_update() final;
 
-class EncodedStorage;
+    // apply the round robin policy
+    void apply_policy(srf::runtime::RemoteDescriptor&& rd) final;
 
-template <typename T>
-class EncodedObject;
+    std::unordered_map<std::uint64_t, std::shared_ptr<ucx::Endpoint>>::const_iterator m_next;
+};
 
-namespace protos {
-class EncodedObject;
-class RemoteDescriptor;
-}  // namespace protos
-
-}  // namespace srf::codable
+}  // namespace srf::internal::pubsub

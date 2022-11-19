@@ -19,36 +19,27 @@
 
 #include "srf/codable/api.hpp"
 #include "srf/codable/encoded_object.hpp"
+#include "srf/control_plane/api.hpp"
 #include "srf/node/sink_channel.hpp"
 #include "srf/node/source_channel.hpp"
+#include "srf/runtime/remote_descriptor.hpp"
 
 #include <string>
 
 namespace srf::pubsub {
 
-struct ISubscriptionService
-{
-    virtual ~ISubscriptionService() = default;
-
-    virtual const std::string& service_name() const = 0;
-    virtual const std::uint64_t& tag() const        = 0;
-
-    virtual bool is_live() const = 0;
-
-    virtual void stop()       = 0;
-    virtual void await_join() = 0;
-};
-
-class IPublisher : public virtual ISubscriptionService,
-                   public node::SourceChannelWriteable<std::unique_ptr<srf::codable::EncodedStorage>>
+class IPublisher : public virtual control_plane::ISubscriptionService
 {
   public:
     ~IPublisher() override = default;
 
     virtual std::unique_ptr<codable::ICodableStorage> create_storage() = 0;
+
+    virtual channel::Status publish(std::unique_ptr<codable::EncodedStorage> encoded_object) = 0;
+    virtual channel::Status publish(runtime::RemoteDescriptor&& remote_descriptor)           = 0;
 };
 
-class ISubscriber : public virtual ISubscriptionService
+class ISubscriber : public virtual control_plane::ISubscriptionService
 {
   public:
     ~ISubscriber() override = default;

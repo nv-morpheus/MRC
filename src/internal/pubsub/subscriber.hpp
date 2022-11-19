@@ -18,9 +18,11 @@
 #pragma once
 
 #include "internal/control_plane/client/subscription_service.hpp"
+#include "internal/pubsub/pub_sub_base.hpp"
 
 #include "srf/node/queue.hpp"
 #include "srf/node/rx_source.hpp"
+#include "srf/node/source_channel.hpp"
 #include "srf/pubsub/api.hpp"
 #include "srf/utils/macros.hpp"
 
@@ -31,13 +33,17 @@
 
 namespace srf::internal::pubsub {
 
-
-class Subscriber : public srf::pubsub::ISubscriber
+class Subscriber final : public PubSubBase, public srf::pubsub::ISubscriber
 {
-    Subscriber(std::string service_name, std::uint64_t tag, std::function<void(std::unique_ptr<codable::IDecodableStorage>)> ) : m_service_name(std::move(service_name)), m_tag(tag) {}
+    Subscriber(std::string service_name,
+               std::uint64_t tag,
+               srf::node::SourceChannelWriteable<typename T>
+      m_service_name(std::move(service_name)),
+      m_tag(tag)
+    {}
 
   public:
-    ~Subscriber() = default;
+    ~Subscriber() override = default;
 
     DELETE_COPYABILITY(Subscriber);
     DELETE_MOVEABILITY(Subscriber);

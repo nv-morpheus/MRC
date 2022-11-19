@@ -17,14 +17,14 @@
 
 #pragma once
 
-#include "srf/pubsub/api.hpp"
+#include "srf/control_plane/api.hpp"
 
-namespace srf::pubsub {
+namespace srf::control_plane {
 
-class SubscriptionService : public ISubscriptionService
+class SubscriptionServiceForwarder : public ISubscriptionService
 {
   public:
-    ~SubscriptionService() override = default;
+    ~SubscriptionServiceForwarder() override = default;
 
     const std::string& service_name() const final
     {
@@ -36,9 +36,9 @@ class SubscriptionService : public ISubscriptionService
         return service().tag();
     }
 
-    void stop() override
+    void request_stop() override
     {
-        service().stop();
+        service().request_stop();
     }
 
     bool is_live() const override
@@ -55,4 +55,4 @@ class SubscriptionService : public ISubscriptionService
     virtual ISubscriptionService& service() const = 0;
 };
 
-}  // namespace srf::pubsub
+}  // namespace srf::control_plane

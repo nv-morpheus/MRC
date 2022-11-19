@@ -46,20 +46,62 @@ const std::string& SubscriptionService::service_name() const
     return m_service_name;
 }
 
-Role& SubscriptionService::subscriptions(const std::string& role)
+RoleUpdater& SubscriptionService::subscriptions(const std::string& role)
 {
     DCHECK(contains(m_subscriptions, role));
     return *m_subscriptions.at(role);
 }
 
+void SubscriptionService::request_stop()
+{
+    // issue a request to drop this subscription service
+    // after confirmation form the control plane, teardown will be executed by the updater, which will formally
+    // stop and join any outstanding runnables
+    drop_subscription_service();
+}
+
 void SubscriptionService::do_service_start()
 {
+    // register this instance with the control plane
+    // if successful, this object now has a valid and globally unique tag
     register_subscription_service();
 
+    // create update endpoints for the client instance to write updates
     for (const auto& role : subscribe_to_roles())
     {
-        m_subscriptions[role] = std::make_unique<Role>(*this, role);
+        m_subscriptions[role] = std::make_unique<RoleUpdater>(*this, role);
     }
+
+    // virtual method to enable derived class to specialize
+    do_subscription_service_setup();
+
+    // register this subscription service with the client instance
+    // this connects this object to the update stream
+    m_instance.register_subscription_service(this->shared_from_this());
+
+    // inform the control plane that this object can now begin to receieve updates
+    activate_subscription_service();
+}
+
+// a stop is a kill
+void SubscriptionService::do_service_stop()
+{
+    do_service_kill();
+}
+
+// perform teardown
+void SubscriptionService::do_service_kill()
+{
+    do_subscription_service_teardown();
+}
+
+// our start method is not async
+void SubscriptionService::do_service_await_live() {}
+
+//
+void SubscriptionService::do_service_await_join()
+{
+    do_subscription_service_join();
 }
 
 void SubscriptionService::register_subscription_service()
@@ -82,7 +124,7 @@ void SubscriptionService::register_subscription_service()
     {
         protos::RegisterSubscriptionServiceRequest req;
         req.set_instance_id(m_instance.instance_id());
-        req.set_service_name(this->service_name());
+        req.set_service_name(service_name());
         req.set_role(role());
         for (const auto& role : subscribe_to_roles())
         {
@@ -103,7 +145,7 @@ void SubscriptionService::activate_subscription_service()
     CHECK(tag() != 0);
     protos::ActivateSubscriptionServiceRequest req;
     req.set_instance_id(m_instance.instance_id());
-    req.set_service_name(this->service_name());
+    req.set_service_name(service_name());
     req.set_role(role());
     req.set_tag(tag());
     for (const auto& role : subscribe_to_roles())
@@ -117,28 +159,18 @@ void SubscriptionService::activate_subscription_service()
               << "; tag: " << tag();
 }
 
-std::function<void()> SubscriptionService::drop_subscription_service() const
+void SubscriptionService::drop_subscription_service()
 {
-    auto service_name = this->service_name();
-    auto role         = this->role();
-    auto tag          = this->tag();
-    auto& instance    = m_instance;
-
-    // note we are capturing this as a lambda because the moment we issue the drop subscription request
-    // this object becomes volatile. using the lambda, we don't have to capture this as part of the
-    // handles custom deleter, instead, we only capture the lambda
-
-    return [service_name, role, tag, &instance] {
-        DVLOG(10) << "[start] drop subscription service: " << service_name << "; role: " << role << "; tag: " << tag;
-        protos::DropSubscriptionServiceRequest req;
-        req.set_service_name(service_name);
-        req.set_instance_id(instance.instance_id());
-        req.set_tag(tag);
-        auto resp =
-            instance.client().await_unary<protos::Ack>(protos::ClientUnaryDropSubscriptionService, std::move(req));
-        LOG_IF(ERROR, !resp) << resp.error().message();
-        DVLOG(10) << "[finish] drop subscription service: " << service_name << "; role: " << role << "; tag: " << tag;
-    };
+    DVLOG(10) << "[start] drop subscription service: " << service_name() << "; role: " << role() << "; tag: " << tag();
+    CHECK(tag() != 0);
+    protos::DropSubscriptionServiceRequest req;
+    req.set_service_name(service_name());
+    req.set_instance_id(m_instance.instance_id());
+    req.set_tag(tag());
+    auto resp =
+        m_instance.client().await_unary<protos::Ack>(protos::ClientUnaryDropSubscriptionService, std::move(req));
+    SRF_THROW_ON_ERROR(resp);
+    DVLOG(10) << "[finish] drop subscription service: " << service_name() << "; role: " << role() << "; tag: " << tag();
 }
 
 const std::uint64_t& SubscriptionService::tag() const
@@ -147,11 +179,31 @@ const std::uint64_t& SubscriptionService::tag() const
     return m_tag;
 }
 
-Role::Role(SubscriptionService& subscription_service, std::string role_name) :
+RoleUpdater::RoleUpdater(SubscriptionService& subscription_service, std::string role_name) :
   m_subscription_service(subscription_service),
   m_role_name(std::move(role_name))
 {
     DCHECK(contains(m_subscription_service.subscribe_to_roles(), m_role_name));
+}
+
+void SubscriptionService::await_join()
+{
+    service_await_join();
+}
+bool SubscriptionService::is_live() const
+{
+    auto state = Service::state();
+    return (state == ServiceState::Running);
+}
+
+void SubscriptionService::teardown()
+{
+    service_stop();
+}
+
+const srf::runnable::LaunchOptions& SubscriptionService::policy_engine_launch_options() const
+{
+    return m_instance.client().launch_options();
 }
 
 }  // namespace srf::internal::control_plane::client

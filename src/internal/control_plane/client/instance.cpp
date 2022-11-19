@@ -98,11 +98,9 @@ Future<void> Instance::shutdown()
     return m_shutdown_promise.get_future();
 }
 
-void Instance::register_subscription_service(std::unique_ptr<SubscriptionService> subscription_service)
+void Instance::register_subscription_service(std::shared_ptr<ISubscriptionServiceUpdater> subscription_service)
 {
     auto it = m_subscription_services.emplace(subscription_service->service_name(), std::move(subscription_service));
-    it->second->service_start();
-    DCHECK(!m_subscription_services.empty());
 }
 
 void Instance::do_handle_state_update(const protos::StateUpdate& update)
@@ -117,25 +115,25 @@ void Instance::do_handle_state_update(const protos::StateUpdate& update)
 
     if (update.has_drop_subscription_service())
     {
+        const auto& service = update.drop_subscription_service();
+
         DCHECK_GT(m_subscription_services.count(update.service_name()), 0)
             << "failed to find active subscription service with name: " << update.service_name();
 
-        DVLOG(10) << "client::instance [" << partition_id()
-                  << "] dropping tag: " << update.drop_subscription_service().tag()
-                  << "; for role: " << update.drop_subscription_service().role();
+        DVLOG(10) << "client::instance [" << partition_id() << "] dropping tag: " << service.tag()
+                  << "; for role: " << service.role();
 
         auto range = m_subscription_services.equal_range(update.service_name());
         for (auto it = range.first; it != range.second;)
         {
             auto& service = *it->second;
-            if (service.role() == update.drop_subscription_service().role() &&
-                service.tag() == update.drop_subscription_service().tag())
+            if (service.role() == service.role() && service.tag() == service.tag())
             {
                 DVLOG(10) << "client dropping subscription service: " << update.service_name()
                           << "; role: " << service.role() << "; tag: " << service.tag();
 
-                service.service_stop();
-                service.service_await_join();
+                ISubscriptionServiceUpdater& updater = service;
+                updater.teardown();
                 it = m_subscription_services.erase(it);
             }
             else
