@@ -17,13 +17,14 @@
 
 #pragma once
 
-#include "internal/control_plane/client/subscription_service.hpp"
-#include "internal/pubsub/pub_sub_base.hpp"
+#include "internal/memory/forward.hpp"
+#include "internal/pubsub/base.hpp"
 
-#include "srf/node/queue.hpp"
-#include "srf/node/rx_source.hpp"
-#include "srf/node/source_channel.hpp"
+#include "srf/channel/status.hpp"
+#include "srf/node/operators/operator.hpp"
 #include "srf/pubsub/api.hpp"
+#include "srf/runnable/runner.hpp"
+#include "srf/runtime/remote_descriptor.hpp"
 #include "srf/utils/macros.hpp"
 
 #include <cstddef>
@@ -33,14 +34,15 @@
 
 namespace srf::internal::pubsub {
 
-class Subscriber final : public PubSubBase, public srf::pubsub::ISubscriber
+/**
+ * @brief The internal type-erased Subscriber
+ *
+ */
+class Subscriber final : public Base,
+                         public srf::pubsub::ISubscriber,
+                         public srf::node::Operator<srf::runtime::RemoteDescriptor>
 {
-    Subscriber(std::string service_name,
-               std::uint64_t tag,
-               srf::node::SourceChannelWriteable<typename T>
-      m_service_name(std::move(service_name)),
-      m_tag(tag)
-    {}
+    Subscriber(std::string service_name, runtime::Runtime& runtime);
 
   public:
     ~Subscriber() override = default;
@@ -48,20 +50,47 @@ class Subscriber final : public PubSubBase, public srf::pubsub::ISubscriber
     DELETE_COPYABILITY(Subscriber);
     DELETE_MOVEABILITY(Subscriber);
 
-    const std::string& service_name()
-    {
-        return m_service_name;
-    }
-    const std::uint64_t& tag()
-    {
-        return m_tag;
-    }
+    // [ISubscriptionServiceIdentity] provide the value for the role of this instance
+    const std::string& role() const final;
+
+    // [ISubscriptionServiceIdentity] provide the set of roles for which updates will be delivered
+    const std::set<std::string>& subscribe_to_roles() const final;
 
   private:
-    const std::string m_service_name;
-    const std::uint64_t m_tag;
+    // [internal::control_plane::client::SubscriptionService]
+    // setup up the runnables needed to driver the publisher
+    void do_subscription_service_setup() final;
 
-    friend SubscriberManager<T>;
+    // [internal::control_plane::client::SubscriptionService]
+    // teardown up the runnables needed to driver the publisher
+    void do_subscription_service_teardown() final;
+
+    // [internal::control_plane::client::SubscriptionService]
+    // await on the completion of all internal runnables
+    void do_subscription_service_join() final;
+
+    // [Operator]
+    srf::channel::Status on_next(srf::runtime::RemoteDescriptor&& rd) final
+    {
+        return SourceChannelWriteable<srf::runtime::RemoteDescriptor>::await_write(std::move(rd));
+    }
+
+    // [Operator] - signifies the channel was dropped
+    void on_complete() final
+    {
+        SourceChannelWriteable<srf::runtime::RemoteDescriptor>::release_channel();
+    }
+
+    // [internal::control_plane::client::SubscriptionService]
+    // called by the update engine when updates for a given subscribed_to role is received
+    void update_tagged_instances(const std::string& role,
+                                 const std::unordered_map<std::uint64_t, InstanceID>& tagged_instances) final;
+
+    // deserialize the incoming protobuf and create a local remote descriptor
+    srf::runtime::RemoteDescriptor network_handler(memory::TransientBuffer& buffer);
+
+    // runner for the network handler node
+    std::unique_ptr<srf::runnable::Runner> m_network_handler;
 };
 
 }  // namespace srf::internal::pubsub

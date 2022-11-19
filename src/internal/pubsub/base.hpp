@@ -30,10 +30,10 @@ namespace srf::internal::pubsub {
  *
  * This class defines the set of allowed roles.
  */
-class PubSubBase : public control_plane::client::SubscriptionService
+class Base : public control_plane::client::SubscriptionService
 {
   public:
-    PubSubBase(std::string name, runtime::Runtime& runtime) :
+    Base(std::string name, runtime::Runtime& runtime) :
       SubscriptionService(std::move(name), runtime.resources().network()->control_plane()),
       m_runtime(runtime)
     {}

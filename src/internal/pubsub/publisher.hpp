@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "internal/pubsub/pub_sub_base.hpp"
+#include "internal/pubsub/base.hpp"
 #include "internal/resources/forward.hpp"
 #include "internal/ucx/endpoint.hpp"
 
@@ -35,11 +35,7 @@
 
 namespace srf::internal::pubsub {
 
-/**
- * @brief Abstract
- *
- */
-class Publisher : public PubSubBase,
+class Publisher : public Base,
                   public srf::pubsub::IPublisher,
                   public srf::node::SourceChannelWriteable<srf::runtime::RemoteDescriptor>
 {
@@ -82,15 +78,15 @@ class Publisher : public PubSubBase,
 
     // [internal::control_plane::client::SubscriptionService]
     // setup up the runnables needed to driver the publisher
-    void do_subscription_service_setup() override;
+    void do_subscription_service_setup() final;
 
     // [internal::control_plane::client::SubscriptionService]
     // teardown up the runnables needed to driver the publisher
-    void do_subscription_service_teardown() override;
+    void do_subscription_service_teardown() final;
 
     // [internal::control_plane::client::SubscriptionService]
     // await on the completion of all internal runnables
-    void do_subscription_service_join() override;
+    void do_subscription_service_join() final;
 
     // [internal::control_plane::client::SubscriptionService]
     // called by the update engine when updates for a given subscribed_to role is received
