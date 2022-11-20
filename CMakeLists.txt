@@ -179,6 +179,7 @@ add_library(libsrf
   src/internal/pubsub/publisher.cpp
   src/internal/pubsub/publisher_round_robin.cpp
   src/internal/pubsub/subscriber.cpp
+  src/internal/remote_descriptor/decodable_storage.cpp
   src/internal/remote_descriptor/manager.cpp
   src/internal/remote_descriptor/remote_descriptor.cpp
   src/internal/remote_descriptor/storage.cpp
@@ -193,6 +194,8 @@ add_library(libsrf
   src/internal/runnable/resources.cpp
   src/internal/runnable/thread_engine.cpp
   src/internal/runnable/thread_engines.cpp
+  src/internal/runtime/partition.cpp
+  src/internal/runtime/runtime.cpp
   src/internal/segment/builder.cpp
   src/internal/segment/definition.cpp
   src/internal/segment/ibuilder.cpp

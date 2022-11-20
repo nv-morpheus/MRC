@@ -193,4 +193,13 @@ srf::memory::buffer_view CodableStorage::mutable_host_buffer_view(const idx_t& b
     return {reinterpret_cast<void*>(rd.address()), rd.bytes(), srf::codable::decode_memory_type(rd.memory_kind())};
 }
 
+CodableStorage::idx_t CodableStorage::add_meta_data(const google::protobuf::Message& meta_data)
+{
+    CHECK(context_acquired());
+    auto index = m_proto.descriptors_size();
+    auto* desc = m_proto.add_descriptors();
+    CHECK(desc->mutable_meta_data_desc()->mutable_meta_data()->PackFrom(meta_data));
+    return index;
+}
+
 }  // namespace srf::internal::codable

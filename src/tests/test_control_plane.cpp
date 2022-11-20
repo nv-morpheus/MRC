@@ -31,6 +31,7 @@
 
 #include "srf/codable/fundamental_types.hpp"  // IWYU pragma: keep
 #include "srf/memory/buffer.hpp"
+#include "srf/memory/codable/buffer.hpp"  // IWYU pragma: keep
 #include "srf/memory/literals.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/rx_sink.hpp"
@@ -38,6 +39,8 @@
 #include "srf/options/placement.hpp"
 #include "srf/protos/architect.grpc.pb.h"
 #include "srf/protos/architect.pb.h"
+#include "srf/pubsub/publisher_policy.hpp"
+#include "srf/runtime/api.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
@@ -62,7 +65,7 @@ static auto make_runtime(std::function<void(Options& options)> options_lambda = 
             options_lambda(options);
         })));
 
-    return std::make_unique<internal::runtime::RuntimeManager>(std::move(resources));
+    return std::make_unique<internal::runtime::Runtime>(std::move(resources));
 }
 
 class TestControlPlane : public ::testing::Test
@@ -75,7 +78,7 @@ class TestControlPlane : public ::testing::Test
 TEST_F(TestControlPlane, LifeCycle)
 {
     auto sr     = make_runtime();
-    auto server = std::make_unique<internal::control_plane::Server>(sr->runtime(0).resources().runnable());
+    auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).resources().runnable());
 
     server->service_start();
     server->service_await_live();
@@ -89,7 +92,7 @@ TEST_F(TestControlPlane, LifeCycle)
 TEST_F(TestControlPlane, SingleClientConnectDisconnect)
 {
     auto sr     = make_runtime();
-    auto server = std::make_unique<internal::control_plane::Server>(sr->runtime(0).resources().runnable());
+    auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).resources().runnable());
 
     server->service_start();
     server->service_await_live();
@@ -98,7 +101,7 @@ TEST_F(TestControlPlane, SingleClientConnectDisconnect)
 
     // the total number of partition is system dependent
     auto expected_partitions = cr->resources().system().partitions().flattened().size();
-    EXPECT_EQ(cr->runtime(0).resources().network()->control_plane().client().connections().instance_ids().size(),
+    EXPECT_EQ(cr->partition(0).resources().network()->control_plane().client().connections().instance_ids().size(),
               expected_partitions);
 
     // destroying the resources should gracefully shutdown the data plane and the control plane.
@@ -111,7 +114,7 @@ TEST_F(TestControlPlane, SingleClientConnectDisconnect)
 TEST_F(TestControlPlane, DoubleClientConnectExchangeDisconnect)
 {
     auto sr     = make_runtime();
-    auto server = std::make_unique<internal::control_plane::Server>(sr->runtime(0).resources().runnable());
+    auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).resources().runnable());
 
     server->service_start();
     server->service_await_live();
@@ -130,27 +133,29 @@ TEST_F(TestControlPlane, DoubleClientConnectExchangeDisconnect)
 
     // the total number of partition is system dependent
     auto expected_partitions_1 = client_1->resources().system().partitions().flattened().size();
-    EXPECT_EQ(client_1->runtime(0).resources().network()->control_plane().client().connections().instance_ids().size(),
-              expected_partitions_1);
+    EXPECT_EQ(
+        client_1->partition(0).resources().network()->control_plane().client().connections().instance_ids().size(),
+        expected_partitions_1);
 
     auto expected_partitions_2 = client_2->resources().system().partitions().flattened().size();
-    EXPECT_EQ(client_2->runtime(0).resources().network()->control_plane().client().connections().instance_ids().size(),
-              expected_partitions_2);
+    EXPECT_EQ(
+        client_2->partition(0).resources().network()->control_plane().client().connections().instance_ids().size(),
+        expected_partitions_2);
 
-    auto f1 = client_1->runtime(0).resources().network()->control_plane().client().connections().update_future();
-    auto f2 = client_2->runtime(0).resources().network()->control_plane().client().connections().update_future();
+    auto f1 = client_1->partition(0).resources().network()->control_plane().client().connections().update_future();
+    auto f2 = client_2->partition(0).resources().network()->control_plane().client().connections().update_future();
 
-    client_1->runtime(0).resources().network()->control_plane().client().request_update();
+    client_1->partition(0).resources().network()->control_plane().client().request_update();
 
     f1.get();
     f2.get();
 
-    client_1->runtime(0)
+    client_1->partition(0)
         .resources()
         .runnable()
         .main()
         .enqueue([&] {
-            auto worker_count = client_1->runtime(0)
+            auto worker_count = client_1->partition(0)
                                     .resources()
                                     .network()
                                     ->control_plane()
@@ -173,7 +178,7 @@ TEST_F(TestControlPlane, DoubleClientConnectExchangeDisconnect)
 TEST_F(TestControlPlane, DoubleClientPubSub)
 {
     auto sr     = make_runtime();
-    auto server = std::make_unique<internal::control_plane::Server>(sr->runtime(0).resources().runnable());
+    auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).resources().runnable());
 
     server->service_start();
     server->service_await_live();
@@ -192,27 +197,29 @@ TEST_F(TestControlPlane, DoubleClientPubSub)
 
     // the total number of partition is system dependent
     auto expected_partitions_1 = client_1->resources().system().partitions().flattened().size();
-    EXPECT_EQ(client_1->runtime(0).resources().network()->control_plane().client().connections().instance_ids().size(),
-              expected_partitions_1);
+    EXPECT_EQ(
+        client_1->partition(0).resources().network()->control_plane().client().connections().instance_ids().size(),
+        expected_partitions_1);
 
     auto expected_partitions_2 = client_2->resources().system().partitions().flattened().size();
-    EXPECT_EQ(client_2->runtime(0).resources().network()->control_plane().client().connections().instance_ids().size(),
-              expected_partitions_2);
+    EXPECT_EQ(
+        client_2->partition(0).resources().network()->control_plane().client().connections().instance_ids().size(),
+        expected_partitions_2);
 
-    auto f1 = client_1->runtime(0).resources().network()->control_plane().client().connections().update_future();
-    auto f2 = client_2->runtime(0).resources().network()->control_plane().client().connections().update_future();
+    auto f1 = client_1->partition(0).resources().network()->control_plane().client().connections().update_future();
+    auto f2 = client_2->partition(0).resources().network()->control_plane().client().connections().update_future();
 
-    client_1->runtime(0).resources().network()->control_plane().client().request_update();
+    client_1->partition(0).resources().network()->control_plane().client().request_update();
 
     f1.get();
     f2.get();
 
-    client_1->runtime(0)
+    client_1->partition(0)
         .resources()
         .runnable()
         .main()
         .enqueue([&] {
-            auto worker_count = client_1->runtime(0)
+            auto worker_count = client_1->partition(0)
                                     .resources()
                                     .network()
                                     ->control_plane()
@@ -225,14 +232,12 @@ TEST_F(TestControlPlane, DoubleClientPubSub)
         .get();
 
     LOG(INFO) << "MAKE PUBLISHER";
-
-    auto publisher = internal::pubsub::make_publisher<int>(
-        "my_int", internal::pubsub::PublisherType::RoundRobin, client_1->runtime(0));
+    auto publisher = client_1->partition(0).make_publisher<int>("my_int", pubsub::PublisherPolicy::RoundRobin);
 
     LOG(INFO) << "MAKE SUBSCRIBER";
-    auto subscriber = internal::pubsub::make_subscriber<int>("my_int", client_2->runtime(0));
+    auto subscriber = client_2->partition(0).make_subscriber<int>("my_int");
 
-    client_1->runtime(0).resources().network()->control_plane().client().request_update();
+    client_1->partition(0).resources().network()->control_plane().client().request_update();
 
     publisher->await_write(42);
     publisher->await_write(15);
@@ -246,7 +251,7 @@ TEST_F(TestControlPlane, DoubleClientPubSub)
     subscriber.reset();
     LOG(INFO) << "[FINISH] DELETE SUBSCRIBER";
 
-    client_1->runtime(0).resources().network()->control_plane().client().request_update();
+    client_1->partition(0).resources().network()->control_plane().client().request_update();
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     LOG(INFO) << "AFTER SLEEP 2 - publisher should have 0 subscribers";
 
@@ -254,7 +259,7 @@ TEST_F(TestControlPlane, DoubleClientPubSub)
     publisher.reset();
     LOG(INFO) << "[FINISH] DELETE PUBLISHER";
 
-    client_1->runtime(0).resources().network()->control_plane().client().request_update();
+    client_1->partition(0).resources().network()->control_plane().client().request_update();
 
     // destroying the resources should gracefully shutdown the data plane and the control plane.
     client_1.reset();
@@ -267,7 +272,7 @@ TEST_F(TestControlPlane, DoubleClientPubSub)
 TEST_F(TestControlPlane, DoubleClientPubSubBuffers)
 {
     auto sr     = make_runtime();
-    auto server = std::make_unique<internal::control_plane::Server>(sr->runtime(0).resources().runnable());
+    auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).resources().runnable());
 
     server->service_start();
     server->service_await_live();
@@ -292,27 +297,29 @@ TEST_F(TestControlPlane, DoubleClientPubSubBuffers)
 
     // the total number of partition is system dependent
     auto expected_partitions_1 = client_1->resources().system().partitions().flattened().size();
-    EXPECT_EQ(client_1->runtime(0).resources().network()->control_plane().client().connections().instance_ids().size(),
-              expected_partitions_1);
+    EXPECT_EQ(
+        client_1->partition(0).resources().network()->control_plane().client().connections().instance_ids().size(),
+        expected_partitions_1);
 
     auto expected_partitions_2 = client_2->resources().system().partitions().flattened().size();
-    EXPECT_EQ(client_2->runtime(0).resources().network()->control_plane().client().connections().instance_ids().size(),
-              expected_partitions_2);
+    EXPECT_EQ(
+        client_2->partition(0).resources().network()->control_plane().client().connections().instance_ids().size(),
+        expected_partitions_2);
 
-    auto f1 = client_1->runtime(0).resources().network()->control_plane().client().connections().update_future();
-    auto f2 = client_2->runtime(0).resources().network()->control_plane().client().connections().update_future();
+    auto f1 = client_1->partition(0).resources().network()->control_plane().client().connections().update_future();
+    auto f2 = client_2->partition(0).resources().network()->control_plane().client().connections().update_future();
 
-    client_1->runtime(0).resources().network()->control_plane().client().request_update();
+    client_1->partition(0).resources().network()->control_plane().client().request_update();
 
     f1.get();
     f2.get();
 
-    client_1->runtime(0)
+    client_1->partition(0)
         .resources()
         .runnable()
         .main()
         .enqueue([&] {
-            auto worker_count = client_1->runtime(0)
+            auto worker_count = client_1->partition(0)
                                     .resources()
                                     .network()
                                     ->control_plane()
@@ -325,17 +332,16 @@ TEST_F(TestControlPlane, DoubleClientPubSubBuffers)
         .get();
 
     LOG(INFO) << "MAKE PUBLISHER";
-
-    auto publisher = internal::pubsub::make_publisher<srf::memory::buffer>(
-        "my_buffer", internal::pubsub::PublisherType::RoundRobin, client_1->runtime(0));
+    auto publisher =
+        client_1->partition(0).make_publisher<srf::memory::buffer>("my_buffer", pubsub::PublisherPolicy::Broadcast);
 
     LOG(INFO) << "MAKE SUBSCRIBER";
-    auto subscriber = internal::pubsub::make_subscriber<srf::memory::buffer>("my_buffer", client_2->runtime(0));
+    auto subscriber = client_2->partition(0).make_subscriber<srf::memory::buffer>("my_buffer");
 
-    client_1->runtime(0).resources().network()->control_plane().client().request_update();
+    client_1->partition(0).resources().network()->control_plane().client().request_update();
 
-    auto buffer_1 = client_1->runtime(0).resources().host().make_buffer(4_MiB);
-    auto buffer_2 = client_1->runtime(0).resources().host().make_buffer(4_MiB);
+    auto buffer_1 = client_1->partition(0).resources().host().make_buffer(4_MiB);
+    auto buffer_2 = client_1->partition(0).resources().host().make_buffer(4_MiB);
 
     publisher->await_write(std::move(buffer_1));
     publisher->await_write(std::move(buffer_2));
@@ -349,7 +355,7 @@ TEST_F(TestControlPlane, DoubleClientPubSubBuffers)
     subscriber.reset();
     LOG(INFO) << "[FINISH] DELETE SUBSCRIBER";
 
-    client_1->runtime(0).resources().network()->control_plane().client().request_update();
+    client_1->partition(0).resources().network()->control_plane().client().request_update();
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     LOG(INFO) << "AFTER SLEEP 2 - publisher should have 0 subscribers";
 
@@ -357,7 +363,7 @@ TEST_F(TestControlPlane, DoubleClientPubSubBuffers)
     publisher.reset();
     LOG(INFO) << "[FINISH] DELETE PUBLISHER";
 
-    client_1->runtime(0).resources().network()->control_plane().client().request_update();
+    client_1->partition(0).resources().network()->control_plane().client().request_update();
 
     // destroying the resources should gracefully shutdown the data plane and the control plane.
     client_1.reset();

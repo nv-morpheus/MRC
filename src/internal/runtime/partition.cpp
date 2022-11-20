@@ -17,6 +17,7 @@
 
 #include "internal/runtime/partition.hpp"
 
+#include "internal/codable/codable_storage.hpp"
 #include "internal/pubsub/publisher_round_robin.hpp"
 #include "internal/pubsub/subscriber.hpp"
 #include "internal/remote_descriptor/manager.hpp"
@@ -51,8 +52,8 @@ remote_descriptor::Manager& Partition::remote_descriptor_manager()
     return *m_remote_descriptor_manager;
 }
 
-std::shared_ptr<pubsub::Publisher> Partition::make_publisher(const std::string& name,
-                                                             const srf::pubsub::PublisherPolicy& policy)
+std::shared_ptr<pubsub::Publisher> Partition::make_internal_publisher(const std::string& name,
+                                                                      const srf::pubsub::PublisherPolicy& policy)
 {
     if (policy == srf::pubsub::PublisherPolicy::RoundRobin)
     {
@@ -63,7 +64,7 @@ std::shared_ptr<pubsub::Publisher> Partition::make_publisher(const std::string& 
     return nullptr;
 }
 
-std::shared_ptr<pubsub::Subscriber> Partition::make_subscriber(const std::string& name)
+std::shared_ptr<pubsub::Subscriber> Partition::make_internal_subscriber(const std::string& name)
 {
     return std::shared_ptr<pubsub::Subscriber>(new pubsub::Subscriber(name, *this));
 }
@@ -71,12 +72,17 @@ std::shared_ptr<pubsub::Subscriber> Partition::make_subscriber(const std::string
 std::shared_ptr<srf::pubsub::IPublisher> Partition::create_publisher_service(const std::string& name,
                                                                              const srf::pubsub::PublisherPolicy& policy)
 {
-    return make_publisher(name, policy);
+    return make_internal_publisher(name, policy);
 }
 
 std::shared_ptr<srf::pubsub::ISubscriber> Partition::create_subscriber_service(const std::string& name)
 {
-    return make_subscriber(name);
+    return make_internal_subscriber(name);
+}
+
+std::unique_ptr<srf::codable::ICodableStorage> Partition::make_codable_storage()
+{
+    return std::make_unique<codable::CodableStorage>(m_resources);
 }
 
 }  // namespace srf::internal::runtime

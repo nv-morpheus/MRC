@@ -18,6 +18,7 @@
 #pragma once
 
 #include "srf/codable/api.hpp"
+#include "srf/codable/storage_forwarder.hpp"
 #include "srf/codable/type_traits.hpp"
 #include "srf/utils/sfinae_concept.hpp"
 
@@ -26,7 +27,7 @@
 namespace srf::codable {
 
 template <typename T>
-struct Decoder final
+struct Decoder final : public StorageForwarder
 {
   public:
     Decoder(const IDecodableStorage& storage) : m_storage(storage) {}
@@ -47,7 +48,22 @@ struct Decoder final
         return m_storage.buffer_size(idx);
     }
 
+    std::shared_ptr<srf::memory::memory_resource> host_memory_resource() const
+    {
+        return m_storage.host_memory_resource();
+    }
+
+    std::shared_ptr<srf::memory::memory_resource> device_memory_resource() const
+    {
+        return m_storage.host_memory_resource();
+    }
+
   private:
+    const IStorage& const_storage() const final
+    {
+        return m_storage;
+    }
+
     const IDecodableStorage& m_storage;
 
     friend T;

@@ -54,6 +54,10 @@ class DecodableStorageView : public virtual srf::codable::IDecodableStorage, pub
     void copy_from_registered_buffer(const idx_t& idx, srf::memory::buffer_view& dst_view) const;
 
     void copy_from_eager_buffer(const idx_t& idx, srf::memory::buffer_view& dst_view) const;
+
+    std::shared_ptr<srf::memory::memory_resource> host_memory_resource() const final;
+
+    std::shared_ptr<srf::memory::memory_resource> device_memory_resource() const final;
 };
 
 }  // namespace srf::internal::codable

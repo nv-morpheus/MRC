@@ -20,6 +20,6 @@
 namespace srf::runtime {
 
 class IRuntime;
-class IResources;
+class IPartition;
 
 }  // namespace srf::runtime

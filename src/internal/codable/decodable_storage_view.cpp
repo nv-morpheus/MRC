@@ -135,4 +135,18 @@ void DecodableStorageView::copy_from_eager_buffer(const idx_t& idx, srf::memory:
     std::memcpy(dst_view.data(), eager_buffer.data().data(), dst_view.bytes());
 }
 
+std::shared_ptr<srf::memory::memory_resource> DecodableStorageView::host_memory_resource() const
+{
+    return resources().host().arena_memory_resource();
+}
+
+std::shared_ptr<srf::memory::memory_resource> DecodableStorageView::device_memory_resource() const
+{
+    if (resources().device())
+    {
+        return resources().device()->arena_memory_resource();
+    }
+    return nullptr;
+}
+
 }  // namespace srf::internal::codable

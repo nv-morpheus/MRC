@@ -109,26 +109,6 @@ class IStorage
     virtual std::optional<obj_idx_t> parent_obj_idx_for_object(const obj_idx_t& object_idx) const = 0;
 };
 
-// class IEncodingResources
-// {
-//     virtual ~IEncodingResources() = default;
-
-//   protected:
-//     /**
-//      * @brief Host Memory Resource
-//      *
-//      * @return std::shared_ptr<srf::memory::memory_resource>
-//      */
-//     virtual std::shared_ptr<srf::memory::memory_resource> host_memory_resource() const = 0;
-
-//     /**
-//      * @brief Device Memory Resource
-//      *
-//      * @return std::shared_ptr<srf::memory::memory_resource>
-//      */
-//     virtual std::shared_ptr<srf::memory::memory_resource> device_memory_resource() const = 0;
-// };
-
 class IEncodableStorage : public virtual IStorage
 {
   public:
@@ -241,6 +221,20 @@ class IDecodableStorage : public virtual IStorage
      * @return std::size_t
      */
     virtual std::size_t buffer_size(const idx_t& idx) const = 0;
+
+    /**
+     * @brief Host Memory Resource
+     *
+     * @return std::shared_ptr<srf::memory::memory_resource>
+     */
+    virtual std::shared_ptr<srf::memory::memory_resource> host_memory_resource() const = 0;
+
+    /**
+     * @brief Device Memory Resource
+     *
+     * @return std::shared_ptr<srf::memory::memory_resource>
+     */
+    virtual std::shared_ptr<srf::memory::memory_resource> device_memory_resource() const = 0;
 
     template <typename T>
     friend class Decoder;

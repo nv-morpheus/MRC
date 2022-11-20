@@ -238,4 +238,9 @@ InstanceID Manager::instance_id() const
 {
     return m_instance_id;
 }
+srf::runtime::RemoteDescriptor Manager::make_remote_descriptor(
+    std::unique_ptr<srf::runtime::IRemoteDescriptorHandle> handle)
+{
+    return {shared_from_this(), std::move(handle)};
+}
 }  // namespace srf::internal::remote_descriptor

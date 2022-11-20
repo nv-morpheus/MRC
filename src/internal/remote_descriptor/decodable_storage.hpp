@@ -38,10 +38,7 @@ class DecodableStorage final : public codable::DecodableStorageView,
     DELETE_COPYABILITY(DecodableStorage);
     DELETE_MOVEABILITY(DecodableStorage);
 
-    const srf::codable::protos::RemoteDescriptor& remote_descriptor_proto() const final
-    {
-        return m_proto;
-    }
+    const srf::codable::protos::RemoteDescriptor& remote_descriptor_proto() const final;
 
   protected:
     const srf::codable::protos::EncodedObject& get_proto() const final;

@@ -113,7 +113,7 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
     // this holds the operator open;
     std::unique_ptr<srf::node::SourceChannelWriteable<T>> m_persistent_channel;
 
-    friend runtime::IResources;
+    friend runtime::IPartition;
 };
 
 template <typename T>
@@ -125,10 +125,10 @@ channel::Status Publisher<T>::await_write(T&& data)
 
 // template specialization for remote descriptors
 
-template <>
-channel::Status Publisher<runtime::RemoteDescriptor>::await_write(runtime::RemoteDescriptor&& rd)
-{
-    return m_service->publish(std::move(rd));
-}
+// template <>
+// channel::Status Publisher<runtime::RemoteDescriptor>::await_write(runtime::RemoteDescriptor&& rd)
+// {
+//     return m_service->publish(std::move(rd));
+// }
 
 }  // namespace srf::pubsub

@@ -56,8 +56,8 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, std::string>>>
     {
         if (opts.force_copy())
         {
-            auto index  = encoder.create_memory_buffer(str.size());
-            auto buffer = encoder.copy_to_buffer(index, {str.data(), str.size(), memory::memory_kind::host});
+            auto index = encoder.create_memory_buffer(str.size());
+            encoder.copy_to_buffer(index, {str.data(), str.size(), memory::memory_kind::host});
         }
         else
         {

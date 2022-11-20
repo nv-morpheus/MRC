@@ -19,6 +19,7 @@
 
 #include "internal/data_plane/resources.hpp"
 #include "internal/resources/manager.hpp"
+#include "internal/runtime/runtime.hpp"
 
 #include "srf/codable/codable_protocol.hpp"
 #include "srf/codable/decode.hpp"
@@ -48,12 +49,12 @@ class CodableObject
     CodableObject()  = default;
     ~CodableObject() = default;
 
-    static CodableObject deserialize(const DecodableObject<CodableObject>& buffer, std::size_t /*unused*/)
+    static CodableObject deserialize(const Decoder<CodableObject>& buffer, std::size_t /*unused*/)
     {
-        return CodableObject();
+        return {};
     }
 
-    void serialize(EncodableObject<CodableObject>& /*unused*/) {}
+    void serialize(Encoder<CodableObject>& /*unused*/) {}
 };
 
 class CodableObjectWithOptions
@@ -62,13 +63,13 @@ class CodableObjectWithOptions
     CodableObjectWithOptions()  = default;
     ~CodableObjectWithOptions() = default;
 
-    static CodableObjectWithOptions deserialize(const DecodableObject<CodableObjectWithOptions>& encoding,
+    static CodableObjectWithOptions deserialize(const Decoder<CodableObjectWithOptions>& encoding,
                                                 std::size_t /*unused*/)
     {
-        return CodableObjectWithOptions();
+        return {};
     }
 
-    void serialize(EncodableObject<CodableObjectWithOptions>& /*unused*/, const EncodingOptions& opts) {}
+    void serialize(Encoder<CodableObjectWithOptions>& /*unused*/, const EncodingOptions& opts) {}
 };
 
 class CodableViaExternalStruct
@@ -79,7 +80,7 @@ namespace srf::codable {
 template <>
 struct codable_protocol<CodableViaExternalStruct>
 {
-    void serialize(const CodableViaExternalStruct& /*unused*/, EncodableObject<CodableViaExternalStruct>& /*unused*/) {}
+    void serialize(const CodableViaExternalStruct& /*unused*/, Encoder<CodableViaExternalStruct>& /*unused*/) {}
 };
 
 };  // namespace srf::codable
@@ -94,21 +95,23 @@ class TestCodable : public ::testing::Test
   protected:
     void SetUp() override
     {
-        m_resources = std::make_unique<internal::resources::Manager>(
+        auto resources = std::make_unique<internal::resources::Manager>(
             internal::system::SystemProvider(make_system([](Options& options) {
                 // todo(#114) - propose: remove this option entirely
                 options.enable_server(true);
                 options.architect_url("localhost:13337");
                 options.placement().resources_strategy(PlacementResources::Dedicated);
             })));
+
+        m_runtime = std::make_unique<internal::runtime::Runtime>(std::move(resources));
     }
 
     void TearDown() override
     {
-        m_resources.reset();
+        m_runtime.reset();
     }
 
-    std::unique_ptr<internal::resources::Manager> m_resources;
+    std::unique_ptr<internal::runtime::Runtime> m_runtime;
 };
 
 TEST_F(TestCodable, Objects)
@@ -138,15 +141,16 @@ TEST_F(TestCodable, String)
     static_assert(is_codable<std::string>::value, "should be codable");
 
     std::string str = "Hello SRF";
-    auto str_block  = m_resources->partition(0).network()->data_plane().registration_cache().lookup(str.data());
+    auto str_block =
+        m_runtime->partition(0).resources().network()->data_plane().registration_cache().lookup(str.data());
     EXPECT_FALSE(str_block);
 
-    internal::remote_descriptor::EncodedObject encoded_object(m_resources->partition(0));
+    auto encodable_storage = m_runtime->partition(0).make_codable_storage();
 
-    encode(str, encoded_object);
-    EXPECT_EQ(encoded_object.descriptor_count(), 1);
+    encode(str, *encodable_storage);
+    EXPECT_EQ(encodable_storage->descriptor_count(), 1);
 
-    auto decoded_str = decode<std::string>(encoded_object);
+    auto decoded_str = decode<std::string>(*encodable_storage);
     EXPECT_STREQ(str.c_str(), decoded_str.c_str());
 }
 
@@ -155,10 +159,10 @@ TEST_F(TestCodable, Buffer)
     static_assert(is_codable<srf::memory::buffer>::value, "should be codable");
 
     // std::string str = "Hello SRF";
-    // auto str_block  = m_resources->partition(0).network()->data_plane().registration_cache().lookup(str.data());
+    // auto str_block  = m_runtime->partition(0).network()->data_plane().registration_cache().lookup(str.data());
     // EXPECT_FALSE(str_block);
 
-    // internal::remote_descriptor::EncodedObject encoded_object(m_resources->partition(0));
+    // internal::remote_descriptor::EncodedObject encoded_object(m_runtime->partition(0));
 
     // encode(str, encoded_object);
     // EXPECT_EQ(encoded_object.descriptor_count(), 1);
@@ -171,7 +175,7 @@ TEST_F(TestCodable, Buffer)
 // {
 //     static_assert(is_codable<double>::value, "should be codable");
 
-//     m_resources->partition(0)
+//     m_runtime->partition(0)
 //         .runnable()
 //         .main()
 //         .enqueue([] {
@@ -189,7 +193,7 @@ TEST_F(TestCodable, Buffer)
 //     static_assert(is_codable<std::string>::value, "should be codable");
 //     static_assert(is_codable<std::uint64_t>::value, "should be codable");
 
-//     m_resources->partition(0)
+//     m_runtime->partition(0)
 //         .runnable()
 //         .main()
 //         .enqueue([] {

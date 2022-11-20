@@ -22,7 +22,7 @@
 #include "srf/codable/encoded_object.hpp"
 #include "srf/control_plane/subscription_service_forwarder.hpp"
 #include "srf/node/edge_builder.hpp"
-#include "srf/node/operators/operator.hpp"
+#include "srf/node/operators/operator_component.hpp"
 #include "srf/node/queue.hpp"
 #include "srf/node/source_channel.hpp"
 #include "srf/pubsub/api.hpp"
@@ -55,8 +55,7 @@ namespace srf::pubsub {
 template <typename T>
 class Subscriber final : public node::Queue<T>,
                          public control_plane::SubscriptionServiceForwarder,
-                         private srf::node::SourceChannelWriteable<T>,
-                         private srf::node::Operator<srf::runtime::RemoteDescriptor>
+                         private srf::node::SourceChannelWriteable<T>
 {
   public:
     ~Subscriber() final
@@ -85,9 +84,16 @@ class Subscriber final : public node::Queue<T>,
         srf::node::SourceChannelWriteable<T>& typed_source = *this;
         srf::node::make_edge(typed_source, *this);
 
-        // Edge - IPublisher -> Operator
-        srf::node::Operator<srf::runtime::RemoteDescriptor>& rd_sink = *this;
-        srf::node::make_edge(*m_service, rd_sink);
+        // Edge - IPublisher -> OperatorComponent
+        m_rd_sink = std::make_shared<node::OperatorComponent<srf::runtime::RemoteDescriptor>>(
+            // on_next
+            [this](srf::runtime::RemoteDescriptor&& rd) {
+                auto obj = rd.decode<T>();
+                return srf::node::SourceChannelWriteable<T>::await_write(std::move(obj));
+            },
+            // on_complete
+            [this] { srf::node::SourceChannelWriteable<T>::release_channel(); });
+        srf::node::make_edge(*m_service, *m_rd_sink);
 
         // After the edges have been formed, we have a complete pipeline from the data plane to a channel. If we started
         // the service prior to the edge construction, we might get data flowing through an incomplete operator chain
@@ -96,21 +102,7 @@ class Subscriber final : public node::Queue<T>,
     }
 
   private:
-    Subscriber(std::unique_ptr<ISubscriber> service) : m_service(std::move(service)) {}
-
-    // [Operator] - perform action on the remote descriptor without a progress engine
-    // this uses the thread which is driving progress on the edge to perform this action
-    srf::channel::Status on_next(srf::runtime::RemoteDescriptor&& rd) final
-    {
-        auto obj = rd.decode<T>();
-        return srf::node::SourceChannelWriteable<T>::await_write(std::move(obj));
-    }
-
-    // [Operator] - complete the channel closure circuit
-    void on_complete() final
-    {
-        srf::node::SourceChannelWriteable<T>::release_channel();
-    }
+    Subscriber(std::shared_ptr<ISubscriber> service) : m_service(std::move(service)) {}
 
     ISubscriptionService& service() const final
     {
@@ -118,9 +110,10 @@ class Subscriber final : public node::Queue<T>,
         return *m_service;
     }
 
-    std::unique_ptr<ISubscriber> m_service;
+    std::shared_ptr<ISubscriber> m_service;
+    std::shared_ptr<node::OperatorComponent<srf::runtime::RemoteDescriptor>> m_rd_sink;
 
-    friend runtime::IResources;
+    friend runtime::IPartition;
 };
 
 /**
@@ -165,7 +158,7 @@ class Subscriber<srf::runtime::RemoteDescriptor> final : public node::Queue<runt
     }
 
   private:
-    Subscriber(std::unique_ptr<ISubscriber> service) : m_service(std::move(service)) {}
+    Subscriber(std::shared_ptr<ISubscriber> service) : m_service(std::move(service)) {}
 
     ISubscriptionService& service() const final
     {
@@ -173,9 +166,9 @@ class Subscriber<srf::runtime::RemoteDescriptor> final : public node::Queue<runt
         return *m_service;
     }
 
-    std::unique_ptr<ISubscriber> m_service;
+    std::shared_ptr<ISubscriber> m_service;
 
-    friend runtime::IResources;
+    friend runtime::IPartition;
 };
 
 }  // namespace srf::pubsub

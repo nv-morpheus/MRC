@@ -23,6 +23,7 @@
 #include "internal/resources/forward.hpp"
 #include "internal/resources/manager.hpp"
 
+#include "srf/codable/api.hpp"
 #include "srf/runtime/api.hpp"
 #include "srf/runtime/forward.hpp"
 #include "srf/utils/macros.hpp"
@@ -46,12 +47,15 @@ class Partition final : public srf::runtime::IPartition
     // IPartition -> IRemoteDescriptorManager& is covariant
     remote_descriptor::Manager& remote_descriptor_manager() final;
 
-    std::shared_ptr<pubsub::Publisher> make_publisher(const std::string& name,
-                                                      const srf::pubsub::PublisherPolicy& policy);
-
-    std::shared_ptr<pubsub::Subscriber> make_subscriber(const std::string& name);
+    std::unique_ptr<srf::codable::ICodableStorage> make_codable_storage() final;
 
   private:
+    std::shared_ptr<pubsub::Publisher> make_internal_publisher(const std::string& name,
+                                                      const srf::pubsub::PublisherPolicy& policy);
+
+    std::shared_ptr<pubsub::Subscriber> make_internal_subscriber(const std::string& name);
+
+
     // IPartiton -> shared_ptr<IPublisher> is not covariant with shared_ptr<Publisher>
     // however the two are convertable, so we do this in two stages rather than directly
     std::shared_ptr<srf::pubsub::IPublisher> create_publisher_service(const std::string& name,

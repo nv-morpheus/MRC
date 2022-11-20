@@ -25,6 +25,7 @@
 
 #include "srf/codable/codable_protocol.hpp"
 #include "srf/codable/fundamental_types.hpp"
+#include "srf/runtime/remote_descriptor.hpp"
 
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
@@ -46,25 +47,25 @@ class TestRD : public ::testing::Test
                 options.placement().resources_strategy(PlacementResources::Dedicated);
             })));
 
-        m_runtime_manager = std::make_unique<internal::runtime::RuntimeManager>(std::move(resources));
+        m_runtime = std::make_unique<internal::runtime::Runtime>(std::move(resources));
     }
 
     void TearDown() override
     {
-        m_runtime_manager.reset();
+        m_runtime.reset();
     }
 
-    std::unique_ptr<internal::runtime::RuntimeManager> m_runtime_manager;
+    std::unique_ptr<internal::runtime::Runtime> m_runtime;
 };
 
 TEST_F(TestRD, LifeCycle)
 {
-    m_runtime_manager->runtime(0)
+    m_runtime->partition(0)
         .resources()
         .runnable()
         .main()
         .enqueue([this] {
-            auto& rd_manager = m_runtime_manager->runtime(0).remote_descriptor_manager();
+            auto& rd_manager = m_runtime->partition(0).remote_descriptor_manager();
 
             EXPECT_EQ(rd_manager.size(), 0);
 
@@ -73,14 +74,16 @@ TEST_F(TestRD, LifeCycle)
 
             EXPECT_EQ(rd_manager.size(), 1);
 
-            auto handle = rd.release_ownership();
+            // use the internal implementation to transfer ownership and recreate
+            auto handle = internal::remote_descriptor::Manager::unwrap_handle(std::move(rd));
             EXPECT_FALSE(rd);
 
-            auto rd2 = rd_manager.take_ownership(std::move(handle));
+            // recreate from handle
+            auto rd2 = rd_manager.make_remote_descriptor(std::move(handle));
             EXPECT_TRUE(rd2);
 
-            rd.release();
-            rd2.release();
+            rd.release_ownership();
+            rd2.release_ownership();
             EXPECT_EQ(rd_manager.size(), 0);
         })
         .get();
@@ -88,22 +91,21 @@ TEST_F(TestRD, LifeCycle)
 
 TEST_F(TestRD, RemoteRelease)
 {
-    if (m_runtime_manager->resources().partition_count() < 2)
+    if (m_runtime->resources().partition_count() < 2)
     {
         GTEST_SKIP() << "this test only works with 2 or more partitions";
     }
 
-    auto f1 =
-        m_runtime_manager->runtime(0).resources().network()->control_plane().client().connections().update_future();
-    m_runtime_manager->runtime(0).resources().network()->control_plane().client().request_update();
+    auto f1 = m_runtime->partition(0).resources().network()->control_plane().client().connections().update_future();
+    m_runtime->partition(0).resources().network()->control_plane().client().request_update();
 
-    m_runtime_manager->runtime(0)
+    m_runtime->partition(0)
         .resources()
         .runnable()
         .main()
         .enqueue([this] {
-            auto& rd_manager_0 = m_runtime_manager->runtime(0).remote_descriptor_manager();
-            auto& rd_manager_1 = m_runtime_manager->runtime(1).remote_descriptor_manager();
+            auto& rd_manager_0 = m_runtime->partition(0).remote_descriptor_manager();
+            auto& rd_manager_1 = m_runtime->partition(1).remote_descriptor_manager();
 
             EXPECT_EQ(rd_manager_0.size(), 0);
             EXPECT_EQ(rd_manager_1.size(), 0);
@@ -114,16 +116,17 @@ TEST_F(TestRD, RemoteRelease)
             EXPECT_EQ(rd_manager_0.size(), 1);
             EXPECT_EQ(rd_manager_1.size(), 0);
 
-            auto handle = rd.release_ownership();
+            auto handle = internal::remote_descriptor::Manager::unwrap_handle(std::move(rd));
             EXPECT_FALSE(rd);
 
-            auto rd2 = rd_manager_1.take_ownership(std::move(handle));
+            auto rd2 = rd_manager_1.make_remote_descriptor(std::move(handle));
+
             EXPECT_EQ(rd_manager_0.size(), 1);
             EXPECT_EQ(rd_manager_1.size(), 0);
             EXPECT_TRUE(rd2);
 
-            rd.release();
-            rd2.release();
+            rd.release_ownership();
+            rd2.release_ownership();
 
             while (rd_manager_0.size() != 0)
             {

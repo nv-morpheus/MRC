@@ -31,10 +31,8 @@ namespace srf::codable {
 template <typename T>
 struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, srf::memory::buffer>>>
 {
-    static void serialize(const T& obj, EncodableObject<T>& encoded, const EncodingOptions& opts)
+    static void serialize(const T& obj, Encoder<T>& encoded, const EncodingOptions& opts)
     {
-        auto guard = encoded.acquire_encoding_context();
-
         auto idx = encoded.register_memory_view(obj);
         if (!idx)
         {
@@ -42,7 +40,7 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, srf::memory::buffe
         }
     }
 
-    static T deserialize(const DecodableObject<T>& encoded, std::size_t object_idx)
+    static T deserialize(const Decoder<T>& encoded, std::size_t object_idx)
     {
         DCHECK_EQ(std::type_index(typeid(T)).hash_code(), encoded.type_index_hash_for_object(object_idx));
         auto idx   = encoded.start_idx_for_object(object_idx);
