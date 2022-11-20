@@ -31,7 +31,7 @@
 
 namespace srf::internal::pubsub {
 
-Publisher::Publisher(std::string service_name, runtime::Runtime& runtime) :
+Publisher::Publisher(std::string service_name, runtime::Partition& runtime) :
   Base(std::move(service_name), runtime),
   m_runtime(runtime)
 {}

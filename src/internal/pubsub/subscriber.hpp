@@ -19,6 +19,7 @@
 
 #include "internal/memory/forward.hpp"
 #include "internal/pubsub/base.hpp"
+#include "internal/runtime/runtime.hpp"
 
 #include "srf/channel/status.hpp"
 #include "srf/node/operators/operator.hpp"
@@ -42,7 +43,7 @@ class Subscriber final : public Base,
                          public srf::pubsub::ISubscriber,
                          public srf::node::Operator<srf::runtime::RemoteDescriptor>
 {
-    Subscriber(std::string service_name, runtime::Runtime& runtime);
+    Subscriber(std::string service_name, runtime::Partition& runtime);
 
   public:
     ~Subscriber() override = default;
@@ -91,6 +92,9 @@ class Subscriber final : public Base,
 
     // runner for the network handler node
     std::unique_ptr<srf::runnable::Runner> m_network_handler;
+
+    // limit access to the constructor; this object must be constructed as a shared_ptr
+    friend runtime::Partition;
 };
 
 }  // namespace srf::internal::pubsub

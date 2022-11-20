@@ -67,14 +67,13 @@ class SubscriptionService : public virtual srf::control_plane::ISubscriptionServ
     SubscriptionService(const std::string& service_name, Instance& instance);
     ~SubscriptionService() override;
 
-    // todo(cpp20) - template<concepts::subscription_service T, typename... Args>
-    template <typename T, typename... ArgsT>
-    static auto create(ArgsT&&... args) -> std::shared_ptr<T>
-    {
-        auto service = std::shared_ptr<T>(new T(std::forward<ArgsT>(args)...));
-        service->service_start();
-        return service;
-    }
+    // // todo(cpp20) - template<concepts::subscription_service T, typename... Args>
+    // template <typename T, typename... ArgsT>
+    // static auto create(ArgsT&&... args) -> std::shared_ptr<T>
+    // {
+    //     auto service = std::shared_ptr<T>(new T(std::forward<ArgsT>(args)...));
+    //     return service;
+    // }
 
     // [srf::control_plane::ISubscriptionServiceIdentity] name of service
     const std::string& service_name() const final;
@@ -89,8 +88,14 @@ class SubscriptionService : public virtual srf::control_plane::ISubscriptionServ
     // note: the subscription service is not stopped/joined until getting a drop_subscription_service event the server
     void request_stop() final;
 
+    // [srf::control_plane::ISubscriptionServiceControl] indicates that the public api has requested an await_start
+    void await_start() final;
+
     // [srf::control_plane::ISubscriptionServiceControl] indicates that the public api has requested an await_join
     void await_join() final;
+
+    // [srf::control_plane::ISubscriptionServiceControl]
+    bool is_startable() const final;
 
     // [srf::control_plane::ISubscriptionServiceControl]
     bool is_live() const final;

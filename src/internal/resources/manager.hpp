@@ -32,7 +32,7 @@
 #include <vector>
 
 namespace srf::internal::runtime {
-class RuntimeManager;
+class Runtime;
 }
 
 namespace srf::internal::resources {
@@ -89,7 +89,7 @@ class Manager final : public system::SystemProvider
     static thread_local PartitionResources* m_thread_partition;
     static thread_local Manager* m_thread_resources;
 
-    friend internal::runtime::RuntimeManager;
+    friend runtime::Runtime;
 };
 
 }  // namespace srf::internal::resources

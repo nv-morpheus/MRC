@@ -36,19 +36,39 @@ class SubscriptionServiceForwarder : public ISubscriptionService
         return service().tag();
     }
 
+    const std::string& role() const final
+    {
+        return service().role();
+    }
+
+    const std::set<std::string>& subscribe_to_roles() const final
+    {
+        return service().subscribe_to_roles();
+    }
+
+    void await_start() override
+    {
+        service().await_start();
+    }
+
     void request_stop() override
     {
         service().request_stop();
     }
 
-    bool is_live() const override
-    {
-        return service().is_live();
-    }
-
     void await_join() override
     {
         service().await_join();
+    }
+
+    bool is_startable() const override
+    {
+        return service().is_startable();
+    }
+
+    bool is_live() const override
+    {
+        return service().is_live();
     }
 
   private:

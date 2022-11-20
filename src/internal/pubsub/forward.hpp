@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,22 +17,12 @@
 
 #pragma once
 
-#include "srf/runtime/resources.hpp"
+namespace srf::internal::pubsub {
 
-#include <cstdint>
+class Publisher;
+class Subscriber;
 
-namespace srf::runtime {
+// Specific types of Publishers
+class PublisherRoundRobin;
 
-class IRuntime
-{
-  public:
-    virtual ~IRuntime() = default;
-
-    virtual std::size_t partition_count() const = 0;
-    virtual std::size_t gpu_count() const       = 0;
-
-    virtual IResources& default_resources()                           = 0;
-    virtual IResources& partition_resources(std::size_t partition_id) = 0;
-};
-
-}  // namespace srf::runtime
+}  // namespace srf::internal::pubsub

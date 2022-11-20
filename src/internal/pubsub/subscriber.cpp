@@ -27,8 +27,7 @@
 
 namespace srf::internal::pubsub {
 
-Subscriber::Subscriber(std::string service_name, runtime::Runtime& runtime) :
-  Base(std::move(service_name), runtime)
+Subscriber::Subscriber(std::string service_name, runtime::Partition& runtime) : Base(std::move(service_name), runtime)
 {}
 
 void Subscriber::do_subscription_service_setup()

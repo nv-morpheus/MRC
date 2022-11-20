@@ -53,6 +53,7 @@ class Service  // : public IService
     void service_kill();
     void service_await_join();
 
+    bool is_service_startable() const;
     const ServiceState& state() const;
 
   protected:

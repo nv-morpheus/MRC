@@ -20,7 +20,7 @@
 namespace srf::internal {
 
 namespace runtime {
-class Runtime;
+class Partition;
 }
 
 namespace resources {

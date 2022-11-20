@@ -23,8 +23,9 @@ namespace srf::internal::pubsub {
 
 class PublisherRoundRobin final : public Publisher
 {
-  public:
     using Publisher::Publisher;
+
+  public:
     ~PublisherRoundRobin() final = default;
 
   private:
@@ -35,6 +36,8 @@ class PublisherRoundRobin final : public Publisher
     void apply_policy(srf::runtime::RemoteDescriptor&& rd) final;
 
     std::unordered_map<std::uint64_t, std::shared_ptr<ucx::Endpoint>>::const_iterator m_next;
+
+    friend runtime::Partition;
 };
 
 }  // namespace srf::internal::pubsub

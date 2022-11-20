@@ -44,14 +44,20 @@ struct ISubscriptionServiceControls
 {
     virtual ~ISubscriptionServiceControls() = default;
 
-    // true/false if the subscription service is live
-    virtual bool is_live() const = 0;
-
     // request that the subscription service be stopped
     virtual void request_stop() = 0;
 
+    // bring up the service
+    virtual void await_start() = 0;
+
     // await the completion of the subscription service
     virtual void await_join() = 0;
+
+    // true/false if the subscription service is startable
+    virtual bool is_startable() const = 0;
+
+    // true/false if the subscription service is live
+    virtual bool is_live() const = 0;
 };
 
 struct ISubscriptionService : public virtual ISubscriptionServiceIdentity, public virtual ISubscriptionServiceControls

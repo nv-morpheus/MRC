@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "internal/remote_descriptor/forward.hpp"
-#include "internal/remote_descriptor/remote_descriptor.hpp"
 #include "internal/resources/forward.hpp"
-#include "internal/resources/manager.hpp"
+#include "internal/runtime/partition.hpp"
 
+#include "srf/runtime/api.hpp"
+#include "srf/runtime/forward.hpp"
 #include "srf/utils/macros.hpp"
 
 #include <iterator>
@@ -29,60 +29,32 @@
 
 namespace srf::internal::runtime {
 
-class Runtime
+/**
+ * @brief Implements the public Runtime interface and owns any high-level runtime resources, e.g. the remote descriptor
+ * manager which are built on partition resources. The Runtime object is responsible for bringing up and tearing down
+ * core resources manager.
+ */
+class Runtime final : public srf::runtime::IRuntime
 {
   public:
-    Runtime(resources::PartitionResources& resources);
-    ~Runtime();
+    Runtime(std::unique_ptr<resources::Manager> resources);
+    ~Runtime() override;
 
-    DELETE_COPYABILITY(Runtime);
-    DELETE_MOVEABILITY(Runtime);
+    // IRuntime - total number of partitions
+    std::size_t partition_count() const final;
 
-    resources::PartitionResources& resources();
+    // IRuntime - total number of gpus / gpu partitions
+    std::size_t gpu_count() const final;
 
-    remote_descriptor::Manager& remote_descriptor_manager();
+    // access the partition specific resources for a given partition_id
+    Partition& partition(std::size_t partition_id) final;
 
-  private:
-    resources::PartitionResources& m_resources;
-    std::shared_ptr<remote_descriptor::Manager> m_remote_descriptor_manager;
-};
-
-class RuntimeManager
-{
-  public:
-    RuntimeManager(std::unique_ptr<resources::Manager> resources) : m_resources(std::move(resources))
-    {
-        CHECK(m_resources);
-        for (int i = 0; i < m_resources->partition_count(); i++)
-        {
-            m_partitions.push_back(std::make_unique<Runtime>(m_resources->partition(i)));
-        }
-    }
-
-    ~RuntimeManager()
-    {
-        // the problem is that m_partitions goes away, then m_resources is destroyed
-        // when not all Publishers/Subscribers which were created with a ref to a Runtime
-        // might not yet be finished
-        m_resources->shutdown().get();
-    }
-
-    resources::Manager& resources()
-    {
-        CHECK(m_resources);
-        return *m_resources;
-    }
-
-    Runtime& runtime(std::size_t partition_id)
-    {
-        DCHECK_LT(partition_id, m_resources->partition_count());
-        DCHECK(m_partitions.at(partition_id));
-        return *m_partitions.at(partition_id);
-    }
+    // access the full set of internal resources
+    resources::Manager& resources() const;
 
   private:
     std::unique_ptr<resources::Manager> m_resources;
-    std::vector<std::unique_ptr<Runtime>> m_partitions;
+    std::vector<std::unique_ptr<Partition>> m_partitions;
 };
 
 }  // namespace srf::internal::runtime

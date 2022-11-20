@@ -20,6 +20,7 @@
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/client/instance.hpp"
 #include "internal/expected.hpp"
+#include "internal/service.hpp"
 #include "internal/utils/contains.hpp"
 
 #include <glog/logging.h>
@@ -57,7 +58,10 @@ void SubscriptionService::request_stop()
     // issue a request to drop this subscription service
     // after confirmation form the control plane, teardown will be executed by the updater, which will formally
     // stop and join any outstanding runnables
-    drop_subscription_service();
+    if (Service::state() == ServiceState::Running)
+    {
+        drop_subscription_service();
+    }
 }
 
 void SubscriptionService::do_service_start()
@@ -206,4 +210,12 @@ const srf::runnable::LaunchOptions& SubscriptionService::policy_engine_launch_op
     return m_instance.client().launch_options();
 }
 
+void SubscriptionService::await_start()
+{
+    service_start();
+}
+bool SubscriptionService::is_startable() const
+{
+    return is_service_startable();
+}
 }  // namespace srf::internal::control_plane::client

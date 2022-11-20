@@ -39,7 +39,8 @@ class IPublisher : public virtual control_plane::ISubscriptionService
     virtual channel::Status publish(runtime::RemoteDescriptor&& remote_descriptor)           = 0;
 };
 
-class ISubscriber : public virtual control_plane::ISubscriptionService
+class ISubscriber : public virtual control_plane::ISubscriptionService,
+                    public srf::node::SourceChannelWriteable<srf::runtime::RemoteDescriptor>
 {
   public:
     ~ISubscriber() override = default;

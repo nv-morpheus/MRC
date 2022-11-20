@@ -17,34 +17,45 @@
 
 #include "internal/runtime/runtime.hpp"
 
-#include "internal/remote_descriptor/manager.hpp"
+#include "internal/resources/manager.hpp"
+#include "internal/runtime/partition.hpp"
 
 namespace srf::internal::runtime {
-Runtime::Runtime(resources::PartitionResources& resources) : m_resources(resources)
+
+Runtime::Runtime(std::unique_ptr<resources::Manager> resources) : m_resources(std::move(resources))
 {
-    if (resources.network())
+    CHECK(m_resources);
+    for (int i = 0; i < m_resources->partition_count(); i++)
     {
-        m_remote_descriptor_manager =
-            std::make_shared<remote_descriptor::Manager>(resources.network()->instance_id(), resources);
+        m_partitions.push_back(std::make_unique<Partition>(m_resources->partition(i)));
     }
 }
 
 Runtime::~Runtime()
 {
-    if (m_remote_descriptor_manager)
-    {
-        m_remote_descriptor_manager->service_stop();
-        m_remote_descriptor_manager->service_await_join();
-    }
+    // the problem is that m_partitions goes away, then m_resources is destroyed
+    // when not all Publishers/Subscribers which were created with a ref to a Partition
+    // might not yet be finished
+    m_resources->shutdown().get();
 }
 
-resources::PartitionResources& Runtime::resources()
+resources::Manager& Runtime::resources() const
 {
-    return m_resources;
+    CHECK(m_resources);
+    return *m_resources;
 }
-remote_descriptor::Manager& Runtime::remote_descriptor_manager()
+std::size_t Runtime::partition_count() const
 {
-    CHECK(m_remote_descriptor_manager);
-    return *m_remote_descriptor_manager;
+    return m_partitions.size();
+}
+std::size_t Runtime::gpu_count() const
+{
+    return resources().device_count();
+}
+Partition& Runtime::partition(std::size_t partition_id)
+{
+    DCHECK_LT(partition_id, m_resources->partition_count());
+    DCHECK(m_partitions.at(partition_id));
+    return *m_partitions.at(partition_id);
 }
 }  // namespace srf::internal::runtime

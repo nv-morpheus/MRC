@@ -33,13 +33,18 @@
 #include <unordered_map>
 #include <utility>
 
+namespace srf::internal::runtime {
+class Partition;
+}
+
 namespace srf::internal::pubsub {
 
 class Publisher : public Base,
                   public srf::pubsub::IPublisher,
                   public srf::node::SourceChannelWriteable<srf::runtime::RemoteDescriptor>
 {
-    Publisher(std::string service_name, runtime::Runtime& runtime);
+  protected:
+    Publisher(std::string service_name, runtime::Partition& runtime);
 
   public:
     ~Publisher() override = default;
@@ -100,7 +105,7 @@ class Publisher : public Base,
     virtual void on_update() = 0;
 
     // resources - needs to be a PartitionRuntime
-    runtime::Runtime& m_runtime;
+    runtime::Partition& m_runtime;
 
     // policy engine runner
     std::unique_ptr<srf::runnable::Runner> m_policy_engine;

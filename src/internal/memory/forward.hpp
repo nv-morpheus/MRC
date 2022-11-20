@@ -17,32 +17,8 @@
 
 #pragma once
 
-#include "srf/channel/ingress.hpp"
-#include "srf/node/edge_properties.hpp"
-#include "srf/node/forward.hpp"
-#include "srf/node/sink_channel_base.hpp"
+namespace srf::internal::memory {
 
-namespace srf::node {
+class TransientBuffer;
 
-template <typename T>
-class Queue : public SinkChannelBase<T>, public SinkProperties<T>, public ChannelProvider<T>
-{
-  public:
-    Queue()           = default;
-    ~Queue() override = default;
-
-  private:
-    // SinkProperties<T> - aka IngressProvider
-    std::shared_ptr<channel::Ingress<T>> channel_ingress() final
-    {
-        return SinkChannelBase<T>::ingress_channel();
-    }
-
-    // ChannelProvider
-    std::shared_ptr<channel::Channel<T>> channel() final
-    {
-        return SinkChannelBase<T>::channel();
-    }
-};
-
-}  // namespace srf::node
+}

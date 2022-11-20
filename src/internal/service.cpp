@@ -100,6 +100,12 @@ const ServiceState& Service::state() const
     return m_state;
 }
 
+bool Service::is_service_startable() const
+{
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    return (m_state == ServiceState::Initialized);
+}
+
 bool Service::forward_state(ServiceState new_state)
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
@@ -136,4 +142,5 @@ void Service::service_set_description(std::string description)
 {
     m_description = std::move(description);
 }
+
 }  // namespace srf::internal

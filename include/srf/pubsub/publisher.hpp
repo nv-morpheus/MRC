@@ -29,6 +29,26 @@
 
 namespace srf::pubsub {
 
+/**
+ * @brief Publishes an object T which will be received by one more more Subscribers.
+ *
+ * This object is both directly writeable, but also connectable to multiple upstream sources of T. By its nature as an
+ * operator, forward progress is performed not by a progress engine, but rather by the callers of await_write or by the
+ * execution context driving forward progress along the edge.
+ *
+ * This object is always created as as shared_ptr with a copy held by the instance of the control plane on a specific
+ * partition whose resources are using for encoding, decoding and data transport. After edges are formed, this object
+ * can be destroyed and its lifecycle will be properly managed by the runtime.
+ *
+ * Publisher<T> Data Path:
+ * [T] -> EncodedObject<T> -> EncodedStorage -> RemoteDescriptor -> Transient Buffer -> Data Plane Tagged Send
+ *
+ * Subscriber<T> Data Path:
+ * Data Plane Tagged Received -> Transient Buffer -> RemoteDescriptor -> Subscriber/Source<T> ->
+ *
+ * Subscriber<RemoteDescriptor> Data Path:
+ * Data Plane Tagged Received -> Transient Buffer -> RemoteDescriptor -> Subscriber/Source<RemoteDescriptor> ->
+ */
 template <typename T>
 class Publisher final : public control_plane::SubscriptionServiceForwarder,
                         public node::Operator<T>,

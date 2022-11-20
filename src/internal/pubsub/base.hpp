@@ -33,7 +33,7 @@ namespace srf::internal::pubsub {
 class Base : public control_plane::client::SubscriptionService
 {
   public:
-    Base(std::string name, runtime::Runtime& runtime) :
+    Base(std::string name, runtime::Partition& runtime) :
       SubscriptionService(std::move(name), runtime.resources().network()->control_plane()),
       m_runtime(runtime)
     {}
@@ -58,7 +58,7 @@ class Base : public control_plane::client::SubscriptionService
     }
 
   protected:
-    inline runtime::Runtime& runtime()
+    inline runtime::Partition& runtime()
     {
         return m_runtime;
     }
@@ -69,7 +69,7 @@ class Base : public control_plane::client::SubscriptionService
     }
 
   private:
-    runtime::Runtime& m_runtime;
+    runtime::Partition& m_runtime;
 };
 
 }  // namespace srf::internal::pubsub
