@@ -22,16 +22,13 @@
 
 namespace srf::node {
 
-struct OperatorBase
-{
-    virtual ~OperatorBase() = 0;
-};
-
-inline OperatorBase::~OperatorBase() = default;
-
 template <typename T>
-class Operator : public SinkProperties<T>, public OperatorBase, public std::enable_shared_from_this<Operator<T>>
+class UniqueOperator : public SinkProperties<T>
 {
+  public:
+    virtual ~UniqueOperator() = default;
+
+  private:
     // SinkProperties
     std::shared_ptr<channel::Ingress<T>> channel_ingress() final;
 
@@ -40,14 +37,14 @@ class Operator : public SinkProperties<T>, public OperatorBase, public std::enab
 
     // called by the IngressAdaptor's destructor
     // this signifies that the last held IngressAdaptor has been releases
-    // and the Operator should cascade the on_complete signal
+    // and the UniqueOperator should cascade the on_complete signal
     virtual void on_complete() = 0;
 
     // Ingress Adaptor
     class IngressAdaptor : public channel::Ingress<T>
     {
       public:
-        IngressAdaptor(Operator& parent) : m_parent(parent) {}
+        IngressAdaptor(UniqueOperator& parent) : m_parent(parent) {}
         ~IngressAdaptor()
         {
             m_parent.on_complete();
@@ -59,7 +56,7 @@ class Operator : public SinkProperties<T>, public OperatorBase, public std::enab
         }
 
       private:
-        Operator& m_parent;
+        UniqueOperator& m_parent;
     };
 
     std::weak_ptr<IngressAdaptor> m_ingress;
@@ -67,20 +64,16 @@ class Operator : public SinkProperties<T>, public OperatorBase, public std::enab
 };
 
 template <typename T>
-std::shared_ptr<channel::Ingress<T>> Operator<T>::channel_ingress()
+std::shared_ptr<channel::Ingress<T>> UniqueOperator<T>::channel_ingress()
 {
     std::shared_ptr<IngressAdaptor> ingress;
     if ((ingress = m_ingress.lock()))
     {
         return ingress;
     }
-    LOG(INFO) << "before shared_from_this()";
-    auto this_operator = this->shared_from_this();
-    LOG(INFO) << "after shared_from_this()";
-    ingress = std::shared_ptr<IngressAdaptor>(new IngressAdaptor(*this), [this_operator](IngressAdaptor* ptr) mutable {
-        delete ptr;
-        this_operator.reset();
-    });
+
+    ingress = std::make_shared<IngressAdaptor>(*this);
+
     auto m_ingress = ingress;
     return ingress;
 }

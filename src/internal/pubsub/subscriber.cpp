@@ -42,13 +42,18 @@ void Subscriber::do_subscription_service_setup()
             return this->network_handler(buffer);
         }));
 
+    DVLOG(10) << "form edge:  network_soruce -> network_handler";
     srf::node::make_edge(network_source, *network_handler);
+
+    DVLOG(10) << "form edge:  network_handler -> rd_channel (ISubscriber::SourceChannelWriteable)";
     srf::node::make_edge(*network_handler, *this);
 
+    DVLOG(10) << "starting network handler node";
     m_network_handler =
         resources().runnable().launch_control().prepare_launcher(std::move(network_handler))->ignition();
 
     m_network_handler->await_live();
+    DVLOG(10) << "finished internal:pubsub::Subscriber setup";
 }
 
 void Subscriber::do_subscription_service_teardown()

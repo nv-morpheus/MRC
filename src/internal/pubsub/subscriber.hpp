@@ -22,7 +22,7 @@
 #include "internal/runtime/runtime.hpp"
 
 #include "srf/channel/status.hpp"
-#include "srf/node/operators/operator.hpp"
+#include "srf/node/operators/unique_operator.hpp"
 #include "srf/pubsub/api.hpp"
 #include "srf/runnable/runner.hpp"
 #include "srf/runtime/remote_descriptor.hpp"
@@ -30,6 +30,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -41,7 +42,7 @@ namespace srf::internal::pubsub {
  */
 class Subscriber final : public Base,
                          public srf::pubsub::ISubscriber,
-                         public srf::node::Operator<srf::runtime::RemoteDescriptor>
+                         public srf::node::UniqueOperator<srf::runtime::RemoteDescriptor>
 {
     Subscriber(std::string service_name, runtime::Partition& runtime);
 

@@ -80,9 +80,13 @@ class Subscriber final : public node::Queue<T>,
             return;
         }
 
+        LOG(INFO) << "forming first edge: typed_source -> self [Node<T>]";
+
         // Edge - SourceChannelWritable<T> -> Queue<T>
         srf::node::SourceChannelWriteable<T>& typed_source = *this;
         srf::node::make_edge(typed_source, *this);
+
+        LOG(INFO) << "forming second edge: ipublisher -> operator_component";
 
         // Edge - IPublisher -> OperatorComponent
         m_rd_sink = std::make_shared<node::OperatorComponent<srf::runtime::RemoteDescriptor>>(
@@ -98,7 +102,9 @@ class Subscriber final : public node::Queue<T>,
         // After the edges have been formed, we have a complete pipeline from the data plane to a channel. If we started
         // the service prior to the edge construction, we might get data flowing through an incomplete operator chain
         // and result in an inablility to handle backpressure.
+        LOG(INFO) << "issuing isubscriber::await_start";
         m_service->await_start();
+        LOG(INFO) << "subscriber::await_start finished";
     }
 
   private:

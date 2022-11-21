@@ -77,7 +77,9 @@ void SubscriptionService::do_service_start()
     }
 
     // virtual method to enable derived class to specialize
+    DVLOG(10) << "[start] setup subscription service: " << service_name() << ", role: " << role();
     do_subscription_service_setup();
+    DVLOG(10) << "[success] setup subscription service: " << service_name() << ", role: " << role();
 
     // register this subscription service with the client instance
     // this connects this object to the update stream
