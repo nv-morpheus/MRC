@@ -65,27 +65,34 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
     // publisher
     channel::Status await_write(T&& data) final;
 
-  private:
-    Publisher(std::shared_ptr<IPublisher> publisher) : m_service(std::move(publisher))
+    void await_start() final
     {
-        CHECK(m_service);
-
         // form a persistent connection to the operator
         // data flowing in from operator edges are forwarded to the public await_write
         m_persistent_channel = std::make_unique<srf::node::SourceChannelWriteable<T>>();
         srf::node::make_edge(*m_persistent_channel, *this);
+
+        CHECK(m_service);
+        m_service->await_start();
     }
 
-    // [ISubscriptionServiceControl] - this overrides the SubscriptionServiceForwarder forwarding method
-    // issuing a request to stop should only happen after all edges have been dropped from this operator
-    // we simply release the persistent channel on stop, then the issue
-    // a SuscriptionService::stop() final upstream disconnect.
     void request_stop() final
     {
         // drop the persistent channel holding keeping the operator live
         // when the last connection is dropped, the Operator<T>::on_complete override will be triggered
         m_persistent_channel.reset();
     }
+
+  private:
+    Publisher(std::shared_ptr<IPublisher> publisher) : m_service(std::move(publisher))
+    {
+        CHECK(m_service);
+    }
+
+    // [ISubscriptionServiceControl] - this overrides the SubscriptionServiceForwarder forwarding method
+    // issuing a request to stop should only happen after all edges have been dropped from this operator
+    // we simply release the persistent channel on stop, then the issue
+    // a SuscriptionService::stop() final upstream disconnect.
 
     // [Operator<T>] the trigger of this method signifies that all upstream connections, including the locally held
     // persistent connection, have been released. this should be the signal to initiate a stop on the service, as a stop

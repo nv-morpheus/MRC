@@ -175,99 +175,107 @@ TEST_F(TestControlPlane, DoubleClientConnectExchangeDisconnect)
     server->service_await_join();
 }
 
-// TEST_F(TestControlPlane, DoubleClientPubSub)
-// {
-//     auto sr     = make_runtime();
-//     auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).resources().runnable());
+TEST_F(TestControlPlane, DoubleClientPubSub)
+{
+    auto sr     = make_runtime();
+    auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).resources().runnable());
 
-//     server->service_start();
-//     server->service_await_live();
+    server->service_start();
+    server->service_await_live();
 
-//     auto client_1 = make_runtime([](Options& options) {
-//         options.topology().user_cpuset("0-3");
-//         options.topology().restrict_gpus(true);
-//         options.architect_url("localhost:13337");
-//     });
+    auto client_1 = make_runtime([](Options& options) {
+        options.topology().user_cpuset("0-3");
+        options.topology().restrict_gpus(true);
+        options.architect_url("localhost:13337");
+    });
 
-//     auto client_2 = make_runtime([](Options& options) {
-//         options.topology().user_cpuset("4-7");
-//         options.topology().restrict_gpus(true);
-//         options.architect_url("localhost:13337");
-//     });
+    auto client_2 = make_runtime([](Options& options) {
+        options.topology().user_cpuset("4-7");
+        options.topology().restrict_gpus(true);
+        options.architect_url("localhost:13337");
+    });
 
-//     // the total number of partition is system dependent
-//     auto expected_partitions_1 = client_1->resources().system().partitions().flattened().size();
-//     EXPECT_EQ(
-//         client_1->partition(0).resources().network()->control_plane().client().connections().instance_ids().size(),
-//         expected_partitions_1);
+    // the total number of partition is system dependent
+    auto expected_partitions_1 = client_1->resources().system().partitions().flattened().size();
+    EXPECT_EQ(
+        client_1->partition(0).resources().network()->control_plane().client().connections().instance_ids().size(),
+        expected_partitions_1);
 
-//     auto expected_partitions_2 = client_2->resources().system().partitions().flattened().size();
-//     EXPECT_EQ(
-//         client_2->partition(0).resources().network()->control_plane().client().connections().instance_ids().size(),
-//         expected_partitions_2);
+    auto expected_partitions_2 = client_2->resources().system().partitions().flattened().size();
+    EXPECT_EQ(
+        client_2->partition(0).resources().network()->control_plane().client().connections().instance_ids().size(),
+        expected_partitions_2);
 
-//     auto f1 = client_1->partition(0).resources().network()->control_plane().client().connections().update_future();
-//     auto f2 = client_2->partition(0).resources().network()->control_plane().client().connections().update_future();
+    auto f1 = client_1->partition(0).resources().network()->control_plane().client().connections().update_future();
+    auto f2 = client_2->partition(0).resources().network()->control_plane().client().connections().update_future();
 
-//     client_1->partition(0).resources().network()->control_plane().client().request_update();
+    client_1->partition(0).resources().network()->control_plane().client().request_update();
 
-//     f1.get();
-//     f2.get();
+    f1.get();
+    f2.get();
 
-//     client_1->partition(0)
-//         .resources()
-//         .runnable()
-//         .main()
-//         .enqueue([&] {
-//             auto worker_count = client_1->partition(0)
-//                                     .resources()
-//                                     .network()
-//                                     ->control_plane()
-//                                     .client()
-//                                     .connections()
-//                                     .worker_addresses()
-//                                     .size();
-//             EXPECT_EQ(worker_count, expected_partitions_1 + expected_partitions_2);
-//         })
-//         .get();
+    client_1->partition(0)
+        .resources()
+        .runnable()
+        .main()
+        .enqueue([&] {
+            auto worker_count = client_1->partition(0)
+                                    .resources()
+                                    .network()
+                                    ->control_plane()
+                                    .client()
+                                    .connections()
+                                    .worker_addresses()
+                                    .size();
+            EXPECT_EQ(worker_count, expected_partitions_1 + expected_partitions_2);
+        })
+        .get();
 
-//     LOG(INFO) << "MAKE PUBLISHER";
-//     auto publisher = client_1->partition(0).make_publisher<int>("my_int", pubsub::PublisherPolicy::RoundRobin);
+    LOG(INFO) << "MAKE PUBLISHER";
+    auto publisher = client_1->partition(0).make_publisher<int>("my_int", pubsub::PublisherPolicy::RoundRobin);
+    LOG(INFO) << "PUBLISHER START";
+    publisher->await_start();
+    LOG(INFO) << "PUBLISHER STARTED";
 
-//     LOG(INFO) << "MAKE SUBSCRIBER";
-//     auto subscriber = client_2->partition(0).make_subscriber<int>("my_int");
+    LOG(INFO) << "MAKE SUBSCRIBER";
+    auto subscriber = client_2->partition(0).make_subscriber<int>("my_int");
+    LOG(INFO) << "SUBSCRIBER START";
+    subscriber->await_start();
+    LOG(INFO) << "SUBSCRIBER STARTED";
 
-//     client_1->partition(0).resources().network()->control_plane().client().request_update();
+    client_1->partition(0).resources().network()->control_plane().client().request_update();
 
-//     publisher->await_write(42);
-//     publisher->await_write(15);
+    publisher->await_write(42);
+    publisher->await_write(15);
 
-//     std::this_thread::sleep_for(std::chrono::milliseconds(300));
-//     LOG(INFO) << "AFTER SLEEP 1 - publisher should have 1 subscriber";
-//     // client-side: publisher manager should have 1 tagged instance in it write list
-//     // server-side: publisher member list: 1, subscriber member list: 1, subscriber subscribe_to list: 1
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    LOG(INFO) << "AFTER SLEEP 1 - publisher should have 1 subscriber";
+    // client-side: publisher manager should have 1 tagged instance in it write list
+    // server-side: publisher member list: 1, subscriber member list: 1, subscriber subscribe_to list: 1
 
-//     LOG(INFO) << "[START] DELETE SUBSCRIBER";
-//     subscriber.reset();
-//     LOG(INFO) << "[FINISH] DELETE SUBSCRIBER";
+    LOG(INFO) << "[START] DELETE SUBSCRIBER";
+    subscriber->request_stop();
+    subscriber->await_join();
+    LOG(INFO) << "[FINISH] DELETE SUBSCRIBER";
 
-//     client_1->partition(0).resources().network()->control_plane().client().request_update();
-//     std::this_thread::sleep_for(std::chrono::milliseconds(300));
-//     LOG(INFO) << "AFTER SLEEP 2 - publisher should have 0 subscribers";
+    client_1->partition(0).resources().network()->control_plane().client().request_update();
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    LOG(INFO) << "AFTER SLEEP 2 - publisher should have 0 subscribers";
 
-//     LOG(INFO) << "[START] DELETE PUBLISHER";
-//     publisher.reset();
-//     LOG(INFO) << "[FINISH] DELETE PUBLISHER";
+    LOG(INFO) << "[START] DELETE PUBLISHER";
+    publisher->request_stop();
+    publisher->await_join();
+    LOG(INFO) << "[FINISH] DELETE PUBLISHER";
 
-//     client_1->partition(0).resources().network()->control_plane().client().request_update();
+    client_1->partition(0).resources().network()->control_plane().client().request_update();
 
-//     // destroying the resources should gracefully shutdown the data plane and the control plane.
-//     client_1.reset();
-//     client_2.reset();
+    // destroying the resources should gracefully shutdown the data plane and the control plane.
+    client_1.reset();
+    client_2.reset();
 
-//     server->service_stop();
-//     server->service_await_join();
-// }
+    server->service_stop();
+    server->service_await_join();
+}
 
 // TEST_F(TestControlPlane, DoubleClientPubSubBuffers)
 // {

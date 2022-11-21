@@ -102,7 +102,10 @@ class Subscriber final : public node::Queue<T>,
     }
 
   private:
-    Subscriber(std::shared_ptr<ISubscriber> service) : m_service(std::move(service)) {}
+    Subscriber(std::shared_ptr<ISubscriber> service) : m_service(std::move(service))
+    {
+        CHECK(m_service);
+    }
 
     ISubscriptionService& service() const final
     {
