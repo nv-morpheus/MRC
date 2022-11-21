@@ -106,6 +106,16 @@ void Publisher::do_subscription_service_setup()
     m_policy_engine->await_live();
 }
 
+void Publisher::do_subscription_service_teardown()
+{
+    release_channel();
+}
+
+void Publisher::do_subscription_service_join()
+{
+    m_policy_engine->await_join();
+}
+
 void Publisher::publish(srf::runtime::RemoteDescriptor&& rd,
                         const std::uint64_t& tag,
                         std::shared_ptr<ucx::Endpoint> endpoint)

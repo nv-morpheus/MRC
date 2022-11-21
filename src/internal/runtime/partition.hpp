@@ -25,7 +25,6 @@
 
 #include "srf/codable/api.hpp"
 #include "srf/runtime/api.hpp"
-#include "srf/runtime/forward.hpp"
 #include "srf/utils/macros.hpp"
 
 #include <iterator>
@@ -51,10 +50,9 @@ class Partition final : public srf::runtime::IPartition
 
   private:
     std::shared_ptr<pubsub::Publisher> make_internal_publisher(const std::string& name,
-                                                      const srf::pubsub::PublisherPolicy& policy);
+                                                               const srf::pubsub::PublisherPolicy& policy);
 
     std::shared_ptr<pubsub::Subscriber> make_internal_subscriber(const std::string& name);
-
 
     // IPartiton -> shared_ptr<IPublisher> is not covariant with shared_ptr<Publisher>
     // however the two are convertable, so we do this in two stages rather than directly

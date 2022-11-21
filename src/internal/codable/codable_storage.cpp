@@ -26,6 +26,7 @@
 #include "internal/ucx/remote_registration_cache.hpp"
 
 #include "srf/codable/memory.hpp"
+#include "srf/cuda/common.hpp"
 #include "srf/memory/buffer_view.hpp"
 #include "srf/memory/literals.hpp"
 #include "srf/memory/memory_kind.hpp"
@@ -84,6 +85,20 @@ std::optional<CodableStorage::idx_t> CodableStorage::register_memory_view(srf::m
     auto* desc = mutable_proto().add_descriptors()->mutable_remote_desc();
     encode_descriptor(m_resources.network()->instance_id(), *desc, view, *ucx_block, should_cache);
     return count;
+}
+
+void CodableStorage::copy_to_buffer(idx_t buffer_idx, srf::memory::const_buffer_view view)
+{
+    auto search = m_buffers.find(buffer_idx);
+    CHECK(search != m_buffers.end()) << "buffer_idx=" << buffer_idx << " was not created with create_buffer";
+
+    auto& dst = search->second;
+    CHECK_LE(dst.bytes(), view.bytes());
+
+    // todo(ryan) - enumerate this to use explicit copy methods, e.g. std::memcpy, cudaMemcpy, cudaMemcpyAsync with
+    // directional H2D/D2H. the resources object should provide a cuda stream pool per partition and a single runtime
+    // stream on the off chance the partition doesn't have a device, but is exposed to device memory.
+    SRF_CHECK_CUDA(cudaMemcpy(dst.data(), view.data(), view.bytes(), cudaMemcpyDefault));
 }
 
 CodableStorage::idx_t CodableStorage::copy_to_eager_descriptor(srf::memory::const_buffer_view view)
