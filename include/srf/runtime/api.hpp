@@ -83,7 +83,7 @@ class IPartition
     virtual std::shared_ptr<pubsub::IPublisher> create_publisher_service(const std::string& name,
                                                                          const pubsub::PublisherPolicy& policy) = 0;
 
-    virtual std::shared_ptr<pubsub::ISubscriber> create_subscriber_service(const std::string& name);
+    virtual std::shared_ptr<pubsub::ISubscriber> create_subscriber_service(const std::string& name) = 0;
 };
 
 }  // namespace srf::runtime
