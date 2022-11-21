@@ -22,4 +22,9 @@ namespace srf::runtime {
 class IRuntime;
 class IPartition;
 
+class IRemoteDescriptorManager;
+class IRemoteDescriptorHandle;
+
+class RemoteDescriptor;
+
 }  // namespace srf::runtime

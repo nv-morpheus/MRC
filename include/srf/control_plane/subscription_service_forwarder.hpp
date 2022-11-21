@@ -21,6 +21,9 @@
 
 namespace srf::control_plane {
 
+/**
+ * @brief Convenience class to forward the ISubscriptionService to an instance of an ISubscriptionService
+ */
 class SubscriptionServiceForwarder : public ISubscriptionService
 {
   public:

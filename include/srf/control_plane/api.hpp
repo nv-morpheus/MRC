@@ -23,6 +23,22 @@
 
 namespace srf::control_plane {
 
+/**
+ * @brief Public interface for control plane subscription services
+ *
+ * A subscription service on the control plane is defined by a globally unique service_name with a set of roles. An
+ * instance of a subscriptions service is bound to a specific role and a list of roles for which updates will be
+ * provided.
+ *
+ * Example, the SRF Publisher-Subscriber (pubsub) is a service with two roles {"Publisher", "Subscriber"}. An instance
+ * of a Publisher object has the role() set to "Publisher" and gets a globally unqiue 64-bit tag/identifier. Publishers
+ * subscribe to updates from the Subscriber role. When Subscribers are added or removed, the control plane will issue
+ * updates that will be delivered to the Publisher object.
+ *
+ * This interface is broken down into two components, one focused on the identity and one focused the controls.
+ */
+struct ISubscriptionService;
+
 struct ISubscriptionServiceIdentity
 {
     virtual ~ISubscriptionServiceIdentity() = default;

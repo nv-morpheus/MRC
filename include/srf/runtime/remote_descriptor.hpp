@@ -31,6 +31,24 @@ namespace srf::runtime {
 
 class IRemoteDescriptorManager;
 
+/**
+ * @brief Primary user-level object for interacting with globally accessible object.
+ *
+ * The RemoteDescriptor is an RAII object which manages the lifecycle of a globally accessible object held by the
+ * RemoteDescriptor manager on a given instance of the SRF runtime.
+ *
+ * The RemoteDescriptor can be used to reconstruct the globally accessible object using the decode method. This may
+ * trigger network operations.
+ *
+ * A RemoteDescriptor owns some number of reference counting tokens for the global object. The RemoteDescriptor may
+ * release ownership of those tokens which would decrement the global reference count by the number of tokens held or it
+ * may choose to transfer ownership of those tokens by transmitting this object across the data plane to be
+ * reconstructed on a remote instance.
+ *
+ * When a RemoteDescriptor is tranferred, the resulting local RemoteDescriptor::has_value or bool operator returns
+ * false, meaning it no longer has access to the global object.
+ *
+ */
 class RemoteDescriptor final
 {
   public:
@@ -40,13 +58,17 @@ class RemoteDescriptor final
     DELETE_COPYABILITY(RemoteDescriptor);
     DEFAULT_MOVEABILITY(RemoteDescriptor);
 
-    bool has_value() const;
-
-    operator bool() const
-    {
-        return has_value();
-    }
-
+    /**
+     * @brief Decode the globally accessible object into a local object T constructed from the partition resources which
+     * currently owns the RemoteDescriptor.
+     *
+     * todo(mdemoret/ryanolson) - we should consider renaming this method to `await_decode` as this object may trigger
+     * network operators and may yield the execution context.
+     *
+     * @tparam T
+     * @param object_idx
+     * @return T
+     */
     template <typename T>
     T decode(std::size_t object_idx = 0)
     {
@@ -58,6 +80,27 @@ class RemoteDescriptor final
      * @brief Releases the RemoteDescriptor causing a decrement of the global token count
      */
     void release_ownership();
+
+    /**
+     * @brief Returns true if this object is still connected to the global object; otherwise, ownership has been
+     * transferred or released.
+     *
+     * @return true
+     * @return false
+     */
+    bool has_value() const;
+
+    /**
+     * @brief Returns true if this object is still connected to the global object; otherwise, ownership has been
+     * transferred or released.
+     *
+     * @return true
+     * @return false
+     */
+    operator bool() const
+    {
+        return has_value();
+    }
 
   private:
     RemoteDescriptor(std::shared_ptr<IRemoteDescriptorManager> manager,

@@ -45,31 +45,79 @@ class IRuntime
   public:
     virtual ~IRuntime() = default;
 
+    /**
+     * @brief Number of partitions constructed by the runtime.
+     */
     virtual std::size_t partition_count() const = 0;
-    virtual std::size_t gpu_count() const       = 0;
 
+    /**
+     * @brief Number of visible and accessible NVIDIA GPU accelerators available to the runtime.
+     */
+    virtual std::size_t gpu_count() const = 0;
+
+    /**
+     * @brief Access resources for a given partition.
+     *
+     * This method will throw or abort on an invalid partition_id.
+     *
+     * @param partition_id
+     * @return IPartition&
+     */
     virtual IPartition& partition(std::size_t partition_id) = 0;
 };
 
 /**
  * @brief Partition-level interface for publically exposed resources/components
+ *
+ * In order to keep the ABI clean and to enforce a stronger compilation boundary, only pure virtual methods and objects
+ * are used in the runtime interface definition.
+ *
+ * Public templated objects like Publisher<T> and Subscriber<T> that are privately constructed with IPublisherService
+ * and ISubscriberService, respectively, are friended to IPartition, rather than constructing a
+ * Publisher<T>/Subscriber<T> directly from IPartition which would propagate the dependencies of those objects thru the
+ * interface API.
  */
 class IPartition
 {
   public:
     virtual ~IPartition() = default;
 
+    /**
+     * @brief Access the remote descriptor manager resource thru its interface
+     */
     virtual IRemoteDescriptorManager& remote_descriptor_manager() = 0;
 
+    /**
+     * @brief Provides a suitable ICodableStorage object backed by the required resources from this partition.
+     */
     virtual std::unique_ptr<codable::ICodableStorage> make_codable_storage() = 0;
 
   private:
+    /**
+     * @brief Provides an IPublisherService backed by resources on this partition.
+     *
+     * An IPublisherService is not directly used in the public API, but is used as part of the private constructor for
+     * initializing a Publisher.
+     *
+     * @param name - unique name linking publishers and subscribers
+     * @param policy - the type of publisher, e.g. load-balancer, broadcaster, etc.
+     * @return std::shared_ptr<pubsub::IPublisherService>
+     */
     virtual std::shared_ptr<pubsub::IPublisherService> make_publisher_service(
         const std::string& name, const pubsub::PublisherPolicy& policy) = 0;
 
+    /**
+     * @brief Provides an ISubscriberService backed by resources on this partition.
+     *
+     * An ISubscriberService is not directly used in the public API, but is used as part of the private constructor for
+     * initializing a Subscriber.
+     *
+     * @param name
+     * @return std::shared_ptr<pubsub::ISubscriberService>
+     */
     virtual std::shared_ptr<pubsub::ISubscriberService> make_subscriber_service(const std::string& name) = 0;
 
-    // enable access to private methods
+    // Friends
 
     template <typename T>
     friend class pubsub::Publisher;

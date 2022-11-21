@@ -25,6 +25,13 @@ class RemoteDescriptor;
 
 namespace srf::runtime {
 
+/**
+ * @brief An IDecodableStorage object that owns the object encoding, backing instance_id, and reference counting tokens,
+ * but does *not* own the backing object.
+ *
+ * This object can be decoded (using the resources of the backing partition), separated from the RemoteDescriptor and
+ * used to transport and recreate the RemoteDescriptor an another machine or can be globally released by the manager.
+ */
 struct IRemoteDescriptorHandle : public virtual codable::IDecodableStorage
 {
     ~IRemoteDescriptorHandle() override = default;

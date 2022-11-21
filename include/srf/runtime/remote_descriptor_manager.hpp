@@ -19,35 +19,65 @@
 
 #include "srf/codable/api.hpp"
 #include "srf/codable/encoded_object.hpp"
-#include "srf/protos/codable.pb.h"
 #include "srf/runtime/remote_descriptor.hpp"
 
 #include <memory>
 
 namespace srf::runtime {
 
-class RemoteDescriptor;
 class IRemoteDescriptorHandle;
 
 /**
- * @brief Publid interface of the RemoteDescriptorManager
+ * @brief Public interface of the RemoteDescriptorManager
  *
+ * A RemoteDescriptor manager is a partition-level runtime resource.
  */
 class IRemoteDescriptorManager
 {
   public:
     virtual ~IRemoteDescriptorManager() = default;
 
+    /**
+     * @brief Take ownership of an object T and provide back a RemoteDescriptor
+     *
+     * The remote descriptor manager will take ownership of a given object T, encode the description of that object in
+     * an encoded storage object, then provide back a RemoteDescriptor object which is used to manage the lifecycle of
+     * the original object T as well as decoding a copy of the original object. RemoteDescriptors can be transferred
+     * across the SRF data plane to other physical machines/processes. When being decoded on a remote instance, the SRF
+     * data plane uses the UCX communications library which will optimize the network transport based on the available
+     * hardware on the source and destination machines.
+     *
+     * @tparam T
+     * @param object
+     * @return RemoteDescriptor
+     */
     template <typename T>
     RemoteDescriptor register_object(T&& object)
     {
         return register_encoded_object(codable::EncodedObject<T>::create(std::move(object), create_storage()));
     }
 
+    /**
+     * @brief Take ownership of an EncodedStorage object and provide back a RemoteDescriptor
+     *
+     * Similar to `register_object`, but the backing object has already been captured and encoded by the EncodedStorage
+     * object.
+     *
+     * @param object
+     * @return RemoteDescriptor
+     */
     virtual RemoteDescriptor register_encoded_object(std::unique_ptr<codable::EncodedStorage> object) = 0;
 
   protected:
-    virtual std::unique_ptr<codable::ICodableStorage> create_storage()           = 0;
+    // Provides a ICodableStorage backed by the partition resources
+    virtual std::unique_ptr<codable::ICodableStorage> create_storage() = 0;
+
+    // Release the IRemoteDescriptorHandle by decrementing the *global* reference counting tokens by the number of
+    // tokens held by the handle. This method will trigger *yielding* network communication if instance_id of the handle
+    // is different from the instance_id of the remote descriptor manager.
+    //
+    // todo(mdemoret/ryanolson) - consider renaming to await_release_handle to indicate that the method may yield the
+    // execution context
     virtual void release_handle(std::unique_ptr<IRemoteDescriptorHandle> handle) = 0;
 
     friend RemoteDescriptor;
