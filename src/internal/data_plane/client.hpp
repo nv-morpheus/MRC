@@ -23,11 +23,8 @@
 #include "internal/memory/transient_pool.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/service.hpp"
 #include "internal/ucx/common.hpp"
-#include "internal/ucx/context.hpp"
 #include "internal/ucx/endpoint.hpp"
-#include "internal/ucx/worker.hpp"
 
 #include "srf/channel/status.hpp"
 #include "srf/node/source_channel.hpp"
@@ -38,12 +35,11 @@
 #include "srf/types.hpp"
 #include "srf/utils/macros.hpp"
 
-#include <rxcpp/rx.hpp>  // IWYU pragma: keep
-#include <ucp/api/ucp_def.h>
-
 #include <cstddef>
+#include <cstdint>
 #include <map>
 #include <memory>
+#include <string>
 
 namespace srf::internal::data_plane {
 

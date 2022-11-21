@@ -18,7 +18,6 @@
 #pragma once
 
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/runnable/resources.hpp"
 
 #include "srf/memory/buffer.hpp"
 #include "srf/memory/resources/memory_resource.hpp"

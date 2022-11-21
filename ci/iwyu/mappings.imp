@@ -6,6 +6,7 @@
 { "include": [ "<bits/cxxabi_forced.h>", private, "<mutex>", "public" ] },
 { "include": [ "<bits/cxxabi_forced.h>", private, "<vector>", "public" ] },
 { "include": [ "<bits/types/siginfo_t.h>", private, "<csignal>", "public" ] },
+{ "include": [ "<string.h>", "public", "<cstring>", "public" ] },
 
 # boost
 { "include": ["@<boost/fiber/future/detail/.*>", "private", "<boost/fiber/future/future.hpp>", "public"] },
@@ -34,6 +35,40 @@
 
 # Protobuf
 { "include": [ "<google/protobuf/repeated_ptr_field.h>", private, "<google/protobuf/repeated_field.h>", "public" ] },
+
+# rxcpp
+# Hide includes that are exported by <rxcpp/rx.hpp>
+{ "include": [ "<rxcpp/rx-util.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "\"rxcpp/rx-util.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "<rxcpp/rx-predef.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "\"rxcpp/rx-predef.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "<rxcpp/rx-subscription.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "\"rxcpp/rx-subscription.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "<rxcpp/rx-observer.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "\"rxcpp/rx-observer.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "<rxcpp/rx-scheduler.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "\"rxcpp/rx-scheduler.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "<rxcpp/rx-subscriber.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "\"rxcpp/rx-subscriber.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "<rxcpp/rx-notification.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "\"rxcpp/rx-notification.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "<rxcpp/rx-coordination.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "\"rxcpp/rx-coordination.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "<rxcpp/rx-sources.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "\"rxcpp/rx-sources.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "<rxcpp/rx-subjects.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "\"rxcpp/rx-subjects.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "<rxcpp/rx-operators.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "\"rxcpp/rx-operators.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "<rxcpp/rx-observable.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "\"rxcpp/rx-observable.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "<rxcpp/rx-connectable_observable.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "\"rxcpp/rx-connectable_observable.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "<rxcpp/rx-grouped_observable.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "\"rxcpp/rx-grouped_observable.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
+
+# ucp
+{ "include": [ "<ucp/api/ucp_def.h>", "public", "<ucp/api/ucp.h>", "public" ] },
 
 ## Symbol mappings
 # stdlib
@@ -84,37 +119,6 @@
 
 # spdlog
 { "symbol": ["spdlog::details::file_helper::~file_helper", "private", "<spdlog/sinks/basic_file_sink.h>", "public"] },
-
-# rxcpp
-# Hide includes that are exported by <rxcpp/rx.hpp>
-{ "include": [ "<rxcpp/rx-util.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "\"rxcpp/rx-util.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "<rxcpp/rx-predef.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "\"rxcpp/rx-predef.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "<rxcpp/rx-subscription.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "\"rxcpp/rx-subscription.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "<rxcpp/rx-observer.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "\"rxcpp/rx-observer.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "<rxcpp/rx-scheduler.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "\"rxcpp/rx-scheduler.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "<rxcpp/rx-subscriber.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "\"rxcpp/rx-subscriber.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "<rxcpp/rx-notification.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "\"rxcpp/rx-notification.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "<rxcpp/rx-coordination.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "\"rxcpp/rx-coordination.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "<rxcpp/rx-sources.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "\"rxcpp/rx-sources.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "<rxcpp/rx-subjects.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "\"rxcpp/rx-subjects.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "<rxcpp/rx-operators.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "\"rxcpp/rx-operators.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "<rxcpp/rx-observable.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "\"rxcpp/rx-observable.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "<rxcpp/rx-connectable_observable.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "\"rxcpp/rx-connectable_observable.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "<rxcpp/rx-grouped_observable.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
-{ "include": [ "\"rxcpp/rx-grouped_observable.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
 
 # srf
 { "symbol": ["std::__decay_and_strip<std::shared_ptr<srf::TraceStatistics> &>::__type" , "private", "\"srf/benchmarking/trace_statistics.hpp\"", "public"] },

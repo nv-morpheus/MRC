@@ -17,33 +17,84 @@
 
 #pragma once
 
+#include "srf/benchmarking/trace_statistics.hpp"
+#include "srf/core/watcher.hpp"
 #include "srf/engine/segment/ibuilder.hpp"
 #include "srf/exceptions/runtime_error.hpp"
+#include "srf/modules/segment_modules.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/rx_node.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
-#include "srf/node/sink_properties.hpp"
-#include "srf/node/source_properties.hpp"
-#include "srf/runnable/launchable.hpp"
-#include "srf/runnable/runnable.hpp"
-#include "srf/segment/component.hpp"
-#include "srf/segment/egress_port.hpp"
-#include "srf/segment/forward.hpp"
-#include "srf/segment/object.hpp"
-#include "srf/segment/runnable.hpp"
+#include "srf/node/sink_properties.hpp"    // IWYU pragma: keep
+#include "srf/node/source_properties.hpp"  // IWYU pragma: keep
+#include "srf/runnable/context.hpp"
+#include "srf/runnable/launchable.hpp"   // IWYU pragma: keep
+#include "srf/runnable/runnable.hpp"     // IWYU pragma: keep
+#include "srf/segment/component.hpp"     // IWYU pragma: keep
+#include "srf/segment/egress_port.hpp"   // IWYU pragma: keep
+#include "srf/segment/forward.hpp"       // IWYU pragma: keep
+#include "srf/segment/ingress_port.hpp"  // IWYU pragma: keep
+#include "srf/segment/object.hpp"        // IWYU pragma: keep
+#include "srf/segment/runnable.hpp"      // IWYU pragma: keep
 #include "srf/utils/macros.hpp"
 
+#include <boost/hana.hpp>  // IWYU pragma: keep
 #include <glog/logging.h>
-#include <rxcpp/rx-observable.hpp>
-#include <rxcpp/rx-observer.hpp>
+#include <nlohmann/json.hpp>
+#include <rxcpp/rx.hpp>
 
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <ostream>
 #include <string>
+#include <type_traits>
+#include <typeindex>
 #include <utility>
+#include <vector>
+
+// IWYU pragma: no_include <boost/hana/fwd/core/when.hpp>
+// IWYU pragma: no_include <boost/hana/fwd/if.hpp>
+// IWYU pragma: no_include <boost/hana/fwd/type.hpp>
+
+namespace {
+namespace hana = boost::hana;
+
+template <typename T>
+auto has_source_add_watcher =
+    hana::is_valid([](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).source_add_watcher(
+                                        std::declval<std::shared_ptr<srf::WatcherInterface>>())) {});
+
+template <typename T>
+auto has_sink_add_watcher =
+    hana::is_valid([](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).sink_add_watcher(
+                                        std::declval<std::shared_ptr<srf::WatcherInterface>>())) {});
+
+template <typename T>
+void add_stats_watcher_if_rx_source(T& thing, std::string name)
+{
+    return hana::if_(
+        has_source_add_watcher<T>(thing),
+        [name](auto&& object) {
+            auto trace_stats = srf::benchmarking::TraceStatistics::get_or_create(name);
+            std::forward<decltype(object)>(object).source_add_watcher(trace_stats);
+        },
+        [name]([[maybe_unused]] auto&& object) {})(thing);
+}
+
+template <typename T>
+void add_stats_watcher_if_rx_sink(T& thing, std::string name)
+{
+    return hana::if_(
+        has_sink_add_watcher<T>(thing),
+        [name](auto&& object) {
+            auto trace_stats = srf::benchmarking::TraceStatistics::get_or_create(name);
+            std::forward<decltype(object)>(object).sink_add_watcher(trace_stats);
+        },
+        [name]([[maybe_unused]] auto&& object) {})(thing);
+}
+}  // namespace
 
 namespace srf::segment {
 
@@ -54,6 +105,9 @@ class Builder final
   public:
     DELETE_COPYABILITY(Builder);
     DELETE_MOVEABILITY(Builder);
+
+    std::shared_ptr<ObjectProperties> get_ingress(std::string name, std::type_index type_index);
+    std::shared_ptr<ObjectProperties> get_egress(std::string name, std::type_index type_index);
 
     template <typename T>
     std::shared_ptr<Object<node::SinkProperties<T>>> get_egress(std::string name);
@@ -67,38 +121,96 @@ class Builder final
     template <typename ObjectT, typename... ArgsT>
     std::shared_ptr<Object<ObjectT>> construct_object(std::string name, ArgsT&&... args)
     {
-        return make_object(std::move(name), std::make_unique<ObjectT>(std::forward<ArgsT>(args)...));
+        auto ns_name = m_namespace_prefix.empty() ? name : m_namespace_prefix + "/" + name;
+        auto uptr    = std::make_unique<ObjectT>(std::forward<ArgsT>(args)...);
+
+        ::add_stats_watcher_if_rx_source(*uptr, ns_name);
+        ::add_stats_watcher_if_rx_sink(*uptr, ns_name);
+
+        return make_object(std::move(ns_name), std::move(uptr));
     }
 
-    template <typename SourceTypeT, typename CreateFnT>
+    template <typename SourceTypeT,
+              template <class, class = srf::runnable::Context> class NodeTypeT = node::RxSource,
+              typename CreateFnT>
     auto make_source(std::string name, CreateFnT&& create_fn)
     {
-        return make_object(std::move(name),
-                           std::make_unique<node::RxSource<SourceTypeT>>(
-                               rxcpp::observable<>::create<SourceTypeT>(std::forward<CreateFnT>(create_fn))));
+        return construct_object<NodeTypeT<SourceTypeT>>(
+            name, rxcpp::observable<>::create<SourceTypeT>(std::forward<CreateFnT>(create_fn)));
     }
 
-    template <typename SinkTypeT, typename... ArgsT>
+    template <typename SinkTypeT,
+              template <class, class = srf::runnable::Context> class NodeTypeT = node::RxSink,
+              typename... ArgsT>
     auto make_sink(std::string name, ArgsT&&... ops)
     {
-        return make_object(std::move(name),
-                           std::make_unique<node::RxSink<SinkTypeT>>(
-                               rxcpp::make_observer_dynamic<SinkTypeT>(std::forward<ArgsT>(ops)...)));
+        return construct_object<NodeTypeT<SinkTypeT>>(name,
+                                                      rxcpp::make_observer<SinkTypeT>(std::forward<ArgsT>(ops)...));
     }
 
-    template <typename SinkTypeT, typename... ArgsT>
+    template <typename SinkTypeT,
+              template <class, class, class = srf::runnable::Context> class NodeTypeT = node::RxNode,
+              typename... ArgsT>
     auto make_node(std::string name, ArgsT&&... ops)
     {
-        return make_object(std::move(name),
-                           std::make_unique<node::RxNode<SinkTypeT, SinkTypeT>>(std::forward<ArgsT>(ops)...));
+        return construct_object<NodeTypeT<SinkTypeT, SinkTypeT>>(name, std::forward<ArgsT>(ops)...);
     }
 
-    template <typename SinkTypeT, typename SourceTypeT, typename... ArgsT>
+    template <typename SinkTypeT,
+              typename SourceTypeT,
+              template <class, class, class = srf::runnable::Context> class NodeTypeT = node::RxNode,
+              typename... ArgsT>
     auto make_node(std::string name, ArgsT&&... ops)
     {
-        return make_object(std::move(name),
-                           std::make_unique<node::RxNode<SinkTypeT, SourceTypeT>>(std::forward<ArgsT>(ops)...));
+        return construct_object<NodeTypeT<SinkTypeT, SourceTypeT>>(name, std::forward<ArgsT>(ops)...);
     }
+
+    /**
+     * Instantiate a segment module of `ModuleTypeT`, intialize it, and return it to the caller
+     * @tparam ModuleTypeT Type of module to create
+     * @param module_name Unique name of this instance of the module
+     * @param config Configuration to pass to the module
+     * @return Return a shared pointer to the new module, which is a derived class of SegmentModule
+     */
+    template <typename ModuleTypeT>
+    std::shared_ptr<ModuleTypeT> make_module(std::string module_name, nlohmann::json config = {})
+    {
+        static_assert(std::is_base_of_v<modules::SegmentModule, ModuleTypeT>);
+
+        auto module = std::make_shared<ModuleTypeT>(std::move(module_name), std::move(config));
+        init_module(module);
+
+        return std::move(module);
+    }
+
+    /**
+     * Initialize a SegmentModule that was instantiated outside of the builder.
+     * @param module Module to initialize
+     */
+    void init_module(std::shared_ptr<srf::modules::SegmentModule> module);
+
+    /**
+     * Register an input port on the given module -- note: this in generally only necessary for dynamically
+     * created modules that use an alternate initializer function independent of the derived class.
+     * See: PythonSegmentModule
+     * @param input_name Unique name of the input port
+     * @param object shared pointer to type erased Object associated with 'input_name' on this module instance.
+     */
+    void register_module_input(std::string input_name, std::shared_ptr<segment::ObjectProperties> object);
+
+    /**
+     * Register an output port on the given module -- note: this in generally only necessary for dynamically
+     * created modules that use an alternate initializer function independent of the derived class.
+     * See: PythonSegmentModule
+     * @param output_name Unique name of the output port
+     * @param object shared pointer to type erased Object associated with 'output_name' on this module instance.
+     */
+    void register_module_output(std::string output_name, std::shared_ptr<segment::ObjectProperties> object);
+
+    std::shared_ptr<srf::modules::SegmentModule> load_module_from_registry(const std::string& module_id,
+                                                                           const std::string& registry_namespace,
+                                                                           std::string module_name,
+                                                                           nlohmann::json config = {});
 
     template <typename SourceNodeTypeT, typename SinkNodeTypeT>
     void make_edge(std::shared_ptr<Object<SourceNodeTypeT>> source, std::shared_ptr<Object<SinkNodeTypeT>> sink)
@@ -126,6 +238,70 @@ class Builder final
     {
         DVLOG(10) << "forming segment edge between two node objects";
         node::make_edge(source, sink);
+    }
+
+    /**
+     * Given a typed source and a typeless sink, attempt to construct an edge between them -- assumes that source and
+     * sink types are convertible.
+     *
+     * @tparam InputT
+     * @param source
+     * @param sink
+     */
+    template <typename InputT>
+    void make_edge(node::SourceProperties<InputT>& source, std::shared_ptr<segment::ObjectProperties> sink)
+    {
+        DVLOG(10) << "forming segment edge between two node objects";
+        node::make_edge(source, sink->template sink_typed<InputT>());
+    }
+
+    /**
+     * Partial dynamic edge construction:
+     *
+     * Create edge using a fully constructed Object and a type erased Object
+     *  We extract the underlying node object (Likely an RxNode) and call make_edge with it and the type erased
+     *  object. This works via a cascaded type extraction process.
+     * @tparam SourceNodeTypeT
+     * @param source Fully typed, wrapped, object
+     * @param sink Type erased object -- assumed to be convertible to source type
+     */
+    template <typename SourceNodeTypeT>
+    void make_edge(std::shared_ptr<Object<SourceNodeTypeT>>& source, std::shared_ptr<segment::ObjectProperties> sink)
+    {
+        DVLOG(10) << "forming segment edge between a segment source and typeless Object";
+        this->make_edge(source->object(), sink);
+    }
+
+    /**
+     * Given a typeless source and a typed sink, attempt to construct an edge between them -- assumes that
+     * source and sink type's are convertible.
+     *
+     * @tparam OutputT
+     * @param source
+     * @param sink
+     */
+    template <typename OutputT>
+    void make_edge(std::shared_ptr<segment::ObjectProperties> source, node::SinkProperties<OutputT>& sink)
+    {
+        DVLOG(10) << "forming segment edge between two node objects";
+        node::make_edge(source->template source_typed<OutputT>(), sink);
+    }
+
+    /**
+     * Partial dynamic edge construction:
+     *
+     * Create edge using a fully constructed Object and a type erased Object
+     *  We extract the underlying node object (Likely an RxNode) and call make_edge with it and the type erased
+     *  object. This works via a cascaded type extraction process.
+     * @tparam SinkNodeTypeT
+     * @param source Fully typed, wrapped, object
+     * @param sink Fully typed, wrapped, object
+     */
+    template <typename SinkNodeTypeT>
+    void make_edge(std::shared_ptr<segment::ObjectProperties> source, std::shared_ptr<Object<SinkNodeTypeT>>& sink)
+    {
+        DVLOG(10) << "forming segment edge between a typeless object and a segment sink";
+        this->make_edge(source, sink->object());
     }
 
     template <typename SourceNodeTypeT, typename SinkNodeTypeT = SourceNodeTypeT>
@@ -168,7 +344,17 @@ class Builder final
     }
 
   private:
+    using sp_segment_module_t = std::shared_ptr<srf::modules::SegmentModule>;
+    using sp_obj_prop_t       = std::shared_ptr<segment::ObjectProperties>;
+
+    std::string m_namespace_prefix;
+    std::vector<std::string> m_namespace_stack{};
+    std::vector<sp_segment_module_t> m_module_stack{};
+
     internal::segment::IBuilder& m_backend;
+
+    void ns_push(sp_segment_module_t module);
+    void ns_pop();
 
     friend Definition;
 };
@@ -176,6 +362,7 @@ class Builder final
 template <typename ObjectT>
 std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::unique_ptr<ObjectT> node)
 {
+    // Note: name should have any prefix modifications done prior to getting here.
     if (m_backend.has_object(name))
     {
         LOG(ERROR) << "A Object named " << name << " is already registered";
@@ -188,6 +375,7 @@ std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::uni
     {
         auto segment_name = m_backend.name() + "/" + name;
         auto segment_node = std::make_shared<Runnable<ObjectT>>(segment_name, std::move(node));
+
         m_backend.add_runnable(name, segment_node);
         m_backend.add_object(name, segment_node);
         segment_object = segment_node;
@@ -209,13 +397,13 @@ std::shared_ptr<Object<node::SinkProperties<T>>> Builder::get_egress(std::string
     auto base = m_backend.get_egress_base(name);
     if (!base)
     {
-        throw exceptions::SrfRuntimeError("egress port name not found: " + name);
+        throw exceptions::SrfRuntimeError("Egress port name not found: " + name);
     }
 
-    auto port = std::dynamic_pointer_cast<EgressPort<T>>(base);
+    auto port = std::dynamic_pointer_cast<Object<node::SinkProperties<T>>>(base);
     if (port == nullptr)
     {
-        throw exceptions::SrfRuntimeError("egress port type mismatch: " + name);
+        throw exceptions::SrfRuntimeError("Egress port type mismatch: " + name);
     }
 
     return port;
@@ -227,13 +415,13 @@ std::shared_ptr<Object<node::SourceProperties<T>>> Builder::get_ingress(std::str
     auto base = m_backend.get_ingress_base(name);
     if (!base)
     {
-        throw exceptions::SrfRuntimeError("ingress port name not found: " + name);
+        throw exceptions::SrfRuntimeError("Ingress port name not found: " + name);
     }
 
-    auto port = std::dynamic_pointer_cast<IngressPort<T>>(base);
+    auto port = std::dynamic_pointer_cast<Object<node::SourceProperties<T>>>(base);
     if (port == nullptr)
     {
-        throw exceptions::SrfRuntimeError("ingress port type mismatch: " + name);
+        throw exceptions::SrfRuntimeError("Ingress port type mismatch: " + name);
     }
 
     return port;

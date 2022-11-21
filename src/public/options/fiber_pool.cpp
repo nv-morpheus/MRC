@@ -40,7 +40,7 @@ bool FiberPoolOptions::enable_memory_binding() const
 }
 bool FiberPoolOptions::enable_thread_binding() const
 {
-    return m_enable_memory_binding;
+    return m_enable_thread_binding;
 }
 bool FiberPoolOptions::enable_tracing_scheduler() const
 {

@@ -29,6 +29,7 @@
 #include "internal/ucx/registation_callback_builder.hpp"
 #include "internal/utils/contains.hpp"
 
+#include "srf/core/bitmap.hpp"
 #include "srf/exceptions/runtime_error.hpp"
 #include "srf/options/options.hpp"
 #include "srf/options/placement.hpp"
@@ -37,6 +38,7 @@
 #include <glog/logging.h>
 
 #include <functional>
+#include <map>
 #include <optional>
 #include <ostream>
 #include <string>

@@ -46,14 +46,18 @@
 #include "srf/segment/egress_ports.hpp"
 #include "srf/segment/ingress_ports.hpp"
 #include "srf/segment/object.hpp"
+#include "srf/utils/macros.hpp"
 
 #include <boost/fiber/fiber.hpp>
 #include <boost/fiber/operations.hpp>
+#include <boost/hana/if.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <rxcpp/rx.hpp>
 
+#include <array>
 #include <chrono>
+#include <cstddef>
 #include <functional>
 #include <future>
 #include <map>

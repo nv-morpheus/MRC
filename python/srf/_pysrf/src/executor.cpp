@@ -191,9 +191,15 @@ void Executor::stop()
 
 void Executor::join()
 {
-    // Release the GIL before blocking
-    py::gil_scoped_release nogil;
+    {
+        // Release the GIL before blocking
+        py::gil_scoped_release nogil;
 
+        // Wait without the GIL
+        m_join_future.wait();
+    }
+
+    // Call get() with the GIL to rethrow any exceptions
     m_join_future.get();
 }
 
@@ -206,6 +212,9 @@ std::shared_ptr<Awaitable> Executor::join_async()
 
         // Grab the GIL to return a py::object
         py::gil_scoped_acquire gil;
+
+        // Once we have the GIL, call get() to propagate any exceptions
+        this->m_join_future.get();
 
         return py::none();
     });

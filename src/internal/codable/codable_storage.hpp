@@ -23,6 +23,7 @@
 
 #include "srf/codable/api.hpp"
 #include "srf/protos/codable.pb.h"
+#include "srf/types.hpp"
 
 #include <memory>
 #include <mutex>

@@ -26,13 +26,13 @@
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <ucp/api/ucp.h>
-#include <ucp/api/ucp_def.h>
 #include <ucs/type/status.h>
 
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <future>
 #include <list>
 #include <memory>
 #include <ostream>
@@ -84,8 +84,6 @@ TEST_F(TestUCX, EndpointsInProcess)
     worker_1->progress();
     worker_2->progress();
 }
-
-// RDMA
 
 struct GetUserData
 {
@@ -161,6 +159,11 @@ TEST_F(TestUCX, Get)
         worker_get_src->progress();
     }
     future.get();
+
+    // unregister memory
+    ucp_rkey_buffer_release(src_rbuff);
+    context->unregister_memory(src_lkey);
+    context->unregister_memory(dst_lkey);
 }
 
 // Recv
@@ -201,6 +204,80 @@ class SendRecvManager
 };
 
 TEST_F(TestUCX, Recv)
+{
+    auto context = std::make_shared<Context>();
+
+    auto worker_src = std::make_shared<Worker>(context);
+    auto worker_dst = std::make_shared<Worker>(context);
+
+    // create an ep from the worker issuing the GET to the worker address that is the source bytes
+    auto ep = std::make_shared<Endpoint>(worker_src, worker_dst->address());
+
+    std::promise<void> send_promise;
+    std::promise<ucp_tag_t> recv_promise;
+    auto send_future = send_promise.get_future();
+    auto recv_future = recv_promise.get_future();
+
+    // dst issue recv
+    ucp_request_param_t params;
+    params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
+    params.cb.recv      = recv_get_callback;
+    params.user_data    = &recv_promise;
+
+    void* status_ptr_1 = ucp_tag_recv_nbx(worker_dst->handle(), nullptr, 0, 0, 0, &params);
+    EXPECT_NE(status_ptr_1, nullptr);
+
+    // void* status_ptr_2 = ucp_tag_recv_nbx(worker_dst->handle(), nullptr, 0, 0, 0, &params);
+    // EXPECT_NE(status_ptr_2, nullptr);
+
+    // sender
+    ucp_request_param_t send_params;
+    send_params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
+    send_params.cb.send      = send_callback;
+    send_params.user_data    = &send_promise;
+
+    ucs_status_ptr_t send_rc = ucp_tag_send_nbx(ep->handle(), nullptr, 0, 42, &send_params);
+    EXPECT_NE(send_rc, nullptr);
+
+    auto send_status = std::future_status::timeout;
+    while (send_status == std::future_status::timeout)
+    {
+        send_status = send_future.wait_for(std::chrono::microseconds(1));
+        worker_dst->progress();
+        worker_src->progress();
+    }
+    send_future.get();
+
+    VLOG(1) << "send complete";
+
+    auto recv_status = std::future_status::timeout;
+    while (recv_status == std::future_status::timeout)
+    {
+        recv_status = recv_future.wait_for(std::chrono::microseconds(1));
+        worker_dst->progress();
+        worker_src->progress();
+    }
+
+    auto tag = recv_future.get();
+
+    EXPECT_EQ(tag, 42);
+
+    // note: uncommenting this code will push a recv request but the worker and ep will shutdown
+    // resulting in a ucx working message
+    // if we have pre-posted recvs, we will need a way to cancel them to prevent these warnings
+    // {
+    //     ucp_request_param_t params;
+    //     params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA |
+    //     UCP_OP_ATTR_FLAG_NO_IMM_CMPL; params.cb.recv      = recv_get_callback; params.user_data    = nullptr;
+
+    //     void* status_ptr_1 = ucp_tag_recv_nbx(worker_dst->handle(), nullptr, 0, 0, 0, &params);
+    //     EXPECT_NE(status_ptr_1, nullptr);
+    // }
+}
+
+// Recv
+
+TEST_F(TestUCX, Recv2)
 {
     auto context = std::make_shared<Context>();
 

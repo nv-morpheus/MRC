@@ -19,6 +19,7 @@
 
 #include "internal/pipeline/pipeline.hpp"
 #include "internal/pipeline/resources.hpp"
+#include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/segment/definition.hpp"
 #include "internal/segment/instance.hpp"

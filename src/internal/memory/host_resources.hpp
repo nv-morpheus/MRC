@@ -24,6 +24,7 @@
 #include "srf/memory/buffer.hpp"
 #include "srf/memory/resources/memory_resource.hpp"
 
+#include <cstddef>
 #include <memory>
 
 namespace srf::internal::memory {

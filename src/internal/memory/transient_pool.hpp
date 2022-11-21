@@ -25,6 +25,7 @@
 #include <glog/logging.h>
 
 #include <cstddef>
+#include <memory>
 #include <new>
 #include <utility>
 

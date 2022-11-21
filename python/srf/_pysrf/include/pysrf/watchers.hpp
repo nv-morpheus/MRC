@@ -17,18 +17,23 @@
 
 #pragma once
 
-#include "pysrf/executor.hpp"
-
 #include "srf/benchmarking/segment_watcher.hpp"
 #include "srf/benchmarking/tracer.hpp"
-#include "srf/segment/builder.hpp"
-#include "srf/segment/object.hpp"
 
 #include <pybind11/pytypes.h>  // for object, dict
 
 #include <functional>
 #include <memory>
 #include <string>
+
+namespace srf::segment {
+class Builder;
+struct ObjectProperties;
+}  // namespace srf::segment
+
+namespace srf::pysrf {
+class Executor;
+}
 
 namespace srf::pysrf {
 

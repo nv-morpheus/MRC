@@ -17,6 +17,7 @@
 
 #include "internal/memory/device_resources.hpp"
 
+#include "internal/runnable/resources.hpp"
 #include "internal/system/device_partition.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/system/system.hpp"

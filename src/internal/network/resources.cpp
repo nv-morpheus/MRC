@@ -28,6 +28,12 @@
 #include "internal/ucx/registration_cache.hpp"
 #include "internal/ucx/resources.hpp"
 
+#include "srf/core/task_queue.hpp"
+#include "srf/types.hpp"
+
+#include <boost/fiber/future/future.hpp>
+#include <glog/logging.h>
+
 namespace srf::internal::network {
 
 Resources::Resources(resources::PartitionResourceBase& base,

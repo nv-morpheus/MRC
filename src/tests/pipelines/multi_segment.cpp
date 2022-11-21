@@ -30,9 +30,9 @@
 #include "srf/segment/ingress_ports.hpp"
 #include "srf/segment/object.hpp"
 
+#include <boost/hana/if.hpp>
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>
-#include <rxcpp/sources/rx-iterate.hpp>
 
 #include <memory>
 #include <ostream>

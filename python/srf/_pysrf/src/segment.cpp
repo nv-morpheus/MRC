@@ -22,11 +22,18 @@
 #include "pysrf/utils.hpp"
 
 #include "srf/channel/status.hpp"
+#include "srf/core/utils.hpp"
+#include "srf/manifold/egress.hpp"
+#include "srf/modules/segment_modules.hpp"
 #include "srf/node/edge_builder.hpp"
+#include "srf/node/port_registry.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_properties.hpp"
 #include "srf/runnable/context.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/segment/object.hpp"
 
+#include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 #include <pybind11/cast.h>
 #include <pybind11/detail/internals.h>
@@ -37,16 +44,23 @@
 #include <rxcpp/rx.hpp>
 
 #include <exception>
-#include <fstream>  // IWYU pragma: keep
+#include <fstream>
 #include <functional>
+#include <map>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <typeindex>
 #include <utility>
 #include <vector>
 
 // IWYU thinks we need array for py::print
 // IWYU pragma: no_include <array>
+// IWYU pragma: no_include <boost/fiber/future/detail/shared_state.hpp>
+// IWYU pragma: no_include <boost/fiber/future/detail/task_base.hpp>
+// IWYU pragma: no_include <boost/hana/if.hpp>
+// IWYU pragma: no_include <boost/smart_ptr/detail/operator_bool.hpp>
+// IWYU pragma: no_include "rx-includes.hpp"
 
 namespace srf::pysrf {
 
@@ -56,7 +70,7 @@ std::shared_ptr<srf::segment::ObjectProperties> build_source(srf::segment::Build
                                                              const std::string& name,
                                                              std::function<py::iterator()> iter_factory)
 {
-    auto wrapper = [iter_factory](PyObjectSubscriber& s) mutable {
+    auto wrapper = [iter_factory](PyObjectSubscriber& subscriber) mutable {
         auto& ctx = runnable::Context::get_runtime_context();
 
         AcquireGIL gil;
@@ -66,27 +80,27 @@ std::shared_ptr<srf::segment::ObjectProperties> build_source(srf::segment::Build
             DVLOG(10) << ctx.info() << " Starting source";
 
             // Get the iterator from the factory
-            auto it = iter_factory();
+            auto iter = iter_factory();
 
             // Loop over the iterator
-            while (it != py::iterator::sentinel())
+            while (iter != py::iterator::sentinel())
             {
                 // Get the next value
-                auto next_val = py::cast<py::object>(*it);
-
-                // Increment it for next loop
-                ++it;
+                auto next_val = py::cast<py::object>(*iter);
 
                 {
                     // Release the GIL to call on_next
                     pybind11::gil_scoped_release nogil;
 
                     //  Only send if its subscribed. Very important to ensure the object has been moved!
-                    if (s.is_subscribed())
+                    if (subscriber.is_subscribed())
                     {
-                        s.on_next(std::move(next_val));
+                        subscriber.on_next(std::move(next_val));
                     }
                 }
+
+                // Increment it for next loop
+                ++iter;
             }
 
         } catch (const std::exception& e)
@@ -94,14 +108,14 @@ std::shared_ptr<srf::segment::ObjectProperties> build_source(srf::segment::Build
             LOG(ERROR) << ctx.info() << "Error occurred in source. Error msg: " << e.what();
 
             gil.release();
-            s.on_error(std::current_exception());
+            subscriber.on_error(std::current_exception());
             return;
         }
 
         // Release the GIL to call on_complete
         gil.release();
 
-        s.on_completed();
+        subscriber.on_completed();
 
         DVLOG(10) << ctx.info() << " Source complete";
     };
@@ -109,7 +123,7 @@ std::shared_ptr<srf::segment::ObjectProperties> build_source(srf::segment::Build
     return self.construct_object<PythonSource<PyHolder>>(name, wrapper);
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_source(srf::segment::Builder& self,
+std::shared_ptr<srf::segment::ObjectProperties> BuilderProxy::make_source(srf::segment::Builder& self,
                                                                           const std::string& name,
                                                                           py::iterator source_iterator)
 {
@@ -129,7 +143,7 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_source(srf::s
     });
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_source(srf::segment::Builder& self,
+std::shared_ptr<srf::segment::ObjectProperties> BuilderProxy::make_source(srf::segment::Builder& self,
                                                                           const std::string& name,
                                                                           py::iterable source_iterable)
 {
@@ -140,7 +154,7 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_source(srf::s
     });
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_source(srf::segment::Builder& self,
+std::shared_ptr<srf::segment::ObjectProperties> BuilderProxy::make_source(srf::segment::Builder& self,
                                                                           const std::string& name,
                                                                           py::function gen_factory)
 {
@@ -151,22 +165,22 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_source(srf::s
     });
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_sink(srf::segment::Builder& self,
+std::shared_ptr<srf::segment::ObjectProperties> BuilderProxy::make_sink(srf::segment::Builder& self,
                                                                         const std::string& name,
-                                                                        std::function<void(py::object x)> on_next,
-                                                                        std::function<void(py::object x)> on_error,
+                                                                        std::function<void(py::object object)> on_next,
+                                                                        std::function<void(py::object object)> on_error,
                                                                         std::function<void()> on_completed)
 {
-    auto on_next_w = [on_next](PyHolder x) {
+    auto on_next_w = [on_next](PyHolder object) {
         pybind11::gil_scoped_acquire gil;
-        on_next(std::move(x));  // Move the object into a temporary
+        on_next(std::move(object));  // Move the object into a temporary
     };
 
-    auto on_error_w = [on_error](std::exception_ptr x) {
+    auto on_error_w = [on_error](std::exception_ptr ptr) {
         pybind11::gil_scoped_acquire gil;
 
         // First, translate the exception setting the python exception value
-        py::detail::translate_exception(x);
+        py::detail::translate_exception(ptr);
 
         // Creating py::error_already_set will clear the exception and retrieve the value
         py::error_already_set active_ex;
@@ -180,14 +194,42 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_sink(srf::seg
         on_completed();
     };
 
-    return self.construct_object<PythonSink<PyHolder>>(
-        name, rxcpp::make_observer<PyHolder>(on_next_w, on_error_w, on_completed_w));
+    return self.make_sink<PyHolder, PythonSink>(name, on_next_w, on_error_w, on_completed_w);
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node(
-    srf::segment::Builder& self, const std::string& name, std::function<pybind11::object(pybind11::object x)> map_f)
+std::shared_ptr<srf::segment::ObjectProperties> BuilderProxy::get_ingress(srf::segment::Builder& self,
+                                                                          const std::string& name)
 {
-    auto node = self.construct_object<PythonNode<PyHolder, PyHolder>>(
+    auto it_caster = node::PortRegistry::s_port_to_type_index.find(name);
+    if (it_caster != node::PortRegistry::s_port_to_type_index.end())
+    {
+        VLOG(2) << "Found an ingress port caster for " << name;
+
+        return self.get_ingress(name, it_caster->second);
+    }
+    return self.get_ingress<PyHolder>(name);
+}
+
+std::shared_ptr<srf::segment::ObjectProperties> BuilderProxy::get_egress(srf::segment::Builder& self,
+                                                                         const std::string& name)
+{
+    auto it_caster = node::PortRegistry::s_port_to_type_index.find(name);
+    if (it_caster != node::PortRegistry::s_port_to_type_index.end())
+    {
+        VLOG(2) << "Found an egress port caster for " << name;
+
+        return self.get_egress(name, it_caster->second);
+    }
+
+    return self.get_egress<PyHolder>(name);
+}
+
+std::shared_ptr<srf::segment::ObjectProperties> BuilderProxy::make_node(
+    srf::segment::Builder& self,
+    const std::string& name,
+    std::function<pybind11::object(pybind11::object object)> map_f)
+{
+    return self.make_node<PyHolder, PyHolder, PythonNode>(
         name, rxcpp::operators::map([map_f](PyHolder data_object) -> PyHolder {
             try
             {
@@ -208,16 +250,14 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node(
                 // caught by python output.on_error(std::current_exception());
             }
         }));
-
-    return node;
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node_full(
+std::shared_ptr<srf::segment::ObjectProperties> BuilderProxy::make_node_full(
     srf::segment::Builder& self,
     const std::string& name,
     std::function<void(const pysrf::PyObjectObservable& obs, pysrf::PyObjectSubscriber& sub)> sub_fn)
 {
-    auto node = self.construct_object<PythonNode<PyHolder, PyHolder>>(name);
+    auto node = self.make_node<PyHolder, PyHolder, PythonNode>(name);
 
     node->object().make_stream([sub_fn](const PyObjectObservable& input) -> PyObjectObservable {
         return rxcpp::observable<>::create<PyHolder>([input, sub_fn](pysrf::PyObjectSubscriber output) {
@@ -247,135 +287,43 @@ std::shared_ptr<srf::segment::ObjectProperties> SegmentProxy::make_node_full(
     return node;
 }
 
-void SegmentProxy::make_py2cxx_edge_adapter(srf::segment::Builder& self,
-                                            std::shared_ptr<srf::segment::ObjectProperties> source,
-                                            std::shared_ptr<srf::segment::ObjectProperties> sink,
-                                            py::object& sink_t)
+std::shared_ptr<srf::modules::SegmentModule> BuilderProxy::load_module_from_registry(
+    srf::segment::Builder& self,
+    const std::string& module_id,
+    const std::string& registry_namespace,
+    std::string module_name,
+    py::dict config)
 {
-    using source_type_t = py::object;
+    auto json_config = cast_from_pyobject(config);
 
-    /*
-
-    // https://numpy.org/doc/stable/reference/generated/numpy.dtype.kind.html
-    pybind11::dtype dtype = pybind11::dtype::from_args(sink_t);
-    switch (dtype.kind())
-    {
-    case 'b':
-        self.make_dynamic_edge<source_type_t, bool, false>(source->name(), sink->name());
-        break;
-    case 'i':
-        if (dtype.itemsize() == 4)
-        {
-            self.make_dynamic_edge<source_type_t, int32_t, false>(source->name(), sink->name());
-            break;
-        }
-        self.make_dynamic_edge<source_type_t, int64_t, false>(source->name(), sink->name());
-        break;
-    case 'u':
-        if (dtype.itemsize() == 4)
-        {
-            self.make_dynamic_edge<source_type_t, uint32_t, false>(source->name(), sink->name());
-            break;
-        }
-        self.make_dynamic_edge<source_type_t, uint64_t, false>(source->name(), sink->name());
-        break;
-    case 'f':
-        if (dtype.itemsize() == 4)
-        {
-            self.make_dynamic_edge<source_type_t, float, false>(source->name(), sink->name());
-            break;
-        }
-        self.make_dynamic_edge<source_type_t, double, false>(source->name(), sink->name());
-        break;
-    case 'c':
-        throw std::runtime_error("Complex-float datatypes are not currently supported");
-    case 'm':
-        throw std::runtime_error("Timedelta datatypes are not currently supported");
-    case 'M':
-        throw std::runtime_error("Datetime datatypes are not currently supported");
-    case 'O':
-        throw std::runtime_error("Automatic conversion between py::objects is not supported.");
-    case 'S':
-        self.make_dynamic_edge<source_type_t, std::string, false>(source->name(), sink->name());
-        break;
-    case 'U':
-        self.make_dynamic_edge<source_type_t, std::string, false>(source->name(), sink->name());
-        break;
-    case 'V':
-        throw std::runtime_error("Void datatypes are not supported");
-    default:
-        throw std::runtime_error("Unknown sink type");
-    }
-
-    */
+    return self.load_module_from_registry(
+        module_id, registry_namespace, std::move(module_name), std::move(json_config));
 }
 
-void SegmentProxy::make_cxx2py_edge_adapter(srf::segment::Builder& self,
-                                            std::shared_ptr<srf::segment::ObjectProperties> source,
-                                            std::shared_ptr<srf::segment::ObjectProperties> sink,
-                                            py::object& source_t)
+void BuilderProxy::init_module(srf::segment::Builder& self, std::shared_ptr<srf::modules::SegmentModule> module)
 {
-    using sink_type_t = pybind11::object;
-
-    LOG(FATAL) << "fixme";
-    /*
-        // https://numpy.org/doc/stable/reference/generated/numpy.dtype.kind.html
-        pybind11::dtype dtype = pybind11::dtype::from_args(source_t);
-        switch (dtype.kind())
-        {
-        case 'b':
-            self.make_dynamic_edge<bool, sink_type_t, false>(source->name(), sink->name());
-            break;
-        case 'i':
-            if (dtype.itemsize() == 4)
-            {
-                self.make_dynamic_edge<int32_t, sink_type_t, false>(source->name(), sink->name());
-                break;
-            }
-            self.make_dynamic_edge<int64_t, sink_type_t, false>(source->name(), sink->name());
-            break;
-        case 'u':
-            if (dtype.itemsize() == 4)
-            {
-                self.make_dynamic_edge<uint32_t, sink_type_t, false>(source->name(), sink->name());
-                break;
-            }
-            self.make_dynamic_edge<uint64_t, sink_type_t, false>(source->name(), sink->name());
-            break;
-        case 'f':
-            if (dtype.itemsize() == 4)
-            {
-                self.make_dynamic_edge<float, sink_type_t, false>(source->name(), sink->name());
-                break;
-            }
-            self.make_dynamic_edge<double, sink_type_t, false>(source->name(), sink->name());
-            break;
-
-        case 'c':
-            throw std::runtime_error("Complex-float datatypes are not supported.");
-        case 'm':
-            throw std::runtime_error("Timedelta datatypes are not supported.");
-        case 'M':
-            throw std::runtime_error("Datetime datatypes are not supported.");
-        case 'O':
-            throw std::runtime_error("Automatic conversion to generic py::object is not supported.");
-        case 'S':
-            self.make_dynamic_edge<std::string, sink_type_t, false>(source->name(), sink->name());
-        case 'U':
-            self.make_dynamic_edge<std::string, sink_type_t, false>(source->name(), sink->name());
-            break;
-        case 'V':
-            throw std::runtime_error("Void datatypes are not supported");
-        default:
-            throw std::runtime_error("Unknown sink type");
-        }
-    */
+    self.init_module(module);
 }
 
-void SegmentProxy::make_edge(srf::segment::Builder& self,
+void BuilderProxy::register_module_input(srf::segment::Builder& self,
+                                         std::string input_name,
+                                         std::shared_ptr<segment::ObjectProperties> object)
+{
+    self.register_module_input(std::move(input_name), object);
+}
+
+void BuilderProxy::register_module_output(srf::segment::Builder& self,
+                                          std::string output_name,
+                                          std::shared_ptr<segment::ObjectProperties> object)
+{
+    self.register_module_output(std::move(output_name), object);
+}
+
+void BuilderProxy::make_edge(srf::segment::Builder& self,
                              std::shared_ptr<srf::segment::ObjectProperties> source,
                              std::shared_ptr<srf::segment::ObjectProperties> sink)
 {
-    node::EdgeBuilder::make_edge_typeless(source->source_typeless(), sink->sink_typeless());
+    node::EdgeBuilder::make_edge_typeless(source->source_base(), sink->sink_base());
 }
+
 }  // namespace srf::pysrf

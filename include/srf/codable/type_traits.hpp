@@ -133,4 +133,13 @@ struct is_codable
   : std::conditional<(is_encodable<T>::value && is_decodable<T>::value), std::true_type, std::false_type>::type
 {};
 
+template <typename T>
+inline constexpr bool is_encodable_v = is_encodable<T>::value;  // NOLINT
+
+template <typename T>
+inline constexpr bool is_decodable_v = is_decodable<T>::value;  // NOLINT
+
+template <typename T>
+inline constexpr bool is_codable_v = is_codable<T>::value;  // NOLINT
+
 }  // namespace srf::codable

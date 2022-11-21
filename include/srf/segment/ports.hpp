@@ -30,24 +30,23 @@ namespace srf::segment {
 
 class Definition;
 
-template <template <class> class PortT, typename BaseT, typename... TypesT>
+template <typename BaseT>
 class Ports
 {
   public:
-    static constexpr auto PortCount = sizeof...(TypesT);
-    using port_builder_fn_t         = std::function<std::shared_ptr<BaseT>(const SegmentAddress&, const PortName&)>;
+    using port_builder_fn_t = std::function<std::shared_ptr<BaseT>(const SegmentAddress&, const PortName&)>;
 
-    Ports(std::vector<std::string> names)
+    Ports(std::vector<std::string> names, std::vector<port_builder_fn_t> builder_fns)
     {
-        if (names.size() != PortCount)
+        if (names.size() != builder_fns.size())
         {
-            LOG(ERROR) << "expected " << PortCount << " port names; got " << names.size();
+            LOG(ERROR) << "expected " << builder_fns.size() << " port names; got " << names.size();
             throw exceptions::SrfRuntimeError("invalid number of port names");
         }
 
         // test for uniqueness
         std::set<std::string> unique_names(names.begin(), names.end());
-        if (unique_names.size() != PortCount)
+        if (unique_names.size() != builder_fns.size())
         {
             LOG(ERROR) << "error: port names must be unique";
             throw exceptions::SrfRuntimeError("port names must be unique");
@@ -56,28 +55,12 @@ class Ports
         // store names
         m_names = names;
 
-        std::vector<port_builder_fn_t> builders;
-        (builders.push_back([](const SegmentAddress& address, const PortName& name) {
-            return std::make_shared<PortT<TypesT>>(address, name);
-        }),
-         ...);
-
-        if (builders.size() != PortCount)
-        {
-            throw exceptions::SrfRuntimeError("invalid number of initializers");
-        }
-
         for (int i = 0; i < names.size(); ++i)  // NOLINT
         {
-            auto builder         = builders[i];
+            auto builder         = builder_fns[i];
             auto name            = names[i];
             m_initializers[name] = [builder, name](const SegmentAddress& address) { return builder(address, name); };
         }
-    }
-
-    constexpr auto port_count() const
-    {
-        return PortCount;
     }
 
     const std::vector<std::string>& names() const

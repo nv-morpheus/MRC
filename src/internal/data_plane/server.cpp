@@ -18,16 +18,17 @@
 #include "internal/data_plane/server.hpp"
 
 #include "internal/data_plane/tags.hpp"
+#include "internal/runnable/resources.hpp"
 #include "internal/ucx/common.hpp"
-#include "internal/ucx/context.hpp"
 #include "internal/ucx/resources.hpp"
-#include "internal/ucx/worker.hpp"
 
 #include "srf/channel/status.hpp"
+#include "srf/core/task_queue.hpp"
 #include "srf/memory/buffer_view.hpp"
 #include "srf/memory/literals.hpp"
 #include "srf/memory/memory_kind.hpp"
 #include "srf/node/edge_builder.hpp"
+#include "srf/node/generic_source.hpp"
 #include "srf/node/operators/router.hpp"
 #include "srf/node/source_channel.hpp"
 #include "srf/runnable/context.hpp"
@@ -37,12 +38,10 @@
 #include "srf/runnable/runner.hpp"
 #include "srf/types.hpp"
 
+#include <boost/fiber/future/future.hpp>
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
-#include <rxcpp/rx.hpp>  // IWYU pragma: keep
+#include <rxcpp/rx.hpp>
 #include <ucp/api/ucp.h>
 #include <ucp/api/ucp_def.h>
 #include <ucs/type/status.h>
@@ -68,21 +67,6 @@ void zero_bytes_completion_handler(void* request,
         LOG(FATAL) << "zero_bytes_completion_handler observed " << ucs_status_string(status);
     }
     ucp_request_free(request);
-}
-
-void recv_completion_handler(void* request, ucs_status_t status, const ucp_tag_recv_info_t* msg_info, void* user_data)
-{
-    LOG(FATAL) << "implement me";
-    // if (status != UCS_OK)
-    // {
-    //     LOG(FATAL) << "recv_completion_handler observed " << ucs_status_string(status);
-    // }
-    // auto user_bits = decode_user_bits(msg_info->sender_tag);
-    // DCHECK(static_subscriber && static_subscriber->is_subscribed());
-    // auto msg = std::make_pair(user_bits,
-    //                           srf::memory::buffer_view(user_data, msg_info->length, srf::memory::memory_kind::host));
-    // static_subscriber->on_next(std::move(msg));
-    // ucp_request_free(request);
 }
 
 static void pre_post_recv(detail::PrePostedRecvInfo* info);
@@ -285,7 +269,7 @@ void DataPlaneServerWorker::data_source(rxcpp::subscriber<network_event_t>& s)
     ucp_tag_recv_info_t msg_info;
     std::uint32_t backoff = 1;
 
-    DVLOG(10) << "startin data plane server progress engine loop";
+    DVLOG(10) << "starting data plane server progress engine loop";
 
     // the progress loop has tag_probe_nb disabled
     // this should be re-enabled to accept tagged messages that have payloads
@@ -351,7 +335,7 @@ void DataPlaneServerWorker::on_tagged_msg(rxcpp::subscriber<network_event_t>& su
         recv_bytes       = msg_info.length;
         recv_addr        = std::malloc(recv_bytes);
         params.user_data = recv_addr;
-        params.cb.recv   = recv_completion_handler;
+        // params.cb.recv   = recv_completion_handler;
         break;
     }
 

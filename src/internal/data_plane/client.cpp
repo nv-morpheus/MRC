@@ -22,17 +22,10 @@
 #include "internal/data_plane/tags.hpp"
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/ucx/common.hpp"
-#include "internal/ucx/context.hpp"
 #include "internal/ucx/endpoint.hpp"
 #include "internal/ucx/resources.hpp"
 #include "internal/ucx/worker.hpp"
-#include "internal/utils/contains.hpp"
 
-#include "srf/channel/buffered_channel.hpp"
-#include "srf/channel/channel.hpp"
-#include "srf/channel/status.hpp"
-#include "srf/codable/encode.hpp"
-#include "srf/codable/encoded_object.hpp"
 #include "srf/codable/protobuf_message.hpp"  // IWYU pragma: keep
 #include "srf/exceptions/runtime_error.hpp"
 #include "srf/memory/buffer_view.hpp"
@@ -48,17 +41,13 @@
 #include "srf/runnable/type_traits.hpp"
 #include "srf/types.hpp"
 
-#include <boost/fiber/future/future.hpp>
-#include <boost/fiber/future/promise.hpp>
 #include <glog/logging.h>
 #include <ucp/api/ucp.h>
 #include <ucp/api/ucp_def.h>
 #include <ucs/memory/memory_type.h>
 #include <ucs/type/status.h>
 
-#include <algorithm>
-#include <cstring>
-#include <exception>
+#include <atomic>
 #include <memory>
 #include <ostream>
 #include <stdexcept>

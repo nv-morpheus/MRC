@@ -20,7 +20,18 @@
 #include "pysrf/segment.hpp"
 #include "pysrf/utils.hpp"
 
+#include "srf/segment/builder.hpp"  // IWYU pragma: keep
+#include "srf/utils/string_utils.hpp"
+#include "srf/version.hpp"
+
+#include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>  // IWYU pragma: keep
+
+#include <ostream>
+
+// IWYU pragma: no_include <pybind11/detail/common.h>
+// IWYU pragma: no_include <pybind11/detail/descr.h>
 // IWYU thinks we need array for py::class_<Pipeline>
 // IWYU pragma: no_include <array>
 
@@ -29,31 +40,34 @@ namespace srf::pysrf {
 namespace py = pybind11;
 
 // Define the pybind11 module m, as 'pipeline'.
-PYBIND11_MODULE(pipeline, m)
+PYBIND11_MODULE(pipeline, module)
 {
-    m.doc() = R"pbdoc(
-        Pybind11 example plugin
-        -----------------------
-        .. currentmodule:: scikit_build_example
+    module.doc() = R"pbdoc(
+        Python bindings for SRF pipelines
+        -------------------------------
+        .. currentmodule:: pipeline
         .. autosummary::
            :toctree: _generate
-           add
-           subtract
     )pbdoc";
 
     // Common must be first in every module
-    pysrf::import(m, "srf.core.common");
+    pysrf::import(module, "srf.core.common");
+    pysrf::import(module, "srf.core.segment");
 
-    pysrf::import(m, "srf.core.segment");
-
-    py::class_<Pipeline>(m, "Pipeline")
+    py::class_<Pipeline>(module, "Pipeline")
         .def(py::init<>())
-        .def("make_segment", wrap_segment_init_callback(&Pipeline::make_segment));
+        .def(
+            "make_segment",
+            wrap_segment_init_callback(
+                static_cast<void (Pipeline::*)(const std::string&, const std::function<void(srf::segment::Builder&)>&)>(
+                    &Pipeline::make_segment)))
+        .def("make_segment",
+             wrap_segment_init_callback(
+                 static_cast<void (Pipeline::*)(
+                     const std::string&, py::list, py::list, const std::function<void(srf::segment::Builder&)>&)>(
+                     &Pipeline::make_segment)));
 
-#ifdef VERSION_INFO
-    m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
-#else
-    m.attr("__version__") = "dev";
-#endif
+    module.attr("__version__") =
+        SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
 }  // namespace srf::pysrf

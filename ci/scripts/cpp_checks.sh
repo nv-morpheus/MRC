@@ -32,7 +32,7 @@ CLANG_TIDY_RETVAL=0
 CLANG_FORMAT_RETVAL=0
 IWYU_RETVAL=0
 
-# Get the list of modified files inside the trtlab/srf folder
+# Get the list of modified files inside the srf repo
 get_modified_files ${CPP_FILE_REGEX} SRF_MODIFIED_FILES
 
 # If there are any files, then run clang tidy
@@ -139,7 +139,7 @@ else
    echo -e "\n\n>>>> PASSED: include-what-you-use check\n\n"
 fi
 
-RETVALS=(${CLANG_TIDY_RETVAL} ${CLANG_FORMAT_RETVAL} ${IWYU_RETVAL})
+RETVALS=(${PRAGMA_CHECK_RETVAL} ${CLANG_TIDY_RETVAL} ${CLANG_FORMAT_RETVAL} ${IWYU_RETVAL})
 IFS=$'\n'
 RETVAL=`echo "${RETVALS[*]}" | sort -nr | head -n1`
 

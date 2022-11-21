@@ -57,6 +57,7 @@
 #include "srf/utils/macros.hpp"
 
 #include <boost/fiber/operations.hpp>
+#include <boost/hana/if.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <rxcpp/operators/rx-map.hpp>

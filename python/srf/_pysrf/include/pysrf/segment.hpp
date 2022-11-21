@@ -19,19 +19,19 @@
 
 #include "pysrf/types.hpp"
 
-#include "srf/segment/builder.hpp"
+#include "srf/modules/segment_modules.hpp"
+#include "srf/segment/forward.hpp"
 #include "srf/segment/object.hpp"
 
-// pybind11/functional.h is necessary so calls to wrap_segment_init_callback can use type converter
 #include <pybind11/functional.h>  // IWYU pragma: keep
-#include <pybind11/pybind11.h>    // IWYU pragma: keep
 #include <pybind11/pytypes.h>
+#include <pybind11/stl.h>  // IWYU pragma: keep
 
-#include <cstddef>     // for size_t
-#include <functional>  // for function
+#include <cstddef>
+#include <functional>
 #include <memory>
 #include <string>
-#include <utility>  // for forward
+#include <utility>
 
 namespace srf::pysrf {
 
@@ -64,13 +64,55 @@ auto wrap_segment_init_callback(void (ClassT::*method)(const std::string&,
             f_to_wrap(&t, std::forward<ArgsT>(args)...);
         };
 
-        return (self->*method)(std::forward<const std::string&>(name), std::forward<decltype(f_wrapped)>(f_wrapped));
+        return (self->*method)(std::forward<const std::string&>(name), (std::forward<decltype(f_wrapped)>(f_wrapped)));
     };
 
     return func;
 }
 
-class SegmentProxy
+/**
+ * [Overload for segment initialization with additional port name + type information store in pybind11::lists.]
+ *
+ * Relates to https://github.com/pybind/pybind11/issues/1241 -- for a general solution see pydrake's WrapFunction
+ *  method.
+ *
+ * We need to force pybind to pass us a function that expects a srf::segment::Builder* not a srf::segment::Builder&. If
+ * not it'll try to make a copy and srf::segment::Builder isn't copy-constructable. Once we have that, we wrap it with
+ * our reference based function.
+ *
+ * @tparam ClassT Class where the init method binding is defined.
+ * @tparam ArgsT any additional arguments to pass to the initializer function
+ * @param method method of ClassT that we need to wrap.
+ * @return wrapped ClassT::*method function.
+ */
+template <typename ClassT, typename... ArgsT>
+auto wrap_segment_init_callback(
+    void (ClassT::*method)(const std::string&,
+                           pybind11::list,
+                           pybind11::list,
+                           const std::function<void(srf::segment::Builder&, ArgsT... args)>&))
+{
+    // Build up the function we're going to return, the signature on this function is what forces python to give us
+    //  a pointer.
+    auto func = [method](ClassT* self,
+                         const std::string& name,
+                         pybind11::list ingress_port_ids,
+                         pybind11::list egress_port_ids,
+                         const std::function<void(srf::segment::Builder*, ArgsT...)>& f_to_wrap) {
+        auto f_wrapped = [f_to_wrap](srf::segment::Builder& t, ArgsT... args) {
+            f_to_wrap(&t, std::forward<ArgsT>(args)...);
+        };
+
+        return (self->*method)(std::forward<const std::string&>(name),
+                               std::forward<pybind11::list>(ingress_port_ids),
+                               std::forward<pybind11::list>(egress_port_ids),
+                               std::forward<decltype(f_wrapped)>(f_wrapped));
+    };
+
+    return func;
+}
+
+class BuilderProxy
 {
   public:
     static std::shared_ptr<srf::segment::ObjectProperties> make_source(srf::segment::Builder& self,
@@ -134,8 +176,6 @@ class SegmentProxy
         const std::string& name,
         std::function<void(const pysrf::PyObjectObservable& obs, pysrf::PyObjectSubscriber& sub)> sub_fn);
 
-    static void test_fn(srf::segment::Builder& self, pybind11::function py_func);
-
     static void make_py2cxx_edge_adapter(srf::segment::Builder& self,
                                          std::shared_ptr<srf::segment::ObjectProperties> source,
                                          std::shared_ptr<srf::segment::ObjectProperties> sink,
@@ -149,6 +189,28 @@ class SegmentProxy
     static void make_edge(srf::segment::Builder& self,
                           std::shared_ptr<srf::segment::ObjectProperties> source,
                           std::shared_ptr<srf::segment::ObjectProperties> sink);
+
+    static std::shared_ptr<srf::segment::ObjectProperties> get_ingress(srf::segment::Builder& self,
+                                                                       const std::string& name);
+
+    static std::shared_ptr<srf::segment::ObjectProperties> get_egress(srf::segment::Builder& self,
+                                                                      const std::string& name);
+
+    static std::shared_ptr<srf::modules::SegmentModule> load_module_from_registry(srf::segment::Builder& self,
+                                                                                  const std::string& module_id,
+                                                                                  const std::string& registry_namespace,
+                                                                                  std::string module_name,
+                                                                                  pybind11::dict config = {});
+
+    static void register_module_input(srf::segment::Builder& self,
+                                      std::string input_name,
+                                      std::shared_ptr<segment::ObjectProperties> object);
+
+    static void register_module_output(srf::segment::Builder& self,
+                                       std::string output_name,
+                                       std::shared_ptr<segment::ObjectProperties> object);
+
+    static void init_module(srf::segment::Builder& self, std::shared_ptr<srf::modules::SegmentModule> module);
 
     static std::shared_ptr<srf::segment::ObjectProperties> make_file_reader(srf::segment::Builder& self,
                                                                             const std::string& name,

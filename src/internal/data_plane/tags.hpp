@@ -20,6 +20,7 @@
 #include <ucp/api/ucp.h>
 
 #include <cstdint>
+#include <stdexcept>
 #include <tuple>
 
 static constexpr ucp_tag_t ALL1_BITS = 0xFFFFFFFFFFFFFFFF;  // NOLINT

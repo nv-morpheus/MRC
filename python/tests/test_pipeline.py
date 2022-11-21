@@ -21,7 +21,9 @@
 # import numpy as np
 # import pytest
 
-# import srf
+import srf
+import srf.tests.test_edges_cpp as m
+
 # from srf.core.options import PlacementStrategy
 
 # whereami = pathlib.Path(__file__).parent.resolve()
@@ -259,9 +261,193 @@
 #     for actual in TRACING_DICT["inputs"]:
 #         assert (np.isclose(actual, 34.002060877715685))
 
-# if (__name__ in ("__main__", )):
-#     test_homogenous_string_usage()
-#     test_cxx_string_source_to_python_chain()
-#     # test_heterogenous_string_usage()
-#     # test_heterogenous_double_pipeline()
-#     # test_list_flatten_test()
+
+def test_pipeline_creation_noports():
+
+    def init(seg):
+        pass
+
+    pipe = srf.Pipeline()
+    pipe.make_segment("TestSegment1", init)
+    pipe.make_segment("TestSegment2", [], [], init)
+
+
+"""
+Test that the python bindings for segment creation with ingress and/or egress ports works as expected.
+Since this is a runtime operator and all IngressCount X EgressCount pairs will generate a new class instance that is
+explciitly defined, we check all of them.
+"""
+
+
+def test_dynamic_port_creation_good():
+
+    def init(builder):
+        pass
+
+    ingress = [f"{chr(i)}" for i in range(65, 76)]
+    egress = [f"{chr(i)}" for i in range(97, 108)]
+
+    for i in range(len(ingress)):
+        for j in range(len(egress)):
+            pipe = srf.Pipeline()
+            pipe.make_segment("DynamicPortTestSegment", ingress[0:i], egress[0:j], init)
+
+
+def test_dynamic_port_creation_bad():
+
+    def init(builder):
+        pass
+
+    ingress = [(f"{chr(i)}", 'c') for i in range(65, 76)]
+    egress = [(f"{chr(i)}", 12) for i in range(97, 108)]
+
+    pipe = srf.Pipeline()
+    try:
+        pipe.make_segment("DynamicPortTestSegmentIngress", ingress, [], init)
+        assert (False)
+    except Exception as e:
+        print(e)
+        pass
+
+    try:
+        pipe.make_segment("DynamicPortTestSegmentEgress", [], egress, init)
+        assert (False)
+    except Exception as e:
+        print(e)
+        pass
+
+
+def test_ingress_egress_custom_type_construction():
+
+    def gen_data():
+        yield 1
+        yield 2
+        yield 3
+
+    def init1(builder: srf.Builder):
+        source = builder.make_source("source", gen_data)
+        egress = builder.get_egress("a")
+
+        builder.make_edge(source, egress)
+
+    def init2(builder: srf.Builder):
+
+        def on_next(input):
+            pass
+
+        def on_error():
+            pass
+
+        def on_complete():
+            pass
+
+        ingress = builder.get_ingress("a")
+        sink = builder.make_sink("sink", on_next, on_error, on_complete)
+
+        builder.make_edge(ingress, sink)
+
+    pipe = srf.Pipeline()
+
+    # Create segments with various combinations of type and untyped ports
+    pipe.make_segment("TestSegment1", [("c", m.DerivedA), "c21", ("c31", int, False), "c41"],
+                      ["d11", ("d", m.DerivedA)],
+                      init1)
+    pipe.make_segment("TestSegment2", [("a", m.DerivedB), "a22", "e32"],
+                      [("b21", dict, False), "b22", ("b", m.DerivedB)],
+                      init2)
+    pipe.make_segment("TestSegment3", [("e", m.Base), ("e23", list, False), "e33"], ["f11", ("f", m.Base), "f13"],
+                      init1)
+
+
+def test_dynamic_port_get_ingress_egress():
+
+    def gen_data():
+        yield 1
+        yield 2
+        yield 3
+
+    def init1(builder: srf.Builder):
+        source = builder.make_source("source", gen_data)
+        egress = builder.get_egress("b")
+
+        builder.make_edge(source, egress)
+
+    def init2(builder: srf.Builder):
+
+        def on_next(input):
+            pass
+
+        def on_error():
+            pass
+
+        def on_complete():
+            pass
+
+        ingress = builder.get_ingress("b")
+        sink = builder.make_sink("sink", on_next, on_error, on_complete)
+
+        builder.make_edge(ingress, sink)
+
+    pipe = srf.Pipeline()
+
+    pipe.make_segment("TestSegment11", [], ["b"], init1)
+    pipe.make_segment("TestSegment22", ["b"], [], init2)
+
+    options = srf.Options()
+
+    executor = srf.Executor(options)
+    executor.register_pipeline(pipe)
+
+    executor.start()
+    executor.join()
+
+
+def test_dynamic_port_with_type_get_ingress_egress():
+
+    def gen_data():
+        yield 1
+        yield 2
+        yield 3
+
+    def init1(builder: srf.Builder):
+        source = builder.make_source("source", gen_data)
+        egress = builder.get_egress("b")
+
+        builder.make_edge(source, egress)
+
+    def init2(builder: srf.Builder):
+
+        def on_next(input):
+            pass
+
+        def on_error():
+            pass
+
+        def on_complete():
+            pass
+
+        ingress = builder.get_ingress("b")
+        sink = builder.make_sink("sink", on_next, on_error, on_complete)
+
+        builder.make_edge(ingress, sink)
+
+    pipe = srf.Pipeline()
+
+    pipe.make_segment("TestSegment11", [], [("b", int, False)], init1)
+    pipe.make_segment("TestSegment22", [("b", int, False)], [], init2)
+
+    options = srf.Options()
+
+    executor = srf.Executor(options)
+    executor.register_pipeline(pipe)
+
+    executor.start()
+    executor.join()
+
+
+if (__name__ in ("__main__", )):
+    test_dynamic_port_creation_good()
+    test_dynamic_port_creation_bad()
+    test_ingress_egress_custom_type_construction()
+    test_dynamic_port_get_ingress_egress()
+    test_dynamic_port_with_type_get_ingress_egress()

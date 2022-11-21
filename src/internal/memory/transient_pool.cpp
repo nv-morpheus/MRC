@@ -97,7 +97,6 @@ TransientPool::TransientPool(std::size_t block_size,
 {
     CHECK(m_pool);
     CHECK_LT(block_count, capacity);
-
     for (int i = 0; i < block_count; i++)
     {
         m_pool->emplace(block_size, mr);
@@ -125,7 +124,7 @@ TransientBuffer TransientPool::await_buffer(std::size_t bytes)
     m_addr += bytes;
     m_remaining -= bytes;
 
-    return TransientBuffer(addr, bytes, m_buffer);
+    return {addr, bytes, m_buffer};
 }
 
 }  // namespace srf::internal::memory

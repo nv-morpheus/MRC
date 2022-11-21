@@ -15,22 +15,53 @@
  * limitations under the License.
  */
 
+#include "pysrf/edge_adapter.hpp"
+#include "pysrf/port_builders.hpp"
+#include "pysrf/types.hpp"
+
+#include "srf/channel/status.hpp"
+#include "srf/core/utils.hpp"
+#include "srf/manifold/egress.hpp"
+#include "srf/node/sink_properties.hpp"
+#include "srf/node/source_properties.hpp"
+#include "srf/utils/string_utils.hpp"
+#include "srf/version.hpp"
+
+#include <boost/fiber/future/future.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
+#include <rxcpp/rx.hpp>
+
+#include <algorithm>
+#include <memory>
+#include <ostream>
+#include <vector>
+
+// IWYU pragma: no_include <boost/fiber/future/detail/shared_state.hpp>
+// IWYU pragma: no_include <boost/fiber/future/detail/task_base.hpp>
+// IWYU pragma: no_include <boost/smart_ptr/detail/operator_bool.hpp>
+// IWYU pragma: no_include <pybind11/detail/common.h>
+// IWYU pragma: no_include "rx-includes.hpp"
 
 namespace srf::pysrf {
 
 namespace py = pybind11;
 using namespace py::literals;
 
-PYBIND11_MODULE(common, m)
+PYBIND11_MODULE(common, module)
 {
-    m.doc() = R"pbdoc()pbdoc";
+    module.doc() = R"pbdoc(
+        Python bindings for SRF common functionality / utilities
+        -------------------------------
+        .. currentmodule:: common
+        .. autosummary::
+           :toctree: _generate
+    )pbdoc";
 
-#ifdef VERSION_INFO
-    m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
-#else
-    m.attr("__version__") = "dev";
-#endif
+    EdgeAdapterUtil::register_data_adapters<PyHolder>();
+    PortBuilderUtil::register_port_util<PyHolder>();
+
+    module.attr("__version__") =
+        SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
 }  // namespace srf::pysrf

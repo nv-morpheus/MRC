@@ -151,7 +151,7 @@ function(find_and_configure_hwloc version)
       add_dependencies(hwloc::hwloc hwloc)
 
       # Finally, add this to the style check dependencies
-      add_dependencies(style_checks hwloc-install)
+      add_dependencies(${PROJECT_NAME}_style_checks hwloc-install)
 
     endif()
   endif()

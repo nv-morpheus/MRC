@@ -27,8 +27,6 @@
 
 #include "srf/utils/macros.hpp"
 
-#include <cstddef>
-
 namespace srf::internal::network {
 
 class Resources final : private resources::PartitionResourceBase
@@ -42,7 +40,7 @@ class Resources final : private resources::PartitionResourceBase
 
     DELETE_COPYABILITY(Resources);
 
-    Resources(Resources&&) noexcept = default;
+    Resources(Resources&&) noexcept            = default;
     Resources& operator=(Resources&&) noexcept = delete;
 
     const InstanceID& instance_id() const;

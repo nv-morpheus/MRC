@@ -22,8 +22,15 @@
 #include "srf/node/generic_source.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
+#include "srf/utils/macros.hpp"
 
+#include <glog/logging.h>
+#include <rxcpp/rx.hpp>
+
+#include <array>
+#include <cstddef>
 #include <memory>
+#include <utility>
 
 namespace test::nodes {
 
