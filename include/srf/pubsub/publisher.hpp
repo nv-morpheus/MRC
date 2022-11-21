@@ -21,11 +21,12 @@
 #include "srf/codable/encoded_object.hpp"
 #include "srf/control_plane/subscription_service_forwarder.hpp"
 #include "srf/node/edge_builder.hpp"
-#include "srf/node/operators/operator.hpp"
+#include "srf/node/operators/unique_operator.hpp"
 #include "srf/node/source_channel.hpp"
 #include "srf/pubsub/api.hpp"
-#include "srf/runtime/forward.hpp"
+#include "srf/runtime/api.hpp"
 #include "srf/runtime/remote_descriptor.hpp"
+#include "srf/utils/macros.hpp"
 
 namespace srf::pubsub {
 
@@ -35,10 +36,6 @@ namespace srf::pubsub {
  * This object is both directly writeable, but also connectable to multiple upstream sources of T. By its nature as an
  * operator, forward progress is performed not by a progress engine, but rather by the callers of await_write or by the
  * execution context driving forward progress along the edge.
- *
- * This object is always created as as shared_ptr with a copy held by the instance of the control plane on a specific
- * partition whose resources are using for encoding, decoding and data transport. After edges are formed, this object
- * can be destroyed and its lifecycle will be properly managed by the runtime.
  *
  * Publisher<T> Data Path:
  * [T] -> EncodedObject<T> -> EncodedStorage -> RemoteDescriptor -> Transient Buffer -> Data Plane Tagged Send
@@ -51,15 +48,25 @@ namespace srf::pubsub {
  */
 template <typename T>
 class Publisher final : public control_plane::SubscriptionServiceForwarder,
-                        public node::Operator<T>,
+                        public node::UniqueOperator<T>,
                         public channel::Ingress<T>
 {
   public:
+    static std::unique_ptr<Publisher> create(std::string name,
+                                             const PublisherPolicy& policy,
+                                             runtime::IPartition& partition)
+    {
+        return std::unique_ptr<Publisher>{new Publisher(partition.make_publisher_service(name, policy))};
+    }
+
     ~Publisher() final
     {
         request_stop();
         await_join();
     }
+
+    DELETE_COPYABILITY(Publisher);
+    DELETE_MOVEABILITY(Publisher);
 
     // [Ingress<T>] publish T by capturing it as an encoded object, then pushing that encoded object to the internal
     // publisher
@@ -84,7 +91,7 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
     }
 
   private:
-    Publisher(std::shared_ptr<IPublisher> publisher) : m_service(std::move(publisher))
+    Publisher(std::shared_ptr<IPublisherService> publisher) : m_service(std::move(publisher))
     {
         CHECK(m_service);
     }
@@ -115,7 +122,7 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
     }
 
     // internal type-erased implementation of publisher
-    const std::shared_ptr<IPublisher> m_service;
+    const std::shared_ptr<IPublisherService> m_service;
 
     // this holds the operator open;
     std::unique_ptr<srf::node::SourceChannelWriteable<T>> m_persistent_channel;

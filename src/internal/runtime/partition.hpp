@@ -49,19 +49,10 @@ class Partition final : public srf::runtime::IPartition
     std::unique_ptr<srf::codable::ICodableStorage> make_codable_storage() final;
 
   private:
-    std::shared_ptr<pubsub::Publisher> make_internal_publisher(const std::string& name,
-                                                               const srf::pubsub::PublisherPolicy& policy);
+    std::shared_ptr<srf::pubsub::IPublisherService> make_publisher_service(
+        const std::string& name, const srf::pubsub::PublisherPolicy& policy) final;
 
-    std::shared_ptr<pubsub::Subscriber> make_internal_subscriber(const std::string& name);
-
-    // IPartiton -> shared_ptr<IPublisher> is not covariant with shared_ptr<Publisher>
-    // however the two are convertable, so we do this in two stages rather than directly
-    std::shared_ptr<srf::pubsub::IPublisher> create_publisher_service(const std::string& name,
-                                                                      const srf::pubsub::PublisherPolicy& policy) final;
-
-    // IPartiton -> shared_ptr<ISubscriber> is not covariant with shared_ptr<Subscriber>
-    // however the two are convertable, so we do this in two stages rather than directly
-    std::shared_ptr<srf::pubsub::ISubscriber> create_subscriber_service(const std::string& name) final;
+    std::shared_ptr<srf::pubsub::ISubscriberService> make_subscriber_service(const std::string& name) final;
 
     resources::PartitionResources& m_resources;
     std::shared_ptr<remote_descriptor::Manager> m_remote_descriptor_manager;

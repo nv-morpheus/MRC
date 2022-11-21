@@ -39,7 +39,9 @@
 #include "srf/options/placement.hpp"
 #include "srf/protos/architect.grpc.pb.h"
 #include "srf/protos/architect.pb.h"
+#include "srf/pubsub/publisher.hpp"
 #include "srf/pubsub/publisher_policy.hpp"
+#include "srf/pubsub/subscriber.hpp"
 #include "srf/runtime/api.hpp"
 
 #include <glog/logging.h>
@@ -52,6 +54,7 @@
 #include <thread>
 
 using namespace srf;
+using namespace srf::pubsub;
 using namespace srf::memory::literals;
 
 static auto make_runtime(std::function<void(Options& options)> options_lambda = [](Options& options) {})
@@ -232,13 +235,13 @@ TEST_F(TestControlPlane, DoubleClientPubSub)
         .get();
 
     LOG(INFO) << "MAKE PUBLISHER";
-    auto publisher = client_1->partition(0).make_publisher<int>("my_int", pubsub::PublisherPolicy::RoundRobin);
+    auto publisher = Publisher<int>::create("my_int", PublisherPolicy::RoundRobin, client_1->partition(0));
     LOG(INFO) << "PUBLISHER START";
     publisher->await_start();
     LOG(INFO) << "PUBLISHER STARTED";
 
     LOG(INFO) << "MAKE SUBSCRIBER";
-    auto subscriber = client_2->partition(0).make_subscriber<int>("my_int");
+    auto subscriber = Subscriber<int>::create("my_int", client_2->partition(0));
     LOG(INFO) << "SUBSCRIBER START";
     subscriber->await_start();
     LOG(INFO) << "SUBSCRIBER STARTED";

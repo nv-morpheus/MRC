@@ -45,7 +45,7 @@ void Subscriber::do_subscription_service_setup()
     DVLOG(10) << "form edge:  network_soruce -> network_handler";
     srf::node::make_edge(network_source, *network_handler);
 
-    DVLOG(10) << "form edge:  network_handler -> rd_channel (ISubscriber::SourceChannelWriteable)";
+    DVLOG(10) << "form edge:  network_handler -> rd_channel (ISubscriberService::SourceChannelWriteable)";
     srf::node::make_edge(*network_handler, *this);
 
     DVLOG(10) << "starting network handler node";

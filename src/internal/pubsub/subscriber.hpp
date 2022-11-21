@@ -41,7 +41,7 @@ namespace srf::internal::pubsub {
  *
  */
 class Subscriber final : public Base,
-                         public srf::pubsub::ISubscriber,
+                         public srf::pubsub::ISubscriberService,
                          public srf::node::UniqueOperator<srf::runtime::RemoteDescriptor>
 {
     Subscriber(std::string service_name, runtime::Partition& runtime);

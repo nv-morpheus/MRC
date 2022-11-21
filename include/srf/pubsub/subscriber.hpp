@@ -26,8 +26,9 @@
 #include "srf/node/queue.hpp"
 #include "srf/node/source_channel.hpp"
 #include "srf/pubsub/api.hpp"
-#include "srf/runtime/forward.hpp"
+#include "srf/runtime/api.hpp"
 #include "srf/runtime/remote_descriptor.hpp"
+#include "srf/utils/macros.hpp"
 
 namespace srf::pubsub {
 
@@ -38,10 +39,6 @@ namespace srf::pubsub {
  * Subscriber has a template specialization, i.e. Subscriber<RemoteDescriptor> which bypasses the decoding of the object
  * and provides direct acess to the remote descriptor. This is useful for propagating the RemoteDescriptor without
  * having to pull required bulk data held on the remote instance.
- *
- * This object is always created as as shared_ptr with a copy held by the instance of the control plane on a specific
- * partition whose resources are using for encoding, decoding and data transport. After edges are formed, this object
- * can be destroyed and its lifecycle will be properly managed by the runtime.
  *
  * Publisher<T> Data Path:
  * [T] -> EncodedObject<T> -> EncodedStorage -> RemoteDescriptor -> Transient Buffer -> Data Plane Tagged Send
@@ -58,11 +55,19 @@ class Subscriber final : public node::Queue<T>,
                          private srf::node::SourceChannelWriteable<T>
 {
   public:
+    static std::unique_ptr<Subscriber> create(std::string name, runtime::IPartition& partition)
+    {
+        return std::unique_ptr<Subscriber>{new Subscriber(partition.make_subscriber_service(name))};
+    }
+
     ~Subscriber() final
     {
         request_stop();
         await_join();
     }
+
+    DELETE_COPYABILITY(Subscriber);
+    DELETE_MOVEABILITY(Subscriber);
 
     /**
      * @brief Start the Subscriber
@@ -86,9 +91,9 @@ class Subscriber final : public node::Queue<T>,
         srf::node::SourceChannelWriteable<T>& typed_source = *this;
         srf::node::make_edge(typed_source, *this);
 
-        LOG(INFO) << "forming second edge: ipublisher -> operator_component";
+        LOG(INFO) << "forming second edge: IPublisherService -> operator_component";
 
-        // Edge - IPublisher -> OperatorComponent
+        // Edge - IPublisherService -> OperatorComponent
         m_rd_sink = std::make_shared<node::OperatorComponent<srf::runtime::RemoteDescriptor>>(
             // on_next
             [this](srf::runtime::RemoteDescriptor&& rd) {
@@ -108,7 +113,7 @@ class Subscriber final : public node::Queue<T>,
     }
 
   private:
-    Subscriber(std::shared_ptr<ISubscriber> service) : m_service(std::move(service))
+    Subscriber(std::shared_ptr<ISubscriberService> service) : m_service(std::move(service))
     {
         CHECK(m_service);
     }
@@ -119,7 +124,7 @@ class Subscriber final : public node::Queue<T>,
         return *m_service;
     }
 
-    std::shared_ptr<ISubscriber> m_service;
+    std::shared_ptr<ISubscriberService> m_service;
     std::shared_ptr<node::OperatorComponent<srf::runtime::RemoteDescriptor>> m_rd_sink;
 
     friend runtime::IPartition;
@@ -157,7 +162,7 @@ class Subscriber<srf::runtime::RemoteDescriptor> final : public node::Queue<runt
             return;
         }
 
-        // Edge - IPublisher -> Queue
+        // Edge - IPublisherService -> Queue
         srf::node::make_edge(*m_service, *this);
 
         // After the edges have been formed, we have a complete pipeline from the data plane to a channel. If we started
@@ -167,7 +172,7 @@ class Subscriber<srf::runtime::RemoteDescriptor> final : public node::Queue<runt
     }
 
   private:
-    Subscriber(std::shared_ptr<ISubscriber> service) : m_service(std::move(service)) {}
+    Subscriber(std::shared_ptr<ISubscriberService> service) : m_service(std::move(service)) {}
 
     ISubscriptionService& service() const final
     {
@@ -175,7 +180,7 @@ class Subscriber<srf::runtime::RemoteDescriptor> final : public node::Queue<runt
         return *m_service;
     }
 
-    std::shared_ptr<ISubscriber> m_service;
+    std::shared_ptr<ISubscriberService> m_service;
 
     friend runtime::IPartition;
 };

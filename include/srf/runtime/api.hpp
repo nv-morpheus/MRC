@@ -18,10 +18,7 @@
 #pragma once
 
 #include "srf/codable/api.hpp"
-#include "srf/pubsub/api.hpp"
-#include "srf/pubsub/publisher.hpp"
-#include "srf/pubsub/publisher_policy.hpp"
-#include "srf/pubsub/subscriber.hpp"
+#include "srf/pubsub/forward.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -29,7 +26,6 @@
 namespace srf::runtime {
 
 class IPartition;
-class IRuntime;
 class IRemoteDescriptorManager;
 
 /**
@@ -67,23 +63,19 @@ class IPartition
 
     virtual std::unique_ptr<codable::ICodableStorage> make_codable_storage() = 0;
 
-    template <typename T>
-    std::shared_ptr<pubsub::Publisher<T>> make_publisher(std::string name, pubsub::PublisherPolicy policy)
-    {
-        return std::shared_ptr<pubsub::Publisher<T>>(new pubsub::Publisher<T>(create_publisher_service(name, policy)));
-    }
-
-    template <typename T>
-    std::shared_ptr<pubsub::Subscriber<T>> make_subscriber(std::string name)
-    {
-        return std::shared_ptr<pubsub::Subscriber<T>>(new pubsub::Subscriber<T>(create_subscriber_service(name)));
-    }
-
   private:
-    virtual std::shared_ptr<pubsub::IPublisher> create_publisher_service(const std::string& name,
-                                                                         const pubsub::PublisherPolicy& policy) = 0;
+    virtual std::shared_ptr<pubsub::IPublisherService> make_publisher_service(
+        const std::string& name, const pubsub::PublisherPolicy& policy) = 0;
 
-    virtual std::shared_ptr<pubsub::ISubscriber> create_subscriber_service(const std::string& name) = 0;
+    virtual std::shared_ptr<pubsub::ISubscriberService> make_subscriber_service(const std::string& name) = 0;
+
+    // enable access to private methods
+
+    template <typename T>
+    friend class pubsub::Publisher;
+
+    template <typename T>
+    friend class pubsub::Subscriber;
 };
 
 }  // namespace srf::runtime

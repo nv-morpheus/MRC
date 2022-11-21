@@ -28,10 +28,16 @@
 
 namespace srf::pubsub {
 
-class IPublisher : public virtual control_plane::ISubscriptionService
+enum class PublisherPolicy
+{
+    Broadcast,
+    RoundRobin,
+};
+
+class IPublisherService : public virtual control_plane::ISubscriptionService
 {
   public:
-    ~IPublisher() override = default;
+    ~IPublisherService() override = default;
 
     virtual std::unique_ptr<codable::ICodableStorage> create_storage() = 0;
 
@@ -39,11 +45,11 @@ class IPublisher : public virtual control_plane::ISubscriptionService
     virtual channel::Status publish(runtime::RemoteDescriptor&& remote_descriptor)           = 0;
 };
 
-class ISubscriber : public virtual control_plane::ISubscriptionService,
-                    public srf::node::SourceChannelWriteable<srf::runtime::RemoteDescriptor>
+class ISubscriberService : public virtual control_plane::ISubscriptionService,
+                           public srf::node::SourceChannelWriteable<srf::runtime::RemoteDescriptor>
 {
   public:
-    ~ISubscriber() override = default;
+    ~ISubscriberService() override = default;
 };
 
 }  // namespace srf::pubsub

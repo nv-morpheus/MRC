@@ -40,7 +40,7 @@ class Partition;
 namespace srf::internal::pubsub {
 
 class Publisher : public Base,
-                  public srf::pubsub::IPublisher,
+                  public srf::pubsub::IPublisherService,
                   public srf::node::SourceChannelWriteable<srf::runtime::RemoteDescriptor>
 {
   protected:
@@ -52,10 +52,10 @@ class Publisher : public Base,
     DELETE_COPYABILITY(Publisher);
     DELETE_MOVEABILITY(Publisher);
 
-    // [IPublisher] publish a remote descriptor
+    // [IPublisherService] publish a remote descriptor
     channel::Status publish(srf::runtime::RemoteDescriptor&& rd) final;
 
-    // [IPublisher] publish an encoded object
+    // [IPublisherService] publish an encoded object
     channel::Status publish(std::unique_ptr<srf::codable::EncodedStorage> encoded_object) final;
 
     // [ISubscriptionServiceIdentity] provide the value for the role of this instance
@@ -78,7 +78,7 @@ class Publisher : public Base,
     const std::unordered_map<std::uint64_t, std::shared_ptr<ucx::Endpoint>>& tagged_endpoints() const;
 
   private:
-    // [IPublisher] provides a runtime dependent codable storage object
+    // [IPublisherService] provides a runtime dependent codable storage object
     std::unique_ptr<srf::codable::ICodableStorage> create_storage() final;
 
     // [internal::control_plane::client::SubscriptionService]

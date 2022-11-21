@@ -52,8 +52,8 @@ remote_descriptor::Manager& Partition::remote_descriptor_manager()
     return *m_remote_descriptor_manager;
 }
 
-std::shared_ptr<pubsub::Publisher> Partition::make_internal_publisher(const std::string& name,
-                                                                      const srf::pubsub::PublisherPolicy& policy)
+std::shared_ptr<srf::pubsub::IPublisherService> Partition::make_publisher_service(
+    const std::string& name, const srf::pubsub::PublisherPolicy& policy)
 {
     if (policy == srf::pubsub::PublisherPolicy::RoundRobin)
     {
@@ -64,20 +64,9 @@ std::shared_ptr<pubsub::Publisher> Partition::make_internal_publisher(const std:
     return nullptr;
 }
 
-std::shared_ptr<pubsub::Subscriber> Partition::make_internal_subscriber(const std::string& name)
+std::shared_ptr<srf::pubsub::ISubscriberService> Partition::make_subscriber_service(const std::string& name)
 {
     return std::shared_ptr<pubsub::Subscriber>(new pubsub::Subscriber(name, *this));
-}
-
-std::shared_ptr<srf::pubsub::IPublisher> Partition::create_publisher_service(const std::string& name,
-                                                                             const srf::pubsub::PublisherPolicy& policy)
-{
-    return make_internal_publisher(name, policy);
-}
-
-std::shared_ptr<srf::pubsub::ISubscriber> Partition::create_subscriber_service(const std::string& name)
-{
-    return make_internal_subscriber(name);
 }
 
 std::unique_ptr<srf::codable::ICodableStorage> Partition::make_codable_storage()

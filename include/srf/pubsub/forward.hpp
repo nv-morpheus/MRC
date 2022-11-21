@@ -15,6 +15,17 @@
  * limitations under the License.
  */
 
-#pragma once
+namespace srf::pubsub {
 
-namespace srf::pubsub {}
+template <typename T>
+class Publisher;
+
+template <typename T>
+class Subscriber;
+
+class IPublisherService;
+class ISubscriberService;
+
+enum class PublisherPolicy;
+
+}  // namespace srf::pubsub
