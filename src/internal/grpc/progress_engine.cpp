@@ -17,6 +17,16 @@
 
 #include "internal/grpc/progress_engine.hpp"
 
+#include <boost/fiber/operations.hpp>
+#include <glog/logging.h>
+#include <grpc/support/time.h>
+#include <grpcpp/grpcpp.h>
+#include <stdint.h>
+
+#include <chrono>
+#include <ostream>
+#include <utility>
+
 namespace srf::internal::rpc {
 
 ProgressEngine::ProgressEngine(std::shared_ptr<grpc::CompletionQueue> cq) : m_cq(std::move(cq)) {}

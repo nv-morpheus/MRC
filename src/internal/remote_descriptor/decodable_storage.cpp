@@ -17,6 +17,8 @@
 
 #include "internal/remote_descriptor/decodable_storage.hpp"
 
+#include <utility>
+
 namespace srf::internal::remote_descriptor {
 
 DecodableStorage::DecodableStorage(srf::codable::protos::RemoteDescriptor&& proto,

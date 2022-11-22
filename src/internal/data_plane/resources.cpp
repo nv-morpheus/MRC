@@ -18,19 +18,12 @@
 #include "internal/data_plane/resources.hpp"
 
 #include "internal/control_plane/client.hpp"
-#include "internal/control_plane/client/instance.hpp"
 #include "internal/data_plane/client.hpp"
 #include "internal/data_plane/server.hpp"
-#include "internal/resources/forward.hpp"
 #include "internal/ucx/resources.hpp"
+#include "internal/ucx/worker.hpp"
 
-#include "srf/cuda/common.hpp"
 #include "srf/memory/literals.hpp"
-#include "srf/runnable/launch_control.hpp"
-
-#include <glog/logging.h>
-
-#include <memory>
 
 namespace srf::internal::data_plane {
 
@@ -116,7 +109,7 @@ Server& Resources::server()
     return m_server;
 }
 
-runnable::LaunchOptions Resources::launch_options(std::size_t concurrency)
+srf::runnable::LaunchOptions Resources::launch_options(std::size_t concurrency)
 {
     return ucx::Resources::launch_options(concurrency);
 }

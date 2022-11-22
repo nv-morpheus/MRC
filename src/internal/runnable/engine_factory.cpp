@@ -35,6 +35,7 @@
 
 #include <cstddef>
 #include <functional>
+#include <mutex>
 #include <ostream>
 #include <utility>
 #include <vector>

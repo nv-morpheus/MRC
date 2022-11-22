@@ -29,13 +29,13 @@
 #include <boost/fiber/context.hpp>
 #include <boost/fiber/fiber.hpp>
 #include <boost/fiber/future/future.hpp>
+#include <boost/fiber/future/packaged_task.hpp>
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 
 #include <ostream>
 #include <string>
 #include <thread>
-#include <type_traits>
 #include <utility>
 
 namespace srf::internal::system {

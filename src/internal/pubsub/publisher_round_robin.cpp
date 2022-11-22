@@ -17,7 +17,16 @@
 
 #include "internal/pubsub/publisher_round_robin.hpp"
 
+#include "internal/resources/partition_resources.hpp"
+#include "internal/runnable/resources.hpp"
+
+#include "srf/core/task_queue.hpp"
+
 #include <glog/logging.h>
+
+#include <atomic>
+#include <ostream>
+#include <utility>
 
 namespace srf::internal::pubsub {
 

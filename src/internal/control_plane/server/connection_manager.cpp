@@ -19,9 +19,15 @@
 
 #include "internal/utils/contains.hpp"
 
+#include "srf/channel/status.hpp"
 #include "srf/protos/architect.pb.h"
 
 #include <glog/logging.h>
+#include <google/protobuf/any.pb.h>
+
+#include <algorithm>
+#include <ostream>
+#include <utility>
 
 namespace srf::internal::control_plane::server {
 

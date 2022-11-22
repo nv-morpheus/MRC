@@ -25,7 +25,13 @@
 #include "srf/protos/architect.pb.h"
 #include "srf/types.hpp"
 
+#include <stdint.h>
+
+#include <map>
+#include <memory>
+#include <set>
 #include <string>
+#include <utility>
 
 namespace srf::internal::control_plane::server {
 

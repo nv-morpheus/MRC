@@ -22,6 +22,9 @@
 #include <glog/logging.h>
 #include <ucp/api/ucp.h>
 
+#include <atomic>
+#include <ostream>
+
 namespace srf::internal::data_plane {
 
 void Callbacks::send(void* request, ucs_status_t status, void* user_data)

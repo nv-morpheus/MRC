@@ -20,11 +20,17 @@
 #include "internal/memory/device_resources.hpp"
 #include "internal/memory/host_resources.hpp"
 #include "internal/network/resources.hpp"
+#include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/system/resources.hpp"
 #include "internal/system/system_provider.hpp"
 #include "internal/ucx/resources.hpp"
+
+#include "srf/core/task_queue.hpp"
+#include "srf/types.hpp"
+
+#include <boost/fiber/future/future.hpp>
 
 #include <cstddef>
 #include <memory>

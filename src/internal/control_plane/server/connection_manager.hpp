@@ -21,12 +21,17 @@
 #include "internal/control_plane/server/versioned_issuer.hpp"
 #include "internal/expected.hpp"
 #include "internal/grpc/server_streaming.hpp"
+#include "internal/grpc/stream_writer.hpp"
 
 #include "srf/protos/architect.pb.h"
+#include "srf/types.hpp"
 
-#include <cstdint>
+#include <cstddef>
 #include <map>
+#include <memory>
 #include <set>
+#include <string>
+#include <vector>
 
 namespace srf::internal::control_plane::server {
 

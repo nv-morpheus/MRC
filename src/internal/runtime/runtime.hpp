@@ -17,15 +17,14 @@
 
 #pragma once
 
-#include "internal/resources/forward.hpp"
+#include "internal/resources/manager.hpp"
 #include "internal/runtime/partition.hpp"
 
 #include "srf/runtime/api.hpp"
-#include "srf/runtime/forward.hpp"
-#include "srf/utils/macros.hpp"
 
-#include <iterator>
+#include <cstddef>
 #include <memory>
+#include <vector>
 
 namespace srf::internal::runtime {
 

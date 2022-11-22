@@ -17,32 +17,12 @@
 
 #pragma once
 
-#include "internal/resources/forward.hpp"
-#include "internal/resources/partition_resources_base.hpp"
+namespace srf::internal::ucx {
 
-#include <memory>
+class Context;
+class Worker;
+class Endpoint;
 
-namespace srf::internal::control_plane {
+class MemoryBlock;
 
-class Client;
-class Server;
-
-class Resources final : private resources::PartitionResourceBase
-{
-  public:
-    Resources(resources::PartitionResourceBase& base);
-    ~Resources() final;
-
-    Client& client()
-    {
-        return *m_client;
-    }
-
-  private:
-    std::unique_ptr<Server> m_server;
-    const std::unique_ptr<Client> m_client;
-
-    friend network::Resources;
-};
-
-}  // namespace srf::internal::control_plane
+}  // namespace srf::internal::ucx

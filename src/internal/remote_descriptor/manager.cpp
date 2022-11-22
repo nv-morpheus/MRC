@@ -18,23 +18,43 @@
 #include "internal/remote_descriptor/manager.hpp"
 
 #include "internal/codable/codable_storage.hpp"
-#include "internal/control_plane/client/connections_manager.hpp"
+#include "internal/data_plane/client.hpp"
 #include "internal/data_plane/request.hpp"
 #include "internal/data_plane/resources.hpp"
+#include "internal/network/resources.hpp"
 #include "internal/remote_descriptor/decodable_storage.hpp"
-#include "internal/remote_descriptor/remote_descriptor.hpp"
 #include "internal/remote_descriptor/storage.hpp"
-#include "internal/resources/forward.hpp"
+#include "internal/runnable/resources.hpp"
+#include "internal/ucx/resources.hpp"
+#include "internal/ucx/worker.hpp"
 
+#include "srf/channel/buffered_channel.hpp"
+#include "srf/channel/channel.hpp"
 #include "srf/channel/status.hpp"
 #include "srf/codable/api.hpp"
 #include "srf/codable/encoded_object.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/node/rx_sink.hpp"
 #include "srf/node/source_channel.hpp"
 #include "srf/protos/codable.pb.h"
+#include "srf/runnable/launch_control.hpp"
+#include "srf/runnable/launch_options.hpp"
+#include "srf/runnable/launcher.hpp"
 #include "srf/runtime/remote_descriptor_handle.hpp"
+#include "srf/utils/string_utils.hpp"
 
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
+#include <rxcpp/rx.hpp>
+#include <ucp/api/ucp.h>
+#include <ucs/type/status.h>
+
+#include <atomic>
+#include <optional>
+#include <ostream>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace srf::internal::remote_descriptor {
 
@@ -163,7 +183,7 @@ void Manager::do_service_start()
         std::make_unique<channel::BufferedChannel<RemoteDescriptorDecrementMessage>>(128));
     node::make_edge(*m_decrement_channel, *decrement_handler);
 
-    runnable::LaunchOptions launch_options;
+    srf::runnable::LaunchOptions launch_options;
     launch_options.engine_factory_name = "main";
 
     m_decrement_handler = m_resources.runnable()

@@ -17,17 +17,22 @@
 
 #pragma once
 
+#include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/data_plane/client.hpp"
 #include "internal/data_plane/server.hpp"
-#include "internal/resources/forward.hpp"
+#include "internal/memory/host_resources.hpp"
+#include "internal/memory/transient_pool.hpp"
+#include "internal/network/resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/runnable/engines.hpp"
 #include "internal/service.hpp"
+#include "internal/ucx/registration_cache.hpp"
+#include "internal/ucx/resources.hpp"
 
-#include "srf/protos/codable.pb.h"
+#include "srf/runnable/launch_options.hpp"
+#include "srf/types.hpp"
 
-#include <memory>
-#include <utility>
+#include <cstddef>
+#include <string>
 
 namespace srf::internal::data_plane {
 
@@ -52,7 +57,7 @@ class Resources final : private Service, private resources::PartitionResourceBas
     std::string ucx_address() const;
     const ucx::RegistrationCache& registration_cache() const;
 
-    static runnable::LaunchOptions launch_options(std::size_t concurrency);
+    static srf::runnable::LaunchOptions launch_options(std::size_t concurrency);
 
   private:
     void do_service_start() final;

@@ -18,7 +18,10 @@
 #pragma once
 
 #include "srf/codable/api.hpp"
-#include "srf/protos/codable.pb.h"
+#include "srf/protos/codable.pb.h"  // todo(iwyu) protos::EncodedObject should be forward declared
+
+#include <cstddef>
+#include <optional>
 
 namespace srf::internal::codable {
 

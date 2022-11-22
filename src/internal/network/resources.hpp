@@ -18,14 +18,14 @@
 #pragma once
 
 #include "internal/control_plane/client/state_manager.hpp"
-#include "internal/remote_descriptor/remote_descriptor.hpp"
 #include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/runnable/resources.hpp"
-#include "internal/ucx/registration_cache.hpp"
 #include "internal/ucx/resources.hpp"
 
+#include "srf/types.hpp"
 #include "srf/utils/macros.hpp"
+
+#include <memory>
 
 namespace srf::internal::network {
 

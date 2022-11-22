@@ -17,6 +17,7 @@
 
 #include "internal/system/partitions.hpp"
 
+#include "internal/system/gpu_info.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/topology.hpp"

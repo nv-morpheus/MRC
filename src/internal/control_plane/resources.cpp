@@ -19,7 +19,9 @@
 
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/server.hpp"
-#include "internal/resources/forward.hpp"
+#include "internal/system/system.hpp"
+
+#include "srf/options/options.hpp"
 
 #include <glog/logging.h>
 

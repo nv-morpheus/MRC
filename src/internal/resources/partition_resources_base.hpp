@@ -20,8 +20,6 @@
 #include "internal/runnable/resources.hpp"
 #include "internal/system/partition_provider.hpp"
 
-#include "srf/utils/macros.hpp"
-
 #include <cstddef>
 #include <functional>
 

@@ -21,12 +21,11 @@
 #include "internal/runnable/resources.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/resources.hpp"
+#include "internal/ucx/worker.hpp"
 
 #include "srf/channel/status.hpp"
 #include "srf/core/task_queue.hpp"
-#include "srf/memory/buffer_view.hpp"
 #include "srf/memory/literals.hpp"
-#include "srf/memory/memory_kind.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/generic_source.hpp"
 #include "srf/node/operators/router.hpp"
@@ -49,7 +48,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
-#include <exception>
 #include <ostream>
 #include <utility>
 

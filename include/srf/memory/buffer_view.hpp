@@ -22,7 +22,7 @@
 
 #include <glog/logging.h>
 
-#include <cstddef>  // for size_t
+#include <cstddef>
 
 namespace srf::memory {
 
@@ -41,14 +41,17 @@ class const_buffer_view  // NOLINT
     const_buffer_view()          = default;
     virtual ~const_buffer_view() = default;
 
-    const_buffer_view(const const_buffer_view& other) = default;
+    const_buffer_view(const const_buffer_view& other)      = default;
     const_buffer_view& operator=(const const_buffer_view&) = default;
 
+    // our "move" is really an assignment (copy) constructor as you do not move fundamental types
     const_buffer_view(const_buffer_view&& other) noexcept :
       m_data(other.m_data),
       m_bytes(other.m_bytes),
       m_kind(other.m_kind)
     {}
+
+    // our "move" is really an assignment (copy) operator= as you do not move fundamental types
     const_buffer_view& operator=(const_buffer_view&& other) noexcept
     {
         m_data  = other.m_data;

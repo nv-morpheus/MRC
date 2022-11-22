@@ -22,7 +22,9 @@
 
 #include "srf/types.hpp"
 
-#include <ucp/api/ucp_def.h>  // for ucp_ep_h
+#include <ucp/api/ucp_def.h>
+
+#include <memory>
 
 namespace srf::internal::ucx {
 

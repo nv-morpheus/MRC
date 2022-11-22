@@ -19,29 +19,30 @@
 
 #include "internal/control_plane/proto_helpers.hpp"
 #include "internal/control_plane/server/subscription_manager.hpp"
-#include "internal/utils/contains.hpp"
 
 #include "srf/channel/status.hpp"
 #include "srf/node/edge_builder.hpp"
-#include "srf/node/generic_node.hpp"
 #include "srf/node/rx_sink.hpp"
+#include "srf/node/rx_source.hpp"
 #include "srf/protos/architect.grpc.pb.h"
 #include "srf/protos/architect.pb.h"
-#include "srf/runnable/launch_options.hpp"
+#include "srf/runnable/launch_control.hpp"
+#include "srf/runnable/launcher.hpp"
 
 #include <boost/fiber/condition_variable.hpp>
-#include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
-#include <google/protobuf/any.pb.h>
-#include <rxcpp/rx-subscriber.hpp>
-#include <tl/expected.hpp>
+#include <grpcpp/grpcpp.h>
+#include <rxcpp/sources/rx-iterate.hpp>
 
 #include <algorithm>
 #include <exception>
-#include <functional>
+#include <future>
+#include <mutex>
 #include <ostream>
-#include <type_traits>  // IWYU pragma: keep
+#include <set>
+#include <type_traits>
 #include <utility>
+#include <vector>
 
 namespace srf::internal::control_plane {
 

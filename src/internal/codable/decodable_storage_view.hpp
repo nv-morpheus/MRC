@@ -18,23 +18,13 @@
 #pragma once
 
 #include "internal/codable/storage_resources.hpp"
-#include "internal/codable/storage_view.hpp"
-#include "internal/resources/forward.hpp"
-#include "internal/ucx/memory_block.hpp"
-#include "internal/utils/contains.hpp"
 
 #include "srf/codable/api.hpp"
-#include "srf/memory/buffer.hpp"
 #include "srf/memory/buffer_view.hpp"
-#include "srf/memory/memory_kind.hpp"
 #include "srf/memory/resources/memory_resource.hpp"
-#include "srf/protos/codable.pb.h"
 
-#include <glog/logging.h>
-
-#include <mutex>
-#include <optional>
-#include <typeindex>
+#include <cstddef>
+#include <memory>
 
 namespace srf::internal::codable {
 

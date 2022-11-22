@@ -22,31 +22,35 @@
 #include "internal/control_plane/client/subscription_service.hpp"
 #include "internal/expected.hpp"
 #include "internal/grpc/client_streaming.hpp"
-#include "internal/grpc/progress_engine.hpp"
-#include "internal/grpc/promise_handler.hpp"
 #include "internal/grpc/stream_writer.hpp"
-#include "internal/resources/forward.hpp"
+#include "internal/network/resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/runnable/engines.hpp"
-#include "internal/runnable/resources.hpp"
 #include "internal/service.hpp"
-#include "internal/ucx/common.hpp"
+#include "internal/ucx/resources.hpp"
 
-#include "srf/exceptions/runtime_error.hpp"
-#include "srf/node/edge_builder.hpp"
-#include "srf/node/operators/broadcast.hpp"
-#include "srf/node/operators/router.hpp"
+#include "srf/channel/status.hpp"
 #include "srf/node/source_channel.hpp"
-#include "srf/node/source_properties.hpp"
 #include "srf/protos/architect.grpc.pb.h"
 #include "srf/protos/architect.pb.h"
+#include "srf/runnable/launch_options.hpp"
 #include "srf/runnable/runner.hpp"
 #include "srf/types.hpp"
 #include "srf/utils/macros.hpp"
 
+#include <boost/fiber/future/future.hpp>
+#include <glog/logging.h>
+#include <grpcpp/channel.h>
 #include <grpcpp/completion_queue.h>
+#include <cstdint>
 
+#include <map>
+#include <memory>
 #include <mutex>
+#include <optional>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace srf::internal::control_plane {
 
@@ -121,7 +125,7 @@ class Client final : public resources::PartitionResourceBase, public Service
 
     bool has_subscription_service(const std::string& name) const;
 
-    const runnable::LaunchOptions& launch_options() const;
+    const srf::runnable::LaunchOptions& launch_options() const;
 
     client::ConnectionsManager& connections() const
     {
@@ -180,7 +184,7 @@ class Client final : public resources::PartitionResourceBase, public Service
     // The customer destruction of this object will cause a gRPC WritesDone to be issued to the server.
     writer_t m_writer;
 
-    runnable::LaunchOptions m_launch_options;
+    srf::runnable::LaunchOptions m_launch_options;
 
     std::mutex m_mutex;
 

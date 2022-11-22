@@ -17,25 +17,23 @@
 
 #pragma once
 
-#include "internal/control_plane/client/state_manager.hpp"
 #include "internal/service.hpp"
 
-#include "srf/channel/status.hpp"
 #include "srf/control_plane/api.hpp"
-#include "srf/node/edge_builder.hpp"
-#include "srf/node/operators/router.hpp"
-#include "srf/node/sink_channel.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/protos/architect.pb.h"
-#include "srf/pubsub/api.hpp"
 #include "srf/runnable/launch_options.hpp"
 #include "srf/types.hpp"
 #include "srf/utils/macros.hpp"
 
+#include <boost/fiber/future/promise.hpp>
+#include <cstdint>
+
+#include <map>
 #include <memory>
+#include <mutex>
 #include <set>
 #include <string>
-#include <utility>
+#include <unordered_map>
+#include <vector>
 
 namespace srf::internal::control_plane::client {
 

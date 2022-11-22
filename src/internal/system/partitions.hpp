@@ -18,9 +18,9 @@
 #pragma once
 
 #include "internal/system/device_partition.hpp"
-#include "internal/system/gpu_info.hpp"
 #include "internal/system/host_partition.hpp"
 #include "internal/system/partition.hpp"
+#include "internal/system/topology.hpp"  // todo(iwyu) - forward declare Topology?
 
 #include "srf/options/options.hpp"
 #include "srf/options/placement.hpp"
@@ -30,7 +30,6 @@
 namespace srf::internal::system {
 
 class System;
-class Topology;  // IWYU pragma: keep
 
 class Partitions
 {

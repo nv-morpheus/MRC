@@ -23,9 +23,13 @@
 #include "internal/resources/forward.hpp"
 #include "internal/ucx/common.hpp"
 
+#include "srf/channel/status.hpp"
+#include "srf/node/source_channel.hpp"
 #include "srf/protos/architect.pb.h"
 #include "srf/types.hpp"
 
+#include <map>
+#include <memory>
 #include <optional>
 #include <vector>
 

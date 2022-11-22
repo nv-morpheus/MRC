@@ -18,16 +18,29 @@
 #include "internal/control_plane/client.hpp"
 
 #include "internal/control_plane/client/connections_manager.hpp"
+#include "internal/grpc/progress_engine.hpp"
+#include "internal/grpc/promise_handler.hpp"
 #include "internal/runnable/resources.hpp"
+#include "internal/system/system.hpp"
 #include "internal/ucx/resources.hpp"
-#include "internal/utils/contains.hpp"
 
-#include "srf/channel/channel.hpp"
 #include "srf/channel/status.hpp"
-#include "srf/exceptions/runtime_error.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/node/rx_sink.hpp"
 #include "srf/node/source_channel.hpp"
+#include "srf/options/options.hpp"
 #include "srf/protos/architect.grpc.pb.h"
 #include "srf/protos/architect.pb.h"
+#include "srf/runnable/launch_control.hpp"
+#include "srf/runnable/launcher.hpp"
+
+#include <boost/fiber/future/promise.hpp>
+#include <google/protobuf/any.pb.h>
+#include <grpcpp/grpcpp.h>
+#include <grpcpp/security/credentials.h>
+#include <rxcpp/rx.hpp>
+
+#include <ostream>
 
 namespace srf::internal::control_plane {
 
@@ -225,7 +238,7 @@ void Client::route_state_update(std::uint64_t tag, protos::StateUpdate&& update)
 //     return contains(m_subscription_services, name);
 // }
 
-const runnable::LaunchOptions& Client::launch_options() const
+const srf::runnable::LaunchOptions& Client::launch_options() const
 {
     return m_launch_options;
 }

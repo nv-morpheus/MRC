@@ -17,9 +17,9 @@
 
 #include "internal/memory/transient_pool.hpp"
 
-#include "internal/memory/memory_block.hpp"
-
 #include "srf/memory/resources/memory_resource.hpp"
+
+#include <ostream>
 
 #define SRF_DEBUG 1
 

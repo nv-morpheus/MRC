@@ -15,14 +15,11 @@
  * limitations under the License.
  */
 
-#include "srf/memory/buffer_view.hpp"
 #include "srf/memory/memory_kind.hpp"
 #include "srf/protos/codable.pb.h"
 
-#include <google/protobuf/any.pb.h>
-#include <google/protobuf/message.h>
+#include <glog/logging.h>
 
-#include <cstdint>
 #include <ostream>
 
 namespace srf::codable {

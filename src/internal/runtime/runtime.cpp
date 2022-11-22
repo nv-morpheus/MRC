@@ -20,6 +20,12 @@
 #include "internal/resources/manager.hpp"
 #include "internal/runtime/partition.hpp"
 
+#include "srf/types.hpp"
+
+#include <glog/logging.h>
+
+#include <utility>
+
 namespace srf::internal::runtime {
 
 Runtime::Runtime(std::unique_ptr<resources::Manager> resources) : m_resources(std::move(resources))

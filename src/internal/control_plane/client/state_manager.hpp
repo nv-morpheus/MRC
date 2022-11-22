@@ -17,19 +17,15 @@
 
 #pragma once
 
-#include "internal/expected.hpp"
-#include "internal/service.hpp"
-
-#include "srf/channel/recent_channel.hpp"
-#include "srf/channel/status.hpp"
-#include "srf/node/queue.hpp"
 #include "srf/node/source_channel.hpp"
 #include "srf/protos/architect.pb.h"
 #include "srf/runnable/runner.hpp"
 #include "srf/types.hpp"
+#include "srf/utils/macros.hpp"
 
-#include <exception>
-#include <stdexcept>
+#include <cstddef>
+#include <memory>
+#include <mutex>
 #include <vector>
 
 namespace srf::internal::control_plane {

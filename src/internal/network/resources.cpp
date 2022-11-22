@@ -18,14 +18,11 @@
 #include "internal/network/resources.hpp"
 
 #include "internal/control_plane/client.hpp"
-#include "internal/control_plane/resources.hpp"
+#include "internal/control_plane/client/connections_manager.hpp"
+#include "internal/control_plane/client/instance.hpp"
 #include "internal/data_plane/resources.hpp"
-#include "internal/data_plane/server.hpp"
 #include "internal/memory/host_resources.hpp"
-#include "internal/remote_descriptor/remote_descriptor.hpp"
-#include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/ucx/registration_cache.hpp"
 #include "internal/ucx/resources.hpp"
 
 #include "srf/core/task_queue.hpp"
@@ -33,6 +30,9 @@
 
 #include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
+
+#include <utility>
+#include <vector>
 
 namespace srf::internal::network {
 

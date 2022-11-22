@@ -18,16 +18,24 @@
 #include "internal/control_plane/client/state_manager.hpp"
 
 #include "internal/control_plane/client.hpp"
-#include "internal/resources/partition_resources_base.hpp"
+#include "internal/expected.hpp"
+#include "internal/runnable/resources.hpp"
 
-#include "srf/channel/forward.hpp"
-#include "srf/channel/recent_channel.hpp"
+#include "srf/channel/status.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/source_channel.hpp"
 #include "srf/protos/architect.pb.h"
+#include "srf/runnable/launch_control.hpp"
+#include "srf/runnable/launcher.hpp"
 
+#include <boost/fiber/future/promise.hpp>
+#include <ext/alloc_traits.h>
 #include <glog/logging.h>
+#include <rxcpp/rx.hpp>
+
+#include <exception>
+#include <utility>
 
 namespace srf::internal::control_plane::client {
 

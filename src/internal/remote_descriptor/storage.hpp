@@ -21,9 +21,9 @@
 #include "srf/codable/encoded_object.hpp"
 #include "srf/utils/macros.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <mutex>
 
 namespace srf::internal::remote_descriptor {
 

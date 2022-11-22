@@ -17,18 +17,14 @@
 
 #pragma once
 
+#include "internal/memory/host_resources.hpp"
 #include "internal/memory/transient_pool.hpp"
-#include "internal/resources/forward.hpp"
-#include "internal/resources/partition_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
 #include "internal/ucx/common.hpp"
-#include "internal/ucx/context.hpp"
-#include "internal/ucx/registration_cache.hpp"
-#include "internal/ucx/worker.hpp"
+#include "internal/ucx/resources.hpp"
 
 #include "srf/channel/status.hpp"
-#include "srf/memory/buffer_view.hpp"
 #include "srf/node/operators/router.hpp"
 #include "srf/node/source_channel.hpp"
 #include "srf/runnable/runner.hpp"
@@ -37,6 +33,7 @@
 #include <ucp/api/ucp_def.h>
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <utility>
 #include <vector>

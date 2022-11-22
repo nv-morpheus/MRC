@@ -19,8 +19,13 @@
 
 #include "srf/codable/decode.hpp"
 #include "srf/codable/encode.hpp"
+#include "srf/codable/encoding_options.hpp"
 
 #include <glog/logging.h>
+
+#include <optional>
+#include <typeindex>
+#include <utility>
 
 namespace srf::codable {
 

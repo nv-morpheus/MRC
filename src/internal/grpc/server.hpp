@@ -22,9 +22,10 @@
 
 #include "srf/runnable/runner.hpp"
 
-#include <grpcpp/completion_queue.h>
 #include <grpcpp/grpcpp.h>
-#include <grpcpp/server_builder.h>
+
+#include <memory>
+#include <vector>
 
 namespace srf::internal::rpc {
 

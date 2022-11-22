@@ -17,8 +17,6 @@
 
 #include "internal/codable/storage_view.hpp"
 
-#include "srf/codable/types.hpp"
-
 #include <glog/logging.h>
 
 #include <optional>

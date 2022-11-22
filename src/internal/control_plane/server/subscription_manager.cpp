@@ -17,13 +17,17 @@
 
 #include "internal/control_plane/server/subscription_manager.hpp"
 
+#include "internal/grpc/stream_writer.hpp"
 #include "internal/utils/contains.hpp"
 
 #include "srf/protos/architect.pb.h"
 
 #include <glog/logging.h>
+#include <google/protobuf/any.pb.h>
 
 #include <algorithm>
+#include <cstdint>
+#include <ostream>
 
 namespace srf::internal::control_plane::server {
 

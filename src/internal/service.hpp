@@ -18,6 +18,7 @@
 #pragma once
 
 #include <mutex>
+#include <string>
 
 namespace srf::internal {
 
