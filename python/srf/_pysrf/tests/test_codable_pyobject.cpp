@@ -19,6 +19,7 @@
 
 #include "test_pysrf.hpp"
 
+#include "pysrf/codable_object.hpp"  // IWYU pragma: keep
 #include "pysrf/forward.hpp"
 #include "pysrf/types.hpp"
 
