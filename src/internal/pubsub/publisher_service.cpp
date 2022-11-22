@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "internal/pubsub/publisher.hpp"
+#include "internal/pubsub/publisher_service.hpp"
 
 #include "internal/codable/codable_storage.hpp"
 #include "internal/control_plane/client.hpp"
@@ -31,39 +31,39 @@
 
 namespace srf::internal::pubsub {
 
-Publisher::Publisher(std::string service_name, runtime::Partition& runtime) :
+PublisherService::PublisherService(std::string service_name, runtime::Partition& runtime) :
   Base(std::move(service_name), runtime),
   m_runtime(runtime)
 {}
 
-channel::Status Publisher::publish(srf::runtime::RemoteDescriptor&& rd)
+channel::Status PublisherService::publish(srf::runtime::RemoteDescriptor&& rd)
 {
     return this->await_write(std::move(rd));
 }
 
-channel::Status Publisher::publish(std::unique_ptr<srf::codable::EncodedStorage> encoded_object)
+channel::Status PublisherService::publish(std::unique_ptr<srf::codable::EncodedStorage> encoded_object)
 {
     auto rd = m_runtime.remote_descriptor_manager().register_encoded_object(std::move(encoded_object));
     return this->await_write(std::move(rd));
 }
 
-std::unique_ptr<srf::codable::ICodableStorage> Publisher::create_storage()
+std::unique_ptr<srf::codable::ICodableStorage> PublisherService::create_storage()
 {
     return std::make_unique<codable::CodableStorage>(m_runtime.resources());
 }
 
-const std::string& Publisher::role() const
+const std::string& PublisherService::role() const
 {
     return role_publisher();
 }
 
-const std::set<std::string>& Publisher::subscribe_to_roles() const
+const std::set<std::string>& PublisherService::subscribe_to_roles() const
 {
     static std::set<std::string> r = {role_subscriber()};
     return r;
 }
-void Publisher::update_tagged_instances(const std::string& role,
-                                        const std::unordered_map<std::uint64_t, InstanceID>& tagged_instances)
+void PublisherService::update_tagged_instances(const std::string& role,
+                                               const std::unordered_map<std::uint64_t, InstanceID>& tagged_instances)
 {
     DCHECK_EQ(role, role_subscriber());
 
@@ -88,7 +88,7 @@ void Publisher::update_tagged_instances(const std::string& role,
     on_update();
 }
 
-void Publisher::do_subscription_service_setup()
+void PublisherService::do_subscription_service_setup()
 {
     auto policy_engine = std::make_unique<srf::node::RxSink<srf::runtime::RemoteDescriptor>>(
         [this](srf::runtime::RemoteDescriptor rd) { apply_policy(std::move(rd)); });
@@ -106,19 +106,19 @@ void Publisher::do_subscription_service_setup()
     m_policy_engine->await_live();
 }
 
-void Publisher::do_subscription_service_teardown()
+void PublisherService::do_subscription_service_teardown()
 {
     release_channel();
 }
 
-void Publisher::do_subscription_service_join()
+void PublisherService::do_subscription_service_join()
 {
     m_policy_engine->await_join();
 }
 
-void Publisher::publish(srf::runtime::RemoteDescriptor&& rd,
-                        const std::uint64_t& tag,
-                        std::shared_ptr<ucx::Endpoint> endpoint)
+void PublisherService::publish(srf::runtime::RemoteDescriptor&& rd,
+                               const std::uint64_t& tag,
+                               std::shared_ptr<ucx::Endpoint> endpoint)
 {
     // todo(cpp20) - bracket initializer
     // {.rd = std::move(rd), .endpoint = std::move(endpoint), .tag = tag}
@@ -126,11 +126,11 @@ void Publisher::publish(srf::runtime::RemoteDescriptor&& rd,
         {std::move(rd), std::move(endpoint), tag});
 }
 
-const std::unordered_map<std::uint64_t, InstanceID>& Publisher::tagged_instances() const
+const std::unordered_map<std::uint64_t, InstanceID>& PublisherService::tagged_instances() const
 {
     return m_tagged_instances;
 }
-const std::unordered_map<std::uint64_t, std::shared_ptr<ucx::Endpoint>>& Publisher::tagged_endpoints() const
+const std::unordered_map<std::uint64_t, std::shared_ptr<ucx::Endpoint>>& PublisherService::tagged_endpoints() const
 {
     return m_tagged_endpoints;
 }

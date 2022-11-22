@@ -39,18 +39,18 @@ class Partition;
 
 namespace srf::internal::pubsub {
 
-class Publisher : public Base,
-                  public srf::pubsub::IPublisherService,
-                  public srf::node::SourceChannelWriteable<srf::runtime::RemoteDescriptor>
+class PublisherService : public Base,
+                         public srf::pubsub::IPublisherService,
+                         public srf::node::SourceChannelWriteable<srf::runtime::RemoteDescriptor>
 {
   protected:
-    Publisher(std::string service_name, runtime::Partition& runtime);
+    PublisherService(std::string service_name, runtime::Partition& runtime);
 
   public:
-    ~Publisher() override = default;
+    ~PublisherService() override = default;
 
-    DELETE_COPYABILITY(Publisher);
-    DELETE_MOVEABILITY(Publisher);
+    DELETE_COPYABILITY(PublisherService);
+    DELETE_MOVEABILITY(PublisherService);
 
     // [IPublisherService] publish a remote descriptor
     channel::Status publish(srf::runtime::RemoteDescriptor&& rd) final;

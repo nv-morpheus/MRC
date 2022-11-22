@@ -37,20 +37,20 @@
 namespace srf::internal::pubsub {
 
 /**
- * @brief The internal type-erased Subscriber
+ * @brief The internal type-erased SubscriberService
  *
  */
-class Subscriber final : public Base,
-                         public srf::pubsub::ISubscriberService,
-                         public srf::node::UniqueOperator<srf::runtime::RemoteDescriptor>
+class SubscriberService final : public Base,
+                                public srf::pubsub::ISubscriberService,
+                                public srf::node::UniqueOperator<srf::runtime::RemoteDescriptor>
 {
-    Subscriber(std::string service_name, runtime::Partition& runtime);
+    SubscriberService(std::string service_name, runtime::Partition& runtime);
 
   public:
-    ~Subscriber() override = default;
+    ~SubscriberService() override = default;
 
-    DELETE_COPYABILITY(Subscriber);
-    DELETE_MOVEABILITY(Subscriber);
+    DELETE_COPYABILITY(SubscriberService);
+    DELETE_MOVEABILITY(SubscriberService);
 
     // [ISubscriptionServiceIdentity] provide the value for the role of this instance
     const std::string& role() const final;

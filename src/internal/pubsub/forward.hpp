@@ -19,8 +19,8 @@
 
 namespace srf::internal::pubsub {
 
-class Publisher;
-class Subscriber;
+class PublisherService;
+class SubscriberService;
 
 // Specific types of Publishers
 class PublisherRoundRobin;
