@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "internal/control_plane/client/connections_manager.hpp"
+#include "internal/control_plane/client/state_manager.hpp"
 #include "internal/data_plane/client.hpp"
 #include "internal/data_plane/server.hpp"
 #include "internal/memory/host_resources.hpp"

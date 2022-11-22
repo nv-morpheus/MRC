@@ -37,7 +37,6 @@
 #include <ostream>
 #include <set>
 #include <string>
-#include <type_traits>
 #include <utility>
 
 namespace srf::internal::control_plane::client {

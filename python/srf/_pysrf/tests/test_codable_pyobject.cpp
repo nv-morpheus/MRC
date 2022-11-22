@@ -19,7 +19,6 @@
 
 #include "test_pysrf.hpp"
 
-#include "pysrf/codable_object.hpp"
 #include "pysrf/forward.hpp"
 #include "pysrf/types.hpp"
 

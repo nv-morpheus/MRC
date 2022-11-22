@@ -45,6 +45,7 @@
 #include <ucp/api/ucp.h>
 #include <ucs/type/status.h>
 
+#include <algorithm>
 #include <atomic>
 #include <memory>
 #include <ostream>

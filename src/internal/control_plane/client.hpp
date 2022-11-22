@@ -41,8 +41,8 @@
 #include <glog/logging.h>
 #include <grpcpp/channel.h>
 #include <grpcpp/completion_queue.h>
-#include <cstdint>
 
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <mutex>
