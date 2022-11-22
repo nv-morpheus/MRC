@@ -41,8 +41,9 @@ using Mutex = userspace_threads::mutex;  // NOLINT(readability-identifier-naming
 
 using CondV = userspace_threads::cv;  // NOLINT(readability-identifier-naming)
 
-using InstanceID = std::uint64_t;                      // NOLINT(readability-identifier-naming)
-using MachineID  = std::uint64_t;                      // NOLINT(readability-identifier-naming)
+using MachineID  = std::uint64_t;  // NOLINT(readability-identifier-naming)
+using InstanceID = std::uint64_t;  // NOLINT(readability-identifier-naming)
+using TagID      = std::uint64_t;  // NOLINT(readability-identifier-naming)
 
 using NodeID   = std::uint32_t;  // NOLINT(readability-identifier-naming)
 using ObjectID = std::uint32_t;  // NOLINT(readability-identifier-naming)
