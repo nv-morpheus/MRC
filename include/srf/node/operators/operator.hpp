@@ -74,9 +74,7 @@ std::shared_ptr<channel::Ingress<T>> Operator<T>::channel_ingress()
     {
         return ingress;
     }
-    LOG(INFO) << "before shared_from_this()";
     auto this_operator = this->shared_from_this();
-    LOG(INFO) << "after shared_from_this()";
     ingress = std::shared_ptr<IngressAdaptor>(new IngressAdaptor(*this), [this_operator](IngressAdaptor* ptr) mutable {
         delete ptr;
         this_operator.reset();
