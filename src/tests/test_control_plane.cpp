@@ -46,6 +46,7 @@
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
+#include <gtest/internal/gtest-internal.h>
 
 #include <chrono>
 #include <memory>
@@ -180,6 +181,9 @@ TEST_F(TestControlPlane, DoubleClientConnectExchangeDisconnect)
 
 TEST_F(TestControlPlane, DoubleClientPubSub)
 {
+    // todo(ryan) - re-enable test after mrc control plane updates to fence on updates
+    GTEST_SKIP();
+
     auto sr     = make_runtime();
     auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).resources().runnable());
 
