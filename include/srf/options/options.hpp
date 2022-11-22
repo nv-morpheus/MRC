@@ -24,6 +24,7 @@
 #include "srf/options/services.hpp"
 #include "srf/options/topology.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 

@@ -17,6 +17,8 @@
 
 #include "common.hpp"
 
+#include <utility>
+
 std::shared_ptr<srf::internal::system::System> make_system(std::function<void(srf::Options&)> updater)
 {
     auto options = std::make_shared<srf::Options>();

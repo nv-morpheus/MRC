@@ -28,7 +28,6 @@
 #include "srf/types.hpp"
 
 #include <cstdint>
-
 #include <map>
 #include <memory>
 #include <string>

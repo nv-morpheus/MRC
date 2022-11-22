@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "srf/codable/api.hpp"
 #include "srf/codable/codable_protocol.hpp"
 #include "srf/codable/decode.hpp"  // todo(iwyu) - Decoder<>& is forward declared in api.hpp
 #include "srf/codable/encode.hpp"  // todo(iwyu) - Encoder<>& is forward declared in api.hpp
+#include "srf/codable/encoding_options.hpp"
 #include "srf/memory/buffer.hpp"
 
 #include <cstddef>

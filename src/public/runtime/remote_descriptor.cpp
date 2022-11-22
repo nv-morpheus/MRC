@@ -20,6 +20,8 @@
 #include "srf/runtime/remote_descriptor_handle.hpp"
 #include "srf/runtime/remote_descriptor_manager.hpp"
 
+#include <utility>
+
 namespace srf::runtime {
 
 RemoteDescriptor::RemoteDescriptor(std::shared_ptr<IRemoteDescriptorManager> manager,

@@ -33,15 +33,18 @@
 #include "srf/data/reusable_pool.hpp"
 #include "srf/engine/pipeline/ipipeline.hpp"
 #include "srf/node/queue.hpp"
+#include "srf/node/rx_node.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
 #include "srf/node/sink_properties.hpp"
 #include "srf/node/source_properties.hpp"
+#include "srf/options/engine_groups.hpp"
 #include "srf/options/options.hpp"
 #include "srf/options/placement.hpp"
 #include "srf/options/topology.hpp"
 #include "srf/pipeline/pipeline.hpp"
 #include "srf/runnable/context.hpp"
+#include "srf/runnable/types.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/segment/egress_ports.hpp"
 #include "srf/segment/ingress_ports.hpp"
@@ -53,7 +56,9 @@
 #include <boost/hana/if.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
+#include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx.hpp>
+#include <rxcpp/sources/rx-iterate.hpp>
 
 #include <array>
 #include <chrono>

@@ -18,18 +18,36 @@
 #include "common.hpp"
 
 #include "internal/control_plane/client.hpp"
+#include "internal/control_plane/client/connections_manager.hpp"
+#include "internal/control_plane/client/instance.hpp"
+#include "internal/network/resources.hpp"
 #include "internal/remote_descriptor/manager.hpp"
-#include "internal/remote_descriptor/remote_descriptor.hpp"
 #include "internal/resources/manager.hpp"
+#include "internal/resources/partition_resources.hpp"
+#include "internal/runnable/resources.hpp"
+#include "internal/runtime/partition.hpp"
 #include "internal/runtime/runtime.hpp"
+#include "internal/system/system_provider.hpp"
 
 #include "srf/codable/codable_protocol.hpp"
-#include "srf/codable/fundamental_types.hpp"
+#include "srf/codable/fundamental_types.hpp"  // IWYU pragma: keep
+#include "srf/core/bitmap.hpp"
+#include "srf/core/task_queue.hpp"
+#include "srf/options/options.hpp"
+#include "srf/options/placement.hpp"
 #include "srf/runtime/remote_descriptor.hpp"
+#include "srf/runtime/remote_descriptor_handle.hpp"
+#include "srf/types.hpp"
 
+#include <boost/fiber/future/future.hpp>
 #include <boost/fiber/operations.hpp>
-#include <glog/logging.h>
 #include <gtest/gtest.h>
+
+#include <memory>
+#include <optional>
+#include <string>
+#include <type_traits>
+#include <utility>
 
 using namespace srf;
 using namespace srf::codable;

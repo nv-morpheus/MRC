@@ -19,7 +19,9 @@
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/control_plane/client/instance.hpp"
 #include "internal/data_plane/client.hpp"
+#include "internal/data_plane/request.hpp"
 #include "internal/data_plane/resources.hpp"
+#include "internal/data_plane/server.hpp"
 #include "internal/data_plane/tags.hpp"
 #include "internal/memory/device_resources.hpp"
 #include "internal/memory/host_resources.hpp"
@@ -27,11 +29,13 @@
 #include "internal/network/resources.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
+#include "internal/runnable/resources.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 #include "internal/ucx/memory_block.hpp"
 #include "internal/ucx/registration_cache.hpp"
 
+#include "srf/channel/status.hpp"
 #include "srf/memory/adaptors.hpp"
 #include "srf/memory/buffer.hpp"
 #include "srf/memory/literals.hpp"
@@ -39,14 +43,26 @@
 #include "srf/memory/resources/host/pinned_memory_resource.hpp"
 #include "srf/memory/resources/logging_resource.hpp"
 #include "srf/memory/resources/memory_resource.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/node/operators/router.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/source_channel.hpp"
 #include "srf/options/options.hpp"
 #include "srf/options/placement.hpp"
 #include "srf/options/resources.hpp"
+#include "srf/runnable/launch_control.hpp"
+#include "srf/runnable/launcher.hpp"
+#include "srf/runnable/runner.hpp"
 
+#include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
+#include <rxcpp/rx.hpp>
 #include <spdlog/sinks/basic_file_sink.h>
+#include <stdint.h>
 
+#include <algorithm>
+#include <atomic>
 #include <cstddef>
 #include <functional>
 #include <map>

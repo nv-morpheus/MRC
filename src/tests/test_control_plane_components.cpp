@@ -15,12 +15,23 @@
  * limitations under the License.
  */
 
+#include "internal/control_plane/server/client_instance.hpp"
 #include "internal/control_plane/server/tagged_issuer.hpp"
 
-#include <glog/logging.h>
+#include "srf/channel/status.hpp"
+#include "srf/types.hpp"
+
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <atomic>
+#include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 using namespace srf;
 using namespace srf::internal::control_plane;

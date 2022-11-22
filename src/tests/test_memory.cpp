@@ -31,7 +31,6 @@
 #include "srf/memory/resources/host/malloc_memory_resource.hpp"
 #include "srf/memory/resources/host/pinned_memory_resource.hpp"
 #include "srf/memory/resources/logging_resource.hpp"
-#include "srf/memory/resources/memory_resource.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
@@ -40,9 +39,12 @@
 #include <atomic>
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <ostream>
+#include <string>
 #include <type_traits>
 #include <utility>
+
 // iwyu thinks spdlog, map, set, thread & vector are needed for arena_resource
 // IWYU pragma: no_include <spdlog/sinks/basic_file_sink.h>
 // IWYU pragma: no_include "spdlog/sinks/basic_file_sink.h"

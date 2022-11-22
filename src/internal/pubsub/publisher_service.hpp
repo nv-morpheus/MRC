@@ -37,10 +37,6 @@
 #include <string>
 #include <unordered_map>
 
-namespace srf::internal::runtime {
-class Partition;
-}
-
 namespace srf::internal::pubsub {
 
 class PublisherService : public Base,

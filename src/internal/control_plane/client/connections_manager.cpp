@@ -30,9 +30,9 @@
 
 #include <ext/alloc_traits.h>
 #include <glog/logging.h>
-#include <cstdint>
 
 #include <algorithm>
+#include <cstdint>
 #include <iterator>
 #include <ostream>
 #include <set>

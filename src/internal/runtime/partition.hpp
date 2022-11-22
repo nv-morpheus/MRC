@@ -22,7 +22,6 @@
 
 #include "srf/codable/api.hpp"
 #include "srf/pubsub/api.hpp"
-#include "srf/pubsub/forward.hpp"
 #include "srf/runtime/api.hpp"
 #include "srf/utils/macros.hpp"
 

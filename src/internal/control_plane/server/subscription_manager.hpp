@@ -25,8 +25,7 @@
 #include "srf/protos/architect.pb.h"
 #include "srf/types.hpp"
 
-#include <stdint.h>
-
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <set>

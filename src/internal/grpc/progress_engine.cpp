@@ -21,9 +21,9 @@
 #include <glog/logging.h>
 #include <grpc/support/time.h>
 #include <grpcpp/grpcpp.h>
-#include <stdint.h>
 
 #include <chrono>
+#include <cstdint>
 #include <ostream>
 #include <utility>
 

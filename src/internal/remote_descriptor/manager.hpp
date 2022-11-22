@@ -34,9 +34,8 @@
 #include "srf/runtime/remote_descriptor_manager.hpp"
 #include "srf/types.hpp"
 
-#include <stdint.h>
-
 #include <cstddef>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <mutex>

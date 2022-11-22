@@ -20,30 +20,45 @@
 #include "internal/grpc/client_streaming.hpp"
 #include "internal/grpc/server.hpp"
 #include "internal/grpc/server_streaming.hpp"
+#include "internal/grpc/stream_writer.hpp"
 #include "internal/resources/manager.hpp"
+#include "internal/resources/partition_resources.hpp"
+#include "internal/runnable/resources.hpp"
+#include "internal/system/system_provider.hpp"
 
+#include "srf/channel/egress.hpp"
 #include "srf/channel/status.hpp"
 #include "srf/codable/codable_protocol.hpp"
-#include "srf/codable/fundamental_types.hpp"
-#include "srf/node/forward.hpp"
+#include "srf/core/bitmap.hpp"
+#include "srf/core/task_queue.hpp"
 #include "srf/node/generic_sink.hpp"
-#include "srf/node/sink_properties.hpp"
-#include "srf/protos/architect.grpc.pb.h"
-#include "srf/protos/architect.pb.h"
+#include "srf/node/sink_channel.hpp"
+#include "srf/options/options.hpp"
+#include "srf/options/placement.hpp"
+#include "srf/options/topology.hpp"
 #include "srf/protos/test.grpc.pb.h"
 #include "srf/protos/test.pb.h"
+#include "srf/runnable/context.hpp"
+#include "srf/runnable/launch_control.hpp"
+#include "srf/runnable/launcher.hpp"
+#include "srf/runnable/runner.hpp"
+#include "srf/types.hpp"
 
+#include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 #include <grpcpp/client_context.h>
-#include <grpcpp/completion_queue.h>
+#include <grpcpp/grpcpp.h>
+#include <grpcpp/security/credentials.h>
 #include <grpcpp/server_context.h>
 #include <gtest/gtest.h>
+#include <rxcpp/rx.hpp>
 
 #include <chrono>
 #include <memory>
-#include <optional>
-#include <set>
+#include <ostream>
 #include <thread>
+#include <utility>
+#include <vector>
 
 using namespace srf;
 using namespace srf::codable;

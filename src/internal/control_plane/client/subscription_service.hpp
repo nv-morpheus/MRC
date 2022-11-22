@@ -25,8 +25,8 @@
 #include "srf/utils/macros.hpp"
 
 #include <boost/fiber/future/promise.hpp>
-#include <cstdint>
 
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <mutex>

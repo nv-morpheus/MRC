@@ -20,6 +20,11 @@
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 
+#include <memory>
+#include <ostream>
+#include <string>
+#include <utility>
+
 using namespace srf;
 using namespace srf::internal;
 
