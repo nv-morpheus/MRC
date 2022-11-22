@@ -30,7 +30,7 @@
 
 #include <ext/alloc_traits.h>
 #include <glog/logging.h>
-#include <stdint.h>
+#include <cstdint>
 
 #include <algorithm>
 #include <iterator>
