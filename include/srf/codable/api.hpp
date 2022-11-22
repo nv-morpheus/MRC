@@ -42,6 +42,8 @@ class Encoder;
 template <typename T>
 class Decoder;
 
+class EncodingOptions;
+
 /**
  * @brief Interface for an EncodedObject
  *

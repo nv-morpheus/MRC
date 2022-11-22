@@ -17,40 +17,20 @@
 
 #pragma once
 
-#include "srf/codable/codable_protocol.hpp"
-#include "srf/codable/encoded_object.hpp"
-#include "srf/codable/encoding_options.hpp"
-#include "srf/memory/buffer_view.hpp"
-#include "srf/memory/memory_kind.hpp"
+#include "srf/codable/api.hpp"
+#include "srf/memory/buffer.hpp"
 
 #include <type_traits>
 #include <typeindex>
 
 namespace srf::codable {
 
-template <typename T>
-struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, srf::memory::buffer>>>
+template <>
+struct codable_protocol<srf::memory::buffer>
 {
-    static void serialize(const T& obj, Encoder<T>& encoded, const EncodingOptions& opts)
-    {
-        auto idx = encoded.register_memory_view(obj);
-        if (!idx)
-        {
-            encoded.copy_to_eager_descriptor(obj);
-        }
-    }
+    static void serialize(const memory::buffer& obj, Encoder<memory::buffer>& encoded, const EncodingOptions& opts);
 
-    static T deserialize(const Decoder<T>& encoded, std::size_t object_idx)
-    {
-        DCHECK_EQ(std::type_index(typeid(T)).hash_code(), encoded.type_index_hash_for_object(object_idx));
-        auto idx   = encoded.start_idx_for_object(object_idx);
-        auto bytes = encoded.buffer_size(idx);
-
-        srf::memory::buffer buffer(bytes, encoded.host_memory_resource());
-        encoded.copy_from_buffer(idx, buffer);
-
-        return buffer;
-    }
+    static memory::buffer deserialize(const Decoder<memory::buffer>& encoded, std::size_t object_idx);
 };
 
 }  // namespace srf::codable

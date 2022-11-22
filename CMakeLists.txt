@@ -254,6 +254,7 @@ add_library(libsrf
   src/public/cuda/sync.cpp
   src/public/manifold/manifold.cpp
   src/public/memory/buffer_view.cpp
+  src/public/memory/codable/buffer.cpp
   src/public/metrics/counter.cpp
   src/public/metrics/registry.cpp
   src/public/modules/module_registry.cpp

@@ -76,7 +76,6 @@ class Broadcast : public Operator<T>, public SourceProperties<T>
         m_output_channels.push_back(typed_ingress);
     }
 
-    // std::vector<SourceChannelWriteable<T>> m_downstream_channels;
     std::vector<std::shared_ptr<channel::Ingress<T>>> m_output_channels;
     bool m_deep_copy;
 };
