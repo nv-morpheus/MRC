@@ -33,14 +33,6 @@
 #include <optional>
 #include <vector>
 
-namespace srf::internal::data_plane {
-class Client;
-}
-
-namespace srf::internal::control_plane {
-class Client;
-}
-
 namespace srf::internal::control_plane::client {
 
 class ConnectionsManager : public StateManager

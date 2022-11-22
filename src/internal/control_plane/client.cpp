@@ -40,6 +40,7 @@
 #include <grpcpp/security/credentials.h>
 #include <rxcpp/rx.hpp>
 
+#include <algorithm>
 #include <ostream>
 
 namespace srf::internal::control_plane {

@@ -46,10 +46,8 @@
 
 #include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
-#include <grpcpp/client_context.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/security/credentials.h>
-#include <grpcpp/server_context.h>
 #include <gtest/gtest.h>
 #include <rxcpp/rx.hpp>
 

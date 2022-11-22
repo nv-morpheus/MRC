@@ -38,7 +38,6 @@
 namespace srf::internal::control_plane::client {
 
 class Instance;
-class SubscriptionService;
 class RoleUpdater;
 
 class ISubscriptionServiceUpdater : public virtual srf::control_plane::ISubscriptionServiceIdentity

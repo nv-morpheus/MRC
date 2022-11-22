@@ -28,7 +28,6 @@
 #include <glog/logging.h>
 
 #include <ostream>
-#include <type_traits>
 #include <utility>
 
 namespace srf::internal::control_plane::client {

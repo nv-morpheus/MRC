@@ -32,14 +32,6 @@
 #include <memory>
 #include <string>
 
-namespace srf::internal::control_plane {
-class Client;
-}
-
-namespace srf::internal::data_plane {
-class Client;
-}
-
 namespace srf::internal::control_plane::client {
 
 class ISubscriptionServiceUpdater;

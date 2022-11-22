@@ -28,7 +28,7 @@
 
 #include "srf/channel/buffered_channel.hpp"
 #include "srf/channel/channel.hpp"
-#include "srf/codable/protobuf_message.hpp"
+#include "srf/codable/protobuf_message.hpp"  // IWYU pragma: keep
 #include "srf/memory/literals.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/rx_sink.hpp"

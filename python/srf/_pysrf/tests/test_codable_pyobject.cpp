@@ -15,30 +15,49 @@
  * limitations under the License.
  */
 
+// iwyu headers for the narrowed tests
+
 #include "test_pysrf.hpp"
 
-#include "pysrf/codable_object.hpp"  // IWYU pragma: keep
+#include "pysrf/codable_object.hpp"
 #include "pysrf/forward.hpp"
 #include "pysrf/types.hpp"
 
-#include "srf/codable/api.hpp"
 #include "srf/codable/codable_protocol.hpp"
-#include "srf/codable/decode.hpp"
-#include "srf/codable/encode.hpp"
-#include "srf/codable/encoded_object.hpp"
-#include "srf/codable/encoding_options.hpp"
-#include "srf/codable/storage_forwarder.hpp"
 #include "srf/codable/type_traits.hpp"
-#include "srf/protos/codable.pb.h"
 
 #include <gtest/gtest.h>
 #include <object.h>
-#include <pybind11/cast.h>
-#include <pybind11/gil.h>
-#include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
 #include <string>  // IWYU pragma: keep
+
+// uncomment the following header list when uncommenting the test
+
+// #include "test_pysrf.hpp"
+
+// #include "pysrf/codable_object.hpp"  // IWYU pragma: keep
+// #include "pysrf/forward.hpp"
+// #include "pysrf/types.hpp"
+
+// #include "srf/codable/api.hpp"
+// #include "srf/codable/codable_protocol.hpp"
+// #include "srf/codable/decode.hpp"
+// #include "srf/codable/encode.hpp"
+// #include "srf/codable/encoded_object.hpp"
+// #include "srf/codable/encoding_options.hpp"
+// #include "srf/codable/storage_forwarder.hpp"
+// #include "srf/codable/type_traits.hpp"
+// #include "srf/protos/codable.pb.h"
+
+// #include <gtest/gtest.h>
+// #include <object.h>
+// #include <pybind11/cast.h>
+// #include <pybind11/gil.h>
+// #include <pybind11/pybind11.h>
+// #include <pybind11/pytypes.h>
+
+// #include <string>  // IWYU pragma: keep
 
 // IWYU pragma: no_include <gtest/gtest-message.h>
 // IWYU pragma: no_include "gtest/gtest_pred_impl.h"

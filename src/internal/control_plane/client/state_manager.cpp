@@ -34,6 +34,7 @@
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>
 
+#include <algorithm>
 #include <exception>
 #include <utility>
 

@@ -35,10 +35,10 @@
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>
 
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <ostream>
-#include <set>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>

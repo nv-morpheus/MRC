@@ -59,11 +59,11 @@
 #include <gtest/gtest.h>
 #include <rxcpp/rx.hpp>
 #include <spdlog/sinks/basic_file_sink.h>
-#include <stdint.h>
 
 #include <algorithm>
 #include <atomic>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <map>
 #include <memory>
