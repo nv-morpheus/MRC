@@ -30,6 +30,9 @@
 #include <utility>
 #include <vector>
 
+struct PipelineUtils {
+};
+
 TEST_F(TestMirrorTapModule, ConstructorTest)
 {
     using namespace modules;
