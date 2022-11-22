@@ -41,8 +41,11 @@ class const_buffer_view  // NOLINT
     const_buffer_view()          = default;
     virtual ~const_buffer_view() = default;
 
+    // todo(clang-format-14)
+    // clang-format off
     const_buffer_view(const const_buffer_view& other)      = default;
     const_buffer_view& operator=(const const_buffer_view&) = default;
+    // clang-format on
 
     // our "move" is really an assignment (copy) constructor as you do not move fundamental types
     const_buffer_view(const_buffer_view&& other) noexcept :

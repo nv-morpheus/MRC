@@ -24,11 +24,14 @@ namespace srf::core {
 class SpinLockMutex
 {
   public:
+    // todo(clang-format-14)
+    // clang-format off
     SpinLockMutex() noexcept                                = default;
     ~SpinLockMutex() noexcept                               = default;
     SpinLockMutex(const SpinLockMutex&)                     = delete;
     SpinLockMutex& operator=(const SpinLockMutex&)          = delete;
     SpinLockMutex& operator=(const SpinLockMutex&) volatile = delete;
+    // clang-format off
 
     static inline void yield() noexcept
     {
