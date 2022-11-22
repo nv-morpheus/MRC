@@ -24,6 +24,8 @@
 #include "srf/manifold/egress.hpp"
 #include "srf/node/sink_properties.hpp"
 #include "srf/node/source_properties.hpp"
+#include "srf/utils/string_utils.hpp"
+#include "srf/version.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <pybind11/pybind11.h>
@@ -32,6 +34,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <ostream>
 #include <vector>
 
 // IWYU pragma: no_include <boost/fiber/future/detail/shared_state.hpp>
@@ -45,9 +48,9 @@ namespace srf::pysrf {
 namespace py = pybind11;
 using namespace py::literals;
 
-PYBIND11_MODULE(common, m)
+PYBIND11_MODULE(common, module)
 {
-    m.doc() = R"pbdoc(
+    module.doc() = R"pbdoc(
         Python bindings for SRF common functionality / utilities
         -------------------------------
         .. currentmodule:: common
@@ -57,10 +60,8 @@ PYBIND11_MODULE(common, m)
 
     // EdgeAdapterUtil::register_data_adapters<PyHolder>();
     PortBuilderUtil::register_port_util<PyHolder>();
-#ifdef VERSION_INFO
-    m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
-#else
-    m.attr("__version__") = "dev";
-#endif
+
+    module.attr("__version__") =
+        SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
 }  // namespace srf::pysrf

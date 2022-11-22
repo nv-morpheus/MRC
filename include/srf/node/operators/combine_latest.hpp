@@ -48,18 +48,30 @@ namespace detail {
 struct surely
 {
     template <class... T>
-    auto operator()(const T&... t) const -> decltype(std::make_tuple(t.get()...))
+    auto operator()(const T&... t) const -> decltype(std::make_tuple(t.value()...))
     {
-        return std::make_tuple(t.get()...);
+        return std::make_tuple(t.value()...);
     }
 };
 }  // namespace detail
 
+// template <class... T>
+// inline auto surely(const std::tuple<T...>& tpl) -> decltype(rxcpp::util::apply(tpl, detail::surely()))
+// {
+//     return rxcpp::util::apply(tpl, detail::surely());
+// }
+
 template <class... T>
-inline auto surely(const std::tuple<T...>& tpl) -> decltype(apply(tpl, detail::surely()))
+inline auto surely2(const std::tuple<T...>& tpl)
 {
-    return apply(tpl, detail::surely());
+    return std::apply([](auto... args) { return std::make_tuple(args.value()...); });
 }
+
+// template <typename... TypesT>
+// static auto surely2(const std::tuple<TypesT...>& tpl, std::index_sequence<Is...>)
+// {
+//     return std::make_tuple(std::make_shared<Upstream<Is>>(*self)...);
+// }
 
 // template <size_t i, typename T>
 // struct IndexTypePair
@@ -92,13 +104,14 @@ class CombineLatest : public IngressAcceptor<std::tuple<TypesT...>>
     template <std::size_t... Is>
     static auto build_ingress(CombineLatest* self, std::index_sequence<Is...>)
     {
-        return std::make_tuple(std::make_shared<UpstreamEdge<Is>>(*self)...);
+        return std::make_tuple(std::make_shared<Upstream<Is>>(*self)...);
     }
 
   public:
-    CombineLatest() : (build_ingress(const_cast<CombineLatest*>(this), std::index_sequence_for<TypesT...>{}))
+    CombineLatest() :
+      m_upstream_holders(build_ingress(const_cast<CombineLatest*>(this), std::index_sequence_for<TypesT...>{}))
     {
-        auto a = build_ingress(const_cast<CombineLatest*>(this), std::index_sequence_for<TypesT...>{});
+        // auto a = build_ingress(const_cast<CombineLatest*>(this), std::index_sequence_for<TypesT...>{});
     }
 
     virtual ~CombineLatest() = default;
@@ -111,24 +124,25 @@ class CombineLatest : public IngressAcceptor<std::tuple<TypesT...>>
 
   protected:
     template <size_t N>
-    class UpstreamEdge : public IngressProvider<NthTypeOf<N, TypesT...>>,
-                         public IEdgeWritable<NthTypeOf<N, TypesT...>>,
-                         public std::enable_shared_from_this<UpstreamEdge<N>>
+    class Upstream : public IngressProvider<NthTypeOf<N, TypesT...>>
     {
         using upstream_t = NthTypeOf<N, TypesT...>;
 
       public:
-        UpstreamEdge(CombineLatest& parent) : m_parent(parent) {}
-
-        ~UpstreamEdge()
+        Upstream(CombineLatest& parent)
         {
-            m_parent.edge_complete();
+            this->init_edge(std::make_shared<InnerEdge>(parent));
         }
 
-        virtual channel::Status await_write(upstream_t&& data)
-        {
-            return m_parent.set_upstream_value<N>(std::move(data));
-        }
+        // ~Upstream()
+        // {
+        //     m_parent.edge_complete();
+        // }
+
+        // virtual channel::Status await_write(upstream_t&& data)
+        // {
+        //     return m_parent.set_upstream_value<N>(std::move(data));
+        // }
 
         // std::shared_ptr<IngressHandleObj> get_ingress_obj() const override
         // {
@@ -136,7 +150,25 @@ class CombineLatest : public IngressAcceptor<std::tuple<TypesT...>>
         // }
 
       private:
-        CombineLatest& m_parent;
+        class InnerEdge : public IEdgeWritable<NthTypeOf<N, TypesT...>>
+        {
+          public:
+            InnerEdge(CombineLatest& parent) : m_parent(parent) {}
+            ~InnerEdge()
+            {
+                m_parent.edge_complete();
+            }
+
+            virtual channel::Status await_write(upstream_t&& data)
+            {
+                return m_parent.set_upstream_value<N>(std::move(data));
+            }
+
+          private:
+            CombineLatest& m_parent;
+        };
+
+        // CombineLatest& m_parent;
     };
 
   private:
@@ -160,9 +192,9 @@ class CombineLatest : public IngressAcceptor<std::tuple<TypesT...>>
         // Check if we should push the new value
         if (m_values_set == sizeof...(TypesT))
         {
-            // auto new_val = surely(m_state);
+            // std::tuple<TypesT...> new_val = surely2(m_state);
 
-            // status = this->get_writable_edge()->await_write(std::make_tuple((, ...)) new_val);
+            // status = this->get_writable_edge()->await_write(std::move(new_val));
         }
 
         return status;

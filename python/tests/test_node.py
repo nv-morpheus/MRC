@@ -46,7 +46,6 @@ def ex_runner():
 @pytest.mark.parametrize("pe_count", [1, 3])
 @pytest.mark.parametrize("source_type", ["iterator", "iterable", "function"])
 def test_launch_options_source(source_type: str, pe_count: int, engines_per_pe: int):
-
     hit_count = 0
 
     source = None
@@ -85,8 +84,6 @@ def test_launch_options_source(source_type: str, pe_count: int, engines_per_pe: 
 
             hit_count += 1
 
-            print("Hit with value: {}".format(x))
-
         hit_counter = seg.make_node("hit_counter", node_fn)
         seg.make_edge(src_node, hit_counter)
 
@@ -116,14 +113,12 @@ def test_launch_options_source(source_type: str, pe_count: int, engines_per_pe: 
 
 
 def test_launch_options_iterable():
-
     pe_count = 2
     engines_per_pe = 4
 
     hit_count = 0
 
     def segment_init(seg: srf.Builder):
-
         src_node = seg.make_source("my_src", [1, 2, 3])
 
         src_node.launch_options.pe_count = pe_count
@@ -133,8 +128,6 @@ def test_launch_options_iterable():
             nonlocal hit_count
 
             hit_count += 1
-
-            print("Hit with value: {}".format(x))
 
         hit_counter = seg.make_node("hit_counter", node_fn)
         seg.make_edge(src_node, hit_counter)

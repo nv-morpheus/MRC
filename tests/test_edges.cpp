@@ -107,7 +107,7 @@ class EdgeWritableLambda : public IEdgeWritable<T>
       m_on_complete(std::move(on_complete))
     {}
 
-    ~EdgeWritableLambda()
+    ~EdgeWritableLambda() override
     {
         if (m_on_complete)
         {
@@ -115,7 +115,7 @@ class EdgeWritableLambda : public IEdgeWritable<T>
         }
     }
 
-    virtual channel::Status await_write(T&& t)
+    channel::Status await_write(T&& t) override
     {
         return m_on_await_write(std::move(t));
     }

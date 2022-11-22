@@ -24,19 +24,22 @@
 #include "srf/runnable/launch_options.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/segment/object.hpp"
+#include "srf/utils/string_utils.hpp"
+#include "srf/version.hpp"
 
 #include <pybind11/pybind11.h>  // IWYU pragma: keep
 
 #include <cstddef>
 #include <memory>
+#include <sstream>
 #include <string>
 
 namespace srf::pysrf {
 namespace py = pybind11;
 
-PYBIND11_MODULE(node, m)
+PYBIND11_MODULE(node, module)
 {
-    m.doc() = R"pbdoc(
+    module.doc() = R"pbdoc(
         Python bindings for SRF nodes
         -------------------------------
         .. currentmodule:: node
@@ -45,8 +48,8 @@ PYBIND11_MODULE(node, m)
     )pbdoc";
 
     // Common must be first in every module
-    pysrf::import(m, "srf.core.common");
-    pysrf::import(m, "srf.core.segment");  // Needed for Builder and SegmentObject
+    pysrf::import(module, "srf.core.common");
+    pysrf::import(module, "srf.core.segment");  // Needed for Builder and SegmentObject
 
     // py::class_<srf::segment::Object<PythonNode<PyHolder, PyHolder>>,
     //            srf::segment::ObjectProperties,
@@ -59,17 +62,14 @@ PYBIND11_MODULE(node, m)
 
     py::class_<srf::segment::Object<node::BroadcastTypeless>,
                srf::segment::ObjectProperties,
-               std::shared_ptr<srf::segment::Object<node::BroadcastTypeless>>>(m, "Broadcast")
+               std::shared_ptr<srf::segment::Object<node::BroadcastTypeless>>>(module, "Broadcast")
         .def(py::init<>([](srf::segment::Builder& builder, std::string name) {
             auto node = builder.construct_object<node::BroadcastTypeless>(name);
 
             return node;
         }));
 
-#ifdef VERSION_INFO
-    m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
-#else
-    m.attr("__version__") = "dev";
-#endif
+    module.attr("__version__") =
+        SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
 }  // namespace srf::pysrf

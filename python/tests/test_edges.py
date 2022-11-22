@@ -16,7 +16,7 @@
 import dataclasses
 
 import srf
-import srf.core.segment
+import srf.core.node
 import srf.tests.test_edges_cpp as m
 
 
@@ -84,13 +84,13 @@ def test_edge_cpp_to_py_same():
         source = m.SourceDerivedB(seg, "source")
 
         def on_next(x: m.Base):
-            print("Got: {}".format(type(x)))
+            pass
 
         def on_error(e):
             pass
 
         def on_complete():
-            print("Complete")
+            pass
 
         sink = seg.make_sink("sink", on_next, on_error, on_complete)
         seg.make_edge(source, sink)
@@ -164,7 +164,6 @@ def test_edge_wrapper():
 
         def on_next(x: int):
             nonlocal on_next_count
-            print("Got: {}".format(type(x)))
 
             on_next_count += 1
 
@@ -172,7 +171,7 @@ def test_edge_wrapper():
             pass
 
         def on_complete():
-            print("Complete")
+            pass
 
         sink = seg.make_sink("sink", on_next, on_error, on_complete)
         seg.make_edge(node, sink)
@@ -283,7 +282,7 @@ def test_multi_segment():
 
         # This method will get called each time the sink gets a value
         def sink_on_next(x: MyCustomClass):
-            print("Sink: Got Obj Name: {}, Value: {}".format(x.name, x.value))
+            pass
 
         def sink_on_next_untyped(input):
             pass
@@ -338,7 +337,7 @@ def test_broadcast_cpp_to_cpp_same():
     def segment_init(seg: srf.Builder):
         source = m.SourceDerivedB(seg, "source")
 
-        broadcast = srf.core.segment.Broadcast(seg, "broadcast")
+        broadcast = srf.core.node.Broadcast(seg, "broadcast")
 
         sink = m.SinkDerivedB(seg, "sink")
 
@@ -368,7 +367,7 @@ def test_broadcast_cpp_to_cpp_different():
     def segment_init(seg: srf.Builder):
         source = m.SourceDerivedB(seg, "source")
 
-        broadcast = srf.core.segment.Broadcast(seg, "broadcast")
+        broadcast = srf.core.node.Broadcast(seg, "broadcast")
 
         sink = m.SinkBase(seg, "sink")
 
@@ -399,7 +398,7 @@ def test_broadcast_cpp_to_cpp_multi():
         source_derived = m.SourceDerivedB(seg, "source_derived")
         source_base = m.SourceBase(seg, "source_base")
 
-        broadcast = srf.core.segment.Broadcast(seg, "broadcast")
+        broadcast = srf.core.node.Broadcast(seg, "broadcast")
 
         sink_base = m.SinkBase(seg, "sink_base")
         sink_derived = m.SinkDerivedB(seg, "sink_derived")

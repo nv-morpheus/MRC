@@ -30,6 +30,7 @@
 
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <typeindex>
 
@@ -74,6 +75,7 @@ void EdgeBuilder::make_edge_egress_typeless(IEgressProviderBase& source,
 }
 
 // std::shared_ptr<IEdgeWritableBase> EdgeBuilder::ingress_adapter_for_sink(
+
 //     IIngressAcceptorBase& source, IIngressProviderBase& sink, std::shared_ptr<IEdgeWritableBase> ingress_handle)
 // {
 //     VLOG(2) << "Looking for edge adapter: (" << type_name(source.ingress_acceptor_type()) << ", "
@@ -127,12 +129,24 @@ std::shared_ptr<IngressHandleObj> EdgeBuilder::do_adapt_ingress(const EdgeTypePa
     // Next check the static converters
     if (srf::node::EdgeRegistry::has_converter(target_type.full_type(), ingress->get_type().full_type()))
     {
-        auto fn_converter =
-            srf::node::EdgeRegistry::find_converter(target_type.full_type(), ingress->get_type().full_type());
+        try
+        {
+            auto fn_converter =
+                srf::node::EdgeRegistry::find_converter(target_type.full_type(), ingress->get_type().full_type());
 
-        auto converted_edge = fn_converter(ingress->get_ingress());
+            auto converted_edge = fn_converter(ingress->get_ingress());
 
-        return std::make_shared<IngressHandleObj>(converted_edge);
+            return std::make_shared<IngressHandleObj>(converted_edge);
+        } catch (std::runtime_error e)
+        {
+            // Last attempt, check if types are the same and return ingress handle.
+            if (target_type.full_type() == ingress->get_type().full_type())
+            {
+                return ingress;
+            }
+
+            throw e;
+        }
     }
 
     // Start dynamic lookup
