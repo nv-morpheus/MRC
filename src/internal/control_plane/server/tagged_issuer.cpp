@@ -23,24 +23,24 @@ namespace srf::internal::control_plane::server {
 
 Tagged::~Tagged() = default;
 
-Tagged::tag_t Tagged::upper_bound() const
+TagID Tagged::upper_bound() const
 {
     return (m_tag + UINT16_MAX);
 }
-Tagged::tag_t Tagged::lower_bound() const
+TagID Tagged::lower_bound() const
 {
     return m_tag;
 }
-bool Tagged::is_valid_tag(const tag_t& tag) const
+bool Tagged::is_valid_tag(const TagID& tag) const
 {
     static constexpr std::uint64_t Mask = 0x0000FFFFFFFF0000;
     return ((tag & Mask) == m_tag);
 }
-bool Tagged::is_issued_tag(const tag_t& tag) const
+bool Tagged::is_issued_tag(const TagID& tag) const
 {
     return (tag > lower_bound() && tag <= (m_tag + m_uid));
 }
-Tagged::tag_t Tagged::next_tag()
+TagID Tagged::next_tag()
 {
     if (m_uid++ < UINT16_MAX)
     {
@@ -49,7 +49,7 @@ Tagged::tag_t Tagged::next_tag()
     throw std::overflow_error(
         SRF_CONCAT_STR("limit of uniquely Tagged objects with tag " << m_tag << " reached; fatal error"));
 }
-Tagged::tag_t Tagged::next()
+TagID Tagged::next()
 {
     constexpr std::uint32_t MaxVal = 0x0FFFFFFF;
     static std::uint32_t next_tag  = 0;
@@ -94,7 +94,7 @@ void TaggedIssuer::drop_instance(ClientInstance::instance_id_t instance_id)
         i = drop_tag(i);
     }
 }
-void TaggedIssuer::drop_tag(tag_t tag)
+void TaggedIssuer::drop_tag(TagID tag)
 {
     for (auto i = m_instance_tags.begin(); i != m_instance_tags.end(); i++)
     {
@@ -106,7 +106,7 @@ void TaggedIssuer::drop_tag(tag_t tag)
     }
     throw std::invalid_argument(SRF_CONCAT_STR("tag " << tag << " not registered"));
 }
-Tagged::tag_t TaggedIssuer::register_instance_id(ClientInstance::instance_id_t instance_id)
+TagID TaggedIssuer::register_instance_id(ClientInstance::instance_id_t instance_id)
 {
     auto tag = next_tag();
     m_instance_tags.emplace(instance_id, tag);

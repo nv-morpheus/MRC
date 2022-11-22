@@ -64,14 +64,14 @@ class SubscriptionService final : public TaggedIssuer
     bool has_role(const std::string& role) const;
     bool compare_roles(const std::set<std::string>& roles) const;
 
-    Expected<tag_t> register_instance(std::shared_ptr<server::ClientInstance> instance,
+    Expected<TagID> register_instance(std::shared_ptr<server::ClientInstance> instance,
                                       const std::string& role,
                                       const std::set<std::string>& subscribe_to_roles);
 
     Expected<> activate_instance(std::shared_ptr<server::ClientInstance> instance,
                                  const std::string& role,
                                  const std::set<std::string>& subscribe_to_roles,
-                                 tag_t tag);
+                                 TagID tag);
 
     Expected<> update_role(const protos::UpdateSubscriptionServiceRequest& update_req);
 
@@ -80,7 +80,7 @@ class SubscriptionService final : public TaggedIssuer
     Role& get_role(const std::string& name);
 
     void do_issue_update() final;
-    void do_drop_tag(const tag_t& tag) final;
+    void do_drop_tag(const TagID& tag) final;
 
     std::string m_name;
 

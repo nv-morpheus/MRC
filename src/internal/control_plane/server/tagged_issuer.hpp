@@ -20,6 +20,7 @@
 #include "internal/control_plane/server/client_instance.hpp"
 #include "internal/control_plane/server/update_issuer.hpp"
 
+#include "srf/types.hpp"
 #include "srf/utils/macros.hpp"
 #include "srf/utils/string_utils.hpp"
 
@@ -37,8 +38,6 @@ namespace srf::internal::control_plane::server {
 class Tagged
 {
   public:
-    using tag_t = std::uint64_t;
-
     Tagged()          = default;
     virtual ~Tagged() = 0;
 
@@ -47,19 +46,19 @@ class Tagged
 
     // a valid tag masks out both the upper and lower 16-bits
     // and compares the value against the instances tag() value
-    bool is_valid_tag(const tag_t& tag) const;
-    bool is_issued_tag(const tag_t& tag) const;
+    bool is_valid_tag(const TagID& tag) const;
+    bool is_issued_tag(const TagID& tag) const;
 
-    tag_t upper_bound() const;
-    tag_t lower_bound() const;
+    TagID upper_bound() const;
+    TagID lower_bound() const;
 
   protected:
-    tag_t next_tag();
+    TagID next_tag();
 
   private:
-    static tag_t next();
+    static TagID next();
 
-    const tag_t m_tag{next()};
+    const TagID m_tag{next()};
     std::uint16_t m_uid{1};
 };
 
@@ -79,14 +78,14 @@ class Tagged
 class TaggedIssuer : public Tagged, public UpdateIssuer
 {
     virtual void do_issue_update()             = 0;
-    virtual void do_drop_tag(const tag_t& tag) = 0;
+    virtual void do_drop_tag(const TagID& tag) = 0;
 
   public:
     ~TaggedIssuer() override;
 
     void drop_instance(std::shared_ptr<ClientInstance> instance);
     void drop_instance(ClientInstance::instance_id_t instance_id);
-    void drop_tag(tag_t tag);
+    void drop_tag(TagID tag);
     void drop_all();
 
     std::size_t tag_count() const;
@@ -95,10 +94,10 @@ class TaggedIssuer : public Tagged, public UpdateIssuer
     void issue_update() final;
 
   protected:
-    tag_t register_instance_id(ClientInstance::instance_id_t instance_id);
+    TagID register_instance_id(ClientInstance::instance_id_t instance_id);
 
   private:
-    std::multimap<ClientInstance::instance_id_t, tag_t> m_instance_tags;
+    std::multimap<ClientInstance::instance_id_t, TagID> m_instance_tags;
 
     decltype(m_instance_tags)::iterator drop_tag(decltype(m_instance_tags)::iterator it);
 };

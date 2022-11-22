@@ -37,7 +37,7 @@ struct TaggedObject : public server::Tagged
 class TaggedIssuer : public server::TaggedIssuer
 {
   public:
-    TaggedIssuer(std::function<void(const tag_t& tag)> on_drop) : m_on_drop(std::move(on_drop)) {}
+    TaggedIssuer(std::function<void(const TagID& tag)> on_drop) : m_on_drop(std::move(on_drop)) {}
     ~TaggedIssuer() override
     {
         this->drop_all();
@@ -46,8 +46,8 @@ class TaggedIssuer : public server::TaggedIssuer
     using server::TaggedIssuer::register_instance_id;
 
   private:
-    std::function<void(const tag_t& tag)> m_on_drop;
-    void do_drop_tag(const tag_t& tag) final
+    std::function<void(const TagID& tag)> m_on_drop;
+    void do_drop_tag(const TagID& tag) final
     {
         EXPECT_TRUE(m_on_drop);
         m_on_drop(tag);
@@ -84,9 +84,9 @@ TEST_F(TestControlPlaneComponents, Tagged)
 TEST_F(TestControlPlaneComponents, TaggedIssuer)
 {
     std::atomic<std::size_t> counter = 0;
-    auto service = std::make_unique<TaggedIssuer>([&counter](const TaggedIssuer::tag_t& tag) { ++counter; });
+    auto service = std::make_unique<TaggedIssuer>([&counter](const TagID& tag) { ++counter; });
 
-    std::vector<TaggedIssuer::tag_t> tags;
+    std::vector<TagID> tags;
     tags.push_back(service->register_instance_id(1));
     tags.push_back(service->register_instance_id(2));
     tags.push_back(service->register_instance_id(2));
