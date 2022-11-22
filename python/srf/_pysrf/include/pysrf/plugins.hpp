@@ -17,29 +17,6 @@
 
 #pragma once
 
-<<<<<<<< HEAD:src/internal/grpc/promise_handler.hpp
-#include "internal/grpc/progress_engine.hpp"
-
-#include "srf/node/generic_sink.hpp"
-
-#include <boost/fiber/all.hpp>
-
-namespace srf::internal::rpc {
-
-/**
- * @brief SRF Sink to handle ProgressEvents which correspond to Promise<bool> tags
- */
-class PromiseHandler final : public srf::node::GenericSink<ProgressEvent>
-{
-    void on_data(ProgressEvent&& event) final
-    {
-        auto* promise = static_cast<boost::fibers::promise<bool>*>(event.tag);
-        promise->set_value(event.ok);
-    }
-};
-
-}  // namespace srf::internal::rpc
-========
 #include "srf/modules/plugins.hpp"
 
 #include <memory>
@@ -59,4 +36,3 @@ class PluginProxy
 #pragma GCC visibility pop
 
 }  // namespace srf::pysrf
->>>>>>>> origin/branch-23.01:python/srf/_pysrf/include/pysrf/plugins.hpp
