@@ -68,7 +68,6 @@ add_executable(test_srf_private
 target_link_libraries(test_srf_private
   PRIVATE
   ${PROJECT_NAME}::libsrf
-  nvrpc-client
   GTest::gtest
   hwloc::hwloc
   ucx::ucs

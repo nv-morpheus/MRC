@@ -306,9 +306,13 @@ target_link_libraries(libsrf
   rxcpp::rxcpp
   glog::glog
   libcudacxx::libcudacxx
+  Boost::fiber
+  Boost::context
+  glog::glog
+  gRPC::grpc++
+  gRPC::grpc
+  gRPC::gpr
   PRIVATE
-  nvrpc
-  nvrpc-client
   hwloc::hwloc
   prometheus-cpp::core # private in MR !199
   ucx::ucs
@@ -369,8 +373,6 @@ endif()
 if(SRF_BUILD_BENCHMARKS)
   add_subdirectory(benchmarks)
 endif()
-
-add_subdirectory(tools/nvrpc)
 
 # ##################################################################################################
 # - install export --------------------------------------------------------------------------------
