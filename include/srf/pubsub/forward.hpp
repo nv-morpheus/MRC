@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#pragma once
+
 namespace srf::pubsub {
 
 template <typename T>

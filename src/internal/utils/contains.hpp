@@ -30,10 +30,10 @@ bool contains(const Container& container, const Key& key)
 
 template <typename C>
 class KeyIterator : public std::iterator<std::bidirectional_iterator_tag,
-                                          typename C::key_type,
-                                          typename C::difference_type,
-                                          typename C::pointer,
-                                          typename C::reference>
+                                         typename C::key_type,
+                                         typename C::difference_type,
+                                         typename C::pointer,
+                                         typename C::reference>
 {
   public:
     KeyIterator() = default;

@@ -238,7 +238,7 @@ void Client::issue_remote_descriptor(RemoteDescriptorMessage&& msg)
     DCHECK_LE(msg.tag, TAG_USER_MASK);
 
     // detach handle from remote descriptor to ensure that the tokens are not decremented
-    auto handle     = remote_descriptor::Manager::unwrap_handle(std::move(msg.rd));
+    auto handle = remote_descriptor::Manager::unwrap_handle(std::move(msg.rd));
 
     // gain access to the protobuf backing the handle
     const auto& proto = handle->proto();

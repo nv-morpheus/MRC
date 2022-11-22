@@ -118,7 +118,7 @@ class Server : public Service
 
     void drop_instance(const instance_id_t& instance_id);
     void drop_stream(writer_t& writer);
-    void on_fatal_exception();
+    static void on_fatal_exception();
 
     // convenience methods - these method do not lock internal state
     Expected<instance_t> get_instance(const instance_id_t& instance_id) const;
