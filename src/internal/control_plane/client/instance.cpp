@@ -39,7 +39,7 @@
 #include <chrono>
 #include <cstdint>
 #include <ostream>
-#include <type_traits>
+#include <type_traits>  // IWYU pragma: keep
 #include <unordered_map>
 #include <utility>
 #include <vector>
