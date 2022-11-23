@@ -17,21 +17,21 @@
 
 #pragma once
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 /**
- * @brief Enum for the internal SRF services
+ * @brief Enum for the internal MRC services
  */
 enum class InternalServiceType
 {
 };
 
 /**
- * @brief Service Runnables should derive from this to signify they are a SRF service.
+ * @brief Service Runnables should derive from this to signify they are a MRC service.
  */
 struct InternalService
 {
     virtual InternalServiceType service_type() const = 0;
 };
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

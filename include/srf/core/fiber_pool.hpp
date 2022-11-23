@@ -26,7 +26,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace srf::core {
+namespace mrc::core {
 
 class FiberPool
 {
@@ -56,4 +56,4 @@ class FiberPool
     virtual FiberTaskQueue& task_queue(const std::size_t& index) = 0;
 };
 
-}  // namespace srf::core
+}  // namespace mrc::core

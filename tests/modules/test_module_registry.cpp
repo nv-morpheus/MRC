@@ -196,7 +196,7 @@ TEST_F(TestModuleRegistry, DynamicModuleLoadTest)
 
 TEST_F(TestModuleRegistry, DynamicModuleRegistrationTest)
 {
-    using namespace srf::modules;
+    using namespace mrc::modules;
     void* module_handle;
     bool (*entrypoint_load)();
     bool (*entrypoint_unload)();
@@ -269,7 +269,7 @@ TEST_F(TestModuleRegistry, DynamicModuleRegistrationTest)
 
 TEST_F(TestModuleRegistry, DynamicModulePluginInterfaceTest)
 {
-    using namespace srf::modules;
+    using namespace mrc::modules;
 
     auto plugin = PluginModule::create_or_acquire("libdynamic_test_module.so");
     plugin->set_library_directory(get_modules_path());
@@ -286,7 +286,7 @@ TEST_F(TestModuleRegistry, DynamicModulePluginInterfaceTest)
 
 TEST_F(TestModuleRegistry, DynamicModulePluginRegistrationTest)
 {
-    using namespace srf::modules;
+    using namespace mrc::modules;
 
     // auto plugin = std::unique_ptr<PluginModule>{};
     auto plugin = PluginModule::create_or_acquire("libdynamic_test_module.so");
@@ -341,7 +341,7 @@ TEST_F(TestModuleRegistry, DynamicModulePluginRegistrationTest)
 
 TEST_F(TestModuleRegistry, DynamicModuleBadVersionTest)
 {
-    using namespace srf::modules;
+    using namespace mrc::modules;
     void* module_handle;
     bool (*entrypoint)();
 

@@ -30,7 +30,7 @@
 // #include <stdexcept>
 // #include <utility>
 
-namespace srf::internal::remote_descriptor {
+namespace mrc::internal::remote_descriptor {
 
 // class Manager;
 
@@ -42,7 +42,7 @@ namespace srf::internal::remote_descriptor {
 //     {}
 
 //   public:
-//     static std::unique_ptr<RemoteDescriptor> unwrap(srf::remote_descriptor::RemoteDescriptor&& rd);
+//     static std::unique_ptr<RemoteDescriptor> unwrap(mrc::remote_descriptor::RemoteDescriptor&& rd);
 
 //     ~RemoteDescriptor();
 
@@ -72,14 +72,14 @@ namespace srf::internal::remote_descriptor {
 //     /**
 //      * @brief Returns a reference to an IDecodableStorage for decoding a RemoteDescriptor
 //      */
-//     const srf::codable::IDecodableStorage& encoding() const;
+//     const mrc::codable::IDecodableStorage& encoding() const;
 
 //   private:
 //     std::shared_ptr<Manager> m_manager;
-//     std::shared_ptr<srf::codable::IDecodableStorage> m_encoding;
+//     std::shared_ptr<mrc::codable::IDecodableStorage> m_encoding;
 //     InstanceID m_instance_id;
 
 //     friend Manager;
 // };
 
-}  // namespace srf::internal::remote_descriptor
+}  // namespace mrc::internal::remote_descriptor

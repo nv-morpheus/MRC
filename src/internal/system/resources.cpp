@@ -25,7 +25,7 @@
 #include <map>
 #include <vector>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 Resources::Resources(SystemProvider system) :
   SystemProvider(system),
@@ -69,4 +69,4 @@ std::unique_ptr<Resources> Resources::unwrap(IResources& resources)
 {
     return std::move(resources.m_impl);
 }
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

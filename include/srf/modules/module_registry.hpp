@@ -26,7 +26,7 @@
 #include <string>
 #include <vector>
 
-namespace srf::modules {
+namespace mrc::modules {
 
 class SegmentModule;
 
@@ -37,7 +37,7 @@ class ModuleRegistry
 {
   public:
     using module_constructor_t =
-        std::function<std::shared_ptr<srf::modules::SegmentModule>(std::string module_name, nlohmann::json config)>;
+        std::function<std::shared_ptr<mrc::modules::SegmentModule>(std::string module_name, nlohmann::json config)>;
 
     using module_registry_map_t  = std::map<std::string, module_constructor_t>;
     using module_namespace_map_t = std::map<std::string, module_registry_map_t>;
@@ -120,4 +120,4 @@ class ModuleRegistry
     static std::recursive_mutex s_mutex;
 };
 
-}  // namespace srf::modules
+}  // namespace mrc::modules

@@ -25,7 +25,7 @@
 #include <memory>
 #include <string>
 
-namespace srf::internal::ucx {
+namespace mrc::internal::ucx {
 
 using WorkerAddress = std::string;  // NOLINT
 
@@ -39,4 +39,4 @@ class Endpoint;
 class SendManager;
 class ReceiveManager;
 
-}  // namespace srf::internal::ucx
+}  // namespace mrc::internal::ucx

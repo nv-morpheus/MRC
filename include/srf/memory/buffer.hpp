@@ -24,7 +24,7 @@
 #include <cstddef>
 #include <utility>
 
-namespace srf::memory {
+namespace mrc::memory {
 
 class buffer
 {
@@ -42,7 +42,7 @@ class buffer
         release();
     }
 
-    buffer(const buffer&) = delete;
+    buffer(const buffer&)            = delete;
     buffer& operator=(const buffer&) = delete;
 
     buffer(buffer&& other) noexcept :
@@ -116,11 +116,11 @@ class buffer
     friend std::ostream& operator<<(std::ostream& os, const buffer& buffer);
 };
 
-inline std::ostream& operator<<(std::ostream& os, const srf::memory::buffer& buffer)
+inline std::ostream& operator<<(std::ostream& os, const mrc::memory::buffer& buffer)
 {
-    os << "[memory::buffer " << buffer.data() << "; bytes=" << srf::bytes_to_string(buffer.bytes())
-       << "; kind= " << srf::memory::kind_string(buffer.kind()) << "]";
+    os << "[memory::buffer " << buffer.data() << "; bytes=" << mrc::bytes_to_string(buffer.bytes())
+       << "; kind= " << mrc::memory::kind_string(buffer.kind()) << "]";
     return os;
 }
 
-}  // namespace srf::memory
+}  // namespace mrc::memory

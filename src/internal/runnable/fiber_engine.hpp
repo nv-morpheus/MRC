@@ -27,7 +27,7 @@
 
 #include <functional>
 
-namespace srf::internal::runnable {
+namespace mrc::internal::runnable {
 
 class FiberEngine final : public Engine
 {
@@ -46,4 +46,4 @@ class FiberEngine final : public Engine
     FiberMetaData m_meta;
 };
 
-}  // namespace srf::internal::runnable
+}  // namespace mrc::internal::runnable

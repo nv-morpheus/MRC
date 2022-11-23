@@ -22,7 +22,7 @@
 #include "srf/options/resources.hpp"
 #include "srf/options/topology.hpp"
 
-namespace srf {
+namespace mrc {
 
 // template<class T>
 // using blocking_queue = boost::fibers::buffered_channel<T>;
@@ -68,4 +68,4 @@ using ResourceGroupID = std::size_t;  // NOLINT(readability-identifier-naming)
 
 using Tags = std::vector<SegmentAddress>;  // NOLINT
 
-}  // namespace srf
+}  // namespace mrc

@@ -29,7 +29,7 @@
 #include <ostream>
 #include <utility>
 
-namespace srf::internal::control_plane::server {
+namespace mrc::internal::control_plane::server {
 
 void ConnectionManager::add_stream(const stream_t& stream)
 {
@@ -264,4 +264,4 @@ const std::map<ConnectionManager::stream_id_t, ConnectionManager::stream_t>& Con
     return m_streams;
 }
 
-}  // namespace srf::internal::control_plane::server
+}  // namespace mrc::internal::control_plane::server

@@ -22,7 +22,7 @@
 #include "srf/manifold/manifold.hpp"
 #include "srf/segment/utils.hpp"
 
-namespace srf::manifold {
+namespace mrc::manifold {
 
 template <typename IngressT, typename EgressT>
 class CompositeManifold : public Manifold
@@ -134,4 +134,4 @@ class CompositeManifold : public Manifold
     std::unique_ptr<EgressT> m_egress;
 };
 
-}  // namespace srf::manifold
+}  // namespace mrc::manifold

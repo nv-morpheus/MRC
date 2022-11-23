@@ -19,7 +19,7 @@
 
 #include "srf/runnable/context.hpp"
 
-namespace srf {
+namespace mrc {
 
 /**
  * @brief Acquire the local context for the current Runnable.
@@ -34,4 +34,4 @@ runnable::Context& get_current_context()
     return runnable::Context::get_runtime_context();
 }
 
-}  // namespace srf
+}  // namespace mrc

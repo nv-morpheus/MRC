@@ -23,17 +23,17 @@ namespace prometheus {
 class Counter;
 }
 
-namespace srf::metrics {
+namespace mrc::metrics {
 
 class Counter
 {
   public:
     explicit Counter(prometheus::Counter*);
 
-    Counter(const Counter&) = default;
+    Counter(const Counter&)            = default;
     Counter& operator=(const Counter&) = default;
 
-    Counter(Counter&&) noexcept = default;
+    Counter(Counter&&) noexcept            = default;
     Counter& operator=(Counter&&) noexcept = default;
 
     void increment();
@@ -43,4 +43,4 @@ class Counter
     prometheus::Counter* m_counter;
 };
 
-}  // namespace srf::metrics
+}  // namespace mrc::metrics

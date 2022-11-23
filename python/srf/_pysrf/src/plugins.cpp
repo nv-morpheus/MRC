@@ -19,11 +19,11 @@
 
 #include <memory>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
-std::shared_ptr<srf::modules::PluginModule> PluginProxy::create_or_acquire(const std::string& plugin_library_name)
+std::shared_ptr<mrc::modules::PluginModule> PluginProxy::create_or_acquire(const std::string& plugin_library_name)
 {
     return modules::PluginModule::create_or_acquire(plugin_library_name);
 }
 
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

@@ -30,13 +30,13 @@
 #include <sstream>
 #include <string>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 namespace py = pybind11;
 
 PYBIND11_MODULE(node, module)
 {
     module.doc() = R"pbdoc(
-        Python bindings for SRF nodes
+        Python bindings for MRC nodes
         -------------------------------
         .. currentmodule:: node
         .. autosummary::
@@ -46,18 +46,18 @@ PYBIND11_MODULE(node, module)
     // Common must be first in every module
     pysrf::import(module, "srf.core.common");
 
-    py::class_<srf::runnable::LaunchOptions>(module, "LaunchOptions")
-        .def_readwrite("pe_count", &srf::runnable::LaunchOptions::pe_count)
-        .def_readwrite("engines_per_pe", &srf::runnable::LaunchOptions::engines_per_pe)
-        .def_readwrite("engine_factory_name", &srf::runnable::LaunchOptions::engine_factory_name);
+    py::class_<mrc::runnable::LaunchOptions>(module, "LaunchOptions")
+        .def_readwrite("pe_count", &mrc::runnable::LaunchOptions::pe_count)
+        .def_readwrite("engines_per_pe", &mrc::runnable::LaunchOptions::engines_per_pe)
+        .def_readwrite("engine_factory_name", &mrc::runnable::LaunchOptions::engine_factory_name);
 
-    py::class_<srf::segment::ObjectProperties, std::shared_ptr<srf::segment::ObjectProperties>>(module, "SegmentObject")
+    py::class_<mrc::segment::ObjectProperties, std::shared_ptr<mrc::segment::ObjectProperties>>(module, "SegmentObject")
         .def_property_readonly("name", &PyNode::name)
         .def_property_readonly("launch_options",
-                               py::overload_cast<>(&srf::segment::ObjectProperties::launch_options),
+                               py::overload_cast<>(&mrc::segment::ObjectProperties::launch_options),
                                py::return_value_policy::reference_internal);
 
     module.attr("__version__") =
         SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

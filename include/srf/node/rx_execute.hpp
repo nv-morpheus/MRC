@@ -26,7 +26,7 @@
 
 #include <memory>
 
-namespace srf::node {
+namespace mrc::node {
 
 class RxExecute
 {
@@ -61,4 +61,4 @@ class RxExecute
     std::unique_ptr<RxSubscribable> m_subscribable;
 };
 
-}  // namespace srf::node
+}  // namespace mrc::node

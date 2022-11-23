@@ -30,20 +30,20 @@
 #include <functional>
 #include <vector>
 
-namespace srf::internal::runnable {
+namespace mrc::internal::runnable {
 
 class FiberEngines final : public Engines
 {
   public:
     FiberEngines(system::FiberPool& pool, int priority = SRF_DEFAULT_FIBER_PRIORITY);
 
-    FiberEngines(::srf::runnable::LaunchOptions launch_options,
+    FiberEngines(::mrc::runnable::LaunchOptions launch_options,
                  system::FiberPool& pool,
                  int priority = SRF_DEFAULT_FIBER_PRIORITY);
 
-    FiberEngines(::srf::runnable::LaunchOptions launch_options, system::FiberPool& pool, const FiberMetaData& meta);
+    FiberEngines(::mrc::runnable::LaunchOptions launch_options, system::FiberPool& pool, const FiberMetaData& meta);
 
-    FiberEngines(::srf::runnable::LaunchOptions launch_options,
+    FiberEngines(::mrc::runnable::LaunchOptions launch_options,
                  std::vector<std::reference_wrapper<core::FiberTaskQueue>>&& task_queues,
                  int priority = SRF_DEFAULT_FIBER_PRIORITY);
 
@@ -54,8 +54,8 @@ class FiberEngines final : public Engines
   private:
     void initialize_launchers();
 
-    std::vector<std::reference_wrapper<srf::core::FiberTaskQueue>> m_task_queues;
+    std::vector<std::reference_wrapper<mrc::core::FiberTaskQueue>> m_task_queues;
     FiberMetaData m_meta;
 };
 
-}  // namespace srf::internal::runnable
+}  // namespace mrc::internal::runnable

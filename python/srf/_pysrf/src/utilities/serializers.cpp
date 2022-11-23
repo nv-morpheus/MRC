@@ -36,7 +36,7 @@
 #include <type_traits>
 
 namespace py = pybind11;
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 pybind11::object Serializer::persist_to_shared_memory(pybind11::object obj)
 {
@@ -88,4 +88,4 @@ std::tuple<char*, std::size_t> Serializer::serialize(pybind11::object obj, bool 
 
     return std::make_tuple(ret_bytes, size_bytes);
 }
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

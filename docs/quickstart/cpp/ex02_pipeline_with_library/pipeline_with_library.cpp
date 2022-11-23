@@ -15,23 +15,21 @@
  * limitations under the License.
  */
 
-#include <glog/logging.h>
+#include "nodes.hpp"
 
+#include <glog/logging.h>
 #include <srf/node/rx_sink.hpp>
 #include <srf/pipeline/pipeline.hpp>
 #include <srf/srf.hpp>
 
-#include "nodes.hpp"
-
-using namespace srf;
-using namespace srf::quickstart::cpp::common;
-
-int main(int argc, char* argv[])
+using namespace mrc;
+using namespace mrc::quickstart::cpp::common;
+namespace mrc int main(int argc, char* argv[])
 {
     std::atomic<long> counter = 0;
 
     // srf options
-    auto options = std::make_unique<srf::Options>();
+    auto options = std::make_unique<mrc::Options>();
 
     // create executor
     Executor executor(std::move(options));
@@ -87,4 +85,4 @@ int main(int argc, char* argv[])
     std::cout << "srf pipeline complete: counter should be 3; counter=" << counter << std::endl;
 
     return 0;
-};
+};  // namespace )

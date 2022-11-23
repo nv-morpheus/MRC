@@ -26,15 +26,15 @@
 #include <cstddef>  // for size_t
 #include <memory>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 namespace py = pybind11;
 
 void init_tracer_stats_api(py::module_& m);
 void init_tracer_api(py::module_& m);
 
-using latency_tracer_t    = srf::benchmarking::TracerEnsemble<py::object, srf::benchmarking::LatencyTracer>;
-using throughput_tracer_t = srf::benchmarking::TracerEnsemble<py::object, srf::benchmarking::ThroughputTracer>;
+using latency_tracer_t    = mrc::benchmarking::TracerEnsemble<py::object, mrc::benchmarking::LatencyTracer>;
+using throughput_tracer_t = mrc::benchmarking::TracerEnsemble<py::object, mrc::benchmarking::ThroughputTracer>;
 
 // TODO (Devin): Not supporting direct tracers yet, file still needs to be implemented.
 PYBIND11_MODULE(tracers, m)
@@ -59,7 +59,7 @@ PYBIND11_MODULE(tracers, m)
     LatencyTracer.def(py::init<std::size_t>());
 
     // TODO(devin)
-    // LatencyTracer.def("add_counters", &srf::LatencyTracer::add_counters);
+    // LatencyTracer.def("add_counters", &mrc::LatencyTracer::add_counters);
     LatencyTracer.def_static("aggregate", [](py::object& obj_type, py::list ensemble_tracers) {
         // Something is broken with calling static members
     });
@@ -74,4 +74,4 @@ PYBIND11_MODULE(tracers, m)
     // ThroughputTracer.def("add_counters", &ThroughputTracerT::add_counters);
     // ThroughputTracer.def("aggregate", &ThroughputTracerT::aggregate);
 }
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

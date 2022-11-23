@@ -22,7 +22,7 @@
 
 #include <glog/logging.h>
 
-namespace srf::memory {
+namespace mrc::memory {
 
 template <typename Upstream>
 class logging_resource final : public adaptor<Upstream>
@@ -53,4 +53,4 @@ class logging_resource final : public adaptor<Upstream>
     const int m_verbosity;
 };
 
-}  // namespace srf::memory
+}  // namespace mrc::memory

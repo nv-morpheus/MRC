@@ -22,7 +22,7 @@
 #include "srf/metrics/registry.hpp"
 #include "srf/runnable/launch_control.hpp"
 
-namespace srf::pipeline {
+namespace mrc::pipeline {
 
 struct Resources
 {
@@ -33,4 +33,4 @@ struct Resources
     // virtual std::shared_ptr<metrics::Registry> metrics_registry() = 0;
 };
 
-}  // namespace srf::pipeline
+}  // namespace mrc::pipeline

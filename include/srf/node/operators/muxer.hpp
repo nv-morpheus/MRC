@@ -20,7 +20,7 @@
 #include "srf/node/operators/operator.hpp"
 #include "srf/node/source_channel.hpp"
 
-namespace srf::node {
+namespace mrc::node {
 
 template <typename T>
 class Muxer : public Operator<T>, public SourceChannelWriteable<T>
@@ -38,4 +38,4 @@ class Muxer : public Operator<T>, public SourceChannelWriteable<T>
     }
 };
 
-}  // namespace srf::node
+}  // namespace mrc::node

@@ -33,16 +33,16 @@
 #include <ostream>
 #include <utility>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 bool ModuleRegistryProxy::contains(const std::string& name, const std::string& registry_namespace)
 {
-    return srf::modules::ModuleRegistry::contains(name, registry_namespace);
+    return mrc::modules::ModuleRegistry::contains(name, registry_namespace);
 }
 
 bool ModuleRegistryProxy::contains_namespace(const std::string& registry_namespace)
 {
-    return srf::modules::ModuleRegistry::contains_namespace(registry_namespace);
+    return mrc::modules::ModuleRegistry::contains_namespace(registry_namespace);
 }
 
 std::map<std::string, std::vector<std::string>> ModuleRegistryProxy::registered_modules()
@@ -69,7 +69,7 @@ pybind11::cpp_function ModuleRegistryProxy::get_module_constructor(const std::st
 
 void ModuleRegistryProxy::register_module(std::string name,
                                           const registry_version_t& release_version,
-                                          std::function<void(srf::segment::Builder&)> fn_py_initializer)
+                                          std::function<void(mrc::segment::Builder&)> fn_py_initializer)
 {
     register_module(name, "default", release_version, fn_py_initializer);
 }
@@ -77,7 +77,7 @@ void ModuleRegistryProxy::register_module(std::string name,
 void ModuleRegistryProxy::register_module(std::string name,
                                           std::string registry_namespace,
                                           const registry_version_t& release_version,
-                                          std::function<void(srf::segment::Builder&)> fn_py_initializer)
+                                          std::function<void(mrc::segment::Builder&)> fn_py_initializer)
 {
     VLOG(2) << "Registering python module: " << registry_namespace << "::" << name;
     auto fn_constructor = [fn_py_initializer](std::string name, nlohmann::json config) {
@@ -87,7 +87,7 @@ void ModuleRegistryProxy::register_module(std::string name,
         return module;
     };
 
-    srf::modules::ModuleRegistry::register_module(name, registry_namespace, release_version, fn_constructor);
+    mrc::modules::ModuleRegistry::register_module(name, registry_namespace, release_version, fn_constructor);
 
     register_module_cleanup_fn(name, registry_namespace);
 }
@@ -96,7 +96,7 @@ void ModuleRegistryProxy::unregister_module(const std::string& name,
                                             const std::string& registry_namespace,
                                             bool optional)
 {
-    return srf::modules::ModuleRegistry::unregister_module(name, registry_namespace, optional);
+    return mrc::modules::ModuleRegistry::unregister_module(name, registry_namespace, optional);
 }
 
 void ModuleRegistryProxy::register_module_cleanup_fn(const std::string& name, const std::string& registry_namespace)
@@ -106,8 +106,8 @@ void ModuleRegistryProxy::register_module_cleanup_fn(const std::string& name, co
         VLOG(2) << "(atexit) Unregistering " << registry_namespace << "::" << name;
 
         // Try unregister -- ignore if already unregistered
-        srf::modules::ModuleRegistry::unregister_module(name, registry_namespace, true);
+        mrc::modules::ModuleRegistry::unregister_module(name, registry_namespace, true);
     }));
 }
 
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

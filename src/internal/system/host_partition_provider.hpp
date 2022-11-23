@@ -22,7 +22,7 @@
 
 #include <cstddef>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 /**
  * @brief Extends SystemProvider to add host_partition_id and host_partition info.
@@ -41,4 +41,4 @@ class HostPartitionProvider : public SystemProvider
     const std::size_t m_host_partition_id;
 };
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

@@ -25,43 +25,43 @@
 
 namespace {
 
-inline srf::LogLevels py_level_to_srf(int py_level)
+inline mrc::LogLevels py_level_to_srf(int py_level)
 {
-    srf::LogLevels level = srf::LogLevels::INFO;
+    mrc::LogLevels level = mrc::LogLevels::INFO;
     if (py_level >= 40)
     {
-        level = srf::LogLevels::ERROR;
+        level = mrc::LogLevels::ERROR;
     }
     else if (py_level >= 30)
     {
-        level = srf::LogLevels::WARNING;
+        level = mrc::LogLevels::WARNING;
     }
 
     return level;
 }
 
-inline int srf_to_py_level(srf::LogLevels level)
+inline int srf_to_py_level(mrc::LogLevels level)
 {
     switch (level)
     {
-    case srf::LogLevels::FATAL:
-        return srf::pysrf::py_log_levels::CRITICAL;
-    case srf::LogLevels::ERROR:
-        return srf::pysrf::py_log_levels::ERROR;
-    case srf::LogLevels::WARNING:
-        return srf::pysrf::py_log_levels::WARNING;
+    case mrc::LogLevels::FATAL:
+        return mrc::pysrf::py_log_levels::CRITICAL;
+    case mrc::LogLevels::ERROR:
+        return mrc::pysrf::py_log_levels::ERROR;
+    case mrc::LogLevels::WARNING:
+        return mrc::pysrf::py_log_levels::WARNING;
     default:
-        return srf::pysrf::py_log_levels::INFO;
+        return mrc::pysrf::py_log_levels::INFO;
     }
 }
 
 }  // namespace
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 bool init_logging(const std::string& logname, int py_level)
 {
-    bool initialized = srf::init_logging(logname, py_level_to_srf(py_level));
+    bool initialized = mrc::init_logging(logname, py_level_to_srf(py_level));
     if (!initialized)
     {
         LOG(WARNING) << "Srf logger already initialized";
@@ -72,17 +72,17 @@ bool init_logging(const std::string& logname, int py_level)
 
 int get_level()
 {
-    return srf_to_py_level(srf::get_log_level());
+    return srf_to_py_level(mrc::get_log_level());
 }
 
 void set_level(int py_level)
 {
-    srf::set_log_level(py_level_to_srf(py_level));
+    mrc::set_log_level(py_level_to_srf(py_level));
 }
 
 void log(const std::string& msg, int py_level, const std::string& filename, int line)
 {
-    if (!srf::is_initialized())
+    if (!mrc::is_initialized())
     {
         init_logging("srf");
         LOG(WARNING) << "Log called prior to calling init_logging, initialized with defaults";
@@ -91,4 +91,4 @@ void log(const std::string& msg, int py_level, const std::string& filename, int 
     google::LogMessage(filename.c_str(), line, static_cast<int>(py_level_to_srf(py_level))).stream() << msg;
 }
 
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

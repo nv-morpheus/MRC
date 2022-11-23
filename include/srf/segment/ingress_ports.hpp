@@ -20,7 +20,7 @@
 #include "srf/segment/ingress_port.hpp"
 #include "srf/segment/ports.hpp"
 
-namespace srf::segment {
+namespace mrc::segment {
 
 struct IngressPortsBase : public Ports<IngressPortBase>
 {
@@ -47,4 +47,4 @@ struct IngressPorts : public IngressPortsBase
     }
 };
 
-}  // namespace srf::segment
+}  // namespace mrc::segment

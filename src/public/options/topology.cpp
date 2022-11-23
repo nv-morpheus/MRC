@@ -21,7 +21,7 @@
 
 #include <utility>  // for move
 
-namespace srf {
+namespace mrc {
 
 // Topology Options
 
@@ -77,4 +77,4 @@ TopologyOptions& TopologyOptions::ignore_dgx_display(bool default_true)
     m_ignore_dgx_display = default_true;
     return *this;
 }
-}  // namespace srf
+}  // namespace mrc

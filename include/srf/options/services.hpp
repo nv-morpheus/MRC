@@ -22,7 +22,7 @@
 
 #include <map>
 
-namespace srf {
+namespace mrc {
 
 class ServiceOptions
 {
@@ -38,4 +38,4 @@ class ServiceOptions
     runnable::LaunchOptions m_default_options;
 };
 
-}  // namespace srf
+}  // namespace mrc

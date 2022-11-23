@@ -23,9 +23,9 @@
 
 #define SRF_DEBUG 1
 
-namespace srf::internal::memory {
+namespace mrc::internal::memory {
 
-TransientBuffer::TransientBuffer(void* addr, std::size_t bytes, srf::data::SharedReusable<srf::memory::buffer> buffer) :
+TransientBuffer::TransientBuffer(void* addr, std::size_t bytes, mrc::data::SharedReusable<mrc::memory::buffer> buffer) :
   m_addr(addr),
   m_bytes(bytes),
   m_buffer(std::move(buffer))
@@ -90,10 +90,10 @@ void TransientBuffer::release()
 
 TransientPool::TransientPool(std::size_t block_size,
                              std::size_t block_count,
-                             std::shared_ptr<srf::memory::memory_resource> mr,
+                             std::shared_ptr<mrc::memory::memory_resource> mr,
                              std::size_t capacity) :
   m_block_size(block_size),
-  m_pool(srf::data::ReusablePool<srf::memory::buffer>::create(capacity))
+  m_pool(mrc::data::ReusablePool<mrc::memory::buffer>::create(capacity))
 {
     CHECK(m_pool);
     CHECK_LT(block_count, capacity);
@@ -127,4 +127,4 @@ TransientBuffer TransientPool::await_buffer(std::size_t bytes)
     return {addr, bytes, m_buffer};
 }
 
-}  // namespace srf::internal::memory
+}  // namespace mrc::internal::memory

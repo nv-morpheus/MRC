@@ -30,7 +30,7 @@
 #include <vector>
 
 namespace {
-std::string version_to_string(const srf::modules::ModuleRegistry::registry_version_t& release_version)
+std::string version_to_string(const mrc::modules::ModuleRegistry::registry_version_t& release_version)
 {
     if (release_version.empty())
     {
@@ -47,7 +47,7 @@ std::string version_to_string(const srf::modules::ModuleRegistry::registry_versi
 }
 }  // namespace
 
-namespace srf::modules {
+namespace mrc::modules {
 
 const unsigned int ModuleRegistry::VersionElements{3};
 
@@ -107,7 +107,7 @@ const ModuleRegistry::module_name_map_t& ModuleRegistry::registered_modules()
 
 void ModuleRegistry::register_module(std::string name,
                                      const registry_version_t& release_version,
-                                     srf::modules::ModuleRegistry::module_constructor_t fn_constructor)
+                                     mrc::modules::ModuleRegistry::module_constructor_t fn_constructor)
 {
     register_module(std::move(name), "default", release_version, fn_constructor);
 }
@@ -115,7 +115,7 @@ void ModuleRegistry::register_module(std::string name,
 void ModuleRegistry::register_module(std::string name,
                                      std::string registry_namespace,
                                      const registry_version_t& release_version,
-                                     srf::modules::ModuleRegistry::module_constructor_t fn_constructor)
+                                     mrc::modules::ModuleRegistry::module_constructor_t fn_constructor)
 {
     std::lock_guard<decltype(s_mutex)> lock(s_mutex);
     VLOG(2) << "Registering module: " << registry_namespace << "::" << name;
@@ -202,4 +202,4 @@ bool ModuleRegistry::is_version_compatible(const registry_version_t& release_ver
                       release_version.begin());
 }
 
-}  // namespace srf::modules
+}  // namespace mrc::modules

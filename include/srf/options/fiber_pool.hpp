@@ -17,7 +17,7 @@
 
 #pragma once
 
-namespace srf {
+namespace mrc {
 
 class FiberPoolOptions
 {
@@ -49,4 +49,4 @@ class FiberPoolOptions
     bool m_enable_tracing_scheduler{false};
 };
 
-}  // namespace srf
+}  // namespace mrc

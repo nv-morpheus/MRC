@@ -34,7 +34,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace srf::benchmarking {
+namespace mrc::benchmarking {
 using namespace std::chrono_literals;
 
 class TracerBase
@@ -401,4 +401,4 @@ class TraceAggregator : public TraceAggregatorBase
         }
     }
 };
-}  // namespace srf::benchmarking
+}  // namespace mrc::benchmarking

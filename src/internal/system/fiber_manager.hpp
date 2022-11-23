@@ -34,7 +34,7 @@
 #include <utility>
 #include <vector>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 class Resources;  // IWYU pragma: keep
 
@@ -111,4 +111,4 @@ class FiberManager final
     std::map<std::uint32_t, std::unique_ptr<FiberTaskQueue>> m_queues;
 };
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

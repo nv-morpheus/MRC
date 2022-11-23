@@ -21,7 +21,7 @@
 
 #include <string>
 
-namespace srf {
+namespace mrc {
 
 class TopologyOptions
 {
@@ -79,4 +79,4 @@ class TopologyOptions
     CpuSet m_user_cpuset;
 };
 
-}  // namespace srf
+}  // namespace mrc

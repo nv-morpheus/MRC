@@ -25,9 +25,9 @@
 
 #include "srf/memory/literals.hpp"
 
-namespace srf::internal::data_plane {
+namespace mrc::internal::data_plane {
 
-using namespace srf::memory::literals;
+using namespace mrc::memory::literals;
 
 Resources::Resources(resources::PartitionResourceBase& base,
                      ucx::Resources& ucx,
@@ -109,7 +109,7 @@ Server& Resources::server()
     return m_server;
 }
 
-srf::runnable::LaunchOptions Resources::launch_options(std::size_t concurrency)
+mrc::runnable::LaunchOptions Resources::launch_options(std::size_t concurrency)
 {
     return ucx::Resources::launch_options(concurrency);
 }
@@ -118,4 +118,4 @@ const InstanceID& Resources::instance_id() const
 {
     return m_instance_id;
 }
-}  // namespace srf::internal::data_plane
+}  // namespace mrc::internal::data_plane

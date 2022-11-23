@@ -23,7 +23,7 @@
 #include <cstdint>
 #include <memory>
 
-namespace srf::runtime {
+namespace mrc::runtime {
 
 class IPartition;
 class IRemoteDescriptorManager;
@@ -31,7 +31,7 @@ class IRemoteDescriptorManager;
 /**
  * @brief Top-level interface for public runtime resources/components
  *
- * The SRF runtime constructs a set of one more partitions based on user configuration options. Based on the PCIe
+ * The MRC runtime constructs a set of one more partitions based on user configuration options. Based on the PCIe
  * topology of the machine, partitions are a set of topologically aligned resources. There will be at least as many
  * partitions as there are accessiable NVIDIA GPU compute devices such that partitions [0, gpu_count()] are arranged in
  * CUDA device_id order. Based on user options, each partition will consist of a set of CPU cores, memory allocators, an
@@ -126,4 +126,4 @@ class IPartition
     friend class pubsub::Subscriber;
 };
 
-}  // namespace srf::runtime
+}  // namespace mrc::runtime

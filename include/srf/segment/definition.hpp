@@ -29,7 +29,7 @@
 #include <string>
 #include <utility>
 
-namespace srf::segment {
+namespace mrc::segment {
 
 class Definition final : public internal::segment::IDefinition
 {
@@ -85,4 +85,4 @@ class Definition final : public internal::segment::IDefinition
     }
 };
 
-}  // namespace srf::segment
+}  // namespace mrc::segment

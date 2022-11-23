@@ -33,7 +33,7 @@
 
 namespace fs = boost::filesystem;
 
-namespace srf::modules {
+namespace mrc::modules {
 
 std::map<std::string, std::shared_ptr<PluginModule>> PluginModule::s_plugin_map{};
 std::recursive_mutex PluginModule::s_mutex{};
@@ -292,11 +292,11 @@ bool PluginModule::try_build_plugin_interface(bool throw_on_error)
         clear_plugin_interface();
         if (throw_on_error)
         {
-            LOG(ERROR) << "Failed to load SRF plugin-> " << error.what();
+            LOG(ERROR) << "Failed to load MRC plugin-> " << error.what();
             throw error;
         }
 
-        LOG(WARNING) << "Failed to load SRF plugin-> " << error.what();
+        LOG(WARNING) << "Failed to load MRC plugin-> " << error.what();
         return false;
     }
 
@@ -310,4 +310,4 @@ void PluginModule::clear_plugin_interface()
     m_plugin_unload = nullptr;
 }
 
-}  // namespace srf::modules
+}  // namespace mrc::modules

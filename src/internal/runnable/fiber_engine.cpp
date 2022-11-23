@@ -27,7 +27,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace srf::internal::runnable {
+namespace mrc::internal::runnable {
 
 FiberEngine::FiberEngine(core::FiberTaskQueue& task_queue, int priority) : m_task_queue(task_queue), m_meta{priority} {}
 
@@ -45,4 +45,4 @@ runnable::EngineType FiberEngine::engine_type() const
 {
     return EngineType::Fiber;
 }
-}  // namespace srf::internal::runnable
+}  // namespace mrc::internal::runnable

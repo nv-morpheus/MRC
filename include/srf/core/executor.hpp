@@ -22,7 +22,7 @@
 
 #include <memory>
 
-namespace srf {
+namespace mrc {
 
 class Executor final : public internal::executor::IExecutor
 {
@@ -33,4 +33,4 @@ class Executor final : public internal::executor::IExecutor
     ~Executor() final = default;
 };
 
-}  // namespace srf
+}  // namespace mrc

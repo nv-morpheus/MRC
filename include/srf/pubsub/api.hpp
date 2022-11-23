@@ -26,7 +26,7 @@
 
 #include <string>
 
-namespace srf::pubsub {
+namespace mrc::pubsub {
 
 enum class PublisherPolicy
 {
@@ -46,10 +46,10 @@ class IPublisherService : public virtual control_plane::ISubscriptionService
 };
 
 class ISubscriberService : public virtual control_plane::ISubscriptionService,
-                           public srf::node::SourceChannelWriteable<srf::runtime::RemoteDescriptor>
+                           public mrc::node::SourceChannelWriteable<mrc::runtime::RemoteDescriptor>
 {
   public:
     ~ISubscriberService() override = default;
 };
 
-}  // namespace srf::pubsub
+}  // namespace mrc::pubsub

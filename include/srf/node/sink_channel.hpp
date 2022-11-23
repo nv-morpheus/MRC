@@ -31,7 +31,7 @@
 
 #include <mutex>
 
-namespace srf::node {
+namespace mrc::node {
 
 /**
  * @brief Extends SinkProperties to hold a Channel and provide SinkProperties access the the channel ingress
@@ -75,4 +75,4 @@ class SinkChannelReadable : public SinkChannel<T>
     using SinkChannel<T>::egress;
 };
 
-}  // namespace srf::node
+}  // namespace mrc::node

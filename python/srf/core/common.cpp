@@ -43,7 +43,7 @@
 // IWYU pragma: no_include <pybind11/detail/common.h>
 // IWYU pragma: no_include "rx-includes.hpp"
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -51,7 +51,7 @@ using namespace py::literals;
 PYBIND11_MODULE(common, module)
 {
     module.doc() = R"pbdoc(
-        Python bindings for SRF common functionality / utilities
+        Python bindings for MRC common functionality / utilities
         -------------------------------
         .. currentmodule:: common
         .. autosummary::
@@ -64,4 +64,4 @@ PYBIND11_MODULE(common, module)
     module.attr("__version__") =
         SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

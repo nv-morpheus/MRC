@@ -27,7 +27,7 @@
 
 #include <memory>
 
-namespace srf::internal::control_plane {
+namespace mrc::internal::control_plane {
 
 Resources::Resources(resources::PartitionResourceBase& base) :
   resources::PartitionResourceBase(base),
@@ -60,4 +60,4 @@ Resources::~Resources()
     }
 }
 
-}  // namespace srf::internal::control_plane
+}  // namespace mrc::internal::control_plane

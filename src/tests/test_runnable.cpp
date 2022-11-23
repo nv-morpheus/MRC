@@ -49,7 +49,7 @@
 #include <type_traits>
 #include <utility>
 
-using namespace srf;
+using namespace mrc;
 
 #define SRF_DEFAULT_FIBER_PRIORITY 0
 

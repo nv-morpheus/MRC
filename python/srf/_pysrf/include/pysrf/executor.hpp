@@ -29,9 +29,9 @@
 #include <future>  // for future & promise
 #include <memory>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
-// Export everything in the srf::pysrf namespace by default since we compile with -fvisibility=hidden
+// Export everything in the mrc::pysrf namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
 
 // This object serves as a bridge between awaiting in python and awaiting on fibers
@@ -66,12 +66,12 @@ class Executor
     void join();
     std::shared_ptr<Awaitable> join_async();
 
-    std::shared_ptr<srf::Executor> get_executor() const;
+    std::shared_ptr<mrc::Executor> get_executor() const;
 
   private:
     SharedFuture<void> m_join_future;
 
-    std::shared_ptr<srf::Executor> m_exec;
+    std::shared_ptr<mrc::Executor> m_exec;
 };
 
 class PyBoostFuture
@@ -91,4 +91,4 @@ class PyBoostFuture
 
 #pragma GCC visibility pop
 
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

@@ -28,7 +28,7 @@
 
 #include <memory>
 
-namespace srf::node {
+namespace mrc::node {
 
 /**
  * @brief Extends SourceProperties to hold a channel ingress which is the writing interface to an edge.
@@ -104,4 +104,4 @@ class SourceChannelWriteable : public SourceChannel<T>
     }
 };
 
-}  // namespace srf::node
+}  // namespace mrc::node

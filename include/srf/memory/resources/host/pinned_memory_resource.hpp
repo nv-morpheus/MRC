@@ -22,7 +22,7 @@
 #include <cuda_runtime.h>
 #include <glog/logging.h>
 
-namespace srf::memory {
+namespace mrc::memory {
 
 class pinned_memory_resource final : public memory_resource
 {
@@ -59,4 +59,4 @@ class pinned_memory_resource final : public memory_resource
     }
 };
 
-};  // namespace srf::memory
+};  // namespace mrc::memory

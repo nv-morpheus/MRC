@@ -31,7 +31,7 @@
 #include <utility>
 #include <vector>
 
-namespace srf::metrics {
+namespace mrc::metrics {
 
 Registry::Registry() :
   m_registry(std::make_shared<prometheus::Registry>()),
@@ -66,4 +66,4 @@ std::vector<CounterReport> Registry::collect_throughput_counters() const
     return report;
 }
 
-}  // namespace srf::metrics
+}  // namespace mrc::metrics

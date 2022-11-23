@@ -22,7 +22,7 @@
 
 #include <cstdint>
 
-namespace srf {
+namespace mrc {
 
 struct PlacementGroup
 {
@@ -34,4 +34,4 @@ struct PlacementGroup
     [[nodiscard]] virtual bool has_gpus() const            = 0;
 };
 
-}  // namespace srf
+}  // namespace mrc

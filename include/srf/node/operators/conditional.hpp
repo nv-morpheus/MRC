@@ -20,7 +20,7 @@
 #include "srf/node/operators/operator.hpp"
 #include "srf/node/operators/router.hpp"
 
-namespace srf::node {
+namespace mrc::node {
 
 template <typename T, typename CaseT>
 class Conditional : public Operator<T>, public RouterBase<CaseT, T>
@@ -43,4 +43,4 @@ class Conditional : public Operator<T>, public RouterBase<CaseT, T>
     std::function<CaseT(const T&)> m_predicate;
 };
 
-}  // namespace srf::node
+}  // namespace mrc::node

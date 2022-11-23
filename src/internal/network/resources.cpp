@@ -34,7 +34,7 @@
 #include <utility>
 #include <vector>
 
-namespace srf::internal::network {
+namespace mrc::internal::network {
 
 Resources::Resources(resources::PartitionResourceBase& base,
                      ucx::Resources& ucx,
@@ -100,4 +100,4 @@ Future<void> Resources::shutdown()
     return m_control_plane->shutdown();
 }
 
-}  // namespace srf::internal::network
+}  // namespace mrc::internal::network

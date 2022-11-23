@@ -65,7 +65,7 @@ class CodableObjectWithOptions
 class CodableViaExternalStruct
 {};
 
-namespace srf::codable {
+namespace mrc::codable {
 
 template <>
 struct codable_protocol<CodableViaExternalStruct>
@@ -73,9 +73,9 @@ struct codable_protocol<CodableViaExternalStruct>
     void serialize(const CodableViaExternalStruct& /*unused*/, Encoded<CodableViaExternalStruct>& /*unused*/) {}
 };
 
-};  // namespace srf::codable
+};  // namespace mrc::codable
 
-namespace srf::codable {}
+namespace mrc::codable {}
 
 struct NotCodableObject
 {};

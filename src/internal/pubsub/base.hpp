@@ -23,7 +23,7 @@
 
 #include <string>
 
-namespace srf::internal::pubsub {
+namespace mrc::internal::pubsub {
 
 /**
  * @brief PubSub is a specialization of the generic SubscriptionService
@@ -72,4 +72,4 @@ class Base : public control_plane::client::SubscriptionService
     runtime::Partition& m_runtime;
 };
 
-}  // namespace srf::internal::pubsub
+}  // namespace mrc::internal::pubsub

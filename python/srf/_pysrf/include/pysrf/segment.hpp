@@ -33,17 +33,17 @@
 #include <string>
 #include <utility>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
-// Export everything in the srf::pysrf namespace by default since we compile with -fvisibility=hidden
+// Export everything in the mrc::pysrf namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
 
 /**
  * Relates to https://github.com/pybind/pybind11/issues/1241 -- for a general solution see pydrake's WrapFunction
  *  method.
  *
- * We need to force pybind to pass us a function that expects a srf::segment::Builder* not a srf::segment::Builder&. If
- * not it'll try to make a copy and srf::segment::Builder isnt' copy-constructable. Once we have that, we wrap it with
+ * We need to force pybind to pass us a function that expects a mrc::segment::Builder* not a mrc::segment::Builder&. If
+ * not it'll try to make a copy and mrc::segment::Builder isnt' copy-constructable. Once we have that, we wrap it with
  * our reference based function.
  *
  * @tparam ClassT Class where the init method binding is defined.
@@ -53,14 +53,14 @@ namespace srf::pysrf {
  */
 template <typename ClassT, typename... ArgsT>
 auto wrap_segment_init_callback(void (ClassT::*method)(const std::string&,
-                                                       const std::function<void(srf::segment::Builder&, ArgsT...)>&))
+                                                       const std::function<void(mrc::segment::Builder&, ArgsT...)>&))
 {
     // Build up the function we're going to return, the signature on this function is what forces python to give us
     //  a pointer.
     auto func = [method](ClassT* self,
                          const std::string& name,
-                         const std::function<void(srf::segment::Builder*, ArgsT...)>& f_to_wrap) {
-        auto f_wrapped = [f_to_wrap](srf::segment::Builder& t, ArgsT... args) {
+                         const std::function<void(mrc::segment::Builder*, ArgsT...)>& f_to_wrap) {
+        auto f_wrapped = [f_to_wrap](mrc::segment::Builder& t, ArgsT... args) {
             f_to_wrap(&t, std::forward<ArgsT>(args)...);
         };
 
@@ -76,8 +76,8 @@ auto wrap_segment_init_callback(void (ClassT::*method)(const std::string&,
  * Relates to https://github.com/pybind/pybind11/issues/1241 -- for a general solution see pydrake's WrapFunction
  *  method.
  *
- * We need to force pybind to pass us a function that expects a srf::segment::Builder* not a srf::segment::Builder&. If
- * not it'll try to make a copy and srf::segment::Builder isn't copy-constructable. Once we have that, we wrap it with
+ * We need to force pybind to pass us a function that expects a mrc::segment::Builder* not a mrc::segment::Builder&. If
+ * not it'll try to make a copy and mrc::segment::Builder isn't copy-constructable. Once we have that, we wrap it with
  * our reference based function.
  *
  * @tparam ClassT Class where the init method binding is defined.
@@ -90,7 +90,7 @@ auto wrap_segment_init_callback(
     void (ClassT::*method)(const std::string&,
                            pybind11::list,
                            pybind11::list,
-                           const std::function<void(srf::segment::Builder&, ArgsT... args)>&))
+                           const std::function<void(mrc::segment::Builder&, ArgsT... args)>&))
 {
     // Build up the function we're going to return, the signature on this function is what forces python to give us
     //  a pointer.
@@ -98,8 +98,8 @@ auto wrap_segment_init_callback(
                          const std::string& name,
                          pybind11::list ingress_port_ids,
                          pybind11::list egress_port_ids,
-                         const std::function<void(srf::segment::Builder*, ArgsT...)>& f_to_wrap) {
-        auto f_wrapped = [f_to_wrap](srf::segment::Builder& t, ArgsT... args) {
+                         const std::function<void(mrc::segment::Builder*, ArgsT...)>& f_to_wrap) {
+        auto f_wrapped = [f_to_wrap](mrc::segment::Builder& t, ArgsT... args) {
             f_to_wrap(&t, std::forward<ArgsT>(args)...);
         };
 
@@ -115,20 +115,20 @@ auto wrap_segment_init_callback(
 class BuilderProxy
 {
   public:
-    static std::shared_ptr<srf::segment::ObjectProperties> make_source(srf::segment::Builder& self,
+    static std::shared_ptr<mrc::segment::ObjectProperties> make_source(mrc::segment::Builder& self,
                                                                        const std::string& name,
                                                                        pybind11::iterator source_iterator);
 
-    static std::shared_ptr<srf::segment::ObjectProperties> make_source(srf::segment::Builder& self,
+    static std::shared_ptr<mrc::segment::ObjectProperties> make_source(mrc::segment::Builder& self,
                                                                        const std::string& name,
                                                                        pybind11::iterable source_iter);
 
-    static std::shared_ptr<srf::segment::ObjectProperties> make_source(srf::segment::Builder& self,
+    static std::shared_ptr<mrc::segment::ObjectProperties> make_source(mrc::segment::Builder& self,
                                                                        const std::string& name,
                                                                        pybind11::function gen_factory);
 
-    static std::shared_ptr<srf::segment::ObjectProperties> make_source(
-        srf::segment::Builder& self,
+    static std::shared_ptr<mrc::segment::ObjectProperties> make_source(
+        mrc::segment::Builder& self,
         const std::string& name,
         const std::function<void(pysrf::PyObjectSubscriber& sub)>& f);
 
@@ -136,7 +136,7 @@ class BuilderProxy
      * Construct a new pybind11::object sink.
      * Create and return a Segment node used to sink python objects following out of the Segment.
      *
-     * (py) @param name: Unique name of the node that will be created in the SRF Segment.
+     * (py) @param name: Unique name of the node that will be created in the MRC Segment.
      * (py) @param on_next: python/std function that will be called on a new data element.
      * (py) @param on_error: python/std function that will be called if an error occurs.
      * (py) @param on_completed: python/std function that will be called
@@ -152,7 +152,7 @@ class BuilderProxy
      *      sink = segment.make_sink("test", my_on_next, my_on_error, my_on_completed)
      *  ```
      */
-    static std::shared_ptr<srf::segment::ObjectProperties> make_sink(srf::segment::Builder& self,
+    static std::shared_ptr<mrc::segment::ObjectProperties> make_sink(mrc::segment::Builder& self,
                                                                      const std::string& name,
                                                                      std::function<void(pybind11::object x)> on_next,
                                                                      std::function<void(pybind11::object x)> on_error,
@@ -162,75 +162,75 @@ class BuilderProxy
      * Construct a new 'pure' python::object -> python::object node
      *
      * This will create and return a new lambda function with the following signature:
-     * (py) @param name : Unique name of the node that will be created in the SRF Segment.
+     * (py) @param name : Unique name of the node that will be created in the MRC Segment.
      * (py) @param map_f : a std::function that takes a pybind11::object and returns a pybind11::object. This is your
      * python-function which will be called on each data element as it flows through the node.
      */
-    static std::shared_ptr<srf::segment::ObjectProperties> make_node(
-        srf::segment::Builder& self,
+    static std::shared_ptr<mrc::segment::ObjectProperties> make_node(
+        mrc::segment::Builder& self,
         const std::string& name,
         std::function<pybind11::object(pybind11::object x)> map_f);
 
-    static std::shared_ptr<srf::segment::ObjectProperties> make_node_full(
-        srf::segment::Builder& self,
+    static std::shared_ptr<mrc::segment::ObjectProperties> make_node_full(
+        mrc::segment::Builder& self,
         const std::string& name,
         std::function<void(const pysrf::PyObjectObservable& obs, pysrf::PyObjectSubscriber& sub)> sub_fn);
 
-    static void make_py2cxx_edge_adapter(srf::segment::Builder& self,
-                                         std::shared_ptr<srf::segment::ObjectProperties> source,
-                                         std::shared_ptr<srf::segment::ObjectProperties> sink,
+    static void make_py2cxx_edge_adapter(mrc::segment::Builder& self,
+                                         std::shared_ptr<mrc::segment::ObjectProperties> source,
+                                         std::shared_ptr<mrc::segment::ObjectProperties> sink,
                                          pybind11::object& sink_t);
 
-    static void make_cxx2py_edge_adapter(srf::segment::Builder& self,
-                                         std::shared_ptr<srf::segment::ObjectProperties> source,
-                                         std::shared_ptr<srf::segment::ObjectProperties> sink,
+    static void make_cxx2py_edge_adapter(mrc::segment::Builder& self,
+                                         std::shared_ptr<mrc::segment::ObjectProperties> source,
+                                         std::shared_ptr<mrc::segment::ObjectProperties> sink,
                                          pybind11::object& source_t);
 
-    static void make_edge(srf::segment::Builder& self,
-                          std::shared_ptr<srf::segment::ObjectProperties> source,
-                          std::shared_ptr<srf::segment::ObjectProperties> sink);
+    static void make_edge(mrc::segment::Builder& self,
+                          std::shared_ptr<mrc::segment::ObjectProperties> source,
+                          std::shared_ptr<mrc::segment::ObjectProperties> sink);
 
-    static std::shared_ptr<srf::segment::ObjectProperties> get_ingress(srf::segment::Builder& self,
+    static std::shared_ptr<mrc::segment::ObjectProperties> get_ingress(mrc::segment::Builder& self,
                                                                        const std::string& name);
 
-    static std::shared_ptr<srf::segment::ObjectProperties> get_egress(srf::segment::Builder& self,
+    static std::shared_ptr<mrc::segment::ObjectProperties> get_egress(mrc::segment::Builder& self,
                                                                       const std::string& name);
 
-    static std::shared_ptr<srf::modules::SegmentModule> load_module_from_registry(srf::segment::Builder& self,
+    static std::shared_ptr<mrc::modules::SegmentModule> load_module_from_registry(mrc::segment::Builder& self,
                                                                                   const std::string& module_id,
                                                                                   const std::string& registry_namespace,
                                                                                   std::string module_name,
                                                                                   pybind11::dict config = {});
 
-    static void register_module_input(srf::segment::Builder& self,
+    static void register_module_input(mrc::segment::Builder& self,
                                       std::string input_name,
                                       std::shared_ptr<segment::ObjectProperties> object);
 
-    static void register_module_output(srf::segment::Builder& self,
+    static void register_module_output(mrc::segment::Builder& self,
                                        std::string output_name,
                                        std::shared_ptr<segment::ObjectProperties> object);
 
-    static void init_module(srf::segment::Builder& self, std::shared_ptr<srf::modules::SegmentModule> module);
+    static void init_module(mrc::segment::Builder& self, std::shared_ptr<mrc::modules::SegmentModule> module);
 
-    static std::shared_ptr<srf::segment::ObjectProperties> make_file_reader(srf::segment::Builder& self,
+    static std::shared_ptr<mrc::segment::ObjectProperties> make_file_reader(mrc::segment::Builder& self,
                                                                             const std::string& name,
                                                                             const std::string& filename);
 
-    static std::shared_ptr<srf::segment::ObjectProperties> debug_float_source(srf::segment::Builder& self,
+    static std::shared_ptr<mrc::segment::ObjectProperties> debug_float_source(mrc::segment::Builder& self,
                                                                               const std::string& name,
                                                                               std::size_t iterations);
 
-    static std::shared_ptr<srf::segment::ObjectProperties> debug_float_passthrough(srf::segment::Builder& self,
+    static std::shared_ptr<mrc::segment::ObjectProperties> debug_float_passthrough(mrc::segment::Builder& self,
                                                                                    const std::string& name);
 
-    static std::shared_ptr<PyNode> flatten_list(srf::segment::Builder& self, const std::string& name);
+    static std::shared_ptr<PyNode> flatten_list(mrc::segment::Builder& self, const std::string& name);
 
-    static std::shared_ptr<srf::segment::ObjectProperties> debug_string_passthrough(srf::segment::Builder& self,
+    static std::shared_ptr<mrc::segment::ObjectProperties> debug_string_passthrough(mrc::segment::Builder& self,
                                                                                     const std::string& name);
 
-    static std::shared_ptr<srf::segment::ObjectProperties> debug_float_sink(srf::segment::Builder& self,
+    static std::shared_ptr<mrc::segment::ObjectProperties> debug_float_sink(mrc::segment::Builder& self,
                                                                             const std::string& name);
 };
 
 #pragma GCC visibility pop
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

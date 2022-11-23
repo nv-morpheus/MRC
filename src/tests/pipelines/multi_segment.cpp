@@ -40,7 +40,7 @@
 #include <utility>
 #include <vector>
 
-using namespace srf;
+using namespace mrc;
 
 namespace test::pipelines {
 

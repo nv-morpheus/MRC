@@ -37,11 +37,11 @@
 #include <optional>
 #include <vector>
 
-namespace srf::internal::runtime {
+namespace mrc::internal::runtime {
 class Runtime;
 }
 
-namespace srf::internal::resources {
+namespace mrc::internal::resources {
 
 class Manager final : public system::SystemProvider
 {
@@ -98,4 +98,4 @@ class Manager final : public system::SystemProvider
     friend runtime::Runtime;
 };
 
-}  // namespace srf::internal::resources
+}  // namespace mrc::internal::resources

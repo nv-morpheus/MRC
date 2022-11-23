@@ -17,7 +17,7 @@
 
 #pragma once
 
-namespace srf::segment {
+namespace mrc::segment {
 
 class Definition;
 class Builder;
@@ -46,4 +46,4 @@ class IngressPort;
 
 class IngressPortBase;
 
-};  // namespace srf::segment
+};  // namespace mrc::segment

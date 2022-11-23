@@ -30,7 +30,7 @@
 
 #include <mutex>
 
-namespace srf::node {
+namespace mrc::node {
 
 /**
  * @brief Extends SinkProperties to hold a Channel and provide SinkProperties access the the channel ingress
@@ -225,4 +225,4 @@ void SinkChannelBase<T>::enable_persistence()
     CHECK(m_persistent_ingress = ingress_channel());
 }
 
-}  // namespace srf::node
+}  // namespace mrc::node

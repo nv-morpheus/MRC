@@ -20,7 +20,7 @@
 #include <functional>
 #include <memory>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 class ISystem;
 class Resources;
@@ -40,4 +40,4 @@ class IResources
     friend Resources;
 };
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

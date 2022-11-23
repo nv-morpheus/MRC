@@ -17,7 +17,7 @@
 
 #pragma once
 
-namespace srf::pubsub {
+namespace mrc::pubsub {
 
 template <typename T>
 class Publisher;
@@ -30,4 +30,4 @@ class ISubscriberService;
 
 enum class PublisherPolicy;
 
-}  // namespace srf::pubsub
+}  // namespace mrc::pubsub

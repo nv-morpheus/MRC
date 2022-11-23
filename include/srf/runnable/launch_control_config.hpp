@@ -27,7 +27,7 @@
 #include <memory>
 #include <string>
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 /**
  * @brief Configuration object used to construct a LaunchControl object
@@ -51,4 +51,4 @@ struct LaunchControlConfig
     // ServiceOptions services;
 };
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

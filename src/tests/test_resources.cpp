@@ -34,7 +34,7 @@
 #include <memory>
 #include <utility>
 
-using namespace srf;
+using namespace mrc;
 using namespace internal;
 
 // iwyu is getting confused between std::uint32_t and boost::uint32_t

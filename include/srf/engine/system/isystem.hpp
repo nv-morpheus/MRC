@@ -21,14 +21,14 @@
 
 #include <memory>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 class System;
 
 /**
  * @brief System object
  *
- * Core class that could be used to transfer Topology and Partition information from the SRF runtime.
+ * Core class that could be used to transfer Topology and Partition information from the MRC runtime.
  *
  * Currently, this is only an opaque handle for constructing a system::IResource.
  */
@@ -43,4 +43,4 @@ class ISystem
     friend System;
 };
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

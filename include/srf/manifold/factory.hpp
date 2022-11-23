@@ -22,7 +22,7 @@
 
 #include <memory>
 
-namespace srf::manifold {
+namespace mrc::manifold {
 
 template <typename T>
 struct Factory final
@@ -33,4 +33,4 @@ struct Factory final
     }
 };
 
-}  // namespace srf::manifold
+}  // namespace mrc::manifold

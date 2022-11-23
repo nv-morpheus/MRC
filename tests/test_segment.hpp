@@ -35,7 +35,7 @@
 
 // IWYU pragma: no_include "gtest/gtest_pred_impl.h"
 
-namespace srf::segment {
+namespace mrc::segment {
 struct ObjectProperties;
 }
 

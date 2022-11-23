@@ -20,7 +20,7 @@
 #include "srf/node/forward.hpp"
 #include "srf/types.hpp"
 
-namespace srf::manifold {
+namespace mrc::manifold {
 
 struct Interface
 {
@@ -40,4 +40,4 @@ struct Interface
     virtual void update_outputs() = 0;
 };
 
-}  // namespace srf::manifold
+}  // namespace mrc::manifold

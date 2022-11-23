@@ -28,37 +28,37 @@
 #include <string>
 #include <vector>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
-// Export everything in the srf::pysrf namespace by default since we compile with -fvisibility=hidden
+// Export everything in the mrc::pysrf namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
 
 class SegmentModuleProxy
 {
   public:
-    static std::string component_prefix(srf::modules::SegmentModule& self);
+    static std::string component_prefix(mrc::modules::SegmentModule& self);
 
-    static pybind11::dict config(srf::modules::SegmentModule& self);
+    static pybind11::dict config(mrc::modules::SegmentModule& self);
 
-    static const std::string& name(srf::modules::SegmentModule& self);
+    static const std::string& name(mrc::modules::SegmentModule& self);
 
-    static std::string module_type_name(srf::modules::SegmentModule& self);
+    static std::string module_type_name(mrc::modules::SegmentModule& self);
 
-    static std::vector<std::string> input_ids(srf::modules::SegmentModule& self);
+    static std::vector<std::string> input_ids(mrc::modules::SegmentModule& self);
 
-    static std::vector<std::string> output_ids(srf::modules::SegmentModule& self);
+    static std::vector<std::string> output_ids(mrc::modules::SegmentModule& self);
 
-    static std::shared_ptr<srf::segment::ObjectProperties> input_port(srf::modules::SegmentModule& self,
+    static std::shared_ptr<mrc::segment::ObjectProperties> input_port(mrc::modules::SegmentModule& self,
                                                                       const std::string& input_id);
 
-    static const srf::modules::SegmentModule::segment_module_port_map_t& input_ports(srf::modules::SegmentModule& self);
+    static const mrc::modules::SegmentModule::segment_module_port_map_t& input_ports(mrc::modules::SegmentModule& self);
 
-    static std::shared_ptr<srf::segment::ObjectProperties> output_port(srf::modules::SegmentModule& self,
+    static std::shared_ptr<mrc::segment::ObjectProperties> output_port(mrc::modules::SegmentModule& self,
                                                                        const std::string& output_id);
 
-    static const srf::modules::SegmentModule::segment_module_port_map_t& output_ports(
-        srf::modules::SegmentModule& self);
+    static const mrc::modules::SegmentModule::segment_module_port_map_t& output_ports(
+        mrc::modules::SegmentModule& self);
 };
 
 #pragma GCC visibility pop
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

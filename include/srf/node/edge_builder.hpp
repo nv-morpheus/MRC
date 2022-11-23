@@ -29,7 +29,7 @@
 #include <sstream>
 #include <typeindex>
 
-namespace srf::node {
+namespace mrc::node {
 
 struct EdgeBuilder final
 {
@@ -42,8 +42,8 @@ struct EdgeBuilder final
      * @return Ingress handle constructed by the adapter
      */
     static std::shared_ptr<channel::IngressHandle> ingress_adapter_for_sink(
-        srf::node::SourcePropertiesBase& source,
-        srf::node::SinkPropertiesBase& sink,
+        mrc::node::SourcePropertiesBase& source,
+        mrc::node::SinkPropertiesBase& sink,
         std::shared_ptr<channel::IngressHandle> ingress_handle);
 
     /**
@@ -56,7 +56,7 @@ struct EdgeBuilder final
      */
     static std::shared_ptr<channel::IngressHandle> ingress_for_source_type(
         std::type_index source_type,
-        srf::node::SinkPropertiesBase& sink,
+        mrc::node::SinkPropertiesBase& sink,
         std::shared_ptr<channel::IngressHandle> ingress_handle);
 
     /**
@@ -142,4 +142,4 @@ void operator|(SourceProperties<SourceT>& source, SinkProperties<SinkT>& sink)
     EdgeBuilder::make_edge(source, sink);
 }
 
-}  // namespace srf::node
+}  // namespace mrc::node

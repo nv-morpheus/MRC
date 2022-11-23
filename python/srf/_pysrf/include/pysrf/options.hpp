@@ -28,9 +28,9 @@
 #include <cstddef>  // for size_t
 #include <string>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
-// Export everything in the srf::pysrf namespace by default since we compile with -fvisibility=hidden
+// Export everything in the mrc::pysrf namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
 
 class ConfigProxy
@@ -43,40 +43,40 @@ class ConfigProxy
 class EngineFactoryOptionsProxy
 {
   public:
-    static std::size_t get_cpu_count(srf::EngineFactoryOptions& self);
+    static std::size_t get_cpu_count(mrc::EngineFactoryOptions& self);
 
-    static void set_cpu_count(srf::EngineFactoryOptions& self, std::size_t cpu_count);
+    static void set_cpu_count(mrc::EngineFactoryOptions& self, std::size_t cpu_count);
 
-    static runnable::EngineType get_engine_type(srf::EngineFactoryOptions& self);
+    static runnable::EngineType get_engine_type(mrc::EngineFactoryOptions& self);
 
-    static void set_engine_type(srf::EngineFactoryOptions& self, runnable::EngineType engine_type);
+    static void set_engine_type(mrc::EngineFactoryOptions& self, runnable::EngineType engine_type);
 
-    static bool get_reusable(srf::EngineFactoryOptions& self);
+    static bool get_reusable(mrc::EngineFactoryOptions& self);
 
-    static void set_reusable(srf::EngineFactoryOptions& self, bool reusable);
+    static void set_reusable(mrc::EngineFactoryOptions& self, bool reusable);
 
-    static bool get_allow_overlap(srf::EngineFactoryOptions& self);
+    static bool get_allow_overlap(mrc::EngineFactoryOptions& self);
 
-    static void set_allow_overlap(srf::EngineFactoryOptions& self, bool allow_overlap);
+    static void set_allow_overlap(mrc::EngineFactoryOptions& self, bool allow_overlap);
 };
 
 class OptionsProxy
 {
   public:
-    static std::string get_user_cpuset(srf::TopologyOptions& self);
+    static std::string get_user_cpuset(mrc::TopologyOptions& self);
 
-    static void set_user_cpuset(srf::TopologyOptions& self, const std::string& user_cpuset);
+    static void set_user_cpuset(mrc::TopologyOptions& self, const std::string& user_cpuset);
 
-    static srf::PlacementStrategy get_cpu_strategy(srf::PlacementOptions& self);
+    static mrc::PlacementStrategy get_cpu_strategy(mrc::PlacementOptions& self);
 
-    static void set_cpu_strategy(srf::PlacementOptions& self, srf::PlacementStrategy strategy);
+    static void set_cpu_strategy(mrc::PlacementOptions& self, mrc::PlacementStrategy strategy);
 
-    static srf::PlacementOptions& get_placement(srf::Options& self);
+    static mrc::PlacementOptions& get_placement(mrc::Options& self);
 
-    static srf::TopologyOptions& get_topology(srf::Options& self);
+    static mrc::TopologyOptions& get_topology(mrc::Options& self);
 
-    static srf::EngineGroups& get_engine_factories(srf::Options& self);
+    static mrc::EngineGroups& get_engine_factories(mrc::Options& self);
 };
 
 #pragma GCC visibility pop
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

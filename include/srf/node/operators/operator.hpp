@@ -20,7 +20,7 @@
 #include "srf/channel/ingress.hpp"
 #include "srf/node/sink_properties.hpp"
 
-namespace srf::node {
+namespace mrc::node {
 
 struct OperatorBase
 {
@@ -83,4 +83,4 @@ std::shared_ptr<channel::Ingress<T>> Operator<T>::channel_ingress()
     return ingress;
 }
 
-}  // namespace srf::node
+}  // namespace mrc::node

@@ -26,7 +26,7 @@
 #include <set>
 #include <utility>
 
-namespace srf::internal::segment {
+namespace mrc::internal::segment {
 
 Definition::Definition(std::string name,
                        std::map<std::string, IDefinition::ingress_initializer_t> ingress_initializers,
@@ -70,7 +70,7 @@ std::vector<std::string> Definition::egress_port_names() const
     return names;
 }
 
-// namespace srf::internal::segment {
+// namespace mrc::internal::segment {
 // Definition::Definition(std::string name,
 //                        std::map<std::string, ingress_initializer_t> ingress_initializers,
 //                        std::map<std::string, egress_initializer_t> egress_initializers,
@@ -196,6 +196,6 @@ void Definition::validate_ports() const
 // {
 //     return m_ingress_initializers;
 // }
-// }  // namespace srf::internal::segment
+// }  // namespace mrc::internal::segment
 
-}  // namespace srf::internal::segment
+}  // namespace mrc::internal::segment

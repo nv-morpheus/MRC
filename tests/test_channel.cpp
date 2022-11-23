@@ -39,7 +39,7 @@
 // IWYU thinks algorithm is needed for: auto channel = std::make_shared<RecentChannel<int>>(2);
 // IWYU pragma: no_include <algorithm>
 
-using namespace srf;
+using namespace mrc;
 
 class TestChannel : public ::testing::Test
 {

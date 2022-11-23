@@ -56,7 +56,7 @@
 #include <utility>
 #include <vector>
 
-namespace srf::internal::remote_descriptor {
+namespace mrc::internal::remote_descriptor {
 
 namespace {
 
@@ -82,7 +82,7 @@ Manager::Manager(const InstanceID& instance_id, resources::PartitionResources& r
   m_instance_id(instance_id),
   m_resources(resources)
 {
-    service_set_description(SRF_CONCAT_STR("srf::remote_description_manager[" << instance_id << "]"));
+    service_set_description(SRF_CONCAT_STR("mrc::remote_description_manager[" << instance_id << "]"));
     service_start();
     service_await_live();
 }
@@ -92,21 +92,21 @@ Manager::~Manager()
     Service::call_in_destructor();
 }
 
-srf::runtime::RemoteDescriptor Manager::make_remote_descriptor(srf::codable::protos::RemoteDescriptor&& proto)
+mrc::runtime::RemoteDescriptor Manager::make_remote_descriptor(mrc::codable::protos::RemoteDescriptor&& proto)
 {
     // attach the resources for the partition in which this manager is operating to the rd's protobuf
     auto handle = std::make_unique<DecodableStorage>(std::move(proto), m_resources);
     return {shared_from_this(), std::move(handle)};
 }
 
-srf::runtime::RemoteDescriptor Manager::register_encoded_object(std::unique_ptr<srf::codable::EncodedStorage> object)
+mrc::runtime::RemoteDescriptor Manager::register_encoded_object(std::unique_ptr<mrc::codable::EncodedStorage> object)
 {
     CHECK(object);
 
     auto object_id = reinterpret_cast<std::size_t>(object.get());
 
     Storage storage(std::move(object));
-    srf::codable::protos::RemoteDescriptor rd;
+    mrc::codable::protos::RemoteDescriptor rd;
 
     DVLOG(10) << "storing object_id: " << object_id << " with " << storage.tokens_count() << " tokens";
 
@@ -126,7 +126,7 @@ srf::runtime::RemoteDescriptor Manager::register_encoded_object(std::unique_ptr<
     return make_remote_descriptor(std::move(rd));
 }
 
-std::unique_ptr<srf::codable::ICodableStorage> Manager::create_storage()
+std::unique_ptr<mrc::codable::ICodableStorage> Manager::create_storage()
 {
     return std::make_unique<codable::CodableStorage>(m_resources);
 }
@@ -136,7 +136,7 @@ std::size_t Manager::size() const
     return m_stored_objects.size();
 }
 
-void Manager::release_handle(std::unique_ptr<srf::runtime::IRemoteDescriptorHandle> handle)
+void Manager::release_handle(std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> handle)
 {
     CHECK(handle);
     const auto& rd = handle->remote_descriptor_proto();
@@ -183,7 +183,7 @@ void Manager::do_service_start()
         std::make_unique<channel::BufferedChannel<RemoteDescriptorDecrementMessage>>(128));
     node::make_edge(*m_decrement_channel, *decrement_handler);
 
-    srf::runnable::LaunchOptions launch_options;
+    mrc::runnable::LaunchOptions launch_options;
     launch_options.engine_factory_name = "main";
 
     m_decrement_handler = m_resources.runnable()
@@ -247,7 +247,7 @@ std::uint32_t Manager::active_message_id()
     return 10000;
 }
 
-const srf::codable::IDecodableStorage& Manager::encoding(const std::size_t& object_id) const
+const mrc::codable::IDecodableStorage& Manager::encoding(const std::size_t& object_id) const
 {
     std::lock_guard lock(m_mutex);
     auto search = m_stored_objects.find(object_id);
@@ -258,9 +258,9 @@ InstanceID Manager::instance_id() const
 {
     return m_instance_id;
 }
-srf::runtime::RemoteDescriptor Manager::make_remote_descriptor(
-    std::unique_ptr<srf::runtime::IRemoteDescriptorHandle> handle)
+mrc::runtime::RemoteDescriptor Manager::make_remote_descriptor(
+    std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> handle)
 {
     return {shared_from_this(), std::move(handle)};
 }
-}  // namespace srf::internal::remote_descriptor
+}  // namespace mrc::internal::remote_descriptor

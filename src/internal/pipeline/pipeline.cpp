@@ -30,7 +30,7 @@
 #include <utility>
 #include <vector>
 
-namespace srf::internal::pipeline {
+namespace mrc::internal::pipeline {
 
 void Pipeline::add_segment(std::shared_ptr<const segment::Definition> segment)
 {
@@ -74,4 +74,4 @@ std::shared_ptr<Pipeline> Pipeline::unwrap(IPipeline& pipeline)
 {
     return pipeline.m_impl;
 }
-}  // namespace srf::internal::pipeline
+}  // namespace mrc::internal::pipeline

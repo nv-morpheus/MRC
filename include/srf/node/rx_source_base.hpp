@@ -36,7 +36,7 @@
 #include <memory>
 #include <mutex>
 
-namespace srf::node {
+namespace mrc::node {
 
 /**
  * @brief Extends SourceChannel<T> to provide observer responsible for writing data to the channel
@@ -95,4 +95,4 @@ void RxSourceBase<T>::source_remove_watcher(std::shared_ptr<WatcherInterface> wa
     Watchable::remove_watcher(std::move(watcher));
 }
 
-}  // namespace srf::node
+}  // namespace mrc::node

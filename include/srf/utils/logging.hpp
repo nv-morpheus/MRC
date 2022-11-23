@@ -22,7 +22,7 @@
 // #include <iomanip>
 // #include <ostream>
 
-namespace srf::utils {
+namespace mrc::utils {
 // void glog_custom_prefix(std::ostream &s, const LogMessageInfo &l, void *)
 // {
 //     s << l.severity[0]                         // Severity
@@ -41,4 +41,4 @@ namespace srf::utils {
 //       << std::setfill('0') << ' '              // Break
 //       << l.filename << ':' << l.line_number << "]";
 // }
-}  // namespace srf::utils
+}  // namespace mrc::utils

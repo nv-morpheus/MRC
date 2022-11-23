@@ -42,7 +42,7 @@
     #endif
 
 // modification from original - namespace
-namespace srf {
+namespace mrc {
 
 class thread_barrier  // NOLINT
 {
@@ -59,7 +59,7 @@ class thread_barrier  // NOLINT
         BOOST_ASSERT(0 != initial);
     }
 
-    thread_barrier(thread_barrier const&) = delete;
+    thread_barrier(thread_barrier const&)            = delete;
     thread_barrier& operator=(thread_barrier const&) = delete;
 
     bool wait()
@@ -79,6 +79,6 @@ class thread_barrier  // NOLINT
     }
 };
 
-}  // namespace srf
+}  // namespace mrc
 
 #endif  // BOOST_FIBER_DETAIL_THREAD_BARRIER_H

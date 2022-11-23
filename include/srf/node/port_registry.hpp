@@ -28,13 +28,13 @@
 #include <typeindex>
 #include <vector>
 
-namespace srf::segment {
+namespace mrc::segment {
 class EgressPortBase;
 struct IngressPortBase;
 struct ObjectProperties;
-}  // namespace srf::segment
+}  // namespace mrc::segment
 
-namespace srf::node {
+namespace mrc::node {
 
 /**
  * @brief Utility object used for constructing, inspecting, and manipulating ingress and egress ports dynamically.
@@ -127,4 +127,4 @@ struct PortRegistry
     static std::recursive_mutex s_mutex;
 };
 
-}  // namespace srf::node
+}  // namespace mrc::node

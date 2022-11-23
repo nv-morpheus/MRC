@@ -1,6 +1,6 @@
 # Configuration Options
 
-This example shows how altering two common configuration options (number of threads and channel size) of a SRF pipeline can change its behavior. By default SRF will set the thread count to match the number of cores in a system and will use a channel size of `128`. The channel size is expressed in number of elements regardless of the byte size of the objects.
+This example shows how altering two common configuration options (number of threads and channel size) of a MRC pipeline can change its behavior. By default MRC will set the thread count to match the number of cores in a system and will use a channel size of `128`. The channel size is expressed in number of elements regardless of the byte size of the objects.
 
 In our previous examples the pipelines were quite simple. However in non-trivial pipelines it is quite likely that some nodes will execute faster than other nodes. When a reletively faster upstream source node emits data faster than they are able to be processed by a downstream sink node, it is possible that the channel will hit it's max channel size. When this happens the source node will block on the next write until there is room in the channel. Increasing the size of the channel would allow the source to emit as quickly as it is able to but at the cost of increased memory consumption.
 
@@ -23,7 +23,7 @@ Sink  : Got value  ${MESSAGE_ID}, TID: [${THREAD_NAME}]
 ```
 
 ### Note:
-The threads will be created by SRF's underlying C++ implementation. Python's threading library will always return a thread name in the form of "Dummy-*" for any threads not created by Python.
+The threads will be created by MRC's underlying C++ implementation. Python's threading library will always return a thread name in the form of "Dummy-*" for any threads not created by Python.
 
 In this example, it will be important to pay attention to the ordering of the messages, and the thread that they were executed on.
 

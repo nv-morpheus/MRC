@@ -17,7 +17,7 @@
 
 #include "srf/options/fiber_pool.hpp"
 
-namespace srf {
+namespace mrc {
 
 FiberPoolOptions& FiberPoolOptions::enable_memory_binding(bool default_true)
 {
@@ -47,4 +47,4 @@ bool FiberPoolOptions::enable_tracing_scheduler() const
     return m_enable_tracing_scheduler;
 }
 
-}  // namespace srf
+}  // namespace mrc

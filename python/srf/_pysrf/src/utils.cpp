@@ -38,7 +38,7 @@
 // IWYU pragma: no_include <pybind11/detail/type_caster_base.h>
 // IWYU pragma: no_include "pystate.h"
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 namespace py = pybind11;
 using nlohmann::json;
@@ -219,7 +219,7 @@ pybind11::object PyObjectWrapper::copy_obj() const&
 {
     if (PyGILState_Check() == 0)
     {
-        throw srf::exceptions::SrfRuntimeError("Must have the GIL copying to py::object");
+        throw mrc::exceptions::SrfRuntimeError("Must have the GIL copying to py::object");
     }
 
     // Allow for peaking into the object
@@ -230,7 +230,7 @@ pybind11::object&& PyObjectWrapper::move_obj() &&
 {
     if (!m_obj)
     {
-        throw srf::exceptions::SrfRuntimeError(
+        throw mrc::exceptions::SrfRuntimeError(
             "Cannot convert empty wrapper to py::object. Did you accidentally move out the object?");
     }
 
@@ -312,7 +312,7 @@ PyObjectHolder::operator const pybind11::handle&() const&
     // TODO(MDD): Do we need the GIL here?
     if (PyGILState_Check() == 0)
     {
-        throw srf::exceptions::SrfRuntimeError("Must have the GIL copying to py::object");
+        throw mrc::exceptions::SrfRuntimeError("Must have the GIL copying to py::object");
     }
 
     return m_wrapped->view_obj();
@@ -328,4 +328,4 @@ PyObject* PyObjectHolder::ptr() const
     return m_wrapped->ptr();
 }
 
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

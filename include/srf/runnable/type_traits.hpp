@@ -22,7 +22,7 @@
 #include "srf/runnable/detail/type_traits.hpp"
 #include "srf/utils/macros.hpp"
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 template <typename T>
 using runnable_context_t = typename decltype(detail::get_runnable_context_t(std::declval<T&>()))::type;
@@ -60,4 +60,4 @@ inline constexpr bool is_thread_runnable_v = is_thread_runnable<T>::value;  // N
 template <typename T>
 using unwrap_context_t = typename detail::unwrap_context_second_t<T>;
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

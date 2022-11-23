@@ -26,25 +26,25 @@
 #include <memory>
 #include <string>
 
-namespace srf::segment {
+namespace mrc::segment {
 class Builder;
 struct ObjectProperties;
-}  // namespace srf::segment
+}  // namespace mrc::segment
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 class Executor;
 }
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
-// Export everything in the srf::pysrf namespace by default since we compile with -fvisibility=hidden
+// Export everything in the mrc::pysrf namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
 
-using latency_ensemble_t = srf::benchmarking::TracerEnsemble<pybind11::object, srf::benchmarking::LatencyTracer>;
-using latency_watcher_t  = srf::benchmarking::SegmentWatcher<latency_ensemble_t>;
+using latency_ensemble_t = mrc::benchmarking::TracerEnsemble<pybind11::object, mrc::benchmarking::LatencyTracer>;
+using latency_watcher_t  = mrc::benchmarking::SegmentWatcher<latency_ensemble_t>;
 
-using throughput_ensemble_t = srf::benchmarking::TracerEnsemble<pybind11::object, srf::benchmarking::ThroughputTracer>;
-using throughput_watcher_t  = srf::benchmarking::SegmentWatcher<throughput_ensemble_t>;
+using throughput_ensemble_t = mrc::benchmarking::TracerEnsemble<pybind11::object, mrc::benchmarking::ThroughputTracer>;
+using throughput_watcher_t  = mrc::benchmarking::SegmentWatcher<throughput_ensemble_t>;
 
 class LatencyWatcher : public latency_watcher_t
 {
@@ -53,16 +53,16 @@ class LatencyWatcher : public latency_watcher_t
     LatencyWatcher(std::shared_ptr<pysrf::Executor> executor, std::function<void(latency_ensemble_t&)> payload_init);
 
     void make_segment(const std::string& name,
-                      const std::function<void(srf::segment::Builder&, LatencyWatcher&)>& init);
-    std::shared_ptr<srf::segment::ObjectProperties> make_tracer_source(srf::segment::Builder& seg,
+                      const std::function<void(mrc::segment::Builder&, LatencyWatcher&)>& init);
+    std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_source(mrc::segment::Builder& seg,
                                                                        const std::string& name,
                                                                        bool force_sequential = false);
-    std::shared_ptr<srf::segment::ObjectProperties> make_traced_node(
-        srf::segment::Builder& seg,
+    std::shared_ptr<mrc::segment::ObjectProperties> make_traced_node(
+        mrc::segment::Builder& seg,
         const std::string& name,
         std::function<pybind11::object(pybind11::object py_obj)> map_f);
-    std::shared_ptr<srf::segment::ObjectProperties> make_tracer_sink(
-        srf::segment::Builder& seg, const std::string& name, std::function<void(pybind11::object py_obj)> sink_f);
+    std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_sink(
+        mrc::segment::Builder& seg, const std::string& name, std::function<void(pybind11::object py_obj)> sink_f);
 
     pybind11::dict aggregate_tracers_as_pydict();
 
@@ -78,16 +78,16 @@ class ThroughputWatcher : public throughput_watcher_t
                       std::function<void(throughput_ensemble_t&)> payload_init);
 
     void make_segment(const std::string& name,
-                      const std::function<void(srf::segment::Builder&, ThroughputWatcher&)>& init);
-    std::shared_ptr<srf::segment::ObjectProperties> make_tracer_source(srf::segment::Builder& seg,
+                      const std::function<void(mrc::segment::Builder&, ThroughputWatcher&)>& init);
+    std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_source(mrc::segment::Builder& seg,
                                                                        const std::string& name,
                                                                        bool force_sequential = false);
-    std::shared_ptr<srf::segment::ObjectProperties> make_traced_node(
-        srf::segment::Builder& seg,
+    std::shared_ptr<mrc::segment::ObjectProperties> make_traced_node(
+        mrc::segment::Builder& seg,
         const std::string& name,
         std::function<pybind11::object(pybind11::object py_obj)> map_f);
-    std::shared_ptr<srf::segment::ObjectProperties> make_tracer_sink(
-        srf::segment::Builder& seg, const std::string& name, std::function<void(pybind11::object py_obj)> sink_f);
+    std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_sink(
+        mrc::segment::Builder& seg, const std::string& name, std::function<void(pybind11::object py_obj)> sink_f);
 
     pybind11::dict aggregate_tracers_as_pydict();
 
@@ -96,4 +96,4 @@ class ThroughputWatcher : public throughput_watcher_t
 };
 
 #pragma GCC visibility pop
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

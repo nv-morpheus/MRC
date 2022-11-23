@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 
-namespace srf::modules {
+namespace mrc::modules {
 
 class PluginModule
 {
@@ -108,4 +108,4 @@ class PluginModule
     void clear_plugin_interface();
 };
 
-}  // namespace srf::modules
+}  // namespace mrc::modules

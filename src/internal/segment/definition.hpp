@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-namespace srf::internal::segment {
+namespace mrc::internal::segment {
 
 class Definition final
 {
@@ -62,4 +62,4 @@ class Definition final
     std::map<std::string, IDefinition::ingress_initializer_t> m_ingress_initializers;
 };
 
-}  // namespace srf::internal::segment
+}  // namespace mrc::internal::segment

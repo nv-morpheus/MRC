@@ -34,7 +34,7 @@
 #include <memory>
 #include <unordered_map>
 
-namespace srf::manifold {
+namespace mrc::manifold {
 
 namespace detail {
 
@@ -126,4 +126,4 @@ class LoadBalancer : public CompositeManifold<MuxedIngress<T>, RoundRobinEgress<
     std::unique_ptr<runnable::Runner> m_runner{nullptr};
 };
 
-}  // namespace srf::manifold
+}  // namespace mrc::manifold

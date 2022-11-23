@@ -21,7 +21,7 @@
 
 #include <string>
 
-namespace srf::memory {
+namespace mrc::memory {
 
 enum class memory_kind
 {
@@ -67,4 +67,4 @@ static const std::string& kind_string(const memory_kind& kind)
     return error;
 }
 
-}  // namespace srf::memory
+}  // namespace mrc::memory

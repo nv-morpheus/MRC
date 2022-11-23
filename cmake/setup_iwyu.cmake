@@ -1,4 +1,4 @@
-#=============================================================================
+# =============================================================================
 # SPDX-FileCopyrightText: Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -6,15 +6,14 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#=============================================================================
-
+# =============================================================================
 
 function(configure_iwyu)
   list(APPEND CMAKE_MESSAGE_CONTEXT "iwyu")
@@ -25,18 +24,18 @@ function(configure_iwyu)
 
   if(SRF_IWYU_PROGRAM)
     set(SRF_IWYU_OPTIONS
-        -Xiwyu; --mapping_file=${PROJECT_SOURCE_DIR}/ci/iwyu/mappings.imp;
-        -Xiwyu; --max_line_length=120;
-        -Xiwyu; --verbose=${SRF_IWYU_VERBOSITY};
-        -Xiwyu; --no_fwd_decls;
-        -Xiwyu; --quoted_includes_first;
-        -Xiwyu; --cxx17ns;
-        -Xiwyu --no_comments)
+      -Xiwyu; --mapping_file=${PROJECT_SOURCE_DIR}/ci/iwyu/mappings.imp;
+      -Xiwyu; --max_line_length=120;
+      -Xiwyu; --verbose=${SRF_IWYU_VERBOSITY};
+      -Xiwyu; --no_fwd_decls;
+      -Xiwyu; --quoted_includes_first;
+      -Xiwyu; --cxx17ns;
+      -Xiwyu --no_comments)
 
     # Convert these to space separated arguments
     string(REPLACE ";" " " SRF_IWYU_OPTIONS "${SRF_IWYU_OPTIONS}")
 
-    message(STATUS "Enabling include-what-you-use for SRF targets")
+    message(STATUS "Enabling include-what-you-use for MRC targets")
 
     set(IWYU_WRAPPER "${CMAKE_CURRENT_BINARY_DIR}/run_iwyu.sh")
 

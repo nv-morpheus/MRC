@@ -17,8 +17,8 @@
 
 #pragma once
 
-namespace srf::internal::remote_descriptor {
+namespace mrc::internal::remote_descriptor {
 
 class Manager;
 
-}  // namespace srf::internal::remote_descriptor
+}  // namespace mrc::internal::remote_descriptor

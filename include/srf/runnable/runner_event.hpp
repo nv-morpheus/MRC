@@ -19,7 +19,7 @@
 
 #include "srf/runnable/runner.hpp"
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 /**
  * @brief Emitted by LaunchControl when Runners launched via LaunchControl change state
@@ -32,4 +32,4 @@ struct RunnerEvent
     Runner::State new_state;
 };
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

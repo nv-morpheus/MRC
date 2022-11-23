@@ -26,7 +26,7 @@
 #include <cstddef>
 #include <optional>
 
-namespace srf::internal::resources {
+namespace mrc::internal::resources {
 
 /**
  * @brief Partition Resources define the set of Resources available to a given Partition
@@ -53,4 +53,4 @@ class PartitionResources final : public PartitionResourceBase
     std::optional<network::Resources>& m_network;
 };
 
-}  // namespace srf::internal::resources
+}  // namespace mrc::internal::resources

@@ -35,7 +35,7 @@
 // IWYU pragma: no_include <pybind11/detail/common.h>
 // IWYU pragma: no_include <pybind11/detail/descr.h>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 namespace py = pybind11;
 
@@ -45,7 +45,7 @@ PYBIND11_MODULE(watchers, m)
 
     // Segment watcher allows for each tracer object to have a data payload. To simplify, for now, we'll assume
     // that the payload is a py::object.
-    // auto SegmentWatcher = py::class_<srf::SegmentWatcher<py::object>>(m, "SegmentWatcher");
+    // auto SegmentWatcher = py::class_<mrc::SegmentWatcher<py::object>>(m, "SegmentWatcher");
     auto PyLatencyWatcher = py::class_<pysrf::LatencyWatcher>(m, "LatencyWatcher");
     PyLatencyWatcher.def(py::init<std::shared_ptr<pysrf::Executor>>());
     PyLatencyWatcher.def(py::init<std::shared_ptr<pysrf::Executor>, std::function<void(pysrf::latency_ensemble_t&)>>());
@@ -99,4 +99,4 @@ PYBIND11_MODULE(watchers, m)
     PyThroughputWatcher.def("tracer_count", py::overload_cast<std::size_t>(&pysrf::ThroughputWatcher::tracer_count));
     PyThroughputWatcher.def("tracing", &pysrf::ThroughputWatcher::tracing);
 }
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

@@ -66,9 +66,9 @@
 // IWYU pragma: no_include <tupleobject.h>
 
 namespace py    = pybind11;
-namespace pysrf = srf::pysrf;
+namespace pysrf = mrc::pysrf;
 using namespace std::string_literals;
-using namespace srf::codable;
+using namespace mrc::codable;
 using namespace pybind11::literals;
 
 PYSRF_TEST_CLASS(CodablePyobject);
@@ -81,10 +81,10 @@ TEST_F(TestCodablePyobject, PyObject)
     static_assert(is_decodable_v<pysrf::PyHolder>, "pybind11::object should be decodable.");
     static_assert(!is_codable_v<PyObject>,
                   "No support for directly coding cpython objects -- "
-                  "use pybind11::object or srf::PyHolder");
+                  "use pybind11::object or mrc::PyHolder");
     static_assert(!is_decodable_v<PyObject>,
                   "No support for directly coding cpython objects -- "
-                  "use pybind11::object or srf::PyHolder");
+                  "use pybind11::object or mrc::PyHolder");
 }
 
 // todo(ryan/mdemoret) - reenable when python has a runtime object and a codable storage object can be acquired

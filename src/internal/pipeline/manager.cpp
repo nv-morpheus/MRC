@@ -38,7 +38,7 @@
 #include <string>
 #include <utility>
 
-namespace srf::internal::pipeline {
+namespace mrc::internal::pipeline {
 
 Manager::Manager(std::shared_ptr<Pipeline> pipeline, resources::Manager& resources) :
   m_pipeline(std::move(pipeline)),
@@ -63,7 +63,7 @@ void Manager::push_updates(SegmentAddresses&& segment_addresses)
 
 void Manager::do_service_start()
 {
-    srf::runnable::LaunchOptions main;
+    mrc::runnable::LaunchOptions main;
     main.engine_factory_name = "main";
     main.pe_count            = 1;
     main.engines_per_pe      = 1;
@@ -79,7 +79,7 @@ void Manager::do_service_start()
     auto launcher = resources().partition(0).runnable().launch_control().prepare_launcher(main, std::move(controller));
 
     // explicit capture and rethrow the error
-    launcher->apply([this](srf::runnable::Runner& runner) {
+    launcher->apply([this](mrc::runnable::Runner& runner) {
         runner.on_completion_callback([this](bool ok) {
             if (!ok)
             {
@@ -135,4 +135,4 @@ const Pipeline& Manager::pipeline() const
     CHECK(m_pipeline);
     return *m_pipeline;
 }
-}  // namespace srf::internal::pipeline
+}  // namespace mrc::internal::pipeline

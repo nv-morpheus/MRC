@@ -50,8 +50,8 @@
 #include <type_traits>
 #include <utility>
 
-using namespace srf;
-using namespace srf::codable;
+using namespace mrc;
+using namespace mrc::codable;
 
 class CodableObject
 {
@@ -85,7 +85,7 @@ class CodableObjectWithOptions
 class CodableViaExternalStruct
 {};
 
-namespace srf::codable {
+namespace mrc::codable {
 
 template <>
 struct codable_protocol<CodableViaExternalStruct>
@@ -93,9 +93,9 @@ struct codable_protocol<CodableViaExternalStruct>
     void serialize(const CodableViaExternalStruct& /*unused*/, Encoder<CodableViaExternalStruct>& /*unused*/) {}
 };
 
-};  // namespace srf::codable
+};  // namespace mrc::codable
 
-namespace srf::codable {}
+namespace mrc::codable {}
 
 struct NotCodableObject
 {};
@@ -150,7 +150,7 @@ TEST_F(TestCodable, String)
 {
     static_assert(is_codable<std::string>::value, "should be codable");
 
-    std::string str = "Hello SRF";
+    std::string str = "Hello MRC";
     auto str_block =
         m_runtime->partition(0).resources().network()->data_plane().registration_cache().lookup(str.data());
     EXPECT_FALSE(str_block);
@@ -166,9 +166,9 @@ TEST_F(TestCodable, String)
 
 TEST_F(TestCodable, Buffer)
 {
-    static_assert(is_codable<srf::memory::buffer>::value, "should be codable");
+    static_assert(is_codable<mrc::memory::buffer>::value, "should be codable");
 
-    // std::string str = "Hello SRF";
+    // std::string str = "Hello MRC";
     // auto str_block  = m_runtime->partition(0).network()->data_plane().registration_cache().lookup(str.data());
     // EXPECT_FALSE(str_block);
 
@@ -229,7 +229,7 @@ TEST_F(TestCodable, Buffer)
 
 TEST_F(TestCodable, EncodedObjectProto)
 {
-    static_assert(codable::is_encodable<srf::codable::protos::EncodedObject>::value, "should be encodable");
-    static_assert(codable::is_decodable<srf::codable::protos::EncodedObject>::value, "should be decodable");
-    static_assert(is_codable<srf::codable::protos::EncodedObject>::value, "should be codable");
+    static_assert(codable::is_encodable<mrc::codable::protos::EncodedObject>::value, "should be encodable");
+    static_assert(codable::is_decodable<mrc::codable::protos::EncodedObject>::value, "should be decodable");
+    static_assert(is_codable<mrc::codable::protos::EncodedObject>::value, "should be codable");
 }

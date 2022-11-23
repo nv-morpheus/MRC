@@ -31,7 +31,7 @@
 #include <string>
 #include <thread>
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 class ThreadContextResources
 {
@@ -118,4 +118,4 @@ class ThreadContext final : public ContextT
     std::unique_lock<std::mutex> m_lock;
 };
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

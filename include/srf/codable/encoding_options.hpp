@@ -17,7 +17,7 @@
 
 #pragma once
 
-namespace srf::codable {
+namespace mrc::codable {
 
 class EncodingOptions final
 {
@@ -50,4 +50,4 @@ class EncodingOptions final
     bool m_force_copy{false};
 };
 
-}  // namespace srf::codable
+}  // namespace mrc::codable

@@ -49,8 +49,8 @@
 #include <type_traits>
 #include <utility>
 
-using namespace srf;
-using namespace srf::codable;
+using namespace mrc;
+using namespace mrc::codable;
 
 class TestRD : public ::testing::Test
 {

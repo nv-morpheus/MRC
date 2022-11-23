@@ -36,7 +36,7 @@
 #include <string>
 
 namespace py    = pybind11;
-namespace pysrf = srf::pysrf;
+namespace pysrf = mrc::pysrf;
 using namespace std::string_literals;
 using namespace pybind11::literals;
 

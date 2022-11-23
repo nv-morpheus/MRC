@@ -21,7 +21,7 @@
 
 #include <atomic>
 
-namespace srf::internal::memory {
+namespace mrc::internal::memory {
 
 template <typename UpstreamT>
 class CallbackAdaptor;
@@ -67,14 +67,14 @@ class CallbackBuilder
  * deallocation.
  */
 template <typename UpstreamT>
-class CallbackAdaptor final : public srf::memory::adaptor<UpstreamT>
+class CallbackAdaptor final : public mrc::memory::adaptor<UpstreamT>
 {
   public:
     using allocate_callback_t   = CallbackBuilder::allocate_callback_t;
     using deallocate_callback_t = CallbackBuilder::deallocate_callback_t;
 
     CallbackAdaptor(UpstreamT upstream, CallbackBuilder&& builder) :
-      srf::memory::adaptor<UpstreamT>(std::move(upstream)),
+      mrc::memory::adaptor<UpstreamT>(std::move(upstream)),
       m_allocate_callbacks(std::move(builder.m_allocate_callbacks)),
       m_deallocate_callbacks(std::move(builder.m_deallocate_callbacks))
     {}
@@ -108,4 +108,4 @@ class CallbackAdaptor final : public srf::memory::adaptor<UpstreamT>
     std::vector<deallocate_callback_t> m_deallocate_callbacks;
 };
 
-}  // namespace srf::internal::memory
+}  // namespace mrc::internal::memory

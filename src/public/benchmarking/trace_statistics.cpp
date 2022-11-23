@@ -35,7 +35,7 @@
 
 using nlohmann::json;
 
-namespace srf::benchmarking {
+namespace mrc::benchmarking {
 
 thread_local std::map<std::string, std::shared_ptr<TraceStatistics>> TraceStatistics::TraceObjectMap{};
 std::multimap<std::string, std::shared_ptr<TraceStatistics>> TraceStatistics::TraceObjectMultimap{};
@@ -431,4 +431,4 @@ void TraceStatistics::receive()
     m_receive_count++;
 }
 
-}  // namespace srf::benchmarking
+}  // namespace mrc::benchmarking

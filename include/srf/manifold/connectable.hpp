@@ -20,7 +20,7 @@
 #include "srf/manifold/interface.hpp"
 #include "srf/pipeline/resources.hpp"
 
-namespace srf::manifold {
+namespace mrc::manifold {
 
 struct Connectable
 {
@@ -44,4 +44,4 @@ struct Connectable
     virtual void connect_to_manifold(std::shared_ptr<manifold::Interface> manifold) = 0;
 };
 
-}  // namespace srf::manifold
+}  // namespace mrc::manifold

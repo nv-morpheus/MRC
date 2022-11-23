@@ -26,7 +26,7 @@
 #include <string>
 #include <unordered_set>
 
-namespace srf {
+namespace mrc {
 
 std::uint16_t hash(const std::string&);
 
@@ -108,8 +108,8 @@ class Unwinder
         m_function = nullptr;
     }
 
-    Unwinder()                = delete;
-    Unwinder(const Unwinder&) = delete;
+    Unwinder()                           = delete;
+    Unwinder(const Unwinder&)            = delete;
     Unwinder& operator=(const Unwinder&) = delete;
 
   private:
@@ -123,7 +123,7 @@ class Unwinder
 
 #define SRF_UNWIND_EXPLICIT(function_name, unwinder_name, function) \
     auto function_name = (function);                                \
-    srf::Unwinder<decltype(function_name)> unwinder_name(std::addressof(function_name))
+    mrc::Unwinder<decltype(function_name)> unwinder_name(std::addressof(function_name))
 
 template <typename T>
 std::pair<std::set<T>, std::set<T>> set_compare(const std::set<T>& cur_set, const std::set<T>& new_set)
@@ -141,4 +141,4 @@ std::pair<std::set<T>, std::set<T>> set_compare(const std::set<T>& cur_set, cons
 
     return std::make_pair(std::move(create), std::move(remove));
 }
-}  // namespace srf
+}  // namespace mrc

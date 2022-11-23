@@ -17,7 +17,7 @@
 
 #pragma once
 
-namespace srf::runtime {
+namespace mrc::runtime {
 
 class IRuntime;
 class IPartition;
@@ -27,4 +27,4 @@ class IRemoteDescriptorHandle;
 
 class RemoteDescriptor;
 
-}  // namespace srf::runtime
+}  // namespace mrc::runtime

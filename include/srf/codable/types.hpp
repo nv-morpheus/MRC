@@ -19,9 +19,9 @@
 
 #include <cstdint>
 
-namespace srf::codable {
+namespace mrc::codable {
 
 using idx_t     = int;
 using obj_idx_t = int;
 
-}  // namespace srf::codable
+}  // namespace mrc::codable

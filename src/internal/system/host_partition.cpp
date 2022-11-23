@@ -22,7 +22,7 @@
 
 #include <utility>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 HostPartition::HostPartition(CpuSet cpu_set, NumaSet numa_set, std::size_t total_memory) :
   m_cpu_set(std::move(cpu_set)),
@@ -61,4 +61,4 @@ const EngineFactoryCpuSets& HostPartition::engine_factory_cpu_sets() const
 {
     return m_engine_factory_cpu_sets;
 }
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

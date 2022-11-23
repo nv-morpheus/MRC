@@ -21,7 +21,7 @@
 
 #include <glog/logging.h>
 
-using namespace srf;
+using namespace mrc;
 
 TEST_CLASS(Logging);
 

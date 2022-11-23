@@ -19,7 +19,7 @@
 
 #include <cstdlib>
 
-namespace srf::sfinae {
+namespace mrc::sfinae {
 
 #define SRF_AUTO_RETURN_TYPE(Expr, T)                                                                      \
     decltype(Expr)                                                                                         \
@@ -59,4 +59,4 @@ struct invalid_concept  // NOLINT(readability-identifier-naming)
     static const bool error = false;  // NOLINT(readability-identifier-naming)
 };
 
-}  // namespace srf::sfinae
+}  // namespace mrc::sfinae

@@ -54,7 +54,7 @@
 // IWYU pragma: no_include <algorithm>
 // IWYU pragma: no_include <map>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 namespace py = pybind11;
 
@@ -145,7 +145,7 @@ Executor::Executor(std::shared_ptr<Options> options)
     // Now create the executor
     auto system    = std::make_unique<System>(options);
     auto resources = std::make_unique<SystemResources>(std::move(system));
-    m_exec         = std::make_shared<srf::Executor>(std::move(resources));
+    m_exec         = std::make_shared<mrc::Executor>(std::move(resources));
 }
 
 Executor::~Executor()
@@ -222,7 +222,7 @@ std::shared_ptr<Awaitable> Executor::join_async()
     return std::make_shared<Awaitable>(std::move(py_fiber_future));
 }
 
-std::shared_ptr<srf::Executor> Executor::get_executor() const
+std::shared_ptr<mrc::Executor> Executor::get_executor() const
 {
     return m_exec;
 }
@@ -276,4 +276,4 @@ void PyBoostFuture::set_result(py::object&& obj)
     m_promise.set_value(std::move(obj));
 }
 
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

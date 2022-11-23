@@ -20,7 +20,7 @@
 #include "srf/channel/status.hpp"
 #include "srf/channel/types.hpp"
 
-namespace srf::channel {
+namespace mrc::channel {
 
 /**
  * @brief Interface for data flowing out of a channel via a fiber yielding read mechanism
@@ -37,4 +37,4 @@ struct Egress
     virtual Status try_read(T&)                              = 0;
 };
 
-}  // namespace srf::channel
+}  // namespace mrc::channel

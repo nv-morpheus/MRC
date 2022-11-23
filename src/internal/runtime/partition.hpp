@@ -28,9 +28,9 @@
 #include <memory>
 #include <string>
 
-namespace srf::internal::runtime {
+namespace mrc::internal::runtime {
 
-class Partition final : public srf::runtime::IPartition
+class Partition final : public mrc::runtime::IPartition
 {
   public:
     Partition(resources::PartitionResources& resources);
@@ -44,16 +44,16 @@ class Partition final : public srf::runtime::IPartition
     // IPartition -> IRemoteDescriptorManager& is covariant
     remote_descriptor::Manager& remote_descriptor_manager() final;
 
-    std::unique_ptr<srf::codable::ICodableStorage> make_codable_storage() final;
+    std::unique_ptr<mrc::codable::ICodableStorage> make_codable_storage() final;
 
   private:
-    std::shared_ptr<srf::pubsub::IPublisherService> make_publisher_service(
-        const std::string& name, const srf::pubsub::PublisherPolicy& policy) final;
+    std::shared_ptr<mrc::pubsub::IPublisherService> make_publisher_service(
+        const std::string& name, const mrc::pubsub::PublisherPolicy& policy) final;
 
-    std::shared_ptr<srf::pubsub::ISubscriberService> make_subscriber_service(const std::string& name) final;
+    std::shared_ptr<mrc::pubsub::ISubscriberService> make_subscriber_service(const std::string& name) final;
 
     resources::PartitionResources& m_resources;
     std::shared_ptr<remote_descriptor::Manager> m_remote_descriptor_manager;
 };
 
-}  // namespace srf::internal::runtime
+}  // namespace mrc::internal::runtime

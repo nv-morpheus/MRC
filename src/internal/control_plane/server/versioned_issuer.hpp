@@ -24,7 +24,7 @@
 
 #include <cstdint>
 
-namespace srf::internal::control_plane::server {
+namespace mrc::internal::control_plane::server {
 
 class VersionedState : public UpdateIssuer
 {
@@ -76,4 +76,4 @@ class VersionedState : public UpdateIssuer
     std::size_t m_issued_nonce{1};
 };
 
-}  // namespace srf::internal::control_plane::server
+}  // namespace mrc::internal::control_plane::server

@@ -19,15 +19,15 @@
 
 #include <utility>
 
-namespace srf::internal::remote_descriptor {
+namespace mrc::internal::remote_descriptor {
 
-DecodableStorage::DecodableStorage(srf::codable::protos::RemoteDescriptor&& proto,
+DecodableStorage::DecodableStorage(mrc::codable::protos::RemoteDescriptor&& proto,
                                    resources::PartitionResources& resources) :
   m_proto(std::move(proto)),
   m_resources(resources)
 {}
 
-const srf::codable::protos::EncodedObject& DecodableStorage::get_proto() const
+const mrc::codable::protos::EncodedObject& DecodableStorage::get_proto() const
 {
     return m_proto.encoded_object();
 }
@@ -37,8 +37,8 @@ resources::PartitionResources& DecodableStorage::resources() const
     return m_resources;
 }
 
-const srf::codable::protos::RemoteDescriptor& DecodableStorage::remote_descriptor_proto() const
+const mrc::codable::protos::RemoteDescriptor& DecodableStorage::remote_descriptor_proto() const
 {
     return m_proto;
 }
-}  // namespace srf::internal::remote_descriptor
+}  // namespace mrc::internal::remote_descriptor

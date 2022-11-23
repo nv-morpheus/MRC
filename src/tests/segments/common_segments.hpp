@@ -21,7 +21,7 @@
 
 namespace test::segments {
 
-std::shared_ptr<srf::segment::Definition> single_finite_no_ports(std::string name);
-std::shared_ptr<srf::segment::Definition> single_finite_no_ports_will_throw(std::string name);
+std::shared_ptr<mrc::segment::Definition> single_finite_no_ports(std::string name);
+std::shared_ptr<mrc::segment::Definition> single_finite_no_ports_will_throw(std::string name);
 
 }  // namespace test::segments

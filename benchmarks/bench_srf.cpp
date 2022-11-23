@@ -25,7 +25,7 @@
 #include <cstddef>
 #include <memory>
 
-using namespace srf;
+using namespace mrc;
 
 namespace {
 class Buffer

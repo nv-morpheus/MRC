@@ -25,27 +25,27 @@
 #include <memory>
 #include <vector>
 
-namespace srf::internal::runnable {
+namespace mrc::internal::runnable {
 
-using ::srf::runnable::EngineType;
-using ::srf::runnable::LaunchOptions;
+using ::mrc::runnable::EngineType;
+using ::mrc::runnable::LaunchOptions;
 
-class Engines : public ::srf::runnable::Engines
+class Engines : public ::mrc::runnable::Engines
 {
   public:
     Engines(LaunchOptions launch_options);
 
-    const std::vector<std::shared_ptr<::srf::runnable::Engine>>& launchers() const final;
+    const std::vector<std::shared_ptr<::mrc::runnable::Engine>>& launchers() const final;
     const LaunchOptions& launch_options() const final;
     std::size_t size() const final;
 
   protected:
-    void add_launcher(std::shared_ptr<::srf::runnable::Engine> launcher);
+    void add_launcher(std::shared_ptr<::mrc::runnable::Engine> launcher);
     void clear_launchers();
 
   private:
     LaunchOptions m_launch_options;
-    std::vector<std::shared_ptr<::srf::runnable::Engine>> m_launchers;
+    std::vector<std::shared_ptr<::mrc::runnable::Engine>> m_launchers;
 };
 
-}  // namespace srf::internal::runnable
+}  // namespace mrc::internal::runnable

@@ -63,14 +63,14 @@
     #define SRF_DLL_EXPORTS
 #endif
 
-#ifdef SRF_DLL              // defined if SRF is compiled as a DLL
-    #ifdef SRF_DLL_EXPORTS  // defined if we are building the SRF DLL (instead of using it)
+#ifdef SRF_DLL              // defined if MRC is compiled as a DLL
+    #ifdef SRF_DLL_EXPORTS  // defined if we are building the MRC DLL (instead of using it)
         #define SRF_API SRF_HELPER_DLL_EXPORT
     #else
         #define SRF_API SRF_HELPER_DLL_IMPORT
     #endif  // SRF_DLL_EXPORTS
     #define SRF_LOCAL SRF_HELPER_DLL_LOCAL
-#else  // SRF_DLL is not defined: this means SRF is a static lib.
+#else  // SRF_DLL is not defined: this means MRC is a static lib.
     #define SRF_API
     #define SRF_LOCAL
 static_assert(false, "always build the .so/.dll")

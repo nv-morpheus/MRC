@@ -26,11 +26,11 @@
 
 #include <memory>
 
-namespace srf::internal::runnable {
+namespace mrc::internal::runnable {
 
-std::shared_ptr<::srf::runnable::EngineFactory> make_engine_factory(const system::Resources& system,
+std::shared_ptr<::mrc::runnable::EngineFactory> make_engine_factory(const system::Resources& system,
                                                                     EngineType engine_type,
                                                                     const CpuSet& cpu_set,
                                                                     bool reusable);
 
-}  // namespace srf::internal::runnable
+}  // namespace mrc::internal::runnable

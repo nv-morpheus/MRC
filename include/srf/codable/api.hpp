@@ -26,7 +26,7 @@
 #include <optional>
 #include <typeindex>
 
-namespace srf::codable {
+namespace mrc::codable {
 
 namespace protos {
 class EncodedObject;
@@ -63,8 +63,8 @@ class EncodingOptions;
 class IStorage
 {
   public:
-    using idx_t     = srf::codable::idx_t;
-    using obj_idx_t = srf::codable::obj_idx_t;
+    using idx_t     = mrc::codable::idx_t;
+    using obj_idx_t = mrc::codable::obj_idx_t;
 
     virtual ~IStorage() = default;
 
@@ -156,7 +156,7 @@ class IEncodableStorage : public virtual IStorage
      *
      * After creation, the const_buffer_view can be accessed by calling view with the index returned.
      *
-     * @note The memory_resource backing the creation of the buffer<> comes from the SRF Runtime's thread local resource
+     * @note The memory_resource backing the creation of the buffer<> comes from the MRC Runtime's thread local resource
      * object.
      *
      * @param bytes
@@ -227,16 +227,16 @@ class IDecodableStorage : public virtual IStorage
     /**
      * @brief Host Memory Resource
      *
-     * @return std::shared_ptr<srf::memory::memory_resource>
+     * @return std::shared_ptr<mrc::memory::memory_resource>
      */
-    virtual std::shared_ptr<srf::memory::memory_resource> host_memory_resource() const = 0;
+    virtual std::shared_ptr<mrc::memory::memory_resource> host_memory_resource() const = 0;
 
     /**
      * @brief Device Memory Resource
      *
-     * @return std::shared_ptr<srf::memory::memory_resource>
+     * @return std::shared_ptr<mrc::memory::memory_resource>
      */
-    virtual std::shared_ptr<srf::memory::memory_resource> device_memory_resource() const = 0;
+    virtual std::shared_ptr<mrc::memory::memory_resource> device_memory_resource() const = 0;
 
     template <typename T>
     friend class Decoder;
@@ -245,4 +245,4 @@ class IDecodableStorage : public virtual IStorage
 struct ICodableStorage : public virtual IEncodableStorage, public virtual IDecodableStorage
 {};
 
-}  // namespace srf::codable
+}  // namespace mrc::codable

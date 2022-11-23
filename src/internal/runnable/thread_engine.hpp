@@ -30,7 +30,7 @@
 #include <optional>
 #include <thread>
 
-namespace srf::internal::runnable {
+namespace mrc::internal::runnable {
 
 class ThreadEngine final : public Engine
 {
@@ -51,4 +51,4 @@ class ThreadEngine final : public Engine
     std::unique_ptr<system::Thread> m_thread;
 };
 
-}  // namespace srf::internal::runnable
+}  // namespace mrc::internal::runnable

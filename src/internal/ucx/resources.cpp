@@ -34,7 +34,7 @@
 
 #include <ostream>
 
-namespace srf::internal::ucx {
+namespace mrc::internal::ucx {
 
 Resources::Resources(resources::PartitionResourceBase& base, system::FiberTaskQueue& network_task_queue) :
   resources::PartitionResourceBase(base),
@@ -75,7 +75,7 @@ void Resources::add_registration_cache_to_builder(RegistrationCallbackBuilder& b
     builder.add_registration_cache(m_registration_cache);
 }
 
-srf::core::FiberTaskQueue& Resources::network_task_queue()
+mrc::core::FiberTaskQueue& Resources::network_task_queue()
 {
     return m_network_task_queue;
 }
@@ -97,12 +97,12 @@ std::shared_ptr<ucx::Endpoint> Resources::make_ep(const std::string& worker_addr
     return std::make_shared<ucx::Endpoint>(m_worker, worker_address);
 }
 
-srf::runnable::LaunchOptions Resources::launch_options(std::uint64_t concurrency)
+mrc::runnable::LaunchOptions Resources::launch_options(std::uint64_t concurrency)
 {
-    srf::runnable::LaunchOptions launch_options;
+    mrc::runnable::LaunchOptions launch_options;
     launch_options.engine_factory_name = "srf_network";
     launch_options.engines_per_pe      = concurrency;
     launch_options.pe_count            = 1;
     return launch_options;
 }
-}  // namespace srf::internal::ucx
+}  // namespace mrc::internal::ucx

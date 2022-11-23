@@ -55,7 +55,7 @@ it freely, subject to the following restrictions:
 
 #include <cstdint>
 
-namespace srf::memory::literals {
+namespace mrc::memory::literals {
 
 constexpr std::size_t operator"" _KiB(unsigned long long value) noexcept
 {
@@ -96,4 +96,4 @@ constexpr std::size_t operator"" _TB(unsigned long long value) noexcept
 {
     return std::size_t(value * 1000 * 1000 * 1000 * 1000);
 }
-}  // namespace srf::memory::literals
+}  // namespace mrc::memory::literals

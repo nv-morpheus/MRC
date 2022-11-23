@@ -32,7 +32,7 @@
 #include <memory>
 #include <utility>
 
-namespace srf::internal::rpc {
+namespace mrc::internal::rpc {
 
 Server::Server(runnable::Resources& runnable) : m_runnable(runnable)
 {
@@ -51,7 +51,7 @@ void Server::do_service_start()
 
     auto progress_engine = std::make_unique<ProgressEngine>(m_cq);
     auto event_handler   = std::make_unique<PromiseHandler>();
-    srf::node::make_edge(*progress_engine, *event_handler);
+    mrc::node::make_edge(*progress_engine, *event_handler);
 
     m_progress_engine = m_runnable.launch_control().prepare_launcher(std::move(progress_engine))->ignition();
     m_event_hander    = m_runnable.launch_control().prepare_launcher(std::move(event_handler))->ignition();
@@ -102,4 +102,4 @@ void Server::register_service(std::shared_ptr<grpc::Service> service)
     m_builder.RegisterService(service.get());
     m_services.push_back(service);
 }
-}  // namespace srf::internal::rpc
+}  // namespace mrc::internal::rpc

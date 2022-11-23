@@ -19,10 +19,10 @@
 
 #include "srf/engine/segment/idefinition.hpp"
 
-namespace srf::internal::segment {
+namespace mrc::internal::segment {
 
 class Definition;
 class IDefinition;
 class IBuilder;
 
-}  // namespace srf::internal::segment
+}  // namespace mrc::internal::segment

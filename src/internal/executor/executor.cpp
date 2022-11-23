@@ -37,7 +37,7 @@
 #include <string>
 #include <type_traits>
 
-namespace srf::internal::executor {
+namespace mrc::internal::executor {
 
 static bool valid_pipeline(const pipeline::Pipeline& pipeline);
 
@@ -143,4 +143,4 @@ bool valid_pipeline(const pipeline::Pipeline& pipeline)
     return valid;
 }
 
-}  // namespace srf::internal::executor
+}  // namespace mrc::internal::executor

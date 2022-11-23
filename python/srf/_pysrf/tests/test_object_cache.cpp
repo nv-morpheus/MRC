@@ -36,7 +36,7 @@
 #include <string>
 
 namespace py    = pybind11;
-namespace pysrf = srf::pysrf;
+namespace pysrf = mrc::pysrf;
 using namespace std::string_literals;
 using namespace pybind11::literals;
 
@@ -44,12 +44,12 @@ PYSRF_TEST_CLASS(ObjectCache);
 
 TEST_F(TestObjectCache, Acquire)
 {
-    srf::pysrf::PythonObjectCache& cache = pysrf::PythonObjectCache::get_handle();
+    mrc::pysrf::PythonObjectCache& cache = pysrf::PythonObjectCache::get_handle();
 }
 
 TEST_F(TestObjectCache, Interface)
 {
-    srf::pysrf::PythonObjectCache& cache = pysrf::PythonObjectCache::get_handle();
+    mrc::pysrf::PythonObjectCache& cache = pysrf::PythonObjectCache::get_handle();
 
     auto sys = cache.get_module("sys");
     auto os  = cache.get_module("os");

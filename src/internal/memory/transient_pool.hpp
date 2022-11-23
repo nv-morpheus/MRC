@@ -29,7 +29,7 @@
 #include <new>
 #include <utility>
 
-namespace srf::internal::memory {
+namespace mrc::internal::memory {
 
 /**
  * @brief A short-lived buffer based on a portion of a data::SharedResable<memory::buffer>
@@ -47,7 +47,7 @@ class TransientBuffer
      * @param bytes - number of bytes allocated to this buffer starting at addr
      * @param buffer - reference counted holder to the SharedReusable, this is held for reference counting only
      */
-    TransientBuffer(void* addr, std::size_t bytes, srf::data::SharedReusable<srf::memory::buffer> buffer);
+    TransientBuffer(void* addr, std::size_t bytes, mrc::data::SharedReusable<mrc::memory::buffer> buffer);
     TransientBuffer(void* addr, std::size_t bytes, const TransientBuffer& buffer);
 
     TransientBuffer() = default;
@@ -77,7 +77,7 @@ class TransientBuffer
   private:
     void* m_addr{nullptr};
     std::size_t m_bytes{0};
-    srf::data::SharedReusable<srf::memory::buffer> m_buffer;
+    mrc::data::SharedReusable<mrc::memory::buffer> m_buffer;
 };
 
 /**
@@ -108,7 +108,7 @@ class Transient final : private TransientBuffer
     Transient& operator=(Transient&& other) noexcept
     {
         TransientBuffer::operator=(std::move(other));
-        m_data                   = std::exchange(other.m_data, nullptr);
+        m_data = std::exchange(other.m_data, nullptr);
         return *this;
     }
 
@@ -166,7 +166,7 @@ class TransientPool
   public:
     TransientPool(std::size_t block_size,
                   std::size_t block_count,
-                  std::shared_ptr<srf::memory::memory_resource> mr,
+                  std::shared_ptr<mrc::memory::memory_resource> mr,
                   std::size_t capacity = 64);
 
     /**
@@ -196,10 +196,10 @@ class TransientPool
 
   private:
     const std::size_t m_block_size;
-    const std::shared_ptr<srf::data::ReusablePool<srf::memory::buffer>> m_pool;
+    const std::shared_ptr<mrc::data::ReusablePool<mrc::memory::buffer>> m_pool;
     std::byte* m_addr{nullptr};
     std::size_t m_remaining{0};
-    srf::data::SharedReusable<srf::memory::buffer> m_buffer;
+    mrc::data::SharedReusable<mrc::memory::buffer> m_buffer;
 };
 
-}  // namespace srf::internal::memory
+}  // namespace mrc::internal::memory

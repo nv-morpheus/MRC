@@ -36,14 +36,14 @@
 #include <type_traits>
 #include <typeindex>
 
-namespace srf::codable {
+namespace mrc::codable {
 
 template <typename T>
 struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, pybind11::object>>>
 {
     static void serialize(const T& py_object, Encoder<T>& encoded, const EncodingOptions& opts)
     {
-        using namespace srf::pysrf;
+        using namespace mrc::pysrf;
         VLOG(8) << "Serializing python object";
         pybind11::gil_scoped_acquire gil;
         pybind11::buffer_info py_bytebuffer;
@@ -59,7 +59,7 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, pybind11::object>>
 
     static T deserialize(const Decoder<T>& encoded, std::size_t object_idx)
     {
-        using namespace srf::pysrf;
+        using namespace mrc::pysrf;
         VLOG(8) << "De-serializing python object";
         pybind11::gil_scoped_acquire gil;
         DCHECK_EQ(std::type_index(typeid(T)).hash_code(), encoded.type_index_hash_for_object(object_idx));
@@ -77,7 +77,7 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, pysrf::PyHolder>>>
 {
     static void serialize(const T& pyholder_object, Encoder<T>& encoded, const EncodingOptions& opts)
     {
-        using namespace srf::pysrf;
+        using namespace mrc::pysrf;
         VLOG(8) << "Serializing PyHolder object";
         pybind11::gil_scoped_acquire gil;
         pybind11::object py_object = pyholder_object.copy_obj();  // Not a deep copy, just inc_ref the pointer.
@@ -94,7 +94,7 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, pysrf::PyHolder>>>
 
     static T deserialize(const Decoder<T>& encoded, std::size_t object_idx)
     {
-        using namespace srf::pysrf;
+        using namespace mrc::pysrf;
         VLOG(8) << "De-serializing PyHolder object";
         pybind11::gil_scoped_acquire gil;
         DCHECK_EQ(std::type_index(typeid(T)).hash_code(), encoded.type_index_hash_for_object(object_idx));
@@ -107,4 +107,4 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, pysrf::PyHolder>>>
     }
 };
 
-}  // namespace srf::codable
+}  // namespace mrc::codable

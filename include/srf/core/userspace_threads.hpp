@@ -19,7 +19,7 @@
 
 #include <boost/fiber/all.hpp>
 
-namespace srf {
+namespace mrc {
 
 struct userspace_threads  // NOLINT
 {
@@ -59,4 +59,4 @@ struct userspace_threads  // NOLINT
         boost::this_fiber::sleep_until(sleep_time_point);
     }
 };
-}  // namespace srf
+}  // namespace mrc

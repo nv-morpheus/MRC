@@ -24,7 +24,7 @@
 
 // IWYU pragma: no_include "srf/channel/forward.hpp"
 
-using namespace srf;
+using namespace mrc;
 
 namespace test::pipelines {
 

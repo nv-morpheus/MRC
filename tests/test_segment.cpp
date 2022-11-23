@@ -78,9 +78,9 @@
 // IWYU pragma: no_include "gtest/gtest_pred_impl.h"
 // IWYU thinks we need map for segment::Definition::create
 
-namespace srf::exceptions {
+namespace mrc::exceptions {
 struct SrfRuntimeError;
-}  // namespace srf::exceptions
+}  // namespace mrc::exceptions
 
 using namespace std::literals::string_literals;
 
@@ -947,7 +947,7 @@ TEST_F(TestSegment, EnsureMoveConstructor)
 TEST_F(TestSegment, SegmentTestRxcppHigherLevelNodes)
 {
     std::size_t iterations = 5;
-    using srf::benchmarking::TraceStatistics;
+    using mrc::benchmarking::TraceStatistics;
     TraceStatistics::trace_channels();
     TraceStatistics::trace_operators();
 

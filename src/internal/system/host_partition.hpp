@@ -26,11 +26,11 @@
 #include <cstddef>
 #include <vector>
 
-namespace srf {
+namespace mrc {
 class Options;  // IWYU pragma: keep
 }
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 class HostPartition
 {
@@ -56,4 +56,4 @@ class HostPartition
     EngineFactoryCpuSets m_engine_factory_cpu_sets;
 };
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

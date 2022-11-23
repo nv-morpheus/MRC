@@ -38,7 +38,7 @@
 #include <mutex>
 #include <string>
 
-namespace srf::node {
+namespace mrc::node {
 
 template <typename T>
 class RxSinkBase : public SinkChannel<T>, private Watchable
@@ -103,4 +103,4 @@ void RxSinkBase<T>::sink_remove_watcher(std::shared_ptr<WatcherInterface> watche
     Watchable::remove_watcher(std::move(watcher));
 }
 
-}  // namespace srf::node
+}  // namespace mrc::node

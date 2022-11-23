@@ -39,7 +39,7 @@
 #include <mutex>
 #include <string>
 
-namespace srf::node {
+namespace mrc::node {
 
 template <typename T, typename ContextT>
 class GenericSink : public RxSink<T, ContextT>
@@ -59,4 +59,4 @@ GenericSink<T, ContextT>::GenericSink()
         rxcpp::make_observer_dynamic<T>([this](T data) { this->on_data(std::move(data)); }));
 }
 
-}  // namespace srf::node
+}  // namespace mrc::node

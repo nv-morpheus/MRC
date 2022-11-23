@@ -24,7 +24,7 @@
 
 #include <memory>
 
-namespace srf::codable {
+namespace mrc::codable {
 
 template <typename T>
 class Encoder final
@@ -97,4 +97,4 @@ void encode(const T& obj, IEncodableStorage* storage, EncodingOptions opts = {})
     encoder.serialize(obj, std::move(opts));
 }
 
-}  // namespace srf::codable
+}  // namespace mrc::codable

@@ -17,7 +17,7 @@
 
 #pragma once
 
-namespace srf::internal::pubsub {
+namespace mrc::internal::pubsub {
 
 class PublisherService;
 class SubscriberService;
@@ -25,4 +25,4 @@ class SubscriberService;
 // Specific types of Publishers
 class PublisherRoundRobin;
 
-}  // namespace srf::internal::pubsub
+}  // namespace mrc::internal::pubsub

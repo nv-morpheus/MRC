@@ -24,7 +24,7 @@
 #include <memory>
 #include <typeindex>
 
-namespace srf::node {
+namespace mrc::node {
 
 /**
  * @brief EdgeRegistry is an IngressHandle which contains the necessary conversion method to facilitate the creation an
@@ -48,4 +48,4 @@ struct EdgeRegistry
     static std::map<std::type_index, std::map<std::type_index, build_fn_t>> registered_converters;
 };
 
-}  // namespace srf::node
+}  // namespace mrc::node

@@ -26,7 +26,7 @@
 #include <sstream>
 #include <string>
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 class Runner;
 
@@ -91,4 +91,4 @@ class Context
     friend class Runner;
 };
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

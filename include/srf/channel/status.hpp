@@ -17,7 +17,7 @@
 
 #pragma once
 
-namespace srf::channel {
+namespace mrc::channel {
 
 enum class Status
 {

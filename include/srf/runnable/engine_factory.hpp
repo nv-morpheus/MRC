@@ -22,7 +22,7 @@
 
 #include <memory>
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 /**
  * @brief Constructs Engines of a specified type
@@ -41,4 +41,4 @@ struct EngineFactory
     virtual std::shared_ptr<Engines> build_engines(const LaunchOptions& launch_options) = 0;
 };
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

@@ -25,7 +25,7 @@
 
 #include <utility>
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 Launcher::Launcher(std::unique_ptr<Runner> runner,
                    std::vector<std::shared_ptr<Context>>&& contexts,
@@ -54,4 +54,4 @@ void Launcher::apply(std::function<void(Runner&)> fn)
     fn(*m_runner);
 }
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

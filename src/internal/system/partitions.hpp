@@ -27,7 +27,7 @@
 
 #include <vector>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 class System;
 
@@ -65,4 +65,4 @@ class Partitions
     PlacementResources m_device_to_host_strategy;
 };
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

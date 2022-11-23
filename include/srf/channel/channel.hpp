@@ -25,7 +25,7 @@
 
 #include <cstddef>
 
-namespace srf::channel {
+namespace mrc::channel {
 
 std::size_t default_channel_size();
 void set_default_channel_size(std::size_t default_size);
@@ -36,9 +36,9 @@ struct ChannelBase
 };
 
 /**
- * @brief Primary data transport layer between SRF Pipeline components responsible for handling backpressure.
+ * @brief Primary data transport layer between MRC Pipeline components responsible for handling backpressure.
  *
- * Channel is a fundamental component of the SRF library which exposes a writer/sender interface via Ingress and a
+ * Channel is a fundamental component of the MRC library which exposes a writer/sender interface via Ingress and a
  * reader/receiver interface via Egress.
  *
  * A Channel has two primary purposes:
@@ -52,7 +52,7 @@ struct ChannelBase
  * The channel interface was designed to mimic boost::fiber::buffered_channel but allow for alternative
  * implementations such as RecentChannel and NullChannel.
  *
- * @note While Channel provides an close_channel and is_channel_closed method, these are rarely used in the SRF code
+ * @note While Channel provides an close_channel and is_channel_closed method, these are rarely used in the MRC code
  * base. A Channel is most often owned by an object which then exposed a custom Ingress to that channel for which
  * the contract guarantees the channels is open and direct closure by writers is not allowed.
  *
@@ -133,11 +133,11 @@ inline bool Channel<T>::is_channel_closed() const
     return do_is_channel_closed();
 }
 
-}  // namespace srf::channel
+}  // namespace mrc::channel
 
-namespace srf {
+namespace mrc {
 
 template <typename T>
 using Channel = channel::Channel<T>;  // NOLINT
 
-}  // namespace srf
+}  // namespace mrc

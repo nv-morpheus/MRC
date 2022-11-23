@@ -27,7 +27,7 @@
 #include <memory>
 #include <unordered_map>
 
-namespace srf::internal::pubsub {
+namespace mrc::internal::pubsub {
 
 class PublisherRoundRobin final : public PublisherService
 {
@@ -41,11 +41,11 @@ class PublisherRoundRobin final : public PublisherService
     void on_update() final;
 
     // apply the round robin policy
-    void apply_policy(srf::runtime::RemoteDescriptor&& rd) final;
+    void apply_policy(mrc::runtime::RemoteDescriptor&& rd) final;
 
     std::unordered_map<std::uint64_t, std::shared_ptr<ucx::Endpoint>>::const_iterator m_next;
 
     friend runtime::Partition;
 };
 
-}  // namespace srf::internal::pubsub
+}  // namespace mrc::internal::pubsub

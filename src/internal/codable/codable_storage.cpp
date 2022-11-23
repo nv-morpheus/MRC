@@ -42,27 +42,27 @@
 #include <ostream>
 #include <utility>
 
-using namespace srf::memory::literals;
+using namespace mrc::memory::literals;
 
-namespace srf::internal::codable {
+namespace mrc::internal::codable {
 
 CodableStorage::CodableStorage(resources::PartitionResources& resources) : m_resources(resources) {}
-CodableStorage::CodableStorage(srf::codable::protos::EncodedObject proto, resources::PartitionResources& resources) :
+CodableStorage::CodableStorage(mrc::codable::protos::EncodedObject proto, resources::PartitionResources& resources) :
   m_proto(std::move(proto)),
   m_resources(resources)
 {}
 
-srf::codable::IDecodableStorage& CodableStorage::decodable()
+mrc::codable::IDecodableStorage& CodableStorage::decodable()
 {
     return *this;
 }
 
-srf::codable::IEncodableStorage& CodableStorage::encodable()
+mrc::codable::IEncodableStorage& CodableStorage::encodable()
 {
     return *this;
 }
 
-std::optional<CodableStorage::idx_t> CodableStorage::register_memory_view(srf::memory::const_buffer_view view,
+std::optional<CodableStorage::idx_t> CodableStorage::register_memory_view(mrc::memory::const_buffer_view view,
                                                                           bool force_register)
 {
     CHECK(m_resources.network());
@@ -89,7 +89,7 @@ std::optional<CodableStorage::idx_t> CodableStorage::register_memory_view(srf::m
     return count;
 }
 
-void CodableStorage::copy_to_buffer(idx_t buffer_idx, srf::memory::const_buffer_view view)
+void CodableStorage::copy_to_buffer(idx_t buffer_idx, mrc::memory::const_buffer_view view)
 {
     auto search = m_buffers.find(buffer_idx);
     CHECK(search != m_buffers.end()) << "buffer_idx=" << buffer_idx << " was not created with create_buffer";
@@ -103,7 +103,7 @@ void CodableStorage::copy_to_buffer(idx_t buffer_idx, srf::memory::const_buffer_
     SRF_CHECK_CUDA(cudaMemcpy(dst.data(), view.data(), view.bytes(), cudaMemcpyDefault));
 }
 
-CodableStorage::idx_t CodableStorage::copy_to_eager_descriptor(srf::memory::const_buffer_view view)
+CodableStorage::idx_t CodableStorage::copy_to_eager_descriptor(mrc::memory::const_buffer_view view)
 {
     CHECK(context_acquired());
     auto count = descriptor_count();
@@ -123,8 +123,8 @@ CodableStorage::idx_t CodableStorage::create_memory_buffer(std::uint64_t bytes)
 }
 
 void CodableStorage::encode_descriptor(const InstanceID& instance_id,
-                                       srf::codable::protos::RemoteMemoryDescriptor& desc,
-                                       srf::memory::const_buffer_view view,
+                                       mrc::codable::protos::RemoteMemoryDescriptor& desc,
+                                       mrc::memory::const_buffer_view view,
                                        const ucx::MemoryBlock& ucx_block,
                                        bool should_cache)
 {
@@ -133,23 +133,23 @@ void CodableStorage::encode_descriptor(const InstanceID& instance_id,
     desc.set_bytes(view.bytes());
     desc.set_memory_block_address(reinterpret_cast<std::uint64_t>(ucx_block.data()));
     desc.set_memory_block_size(ucx_block.bytes());
-    desc.set_memory_kind(srf::codable::encode_memory_type(view.kind()));
+    desc.set_memory_kind(mrc::codable::encode_memory_type(view.kind()));
     desc.set_remote_key(ucx_block.packed_remote_keys());
     desc.set_should_cache(should_cache);
 }
 
-srf::memory::buffer_view CodableStorage::decode_descriptor(const srf::codable::protos::RemoteMemoryDescriptor& desc)
+mrc::memory::buffer_view CodableStorage::decode_descriptor(const mrc::codable::protos::RemoteMemoryDescriptor& desc)
 {
     return {
-        reinterpret_cast<void*>(desc.address()), desc.bytes(), srf::codable::decode_memory_type(desc.memory_kind())};
+        reinterpret_cast<void*>(desc.address()), desc.bytes(), mrc::codable::decode_memory_type(desc.memory_kind())};
 }
 
-srf::codable::protos::EncodedObject& CodableStorage::get_mutable_proto()
+mrc::codable::protos::EncodedObject& CodableStorage::get_mutable_proto()
 {
     return m_proto;
 }
 
-const srf::codable::protos::EncodedObject& CodableStorage::get_proto() const
+const mrc::codable::protos::EncodedObject& CodableStorage::get_proto() const
 {
     return m_proto;
 }
@@ -192,22 +192,22 @@ bool CodableStorage::context_acquired() const
     return m_context_acquired;
 }
 
-srf::codable::protos::EncodedObject& CodableStorage::mutable_proto()
+mrc::codable::protos::EncodedObject& CodableStorage::mutable_proto()
 {
     return get_mutable_proto();
 }
 
-srf::memory::buffer_view CodableStorage::mutable_host_buffer_view(const idx_t& buffer_idx)
+mrc::memory::buffer_view CodableStorage::mutable_host_buffer_view(const idx_t& buffer_idx)
 {
     CHECK_LT(buffer_idx, descriptor_count());
     const auto& desc = mutable_proto().descriptors().at(buffer_idx);
 
     CHECK(desc.has_remote_desc());
     const auto& rd = desc.remote_desc();
-    CHECK(rd.memory_kind() == srf::codable::protos::MemoryKind::Host ||
-          rd.memory_kind() == srf::codable::protos::MemoryKind::Pinned);
+    CHECK(rd.memory_kind() == mrc::codable::protos::MemoryKind::Host ||
+          rd.memory_kind() == mrc::codable::protos::MemoryKind::Pinned);
 
-    return {reinterpret_cast<void*>(rd.address()), rd.bytes(), srf::codable::decode_memory_type(rd.memory_kind())};
+    return {reinterpret_cast<void*>(rd.address()), rd.bytes(), mrc::codable::decode_memory_type(rd.memory_kind())};
 }
 
 CodableStorage::idx_t CodableStorage::add_meta_data(const google::protobuf::Message& meta_data)
@@ -219,4 +219,4 @@ CodableStorage::idx_t CodableStorage::add_meta_data(const google::protobuf::Mess
     return index;
 }
 
-}  // namespace srf::internal::codable
+}  // namespace mrc::internal::codable

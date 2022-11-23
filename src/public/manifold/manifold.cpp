@@ -29,7 +29,7 @@
 #include <string>
 #include <utility>
 
-namespace srf::manifold {
+namespace mrc::manifold {
 
 Manifold::Manifold(PortName port_name, pipeline::Resources& resources) :
   m_port_name(std::move(port_name)),
@@ -62,4 +62,4 @@ void Manifold::add_output(const SegmentAddress& address, node::SinkPropertiesBas
               << segment::info(address);
 }
 
-}  // namespace srf::manifold
+}  // namespace mrc::manifold

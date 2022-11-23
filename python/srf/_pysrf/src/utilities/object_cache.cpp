@@ -34,7 +34,7 @@
 // IWYU pragma: no_include <pybind11/detail/descr.h>
 
 namespace py = pybind11;
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 std::unique_ptr<PythonObjectCache> PythonObjectCache::s_py_object_cache{nullptr};
 std::mutex PythonObjectCache::s_cache_lock{};
@@ -130,4 +130,4 @@ void PythonObjectCache::atexit_callback()
     s_py_object_cache.release();
 }
 
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

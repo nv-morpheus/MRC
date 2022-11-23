@@ -19,7 +19,7 @@ syntax = "proto3";
 
 import "google/protobuf/any.proto";
 
-package srf.codable.protos;
+package mrc.codable.protos;
 
 enum MemoryKind
 {

@@ -27,7 +27,7 @@
 #include <cstdint>
 #include <ostream>
 
-namespace srf::codable {
+namespace mrc::codable {
 
 static memory::memory_kind decode_memory_type(const protos::MemoryKind& proto_kind)
 {
@@ -206,4 +206,4 @@ std::size_t EncodedObject::add_buffer(std::shared_ptr<memory::memory_resource> m
     return index;
 }
 
-}  // namespace srf::codable
+}  // namespace mrc::codable

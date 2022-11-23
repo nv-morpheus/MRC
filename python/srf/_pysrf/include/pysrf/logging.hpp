@@ -19,7 +19,7 @@
 
 #include <string>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 #pragma GCC visibility push(default)
 
 /**
@@ -45,7 +45,7 @@ constexpr int CRITICAL = 50;
 bool init_logging(const std::string& logname, int py_level = py_log_levels::INFO);
 
 /**
- * @brief Returns the currently configured log level of the SRF logger.
+ * @brief Returns the currently configured log level of the MRC logger.
  * Safe to call both prior to and after calling `init_logging`
  */
 int get_level();
@@ -71,4 +71,4 @@ void log(const std::string& msg,
          int line                    = 0);
 
 #pragma GCC visibility pop
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

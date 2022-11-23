@@ -42,7 +42,7 @@ inline std::string demangle_type_str(const std::string& instr)
 }
 }  // namespace
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 Runnable::Runnable()  = default;
 Runnable::~Runnable() = default;
@@ -70,4 +70,4 @@ void Runnable::update_state(State new_state)
 
 void Runnable::on_state_update(const State& /*unused*/) {}
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

@@ -32,7 +32,7 @@ struct hwloc_bitmap_s;
 typedef struct hwloc_bitmap_s* hwloc_bitmap_t;              // NOLINT
 typedef const struct hwloc_bitmap_s* hwloc_const_bitmap_t;  // NOLINT
 
-namespace srf {
+namespace mrc {
 
 class Bitmap
 {
@@ -235,4 +235,4 @@ class RoundRobinCpuSet
     std::mutex m_mutex;
 };
 
-}  // namespace srf
+}  // namespace mrc

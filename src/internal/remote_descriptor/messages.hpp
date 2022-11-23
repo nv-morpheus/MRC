@@ -19,7 +19,7 @@
 
 #include <cstdint>
 
-namespace srf::internal::remote_descriptor {
+namespace mrc::internal::remote_descriptor {
 
 struct RemoteDescriptorDecrementMessage
 {
@@ -27,4 +27,4 @@ struct RemoteDescriptorDecrementMessage
     std::uint64_t tokens;
 };
 
-}  // namespace srf::internal::remote_descriptor
+}  // namespace mrc::internal::remote_descriptor

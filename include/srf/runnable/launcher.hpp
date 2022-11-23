@@ -27,7 +27,7 @@
 #include <mutex>
 #include <vector>
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 /**
  * @brief This is one-time use object used to launch a Runnable.
@@ -65,4 +65,4 @@ class Launcher final
     std::mutex m_mutex;
 };
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

@@ -25,7 +25,7 @@
 #include <type_traits>
 #include <typeinfo>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 template <typename T, typename U>
 struct WrappedType
@@ -112,13 +112,13 @@ struct PortBuilderUtil
     static node::PortUtil::ingress_caster_tuple_t create_ingress_casters()
     {
         return std::tuple(
-            [](std::shared_ptr<srf::segment::IngressPortBase> base) -> std::shared_ptr<segment::ObjectProperties> {
+            [](std::shared_ptr<mrc::segment::IngressPortBase> base) -> std::shared_ptr<segment::ObjectProperties> {
                 VLOG(2) << "Attempting dynamic Ingress cast for: " << type_name<decltype(base)>() << " into "
                         << type_name<segment::Object<node::SourceProperties<IngressDataT>>>();
 
                 return std::dynamic_pointer_cast<segment::Object<node::SourceProperties<IngressDataT>>>(base);
             },
-            [](std::shared_ptr<srf::segment::IngressPortBase> base) -> std::shared_ptr<segment::ObjectProperties> {
+            [](std::shared_ptr<mrc::segment::IngressPortBase> base) -> std::shared_ptr<segment::ObjectProperties> {
                 VLOG(2) << "Attempting dynamic Ingress cast for: " << type_name<decltype(base)>() << " into "
                         << type_name<segment::Object<node::SourceProperties<std::shared_ptr<IngressDataT>>>>();
 
@@ -131,13 +131,13 @@ struct PortBuilderUtil
     static node::PortUtil::egress_caster_tuple_t create_egress_casters()
     {
         return std::tuple(
-            [](std::shared_ptr<srf::segment::EgressPortBase> base) -> std::shared_ptr<segment::ObjectProperties> {
+            [](std::shared_ptr<mrc::segment::EgressPortBase> base) -> std::shared_ptr<segment::ObjectProperties> {
                 VLOG(2) << "Attempting dynamic Egress cast for: " << type_name<decltype(base)>() << " into "
                         << type_name<segment::Object<node::SinkProperties<EgressDataT>>>();
 
                 return std::dynamic_pointer_cast<segment::Object<node::SinkProperties<EgressDataT>>>(base);
             },
-            [](std::shared_ptr<srf::segment::EgressPortBase> base) -> std::shared_ptr<segment::ObjectProperties> {
+            [](std::shared_ptr<mrc::segment::EgressPortBase> base) -> std::shared_ptr<segment::ObjectProperties> {
                 VLOG(2) << "Attempting dynamic Egress cast for: " << type_name<decltype(base)>() << " into "
                         << type_name<segment::Object<node::SinkProperties<std::shared_ptr<EgressDataT>>>>();
 
@@ -155,12 +155,12 @@ struct PortBuilderUtil
 
         std::type_index type_idx = typeid(port_dtype_t);
 
-        if (!srf::node::PortRegistry::has_port_util(type_idx))
+        if (!mrc::node::PortRegistry::has_port_util(type_idx))
         {
             VLOG(2) << "Registering PySRF port util for: " << type_name<port_type_t>() << " "
                     << "=> " << type_name<port_dtype_t>() << " " << type_idx.hash_code();
 
-            auto port_util = std::make_shared<srf::node::PortUtil>(typeid(port_dtype_t));
+            auto port_util = std::make_shared<mrc::node::PortUtil>(typeid(port_dtype_t));
 
             port_util->m_ingress_builders = create_ingress_builders<port_dtype_t>();
             port_util->m_egress_builders  = create_egress_builders<port_dtype_t>();
@@ -204,4 +204,4 @@ struct AutoRegEgressPort
     }
 };
 
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

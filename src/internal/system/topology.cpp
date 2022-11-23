@@ -48,7 +48,7 @@
 
 // Topology
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 std::shared_ptr<Topology> Topology::Create()
 {
@@ -390,4 +390,4 @@ bool Topology::contains(const CpuSet& cpu_set) const
 {
     return bool(hwloc_bitmap_isincluded(&cpu_set.bitmap(), &this->cpu_set().bitmap()));
 }
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

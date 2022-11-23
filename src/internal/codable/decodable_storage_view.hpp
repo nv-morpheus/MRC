@@ -26,28 +26,28 @@
 #include <cstddef>
 #include <memory>
 
-namespace srf::internal::codable {
+namespace mrc::internal::codable {
 
 /**
  * @brief Storage implements the IDecodableStorage interface for an EncodedObject/Storage
  */
-class DecodableStorageView : public virtual srf::codable::IDecodableStorage, public IStorageResources
+class DecodableStorageView : public virtual mrc::codable::IDecodableStorage, public IStorageResources
 {
   public:
     ~DecodableStorageView() override = default;
 
   protected:
-    void copy_from_buffer(const idx_t& idx, srf::memory::buffer_view dst_view) const final;
+    void copy_from_buffer(const idx_t& idx, mrc::memory::buffer_view dst_view) const final;
 
     std::size_t buffer_size(const idx_t& idx) const final;
 
-    void copy_from_registered_buffer(const idx_t& idx, srf::memory::buffer_view& dst_view) const;
+    void copy_from_registered_buffer(const idx_t& idx, mrc::memory::buffer_view& dst_view) const;
 
-    void copy_from_eager_buffer(const idx_t& idx, srf::memory::buffer_view& dst_view) const;
+    void copy_from_eager_buffer(const idx_t& idx, mrc::memory::buffer_view& dst_view) const;
 
-    std::shared_ptr<srf::memory::memory_resource> host_memory_resource() const final;
+    std::shared_ptr<mrc::memory::memory_resource> host_memory_resource() const final;
 
-    std::shared_ptr<srf::memory::memory_resource> device_memory_resource() const final;
+    std::shared_ptr<mrc::memory::memory_resource> device_memory_resource() const final;
 };
 
-}  // namespace srf::internal::codable
+}  // namespace mrc::internal::codable

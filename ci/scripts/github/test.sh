@@ -31,7 +31,7 @@ tar xf "${WORKSPACE_TMP}/build.tar.bz"
 REPORTS_DIR="${WORKSPACE_TMP}/reports"
 mkdir -p ${WORKSPACE_TMP}/reports
 
-rapids-logger "Installing SRF"
+rapids-logger "Installing MRC"
 cmake -P ${SRF_ROOT}/build/cmake_install.cmake
 pip install ${SRF_ROOT}/build/python
 
@@ -48,8 +48,8 @@ cd ${SRF_ROOT}/build
 set +e
 # Tests known to be failing
 # Issues:
-# * test_srf_private - https://github.com/nv-morpheus/SRF/issues/33
-# * nvrpc - https://github.com/nv-morpheus/SRF/issues/34
+# * test_srf_private - https://github.com/nv-morpheus/MRC/issues/33
+# * nvrpc - https://github.com/nv-morpheus/MRC/issues/34
 ctest --output-on-failure \
       --exclude-regex "test_srf_private|nvrpc" \
       --output-junit ${REPORTS_DIR}/report_ctest.xml

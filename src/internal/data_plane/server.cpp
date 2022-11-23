@@ -51,7 +51,7 @@
 #include <ostream>
 #include <utility>
 
-namespace srf::internal::data_plane {
+namespace mrc::internal::data_plane {
 
 namespace {
 
@@ -120,7 +120,7 @@ void pre_post_recv(detail::PrePostedRecvInfo* info)
 
 }  // namespace
 
-using namespace srf::memory::literals;
+using namespace mrc::memory::literals;
 
 class DataPlaneServerWorker final : public node::GenericSource<network_event_t>
 {
@@ -192,7 +192,7 @@ void Server::do_service_start()
             m_progress_engine =
                 runnable()
                     .launch_control()
-                    .prepare_launcher(srf::runnable::LaunchOptions("srf_network"), std::move(progress_engine))
+                    .prepare_launcher(mrc::runnable::LaunchOptions("srf_network"), std::move(progress_engine))
                     ->ignition();
         })
         .get();
@@ -348,4 +348,4 @@ void DataPlaneServerWorker::on_tagged_msg(rxcpp::subscriber<network_event_t>& su
     }
 }
 
-}  // namespace srf::internal::data_plane
+}  // namespace mrc::internal::data_plane

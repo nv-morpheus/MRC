@@ -40,7 +40,7 @@ std::string accum_merge(std::string lhs, std::string rhs)
 
 }  // namespace
 
-namespace srf::segment {
+namespace mrc::segment {
 std::shared_ptr<ObjectProperties> Builder::get_ingress(std::string name, std::type_index type_index)
 {
     auto base = m_backend.get_ingress_base(name);
@@ -87,12 +87,12 @@ void Builder::init_module(sp_segment_module_t module)
     ns_pop();
 }
 
-std::shared_ptr<srf::modules::SegmentModule> Builder::load_module_from_registry(const std::string& module_id,
+std::shared_ptr<mrc::modules::SegmentModule> Builder::load_module_from_registry(const std::string& module_id,
                                                                                 const std::string& registry_namespace,
                                                                                 std::string module_name,
                                                                                 nlohmann::json config)
 {
-    auto fn_module_constructor = srf::modules::ModuleRegistry::get_module_constructor(module_id, registry_namespace);
+    auto fn_module_constructor = mrc::modules::ModuleRegistry::get_module_constructor(module_id, registry_namespace);
     auto module                = fn_module_constructor(std::move(module_name), std::move(config));
 
     init_module(module);
@@ -151,4 +151,4 @@ void Builder::register_module_output(std::string output_name, sp_obj_prop_t obje
     current_module->register_output_port(std::move(output_name), object);
 }
 
-}  // namespace srf::segment
+}  // namespace mrc::segment

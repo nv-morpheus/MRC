@@ -24,7 +24,7 @@
 #include "srf/runnable/launch_options.hpp"
 #include "srf/runnable/types.hpp"
 
-namespace srf::internal::runnable {
+namespace mrc::internal::runnable {
 
 class ThreadEngines final : public Engines
 {
@@ -42,4 +42,4 @@ class ThreadEngines final : public Engines
     const system::Resources& m_system;
 };
 
-}  // namespace srf::internal::runnable
+}  // namespace mrc::internal::runnable

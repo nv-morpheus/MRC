@@ -34,7 +34,7 @@
 
 namespace test::nodes {
 
-using namespace srf::memory::literals;
+using namespace mrc::memory::literals;
 
 template <std::size_t Bytes>
 class Buffer
@@ -64,14 +64,14 @@ class Buffer
 };
 
 template <std::size_t Bytes>
-class BufferSource final : public srf::node::GenericSource<srf::data::Reusable<Buffer<Bytes>>>
+class BufferSource final : public mrc::node::GenericSource<mrc::data::Reusable<Buffer<Bytes>>>
 {
   public:
-    using data_t = srf::data::Reusable<Buffer<Bytes>>;
+    using data_t = mrc::data::Reusable<Buffer<Bytes>>;
 
-    BufferSource(std::size_t capacity) : m_pool(srf::data::ReusablePool<Buffer<Bytes>>::create(capacity)) {}
+    BufferSource(std::size_t capacity) : m_pool(mrc::data::ReusablePool<Buffer<Bytes>>::create(capacity)) {}
 
-    srf::data::ReusablePool<Buffer<Bytes>>& pool()
+    mrc::data::ReusablePool<Buffer<Bytes>>& pool()
     {
         CHECK(m_pool);
         return *m_pool;
@@ -85,14 +85,14 @@ class BufferSource final : public srf::node::GenericSource<srf::data::Reusable<B
         s.on_next(std::move(buffer));
     }
 
-    std::shared_ptr<srf::data::ReusablePool<Buffer<Bytes>>> m_pool;
+    std::shared_ptr<mrc::data::ReusablePool<Buffer<Bytes>>> m_pool;
 };
 
-std::unique_ptr<srf::node::RxSource<int>> finite_int_rx_source(int count = 3);
-std::unique_ptr<srf::node::RxSource<int>> infinite_int_rx_source();
+std::unique_ptr<mrc::node::RxSource<int>> finite_int_rx_source(int count = 3);
+std::unique_ptr<mrc::node::RxSource<int>> infinite_int_rx_source();
 
-std::unique_ptr<srf::node::RxSink<int>> int_sink();
-std::unique_ptr<srf::node::RxSink<int>> int_sink_throw_on_even();
+std::unique_ptr<mrc::node::RxSink<int>> int_sink();
+std::unique_ptr<mrc::node::RxSink<int>> int_sink_throw_on_even();
 
 std::unique_ptr<BufferSource<1_MiB>> infinte_buffer_source(std::size_t capacity);
 

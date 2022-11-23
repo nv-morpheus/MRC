@@ -24,7 +24,7 @@
 #include <gtest/gtest.h>
 #include <pybind11/embed.h>
 
-using namespace srf;
+using namespace mrc;
 // Essentially the same macro from test_srf.hpp but with an embedded python interpreter.
 // The attribute visibility bit avoids a compiler warning about the test class being
 // declared with greater visibility than the interpreter attribute

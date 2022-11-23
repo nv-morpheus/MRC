@@ -22,7 +22,7 @@
 
 #include <memory>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 class System final : public internal::system::ISystem
 {
@@ -42,4 +42,4 @@ class SystemResources final : public internal::system::IResources
     void add_gil_finalizer();
 };
 
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

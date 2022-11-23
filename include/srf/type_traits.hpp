@@ -21,7 +21,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace srf {
+namespace mrc {
 
 template <typename T>
 struct is_shared_ptr : std::false_type
@@ -92,4 +92,4 @@ struct use_object_semantics<
 {};
 */
 
-}  // namespace srf
+}  // namespace mrc

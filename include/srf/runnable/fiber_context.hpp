@@ -30,7 +30,7 @@
 #include <sstream>  // for stringstream
 #include <string>
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 class FiberContextResources
 {
@@ -117,4 +117,4 @@ class FiberContext final : public ContextT
     std::unique_lock<boost::fibers::mutex> m_lock;
 };
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

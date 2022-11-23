@@ -36,7 +36,7 @@
 #include <unordered_set>
 #include <utility>
 
-namespace srf::node {
+namespace mrc::node {
 
 /**
  * @brief Convenience object to register Edge converters/adaptors with the EdgeRegistry
@@ -81,4 +81,4 @@ struct IdentityEdgeConnector
     }
 };
 
-}  // namespace srf::node
+}  // namespace mrc::node

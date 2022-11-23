@@ -24,7 +24,7 @@
 #include <functional>
 #include <map>
 
-namespace srf {
+namespace mrc {
 
 class SharedResourceBitMap
 {
@@ -42,4 +42,4 @@ class SharedResourceBitMap
     std::map<std::uint32_t, Bitmap> m_map;
 };
 
-}  // namespace srf
+}  // namespace mrc

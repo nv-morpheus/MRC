@@ -37,7 +37,7 @@
 #include <memory>
 #include <mutex>
 
-namespace srf::node {
+namespace mrc::node {
 
 template <typename T, typename ContextT>
 class GenericSource : public RxSource<T, ContextT>
@@ -69,4 +69,4 @@ GenericSource<T, ContextT>::GenericSource() :
     // RxSource<T, ContextT>::set_observable();
 }
 
-}  // namespace srf::node
+}  // namespace mrc::node

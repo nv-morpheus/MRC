@@ -2,7 +2,7 @@
 layout: default
 nav_order: 1
 parent: Resources
-grand_parent: SRF Maintainer Docs
+grand_parent: MRC Maintainer Docs
 title: Code of Conduct
 ---
 
@@ -10,7 +10,7 @@ title: Code of Conduct
 
 ## Overview
 
-Define the code of conduct followed and enforced for SRF.
+Define the code of conduct followed and enforced for MRC.
 
 ### Intended audience
 
@@ -97,4 +97,3 @@ available at https://www.contributor-covenant.org/version/1/4/code-of-conduct.ht
 
 For answers to common questions about this code of conduct, see
 https://www.contributor-covenant.org/faq
-

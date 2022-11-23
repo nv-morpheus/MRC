@@ -23,7 +23,7 @@
 
 #include <mutex>
 
-namespace srf::benchmarking {
+namespace mrc::benchmarking {
 
 using nlohmann::json;
 
@@ -232,11 +232,11 @@ void TraceAggregatorBase::process_tracer_data(const std::vector<std::shared_ptr<
     m_node_count      = segment_node_count;
     m_tracer_count    = tracers.size();
     m_json_data       = {
-        {
-            "metadata",
-            {{"elapsed_time", m_elapsed_seconds}, {"tracer_count", m_tracer_count}, {"node_count", m_node_count}},
+              {
+                  "metadata",
+                  {{"elapsed_time", m_elapsed_seconds}, {"tracer_count", m_tracer_count}, {"node_count", m_node_count}},
         },
-        {"aggregations", {}}};
+              {"aggregations", {}}};
 
     if (!cmpt_id_to_name.empty())
     {
@@ -251,4 +251,4 @@ const json& TraceAggregatorBase::to_json()
     return m_json_data;
 }
 
-}  // namespace srf::benchmarking
+}  // namespace mrc::benchmarking

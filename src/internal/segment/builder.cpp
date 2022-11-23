@@ -33,7 +33,7 @@
 #include <ostream>
 #include <utility>
 
-namespace srf::internal::segment {
+namespace mrc::internal::segment {
 
 Builder::Builder(std::shared_ptr<const Definition> segdef,
                  SegmentRank rank,
@@ -77,7 +77,7 @@ bool Builder::has_object(const std::string& name) const
     return bool(search != m_objects.end());
 }
 
-srf::segment::ObjectProperties& Builder::find_object(const std::string& name)
+mrc::segment::ObjectProperties& Builder::find_object(const std::string& name)
 {
     auto search = m_objects.find(name);
     if (search == m_objects.end())
@@ -88,7 +88,7 @@ srf::segment::ObjectProperties& Builder::find_object(const std::string& name)
     return *(search->second);
 }
 
-std::shared_ptr<::srf::segment::IngressPortBase> Builder::get_ingress_base(const std::string& name)
+std::shared_ptr<::mrc::segment::IngressPortBase> Builder::get_ingress_base(const std::string& name)
 {
     auto search = m_ingress_ports.find(name);
     if (search != m_ingress_ports.end())
@@ -98,7 +98,7 @@ std::shared_ptr<::srf::segment::IngressPortBase> Builder::get_ingress_base(const
     return nullptr;
 }
 
-std::shared_ptr<::srf::segment::EgressPortBase> Builder::get_egress_base(const std::string& name)
+std::shared_ptr<::mrc::segment::EgressPortBase> Builder::get_egress_base(const std::string& name)
 {
     auto search = m_egress_ports.find(name);
     if (search != m_egress_ports.end())
@@ -108,7 +108,7 @@ std::shared_ptr<::srf::segment::EgressPortBase> Builder::get_egress_base(const s
     return nullptr;
 }
 
-void Builder::add_object(const std::string& name, std::shared_ptr<::srf::segment::ObjectProperties> object)
+void Builder::add_object(const std::string& name, std::shared_ptr<::mrc::segment::ObjectProperties> object)
 {
     if (has_object(name))
     {
@@ -118,7 +118,7 @@ void Builder::add_object(const std::string& name, std::shared_ptr<::srf::segment
     m_objects[name] = std::move(object);
 }
 
-void Builder::add_runnable(const std::string& name, std::shared_ptr<srf::runnable::Launchable> runnable)
+void Builder::add_runnable(const std::string& name, std::shared_ptr<mrc::runnable::Launchable> runnable)
 {
     if (has_object(name))
     {
@@ -128,12 +128,12 @@ void Builder::add_runnable(const std::string& name, std::shared_ptr<srf::runnabl
     m_nodes[name] = std::move(runnable);
 }
 
-const std::map<std::string, std::shared_ptr<::srf::segment::EgressPortBase>>& Builder::egress_ports() const
+const std::map<std::string, std::shared_ptr<::mrc::segment::EgressPortBase>>& Builder::egress_ports() const
 {
     return m_egress_ports;
 }
 
-const std::map<std::string, std::shared_ptr<::srf::segment::IngressPortBase>>& Builder::ingress_ports() const
+const std::map<std::string, std::shared_ptr<::mrc::segment::IngressPortBase>>& Builder::ingress_ports() const
 {
     return m_ingress_ports;
 }
@@ -143,7 +143,7 @@ const Definition& Builder::definition() const
     CHECK(m_definition);
     return *m_definition;
 }
-const std::map<std::string, std::shared_ptr<srf::runnable::Launchable>>& Builder::nodes() const
+const std::map<std::string, std::shared_ptr<mrc::runnable::Launchable>>& Builder::nodes() const
 {
     return m_nodes;
 }
@@ -152,4 +152,4 @@ std::function<void(std::int64_t)> Builder::make_throughput_counter(const std::st
     auto counter = m_resources.metrics_registry().make_throughput_counter(name);
     return [counter](std::int64_t ticks) mutable { counter.increment(ticks); };
 }
-}  // namespace srf::internal::segment
+}  // namespace mrc::internal::segment

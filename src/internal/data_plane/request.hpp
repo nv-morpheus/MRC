@@ -21,7 +21,7 @@
 
 #include <atomic>
 
-namespace srf::internal::data_plane {
+namespace mrc::internal::data_plane {
 
 class Callbacks;
 class Client;
@@ -61,4 +61,4 @@ class Request final
     friend Callbacks;
 };
 
-}  // namespace srf::internal::data_plane
+}  // namespace mrc::internal::data_plane

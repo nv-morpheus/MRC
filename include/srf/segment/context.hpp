@@ -21,7 +21,7 @@
 
 #include <string>
 
-namespace srf::segment {
+namespace mrc::segment {
 
 template <typename ContextT = runnable::Context>
 class Context : public ContextT
@@ -49,4 +49,4 @@ class Context : public ContextT
     std::string m_name;
 };
 
-}  // namespace srf::segment
+}  // namespace mrc::segment

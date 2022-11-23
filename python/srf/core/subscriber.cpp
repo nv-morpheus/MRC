@@ -32,7 +32,7 @@
 #include <memory>
 #include <ostream>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -40,7 +40,7 @@ using namespace py::literals;
 PYBIND11_MODULE(subscriber, module)
 {
     module.doc() = R"pbdoc(
-        Python bindings for SRF subscribers
+        Python bindings for MRC subscribers
         -------------------------------
         .. currentmodule:: subscriber
         .. autosummary::
@@ -79,4 +79,4 @@ PYBIND11_MODULE(subscriber, module)
     module.attr("__version__") =
         SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

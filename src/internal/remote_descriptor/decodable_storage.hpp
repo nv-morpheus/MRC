@@ -25,29 +25,29 @@
 #include "srf/runtime/remote_descriptor_handle.hpp"
 #include "srf/utils/macros.hpp"
 
-namespace srf::internal::remote_descriptor {
+namespace mrc::internal::remote_descriptor {
 
 class DecodableStorage final : public codable::DecodableStorageView,
                                public codable::StorageView,
-                               public srf::runtime::IRemoteDescriptorHandle
+                               public mrc::runtime::IRemoteDescriptorHandle
 {
   public:
-    DecodableStorage(srf::codable::protos::RemoteDescriptor&& proto, resources::PartitionResources& resources);
+    DecodableStorage(mrc::codable::protos::RemoteDescriptor&& proto, resources::PartitionResources& resources);
     ~DecodableStorage() final = default;
 
     DELETE_COPYABILITY(DecodableStorage);
     DELETE_MOVEABILITY(DecodableStorage);
 
-    const srf::codable::protos::RemoteDescriptor& remote_descriptor_proto() const final;
+    const mrc::codable::protos::RemoteDescriptor& remote_descriptor_proto() const final;
 
   protected:
-    const srf::codable::protos::EncodedObject& get_proto() const final;
+    const mrc::codable::protos::EncodedObject& get_proto() const final;
 
     resources::PartitionResources& resources() const final;
 
   private:
-    srf::codable::protos::RemoteDescriptor m_proto;
+    mrc::codable::protos::RemoteDescriptor m_proto;
     resources::PartitionResources& m_resources;
 };
 
-}  // namespace srf::internal::remote_descriptor
+}  // namespace mrc::internal::remote_descriptor

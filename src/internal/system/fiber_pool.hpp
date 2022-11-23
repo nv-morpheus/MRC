@@ -31,7 +31,7 @@
 #include <memory>
 #include <vector>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 class FiberPool final : public core::FiberPool
 {
@@ -60,7 +60,7 @@ class FiberPool final : public core::FiberPool
     void set_thread_local_resource(std::uint32_t index, std::shared_ptr<ResourceT> resource)
     {
         task_queue(index)
-            .enqueue([resource] { ::srf::utils::ThreadLocalSharedPointer<ResourceT>::set(resource); })
+            .enqueue([resource] { ::mrc::utils::ThreadLocalSharedPointer<ResourceT>::set(resource); })
             .get();
     }
 
@@ -69,4 +69,4 @@ class FiberPool final : public core::FiberPool
     std::vector<std::reference_wrapper<FiberTaskQueue>> m_queues;
 };
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

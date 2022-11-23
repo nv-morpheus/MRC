@@ -20,7 +20,7 @@
 #include "srf/core/bitmap.hpp"
 #include "srf/core/host_partition.hpp"
 
-namespace srf::core {
+namespace mrc::core {
 
 struct DevicePartition : public virtual HostPartition
 {
@@ -40,4 +40,4 @@ struct DevicePartition : public virtual HostPartition
     using HostPartition::device_partition_ids;
 };
 
-}  // namespace srf::core
+}  // namespace mrc::core

@@ -40,7 +40,7 @@
 #include <vector>
 
 namespace py    = pybind11;
-namespace pysrf = srf::pysrf;
+namespace pysrf = mrc::pysrf;
 using namespace std::string_literals;
 
 // Create values too big to fit in int & float types to ensure we can pass
@@ -150,7 +150,7 @@ TEST_F(TestUtils, PyObjectWrapper)
 
     EXPECT_EQ(test_list.ref_count(), 1);
 
-    srf::pysrf::PyObjectWrapper wrapper(std::move(test_list));
+    mrc::pysrf::PyObjectWrapper wrapper(std::move(test_list));
 
     // Initial object should be empty
     EXPECT_FALSE(test_list);
@@ -181,7 +181,7 @@ TEST_F(TestUtils, PyObjectHolder)
 
     EXPECT_EQ(test_list.ref_count(), 1);
 
-    srf::pysrf::PyObjectHolder wrapper(std::move(test_list));
+    mrc::pysrf::PyObjectHolder wrapper(std::move(test_list));
 
     // Initial object should be empty
     EXPECT_FALSE(test_list);
@@ -206,7 +206,7 @@ TEST_F(TestUtils, PyObjectHolder)
     EXPECT_EQ(wrapper.view_obj().ref_count(), 1);
 
     // Make a copy of the holder
-    srf::pysrf::PyObjectHolder holder_copy = wrapper;
+    mrc::pysrf::PyObjectHolder holder_copy = wrapper;
 
     // Ref count should be the same
     EXPECT_TRUE(wrapper.view_obj());

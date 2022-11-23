@@ -39,7 +39,7 @@
 #include <mutex>
 #include <string>
 
-namespace srf::node {
+namespace mrc::node {
 
 template <typename InputT, typename OutputT, typename ContextT>
 class GenericNode : public RxNode<InputT, OutputT, ContextT>
@@ -59,4 +59,4 @@ class GenericNode : public RxNode<InputT, OutputT, ContextT>
     virtual void on_completed(rxcpp::subscriber<OutputT>& subscriber) {}
 };
 
-}  // namespace srf::node
+}  // namespace mrc::node

@@ -21,7 +21,7 @@
 
 #include <cstring>
 
-namespace srf::internal::ucx {
+namespace mrc::internal::ucx {
 
 MemoryBlock::MemoryBlock(const void* data, std::size_t bytes) : memory::MemoryBlock(data, bytes) {}
 
@@ -77,4 +77,4 @@ std::string MemoryBlock::packed_remote_keys() const
     return keys;
 }
 
-}  // namespace srf::internal::ucx
+}  // namespace mrc::internal::ucx

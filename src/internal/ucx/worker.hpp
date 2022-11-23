@@ -29,7 +29,7 @@
 #include <cstddef>  // for size_t
 #include <string>
 
-namespace srf::internal::ucx {
+namespace mrc::internal::ucx {
 
 class Worker : public Primitive<ucp_worker_h>
 {
@@ -53,4 +53,4 @@ class Worker : public Primitive<ucp_worker_h>
     std::size_t m_address_length;
 };
 
-}  // namespace srf::internal::ucx
+}  // namespace mrc::internal::ucx

@@ -28,7 +28,7 @@
 #include "srf/runtime/remote_descriptor.hpp"
 #include "srf/utils/macros.hpp"
 
-namespace srf::pubsub {
+namespace mrc::pubsub {
 
 /**
  * @brief Publishes an object T which will be received by one more more Subscribers.
@@ -76,8 +76,8 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
     {
         // form a persistent connection to the operator
         // data flowing in from operator edges are forwarded to the public await_write
-        m_persistent_channel = std::make_unique<srf::node::SourceChannelWriteable<T>>();
-        srf::node::make_edge(*m_persistent_channel, *this);
+        m_persistent_channel = std::make_unique<mrc::node::SourceChannelWriteable<T>>();
+        mrc::node::make_edge(*m_persistent_channel, *this);
 
         CHECK(m_service);
         m_service->await_start();
@@ -125,7 +125,7 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
     const std::shared_ptr<IPublisherService> m_service;
 
     // this holds the operator open;
-    std::unique_ptr<srf::node::SourceChannelWriteable<T>> m_persistent_channel;
+    std::unique_ptr<mrc::node::SourceChannelWriteable<T>> m_persistent_channel;
 
     friend runtime::IPartition;
 };
@@ -145,4 +145,4 @@ channel::Status Publisher<T>::await_write(T&& data)
 //     return m_service->publish(std::move(rd));
 // }
 
-}  // namespace srf::pubsub
+}  // namespace mrc::pubsub

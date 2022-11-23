@@ -23,7 +23,7 @@
 #include <utility>
 #include <vector>
 
-namespace srf {
+namespace mrc {
 
 /**
  * @brief Generates a vector of indexes which access the vector of values in a sorted
@@ -43,4 +43,4 @@ std::vector<std::size_t> sort_indexes(const std::vector<T>& values)
     return idx;
 }
 
-}  // namespace srf
+}  // namespace mrc

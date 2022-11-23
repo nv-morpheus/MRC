@@ -24,7 +24,7 @@
 #include <cstddef>  // for size_t
 #include <tuple>
 
-namespace srf::internal::ucx {
+namespace mrc::internal::ucx {
 
 class Context final : public Primitive<ucp_context_h>
 {
@@ -39,4 +39,4 @@ class Context final : public Primitive<ucp_context_h>
     void unregister_memory(ucp_mem_h, void* rbuffer = nullptr);
 };
 
-}  // namespace srf::internal::ucx
+}  // namespace mrc::internal::ucx

@@ -17,7 +17,7 @@
 
 syntax = "proto3";
 
-package srf.protos.meta_data;
+package mrc.protos.meta_data;
 
 message TensorMetaData
 {

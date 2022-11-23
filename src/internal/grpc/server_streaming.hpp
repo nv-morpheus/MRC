@@ -53,20 +53,20 @@
 #include <optional>
 #include <tuple>
 
-namespace srf::internal::rpc {
+namespace mrc::internal::rpc {
 
 /**
- * @brief Implementation of a gRPC bidirectional streaming server using SRF primitives
+ * @brief Implementation of a gRPC bidirectional streaming server using MRC primitives
  *
  * ServerStream as three-phases:
  *
  * 1) After construction with a request_fn_t, the ServerStream is "enqueued" with the server by calling `await_init()`.
  *    If `nullptr` is returned, then the stream was not initialized by the server and the object can be destroyed.
  *    Otherwise a shared_ptr to a StreamWriter is returns and the stream is live.
- * 2) The initialization of a live stream creates two SRF runnables:
- *    - A Reader which is a srf::node::RxSource<IncomingData> and,
- *    - A Writer which is a srf::node::RxSink<ResponseT>.
- *    These SRF runnables are responsible for pull data off the stream (Reader) and piping IncomingData throught a
+ * 2) The initialization of a live stream creates two MRC runnables:
+ *    - A Reader which is a mrc::node::RxSource<IncomingData> and,
+ *    - A Writer which is a mrc::node::RxSink<ResponseT>.
+ *    These MRC runnables are responsible for pull data off the stream (Reader) and piping IncomingData throught a
  *    user-defined Handler sink which can be attached via the `attach_to` or `attach_to_queue` methods. Part of
  *    IncomingData is a shared_ptr to another instance of StreamWriter allowing the Handler to optional write one or
  *    more responses on to the stream back to the client.
@@ -105,7 +105,7 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
     class ServerStreamWriter final : public stream_writer_t
     {
       public:
-        ServerStreamWriter(std::shared_ptr<srf::node::SourceChannelWriteable<writer_t>> channel,
+        ServerStreamWriter(std::shared_ptr<mrc::node::SourceChannelWriteable<writer_t>> channel,
                            std::shared_ptr<ServerStream> parent) :
           m_parent(parent),
           m_channel(channel)
@@ -113,14 +113,14 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
             CHECK(channel);
         }
 
-        srf::channel::Status await_write(writer_t&& t) final
+        mrc::channel::Status await_write(writer_t&& t) final
         {
             auto channel = m_channel.lock();
             if (channel)
             {
                 return channel->await_write(std::move(t));
             }
-            return srf::channel::Status::closed;
+            return mrc::channel::Status::closed;
         }
 
         void finish()
@@ -148,7 +148,7 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
 
       private:
         const std::shared_ptr<ServerStream<RequestT, ResponseT>> m_parent;
-        std::weak_ptr<srf::node::SourceChannelWriteable<writer_t>> m_channel;
+        std::weak_ptr<mrc::node::SourceChannelWriteable<writer_t>> m_channel;
     };
 
   public:
@@ -165,7 +165,7 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
     ServerStream(request_fn_t request_fn, runnable::Resources& runnable) :
       m_runnable(runnable),
       m_stream(std::make_unique<grpc::ServerAsyncReaderWriter<ResponseT, RequestT>>(&m_context)),
-      m_reader_source(std::make_unique<srf::node::RxSource<IncomingData>>(
+      m_reader_source(std::make_unique<mrc::node::RxSource<IncomingData>>(
           rxcpp::observable<>::create<IncomingData>([this](rxcpp::subscriber<IncomingData> s) {
               this->do_read(s);
               s.on_completed();
@@ -207,17 +207,17 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
     }
 
     // must be called before await_init()
-    void attach_to(srf::node::SinkProperties<IncomingData>& sink)
+    void attach_to(mrc::node::SinkProperties<IncomingData>& sink)
     {
         CHECK(m_reader_source);
-        srf::node::make_edge(*m_reader_source, sink);
+        mrc::node::make_edge(*m_reader_source, sink);
     }
 
     // must be called before await_init()
-    void attach_to_queue(srf::node::ChannelAcceptor<IncomingData>& queue)
+    void attach_to_queue(mrc::node::ChannelAcceptor<IncomingData>& queue)
     {
         CHECK(m_reader_source);
-        srf::node::make_edge(*m_reader_source, queue);
+        mrc::node::make_edge(*m_reader_source, queue);
     }
 
   private:
@@ -290,10 +290,10 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
         CHECK(m_reader_source);
 
         // make writer sink
-        m_write_channel = std::make_shared<srf::node::SourceChannelWriteable<writer_t>>();
-        auto writer     = std::make_unique<srf::node::RxSink<writer_t>>([this](writer_t request) { do_write(request); },
+        m_write_channel = std::make_shared<mrc::node::SourceChannelWriteable<writer_t>>();
+        auto writer     = std::make_unique<mrc::node::RxSink<writer_t>>([this](writer_t request) { do_write(request); },
                                                                     [this] { do_writes_done(); });
-        srf::node::make_edge(*m_write_channel, *writer);
+        mrc::node::make_edge(*m_write_channel, *writer);
 
         // construct StreamWriter
         m_can_write     = true;
@@ -370,10 +370,10 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
     std::optional<grpc::Status> m_status;
 
     // reader_source - available for handler connections (attach_to method) prior to await_init
-    std::unique_ptr<srf::node::RxSource<IncomingData>> m_reader_source;
+    std::unique_ptr<mrc::node::RxSource<IncomingData>> m_reader_source;
 
     // channel connected to the writer sink; each ServerStreamWriter will take ownership of a shared_ptr
-    std::shared_ptr<srf::node::SourceChannelWriteable<writer_t>> m_write_channel;
+    std::shared_ptr<mrc::node::SourceChannelWriteable<writer_t>> m_write_channel;
 
     // the destruction of this object also ensures that m_write_channel is reset
     // this object is nullified after the last IncomingData object is passed to the handler
@@ -381,10 +381,10 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
     std::weak_ptr<stream_writer_t> m_weak_stream_writer;
 
     // runners to manage the life cycles of the reader / writer runnables
-    std::unique_ptr<srf::runnable::Runner> m_writer;
-    std::unique_ptr<srf::runnable::Runner> m_reader;
+    std::unique_ptr<mrc::runnable::Runner> m_writer;
+    std::unique_ptr<mrc::runnable::Runner> m_reader;
 
     friend ServerStreamWriter;
 };
 
-}  // namespace srf::internal::rpc
+}  // namespace mrc::internal::rpc

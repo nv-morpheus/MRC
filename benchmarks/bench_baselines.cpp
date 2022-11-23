@@ -39,7 +39,7 @@
 #include <utility>
 #include <vector>
 
-using namespace srf::benchmarking;
+using namespace mrc::benchmarking;
 
 namespace defs {
 using clock_t   = std::chrono::steady_clock;

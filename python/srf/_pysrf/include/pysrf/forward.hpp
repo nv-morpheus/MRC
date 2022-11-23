@@ -23,17 +23,17 @@ class module_;
 class object;
 }  // namespace pybind11
 
-// Common SRF classes that are used
-namespace srf::segment {
+// Common MRC classes that are used
+namespace mrc::segment {
 
 class ObjectProperties;
 
-}  // namespace srf::segment
+}  // namespace mrc::segment
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 class PyObjectHolder;
 class PyObjectWrapper;
 class PythonOperator;
 
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

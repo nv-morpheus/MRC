@@ -20,7 +20,7 @@
 #include <memory>
 #include <set>
 
-namespace srf {
+namespace mrc {
 
 #ifdef SRF_TRACING_DISABLED
     #define WATCHER_PROLOGUE(event)
@@ -87,4 +87,4 @@ inline void Watchable::watcher_epilogue(WatchableEvent op, bool rc, const void* 
     }
 }
 
-}  // namespace srf
+}  // namespace mrc

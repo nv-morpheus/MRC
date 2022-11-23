@@ -23,7 +23,7 @@
 #include <atomic>
 #include <string>
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 /**
  * Runnable is an abstract base class from which the deriving parent should override the pure virtual run() method
@@ -102,4 +102,4 @@ class RunnableWithContext : public Runnable
     }
 };
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

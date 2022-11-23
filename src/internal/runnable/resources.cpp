@@ -36,7 +36,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace srf::internal::runnable {
+namespace mrc::internal::runnable {
 
 Resources::Resources(const system::Resources& system_resources, std::size_t _host_partition_id) :
   HostPartitionProvider(system_resources, _host_partition_id),
@@ -51,7 +51,7 @@ Resources::Resources(const system::Resources& system_resources, std::size_t _hos
     main()
         .enqueue([this, &system_resources, &host_partition]() mutable {
             DVLOG(10) << "constructing engine factories on main for host partition " << host_partition.cpu_set().str();
-            srf::runnable::LaunchControlConfig config;
+            mrc::runnable::LaunchControlConfig config;
 
             for (const auto& [name, cpu_set] : host_partition.engine_factory_cpu_sets().fiber_cpu_sets)
             {
@@ -73,7 +73,7 @@ Resources::Resources(const system::Resources& system_resources, std::size_t _hos
 
             // construct launch control
             DVLOG(10) << "constructing launch control on main for host partition " << host_partition.cpu_set().str();
-            m_launch_control = std::make_unique<::srf::runnable::LaunchControl>(std::move(config));
+            m_launch_control = std::make_unique<::mrc::runnable::LaunchControl>(std::move(config));
         })
         .get();
 }
@@ -83,14 +83,14 @@ core::FiberTaskQueue& Resources::main()
     return m_main;
 }
 
-srf::runnable::LaunchControl& Resources::launch_control()
+mrc::runnable::LaunchControl& Resources::launch_control()
 {
     CHECK(m_launch_control);
     return *m_launch_control;
 }
 
-const srf::core::FiberTaskQueue& Resources::main() const
+const mrc::core::FiberTaskQueue& Resources::main() const
 {
     return m_main;
 }
-}  // namespace srf::internal::runnable
+}  // namespace mrc::internal::runnable

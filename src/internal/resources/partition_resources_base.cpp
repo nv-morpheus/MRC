@@ -21,7 +21,7 @@
 
 #include <glog/logging.h>
 
-namespace srf::internal::resources {
+namespace mrc::internal::resources {
 
 PartitionResourceBase::PartitionResourceBase(runnable::Resources& runnable, std::size_t partition_id) :
   system::PartitionProvider(runnable, partition_id),
@@ -38,4 +38,4 @@ const runnable::Resources& PartitionResourceBase::runnable() const
 {
     return m_runnable;
 }
-}  // namespace srf::internal::resources
+}  // namespace mrc::internal::resources

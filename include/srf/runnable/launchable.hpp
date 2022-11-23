@@ -20,7 +20,7 @@
 #include "srf/runnable/launch_control.hpp"
 #include "srf/runnable/launcher.hpp"
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 struct Launchable
 {
@@ -29,4 +29,4 @@ struct Launchable
     virtual std::unique_ptr<Launcher> prepare_launcher(LaunchControl& launch_control) = 0;
 };
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

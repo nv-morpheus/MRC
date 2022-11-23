@@ -27,9 +27,9 @@
 #include <string>
 #include <vector>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
-// Export everything in the srf::pysrf namespace by default since we compile with -fvisibility=hidden
+// Export everything in the mrc::pysrf namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
 
 class ModuleRegistryProxy
@@ -52,12 +52,12 @@ class ModuleRegistryProxy
 
     static void register_module(std::string name,
                                 const registry_version_t& release_version,
-                                std::function<void(srf::segment::Builder&)> fn_py_initializer);
+                                std::function<void(mrc::segment::Builder&)> fn_py_initializer);
 
     static void register_module(std::string name,
                                 std::string registry_namespace,
                                 const registry_version_t& release_version,
-                                std::function<void(srf::segment::Builder&)> fn_py_initializer);
+                                std::function<void(mrc::segment::Builder&)> fn_py_initializer);
 
     static void unregister_module(const std::string& name, const std::string& registry_namespace, bool optional = true);
 
@@ -75,4 +75,4 @@ class ModuleRegistryProxy
 };
 
 #pragma GCC visibility pop
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

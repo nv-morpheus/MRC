@@ -38,14 +38,14 @@
 
 const std::vector<unsigned int> PybindSegmentModuleVersion{srf_VERSION_MAJOR, srf_VERSION_MINOR, srf_VERSION_PATCH};
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 namespace py = pybind11;
 
 PYBIND11_MODULE(plugins, module)
 {
     module.doc() = R"pbdoc(
-        Python bindings for SRF Plugins
+        Python bindings for MRC Plugins
         -------------------------------
         .. currentmodule:: plugins
         .. autosummary::
@@ -57,24 +57,24 @@ PYBIND11_MODULE(plugins, module)
     pysrf::import_module_object(module, "srf.core.segment", "SegmentModule");
 
     auto PluginModule =
-        py::class_<srf::modules::PluginModule, std::shared_ptr<srf::modules::PluginModule>>(module, "PluginModule");
+        py::class_<mrc::modules::PluginModule, std::shared_ptr<mrc::modules::PluginModule>>(module, "PluginModule");
 
     /** Module Register Interface Declarations **/
     PluginModule.def("create_or_acquire", &PluginProxy::create_or_acquire, py::return_value_policy::reference_internal);
 
-    PluginModule.def("list_modules", &srf::modules::PluginModule::list_modules);
+    PluginModule.def("list_modules", &mrc::modules::PluginModule::list_modules);
 
-    PluginModule.def("load", &srf::modules::PluginModule::load, py::arg("throw_on_error") = true);
+    PluginModule.def("load", &mrc::modules::PluginModule::load, py::arg("throw_on_error") = true);
 
-    PluginModule.def("reload", &srf::modules::PluginModule::reload);
+    PluginModule.def("reload", &mrc::modules::PluginModule::reload);
 
-    PluginModule.def("reset_library_directory", &srf::modules::PluginModule::reset_library_directory);
+    PluginModule.def("reset_library_directory", &mrc::modules::PluginModule::reset_library_directory);
 
-    PluginModule.def("set_library_directory", &srf::modules::PluginModule::set_library_directory, py::arg("path"));
+    PluginModule.def("set_library_directory", &mrc::modules::PluginModule::set_library_directory, py::arg("path"));
 
-    PluginModule.def("unload", &srf::modules::PluginModule::unload, py::arg("throw_on_error") = true);
+    PluginModule.def("unload", &mrc::modules::PluginModule::unload, py::arg("throw_on_error") = true);
 
     module.attr("__version__") =
         SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

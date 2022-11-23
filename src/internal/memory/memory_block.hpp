@@ -19,7 +19,7 @@
 
 #include <stdexcept>
 
-namespace srf::internal::memory {
+namespace mrc::internal::memory {
 
 struct MemoryBlock
 {
@@ -27,10 +27,10 @@ struct MemoryBlock
     MemoryBlock(const void* data, std::size_t bytes) : m_data(const_cast<void*>(data)), m_bytes(bytes) {}
     virtual ~MemoryBlock() = default;
 
-    MemoryBlock(const MemoryBlock& other) = default;
+    MemoryBlock(const MemoryBlock& other)            = default;
     MemoryBlock& operator=(const MemoryBlock& other) = default;
 
-    MemoryBlock(MemoryBlock&&) = delete;
+    MemoryBlock(MemoryBlock&&)            = delete;
     MemoryBlock& operator=(MemoryBlock&&) = delete;
 
     void* data()
@@ -132,4 +132,4 @@ struct MemoryBlockCompareAddr
     }
 };
 
-}  // namespace srf::internal::memory
+}  // namespace mrc::internal::memory

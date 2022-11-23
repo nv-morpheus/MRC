@@ -22,7 +22,7 @@
 
 #include <sstream>
 
-namespace srf::segment {
+namespace mrc::segment {
 
 static std::string info(const SegmentAddress& address)
 {
@@ -32,4 +32,4 @@ static std::string info(const SegmentAddress& address)
     return ss.str();
 }
 
-}  // namespace srf::segment
+}  // namespace mrc::segment

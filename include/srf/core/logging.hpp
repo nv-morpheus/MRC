@@ -21,7 +21,7 @@
 
 #include <string>
 
-namespace srf {
+namespace mrc {
 
 /**
  * @brief Log levels, currently there is a 1:1 mapping to the glog levels.
@@ -36,14 +36,14 @@ enum class LogLevels
 };
 
 /**
- * @brief Initializes SRF's logger, calling this function a second time has
+ * @brief Initializes MRC's logger, calling this function a second time has
  * no impact. The return value inidicates if the logger was initialized,
  * which will be `true` on the first call, and `false` for all subsequant calls.
  */
 bool init_logging(const std::string& logname, LogLevels level = LogLevels::INFO, bool log_to_stderr = true);
 
 /**
- * @brief Checks if SRF's logger has been initialized via `init_logging`
+ * @brief Checks if MRC's logger has been initialized via `init_logging`
  *
  * @return true
  * @return false
@@ -51,15 +51,15 @@ bool init_logging(const std::string& logname, LogLevels level = LogLevels::INFO,
 bool is_initialized();
 
 /**
- * @brief Returns the currently configured log level of the SRF logger.
+ * @brief Returns the currently configured log level of the MRC logger.
  * Safe to call both prior to and after calling `init_logging`
  */
 LogLevels get_log_level();
 
 /**
- * @brief Adjusts the log level of SRF's logger.
+ * @brief Adjusts the log level of MRC's logger.
  * Calling this prior to calling `init_logging` has no impact as `init_logging` will set the log level.
  */
 void set_log_level(LogLevels level);
 
-}  // namespace srf
+}  // namespace mrc

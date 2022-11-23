@@ -20,9 +20,9 @@
 #include <cstddef>  // for size_t
 #include <string>
 
-namespace srf {
+namespace mrc {
 
 std::string bytes_to_string(std::size_t bytes);
 std::size_t string_to_bytes(std::string);
 
-}  // namespace srf
+}  // namespace mrc

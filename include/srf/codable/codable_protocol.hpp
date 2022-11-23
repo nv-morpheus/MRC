@@ -17,9 +17,9 @@
 
 #pragma once
 
-namespace srf::codable {
+namespace mrc::codable {
 
 template <typename T, typename EnableT = void>
 struct codable_protocol;  // NOLINT(readability-identifier-naming)
 
-}  // namespace srf::codable
+}  // namespace mrc::codable

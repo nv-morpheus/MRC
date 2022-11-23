@@ -40,7 +40,7 @@
         CHECK_NE(rc, -1);       \
     }
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 class Topology final
 {
@@ -204,4 +204,4 @@ class Topology final
     std::map<int, GpuInfo> m_gpu_info;
 };
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

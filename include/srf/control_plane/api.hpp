@@ -21,7 +21,7 @@
 #include <set>
 #include <string>
 
-namespace srf::control_plane {
+namespace mrc::control_plane {
 
 /**
  * @brief Public interface for control plane subscription services
@@ -30,7 +30,7 @@ namespace srf::control_plane {
  * instance of a subscriptions service is bound to a specific role and a list of roles for which updates will be
  * provided.
  *
- * Example, the SRF Publisher-Subscriber (pubsub) is a service with two roles {"Publisher", "Subscriber"}. An instance
+ * Example, the MRC Publisher-Subscriber (pubsub) is a service with two roles {"Publisher", "Subscriber"}. An instance
  * of a Publisher object has the role() set to "Publisher" and gets a globally unqiue 64-bit tag/identifier. Publishers
  * subscribe to updates from the Subscriber role. When Subscribers are added or removed, the control plane will issue
  * updates that will be delivered to the Publisher object.
@@ -79,4 +79,4 @@ struct ISubscriptionServiceControls
 struct ISubscriptionService : public virtual ISubscriptionServiceIdentity, public virtual ISubscriptionServiceControls
 {};
 
-}  // namespace srf::control_plane
+}  // namespace mrc::control_plane

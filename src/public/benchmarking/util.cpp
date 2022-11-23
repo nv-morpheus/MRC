@@ -31,7 +31,7 @@
 using namespace prometheus;
 using namespace nlohmann;
 
-namespace srf::benchmarking {
+namespace mrc::benchmarking {
 std::size_t TimeUtil::s_mean_steady_clock_call_unit_delay{100};
 TimeUtil::time_resolution_unit_t TimeUtil::s_minimum_resolution{10};
 
@@ -64,11 +64,11 @@ TimeUtil::time_pt_t TimeUtil::get_delay_compensated_time_point()
     return get_current_time_point() + TimeUtil::time_resolution_unit_t(s_mean_steady_clock_call_unit_delay);
 }
 
-}  // namespace srf::benchmarking
+}  // namespace mrc::benchmarking
 
-std::shared_ptr<Registry> srf::benchmarking::json_to_prometheus(const json& json_data)
+std::shared_ptr<Registry> mrc::benchmarking::json_to_prometheus(const json& json_data)
 {
-    using namespace srf::benchmarking;
+    using namespace mrc::benchmarking;
 
     auto registry = std::make_shared<Registry>();
 
@@ -106,7 +106,7 @@ std::shared_ptr<Registry> srf::benchmarking::json_to_prometheus(const json& json
     return registry;
 }
 
-void srf::benchmarking::json_counter_to_prometheus(const json& counters, Registry& registry)
+void mrc::benchmarking::json_counter_to_prometheus(const json& counters, Registry& registry)
 {
     for (auto it = counters.begin(); it != counters.end(); it++)
     {

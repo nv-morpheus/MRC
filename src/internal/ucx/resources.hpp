@@ -34,11 +34,11 @@
 #include <memory>
 #include <string>
 
-namespace srf::internal::network {
+namespace mrc::internal::network {
 class Resources;
 }
 
-namespace srf::internal::ucx {
+namespace mrc::internal::ucx {
 
 /**
  * @brief UCX Resources - if networking is enabled, there should be 1 UCX Resource per "flattened" partition
@@ -54,7 +54,7 @@ class Resources final : public resources::PartitionResourceBase
     Worker& worker();
 
     // task queue used to run the data plane's progress engine
-    srf::core::FiberTaskQueue& network_task_queue();
+    mrc::core::FiberTaskQueue& network_task_queue();
 
     // registration cache to look up local/remote keys for registered blocks of memory
     RegistrationCache& registration_cache();
@@ -66,13 +66,13 @@ class Resources final : public resources::PartitionResourceBase
     template <typename UpstreamT>
     auto adapt_to_registered_resource(UpstreamT upstream, int cuda_device_id)
     {
-        return srf::memory::make_unique_resource<RegistrationResource>(
+        return mrc::memory::make_unique_resource<RegistrationResource>(
             std::move(upstream), m_registration_cache, cuda_device_id);
     }
 
     std::shared_ptr<ucx::Endpoint> make_ep(const std::string& worker_address) const;
 
-    static srf::runnable::LaunchOptions launch_options(std::uint64_t concurrency);
+    static mrc::runnable::LaunchOptions launch_options(std::uint64_t concurrency);
 
   private:
     system::FiberTaskQueue& m_network_task_queue;
@@ -84,4 +84,4 @@ class Resources final : public resources::PartitionResourceBase
     friend network::Resources;
 };
 
-}  // namespace srf::internal::ucx
+}  // namespace mrc::internal::ucx

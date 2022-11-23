@@ -19,7 +19,7 @@
 
 #include "srf/memory/memory_kind.hpp"
 
-namespace srf::memory {
+namespace mrc::memory {
 
 const_buffer_view::const_buffer_view(void* data, std::size_t bytes, memory_kind kind) :
   m_data(data),
@@ -63,4 +63,4 @@ void* buffer_view::data()
     return m_data;
 }
 
-}  // namespace srf::memory
+}  // namespace mrc::memory

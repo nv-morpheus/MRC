@@ -19,7 +19,7 @@
 
 #include "srf/control_plane/api.hpp"
 
-namespace srf::control_plane {
+namespace mrc::control_plane {
 
 /**
  * @brief Convenience class to forward the ISubscriptionService to an instance of an ISubscriptionService
@@ -78,4 +78,4 @@ class SubscriptionServiceForwarder : public ISubscriptionService
     virtual ISubscriptionService& service() const = 0;
 };
 
-}  // namespace srf::control_plane
+}  // namespace mrc::control_plane

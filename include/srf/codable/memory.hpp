@@ -20,12 +20,12 @@
 #include "srf/memory/memory_kind.hpp"
 #include "srf/protos/codable.pb.h"
 
-namespace srf::codable {
+namespace mrc::codable {
 
-// convert srf::memory::memory_kind enum to srf::codable::protos::MemoryKind
+// convert mrc::memory::memory_kind enum to mrc::codable::protos::MemoryKind
 protos::MemoryKind encode_memory_type(memory::memory_kind mem_kind);
 
-// convert srf::codable::protos::MemoryKind to srf::memory::memory_kind
+// convert mrc::codable::protos::MemoryKind to mrc::memory::memory_kind
 memory::memory_kind decode_memory_type(const protos::MemoryKind& proto_kind);
 
-}  // namespace srf::codable
+}  // namespace mrc::codable

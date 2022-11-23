@@ -77,7 +77,7 @@ if hasArg upload; then
       mamba install -y anaconda-client
    fi
 
-   echo -e "${y}Uploading SRF Conda Package${x}"
+   echo -e "${y}Uploading MRC Conda Package${x}"
 
    # Add the conda token needed for uploading
    CONDA_ARGS_ARRAY+=("--token" "${CONDA_TOKEN}")

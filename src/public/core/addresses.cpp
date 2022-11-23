@@ -25,7 +25,7 @@
 #include <ostream>
 #include <string>
 
-namespace srf {
+namespace mrc {
 
 namespace {
 
@@ -133,4 +133,4 @@ std::string port_address_string(const PortAddress& address)
     return port_address_string(id, rank, port);
 }
 
-}  // namespace srf
+}  // namespace mrc

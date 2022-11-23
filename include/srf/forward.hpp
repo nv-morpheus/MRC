@@ -17,7 +17,7 @@
 
 #pragma once
 
-namespace srf {
+namespace mrc {
 
 class Executor;
 class ExecutorBase;
@@ -57,4 +57,4 @@ class ResourceOptions;
 class MemoryPoolOptions;
 class TopologyOptions;
 
-}  // namespace srf
+}  // namespace mrc

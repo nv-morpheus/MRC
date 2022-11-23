@@ -24,7 +24,7 @@
 #include <ostream>
 #include <utility>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 const HostPartition& Partition::host() const
 {
@@ -56,4 +56,4 @@ size_t Partition::host_partition_id() const
 {
     return m_host_partition_id;
 }
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

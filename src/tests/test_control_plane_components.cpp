@@ -33,8 +33,8 @@
 #include <utility>
 #include <vector>
 
-using namespace srf;
-using namespace srf::internal::control_plane;
+using namespace mrc;
+using namespace mrc::internal::control_plane;
 
 class TestControlPlaneComponents : public ::testing::Test
 {};

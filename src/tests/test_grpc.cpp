@@ -58,8 +58,8 @@
 #include <utility>
 #include <vector>
 
-using namespace srf;
-using namespace srf::codable;
+using namespace mrc;
+using namespace mrc::codable;
 
 class TestRPC : public ::testing::Test
 {
@@ -78,7 +78,7 @@ class TestRPC : public ::testing::Test
         m_server = std::make_unique<internal::rpc::Server>(m_resources->partition(0).runnable());
 
         m_channel = grpc::CreateChannel("localhost:13337", grpc::InsecureChannelCredentials());
-        m_stub    = srf::testing::TestService::NewStub(m_channel);
+        m_stub    = mrc::testing::TestService::NewStub(m_channel);
     }
 
     void TearDown() override
@@ -91,7 +91,7 @@ class TestRPC : public ::testing::Test
 
     std::unique_ptr<internal::resources::Manager> m_resources;
     std::shared_ptr<grpc::Channel> m_channel;
-    std::shared_ptr<srf::testing::TestService::Stub> m_stub;
+    std::shared_ptr<mrc::testing::TestService::Stub> m_stub;
     std::unique_ptr<internal::rpc::Server> m_server;
 };
 
@@ -102,21 +102,21 @@ TEST_F(TestRPC, ServerLifeCycle)
     m_server->service_stop();
     m_server->service_await_join();
 
-    // auto service = std::make_shared<srf::protos::Architect::AsyncService>();
+    // auto service = std::make_shared<mrc::protos::Architect::AsyncService>();
     // server.register_service(service);
 }
 
-using stream_server_t = internal::rpc::ServerStream<srf::testing::Input, srf::testing::Output>;
-using stream_client_t = internal::rpc::ClientStream<srf::testing::Input, srf::testing::Output>;
+using stream_server_t = internal::rpc::ServerStream<mrc::testing::Input, mrc::testing::Output>;
+using stream_client_t = internal::rpc::ClientStream<mrc::testing::Input, mrc::testing::Output>;
 
 TEST_F(TestRPC, Alternative)
 {
-    auto service = std::make_shared<srf::testing::TestService::AsyncService>();
+    auto service = std::make_shared<mrc::testing::TestService::AsyncService>();
     m_server->register_service(service);
 
     auto cq           = m_server->get_cq();
     auto service_init = [service, cq](grpc::ServerContext* context,
-                                      grpc::ServerAsyncReaderWriter<srf::testing::Output, srf::testing::Input>* stream,
+                                      grpc::ServerAsyncReaderWriter<mrc::testing::Output, mrc::testing::Input>* stream,
                                       void* tag) {
         service->RequestStreaming(context, stream, cq.get(), cq.get(), tag);
     };
@@ -139,13 +139,13 @@ TEST_F(TestRPC, Alternative)
     EXPECT_FALSE(status.ok());
 }
 
-class ServerHandler : public srf::node::GenericSink<typename stream_server_t::IncomingData>
+class ServerHandler : public mrc::node::GenericSink<typename stream_server_t::IncomingData>
 {
     void on_data(typename stream_server_t::IncomingData&& data) final
     {
         if (data.ok && !m_done_or_cancelled)
         {
-            srf::testing::Output response;
+            mrc::testing::Output response;
             if (data.msg.batch_id() == 42)
             {
                 m_done_or_cancelled = true;
@@ -170,12 +170,12 @@ class ServerHandler : public srf::node::GenericSink<typename stream_server_t::In
 // because no client connects and the server shuts down
 TEST_F(TestRPC, StreamingServerWithHandler)
 {
-    auto service = std::make_shared<srf::testing::TestService::AsyncService>();
+    auto service = std::make_shared<mrc::testing::TestService::AsyncService>();
     m_server->register_service(service);
 
     auto cq           = m_server->get_cq();
     auto service_init = [service, cq](grpc::ServerContext* context,
-                                      grpc::ServerAsyncReaderWriter<srf::testing::Output, srf::testing::Input>* stream,
+                                      grpc::ServerAsyncReaderWriter<mrc::testing::Output, mrc::testing::Input>* stream,
                                       void* tag) {
         service->RequestStreaming(context, stream, cq.get(), cq.get(), tag);
     };
@@ -213,12 +213,12 @@ TEST_F(TestRPC, StreamingServerWithHandler)
 // this tests the basic lifecycle of a normally behaving client/server stream.
 TEST_F(TestRPC, StreamingPingPong)
 {
-    auto service = std::make_shared<srf::testing::TestService::AsyncService>();
+    auto service = std::make_shared<mrc::testing::TestService::AsyncService>();
     m_server->register_service(service);
 
     auto cq           = m_server->get_cq();
     auto service_init = [service, cq](grpc::ServerContext* context,
-                                      grpc::ServerAsyncReaderWriter<srf::testing::Output, srf::testing::Input>* stream,
+                                      grpc::ServerAsyncReaderWriter<mrc::testing::Output, mrc::testing::Input>* stream,
                                       void* tag) {
         service->RequestStreaming(context, stream, cq.get(), cq.get(), tag);
     };
@@ -244,7 +244,7 @@ TEST_F(TestRPC, StreamingPingPong)
     };
 
     auto client = std::make_shared<stream_client_t>(prepare_fn, m_resources->partition(0).runnable());
-    srf::node::SinkChannelReadable<typename stream_client_t::IncomingData> client_handler;
+    mrc::node::SinkChannelReadable<typename stream_client_t::IncomingData> client_handler;
     client->attach_to(client_handler);
 
     auto client_writer = client->await_init();
@@ -252,7 +252,7 @@ TEST_F(TestRPC, StreamingPingPong)
     for (int i = 0; i < 10; i++)
     {
         VLOG(1) << "sending request " << i;
-        srf::testing::Input request;
+        mrc::testing::Input request;
         request.set_batch_id(i);
         client_writer->await_write(std::move(request));
 
@@ -284,12 +284,12 @@ TEST_F(TestRPC, StreamingPingPong)
 
 TEST_F(TestRPC, StreamingPingPongEarlyServerFinish)
 {
-    auto service = std::make_shared<srf::testing::TestService::AsyncService>();
+    auto service = std::make_shared<mrc::testing::TestService::AsyncService>();
     m_server->register_service(service);
 
     auto cq           = m_server->get_cq();
     auto service_init = [service, cq](grpc::ServerContext* context,
-                                      grpc::ServerAsyncReaderWriter<srf::testing::Output, srf::testing::Input>* stream,
+                                      grpc::ServerAsyncReaderWriter<mrc::testing::Output, mrc::testing::Input>* stream,
                                       void* tag) {
         service->RequestStreaming(context, stream, cq.get(), cq.get(), tag);
     };
@@ -315,7 +315,7 @@ TEST_F(TestRPC, StreamingPingPongEarlyServerFinish)
     };
 
     auto client = std::make_shared<stream_client_t>(prepare_fn, m_resources->partition(0).runnable());
-    srf::node::SinkChannelReadable<typename stream_client_t::IncomingData> client_handler;
+    mrc::node::SinkChannelReadable<typename stream_client_t::IncomingData> client_handler;
     client->attach_to(client_handler);
 
     auto client_writer = client->await_init();
@@ -323,25 +323,25 @@ TEST_F(TestRPC, StreamingPingPongEarlyServerFinish)
     for (int i = 40; i < 50; i++)
     {
         VLOG(1) << "sending request " << i;
-        srf::testing::Input request;
+        mrc::testing::Input request;
         request.set_batch_id(i);
         auto status = client_writer->await_write(std::move(request));
         if (i <= 42)
         {
-            EXPECT_EQ(status, srf::channel::Status::success);
+            EXPECT_EQ(status, mrc::channel::Status::success);
         }
         else
         {
-            EXPECT_EQ(status, srf::channel::Status::closed);
+            EXPECT_EQ(status, mrc::channel::Status::closed);
         }
 
-        if (status == srf::channel::Status::success)
+        if (status == mrc::channel::Status::success)
         {
             typename stream_client_t::IncomingData response;
             VLOG(1) << "awaiting response " << i;
             auto status = client_handler.egress().await_read(response);
 
-            if (status == srf::channel::Status::success)
+            if (status == mrc::channel::Status::success)
             {
                 VLOG(1) << "got response " << i;
                 EXPECT_EQ(response.msg.batch_id(), i);
@@ -373,12 +373,12 @@ TEST_F(TestRPC, StreamingPingPongEarlyServerFinish)
 
 TEST_F(TestRPC, StreamingPingPongEarlyServerCancel)
 {
-    auto service = std::make_shared<srf::testing::TestService::AsyncService>();
+    auto service = std::make_shared<mrc::testing::TestService::AsyncService>();
     m_server->register_service(service);
 
     auto cq           = m_server->get_cq();
     auto service_init = [service, cq](grpc::ServerContext* context,
-                                      grpc::ServerAsyncReaderWriter<srf::testing::Output, srf::testing::Input>* stream,
+                                      grpc::ServerAsyncReaderWriter<mrc::testing::Output, mrc::testing::Input>* stream,
                                       void* tag) {
         service->RequestStreaming(context, stream, cq.get(), cq.get(), tag);
     };
@@ -404,7 +404,7 @@ TEST_F(TestRPC, StreamingPingPongEarlyServerCancel)
     };
 
     auto client = std::make_shared<stream_client_t>(prepare_fn, m_resources->partition(0).runnable());
-    srf::node::SinkChannelReadable<typename stream_client_t::IncomingData> client_handler;
+    mrc::node::SinkChannelReadable<typename stream_client_t::IncomingData> client_handler;
     client->attach_to(client_handler);
 
     auto client_writer = client->await_init();
@@ -412,25 +412,25 @@ TEST_F(TestRPC, StreamingPingPongEarlyServerCancel)
     for (int i = 400; i < 500; i += 10)
     {
         VLOG(1) << "sending request " << i;
-        srf::testing::Input request;
+        mrc::testing::Input request;
         request.set_batch_id(i);
         auto status = client_writer->await_write(std::move(request));
         if (i <= 420)
         {
-            EXPECT_EQ(status, srf::channel::Status::success);
+            EXPECT_EQ(status, mrc::channel::Status::success);
         }
         else
         {
-            EXPECT_EQ(status, srf::channel::Status::closed);
+            EXPECT_EQ(status, mrc::channel::Status::closed);
         }
 
-        if (status == srf::channel::Status::success)
+        if (status == mrc::channel::Status::success)
         {
             typename stream_client_t::IncomingData response;
             VLOG(1) << "awaiting response " << i;
             auto status = client_handler.egress().await_read(response);
 
-            if (status == srf::channel::Status::success)
+            if (status == mrc::channel::Status::success)
             {
                 VLOG(1) << "got response " << i;
                 EXPECT_EQ(response.msg.batch_id(), i);
@@ -463,12 +463,12 @@ TEST_F(TestRPC, StreamingPingPongEarlyServerCancel)
 
 TEST_F(TestRPC, StreamingPingPongClientEarlyTermination)
 {
-    auto service = std::make_shared<srf::testing::TestService::AsyncService>();
+    auto service = std::make_shared<mrc::testing::TestService::AsyncService>();
     m_server->register_service(service);
 
     auto cq           = m_server->get_cq();
     auto service_init = [service, cq](grpc::ServerContext* context,
-                                      grpc::ServerAsyncReaderWriter<srf::testing::Output, srf::testing::Input>* stream,
+                                      grpc::ServerAsyncReaderWriter<mrc::testing::Output, mrc::testing::Input>* stream,
                                       void* tag) {
         service->RequestStreaming(context, stream, cq.get(), cq.get(), tag);
     };
@@ -494,7 +494,7 @@ TEST_F(TestRPC, StreamingPingPongClientEarlyTermination)
     };
 
     auto client = std::make_shared<stream_client_t>(prepare_fn, m_resources->partition(0).runnable());
-    srf::node::SinkChannelReadable<typename stream_client_t::IncomingData> client_handler;
+    mrc::node::SinkChannelReadable<typename stream_client_t::IncomingData> client_handler;
     client->attach_to(client_handler);
 
     auto client_writer = client->await_init();
@@ -502,7 +502,7 @@ TEST_F(TestRPC, StreamingPingPongClientEarlyTermination)
     for (int i = 0; i < 10; i++)
     {
         VLOG(1) << "sending request " << i;
-        srf::testing::Input request;
+        mrc::testing::Input request;
         request.set_batch_id(i);
         client_writer->await_write(std::move(request));
 

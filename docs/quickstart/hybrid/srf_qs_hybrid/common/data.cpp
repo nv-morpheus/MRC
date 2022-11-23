@@ -15,17 +15,16 @@
  * limitations under the License.
  */
 
-#include <srf_qs_hybrid/data_object.hpp>
-
 #include <glog/logging.h>
 #include <pybind11/pybind11.h>
 #include <srf/utils/string_utils.hpp>
+#include <srf_qs_hybrid/data_object.hpp>
 
 #include <memory>
 #include <sstream>
 #include <utility>
 
-namespace srf::quickstart::hybrid::common {
+namespace mrc::quickstart::hybrid::common {
 namespace py = pybind11;
 
 PYBIND11_MODULE(data, m)
@@ -69,4 +68,5 @@ PYBIND11_MODULE(data, m)
     m.attr("__version__") = "dev";
 #endif
 }
-}  // namespace srf::quickstart::hybrid::common
+}  // namespace mrc::quickstart::hybrid::common
+namespace mrc

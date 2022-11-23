@@ -44,7 +44,7 @@
 #include <mutex>
 #include <string>
 
-namespace srf::node {
+namespace mrc::node {
 
 template <typename T, typename ContextT>
 class RxSink : public RxSinkBase<T>, public RxRunnable<ContextT>, public RxPrologueTap<T>
@@ -130,4 +130,4 @@ template <typename T, typename ContextT>
 void RxSink<T, ContextT>::on_shutdown_critical_section()
 {}
 
-}  // namespace srf::node
+}  // namespace mrc::node

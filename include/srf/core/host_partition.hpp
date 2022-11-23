@@ -19,7 +19,7 @@
 
 #include "srf/core/bitmap.hpp"
 
-namespace srf::core {
+namespace mrc::core {
 
 struct HostPartition
 {
@@ -34,4 +34,4 @@ struct HostPartition
     // virtual memory::resource memory_resource() = 0;
 };
 
-}  // namespace srf::core
+}  // namespace mrc::core

@@ -17,7 +17,7 @@
 
 #pragma once
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 class Context;
 
@@ -54,4 +54,4 @@ class Launchable;
 template <typename T>
 class Payload;
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

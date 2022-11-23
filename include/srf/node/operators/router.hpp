@@ -27,7 +27,7 @@
 #include <map>
 #include <memory>
 
-namespace srf::node {
+namespace mrc::node {
 
 template <typename KeyT, typename T>
 class RouterBase
@@ -90,4 +90,4 @@ class Router : public Operator<std::pair<KeyT, T>>, public RouterBase<KeyT, T>
     }
 };
 
-}  // namespace srf::node
+}  // namespace mrc::node

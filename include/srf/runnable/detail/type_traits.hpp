@@ -23,7 +23,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace srf::runnable::detail {
+namespace mrc::runnable::detail {
 
 template <typename T>
 struct self  // NOLINT
@@ -133,4 +133,4 @@ struct is_unwrapped_context<
     typename std::enable_if_t<std::is_same_v<unwrap_context_first_t<T>, unwrap_context_second_t<T>>>> : std::true_type
 {};
 
-}  // namespace srf::runnable::detail
+}  // namespace mrc::runnable::detail

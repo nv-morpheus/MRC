@@ -27,7 +27,7 @@
 
 #include <memory>
 
-namespace srf::internal::network {
+namespace mrc::internal::network {
 
 class Resources final : private resources::PartitionResourceBase
 {
@@ -66,4 +66,4 @@ class Resources final : private resources::PartitionResourceBase
     friend resources::Manager;
 };
 
-}  // namespace srf::internal::network
+}  // namespace mrc::internal::network

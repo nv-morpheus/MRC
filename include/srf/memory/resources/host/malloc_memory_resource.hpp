@@ -19,7 +19,7 @@
 
 #include "srf/memory/resources/memory_resource.hpp"
 
-namespace srf::memory {
+namespace mrc::memory {
 
 class malloc_memory_resource final : public memory_resource
 {
@@ -39,4 +39,4 @@ class malloc_memory_resource final : public memory_resource
     }
 };
 
-}  // namespace srf::memory
+}  // namespace mrc::memory

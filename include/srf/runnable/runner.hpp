@@ -38,7 +38,7 @@
 #include <utility>
 #include <vector>
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 /**
  * @brief Runner takes ownership and manages the lifecycle of a Runnable
@@ -261,4 +261,4 @@ auto make_runner(std::unique_ptr<RunnableT> runnable)
     return std::make_unique<SpecializedRunner<context_t>>(std::move(runnable));
 }
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

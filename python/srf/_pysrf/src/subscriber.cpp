@@ -37,7 +37,7 @@
 #include <utility>
 #include <vector>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -217,4 +217,4 @@ PyObjectObservable ObservableProxy::pipe(PyObjectObservable* self, py::args args
     }
 }
 
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

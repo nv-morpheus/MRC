@@ -28,7 +28,7 @@
 #include <mutex>
 #include <vector>
 
-namespace srf::internal::control_plane {
+namespace mrc::internal::control_plane {
 
 class Client;
 
@@ -84,8 +84,8 @@ class StateManager
     std::size_t m_nonce{1};
     mutable std::mutex m_mutex;
     std::vector<Promise<void>> m_update_promises;
-    std::unique_ptr<srf::runnable::Runner> m_runner;
+    std::unique_ptr<mrc::runnable::Runner> m_runner;
 };
 
 }  // namespace client
-}  // namespace srf::internal::control_plane
+}  // namespace mrc::internal::control_plane

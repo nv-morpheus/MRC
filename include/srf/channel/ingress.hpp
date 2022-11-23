@@ -22,7 +22,7 @@
 #include <type_traits>  // IWYU pragma: export
 #include <utility>
 
-namespace srf::channel {
+namespace mrc::channel {
 
 /**
  * @brief Opaque handle that is a type-erased common ancestor for all Ingress<T>
@@ -53,4 +53,4 @@ struct Ingress : public IngressHandle
     }
 };
 
-}  // namespace srf::channel
+}  // namespace mrc::channel

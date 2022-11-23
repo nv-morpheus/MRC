@@ -34,7 +34,7 @@
 #include <mutex>
 #include <string>
 
-namespace srf::benchmarking {
+namespace mrc::benchmarking {
 
 /**
  * @brief
@@ -488,4 +488,4 @@ void SegmentWatcher<TracerTypeT>::shutdown_segment()
     m_executor.reset();
 }
 
-}  // namespace srf::benchmarking
+}  // namespace mrc::benchmarking

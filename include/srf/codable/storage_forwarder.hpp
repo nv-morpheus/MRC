@@ -19,7 +19,7 @@
 
 #include "srf/codable/api.hpp"
 
-namespace srf::codable {
+namespace mrc::codable {
 
 class StorageForwarder : public virtual IStorage
 {
@@ -90,4 +90,4 @@ class StorageForwarder : public virtual IStorage
     virtual const IStorage& const_storage() const = 0;
 };
 
-}  // namespace srf::codable
+}  // namespace mrc::codable

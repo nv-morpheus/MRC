@@ -19,20 +19,20 @@
 
 #include "srf/node/operators/operator.hpp"
 
-namespace srf::node {
+namespace mrc::node {
 
 template <typename T>
 class OperatorComponent final : public Operator<T>
 {
   public:
     OperatorComponent(
-        std::function<srf::channel::Status(T&&)> on_next, std::function<void()> on_complete = [] {}) :
+        std::function<mrc::channel::Status(T&&)> on_next, std::function<void()> on_complete = [] {}) :
       m_on_next(std::move(on_next)),
       m_on_complete(std::move(on_complete))
     {}
 
   private:
-    srf::channel::Status on_next(T&& obj) final
+    mrc::channel::Status on_next(T&& obj) final
     {
         return m_on_next(std::move(obj));
     }
@@ -42,8 +42,8 @@ class OperatorComponent final : public Operator<T>
         m_on_complete();
     }
 
-    std::function<srf::channel::Status(T&&)> m_on_next;
+    std::function<mrc::channel::Status(T&&)> m_on_next;
     std::function<void()> m_on_complete;
 };
 
-}  // namespace srf::node
+}  // namespace mrc::node

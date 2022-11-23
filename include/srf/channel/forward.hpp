@@ -17,7 +17,7 @@
 
 #pragma once
 
-namespace srf::channel {
+namespace mrc::channel {
 
 enum class Status;
 
@@ -41,4 +41,4 @@ class RecentChannel;
 template <typename T>
 class NullChannel;
 
-}  // namespace srf::channel
+}  // namespace mrc::channel

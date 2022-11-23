@@ -23,7 +23,7 @@
 
 #include <memory>
 
-namespace srf::runtime {
+namespace mrc::runtime {
 
 class IRemoteDescriptorHandle;
 
@@ -43,7 +43,7 @@ class IRemoteDescriptorManager
      * The remote descriptor manager will take ownership of a given object T, encode the description of that object in
      * an encoded storage object, then provide back a RemoteDescriptor object which is used to manage the lifecycle of
      * the original object T as well as decoding a copy of the original object. RemoteDescriptors can be transferred
-     * across the SRF data plane to other physical machines/processes. When being decoded on a remote instance, the SRF
+     * across the MRC data plane to other physical machines/processes. When being decoded on a remote instance, the MRC
      * data plane uses the UCX communications library which will optimize the network transport based on the available
      * hardware on the source and destination machines.
      *
@@ -83,4 +83,4 @@ class IRemoteDescriptorManager
     friend RemoteDescriptor;
 };
 
-}  // namespace srf::runtime
+}  // namespace mrc::runtime

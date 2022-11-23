@@ -38,7 +38,7 @@
 #include <ostream>
 #include <string>
 
-namespace srf::internal::codable {
+namespace mrc::internal::codable {
 
 std::size_t DecodableStorageView::buffer_size(const idx_t& idx) const
 {
@@ -58,7 +58,7 @@ std::size_t DecodableStorageView::buffer_size(const idx_t& idx) const
     // }
 }
 
-void DecodableStorageView::copy_from_buffer(const idx_t& idx, srf::memory::buffer_view dst_view) const
+void DecodableStorageView::copy_from_buffer(const idx_t& idx, mrc::memory::buffer_view dst_view) const
 {
     CHECK_LT(idx, descriptor_count());
     const auto& desc = proto().descriptors().at(idx);
@@ -76,7 +76,7 @@ void DecodableStorageView::copy_from_buffer(const idx_t& idx, srf::memory::buffe
     LOG(FATAL) << "descriptor " << idx << " not backed by a buffered resource";
 }
 
-void DecodableStorageView::copy_from_registered_buffer(const idx_t& idx, srf::memory::buffer_view& dst_view) const
+void DecodableStorageView::copy_from_registered_buffer(const idx_t& idx, mrc::memory::buffer_view& dst_view) const
 {
     const auto& remote = proto().descriptors().at(idx).remote_desc();
     CHECK_LE(dst_view.bytes(), remote.bytes());
@@ -131,29 +131,29 @@ void DecodableStorageView::copy_from_registered_buffer(const idx_t& idx, srf::me
     }
 }
 
-void DecodableStorageView::copy_from_eager_buffer(const idx_t& idx, srf::memory::buffer_view& dst_view) const
+void DecodableStorageView::copy_from_eager_buffer(const idx_t& idx, mrc::memory::buffer_view& dst_view) const
 {
     const auto& eager_buffer = proto().descriptors().at(idx).eager_desc();
     CHECK_LE(dst_view.bytes(), eager_buffer.data().size());
 
-    if (dst_view.kind() == srf::memory::memory_kind::device)
+    if (dst_view.kind() == mrc::memory::memory_kind::device)
     {
         LOG(FATAL) << "implement async device copies";
     }
 
-    if (dst_view.kind() == srf::memory::memory_kind::none)
+    if (dst_view.kind() == mrc::memory::memory_kind::none)
     {
         LOG(WARNING) << "got a memory::kind::none";
     }
     std::memcpy(dst_view.data(), eager_buffer.data().data(), dst_view.bytes());
 }
 
-std::shared_ptr<srf::memory::memory_resource> DecodableStorageView::host_memory_resource() const
+std::shared_ptr<mrc::memory::memory_resource> DecodableStorageView::host_memory_resource() const
 {
     return resources().host().arena_memory_resource();
 }
 
-std::shared_ptr<srf::memory::memory_resource> DecodableStorageView::device_memory_resource() const
+std::shared_ptr<mrc::memory::memory_resource> DecodableStorageView::device_memory_resource() const
 {
     if (resources().device())
     {
@@ -162,4 +162,4 @@ std::shared_ptr<srf::memory::memory_resource> DecodableStorageView::device_memor
     return nullptr;
 }
 
-}  // namespace srf::internal::codable
+}  // namespace mrc::internal::codable

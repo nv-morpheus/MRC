@@ -27,7 +27,7 @@
 #include <memory>
 #include <thread>
 
-namespace srf::core {
+namespace mrc::core {
 
 class FiberTaskQueue
 {
@@ -101,4 +101,4 @@ class FiberTaskQueue
     std::atomic<std::size_t> m_detached{0};
 };
 
-}  // namespace srf::core
+}  // namespace mrc::core

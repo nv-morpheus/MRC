@@ -23,7 +23,7 @@
 #include <string>
 #include <tuple>
 
-namespace srf {
+namespace mrc {
 
 /**
  * @brief Hash of segment name
@@ -101,4 +101,4 @@ extern std::string port_address_string(const SegmentID& id, const SegmentRank& r
  **/
 extern std::string port_address_string(const PortAddress& address);
 
-}  // namespace srf
+}  // namespace mrc

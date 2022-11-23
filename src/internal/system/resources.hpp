@@ -37,7 +37,7 @@
 #include <string>
 #include <utility>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 class Resources final : public SystemProvider
 {
@@ -75,7 +75,7 @@ void Resources::register_thread_local_resource(const CpuSet& cpu_set, std::share
     CHECK(system().topology().contains(cpu_set));
     auto pool = make_fiber_pool(cpu_set);
     pool.set_thread_local_resource(resource);
-    register_thread_local_initializer([resource] { ::srf::utils::ThreadLocalSharedPointer<ResourceT>::set(resource); });
+    register_thread_local_initializer([resource] { ::mrc::utils::ThreadLocalSharedPointer<ResourceT>::set(resource); });
 }
 
 template <typename CallableT>
@@ -92,4 +92,4 @@ Thread Resources::make_thread(std::string desc, CpuSet cpu_affinity, CallableT&&
     return m_thread_resources->make_thread(std::move(desc), std::move(cpu_affinity), std::move(callable));
 }
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

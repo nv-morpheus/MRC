@@ -47,7 +47,7 @@
 // IWYU pragma: no_include "rx-includes.hpp"
 
 namespace py    = pybind11;
-namespace pysrf = srf::pysrf;
+namespace pysrf = mrc::pysrf;
 using namespace std::string_literals;
 
 PYSRF_TEST_CLASS(Executor);
@@ -57,7 +57,7 @@ TEST_F(TestExecutor, Execute)
     std::atomic<unsigned int> counter = 0;
     pysrf::Pipeline p;
 
-    auto init = [&counter](srf::segment::Builder& seg) {
+    auto init = [&counter](mrc::segment::Builder& seg) {
         auto src = seg.make_source<bool>("src", [](rxcpp::subscriber<bool>& s) {
             if (s.is_subscribed())
             {
@@ -84,7 +84,7 @@ TEST_F(TestExecutor, Execute)
     p.make_segment("seg2"s, init);
     p.make_segment("seg3"s, init);
 
-    auto options = std::make_shared<srf::Options>();
+    auto options = std::make_shared<mrc::Options>();
     options->topology().user_cpuset("0");
 
     pysrf::Executor exec{options};

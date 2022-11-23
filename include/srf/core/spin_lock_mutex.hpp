@@ -19,7 +19,7 @@
 
 #include <atomic>
 
-namespace srf::core {
+namespace mrc::core {
 
 class SpinLockMutex
 {
@@ -83,4 +83,4 @@ class SpinLockMutex
     std::atomic<bool> m_flag{false};
 };
 
-}  // namespace srf::core
+}  // namespace mrc::core

@@ -26,15 +26,15 @@
 #include <string>
 
 // todo(ryan) - most base classes that will be owned by the engine will need to be moved to engine api/lib
-namespace srf::segment {
+namespace mrc::segment {
 
 class ObjectProperties;
 class EgressPortBase;
 class IngressPortBase;
 
-}  // namespace srf::segment
+}  // namespace mrc::segment
 
-namespace srf::internal::segment {
+namespace mrc::internal::segment {
 
 class Builder;
 
@@ -49,15 +49,15 @@ class IBuilder final
 
     const std::string& name() const;
     bool has_object(const std::string& name) const;
-    ::srf::segment::ObjectProperties& find_object(const std::string& name);
-    void add_object(const std::string& name, std::shared_ptr<::srf::segment::ObjectProperties> object);
-    void add_runnable(const std::string& name, std::shared_ptr<srf::runnable::Launchable> runnable);
-    std::shared_ptr<::srf::segment::IngressPortBase> get_ingress_base(const std::string& name);
-    std::shared_ptr<::srf::segment::EgressPortBase> get_egress_base(const std::string& name);
+    ::mrc::segment::ObjectProperties& find_object(const std::string& name);
+    void add_object(const std::string& name, std::shared_ptr<::mrc::segment::ObjectProperties> object);
+    void add_runnable(const std::string& name, std::shared_ptr<mrc::runnable::Launchable> runnable);
+    std::shared_ptr<::mrc::segment::IngressPortBase> get_ingress_base(const std::string& name);
+    std::shared_ptr<::mrc::segment::EgressPortBase> get_egress_base(const std::string& name);
     std::function<void(std::int64_t)> make_throughput_counter(const std::string& name);
 
   private:
     Builder* m_impl;
 };
 
-}  // namespace srf::internal::segment
+}  // namespace mrc::internal::segment

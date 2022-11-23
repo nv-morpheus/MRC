@@ -31,7 +31,7 @@
 #include <map>
 #include <shared_mutex>
 
-namespace srf::memory {
+namespace mrc::memory {
 
 // Ignore naming conventions here to match RMM
 // NOLINTBEGIN(readability-identifier-naming)
@@ -118,9 +118,9 @@ class arena_resource final : public adaptor<Upstream>
     ~arena_resource() override = default;
 
     // Disable copy (and move) semantics.
-    arena_resource(arena_resource const&) = delete;
-    arena_resource& operator=(arena_resource const&) = delete;
-    arena_resource(arena_resource&&) noexcept        = delete;
+    arena_resource(arena_resource const&)                = delete;
+    arena_resource& operator=(arena_resource const&)     = delete;
+    arena_resource(arena_resource&&) noexcept            = delete;
     arena_resource& operator=(arena_resource&&) noexcept = delete;
 
   private:
@@ -325,4 +325,4 @@ class arena_resource final : public adaptor<Upstream>
 
 // NOLINTEND(readability-identifier-naming)
 
-}  // namespace srf::memory
+}  // namespace mrc::memory

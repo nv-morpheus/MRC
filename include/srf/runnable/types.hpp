@@ -19,7 +19,7 @@
 
 #include <string>
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 enum class EngineType
 {
@@ -40,4 +40,4 @@ inline std::string default_engine_factory_name()
     return std::string("default");
 }
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

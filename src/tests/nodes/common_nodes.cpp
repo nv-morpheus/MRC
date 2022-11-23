@@ -36,8 +36,8 @@
 #include <utility>
 #include <vector>
 
-using namespace srf;
-using namespace srf::memory::literals;
+using namespace mrc;
+using namespace mrc::memory::literals;
 
 namespace test::nodes {
 

@@ -19,7 +19,7 @@
 
 #include <string>
 
-namespace srf::quickstart::hybrid::common {
+namespace mrc::quickstart::hybrid::common {
 
 struct DataObject
 {
@@ -33,4 +33,4 @@ struct DataObject
     std::string name;
     int value{0};
 };
-}  // namespace srf::quickstart::hybrid::common
+}  // namespace mrc::quickstart::hybrid::common

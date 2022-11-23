@@ -24,7 +24,7 @@
 
 #include <cstddef>
 
-namespace srf::memory {
+namespace mrc::memory {
 
 class buffer_view;
 
@@ -164,4 +164,4 @@ class buffer_view : public const_buffer_view
     void* data();
 };
 
-}  // namespace srf::memory
+}  // namespace mrc::memory

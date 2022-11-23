@@ -46,7 +46,7 @@
 #include <string>
 #include <utility>
 
-namespace srf::internal::segment {
+namespace mrc::internal::segment {
 
 Instance::Instance(std::shared_ptr<const Definition> definition,
                    SegmentRank rank,
@@ -56,7 +56,7 @@ Instance::Instance(std::shared_ptr<const Definition> definition,
   m_id(definition->id()),
   m_rank(rank),
   m_address(segment_address_encode(m_id, m_rank)),
-  m_info(::srf::segment::info(segment_address_encode(m_id, rank))),
+  m_info(::mrc::segment::info(segment_address_encode(m_id, rank))),
   m_resources(resources),
   m_default_partition_id(partition_id)
 {
@@ -94,12 +94,12 @@ const SegmentAddress& Instance::address() const
 void Instance::do_service_start()
 {
     // prepare launchers from m_builder
-    std::map<std::string, std::unique_ptr<srf::runnable::Launcher>> m_launchers;
-    std::map<std::string, std::unique_ptr<srf::runnable::Launcher>> m_egress_launchers;
-    std::map<std::string, std::unique_ptr<srf::runnable::Launcher>> m_ingress_launchers;
+    std::map<std::string, std::unique_ptr<mrc::runnable::Launcher>> m_launchers;
+    std::map<std::string, std::unique_ptr<mrc::runnable::Launcher>> m_egress_launchers;
+    std::map<std::string, std::unique_ptr<mrc::runnable::Launcher>> m_ingress_launchers;
 
-    auto apply_callback = [this](std::unique_ptr<srf::runnable::Launcher>& launcher, std::string name) {
-        launcher->apply([this, n = std::move(name)](srf::runnable::Runner& runner) {
+    auto apply_callback = [this](std::unique_ptr<mrc::runnable::Launcher>& launcher, std::string name) {
+        launcher->apply([this, n = std::move(name)](mrc::runnable::Runner& runner) {
             runner.on_completion_callback([this, n](bool ok) {
                 if (!ok)
                 {
@@ -227,7 +227,7 @@ void Instance::do_service_await_join()
     DVLOG(10) << info() << " join started";
     std::exception_ptr first_exception = nullptr;
 
-    auto check = [&first_exception](srf::runnable::Runner& runner) {
+    auto check = [&first_exception](mrc::runnable::Runner& runner) {
         try
         {
             runner.await_join();
@@ -318,4 +318,4 @@ std::shared_ptr<manifold::Interface> Instance::create_manifold(const PortName& n
     return nullptr;
 }
 
-}  // namespace srf::internal::segment
+}  // namespace mrc::internal::segment

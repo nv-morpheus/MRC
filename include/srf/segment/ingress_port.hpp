@@ -34,7 +34,7 @@
 #include <memory>
 #include <string>
 
-namespace srf::segment {
+namespace mrc::segment {
 
 class Instance;
 
@@ -95,4 +95,4 @@ class IngressPort : public Object<node::SourceProperties<T>>, public IngressPort
     friend Instance;
 };
 
-}  // namespace srf::segment
+}  // namespace mrc::segment

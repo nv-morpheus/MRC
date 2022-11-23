@@ -29,7 +29,7 @@
 #include <ostream>
 
 namespace py = pybind11;
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 PythonPickleInterface::~PythonPickleInterface() = default;
 
@@ -65,4 +65,4 @@ pybind11::object PythonPickleInterface::unpickle(pybind11::bytes bytes)
     }
 }
 
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

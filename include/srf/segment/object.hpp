@@ -32,7 +32,7 @@
 #include <string>
 #include <type_traits>
 
-namespace srf::segment {
+namespace mrc::segment {
 
 struct ObjectProperties
 {
@@ -70,7 +70,7 @@ node::SinkProperties<T>& ObjectProperties::sink_typed()
     if (sink == nullptr)
     {
         LOG(ERROR) << "Failed to cast " << type_name() << " to "
-                   << "SinkProperties<" << std::string(srf::type_name<T>()) << "> from "
+                   << "SinkProperties<" << std::string(mrc::type_name<T>()) << "> from "
                    << "SinkProperties<" << base.sink_type_name() << ">.";
         throw exceptions::SrfRuntimeError("Failed to cast Sink to requested SinkProperties<T>");
     }
@@ -87,7 +87,7 @@ node::SourceProperties<T>& ObjectProperties::source_typed()
     if (source == nullptr)
     {
         LOG(ERROR) << "Failed to cast " << type_name() << " to "
-                   << "SourceProperties<" << std::string(srf::type_name<T>()) << "> from "
+                   << "SourceProperties<" << std::string(mrc::type_name<T>()) << "> from "
                    << "SourceProperties<" << base.source_type_name() << ">.";
         throw exceptions::SrfRuntimeError("Failed to cast Source to requested SourceProperties<T>");
     }
@@ -136,6 +136,7 @@ class Object : public virtual ObjectProperties
         }
         return m_launch_options;
     }
+
   protected:
     void set_name(const std::string& name);
 
@@ -175,7 +176,7 @@ std::string Object<ObjectT>::name() const
 template <typename ObjectT>
 std::string Object<ObjectT>::type_name() const
 {
-    return std::string(::srf::type_name<ObjectT>());
+    return std::string(::mrc::type_name<ObjectT>());
 }
 
 template <typename ObjectT>
@@ -218,4 +219,4 @@ node::SourcePropertiesBase& Object<ObjectT>::source_base()
     return *base;
 }
 
-}  // namespace srf::segment
+}  // namespace mrc::segment

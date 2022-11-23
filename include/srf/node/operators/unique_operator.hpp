@@ -20,7 +20,7 @@
 #include "srf/channel/ingress.hpp"
 #include "srf/node/sink_properties.hpp"
 
-namespace srf::node {
+namespace mrc::node {
 
 template <typename T>
 class UniqueOperator : public SinkProperties<T>
@@ -78,4 +78,4 @@ std::shared_ptr<channel::Ingress<T>> UniqueOperator<T>::channel_ingress()
     return ingress;
 }
 
-}  // namespace srf::node
+}  // namespace mrc::node

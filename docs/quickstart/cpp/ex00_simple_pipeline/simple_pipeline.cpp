@@ -16,17 +16,16 @@
  */
 
 #include <glog/logging.h>
-
 #include <srf/node/rx_sink.hpp>
 #include <srf/pipeline/pipeline.hpp>
 #include <srf/srf.hpp>
 
-using namespace srf;
+using namespace mrc;
 
 int main(int argc, char* argv[])
 {
     // srf options
-    auto options = std::make_unique<srf::Options>();
+    auto options = std::make_unique<mrc::Options>();
 
     // create executor
     Executor executor(std::move(options));

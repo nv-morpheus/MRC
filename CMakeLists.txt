@@ -22,11 +22,11 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "srf")
 # Options of the form: SRF_ENABLE_XXX, alter whether to build using a specific optional third party library. ON by default
 # Options of the form: SRF_USE_XXX, enable linting or alter the environment and are OFF by default
 option(BUILD_SHARED_LIBS "Default value for whether or not to build shared or static libraries" ON)
-option(SRF_BUILD_BENCHMARKS "Whether or not to build SRF benchmarks" OFF)
+option(SRF_BUILD_BENCHMARKS "Whether or not to build MRC benchmarks" OFF)
 option(SRF_BUILD_DOCS "Enable building of API documentation" OFF)
-option(SRF_BUILD_LIBRARY "Whether the entire SRF library should be built. If set to OFF, only the pieces needed for a target will be built. Set to ON if installing the library" ON)
+option(SRF_BUILD_LIBRARY "Whether the entire MRC library should be built. If set to OFF, only the pieces needed for a target will be built. Set to ON if installing the library" ON)
 option(SRF_BUILD_PYTHON "Enable building the python bindings for Srf" ON)
-option(SRF_BUILD_TESTS "Whether or not to build SRF tests" ON)
+option(SRF_BUILD_TESTS "Whether or not to build MRC tests" ON)
 option(SRF_USE_CCACHE "Enable caching compilation results with ccache" OFF)
 option(SRF_USE_CLANG_TIDY "Enable running clang-tidy as part of the build process" OFF)
 option(SRF_USE_CONDA "Enables finding dependencies via conda instead of vcpkg. Note: This will disable vcpkg. All dependencies must be installed first in the conda environment" ON)
@@ -145,7 +145,7 @@ include(cmake/setup_coverage.cmake)
 include(cmake/setup_iwyu.cmake)
 
 # ###################################
-# - Begin SRF Targets --------------
+# - Begin MRC Targets --------------
 
 # Keep all source files sorted!!!
 add_library(libsrf
@@ -391,7 +391,7 @@ rapids_export(INSTALL ${PROJECT_NAME}
   EXPORT_SET ${PROJECT_NAME}-core-exports
   GLOBAL_TARGETS libsrf
   VERSION ${PROJECT_VERSION}
-  NAMESPACE srf::
+  NAMESPACE mrc::
   DOCUMENTATION doc_string
   FINAL_CODE_BLOCK code_string
 )
@@ -403,7 +403,7 @@ rapids_export(BUILD ${PROJECT_NAME}
   GLOBAL_TARGETS libsrf
   VERSION ${PROJECT_VERSION}
   LANGUAGES C CXX CUDA
-  NAMESPACE srf::
+  NAMESPACE mrc::
   DOCUMENTATION doc_string
   FINAL_CODE_BLOCK code_string
 )

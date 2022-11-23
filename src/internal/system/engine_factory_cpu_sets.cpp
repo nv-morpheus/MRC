@@ -33,7 +33,7 @@
 #include <ostream>
 #include <utility>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 bool EngineFactoryCpuSets::is_resuable(const std::string& name) const
 {
@@ -258,4 +258,4 @@ std::size_t EngineFactoryCpuSets::main_cpu_id() const
     return search->second.first();
 }
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

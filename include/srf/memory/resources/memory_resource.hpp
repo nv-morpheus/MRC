@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-namespace srf::memory {
+namespace mrc::memory {
 
 struct memory_resource
 {
@@ -52,4 +52,4 @@ struct memory_resource
     virtual memory_kind do_kind() const                      = 0;
 };
 
-}  // namespace srf::memory
+}  // namespace mrc::memory

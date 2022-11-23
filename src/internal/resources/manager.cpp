@@ -46,7 +46,7 @@
 #include <thread>
 #include <utility>
 
-namespace srf::internal::resources {
+namespace mrc::internal::resources {
 
 thread_local Manager* Manager::m_thread_resources{nullptr};
 thread_local PartitionResources* Manager::m_thread_partition{nullptr};
@@ -210,7 +210,7 @@ Manager& Manager::get_resources()
     if (m_thread_resources == nullptr)  // todo(cpp20) [[unlikely]]
     {
         LOG(ERROR) << "thread with id " << std::this_thread::get_id()
-                   << " attempting to access the SRF runtime, but is not a SRF runtime thread";
+                   << " attempting to access the MRC runtime, but is not a MRC runtime thread";
         throw exceptions::SrfRuntimeError("can not access runtime resources from outside the runtime");
     }
 
@@ -231,11 +231,11 @@ PartitionResources& Manager::get_partition()
             }
 
             LOG(ERROR) << "thread with id " << std::this_thread::get_id()
-                       << " attempting to access the SRF runtime, but is not a SRF runtime thread";
+                       << " attempting to access the MRC runtime, but is not a MRC runtime thread";
             throw exceptions::SrfRuntimeError("can not access runtime resources from outside the runtime");
         }
 
         return *m_thread_partition;
     }
 }
-}  // namespace srf::internal::resources
+}  // namespace mrc::internal::resources

@@ -22,7 +22,7 @@
 
 #include <type_traits>
 
-namespace srf::node {
+namespace mrc::node {
 
 // Ignore naming conventions here to match <type_traits> (Available after clang-tidy-14)
 // NOLINTBEGIN(readability-identifier-naming)
@@ -130,4 +130,4 @@ struct is_node<T, std::enable_if_t<is_sink<T>{} && is_source<T>{}>>
 };
 
 // NOLINTEND(readability-identifier-naming)
-}  // namespace srf::node
+}  // namespace mrc::node

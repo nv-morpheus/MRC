@@ -40,7 +40,7 @@
 // IWYU pragma: no_include <pybind11/detail/descr.h>
 
 namespace py    = pybind11;
-namespace pysrf = srf::pysrf;
+namespace pysrf = mrc::pysrf;
 using namespace std::string_literals;
 using namespace pybind11::literals;
 

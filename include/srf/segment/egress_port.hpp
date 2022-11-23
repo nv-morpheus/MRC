@@ -37,7 +37,7 @@
 #include <string>
 #include <utility>
 
-namespace srf::segment {
+namespace mrc::segment {
 
 class Instance;
 
@@ -104,4 +104,4 @@ class EgressPort final : public Object<node::SinkProperties<T>>,
     std::mutex m_mutex;
 };
 
-}  // namespace srf::segment
+}  // namespace mrc::segment

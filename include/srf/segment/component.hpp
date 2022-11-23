@@ -25,7 +25,7 @@
 #include <ostream>
 #include <utility>
 
-namespace srf::segment {
+namespace mrc::segment {
 
 template <typename ResourceT>
 class Component final : public Object<ResourceT>
@@ -43,4 +43,4 @@ class Component final : public Object<ResourceT>
     std::unique_ptr<ResourceT> m_resource;
 };
 
-}  // namespace srf::segment
+}  // namespace mrc::segment

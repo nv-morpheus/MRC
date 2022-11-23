@@ -59,10 +59,10 @@
 // IWYU pragma: no_include <pybind11/detail/type_caster_base.h>
 // IWYU pragma: no_include "rx-includes.hpp"
 
-namespace srf::pytests {
+namespace mrc::pytests {
 
 namespace py    = pybind11;
-namespace pysrf = srf::pysrf;
+namespace pysrf = mrc::pysrf;
 
 struct Base
 {};
@@ -201,25 +201,25 @@ PYBIND11_MODULE(test_edges_cpp, module)
     pysrf::import(module, "srf");
 
     py::class_<Base, std::shared_ptr<Base>>(module, "Base").def(py::init<>([]() { return std::make_shared<Base>(); }));
-    srf::pysrf::PortBuilderUtil::register_port_util<Base>();
+    mrc::pysrf::PortBuilderUtil::register_port_util<Base>();
 
     py::class_<DerivedA, Base, std::shared_ptr<DerivedA>>(module, "DerivedA").def(py::init<>([]() {
         return std::make_shared<DerivedA>();
     }));
-    srf::pysrf::PortBuilderUtil::register_port_util<DerivedA>();
+    mrc::pysrf::PortBuilderUtil::register_port_util<DerivedA>();
 
     py::class_<DerivedB, Base, std::shared_ptr<DerivedB>>(module, "DerivedB").def(py::init<>([]() {
         return std::make_shared<DerivedB>();
     }));
-    srf::pysrf::PortBuilderUtil::register_port_util<DerivedB>();
+    mrc::pysrf::PortBuilderUtil::register_port_util<DerivedB>();
 
-    srf::node::EdgeConnector<py::object, pysrf::PyObjectHolder>::register_converter();
-    srf::node::EdgeConnector<pysrf::PyObjectHolder, py::object>::register_converter();
+    mrc::node::EdgeConnector<py::object, pysrf::PyObjectHolder>::register_converter();
+    mrc::node::EdgeConnector<pysrf::PyObjectHolder, py::object>::register_converter();
 
     py::class_<segment::Object<SourceDerivedB>,
-               srf::segment::ObjectProperties,
+               mrc::segment::ObjectProperties,
                std::shared_ptr<segment::Object<SourceDerivedB>>>(module, "SourceDerivedB")
-        .def(py::init<>([](srf::segment::Builder& parent, const std::string& name) {
+        .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name) {
                  auto stage = parent.construct_object<SourceDerivedB>(name);
 
                  return stage;
@@ -228,9 +228,9 @@ PYBIND11_MODULE(test_edges_cpp, module)
              py::arg("name"));
 
     py::class_<segment::Object<SourcePyHolder>,
-               srf::segment::ObjectProperties,
+               mrc::segment::ObjectProperties,
                std::shared_ptr<segment::Object<SourcePyHolder>>>(module, "SourcePyHolder")
-        .def(py::init<>([](srf::segment::Builder& parent, const std::string& name) {
+        .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name) {
                  auto stage = parent.construct_object<SourcePyHolder>(name);
 
                  return stage;
@@ -238,9 +238,9 @@ PYBIND11_MODULE(test_edges_cpp, module)
              py::arg("parent"),
              py::arg("name"));
 
-    py::class_<segment::Object<NodeBase>, srf::segment::ObjectProperties, std::shared_ptr<segment::Object<NodeBase>>>(
+    py::class_<segment::Object<NodeBase>, mrc::segment::ObjectProperties, std::shared_ptr<segment::Object<NodeBase>>>(
         module, "NodeBase")
-        .def(py::init<>([](srf::segment::Builder& parent, const std::string& name) {
+        .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name) {
                  auto stage = parent.construct_object<NodeBase>(name);
 
                  return stage;
@@ -249,9 +249,9 @@ PYBIND11_MODULE(test_edges_cpp, module)
              py::arg("name"));
 
     py::class_<segment::Object<NodePyHolder>,
-               srf::segment::ObjectProperties,
+               mrc::segment::ObjectProperties,
                std::shared_ptr<segment::Object<NodePyHolder>>>(module, "NodePyHolder")
-        .def(py::init<>([](srf::segment::Builder& parent, const std::string& name) {
+        .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name) {
                  auto stage = parent.construct_object<NodePyHolder>(name);
 
                  return stage;
@@ -272,4 +272,4 @@ PYBIND11_MODULE(test_edges_cpp, module)
     module.attr("__version__") =
         SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
-}  // namespace srf::pytests
+}  // namespace mrc::pytests

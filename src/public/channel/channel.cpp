@@ -22,7 +22,7 @@
 #include <cstddef>
 #include <stdexcept>
 
-namespace srf::channel {
+namespace mrc::channel {
 
 static std::size_t s_default_channel_size = SRF_DEFAULT_BUFFERED_CHANNEL_SIZE;
 
@@ -42,4 +42,4 @@ void set_default_channel_size(std::size_t default_size)
 
 ChannelBase::~ChannelBase() = default;
 
-}  // namespace srf::channel
+}  // namespace mrc::channel

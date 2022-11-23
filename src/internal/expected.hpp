@@ -22,7 +22,7 @@
 
 #include <tl/expected.hpp>  // IWYU pragma: export
 
-namespace srf::internal {
+namespace mrc::internal {
 
 enum class ErrorCode
 {
@@ -92,4 +92,4 @@ using Expected = tl::expected<T, Error>;  // NOLINT
         throw expected.error();                                       \
     }
 
-}  // namespace srf::internal
+}  // namespace mrc::internal

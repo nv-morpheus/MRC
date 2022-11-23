@@ -17,11 +17,11 @@
 
 #pragma once
 
-namespace srf::runnable {
+namespace mrc::runnable {
 class Context;
 }
 
-namespace srf::node {
+namespace mrc::node {
 
 class EdgeBuilder;
 
@@ -89,4 +89,4 @@ class GenericSource;
 template <typename InputT, typename OutputT = InputT, typename ContextT = runnable::Context>
 class GenericNode;
 
-}  // namespace srf::node
+}  // namespace mrc::node

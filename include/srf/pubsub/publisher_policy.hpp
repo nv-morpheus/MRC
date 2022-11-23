@@ -17,4 +17,4 @@
 
 #pragma once
 
-namespace srf::pubsub {}
+namespace mrc::pubsub {}

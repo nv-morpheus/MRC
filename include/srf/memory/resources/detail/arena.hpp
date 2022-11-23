@@ -34,7 +34,7 @@
 #include <set>
 #include <unordered_map>
 
-namespace srf::memory::detail::arena {
+namespace mrc::memory::detail::arena {
 /// Minimum size of a superblock (256 KiB).
 constexpr std::size_t minimum_superblock_size = 1U << 18U;  // NOLINT
 
@@ -342,9 +342,9 @@ class global_arena final
     }
 
     // Disable copy (and move) semantics.
-    global_arena(global_arena const&) = delete;
-    global_arena& operator=(global_arena const&) = delete;
-    global_arena(global_arena&&) noexcept        = delete;
+    global_arena(global_arena const&)                = delete;
+    global_arena& operator=(global_arena const&)     = delete;
+    global_arena(global_arena&&) noexcept            = delete;
     global_arena& operator=(global_arena&&) noexcept = delete;
 
     /**
@@ -518,9 +518,9 @@ class arena
     ~arena() = default;
 
     // Disable copy (and move) semantics.
-    arena(arena const&) = delete;
-    arena& operator=(arena const&) = delete;
-    arena(arena&&) noexcept        = delete;
+    arena(arena const&)                = delete;
+    arena& operator=(arena const&)     = delete;
+    arena(arena&&) noexcept            = delete;
     arena& operator=(arena&&) noexcept = delete;
 
     /**
@@ -663,10 +663,10 @@ class arena_cleaner
     explicit arena_cleaner(std::shared_ptr<arena<Upstream>> const& arena) : arena_(arena) {}
 
     // Disable copy (and move) semantics.
-    arena_cleaner(arena_cleaner const&) = delete;
+    arena_cleaner(arena_cleaner const&)            = delete;
     arena_cleaner& operator=(arena_cleaner const&) = delete;
     arena_cleaner(arena_cleaner&&) noexcept        = delete;
-    arena_cleaner& operator=(arena_cleaner&&) = delete;
+    arena_cleaner& operator=(arena_cleaner&&)      = delete;
 
     ~arena_cleaner()
     {
@@ -682,4 +682,4 @@ class arena_cleaner
     std::weak_ptr<arena<Upstream>> arena_;  // NOLINT
 };
 
-}  // namespace srf::memory::detail::arena
+}  // namespace mrc::memory::detail::arena

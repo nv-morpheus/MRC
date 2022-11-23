@@ -37,7 +37,7 @@
 
 // IWYU pragma: no_include <array>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 namespace py = pybind11;
 
@@ -247,7 +247,7 @@ PythonOperator OperatorsProxy::to_list()
 {
     //  Build and return the map operator
     return PythonOperator("to_list", [](PyObjectObservable source) {
-        using pyobj_to_list_t = ::srf::pysrf::to_list<PyHolder>;
+        using pyobj_to_list_t = ::mrc::pysrf::to_list<PyHolder>;
 
         // return source.subscribe(sink);
         return source.lift<rxcpp::util::value_type_t<pyobj_to_list_t>>(pyobj_to_list_t())
@@ -269,4 +269,4 @@ PythonOperator OperatorsProxy::to_list()
             });
     });
 }
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

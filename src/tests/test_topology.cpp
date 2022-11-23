@@ -39,7 +39,7 @@
 #include <type_traits>
 #include <vector>
 
-using namespace srf;
+using namespace mrc;
 
 // iwyu is getting confused between std::uint32_t and boost::uint32_t
 // IWYU pragma: no_include <boost/cstdint.hpp>

@@ -17,12 +17,12 @@
 
 #pragma once
 
-namespace srf::core {
+namespace mrc::core {
 
 /**
  * @brief Public Runtime Interface
  *
- * Any execution context can query its unique runtime by calling `srf::runtime()`. This will return a Runtime object
+ * Any execution context can query its unique runtime by calling `mrc::runtime()`. This will return a Runtime object
  * that is specialized to execution context of the caller. The caller has access to all of the resource partition on
  * the physical machine, however the Partition assigned the current execution context by the scheduler is provided by
  * the Partition methods - host(), device(int=0), and device_count(). The current execution should primary uses these
@@ -41,4 +41,4 @@ class Runtime  // : public Partition
     // virtual const DevicePartition& device_partitions(const std::uint32_t&) const = 0;
 };
 
-}  // namespace srf::core
+}  // namespace mrc::core

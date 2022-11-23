@@ -35,7 +35,7 @@ struct WrapTupleElems<N, WrappingT, std::tuple<TupleArgsT...>>
 };
 */
 
-namespace srf {
+namespace mrc {
 
 // Pulled from cuDF
 template <typename T>
@@ -168,4 +168,4 @@ struct DataType
     TypeId m_type_id;
 };
 
-}  // namespace srf
+}  // namespace mrc

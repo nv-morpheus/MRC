@@ -24,7 +24,7 @@
 #include <memory>
 #include <type_traits>
 
-namespace srf::codable {
+namespace mrc::codable {
 
 template <typename T>
 class Encoder;
@@ -141,4 +141,4 @@ inline constexpr bool is_decodable_v = is_decodable<T>::value;  // NOLINT
 template <typename T>
 inline constexpr bool is_codable_v = is_codable<T>::value;  // NOLINT
 
-}  // namespace srf::codable
+}  // namespace mrc::codable

@@ -48,14 +48,14 @@
 // IWYU pragma: no_include <pybind11/detail/common.h>
 // IWYU pragma: no_include <pybind11/detail/descr.h>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 namespace py = pybind11;
 
 PYBIND11_MODULE(segment, module)
 {
     module.doc() = R"pbdoc(
-        Python bindings for SRF Segments
+        Python bindings for MRC Segments
         -------------------------------
         .. currentmodule:: segment
         .. autosummary::
@@ -97,10 +97,10 @@ PYBIND11_MODULE(segment, module)
     node::EdgeConnector<std::string, PyHolder>::register_converter();
     node::EdgeConnector<PyHolder, std::string>::register_converter();
 
-    auto Builder    = py::class_<srf::segment::Builder>(module, "Builder");
-    auto Definition = py::class_<srf::segment::Definition>(module, "Definition");
+    auto Builder    = py::class_<mrc::segment::Builder>(module, "Builder");
+    auto Definition = py::class_<mrc::segment::Definition>(module, "Definition");
     auto SegmentModule =
-        py::class_<srf::modules::SegmentModule, std::shared_ptr<srf::modules::SegmentModule>>(module, "SegmentModule");
+        py::class_<mrc::modules::SegmentModule, std::shared_ptr<mrc::modules::SegmentModule>>(module, "SegmentModule");
     auto SegmentModuleRegistry = py::class_<ModuleRegistryProxy>(module, "ModuleRegistry");
 
     /** Builder Interface Declarations **/
@@ -108,23 +108,23 @@ PYBIND11_MODULE(segment, module)
      * @brief Make a source node that generates py::object values
      */
     Builder.def("make_source",
-                static_cast<std::shared_ptr<srf::segment::ObjectProperties> (*)(
-                    srf::segment::Builder&, const std::string&, py::iterator)>(&BuilderProxy::make_source));
+                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(
+                    mrc::segment::Builder&, const std::string&, py::iterator)>(&BuilderProxy::make_source));
 
     Builder.def("make_source",
-                static_cast<std::shared_ptr<srf::segment::ObjectProperties> (*)(
-                    srf::segment::Builder&, const std::string&, py::iterable)>(&BuilderProxy::make_source),
+                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(
+                    mrc::segment::Builder&, const std::string&, py::iterable)>(&BuilderProxy::make_source),
                 py::return_value_policy::reference_internal);
 
     Builder.def("make_source",
-                static_cast<std::shared_ptr<srf::segment::ObjectProperties> (*)(
-                    srf::segment::Builder&, const std::string&, py::function)>(&BuilderProxy::make_source));
+                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(
+                    mrc::segment::Builder&, const std::string&, py::function)>(&BuilderProxy::make_source));
 
     /**
      * Construct a new py::object sink.
      * Create and return a Segment node used to sink python objects following out of the Segment.
      *
-     * (py) @param name: Unique name of the node that will be created in the SRF Segment.
+     * (py) @param name: Unique name of the node that will be created in the MRC Segment.
      * (py) @param on_next: python/std function that will be called on a new data element.
      * (py) @param on_error: python/std function that will be called if an error occurs.
      * (py) @param on_completed: python/std function that will be called
@@ -146,7 +146,7 @@ PYBIND11_MODULE(segment, module)
      * Construct a new 'pure' python::object -> python::object node
      *
      * This will create and return a new lambda function with the following signature:
-     * (py) @param name : Unique name of the node that will be created in the SRF Segment.
+     * (py) @param name : Unique name of the node that will be created in the MRC Segment.
      * (py) @param map_f : a std::function that takes a py::object and returns a py::object. This is your
      * python-function which will be called on each data element as it flows through the node.
      */
@@ -233,7 +233,7 @@ PYBIND11_MODULE(segment, module)
     SegmentModuleRegistry.def_static(
         "register_module",
         static_cast<void (*)(
-            std::string, const std::vector<unsigned int>&, std::function<void(srf::segment::Builder&)>)>(
+            std::string, const std::vector<unsigned int>&, std::function<void(mrc::segment::Builder&)>)>(
             &ModuleRegistryProxy::register_module),
         py::arg("name"),
         py::arg("release_version"),
@@ -242,7 +242,7 @@ PYBIND11_MODULE(segment, module)
     SegmentModuleRegistry.def_static(
         "register_module",
         static_cast<void (*)(
-            std::string, std::string, const std::vector<unsigned int>&, std::function<void(srf::segment::Builder&)>)>(
+            std::string, std::string, const std::vector<unsigned int>&, std::function<void(mrc::segment::Builder&)>)>(
             &ModuleRegistryProxy::register_module),
         py::arg("name"),
         py::arg("registry_namespace"),
@@ -258,4 +258,4 @@ PYBIND11_MODULE(segment, module)
     module.attr("__version__") =
         SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

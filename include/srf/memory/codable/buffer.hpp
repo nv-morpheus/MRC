@@ -25,14 +25,14 @@
 
 #include <cstddef>
 
-namespace srf::codable {
+namespace mrc::codable {
 
 template <>
-struct codable_protocol<srf::memory::buffer>
+struct codable_protocol<mrc::memory::buffer>
 {
     static void serialize(const memory::buffer& obj, Encoder<memory::buffer>& encoded, const EncodingOptions& opts);
 
     static memory::buffer deserialize(const Decoder<memory::buffer>& encoded, std::size_t object_idx);
 };
 
-}  // namespace srf::codable
+}  // namespace mrc::codable

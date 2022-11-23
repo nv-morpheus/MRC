@@ -23,7 +23,7 @@
 
 #include <exception>
 
-using namespace srf::benchmarking;
+using namespace mrc::benchmarking;
 
 void stat_check_helper(
     nlohmann::json metrics, std::size_t ch_read, std::size_t receive, std::size_t ch_write, std::size_t emit)

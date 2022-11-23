@@ -21,7 +21,7 @@
 
 #include <cuda_runtime.h>
 
-namespace srf {
+namespace mrc {
 
 /**
  * @brief enqueue on to a stream an awaitable promise that will be fulfilled
@@ -36,4 +36,4 @@ namespace srf {
  */
 Future<void> enqueue_stream_sync_event(cudaStream_t stream);
 
-}  // namespace srf
+}  // namespace mrc

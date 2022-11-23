@@ -22,7 +22,7 @@
 #include <typeindex>
 #include <utility>
 
-namespace srf::node {
+namespace mrc::node {
 
 std::map<std::type_index, EdgeAdapterRegistry::source_adapter_fn_t> EdgeAdapterRegistry::registered_source_adapters{};
 std::map<std::type_index, EdgeAdapterRegistry::sink_adapter_fn_t> EdgeAdapterRegistry::registered_sink_adapters{};
@@ -86,4 +86,4 @@ EdgeAdapterRegistry::sink_adapter_fn_t EdgeAdapterRegistry::find_sink_adapter(st
 
     return iter_sink->second;
 }
-}  // namespace srf::node
+}  // namespace mrc::node

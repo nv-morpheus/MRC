@@ -25,7 +25,7 @@
 #include <ostream>
 #include <string>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 /**
  * @brief GpuInfo describes an NVIDIA GPU within the hwloc topology
@@ -75,4 +75,4 @@ class GpuInfo
     }
 };
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

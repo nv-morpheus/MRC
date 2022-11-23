@@ -19,7 +19,7 @@
 
 #include "srf/memory/literals.hpp"
 
-namespace srf {
+namespace mrc {
 
 using namespace memory::literals;
 
@@ -74,4 +74,4 @@ bool ResourceOptions::enable_device_memory_pool() const
     return m_enable_device_memory_pool;
 }
 
-}  // namespace srf
+}  // namespace mrc

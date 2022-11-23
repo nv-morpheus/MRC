@@ -17,4 +17,4 @@
 
 #include "srf/core/fiber_pool.hpp"
 
-namespace srf::core {}  // namespace srf::core
+namespace mrc::core {}  // namespace mrc::core

@@ -35,7 +35,7 @@
 // IWYU thinks we need array for py::class_<Pipeline>
 // IWYU pragma: no_include <array>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 namespace py = pybind11;
 
@@ -43,7 +43,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(pipeline, module)
 {
     module.doc() = R"pbdoc(
-        Python bindings for SRF pipelines
+        Python bindings for MRC pipelines
         -------------------------------
         .. currentmodule:: pipeline
         .. autosummary::
@@ -59,15 +59,15 @@ PYBIND11_MODULE(pipeline, module)
         .def(
             "make_segment",
             wrap_segment_init_callback(
-                static_cast<void (Pipeline::*)(const std::string&, const std::function<void(srf::segment::Builder&)>&)>(
+                static_cast<void (Pipeline::*)(const std::string&, const std::function<void(mrc::segment::Builder&)>&)>(
                     &Pipeline::make_segment)))
         .def("make_segment",
              wrap_segment_init_callback(
                  static_cast<void (Pipeline::*)(
-                     const std::string&, py::list, py::list, const std::function<void(srf::segment::Builder&)>&)>(
+                     const std::string&, py::list, py::list, const std::function<void(mrc::segment::Builder&)>&)>(
                      &Pipeline::make_segment)));
 
     module.attr("__version__") =
         SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

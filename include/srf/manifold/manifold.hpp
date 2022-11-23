@@ -25,7 +25,7 @@
 
 #include <string>
 
-namespace srf::manifold {
+namespace mrc::manifold {
 
 class Manifold : public Interface
 {
@@ -55,4 +55,4 @@ class Manifold : public Interface
     std::string m_info;
 };
 
-}  // namespace srf::manifold
+}  // namespace mrc::manifold

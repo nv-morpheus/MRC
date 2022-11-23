@@ -25,7 +25,7 @@
 #include <stdexcept>
 #include <utility>
 
-namespace srf::internal::control_plane::server {
+namespace mrc::internal::control_plane::server {
 
 Tagged::~Tagged() = default;
 
@@ -138,4 +138,4 @@ void TaggedIssuer::issue_update()
     do_issue_update();
 }
 
-}  // namespace srf::internal::control_plane::server
+}  // namespace mrc::internal::control_plane::server

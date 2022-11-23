@@ -30,7 +30,7 @@
 #include <string>
 #include <vector>
 
-using namespace srf;
+using namespace mrc;
 
 namespace test::segments {
 

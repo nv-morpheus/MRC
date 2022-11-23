@@ -26,7 +26,7 @@
 #include <mutex>
 #include <string>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 #pragma GCC visibility push(default)
 /**
@@ -46,7 +46,7 @@ class PythonObjectCache
     PythonObjectCache(PythonObjectCache&)  = delete;
     PythonObjectCache(PythonObjectCache&&) = delete;
 
-    PythonObjectCache& operator=(PythonObjectCache&) = delete;
+    PythonObjectCache& operator=(PythonObjectCache&)  = delete;
     PythonObjectCache& operator=(PythonObjectCache&&) = delete;
 
     /**
@@ -99,4 +99,4 @@ class PythonObjectCache
 };
 
 #pragma GCC visibility pop
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

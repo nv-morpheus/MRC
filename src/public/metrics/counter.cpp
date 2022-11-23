@@ -19,7 +19,7 @@
 
 #include <prometheus/counter.h>
 
-namespace srf::metrics {
+namespace mrc::metrics {
 
 Counter::Counter(prometheus::Counter* counter) : m_counter(counter) {}
 
@@ -33,4 +33,4 @@ void Counter::increment(const std::size_t& ticks)
     m_counter->Increment(ticks);
 }
 
-}  // namespace srf::metrics
+}  // namespace mrc::metrics

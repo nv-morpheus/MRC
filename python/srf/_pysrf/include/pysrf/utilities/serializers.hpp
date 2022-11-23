@@ -22,7 +22,7 @@
 #include <cstddef>
 #include <tuple>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 #pragma GCC visibility push(default)
 
 struct Serializer
@@ -39,4 +39,4 @@ struct Serializer
     static pybind11::object persist_to_shared_memory(pybind11::object obj);
 };
 #pragma GCC visibility pop
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

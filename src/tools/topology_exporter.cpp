@@ -27,7 +27,7 @@
 #include <cstdio>
 #include <memory>
 
-using namespace srf;
+using namespace mrc;
 using namespace internal;
 
 int main(int argc, char* argv[])

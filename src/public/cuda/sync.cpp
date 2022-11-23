@@ -22,7 +22,7 @@
 
 #include <boost/fiber/future/promise.hpp>
 
-namespace srf {
+namespace mrc {
 
 static void enqueue_stream_event_callback(void* user_data)
 {
@@ -39,4 +39,4 @@ Future<void> enqueue_stream_sync_event(cudaStream_t stream)
     return future;
 }
 
-}  // namespace srf
+}  // namespace mrc

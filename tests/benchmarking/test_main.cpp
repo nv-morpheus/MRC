@@ -21,7 +21,7 @@
 
 int main(int argc, char** argv)
 {
-    srf::init_logging("srf::test_srf_benchmarking");
+    mrc::init_logging("mrc::test_srf_benchmarking");
     ::testing::InitGoogleTest(&argc, argv);
     ::google::ParseCommandLineFlags(&argc, &argv, true);
     return RUN_ALL_TESTS();

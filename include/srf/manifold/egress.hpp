@@ -25,7 +25,7 @@
 
 #include <memory>
 
-namespace srf::manifold {
+namespace mrc::manifold {
 
 struct EgressDelegate
 {
@@ -118,4 +118,4 @@ class RoundRobinEgress : public MappedEgress<T>
     std::vector<node::SourceChannelWriteable<T>*> m_pick_list;
 };
 
-}  // namespace srf::manifold
+}  // namespace mrc::manifold

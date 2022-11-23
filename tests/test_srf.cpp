@@ -19,7 +19,7 @@
 
 #include <utility>
 
-namespace srf {
+namespace mrc {
 
 std::atomic<int> CopyMoveCounter::global_default_constructed_count = 0;
 std::atomic<int> CopyMoveCounter::global_value_constructed_count   = 0;
@@ -167,4 +167,4 @@ int CopyMoveCounter::global_copy_count()
     return global_copy_constructed_count + global_copy_assignment_count;
 }
 
-}  // namespace srf
+}  // namespace mrc

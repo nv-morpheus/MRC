@@ -36,7 +36,7 @@ class Family;  // IWYU pragma: keep
 
 }  // namespace prometheus
 
-namespace srf::metrics {
+namespace mrc::metrics {
 
 struct CounterReport
 {
@@ -61,4 +61,4 @@ class Registry
     prometheus::Family<prometheus::Counter>& m_throughput_counters;
 };
 
-}  // namespace srf::metrics
+}  // namespace mrc::metrics

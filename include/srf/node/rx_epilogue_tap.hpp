@@ -22,7 +22,7 @@
 #include <functional>
 #include <vector>
 
-namespace srf::node {
+namespace mrc::node {
 
 // set of tap operators that are inserted into the rx chain and executor just prior to the observer.
 template <typename T>
@@ -49,4 +49,4 @@ class RxEpilogueTap
     std::vector<std::function<void(const T&)>> m_taps;
 };
 
-}  // namespace srf::node
+}  // namespace mrc::node

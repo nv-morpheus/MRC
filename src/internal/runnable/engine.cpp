@@ -25,7 +25,7 @@
 #include <ostream>
 #include <utility>
 
-namespace srf::internal::runnable {
+namespace mrc::internal::runnable {
 
 Future<void> Engine::launch_task(std::function<void()> task)
 {
@@ -38,4 +38,4 @@ Future<void> Engine::launch_task(std::function<void()> task)
     return do_launch_task(std::move(task));
 }
 
-}  // namespace srf::internal::runnable
+}  // namespace mrc::internal::runnable

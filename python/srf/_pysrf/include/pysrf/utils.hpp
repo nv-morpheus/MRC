@@ -38,9 +38,9 @@
 // IWYU pragma: no_include <pybind11/detail/type_caster_base.h>
 // IWYU pragma: no_include <pystate.h>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
-// Export everything in the srf::pysrf namespace by default since we compile with -fvisibility=hidden
+// Export everything in the mrc::pysrf namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
 
 pybind11::object cast_from_json(const nlohmann::json& source);
@@ -202,4 +202,4 @@ class PYBIND11_EXPORT PyObjectHolder : public pybind11::detail::object_api<PyObj
 
 #pragma GCC visibility pop
 
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

@@ -26,7 +26,7 @@
 
 #include <typeindex>
 
-namespace srf::node {
+namespace mrc::node {
 
 /**
  * @brief Type erased base class for the formation of all edges to a sink
@@ -108,4 +108,4 @@ class SinkProperties : public SinkPropertiesBase
     friend EdgeBuilder;
 };
 
-}  // namespace srf::node
+}  // namespace mrc::node

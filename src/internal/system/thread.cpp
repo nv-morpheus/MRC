@@ -32,7 +32,7 @@
 #include <cstdint>
 #include <type_traits>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 Thread::Thread(std::shared_ptr<const ThreadResources> resources, std::thread&& thread) :
   m_resources(std::move(resources)),
@@ -159,4 +159,4 @@ void ThreadResources::finalize_thread(const CpuSet& cpu_affinity) const
     }
 }
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

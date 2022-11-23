@@ -29,7 +29,7 @@
 #include <string>
 #include <utility>
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 namespace {
 
@@ -156,4 +156,4 @@ bool Context::status() const
     return (m_exception_ptr == nullptr);
 }
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

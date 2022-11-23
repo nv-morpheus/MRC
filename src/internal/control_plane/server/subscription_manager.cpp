@@ -29,7 +29,7 @@
 #include <cstdint>
 #include <ostream>
 
-namespace srf::internal::control_plane::server {
+namespace mrc::internal::control_plane::server {
 
 void Role::add_member(std::uint64_t tag, std::shared_ptr<server::ClientInstance> instance)
 {
@@ -283,4 +283,4 @@ Expected<> SubscriptionService::update_role(const protos::UpdateSubscriptionServ
     return {};
 }
 
-}  // namespace srf::internal::control_plane::server
+}  // namespace mrc::internal::control_plane::server

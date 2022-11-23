@@ -33,7 +33,7 @@ project(srf-quickstart
 rapids_cpm_init()
 
 # Set the option prefix to match the outer project before including. Must be before find_package(srf)
-set(OPTION_PREFIX "SRF")
+set(OPTION_PREFIX "MRC")
 include(python_module_tools)
 
 rapids_find_package(srf REQUIRED)

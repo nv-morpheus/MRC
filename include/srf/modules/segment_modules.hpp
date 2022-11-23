@@ -28,11 +28,11 @@
 #include <typeindex>
 #include <vector>
 
-namespace srf::modules {
+namespace mrc::modules {
 
 class SegmentModule
 {
-    friend srf::segment::Builder;
+    friend mrc::segment::Builder;
 
   public:
     using segment_module_port_map_t      = std::map<std::string, std::shared_ptr<segment::ObjectProperties>>;
@@ -166,4 +166,4 @@ class SegmentModule
     const nlohmann::json m_config;
 };
 
-}  // namespace srf::modules
+}  // namespace mrc::modules

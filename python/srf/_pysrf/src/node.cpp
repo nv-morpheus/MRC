@@ -17,4 +17,4 @@
 
 #include "pysrf/node.hpp"
 
-namespace srf::pysrf {}  // namespace srf::pysrf
+namespace mrc::pysrf {}  // namespace mrc::pysrf

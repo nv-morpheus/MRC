@@ -32,7 +32,7 @@
 #include <memory>
 #include <sstream>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 namespace py = pybind11;
 
@@ -43,7 +43,7 @@ class Config
 PYBIND11_MODULE(options, module)
 {
     module.doc() = R"pbdoc(
-        Python bindings for SRF options
+        Python bindings for MRC options
         -------------------------------
         .. currentmodule:: options
         .. autosummary::
@@ -61,26 +61,26 @@ PYBIND11_MODULE(options, module)
                 Sets the default size of the buffers between edges for all newly created edges. Larger size will reduce backpressure at the cost of memory.
             )doc");
 
-    py::enum_<srf::PlacementStrategy>(module, "PlacementStrategy")
-        .value("PerMachine", srf::PlacementStrategy::PerMachine)
-        .value("PerNumaNode", srf::PlacementStrategy::PerNumaNode)
+    py::enum_<mrc::PlacementStrategy>(module, "PlacementStrategy")
+        .value("PerMachine", mrc::PlacementStrategy::PerMachine)
+        .value("PerNumaNode", mrc::PlacementStrategy::PerNumaNode)
         .export_values();
 
-    py::enum_<srf::runnable::EngineType>(module, "EngineType")
-        .value("Fiber", srf::runnable::EngineType::Fiber)
-        .value("Process", srf::runnable::EngineType::Process)
-        .value("Thread", srf::runnable::EngineType::Thread)
+    py::enum_<mrc::runnable::EngineType>(module, "EngineType")
+        .value("Fiber", mrc::runnable::EngineType::Fiber)
+        .value("Process", mrc::runnable::EngineType::Process)
+        .value("Thread", mrc::runnable::EngineType::Thread)
         .export_values();
 
-    py::class_<srf::TopologyOptions>(module, "TopologyOptions")
+    py::class_<mrc::TopologyOptions>(module, "TopologyOptions")
         .def(py::init<>())
         .def_property("user_cpuset", &OptionsProxy::get_user_cpuset, &OptionsProxy::set_user_cpuset);
 
-    py::class_<srf::PlacementOptions>(module, "PlacementOptions")
+    py::class_<mrc::PlacementOptions>(module, "PlacementOptions")
         .def(py::init<>())
         .def_property("cpu_strategy", &OptionsProxy::get_cpu_strategy, &OptionsProxy::set_cpu_strategy);
 
-    py::class_<srf::EngineFactoryOptions>(module, "EngineFactoryOptions")
+    py::class_<mrc::EngineFactoryOptions>(module, "EngineFactoryOptions")
         .def(py::init<>())
         .def_property("cpu_count", &EngineFactoryOptionsProxy::get_cpu_count, &EngineFactoryOptionsProxy::set_cpu_count)
         .def_property(
@@ -90,20 +90,20 @@ PYBIND11_MODULE(options, module)
                       &EngineFactoryOptionsProxy::get_allow_overlap,
                       &EngineFactoryOptionsProxy::set_allow_overlap);
 
-    py::class_<srf::EngineGroups>(module, "EngineGroups")
+    py::class_<mrc::EngineGroups>(module, "EngineGroups")
         .def(py::init<>())
         .def_property(
-            "default_engine_type", &srf::EngineGroups::default_engine_type, &srf::EngineGroups::set_default_engine_type)
+            "default_engine_type", &mrc::EngineGroups::default_engine_type, &mrc::EngineGroups::set_default_engine_type)
         .def_property("dedicated_main_thread",
-                      &srf::EngineGroups::dedicated_main_thread,
-                      &srf::EngineGroups::set_dedicated_main_thread)
+                      &mrc::EngineGroups::dedicated_main_thread,
+                      &mrc::EngineGroups::set_dedicated_main_thread)
         .def("set_engine_factory_options",
-             py::overload_cast<std::string, EngineFactoryOptions>(&srf::EngineGroups::set_engine_factory_options))
+             py::overload_cast<std::string, EngineFactoryOptions>(&mrc::EngineGroups::set_engine_factory_options))
         .def("engine_group_options",
-             &srf::EngineGroups::engine_group_options,
+             &mrc::EngineGroups::engine_group_options,
              py::return_value_policy::reference_internal);
 
-    py::class_<srf::Options, std::shared_ptr<srf::Options>>(module, "Options")
+    py::class_<mrc::Options, std::shared_ptr<mrc::Options>>(module, "Options")
         .def(py::init<>())
         .def_property_readonly("placement", &OptionsProxy::get_placement, py::return_value_policy::reference_internal)
         .def_property_readonly("topology", &OptionsProxy::get_topology, py::return_value_policy::reference_internal)
@@ -111,10 +111,10 @@ PYBIND11_MODULE(options, module)
             "engine_factories", &OptionsProxy::get_engine_factories, py::return_value_policy::reference_internal)
         .def_property("architect_url",
                       // return a const str
-                      static_cast<std::string const& (srf::Options::*)() const>(&srf::Options::architect_url),
-                      static_cast<void (srf::Options::*)(std::string)>(&srf::Options::architect_url));
+                      static_cast<std::string const& (mrc::Options::*)() const>(&mrc::Options::architect_url),
+                      static_cast<void (mrc::Options::*)(std::string)>(&mrc::Options::architect_url));
 
     module.attr("__version__") =
         SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

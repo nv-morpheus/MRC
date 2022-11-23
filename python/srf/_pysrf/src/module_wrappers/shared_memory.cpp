@@ -31,7 +31,7 @@
 using namespace pybind11::literals;
 namespace py = pybind11;
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 PythonSharedMemoryInterface::~PythonSharedMemoryInterface() = default;
 
 PythonSharedMemoryInterface::PythonSharedMemoryInterface() : m_pycache(PythonObjectCache::get_handle())
@@ -118,9 +118,9 @@ void PythonSharedMemoryInterface::unlink()
     m_shmem.attr("unlink")();
 }
 
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf
 
-py::object srf::pysrf::build_shmem_descriptor(const PythonSharedMemoryInterface& shmem_interface, bool flag_is_shared)
+py::object mrc::pysrf::build_shmem_descriptor(const PythonSharedMemoryInterface& shmem_interface, bool flag_is_shared)
 {
     auto& m_pycache = PythonObjectCache::get_handle();
 

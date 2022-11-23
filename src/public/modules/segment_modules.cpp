@@ -25,7 +25,7 @@
 #include <stdexcept>
 #include <utility>
 
-namespace srf::modules {
+namespace mrc::modules {
 
 SegmentModule::SegmentModule(std::string module_name) : m_module_instance_name(std::move(module_name))
 {
@@ -179,4 +179,4 @@ void SegmentModule::register_output_port(std::string output_name, std::shared_pt
     m_output_port_type_indices.try_emplace(output_name, object->source_base().source_type());
 }
 
-}  // namespace srf::modules
+}  // namespace mrc::modules

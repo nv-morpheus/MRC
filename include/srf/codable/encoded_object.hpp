@@ -23,12 +23,12 @@
 
 #include <cstdint>
 
-namespace srf::codable {
+namespace mrc::codable {
 
 class EncodedStorage
 {
   public:
-    explicit EncodedStorage(std::unique_ptr<srf::codable::IDecodableStorage> encoding) : m_encoding(std::move(encoding))
+    explicit EncodedStorage(std::unique_ptr<mrc::codable::IDecodableStorage> encoding) : m_encoding(std::move(encoding))
     {
         CHECK(m_encoding);
     }
@@ -41,13 +41,13 @@ class EncodedStorage
     }
 
   private:
-    std::unique_ptr<srf::codable::IDecodableStorage> m_encoding;
+    std::unique_ptr<mrc::codable::IDecodableStorage> m_encoding;
 };
 
 template <typename T>
 class EncodedObject final : public EncodedStorage
 {
-    EncodedObject(T&& object, std::unique_ptr<srf::codable::IDecodableStorage> encoding) :
+    EncodedObject(T&& object, std::unique_ptr<mrc::codable::IDecodableStorage> encoding) :
       EncodedStorage(std::move(encoding)),
       m_object(std::move(object))
     {}
@@ -55,9 +55,9 @@ class EncodedObject final : public EncodedStorage
   public:
     ~EncodedObject() final = default;
 
-    static std::unique_ptr<EncodedObject<T>> create(T&& object, std::unique_ptr<srf::codable::ICodableStorage> storage)
+    static std::unique_ptr<EncodedObject<T>> create(T&& object, std::unique_ptr<mrc::codable::ICodableStorage> storage)
     {
-        srf::codable::encode(object, *storage);
+        mrc::codable::encode(object, *storage);
         return std::unique_ptr<EncodedObject<T>>(new EncodedObject(std::move(object), std::move(storage)));
     }
 
@@ -68,16 +68,16 @@ class EncodedObject final : public EncodedStorage
 template <typename T>
 class EncodedObject<std::unique_ptr<T>> : public EncodedStorage
 {
-    EncodedObject(std::unique_ptr<T> object, std::unique_ptr<srf::codable::IDecodableStorage> encoding) :
+    EncodedObject(std::unique_ptr<T> object, std::unique_ptr<mrc::codable::IDecodableStorage> encoding) :
       EncodedStorage(std::move(encoding)),
       m_object(std::move(object))
     {}
 
   public:
     static std::unique_ptr<EncodedObject<T>> create(std::unique_ptr<T> object,
-                                                    std::unique_ptr<srf::codable::ICodableStorage> storage)
+                                                    std::unique_ptr<mrc::codable::ICodableStorage> storage)
     {
-        srf::codable::encode(*object, *storage);
+        mrc::codable::encode(*object, *storage);
         return std::unique_ptr<EncodedObject<T>>(new EncodedObject(std::move(object), std::move(storage)));
     }
 
@@ -85,4 +85,4 @@ class EncodedObject<std::unique_ptr<T>> : public EncodedStorage
     std::unique_ptr<T> m_object;
 };
 
-}  // namespace srf::codable
+}  // namespace mrc::codable

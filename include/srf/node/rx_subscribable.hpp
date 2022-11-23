@@ -24,7 +24,7 @@
 
 #include <memory>
 
-namespace srf::node {
+namespace mrc::node {
 
 class RxSubscribable
 {
@@ -44,4 +44,4 @@ class RxSubscribable
     friend RxExecute;
 };
 
-}  // namespace srf::node
+}  // namespace mrc::node

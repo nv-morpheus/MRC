@@ -27,7 +27,7 @@ namespace prometheus {
 class Registry;
 }
 
-namespace srf::benchmarking {
+namespace mrc::benchmarking {
 
 struct TimeUtil
 {
@@ -78,4 +78,4 @@ std::shared_ptr<prometheus::Registry> json_to_prometheus(const nlohmann::json&);
  * @param counters JSON object containing an array of counter metrics
  */
 void json_counter_to_prometheus(const nlohmann::json&, prometheus::Registry&);
-}  // namespace srf::benchmarking
+}  // namespace mrc::benchmarking

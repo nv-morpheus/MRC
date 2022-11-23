@@ -424,7 +424,7 @@ TEST_P(ParallelTests, SourceMultiThread)
 
     auto my_segment = p->make_segment("my_segment", [&](segment::Builder& seg) {
         auto source = seg.make_source<int>("src1", [&](rxcpp::subscriber<int>& s) {
-            auto& context = srf::runnable::Context::get_runtime_context();
+            auto& context = mrc::runnable::Context::get_runtime_context();
 
             for (size_t i = 0; i < source_count; ++i)
             {
@@ -448,7 +448,7 @@ TEST_P(ParallelTests, SourceMultiThread)
         auto sink = seg.make_sink<int>(
             "sinkRef",
             [&](const int& x) {
-                auto& context = srf::runnable::Context::get_runtime_context();
+                auto& context = mrc::runnable::Context::get_runtime_context();
 
                 // Print value
                 DVLOG(1) << context.info() << " Sink got value: '" << x << "'" << std::endl;
@@ -511,7 +511,7 @@ TEST_P(ParallelTests, SinkMultiThread)
 
     auto my_segment = p->make_segment("my_segment", [&](segment::Builder& seg) {
         auto source = seg.make_source<int>("src1", [&](rxcpp::subscriber<int>& s) {
-            auto& context = srf::runnable::Context::get_runtime_context();
+            auto& context = mrc::runnable::Context::get_runtime_context();
 
             for (size_t i = 0; i < source_count; ++i)
             {
@@ -525,7 +525,7 @@ TEST_P(ParallelTests, SinkMultiThread)
         auto sink = seg.make_sink<int>(
             "sink",
             [&](const int& x) {
-                auto& context = srf::runnable::Context::get_runtime_context();
+                auto& context = mrc::runnable::Context::get_runtime_context();
 
                 {
                     std::lock_guard<std::mutex> lock(mut);
@@ -585,7 +585,7 @@ TEST_P(ParallelTests, NodeMultiThread)
 
     auto my_segment = p->make_segment("my_segment", [&](segment::Builder& seg) {
         auto source = seg.make_source<int>("src1", [&](rxcpp::subscriber<int>& s) {
-            auto& context = srf::runnable::Context::get_runtime_context();
+            auto& context = mrc::runnable::Context::get_runtime_context();
 
             for (size_t i = 0; i < source_count; ++i)
             {
@@ -597,7 +597,7 @@ TEST_P(ParallelTests, NodeMultiThread)
         });
 
         auto node = seg.make_node<int>("node", rxcpp::operators::map([&](const int& x) {
-                                           auto& context = srf::runnable::Context::get_runtime_context();
+                                           auto& context = mrc::runnable::Context::get_runtime_context();
 
                                            {
                                                std::lock_guard<std::mutex> lock(mut);
@@ -619,7 +619,7 @@ TEST_P(ParallelTests, NodeMultiThread)
         auto sink = seg.make_sink<int>(
             "sink",
             [&](const int& x) {
-                auto& context = srf::runnable::Context::get_runtime_context();
+                auto& context = mrc::runnable::Context::get_runtime_context();
 
                 DVLOG(1) << context.info() << " Sink got value: '" << x << "'" << std::endl;
 

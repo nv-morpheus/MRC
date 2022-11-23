@@ -23,7 +23,7 @@
 #include <sstream>
 #include <utility>
 
-namespace srf::quickstart::hybrid::ex00_wrap_data_objects {
+namespace mrc::quickstart::hybrid::ex00_wrap_data_objects {
 namespace py = pybind11;
 
 struct MyDataObject
@@ -60,4 +60,4 @@ PYBIND11_MODULE(data, m)
     m.attr("__version__") = "dev";
 #endif
 }
-}  // namespace srf::quickstart::hybrid::ex00_wrap_data_objects
+}  // namespace mrc::quickstart::hybrid::ex00_wrap_data_objects

@@ -21,7 +21,7 @@
 #include "srf/engine/segment/idefinition.hpp"
 #include "srf/segment/builder.hpp"
 
-namespace srf::segment {
+namespace mrc::segment {
 
 std::shared_ptr<Definition> Definition::create(std::string name,
                                                std::map<std::string, ingress_initializer_t> ingress_initializers,
@@ -45,4 +45,4 @@ Definition::Definition(std::string name,
       std::move(name), std::move(ingress_ports), std::move(egress_ports), std::move(backend_initializer))
 {}
 
-}  // namespace srf::segment
+}  // namespace mrc::segment

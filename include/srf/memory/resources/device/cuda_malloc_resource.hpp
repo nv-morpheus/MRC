@@ -26,7 +26,7 @@
 
 #include <cstddef>
 
-namespace srf::memory {
+namespace mrc::memory {
 
 class cuda_malloc_resource final : public memory_resource
 {
@@ -57,4 +57,4 @@ class cuda_malloc_resource final : public memory_resource
     const int m_device_id;
 };
 
-}  // namespace srf::memory
+}  // namespace mrc::memory

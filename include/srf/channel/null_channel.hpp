@@ -22,7 +22,7 @@
 
 #include <memory>  // for lock_guard
 
-namespace srf::channel {
+namespace mrc::channel {
 
 template <typename T>
 class NullChannel : public Channel<T>
@@ -77,9 +77,9 @@ class NullChannel : public Channel<T>
     bool m_is_shutdown;
 };
 
-}  // namespace srf::channel
+}  // namespace mrc::channel
 
-namespace srf {
+namespace mrc {
 
 template <typename T>
 using NullChannel = channel::NullChannel<T>;  // NOLINT

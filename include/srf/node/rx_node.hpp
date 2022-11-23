@@ -38,7 +38,7 @@
 #include <memory>
 #include <mutex>
 
-namespace srf::node {
+namespace mrc::node {
 
 template <typename InputT, typename OutputT, typename ContextT>
 class RxNode : public RxSinkBase<InputT>,
@@ -143,4 +143,4 @@ void RxNode<InputT, OutputT, ContextT>::on_shutdown_critical_section()
     RxSourceBase<OutputT>::release_channel();
 }
 
-}  // namespace srf::node
+}  // namespace mrc::node

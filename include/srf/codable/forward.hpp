@@ -17,7 +17,7 @@
 
 #pragma once
 
-namespace srf::codable {
+namespace mrc::codable {
 
 class IStorage;
 class IEncodableStorage;
@@ -39,4 +39,4 @@ class EncodedObject;
 class RemoteDescriptor;
 }  // namespace protos
 
-}  // namespace srf::codable
+}  // namespace mrc::codable

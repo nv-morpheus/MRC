@@ -59,7 +59,7 @@
 // IWYU pragma: no_include <set>
 // IWYU pragma: no_include <vector>
 
-using namespace srf;
+using namespace mrc;
 
 class TestPipeline : public ::testing::Test
 {

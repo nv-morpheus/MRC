@@ -35,7 +35,7 @@
     class Test##name : public ::testing::Test \
     {}
 
-namespace srf {
+namespace mrc {
 // class that records when it's moved/copied
 struct CopyMoveCounter
 {
@@ -170,6 +170,6 @@ class ParallelTester
     std::condition_variable m_cv;
 };
 
-}  // namespace srf
+}  // namespace mrc
 
-using namespace srf;
+using namespace mrc;

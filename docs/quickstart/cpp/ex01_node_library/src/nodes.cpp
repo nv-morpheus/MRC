@@ -19,10 +19,10 @@
 
 #include <rxcpp/rx.hpp>
 
-namespace srf::quickstart::cpp::ex01_node_library {
+namespace mrc::quickstart::cpp::ex01_node_library {
 
 IntSource::IntSource() :
-  srf::node::RxSource<int>(rxcpp::observable<>::create<int>([](rxcpp::subscriber<int> s) {
+  mrc::node::RxSource<int>(rxcpp::observable<>::create<int>([](rxcpp::subscriber<int> s) {
       s.on_next(1);
       s.on_next(2);
       s.on_next(3);
@@ -30,4 +30,4 @@ IntSource::IntSource() :
   }))
 {}
 
-}  // namespace srf::quickstart::cpp::ex01_node_library
+}  // namespace mrc::quickstart::cpp::ex01_node_library

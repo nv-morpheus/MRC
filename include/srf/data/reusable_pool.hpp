@@ -30,7 +30,7 @@
 #include <queue>
 #include <stdexcept>
 
-namespace srf::data {
+namespace mrc::data {
 
 /**
  * @brief A move-only holder of an object of T that is acquired from a ReusablePool<T> and will be returned to the same
@@ -153,7 +153,7 @@ class Reusable final
   public:
     Reusable() = default;
 
-    Reusable(Reusable&&) noexcept = default;
+    Reusable(Reusable&&) noexcept            = default;
     Reusable& operator=(Reusable&&) noexcept = default;
 
     DELETE_COPYABILITY(Reusable);
@@ -209,10 +209,10 @@ class SharedReusable final
     SharedReusable() = default;
     SharedReusable(Reusable<T>&& data) : SharedReusable(std::move(data.m_data), data.m_pool) {}
 
-    SharedReusable(const SharedReusable&) = default;
+    SharedReusable(const SharedReusable&)            = default;
     SharedReusable& operator=(const SharedReusable&) = default;
 
-    SharedReusable(SharedReusable&&) noexcept = default;
+    SharedReusable(SharedReusable&&) noexcept            = default;
     SharedReusable& operator=(SharedReusable&&) noexcept = default;
 
     ~SharedReusable() = default;
@@ -247,4 +247,4 @@ class SharedReusable final
     friend pool_t;
 };
 
-}  // namespace srf::data
+}  // namespace mrc::data

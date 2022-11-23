@@ -30,7 +30,7 @@
 #include "srf/runtime/remote_descriptor.hpp"
 #include "srf/utils/macros.hpp"
 
-namespace srf::pubsub {
+namespace mrc::pubsub {
 
 /**
  * @brief Receiving end of the Publisher->Subscriber chain
@@ -52,7 +52,7 @@ namespace srf::pubsub {
 template <typename T>
 class Subscriber final : public node::Queue<T>,
                          public control_plane::SubscriptionServiceForwarder,
-                         private srf::node::SourceChannelWriteable<T>
+                         private mrc::node::SourceChannelWriteable<T>
 {
   public:
     static std::unique_ptr<Subscriber> create(std::string name, runtime::IPartition& partition)
@@ -88,21 +88,21 @@ class Subscriber final : public node::Queue<T>,
         LOG(INFO) << "forming first edge: typed_source -> self [Node<T>]";
 
         // Edge - SourceChannelWritable<T> -> Queue<T>
-        srf::node::SourceChannelWriteable<T>& typed_source = *this;
-        srf::node::make_edge(typed_source, *this);
+        mrc::node::SourceChannelWriteable<T>& typed_source = *this;
+        mrc::node::make_edge(typed_source, *this);
 
         LOG(INFO) << "forming second edge: IPublisherService -> operator_component";
 
         // Edge - IPublisherService -> OperatorComponent
-        m_rd_sink = std::make_shared<node::OperatorComponent<srf::runtime::RemoteDescriptor>>(
+        m_rd_sink = std::make_shared<node::OperatorComponent<mrc::runtime::RemoteDescriptor>>(
             // on_next
-            [this](srf::runtime::RemoteDescriptor&& rd) {
+            [this](mrc::runtime::RemoteDescriptor&& rd) {
                 auto obj = rd.decode<T>();
-                return srf::node::SourceChannelWriteable<T>::await_write(std::move(obj));
+                return mrc::node::SourceChannelWriteable<T>::await_write(std::move(obj));
             },
             // on_complete
-            [this] { srf::node::SourceChannelWriteable<T>::release_channel(); });
-        srf::node::make_edge(*m_service, *m_rd_sink);
+            [this] { mrc::node::SourceChannelWriteable<T>::release_channel(); });
+        mrc::node::make_edge(*m_service, *m_rd_sink);
 
         // After the edges have been formed, we have a complete pipeline from the data plane to a channel. If we started
         // the service prior to the edge construction, we might get data flowing through an incomplete operator chain
@@ -125,7 +125,7 @@ class Subscriber final : public node::Queue<T>,
     }
 
     std::shared_ptr<ISubscriberService> m_service;
-    std::shared_ptr<node::OperatorComponent<srf::runtime::RemoteDescriptor>> m_rd_sink;
+    std::shared_ptr<node::OperatorComponent<mrc::runtime::RemoteDescriptor>> m_rd_sink;
 
     friend runtime::IPartition;
 };
@@ -136,7 +136,7 @@ class Subscriber final : public node::Queue<T>,
  * @tparam T
  */
 template <>
-class Subscriber<srf::runtime::RemoteDescriptor> final : public node::Queue<runtime::RemoteDescriptor>,
+class Subscriber<mrc::runtime::RemoteDescriptor> final : public node::Queue<runtime::RemoteDescriptor>,
                                                          public control_plane::SubscriptionServiceForwarder
 {
   public:
@@ -163,7 +163,7 @@ class Subscriber<srf::runtime::RemoteDescriptor> final : public node::Queue<runt
         }
 
         // Edge - IPublisherService -> Queue
-        srf::node::make_edge(*m_service, *this);
+        mrc::node::make_edge(*m_service, *this);
 
         // After the edges have been formed, we have a complete pipeline from the data plane to a channel. If we started
         // the service prior to the edge construction, we might get data flowing through an incomplete operator chain
@@ -185,4 +185,4 @@ class Subscriber<srf::runtime::RemoteDescriptor> final : public node::Queue<runt
     friend runtime::IPartition;
 };
 
-}  // namespace srf::pubsub
+}  // namespace mrc::pubsub

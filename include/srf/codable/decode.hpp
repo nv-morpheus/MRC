@@ -24,7 +24,7 @@
 
 #include <memory>
 
-namespace srf::codable {
+namespace mrc::codable {
 
 template <typename T>
 struct Decoder final : public StorageForwarder
@@ -48,12 +48,12 @@ struct Decoder final : public StorageForwarder
         return m_storage.buffer_size(idx);
     }
 
-    std::shared_ptr<srf::memory::memory_resource> host_memory_resource() const
+    std::shared_ptr<mrc::memory::memory_resource> host_memory_resource() const
     {
         return m_storage.host_memory_resource();
     }
 
-    std::shared_ptr<srf::memory::memory_resource> device_memory_resource() const
+    std::shared_ptr<mrc::memory::memory_resource> device_memory_resource() const
     {
         return m_storage.host_memory_resource();
     }
@@ -77,4 +77,4 @@ auto decode(const IDecodableStorage& encoded, std::size_t object_idx = 0)
     return decoder.deserialize(object_idx);
 }
 
-}  // namespace srf::codable
+}  // namespace mrc::codable

@@ -32,7 +32,7 @@
 #include <thread>
 #include <tuple>
 
-namespace srf::benchmarking {
+namespace mrc::benchmarking {
 
 /**
  * @brief Class used to store statistics gathered from internal nodes via watcher interfaces. The class consists
@@ -211,4 +211,4 @@ class TraceStatistics : public WatcherInterface
     std::array<std::function<void(void)>, MaxSlotsV> m_exit_lookup_table;
 };
 
-}  // namespace srf::benchmarking
+}  // namespace mrc::benchmarking

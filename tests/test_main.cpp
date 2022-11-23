@@ -28,7 +28,7 @@
 
 int main(int argc, char** argv)
 {
-    srf::init_logging("srf::test_srf");
+    mrc::init_logging("mrc::test_srf");
     // ::google::InstallFailureFunction(&TestFailuresThrowExceptions);
     ::testing::InitGoogleTest(&argc, argv);
     ::google::ParseCommandLineFlags(&argc, &argv, true);

@@ -19,7 +19,7 @@
 
 #include <cstddef>  // for size_t
 
-namespace srf {
+namespace mrc {
 
 class MemoryPoolOptions
 {
@@ -92,4 +92,4 @@ class ResourceOptions
     MemoryPoolOptions m_device_memory_pool;
 };
 
-}  // namespace srf
+}  // namespace mrc

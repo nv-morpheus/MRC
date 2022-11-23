@@ -26,7 +26,7 @@
 #include <map>
 #include <memory>
 
-namespace srf::internal::pipeline {
+namespace mrc::internal::pipeline {
 
 class Pipeline
 {
@@ -46,4 +46,4 @@ class Pipeline
     std::map<SegmentID, std::shared_ptr<const segment::Definition>> m_segments;
 };
 
-}  // namespace srf::internal::pipeline
+}  // namespace mrc::internal::pipeline

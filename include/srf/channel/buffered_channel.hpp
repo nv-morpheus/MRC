@@ -22,7 +22,7 @@
 #include <boost/fiber/buffered_channel.hpp>
 #include <boost/fiber/channel_op_status.hpp>
 
-namespace srf::channel {
+namespace mrc::channel {
 
 template <typename T>
 class BufferedChannel final : public Channel<T>
@@ -85,9 +85,9 @@ class BufferedChannel final : public Channel<T>
     boost::fibers::buffered_channel<T> m_channel;
 };
 
-}  // namespace srf::channel
+}  // namespace mrc::channel
 
-namespace srf {
+namespace mrc {
 
 template <typename T>
 using BufferedChannel = channel::BufferedChannel<T>;  // NOLINT

@@ -46,7 +46,7 @@
 #include <utility>
 #include <vector>
 
-namespace srf::internal::memory {
+namespace mrc::internal::memory {
 
 DeviceResources::DeviceResources(resources::PartitionResourceBase& base, std::optional<ucx::Resources>& ucx) :
   resources::PartitionResourceBase(base)
@@ -61,8 +61,8 @@ DeviceResources::DeviceResources(resources::PartitionResourceBase& base, std::op
 
             DeviceGuard guard(cuda_device_id());
 
-            auto cuda_malloc = std::make_unique<srf::memory::cuda_malloc_resource>(cuda_device_id());
-            m_system         = srf::memory::make_shared_resource<srf::memory::logging_resource>(std::move(cuda_malloc),
+            auto cuda_malloc = std::make_unique<mrc::memory::cuda_malloc_resource>(cuda_device_id());
+            m_system         = mrc::memory::make_shared_resource<mrc::memory::logging_resource>(std::move(cuda_malloc),
                                                                                         device_prefix.str());
 
             if (ucx)
@@ -82,7 +82,7 @@ DeviceResources::DeviceResources(resources::PartitionResourceBase& base, std::op
                          << " constructing arena memory_resource with initial=" << bytes_to_string(opts.block_size())
                          << "; max bytes=" << bytes_to_string(opts.max_aggreate_bytes());
 
-                m_arena = srf::memory::make_shared_resource<srf::memory::arena_resource>(
+                m_arena = mrc::memory::make_shared_resource<mrc::memory::arena_resource>(
                     m_registered, opts.block_size(), opts.max_aggreate_bytes());
             }
             else
@@ -98,20 +98,20 @@ int DeviceResources::cuda_device_id() const
     return partition().device().cuda_device_id();
 }
 
-srf::memory::buffer DeviceResources::make_buffer(std::size_t bytes)
+mrc::memory::buffer DeviceResources::make_buffer(std::size_t bytes)
 {
-    return srf::memory::buffer(bytes, m_arena);
+    return mrc::memory::buffer(bytes, m_arena);
 }
-std::shared_ptr<srf::memory::memory_resource> DeviceResources::system_memory_resource() const
+std::shared_ptr<mrc::memory::memory_resource> DeviceResources::system_memory_resource() const
 {
     return m_system;
 }
-std::shared_ptr<srf::memory::memory_resource> DeviceResources::registered_memory_resource() const
+std::shared_ptr<mrc::memory::memory_resource> DeviceResources::registered_memory_resource() const
 {
     return m_registered;
 }
-std::shared_ptr<srf::memory::memory_resource> DeviceResources::arena_memory_resource() const
+std::shared_ptr<mrc::memory::memory_resource> DeviceResources::arena_memory_resource() const
 {
     return m_arena;
 }
-}  // namespace srf::internal::memory
+}  // namespace mrc::internal::memory

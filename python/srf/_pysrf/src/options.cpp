@@ -31,97 +31,97 @@
 #include <cstddef>
 #include <string>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 namespace py = pybind11;
 
 std::size_t ConfigProxy::get_default_channel_size(const py::object& obj)
 {
-    return srf::channel::default_channel_size();
+    return mrc::channel::default_channel_size();
 }
 
 void ConfigProxy::set_default_channel_size(const py::object& obj, size_t default_channel_size)
 {
-    srf::channel::set_default_channel_size(default_channel_size);
+    mrc::channel::set_default_channel_size(default_channel_size);
 }
 
-std::size_t EngineFactoryOptionsProxy::get_cpu_count(srf::EngineFactoryOptions& self)
+std::size_t EngineFactoryOptionsProxy::get_cpu_count(mrc::EngineFactoryOptions& self)
 {
     return self.cpu_count;
 }
 
-void EngineFactoryOptionsProxy::set_cpu_count(srf::EngineFactoryOptions& self, std::size_t cpu_count)
+void EngineFactoryOptionsProxy::set_cpu_count(mrc::EngineFactoryOptions& self, std::size_t cpu_count)
 {
     self.cpu_count = cpu_count;
 }
 
-runnable::EngineType EngineFactoryOptionsProxy::get_engine_type(srf::EngineFactoryOptions& self)
+runnable::EngineType EngineFactoryOptionsProxy::get_engine_type(mrc::EngineFactoryOptions& self)
 {
     return self.engine_type;
 }
 
-void EngineFactoryOptionsProxy::set_engine_type(srf::EngineFactoryOptions& self, runnable::EngineType engine_type)
+void EngineFactoryOptionsProxy::set_engine_type(mrc::EngineFactoryOptions& self, runnable::EngineType engine_type)
 {
     self.engine_type = engine_type;
 }
 
-bool EngineFactoryOptionsProxy::get_reusable(srf::EngineFactoryOptions& self)
+bool EngineFactoryOptionsProxy::get_reusable(mrc::EngineFactoryOptions& self)
 {
     return self.reusable;
 }
 
-void EngineFactoryOptionsProxy::set_reusable(srf::EngineFactoryOptions& self, bool reusable)
+void EngineFactoryOptionsProxy::set_reusable(mrc::EngineFactoryOptions& self, bool reusable)
 {
     self.reusable = reusable;
 }
 
-bool EngineFactoryOptionsProxy::get_allow_overlap(srf::EngineFactoryOptions& self)
+bool EngineFactoryOptionsProxy::get_allow_overlap(mrc::EngineFactoryOptions& self)
 {
     return self.allow_overlap;
 }
 
-void EngineFactoryOptionsProxy::set_allow_overlap(srf::EngineFactoryOptions& self, bool allow_overlap)
+void EngineFactoryOptionsProxy::set_allow_overlap(mrc::EngineFactoryOptions& self, bool allow_overlap)
 {
     self.allow_overlap = allow_overlap;
 }
 
-std::string OptionsProxy::get_user_cpuset(srf::TopologyOptions& self)
+std::string OptionsProxy::get_user_cpuset(mrc::TopologyOptions& self)
 {
     // Convert the CPU set to a string
     return self.user_cpuset().str();
 }
 
-void OptionsProxy::set_user_cpuset(srf::TopologyOptions& self, const std::string& user_cpuset)
+void OptionsProxy::set_user_cpuset(mrc::TopologyOptions& self, const std::string& user_cpuset)
 {
     // Directly set
     self.user_cpuset(user_cpuset);
 }
 
-srf::PlacementStrategy OptionsProxy::get_cpu_strategy(srf::PlacementOptions& self)
+mrc::PlacementStrategy OptionsProxy::get_cpu_strategy(mrc::PlacementOptions& self)
 {
     // Convert the CPU set to a string
     return self.cpu_strategy();
 }
 
-void OptionsProxy::set_cpu_strategy(srf::PlacementOptions& self, srf::PlacementStrategy strategy)
+void OptionsProxy::set_cpu_strategy(mrc::PlacementOptions& self, mrc::PlacementStrategy strategy)
 {
     // Directly set
     self.cpu_strategy(strategy);
 }
 
-srf::PlacementOptions& OptionsProxy::get_placement(srf::Options& self)
+mrc::PlacementOptions& OptionsProxy::get_placement(mrc::Options& self)
 {
     return self.placement();
 }
 
-srf::TopologyOptions& OptionsProxy::get_topology(srf::Options& self)
+mrc::TopologyOptions& OptionsProxy::get_topology(mrc::Options& self)
 {
     return self.topology();
 }
 
-srf::EngineGroups& OptionsProxy::get_engine_factories(srf::Options& self)
+mrc::EngineGroups& OptionsProxy::get_engine_factories(mrc::Options& self)
 {
     return self.engine_factories();
 }
 
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

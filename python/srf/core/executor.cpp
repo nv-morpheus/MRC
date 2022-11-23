@@ -34,14 +34,14 @@
 // IWYU thinks we need vectir for py::class_<Executor, std::shared_ptr<Executor>>
 // IWYU pragma: no_include <vector>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 namespace py = pybind11;
 
 PYBIND11_MODULE(executor, module)
 {
     module.doc() = R"pbdoc(
-        Python bindings for SRF executors
+        Python bindings for MRC executors
         -------------------------------
         .. currentmodule:: executor
         .. autosummary::
@@ -61,13 +61,13 @@ PYBIND11_MODULE(executor, module)
 
     py::class_<Executor, std::shared_ptr<Executor>>(module, "Executor")
         .def(py::init<>([]() {
-            auto options = std::make_shared<srf::Options>();
+            auto options = std::make_shared<mrc::Options>();
 
             auto* exec = new Executor(std::move(options));
 
             return exec;
         }))
-        .def(py::init<>([](std::shared_ptr<srf::Options> options) {
+        .def(py::init<>([](std::shared_ptr<mrc::Options> options) {
             auto* exec = new Executor(std::move(options));
 
             return exec;
@@ -86,4 +86,4 @@ PYBIND11_MODULE(executor, module)
     module.attr("__version__") =
         SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

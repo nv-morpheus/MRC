@@ -21,7 +21,7 @@
 
 #include <ostream>
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 std::string engine_type_string(const EngineType& engine_type)
 {
@@ -42,4 +42,4 @@ std::string engine_type_string(const EngineType& engine_type)
     return "error";
 }
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

@@ -24,7 +24,7 @@
 
 #include <string>  // for allocator, operator==, basic_string, string
 
-using namespace srf;
+using namespace mrc;
 using namespace metrics;
 
 class TestMetrics : public ::testing::Test
@@ -32,11 +32,11 @@ class TestMetrics : public ::testing::Test
   protected:
     void SetUp() override
     {
-        m_registry = std::make_shared<srf::metrics::Registry>();
+        m_registry = std::make_shared<mrc::metrics::Registry>();
     }
     void TearDown() override {}
 
-    std::shared_ptr<srf::metrics::Registry> m_registry;
+    std::shared_ptr<mrc::metrics::Registry> m_registry;
 };
 
 TEST_F(TestMetrics, ThroughputCounter)

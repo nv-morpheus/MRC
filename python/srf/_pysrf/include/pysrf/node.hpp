@@ -44,7 +44,7 @@
 #include <memory>
 #include <utility>
 
-namespace srf {
+namespace mrc {
 
 namespace node {
 
@@ -165,10 +165,10 @@ struct Edge<pybind11::object, pysrf::PyObjectHolder, void> : public EdgeBase<pyb
 
 namespace pysrf {
 
-// Export everything in the srf::pysrf namespace by default since we compile with -fvisibility=hidden
+// Export everything in the mrc::pysrf namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
 
-template <typename InputT, typename ContextT = srf::runnable::Context>
+template <typename InputT, typename ContextT = mrc::runnable::Context>
 class PythonSink : public node::RxSink<InputT, ContextT>,
                    public pysrf::AutoRegSinkAdapter<InputT>,
                    public pysrf::AutoRegEgressPort<InputT>
@@ -181,7 +181,7 @@ class PythonSink : public node::RxSink<InputT, ContextT>,
     using node::RxSink<InputT>::RxSink;
 };
 
-template <typename InputT, typename OutputT, typename ContextT = srf::runnable::Context>
+template <typename InputT, typename OutputT, typename ContextT = mrc::runnable::Context>
 class PythonNode : public node::RxNode<InputT, OutputT, ContextT>,
                    public pysrf::AutoRegSourceAdapter<OutputT>,
                    public pysrf::AutoRegSinkAdapter<InputT>,
@@ -226,7 +226,7 @@ class PythonNode : public node::RxNode<InputT, OutputT, ContextT>,
     }
 };
 
-template <typename OutputT, typename ContextT = srf::runnable::Context>
+template <typename OutputT, typename ContextT = mrc::runnable::Context>
 class PythonSource : public node::RxSource<OutputT, ContextT>,
                      public pysrf::AutoRegSourceAdapter<OutputT>,
                      public pysrf::AutoRegIngressPort<OutputT>
@@ -252,4 +252,4 @@ class SegmentObjectProxy
 #pragma GCC visibility pop
 
 }  // namespace pysrf
-}  // namespace srf
+}  // namespace mrc

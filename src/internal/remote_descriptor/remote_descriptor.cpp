@@ -23,7 +23,7 @@
 // #include "srf/codable/api.hpp"
 // #include "srf/protos/codable.pb.h"
 
-namespace srf::internal::remote_descriptor {
+namespace mrc::internal::remote_descriptor {
 
 // RemoteDescriptor::~RemoteDescriptor()
 // {
@@ -51,15 +51,15 @@ namespace srf::internal::remote_descriptor {
 //     return std::move(m_handle);
 // }
 
-// // const srf::codable::IDecodableStorage& RemoteDescriptor::encoding() const
+// // const mrc::codable::IDecodableStorage& RemoteDescriptor::encoding() const
 // // {
 // //     CHECK(*this);
 // //     return m_handle.proto().encoded_object();
 // // }
 
-// std::unique_ptr<RemoteDescriptor> RemoteDescriptor::unwrap(srf::runtime::RemoteDescriptor&& rd)
+// std::unique_ptr<RemoteDescriptor> RemoteDescriptor::unwrap(mrc::runtime::RemoteDescriptor&& rd)
 // {
 //     return std::move(rd.m_impl);
 // }
 
-}  // namespace srf::internal::remote_descriptor
+}  // namespace mrc::internal::remote_descriptor

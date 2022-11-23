@@ -22,7 +22,7 @@
 
 #include <memory>
 
-namespace srf::utils {
+namespace mrc::utils {
 
 /**
  * @brief thread local storage for a std::shared_ptr<ResourceT>
@@ -63,4 +63,4 @@ class ThreadLocalSharedPointer final
     DELETE_COPYABILITY(ThreadLocalSharedPointer);
 };
 
-}  // namespace srf::utils
+}  // namespace mrc::utils

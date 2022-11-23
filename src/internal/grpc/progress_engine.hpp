@@ -27,7 +27,7 @@
 #include <memory>
 #include <vector>
 
-namespace srf::internal::rpc {
+namespace mrc::internal::rpc {
 
 /**
  * @brief gRPC event data pulled from a CQ
@@ -44,13 +44,13 @@ struct ProgressEvent
 /**
  * @brief gRPC Progress Engine which pulls ProgressEvents off the CompletionQueue
  *
- * This is a SRF Source and only emit ProgressEvents which consist of a void* tag and a bool ok. The user must define
+ * This is a MRC Source and only emit ProgressEvents which consist of a void* tag and a bool ok. The user must define
  * what the void* tag means and pair the appropriate handler as a Sink.
  *
  * For the majority of the internal gRPC use cases, we will use the PromiseHandler which assumes the void* tag can be
- * statically cast to a srf::Promise<bool>, which is a fiber yielding promise.
+ * statically cast to a mrc::Promise<bool>, which is a fiber yielding promise.
  */
-class ProgressEngine final : public srf::node::GenericSource<ProgressEvent>
+class ProgressEngine final : public mrc::node::GenericSource<ProgressEvent>
 {
   public:
     ProgressEngine(std::shared_ptr<grpc::CompletionQueue> cq);
@@ -65,4 +65,4 @@ class ProgressEngine final : public srf::node::GenericSource<ProgressEvent>
     std::shared_ptr<grpc::CompletionQueue> m_cq;
 };
 
-}  // namespace srf::internal::rpc
+}  // namespace mrc::internal::rpc

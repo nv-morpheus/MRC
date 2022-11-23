@@ -41,7 +41,7 @@
 #include <string>
 #include <vector>
 
-namespace srf::node {
+namespace mrc::node {
 
 /**
  * @brief Fully capable Source node that is runnable via RxRunnable
@@ -105,4 +105,4 @@ void RxSource<T, ContextT>::on_kill(const rxcpp::subscription& subscription)
     subscription.unsubscribe();
 }
 
-}  // namespace srf::node
+}  // namespace mrc::node

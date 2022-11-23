@@ -47,7 +47,7 @@
 #include <string>
 #include <utility>
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 /**
  * @brief Coordinates the requires resources needed to launch a Runnable
@@ -340,4 +340,4 @@ class LaunchControl final
     std::shared_ptr<core::FiberTaskQueue> m_main;
 };
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

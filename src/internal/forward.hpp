@@ -19,7 +19,7 @@
 
 #include "srf/forward.hpp"
 
-namespace srf {
+namespace mrc {
 
 class ExecutorBase;
 class ExecutorUpgradeState;
@@ -37,4 +37,4 @@ class PlacementResourcesBase;
 class StandalonePlacementResources;
 class ArchitectPlacementResources;
 
-}  // namespace srf
+}  // namespace mrc

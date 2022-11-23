@@ -38,7 +38,7 @@
 #include <utility>
 #include <vector>
 
-namespace srf::internal::pipeline {
+namespace mrc::internal::pipeline {
 
 Controller::Controller(std::unique_ptr<Instance> pipeline) : m_pipeline(std::move(pipeline))
 {
@@ -48,7 +48,7 @@ Controller::Controller(std::unique_ptr<Instance> pipeline) : m_pipeline(std::mov
 
 void Controller::on_data(ControlMessage&& message)
 {
-    auto& ctx = srf::runnable::Context::get_runtime_context();
+    auto& ctx = mrc::runnable::Context::get_runtime_context();
     DCHECK_EQ(ctx.size(), 1);
 
     switch (message.type)
@@ -119,7 +119,7 @@ void Controller::update(SegmentAddresses&& new_segments_map)
     for (const auto& address : create_segments)
     {
         auto partition_id = new_segments_map.at(address);
-        DVLOG(10) << info() << ": create segment for address " << ::srf::segment::info(address)
+        DVLOG(10) << info() << ": create segment for address " << ::mrc::segment::info(address)
                   << " on resource partition: " << partition_id;
         m_pipeline->create_segment(address, partition_id);
     }
@@ -127,7 +127,7 @@ void Controller::update(SegmentAddresses&& new_segments_map)
     // detach from manifold or stop old segments
     for (const auto& address : remove_segments)
     {
-        DVLOG(10) << info() << ": stop segment for address " << ::srf::segment::info(address);
+        DVLOG(10) << info() << ": stop segment for address " << ::mrc::segment::info(address);
         m_pipeline->stop_segment(address);
     }
 
@@ -160,4 +160,4 @@ const std::string& Controller::info()
     return str;
 }
 
-}  // namespace srf::internal::pipeline
+}  // namespace mrc::internal::pipeline

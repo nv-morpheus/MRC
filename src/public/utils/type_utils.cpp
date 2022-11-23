@@ -27,7 +27,7 @@
 #include <stdexcept>
 #include <utility>  // for pair
 
-namespace srf {
+namespace mrc {
 
 std::map<char, std::map<size_t, TypeId>> make_str_to_type_id()
 {
@@ -155,4 +155,4 @@ char DataType::type_char() const
         throw std::invalid_argument("Unknown datatype");
     }
 }
-}  // namespace srf
+}  // namespace mrc

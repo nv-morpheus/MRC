@@ -28,7 +28,7 @@
 #include <memory>
 #include <vector>
 
-namespace srf::node {
+namespace mrc::node {
 
 template <typename T>
 class Broadcast : public Operator<T>, public SourceProperties<T>
@@ -80,4 +80,4 @@ class Broadcast : public Operator<T>, public SourceProperties<T>
     bool m_deep_copy;
 };
 
-}  // namespace srf::node
+}  // namespace mrc::node

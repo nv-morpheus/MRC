@@ -36,7 +36,7 @@
 // https://github.com/include-what-you-use/include-what-you-use/issues/908
 // IWYU pragma: no_include <algorithm>
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 class Runner;
 
@@ -71,4 +71,4 @@ class Engines
     virtual std::size_t size() const                                      = 0;
 };
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

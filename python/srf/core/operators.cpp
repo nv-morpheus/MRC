@@ -28,7 +28,7 @@
 #include <array>
 #include <ostream>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 namespace py = pybind11;
 
@@ -36,7 +36,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(operators, module)
 {
     module.doc() = R"pbdoc(
-        Python bindings for SRF operators
+        Python bindings for MRC operators
         -------------------------------
         .. currentmodule:: operators
         .. autosummary::
@@ -58,4 +58,4 @@ PYBIND11_MODULE(operators, module)
     module.attr("__version__") =
         SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

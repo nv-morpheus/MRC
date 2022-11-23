@@ -24,4 +24,4 @@
 #include <functional>
 #include <memory>
 
-std::shared_ptr<srf::internal::system::System> make_system(std::function<void(srf::Options&)> updater = nullptr);
+std::shared_ptr<mrc::internal::system::System> make_system(std::function<void(mrc::Options&)> updater = nullptr);

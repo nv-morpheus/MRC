@@ -27,59 +27,59 @@
 #include <algorithm>
 #include <memory>
 
-namespace srf::pysrf {
-std::string SegmentModuleProxy::component_prefix(srf::modules::SegmentModule& self)
+namespace mrc::pysrf {
+std::string SegmentModuleProxy::component_prefix(mrc::modules::SegmentModule& self)
 {
     return self.component_prefix();
 }
 
-pybind11::dict SegmentModuleProxy::config(srf::modules::SegmentModule& self)
+pybind11::dict SegmentModuleProxy::config(mrc::modules::SegmentModule& self)
 {
     return cast_from_json(self.config());
 }
 
-const std::string& SegmentModuleProxy::name(srf::modules::SegmentModule& self)
+const std::string& SegmentModuleProxy::name(mrc::modules::SegmentModule& self)
 {
     return self.name();
 }
 
-std::string SegmentModuleProxy::module_type_name(srf::modules::SegmentModule& self)
+std::string SegmentModuleProxy::module_type_name(mrc::modules::SegmentModule& self)
 {
     return self.module_type_name();
 }
 
-std::vector<std::string> SegmentModuleProxy::input_ids(srf::modules::SegmentModule& self)
+std::vector<std::string> SegmentModuleProxy::input_ids(mrc::modules::SegmentModule& self)
 {
     return self.input_ids();
 }
 
-std::vector<std::string> SegmentModuleProxy::output_ids(srf::modules::SegmentModule& self)
+std::vector<std::string> SegmentModuleProxy::output_ids(mrc::modules::SegmentModule& self)
 {
     return self.output_ids();
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> SegmentModuleProxy::input_port(srf::modules::SegmentModule& self,
+std::shared_ptr<mrc::segment::ObjectProperties> SegmentModuleProxy::input_port(mrc::modules::SegmentModule& self,
                                                                                const std::string& input_id)
 {
     return self.input_port(input_id);
 }
 
-const srf::modules::SegmentModule::segment_module_port_map_t& SegmentModuleProxy::input_ports(
-    srf::modules::SegmentModule& self)
+const mrc::modules::SegmentModule::segment_module_port_map_t& SegmentModuleProxy::input_ports(
+    mrc::modules::SegmentModule& self)
 {
     return self.input_ports();
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> SegmentModuleProxy::output_port(srf::modules::SegmentModule& self,
+std::shared_ptr<mrc::segment::ObjectProperties> SegmentModuleProxy::output_port(mrc::modules::SegmentModule& self,
                                                                                 const std::string& output_id)
 {
     return self.output_port(output_id);
 }
 
-const srf::modules::SegmentModule::segment_module_port_map_t& SegmentModuleProxy::output_ports(
-    srf::modules::SegmentModule& self)
+const mrc::modules::SegmentModule::segment_module_port_map_t& SegmentModuleProxy::output_ports(
+    mrc::modules::SegmentModule& self)
 {
     return self.output_ports();
 }
 
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

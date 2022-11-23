@@ -74,8 +74,8 @@
 #include <utility>
 #include <vector>
 
-using namespace srf;
-using namespace srf::memory::literals;
+using namespace mrc;
+using namespace mrc::memory::literals;
 
 static std::shared_ptr<internal::system::System> make_system(std::function<void(Options&)> updater = nullptr)
 {
@@ -93,12 +93,12 @@ class TestNetwork : public ::testing::Test
 
 TEST_F(TestNetwork, Arena)
 {
-    std::shared_ptr<srf::memory::memory_resource> mr;
-    auto pinned  = std::make_shared<srf::memory::pinned_memory_resource>();
+    std::shared_ptr<mrc::memory::memory_resource> mr;
+    auto pinned  = std::make_shared<mrc::memory::pinned_memory_resource>();
     mr           = pinned;
-    auto logging = srf::memory::make_shared_resource<srf::memory::logging_resource>(mr, "pinned", 10);
-    auto arena   = srf::memory::make_shared_resource<srf::memory::arena_resource>(logging, 128_MiB, 512_MiB);
-    auto f       = srf::memory::make_shared_resource<srf::memory::logging_resource>(arena, "arena", 10);
+    auto logging = mrc::memory::make_shared_resource<mrc::memory::logging_resource>(mr, "pinned", 10);
+    auto arena   = mrc::memory::make_shared_resource<mrc::memory::arena_resource>(logging, 128_MiB, 512_MiB);
+    auto f       = mrc::memory::make_shared_resource<mrc::memory::logging_resource>(arena, "arena", 10);
 
     auto* ptr = f->allocate(1024);
     f->deallocate(ptr, 1024);
@@ -343,7 +343,7 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
             r0.server().deserialize_source().drop_edge(tag);
         });
 
-    srf::node::make_edge(r0.server().deserialize_source().source(tag), *recv_sink);
+    mrc::node::make_edge(r0.server().deserialize_source().source(tag), *recv_sink);
 
     auto launch_opts = resources->partition(0).network()->data_plane().launch_options(1);
     auto recv_runner = resources->partition(0)

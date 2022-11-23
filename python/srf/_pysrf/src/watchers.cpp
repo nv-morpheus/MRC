@@ -47,7 +47,7 @@
 // IWYU pragma: no_include "rxcpp/sources/rx-iterate.hpp"
 // IWYU pragma: no_include "rx-includes.hpp"
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 namespace py = pybind11;
 
@@ -70,17 +70,17 @@ LatencyWatcher::LatencyWatcher(std::shared_ptr<pysrf::Executor> executor,
 {}
 
 void LatencyWatcher::make_segment(const std::string& name,
-                                  const std::function<void(srf::segment::Builder&, LatencyWatcher&)>& init)
+                                  const std::function<void(mrc::segment::Builder&, LatencyWatcher&)>& init)
 {
     pysrf::Pipeline pipeline;
 
-    auto tracer_init_wrapper = [this, init](srf::segment::Builder& seg) { init(seg, *this); };
+    auto tracer_init_wrapper = [this, init](mrc::segment::Builder& seg) { init(seg, *this); };
 
     pipeline.make_segment(name, tracer_init_wrapper);
     m_executor->register_pipeline(pipeline);
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> LatencyWatcher::make_tracer_source(srf::segment::Builder& seg,
+std::shared_ptr<mrc::segment::ObjectProperties> LatencyWatcher::make_tracer_source(mrc::segment::Builder& seg,
                                                                                    const std::string& name,
                                                                                    bool force_sequential)
 {
@@ -94,8 +94,8 @@ std::shared_ptr<srf::segment::ObjectProperties> LatencyWatcher::make_tracer_sour
     return seg.make_source<data_type_t>(name, this->create_rx_tracer_source<false>(name));
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> LatencyWatcher::make_traced_node(
-    srf::segment::Builder& seg, const std::string& name, std::function<py::object(py::object py_obj)> map_f)
+std::shared_ptr<mrc::segment::ObjectProperties> LatencyWatcher::make_traced_node(
+    mrc::segment::Builder& seg, const std::string& name, std::function<py::object(py::object py_obj)> map_f)
 {
     using data_type_t = std::shared_ptr<pysrf::latency_ensemble_t>;
     auto internal_idx = this->get_or_create_node_entry(name);
@@ -114,8 +114,8 @@ std::shared_ptr<srf::segment::ObjectProperties> LatencyWatcher::make_traced_node
     return trace_node;  // std::static_pointer_cast<Node>(trace_node);
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> LatencyWatcher::make_tracer_sink(
-    srf::segment::Builder& seg, const std::string& name, std::function<void(py::object py_obj)> sink_f)
+std::shared_ptr<mrc::segment::ObjectProperties> LatencyWatcher::make_tracer_sink(
+    mrc::segment::Builder& seg, const std::string& name, std::function<void(py::object py_obj)> sink_f)
 {
     using data_type_t    = std::shared_ptr<pysrf::latency_ensemble_t>;
     auto compound_sink_f = [sink_f](pysrf::latency_ensemble_t& data) {
@@ -140,7 +140,7 @@ ThroughputWatcher::ThroughputWatcher(std::shared_ptr<pysrf::Executor> executor) 
   m_executor(executor)
 {
     using throughput_ensemble_t =
-        srf::benchmarking::TracerEnsemble<pybind11::object, srf::benchmarking::ThroughputTracer>;
+        mrc::benchmarking::TracerEnsemble<pybind11::object, mrc::benchmarking::ThroughputTracer>;
 
     auto payload_initializer = [](throughput_ensemble_t& le) {
         py::gil_scoped_acquire gil;
@@ -157,17 +157,17 @@ ThroughputWatcher::ThroughputWatcher(std::shared_ptr<pysrf::Executor> executor,
 {}
 
 void ThroughputWatcher::make_segment(const std::string& name,
-                                     const std::function<void(srf::segment::Builder&, ThroughputWatcher&)>& init)
+                                     const std::function<void(mrc::segment::Builder&, ThroughputWatcher&)>& init)
 {
     pysrf::Pipeline pipeline;
 
-    auto tracer_init_wrapper = [this, init](srf::segment::Builder& seg) { init(seg, *this); };
+    auto tracer_init_wrapper = [this, init](mrc::segment::Builder& seg) { init(seg, *this); };
 
     pipeline.make_segment(name, tracer_init_wrapper);
     m_executor->register_pipeline(pipeline);
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> ThroughputWatcher::make_tracer_source(srf::segment::Builder& seg,
+std::shared_ptr<mrc::segment::ObjectProperties> ThroughputWatcher::make_tracer_source(mrc::segment::Builder& seg,
                                                                                       const std::string& name,
                                                                                       bool force_sequential)
 {
@@ -181,8 +181,8 @@ std::shared_ptr<srf::segment::ObjectProperties> ThroughputWatcher::make_tracer_s
     return seg.make_source<data_type_t>(name, this->create_rx_tracer_source<false>(name));
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> ThroughputWatcher::make_traced_node(
-    srf::segment::Builder& seg, const std::string& name, std::function<py::object(py::object x)> map_f)
+std::shared_ptr<mrc::segment::ObjectProperties> ThroughputWatcher::make_traced_node(
+    mrc::segment::Builder& seg, const std::string& name, std::function<py::object(py::object x)> map_f)
 {
     using data_type_t = std::shared_ptr<pysrf::throughput_ensemble_t>;
     auto internal_idx = this->get_or_create_node_entry(name);
@@ -201,8 +201,8 @@ std::shared_ptr<srf::segment::ObjectProperties> ThroughputWatcher::make_traced_n
     return trace_node;
 }
 
-std::shared_ptr<srf::segment::ObjectProperties> ThroughputWatcher::make_tracer_sink(
-    srf::segment::Builder& seg, const std::string& name, std::function<void(py::object x)> sink_f)
+std::shared_ptr<mrc::segment::ObjectProperties> ThroughputWatcher::make_tracer_sink(
+    mrc::segment::Builder& seg, const std::string& name, std::function<void(py::object x)> sink_f)
 {
     using data_type_t    = std::shared_ptr<pysrf::throughput_ensemble_t>;
     auto compound_sink_f = [sink_f](pysrf::throughput_ensemble_t& data) {
@@ -222,4 +222,4 @@ py::dict ThroughputWatcher::aggregate_tracers_as_pydict()
     return pysrf::cast_from_json(j);
 }
 
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

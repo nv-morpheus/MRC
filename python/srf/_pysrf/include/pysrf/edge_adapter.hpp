@@ -51,7 +51,7 @@
 #include <typeindex>  // for type_index
 #include <utility>    // for move, forward:
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 /**
  * @brief Utility struct which supports building pySRF source/sink adapter functions which can be registered with
@@ -60,14 +60,14 @@ namespace srf::pysrf {
 struct EdgeAdapterUtil
 {
     using source_adapter_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(
-        srf::node::SourcePropertiesBase&, srf::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle>)>;
+        mrc::node::SourcePropertiesBase&, mrc::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle>)>;
     using sink_adapter_fn_t   = std::function<std::shared_ptr<channel::IngressHandle>(
-        std::type_index, srf::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle> ingress_handle)>;
+        std::type_index, mrc::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle> ingress_handle)>;
 
     template <typename DataTypeT>
     static void register_data_adapters()
     {
-        if (!srf::node::EdgeAdapterRegistry::has_source_adapter(typeid(DataTypeT)))
+        if (!mrc::node::EdgeAdapterRegistry::has_source_adapter(typeid(DataTypeT)))
         {
             std::type_index source_type = typeid(DataTypeT);
             VLOG(2) << "Registering PySRF source adapter for: " << type_name<DataTypeT>() << " "
@@ -76,7 +76,7 @@ struct EdgeAdapterUtil
                                                                EdgeAdapterUtil::build_source_adapter<DataTypeT>());
         }
 
-        if (!srf::node::EdgeAdapterRegistry::has_sink_adapter(typeid(DataTypeT)))
+        if (!mrc::node::EdgeAdapterRegistry::has_sink_adapter(typeid(DataTypeT)))
         {
             std::type_index sink_type = typeid(DataTypeT);
             VLOG(2) << "Registering PySRF sink adapter for: " << type_name<DataTypeT>() << " " << sink_type.hash_code();
@@ -89,7 +89,7 @@ struct EdgeAdapterUtil
     static sink_adapter_fn_t build_sink_adapter()
     {
         return [](std::type_index source_type,
-                  srf::node::SinkPropertiesBase& sink,
+                  mrc::node::SinkPropertiesBase& sink,
                   std::shared_ptr<channel::IngressHandle> ingress_handle) {
             if (source_type == typeid(PyHolder))
             {
@@ -116,8 +116,8 @@ struct EdgeAdapterUtil
     template <typename OutputT>
     static source_adapter_fn_t build_source_adapter()
     {
-        return [](srf::node::SourcePropertiesBase& source,
-                  srf::node::SinkPropertiesBase& sink,
+        return [](mrc::node::SourcePropertiesBase& source,
+                  mrc::node::SinkPropertiesBase& sink,
                   std::shared_ptr<channel::IngressHandle> ingress_handle) {
             // First check if there was a defined converter
             if (node::EdgeRegistry::has_converter(source.source_type(), sink.sink_type()))
@@ -155,7 +155,7 @@ struct EdgeAdapterUtil
             // Check if the source is a pybind11::object
             if (writer_type == typeid(PyHolder) && reader_typei)
             {
-                return srf::node::EdgeBuilder::ingress_for_source_type(source.source_type(), sink, ingress_handle);
+                return mrc::node::EdgeBuilder::ingress_for_source_type(source.source_type(), sink, ingress_handle);
                 // return sink_ingress_adapter_for_source_type(sink, writer_type);
             }
 
@@ -166,7 +166,7 @@ struct EdgeAdapterUtil
                 node::EdgeConnector<OutputT, PyHolder>::register_converter();
 
                 // Build the edge with the holder type
-                return srf::node::EdgeBuilder::ingress_for_source_type(source.source_type(), sink, ingress_handle);
+                return mrc::node::EdgeBuilder::ingress_for_source_type(source.source_type(), sink, ingress_handle);
             }
 
             // Check if both have been registered with pybind 11
@@ -178,7 +178,7 @@ struct EdgeAdapterUtil
                 // auto py_to_sink_edge = std::dynamic_pointer_cast<channel::Ingress<pybind11::object>>(
                 //    sink.ingress_for_source_type(typeid(pybind11::object)));
                 auto py_to_sink_edge = std::dynamic_pointer_cast<channel::Ingress<PyHolder>>(
-                    srf::node::EdgeBuilder::ingress_for_source_type(typeid(PyHolder), sink, ingress_handle));
+                    mrc::node::EdgeBuilder::ingress_for_source_type(typeid(PyHolder), sink, ingress_handle));
 
                 auto source_to_py_edge = std::make_shared<node::Edge<OutputT, PyHolder>>(py_to_sink_edge);
 
@@ -214,7 +214,7 @@ struct AutoRegSourceAdapter
 
     static bool register_adapter()
     {
-        if (!srf::node::EdgeAdapterRegistry::has_source_adapter(typeid(SourceT)))
+        if (!mrc::node::EdgeAdapterRegistry::has_source_adapter(typeid(SourceT)))
         {
             std::type_index source_type = typeid(SourceT);
             VLOG(2) << "Registering PySRF source adapter for: " << type_name<SourceT>() << " "
@@ -243,7 +243,7 @@ struct AutoRegSinkAdapter
 
     static bool register_adapter()
     {
-        if (!srf::node::EdgeAdapterRegistry::has_sink_adapter(typeid(SinkT)))
+        if (!mrc::node::EdgeAdapterRegistry::has_sink_adapter(typeid(SinkT)))
         {
             std::type_index sink_type = typeid(SinkT);
             VLOG(2) << "Registering PySRF sink adapter for: " << type_name<SinkT>() << " " << sink_type.hash_code();
@@ -254,4 +254,4 @@ struct AutoRegSinkAdapter
         return true;
     }
 };
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

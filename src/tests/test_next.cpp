@@ -75,7 +75,7 @@
 #include <utility>
 #include <vector>
 
-using namespace srf;
+using namespace mrc;
 
 static std::shared_ptr<internal::system::System> make_system(std::function<void(Options&)> updater = nullptr)
 {
@@ -305,7 +305,7 @@ TEST_F(TestNext, MakeEdgeConvertibleFromSinkRxRunnable)
     EXPECT_EQ(counter, 1);
 }
 
-class Node : public srf::node::GenericNode<int, double>
+class Node : public mrc::node::GenericNode<int, double>
 {
     void on_data(int&& input, rxcpp::subscriber<double>& subscriber) final {}
 };

@@ -49,8 +49,8 @@
 #include <utility>
 #include <vector>
 
-using namespace srf;
-using namespace srf::benchmarking;
+using namespace mrc;
+using namespace mrc::benchmarking;
 using namespace std::literals::chrono_literals;
 
 /**

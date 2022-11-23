@@ -28,7 +28,7 @@
 #include <memory>
 #include <utility>
 
-namespace srf::node {
+namespace mrc::node {
 
 /**
  * @brief An Edge is an Ingress adaptor. This base class provides the storage for actual Channel on which the write will
@@ -76,4 +76,4 @@ struct Edge<SourceT, SinkT, std::enable_if_t<std::is_convertible_v<SourceT, Sink
     }
 };
 
-}  // namespace srf::node
+}  // namespace mrc::node

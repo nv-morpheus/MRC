@@ -31,7 +31,7 @@
 #include <ostream>
 #include <utility>
 
-namespace srf::segment {
+namespace mrc::segment {
 
 template <typename NodeT>
 class Runnable : public Object<NodeT>, public runnable::Launchable
@@ -81,4 +81,4 @@ std::unique_ptr<runnable::Launcher> Runnable<NodeT>::prepare_launcher(runnable::
     }
 }
 
-}  // namespace srf::segment
+}  // namespace mrc::segment

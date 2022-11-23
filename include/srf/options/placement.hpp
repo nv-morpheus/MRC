@@ -90,7 +90,7 @@
 /**
  * @brief Strategy for partitioning the machine into groups
  */
-namespace srf {
+namespace mrc {
 enum class PlacementStrategy
 {
     PerMachine,
@@ -123,4 +123,4 @@ class PlacementOptions
     PlacementResources m_resources_strategy{PlacementResources::Shared};
 };
 
-}  // namespace srf
+}  // namespace mrc

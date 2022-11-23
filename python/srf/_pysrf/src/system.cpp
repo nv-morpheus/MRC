@@ -31,7 +31,7 @@
 #include <ostream>
 #include <utility>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 System::System(std::shared_ptr<Options> options) : internal::system::ISystem(std::move(options)) {}
 
@@ -58,7 +58,7 @@ void SystemResources::add_gil_initializer()
 
         if (!trace_module.is_none() && !trace_module.attr("find")("pydevd").equal(pybind11::int_(-1)))
         {
-            VLOG(10) << "Found pydevd trace function. Will attempt to enable debugging for SRF threads.";
+            VLOG(10) << "Found pydevd trace function. Will attempt to enable debugging for MRC threads.";
             has_pydevd_trace = true;
         }
     }
@@ -130,4 +130,4 @@ void SystemResources::add_gil_finalizer()
     });
 }
 
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

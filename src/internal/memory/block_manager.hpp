@@ -27,7 +27,7 @@
 #include <queue>
 #include <utility>
 
-namespace srf::internal::memory {
+namespace mrc::internal::memory {
 
 template <typename BlockTypeT>
 class BlockManager final
@@ -48,7 +48,7 @@ class BlockManager final
         return *this;
     }
 
-    BlockManager(const BlockManager&) = delete;
+    BlockManager(const BlockManager&)            = delete;
     BlockManager& operator=(const BlockManager&) = delete;
 
     const block_type& add_block(block_type block)
@@ -133,4 +133,4 @@ class BlockManager final
     std::map<std::uintptr_t, block_type> m_block_map;
 };
 
-}  // namespace srf::internal::memory
+}  // namespace mrc::internal::memory

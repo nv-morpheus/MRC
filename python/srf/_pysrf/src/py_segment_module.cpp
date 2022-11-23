@@ -26,7 +26,7 @@
 #include <string_view>
 #include <utility>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 PythonSegmentModule::PythonSegmentModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
 
@@ -42,7 +42,7 @@ void PythonSegmentModule::initialize(segment::Builder& builder)
 
 std::string PythonSegmentModule::module_type_name() const
 {
-    return std::string(::srf::type_name<type_t>());
+    return std::string(::mrc::type_name<type_t>());
 }
 
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

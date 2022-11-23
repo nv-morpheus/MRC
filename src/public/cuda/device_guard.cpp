@@ -24,7 +24,7 @@
 // IWYU thinks we need std::allocator for the debug macros (and only in debug builds)
 // IWYU pragma: no_include <memory>
 
-namespace srf {
+namespace mrc {
 
 DeviceGuard::DeviceGuard(int device_id)
 {
@@ -38,4 +38,4 @@ DeviceGuard::~DeviceGuard()
     SRF_CHECK_CUDA(cudaSetDevice(m_DeviceID));
 }
 
-}  // namespace srf
+}  // namespace mrc

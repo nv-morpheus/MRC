@@ -19,12 +19,12 @@
 
 #include <srf/node/rx_source.hpp>
 
-namespace srf::quickstart::cpp::common {
+namespace mrc::quickstart::cpp::common {
 
-class IntSource : public srf::node::RxSource<int>
+class IntSource : public mrc::node::RxSource<int>
 {
   public:
     IntSource();
 };
 
-}  // namespace srf::quickstart::cpp::common
+}  // namespace mrc::quickstart::cpp::common

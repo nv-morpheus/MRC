@@ -24,7 +24,7 @@
 #include <map>
 #include <string>
 
-namespace srf {
+namespace mrc {
 
 // possible global method to get default engine type
 // this should be an env or compile time option, not a runtime option
@@ -84,4 +84,4 @@ class EngineGroups final
     std::map<std::string, EngineFactoryOptions> m_engine_resource_groups;
 };
 
-}  // namespace srf
+}  // namespace mrc

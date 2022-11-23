@@ -24,7 +24,7 @@
 #include "srf/segment/forward.hpp"
 #include "srf/segment/ingress_ports.hpp"
 
-namespace srf {
+namespace mrc {
 
 class Segment final
 {
@@ -36,4 +36,4 @@ class Segment final
     }
 };
 
-}  // namespace srf
+}  // namespace mrc

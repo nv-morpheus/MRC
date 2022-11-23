@@ -30,7 +30,7 @@
 #include <map>
 #include <memory>
 
-namespace srf::internal::pipeline {
+namespace mrc::internal::pipeline {
 
 class Instance final : public Service, public Resources
 {
@@ -78,4 +78,4 @@ class Instance final : public Service, public Resources
     SharedFuture<void> m_joinable_future;
 };
 
-}  // namespace srf::internal::pipeline
+}  // namespace mrc::internal::pipeline

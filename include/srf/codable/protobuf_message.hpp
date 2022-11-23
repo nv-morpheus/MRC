@@ -28,7 +28,7 @@
 
 #include <type_traits>
 
-namespace srf::codable {
+namespace mrc::codable {
 
 template <typename T>
 struct codable_protocol<T, std::enable_if_t<std::is_base_of_v<::google::protobuf::Message, T>>>
@@ -50,4 +50,4 @@ struct codable_protocol<T, std::enable_if_t<std::is_base_of_v<::google::protobuf
     }
 };
 
-}  // namespace srf::codable
+}  // namespace mrc::codable

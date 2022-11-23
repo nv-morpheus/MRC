@@ -23,7 +23,7 @@
 #include <dlfcn.h>
 #include <nlohmann/json.hpp>
 
-namespace srf::modules {
+namespace mrc::modules {
 struct ModelRegistryUtil
 {
     /**
@@ -50,4 +50,4 @@ struct ModelRegistryUtil
                                         });
     }
 };
-}  // namespace srf::modules
+}  // namespace mrc::modules

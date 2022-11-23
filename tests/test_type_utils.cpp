@@ -27,22 +27,22 @@ TEST_CLASS(TypeUtils);
 
 TEST_F(TestTypeUtils, DataTypeCopy)
 {
-    srf::DataType d1(srf::TypeId::INT32);
-    srf::DataType d2(srf::TypeId::FLOAT32);
+    mrc::DataType d1(mrc::TypeId::INT32);
+    mrc::DataType d2(mrc::TypeId::FLOAT32);
 
-    std::vector<srf::DataType> type_list;
+    std::vector<mrc::DataType> type_list;
     type_list.push_back(d1);
     type_list.push_back(d2);
-    type_list.emplace_back(srf::TypeId::INT32);
-    type_list.emplace_back(srf::TypeId::FLOAT32);
+    type_list.emplace_back(mrc::TypeId::INT32);
+    type_list.emplace_back(mrc::TypeId::FLOAT32);
 
     EXPECT_EQ(type_list[0], d1);
     EXPECT_EQ(type_list[1], d2);
     EXPECT_EQ(type_list[2], d1);
     EXPECT_EQ(type_list[3], d2);
 
-    srf::DataType d3 = d1;
-    srf::DataType d4 = d2;
+    mrc::DataType d3 = d1;
+    mrc::DataType d4 = d2;
 
     EXPECT_EQ(d3, d1);
     EXPECT_EQ(d3.type_id(), d1.type_id());
@@ -50,6 +50,6 @@ TEST_F(TestTypeUtils, DataTypeCopy)
     EXPECT_EQ(d4, d2);
     EXPECT_EQ(d4.type_id(), d2.type_id());
 
-    srf::DataType d5{d1};
-    srf::DataType d6{d2};
+    mrc::DataType d5{d1};
+    mrc::DataType d6{d2};
 }

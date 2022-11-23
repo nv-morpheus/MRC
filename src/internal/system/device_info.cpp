@@ -89,7 +89,7 @@ struct NvmlState
                     // return;
                     // }
 
-                    LOG(FATAL) << "SRF Issue #205: mig instance queries and enumeration is current not supported";
+                    LOG(FATAL) << "MRC Issue #205: mig instance queries and enumeration is current not supported";
                 }
                 else
                 {
@@ -131,7 +131,7 @@ auto nvmlInstatnce = std::make_unique<NvmlState>();
 
 }  // namespace
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 nvmlDevice_t DeviceInfo::GetHandleById(unsigned int device_id)
 {
@@ -224,4 +224,4 @@ std::string DeviceInfo::Name(int device_id)
     return buffer.data();
 }
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

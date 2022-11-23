@@ -26,11 +26,11 @@
 #include <cstddef>
 #include <memory>
 
-namespace srf::internal::remote_descriptor {
+namespace mrc::internal::remote_descriptor {
 class Manager;
-}  // namespace srf::internal::remote_descriptor
+}  // namespace mrc::internal::remote_descriptor
 
-namespace srf::runtime {
+namespace mrc::runtime {
 
 // class IRemoteDescriptorHandle;
 class IRemoteDescriptorManager;
@@ -39,7 +39,7 @@ class IRemoteDescriptorManager;
  * @brief Primary user-level object for interacting with globally accessible object.
  *
  * The RemoteDescriptor is an RAII object which manages the lifecycle of a globally accessible object held by the
- * RemoteDescriptor manager on a given instance of the SRF runtime.
+ * RemoteDescriptor manager on a given instance of the MRC runtime.
  *
  * The RemoteDescriptor can be used to reconstruct the globally accessible object using the decode method. This may
  * trigger network operations.
@@ -118,4 +118,4 @@ class RemoteDescriptor final
     friend internal::remote_descriptor::Manager;
 };
 
-}  // namespace srf::runtime
+}  // namespace mrc::runtime

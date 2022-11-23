@@ -26,7 +26,7 @@
 #include <tuple>
 #include <vector>
 
-namespace srf::segment {
+namespace mrc::segment {
 
 class Definition;
 
@@ -74,4 +74,4 @@ class Ports
     friend Definition;
 };
 
-}  // namespace srf::segment
+}  // namespace mrc::segment

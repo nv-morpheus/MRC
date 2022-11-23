@@ -25,7 +25,7 @@
 #include <memory>
 #include <mutex>
 
-namespace srf::internal::ucx {
+namespace mrc::internal::ucx {
 
 class RegistrationCallbackBuilder final : public memory::CallbackBuilder
 {
@@ -41,4 +41,4 @@ class RegistrationCallbackBuilder final : public memory::CallbackBuilder
     using CallbackBuilder::register_callbacks;
 };
 
-}  // namespace srf::internal::ucx
+}  // namespace mrc::internal::ucx

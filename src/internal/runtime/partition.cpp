@@ -28,7 +28,7 @@
 #include <optional>
 #include <ostream>
 
-namespace srf::internal::runtime {
+namespace mrc::internal::runtime {
 
 Partition::Partition(resources::PartitionResources& resources) : m_resources(resources)
 {
@@ -58,10 +58,10 @@ remote_descriptor::Manager& Partition::remote_descriptor_manager()
     return *m_remote_descriptor_manager;
 }
 
-std::shared_ptr<srf::pubsub::IPublisherService> Partition::make_publisher_service(
-    const std::string& name, const srf::pubsub::PublisherPolicy& policy)
+std::shared_ptr<mrc::pubsub::IPublisherService> Partition::make_publisher_service(
+    const std::string& name, const mrc::pubsub::PublisherPolicy& policy)
 {
-    if (policy == srf::pubsub::PublisherPolicy::RoundRobin)
+    if (policy == mrc::pubsub::PublisherPolicy::RoundRobin)
     {
         return std::shared_ptr<pubsub::PublisherRoundRobin>(new pubsub::PublisherRoundRobin(name, *this));
     }
@@ -70,14 +70,14 @@ std::shared_ptr<srf::pubsub::IPublisherService> Partition::make_publisher_servic
     return nullptr;
 }
 
-std::shared_ptr<srf::pubsub::ISubscriberService> Partition::make_subscriber_service(const std::string& name)
+std::shared_ptr<mrc::pubsub::ISubscriberService> Partition::make_subscriber_service(const std::string& name)
 {
     return std::shared_ptr<pubsub::SubscriberService>(new pubsub::SubscriberService(name, *this));
 }
 
-std::unique_ptr<srf::codable::ICodableStorage> Partition::make_codable_storage()
+std::unique_ptr<mrc::codable::ICodableStorage> Partition::make_codable_storage()
 {
     return std::make_unique<codable::CodableStorage>(m_resources);
 }
 
-}  // namespace srf::internal::runtime
+}  // namespace mrc::internal::runtime

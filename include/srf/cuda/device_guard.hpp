@@ -19,7 +19,7 @@
 
 #include "srf/utils/macros.hpp"
 
-namespace srf {
+namespace mrc {
 
 class DeviceGuard final
 {
@@ -34,4 +34,4 @@ class DeviceGuard final
     int m_DeviceID;
 };
 
-}  // namespace srf
+}  // namespace mrc

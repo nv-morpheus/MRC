@@ -41,7 +41,7 @@
 // IWYU thinks we need std::max for calling m_instances.resize()
 // IWYU pragma: no_include <algorithm>
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 static std::string runnable_state_str(const Runner::State& state)
 {
@@ -258,4 +258,4 @@ void Runner::on_completion_callback(on_completion_callback_t callback)
     CHECK(m_completion_callback == nullptr);
     m_completion_callback = callback;
 }
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

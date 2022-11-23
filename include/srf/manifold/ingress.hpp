@@ -25,7 +25,7 @@
 
 #include <memory>
 
-namespace srf::manifold {
+namespace mrc::manifold {
 
 struct IngressDelegate
 {
@@ -78,4 +78,4 @@ class MuxedIngress : public TypedIngress<T>
     std::shared_ptr<node::Muxer<T>> m_muxer;
 };
 
-}  // namespace srf::manifold
+}  // namespace mrc::manifold

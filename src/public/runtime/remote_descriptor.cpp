@@ -22,7 +22,7 @@
 
 #include <utility>
 
-namespace srf::runtime {
+namespace mrc::runtime {
 
 RemoteDescriptor::RemoteDescriptor(std::shared_ptr<IRemoteDescriptorManager> manager,
                                    std::unique_ptr<IRemoteDescriptorHandle> handle) :
@@ -54,4 +54,4 @@ std::unique_ptr<IRemoteDescriptorHandle> RemoteDescriptor::release_handle()
     return std::move(m_handle);
 }
 
-}  // namespace srf::runtime
+}  // namespace mrc::runtime

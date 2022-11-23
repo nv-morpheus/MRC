@@ -37,7 +37,7 @@
 #include <typeindex>
 #include <vector>
 
-namespace srf::internal::codable {
+namespace mrc::internal::codable {
 
 /**
  * @brief CodableStorage implements both the IEncodableStorage and the IDecodableStorage interfaces
@@ -45,18 +45,18 @@ namespace srf::internal::codable {
  *
  *
  */
-class CodableStorage final : public srf::codable::ICodableStorage, public StorageView, public DecodableStorageView
+class CodableStorage final : public mrc::codable::ICodableStorage, public StorageView, public DecodableStorageView
 {
   public:
     CodableStorage(resources::PartitionResources& resources);
-    CodableStorage(srf::codable::protos::EncodedObject proto, resources::PartitionResources& resources);
+    CodableStorage(mrc::codable::protos::EncodedObject proto, resources::PartitionResources& resources);
 
-    srf::codable::IEncodableStorage& encodable();
+    mrc::codable::IEncodableStorage& encodable();
 
-    srf::codable::IDecodableStorage& decodable();
+    mrc::codable::IDecodableStorage& decodable();
 
   private:
-    srf::codable::protos::EncodedObject& mutable_proto() final;
+    mrc::codable::protos::EncodedObject& mutable_proto() final;
 
     bool context_acquired() const final;
 
@@ -66,10 +66,10 @@ class CodableStorage final : public srf::codable::ICodableStorage, public Storag
 
     // register memory region
     // may return nullopt if the region is considered too small
-    std::optional<idx_t> register_memory_view(srf::memory::const_buffer_view view, bool force_register = false) final;
+    std::optional<idx_t> register_memory_view(mrc::memory::const_buffer_view view, bool force_register = false) final;
 
     // copy to eager descriptor
-    idx_t copy_to_eager_descriptor(srf::memory::const_buffer_view view) final;
+    idx_t copy_to_eager_descriptor(mrc::memory::const_buffer_view view) final;
 
     // add a meta_data descriptor
     idx_t add_meta_data(const google::protobuf::Message& meta_data) final;
@@ -78,35 +78,35 @@ class CodableStorage final : public srf::codable::ICodableStorage, public Storag
     idx_t create_memory_buffer(std::size_t bytes) final;
 
     // copy data to a created buffer
-    void copy_to_buffer(idx_t buffer_idx, srf::memory::const_buffer_view view) final;
+    void copy_to_buffer(idx_t buffer_idx, mrc::memory::const_buffer_view view) final;
 
     // get a mutable view into the memory of a descriptor
-    srf::memory::buffer_view mutable_host_buffer_view(const idx_t& buffer_idx) final;
+    mrc::memory::buffer_view mutable_host_buffer_view(const idx_t& buffer_idx) final;
 
     /**
      * @brief Converts a memory block to a RemoteMemoryDescriptor proto
      */
     static void encode_descriptor(const InstanceID& instance_id,
-                                  srf::codable::protos::RemoteMemoryDescriptor& desc,
-                                  srf::memory::const_buffer_view view,
+                                  mrc::codable::protos::RemoteMemoryDescriptor& desc,
+                                  mrc::memory::const_buffer_view view,
                                   const ucx::MemoryBlock& ucx_block,
                                   bool should_cache = false);
 
-    static srf::memory::buffer_view decode_descriptor(const srf::codable::protos::RemoteMemoryDescriptor& desc);
+    static mrc::memory::buffer_view decode_descriptor(const mrc::codable::protos::RemoteMemoryDescriptor& desc);
 
-    srf::codable::protos::EncodedObject& get_mutable_proto();
+    mrc::codable::protos::EncodedObject& get_mutable_proto();
 
-    const srf::codable::protos::EncodedObject& get_proto() const final;
+    const mrc::codable::protos::EncodedObject& get_proto() const final;
 
     resources::PartitionResources& resources() const final;
 
     resources::PartitionResources& m_resources;
-    srf::codable::protos::EncodedObject m_proto;
-    std::map<idx_t, srf::memory::buffer> m_buffers;
-    std::vector<srf::memory::const_buffer_view> m_temporary_registrations;
+    mrc::codable::protos::EncodedObject m_proto;
+    std::map<idx_t, mrc::memory::buffer> m_buffers;
+    std::vector<mrc::memory::const_buffer_view> m_temporary_registrations;
     std::optional<obj_idx_t> m_parent{std::nullopt};
     bool m_context_acquired{false};
     mutable std::mutex m_mutex;
 };
 
-}  // namespace srf::internal::codable
+}  // namespace mrc::internal::codable

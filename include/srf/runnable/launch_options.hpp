@@ -24,7 +24,7 @@
 #include <cstdint>
 #include <string>
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 struct LaunchOptions
 {
@@ -45,4 +45,4 @@ struct ServiceLaunchOptions : public LaunchOptions
     int m_priority{SRF_DEFAULT_FIBER_PRIORITY};
 };
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

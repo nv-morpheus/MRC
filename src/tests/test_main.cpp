@@ -31,7 +31,7 @@ __attribute__((noreturn)) void TestFailuresThrowExceptions()
 
 int main(int argc, char** argv)
 {
-    srf::init_logging("srf::test_srf_private");
+    mrc::init_logging("mrc::test_srf_private");
     ::google::InstallFailureFunction(&TestFailuresThrowExceptions);
     ::testing::InitGoogleTest(&argc, argv);
     ::google::ParseCommandLineFlags(&argc, &argv, true);

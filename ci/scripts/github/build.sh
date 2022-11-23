@@ -50,10 +50,10 @@ show_conda_info
 rapids-logger "Configuring for build and test"
 cmake -B build -G Ninja ${CMAKE_FLAGS} .
 
-rapids-logger "Building SRF"
+rapids-logger "Building MRC"
 cmake --build build --parallel ${PARALLEL_LEVEL}
 
-rapids-logger "sccache usage for SRF build:"
+rapids-logger "sccache usage for MRC build:"
 sccache --show-stats
 
 rapids-logger "Archiving results"

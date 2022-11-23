@@ -27,9 +27,9 @@
 #include <memory>
 #include <string>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
-// Export everything in the srf::pysrf namespace by default since we compile with -fvisibility=hidden
+// Export everything in the mrc::pysrf namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
 
 class Pipeline
@@ -38,11 +38,11 @@ class Pipeline
     Pipeline();
 
     /**
-     * @brief Create a new SRF segment
+     * @brief Create a new MRC segment
      * @param name Segment name
      * @param init initializer used to define segment internals
      */
-    void make_segment(const std::string& name, const std::function<void(srf::segment::Builder&)>& init);
+    void make_segment(const std::string& name, const std::function<void(mrc::segment::Builder&)>& init);
 
     /**
      * @brief
@@ -56,13 +56,13 @@ class Pipeline
     void make_segment(const std::string& name,
                       pybind11::list ingress_port_info,
                       pybind11::list egress_port_info,
-                      const std::function<void(srf::segment::Builder&)>& init);
+                      const std::function<void(mrc::segment::Builder&)>& init);
 
-    std::unique_ptr<srf::pipeline::Pipeline> swap();
+    std::unique_ptr<mrc::pipeline::Pipeline> swap();
 
   private:
-    std::unique_ptr<srf::pipeline::Pipeline> m_pipeline;
+    std::unique_ptr<mrc::pipeline::Pipeline> m_pipeline;
 };
 
 #pragma GCC visibility pop
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

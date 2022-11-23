@@ -22,11 +22,11 @@
 
 #include <memory>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 class IResources;
 }
 
-namespace srf::internal::executor {
+namespace mrc::internal::executor {
 
 class Executor;
 
@@ -62,4 +62,4 @@ class IExecutor
     friend Executor;
 };
 
-}  // namespace srf::internal::executor
+}  // namespace mrc::internal::executor

@@ -34,7 +34,7 @@
 #include <thread>
 #include <utility>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 class ThreadResources;
 
@@ -50,7 +50,7 @@ class Thread
     ~Thread();
     const std::thread& thread() const;
 
-    Thread(Thread&&) noexcept = default;
+    Thread(Thread&&) noexcept            = default;
     Thread& operator=(Thread&&) noexcept = default;
 
     void join();
@@ -64,7 +64,7 @@ class Thread
 };
 
 /**
- * @brief Resources for all SRF threads
+ * @brief Resources for all MRC threads
  *
  * The ThreadResources holds the thread initializer and finalizer methods, and is responsible for spawning Threads which
  * capture a shared_ptr<ThreadResources> via shared_from_this();
@@ -106,4 +106,4 @@ Thread ThreadResources::make_thread(std::string desc, CpuSet cpu_affinity, Calla
     return Thread(shared_from_this(), std::move(thread));
 }
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

@@ -40,9 +40,9 @@
 #include <utility>
 #include <vector>
 
-namespace srf::internal::runnable {
+namespace mrc::internal::runnable {
 
-class FiberEngineFactory : public ::srf::runnable::EngineFactory
+class FiberEngineFactory : public ::mrc::runnable::EngineFactory
 {
   public:
     /**
@@ -53,14 +53,14 @@ class FiberEngineFactory : public ::srf::runnable::EngineFactory
      *
      * @return std::shared_ptr<Engines>
      */
-    std::shared_ptr<::srf::runnable::Engines> build_engines(const LaunchOptions& launch_options) final
+    std::shared_ptr<::mrc::runnable::Engines> build_engines(const LaunchOptions& launch_options) final
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         return std::make_shared<FiberEngines>(
             launch_options, get_next_n_queues(launch_options.pe_count), SRF_DEFAULT_FIBER_PRIORITY);
     }
 
-    ::srf::runnable::EngineType backend() const final
+    ::mrc::runnable::EngineType backend() const final
     {
         return EngineType::Fiber;
     }
@@ -144,7 +144,7 @@ class SingleUseFiberEngineFactory final : public FiberEngineFactory
     std::size_t m_offset{0};
 };
 
-class ThreadEngineFactory : public ::srf::runnable::EngineFactory
+class ThreadEngineFactory : public ::mrc::runnable::EngineFactory
 {
   public:
     ThreadEngineFactory(const system::Resources& system_resources, CpuSet cpu_set) :
@@ -154,7 +154,7 @@ class ThreadEngineFactory : public ::srf::runnable::EngineFactory
         CHECK(!m_cpu_set.empty());
     }
 
-    std::shared_ptr<::srf::runnable::Engines> build_engines(const LaunchOptions& launch_options) final
+    std::shared_ptr<::mrc::runnable::Engines> build_engines(const LaunchOptions& launch_options) final
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         auto cpu_set = get_next_n_cpus(launch_options.pe_count);
@@ -238,7 +238,7 @@ class SingleUseThreadEngineFactory final : public ThreadEngineFactory
     int m_prev_cpu_idx = -1;
 };
 
-std::shared_ptr<::srf::runnable::EngineFactory> make_engine_factory(const system::Resources& system_resources,
+std::shared_ptr<::mrc::runnable::EngineFactory> make_engine_factory(const system::Resources& system_resources,
                                                                     EngineType engine_type,
                                                                     const CpuSet& cpu_set,
                                                                     bool reusable)
@@ -264,4 +264,4 @@ std::shared_ptr<::srf::runnable::EngineFactory> make_engine_factory(const system
     LOG(FATAL) << "unsupported engine type";
 }
 
-}  // namespace srf::internal::runnable
+}  // namespace mrc::internal::runnable

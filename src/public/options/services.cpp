@@ -22,7 +22,7 @@
 
 #include <utility>
 
-namespace srf {
+namespace mrc {
 
 void ServiceOptions::set_service_options(runnable::InternalServiceType service_type,
                                          const runnable::LaunchOptions& launch_options)
@@ -49,4 +49,4 @@ const runnable::LaunchOptions& ServiceOptions::default_options() const
     return m_default_options;
 }
 
-}  // namespace srf
+}  // namespace mrc

@@ -24,7 +24,7 @@
 #include <string>
 #include <utility>
 
-namespace srf {
+namespace mrc {
 
 std::string default_engine_factory_name()
 {
@@ -99,4 +99,4 @@ bool EngineGroups::ignore_hyper_threads() const
 {
     return m_ignore_hyper_threads;
 }
-}  // namespace srf
+}  // namespace mrc

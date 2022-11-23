@@ -30,7 +30,7 @@
 #include <ostream>
 
 namespace py = pybind11;
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 pybind11::object Deserializer::deserialize(const char* bytes, std::size_t count)
 {
@@ -87,4 +87,4 @@ pybind11::object Deserializer::load_from_shared_memory(pybind11::object descript
 
     return obj;
 }
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

@@ -19,7 +19,7 @@
 
 #include "srf/constants.hpp"
 
-namespace srf {
+namespace mrc {
 
 /**
  * @brief Additional fiber meta data used for when enqueuing work to a TaskQueue
@@ -29,4 +29,4 @@ struct FiberMetaData
     int priority{SRF_DEFAULT_FIBER_PRIORITY};
 };
 
-}  // namespace srf
+}  // namespace mrc

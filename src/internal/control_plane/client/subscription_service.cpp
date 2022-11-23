@@ -30,7 +30,7 @@
 #include <ostream>
 #include <utility>
 
-namespace srf::internal::control_plane::client {
+namespace mrc::internal::control_plane::client {
 
 SubscriptionService::SubscriptionService(const std::string& service_name, Instance& instance) :
   m_service_name(std::move(service_name)),
@@ -210,7 +210,7 @@ void SubscriptionService::teardown()
     service_stop();
 }
 
-const srf::runnable::LaunchOptions& SubscriptionService::policy_engine_launch_options() const
+const mrc::runnable::LaunchOptions& SubscriptionService::policy_engine_launch_options() const
 {
     return m_instance.client().launch_options();
 }
@@ -223,4 +223,4 @@ bool SubscriptionService::is_startable() const
 {
     return is_service_startable();
 }
-}  // namespace srf::internal::control_plane::client
+}  // namespace mrc::internal::control_plane::client

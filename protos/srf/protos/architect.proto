@@ -20,7 +20,7 @@ syntax = "proto3";
 
 import "google/protobuf/any.proto";
 
-package srf.protos;
+package mrc.protos;
 
 service Architect {
     rpc EventStream(stream Event) returns (stream Event) {}

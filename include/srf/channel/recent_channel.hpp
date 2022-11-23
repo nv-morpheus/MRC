@@ -27,7 +27,7 @@
 #include <mutex>
 #include <thread>  // for lock_guard & unique_lock
 
-namespace srf::channel {
+namespace mrc::channel {
 
 template <typename T>
 class RecentChannel : public Channel<T>
@@ -126,9 +126,9 @@ class RecentChannel : public Channel<T>
     std::deque<T> m_deque;
 };
 
-}  // namespace srf::channel
+}  // namespace mrc::channel
 
-namespace srf {
+namespace mrc {
 
 template <typename T>
 using RecentChannel = channel::RecentChannel<T>;  // NOLINT

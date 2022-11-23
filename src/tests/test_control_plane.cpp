@@ -62,9 +62,9 @@
 #include <utility>
 #include <vector>
 
-using namespace srf;
-using namespace srf::pubsub;
-using namespace srf::memory::literals;
+using namespace mrc;
+using namespace mrc::pubsub;
+using namespace mrc::memory::literals;
 
 static auto make_runtime(std::function<void(Options& options)> options_lambda = [](Options& options) {})
 {
@@ -356,10 +356,10 @@ TEST_F(TestControlPlane, DoubleClientPubSub)
 
 //     LOG(INFO) << "MAKE PUBLISHER";
 //     auto publisher =
-//         client_1->partition(0).make_publisher<srf::memory::buffer>("my_buffer", pubsub::PublisherPolicy::Broadcast);
+//         client_1->partition(0).make_publisher<mrc::memory::buffer>("my_buffer", pubsub::PublisherPolicy::Broadcast);
 
 //     LOG(INFO) << "MAKE SUBSCRIBER";
-//     auto subscriber = client_2->partition(0).make_subscriber<srf::memory::buffer>("my_buffer");
+//     auto subscriber = client_2->partition(0).make_subscriber<mrc::memory::buffer>("my_buffer");
 
 //     client_1->partition(0).resources().network()->control_plane().client().request_update();
 

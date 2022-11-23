@@ -26,7 +26,7 @@
 #include <ostream>
 #include <stdexcept>
 
-namespace srf::pytests {
+namespace mrc::pytests {
 
 namespace py = pybind11;
 
@@ -51,4 +51,4 @@ PYBIND11_MODULE(utils, module)
     module.attr("__version__") =
         SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
-}  // namespace srf::pytests
+}  // namespace mrc::pytests

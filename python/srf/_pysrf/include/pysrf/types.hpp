@@ -25,7 +25,7 @@
 
 #include <functional>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 using PyHolder = PyObjectHolder;  // NOLINT
 
@@ -33,8 +33,8 @@ using PySubscription     = rxcpp::subscription;                                /
 using PyObjectObserver   = rxcpp::observer<PyHolder, void, void, void, void>;  // NOLINT(readability-identifier-naming)
 using PyObjectSubscriber = rxcpp::subscriber<PyHolder, PyObjectObserver>;      // NOLINT(readability-identifier-naming)
 using PyObjectObservable = rxcpp::observable<PyHolder>;                        // NOLINT(readability-identifier-naming)
-using PyNode             = srf::segment::ObjectProperties;                     // NOLINT(readability-identifier-naming)
+using PyNode             = mrc::segment::ObjectProperties;                     // NOLINT(readability-identifier-naming)
 // NOLINTNEXTLINE(readability-identifier-naming)
 using PyObjectOperateFn = std::function<PyObjectObservable(PyObjectObservable source)>;
 
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

@@ -24,18 +24,18 @@
 #include <memory>
 #include <string>
 
-namespace srf::segment {
+namespace mrc::segment {
 
 class EgressPortBase;
 class IngressPortBase;
 
-}  // namespace srf::segment
+}  // namespace mrc::segment
 
-namespace srf::internal::pipeline {
+namespace mrc::internal::pipeline {
 class IPipeline;
 }
 
-namespace srf::internal::segment {
+namespace mrc::internal::segment {
 
 class Definition;
 class IBuilder;
@@ -43,9 +43,9 @@ class IBuilder;
 struct IDefinition
 {
     using backend_initializer_fn_t = std::function<void(IBuilder&)>;
-    using egress_initializer_t = std::function<std::shared_ptr<::srf::segment::EgressPortBase>(const SegmentAddress&)>;
+    using egress_initializer_t = std::function<std::shared_ptr<::mrc::segment::EgressPortBase>(const SegmentAddress&)>;
     using ingress_initializer_t =
-        std::function<std::shared_ptr<::srf::segment::IngressPortBase>(const SegmentAddress&)>;
+        std::function<std::shared_ptr<::mrc::segment::IngressPortBase>(const SegmentAddress&)>;
 
     IDefinition(std::string name,
                 std::map<std::string, ingress_initializer_t> ingress_initializers,
@@ -66,4 +66,4 @@ struct IDefinition
     friend pipeline::IPipeline;
 };
 
-}  // namespace srf::internal::segment
+}  // namespace mrc::internal::segment

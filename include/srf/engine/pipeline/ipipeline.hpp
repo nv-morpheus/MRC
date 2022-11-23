@@ -19,12 +19,12 @@
 
 #include <memory>
 
-namespace srf::internal::segment {
+namespace mrc::internal::segment {
 class IDefinition;
 class Definition;
-}  // namespace srf::internal::segment
+}  // namespace mrc::internal::segment
 
-namespace srf::internal::pipeline {
+namespace mrc::internal::pipeline {
 
 class Pipeline;
 
@@ -44,4 +44,4 @@ class IPipeline
     friend Pipeline;
 };
 
-}  // namespace srf::internal::pipeline
+}  // namespace mrc::internal::pipeline

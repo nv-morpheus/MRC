@@ -27,7 +27,7 @@
 
 #include <sstream>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 namespace py = pybind11;
 using namespace std::string_literals;
@@ -35,7 +35,7 @@ using namespace std::string_literals;
 PYBIND11_MODULE(logging, module)
 {
     module.doc() = R"pbdoc(
-        Python bindings for SRF logging
+        Python bindings for MRC logging
         -------------------------------
         .. currentmodule:: logging
         .. autosummary::
@@ -45,20 +45,20 @@ PYBIND11_MODULE(logging, module)
     module.def(
         "init_logging",
         &init_logging,
-        "Initializes SRF's logger, The return value inidicates if the logger was initialized, which will be `True` "
+        "Initializes MRC's logger, The return value inidicates if the logger was initialized, which will be `True` "
         "on the first call, and `False` for all subsequant calls.",
         py::arg("logname"),
         py::arg("py_level") = py_log_levels::INFO);
 
-    module.def("is_initialized", &srf::is_initialized, "Checks if SRF's logger has been initialized.");
+    module.def("is_initialized", &mrc::is_initialized, "Checks if MRC's logger has been initialized.");
 
-    module.def("get_level", &get_level, "Gets the log level for SRF's logger.");
+    module.def("get_level", &get_level, "Gets the log level for MRC's logger.");
 
-    module.def("set_level", &set_level, "Sets the log level for SRF's logger.", py::arg("py_level"));
+    module.def("set_level", &set_level, "Sets the log level for MRC's logger.", py::arg("py_level"));
 
     module.def("log",
                &log,
-               "Logs a message to SRF's logger.",
+               "Logs a message to MRC's logger.",
                py::arg("msg"),
                py::arg("py_level") = py_log_levels::INFO,
                py::arg("filename") = ""s,
@@ -67,4 +67,4 @@ PYBIND11_MODULE(logging, module)
     module.attr("__version__") =
         SRF_CONCAT_STR(srf_VERSION_MAJOR << "." << srf_VERSION_MINOR << "." << srf_VERSION_PATCH);
 }
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

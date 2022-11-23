@@ -46,7 +46,7 @@
 
 // IWYU pragma: no_include <pybind11/detail/common.h>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 namespace py = pybind11;
 
 namespace {
@@ -54,19 +54,19 @@ struct PipelineIngressInfo
 {
     std::vector<std::string> m_names;
     std::vector<std::type_index> m_type_indices;
-    std::vector<srf::node::PortUtil::ingress_builder_fn_t> m_ingress_builders;
+    std::vector<mrc::node::PortUtil::ingress_builder_fn_t> m_ingress_builders;
 };
 
 struct PipelineEgressInfo
 {
     std::vector<std::string> m_names;
     std::vector<std::type_index> m_type_indices;
-    std::vector<srf::node::PortUtil::egress_builder_fn_t> m_egress_builders;
+    std::vector<mrc::node::PortUtil::egress_builder_fn_t> m_egress_builders;
 };
 
 PipelineIngressInfo collect_ingress_info(py::list ids)
 {
-    using namespace srf::node;
+    using namespace mrc::node;
     PipelineIngressInfo ingress_info;
 
     for (const auto& item : ids)
@@ -115,7 +115,7 @@ PipelineIngressInfo collect_ingress_info(py::list ids)
 
 PipelineEgressInfo collect_egress_info(py::list ids)
 {
-    using namespace srf::node;
+    using namespace mrc::node;
 
     PipelineEgressInfo egress_info;
 
@@ -165,11 +165,11 @@ PipelineEgressInfo collect_egress_info(py::list ids)
 }
 }  // namespace
 
-Pipeline::Pipeline() : m_pipeline(srf::pipeline::make_pipeline()) {}
+Pipeline::Pipeline() : m_pipeline(mrc::pipeline::make_pipeline()) {}
 
-void Pipeline::make_segment(const std::string& name, const std::function<void(srf::segment::Builder&)>& init)
+void Pipeline::make_segment(const std::string& name, const std::function<void(mrc::segment::Builder&)>& init)
 {
-    auto init_wrapper = [=](srf::segment::Builder& seg) {
+    auto init_wrapper = [=](mrc::segment::Builder& seg) {
         py::gil_scoped_acquire gil;
         init(seg);
     };
@@ -180,14 +180,14 @@ void Pipeline::make_segment(const std::string& name, const std::function<void(sr
 void Pipeline::make_segment(const std::string& name,
                             py::list ingress_port_info,
                             py::list egress_port_info,
-                            const std::function<void(srf::segment::Builder&)>& init)
+                            const std::function<void(mrc::segment::Builder&)>& init)
 {
     if (ingress_port_info.empty() && egress_port_info.empty())
     {
         return make_segment(name, init);
     }
 
-    auto init_wrapper = [init](srf::segment::Builder& seg) {
+    auto init_wrapper = [init](mrc::segment::Builder& seg) {
         py::gil_scoped_acquire gil;
         init(seg);
     };
@@ -203,10 +203,10 @@ void Pipeline::make_segment(const std::string& name,
     m_pipeline->make_segment(name, ingress_ports, egress_ports, init_wrapper);
 }
 
-std::unique_ptr<srf::pipeline::Pipeline> Pipeline::swap()
+std::unique_ptr<mrc::pipeline::Pipeline> Pipeline::swap()
 {
     auto tmp   = std::move(m_pipeline);
-    m_pipeline = srf::pipeline::make_pipeline();
+    m_pipeline = mrc::pipeline::make_pipeline();
     return std::move(tmp);
 }
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

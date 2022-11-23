@@ -71,7 +71,7 @@
 // IWYU pragma: no_include "rx-includes.hpp"
 
 namespace py    = pybind11;
-namespace pysrf = srf::pysrf;
+namespace pysrf = mrc::pysrf;
 using namespace std::string_literals;
 using namespace py::literals;
 
@@ -96,9 +96,9 @@ PYSRF_TEST_CLASS(Pipeline);
 // TEST_F(TestPipeline, MakeSegment)
 // {
 //     pysrf::Pipeline p;
-//     p.make_segment("turtle"s, [](srf::segment::Builder& seg) {});
-//     p.make_segment("lizard"s, [](srf::segment::Builder& seg) {});
-//     p.make_segment("frog"s, [](srf::segment::Builder& seg) {});
+//     p.make_segment("turtle"s, [](mrc::segment::Builder& seg) {});
+//     p.make_segment("lizard"s, [](mrc::segment::Builder& seg) {});
+//     p.make_segment("frog"s, [](mrc::segment::Builder& seg) {});
 
 //     auto pipe_ptr = p.swap();
 //     EXPECT_EQ(pipe_ptr->segment_count(), 3);
@@ -112,7 +112,7 @@ TEST_F(TestPipeline, Execute)
     std::atomic<unsigned int> counter = 0;
     pysrf::Pipeline p;
 
-    auto init = [&counter](srf::segment::Builder& seg) {
+    auto init = [&counter](mrc::segment::Builder& seg) {
         auto src = seg.make_source<bool>("src", [](rxcpp::subscriber<bool>& s) {
             if (s.is_subscribed())
             {
@@ -139,11 +139,11 @@ TEST_F(TestPipeline, Execute)
     p.make_segment("seg2"s, init);
     p.make_segment("seg3"s, init);
 
-    auto options = std::make_shared<srf::Options>();
+    auto options = std::make_shared<mrc::Options>();
     options->topology().user_cpuset("0");
 
-    // note this is the base SRF executor not a pysrf executor
-    srf::Executor exec{options};
+    // note this is the base MRC executor not a pysrf executor
+    mrc::Executor exec{options};
     exec.register_pipeline(p.swap());
 
     py::gil_scoped_release release;
@@ -158,7 +158,7 @@ TEST_F(TestPipeline, DynamicPortConstructionGood)
     pysrf::PortBuilderUtil::register_port_util<pysrf::PyHolder>();
 
     std::string name                                 = "xyz";
-    std::function<void(srf::segment::Builder&)> init = [](srf::segment::Builder& builder) {
+    std::function<void(mrc::segment::Builder&)> init = [](mrc::segment::Builder& builder) {
         std::cerr << "Builder called" << std::endl;
     };
 
@@ -204,7 +204,7 @@ TEST_F(TestPipeline, DynamicPortConstructionBadDuplicatePorts)
     pysrf::PortBuilderUtil::register_port_util<pysrf::PyHolder>();
 
     std::string name                                 = "xyz";
-    std::function<void(srf::segment::Builder&)> init = [](srf::segment::Builder& builder) {
+    std::function<void(mrc::segment::Builder&)> init = [](mrc::segment::Builder& builder) {
         std::cerr << "Builder called" << std::endl;
     };
 
@@ -249,8 +249,8 @@ TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
     std::vector<std::string> source_segment_egress_ids{"source_1", "source_2", "source_3", "source_4"};
     std::vector<std::string> intermediate_segment_egress_ids{"internal_1", "internal_2", "internal_3", "internal_4"};
 
-    std::function<void(srf::segment::Builder&)> seg1_init =
-        [source_segment_egress_ids](srf::segment::Builder& builder) {
+    std::function<void(mrc::segment::Builder&)> seg1_init =
+        [source_segment_egress_ids](mrc::segment::Builder& builder) {
             for (int i = 0; i < source_segment_egress_ids.size(); i++)
             {
                 auto src = builder.make_source<pysrf::PyHolder>(
@@ -280,8 +280,8 @@ TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
             LOG(INFO) << "Finished TestSegment1 Initialization";
         };
 
-    std::function<void(srf::segment::Builder&)> seg2_init =
-        [source_segment_egress_ids, intermediate_segment_egress_ids](srf::segment::Builder& builder) {
+    std::function<void(mrc::segment::Builder&)> seg2_init =
+        [source_segment_egress_ids, intermediate_segment_egress_ids](mrc::segment::Builder& builder) {
             for (auto ingress_it : source_segment_egress_ids)
             {
                 auto ingress_test = builder.get_ingress<pysrf::PyHolder>(ingress_it);
@@ -299,8 +299,8 @@ TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
             LOG(INFO) << "Finished TestSegment2 Initialization";
         };
 
-    std::function<void(srf::segment::Builder&)> seg3_init =
-        [&sink_count, intermediate_segment_egress_ids](srf::segment::Builder& builder) {
+    std::function<void(mrc::segment::Builder&)> seg3_init =
+        [&sink_count, intermediate_segment_egress_ids](mrc::segment::Builder& builder) {
             for (int i = 0; i < intermediate_segment_egress_ids.size(); ++i)
             {
                 auto ingress = builder.get_ingress<pysrf::PyHolder>(intermediate_segment_egress_ids[i]);
@@ -323,11 +323,11 @@ TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
         "TestSegment2", py::cast(source_segment_egress_ids), py::cast(intermediate_segment_egress_ids), seg2_init);
     pipe.make_segment("TestSegment3", py::cast(intermediate_segment_egress_ids), py::list(), seg3_init);
 
-    auto opt1 = std::make_shared<srf::Options>();
+    auto opt1 = std::make_shared<mrc::Options>();
     opt1->topology().user_cpuset("0");
     opt1->topology().restrict_gpus(true);
 
-    srf::Executor exec1{opt1};
+    mrc::Executor exec1{opt1};
 
     exec1.register_pipeline(pipe.swap());
 

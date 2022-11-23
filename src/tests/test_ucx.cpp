@@ -39,7 +39,7 @@
 #include <stdexcept>
 #include <string>
 
-using namespace srf;
+using namespace mrc;
 using namespace internal::ucx;
 
 class TestUCX : public ::testing::Test

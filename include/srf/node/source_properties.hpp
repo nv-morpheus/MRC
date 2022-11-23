@@ -28,7 +28,7 @@
 #include <string>
 #include <typeindex>
 
-namespace srf::node {
+namespace mrc::node {
 
 /**
  * @brief Type erased base class for the formation of all edges to a source
@@ -103,4 +103,4 @@ class SourceProperties : public SourcePropertiesBase
         return std::string(type_name<T>());
     }
 };
-}  // namespace srf::node
+}  // namespace mrc::node

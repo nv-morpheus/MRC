@@ -22,7 +22,7 @@
 #include "srf/node/rx_subscribable.hpp"
 #include "srf/runnable/runnable.hpp"
 
-namespace srf::node {
+namespace mrc::node {
 
 template <typename ContextT>
 class RxRunnable : public runnable::RunnableWithContext<ContextT>, public RxSubscribable
@@ -106,4 +106,4 @@ void RxRunnable<ContextT>::on_state_update(const state_t& state)
     }
 }
 
-}  // namespace srf::node
+}  // namespace mrc::node

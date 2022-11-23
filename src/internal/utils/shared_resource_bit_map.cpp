@@ -22,7 +22,7 @@
 #include <cstdint>  // for uint32_t
 #include <utility>  // for pair
 
-namespace srf {
+namespace mrc {
 
 void SharedResourceBitMap::insert(const Bitmap& bitmap, const std::uint32_t& object_id)
 {
@@ -60,4 +60,4 @@ const std::map<std::uint32_t, Bitmap>& SharedResourceBitMap::map() const
 {
     return m_map;
 }
-}  // namespace srf
+}  // namespace mrc

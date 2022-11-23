@@ -27,7 +27,7 @@
 #include <type_traits>
 #include <typeindex>
 
-namespace srf::codable {
+namespace mrc::codable {
 
 template <typename T>
 struct codable_protocol<T, std::enable_if_t<std::is_fundamental_v<T>>>
@@ -83,4 +83,4 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, std::string>>>
     }
 };
 
-}  // namespace srf::codable
+}  // namespace mrc::codable

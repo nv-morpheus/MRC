@@ -28,7 +28,7 @@
 #include <memory>
 #include <string>
 
-namespace srf {
+namespace mrc {
 
 class Options
 {
@@ -73,4 +73,4 @@ class Options
     std::string m_config_request{"*:1:*"};
 };
 
-}  // namespace srf
+}  // namespace mrc

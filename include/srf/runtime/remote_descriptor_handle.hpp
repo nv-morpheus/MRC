@@ -19,11 +19,11 @@
 
 #include "srf/codable/api.hpp"
 
-namespace srf::codable::protos {
+namespace mrc::codable::protos {
 class RemoteDescriptor;
 }
 
-namespace srf::runtime {
+namespace mrc::runtime {
 
 /**
  * @brief An IDecodableStorage object that owns the object encoding, backing instance_id, and reference counting tokens,
@@ -36,7 +36,7 @@ struct IRemoteDescriptorHandle : public virtual codable::IDecodableStorage
 {
     ~IRemoteDescriptorHandle() override = default;
 
-    virtual const srf::codable::protos::RemoteDescriptor& remote_descriptor_proto() const = 0;
+    virtual const mrc::codable::protos::RemoteDescriptor& remote_descriptor_proto() const = 0;
 };
 
-}  // namespace srf::runtime
+}  // namespace mrc::runtime

@@ -22,7 +22,7 @@
 
 #include <cstddef>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 #pragma GCC visibility push(default)
 struct Deserializer
 {
@@ -44,4 +44,4 @@ struct Deserializer
     static pybind11::object load_from_shared_memory(pybind11::object descriptor);
 };
 #pragma GCC visibility pop
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

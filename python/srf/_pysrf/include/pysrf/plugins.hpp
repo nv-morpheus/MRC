@@ -22,17 +22,17 @@
 #include <memory>
 #include <string>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
-// Export everything in the srf::pysrf namespace by default since we compile with -fvisibility=hidden
+// Export everything in the mrc::pysrf namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
 
 class PluginProxy
 {
   public:
-    static std::shared_ptr<srf::modules::PluginModule> create_or_acquire(const std::string& plugin_library_name);
+    static std::shared_ptr<mrc::modules::PluginModule> create_or_acquire(const std::string& plugin_library_name);
 };
 
 #pragma GCC visibility pop
 
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

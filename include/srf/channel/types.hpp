@@ -19,10 +19,10 @@
 
 #include <chrono>
 
-namespace srf::channel {
+namespace mrc::channel {
 
 using clock_t      = std::chrono::high_resolution_clock;
 using duration_t   = std::chrono::nanoseconds;
 using time_point_t = std::chrono::time_point<clock_t, duration_t>;
 
-}  // namespace srf::channel
+}  // namespace mrc::channel

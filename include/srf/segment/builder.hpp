@@ -64,12 +64,12 @@ namespace hana = boost::hana;
 template <typename T>
 auto has_source_add_watcher =
     hana::is_valid([](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).source_add_watcher(
-                                        std::declval<std::shared_ptr<srf::WatcherInterface>>())) {});
+                                        std::declval<std::shared_ptr<mrc::WatcherInterface>>())) {});
 
 template <typename T>
 auto has_sink_add_watcher =
     hana::is_valid([](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).sink_add_watcher(
-                                        std::declval<std::shared_ptr<srf::WatcherInterface>>())) {});
+                                        std::declval<std::shared_ptr<mrc::WatcherInterface>>())) {});
 
 template <typename T>
 void add_stats_watcher_if_rx_source(T& thing, std::string name)
@@ -77,7 +77,7 @@ void add_stats_watcher_if_rx_source(T& thing, std::string name)
     return hana::if_(
         has_source_add_watcher<T>(thing),
         [name](auto&& object) {
-            auto trace_stats = srf::benchmarking::TraceStatistics::get_or_create(name);
+            auto trace_stats = mrc::benchmarking::TraceStatistics::get_or_create(name);
             std::forward<decltype(object)>(object).source_add_watcher(trace_stats);
         },
         [name]([[maybe_unused]] auto&& object) {})(thing);
@@ -89,14 +89,14 @@ void add_stats_watcher_if_rx_sink(T& thing, std::string name)
     return hana::if_(
         has_sink_add_watcher<T>(thing),
         [name](auto&& object) {
-            auto trace_stats = srf::benchmarking::TraceStatistics::get_or_create(name);
+            auto trace_stats = mrc::benchmarking::TraceStatistics::get_or_create(name);
             std::forward<decltype(object)>(object).sink_add_watcher(trace_stats);
         },
         [name]([[maybe_unused]] auto&& object) {})(thing);
 }
 }  // namespace
 
-namespace srf::segment {
+namespace mrc::segment {
 
 class Builder final
 {
@@ -131,7 +131,7 @@ class Builder final
     }
 
     template <typename SourceTypeT,
-              template <class, class = srf::runnable::Context> class NodeTypeT = node::RxSource,
+              template <class, class = mrc::runnable::Context> class NodeTypeT = node::RxSource,
               typename CreateFnT>
     auto make_source(std::string name, CreateFnT&& create_fn)
     {
@@ -140,7 +140,7 @@ class Builder final
     }
 
     template <typename SinkTypeT,
-              template <class, class = srf::runnable::Context> class NodeTypeT = node::RxSink,
+              template <class, class = mrc::runnable::Context> class NodeTypeT = node::RxSink,
               typename... ArgsT>
     auto make_sink(std::string name, ArgsT&&... ops)
     {
@@ -149,7 +149,7 @@ class Builder final
     }
 
     template <typename SinkTypeT,
-              template <class, class, class = srf::runnable::Context> class NodeTypeT = node::RxNode,
+              template <class, class, class = mrc::runnable::Context> class NodeTypeT = node::RxNode,
               typename... ArgsT>
     auto make_node(std::string name, ArgsT&&... ops)
     {
@@ -158,7 +158,7 @@ class Builder final
 
     template <typename SinkTypeT,
               typename SourceTypeT,
-              template <class, class, class = srf::runnable::Context> class NodeTypeT = node::RxNode,
+              template <class, class, class = mrc::runnable::Context> class NodeTypeT = node::RxNode,
               typename... ArgsT>
     auto make_node(std::string name, ArgsT&&... ops)
     {
@@ -187,7 +187,7 @@ class Builder final
      * Initialize a SegmentModule that was instantiated outside of the builder.
      * @param module Module to initialize
      */
-    void init_module(std::shared_ptr<srf::modules::SegmentModule> module);
+    void init_module(std::shared_ptr<mrc::modules::SegmentModule> module);
 
     /**
      * Register an input port on the given module -- note: this in generally only necessary for dynamically
@@ -207,7 +207,7 @@ class Builder final
      */
     void register_module_output(std::string output_name, std::shared_ptr<segment::ObjectProperties> object);
 
-    std::shared_ptr<srf::modules::SegmentModule> load_module_from_registry(const std::string& module_id,
+    std::shared_ptr<mrc::modules::SegmentModule> load_module_from_registry(const std::string& module_id,
                                                                            const std::string& registry_namespace,
                                                                            std::string module_name,
                                                                            nlohmann::json config = {});
@@ -344,7 +344,7 @@ class Builder final
     }
 
   private:
-    using sp_segment_module_t = std::shared_ptr<srf::modules::SegmentModule>;
+    using sp_segment_module_t = std::shared_ptr<mrc::modules::SegmentModule>;
     using sp_obj_prop_t       = std::shared_ptr<segment::ObjectProperties>;
 
     std::string m_namespace_prefix;
@@ -427,4 +427,4 @@ std::shared_ptr<Object<node::SourceProperties<T>>> Builder::get_ingress(std::str
     return port;
 }
 
-}  // namespace srf::segment
+}  // namespace mrc::segment

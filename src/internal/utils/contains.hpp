@@ -19,7 +19,7 @@
 
 #include <iterator>
 
-namespace srf {
+namespace mrc {
 
 template <typename Container, typename Key>
 bool contains(const Container& container, const Key& key)
@@ -98,4 +98,4 @@ KeyIterator<C> end_keys(const C& c)
     return KeyIterator<C>(c.end());
 }
 
-}  // namespace srf
+}  // namespace mrc

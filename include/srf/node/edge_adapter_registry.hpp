@@ -23,16 +23,16 @@
 #include <mutex>
 #include <typeindex>
 
-namespace srf::channel {
+namespace mrc::channel {
 struct IngressHandle;
 }
 
-namespace srf::node {
+namespace mrc::node {
 class SinkPropertiesBase;
 class SourcePropertiesBase;
-}  // namespace srf::node
+}  // namespace mrc::node
 
-namespace srf::node {
+namespace mrc::node {
 
 /**
  * @brief EdgeAdaptorRegistry used for the registry of adapter routines which allow for customized runtime
@@ -46,10 +46,10 @@ struct EdgeAdapterRegistry
 {
     // Function to create the adapter function
     using source_adapter_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(
-        srf::node::SourcePropertiesBase&, srf::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle>)>;
+        mrc::node::SourcePropertiesBase&, mrc::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle>)>;
 
     using sink_adapter_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(
-        std::type_index, srf::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle>)>;
+        std::type_index, mrc::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle>)>;
 
     EdgeAdapterRegistry() = delete;
 
@@ -82,4 +82,4 @@ struct EdgeAdapterRegistry
 
     static std::recursive_mutex s_mutex;
 };
-}  // namespace srf::node
+}  // namespace mrc::node

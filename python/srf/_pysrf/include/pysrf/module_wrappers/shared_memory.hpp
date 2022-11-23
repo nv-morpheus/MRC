@@ -23,7 +23,7 @@
 
 #include <cstddef>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 /**
  * @brief Wrapper around the multiprocess.shared_memory class
  **/
@@ -109,4 +109,4 @@ pybind11::object build_shmem_descriptor(const PythonSharedMemoryInterface& shmem
                                         bool flag_is_shared = false);
 
 #pragma GCC visibility pop
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

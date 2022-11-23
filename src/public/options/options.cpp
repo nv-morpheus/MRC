@@ -28,7 +28,7 @@
 
 #include <utility>  // for move
 
-namespace srf {
+namespace mrc {
 
 Options::Options() :
   m_engine_groups(std::make_unique<EngineGroups>()),
@@ -145,4 +145,4 @@ void Options::server_port(std::uint16_t port)
 {
     m_server_port = port;
 }
-}  // namespace srf
+}  // namespace mrc

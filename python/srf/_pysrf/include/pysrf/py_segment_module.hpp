@@ -27,11 +27,11 @@
 #include <functional>
 #include <string>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 
 class ModuleRegistryProxy;
 
-// Export everything in the srf::pysrf namespace by default since we compile with -fvisibility=hidden
+// Export everything in the mrc::pysrf namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
 
 /**
@@ -39,13 +39,13 @@ class ModuleRegistryProxy;
  * This is accomplished by allowing the builder to set m_py_initialize, and subsequently calling it in the overridden
  * `initialize` method.
  */
-class PythonSegmentModule : public srf::modules::SegmentModule
+class PythonSegmentModule : public mrc::modules::SegmentModule
 {
     using type_t = PythonSegmentModule;
     friend ModuleRegistryProxy;
 
   public:
-    using py_initializer_t = std::function<void(srf::segment::Builder&)>;
+    using py_initializer_t = std::function<void(mrc::segment::Builder&)>;
 
     PythonSegmentModule(std::string module_name);
     PythonSegmentModule(std::string module_name, nlohmann::json config);
@@ -57,6 +57,6 @@ class PythonSegmentModule : public srf::modules::SegmentModule
   private:
     py_initializer_t m_py_initialize{};
 };
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf
 
 #pragma GCC visibility pop

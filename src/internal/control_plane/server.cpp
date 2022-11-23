@@ -43,7 +43,7 @@
 #include <utility>
 #include <vector>
 
-namespace srf::internal::control_plane {
+namespace mrc::internal::control_plane {
 
 template <typename T>
 static Expected<T> unpack_request(Server::event_t& event)
@@ -69,7 +69,7 @@ static Expected<> unary_response(Server::event_t& event, Expected<MessageT>&& me
         error.set_message(message.error().message());
         return unary_response<protos::Error>(event, std::move(error));
     }
-    srf::protos::Event out;
+    mrc::protos::Event out;
     out.set_tag(event.msg.tag());
     out.set_event(protos::EventType::Response);
     out.mutable_message()->PackFrom(*message);
@@ -85,7 +85,7 @@ Server::Server(runnable::Resources& runnable) : m_runnable(runnable), m_server(m
 void Server::do_service_start()
 {
     // node to accept connections
-    auto acceptor = std::make_unique<srf::node::RxSource<stream_t>>(
+    auto acceptor = std::make_unique<mrc::node::RxSource<stream_t>>(
         rxcpp::observable<>::create<stream_t>([this](rxcpp::subscriber<stream_t>& s) { do_accept_stream(s); }));
 
     // node to periodically issue updates
@@ -93,22 +93,22 @@ void Server::do_service_start()
     // create external queue for incoming events
     // as new grpc streams are initialized by the acceptor, they attach as sources to the queue (stream >> queue)
     // these streams issue event (event_t) object which encapsulate the stream_writer for the originating stream
-    m_queue = std::make_unique<srf::node::Queue<event_t>>();
+    m_queue = std::make_unique<mrc::node::Queue<event_t>>();
     m_queue->enable_persistence();
 
     // the queue is attached to the event handler which will update the internal state of the server
     auto handler =
-        std::make_unique<srf::node::RxSink<event_t>>([this](event_t event) { do_handle_event(std::move(event)); });
+        std::make_unique<mrc::node::RxSink<event_t>>([this](event_t event) { do_handle_event(std::move(event)); });
 
     // node to periodically issue update of the server state to connected clients via the grpc bidi streams
-    auto updater = std::make_unique<srf::node::RxSource<void*>>(
+    auto updater = std::make_unique<mrc::node::RxSource<void*>>(
         rxcpp::observable<>::create<void*>([this](rxcpp::subscriber<void*>& s) { do_issue_update(s); }));
 
     // edge: queue >> handler
-    srf::node::make_edge(*m_queue, *handler);
+    mrc::node::make_edge(*m_queue, *handler);
 
     // grpc service
-    m_service = std::make_shared<srf::protos::Architect::AsyncService>();
+    m_service = std::make_shared<mrc::protos::Architect::AsyncService>();
 
     // bring up the grpc server and the progress engine
     m_server.register_service(m_service);
@@ -116,7 +116,7 @@ void Server::do_service_start()
 
     // start the handler
     // if required, this is the runnable which most users would want to increase the level of concurrency
-    // srf::runnable::LaunchOptions options;
+    // mrc::runnable::LaunchOptions options;
     // options.engine_factory_name = "default";
     // options.pe_count = N;       // number of thread/cores
     // options.engines_per_pe = M; // number of fibers/user-threads per thread/core
@@ -194,7 +194,7 @@ void Server::do_service_await_join()
  * creates a single stream and waits for it to get initialized, then creates another. The current implementation is
  * unbounded an upper bound could be added.
  *
- * This method works well for the requirements of the SRF control plane where the number of connections is relatively
+ * This method works well for the requirements of the MRC control plane where the number of connections is relatively
  * small and the duration of the connection is long.
  */
 void Server::do_accept_stream(rxcpp::subscriber<stream_t>& s)
@@ -202,7 +202,7 @@ void Server::do_accept_stream(rxcpp::subscriber<stream_t>& s)
     auto cq = m_server.get_cq();
 
     auto request_fn = [this, cq](grpc::ServerContext* context,
-                                 grpc::ServerAsyncReaderWriter<srf::protos::Event, srf::protos::Event>* stream,
+                                 grpc::ServerAsyncReaderWriter<mrc::protos::Event, mrc::protos::Event>* stream,
                                  void* tag) {
         m_service->RequestEventStream(context, stream, cq.get(), cq.get(), tag);
     };
@@ -631,4 +631,4 @@ Expected<decltype(Server::m_subscription_services)::const_iterator> Server::get_
     return search;
 }
 
-}  // namespace srf::internal::control_plane
+}  // namespace mrc::internal::control_plane

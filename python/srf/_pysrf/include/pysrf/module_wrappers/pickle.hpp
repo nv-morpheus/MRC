@@ -21,7 +21,7 @@
 
 #include <pybind11/pytypes.h>
 
-namespace srf::pysrf {
+namespace mrc::pysrf {
 #pragma GCC visibility push(default)
 /****** PythonPickleInterface****************************************/
 /**
@@ -44,4 +44,4 @@ class PythonPickleInterface
     pybind11::function m_func_dumps{};
 };
 #pragma GCC visibility pop
-}  // namespace srf::pysrf
+}  // namespace mrc::pysrf

@@ -32,7 +32,7 @@
 #include <memory>
 #include <string>
 
-namespace srf::internal::control_plane::client {
+namespace mrc::internal::control_plane::client {
 
 class ISubscriptionServiceUpdater;
 
@@ -42,7 +42,7 @@ class Instance final : private resources::PartitionResourceBase, private Service
     Instance(Client& client,
              InstanceID instance_id,
              resources::PartitionResourceBase& base,
-             srf::node::SourceChannel<const protos::StateUpdate>& update_channel);
+             mrc::node::SourceChannel<const protos::StateUpdate>& update_channel);
     ~Instance() final;
 
     Client& client();
@@ -70,9 +70,9 @@ class Instance final : private resources::PartitionResourceBase, private Service
     const InstanceID m_instance_id;
     Promise<void> m_shutdown_promise;
     std::multimap<std::string, std::shared_ptr<ISubscriptionServiceUpdater>> m_subscription_services;
-    std::unique_ptr<srf::runnable::Runner> m_update_handler;
+    std::unique_ptr<mrc::runnable::Runner> m_update_handler;
 
     friend network::Resources;
 };
 
-}  // namespace srf::internal::control_plane::client
+}  // namespace mrc::internal::control_plane::client

@@ -22,7 +22,7 @@
 #include "srf/node/forward.hpp"
 #include "srf/node/sink_channel_base.hpp"
 
-namespace srf::node {
+namespace mrc::node {
 
 template <typename T>
 class Queue : public SinkChannelBase<T>, public SinkProperties<T>, public ChannelProvider<T>
@@ -45,4 +45,4 @@ class Queue : public SinkChannelBase<T>, public SinkProperties<T>, public Channe
     }
 };
 
-}  // namespace srf::node
+}  // namespace mrc::node

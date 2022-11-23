@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-#include <srf_qs_hybrid/data_object.hpp>
-
 #include <glog/logging.h>
 #include <pybind11/pybind11.h>
 #include <pysrf/node.hpp>
@@ -24,15 +22,16 @@
 #include <srf/segment/builder.hpp>
 #include <srf/segment/object.hpp>
 #include <srf/utils/string_utils.hpp>
+#include <srf_qs_hybrid/data_object.hpp>
 
 #include <memory>
 #include <sstream>
 #include <utility>
 
-namespace srf::quickstart::hybrid::ex01_wrap_nodes {
+namespace mrc::quickstart::hybrid::ex01_wrap_nodes {
 namespace py = pybind11;
 
-class MyDataObjectSource : public srf::pysrf::PythonSource<std::shared_ptr<common::DataObject>>
+class MyDataObjectSource : public mrc::pysrf::PythonSource<std::shared_ptr<common::DataObject>>
 {
   public:
     MyDataObjectSource(size_t count) : PythonSource(build()), m_count(count) {}
@@ -57,9 +56,9 @@ class MyDataObjectSource : public srf::pysrf::PythonSource<std::shared_ptr<commo
 };
 
 class MyDataObjectNode
-  : public srf::pysrf::PythonNode<std::shared_ptr<common::DataObject>, std::shared_ptr<common::DataObject>>
+  : public mrc::pysrf::PythonNode<std::shared_ptr<common::DataObject>, std::shared_ptr<common::DataObject>>
 {
-    using base_t = srf::pysrf::PythonNode<std::shared_ptr<common::DataObject>, std::shared_ptr<common::DataObject>>;
+    using base_t = mrc::pysrf::PythonNode<std::shared_ptr<common::DataObject>, std::shared_ptr<common::DataObject>>;
 
   public:
     MyDataObjectNode() : PythonNode(base_t::op_factory_from_sub_fn(build())) {}
@@ -82,7 +81,7 @@ class MyDataObjectNode
     size_t m_count;
 };
 
-class MyDataObjectSink : public srf::pysrf::PythonSink<std::shared_ptr<common::DataObject>>
+class MyDataObjectSink : public mrc::pysrf::PythonSink<std::shared_ptr<common::DataObject>>
 {
   public:
     MyDataObjectSink() : PythonSink(build_on_next(), build_on_complete()) {}
@@ -92,7 +91,7 @@ class MyDataObjectSink : public srf::pysrf::PythonSink<std::shared_ptr<common::D
     {
         return [this](sink_type_t x) {
             // Log the received value
-            LOG(INFO) << srf::runnable::Context::get_runtime_context().info() << " Got value: " << x->to_string();
+            LOG(INFO) << mrc::runnable::Context::get_runtime_context().info() << " Got value: " << x->to_string();
         };
     }
 
@@ -100,7 +99,7 @@ class MyDataObjectSink : public srf::pysrf::PythonSink<std::shared_ptr<common::D
     {
         return [this]() {
             // Log that we are completed
-            LOG(INFO) << srf::runnable::Context::get_runtime_context().info() << " Completed";
+            LOG(INFO) << mrc::runnable::Context::get_runtime_context().info() << " Completed";
         };
     }
 };
@@ -116,13 +115,13 @@ PYBIND11_MODULE(nodes, m)
         )pbdoc";
 
     // Required for SegmentObject
-    srf::pysrf::import(m, "srf.core.node");
+    mrc::pysrf::import(m, "srf.core.node");
 
-    py::class_<srf::segment::Object<MyDataObjectSource>,
-               srf::segment::ObjectProperties,
-               std::shared_ptr<srf::segment::Object<MyDataObjectSource>>>(
+    py::class_<mrc::segment::Object<MyDataObjectSource>,
+               mrc::segment::ObjectProperties,
+               std::shared_ptr<mrc::segment::Object<MyDataObjectSource>>>(
         m, "MyDataObjectSource", py::multiple_inheritance())
-        .def(py::init<>([](srf::segment::Builder& parent, const std::string& name, size_t count) {
+        .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name, size_t count) {
                  auto stage = parent.construct_object<MyDataObjectSource>(name, count);
 
                  return stage;
@@ -131,11 +130,11 @@ PYBIND11_MODULE(nodes, m)
              py::arg("name"),
              py::arg("count"));
 
-    py::class_<srf::segment::Object<MyDataObjectNode>,
-               srf::segment::ObjectProperties,
-               std::shared_ptr<srf::segment::Object<MyDataObjectNode>>>(
+    py::class_<mrc::segment::Object<MyDataObjectNode>,
+               mrc::segment::ObjectProperties,
+               std::shared_ptr<mrc::segment::Object<MyDataObjectNode>>>(
         m, "MyDataObjectNode", py::multiple_inheritance())
-        .def(py::init<>([](srf::segment::Builder& parent, const std::string& name) {
+        .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name) {
                  auto stage = parent.construct_object<MyDataObjectNode>(name);
 
                  return stage;
@@ -143,11 +142,11 @@ PYBIND11_MODULE(nodes, m)
              py::arg("parent"),
              py::arg("name"));
 
-    py::class_<srf::segment::Object<MyDataObjectSink>,
-               srf::segment::ObjectProperties,
-               std::shared_ptr<srf::segment::Object<MyDataObjectSink>>>(
+    py::class_<mrc::segment::Object<MyDataObjectSink>,
+               mrc::segment::ObjectProperties,
+               std::shared_ptr<mrc::segment::Object<MyDataObjectSink>>>(
         m, "MyDataObjectSink", py::multiple_inheritance())
-        .def(py::init<>([](srf::segment::Builder& parent, const std::string& name) {
+        .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name) {
                  auto stage = parent.construct_object<MyDataObjectSink>(name);
 
                  return stage;
@@ -161,4 +160,5 @@ PYBIND11_MODULE(nodes, m)
     m.attr("__version__") = "dev";
 #endif
 }
-}  // namespace srf::quickstart::hybrid::ex01_wrap_nodes
+}  // namespace mrc::quickstart::hybrid::ex01_wrap_nodes
+namespace mrc

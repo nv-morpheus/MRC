@@ -26,7 +26,7 @@
 #include <cstddef>  // for size_t
 #include <type_traits>
 
-namespace srf::memory {
+namespace mrc::memory {
 
 template <typename PointerT>
 class adaptor : public memory_resource
@@ -106,4 +106,4 @@ auto make_unique_resource(PointerT upstream, Args&&... args)
     return std::make_unique<Resource<PointerT>>(std::move(upstream), std::forward<Args>(args)...);
 }
 
-}  // namespace srf::memory
+}  // namespace mrc::memory

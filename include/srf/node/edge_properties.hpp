@@ -22,7 +22,7 @@
 
 #include <memory>
 
-namespace srf::node {
+namespace mrc::node {
 
 // If:
 // - SourceChannel<T> is an IngressAcceptor
@@ -61,4 +61,4 @@ class ChannelAcceptor
     friend EdgeBuilder;
 };
 
-}  // namespace srf::node
+}  // namespace mrc::node
