@@ -19,8 +19,8 @@
 
 #include "internal/grpc/stream_writer.hpp"
 
-#include "srf/protos/architect.pb.h"
-#include "srf/utils/macros.hpp"
+#include "mrc/protos/architect.pb.h"
+#include "mrc/utils/macros.hpp"
 
 #include <string>
 

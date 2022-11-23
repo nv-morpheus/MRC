@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#include "srf/memory/memory_kind.hpp"
-#include "srf/protos/codable.pb.h"
+#include "mrc/memory/memory_kind.hpp"
+#include "mrc/protos/codable.pb.h"
 
 #include <glog/logging.h>
 

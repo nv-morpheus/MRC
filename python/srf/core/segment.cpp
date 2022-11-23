@@ -23,14 +23,14 @@
 #include "pysrf/types.hpp"
 #include "pysrf/utils.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/modules/segment_modules.hpp"
-#include "srf/node/edge_connector.hpp"
-#include "srf/segment/builder.hpp"
-#include "srf/segment/definition.hpp"
-#include "srf/segment/object.hpp"  // IWYU pragma: keep
-#include "srf/utils/string_utils.hpp"
-#include "srf/version.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/modules/segment_modules.hpp"
+#include "mrc/node/edge_connector.hpp"
+#include "mrc/segment/builder.hpp"
+#include "mrc/segment/definition.hpp"
+#include "mrc/segment/object.hpp"  // IWYU pragma: keep
+#include "mrc/utils/string_utils.hpp"
+#include "mrc/version.hpp"
 
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>

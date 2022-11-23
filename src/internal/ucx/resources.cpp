@@ -24,9 +24,9 @@
 #include "internal/ucx/endpoint.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include "srf/core/task_queue.hpp"
-#include "srf/cuda/common.hpp"
-#include "srf/types.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/cuda/common.hpp"
+#include "mrc/types.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <cuda_runtime.h>

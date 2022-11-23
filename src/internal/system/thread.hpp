@@ -21,7 +21,7 @@
 #include "internal/system/system_provider.hpp"
 #include "internal/system/topology.hpp"
 
-#include "srf/core/bitmap.hpp"
+#include "mrc/core/bitmap.hpp"
 
 #include <glog/logging.h>
 

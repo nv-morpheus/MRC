@@ -21,14 +21,14 @@
 #include "internal/pubsub/base.hpp"
 #include "internal/runtime/partition.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/node/operators/unique_operator.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/pubsub/api.hpp"
-#include "srf/runnable/runner.hpp"
-#include "srf/runtime/remote_descriptor.hpp"
-#include "srf/types.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/node/operators/unique_operator.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/pubsub/api.hpp"
+#include "mrc/runnable/runner.hpp"
+#include "mrc/runtime/remote_descriptor.hpp"
+#include "mrc/types.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <cstdint>
 #include <memory>

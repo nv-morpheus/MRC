@@ -20,10 +20,10 @@
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 
-#include "srf/codable/api.hpp"
-#include "srf/pubsub/api.hpp"
-#include "srf/runtime/api.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/codable/api.hpp"
+#include "mrc/pubsub/api.hpp"
+#include "mrc/runtime/api.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <memory>
 #include <string>

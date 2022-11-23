@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-#include "srf/engine/segment/ibuilder.hpp"
+#include "mrc/engine/segment/ibuilder.hpp"
 
 #include "internal/segment/builder.hpp"
 
-#include "srf/segment/object.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <glog/logging.h>
 

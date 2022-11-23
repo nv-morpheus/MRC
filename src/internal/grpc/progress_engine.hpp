@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "srf/channel/status.hpp"
-#include "srf/node/generic_source.hpp"
-#include "srf/runnable/context.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/node/generic_source.hpp"
+#include "mrc/runnable/context.hpp"
 
 #include <grpcpp/completion_queue.h>
 #include <rxcpp/rx.hpp>

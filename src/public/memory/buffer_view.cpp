@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include "srf/memory/buffer_view.hpp"
+#include "mrc/memory/buffer_view.hpp"
 
-#include "srf/memory/memory_kind.hpp"
+#include "mrc/memory/memory_kind.hpp"
 
 namespace mrc::memory {
 

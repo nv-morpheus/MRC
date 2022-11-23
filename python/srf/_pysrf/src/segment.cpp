@@ -21,17 +21,17 @@
 #include "pysrf/types.hpp"
 #include "pysrf/utils.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/core/utils.hpp"
-#include "srf/manifold/egress.hpp"
-#include "srf/modules/segment_modules.hpp"
-#include "srf/node/edge_builder.hpp"
-#include "srf/node/port_registry.hpp"
-#include "srf/node/sink_properties.hpp"
-#include "srf/node/source_properties.hpp"
-#include "srf/runnable/context.hpp"
-#include "srf/segment/builder.hpp"
-#include "srf/segment/object.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/core/utils.hpp"
+#include "mrc/manifold/egress.hpp"
+#include "mrc/modules/segment_modules.hpp"
+#include "mrc/node/edge_builder.hpp"
+#include "mrc/node/port_registry.hpp"
+#include "mrc/node/sink_properties.hpp"
+#include "mrc/node/source_properties.hpp"
+#include "mrc/runnable/context.hpp"
+#include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>

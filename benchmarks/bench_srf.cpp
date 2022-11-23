@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include "srf/channel/status.hpp"
-#include "srf/data/reusable_pool.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/data/reusable_pool.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <benchmark/benchmark.h>
 

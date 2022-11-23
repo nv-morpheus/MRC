@@ -20,7 +20,7 @@
 #include "internal/pipeline/instance.hpp"
 #include "internal/pipeline/types.hpp"
 
-#include "srf/node/generic_sink.hpp"
+#include "mrc/node/generic_sink.hpp"
 
 #include <memory>
 #include <string>

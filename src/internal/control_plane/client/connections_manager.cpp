@@ -25,8 +25,8 @@
 #include "internal/ucx/worker.hpp"
 #include "internal/utils/contains.hpp"
 
-#include "srf/core/task_queue.hpp"
-#include "srf/protos/architect.pb.h"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/protos/architect.pb.h"
 
 #include <ext/alloc_traits.h>
 #include <glog/logging.h>

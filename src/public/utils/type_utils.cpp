@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include "srf/utils/type_utils.hpp"
+#include "mrc/utils/type_utils.hpp"
 
-#include "srf/utils/string_utils.hpp"
+#include "mrc/utils/string_utils.hpp"
 
 #include <glog/logging.h>
 

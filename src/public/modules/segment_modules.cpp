@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-#include "srf/modules/segment_modules.hpp"
+#include "mrc/modules/segment_modules.hpp"
 
-#include "srf/node/sink_properties.hpp"
-#include "srf/node/source_properties.hpp"
+#include "mrc/node/sink_properties.hpp"
+#include "mrc/node/source_properties.hpp"
 
 #include <algorithm>
 #include <ostream>

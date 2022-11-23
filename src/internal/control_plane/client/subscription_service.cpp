@@ -23,7 +23,7 @@
 #include "internal/service.hpp"
 #include "internal/utils/contains.hpp"
 
-#include "srf/protos/architect.pb.h"
+#include "mrc/protos/architect.pb.h"
 
 #include <glog/logging.h>
 

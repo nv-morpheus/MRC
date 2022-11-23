@@ -26,19 +26,19 @@
 #include "internal/ucx/resources.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include "srf/channel/buffered_channel.hpp"
-#include "srf/channel/channel.hpp"
-#include "srf/codable/protobuf_message.hpp"  // IWYU pragma: keep
-#include "srf/memory/literals.hpp"
-#include "srf/node/edge_builder.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/protos/codable.pb.h"
-#include "srf/runnable/launch_control.hpp"
-#include "srf/runnable/launcher.hpp"
-#include "srf/runnable/runner.hpp"
-#include "srf/runtime/remote_descriptor_handle.hpp"
-#include "srf/types.hpp"
+#include "mrc/channel/buffered_channel.hpp"
+#include "mrc/channel/channel.hpp"
+#include "mrc/codable/protobuf_message.hpp"  // IWYU pragma: keep
+#include "mrc/memory/literals.hpp"
+#include "mrc/node/edge_builder.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/protos/codable.pb.h"
+#include "mrc/runnable/launch_control.hpp"
+#include "mrc/runnable/launcher.hpp"
+#include "mrc/runnable/runner.hpp"
+#include "mrc/runtime/remote_descriptor_handle.hpp"
+#include "mrc/types.hpp"
 
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>

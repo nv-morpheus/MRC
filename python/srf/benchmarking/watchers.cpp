@@ -20,7 +20,7 @@
 #include "pysrf/executor.hpp"  // IWYU pragma: keep
 #include "pysrf/segment.hpp"
 
-#include "srf/segment/builder.hpp"  // IWYU pragma: keep
+#include "mrc/segment/builder.hpp"  // IWYU pragma: keep
 
 #include <pybind11/attr.h>
 #include <pybind11/gil.h>

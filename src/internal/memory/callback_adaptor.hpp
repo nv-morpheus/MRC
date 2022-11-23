@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "srf/memory/adaptors.hpp"
+#include "mrc/memory/adaptors.hpp"
 
 #include <atomic>
 

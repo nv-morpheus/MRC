@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "srf/core/bitmap.hpp"
+#include "mrc/core/bitmap.hpp"
 
 #include <cstddef>  // for size_t
 #include <cstdint>  // for uint32_t

@@ -20,10 +20,10 @@
 #include "pysrf/pipeline.hpp"
 #include "pysrf/system.hpp"
 
-#include "srf/core/executor.hpp"
-#include "srf/engine/pipeline/ipipeline.hpp"
-#include "srf/options/options.hpp"
-#include "srf/types.hpp"  // for Future, SharedFuture
+#include "mrc/core/executor.hpp"
+#include "mrc/engine/pipeline/ipipeline.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/types.hpp"  // for Future, SharedFuture
 
 #include <boost/fiber/future/async.hpp>
 #include <boost/fiber/future/future.hpp>         // for task_base<>::ptr_type, future

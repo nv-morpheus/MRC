@@ -19,7 +19,7 @@
 
 #include "internal/grpc/progress_engine.hpp"
 
-#include "srf/node/generic_sink.hpp"
+#include "mrc/node/generic_sink.hpp"
 
 #include <boost/fiber/all.hpp>
 

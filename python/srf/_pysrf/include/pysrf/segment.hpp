@@ -19,9 +19,9 @@
 
 #include "pysrf/types.hpp"
 
-#include "srf/modules/segment_modules.hpp"
-#include "srf/segment/forward.hpp"
-#include "srf/segment/object.hpp"
+#include "mrc/modules/segment_modules.hpp"
+#include "mrc/segment/forward.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/pytypes.h>

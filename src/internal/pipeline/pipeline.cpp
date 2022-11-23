@@ -19,9 +19,9 @@
 
 #include "internal/segment/definition.hpp"
 
-#include "srf/engine/pipeline/ipipeline.hpp"
-#include "srf/exceptions/runtime_error.hpp"
-#include "srf/types.hpp"
+#include "mrc/engine/pipeline/ipipeline.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/types.hpp"
 
 #include <glog/logging.h>
 

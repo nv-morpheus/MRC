@@ -19,10 +19,10 @@
 
 #include "internal/system/gpu_info.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/options/topology.hpp"
-#include "srf/protos/architect.pb.h"
-#include "srf/utils/macros.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/options/topology.hpp"
+#include "mrc/protos/architect.pb.h"
+#include "mrc/utils/macros.hpp"
 
 #include <glog/logging.h>
 #include <hwloc.h>

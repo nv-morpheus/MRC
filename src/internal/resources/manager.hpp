@@ -27,8 +27,8 @@
 #include "internal/system/system_provider.hpp"
 #include "internal/ucx/resources.hpp"
 
-#include "srf/core/task_queue.hpp"
-#include "srf/types.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/types.hpp"
 
 #include <boost/fiber/future/future.hpp>
 

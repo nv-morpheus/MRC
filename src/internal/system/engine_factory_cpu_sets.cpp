@@ -19,11 +19,11 @@
 
 #include "internal/system/topology.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/exceptions/runtime_error.hpp"
-#include "srf/options/engine_groups.hpp"
-#include "srf/options/options.hpp"
-#include "srf/runnable/types.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/options/engine_groups.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/runnable/types.hpp"
 
 #include <glog/logging.h>
 #include <hwloc.h>

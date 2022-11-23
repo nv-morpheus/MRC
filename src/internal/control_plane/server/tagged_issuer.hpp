@@ -20,8 +20,8 @@
 #include "internal/control_plane/server/client_instance.hpp"
 #include "internal/control_plane/server/update_issuer.hpp"
 
-#include "srf/types.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/types.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <cstddef>
 #include <cstdint>

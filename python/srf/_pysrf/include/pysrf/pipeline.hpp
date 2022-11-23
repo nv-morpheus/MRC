@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "srf/pipeline/pipeline.hpp"      // IWYU pragma: keep
-#include "srf/segment/builder.hpp"        // IWYU pragma: keep
-#include "srf/segment/ingress_ports.hpp"  // IWYU pragma: keep
+#include "mrc/pipeline/pipeline.hpp"      // IWYU pragma: keep
+#include "mrc/segment/builder.hpp"        // IWYU pragma: keep
+#include "mrc/segment/ingress_ports.hpp"  // IWYU pragma: keep
 
 #include <pybind11/pytypes.h>
 

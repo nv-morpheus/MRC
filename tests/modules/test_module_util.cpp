@@ -17,9 +17,9 @@
 
 #include "test_modules.hpp"
 
-#include "srf/modules/module_registry_util.hpp"
-#include "srf/modules/sample_modules.hpp"
-#include "srf/version.hpp"
+#include "mrc/modules/module_registry_util.hpp"
+#include "mrc/modules/sample_modules.hpp"
+#include "mrc/version.hpp"
 
 TEST_F(TestModuleUtil, ModuleRegistryUtilTest)
 {

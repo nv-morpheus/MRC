@@ -17,16 +17,16 @@
 
 #include "test_srf.hpp"  // IWYU pragma: associated
 
-#include "srf/channel/status.hpp"
-#include "srf/core/addresses.hpp"
-#include "srf/core/executor.hpp"
-#include "srf/node/rx_subscribable.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/placement.hpp"
-#include "srf/options/topology.hpp"
-#include "srf/pipeline/pipeline.hpp"
-#include "srf/segment/builder.hpp"
-#include "srf/types.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/core/addresses.hpp"
+#include "mrc/core/executor.hpp"
+#include "mrc/node/rx_subscribable.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/placement.hpp"
+#include "mrc/options/topology.hpp"
+#include "mrc/pipeline/pipeline.hpp"
+#include "mrc/segment/builder.hpp"
+#include "mrc/types.hpp"
 
 #include <gtest/gtest-param-test.h>
 #include <gtest/gtest.h>

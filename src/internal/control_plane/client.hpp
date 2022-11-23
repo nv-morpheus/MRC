@@ -28,14 +28,14 @@
 #include "internal/service.hpp"
 #include "internal/ucx/resources.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/protos/architect.grpc.pb.h"
-#include "srf/protos/architect.pb.h"
-#include "srf/runnable/launch_options.hpp"
-#include "srf/runnable/runner.hpp"
-#include "srf/types.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/protos/architect.grpc.pb.h"
+#include "mrc/protos/architect.pb.h"
+#include "mrc/runnable/launch_options.hpp"
+#include "mrc/runnable/runner.hpp"
+#include "mrc/types.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>

@@ -28,23 +28,23 @@ add_library(srf_test_protos)
 protobuf_generate_grpc_cpp(srf_protos
   HDRS srf_protos-headers
   PROTOS
-  srf/protos/codable.proto
-  srf/protos/remote_descriptor.proto
-  srf/protos/tensor_meta_data.proto
+  mrc/protos/codable.proto
+  mrc/protos/remote_descriptor.proto
+  mrc/protos/tensor_meta_data.proto
 )
 
 protobuf_generate_grpc_cpp(srf_architect_protos
   GEN_GRPC
   HDRS srf_architect_protos-headers
   PROTOS
-  srf/protos/architect.proto
+  mrc/protos/architect.proto
 )
 
 protobuf_generate_grpc_cpp(srf_test_protos
   GEN_GRPC
   HDRS srf_test_protos-headers
   PROTOS
-  srf/protos/test.proto
+  mrc/protos/test.proto
 )
 
 # Create a custom target just for the generated headers which is necessary for style checks without build

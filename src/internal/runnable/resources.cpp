@@ -22,10 +22,10 @@
 #include "internal/system/engine_factory_cpu_sets.hpp"
 #include "internal/system/host_partition.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/runnable/launch_control_config.hpp"
-#include "srf/runnable/types.hpp"
-#include "srf/types.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/runnable/launch_control_config.hpp"
+#include "mrc/runnable/types.hpp"
+#include "mrc/types.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>

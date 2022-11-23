@@ -20,7 +20,7 @@
 #include "internal/resources/manager.hpp"
 #include "internal/runtime/partition.hpp"
 
-#include "srf/runtime/api.hpp"
+#include "mrc/runtime/api.hpp"
 
 #include <cstddef>
 #include <memory>

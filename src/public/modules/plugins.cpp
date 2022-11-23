@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "srf/modules/plugins.hpp"
+#include "mrc/modules/plugins.hpp"
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>

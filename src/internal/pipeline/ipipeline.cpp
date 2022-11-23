@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-#include "srf/engine/pipeline/ipipeline.hpp"
+#include "mrc/engine/pipeline/ipipeline.hpp"
 
 #include "internal/pipeline/pipeline.hpp"
 
-#include "srf/engine/segment/idefinition.hpp"
+#include "mrc/engine/segment/idefinition.hpp"
 
 #include <glog/logging.h>
 

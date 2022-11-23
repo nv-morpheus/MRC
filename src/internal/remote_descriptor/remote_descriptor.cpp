@@ -20,8 +20,8 @@
 // #include "internal/remote_descriptor/manager.hpp"
 // #include "internal/resources/partition_resources.hpp"
 
-// #include "srf/codable/api.hpp"
-// #include "srf/protos/codable.pb.h"
+// #include "mrc/codable/api.hpp"
+// #include "mrc/protos/codable.pb.h"
 
 namespace mrc::internal::remote_descriptor {
 

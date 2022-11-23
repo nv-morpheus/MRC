@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include "srf/options/resources.hpp"
+#include "mrc/options/resources.hpp"
 
-#include "srf/memory/literals.hpp"
+#include "mrc/memory/literals.hpp"
 
 namespace mrc {
 

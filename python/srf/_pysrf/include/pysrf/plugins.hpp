@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "srf/modules/plugins.hpp"
+#include "mrc/modules/plugins.hpp"
 
 #include <memory>
 #include <string>

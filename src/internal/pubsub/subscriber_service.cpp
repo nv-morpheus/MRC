@@ -28,13 +28,13 @@
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 
-#include "srf/node/edge_builder.hpp"
-#include "srf/node/operators/router.hpp"
-#include "srf/node/rx_node.hpp"
-#include "srf/protos/codable.pb.h"
-#include "srf/runnable/launch_control.hpp"
-#include "srf/runnable/launcher.hpp"
-#include "srf/utils/bytes_to_string.hpp"
+#include "mrc/node/edge_builder.hpp"
+#include "mrc/node/operators/router.hpp"
+#include "mrc/node/rx_node.hpp"
+#include "mrc/protos/codable.pb.h"
+#include "mrc/runnable/launch_control.hpp"
+#include "mrc/runnable/launcher.hpp"
+#include "mrc/utils/bytes_to_string.hpp"
 
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>

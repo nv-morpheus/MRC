@@ -21,7 +21,7 @@
 #include "internal/runtime/partition.hpp"
 #include "internal/ucx/endpoint.hpp"
 
-#include "srf/runtime/remote_descriptor.hpp"
+#include "mrc/runtime/remote_descriptor.hpp"
 
 #include <cstdint>
 #include <memory>

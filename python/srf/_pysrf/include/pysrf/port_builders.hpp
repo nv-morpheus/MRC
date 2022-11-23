@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "srf/node/port_registry.hpp"
-#include "srf/segment/egress_port.hpp"
-#include "srf/segment/ingress_port.hpp"
-#include "srf/segment/object.hpp"
+#include "mrc/node/port_registry.hpp"
+#include "mrc/segment/egress_port.hpp"
+#include "mrc/segment/ingress_port.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <type_traits>
 #include <typeinfo>

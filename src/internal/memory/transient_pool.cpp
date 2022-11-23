@@ -17,7 +17,7 @@
 
 #include "internal/memory/transient_pool.hpp"
 
-#include "srf/memory/resources/memory_resource.hpp"
+#include "mrc/memory/resources/memory_resource.hpp"
 
 #include <ostream>
 

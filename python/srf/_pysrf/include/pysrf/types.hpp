@@ -19,7 +19,7 @@
 
 #include "pysrf/utils.hpp"
 
-#include "srf/segment/object.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <rxcpp/rx.hpp>  // IWYU pragma: keep
 

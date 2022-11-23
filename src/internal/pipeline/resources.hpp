@@ -19,7 +19,7 @@
 
 #include "internal/resources/manager.hpp"
 
-#include "srf/metrics/registry.hpp"
+#include "mrc/metrics/registry.hpp"
 
 #include <memory>
 

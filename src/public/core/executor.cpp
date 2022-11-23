@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-#include "srf/core/executor.hpp"
+#include "mrc/core/executor.hpp"
 
-#include "srf/engine/executor/iexecutor.hpp"
-#include "srf/engine/system/iresources.hpp"
-#include "srf/options/options.hpp"
+#include "mrc/engine/executor/iexecutor.hpp"
+#include "mrc/engine/system/iresources.hpp"
+#include "mrc/options/options.hpp"
 
 #include <utility>  // for move
 

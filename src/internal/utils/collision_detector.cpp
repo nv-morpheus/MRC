@@ -17,8 +17,8 @@
 
 #include "internal/utils/collision_detector.hpp"
 
-#include "srf/core/addresses.hpp"
-#include "srf/exceptions/runtime_error.hpp"
+#include "mrc/core/addresses.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
 
 #include <glog/logging.h>
 

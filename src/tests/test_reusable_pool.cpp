@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "srf/data/reusable_pool.hpp"
+#include "mrc/data/reusable_pool.hpp"
 
 #include <gtest/gtest.h>
 

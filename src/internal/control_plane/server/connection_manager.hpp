@@ -23,8 +23,8 @@
 #include "internal/grpc/server_streaming.hpp"
 #include "internal/grpc/stream_writer.hpp"
 
-#include "srf/protos/architect.pb.h"
-#include "srf/types.hpp"
+#include "mrc/protos/architect.pb.h"
+#include "mrc/types.hpp"
 
 #include <cstddef>
 #include <map>

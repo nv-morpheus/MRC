@@ -16,7 +16,7 @@
  */
 #pragma once
 
-#include "srf/channel/ingress.hpp"
+#include "mrc/channel/ingress.hpp"
 
 namespace mrc::internal::rpc {
 

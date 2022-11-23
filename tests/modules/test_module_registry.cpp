@@ -17,10 +17,10 @@
 
 #include "test_modules.hpp"
 
-#include "srf/modules/module_registry.hpp"
-#include "srf/modules/plugins.hpp"
-#include "srf/modules/sample_modules.hpp"
-#include "srf/version.hpp"
+#include "mrc/modules/module_registry.hpp"
+#include "mrc/modules/plugins.hpp"
+#include "mrc/modules/sample_modules.hpp"
+#include "mrc/version.hpp"
 
 #include <boost/filesystem.hpp>
 #include <dlfcn.h>

@@ -17,12 +17,12 @@
 
 #include "../nodes/common_nodes.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/rx_source.hpp"
-#include "srf/segment/builder.hpp"
-#include "srf/segment/definition.hpp"
-#include "srf/segment/object.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_source.hpp"
+#include "mrc/segment/builder.hpp"
+#include "mrc/segment/definition.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <rxcpp/rx.hpp>
 

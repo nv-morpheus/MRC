@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "srf/core/logging.hpp"
+#include "mrc/core/logging.hpp"
 
 #include <gtest/gtest.h>
 

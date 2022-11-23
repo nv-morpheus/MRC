@@ -20,7 +20,7 @@
 #include "pysrf/py_segment_module.hpp"
 #include "pysrf/utils.hpp"
 
-#include "srf/modules/module_registry.hpp"
+#include "mrc/modules/module_registry.hpp"
 
 #include <glog/logging.h>
 #include <nlohmann/json.hpp>

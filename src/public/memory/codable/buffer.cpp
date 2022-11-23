@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-#include "srf/memory/codable/buffer.hpp"
+#include "mrc/memory/codable/buffer.hpp"
 
-#include "srf/codable/decode.hpp"
-#include "srf/codable/encode.hpp"
-#include "srf/codable/encoding_options.hpp"
+#include "mrc/codable/decode.hpp"
+#include "mrc/codable/encode.hpp"
+#include "mrc/codable/encoding_options.hpp"
 
 #include <glog/logging.h>
 

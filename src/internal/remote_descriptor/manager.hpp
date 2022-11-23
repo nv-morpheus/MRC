@@ -23,16 +23,16 @@
 #include "internal/resources/partition_resources.hpp"
 #include "internal/service.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/codable/api.hpp"
-#include "srf/codable/encoded_object.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/protos/codable.pb.h"
-#include "srf/runnable/runner.hpp"
-#include "srf/runtime/remote_descriptor.hpp"
-#include "srf/runtime/remote_descriptor_handle.hpp"
-#include "srf/runtime/remote_descriptor_manager.hpp"
-#include "srf/types.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/codable/api.hpp"
+#include "mrc/codable/encoded_object.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/protos/codable.pb.h"
+#include "mrc/runnable/runner.hpp"
+#include "mrc/runtime/remote_descriptor.hpp"
+#include "mrc/runtime/remote_descriptor_handle.hpp"
+#include "mrc/runtime/remote_descriptor_manager.hpp"
+#include "mrc/types.hpp"
 
 #include <cstddef>
 #include <cstdint>

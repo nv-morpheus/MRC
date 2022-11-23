@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "srf/benchmarking/util.hpp"
+#include "mrc/benchmarking/util.hpp"
 
 #include <glog/logging.h>
 #include <nlohmann/json.hpp>

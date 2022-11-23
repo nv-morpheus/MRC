@@ -20,7 +20,7 @@
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/primitive.hpp"
 
-#include "srf/types.hpp"
+#include "mrc/types.hpp"
 
 #include <ucp/api/ucp_def.h>
 

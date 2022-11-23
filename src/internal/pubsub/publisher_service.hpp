@@ -21,15 +21,15 @@
 #include "internal/runtime/partition.hpp"
 #include "internal/ucx/endpoint.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/codable/api.hpp"
-#include "srf/codable/encoded_object.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/pubsub/api.hpp"
-#include "srf/runnable/runner.hpp"
-#include "srf/runtime/remote_descriptor.hpp"
-#include "srf/types.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/codable/api.hpp"
+#include "mrc/codable/encoded_object.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/pubsub/api.hpp"
+#include "mrc/runnable/runner.hpp"
+#include "mrc/runtime/remote_descriptor.hpp"
+#include "mrc/types.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <cstdint>
 #include <memory>

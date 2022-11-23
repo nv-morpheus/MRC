@@ -20,14 +20,14 @@
 #include "pysrf/executor.hpp"
 #include "pysrf/pipeline.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/node/rx_node.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/rx_source.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/topology.hpp"
-#include "srf/segment/builder.hpp"
-#include "srf/segment/object.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/node/rx_node.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_source.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/topology.hpp"
+#include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <boost/hana/if.hpp>
 #include <gtest/gtest.h>     // IWYU pragma: keep

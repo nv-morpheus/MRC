@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-#include "srf/runtime/remote_descriptor.hpp"
+#include "mrc/runtime/remote_descriptor.hpp"
 
-#include "srf/runtime/remote_descriptor_handle.hpp"
-#include "srf/runtime/remote_descriptor_manager.hpp"
+#include "mrc/runtime/remote_descriptor_handle.hpp"
+#include "mrc/runtime/remote_descriptor_manager.hpp"
 
 #include <utility>
 

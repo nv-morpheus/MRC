@@ -23,7 +23,7 @@
 #include "internal/ucx/resources.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include "srf/memory/literals.hpp"
+#include "mrc/memory/literals.hpp"
 
 namespace mrc::internal::data_plane {
 

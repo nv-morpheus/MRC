@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "srf/node/port_registry.hpp"
+#include "mrc/node/port_registry.hpp"
 
 #include <glog/logging.h>
 

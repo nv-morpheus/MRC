@@ -20,17 +20,17 @@
 #include "pysrf/port_builders.hpp"
 #include "pysrf/utils.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/core/utils.hpp"
-#include "srf/manifold/egress.hpp"
-#include "srf/node/edge_connector.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/sink_properties.hpp"
-#include "srf/node/source_properties.hpp"
-#include "srf/segment/builder.hpp"
-#include "srf/segment/object.hpp"
-#include "srf/utils/string_utils.hpp"
-#include "srf/version.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/core/utils.hpp"
+#include "mrc/manifold/egress.hpp"
+#include "mrc/node/edge_connector.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/sink_properties.hpp"
+#include "mrc/node/source_properties.hpp"
+#include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
+#include "mrc/utils/string_utils.hpp"
+#include "mrc/version.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <pybind11/cast.h>

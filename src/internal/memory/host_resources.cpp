@@ -21,17 +21,17 @@
 #include "internal/system/host_partition.hpp"
 #include "internal/system/system.hpp"
 
-#include "srf/core/task_queue.hpp"
-#include "srf/memory/adaptors.hpp"
-#include "srf/memory/resources/arena_resource.hpp"
-#include "srf/memory/resources/host/malloc_memory_resource.hpp"
-#include "srf/memory/resources/host/pinned_memory_resource.hpp"
-#include "srf/memory/resources/logging_resource.hpp"
-#include "srf/memory/resources/memory_resource.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/resources.hpp"
-#include "srf/types.hpp"
-#include "srf/utils/bytes_to_string.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/memory/adaptors.hpp"
+#include "mrc/memory/resources/arena_resource.hpp"
+#include "mrc/memory/resources/host/malloc_memory_resource.hpp"
+#include "mrc/memory/resources/host/pinned_memory_resource.hpp"
+#include "mrc/memory/resources/logging_resource.hpp"
+#include "mrc/memory/resources/memory_resource.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/resources.hpp"
+#include "mrc/types.hpp"
+#include "mrc/utils/bytes_to_string.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>

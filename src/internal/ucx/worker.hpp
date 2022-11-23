@@ -22,7 +22,7 @@
 #include "internal/ucx/endpoint.hpp"
 #include "internal/ucx/primitive.hpp"
 
-#include "srf/types.hpp"
+#include "mrc/types.hpp"
 
 #include <ucp/api/ucp_def.h>  // for ucp_worker_h, ucp_address_t
 

@@ -19,7 +19,7 @@
 
 #include "../test_segment.hpp"
 
-#include "srf/pipeline/pipeline.hpp"
+#include "mrc/pipeline/pipeline.hpp"
 
 #include <random>
 

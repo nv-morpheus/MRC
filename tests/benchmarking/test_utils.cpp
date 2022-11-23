@@ -18,8 +18,8 @@
 #include "test_benchmarking.hpp"
 #include "test_stat_gather.hpp"
 
-#include "srf/benchmarking/trace_statistics.hpp"
-#include "srf/benchmarking/util.hpp"
+#include "mrc/benchmarking/trace_statistics.hpp"
+#include "mrc/benchmarking/util.hpp"
 
 #include <nlohmann/json.hpp>
 #include <prometheus/registry.h>

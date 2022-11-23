@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "srf/codable/api.hpp"
-#include "srf/codable/encoded_object.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/codable/api.hpp"
+#include "mrc/codable/encoded_object.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <cstddef>
 #include <cstdint>

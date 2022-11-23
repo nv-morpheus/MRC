@@ -19,8 +19,8 @@
 
 #include "internal/utils/contains.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/protos/architect.pb.h"
+#include "mrc/channel/status.hpp"
+#include "mrc/protos/architect.pb.h"
 
 #include <glog/logging.h>
 #include <google/protobuf/any.pb.h>

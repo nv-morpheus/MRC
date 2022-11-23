@@ -17,7 +17,7 @@
 
 #include "./test_srf.hpp"  // IWYU pragma: associated
 
-#include "srf/utils/type_utils.hpp"
+#include "mrc/utils/type_utils.hpp"
 
 #include <gtest/gtest.h>  // for EXPECT_EQ
 

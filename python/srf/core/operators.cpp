@@ -19,8 +19,8 @@
 
 #include "pysrf/utils.hpp"
 
-#include "srf/utils/string_utils.hpp"
-#include "srf/version.hpp"
+#include "mrc/utils/string_utils.hpp"
+#include "mrc/version.hpp"
 
 #include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/pybind11.h>

@@ -72,15 +72,19 @@ IncludeCategories:
   # 1 - source relative files `#include "./some_header.hpp"` (Grouped with 2)
   # 2 - source relative files starting with internal/public `#include "internal/some_header.hpp"`
   # 3 - Python MRC public API files `#include "pysrf/srf_header.hpp"`
-  # 4 - MRC public API files `#include "srf/srf_header.hpp"`
+  # 4 - MRC public API files `#include "mrc/srf_header.hpp"`
   # 5 - NVRPC public API files `#include "nvrpc/some_header.hpp"`
   # 6 - External installed libraries `#include <external_lib/some_header.hpp>`
   # 7 - System includes `#include <string>`
   # First match any Python MRC public API headers with quotes
   - Regex:           '^"pysrf\/.*\.(h|hpp)"'
     Priority:        3
+  - Regex:           '^"pymrc\/.*\.(h|hpp)"'
+    Priority:        3
   # Next match any MRC public API headers with quotes
   - Regex:           '^"srf\/.*\.(h|hpp)"'
+    Priority:        4
+  - Regex:           '^"mrc\/.*\.(h|hpp)"'
     Priority:        4
   # Next match public NVRPC headers with quotes
   - Regex:           '^<nvrpc\/.*\.(h|hpp)>'

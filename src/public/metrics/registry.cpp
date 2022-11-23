@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include "srf/metrics/registry.hpp"
+#include "mrc/metrics/registry.hpp"
 
-#include "srf/metrics/counter.hpp"
+#include "mrc/metrics/counter.hpp"
 
 #include <glog/logging.h>
 #include <prometheus/client_metric.h>

@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include "srf/data/reusable_pool.hpp"
-#include "srf/memory/literals.hpp"
-#include "srf/node/generic_source.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/rx_source.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/data/reusable_pool.hpp"
+#include "mrc/memory/literals.hpp"
+#include "mrc/node/generic_source.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_source.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>

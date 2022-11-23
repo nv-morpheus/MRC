@@ -17,10 +17,10 @@
 
 #include "internal/segment/definition.hpp"
 
-#include "srf/core/addresses.hpp"
-#include "srf/engine/segment/idefinition.hpp"
-#include "srf/exceptions/runtime_error.hpp"
-#include "srf/types.hpp"
+#include "mrc/core/addresses.hpp"
+#include "mrc/engine/segment/idefinition.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/types.hpp"
 
 #include <cstdint>
 #include <set>

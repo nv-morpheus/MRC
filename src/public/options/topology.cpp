@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include "srf/options/topology.hpp"
+#include "mrc/options/topology.hpp"
 
-#include "srf/core/bitmap.hpp"  // for CpuSet
+#include "mrc/core/bitmap.hpp"  // for CpuSet
 
 #include <utility>  // for move
 

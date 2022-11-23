@@ -26,20 +26,20 @@
 #include "internal/system/system_provider.hpp"
 #include "internal/ucx/registration_cache.hpp"
 
-#include "srf/codable/api.hpp"
-#include "srf/codable/codable_protocol.hpp"
-#include "srf/codable/decode.hpp"
-#include "srf/codable/encode.hpp"
-#include "srf/codable/encoding_options.hpp"
-#include "srf/codable/fundamental_types.hpp"  // IWYU pragma: keep
-#include "srf/codable/protobuf_message.hpp"   // IWYU pragma: keep
-#include "srf/codable/type_traits.hpp"
-#include "srf/core/bitmap.hpp"
-#include "srf/memory/buffer.hpp"
-#include "srf/memory/codable/buffer.hpp"  // IWYU pragma: keep
-#include "srf/options/options.hpp"
-#include "srf/options/placement.hpp"
-#include "srf/protos/codable.pb.h"
+#include "mrc/codable/api.hpp"
+#include "mrc/codable/codable_protocol.hpp"
+#include "mrc/codable/decode.hpp"
+#include "mrc/codable/encode.hpp"
+#include "mrc/codable/encoding_options.hpp"
+#include "mrc/codable/fundamental_types.hpp"  // IWYU pragma: keep
+#include "mrc/codable/protobuf_message.hpp"   // IWYU pragma: keep
+#include "mrc/codable/type_traits.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/memory/buffer.hpp"
+#include "mrc/memory/codable/buffer.hpp"  // IWYU pragma: keep
+#include "mrc/options/options.hpp"
+#include "mrc/options/placement.hpp"
+#include "mrc/protos/codable.pb.h"
 
 #include <gtest/gtest.h>
 

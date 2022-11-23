@@ -23,8 +23,8 @@
 #include "internal/segment/instance.hpp"
 #include "internal/service.hpp"
 
-#include "srf/manifold/interface.hpp"
-#include "srf/types.hpp"
+#include "mrc/manifold/interface.hpp"
+#include "mrc/types.hpp"
 
 #include <cstdint>
 #include <map>

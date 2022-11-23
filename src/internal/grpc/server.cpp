@@ -21,10 +21,10 @@
 #include "internal/grpc/promise_handler.hpp"
 #include "internal/runnable/resources.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/node/edge_builder.hpp"
-#include "srf/runnable/launch_control.hpp"
-#include "srf/runnable/launcher.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/node/edge_builder.hpp"
+#include "mrc/runnable/launch_control.hpp"
+#include "mrc/runnable/launcher.hpp"
 
 #include <grpcpp/security/server_credentials.h>
 #include <rxcpp/rx.hpp>

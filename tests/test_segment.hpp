@@ -19,14 +19,14 @@
 
 #include "test_srf.hpp"  // IWYU pragma: keep
 
-#include "srf/core/executor.hpp"  // IWYU pragma: keep
-#include "srf/options/options.hpp"
-#include "srf/options/topology.hpp"
-#include "srf/pipeline/pipeline.hpp"
-#include "srf/segment/builder.hpp"  // IWYU pragma: keep
-#include "srf/segment/egress_ports.hpp"
-#include "srf/segment/ingress_ports.hpp"
-#include "srf/segment/segment.hpp"  // IWYU pragma: keep
+#include "mrc/core/executor.hpp"  // IWYU pragma: keep
+#include "mrc/options/options.hpp"
+#include "mrc/options/topology.hpp"
+#include "mrc/pipeline/pipeline.hpp"
+#include "mrc/segment/builder.hpp"  // IWYU pragma: keep
+#include "mrc/segment/egress_ports.hpp"
+#include "mrc/segment/ingress_ports.hpp"
+#include "mrc/segment/segment.hpp"  // IWYU pragma: keep
 
 #include <cstddef>
 #include <functional>

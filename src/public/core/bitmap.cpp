@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "srf/core/bitmap.hpp"
+#include "mrc/core/bitmap.hpp"
 
 #include "internal/utils/parse_ints.hpp"
 #include "internal/utils/ranges.hpp"

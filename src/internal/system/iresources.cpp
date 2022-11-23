@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-#include "srf/engine/system/iresources.hpp"
+#include "mrc/engine/system/iresources.hpp"
 
 #include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 #include "internal/system/topology.hpp"
 
-#include "srf/engine/system/isystem.hpp"
+#include "mrc/engine/system/isystem.hpp"
 
 #include <memory>
 #include <utility>

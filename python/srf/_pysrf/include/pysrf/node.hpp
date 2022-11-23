@@ -22,17 +22,17 @@
 #include "pysrf/types.hpp"
 #include "pysrf/utils.hpp"
 
-#include "srf/channel/ingress.hpp"
-#include "srf/channel/status.hpp"
-#include "srf/node/edge.hpp"
-#include "srf/node/edge_connector.hpp"
-#include "srf/node/forward.hpp"
-#include "srf/node/rx_node.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/rx_source.hpp"
-#include "srf/node/sink_properties.hpp"    // IWYU pragma: keep
-#include "srf/node/source_properties.hpp"  // IWYU pragma: keep
-#include "srf/runnable/context.hpp"
+#include "mrc/channel/ingress.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/node/edge.hpp"
+#include "mrc/node/edge_connector.hpp"
+#include "mrc/node/forward.hpp"
+#include "mrc/node/rx_node.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_source.hpp"
+#include "mrc/node/sink_properties.hpp"    // IWYU pragma: keep
+#include "mrc/node/source_properties.hpp"  // IWYU pragma: keep
+#include "mrc/runnable/context.hpp"
 
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>

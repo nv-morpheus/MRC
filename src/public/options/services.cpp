@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-#include "srf/options/services.hpp"
+#include "mrc/options/services.hpp"
 
-#include "srf/runnable/internal_service.hpp"
-#include "srf/runnable/launch_options.hpp"
+#include "mrc/runnable/internal_service.hpp"
+#include "mrc/runnable/launch_options.hpp"
 
 #include <utility>
 

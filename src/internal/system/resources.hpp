@@ -25,9 +25,9 @@
 #include "internal/system/thread.hpp"
 #include "internal/system/topology.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/engine/system/iresources.hpp"
-#include "srf/utils/thread_local_shared_pointer.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/engine/system/iresources.hpp"
+#include "mrc/utils/thread_local_shared_pointer.hpp"
 
 #include <glog/logging.h>
 

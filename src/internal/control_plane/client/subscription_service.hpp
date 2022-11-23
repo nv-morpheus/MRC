@@ -19,10 +19,10 @@
 
 #include "internal/service.hpp"
 
-#include "srf/control_plane/api.hpp"
-#include "srf/runnable/launch_options.hpp"
-#include "srf/types.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/control_plane/api.hpp"
+#include "mrc/runnable/launch_options.hpp"
+#include "mrc/types.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <boost/fiber/future/promise.hpp>
 

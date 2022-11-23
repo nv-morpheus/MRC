@@ -22,11 +22,11 @@
 #include "internal/resources/forward.hpp"
 #include "internal/ucx/forward.hpp"
 
-#include "srf/codable/api.hpp"
-#include "srf/memory/buffer.hpp"
-#include "srf/memory/buffer_view.hpp"
-#include "srf/protos/codable.pb.h"
-#include "srf/types.hpp"
+#include "mrc/codable/api.hpp"
+#include "mrc/memory/buffer.hpp"
+#include "mrc/memory/buffer_view.hpp"
+#include "mrc/protos/codable.pb.h"
+#include "mrc/types.hpp"
 
 #include <google/protobuf/message.h>
 

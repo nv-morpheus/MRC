@@ -23,13 +23,13 @@
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/node/edge_builder.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/runnable/launch_control.hpp"
-#include "srf/runnable/launch_options.hpp"
-#include "srf/runnable/launcher.hpp"
-#include "srf/runnable/runner.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/node/edge_builder.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/runnable/launch_control.hpp"
+#include "mrc/runnable/launch_options.hpp"
+#include "mrc/runnable/launcher.hpp"
+#include "mrc/runnable/runner.hpp"
 
 #include <glog/logging.h>
 

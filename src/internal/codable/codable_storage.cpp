@@ -25,12 +25,12 @@
 #include "internal/ucx/registration_cache.hpp"
 #include "internal/ucx/resources.hpp"
 
-#include "srf/codable/memory.hpp"
-#include "srf/cuda/common.hpp"
-#include "srf/memory/buffer_view.hpp"
-#include "srf/memory/literals.hpp"
-#include "srf/protos/codable.pb.h"
-#include "srf/types.hpp"
+#include "mrc/codable/memory.hpp"
+#include "mrc/cuda/common.hpp"
+#include "mrc/memory/buffer_view.hpp"
+#include "mrc/memory/literals.hpp"
+#include "mrc/protos/codable.pb.h"
+#include "mrc/types.hpp"
 
 #include <cuda_runtime.h>
 #include <glog/logging.h>

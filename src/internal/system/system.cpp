@@ -19,9 +19,9 @@
 
 #include "internal/system/partitions.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/engine/system/isystem.hpp"
-#include "srf/options/options.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/engine/system/isystem.hpp"
+#include "mrc/options/options.hpp"
 
 #include <glog/logging.h>
 #include <hwloc.h>

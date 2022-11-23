@@ -28,8 +28,8 @@
 #include "internal/ucx/registration_cache.hpp"
 #include "internal/ucx/resources.hpp"
 
-#include "srf/runnable/launch_options.hpp"
-#include "srf/types.hpp"
+#include "mrc/runnable/launch_options.hpp"
+#include "mrc/types.hpp"
 
 #include <cstddef>
 #include <string>

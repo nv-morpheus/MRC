@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include "srf/channel/channel.hpp"
+#include "mrc/channel/channel.hpp"
 
-#include "srf/constants.hpp"
+#include "mrc/constants.hpp"
 
 #include <cstddef>
 #include <stdexcept>

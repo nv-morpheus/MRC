@@ -20,12 +20,12 @@
 #include "internal/system/partitions.hpp"
 #include "internal/system/topology.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/options/engine_groups.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/placement.hpp"
-#include "srf/options/topology.hpp"
-#include "srf/runnable/types.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/options/engine_groups.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/placement.hpp"
+#include "mrc/options/topology.hpp"
+#include "mrc/runnable/types.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>

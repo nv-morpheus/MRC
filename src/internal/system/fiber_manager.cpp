@@ -22,10 +22,10 @@
 #include "internal/system/system.hpp"
 #include "internal/system/topology.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/exceptions/runtime_error.hpp"
-#include "srf/options/fiber_pool.hpp"
-#include "srf/options/options.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/options/fiber_pool.hpp"
+#include "mrc/options/options.hpp"
 
 #include <functional>
 #include <memory>

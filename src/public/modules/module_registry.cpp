@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include "srf/modules/module_registry.hpp"
+#include "mrc/modules/module_registry.hpp"
 
-#include "srf/version.hpp"
+#include "mrc/version.hpp"
 
 #include <glog/logging.h>
 

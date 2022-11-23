@@ -21,9 +21,9 @@
 #include "internal/system/host_partition_provider.hpp"
 #include "internal/system/resources.hpp"
 
-#include "srf/core/task_queue.hpp"
-#include "srf/pipeline/resources.hpp"
-#include "srf/runnable/launch_control.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/pipeline/resources.hpp"
+#include "mrc/runnable/launch_control.hpp"
 
 #include <cstddef>
 #include <memory>

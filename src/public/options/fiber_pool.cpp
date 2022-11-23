@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "srf/options/fiber_pool.hpp"
+#include "mrc/options/fiber_pool.hpp"
 
 namespace mrc {
 

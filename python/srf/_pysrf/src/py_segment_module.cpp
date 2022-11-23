@@ -17,7 +17,7 @@
 
 #include "pysrf/py_segment_module.hpp"
 
-#include "srf/core/utils.hpp"
+#include "mrc/core/utils.hpp"
 
 #include <glog/logging.h>
 

@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "srf/data/reusable_pool.hpp"
-#include "srf/memory/buffer.hpp"
-#include "srf/memory/resources/memory_resource.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/data/reusable_pool.hpp"
+#include "mrc/memory/buffer.hpp"
+#include "mrc/memory/resources/memory_resource.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <glog/logging.h>
 

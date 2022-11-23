@@ -17,7 +17,7 @@
 
 #include "pysrf/logging.hpp"
 
-#include "srf/core/logging.hpp"
+#include "mrc/core/logging.hpp"
 
 #include <glog/logging.h>  // needs to be included prior to log_severity
 

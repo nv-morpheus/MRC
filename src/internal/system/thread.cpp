@@ -21,10 +21,10 @@
 #include "internal/system/topology.hpp"
 #include "public/utils/thread_utils.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/options/fiber_pool.hpp"
-#include "srf/options/options.hpp"
-#include "srf/utils/string_utils.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/options/fiber_pool.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/utils/string_utils.hpp"
 
 #include <glog/logging.h>
 #include <hwloc.h>

@@ -15,18 +15,18 @@
  * limitations under the License.
  */
 
-#include "srf/modules/sample_modules.hpp"
+#include "mrc/modules/sample_modules.hpp"
 
 #include "rxcpp/operators/rx-map.hpp"
 #include "rxcpp/sources/rx-iterate.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/core/utils.hpp"
-#include "srf/modules/segment_modules.hpp"
-#include "srf/node/rx_node.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/rx_source.hpp"
-#include "srf/segment/object.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/core/utils.hpp"
+#include "mrc/modules/segment_modules.hpp"
+#include "mrc/node/rx_node.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_source.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <boost/hana/if.hpp>
 #include <glog/logging.h>

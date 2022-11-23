@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "srf/segment/definition.hpp"
+#include "mrc/segment/definition.hpp"
 
 namespace test::segments {
 

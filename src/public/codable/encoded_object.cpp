@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-#include "srf/codable/encoded_object.hpp"
+#include "mrc/codable/encoded_object.hpp"
 
-#include "srf/memory/buffer_view.hpp"
-#include "srf/memory/memory_kind.hpp"
-#include "srf/protos/codable.pb.h"
+#include "mrc/memory/buffer_view.hpp"
+#include "mrc/memory/memory_kind.hpp"
+#include "mrc/protos/codable.pb.h"
 
 #include <google/protobuf/any.pb.h>
 #include <google/protobuf/message.h>

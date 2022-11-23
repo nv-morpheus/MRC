@@ -20,9 +20,9 @@
 #include "pysrf/segment.hpp"
 #include "pysrf/utils.hpp"
 
-#include "srf/segment/builder.hpp"  // IWYU pragma: keep
-#include "srf/utils/string_utils.hpp"
-#include "srf/version.hpp"
+#include "mrc/segment/builder.hpp"  // IWYU pragma: keep
+#include "mrc/utils/string_utils.hpp"
+#include "mrc/version.hpp"
 
 #include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/pybind11.h>

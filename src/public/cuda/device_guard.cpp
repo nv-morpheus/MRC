@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include "srf/cuda/device_guard.hpp"
+#include "mrc/cuda/device_guard.hpp"
 
-#include "srf/cuda/common.hpp"
+#include "mrc/cuda/common.hpp"
 
 #include <cuda_runtime.h>
 #include <glog/logging.h>

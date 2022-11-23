@@ -22,8 +22,8 @@
 #include "internal/control_plane/server/versioned_issuer.hpp"
 #include "internal/expected.hpp"
 
-#include "srf/protos/architect.pb.h"
-#include "srf/types.hpp"
+#include "mrc/protos/architect.pb.h"
+#include "mrc/types.hpp"
 
 #include <cstdint>
 #include <map>

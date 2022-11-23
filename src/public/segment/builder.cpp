@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-#include "srf/segment/builder.hpp"
+#include "mrc/segment/builder.hpp"
 
-#include "srf/modules/module_registry.hpp"
-#include "srf/node/port_registry.hpp"
+#include "mrc/modules/module_registry.hpp"
+#include "mrc/node/port_registry.hpp"
 
 #include <nlohmann/json.hpp>
 

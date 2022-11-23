@@ -21,9 +21,9 @@
 #include "internal/codable/storage_view.hpp"
 #include "internal/resources/forward.hpp"
 
-#include "srf/protos/codable.pb.h"
-#include "srf/runtime/remote_descriptor_handle.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/protos/codable.pb.h"
+#include "mrc/runtime/remote_descriptor_handle.hpp"
+#include "mrc/utils/macros.hpp"
 
 namespace mrc::internal::remote_descriptor {
 

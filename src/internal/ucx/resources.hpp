@@ -26,9 +26,9 @@
 #include "internal/ucx/registration_resource.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include "srf/core/task_queue.hpp"
-#include "srf/memory/adaptors.hpp"
-#include "srf/runnable/launch_options.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/memory/adaptors.hpp"
+#include "mrc/runnable/launch_options.hpp"
 
 #include <cstdint>
 #include <memory>

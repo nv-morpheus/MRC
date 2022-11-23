@@ -21,11 +21,11 @@
 #include "pysrf/utilities/deserializers.hpp"
 #include "pysrf/utilities/serializers.hpp"
 
-#include "srf/codable/codable_protocol.hpp"
-#include "srf/codable/decode.hpp"
-#include "srf/codable/encode.hpp"
-#include "srf/codable/encoding_options.hpp"
-#include "srf/memory/memory_kind.hpp"
+#include "mrc/codable/codable_protocol.hpp"
+#include "mrc/codable/decode.hpp"
+#include "mrc/codable/encode.hpp"
+#include "mrc/codable/encoding_options.hpp"
+#include "mrc/memory/memory_kind.hpp"
 
 #include <Python.h>
 #include <glog/logging.h>

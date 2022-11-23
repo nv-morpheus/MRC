@@ -31,10 +31,10 @@
 #include "internal/ucx/registation_callback_builder.hpp"
 #include "internal/utils/contains.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/exceptions/runtime_error.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/placement.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/placement.hpp"
 
 #include <ext/alloc_traits.h>
 #include <glog/logging.h>

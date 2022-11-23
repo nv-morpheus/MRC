@@ -19,9 +19,9 @@
 
 #include "internal/ucx/registration_cache.hpp"
 
-#include "srf/cuda/common.hpp"
-#include "srf/cuda/device_guard.hpp"
-#include "srf/memory/adaptors.hpp"
+#include "mrc/cuda/common.hpp"
+#include "mrc/cuda/device_guard.hpp"
+#include "mrc/memory/adaptors.hpp"
 
 #include <memory>
 

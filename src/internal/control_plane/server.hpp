@@ -27,11 +27,11 @@
 #include "internal/runnable/resources.hpp"
 #include "internal/service.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/node/queue.hpp"
-#include "srf/protos/architect.grpc.pb.h"
-#include "srf/protos/architect.pb.h"
-#include "srf/runnable/runner.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/node/queue.hpp"
+#include "mrc/protos/architect.grpc.pb.h"
+#include "mrc/protos/architect.pb.h"
+#include "mrc/runnable/runner.hpp"
 
 #include <boost/fiber/condition_variable.hpp>
 #include <boost/fiber/mutex.hpp>

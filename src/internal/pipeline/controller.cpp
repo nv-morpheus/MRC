@@ -19,11 +19,11 @@
 
 #include "internal/pipeline/types.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/core/utils.hpp"
-#include "srf/runnable/context.hpp"
-#include "srf/segment/utils.hpp"
-#include "srf/types.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/core/utils.hpp"
+#include "mrc/runnable/context.hpp"
+#include "mrc/segment/utils.hpp"
+#include "mrc/types.hpp"
 
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>

@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "srf/core/bitmap.hpp"
-#include "srf/forward.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/forward.hpp"
 
 #include <cstdint>
 

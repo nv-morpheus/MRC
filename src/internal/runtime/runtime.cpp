@@ -20,7 +20,7 @@
 #include "internal/resources/manager.hpp"
 #include "internal/runtime/partition.hpp"
 
-#include "srf/types.hpp"
+#include "mrc/types.hpp"
 
 #include <glog/logging.h>
 

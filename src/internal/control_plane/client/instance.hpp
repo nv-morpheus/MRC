@@ -22,10 +22,10 @@
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
 
-#include "srf/node/source_channel.hpp"
-#include "srf/protos/architect.pb.h"
-#include "srf/runnable/runner.hpp"
-#include "srf/types.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/protos/architect.pb.h"
+#include "mrc/runnable/runner.hpp"
+#include "mrc/types.hpp"
 
 #include <cstdint>
 #include <map>

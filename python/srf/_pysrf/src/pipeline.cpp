@@ -20,12 +20,12 @@
 #include "pysrf/types.hpp"
 #include "pysrf/utils.hpp"
 
-#include "srf/node/forward.hpp"
-#include "srf/node/port_registry.hpp"
-#include "srf/segment/builder.hpp"  // IWYU pragma: keep
-#include "srf/segment/egress_ports.hpp"
-#include "srf/segment/ingress_ports.hpp"
-#include "srf/segment/ports.hpp"
+#include "mrc/node/forward.hpp"
+#include "mrc/node/port_registry.hpp"
+#include "mrc/segment/builder.hpp"  // IWYU pragma: keep
+#include "mrc/segment/egress_ports.hpp"
+#include "mrc/segment/ingress_ports.hpp"
+#include "mrc/segment/ports.hpp"
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>

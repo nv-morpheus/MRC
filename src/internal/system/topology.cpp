@@ -20,10 +20,10 @@
 #include "internal/system/device_info.hpp"
 #include "internal/utils/ranges.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/cuda/common.hpp"
-#include "srf/exceptions/runtime_error.hpp"
-#include "srf/options/topology.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/cuda/common.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/options/topology.hpp"
 
 #include <cuda_runtime.h>
 #include <glog/logging.h>

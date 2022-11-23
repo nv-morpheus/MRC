@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-#include "srf/segment/definition.hpp"
+#include "mrc/segment/definition.hpp"
 
-#include "srf/engine/segment/ibuilder.hpp"
-#include "srf/engine/segment/idefinition.hpp"
-#include "srf/segment/builder.hpp"
+#include "mrc/engine/segment/ibuilder.hpp"
+#include "mrc/engine/segment/idefinition.hpp"
+#include "mrc/segment/builder.hpp"
 
 namespace mrc::segment {
 

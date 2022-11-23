@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-#include "srf/options/options.hpp"
+#include "mrc/options/options.hpp"
 
-#include "srf/options/engine_groups.hpp"
-#include "srf/options/fiber_pool.hpp"
-#include "srf/options/placement.hpp"
-#include "srf/options/resources.hpp"
-#include "srf/options/services.hpp"
-#include "srf/options/topology.hpp"
+#include "mrc/options/engine_groups.hpp"
+#include "mrc/options/fiber_pool.hpp"
+#include "mrc/options/placement.hpp"
+#include "mrc/options/resources.hpp"
+#include "mrc/options/services.hpp"
+#include "mrc/options/topology.hpp"
 
 #include <glog/logging.h>
 

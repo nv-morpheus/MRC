@@ -21,9 +21,9 @@
 #include "internal/system/resources.hpp"
 #include "internal/system/thread.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/runnable/types.hpp"
-#include "srf/types.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/runnable/types.hpp"
+#include "mrc/types.hpp"
 
 #include <functional>
 #include <memory>

@@ -19,9 +19,9 @@
 
 #include "internal/system/thread.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/core/task_queue.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <boost/fiber/buffered_channel.hpp>
 

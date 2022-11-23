@@ -17,7 +17,7 @@
 
 #include "internal/system/gpu_info.hpp"
 
-#include "srf/core/bitmap.hpp"
+#include "mrc/core/bitmap.hpp"
 
 namespace mrc::internal::system {
 

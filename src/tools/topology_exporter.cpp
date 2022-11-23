@@ -18,9 +18,9 @@
 #include "internal/system/gpu_info.hpp"
 #include "internal/system/topology.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/options/options.hpp"
-#include "srf/protos/architect.pb.h"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/protos/architect.pb.h"
 
 #include <glog/logging.h>
 

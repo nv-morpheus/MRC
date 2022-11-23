@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-#include "srf/node/edge_builder.hpp"
+#include "mrc/node/edge_builder.hpp"
 
-#include "srf/channel/ingress.hpp"
-#include "srf/node/edge_adapter_registry.hpp"
-#include "srf/node/edge_registry.hpp"
-#include "srf/node/sink_properties.hpp"
-#include "srf/node/source_properties.hpp"
+#include "mrc/channel/ingress.hpp"
+#include "mrc/node/edge_adapter_registry.hpp"
+#include "mrc/node/edge_registry.hpp"
+#include "mrc/node/sink_properties.hpp"
+#include "mrc/node/source_properties.hpp"
 
 #include <glog/logging.h>
 

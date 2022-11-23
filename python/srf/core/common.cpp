@@ -19,13 +19,13 @@
 #include "pysrf/port_builders.hpp"
 #include "pysrf/types.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/core/utils.hpp"
-#include "srf/manifold/egress.hpp"
-#include "srf/node/sink_properties.hpp"
-#include "srf/node/source_properties.hpp"
-#include "srf/utils/string_utils.hpp"
-#include "srf/version.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/core/utils.hpp"
+#include "mrc/manifold/egress.hpp"
+#include "mrc/node/sink_properties.hpp"
+#include "mrc/node/source_properties.hpp"
+#include "mrc/utils/string_utils.hpp"
+#include "mrc/version.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <pybind11/pybind11.h>

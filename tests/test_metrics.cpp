@@ -17,8 +17,8 @@
 
 #include "./test_srf.hpp"  // IWYU pragma: associated
 
-#include "srf/metrics/counter.hpp"
-#include "srf/metrics/registry.hpp"
+#include "mrc/metrics/counter.hpp"
+#include "mrc/metrics/registry.hpp"
 
 #include <gtest/gtest.h>  // for AssertionResult, SuiteApiResolver, TestInfo, EXPECT_TRUE, Message, TEST_F, Test, TestFactoryImpl, TestPartResult
 

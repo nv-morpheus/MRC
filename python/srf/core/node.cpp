@@ -18,10 +18,10 @@
 #include "pysrf/types.hpp"
 #include "pysrf/utils.hpp"
 
-#include "srf/runnable/launch_options.hpp"
-#include "srf/segment/object.hpp"
-#include "srf/utils/string_utils.hpp"
-#include "srf/version.hpp"
+#include "mrc/runnable/launch_options.hpp"
+#include "mrc/segment/object.hpp"
+#include "mrc/utils/string_utils.hpp"
+#include "mrc/version.hpp"
 
 #include <pybind11/pybind11.h>  // IWYU pragma: keep
 

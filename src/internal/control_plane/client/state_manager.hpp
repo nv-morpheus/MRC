@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "srf/node/source_channel.hpp"
-#include "srf/protos/architect.pb.h"
-#include "srf/runnable/runner.hpp"
-#include "srf/types.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/protos/architect.pb.h"
+#include "mrc/runnable/runner.hpp"
+#include "mrc/types.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <cstddef>
 #include <memory>

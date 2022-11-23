@@ -22,15 +22,15 @@
 #include "internal/ucx/registration_cache.hpp"
 #include "internal/ucx/registration_resource.hpp"
 
-#include "srf/memory/adaptors.hpp"
-#include "srf/memory/buffer.hpp"
-#include "srf/memory/literals.hpp"
-#include "srf/memory/memory_kind.hpp"
-#include "srf/memory/resources/arena_resource.hpp"
-#include "srf/memory/resources/device/cuda_malloc_resource.hpp"
-#include "srf/memory/resources/host/malloc_memory_resource.hpp"
-#include "srf/memory/resources/host/pinned_memory_resource.hpp"
-#include "srf/memory/resources/logging_resource.hpp"
+#include "mrc/memory/adaptors.hpp"
+#include "mrc/memory/buffer.hpp"
+#include "mrc/memory/literals.hpp"
+#include "mrc/memory/memory_kind.hpp"
+#include "mrc/memory/resources/arena_resource.hpp"
+#include "mrc/memory/resources/device/cuda_malloc_resource.hpp"
+#include "mrc/memory/resources/host/malloc_memory_resource.hpp"
+#include "mrc/memory/resources/host/pinned_memory_resource.hpp"
+#include "mrc/memory/resources/logging_resource.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>

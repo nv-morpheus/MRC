@@ -19,9 +19,9 @@
 
 #include "internal/codable/storage_resources.hpp"
 
-#include "srf/codable/api.hpp"
-#include "srf/memory/buffer_view.hpp"
-#include "srf/memory/resources/memory_resource.hpp"
+#include "mrc/codable/api.hpp"
+#include "mrc/memory/buffer_view.hpp"
+#include "mrc/memory/resources/memory_resource.hpp"
 
 #include <cstddef>
 #include <memory>

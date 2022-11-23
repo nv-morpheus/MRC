@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-#include "srf/core/utils.hpp"
-#include "srf/modules/module_registry_util.hpp"
-#include "srf/modules/segment_modules.hpp"
-#include "srf/segment/builder.hpp"
-#include "srf/version.hpp"
+#include "mrc/core/utils.hpp"
+#include "mrc/modules/module_registry_util.hpp"
+#include "mrc/modules/segment_modules.hpp"
+#include "mrc/segment/builder.hpp"
+#include "mrc/version.hpp"
 
 #include <nlohmann/json.hpp>
 #include <rxcpp/rx-subscriber.hpp>

@@ -23,10 +23,10 @@
 #include "internal/system/topology.hpp"
 #include "internal/utils/shared_resource_bit_map.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/placement.hpp"
-#include "srf/utils/bytes_to_string.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/placement.hpp"
+#include "mrc/utils/bytes_to_string.hpp"
 
 #include <ext/alloc_traits.h>
 #include <glog/logging.h>

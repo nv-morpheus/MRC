@@ -18,8 +18,8 @@
 #include "internal/control_plane/server/client_instance.hpp"
 #include "internal/control_plane/server/tagged_issuer.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/types.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/types.hpp"
 
 #include <gtest/gtest.h>
 

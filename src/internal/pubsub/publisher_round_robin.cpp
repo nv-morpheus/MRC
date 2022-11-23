@@ -20,7 +20,7 @@
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 
-#include "srf/core/task_queue.hpp"
+#include "mrc/core/task_queue.hpp"
 
 #include <glog/logging.h>
 

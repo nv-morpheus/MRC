@@ -20,7 +20,7 @@
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include "srf/types.hpp"
+#include "mrc/types.hpp"
 
 #include <ucp/api/ucp_def.h>  // for ucp_tag_t, ucp_tag_message_h, ucp_tag_recv_info_t
 

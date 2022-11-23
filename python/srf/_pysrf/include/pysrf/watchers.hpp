@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "srf/benchmarking/segment_watcher.hpp"
-#include "srf/benchmarking/tracer.hpp"
+#include "mrc/benchmarking/segment_watcher.hpp"
+#include "mrc/benchmarking/tracer.hpp"
 
 #include <pybind11/pytypes.h>  // for object, dict
 

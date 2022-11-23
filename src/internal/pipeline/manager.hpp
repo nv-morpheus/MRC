@@ -22,9 +22,9 @@
 #include "internal/resources/manager.hpp"
 #include "internal/service.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/runnable/runner.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/runnable/runner.hpp"
 
 #include <memory>
 

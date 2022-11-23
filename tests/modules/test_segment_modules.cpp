@@ -17,13 +17,13 @@
 
 #include "test_modules.hpp"
 
-#include "srf/core/executor.hpp"
-#include "srf/engine/pipeline/ipipeline.hpp"
-#include "srf/modules/module_registry.hpp"
-#include "srf/modules/plugins.hpp"
-#include "srf/modules/sample_modules.hpp"
-#include "srf/options/options.hpp"
-#include "srf/segment/builder.hpp"
+#include "mrc/core/executor.hpp"
+#include "mrc/engine/pipeline/ipipeline.hpp"
+#include "mrc/modules/module_registry.hpp"
+#include "mrc/modules/plugins.hpp"
+#include "mrc/modules/sample_modules.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/segment/builder.hpp"
 
 #include <gtest/gtest-message.h>
 #include <gtest/gtest-test-part.h>

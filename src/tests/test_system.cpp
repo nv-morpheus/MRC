@@ -25,11 +25,11 @@
 #include "internal/system/thread_pool.hpp"
 #include "internal/system/topology.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/topology.hpp"
-#include "srf/types.hpp"
-#include "srf/utils/thread_local_shared_pointer.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/topology.hpp"
+#include "mrc/types.hpp"
+#include "mrc/utils/thread_local_shared_pointer.hpp"
 
 #include <boost/fiber/future/async.hpp>
 #include <boost/fiber/future/future.hpp>

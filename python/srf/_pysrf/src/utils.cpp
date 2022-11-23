@@ -17,7 +17,7 @@
 
 #include "pysrf/utils.hpp"
 
-#include "srf/exceptions/runtime_error.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
 
 #include <nlohmann/json.hpp>
 #include <pybind11/cast.h>

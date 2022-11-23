@@ -20,9 +20,9 @@
 #include "internal/system/partitions.hpp"
 #include "internal/system/topology.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/options/options.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <memory>
 #include <utility>

@@ -20,11 +20,11 @@
 // #include "internal/remote_descriptor/handle.hpp"
 // #include "internal/resources/forward.hpp"
 
-// #include "srf/codable/api.hpp"
-// #include "srf/protos/codable.pb.h"
-// #include "srf/runtime/remote_descriptor.hpp"
-// #include "srf/types.hpp"
-// #include "srf/utils/macros.hpp"
+// #include "mrc/codable/api.hpp"
+// #include "mrc/protos/codable.pb.h"
+// #include "mrc/runtime/remote_descriptor.hpp"
+// #include "mrc/types.hpp"
+// #include "mrc/utils/macros.hpp"
 
 // #include <memory>
 // #include <stdexcept>

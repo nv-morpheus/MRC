@@ -25,8 +25,8 @@
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/ucx/resources.hpp"
 
-#include "srf/core/task_queue.hpp"
-#include "srf/types.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/types.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>

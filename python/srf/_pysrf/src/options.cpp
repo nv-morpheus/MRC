@@ -17,13 +17,13 @@
 
 #include "pysrf/options.hpp"  // IWYU pragma: associated
 
-#include "srf/channel/channel.hpp"
-#include "srf/core/bitmap.hpp"
-#include "srf/options/engine_groups.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/placement.hpp"
-#include "srf/options/topology.hpp"
-#include "srf/runnable/types.hpp"
+#include "mrc/channel/channel.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/options/engine_groups.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/placement.hpp"
+#include "mrc/options/topology.hpp"
+#include "mrc/runnable/types.hpp"
 
 #include <pybind11/pybind11.h>  // IWYU pragma: keep
 #include <pybind11/pytypes.h>
