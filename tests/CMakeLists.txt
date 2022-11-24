@@ -31,8 +31,8 @@ add_executable(test_srf
 
 target_link_libraries(test_srf
   PRIVATE
-    ${PROJECT_NAME}::libsrf
-    GTest::gtest
+  ${PROJECT_NAME}::libmrc
+  GTest::gtest
 )
 
 add_test(

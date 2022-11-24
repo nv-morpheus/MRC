@@ -9,9 +9,9 @@ The MRC Quick Start Guide (QSG) provides Python, C++, and Hybrid (Python and C++
 - [Environment Setup](#environment-setup)
   - [Installing Examples via Conda](#installing-examples-via-conda)
   - [Installing Examples via Source](#installing-examples-via-source)
-- [Python MRC Examples](#python-srf-examples)
-- [C++ MRC Examples](#c-srf-examples)
-- [Hybrid (Python and C++) MRC Examples](#hybrid-python-and-c-srf-examples)
+- [Python MRC Examples](#python-mrc-examples)
+- [C++ MRC Examples](#c-mrc-examples)
+- [Hybrid (Python and C++) MRC Examples](#hybrid-python-and-c-mrc-examples)
 
 
 ## Environment Setup
@@ -20,15 +20,15 @@ To get started with the Quick Start Guide, it is necessary to install the requir
 
 ### Installing Examples via Conda
 
-If you've alredy followed the MRC library installation instructions in the [main project README](../../README.md#installation), you've most likely already created a Conda environment from which either `srf` (Python) or `libsrf` (C++) was installed. In this case, you can install the QSG dependencies and build the examples with:
+If you've alredy followed the MRC library installation instructions in the [main project README](../../README.md#installation), you've most likely already created a Conda environment from which either `mrc` (Python) or `libmrc` (C++) was installed. In this case, you can install the QSG dependencies and build the examples with:
 
 ```bash
 # Change directory to the quickstart root
 cd ${SRF_HOME}/docs/quickstart/
 
-# Update the existing MRC conda environment. Here, we assume the environment is named `srf`, but you can change this to the environment name you used, if different
-conda env update -n srf -f environment_cpp.yml
-conda activate srf
+# Update the existing MRC conda environment. Here, we assume the environment is named `mrc`, but you can change this to the environment name you used, if different
+conda env update -n mrc -f environment_cpp.yml
+conda activate mrc
 
 # Build the QSG including the C++ examples
 ./compile.sh
@@ -42,9 +42,9 @@ If you haven't installed MRC or would like to create an entirely new Conda envir
 # Change directory to the quickstart root
 cd ${SRF_HOME}/docs/quickstart/
 
-# Create a new MRC conda environment. Here, we assume the environment is named `srf-quickstart`
-conda env create -n srf-quickstart -f environment_cpp.yml
-conda activate srf-quickstart
+# Create a new MRC conda environment. Here, we assume the environment is named `mrc-quickstart`
+conda env create -n mrc-quickstart -f environment_cpp.yml
+conda activate mrc-quickstart
 
 # Build the QSG including the C++ examples
 ./compile.sh

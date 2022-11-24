@@ -109,8 +109,8 @@ echo -e "${y}===Begin Env===${x}"
 env
 echo -e "${y}===End Env===${x}"
 
-echo -e "${y}===Running conda-build for libsrf===${x}"
+echo -e "${y}===Running conda-build for libmrc===${x}"
 set -x
-conda ${CONDA_COMMAND} "${CONDA_ARGS_ARRAY[@]}" ${CONDA_ARGS} ci/conda/recipes/libsrf
+conda ${CONDA_COMMAND} "${CONDA_ARGS_ARRAY[@]}" ${CONDA_ARGS} ci/conda/recipes/libmrc
 set +x
-echo -e "${g}===Running conda-build for libsrf Complete!===${x}"
+echo -e "${g}===Running conda-build for libmrc Complete!===${x}"

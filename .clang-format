@@ -82,8 +82,6 @@ IncludeCategories:
   - Regex:           '^"pymrc\/.*\.(h|hpp)"'
     Priority:        3
   # Next match any MRC public API headers with quotes
-  - Regex:           '^"srf\/.*\.(h|hpp)"'
-    Priority:        4
   - Regex:           '^"mrc\/.*\.(h|hpp)"'
     Priority:        4
   # Next match public NVRPC headers with quotes

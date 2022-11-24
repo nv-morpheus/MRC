@@ -27,5 +27,5 @@ target_include_directories(ex01_node_library
 
 target_link_libraries(ex01_node_library
   PUBLIC
-  mrc::libsrf
+  mrc::libmrc
 )

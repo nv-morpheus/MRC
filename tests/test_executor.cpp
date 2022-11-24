@@ -503,7 +503,7 @@ TEST_F(TestExecutor, MultiNode)
 //     // since it owns the oracle server
 
 //     source_1->channel().push("hello");
-//     source_1->channel().push("srf");
+//     source_1->channel().push("mrc");
 //     source_1->channel().close();
 
 //     std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -554,7 +554,7 @@ TEST_F(TestExecutor, MultiNode)
 //     start_2.get();
 
 //     source_1->channel().push("hello");
-//     source_1->channel().push("srf");
+//     source_1->channel().push("mrc");
 //     source_1->channel().close();
 
 //     machine_2.join();

@@ -19,7 +19,7 @@ Checks: >
   google-readability-todo
 
 #WarningsAsErrors: '*'
-HeaderFilterRegex: '.*\/include\/srf\/.*'
+HeaderFilterRegex: '.*\/include\/mrc\/.*'
 AnalyzeTemporaryDtors: false
 FormatStyle: file
 CheckOptions:

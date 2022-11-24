@@ -22,7 +22,7 @@
 
 #include <memory>
 
-// IWYU pragma: no_include "srf/channel/forward.hpp"
+// IWYU pragma: no_include "mrc/channel/forward.hpp"
 
 using namespace mrc;
 

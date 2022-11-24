@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 # Keep all source files sorted!!!
 add_executable(topology_exporter
   topology_exporter.cpp
@@ -21,12 +20,12 @@ add_executable(topology_exporter
 
 target_link_libraries(topology_exporter
   PRIVATE
-    ${PROJECT_NAME}::libsrf
-    hwloc::hwloc
+  ${PROJECT_NAME}::libmrc
+  hwloc::hwloc
 )
 
 target_include_directories(topology_exporter
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}../
-    ${SRF_ROOT_DIR}/src
+  ${CMAKE_CURRENT_SOURCE_DIR}../
+  ${SRF_ROOT_DIR}/src
 )

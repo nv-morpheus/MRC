@@ -27,5 +27,5 @@ target_include_directories(common
 
 target_link_libraries(common
   PUBLIC
-  mrc::libsrf
+  mrc::libmrc
 )

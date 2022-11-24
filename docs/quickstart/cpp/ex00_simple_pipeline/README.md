@@ -75,11 +75,11 @@ We can see this simple pipeline in action by running the example in the build fo
 
 ```bash
 $ ${QSG_BUILD_DIR}/docs/quickstart/cpp/ex00_simple_pipeline/ex00_simple_pipeline.x
-srf pipeline starting...
+mrc pipeline starting...
 sink: 2.5
 sink: 5
 sink: 7.5
-srf pipeline complete: counter should be 3; counter=3
+mrc pipeline complete: counter should be 3; counter=3
 ```
 
 Where `${QSG_BUILD_DIR}` is the output location of the CMake build.

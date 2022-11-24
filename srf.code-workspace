@@ -96,7 +96,7 @@
                 "name": "debug test_srf.x",
                 "type": "cppdbg",
                 "request": "launch",
-                "program": "${workspaceFolder}/build/srf/tests/test_srf",
+                "program": "${workspaceFolder}/build/mrc/tests/test_srf",
                 "args": [],
                 "stopAtEntry": false,
                 "cwd": "${workspaceFolder}",
@@ -185,7 +185,7 @@
                 ],
                 "symbolLoadInfo": {
                     "loadAll": false,
-                    "exceptionList": "libsrf*.so;cudf_helpers.*;executor.*;morpheus.*;node.*;options.*;pipeline.*;segment.*;subscriber.*;test_edges_cpp.*"
+                    "exceptionList": "libmrc*.so;cudf_helpers.*;executor.*;morpheus.*;node.*;options.*;pipeline.*;segment.*;subscriber.*;test_edges_cpp.*"
                 },
                 "miDebuggerPath": "gdb",
                 "sourceFileMap": {
@@ -293,7 +293,7 @@
             "linux": {
                 "MIMode": "gdb",
                 "symbolLoadInfo": {
-                    "exceptionList": "*libsrf*.so",
+                    "exceptionList": "*libmrc*.so",
                     "loadAll": false
                 },
                 "type": "cppdbg"

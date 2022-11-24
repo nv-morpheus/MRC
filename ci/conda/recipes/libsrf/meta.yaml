@@ -20,7 +20,7 @@
 {% set cuda_major = cuda_version.split('.')[0] %}
 
 package:
-  name: libsrf-split
+  name: libmrc-split
   version: {{ version }}
 
 source:
@@ -74,11 +74,11 @@ requirements:
     - ucx
 
 outputs:
-  - name: libsrf
+  - name: libmrc
     build:
       string: cuda_{{ cuda_version }}_h{{ PKG_HASH }}_{{ PKG_BUILDNUM }}
       run_exports:
-        - {{ pin_subpackage("libsrf", max_pin="x.x") }}
+        - {{ pin_subpackage("libmrc", max_pin="x.x") }}
       include_recipe: False
     script: move_libsrf_files.sh
     requirements:
@@ -125,12 +125,12 @@ outputs:
     script: move_srf_files.sh
     requirements:
       host:
-        # Only should need libsrf and python. Keep sorted!
-        - {{ pin_subpackage('libsrf', exact=True) }}
+        # Only should need libmrc and python. Keep sorted!
+        - {{ pin_subpackage('libmrc', exact=True) }}
         - abseil-cpp # srf does not require abseil at build time. See https://github.com/conda-forge/arrow-cpp-feedstock/issues/814
         - python {{ python }}
       run:
-        - {{ pin_subpackage('libsrf', exact=True) }}
+        - {{ pin_subpackage('libmrc', exact=True) }}
         - rmm {{ rapids_version }}.* # This is not necessary but required until this is fixed: https://github.com/mamba-org/boa/issues/232
         - python
     test:

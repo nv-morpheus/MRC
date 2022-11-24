@@ -1,6 +1,6 @@
 {
     "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
-    "name": "srf",
+    "name": "mrc",
     "version": "0.1.0",
     "description": "NVIDIA C++ Streaming Libray",
     "dependencies": [

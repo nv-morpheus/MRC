@@ -52,7 +52,7 @@ namespace mrc::modules {
 const unsigned int ModuleRegistry::VersionElements{3};
 
 const ModuleRegistry::registry_version_t ModuleRegistry::Version{
-    srf_VERSION_MAJOR, srf_VERSION_MINOR, srf_VERSION_PATCH};
+    mrc_VERSION_MAJOR, mrc_VERSION_MINOR, mrc_VERSION_PATCH};
 
 ModuleRegistry::module_namespace_map_t ModuleRegistry::s_module_namespace_registry{
     {"default", ModuleRegistry::module_registry_map_t{}}};

@@ -24,7 +24,7 @@ The **Streaming Reactive Framework** (MRC) library (proununced "surf") is a **re
   - [Conda Installation](#conda-installation)
     - [Python Bindings](#python-bindings)
     - [C++ Bindings](#c-bindings)
-    - [Full MRC Library](#full-srf-library)
+    - [Full MRC Library](#full-mrc-library)
     - [Optional Settings](#optional-settings)
   - [Source Installation](#source-installation)
   - [Docker Installation](#docker-installation)
@@ -57,37 +57,37 @@ If you choose to use Mamba rather than Conda, simply replace `conda` with `mamba
 #### Python Bindings
 ```bash
 # If needed, create a new conda environment
-conda create --name srf python=3.8
+conda create --name mrc python=3.8
 
 # Activate the newly created conda environment
-conda activate srf
+conda activate mrc
 
 # Install MRC Python bindings
-conda install -c rapidsai -c nvidia -c conda-forge srf
+conda install -c rapidsai -c nvidia -c conda-forge mrc
 ```
 
 #### C++ Bindings
 ```bash
 # If needed, create a new conda environment
-conda create --name srf python=3.8
+conda create --name mrc python=3.8
 
 # Activate the newly created conda environment
-conda activate srf
+conda activate mrc
 
 # Install MRC Python bindings
-conda install -c rapidsai -c nvidia -c conda-forge libsrf
+conda install -c rapidsai -c nvidia -c conda-forge libmrc
 ```
 
 #### Full MRC Library
 ```bash
 # If needed, create a new conda environment
-conda create --name srf python=3.8
+conda create --name mrc python=3.8
 
 # Activate the newly created conda environment
-conda activate srf
+conda activate mrc
 
 # Install MRC Python bindings
-conda install -c rapidsai -c nvidia -c conda-forge srf libsrf
+conda install -c rapidsai -c nvidia -c conda-forge mrc libmrc
 ```
 
 #### Optional Settings
@@ -110,16 +110,16 @@ Installing via source is for more advanced users and is necessary to try MRC fea
 <!-- omit in toc -->
 #### Clone MRC repository
 ```bash
-export SRF_HOME=$(pwd)/srf
-git clone git@github.com:nv-morpheus/srf.git $SRF_HOME
+export SRF_HOME=$(pwd)/mrc
+git clone git@github.com:nv-morpheus/mrc.git $SRF_HOME
 cd $SRF_HOME
 ```
 <!-- omit in toc -->
 #### Create MRC Conda Environment
 ```bash
 # note: `mamba` may be used in place of `conda` for better performance.
-conda env create -n srf-dev --file $SRF_HOME/ci/conda/environments/dev_env.yml
-conda activate srf-dev
+conda env create -n mrc-dev --file $SRF_HOME/ci/conda/environments/dev_env.yml
+conda activate mrc-dev
 ```
 <!-- omit in toc -->
 #### Build MRC
@@ -151,11 +151,11 @@ pytest $SRF_HOME/python
 ### Docker Installation
 A Dockerfile is provided at `$SRF_HOME` and can be built with
 ```bash
-docker build -t srf:latest .
+docker build -t mrc:latest .
 ```
 To run the container
 ```bash
-docker run --gpus all --rm -it srf:latest /bin/bash
+docker run --gpus all --rm -it mrc:latest /bin/bash
 ```
 
 ## Quickstart Guide

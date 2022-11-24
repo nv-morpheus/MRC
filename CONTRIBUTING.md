@@ -60,7 +60,7 @@ Look at the unassigned issues, and find an issue to which you are comfortable co
 #### CUDA Toolkit Setup
 
 MRC uses the CUDA Toolkit. If you have multiple versions installed on your host, then some care needs to be taken in your environment.
-For example, you may see the following error when activating the srf conda environment:
+For example, you may see the following error when activating the mrc conda environment:
 
 `Version of installed CUDA didn't match package`
 
@@ -77,16 +77,16 @@ Some options:
 
 #### Clone MRC repository
 ```bash
-export SRF_HOME=$(pwd)/srf
-git clone git@github.com:nv-morpheus/srf.git $SRF_HOME
+export SRF_HOME=$(pwd)/mrc
+git clone git@github.com:nv-morpheus/mrc.git $SRF_HOME
 cd $SRF_HOME
 ```
 
 #### Create MRC Conda environment
 ```bash
 # note: `mamba` may be used in place of `conda` for better performance.
-conda env create -n srf --file $SRF_HOME/ci/conda/environments/dev_env.yml
-conda activate srf
+conda env create -n mrc --file $SRF_HOME/ci/conda/environments/dev_env.yml
+conda activate mrc
 ```
 #### Build MRC
 ```bash

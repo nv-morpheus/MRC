@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <srf/utils/string_utils.hpp>
+#include <mrc/utils/string_utils.hpp>
 
 #include <string>
 

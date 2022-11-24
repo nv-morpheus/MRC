@@ -13,4 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-test -f $PREFIX/lib/libsrf.so
+test -f $PREFIX/lib/libmrc.so

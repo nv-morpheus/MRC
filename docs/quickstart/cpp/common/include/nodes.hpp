@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <srf/node/rx_source.hpp>
+#include <mrc/node/rx_source.hpp>
 
 namespace mrc::quickstart::cpp::common {
 

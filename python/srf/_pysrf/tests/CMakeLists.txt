@@ -32,11 +32,11 @@ add_executable(test_pysrf
 
 target_link_libraries(test_pysrf
   PRIVATE
-    ${PROJECT_NAME}::pysrf
-    ${PROJECT_NAME}::libsrf
-    glog::glog
-    GTest::gtest
-    pybind11::embed
+  ${PROJECT_NAME}::pysrf
+  ${PROJECT_NAME}::libmrc
+  glog::glog
+  GTest::gtest
+  pybind11::embed
 )
 
 add_test(

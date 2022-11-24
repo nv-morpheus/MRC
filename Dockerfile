@@ -25,7 +25,7 @@ ARG LINUX_VER=20.04
 # Configure the base conda environment
 FROM ${FROM_IMAGE}:${CUDA_VER}-devel-${LINUX_DISTRO}${LINUX_VER} AS base
 
-ARG CONDA_ENV_NAME=srf
+ARG CONDA_ENV_NAME=mrc
 ARG PYTHON_VER=3.8
 
 # Update and install some base dependencies
@@ -94,7 +94,7 @@ RUN --mount=type=bind,from=conda_bld_srf,source=/opt/conda/conda-bld,target=/opt
     --mount=type=cache,id=conda_pkgs,target=/opt/conda/pkgs,sharing=locked \
     source activate ${CONDA_ENV_NAME} &&\
     # Install conda packages
-    CONDA_ALWAYS_YES=true /opt/conda/bin/mamba install -n ${CONDA_ENV_NAME} -c local -c rapidsai -c nvidia -c conda-forge srf &&\
+    CONDA_ALWAYS_YES=true /opt/conda/bin/mamba install -n ${CONDA_ENV_NAME} -c local -c rapidsai -c nvidia -c conda-forge mrc &&\
     # Clean and activate
     conda clean -afy
 

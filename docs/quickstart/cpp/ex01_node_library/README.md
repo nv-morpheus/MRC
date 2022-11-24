@@ -59,11 +59,11 @@ target_include_directories(ex01_node_library
 
 target_link_libraries(ex01_node_library
   PUBLIC
-    mrc::libsrf
+    mrc::libmrc
 )
 ```
 
-As far as CMake libraries go, there is nothing out of the ordinary that needs to be done to build the component into a library. Simply create a library as usual and be sure to add `mrc::libsrf` to the library list in `target_link_libraries`.
+As far as CMake libraries go, there is nothing out of the ordinary that needs to be done to build the component into a library. Simply create a library as usual and be sure to add `mrc::libmrc` to the library list in `target_link_libraries`.
 
 ## Running the Example
 

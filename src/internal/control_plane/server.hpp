@@ -82,7 +82,7 @@ class Server : public Service
     void do_handle_event(event_t&& event);
     void do_issue_update(rxcpp::subscriber<void*>& s);
 
-    // srf resources
+    // mrc resources
     runnable::Resources& m_runnable;
 
     // grpc

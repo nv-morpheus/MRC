@@ -23,9 +23,9 @@ add_executable(test_srf_benchmarking
 
 target_link_libraries(test_srf_benchmarking
   PRIVATE
-    ${PROJECT_NAME}::libsrf
-    GTest::gtest
-    prometheus-cpp::core
+  ${PROJECT_NAME}::libmrc
+  GTest::gtest
+  prometheus-cpp::core
 )
 
 add_test(

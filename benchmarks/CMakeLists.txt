@@ -21,19 +21,19 @@ add_executable(bench_srf
 
 target_link_libraries(bench_srf
   PRIVATE
-    ${PROJECT_NAME}::libsrf
-    benchmark::benchmark
-    prometheus-cpp::core
+  ${PROJECT_NAME}::libmrc
+  benchmark::benchmark
+  prometheus-cpp::core
 )
 
 add_executable(bench_rxcpp_components
   main.cpp
   bench_baselines.cpp
-  )
+)
 
 target_link_libraries(bench_rxcpp_components
   PRIVATE
-    ${PROJECT_NAME}::libsrf
-    benchmark::benchmark
-    prometheus-cpp::core
-  )
+  ${PROJECT_NAME}::libmrc
+  benchmark::benchmark
+  prometheus-cpp::core
+)

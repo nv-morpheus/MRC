@@ -16,19 +16,19 @@
 list(APPEND CMAKE_MESSAGE_CONTEXT "tests")
 
 add_library(dynamic_test_module MODULE
-    dynamic_module.cpp
+  dynamic_module.cpp
 )
 
 include_directories(dynamic_test_module
   PUBLIC
-    ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/include
 )
 
 target_link_libraries(dynamic_test_module
-    PUBLIC
-      rxcpp::rxcpp
-    PRIVATE
-      libsrf
+  PUBLIC
+  rxcpp::rxcpp
+  PRIVATE
+  libmrc
 )
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

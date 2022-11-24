@@ -16,9 +16,9 @@
  */
 
 #include <glog/logging.h>
-#include <srf/node/rx_sink.hpp>
-#include <srf/pipeline/pipeline.hpp>
-#include <srf/srf.hpp>
+#include <mrc/mrc.hpp>
+#include <mrc/node/rx_sink.hpp>
+#include <mrc/pipeline/pipeline.hpp>
 
 using namespace mrc;
 
