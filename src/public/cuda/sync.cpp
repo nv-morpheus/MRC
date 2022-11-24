@@ -35,7 +35,7 @@ Future<void> enqueue_stream_sync_event(cudaStream_t stream)
 {
     auto* promise = new Promise<void>;
     auto future   = promise->get_future();
-    SRF_CHECK_CUDA(cudaLaunchHostFunc(stream, enqueue_stream_event_callback, promise));
+    MRC_CHECK_CUDA(cudaLaunchHostFunc(stream, enqueue_stream_event_callback, promise));
     return future;
 }
 

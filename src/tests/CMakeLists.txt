@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set(SRF_INTERNAL_TEST_BINARY_FILES "")
+set(MRC_INTERNAL_TEST_BINARY_FILES "")
 
-file(GLOB_RECURSE SRF_INTERNAL_TEST_SOURCE_FILES
+file(GLOB_RECURSE MRC_INTERNAL_TEST_SOURCE_FILES
   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
   LIST_DIRECTORIES FALSE
   CONFIGURE_DEPENDS
@@ -23,7 +23,7 @@ file(GLOB_RECURSE SRF_INTERNAL_TEST_SOURCE_FILES
 )
 
 # For each file, copy if its different
-foreach(file ${SRF_INTERNAL_TEST_SOURCE_FILES})
+foreach(file ${MRC_INTERNAL_TEST_SOURCE_FILES})
   add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${file}
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/${file} ${CMAKE_CURRENT_BINARY_DIR}/${file}
@@ -31,11 +31,11 @@ foreach(file ${SRF_INTERNAL_TEST_SOURCE_FILES})
     COMMENT "Copying ${file} to ${CMAKE_CURRENT_BINARY_DIR}/${file}"
   )
 
-  list(APPEND SRF_INTERNAL_TEST_BINARY_FILES ${CMAKE_CURRENT_BINARY_DIR}/${file})
+  list(APPEND MRC_INTERNAL_TEST_BINARY_FILES ${CMAKE_CURRENT_BINARY_DIR}/${file})
 endforeach()
 
 add_custom_target(copy_fixture_files ALL
-  DEPENDS ${SRF_INTERNAL_TEST_BINARY_FILES}
+  DEPENDS ${MRC_INTERNAL_TEST_BINARY_FILES}
 )
 
 # Keep all source files sorted!!!
@@ -80,7 +80,7 @@ target_link_libraries(test_srf_private
 # Necessary include to prevent IWYU from showing absolute paths
 target_include_directories(test_srf_private
   PRIVATE
-  ${SRF_ROOT_DIR}/src
+  ${MRC_ROOT_DIR}/src
   copy_fixture_files
 )
 

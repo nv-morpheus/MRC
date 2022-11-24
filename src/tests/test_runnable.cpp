@@ -51,7 +51,7 @@
 
 using namespace mrc;
 
-#define SRF_DEFAULT_FIBER_PRIORITY 0
+#define MRC_DEFAULT_FIBER_PRIORITY 0
 
 static std::shared_ptr<internal::system::System> make_system(std::function<void(Options&)> updater = nullptr)
 {

@@ -54,7 +54,7 @@ env:
   CHANGE_TARGET: "${{ github.base_ref }}"
   GH_TOKEN: "${{ github.token }}"
   GIT_COMMIT: "${{ github.sha }}"
-  SRF_ROOT: "${{ github.workspace }}/srf"
+  MRC_ROOT: "${{ github.workspace }}/srf"
   WORKSPACE: "${{ github.workspace }}/srf"
   WORKSPACE_TMP: "${{ github.workspace }}/tmp"
 

@@ -115,6 +115,6 @@ PYBIND11_MODULE(options, module)
                       static_cast<void (mrc::Options::*)(std::string)>(&mrc::Options::architect_url));
 
     module.attr("__version__") =
-        SRF_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "." << mrc_VERSION_PATCH);
+        MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "." << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

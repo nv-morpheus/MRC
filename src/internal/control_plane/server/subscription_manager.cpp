@@ -194,10 +194,10 @@ Expected<TagID> SubscriptionService::register_instance(std::shared_ptr<server::C
                                                        const std::set<std::string>& subscribe_to_roles)
 {
     // ensure all roles and subscribe_to_roles are valid
-    SRF_CHECK(contains(m_roles, role));
+    MRC_CHECK(contains(m_roles, role));
     for (const auto& s2r : subscribe_to_roles)
     {
-        SRF_CHECK(contains(m_roles, s2r));
+        MRC_CHECK(contains(m_roles, s2r));
     }
 
     auto tag = register_instance_id(instance->get_id());
@@ -211,13 +211,13 @@ Expected<> SubscriptionService::activate_instance(std::shared_ptr<server::Client
                                                   TagID tag)
 {
     // ensure all roles and subscribe_to_roles are valid
-    SRF_CHECK(contains(m_roles, role));
+    MRC_CHECK(contains(m_roles, role));
     for (const auto& s2r : subscribe_to_roles)
     {
-        SRF_CHECK(contains(m_roles, s2r));
+        MRC_CHECK(contains(m_roles, s2r));
     }
 
-    SRF_CHECK(is_issued_tag(tag));
+    MRC_CHECK(is_issued_tag(tag));
 
     get_role(role).add_member(tag, instance);
     for (const auto& s2r : subscribe_to_roles)
@@ -273,9 +273,9 @@ const std::string& SubscriptionService::service_name() const
 
 Expected<> SubscriptionService::update_role(const protos::UpdateSubscriptionServiceRequest& update_req)
 {
-    SRF_CHECK(update_req.service_name() == service_name());
+    MRC_CHECK(update_req.service_name() == service_name());
     auto search = m_roles.find(update_req.role());
-    SRF_CHECK(search != m_roles.end());
+    MRC_CHECK(search != m_roles.end());
     for (const auto& tag : update_req.tags())
     {
         search->second->update_subscriber_nonce(tag, update_req.nonce());

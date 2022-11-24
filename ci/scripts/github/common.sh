@@ -16,8 +16,8 @@
 
 rapids-logger "Env Setup"
 source /opt/conda/etc/profile.d/conda.sh
-export SRF_ROOT=${SRF_ROOT:-$(git rev-parse --show-toplevel)}
-cd ${SRF_ROOT}
+export MRC_ROOT=${SRF_ROOT:-$(git rev-parse --show-toplevel)}
+cd ${MRC_ROOT}
 # For non-gpu hosts nproc will correctly report the number of cores we are able to use
 # On a GPU host however nproc will report the total number of cores and PARALLEL_LEVEL
 # will be defined specifying the subset we are allowed to use.
@@ -34,7 +34,7 @@ id
 # NUM_PROC is used by some of the other scripts
 export NUM_PROC=${PARALLEL_LEVEL:-$(nproc)}
 
-export CONDA_ENV_YML="${SRF_ROOT}/ci/conda/environments/dev_env.yml"
+export CONDA_ENV_YML="${MRC_ROOT}/ci/conda/environments/dev_env.yml"
 
 export CMAKE_BUILD_ALL_FEATURES="-DCMAKE_MESSAGE_CONTEXT_SHOW=ON -DSRF_BUILD_BENCHMARKS=ON -DSRF_BUILD_EXAMPLES=ON -DSRF_BUILD_PYTHON=ON -DSRF_BUILD_TESTS=ON -DSRF_USE_CONDA=ON -DSRF_PYTHON_BUILD_STUBS=ON"
 export CMAKE_BUILD_WITH_CODECOV="-DCMAKE_BUILD_TYPE=Debug -DSRF_ENABLE_CODECOV=ON"

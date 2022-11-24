@@ -38,7 +38,7 @@ export x="\033[0m"
 export CONDA_COMMAND=${CONDA_COMMAND:-"mambabuild"}
 
 # Get the path to the morpheus git folder
-export SRF_ROOT=${SRF_ROOT:-$(git rev-parse --show-toplevel)}
+export MRC_ROOT=${SRF_ROOT:-$(git rev-parse --show-toplevel)}
 
 export CUDA="$(conda list | grep cudatoolkit | egrep -o "[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+")"
 export PYTHON_VER="$(python -c "import sys; print('.'.join(map(str, sys.version_info[:2])))")"
@@ -50,10 +50,10 @@ echo ""
 export PARALLEL_LEVEL=${PARALLEL_LEVEL:-$(nproc)}
 
 # Export variables for the cache
-export SRF_CACHE_DIR=${SRF_CACHE_DIR:-"${SRF_ROOT}/.cache"}
+export MRC_CACHE_DIR=${SRF_CACHE_DIR:-"${SRF_ROOT}/.cache"}
 
 # Export CCACHE variables
-export CCACHE_DIR="${SRF_CACHE_DIR}/ccache"
+export CCACHE_DIR="${MRC_CACHE_DIR}/ccache"
 export CCACHE_NOHASHDIR=1
 export CMAKE_GENERATOR="Ninja"
 export CMAKE_C_COMPILER_LAUNCHER="ccache"

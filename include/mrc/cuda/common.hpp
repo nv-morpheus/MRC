@@ -27,13 +27,13 @@
 
 // Global setting to check for CUDA errors. Can be overridden by the build.
 // When enabled, will check for errors in Debug build, and will not check for errors in Release
-#ifndef SRF_CUDA_CHECK_ERRORS
-    #define SRF_CUDA_CHECK_ERRORS 1
+#ifndef MRC_CUDA_CHECK_ERRORS
+    #define MRC_CUDA_CHECK_ERRORS 1
 #endif
 
-// Forces synchronizing CUDA and checking for error even in a Release build. Has no effect if SRF_CUDA_CHECK_ERRORS=0
-#ifndef SRF_CUDA_FORCE_CHECK_ERRORS
-    #define SRF_CUDA_FORCE_CHECK_ERRORS 0
+// Forces synchronizing CUDA and checking for error even in a Release build. Has no effect if MRC_CUDA_CHECK_ERRORS=0
+#ifndef MRC_CUDA_FORCE_CHECK_ERRORS
+    #define MRC_CUDA_FORCE_CHECK_ERRORS 0
 #endif
 
 // clang-format on
@@ -70,27 +70,27 @@ void __check_cuda_errors(T status, const std::string& methodName, const std::str
     }
 }
 
-#if (!defined(NDEBUG) || SRF_CUDA_FORCE_CHECK_ERRORS) && SRF_CUDA_CHECK_ERRORS
+#if (!defined(NDEBUG) || MRC_CUDA_FORCE_CHECK_ERRORS) && MRC_CUDA_CHECK_ERRORS
 
     // Checks the return value of a cuda function
-    #define SRF_CHECK_CUDA(code)                                  \
+    #define MRC_CHECK_CUDA(code)                                  \
         {                                                         \
             __check_cuda_errors(code, #code, __FILE__, __LINE__); \
         }
 
     // Syncronizes the current device and checks the last error via cudaGetLastError()
-    #define SRF_CHECK_CUDA_LAST_ERROR()        \
+    #define MRC_CHECK_CUDA_LAST_ERROR()        \
         {                                      \
             cudaThreadSynchronize();           \
-            SRF_CHECK_CUDA(cudaGetLastError()) \
+            MRC_CHECK_CUDA(cudaGetLastError()) \
         }
 
 #else
 
     // Checks the return value of a cuda function
-    #define SRF_CHECK_CUDA(code) code;
+    #define MRC_CHECK_CUDA(code) code;
 
     // Syncronizes the current device and checks the last error via cudaGetLastError()
-    #define SRF_CHECK_CUDA_LAST_ERROR()
+    #define MRC_CHECK_CUDA_LAST_ERROR()
 
 #endif

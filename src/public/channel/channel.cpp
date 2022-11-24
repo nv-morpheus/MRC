@@ -24,7 +24,7 @@
 
 namespace mrc::channel {
 
-static std::size_t s_default_channel_size = SRF_DEFAULT_BUFFERED_CHANNEL_SIZE;
+static std::size_t s_default_channel_size = MRC_DEFAULT_BUFFERED_CHANNEL_SIZE;
 
 std::size_t default_channel_size()
 {

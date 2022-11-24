@@ -184,7 +184,7 @@ TEST_F(TestModuleRegistry, DynamicModuleLoadTest)
     }
     EXPECT_TRUE(module_handle);
 
-    dummy_entrypoint        = (bool (*)())dlsym(module_handle, "SRF_MODULE_dummy_entrypoint");
+    dummy_entrypoint        = (bool (*)())dlsym(module_handle, "MRC_MODULE_dummy_entrypoint");
     const char* dlsym_error = dlerror();
     if (dlsym_error != nullptr)
     {
@@ -210,7 +210,7 @@ TEST_F(TestModuleRegistry, DynamicModuleRegistrationTest)
     }
     EXPECT_TRUE(module_handle);
 
-    entrypoint_load         = (bool (*)())dlsym(module_handle, "SRF_MODULE_entrypoint_load");
+    entrypoint_load         = (bool (*)())dlsym(module_handle, "MRC_MODULE_entrypoint_load");
     const char* dlsym_error = dlerror();
     if (dlsym_error != nullptr)
     {
@@ -225,7 +225,7 @@ TEST_F(TestModuleRegistry, DynamicModuleRegistrationTest)
     EXPECT_TRUE(ModuleRegistry::contains_namespace(module_namespace));
     EXPECT_TRUE(ModuleRegistry::contains(module_name, module_namespace));
 
-    entrypoint_unload              = (bool (*)())dlsym(module_handle, "SRF_MODULE_entrypoint_unload");
+    entrypoint_unload              = (bool (*)())dlsym(module_handle, "MRC_MODULE_entrypoint_unload");
     const char* dlsym_unload_error = dlerror();
     if (dlsym_unload_error != nullptr)
     {
@@ -354,7 +354,7 @@ TEST_F(TestModuleRegistry, DynamicModuleBadVersionTest)
     }
     EXPECT_TRUE(module_handle);
 
-    entrypoint              = (bool (*)())dlsym(module_handle, "SRF_MODULE_bad_version_entrypoint");
+    entrypoint              = (bool (*)())dlsym(module_handle, "MRC_MODULE_bad_version_entrypoint");
     const char* dlsym_error = dlerror();
     if (dlsym_error != nullptr)
     {

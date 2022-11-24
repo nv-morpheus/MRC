@@ -84,7 +84,7 @@ RUN --mount=type=ssh \
     --mount=type=cache,id=workspace_cache,target=/work/.cache,sharing=locked \
     --mount=type=cache,id=conda_pkgs,target=/opt/conda/pkgs,sharing=locked \
     source activate base &&\
-    SRF_ROOT=/work CONDA_BLD_DIR=/opt/conda/conda-bld CONDA_ARGS="--no-test" ./ci/conda/recipes/run_conda_build.sh
+    MRC_ROOT=/work CONDA_BLD_DIR=/opt/conda/conda-bld CONDA_ARGS="--no-test" ./ci/conda/recipes/run_conda_build.sh
 
 # ============ Stage: runtime ============
 # Setup container for runtime environment

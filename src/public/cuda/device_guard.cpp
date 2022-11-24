@@ -29,13 +29,13 @@ namespace mrc {
 DeviceGuard::DeviceGuard(int device_id)
 {
     DCHECK_GE(device_id, 0);
-    SRF_CHECK_CUDA(cudaGetDevice(&m_DeviceID));
-    SRF_CHECK_CUDA(cudaSetDevice(device_id));
+    MRC_CHECK_CUDA(cudaGetDevice(&m_DeviceID));
+    MRC_CHECK_CUDA(cudaSetDevice(device_id));
 }
 
 DeviceGuard::~DeviceGuard()
 {
-    SRF_CHECK_CUDA(cudaSetDevice(m_DeviceID));
+    MRC_CHECK_CUDA(cudaSetDevice(m_DeviceID));
 }
 
 }  // namespace mrc

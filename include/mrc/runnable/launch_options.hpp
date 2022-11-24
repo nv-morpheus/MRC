@@ -42,7 +42,7 @@ struct LaunchOptions
 
 struct ServiceLaunchOptions : public LaunchOptions
 {
-    int m_priority{SRF_DEFAULT_FIBER_PRIORITY};
+    int m_priority{MRC_DEFAULT_FIBER_PRIORITY};
 };
 
 }  // namespace mrc::runnable

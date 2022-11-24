@@ -100,7 +100,7 @@ void CodableStorage::copy_to_buffer(idx_t buffer_idx, mrc::memory::const_buffer_
     // todo(ryan) - enumerate this to use explicit copy methods, e.g. std::memcpy, cudaMemcpy, cudaMemcpyAsync with
     // directional H2D/D2H. the resources object should provide a cuda stream pool per partition and a single runtime
     // stream on the off chance the partition doesn't have a device, but is exposed to device memory.
-    SRF_CHECK_CUDA(cudaMemcpy(dst.data(), view.data(), view.bytes(), cudaMemcpyDefault));
+    MRC_CHECK_CUDA(cudaMemcpy(dst.data(), view.data(), view.bytes(), cudaMemcpyDefault));
 }
 
 CodableStorage::idx_t CodableStorage::copy_to_eager_descriptor(mrc::memory::const_buffer_view view)

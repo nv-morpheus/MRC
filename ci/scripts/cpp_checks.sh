@@ -33,13 +33,13 @@ CLANG_FORMAT_RETVAL=0
 IWYU_RETVAL=0
 
 # Get the list of modified files inside the srf repo
-get_modified_files ${CPP_FILE_REGEX} SRF_MODIFIED_FILES
+get_modified_files ${CPP_FILE_REGEX} MRC_MODIFIED_FILES
 
 # If there are any files, then run clang tidy
-if [[ -n "${SRF_MODIFIED_FILES}" ]]; then
-   echo -e "Running C++ checks on ${#SRF_MODIFIED_FILES[@]} files:"
+if [[ -n "${MRC_MODIFIED_FILES}" ]]; then
+   echo -e "Running C++ checks on ${#MRC_MODIFIED_FILES[@]} files:"
 
-   for f in "${SRF_MODIFIED_FILES[@]}"; do
+   for f in "${MRC_MODIFIED_FILES[@]}"; do
       echo "  $f"
    done
 

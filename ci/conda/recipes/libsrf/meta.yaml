@@ -30,7 +30,7 @@ build:
   number: {{ GIT_DESCRIBE_NUMBER }}
   script_env:
     - CMAKE_CUDA_ARCHITECTURES=ALL
-    - SRF_CACHE_DIR
+    - MRC_CACHE_DIR
     - PARALLEL_LEVEL
   include_recipe: False
 

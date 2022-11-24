@@ -52,7 +52,7 @@ PYBIND11_MODULE(data, m)
         .def_readwrite("name", &MyDataObject::name)
         .def_readwrite("value", &MyDataObject::value)
         .def("__repr__", [](MyDataObject& self) {
-            return SRF_CONCAT_STR("{Name: '" << self.name << "', Value: " << self.value << "}");
+            return MRC_CONCAT_STR("{Name: '" << self.name << "', Value: " << self.value << "}");
         });
 
 #ifdef VERSION_INFO

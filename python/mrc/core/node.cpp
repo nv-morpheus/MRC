@@ -58,6 +58,6 @@ PYBIND11_MODULE(node, module)
                                py::return_value_policy::reference_internal);
 
     module.attr("__version__") =
-        SRF_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "." << mrc_VERSION_PATCH);
+        MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "." << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

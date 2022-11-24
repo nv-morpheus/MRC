@@ -127,7 +127,7 @@ class TestPartitions : public testing::TestWithParam<const char*>
     {
         std::string root_path;
         std::stringstream path;
-        auto* root_env = std::getenv("SRF_TEST_INTERNAL_DATA_PATH");
+        auto* root_env = std::getenv("MRC_TEST_INTERNAL_DATA_PATH");
         if (root_env != nullptr)
         {
             root_path = std::string(root_env);

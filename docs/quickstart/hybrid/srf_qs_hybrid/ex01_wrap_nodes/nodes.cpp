@@ -44,7 +44,7 @@ class MyDataObjectSource : public mrc::pymrc::PythonSource<std::shared_ptr<commo
             for (size_t i = 0; i < m_count; ++i)
             {
                 // Create a new object
-                auto obj = std::make_shared<common::DataObject>(SRF_CONCAT_STR("Instance-" << i), i);
+                auto obj = std::make_shared<common::DataObject>(MRC_CONCAT_STR("Instance-" << i), i);
 
                 output.on_next(std::move(obj));
             }

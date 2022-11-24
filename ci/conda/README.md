@@ -3,7 +3,7 @@
 To build the Conda packages, it's recommended to run the provided scripts from a docker container. To build the container, `srf-conda-build`, run the following:
 
 ```bash
-cd ${SRF_HOME}
+cd ${MRC_HOME}
 docker buildx build --target development -t srf-conda-build .
 ```
 
@@ -20,10 +20,10 @@ docker run --rm -ti -v $PWD:/work \
    srf-conda-build ./ci/conda/recipes/run_conda_build.sh
 ```
 
-This will save the conda packages to `${SRF_HOME}/.conda-bld`. To install from this location, use the following:
+This will save the conda packages to `${MRC_HOME}/.conda-bld`. To install from this location, use the following:
 
 ```bash
-conda install -c file://${SRF_HOME}/.conda-bld srf
+conda install -c file://${MRC_HOME}/.conda-bld srf
 ```
 
 ## Uploading the Conda Package

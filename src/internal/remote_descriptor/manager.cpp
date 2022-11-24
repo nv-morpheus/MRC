@@ -82,7 +82,7 @@ Manager::Manager(const InstanceID& instance_id, resources::PartitionResources& r
   m_instance_id(instance_id),
   m_resources(resources)
 {
-    service_set_description(SRF_CONCAT_STR("mrc::remote_description_manager[" << instance_id << "]"));
+    service_set_description(MRC_CONCAT_STR("mrc::remote_description_manager[" << instance_id << "]"));
     service_start();
     service_await_live();
 }

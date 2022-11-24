@@ -110,7 +110,7 @@ struct EdgeBuilder final
         }
         else
         {
-            // todo(cpp20) - use templated lambda to trigger the static fail - make a SRF_STATIC_FAIL macro
+            // todo(cpp20) - use templated lambda to trigger the static fail - make a MRC_STATIC_FAIL macro
             static_assert(!sizeof(SourceT), "No dynamic lookup available for statically typed objects");
         }
 

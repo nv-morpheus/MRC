@@ -21,7 +21,7 @@
 
 #include <ostream>
 
-#define SRF_DEBUG 1
+#define MRC_DEBUG 1
 
 namespace mrc::internal::memory {
 

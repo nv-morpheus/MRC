@@ -21,7 +21,7 @@
 
 namespace mrc::sfinae {
 
-#define SRF_AUTO_RETURN_TYPE(Expr, T)                                                                      \
+#define MRC_AUTO_RETURN_TYPE(Expr, T)                                                                      \
     decltype(Expr)                                                                                         \
     {                                                                                                      \
         static_assert(std::is_same<decltype(Expr), T>::value, #Expr " does not have the return type " #T); \

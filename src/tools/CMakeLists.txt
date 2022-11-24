@@ -27,5 +27,5 @@ target_link_libraries(topology_exporter
 target_include_directories(topology_exporter
   PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}../
-  ${SRF_ROOT_DIR}/src
+  ${MRC_ROOT_DIR}/src
 )

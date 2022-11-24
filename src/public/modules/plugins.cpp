@@ -38,9 +38,9 @@ namespace mrc::modules {
 std::map<std::string, std::shared_ptr<PluginModule>> PluginModule::s_plugin_map{};
 std::recursive_mutex PluginModule::s_mutex{};
 
-const std::string PluginModule::PluginEntrypointList{"SRF_MODULE_entrypoint_list"};
-const std::string PluginModule::PluginEntrypointLoad{"SRF_MODULE_entrypoint_load"};
-const std::string PluginModule::PluginEntrypointUnload{"SRF_MODULE_entrypoint_unload"};
+const std::string PluginModule::PluginEntrypointList{"MRC_MODULE_entrypoint_list"};
+const std::string PluginModule::PluginEntrypointLoad{"MRC_MODULE_entrypoint_load"};
+const std::string PluginModule::PluginEntrypointUnload{"MRC_MODULE_entrypoint_unload"};
 
 std::shared_ptr<PluginModule> PluginModule::create_or_acquire(const std::string& plugin_library_name)
 {

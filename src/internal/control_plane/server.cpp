@@ -365,7 +365,7 @@ void Server::on_fatal_exception()
 Expected<> Server::unary_register_workers(event_t& event)
 {
     auto req = unpack_request<protos::RegisterWorkersRequest>(event);
-    SRF_EXPECT(req);
+    MRC_EXPECT(req);
 
     DVLOG(10) << "registering stream " << event.stream->get_id() << " with " << req->ucx_worker_addresses_size()
               << " partitions groups";
@@ -376,7 +376,7 @@ Expected<> Server::unary_register_workers(event_t& event)
 Expected<> Server::unary_drop_worker(event_t& event)
 {
     auto req = unpack_request<protos::TaggedInstance>(event);
-    SRF_EXPECT(req);
+    MRC_EXPECT(req);
 
     DVLOG(10) << "dropping instance " << req->instance_id() << " from stream " << event.stream->get_id();
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
@@ -391,7 +391,7 @@ Expected<> Server::unary_drop_worker(event_t& event)
 Expected<> Server::unary_activate_stream(event_t& event)
 {
     auto message = unpack_request<protos::RegisterWorkersResponse>(event);
-    SRF_EXPECT(message);
+    MRC_EXPECT(message);
     DVLOG(10) << "activating stream " << message->machine_id() << " with " << message->instance_ids_size()
               << " instances/partitions";
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
@@ -401,7 +401,7 @@ Expected<> Server::unary_activate_stream(event_t& event)
 Expected<> Server::unary_lookup_workers(event_t& event)
 {
     auto message = unpack_request<protos::LookupWorkersRequest>(event);
-    SRF_EXPECT(message);
+    MRC_EXPECT(message);
     DVLOG(10) << "looking up worker addresses for " << message->instance_ids_size() << " instances";
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
     return unary_response(event, m_connections.lookup_workers(event.stream, *message));
@@ -410,7 +410,7 @@ Expected<> Server::unary_lookup_workers(event_t& event)
 Expected<protos::Ack> Server::unary_create_subscription_service(event_t& event)
 {
     auto req = unpack_request<protos::CreateSubscriptionServiceRequest>(event);
-    SRF_EXPECT(req);
+    MRC_EXPECT(req);
 
     DVLOG(10) << "[start] create (or get) subscription service: " << req->service_name();
 
@@ -456,11 +456,11 @@ Expected<protos::Ack> Server::unary_create_subscription_service(event_t& event)
 Expected<protos::RegisterSubscriptionServiceResponse> Server::unary_register_subscription_service(event_t& event)
 {
     auto req = unpack_request<protos::RegisterSubscriptionServiceRequest>(event);
-    SRF_EXPECT(req);
+    MRC_EXPECT(req);
 
     // validate message - can be done before locking internal state
     auto subscribe_to = check_unique_repeated_field(req->subscribe_to_roles());
-    SRF_EXPECT(subscribe_to);
+    MRC_EXPECT(subscribe_to);
 
     // lock internal state
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
@@ -469,28 +469,28 @@ Expected<protos::RegisterSubscriptionServiceResponse> Server::unary_register_sub
               << " from machine " << event.stream->get_id();
 
     auto instance = validate_instance_id(req->instance_id(), event);
-    SRF_EXPECT(instance);
+    MRC_EXPECT(instance);
 
     auto service_iter = get_subscription_service(req->service_name());
-    SRF_EXPECT(service_iter);
+    MRC_EXPECT(service_iter);
     auto& service = *(service_iter.value()->second);
 
     // validate roles are valid
     if (!service.has_role(req->role()))
     {
-        return Error::create(SRF_CONCAT_STR(
+        return Error::create(MRC_CONCAT_STR(
             "subscription service " << req->service_name() << " does not contain primary role: " << req->role()));
     }
     if (!std::all_of(subscribe_to.value().begin(), subscribe_to.value().end(), [&service](const std::string& role) {
             return service.has_role(role);
         }))
     {
-        return Error::create(SRF_CONCAT_STR("subscription service " << req->service_name()
+        return Error::create(MRC_CONCAT_STR("subscription service " << req->service_name()
                                                                     << " one or more subscribe_to_roles were invalid"));
     }
 
     auto tag = service.register_instance(*instance, req->role(), *subscribe_to);
-    SRF_EXPECT(tag);
+    MRC_EXPECT(tag);
 
     DVLOG(10) << "[success] register subscription service: " << req->service_name() << "; role: " << req->role();
     protos::RegisterSubscriptionServiceResponse resp;
@@ -503,11 +503,11 @@ Expected<protos::RegisterSubscriptionServiceResponse> Server::unary_register_sub
 Expected<protos::Ack> Server::unary_activate_subscription_service(event_t& event)
 {
     auto req = unpack_request<protos::ActivateSubscriptionServiceRequest>(event);
-    SRF_EXPECT(req);
+    MRC_EXPECT(req);
 
     // validate message - can be done before locking internal state
     auto subscribe_to = check_unique_repeated_field(req->subscribe_to_roles());
-    SRF_EXPECT(subscribe_to);
+    MRC_EXPECT(subscribe_to);
 
     // lock internal state
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
@@ -516,27 +516,27 @@ Expected<protos::Ack> Server::unary_activate_subscription_service(event_t& event
               << req->role() << " from machine " << event.stream->get_id();
 
     auto instance = validate_instance_id(req->instance_id(), event);
-    SRF_EXPECT(instance);
+    MRC_EXPECT(instance);
 
     auto service_iter = get_subscription_service(req->service_name());
-    SRF_EXPECT(service_iter);
+    MRC_EXPECT(service_iter);
     auto& service = *(service_iter.value()->second);
 
     // validate roles are valid
     if (!service.has_role(req->role()))
     {
-        return Error::create(SRF_CONCAT_STR(
+        return Error::create(MRC_CONCAT_STR(
             "subscription service " << req->service_name() << " does not contain primary role: " << req->role()));
     }
     if (!std::all_of(subscribe_to.value().begin(), subscribe_to.value().end(), [&service](const std::string& role) {
             return service.has_role(role);
         }))
     {
-        return Error::create(SRF_CONCAT_STR("subscription service " << req->service_name()
+        return Error::create(MRC_CONCAT_STR("subscription service " << req->service_name()
                                                                     << " one or more subscribe_to_roles were invalid"));
     }
 
-    SRF_EXPECT(service.activate_instance(*instance, req->role(), *subscribe_to, req->tag()));
+    MRC_EXPECT(service.activate_instance(*instance, req->role(), *subscribe_to, req->tag()));
     DVLOG(10) << "[success] activate subscription service: " << req->service_name() << "; role: " << req->role();
 
     return {};
@@ -545,15 +545,15 @@ Expected<protos::Ack> Server::unary_activate_subscription_service(event_t& event
 Expected<protos::Ack> Server::unary_drop_subscription_service(event_t& event)
 {
     auto req = unpack_request<protos::DropSubscriptionServiceRequest>(event);
-    SRF_EXPECT(req);
+    MRC_EXPECT(req);
 
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
     auto instance = validate_instance_id(req->instance_id(), event);
-    SRF_EXPECT(instance);
+    MRC_EXPECT(instance);
 
     auto service_iter = get_subscription_service(req->service_name());
-    SRF_EXPECT(service_iter);
+    MRC_EXPECT(service_iter);
     auto& service = *(service_iter.value()->second);
 
     service.drop_tag(req->tag());
@@ -563,12 +563,12 @@ Expected<protos::Ack> Server::unary_drop_subscription_service(event_t& event)
 Expected<> Server::event_update_subscription_service(event_t& event)
 {
     auto req = unpack_request<protos::UpdateSubscriptionServiceRequest>(event);
-    SRF_EXPECT(req);
+    MRC_EXPECT(req);
 
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
     auto service_iter = get_subscription_service(req->service_name());
-    SRF_EXPECT(service_iter);
+    MRC_EXPECT(service_iter);
     auto& service = *(service_iter.value()->second);
 
     return service.update_role(*req);
@@ -608,7 +608,7 @@ Expected<Server::instance_t> Server::validate_instance_id(const instance_id_t& i
     return m_connections.get_instance(instance_id).and_then([&event, &instance_id](auto& i) -> Expected<instance_t> {
         if (event.stream->get_id() != i->stream_writer().get_id())
         {
-            return Error::create(SRF_CONCAT_STR(
+            return Error::create(MRC_CONCAT_STR(
                 "instance_id (" << instance_id << ") not assocated with machine/stream: " << event.stream->get_id()));
         }
         return i;

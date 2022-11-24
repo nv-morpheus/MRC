@@ -53,7 +53,7 @@ TagID Tagged::next_tag()
         return (m_tag + m_uid);
     }
     throw std::overflow_error(
-        SRF_CONCAT_STR("limit of uniquely Tagged objects with tag " << m_tag << " reached; fatal error"));
+        MRC_CONCAT_STR("limit of uniquely Tagged objects with tag " << m_tag << " reached; fatal error"));
 }
 TagID Tagged::next()
 {
@@ -110,7 +110,7 @@ void TaggedIssuer::drop_tag(TagID tag)
             return;
         }
     }
-    throw std::invalid_argument(SRF_CONCAT_STR("tag " << tag << " not registered"));
+    throw std::invalid_argument(MRC_CONCAT_STR("tag " << tag << " not registered"));
 }
 TagID TaggedIssuer::register_instance_id(ClientInstance::instance_id_t instance_id)
 {

@@ -21,57 +21,57 @@
 // https://gcc.gnu.org/wiki/Visibility
 
 // For every non-templated non-static function definition in your library (both headers and source files), decide if it
-// is publicly used or internally used: If it is publicly used, mark with SRF_API like this: extern SRF_API PublicFunc()
+// is publicly used or internally used: If it is publicly used, mark with MRC_API like this: extern MRC_API PublicFunc()
 
-// If it is only internally used, mark with SRF_LOCAL like this: extern SRF_LOCAL PublicFunc() Remember, static
+// If it is only internally used, mark with MRC_LOCAL like this: extern MRC_LOCAL PublicFunc() Remember, static
 // functions need no demarcation, nor does anything in an anonymous namespace, nor does anything which is templated.
 
 // For every non-templated class definition in your library (both headers and source files), decide if it is publicly
-// used or internally used: If it is publicly used, mark with SRF_API like this: class SRF_API PublicClass
+// used or internally used: If it is publicly used, mark with MRC_API like this: class MRC_API PublicClass
 
-// If it is only internally used, mark with SRF_LOCAL like this: class SRF_LOCAL PublicClass
+// If it is only internally used, mark with MRC_LOCAL like this: class MRC_LOCAL PublicClass
 
 // Individual member functions of an exported class that are not part of the interface, in particular ones which are
-// private, and are not used by friend code, should be marked individually with SRF_LOCAL.
+// private, and are not used by friend code, should be marked individually with MRC_LOCAL.
 
 // In your build system (Makefile etc), you will probably wish to add the -fvisibility=hidden and
 // -fvisibility-inlines-hidden options to the command line arguments of every GCC invocation. Remember to test your
 // library thoroughly afterwards, including that all exceptions correctly traverse shared object boundaries.
 
 #if defined _WIN32 || defined __CYGWIN__
-    #define SRF_HELPER_DLL_IMPORT __declspec(dllimport)
-    #define SRF_HELPER_DLL_EXPORT __declspec(dllexport)
-    #define SRF_HELPER_DLL_LOCAL
+    #define MRC_HELPER_DLL_IMPORT __declspec(dllimport)
+    #define MRC_HELPER_DLL_EXPORT __declspec(dllexport)
+    #define MRC_HELPER_DLL_LOCAL
 #else
     #if __GNUC__ >= 4
-        #define SRF_HELPER_DLL_IMPORT __attribute__((visibility("default")))
-        #define SRF_HELPER_DLL_EXPORT __attribute__((visibility("default")))
-        #define SRF_HELPER_DLL_LOCAL __attribute__((visibility("hidden")))
+        #define MRC_HELPER_DLL_IMPORT __attribute__((visibility("default")))
+        #define MRC_HELPER_DLL_EXPORT __attribute__((visibility("default")))
+        #define MRC_HELPER_DLL_LOCAL __attribute__((visibility("hidden")))
     #else
-        #define SRF_HELPER_DLL_IMPORT
-        #define SRF_HELPER_DLL_EXPORT
-        #define SRF_HELPER_DLL_LOCAL
+        #define MRC_HELPER_DLL_IMPORT
+        #define MRC_HELPER_DLL_EXPORT
+        #define MRC_HELPER_DLL_LOCAL
     #endif
 #endif
 
-// Now we use the generic helper definitions above to define SRF_API and SRF_LOCAL.
-// SRF_API is used for the public API symbols. It either DLL imports or DLL exports (or does nothing for static build)
-// SRF_LOCAL is used for non-api symbols.
+// Now we use the generic helper definitions above to define MRC_API and MRC_LOCAL.
+// MRC_API is used for the public API symbols. It either DLL imports or DLL exports (or does nothing for static build)
+// MRC_LOCAL is used for non-api symbols.
 
-#define SRF_DLL  // we alway build the .so/.dll
+#define MRC_DLL  // we alway build the .so/.dll
 #ifdef libsrf_EXPORTS
-    #define SRF_DLL_EXPORTS
+    #define MRC_DLL_EXPORTS
 #endif
 
-#ifdef SRF_DLL              // defined if MRC is compiled as a DLL
-    #ifdef SRF_DLL_EXPORTS  // defined if we are building the MRC DLL (instead of using it)
-        #define SRF_API SRF_HELPER_DLL_EXPORT
+#ifdef MRC_DLL              // defined if MRC is compiled as a DLL
+    #ifdef MRC_DLL_EXPORTS  // defined if we are building the MRC DLL (instead of using it)
+        #define MRC_API MRC_HELPER_DLL_EXPORT
     #else
-        #define SRF_API SRF_HELPER_DLL_IMPORT
-    #endif  // SRF_DLL_EXPORTS
-    #define SRF_LOCAL SRF_HELPER_DLL_LOCAL
-#else  // SRF_DLL is not defined: this means MRC is a static lib.
-    #define SRF_API
-    #define SRF_LOCAL
+        #define MRC_API MRC_HELPER_DLL_IMPORT
+    #endif  // MRC_DLL_EXPORTS
+    #define MRC_LOCAL MRC_HELPER_DLL_LOCAL
+#else  // MRC_DLL is not defined: this means MRC is a static lib.
+    #define MRC_API
+    #define MRC_LOCAL
 static_assert(false, "always build the .so/.dll")
-#endif  // SRF_DLL
+#endif  // MRC_DLL

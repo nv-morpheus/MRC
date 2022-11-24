@@ -79,6 +79,6 @@ install(
   COMPONENT Python
 )
 
-if(SRF_BUILD_TESTS)
+if(MRC_BUILD_TESTS)
   add_subdirectory(tests)
 endif()

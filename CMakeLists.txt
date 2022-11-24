@@ -18,25 +18,25 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 list(APPEND CMAKE_MESSAGE_CONTEXT "mrc")
 
 # Global options.
-# Options of the form: SRF_BUILD_XXX, enable library features and use default values targeting average users of the library
-# Options of the form: SRF_ENABLE_XXX, alter whether to build using a specific optional third party library. ON by default
-# Options of the form: SRF_USE_XXX, enable linting or alter the environment and are OFF by default
+# Options of the form: MRC_BUILD_XXX, enable library features and use default values targeting average users of the library
+# Options of the form: MRC_ENABLE_XXX, alter whether to build using a specific optional third party library. ON by default
+# Options of the form: MRC_USE_XXX, enable linting or alter the environment and are OFF by default
 option(BUILD_SHARED_LIBS "Default value for whether or not to build shared or static libraries" ON)
-option(SRF_BUILD_BENCHMARKS "Whether or not to build MRC benchmarks" OFF)
-option(SRF_BUILD_DOCS "Enable building of API documentation" OFF)
-option(SRF_BUILD_LIBRARY "Whether the entire MRC library should be built. If set to OFF, only the pieces needed for a target will be built. Set to ON if installing the library" ON)
-option(SRF_BUILD_PYTHON "Enable building the python bindings for Srf" ON)
-option(SRF_BUILD_TESTS "Whether or not to build MRC tests" ON)
-option(SRF_USE_CCACHE "Enable caching compilation results with ccache" OFF)
-option(SRF_USE_CLANG_TIDY "Enable running clang-tidy as part of the build process" OFF)
-option(SRF_USE_CONDA "Enables finding dependencies via conda instead of vcpkg. Note: This will disable vcpkg. All dependencies must be installed first in the conda environment" ON)
-option(SRF_USE_IWYU "Enable running include-what-you-use as part of the build process" OFF)
-option(SRF_ENABLE_CODECOV "Enable gcov code coverage" OFF)
+option(MRC_BUILD_BENCHMARKS "Whether or not to build MRC benchmarks" OFF)
+option(MRC_BUILD_DOCS "Enable building of API documentation" OFF)
+option(MRC_BUILD_LIBRARY "Whether the entire MRC library should be built. If set to OFF, only the pieces needed for a target will be built. Set to ON if installing the library" ON)
+option(MRC_BUILD_PYTHON "Enable building the python bindings for Srf" ON)
+option(MRC_BUILD_TESTS "Whether or not to build MRC tests" ON)
+option(MRC_USE_CCACHE "Enable caching compilation results with ccache" OFF)
+option(MRC_USE_CLANG_TIDY "Enable running clang-tidy as part of the build process" OFF)
+option(MRC_USE_CONDA "Enables finding dependencies via conda instead of vcpkg. Note: This will disable vcpkg. All dependencies must be installed first in the conda environment" ON)
+option(MRC_USE_IWYU "Enable running include-what-you-use as part of the build process" OFF)
+option(MRC_ENABLE_CODECOV "Enable gcov code coverage" OFF)
 
-set(SRF_RAPIDS_VERSION "22.08" CACHE STRING "Which version of RAPIDS to build for. Sets default versions for RAPIDS CMake and RMM.")
+set(MRC_RAPIDS_VERSION "22.08" CACHE STRING "Which version of RAPIDS to build for. Sets default versions for RAPIDS CMake and RMM.")
 
-set(SRF_CACHE_DIR "${CMAKE_SOURCE_DIR}/.cache" CACHE PATH "Directory to contain all CPM and CCache data")
-mark_as_advanced(SRF_CACHE_DIR)
+set(MRC_CACHE_DIR "${CMAKE_SOURCE_DIR}/.cache" CACHE PATH "Directory to contain all CPM and CCache data")
+mark_as_advanced(MRC_CACHE_DIR)
 
 # CMake path
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -80,7 +80,7 @@ enable_language(CUDA)
 
 # Create a variable for subdirectories to use to reference from the root of the
 # project. Also used by ccache
-set(SRF_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(MRC_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Set a default build type if none was specified
 rapids_cmake_build_type(Release)
@@ -88,7 +88,7 @@ rapids_cmake_build_type(Release)
 # Once the build type is set, remove any dumb vcpkg debug folders from the
 # search paths. Without this FindBoost fails since it defaults to the debug
 # binaries
-if(DEFINED CACHE{SRF_VCPKG_TOOLCHAIN} AND DEFINED CMAKE_BUILD_TYPE AND NOT CMAKE_BUILD_TYPE MATCHES "^[Dd][Ee][Bb][Uu][Gg]$")
+if(DEFINED CACHE{MRC_VCPKG_TOOLCHAIN} AND DEFINED CMAKE_BUILD_TYPE AND NOT CMAKE_BUILD_TYPE MATCHES "^[Dd][Ee][Bb][Uu][Gg]$")
   message(STATUS "Release Build: Removing debug Vcpkg paths from CMAKE_PREFIX_PATH and CMAKE_FIND_ROOT_PATH")
   list(REMOVE_ITEM CMAKE_PREFIX_PATH "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug")
   list(REMOVE_ITEM CMAKE_FIND_ROOT_PATH "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug")
@@ -104,7 +104,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 include(cmake/setup_cache.cmake)
 
 # Configure conda
-if(SRF_USE_CONDA AND DEFINED ENV{CONDA_PREFIX})
+if(MRC_USE_CONDA AND DEFINED ENV{CONDA_PREFIX})
   rapids_cmake_support_conda_env(conda_env MODIFY_PREFIX_PATH)
 
   if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT AND DEFINED ENV{CONDA_PREFIX})
@@ -331,7 +331,7 @@ target_include_directories(libmrc
 
 target_compile_definitions(libmrc
   PUBLIC
-  $<$<BOOL:${SRF_BUILD_BENCHMARKS}>:SRF_ENABLE_BENCHMARKING>
+  $<$<BOOL:${MRC_BUILD_BENCHMARKS}>:SRF_ENABLE_BENCHMARKING>
 )
 
 set_target_properties(libmrc PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
@@ -360,17 +360,17 @@ install(
 
 # ##################################################################################################
 # - subdirectories --------------------------------------------------------------------------------
-if(SRF_BUILD_PYTHON)
+if(MRC_BUILD_PYTHON)
   add_subdirectory(python)
 endif()
 
-if(SRF_BUILD_TESTS)
+if(MRC_BUILD_TESTS)
   add_subdirectory(tests)
 
   add_subdirectory(src/tests)
 endif()
 
-if(SRF_BUILD_BENCHMARKS)
+if(MRC_BUILD_BENCHMARKS)
   add_subdirectory(benchmarks)
 endif()
 
@@ -408,7 +408,7 @@ rapids_export(BUILD ${PROJECT_NAME}
   FINAL_CODE_BLOCK code_string
 )
 
-if(SRF_BUILD_DOCS)
+if(MRC_BUILD_DOCS)
   add_subdirectory(docs)
 endif()
 

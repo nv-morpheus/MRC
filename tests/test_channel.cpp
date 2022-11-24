@@ -138,7 +138,7 @@ TEST_F(TestChannel, BufferedChannel)
     channel->await_write(42);
     ingress.await_write(2);
 
-#ifdef SRF_TRACING_DISABLED
+#ifdef MRC_TRACING_DISABLED
     EXPECT_EQ(observer->m_read_counter, 0);
     EXPECT_EQ(observer->m_write_counter, 0);
 #else
@@ -152,7 +152,7 @@ TEST_F(TestChannel, BufferedChannel)
     egress.try_read(std::ref(i));
     EXPECT_EQ(i, 2);
 
-#ifdef SRF_TRACING_DISABLED
+#ifdef MRC_TRACING_DISABLED
     EXPECT_EQ(observer->m_read_counter, 0);
     EXPECT_EQ(observer->m_write_counter, 0);
 #else

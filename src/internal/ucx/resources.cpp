@@ -48,9 +48,9 @@ Resources::Resources(resources::PartitionResourceBase& base, system::FiberTaskQu
                 void* tmp = nullptr;
                 DVLOG(10) << "partition: " << partition_id()
                           << " has a gpu present; ensure a cuda context is active before instantiating a ucx context";
-                SRF_CHECK_CUDA(cudaSetDevice(partition().device().cuda_device_id()));
-                SRF_CHECK_CUDA(cudaMalloc(&tmp, 1024));
-                SRF_CHECK_CUDA(cudaFree(tmp));
+                MRC_CHECK_CUDA(cudaSetDevice(partition().device().cuda_device_id()));
+                MRC_CHECK_CUDA(cudaMalloc(&tmp, 1024));
+                MRC_CHECK_CUDA(cudaFree(tmp));
             }
 
             // we need to create both the context and the workers to ensure ucx and cuda are aligned

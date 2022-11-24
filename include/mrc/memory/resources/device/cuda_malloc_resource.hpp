@@ -39,14 +39,14 @@ class cuda_malloc_resource final : public memory_resource
     {
         void* ptr = nullptr;
         DeviceGuard guard(m_device_id);
-        SRF_CHECK_CUDA(cudaMalloc(&ptr, bytes));
+        MRC_CHECK_CUDA(cudaMalloc(&ptr, bytes));
         return ptr;
     }
 
     void do_deallocate(void* ptr, std::size_t /*__bytes*/) final
     {
         DeviceGuard guard(m_device_id);
-        SRF_CHECK_CUDA(cudaFree(ptr));
+        MRC_CHECK_CUDA(cudaFree(ptr));
     }
 
     memory_kind do_kind() const final

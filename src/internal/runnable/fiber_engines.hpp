@@ -35,17 +35,17 @@ namespace mrc::internal::runnable {
 class FiberEngines final : public Engines
 {
   public:
-    FiberEngines(system::FiberPool& pool, int priority = SRF_DEFAULT_FIBER_PRIORITY);
+    FiberEngines(system::FiberPool& pool, int priority = MRC_DEFAULT_FIBER_PRIORITY);
 
     FiberEngines(::mrc::runnable::LaunchOptions launch_options,
                  system::FiberPool& pool,
-                 int priority = SRF_DEFAULT_FIBER_PRIORITY);
+                 int priority = MRC_DEFAULT_FIBER_PRIORITY);
 
     FiberEngines(::mrc::runnable::LaunchOptions launch_options, system::FiberPool& pool, const FiberMetaData& meta);
 
     FiberEngines(::mrc::runnable::LaunchOptions launch_options,
                  std::vector<std::reference_wrapper<core::FiberTaskQueue>>&& task_queues,
-                 int priority = SRF_DEFAULT_FIBER_PRIORITY);
+                 int priority = MRC_DEFAULT_FIBER_PRIORITY);
 
     ~FiberEngines() final = default;
 

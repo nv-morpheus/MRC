@@ -77,45 +77,45 @@ Some options:
 
 #### Clone MRC repository
 ```bash
-export SRF_HOME=$(pwd)/mrc
-git clone git@github.com:nv-morpheus/mrc.git $SRF_HOME
-cd $SRF_HOME
+export MRC_HOME=$(pwd)/mrc
+git clone git@github.com:nv-morpheus/mrc.git $MRC_HOME
+cd $MRC_HOME
 ```
 
 #### Create MRC Conda environment
 ```bash
 # note: `mamba` may be used in place of `conda` for better performance.
-conda env create -n mrc --file $SRF_HOME/ci/conda/environments/dev_env.yml
+conda env create -n mrc --file $MRC_HOME/ci/conda/environments/dev_env.yml
 conda activate mrc
 ```
 #### Build MRC
 ```bash
-mkdir $SRF_HOME/build
-cd $SRF_HOME/build
+mkdir $MRC_HOME/build
+cd $MRC_HOME/build
 cmake ..
 make -j $(nproc)
 ```
 
 #### Run MRC C++ Tests
 ```bash
-export SRF_TEST_INTERNAL_DATA_PATH=$SRF_HOME/src/tests
-$SRF_HOME/build/src/tests/test_srf_private.x
-$SRF_HOME/build/tests/test_srf.x
-$SRF_HOME/build/tests/logging/test_srf_logging.x
+export MRC_TEST_INTERNAL_DATA_PATH=$SRF_HOME/src/tests
+$MRC_HOME/build/src/tests/test_srf_private.x
+$MRC_HOME/build/tests/test_srf.x
+$MRC_HOME/build/tests/logging/test_srf_logging.x
 ```
 
 ### Install MRC Python
 ```bash
-pip install -e $SRF_HOME/build/python
+pip install -e $MRC_HOME/build/python
 ```
 
 #### Run MRC Python Tests
 ```bash
-pytest $SRF_HOME/python
+pytest $MRC_HOME/python
 ```
 
 ### Building API Documentation
-From the root of the MRC repo, configure CMake with `SRF_BUILD_DOCS=ON` then build the `srf_docs` target. Once built the documentation will be located in the `build/docs/html` directory.
+From the root of the MRC repo, configure CMake with `MRC_BUILD_DOCS=ON` then build the `srf_docs` target. Once built the documentation will be located in the `build/docs/html` directory.
 ```bash
 cmake -B build -DSRF_BUILD_DOCS=ON .
 cmake --build build --target srf_docs

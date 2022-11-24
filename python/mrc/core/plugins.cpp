@@ -75,6 +75,6 @@ PYBIND11_MODULE(plugins, module)
     PluginModule.def("unload", &mrc::modules::PluginModule::unload, py::arg("throw_on_error") = true);
 
     module.attr("__version__") =
-        SRF_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "." << mrc_VERSION_PATCH);
+        MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "." << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

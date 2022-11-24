@@ -21,10 +21,10 @@
 list(APPEND CMAKE_MESSAGE_CONTEXT "coverage")
 
 # Include coverage tools if enabled
-if(SRF_ENABLE_CODECOV)
+if(MRC_ENABLE_CODECOV)
   include(cmake/deps/Configure_gcov.cmake)
 
-  message(STATUS "SRF_ENABLE_CODECOV is ON, configuring report exclusions and setting up coverage build targets")
+  message(STATUS "MRC_ENABLE_CODECOV is ON, configuring report exclusions and setting up coverage build targets")
   set(CODECOV_REPORT_EXCLUSIONS
     "${CMAKE_BINARY_DIR}/protos/*" # Remove this if/when we get protobuf code unit tested.
     "benchmarks/*" # Remove this if/when we get protobuf code unit tested.
@@ -51,7 +51,7 @@ endif()
 
 #[=======================================================================[
 @brief : Given a target, configure the target with appropriate gcov if
-SRF_ENABLE_CODECOV is enabled.
+MRC_ENABLE_CODECOV is enabled.
 
 ex. #configure_codecov(target_name)
 results --
@@ -59,7 +59,7 @@ results --
 #configure_codecov <TARGET_NAME>
 #]=======================================================================]
 function(configure_codecov_target target)
-  if(${SRF_ENABLE_CODECOV} STREQUAL "ON")
+  if(${MRC_ENABLE_CODECOV} STREQUAL "ON")
     message(STATUS "Configuring target <${target}> for code coverage.")
     append_coverage_compiler_flags_to_target("${target}")
   endif()

@@ -47,7 +47,7 @@ PYBIND11_MODULE(data, m)
         .def_readwrite("value", &DataObject::value)
         .def("__repr__",
              [](DataObject& self) {
-                 return SRF_CONCAT_STR("{Name: '" << self.name << "', Value: " << self.value << "}");
+                 return MRC_CONCAT_STR("{Name: '" << self.name << "', Value: " << self.value << "}");
              })
         .def(py::pickle(
             [](const DataObject& data_object) {  // __getstate__

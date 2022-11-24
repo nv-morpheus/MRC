@@ -41,9 +41,9 @@ thread_local std::map<std::string, std::shared_ptr<TraceStatistics>> TraceStatis
 std::multimap<std::string, std::shared_ptr<TraceStatistics>> TraceStatistics::TraceObjectMultimap{};
 std::recursive_mutex TraceStatistics::s_state_mutex{};
 
-bool TraceStatistics::s_trace_operators              = (std::getenv("SRF_TRACE_OPERATORS") != nullptr);
+bool TraceStatistics::s_trace_operators              = (std::getenv("MRC_TRACE_OPERATORS") != nullptr);
 bool TraceStatistics::s_trace_operators_set_manually = false;
-bool TraceStatistics::s_trace_channels               = (std::getenv("SRF_TRACE_CHANNELS") != nullptr);
+bool TraceStatistics::s_trace_channels               = (std::getenv("MRC_TRACE_CHANNELS") != nullptr);
 bool TraceStatistics::s_trace_channels_set_manually  = false;
 bool TraceStatistics::s_initialized                  = false;
 
@@ -386,9 +386,9 @@ void TraceStatistics::sync_state()
     std::lock_guard<std::recursive_mutex> lock(s_state_mutex);
 
     TraceStatistics::s_trace_operators =
-        s_trace_operators_set_manually ? s_trace_operators : (std::getenv("SRF_TRACE_OPERATORS") != nullptr);
+        s_trace_operators_set_manually ? s_trace_operators : (std::getenv("MRC_TRACE_OPERATORS") != nullptr);
     TraceStatistics::s_trace_channels =
-        s_trace_channels_set_manually ? s_trace_channels : (std::getenv("SRF_TRACE_CHANNELS") != nullptr);
+        s_trace_channels_set_manually ? s_trace_channels : (std::getenv("MRC_TRACE_CHANNELS") != nullptr);
 
     for (auto& mm_iter : TraceObjectMultimap)
     {

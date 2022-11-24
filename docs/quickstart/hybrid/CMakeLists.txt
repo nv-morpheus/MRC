@@ -26,7 +26,7 @@ add_subdirectory(srf_qs_hybrid/ex01_wrap_nodes)
 
 set(extra_args "IS_INPLACE")
 
-if(SRF_PYTHON_PERFORM_INSTALL)
+if(MRC_PYTHON_PERFORM_INSTALL)
   list(APPEND extra_args "INSTALL_WHEEL")
 endif()
 

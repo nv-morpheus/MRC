@@ -116,12 +116,12 @@ class Unwinder
     FunctionT* m_function;
 };
 
-#define SRF_UNWIND(var_name, function) SRF_UNWIND_EXPLICIT(uw_func_##var_name, var_name, function)
+#define MRC_UNWIND(var_name, function) MRC_UNWIND_EXPLICIT(uw_func_##var_name, var_name, function)
 
-#define SRF_UNWIND_AUTO(function) \
-    SRF_UNWIND_EXPLICIT(SRF_UNIQUE_VAR_NAME(uw_func_), SRF_UNIQUE_VAR_NAME(un_obj_), function)
+#define MRC_UNWIND_AUTO(function) \
+    MRC_UNWIND_EXPLICIT(MRC_UNIQUE_VAR_NAME(uw_func_), MRC_UNIQUE_VAR_NAME(un_obj_), function)
 
-#define SRF_UNWIND_EXPLICIT(function_name, unwinder_name, function) \
+#define MRC_UNWIND_EXPLICIT(function_name, unwinder_name, function) \
     auto function_name = (function);                                \
     mrc::Unwinder<decltype(function_name)> unwinder_name(std::addressof(function_name))
 

@@ -21,7 +21,7 @@ create_python_package(srf_qs_python)
 
 set(extra_args "IS_INPLACE")
 
-if(SRF_PYTHON_PERFORM_INSTALL)
+if(MRC_PYTHON_PERFORM_INSTALL)
   list(APPEND extra_args "INSTALL_WHEEL")
 endif()
 

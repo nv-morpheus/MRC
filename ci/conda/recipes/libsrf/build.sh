@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-SRF_BUILD_TYPE=${SRF_BUILD_TYPE:-Release}
+MRC_BUILD_TYPE=${SRF_BUILD_TYPE:-Release}
 
 # For now CUDAHOSTCXX is set to `/usr/bin/g++` by
 # https://github.com/rapidsai/docker/blob/161b200157206660d88fb02cf69fe58d363ac95e/generated-dockerfiles/rapidsai-core_ubuntu18.04-devel.Dockerfile
@@ -23,7 +23,7 @@ SRF_BUILD_TYPE=${SRF_BUILD_TYPE:-Release}
 export CUDAHOSTCXX=${CXX}
 
 export CCACHE_BASEDIR=$(realpath ${SRC_DIR}/..)
-# export CCACHE_LOGFILE=${SRF_CACHE_DIR}/ccache/ccache.log
+# export CCACHE_LOGFILE=${MRC_CACHE_DIR}/ccache/ccache.log
 export CCACHE_DEBUG=1
 export CCACHE_DEBUGDIR=${SRC_DIR}/ccache_debug
 export CCACHE_SLOPPINESS="system_headers"
@@ -41,9 +41,9 @@ export LD_LIBRARY_PATH="$BUILD_PREFIX/lib:$PREFIX/lib:$LD_LIBRARY_PATH"
 CMAKE_ARGS=${CMAKE_ARGS:-""}
 
 # Check for some srf environment variables. Append to front of args to allow users to overwrite them
-if [[ -n "${SRF_CACHE_DIR}" ]]; then
+if [[ -n "${MRC_CACHE_DIR}" ]]; then
    # Set the cache variable, then set the Staging prefix to allow for host searching
-   CMAKE_ARGS="-DSRF_CACHE_DIR=${SRF_CACHE_DIR} ${CMAKE_ARGS}"
+   CMAKE_ARGS="-DSRF_CACHE_DIR=${MRC_CACHE_DIR} ${CMAKE_ARGS}"
 fi
 
 # Use the GNU paths to help ccache
@@ -55,7 +55,7 @@ CMAKE_ARGS="-DCMAKE_MESSAGE_CONTEXT_SHOW=ON ${CMAKE_ARGS}"
 CMAKE_ARGS="-DCMAKE_INSTALL_PREFIX=$PREFIX ${CMAKE_ARGS}"
 CMAKE_ARGS="-DCMAKE_INSTALL_LIBDIR=lib ${CMAKE_ARGS}"
 CMAKE_ARGS="-DBUILD_SHARED_LIBS=ON ${CMAKE_ARGS}"
-CMAKE_ARGS="-DCMAKE_BUILD_TYPE=${SRF_BUILD_TYPE} ${CMAKE_ARGS}"
+CMAKE_ARGS="-DCMAKE_BUILD_TYPE=${MRC_BUILD_TYPE} ${CMAKE_ARGS}"
 CMAKE_ARGS="-DSRF_USE_CONDA=ON ${CMAKE_ARGS}"
 CMAKE_ARGS="-DSRF_USE_CCACHE=OFF ${CMAKE_ARGS}"
 CMAKE_ARGS="-DSRF_BUILD_PYTHON=ON ${CMAKE_ARGS}"

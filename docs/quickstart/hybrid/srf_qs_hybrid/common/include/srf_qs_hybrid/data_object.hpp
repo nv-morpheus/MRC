@@ -27,7 +27,7 @@ struct DataObject
 
     std::string to_string() const
     {
-        return SRF_CONCAT_STR("{Name: '" << this->name << "', Value: " << this->value << "}");
+        return MRC_CONCAT_STR("{Name: '" << this->name << "', Value: " << this->value << "}");
     }
 
     std::string name;

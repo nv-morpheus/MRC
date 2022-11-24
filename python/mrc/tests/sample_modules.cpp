@@ -72,6 +72,6 @@ PYBIND11_MODULE(sample_modules, module)
         "TemplateModuleString", "srf_unittest", PybindSegmentModuleVersion);
 
     module.attr("__version__") =
-        SRF_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "." << mrc_VERSION_PATCH);
+        MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "." << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

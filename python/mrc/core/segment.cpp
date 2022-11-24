@@ -256,6 +256,6 @@ PYBIND11_MODULE(segment, module)
                                      py::arg("optional") = true);
 
     module.attr("__version__") =
-        SRF_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "." << mrc_VERSION_PATCH);
+        MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "." << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

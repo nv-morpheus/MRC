@@ -473,7 +473,7 @@ TEST_P(ParallelTests, SourceMultiThread)
     });
 
     auto options = std::make_unique<Options>();
-    options->topology().user_cpuset(SRF_CONCAT_STR("0-" << source_thread_count));
+    options->topology().user_cpuset(MRC_CONCAT_STR("0-" << source_thread_count));
     options->topology().restrict_gpus(true);
     options->placement().resources_strategy(PlacementResources::Shared);  // ignore numa
 
@@ -550,7 +550,7 @@ TEST_P(ParallelTests, SinkMultiThread)
     });
 
     auto options = std::make_unique<Options>();
-    options->topology().user_cpuset(SRF_CONCAT_STR("0-" << thread_count));
+    options->topology().user_cpuset(MRC_CONCAT_STR("0-" << thread_count));
     options->topology().restrict_gpus(true);
     options->placement().resources_strategy(PlacementResources::Shared);  // ignore numa
 
@@ -634,7 +634,7 @@ TEST_P(ParallelTests, NodeMultiThread)
     });
 
     auto options = std::make_unique<Options>();
-    options->topology().user_cpuset(SRF_CONCAT_STR("0-" << thread_count));
+    options->topology().user_cpuset(MRC_CONCAT_STR("0-" << thread_count));
     options->topology().restrict_gpus(true);
     options->placement().resources_strategy(PlacementResources::Shared);  // ignore numa
 

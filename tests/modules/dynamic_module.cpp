@@ -83,12 +83,12 @@ const char* MODULES[] = {"srf_unittest_cpp_dynamic::DynamicSourceModule",
                          "srf_unittest_cpp_dynamic_2::DynamicSourceModule",
                          "srf_unittest_cpp_dynamic_3::DynamicSourceModule"};
 
-[[maybe_unused]] bool SRF_MODULE_dummy_entrypoint()  // NOLINT
+[[maybe_unused]] bool MRC_MODULE_dummy_entrypoint()  // NOLINT
 {
     return true;
 }
 
-[[maybe_unused]] bool SRF_MODULE_entrypoint_load()  // NOLINT
+[[maybe_unused]] bool MRC_MODULE_entrypoint_load()  // NOLINT
 {
     using namespace mrc::modules;
 
@@ -125,7 +125,7 @@ const char* MODULES[] = {"srf_unittest_cpp_dynamic::DynamicSourceModule",
     return true;
 }
 
-[[maybe_unused]] bool SRF_MODULE_entrypoint_unload()  // NOLINT
+[[maybe_unused]] bool MRC_MODULE_entrypoint_unload()  // NOLINT
 {
     using namespace mrc::modules;
 
@@ -142,14 +142,14 @@ const char* MODULES[] = {"srf_unittest_cpp_dynamic::DynamicSourceModule",
     return true;
 }
 
-[[maybe_unused]] unsigned int SRF_MODULE_entrypoint_list(const char** result)  // NOLINT
+[[maybe_unused]] unsigned int MRC_MODULE_entrypoint_list(const char** result)  // NOLINT
 {
     *result = (const char*)(&MODULES);
 
     return 3;
 }
 
-[[maybe_unused]] bool SRF_MODULE_bad_version_entrypoint()  // NOLINT
+[[maybe_unused]] bool MRC_MODULE_bad_version_entrypoint()  // NOLINT
 {
     using namespace mrc::modules;
 

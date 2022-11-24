@@ -22,7 +22,7 @@
 
 namespace mrc {
 
-#ifdef SRF_TRACING_DISABLED
+#ifdef MRC_TRACING_DISABLED
     #define WATCHER_PROLOGUE(event)
     #define WATCHER_EPILOGUE(event, rc)
     #define WATCHER_EPILOGUE(event, rc)

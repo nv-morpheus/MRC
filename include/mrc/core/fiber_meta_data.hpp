@@ -26,7 +26,7 @@ namespace mrc {
  */
 struct FiberMetaData
 {
-    int priority{SRF_DEFAULT_FIBER_PRIORITY};
+    int priority{MRC_DEFAULT_FIBER_PRIORITY};
 };
 
 }  // namespace mrc

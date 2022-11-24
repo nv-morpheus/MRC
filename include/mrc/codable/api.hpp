@@ -136,7 +136,7 @@ class IEncodableStorage : public virtual IStorage
      * @brief Add an eager buffer owned by EncodedObject. This buffer will be serialized and sent as part of the control
      * message.
      *
-     * Eager buffers are limited in size by compilation limits, SRF_MAX_EAGER_BUFFER_SIZE and SRF_MAX_EAGER_TOTAL_BYTES
+     * Eager buffers are limited in size by compilation limits, MRC_MAX_EAGER_BUFFER_SIZE and MRC_MAX_EAGER_TOTAL_BYTES
      * TODO(ryan) - enforce these compile time limits
      *
      * @return std::size_t

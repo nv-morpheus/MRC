@@ -32,7 +32,7 @@
 
 #define TEST_BIT(_n, _p) (_n & (1UL << _p))
 
-#define SRF_CHECK_NVML(expression)                                    \
+#define MRC_CHECK_NVML(expression)                                    \
     {                                                                 \
         auto status = (expression);                                   \
         if (status != NVML_SUCCESS)                                   \
@@ -166,7 +166,7 @@ cpu_set DeviceInfo::Affinity(int device_id)
 std::size_t DeviceInfo::Alignment()
 {
     struct cudaDeviceProp properties;
-    SRF_CHECK_CUDA(cudaGetDeviceProperties(&properties, 0));
+    MRC_CHECK_CUDA(cudaGetDeviceProperties(&properties, 0));
     return properties.textureAlignment;
 }
 
@@ -213,7 +213,7 @@ std::set<unsigned int> DeviceInfo::AccessibleDeviceIndexes()
 nvmlMemory_t DeviceInfo::MemoryInfo(int device_id)
 {
     nvmlMemory_t info;
-    SRF_CHECK_NVML(nvmlDeviceGetMemoryInfo(DeviceInfo::GetHandleById(device_id), &info));
+    MRC_CHECK_NVML(nvmlDeviceGetMemoryInfo(DeviceInfo::GetHandleById(device_id), &info));
     return info;
 }
 

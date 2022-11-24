@@ -32,7 +32,7 @@ namespace mrc::internal::runnable {
 class FiberEngine final : public Engine
 {
   public:
-    FiberEngine(core::FiberTaskQueue& task_queue, int priority = SRF_DEFAULT_FIBER_PRIORITY);
+    FiberEngine(core::FiberTaskQueue& task_queue, int priority = MRC_DEFAULT_FIBER_PRIORITY);
     FiberEngine(core::FiberTaskQueue& task_queue, const FiberMetaData& meta);
 
     ~FiberEngine() final = default;
