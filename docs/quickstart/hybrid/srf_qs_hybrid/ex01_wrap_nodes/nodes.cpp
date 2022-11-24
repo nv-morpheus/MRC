@@ -15,11 +15,12 @@
  * limitations under the License.
  */
 
+#include "mrc/runnable/context.hpp"
+#include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
+#include "mrc/utils/string_utils.hpp"
+
 #include <glog/logging.h>
-#include <mrc/runnable/context.hpp>
-#include <mrc/segment/builder.hpp>
-#include <mrc/segment/object.hpp>
-#include <mrc/utils/string_utils.hpp>
 #include <pybind11/pybind11.h>
 #include <pysrf/node.hpp>
 #include <srf_qs_hybrid/data_object.hpp>
@@ -31,7 +32,7 @@
 namespace mrc::quickstart::hybrid::ex01_wrap_nodes {
 namespace py = pybind11;
 
-class MyDataObjectSource : public mrc::pysrf::PythonSource<std::shared_ptr<common::DataObject>>
+class MyDataObjectSource : public mrc::pymrc::PythonSource<std::shared_ptr<common::DataObject>>
 {
   public:
     MyDataObjectSource(size_t count) : PythonSource(build()), m_count(count) {}
@@ -56,9 +57,9 @@ class MyDataObjectSource : public mrc::pysrf::PythonSource<std::shared_ptr<commo
 };
 
 class MyDataObjectNode
-  : public mrc::pysrf::PythonNode<std::shared_ptr<common::DataObject>, std::shared_ptr<common::DataObject>>
+  : public mrc::pymrc::PythonNode<std::shared_ptr<common::DataObject>, std::shared_ptr<common::DataObject>>
 {
-    using base_t = mrc::pysrf::PythonNode<std::shared_ptr<common::DataObject>, std::shared_ptr<common::DataObject>>;
+    using base_t = mrc::pymrc::PythonNode<std::shared_ptr<common::DataObject>, std::shared_ptr<common::DataObject>>;
 
   public:
     MyDataObjectNode() : PythonNode(base_t::op_factory_from_sub_fn(build())) {}
@@ -81,7 +82,7 @@ class MyDataObjectNode
     size_t m_count;
 };
 
-class MyDataObjectSink : public mrc::pysrf::PythonSink<std::shared_ptr<common::DataObject>>
+class MyDataObjectSink : public mrc::pymrc::PythonSink<std::shared_ptr<common::DataObject>>
 {
   public:
     MyDataObjectSink() : PythonSink(build_on_next(), build_on_complete()) {}
@@ -115,7 +116,7 @@ PYBIND11_MODULE(nodes, m)
         )pbdoc";
 
     // Required for SegmentObject
-    mrc::pysrf::import(m, "srf.core.node");
+    mrc::pymrc::import(m, "mrc.core.node");
 
     py::class_<mrc::segment::Object<MyDataObjectSource>,
                mrc::segment::ObjectProperties,

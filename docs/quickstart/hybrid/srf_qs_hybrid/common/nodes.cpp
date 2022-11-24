@@ -15,11 +15,12 @@
  * limitations under the License.
  */
 
+#include "mrc/runnable/context.hpp"
+#include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
+#include "mrc/utils/string_utils.hpp"
+
 #include <glog/logging.h>
-#include <mrc/runnable/context.hpp>
-#include <mrc/segment/builder.hpp>
-#include <mrc/segment/object.hpp>
-#include <mrc/utils/string_utils.hpp>
 #include <pybind11/pybind11.h>
 #include <pysrf/node.hpp>
 #include <srf_qs_hybrid/data_object.hpp>
@@ -31,9 +32,9 @@
 namespace mrc::quickstart::hybrid::common {
 namespace py = pybind11;
 
-class DataObjectSource : public mrc::pysrf::PythonSource<std::shared_ptr<common::DataObject>>
+class DataObjectSource : public mrc::pymrc::PythonSource<std::shared_ptr<common::DataObject>>
 {
-    // using base_t = mrc::pysrf::PythonSource<std::shared_ptr<common::DataObject>>;
+    // using base_t = mrc::pymrc::PythonSource<std::shared_ptr<common::DataObject>>;
     // using typename base_t::source_type_t;
     // using typename base_t::subscriber_fn_t;
 
@@ -60,9 +61,9 @@ class DataObjectSource : public mrc::pysrf::PythonSource<std::shared_ptr<common:
 };
 
 class DataObjectNode
-  : public mrc::pysrf::PythonNode<std::shared_ptr<common::DataObject>, std::shared_ptr<common::DataObject>>
+  : public mrc::pymrc::PythonNode<std::shared_ptr<common::DataObject>, std::shared_ptr<common::DataObject>>
 {
-    using base_t = mrc::pysrf::PythonNode<std::shared_ptr<common::DataObject>, std::shared_ptr<common::DataObject>>;
+    using base_t = mrc::pymrc::PythonNode<std::shared_ptr<common::DataObject>, std::shared_ptr<common::DataObject>>;
 
   public:
     DataObjectNode() : PythonNode(base_t::op_factory_from_sub_fn(build())) {}
@@ -85,9 +86,9 @@ class DataObjectNode
     size_t m_count;
 };
 
-class DataObjectSink : public mrc::pysrf::PythonSink<std::shared_ptr<common::DataObject>>
+class DataObjectSink : public mrc::pymrc::PythonSink<std::shared_ptr<common::DataObject>>
 {
-    // using base_t = mrc::pysrf::PythonSink<std::shared_ptr<common::DataObject>>;
+    // using base_t = mrc::pymrc::PythonSink<std::shared_ptr<common::DataObject>>;
     // using typename base_t::sink_type_t;
 
   public:
@@ -122,7 +123,7 @@ PYBIND11_MODULE(nodes, m)
         )pbdoc";
 
     // Required for SegmentObject
-    mrc::pysrf::import(m, "srf.core.node");
+    mrc::pymrc::import(m, "mrc.core.node");
 
     py::class_<mrc::segment::Object<DataObjectSource>,
                mrc::segment::ObjectProperties,

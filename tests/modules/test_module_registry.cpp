@@ -36,7 +36,7 @@ TEST_F(TestModuleRegistry, RegistryModuleTest)
     auto config            = nlohmann::json();
     config["source_count"] = 42;
 
-    const std::vector<unsigned int> release_version = {srf_VERSION_MAJOR, srf_VERSION_MINOR, srf_VERSION_PATCH};
+    const std::vector<unsigned int> release_version = {mrc_VERSION_MAJOR, mrc_VERSION_MINOR, mrc_VERSION_PATCH};
 
     auto simple_mod_func = [](std::string module_name, nlohmann::json config) {
         return std::make_shared<SimpleModule>(std::move(module_name), std::move(config));
@@ -112,8 +112,8 @@ TEST_F(TestModuleRegistry, UnRegistrerModuleTest)
     using namespace modules;
 
     std::string period              = ".";
-    std::string release_version_str = std::to_string(srf_VERSION_MAJOR) + period + std::to_string(srf_VERSION_MINOR) +
-                                      period + std::to_string(srf_VERSION_PATCH);
+    std::string release_version_str = std::to_string(mrc_VERSION_MAJOR) + period + std::to_string(mrc_VERSION_MINOR) +
+                                      period + std::to_string(mrc_VERSION_PATCH);
 
     std::string registry_namespace = "module_registry_unittest";
     std::string simple_mod_name    = "SimpleModule";
@@ -130,7 +130,7 @@ TEST_F(TestModuleRegistry, VersionCompatibleTest)
 {
     using namespace modules;
 
-    const std::vector<unsigned int> release_version     = {srf_VERSION_MAJOR, srf_VERSION_MINOR, srf_VERSION_PATCH};
+    const std::vector<unsigned int> release_version     = {mrc_VERSION_MAJOR, mrc_VERSION_MINOR, mrc_VERSION_PATCH};
     const std::vector<unsigned int> old_release_version = {22, 10, 0};
     const std::vector<unsigned int> no_version_patch    = {22, 10};
     const std::vector<unsigned int> no_version_minor_and_patch = {22};

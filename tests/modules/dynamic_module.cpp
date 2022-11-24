@@ -77,7 +77,7 @@ std::string DynamicSourceModule::module_type_name() const
 
 extern "C" {
 
-const std::vector<unsigned int> DynamicTestModuleVersion{srf_VERSION_MAJOR, srf_VERSION_MINOR, srf_VERSION_PATCH};
+const std::vector<unsigned int> DynamicTestModuleVersion{mrc_VERSION_MAJOR, mrc_VERSION_MINOR, mrc_VERSION_PATCH};
 
 const char* MODULES[] = {"srf_unittest_cpp_dynamic::DynamicSourceModule",
                          "srf_unittest_cpp_dynamic_2::DynamicSourceModule",

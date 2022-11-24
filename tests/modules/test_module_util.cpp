@@ -27,7 +27,7 @@ TEST_F(TestModuleUtil, ModuleRegistryUtilTest)
 
     const auto* registry_namespace = "srf_unittest";
 
-    const std::vector<unsigned int> release_version = {srf_VERSION_MAJOR, srf_VERSION_MINOR, srf_VERSION_PATCH};
+    const std::vector<unsigned int> release_version = {mrc_VERSION_MAJOR, mrc_VERSION_MINOR, mrc_VERSION_PATCH};
 
     ModelRegistryUtil::create_registered_module<SimpleModule>("SimpleModule", registry_namespace, release_version);
     ModelRegistryUtil::create_registered_module<SourceModule>("SourceModule", registry_namespace, release_version);

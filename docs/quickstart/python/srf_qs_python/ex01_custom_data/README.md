@@ -45,11 +45,11 @@ Running the example yields the following:
 
 ```bash
 $ python ./docs/quickstart/python/srf_qs_python/ex01_custom_data/run.py
-srf pipeline starting...
+mrc pipeline starting...
 Processing 'Instance-0'
 Processing 'Instance-1'
 Processing 'Instance-2'
-srf pipeline complete: total_sum should be 6; total_sum=6
+mrc pipeline complete: total_sum should be 6; total_sum=6
 ```
 
 Looking at the output, we can see that 3 objects were procesed by this pipeline, one for each object emmitted by the source. Unlike previous examples, we printed the names of each object in the interior node, instead of in the sink.

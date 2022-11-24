@@ -25,8 +25,8 @@ if(SRF_PYTHON_PERFORM_INSTALL)
   list(APPEND extra_args "INSTALL_WHEEL")
 endif()
 
-if(TARGET srf-package-install)
-  list(APPEND extra_args "PYTHON_DEPENDENCIES" "srf-package-install")
+if(TARGET mrc-package-install)
+  list(APPEND extra_args "PYTHON_DEPENDENCIES" "mrc-package-install")
 endif()
 
 build_python_package(srf_qs_python ${extra_args})

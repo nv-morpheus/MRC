@@ -17,10 +17,11 @@
 
 #include "nodes.hpp"
 
+#include "mrc/mrc.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/pipeline/pipeline.hpp"
+
 #include <glog/logging.h>
-#include <mrc/mrc.hpp>
-#include <mrc/node/rx_sink.hpp>
-#include <mrc/pipeline/pipeline.hpp>
 
 using namespace mrc;
 using namespace mrc::quickstart::cpp::common;

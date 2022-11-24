@@ -24,11 +24,11 @@ We can see this simple pipeline in action by running the python script:
 
 ```bash
 $ python docs/quickstart/python/srf_qs_python/ex00_simple_pipeline/run.py
-srf pipeline starting...
+mrc pipeline starting...
 Got value: 2.5, Incrementing counter
 Got value: 5.0, Incrementing counter
 Got value: 7.5, Incrementing counter
-srf pipeline complete: counter should be 3; counter=3
+mrc pipeline complete: counter should be 3; counter=3
 ```
 
 We can see that the sink function was called 3 times, one for each value emitted by the source. What happens if you change the number of `yield` statements in the source object?

@@ -21,7 +21,7 @@ add_pybind11_library(
   SOURCE_FILES
   data.cpp
   LINK_TARGETS
-  mrc::pysrf
+  mrc::pymrc
   OUTPUT_TARGET
   common_data_target
 )
