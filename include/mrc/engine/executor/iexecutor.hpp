@@ -31,7 +31,7 @@ namespace mrc::internal::executor {
 class Executor;
 
 /**
- * @brief The I-classes in srf/internal enable the building and customization of an Executor.
+ * @brief The I-classes in mrc/internal enable the building and customization of an Executor.
  *
  * The build order should be:
  * - ISystem

@@ -30,8 +30,8 @@ if(MRC_ENABLE_CODECOV)
     "benchmarks/*" # Remove this if/when we get protobuf code unit tested.
     ".cache/*"
     "docs/*" # Remove this if/when we get protobuf code unit tested.
-    "python/srf/_pymrc/tests/*"
-    "python/srf/tests/*"
+    "python/mrc/_pymrc/tests/*"
+    "python/mrc/tests/*"
     "src/tests/*"
     "tests/*"
   )

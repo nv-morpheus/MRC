@@ -41,7 +41,7 @@ class TestMetrics : public ::testing::Test
 
 TEST_F(TestMetrics, ThroughputCounter)
 {
-    auto counter = m_registry->make_counter("srf_throughput_counters", {{"name", "test_counter"}});
+    auto counter = m_registry->make_counter("mrc_throughput_counters", {{"name", "test_counter"}});
 
     counter.increment();
     counter.increment(42);

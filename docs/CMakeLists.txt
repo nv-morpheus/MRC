@@ -37,7 +37,7 @@ set(DOXYGEN_DOT_IMAGE_FORMAT "svg")
 set(DOXYGEN_INTERACTIVE_SVG YES)
 
 doxygen_add_docs(
-  srf_docs
+  mrc_docs
   "include"
   "protos"
   "python"

@@ -29,7 +29,7 @@ namespace mrc int main(int argc, char* argv[])
 {
     std::atomic<long> counter = 0;
 
-    // srf options
+    // mrc options
     auto options = std::make_unique<mrc::Options>();
 
     // create executor
@@ -43,7 +43,7 @@ namespace mrc int main(int argc, char* argv[])
         // Source
         // This first "node" is a source node which has no upstream dependencies. It is responsible for producing data
         // to be consume by downstream nodes
-        // Here we are constructing the IntSource from the libsrf_quicstart library
+        // Here we are constructing the IntSource from the libmrc_quicstart library
         auto source = s.construct_object<IntSource>("int_source");
 
         // Node
@@ -80,10 +80,10 @@ namespace mrc int main(int argc, char* argv[])
     executor.register_pipeline(std::move(pipeline));
 
     // start the pipeline and wait until it finishes
-    std::cout << "srf pipeline starting..." << std::endl;
+    std::cout << "mrc pipeline starting..." << std::endl;
     executor.start();
     executor.join();
-    std::cout << "srf pipeline complete: counter should be 3; counter=" << counter << std::endl;
+    std::cout << "mrc pipeline complete: counter should be 3; counter=" << counter << std::endl;
 
     return 0;
 };  // namespace )

@@ -25,7 +25,7 @@ TEST_F(TestModuleUtil, ModuleRegistryUtilTest)
 {
     using namespace modules;
 
-    const auto* registry_namespace = "srf_unittest";
+    const auto* registry_namespace = "mrc_unittest";
 
     const std::vector<unsigned int> release_version = {mrc_VERSION_MAJOR, mrc_VERSION_MINOR, mrc_VERSION_PATCH};
 

@@ -13,14 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import srf
+import mrc
 
 
 def run_pipeline():
 
     counter = 0
 
-    def segment_init(seg: srf.Builder):
+    def segment_init(seg: mrc.Builder):
 
         # Use a generator function as the source
         def source_gen():
@@ -61,24 +61,24 @@ def run_pipeline():
         seg.make_edge(node, sink)
 
     # Create the pipeline object
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
 
     # Create a segment
     pipeline.make_segment("my_seg", segment_init)
 
     # Build executor options
-    options = srf.Options()
+    options = mrc.Options()
 
     # Set to 1 thread
     options.topology.user_cpuset = "0-0"
 
     # Create the executor
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
 
     # Register pipeline to tell executor what to run
     executor.register_pipeline(pipeline)
 
-    print("srf pipeline starting...")
+    print("mrc pipeline starting...")
 
     # This will start the pipeline and return immediately
     executor.start()
@@ -86,7 +86,7 @@ def run_pipeline():
     # Wait for the pipeline to exit on its own
     executor.join()
 
-    print("srf pipeline complete: counter should be 3; counter={}".format(counter))
+    print("mrc pipeline complete: counter should be 3; counter={}".format(counter))
 
 
 if (__name__ == "__main__"):

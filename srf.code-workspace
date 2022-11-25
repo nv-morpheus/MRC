@@ -68,7 +68,7 @@
                 "name": "Debug Examples",
                 "type": "cppdbg",
                 "request": "launch",
-                "program": "${workspaceFolder}/build/examples/20_SrfSingleSegment/srf_single_segment.x",
+                "program": "${workspaceFolder}/build/examples/20_SrfSingleSegment/mrc_single_segment.x",
                 "args": [
                     "--cpu_strategy=1",
                     "--iterations=2",
@@ -93,10 +93,10 @@
                 "miDebuggerPath": "gdb"
             },
             {
-                "name": "debug test_srf.x",
+                "name": "debug test_mrc.x",
                 "type": "cppdbg",
                 "request": "launch",
-                "program": "${workspaceFolder}/build/mrc/tests/test_srf",
+                "program": "${workspaceFolder}/build/mrc/tests/test_mrc",
                 "args": [],
                 "stopAtEntry": false,
                 "cwd": "${workspaceFolder}",
@@ -114,10 +114,10 @@
                 "miDebuggerPath": "/usr/bin/gdb"
             },
             {
-                "name": "debug bench_srf.x",
+                "name": "debug bench_mrc.x",
                 "type": "cppdbg",
                 "request": "launch",
-                "program": "${workspaceFolder}/build/benchmarks/bench_srf",
+                "program": "${workspaceFolder}/build/benchmarks/bench_mrc",
                 "args": [],
                 "stopAtEntry": false,
                 "cwd": "${workspaceFolder}",

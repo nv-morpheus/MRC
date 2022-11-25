@@ -298,8 +298,8 @@ add_library(${PROJECT_NAME}::libmrc ALIAS libmrc)
 
 target_link_libraries(libmrc
   PUBLIC
-  srf_protos
-  srf_architect_protos
+  mrc_protos
+  mrc_architect_protos
   rmm::rmm
   CUDA::nvml
   CUDA::cudart

@@ -73,9 +73,9 @@ ENTRYPOINT [ "/opt/conda/bin/tini", "--", "ci/conda/entrypoint.sh" ]
 # Reset the shell back to normal
 SHELL ["/bin/bash", "-c"]
 
-# ============ Stage: conda_bld_srf ============
+# ============ Stage: conda_bld_mrc ============
 # Now build the conda dependency packages
-FROM base as conda_bld_srf
+FROM base as conda_bld_mrc
 
 # Copy the source
 COPY . ./
@@ -90,7 +90,7 @@ RUN --mount=type=ssh \
 # Setup container for runtime environment
 FROM conda_env as runtime
 
-RUN --mount=type=bind,from=conda_bld_srf,source=/opt/conda/conda-bld,target=/opt/conda/conda-bld \
+RUN --mount=type=bind,from=conda_bld_mrc,source=/opt/conda/conda-bld,target=/opt/conda/conda-bld \
     --mount=type=cache,id=conda_pkgs,target=/opt/conda/pkgs,sharing=locked \
     source activate ${CONDA_ENV_NAME} &&\
     # Install conda packages

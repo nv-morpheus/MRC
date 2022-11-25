@@ -79,9 +79,9 @@ extern "C" {
 
 const std::vector<unsigned int> DynamicTestModuleVersion{mrc_VERSION_MAJOR, mrc_VERSION_MINOR, mrc_VERSION_PATCH};
 
-const char* MODULES[] = {"srf_unittest_cpp_dynamic::DynamicSourceModule",
-                         "srf_unittest_cpp_dynamic_2::DynamicSourceModule",
-                         "srf_unittest_cpp_dynamic_3::DynamicSourceModule"};
+const char* MODULES[] = {"mrc_unittest_cpp_dynamic::DynamicSourceModule",
+                         "mrc_unittest_cpp_dynamic_2::DynamicSourceModule",
+                         "mrc_unittest_cpp_dynamic_3::DynamicSourceModule"};
 
 [[maybe_unused]] bool MRC_MODULE_dummy_entrypoint()  // NOLINT
 {
@@ -95,7 +95,7 @@ const char* MODULES[] = {"srf_unittest_cpp_dynamic::DynamicSourceModule",
     try
     {
         ModuleRegistry::register_module("DynamicSourceModule",
-                                        "srf_unittest_cpp_dynamic",
+                                        "mrc_unittest_cpp_dynamic",
                                         DynamicTestModuleVersion,
                                         [](std::string module_name, nlohmann::json config) {
                                             return std::make_shared<mrc::modules::DynamicSourceModule>(
@@ -103,7 +103,7 @@ const char* MODULES[] = {"srf_unittest_cpp_dynamic::DynamicSourceModule",
                                         });
 
         ModuleRegistry::register_module("DynamicSourceModule",
-                                        "srf_unittest_cpp_dynamic_2",
+                                        "mrc_unittest_cpp_dynamic_2",
                                         DynamicTestModuleVersion,
                                         [](std::string module_name, nlohmann::json config) {
                                             return std::make_shared<mrc::modules::DynamicSourceModule>(
@@ -111,7 +111,7 @@ const char* MODULES[] = {"srf_unittest_cpp_dynamic::DynamicSourceModule",
                                         });
 
         ModuleRegistry::register_module("DynamicSourceModule",
-                                        "srf_unittest_cpp_dynamic_3",
+                                        "mrc_unittest_cpp_dynamic_3",
                                         DynamicTestModuleVersion,
                                         [](std::string module_name, nlohmann::json config) {
                                             return std::make_shared<mrc::modules::DynamicSourceModule>(
@@ -131,9 +131,9 @@ const char* MODULES[] = {"srf_unittest_cpp_dynamic::DynamicSourceModule",
 
     try
     {
-        ModuleRegistry::unregister_module("DynamicSourceModule", "srf_unittest_cpp_dynamic");
-        ModuleRegistry::unregister_module("DynamicSourceModule", "srf_unittest_cpp_dynamic_2");
-        ModuleRegistry::unregister_module("DynamicSourceModule", "srf_unittest_cpp_dynamic_3");
+        ModuleRegistry::unregister_module("DynamicSourceModule", "mrc_unittest_cpp_dynamic");
+        ModuleRegistry::unregister_module("DynamicSourceModule", "mrc_unittest_cpp_dynamic_2");
+        ModuleRegistry::unregister_module("DynamicSourceModule", "mrc_unittest_cpp_dynamic_3");
     } catch (...)
     {
         return false;
@@ -156,7 +156,7 @@ const char* MODULES[] = {"srf_unittest_cpp_dynamic::DynamicSourceModule",
     auto BadVersion = std::vector<unsigned int>{13, 14, 15};
 
     ModuleRegistry::register_module("DynamicSourceModule_BAD",
-                                    "srf_unittest_cpp_dynamic_BAD",
+                                    "mrc_unittest_cpp_dynamic_BAD",
                                     BadVersion,
                                     [](std::string module_name, nlohmann::json config) {
                                         return std::make_shared<mrc::modules::DynamicSourceModule>(

@@ -83,7 +83,7 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
         {
             VLOG(1) << "building ucx resources for partition " << base.partition_id();
             auto network_task_queue_cpuset =
-                base.partition().host().engine_factory_cpu_sets().fiber_cpu_sets.at("srf_network");
+                base.partition().host().engine_factory_cpu_sets().fiber_cpu_sets.at("mrc_network");
             auto& network_fiber_queue = m_system->get_task_queue(network_task_queue_cpuset.first());
             std::optional<ucx::Resources> ucx;
             ucx.emplace(base, network_fiber_queue);

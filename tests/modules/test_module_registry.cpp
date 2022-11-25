@@ -219,7 +219,7 @@ TEST_F(TestModuleRegistry, DynamicModuleRegistrationTest)
     EXPECT_TRUE(dlsym_error == nullptr);
     EXPECT_TRUE(entrypoint_load());
 
-    std::string module_namespace{"srf_unittest_cpp_dynamic"};
+    std::string module_namespace{"mrc_unittest_cpp_dynamic"};
     std::string module_name{"DynamicSourceModule"};
 
     EXPECT_TRUE(ModuleRegistry::contains_namespace(module_namespace));
@@ -241,7 +241,7 @@ TEST_F(TestModuleRegistry, DynamicModuleRegistrationTest)
         config["source_count"] = source_count;
 
         auto dynamic_source_mod = builder.load_module_from_registry(
-            "DynamicSourceModule", "srf_unittest_cpp_dynamic", "DynamicModuleSourceTest_mod1", config);
+            "DynamicSourceModule", "mrc_unittest_cpp_dynamic", "DynamicModuleSourceTest_mod1", config);
 
         auto sink = builder.make_sink<bool>("sink", [&packet_count](bool input) {
             packet_count++;
@@ -294,7 +294,7 @@ TEST_F(TestModuleRegistry, DynamicModulePluginRegistrationTest)
     plugin->load();
     plugin->reload();
 
-    std::string module_namespace{"srf_unittest_cpp_dynamic"};
+    std::string module_namespace{"mrc_unittest_cpp_dynamic"};
     std::string module_name{"DynamicSourceModule"};
 
     EXPECT_TRUE(ModuleRegistry::contains_namespace(module_namespace));
@@ -302,29 +302,29 @@ TEST_F(TestModuleRegistry, DynamicModulePluginRegistrationTest)
 
     /*
      * The dynamic_test_module registers DynamicSourceModule in three test namespaces:
-     * srf_unittest_cpp_dynamic[1|2|3]. Double check this here.
+     * mrc_unittest_cpp_dynamic[1|2|3]. Double check this here.
      */
     auto registered_modules = ModuleRegistry::registered_modules();
 
-    EXPECT_TRUE(registered_modules.find("srf_unittest_cpp_dynamic") != registered_modules.end());
-    auto& ns_1 = registered_modules["srf_unittest_cpp_dynamic"];
+    EXPECT_TRUE(registered_modules.find("mrc_unittest_cpp_dynamic") != registered_modules.end());
+    auto& ns_1 = registered_modules["mrc_unittest_cpp_dynamic"];
     EXPECT_EQ(ns_1.size(), 1);
     EXPECT_TRUE(ns_1[0] == "DynamicSourceModule");
 
-    EXPECT_TRUE(registered_modules.find("srf_unittest_cpp_dynamic_2") != registered_modules.end());
-    auto& ns_2 = registered_modules["srf_unittest_cpp_dynamic_2"];
+    EXPECT_TRUE(registered_modules.find("mrc_unittest_cpp_dynamic_2") != registered_modules.end());
+    auto& ns_2 = registered_modules["mrc_unittest_cpp_dynamic_2"];
     EXPECT_EQ(ns_2.size(), 1);
     EXPECT_TRUE(ns_2[0] == "DynamicSourceModule");
 
-    EXPECT_TRUE(registered_modules.find("srf_unittest_cpp_dynamic_3") != registered_modules.end());
-    auto& ns_3 = registered_modules["srf_unittest_cpp_dynamic_3"];
+    EXPECT_TRUE(registered_modules.find("mrc_unittest_cpp_dynamic_3") != registered_modules.end());
+    auto& ns_3 = registered_modules["mrc_unittest_cpp_dynamic_3"];
     EXPECT_EQ(ns_3.size(), 1);
     EXPECT_TRUE(ns_3[0] == "DynamicSourceModule");
 
     std::vector<std::string> expected_modules{
-        "srf_unittest_cpp_dynamic::DynamicSourceModule",
-        "srf_unittest_cpp_dynamic_2::DynamicSourceModule",
-        "srf_unittest_cpp_dynamic_3::DynamicSourceModule",
+        "mrc_unittest_cpp_dynamic::DynamicSourceModule",
+        "mrc_unittest_cpp_dynamic_2::DynamicSourceModule",
+        "mrc_unittest_cpp_dynamic_3::DynamicSourceModule",
     };
 
     auto actual_modules = plugin->list_modules();
@@ -334,9 +334,9 @@ TEST_F(TestModuleRegistry, DynamicModulePluginRegistrationTest)
     plugin->unload();
     registered_modules = ModuleRegistry::registered_modules();
 
-    EXPECT_TRUE(registered_modules.find("srf_unittest_cpp_dynamic") == registered_modules.end());
-    EXPECT_TRUE(registered_modules.find("srf_unittest_cpp_dynamic_2") == registered_modules.end());
-    EXPECT_TRUE(registered_modules.find("srf_unittest_cpp_dynamic_3") == registered_modules.end());
+    EXPECT_TRUE(registered_modules.find("mrc_unittest_cpp_dynamic") == registered_modules.end());
+    EXPECT_TRUE(registered_modules.find("mrc_unittest_cpp_dynamic_2") == registered_modules.end());
+    EXPECT_TRUE(registered_modules.find("mrc_unittest_cpp_dynamic_3") == registered_modules.end());
 }
 
 TEST_F(TestModuleRegistry, DynamicModuleBadVersionTest)
@@ -363,7 +363,7 @@ TEST_F(TestModuleRegistry, DynamicModuleBadVersionTest)
     EXPECT_TRUE(dlsym_error == nullptr);
     EXPECT_THROW(entrypoint(), std::runtime_error);
 
-    std::string module_namespace{"srf_unittest_cpp_dynamic_BAD"};
+    std::string module_namespace{"mrc_unittest_cpp_dynamic_BAD"};
     std::string module_name{"DynamicSourceModule_BAD"};
 
     EXPECT_FALSE(ModuleRegistry::contains_namespace(module_namespace));

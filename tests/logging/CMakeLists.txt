@@ -14,18 +14,18 @@
 # limitations under the License.
 
 # Keep all source files sorted!!!
-add_executable(test_srf_logging
+add_executable(test_mrc_logging
   test_logging.cpp
   test_main.cpp
 )
 
-target_link_libraries(test_srf_logging
+target_link_libraries(test_mrc_logging
   PRIVATE
   ${PROJECT_NAME}::libmrc
   GTest::gtest
 )
 
 add_test(
-  NAME test_srf_logging
-  COMMAND $<TARGET_FILE:test_srf_logging>
+  NAME test_mrc_logging
+  COMMAND $<TARGET_FILE:test_mrc_logging>
 )

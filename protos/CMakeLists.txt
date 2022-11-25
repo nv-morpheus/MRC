@@ -15,47 +15,47 @@
 
 include(GRPCGenerateCPP)
 
-add_library(srf_protos)
+add_library(mrc_protos)
 
-add_library(${PROJECT_NAME}::srf_protos ALIAS srf_protos)
+add_library(${PROJECT_NAME}::mrc_protos ALIAS mrc_protos)
 
-add_library(srf_architect_protos)
+add_library(mrc_architect_protos)
 
-add_library(${PROJECT_NAME}::srf_architect_protos ALIAS srf_architect_protos)
+add_library(${PROJECT_NAME}::mrc_architect_protos ALIAS mrc_architect_protos)
 
-add_library(srf_test_protos)
+add_library(mrc_test_protos)
 
-protobuf_generate_grpc_cpp(srf_protos
-  HDRS srf_protos-headers
+protobuf_generate_grpc_cpp(mrc_protos
+  HDRS mrc_protos-headers
   PROTOS
   mrc/protos/codable.proto
   mrc/protos/remote_descriptor.proto
   mrc/protos/tensor_meta_data.proto
 )
 
-protobuf_generate_grpc_cpp(srf_architect_protos
+protobuf_generate_grpc_cpp(mrc_architect_protos
   GEN_GRPC
-  HDRS srf_architect_protos-headers
+  HDRS mrc_architect_protos-headers
   PROTOS
   mrc/protos/architect.proto
 )
 
-protobuf_generate_grpc_cpp(srf_test_protos
+protobuf_generate_grpc_cpp(mrc_test_protos
   GEN_GRPC
-  HDRS srf_test_protos-headers
+  HDRS mrc_test_protos-headers
   PROTOS
   mrc/protos/test.proto
 )
 
 # Create a custom target just for the generated headers which is necessary for style checks without build
 add_custom_target(
-  srf_protos-headers-target
-  DEPENDS ${srf_protos-headers} ${srf_architect_protos-headers} ${srf_test_protos-headers}
+  mrc_protos-headers-target
+  DEPENDS ${mrc_protos-headers} ${mrc_architect_protos-headers} ${mrc_test_protos-headers}
 )
 
 # Disable clang-tidy and IWYU for the proto target
 set_target_properties(
-  srf_protos
+  mrc_protos
   PROPERTIES
   CXX_CLANG_TIDY ""
   C_INCLUDE_WHAT_YOU_USE ""
@@ -64,7 +64,7 @@ set_target_properties(
 )
 
 set_target_properties(
-  srf_architect_protos
+  mrc_architect_protos
   PROPERTIES
   CXX_CLANG_TIDY ""
   C_INCLUDE_WHAT_YOU_USE ""
@@ -73,7 +73,7 @@ set_target_properties(
 )
 
 set_target_properties(
-  srf_test_protos
+  mrc_test_protos
   PROPERTIES
   CXX_CLANG_TIDY ""
   C_INCLUDE_WHAT_YOU_USE ""
@@ -82,10 +82,10 @@ set_target_properties(
 )
 
 # Finally, add this to the style check dependencies
-add_dependencies(${PROJECT_NAME}_style_checks srf_protos-headers-target)
+add_dependencies(${PROJECT_NAME}_style_checks mrc_protos-headers-target)
 
 install(
-  TARGETS srf_protos srf_architect_protos
+  TARGETS mrc_protos mrc_architect_protos
   EXPORT ${PROJECT_NAME}-core-exports
   PUBLIC_HEADER
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/protos"

@@ -30,7 +30,7 @@ void TestFailuresThrowExceptions()
 
 int main(int argc, char** argv)
 {
-    mrc::init_logging("mrc::test_pysrf");
+    mrc::init_logging("mrc::test_pymrc");
     ::testing::InitGoogleTest(&argc, argv);
     ::google::ParseCommandLineFlags(&argc, &argv, true);
     return RUN_ALL_TESTS();

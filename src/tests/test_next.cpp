@@ -462,20 +462,20 @@ TEST_F(TestNext, SourceNodeSink)
 };
 
 template <typename T, typename = void>
-struct is_srf_value : std::false_type
+struct is_mrc_value : std::false_type
 {};
 
 template <typename T>
-struct is_srf_value<T, std::enable_if_t<std::is_arithmetic_v<T>>> : std::true_type
+struct is_mrc_value<T, std::enable_if_t<std::is_arithmetic_v<T>>> : std::true_type
 {};
 
 template <typename T>
-struct is_srf_object
-  : std::integral_constant<bool, std::is_class_v<T> and not is_srf_value<T>::value and not is_smart_ptr<T>::value>
+struct is_mrc_object
+  : std::integral_constant<bool, std::is_class_v<T> and not is_mrc_value<T>::value and not is_smart_ptr<T>::value>
 {};
 
 template <typename T>
-struct is_valid_node_type : std::integral_constant<bool, is_srf_object<T>::value or is_srf_value<T>::value>
+struct is_valid_node_type : std::integral_constant<bool, is_mrc_object<T>::value or is_mrc_value<T>::value>
 {};
 
 template <typename T, typename = void>
@@ -485,19 +485,19 @@ struct get_node_type  // NOLINT
 };
 
 template <typename T>
-struct get_node_type<T, std::enable_if_t<is_srf_value<T>::value>>
+struct get_node_type<T, std::enable_if_t<is_mrc_value<T>::value>>
 {
     using type = T;  // NOLINT
 };
 
 template <typename T>
-struct get_node_type<T, std::enable_if_t<is_srf_object<T>::value and !std::is_const_v<T>>>
+struct get_node_type<T, std::enable_if_t<is_mrc_object<T>::value and !std::is_const_v<T>>>
 {
     using type = std::unique_ptr<T>;  // NOLINT
 };
 
 template <typename T>
-struct get_node_type<T, std::enable_if_t<is_srf_object<T>::value and std::is_const_v<T>>>
+struct get_node_type<T, std::enable_if_t<is_mrc_object<T>::value and std::is_const_v<T>>>
 {
     using type = std::shared_ptr<const T>;  // NOLINT
 };
@@ -518,13 +518,13 @@ TEST_F(TestNext, TypeTraits)
     static_assert(!is_valid_node_type<std::shared_ptr<ExampleObject>>::value, " ");
     static_assert(!is_valid_node_type<std::shared_ptr<const ExampleObject>>::value, " ");
 
-    static_assert(is_srf_value<int>::value, " ");
-    static_assert(is_srf_value<const int>::value, " ");
-    static_assert(!is_srf_value<ExampleObject>::value, " ");
+    static_assert(is_mrc_value<int>::value, " ");
+    static_assert(is_mrc_value<const int>::value, " ");
+    static_assert(!is_mrc_value<ExampleObject>::value, " ");
 
-    static_assert(is_srf_object<ExampleObject>::value, "should be true");
-    static_assert(is_srf_object<const ExampleObject>::value, "should be true");
-    static_assert(!is_srf_object<int>::value, "should be false");
+    static_assert(is_mrc_object<ExampleObject>::value, "should be true");
+    static_assert(is_mrc_object<const ExampleObject>::value, "should be true");
+    static_assert(!is_mrc_object<int>::value, "should be false");
 
     // get_node_type(T) => T if value otherwise unique_ptr<T>
     // get_node_type(const T) => const T if value otherwise shared_ptr<const T>

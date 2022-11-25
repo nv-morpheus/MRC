@@ -17,12 +17,12 @@ import argparse
 import os
 import threading
 
-import srf
+import mrc
 
 
 def run_pipeline(count: int, channel_size: int, threads: int):
 
-    def segment_init(seg: srf.Builder):
+    def segment_init(seg: mrc.Builder):
 
         # Use a generator function as the source
         def source_gen():
@@ -60,27 +60,27 @@ def run_pipeline(count: int, channel_size: int, threads: int):
         # Connect the source to the sink
         seg.make_edge(node, sink)
 
-    srf.Config.default_channel_size = channel_size
+    mrc.Config.default_channel_size = channel_size
 
     # Create the pipeline object
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
 
     # Create a segment
     pipeline.make_segment("my_seg", segment_init)
 
     # Build executor options
-    options = srf.Options()
+    options = mrc.Options()
 
     # Set the number of cores to use. Uses the format `{min_core}-{max_core}` (inclusive)
     options.topology.user_cpuset = "0-{}".format(threads - 1)
 
     # Create the executor
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
 
     # Register pipeline to tell executor what to run
     executor.register_pipeline(pipeline)
 
-    print("srf pipeline starting...")
+    print("mrc pipeline starting...")
 
     # This will start the pipeline and return immediately
     executor.start()
@@ -88,7 +88,7 @@ def run_pipeline(count: int, channel_size: int, threads: int):
     # Wait for the pipeline to exit on its own
     executor.join()
 
-    print("srf pipeline complete.".format())
+    print("mrc pipeline complete.".format())
 
 
 if (__name__ == "__main__"):
@@ -97,7 +97,7 @@ if (__name__ == "__main__"):
     parser.add_argument('--count', type=int, default=10, help="The number of items for the source to emit")
     parser.add_argument('--channel_size',
                         type=int,
-                        default=srf.Config.default_channel_size,
+                        default=mrc.Config.default_channel_size,
                         help="The size of the inter-node buffers. Must be a power of 2")
     parser.add_argument('--threads', type=int, default=os.cpu_count(), help="The number of threads to use.")
 

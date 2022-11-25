@@ -13,12 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from srf_qs_hybrid.common import setup_logger
-from srf_qs_hybrid.ex01_wrap_nodes import MyDataObjectNode
-from srf_qs_hybrid.ex01_wrap_nodes import MyDataObjectSink
-from srf_qs_hybrid.ex01_wrap_nodes import MyDataObjectSource
+from mrc_qs_hybrid.common import setup_logger
+from mrc_qs_hybrid.ex01_wrap_nodes import MyDataObjectNode
+from mrc_qs_hybrid.ex01_wrap_nodes import MyDataObjectSink
+from mrc_qs_hybrid.ex01_wrap_nodes import MyDataObjectSource
 
-import srf
+import mrc
 
 # Setup logging
 logger = setup_logger(__file__)
@@ -26,7 +26,7 @@ logger = setup_logger(__file__)
 
 def run_pipeline():
 
-    def segment_init(seg: srf.Builder):
+    def segment_init(seg: mrc.Builder):
 
         # Create the source object
         src = MyDataObjectSource(seg, "src", count=3)
@@ -41,24 +41,24 @@ def run_pipeline():
         seg.make_edge(node, sink)
 
     # Create the pipeline object
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
 
     # Create a segment
     pipeline.make_segment("my_seg", segment_init)
 
     # Build executor options
-    options = srf.Options()
+    options = mrc.Options()
 
     # Set to 1 thread
     options.topology.user_cpuset = "0-0"
 
     # Create the executor
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
 
     # Register pipeline to tell executor what to run
     executor.register_pipeline(pipeline)
 
-    logger.info("srf pipeline starting...")
+    logger.info("mrc pipeline starting...")
 
     # This will start the pipeline and return immediately
     executor.start()
@@ -66,7 +66,7 @@ def run_pipeline():
     # Wait for the pipeline to exit on its own
     executor.join()
 
-    logger.info("srf pipeline complete")
+    logger.info("mrc pipeline complete")
 
 
 if (__name__ == "__main__"):

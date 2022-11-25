@@ -15,8 +15,8 @@
 
 import dataclasses
 
-import srf
-from srf.core import operators as ops
+import mrc
+from mrc.core import operators as ops
 
 
 @dataclasses.dataclass
@@ -28,7 +28,7 @@ class MyCustomClass:
 
 def run_pipeline():
 
-    def segment_init(seg: srf.Builder):
+    def segment_init(seg: mrc.Builder):
 
         # Use a generator function as the source
         def source_gen():
@@ -43,7 +43,7 @@ def run_pipeline():
         value_count = 0
         value_sum = 0
 
-        def node_fn(input: srf.Observable, output: srf.Subscriber):
+        def node_fn(input: mrc.Observable, output: mrc.Subscriber):
 
             def update_obj(x: MyCustomClass):
                 nonlocal value_count
@@ -87,24 +87,24 @@ def run_pipeline():
         seg.make_edge(node, sink)
 
     # Create the pipeline object
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
 
     # Create a segment
     pipeline.make_segment("my_seg", segment_init)
 
     # Build executor options
-    options = srf.Options()
+    options = mrc.Options()
 
     # Set to 1 thread
     options.topology.user_cpuset = "0-0"
 
     # Create the executor
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
 
     # Register pipeline to tell executor what to run
     executor.register_pipeline(pipeline)
 
-    print("srf pipeline starting...")
+    print("mrc pipeline starting...")
 
     # This will start the pipeline and return immediately
     executor.start()
@@ -112,7 +112,7 @@ def run_pipeline():
     # Wait for the pipeline to exit on its own
     executor.join()
 
-    print("srf pipeline completed.")
+    print("mrc pipeline completed.")
 
 
 if (__name__ == "__main__"):

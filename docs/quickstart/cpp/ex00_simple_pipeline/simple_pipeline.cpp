@@ -25,7 +25,7 @@ using namespace mrc;
 
 int main(int argc, char* argv[])
 {
-    // srf options
+    // mrc options
     auto options = std::make_unique<mrc::Options>();
 
     // create executor
@@ -85,11 +85,11 @@ int main(int argc, char* argv[])
     executor.register_pipeline(std::move(pipeline));
 
     // start the pipeline and wait until it finishes
-    std::cout << "srf pipeline starting..." << std::endl;
+    std::cout << "mrc pipeline starting..." << std::endl;
     executor.start();
     executor.join();
 
-    std::cout << "srf pipeline complete: counter should be 3; counter=" << counter << std::endl;
+    std::cout << "mrc pipeline complete: counter should be 3; counter=" << counter << std::endl;
 
     return 0;
 };

@@ -14,7 +14,7 @@
 # limitations under the License.
 
 # Keep all source files sorted!!!
-add_executable(test_srf
+add_executable(test_mrc
   modules/test_module_registry.cpp
   modules/test_module_util.cpp
   modules/test_segment_modules.cpp
@@ -25,19 +25,19 @@ add_executable(test_srf
   test_node.cpp
   test_pipeline.cpp
   test_segment.cpp
-  test_srf.cpp
+  test_mrc.cpp
   test_type_utils.cpp
 )
 
-target_link_libraries(test_srf
+target_link_libraries(test_mrc
   PRIVATE
   ${PROJECT_NAME}::libmrc
   GTest::gtest
 )
 
 add_test(
-  NAME test_srf
-  COMMAND $<TARGET_FILE:test_srf>
+  NAME test_mrc
+  COMMAND $<TARGET_FILE:test_mrc>
 )
 
 add_subdirectory(benchmarking)

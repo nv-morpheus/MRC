@@ -55,7 +55,7 @@ class Buffer
 };
 }  // namespace
 
-static void srf_data_reusable(benchmark::State& state)
+static void mrc_data_reusable(benchmark::State& state)
 {
     auto pool = data::ReusablePool<Buffer>::create(32);
     pool->add_item(std::make_unique<Buffer>());
@@ -68,4 +68,4 @@ static void srf_data_reusable(benchmark::State& state)
     }
 }
 
-BENCHMARK(srf_data_reusable);
+BENCHMARK(mrc_data_reusable);

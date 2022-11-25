@@ -435,7 +435,7 @@ TEST_P(TestPartitions, EngineFactoryScenario3)
     EXPECT_ANY_THROW(make_partitions(options_fail));
 
     // drop the url, drop the number of cores
-    // dedicated network thread requested, but no architect url => no srf_network engine factory
+    // dedicated network thread requested, but no architect url => no mrc_network engine factory
     auto options_no_url = make_options([common](Options& options) {
         common(options);
         options.topology().user_cpuset("0");
@@ -460,7 +460,7 @@ TEST_P(TestPartitions, EngineFactoryScenario3)
 
     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("default").weight(), 1);
     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("main").weight(), 1);
-    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("srf_network").weight(), 1);
+    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("mrc_network").weight(), 1);
 }
 
 TEST_P(TestPartitions, EngineFactoryScenario4)
@@ -491,8 +491,8 @@ TEST_P(TestPartitions, EngineFactoryScenario4)
 
     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("default").weight(), 1);
     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("main").weight(), 1);
-    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("srf_network").weight(), 1);
-    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("main").first(), cpu_sets.fiber_cpu_sets.at("srf_network").first());
+    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("mrc_network").weight(), 1);
+    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("main").first(), cpu_sets.fiber_cpu_sets.at("mrc_network").first());
 }
 
 TEST_P(TestPartitions, EngineFactoryScenario5)
@@ -525,8 +525,8 @@ TEST_P(TestPartitions, EngineFactoryScenario5)
 
     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("default").weight(), 1);
     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("main").weight(), 1);
-    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("srf_network").weight(), 1);
-    EXPECT_NE(cpu_sets.fiber_cpu_sets.at("main").first(), cpu_sets.fiber_cpu_sets.at("srf_network").first());
+    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("mrc_network").weight(), 1);
+    EXPECT_NE(cpu_sets.fiber_cpu_sets.at("main").first(), cpu_sets.fiber_cpu_sets.at("mrc_network").first());
 }
 
 TEST_P(TestPartitions, EngineFactoryScenario6)

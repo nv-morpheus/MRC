@@ -14,14 +14,14 @@
 # limitations under the License.
 
 # Keep all source files sorted!!!
-add_executable(test_srf_benchmarking
+add_executable(test_mrc_benchmarking
   test_benchmarking.cpp
   test_main.cpp
   test_stat_gather.cpp
   test_utils.cpp
 )
 
-target_link_libraries(test_srf_benchmarking
+target_link_libraries(test_mrc_benchmarking
   PRIVATE
   ${PROJECT_NAME}::libmrc
   GTest::gtest
@@ -29,6 +29,6 @@ target_link_libraries(test_srf_benchmarking
 )
 
 add_test(
-  NAME test_srf_benchmarking
-  COMMAND $<TARGET_FILE:test_srf_benchmarking>
+  NAME test_mrc_benchmarking
+  COMMAND $<TARGET_FILE:test_mrc_benchmarking>
 )

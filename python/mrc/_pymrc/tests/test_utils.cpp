@@ -53,7 +53,7 @@ PYSRF_TEST_CLASS(Utils);
 TEST_F(TestUtils, ImportModuleObject)
 {
     auto module_def = std::make_unique<py::module_::module_def>();
-    auto m          = py::module_::create_extension_module("pysrf_unittest", nullptr, module_def.get());
+    auto m          = py::module_::create_extension_module("pymrc_unittest", nullptr, module_def.get());
 
     EXPECT_EQ(py::getattr(m, "loads", py::none()), py::none());
 

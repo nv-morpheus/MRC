@@ -51,7 +51,7 @@ Resources::Resources(resources::PartitionResourceBase& base,
     CHECK_LT(partition_id(), m_control_plane->client().connections().instance_ids().size());
     CHECK_EQ(m_control_plane->instance_id(), m_control_plane->client().connections().instance_ids().at(partition_id()));
 
-    // construct resources on the srf_network task queue thread
+    // construct resources on the mrc_network task queue thread
     ucx.network_task_queue()
         .enqueue([this, &base, &ucx, &host] {
             m_data_plane =

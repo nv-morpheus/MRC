@@ -39,7 +39,7 @@ add_custom_target(copy_fixture_files ALL
 )
 
 # Keep all source files sorted!!!
-add_executable(test_srf_private
+add_executable(test_mrc_private
   common.cpp
   nodes/common_nodes.cpp
   pipelines/multi_segment.cpp
@@ -65,7 +65,7 @@ add_executable(test_srf_private
   test_ucx.cpp
 )
 
-target_link_libraries(test_srf_private
+target_link_libraries(test_mrc_private
   PRIVATE
   ${PROJECT_NAME}::libmrc
   GTest::gtest
@@ -73,18 +73,18 @@ target_link_libraries(test_srf_private
   ucx::ucs
   ucx::ucp
   pthread
-  srf_test_protos
+  mrc_test_protos
   tl::expected
 )
 
 # Necessary include to prevent IWYU from showing absolute paths
-target_include_directories(test_srf_private
+target_include_directories(test_mrc_private
   PRIVATE
   ${MRC_ROOT_DIR}/src
   copy_fixture_files
 )
 
 add_test(
-  NAME test_srf_private
-  COMMAND $<TARGET_FILE:test_srf_private>
+  NAME test_mrc_private
+  COMMAND $<TARGET_FILE:test_mrc_private>
 )

@@ -38,7 +38,7 @@ setup(
     include_package_data=True,
     packages=find_packages(include=['mrc', 'mrc.*'], exclude=['tests']),
     package_data={
-        "mrc": ["_pymrc/*.so"]  # Add the pysrf library for the root package
+        "mrc": ["_pymrc/*.so"]  # Add the pymrc library for the root package
     },
     license="Apache",
     cmdclass=versioneer.get_cmdclass())

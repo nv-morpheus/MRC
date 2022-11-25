@@ -13,13 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_executable(bench_srf
+add_executable(bench_mrc
   main.cpp
-  bench_srf.cpp
+  bench_mrc.cpp
   bench_segment.cpp
 )
 
-target_link_libraries(bench_srf
+target_link_libraries(bench_mrc
   PRIVATE
   ${PROJECT_NAME}::libmrc
   benchmark::benchmark

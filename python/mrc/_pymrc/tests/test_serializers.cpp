@@ -46,11 +46,11 @@ using namespace pybind11::literals;
 
 PYSRF_TEST_CLASS(Serializer);
 
-class PysrfPickleableSimple
+class PymrcPickleableSimple
 {
   public:
-    PysrfPickleableSimple(std::string s, int i) : m_string_val(std::move(s)), m_int_val(i){};
-    ~PysrfPickleableSimple() = default;
+    PymrcPickleableSimple(std::string s, int i) : m_string_val(std::move(s)), m_int_val(i){};
+    ~PymrcPickleableSimple() = default;
 
     const std::string& string_value() const
     {
@@ -66,15 +66,15 @@ class PysrfPickleableSimple
     std::string m_string_val{"A string"};
 };
 
-PYBIND11_EMBEDDED_MODULE(pysrf_test_module, m)
+PYBIND11_EMBEDDED_MODULE(pymrc_test_module, m)
 {
-    auto PysrfPickleableSimple_ = pybind11::class_<PysrfPickleableSimple>(m, "PysrfPickleableSimple");
+    auto PymrcPickleableSimple_ = pybind11::class_<PymrcPickleableSimple>(m, "PymrcPickleableSimple");
 
-    PysrfPickleableSimple_.def(py::init<std::string&, int>());
-    PysrfPickleableSimple_.def("string_value", &PysrfPickleableSimple::string_value);
-    PysrfPickleableSimple_.def("int_value", &PysrfPickleableSimple::int_value);
-    PysrfPickleableSimple_.def(pybind11::pickle(
-        [](const PysrfPickleableSimple& ptc) {  // __getstate__
+    PymrcPickleableSimple_.def(py::init<std::string&, int>());
+    PymrcPickleableSimple_.def("string_value", &PymrcPickleableSimple::string_value);
+    PymrcPickleableSimple_.def("int_value", &PymrcPickleableSimple::int_value);
+    PymrcPickleableSimple_.def(pybind11::pickle(
+        [](const PymrcPickleableSimple& ptc) {  // __getstate__
             return pybind11::make_tuple(ptc.string_value(), ptc.int_value());
         },
         [](pybind11::tuple info) {  // __setstate__
@@ -83,7 +83,7 @@ PYBIND11_EMBEDDED_MODULE(pysrf_test_module, m)
                 throw std::runtime_error{"Invalid State"};
             }
 
-            PysrfPickleableSimple ptc(info[0].cast<std::string>(), info[1].cast<int>());
+            PymrcPickleableSimple ptc(info[0].cast<std::string>(), info[1].cast<int>());
 
             return ptc;
         }));
@@ -145,8 +145,8 @@ TEST_F(TestSerializer, Pybind11Simple)
 {
     py::gil_scoped_acquire gil;
 
-    auto test_mod          = py::module_::import("pysrf_test_module");
-    auto simple_pickleable = test_mod.attr("PysrfPickleableSimple")("another string", 42);
+    auto test_mod          = py::module_::import("pymrc_test_module");
+    auto simple_pickleable = test_mod.attr("PymrcPickleableSimple")("another string", 42);
 
     auto result  = pymrc::Serializer::serialize(simple_pickleable, false);
     auto rebuilt = pymrc::Deserializer::deserialize(std::get<0>(result), std::get<1>(result));
@@ -159,8 +159,8 @@ TEST_F(TestSerializer, Pybind11SimpleShmem)
 {
     py::gil_scoped_acquire gil;
 
-    auto test_mod          = py::module_::import("pysrf_test_module");
-    auto simple_pickleable = test_mod.attr("PysrfPickleableSimple")("another string", 42);
+    auto test_mod          = py::module_::import("pymrc_test_module");
+    auto simple_pickleable = test_mod.attr("PymrcPickleableSimple")("another string", 42);
 
     auto result  = pymrc::Serializer::serialize(simple_pickleable, true);
     auto rebuilt = pymrc::Deserializer::deserialize(std::get<0>(result), std::get<1>(result));

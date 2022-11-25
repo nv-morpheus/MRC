@@ -187,12 +187,12 @@ void Server::do_service_start()
             // for edge between source and router - on channel operator driven by the source thread
             node::make_edge(*progress_engine, *m_deserialize_source);
 
-            // all network runnables use the `srf_network` engine factory
+            // all network runnables use the `mrc_network` engine factory
             DVLOG(10) << "launch network event mananger progress engine";
             m_progress_engine =
                 runnable()
                     .launch_control()
-                    .prepare_launcher(mrc::runnable::LaunchOptions("srf_network"), std::move(progress_engine))
+                    .prepare_launcher(mrc::runnable::LaunchOptions("mrc_network"), std::move(progress_engine))
                     ->ignition();
         })
         .get();

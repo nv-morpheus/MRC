@@ -15,7 +15,7 @@
 
 import logging
 
-import srf.core.logging as srf_logging
+import mrc.core.logging as mrc_logging
 
 
 class SrfHandler(logging.Handler):
@@ -26,7 +26,7 @@ class SrfHandler(logging.Handler):
     def emit(self, record):
         try:
             msg = self.format(record)
-            srf_logging.log(msg, record.levelno, record.filename, record.lineno)
+            mrc_logging.log(msg, record.levelno, record.filename, record.lineno)
         except RecursionError:  # See issue 36272 https://bugs.python.org/issue36272
             raise
         except Exception:
@@ -34,8 +34,8 @@ class SrfHandler(logging.Handler):
 
     def setLevel(self, level):
         """
-        Set the logging level of this handler and the srf
+        Set the logging level of this handler and the mrc
         """
         # This could be a string so let the parent figure out how to validate it
         super().setLevel(level)
-        srf_logging.set_level(self.level)
+        mrc_logging.set_level(self.level)

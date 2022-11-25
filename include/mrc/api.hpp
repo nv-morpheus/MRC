@@ -59,7 +59,7 @@
 // MRC_LOCAL is used for non-api symbols.
 
 #define MRC_DLL  // we alway build the .so/.dll
-#ifdef libsrf_EXPORTS
+#ifdef libmrc_EXPORTS
     #define MRC_DLL_EXPORTS
 #endif
 
