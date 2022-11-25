@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "test_pysrf.hpp"
+#include "test_pymrc.hpp"
 
 #include "pymrc/module_wrappers/pickle.hpp"
 #include "pymrc/utilities/object_cache.hpp"

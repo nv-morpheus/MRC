@@ -17,7 +17,7 @@
 
 // iwyu headers for the narrowed tests
 
-#include "test_pysrf.hpp"
+#include "test_pymrc.hpp"
 
 #include "pymrc/codable_object.hpp"  // IWYU pragma: keep
 #include "pymrc/forward.hpp"
@@ -34,7 +34,7 @@
 
 // uncomment the following header list when uncommenting the test
 
-// #include "test_pysrf.hpp"
+// #include "test_pymrc.hpp"
 
 // #include "pymrc/codable_object.hpp"  // IWYU pragma: keep
 // #include "pymrc/forward.hpp"

@@ -25,7 +25,7 @@
 #include <pybind11/embed.h>
 
 using namespace mrc;
-// Essentially the same macro from test_srf.hpp but with an embedded python interpreter.
+// Essentially the same macro from test_mrc.hpp but with an embedded python interpreter.
 // The attribute visibility bit avoids a compiler warning about the test class being
 // declared with greater visibility than the interpreter attribute
 #define PYSRF_TEST_CLASS(name)                                                       \

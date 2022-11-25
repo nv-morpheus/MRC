@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "test_srf.hpp"
+#include "test_mrc.hpp"
 
 #include <utility>
 

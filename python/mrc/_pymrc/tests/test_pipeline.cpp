@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "test_pysrf.hpp"
+#include "test_pymrc.hpp"
 
 #include "pymrc/executor.hpp"  // IWYU pragma: keep
 #include "pymrc/pipeline.hpp"
@@ -23,18 +23,18 @@
 #include "pymrc/types.hpp"
 #include "pymrc/utils.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/core/utils.hpp"
-#include "srf/manifold/egress.hpp"
-#include "srf/node/rx_node.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/rx_source.hpp"
-#include "srf/node/sink_properties.hpp"
-#include "srf/node/source_properties.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/topology.hpp"
-#include "srf/segment/builder.hpp"
-#include "srf/segment/object.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/core/utils.hpp"
+#include "mrc/manifold/egress.hpp"
+#include "mrc/node/rx_node.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_source.hpp"
+#include "mrc/node/sink_properties.hpp"
+#include "mrc/node/source_properties.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/topology.hpp"
+#include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <boost/hana/if.hpp>

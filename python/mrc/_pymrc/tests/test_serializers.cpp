@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "test_pysrf.hpp"
+#include "test_pymrc.hpp"
 
 #include "pymrc/utilities/deserializers.hpp"
 #include "pymrc/utilities/serializers.hpp"

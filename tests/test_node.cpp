@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "test_srf.hpp"  // IWYU pragma: associated
+#include "test_mrc.hpp"  // IWYU pragma: associated
 
 #include "mrc/channel/status.hpp"
 #include "mrc/core/addresses.hpp"

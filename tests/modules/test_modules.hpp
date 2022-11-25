@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "../test_srf.hpp"  // IWYU pragma: keep
+#include "../test_mrc.hpp"  // IWYU pragma: keep
 
 #include "mrc/core/executor.hpp"  // IWYU pragma: keep
 #include "mrc/options/options.hpp"
