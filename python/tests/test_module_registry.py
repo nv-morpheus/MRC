@@ -286,10 +286,12 @@ def test_py_registered_nested_copied_modules():
     def init_wrapper(builder: srf.Builder):
         global packet_count
         packet_count = 0
-        builder.load_module("test_py_registered_nested_copied_module", "srf_unittests", "my_loaded_module!",
-                            {"test1": "module_1"})
-        builder.load_module("test_py_registered_nested_copied_module", "srf_unittests", "my_loaded_module_copy!",
-                            {"test2": "module_2"})
+        builder.load_module("test_py_registered_nested_copied_module",
+                            "srf_unittests",
+                            "my_loaded_module!", {"test1": "module_1"})
+        builder.load_module("test_py_registered_nested_copied_module",
+                            "srf_unittests",
+                            "my_loaded_module_copy!", {"test2": "module_2"})
 
     pipeline = srf.Pipeline()
     pipeline.make_segment("ModuleAsSource_Segment", init_wrapper)
@@ -315,6 +317,7 @@ def test_py_dynamic_module_source():
     module_name = "test_py_dyn_source"
 
     def module_initializer(builder: srf.Builder):
+
         def gen_data():
             for x in range(42):
                 yield random.choice([True, False])
