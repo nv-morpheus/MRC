@@ -24,9 +24,7 @@
 #include "pysrf/utils.hpp"
 
 #include "srf/channel/status.hpp"
-#include "srf/core/executor.hpp"
 #include "srf/core/utils.hpp"
-#include "srf/engine/pipeline/ipipeline.hpp"
 #include "srf/manifold/egress.hpp"
 #include "srf/node/rx_node.hpp"
 #include "srf/node/rx_sink.hpp"
@@ -143,10 +141,9 @@ TEST_F(TestPipeline, Execute)
     options->topology().user_cpuset("0");
 
     // note this is the base SRF executor not a pysrf executor
-    srf::Executor exec{options};
-    exec.register_pipeline(p.swap());
+    pysrf::Executor exec{options};
+    exec.register_pipeline(p);
 
-    py::gil_scoped_release release;
     exec.start();
     exec.join();
 
@@ -243,6 +240,7 @@ TEST_F(TestPipeline, DynamicPortConstructionBadDuplicatePorts)
 
 TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
 {
+    pysrf::PortBuilderUtil::register_port_util<pysrf::PyHolder>();
     const std::size_t object_count{10};
     const std::size_t source_count{4};
     std::atomic<std::size_t> sink_count{0};
@@ -327,11 +325,9 @@ TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
     opt1->topology().user_cpuset("0");
     opt1->topology().restrict_gpus(true);
 
-    srf::Executor exec1{opt1};
+    pysrf::Executor exec1{opt1};
 
-    exec1.register_pipeline(pipe.swap());
-
-    py::gil_scoped_release release;
+    exec1.register_pipeline(pipe);
 
     exec1.start();
     exec1.join();
