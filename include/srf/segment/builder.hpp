@@ -202,7 +202,7 @@ class Builder final
      * Get the json configuration for the current module under configuration.
      * @return nlohmann::json object.
      */
-    const nlohmann::json get_current_module_config();
+    nlohmann::json get_current_module_config();
 
     /**
      * Register an output port on the given module -- note: this in generally only necessary for dynamically

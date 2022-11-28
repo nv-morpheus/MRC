@@ -151,7 +151,7 @@ void Builder::register_module_output(std::string output_name, sp_obj_prop_t obje
     current_module->register_output_port(std::move(output_name), object);
 }
 
-const nlohmann::json Builder::get_current_module_config()
+nlohmann::json Builder::get_current_module_config()
 {
     if (m_module_stack.empty())
     {
