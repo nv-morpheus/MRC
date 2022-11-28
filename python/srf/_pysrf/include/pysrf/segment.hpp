@@ -27,7 +27,6 @@
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
 
-#include <cstddef>
 #include <functional>
 #include <memory>
 #include <string>
