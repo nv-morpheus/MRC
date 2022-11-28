@@ -24,9 +24,7 @@
 #include "pysrf/utils.hpp"
 
 #include "srf/channel/status.hpp"
-#include "srf/core/executor.hpp"
 #include "srf/core/utils.hpp"
-#include "srf/engine/pipeline/ipipeline.hpp"
 #include "srf/manifold/egress.hpp"
 #include "srf/node/rx_node.hpp"
 #include "srf/node/rx_sink.hpp"
