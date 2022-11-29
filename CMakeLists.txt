@@ -136,13 +136,13 @@ add_subdirectory(protos)
 
 # ###################################
 # - Post dependencies setup --------
-include(cmake/setup_compiler.cmake)
+include(environment/setup_compiler)
 
 # Setup code coverage components
-include(cmake/setup_coverage.cmake)
+include(environment/setup_coverage)
 
 # Setup IWYU if enabled
-include(cmake/setup_iwyu.cmake)
+include(environment/setup_iwyu)
 
 # ###################################
 # - Begin MRC Targets --------------

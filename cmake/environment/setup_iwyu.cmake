@@ -40,7 +40,7 @@ function(configure_iwyu)
     set(IWYU_WRAPPER "${CMAKE_CURRENT_BINARY_DIR}/run_iwyu.sh")
 
     # Make a ccache runner file with the necessary settings. MRC_CCACHE_OPTIONS must be set!
-    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/run_iwyu.sh.in" "${IWYU_WRAPPER}")
+    configure_file("${LOCAL_MODULES_PATH}/templates/run_iwyu.sh.in" "${IWYU_WRAPPER}")
 
     if(MRC_USE_CCACHE)
       set(CMAKE_C_INCLUDE_WHAT_YOU_USE "${CMAKE_CURRENT_BINARY_DIR}/run_ccache_prefix.sh;${IWYU_WRAPPER};${CMAKE_C_COMPILER}" PARENT_SCOPE)

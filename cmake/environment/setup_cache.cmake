@@ -66,7 +66,7 @@ function(configure_ccache cache_dir_name)
     set(CCACHE_COMPILERTYPE "auto")
   endif()
 
-  configure_file("${LOCAL_MODULES_PATH}/run_ccache.sh.in" "${CMAKE_CURRENT_BINARY_DIR}/run_ccache_c.sh" @ONLY)
+  configure_file("${LOCAL_MODULES_PATH}/templates/run_ccache.sh.in" "${CMAKE_CURRENT_BINARY_DIR}/run_ccache_c.sh" @ONLY)
 
   # Configure ccache for CXX
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -77,11 +77,11 @@ function(configure_ccache cache_dir_name)
     set(CCACHE_COMPILERTYPE "auto")
   endif()
 
-  configure_file("${LOCAL_MODULES_PATH}/run_ccache.sh.in" "${CMAKE_CURRENT_BINARY_DIR}/run_ccache_cxx.sh" @ONLY)
+  configure_file("${LOCAL_MODULES_PATH}/templates/run_ccache.sh.in" "${CMAKE_CURRENT_BINARY_DIR}/run_ccache_cxx.sh" @ONLY)
 
   # Configure ccache for CUDA
   set(CCACHE_COMPILERTYPE "nvcc")
-  configure_file("${LOCAL_MODULES_PATH}/run_ccache.sh.in" "${CMAKE_CURRENT_BINARY_DIR}/run_ccache_cuda.sh" @ONLY)
+  configure_file("${LOCAL_MODULES_PATH}/templates/run_ccache.sh.in" "${CMAKE_CURRENT_BINARY_DIR}/run_ccache_cuda.sh" @ONLY)
 
   # Finally, set the compiler option
   set(CMAKE_C_COMPILER_LAUNCHER "${CMAKE_CURRENT_BINARY_DIR}/run_ccache_c.sh" PARENT_SCOPE)

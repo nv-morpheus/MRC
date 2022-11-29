@@ -22,7 +22,7 @@ list(PREPEND CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}")
 list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake")
 
 # Add the RAPIDS cmake helper scripts
-include(import_rapids_cmake)
+include(environment/setup_rapids_cmake)
 
 project(mrc-quickstart
   VERSION 22.11.00
