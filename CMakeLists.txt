@@ -42,12 +42,12 @@ mark_as_advanced(MRC_CACHE_DIR)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-include(cmake/setup_package_manager.cmake)
+include(environment/setup_package_manager)
 
 enable_testing()
 
 # Add the RAPIDS cmake helper scripts
-include(cmake/import_rapids_cmake.cmake)
+include(environment/setup_rapids_cmake)
 
 # Default to using "NATIVE" for CUDA_ARCHITECTURES to build based on GPU in system
 if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
@@ -101,7 +101,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # Setup cache before dependencies
-include(cmake/setup_cache.cmake)
+include(environment/setup_cache)
 
 # Configure conda
 if(MRC_USE_CONDA AND DEFINED ENV{CONDA_PREFIX})
