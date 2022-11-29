@@ -15,7 +15,6 @@
 
 add_pybind11_library(
   data
-
   # MODULE_ROOT
   # ${QUICKSTART_HYBRID_HOME}
   SOURCE_FILES

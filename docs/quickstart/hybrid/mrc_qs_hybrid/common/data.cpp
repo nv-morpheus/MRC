@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-#include "mrc/utils/string_utils.hpp"
+#include "mrc_qs_hybrid/data_object.hpp"
 
 #include <glog/logging.h>
-#include <mrc_qs_hybrid/data_object.hpp>
+#include <mrc/utils/string_utils.hpp>
 #include <pybind11/pybind11.h>
 
 #include <memory>
@@ -70,4 +70,3 @@ PYBIND11_MODULE(data, m)
 #endif
 }
 }  // namespace mrc::quickstart::hybrid::common
-namespace mrc

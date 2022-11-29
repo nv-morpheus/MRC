@@ -1,4 +1,4 @@
-# MRC 22.11.00 (18 Nov 2022)
+# SRF 22.11.00 (18 Nov 2022)
 
 ## 🚨 Breaking Changes
 
@@ -11,7 +11,7 @@
 - change pull_request to pull_request_target ([#201](https://github.com/nv-morpheus/MRC/pull/201)) [@jarmak-nv](https://github.com/jarmak-nv)
 - Registered memory should be released before the UCX Context is destroyed ([#193](https://github.com/nv-morpheus/MRC/pull/193)) [@ryanolson](https://github.com/ryanolson)
 - Fix tests so that the proper upstream build is used for the coverage test ([#192](https://github.com/nv-morpheus/MRC/pull/192)) [@dagardner-nv](https://github.com/dagardner-nv)
-- Updating MRC versions from 22.09 to 22.11 ([#191](https://github.com/nv-morpheus/MRC/pull/191)) [@mdemoret-nv](https://github.com/mdemoret-nv)
+- Updating SRF versions from 22.09 to 22.11 ([#191](https://github.com/nv-morpheus/MRC/pull/191)) [@mdemoret-nv](https://github.com/mdemoret-nv)
 - Fixes &quot;Add new issue/PR to project&quot; action ([#189](https://github.com/nv-morpheus/MRC/pull/189)) [@dagardner-nv](https://github.com/dagardner-nv)
 - Fetch history and tags for package step ([#188](https://github.com/nv-morpheus/MRC/pull/188)) [@dagardner-nv](https://github.com/dagardner-nv)
 - Fix CI deps ([#187](https://github.com/nv-morpheus/MRC/pull/187)) [@dagardner-nv](https://github.com/dagardner-nv)
@@ -25,18 +25,18 @@
 
 ## 🚀 New Features
 
-- : Replacing MRC markdown templates with yml forms ([#200](https://github.com/nv-morpheus/MRC/pull/200)) [@jarmak-nv](https://github.com/jarmak-nv)
+- Replacing SRF markdown templates with yml forms ([#200](https://github.com/nv-morpheus/MRC/pull/200)) [@jarmak-nv](https://github.com/jarmak-nv)
 
 ## 🛠️ Improvements
 
 - Improve NVML + MIG Behavior ([#206](https://github.com/nv-morpheus/MRC/pull/206)) [@ryanolson](https://github.com/ryanolson)
 - Add dockerfile for CI runners ([#199](https://github.com/nv-morpheus/MRC/pull/199)) [@dagardner-nv](https://github.com/dagardner-nv)
 - Add codecov upload ([#197](https://github.com/nv-morpheus/MRC/pull/197)) [@dagardner-nv](https://github.com/dagardner-nv)
-- MRC Modules and Module Registry Implementation ([#196](https://github.com/nv-morpheus/MRC/pull/196)) [@drobison00](https://github.com/drobison00)
+- SRF Modules and Module Registry Implementation ([#196](https://github.com/nv-morpheus/MRC/pull/196)) [@drobison00](https://github.com/drobison00)
 - Allow building build without GPU and without a driver ([#195](https://github.com/nv-morpheus/MRC/pull/195)) [@dagardner-nv](https://github.com/dagardner-nv)
 - Switch to github actions ([#182](https://github.com/nv-morpheus/MRC/pull/182)) [@dagardner-nv](https://github.com/dagardner-nv)
 
-# MRC 22.09.00 (30 Sep 2022)
+# SRF 22.09.00 (30 Sep 2022)
 
 ## 📖 Documentation
 
@@ -47,7 +47,7 @@
 - Bump Versions 22.09 ([#174](https://github.com/nv-morpheus/MRC/pull/174)) [@mdemoret-nv](https://github.com/mdemoret-nv)
 - Add missing checks for YAPF_RETVAL &amp; PRAGMA_CHECK_RETVAL in CI ([#173](https://github.com/nv-morpheus/MRC/pull/173)) [@dagardner-nv](https://github.com/dagardner-nv)
 
-# MRC 22.08.00 (7 Sep 2022)
+# SRF 22.08.00 (7 Sep 2022)
 
 ## 🐛 Bug Fixes
 
@@ -55,7 +55,7 @@
 - Fix contributing guide build ([#139](https://github.com/nv-morpheus/MRC/pull/139)) [@cwharris](https://github.com/cwharris)
 - fix faulty assumption about remote key sizes ([#137](https://github.com/nv-morpheus/MRC/pull/137)) [@ryanolson](https://github.com/ryanolson)
 - Resolves issue-32, re-add stats watchers to Rx and Python nodes ([#130](https://github.com/nv-morpheus/MRC/pull/130)) [@drobison00](https://github.com/drobison00)
-- Fix MRC Conda Upload ([#70](https://github.com/nv-morpheus/MRC/pull/70)) [@mdemoret-nv](https://github.com/mdemoret-nv)
+- Fix SRF Conda Upload ([#70](https://github.com/nv-morpheus/MRC/pull/70)) [@mdemoret-nv](https://github.com/mdemoret-nv)
 
 ## 📖 Documentation
 
@@ -77,20 +77,20 @@
 - Action to Add Issues/PRs to Project ([#155](https://github.com/nv-morpheus/MRC/pull/155)) [@jarmak-nv](https://github.com/jarmak-nv)
 - Add ability to specify port data type for known c++ types from Python ([#153](https://github.com/nv-morpheus/MRC/pull/153)) [@drobison00](https://github.com/drobison00)
 - Fix CPP checks for CI ([#147](https://github.com/nv-morpheus/MRC/pull/147)) [@dagardner-nv](https://github.com/dagardner-nv)
-- Code coverage integration in MRC ([#105](https://github.com/nv-morpheus/MRC/pull/105)) [@drobison00](https://github.com/drobison00)
+- Code coverage integration in SRF ([#105](https://github.com/nv-morpheus/MRC/pull/105)) [@drobison00](https://github.com/drobison00)
 - Add codable interface for python objects, (Ingress|Egress)Ports python bindings, and other elements required for multi-segment. ([#18](https://github.com/nv-morpheus/MRC/pull/18)) [@drobison00](https://github.com/drobison00)
 
-# MRC 22.06.01 (4 Jul 2022)
+# SRF 22.06.01 (4 Jul 2022)
 
 ## 🐛 Bug Fixes
 
 - Fix `flatten()` Operator With Infinite Sources ([#117](https://github.com/nv-morpheus/MRC/pull/117)) [@mdemoret-nv](https://github.com/mdemoret-nv)
 
-# MRC 22.06.00 (28 Jun 2022)
+# SRF 22.06.00 (28 Jun 2022)
 
 ## 🐛 Bug Fixes
 
-- Moving the python_module_tools before the MRC import ([#87](https://github.com/nv-morpheus/MRC/pull/87)) [@mdemoret-nv](https://github.com/mdemoret-nv)
+- Moving the python_module_tools before the SRF import ([#87](https://github.com/nv-morpheus/MRC/pull/87)) [@mdemoret-nv](https://github.com/mdemoret-nv)
 - Fix for pipelines beginning before start is called ([#83](https://github.com/nv-morpheus/MRC/pull/83)) [@ryanolson](https://github.com/ryanolson)
 - host_partition_id incorrectly set with multiple gpus present ([#79](https://github.com/nv-morpheus/MRC/pull/79)) [@ryanolson](https://github.com/ryanolson)
 - Changing RAPIDS_VERSION to SRF_RAPIDS_VERSION ([#73](https://github.com/nv-morpheus/MRC/pull/73)) [@mdemoret-nv](https://github.com/mdemoret-nv)
@@ -102,7 +102,7 @@
 
 ## 📖 Documentation
 
-- MRC README Update - In Preparation of Public Release ([#93](https://github.com/nv-morpheus/MRC/pull/93)) [@mdemoret-nv](https://github.com/mdemoret-nv)
+- SRF README Update - In Preparation of Public Release ([#93](https://github.com/nv-morpheus/MRC/pull/93)) [@mdemoret-nv](https://github.com/mdemoret-nv)
 - Initial CONTRIBUTING.md ([#45](https://github.com/nv-morpheus/MRC/pull/45)) [@cwharris](https://github.com/cwharris)
 
 ## 🚀 New Features
@@ -115,6 +115,6 @@
 - adding pragma once to logging.h ([#41](https://github.com/nv-morpheus/MRC/pull/41)) [@ryanolson](https://github.com/ryanolson)
 - pimpl IBuilder ([#40](https://github.com/nv-morpheus/MRC/pull/40)) [@ryanolson](https://github.com/ryanolson)
 - Add two missing headers that caused clang compile errors. ([#31](https://github.com/nv-morpheus/MRC/pull/31)) [@drobison00](https://github.com/drobison00)
-- Enable CI for MRC ([#24](https://github.com/nv-morpheus/MRC/pull/24)) [@dagardner-nv](https://github.com/dagardner-nv)
+- Enable CI for SRF ([#24](https://github.com/nv-morpheus/MRC/pull/24)) [@dagardner-nv](https://github.com/dagardner-nv)
 - Quickstart ([#20](https://github.com/nv-morpheus/MRC/pull/20)) [@ryanolson](https://github.com/ryanolson)
 - adding node::Queue; refactoring SinkChannel for code reuse ([#1](https://github.com/nv-morpheus/MRC/pull/1)) [@ryanolson](https://github.com/ryanolson)

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "mrc/node/rx_source.hpp"
+#include <mrc/node/rx_source.hpp>
 
 namespace mrc::quickstart::cpp::ex01_node_library {
 

@@ -45,13 +45,13 @@ def test_engine_factories_dedicated_main_thread():
 
     eng_factories.dedicated_main_thread = True
 
-    assert eng_factories.dedicated_main_thread, "dedicated_main_thread set/get should match on ref"
-    assert options.engine_factories.dedicated_main_thread, "dedicated_main_thread set/get should match"
+    assert eng_factories.dedicated_main_thread is True, "dedicated_main_thread set/get should match on ref"
+    assert options.engine_factories.dedicated_main_thread is True, "dedicated_main_thread set/get should match"
 
     eng_factories.dedicated_main_thread = False
 
-    assert eng_factories.dedicated_main_thread, "dedicated_main_thread set/get should match on ref"
-    assert options.engine_factories.dedicated_main_thread, "dedicated_main_thread set/get should match"
+    assert eng_factories.dedicated_main_thread is False, "dedicated_main_thread set/get should match on ref"
+    assert options.engine_factories.dedicated_main_thread is False, "dedicated_main_thread set/get should match"
 
 
 @pytest.mark.parametrize(

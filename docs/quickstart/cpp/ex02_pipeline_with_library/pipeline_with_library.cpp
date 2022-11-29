@@ -17,15 +17,15 @@
 
 #include "nodes.hpp"
 
-#include "mrc/mrc.hpp"
-#include "mrc/node/rx_sink.hpp"
-#include "mrc/pipeline/pipeline.hpp"
-
 #include <glog/logging.h>
+#include <mrc/mrc.hpp>
+#include <mrc/node/rx_sink.hpp>
+#include <mrc/pipeline/pipeline.hpp>
 
 using namespace mrc;
 using namespace mrc::quickstart::cpp::common;
-namespace mrc int main(int argc, char* argv[])
+
+int main(int argc, char* argv[])
 {
     std::atomic<long> counter = 0;
 
@@ -51,7 +51,7 @@ namespace mrc int main(int argc, char* argv[])
         // subscriber/sink. This examples accects an upstream int and provides a downstream float which is the input
         // value scaled by 2.5.
         auto node = s.make_node<int, float>("int_x2_to_float",
-                                            rxcpp::operators::map([](const int& data) { return float(2.5f * data); }));
+                                            rxcpp::operators::map([](const int& data) { return float(2.5F * data); }));
 
         // Sink
         // Sinks are terminators. They only accept upstream connections and do not provide the ability to pass data on.
@@ -86,4 +86,4 @@ namespace mrc int main(int argc, char* argv[])
     std::cout << "mrc pipeline complete: counter should be 3; counter=" << counter << std::endl;
 
     return 0;
-};  // namespace )
+};

@@ -15,9 +15,8 @@
  * limitations under the License.
  */
 
-#include "mrc/utils/string_utils.hpp"
-
 #include <glog/logging.h>
+#include <mrc/utils/string_utils.hpp>
 #include <pybind11/pybind11.h>
 
 #include <memory>

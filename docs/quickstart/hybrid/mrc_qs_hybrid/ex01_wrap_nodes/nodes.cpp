@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-#include "mrc/runnable/context.hpp"
-#include "mrc/segment/builder.hpp"
-#include "mrc/segment/object.hpp"
-#include "mrc/utils/string_utils.hpp"
+#include "mrc_qs_hybrid/data_object.hpp"
 
 #include <glog/logging.h>
-#include <mrc_qs_hybrid/data_object.hpp>
+#include <mrc/runnable/context.hpp>
+#include <mrc/segment/builder.hpp>
+#include <mrc/segment/object.hpp>
+#include <mrc/utils/string_utils.hpp>
 #include <pybind11/pybind11.h>
 #include <pymrc/node.hpp>
 
@@ -162,4 +162,3 @@ PYBIND11_MODULE(nodes, m)
 #endif
 }
 }  // namespace mrc::quickstart::hybrid::ex01_wrap_nodes
-namespace mrc

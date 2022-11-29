@@ -15,11 +15,10 @@
  * limitations under the License.
  */
 
-#include "mrc/mrc.hpp"
-#include "mrc/node/rx_sink.hpp"
-#include "mrc/pipeline/pipeline.hpp"
-
 #include <glog/logging.h>
+#include <mrc/mrc.hpp>
+#include <mrc/node/rx_sink.hpp>
+#include <mrc/pipeline/pipeline.hpp>
 
 using namespace mrc;
 
@@ -55,7 +54,7 @@ int main(int argc, char* argv[])
         // value scaled by 2.
         auto node = s.make_node<int, float>("int_to_float_node", rxcpp::operators::map([](const int& data) {
                                                 // Multiple the input value returning a float
-                                                return float(2.5f * data);
+                                                return float(2.5F * data);
                                             }));
 
         // Sink

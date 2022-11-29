@@ -43,28 +43,6 @@
                 "miDebuggerPath": "gdb"
             },
             {
-                "name": "debug extension",
-                "type": "cppdbg",
-                "request": "launch",
-                "program": "${workspaceFolder}/build/examples/30_Extension/30_extension.x.x",
-                "args": [
-                    "--iterations=3",
-                    "--cpuset='0-1'"
-                ],
-                "stopAtEntry": false,
-                "cwd": "${workspaceFolder}",
-                "externalConsole": false,
-                "MIMode": "gdb",
-                "setupCommands": [
-                    {
-                        "description": "Enable pretty-printing for gdb",
-                        "text": "-enable-pretty-printing",
-                        "ignoreFailures": true
-                    }
-                ],
-                "miDebuggerPath": "/usr/bin/gdb"
-            },
-            {
                 "name": "debug test_mrc.x",
                 "type": "cppdbg",
                 "request": "launch",
@@ -83,7 +61,7 @@
                     }
                 ],
                 "preLaunchTask": "C/C++: g++ build active file",
-                "miDebuggerPath": "/usr/bin/gdb"
+                "miDebuggerPath": "gdb"
             },
             {
                 "name": "debug bench_mrc.x",
@@ -104,16 +82,7 @@
                     }
                 ],
                 "preLaunchTask": "C/C++: g++ build active file",
-                "miDebuggerPath": "/usr/bin/gdb"
-            },
-            {
-                "name": "Python: Test Python Pipeline",
-                "type": "python",
-                "request": "launch",
-                "program": "${workspaceFolder}/python/tests/test_morpheus_fil-cpp.py",
-                "console": "integratedTerminal",
-                "cwd": "${workspaceFolder}/python",
-                "justMyCode": false,
+                "miDebuggerPath": "gdb"
             },
             {
                 "name": "Debug MRC from Python",
@@ -226,6 +195,9 @@
             "**/.hg/store/**": true,
             "**/node_modules/*/**": true
         },
+        "isort.args": [
+            "--settings-file=${workspaceFolder}/python/setup.cfg"
+        ],
         "python.analysis.extraPaths": [
             "python"
         ],
@@ -244,9 +216,6 @@
             "--rcfile=${workspaceFolder}/python/.pylintrc"
         ],
         "python.linting.pylintEnabled": true,
-        "python.sortImports.args": [
-            "--settings-file=${workspaceFolder}/python/setup.cfg"
-        ],
         "python.testing.cwd": "${workspaceFolder}/python",
         "python.testing.pytestArgs": [
             "-s"
@@ -309,7 +278,7 @@
             "matepek.vscode-catch2-test-adapter",
             "ms-vscode.cmake-tools",
             "stkb.rewrap",
-            "formulahendry.terminal",
+            "twxs.cmake",
         ],
         // List of extensions recommended by VS Code that should not be recommended for users of this workspace.
         "unwantedRecommendations": [
