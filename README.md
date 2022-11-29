@@ -1,7 +1,7 @@
 <!-- omit in toc -->
 # Morpheus Runtime Core (MRC)
 
-The **Morpheus Runtime Core** (MRC) library (proununced "merc") is a **reactive, network-aware, flexible, and performance-oriented streaming data library** that standardizes building modular and reusable pipelines with both C++ and Python​. MRC was designed as the backbone for NVIDIA's [Morpheus](https://github.com/nv-morpheus/Morpheus) cyber security library and it's goal is to serve as a common high-performance streaming data layer in which all personas of developers - ranging from Data Scientists to DevOps and Performance Engineers can find value.
+The **Morpheus Runtime Core** (MRC) library is a **reactive, network-aware, flexible, and performance-oriented streaming data library** that standardizes building modular and reusable pipelines with both C++ and Python. Designed to efficiently handle non-deterministic volumes and highly variable data streams, MRC is the backbone for NVIDIA's [Morpheus](https://github.com/nv-morpheus/Morpheus) cyber security library. It's goal is to serve as a common high-performance streaming data layer in which all personas of developers, ranging from Data Scientists to DevOps and Performance Engineers, find value.
 
 <!-- omit in toc -->
 ### Major features and differentiators

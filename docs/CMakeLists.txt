@@ -42,7 +42,6 @@ doxygen_add_docs(
   "protos"
   "python"
   "src"
-  "tools"
   "LICENSE"
   "README.md"
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
