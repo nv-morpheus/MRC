@@ -53,26 +53,32 @@ rapids_find_package(CUDAToolkit
   INSTALL_EXPORT_SET ${PROJECT_NAME}-core-exports
 )
 
+set(MORPHEUS_UTILS_VERSION "0.1" CACHE STRING "Version of morphues utils")
+include(Configure_morpheus_utils)
+
+list(APPEND CMAKE_MODULE_PATH "${MORPHEUS_UTILS_HOME}/cmake")
+list(APPEND CMAKE_PREFIX_PATH "${MORPHEUS_UTILS_HOME}/cmake")
+
 # Boost
 # =====
 # - Use static linking to avoid issues with system-wide installations of Boost.
 # - Use numa=on to ensure the numa component of fiber gets built
 set(BOOST_VERSION "1.74.0" CACHE STRING "Version of boost to use")
-include(deps/Configure_boost)
+include(package_config/boost/Configure_boost)
 
 # UCX
 # ===
 set(UCX_VERSION "1.13" CACHE STRING "Version of ucx to use")
-include(deps/Configure_ucx)
+include(package_config/ucx/Configure_ucx)
 
 # hwloc
 # =====
 set(HWLOC_VERSION "2.5" CACHE STRING "Version of hwloc to use")
-include(deps/Configure_hwloc)
+include(package_config/hwloc/Configure_hwloc)
 
 # expected
 set(EXPECTED_VERSION "1.0.0" CACHE STRING "Version of expected to use")
-include(deps/Configure_expected)
+include(package_config/expected/Configure_expected)
 
 # FlatBuffers
 # ===========
@@ -87,7 +93,7 @@ include(deps/Configure_expected)
 # NVIDIA RAPIDS RMM
 # =================
 set(RMM_VERSION "\${MRC_RAPIDS_VERSION}" CACHE STRING "Version of RMM to use. Defaults to \${MRC_RAPIDS_VERSION}")
-include(deps/Configure_RMM)
+include(package_config/rmm/Configure_rmm)
 
 # gflags
 # ======
@@ -105,7 +111,7 @@ rapids_find_package(gflags REQUIRED
 # - link against shared
 # - todo: compile with -DWITH_GFLAGS=OFF and remove gflags dependency
 set(GLOG_VERSION "0.6" CACHE STRING "Version of glog to use")
-include(deps/Configure_glog)
+include(package_config/glog/Configure_glog)
 
 # nvidia cub
 # ==========
@@ -128,7 +134,7 @@ rapids_find_package(gRPC REQUIRED
 # RxCpp
 # =====
 set(RXCPP_VERSION "4.1.1.2" CACHE STRING "Version of RxCpp to use")
-include(deps/Configure_rxcpp)
+include(package_config/rxcpp/Configure_rxcpp)
 
 # JSON
 # ======
@@ -143,12 +149,12 @@ rapids_find_package(nlohmann_json REQUIRED
 # prometheus
 # =========
 set(PROMETHEUS_CPP_VERSION "1.0.0" CACHE STRING "Version of Prometheus-cpp to use")
-include(deps/Configure_prometheus)
+include(package_config/prometheus/Configure_prometheus)
 
 # libcudacxx
 # =========
 set(LIBCUDACXX_VERSION "1.8.0" CACHE STRING "Version of libcudacxx to use")
-include(deps/Configure_libcudacxx)
+include(package_config/libcudacxx/Configure_libcudacxx)
 
 if(MRC_BUILD_BENCHMARKS)
   # google benchmark

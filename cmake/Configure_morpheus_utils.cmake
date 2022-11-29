@@ -15,22 +15,18 @@
 # limitations under the License.
 # =============================================================================
 
-function(find_and_configure_tl_expected version)
-  list(APPEND CMAKE_MESSAGE_CONTEXT "tl-expected")
+function(find_and_configure_morpheus_utils version)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "morpheus_utils")
 
-  rapids_cpm_find(tl-expected ${version}
-    GLOBAL_TARGETS
-    expected tl::expected
-    BUILD_EXPORT_SET
-    ${PROJECT_NAME}-core-exports
-    INSTALL_EXPORT_SET
-    ${PROJECT_NAME}-core-exports
+  rapids_cpm_find(morpheus_utils ${version}
     CPM_ARGS
-    GIT_REPOSITORY https://github.com/ryanolson/expected.git
-    GIT_TAG "5f4b7d2987658cc2a555ce7f4f5b81196461d953"
-    GIT_SHALLOW TRUE
-    OPTIONS "EXPECTED_BUILD_PACKAGE ON"
+      #GIT_REPOSITORY https://github.com/ryanolson/expected.git
+      GIT_REPOSITORY /home/drobison/Development/devin-morpheus-utils-public
+      GIT_TAG v${version}
+      DOWNLOAD_ONLY TRUE
   )
+
+  set(MORPHEUS_UTILS_HOME "${morpheus_utils_SOURCE_DIR}" CACHE INTERNAL "Morpheus utils home")
 endfunction()
 
-find_and_configure_tl_expected(${EXPECTED_VERSION})
+find_and_configure_morpheus_utils(${MORPHEUS_UTILS_VERSION})
