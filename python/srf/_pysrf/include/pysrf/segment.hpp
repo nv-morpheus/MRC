@@ -27,7 +27,6 @@
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
 
-#include <cstddef>
 #include <functional>
 #include <memory>
 #include <string>
@@ -176,16 +175,6 @@ class BuilderProxy
         const std::string& name,
         std::function<void(const pysrf::PyObjectObservable& obs, pysrf::PyObjectSubscriber& sub)> sub_fn);
 
-    static void make_py2cxx_edge_adapter(srf::segment::Builder& self,
-                                         std::shared_ptr<srf::segment::ObjectProperties> source,
-                                         std::shared_ptr<srf::segment::ObjectProperties> sink,
-                                         pybind11::object& sink_t);
-
-    static void make_cxx2py_edge_adapter(srf::segment::Builder& self,
-                                         std::shared_ptr<srf::segment::ObjectProperties> source,
-                                         std::shared_ptr<srf::segment::ObjectProperties> sink,
-                                         pybind11::object& source_t);
-
     static void make_edge(srf::segment::Builder& self,
                           std::shared_ptr<srf::segment::ObjectProperties> source,
                           std::shared_ptr<srf::segment::ObjectProperties> sink);
@@ -210,26 +199,9 @@ class BuilderProxy
                                        std::string output_name,
                                        std::shared_ptr<segment::ObjectProperties> object);
 
+    static pybind11::dict get_current_module_config(srf::segment::Builder& self);
+
     static void init_module(srf::segment::Builder& self, std::shared_ptr<srf::modules::SegmentModule> module);
-
-    static std::shared_ptr<srf::segment::ObjectProperties> make_file_reader(srf::segment::Builder& self,
-                                                                            const std::string& name,
-                                                                            const std::string& filename);
-
-    static std::shared_ptr<srf::segment::ObjectProperties> debug_float_source(srf::segment::Builder& self,
-                                                                              const std::string& name,
-                                                                              std::size_t iterations);
-
-    static std::shared_ptr<srf::segment::ObjectProperties> debug_float_passthrough(srf::segment::Builder& self,
-                                                                                   const std::string& name);
-
-    static std::shared_ptr<PyNode> flatten_list(srf::segment::Builder& self, const std::string& name);
-
-    static std::shared_ptr<srf::segment::ObjectProperties> debug_string_passthrough(srf::segment::Builder& self,
-                                                                                    const std::string& name);
-
-    static std::shared_ptr<srf::segment::ObjectProperties> debug_float_sink(srf::segment::Builder& self,
-                                                                            const std::string& name);
 };
 
 #pragma GCC visibility pop
