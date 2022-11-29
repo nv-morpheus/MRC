@@ -286,10 +286,10 @@ def test_py_registered_nested_copied_modules():
     def init_wrapper(builder: mrc.Builder):
         global packet_count
         packet_count = 0
-        builder.load_module("test_py_registered_nested_copied_module", "mrc_unittests", "my_loaded_module!", {})
+        builder.load_module("test_py_registered_nested_copied_module",
                             "mrc_unittests",
                             "my_loaded_module!", {"test1": "module_1"})
-        builder.load_module("test_py_registered_nested_copied_module", "mrc_unittests", "my_loaded_module_copy!", {})
+        builder.load_module("test_py_registered_nested_copied_module",
                             "mrc_unittests",
                             "my_loaded_module_copy!", {"test2": "module_2"})
 

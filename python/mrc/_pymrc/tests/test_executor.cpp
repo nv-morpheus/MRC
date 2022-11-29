@@ -69,7 +69,7 @@ TEST_F(TestExecutor, Execute)
         });
 
         auto internal = seg.make_node<bool, unsigned int>("internal", rxcpp::operators::map([](bool b) {
-                                                              unsigned int i{b};
+                                                              unsigned int i{static_cast<unsigned int>(b)};
                                                               return i;
                                                           }));
 

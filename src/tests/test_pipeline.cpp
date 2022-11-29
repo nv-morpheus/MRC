@@ -24,22 +24,28 @@
 #include "internal/resources/manager.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
+#include "internal/system/topology.hpp"
 #include "internal/utils/collision_detector.hpp"
 
+#include "mrc/channel/channel.hpp"
 #include "mrc/channel/status.hpp"
 #include "mrc/core/addresses.hpp"
 #include "mrc/core/executor.hpp"
 #include "mrc/data/reusable_pool.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/node/queue.hpp"
+#include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
+#include "mrc/options/engine_groups.hpp"
 #include "mrc/options/options.hpp"
+#include "mrc/options/placement.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/runnable/context.hpp"
+#include "mrc/runnable/types.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
@@ -508,6 +514,13 @@ TEST_F(TestPipeline, Nodes1k)
 
 TEST_F(TestPipeline, EngineFactories)
 {
+    auto topology = mrc::internal::system::Topology::Create();
+
+    if (topology->core_count() < 8)
+    {
+        GTEST_SKIP_("Not enough logical CPUs to run the test. 8 required");
+    }
+
     auto options = std::make_shared<Options>();
     options->placement().resources_strategy(PlacementResources::Dedicated);
     options->engine_factories().set_ignore_hyper_threads(true);

@@ -28,17 +28,10 @@ namespace mrc::codable {
 class EncodedStorage
 {
   public:
-    explicit EncodedStorage(std::unique_ptr<mrc::codable::IDecodableStorage> encoding) : m_encoding(std::move(encoding))
-    {
-        CHECK(m_encoding);
-    }
+    explicit EncodedStorage(std::unique_ptr<mrc::codable::IDecodableStorage> encoding);
     virtual ~EncodedStorage() = default;
 
-    IDecodableStorage& encoding() const
-    {
-        CHECK(m_encoding);
-        return *m_encoding;
-    }
+    IDecodableStorage& encoding() const;
 
   private:
     std::unique_ptr<mrc::codable::IDecodableStorage> m_encoding;

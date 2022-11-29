@@ -48,7 +48,7 @@ class BlockManager final
         return *this;
     }
 
-    BlockManager(const BlockManager&)            = delete;
+    BlockManager(const BlockManager&) = delete;
     BlockManager& operator=(const BlockManager&) = delete;
 
     const block_type& add_block(block_type block)

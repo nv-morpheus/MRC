@@ -118,9 +118,9 @@ class arena_resource final : public adaptor<Upstream>
     ~arena_resource() override = default;
 
     // Disable copy (and move) semantics.
-    arena_resource(arena_resource const&)                = delete;
-    arena_resource& operator=(arena_resource const&)     = delete;
-    arena_resource(arena_resource&&) noexcept            = delete;
+    arena_resource(arena_resource const&) = delete;
+    arena_resource& operator=(arena_resource const&) = delete;
+    arena_resource(arena_resource&&) noexcept        = delete;
     arena_resource& operator=(arena_resource&&) noexcept = delete;
 
   private:

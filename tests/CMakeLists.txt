@@ -22,10 +22,10 @@ add_executable(test_mrc
   test_executor.cpp
   test_main.cpp
   test_metrics.cpp
+  test_mrc.cpp
   test_node.cpp
   test_pipeline.cpp
   test_segment.cpp
-  test_mrc.cpp
   test_type_utils.cpp
 )
 

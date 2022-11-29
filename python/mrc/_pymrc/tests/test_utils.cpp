@@ -45,8 +45,8 @@ using namespace std::string_literals;
 
 // Create values too big to fit in int & float types to ensure we can pass
 // long & double types to both nlohmann/json and python
-constexpr long longval{UINT_MAX + 1l};
-constexpr double doubleval{FLT_MAX + 1.0 + DBL_MIN};
+constexpr long LONGVAL{UINT_MAX + 1L};
+constexpr double DOUBLEEVAL{FLT_MAX + 1.0 + DBL_MIN};
 
 PYMRC_TEST_CLASS(Utils);
 
@@ -60,7 +60,7 @@ TEST_F(TestUtils, ImportModuleObject)
     pymrc::import_module_object(m, "json", "loads");
     EXPECT_NE(py::getattr(m, "loads"), py::none());
 
-    py::dict d = m.attr("loads")(py::str("{\"test\":\"this\"}"));
+    py::dict d = m.attr("loads")(py::str(R"({"test":"this"})"));
     EXPECT_EQ(d["test"].cast<std::string>(), "this"s);
 }
 
@@ -70,31 +70,31 @@ TEST_F(TestUtils, CastFromJson)
                         {"alphabet", {"a", "b", "c"}},
                         {"ncc", 1701},
                         {"cost", 47.47},
-                        {"long val", longval},
-                        {"double val", doubleval}};
+                        {"long val", LONGVAL},
+                        {"double val", DOUBLEEVAL}};
 
     VLOG(10) << j.dump(4);
     auto pyobj = pymrc::cast_from_json(j);
 
     EXPECT_EQ(pyobj["ncc"].cast<int>(), 1701);
-    EXPECT_EQ(pyobj["cost"].cast<float>(), 47.47f);
-    EXPECT_EQ(pyobj["long val"].cast<long>(), longval);
-    EXPECT_EQ(pyobj["double val"].cast<double>(), doubleval);
+    EXPECT_EQ(pyobj["cost"].cast<float>(), 47.47F);
+    EXPECT_EQ(pyobj["long val"].cast<long>(), LONGVAL);
+    EXPECT_EQ(pyobj["double val"].cast<double>(), DOUBLEEVAL);
 
     {
         std::vector<std::string> expected{"a", "b", "c"};
         EXPECT_EQ(pyobj["alphabet"].cast<std::vector<std::string>>(), expected);
     }
     {
-        using expected_T = std::array<std::string, 3>;
-        expected_T expected{"a"s, "b"s, "c"s};
-        EXPECT_EQ(pyobj["alphabet"].cast<expected_T>(), expected);
+        using expected_t = std::array<std::string, 3>;
+        expected_t expected{"a"s, "b"s, "c"s};
+        EXPECT_EQ(pyobj["alphabet"].cast<expected_t>(), expected);
     }
 
     {
-        using expected_T = std::map<std::string, std::string>;
-        expected_T expected{{"is", "a test"}};
-        EXPECT_EQ(pyobj["this"].cast<expected_T>(), expected);
+        using expected_t = std::map<std::string, std::string>;
+        expected_t expected{{"is", "a test"}};
+        EXPECT_EQ(pyobj["this"].cast<expected_t>(), expected);
     }
 }
 
@@ -122,24 +122,24 @@ TEST_F(TestUtils, CastFromPyObject)
         auto j = pymrc::cast_from_pyobject(d);
 
         EXPECT_EQ(j["ncc"].get<int>(), 1701);
-        EXPECT_EQ(j["cost"].get<float>(), 47.47f);
-        EXPECT_EQ(j["long val"].get<long>(), longval);
-        EXPECT_EQ(j["double val"].get<double>(), doubleval);
+        EXPECT_EQ(j["cost"].get<float>(), 47.47F);
+        EXPECT_EQ(j["long val"].get<long>(), LONGVAL);
+        EXPECT_EQ(j["double val"].get<double>(), DOUBLEEVAL);
 
         {
             std::vector<std::string> expected{"a", "b", "c"};
             EXPECT_EQ(j["alphabet"].get<std::vector<std::string>>(), expected);
         }
         {
-            using expected_T = std::array<std::string, 3>;
-            expected_T expected{"a"s, "b"s, "c"s};
-            EXPECT_EQ(j["alphabet"].get<expected_T>(), expected);
+            using expected_t = std::array<std::string, 3>;
+            expected_t expected{"a"s, "b"s, "c"s};
+            EXPECT_EQ(j["alphabet"].get<expected_t>(), expected);
         }
 
         {
-            using expected_T = std::map<std::string, std::string>;
-            expected_T expected{{"is", "a test"}};
-            EXPECT_EQ(j["this"].get<expected_T>(), expected);
+            using expected_t = std::map<std::string, std::string>;
+            expected_t expected{{"is", "a test"}};
+            EXPECT_EQ(j["this"].get<expected_t>(), expected);
         }
     }
 }

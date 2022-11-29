@@ -43,6 +43,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <memory>
 #include <optional>
@@ -164,68 +165,78 @@ TEST_F(TestCodable, String)
     EXPECT_STREQ(str.c_str(), decoded_str.c_str());
 }
 
+int random_number()
+{
+    return (std::rand() % 50 + 1);
+}
+
+void populate(int size, int* ptr)
+{
+    std::srand(unsigned(std::time(nullptr)));
+    std::generate(ptr, ptr + size - 1, random_number);
+}
+
 TEST_F(TestCodable, Buffer)
 {
     static_assert(is_codable<mrc::memory::buffer>::value, "should be codable");
 
-    // std::string str = "Hello MRC";
-    // auto str_block  = m_runtime->partition(0).network()->data_plane().registration_cache().lookup(str.data());
-    // EXPECT_FALSE(str_block);
+    // Uncomment when local copy is working!
+    // auto encodable_storage = m_runtime->partition(0).make_codable_storage();
 
-    // internal::remote_descriptor::EncodedObject encoded_object(m_runtime->partition(0));
+    // size_t int_count = 100;
 
-    // encode(str, encoded_object);
-    // EXPECT_EQ(encoded_object.descriptor_count(), 1);
+    // auto buffer = m_runtime->partition(0).resources().host().make_buffer(int_count * sizeof(int));
 
-    // auto decoded_str = decode<std::string>(encoded_object);
-    // EXPECT_STREQ(str.c_str(), decoded_str.c_str());
+    // populate(int_count, static_cast<int*>(buffer.data()));
+
+    // encode(buffer, *encodable_storage);
+    // EXPECT_EQ(encodable_storage->descriptor_count(), 1);
+
+    // auto decoding = decode<mrc::memory::buffer>(*encodable_storage);
+
+    // int* input_start  = static_cast<int*>(buffer.data());
+    // int* output_start = static_cast<int*>(decoding.data());
+
+    // EXPECT_TRUE(std::equal(input_start, input_start + int_count, output_start));
 }
 
-// TEST_F(TestCodable, Double)
-// {
-//     static_assert(is_codable<double>::value, "should be codable");
+TEST_F(TestCodable, Double)
+{
+    static_assert(is_codable<double>::value, "should be codable");
 
-//     m_runtime->partition(0)
-//         .runnable()
-//         .main()
-//         .enqueue([] {
-//             double pi     = 3.14159;
-//             auto encoding = encode(pi);
-//             auto decoding = decode<double>(*encoding);
+    auto encodable_storage = m_runtime->partition(0).make_codable_storage();
 
-//             EXPECT_DOUBLE_EQ(pi, decoding);
-//         })
-//         .get();
-// }
+    double pi = 3.14159;
 
-// TEST_F(TestCodable, Composite)
-// {
-//     static_assert(is_codable<std::string>::value, "should be codable");
-//     static_assert(is_codable<std::uint64_t>::value, "should be codable");
+    encode(pi, *encodable_storage);
+    EXPECT_EQ(encodable_storage->descriptor_count(), 1);
 
-//     m_runtime->partition(0)
-//         .runnable()
-//         .main()
-//         .enqueue([] {
-//             std::string str   = "Hello Mrc";
-//             std::uint64_t ans = 42;
+    auto decoding = decode<double>(*encodable_storage);
+    EXPECT_DOUBLE_EQ(pi, decoding);
+}
 
-//             EncodedObject encoding;
+TEST_F(TestCodable, Composite)
+{
+    static_assert(is_codable<std::string>::value, "should be codable");
+    static_assert(is_codable<std::uint64_t>::value, "should be codable");
 
-//             encode(str, encoding);
-//             encode(ans, encoding);
+    std::string str   = "Hello Mrc";
+    std::uint64_t ans = 42;
 
-//             EXPECT_EQ(encoding.object_count(), 2);
-//             EXPECT_EQ(encoding.descriptor_count(), 2);
+    auto encodable_storage = m_runtime->partition(0).make_codable_storage();
 
-//             auto decoded_str = decode<std::string>(encoding, 0);
-//             auto decoded_ans = decode<std::uint64_t>(encoding, 1);
+    encode(str, *encodable_storage);
+    encode(ans, *encodable_storage);
 
-//             EXPECT_STREQ(str.c_str(), decoded_str.c_str());
-//             EXPECT_EQ(ans, decoded_ans);
-//         })
-//         .get();
-// }
+    EXPECT_EQ(encodable_storage->object_count(), 2);
+    EXPECT_EQ(encodable_storage->descriptor_count(), 2);
+
+    auto decoded_str = decode<std::string>(*encodable_storage, 0);
+    auto decoded_ans = decode<std::uint64_t>(*encodable_storage, 1);
+
+    EXPECT_STREQ(str.c_str(), decoded_str.c_str());
+    EXPECT_EQ(ans, decoded_ans);
+}
 
 TEST_F(TestCodable, EncodedObjectProto)
 {
