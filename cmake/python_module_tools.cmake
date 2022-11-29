@@ -56,7 +56,7 @@ message(VERBOSE "Python3_NumPy_VERSION: " ${Python3_NumPy_VERSION})
 # pybind11
 # =========
 set(PYBIND11_VERSION "2.8.1" CACHE STRING "Version of Pybind11 to use")
-include(deps/Configure_pybind11)
+include(${MORPHEUS_UTILS_HOME}/cmake/package_config/pybind11/Configure_pybind11.cmake)
 
 if (NOT EXISTS ${Python3_SITELIB}/skbuild)
     # In case this is messed up by `/usr/local/python/site-packages` vs `/usr/python/site-packages`, check pip itself.

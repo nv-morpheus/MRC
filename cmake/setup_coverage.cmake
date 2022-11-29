@@ -22,7 +22,7 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "coverage")
 
 # Include coverage tools if enabled
 if(MRC_ENABLE_CODECOV)
-  include(cmake/deps/Configure_gcov.cmake)
+  include(${MORPHEUS_UTILS_HOME}/cmake/environment_config/gcov/setup.cmake)
 
   message(STATUS "MRC_ENABLE_CODECOV is ON, configuring report exclusions and setting up coverage build targets")
   set(CODECOV_REPORT_EXCLUSIONS
