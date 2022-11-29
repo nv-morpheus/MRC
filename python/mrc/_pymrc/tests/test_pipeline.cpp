@@ -73,7 +73,7 @@ namespace pymrc = mrc::pymrc;
 using namespace std::string_literals;
 using namespace py::literals;
 
-PYSRF_TEST_CLASS(Pipeline);
+PYMRC_TEST_CLASS(Pipeline);
 
 // TEST_F(TestPipeline, Constructor)
 // {

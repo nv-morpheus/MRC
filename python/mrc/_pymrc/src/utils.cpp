@@ -219,7 +219,7 @@ pybind11::object PyObjectWrapper::copy_obj() const&
 {
     if (PyGILState_Check() == 0)
     {
-        throw mrc::exceptions::SrfRuntimeError("Must have the GIL copying to py::object");
+        throw mrc::exceptions::MrcRuntimeError("Must have the GIL copying to py::object");
     }
 
     // Allow for peaking into the object
@@ -230,7 +230,7 @@ pybind11::object&& PyObjectWrapper::move_obj() &&
 {
     if (!m_obj)
     {
-        throw mrc::exceptions::SrfRuntimeError(
+        throw mrc::exceptions::MrcRuntimeError(
             "Cannot convert empty wrapper to py::object. Did you accidentally move out the object?");
     }
 
@@ -312,7 +312,7 @@ PyObjectHolder::operator const pybind11::handle&() const&
     // TODO(MDD): Do we need the GIL here?
     if (PyGILState_Check() == 0)
     {
-        throw mrc::exceptions::SrfRuntimeError("Must have the GIL copying to py::object");
+        throw mrc::exceptions::MrcRuntimeError("Must have the GIL copying to py::object");
     }
 
     return m_wrapped->view_obj();

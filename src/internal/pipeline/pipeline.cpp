@@ -41,7 +41,7 @@ void Pipeline::add_segment(std::shared_ptr<const segment::Definition> segment)
     if (search != m_segments.end())
     {
         LOG(ERROR) << "segment: " << segment->name() << " is already registered";
-        throw exceptions::SrfRuntimeError("duplicate segment registration");
+        throw exceptions::MrcRuntimeError("duplicate segment registration");
     }
 
     // check for name collisions

@@ -25,7 +25,7 @@ option(BUILD_SHARED_LIBS "Default value for whether or not to build shared or st
 option(MRC_BUILD_BENCHMARKS "Whether or not to build MRC benchmarks" OFF)
 option(MRC_BUILD_DOCS "Enable building of API documentation" OFF)
 option(MRC_BUILD_LIBRARY "Whether the entire MRC library should be built. If set to OFF, only the pieces needed for a target will be built. Set to ON if installing the library" ON)
-option(MRC_BUILD_PYTHON "Enable building the python bindings for Srf" ON)
+option(MRC_BUILD_PYTHON "Enable building the python bindings for MRC" ON)
 option(MRC_BUILD_TESTS "Whether or not to build MRC tests" ON)
 option(MRC_USE_CCACHE "Enable caching compilation results with ccache" OFF)
 option(MRC_USE_CLANG_TIDY "Enable running clang-tidy as part of the build process" OFF)
@@ -331,7 +331,7 @@ target_include_directories(libmrc
 
 target_compile_definitions(libmrc
   PUBLIC
-  $<$<BOOL:${MRC_BUILD_BENCHMARKS}>:SRF_ENABLE_BENCHMARKING>
+  $<$<BOOL:${MRC_BUILD_BENCHMARKS}>:MRC_ENABLE_BENCHMARKING>
 )
 
 set_target_properties(libmrc PROPERTIES OUTPUT_NAME ${PROJECT_NAME})

@@ -39,7 +39,7 @@ const DevicePartition& Partition::device() const
         return *m_device;
     }
     LOG(ERROR) << "attemping to access an unassigned DevicePartition";
-    throw exceptions::SrfRuntimeError("no device partition available");
+    throw exceptions::MrcRuntimeError("no device partition available");
 }
 bool Partition::has_device() const
 {

@@ -207,7 +207,7 @@ TEST_F(TestCodable, Buffer)
 //         .runnable()
 //         .main()
 //         .enqueue([] {
-//             std::string str   = "Hello Srf";
+//             std::string str   = "Hello Mrc";
 //             std::uint64_t ans = 42;
 
 //             EncodedObject encoding;

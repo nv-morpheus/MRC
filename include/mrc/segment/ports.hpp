@@ -41,7 +41,7 @@ class Ports
         if (names.size() != builder_fns.size())
         {
             LOG(ERROR) << "expected " << builder_fns.size() << " port names; got " << names.size();
-            throw exceptions::SrfRuntimeError("invalid number of port names");
+            throw exceptions::MrcRuntimeError("invalid number of port names");
         }
 
         // test for uniqueness
@@ -49,7 +49,7 @@ class Ports
         if (unique_names.size() != builder_fns.size())
         {
             LOG(ERROR) << "error: port names must be unique";
-            throw exceptions::SrfRuntimeError("port names must be unique");
+            throw exceptions::MrcRuntimeError("port names must be unique");
         }
 
         // store names

@@ -31,7 +31,7 @@ In this example, it will be important to pay attention to the ordering of the me
 This example will by default create a source which emits `10` integers, if we intentionally limit the channel size to 4 and limit our execution to a single thread the output should look like:
 
 ```bash
-$ python ./docs/quickstart/python/srf_qs_python/ex03_config_options/run.py --channel_size 4 --threads 1
+$ python ./docs/quickstart/python/mrc_qs_python/ex03_config_options/run.py --channel_size 4 --threads 1
 mrc pipeline starting...
 Source: Starting
 Source: Emitted    00, TID: [Dummy-1]
@@ -72,7 +72,7 @@ mrc pipeline complete.
 If we up the channel size to 8 we get the following:
 
 ```bash
-$ python ./docs/quickstart/python/srf_qs_python/ex03_config_options/run.py --channel_size 8 --threads 1
+$ python ./docs/quickstart/python/mrc_qs_python/ex03_config_options/run.py --channel_size 8 --threads 1
 mrc pipeline starting...
 Source: Starting
 Source: Emitted    00, TID: [Dummy-1]
@@ -112,7 +112,7 @@ mrc pipeline complete.
 If we add another thread:
 
 ```bash
-$ python ./docs/quickstart/python/srf_qs_python/ex03_config_options/run.py --channel_size 4 --threads 2
+$ python ./docs/quickstart/python/mrc_qs_python/ex03_config_options/run.py --channel_size 4 --threads 2
 mrc pipeline starting...
 Source: Starting
 Source: Emitted    00, TID: [Dummy-1]
@@ -152,7 +152,7 @@ mrc pipeline complete.
 And 3 threads:
 
 ```bash
-$ python ./docs/quickstart/python/srf_qs_python/ex03_config_options/run.py --channel_size 4 --threads 3
+$ python ./docs/quickstart/python/mrc_qs_python/ex03_config_options/run.py --channel_size 4 --threads 3
 mrc pipeline starting...
 Source: Starting
 Source: Emitted    00, TID: [Dummy-1]

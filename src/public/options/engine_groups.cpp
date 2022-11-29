@@ -52,7 +52,7 @@ const EngineFactoryOptions& EngineGroups::engine_group_options(const std::string
     auto search = m_engine_resource_groups.find(name);
     if (search == m_engine_resource_groups.end())
     {
-        throw exceptions::SrfRuntimeError("Unknown EngineGroup name: " + name);
+        throw exceptions::MrcRuntimeError("Unknown EngineGroup name: " + name);
     }
     return search->second;
 }

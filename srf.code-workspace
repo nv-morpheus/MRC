@@ -65,34 +65,6 @@
                 "miDebuggerPath": "/usr/bin/gdb"
             },
             {
-                "name": "Debug Examples",
-                "type": "cppdbg",
-                "request": "launch",
-                "program": "${workspaceFolder}/build/examples/20_SrfSingleSegment/mrc_single_segment.x",
-                "args": [
-                    "--cpu_strategy=1",
-                    "--iterations=2",
-                    "--cpuset='0-0'"
-                ],
-                "stopAtEntry": false,
-                "cwd": "${workspaceFolder}",
-                "environment": [],
-                "externalConsole": false,
-                "MIMode": "gdb",
-                "setupCommands": [
-                    {
-                        "description": "Enable pretty-printing for gdb",
-                        "text": "-enable-pretty-printing",
-                        "ignoreFailures": true
-                    },
-                    {
-                        "description": "Skip stdio-common files",
-                        "text": "-interpreter-exec console \"skip -gfi **/bits/*.h\""
-                    },
-                ],
-                "miDebuggerPath": "gdb"
-            },
-            {
                 "name": "debug test_mrc.x",
                 "type": "cppdbg",
                 "request": "launch",
@@ -243,7 +215,7 @@
         },
         "cmake.configureArgs": [
             "-DCMAKE_MESSAGE_CONTEXT_SHOW:BOOL=ON", // Show message context by default
-            "-DSRF_PYTHON_INPLACE_BUILD:BOOL=ON" // Allow inplace build for python. Use `pip install -e .` from the python folder to install
+            "-DMRC_PYTHON_INPLACE_BUILD:BOOL=ON" // Allow inplace build for python. Use `pip install -e .` from the python folder to install
         ],
         "files.insertFinalNewline": true,
         "files.trimTrailingWhitespace": true,

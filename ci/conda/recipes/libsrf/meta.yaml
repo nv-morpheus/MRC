@@ -80,7 +80,7 @@ outputs:
       run_exports:
         - {{ pin_subpackage("libmrc", max_pin="x.x") }}
       include_recipe: False
-    script: move_libsrf_files.sh
+    script: move_libmrc_files.sh
     requirements:
       build:
         # Most are copied from the split package to utilize the run_exports. Keep sorted!
@@ -110,24 +110,24 @@ outputs:
         - {{ pin_compatible('ucx', max_pin='x.x')}}
         - boost-cpp # Needed to use pin_run_as_build
     test:
-      script: test_libsrf.sh
+      script: test_libmrc.sh
       files:
         - build/**/*.x
 
-  - name: srf
+  - name: mrc
     build:
       string: cuda_{{ cuda_version }}_py{{ py_version }}_h{{ PKG_HASH }}_{{ PKG_BUILDNUM }}
       run_exports:
-        - {{ pin_subpackage("srf", max_pin="x.x") }}
+        - {{ pin_subpackage("mrc", max_pin="x.x") }}
       ignore_run_exports:
         - pypy
       include_recipe: False
-    script: move_srf_files.sh
+    script: move_mrc_files.sh
     requirements:
       host:
         # Only should need libmrc and python. Keep sorted!
         - {{ pin_subpackage('libmrc', exact=True) }}
-        - abseil-cpp # srf does not require abseil at build time. See https://github.com/conda-forge/arrow-cpp-feedstock/issues/814
+        - abseil-cpp # mrc does not require abseil at build time. See https://github.com/conda-forge/arrow-cpp-feedstock/issues/814
         - python {{ python }}
       run:
         - {{ pin_subpackage('libmrc', exact=True) }}
@@ -135,8 +135,8 @@ outputs:
         - python
     test:
       imports:
-        - srf
-      script: test_srf.sh
+        - mrc
+      script: test_mrc.sh
       source_files:
         # Copy the pytest source files
         - python/pytest.ini

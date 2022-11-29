@@ -64,7 +64,7 @@ bool init_logging(const std::string& logname, int py_level)
     bool initialized = mrc::init_logging(logname, py_level_to_mrc(py_level));
     if (!initialized)
     {
-        LOG(WARNING) << "Srf logger already initialized";
+        LOG(WARNING) << "MRC logger already initialized";
     }
 
     return initialized;

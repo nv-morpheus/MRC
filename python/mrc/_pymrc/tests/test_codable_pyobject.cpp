@@ -71,7 +71,7 @@ using namespace std::string_literals;
 using namespace mrc::codable;
 using namespace pybind11::literals;
 
-PYSRF_TEST_CLASS(CodablePyobject);
+PYMRC_TEST_CLASS(CodablePyobject);
 
 TEST_F(TestCodablePyobject, PyObject)
 {

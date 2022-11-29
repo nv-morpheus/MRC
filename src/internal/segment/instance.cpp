@@ -288,7 +288,7 @@ void Instance::attach_manifold(std::shared_ptr<manifold::Interface> manifold)
     }
 
     LOG(ERROR) << "unable to find an ingress or egress port matching the port_name " << port_name;
-    throw exceptions::SrfRuntimeError("invalid manifold for segment");
+    throw exceptions::MrcRuntimeError("invalid manifold for segment");
 }
 
 const std::string& Instance::info() const

@@ -15,7 +15,7 @@ The **Streaming Reactive Framework** (MRC) library (proununced "surf") is a **re
 <!-- omit in toc -->
 ### Anatomy of a MRC Pipeline
 
-![MRC Pipeline](docs/imgs/srf_pipeline.jpg)
+![MRC Pipeline](docs/imgs/mrc_pipeline.jpg)
 
 <!-- omit in toc -->
 ## Table of Contents
@@ -132,10 +132,10 @@ make -j $(nproc)
 <!-- omit in toc -->
 #### Run MRC C++ Tests
 ```bash
-export MRC_TEST_INTERNAL_DATA_PATH=$SRF_HOME/src/tests
-$MRC_HOME/build/src/tests/test_srf_private.x
-$MRC_HOME/build/tests/test_srf.x
-$MRC_HOME/build/tests/logging/test_srf_logging.x
+export MRC_TEST_INTERNAL_DATA_PATH=$MRC_HOME/src/tests
+$MRC_HOME/build/src/tests/test_mrc_private.x
+$MRC_HOME/build/tests/test_mrc.x
+$MRC_HOME/build/tests/logging/test_mrc_logging.x
 ```
 <!-- omit in toc -->
 #### Install MRC Python Bindings

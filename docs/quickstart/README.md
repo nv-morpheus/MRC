@@ -33,7 +33,7 @@ conda activate mrc
 # Build the QSG including the C++ examples
 ./compile.sh
 
-# Install Python module (srf_qs_python) to build the MRC QSG Python examples
+# Install Python module (mrc_qs_python) to build the MRC QSG Python examples
 pip install -e python
 ```
 
@@ -49,7 +49,7 @@ conda activate mrc-quickstart
 # Build the QSG including the C++ examples
 ./compile.sh
 
-# Install Python module (srf_qs_python) to build the MRC QSG Python examples
+# Install Python module (mrc_qs_python) to build the MRC QSG Python examples
 pip install -e python
 ```
 
@@ -68,20 +68,20 @@ cd ${MRC_HOME}/docs/quickstart
 # Build the QSG including the C++ examples
 ./compile.sh
 
-# Install Python module (srf_qs_python) to build the MRC QSG Python examples
+# Install Python module (mrc_qs_python) to build the MRC QSG Python examples
 pip install -e python
 ```
 
 ## Python MRC Examples
 
-For users interested in using MRC from Python, the QSG provides several examples in the `docs/quickstart/python/srf_qs_python` directory. These examples are organized into separate folders each showing a different topic. Each example directory has a name with the format, `ex##_${EXAMPLE_NAME}`, where `XX` represents the example number (in increasing complexity) and `${EXAMPLE_NAME}` is the example name. Below is a list of the available examples and a brief description:
+For users interested in using MRC from Python, the QSG provides several examples in the `docs/quickstart/python/mrc_qs_python` directory. These examples are organized into separate folders each showing a different topic. Each example directory has a name with the format, `ex##_${EXAMPLE_NAME}`, where `XX` represents the example number (in increasing complexity) and `${EXAMPLE_NAME}` is the example name. Below is a list of the available examples and a brief description:
 
 | #      | Name | Description |
 | ----------- | ----------- | --- |
-| 00 | [simple_pipeline](./python/srf_qs_python/ex00_simple_pipeline/README.md) | A small, basic pipeline with only a single source, node and sink |
-| 01 | [custom_data](./python/srf_qs_python/ex01_custom_data/README.md) | Similar to simple_pipeline, but passes a custom data type between nodes |
-| 02 | [reactive_operators](./python/srf_qs_python/ex02_reactive_operators/README.md) | Demonstrates how to use Reactive style operators inside of nodes for more complex functionality |
-| 03 | [config_options](./python/srf_qs_python/ex03_config_options/README.md) | Illustrates how thread and buffer options can alter performance |
+| 00 | [simple_pipeline](./python/mrc_qs_python/ex00_simple_pipeline/README.md) | A small, basic pipeline with only a single source, node and sink |
+| 01 | [custom_data](./python/mrc_qs_python/ex01_custom_data/README.md) | Similar to simple_pipeline, but passes a custom data type between nodes |
+| 02 | [reactive_operators](./python/mrc_qs_python/ex02_reactive_operators/README.md) | Demonstrates how to use Reactive style operators inside of nodes for more complex functionality |
+| 03 | [config_options](./python/mrc_qs_python/ex03_config_options/README.md) | Illustrates how thread and buffer options can alter performance |
 
 Once installed, the examples can be run from any directory.
 
@@ -91,13 +91,13 @@ Once installed, the examples can be run from any directory.
 Each example directory contains a `README.md` file with information about the example and a `run.py` Python file. To run any of the examples, simply launch the `run.py` file from python:
 
 ```bash
-python docs/quickstart/python/srf_qs_python/**ex##_ExampleName**/run.py
+python docs/quickstart/python/mrc_qs_python/**ex##_ExampleName**/run.py
 ```
 
 Some examples have configurable options to alter the behavior of the example. To see what options are available, pass `--help` to the example's `run.py` file. For example:
 
 ```bash
-$ python docs/quickstart/python/srf_qs_python/ex03_config_options/run.py --help
+$ python docs/quickstart/python/mrc_qs_python/ex03_config_options/run.py --help
 usage: run.py [-h] [--count COUNT] [--channel_size CHANNEL_SIZE] [--threads THREADS]
 
 ConfigOptions Example.
@@ -127,13 +127,13 @@ Each example directory contains a `README.md` file with information about the ex
 
 ## Hybrid (Python and C++) MRC Examples
 
-For users interested in using MRC in a hybrid environment with both C++ and Python, the QSG provides several examples in the `docs/quickstart/hybrid/srf_qs_hybrid` directory. These examples are organized into separate folders each showing a different topic. Each example directory has a name with the format, `ex##_${EXAMPLE_NAME}`, where `XX` represents the example number (in increasing complexity) and `${EXAMPLE_NAME}` is the example name. Below is a list of the available examples and a brief description:
+For users interested in using MRC in a hybrid environment with both C++ and Python, the QSG provides several examples in the `docs/quickstart/hybrid/mrc_qs_hybrid` directory. These examples are organized into separate folders each showing a different topic. Each example directory has a name with the format, `ex##_${EXAMPLE_NAME}`, where `XX` represents the example number (in increasing complexity) and `${EXAMPLE_NAME}` is the example name. Below is a list of the available examples and a brief description:
 
 | #      | Name | Description |
 | ----------- | ----------- | --- |
-| 00 | [wrap_data_objects](./hybrid/srf_qs_hybrid/ex00_wrap_data_objects/README.md) | How to run a pipeline in Python using C++ data objects |
-| 01 | [wrap_nodes](./hybrid/srf_qs_hybrid/ex01_wrap_nodes/README.md) | How to run a pipeline in Python using sources, sinks, and nodes defined in C++ |
-| 02 | [mixed_execution](./hybrid/srf_qs_hybrid/ex02_mixed_execution/README.md) | How to run a pipeline with some nodes in python and others in C++ |
+| 00 | [wrap_data_objects](./hybrid/mrc_qs_hybrid/ex00_wrap_data_objects/README.md) | How to run a pipeline in Python using C++ data objects |
+| 01 | [wrap_nodes](./hybrid/mrc_qs_hybrid/ex01_wrap_nodes/README.md) | How to run a pipeline in Python using sources, sinks, and nodes defined in C++ |
+| 02 | [mixed_execution](./hybrid/mrc_qs_hybrid/ex02_mixed_execution/README.md) | How to run a pipeline with some nodes in python and others in C++ |
 
 <!-- omit in toc -->
 ### Running the Hybrid MRC Examples
@@ -141,13 +141,13 @@ For users interested in using MRC in a hybrid environment with both C++ and Pyth
 Each example directory contains a `README.md` file with information about the example and a `run.py` python file. To run any of the examples, simply launch the `run.py` file from python:
 
 ```bash
-python docs/quickstart/hybrid/srf_qs_python/<ex##_ExampleName>/run.py
+python docs/quickstart/hybrid/mrc_qs_python/<ex##_ExampleName>/run.py
 ```
 
 Some examples have configurable options to alter the behavior of the example. To see what options are available, pass `--help` to the example's `run.py` file. For example:
 
 ```bash
-$ python docs/quickstart/hybrid/srf_qs_hybrid/ex02_mixed_execution/run.py --help
+$ python docs/quickstart/hybrid/mrc_qs_hybrid/ex02_mixed_execution/run.py --help
 usage: run.py [-h] [--python_source] [--python_node] [--python_sink]
 
 mixed_execution Example.

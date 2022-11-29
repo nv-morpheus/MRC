@@ -48,10 +48,10 @@ cd ${MRC_ROOT}/build
 set +e
 # Tests known to be failing
 # Issues:
-# * test_srf_private - https://github.com/nv-morpheus/MRC/issues/33
+# * test_mrc_private - https://github.com/nv-morpheus/MRC/issues/33
 # * nvrpc - https://github.com/nv-morpheus/MRC/issues/34
 ctest --output-on-failure \
-      --exclude-regex "test_srf_private|nvrpc" \
+      --exclude-regex "test_mrc_private|nvrpc" \
       --output-junit ${REPORTS_DIR}/report_ctest.xml
 
 CTEST_RESULTS=$?
@@ -75,7 +75,7 @@ if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
   aws s3 cp ${WORKSPACE_TMP}/coverage_reports.tar.bz "${ARTIFACT_URL}/coverage_reports.tar.bz"
 
   gpuci_logger "Upload codecov report"
-  codecov --root ${MRC_ROOT} -f ${SRF_ROOT}/build/gcovr-xml-report.xml
+  codecov --root ${MRC_ROOT} -f ${MRC_ROOT}/build/gcovr-xml-report.xml
 fi
 
 rapids-logger "Archiving test reports"

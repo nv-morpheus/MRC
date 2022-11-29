@@ -54,7 +54,7 @@
 namespace mrc::pymrc {
 
 /**
- * @brief Utility struct which supports building pySRF source/sink adapter functions which can be registered with
+ * @brief Utility struct which supports building pyMRC source/sink adapter functions which can be registered with
  * the EdgeAdapterRegistry.
  */
 struct EdgeAdapterUtil
@@ -70,7 +70,7 @@ struct EdgeAdapterUtil
         if (!mrc::node::EdgeAdapterRegistry::has_source_adapter(typeid(DataTypeT)))
         {
             std::type_index source_type = typeid(DataTypeT);
-            VLOG(2) << "Registering PySRF source adapter for: " << type_name<DataTypeT>() << " "
+            VLOG(2) << "Registering PyMRC source adapter for: " << type_name<DataTypeT>() << " "
                     << source_type.hash_code();
             node::EdgeAdapterRegistry::register_source_adapter(typeid(DataTypeT),
                                                                EdgeAdapterUtil::build_source_adapter<DataTypeT>());
@@ -79,7 +79,7 @@ struct EdgeAdapterUtil
         if (!mrc::node::EdgeAdapterRegistry::has_sink_adapter(typeid(DataTypeT)))
         {
             std::type_index sink_type = typeid(DataTypeT);
-            VLOG(2) << "Registering PySRF sink adapter for: " << type_name<DataTypeT>() << " " << sink_type.hash_code();
+            VLOG(2) << "Registering PyMRC sink adapter for: " << type_name<DataTypeT>() << " " << sink_type.hash_code();
             node::EdgeAdapterRegistry::register_sink_adapter(typeid(DataTypeT),
                                                              EdgeAdapterUtil::build_sink_adapter<DataTypeT>());
         }
@@ -199,7 +199,7 @@ struct EdgeAdapterUtil
 };
 
 /**
- * @brief Sources which inherit this object will automatically attempt to register a pySRF adapter for their data type
+ * @brief Sources which inherit this object will automatically attempt to register a pyMRC adapter for their data type
  * with the EdgeAdaptorRegistry
  * @tparam SourceT Data type the inheriting source emits
  */
@@ -217,7 +217,7 @@ struct AutoRegSourceAdapter
         if (!mrc::node::EdgeAdapterRegistry::has_source_adapter(typeid(SourceT)))
         {
             std::type_index source_type = typeid(SourceT);
-            VLOG(2) << "Registering PySRF source adapter for: " << type_name<SourceT>() << " "
+            VLOG(2) << "Registering PyMRC source adapter for: " << type_name<SourceT>() << " "
                     << source_type.hash_code();
             node::EdgeAdapterRegistry::register_source_adapter(typeid(SourceT),
                                                                EdgeAdapterUtil::build_source_adapter<SourceT>());
@@ -228,7 +228,7 @@ struct AutoRegSourceAdapter
 };
 
 /**
- * @brief Sinks which inherit this object will automatically attempt to register a pySRF adapter for their data type
+ * @brief Sinks which inherit this object will automatically attempt to register a pyMRC adapter for their data type
  * with the EdgeAdaptorRegistry
  * @tparam SinkT Data type the inheriting sink receives
  */
@@ -246,7 +246,7 @@ struct AutoRegSinkAdapter
         if (!mrc::node::EdgeAdapterRegistry::has_sink_adapter(typeid(SinkT)))
         {
             std::type_index sink_type = typeid(SinkT);
-            VLOG(2) << "Registering PySRF sink adapter for: " << type_name<SinkT>() << " " << sink_type.hash_code();
+            VLOG(2) << "Registering PyMRC sink adapter for: " << type_name<SinkT>() << " " << sink_type.hash_code();
             node::EdgeAdapterRegistry::register_sink_adapter(typeid(SinkT),
                                                              EdgeAdapterUtil::build_sink_adapter<SinkT>());
         }

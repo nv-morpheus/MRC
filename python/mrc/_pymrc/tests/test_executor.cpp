@@ -50,7 +50,7 @@ namespace py    = pybind11;
 namespace pymrc = mrc::pymrc;
 using namespace std::string_literals;
 
-PYSRF_TEST_CLASS(Executor);
+PYMRC_TEST_CLASS(Executor);
 
 TEST_F(TestExecutor, Execute)
 {

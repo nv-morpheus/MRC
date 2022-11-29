@@ -17,7 +17,7 @@ import logging
 import os
 
 import mrc
-from mrc.core.log_handler import SrfHandler
+from mrc.core.log_handler import MrcHandler
 
 # Intentionally import everything from the pybind11 module into this package
 from .data import *  # NOQA
@@ -30,7 +30,7 @@ def setup_logger(example_file: str):
     mrc.logging.init_logging(os.path.split(os.path.dirname(example_file))[1], logging.INFO)
 
     logger = logging.getLogger()
-    logger.addHandler(SrfHandler())
+    logger.addHandler(MrcHandler())
     logger.setLevel(logging.INFO)
 
     return logger

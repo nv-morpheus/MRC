@@ -108,7 +108,7 @@ TEST_F(TestCodable, String)
 {
     static_assert(is_codable<std::string>::value, "should be codable");
 
-    std::string str = "Hello Srf";
+    std::string str = "Hello MRC";
     auto encoding   = encode(str);
     auto decoding   = decode<std::string>(*encoding);
 
@@ -131,7 +131,7 @@ TEST_F(TestCodable, Composite)
     static_assert(is_codable<std::string>::value, "should be codable");
     static_assert(is_codable<std::uint64_t>::value, "should be codable");
 
-    std::string str   = "Hello Srf";
+    std::string str   = "Hello MRC";
     std::uint64_t ans = 42;
 
     EncodedObject encoding;

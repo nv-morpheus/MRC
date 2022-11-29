@@ -33,7 +33,7 @@ def test_logging(mock_mrc_log):
     mrc_logging.set_level(logging.INFO)
     assert mrc_logging.get_level() == logging.INFO
 
-    handler = mrc_log_handler.SrfHandler()
+    handler = mrc_log_handler.MrcHandler()
     handler.setLevel(logging.WARNING)
 
     assert mrc_logging.get_level() == logging.WARNING

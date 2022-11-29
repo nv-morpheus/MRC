@@ -36,7 +36,7 @@ struct Deserializer
     static pybind11::object deserialize(const char* bytes, std::size_t count);
 
     /**
-     * @brief Given a pySRF shmem descriptor, attempt to retrieve the object information from shared memory
+     * @brief Given a pyMRC shmem descriptor, attempt to retrieve the object information from shared memory
      * and unpickle it.
      * @param descriptor
      * @return

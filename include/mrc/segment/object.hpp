@@ -72,7 +72,7 @@ node::SinkProperties<T>& ObjectProperties::sink_typed()
         LOG(ERROR) << "Failed to cast " << type_name() << " to "
                    << "SinkProperties<" << std::string(mrc::type_name<T>()) << "> from "
                    << "SinkProperties<" << base.sink_type_name() << ">.";
-        throw exceptions::SrfRuntimeError("Failed to cast Sink to requested SinkProperties<T>");
+        throw exceptions::MrcRuntimeError("Failed to cast Sink to requested SinkProperties<T>");
     }
 
     return *sink;
@@ -89,7 +89,7 @@ node::SourceProperties<T>& ObjectProperties::source_typed()
         LOG(ERROR) << "Failed to cast " << type_name() << " to "
                    << "SourceProperties<" << std::string(mrc::type_name<T>()) << "> from "
                    << "SourceProperties<" << base.source_type_name() << ">.";
-        throw exceptions::SrfRuntimeError("Failed to cast Source to requested SourceProperties<T>");
+        throw exceptions::MrcRuntimeError("Failed to cast Source to requested SourceProperties<T>");
     }
 
     return *source;
@@ -122,7 +122,7 @@ class Object : public virtual ObjectProperties
         if (!is_runnable())
         {
             LOG(ERROR) << "Segment Object is not Runnable; access to LaunchOption forbidden";
-            throw exceptions::SrfRuntimeError("not a runnable");
+            throw exceptions::MrcRuntimeError("not a runnable");
         }
         return m_launch_options;
     }
@@ -132,7 +132,7 @@ class Object : public virtual ObjectProperties
         if (!is_runnable())
         {
             LOG(ERROR) << "Segment Object is not Runnable; access to LaunchOption forbidden";
-            throw exceptions::SrfRuntimeError("not a runnable");
+            throw exceptions::MrcRuntimeError("not a runnable");
         }
         return m_launch_options;
     }
@@ -156,7 +156,7 @@ ObjectT& Object<ObjectT>::object()
         LOG(ERROR) << "Error accessing the Object API; Nodes are moved from the Segment API to the Executor "
                       "when the "
                       "pipeline is started.";
-        throw exceptions::SrfRuntimeError("Object API is unavailable - expected if the Pipeline is running.");
+        throw exceptions::MrcRuntimeError("Object API is unavailable - expected if the Pipeline is running.");
     }
     return *node;
 }
@@ -197,7 +197,7 @@ node::SinkPropertiesBase& Object<ObjectT>::sink_base()
     if constexpr (!std::is_base_of_v<node::SinkPropertiesBase, ObjectT>)
     {
         LOG(ERROR) << type_name() << " is not a Sink";
-        throw exceptions::SrfRuntimeError("Object is not a Sink");
+        throw exceptions::MrcRuntimeError("Object is not a Sink");
     }
 
     auto* base = dynamic_cast<node::SinkPropertiesBase*>(get_object());
@@ -211,7 +211,7 @@ node::SourcePropertiesBase& Object<ObjectT>::source_base()
     if constexpr (!std::is_base_of_v<node::SourcePropertiesBase, ObjectT>)
     {
         LOG(ERROR) << type_name() << " is not a Source";
-        throw exceptions::SrfRuntimeError("Object is not a Source");
+        throw exceptions::MrcRuntimeError("Object is not a Source");
     }
 
     auto* base = dynamic_cast<node::SourcePropertiesBase*>(get_object());

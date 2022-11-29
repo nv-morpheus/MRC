@@ -37,7 +37,7 @@ class ThreadLocalSharedPointer final
     {
         if (thread_local_ref() == nullptr)
         {
-            throw exceptions::SrfRuntimeError("accessing unset ThreadLocalSharedPointer");
+            throw exceptions::MrcRuntimeError("accessing unset ThreadLocalSharedPointer");
         }
         return thread_local_ref();
     }

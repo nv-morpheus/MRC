@@ -87,7 +87,7 @@ TEST_F(TestRD, LifeCycle)
 
             EXPECT_EQ(rd_manager.size(), 0);
 
-            std::string test("Hi SRFer");
+            std::string test("Hi MRC");
             auto rd = rd_manager.register_object(std::move(test));
 
             EXPECT_EQ(rd_manager.size(), 1);
@@ -128,7 +128,7 @@ TEST_F(TestRD, RemoteRelease)
             EXPECT_EQ(rd_manager_0.size(), 0);
             EXPECT_EQ(rd_manager_1.size(), 0);
 
-            std::string test("Hi SRFer");
+            std::string test("Hi MRC");
             auto rd = rd_manager_0.register_object(std::move(test));
 
             EXPECT_EQ(rd_manager_0.size(), 1);

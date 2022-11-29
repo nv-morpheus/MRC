@@ -141,7 +141,7 @@ std::shared_ptr<Topology> Topology::Create(const TopologyOptions& options,
         auto intersection = topo_cpu_set.set_intersect(options.user_cpuset());
         if (intersection.empty())
         {
-            throw exceptions::SrfRuntimeError("intersection between user_cpuset and topo_cpuset is null");
+            throw exceptions::MrcRuntimeError("intersection between user_cpuset and topo_cpuset is null");
         }
         auto dropped = options.user_cpuset().weight() - intersection.weight();
         if (dropped != 0)

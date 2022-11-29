@@ -148,7 +148,7 @@ std::shared_ptr<channel::Ingress<T>> SinkChannelBase<T>::ingress_channel()
 
     if (m_channel->is_channel_closed())
     {
-        throw exceptions::SrfRuntimeError("attempting to acquire an Ingress to a closed channel");
+        throw exceptions::MrcRuntimeError("attempting to acquire an Ingress to a closed channel");
     }
 
     // the last holder that owns a shared_ptr<Ingress> will close the channel

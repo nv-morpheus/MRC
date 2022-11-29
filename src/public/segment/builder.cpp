@@ -46,14 +46,14 @@ std::shared_ptr<ObjectProperties> Builder::get_ingress(std::string name, std::ty
     auto base = m_backend.get_ingress_base(name);
     if (!base)
     {
-        throw exceptions::SrfRuntimeError("Egress port name not found: " + name);
+        throw exceptions::MrcRuntimeError("Egress port name not found: " + name);
     }
 
     auto port_util = node::PortRegistry::find_port_util(type_index);
     auto port      = port_util->try_cast_ingress_base_to_object(base);
     if (port == nullptr)
     {
-        throw exceptions::SrfRuntimeError("Egress port type mismatch: " + name);
+        throw exceptions::MrcRuntimeError("Egress port type mismatch: " + name);
     }
 
     return port;
@@ -64,7 +64,7 @@ std::shared_ptr<ObjectProperties> Builder::get_egress(std::string name, std::typ
     auto base = m_backend.get_egress_base(name);
     if (!base)
     {
-        throw exceptions::SrfRuntimeError("Egress port name not found: " + name);
+        throw exceptions::MrcRuntimeError("Egress port name not found: " + name);
     }
 
     auto port_util = node::PortRegistry::find_port_util(type_index);
@@ -72,7 +72,7 @@ std::shared_ptr<ObjectProperties> Builder::get_egress(std::string name, std::typ
     auto port = port_util->try_cast_egress_base_to_object(base);
     if (port == nullptr)
     {
-        throw exceptions::SrfRuntimeError("Egress port type mismatch: " + name);
+        throw exceptions::MrcRuntimeError("Egress port type mismatch: " + name);
     }
 
     return port;

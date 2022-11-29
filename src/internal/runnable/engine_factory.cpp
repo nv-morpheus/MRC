@@ -126,7 +126,7 @@ class SingleUseFiberEngineFactory final : public FiberEngineFactory
         if (m_offset + count > m_pool.thread_count())
         {
             LOG(ERROR) << "more dedicated threads/cores than available";
-            throw exceptions::SrfRuntimeError("more dedicated threads/cores than available");
+            throw exceptions::MrcRuntimeError("more dedicated threads/cores than available");
         }
 
         std::vector<std::reference_wrapper<core::FiberTaskQueue>> queues;
@@ -227,7 +227,7 @@ class SingleUseThreadEngineFactory final : public ThreadEngineFactory
             if (m_prev_cpu_idx == -1)
             {
                 LOG(ERROR) << "SingleUse logical cpu ids exhausted";
-                throw exceptions::SrfRuntimeError("SingleUse logical cpu ids exhausted");
+                throw exceptions::MrcRuntimeError("SingleUse logical cpu ids exhausted");
             }
             cpu_set.on(m_prev_cpu_idx);
         }

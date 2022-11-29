@@ -140,7 +140,7 @@ void Definition::validate_ports() const
     if (port_names.size() != names.size())
     {
         // LOG(ERROR) << info() << "ingress and egress port names must be unique";
-        throw exceptions::SrfRuntimeError("ingress and egress port names must be unique");
+        throw exceptions::MrcRuntimeError("ingress and egress port names must be unique");
     }
 
     // check for hash collision over all port names
@@ -153,7 +153,7 @@ void Definition::validate_ports() const
     {
         // todo(ryan) - improve logging - print out each name and hash
         // LOG(ERROR) << info() << " hash collision detected on port names";
-        throw exceptions::SrfRuntimeError("hash collection detected in port names");
+        throw exceptions::MrcRuntimeError("hash collection detected in port names");
     }
 }
 

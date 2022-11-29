@@ -40,7 +40,7 @@ class RouterBase
         auto search = m_sources.find(key);
         if (search == m_sources.end())
         {
-            throw exceptions::SrfRuntimeError("unable to find edge for key");
+            throw exceptions::MrcRuntimeError("unable to find edge for key");
         }
         return search->second;
     }

@@ -44,7 +44,7 @@ namespace pymrc = mrc::pymrc;
 using namespace std::string_literals;
 using namespace pybind11::literals;
 
-PYSRF_TEST_CLASS(Serializer);
+PYMRC_TEST_CLASS(Serializer);
 
 class PymrcPickleableSimple
 {

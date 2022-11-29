@@ -18,9 +18,9 @@ import logging
 import mrc.core.logging as mrc_logging
 
 
-class SrfHandler(logging.Handler):
+class MrcHandler(logging.Handler):
     """
-    Forwards logs to Srf's logger
+    Forwards logs to MRC's logger
     """
 
     def emit(self, record):

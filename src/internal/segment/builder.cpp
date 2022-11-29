@@ -83,7 +83,7 @@ mrc::segment::ObjectProperties& Builder::find_object(const std::string& name)
     if (search == m_objects.end())
     {
         LOG(ERROR) << "Unable to find segment object with name: " << name;
-        throw exceptions::SrfRuntimeError("unable to find segment object with name " + name);
+        throw exceptions::MrcRuntimeError("unable to find segment object with name " + name);
     }
     return *(search->second);
 }
@@ -113,7 +113,7 @@ void Builder::add_object(const std::string& name, std::shared_ptr<::mrc::segment
     if (has_object(name))
     {
         LOG(ERROR) << "A Object named " << name << " is already registered";
-        throw exceptions::SrfRuntimeError("duplicate name detected - name owned by a node");
+        throw exceptions::MrcRuntimeError("duplicate name detected - name owned by a node");
     }
     m_objects[name] = std::move(object);
 }
@@ -123,7 +123,7 @@ void Builder::add_runnable(const std::string& name, std::shared_ptr<mrc::runnabl
     if (has_object(name))
     {
         LOG(ERROR) << "A Object named " << name << " is already registered";
-        throw exceptions::SrfRuntimeError("duplicate name detected - name owned by a node");
+        throw exceptions::MrcRuntimeError("duplicate name detected - name owned by a node");
     }
     m_nodes[name] = std::move(runnable);
 }

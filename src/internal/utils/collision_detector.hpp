@@ -36,7 +36,7 @@ class CollisionDetector
      * @brief registers a port name to check for name collisions in the 16-bit hash-space
      * @param [in] name   port name to register
      * @returns    port  uint16_t port id associated with name
-     * @throws     SrfRuntimeError in the event of a name collision
+     * @throws     MrcRuntimeError in the event of a name collision
      **/
     std::uint16_t register_name(const std::string& name);
 
@@ -44,7 +44,7 @@ class CollisionDetector
      * @brief lookup name in registry to determine if it registered or not
      * @param [in] name   port name to check registration
      * @returns    port  uint16_t port id associated with name
-     * @throws     SrfRuntimeError in the event of name is not registred
+     * @throws     MrcRuntimeError in the event of name is not registred
      **/
     std::uint16_t lookup_name(const std::string& name) const;
 
@@ -52,7 +52,7 @@ class CollisionDetector
      * @brief lookup name associated with hash
      * @param   [in] hash
      * @returns      name
-     * @throws       SrfRuntimeError if hash is not registered
+     * @throws       MrcRuntimeError if hash is not registered
      **/
     const std::string& name(const std::uint16_t& hash) const;
 

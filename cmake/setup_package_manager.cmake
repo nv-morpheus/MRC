@@ -63,7 +63,7 @@ else()
       set(MRC_VCPKG_TOOLCHAIN "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE INTERNAL "")
 
       # Default Vcpkg cache to
-      set(MRC_VCPKG_DEFAULT_BINARY_CACHE "${SRF_CACHE_DIR}/vcpkg" CACHE PATH "The location to use for storing Vcpkg binaries between builds. Defaults to environment variable \$VCPKG_DEFAULT_BINARY_CACHE")
+      set(MRC_VCPKG_DEFAULT_BINARY_CACHE "${MRC_CACHE_DIR}/vcpkg" CACHE PATH "The location to use for storing Vcpkg binaries between builds. Defaults to environment variable \$VCPKG_DEFAULT_BINARY_CACHE")
       mark_as_advanced(MRC_VCPKG_DEFAULT_BINARY_CACHE)
 
       # If using shared libs (the default) use a custom triplet file to use dynamic linking

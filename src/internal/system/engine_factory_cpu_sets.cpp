@@ -145,7 +145,7 @@ EngineFactoryCpuSets generate_engine_factory_cpu_sets(const Topology& topology,
     {
         LOG(ERROR) << "requested configuration requires " << min_cpu_count << " logical cpus; only " << cpu_count
                    << " detected";
-        throw exceptions::SrfRuntimeError("insufficient number of logical cpus assigned to the current process");
+        throw exceptions::MrcRuntimeError("insufficient number of logical cpus assigned to the current process");
     }
 
     // for the set of logical cpus in the placement group, first assign all cpus that will be in the fiber pool for this

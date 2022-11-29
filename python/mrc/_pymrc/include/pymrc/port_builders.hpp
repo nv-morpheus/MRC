@@ -157,7 +157,7 @@ struct PortBuilderUtil
 
         if (!mrc::node::PortRegistry::has_port_util(type_idx))
         {
-            VLOG(2) << "Registering PySRF port util for: " << type_name<port_type_t>() << " "
+            VLOG(2) << "Registering PyMRC port util for: " << type_name<port_type_t>() << " "
                     << "=> " << type_name<port_dtype_t>() << " " << type_idx.hash_code();
 
             auto port_util = std::make_shared<mrc::node::PortUtil>(typeid(port_dtype_t));

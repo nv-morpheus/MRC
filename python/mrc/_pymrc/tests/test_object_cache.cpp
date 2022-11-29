@@ -40,7 +40,7 @@ namespace pymrc = mrc::pymrc;
 using namespace std::string_literals;
 using namespace pybind11::literals;
 
-PYSRF_TEST_CLASS(ObjectCache);
+PYMRC_TEST_CLASS(ObjectCache);
 
 TEST_F(TestObjectCache, Acquire)
 {

@@ -34,7 +34,7 @@ namespace py = pybind11;
 using namespace std::string_literals;
 using namespace pybind11::literals;
 
-PYSRF_TEST_CLASS(ShmemWrapper);
+PYMRC_TEST_CLASS(ShmemWrapper);
 
 TEST_F(TestShmemWrapper, Construct)
 {

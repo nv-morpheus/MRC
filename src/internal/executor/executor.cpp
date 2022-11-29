@@ -65,7 +65,7 @@ void Executor::register_pipeline(std::unique_ptr<pipeline::IPipeline> ipipeline)
 
     if (!valid_pipeline(*pipeline))
     {
-        throw exceptions::SrfRuntimeError("pipeline validation failed");
+        throw exceptions::MrcRuntimeError("pipeline validation failed");
     }
 
     m_pipeline_manager = std::make_unique<pipeline::Manager>(pipeline, *m_resources_manager);

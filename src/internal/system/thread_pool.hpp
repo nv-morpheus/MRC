@@ -77,7 +77,7 @@ class ThreadPool final
         if (status == boost::fibers::channel_op_status::closed)
         {
             LOG(ERROR) << "failed to enqueue work to ThreadPool; ThreadPool is shutting down";
-            throw exceptions::SrfRuntimeError("failed to enqueue work to ThreadPool; ThreadPool is shutting down");
+            throw exceptions::MrcRuntimeError("failed to enqueue work to ThreadPool; ThreadPool is shutting down");
         }
 
         return std::move(future);

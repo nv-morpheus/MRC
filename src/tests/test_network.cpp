@@ -370,7 +370,7 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
 // {
 //     auto launcher = m_launch_control->prepare_launcher(std::move(m_mutable_nem));
 
-//     // auto& service = m_launch_control->service(runnable::SrfService::data_plane::Server);
+//     // auto& service = m_launch_control->service(runnable::MrcService::data_plane::Server);
 //     // service.stop();
 //     // service.await_join();
 // }

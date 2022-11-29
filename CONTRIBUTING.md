@@ -98,10 +98,10 @@ make -j $(nproc)
 
 #### Run MRC C++ Tests
 ```bash
-export MRC_TEST_INTERNAL_DATA_PATH=$SRF_HOME/src/tests
-$MRC_HOME/build/src/tests/test_srf_private.x
-$MRC_HOME/build/tests/test_srf.x
-$MRC_HOME/build/tests/logging/test_srf_logging.x
+export MRC_TEST_INTERNAL_DATA_PATH=$MRC_HOME/src/tests
+$MRC_HOME/build/src/tests/test_mrc_private.x
+$MRC_HOME/build/tests/test_mrc.x
+$MRC_HOME/build/tests/logging/test_mrc_logging.x
 ```
 
 ### Install MRC Python
@@ -115,10 +115,10 @@ pytest $MRC_HOME/python
 ```
 
 ### Building API Documentation
-From the root of the MRC repo, configure CMake with `MRC_BUILD_DOCS=ON` then build the `srf_docs` target. Once built the documentation will be located in the `build/docs/html` directory.
+From the root of the MRC repo, configure CMake with `MRC_BUILD_DOCS=ON` then build the `mrc_docs` target. Once built the documentation will be located in the `build/docs/html` directory.
 ```bash
-cmake -B build -DSRF_BUILD_DOCS=ON .
-cmake --build build --target srf_docs
+cmake -B build -DMRC_BUILD_DOCS=ON .
+cmake --build build --target mrc_docs
 ```
 
 ## Licensing

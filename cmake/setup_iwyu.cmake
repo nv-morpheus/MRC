@@ -33,7 +33,7 @@ function(configure_iwyu)
       -Xiwyu --no_comments)
 
     # Convert these to space separated arguments
-    string(REPLACE ";" " " MRC_IWYU_OPTIONS "${SRF_IWYU_OPTIONS}")
+    string(REPLACE ";" " " MRC_IWYU_OPTIONS "${MRC_IWYU_OPTIONS}")
 
     message(STATUS "Enabling include-what-you-use for MRC targets")
 

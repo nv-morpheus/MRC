@@ -68,7 +68,7 @@ class SourceChannel : public SourceProperties<T>, private channel::Ingress<T>
     virtual channel::Status no_channel(T&& data)
     {
         LOG(ERROR) << "SourceChannel has either not been connected or the channel has been released";
-        throw exceptions::SrfRuntimeError(
+        throw exceptions::MrcRuntimeError(
             "SourceChannel has either not been connected or the channel has been released");
         return channel::Status::error;
     }
@@ -80,7 +80,7 @@ class SourceChannel : public SourceProperties<T>, private channel::Ingress<T>
         {
             // todo(ryan) - we could specialize this exception, then if we catch it in segment::Builder::make_edge, we
             // could enhance the error description and rethrow the same exception
-            throw exceptions::SrfRuntimeError(
+            throw exceptions::MrcRuntimeError(
                 "multiple edges to a source detected; use an operator to select proper behavior");
         }
         m_ingress = std::dynamic_pointer_cast<channel::Ingress<T>>(untyped_ingress);

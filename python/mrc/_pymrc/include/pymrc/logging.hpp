@@ -37,7 +37,7 @@ constexpr int CRITICAL = 50;
 }  // namespace py_log_levels
 
 /**
- * @brief Initializes Srf's logger, calling this function a second time has
+ * @brief Initializes MRC's logger, calling this function a second time has
  * no impact. The return value inidicates if the logger was initialized,
  * which will be `true` on the first call, and `false` for all subsequant calls.
  * The `py_level` argument is the Python numeric log level and defaults to INFO.
@@ -51,12 +51,12 @@ bool init_logging(const std::string& logname, int py_level = py_log_levels::INFO
 int get_level();
 
 /**
- * @brief Adjusts the log level of Srf's logger, the `py_level` argument is the Python numeric log level
+ * @brief Adjusts the log level of MRC's logger, the `py_level` argument is the Python numeric log level
  */
 void set_level(int py_level);
 
 /**
- * @brief Logs a message to Srf's logger (currently GLOG).
+ * @brief Logs a message to MRC's logger (currently GLOG).
  * The `py_level` argument is the Python numeric log level
  *
  * Debug messages are logged at the info level, as GLOG's idea of a debug log is

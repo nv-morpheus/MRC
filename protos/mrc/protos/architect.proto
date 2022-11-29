@@ -363,8 +363,8 @@ message WorkerAddress
 
 // EventStream
 //
-// Architect: HelloSrf
-// Srf: HelloArchitect - instance_id
+// Architect: HelloMrc
+// Mrc: HelloArchitect - instance_id
 // Architect:
 //   - hold, update_config, start_segments
 

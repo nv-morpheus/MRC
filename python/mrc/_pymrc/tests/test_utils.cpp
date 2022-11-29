@@ -48,7 +48,7 @@ using namespace std::string_literals;
 constexpr long longval{UINT_MAX + 1l};
 constexpr double doubleval{FLT_MAX + 1.0 + DBL_MIN};
 
-PYSRF_TEST_CLASS(Utils);
+PYMRC_TEST_CLASS(Utils);
 
 TEST_F(TestUtils, ImportModuleObject)
 {

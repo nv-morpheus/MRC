@@ -211,7 +211,7 @@ Manager& Manager::get_resources()
     {
         LOG(ERROR) << "thread with id " << std::this_thread::get_id()
                    << " attempting to access the MRC runtime, but is not a MRC runtime thread";
-        throw exceptions::SrfRuntimeError("can not access runtime resources from outside the runtime");
+        throw exceptions::MrcRuntimeError("can not access runtime resources from outside the runtime");
     }
 
     return *m_thread_resources;
@@ -227,12 +227,12 @@ PartitionResources& Manager::get_partition()
             if (resources.system().partitions().device_to_host_strategy() == PlacementResources::Shared)
             {
                 LOG(ERROR) << "runtime partition query is disabed when PlacementResources::Shared is in use";
-                throw exceptions::SrfRuntimeError("unable to access runtime parition info");
+                throw exceptions::MrcRuntimeError("unable to access runtime parition info");
             }
 
             LOG(ERROR) << "thread with id " << std::this_thread::get_id()
                        << " attempting to access the MRC runtime, but is not a MRC runtime thread";
-            throw exceptions::SrfRuntimeError("can not access runtime resources from outside the runtime");
+            throw exceptions::MrcRuntimeError("can not access runtime resources from outside the runtime");
         }
 
         return *m_thread_partition;

@@ -79,7 +79,7 @@
 // IWYU thinks we need map for segment::Definition::create
 
 namespace mrc::exceptions {
-struct SrfRuntimeError;
+struct MrcRuntimeError;
 }  // namespace mrc::exceptions
 
 using namespace std::literals::string_literals;
@@ -149,7 +149,7 @@ TEST_F(TestSegment, PortsConstructorBadNameBuilderSizeMismatch)
     std::vector<std::string> port_names{"a", "b", "c"};
     std::vector<port_type_t::port_builder_fn_t> port_builder_fns{};
 
-    EXPECT_THROW(port_type_t BadPorts(port_names, port_builder_fns), exceptions::SrfRuntimeError);
+    EXPECT_THROW(port_type_t BadPorts(port_names, port_builder_fns), exceptions::MrcRuntimeError);
 }
 
 TEST_F(TestSegment, PortsConstructorBadDuplicateName)
@@ -164,7 +164,7 @@ TEST_F(TestSegment, PortsConstructorBadDuplicateName)
     std::vector<std::string> port_names{"a", "b", "a"};
     std::vector<port_type_t::port_builder_fn_t> port_builder_fns{port_builder, port_builder, port_builder};
 
-    EXPECT_THROW(port_type_t BadPorts(port_names, port_builder_fns), exceptions::SrfRuntimeError);
+    EXPECT_THROW(port_type_t BadPorts(port_names, port_builder_fns), exceptions::MrcRuntimeError);
 }
 
 TEST_F(TestSegment, UserLambdaIsCalled)

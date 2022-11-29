@@ -366,7 +366,7 @@ std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::uni
     if (m_backend.has_object(name))
     {
         LOG(ERROR) << "A Object named " << name << " is already registered";
-        throw exceptions::SrfRuntimeError("duplicate name detected - name owned by a node");
+        throw exceptions::MrcRuntimeError("duplicate name detected - name owned by a node");
     }
 
     std::shared_ptr<Object<ObjectT>> segment_object{nullptr};
@@ -397,13 +397,13 @@ std::shared_ptr<Object<node::SinkProperties<T>>> Builder::get_egress(std::string
     auto base = m_backend.get_egress_base(name);
     if (!base)
     {
-        throw exceptions::SrfRuntimeError("Egress port name not found: " + name);
+        throw exceptions::MrcRuntimeError("Egress port name not found: " + name);
     }
 
     auto port = std::dynamic_pointer_cast<Object<node::SinkProperties<T>>>(base);
     if (port == nullptr)
     {
-        throw exceptions::SrfRuntimeError("Egress port type mismatch: " + name);
+        throw exceptions::MrcRuntimeError("Egress port type mismatch: " + name);
     }
 
     return port;
@@ -415,13 +415,13 @@ std::shared_ptr<Object<node::SourceProperties<T>>> Builder::get_ingress(std::str
     auto base = m_backend.get_ingress_base(name);
     if (!base)
     {
-        throw exceptions::SrfRuntimeError("Ingress port name not found: " + name);
+        throw exceptions::MrcRuntimeError("Ingress port name not found: " + name);
     }
 
     auto port = std::dynamic_pointer_cast<Object<node::SourceProperties<T>>>(base);
     if (port == nullptr)
     {
-        throw exceptions::SrfRuntimeError("Ingress port type mismatch: " + name);
+        throw exceptions::MrcRuntimeError("Ingress port type mismatch: " + name);
     }
 
     return port;
