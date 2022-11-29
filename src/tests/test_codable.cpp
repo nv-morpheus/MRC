@@ -31,12 +31,12 @@
 #include "mrc/codable/decode.hpp"
 #include "mrc/codable/encode.hpp"
 #include "mrc/codable/encoding_options.hpp"
-#include "mrc/codable/fundamental_types.hpp"  // IWYU pragma: keep
-#include "mrc/codable/protobuf_message.hpp"   // IWYU pragma: keep
+#include "mrc/codable/fundamental_types.hpp"
+#include "mrc/codable/protobuf_message.hpp"
 #include "mrc/codable/type_traits.hpp"
 #include "mrc/core/bitmap.hpp"
 #include "mrc/memory/buffer.hpp"
-#include "mrc/memory/codable/buffer.hpp"  // IWYU pragma: keep
+#include "mrc/memory/codable/buffer.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
 #include "mrc/protos/codable.pb.h"
@@ -44,7 +44,9 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
-#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
+#include <ctime>
 #include <memory>
 #include <optional>
 #include <string>

@@ -15,11 +15,13 @@
  * limitations under the License.
  */
 
+#include "mrc/channel/status.hpp"
 #include "mrc/data/reusable_pool.hpp"
 
 #include <gtest/gtest.h>
 
-#include <functional>
+#include <atomic>
+#include <cstddef>
 #include <memory>
 #include <utility>
 

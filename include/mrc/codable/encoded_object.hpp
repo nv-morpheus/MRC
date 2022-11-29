@@ -19,9 +19,6 @@
 
 #include "mrc/codable/api.hpp"
 #include "mrc/codable/encode.hpp"
-#include "mrc/utils/macros.hpp"
-
-#include <cstdint>
 
 namespace mrc::codable {
 
