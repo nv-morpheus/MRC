@@ -36,6 +36,7 @@ class Resources final : public system::HostPartitionProvider, public srf::pipeli
     Resources(const system::Resources& system_resources, std::size_t _host_partition_id);
 
     srf::core::FiberTaskQueue& main() final;
+    const srf::core::FiberTaskQueue& main() const;
     srf::runnable::LaunchControl& launch_control() final;
 
   private:

@@ -52,9 +52,9 @@ void HostPartition::add_device_partition_id(int gpu_id)
     m_device_partitions.push_back(gpu_id);
 }
 
-void HostPartition::set_engine_factory_cpu_sets(const Options& options)
+void HostPartition::set_engine_factory_cpu_sets(const Topology& topology, const Options& options)
 {
-    m_engine_factory_cpu_sets = generate_engine_factory_cpu_sets(options, cpu_set());
+    m_engine_factory_cpu_sets = generate_engine_factory_cpu_sets(topology, options, cpu_set());
 }
 
 const EngineFactoryCpuSets& HostPartition::engine_factory_cpu_sets() const

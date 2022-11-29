@@ -26,6 +26,8 @@
 
 namespace srf::internal::system {
 
+class Topology;
+
 struct EngineFactoryCpuSets
 {
     bool is_resuable(const std::string& name) const;
@@ -49,6 +51,8 @@ struct EngineFactoryCpuSets
  * @param cpu_set
  * @return LaunchControlPlacementCpuSets
  */
-extern EngineFactoryCpuSets generate_engine_factory_cpu_sets(const Options& options, const CpuSet& cpu_set);
+extern EngineFactoryCpuSets generate_engine_factory_cpu_sets(const Topology& topology,
+                                                             const Options& options,
+                                                             const CpuSet& cpu_set);
 
 }  // namespace srf::internal::system

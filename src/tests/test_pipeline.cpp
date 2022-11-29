@@ -26,20 +26,25 @@
 #include "internal/system/system_provider.hpp"
 #include "internal/utils/collision_detector.hpp"
 
+#include "srf/channel/channel.hpp"
 #include "srf/channel/status.hpp"
 #include "srf/core/addresses.hpp"
 #include "srf/core/executor.hpp"
 #include "srf/data/reusable_pool.hpp"
 #include "srf/engine/pipeline/ipipeline.hpp"
 #include "srf/node/queue.hpp"
+#include "srf/node/rx_node.hpp"
 #include "srf/node/rx_sink.hpp"
 #include "srf/node/rx_source.hpp"
 #include "srf/node/sink_properties.hpp"
 #include "srf/node/source_properties.hpp"
+#include "srf/options/engine_groups.hpp"
 #include "srf/options/options.hpp"
+#include "srf/options/placement.hpp"
 #include "srf/options/topology.hpp"
 #include "srf/pipeline/pipeline.hpp"
 #include "srf/runnable/context.hpp"
+#include "srf/runnable/types.hpp"
 #include "srf/segment/builder.hpp"
 #include "srf/segment/egress_ports.hpp"
 #include "srf/segment/ingress_ports.hpp"
@@ -51,7 +56,9 @@
 #include <boost/hana/if.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
+#include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx.hpp>
+#include <rxcpp/sources/rx-iterate.hpp>
 
 #include <array>
 #include <chrono>
@@ -122,8 +129,9 @@ static void run_custom_manager(std::unique_ptr<internal::pipeline::IPipeline> pi
 static void run_manager(std::unique_ptr<internal::pipeline::IPipeline> pipeline, bool delayed_stop = false)
 {
     auto resources = internal::resources::Manager(internal::system::SystemProvider(make_system([](Options& options) {
-        options.topology().user_cpuset("0-1");
+        options.topology().user_cpuset("0");
         options.topology().restrict_gpus(true);
+        srf::channel::set_default_channel_size(64);
     })));
 
     auto manager = std::make_unique<internal::pipeline::Manager>(unwrap(*pipeline), resources);
@@ -450,4 +458,87 @@ TEST_F(TestPipeline, ReusableSource)
 
     exec.start();
     exec.join();
+}
+
+TEST_F(TestPipeline, Nodes1k)
+{
+    auto pipeline = pipeline::make_pipeline();
+
+    std::size_t count      = 1000;
+    std::size_t recv_count = 0;
+
+    auto start = std::chrono::high_resolution_clock::now();
+    auto end   = std::chrono::high_resolution_clock::now();
+
+    auto segment = pipeline->make_segment("seg_1", [&](segment::Builder& s) {
+        auto rx_source = s.make_source<int>("rx_source", [&start, count](rxcpp::subscriber<int> s) {
+            VLOG(1) << runnable::Context::get_runtime_context().info();
+            start = std::chrono::high_resolution_clock::now();
+            for (int i = 0; i < count; i++)
+            {
+                s.on_next(0);
+            }
+            s.on_completed();
+        });
+        auto queue     = s.make_object("queue", std::make_unique<node::Queue<int>>());
+        s.make_edge(rx_source, queue);
+        auto node = s.make_node<int>("node_0", rxcpp::operators::map([](int data) { return (data + 1); }));
+        s.make_edge(queue, node);
+        for (int i = 1; i < 997; i++)
+        {
+            std::stringstream ss;
+            ss << "node_" << i;
+            auto curr = s.make_node<int>(ss.str(), rxcpp::operators::map([](int data) { return (data + 1); }));
+            s.make_edge(node, curr);
+            node = curr;
+        }
+        auto rx_sink = s.make_sink<int>(
+            "rx_sink",
+            [&](int data) {
+                VLOG(1) << "data: " << data;
+                EXPECT_EQ(data, 997);
+                recv_count++;
+            },
+            [&] {
+                end = std::chrono::high_resolution_clock::now();
+                EXPECT_EQ(recv_count, count);
+            });
+        s.make_edge(node, rx_sink);
+    });
+
+    run_manager(std::move(pipeline));
+
+    LOG(INFO) << " time in us: " << std::chrono::duration<double>(end - start).count();
+}
+
+TEST_F(TestPipeline, EngineFactories)
+{
+    auto options = std::make_shared<Options>();
+    options->placement().resources_strategy(PlacementResources::Dedicated);
+    options->engine_factories().set_ignore_hyper_threads(true);
+    options->engine_factories().set_engine_factory_options("rivermax_threads", [](EngineFactoryOptions& opts) {
+        opts.engine_type   = srf::runnable::EngineType::Thread;
+        opts.cpu_count     = 4;
+        opts.allow_overlap = false;
+        opts.reusable      = false;
+    });
+
+    options->engine_factories().set_engine_factory_options("stage_1", [](EngineFactoryOptions& opts) {
+        opts.engine_type   = srf::runnable::EngineType::Fiber;
+        opts.cpu_count     = 2;
+        opts.allow_overlap = false;
+        opts.reusable      = false;
+    });
+
+    options->engine_factories().set_engine_factory_options("stage_2", [](EngineFactoryOptions& opts) {
+        opts.engine_type   = srf::runnable::EngineType::Fiber;
+        opts.cpu_count     = 2;
+        opts.allow_overlap = false;
+        opts.reusable      = false;
+    });
+
+    Executor executor(options);
+    executor.register_pipeline(test::pipelines::finite_single_segment());
+    executor.start();
+    executor.join();
 }

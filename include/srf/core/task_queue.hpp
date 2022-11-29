@@ -85,7 +85,9 @@ class FiberTaskQueue
         return future;
     }
 
-    virtual const CpuSet& affinity() const = 0;
+    virtual const CpuSet& affinity() const     = 0;
+    virtual std::thread::id thread_id() const  = 0;
+    virtual bool caller_on_same_thread() const = 0;
 
   protected:
     std::size_t detached() const

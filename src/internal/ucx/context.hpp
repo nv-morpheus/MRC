@@ -32,9 +32,9 @@ class Context final : public Primitive<ucp_context_h>
     Context();
     ~Context() override;
 
-    ucp_mem_h register_memory(void*, std::size_t);
+    ucp_mem_h register_memory(const void*, std::size_t);
 
-    std::tuple<ucp_mem_h, void*, std::size_t> register_memory_with_rkey(void*, std::size_t);
+    std::tuple<ucp_mem_h, void*, std::size_t> register_memory_with_rkey(const void*, std::size_t);
 
     void unregister_memory(ucp_mem_h, void* rbuffer = nullptr);
 };

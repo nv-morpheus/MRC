@@ -25,11 +25,11 @@
 namespace srf::node {
 
 template <typename T>
-class Queue final : public SinkChannelBase<T>, public SinkProperties<T>, public ChannelProvider<T>
+class Queue : public SinkChannelBase<T>, public SinkProperties<T>, public ChannelProvider<T>
 {
   public:
-    Queue()        = default;
-    ~Queue() final = default;
+    Queue()           = default;
+    ~Queue() override = default;
 
   private:
     // SinkProperties<T> - aka IngressProvider

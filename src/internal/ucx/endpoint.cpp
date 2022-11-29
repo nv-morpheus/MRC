@@ -18,6 +18,7 @@
 #include "internal/ucx/endpoint.hpp"
 
 #include "internal/ucx/common.hpp"
+#include "internal/ucx/remote_registration_cache.hpp"
 #include "internal/ucx/worker.hpp"
 
 #include "srf/types.hpp"
@@ -47,6 +48,8 @@ Endpoint::Endpoint(Handle<Worker> local_worker, WorkerAddress remote_worker) : m
     {
         LOG(FATAL) << "ucp_ep_create failed: " << ucs_status_string(status);
     }
+
+    m_registration_cache = std::make_unique<RemoteRegistrationCache>(m_handle);
 }
 
 Endpoint::~Endpoint()
@@ -74,6 +77,18 @@ Endpoint::~Endpoint()
     } while (status == UCS_INPROGRESS);
 
     ucp_request_free(request);
+}
+
+RemoteRegistrationCache& Endpoint::registration_cache()
+{
+    CHECK(m_registration_cache);
+    return *m_registration_cache;
+}
+
+const RemoteRegistrationCache& Endpoint::registration_cache() const
+{
+    CHECK(m_registration_cache);
+    return *m_registration_cache;
 }
 
 }  // namespace srf::internal::ucx

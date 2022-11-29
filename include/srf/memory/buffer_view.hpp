@@ -20,9 +20,7 @@
 #include "srf/memory/buffer.hpp"
 #include "srf/memory/memory_kind.hpp"
 
-#include <glog/logging.h>
-
-#include <cstddef>  // for size_t
+#include <cstddef>
 
 namespace srf::memory {
 
@@ -40,6 +38,15 @@ class const_buffer_view  // NOLINT
   public:
     const_buffer_view()          = default;
     virtual ~const_buffer_view() = default;
+
+    // todo(clang-format-14)
+    // clang-format off
+    const_buffer_view(const const_buffer_view& other)      = default;
+    const_buffer_view& operator=(const const_buffer_view&) = default;
+    // clang-format on
+
+    const_buffer_view(const_buffer_view&& other) noexcept;
+    const_buffer_view& operator=(const_buffer_view&& other) noexcept;
 
     /**
      * @brief Construct a new const_buffer_view object from a raw pointer and details
@@ -65,13 +72,7 @@ class const_buffer_view  // NOLINT
      * @tparam Properties
      * @param buffer
      */
-    const_buffer_view(const buffer& buffer) :
-      m_data(const_cast<void*>(buffer.data())),
-      m_bytes(buffer.bytes()),
-      m_kind(buffer.kind())
-    {
-        CHECK(operator bool());
-    }
+    const_buffer_view(const buffer& buffer);
 
     /**
      * @brief Constant pointer to the start of the memory buffer_view

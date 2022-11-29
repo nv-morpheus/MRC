@@ -17,6 +17,11 @@
 
 #include "internal/resources/manager.hpp"
 
+#include "internal/control_plane/client.hpp"
+#include "internal/control_plane/client/connections_manager.hpp"
+#include "internal/control_plane/client/instance.hpp"
+#include "internal/control_plane/resources.hpp"
+#include "internal/data_plane/resources.hpp"  // IWYU pragma: keep
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/system/engine_factory_cpu_sets.hpp"
 #include "internal/system/host_partition.hpp"
@@ -24,6 +29,7 @@
 #include "internal/system/partitions.hpp"
 #include "internal/system/system.hpp"
 #include "internal/ucx/registation_callback_builder.hpp"
+#include "internal/utils/contains.hpp"
 
 #include "srf/core/bitmap.hpp"
 #include "srf/exceptions/runtime_error.hpp"
@@ -89,6 +95,15 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
         }
     }
 
+    // create control plane and register worker addresses
+    std::map<InstanceID, std::unique_ptr<control_plane::client::Instance>> control_instances;
+    if (network_enabled)
+    {
+        m_control_plane   = std::make_shared<control_plane::Resources>(base_partition_resources.at(0));
+        control_instances = m_control_plane->client().register_ucx_addresses(m_ucx);
+        CHECK_EQ(m_control_plane->client().connections().instance_ids().size(), m_ucx.size());
+    }
+
     // construct the host memory resources for each host_partition
     for (std::size_t i = 0; i < host_partitions.size(); ++i)
     {
@@ -107,7 +122,7 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
         m_host.emplace_back(m_runnable.at(i), std::move(builder));
     }
 
-    // devices
+    // devices resources
     for (auto& base : base_partition_resources)
     {
         VLOG(1) << "building device resources for partition: " << base.partition_id();
@@ -132,7 +147,13 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
             VLOG(1) << "building network resources for partition: " << base.partition_id();
             CHECK(m_ucx.at(base.partition_id()));
             std::optional<network::Resources> network;
-            network.emplace(base, *m_ucx.at(base.partition_id()), m_host.at(base.partition().host_partition_id()));
+            auto instance_id = m_control_plane->client().connections().instance_ids().at(base.partition_id());
+            DCHECK(contains(control_instances, instance_id));  // todo(cpp20) contains
+            auto instance = std::move(control_instances.at(instance_id));
+            network.emplace(base,
+                            *m_ucx.at(base.partition_id()),
+                            m_host.at(base.partition().host_partition_id()),
+                            std::move(instance));
             m_network.push_back(std::move(network));
         }
         else
@@ -161,6 +182,11 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
             }
         });
     }
+}
+
+Manager::~Manager()
+{
+    m_network.clear();
 }
 
 std::size_t Manager::partition_count() const

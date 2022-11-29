@@ -17,13 +17,21 @@
 
 #pragma once
 
+#include "internal/control_plane/client/state_manager.hpp"
 #include "internal/data_plane/client.hpp"
 #include "internal/data_plane/server.hpp"
-#include "internal/resources/forward.hpp"
+#include "internal/memory/host_resources.hpp"
+#include "internal/memory/transient_pool.hpp"
+#include "internal/network/resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
 #include "internal/ucx/registration_cache.hpp"
+#include "internal/ucx/resources.hpp"
 
+#include "srf/runnable/launch_options.hpp"
+#include "srf/types.hpp"
+
+#include <cstddef>
 #include <string>
 
 namespace srf::internal::data_plane {
@@ -35,13 +43,21 @@ namespace srf::internal::data_plane {
 class Resources final : private Service, private resources::PartitionResourceBase
 {
   public:
-    Resources(resources::PartitionResourceBase& base, ucx::Resources& ucx, memory::HostResources& host);
+    Resources(resources::PartitionResourceBase& base,
+              ucx::Resources& ucx,
+              memory::HostResources& host,
+              const InstanceID& instance_id,
+              control_plane::Client& control_plane_client);
     ~Resources() final;
 
     Client& client();
+    Server& server();
 
+    const InstanceID& instance_id() const;
     std::string ucx_address() const;
     const ucx::RegistrationCache& registration_cache() const;
+
+    static srf::runnable::LaunchOptions launch_options(std::size_t concurrency);
 
   private:
     void do_service_start() final;
@@ -52,7 +68,10 @@ class Resources final : private Service, private resources::PartitionResourceBas
 
     ucx::Resources& m_ucx;
     memory::HostResources& m_host;
+    control_plane::Client& m_control_plane_client;
+    InstanceID m_instance_id;
 
+    memory::TransientPool m_transient_pool;
     Server m_server;
     Client m_client;
 

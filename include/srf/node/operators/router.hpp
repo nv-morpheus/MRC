@@ -51,6 +51,8 @@ class RouterBase
     }
 
   public:
+    using source_data_t = std::pair<KeyT, T>;
+
     SourceChannel<T>& source(KeyT key)
     {
         return m_sources[key];

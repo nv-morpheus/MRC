@@ -19,7 +19,6 @@ add_executable(test_srf
   modules/test_module_util.cpp
   modules/test_segment_modules.cpp
   test_channel.cpp
-  test_codable.cpp
   test_executor.cpp
   test_main.cpp
   test_metrics.cpp

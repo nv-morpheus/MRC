@@ -61,8 +61,8 @@ class RxSource : public RxSourceBase<T>, public RxRunnable<ContextT>, public RxE
   private:
     void on_shutdown_critical_section() final;
     void do_subscribe(rxcpp::composite_subscription& subscription) final;
-    void on_stop(const rxcpp::subscription& subscription) const final;
-    void on_kill(const rxcpp::subscription& subscription) const final;
+    void on_stop(const rxcpp::subscription& subscription) override;
+    void on_kill(const rxcpp::subscription& subscription) final;
 
     rxcpp::observable<T> m_observable;
 };
@@ -94,13 +94,13 @@ void RxSource<T, ContextT>::do_subscribe(rxcpp::composite_subscription& subscrip
 }
 
 template <typename T, typename ContextT>
-void RxSource<T, ContextT>::on_stop(const rxcpp::subscription& subscription) const
+void RxSource<T, ContextT>::on_stop(const rxcpp::subscription& subscription)
 {
     subscription.unsubscribe();
 }
 
 template <typename T, typename ContextT>
-void RxSource<T, ContextT>::on_kill(const rxcpp::subscription& subscription) const
+void RxSource<T, ContextT>::on_kill(const rxcpp::subscription& subscription)
 {
     subscription.unsubscribe();
 }

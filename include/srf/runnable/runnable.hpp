@@ -40,10 +40,8 @@ class Runnable
      */
     virtual void main(Context&) = 0;
 
-  protected:
-    Runnable();
-
   public:
+    Runnable();
     virtual ~Runnable();
 
     DELETE_COPYABILITY(Runnable);

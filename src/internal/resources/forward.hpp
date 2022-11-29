@@ -19,9 +19,14 @@
 
 namespace srf::internal {
 
+namespace runtime {
+class Partition;
+}
+
 namespace resources {
 class Manager;
 class PartitionResourceBase;
+class PartitionResources;
 }  // namespace resources
 
 namespace runnable {
@@ -41,6 +46,13 @@ class Resources;
 namespace ucx {
 class Resources;
 }  // namespace ucx
+
+namespace control_plane {
+class Resources;
+namespace client {
+class Instance;
+}
+}  // namespace control_plane
 
 namespace data_plane {
 class Resources;

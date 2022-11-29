@@ -17,61 +17,66 @@
 
 #pragma once
 
+#include "srf/channel/ingress.hpp"
 #include "srf/channel/status.hpp"
+#include "srf/node/forward.hpp"
 #include "srf/node/operators/operator.hpp"
 #include "srf/node/source_channel.hpp"
+#include "srf/node/source_properties.hpp"
 #include "srf/type_traits.hpp"
+
+#include <memory>
+#include <vector>
 
 namespace srf::node {
 
 template <typename T>
-class Broadcast final : public Operator<T>
+class Broadcast : public Operator<T>, public SourceProperties<T>
 {
   public:
     Broadcast(bool deep_copy = false) : m_deep_copy(deep_copy) {}
-    ~Broadcast() final = default;
+    ~Broadcast() = default;
 
-    /**
-     * @brief Provides a reference to a SourceChannel<T>; this should be captured or used immediately with
-     * node::make_edge
-     *
-     * @return SourceChannel<T>&
-     */
-    [[nodiscard]] SourceChannel<T>& make_source()
-    {
-        return m_downstream_channels.emplace_back();
-    }
-
-  private:
+  protected:
     // Operator::on_next
-    inline channel::Status on_next(T&& data) final
+    channel::Status on_next(T&& data) override
     {
-        for (int i = 1; i < m_downstream_channels.size(); ++i)
+        for (int i = 1; i < m_output_channels.size(); ++i)
         {
             if constexpr (is_shared_ptr<T>::value)
             {
                 if (m_deep_copy)
                 {
                     auto deep_copy = std::make_shared<typename T::element_type>(*data);
-                    CHECK(m_downstream_channels[i].await_write(std::move(deep_copy)) == channel::Status::success);
+                    CHECK(m_output_channels[i]->await_write(std::move(deep_copy)) == channel::Status::success);
                     continue;
                 }
             }
 
             T shallow_copy(data);
-            CHECK(m_downstream_channels[i].await_write(std::move(shallow_copy)) == channel::Status::success);
+            CHECK(m_output_channels[i]->await_write(std::move(shallow_copy)) == channel::Status::success);
         }
 
-        return m_downstream_channels[0].await_write(std::move(data));
+        return m_output_channels[0]->await_write(std::move(data));
     }
 
     // Operator::on_complete
     void on_complete() final
     {
-        m_downstream_channels.clear();
+        VLOG(10) << "Closing broadcast with " << m_output_channels.size() << " downstream channels";
+        m_output_channels.clear();
     }
 
-    std::vector<SourceChannelWriteable<T>> m_downstream_channels;
+    void complete_edge(std::shared_ptr<channel::IngressHandle> ingress) override
+    {
+        auto typed_ingress = std::dynamic_pointer_cast<channel::Ingress<T>>(ingress);
+
+        CHECK(typed_ingress) << "Invalid ingress type passed to broadcast";
+
+        m_output_channels.push_back(typed_ingress);
+    }
+
+    std::vector<std::shared_ptr<channel::Ingress<T>>> m_output_channels;
     bool m_deep_copy;
 };
 

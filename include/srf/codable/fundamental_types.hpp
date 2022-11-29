@@ -18,7 +18,8 @@
 #pragma once
 
 #include "srf/codable/codable_protocol.hpp"
-#include "srf/codable/encoded_object.hpp"
+#include "srf/codable/decode.hpp"
+#include "srf/codable/encode.hpp"
 #include "srf/codable/encoding_options.hpp"
 #include "srf/memory/buffer_view.hpp"
 #include "srf/memory/memory_kind.hpp"
@@ -31,18 +32,19 @@ namespace srf::codable {
 template <typename T>
 struct codable_protocol<T, std::enable_if_t<std::is_fundamental_v<T>>>
 {
-    static void serialize(const T& t, Encoded<T>& encoded, const EncodingOptions& opts)
+    static void serialize(const T& t, Encoder<T>& encoder, const EncodingOptions& opts)
     {
-        auto guard = encoded.acquire_encoding_context();
-        auto index = encoded.add_eager_buffer(&t, sizeof(t));
+        auto index = encoder.copy_to_eager_descriptor({&t, sizeof(t), memory::memory_kind::host});
     }
 
-    static T deserialize(const EncodedObject& encoded, std::size_t object_idx)
+    static T deserialize(const Decoder<T>& decoder, std::size_t object_idx)
     {
-        DCHECK_EQ(std::type_index(typeid(T)).hash_code(), encoded.type_index_hash_for_object(object_idx));
-        auto idx          = encoded.start_idx_for_object(object_idx);
-        const auto& eager = encoded.eager_descriptor(idx);
-        T val             = *(reinterpret_cast<const T*>(eager.data().data()));
+        DCHECK_EQ(std::type_index(typeid(T)).hash_code(), decoder.type_index_hash_for_object(object_idx));
+        auto idx = decoder.start_idx_for_object(object_idx);
+
+        T val;
+        decoder.copy_from_buffer(object_idx, {&val, sizeof(T), memory::memory_kind::host});
+
         return val;
     }
 };
@@ -50,31 +52,32 @@ struct codable_protocol<T, std::enable_if_t<std::is_fundamental_v<T>>>
 template <typename T>
 struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, std::string>>>
 {
-    static void serialize(const T& str, Encoded<T>& encoded, const EncodingOptions& opts)
+    static void serialize(const T& str, Encoder<T>& encoder, const EncodingOptions& opts)
     {
-        auto guard = encoded.acquire_encoding_context();
         if (opts.force_copy())
         {
-            auto index = encoded.add_host_buffer(str.size());
-            auto block = encoded.mutable_memory_block(index);
-            std::memcpy(block.data(), str.data(), str.size());
+            auto index = encoder.create_memory_buffer(str.size());
+            encoder.copy_to_buffer(index, {str.data(), str.size(), memory::memory_kind::host});
         }
         else
         {
-            // not registered
-            encoded.add_memory_block(memory::const_buffer_view(str.data(), str.size(), memory::memory_kind::host));
+            auto idx = encoder.register_memory_view({str.data(), str.size(), memory::memory_kind::host});
+            if (!idx)
+            {
+                encoder.copy_to_eager_descriptor({str.data(), str.size(), memory::memory_kind::host});
+            }
         }
     }
 
-    static T deserialize(const EncodedObject& encoded, std::size_t object_idx)
+    static T deserialize(const Decoder<T>& decoder, std::size_t object_idx)
     {
-        DCHECK_EQ(std::type_index(typeid(T)).hash_code(), encoded.type_index_hash_for_object(object_idx));
-        T str;
-        auto idx           = encoded.start_idx_for_object(object_idx);
-        const auto& buffer = encoded.memory_block(idx);
+        DCHECK_EQ(std::type_index(typeid(T)).hash_code(), decoder.type_index_hash_for_object(object_idx));
+        auto idx   = decoder.start_idx_for_object(object_idx);
+        auto bytes = decoder.buffer_size(idx);
 
-        str.resize(buffer.bytes());
-        std::memcpy(str.data(), buffer.data(), buffer.bytes());
+        T str;
+        str.resize(bytes);
+        decoder.copy_from_buffer(idx, {str.data(), str.size(), memory::memory_kind::host});
 
         return str;
     }

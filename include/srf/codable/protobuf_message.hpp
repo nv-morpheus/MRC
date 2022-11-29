@@ -18,7 +18,8 @@
 #pragma once
 
 #include "srf/codable/codable_protocol.hpp"
-#include "srf/codable/encoded_object.hpp"
+#include "srf/codable/decode.hpp"
+#include "srf/codable/encode.hpp"
 #include "srf/codable/encoding_options.hpp"
 #include "srf/memory/buffer_view.hpp"
 #include "srf/memory/memory_kind.hpp"
@@ -32,19 +33,18 @@ namespace srf::codable {
 template <typename T>
 struct codable_protocol<T, std::enable_if_t<std::is_base_of_v<::google::protobuf::Message, T>>>
 {
-    static void serialize(const T& msg, Encoded<T>& encoded, const EncodingOptions& opts)
+    static void serialize(const T& msg, Encoder<T>& encoder, const EncodingOptions& opts)
     {
-        auto guard = encoded.acquire_encoding_context();
-        auto index = encoded.add_host_buffer(msg.ByteSizeLong());
-        auto block = encoded.mutable_memory_block(index);
+        auto index = encoder.add_host_buffer(msg.ByteSizeLong());
+        auto block = encoder.mutable_memory_block(index);
         msg.SerializeToArray(block.data(), block.bytes());
     }
 
-    static T deserialize(const EncodedObject& encoded, std::size_t object_idx)
+    static T deserialize(const Decoder<T>& decoder, std::size_t object_idx)
     {
         T msg;
-        auto idx          = encoded.start_idx_for_object(object_idx);
-        const auto& block = encoded.memory_block(idx);
+        auto idx          = decoder.start_idx_for_object(object_idx);
+        const auto& block = decoder.memory_block(idx);
         CHECK(msg.ParseFromArray(block.data(), block.bytes()));
         return msg;
     }
