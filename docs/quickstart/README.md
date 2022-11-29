@@ -1,8 +1,7 @@
 <!-- omit in toc -->
 # MRC Quick Start Guide
-:surfer: **Learn to MRC and Catch the Wave to GPU-Accelerated Streaming Pipelines** :surfer:
 
-The MRC Quick Start Guide (QSG) provides Python, C++, and Hybrid (Python and C++) examples on how to get started building high-performance streaming pipelines with the MRC library. The goal of this tutorial is to provide a gentle on-ramp to building applications with MRC and is targeted towards a wide persona of developers - ranging from data scientists to performance engineers.
+The MRC Quick Start Guide (QSG) provides Python, C++, and Hybrid (Python and C++) examples on how to get started building high-performance, streaming data pipelines with the MRC library. The goal of this tutorial is to provide a gentle on-ramp to building applications with MRC and is targeted towards a wide persona of developers - ranging from data scientists to performance engineers.
 
 <!-- omit in toc -->
 ## Table of Contents

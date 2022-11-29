@@ -150,7 +150,7 @@ outputs:
 
 about:
   home: https://www.nvidia.com/
-  summary: A GPU accelerated streaming library with python bindings
+  summary: A GPU accelerated streaming data library with python bindings
   license: Apache-2.0
   license_family: Apache
   license_file: LICENSE
