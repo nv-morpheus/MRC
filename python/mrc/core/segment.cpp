@@ -184,6 +184,8 @@ PYBIND11_MODULE(segment, module)
     Builder.def(
         "register_module_output", &BuilderProxy::register_module_output, py::arg("output_name"), py::arg("object"));
 
+    Builder.def("get_current_module_config", &BuilderProxy::get_current_module_config);
+
     Builder.def("make_node_full", &BuilderProxy::make_node_full, py::return_value_policy::reference_internal);
 
     /** Segment Module Interface Declarations **/

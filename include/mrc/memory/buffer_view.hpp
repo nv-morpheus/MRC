@@ -20,8 +20,6 @@
 #include "mrc/memory/buffer.hpp"
 #include "mrc/memory/memory_kind.hpp"
 
-#include <glog/logging.h>
-
 #include <cstddef>
 
 namespace mrc::memory {
@@ -47,21 +45,8 @@ class const_buffer_view  // NOLINT
     const_buffer_view& operator=(const const_buffer_view&) = default;
     // clang-format on
 
-    // our "move" is really an assignment (copy) constructor as you do not move fundamental types
-    const_buffer_view(const_buffer_view&& other) noexcept :
-      m_data(other.m_data),
-      m_bytes(other.m_bytes),
-      m_kind(other.m_kind)
-    {}
-
-    // our "move" is really an assignment (copy) operator= as you do not move fundamental types
-    const_buffer_view& operator=(const_buffer_view&& other) noexcept
-    {
-        m_data  = other.m_data;
-        m_bytes = other.m_bytes;
-        m_kind  = other.m_kind;
-        return *this;
-    }
+    const_buffer_view(const_buffer_view&& other) noexcept;
+    const_buffer_view& operator=(const_buffer_view&& other) noexcept;
 
     /**
      * @brief Construct a new const_buffer_view object from a raw pointer and details
@@ -87,13 +72,7 @@ class const_buffer_view  // NOLINT
      * @tparam Properties
      * @param buffer
      */
-    const_buffer_view(const buffer& buffer) :
-      m_data(const_cast<void*>(buffer.data())),
-      m_bytes(buffer.bytes()),
-      m_kind(buffer.kind())
-    {
-        CHECK(operator bool());
-    }
+    const_buffer_view(const buffer& buffer);
 
     /**
      * @brief Constant pointer to the start of the memory buffer_view

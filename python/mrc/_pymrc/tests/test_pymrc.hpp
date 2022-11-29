@@ -28,8 +28,13 @@ using namespace mrc;
 // Essentially the same macro from test_mrc.hpp but with an embedded python interpreter.
 // The attribute visibility bit avoids a compiler warning about the test class being
 // declared with greater visibility than the interpreter attribute
+// Note: the gil_scoped_acquire causes thread state to be properly (re)initialized for each test.
 #define PYMRC_TEST_CLASS(name)                                                       \
     class __attribute__((visibility("default"))) Test##name : public ::testing::Test \
     {                                                                                \
-        py::scoped_interpreter m_interpreter;                                        \
+        void SetUp() override                                                        \
+        {                                                                            \
+            pybind11::gil_scoped_acquire();                                          \
+        }                                                                            \
+        pybind11::scoped_interpreter m_interpreter;                                  \
     }

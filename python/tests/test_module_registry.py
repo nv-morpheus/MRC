@@ -135,18 +135,19 @@ def test_get_module_constructor():
 
 
 def test_module_intitialize():
-
     module_name = "test_py_source_from_cpp"
     config = {"source_count": 42}
     registry = mrc.ModuleRegistry
 
     def module_initializer(builder: mrc.Builder):
+        local_config = builder.get_current_module_config()
+        assert ("source_count" in local_config)
+        assert (local_config["source_count"] == config["source_count"])
 
         source_mod = builder.load_module("SourceModule", "mrc_unittest", "ModuleSourceTest_mod1", config)
         builder.register_module_output("source", source_mod.output_port("source"))
 
     def init_wrapper(builder: mrc.Builder):
-
         global packet_count
         packet_count = 0
 
@@ -200,6 +201,10 @@ def test_py_registered_nested_modules():
     def module_initializer(builder: mrc.Builder):
         global packet_count
 
+        local_config = builder.get_current_module_config()
+        assert (isinstance(local_config, type({})))
+        assert (len(local_config.keys()) == 0)
+
         def on_next(data):
             global packet_count
             packet_count += 1
@@ -246,6 +251,16 @@ def test_py_registered_nested_copied_modules():
     global packet_count
 
     def module_initializer(builder: mrc.Builder):
+        local_config = builder.get_current_module_config()
+        assert (isinstance(local_config, type({})))
+        if ("test1" in local_config):
+            assert ("test2" not in local_config)
+            assert (local_config["test1"] == "module_1")
+        else:
+            assert ("test1" not in local_config)
+            assert ("test2" in local_config)
+            assert (local_config["test2"] == "module_2")
+
         global packet_count
 
         def on_next(data):
@@ -272,7 +287,11 @@ def test_py_registered_nested_copied_modules():
         global packet_count
         packet_count = 0
         builder.load_module("test_py_registered_nested_copied_module", "mrc_unittests", "my_loaded_module!", {})
+                            "mrc_unittests",
+                            "my_loaded_module!", {"test1": "module_1"})
         builder.load_module("test_py_registered_nested_copied_module", "mrc_unittests", "my_loaded_module_copy!", {})
+                            "mrc_unittests",
+                            "my_loaded_module_copy!", {"test2": "module_2"})
 
     pipeline = mrc.Pipeline()
     pipeline.make_segment("ModuleAsSource_Segment", init_wrapper)

@@ -319,6 +319,13 @@ void BuilderProxy::register_module_output(mrc::segment::Builder& self,
     self.register_module_output(std::move(output_name), object);
 }
 
+py::dict BuilderProxy::get_current_module_config(mrc::segment::Builder& self)
+{
+    auto json_config = self.get_current_module_config();
+
+    return cast_from_json(json_config);
+}
+
 void BuilderProxy::make_edge(mrc::segment::Builder& self,
                              std::shared_ptr<mrc::segment::ObjectProperties> source,
                              std::shared_ptr<mrc::segment::ObjectProperties> sink)

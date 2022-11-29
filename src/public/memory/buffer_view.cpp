@@ -19,7 +19,27 @@
 
 #include "mrc/memory/memory_kind.hpp"
 
+#include <glog/logging.h>
+
+#include <utility>
+
 namespace mrc::memory {
+
+// For the move constructor, reset the values in `other` to the defaults
+const_buffer_view::const_buffer_view(const_buffer_view&& other) noexcept :
+  m_data(std::exchange(other.m_data, nullptr)),
+  m_bytes(std::exchange(other.m_bytes, 0UL)),
+  m_kind(std::exchange(other.m_kind, memory_kind::none))
+{}
+
+const_buffer_view& const_buffer_view::operator=(const_buffer_view&& other) noexcept
+{
+    std::swap(m_data, other.m_data);
+    std::swap(m_bytes, other.m_bytes);
+    std::swap(m_kind, other.m_kind);
+
+    return *this;
+}
 
 const_buffer_view::const_buffer_view(void* data, std::size_t bytes, memory_kind kind) :
   m_data(data),
@@ -32,6 +52,14 @@ const_buffer_view::const_buffer_view(const void* data, std::size_t bytes, memory
   m_bytes(bytes),
   m_kind(kind)
 {}
+
+const_buffer_view::const_buffer_view(const buffer& buffer) :
+  m_data(const_cast<void*>(buffer.data())),
+  m_bytes(buffer.bytes()),
+  m_kind(buffer.kind())
+{
+    CHECK(operator bool());
+}
 
 const void* const_buffer_view::data() const
 {

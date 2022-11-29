@@ -199,6 +199,12 @@ class Builder final
     void register_module_input(std::string input_name, std::shared_ptr<segment::ObjectProperties> object);
 
     /**
+     * Get the json configuration for the current module under configuration.
+     * @return nlohmann::json object.
+     */
+    nlohmann::json get_current_module_config();
+
+    /**
      * Register an output port on the given module -- note: this in generally only necessary for dynamically
      * created modules that use an alternate initializer function independent of the derived class.
      * See: PythonSegmentModule

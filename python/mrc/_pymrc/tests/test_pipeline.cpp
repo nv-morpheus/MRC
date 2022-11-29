@@ -141,10 +141,9 @@ TEST_F(TestPipeline, Execute)
     options->topology().user_cpuset("0");
 
     // note this is the base MRC executor not a pymrc executor
-    mrc::Executor exec{options};
-    exec.register_pipeline(p.swap());
+    pymrc::Executor exec{options};
+    exec.register_pipeline(p);
 
-    py::gil_scoped_release release;
     exec.start();
     exec.join();
 
@@ -241,6 +240,7 @@ TEST_F(TestPipeline, DynamicPortConstructionBadDuplicatePorts)
 
 TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
 {
+    pymrc::PortBuilderUtil::register_port_util<pymrc::PyHolder>();
     const std::size_t object_count{10};
     const std::size_t source_count{4};
     std::atomic<std::size_t> sink_count{0};
@@ -325,11 +325,9 @@ TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
     opt1->topology().user_cpuset("0");
     opt1->topology().restrict_gpus(true);
 
-    mrc::Executor exec1{opt1};
+    pymrc::Executor exec1{opt1};
 
-    exec1.register_pipeline(pipe.swap());
-
-    py::gil_scoped_release release;
+    exec1.register_pipeline(pipe);
 
     exec1.start();
     exec1.join();
