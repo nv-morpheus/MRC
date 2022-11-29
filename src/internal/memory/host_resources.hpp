@@ -21,13 +21,13 @@
 #include "internal/system/host_partition_provider.hpp"
 #include "internal/ucx/registation_callback_builder.hpp"
 
-#include "srf/memory/buffer.hpp"
-#include "srf/memory/resources/memory_resource.hpp"
+#include "mrc/memory/buffer.hpp"
+#include "mrc/memory/resources/memory_resource.hpp"
 
 #include <cstddef>
 #include <memory>
 
-namespace srf::internal::memory {
+namespace mrc::internal::memory {
 
 /**
  * @brief Object that provides access to host memory_resource objects for a given host partition
@@ -37,16 +37,16 @@ class HostResources final : private system::HostPartitionProvider
   public:
     HostResources(runnable::Resources& runnable, ucx::RegistrationCallbackBuilder&& callbacks);
 
-    srf::memory::buffer make_buffer(std::size_t bytes);
+    mrc::memory::buffer make_buffer(std::size_t bytes);
 
-    std::shared_ptr<srf::memory::memory_resource> system_memory_resource();
-    std::shared_ptr<srf::memory::memory_resource> registered_memory_resource();
-    std::shared_ptr<srf::memory::memory_resource> arena_memory_resource();
+    std::shared_ptr<mrc::memory::memory_resource> system_memory_resource();
+    std::shared_ptr<mrc::memory::memory_resource> registered_memory_resource();
+    std::shared_ptr<mrc::memory::memory_resource> arena_memory_resource();
 
   private:
-    std::shared_ptr<srf::memory::memory_resource> m_system;
-    std::shared_ptr<srf::memory::memory_resource> m_registered;
-    std::shared_ptr<srf::memory::memory_resource> m_arena;
+    std::shared_ptr<mrc::memory::memory_resource> m_system;
+    std::shared_ptr<mrc::memory::memory_resource> m_registered;
+    std::shared_ptr<mrc::memory::memory_resource> m_arena;
 };
 
-}  // namespace srf::internal::memory
+}  // namespace mrc::internal::memory

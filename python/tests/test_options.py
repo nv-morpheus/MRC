@@ -15,17 +15,17 @@
 
 import pytest
 
-import srf
+import mrc
 
 
 # @pytest.mark.parametrize("engines_per_pe", [1, 2])
 # @pytest.mark.parametrize("pe_count", [1, 3])
 @pytest.mark.parametrize(
     "engine_type",
-    [srf.core.options.EngineType.Fiber, srf.core.options.EngineType.Process, srf.core.options.EngineType.Thread])
-def test_engine_factories_default_engine_type(engine_type: srf.core.options.EngineType):
+    [mrc.core.options.EngineType.Fiber, mrc.core.options.EngineType.Process, mrc.core.options.EngineType.Thread])
+def test_engine_factories_default_engine_type(engine_type: mrc.core.options.EngineType):
 
-    options = srf.Options()
+    options = mrc.Options()
 
     # Hold a reference
     eng_factories = options.engine_factories
@@ -38,40 +38,40 @@ def test_engine_factories_default_engine_type(engine_type: srf.core.options.Engi
 
 def test_engine_factories_dedicated_main_thread():
 
-    options = srf.Options()
+    options = mrc.Options()
 
     # Hold a reference
     eng_factories = options.engine_factories
 
     eng_factories.dedicated_main_thread = True
 
-    assert eng_factories.dedicated_main_thread == True, "dedicated_main_thread set/get should match on ref"
-    assert options.engine_factories.dedicated_main_thread == True, "dedicated_main_thread set/get should match"
+    assert eng_factories.dedicated_main_thread is True, "dedicated_main_thread set/get should match on ref"
+    assert options.engine_factories.dedicated_main_thread is True, "dedicated_main_thread set/get should match"
 
     eng_factories.dedicated_main_thread = False
 
-    assert eng_factories.dedicated_main_thread == False, "dedicated_main_thread set/get should match on ref"
-    assert options.engine_factories.dedicated_main_thread == False, "dedicated_main_thread set/get should match"
+    assert eng_factories.dedicated_main_thread is False, "dedicated_main_thread set/get should match on ref"
+    assert options.engine_factories.dedicated_main_thread is False, "dedicated_main_thread set/get should match"
 
 
 @pytest.mark.parametrize(
     "engine_type",
-    [srf.core.options.EngineType.Fiber, srf.core.options.EngineType.Process, srf.core.options.EngineType.Thread])
-def test_engine_factory_options(engine_type: srf.core.options.EngineType):
+    [mrc.core.options.EngineType.Fiber, mrc.core.options.EngineType.Process, mrc.core.options.EngineType.Thread])
+def test_engine_factory_options(engine_type: mrc.core.options.EngineType):
 
-    options = srf.Options()
+    options = mrc.Options()
 
     # Hold a reference
     eng_factories = options.engine_factories
 
-    def check_one_option(options: srf.Options,
+    def check_one_option(options: mrc.Options,
                          name: str,
                          cpu_count: int,
-                         eng_type: srf.core.options.EngineType,
+                         eng_type: mrc.core.options.EngineType,
                          reusable: bool,
                          allow_overlap: bool):
 
-        option_group = srf.core.options.EngineFactoryOptions()
+        option_group = mrc.core.options.EngineFactoryOptions()
         option_group.cpu_count = cpu_count
         option_group.engine_type = eng_type
         option_group.reusable = reusable

@@ -27,11 +27,11 @@
 #include "internal/runnable/resources.hpp"
 #include "internal/service.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/node/queue.hpp"
-#include "srf/protos/architect.grpc.pb.h"
-#include "srf/protos/architect.pb.h"
-#include "srf/runnable/runner.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/node/queue.hpp"
+#include "mrc/protos/architect.grpc.pb.h"
+#include "mrc/protos/architect.pb.h"
+#include "mrc/runnable/runner.hpp"
 
 #include <boost/fiber/condition_variable.hpp>
 #include <boost/fiber/mutex.hpp>
@@ -43,7 +43,7 @@
 #include <memory>
 #include <string>
 
-namespace srf::internal::control_plane {
+namespace mrc::internal::control_plane {
 
 /**
  * @brief Control Plane Server
@@ -53,7 +53,7 @@ namespace srf::internal::control_plane {
  * to exchange connection information like UCX worker addresses.
  *
  * The server must be resilient to termination, meaning we can not use glog's CHECK statement to validate assumptions.
- * We will use C++ exceptions that throw a srf::internal::Error to replace the std::abort of a failed CHECK/ASSERT.
+ * We will use C++ exceptions that throw a mrc::internal::Error to replace the std::abort of a failed CHECK/ASSERT.
  * To indicate "softer" errors, perhaps configuration errors by the client or mismatched state between client and server
  * as failed Expected. All top-level event handlers should return an Expected<Message> where message is the type of
  * message which will be returned to the client. The write methods will check the state of the Expected<Message> and
@@ -62,8 +62,8 @@ namespace srf::internal::control_plane {
 class Server : public Service
 {
   public:
-    using stream_t      = std::shared_ptr<rpc::ServerStream<srf::protos::Event, srf::protos::Event>>;
-    using writer_t      = std::shared_ptr<rpc::StreamWriter<srf::protos::Event>>;
+    using stream_t      = std::shared_ptr<rpc::ServerStream<mrc::protos::Event, mrc::protos::Event>>;
+    using writer_t      = std::shared_ptr<rpc::StreamWriter<mrc::protos::Event>>;
     using event_t       = stream_t::element_type::IncomingData;
     using instance_t    = std::shared_ptr<server::ClientInstance>;
     using stream_id_t   = std::size_t;
@@ -82,24 +82,24 @@ class Server : public Service
     void do_handle_event(event_t&& event);
     void do_issue_update(rxcpp::subscriber<void*>& s);
 
-    // srf resources
+    // mrc resources
     runnable::Resources& m_runnable;
 
     // grpc
     rpc::Server m_server;
-    std::shared_ptr<srf::protos::Architect::AsyncService> m_service;
+    std::shared_ptr<mrc::protos::Architect::AsyncService> m_service;
 
     // client state
     server::ConnectionManager m_connections;
     std::map<std::string, std::unique_ptr<server::SubscriptionService>> m_subscription_services;
 
     // operators / queues
-    std::unique_ptr<srf::node::Queue<event_t>> m_queue;
+    std::unique_ptr<mrc::node::Queue<event_t>> m_queue;
 
     // runners
-    std::unique_ptr<srf::runnable::Runner> m_stream_acceptor;
-    std::unique_ptr<srf::runnable::Runner> m_event_handler;
-    std::unique_ptr<srf::runnable::Runner> m_update_handler;
+    std::unique_ptr<mrc::runnable::Runner> m_stream_acceptor;
+    std::unique_ptr<mrc::runnable::Runner> m_event_handler;
+    std::unique_ptr<mrc::runnable::Runner> m_update_handler;
 
     // state mutex/cv/timeout
     mutable boost::fibers::mutex m_mutex;
@@ -128,4 +128,4 @@ class Server : public Service
     Expected<decltype(m_subscription_services)::const_iterator> get_subscription_service(const std::string& name) const;
 };
 
-}  // namespace srf::internal::control_plane
+}  // namespace mrc::internal::control_plane

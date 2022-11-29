@@ -16,15 +16,15 @@
 # Ensure this is only run once
 include_guard(GLOBAL)
 
-set(RAPIDS_CMAKE_VERSION "${SRF_RAPIDS_VERSION}" CACHE STRING "Version of rapids-cmake to use")
+set(RAPIDS_CMAKE_VERSION "${MRC_RAPIDS_VERSION}" CACHE STRING "Version of rapids-cmake to use")
 
 # Download and load the repo according to the rapids-cmake instructions if it does not exist
 if(NOT EXISTS ${CMAKE_BINARY_DIR}/RAPIDS_CMAKE.cmake)
-   message(STATUS "Downloading RAPIDS CMake Version: ${RAPIDS_CMAKE_VERSION}")
-   file(
-      DOWNLOAD https://raw.githubusercontent.com/rapidsai/rapids-cmake/branch-${RAPIDS_CMAKE_VERSION}/RAPIDS.cmake
-      ${CMAKE_BINARY_DIR}/RAPIDS_CMAKE.cmake
-   )
+  message(STATUS "Downloading RAPIDS CMake Version: ${RAPIDS_CMAKE_VERSION}")
+  file(
+    DOWNLOAD https://raw.githubusercontent.com/rapidsai/rapids-cmake/branch-${RAPIDS_CMAKE_VERSION}/RAPIDS.cmake
+    ${CMAKE_BINARY_DIR}/RAPIDS_CMAKE.cmake
+  )
 endif()
 
 # Now load the file

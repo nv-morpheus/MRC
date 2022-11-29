@@ -21,15 +21,15 @@
 #include "internal/runtime/partition.hpp"
 #include "internal/ucx/endpoint.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/codable/api.hpp"
-#include "srf/codable/encoded_object.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/pubsub/api.hpp"
-#include "srf/runnable/runner.hpp"
-#include "srf/runtime/remote_descriptor.hpp"
-#include "srf/types.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/codable/api.hpp"
+#include "mrc/codable/encoded_object.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/pubsub/api.hpp"
+#include "mrc/runnable/runner.hpp"
+#include "mrc/runtime/remote_descriptor.hpp"
+#include "mrc/types.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -37,11 +37,11 @@
 #include <string>
 #include <unordered_map>
 
-namespace srf::internal::pubsub {
+namespace mrc::internal::pubsub {
 
 class PublisherService : public Base,
-                         public srf::pubsub::IPublisherService,
-                         public srf::node::SourceChannelWriteable<srf::runtime::RemoteDescriptor>
+                         public mrc::pubsub::IPublisherService,
+                         public mrc::node::SourceChannelWriteable<mrc::runtime::RemoteDescriptor>
 {
   protected:
     PublisherService(std::string service_name, runtime::Partition& runtime);
@@ -53,10 +53,10 @@ class PublisherService : public Base,
     DELETE_MOVEABILITY(PublisherService);
 
     // [IPublisherService] publish a remote descriptor
-    channel::Status publish(srf::runtime::RemoteDescriptor&& rd) final;
+    channel::Status publish(mrc::runtime::RemoteDescriptor&& rd) final;
 
     // [IPublisherService] publish an encoded object
-    channel::Status publish(std::unique_ptr<srf::codable::EncodedStorage> encoded_object) final;
+    channel::Status publish(std::unique_ptr<mrc::codable::EncodedStorage> encoded_object) final;
 
     // [ISubscriptionServiceIdentity] provide the value for the role of this instance
     const std::string& role() const final;
@@ -67,7 +67,7 @@ class PublisherService : public Base,
   protected:
     // sends a remote descriptor to a remote endpoint over the data plane with a globally unique tag
     // note: the tag is required to differentiate multiple subscribers on the same endpoint
-    void publish(srf::runtime::RemoteDescriptor&& rd,
+    void publish(mrc::runtime::RemoteDescriptor&& rd,
                  const std::uint64_t& tag,
                  std::shared_ptr<ucx::Endpoint> endpoint);
 
@@ -79,7 +79,7 @@ class PublisherService : public Base,
 
   private:
     // [IPublisherService] provides a runtime dependent codable storage object
-    std::unique_ptr<srf::codable::ICodableStorage> create_storage() final;
+    std::unique_ptr<mrc::codable::ICodableStorage> create_storage() final;
 
     // [internal::control_plane::client::SubscriptionService]
     // setup up the runnables needed to driver the publisher
@@ -99,7 +99,7 @@ class PublisherService : public Base,
                                  const std::unordered_map<std::uint64_t, InstanceID>& tagged_instances) final;
 
     // apply policy
-    virtual void apply_policy(srf::runtime::RemoteDescriptor&& rd) = 0;
+    virtual void apply_policy(mrc::runtime::RemoteDescriptor&& rd) = 0;
 
     // called immediate on completion of update_tagged_instances
     virtual void on_update() = 0;
@@ -108,7 +108,7 @@ class PublisherService : public Base,
     runtime::Partition& m_runtime;
 
     // policy engine runner
-    std::unique_ptr<srf::runnable::Runner> m_policy_engine;
+    std::unique_ptr<mrc::runnable::Runner> m_policy_engine;
 
     // set of active tagged instances for subscribers
     std::unordered_map<std::uint64_t, InstanceID> m_tagged_instances;
@@ -117,4 +117,4 @@ class PublisherService : public Base,
     std::unordered_map<std::uint64_t, std::shared_ptr<ucx::Endpoint>> m_tagged_endpoints;
 };
 
-}  // namespace srf::internal::pubsub
+}  // namespace mrc::internal::pubsub

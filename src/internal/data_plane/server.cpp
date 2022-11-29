@@ -23,19 +23,19 @@
 #include "internal/ucx/resources.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/core/task_queue.hpp"
-#include "srf/memory/literals.hpp"
-#include "srf/node/edge_builder.hpp"
-#include "srf/node/generic_source.hpp"
-#include "srf/node/operators/router.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/runnable/context.hpp"
-#include "srf/runnable/launch_control.hpp"
-#include "srf/runnable/launch_options.hpp"
-#include "srf/runnable/launcher.hpp"
-#include "srf/runnable/runner.hpp"
-#include "srf/types.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/memory/literals.hpp"
+#include "mrc/node/edge_builder.hpp"
+#include "mrc/node/generic_source.hpp"
+#include "mrc/node/operators/router.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/runnable/context.hpp"
+#include "mrc/runnable/launch_control.hpp"
+#include "mrc/runnable/launch_options.hpp"
+#include "mrc/runnable/launcher.hpp"
+#include "mrc/runnable/runner.hpp"
+#include "mrc/types.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <boost/fiber/operations.hpp>
@@ -51,7 +51,7 @@
 #include <ostream>
 #include <utility>
 
-namespace srf::internal::data_plane {
+namespace mrc::internal::data_plane {
 
 namespace {
 
@@ -120,7 +120,7 @@ void pre_post_recv(detail::PrePostedRecvInfo* info)
 
 }  // namespace
 
-using namespace srf::memory::literals;
+using namespace mrc::memory::literals;
 
 class DataPlaneServerWorker final : public node::GenericSource<network_event_t>
 {
@@ -187,12 +187,12 @@ void Server::do_service_start()
             // for edge between source and router - on channel operator driven by the source thread
             node::make_edge(*progress_engine, *m_deserialize_source);
 
-            // all network runnables use the `srf_network` engine factory
+            // all network runnables use the `mrc_network` engine factory
             DVLOG(10) << "launch network event mananger progress engine";
             m_progress_engine =
                 runnable()
                     .launch_control()
-                    .prepare_launcher(srf::runnable::LaunchOptions("srf_network"), std::move(progress_engine))
+                    .prepare_launcher(mrc::runnable::LaunchOptions("mrc_network"), std::move(progress_engine))
                     ->ignition();
         })
         .get();
@@ -348,4 +348,4 @@ void DataPlaneServerWorker::on_tagged_msg(rxcpp::subscriber<network_event_t>& su
     }
 }
 
-}  // namespace srf::internal::data_plane
+}  // namespace mrc::internal::data_plane

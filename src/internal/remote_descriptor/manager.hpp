@@ -23,16 +23,16 @@
 #include "internal/resources/partition_resources.hpp"
 #include "internal/service.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/codable/api.hpp"
-#include "srf/codable/encoded_object.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/protos/codable.pb.h"
-#include "srf/runnable/runner.hpp"
-#include "srf/runtime/remote_descriptor.hpp"
-#include "srf/runtime/remote_descriptor_handle.hpp"
-#include "srf/runtime/remote_descriptor_manager.hpp"
-#include "srf/types.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/codable/api.hpp"
+#include "mrc/codable/encoded_object.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/protos/codable.pb.h"
+#include "mrc/runnable/runner.hpp"
+#include "mrc/runtime/remote_descriptor.hpp"
+#include "mrc/runtime/remote_descriptor_handle.hpp"
+#include "mrc/runtime/remote_descriptor_manager.hpp"
+#include "mrc/types.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -40,7 +40,7 @@
 #include <memory>
 #include <mutex>
 
-namespace srf::internal::remote_descriptor {
+namespace mrc::internal::remote_descriptor {
 
 /**
  * @brief Creates and Manages RemoteDescriptors
@@ -64,36 +64,36 @@ namespace srf::internal::remote_descriptor {
  */
 class Manager final : private Service,
                       public std::enable_shared_from_this<Manager>,
-                      public srf::runtime::IRemoteDescriptorManager
+                      public mrc::runtime::IRemoteDescriptorManager
 {
   public:
     Manager(const InstanceID& instance_id, resources::PartitionResources& resources);
 
     ~Manager() override;
 
-    srf::runtime::RemoteDescriptor make_remote_descriptor(srf::codable::protos::RemoteDescriptor&& proto);
-    srf::runtime::RemoteDescriptor make_remote_descriptor(
-        std::unique_ptr<srf::runtime::IRemoteDescriptorHandle> handle);
+    mrc::runtime::RemoteDescriptor make_remote_descriptor(mrc::codable::protos::RemoteDescriptor&& proto);
+    mrc::runtime::RemoteDescriptor make_remote_descriptor(
+        std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> handle);
 
     std::size_t size() const;
 
     InstanceID instance_id() const;
 
-    const srf::codable::IDecodableStorage& encoding(const std::size_t& object_id) const;
+    const mrc::codable::IDecodableStorage& encoding(const std::size_t& object_id) const;
 
-    void release_handle(std::unique_ptr<srf::runtime::IRemoteDescriptorHandle> handle) final;
+    void release_handle(std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> handle) final;
 
-    static std::unique_ptr<srf::runtime::IRemoteDescriptorHandle> unwrap_handle(srf::runtime::RemoteDescriptor&& rd)
+    static std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> unwrap_handle(mrc::runtime::RemoteDescriptor&& rd)
     {
         return rd.release_handle();
     }
 
-    srf::runtime::RemoteDescriptor register_encoded_object(std::unique_ptr<srf::codable::EncodedStorage> object) final;
+    mrc::runtime::RemoteDescriptor register_encoded_object(std::unique_ptr<mrc::codable::EncodedStorage> object) final;
 
   private:
     static std::uint32_t active_message_id();
 
-    std::unique_ptr<srf::codable::ICodableStorage> create_storage() final;
+    std::unique_ptr<mrc::codable::ICodableStorage> create_storage() final;
 
     void decrement_tokens(std::size_t object_id, std::size_t token_count);
 
@@ -108,12 +108,12 @@ class Manager final : private Service,
     const InstanceID m_instance_id;
 
     resources::PartitionResources& m_resources;
-    std::unique_ptr<srf::runnable::Runner> m_decrement_handler;
-    std::unique_ptr<srf::node::SourceChannelWriteable<RemoteDescriptorDecrementMessage>> m_decrement_channel;
+    std::unique_ptr<mrc::runnable::Runner> m_decrement_handler;
+    std::unique_ptr<mrc::node::SourceChannelWriteable<RemoteDescriptorDecrementMessage>> m_decrement_channel;
 
     mutable std::mutex m_mutex;
 
     friend internal::runtime::Partition;
 };
 
-}  // namespace srf::internal::remote_descriptor
+}  // namespace mrc::internal::remote_descriptor

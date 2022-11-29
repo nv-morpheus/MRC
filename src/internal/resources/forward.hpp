@@ -17,7 +17,7 @@
 
 #pragma once
 
-namespace srf::internal {
+namespace mrc::internal {
 
 namespace runtime {
 class Partition;
@@ -58,4 +58,4 @@ namespace data_plane {
 class Resources;
 }  // namespace data_plane
 
-}  // namespace srf::internal
+}  // namespace mrc::internal

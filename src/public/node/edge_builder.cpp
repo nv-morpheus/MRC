@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-#include "srf/node/edge_builder.hpp"
+#include "mrc/node/edge_builder.hpp"
 
-#include "srf/channel/ingress.hpp"
-#include "srf/node/edge_adapter_registry.hpp"
-#include "srf/node/edge_registry.hpp"
-#include "srf/node/sink_properties.hpp"
-#include "srf/node/source_properties.hpp"
+#include "mrc/channel/ingress.hpp"
+#include "mrc/node/edge_adapter_registry.hpp"
+#include "mrc/node/edge_registry.hpp"
+#include "mrc/node/sink_properties.hpp"
+#include "mrc/node/source_properties.hpp"
 
 #include <glog/logging.h>
 
@@ -31,15 +31,15 @@
 #include <string>
 #include <typeindex>
 
-namespace srf::node {
+namespace mrc::node {
 void EdgeBuilder::make_edge_typeless(SourcePropertiesBase& source, SinkPropertiesBase& sink, bool allow_narrowing)
 {
     source.complete_edge(EdgeBuilder::ingress_adapter_for_sink(source, sink, sink.ingress_handle()));
 }
 
 std::shared_ptr<channel::IngressHandle> EdgeBuilder::ingress_adapter_for_sink(
-    srf::node::SourcePropertiesBase& source,
-    srf::node::SinkPropertiesBase& sink,
+    mrc::node::SourcePropertiesBase& source,
+    mrc::node::SinkPropertiesBase& sink,
     std::shared_ptr<channel::IngressHandle> ingress_handle)
 {
     VLOG(2) << "Looking for edge adapter: (" << source.source_type_name() << ", " << sink.sink_type_name() << ")";
@@ -60,7 +60,7 @@ std::shared_ptr<channel::IngressHandle> EdgeBuilder::ingress_adapter_for_sink(
     // Fallback -- probably fail
     try
     {
-        auto fn_converter = srf::node::EdgeRegistry::find_converter(source.source_type(), sink.sink_type());
+        auto fn_converter = mrc::node::EdgeRegistry::find_converter(source.source_type(), sink.sink_type());
         return fn_converter(ingress_handle);
     } catch (std::runtime_error e)
     {
@@ -76,7 +76,7 @@ std::shared_ptr<channel::IngressHandle> EdgeBuilder::ingress_adapter_for_sink(
 
 std::shared_ptr<channel::IngressHandle> EdgeBuilder::ingress_for_source_type(
     std::type_index source_type,
-    srf::node::SinkPropertiesBase& sink,
+    mrc::node::SinkPropertiesBase& sink,
     std::shared_ptr<channel::IngressHandle> ingress_handle)
 {
     if (EdgeAdapterRegistry::has_sink_adapter(sink.sink_type()))
@@ -92,8 +92,8 @@ std::shared_ptr<channel::IngressHandle> EdgeBuilder::ingress_for_source_type(
     }
 
     // Fallback -- probably fail
-    auto fn_converter = srf::node::EdgeRegistry::find_converter(source_type, sink.sink_type());
+    auto fn_converter = mrc::node::EdgeRegistry::find_converter(source_type, sink.sink_type());
     return fn_converter(ingress_handle);
 }
 
-}  // namespace srf::node
+}  // namespace mrc::node

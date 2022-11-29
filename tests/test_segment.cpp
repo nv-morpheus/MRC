@@ -17,26 +17,26 @@
 
 #include "test_segment.hpp"
 
-#include "srf/benchmarking/trace_statistics.hpp"
-#include "srf/channel/status.hpp"
-#include "srf/core/executor.hpp"
-#include "srf/engine/pipeline/ipipeline.hpp"
-#include "srf/manifold/egress.hpp"
-#include "srf/node/operators/broadcast.hpp"
-#include "srf/node/rx_node.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/rx_source.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/node/source_properties.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/topology.hpp"
-#include "srf/pipeline/pipeline.hpp"
-#include "srf/segment/builder.hpp"
-#include "srf/segment/definition.hpp"
-#include "srf/segment/ingress_port.hpp"
-#include "srf/segment/object.hpp"
-#include "srf/segment/ports.hpp"
-#include "srf/types.hpp"
+#include "mrc/benchmarking/trace_statistics.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/core/executor.hpp"
+#include "mrc/engine/pipeline/ipipeline.hpp"
+#include "mrc/manifold/egress.hpp"
+#include "mrc/node/operators/broadcast.hpp"
+#include "mrc/node/rx_node.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_source.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/node/source_properties.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/topology.hpp"
+#include "mrc/pipeline/pipeline.hpp"
+#include "mrc/segment/builder.hpp"
+#include "mrc/segment/definition.hpp"
+#include "mrc/segment/ingress_port.hpp"
+#include "mrc/segment/object.hpp"
+#include "mrc/segment/ports.hpp"
+#include "mrc/types.hpp"
 
 #include <cxxabi.h>
 #include <glog/logging.h>
@@ -78,9 +78,9 @@
 // IWYU pragma: no_include "gtest/gtest_pred_impl.h"
 // IWYU thinks we need map for segment::Definition::create
 
-namespace srf::exceptions {
-struct SrfRuntimeError;
-}  // namespace srf::exceptions
+namespace mrc::exceptions {
+struct MrcRuntimeError;
+}  // namespace mrc::exceptions
 
 using namespace std::literals::string_literals;
 
@@ -149,7 +149,7 @@ TEST_F(TestSegment, PortsConstructorBadNameBuilderSizeMismatch)
     std::vector<std::string> port_names{"a", "b", "c"};
     std::vector<port_type_t::port_builder_fn_t> port_builder_fns{};
 
-    EXPECT_THROW(port_type_t BadPorts(port_names, port_builder_fns), exceptions::SrfRuntimeError);
+    EXPECT_THROW(port_type_t BadPorts(port_names, port_builder_fns), exceptions::MrcRuntimeError);
 }
 
 TEST_F(TestSegment, PortsConstructorBadDuplicateName)
@@ -164,7 +164,7 @@ TEST_F(TestSegment, PortsConstructorBadDuplicateName)
     std::vector<std::string> port_names{"a", "b", "a"};
     std::vector<port_type_t::port_builder_fn_t> port_builder_fns{port_builder, port_builder, port_builder};
 
-    EXPECT_THROW(port_type_t BadPorts(port_names, port_builder_fns), exceptions::SrfRuntimeError);
+    EXPECT_THROW(port_type_t BadPorts(port_names, port_builder_fns), exceptions::MrcRuntimeError);
 }
 
 TEST_F(TestSegment, UserLambdaIsCalled)
@@ -947,7 +947,7 @@ TEST_F(TestSegment, EnsureMoveConstructor)
 TEST_F(TestSegment, SegmentTestRxcppHigherLevelNodes)
 {
     std::size_t iterations = 5;
-    using srf::benchmarking::TraceStatistics;
+    using mrc::benchmarking::TraceStatistics;
     TraceStatistics::trace_channels();
     TraceStatistics::trace_operators();
 

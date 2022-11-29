@@ -25,12 +25,12 @@
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 
-#include "srf/core/utils.hpp"
-#include "srf/node/edge_builder.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/runnable/launch_control.hpp"
-#include "srf/runnable/launcher.hpp"
-#include "srf/runtime/remote_descriptor.hpp"
+#include "mrc/core/utils.hpp"
+#include "mrc/node/edge_builder.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/runnable/launch_control.hpp"
+#include "mrc/runnable/launcher.hpp"
+#include "mrc/runtime/remote_descriptor.hpp"
 
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>
@@ -39,25 +39,25 @@
 #include <utility>
 #include <vector>
 
-namespace srf::internal::pubsub {
+namespace mrc::internal::pubsub {
 
 PublisherService::PublisherService(std::string service_name, runtime::Partition& runtime) :
   Base(std::move(service_name), runtime),
   m_runtime(runtime)
 {}
 
-channel::Status PublisherService::publish(srf::runtime::RemoteDescriptor&& rd)
+channel::Status PublisherService::publish(mrc::runtime::RemoteDescriptor&& rd)
 {
     return this->await_write(std::move(rd));
 }
 
-channel::Status PublisherService::publish(std::unique_ptr<srf::codable::EncodedStorage> encoded_object)
+channel::Status PublisherService::publish(std::unique_ptr<mrc::codable::EncodedStorage> encoded_object)
 {
     auto rd = m_runtime.remote_descriptor_manager().register_encoded_object(std::move(encoded_object));
     return this->await_write(std::move(rd));
 }
 
-std::unique_ptr<srf::codable::ICodableStorage> PublisherService::create_storage()
+std::unique_ptr<mrc::codable::ICodableStorage> PublisherService::create_storage()
 {
     return std::make_unique<codable::CodableStorage>(m_runtime.resources());
 }
@@ -100,11 +100,11 @@ void PublisherService::update_tagged_instances(const std::string& role,
 
 void PublisherService::do_subscription_service_setup()
 {
-    auto policy_engine = std::make_unique<srf::node::RxSink<srf::runtime::RemoteDescriptor>>(
-        [this](srf::runtime::RemoteDescriptor rd) { apply_policy(std::move(rd)); });
+    auto policy_engine = std::make_unique<mrc::node::RxSink<mrc::runtime::RemoteDescriptor>>(
+        [this](mrc::runtime::RemoteDescriptor rd) { apply_policy(std::move(rd)); });
 
     // form an edge to this object's SourceChannelWritable
-    srf::node::make_edge(*this, *policy_engine);
+    mrc::node::make_edge(*this, *policy_engine);
 
     // launch the policy engine on the same fiber pool as the updater
     m_policy_engine = m_runtime.resources()
@@ -126,7 +126,7 @@ void PublisherService::do_subscription_service_join()
     m_policy_engine->await_join();
 }
 
-void PublisherService::publish(srf::runtime::RemoteDescriptor&& rd,
+void PublisherService::publish(mrc::runtime::RemoteDescriptor&& rd,
                                const std::uint64_t& tag,
                                std::shared_ptr<ucx::Endpoint> endpoint)
 {
@@ -144,4 +144,4 @@ const std::unordered_map<std::uint64_t, std::shared_ptr<ucx::Endpoint>>& Publish
 {
     return m_tagged_endpoints;
 }
-}  // namespace srf::internal::pubsub
+}  // namespace mrc::internal::pubsub

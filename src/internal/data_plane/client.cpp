@@ -26,19 +26,19 @@
 #include "internal/ucx/resources.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include "srf/channel/buffered_channel.hpp"
-#include "srf/channel/channel.hpp"
-#include "srf/codable/protobuf_message.hpp"  // IWYU pragma: keep
-#include "srf/memory/literals.hpp"
-#include "srf/node/edge_builder.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/protos/codable.pb.h"
-#include "srf/runnable/launch_control.hpp"
-#include "srf/runnable/launcher.hpp"
-#include "srf/runnable/runner.hpp"
-#include "srf/runtime/remote_descriptor_handle.hpp"
-#include "srf/types.hpp"
+#include "mrc/channel/buffered_channel.hpp"
+#include "mrc/channel/channel.hpp"
+#include "mrc/codable/protobuf_message.hpp"  // IWYU pragma: keep
+#include "mrc/memory/literals.hpp"
+#include "mrc/node/edge_builder.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/protos/codable.pb.h"
+#include "mrc/runnable/launch_control.hpp"
+#include "mrc/runnable/launcher.hpp"
+#include "mrc/runnable/runner.hpp"
+#include "mrc/runtime/remote_descriptor_handle.hpp"
+#include "mrc/types.hpp"
 
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>
@@ -54,9 +54,9 @@
 #include <utility>
 #include <vector>
 
-namespace srf::internal::data_plane {
+namespace mrc::internal::data_plane {
 
-using namespace srf::memory::literals;
+using namespace mrc::memory::literals;
 
 Client::Client(resources::PartitionResourceBase& base,
                ucx::Resources& ucx,
@@ -245,7 +245,7 @@ void Client::issue_remote_descriptor(RemoteDescriptorMessage&& msg)
 
     auto msg_length = proto.ByteSizeLong();
 
-    // todo(ryan) - parameterize srf::data_plane::client::max_remote_descriptor_eager_size
+    // todo(ryan) - parameterize mrc::data_plane::client::max_remote_descriptor_eager_size
     if (msg_length <= 1_MiB)
     {
         auto buffer = m_transient_pool.await_buffer(msg_length);
@@ -279,13 +279,13 @@ void Client::do_service_start()
     auto rd_writer = std::make_unique<node::RxSink<RemoteDescriptorMessage>>(
         [this](RemoteDescriptorMessage msg) { issue_remote_descriptor(std::move(msg)); });
 
-    // todo(ryan) - parameterize srf::data_plane::client::max_queued_remote_descriptor_sends
+    // todo(ryan) - parameterize mrc::data_plane::client::max_queued_remote_descriptor_sends
     rd_writer->update_channel(std::make_unique<channel::BufferedChannel<RemoteDescriptorMessage>>(128));
 
     // form edge
-    srf::node::make_edge(*m_rd_channel, *rd_writer);
+    mrc::node::make_edge(*m_rd_channel, *rd_writer);
 
-    // todo(ryan) - parameterize srf::data_plane::client::max_inflight_remote_descriptor_sends
+    // todo(ryan) - parameterize mrc::data_plane::client::max_inflight_remote_descriptor_sends
     auto launch_options = Resources::launch_options(16);
 
     // launch rd_writer
@@ -313,4 +313,4 @@ void Client::do_service_await_join()
     m_rd_writer->await_join();
 }
 
-}  // namespace srf::internal::data_plane
+}  // namespace mrc::internal::data_plane

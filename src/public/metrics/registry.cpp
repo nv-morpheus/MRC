@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include "srf/metrics/registry.hpp"
+#include "mrc/metrics/registry.hpp"
 
-#include "srf/metrics/counter.hpp"
+#include "mrc/metrics/counter.hpp"
 
 #include <glog/logging.h>
 #include <prometheus/client_metric.h>
@@ -31,12 +31,12 @@
 #include <utility>
 #include <vector>
 
-namespace srf::metrics {
+namespace mrc::metrics {
 
 Registry::Registry() :
   m_registry(std::make_shared<prometheus::Registry>()),
   m_throughput_counters(prometheus::BuildCounter()
-                            .Name("srf_throughput_counters")
+                            .Name("mrc_throughput_counters")
                             .Help("number of data elements passing thru a given pipeline object")
                             .Register(*m_registry))
 {}
@@ -66,4 +66,4 @@ std::vector<CounterReport> Registry::collect_throughput_counters() const
     return report;
 }
 
-}  // namespace srf::metrics
+}  // namespace mrc::metrics

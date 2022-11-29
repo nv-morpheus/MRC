@@ -24,11 +24,11 @@
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/resources.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/node/operators/router.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/runnable/runner.hpp"
-#include "srf/types.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/node/operators/router.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/runnable/runner.hpp"
+#include "mrc/types.hpp"
 
 #include <ucp/api/ucp_def.h>
 
@@ -59,7 +59,7 @@
 // channel decoder, which should issue the recv in the same context as was
 // called and return immediately.
 
-namespace srf::internal::data_plane {
+namespace mrc::internal::data_plane {
 
 using network_event_t = std::pair<std::uint64_t, memory::TransientBuffer>;
 
@@ -117,7 +117,7 @@ class Server final : public Service, public resources::PartitionResourceBase
     std::vector<detail::PrePostedRecvInfo> m_pre_posted_recv_info;
 
     // runner for the ucx progress engine event source
-    std::unique_ptr<srf::runnable::Runner> m_progress_engine;
+    std::unique_ptr<mrc::runnable::Runner> m_progress_engine;
 };
 
-}  // namespace srf::internal::data_plane
+}  // namespace mrc::internal::data_plane

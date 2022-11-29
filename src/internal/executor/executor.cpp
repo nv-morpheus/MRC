@@ -24,10 +24,10 @@
 #include "internal/resources/manager.hpp"
 #include "internal/system/system.hpp"
 
-#include "srf/core/addresses.hpp"
-#include "srf/engine/pipeline/ipipeline.hpp"
-#include "srf/exceptions/runtime_error.hpp"
-#include "srf/options/options.hpp"
+#include "mrc/core/addresses.hpp"
+#include "mrc/engine/pipeline/ipipeline.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/options/options.hpp"
 
 #include <glog/logging.h>
 
@@ -37,7 +37,7 @@
 #include <string>
 #include <type_traits>
 
-namespace srf::internal::executor {
+namespace mrc::internal::executor {
 
 static bool valid_pipeline(const pipeline::Pipeline& pipeline);
 
@@ -65,7 +65,7 @@ void Executor::register_pipeline(std::unique_ptr<pipeline::IPipeline> ipipeline)
 
     if (!valid_pipeline(*pipeline))
     {
-        throw exceptions::SrfRuntimeError("pipeline validation failed");
+        throw exceptions::MrcRuntimeError("pipeline validation failed");
     }
 
     m_pipeline_manager = std::make_unique<pipeline::Manager>(pipeline, *m_resources_manager);
@@ -143,4 +143,4 @@ bool valid_pipeline(const pipeline::Pipeline& pipeline)
     return valid;
 }
 
-}  // namespace srf::internal::executor
+}  // namespace mrc::internal::executor

@@ -27,8 +27,8 @@
 #include "internal/system/system_provider.hpp"
 #include "internal/ucx/resources.hpp"
 
-#include "srf/core/task_queue.hpp"
-#include "srf/types.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/types.hpp"
 
 #include <boost/fiber/future/future.hpp>
 
@@ -37,11 +37,11 @@
 #include <optional>
 #include <vector>
 
-namespace srf::internal::runtime {
+namespace mrc::internal::runtime {
 class Runtime;
 }
 
-namespace srf::internal::resources {
+namespace mrc::internal::resources {
 
 class Manager final : public system::SystemProvider
 {
@@ -98,4 +98,4 @@ class Manager final : public system::SystemProvider
     friend runtime::Runtime;
 };
 
-}  // namespace srf::internal::resources
+}  // namespace mrc::internal::resources

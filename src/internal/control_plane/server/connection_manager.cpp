@@ -19,8 +19,8 @@
 
 #include "internal/utils/contains.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/protos/architect.pb.h"
+#include "mrc/channel/status.hpp"
+#include "mrc/protos/architect.pb.h"
 
 #include <glog/logging.h>
 #include <google/protobuf/any.pb.h>
@@ -29,7 +29,7 @@
 #include <ostream>
 #include <utility>
 
-namespace srf::internal::control_plane::server {
+namespace mrc::internal::control_plane::server {
 
 void ConnectionManager::add_stream(const stream_t& stream)
 {
@@ -94,7 +94,7 @@ Expected<ConnectionManager::instance_t> ConnectionManager::get_instance(const in
     auto search = m_instances.find(instance_id);
     if (search == m_instances.end())
     {
-        return Error::create(SRF_CONCAT_STR("unable to acquire instance with id: " << instance_id));
+        return Error::create(MRC_CONCAT_STR("unable to acquire instance with id: " << instance_id));
     }
     return search->second;
 }
@@ -128,7 +128,7 @@ Expected<protos::RegisterWorkersResponse> ConnectionManager::register_instances(
     // check if any workers/instances have been registered on the requesting stream
     if (m_instances_by_stream.count(stream_id) != 0)
     {
-        return Error::create(SRF_CONCAT_STR("failed to register instances on immutable stream "
+        return Error::create(MRC_CONCAT_STR("failed to register instances on immutable stream "
                                             << stream_id << "; streams are immutable after first registration"));
     }
 
@@ -162,7 +162,7 @@ Expected<protos::Ack> ConnectionManager::drop_instance(const writer_t& writer, c
 {
     const auto stream_id = writer->get_id();
     auto instance        = get_instance(req.instance_id());
-    SRF_EXPECT(instance);
+    MRC_EXPECT(instance);
 
     DCHECK(contains(m_ucx_worker_addresses, instance.value()->worker_address()));
     m_ucx_worker_addresses.erase(instance.value()->worker_address());
@@ -264,4 +264,4 @@ const std::map<ConnectionManager::stream_id_t, ConnectionManager::stream_t>& Con
     return m_streams;
 }
 
-}  // namespace srf::internal::control_plane::server
+}  // namespace mrc::internal::control_plane::server

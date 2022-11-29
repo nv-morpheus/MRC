@@ -17,7 +17,7 @@
 
 #pragma once
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 class System;
 class Topology;
@@ -30,4 +30,4 @@ class FiberTaskQueue;
 class FiberPool;
 class FiberManager;
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

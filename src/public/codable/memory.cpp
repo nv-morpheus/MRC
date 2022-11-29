@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-#include "srf/memory/memory_kind.hpp"
-#include "srf/protos/codable.pb.h"
+#include "mrc/memory/memory_kind.hpp"
+#include "mrc/protos/codable.pb.h"
 
 #include <glog/logging.h>
 
 #include <ostream>
 
-namespace srf::codable {
+namespace mrc::codable {
 
 memory::memory_kind decode_memory_type(const protos::MemoryKind& proto_kind)
 {
@@ -56,10 +56,10 @@ protos::MemoryKind encode_memory_type(memory::memory_kind mem_kind)
     case memory::memory_kind::managed:
         return protos::MemoryKind::Managed;
     default:
-        LOG(FATAL) << "unhandled srf::memory::memory_kind";
+        LOG(FATAL) << "unhandled mrc::memory::memory_kind";
     };
 
     return protos::MemoryKind::None;
 }
 
-}  // namespace srf::codable
+}  // namespace mrc::codable

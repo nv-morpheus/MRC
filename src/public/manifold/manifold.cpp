@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-#include "srf/manifold/manifold.hpp"
+#include "mrc/manifold/manifold.hpp"
 
-#include "srf/node/sink_properties.hpp"
-#include "srf/node/source_properties.hpp"
-#include "srf/pipeline/resources.hpp"
-#include "srf/segment/utils.hpp"
-#include "srf/types.hpp"
+#include "mrc/node/sink_properties.hpp"
+#include "mrc/node/source_properties.hpp"
+#include "mrc/pipeline/resources.hpp"
+#include "mrc/segment/utils.hpp"
+#include "mrc/types.hpp"
 
 #include <glog/logging.h>
 
@@ -29,7 +29,7 @@
 #include <string>
 #include <utility>
 
-namespace srf::manifold {
+namespace mrc::manifold {
 
 Manifold::Manifold(PortName port_name, pipeline::Resources& resources) :
   m_port_name(std::move(port_name)),
@@ -62,4 +62,4 @@ void Manifold::add_output(const SegmentAddress& address, node::SinkPropertiesBas
               << segment::info(address);
 }
 
-}  // namespace srf::manifold
+}  // namespace mrc::manifold

@@ -16,12 +16,12 @@
  */
 #pragma once
 
-#include "srf/channel/ingress.hpp"
+#include "mrc/channel/ingress.hpp"
 
-namespace srf::internal::rpc {
+namespace mrc::internal::rpc {
 
 template <typename T>
-struct StreamWriter : public srf::channel::Ingress<T>
+struct StreamWriter : public mrc::channel::Ingress<T>
 {
     virtual ~StreamWriter()            = default;
     virtual void finish()              = 0;
@@ -30,4 +30,4 @@ struct StreamWriter : public srf::channel::Ingress<T>
     virtual std::size_t get_id() const = 0;
 };
 
-}  // namespace srf::internal::rpc
+}  // namespace mrc::internal::rpc

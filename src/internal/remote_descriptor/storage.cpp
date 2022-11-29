@@ -21,14 +21,14 @@
 
 #include <utility>
 
-namespace srf::internal::remote_descriptor {
+namespace mrc::internal::remote_descriptor {
 
-Storage::Storage(std::unique_ptr<srf::codable::EncodedStorage> storage) : m_storage(std::move(storage))
+Storage::Storage(std::unique_ptr<mrc::codable::EncodedStorage> storage) : m_storage(std::move(storage))
 {
     CHECK(m_storage);
 }
 
-const srf::codable::IDecodableStorage& Storage::encoding() const
+const mrc::codable::IDecodableStorage& Storage::encoding() const
 {
     CHECK(m_storage);
     return m_storage->encoding();
@@ -46,4 +46,4 @@ std::size_t Storage::decrement_tokens(std::size_t decrement_count)
     return m_tokens;
 }
 
-}  // namespace srf::internal::remote_descriptor
+}  // namespace mrc::internal::remote_descriptor

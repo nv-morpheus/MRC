@@ -20,7 +20,7 @@
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 
-#include "srf/core/task_queue.hpp"
+#include "mrc/core/task_queue.hpp"
 
 #include <glog/logging.h>
 
@@ -28,14 +28,14 @@
 #include <ostream>
 #include <utility>
 
-namespace srf::internal::pubsub {
+namespace mrc::internal::pubsub {
 
 void PublisherRoundRobin::on_update()
 {
     m_next = this->tagged_endpoints().cbegin();
 }
 
-void PublisherRoundRobin::apply_policy(srf::runtime::RemoteDescriptor&& rd)
+void PublisherRoundRobin::apply_policy(mrc::runtime::RemoteDescriptor&& rd)
 {
     DCHECK(this->resources().runnable().main().caller_on_same_thread());
 
@@ -62,4 +62,4 @@ void PublisherRoundRobin::apply_policy(srf::runtime::RemoteDescriptor&& rd)
     }
 }
 
-}  // namespace srf::internal::pubsub
+}  // namespace mrc::internal::pubsub

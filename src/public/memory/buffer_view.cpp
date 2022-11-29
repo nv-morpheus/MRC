@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-#include "srf/memory/buffer_view.hpp"
+#include "mrc/memory/buffer_view.hpp"
 
-#include "srf/memory/memory_kind.hpp"
+#include "mrc/memory/memory_kind.hpp"
 
 #include <glog/logging.h>
 
 #include <utility>
 
-namespace srf::memory {
+namespace mrc::memory {
 
 // For the move constructor, reset the values in `other` to the defaults
 const_buffer_view::const_buffer_view(const_buffer_view&& other) noexcept :
@@ -91,4 +91,4 @@ void* buffer_view::data()
     return m_data;
 }
 
-}  // namespace srf::memory
+}  // namespace mrc::memory

@@ -22,7 +22,7 @@
 
 #include <memory>
 
-namespace srf::internal::control_plane {
+namespace mrc::internal::control_plane {
 
 class Client;
 class Server;
@@ -45,4 +45,4 @@ class Resources final : private resources::PartitionResourceBase
     friend network::Resources;
 };
 
-}  // namespace srf::internal::control_plane
+}  // namespace mrc::internal::control_plane

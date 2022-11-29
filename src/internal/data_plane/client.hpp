@@ -27,11 +27,11 @@
 #include "internal/ucx/resources.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/runnable/runner.hpp"
-#include "srf/runtime/remote_descriptor.hpp"
-#include "srf/types.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/runnable/runner.hpp"
+#include "mrc/runtime/remote_descriptor.hpp"
+#include "mrc/types.hpp"
 
 #include <ucp/api/ucp_def.h>
 
@@ -41,11 +41,11 @@
 #include <memory>
 #include <string>
 
-namespace srf::internal::data_plane {
+namespace mrc::internal::data_plane {
 
 struct RemoteDescriptorMessage
 {
-    srf::runtime::RemoteDescriptor rd;
+    mrc::runtime::RemoteDescriptor rd;
     std::shared_ptr<ucx::Endpoint> endpoint;
     std::uint64_t tag;
 };
@@ -120,10 +120,10 @@ class Client final : public resources::PartitionResourceBase, private Service
     memory::TransientPool& m_transient_pool;
     mutable std::map<InstanceID, std::shared_ptr<ucx::Endpoint>> m_endpoints;
 
-    std::unique_ptr<srf::runnable::Runner> m_rd_writer;
+    std::unique_ptr<mrc::runnable::Runner> m_rd_writer;
     std::unique_ptr<node::SourceChannelWriteable<RemoteDescriptorMessage>> m_rd_channel;
 
     friend Resources;
 };
 
-}  // namespace srf::internal::data_plane
+}  // namespace mrc::internal::data_plane

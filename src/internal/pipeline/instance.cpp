@@ -24,11 +24,11 @@
 #include "internal/segment/definition.hpp"
 #include "internal/segment/instance.hpp"
 
-#include "srf/core/addresses.hpp"
-#include "srf/core/task_queue.hpp"
-#include "srf/manifold/interface.hpp"
-#include "srf/segment/utils.hpp"
-#include "srf/types.hpp"
+#include "mrc/core/addresses.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/manifold/interface.hpp"
+#include "mrc/segment/utils.hpp"
+#include "mrc/types.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
@@ -39,7 +39,7 @@
 #include <utility>
 #include <vector>
 
-namespace srf::internal::pipeline {
+namespace mrc::internal::pipeline {
 
 Instance::Instance(std::shared_ptr<const Pipeline> definition, resources::Manager& resources) :
   Resources(resources),
@@ -89,7 +89,7 @@ void Instance::stop_segment(const SegmentAddress& address)
 
     for (const auto& name : segdef->ingress_port_names())
     {
-        DVLOG(3) << "Dropping IngressPort for " << ::srf::segment::info(address) << " on manifold " << name;
+        DVLOG(3) << "Dropping IngressPort for " << ::mrc::segment::info(address) << " on manifold " << name;
         // manifold(name).drop_output(address);
     }
 
@@ -115,11 +115,11 @@ void Instance::create_segment(const SegmentAddress& address, std::uint32_t parti
 
             for (const auto& name : definition->egress_port_names())
             {
-                VLOG(10) << ::srf::segment::info(address) << " configuring manifold for egress port " << name;
+                VLOG(10) << ::mrc::segment::info(address) << " configuring manifold for egress port " << name;
                 std::shared_ptr<manifold::Interface> manifold = get_manifold(name);
                 if (!manifold)
                 {
-                    VLOG(10) << ::srf::segment::info(address) << " creating manifold for egress port " << name;
+                    VLOG(10) << ::mrc::segment::info(address) << " creating manifold for egress port " << name;
                     manifold          = segment->create_manifold(name);
                     m_manifolds[name] = manifold;
                 }
@@ -128,11 +128,11 @@ void Instance::create_segment(const SegmentAddress& address, std::uint32_t parti
 
             for (const auto& name : definition->ingress_port_names())
             {
-                VLOG(10) << ::srf::segment::info(address) << " configuring manifold for ingress port " << name;
+                VLOG(10) << ::mrc::segment::info(address) << " configuring manifold for ingress port " << name;
                 std::shared_ptr<manifold::Interface> manifold = get_manifold(name);
                 if (!manifold)
                 {
-                    VLOG(10) << ::srf::segment::info(address) << " creating manifold for ingress port " << name;
+                    VLOG(10) << ::mrc::segment::info(address) << " creating manifold for ingress port " << name;
                     manifold          = segment->create_manifold(name);
                     m_manifolds[name] = manifold;
                 }
@@ -222,4 +222,4 @@ void Instance::do_service_await_join()
     }
 }
 
-}  // namespace srf::internal::pipeline
+}  // namespace mrc::internal::pipeline

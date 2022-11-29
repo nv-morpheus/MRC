@@ -29,11 +29,11 @@ doxygen --version
 show_conda_info
 
 rapids-logger "Configuring for docs"
-cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} -DSRF_BUILD_DOCS=ON .
+cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} -DMRC_BUILD_DOCS=ON .
 
 
 rapids-logger "Building docs"
-cmake --build build --target srf_docs
+cmake --build build --target mrc_docs
 
 rapids-logger "Tarring the docs"
 tar cfj "${WORKSPACE_TMP}/docs.tar.bz" build/docs/html

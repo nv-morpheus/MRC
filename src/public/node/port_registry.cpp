@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "srf/node/port_registry.hpp"
+#include "mrc/node/port_registry.hpp"
 
 #include <glog/logging.h>
 
@@ -26,7 +26,7 @@
 #include <typeindex>
 #include <utility>
 
-namespace srf::node {
+namespace mrc::node {
 
 std::map<std::type_index, std::shared_ptr<PortUtil>> PortRegistry::s_registered_port_utils{};
 std::map<std::string, std::type_index> PortRegistry::s_port_to_type_index{};
@@ -123,4 +123,4 @@ std::shared_ptr<PortUtil> PortRegistry::find_port_util(std::type_index type_inde
 
     return iter_util->second;
 }
-}  // namespace srf::node
+}  // namespace mrc::node

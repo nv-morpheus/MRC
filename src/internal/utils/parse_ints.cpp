@@ -44,7 +44,7 @@ std::vector<std::string> split_string_to_array(const std::string& str, char spli
 }
 }  // namespace
 
-namespace srf {
+namespace mrc {
 
 std::vector<int> parse_ints(const std::string& data)
 {
@@ -74,4 +74,4 @@ std::vector<int> parse_ints(const std::string& data)
     return result;
 }
 
-}  // namespace srf
+}  // namespace mrc

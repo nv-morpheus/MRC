@@ -23,22 +23,22 @@
 #include "internal/resources/forward.hpp"
 #include "internal/ucx/common.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/protos/architect.pb.h"
-#include "srf/types.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/protos/architect.pb.h"
+#include "mrc/types.hpp"
 
 #include <map>
 #include <memory>
 #include <optional>
 #include <vector>
 
-namespace srf::internal::control_plane::client {
+namespace mrc::internal::control_plane::client {
 
 class ConnectionsManager : public StateManager
 {
   public:
-    using update_channel_t = srf::node::SourceChannelWriteable<const protos::StateUpdate>;
+    using update_channel_t = mrc::node::SourceChannelWriteable<const protos::StateUpdate>;
 
     ConnectionsManager(Client& client, update_channel_t& update_channel);
     ~ConnectionsManager() override;
@@ -65,4 +65,4 @@ class ConnectionsManager : public StateManager
     std::map<InstanceID, std::unique_ptr<update_channel_t>> m_update_channels;
 };
 
-}  // namespace srf::internal::control_plane::client
+}  // namespace mrc::internal::control_plane::client

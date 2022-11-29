@@ -28,13 +28,13 @@
 #include "internal/ucx/registration_cache.hpp"
 #include "internal/ucx/resources.hpp"
 
-#include "srf/runnable/launch_options.hpp"
-#include "srf/types.hpp"
+#include "mrc/runnable/launch_options.hpp"
+#include "mrc/types.hpp"
 
 #include <cstddef>
 #include <string>
 
-namespace srf::internal::data_plane {
+namespace mrc::internal::data_plane {
 
 /**
  * @brief ArchitectResources hold and is responsible for constructing any object that depending the UCX data plane
@@ -57,7 +57,7 @@ class Resources final : private Service, private resources::PartitionResourceBas
     std::string ucx_address() const;
     const ucx::RegistrationCache& registration_cache() const;
 
-    static srf::runnable::LaunchOptions launch_options(std::size_t concurrency);
+    static mrc::runnable::LaunchOptions launch_options(std::size_t concurrency);
 
   private:
     void do_service_start() final;
@@ -78,4 +78,4 @@ class Resources final : private Service, private resources::PartitionResourceBas
     friend network::Resources;
 };
 
-}  // namespace srf::internal::data_plane
+}  // namespace mrc::internal::data_plane

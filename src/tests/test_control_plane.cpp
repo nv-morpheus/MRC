@@ -31,21 +31,21 @@
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/codable/fundamental_types.hpp"
-#include "srf/codable/fundamental_types.hpp"  // IWYU pragma: keep
-#include "srf/core/bitmap.hpp"
-#include "srf/core/task_queue.hpp"
-#include "srf/memory/codable/buffer.hpp"
-#include "srf/memory/codable/buffer.hpp"  // IWYU pragma: keep
-#include "srf/memory/literals.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/placement.hpp"
-#include "srf/options/topology.hpp"
-#include "srf/pubsub/api.hpp"
-#include "srf/pubsub/publisher.hpp"
-#include "srf/pubsub/subscriber.hpp"
-#include "srf/types.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/codable/fundamental_types.hpp"
+#include "mrc/codable/fundamental_types.hpp"  // IWYU pragma: keep
+#include "mrc/core/bitmap.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/memory/codable/buffer.hpp"
+#include "mrc/memory/codable/buffer.hpp"  // IWYU pragma: keep
+#include "mrc/memory/literals.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/placement.hpp"
+#include "mrc/options/topology.hpp"
+#include "mrc/pubsub/api.hpp"
+#include "mrc/pubsub/publisher.hpp"
+#include "mrc/pubsub/subscriber.hpp"
+#include "mrc/types.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
@@ -62,9 +62,9 @@
 #include <utility>
 #include <vector>
 
-using namespace srf;
-using namespace srf::pubsub;
-using namespace srf::memory::literals;
+using namespace mrc;
+using namespace mrc::pubsub;
+using namespace mrc::memory::literals;
 
 static auto make_runtime(std::function<void(Options& options)> options_lambda = [](Options& options) {})
 {
@@ -356,10 +356,10 @@ TEST_F(TestControlPlane, DoubleClientPubSub)
 
 //     LOG(INFO) << "MAKE PUBLISHER";
 //     auto publisher =
-//         client_1->partition(0).make_publisher<srf::memory::buffer>("my_buffer", pubsub::PublisherPolicy::Broadcast);
+//         client_1->partition(0).make_publisher<mrc::memory::buffer>("my_buffer", pubsub::PublisherPolicy::Broadcast);
 
 //     LOG(INFO) << "MAKE SUBSCRIBER";
-//     auto subscriber = client_2->partition(0).make_subscriber<srf::memory::buffer>("my_buffer");
+//     auto subscriber = client_2->partition(0).make_subscriber<mrc::memory::buffer>("my_buffer");
 
 //     client_1->partition(0).resources().network()->control_plane().client().request_update();
 

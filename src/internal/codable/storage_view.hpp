@@ -17,13 +17,13 @@
 
 #pragma once
 
-#include "srf/codable/api.hpp"
-#include "srf/protos/codable.pb.h"  // todo(iwyu) protos::EncodedObject should be forward declared
+#include "mrc/codable/api.hpp"
+#include "mrc/protos/codable.pb.h"  // todo(iwyu) protos::EncodedObject should be forward declared
 
 #include <cstddef>
 #include <optional>
 
-namespace srf::internal::codable {
+namespace mrc::internal::codable {
 
 /**
  * @brief StorageView implements the methods on IEncodedObject with a reference to a protos::EncodedObject as the
@@ -34,13 +34,13 @@ namespace srf::internal::codable {
  * This is mostly used to avoid the repeatative implementation of the interface when using a unique_ptr, shared_ptr or a
  * direct protos::EncodedObject.
  */
-class StorageView : public virtual srf::codable::IStorage
+class StorageView : public virtual mrc::codable::IStorage
 {
   public:
     StorageView()           = default;
     ~StorageView() override = default;
 
-    const srf::codable::protos::EncodedObject& proto() const final;
+    const mrc::codable::protos::EncodedObject& proto() const final;
 
     obj_idx_t object_count() const final;
 
@@ -53,7 +53,7 @@ class StorageView : public virtual srf::codable::IStorage
     std::optional<obj_idx_t> parent_obj_idx_for_object(const obj_idx_t& object_idx) const final;
 
   private:
-    virtual const srf::codable::protos::EncodedObject& get_proto() const = 0;
+    virtual const mrc::codable::protos::EncodedObject& get_proto() const = 0;
 };
 
-}  // namespace srf::internal::codable
+}  // namespace mrc::internal::codable

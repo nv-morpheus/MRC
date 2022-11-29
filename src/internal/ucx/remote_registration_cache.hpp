@@ -29,7 +29,7 @@
 #include <mutex>
 #include <optional>
 
-namespace srf::internal::ucx {
+namespace mrc::internal::ucx {
 
 /**
  * @brief UCX Registration Cache
@@ -141,4 +141,4 @@ class RemoteRegistrationCache final
     memory::BlockManager<MemoryBlock> m_blocks;
 };
 
-}  // namespace srf::internal::ucx
+}  // namespace mrc::internal::ucx

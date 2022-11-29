@@ -32,14 +32,14 @@ CLANG_TIDY_RETVAL=0
 CLANG_FORMAT_RETVAL=0
 IWYU_RETVAL=0
 
-# Get the list of modified files inside the srf repo
-get_modified_files ${CPP_FILE_REGEX} SRF_MODIFIED_FILES
+# Get the list of modified files inside the MRC repo
+get_modified_files ${CPP_FILE_REGEX} MRC_MODIFIED_FILES
 
 # If there are any files, then run clang tidy
-if [[ -n "${SRF_MODIFIED_FILES}" ]]; then
-   echo -e "Running C++ checks on ${#SRF_MODIFIED_FILES[@]} files:"
+if [[ -n "${MRC_MODIFIED_FILES}" ]]; then
+   echo -e "Running C++ checks on ${#MRC_MODIFIED_FILES[@]} files:"
 
-   for f in "${SRF_MODIFIED_FILES[@]}"; do
+   for f in "${MRC_MODIFIED_FILES[@]}"; do
       echo "  $f"
    done
 
@@ -80,7 +80,7 @@ if [[ -n "${SRF_MODIFIED_FILES}" ]]; then
 
    # Include What You Use
    if [[ "${SKIP_IWYU}" == "" ]]; then
-      IWYU_DIRS="benchmarks python src tools"
+      IWYU_DIRS="benchmarks python src"
       NUM_PROC=$(get_num_proc)
       IWYU_OUTPUT=`${IWYU_TOOL} -p ${BUILD_DIR} -j ${NUM_PROC} ${IWYU_DIRS} 2>&1`
       IWYU_RETVAL=$?

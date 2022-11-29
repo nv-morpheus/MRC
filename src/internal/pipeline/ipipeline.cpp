@@ -15,17 +15,17 @@
  * limitations under the License.
  */
 
-#include "srf/engine/pipeline/ipipeline.hpp"
+#include "mrc/engine/pipeline/ipipeline.hpp"
 
 #include "internal/pipeline/pipeline.hpp"
 
-#include "srf/engine/segment/idefinition.hpp"
+#include "mrc/engine/segment/idefinition.hpp"
 
 #include <glog/logging.h>
 
 #include <utility>
 
-namespace srf::internal::pipeline {
+namespace mrc::internal::pipeline {
 
 IPipeline::IPipeline() : m_impl(std::make_shared<Pipeline>()) {}
 IPipeline::~IPipeline() = default;
@@ -43,4 +43,4 @@ void IPipeline::add_segment(std::shared_ptr<const segment::Definition> segment)
     m_impl->add_segment(std::move(segment));
 }
 
-}  // namespace srf::internal::pipeline
+}  // namespace mrc::internal::pipeline

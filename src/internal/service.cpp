@@ -22,7 +22,7 @@
 #include <ostream>
 #include <utility>
 
-namespace srf::internal {
+namespace mrc::internal {
 
 Service::~Service()
 {
@@ -144,4 +144,4 @@ void Service::service_set_description(std::string description)
     m_description = std::move(description);
 }
 
-}  // namespace srf::internal
+}  // namespace mrc::internal

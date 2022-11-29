@@ -35,24 +35,24 @@
 #include "internal/ucx/memory_block.hpp"
 #include "internal/ucx/registration_cache.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/memory/adaptors.hpp"
-#include "srf/memory/buffer.hpp"
-#include "srf/memory/literals.hpp"
-#include "srf/memory/resources/arena_resource.hpp"
-#include "srf/memory/resources/host/pinned_memory_resource.hpp"
-#include "srf/memory/resources/logging_resource.hpp"
-#include "srf/memory/resources/memory_resource.hpp"
-#include "srf/node/edge_builder.hpp"
-#include "srf/node/operators/router.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/placement.hpp"
-#include "srf/options/resources.hpp"
-#include "srf/runnable/launch_control.hpp"
-#include "srf/runnable/launcher.hpp"
-#include "srf/runnable/runner.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/memory/adaptors.hpp"
+#include "mrc/memory/buffer.hpp"
+#include "mrc/memory/literals.hpp"
+#include "mrc/memory/resources/arena_resource.hpp"
+#include "mrc/memory/resources/host/pinned_memory_resource.hpp"
+#include "mrc/memory/resources/logging_resource.hpp"
+#include "mrc/memory/resources/memory_resource.hpp"
+#include "mrc/node/edge_builder.hpp"
+#include "mrc/node/operators/router.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/placement.hpp"
+#include "mrc/options/resources.hpp"
+#include "mrc/runnable/launch_control.hpp"
+#include "mrc/runnable/launcher.hpp"
+#include "mrc/runnable/runner.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
@@ -74,8 +74,8 @@
 #include <utility>
 #include <vector>
 
-using namespace srf;
-using namespace srf::memory::literals;
+using namespace mrc;
+using namespace mrc::memory::literals;
 
 static std::shared_ptr<internal::system::System> make_system(std::function<void(Options&)> updater = nullptr)
 {
@@ -93,12 +93,12 @@ class TestNetwork : public ::testing::Test
 
 TEST_F(TestNetwork, Arena)
 {
-    std::shared_ptr<srf::memory::memory_resource> mr;
-    auto pinned  = std::make_shared<srf::memory::pinned_memory_resource>();
+    std::shared_ptr<mrc::memory::memory_resource> mr;
+    auto pinned  = std::make_shared<mrc::memory::pinned_memory_resource>();
     mr           = pinned;
-    auto logging = srf::memory::make_shared_resource<srf::memory::logging_resource>(mr, "pinned", 10);
-    auto arena   = srf::memory::make_shared_resource<srf::memory::arena_resource>(logging, 128_MiB, 512_MiB);
-    auto f       = srf::memory::make_shared_resource<srf::memory::logging_resource>(arena, "arena", 10);
+    auto logging = mrc::memory::make_shared_resource<mrc::memory::logging_resource>(mr, "pinned", 10);
+    auto arena   = mrc::memory::make_shared_resource<mrc::memory::arena_resource>(logging, 128_MiB, 512_MiB);
+    auto f       = mrc::memory::make_shared_resource<mrc::memory::logging_resource>(arena, "arena", 10);
 
     auto* ptr = f->allocate(1024);
     f->deallocate(ptr, 1024);
@@ -343,7 +343,7 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
             r0.server().deserialize_source().drop_edge(tag);
         });
 
-    srf::node::make_edge(r0.server().deserialize_source().source(tag), *recv_sink);
+    mrc::node::make_edge(r0.server().deserialize_source().source(tag), *recv_sink);
 
     auto launch_opts = resources->partition(0).network()->data_plane().launch_options(1);
     auto recv_runner = resources->partition(0)
@@ -370,7 +370,7 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
 // {
 //     auto launcher = m_launch_control->prepare_launcher(std::move(m_mutable_nem));
 
-//     // auto& service = m_launch_control->service(runnable::SrfService::data_plane::Server);
+//     // auto& service = m_launch_control->service(runnable::MrcService::data_plane::Server);
 //     // service.stop();
 //     // service.await_join();
 // }

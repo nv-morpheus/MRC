@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "srf/core/logging.hpp"
+#include "mrc/core/logging.hpp"
 
 #include <gflags/gflags.h>  // for ParseCommandLineFlags
 #include <gtest/gtest.h>    // IWYU pragma: keep
@@ -28,7 +28,7 @@
 
 int main(int argc, char** argv)
 {
-    srf::init_logging("srf::test_srf");
+    mrc::init_logging("mrc::test_mrc");
     // ::google::InstallFailureFunction(&TestFailuresThrowExceptions);
     ::testing::InitGoogleTest(&argc, argv);
     ::google::ParseCommandLineFlags(&argc, &argv, true);

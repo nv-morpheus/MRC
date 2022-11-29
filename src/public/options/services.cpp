@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-#include "srf/options/services.hpp"
+#include "mrc/options/services.hpp"
 
-#include "srf/runnable/internal_service.hpp"
-#include "srf/runnable/launch_options.hpp"
+#include "mrc/runnable/internal_service.hpp"
+#include "mrc/runnable/launch_options.hpp"
 
 #include <utility>
 
-namespace srf {
+namespace mrc {
 
 void ServiceOptions::set_service_options(runnable::InternalServiceType service_type,
                                          const runnable::LaunchOptions& launch_options)
@@ -49,4 +49,4 @@ const runnable::LaunchOptions& ServiceOptions::default_options() const
     return m_default_options;
 }
 
-}  // namespace srf
+}  // namespace mrc

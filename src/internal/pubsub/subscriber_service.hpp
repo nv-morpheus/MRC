@@ -21,14 +21,14 @@
 #include "internal/pubsub/base.hpp"
 #include "internal/runtime/partition.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/node/operators/unique_operator.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/pubsub/api.hpp"
-#include "srf/runnable/runner.hpp"
-#include "srf/runtime/remote_descriptor.hpp"
-#include "srf/types.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/node/operators/unique_operator.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/pubsub/api.hpp"
+#include "mrc/runnable/runner.hpp"
+#include "mrc/runtime/remote_descriptor.hpp"
+#include "mrc/types.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -37,15 +37,15 @@
 #include <unordered_map>
 #include <utility>
 
-namespace srf::internal::pubsub {
+namespace mrc::internal::pubsub {
 
 /**
  * @brief The internal type-erased SubscriberService
  *
  */
 class SubscriberService final : public Base,
-                                public srf::pubsub::ISubscriberService,
-                                public srf::node::UniqueOperator<srf::runtime::RemoteDescriptor>
+                                public mrc::pubsub::ISubscriberService,
+                                public mrc::node::UniqueOperator<mrc::runtime::RemoteDescriptor>
 {
     SubscriberService(std::string service_name, runtime::Partition& runtime);
 
@@ -75,15 +75,15 @@ class SubscriberService final : public Base,
     void do_subscription_service_join() final;
 
     // [Operator]
-    srf::channel::Status on_next(srf::runtime::RemoteDescriptor&& rd) final
+    mrc::channel::Status on_next(mrc::runtime::RemoteDescriptor&& rd) final
     {
-        return SourceChannelWriteable<srf::runtime::RemoteDescriptor>::await_write(std::move(rd));
+        return SourceChannelWriteable<mrc::runtime::RemoteDescriptor>::await_write(std::move(rd));
     }
 
     // [Operator] - signifies the channel was dropped
     void on_complete() final
     {
-        SourceChannelWriteable<srf::runtime::RemoteDescriptor>::release_channel();
+        SourceChannelWriteable<mrc::runtime::RemoteDescriptor>::release_channel();
     }
 
     // [internal::control_plane::client::SubscriptionService]
@@ -92,13 +92,13 @@ class SubscriberService final : public Base,
                                  const std::unordered_map<std::uint64_t, InstanceID>& tagged_instances) final;
 
     // deserialize the incoming protobuf and create a local remote descriptor
-    srf::runtime::RemoteDescriptor network_handler(memory::TransientBuffer& buffer);
+    mrc::runtime::RemoteDescriptor network_handler(memory::TransientBuffer& buffer);
 
     // runner for the network handler node
-    std::unique_ptr<srf::runnable::Runner> m_network_handler;
+    std::unique_ptr<mrc::runnable::Runner> m_network_handler;
 
     // limit access to the constructor; this object must be constructed as a shared_ptr
     friend runtime::Partition;
 };
 
-}  // namespace srf::internal::pubsub
+}  // namespace mrc::internal::pubsub

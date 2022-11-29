@@ -21,13 +21,13 @@
 #include "internal/expected.hpp"
 #include "internal/runnable/resources.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/node/edge_builder.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/protos/architect.pb.h"
-#include "srf/runnable/launch_control.hpp"
-#include "srf/runnable/launcher.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/node/edge_builder.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/protos/architect.pb.h"
+#include "mrc/runnable/launch_control.hpp"
+#include "mrc/runnable/launcher.hpp"
 
 #include <boost/fiber/future/promise.hpp>
 #include <ext/alloc_traits.h>
@@ -38,7 +38,7 @@
 #include <exception>
 #include <utility>
 
-namespace srf::internal::control_plane::client {
+namespace mrc::internal::control_plane::client {
 
 StateManager::StateManager(Client& client) : m_client(client) {}
 
@@ -102,4 +102,4 @@ void StateManager::await_join()
     CHECK(m_runner);
     m_runner->await_join();
 }
-}  // namespace srf::internal::control_plane::client
+}  // namespace mrc::internal::control_plane::client

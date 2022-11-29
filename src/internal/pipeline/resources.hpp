@@ -19,11 +19,11 @@
 
 #include "internal/resources/manager.hpp"
 
-#include "srf/metrics/registry.hpp"
+#include "mrc/metrics/registry.hpp"
 
 #include <memory>
 
-namespace srf::internal::pipeline {
+namespace mrc::internal::pipeline {
 
 class Resources
 {
@@ -38,4 +38,4 @@ class Resources
     std::unique_ptr<metrics::Registry> m_metrics_registry;
 };
 
-}  // namespace srf::internal::pipeline
+}  // namespace mrc::internal::pipeline

@@ -20,12 +20,12 @@
 #include "internal/system/partitions.hpp"
 #include "internal/system/topology.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/options/engine_groups.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/placement.hpp"
-#include "srf/options/topology.hpp"
-#include "srf/runnable/types.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/options/engine_groups.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/placement.hpp"
+#include "mrc/options/topology.hpp"
+#include "mrc/runnable/types.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
@@ -39,7 +39,7 @@
 #include <utility>
 #include <vector>
 
-using namespace srf;
+using namespace mrc;
 using namespace internal;
 using namespace system;
 
@@ -127,7 +127,7 @@ class TestPartitions : public testing::TestWithParam<const char*>
     {
         std::string root_path;
         std::stringstream path;
-        auto* root_env = std::getenv("SRF_TEST_INTERNAL_DATA_PATH");
+        auto* root_env = std::getenv("MRC_TEST_INTERNAL_DATA_PATH");
         if (root_env != nullptr)
         {
             root_path = std::string(root_env);
@@ -435,7 +435,7 @@ TEST_P(TestPartitions, EngineFactoryScenario3)
     EXPECT_ANY_THROW(make_partitions(options_fail));
 
     // drop the url, drop the number of cores
-    // dedicated network thread requested, but no architect url => no srf_network engine factory
+    // dedicated network thread requested, but no architect url => no mrc_network engine factory
     auto options_no_url = make_options([common](Options& options) {
         common(options);
         options.topology().user_cpuset("0");
@@ -460,7 +460,7 @@ TEST_P(TestPartitions, EngineFactoryScenario3)
 
     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("default").weight(), 1);
     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("main").weight(), 1);
-    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("srf_network").weight(), 1);
+    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("mrc_network").weight(), 1);
 }
 
 TEST_P(TestPartitions, EngineFactoryScenario4)
@@ -491,8 +491,8 @@ TEST_P(TestPartitions, EngineFactoryScenario4)
 
     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("default").weight(), 1);
     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("main").weight(), 1);
-    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("srf_network").weight(), 1);
-    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("main").first(), cpu_sets.fiber_cpu_sets.at("srf_network").first());
+    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("mrc_network").weight(), 1);
+    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("main").first(), cpu_sets.fiber_cpu_sets.at("mrc_network").first());
 }
 
 TEST_P(TestPartitions, EngineFactoryScenario5)
@@ -525,8 +525,8 @@ TEST_P(TestPartitions, EngineFactoryScenario5)
 
     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("default").weight(), 1);
     EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("main").weight(), 1);
-    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("srf_network").weight(), 1);
-    EXPECT_NE(cpu_sets.fiber_cpu_sets.at("main").first(), cpu_sets.fiber_cpu_sets.at("srf_network").first());
+    EXPECT_EQ(cpu_sets.fiber_cpu_sets.at("mrc_network").weight(), 1);
+    EXPECT_NE(cpu_sets.fiber_cpu_sets.at("main").first(), cpu_sets.fiber_cpu_sets.at("mrc_network").first());
 }
 
 TEST_P(TestPartitions, EngineFactoryScenario6)

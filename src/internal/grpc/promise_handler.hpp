@@ -19,16 +19,16 @@
 
 #include "internal/grpc/progress_engine.hpp"
 
-#include "srf/node/generic_sink.hpp"
+#include "mrc/node/generic_sink.hpp"
 
 #include <boost/fiber/all.hpp>
 
-namespace srf::internal::rpc {
+namespace mrc::internal::rpc {
 
 /**
- * @brief SRF Sink to handle ProgressEvents which correspond to Promise<bool> tags
+ * @brief MRC Sink to handle ProgressEvents which correspond to Promise<bool> tags
  */
-class PromiseHandler final : public srf::node::GenericSink<ProgressEvent>
+class PromiseHandler final : public mrc::node::GenericSink<ProgressEvent>
 {
     void on_data(ProgressEvent&& event) final
     {
@@ -37,4 +37,4 @@ class PromiseHandler final : public srf::node::GenericSink<ProgressEvent>
     }
 };
 
-}  // namespace srf::internal::rpc
+}  // namespace mrc::internal::rpc

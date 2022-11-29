@@ -1,0 +1,399 @@
+/**
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2022,NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+package mrc.protos;
+
+service Architect {
+    rpc EventStream(stream Event) returns (stream Event) {}
+}
+
+enum EventType
+{
+    Unused = 0;
+    Response = 1;
+    ControlStop = 2;
+
+    // Client Events - No Response
+    ClientEventRequestStateUpdate = 100;
+
+    // Connection Management
+    ClientUnaryRegisterWorkers = 201;
+    ClientUnaryActivateStream = 202;
+    ClientUnaryLookupWorkerAddresses = 203;
+    ClientUnaryDropWorker = 204;
+
+    // SubscriptionService
+    ClientUnaryCreateSubscriptionService = 301;
+    ClientUnaryRegisterSubscriptionService = 302;
+    ClientUnaryActivateSubscriptionService = 303;
+    ClientUnaryDropSubscriptionService = 304;
+    ClientEventUpdateSubscriptionService = 305;
+
+    // Server Event issues to Client(s)
+    ServerEvent = 1000;
+    ServerStateUpdate = 1001;
+}
+
+enum ErrorCode
+{
+    Success = 0;
+    ServerError = 1;
+    ClientError = 2;
+    InstanceError = 3;
+}
+
+message Event
+{
+    EventType event = 1;
+    uint64 tag = 2;
+    oneof message_or_error {
+      google.protobuf.Any message = 3;
+      Error error = 4;
+    }
+}
+
+message Error
+{
+    ErrorCode code = 1;
+    string message = 2;
+}
+
+message Ack
+{
+}
+
+// Initialization - Step 1
+
+message RegisterWorkersRequest
+{
+    repeated bytes ucx_worker_addresses = 1;
+    Pipeline pipeline = 2;
+}
+
+message RegisterWorkersResponse
+{
+    uint64 machine_id = 1;
+    repeated uint64 instance_ids = 2;
+}
+
+// Initialization - Step 2
+
+message RegisterPipelineRequest
+{
+    // uint32 machine_id = 1;
+    Pipeline pipeline = 2;
+    repeated PipelineConfiguration requested_config = 3;
+}
+
+message RegisterPipelineResponse
+{
+}
+
+message LookupWorkersRequest
+{
+    repeated uint64 instance_ids = 1;
+}
+
+message LookupWorkersResponse
+{
+    repeated WorkerAddress worker_addresses = 2;
+}
+
+// Subscription
+
+message CreateSubscriptionServiceRequest
+{
+    string service_name = 1;
+    repeated string roles = 2;
+}
+
+message RegisterSubscriptionServiceRequest
+{
+    string service_name = 1;
+    string role = 2;
+    repeated string subscribe_to_roles = 3;
+    uint64 instance_id = 4;
+}
+
+message RegisterSubscriptionServiceResponse
+{
+    string service_name = 1;
+    string role = 2;
+    uint64 tag = 3;
+}
+
+message ActivateSubscriptionServiceRequest
+{
+    string service_name = 1;
+    string role = 2;
+    repeated string subscribe_to_roles = 3;
+    uint64 instance_id = 4;
+    uint64 tag = 5;
+}
+
+message DropSubscriptionServiceRequest
+{
+    string service_name = 1;
+    uint64 instance_id = 2;
+    uint64 tag = 3;
+}
+
+message UpdateSubscriptionServiceRequest
+{
+    string service_name = 1;
+    string role = 2;
+    uint64 nonce = 3;
+    repeated uint64 tags = 4;
+}
+
+message TaggedInstance
+{
+    uint64 instance_id = 1;
+    uint64 tag = 2;
+}
+
+// message sent by an UpdateManager
+message StateUpdate
+{
+    string service_name = 1;
+    uint64 nonce = 2;
+    uint64 instance_id = 3;
+    oneof update_state {
+        UpdateConnectionsState connections = 4;
+        UpdateSubscriptionServiceState update_subscription_service = 5;
+        DropSubscriptionServiceState drop_subscription_service = 6;
+    }
+}
+
+message UpdateConnectionsState
+{
+    repeated TaggedInstance tagged_instances = 1;
+}
+
+message UpdateSubscriptionServiceState
+{
+    string role = 1;
+    repeated TaggedInstance tagged_instances = 2;
+}
+
+message DropSubscriptionServiceState
+{
+    string role = 1;
+    uint64 tag = 2;
+}
+
+// Basic Control message
+
+message ControlMessage
+{
+
+}
+
+// OnComplete Message
+
+message OnComplete
+{
+    repeated uint32 segment_addresses = 1;
+}
+
+// Update Assignments - Primary
+
+message UpdateAssignments
+{
+    repeated SegmentAssignment assignments = 1;
+}
+
+message SegmentAssignment
+{
+    uint64 machine_id = 1;
+    uint64 instance_id = 2;
+    uint32 address = 3;
+    map<uint32, EgressPolicy> egress_polices = 5;
+    bool issue_event_on_complete = 6;
+    repeated uint32 network_ingress_ports = 7;
+}
+
+message Topology
+{
+    string hwloc_xml_string = 1;
+    string cpu_set = 2;
+    repeated GpuInfo gpu_info = 3;
+}
+
+message GpuInfo
+{
+    string cpu_set = 1;
+    string name = 2;
+    string uuid = 3;
+    string pcie_bus_id = 4;
+    uint64 memory_capacity = 5;
+    int32  cuda_device_id = 6;
+}
+
+message Pipeline
+{
+    string name = 1;
+    repeated SegmentDefinition segments = 2;
+}
+
+message SegmentDefinition
+{
+    string name = 1;
+    uint32 id = 2;
+    repeated IngressPort ingress_ports = 3;
+    repeated EgressPort egress_ports = 4;
+    SegmentOptions options = 5;
+}
+
+message SegmentOptions
+{
+    enum PlacementStrategy
+    {
+        ResourceGroup = 0;
+        PhysicalMachine = 1;
+        Global = 2;
+    }
+
+    PlacementStrategy placement_strategy = 1;
+    ScalingOptions scaling_options = 2;
+}
+
+message ScalingOptions
+{
+    enum ScalingStrategy
+    {
+        Static = 0;
+    }
+
+    ScalingStrategy strategy = 1;
+    uint32 initial_count = 2;
+}
+
+// for ingress and egress ports
+// network_enabled informs the object if data is expected to
+// flow in/out of the ports over the network.
+// if the value is FALSE, these ports will not be hooked up to
+// their respective deserializer/serializer nodes
+// AND no architect events will be triggered when on_complete is
+// called.
+// if the value is TRUE, the ports will be hooked up to the network
+// objects AND on_complete will always trigger a blocking architect
+// event
+
+message IngressPort
+{
+    string name = 1;
+    uint32 id = 2;
+}
+
+message EgressPort
+{
+    string name = 1;
+    uint32 id = 2;
+
+    enum PolicyType
+    {
+        PolicyDefined = 0;
+        UserDefined = 1;
+    }
+
+    PolicyType policy_type = 3;
+}
+
+message IngressPolicy
+{
+    bool network_enabled = 1;
+}
+
+message EgressPolicy
+{
+    enum Policy
+    {
+        LoadBalance = 0;
+        Broadcast = 1;
+    }
+    Policy policy = 3;
+
+    // list of allowed pol
+    repeated uint32 segment_addresses = 4; // segment_address, not port_address
+}
+
+message PipelineConfiguration
+{
+    uint64 instance_id = 1;
+    repeated SegmentConfiguration segments = 2;
+}
+
+message SegmentConfiguration
+{
+    string name = 1;
+    uint32 concurrency = 2;
+    uint32 rank = 3;
+    map<uint32, EgressPolicy> egress_polices = 4;
+    map<uint32, IngressPolicy> ingress_policies = 5;
+}
+
+
+message WorkerAddress
+{
+    uint64 machine_id = 1;
+    uint64 instance_id = 2;
+    bytes worker_address = 3;
+}
+
+
+// EventStream
+//
+// Architect: HelloMrc
+// Mrc: HelloArchitect - instance_id
+// Architect:
+//   - hold, update_config, start_segments
+
+
+message InstancesResources
+{
+    uint64 host_memory = 1;
+    repeated CPU cpus = 2;
+    repeated GPU gpus = 3;
+    repeated NIC nics = 4;
+    // todo - topology - assign cpu/numa_nodes, gpus and nics into optimized groups
+    // use topology groups as the default unit of placement
+}
+
+message CPU
+{
+    uint32 cores = 1;
+    uint32 numa_nodes = 2;
+    // numa_node_masks - which cores are assigned each numa_node
+}
+
+message GPU
+{
+    string name = 1;
+    uint32 cores = 2;
+    uint64 memory = 3;
+    float compute_capability = 4;
+}
+
+message NIC
+{
+}

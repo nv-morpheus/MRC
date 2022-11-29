@@ -20,14 +20,14 @@
 #include "internal/runnable/resources.hpp"
 #include "internal/service.hpp"
 
-#include "srf/runnable/runner.hpp"
+#include "mrc/runnable/runner.hpp"
 
 #include <grpcpp/grpcpp.h>
 
 #include <memory>
 #include <vector>
 
-namespace srf::internal::rpc {
+namespace mrc::internal::rpc {
 
 class Server : public Service
 {
@@ -53,8 +53,8 @@ class Server : public Service
     std::vector<std::shared_ptr<grpc::Service>> m_services;
     std::shared_ptr<grpc::ServerCompletionQueue> m_cq;
     std::unique_ptr<grpc::Server> m_server;
-    std::unique_ptr<srf::runnable::Runner> m_progress_engine;
-    std::unique_ptr<srf::runnable::Runner> m_event_hander;
+    std::unique_ptr<mrc::runnable::Runner> m_progress_engine;
+    std::unique_ptr<mrc::runnable::Runner> m_event_hander;
 };
 
-}  // namespace srf::internal::rpc
+}  // namespace mrc::internal::rpc

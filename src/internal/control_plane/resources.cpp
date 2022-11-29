@@ -21,13 +21,13 @@
 #include "internal/control_plane/server.hpp"
 #include "internal/system/system.hpp"
 
-#include "srf/options/options.hpp"
+#include "mrc/options/options.hpp"
 
 #include <glog/logging.h>
 
 #include <memory>
 
-namespace srf::internal::control_plane {
+namespace mrc::internal::control_plane {
 
 Resources::Resources(resources::PartitionResourceBase& base) :
   resources::PartitionResourceBase(base),
@@ -60,4 +60,4 @@ Resources::~Resources()
     }
 }
 
-}  // namespace srf::internal::control_plane
+}  // namespace mrc::internal::control_plane

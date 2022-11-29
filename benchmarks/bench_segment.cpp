@@ -15,18 +15,18 @@
  * limitations under the License.
  */
 
-#include "srf/benchmarking/segment_watcher.hpp"
-#include "srf/benchmarking/tracer.hpp"
-#include "srf/benchmarking/util.hpp"
-#include "srf/channel/status.hpp"
-#include "srf/core/executor.hpp"
-#include "srf/engine/pipeline/ipipeline.hpp"
-#include "srf/node/rx_node.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/rx_source.hpp"
-#include "srf/pipeline/pipeline.hpp"
-#include "srf/segment/builder.hpp"
-#include "srf/segment/object.hpp"
+#include "mrc/benchmarking/segment_watcher.hpp"
+#include "mrc/benchmarking/tracer.hpp"
+#include "mrc/benchmarking/util.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/core/executor.hpp"
+#include "mrc/engine/pipeline/ipipeline.hpp"
+#include "mrc/node/rx_node.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_source.hpp"
+#include "mrc/pipeline/pipeline.hpp"
+#include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <benchmark/benchmark.h>
 #include <boost/hana/if.hpp>
@@ -49,8 +49,8 @@
 #include <utility>
 #include <vector>
 
-using namespace srf;
-using namespace srf::benchmarking;
+using namespace mrc;
+using namespace mrc::benchmarking;
 using namespace std::literals::chrono_literals;
 
 /**

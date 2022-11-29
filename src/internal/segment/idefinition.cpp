@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-#include "srf/engine/segment/idefinition.hpp"
+#include "mrc/engine/segment/idefinition.hpp"
 
 #include "internal/segment/definition.hpp"
 
 #include <utility>
 
-namespace srf::internal::segment {
+namespace mrc::internal::segment {
 
 IDefinition::IDefinition(std::string name,
                          std::map<std::string, ingress_initializer_t> ingress_initializers,
@@ -36,4 +36,4 @@ const std::string& IDefinition::name() const
 {
     return m_impl->name();
 }
-}  // namespace srf::internal::segment
+}  // namespace mrc::internal::segment

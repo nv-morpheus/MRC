@@ -20,15 +20,15 @@
 #include "internal/control_plane/server/client_instance.hpp"
 #include "internal/control_plane/server/update_issuer.hpp"
 
-#include "srf/types.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/types.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <cstddef>
 #include <cstdint>
 #include <map>
 #include <memory>
 
-namespace srf::internal::control_plane::server {
+namespace mrc::internal::control_plane::server {
 
 /**
  * @brief Creates masked tags.
@@ -103,4 +103,4 @@ class TaggedIssuer : public Tagged, public UpdateIssuer
     decltype(m_instance_tags)::iterator drop_tag(decltype(m_instance_tags)::iterator it);
 };
 
-}  // namespace srf::internal::control_plane::server
+}  // namespace mrc::internal::control_plane::server

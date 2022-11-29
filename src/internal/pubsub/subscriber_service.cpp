@@ -28,13 +28,13 @@
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 
-#include "srf/node/edge_builder.hpp"
-#include "srf/node/operators/router.hpp"
-#include "srf/node/rx_node.hpp"
-#include "srf/protos/codable.pb.h"
-#include "srf/runnable/launch_control.hpp"
-#include "srf/runnable/launcher.hpp"
-#include "srf/utils/bytes_to_string.hpp"
+#include "mrc/node/edge_builder.hpp"
+#include "mrc/node/operators/router.hpp"
+#include "mrc/node/rx_node.hpp"
+#include "mrc/protos/codable.pb.h"
+#include "mrc/runnable/launch_control.hpp"
+#include "mrc/runnable/launcher.hpp"
+#include "mrc/utils/bytes_to_string.hpp"
 
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>
@@ -43,7 +43,7 @@
 #include <ostream>
 #include <vector>
 
-namespace srf::internal::pubsub {
+namespace mrc::internal::pubsub {
 
 SubscriberService::SubscriberService(std::string service_name, runtime::Partition& runtime) :
   Base(std::move(service_name), runtime)
@@ -56,16 +56,16 @@ void SubscriberService::do_subscription_service_setup()
     // reg
     auto& network_source = resources().network()->data_plane().server().deserialize_source().source(tag());
 
-    auto network_handler = std::make_unique<srf::node::RxNode<memory::TransientBuffer, srf::runtime::RemoteDescriptor>>(
-        rxcpp::operators::map([this](memory::TransientBuffer buffer) -> srf::runtime::RemoteDescriptor {
+    auto network_handler = std::make_unique<mrc::node::RxNode<memory::TransientBuffer, mrc::runtime::RemoteDescriptor>>(
+        rxcpp::operators::map([this](memory::TransientBuffer buffer) -> mrc::runtime::RemoteDescriptor {
             return this->network_handler(buffer);
         }));
 
     DVLOG(10) << "form edge:  network_soruce -> network_handler";
-    srf::node::make_edge(network_source, *network_handler);
+    mrc::node::make_edge(network_source, *network_handler);
 
     DVLOG(10) << "form edge:  network_handler -> rd_channel (ISubscriberService::SourceChannelWriteable)";
-    srf::node::make_edge(*network_handler, *this);
+    mrc::node::make_edge(*network_handler, *this);
 
     DVLOG(10) << "starting network handler node";
     m_network_handler =
@@ -87,12 +87,12 @@ void SubscriberService::do_subscription_service_join()
     m_network_handler->await_join();
 }
 
-srf::runtime::RemoteDescriptor SubscriberService::network_handler(memory::TransientBuffer& buffer)
+mrc::runtime::RemoteDescriptor SubscriberService::network_handler(memory::TransientBuffer& buffer)
 {
-    DVLOG(10) << "transient buffer holding the rd: " << srf::bytes_to_string(buffer.bytes());
+    DVLOG(10) << "transient buffer holding the rd: " << mrc::bytes_to_string(buffer.bytes());
 
     // deserialize remote descriptor handle/proto from transient buffer
-    srf::codable::protos::RemoteDescriptor proto;
+    mrc::codable::protos::RemoteDescriptor proto;
     CHECK(proto.ParseFromArray(buffer.data(), buffer.bytes()));
 
     // release transient buffer so it can be reused
@@ -116,4 +116,4 @@ void SubscriberService::update_tagged_instances(const std::string& role,
 {
     LOG(FATAL) << "subscribers should not receive updates";
 }
-}  // namespace srf::internal::pubsub
+}  // namespace mrc::internal::pubsub

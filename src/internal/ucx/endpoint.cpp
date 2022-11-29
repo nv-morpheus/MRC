@@ -21,7 +21,7 @@
 #include "internal/ucx/remote_registration_cache.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include "srf/types.hpp"
+#include "mrc/types.hpp"
 
 #include <glog/logging.h>
 #include <ucp/api/ucp.h>      // for ucp_ep_close_nb, ucp_ep_create, UCP_EP_...
@@ -33,7 +33,7 @@
 #include <ostream>  // for logging
 #include <utility>
 
-namespace srf::internal::ucx {
+namespace mrc::internal::ucx {
 
 Endpoint::Endpoint(Handle<Worker> local_worker, WorkerAddress remote_worker) : m_worker(std::move(local_worker))
 {
@@ -91,4 +91,4 @@ const RemoteRegistrationCache& Endpoint::registration_cache() const
     return *m_registration_cache;
 }
 
-}  // namespace srf::internal::ucx
+}  // namespace mrc::internal::ucx

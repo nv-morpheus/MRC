@@ -14,7 +14,7 @@
 # limitations under the License.
 
 name: Submit Question
-description: Ask a general question about SRF
+description: Ask a general question about MRC
 title: "[QST]: "
 labels: ["question"]
 
@@ -29,6 +29,6 @@ body:
     attributes:
       label: What is your question?
       description: Please be specific and we will answer your question as soon as possible.
-      placeholder: Does SRF integrate with XYZ software?
+      placeholder: Does MRC integrate with XYZ software?
     validations:
       required: true

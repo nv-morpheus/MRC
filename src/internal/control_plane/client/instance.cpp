@@ -23,13 +23,13 @@
 #include "internal/runnable/resources.hpp"
 #include "internal/utils/contains.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/node/edge_builder.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/protos/architect.pb.h"
-#include "srf/runnable/launch_control.hpp"
-#include "srf/runnable/launcher.hpp"
-#include "srf/types.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/node/edge_builder.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/protos/architect.pb.h"
+#include "mrc/runnable/launch_control.hpp"
+#include "mrc/runnable/launcher.hpp"
+#include "mrc/types.hpp"
 
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
@@ -44,20 +44,20 @@
 #include <utility>
 #include <vector>
 
-namespace srf::internal::control_plane::client {
+namespace mrc::internal::control_plane::client {
 
 Instance::Instance(Client& client,
                    InstanceID instance_id,
                    resources::PartitionResourceBase& base,
-                   srf::node::SourceChannel<const protos::StateUpdate>& update_channel) :
+                   mrc::node::SourceChannel<const protos::StateUpdate>& update_channel) :
   resources::PartitionResourceBase(base),
   m_client(client),
   m_instance_id(instance_id)
 {
-    auto update_handler = std::make_unique<srf::node::RxSink<protos::StateUpdate>>(
+    auto update_handler = std::make_unique<mrc::node::RxSink<protos::StateUpdate>>(
         [this](protos::StateUpdate update) { do_handle_state_update(update); });
 
-    srf::node::make_edge(update_channel, *update_handler);
+    mrc::node::make_edge(update_channel, *update_handler);
 
     m_update_handler =
         runnable().launch_control().prepare_launcher(client.launch_options(), std::move(update_handler))->ignition();
@@ -220,4 +220,4 @@ Client& Instance::client()
 //     }
 // }
 
-}  // namespace srf::internal::control_plane::client
+}  // namespace mrc::internal::control_plane::client

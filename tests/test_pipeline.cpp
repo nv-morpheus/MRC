@@ -15,23 +15,23 @@
  * limitations under the License.
  */
 
-#include "test_srf.hpp"  // IWYU pragma: associated
+#include "test_mrc.hpp"  // IWYU pragma: associated
 
-#include "srf/channel/status.hpp"
-#include "srf/core/executor.hpp"
-#include "srf/memory/memory_kind.hpp"
-#include "srf/node/edge_builder.hpp"
-#include "srf/node/rx_node.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/rx_source.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/topology.hpp"
-#include "srf/pipeline/pipeline.hpp"
-#include "srf/segment/builder.hpp"
-#include "srf/segment/definition.hpp"
-#include "srf/segment/egress_ports.hpp"
-#include "srf/segment/ingress_ports.hpp"
-#include "srf/segment/segment.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/core/executor.hpp"
+#include "mrc/memory/memory_kind.hpp"
+#include "mrc/node/edge_builder.hpp"
+#include "mrc/node/rx_node.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_source.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/topology.hpp"
+#include "mrc/pipeline/pipeline.hpp"
+#include "mrc/segment/builder.hpp"
+#include "mrc/segment/definition.hpp"
+#include "mrc/segment/egress_ports.hpp"
+#include "mrc/segment/ingress_ports.hpp"
+#include "mrc/segment/segment.hpp"
 
 #include <gtest/gtest.h>
 #include <rxcpp/operators/rx-map.hpp>
@@ -59,7 +59,7 @@
 // IWYU pragma: no_include <set>
 // IWYU pragma: no_include <vector>
 
-using namespace srf;
+using namespace mrc;
 
 class TestPipeline : public ::testing::Test
 {

@@ -22,12 +22,12 @@
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/ucx/resources.hpp"
 
-#include "srf/types.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/types.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <memory>
 
-namespace srf::internal::network {
+namespace mrc::internal::network {
 
 class Resources final : private resources::PartitionResourceBase
 {
@@ -66,4 +66,4 @@ class Resources final : private resources::PartitionResourceBase
     friend resources::Manager;
 };
 
-}  // namespace srf::internal::network
+}  // namespace mrc::internal::network

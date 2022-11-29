@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-#include "srf/runtime/remote_descriptor.hpp"
+#include "mrc/runtime/remote_descriptor.hpp"
 
-#include "srf/runtime/remote_descriptor_handle.hpp"
-#include "srf/runtime/remote_descriptor_manager.hpp"
+#include "mrc/runtime/remote_descriptor_handle.hpp"
+#include "mrc/runtime/remote_descriptor_manager.hpp"
 
 #include <utility>
 
-namespace srf::runtime {
+namespace mrc::runtime {
 
 RemoteDescriptor::RemoteDescriptor(std::shared_ptr<IRemoteDescriptorManager> manager,
                                    std::unique_ptr<IRemoteDescriptorHandle> handle) :
@@ -54,4 +54,4 @@ std::unique_ptr<IRemoteDescriptorHandle> RemoteDescriptor::release_handle()
     return std::move(m_handle);
 }
 
-}  // namespace srf::runtime
+}  // namespace mrc::runtime

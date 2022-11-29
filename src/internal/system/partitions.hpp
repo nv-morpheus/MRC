@@ -22,12 +22,12 @@
 #include "internal/system/partition.hpp"
 #include "internal/system/topology.hpp"  // todo(iwyu) - forward declare Topology?
 
-#include "srf/options/options.hpp"
-#include "srf/options/placement.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/placement.hpp"
 
 #include <vector>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 class System;
 
@@ -65,4 +65,4 @@ class Partitions
     PlacementResources m_device_to_host_strategy;
 };
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

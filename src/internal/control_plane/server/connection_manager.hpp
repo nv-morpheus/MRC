@@ -23,8 +23,8 @@
 #include "internal/grpc/server_streaming.hpp"
 #include "internal/grpc/stream_writer.hpp"
 
-#include "srf/protos/architect.pb.h"
-#include "srf/types.hpp"
+#include "mrc/protos/architect.pb.h"
+#include "mrc/types.hpp"
 
 #include <cstddef>
 #include <map>
@@ -33,12 +33,12 @@
 #include <string>
 #include <vector>
 
-namespace srf::internal::control_plane::server {
+namespace mrc::internal::control_plane::server {
 
 /**
  * @brief Control Plane Connection Manager
  *
- * Manages each gRPC bidirectional stream via the srf::internal::rpc::ServerStream connection.
+ * Manages each gRPC bidirectional stream via the mrc::internal::rpc::ServerStream connection.
  *
  * Each stream/connection is allowed a one-time registration of client instances (client-side partitions) to be
  * associated with the stream.
@@ -59,8 +59,8 @@ namespace srf::internal::control_plane::server {
 class ConnectionManager : public VersionedState
 {
   public:
-    using stream_t      = std::shared_ptr<rpc::ServerStream<srf::protos::Event, srf::protos::Event>>;
-    using writer_t      = std::shared_ptr<rpc::StreamWriter<srf::protos::Event>>;
+    using stream_t      = std::shared_ptr<rpc::ServerStream<mrc::protos::Event, mrc::protos::Event>>;
+    using writer_t      = std::shared_ptr<rpc::StreamWriter<mrc::protos::Event>>;
     using event_t       = stream_t::element_type::IncomingData;
     using instance_t    = std::shared_ptr<server::ClientInstance>;
     using stream_id_t   = std::size_t;
@@ -106,4 +106,4 @@ class ConnectionManager : public VersionedState
     std::multimap<stream_id_t, instance_id_t> m_instances_by_stream;
 };
 
-}  // namespace srf::internal::control_plane::server
+}  // namespace mrc::internal::control_plane::server

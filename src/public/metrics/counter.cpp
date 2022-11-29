@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-#include "srf/metrics/counter.hpp"
+#include "mrc/metrics/counter.hpp"
 
 #include <prometheus/counter.h>
 
-namespace srf::metrics {
+namespace mrc::metrics {
 
 Counter::Counter(prometheus::Counter* counter) : m_counter(counter) {}
 
@@ -33,4 +33,4 @@ void Counter::increment(const std::size_t& ticks)
     m_counter->Increment(ticks);
 }
 
-}  // namespace srf::metrics
+}  // namespace mrc::metrics

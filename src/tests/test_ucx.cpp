@@ -18,8 +18,8 @@
 #include "internal/ucx/all.hpp"
 #include "internal/ucx/endpoint.hpp"
 
-#include "srf/channel/forward.hpp"
-#include "srf/types.hpp"
+#include "mrc/channel/forward.hpp"
+#include "mrc/types.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <boost/fiber/future/future_status.hpp>
@@ -39,7 +39,7 @@
 #include <stdexcept>
 #include <string>
 
-using namespace srf;
+using namespace mrc;
 using namespace internal::ucx;
 
 class TestUCX : public ::testing::Test

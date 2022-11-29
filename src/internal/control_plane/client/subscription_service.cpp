@@ -23,21 +23,21 @@
 #include "internal/service.hpp"
 #include "internal/utils/contains.hpp"
 
-#include "srf/protos/architect.pb.h"
+#include "mrc/protos/architect.pb.h"
 
 #include <glog/logging.h>
 
 #include <ostream>
 #include <utility>
 
-namespace srf::internal::control_plane::client {
+namespace mrc::internal::control_plane::client {
 
 SubscriptionService::SubscriptionService(const std::string& service_name, Instance& instance) :
   m_service_name(std::move(service_name)),
   m_instance(instance)
 {
     service_set_description(
-        SRF_CONCAT_STR("subscription_service " << m_service_name << "[" << instance.instance_id() << "]"));
+        MRC_CONCAT_STR("subscription_service " << m_service_name << "[" << instance.instance_id() << "]"));
 }
 
 SubscriptionService::~SubscriptionService()
@@ -125,7 +125,7 @@ void SubscriptionService::register_subscription_service()
         }
         auto resp =
             m_instance.client().await_unary<protos::Ack>(protos::ClientUnaryCreateSubscriptionService, std::move(req));
-        SRF_THROW_ON_ERROR(resp);
+        MRC_THROW_ON_ERROR(resp);
     }
     DVLOG(10) << "subscribtion_service: " << service_name() << " is live on the control plane server";
 
@@ -141,7 +141,7 @@ void SubscriptionService::register_subscription_service()
         }
         auto resp = m_instance.client().await_unary<protos::RegisterSubscriptionServiceResponse>(
             protos::ClientUnaryRegisterSubscriptionService, std::move(req));
-        SRF_THROW_ON_ERROR(resp);
+        MRC_THROW_ON_ERROR(resp);
         m_tag = resp->tag();
     }
     DVLOG(10) << "registered subscription_service: " << service_name() << "; role: " << role() << "; tag: " << m_tag;
@@ -161,7 +161,7 @@ void SubscriptionService::activate_subscription_service()
     {
         req.add_subscribe_to_roles(role);
     }
-    SRF_THROW_ON_ERROR(m_instance.client().template await_unary<protos::Ack>(
+    MRC_THROW_ON_ERROR(m_instance.client().template await_unary<protos::Ack>(
         protos::ClientUnaryActivateSubscriptionService, std::move(req)));
 
     DVLOG(10) << "[finish] activate subscription service: " << service_name() << "; role: " << role()
@@ -178,7 +178,7 @@ void SubscriptionService::drop_subscription_service()
     req.set_tag(tag());
     auto resp =
         m_instance.client().await_unary<protos::Ack>(protos::ClientUnaryDropSubscriptionService, std::move(req));
-    SRF_THROW_ON_ERROR(resp);
+    MRC_THROW_ON_ERROR(resp);
     DVLOG(10) << "[finish] drop subscription service: " << service_name() << "; role: " << role() << "; tag: " << tag();
 }
 
@@ -210,7 +210,7 @@ void SubscriptionService::teardown()
     service_stop();
 }
 
-const srf::runnable::LaunchOptions& SubscriptionService::policy_engine_launch_options() const
+const mrc::runnable::LaunchOptions& SubscriptionService::policy_engine_launch_options() const
 {
     return m_instance.client().launch_options();
 }
@@ -223,4 +223,4 @@ bool SubscriptionService::is_startable() const
 {
     return is_service_startable();
 }
-}  // namespace srf::internal::control_plane::client
+}  // namespace mrc::internal::control_plane::client

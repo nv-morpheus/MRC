@@ -15,16 +15,16 @@
  * limitations under the License.
  */
 
-#include "srf/channel/channel.hpp"
+#include "mrc/channel/channel.hpp"
 
-#include "srf/constants.hpp"
+#include "mrc/constants.hpp"
 
 #include <cstddef>
 #include <stdexcept>
 
-namespace srf::channel {
+namespace mrc::channel {
 
-static std::size_t s_default_channel_size = SRF_DEFAULT_BUFFERED_CHANNEL_SIZE;
+static std::size_t s_default_channel_size = MRC_DEFAULT_BUFFERED_CHANNEL_SIZE;
 
 std::size_t default_channel_size()
 {
@@ -42,4 +42,4 @@ void set_default_channel_size(std::size_t default_size)
 
 ChannelBase::~ChannelBase() = default;
 
-}  // namespace srf::channel
+}  // namespace mrc::channel

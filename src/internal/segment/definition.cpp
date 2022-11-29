@@ -17,16 +17,16 @@
 
 #include "internal/segment/definition.hpp"
 
-#include "srf/core/addresses.hpp"
-#include "srf/engine/segment/idefinition.hpp"
-#include "srf/exceptions/runtime_error.hpp"
-#include "srf/types.hpp"
+#include "mrc/core/addresses.hpp"
+#include "mrc/engine/segment/idefinition.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/types.hpp"
 
 #include <cstdint>
 #include <set>
 #include <utility>
 
-namespace srf::internal::segment {
+namespace mrc::internal::segment {
 
 Definition::Definition(std::string name,
                        std::map<std::string, IDefinition::ingress_initializer_t> ingress_initializers,
@@ -70,7 +70,7 @@ std::vector<std::string> Definition::egress_port_names() const
     return names;
 }
 
-// namespace srf::internal::segment {
+// namespace mrc::internal::segment {
 // Definition::Definition(std::string name,
 //                        std::map<std::string, ingress_initializer_t> ingress_initializers,
 //                        std::map<std::string, egress_initializer_t> egress_initializers,
@@ -140,7 +140,7 @@ void Definition::validate_ports() const
     if (port_names.size() != names.size())
     {
         // LOG(ERROR) << info() << "ingress and egress port names must be unique";
-        throw exceptions::SrfRuntimeError("ingress and egress port names must be unique");
+        throw exceptions::MrcRuntimeError("ingress and egress port names must be unique");
     }
 
     // check for hash collision over all port names
@@ -153,7 +153,7 @@ void Definition::validate_ports() const
     {
         // todo(ryan) - improve logging - print out each name and hash
         // LOG(ERROR) << info() << " hash collision detected on port names";
-        throw exceptions::SrfRuntimeError("hash collection detected in port names");
+        throw exceptions::MrcRuntimeError("hash collection detected in port names");
     }
 }
 
@@ -196,6 +196,6 @@ void Definition::validate_ports() const
 // {
 //     return m_ingress_initializers;
 // }
-// }  // namespace srf::internal::segment
+// }  // namespace mrc::internal::segment
 
-}  // namespace srf::internal::segment
+}  // namespace mrc::internal::segment

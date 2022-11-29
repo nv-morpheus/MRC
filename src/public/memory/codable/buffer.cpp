@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-#include "srf/memory/codable/buffer.hpp"
+#include "mrc/memory/codable/buffer.hpp"
 
-#include "srf/codable/decode.hpp"
-#include "srf/codable/encode.hpp"
-#include "srf/codable/encoding_options.hpp"
+#include "mrc/codable/decode.hpp"
+#include "mrc/codable/encode.hpp"
+#include "mrc/codable/encoding_options.hpp"
 
 #include <glog/logging.h>
 
@@ -27,9 +27,9 @@
 #include <typeindex>
 #include <utility>
 
-namespace srf::codable {
+namespace mrc::codable {
 
-void codable_protocol<srf::memory::buffer>::serialize(const memory::buffer& obj,
+void codable_protocol<mrc::memory::buffer>::serialize(const memory::buffer& obj,
                                                       Encoder<memory::buffer>& encoded,
                                                       const EncodingOptions& opts)
 {
@@ -40,17 +40,17 @@ void codable_protocol<srf::memory::buffer>::serialize(const memory::buffer& obj,
     }
 }
 
-memory::buffer codable_protocol<srf::memory::buffer>::deserialize(const Decoder<memory::buffer>& encoded,
+memory::buffer codable_protocol<mrc::memory::buffer>::deserialize(const Decoder<memory::buffer>& encoded,
                                                                   std::size_t object_idx)
 {
     DCHECK_EQ(std::type_index(typeid(memory::buffer)).hash_code(), encoded.type_index_hash_for_object(object_idx));
     auto idx   = encoded.start_idx_for_object(object_idx);
     auto bytes = encoded.buffer_size(idx);
 
-    srf::memory::buffer buffer(bytes, encoded.host_memory_resource());
+    mrc::memory::buffer buffer(bytes, encoded.host_memory_resource());
     encoded.copy_from_buffer(idx, buffer);
 
     return std::move(buffer);
 }
 
-}  // namespace srf::codable
+}  // namespace mrc::codable

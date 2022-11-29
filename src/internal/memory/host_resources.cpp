@@ -21,17 +21,17 @@
 #include "internal/system/host_partition.hpp"
 #include "internal/system/system.hpp"
 
-#include "srf/core/task_queue.hpp"
-#include "srf/memory/adaptors.hpp"
-#include "srf/memory/resources/arena_resource.hpp"
-#include "srf/memory/resources/host/malloc_memory_resource.hpp"
-#include "srf/memory/resources/host/pinned_memory_resource.hpp"
-#include "srf/memory/resources/logging_resource.hpp"
-#include "srf/memory/resources/memory_resource.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/resources.hpp"
-#include "srf/types.hpp"
-#include "srf/utils/bytes_to_string.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/memory/adaptors.hpp"
+#include "mrc/memory/resources/arena_resource.hpp"
+#include "mrc/memory/resources/host/malloc_memory_resource.hpp"
+#include "mrc/memory/resources/host/pinned_memory_resource.hpp"
+#include "mrc/memory/resources/logging_resource.hpp"
+#include "mrc/memory/resources/memory_resource.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/resources.hpp"
+#include "mrc/types.hpp"
+#include "mrc/utils/bytes_to_string.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
@@ -46,7 +46,7 @@
 #include <utility>
 #include <vector>
 
-namespace srf::internal::memory {
+namespace mrc::internal::memory {
 
 HostResources::HostResources(runnable::Resources& runnable, ucx::RegistrationCallbackBuilder&& callbacks) :
   system::HostPartitionProvider(runnable)
@@ -59,18 +59,18 @@ HostResources::HostResources(runnable::Resources& runnable, ucx::RegistrationCal
             // construct raw memory_resource from malloc or pinned if device(s) present
             if (host_partition().device_partition_ids().empty())
             {
-                m_system = std::make_shared<srf::memory::malloc_memory_resource>();
+                m_system = std::make_shared<mrc::memory::malloc_memory_resource>();
                 prefix << "malloc";
             }
             else
             {
-                m_system = std::make_shared<srf::memory::pinned_memory_resource>();
+                m_system = std::make_shared<mrc::memory::pinned_memory_resource>();
                 prefix << "cuda_pinned";
             }
 
             prefix << ":" << host_partition_id();
             m_system =
-                srf::memory::make_shared_resource<srf::memory::logging_resource>(std::move(m_system), prefix.str());
+                mrc::memory::make_shared_resource<mrc::memory::logging_resource>(std::move(m_system), prefix.str());
 
             // adapt to callback resource if we have callbacks
             if (callbacks.size() == 0)
@@ -80,7 +80,7 @@ HostResources::HostResources(runnable::Resources& runnable, ucx::RegistrationCal
             else
             {
                 m_registered =
-                    srf::memory::make_shared_resource<memory::CallbackAdaptor>(m_system, std::move(callbacks));
+                    mrc::memory::make_shared_resource<memory::CallbackAdaptor>(m_system, std::move(callbacks));
             }
 
             // adapt to arena
@@ -92,7 +92,7 @@ HostResources::HostResources(runnable::Resources& runnable, ucx::RegistrationCal
                          << " constructing arena memory_resource with initial=" << bytes_to_string(opts.block_size())
                          << "; max bytes=" << bytes_to_string(opts.max_aggreate_bytes());
 
-                m_arena = srf::memory::make_shared_resource<srf::memory::arena_resource>(
+                m_arena = mrc::memory::make_shared_resource<mrc::memory::arena_resource>(
                     m_registered, opts.block_size(), opts.max_aggreate_bytes());
             }
             else
@@ -103,20 +103,20 @@ HostResources::HostResources(runnable::Resources& runnable, ucx::RegistrationCal
         .get();
 }
 
-srf::memory::buffer HostResources::make_buffer(std::size_t bytes)
+mrc::memory::buffer HostResources::make_buffer(std::size_t bytes)
 {
-    return srf::memory::buffer(bytes, m_arena);
+    return mrc::memory::buffer(bytes, m_arena);
 }
-std::shared_ptr<srf::memory::memory_resource> HostResources::system_memory_resource()
+std::shared_ptr<mrc::memory::memory_resource> HostResources::system_memory_resource()
 {
     return m_system;
 }
-std::shared_ptr<srf::memory::memory_resource> HostResources::registered_memory_resource()
+std::shared_ptr<mrc::memory::memory_resource> HostResources::registered_memory_resource()
 {
     return m_registered;
 }
-std::shared_ptr<srf::memory::memory_resource> HostResources::arena_memory_resource()
+std::shared_ptr<mrc::memory::memory_resource> HostResources::arena_memory_resource()
 {
     return m_arena;
 }
-}  // namespace srf::internal::memory
+}  // namespace mrc::internal::memory

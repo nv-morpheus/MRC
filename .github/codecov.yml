@@ -11,7 +11,6 @@ coverage:
           - "include"
           - "python"
           - "src"
-          - "tools"
     patch:
       default:
         informational: true
@@ -22,7 +21,6 @@ coverage:
           - "include"
           - "python"
           - "src"
-          - "tools"
 comment:
   behavior: new
 

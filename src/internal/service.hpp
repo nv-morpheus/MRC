@@ -20,7 +20,7 @@
 #include <mutex>
 #include <string>
 
-namespace srf::internal {
+namespace mrc::internal {
 
 enum class ServiceState
 {
@@ -71,8 +71,8 @@ class Service  // : public IService
     virtual void do_service_await_join() = 0;
 
     ServiceState m_state{ServiceState::Initialized};
-    std::string m_description{"srf::internal::service"};
+    std::string m_description{"mrc::internal::service"};
     mutable std::mutex m_mutex;
 };
 
-}  // namespace srf::internal
+}  // namespace mrc::internal

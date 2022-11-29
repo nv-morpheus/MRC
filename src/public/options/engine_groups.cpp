@@ -14,17 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "srf/options/engine_groups.hpp"
+#include "mrc/options/engine_groups.hpp"
 
-#include "srf/exceptions/runtime_error.hpp"
-#include "srf/runnable/types.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/runnable/types.hpp"
 
 #include <functional>
 #include <map>
 #include <string>
 #include <utility>
 
-namespace srf {
+namespace mrc {
 
 std::string default_engine_factory_name()
 {
@@ -52,7 +52,7 @@ const EngineFactoryOptions& EngineGroups::engine_group_options(const std::string
     auto search = m_engine_resource_groups.find(name);
     if (search == m_engine_resource_groups.end())
     {
-        throw exceptions::SrfRuntimeError("Unknown EngineGroup name: " + name);
+        throw exceptions::MrcRuntimeError("Unknown EngineGroup name: " + name);
     }
     return search->second;
 }
@@ -99,4 +99,4 @@ bool EngineGroups::ignore_hyper_threads() const
 {
     return m_ignore_hyper_threads;
 }
-}  // namespace srf
+}  // namespace mrc

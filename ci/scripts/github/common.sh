@@ -16,8 +16,8 @@
 
 rapids-logger "Env Setup"
 source /opt/conda/etc/profile.d/conda.sh
-export SRF_ROOT=${SRF_ROOT:-$(git rev-parse --show-toplevel)}
-cd ${SRF_ROOT}
+export MRC_ROOT=${MRC_ROOT:-$(git rev-parse --show-toplevel)}
+cd ${MRC_ROOT}
 # For non-gpu hosts nproc will correctly report the number of cores we are able to use
 # On a GPU host however nproc will report the total number of cores and PARALLEL_LEVEL
 # will be defined specifying the subset we are allowed to use.
@@ -34,10 +34,10 @@ id
 # NUM_PROC is used by some of the other scripts
 export NUM_PROC=${PARALLEL_LEVEL:-$(nproc)}
 
-export CONDA_ENV_YML="${SRF_ROOT}/ci/conda/environments/dev_env.yml"
+export CONDA_ENV_YML="${MRC_ROOT}/ci/conda/environments/dev_env.yml"
 
-export CMAKE_BUILD_ALL_FEATURES="-DCMAKE_MESSAGE_CONTEXT_SHOW=ON -DSRF_BUILD_BENCHMARKS=ON -DSRF_BUILD_EXAMPLES=ON -DSRF_BUILD_PYTHON=ON -DSRF_BUILD_TESTS=ON -DSRF_USE_CONDA=ON -DSRF_PYTHON_BUILD_STUBS=ON"
-export CMAKE_BUILD_WITH_CODECOV="-DCMAKE_BUILD_TYPE=Debug -DSRF_ENABLE_CODECOV=ON"
+export CMAKE_BUILD_ALL_FEATURES="-DCMAKE_MESSAGE_CONTEXT_SHOW=ON -DMRC_BUILD_BENCHMARKS=ON -DMRC_BUILD_EXAMPLES=ON -DMRC_BUILD_PYTHON=ON -DMRC_BUILD_TESTS=ON -DMRC_USE_CONDA=ON -DMRC_PYTHON_BUILD_STUBS=ON"
+export CMAKE_BUILD_WITH_CODECOV="-DCMAKE_BUILD_TYPE=Debug -DMRC_ENABLE_CODECOV=ON"
 
 # Set the depth to allow git describe to work
 export GIT_DEPTH=1000
@@ -56,7 +56,7 @@ export ARTIFACT_URL="${S3_URL}${ARTIFACT_ENDPOINT}"
 export DISPLAY_ARTIFACT_URL="${DISPLAY_URL}${ARTIFACT_ENDPOINT}"
 
 # Set sccache env vars
-export SCCACHE_S3_KEY_PREFIX=srf-${NVARCH}-${BUILD_CC}
+export SCCACHE_S3_KEY_PREFIX=mrc-${NVARCH}-${BUILD_CC}
 export SCCACHE_BUCKET=rapids-sccache
 export SCCACHE_REGION="${AWS_DEFAULT_REGION}"
 export SCCACHE_IDLE_TIMEOUT=32768
@@ -71,9 +71,9 @@ function print_env_vars() {
 
 function update_conda_env() {
     rapids-logger "Checking for updates to conda env"
-    rapids-mamba-retry env update -n srf -q --file ${CONDA_ENV_YML}
+    rapids-mamba-retry env update -n mrc -q --file ${CONDA_ENV_YML}
     conda deactivate
-    conda activate srf
+    conda activate mrc
 }
 
 print_env_vars

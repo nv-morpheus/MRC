@@ -21,9 +21,9 @@
 
 #include <optional>
 
-namespace srf::internal::codable {
+namespace mrc::internal::codable {
 
-const srf::codable::protos::EncodedObject& StorageView::proto() const
+const mrc::codable::protos::EncodedObject& StorageView::proto() const
 {
     return get_proto();
 }
@@ -61,4 +61,4 @@ std::optional<StorageView::obj_idx_t> StorageView::parent_obj_idx_for_object(con
     return parent_object_idx;
 }
 
-}  // namespace srf::internal::codable
+}  // namespace mrc::internal::codable

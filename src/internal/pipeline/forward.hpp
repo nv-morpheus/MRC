@@ -17,7 +17,7 @@
 
 #pragma once
 
-namespace srf::internal::pipeline {
+namespace mrc::internal::pipeline {
 class Pipeline;
 class Manager;
-}  // namespace srf::internal::pipeline
+}  // namespace mrc::internal::pipeline

@@ -16,4 +16,4 @@
 
 # Allows running ccache with options inside of CMake. CMake does not work well
 # with setting variables before calling a command
-${SRF_IWYU_PROGRAM} ${SRF_IWYU_OPTIONS} "$@"
+${MRC_IWYU_PROGRAM} ${MRC_IWYU_OPTIONS} "$@"

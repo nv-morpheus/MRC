@@ -19,18 +19,18 @@
 
 #include "internal/grpc/stream_writer.hpp"
 
-#include "srf/protos/architect.pb.h"
-#include "srf/utils/macros.hpp"
+#include "mrc/protos/architect.pb.h"
+#include "mrc/utils/macros.hpp"
 
 #include <string>
 
-namespace srf::internal::control_plane::server {
+namespace mrc::internal::control_plane::server {
 
 class ClientInstance
 {
   public:
     using instance_id_t = std::uint64_t;
-    using writer_t      = std::shared_ptr<rpc::StreamWriter<srf::protos::Event>>;
+    using writer_t      = std::shared_ptr<rpc::StreamWriter<mrc::protos::Event>>;
 
     ClientInstance(writer_t writer, std::string worker_address) :
       m_stream_writer(std::move(writer)),
@@ -47,7 +47,7 @@ class ClientInstance
         return reinterpret_cast<instance_id_t>(this);
     }
 
-    rpc::StreamWriter<srf::protos::Event>& stream_writer() const
+    rpc::StreamWriter<mrc::protos::Event>& stream_writer() const
     {
         return *m_stream_writer;
     }
@@ -58,8 +58,8 @@ class ClientInstance
     }
 
   private:
-    const std::shared_ptr<rpc::StreamWriter<srf::protos::Event>> m_stream_writer;
+    const std::shared_ptr<rpc::StreamWriter<mrc::protos::Event>> m_stream_writer;
     const std::string m_worker_address;
 };
 
-}  // namespace srf::internal::control_plane::server
+}  // namespace mrc::internal::control_plane::server

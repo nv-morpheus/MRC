@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "srf/types.hpp"
+#include "mrc/types.hpp"
 
 #include <boost/fiber/all.hpp>
 #include <ucp/api/ucp.h>
@@ -25,7 +25,7 @@
 #include <memory>
 #include <string>
 
-namespace srf::internal::ucx {
+namespace mrc::internal::ucx {
 
 using WorkerAddress = std::string;  // NOLINT
 
@@ -39,4 +39,4 @@ class Endpoint;
 class SendManager;
 class ReceiveManager;
 
-}  // namespace srf::internal::ucx
+}  // namespace mrc::internal::ucx

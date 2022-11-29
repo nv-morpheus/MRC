@@ -17,18 +17,18 @@
 
 #pragma once
 
-#include "srf/node/source_channel.hpp"
-#include "srf/protos/architect.pb.h"
-#include "srf/runnable/runner.hpp"
-#include "srf/types.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/protos/architect.pb.h"
+#include "mrc/runnable/runner.hpp"
+#include "mrc/types.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <cstddef>
 #include <memory>
 #include <mutex>
 #include <vector>
 
-namespace srf::internal::control_plane {
+namespace mrc::internal::control_plane {
 
 class Client;
 
@@ -84,8 +84,8 @@ class StateManager
     std::size_t m_nonce{1};
     mutable std::mutex m_mutex;
     std::vector<Promise<void>> m_update_promises;
-    std::unique_ptr<srf::runnable::Runner> m_runner;
+    std::unique_ptr<mrc::runnable::Runner> m_runner;
 };
 
 }  // namespace client
-}  // namespace srf::internal::control_plane
+}  // namespace mrc::internal::control_plane

@@ -19,10 +19,10 @@
 
 #include "internal/service.hpp"
 
-#include "srf/control_plane/api.hpp"
-#include "srf/runnable/launch_options.hpp"
-#include "srf/types.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/control_plane/api.hpp"
+#include "mrc/runnable/launch_options.hpp"
+#include "mrc/types.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <boost/fiber/future/promise.hpp>
 
@@ -35,12 +35,12 @@
 #include <unordered_map>
 #include <vector>
 
-namespace srf::internal::control_plane::client {
+namespace mrc::internal::control_plane::client {
 
 class Instance;
 class RoleUpdater;
 
-class ISubscriptionServiceUpdater : public virtual srf::control_plane::ISubscriptionServiceIdentity
+class ISubscriptionServiceUpdater : public virtual mrc::control_plane::ISubscriptionServiceIdentity
 {
   public:
     ~ISubscriptionServiceUpdater() override = default;
@@ -55,7 +55,7 @@ class ISubscriptionServiceUpdater : public virtual srf::control_plane::ISubscrip
     friend Instance;
 };
 
-class SubscriptionService : public virtual srf::control_plane::ISubscriptionService,
+class SubscriptionService : public virtual mrc::control_plane::ISubscriptionService,
                             public ISubscriptionServiceUpdater,
                             public std::enable_shared_from_this<SubscriptionService>,
                             private Service
@@ -72,33 +72,33 @@ class SubscriptionService : public virtual srf::control_plane::ISubscriptionServ
     //     return service;
     // }
 
-    // [srf::control_plane::ISubscriptionServiceIdentity] name of service
+    // [mrc::control_plane::ISubscriptionServiceIdentity] name of service
     const std::string& service_name() const final;
 
-    // [srf::control_plane::ISubscriptionServiceIdentity] globally unique tag for this instance
+    // [mrc::control_plane::ISubscriptionServiceIdentity] globally unique tag for this instance
     const std::uint64_t& tag() const final;
 
     // the set of possible roles for this service
     virtual const std::set<std::string>& roles() const = 0;
 
-    // [srf::control_plane::ISubscriptionServiceControl] indicates that the public api has requested a stop
+    // [mrc::control_plane::ISubscriptionServiceControl] indicates that the public api has requested a stop
     // note: the subscription service is not stopped/joined until getting a drop_subscription_service event the server
     void request_stop() final;
 
-    // [srf::control_plane::ISubscriptionServiceControl] indicates that the public api has requested an await_start
+    // [mrc::control_plane::ISubscriptionServiceControl] indicates that the public api has requested an await_start
     void await_start() final;
 
-    // [srf::control_plane::ISubscriptionServiceControl] indicates that the public api has requested an await_join
+    // [mrc::control_plane::ISubscriptionServiceControl] indicates that the public api has requested an await_join
     void await_join() final;
 
-    // [srf::control_plane::ISubscriptionServiceControl]
+    // [mrc::control_plane::ISubscriptionServiceControl]
     bool is_startable() const final;
 
-    // [srf::control_plane::ISubscriptionServiceControl]
+    // [mrc::control_plane::ISubscriptionServiceControl]
     bool is_live() const final;
 
   protected:
-    const srf::runnable::LaunchOptions& policy_engine_launch_options() const;
+    const mrc::runnable::LaunchOptions& policy_engine_launch_options() const;
 
   private:
     // this method is executed when the control plane client receives an update for this subscription service
@@ -170,4 +170,4 @@ class RoleUpdater final
     friend Instance;
 };
 
-}  // namespace srf::internal::control_plane::client
+}  // namespace mrc::internal::control_plane::client

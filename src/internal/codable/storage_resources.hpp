@@ -19,7 +19,7 @@
 
 #include "internal/resources/forward.hpp"
 
-namespace srf::internal::codable {
+namespace mrc::internal::codable {
 
 struct IStorageResources
 {
@@ -27,4 +27,4 @@ struct IStorageResources
     virtual resources::PartitionResources& resources() const = 0;
 };
 
-}  // namespace srf::internal::codable
+}  // namespace mrc::internal::codable

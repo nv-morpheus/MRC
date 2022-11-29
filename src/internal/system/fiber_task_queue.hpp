@@ -19,9 +19,9 @@
 
 #include "internal/system/thread.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/core/task_queue.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <boost/fiber/buffered_channel.hpp>
 
@@ -29,7 +29,7 @@
 #include <iosfwd>
 #include <thread>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 class Resources;
 
@@ -62,4 +62,4 @@ class FiberTaskQueue final : public core::FiberTaskQueue
     Thread m_thread;
 };
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

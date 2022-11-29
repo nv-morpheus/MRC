@@ -24,15 +24,15 @@
 #include "internal/system/system.hpp"
 #include "internal/ucx/resources.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/node/edge_builder.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/options/options.hpp"
-#include "srf/protos/architect.grpc.pb.h"
-#include "srf/protos/architect.pb.h"
-#include "srf/runnable/launch_control.hpp"
-#include "srf/runnable/launcher.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/node/edge_builder.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/protos/architect.grpc.pb.h"
+#include "mrc/protos/architect.pb.h"
+#include "mrc/runnable/launch_control.hpp"
+#include "mrc/runnable/launcher.hpp"
 
 #include <boost/fiber/future/promise.hpp>
 #include <google/protobuf/any.pb.h>
@@ -43,7 +43,7 @@
 #include <algorithm>
 #include <ostream>
 
-namespace srf::internal::control_plane {
+namespace mrc::internal::control_plane {
 
 Client::Client(resources::PartitionResourceBase& base, std::shared_ptr<grpc::CompletionQueue> cq) :
   resources::PartitionResourceBase(base),
@@ -71,7 +71,7 @@ void Client::do_service_start()
     auto url = runnable().system().options().architect_url();
     CHECK(!url.empty());
     auto channel = grpc::CreateChannel(url, grpc::InsecureChannelCredentials());
-    m_stub       = srf::protos::Architect::NewStub(channel);
+    m_stub       = mrc::protos::Architect::NewStub(channel);
 
     if (m_owns_progress_engine)
     {
@@ -79,7 +79,7 @@ void Client::do_service_start()
         auto progress_engine  = std::make_unique<rpc::ProgressEngine>(m_cq);
         auto progress_handler = std::make_unique<rpc::PromiseHandler>();
 
-        srf::node::make_edge(*progress_engine, *progress_handler);
+        mrc::node::make_edge(*progress_engine, *progress_handler);
 
         m_progress_handler =
             runnable().launch_control().prepare_launcher(launch_options(), std::move(progress_handler))->ignition();
@@ -101,7 +101,7 @@ void Client::do_service_start()
     m_stream->attach_to(*event_handler);
 
     // ensure all downstream event handlers are constructed before constructing and starting the event handler
-    m_connections_update_channel = std::make_unique<srf::node::SourceChannelWriteable<const protos::StateUpdate>>();
+    m_connections_update_channel = std::make_unique<mrc::node::SourceChannelWriteable<const protos::StateUpdate>>();
     m_connections_manager        = std::make_unique<client::ConnectionsManager>(*this, *m_connections_update_channel);
 
     // launch runnables
@@ -219,7 +219,7 @@ void Client::route_state_update(std::uint64_t tag, protos::StateUpdate&& update)
         {
             auto copy   = update;
             auto status = instance->await_write(std::move(copy));
-            LOG_IF(WARNING, status != srf::channel::Status::success)
+            LOG_IF(WARNING, status != mrc::channel::Status::success)
                 << "unable to route update for service: " << update.service_name();
         }
     }
@@ -228,7 +228,7 @@ void Client::route_state_update(std::uint64_t tag, protos::StateUpdate&& update)
         auto instance = m_connections_manager->instance_channels().find(tag);
         CHECK(instance != m_connections_manager->instance_channels().end());
         auto status = instance->second->await_write(std::move(update));
-        LOG_IF(WARNING, status != srf::channel::Status::success)
+        LOG_IF(WARNING, status != mrc::channel::Status::success)
             << "unable to route update for service: " << update.service_name();
     }
 }
@@ -239,7 +239,7 @@ void Client::route_state_update(std::uint64_t tag, protos::StateUpdate&& update)
 //     return contains(m_subscription_services, name);
 // }
 
-const srf::runnable::LaunchOptions& Client::launch_options() const
+const mrc::runnable::LaunchOptions& Client::launch_options() const
 {
     return m_launch_options;
 }
@@ -262,4 +262,4 @@ void Client::request_update()
     // }
 }
 
-}  // namespace srf::internal::control_plane
+}  // namespace mrc::internal::control_plane

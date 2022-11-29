@@ -31,9 +31,9 @@ tar xf "${WORKSPACE_TMP}/build.tar.bz"
 REPORTS_DIR="${WORKSPACE_TMP}/reports"
 mkdir -p ${WORKSPACE_TMP}/reports
 
-rapids-logger "Installing SRF"
-cmake -P ${SRF_ROOT}/build/cmake_install.cmake
-pip install ${SRF_ROOT}/build/python
+rapids-logger "Installing MRC"
+cmake -P ${MRC_ROOT}/build/cmake_install.cmake
+pip install ${MRC_ROOT}/build/python
 
 if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
   CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES} ${CMAKE_BUILD_WITH_CODECOV}"
@@ -44,22 +44,22 @@ fi
 cmake -B build -G Ninja ${CMAKE_FLAGS} .
 
 rapids-logger "Running C++ Tests"
-cd ${SRF_ROOT}/build
+cd ${MRC_ROOT}/build
 set +e
 # Tests known to be failing
 # Issues:
-# * test_srf_private - https://github.com/nv-morpheus/SRF/issues/33
-# * nvrpc - https://github.com/nv-morpheus/SRF/issues/34
+# * test_mrc_private - https://github.com/nv-morpheus/MRC/issues/33
+# * nvrpc - https://github.com/nv-morpheus/MRC/issues/34
 ctest --output-on-failure \
-      --exclude-regex "test_srf_private|nvrpc" \
+      --exclude-regex "test_mrc_private|nvrpc" \
       --output-junit ${REPORTS_DIR}/report_ctest.xml
 
 CTEST_RESULTS=$?
 set -e
-cd ${SRF_ROOT}
+cd ${MRC_ROOT}
 
 rapids-logger "Running Python Tests"
-cd ${SRF_ROOT}/build/python
+cd ${MRC_ROOT}/build/python
 set +e
 pytest -v --junit-xml=${WORKSPACE_TMP}/report_pytest.xml
 PYTEST_RESULTS=$?
@@ -67,15 +67,15 @@ set -e
 
 if [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
   rapids-logger "Generating codecov report"
-  cd ${SRF_ROOT}
+  cd ${MRC_ROOT}
   cmake --build build --target gcovr-html-report gcovr-xml-report
 
   rapids-logger "Archiving codecov report"
-  tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${SRF_ROOT}/build/gcovr-html-report
+  tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${MRC_ROOT}/build/gcovr-html-report
   aws s3 cp ${WORKSPACE_TMP}/coverage_reports.tar.bz "${ARTIFACT_URL}/coverage_reports.tar.bz"
 
   gpuci_logger "Upload codecov report"
-  codecov --root ${SRF_ROOT} -f ${SRF_ROOT}/build/gcovr-xml-report.xml
+  codecov --root ${MRC_ROOT} -f ${MRC_ROOT}/build/gcovr-xml-report.xml
 fi
 
 rapids-logger "Archiving test reports"

@@ -22,10 +22,10 @@
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 
-#include "srf/core/task_queue.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/placement.hpp"
-#include "srf/types.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/placement.hpp"
+#include "mrc/types.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <gtest/gtest.h>
@@ -34,7 +34,7 @@
 #include <memory>
 #include <utility>
 
-using namespace srf;
+using namespace mrc;
 using namespace internal;
 
 // iwyu is getting confused between std::uint32_t and boost::uint32_t

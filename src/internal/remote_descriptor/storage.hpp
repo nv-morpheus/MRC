@@ -17,36 +17,36 @@
 
 #pragma once
 
-#include "srf/codable/api.hpp"
-#include "srf/codable/encoded_object.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/codable/api.hpp"
+#include "mrc/codable/encoded_object.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 
-namespace srf::internal::remote_descriptor {
+namespace mrc::internal::remote_descriptor {
 
 class Storage final
 {
   public:
     Storage() = default;
-    explicit Storage(std::unique_ptr<srf::codable::EncodedStorage> storage);
+    explicit Storage(std::unique_ptr<mrc::codable::EncodedStorage> storage);
 
     ~Storage() = default;
 
     DELETE_COPYABILITY(Storage);
     DEFAULT_MOVEABILITY(Storage);
 
-    const srf::codable::IDecodableStorage& encoding() const;
+    const mrc::codable::IDecodableStorage& encoding() const;
 
     std::size_t tokens_count() const;
 
     std::size_t decrement_tokens(std::size_t decrement_count);
 
   private:
-    std::unique_ptr<srf::codable::EncodedStorage> m_storage;
+    std::unique_ptr<mrc::codable::EncodedStorage> m_storage;
     std::int32_t m_tokens{INT32_MAX};
 };
 
-}  // namespace srf::internal::remote_descriptor
+}  // namespace mrc::internal::remote_descriptor

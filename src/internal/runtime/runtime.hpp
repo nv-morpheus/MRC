@@ -20,20 +20,20 @@
 #include "internal/resources/manager.hpp"
 #include "internal/runtime/partition.hpp"
 
-#include "srf/runtime/api.hpp"
+#include "mrc/runtime/api.hpp"
 
 #include <cstddef>
 #include <memory>
 #include <vector>
 
-namespace srf::internal::runtime {
+namespace mrc::internal::runtime {
 
 /**
  * @brief Implements the public Runtime interface and owns any high-level runtime resources, e.g. the remote descriptor
  * manager which are built on partition resources. The Runtime object is responsible for bringing up and tearing down
  * core resources manager.
  */
-class Runtime final : public srf::runtime::IRuntime
+class Runtime final : public mrc::runtime::IRuntime
 {
   public:
     Runtime(std::unique_ptr<resources::Manager> resources);
@@ -56,4 +56,4 @@ class Runtime final : public srf::runtime::IRuntime
     std::vector<std::unique_ptr<Partition>> m_partitions;
 };
 
-}  // namespace srf::internal::runtime
+}  // namespace mrc::internal::runtime

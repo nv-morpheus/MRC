@@ -28,14 +28,14 @@
 #include "internal/service.hpp"
 #include "internal/ucx/resources.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/protos/architect.grpc.pb.h"
-#include "srf/protos/architect.pb.h"
-#include "srf/runnable/launch_options.hpp"
-#include "srf/runnable/runner.hpp"
-#include "srf/types.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/protos/architect.grpc.pb.h"
+#include "mrc/protos/architect.pb.h"
+#include "mrc/runnable/launch_options.hpp"
+#include "mrc/runnable/runner.hpp"
+#include "mrc/types.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
@@ -52,7 +52,7 @@
 #include <utility>
 #include <vector>
 
-namespace srf::internal::control_plane {
+namespace mrc::internal::control_plane {
 
 template <typename ResponseT>
 class AsyncStatus;
@@ -85,10 +85,10 @@ class Client final : public resources::PartitionResourceBase, public Service
         Operational,
     };
 
-    using stream_t         = std::shared_ptr<rpc::ClientStream<srf::protos::Event, srf::protos::Event>>;
-    using writer_t         = std::shared_ptr<rpc::StreamWriter<srf::protos::Event>>;
+    using stream_t         = std::shared_ptr<rpc::ClientStream<mrc::protos::Event, mrc::protos::Event>>;
+    using writer_t         = std::shared_ptr<rpc::StreamWriter<mrc::protos::Event>>;
     using event_t          = stream_t::element_type::IncomingData;
-    using update_channel_t = srf::node::SourceChannelWriteable<protos::StateUpdate>;
+    using update_channel_t = mrc::node::SourceChannelWriteable<protos::StateUpdate>;
 
     Client(resources::PartitionResourceBase& base);
 
@@ -125,7 +125,7 @@ class Client final : public resources::PartitionResourceBase, public Service
 
     bool has_subscription_service(const std::string& name) const;
 
-    const srf::runnable::LaunchOptions& launch_options() const;
+    const mrc::runnable::LaunchOptions& launch_options() const;
 
     client::ConnectionsManager& connections() const
     {
@@ -157,14 +157,14 @@ class Client final : public resources::PartitionResourceBase, public Service
 
     std::shared_ptr<grpc::CompletionQueue> m_cq;
     std::shared_ptr<grpc::Channel> m_channel;
-    std::shared_ptr<srf::protos::Architect::Stub> m_stub;
+    std::shared_ptr<mrc::protos::Architect::Stub> m_stub;
 
     // if true, then the following runners should not be null
     // if false, then the following runners must be null
     const bool m_owns_progress_engine;
-    std::unique_ptr<srf::runnable::Runner> m_progress_handler;
-    std::unique_ptr<srf::runnable::Runner> m_progress_engine;
-    std::unique_ptr<srf::runnable::Runner> m_event_handler;
+    std::unique_ptr<mrc::runnable::Runner> m_progress_handler;
+    std::unique_ptr<mrc::runnable::Runner> m_progress_engine;
+    std::unique_ptr<mrc::runnable::Runner> m_event_handler;
 
     // std::map<std::string, std::unique_ptr<node::SourceChannelWriteable<protos::StateUpdate>>> m_update_channels;
     // std::unique_ptr<client::ConnectionsManager> m_connections_manager;
@@ -174,8 +174,8 @@ class Client final : public resources::PartitionResourceBase, public Service
     std::unique_ptr<client::ConnectionsManager> m_connections_manager;
 
     // update channel
-    std::unique_ptr<srf::node::SourceChannelWriteable<const protos::StateUpdate>> m_connections_update_channel;
-    std::map<InstanceID, srf::node::SourceChannelWriteable<const protos::StateUpdate>> m_instance_update_channels;
+    std::unique_ptr<mrc::node::SourceChannelWriteable<const protos::StateUpdate>> m_connections_update_channel;
+    std::map<InstanceID, mrc::node::SourceChannelWriteable<const protos::StateUpdate>> m_instance_update_channels;
 
     // Stream Context
     stream_t m_stream;
@@ -184,7 +184,7 @@ class Client final : public resources::PartitionResourceBase, public Service
     // The customer destruction of this object will cause a gRPC WritesDone to be issued to the server.
     writer_t m_writer;
 
-    srf::runnable::LaunchOptions m_launch_options;
+    mrc::runnable::LaunchOptions m_launch_options;
 
     std::mutex m_mutex;
 
@@ -254,4 +254,4 @@ void Client::issue_event(const protos::EventType& event_type, MessageT&& message
     m_writer->await_write(std::move(event));
 }
 
-}  // namespace srf::internal::control_plane
+}  // namespace mrc::internal::control_plane

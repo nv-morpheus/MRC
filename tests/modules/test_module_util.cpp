@@ -17,17 +17,17 @@
 
 #include "test_modules.hpp"
 
-#include "srf/modules/module_registry_util.hpp"
-#include "srf/modules/sample_modules.hpp"
-#include "srf/version.hpp"
+#include "mrc/modules/module_registry_util.hpp"
+#include "mrc/modules/sample_modules.hpp"
+#include "mrc/version.hpp"
 
 TEST_F(TestModuleUtil, ModuleRegistryUtilTest)
 {
     using namespace modules;
 
-    const auto* registry_namespace = "srf_unittest";
+    const auto* registry_namespace = "mrc_unittest";
 
-    const std::vector<unsigned int> release_version = {srf_VERSION_MAJOR, srf_VERSION_MINOR, srf_VERSION_PATCH};
+    const std::vector<unsigned int> release_version = {mrc_VERSION_MAJOR, mrc_VERSION_MINOR, mrc_VERSION_PATCH};
 
     ModelRegistryUtil::create_registered_module<SimpleModule>("SimpleModule", registry_namespace, release_version);
     ModelRegistryUtil::create_registered_module<SourceModule>("SourceModule", registry_namespace, release_version);

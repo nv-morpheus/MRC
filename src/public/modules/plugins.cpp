@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "srf/modules/plugins.hpp"
+#include "mrc/modules/plugins.hpp"
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
@@ -33,14 +33,14 @@
 
 namespace fs = boost::filesystem;
 
-namespace srf::modules {
+namespace mrc::modules {
 
 std::map<std::string, std::shared_ptr<PluginModule>> PluginModule::s_plugin_map{};
 std::recursive_mutex PluginModule::s_mutex{};
 
-const std::string PluginModule::PluginEntrypointList{"SRF_MODULE_entrypoint_list"};
-const std::string PluginModule::PluginEntrypointLoad{"SRF_MODULE_entrypoint_load"};
-const std::string PluginModule::PluginEntrypointUnload{"SRF_MODULE_entrypoint_unload"};
+const std::string PluginModule::PluginEntrypointList{"MRC_MODULE_entrypoint_list"};
+const std::string PluginModule::PluginEntrypointLoad{"MRC_MODULE_entrypoint_load"};
+const std::string PluginModule::PluginEntrypointUnload{"MRC_MODULE_entrypoint_unload"};
 
 std::shared_ptr<PluginModule> PluginModule::create_or_acquire(const std::string& plugin_library_name)
 {
@@ -292,11 +292,11 @@ bool PluginModule::try_build_plugin_interface(bool throw_on_error)
         clear_plugin_interface();
         if (throw_on_error)
         {
-            LOG(ERROR) << "Failed to load SRF plugin-> " << error.what();
+            LOG(ERROR) << "Failed to load MRC plugin-> " << error.what();
             throw error;
         }
 
-        LOG(WARNING) << "Failed to load SRF plugin-> " << error.what();
+        LOG(WARNING) << "Failed to load MRC plugin-> " << error.what();
         return false;
     }
 
@@ -310,4 +310,4 @@ void PluginModule::clear_plugin_interface()
     m_plugin_unload = nullptr;
 }
 
-}  // namespace srf::modules
+}  // namespace mrc::modules

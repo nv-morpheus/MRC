@@ -19,11 +19,11 @@
 
 #include "internal/system/topology.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/exceptions/runtime_error.hpp"
-#include "srf/options/engine_groups.hpp"
-#include "srf/options/options.hpp"
-#include "srf/runnable/types.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/options/engine_groups.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/runnable/types.hpp"
 
 #include <glog/logging.h>
 #include <hwloc.h>
@@ -33,7 +33,7 @@
 #include <ostream>
 #include <utility>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 bool EngineFactoryCpuSets::is_resuable(const std::string& name) const
 {
@@ -102,7 +102,7 @@ EngineFactoryCpuSets generate_engine_factory_cpu_sets(const Topology& topology,
         net.cpu_count                    = 1;
         net.allow_overlap                = false;
         net.reusable                     = true;
-        engine_groups_map["srf_network"] = std::move(net);
+        engine_groups_map["mrc_network"] = std::move(net);
     }
 
     DVLOG(10) << "evaluating minimum cpu count for engine group options";
@@ -145,7 +145,7 @@ EngineFactoryCpuSets generate_engine_factory_cpu_sets(const Topology& topology,
     {
         LOG(ERROR) << "requested configuration requires " << min_cpu_count << " logical cpus; only " << cpu_count
                    << " detected";
-        throw exceptions::SrfRuntimeError("insufficient number of logical cpus assigned to the current process");
+        throw exceptions::MrcRuntimeError("insufficient number of logical cpus assigned to the current process");
     }
 
     // for the set of logical cpus in the placement group, first assign all cpus that will be in the fiber pool for this
@@ -184,12 +184,12 @@ EngineFactoryCpuSets generate_engine_factory_cpu_sets(const Topology& topology,
     config.reusable[default_engine_factory_name()] = true;
     config.reusable["main"]                        = true;
 
-    // if we are not using a dedicated network thread, use the same fiber queue as main for srf_network
+    // if we are not using a dedicated network thread, use the same fiber queue as main for mrc_network
     if (!options.architect_url().empty() && !specialized_network)
     {
-        config.fiber_cpu_sets["srf_network"] = config.fiber_cpu_sets.at("main");
-        config.reusable["srf_network"]       = true;
-        DVLOG(10) << "- cpu_set for `srf_network`: " << config.fiber_cpu_sets["srf_network"];
+        config.fiber_cpu_sets["mrc_network"] = config.fiber_cpu_sets.at("main");
+        config.reusable["mrc_network"]       = true;
+        DVLOG(10) << "- cpu_set for `mrc_network`: " << config.fiber_cpu_sets["mrc_network"];
     }
 
     // get all resources for groups that have overlap disabled
@@ -258,4 +258,4 @@ std::size_t EngineFactoryCpuSets::main_cpu_id() const
     return search->second.first();
 }
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

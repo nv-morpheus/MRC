@@ -15,20 +15,20 @@
  * limitations under the License.
  */
 
-#include "srf/engine/executor/iexecutor.hpp"
+#include "mrc/engine/executor/iexecutor.hpp"
 
 #include "internal/executor/executor.hpp"
 #include "internal/system/resources.hpp"
 
-#include "srf/engine/system/iresources.hpp"
-#include "srf/options/options.hpp"
+#include "mrc/engine/system/iresources.hpp"
+#include "mrc/options/options.hpp"
 
 #include <glog/logging.h>
 
 #include <memory>
 #include <utility>
 
-namespace srf::internal::executor {
+namespace mrc::internal::executor {
 
 IExecutor::IExecutor(std::shared_ptr<Options> options) : m_impl(make_executor(std::move(options))) {}
 IExecutor::IExecutor(std::unique_ptr<system::IResources> resources) :
@@ -63,4 +63,4 @@ void IExecutor::join()
     m_impl->service_await_join();
 }
 
-}  // namespace srf::internal::executor
+}  // namespace mrc::internal::executor

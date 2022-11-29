@@ -19,5 +19,5 @@ add_executable(ex00_simple_pipeline
 
 target_link_libraries(ex00_simple_pipeline
   PUBLIC
-    srf::libsrf
+  mrc::libmrc
 )

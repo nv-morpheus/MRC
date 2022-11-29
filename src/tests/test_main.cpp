@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "srf/core/logging.hpp"
+#include "mrc/core/logging.hpp"
 
 #include <gflags/gflags.h>  // for ParseCommandLineFlags
 #include <glog/logging.h>
@@ -31,7 +31,7 @@ __attribute__((noreturn)) void TestFailuresThrowExceptions()
 
 int main(int argc, char** argv)
 {
-    srf::init_logging("srf::test_srf_private");
+    mrc::init_logging("mrc::test_mrc_private");
     ::google::InstallFailureFunction(&TestFailuresThrowExceptions);
     ::testing::InitGoogleTest(&argc, argv);
     ::google::ParseCommandLineFlags(&argc, &argv, true);

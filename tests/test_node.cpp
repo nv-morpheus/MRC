@@ -15,18 +15,18 @@
  * limitations under the License.
  */
 
-#include "test_srf.hpp"  // IWYU pragma: associated
+#include "test_mrc.hpp"  // IWYU pragma: associated
 
-#include "srf/channel/status.hpp"
-#include "srf/core/addresses.hpp"
-#include "srf/core/executor.hpp"
-#include "srf/node/rx_subscribable.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/placement.hpp"
-#include "srf/options/topology.hpp"
-#include "srf/pipeline/pipeline.hpp"
-#include "srf/segment/builder.hpp"
-#include "srf/types.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/core/addresses.hpp"
+#include "mrc/core/executor.hpp"
+#include "mrc/node/rx_subscribable.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/placement.hpp"
+#include "mrc/options/topology.hpp"
+#include "mrc/pipeline/pipeline.hpp"
+#include "mrc/segment/builder.hpp"
+#include "mrc/types.hpp"
 
 #include <gtest/gtest-param-test.h>
 #include <gtest/gtest.h>
@@ -424,7 +424,7 @@ TEST_P(ParallelTests, SourceMultiThread)
 
     auto my_segment = p->make_segment("my_segment", [&](segment::Builder& seg) {
         auto source = seg.make_source<int>("src1", [&](rxcpp::subscriber<int>& s) {
-            auto& context = srf::runnable::Context::get_runtime_context();
+            auto& context = mrc::runnable::Context::get_runtime_context();
 
             for (size_t i = 0; i < source_count; ++i)
             {
@@ -448,7 +448,7 @@ TEST_P(ParallelTests, SourceMultiThread)
         auto sink = seg.make_sink<int>(
             "sinkRef",
             [&](const int& x) {
-                auto& context = srf::runnable::Context::get_runtime_context();
+                auto& context = mrc::runnable::Context::get_runtime_context();
 
                 // Print value
                 DVLOG(1) << context.info() << " Sink got value: '" << x << "'" << std::endl;
@@ -473,7 +473,7 @@ TEST_P(ParallelTests, SourceMultiThread)
     });
 
     auto options = std::make_unique<Options>();
-    options->topology().user_cpuset(SRF_CONCAT_STR("0-" << source_thread_count));
+    options->topology().user_cpuset(MRC_CONCAT_STR("0-" << source_thread_count));
     options->topology().restrict_gpus(true);
     options->placement().resources_strategy(PlacementResources::Shared);  // ignore numa
 
@@ -511,7 +511,7 @@ TEST_P(ParallelTests, SinkMultiThread)
 
     auto my_segment = p->make_segment("my_segment", [&](segment::Builder& seg) {
         auto source = seg.make_source<int>("src1", [&](rxcpp::subscriber<int>& s) {
-            auto& context = srf::runnable::Context::get_runtime_context();
+            auto& context = mrc::runnable::Context::get_runtime_context();
 
             for (size_t i = 0; i < source_count; ++i)
             {
@@ -525,7 +525,7 @@ TEST_P(ParallelTests, SinkMultiThread)
         auto sink = seg.make_sink<int>(
             "sink",
             [&](const int& x) {
-                auto& context = srf::runnable::Context::get_runtime_context();
+                auto& context = mrc::runnable::Context::get_runtime_context();
 
                 {
                     std::lock_guard<std::mutex> lock(mut);
@@ -550,7 +550,7 @@ TEST_P(ParallelTests, SinkMultiThread)
     });
 
     auto options = std::make_unique<Options>();
-    options->topology().user_cpuset(SRF_CONCAT_STR("0-" << thread_count));
+    options->topology().user_cpuset(MRC_CONCAT_STR("0-" << thread_count));
     options->topology().restrict_gpus(true);
     options->placement().resources_strategy(PlacementResources::Shared);  // ignore numa
 
@@ -585,7 +585,7 @@ TEST_P(ParallelTests, NodeMultiThread)
 
     auto my_segment = p->make_segment("my_segment", [&](segment::Builder& seg) {
         auto source = seg.make_source<int>("src1", [&](rxcpp::subscriber<int>& s) {
-            auto& context = srf::runnable::Context::get_runtime_context();
+            auto& context = mrc::runnable::Context::get_runtime_context();
 
             for (size_t i = 0; i < source_count; ++i)
             {
@@ -597,7 +597,7 @@ TEST_P(ParallelTests, NodeMultiThread)
         });
 
         auto node = seg.make_node<int>("node", rxcpp::operators::map([&](const int& x) {
-                                           auto& context = srf::runnable::Context::get_runtime_context();
+                                           auto& context = mrc::runnable::Context::get_runtime_context();
 
                                            {
                                                std::lock_guard<std::mutex> lock(mut);
@@ -619,7 +619,7 @@ TEST_P(ParallelTests, NodeMultiThread)
         auto sink = seg.make_sink<int>(
             "sink",
             [&](const int& x) {
-                auto& context = srf::runnable::Context::get_runtime_context();
+                auto& context = mrc::runnable::Context::get_runtime_context();
 
                 DVLOG(1) << context.info() << " Sink got value: '" << x << "'" << std::endl;
 
@@ -634,7 +634,7 @@ TEST_P(ParallelTests, NodeMultiThread)
     });
 
     auto options = std::make_unique<Options>();
-    options->topology().user_cpuset(SRF_CONCAT_STR("0-" << thread_count));
+    options->topology().user_cpuset(MRC_CONCAT_STR("0-" << thread_count));
     options->topology().restrict_gpus(true);
     options->placement().resources_strategy(PlacementResources::Shared);  // ignore numa
 

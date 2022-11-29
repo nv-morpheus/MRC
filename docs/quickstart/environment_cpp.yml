@@ -1,4 +1,4 @@
-name: srf-quickstart
+name: mrc-quickstart
 
 channels:
   - conda-forge
@@ -30,7 +30,7 @@ dependencies:
   - python=3.8
   - scikit-build>=0.12
   - spdlog=1.8.5
-  - srf=22.11
+  - mrc=22.11
   - sysroot_linux-64=2.17
   - pip:
     - cython

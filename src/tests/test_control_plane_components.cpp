@@ -18,8 +18,8 @@
 #include "internal/control_plane/server/client_instance.hpp"
 #include "internal/control_plane/server/tagged_issuer.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/types.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/types.hpp"
 
 #include <gtest/gtest.h>
 
@@ -33,8 +33,8 @@
 #include <utility>
 #include <vector>
 
-using namespace srf;
-using namespace srf::internal::control_plane;
+using namespace mrc;
+using namespace mrc::internal::control_plane;
 
 class TestControlPlaneComponents : public ::testing::Test
 {};

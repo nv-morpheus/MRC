@@ -24,7 +24,7 @@
 #include <cstddef>
 #include <string>
 
-namespace srf::internal::ucx {
+namespace mrc::internal::ucx {
 
 /**
  * @brief Extends memory::MemoryBlock to add UCX memory registration information
@@ -68,4 +68,4 @@ struct MemoryBlock : public memory::MemoryBlock
     std::size_t m_remote_handle_size{0};
 };
 
-}  // namespace srf::internal::ucx
+}  // namespace mrc::internal::ucx

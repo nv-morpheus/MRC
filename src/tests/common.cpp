@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2018-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,13 +19,13 @@
 
 #include <utility>
 
-std::shared_ptr<srf::internal::system::System> make_system(std::function<void(srf::Options&)> updater)
+std::shared_ptr<mrc::internal::system::System> make_system(std::function<void(mrc::Options&)> updater)
 {
-    auto options = std::make_shared<srf::Options>();
+    auto options = std::make_shared<mrc::Options>();
     if (updater)
     {
         updater(*options);
     }
 
-    return srf::internal::system::make_system(std::move(options));
+    return mrc::internal::system::make_system(std::move(options));
 }

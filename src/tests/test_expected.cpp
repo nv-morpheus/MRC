@@ -25,8 +25,8 @@
 #include <string>
 #include <utility>
 
-using namespace srf;
-using namespace srf::internal;
+using namespace mrc;
+using namespace mrc::internal;
 
 class TestExpected : public ::testing::Test
 {};

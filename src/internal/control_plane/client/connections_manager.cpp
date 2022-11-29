@@ -25,8 +25,8 @@
 #include "internal/ucx/worker.hpp"
 #include "internal/utils/contains.hpp"
 
-#include "srf/core/task_queue.hpp"
-#include "srf/protos/architect.pb.h"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/protos/architect.pb.h"
 
 #include <ext/alloc_traits.h>
 #include <glog/logging.h>
@@ -40,7 +40,7 @@
 #include <type_traits>  // IWYU pragma: keep
 #include <utility>
 
-namespace srf::internal::control_plane::client {
+namespace mrc::internal::control_plane::client {
 
 ConnectionsManager::ConnectionsManager(Client& client, update_channel_t& update_channel) : StateManager(client)
 {
@@ -188,4 +188,4 @@ ConnectionsManager::instance_channels() const
     return m_update_channels;
 }
 
-}  // namespace srf::internal::control_plane::client
+}  // namespace mrc::internal::control_plane::client

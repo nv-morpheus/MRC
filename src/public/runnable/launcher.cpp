@@ -15,17 +15,17 @@
  * limitations under the License.
  */
 
-#include "srf/runnable/launcher.hpp"
+#include "mrc/runnable/launcher.hpp"
 
-#include "srf/runnable/context.hpp"
-#include "srf/runnable/engine.hpp"
-#include "srf/runnable/runner.hpp"
+#include "mrc/runnable/context.hpp"
+#include "mrc/runnable/engine.hpp"
+#include "mrc/runnable/runner.hpp"
 
 #include <glog/logging.h>
 
 #include <utility>
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 Launcher::Launcher(std::unique_ptr<Runner> runner,
                    std::vector<std::shared_ptr<Context>>&& contexts,
@@ -54,4 +54,4 @@ void Launcher::apply(std::function<void(Runner&)> fn)
     fn(*m_runner);
 }
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

@@ -20,41 +20,41 @@
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 
-#include "srf/channel/egress.hpp"
-#include "srf/channel/ingress.hpp"
-#include "srf/channel/status.hpp"
-#include "srf/core/bitmap.hpp"
-#include "srf/data/reusable_pool.hpp"
-#include "srf/node/edge_builder.hpp"
-#include "srf/node/generic_node.hpp"
-#include "srf/node/generic_sink.hpp"
-#include "srf/node/generic_source.hpp"
-#include "srf/node/operators/conditional.hpp"
-#include "srf/node/rx_execute.hpp"
-#include "srf/node/rx_node.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/rx_source.hpp"
-#include "srf/node/rx_subscribable.hpp"
-#include "srf/node/sink_channel.hpp"
-#include "srf/node/source_channel.hpp"
-#include "srf/node/source_properties.hpp"
-#include "srf/options/engine_groups.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/topology.hpp"
-#include "srf/runnable/context.hpp"
-#include "srf/runnable/launch_control.hpp"
-#include "srf/runnable/launch_options.hpp"
-#include "srf/runnable/launcher.hpp"
-#include "srf/runnable/runner.hpp"
-#include "srf/runnable/types.hpp"
-#include "srf/segment/builder.hpp"
-#include "srf/segment/definition.hpp"
-#include "srf/segment/egress_ports.hpp"
-#include "srf/segment/object.hpp"
-#include "srf/segment/runnable.hpp"
-#include "srf/segment/segment.hpp"
-#include "srf/type_traits.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/channel/egress.hpp"
+#include "mrc/channel/ingress.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/data/reusable_pool.hpp"
+#include "mrc/node/edge_builder.hpp"
+#include "mrc/node/generic_node.hpp"
+#include "mrc/node/generic_sink.hpp"
+#include "mrc/node/generic_source.hpp"
+#include "mrc/node/operators/conditional.hpp"
+#include "mrc/node/rx_execute.hpp"
+#include "mrc/node/rx_node.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_source.hpp"
+#include "mrc/node/rx_subscribable.hpp"
+#include "mrc/node/sink_channel.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/node/source_properties.hpp"
+#include "mrc/options/engine_groups.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/topology.hpp"
+#include "mrc/runnable/context.hpp"
+#include "mrc/runnable/launch_control.hpp"
+#include "mrc/runnable/launch_options.hpp"
+#include "mrc/runnable/launcher.hpp"
+#include "mrc/runnable/runner.hpp"
+#include "mrc/runnable/types.hpp"
+#include "mrc/segment/builder.hpp"
+#include "mrc/segment/definition.hpp"
+#include "mrc/segment/egress_ports.hpp"
+#include "mrc/segment/object.hpp"
+#include "mrc/segment/runnable.hpp"
+#include "mrc/segment/segment.hpp"
+#include "mrc/type_traits.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <boost/fiber/operations.hpp>
 #include <boost/hana/if.hpp>
@@ -75,7 +75,7 @@
 #include <utility>
 #include <vector>
 
-using namespace srf;
+using namespace mrc;
 
 static std::shared_ptr<internal::system::System> make_system(std::function<void(Options&)> updater = nullptr)
 {
@@ -305,7 +305,7 @@ TEST_F(TestNext, MakeEdgeConvertibleFromSinkRxRunnable)
     EXPECT_EQ(counter, 1);
 }
 
-class Node : public srf::node::GenericNode<int, double>
+class Node : public mrc::node::GenericNode<int, double>
 {
     void on_data(int&& input, rxcpp::subscriber<double>& subscriber) final {}
 };
@@ -462,20 +462,20 @@ TEST_F(TestNext, SourceNodeSink)
 };
 
 template <typename T, typename = void>
-struct is_srf_value : std::false_type
+struct is_mrc_value : std::false_type
 {};
 
 template <typename T>
-struct is_srf_value<T, std::enable_if_t<std::is_arithmetic_v<T>>> : std::true_type
+struct is_mrc_value<T, std::enable_if_t<std::is_arithmetic_v<T>>> : std::true_type
 {};
 
 template <typename T>
-struct is_srf_object
-  : std::integral_constant<bool, std::is_class_v<T> and not is_srf_value<T>::value and not is_smart_ptr<T>::value>
+struct is_mrc_object
+  : std::integral_constant<bool, std::is_class_v<T> and not is_mrc_value<T>::value and not is_smart_ptr<T>::value>
 {};
 
 template <typename T>
-struct is_valid_node_type : std::integral_constant<bool, is_srf_object<T>::value or is_srf_value<T>::value>
+struct is_valid_node_type : std::integral_constant<bool, is_mrc_object<T>::value or is_mrc_value<T>::value>
 {};
 
 template <typename T, typename = void>
@@ -485,19 +485,19 @@ struct get_node_type  // NOLINT
 };
 
 template <typename T>
-struct get_node_type<T, std::enable_if_t<is_srf_value<T>::value>>
+struct get_node_type<T, std::enable_if_t<is_mrc_value<T>::value>>
 {
     using type = T;  // NOLINT
 };
 
 template <typename T>
-struct get_node_type<T, std::enable_if_t<is_srf_object<T>::value and !std::is_const_v<T>>>
+struct get_node_type<T, std::enable_if_t<is_mrc_object<T>::value and !std::is_const_v<T>>>
 {
     using type = std::unique_ptr<T>;  // NOLINT
 };
 
 template <typename T>
-struct get_node_type<T, std::enable_if_t<is_srf_object<T>::value and std::is_const_v<T>>>
+struct get_node_type<T, std::enable_if_t<is_mrc_object<T>::value and std::is_const_v<T>>>
 {
     using type = std::shared_ptr<const T>;  // NOLINT
 };
@@ -518,13 +518,13 @@ TEST_F(TestNext, TypeTraits)
     static_assert(!is_valid_node_type<std::shared_ptr<ExampleObject>>::value, " ");
     static_assert(!is_valid_node_type<std::shared_ptr<const ExampleObject>>::value, " ");
 
-    static_assert(is_srf_value<int>::value, " ");
-    static_assert(is_srf_value<const int>::value, " ");
-    static_assert(!is_srf_value<ExampleObject>::value, " ");
+    static_assert(is_mrc_value<int>::value, " ");
+    static_assert(is_mrc_value<const int>::value, " ");
+    static_assert(!is_mrc_value<ExampleObject>::value, " ");
 
-    static_assert(is_srf_object<ExampleObject>::value, "should be true");
-    static_assert(is_srf_object<const ExampleObject>::value, "should be true");
-    static_assert(!is_srf_object<int>::value, "should be false");
+    static_assert(is_mrc_object<ExampleObject>::value, "should be true");
+    static_assert(is_mrc_object<const ExampleObject>::value, "should be true");
+    static_assert(!is_mrc_object<int>::value, "should be false");
 
     // get_node_type(T) => T if value otherwise unique_ptr<T>
     // get_node_type(const T) => const T if value otherwise shared_ptr<const T>

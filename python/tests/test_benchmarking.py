@@ -17,7 +17,7 @@
 import pathlib
 import random
 
-import srf.benchmarking
+import mrc.benchmarking
 
 whereami = pathlib.Path(__file__).parent.resolve()
 
@@ -30,8 +30,8 @@ def tracer_test_f(x):
 
 
 # @pytest.mark.xfail  # issue#161
-def init_tracer_segment(seg: srf.Builder, watcher: srf.benchmarking.LatencyWatcher):
-    # CXX double source with heterogesrfus segment node composition
+def init_tracer_segment(seg: mrc.Builder, watcher: mrc.benchmarking.LatencyWatcher):
+    # CXX double source with heterogeneous segment node composition
     # print("Made it into init_tracer_segment\n", flush=True)
     python_tracer_source = watcher.make_tracer_source(seg, "tracer_source", False)
     python_node_1 = watcher.make_traced_node(seg, "python_traced_1", tracer_test_f)
@@ -43,10 +43,10 @@ def init_tracer_segment(seg: srf.Builder, watcher: srf.benchmarking.LatencyWatch
 
 # @pytest.mark.xfail  # issue#161
 # def test_tracer_creation():
-#    options = srf.Options()
-#    executor = srf.Executor(options)
+#    options = mrc.Options()
+#    executor = mrc.Executor(options)
 #
-#    latency_watcher = srf.benchmarking.LatencyWatcher(executor)
+#    latency_watcher = mrc.benchmarking.LatencyWatcher(executor)
 #    latency_watcher.make_segment("tracer_segment", init_tracer_segment)
 #
 #    latency_watcher.tracer_count(TEST_ITERATIONS)
@@ -60,29 +60,29 @@ def init_tracer_segment(seg: srf.Builder, watcher: srf.benchmarking.LatencyWatch
 
 # @pytest.mark.xfail  # issue#161
 # def test_latency_tracer_counts_match_framework_stats():
-#     srf.benchmarking.reset_tracing_stats()
-#     assert (srf.benchmarking.trace_operators() == (False, False))
-#     assert (srf.benchmarking.trace_channels() == (False, False))
+#     mrc.benchmarking.reset_tracing_stats()
+#     assert (mrc.benchmarking.trace_operators() == (False, False))
+#     assert (mrc.benchmarking.trace_channels() == (False, False))
 
-#     srf.benchmarking.trace_operators(True)
-#     assert (srf.benchmarking.trace_operators() == (True, True))
-#     srf.benchmarking.trace_channels(True)
-#     assert (srf.benchmarking.trace_channels() == (True, True))
+#     mrc.benchmarking.trace_operators(True)
+#     assert (mrc.benchmarking.trace_operators() == (True, True))
+#     mrc.benchmarking.trace_channels(True)
+#     assert (mrc.benchmarking.trace_channels() == (True, True))
 #     required_components = [("tracer_source", "src"), ("python_traced_1", "internal"), ("tracer_sink", "sink")]
 
-#     options = srf.Options()
+#     options = mrc.Options()
 
 #     options.placement.cpu_strategy = PlacementStrategy.PerMachine
-#     executor = srf.Executor(options)
+#     executor = mrc.Executor(options)
 
-#     latency_watcher = srf.benchmarking.LatencyWatcher(executor)
+#     latency_watcher = mrc.benchmarking.LatencyWatcher(executor)
 #     latency_watcher.make_segment("tracer_segment", init_tracer_segment)
 
 #     latency_watcher.tracer_count(TEST_ITERATIONS)
 #     latency_watcher.trace_until_notified()
 #     latency_watcher.shutdown()
 
-#     framework_stats_info = srf.benchmarking.get_tracing_stats()
+#     framework_stats_info = mrc.benchmarking.get_tracing_stats()
 #     component_metrics = framework_stats_info["aggregations"]["components"]["metrics"]
 #     # Verify tracer benchmark data looks correct
 #     tracer_metrics = latency_watcher.aggregate_tracers()
@@ -111,28 +111,28 @@ def init_tracer_segment(seg: srf.Builder, watcher: srf.benchmarking.LatencyWatch
 #             assert (component["component_channel_read_total"] == TEST_ITERATIONS)
 #             assert (component["component_receive_total"] == TEST_ITERATIONS)
 
-#     srf.benchmarking.reset_tracing_stats()
+#     mrc.benchmarking.reset_tracing_stats()
 
 # @pytest.mark.xfail  # issue#161
 # def test_throughput_tracer_counts_match_framework_stats():
-#     srf.benchmarking.reset_tracing_stats()
-#     srf.benchmarking.trace_operators(True)
-#     srf.benchmarking.trace_channels(True)
+#     mrc.benchmarking.reset_tracing_stats()
+#     mrc.benchmarking.trace_operators(True)
+#     mrc.benchmarking.trace_channels(True)
 #     required_components = [("tracer_source", "src"), ("python_traced_1", "internal"), ("tracer_sink", "sink")]
 
-#     options = srf.Options()
+#     options = mrc.Options()
 
 #     options.placement.cpu_strategy = PlacementStrategy.PerMachine
-#     executor = srf.Executor(options)
+#     executor = mrc.Executor(options)
 
-#     throughput_watcher = srf.benchmarking.ThroughputWatcher(executor)
+#     throughput_watcher = mrc.benchmarking.ThroughputWatcher(executor)
 #     throughput_watcher.make_segment("tracer_segment", init_tracer_segment)
 
 #     throughput_watcher.tracer_count(TEST_ITERATIONS)
 #     throughput_watcher.trace_until_notified()
 #     throughput_watcher.shutdown()
 
-#     framework_stats_info = srf.benchmarking.get_tracing_stats()
+#     framework_stats_info = mrc.benchmarking.get_tracing_stats()
 #     component_metrics = framework_stats_info["aggregations"]["components"]["metrics"]
 
 #     tracer_metrics = throughput_watcher.aggregate_tracers()
@@ -167,7 +167,7 @@ def init_tracer_segment(seg: srf.Builder, watcher: srf.benchmarking.LatencyWatch
 #             assert (component["component_channel_read_total"] == TEST_ITERATIONS)
 #             assert (component["component_receive_total"] == TEST_ITERATIONS)
 
-#     srf.benchmarking.reset_tracing_stats()
+#     mrc.benchmarking.reset_tracing_stats()
 
 if (__name__ in ("__main__", )):
     # init_tracer_segment()

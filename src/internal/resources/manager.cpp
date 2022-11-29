@@ -31,10 +31,10 @@
 #include "internal/ucx/registation_callback_builder.hpp"
 #include "internal/utils/contains.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/exceptions/runtime_error.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/placement.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/placement.hpp"
 
 #include <ext/alloc_traits.h>
 #include <glog/logging.h>
@@ -46,7 +46,7 @@
 #include <thread>
 #include <utility>
 
-namespace srf::internal::resources {
+namespace mrc::internal::resources {
 
 thread_local Manager* Manager::m_thread_resources{nullptr};
 thread_local PartitionResources* Manager::m_thread_partition{nullptr};
@@ -83,7 +83,7 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
         {
             VLOG(1) << "building ucx resources for partition " << base.partition_id();
             auto network_task_queue_cpuset =
-                base.partition().host().engine_factory_cpu_sets().fiber_cpu_sets.at("srf_network");
+                base.partition().host().engine_factory_cpu_sets().fiber_cpu_sets.at("mrc_network");
             auto& network_fiber_queue = m_system->get_task_queue(network_task_queue_cpuset.first());
             std::optional<ucx::Resources> ucx;
             ucx.emplace(base, network_fiber_queue);
@@ -210,8 +210,8 @@ Manager& Manager::get_resources()
     if (m_thread_resources == nullptr)  // todo(cpp20) [[unlikely]]
     {
         LOG(ERROR) << "thread with id " << std::this_thread::get_id()
-                   << " attempting to access the SRF runtime, but is not a SRF runtime thread";
-        throw exceptions::SrfRuntimeError("can not access runtime resources from outside the runtime");
+                   << " attempting to access the MRC runtime, but is not a MRC runtime thread";
+        throw exceptions::MrcRuntimeError("can not access runtime resources from outside the runtime");
     }
 
     return *m_thread_resources;
@@ -227,15 +227,15 @@ PartitionResources& Manager::get_partition()
             if (resources.system().partitions().device_to_host_strategy() == PlacementResources::Shared)
             {
                 LOG(ERROR) << "runtime partition query is disabed when PlacementResources::Shared is in use";
-                throw exceptions::SrfRuntimeError("unable to access runtime parition info");
+                throw exceptions::MrcRuntimeError("unable to access runtime parition info");
             }
 
             LOG(ERROR) << "thread with id " << std::this_thread::get_id()
-                       << " attempting to access the SRF runtime, but is not a SRF runtime thread";
-            throw exceptions::SrfRuntimeError("can not access runtime resources from outside the runtime");
+                       << " attempting to access the MRC runtime, but is not a MRC runtime thread";
+            throw exceptions::MrcRuntimeError("can not access runtime resources from outside the runtime");
         }
 
         return *m_thread_partition;
     }
 }
-}  // namespace srf::internal::resources
+}  // namespace mrc::internal::resources

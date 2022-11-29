@@ -22,8 +22,8 @@
 #include "internal/control_plane/server/versioned_issuer.hpp"
 #include "internal/expected.hpp"
 
-#include "srf/protos/architect.pb.h"
-#include "srf/types.hpp"
+#include "mrc/protos/architect.pb.h"
+#include "mrc/types.hpp"
 
 #include <cstdint>
 #include <map>
@@ -32,7 +32,7 @@
 #include <string>
 #include <utility>
 
-namespace srf::internal::control_plane::server {
+namespace mrc::internal::control_plane::server {
 
 class Role;
 
@@ -157,4 +157,4 @@ class Role final : public VersionedState
     std::map<std::uint64_t, std::pair<std::uint64_t, std::shared_ptr<server::ClientInstance>>> m_latched_members;
 };
 
-}  // namespace srf::internal::control_plane::server
+}  // namespace mrc::internal::control_plane::server

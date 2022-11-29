@@ -19,7 +19,7 @@
 
 #include <stdexcept>
 
-namespace srf::internal::memory {
+namespace mrc::internal::memory {
 
 struct MemoryBlock
 {
@@ -132,4 +132,4 @@ struct MemoryBlockCompareAddr
     }
 };
 
-}  // namespace srf::internal::memory
+}  // namespace mrc::internal::memory

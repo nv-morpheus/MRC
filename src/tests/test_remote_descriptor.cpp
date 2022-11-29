@@ -29,15 +29,15 @@
 #include "internal/runtime/runtime.hpp"
 #include "internal/system/system_provider.hpp"
 
-#include "srf/codable/codable_protocol.hpp"
-#include "srf/codable/fundamental_types.hpp"  // IWYU pragma: keep
-#include "srf/core/bitmap.hpp"
-#include "srf/core/task_queue.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/placement.hpp"
-#include "srf/runtime/remote_descriptor.hpp"
-#include "srf/runtime/remote_descriptor_handle.hpp"
-#include "srf/types.hpp"
+#include "mrc/codable/codable_protocol.hpp"
+#include "mrc/codable/fundamental_types.hpp"  // IWYU pragma: keep
+#include "mrc/core/bitmap.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/placement.hpp"
+#include "mrc/runtime/remote_descriptor.hpp"
+#include "mrc/runtime/remote_descriptor_handle.hpp"
+#include "mrc/types.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <boost/fiber/operations.hpp>
@@ -49,8 +49,8 @@
 #include <type_traits>
 #include <utility>
 
-using namespace srf;
-using namespace srf::codable;
+using namespace mrc;
+using namespace mrc::codable;
 
 class TestRD : public ::testing::Test
 {
@@ -87,7 +87,7 @@ TEST_F(TestRD, LifeCycle)
 
             EXPECT_EQ(rd_manager.size(), 0);
 
-            std::string test("Hi SRFer");
+            std::string test("Hi MRC");
             auto rd = rd_manager.register_object(std::move(test));
 
             EXPECT_EQ(rd_manager.size(), 1);
@@ -128,7 +128,7 @@ TEST_F(TestRD, RemoteRelease)
             EXPECT_EQ(rd_manager_0.size(), 0);
             EXPECT_EQ(rd_manager_1.size(), 0);
 
-            std::string test("Hi SRFer");
+            std::string test("Hi MRC");
             auto rd = rd_manager_0.register_object(std::move(test));
 
             EXPECT_EQ(rd_manager_0.size(), 1);

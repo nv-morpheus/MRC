@@ -24,32 +24,33 @@
 #include "internal/resources/manager.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
+#include "internal/system/topology.hpp"
 #include "internal/utils/collision_detector.hpp"
 
-#include "srf/channel/channel.hpp"
-#include "srf/channel/status.hpp"
-#include "srf/core/addresses.hpp"
-#include "srf/core/executor.hpp"
-#include "srf/data/reusable_pool.hpp"
-#include "srf/engine/pipeline/ipipeline.hpp"
-#include "srf/node/queue.hpp"
-#include "srf/node/rx_node.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/rx_source.hpp"
-#include "srf/node/sink_properties.hpp"
-#include "srf/node/source_properties.hpp"
-#include "srf/options/engine_groups.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/placement.hpp"
-#include "srf/options/topology.hpp"
-#include "srf/pipeline/pipeline.hpp"
-#include "srf/runnable/context.hpp"
-#include "srf/runnable/types.hpp"
-#include "srf/segment/builder.hpp"
-#include "srf/segment/egress_ports.hpp"
-#include "srf/segment/ingress_ports.hpp"
-#include "srf/segment/object.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/channel/channel.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/core/addresses.hpp"
+#include "mrc/core/executor.hpp"
+#include "mrc/data/reusable_pool.hpp"
+#include "mrc/engine/pipeline/ipipeline.hpp"
+#include "mrc/node/queue.hpp"
+#include "mrc/node/rx_node.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_source.hpp"
+#include "mrc/node/sink_properties.hpp"
+#include "mrc/node/source_properties.hpp"
+#include "mrc/options/engine_groups.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/placement.hpp"
+#include "mrc/options/topology.hpp"
+#include "mrc/pipeline/pipeline.hpp"
+#include "mrc/runnable/context.hpp"
+#include "mrc/runnable/types.hpp"
+#include "mrc/segment/builder.hpp"
+#include "mrc/segment/egress_ports.hpp"
+#include "mrc/segment/ingress_ports.hpp"
+#include "mrc/segment/object.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <boost/fiber/fiber.hpp>
 #include <boost/fiber/operations.hpp>
@@ -76,7 +77,7 @@
 #include <utility>
 #include <vector>
 
-using namespace srf;
+using namespace mrc;
 
 // iwyu is getting confused between std::uint32_t and boost::uint32_t
 // IWYU pragma: no_include <boost/cstdint.hpp>
@@ -131,7 +132,7 @@ static void run_manager(std::unique_ptr<internal::pipeline::IPipeline> pipeline,
     auto resources = internal::resources::Manager(internal::system::SystemProvider(make_system([](Options& options) {
         options.topology().user_cpuset("0");
         options.topology().restrict_gpus(true);
-        srf::channel::set_default_channel_size(64);
+        mrc::channel::set_default_channel_size(64);
     })));
 
     auto manager = std::make_unique<internal::pipeline::Manager>(unwrap(*pipeline), resources);
@@ -312,41 +313,41 @@ TEST_F(TestPipeline, MultiSegmentLoadBalancer)
 
 TEST_F(TestPipeline, UnmatchedIngress)
 {
-    std::function<void(srf::segment::Builder&)> init = [](srf::segment::Builder& builder) {};
+    std::function<void(mrc::segment::Builder&)> init = [](mrc::segment::Builder& builder) {};
 
     auto pipe = pipeline::make_pipeline();
 
     pipe->make_segment("TestSegment1", segment::IngressPorts<int>({"some_port"}), init);
 
-    auto opt1 = std::make_shared<srf::Options>();
+    auto opt1 = std::make_shared<mrc::Options>();
     opt1->topology().user_cpuset("0");
     opt1->topology().restrict_gpus(true);
 
-    srf::Executor exec1{opt1};
+    mrc::Executor exec1{opt1};
 
     EXPECT_ANY_THROW(exec1.register_pipeline(std::move(pipe)));
 }
 
 TEST_F(TestPipeline, UnmatchedEgress)
 {
-    std::function<void(srf::segment::Builder&)> init = [](srf::segment::Builder& builder) {};
+    std::function<void(mrc::segment::Builder&)> init = [](mrc::segment::Builder& builder) {};
 
     auto pipe = pipeline::make_pipeline();
 
     pipe->make_segment("TestSegment1", segment::EgressPorts<int>({"some_port"}), init);
 
-    auto opt1 = std::make_shared<srf::Options>();
+    auto opt1 = std::make_shared<mrc::Options>();
     opt1->topology().user_cpuset("0");
     opt1->topology().restrict_gpus(true);
 
-    srf::Executor exec1{opt1};
+    mrc::Executor exec1{opt1};
 
     EXPECT_ANY_THROW(exec1.register_pipeline(std::move(pipe)));
 }
 
 TEST_F(TestPipeline, RequiresMoreManifolds)
 {
-    std::function<void(srf::segment::Builder&)> init = [](srf::segment::Builder& builder) {};
+    std::function<void(mrc::segment::Builder&)> init = [](mrc::segment::Builder& builder) {};
 
     auto pipe = pipeline::make_pipeline();
 
@@ -354,11 +355,11 @@ TEST_F(TestPipeline, RequiresMoreManifolds)
     pipe->make_segment("TestSegment2", segment::IngressPorts<int>({"some_port"}), init);
     pipe->make_segment("TestSegment3", segment::IngressPorts<int>({"some_port"}), init);
 
-    auto opt1 = std::make_shared<srf::Options>();
+    auto opt1 = std::make_shared<mrc::Options>();
     opt1->topology().user_cpuset("0");
     opt1->topology().restrict_gpus(true);
 
-    srf::Executor exec1{opt1};
+    mrc::Executor exec1{opt1};
 
     EXPECT_ANY_THROW(exec1.register_pipeline(std::move(pipe)));
 }
@@ -414,11 +415,11 @@ TEST_F(TestPipeline, ReusableSource)
     auto pipe = pipeline::make_pipeline();
     auto pool = data::ReusablePool<Buffer>::create(32);
 
-    auto opt = std::make_shared<srf::Options>();
+    auto opt = std::make_shared<mrc::Options>();
     opt->topology().user_cpuset("0");
     opt->topology().restrict_gpus(true);
 
-    srf::Executor exec{opt};
+    mrc::Executor exec{opt};
 
     EXPECT_EQ(pool->size(), 0);
 
@@ -513,25 +514,32 @@ TEST_F(TestPipeline, Nodes1k)
 
 TEST_F(TestPipeline, EngineFactories)
 {
+    auto topology = mrc::internal::system::Topology::Create();
+
+    if (topology->core_count() < 8)
+    {
+        GTEST_SKIP_("Not enough logical CPUs to run the test. 8 required");
+    }
+
     auto options = std::make_shared<Options>();
     options->placement().resources_strategy(PlacementResources::Dedicated);
     options->engine_factories().set_ignore_hyper_threads(true);
     options->engine_factories().set_engine_factory_options("rivermax_threads", [](EngineFactoryOptions& opts) {
-        opts.engine_type   = srf::runnable::EngineType::Thread;
+        opts.engine_type   = mrc::runnable::EngineType::Thread;
         opts.cpu_count     = 4;
         opts.allow_overlap = false;
         opts.reusable      = false;
     });
 
     options->engine_factories().set_engine_factory_options("stage_1", [](EngineFactoryOptions& opts) {
-        opts.engine_type   = srf::runnable::EngineType::Fiber;
+        opts.engine_type   = mrc::runnable::EngineType::Fiber;
         opts.cpu_count     = 2;
         opts.allow_overlap = false;
         opts.reusable      = false;
     });
 
     options->engine_factories().set_engine_factory_options("stage_2", [](EngineFactoryOptions& opts) {
-        opts.engine_type   = srf::runnable::EngineType::Fiber;
+        opts.engine_type   = mrc::runnable::EngineType::Fiber;
         opts.cpu_count     = 2;
         opts.allow_overlap = false;
         opts.reusable      = false;

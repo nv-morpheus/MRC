@@ -21,27 +21,27 @@
 #include "internal/system/host_partition_provider.hpp"
 #include "internal/system/resources.hpp"
 
-#include "srf/core/task_queue.hpp"
-#include "srf/pipeline/resources.hpp"
-#include "srf/runnable/launch_control.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/pipeline/resources.hpp"
+#include "mrc/runnable/launch_control.hpp"
 
 #include <cstddef>
 #include <memory>
 
-namespace srf::internal::runnable {
+namespace mrc::internal::runnable {
 
-class Resources final : public system::HostPartitionProvider, public srf::pipeline::Resources
+class Resources final : public system::HostPartitionProvider, public mrc::pipeline::Resources
 {
   public:
     Resources(const system::Resources& system_resources, std::size_t _host_partition_id);
 
-    srf::core::FiberTaskQueue& main() final;
-    const srf::core::FiberTaskQueue& main() const;
-    srf::runnable::LaunchControl& launch_control() final;
+    mrc::core::FiberTaskQueue& main() final;
+    const mrc::core::FiberTaskQueue& main() const;
+    mrc::runnable::LaunchControl& launch_control() final;
 
   private:
     system::FiberTaskQueue& m_main;
-    std::unique_ptr<srf::runnable::LaunchControl> m_launch_control;
+    std::unique_ptr<mrc::runnable::LaunchControl> m_launch_control;
 };
 
-}  // namespace srf::internal::runnable
+}  // namespace mrc::internal::runnable
