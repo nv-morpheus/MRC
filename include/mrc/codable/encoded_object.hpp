@@ -20,6 +20,9 @@
 #include "mrc/codable/api.hpp"
 #include "mrc/codable/encode.hpp"
 
+#include <memory>
+#include <utility>
+
 namespace mrc::codable {
 
 class EncodedStorage
