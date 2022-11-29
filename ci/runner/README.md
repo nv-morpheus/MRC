@@ -38,6 +38,6 @@ If the images are already built, the build step can be skipped by setting `SKIP_
 # Updating CI to use the new images
 Update `.github/workflows/pull_request.yml` changing these two lines with the new image names:
 ```yaml
-      container: nvcr.io/ea-nvidia-morpheus/morpheus:srf-ci-driver-221102
-      test_container: nvcr.io/ea-nvidia-morpheus/morpheus:srf-ci-base-221102
+      container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-driver-221128
+      test_container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-base-221128
 ```
