@@ -17,10 +17,12 @@
 
 #pragma once
 
-#include "internal/resources/forward.hpp"
+#include "internal/memory/host_resources.hpp"
+#include "internal/memory/transient_pool.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
 #include "internal/ucx/common.hpp"
+#include "internal/ucx/resources.hpp"
 
 #include "srf/channel/status.hpp"
 #include "srf/memory/buffer_view.hpp"
@@ -33,6 +35,7 @@
 #include <ucp/api/ucp_def.h>
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -60,27 +63,32 @@
 
 namespace srf::internal::data_plane {
 
+using network_event_t = std::pair<std::uint64_t, memory::TransientBuffer>;
+
 namespace detail {
 struct PrePostedRecvInfo
 {
     ucp_worker_h worker;
-    node::EdgeChannelWriter<ucp_tag_t>* channel;
+    node::EdgeChannelWriter<network_event_t>* channel;
     void* request;
-    // std::array<std::byte, 2048> buffer;
+    memory::TransientBuffer buffer;
+    memory::TransientPool* pool;
 };
 }  // namespace detail
-
-using network_event_t = std::pair<PortAddress, srf::memory::buffer_view>;
 
 class Server final : public Service, public resources::PartitionResourceBase
 {
   public:
-    Server(resources::PartitionResourceBase& provider, ucx::Resources& ucx, memory::HostResources& host);
+    Server(resources::PartitionResourceBase& provider,
+           ucx::Resources& ucx,
+           memory::HostResources& host,
+           memory::TransientPool& transient_pool,
+           InstanceID instance_id);
     ~Server() final;
 
     ucx::WorkerAddress worker_address() const;
 
-    node::TaggedRouter<PortAddress, srf::memory::buffer_view>& deserialize_source();
+    node::TaggedRouter<PortAddress, memory::TransientBuffer>& deserialize_source();
 
   private:
     void do_service_start() final;
@@ -94,14 +102,18 @@ class Server final : public Service, public resources::PartitionResourceBase
     // ucx resources
     ucx::Resources& m_ucx;
     memory::HostResources& m_host;
+    InstanceID m_instance_id;
+
+    // transient memory pool
+    memory::TransientPool& m_transient_pool;
 
     // deserialization nodes will connect to this source wtih their port id
     // the source for this router is the private GenericSoruce of this object
-    std::shared_ptr<node::TaggedRouter<PortAddress, srf::memory::buffer_view>> m_deserialize_source;
+    std::shared_ptr<node::TaggedRouter<PortAddress, memory::TransientBuffer>> m_deserialize_source;
 
     // the remote descriptor manager will connect to this source
     // data will be emitted on this source as a conditional branch of data source
-    std::shared_ptr<node::EdgeChannelWriter<ucp_tag_t>> m_rd_source;
+    std::shared_ptr<node::EdgeChannelWriter<network_event_t>> m_prepost_channel;
 
     // pre-posted recv state
     std::vector<detail::PrePostedRecvInfo> m_pre_posted_recv_info;

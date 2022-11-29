@@ -15,19 +15,27 @@
  * limitations under the License.
  */
 
+#include "internal/control_plane/client.hpp"
+#include "internal/control_plane/client/connections_manager.hpp"
+#include "internal/control_plane/client/instance.hpp"
 #include "internal/data_plane/client.hpp"
 #include "internal/data_plane/request.hpp"
 #include "internal/data_plane/resources.hpp"
+#include "internal/data_plane/server.hpp"
+#include "internal/data_plane/tags.hpp"
 #include "internal/memory/device_resources.hpp"
 #include "internal/memory/host_resources.hpp"
+#include "internal/memory/transient_pool.hpp"
 #include "internal/network/resources.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
+#include "internal/runnable/resources.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 #include "internal/ucx/memory_block.hpp"
 #include "internal/ucx/registration_cache.hpp"
 
+#include "srf/channel/status.hpp"
 #include "srf/memory/adaptors.hpp"
 #include "srf/memory/buffer.hpp"
 #include "srf/memory/literals.hpp"
@@ -35,15 +43,27 @@
 #include "srf/memory/resources/host/pinned_memory_resource.hpp"
 #include "srf/memory/resources/logging_resource.hpp"
 #include "srf/memory/resources/memory_resource.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/node/operators/router.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/source_channel.hpp"
 #include "srf/options/options.hpp"
 #include "srf/options/placement.hpp"
 #include "srf/options/resources.hpp"
+#include "srf/runnable/launch_control.hpp"
+#include "srf/runnable/launcher.hpp"
+#include "srf/runnable/runner.hpp"
 
+#include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
+#include <rxcpp/rx.hpp>
 #include <spdlog/sinks/basic_file_sink.h>
 
+#include <algorithm>
+#include <atomic>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <map>
 #include <memory>
@@ -91,6 +111,7 @@ TEST_F(TestNetwork, ResourceManager)
     // since all network services for potentially multiple devices are colocated on a single thread
     auto resources = std::make_unique<internal::resources::Manager>(
         internal::system::SystemProvider(make_system([](Options& options) {
+            options.enable_server(true);
             options.architect_url("localhost:13337");
             options.placement().resources_strategy(PlacementResources::Dedicated);
             options.resources().enable_device_memory_pool(true);
@@ -118,16 +139,19 @@ TEST_F(TestNetwork, ResourceManager)
     auto h_ucx_block = resources->partition(0).network()->data_plane().registration_cache().lookup(h_buffer_0.data());
     auto d_ucx_block = resources->partition(0).network()->data_plane().registration_cache().lookup(d_buffer_0.data());
 
-    EXPECT_EQ(h_ucx_block.bytes(), 32_MiB);
-    EXPECT_EQ(d_ucx_block.bytes(), 64_MiB);
+    EXPECT_TRUE(h_ucx_block);
+    EXPECT_TRUE(d_ucx_block);
 
-    EXPECT_TRUE(h_ucx_block.local_handle());
-    EXPECT_TRUE(h_ucx_block.remote_handle());
-    EXPECT_TRUE(h_ucx_block.remote_handle_size());
+    EXPECT_EQ(h_ucx_block->bytes(), 32_MiB);
+    EXPECT_EQ(d_ucx_block->bytes(), 64_MiB);
 
-    EXPECT_TRUE(d_ucx_block.local_handle());
-    EXPECT_TRUE(d_ucx_block.remote_handle());
-    EXPECT_TRUE(d_ucx_block.remote_handle_size());
+    EXPECT_TRUE(h_ucx_block->local_handle());
+    EXPECT_TRUE(h_ucx_block->remote_handle());
+    EXPECT_TRUE(h_ucx_block->remote_handle_size());
+
+    EXPECT_TRUE(d_ucx_block->local_handle());
+    EXPECT_TRUE(d_ucx_block->remote_handle());
+    EXPECT_TRUE(d_ucx_block->remote_handle_size());
 
     // the following can not assumed to be true
     // the remote handle size is proportional to the number and types of ucx transports available in a given domain
@@ -147,6 +171,7 @@ TEST_F(TestNetwork, CommsSendRecv)
     // since all network services for potentially multiple devices are colocated on a single thread
     auto resources = std::make_unique<internal::resources::Manager>(
         internal::system::SystemProvider(make_system([](Options& options) {
+            options.enable_server(true);
             options.architect_url("localhost:13337");
             options.placement().resources_strategy(PlacementResources::Dedicated);
             options.resources().enable_device_memory_pool(true);
@@ -169,8 +194,17 @@ TEST_F(TestNetwork, CommsSendRecv)
     auto& r1 = resources->partition(1).network()->data_plane();
 
     // here we are exchanging internal ucx worker addresses without the need of the control plane
-    r0.client().register_instance(1, r1.ucx_address());  // register r1 as instance_id 1
-    r1.client().register_instance(0, r0.ucx_address());  // register r0 as instance_id 0
+    // r0.client().register_instance(1, r1.ucx_address());  // register r1 as instance_id 1
+    // r1.client().register_instance(0, r0.ucx_address());  // register r0 as instance_id 0
+
+    auto f1 = resources->partition(0).network()->control_plane().client().connections().update_future();
+    auto f2 = resources->partition(1).network()->control_plane().client().connections().update_future();
+    resources->partition(0).network()->control_plane().client().request_update();
+    f1.get();
+    f2.get();
+
+    auto id_0 = resources->partition(0).network()->control_plane().instance_id();
+    auto id_1 = resources->partition(1).network()->control_plane().instance_id();
 
     int src = 42;
     int dst = -1;
@@ -178,8 +212,8 @@ TEST_F(TestNetwork, CommsSendRecv)
     internal::data_plane::Request send_req;
     internal::data_plane::Request recv_req;
 
-    r1.client().async_recv(&dst, sizeof(int), 0, recv_req);
-    r0.client().async_send(&src, sizeof(int), 0, 1, send_req);
+    r1.client().async_p2p_recv(&dst, sizeof(int), 0, recv_req);
+    r0.client().async_p2p_send(&src, sizeof(int), 0, id_1, send_req);
 
     LOG(INFO) << "await recv";
     recv_req.await_complete();
@@ -199,6 +233,7 @@ TEST_F(TestNetwork, CommsGet)
     // since all network services for potentially multiple devices are colocated on a single thread
     auto resources = std::make_unique<internal::resources::Manager>(
         internal::system::SystemProvider(make_system([](Options& options) {
+            options.enable_server(true);
             options.architect_url("localhost:13337");
             options.placement().resources_strategy(PlacementResources::Dedicated);
             options.resources().enable_device_memory_pool(true);
@@ -220,8 +255,10 @@ TEST_F(TestNetwork, CommsGet)
     auto src = resources->partition(0).host().make_buffer(1_MiB);
     auto dst = resources->partition(1).host().make_buffer(1_MiB);
 
-    auto src_keys =
-        resources->partition(0).network()->data_plane().registration_cache().lookup(src.data()).packed_remote_keys();
+    // here we really want a monad on the optional
+    auto block = resources->partition(0).network()->data_plane().registration_cache().lookup(src.data());
+    EXPECT_TRUE(block);
+    auto src_keys = block->packed_remote_keys();
 
     auto* src_data    = static_cast<std::size_t*>(src.data());
     std::size_t count = 1_MiB / sizeof(std::size_t);
@@ -234,12 +271,18 @@ TEST_F(TestNetwork, CommsGet)
     auto& r1 = resources->partition(1).network()->data_plane();
 
     // here we are exchanging internal ucx worker addresses without the need of the control plane
-    r0.client().register_instance(1, r1.ucx_address());  // register r1 as instance_id 1
-    r1.client().register_instance(0, r0.ucx_address());  // register r0 as instance_id 0
+    auto f1 = resources->partition(0).network()->control_plane().client().connections().update_future();
+    auto f2 = resources->partition(1).network()->control_plane().client().connections().update_future();
+    resources->partition(0).network()->control_plane().client().request_update();
+    f1.get();
+    f2.get();
+
+    auto id_0 = resources->partition(0).network()->control_plane().instance_id();
+    auto id_1 = resources->partition(1).network()->control_plane().instance_id();
 
     internal::data_plane::Request get_req;
 
-    r1.client().async_get(dst.data(), 1_MiB, 0, src.data(), src_keys, get_req);
+    r1.client().async_get(dst.data(), 1_MiB, id_0, src.data(), src_keys, get_req);
 
     LOG(INFO) << "await get";
     get_req.await_complete();
@@ -254,6 +297,75 @@ TEST_F(TestNetwork, CommsGet)
     resources.reset();
 }
 
+TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
+{
+    // using options.placement().resources_strategy(PlacementResources::Shared)
+    // will test if cudaSetDevice is being properly called by the network services
+    // since all network services for potentially multiple devices are colocated on a single thread
+    auto resources = std::make_unique<internal::resources::Manager>(
+        internal::system::SystemProvider(make_system([](Options& options) {
+            options.enable_server(true);
+            options.architect_url("localhost:13337");
+            options.placement().resources_strategy(PlacementResources::Dedicated);
+            options.resources().enable_device_memory_pool(true);
+            options.resources().enable_host_memory_pool(true);
+            options.resources().host_memory_pool().block_size(32_MiB);
+            options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
+            options.resources().device_memory_pool().block_size(64_MiB);
+            options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
+        })));
+
+    if (resources->partition_count() < 2 && resources->device_count() < 2)
+    {
+        GTEST_SKIP() << "this test only works with 2 device partitions";
+    }
+
+    // here we are exchanging internal ucx worker addresses without the need of the control plane
+    auto f1 = resources->partition(0).network()->control_plane().client().connections().update_future();
+    auto f2 = resources->partition(1).network()->control_plane().client().connections().update_future();
+    resources->partition(0).network()->control_plane().client().request_update();
+    f1.get();
+    f2.get();
+
+    EXPECT_TRUE(resources->partition(0).network());
+    EXPECT_TRUE(resources->partition(1).network());
+
+    auto& r0 = resources->partition(0).network()->data_plane();
+    auto& r1 = resources->partition(1).network()->data_plane();
+
+    const std::uint64_t tag          = 20919;
+    std::atomic<std::size_t> counter = 0;
+
+    auto recv_sink = std::make_unique<node::RxSink<internal::memory::TransientBuffer>>(
+        [&](internal::memory::TransientBuffer buffer) {
+            EXPECT_EQ(buffer.bytes(), 128);
+            counter++;
+            r0.server().deserialize_source().drop_edge(tag);
+        });
+
+    srf::node::make_edge(r0.server().deserialize_source().source(tag), *recv_sink);
+
+    auto launch_opts = resources->partition(0).network()->data_plane().launch_options(1);
+    auto recv_runner = resources->partition(0)
+                           .runnable()
+                           .launch_control()
+                           .prepare_launcher(launch_opts, std::move(recv_sink))
+                           ->ignition();
+
+    auto endpoint = r1.client().endpoint_shared(r0.instance_id());
+
+    internal::data_plane::Request req;
+    auto buffer   = resources->partition(1).host().make_buffer(128);
+    auto send_tag = tag | TAG_EGR_MSG;
+    r1.client().async_send(buffer.data(), buffer.bytes(), send_tag, *endpoint, req);
+    EXPECT_TRUE(req.await_complete());
+
+    // the channel will be dropped when the first message goes thru
+    recv_runner->await_join();
+    EXPECT_EQ(counter, 1);
+
+    resources.reset();
+}
 // TEST_F(TestNetwork, NetworkEventsManagerLifeCycle)
 // {
 //     auto launcher = m_launch_control->prepare_launcher(std::move(m_mutable_nem));

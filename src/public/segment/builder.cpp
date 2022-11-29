@@ -151,4 +151,21 @@ void Builder::register_module_output(std::string output_name, sp_obj_prop_t obje
     current_module->register_output_port(std::move(output_name), object);
 }
 
+nlohmann::json Builder::get_current_module_config()
+{
+    if (m_module_stack.empty())
+    {
+        std::stringstream sstream;
+
+        sstream << "Failed to acquire module configuration -> no module context exists";
+        VLOG(2) << sstream.str();
+
+        throw std::invalid_argument(sstream.str());
+    }
+
+    auto current_module = m_module_stack.back();
+
+    return current_module->config();
+}
+
 }  // namespace srf::segment

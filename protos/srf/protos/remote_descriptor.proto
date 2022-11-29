@@ -18,31 +18,3 @@
 syntax = "proto3";
 
 import "google/protobuf/any.proto";
-
-package srf.protos;
-
-enum MemoryKind
-{
-    Host = 0;
-    Pinned = 1;
-    Device = 2;
-    Managed = 3;
-    None = 99;
-}
-
-message RemoteDescriptor
-{
-    uint32 instance_id = 1;
-    uint32 object_id = 2;
-    uint64 remote_address = 3;
-    uint64 remote_bytes = 4;
-    bytes remote_key = 5;
-    google.protobuf.Any meta_data = 6;
-    MemoryKind memory_kind = 7;
-}
-
-message MultiPartRemoteDescriptor
-{
-    repeated RemoteDescriptor descriptors = 1;
-    google.protobuf.Any meta_data = 2;
-}

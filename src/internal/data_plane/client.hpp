@@ -17,13 +17,23 @@
 
 #pragma once
 
+#include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/data_plane/request.hpp"
+#include "internal/memory/transient_pool.hpp"
 #include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/ucx/common.hpp"
+#include "internal/service.hpp"
 #include "internal/ucx/endpoint.hpp"
+#include "internal/ucx/resources.hpp"
+#include "internal/ucx/worker.hpp"
 
+#include "srf/channel/status.hpp"
+#include "srf/node/source_channel.hpp"
+#include "srf/runnable/runner.hpp"
+#include "srf/runtime/remote_descriptor.hpp"
 #include "srf/types.hpp"
+
+#include <ucp/api/ucp_def.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -33,71 +43,87 @@
 
 namespace srf::internal::data_plane {
 
-class Client final : public resources::PartitionResourceBase
+struct RemoteDescriptorMessage
+{
+    srf::runtime::RemoteDescriptor rd;
+    std::shared_ptr<ucx::Endpoint> endpoint;
+    std::uint64_t tag;
+};
+
+class Client final : public resources::PartitionResourceBase, private Service
 {
   public:
-    Client(resources::PartitionResourceBase& base, ucx::Resources& ucx);
+    Client(resources::PartitionResourceBase& base,
+           ucx::Resources& ucx,
+           control_plane::client::ConnectionsManager& connections_manager,
+           memory::TransientPool& transient_pool);
     ~Client() final;
 
-    /**
-     * @brief Register a UCX Worker address with an InstanceID
-     */
-    void register_instance(InstanceID instance_id, ucx::WorkerAddress worker_address);
+    std::shared_ptr<ucx::Endpoint> endpoint_shared(const InstanceID& instance_id) const;
 
-    /**
-     * @brief Send an EncodedObject to the PortAddress at InstanceID
-     *
-     * @note Issue #122 would elmininate the need for InstanceID to be passed; however, this might also be an
-     * optimization path to avoid a second PortAddress to InstanceID lookup. NetworkSendManager should issue
-     * the await_send with only port_address and encoded_object; however, the internal should be able to short
-     * circuit the translation.
-     *
-     * @param instance_id
-     * @param port_address
-     * @param encoded_object
-     */
-    // void await_send(const InstanceID& instance_id,
-    //                 const PortAddress& port_address,
-    //                 const codable::EncodedObject& encoded_object);
+    // drop endpoint
+    void drop_endpoint(const InstanceID& instance_id);
 
     // number of established remote instances
-    std::size_t connections() const;
+    std::size_t endpoint_count() const;
 
-    void async_recv(void* addr, std::size_t bytes, std::uint64_t tag, Request& request);
-    void async_send(void* addr, std::size_t bytes, std::uint64_t tag, InstanceID instance_id, Request& request);
+    void async_p2p_recv(void* addr, std::size_t bytes, std::uint64_t tag, Request& request);
+    void async_p2p_send(
+        void* addr, std::size_t bytes, std::uint64_t tag, InstanceID instance_id, Request& request) const;
 
-    /**
-     * @brief Perform an asynchronous one-side GET from a contiguous block of memory starting at remote_addr on remote
-     * instance_id.
-     */
+    node::SourceChannelWriteable<RemoteDescriptorMessage>& remote_descriptor_channel();
+
+    // primitive rdma and send/recv call
+
+    static void async_get(void* addr,
+                          std::size_t bytes,
+                          const ucx::Endpoint& ep,
+                          std::uint64_t remote_addr,
+                          ucp_rkey_h rkey,
+                          Request& request);
+
     void async_get(void* addr,
                    std::size_t bytes,
                    InstanceID instance_id,
                    void* remote_addr,
                    const std::string& packed_remote_key,
-                   Request& request);
+                   Request& request) const;
 
-    // // determine if connected to a given remote instance
-    // bool is_connected_to(InstanceID) const;
+    static void async_recv(void* addr,
+                           std::size_t bytes,
+                           std::uint64_t tag,
+                           std::uint64_t mask,
+                           const ucx::Worker& worker,
+                           Request& request);
+    static void async_send(
+        void* addr, std::size_t bytes, std::uint64_t tag, const ucx::Endpoint& endpoint, Request& request);
 
-    // void decrement_remote_descriptor(InstanceID, ObjectID);
+    static void async_am_send(std::uint32_t id,
+                              const void* header,
+                              std::size_t header_length,
+                              const ucx::Endpoint& endpoint,
+                              Request& request);
 
-    // void get(const protos::RemoteDescriptor&, void*, size_t);
-    // void get(const protos::RemoteDescriptor&, Descriptor&);
-
-  protected:
-    // // issue tag only send - no payload data
-    // void issue_network_event(InstanceID, ucp_tag_t);
-
-    // get endpoint for instance id
-    const ucx::Endpoint& endpoint(InstanceID) const;
-
-    // void push_request(void* request);
+    const ucx::Endpoint& endpoint(const InstanceID& instance_id) const;
 
   private:
+    void issue_remote_descriptor(RemoteDescriptorMessage&& msg);
+
+    void do_service_start() final;
+    void do_service_await_live() final;
+    void do_service_stop() final;
+    void do_service_kill() final;
+    void do_service_await_join() final;
+
     ucx::Resources& m_ucx;
-    std::map<InstanceID, ucx::WorkerAddress> m_workers;
+    control_plane::client::ConnectionsManager& m_connnection_manager;
+    memory::TransientPool& m_transient_pool;
     mutable std::map<InstanceID, std::shared_ptr<ucx::Endpoint>> m_endpoints;
+
+    std::unique_ptr<srf::runnable::Runner> m_rd_writer;
+    std::unique_ptr<node::SourceChannelWriteable<RemoteDescriptorMessage>> m_rd_channel;
+
+    friend Resources;
 };
 
 }  // namespace srf::internal::data_plane

@@ -137,4 +137,12 @@ const EngineGroups& Options::engine_factories() const
     return *m_engine_groups;
 }
 
+std::uint16_t Options::server_port() const
+{
+    return m_server_port;
+}
+void Options::server_port(std::uint16_t port)
+{
+    m_server_port = port;
+}
 }  // namespace srf

@@ -43,7 +43,6 @@
 #include <set>
 #include <string>
 #include <thread>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -107,5 +106,17 @@ HostResources::HostResources(runnable::Resources& runnable, ucx::RegistrationCal
 srf::memory::buffer HostResources::make_buffer(std::size_t bytes)
 {
     return srf::memory::buffer(bytes, m_arena);
+}
+std::shared_ptr<srf::memory::memory_resource> HostResources::system_memory_resource()
+{
+    return m_system;
+}
+std::shared_ptr<srf::memory::memory_resource> HostResources::registered_memory_resource()
+{
+    return m_registered;
+}
+std::shared_ptr<srf::memory::memory_resource> HostResources::arena_memory_resource()
+{
+    return m_arena;
 }
 }  // namespace srf::internal::memory

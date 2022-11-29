@@ -87,4 +87,16 @@ void EngineGroups::set_default_engine_type(runnable::EngineType engine_type)
     m_default_engine_type = engine_type;
 }
 
+void EngineGroups::set_ignore_hyper_threads(bool default_false)
+{
+    m_ignore_hyper_threads = default_false;
+}
+const std::map<std::string, EngineFactoryOptions>& EngineGroups::map() const
+{
+    return m_engine_resource_groups;
+}
+bool EngineGroups::ignore_hyper_threads() const
+{
+    return m_ignore_hyper_threads;
+}
 }  // namespace srf

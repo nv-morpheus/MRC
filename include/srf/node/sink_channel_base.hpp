@@ -112,7 +112,7 @@ class SinkChannelBase
     std::weak_ptr<Edge<T>> m_ingress;
 
     // used to make the channel reader persistent by explicitly holding shared_ptr created from calling weak_ptr::lock
-    std::shared_ptr<Edge<T>> m_persistent_ingress{nullptr};
+    std::shared_ptr<channel::Ingress<T>> m_persistent_ingress{nullptr};
 
     // indicates whether or not a channel connection was ever made
     bool m_ingress_initialized{false};

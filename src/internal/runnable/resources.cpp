@@ -89,4 +89,8 @@ srf::runnable::LaunchControl& Resources::launch_control()
     return *m_launch_control;
 }
 
+const srf::core::FiberTaskQueue& Resources::main() const
+{
+    return m_main;
+}
 }  // namespace srf::internal::runnable

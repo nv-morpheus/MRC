@@ -154,7 +154,8 @@ struct EdgeBuilder final
         }
         else
         {
-            LOG(FATAL) << "No dynamic lookup available for statically typed objects";
+            // todo(cpp20) - use templated lambda to trigger the static fail - make a SRF_STATIC_FAIL macro
+            static_assert(!sizeof(SourceT), "No dynamic lookup available for statically typed objects");
         }
 
         // source.complete_edge(edge);

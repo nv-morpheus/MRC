@@ -44,6 +44,10 @@ class DeviceResources : private resources::PartitionResourceBase
 
     srf::memory::buffer make_buffer(std::size_t bytes);
 
+    std::shared_ptr<srf::memory::memory_resource> system_memory_resource() const;
+    std::shared_ptr<srf::memory::memory_resource> registered_memory_resource() const;
+    std::shared_ptr<srf::memory::memory_resource> arena_memory_resource() const;
+
   private:
     std::shared_ptr<srf::memory::memory_resource> m_system;
     std::shared_ptr<srf::memory::memory_resource> m_registered;

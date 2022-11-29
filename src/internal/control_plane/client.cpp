@@ -15,227 +15,251 @@
  * limitations under the License.
  */
 
-// #include "internal/control_plane/client.hpp"
+#include "internal/control_plane/client.hpp"
 
-// #include "internal/base/placement.hpp"
-// #include "internal/base/placement_resources.hpp"
-// #include "internal/data_plane/instance.hpp"
-// #include "internal/data_plane/server.hpp"
-// #include "internal/pipeline.hpp"
+#include "internal/control_plane/client/connections_manager.hpp"
+#include "internal/grpc/progress_engine.hpp"
+#include "internal/grpc/promise_handler.hpp"
+#include "internal/runnable/resources.hpp"
+#include "internal/system/system.hpp"
+#include "internal/ucx/resources.hpp"
 
-// #include "srf/protos/architect.grpc.pb.h"
-// #include "srf/channel/status.hpp"
-// #include "srf/node/generic_sink.hpp"
-// #include "srf/node/source_channel.hpp"
-// #include "srf/runnable/context.hpp"
-// #include "srf/runnable/fiber_context.hpp"
-// #include "srf/runnable/forward.hpp"
-// #include "srf/runnable/launch_control.hpp"
-// #include "srf/runnable/launch_options.hpp"
-// #include "srf/runnable/launcher.hpp"
-// #include "srf/runnable/runner.hpp"
-// #include "srf/types.hpp"
+#include "srf/channel/status.hpp"
+#include "srf/node/edge_builder.hpp"
+#include "srf/node/rx_sink.hpp"
+#include "srf/node/source_channel.hpp"
+#include "srf/options/options.hpp"
+#include "srf/protos/architect.grpc.pb.h"
+#include "srf/protos/architect.pb.h"
+#include "srf/runnable/launch_control.hpp"
+#include "srf/runnable/launcher.hpp"
 
-// #include <nvrpc/client/client_fiber_streaming.h>
+#include <boost/fiber/future/promise.hpp>
+#include <google/protobuf/any.pb.h>
+#include <grpcpp/grpcpp.h>
+#include <grpcpp/security/credentials.h>
+#include <rxcpp/rx.hpp>
 
-// #include <boost/fiber/future/promise.hpp>
-// #include <boost/fiber/operations.hpp>
-// #include <rxcpp/rx-predef.hpp>
-// #include <rxcpp/rx-subscriber.hpp>
+#include <algorithm>
+#include <ostream>
 
-// #include <chrono>
-// #include <functional>
-// #include <memory>
-// #include <ostream>
-// #include <type_traits>
+namespace srf::internal::control_plane {
 
-// namespace srf::internal::control_plane {
+Client::Client(resources::PartitionResourceBase& base, std::shared_ptr<grpc::CompletionQueue> cq) :
+  resources::PartitionResourceBase(base),
+  m_cq(std::move(cq)),
+  m_owns_progress_engine(false)
+{}
 
-// using StreamingClient = nvrpc::client::fiber::ClientStreaming<protos::Event, protos::Event>;  // NOLINT
+Client::Client(resources::PartitionResourceBase& base) :
+  resources::PartitionResourceBase(base),
+  m_cq(std::make_shared<grpc::CompletionQueue>()),
+  m_owns_progress_engine(true)
+{}
 
-// /**
-//  * @brief Specialized FiberRunnable and InternalService to execute the gRPC client's progress engine
-//  *
-//  * By creating a specialized Runnable that is also an InternalService, this enables users optionally control and
-//  * specialize the runtime location of this Runnable via the Options.
-//  *
-//  */
-// class GrpcClientProgressEngine final : public runnable::FiberRunnable<>
+Client::~Client()
+{
+    Service::call_in_destructor();
+}
+
+void Client::do_service_start()
+{
+    m_launch_options.engine_factory_name = "main";
+    m_launch_options.pe_count            = 1;
+    m_launch_options.engines_per_pe      = 1;
+
+    auto url = runnable().system().options().architect_url();
+    CHECK(!url.empty());
+    auto channel = grpc::CreateChannel(url, grpc::InsecureChannelCredentials());
+    m_stub       = srf::protos::Architect::NewStub(channel);
+
+    if (m_owns_progress_engine)
+    {
+        CHECK(m_cq);
+        auto progress_engine  = std::make_unique<rpc::ProgressEngine>(m_cq);
+        auto progress_handler = std::make_unique<rpc::PromiseHandler>();
+
+        srf::node::make_edge(*progress_engine, *progress_handler);
+
+        m_progress_handler =
+            runnable().launch_control().prepare_launcher(launch_options(), std::move(progress_handler))->ignition();
+        m_progress_engine =
+            runnable().launch_control().prepare_launcher(launch_options(), std::move(progress_engine))->ignition();
+    }
+
+    auto prepare_fn = [this](grpc::ClientContext* context) {
+        CHECK(m_stub);
+        return m_stub->PrepareAsyncEventStream(context, m_cq.get());
+    };
+
+    // event handler - optionally add concurrency here
+    auto event_handler =
+        std::make_unique<node::RxSink<event_t>>([this](event_t event) { do_handle_event(std::move(event)); });
+
+    // make stream and attach event handler
+    m_stream = std::make_shared<stream_t::element_type>(prepare_fn, runnable());
+    m_stream->attach_to(*event_handler);
+
+    // ensure all downstream event handlers are constructed before constructing and starting the event handler
+    m_connections_update_channel = std::make_unique<srf::node::SourceChannelWriteable<const protos::StateUpdate>>();
+    m_connections_manager        = std::make_unique<client::ConnectionsManager>(*this, *m_connections_update_channel);
+
+    // launch runnables
+    m_event_handler =
+        runnable().launch_control().prepare_launcher(launch_options(), std::move(event_handler))->ignition();
+
+    // await initialization
+    m_writer = m_stream->await_init();
+
+    if (!m_writer)
+    {
+        forward_state(State::FailedToConnect);
+        LOG(FATAL) << "unable to connect to control plane";
+    }
+
+    forward_state(State::Connected);
+}
+
+void Client::do_service_stop()
+{
+    m_writer->finish();
+    m_writer.reset();
+}
+
+void Client::do_service_kill()
+{
+    m_writer->cancel();
+    m_writer.reset();
+}
+
+void Client::do_service_await_live()
+{
+    if (m_owns_progress_engine)
+    {
+        m_progress_engine->await_live();
+        m_progress_handler->await_live();
+    }
+    m_event_handler->await_live();
+}
+
+void Client::do_service_await_join()
+{
+    auto status = m_stream->await_fini();
+    m_event_handler->await_join();
+    m_connections_update_channel.reset();
+
+    if (m_owns_progress_engine)
+    {
+        m_cq->Shutdown();
+        m_progress_engine->await_join();
+        m_progress_handler->await_join();
+    }
+}
+
+void Client::do_handle_event(event_t&& event)
+{
+    switch (event.msg.event())
+    {
+        // handle a subset of events directly on the event handler
+
+    case protos::EventType::Response: {
+        auto* promise = reinterpret_cast<Promise<protos::Event>*>(event.msg.tag());
+        if (promise != nullptr)
+        {
+            promise->set_value(std::move(event.msg));
+        }
+    }
+    break;
+
+    case protos::EventType::ServerStateUpdate: {
+        protos::StateUpdate update;
+        CHECK(event.msg.has_message() && event.msg.message().UnpackTo(&update));
+
+        if (update.has_connections())
+        {
+            DCHECK(m_connections_update_channel);
+            CHECK(m_connections_update_channel->await_write(std::move(update)) == channel::Status::success);
+        }
+        else
+        {
+            route_state_update(event.msg.tag(), std::move(update));
+        }
+    }
+    break;
+
+    default:
+        LOG(FATAL) << "event channel not implemented";
+    }
+}
+
+std::map<InstanceID, std::unique_ptr<client::Instance>> Client::register_ucx_addresses(
+    std::vector<std::optional<ucx::Resources>>& ucx_resources)
+{
+    forward_state(State::RegisteringWorkers);
+    auto instances = m_connections_manager->register_ucx_addresses(ucx_resources);
+    forward_state(State::Operational);
+    return instances;
+}
+
+void Client::forward_state(State state)
+{
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    CHECK(m_state < state);
+    m_state = state;
+}
+
+void Client::route_state_update(std::uint64_t tag, protos::StateUpdate&& update)
+{
+    DCHECK(!m_connections_manager->instance_channels().empty());
+
+    if (tag == 0)
+    {
+        DVLOG(10) << "broadcasting " << update.service_name() << " update to all instances";
+        for (const auto& [id, instance] : m_connections_manager->instance_channels())
+        {
+            auto copy   = update;
+            auto status = instance->await_write(std::move(copy));
+            LOG_IF(WARNING, status != srf::channel::Status::success)
+                << "unable to route update for service: " << update.service_name();
+        }
+    }
+    else
+    {
+        auto instance = m_connections_manager->instance_channels().find(tag);
+        CHECK(instance != m_connections_manager->instance_channels().end());
+        auto status = instance->second->await_write(std::move(update));
+        LOG_IF(WARNING, status != srf::channel::Status::success)
+            << "unable to route update for service: " << update.service_name();
+    }
+}
+
+// bool Client::has_subscription_service(const std::string& name) const
 // {
-//   public:
-//     GrpcClientProgressEngine(std::function<void()> progress_engine) : m_progress_engine(std::move(progress_engine))
-//     {}
-
-//   private:
-//     void run(runnable::FiberContext<>& ctx) final
-//     {
-//         m_progress_engine();
-//     }
-
-//     std::function<void()> m_progress_engine;
-// };
-
-// /**
-//  * @brief Event handler sink that receives updates from the architect server and applies those update to the local
-//  * pipeline instance
-//  *
-//  */
-// class EventHandlerUpdateAssignments final : public node::GenericSink<protos::Event>
-// {
-//   public:
-//     EventHandlerUpdateAssignments(pipeline::Instance& pipeline, Client& client) : m_pipeline(pipeline),
-//     m_client(client)
-//     {}
-
-//   private:
-//     void on_data(protos::Event&& event) final
-//     {
-//         CHECK(event.event() == protos::EventType::ServerUpdateAssignments)
-//             << "unexpected event type received; handler only processes ServerUpdateAssignments events";
-//     }
-
-//     pipeline::Instance& m_pipeline;
-//     Client& m_client;
-// };
-
-// std::unique_ptr<::grpc::ClientAsyncReaderWriter<protos::Event, protos::Event>> Client::PrepareAsync(
-//     ::grpc::ClientContext* context, ::grpc::CompletionQueue* cq)
-// {
-//     CHECK(m_stub);
-//     return m_stub->PrepareAsyncEventStream(context, cq);
+//     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+//     return contains(m_subscription_services, name);
 // }
 
-// void Client::TimeoutBackoff(const std::uint64_t& backoff)
-// {
-//     if (backoff < 16384)
-//     {
-//         boost::this_fiber::yield();
-//     }
-//     else
-//     {
-//         auto deadline = std::chrono::high_resolution_clock::now() + std::chrono::nanoseconds(backoff);
-//         boost::this_fiber::sleep_until(deadline);
-//     }
-// }
+const srf::runnable::LaunchOptions& Client::launch_options() const
+{
+    return m_launch_options;
+}
 
-// void Client::CallbackOnInitialized()
-// {
-//     m_promise_live.set_value();
-// }
+void Client::issue_event(const protos::EventType& event_type)
+{
+    protos::Event event;
+    event.set_event(event_type);
+    m_writer->await_write(std::move(event));
+}
 
-// void Client::CallbackOnComplete(const ::grpc::Status& status)
-// {
-//     m_promise_complete.set_value(status);
-// }
+void Client::request_update()
+{
+    issue_event(protos::ClientEventRequestStateUpdate);
+    // std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    // if (!m_update_in_progress && !m_update_requested)
+    // {
+    //     m_update_requested = true;
+    //     issue_event(protos::ClientEventRequestStateUpdate);
+    // }
+}
 
-// void Client::CallbackOnResponseReceived(protos::Event&& event)
-// {
-//     protos::Event response;
-
-//     switch (event.event())
-//     {
-//         // handle a subset of events directly on the grpc event loop
-
-//     case protos::EventType::Response: {
-//         auto* promise = reinterpret_cast<Promise<protos::Event>*>(event.promise());
-//         if (promise != nullptr)
-//         {
-//             promise->set_value(std::move(event));
-//         }
-//     }
-//     break;
-
-//         // handle all other events on the event sink
-
-//     default:
-//         LOG(FATAL) << "event channel not implemented";
-//         m_event_channel->await_write(std::move(event));
-//     }
-// }
-
-// Client::Client(std::shared_ptr<ArchitectRuntime> runtime, std::shared_ptr<protos::Architect::Stub> stub) :
-//   m_runtime(std::move(runtime)),
-//   m_event_channel(std::make_unique<node::SourceChannelWriteable<protos::Event>>()),
-//   m_stub(std::move(stub))
-// {
-//     // kick off grpc progress engine for streaming client
-//     // we specify the `srf_network` fiber engine factory for all network runnables, this is not overridable
-//     DVLOG(10) << "[streaming_client: init] preparing to launch progress engine";
-//     runnable::LaunchOptions grpc_options;
-//     m_grpc_progress_engine =
-//         m_runtime->resources(0)
-//             .launch_control()
-//             .prepare_launcher(runnable::LaunchOptions("srf_network"),
-//                               std::make_unique<GrpcClientProgressEngine>([this] { StreamingClient::ProgressEngine();
-//                               }))
-//             ->ignition();
-
-//     DVLOG(10) << "[streaming_client: init] progress engine: launched";
-//     m_grpc_progress_engine->await_live();
-//     DVLOG(10) << "[streaming_client: init] progress engine: running";
-
-//     // construct any event handler (sinks) and connect them to their respective event sources/writers
-//     // m_event_handler_update_assignments = std::make_unique<EventHandlerUpdateAssignments>(*this);
-
-//     DVLOG(10) << "[streaming_client: init] grpc stream initialize";
-//     StreamingClient::Initialize();
-
-//     DVLOG(10) << "[streaming_client: init] awaiting grpc initialization";
-//     m_promise_live.get_future().get();
-//     DVLOG(10) << "[streaming_client: init] grpc initialized";
-
-//     DVLOG(10) << "[streaming_client: init] register machine/ucx worker addresses with the architect";
-//     register_workers();
-// }
-
-// Client::~Client()
-// {
-//     DVLOG(10) << info() << "closing steam";
-//     StreamingClient::CloseWrites();
-//     DVLOG(10) << info() << "awaiting completion";
-//     auto status = m_promise_complete.get_future().get();
-//     DVLOG(10) << info() << "steam completed";
-//     CHECK(status.ok());
-
-//     DVLOG(10) << info() << "shutting down cq";
-//     StreamingClient::Shutdown();
-//     DVLOG(10) << info() << "awaiting progress engine join";
-//     m_grpc_progress_engine->await_join();
-//     DVLOG(10) << info() << "progress engine complete";
-// }
-
-// void Client::register_workers()
-// {
-//     // Register UCX worker addresses with the Architect and receive assigned InstanceIDs
-//     // Request:  list of uxc worker addresses
-//     // Response: list of instance ids
-
-//     protos::RegisterWorkersRequest request;
-
-//     for (int i = 0; i < m_runtime->placement().group_count(); ++i)
-//     {
-//         // register ucx event managers worker address - this is incoming ucx events that are handled
-//         request.add_ucx_worker_addresses(m_runtime->data_plane_instance(i).events_manager().worker_address());
-//     }
-
-//     CHECK_EQ(request.ucx_worker_addresses_size(), m_runtime->placement().group_count());
-
-//     auto response =
-//         await_unary<protos::RegisterWorkersResponse>(protos::EventType::ClientRegisterWorkers, std::move(request));
-
-//     m_machine_id = response.machine_id();
-
-//     std::stringstream ss;
-//     ss << "[streaming_client: " << m_machine_id << "] ";
-//     m_info = ss.str();
-//     VLOG(1) << info() << "architect assigned this machine as " << m_machine_id;
-
-//     VLOG(1) << info() << "each numa domaim is assigned a globally unique instance_id";
-//     for (const auto& id : response.instance_ids())
-//     {
-//         VLOG(1) << info() << "instance_id:" << id;
-//         m_instance_ids.push_back(id);
-//     }
-// }
-
-// }  // namespace srf::internal::control_plane
+}  // namespace srf::internal::control_plane

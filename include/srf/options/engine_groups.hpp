@@ -67,21 +67,19 @@ class EngineGroups final
     void set_dedicated_main_thread(bool default_false);
     void set_dedicated_network_thread(bool default_false);
     void set_default_engine_type(runnable::EngineType engine_type);
+    void set_ignore_hyper_threads(bool default_false);
 
     const EngineFactoryOptions& engine_group_options(const std::string& name) const;
-
-    const std::map<std::string, EngineFactoryOptions>& map() const
-    {
-        return m_engine_resource_groups;
-    }
-
+    const std::map<std::string, EngineFactoryOptions>& map() const;
     bool dedicated_main_thread() const;
     bool dedicated_network_thread() const;
+    bool ignore_hyper_threads() const;
     runnable::EngineType default_engine_type() const;
 
   private:
     bool m_dedicated_main_thread{false};
     bool m_dedicated_network_thread{false};
+    bool m_ignore_hyper_threads{false};
     runnable::EngineType m_default_engine_type{runnable::EngineType::Fiber};
     std::map<std::string, EngineFactoryOptions> m_engine_resource_groups;
 };

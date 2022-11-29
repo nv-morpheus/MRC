@@ -17,7 +17,8 @@
 
 #pragma once
 
-#include "srf/codable/encoded_object.hpp"
+#include "srf/codable/api.hpp"
+#include "srf/codable/storage_forwarder.hpp"
 #include "srf/codable/type_traits.hpp"
 #include "srf/utils/sfinae_concept.hpp"
 
@@ -26,18 +27,54 @@
 namespace srf::codable {
 
 template <typename T>
-struct Decoder
+struct Decoder final : public StorageForwarder
 {
-    static T deserialize(const EncodedObject& encoding, std::size_t object_idx)
+  public:
+    Decoder(const IDecodableStorage& storage) : m_storage(storage) {}
+
+    T deserialize(std::size_t object_idx) const
     {
-        return detail::deserialize<T>(sfinae::full_concept{}, encoding, object_idx);
+        return detail::deserialize<T>(sfinae::full_concept{}, *this, object_idx);
     }
+
+  protected:
+    void copy_from_buffer(const idx_t& idx, memory::buffer_view dst_view) const
+    {
+        m_storage.copy_from_buffer(idx, std::move(dst_view));
+    }
+
+    std::size_t buffer_size(const idx_t& idx) const
+    {
+        return m_storage.buffer_size(idx);
+    }
+
+    std::shared_ptr<srf::memory::memory_resource> host_memory_resource() const
+    {
+        return m_storage.host_memory_resource();
+    }
+
+    std::shared_ptr<srf::memory::memory_resource> device_memory_resource() const
+    {
+        return m_storage.host_memory_resource();
+    }
+
+  private:
+    const IStorage& const_storage() const final
+    {
+        return m_storage;
+    }
+
+    const IDecodableStorage& m_storage;
+
+    friend T;
+    friend codable_protocol<T>;
 };
 
 template <typename T>
-auto decode(const EncodedObject& encoding, std::size_t object_idx = 0)
+auto decode(const IDecodableStorage& encoded, std::size_t object_idx = 0)
 {
-    return Decoder<T>::deserialize(encoding, object_idx);
+    Decoder<T> decoder(encoded);
+    return decoder.deserialize(object_idx);
 }
 
 }  // namespace srf::codable

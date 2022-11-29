@@ -27,6 +27,7 @@
 #include "srf/core/task_queue.hpp"
 #include "srf/memory/buffer_view.hpp"
 #include "srf/node/channel_holder.hpp"
+#include "srf/memory/literals.hpp"
 #include "srf/node/edge_builder.hpp"
 #include "srf/node/generic_source.hpp"
 #include "srf/node/operators/router.hpp"
@@ -49,7 +50,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
-#include <exception>
 #include <ostream>
 #include <utility>
 
@@ -69,7 +69,7 @@ void zero_bytes_completion_handler(void* request,
     ucp_request_free(request);
 }
 
-static void pre_post_recv_issue(detail::PrePostedRecvInfo* info);
+static void pre_post_recv(detail::PrePostedRecvInfo* info);
 
 void pre_posted_recv_callback(void* request, ucs_status_t status, const ucp_tag_recv_info_t* msg_info, void* user_data)
 {
@@ -78,14 +78,22 @@ void pre_posted_recv_callback(void* request, ucs_status_t status, const ucp_tag_
     if (status == UCS_OK)  // cpp20 [[likely]]
     {
         // grab tag and free request - not sure if there will be a race condition on msg_info
-        auto tag = msg_info->sender_tag;
+        auto tag    = decode_user_bits(msg_info->sender_tag);
+        auto length = msg_info->length;
         ucp_request_free(request);
 
-        // repost recv
-        pre_post_recv_issue(info);
+        // create a shallow copy of the transient buffer with received buffer size
+        DCHECK_LE(length, info->buffer.bytes());
+        memory::TransientBuffer buffer(info->buffer.data(), length, info->buffer);
 
-        // write tag to channel
-        info->channel->await_write(std::move(tag));
+        // write tag to channel - create a shallow copy of the transient buffer with received buffer size
+        info->channel->await_write(std::make_pair(tag, std::move(buffer)));
+
+        // create a new transient buffer
+        info->buffer = info->pool->await_buffer(info->buffer.bytes());
+
+        // repost recv
+        pre_post_recv(info);
     }
     else if (status == UCS_ERR_CANCELED)
     {
@@ -98,19 +106,23 @@ void pre_posted_recv_callback(void* request, ucs_status_t status, const ucp_tag_
     }
 }
 
-void pre_post_recv_issue(detail::PrePostedRecvInfo* info)
+void pre_post_recv(detail::PrePostedRecvInfo* info)
 {
     ucp_request_param_t params;
     params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
     params.cb.recv      = pre_posted_recv_callback;
     params.user_data    = info;
 
-    info->request = ucp_tag_recv_nbx(info->worker, nullptr, 0, 0, 0, &params);
+    // match upper 16 bits instead of only upper 4 bits
+    info->request =
+        ucp_tag_recv_nbx(info->worker, info->buffer.data(), info->buffer.bytes(), TAG_EGR_MSG, TAG_MSG_MASK, &params);
     CHECK(info->request);
     CHECK(!UCS_PTR_IS_ERR(info->request));
 }
 
 }  // namespace
+
+using namespace srf::memory::literals;
 
 class DataPlaneServerWorker final : public node::GenericSource<network_event_t>
 {
@@ -132,10 +144,16 @@ class DataPlaneServerWorker final : public node::GenericSource<network_event_t>
     ucp_tag_t m_tag_mask{0};
 };
 
-Server::Server(resources::PartitionResourceBase& provider, ucx::Resources& ucx, memory::HostResources& host) :
+Server::Server(resources::PartitionResourceBase& provider,
+               ucx::Resources& ucx,
+               memory::HostResources& host,
+               memory::TransientPool& transient_pool,
+               InstanceID instance_id) :
   resources::PartitionResourceBase(provider),
   m_ucx(ucx),
-  m_host(host)
+  m_host(host),
+  m_instance_id(instance_id),
+  m_transient_pool(transient_pool)
 {}
 
 Server::~Server()
@@ -149,22 +167,24 @@ void Server::do_service_start()
         .enqueue([this] {
             // source channel ucx tag recvs masked with the RemoteDescriptor tag
             // this recv has no recv payload, we simply write the tag to the channel
-            // m_rd_source = std::make_unique<node::SourceChannelWriteable<ucp_tag_t>>();
+            m_prepost_channel = std::make_unique<node::SourceChannelWriteable<network_event_t>>();
 
-            // pre-post recv for remote descriptors and remote promise/future
-            // m_pre_posted_recv_info.resize(m_pre_posted_recv_count);
-            // for (auto& info : m_pre_posted_recv_info)
-            // {
-            //     info.worker  = m_ucx.worker().handle();
-            //     info.channel = m_rd_source.get();
-            //     pre_post_recv_issue(&info);
-            // }
+            m_pre_posted_recv_info.resize(m_pre_posted_recv_count);
+            for (auto& info : m_pre_posted_recv_info)
+            {
+                info.worker  = m_ucx.worker().handle();
+                info.channel = m_prepost_channel.get();
+                info.pool    = &m_transient_pool;
+                info.buffer  = m_transient_pool.await_buffer(1_MiB);
+                pre_post_recv(&info);
+            }
 
             // source for ucx tag recvs with data
             auto progress_engine = std::make_shared<DataPlaneServerWorker>(m_ucx.worker());
 
             // router for ucx tag recvs with data
-            m_deserialize_source = std::make_shared<node::TaggedRouter<PortAddress, srf::memory::buffer_view>>();
+            m_deserialize_source = std::make_shared<node::TaggedRouter<PortAddress, memory::TransientBuffer>>();
+            node::make_edge(*m_prepost_channel, *m_deserialize_source);
 
             // for edge between source and router - on channel operator driven by the source thread
             node::make_edge(*progress_engine, *m_deserialize_source);
@@ -222,9 +242,9 @@ void Server::do_service_kill()
 void Server::do_service_await_join()
 {
     m_progress_engine->await_join();
-    if (m_rd_source)
+    if (m_prepost_channel)
     {
-        m_rd_source.reset();
+        m_prepost_channel.reset();
     }
 }
 
@@ -233,7 +253,7 @@ ucx::WorkerAddress Server::worker_address() const
     return m_ucx.worker().address();
 }
 
-node::TaggedRouter<PortAddress, srf::memory::buffer_view>& Server::deserialize_source()
+node::TaggedRouter<PortAddress, memory::TransientBuffer>& Server::deserialize_source()
 {
     CHECK(m_deserialize_source);
     return *m_deserialize_source;
@@ -287,7 +307,6 @@ void DataPlaneServerWorker::on_tagged_msg(rxcpp::subscriber<network_event_t>& su
                                           const ucp_tag_recv_info_t& msg_info)
 {
     ucp_request_param_t params;
-    // std::memset(&params, 0, sizeof(params));
     params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK;
     params.cb.recv      = zero_bytes_completion_handler;
     params.user_data    = nullptr;
@@ -296,11 +315,11 @@ void DataPlaneServerWorker::on_tagged_msg(rxcpp::subscriber<network_event_t>& su
     void* recv_addr        = nullptr;
     std::size_t recv_bytes = 0;
 
-    auto msg_type = tag_decode_msg_type(msg_info.sender_tag);
+    auto msg_type = decode_tag_msg(msg_info.sender_tag);
 
     switch (msg_type)
     {
-    case INGRESS_TAG: {
+    case TAG_RND_MSG: {
         params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK |   // recv_completion_handler
                               UCP_OP_ATTR_FIELD_USER_DATA |  // user_data
                               UCP_OP_ATTR_FIELD_RECV_INFO |  // not sure if this is needed
@@ -319,15 +338,6 @@ void DataPlaneServerWorker::on_tagged_msg(rxcpp::subscriber<network_event_t>& su
         // params.cb.recv   = recv_completion_handler;
         break;
     }
-    case DESCRIPTOR_TAG:
-        // m_rd_source.await_write(msg_info.sender_tag);
-        // m_descriptors_channel->await_write(msg_info.sender_tag);
-        LOG(FATAL) << "remote descriptor not implemented";
-        break;
-
-    case FUTURE_TAG:
-        LOG(FATAL) << "remote futures/promises not implemented";
-        break;
 
     default:
         LOG(FATAL) << "unknown network event received: " << msg_info.sender_tag;

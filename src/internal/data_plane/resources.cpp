@@ -17,28 +17,40 @@
 
 #include "internal/data_plane/resources.hpp"
 
+#include "internal/control_plane/client.hpp"
 #include "internal/data_plane/client.hpp"
 #include "internal/data_plane/server.hpp"
 #include "internal/ucx/resources.hpp"
 #include "internal/ucx/worker.hpp"
 
+#include "srf/memory/literals.hpp"
+
 namespace srf::internal::data_plane {
 
-Resources::Resources(resources::PartitionResourceBase& base, ucx::Resources& ucx, memory::HostResources& host) :
+using namespace srf::memory::literals;
+
+Resources::Resources(resources::PartitionResourceBase& base,
+                     ucx::Resources& ucx,
+                     memory::HostResources& host,
+                     const InstanceID& instance_id,
+                     control_plane::Client& control_plane_client) :
   resources::PartitionResourceBase(base),
   m_ucx(ucx),
   m_host(host),
-  m_server(base, ucx, host),
-  m_client(base, ucx)
+  m_control_plane_client(control_plane_client),
+  m_instance_id(instance_id),
+  m_transient_pool(32_MiB, 4, m_host.registered_memory_resource()),
+  m_server(base, ucx, host, m_transient_pool, m_instance_id),
+  m_client(base, ucx, m_control_plane_client.connections(), m_transient_pool)
 {
     // ensure the data plane progress engine is up and running
-    m_server.service_start();
-    m_server.service_await_live();
+    service_start();
+    service_await_live();
 }
 
 Resources::~Resources()
 {
-    call_in_destructor();
+    Service::call_in_destructor();
 }
 
 Client& Resources::client()
@@ -64,26 +76,46 @@ const ucx::RegistrationCache& Resources::registration_cache() const
 void Resources::do_service_start()
 {
     m_server.service_start();
+    m_client.service_start();
 }
 
 void Resources::do_service_await_live()
 {
     m_server.service_await_live();
+    m_client.service_await_live();
 }
 
 void Resources::do_service_stop()
 {
-    m_server.service_stop();
+    // we only issue
+    m_client.service_stop();
 }
 
 void Resources::do_service_kill()
 {
     m_server.service_kill();
+    m_client.service_kill();
 }
 
 void Resources::do_service_await_join()
 {
+    m_client.service_await_join();
+    m_server.service_stop();
     m_server.service_await_join();
 }
 
+Server& Resources::server()
+{
+    return m_server;
+}
+
+srf::runnable::LaunchOptions Resources::launch_options(std::size_t concurrency)
+{
+    return ucx::Resources::launch_options(concurrency);
+}
+
+const InstanceID& Resources::instance_id() const
+{
+    return m_instance_id;
+}
 }  // namespace srf::internal::data_plane

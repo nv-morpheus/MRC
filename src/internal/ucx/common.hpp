@@ -29,10 +29,6 @@ namespace srf::internal::ucx {
 
 using WorkerAddress = std::string;  // NOLINT
 
-using InstanceID = std::uint32_t;  // NOLINT
-using NodeID     = std::uint64_t;  // NOLINT
-using ObjectID   = std::uint64_t;  // NOLINT
-
 template <typename T>
 class Primitive;
 

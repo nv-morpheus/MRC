@@ -28,7 +28,9 @@
 
 #include "srf/core/task_queue.hpp"
 #include "srf/memory/adaptors.hpp"
+#include "srf/runnable/launch_options.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 
@@ -41,7 +43,7 @@ namespace srf::internal::ucx {
 /**
  * @brief UCX Resources - if networking is enabled, there should be 1 UCX Resource per "flattened" partition
  */
-class Resources final : private resources::PartitionResourceBase
+class Resources final : public resources::PartitionResourceBase
 {
   public:
     Resources(resources::PartitionResourceBase& base, system::FiberTaskQueue& network_task_queue);
@@ -55,7 +57,7 @@ class Resources final : private resources::PartitionResourceBase
     srf::core::FiberTaskQueue& network_task_queue();
 
     // registration cache to look up local/remote keys for registered blocks of memory
-    const RegistrationCache& registration_cache() const;
+    RegistrationCache& registration_cache();
 
     // used to build a callback adaptor memory resource for host memory resources
     void add_registration_cache_to_builder(RegistrationCallbackBuilder& builder);
@@ -69,6 +71,8 @@ class Resources final : private resources::PartitionResourceBase
     }
 
     std::shared_ptr<ucx::Endpoint> make_ep(const std::string& worker_address) const;
+
+    static srf::runnable::LaunchOptions launch_options(std::uint64_t concurrency);
 
   private:
     system::FiberTaskQueue& m_network_task_queue;

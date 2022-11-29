@@ -24,14 +24,14 @@
 namespace srf::node {
 
 template <typename T>
-class Queue final : public IngressProvider<int>, public EgressProvider<int>
+class Queue : public IngressProvider<int>, public EgressProvider<int>
 {
   public:
     Queue()
     {
         this->set_channel(std::make_unique<srf::channel::BufferedChannel<T>>());
     }
-    ~Queue() final = default;
+    ~Queue() override = default;
 
     void set_channel(std::unique_ptr<srf::channel::Channel<int>> channel)
     {

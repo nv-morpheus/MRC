@@ -22,7 +22,8 @@
 #include "pysrf/utilities/serializers.hpp"
 
 #include "srf/codable/codable_protocol.hpp"
-#include "srf/codable/encoded_object.hpp"
+#include "srf/codable/decode.hpp"
+#include "srf/codable/encode.hpp"
 #include "srf/codable/encoding_options.hpp"
 #include "srf/memory/memory_kind.hpp"
 
@@ -40,15 +41,13 @@ namespace srf::codable {
 template <typename T>
 struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, pybind11::object>>>
 {
-    static void serialize(const T& py_object, Encoded<T>& encoded, const EncodingOptions& opts)
+    static void serialize(const T& py_object, Encoder<T>& encoded, const EncodingOptions& opts)
     {
         using namespace srf::pysrf;
         VLOG(8) << "Serializing python object";
         pybind11::gil_scoped_acquire gil;
         pybind11::buffer_info py_bytebuffer;
         std::tuple<char*, std::size_t> serialized_obj;
-
-        auto guard = encoded.acquire_encoding_context();
 
         // Serialize the object
         serialized_obj = Serializer::serialize(py_object, opts.use_shm(), !opts.force_copy());
@@ -58,7 +57,7 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, pybind11::object>>
             std::get<0>(serialized_obj), std::get<1>(serialized_obj), memory::memory_kind::host));
     }
 
-    static T deserialize(const EncodedObject& encoded, std::size_t object_idx)
+    static T deserialize(const Decoder<T>& encoded, std::size_t object_idx)
     {
         using namespace srf::pysrf;
         VLOG(8) << "De-serializing python object";
@@ -76,7 +75,7 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, pybind11::object>>
 template <typename T>
 struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, pysrf::PyHolder>>>
 {
-    static void serialize(const T& pyholder_object, Encoded<T>& encoded, const EncodingOptions& opts)
+    static void serialize(const T& pyholder_object, Encoder<T>& encoded, const EncodingOptions& opts)
     {
         using namespace srf::pysrf;
         VLOG(8) << "Serializing PyHolder object";
@@ -84,8 +83,6 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, pysrf::PyHolder>>>
         pybind11::object py_object = pyholder_object.copy_obj();  // Not a deep copy, just inc_ref the pointer.
         pybind11::buffer_info py_bytebuffer;
         std::tuple<char*, std::size_t> serialized_obj;
-
-        auto guard = encoded.acquire_encoding_context();
 
         // Serialize the object
         serialized_obj = Serializer::serialize(py_object, opts.use_shm(), !opts.force_copy());
@@ -95,7 +92,7 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, pysrf::PyHolder>>>
             memory::buffer_view(std::get<0>(serialized_obj), std::get<1>(serialized_obj), memory::memory_kind::host));
     }
 
-    static T deserialize(const EncodedObject& encoded, std::size_t object_idx)
+    static T deserialize(const Decoder<T>& encoded, std::size_t object_idx)
     {
         using namespace srf::pysrf;
         VLOG(8) << "De-serializing PyHolder object";

@@ -102,4 +102,16 @@ srf::memory::buffer DeviceResources::make_buffer(std::size_t bytes)
 {
     return srf::memory::buffer(bytes, m_arena);
 }
+std::shared_ptr<srf::memory::memory_resource> DeviceResources::system_memory_resource() const
+{
+    return m_system;
+}
+std::shared_ptr<srf::memory::memory_resource> DeviceResources::registered_memory_resource() const
+{
+    return m_registered;
+}
+std::shared_ptr<srf::memory::memory_resource> DeviceResources::arena_memory_resource() const
+{
+    return m_arena;
+}
 }  // namespace srf::internal::memory

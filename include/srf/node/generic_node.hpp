@@ -45,17 +45,18 @@ template <typename InputT, typename OutputT, typename ContextT>
 class GenericNode : public RxNode<InputT, OutputT, ContextT>
 {
   public:
-    GenericNode()
-    {
-        this->make_stream([this](const rxcpp::observable<InputT>& input) {
-            return rxcpp::observable<>::create<OutputT>([this, input](rxcpp::subscriber<OutputT> output) {
-                input.subscribe([this, &output](InputT input) { on_data(std::move(input), output); });
-            });
-        });
-    }
+    GenericNode() :
+      RxNode<InputT, OutputT, ContextT>([this](const rxcpp::observable<InputT>& input) {
+          return rxcpp::observable<>::create<OutputT>([this, input](rxcpp::subscriber<OutputT> output) {
+              input.subscribe([this, &output](InputT i) { on_data(std::move(i), output); },
+                              [this, &output] { on_completed(output); });
+          });
+      })
+    {}
 
   private:
     virtual void on_data(InputT&& data, rxcpp::subscriber<OutputT>& subscriber) = 0;
+    virtual void on_completed(rxcpp::subscriber<OutputT>& subscriber) {}
 };
 
 }  // namespace srf::node

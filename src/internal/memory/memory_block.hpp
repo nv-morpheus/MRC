@@ -24,8 +24,14 @@ namespace srf::internal::memory {
 struct MemoryBlock
 {
     MemoryBlock() = default;
-    MemoryBlock(void* data, std::size_t bytes) : m_data(data), m_bytes(bytes) {}
+    MemoryBlock(const void* data, std::size_t bytes) : m_data(const_cast<void*>(data)), m_bytes(bytes) {}
     virtual ~MemoryBlock() = default;
+
+    MemoryBlock(const MemoryBlock& other) = default;
+    MemoryBlock& operator=(const MemoryBlock& other) = default;
+
+    MemoryBlock(MemoryBlock&&) = delete;
+    MemoryBlock& operator=(MemoryBlock&&) = delete;
 
     void* data()
     {
@@ -42,11 +48,11 @@ struct MemoryBlock
         return m_bytes;
     }
 
-    bool contains(void* ptr) const
+    bool contains(const void* ptr) const
     {
-        auto* p = static_cast<std::byte*>(ptr);
-        auto* s = static_cast<std::byte*>(m_data);
-        auto* e = s + m_bytes;
+        const auto* p = static_cast<const std::byte*>(ptr);
+        auto* s       = static_cast<std::byte*>(m_data);
+        auto* e       = s + m_bytes;
         return (m_data != nullptr && s <= p && p < e);
     }
 

@@ -97,4 +97,11 @@ class SinkChannel : public virtual SinkProperties<T>
 //     SinkChannelBase<T>::set_shared_channel(std::move(channel));
 // }
 
+template <typename T>
+class SinkChannelReadable : public SinkChannel<T>
+{
+  public:
+    using SinkChannel<T>::egress;
+};
+
 }  // namespace srf::node

@@ -94,6 +94,7 @@ namespace srf {
 enum class PlacementStrategy
 {
     PerMachine,
+    PerSocket,
     PerNumaNode,
 };
 

@@ -58,7 +58,7 @@ GenericSource<T, ContextT>::GenericSource() :
       {
           data_source(s);
 
-      } catch (std::exception& e)
+      } catch (...)
       {
           s.on_error(std::current_exception());
           return;

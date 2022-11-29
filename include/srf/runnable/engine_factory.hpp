@@ -36,8 +36,8 @@ namespace srf::runnable {
  */
 struct EngineFactory
 {
-    virtual ~EngineFactory()                                                            = default;
-    virtual EngineType backend() const                                                  = 0;
+    virtual ~EngineFactory()           = default;
+    virtual EngineType backend() const = 0;  // todo(cpp20) constexpr virtual for the specific types
     virtual std::shared_ptr<Engines> build_engines(const LaunchOptions& launch_options) = 0;
 };
 

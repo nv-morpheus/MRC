@@ -41,17 +41,15 @@ using Mutex = userspace_threads::mutex;  // NOLINT(readability-identifier-naming
 
 using CondV = userspace_threads::cv;  // NOLINT(readability-identifier-naming)
 
-using InstanceID = std::uint32_t;                      // NOLINT(readability-identifier-naming)
-using MachineID  = std::uint32_t;                      // NOLINT(readability-identifier-naming)
-using Instances  = std::map<InstanceID, std::string>;  // NOLINT(readability-identifier-naming)
+using MachineID  = std::uint64_t;  // NOLINT(readability-identifier-naming)
+using InstanceID = std::uint64_t;  // NOLINT(readability-identifier-naming)
+using TagID      = std::uint64_t;  // NOLINT(readability-identifier-naming)
 
 using NodeID   = std::uint32_t;  // NOLINT(readability-identifier-naming)
 using ObjectID = std::uint32_t;  // NOLINT(readability-identifier-naming)
 
 template <typename T>
 using Handle = std::shared_ptr<T>;  // NOLINT(readability-identifier-naming)
-
-using PipelineRank = std::uint32_t;  // NOLINT(readability-identifier-naming)
 
 using SegmentName    = std::string;    // NOLINT(readability-identifier-naming)
 using SegmentID      = std::uint16_t;  // NOLINT(readability-identifier-naming)

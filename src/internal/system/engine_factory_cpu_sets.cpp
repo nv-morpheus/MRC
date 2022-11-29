@@ -17,6 +17,8 @@
 
 #include "internal/system/engine_factory_cpu_sets.hpp"
 
+#include "internal/system/topology.hpp"
+
 #include "srf/core/bitmap.hpp"
 #include "srf/exceptions/runtime_error.hpp"
 #include "srf/options/engine_groups.hpp"
@@ -24,6 +26,7 @@
 #include "srf/runnable/types.hpp"
 
 #include <glog/logging.h>
+#include <hwloc.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -39,11 +42,31 @@ bool EngineFactoryCpuSets::is_resuable(const std::string& name) const
     return search->second;
 }
 
-EngineFactoryCpuSets generate_engine_factory_cpu_sets(const Options& options, const CpuSet& cpu_set)
+EngineFactoryCpuSets generate_engine_factory_cpu_sets(const Topology& topology,
+                                                      const Options& options,
+                                                      const CpuSet& cpu_set)
 {
+    CpuSet pe_set;
     EngineFactoryCpuSets config;
 
-    auto cpu_count = cpu_set.weight();
+    if (options.engine_factories().ignore_hyper_threads())
+    {
+        auto core_count = hwloc_get_nbobjs_inside_cpuset_by_type(topology.handle(), &cpu_set.bitmap(), HWLOC_OBJ_CORE);
+        for (int i = 0; i < core_count; i++)
+        {
+            auto* core_obj =
+                hwloc_get_obj_inside_cpuset_by_type(topology.handle(), &cpu_set.bitmap(), HWLOC_OBJ_CORE, i);
+            pe_set.on(core_obj->os_index);
+        }
+        DVLOG(10) << "hyper_threading [off]: " << pe_set;
+    }
+    else
+    {
+        pe_set = cpu_set;
+        DVLOG(10) << "hyper_threading [on]: " << pe_set;
+    }
+
+    auto cpu_count = pe_set.weight();
     CHECK_GT(cpu_count, 0);
 
     const auto& services      = options.services();
@@ -130,7 +153,7 @@ EngineFactoryCpuSets generate_engine_factory_cpu_sets(const Options& options, co
     // the remaining logical cpus will be reserved for thread pools or thread runnables
 
     DVLOG(10) << "allocating logical cpus for `" << default_engine_factory_name() << "`` pool";
-    auto remaining_cpu_set             = cpu_set;
+    auto remaining_cpu_set             = pe_set;
     std::size_t default_pool_cpu_count = cpu_count - min_cpu_count;
     auto default_pool_cpu_set          = remaining_cpu_set.pop(default_pool_cpu_count);
     if (options.engine_factories().default_engine_type() == runnable::EngineType::Fiber)

@@ -21,6 +21,8 @@
 
 #include <ostream>
 
+#define SRF_DEBUG 1
+
 namespace srf::internal::memory {
 
 TransientBuffer::TransientBuffer(void* addr, std::size_t bytes, srf::data::SharedReusable<srf::memory::buffer> buffer) :
@@ -28,6 +30,19 @@ TransientBuffer::TransientBuffer(void* addr, std::size_t bytes, srf::data::Share
   m_bytes(bytes),
   m_buffer(std::move(buffer))
 {}
+
+TransientBuffer::TransientBuffer(void* addr, std::size_t bytes, const TransientBuffer& buffer) :
+  m_addr(addr),
+  m_bytes(bytes),
+  m_buffer(buffer.m_buffer)
+{
+    auto* c = static_cast<std::byte*>(addr);
+    auto* b = static_cast<std::byte*>(const_cast<void*>(buffer.data()));
+    CHECK_GE(c, b);
+    c += bytes;
+    b += buffer.bytes();
+    CHECK_LE(c, b);
+}
 
 TransientBuffer::~TransientBuffer()
 {
@@ -53,6 +68,11 @@ void* TransientBuffer::data()
     return m_addr;
 }
 
+const void* TransientBuffer::data() const
+{
+    return m_addr;
+}
+
 std::size_t TransientBuffer::bytes() const
 {
     return m_bytes;
@@ -70,8 +90,8 @@ void TransientBuffer::release()
 
 TransientPool::TransientPool(std::size_t block_size,
                              std::size_t block_count,
-                             std::size_t capacity,
-                             std::shared_ptr<srf::memory::memory_resource> mr) :
+                             std::shared_ptr<srf::memory::memory_resource> mr,
+                             std::size_t capacity) :
   m_block_size(block_size),
   m_pool(srf::data::ReusablePool<srf::memory::buffer>::create(capacity))
 {
@@ -104,7 +124,7 @@ TransientBuffer TransientPool::await_buffer(std::size_t bytes)
     m_addr += bytes;
     m_remaining -= bytes;
 
-    return TransientBuffer(addr, bytes, m_buffer);
+    return {addr, bytes, m_buffer};
 }
 
 }  // namespace srf::internal::memory

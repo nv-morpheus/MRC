@@ -29,7 +29,6 @@
 #include <rxcpp/sources/rx-iterate.hpp>
 
 #include <chrono>
-#include <exception>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
