@@ -19,20 +19,20 @@
 
 #include "internal/runnable/engine.hpp"
 
-#include "srf/constants.hpp"
-#include "srf/core/fiber_meta_data.hpp"
-#include "srf/core/task_queue.hpp"
-#include "srf/runnable/types.hpp"
-#include "srf/types.hpp"
+#include "mrc/constants.hpp"
+#include "mrc/core/fiber_meta_data.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/runnable/types.hpp"
+#include "mrc/types.hpp"
 
 #include <functional>
 
-namespace srf::internal::runnable {
+namespace mrc::internal::runnable {
 
 class FiberEngine final : public Engine
 {
   public:
-    FiberEngine(core::FiberTaskQueue& task_queue, int priority = SRF_DEFAULT_FIBER_PRIORITY);
+    FiberEngine(core::FiberTaskQueue& task_queue, int priority = MRC_DEFAULT_FIBER_PRIORITY);
     FiberEngine(core::FiberTaskQueue& task_queue, const FiberMetaData& meta);
 
     ~FiberEngine() final = default;
@@ -46,4 +46,4 @@ class FiberEngine final : public Engine
     FiberMetaData m_meta;
 };
 
-}  // namespace srf::internal::runnable
+}  // namespace mrc::internal::runnable

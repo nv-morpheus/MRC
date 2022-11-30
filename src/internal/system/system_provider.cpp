@@ -21,16 +21,16 @@
 
 #include <utility>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 SystemProvider::SystemProvider(std::shared_ptr<const System> system) : m_system(std::move(system))
 {
     CHECK(m_system);
 }
-const System& srf::internal::system::SystemProvider::system() const
+const System& mrc::internal::system::SystemProvider::system() const
 {
     DCHECK(m_system);
     return *m_system;
 }
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

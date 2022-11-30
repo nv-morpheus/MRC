@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "srf/utils/bytes_to_string.hpp"
+#include "mrc/utils/bytes_to_string.hpp"
 
 #include <glog/logging.h>
 
@@ -31,7 +31,7 @@
 // https://github.com/include-what-you-use/include-what-you-use/issues/902
 // IWYU pragma: no_include <vector>
 
-namespace srf {
+namespace mrc {
 
 std::string bytes_to_string(size_t bytes)
 {
@@ -76,4 +76,4 @@ std::uint64_t string_to_bytes(std::string str)
     return (std::uint64_t)(scalar * std::pow(base, exponent));
 }
 
-}  // namespace srf
+}  // namespace mrc

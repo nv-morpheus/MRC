@@ -17,17 +17,32 @@
 
 #include "internal/memory/transient_pool.hpp"
 
-#include "srf/memory/resources/memory_resource.hpp"
+#include "mrc/memory/resources/memory_resource.hpp"
 
 #include <ostream>
 
-namespace srf::internal::memory {
+#define MRC_DEBUG 1
 
-TransientBuffer::TransientBuffer(void* addr, std::size_t bytes, srf::data::SharedReusable<srf::memory::buffer> buffer) :
+namespace mrc::internal::memory {
+
+TransientBuffer::TransientBuffer(void* addr, std::size_t bytes, mrc::data::SharedReusable<mrc::memory::buffer> buffer) :
   m_addr(addr),
   m_bytes(bytes),
   m_buffer(std::move(buffer))
 {}
+
+TransientBuffer::TransientBuffer(void* addr, std::size_t bytes, const TransientBuffer& buffer) :
+  m_addr(addr),
+  m_bytes(bytes),
+  m_buffer(buffer.m_buffer)
+{
+    auto* c = static_cast<std::byte*>(addr);
+    auto* b = static_cast<std::byte*>(const_cast<void*>(buffer.data()));
+    CHECK_GE(c, b);
+    c += bytes;
+    b += buffer.bytes();
+    CHECK_LE(c, b);
+}
 
 TransientBuffer::~TransientBuffer()
 {
@@ -53,6 +68,11 @@ void* TransientBuffer::data()
     return m_addr;
 }
 
+const void* TransientBuffer::data() const
+{
+    return m_addr;
+}
+
 std::size_t TransientBuffer::bytes() const
 {
     return m_bytes;
@@ -70,10 +90,10 @@ void TransientBuffer::release()
 
 TransientPool::TransientPool(std::size_t block_size,
                              std::size_t block_count,
-                             std::size_t capacity,
-                             std::shared_ptr<srf::memory::memory_resource> mr) :
+                             std::shared_ptr<mrc::memory::memory_resource> mr,
+                             std::size_t capacity) :
   m_block_size(block_size),
-  m_pool(srf::data::ReusablePool<srf::memory::buffer>::create(capacity))
+  m_pool(mrc::data::ReusablePool<mrc::memory::buffer>::create(capacity))
 {
     CHECK(m_pool);
     CHECK_LT(block_count, capacity);
@@ -104,7 +124,7 @@ TransientBuffer TransientPool::await_buffer(std::size_t bytes)
     m_addr += bytes;
     m_remaining -= bytes;
 
-    return TransientBuffer(addr, bytes, m_buffer);
+    return {addr, bytes, m_buffer};
 }
 
-}  // namespace srf::internal::memory
+}  // namespace mrc::internal::memory

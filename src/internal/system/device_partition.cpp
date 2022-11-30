@@ -21,7 +21,7 @@
 
 #include <utility>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 DevicePartition::DevicePartition(const GpuInfo& gpu_info, std::shared_ptr<const HostPartition> host_partition) :
   GpuInfo(gpu_info),
@@ -55,4 +55,4 @@ const HostPartition& DevicePartition::host() const
     CHECK(m_host_partition);
     return *m_host_partition;
 }
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

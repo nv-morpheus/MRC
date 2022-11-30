@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-#include "srf/core/logging.hpp"
+#include "mrc/core/logging.hpp"
 
 #include <gtest/gtest.h>
 
 int main(int argc, char** argv)
 {
-    srf::init_logging("srf::test_srf_benchmarking");
+    mrc::init_logging("mrc::test_mrc_benchmarking");
     ::testing::InitGoogleTest(&argc, argv);
     ::google::ParseCommandLineFlags(&argc, &argv, true);
     return RUN_ALL_TESTS();

@@ -20,17 +20,17 @@
 #include "internal/runnable/engines.hpp"
 #include "internal/system/resources.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/runnable/engine_factory.hpp"
-#include "srf/runnable/types.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/runnable/engine_factory.hpp"
+#include "mrc/runnable/types.hpp"
 
 #include <memory>
 
-namespace srf::internal::runnable {
+namespace mrc::internal::runnable {
 
-std::shared_ptr<::srf::runnable::EngineFactory> make_engine_factory(const system::Resources& system,
+std::shared_ptr<::mrc::runnable::EngineFactory> make_engine_factory(const system::Resources& system,
                                                                     EngineType engine_type,
                                                                     const CpuSet& cpu_set,
                                                                     bool reusable);
 
-}  // namespace srf::internal::runnable
+}  // namespace mrc::internal::runnable

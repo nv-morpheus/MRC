@@ -17,14 +17,14 @@
 
 #include "internal/system/partition.hpp"
 
-#include "srf/exceptions/runtime_error.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
 
 #include <glog/logging.h>
 
 #include <ostream>
 #include <utility>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 const HostPartition& Partition::host() const
 {
@@ -39,7 +39,7 @@ const DevicePartition& Partition::device() const
         return *m_device;
     }
     LOG(ERROR) << "attemping to access an unassigned DevicePartition";
-    throw exceptions::SrfRuntimeError("no device partition available");
+    throw exceptions::MrcRuntimeError("no device partition available");
 }
 bool Partition::has_device() const
 {
@@ -56,4 +56,4 @@ size_t Partition::host_partition_id() const
 {
     return m_host_partition_id;
 }
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

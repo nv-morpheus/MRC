@@ -19,4 +19,4 @@
 
 #include "internal/ucx/common.hpp"
 
-namespace srf::internal::ucx {}  // namespace srf::internal::ucx
+namespace mrc::internal::ucx {}  // namespace mrc::internal::ucx

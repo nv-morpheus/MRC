@@ -18,13 +18,13 @@
 #include "test_benchmarking.hpp"
 #include "test_stat_gather.hpp"
 
-#include "srf/benchmarking/trace_statistics.hpp"
-#include "srf/benchmarking/util.hpp"
+#include "mrc/benchmarking/trace_statistics.hpp"
+#include "mrc/benchmarking/util.hpp"
 
 #include <nlohmann/json.hpp>
 #include <prometheus/registry.h>
 
-using namespace srf::benchmarking;
+using namespace mrc::benchmarking;
 
 TEST_F(StatGatherTest, TestPrometheusConversionForFrameworkStats)
 {
@@ -42,7 +42,7 @@ TEST_F(StatGatherTest, TestPrometheusConversionForFrameworkStats)
     auto& json_component_metrics = framework_stats_info["aggregations"]["components"]["metrics"];
     auto& json_metrics           = framework_stats_info["aggregations"]["metrics"]["counter"];
 
-    auto prometheus_registry = srf::benchmarking::json_to_prometheus(framework_stats_info);
+    auto prometheus_registry = mrc::benchmarking::json_to_prometheus(framework_stats_info);
 
     auto metrics = prometheus_registry->Collect();
     for (auto& metric_family : metrics)
@@ -132,7 +132,7 @@ TEST_F(LatencyBenchmarkTests, TestPrometheusConversionForWatcherTraces)
     const auto& metadata  = json_data["metadata"];
     const auto& counters  = json_data["aggregations"]["metrics"]["counter"];
 
-    auto prometheus_registry = srf::benchmarking::json_to_prometheus(json_data);
+    auto prometheus_registry = mrc::benchmarking::json_to_prometheus(json_data);
 
     auto metrics = prometheus_registry->Collect();
     for (auto& metric_family : metrics)

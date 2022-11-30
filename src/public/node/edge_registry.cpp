@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "srf/node/edge_registry.hpp"
+#include "mrc/node/edge_registry.hpp"
 
 #include <glog/logging.h>
 
@@ -25,7 +25,7 @@
 #include <typeindex>
 #include <utility>
 
-namespace srf::node {
+namespace mrc::node {
 
 void EdgeRegistry::register_converter(std::type_index writer_type, std::type_index reader_type, build_fn_t converter)
 {
@@ -76,4 +76,4 @@ EdgeRegistry::build_fn_t EdgeRegistry::find_converter(std::type_index writer_typ
 // Goes from source type to sink type
 std::map<std::type_index, std::map<std::type_index, EdgeRegistry::build_fn_t>> EdgeRegistry::registered_converters;
 
-}  // namespace srf::node
+}  // namespace mrc::node

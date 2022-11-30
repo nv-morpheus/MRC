@@ -19,26 +19,26 @@ find_package(CUDAToolkit REQUIRED)
 
 include(python_module_tools)
 
-# Create the srf python package
-create_python_package(srf)
+# Create the mrc python package
+create_python_package(mrc)
 
 # Add a few additional files to be copied
 add_python_sources("pytest.ini" "tests/string_reader_input.txt")
 
 # Save the root of the python for relative paths
-set(SRF_PY_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
+set(MRC_PY_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 
 # A common macro for adding some default arguments to add_pybind11_module
-macro(srf_add_pybind11_module)
+macro(mrc_add_pybind11_module)
   # Build up the common arguments for add_pybind11_module
   set(_common_args)
-  list(APPEND _common_args "LINK_TARGETS" "pysrf")
+  list(APPEND _common_args "LINK_TARGETS" "pymrc")
 
-  if(SRF_PYTHON_INPLACE_BUILD)
+  if(MRC_PYTHON_INPLACE_BUILD)
     list(APPEND _common_args "COPY_INPLACE")
   endif()
 
-  if(SRF_PYTHON_BUILD_STUBS)
+  if(MRC_PYTHON_BUILD_STUBS)
     list(APPEND _common_args "BUILD_STUBS")
   endif()
 
@@ -46,27 +46,27 @@ macro(srf_add_pybind11_module)
   add_pybind11_module(${ARGN} ${_common_args})
 endmacro()
 
-add_subdirectory(srf/_pysrf)
-add_subdirectory(srf/core)
-add_subdirectory(srf/benchmarking)
+add_subdirectory(mrc/_pymrc)
+add_subdirectory(mrc/core)
+add_subdirectory(mrc/benchmarking)
 
-###################################################################################################
+# ##################################################################################################
 # - tests -----------------------------------------------------------------------------------------
-if (SRF_BUILD_TESTS)
-    add_subdirectory(srf/tests)
-endif ()
+if(MRC_BUILD_TESTS)
+  add_subdirectory(mrc/tests)
+endif()
 
 # Complete the python package
 set(extra_args "")
 
-if(SRF_PYTHON_INPLACE_BUILD)
+if(MRC_PYTHON_INPLACE_BUILD)
   list(APPEND extra_args "IS_INPLACE")
 endif()
 
-if(SRF_PYTHON_PERFORM_INSTALL)
+if(MRC_PYTHON_PERFORM_INSTALL)
   list(APPEND extra_args "INSTALL_WHEEL")
 endif()
 
-build_python_package(srf ${extra_args})
+build_python_package(mrc ${extra_args})
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

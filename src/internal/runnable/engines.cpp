@@ -17,16 +17,16 @@
 
 #include "internal/runnable/engines.hpp"
 
-#include "srf/runnable/engine.hpp"
-#include "srf/runnable/launch_options.hpp"
+#include "mrc/runnable/engine.hpp"
+#include "mrc/runnable/launch_options.hpp"
 
 #include <utility>
 
-namespace srf::internal::runnable {
+namespace mrc::internal::runnable {
 
 Engines::Engines(LaunchOptions launch_options) : m_launch_options(std::move(launch_options)) {}
 
-const std::vector<std::shared_ptr<::srf::runnable::Engine>>& Engines::launchers() const
+const std::vector<std::shared_ptr<::mrc::runnable::Engine>>& Engines::launchers() const
 {
     return m_launchers;
 }
@@ -41,7 +41,7 @@ const LaunchOptions& Engines::launch_options() const
     return m_launch_options;
 }
 
-void Engines::add_launcher(std::shared_ptr<::srf::runnable::Engine> launcher)
+void Engines::add_launcher(std::shared_ptr<::mrc::runnable::Engine> launcher)
 {
     m_launchers.push_back(std::move(launcher));
 }
@@ -51,4 +51,4 @@ void Engines::clear_launchers()
     m_launchers.clear();
 }
 
-}  // namespace srf::internal::runnable
+}  // namespace mrc::internal::runnable

@@ -19,12 +19,12 @@
 
 #include "internal/system/resources.hpp"
 
-#include "srf/core/bitmap.hpp"
+#include "mrc/core/bitmap.hpp"
 
 #include <cstdint>
 #include <thread>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 ThreadPool::ThreadPool(const system::Resources& resources, CpuSet cpuset, std::size_t channel_size) :
   m_cpuset(std::move(cpuset)),
@@ -65,4 +65,4 @@ void ThreadPool::shutdown()
     m_channel.close();
 }
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

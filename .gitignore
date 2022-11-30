@@ -9,6 +9,9 @@
 docs/quickstart/**/*.pyi
 python/**/*.pyi
 
+# Ignore version header file
+include/mrc/version.hpp
+
 # Ignore all vscode options that are in the workspace file
 .vscode/extensions.json
 .vscode/launch.json

@@ -17,7 +17,7 @@
 
 #include "internal/system/device_info.hpp"
 
-#include "srf/cuda/common.hpp"  // IWYU pragma: associated
+#include "mrc/cuda/common.hpp"  // IWYU pragma: associated
 
 #include <cuda_runtime.h>
 #include <glog/logging.h>
@@ -32,7 +32,7 @@
 
 #define TEST_BIT(_n, _p) (_n & (1UL << _p))
 
-#define SRF_CHECK_NVML(expression)                                    \
+#define MRC_CHECK_NVML(expression)                                    \
     {                                                                 \
         auto status = (expression);                                   \
         if (status != NVML_SUCCESS)                                   \
@@ -89,7 +89,7 @@ struct NvmlState
                     // return;
                     // }
 
-                    LOG(FATAL) << "SRF Issue #205: mig instance queries and enumeration is current not supported";
+                    LOG(FATAL) << "MRC Issue #205: mig instance queries and enumeration is current not supported";
                 }
                 else
                 {
@@ -131,7 +131,7 @@ auto nvmlInstatnce = std::make_unique<NvmlState>();
 
 }  // namespace
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 nvmlDevice_t DeviceInfo::GetHandleById(unsigned int device_id)
 {
@@ -166,7 +166,7 @@ cpu_set DeviceInfo::Affinity(int device_id)
 std::size_t DeviceInfo::Alignment()
 {
     struct cudaDeviceProp properties;
-    SRF_CHECK_CUDA(cudaGetDeviceProperties(&properties, 0));
+    MRC_CHECK_CUDA(cudaGetDeviceProperties(&properties, 0));
     return properties.textureAlignment;
 }
 
@@ -213,7 +213,7 @@ std::set<unsigned int> DeviceInfo::AccessibleDeviceIndexes()
 nvmlMemory_t DeviceInfo::MemoryInfo(int device_id)
 {
     nvmlMemory_t info;
-    SRF_CHECK_NVML(nvmlDeviceGetMemoryInfo(DeviceInfo::GetHandleById(device_id), &info));
+    MRC_CHECK_NVML(nvmlDeviceGetMemoryInfo(DeviceInfo::GetHandleById(device_id), &info));
     return info;
 }
 
@@ -224,4 +224,4 @@ std::string DeviceInfo::Name(int device_id)
     return buffer.data();
 }
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

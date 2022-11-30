@@ -20,11 +20,15 @@
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/primitive.hpp"
 
-#include "srf/types.hpp"
+#include "mrc/types.hpp"
 
-#include <ucp/api/ucp_def.h>  // for ucp_ep_h
+#include <ucp/api/ucp_def.h>
 
-namespace srf::internal::ucx {
+#include <memory>
+
+namespace mrc::internal::ucx {
+
+class RemoteRegistrationCache;
 
 class Endpoint : public Primitive<ucp_ep_h>
 {
@@ -32,8 +36,12 @@ class Endpoint : public Primitive<ucp_ep_h>
     Endpoint(Handle<Worker>, WorkerAddress);
     ~Endpoint() override;
 
+    RemoteRegistrationCache& registration_cache();
+    const RemoteRegistrationCache& registration_cache() const;
+
   private:
     Handle<Worker> m_worker;
+    std::unique_ptr<RemoteRegistrationCache> m_registration_cache;
 };
 
-}  // namespace srf::internal::ucx
+}  // namespace mrc::internal::ucx

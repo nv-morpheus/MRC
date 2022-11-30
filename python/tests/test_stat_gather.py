@@ -18,9 +18,9 @@ import random
 
 import pytest
 
-import srf
-import srf.benchmarking
-from srf.core.options import PlacementStrategy
+import mrc
+import mrc.benchmarking
+from mrc.core.options import PlacementStrategy
 
 whereami = pathlib.Path(__file__).parent.resolve()
 
@@ -31,9 +31,9 @@ TEST_ITERATIONS = random.randint(10, 250)
 @pytest.fixture(scope="function", autouse=True)
 def reset_tracing_stats():
     # Reset the tracing stats before and after each test
-    srf.benchmarking.reset_tracing_stats()
+    mrc.benchmarking.reset_tracing_stats()
     yield
-    srf.benchmarking.reset_tracing_stats()
+    mrc.benchmarking.reset_tracing_stats()
 
 
 def on_next(x):
@@ -64,8 +64,8 @@ def double_float_type2(x):
     return temp
 
 
-def init_double_segment(builder: srf.Builder):
-    ## CXX double source with heterogesrfus segment node composition
+def init_double_segment(builder: mrc.Builder):
+    # CXX double source with heterogeneous segment node composition
     python_source_double = builder.make_source("python_source_double", double_source)
     python_node_2x_1 = builder.make_node("python_node_2x_1", double_float_type1)
     builder.make_edge(python_source_double, python_node_2x_1)
@@ -81,13 +81,13 @@ def init_double_segment(builder: srf.Builder):
 
 
 def do_stat_gather_test(name, init_function):
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
     pipeline.make_segment(name, init_function)
 
-    options = srf.Options()
+    options = mrc.Options()
     options.placement.cpu_strategy = PlacementStrategy.PerMachine
 
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
     executor.register_pipeline(pipeline)
 
     executor.start()
@@ -95,15 +95,15 @@ def do_stat_gather_test(name, init_function):
 
 
 def test_stat_gather_operators():
-    srf.benchmarking.reset_tracing_stats()
-    srf.benchmarking.trace_operators(True)
+    mrc.benchmarking.reset_tracing_stats()
+    mrc.benchmarking.trace_operators(True)
 
     do_stat_gather_test("stat_gather_operators", init_double_segment)
     required_components = [("python_source_double", "src"), ("python_node_2x_1", "internal"),
                            ("python_node_2x_2", "internal"), ("python_node_2x_3", "internal"),
                            ("python_sink_double", "sink")]
 
-    framework_stats_info = srf.benchmarking.get_tracing_stats()
+    framework_stats_info = mrc.benchmarking.get_tracing_stats()
     component_metrics = framework_stats_info["aggregations"]["components"]["metrics"]
 
     for key, _type in required_components:
@@ -117,19 +117,19 @@ def test_stat_gather_operators():
             assert (component["component_channel_read_total"] == 0)
             assert (component["component_receive_total"] == TEST_ITERATIONS)
 
-    srf.benchmarking.reset_tracing_stats()
+    mrc.benchmarking.reset_tracing_stats()
 
 
 def test_stat_gather_channels():
-    srf.benchmarking.reset_tracing_stats()
-    srf.benchmarking.trace_channels(True)
+    mrc.benchmarking.reset_tracing_stats()
+    mrc.benchmarking.trace_channels(True)
 
     do_stat_gather_test("stat_gather_channels", init_double_segment)
     required_components = [("python_source_double", "src"), ("python_node_2x_1", "internal"),
                            ("python_node_2x_2", "internal"), ("python_node_2x_3", "internal"),
                            ("python_sink_double", "sink")]
 
-    framework_stats_info = srf.benchmarking.get_tracing_stats()
+    framework_stats_info = mrc.benchmarking.get_tracing_stats()
     component_metrics = framework_stats_info["aggregations"]["components"]["metrics"]
 
     for key, _type in required_components:
@@ -143,23 +143,21 @@ def test_stat_gather_channels():
             assert (component["component_channel_read_total"] == TEST_ITERATIONS)
             assert (component["component_receive_total"] == 0)
 
-    srf.benchmarking.reset_tracing_stats()
+    mrc.benchmarking.reset_tracing_stats()
 
 
 def test_stat_gather_full():
-    srf.benchmarking.reset_tracing_stats()
-    srf.benchmarking.trace_channels(True)
-    srf.benchmarking.trace_operators(True)
+    mrc.benchmarking.reset_tracing_stats()
+    mrc.benchmarking.trace_channels(True)
+    mrc.benchmarking.trace_operators(True)
     do_stat_gather_test("stat_gather_full", init_double_segment)
     required_components = [("python_source_double", "src"), ("python_node_2x_1", "internal"),
                            ("python_node_2x_2", "internal"), ("python_node_2x_3", "internal"),
                            ("python_sink_double", "sink")]
 
-    framework_stats_info = srf.benchmarking.get_tracing_stats()
+    framework_stats_info = mrc.benchmarking.get_tracing_stats()
     component_metrics = framework_stats_info["aggregations"]["components"]["metrics"]
 
-    import json
-    print(json.dumps(component_metrics, indent=2))
     for key, _type in required_components:
         component = component_metrics[key]
         assert (len(component.keys()) > 0)
@@ -170,13 +168,13 @@ def test_stat_gather_full():
             assert (component["component_channel_read_total"] == TEST_ITERATIONS)
             assert (component["component_receive_total"] == TEST_ITERATIONS)
 
-    srf.benchmarking.reset_tracing_stats()
+    mrc.benchmarking.reset_tracing_stats()
 
 
 def test_stat_gather_full_noreset():
-    srf.benchmarking.reset_tracing_stats()
-    srf.benchmarking.trace_channels(True)
-    srf.benchmarking.trace_operators(True)
+    mrc.benchmarking.reset_tracing_stats()
+    mrc.benchmarking.trace_channels(True)
+    mrc.benchmarking.trace_operators(True)
     required_components = [("python_source_double", "src"), ("python_node_2x_1", "internal"),
                            ("python_node_2x_2", "internal"), ("python_node_2x_3", "internal"),
                            ("python_sink_double", "sink")]
@@ -186,7 +184,7 @@ def test_stat_gather_full_noreset():
     for i in range(1, 5):
         do_stat_gather_test("stat_gather_full_noreset", init_double_segment)
 
-        framework_stats_info = srf.benchmarking.get_tracing_stats()
+        framework_stats_info = mrc.benchmarking.get_tracing_stats()
         component_metrics = framework_stats_info["aggregations"]["components"]["metrics"]
 
         for key, _type in required_components:
@@ -199,13 +197,13 @@ def test_stat_gather_full_noreset():
                 assert (component["component_channel_read_total"] == i * TEST_ITERATIONS)
                 assert (component["component_receive_total"] == i * TEST_ITERATIONS)
 
-    srf.benchmarking.reset_tracing_stats()
+    mrc.benchmarking.reset_tracing_stats()
 
 
 def test_stat_gather_full_noreset_start_stop():
-    srf.benchmarking.reset_tracing_stats()
-    srf.benchmarking.trace_channels(True)
-    srf.benchmarking.trace_operators(True)
+    mrc.benchmarking.reset_tracing_stats()
+    mrc.benchmarking.trace_channels(True)
+    mrc.benchmarking.trace_operators(True)
     required_components = [("python_source_double", "src"), ("python_node_2x_1", "internal"),
                            ("python_node_2x_2", "internal"), ("python_node_2x_3", "internal"),
                            ("python_sink_double", "sink")]
@@ -215,15 +213,15 @@ def test_stat_gather_full_noreset_start_stop():
         # Randomly pause tracing between runs to verify counts are correct
         pause = random.choice([True, False])
         if (pause):
-            srf.benchmarking.trace_operators(False)
-            srf.benchmarking.trace_channels(False)
+            mrc.benchmarking.trace_operators(False)
+            mrc.benchmarking.trace_channels(False)
         else:
             active_trace_count += 1
 
-        srf.benchmarking.sync_tracing_state()
+        mrc.benchmarking.sync_tracing_state()
         do_stat_gather_test("stat_gather_full_noreset_start_stop", init_double_segment)
 
-        framework_stats_info = srf.benchmarking.get_tracing_stats()
+        framework_stats_info = mrc.benchmarking.get_tracing_stats()
         component_metrics = framework_stats_info["aggregations"]["components"]["metrics"]
         for key, _type in required_components:
             component = component_metrics[key]
@@ -235,13 +233,13 @@ def test_stat_gather_full_noreset_start_stop():
                 assert (component["component_channel_read_total"] == active_trace_count * TEST_ITERATIONS)
                 assert (component["component_receive_total"] == active_trace_count * TEST_ITERATIONS)
 
-        srf.benchmarking.trace_channels(True)
-        srf.benchmarking.trace_operators(True)
+        mrc.benchmarking.trace_channels(True)
+        mrc.benchmarking.trace_operators(True)
 
-    srf.benchmarking.reset_tracing_stats()
+    mrc.benchmarking.reset_tracing_stats()
 
 
-if (__name__ in ("__main__",)):
+if (__name__ in ("__main__", )):
     test_stat_gather_operators()
     test_stat_gather_channels()
     test_stat_gather_full()

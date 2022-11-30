@@ -15,15 +15,17 @@
  * limitations under the License.
  */
 
-#include "srf/data/reusable_pool.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/data/reusable_pool.hpp"
 
 #include <gtest/gtest.h>
 
-#include <functional>
+#include <atomic>
+#include <cstddef>
 #include <memory>
 #include <utility>
 
-using namespace srf;
+using namespace mrc;
 
 // iwyu is getting confused between std::uint32_t and boost::uint32_t
 // IWYU pragma: no_include <boost/cstdint.hpp>

@@ -26,22 +26,24 @@
 #include "internal/ucx/registration_resource.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include "srf/core/task_queue.hpp"
-#include "srf/memory/adaptors.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/memory/adaptors.hpp"
+#include "mrc/runnable/launch_options.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 
-namespace srf::internal::network {
+namespace mrc::internal::network {
 class Resources;
 }
 
-namespace srf::internal::ucx {
+namespace mrc::internal::ucx {
 
 /**
  * @brief UCX Resources - if networking is enabled, there should be 1 UCX Resource per "flattened" partition
  */
-class Resources final : private resources::PartitionResourceBase
+class Resources final : public resources::PartitionResourceBase
 {
   public:
     Resources(resources::PartitionResourceBase& base, system::FiberTaskQueue& network_task_queue);
@@ -52,10 +54,10 @@ class Resources final : private resources::PartitionResourceBase
     Worker& worker();
 
     // task queue used to run the data plane's progress engine
-    srf::core::FiberTaskQueue& network_task_queue();
+    mrc::core::FiberTaskQueue& network_task_queue();
 
     // registration cache to look up local/remote keys for registered blocks of memory
-    const RegistrationCache& registration_cache() const;
+    RegistrationCache& registration_cache();
 
     // used to build a callback adaptor memory resource for host memory resources
     void add_registration_cache_to_builder(RegistrationCallbackBuilder& builder);
@@ -64,11 +66,13 @@ class Resources final : private resources::PartitionResourceBase
     template <typename UpstreamT>
     auto adapt_to_registered_resource(UpstreamT upstream, int cuda_device_id)
     {
-        return srf::memory::make_unique_resource<RegistrationResource>(
+        return mrc::memory::make_unique_resource<RegistrationResource>(
             std::move(upstream), m_registration_cache, cuda_device_id);
     }
 
     std::shared_ptr<ucx::Endpoint> make_ep(const std::string& worker_address) const;
+
+    static mrc::runnable::LaunchOptions launch_options(std::uint64_t concurrency);
 
   private:
     system::FiberTaskQueue& m_network_task_queue;
@@ -80,4 +84,4 @@ class Resources final : private resources::PartitionResourceBase
     friend network::Resources;
 };
 
-}  // namespace srf::internal::ucx
+}  // namespace mrc::internal::ucx

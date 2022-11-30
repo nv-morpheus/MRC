@@ -17,14 +17,14 @@
 
 #pragma once
 
-#include <srf/node/rx_source.hpp>
+#include <mrc/node/rx_source.hpp>
 
-namespace srf::quickstart::cpp::ex01_node_library {
+namespace mrc::quickstart::cpp::ex01_node_library {
 
-class IntSource : public srf::node::RxSource<int>
+class IntSource : public mrc::node::RxSource<int>
 {
   public:
     IntSource();
 };
 
-}  // namespace srf::quickstart::cpp::ex01_node_library
+}  // namespace mrc::quickstart::cpp::ex01_node_library

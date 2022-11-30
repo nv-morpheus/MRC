@@ -25,7 +25,7 @@
  * @brief Graph of Pipeline Ports
  */
 
-namespace srf::internal::pipeline {
+namespace mrc::internal::pipeline {
 
 class Pipeline;
 
@@ -62,4 +62,4 @@ class PortGraph
     std::set<std::string> m_sources;
 };
 
-}  // namespace srf::internal::pipeline
+}  // namespace mrc::internal::pipeline

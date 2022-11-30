@@ -11,13 +11,15 @@ Checks: >
   readability-*,
   -readability-magic-numbers,
   -readability-function-*,
+  -readability-static-accessed-*,
+  -readability-identifier-length,
   modernize-*,
   -modernize-use-trailing-return-type,
   -modernize-use-nodiscard,
   google-readability-todo
 
 #WarningsAsErrors: '*'
-HeaderFilterRegex: '.*\/include\/srf\/.*'
+HeaderFilterRegex: '.*\/include\/mrc\/.*'
 AnalyzeTemporaryDtors: false
 FormatStyle: file
 CheckOptions:

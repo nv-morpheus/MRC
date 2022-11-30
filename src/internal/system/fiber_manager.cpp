@@ -22,15 +22,15 @@
 #include "internal/system/system.hpp"
 #include "internal/system/topology.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/exceptions/runtime_error.hpp"
-#include "srf/options/fiber_pool.hpp"
-#include "srf/options/options.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/options/fiber_pool.hpp"
+#include "mrc/options/options.hpp"
 
 #include <functional>
 #include <memory>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 FiberManager::FiberManager(const Resources& resources) : m_cpu_set(resources.system().topology().cpu_set())
 {
@@ -59,7 +59,7 @@ FiberPool FiberManager::make_pool(CpuSet cpu_set) const
     // valididate that cpu_set is a subset of topology->cpu_set()
     if (!m_cpu_set.contains(cpu_set))
     {
-        throw exceptions::SrfRuntimeError("cpu_set must be a subset of the initial topology to create a fiber pool");
+        throw exceptions::MrcRuntimeError("cpu_set must be a subset of the initial topology to create a fiber pool");
     }
     auto cpus = cpu_set.vec();
     std::vector<std::reference_wrapper<FiberTaskQueue>> queues;
@@ -94,4 +94,4 @@ FiberTaskQueue& FiberManager::task_queue(std::uint32_t cpu_id) const
     return *search->second;
 }
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

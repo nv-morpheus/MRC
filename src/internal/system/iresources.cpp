@@ -15,19 +15,19 @@
  * limitations under the License.
  */
 
-#include "srf/engine/system/iresources.hpp"
+#include "mrc/engine/system/iresources.hpp"
 
 #include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 #include "internal/system/topology.hpp"
 
-#include "srf/engine/system/isystem.hpp"
+#include "mrc/engine/system/isystem.hpp"
 
 #include <memory>
 #include <utility>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 IResources::IResources(std::shared_ptr<ISystem> system) :
   m_impl(std::make_unique<Resources>(SystemProvider(System::unwrap(*system))))
@@ -44,4 +44,4 @@ void IResources::add_thread_finalizer(std::function<void()> finalizer_fn)
     m_impl->register_thread_local_finalizer(m_impl->system().topology().cpu_set(), std::move(finalizer_fn));
 }
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

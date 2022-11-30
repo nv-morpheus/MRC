@@ -120,7 +120,7 @@
 # spdlog
 { "symbol": ["spdlog::details::file_helper::~file_helper", "private", "<spdlog/sinks/basic_file_sink.h>", "public"] },
 
-# srf
-{ "symbol": ["std::__decay_and_strip<std::shared_ptr<srf::TraceStatistics> &>::__type" , "private", "\"srf/benchmarking/trace_statistics.hpp\"", "public"] },
+# mrc
+{ "symbol": ["std::__decay_and_strip<std::shared_ptr<mrc::TraceStatistics> &>::__type" , "private", "\"mrc/benchmarking/trace_statistics.hpp\"", "public"] },
 
 ]

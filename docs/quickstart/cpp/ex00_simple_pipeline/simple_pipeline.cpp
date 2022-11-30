@@ -16,17 +16,16 @@
  */
 
 #include <glog/logging.h>
+#include <mrc/mrc.hpp>
+#include <mrc/node/rx_sink.hpp>
+#include <mrc/pipeline/pipeline.hpp>
 
-#include <srf/node/rx_sink.hpp>
-#include <srf/pipeline/pipeline.hpp>
-#include <srf/srf.hpp>
-
-using namespace srf;
+using namespace mrc;
 
 int main(int argc, char* argv[])
 {
-    // srf options
-    auto options = std::make_unique<srf::Options>();
+    // mrc options
+    auto options = std::make_unique<mrc::Options>();
 
     // create executor
     Executor executor(std::move(options));
@@ -55,7 +54,7 @@ int main(int argc, char* argv[])
         // value scaled by 2.
         auto node = s.make_node<int, float>("int_to_float_node", rxcpp::operators::map([](const int& data) {
                                                 // Multiple the input value returning a float
-                                                return float(2.5f * data);
+                                                return float(2.5F * data);
                                             }));
 
         // Sink
@@ -85,11 +84,11 @@ int main(int argc, char* argv[])
     executor.register_pipeline(std::move(pipeline));
 
     // start the pipeline and wait until it finishes
-    std::cout << "srf pipeline starting..." << std::endl;
+    std::cout << "mrc pipeline starting..." << std::endl;
     executor.start();
     executor.join();
 
-    std::cout << "srf pipeline complete: counter should be 3; counter=" << counter << std::endl;
+    std::cout << "mrc pipeline complete: counter should be 3; counter=" << counter << std::endl;
 
     return 0;
 };

@@ -18,13 +18,13 @@
 #include "../segments/common_segments.hpp"
 #include "common_pipelines.hpp"
 
-#include "srf/pipeline/pipeline.hpp"
+#include "mrc/pipeline/pipeline.hpp"
 
 #include <memory>
 
-// IWYU pragma: no_include "srf/channel/forward.hpp"
+// IWYU pragma: no_include "mrc/channel/forward.hpp"
 
-using namespace srf;
+using namespace mrc;
 
 namespace test::pipelines {
 

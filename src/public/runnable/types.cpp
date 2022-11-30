@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-#include "srf/runnable/types.hpp"
+#include "mrc/runnable/types.hpp"
 
 #include <glog/logging.h>
 
 #include <ostream>
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 std::string engine_type_string(const EngineType& engine_type)
 {
@@ -42,4 +42,4 @@ std::string engine_type_string(const EngineType& engine_type)
     return "error";
 }
 
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

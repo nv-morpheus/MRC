@@ -21,16 +21,16 @@
 #include "internal/system/resources.hpp"
 #include "internal/system/thread.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/runnable/types.hpp"
-#include "srf/types.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/runnable/types.hpp"
+#include "mrc/types.hpp"
 
 #include <functional>
 #include <memory>
 #include <optional>
 #include <thread>
 
-namespace srf::internal::runnable {
+namespace mrc::internal::runnable {
 
 class ThreadEngine final : public Engine
 {
@@ -51,4 +51,4 @@ class ThreadEngine final : public Engine
     std::unique_ptr<system::Thread> m_thread;
 };
 
-}  // namespace srf::internal::runnable
+}  // namespace mrc::internal::runnable

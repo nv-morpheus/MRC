@@ -17,11 +17,11 @@
 
 #include "internal/pipeline/resources.hpp"
 
-#include "srf/metrics/registry.hpp"
+#include "mrc/metrics/registry.hpp"
 
 #include <glog/logging.h>
 
-namespace srf::internal::pipeline {
+namespace mrc::internal::pipeline {
 
 Resources::Resources(resources::Manager& resources) :
   m_resources(resources),
@@ -39,4 +39,4 @@ metrics::Registry& Resources::metrics_registry() const
     return *m_metrics_registry;
 }
 
-}  // namespace srf::internal::pipeline
+}  // namespace mrc::internal::pipeline

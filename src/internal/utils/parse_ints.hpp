@@ -19,6 +19,6 @@
 #include <string>
 #include <vector>
 
-namespace srf {
+namespace mrc {
 std::vector<int> parse_ints(const std::string&);
 }

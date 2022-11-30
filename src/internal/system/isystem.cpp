@@ -15,17 +15,17 @@
  * limitations under the License.
  */
 
-#include "srf/engine/system/isystem.hpp"
+#include "mrc/engine/system/isystem.hpp"
 
 #include "internal/system/system.hpp"
 
-#include "srf/options/options.hpp"
+#include "mrc/options/options.hpp"
 
 #include <utility>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 ISystem::ISystem(std::shared_ptr<Options> options) : m_impl(make_system(std::move(options))) {}
 ISystem::~ISystem() = default;
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

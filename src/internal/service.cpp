@@ -20,8 +20,9 @@
 #include <glog/logging.h>
 
 #include <ostream>
+#include <utility>
 
-namespace srf::internal {
+namespace mrc::internal {
 
 Service::~Service()
 {
@@ -100,10 +101,17 @@ const ServiceState& Service::state() const
     return m_state;
 }
 
+bool Service::is_service_startable() const
+{
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    return (m_state == ServiceState::Initialized);
+}
+
 bool Service::forward_state(ServiceState new_state)
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    CHECK(m_state <= new_state) << "invalid ServiceState requested; ServiceState is only allowed to advance";
+    CHECK(m_state <= new_state) << m_description
+                                << ": invalid ServiceState requested; ServiceState is only allowed to advance";
     if (m_state < new_state)
     {
         m_state = new_state;
@@ -119,16 +127,21 @@ void Service::call_in_destructor()
     {
         if (state == ServiceState::Running)
         {
-            LOG(ERROR) << "service was not stopped/killed before being destructed; issuing kill";
+            LOG(ERROR) << m_description << ": service was not stopped/killed before being destructed; issuing kill";
             service_kill();
         }
 
         if (state != ServiceState::Completed)
         {
-            LOG(ERROR) << "service was not joined before being destructed; issuing join";
+            LOG(ERROR) << m_description << ": service was not joined before being destructed; issuing join";
             service_await_join();
         }
     }
 }
 
-}  // namespace srf::internal
+void Service::service_set_description(std::string description)
+{
+    m_description = std::move(description);
+}
+
+}  // namespace mrc::internal

@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include "srf/options/placement.hpp"
+#include "mrc/options/placement.hpp"
 
-namespace srf {
+namespace mrc {
 
 PlacementStrategy PlacementOptions::cpu_strategy() const
 {
@@ -38,4 +38,4 @@ PlacementOptions& PlacementOptions::resources_strategy(const PlacementResources&
     m_resources_strategy = strategy;
     return *this;
 }
-}  // namespace srf
+}  // namespace mrc

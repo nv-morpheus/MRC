@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#include "srf/benchmarking/tracer.hpp"
-#include "srf/benchmarking/util.hpp"
+#include "mrc/benchmarking/tracer.hpp"
+#include "mrc/benchmarking/util.hpp"
 
 #include <benchmark/benchmark.h>
 #include <nlohmann/json.hpp>
@@ -39,7 +39,7 @@
 #include <utility>
 #include <vector>
 
-using namespace srf::benchmarking;
+using namespace mrc::benchmarking;
 
 namespace defs {
 using clock_t   = std::chrono::steady_clock;

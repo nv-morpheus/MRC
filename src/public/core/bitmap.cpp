@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "srf/core/bitmap.hpp"
+#include "mrc/core/bitmap.hpp"
 
 #include "internal/utils/parse_ints.hpp"
 #include "internal/utils/ranges.hpp"
@@ -31,7 +31,7 @@
         CHECK_NE(rc, -1);       \
     }
 
-namespace srf {
+namespace mrc {
 
 Bitmap::Bitmap() : m_bitmap(hwloc_bitmap_alloc()) {}
 
@@ -258,4 +258,4 @@ bool Bitmap::contains(const Bitmap& sub_bitmap) const
 {
     return bool(hwloc_bitmap_isincluded(&sub_bitmap.bitmap(), m_bitmap));
 }
-}  // namespace srf
+}  // namespace mrc

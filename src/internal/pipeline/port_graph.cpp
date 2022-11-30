@@ -24,7 +24,7 @@
 #include <utility>
 #include <vector>
 
-namespace srf::internal::pipeline {
+namespace mrc::internal::pipeline {
 
 PortGraph::PortGraph(const Pipeline& pipeline)
 {
@@ -73,4 +73,4 @@ const std::set<std::string>& PortGraph::segments_with_only_egress_ports() const
 {
     return m_sinks;
 }
-}  // namespace srf::internal::pipeline
+}  // namespace mrc::internal::pipeline

@@ -18,53 +18,67 @@
 #include "internal/data_plane/client.hpp"
 
 #include "internal/data_plane/callbacks.hpp"
+#include "internal/data_plane/resources.hpp"
 #include "internal/data_plane/tags.hpp"
-#include "internal/ucx/common.hpp"
+#include "internal/remote_descriptor/manager.hpp"
+#include "internal/runnable/resources.hpp"
 #include "internal/ucx/endpoint.hpp"
 #include "internal/ucx/resources.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include "srf/codable/protobuf_message.hpp"  // IWYU pragma: keep
-#include "srf/types.hpp"
+#include "mrc/channel/buffered_channel.hpp"
+#include "mrc/channel/channel.hpp"
+#include "mrc/codable/protobuf_message.hpp"  // IWYU pragma: keep
+#include "mrc/memory/literals.hpp"
+#include "mrc/node/edge_builder.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/source_channel.hpp"
+#include "mrc/protos/codable.pb.h"
+#include "mrc/runnable/launch_control.hpp"
+#include "mrc/runnable/launcher.hpp"
+#include "mrc/runnable/runner.hpp"
+#include "mrc/runtime/remote_descriptor_handle.hpp"
+#include "mrc/types.hpp"
 
 #include <glog/logging.h>
+#include <rxcpp/rx.hpp>
 #include <ucp/api/ucp.h>
 #include <ucs/type/status.h>
 
+#include <algorithm>
 #include <atomic>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <vector>
 
-namespace srf::internal::data_plane {
+namespace mrc::internal::data_plane {
 
-Client::Client(resources::PartitionResourceBase& base, ucx::Resources& ucx) :
+using namespace mrc::memory::literals;
+
+Client::Client(resources::PartitionResourceBase& base,
+               ucx::Resources& ucx,
+               control_plane::client::ConnectionsManager& connections_manager,
+               memory::TransientPool& transient_pool) :
   resources::PartitionResourceBase(base),
-  m_ucx(ucx)
+  m_ucx(ucx),
+  m_connnection_manager(connections_manager),
+  m_transient_pool(transient_pool),
+  m_rd_channel(std::make_unique<node::SourceChannelWriteable<RemoteDescriptorMessage>>())
 {}
 
 Client::~Client() = default;
 
-void Client::register_instance(InstanceID instance_id, ucx::WorkerAddress worker_address)
-{
-    auto search = m_workers.find(instance_id);
-    if (search != m_workers.end())
-    {
-        LOG(ERROR) << "instance_id: " << instance_id << " was already registered";
-        throw std::runtime_error("instance_id already registered");
-    }
-    m_workers[instance_id] = std::move(worker_address);
-}
-
-const ucx::Endpoint& Client::endpoint(InstanceID id) const
+std::shared_ptr<ucx::Endpoint> Client::endpoint_shared(const InstanceID& id) const
 {
     auto search_endpoints = m_endpoints.find(id);
     if (search_endpoints == m_endpoints.end())
     {
-        auto search_workers = m_workers.find(id);
-        if (search_workers == m_workers.end())
+        const auto& workers = m_connnection_manager.worker_addresses();
+        auto search_workers = workers.find(id);
+        if (search_workers == workers.end())
         {
             LOG(ERROR) << "no endpoint or worker addresss was found for instance_id: " << id;
             throw std::runtime_error("could not acquire ucx endpoint");
@@ -73,21 +87,30 @@ const ucx::Endpoint& Client::endpoint(InstanceID id) const
         DVLOG(10) << "creating endpoint to instance_id: " << id;
         auto endpoint   = m_ucx.make_ep(search_workers->second);
         m_endpoints[id] = endpoint;
-        return *endpoint;
+        return endpoint;
     }
     DCHECK(search_endpoints->second);
-    return *search_endpoints->second;
+    return search_endpoints->second;
 }
 
-std::size_t Client::connections() const
+const ucx::Endpoint& Client::endpoint(const InstanceID& instance_id) const
+{
+    return *endpoint_shared(instance_id);
+}
+
+void Client::drop_endpoint(const InstanceID& instance_id)
+{
+    m_endpoints.erase(instance_id);
+}
+
+std::size_t Client::endpoint_count() const
 {
     return m_endpoints.size();
 }
 
-void Client::async_recv(void* addr, std::size_t bytes, std::uint64_t tag, Request& request)
+void Client::async_recv(
+    void* addr, std::size_t bytes, std::uint64_t tag, std::uint64_t mask, const ucx::Worker& worker, Request& request)
 {
-    static constexpr std::uint64_t mask = P2P_TAG & TAG_USER_MASK;  // NOLINT
-
     CHECK_EQ(request.m_request, nullptr);
     CHECK(request.m_state == Request::State::Init);
     request.m_state = Request::State::Running;
@@ -97,30 +120,65 @@ void Client::async_recv(void* addr, std::size_t bytes, std::uint64_t tag, Reques
     params.cb.recv      = Callbacks::recv;
     params.user_data    = &request;
 
-    // build tag
-    CHECK_LE(tag, TAG_USER_MASK);
-    tag |= P2P_TAG;
-
-    request.m_request = ucp_tag_recv_nbx(m_ucx.worker().handle(), addr, bytes, tag, mask, &params);
+    request.m_request = ucp_tag_recv_nbx(worker.handle(), addr, bytes, tag, mask, &params);
     CHECK(request.m_request);
     CHECK(!UCS_PTR_IS_ERR(request.m_request));
 }
 
-void Client::async_send(void* addr, std::size_t bytes, std::uint64_t tag, InstanceID instance_id, Request& request)
+void Client::async_p2p_recv(void* addr, std::size_t bytes, std::uint64_t tag, Request& request)
+{
+    static constexpr std::uint64_t mask = TAG_P2P_MSG & TAG_USER_MASK;  // NOLINT
+
+    // build tag
+    CHECK_LE(tag, TAG_USER_MASK);
+    tag |= TAG_P2P_MSG;
+
+    async_recv(addr, bytes, tag, mask, m_ucx.worker(), request);
+}
+
+void Client::async_send(
+    void* addr, std::size_t bytes, std::uint64_t tag, const ucx::Endpoint& endpoint, Request& request)
 {
     CHECK_EQ(request.m_request, nullptr);
     CHECK(request.m_state == Request::State::Init);
     request.m_state = Request::State::Running;
-
-    CHECK_LE(tag, TAG_USER_MASK);
-    tag |= P2P_TAG;
 
     ucp_request_param_t send_params;
     send_params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
     send_params.cb.send      = Callbacks::send;
     send_params.user_data    = &request;
 
-    request.m_request = ucp_tag_send_nbx(endpoint(instance_id).handle(), addr, bytes, tag, &send_params);
+    request.m_request = ucp_tag_send_nbx(endpoint.handle(), addr, bytes, tag, &send_params);
+    CHECK(request.m_request);
+    CHECK(!UCS_PTR_IS_ERR(request.m_request));
+}
+
+void Client::async_p2p_send(
+    void* addr, std::size_t bytes, std::uint64_t tag, InstanceID instance_id, Request& request) const
+{
+    CHECK_LE(tag, TAG_USER_MASK);
+    tag |= TAG_P2P_MSG;
+
+    async_send(addr, bytes, tag, endpoint(instance_id), request);
+}
+
+void Client::async_get(void* addr,
+                       std::size_t bytes,
+                       const ucx::Endpoint& ep,
+                       std::uint64_t remote_addr,
+                       ucp_rkey_h rkey,
+                       Request& request)
+{
+    CHECK_EQ(request.m_request, nullptr);
+    CHECK(request.m_state == Request::State::Init);
+    request.m_state = Request::State::Running;
+
+    ucp_request_param_t params;
+    params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
+    params.cb.send      = Callbacks::send;
+    params.user_data    = &request;
+
+    request.m_request = ucp_get_nbx(ep.handle(), addr, bytes, remote_addr, rkey, &params);
     CHECK(request.m_request);
     CHECK(!UCS_PTR_IS_ERR(request.m_request));
 }
@@ -130,18 +188,12 @@ void Client::async_get(void* addr,
                        InstanceID instance_id,
                        void* remote_addr,
                        const std::string& packed_remote_key,
-                       Request& request)
+                       Request& request) const
 {
     CHECK_EQ(request.m_request, nullptr);
     CHECK(request.m_state == Request::State::Init);
-    request.m_state = Request::State::Running;
 
     const auto& ep = endpoint(instance_id);
-
-    ucp_request_param_t params;
-    params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
-    params.cb.send      = Callbacks::send;
-    params.user_data    = &request;
 
     {
         auto rc =
@@ -153,192 +205,112 @@ void Client::async_get(void* addr,
         }
     }
 
-    request.m_request = ucp_get_nbx(ep.handle(),
-                                    addr,
-                                    bytes,
-                                    reinterpret_cast<std::uint64_t>(remote_addr),
-                                    reinterpret_cast<ucp_rkey_h>(request.m_rkey),
-                                    &params);
+    async_get(addr,
+              bytes,
+              ep,
+              reinterpret_cast<std::uint64_t>(remote_addr),
+              reinterpret_cast<ucp_rkey_h>(request.m_rkey),
+              request);
+}
+
+void Client::async_am_send(
+    std::uint32_t id, const void* header, std::size_t header_length, const ucx::Endpoint& endpoint, Request& request)
+{
+    CHECK_EQ(request.m_request, nullptr);
+    CHECK(request.m_state == Request::State::Init);
+    request.m_state = Request::State::Running;
+
+    ucp_request_param_t params;
+    params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
+    params.cb.send      = Callbacks::send;
+    params.user_data    = &request;
+
+    request.m_request = ucp_am_send_nbx(endpoint.handle(), id, header, header_length, nullptr, 0, &params);
     CHECK(request.m_request);
     CHECK(!UCS_PTR_IS_ERR(request.m_request));
 }
 
-// void Client::push_request(void* request)
-// {
-//     DCHECK(m_ucx_request_channel);
-//     m_ucx_request_channel->await_write(std::move(request));
-// }
-
-// bool Client::is_connected_to(InstanceID instance_id) const
-// {
-//     return contains(m_workers, instance_id);
-// }
-
-// void Client::decrement_remote_descriptor(InstanceID id, ObjectID obj_id)
-// {
-//     ucp_tag_t tag = obj_id | DESCRIPTOR_TAG;
-//     issue_network_event(id, tag);
-// }
-
-// void Client::issue_network_event(InstanceID id, ucp_tag_t tag)
-// {
-//     ucp_request_param_t params;
-//     std::memset(&params, 0, sizeof(params));
-
-//     auto* request = ucp_tag_send_nbx(endpoint(id).handle(), nullptr, 0, tag, &params);
-
-//     if (request == nullptr /* UCS_OK */)
-//     {
-//         // send completed successfully
-//         return;
-//     }
-//     if (UCS_PTR_IS_ERR(request))
-//     {
-//         LOG(ERROR) << "send failed";
-//         throw std::runtime_error("send failed");
-//     }
-
-//     // send operation was scheduled by the ucx runtime
-//     // adding requests to the channel will ensure the progress engine
-//     // will work to make forward progress on queued network requests
-//     push_request(std::move(request));
-// }
-
-// struct GetUserData
-// {
-//     Promise<void> promise;
-//     ucp_rkey_h rkey;
-// };
-
-// static void rdma_get_callback(void* request, ucs_status_t status, void* user_data)
-// {
-//     DVLOG(1) << "rdma get callback start for request " << request;
-//     auto* data = static_cast<GetUserData*>(user_data);
-//     if (status != UCS_OK)
-//     {
-//         LOG(FATAL) << "rdma get failure occurred";
-//         // data->promise.set_exception();
-//     }
-//     data->promise.set_value();
-//     ucp_request_free(request);
-//     ucp_rkey_destroy(data->rkey);
-// }
-
-/*
-void Client::get(const protos::RemoteDescriptor& remote_md, Descriptor& buffer)
+void Client::issue_remote_descriptor(RemoteDescriptorMessage&& msg)
 {
-    CHECK_GE(buffer.size(), remote_md.remote_bytes());
+    DCHECK(msg.rd);
+    DCHECK(msg.endpoint);
+    DCHECK_GT(msg.tag, 0);
+    DCHECK_LE(msg.tag, TAG_USER_MASK);
 
-    ucp_request_param_t params;
-    std::memset(&params, 0, sizeof(params));
+    // detach handle from remote descriptor to ensure that the tokens are not decremented
+    auto handle = remote_descriptor::Manager::unwrap_handle(std::move(msg.rd));
 
-    auto* user_data  = new GetUserData;
-    params.user_data = user_data;
+    // gain access to the protobuf backing the handle
+    const auto& proto = handle->proto();
 
-    // unpack rkey on ep
-    const auto& ep = endpoint(remote_md.instance_id());
-    auto rc =
-        ucp_ep_rkey_unpack(ep.handle(), reinterpret_cast<const void*>(remote_md.remote_key().data()), &user_data->rkey);
-    if (rc != UCS_OK)
+    auto msg_length = proto.ByteSizeLong();
+
+    // todo(ryan) - parameterize mrc::data_plane::client::max_remote_descriptor_eager_size
+    if (msg_length <= 1_MiB)
     {
-        LOG(ERROR) << "ucp_ep_rkey_unpack failed - " << ucs_status_string(rc);
-        throw exceptions::SrfRuntimeError("ucp_ep_rkey_unpack failed");
+        auto buffer = m_transient_pool.await_buffer(msg_length);
+        CHECK(proto.SerializeToArray(buffer.data(), buffer.bytes()));
+
+        // the message fits into the size of the preposted recvs issued by the data plane
+        msg.tag |= TAG_EGR_MSG;
+
+        Request request;
+        async_send(buffer.data(), buffer.bytes(), msg.tag, *msg.endpoint, request);
+
+        // await and yield the userspace thread until completed
+        CHECK(request.await_complete());
     }
-
-    params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
-    params.cb.send      = rdma_get_callback;
-
-    // possibly set memory type if the fancy pointer provided those details
-    switch (buffer.type())
+    else
     {
-    case memory::memory_kind_type::host:
-    case memory::memory_kind_type::pinned:
-        params.op_attr_mask |= UCP_OP_ATTR_FIELD_MEMORY_TYPE;
-        params.memory_type = UCS_MEMORY_TYPE_HOST;
-        LOG(INFO) << "setting ucx_get_nbx memory type to HOST";
-        break;
-    case memory::memory_kind_type::device:
-        params.op_attr_mask |= UCP_OP_ATTR_FIELD_MEMORY_TYPE;
-        params.memory_type = UCS_MEMORY_TYPE_CUDA;
-        LOG(FATAL) << "this path is probably broken";
-        break;
-    default:
-        break;
+        LOG(FATAL) << "implement the rendez-vous path (nb_probe) on the server side";
     }
-
-    auto future = user_data->promise.get_future();
-
-    auto* status = ucp_get_nbx(
-        ep.handle(), buffer.data(), remote_md.remote_bytes(), remote_md.remote_address(), user_data->rkey, &params);
-    if (status == nullptr)  // UCS_OK
-    {
-        LOG(FATAL)
-            << "should be unreachable";  // UCP_OP_ATTR_FLAG_NO_IMM_CMPL is set - should force the completion handler
-    }
-    else if (UCS_PTR_IS_ERR(status))
-    {
-        LOG(ERROR) << "rdma get failure";  // << ucs_status_string(status);
-        throw exceptions::SrfRuntimeError("rdma get failure");
-    }
-
-    // await on promise
-    future.get();
 }
-*/
 
-// void Client::await_send(const InstanceID& instance_id,
-//                         const PortAddress& port_address,
-//                         const codable::EncodedObject& encoded_object)
-// {
-//     Promise<void> promise;
-//     auto future = promise.get_future();
+node::SourceChannelWriteable<RemoteDescriptorMessage>& Client::remote_descriptor_channel()
+{
+    CHECK(m_rd_channel);
+    return *m_rd_channel;
+}
 
-//     ucp_tag_t tag = port_address | INGRESS_TAG;
-//     ucp_request_param_t params;
+void Client::do_service_start()
+{
+    CHECK(m_rd_channel);
 
-//     params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA;
-//     params.cb.send      = send_completion_handler_with_future;
-//     params.user_data    = &promise;
+    auto rd_writer = std::make_unique<node::RxSink<RemoteDescriptorMessage>>(
+        [this](RemoteDescriptorMessage msg) { issue_remote_descriptor(std::move(msg)); });
 
-//     // serialize the proto of the encoded object into it's own encoded object
-//     // dogfooding at its best
-//     codable::EncodedObject msg;
-//     codable::encode(encoded_object.proto(), msg);
+    // todo(ryan) - parameterize mrc::data_plane::client::max_queued_remote_descriptor_sends
+    rd_writer->update_channel(std::make_unique<channel::BufferedChannel<RemoteDescriptorMessage>>(128));
 
-//     // sanity check
-//     // 1) there should be only 1 descriptor, and
-//     // 2) the size of the memory block should be the size of the protos requested
-//     DCHECK_EQ(msg.descriptor_count(), 1);
-//     auto block = msg.memory_block(0);
-//     DCHECK_EQ(block.bytes(), encoded_object.proto().ByteSizeLong());
+    // form edge
+    mrc::node::make_edge(*m_rd_channel, *rd_writer);
 
-//     // all encoded_objects are serialized to host memory
-//     // these are small packed remote descriptors, not the actual payload data
-//     params.op_attr_mask |= UCP_OP_ATTR_FIELD_MEMORY_TYPE;
-//     params.memory_type = UCS_MEMORY_TYPE_HOST;
+    // todo(ryan) - parameterize mrc::data_plane::client::max_inflight_remote_descriptor_sends
+    auto launch_options = Resources::launch_options(16);
 
-//     // issue send
-//     ucs_status_ptr_t request =
-//         ucp_tag_send_nbx(endpoint(instance_id).handle(), block.data(), block.bytes(), tag, &params);
+    // launch rd_writer
+    m_rd_writer = runnable().launch_control().prepare_launcher(launch_options, std::move(rd_writer))->ignition();
+}
 
-//     if (request == nullptr /* UCS_OK */)
-//     {
-//         return;
-//     }
-//     if (UCS_PTR_IS_ERR(request))
-//     {
-//         LOG(ERROR) << "send failed - ";
-//         throw std::runtime_error("send failed");
-//     }
+void Client::do_service_await_live()
+{
+    m_rd_writer->await_live();
+}
 
-//     // if we didn't complete immediate or throw an error, then the message
-//     // is in flight. push the request to the progress engine which will
-//     // wake up a progress fiber to complete the send
-//     push_request(std::move(request));
+void Client::do_service_stop()
+{
+    m_rd_channel.reset();
+}
 
-//     // the caller of this await_send method will block and yield the fiber here
-//     // the caller is calling an "await" method so blocking and yielding is implied
-//     future.get();
-// }
+void Client::do_service_kill()
+{
+    m_rd_channel.reset();
+    m_rd_writer->kill();
+}
 
-}  // namespace srf::internal::data_plane
+void Client::do_service_await_join()
+{
+    m_rd_writer->await_join();
+}
+
+}  // namespace mrc::internal::data_plane

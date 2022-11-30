@@ -21,10 +21,10 @@
 #include "internal/system/topology.hpp"
 #include "public/utils/thread_utils.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/options/fiber_pool.hpp"
-#include "srf/options/options.hpp"
-#include "srf/utils/string_utils.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/options/fiber_pool.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/utils/string_utils.hpp"
 
 #include <glog/logging.h>
 #include <hwloc.h>
@@ -32,7 +32,7 @@
 #include <cstdint>
 #include <type_traits>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 Thread::Thread(std::shared_ptr<const ThreadResources> resources, std::thread&& thread) :
   m_resources(std::move(resources)),
@@ -110,13 +110,13 @@ void ThreadResources::initialize_thread(const std::string& desc, const CpuSet& c
         DVLOG(10) << "tid: " << std::this_thread::get_id() << "; setting cpu affinity to " << affinity;
         auto rc = hwloc_set_cpubind(topology.handle(), &cpu_affinity.bitmap(), HWLOC_CPUBIND_THREAD);
         CHECK_NE(rc, -1);
-        set_current_thread_name(SRF_CONCAT_STR("[" << desc << "; " << affinity << "]"));
+        set_current_thread_name(MRC_CONCAT_STR("[" << desc << "; " << affinity << "]"));
     }
     else
     {
         DVLOG(10) << "thread_binding is disabled; tid: " << std::this_thread::get_id()
                   << " will use the affinity of caller";
-        set_current_thread_name(SRF_CONCAT_STR("[" << desc << "; tid:" << std::this_thread::get_id() << "]"));
+        set_current_thread_name(MRC_CONCAT_STR("[" << desc << "; tid:" << std::this_thread::get_id() << "]"));
     }
 
     // todo(ryan) - enable thread/memory binding should be a system option, not specifically a fiber_pool option
@@ -159,4 +159,4 @@ void ThreadResources::finalize_thread(const CpuSet& cpu_affinity) const
     }
 }
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

@@ -17,7 +17,7 @@
 
 # Activate the `morpheus` conda environment.
 . /opt/conda/etc/profile.d/conda.sh
-conda activate srf
+conda activate mrc
 
 # Source "source" file if it exists
 SRC_FILE="/opt/docker/bin/entrypoint_source"

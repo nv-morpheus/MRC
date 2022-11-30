@@ -18,7 +18,6 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "dep")
 # Initialize rapids CPM with package overrides
 rapids_cpm_init(OVERRIDE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/deps/rapids_cpm_package_overrides.json")
 
-
 # Print CMake settings when verbose output is enabled
 message(VERBOSE "PROJECT_NAME: " ${PROJECT_NAME})
 message(VERBOSE "CMAKE_HOST_SYSTEM: ${CMAKE_HOST_SYSTEM}")
@@ -47,7 +46,6 @@ message(VERBOSE "CMAKE_SYSROOT: " ${CMAKE_SYSROOT})
 message(VERBOSE "CMAKE_STAGING_PREFIX: " ${CMAKE_STAGING_PREFIX})
 message(VERBOSE "CMAKE_FIND_ROOT_PATH_MODE_INCLUDE: " ${CMAKE_FIND_ROOT_PATH_MODE_INCLUDE})
 
-
 # Start with CUDA. Need to add it to our export set
 rapids_find_package(CUDAToolkit
   REQUIRED
@@ -72,19 +70,23 @@ include(deps/Configure_ucx)
 set(HWLOC_VERSION "2.5" CACHE STRING "Version of hwloc to use")
 include(deps/Configure_hwloc)
 
+# expected
+set(EXPECTED_VERSION "1.0.0" CACHE STRING "Version of expected to use")
+include(deps/Configure_expected)
+
 # FlatBuffers
 # ===========
-#rapids_find_package(Flatbuffers REQUIRED
-#  GLOBAL_TARGETS Flatbuffers
-#  BUILD_EXPORT_SET ${PROJECT_NAME}-core-exports
-#  INSTALL_EXPORT_SET ${PROJECT_NAME}-core-exports
-#  FIND_ARGS
-#  CONFIG
-#)
+# rapids_find_package(Flatbuffers REQUIRED
+# GLOBAL_TARGETS Flatbuffers
+# BUILD_EXPORT_SET ${PROJECT_NAME}-core-exports
+# INSTALL_EXPORT_SET ${PROJECT_NAME}-core-exports
+# FIND_ARGS
+# CONFIG
+# )
 
 # NVIDIA RAPIDS RMM
 # =================
-set(RMM_VERSION "\${SRF_RAPIDS_VERSION}" CACHE STRING "Version of RMM to use. Defaults to \${SRF_RAPIDS_VERSION}")
+set(RMM_VERSION "\${MRC_RAPIDS_VERSION}" CACHE STRING "Version of RMM to use. Defaults to \${MRC_RAPIDS_VERSION}")
 include(deps/Configure_RMM)
 
 # gflags
@@ -93,8 +95,9 @@ rapids_find_package(gflags REQUIRED
   GLOBAL_TARGETS gflags
   BUILD_EXPORT_SET ${PROJECT_NAME}-core-exports
   INSTALL_EXPORT_SET ${PROJECT_NAME}-core-exports
+
   # FIND_ARGS
-  #   CONFIG
+  # CONFIG
 )
 
 # glog
@@ -103,7 +106,6 @@ rapids_find_package(gflags REQUIRED
 # - todo: compile with -DWITH_GFLAGS=OFF and remove gflags dependency
 set(GLOG_VERSION "0.6" CACHE STRING "Version of glog to use")
 include(deps/Configure_glog)
-
 
 # nvidia cub
 # ==========
@@ -116,9 +118,9 @@ find_path(CUB_INCLUDE_DIRS "cub/cub.cuh"
 # =========
 rapids_find_package(gRPC REQUIRED
   GLOBAL_TARGETS
-    gRPC::address_sorting gRPC::gpr gRPC::grpc gRPC::grpc_unsecure gRPC::grpc++ gRPC::grpc++_alts gRPC::grpc++_error_details gRPC::grpc++_reflection
-    gRPC::grpc++_unsecure gRPC::grpc_plugin_support gRPC::grpcpp_channelz gRPC::upb gRPC::grpc_cpp_plugin gRPC::grpc_csharp_plugin gRPC::grpc_node_plugin
-    gRPC::grpc_objective_c_plugin gRPC::grpc_php_plugin gRPC::grpc_python_plugin gRPC::grpc_ruby_plugin
+  gRPC::address_sorting gRPC::gpr gRPC::grpc gRPC::grpc_unsecure gRPC::grpc++ gRPC::grpc++_alts gRPC::grpc++_error_details gRPC::grpc++_reflection
+  gRPC::grpc++_unsecure gRPC::grpc_plugin_support gRPC::grpcpp_channelz gRPC::upb gRPC::grpc_cpp_plugin gRPC::grpc_csharp_plugin gRPC::grpc_node_plugin
+  gRPC::grpc_objective_c_plugin gRPC::grpc_php_plugin gRPC::grpc_python_plugin gRPC::grpc_ruby_plugin
   BUILD_EXPORT_SET ${PROJECT_NAME}-core-exports
   INSTALL_EXPORT_SET ${PROJECT_NAME}-core-exports
 )
@@ -135,7 +137,7 @@ rapids_find_package(nlohmann_json REQUIRED
   BUILD_EXPORT_SET ${PROJECT_NAME}-core-exports
   INSTALL_EXPORT_SET ${PROJECT_NAME}-core-exports
   FIND_ARGS
-    CONFIG
+  CONFIG
 )
 
 # prometheus
@@ -148,24 +150,26 @@ include(deps/Configure_prometheus)
 set(LIBCUDACXX_VERSION "1.8.0" CACHE STRING "Version of libcudacxx to use")
 include(deps/Configure_libcudacxx)
 
-if(SRF_BUILD_BENCHMARKS)
+if(MRC_BUILD_BENCHMARKS)
   # google benchmark
   # ================
   rapids_find_package(benchmark REQUIRED
     GLOBAL_TARGETS benchmark::benchmark
     BUILD_EXPORT_SET ${PROJECT_NAME}-core-exports
+
     # No install set
     FIND_ARGS
     CONFIG
-    )
+  )
 endif()
 
-if(SRF_BUILD_TESTS)
+if(MRC_BUILD_TESTS)
   # google test
   # ===========
   rapids_find_package(GTest REQUIRED
     GLOBAL_TARGETS GTest::gtest GTest::gmock GTest::gtest_main GTest::gmock_main
     BUILD_EXPORT_SET ${PROJECT_NAME}-core-exports
+
     # No install set
     FIND_ARGS
     CONFIG

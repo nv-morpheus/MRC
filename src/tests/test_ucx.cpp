@@ -18,8 +18,8 @@
 #include "internal/ucx/all.hpp"
 #include "internal/ucx/endpoint.hpp"
 
-#include "srf/channel/forward.hpp"
-#include "srf/types.hpp"
+#include "mrc/channel/forward.hpp"
+#include "mrc/types.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <boost/fiber/future/future_status.hpp>
@@ -39,7 +39,7 @@
 #include <stdexcept>
 #include <string>
 
-using namespace srf;
+using namespace mrc;
 using namespace internal::ucx;
 
 class TestUCX : public ::testing::Test
@@ -84,51 +84,6 @@ TEST_F(TestUCX, EndpointsInProcess)
     worker_1->progress();
     worker_2->progress();
 }
-
-/*
-TEST_F(TestUCX, ReceiveManager)
-{
-    FiberGroup fibers(2);
-    auto worker = UCX::global().create_worker();
-    auto host_allocator = memory::make_allocator(memory::malloc_allocator()).shared();
-    auto device_allocator = memory::make_allocator(memory::cuda_malloc_allocator(0)).shared();
-    auto recv_mgr = std::make_shared<ReceiveManager>(worker, host_allocator, device_allocator);
-
-    recv_mgr->shutdown();
-}
-*/
-
-/*
-TEST_F(TestUCX, UCXTaggedMessages)
-{
-    FiberGroup fibers(2);
-    auto recv_worker = UCX::global().create_worker();
-    auto send_worker = UCX::global().create_worker();
-    auto host_allocator = memory::make_allocator(memory::malloc_allocator()).shared();
-    auto device_allocator = memory::make_allocator(memory::cuda_malloc_allocator(0)).shared();
-    auto recv_mgr = std::make_shared<ReceiveManager>(recv_worker, host_allocator, device_allocator);
-    auto send_mgr = std::make_shared<SendManager>(send_worker);
-
-    auto recv_address = recv_mgr->local_address();
-
-    send_mgr->create_endpoint(42, recv_address);
-
-    auto md = host_allocator->allocate_descriptor(sizeof(std::uint64_t));
-
-    auto fs = send_mgr->async_write(42, 4, std::move(md));
-
-    auto [tag, buff] = recv_mgr->await_read();
-
-    fs.get();
-
-    EXPECT_EQ(tag, 4);
-    EXPECT_EQ(buff.size(), sizeof(std::uint64_t));
-
-    recv_mgr->shutdown();
-}
-*/
-
-// RDMA
 
 struct GetUserData
 {
@@ -249,6 +204,80 @@ class SendRecvManager
 };
 
 TEST_F(TestUCX, Recv)
+{
+    auto context = std::make_shared<Context>();
+
+    auto worker_src = std::make_shared<Worker>(context);
+    auto worker_dst = std::make_shared<Worker>(context);
+
+    // create an ep from the worker issuing the GET to the worker address that is the source bytes
+    auto ep = std::make_shared<Endpoint>(worker_src, worker_dst->address());
+
+    std::promise<void> send_promise;
+    std::promise<ucp_tag_t> recv_promise;
+    auto send_future = send_promise.get_future();
+    auto recv_future = recv_promise.get_future();
+
+    // dst issue recv
+    ucp_request_param_t params;
+    params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
+    params.cb.recv      = recv_get_callback;
+    params.user_data    = &recv_promise;
+
+    void* status_ptr_1 = ucp_tag_recv_nbx(worker_dst->handle(), nullptr, 0, 0, 0, &params);
+    EXPECT_NE(status_ptr_1, nullptr);
+
+    // void* status_ptr_2 = ucp_tag_recv_nbx(worker_dst->handle(), nullptr, 0, 0, 0, &params);
+    // EXPECT_NE(status_ptr_2, nullptr);
+
+    // sender
+    ucp_request_param_t send_params;
+    send_params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
+    send_params.cb.send      = send_callback;
+    send_params.user_data    = &send_promise;
+
+    ucs_status_ptr_t send_rc = ucp_tag_send_nbx(ep->handle(), nullptr, 0, 42, &send_params);
+    EXPECT_NE(send_rc, nullptr);
+
+    auto send_status = std::future_status::timeout;
+    while (send_status == std::future_status::timeout)
+    {
+        send_status = send_future.wait_for(std::chrono::microseconds(1));
+        worker_dst->progress();
+        worker_src->progress();
+    }
+    send_future.get();
+
+    VLOG(1) << "send complete";
+
+    auto recv_status = std::future_status::timeout;
+    while (recv_status == std::future_status::timeout)
+    {
+        recv_status = recv_future.wait_for(std::chrono::microseconds(1));
+        worker_dst->progress();
+        worker_src->progress();
+    }
+
+    auto tag = recv_future.get();
+
+    EXPECT_EQ(tag, 42);
+
+    // note: uncommenting this code will push a recv request but the worker and ep will shutdown
+    // resulting in a ucx working message
+    // if we have pre-posted recvs, we will need a way to cancel them to prevent these warnings
+    // {
+    //     ucp_request_param_t params;
+    //     params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA |
+    //     UCP_OP_ATTR_FLAG_NO_IMM_CMPL; params.cb.recv      = recv_get_callback; params.user_data    = nullptr;
+
+    //     void* status_ptr_1 = ucp_tag_recv_nbx(worker_dst->handle(), nullptr, 0, 0, 0, &params);
+    //     EXPECT_NE(status_ptr_1, nullptr);
+    // }
+}
+
+// Recv
+
+TEST_F(TestUCX, Recv2)
 {
     auto context = std::make_shared<Context>();
 

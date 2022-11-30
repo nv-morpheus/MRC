@@ -20,9 +20,9 @@
 #include "internal/system/fiber_pool.hpp"
 #include "internal/system/fiber_task_queue.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/types.hpp"
-#include "srf/utils/macros.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/types.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <glog/logging.h>
 
@@ -34,7 +34,7 @@
 #include <utility>
 #include <vector>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 class Resources;  // IWYU pragma: keep
 
@@ -111,4 +111,4 @@ class FiberManager final
     std::map<std::uint32_t, std::unique_ptr<FiberTaskQueue>> m_queues;
 };
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

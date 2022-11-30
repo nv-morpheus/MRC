@@ -23,7 +23,7 @@
 #include <set>
 #include <string>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 struct DeviceInfo
 {
@@ -41,4 +41,4 @@ struct DeviceInfo
     static auto AccessibleDevices() -> std::size_t;                   // NOLINT
 };
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

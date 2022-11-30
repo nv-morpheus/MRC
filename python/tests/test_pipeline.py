@@ -21,10 +21,10 @@
 # import numpy as np
 # import pytest
 
-import srf
-import srf.tests.test_edges_cpp as m
+import mrc
+import mrc.tests.test_edges_cpp as m
 
-# from srf.core.options import PlacementStrategy
+# from mrc.core.options import PlacementStrategy
 
 # whereami = pathlib.Path(__file__).parent.resolve()
 
@@ -79,7 +79,7 @@ import srf.tests.test_edges_cpp as m
 
 #     i = 0
 #     for line in data.splitlines():
-#         item = srf.VectorWrapperThing(line)
+#         item = mrc.VectorWrapperThing(line)
 #         print(f"Item refcount before yield: {sys.getrefcount(item)}")
 #         print(f"Item referrers before yield: {gc.get_referrers(item)}")
 #         yield line
@@ -95,7 +95,7 @@ import srf.tests.test_edges_cpp as m
 #     rval = f * 2.212
 #     return rval
 
-# def segment_init_homogesrfus_string_usage(seg: srf.Builder):
+# def segment_init_homogeneous_string_usage(seg: mrc.Builder):
 #     on_next = partial(capture_sink_on_next, tracing_dict=TRACING_DICT)
 #     on_error = partial(capture_sink_on_error, tracing_dict=TRACING_DICT)
 #     on_completed = partial(capture_sink_on_completed, tracing_dict=TRACING_DICT)
@@ -109,7 +109,7 @@ import srf.tests.test_edges_cpp as m
 #     seg.make_edge(pynode_to_upper, py_string_sink)
 #     ### Pure Python example
 
-# def segment_init_cxx_string_source(seg: srf.Builder):
+# def segment_init_cxx_string_source(seg: mrc.Builder):
 #     on_next = partial(capture_sink_on_next, tracing_dict=TRACING_DICT)
 #     on_error = partial(capture_sink_on_error, tracing_dict=TRACING_DICT)
 #     on_completed = partial(capture_sink_on_completed, tracing_dict=TRACING_DICT)
@@ -122,7 +122,7 @@ import srf.tests.test_edges_cpp as m
 #     seg.make_edge(pynode_to_upper_1, pysink)
 #     ###
 
-# def segment_init_heterogesrfus_string_usage(seg: srf.Builder):
+# def segment_init_heterogeneous_string_usage(seg: mrc.Builder):
 #     on_next = partial(capture_sink_on_next, tracing_dict=TRACING_DICT)
 #     on_error = partial(capture_sink_on_error, tracing_dict=TRACING_DICT)
 #     on_completed = partial(capture_sink_on_completed, tracing_dict=TRACING_DICT)
@@ -148,7 +148,7 @@ import srf.tests.test_edges_cpp as m
 #     ###
 #     print("Hetero string usage graph constructed")
 
-# def segment_initcpp_flatten(seg: srf.Builder):
+# def segment_initcpp_flatten(seg: mrc.Builder):
 #     on_next = partial(capture_sink_on_next, tracing_dict=TRACING_DICT)
 #     on_error = partial(capture_sink_on_error, tracing_dict=TRACING_DICT)
 #     on_completed = partial(capture_sink_on_completed, tracing_dict=TRACING_DICT)
@@ -166,12 +166,12 @@ import srf.tests.test_edges_cpp as m
 #     seg.make_cxx2py_edge_adapter(node_flatten_list, py_string_sink, np.str_)
 #     ###
 
-# def segment_init_heterogenous_double_usage(seg: srf.Builder):
+# def segment_init_heterogenous_double_usage(seg: mrc.Builder):
 #     on_next = partial(capture_sink_on_next, tracing_dict=TRACING_DICT)
 #     on_error = partial(capture_sink_on_error, tracing_dict=TRACING_DICT)
 #     on_completed = partial(capture_sink_on_completed, tracing_dict=TRACING_DICT)
 
-#     ### CXX double source with heterogesrfus segment node composition
+#     ### CXX double source with heterogeneous segment node composition
 #     source_double = seg.debug_float_source("source_double", 10000)  # inject new double's into the segment
 #     pynode_multiplier_1 = seg.make_node(
 #         "pynode_multiplier_1", map_double_float)  # Python node that casts our value to a pyobject and doubles it
@@ -193,13 +193,13 @@ import srf.tests.test_edges_cpp as m
 #     global TRACING_DICT
 #     TRACING_DICT = {"inputs": [], "outputs": [], "on_next": 0, "on_error": 0, "on_completed": 0}
 
-#     pipeline = srf.Pipeline()
+#     pipeline = mrc.Pipeline()
 #     pipeline.make_segment(name, init_func)
 
-#     options = srf.Options()
+#     options = mrc.Options()
 #     options.placement.cpu_strategy = PlacementStrategy.PerMachine
 
-#     executor = srf.Executor(options)
+#     executor = mrc.Executor(options)
 #     executor.register_pipeline(pipeline)
 
 #     executor.start()
@@ -213,7 +213,7 @@ import srf.tests.test_edges_cpp as m
 # @pytest.mark.xfail  # issue#161
 # def test_homogenous_string_usage():
 #     global TRACING_DICT
-#     do_segment_test("homogenous_string_segment", segment_init_homogesrfus_string_usage)
+#     do_segment_test("homogenous_string_segment", segment_init_homogeneous_string_usage)
 #     assert (TRACING_DICT['on_next'] == 3)
 #     assert (TRACING_DICT['on_error'] == 0)
 #     assert (TRACING_DICT['on_completed'] == 1)
@@ -237,7 +237,7 @@ import srf.tests.test_edges_cpp as m
 # @pytest.mark.xfail  # issue#161
 # def test_heterogenous_string_usage():
 #     global TRACING_DICT
-#     do_segment_test("heterogenous_string_segment", segment_init_heterogesrfus_string_usage)
+#     do_segment_test("heterogenous_string_segment", segment_init_heterogeneous_string_usage)
 
 #     assert (TRACING_DICT['on_next'] == 220)
 #     assert (TRACING_DICT['on_error'] == 0)
@@ -252,7 +252,7 @@ import srf.tests.test_edges_cpp as m
 # @pytest.mark.xfail  # issue#161
 # def test_heterogenous_double_pipeline():
 #     global TRACING_DICT
-#     do_segment_test("heterogesrfus_double_segment", segment_init_heterogenous_double_usage)
+#     do_segment_test("heterogeneous_double_segment", segment_init_heterogenous_double_usage)
 
 #     assert (TRACING_DICT['on_next'] == 10000)
 #     assert (TRACING_DICT['on_error'] == 0)
@@ -267,7 +267,7 @@ def test_pipeline_creation_noports():
     def init(seg):
         pass
 
-    pipe = srf.Pipeline()
+    pipe = mrc.Pipeline()
     pipe.make_segment("TestSegment1", init)
     pipe.make_segment("TestSegment2", [], [], init)
 
@@ -289,7 +289,7 @@ def test_dynamic_port_creation_good():
 
     for i in range(len(ingress)):
         for j in range(len(egress)):
-            pipe = srf.Pipeline()
+            pipe = mrc.Pipeline()
             pipe.make_segment("DynamicPortTestSegment", ingress[0:i], egress[0:j], init)
 
 
@@ -301,7 +301,7 @@ def test_dynamic_port_creation_bad():
     ingress = [(f"{chr(i)}", 'c') for i in range(65, 76)]
     egress = [(f"{chr(i)}", 12) for i in range(97, 108)]
 
-    pipe = srf.Pipeline()
+    pipe = mrc.Pipeline()
     try:
         pipe.make_segment("DynamicPortTestSegmentIngress", ingress, [], init)
         assert (False)
@@ -324,13 +324,13 @@ def test_ingress_egress_custom_type_construction():
         yield 2
         yield 3
 
-    def init1(builder: srf.Builder):
+    def init1(builder: mrc.Builder):
         source = builder.make_source("source", gen_data)
-        egress = builder.get_egress("b")
+        egress = builder.get_egress("a")
 
         builder.make_edge(source, egress)
 
-    def init2(builder: srf.Builder):
+    def init2(builder: mrc.Builder):
 
         def on_next(input):
             pass
@@ -341,12 +341,12 @@ def test_ingress_egress_custom_type_construction():
         def on_complete():
             pass
 
-        ingress = builder.get_ingress("b")
+        ingress = builder.get_ingress("a")
         sink = builder.make_sink("sink", on_next, on_error, on_complete)
 
         builder.make_edge(ingress, sink)
 
-    pipe = srf.Pipeline()
+    pipe = mrc.Pipeline()
 
     # Create segments with various combinations of type and untyped ports
     pipe.make_segment("TestSegment1", [("c", m.DerivedA), "c21", ("c31", int, False), "c41"],
@@ -366,13 +366,13 @@ def test_dynamic_port_get_ingress_egress():
         yield 2
         yield 3
 
-    def init1(builder: srf.Builder):
+    def init1(builder: mrc.Builder):
         source = builder.make_source("source", gen_data)
         egress = builder.get_egress("b")
 
         builder.make_edge(source, egress)
 
-    def init2(builder: srf.Builder):
+    def init2(builder: mrc.Builder):
 
         def on_next(input):
             pass
@@ -388,14 +388,14 @@ def test_dynamic_port_get_ingress_egress():
 
         builder.make_edge(ingress, sink)
 
-    pipe = srf.Pipeline()
+    pipe = mrc.Pipeline()
 
     pipe.make_segment("TestSegment11", [], ["b"], init1)
     pipe.make_segment("TestSegment22", ["b"], [], init2)
 
-    options = srf.Options()
+    options = mrc.Options()
 
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
     executor.register_pipeline(pipe)
 
     executor.start()
@@ -409,13 +409,13 @@ def test_dynamic_port_with_type_get_ingress_egress():
         yield 2
         yield 3
 
-    def init1(builder: srf.Builder):
+    def init1(builder: mrc.Builder):
         source = builder.make_source("source", gen_data)
         egress = builder.get_egress("b")
 
         builder.make_edge(source, egress)
 
-    def init2(builder: srf.Builder):
+    def init2(builder: mrc.Builder):
 
         def on_next(input):
             pass
@@ -431,14 +431,14 @@ def test_dynamic_port_with_type_get_ingress_egress():
 
         builder.make_edge(ingress, sink)
 
-    pipe = srf.Pipeline()
+    pipe = mrc.Pipeline()
 
     pipe.make_segment("TestSegment11", [], [("b", int, False)], init1)
     pipe.make_segment("TestSegment22", [("b", int, False)], [], init2)
 
-    options = srf.Options()
+    options = mrc.Options()
 
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
     executor.register_pipeline(pipe)
 
     executor.start()

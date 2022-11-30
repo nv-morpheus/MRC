@@ -20,11 +20,11 @@
 #include "internal/pipeline/resources.hpp"
 #include "internal/segment/definition.hpp"
 
-#include "srf/engine/segment/ibuilder.hpp"
-#include "srf/runnable/forward.hpp"
-#include "srf/segment/forward.hpp"
-#include "srf/segment/object.hpp"
-#include "srf/types.hpp"
+#include "mrc/engine/segment/ibuilder.hpp"
+#include "mrc/runnable/forward.hpp"
+#include "mrc/segment/forward.hpp"
+#include "mrc/segment/object.hpp"
+#include "mrc/types.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -33,7 +33,7 @@
 #include <memory>
 #include <string>
 
-namespace srf::internal::segment {
+namespace mrc::internal::segment {
 class Builder final
 {
   public:
@@ -44,21 +44,21 @@ class Builder final
 
     const Definition& definition() const;
 
-    const std::map<std::string, std::shared_ptr<srf::runnable::Launchable>>& nodes() const;
-    const std::map<std::string, std::shared_ptr<srf::segment::EgressPortBase>>& egress_ports() const;
-    const std::map<std::string, std::shared_ptr<srf::segment::IngressPortBase>>& ingress_ports() const;
+    const std::map<std::string, std::shared_ptr<mrc::runnable::Launchable>>& nodes() const;
+    const std::map<std::string, std::shared_ptr<mrc::segment::EgressPortBase>>& egress_ports() const;
+    const std::map<std::string, std::shared_ptr<mrc::segment::IngressPortBase>>& ingress_ports() const;
 
   private:
     const std::string& name() const;
 
     bool has_object(const std::string& name) const;
-    ::srf::segment::ObjectProperties& find_object(const std::string& name);
+    ::mrc::segment::ObjectProperties& find_object(const std::string& name);
 
-    void add_object(const std::string& name, std::shared_ptr<::srf::segment::ObjectProperties> object);
-    void add_runnable(const std::string& name, std::shared_ptr<srf::runnable::Launchable> runnable);
+    void add_object(const std::string& name, std::shared_ptr<::mrc::segment::ObjectProperties> object);
+    void add_runnable(const std::string& name, std::shared_ptr<mrc::runnable::Launchable> runnable);
 
-    std::shared_ptr<::srf::segment::IngressPortBase> get_ingress_base(const std::string& name);
-    std::shared_ptr<::srf::segment::EgressPortBase> get_egress_base(const std::string& name);
+    std::shared_ptr<::mrc::segment::IngressPortBase> get_ingress_base(const std::string& name);
+    std::shared_ptr<::mrc::segment::EgressPortBase> get_egress_base(const std::string& name);
 
     // temporary metrics interface
     std::function<void(std::int64_t)> make_throughput_counter(const std::string& name);
@@ -67,14 +67,14 @@ class Builder final
     std::shared_ptr<const Definition> m_definition;
 
     // all objects - ports, runnables, etc.
-    std::map<std::string, std::shared_ptr<::srf::segment::ObjectProperties>> m_objects;
+    std::map<std::string, std::shared_ptr<::mrc::segment::ObjectProperties>> m_objects;
 
     // only runnables
-    std::map<std::string, std::shared_ptr<srf::runnable::Launchable>> m_nodes;
+    std::map<std::string, std::shared_ptr<mrc::runnable::Launchable>> m_nodes;
 
     // ingress/egress - these are also nodes/objects
-    std::map<std::string, std::shared_ptr<::srf::segment::IngressPortBase>> m_ingress_ports;
-    std::map<std::string, std::shared_ptr<::srf::segment::EgressPortBase>> m_egress_ports;
+    std::map<std::string, std::shared_ptr<::mrc::segment::IngressPortBase>> m_ingress_ports;
+    std::map<std::string, std::shared_ptr<::mrc::segment::EgressPortBase>> m_egress_ports;
 
     pipeline::Resources& m_resources;
     const std::size_t m_default_partition_id;
@@ -82,4 +82,4 @@ class Builder final
     friend IBuilder;
 };
 
-}  // namespace srf::internal::segment
+}  // namespace mrc::internal::segment

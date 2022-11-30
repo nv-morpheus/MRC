@@ -17,15 +17,16 @@
 
 #include "internal/system/partitions.hpp"
 
+#include "internal/system/gpu_info.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/topology.hpp"
 #include "internal/utils/shared_resource_bit_map.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/placement.hpp"
-#include "srf/utils/bytes_to_string.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/placement.hpp"
+#include "mrc/utils/bytes_to_string.hpp"
 
 #include <ext/alloc_traits.h>
 #include <glog/logging.h>
@@ -57,7 +58,7 @@ static void div_even(std::int32_t n, std::int32_t np, std::int32_t me, std::int3
     }
 }
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 Partitions::Partitions(const System& system) : Partitions(system.topology(), system.options()) {}
 
@@ -132,6 +133,10 @@ Partitions::Partitions(const Topology& topology, const Options& options)
     if (m_cpu_strategy == PlacementStrategy::PerNumaNode)
     {
         host_partition_over_obj = HWLOC_OBJ_NUMANODE;
+    }
+    else if (m_cpu_strategy == PlacementStrategy::PerSocket)
+    {
+        host_partition_over_obj = HWLOC_OBJ_SOCKET;
     }
 
     auto partition_depth   = topology.depth_for_object(host_partition_over_obj);
@@ -262,7 +267,7 @@ Partitions::Partitions(const Topology& topology, const Options& options)
     for (auto& partition : host_partitions)
     {
         VLOG(10) << "evaluating engine factory cpu sets for host_partition " << partition->cpu_set().str();
-        partition->set_engine_factory_cpu_sets(options);
+        partition->set_engine_factory_cpu_sets(topology, options);
     }
 
     auto partition_sorter = [](const Partition& lhs, const Partition& rhs) -> bool {
@@ -333,4 +338,4 @@ const std::vector<DevicePartition>& Partitions::device_partitions() const
 {
     return m_device_partitions;
 }
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

@@ -19,10 +19,10 @@
 
 #include "internal/runnable/fiber_engine.hpp"
 
-#include "srf/core/fiber_meta_data.hpp"
-#include "srf/core/task_queue.hpp"
-#include "srf/runnable/launch_options.hpp"
-#include "srf/runnable/types.hpp"
+#include "mrc/core/fiber_meta_data.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/runnable/launch_options.hpp"
+#include "mrc/runnable/types.hpp"
 
 #include <glog/logging.h>
 
@@ -31,13 +31,13 @@
 #include <string>
 #include <utility>
 
-namespace srf::internal::runnable {
+namespace mrc::internal::runnable {
 
 FiberEngines::FiberEngines(system::FiberPool& pool, int priority) :
-  FiberEngines(::srf::runnable::LaunchOptions("custom_options", pool.thread_count()), pool, priority)
+  FiberEngines(::mrc::runnable::LaunchOptions("custom_options", pool.thread_count()), pool, priority)
 {}
 
-FiberEngines::FiberEngines(srf::runnable::LaunchOptions launch_options, system::FiberPool& pool, int priority) :
+FiberEngines::FiberEngines(mrc::runnable::LaunchOptions launch_options, system::FiberPool& pool, int priority) :
   Engines(std::move(launch_options)),
   m_meta{priority}
 {
@@ -49,7 +49,7 @@ FiberEngines::FiberEngines(srf::runnable::LaunchOptions launch_options, system::
     initialize_launchers();
 }
 
-FiberEngines::FiberEngines(srf::runnable::LaunchOptions launch_options,
+FiberEngines::FiberEngines(mrc::runnable::LaunchOptions launch_options,
                            system::FiberPool& pool,
                            const FiberMetaData& meta) :
   Engines(std::move(launch_options)),
@@ -61,7 +61,7 @@ FiberEngines::FiberEngines(srf::runnable::LaunchOptions launch_options,
     }
     initialize_launchers();
 }
-FiberEngines::FiberEngines(srf::runnable::LaunchOptions launch_options,
+FiberEngines::FiberEngines(mrc::runnable::LaunchOptions launch_options,
                            std::vector<std::reference_wrapper<core::FiberTaskQueue>>&& task_queues,
                            int priority) :
   Engines(std::move(launch_options)),
@@ -88,4 +88,4 @@ runnable::EngineType FiberEngines::engine_type() const
 {
     return EngineType::Fiber;
 }
-}  // namespace srf::internal::runnable
+}  // namespace mrc::internal::runnable

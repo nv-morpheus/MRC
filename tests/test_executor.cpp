@@ -15,22 +15,22 @@
  * limitations under the License.
  */
 
-#include "test_srf.hpp"  // IWYU pragma: associated
+#include "test_mrc.hpp"  // IWYU pragma: associated
 
-#include "srf/channel/status.hpp"
-#include "srf/core/executor.hpp"
-#include "srf/core/runtime.hpp"
-#include "srf/node/operators/muxer.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/topology.hpp"
-#include "srf/pipeline/pipeline.hpp"
-#include "srf/segment/builder.hpp"
-#include "srf/segment/context.hpp"
-#include "srf/segment/definition.hpp"
-#include "srf/segment/egress_ports.hpp"
-#include "srf/segment/ingress_ports.hpp"
-#include "srf/segment/segment.hpp"
-#include "srf/types.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/core/executor.hpp"
+#include "mrc/core/runtime.hpp"
+#include "mrc/node/operators/muxer.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/topology.hpp"
+#include "mrc/pipeline/pipeline.hpp"
+#include "mrc/segment/builder.hpp"
+#include "mrc/segment/context.hpp"
+#include "mrc/segment/definition.hpp"
+#include "mrc/segment/egress_ports.hpp"
+#include "mrc/segment/ingress_ports.hpp"
+#include "mrc/segment/segment.hpp"
+#include "mrc/types.hpp"
 
 #include <boost/fiber/buffered_channel.hpp>
 #include <boost/fiber/channel_op_status.hpp>
@@ -503,7 +503,7 @@ TEST_F(TestExecutor, MultiNode)
 //     // since it owns the oracle server
 
 //     source_1->channel().push("hello");
-//     source_1->channel().push("srf");
+//     source_1->channel().push("mrc");
 //     source_1->channel().close();
 
 //     std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -554,7 +554,7 @@ TEST_F(TestExecutor, MultiNode)
 //     start_2.get();
 
 //     source_1->channel().push("hello");
-//     source_1->channel().push("srf");
+//     source_1->channel().push("mrc");
 //     source_1->channel().close();
 
 //     machine_2.join();

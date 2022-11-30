@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include "srf/pipeline/pipeline.hpp"
+#include "mrc/pipeline/pipeline.hpp"
 
 namespace test::pipelines {
 
-std::unique_ptr<srf::pipeline::Pipeline> finite_single_segment();
-std::unique_ptr<srf::pipeline::Pipeline> finite_single_segment_will_throw();
-std::unique_ptr<srf::pipeline::Pipeline> finite_multisegment();
+std::unique_ptr<mrc::pipeline::Pipeline> finite_single_segment();
+std::unique_ptr<mrc::pipeline::Pipeline> finite_single_segment_will_throw();
+std::unique_ptr<mrc::pipeline::Pipeline> finite_multisegment();
 
 }  // namespace test::pipelines
