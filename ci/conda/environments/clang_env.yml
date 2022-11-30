@@ -26,3 +26,4 @@ dependencies:
     - libclang=14
     - libclang-cpp=14
     - llvmdev=14
+    - include-what-you-use=0.19
