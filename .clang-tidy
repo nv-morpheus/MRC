@@ -219,7 +219,7 @@ CheckOptions:
   - key: readability-identifier-naming.TemplateTemplateParameterPrefix
     value: ''
   - key: readability-identifier-naming.TemplateTemplateParameterSuffix
-    value: ''
+    value: 'T'
   - key: readability-identifier-naming.ValueTemplateParameterCase
     value: CamelCase
   - key: readability-identifier-naming.ValueTemplateParameterIgnoredRegexp
