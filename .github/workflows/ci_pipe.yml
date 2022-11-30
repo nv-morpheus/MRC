@@ -170,11 +170,14 @@ jobs:
 
       - name: Build
         shell: bash
+        env:
+          BUILD_CC: "gcc-coverage"
         run: ./mrc/ci/scripts/github/build.sh
 
       - name: Test
         shell: bash
         env:
+          BUILD_CC: "gcc-coverage"
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         run: ./mrc/ci/scripts/github/test_codecov.sh
 
