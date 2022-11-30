@@ -36,16 +36,16 @@ docker build --build-arg FROM_IMAGE=${CI_IMAGE} --network=host -t ${IMAGE_NAME}:
 
 ${DOCKER_CMD} run \
     ${DOCKER_GPU_OPTS} \
-	--rm -d \
-	-v $PWD:/work \
-	-v /cores:/cores \
+    --rm -d \
+    -v $PWD:/work \
+    -v /cores:/cores \
     -v /cache:/cache \
-	--workdir /work \
-	--name ${IMAGE_NAME}_${IMAGE_TAG} \
-	--net host \
-	--ulimit core=-1 \
-	--cap-add=SYS_PTRACE \
-	--cap-add=SYS_ADMIN \
-	--cap-add=SYS_NICE \
-	${IMAGE_NAME}:${IMAGE_TAG} \
+    --workdir /work \
+    --name ${IMAGE_NAME}_${IMAGE_TAG} \
+    --net host \
+    --ulimit core=-1 \
+    --cap-add=SYS_PTRACE \
+    --cap-add=SYS_ADMIN \
+    --cap-add=SYS_NICE \
+    ${IMAGE_NAME}:${IMAGE_TAG} \
     sleep 999999999999999999999
