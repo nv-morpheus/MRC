@@ -40,7 +40,7 @@ class Resources final : private resources::PartitionResourceBase
 
     DELETE_COPYABILITY(Resources);
 
-    // todo(clang-format-14)
+    // todo(clang-format-15)
     // clang-format off
     Resources(Resources&&) noexcept            = default;
     Resources& operator=(Resources&&) noexcept = delete;

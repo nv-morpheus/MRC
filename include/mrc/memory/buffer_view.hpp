@@ -39,7 +39,7 @@ class const_buffer_view  // NOLINT
     const_buffer_view()          = default;
     virtual ~const_buffer_view() = default;
 
-    // todo(clang-format-14)
+    // todo(clang-format-15)
     // clang-format off
     const_buffer_view(const const_buffer_view& other)      = default;
     const_buffer_view& operator=(const const_buffer_view&) = default;
