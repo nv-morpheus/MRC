@@ -19,18 +19,18 @@
 
 #include "internal/resources/partition_resources_base.hpp"
 
-#include "srf/memory/buffer.hpp"
-#include "srf/memory/resources/memory_resource.hpp"
+#include "mrc/memory/buffer.hpp"
+#include "mrc/memory/resources/memory_resource.hpp"
 
 #include <cstddef>
 #include <memory>
 #include <optional>
 
-namespace srf::internal::ucx {
+namespace mrc::internal::ucx {
 class Resources;
 }
 
-namespace srf::internal::memory {
+namespace mrc::internal::memory {
 
 /**
  * @brief Object that provides access to device memory_resource objects for a "flattened" partition
@@ -42,12 +42,16 @@ class DeviceResources : private resources::PartitionResourceBase
 
     int cuda_device_id() const;
 
-    srf::memory::buffer make_buffer(std::size_t bytes);
+    mrc::memory::buffer make_buffer(std::size_t bytes);
+
+    std::shared_ptr<mrc::memory::memory_resource> system_memory_resource() const;
+    std::shared_ptr<mrc::memory::memory_resource> registered_memory_resource() const;
+    std::shared_ptr<mrc::memory::memory_resource> arena_memory_resource() const;
 
   private:
-    std::shared_ptr<srf::memory::memory_resource> m_system;
-    std::shared_ptr<srf::memory::memory_resource> m_registered;
-    std::shared_ptr<srf::memory::memory_resource> m_arena;
+    std::shared_ptr<mrc::memory::memory_resource> m_system;
+    std::shared_ptr<mrc::memory::memory_resource> m_registered;
+    std::shared_ptr<mrc::memory::memory_resource> m_arena;
 };
 
-}  // namespace srf::internal::memory
+}  // namespace mrc::internal::memory

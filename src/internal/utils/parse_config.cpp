@@ -43,7 +43,7 @@ std::vector<std::string> split_string_on(std::string str, char delim)
 }
 }  // namespace
 
-namespace srf {
+namespace mrc {
 
 ConfigurationMap parse_config(std::string config_str)
 {
@@ -93,4 +93,4 @@ ConfigurationMap parse_config(std::string config_str)
     return config;
 }
 
-}  // namespace srf
+}  // namespace mrc

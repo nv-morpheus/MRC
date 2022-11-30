@@ -17,8 +17,8 @@
 
 #include "internal/utils/collision_detector.hpp"
 
-#include "srf/core/addresses.hpp"
-#include "srf/exceptions/runtime_error.hpp"
+#include "mrc/core/addresses.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
 
 #include <glog/logging.h>
 
@@ -26,7 +26,7 @@
 #include <ostream>
 #include <utility>
 
-namespace srf::internal::utils {
+namespace mrc::internal::utils {
 
 std::uint16_t CollisionDetector::register_name(const std::string& name)
 {
@@ -45,7 +45,7 @@ std::uint16_t CollisionDetector::register_name(const std::string& name)
             LOG(ERROR) << "naming hash collision detected between " << search->second << " and " << name << ".\n"
                        << "Interally, 16-bits are used to hash names. Make a small modification to"
                        << "one of these names, e.g. adding an underscore or a dash";
-            throw exceptions::SrfRuntimeError("name registration collision");
+            throw exceptions::MrcRuntimeError("name registration collision");
         }
     }
     return hash;
@@ -57,7 +57,7 @@ std::uint16_t CollisionDetector::lookup_name(const std::string& name) const
     auto search = m_hashes.find(hash);
     if (search == m_hashes.end())
     {
-        throw exceptions::SrfRuntimeError("name not registered");
+        throw exceptions::MrcRuntimeError("name not registered");
     }
 
     // test for collision
@@ -66,7 +66,7 @@ std::uint16_t CollisionDetector::lookup_name(const std::string& name) const
         LOG(ERROR) << "naming hash collision detected between " << search->second << " and " << name << ".\n"
                    << "Interally, 16-bits are used to hash names. Make a small modification to"
                    << "one of these names, e.g. adding an underscore or a dash";
-        throw exceptions::SrfRuntimeError("name registration collision");
+        throw exceptions::MrcRuntimeError("name registration collision");
     }
 
     return hash;
@@ -77,9 +77,9 @@ const std::string& CollisionDetector::name(const std::uint16_t& hash) const
     auto search = m_hashes.find(hash);
     if (search == m_hashes.end())
     {
-        throw exceptions::SrfRuntimeError("hash not registered");
+        throw exceptions::MrcRuntimeError("hash not registered");
     }
     return search->second;
 }
 
-}  // namespace srf::internal::utils
+}  // namespace mrc::internal::utils

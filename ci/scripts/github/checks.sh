@@ -26,13 +26,13 @@ rapids-logger "Configuring CMake"
 cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} .
 
 rapids-logger "Building targets that generate source code"
-cmake --build build --target srf_style_checks --parallel ${PARALLEL_LEVEL}
+cmake --build build --target mrc_style_checks --parallel ${PARALLEL_LEVEL}
 
 rapids-logger "Running C++ style checks"
-${SRF_ROOT}/ci/scripts/cpp_checks.sh
+${MRC_ROOT}/ci/scripts/cpp_checks.sh
 
 rapids-logger "Runing Python style checks"
-${SRF_ROOT}/ci/scripts/python_checks.sh
+${MRC_ROOT}/ci/scripts/python_checks.sh
 
 rapids-logger "Checking copyright headers"
-python ${SRF_ROOT}/ci/scripts/copyright.py --verify-apache-v2 --git-diff-commits ${CHANGE_TARGET} ${GIT_COMMIT}
+python ${MRC_ROOT}/ci/scripts/copyright.py --verify-apache-v2 --git-diff-commits ${CHANGE_TARGET} ${GIT_COMMIT}

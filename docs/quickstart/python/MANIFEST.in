@@ -1,2 +1,2 @@
 include versioneer.py
-include srf_qs_python/_version.py
+include mrc_qs_python/_version.py

@@ -22,9 +22,9 @@
 #include "internal/segment/definition.hpp"
 #include "internal/service.hpp"
 
-#include "srf/manifold/interface.hpp"
-#include "srf/runnable/runner.hpp"
-#include "srf/types.hpp"
+#include "mrc/manifold/interface.hpp"
+#include "mrc/runnable/runner.hpp"
+#include "mrc/types.hpp"
 
 #include <cstddef>
 #include <map>
@@ -32,7 +32,7 @@
 #include <mutex>
 #include <string>
 
-namespace srf::internal::segment {
+namespace mrc::internal::segment {
 
 // todo(ryan) - inherit from service
 class Instance final : public Service
@@ -61,7 +61,7 @@ class Instance final : public Service
     void do_service_kill() final;
     void do_service_await_join() final;
 
-    void callback_on_state_change(const std::string& name, const srf::runnable::Runner::State& new_state);
+    void callback_on_state_change(const std::string& name, const mrc::runnable::Runner::State& new_state);
 
     std::string m_name;
     SegmentID m_id;
@@ -73,11 +73,11 @@ class Instance final : public Service
     pipeline::Resources& m_resources;
     const std::size_t m_default_partition_id;
 
-    std::map<std::string, std::unique_ptr<srf::runnable::Runner>> m_runners;
-    std::map<std::string, std::unique_ptr<srf::runnable::Runner>> m_egress_runners;
-    std::map<std::string, std::unique_ptr<srf::runnable::Runner>> m_ingress_runners;
+    std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_runners;
+    std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_egress_runners;
+    std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_ingress_runners;
 
     mutable std::mutex m_mutex;
 };
 
-}  // namespace srf::internal::segment
+}  // namespace mrc::internal::segment

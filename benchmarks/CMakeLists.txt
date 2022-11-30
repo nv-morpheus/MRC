@@ -13,27 +13,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_executable(bench_srf
+add_executable(bench_mrc
   main.cpp
-  bench_srf.cpp
+  bench_mrc.cpp
   bench_segment.cpp
 )
 
-target_link_libraries(bench_srf
+target_link_libraries(bench_mrc
   PRIVATE
-    ${PROJECT_NAME}::libsrf
-    benchmark::benchmark
-    prometheus-cpp::core
+  ${PROJECT_NAME}::libmrc
+  benchmark::benchmark
+  prometheus-cpp::core
 )
 
 add_executable(bench_rxcpp_components
   main.cpp
   bench_baselines.cpp
-  )
+)
 
 target_link_libraries(bench_rxcpp_components
   PRIVATE
-    ${PROJECT_NAME}::libsrf
-    benchmark::benchmark
-    prometheus-cpp::core
-  )
+  ${PROJECT_NAME}::libmrc
+  benchmark::benchmark
+  prometheus-cpp::core
+)

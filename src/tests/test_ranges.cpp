@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-using namespace srf;
+using namespace mrc;
 
 class TestRanges : public ::testing::Test
 {};

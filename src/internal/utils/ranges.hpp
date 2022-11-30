@@ -24,7 +24,7 @@
 #include <utility>
 #include <vector>
 
-namespace srf {
+namespace mrc {
 
 template <typename T>
 std::vector<std::pair<T, T>> find_ranges(const std::vector<T>& values)
@@ -66,4 +66,4 @@ std::string print_ranges(const std::vector<std::pair<T, T>>& ranges)
     });
 }
 
-}  // namespace srf
+}  // namespace mrc

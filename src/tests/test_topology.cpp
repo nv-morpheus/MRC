@@ -19,8 +19,8 @@
 #include "internal/system/gpu_info.hpp"
 #include "internal/system/topology.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/options/topology.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/options/topology.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
@@ -39,7 +39,7 @@
 #include <type_traits>
 #include <vector>
 
-using namespace srf;
+using namespace mrc;
 
 // iwyu is getting confused between std::uint32_t and boost::uint32_t
 // IWYU pragma: no_include <boost/cstdint.hpp>

@@ -15,17 +15,17 @@
  * limitations under the License.
  */
 
-#include "srf/engine/segment/ibuilder.hpp"
+#include "mrc/engine/segment/ibuilder.hpp"
 
 #include "internal/segment/builder.hpp"
 
-#include "srf/segment/object.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <glog/logging.h>
 
 #include <utility>
 
-namespace srf::internal::segment {
+namespace mrc::internal::segment {
 
 IBuilder::IBuilder(Builder* impl) : m_impl(impl)
 {
@@ -46,31 +46,31 @@ bool IBuilder::has_object(const std::string& name) const
     return m_impl->has_object(name);
 }
 
-srf::segment::ObjectProperties& IBuilder::find_object(const std::string& name)
+mrc::segment::ObjectProperties& IBuilder::find_object(const std::string& name)
 {
     CHECK(m_impl);
     return m_impl->find_object(name);
 }
 
-void IBuilder::add_object(const std::string& name, std::shared_ptr<::srf::segment::ObjectProperties> object)
+void IBuilder::add_object(const std::string& name, std::shared_ptr<::mrc::segment::ObjectProperties> object)
 {
     CHECK(m_impl);
     return m_impl->add_object(name, std::move(object));
 }
 
-void IBuilder::add_runnable(const std::string& name, std::shared_ptr<srf::runnable::Launchable> runnable)
+void IBuilder::add_runnable(const std::string& name, std::shared_ptr<mrc::runnable::Launchable> runnable)
 {
     CHECK(m_impl);
     return m_impl->add_runnable(name, std::move(runnable));
 }
 
-std::shared_ptr<srf::segment::IngressPortBase> IBuilder::get_ingress_base(const std::string& name)
+std::shared_ptr<mrc::segment::IngressPortBase> IBuilder::get_ingress_base(const std::string& name)
 {
     CHECK(m_impl);
     return m_impl->get_ingress_base(name);
 }
 
-std::shared_ptr<srf::segment::EgressPortBase> IBuilder::get_egress_base(const std::string& name)
+std::shared_ptr<mrc::segment::EgressPortBase> IBuilder::get_egress_base(const std::string& name)
 {
     CHECK(m_impl);
     return m_impl->get_egress_base(name);
@@ -82,4 +82,4 @@ std::function<void(std::int64_t)> IBuilder::make_throughput_counter(const std::s
     return m_impl->make_throughput_counter(name);
 }
 
-}  // namespace srf::internal::segment
+}  // namespace mrc::internal::segment

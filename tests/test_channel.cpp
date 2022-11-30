@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-#include "test_srf.hpp"  // IWYU pragma: associated
+#include "test_mrc.hpp"  // IWYU pragma: associated
 
-#include "srf/channel/buffered_channel.hpp"
-#include "srf/channel/egress.hpp"
-#include "srf/channel/ingress.hpp"
-#include "srf/channel/null_channel.hpp"
-#include "srf/channel/recent_channel.hpp"
-#include "srf/core/userspace_threads.hpp"
-#include "srf/core/watcher.hpp"
+#include "mrc/channel/buffered_channel.hpp"
+#include "mrc/channel/egress.hpp"
+#include "mrc/channel/ingress.hpp"
+#include "mrc/channel/null_channel.hpp"
+#include "mrc/channel/recent_channel.hpp"
+#include "mrc/core/userspace_threads.hpp"
+#include "mrc/core/watcher.hpp"
 
 #include <boost/fiber/buffered_channel.hpp>
 #include <boost/fiber/channel_op_status.hpp>
@@ -39,7 +39,7 @@
 // IWYU thinks algorithm is needed for: auto channel = std::make_shared<RecentChannel<int>>(2);
 // IWYU pragma: no_include <algorithm>
 
-using namespace srf;
+using namespace mrc;
 
 class TestChannel : public ::testing::Test
 {
@@ -138,7 +138,7 @@ TEST_F(TestChannel, BufferedChannel)
     channel->await_write(42);
     ingress.await_write(2);
 
-#ifdef SRF_TRACING_DISABLED
+#ifdef MRC_TRACING_DISABLED
     EXPECT_EQ(observer->m_read_counter, 0);
     EXPECT_EQ(observer->m_write_counter, 0);
 #else
@@ -152,7 +152,7 @@ TEST_F(TestChannel, BufferedChannel)
     egress.try_read(std::ref(i));
     EXPECT_EQ(i, 2);
 
-#ifdef SRF_TRACING_DISABLED
+#ifdef MRC_TRACING_DISABLED
     EXPECT_EQ(observer->m_read_counter, 0);
     EXPECT_EQ(observer->m_write_counter, 0);
 #else

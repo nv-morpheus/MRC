@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "srf/core/logging.hpp"
+#include "mrc/core/logging.hpp"
 
 #include <atomic>
 
@@ -23,7 +23,7 @@ namespace {
 std::atomic<bool> GLOG_INITIALIZED = false;
 }  // namespace
 
-namespace srf {
+namespace mrc {
 
 bool init_logging(const std::string& logname, LogLevels level, bool log_to_stderr)
 {
@@ -55,4 +55,4 @@ void set_log_level(LogLevels level)
     FLAGS_minloglevel = static_cast<int>(level);
 }
 
-}  // namespace srf
+}  // namespace mrc

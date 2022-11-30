@@ -18,9 +18,10 @@
 #include "internal/ucx/endpoint.hpp"
 
 #include "internal/ucx/common.hpp"
+#include "internal/ucx/remote_registration_cache.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include "srf/types.hpp"
+#include "mrc/types.hpp"
 
 #include <glog/logging.h>
 #include <ucp/api/ucp.h>      // for ucp_ep_close_nb, ucp_ep_create, UCP_EP_...
@@ -32,7 +33,7 @@
 #include <ostream>  // for logging
 #include <utility>
 
-namespace srf::internal::ucx {
+namespace mrc::internal::ucx {
 
 Endpoint::Endpoint(Handle<Worker> local_worker, WorkerAddress remote_worker) : m_worker(std::move(local_worker))
 {
@@ -47,6 +48,8 @@ Endpoint::Endpoint(Handle<Worker> local_worker, WorkerAddress remote_worker) : m
     {
         LOG(FATAL) << "ucp_ep_create failed: " << ucs_status_string(status);
     }
+
+    m_registration_cache = std::make_unique<RemoteRegistrationCache>(m_handle);
 }
 
 Endpoint::~Endpoint()
@@ -76,4 +79,16 @@ Endpoint::~Endpoint()
     ucp_request_free(request);
 }
 
-}  // namespace srf::internal::ucx
+RemoteRegistrationCache& Endpoint::registration_cache()
+{
+    CHECK(m_registration_cache);
+    return *m_registration_cache;
+}
+
+const RemoteRegistrationCache& Endpoint::registration_cache() const
+{
+    CHECK(m_registration_cache);
+    return *m_registration_cache;
+}
+
+}  // namespace mrc::internal::ucx

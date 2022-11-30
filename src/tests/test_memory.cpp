@@ -22,15 +22,15 @@
 #include "internal/ucx/registration_cache.hpp"
 #include "internal/ucx/registration_resource.hpp"
 
-#include "srf/memory/adaptors.hpp"
-#include "srf/memory/buffer.hpp"
-#include "srf/memory/literals.hpp"
-#include "srf/memory/memory_kind.hpp"
-#include "srf/memory/resources/arena_resource.hpp"
-#include "srf/memory/resources/device/cuda_malloc_resource.hpp"
-#include "srf/memory/resources/host/malloc_memory_resource.hpp"
-#include "srf/memory/resources/host/pinned_memory_resource.hpp"
-#include "srf/memory/resources/logging_resource.hpp"
+#include "mrc/memory/adaptors.hpp"
+#include "mrc/memory/buffer.hpp"
+#include "mrc/memory/literals.hpp"
+#include "mrc/memory/memory_kind.hpp"
+#include "mrc/memory/resources/arena_resource.hpp"
+#include "mrc/memory/resources/device/cuda_malloc_resource.hpp"
+#include "mrc/memory/resources/host/malloc_memory_resource.hpp"
+#include "mrc/memory/resources/host/pinned_memory_resource.hpp"
+#include "mrc/memory/resources/logging_resource.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
@@ -39,9 +39,12 @@
 #include <atomic>
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <ostream>
+#include <string>
 #include <type_traits>
 #include <utility>
+
 // iwyu thinks spdlog, map, set, thread & vector are needed for arena_resource
 // IWYU pragma: no_include <spdlog/sinks/basic_file_sink.h>
 // IWYU pragma: no_include "spdlog/sinks/basic_file_sink.h"
@@ -50,7 +53,7 @@
 // IWYU pragma: no_include <thread>
 // IWYU pragma: no_include <vector>
 
-using namespace srf;
+using namespace mrc;
 using namespace memory;
 using namespace memory::literals;
 
@@ -72,13 +75,22 @@ TEST_F(TestMemory, UcxRegisterePinnedMemoryArena)
 
     auto md = buffer(1_MiB, arena_log);
 
+    VLOG(1) << md;
+    std::stringstream ss;
+    ss << md;
+    auto first     = ss.str().find("bytes=1.0 MiB; kind= pinned");
+    auto not_found = ss.str().find("some string");
+    EXPECT_TRUE(first != std::string::npos);
+    EXPECT_TRUE(not_found == std::string::npos);
+
     auto ucx_block = ucx->registration_cache().lookup(md.data());
 
-    CHECK(ucx_block.local_handle());
-    CHECK(ucx_block.remote_handle());
-    CHECK(ucx_block.remote_handle_size());
+    EXPECT_TRUE(ucx_block);
+    EXPECT_TRUE(ucx_block->local_handle());
+    EXPECT_TRUE(ucx_block->remote_handle());
+    EXPECT_TRUE(ucx_block->remote_handle_size());
 
-    VLOG(1) << "ucx rbuffer size: " << ucx_block.remote_handle_size();
+    VLOG(1) << "ucx rbuffer size: " << ucx_block->remote_handle_size();
 }
 
 TEST_F(TestMemory, UcxRegisteredCudaMemoryArena)
@@ -96,11 +108,12 @@ TEST_F(TestMemory, UcxRegisteredCudaMemoryArena)
 
     auto ucx_block = ucx->registration_cache().lookup(md.data());
 
-    CHECK(ucx_block.local_handle());
-    CHECK(ucx_block.remote_handle());
-    CHECK(ucx_block.remote_handle_size());
+    EXPECT_TRUE(ucx_block);
+    EXPECT_TRUE(ucx_block->local_handle());
+    EXPECT_TRUE(ucx_block->remote_handle());
+    EXPECT_TRUE(ucx_block->remote_handle_size());
 
-    VLOG(1) << "ucx rbuffer size: " << ucx_block.remote_handle_size();
+    VLOG(1) << "ucx rbuffer size: " << ucx_block->remote_handle_size();
 }
 
 TEST_F(TestMemory, CallbackAdaptor)
@@ -115,15 +128,15 @@ TEST_F(TestMemory, CallbackAdaptor)
     builder.register_callbacks([&bytes](void* ptr, std::size_t _bytes) { bytes += _bytes; },
                                [&bytes](void* ptr, std::size_t _bytes) { bytes -= bytes; });
 
-    auto malloc = std::make_unique<srf::memory::malloc_memory_resource>();
-    auto logger = srf::memory::make_unique_resource<srf::memory::logging_resource>(std::move(malloc), "malloc");
+    auto malloc = std::make_unique<mrc::memory::malloc_memory_resource>();
+    auto logger = mrc::memory::make_unique_resource<mrc::memory::logging_resource>(std::move(malloc), "malloc");
     auto callback =
-        srf::memory::make_shared_resource<internal::memory::CallbackAdaptor>(std::move(logger), std::move(builder));
+        mrc::memory::make_shared_resource<internal::memory::CallbackAdaptor>(std::move(logger), std::move(builder));
 
     EXPECT_EQ(calls, 0);
     EXPECT_EQ(bytes, 0);
 
-    auto buffer = srf::memory::buffer(1_MiB, callback);
+    auto buffer = mrc::memory::buffer(1_MiB, callback);
 
     EXPECT_EQ(calls, 1);
     EXPECT_EQ(bytes, 1_MiB);
@@ -169,12 +182,12 @@ TEST_F(TestMemory, TransientPool)
     builder.register_callbacks([&bytes](void* ptr, std::size_t _bytes) { bytes += _bytes; },
                                [&bytes](void* ptr, std::size_t _bytes) { bytes -= bytes; });
 
-    auto malloc = std::make_unique<srf::memory::malloc_memory_resource>();
-    auto logger = srf::memory::make_unique_resource<srf::memory::logging_resource>(std::move(malloc), "malloc");
+    auto malloc = std::make_unique<mrc::memory::malloc_memory_resource>();
+    auto logger = mrc::memory::make_unique_resource<mrc::memory::logging_resource>(std::move(malloc), "malloc");
     auto callback =
-        srf::memory::make_shared_resource<internal::memory::CallbackAdaptor>(std::move(logger), std::move(builder));
+        mrc::memory::make_shared_resource<internal::memory::CallbackAdaptor>(std::move(logger), std::move(builder));
 
-    internal::memory::TransientPool pool(10_MiB, 4, 8, callback);
+    internal::memory::TransientPool pool(10_MiB, 4, callback);
 
     EXPECT_ANY_THROW(pool.await_buffer(11_MiB));
 
@@ -216,7 +229,11 @@ TEST_F(TestMemory, TransientPool)
     // move and test void* gets properly nullified
     other = std::move(buffer);
     EXPECT_EQ(buffer.data(), nullptr);
+
+    std::byte* start = static_cast<std::byte*>(other.data()) + 1;
+    internal::memory::TransientBuffer offset_buffer(start, other.bytes() - 1, other);
     other.release();
+    offset_buffer.release();
 
     // construct an object TickOnDestruct on the memory backed by a TransientBuffer
     int some_int = 4;

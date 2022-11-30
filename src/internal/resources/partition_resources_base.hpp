@@ -23,7 +23,7 @@
 #include <cstddef>
 #include <functional>
 
-namespace srf::internal::resources {
+namespace mrc::internal::resources {
 
 /**
  * @brief Provider of both a system::PartitionProvider and a runnable::Resource assigned to the particular partition
@@ -37,9 +37,10 @@ class PartitionResourceBase : public system::PartitionProvider
     PartitionResourceBase(runnable::Resources& runnable, std::size_t partition_id);
 
     runnable::Resources& runnable();
+    const runnable::Resources& runnable() const;
 
   private:
     std::reference_wrapper<runnable::Resources> m_runnable;
 };
 
-}  // namespace srf::internal::resources
+}  // namespace mrc::internal::resources

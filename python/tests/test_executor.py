@@ -18,8 +18,8 @@ import typing
 
 import pytest
 
-import srf
-from srf.tests.utils import throw_cpp_error
+import mrc
+from mrc.tests.utils import throw_cpp_error
 
 
 def pairwise(t):
@@ -27,13 +27,13 @@ def pairwise(t):
     return zip(it, it)
 
 
-node_fn_type = typing.Callable[[srf.Builder], srf.SegmentObject]
+node_fn_type = typing.Callable[[mrc.Builder], mrc.SegmentObject]
 
 
 @pytest.fixture
 def source_pyexception():
 
-    def build(builder: srf.Builder):
+    def build(builder: mrc.Builder):
 
         def gen_data_and_raise():
             yield 1
@@ -50,7 +50,7 @@ def source_pyexception():
 @pytest.fixture
 def source_cppexception():
 
-    def build(builder: srf.Builder):
+    def build(builder: mrc.Builder):
 
         def gen_data_and_raise():
             yield 1
@@ -67,7 +67,7 @@ def source_cppexception():
 @pytest.fixture
 def sink():
 
-    def build(builder: srf.Builder):
+    def build(builder: mrc.Builder):
 
         def sink_on_next(data):
             print("Got value: {}".format(data))
@@ -82,7 +82,7 @@ def build_pipeline():
 
     def inner(*node_fns: node_fn_type):
 
-        def init_segment(builder: srf.Builder):
+        def init_segment(builder: mrc.Builder):
 
             created_nodes = []
 
@@ -94,7 +94,7 @@ def build_pipeline():
             for source, sink in pairwise(created_nodes):
                 builder.make_edge(source, sink)
 
-        pipe = srf.Pipeline()
+        pipe = mrc.Pipeline()
 
         pipe.make_segment("TestSegment11", init_segment)
 
@@ -103,16 +103,16 @@ def build_pipeline():
     return inner
 
 
-build_pipeline_type = typing.Callable[[typing.Tuple[node_fn_type, ...]], srf.Pipeline]
+build_pipeline_type = typing.Callable[[typing.Tuple[node_fn_type, ...]], mrc.Pipeline]
 
 
 @pytest.fixture
 def build_executor():
 
-    def inner(pipe: srf.Pipeline):
-        options = srf.Options()
+    def inner(pipe: mrc.Pipeline):
+        options = mrc.Options()
 
-        executor = srf.Executor(options)
+        executor = mrc.Executor(options)
         executor.register_pipeline(pipe)
 
         executor.start()
@@ -122,7 +122,7 @@ def build_executor():
     return inner
 
 
-build_executor_type = typing.Callable[[srf.Pipeline], srf.Executor]
+build_executor_type = typing.Callable[[mrc.Pipeline], mrc.Executor]
 
 
 def test_pyexception_in_source(source_pyexception: node_fn_type,

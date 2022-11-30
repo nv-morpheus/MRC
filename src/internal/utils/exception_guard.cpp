@@ -19,7 +19,7 @@
 
 #include <exception>
 
-namespace srf::internal::utils {
+namespace mrc::internal::utils {
 
 ExceptionGuard::ExceptionGuard(std::function<void()> lambda)
 {
@@ -41,4 +41,4 @@ ExceptionGuard::~ExceptionGuard()
     }
 }
 
-}  // namespace srf::internal::utils
+}  // namespace mrc::internal::utils

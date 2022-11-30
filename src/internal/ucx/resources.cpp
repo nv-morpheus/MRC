@@ -24,9 +24,9 @@
 #include "internal/ucx/endpoint.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include "srf/core/task_queue.hpp"
-#include "srf/cuda/common.hpp"
-#include "srf/types.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/cuda/common.hpp"
+#include "mrc/types.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <cuda_runtime.h>
@@ -34,7 +34,7 @@
 
 #include <ostream>
 
-namespace srf::internal::ucx {
+namespace mrc::internal::ucx {
 
 Resources::Resources(resources::PartitionResourceBase& base, system::FiberTaskQueue& network_task_queue) :
   resources::PartitionResourceBase(base),
@@ -48,9 +48,9 @@ Resources::Resources(resources::PartitionResourceBase& base, system::FiberTaskQu
                 void* tmp = nullptr;
                 DVLOG(10) << "partition: " << partition_id()
                           << " has a gpu present; ensure a cuda context is active before instantiating a ucx context";
-                SRF_CHECK_CUDA(cudaSetDevice(partition().device().cuda_device_id()));
-                SRF_CHECK_CUDA(cudaMalloc(&tmp, 1024));
-                SRF_CHECK_CUDA(cudaFree(tmp));
+                MRC_CHECK_CUDA(cudaSetDevice(partition().device().cuda_device_id()));
+                MRC_CHECK_CUDA(cudaMalloc(&tmp, 1024));
+                MRC_CHECK_CUDA(cudaFree(tmp));
             }
 
             // we need to create both the context and the workers to ensure ucx and cuda are aligned
@@ -75,11 +75,12 @@ void Resources::add_registration_cache_to_builder(RegistrationCallbackBuilder& b
     builder.add_registration_cache(m_registration_cache);
 }
 
-srf::core::FiberTaskQueue& Resources::network_task_queue()
+mrc::core::FiberTaskQueue& Resources::network_task_queue()
 {
     return m_network_task_queue;
 }
-const RegistrationCache& Resources::registration_cache() const
+
+RegistrationCache& Resources::registration_cache()
 {
     CHECK(m_registration_cache);
     return *m_registration_cache;
@@ -96,4 +97,12 @@ std::shared_ptr<ucx::Endpoint> Resources::make_ep(const std::string& worker_addr
     return std::make_shared<ucx::Endpoint>(m_worker, worker_address);
 }
 
-}  // namespace srf::internal::ucx
+mrc::runnable::LaunchOptions Resources::launch_options(std::uint64_t concurrency)
+{
+    mrc::runnable::LaunchOptions launch_options;
+    launch_options.engine_factory_name = "mrc_network";
+    launch_options.engines_per_pe      = concurrency;
+    launch_options.pe_count            = 1;
+    return launch_options;
+}
+}  // namespace mrc::internal::ucx

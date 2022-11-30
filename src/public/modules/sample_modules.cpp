@@ -15,18 +15,18 @@
  * limitations under the License.
  */
 
-#include "srf/modules/sample_modules.hpp"
+#include "mrc/modules/sample_modules.hpp"
 
 #include "rxcpp/operators/rx-map.hpp"
 #include "rxcpp/sources/rx-iterate.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/core/utils.hpp"
-#include "srf/modules/segment_modules.hpp"
-#include "srf/node/rx_node.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/rx_source.hpp"
-#include "srf/segment/object.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/core/utils.hpp"
+#include "mrc/modules/segment_modules.hpp"
+#include "mrc/node/rx_node.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_source.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <boost/hana/if.hpp>
 #include <glog/logging.h>
@@ -36,7 +36,7 @@
 #include <string_view>
 #include <vector>
 
-namespace srf::modules {
+namespace mrc::modules {
 SimpleModule::SimpleModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
 
 SimpleModule::SimpleModule(std::string module_name, nlohmann::json config) :
@@ -101,7 +101,7 @@ void SimpleModule::initialize(segment::Builder& builder)
 
 std::string SimpleModule::module_type_name() const
 {
-    return std::string(::srf::type_name<type_t>());
+    return std::string(::mrc::type_name<type_t>());
 }
 
 ConfigurableModule::ConfigurableModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
@@ -143,7 +143,7 @@ void ConfigurableModule::initialize(segment::Builder& builder)
 
 std::string ConfigurableModule::module_type_name() const
 {
-    return std::string(::srf::type_name<type_t>());
+    return std::string(::mrc::type_name<type_t>());
 }
 
 SourceModule::SourceModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
@@ -178,7 +178,7 @@ void SourceModule::initialize(segment::Builder& builder)
 
 std::string SourceModule::module_type_name() const
 {
-    return std::string(::srf::type_name<type_t>());
+    return std::string(::mrc::type_name<type_t>());
 }
 
 SinkModule::SinkModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
@@ -199,7 +199,7 @@ void SinkModule::initialize(segment::Builder& builder)
 
 std::string SinkModule::module_type_name() const
 {
-    return std::string(::srf::type_name<type_t>());
+    return std::string(::mrc::type_name<type_t>());
 }
 
 NestedModule::NestedModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
@@ -226,6 +226,6 @@ void NestedModule::initialize(segment::Builder& builder)
 
 std::string NestedModule::module_type_name() const
 {
-    return std::string(::srf::type_name<type_t>());
+    return std::string(::mrc::type_name<type_t>());
 }
-}  // namespace srf::modules
+}  // namespace mrc::modules

@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-#include "../test_srf.hpp"  // IWYU pragma: associated
+#include "../test_mrc.hpp"  // IWYU pragma: associated
 
-#include "srf/core/logging.hpp"
+#include "mrc/core/logging.hpp"
 
 #include <glog/logging.h>
 
-using namespace srf;
+using namespace mrc;
 
 TEST_CLASS(Logging);
 

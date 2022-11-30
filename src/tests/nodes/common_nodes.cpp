@@ -17,11 +17,11 @@
 
 #include "common_nodes.hpp"
 
-#include "srf/channel/status.hpp"
-#include "srf/memory/literals.hpp"
-#include "srf/node/rx_sink.hpp"
-#include "srf/node/rx_source.hpp"
-#include "srf/runnable/context.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/memory/literals.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_source.hpp"
+#include "mrc/runnable/context.hpp"
 
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
@@ -29,7 +29,6 @@
 #include <rxcpp/sources/rx-iterate.hpp>
 
 #include <chrono>
-#include <exception>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
@@ -37,8 +36,8 @@
 #include <utility>
 #include <vector>
 
-using namespace srf;
-using namespace srf::memory::literals;
+using namespace mrc;
+using namespace mrc::memory::literals;
 
 namespace test::nodes {
 

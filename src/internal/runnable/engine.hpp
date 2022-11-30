@@ -17,18 +17,18 @@
 
 #pragma once
 
-#include "srf/runnable/engine.hpp"
-#include "srf/runnable/types.hpp"
-#include "srf/types.hpp"
+#include "mrc/runnable/engine.hpp"
+#include "mrc/runnable/types.hpp"
+#include "mrc/types.hpp"
 
 #include <functional>
 #include <mutex>
 
-namespace srf::internal::runnable {
+namespace mrc::internal::runnable {
 
-using ::srf::runnable::EngineType;
+using ::mrc::runnable::EngineType;
 
-class Engine : public ::srf::runnable::Engine
+class Engine : public ::mrc::runnable::Engine
 {
     Future<void> launch_task(std::function<void()> task) final;
 
@@ -38,4 +38,4 @@ class Engine : public ::srf::runnable::Engine
     std::mutex m_mutex;
 };
 
-}  // namespace srf::internal::runnable
+}  // namespace mrc::internal::runnable

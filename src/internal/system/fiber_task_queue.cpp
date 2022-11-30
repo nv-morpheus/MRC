@@ -20,25 +20,25 @@
 #include "internal/system/fiber_priority_scheduler.hpp"
 #include "internal/system/resources.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/core/fiber_meta_data.hpp"
-#include "srf/core/task_queue.hpp"
-#include "srf/types.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/core/fiber_meta_data.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/types.hpp"
 
 #include <boost/fiber/channel_op_status.hpp>
 #include <boost/fiber/context.hpp>
 #include <boost/fiber/fiber.hpp>
 #include <boost/fiber/future/future.hpp>
+#include <boost/fiber/future/packaged_task.hpp>
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 
 #include <ostream>
 #include <string>
 #include <thread>
-#include <type_traits>
 #include <utility>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 FiberTaskQueue::FiberTaskQueue(const Resources& resources, CpuSet cpu_affinity, std::size_t channel_size) :
   m_queue(channel_size),
@@ -124,4 +124,12 @@ std::ostream& operator<<(std::ostream& os, const FiberTaskQueue& ftq)
     return os;
 }
 
-}  // namespace srf::internal::system
+std::thread::id FiberTaskQueue::thread_id() const
+{
+    return m_thread.thread().get_id();
+}
+bool FiberTaskQueue::caller_on_same_thread() const
+{
+    return std::this_thread::get_id() == m_thread.thread().get_id();
+}
+}  // namespace mrc::internal::system

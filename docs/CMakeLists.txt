@@ -26,8 +26,8 @@ set(DOXYGEN_EXTRACT_ALL YES)
 set(DOXYGEN_RECURSIVE YES)
 set(DOXYGEN_FILE_PATTERNS "*.c; *.cc; *.cpp; *.h; *.hpp; *.cu; *.cuh; *.md")
 set(DOXYGEN_SOURCE_BROWSER YES)
-set(DOXYGEN_PROJECT_NAME "SRF")
-set(DOXYGEN_PROJECT_BRIEF "Streaming Reactive Framework")
+set(DOXYGEN_PROJECT_NAME "MRC")
+set(DOXYGEN_PROJECT_BRIEF "Morpheus Runtime Core")
 set(DOXYGEN_EXTENSION_MAPPING "cu=C++; cuh=C++")
 set(DOXYGEN_BRIEF_MEMBER_DESC YES)
 set(DOXYGEN_HIDE_UNDOC_MEMBERS NO)
@@ -36,20 +36,17 @@ set(DOXYGEN_HAVE_DOT YES)
 set(DOXYGEN_DOT_IMAGE_FORMAT "svg")
 set(DOXYGEN_INTERACTIVE_SVG YES)
 
-
 doxygen_add_docs(
-    srf_docs
-    "include"
-    "protos"
-    "python"
-    "src"
-    "tools"
-    "LICENSE"
-    "README.md"
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    COMMENT "Generate html documentation"
+  mrc_docs
+  "include"
+  "protos"
+  "python"
+  "src"
+  "LICENSE"
+  "README.md"
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+  COMMENT "Generate html documentation"
 )
-
 
 # Add the binary dir before including quickstart
 list(PREPEND CMAKE_PREFIX_PATH "${PROJECT_BINARY_DIR}")

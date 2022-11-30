@@ -23,11 +23,11 @@
 #include <tuple>
 #include <vector>
 
-namespace srf {
+namespace mrc {
 
 // { segments, concurrency, group_ids }
 using ConfigurationMap = std::vector<std::tuple<std::set<std::string>, int, std::vector<std::uint32_t>>>;  // NOLINT
 
 ConfigurationMap parse_config(std::string);
 
-}  // namespace srf
+}  // namespace mrc

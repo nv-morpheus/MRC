@@ -30,29 +30,29 @@ ISORT_RETVAL=0
 FLAKE_RETVAL=0
 YAPF_RETVAL=0
 
-get_modified_files ${PYTHON_FILE_REGEX} SRF_MODIFIED_FILES
+get_modified_files ${PYTHON_FILE_REGEX} MRC_MODIFIED_FILES
 
 # When invoked by the git pre-commit hook CHANGED_FILES will already be defined
-if [[ -n "${SRF_MODIFIED_FILES}" ]]; then
-   echo -e "Running Python checks on ${#SRF_MODIFIED_FILES[@]} files:"
+if [[ -n "${MRC_MODIFIED_FILES}" ]]; then
+   echo -e "Running Python checks on ${#MRC_MODIFIED_FILES[@]} files:"
 
-   for f in "${SRF_MODIFIED_FILES[@]}"; do
+   for f in "${MRC_MODIFIED_FILES[@]}"; do
       echo "  $f"
    done
 
    if [[ "${SKIP_ISORT}" == "" ]]; then
-      ISORT_OUTPUT=`python3 -m isort --settings-file ${PY_CFG} --filter-files  --check-only ${SRF_MODIFIED_FILES[@]} 2>&1`
+      ISORT_OUTPUT=`python3 -m isort --settings-file ${PY_CFG} --filter-files  --check-only ${MRC_MODIFIED_FILES[@]} 2>&1`
       ISORT_RETVAL=$?
    fi
 
    if [[ "${SKIP_FLAKE}" == "" ]]; then
-      FLAKE_OUTPUT=`python3 -m flake8 --config ${PY_CFG} ${SRF_MODIFIED_FILES[@]} 2>&1`
+      FLAKE_OUTPUT=`python3 -m flake8 --config ${PY_CFG} ${MRC_MODIFIED_FILES[@]} 2>&1`
       FLAKE_RETVAL=$?
    fi
 
    if [[ "${SKIP_YAPF}" == "" ]]; then
       # Run yapf. Will return 1 if there are any diffs
-      YAPF_OUTPUT=`python3 -m yapf --style ${PY_CFG} --diff ${SRF_MODIFIED_FILES[@]} 2>&1`
+      YAPF_OUTPUT=`python3 -m yapf --style ${PY_CFG} --diff ${MRC_MODIFIED_FILES[@]} 2>&1`
       YAPF_RETVAL=$?
    fi
 else

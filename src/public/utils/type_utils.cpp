@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include "srf/utils/type_utils.hpp"
+#include "mrc/utils/type_utils.hpp"
 
-#include "srf/utils/string_utils.hpp"
+#include "mrc/utils/string_utils.hpp"
 
 #include <glog/logging.h>
 
@@ -27,7 +27,7 @@
 #include <stdexcept>
 #include <utility>  // for pair
 
-namespace srf {
+namespace mrc {
 
 std::map<char, std::map<size_t, TypeId>> make_str_to_type_id()
 {
@@ -94,7 +94,7 @@ std::string DataType::name() const
 
 std::string DataType::type_str() const
 {
-    return SRF_CONCAT_STR("<" << this->type_char() << this->item_size());
+    return MRC_CONCAT_STR("<" << this->type_char() << this->item_size());
 }
 
 bool DataType::operator==(const DataType& other) const
@@ -155,4 +155,4 @@ char DataType::type_char() const
         throw std::invalid_argument("Unknown datatype");
     }
 }
-}  // namespace srf
+}  // namespace mrc

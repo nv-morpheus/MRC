@@ -17,9 +17,9 @@ import logging
 
 import pytest
 
-import srf
+import mrc
 # Required to register sample modules with the ModuleRegistry
-import srf.tests.sample_modules
+import mrc.tests.sample_modules
 
 packets_1 = 0
 packets_2 = 0
@@ -56,7 +56,7 @@ def test_py_end_to_end():
     #                                   |_______________________________________________________________
     #
 
-    def init_wrapper(builder: srf.Builder):
+    def init_wrapper(builder: mrc.Builder):
         global packets_1, packets_2, packets_3
         packets_1, packets_2, packets_3 = 0, 0, 0
 
@@ -78,8 +78,8 @@ def test_py_end_to_end():
         def on_complete():
             pass
 
-        simple_mod = builder.load_module("SimpleModule", "srf_unittest", "ModuleEndToEndTest_mod1", {})
-        configurable_mod = builder.load_module("ConfigurableModule", "srf_unittest", "ModuleEndToEndTest_mod2", {})
+        simple_mod = builder.load_module("SimpleModule", "mrc_unittest", "ModuleEndToEndTest_mod1", {})
+        configurable_mod = builder.load_module("ConfigurableModule", "mrc_unittest", "ModuleEndToEndTest_mod2", {})
 
         source1 = builder.make_source("src1", gen_data_1)
         builder.make_edge(source1, simple_mod.input_port("input1"))
@@ -99,13 +99,13 @@ def test_py_end_to_end():
         sink3 = builder.make_sink("sink3", on_next_sink_3, on_error, on_complete)
         builder.make_edge(configurable_mod.output_port("configurable_output_x"), sink3)
 
-    pipe = srf.Pipeline()
+    pipe = mrc.Pipeline()
 
     pipe.make_segment("EndToEnd_Segment", [], [], init_wrapper)
 
-    options = srf.Options()
+    options = mrc.Options()
 
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
     executor.register_pipeline(pipe)
 
     executor.start()
@@ -120,10 +120,10 @@ def test_py_constructor():
 
     config = {"config_key_1": True}
 
-    registry = srf.ModuleRegistry
+    registry = mrc.ModuleRegistry
 
     # Retrieve the module constructor
-    fn_constructor = registry.get_module_constructor("SimpleModule", "srf_unittest")
+    fn_constructor = registry.get_module_constructor("SimpleModule", "mrc_unittest")
 
     # Instantiate a version of the module
     config = {"config_key_1": True}
@@ -143,7 +143,7 @@ def test_py_module_initialization():
         yield True
         yield True
 
-    def init_wrapper(builder: srf.Builder):
+    def init_wrapper(builder: mrc.Builder):
 
         def on_next(input):
             pass
@@ -156,11 +156,11 @@ def test_py_module_initialization():
 
         config = {"config_key_1": True}
 
-        registry = srf.ModuleRegistry
+        registry = mrc.ModuleRegistry
 
         source = builder.make_source("source", gen_data)
         source2 = builder.make_source("source2", gen_data)
-        fn_constructor = registry.get_module_constructor("SimpleModule", "srf_unittest")
+        fn_constructor = registry.get_module_constructor("SimpleModule", "mrc_unittest")
         simple_mod = fn_constructor("ModuleInitializationTest_mod2", config)
         sink = builder.make_sink("sink", on_next, on_error, on_complete)
 
@@ -190,13 +190,13 @@ def test_py_module_initialization():
         builder.make_edge(simple_mod.output_port("output1"), sink)
         builder.make_edge(simple_mod.output_port("output2"), sink)
 
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
     pipeline.make_segment("Initialization_Segment", init_wrapper)
 
-    options = srf.Options()
+    options = mrc.Options()
     options.topology.user_cpuset = "0-1"
 
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
     executor.register_pipeline(pipeline)
     executor.start()
     executor.join()
@@ -204,7 +204,7 @@ def test_py_module_initialization():
 
 def test_py_module_as_source():
 
-    def init_wrapper(builder: srf.Builder):
+    def init_wrapper(builder: mrc.Builder):
         global packet_count
         packet_count = 0
 
@@ -222,17 +222,17 @@ def test_py_module_as_source():
         config = {}
         config["source_count"] = 42
 
-        source_mod = builder.load_module("SourceModule", "srf_unittest", "ModuleSourceTest_mod1", config)
+        source_mod = builder.load_module("SourceModule", "mrc_unittest", "ModuleSourceTest_mod1", config)
         sink = builder.make_sink("sink", on_next, on_error, on_complete)
         builder.make_edge(source_mod.output_port("source"), sink)
 
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
     pipeline.make_segment("ModuleAsSource_Segment", init_wrapper)
 
-    options = srf.Options()
+    options = mrc.Options()
     options.topology.user_cpuset = "0-1"
 
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
     executor.register_pipeline(pipeline)
     executor.start()
     executor.join()
@@ -247,22 +247,22 @@ def test_py_module_as_sink():
             global packet_count
             packet_count += 1
 
-    def init_wrapper(builder: srf.Builder):
+    def init_wrapper(builder: mrc.Builder):
         global packet_count
         packet_count = 0
 
         source = builder.make_source("source", gen_data())
-        sink_mod = builder.load_module("SinkModule", "srf_unittest", "ModuleSinkTest_mod1", {})
+        sink_mod = builder.load_module("SinkModule", "mrc_unittest", "ModuleSinkTest_mod1", {})
 
         builder.make_edge(source, sink_mod.input_port("sink"))
 
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
     pipeline.make_segment("ModuleAsSink_Segment", init_wrapper)
 
-    options = srf.Options()
+    options = mrc.Options()
     options.topology.user_cpuset = "0-1"
 
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
     executor.register_pipeline(pipeline)
     executor.start()
     executor.join()
@@ -272,7 +272,7 @@ def test_py_module_as_sink():
 
 def test_py_module_chaining():
 
-    def init_wrapper(builder: srf.Builder):
+    def init_wrapper(builder: mrc.Builder):
         global packet_count
         packet_count = 0
 
@@ -289,20 +289,20 @@ def test_py_module_chaining():
 
         config = {"source_count": 42}
 
-        source_mod = builder.load_module("SourceModule", "srf_unittest", "ModuleChainingTest_mod1", config)
-        configurable_mod = builder.load_module("ConfigurableModule", "srf_unittest", "ModuleEndToEndTest_mod2", {})
+        source_mod = builder.load_module("SourceModule", "mrc_unittest", "ModuleChainingTest_mod1", config)
+        configurable_mod = builder.load_module("ConfigurableModule", "mrc_unittest", "ModuleEndToEndTest_mod2", {})
         sink = builder.make_sink("sink", on_next, on_error, on_complete)
 
         builder.make_edge(source_mod.output_port("source"), configurable_mod.input_port("configurable_input_a"))
         builder.make_edge(configurable_mod.output_port("configurable_output_x"), sink)
 
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
     pipeline.make_segment("ModuleChaining_Segment", init_wrapper)
 
-    options = srf.Options()
+    options = mrc.Options()
     options.topology.user_cpuset = "0-1"
 
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
     executor.register_pipeline(pipeline)
     executor.start()
     executor.join()
@@ -318,7 +318,7 @@ def test_py_module_nesting():
             global packet_count
             packet_count += 1
 
-    def init_wrapper(builder: srf.Builder):
+    def init_wrapper(builder: mrc.Builder):
         global packet_count
         packet_count = 0
 
@@ -333,18 +333,18 @@ def test_py_module_nesting():
         def on_complete():
             pass
 
-        nested_mod = builder.load_module("NestedModule", "srf_unittest", "ModuleNestingTest_mod1", {})
+        nested_mod = builder.load_module("NestedModule", "mrc_unittest", "ModuleNestingTest_mod1", {})
         nested_sink = builder.make_sink("nested_sink", on_next, on_error, on_complete)
 
         builder.make_edge(nested_mod.output_port("nested_module_output"), nested_sink)
 
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
     pipeline.make_segment("ModuleNesting_Segment", init_wrapper)
 
-    options = srf.Options()
+    options = mrc.Options()
     options.topology.user_cpuset = "0-1"
 
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
     executor.register_pipeline(pipeline)
     executor.start()
     executor.join()

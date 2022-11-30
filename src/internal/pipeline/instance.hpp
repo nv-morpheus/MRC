@@ -23,14 +23,14 @@
 #include "internal/segment/instance.hpp"
 #include "internal/service.hpp"
 
-#include "srf/manifold/interface.hpp"
-#include "srf/types.hpp"
+#include "mrc/manifold/interface.hpp"
+#include "mrc/types.hpp"
 
 #include <cstdint>
 #include <map>
 #include <memory>
 
-namespace srf::internal::pipeline {
+namespace mrc::internal::pipeline {
 
 class Instance final : public Service, public Resources
 {
@@ -78,4 +78,4 @@ class Instance final : public Service, public Resources
     SharedFuture<void> m_joinable_future;
 };
 
-}  // namespace srf::internal::pipeline
+}  // namespace mrc::internal::pipeline

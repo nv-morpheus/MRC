@@ -17,29 +17,53 @@
 
 #pragma once
 
-#include "internal/data_plane/resources.hpp"
+#include "internal/control_plane/client/state_manager.hpp"
 #include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources_base.hpp"
+#include "internal/ucx/resources.hpp"
 
-#include "srf/utils/macros.hpp"
+#include "mrc/types.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <memory>
 
-namespace srf::internal::network {
+namespace mrc::internal::network {
 
 class Resources final : private resources::PartitionResourceBase
 {
   public:
-    Resources(resources::PartitionResourceBase& base, ucx::Resources& ucx, memory::HostResources& host);
+    Resources(resources::PartitionResourceBase& base,
+              ucx::Resources& ucx,
+              memory::HostResources& host,
+              std::unique_ptr<control_plane::client::Instance> control_plane);
     ~Resources() final;
 
     DELETE_COPYABILITY(Resources);
-    DEFAULT_MOVEABILITY(Resources);
 
+    // todo(clang-format-14)
+    // clang-format off
+    Resources(Resources&&) noexcept            = default;
+    Resources& operator=(Resources&&) noexcept = delete;
+    // clang-format on
+
+    const InstanceID& instance_id() const;
+
+    ucx::Resources& ucx();
+    control_plane::client::Instance& control_plane();
     data_plane::Resources& data_plane();
 
   private:
+    Future<void> shutdown();
+
+    InstanceID m_instance_id;
+    ucx::Resources& m_ucx;
+    control_plane::Client& m_control_plane_client;
     std::unique_ptr<data_plane::Resources> m_data_plane;
+
+    // this must be the first variable destroyed
+    std::unique_ptr<control_plane::client::Instance> m_control_plane;
+
+    friend resources::Manager;
 };
 
-}  // namespace srf::internal::network
+}  // namespace mrc::internal::network

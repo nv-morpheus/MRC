@@ -18,18 +18,19 @@
 #pragma once
 
 #include "internal/system/engine_factory_cpu_sets.hpp"
+#include "internal/system/topology.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/options/options.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/options/options.hpp"
 
 #include <cstddef>
 #include <vector>
 
-namespace srf {
+namespace mrc {
 class Options;  // IWYU pragma: keep
 }
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 class HostPartition
 {
@@ -43,7 +44,7 @@ class HostPartition
     const std::vector<int>& device_partition_ids() const;
 
     void add_device_partition_id(int gpu_id);
-    void set_engine_factory_cpu_sets(const Options& options);
+    void set_engine_factory_cpu_sets(const Topology& topology, const Options& options);
 
     const EngineFactoryCpuSets& engine_factory_cpu_sets() const;
 
@@ -55,4 +56,4 @@ class HostPartition
     EngineFactoryCpuSets m_engine_factory_cpu_sets;
 };
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

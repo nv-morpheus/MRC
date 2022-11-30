@@ -17,14 +17,16 @@
 
 #pragma once
 
-#include "srf/core/bitmap.hpp"
-#include "srf/options/options.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/options/options.hpp"
 
 #include <cstddef>
 #include <map>
 #include <string>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
+
+class Topology;
 
 struct EngineFactoryCpuSets
 {
@@ -49,6 +51,8 @@ struct EngineFactoryCpuSets
  * @param cpu_set
  * @return LaunchControlPlacementCpuSets
  */
-extern EngineFactoryCpuSets generate_engine_factory_cpu_sets(const Options& options, const CpuSet& cpu_set);
+extern EngineFactoryCpuSets generate_engine_factory_cpu_sets(const Topology& topology,
+                                                             const Options& options,
+                                                             const CpuSet& cpu_set);
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

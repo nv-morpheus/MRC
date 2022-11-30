@@ -22,7 +22,7 @@
 
 #include <cstddef>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 /**
  * @brief Extends SystemProvider to provide access to partition_id and partition details.
@@ -44,4 +44,4 @@ class PartitionProvider : public SystemProvider
     std::size_t m_partition_id;
 };
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

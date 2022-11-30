@@ -28,7 +28,7 @@
 #include <stdexcept>  // for runtime_error
 #include <tuple>      // for make_tuple, tuple
 
-namespace srf::internal::ucx {
+namespace mrc::internal::ucx {
 
 Context::Context()
 {
@@ -66,7 +66,7 @@ Context::~Context()
     ucp_cleanup(m_handle);
 }
 
-ucp_mem_h Context::register_memory(void* address, std::size_t length)
+ucp_mem_h Context::register_memory(const void* address, std::size_t length)
 {
     ucp_mem_map_params params;
     std::memset(&params, 0, sizeof(params));
@@ -75,7 +75,7 @@ ucp_mem_h Context::register_memory(void* address, std::size_t length)
         UCP_MEM_MAP_PARAM_FIELD_ADDRESS | UCP_MEM_MAP_PARAM_FIELD_LENGTH;  // | UCP_MEM_MAP_PARAM_FIELD_MEMORY_TYPE;
 
     CHECK(address);
-    params.address = address;
+    params.address = const_cast<void*>(address);
     params.length  = length;
     // params.memory_type = memory_type(ptr.type());
     // params.flags = UCP_MEM_MAP_FIXED;
@@ -92,7 +92,7 @@ ucp_mem_h Context::register_memory(void* address, std::size_t length)
     return handle;
 }
 
-std::tuple<ucp_mem_h, void*, std::size_t> Context::register_memory_with_rkey(void* address, std::size_t length)
+std::tuple<ucp_mem_h, void*, std::size_t> Context::register_memory_with_rkey(const void* address, std::size_t length)
 {
     void* rkey_buffer = nullptr;
     std::size_t buffer_size;
@@ -124,4 +124,4 @@ void Context::unregister_memory(ucp_mem_h handle, void* rbuffer)
     }
 }
 
-}  // namespace srf::internal::ucx
+}  // namespace mrc::internal::ucx

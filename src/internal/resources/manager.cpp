@@ -17,6 +17,11 @@
 
 #include "internal/resources/manager.hpp"
 
+#include "internal/control_plane/client.hpp"
+#include "internal/control_plane/client/connections_manager.hpp"
+#include "internal/control_plane/client/instance.hpp"
+#include "internal/control_plane/resources.hpp"
+#include "internal/data_plane/resources.hpp"  // IWYU pragma: keep
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/system/engine_factory_cpu_sets.hpp"
 #include "internal/system/host_partition.hpp"
@@ -24,11 +29,12 @@
 #include "internal/system/partitions.hpp"
 #include "internal/system/system.hpp"
 #include "internal/ucx/registation_callback_builder.hpp"
+#include "internal/utils/contains.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/exceptions/runtime_error.hpp"
-#include "srf/options/options.hpp"
-#include "srf/options/placement.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/placement.hpp"
 
 #include <ext/alloc_traits.h>
 #include <glog/logging.h>
@@ -40,7 +46,7 @@
 #include <thread>
 #include <utility>
 
-namespace srf::internal::resources {
+namespace mrc::internal::resources {
 
 thread_local Manager* Manager::m_thread_resources{nullptr};
 thread_local PartitionResources* Manager::m_thread_partition{nullptr};
@@ -77,7 +83,7 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
         {
             VLOG(1) << "building ucx resources for partition " << base.partition_id();
             auto network_task_queue_cpuset =
-                base.partition().host().engine_factory_cpu_sets().fiber_cpu_sets.at("srf_network");
+                base.partition().host().engine_factory_cpu_sets().fiber_cpu_sets.at("mrc_network");
             auto& network_fiber_queue = m_system->get_task_queue(network_task_queue_cpuset.first());
             std::optional<ucx::Resources> ucx;
             ucx.emplace(base, network_fiber_queue);
@@ -87,6 +93,15 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
         {
             m_ucx.emplace_back(std::nullopt);
         }
+    }
+
+    // create control plane and register worker addresses
+    std::map<InstanceID, std::unique_ptr<control_plane::client::Instance>> control_instances;
+    if (network_enabled)
+    {
+        m_control_plane   = std::make_shared<control_plane::Resources>(base_partition_resources.at(0));
+        control_instances = m_control_plane->client().register_ucx_addresses(m_ucx);
+        CHECK_EQ(m_control_plane->client().connections().instance_ids().size(), m_ucx.size());
     }
 
     // construct the host memory resources for each host_partition
@@ -107,7 +122,7 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
         m_host.emplace_back(m_runnable.at(i), std::move(builder));
     }
 
-    // devices
+    // devices resources
     for (auto& base : base_partition_resources)
     {
         VLOG(1) << "building device resources for partition: " << base.partition_id();
@@ -132,7 +147,13 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
             VLOG(1) << "building network resources for partition: " << base.partition_id();
             CHECK(m_ucx.at(base.partition_id()));
             std::optional<network::Resources> network;
-            network.emplace(base, *m_ucx.at(base.partition_id()), m_host.at(base.partition().host_partition_id()));
+            auto instance_id = m_control_plane->client().connections().instance_ids().at(base.partition_id());
+            DCHECK(contains(control_instances, instance_id));  // todo(cpp20) contains
+            auto instance = std::move(control_instances.at(instance_id));
+            network.emplace(base,
+                            *m_ucx.at(base.partition_id()),
+                            m_host.at(base.partition().host_partition_id()),
+                            std::move(instance));
             m_network.push_back(std::move(network));
         }
         else
@@ -163,6 +184,11 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
     }
 }
 
+Manager::~Manager()
+{
+    m_network.clear();
+}
+
 std::size_t Manager::partition_count() const
 {
     return system().partitions().flattened().size();
@@ -184,8 +210,8 @@ Manager& Manager::get_resources()
     if (m_thread_resources == nullptr)  // todo(cpp20) [[unlikely]]
     {
         LOG(ERROR) << "thread with id " << std::this_thread::get_id()
-                   << " attempting to access the SRF runtime, but is not a SRF runtime thread";
-        throw exceptions::SrfRuntimeError("can not access runtime resources from outside the runtime");
+                   << " attempting to access the MRC runtime, but is not a MRC runtime thread";
+        throw exceptions::MrcRuntimeError("can not access runtime resources from outside the runtime");
     }
 
     return *m_thread_resources;
@@ -201,15 +227,15 @@ PartitionResources& Manager::get_partition()
             if (resources.system().partitions().device_to_host_strategy() == PlacementResources::Shared)
             {
                 LOG(ERROR) << "runtime partition query is disabed when PlacementResources::Shared is in use";
-                throw exceptions::SrfRuntimeError("unable to access runtime parition info");
+                throw exceptions::MrcRuntimeError("unable to access runtime parition info");
             }
 
             LOG(ERROR) << "thread with id " << std::this_thread::get_id()
-                       << " attempting to access the SRF runtime, but is not a SRF runtime thread";
-            throw exceptions::SrfRuntimeError("can not access runtime resources from outside the runtime");
+                       << " attempting to access the MRC runtime, but is not a MRC runtime thread";
+            throw exceptions::MrcRuntimeError("can not access runtime resources from outside the runtime");
         }
 
         return *m_thread_partition;
     }
 }
-}  // namespace srf::internal::resources
+}  // namespace mrc::internal::resources

@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-#include "srf/segment/builder.hpp"
+#include "mrc/segment/builder.hpp"
 
-#include "srf/modules/module_registry.hpp"
-#include "srf/node/port_registry.hpp"
+#include "mrc/modules/module_registry.hpp"
+#include "mrc/node/port_registry.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -40,20 +40,20 @@ std::string accum_merge(std::string lhs, std::string rhs)
 
 }  // namespace
 
-namespace srf::segment {
+namespace mrc::segment {
 std::shared_ptr<ObjectProperties> Builder::get_ingress(std::string name, std::type_index type_index)
 {
     auto base = m_backend.get_ingress_base(name);
     if (!base)
     {
-        throw exceptions::SrfRuntimeError("Egress port name not found: " + name);
+        throw exceptions::MrcRuntimeError("Egress port name not found: " + name);
     }
 
     auto port_util = node::PortRegistry::find_port_util(type_index);
     auto port      = port_util->try_cast_ingress_base_to_object(base);
     if (port == nullptr)
     {
-        throw exceptions::SrfRuntimeError("Egress port type mismatch: " + name);
+        throw exceptions::MrcRuntimeError("Egress port type mismatch: " + name);
     }
 
     return port;
@@ -64,7 +64,7 @@ std::shared_ptr<ObjectProperties> Builder::get_egress(std::string name, std::typ
     auto base = m_backend.get_egress_base(name);
     if (!base)
     {
-        throw exceptions::SrfRuntimeError("Egress port name not found: " + name);
+        throw exceptions::MrcRuntimeError("Egress port name not found: " + name);
     }
 
     auto port_util = node::PortRegistry::find_port_util(type_index);
@@ -72,7 +72,7 @@ std::shared_ptr<ObjectProperties> Builder::get_egress(std::string name, std::typ
     auto port = port_util->try_cast_egress_base_to_object(base);
     if (port == nullptr)
     {
-        throw exceptions::SrfRuntimeError("Egress port type mismatch: " + name);
+        throw exceptions::MrcRuntimeError("Egress port type mismatch: " + name);
     }
 
     return port;
@@ -87,12 +87,12 @@ void Builder::init_module(sp_segment_module_t module)
     ns_pop();
 }
 
-std::shared_ptr<srf::modules::SegmentModule> Builder::load_module_from_registry(const std::string& module_id,
+std::shared_ptr<mrc::modules::SegmentModule> Builder::load_module_from_registry(const std::string& module_id,
                                                                                 const std::string& registry_namespace,
                                                                                 std::string module_name,
                                                                                 nlohmann::json config)
 {
-    auto fn_module_constructor = srf::modules::ModuleRegistry::get_module_constructor(module_id, registry_namespace);
+    auto fn_module_constructor = mrc::modules::ModuleRegistry::get_module_constructor(module_id, registry_namespace);
     auto module                = fn_module_constructor(std::move(module_name), std::move(config));
 
     init_module(module);
@@ -151,4 +151,21 @@ void Builder::register_module_output(std::string output_name, sp_obj_prop_t obje
     current_module->register_output_port(std::move(output_name), object);
 }
 
-}  // namespace srf::segment
+nlohmann::json Builder::get_current_module_config()
+{
+    if (m_module_stack.empty())
+    {
+        std::stringstream sstream;
+
+        sstream << "Failed to acquire module configuration -> no module context exists";
+        VLOG(2) << sstream.str();
+
+        throw std::invalid_argument(sstream.str());
+    }
+
+    auto current_module = m_module_stack.back();
+
+    return current_module->config();
+}
+
+}  // namespace mrc::segment

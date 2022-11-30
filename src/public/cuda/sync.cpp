@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-#include "srf/cuda/sync.hpp"
+#include "mrc/cuda/sync.hpp"
 
-#include "srf/cuda/common.hpp"  // IWYU pragma: associated
-#include "srf/types.hpp"        // for Promise, Future
+#include "mrc/cuda/common.hpp"  // IWYU pragma: associated
+#include "mrc/types.hpp"        // for Promise, Future
 
 #include <boost/fiber/future/promise.hpp>
 
-namespace srf {
+namespace mrc {
 
 static void enqueue_stream_event_callback(void* user_data)
 {
@@ -35,8 +35,8 @@ Future<void> enqueue_stream_sync_event(cudaStream_t stream)
 {
     auto* promise = new Promise<void>;
     auto future   = promise->get_future();
-    SRF_CHECK_CUDA(cudaLaunchHostFunc(stream, enqueue_stream_event_callback, promise));
+    MRC_CHECK_CUDA(cudaLaunchHostFunc(stream, enqueue_stream_event_callback, promise));
     return future;
 }
 
-}  // namespace srf
+}  // namespace mrc

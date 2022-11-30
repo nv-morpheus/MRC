@@ -19,9 +19,9 @@
 
 #include "internal/system/resources.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/runnable/types.hpp"
-#include "srf/types.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/runnable/types.hpp"
+#include "mrc/types.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <boost/fiber/future/packaged_task.hpp>
@@ -30,7 +30,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace srf::internal::runnable {
+namespace mrc::internal::runnable {
 
 ThreadEngine::ThreadEngine(CpuSet cpu_set, const system::Resources& system) :
   m_cpu_set(std::move(cpu_set)),
@@ -61,4 +61,4 @@ runnable::EngineType ThreadEngine::engine_type() const
     return EngineType::Thread;
 }
 
-}  // namespace srf::internal::runnable
+}  // namespace mrc::internal::runnable

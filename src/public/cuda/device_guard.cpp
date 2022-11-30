@@ -15,27 +15,27 @@
  * limitations under the License.
  */
 
-#include "srf/cuda/device_guard.hpp"
+#include "mrc/cuda/device_guard.hpp"
 
-#include "srf/cuda/common.hpp"
+#include "mrc/cuda/common.hpp"
 
 #include <cuda_runtime.h>
 #include <glog/logging.h>
 // IWYU thinks we need std::allocator for the debug macros (and only in debug builds)
 // IWYU pragma: no_include <memory>
 
-namespace srf {
+namespace mrc {
 
 DeviceGuard::DeviceGuard(int device_id)
 {
     DCHECK_GE(device_id, 0);
-    SRF_CHECK_CUDA(cudaGetDevice(&m_DeviceID));
-    SRF_CHECK_CUDA(cudaSetDevice(device_id));
+    MRC_CHECK_CUDA(cudaGetDevice(&m_DeviceID));
+    MRC_CHECK_CUDA(cudaSetDevice(device_id));
 }
 
 DeviceGuard::~DeviceGuard()
 {
-    SRF_CHECK_CUDA(cudaSetDevice(m_DeviceID));
+    MRC_CHECK_CUDA(cudaSetDevice(m_DeviceID));
 }
 
-}  // namespace srf
+}  // namespace mrc

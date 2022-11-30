@@ -20,13 +20,13 @@
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include "srf/types.hpp"
+#include "mrc/types.hpp"
 
 #include <ucp/api/ucp_def.h>  // for ucp_tag_t, ucp_tag_message_h, ucp_tag_recv_info_t
 
 #include <memory>  // for enable_shared_from_this
 
-namespace srf::internal::ucx {
+namespace mrc::internal::ucx {
 
 class TaggedReceiveManager : public std::enable_shared_from_this<TaggedReceiveManager>
 {
@@ -63,4 +63,4 @@ class TaggedReceiveManager : public std::enable_shared_from_this<TaggedReceiveMa
     bool m_running;
 };
 
-}  // namespace srf::internal::ucx
+}  // namespace mrc::internal::ucx

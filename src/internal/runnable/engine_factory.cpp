@@ -22,26 +22,27 @@
 #include "internal/system/fiber_pool.hpp"
 #include "internal/system/resources.hpp"
 
-#include "srf/constants.hpp"
-#include "srf/core/bitmap.hpp"
-#include "srf/core/task_queue.hpp"
-#include "srf/exceptions/runtime_error.hpp"
-#include "srf/runnable/engine.hpp"
-#include "srf/runnable/engine_factory.hpp"
-#include "srf/runnable/launch_options.hpp"
-#include "srf/runnable/types.hpp"
+#include "mrc/constants.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/runnable/engine.hpp"
+#include "mrc/runnable/engine_factory.hpp"
+#include "mrc/runnable/launch_options.hpp"
+#include "mrc/runnable/types.hpp"
 
 #include <glog/logging.h>
 
 #include <cstddef>
 #include <functional>
+#include <mutex>
 #include <ostream>
 #include <utility>
 #include <vector>
 
-namespace srf::internal::runnable {
+namespace mrc::internal::runnable {
 
-class FiberEngineFactory : public ::srf::runnable::EngineFactory
+class FiberEngineFactory : public ::mrc::runnable::EngineFactory
 {
   public:
     /**
@@ -52,19 +53,21 @@ class FiberEngineFactory : public ::srf::runnable::EngineFactory
      *
      * @return std::shared_ptr<Engines>
      */
-    std::shared_ptr<::srf::runnable::Engines> build_engines(const LaunchOptions& launch_options) final
+    std::shared_ptr<::mrc::runnable::Engines> build_engines(const LaunchOptions& launch_options) final
     {
+        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         return std::make_shared<FiberEngines>(
-            launch_options, get_next_n_queues(launch_options.pe_count), SRF_DEFAULT_FIBER_PRIORITY);
+            launch_options, get_next_n_queues(launch_options.pe_count), MRC_DEFAULT_FIBER_PRIORITY);
     }
 
-    ::srf::runnable::EngineType backend() const final
+    ::mrc::runnable::EngineType backend() const final
     {
         return EngineType::Fiber;
     }
 
   private:
     virtual std::vector<std::reference_wrapper<core::FiberTaskQueue>> get_next_n_queues(std::size_t count) = 0;
+    std::mutex m_mutex;
 };
 
 /**
@@ -123,7 +126,7 @@ class SingleUseFiberEngineFactory final : public FiberEngineFactory
         if (m_offset + count > m_pool.thread_count())
         {
             LOG(ERROR) << "more dedicated threads/cores than available";
-            throw exceptions::SrfRuntimeError("more dedicated threads/cores than available");
+            throw exceptions::MrcRuntimeError("more dedicated threads/cores than available");
         }
 
         std::vector<std::reference_wrapper<core::FiberTaskQueue>> queues;
@@ -141,7 +144,7 @@ class SingleUseFiberEngineFactory final : public FiberEngineFactory
     std::size_t m_offset{0};
 };
 
-class ThreadEngineFactory : public ::srf::runnable::EngineFactory
+class ThreadEngineFactory : public ::mrc::runnable::EngineFactory
 {
   public:
     ThreadEngineFactory(const system::Resources& system_resources, CpuSet cpu_set) :
@@ -151,8 +154,9 @@ class ThreadEngineFactory : public ::srf::runnable::EngineFactory
         CHECK(!m_cpu_set.empty());
     }
 
-    std::shared_ptr<::srf::runnable::Engines> build_engines(const LaunchOptions& launch_options) final
+    std::shared_ptr<::mrc::runnable::Engines> build_engines(const LaunchOptions& launch_options) final
     {
+        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         auto cpu_set = get_next_n_cpus(launch_options.pe_count);
         return std::make_shared<ThreadEngines>(launch_options, std::move(cpu_set), m_system_resources);
     }
@@ -173,6 +177,7 @@ class ThreadEngineFactory : public ::srf::runnable::EngineFactory
 
     CpuSet m_cpu_set;
     const system::Resources& m_system_resources;
+    std::mutex m_mutex;
 };
 
 /**
@@ -222,7 +227,7 @@ class SingleUseThreadEngineFactory final : public ThreadEngineFactory
             if (m_prev_cpu_idx == -1)
             {
                 LOG(ERROR) << "SingleUse logical cpu ids exhausted";
-                throw exceptions::SrfRuntimeError("SingleUse logical cpu ids exhausted");
+                throw exceptions::MrcRuntimeError("SingleUse logical cpu ids exhausted");
             }
             cpu_set.on(m_prev_cpu_idx);
         }
@@ -233,7 +238,7 @@ class SingleUseThreadEngineFactory final : public ThreadEngineFactory
     int m_prev_cpu_idx = -1;
 };
 
-std::shared_ptr<::srf::runnable::EngineFactory> make_engine_factory(const system::Resources& system_resources,
+std::shared_ptr<::mrc::runnable::EngineFactory> make_engine_factory(const system::Resources& system_resources,
                                                                     EngineType engine_type,
                                                                     const CpuSet& cpu_set,
                                                                     bool reusable)
@@ -259,4 +264,4 @@ std::shared_ptr<::srf::runnable::EngineFactory> make_engine_factory(const system
     LOG(FATAL) << "unsupported engine type";
 }
 
-}  // namespace srf::internal::runnable
+}  // namespace mrc::internal::runnable

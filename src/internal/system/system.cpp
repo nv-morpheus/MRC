@@ -19,14 +19,14 @@
 
 #include "internal/system/partitions.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/engine/system/isystem.hpp"
-#include "srf/options/options.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/engine/system/isystem.hpp"
+#include "mrc/options/options.hpp"
 
 #include <glog/logging.h>
 #include <hwloc.h>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 std::shared_ptr<System> System::create(std::shared_ptr<Options> options)
 {
@@ -69,4 +69,4 @@ CpuSet System::get_current_thread_affinity() const
     return cpu_set;
 }
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

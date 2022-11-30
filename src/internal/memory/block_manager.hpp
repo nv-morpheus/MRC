@@ -22,11 +22,12 @@
 #include <glog/logging.h>
 
 #include <cstddef>
+#include <functional>
 #include <map>
 #include <queue>
 #include <utility>
 
-namespace srf::internal::memory {
+namespace mrc::internal::memory {
 
 template <typename BlockTypeT>
 class BlockManager final
@@ -50,7 +51,7 @@ class BlockManager final
     BlockManager(const BlockManager&) = delete;
     BlockManager& operator=(const BlockManager&) = delete;
 
-    const block_type& add_block(block_type&& block)
+    const block_type& add_block(block_type block)
     {
         auto key = reinterpret_cast<std::uintptr_t>(block.data()) + block.bytes();
         DCHECK(!owns(block.data()) && !owns(reinterpret_cast<void*>(key - 1)))
@@ -60,7 +61,7 @@ class BlockManager final
         return m_block_map[key];
     }
 
-    const block_type* find_block(void* ptr) const
+    const block_type* find_block(const void* ptr) const
     {
         auto search = find_entry(ptr);
         if (search != m_block_map.end() && search->second.contains(ptr))
@@ -72,7 +73,7 @@ class BlockManager final
         return nullptr;
     }
 
-    void drop_block(void* ptr)
+    void drop_block(const void* ptr)
     {
         DVLOG(10) << "dropping block: " << ptr;
         auto search = find_entry(ptr);
@@ -112,6 +113,14 @@ class BlockManager final
         return (block && block->contains(addr));
     }
 
+    void for_each_block(std::function<void(const block_type& block)> lambda)
+    {
+        for (const auto& [key, block] : m_block_map)
+        {
+            lambda(block);
+        }
+    }
+
   private:
     inline auto find_entry(const void* ptr) const
     {
@@ -124,4 +133,4 @@ class BlockManager final
     std::map<std::uintptr_t, block_type> m_block_map;
 };
 
-}  // namespace srf::internal::memory
+}  // namespace mrc::internal::memory

@@ -25,7 +25,7 @@ ARG LINUX_VER=20.04
 # Configure the base conda environment
 FROM ${FROM_IMAGE}:${CUDA_VER}-devel-${LINUX_DISTRO}${LINUX_VER} AS base
 
-ARG CONDA_ENV_NAME=srf
+ARG CONDA_ENV_NAME=mrc
 ARG PYTHON_VER=3.8
 
 # Update and install some base dependencies
@@ -73,9 +73,9 @@ ENTRYPOINT [ "/opt/conda/bin/tini", "--", "ci/conda/entrypoint.sh" ]
 # Reset the shell back to normal
 SHELL ["/bin/bash", "-c"]
 
-# ============ Stage: conda_bld_srf ============
+# ============ Stage: conda_bld_mrc ============
 # Now build the conda dependency packages
-FROM base as conda_bld_srf
+FROM base as conda_bld_mrc
 
 # Copy the source
 COPY . ./
@@ -84,17 +84,17 @@ RUN --mount=type=ssh \
     --mount=type=cache,id=workspace_cache,target=/work/.cache,sharing=locked \
     --mount=type=cache,id=conda_pkgs,target=/opt/conda/pkgs,sharing=locked \
     source activate base &&\
-    SRF_ROOT=/work CONDA_BLD_DIR=/opt/conda/conda-bld CONDA_ARGS="--no-test" ./ci/conda/recipes/run_conda_build.sh
+    MRC_ROOT=/work CONDA_BLD_DIR=/opt/conda/conda-bld CONDA_ARGS="--no-test" ./ci/conda/recipes/run_conda_build.sh
 
 # ============ Stage: runtime ============
 # Setup container for runtime environment
 FROM conda_env as runtime
 
-RUN --mount=type=bind,from=conda_bld_srf,source=/opt/conda/conda-bld,target=/opt/conda/conda-bld \
+RUN --mount=type=bind,from=conda_bld_mrc,source=/opt/conda/conda-bld,target=/opt/conda/conda-bld \
     --mount=type=cache,id=conda_pkgs,target=/opt/conda/pkgs,sharing=locked \
     source activate ${CONDA_ENV_NAME} &&\
     # Install conda packages
-    CONDA_ALWAYS_YES=true /opt/conda/bin/mamba install -n ${CONDA_ENV_NAME} -c local -c rapidsai -c nvidia -c conda-forge srf &&\
+    CONDA_ALWAYS_YES=true /opt/conda/bin/mamba install -n ${CONDA_ENV_NAME} -c local -c rapidsai -c nvidia -c conda-forge mrc &&\
     # Clean and activate
     conda clean -afy
 

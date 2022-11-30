@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include "srf/core/bitmap.hpp"
-#include "srf/forward.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/forward.hpp"
 
 #include <cstdint>
 
-namespace srf {
+namespace mrc {
 
 struct PlacementGroup
 {
@@ -34,4 +34,4 @@ struct PlacementGroup
     [[nodiscard]] virtual bool has_gpus() const            = 0;
 };
 
-}  // namespace srf
+}  // namespace mrc

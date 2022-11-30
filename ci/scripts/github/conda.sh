@@ -22,4 +22,4 @@ update_conda_env
 
 rapids-logger "Building Conda Package"
 
-${SRF_ROOT}/ci/conda/recipes/run_conda_build.sh upload
+${MRC_ROOT}/ci/conda/recipes/run_conda_build.sh upload

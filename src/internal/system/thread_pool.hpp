@@ -20,8 +20,8 @@
 #include "internal/system/resources.hpp"
 #include "internal/system/thread.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/exceptions/runtime_error.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
 
 #include <boost/fiber/buffered_channel.hpp>
 #include <boost/fiber/channel_op_status.hpp>
@@ -37,7 +37,7 @@
 #include <utility>
 #include <vector>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 /**
  * @brief Fiber-friendly ThreadPool
@@ -77,7 +77,7 @@ class ThreadPool final
         if (status == boost::fibers::channel_op_status::closed)
         {
             LOG(ERROR) << "failed to enqueue work to ThreadPool; ThreadPool is shutting down";
-            throw exceptions::SrfRuntimeError("failed to enqueue work to ThreadPool; ThreadPool is shutting down");
+            throw exceptions::MrcRuntimeError("failed to enqueue work to ThreadPool; ThreadPool is shutting down");
         }
 
         return std::move(future);
@@ -91,4 +91,4 @@ class ThreadPool final
     std::vector<system::Thread> m_threads;
 };
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

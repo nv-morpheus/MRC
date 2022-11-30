@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-#include "srf/core/executor.hpp"
+#include "mrc/core/executor.hpp"
 
-#include "srf/engine/executor/iexecutor.hpp"
-#include "srf/engine/system/iresources.hpp"
-#include "srf/options/options.hpp"
+#include "mrc/engine/executor/iexecutor.hpp"
+#include "mrc/engine/system/iresources.hpp"
+#include "mrc/options/options.hpp"
 
 #include <utility>  // for move
 
-namespace srf {
+namespace mrc {
 
 Executor::Executor() : internal::executor::IExecutor(std::make_shared<Options>()) {}
 Executor::Executor(std::shared_ptr<Options> options) : internal::executor::IExecutor(std::move(options)) {}
@@ -31,4 +31,4 @@ Executor::Executor(std::unique_ptr<internal::system::IResources> resources) :
   internal::executor::IExecutor(std::move(resources))
 {}
 
-}  // namespace srf
+}  // namespace mrc

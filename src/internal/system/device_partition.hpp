@@ -24,7 +24,7 @@
 #include <memory>
 #include <string>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 class DevicePartition final : private GpuInfo
 {
@@ -48,4 +48,4 @@ class DevicePartition final : private GpuInfo
     std::shared_ptr<const HostPartition> m_host_partition;
 };
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

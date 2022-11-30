@@ -17,8 +17,8 @@
 
 #include "internal/system/fiber_pool.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/core/task_queue.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/core/task_queue.hpp"
 
 #include <ext/alloc_traits.h>
 #include <glog/logging.h>
@@ -28,7 +28,7 @@
 #include <utility>
 #include <vector>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 FiberPool::FiberPool(CpuSet cpu_set, std::vector<std::reference_wrapper<FiberTaskQueue>>&& queues) :
   m_cpu_set(std::move(cpu_set)),
@@ -51,4 +51,4 @@ core::FiberTaskQueue& FiberPool::task_queue(const std::size_t& index)
     return m_queues.at(index);
 }
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

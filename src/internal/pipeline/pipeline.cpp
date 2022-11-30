@@ -19,9 +19,9 @@
 
 #include "internal/segment/definition.hpp"
 
-#include "srf/engine/pipeline/ipipeline.hpp"
-#include "srf/exceptions/runtime_error.hpp"
-#include "srf/types.hpp"
+#include "mrc/engine/pipeline/ipipeline.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/types.hpp"
 
 #include <glog/logging.h>
 
@@ -30,7 +30,7 @@
 #include <utility>
 #include <vector>
 
-namespace srf::internal::pipeline {
+namespace mrc::internal::pipeline {
 
 void Pipeline::add_segment(std::shared_ptr<const segment::Definition> segment)
 {
@@ -41,7 +41,7 @@ void Pipeline::add_segment(std::shared_ptr<const segment::Definition> segment)
     if (search != m_segments.end())
     {
         LOG(ERROR) << "segment: " << segment->name() << " is already registered";
-        throw exceptions::SrfRuntimeError("duplicate segment registration");
+        throw exceptions::MrcRuntimeError("duplicate segment registration");
     }
 
     // check for name collisions
@@ -74,4 +74,4 @@ std::shared_ptr<Pipeline> Pipeline::unwrap(IPipeline& pipeline)
 {
     return pipeline.m_impl;
 }
-}  // namespace srf::internal::pipeline
+}  // namespace mrc::internal::pipeline

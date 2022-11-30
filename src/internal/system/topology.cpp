@@ -20,10 +20,10 @@
 #include "internal/system/device_info.hpp"
 #include "internal/utils/ranges.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/cuda/common.hpp"
-#include "srf/exceptions/runtime_error.hpp"
-#include "srf/options/topology.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/cuda/common.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/options/topology.hpp"
 
 #include <cuda_runtime.h>
 #include <glog/logging.h>
@@ -48,7 +48,7 @@
 
 // Topology
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 std::shared_ptr<Topology> Topology::Create()
 {
@@ -141,7 +141,7 @@ std::shared_ptr<Topology> Topology::Create(const TopologyOptions& options,
         auto intersection = topo_cpu_set.set_intersect(options.user_cpuset());
         if (intersection.empty())
         {
-            throw exceptions::SrfRuntimeError("intersection between user_cpuset and topo_cpuset is null");
+            throw exceptions::MrcRuntimeError("intersection between user_cpuset and topo_cpuset is null");
         }
         auto dropped = options.user_cpuset().weight() - intersection.weight();
         if (dropped != 0)
@@ -390,4 +390,4 @@ bool Topology::contains(const CpuSet& cpu_set) const
 {
     return bool(hwloc_bitmap_isincluded(&cpu_set.bitmap(), &this->cpu_set().bitmap()));
 }
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

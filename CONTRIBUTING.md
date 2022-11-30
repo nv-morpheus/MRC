@@ -1,15 +1,15 @@
-# Contributing to SRF
+# Contributing to MRC
 
-Contributions to SRF fall into the following three categories.
+Contributions to MRC fall into the following three categories.
 
 1. To report a bug, request a new feature, or report a problem with
-    documentation, please file an [issue](https://github.com/NVIDIA/SRF/issues/new)
-    describing in detail the problem or new feature. The SRF team evaluates
+    documentation, please file an [issue](https://github.com/NVIDIA/MRC/issues/new)
+    describing in detail the problem or new feature. The MRC team evaluates
     and triages issues, and schedules them for a release. If you believe the
     issue needs priority attention, please comment on the issue to notify the
     team.
 2. To propose and implement a new Feature, please file a new feature request
-    [issue](https://github.com/NVIDIA/SRF/issues/new). Describe the
+    [issue](https://github.com/NVIDIA/MRC/issues/new). Describe the
     intended feature and discuss the design and implementation with the team and
     community. Once the team agrees that the plan looks good, go ahead and
     implement it, using the [code contributions](#code-contributions) guide below.
@@ -18,26 +18,26 @@ Contributions to SRF fall into the following three categories.
     need more context on a particular issue, please ask in a comment.
 
 As contributors and maintainers to this project,
-you are expected to abide by SRF's code of conduct.
+you are expected to abide by MRC's code of conduct.
 More information can be found at: [Contributor Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Code contributions
 
 ### Your first issue
 
-1. Find an issue to work on. The best way is to look for issues with the [good first issue](https://github.com/NVIDIA/SRF/issues) label.
+1. Find an issue to work on. The best way is to look for issues with the [good first issue](https://github.com/NVIDIA/MRC/issues) label.
 2. Comment on the issue stating that you are going to work on it.
 3. Code! Make sure to update unit tests and confirm that test coverage has not decreased (see below)! Ensure the
 [license headers are set properly](#Licensing).
-4. When done, [create your pull request](https://github.com/NVIDIA/SRF/compare).
+4. When done, [create your pull request](https://github.com/NVIDIA/MRC/compare).
 5. Wait for other developers to review your code and update code as needed.
-6. Once reviewed and approved, an SRF developer will merge your pull request.
+6. Once reviewed and approved, an MRC developer will merge your pull request.
 
 Remember, if you are unsure about anything, don't hesitate to comment on issues and ask for clarifications!
 
 ## Unit testing and Code Coverage
 Prior to submitting a pull request, you should ensure that all your contributed code is covered by unit tests, and that
-unit test coverage percentages have not decreased (even better if they've increased). To test, from the SRF root
+unit test coverage percentages have not decreased (even better if they've increased). To test, from the MRC root
 directory:
 
 1. Generate a code coverage report and ensure your additions are covered.
@@ -47,9 +47,9 @@ directory:
 
 ## Seasoned developers
 
-Once you have gotten your feet wet and are more comfortable with the code, you can look at the prioritized issues for our next release in our [project boards](https://github.com/NVIDIA/SRF/projects).
+Once you have gotten your feet wet and are more comfortable with the code, you can look at the prioritized issues for our next release in our [project boards](https://github.com/NVIDIA/MRC/projects).
 
-> **Pro Tip:** Always look at the release board with the highest number for issues to work on. This is where SRF developers also focus their efforts.
+> **Pro Tip:** Always look at the release board with the highest number for issues to work on. This is where MRC developers also focus their efforts.
 
 Look at the unassigned issues, and find an issue to which you are comfortable contributing. Start with _Step 2_ above, commenting on the issue to let others know you are working on it. If you have any questions related to the implementation of the issue, ask them in the issue instead of the PR.
 
@@ -59,8 +59,8 @@ Look at the unassigned issues, and find an issue to which you are comfortable co
 
 #### CUDA Toolkit Setup
 
-SRF uses the CUDA Toolkit. If you have multiple versions installed on your host, then some care needs to be taken in your environment.
-For example, you may see the following error when activating the srf conda environment:
+MRC uses the CUDA Toolkit. If you have multiple versions installed on your host, then some care needs to be taken in your environment.
+For example, you may see the following error when activating the mrc conda environment:
 
 `Version of installed CUDA didn't match package`
 
@@ -75,54 +75,54 @@ Some options:
   - For example, you can set `-DCUDAToolkit_ROOT=/usr/local/cuda-11.5` to tell CMake to use your CUDA 11.5 install
   - This will work even if the `nvcc_linux-64` conda package is uninstalled
 
-#### Clone SRF repository
+#### Clone MRC repository
 ```bash
-export SRF_HOME=$(pwd)/srf
-git clone git@github.com:nv-morpheus/srf.git $SRF_HOME
-cd $SRF_HOME
+export MRC_HOME=$(pwd)/mrc
+git clone git@github.com:nv-morpheus/mrc.git $MRC_HOME
+cd $MRC_HOME
 ```
 
-#### Create SRF Conda environment
+#### Create MRC Conda environment
 ```bash
 # note: `mamba` may be used in place of `conda` for better performance.
-conda env create -n srf --file $SRF_HOME/ci/conda/environments/dev_env.yml
-conda activate srf
+conda env create -n mrc --file $MRC_HOME/ci/conda/environments/dev_env.yml
+conda activate mrc
 ```
-#### Build SRF
+#### Build MRC
 ```bash
-mkdir $SRF_HOME/build
-cd $SRF_HOME/build
+mkdir $MRC_HOME/build
+cd $MRC_HOME/build
 cmake ..
 make -j $(nproc)
 ```
 
-#### Run SRF C++ Tests
+#### Run MRC C++ Tests
 ```bash
-export SRF_TEST_INTERNAL_DATA_PATH=$SRF_HOME/src/tests
-$SRF_HOME/build/src/tests/test_srf_private.x
-$SRF_HOME/build/tests/test_srf.x
-$SRF_HOME/build/tests/logging/test_srf_logging.x
+export MRC_TEST_INTERNAL_DATA_PATH=$MRC_HOME/src/tests
+$MRC_HOME/build/src/tests/test_mrc_private.x
+$MRC_HOME/build/tests/test_mrc.x
+$MRC_HOME/build/tests/logging/test_mrc_logging.x
 ```
 
-### Install SRF Python
+### Install MRC Python
 ```bash
-pip install -e $SRF_HOME/build/python
+pip install -e $MRC_HOME/build/python
 ```
 
-#### Run SRF Python Tests
+#### Run MRC Python Tests
 ```bash
-pytest $SRF_HOME/python
+pytest $MRC_HOME/python
 ```
 
 ### Building API Documentation
-From the root of the SRF repo, configure CMake with `SRF_BUILD_DOCS=ON` then build the `srf_docs` target. Once built the documentation will be located in the `build/docs/html` directory.
+From the root of the MRC repo, configure CMake with `MRC_BUILD_DOCS=ON` then build the `mrc_docs` target. Once built the documentation will be located in the `build/docs/html` directory.
 ```bash
-cmake -B build -DSRF_BUILD_DOCS=ON .
-cmake --build build --target srf_docs
+cmake -B build -DMRC_BUILD_DOCS=ON .
+cmake --build build --target mrc_docs
 ```
 
 ## Licensing
-SRF is licensed under the Apache v2.0 license. All new source files including CMake and other build scripts should contain the Apache v2.0 license header. Any edits to existing source code should update the date range of the copyright to the current year. The format for the license header is:
+MRC is licensed under the Apache v2.0 license. All new source files including CMake and other build scripts should contain the Apache v2.0 license header. Any edits to existing source code should update the date range of the copyright to the current year. The format for the license header is:
 
 ```c++
 /*

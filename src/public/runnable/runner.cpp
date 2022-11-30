@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-#include "srf/runnable/runner.hpp"
+#include "mrc/runnable/runner.hpp"
 
-#include "srf/exceptions/runtime_error.hpp"
-#include "srf/runnable/context.hpp"
-#include "srf/runnable/engine.hpp"
-#include "srf/runnable/runnable.hpp"
-#include "srf/types.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/runnable/context.hpp"
+#include "mrc/runnable/engine.hpp"
+#include "mrc/runnable/runnable.hpp"
+#include "mrc/types.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <ext/alloc_traits.h>
@@ -41,7 +41,7 @@
 // IWYU thinks we need std::max for calling m_instances.resize()
 // IWYU pragma: no_include <algorithm>
 
-namespace srf::runnable {
+namespace mrc::runnable {
 
 static std::string runnable_state_str(const Runner::State& state)
 {
@@ -95,7 +95,7 @@ void Runner::enqueue(std::shared_ptr<Engines> launcher, std::vector<std::shared_
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         if (not m_can_run)
         {
-            throw exceptions::SrfRuntimeError("Runner::run() is disabled");
+            throw exceptions::MrcRuntimeError("Runner::run() is disabled");
         }
 
         // update to instance count = launcher.count()
@@ -258,4 +258,4 @@ void Runner::on_completion_callback(on_completion_callback_t callback)
     CHECK(m_completion_callback == nullptr);
     m_completion_callback = callback;
 }
-}  // namespace srf::runnable
+}  // namespace mrc::runnable

@@ -19,11 +19,11 @@
 
 #include "internal/system/fiber_task_queue.hpp"
 
-#include "srf/core/bitmap.hpp"
-#include "srf/core/fiber_pool.hpp"
-#include "srf/core/task_queue.hpp"
-#include "srf/utils/macros.hpp"
-#include "srf/utils/thread_local_shared_pointer.hpp"
+#include "mrc/core/bitmap.hpp"
+#include "mrc/core/fiber_pool.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/utils/macros.hpp"
+#include "mrc/utils/thread_local_shared_pointer.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -31,7 +31,7 @@
 #include <memory>
 #include <vector>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 class FiberPool final : public core::FiberPool
 {
@@ -60,7 +60,7 @@ class FiberPool final : public core::FiberPool
     void set_thread_local_resource(std::uint32_t index, std::shared_ptr<ResourceT> resource)
     {
         task_queue(index)
-            .enqueue([resource] { ::srf::utils::ThreadLocalSharedPointer<ResourceT>::set(resource); })
+            .enqueue([resource] { ::mrc::utils::ThreadLocalSharedPointer<ResourceT>::set(resource); })
             .get();
     }
 
@@ -69,4 +69,4 @@ class FiberPool final : public core::FiberPool
     std::vector<std::reference_wrapper<FiberTaskQueue>> m_queues;
 };
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system

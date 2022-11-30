@@ -15,12 +15,12 @@
  limitations under the License.
 -->
 
-The `Dockerfile` in this directory defines the images used by the CI runner not for SRF itself.
+The `Dockerfile` in this directory defines the images used by the CI runner not for MRC itself.
 
 # Building CI images
-The `Dockerfile` defines two targets: `base` and `driver`. The `driver` target includes the Nvidia driver needed to build SRF on a machine without access to a GPU.
+The `Dockerfile` defines two targets: `base` and `driver`. The `driver` target includes the Nvidia driver needed to build MRC on a machine without access to a GPU.
 
-To build the images from the root of the SRF repo run:
+To build the images from the root of the MRC repo run:
 ```bash
 SKIP_PUSH=1 ci/runner/build_and_push.sh
 ```
@@ -28,7 +28,7 @@ SKIP_PUSH=1 ci/runner/build_and_push.sh
 # Build and push CI images
 This will require being a member of the `Morpheus Early Access CI` group in [NGC](https://catalog.ngc.nvidia.com) and logging into the `nvcr.io` registry prior to running.
 
-From the root of the SRF repo run:
+From the root of the MRC repo run:
 ```bash
 ci/runner/build_and_push.sh
 ```
@@ -38,6 +38,6 @@ If the images are already built, the build step can be skipped by setting `SKIP_
 # Updating CI to use the new images
 Update `.github/workflows/pull_request.yml` changing these two lines with the new image names:
 ```yaml
-      container: nvcr.io/ea-nvidia-morpheus/morpheus:srf-ci-driver-221102
-      test_container: nvcr.io/ea-nvidia-morpheus/morpheus:srf-ci-base-221102
+      container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-driver-221128
+      test_container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-base-221128
 ```

@@ -19,13 +19,13 @@
 
 #include "internal/ucx/registration_cache.hpp"
 
-#include "srf/cuda/common.hpp"
-#include "srf/cuda/device_guard.hpp"
-#include "srf/memory/adaptors.hpp"
+#include "mrc/cuda/common.hpp"
+#include "mrc/cuda/device_guard.hpp"
+#include "mrc/memory/adaptors.hpp"
 
 #include <memory>
 
-namespace srf::internal::ucx {
+namespace mrc::internal::ucx {
 
 /**
  * @brief Memory Resource adaptor to provide UCX registration to allocated blocks.
@@ -36,11 +36,11 @@ namespace srf::internal::ucx {
  * @tparam PointerT
  */
 template <typename PointerT>
-class RegistrationResource : public srf::memory::adaptor<PointerT>
+class RegistrationResource : public mrc::memory::adaptor<PointerT>
 {
   public:
     RegistrationResource(PointerT upstream, std::shared_ptr<RegistrationCache> registration_cache, int cuda_device_id) :
-      srf::memory::adaptor<PointerT>(std::move(upstream)),
+      mrc::memory::adaptor<PointerT>(std::move(upstream)),
       m_registration_cache(std::move(registration_cache)),
       m_cuda_device_id(cuda_device_id)
     {
@@ -72,4 +72,4 @@ class RegistrationResource : public srf::memory::adaptor<PointerT>
     const int m_cuda_device_id;
 };
 
-}  // namespace srf::internal::ucx
+}  // namespace mrc::internal::ucx

@@ -23,13 +23,13 @@
 #include "internal/system/resources.hpp"
 #include "internal/system/system_provider.hpp"
 
-#include "srf/engine/pipeline/ipipeline.hpp"
-#include "srf/options/options.hpp"
+#include "mrc/engine/pipeline/ipipeline.hpp"
+#include "mrc/options/options.hpp"
 
 #include <memory>
 #include <utility>
 
-namespace srf::internal::executor {
+namespace mrc::internal::executor {
 
 /**
  * @brief Common Executor code used by both the Standalone and Architect Executors
@@ -66,4 +66,4 @@ inline std::unique_ptr<Executor> make_executor(std::unique_ptr<system::Resources
     return std::make_unique<Executor>(std::move(resources));
 }
 
-}  // namespace srf::internal::executor
+}  // namespace mrc::internal::executor

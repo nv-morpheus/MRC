@@ -23,7 +23,7 @@
 #include <cstddef>
 #include <memory>
 
-namespace srf::internal::system {
+namespace mrc::internal::system {
 
 class Partition final
 {
@@ -44,4 +44,4 @@ class Partition final
     std::shared_ptr<const DevicePartition> m_device;
 };
 
-}  // namespace srf::internal::system
+}  // namespace mrc::internal::system
