@@ -133,7 +133,7 @@ RUN --mount=type=cache,id=conda_pkgs,target=/opt/conda/pkgs,sharing=locked \
 RUN source activate ${CONDA_ENV_NAME} &&\
     git clone https://github.com/include-what-you-use/include-what-you-use.git /opt/iwyu &&\
     cd /opt/iwyu &&\
-    git checkout clang_12 &&\
+    git checkout clang_14 &&\
     cmake -G Ninja -DCMAKE_PREFIX_PATH=$CONDA_PREFIX/lib . &&\
     cmake --build . --target install &&\
     echo 'export PATH=$PATH:/opt/iwyu' >>~/.bashrc
