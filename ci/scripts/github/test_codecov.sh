@@ -80,8 +80,8 @@ tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${MRC_ROOT}/build/gcovr-xml-rep
 aws s3 cp ${WORKSPACE_TMP}/coverage_reports.tar.bz "${ARTIFACT_URL}/coverage_reports.tar.bz"
 
 rapids-logger "Upload codecov report"
-/opt/conda/bin/codecov --root ${MRC_ROOT} -f ${MRC_ROOT}/build/gcovr-xml-report-cpp.xml -F cpp --no-gcov-out -X gcov
-/opt/conda/bin/codecov --root ${MRC_ROOT} -f ${MRC_ROOT}/build/gcovr-xml-report-py.xml -F py --no-gcov-out -X gcov
+/opt/conda/envs/mrc/bin/codecov --root ${MRC_ROOT} -f ${MRC_ROOT}/build/gcovr-xml-report-cpp.xml -F cpp --no-gcov-out -X gcov
+/opt/conda/envs/mrc/bin/codecov --root ${MRC_ROOT} -f ${MRC_ROOT}/build/gcovr-xml-report-py.xml -F py --no-gcov-out -X gcov
 
 rapids-logger "Archiving test reports"
 cd $(dirname ${REPORTS_DIR})
