@@ -75,6 +75,11 @@ if(NOT DEFINED CMAKE_CUDA_HOST_COMPILER)
   endif()
 endif()
 
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  # Our version of NVCC officially only supports clang versions 3.2 - 13, we are now using 14
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -allow-unsupported-compiler")
+endif()
+
 # Now enable CUDA
 enable_language(CUDA)
 
@@ -94,7 +99,7 @@ if(DEFINED CACHE{MRC_VCPKG_TOOLCHAIN} AND DEFINED CMAKE_BUILD_TYPE AND NOT CMAKE
   list(REMOVE_ITEM CMAKE_FIND_ROOT_PATH "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug")
 endif()
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
