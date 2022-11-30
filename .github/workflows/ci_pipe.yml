@@ -97,7 +97,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        build_cc: ["gcc", "gcc-coverage", "clang"]
+        build_cc: ["gcc", "clang"]
 
     steps:
       - name: Checkout
@@ -129,7 +129,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        build_cc: ["gcc", "gcc-coverage"]
+        build_cc: ["gcc", "clang"]
 
     steps:
       - name: Checkout
@@ -144,6 +144,37 @@ jobs:
           BUILD_CC: ${{ matrix.build_cc }}
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         run: ./mrc/ci/scripts/github/test.sh
+
+  codecov:
+    name: Code Coverage
+    runs-on: [self-hosted, linux, amd64, gpu-v100-495-1]
+    timeout-minutes: 60
+    container:
+      credentials:
+        username: '$oauthtoken'
+        password: ${{ secrets.NGC_API_KEY }}
+      image: ${{ inputs.container }}
+    strategy:
+      fail-fast: true
+    env:
+      BUILD_CC: "gcc-coverage"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          lfs: false
+          path: 'mrc'
+
+      - name: Build
+        shell: bash
+        run: ./mrc/ci/scripts/github/build.sh
+
+      - name: Test
+        shell: bash
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: ./mrc/ci/scripts/github/test_codecov.sh
 
   documentation:
     name: Documentation
