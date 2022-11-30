@@ -56,7 +56,7 @@ message(VERBOSE "Python3_NumPy_VERSION: " ${Python3_NumPy_VERSION})
 # pybind11
 # =========
 set(PYBIND11_VERSION "2.8.1" CACHE STRING "Version of Pybind11 to use")
-include(${MORPHEUS_UTILS_HOME}/cmake/package_config/pybind11/Configure_pybind11.cmake)
+morpheus_utils_configure_pybind11(${PYBIND11_VERSION})
 
 if (NOT EXISTS ${Python3_SITELIB}/skbuild)
     # In case this is messed up by `/usr/local/python/site-packages` vs `/usr/python/site-packages`, check pip itself.
@@ -80,7 +80,6 @@ set(CYTHON_FLAGS "--directive binding=True,boundscheck=False,wraparound=False,em
 # Now we can find pybind11
 find_package(pybind11 REQUIRED)
 find_package(Cython REQUIRED)
-
 
 function(create_python_package PACKAGE_NAME)
 

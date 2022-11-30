@@ -22,7 +22,8 @@ list(PREPEND CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}")
 list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake")
 
 # Add the RAPIDS cmake helper scripts
-include(environment/setup_rapids_cmake)
+# TODO: Shouldn't be required since we do it at source scope
+# include(morpheus_utils/environment_config/rapids_cmake/setup)
 
 project(mrc-quickstart
   VERSION 22.11.00

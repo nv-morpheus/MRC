@@ -53,47 +53,34 @@ rapids_find_package(CUDAToolkit
   INSTALL_EXPORT_SET ${PROJECT_NAME}-core-exports
 )
 
-set(MORPHEUS_UTILS_VERSION "0.1" CACHE STRING "Version of morphues utils")
-include(Configure_morpheus_utils)
-
-list(APPEND CMAKE_MODULE_PATH "${MORPHEUS_UTILS_HOME}/cmake")
-list(APPEND CMAKE_PREFIX_PATH "${MORPHEUS_UTILS_HOME}/cmake")
+# Import morpheus_utils package configuration API
+include(morpheus_utils/package_config/api)
 
 # Boost
 # =====
 # - Use static linking to avoid issues with system-wide installations of Boost.
 # - Use numa=on to ensure the numa component of fiber gets built
 set(BOOST_VERSION "1.74.0" CACHE STRING "Version of boost to use")
-include(package_config/boost/Configure_boost)
+morpheus_utils_configure_boost_boost_cmake(${BOOST_VERSION})
 
 # UCX
 # ===
 set(UCX_VERSION "1.13" CACHE STRING "Version of ucx to use")
-include(package_config/ucx/Configure_ucx)
+morpheus_utils_configure_ucx(${UCX_VERSION})
 
 # hwloc
 # =====
 set(HWLOC_VERSION "2.5" CACHE STRING "Version of hwloc to use")
-include(package_config/hwloc/Configure_hwloc)
+morpheus_utils_configure_hwloc(${HWLOC_VERSION})
 
 # expected
 set(EXPECTED_VERSION "1.0.0" CACHE STRING "Version of expected to use")
-include(package_config/expected/Configure_expected)
-
-# FlatBuffers
-# ===========
-# rapids_find_package(Flatbuffers REQUIRED
-# GLOBAL_TARGETS Flatbuffers
-# BUILD_EXPORT_SET ${PROJECT_NAME}-core-exports
-# INSTALL_EXPORT_SET ${PROJECT_NAME}-core-exports
-# FIND_ARGS
-# CONFIG
-# )
+morpheus_utils_configure_tl_expected(${EXPECTED_VERSION})
 
 # NVIDIA RAPIDS RMM
 # =================
-set(RMM_VERSION "\${MRC_RAPIDS_VERSION}" CACHE STRING "Version of RMM to use. Defaults to \${MRC_RAPIDS_VERSION}")
-include(package_config/rmm/Configure_rmm)
+set(RMM_VERSION "${MRC_RAPIDS_VERSION}" CACHE STRING "Version of RMM to use. Defaults to \${MRC_RAPIDS_VERSION}")
+morpheus_utils_configure_rmm(${RMM_VERSION})
 
 # gflags
 # ======
@@ -101,9 +88,6 @@ rapids_find_package(gflags REQUIRED
   GLOBAL_TARGETS gflags
   BUILD_EXPORT_SET ${PROJECT_NAME}-core-exports
   INSTALL_EXPORT_SET ${PROJECT_NAME}-core-exports
-
-  # FIND_ARGS
-  # CONFIG
 )
 
 # glog
@@ -111,7 +95,7 @@ rapids_find_package(gflags REQUIRED
 # - link against shared
 # - todo: compile with -DWITH_GFLAGS=OFF and remove gflags dependency
 set(GLOG_VERSION "0.6" CACHE STRING "Version of glog to use")
-include(package_config/glog/Configure_glog)
+morpheus_utils_configure_glog(${GLOG_VERSION})
 
 # nvidia cub
 # ==========
@@ -134,7 +118,7 @@ rapids_find_package(gRPC REQUIRED
 # RxCpp
 # =====
 set(RXCPP_VERSION "4.1.1.2" CACHE STRING "Version of RxCpp to use")
-include(package_config/rxcpp/Configure_rxcpp)
+morpheus_utils_configure_rxcpp(${RXCPP_VERSION})
 
 # JSON
 # ======
@@ -149,12 +133,12 @@ rapids_find_package(nlohmann_json REQUIRED
 # prometheus
 # =========
 set(PROMETHEUS_CPP_VERSION "1.0.0" CACHE STRING "Version of Prometheus-cpp to use")
-include(package_config/prometheus/Configure_prometheus)
+morpheus_utils_configure_prometheus_cpp(${PROMETHEUS_CPP_VERSION})
 
 # libcudacxx
 # =========
 set(LIBCUDACXX_VERSION "1.8.0" CACHE STRING "Version of libcudacxx to use")
-include(package_config/libcudacxx/Configure_libcudacxx)
+morpheus_utils_configure_libcudacxx(${LIBCUDACXX_VERSION})
 
 if(MRC_BUILD_BENCHMARKS)
   # google benchmark
