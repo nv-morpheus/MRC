@@ -18,9 +18,10 @@
 function(find_and_configure_morpheus_utils version)
   list(APPEND CMAKE_MESSAGE_CONTEXT "morpheus_utils")
 
+  # TODO(Devin): Make this an ExternalProject so we don't have any rapids/rpm deps and can pull earlier.
   rapids_cpm_find(morpheus_utils ${version}
     CPM_ARGS
-      #GIT_REPOSITORY https://github.com/ryanolson/expected.git
+      #GIT_REPOSITORY https://github.com/nv-morpheus/utilities.git
       GIT_REPOSITORY /home/drobison/Development/devin-morpheus-utils-public
       GIT_TAG v${version}
       DOWNLOAD_ONLY TRUE
