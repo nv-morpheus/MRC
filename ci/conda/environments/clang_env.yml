@@ -18,6 +18,7 @@
 name: mrc
 channels:
     - conda-forge
+    - anaconda
 dependencies:
     - clang=14
     - clang-tools=14
