@@ -33,6 +33,7 @@ id
 
 # NUM_PROC is used by some of the other scripts
 export NUM_PROC=${PARALLEL_LEVEL:-$(nproc)}
+export BUILD_CC=${BUILD_CC:-"gcc"}
 
 export CONDA_ENV_YML="${MRC_ROOT}/ci/conda/environments/dev_env.yml"
 

@@ -50,7 +50,6 @@ env:
   AWS_DEFAULT_REGION: ${{ inputs.aws_region }}
   AWS_ACCESS_KEY_ID: "${{ secrets.GHA_AWS_ACCESS_KEY_ID }}"
   AWS_SECRET_ACCESS_KEY: "${{ secrets.GHA_AWS_SECRET_ACCESS_KEY }}"
-  BUILD_CC: "gcc"
   CHANGE_TARGET: "${{ github.base_ref }}"
   GH_TOKEN: "${{ github.token }}"
   GIT_COMMIT: "${{ github.sha }}"
@@ -170,14 +169,11 @@ jobs:
 
       - name: Build
         shell: bash
-        env:
-          BUILD_CC: "gcc-coverage"
         run: ./mrc/ci/scripts/github/build.sh
 
       - name: Test
         shell: bash
         env:
-          BUILD_CC: "gcc-coverage"
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         run: ./mrc/ci/scripts/github/test_codecov.sh
 
