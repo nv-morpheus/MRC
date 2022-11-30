@@ -48,20 +48,6 @@ RUN CONDA_ALWAYS_YES=true /opt/conda/bin/mamba env create -n ${PROJ_NAME} -q --f
     conda clean -afy && \
     rm -rf /tmp/conda
 
-
-# Install IWYU (remove once we are on clang-14)
-RUN git clone https://github.com/include-what-you-use/include-what-you-use.git /tmp/iwyu &&\
-    cd /tmp/iwyu &&\
-    git checkout clang_${CLANG_VER} &&\
-    source activate ${PROJ_NAME} && \
-    cmake -G Ninja \
-        -DCMAKE_C_COMPILER=$(which clang) \
-        -DCMAKE_CXX_COMPILER=$(which clang++) \
-        -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX}  . && \
-    cmake --build . --parallel $(nproc) --target install && \
-    cd - && \
-    rm -rf /tmp/iwyu
-
 # ============ driver ==================
 FROM base as driver
 
