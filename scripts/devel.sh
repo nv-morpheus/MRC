@@ -24,7 +24,7 @@ export DOCKER_REGISTRY_SERVER=""
 export DOCKER_REGISTRY_PATH="mrc"
 export DOCKER_TARGET="dev"
 export DOCKER_TAG_PREFIX=""
-export DOCKER_TAG_SUFFIX="$(date +'%y%m%d')"
+export DOCKER_TAG_SUFFIX=""
 
 IMAGE_NAME=$(get_image_full_name ${DOCKER_TARGET})
 CONTAINER_NAME=$(echo ${IMAGE_NAME} | sed -e 's/:/-/g')
@@ -37,13 +37,16 @@ echo "building development image: " $IMAGE_NAME
 ./ci/runner/build_and_push.sh
 
 # variable that effect the launching of the container
-DOCKER_CMD=${DOCKER_CMD:-"docker"}
-DOCKER_OPTS=${DOCKER_OPTS:-"--rm -d --gpus=all"}
+DOCKER_EXE=${DOCKER_EXE:-"docker"}
+DOCKER_GPU_OPTS=${DOCKER_GPU_OPTS:-"--gpus=all"}
+DOCKER_RUN_OPTS=${DOCKER_RUN_OPTS:-"--rm -ti"}
+DOCKER_CMD=${DOCKER_CMD:-"sleep 999999999999999999999"}
 
 SKIP_RUN=${SKIP_RUN:-""}
 
-launch_command=("${DOCKER_CMD}" "run"
-    "${DOCKER_OPTS}"
+launch_command=("${DOCKER_EXE}" "run"
+    "${DOCKER_GPU_OPTS}"
+    "${DOCKER_RUN_OPTS}"
     "--name ${CONTAINER_NAME}"
     "-v ${PWD}:/work"
     "--workdir /work"
@@ -53,7 +56,7 @@ launch_command=("${DOCKER_CMD}" "run"
     "--cap-add=SYS_ADMIN"
     "--cap-add=SYS_NICE"
     "${IMAGE_NAME}"
-    "sleep 999999999999999999999"
+    "${DOCKER_CMD}"
 )
 
 echo "launch command: ${launch_command[@]}"
