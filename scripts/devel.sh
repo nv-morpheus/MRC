@@ -19,35 +19,48 @@
 
 source "ci/runner/common.sh"
 
+# export variables for naming the docker image
 export DOCKER_REGISTRY_SERVER=""
 export DOCKER_REGISTRY_PATH="mrc"
 export DOCKER_TARGET="dev"
 export DOCKER_TAG_PREFIX=""
 export DOCKER_TAG_SUFFIX="$(date +'%y%m%d')"
 
-export SKIP_PUSH=yes
-SKIP_RUN=${SKIP_RUN:-""}
-
 IMAGE_NAME=$(get_image_full_name ${DOCKER_TARGET})
 CONTAINER_NAME=$(echo ${IMAGE_NAME} | sed -e 's/:/-/g')
 
+# export variables for ci/runner/build_and_push.sh
+export SKIP_BUILD=${SKIP_BUILD:-""}
+export SKIP_PUSH=yes
+
+echo "building development image: " $IMAGE_NAME
 ./ci/runner/build_and_push.sh
 
+# variable that effect the launching of the container
 DOCKER_CMD=${DOCKER_CMD:-"docker"}
-DOCKER_GPU_OPTS=${DOCKER_GPU_OPTS:-"--gpus=all"}
+DOCKER_OPTS=${DOCKER_OPTS:-"--rm -d --gpus=all"}
 
-if [ "${SKIP_RUN}" == "" ]; then
-  ${DOCKER_CMD} run \
-    ${DOCKER_GPU_OPTS} \
-    --rm -d \
-    --name ${CONTAINER_NAME} \
-    -v $PWD:/work \
-    --workdir /work \
-    --net host \
-    --ulimit core=-1 \
-    --cap-add=SYS_PTRACE \
-    --cap-add=SYS_ADMIN \
-    --cap-add=SYS_NICE \
-    ${IMAGE_NAME} \
-    sleep 999999999999999999999
+SKIP_RUN=${SKIP_RUN:-""}
+
+launch_command=("${DOCKER_CMD}" "run"
+    "${DOCKER_OPTS}"
+    "--name ${CONTAINER_NAME}"
+    "-v ${PWD}:/work"
+    "--workdir /work"
+    "--net host"
+    "--ulimit core=-1"
+    "--cap-add=SYS_PTRACE"
+    "--cap-add=SYS_ADMIN"
+    "--cap-add=SYS_NICE"
+    "${IMAGE_NAME}"
+    "sleep 999999999999999999999"
+)
+
+echo "launch command: ${launch_command[@]}"
+
+if [ "${SKIP_RUN}" == "" ]
+then
+    eval "${launch_command[@]}"
+else
+    echo "launch skipped"
 fi
