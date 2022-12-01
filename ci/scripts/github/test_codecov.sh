@@ -42,21 +42,26 @@ ctest --output-on-failure \
 CTEST_RESULTS=$?
 set -e
 
+CODECOV_ARGS="--root ${MRC_ROOT} --branch ${GITHUB_REF_NAME} --pr ${GITHUB_REF_NAME##*/} --no-gcov-out --disable gcov"
+echo "CODECOV_ARGS: ${CODECOV_ARGS}"
 
 cd ${MRC_ROOT}
 
 rapids-logger "Compiling coverage for C++ tests"
 
-which gcovr
-whereis gcovr
-gcovr --version
-#gcovr --help
-
 # Run gcovr and delete the stats
 gcovr -j ${PARALLEL_LEVEL} --gcov-executable x86_64-conda-linux-gnu-gcov --xml build/gcovr-xml-report-cpp.xml --xml-pretty -r ${MRC_ROOT} --object-directory "$PWD/build" \
+  --exclude-unreachable-branches --exclude-throw-branches \
   -f '^include/.*' -f '^python/.*' -f '^src/.*' \
   -e '^python/srf/_pysrf/tests/.*' -e '^python/srf/tests/.*' -e '^src/tests/.*' \
-  -d -s
+  -d -s -k
+
+rapids-logger "Uploading codecov for C++ tests"
+
+# Get the list of files that we are interested in (Keeps the upload small)
+GCOV_FILES=$(find . -type f \( -iname "^#include#*.gcov" -or -iname "^#python#*.gcov" -or -iname "^#src#*.gcov" \))
+/opt/conda/envs/mrc/bin/codecov ${CODECOV_ARGS} -f ${GCOV_FILES} -F cpp
+rm build/*.gcov
 
 rapids-logger "Running Python Tests"
 cd ${MRC_ROOT}/build/python
@@ -71,19 +76,22 @@ rapids-logger "Compiling coverage for Python tests"
 
 # Need to rerun gcovr for the python code now
 gcovr -j ${PARALLEL_LEVEL} --gcov-executable x86_64-conda-linux-gnu-gcov --xml build/gcovr-xml-report-py.xml --xml-pretty -r ${MRC_ROOT} --object-directory "$PWD/build" \
+  --exclude-unreachable-branches --exclude-throw-branches \
   -f '^include/.*' -f '^python/.*' -f '^src/.*' \
   -e '^python/srf/_pysrf/tests/.*' -e '^python/srf/tests/.*' -e '^src/tests/.*' \
-  -d -s
+  -d -s -k
+
+rapids-logger "Uploading codecov for Python tests"
+
+# Get the list of files that we are interested in (Keeps the upload small)
+GCOV_FILES=$(find . -type f \( -iname "^#include#*.gcov" -or -iname "^#python#*.gcov" -or -iname "^#src#*.gcov" \))
+/opt/conda/envs/mrc/bin/codecov ${CODECOV_ARGS} -f ${GCOV_FILES} -F py
+rm build/*.gcov
 
 rapids-logger "Archiving codecov report"
 tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${MRC_ROOT}/build/gcovr-xml-report-*.xml
 aws s3 cp ${WORKSPACE_TMP}/coverage_reports.tar.bz "${ARTIFACT_URL}/coverage_reports.tar.bz"
 
-rapids-logger "Upload codecov report"
-CODECOV_ARGS="--root ${MRC_ROOT} --branch ${GITHUB_REF_NAME} --pr ${GITHUB_REF_NAME##*/} --no-gcov-out --disable gcov"
-echo "CODECOV_ARGS: ${CODECOV_ARGS}"
-/opt/conda/envs/mrc/bin/codecov ${CODECOV_ARGS} -f ${MRC_ROOT}/build/gcovr-xml-report-cpp.xml -F cpp
-/opt/conda/envs/mrc/bin/codecov ${CODECOV_ARGS} -f ${MRC_ROOT}/build/gcovr-xml-report-py.xml -F py
 
 rapids-logger "Archiving test reports"
 cd $(dirname ${REPORTS_DIR})
