@@ -24,7 +24,7 @@ namespace mrc::core {
 class SpinLockMutex
 {
   public:
-    // todo(clang-format-14)
+    // todo(clang-format-15)
     // clang-format off
     SpinLockMutex() noexcept                                = default;
     ~SpinLockMutex() noexcept                               = default;

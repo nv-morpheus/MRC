@@ -14,7 +14,7 @@ dependencies:
   - cython=0.29.24
   - doxygen=1.9.2
   - flatbuffers=2.0
-  - gcc_linux-64=9.4
+  - gcc_linux-64=11.2
   - gcovr=5.0
   - gflags=2.2
   - git>=2.35.3 # Needed for wildcards on safe.directory
@@ -23,7 +23,7 @@ dependencies:
   - graphviz=3.0
   - grpc-cpp=1.46
   - gtest=1.10
-  - gxx_linux-64=9.4
+  - gxx_linux-64=11.2
   - jinja2=3.0
   - lcov=1.15
   - libhwloc=2.5
