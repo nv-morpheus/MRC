@@ -35,7 +35,6 @@ option(MRC_USE_CONDA "Enables finding dependencies via conda instead of vcpkg. N
 option(MRC_USE_IWYU "Enable running include-what-you-use as part of the build process" OFF)
 
 set(MRC_RAPIDS_VERSION "22.08" CACHE STRING "Which version of RAPIDS to build for. Sets default versions for RAPIDS CMake and RMM.")
-
 set(MRC_CACHE_DIR "${CMAKE_SOURCE_DIR}/.cache" CACHE PATH "Directory to contain all CPM and CCache data")
 mark_as_advanced(MRC_CACHE_DIR)
 
@@ -51,7 +50,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # Load morpheus utils and update CMake paths
-set(MORPHEUS_UTILS_VERSION "0.1" CACHE STRING "Version of Morpheus utils")
+set(MORPHEUS_UTILS_VERSION "23.01.00-alpha" CACHE STRING "Version of Morpheus utils")
 set(MORPHEUS_UTILS_RAPIDS_CMAKE_VERSION ${MRC_RAPIDS_VERSION})
 set(MORPHEUS_UTILS_RAPIDS_CPM_INIT_OVERRIDE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/rapids_cpm_package_overrides.json")
 include(load_morpheus_utils)

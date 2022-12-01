@@ -29,7 +29,7 @@ option(${OPTION_PREFIX}_PYTHON_BUILD_STUBS "Whether or not to generated .pyi stu
 set(Python3_FIND_VIRTUALENV "FIRST")
 set(Python3_FIND_STRATEGY "LOCATION")
 
-include(morpheus_utils/python/module_tools)
+include(morpheus_utils/python/register_api)
 morpheus_utils_print_python_info()
 
 # Create the mrc python package

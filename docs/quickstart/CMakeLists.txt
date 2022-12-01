@@ -35,7 +35,7 @@ rapids_cpm_init()
 
 # Set the option prefix to match the outer project before including. Must be before find_package(mrc)
 set(OPTION_PREFIX "MRC")
-include(morpheus_utils/python/module_tools)
+include(morpheus_utils/python/register_api)
 
 rapids_find_package(mrc REQUIRED)
 rapids_find_package(CUDAToolkit REQUIRED)
