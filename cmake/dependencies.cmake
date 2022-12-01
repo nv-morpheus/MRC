@@ -53,9 +53,6 @@ rapids_find_package(CUDAToolkit
   INSTALL_EXPORT_SET ${PROJECT_NAME}-core-exports
 )
 
-# Import morpheus_utils package configuration API
-include(morpheus_utils/package_config/api)
-
 # Boost
 # =====
 # - Use static linking to avoid issues with system-wide installations of Boost.

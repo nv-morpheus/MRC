@@ -13,14 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-max_size = 10G
-# hash_dir = false
-# let ccache preserve C++ comments, because some of them may be meaningful to the compiler
-keep_comments_cpp = true
-cache_dir = @CCACHE_DIR@
-compiler_check = %compiler% --version
-# Uncomment to debug ccache preprocessor errors/cache misses
-log_file = @CCACHE_DIR@/ccache.log
+include_guard(GLOBAL)
 
-# Force absolute paths in error output for IDEs
-absolute_paths_in_stderr = true
+list(APPEND CMAKE_MESSAGE_CONTEXT "cache")
+
+morpheus_utils_check_cache_path(MRC_CACHE_DIR)
+
+# Configure CCache if requested
+if(MRC_USE_CCACHE)
+  morpheus_utils_configure_ccache(MRC_CACHE_DIR)
+endif()
+
+morpheus_utils_configure_cpm(MRC_CACHE_DIR)
+
+list(POP_BACK CMAKE_MESSAGE_CONTEXT)

@@ -17,7 +17,7 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "python")
 
 find_package(CUDAToolkit REQUIRED)
 
-include(python_module_tools)
+include(morpheus_utils/python/module_tools)
 
 # Create the mrc python package
 create_python_package(mrc)
