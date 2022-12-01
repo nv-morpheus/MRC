@@ -33,8 +33,6 @@ jobs:
     with:
       run_check: ${{ startsWith(github.ref_name, 'pull-request/') }}
       run_package_conda: ${{ !startsWith(github.ref_name, 'pull-request/') }}
-      container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-driver-221128
-      test_container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-base-221128
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       CONDA_TOKEN: ${{ secrets.CONDA_TOKEN }}

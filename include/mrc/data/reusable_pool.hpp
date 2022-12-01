@@ -117,7 +117,6 @@ class ReusablePool final : public std::enable_shared_from_this<ReusablePool<T>>
 
   private:
     ReusablePool(std::size_t capacity, on_return_t on_return_fn) :
-      m_size(0),
       m_capacity(capacity),
       m_on_return_fn(std::move(on_return_fn)),
       m_channel(capacity)
@@ -133,7 +132,7 @@ class ReusablePool final : public std::enable_shared_from_this<ReusablePool<T>>
     }
 
     std::mutex m_mutex;
-    std::size_t m_size;
+    std::size_t m_size{0UL};
     const std::size_t m_capacity;
     std::function<void(T&)> m_on_return_fn{nullptr};
     boost::fibers::buffered_channel<item_t> m_channel;
@@ -153,7 +152,7 @@ class Reusable final
   public:
     Reusable() = default;
 
-    Reusable(Reusable&&) noexcept = default;
+    Reusable(Reusable&&) noexcept            = default;
     Reusable& operator=(Reusable&&) noexcept = default;
 
     DELETE_COPYABILITY(Reusable);
@@ -209,10 +208,10 @@ class SharedReusable final
     SharedReusable() = default;
     SharedReusable(Reusable<T>&& data) : SharedReusable(std::move(data.m_data), data.m_pool) {}
 
-    SharedReusable(const SharedReusable&) = default;
+    SharedReusable(const SharedReusable&)            = default;
     SharedReusable& operator=(const SharedReusable&) = default;
 
-    SharedReusable(SharedReusable&&) noexcept = default;
+    SharedReusable(SharedReusable&&) noexcept            = default;
     SharedReusable& operator=(SharedReusable&&) noexcept = default;
 
     ~SharedReusable() = default;

@@ -35,6 +35,7 @@ id
 export NUM_PROC=${PARALLEL_LEVEL:-$(nproc)}
 
 export CONDA_ENV_YML="${MRC_ROOT}/ci/conda/environments/dev_env.yml"
+export CONDA_CLANG_ENV_YML="${MRC_ROOT}/ci/conda/environments/clang_env.yml"
 
 export CMAKE_BUILD_ALL_FEATURES="-DCMAKE_MESSAGE_CONTEXT_SHOW=ON -DMRC_BUILD_BENCHMARKS=ON -DMRC_BUILD_EXAMPLES=ON -DMRC_BUILD_PYTHON=ON -DMRC_BUILD_TESTS=ON -DMRC_USE_CONDA=ON -DMRC_PYTHON_BUILD_STUBS=ON"
 export CMAKE_BUILD_WITH_CODECOV="-DCMAKE_BUILD_TYPE=Debug -DMRC_ENABLE_CODECOV=ON"
@@ -49,8 +50,8 @@ PR_NUM="${GITHUB_REF_NAME##*/}"
 
 
 # S3 vars
-export S3_URL="s3://rapids-downloads/ci/srf"
-export DISPLAY_URL="https://downloads.rapids.ai/ci/srf"
+export S3_URL="s3://rapids-downloads/ci/mrc"
+export DISPLAY_URL="https://downloads.rapids.ai/ci/mrc"
 export ARTIFACT_ENDPOINT="/pull-request/${PR_NUM}/${GIT_COMMIT}/${NVARCH}/${BUILD_CC}"
 export ARTIFACT_URL="${S3_URL}${ARTIFACT_ENDPOINT}"
 export DISPLAY_ARTIFACT_URL="${DISPLAY_URL}${ARTIFACT_ENDPOINT}"
@@ -72,6 +73,7 @@ function print_env_vars() {
 function update_conda_env() {
     rapids-logger "Checking for updates to conda env"
     rapids-mamba-retry env update -n mrc -q --file ${CONDA_ENV_YML}
+    rapids-mamba-retry env update -n mrc -q --file ${CONDA_CLANG_ENV_YML}
     conda deactivate
     conda activate mrc
 }
