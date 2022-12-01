@@ -17,9 +17,6 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "tests")
 
 mrc_add_pybind11_module(test_edges_cpp SOURCE_FILES test_edges.cpp)
 mrc_add_pybind11_module(sample_modules SOURCE_FILES sample_modules.cpp)
-
-mrc_add_pybind11_module(utils
-  SOURCE_FILES utils.cpp
-)
+mrc_add_pybind11_module(utils SOURCE_FILES utils.cpp)
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

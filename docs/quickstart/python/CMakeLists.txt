@@ -17,7 +17,7 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "python")
 
 set(QUICKSTART_PYTHON_HOME "${CMAKE_CURRENT_SOURCE_DIR}")
 
-create_python_package(mrc_qs_python)
+morpheus_utils_create_python_package(mrc_qs_python)
 
 set(extra_args "IS_INPLACE")
 
@@ -29,6 +29,6 @@ if(TARGET mrc-package-install)
   list(APPEND extra_args "PYTHON_DEPENDENCIES" "mrc-package-install")
 endif()
 
-build_python_package(mrc_qs_python ${extra_args})
+morpheus_utils_build_python_package(mrc_qs_python ${extra_args})
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

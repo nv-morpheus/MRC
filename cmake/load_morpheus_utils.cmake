@@ -18,18 +18,6 @@
 include_guard()
 include(FetchContent)
 
-function(setup_package_tests TEST_VAR_NAME)
-  set(TEST_VAR_VALUE ${${TEST_VAR_NAME}})
-  if (TEST_VAR_VALUE)
-    message(STATUS "++++++++++++++ TEST_VAR IS ON '${TEST_VAR_VALUE}'")
-  else()
-    message(STATUS "++++++++++++++ TEST_VAR IS OFF '${TEST_VAR_VALUE}'")
-  endif()
-  message(STATUS "====================> CALLED '${TEST_VAR_NAME}'")
-  set(test_thing "a b c")
-  message(STATUS ${test_thing})
-endfunction()
-
 # Fetch morpheus utilities -- don't use CPM, RAPIDS_CPM, or other external libraries here so
 #   we are only relying on CMake to get our core utilities.
 function(find_and_configure_morpheus_utils version)
@@ -55,3 +43,6 @@ function(find_and_configure_morpheus_utils version)
 endfunction()
 
 find_and_configure_morpheus_utils(${MORPHEUS_UTILS_VERSION})
+
+list(APPEND CMAKE_MODULE_PATH "${MORPHEUS_UTILS_HOME}/cmake")
+include(morpheus_utils/load)

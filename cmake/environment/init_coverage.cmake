@@ -22,8 +22,6 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "coverage")
 
 # Include coverage tools if enabled
 if(MRC_ENABLE_CODECOV)
-  include(morpheus_utils/environment_config/code_coverage/init_coverage)
-
   message(STATUS "MRC_ENABLE_CODECOV is ON, configuring report exclusions and setting up coverage build targets")
   set(CODECOV_REPORT_EXCLUSIONS
     "${CMAKE_BINARY_DIR}/protos/*" # Remove this if/when we get protobuf code unit tested.

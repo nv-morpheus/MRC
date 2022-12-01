@@ -52,16 +52,9 @@ list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # Load morpheus utils and update CMake paths
 set(MORPHEUS_UTILS_VERSION "0.1" CACHE STRING "Version of Morpheus utils")
+set(MORPHEUS_UTILS_RAPIDS_CMAKE_VERSION ${MRC_RAPIDS_VERSION})
+set(MORPHEUS_UTILS_RAPIDS_CPM_INIT_OVERRIDE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/rapids_cpm_package_overrides.json")
 include(load_morpheus_utils)
-find_and_configure_morpheus_utils(${MORPHEUS_UTILS_VERSION})
-list(APPEND CMAKE_MODULE_PATH "${MORPHEUS_UTILS_HOME}/cmake")
-
-# Import morpheus_utils APIs
-include(morpheus_utils/environment_config/register_api)
-include(morpheus_utils/package_config/register_api)
-
-# Configure rapids CMake
-morpheus_utils_initialize_rapids_cmake(MRC_RAPIDS_VERSION)
 
 # Configure project package manager
 morpheus_utils_initialize_package_manager(
@@ -432,7 +425,6 @@ add_subdirectory(src/tools)
 
 # Uncomment the following to print all available targets
 if (MRC_ENABLE_DEBUG_INFO)
-  include(morpheus_utils/general/cmake_project_debug_utils)
   morpheus_utils_print_all_targets()
 endif()
 

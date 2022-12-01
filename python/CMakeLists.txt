@@ -17,13 +17,26 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "python")
 
 find_package(CUDAToolkit REQUIRED)
 
+# Get the project name in uppercase if OPTION_PREFIX is not defined
+if(NOT DEFINED OPTION_PREFIX)
+  string(TOUPPER "${PROJECT_NAME}" OPTION_PREFIX)
+endif()
+
+option(${OPTION_PREFIX}_PYTHON_INPLACE_BUILD "Whether or not to copy built python modules back to the source tree for debug purposes." OFF)
+option(${OPTION_PREFIX}_PYTHON_PERFORM_INSTALL "Whether or not to automatically `pip install` any built python library. WARNING: This may overwrite any existing installation of the same name." OFF)
+option(${OPTION_PREFIX}_PYTHON_BUILD_STUBS "Whether or not to generated .pyi stub files for C++ Python modules. Disable to avoid requiring loading the NVIDIA GPU Driver during build" ON)
+
+set(Python3_FIND_VIRTUALENV "FIRST")
+set(Python3_FIND_STRATEGY "LOCATION")
+
 include(morpheus_utils/python/module_tools)
+morpheus_utils_print_python_info()
 
 # Create the mrc python package
-create_python_package(mrc)
+morpheus_utils_create_python_package(mrc)
 
 # Add a few additional files to be copied
-add_python_sources("pytest.ini" "tests/string_reader_input.txt")
+morpheus_utils_add_python_sources("pytest.ini" "tests/string_reader_input.txt")
 
 # Save the root of the python for relative paths
 set(MRC_PY_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
@@ -43,7 +56,7 @@ macro(mrc_add_pybind11_module)
   endif()
 
   # Forward all common arguments plus any arguments passed in
-  add_pybind11_module(${ARGN} ${_common_args})
+  morpheus_utils_add_pybind11_module(${ARGN} ${_common_args})
 endmacro()
 
 add_subdirectory(mrc/_pymrc)
@@ -67,6 +80,6 @@ if(MRC_PYTHON_PERFORM_INSTALL)
   list(APPEND extra_args "INSTALL_WHEEL")
 endif()
 
-build_python_package(mrc ${extra_args})
+morpheus_utils_build_python_package(mrc ${extra_args})
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)
