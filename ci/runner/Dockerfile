@@ -56,3 +56,27 @@ RUN apt update && \
     apt install --no-install-recommends -y libnvidia-compute-495 && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
+
+# ========= development ================
+FROM base as dev
+
+# OS deps
+RUN apt-get update &&\
+    apt-get install --no-install-recommends -y \
+        git \
+        gdb \
+        htop \
+        openssh-client \
+        psmisc \
+        vim-tiny \
+        && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# default working directory
+WORKDIR /work
+
+# Setup git to allow other users to access /work. Requires git 2.35.3 or
+# greater. See https://marc.info/?l=git&m=164989570902912&w=2. Only enable for
+# development
+RUN git config --global --add safe.directory "*"
