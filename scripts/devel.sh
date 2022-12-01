@@ -39,7 +39,7 @@ echo "building development image: " $IMAGE_NAME
 # variable that effect the launching of the container
 DOCKER_EXE=${DOCKER_EXE:-"docker"}
 DOCKER_GPU_OPTS=${DOCKER_GPU_OPTS:-"--gpus=all"}
-DOCKER_RUN_OPTS=${DOCKER_RUN_OPTS:-"--rm -ti"}
+DOCKER_RUN_OPTS=${DOCKER_RUN_OPTS:-"--rm -d"}
 DOCKER_CMD=${DOCKER_CMD:-"sleep 999999999999999999999"}
 
 SKIP_RUN=${SKIP_RUN:-""}
