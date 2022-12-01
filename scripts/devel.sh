@@ -40,11 +40,9 @@ if [ "${SKIP_RUN}" == "" ]; then
   ${DOCKER_CMD} run \
     ${DOCKER_GPU_OPTS} \
     --rm -d \
-    -v $PWD:/work \
-    -v /cores:/cores \
-    -v /cache:/cache \
-    --workdir /work \
     --name ${CONTAINER_NAME} \
+    -v $PWD:/work \
+    --workdir /work \
     --net host \
     --ulimit core=-1 \
     --cap-add=SYS_PTRACE \
