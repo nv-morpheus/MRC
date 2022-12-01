@@ -8,7 +8,7 @@ dependencies:
   - benchmark=1.6.0
   - boost-cpp=1.74
   - ccache
-  - cmake=3.22
+  - cmake=3.23.1
   - cuda-nvml-dev=11.4
   - cudatoolkit=11.4
   - cython=0.29.24

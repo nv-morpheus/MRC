@@ -8,7 +8,7 @@ dependencies:
   - benchmark=1.6.0
   - boost-cpp=1.74
   - ccache
-  - cmake>=3.22
+  - cmake>=3.23.1
   - cython=0.29.24
   - doxygen=1.9.2
   - flatbuffers=2.0
