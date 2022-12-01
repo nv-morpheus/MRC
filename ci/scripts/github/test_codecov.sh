@@ -87,8 +87,13 @@ cd ${MRC_ROOT}/build
 
 # Get the list of files that we are interested in (Keeps the upload small)
 GCOV_FILES=$(find . -type f \( -iname "^#include#*.gcov" -or -iname "^#python#*.gcov" -or -iname "^#src#*.gcov" \))
+
+ls *.gcov
+echo "GCOV_FILES: ${GCOV_FILES}"
+
 /opt/conda/envs/mrc/bin/codecov ${CODECOV_ARGS} -f ${GCOV_FILES} -F py
-rm *.gcov
+# rm *.gcov
+ls
 
 rapids-logger "Archiving codecov report"
 tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${MRC_ROOT}/build/gcovr-xml-report-*.xml
