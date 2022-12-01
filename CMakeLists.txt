@@ -27,11 +27,12 @@ option(MRC_BUILD_DOCS "Enable building of API documentation" OFF)
 option(MRC_BUILD_LIBRARY "Whether the entire MRC library should be built. If set to OFF, only the pieces needed for a target will be built. Set to ON if installing the library" ON)
 option(MRC_BUILD_PYTHON "Enable building the python bindings for MRC" ON)
 option(MRC_BUILD_TESTS "Whether or not to build MRC tests" ON)
+option(MRC_ENABLE_CODECOV "Enable gcov code coverage" OFF)
+option(MRC_ENABLE_DEBUG_INFO "Enable printing debug information" OFF)
 option(MRC_USE_CCACHE "Enable caching compilation results with ccache" OFF)
 option(MRC_USE_CLANG_TIDY "Enable running clang-tidy as part of the build process" OFF)
 option(MRC_USE_CONDA "Enables finding dependencies via conda instead of vcpkg. Note: This will disable vcpkg. All dependencies must be installed first in the conda environment" ON)
 option(MRC_USE_IWYU "Enable running include-what-you-use as part of the build process" OFF)
-option(MRC_ENABLE_CODECOV "Enable gcov code coverage" OFF)
 
 set(MRC_RAPIDS_VERSION "22.08" CACHE STRING "Which version of RAPIDS to build for. Sets default versions for RAPIDS CMake and RMM.")
 
@@ -56,14 +57,14 @@ find_and_configure_morpheus_utils(${MORPHEUS_UTILS_VERSION})
 list(APPEND CMAKE_MODULE_PATH "${MORPHEUS_UTILS_HOME}/cmake")
 
 # Import morpheus_utils APIs
-include(morpheus_utils/environment_config/api)
-include(morpheus_utils/package_config/api)
+include(morpheus_utils/environment_config/register_api)
+include(morpheus_utils/package_config/register_api)
 
 # Configure rapids CMake
-morpheus_utils_configure_rapids_cmake(MRC_RAPIDS_VERSION)
+morpheus_utils_initialize_rapids_cmake(MRC_RAPIDS_VERSION)
 
 # Configure project package manager
-morpheus_utils_configure_package_manager(
+morpheus_utils_initialize_package_manager(
     MRC_USE_CONDA
     MRC_VCPKG_TOOLCHAIN
     MRC_VCPKG_DEFAULT_BINARY_CACHE
@@ -116,7 +117,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # Setup cache before dependencies
 # Configure CCache if requested
-include(environment/setup_ccache)
+include(environment/init_ccache)
 
 # Configure conda
 if(MRC_USE_CONDA AND DEFINED ENV{CONDA_PREFIX})
@@ -151,13 +152,13 @@ add_subdirectory(protos)
 
 # ###################################
 # - Post dependencies setup --------
-include(environment/setup_compiler)
+include(environment/init_compiler)
 
 # Setup code coverage components
-include(environment/setup_coverage)
+include(environment/init_coverage)
 
 # Setup IWYU if enabled
-include(environment/setup_iwyu)
+include(environment/init_iwyu)
 
 # ###################################
 # - Begin MRC Targets --------------
@@ -430,6 +431,9 @@ endif()
 add_subdirectory(src/tools)
 
 # Uncomment the following to print all available targets
-#include(morpheus_utils/source/utils/debug)
-#morpheus_utils_print_all_targets()
+if (MRC_ENABLE_DEBUG_INFO)
+  include(morpheus_utils/general/cmake_project_debug_utils)
+  morpheus_utils_print_all_targets()
+endif()
+
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

@@ -1,5 +1,5 @@
-#!/bin/bash
-# SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# =============================================================================
+# SPDX-FileCopyrightText: Copyright (c) 2020-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# =============================================================================
 
-# Allows running ccache with options inside of CMake. CMake does not work well
-# with setting variables before calling a command
-${MRC_IWYU_PROGRAM} ${MRC_IWYU_OPTIONS} "$@"
+if(MRC_USE_IWYU)
+  morpheus_utils_initialize_iwyu(
+      MRC_USE_IWYU
+      MRC_IWYU_VERBOSITY
+      MRC_IWYU_PROGRAM
+      MRC_IWYU_OPTIONS
+      MRC_USE_CCACHE
+  )
+endif(MRC_USE_IWYU)

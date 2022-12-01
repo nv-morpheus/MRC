@@ -21,9 +21,9 @@ morpheus_utils_check_cache_path(MRC_CACHE_DIR)
 
 # Configure CCache if requested
 if(MRC_USE_CCACHE)
-  morpheus_utils_configure_ccache(MRC_CACHE_DIR)
+  morpheus_utils_initialize_ccache(MRC_CACHE_DIR)
 endif()
 
-morpheus_utils_configure_cpm(MRC_CACHE_DIR)
+morpheus_utils_initialize_cpm(MRC_CACHE_DIR)
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

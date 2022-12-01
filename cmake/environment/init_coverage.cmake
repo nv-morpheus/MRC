@@ -22,7 +22,7 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "coverage")
 
 # Include coverage tools if enabled
 if(MRC_ENABLE_CODECOV)
-  include(morpheus_utils/source/utils/code_coverage/setup)
+  include(morpheus_utils/environment_config/code_coverage/init_coverage)
 
   message(STATUS "MRC_ENABLE_CODECOV is ON, configuring report exclusions and setting up coverage build targets")
   set(CODECOV_REPORT_EXCLUSIONS
