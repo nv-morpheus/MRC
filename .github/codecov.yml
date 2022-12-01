@@ -26,3 +26,12 @@ flags:
     carryforward: false
   py:
     carryforward: false
+
+# Disable partial count for branches (skews numbers down)
+parsers:
+  gcov:
+    branch_detection:
+      conditional: no
+      loop: no
+      method: no
+      macro: no
