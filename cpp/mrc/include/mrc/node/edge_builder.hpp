@@ -82,13 +82,13 @@ struct EdgeBuilder final
         constexpr bool LessBits      = sizeof(SourceT) > sizeof(SinkT);  // Sink requires more bits than source.
         constexpr bool FloatToInt    = std::is_floating_point_v<SourceT> && std::is_integral_v<SinkT>;  // float -> int
         constexpr bool SignedToUnsigned = std::is_signed_v<SourceT> && !std::is_signed_v<SinkT>;  // signed -> unsigned
-        constexpr bool UnsignedToSignedLessBits =
-            !std::is_signed_v<SourceT> && std::is_signed_v<SinkT> &&
-            (sizeof(SourceT) == sizeof(SinkT));  // Unsigned component could exceed signed limits
+        constexpr bool UnsignedToSignedLessBits = !std::is_signed_v<SourceT> && std::is_signed_v<SinkT> &&
+                                                  (sizeof(SourceT) == sizeof(SinkT));  // Unsigned component could
+                                                                                       // exceed signed limits
 
         // If its convertable but may result in loss of data, it requires narrowing
-        constexpr bool RequiresNarrowing =
-            IsConvertable && (LessBits || FloatToInt || SignedToUnsigned || UnsignedToSignedLessBits);
+        constexpr bool RequiresNarrowing = IsConvertable &&
+                                           (LessBits || FloatToInt || SignedToUnsigned || UnsignedToSignedLessBits);
 
         std::shared_ptr<channel::IngressHandle> edge;
 

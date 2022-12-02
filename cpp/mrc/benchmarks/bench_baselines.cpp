@@ -374,10 +374,10 @@ static void rx_map_latency_raw(benchmark::State& state)
         map_latency();
     }
 
-    state.counters["elapsed_seconds"] = defs::elapsed_total_ns * TimeUtil::NsToSec;
-    state.counters["count"]           = defs::count;
-    state.counters["average_latency_seconds"] =
-        static_cast<double>(defs::elapsed_total_ns * TimeUtil::NsToSec) / defs::object_count;
+    state.counters["elapsed_seconds"]         = defs::elapsed_total_ns * TimeUtil::NsToSec;
+    state.counters["count"]                   = defs::count;
+    state.counters["average_latency_seconds"] = static_cast<double>(defs::elapsed_total_ns * TimeUtil::NsToSec) /
+                                                defs::object_count;
 }
 
 static void rx_tap_latency_raw(benchmark::State& state)
@@ -388,10 +388,10 @@ static void rx_tap_latency_raw(benchmark::State& state)
         tap_latency();
     }
 
-    state.counters["elapsed_seconds"] = defs::elapsed_total_ns * TimeUtil::NsToSec;
-    state.counters["count"]           = defs::count;
-    state.counters["average_latency_seconds"] =
-        static_cast<double>(defs::elapsed_total_ns * TimeUtil::NsToSec) / defs::object_count;
+    state.counters["elapsed_seconds"]         = defs::elapsed_total_ns * TimeUtil::NsToSec;
+    state.counters["count"]                   = defs::count;
+    state.counters["average_latency_seconds"] = static_cast<double>(defs::elapsed_total_ns * TimeUtil::NsToSec) /
+                                                defs::object_count;
 }
 
 static void rx_sharedptr_nocreate_latency(benchmark::State& state)
@@ -402,10 +402,10 @@ static void rx_sharedptr_nocreate_latency(benchmark::State& state)
         sharedptr_nocreate_latency(defs::object_count);
     }
 
-    state.counters["elapsed_seconds"] = defs::elapsed_total_ns * TimeUtil::NsToSec;
-    state.counters["count"]           = defs::count;
-    state.counters["average_latency_seconds"] =
-        static_cast<double>(defs::elapsed_total_ns * TimeUtil::NsToSec) / defs::object_count;
+    state.counters["elapsed_seconds"]         = defs::elapsed_total_ns * TimeUtil::NsToSec;
+    state.counters["count"]                   = defs::count;
+    state.counters["average_latency_seconds"] = static_cast<double>(defs::elapsed_total_ns * TimeUtil::NsToSec) /
+                                                defs::object_count;
 }
 
 static void rx_debug_noop_tap_sharedptr_latency(benchmark::State& state)
@@ -416,10 +416,10 @@ static void rx_debug_noop_tap_sharedptr_latency(benchmark::State& state)
         debug_noop_tap_sharedptr_latency(defs::object_count);
     }
 
-    state.counters["elapsed_seconds"] = defs::elapsed_total_ns * TimeUtil::NsToSec;
-    state.counters["count"]           = defs::count;
-    state.counters["average_latency_seconds"] =
-        static_cast<double>(defs::elapsed_total_ns * TimeUtil::NsToSec) / defs::object_count;
+    state.counters["elapsed_seconds"]         = defs::elapsed_total_ns * TimeUtil::NsToSec;
+    state.counters["count"]                   = defs::count;
+    state.counters["average_latency_seconds"] = static_cast<double>(defs::elapsed_total_ns * TimeUtil::NsToSec) /
+                                                defs::object_count;
 }
 
 static void rx_debug_noop_maptap_sharedptr_latency(benchmark::State& state)
@@ -430,10 +430,10 @@ static void rx_debug_noop_maptap_sharedptr_latency(benchmark::State& state)
         debug_noop_maptap_sharedptr_latency(defs::object_count);
     }
 
-    state.counters["elapsed_seconds"] = defs::elapsed_total_ns * TimeUtil::NsToSec;
-    state.counters["count"]           = defs::count;
-    state.counters["average_latency_seconds"] =
-        static_cast<double>(defs::elapsed_total_ns * TimeUtil::NsToSec) / defs::object_count;
+    state.counters["elapsed_seconds"]         = defs::elapsed_total_ns * TimeUtil::NsToSec;
+    state.counters["count"]                   = defs::count;
+    state.counters["average_latency_seconds"] = static_cast<double>(defs::elapsed_total_ns * TimeUtil::NsToSec) /
+                                                defs::object_count;
 }
 
 static void rx_debug_tap_sharedptr_latency(benchmark::State& state)
@@ -444,10 +444,10 @@ static void rx_debug_tap_sharedptr_latency(benchmark::State& state)
         debug_tap_sharedptr_latency(defs::object_count);
     }
 
-    state.counters["elapsed_seconds"] = defs::elapsed_total_ns * TimeUtil::NsToSec;
-    state.counters["count"]           = defs::count;
-    state.counters["average_latency_seconds"] =
-        static_cast<double>(defs::elapsed_total_ns * TimeUtil::NsToSec) / defs::object_count;
+    state.counters["elapsed_seconds"]         = defs::elapsed_total_ns * TimeUtil::NsToSec;
+    state.counters["count"]                   = defs::count;
+    state.counters["average_latency_seconds"] = static_cast<double>(defs::elapsed_total_ns * TimeUtil::NsToSec) /
+                                                defs::object_count;
 }
 
 static void rx_debug_tap_sharedptr_dynamic_observer_latency(benchmark::State& state)
@@ -471,10 +471,10 @@ static void rx_debug_maptap_sharedptr_latency(benchmark::State& state)
         debug_maptap_sharedptr_latency(defs::object_count);
     }
 
-    state.counters["elapsed_seconds"] = defs::elapsed_total_ns * TimeUtil::NsToSec;
-    state.counters["count"]           = defs::count;
-    state.counters["average_latency_seconds"] =
-        static_cast<double>(defs::elapsed_total_ns * TimeUtil::NsToSec) / defs::object_count;
+    state.counters["elapsed_seconds"]         = defs::elapsed_total_ns * TimeUtil::NsToSec;
+    state.counters["count"]                   = defs::count;
+    state.counters["average_latency_seconds"] = static_cast<double>(defs::elapsed_total_ns * TimeUtil::NsToSec) /
+                                                defs::object_count;
 }
 
 static void chrono_steady_clock_now(benchmark::State& state)

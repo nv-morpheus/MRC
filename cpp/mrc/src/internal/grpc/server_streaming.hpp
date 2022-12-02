@@ -303,13 +303,13 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
         mrc::node::make_edge(*m_write_channel, *writer);
 
         // construct StreamWriter
-        m_can_write = true;
-        m_stream_writer =
-            std::shared_ptr<ServerStreamWriter>(new ServerStreamWriter(m_write_channel, this->shared_from_this()),
-                                                [this](ServerStreamWriter* ptr) {
-                                                    delete ptr;
-                                                    m_write_channel.reset();
-                                                });
+        m_can_write     = true;
+        m_stream_writer = std::shared_ptr<ServerStreamWriter>(
+            new ServerStreamWriter(m_write_channel, this->shared_from_this()),
+            [this](ServerStreamWriter* ptr) {
+                delete ptr;
+                m_write_channel.reset();
+            });
         m_weak_stream_writer = m_stream_writer;
 
         // launch reader and writer

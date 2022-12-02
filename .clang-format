@@ -118,14 +118,14 @@ ObjCBlockIndentWidth: 2
 ObjCSpaceAfterProperty: false
 ObjCSpaceBeforeProtocolList: true
 PackConstructorInitializers: CurrentLine
-PenaltyBreakAssignment: 2
-PenaltyBreakBeforeFirstCallParameter: 1
-PenaltyBreakComment: 300
-PenaltyBreakFirstLessLess: 120
-PenaltyBreakString: 1000
+PenaltyBreakAssignment: 80
+PenaltyBreakBeforeFirstCallParameter: 0
+PenaltyBreakComment: 10
+PenaltyBreakFirstLessLess: 10
+PenaltyBreakString: 0
 PenaltyBreakTemplateDeclaration: 10
-PenaltyExcessCharacter: 1000000
-PenaltyReturnTypeOnItsOwnLine: 200
+PenaltyExcessCharacter: 100
+PenaltyReturnTypeOnItsOwnLine: 600
 PointerAlignment: Left
 RawStringFormats:
   - Language: Cpp

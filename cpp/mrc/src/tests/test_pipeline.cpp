@@ -431,24 +431,24 @@ TEST_F(TestPipeline, ReusableSource)
     }
 
     auto init = [&exec, pool](segment::Builder& segment) {
-        auto src =
-            segment.make_source<data::Reusable<Buffer>>("src", [pool](rxcpp::subscriber<data::Reusable<Buffer>> s) {
-                while (s.is_subscribed())
-                {
-                    auto buffer = pool->await_item();
-                    s.on_next(std::move(buffer));
-                }
-                s.on_completed();
-            });
+        auto src = segment.make_source<data::Reusable<Buffer>>("src",
+                                                               [pool](rxcpp::subscriber<data::Reusable<Buffer>> s) {
+                                                                   while (s.is_subscribed())
+                                                                   {
+                                                                       auto buffer = pool->await_item();
+                                                                       s.on_next(std::move(buffer));
+                                                                   }
+                                                                   s.on_completed();
+                                                               });
 
-        auto sink =
-            segment.make_sink<data::SharedReusable<Buffer>>("sink", [&exec](data::SharedReusable<Buffer> buffer) {
-                static std::size_t counter = 0;
-                if (counter++ > 100)
-                {
-                    exec.stop();
-                }
-            });
+        auto sink = segment.make_sink<data::SharedReusable<Buffer>>("sink",
+                                                                    [&exec](data::SharedReusable<Buffer> buffer) {
+                                                                        static std::size_t counter = 0;
+                                                                        if (counter++ > 100)
+                                                                        {
+                                                                            exec.stop();
+                                                                        }
+                                                                    });
 
         EXPECT_TRUE(src->is_runnable());
         EXPECT_TRUE(sink->is_runnable());

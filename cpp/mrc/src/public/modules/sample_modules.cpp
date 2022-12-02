@@ -56,12 +56,13 @@ void SimpleModule::initialize(segment::Builder& builder)
                                                             return output;
                                                         }));
 
-    auto internal1 =
-        builder.make_node<unsigned int, std::string>("_internal1_", rxcpp::operators::map([](unsigned int input) {
-                                                         auto output = std::to_string(input);
-                                                         VLOG(10) << "Created output1 << " << output << std::endl;
-                                                         return output;
-                                                     }));
+    auto internal1 = builder.make_node<unsigned int, std::string>("_internal1_",
+                                                                  rxcpp::operators::map([](unsigned int input) {
+                                                                      auto output = std::to_string(input);
+                                                                      VLOG(10) << "Created output1 << " << output
+                                                                               << std::endl;
+                                                                      return output;
+                                                                  }));
 
     builder.make_edge(input1, internal1);
 
@@ -77,12 +78,13 @@ void SimpleModule::initialize(segment::Builder& builder)
                                                             return output;
                                                         }));
 
-    auto internal2 =
-        builder.make_node<unsigned int, std::string>("_internal2_", rxcpp::operators::map([](unsigned int input) {
-                                                         auto output = std::to_string(input);
-                                                         VLOG(10) << "Created output2: " << output << std::endl;
-                                                         return output;
-                                                     }));
+    auto internal2 = builder.make_node<unsigned int, std::string>("_internal2_",
+                                                                  rxcpp::operators::map([](unsigned int input) {
+                                                                      auto output = std::to_string(input);
+                                                                      VLOG(10)
+                                                                          << "Created output2: " << output << std::endl;
+                                                                      return output;
+                                                                  }));
 
     builder.make_edge(input2, internal2);
 
@@ -123,12 +125,13 @@ void ConfigurableModule::initialize(segment::Builder& builder)
                                                             return output;
                                                         }));
 
-    auto internal1 =
-        builder.make_node<unsigned int, std::string>("_internal1_", rxcpp::operators::map([](unsigned int input) {
-                                                         auto output = std::to_string(input);
-                                                         VLOG(10) << "Created output1: " << output << std::endl;
-                                                         return output;
-                                                     }));
+    auto internal1 = builder.make_node<unsigned int, std::string>("_internal1_",
+                                                                  rxcpp::operators::map([](unsigned int input) {
+                                                                      auto output = std::to_string(input);
+                                                                      VLOG(10)
+                                                                          << "Created output1: " << output << std::endl;
+                                                                      return output;
+                                                                  }));
 
     builder.make_edge(input1, internal1);
 

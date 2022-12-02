@@ -132,8 +132,7 @@ void ThreadResources::initialize_thread(const std::string& desc, const CpuSet& c
 
         DVLOG(10) << "tid: " << std::this_thread::get_id()
                   << "; setting memory affinity to the numa_node associated with " << affinity;
-        auto rc =
-            hwloc_set_membind(topology.handle(), &cpu_affinity.bitmap(), HWLOC_MEMBIND_BIND, HWLOC_MEMBIND_THREAD);
+        auto rc = hwloc_set_membind(topology.handle(), &cpu_affinity.bitmap(), HWLOC_MEMBIND_BIND, HWLOC_MEMBIND_THREAD);
         if (rc == -1)
         {
             LOG(WARNING) << "unable to set memory policy - if using docker use: --cap-add=sys_nice to allow membind";

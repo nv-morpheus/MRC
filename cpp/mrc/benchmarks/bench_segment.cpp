@@ -71,9 +71,9 @@ static void add_state_counters(std::shared_ptr<TraceAggregatorBase> aggregator, 
     auto& metadata = json_data["metadata"];
 
     // std::cerr << json_data.dump(2) << std::endl;
-    state.counters["tracers_total"] = metadata["tracer_count"].get<std::size_t>();
-    state.counters["segment_mean_throughput"] =
-        metadata["elapsed_time"].get<double>() / metadata["tracer_count"].get<std::size_t>();
+    state.counters["tracers_total"]           = metadata["tracer_count"].get<std::size_t>();
+    state.counters["segment_mean_throughput"] = metadata["elapsed_time"].get<double>() /
+                                                metadata["tracer_count"].get<std::size_t>();
     state.counters["segment_elapsed_seconds"] = metadata["elapsed_time"].get<double>();
     std::set<std::string> trace_types         = {"component_latency_seconds_mean", "component_mean_throughput"};
     for (auto counter = counters.begin(); counter != counters.end(); ++counter)
@@ -203,9 +203,9 @@ class SimpleEmitReceiveFixture : public benchmark::Fixture
             std::string int_name  = "n1";
             std::string sink_name = "nsink";
 
-            auto src =
-                segment.make_source<data_type_t>(src_name,
-                                                 m_watcher->template create_rx_tracer_source<OneAtATimeV>(src_name));
+            auto src = segment.make_source<data_type_t>(
+                src_name,
+                m_watcher->template create_rx_tracer_source<OneAtATimeV>(src_name));
 
             auto internal_idx = m_watcher->get_or_create_node_entry(int_name);
             auto internal     = segment.make_node<data_type_t, data_type_t>(int_name,
@@ -262,9 +262,9 @@ class LongEmitReceiveFixture : public benchmark::Fixture
             std::string src_name  = "nsrc";
             std::string sink_name = "nsink";
 
-            auto src =
-                segment.make_source<data_type_t>(src_name,
-                                                 m_watcher->template create_rx_tracer_source<OneAtATimeV>(src_name));
+            auto src = segment.make_source<data_type_t>(
+                src_name,
+                m_watcher->template create_rx_tracer_source<OneAtATimeV>(src_name));
 
             std::shared_ptr<segment::ObjectProperties> last_node = src;
 
@@ -272,13 +272,13 @@ class LongEmitReceiveFixture : public benchmark::Fixture
             {
                 auto int_name     = "n" + std::to_string(i);
                 auto internal_idx = m_watcher->get_or_create_node_entry(int_name);
-                auto internal =
-                    segment.make_node<data_type_t, data_type_t>(int_name,
-                                                                m_watcher->create_tracer_receive_tap(int_name),
-                                                                rxcpp::operators::map([](data_type_t tracer) {
-                                                                    return tracer;
-                                                                }),
-                                                                m_watcher->create_tracer_emit_tap(int_name));
+                auto internal     = segment.make_node<data_type_t, data_type_t>(
+                    int_name,
+                    m_watcher->create_tracer_receive_tap(int_name),
+                    rxcpp::operators::map([](data_type_t tracer) {
+                        return tracer;
+                    }),
+                    m_watcher->create_tracer_emit_tap(int_name));
 
                 segment.make_dynamic_edge<data_type_t>(last_node, internal);
                 last_node = internal;

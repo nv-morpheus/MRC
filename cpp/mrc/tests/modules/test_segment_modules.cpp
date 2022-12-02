@@ -434,9 +434,9 @@ TEST_F(TestSegmentModules, ModuleTemplateWithInitTest)
         };
 #endif
 
-        auto source_1_mod =
-            builder.make_module<TemplateWithInitModule<data_type_1_t, F_1>>("ModuleTemplateWithInitTest_mod1",
-                                                                            config_1);
+        auto source_1_mod = builder.make_module<TemplateWithInitModule<data_type_1_t, F_1>>(
+            "ModuleTemplateWithInitTest_mod1",
+            config_1);
 
         auto sink_1 = builder.make_sink<data_type_1_t>("sink_1", [&packet_count_1](data_type_1_t input) {
             assert(input == 15);
@@ -446,9 +446,9 @@ TEST_F(TestSegmentModules, ModuleTemplateWithInitTest)
 
         builder.make_edge(source_1_mod->output_port("source"), sink_1);
 
-        auto source_2_mod =
-            builder.make_module<TemplateWithInitModule<data_type_2_t, F_2>>("ModuleTemplateWithInitTest_mod2",
-                                                                            config_2);
+        auto source_2_mod = builder.make_module<TemplateWithInitModule<data_type_2_t, F_2>>(
+            "ModuleTemplateWithInitTest_mod2",
+            config_2);
 
         auto sink_2 = builder.make_sink<data_type_2_t>("sink_2", [&packet_count_2](data_type_2_t input) {
             assert(input == "test string");

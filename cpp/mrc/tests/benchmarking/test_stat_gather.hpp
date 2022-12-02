@@ -44,17 +44,17 @@ class StatGatherTest : public ::testing::Test
                 s.on_completed();
             });
 
-            auto internal_1 =
-                segment.make_node<std::string, std::string>("internal_1", rxcpp::operators::map([](std::string s) {
-                                                                return s + "-Mapped";
-                                                            }));
+            auto internal_1 = segment.make_node<std::string, std::string>("internal_1",
+                                                                          rxcpp::operators::map([](std::string s) {
+                                                                              return s + "-Mapped";
+                                                                          }));
 
             segment.make_edge(src, internal_1);
 
-            auto internal_2 =
-                segment.make_node<std::string, std::string>("internal_2", rxcpp::operators::map([](std::string s) {
-                                                                return s;
-                                                            }));
+            auto internal_2 = segment.make_node<std::string, std::string>("internal_2",
+                                                                          rxcpp::operators::map([](std::string s) {
+                                                                              return s;
+                                                                          }));
 
             segment.make_edge(internal_1, internal_2);
 

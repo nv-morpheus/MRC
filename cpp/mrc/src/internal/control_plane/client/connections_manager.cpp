@@ -70,8 +70,8 @@ std::map<InstanceID, std::unique_ptr<client::Instance>> ConnectionsManager::regi
         req.add_ucx_worker_addresses(ucx->worker().address());
     }
 
-    auto resp =
-        client().await_unary<protos::RegisterWorkersResponse>(protos::ClientUnaryRegisterWorkers, std::move(req));
+    auto resp = client().await_unary<protos::RegisterWorkersResponse>(protos::ClientUnaryRegisterWorkers,
+                                                                      std::move(req));
     CHECK_EQ(resp->instance_ids_size(), ucx_resources.size());
 
     m_machine_id = resp->machine_id();
@@ -151,9 +151,9 @@ void ConnectionsManager::do_connections_update(const protos::UpdateConnectionsSt
             req.add_instance_ids(id);
         }
 
-        auto resp =
-            client().await_unary<protos::LookupWorkersResponse>(protos::EventType::ClientUnaryLookupWorkerAddresses,
-                                                                std::move(req));
+        auto resp = client().await_unary<protos::LookupWorkersResponse>(
+            protos::EventType::ClientUnaryLookupWorkerAddresses,
+            std::move(req));
 
         if (!resp)
         {
@@ -182,8 +182,8 @@ const std::map<InstanceID, ucx::WorkerAddress>& ConnectionsManager::worker_addre
     return m_worker_addresses;
 }
 
-const std::map<InstanceID, std::unique_ptr<ConnectionsManager::update_channel_t>>&
-ConnectionsManager::instance_channels() const
+const std::map<InstanceID, std::unique_ptr<ConnectionsManager::update_channel_t>>& ConnectionsManager::instance_channels()
+    const
 {
     DCHECK(client().runnable().main().caller_on_same_thread());
     return m_update_channels;

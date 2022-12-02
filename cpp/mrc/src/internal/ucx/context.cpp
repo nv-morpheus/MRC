@@ -71,8 +71,8 @@ ucp_mem_h Context::register_memory(const void* address, std::size_t length)
     ucp_mem_map_params params;
     std::memset(&params, 0, sizeof(params));
 
-    params.field_mask =
-        UCP_MEM_MAP_PARAM_FIELD_ADDRESS | UCP_MEM_MAP_PARAM_FIELD_LENGTH;  // | UCP_MEM_MAP_PARAM_FIELD_MEMORY_TYPE;
+    params.field_mask = UCP_MEM_MAP_PARAM_FIELD_ADDRESS |
+                        UCP_MEM_MAP_PARAM_FIELD_LENGTH;  // | UCP_MEM_MAP_PARAM_FIELD_MEMORY_TYPE;
 
     CHECK(address);
     params.address = const_cast<void*>(address);

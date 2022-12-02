@@ -34,8 +34,8 @@ Partition::Partition(resources::PartitionResources& resources) : m_resources(res
 {
     if (resources.network())
     {
-        m_remote_descriptor_manager =
-            std::make_shared<remote_descriptor::Manager>(resources.network()->instance_id(), resources);
+        m_remote_descriptor_manager = std::make_shared<remote_descriptor::Manager>(resources.network()->instance_id(),
+                                                                                   resources);
     }
 }
 

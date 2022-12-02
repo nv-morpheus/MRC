@@ -123,8 +123,8 @@ void SubscriptionService::register_subscription_service()
         {
             req.add_roles(role);
         }
-        auto resp =
-            m_instance.client().await_unary<protos::Ack>(protos::ClientUnaryCreateSubscriptionService, std::move(req));
+        auto resp = m_instance.client().await_unary<protos::Ack>(protos::ClientUnaryCreateSubscriptionService,
+                                                                 std::move(req));
         MRC_THROW_ON_ERROR(resp);
     }
     DVLOG(10) << "subscribtion_service: " << service_name() << " is live on the control plane server";
@@ -178,8 +178,8 @@ void SubscriptionService::drop_subscription_service()
     req.set_service_name(service_name());
     req.set_instance_id(m_instance.instance_id());
     req.set_tag(tag());
-    auto resp =
-        m_instance.client().await_unary<protos::Ack>(protos::ClientUnaryDropSubscriptionService, std::move(req));
+    auto resp = m_instance.client().await_unary<protos::Ack>(protos::ClientUnaryDropSubscriptionService,
+                                                             std::move(req));
     MRC_THROW_ON_ERROR(resp);
     DVLOG(10) << "[finish] drop subscription service: " << service_name() << "; role: " << role() << "; tag: " << tag();
 }

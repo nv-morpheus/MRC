@@ -35,8 +35,8 @@ namespace mrc::internal::runnable {
 
 void ThreadEngines::initialize_launchers()
 {
-    CHECK_EQ(launch_options().pe_count, m_cpu_set.weight())
-        << "mismatch in the number of cores in the cpu set with respect to the requested pe_count";
+    CHECK_EQ(launch_options().pe_count, m_cpu_set.weight()) << "mismatch in the number of cores in the cpu set with "
+                                                               "respect to the requested pe_count";
     CHECK_GE(launch_options().engines_per_pe, 1);
 
     m_cpu_set.for_each_bit([this](std::uint32_t idx, std::uint32_t cpu_id) {

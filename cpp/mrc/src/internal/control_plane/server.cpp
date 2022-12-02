@@ -436,8 +436,9 @@ Expected<protos::Ack> Server::unary_create_subscription_service(event_t& event)
     {
         DVLOG(10) << "subscription_service: " << req->service_name()
                   << " first request - creating subscription service";
-        m_subscription_services[req->service_name()] =
-            std::make_unique<server::SubscriptionService>(req->service_name(), std::move(roles));
+        m_subscription_services[req->service_name()] = std::make_unique<server::SubscriptionService>(
+            req->service_name(),
+            std::move(roles));
     }
     else
     {

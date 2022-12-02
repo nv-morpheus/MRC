@@ -44,8 +44,7 @@ struct IDefinition
 {
     using backend_initializer_fn_t = std::function<void(IBuilder&)>;
     using egress_initializer_t = std::function<std::shared_ptr<::mrc::segment::EgressPortBase>(const SegmentAddress&)>;
-    using ingress_initializer_t =
-        std::function<std::shared_ptr<::mrc::segment::IngressPortBase>(const SegmentAddress&)>;
+    using ingress_initializer_t = std::function<std::shared_ptr<::mrc::segment::IngressPortBase>(const SegmentAddress&)>;
 
     IDefinition(std::string name,
                 std::map<std::string, ingress_initializer_t> ingress_initializers,

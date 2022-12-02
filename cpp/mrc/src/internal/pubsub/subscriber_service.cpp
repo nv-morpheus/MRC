@@ -68,8 +68,7 @@ void SubscriberService::do_subscription_service_setup()
     mrc::node::make_edge(*network_handler, *this);
 
     DVLOG(10) << "starting network handler node";
-    m_network_handler =
-        resources().runnable().launch_control().prepare_launcher(std::move(network_handler))->ignition();
+    m_network_handler = resources().runnable().launch_control().prepare_launcher(std::move(network_handler))->ignition();
 
     m_network_handler->await_live();
     DVLOG(10) << "finished internal:pubsub::SubscriberService setup";

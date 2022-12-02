@@ -340,17 +340,17 @@ TEST_F(TestSegment, SegmentEndToEndTest)
             s.on_completed();
         });
 
-        auto internal =
-            segment.make_node<std::string, std::string>("internal",
-                                                        rxcpp::operators::tap([](std::string s) {
-                                                            VLOG(10) << "Side Effect[Before]: " << s << std::endl;
-                                                        }),
-                                                        rxcpp::operators::map([](std::string s) {
-                                                            return s + "-Mapped";
-                                                        }),
-                                                        rxcpp::operators::tap([](std::string s) {
-                                                            VLOG(10) << "Side Effect[After]: " << s << std::endl;
-                                                        }));
+        auto internal = segment.make_node<std::string, std::string>(
+            "internal",
+            rxcpp::operators::tap([](std::string s) {
+                VLOG(10) << "Side Effect[Before]: " << s << std::endl;
+            }),
+            rxcpp::operators::map([](std::string s) {
+                return s + "-Mapped";
+            }),
+            rxcpp::operators::tap([](std::string s) {
+                VLOG(10) << "Side Effect[After]: " << s << std::endl;
+            }));
 
         segment.make_edge(src, internal);
 
@@ -385,19 +385,20 @@ TEST_F(TestSegment, CompileTimeConversionValuesWorkAsExpected)
             s.on_completed();
         });
 
-        auto internal =
-            segment.make_node<std::string, float>("internal", rxcpp::operators::map([](std::string s) -> float {
-                                                      return 1.0;
-                                                  }));
+        auto internal = segment.make_node<std::string, float>("internal",
+                                                              rxcpp::operators::map([](std::string s) -> float {
+                                                                  return 1.0;
+                                                              }));
 
         segment.make_edge(src, internal);
 
-        auto convert_1_double =
-            segment.make_node<double, double>("convert_1_double", rxcpp::operators::map([](double d) -> double {
-                                                  VLOG(9) << "convert_1_double: " << d << std::endl;
-                                                  VLOG(9) << "convert_1_double: " << d * 1.1 << std::endl;
-                                                  return d * 1.1;
-                                              }));
+        auto convert_1_double = segment.make_node<double, double>("convert_1_double",
+                                                                  rxcpp::operators::map([](double d) -> double {
+                                                                      VLOG(9) << "convert_1_double: " << d << std::endl;
+                                                                      VLOG(9) << "convert_1_double: " << d * 1.1
+                                                                              << std::endl;
+                                                                      return d * 1.1;
+                                                                  }));
 
         segment.make_edge(internal, convert_1_double);
 
@@ -409,12 +410,12 @@ TEST_F(TestSegment, CompileTimeConversionValuesWorkAsExpected)
 
         segment.make_edge(convert_1_double, convert_2_int);
 
-        auto convert_3_sizet =
-            segment.make_node<std::size_t, std::string>("convert_3_sizet",
-                                                        rxcpp::operators::map([](std::size_t szt) -> std::string {
-                                                            VLOG(9) << "convert_3_sizet: " << szt << std::endl;
-                                                            return std::to_string(szt);
-                                                        }));
+        auto convert_3_sizet = segment.make_node<std::size_t, std::string>(
+            "convert_3_sizet",
+            rxcpp::operators::map([](std::size_t szt) -> std::string {
+                VLOG(9) << "convert_3_sizet: " << szt << std::endl;
+                return std::to_string(szt);
+            }));
 
         segment.make_edge(convert_2_int, convert_3_sizet);
 
@@ -448,19 +449,20 @@ TEST_F(TestSegment, RuntimeConversionValuesWorkAsExpected)
             s.on_completed();
         });
 
-        auto internal =
-            segment.make_node<std::string, float>("internal", rxcpp::operators::map([](std::string s) -> float {
-                                                      return 1.0;
-                                                  }));
+        auto internal = segment.make_node<std::string, float>("internal",
+                                                              rxcpp::operators::map([](std::string s) -> float {
+                                                                  return 1.0;
+                                                              }));
 
         segment.make_dynamic_edge<std::string, std::string>("src", "internal");
 
-        auto convert_1_double =
-            segment.make_node<double, double>("convert_1_double", rxcpp::operators::map([](double d) -> double {
-                                                  VLOG(9) << "convert_1_double: " << d << std::endl;
-                                                  VLOG(9) << "convert_1_double: " << d * 1.1 << std::endl;
-                                                  return d * 1.1;
-                                              }));
+        auto convert_1_double = segment.make_node<double, double>("convert_1_double",
+                                                                  rxcpp::operators::map([](double d) -> double {
+                                                                      VLOG(9) << "convert_1_double: " << d << std::endl;
+                                                                      VLOG(9) << "convert_1_double: " << d * 1.1
+                                                                              << std::endl;
+                                                                      return d * 1.1;
+                                                                  }));
 
         segment.make_dynamic_edge<float, double>("internal", "convert_1_double");
 
@@ -474,12 +476,12 @@ TEST_F(TestSegment, RuntimeConversionValuesWorkAsExpected)
         //      segment.make_dynamic_edge<double, int, false>("convert_1_double", "convert_2_int");
         segment.make_dynamic_edge<double, int>("convert_1_double", "convert_2_int");
 
-        auto convert_3_sizet =
-            segment.make_node<std::size_t, std::string>("convert_3_sizet",
-                                                        rxcpp::operators::map([](std::size_t szt) -> std::string {
-                                                            VLOG(9) << "convert_3_sizet: " << szt << std::endl;
-                                                            return std::to_string(szt);
-                                                        }));
+        auto convert_3_sizet = segment.make_node<std::size_t, std::string>(
+            "convert_3_sizet",
+            rxcpp::operators::map([](std::size_t szt) -> std::string {
+                VLOG(9) << "convert_3_sizet: " << szt << std::endl;
+                return std::to_string(szt);
+            }));
 
         segment.make_dynamic_edge<int, std::size_t>("convert_2_int", "convert_3_sizet");
 
@@ -509,17 +511,17 @@ TEST_F(TestSegment, SegmentEndToEndTestRx)
             s.on_completed();
         });
 
-        auto internal =
-            segment.make_node<std::string, std::string>("internal",
-                                                        rxcpp::operators::tap([](std::string s) {
-                                                            VLOG(10) << "Side Effect[Before]: " << s << std::endl;
-                                                        }),
-                                                        rxcpp::operators::map([](std::string s) {
-                                                            return s + "-Mapped";
-                                                        }),
-                                                        rxcpp::operators::tap([](std::string s) {
-                                                            VLOG(10) << "Side Effect[After]: " << s << std::endl;
-                                                        }));
+        auto internal = segment.make_node<std::string, std::string>(
+            "internal",
+            rxcpp::operators::tap([](std::string s) {
+                VLOG(10) << "Side Effect[Before]: " << s << std::endl;
+            }),
+            rxcpp::operators::map([](std::string s) {
+                return s + "-Mapped";
+            }),
+            rxcpp::operators::tap([](std::string s) {
+                VLOG(10) << "Side Effect[After]: " << s << std::endl;
+            }));
 
         segment.make_edge(src, internal);
 
@@ -614,10 +616,10 @@ TEST_F(TestSegment, SegmentEndToEndTestSinkOutput)
             s.on_completed();
         });
 
-        auto internal =
-            segment.make_node<std::string, unsigned int>("internal", rxcpp::operators::map([](std::string s) {
-                                                             return static_cast<unsigned int>(s.size());
-                                                         }));
+        auto internal = segment.make_node<std::string, unsigned int>("internal",
+                                                                     rxcpp::operators::map([](std::string s) {
+                                                                         return static_cast<unsigned int>(s.size());
+                                                                     }));
 
         segment.make_edge(src, internal);
 
@@ -651,12 +653,12 @@ TEST_F(TestSegment, SegmentSingleSourceTwoNodesException)
             s.on_completed();
         });
 
-        auto str_length =
-            segment.make_node<std::string, unsigned int>("str_length", rxcpp::operators::map([](std::string s) {
-                                                             DVLOG(1)
-                                                                 << "str_length received: '" << s << "'" << std::endl;
-                                                             return static_cast<unsigned int>(s.size());
-                                                         }));
+        auto str_length = segment.make_node<std::string, unsigned int>("str_length",
+                                                                       rxcpp::operators::map([](std::string s) {
+                                                                           DVLOG(1) << "str_length received: '" << s
+                                                                                    << "'" << std::endl;
+                                                                           return static_cast<unsigned int>(s.size());
+                                                                       }));
 
         segment.make_edge(src, str_length);
 
@@ -666,12 +668,12 @@ TEST_F(TestSegment, SegmentSingleSourceTwoNodesException)
 
         segment.make_edge(str_length, sink1);
 
-        auto str_half_length =
-            segment.make_node<std::string, float>("str_half_length", rxcpp::operators::map([](std::string s) {
-                                                      DVLOG(1)
-                                                          << "str_half_length received: '" << s << "'" << std::endl;
-                                                      return s.size() / 2.0f;
-                                                  }));
+        auto str_half_length = segment.make_node<std::string, float>("str_half_length",
+                                                                     rxcpp::operators::map([](std::string s) {
+                                                                         DVLOG(1) << "str_half_length received: '" << s
+                                                                                  << "'" << std::endl;
+                                                                         return s.size() / 2.0f;
+                                                                     }));
 
         EXPECT_ANY_THROW(segment.make_edge(src, str_half_length));
 
@@ -710,12 +712,12 @@ TEST_F(TestSegment, SegmentSingleSourceTwoNodes)
         auto bcast_src = std::make_shared<node::Broadcast<std::string>>();
         segment.make_edge(src, *bcast_src);
 
-        auto str_length =
-            segment.make_node<std::string, unsigned int>("str_length", rxcpp::operators::map([](std::string s) {
-                                                             DVLOG(1)
-                                                                 << "str_length received: '" << s << "'" << std::endl;
-                                                             return static_cast<unsigned int>(s.size());
-                                                         }));
+        auto str_length = segment.make_node<std::string, unsigned int>("str_length",
+                                                                       rxcpp::operators::map([](std::string s) {
+                                                                           DVLOG(1) << "str_length received: '" << s
+                                                                                    << "'" << std::endl;
+                                                                           return static_cast<unsigned int>(s.size());
+                                                                       }));
 
         segment.make_edge(*bcast_src, str_length);
 
@@ -725,12 +727,12 @@ TEST_F(TestSegment, SegmentSingleSourceTwoNodes)
 
         segment.make_edge(str_length, sink1);
 
-        auto str_half_length =
-            segment.make_node<std::string, float>("str_half_length", rxcpp::operators::map([](std::string s) {
-                                                      DVLOG(1)
-                                                          << "str_half_length received: '" << s << "'" << std::endl;
-                                                      return s.size() / 2.0f;
-                                                  }));
+        auto str_half_length = segment.make_node<std::string, float>("str_half_length",
+                                                                     rxcpp::operators::map([](std::string s) {
+                                                                         DVLOG(1) << "str_half_length received: '" << s
+                                                                                  << "'" << std::endl;
+                                                                         return s.size() / 2.0f;
+                                                                     }));
 
         segment.make_edge(*bcast_src, str_half_length);
 
@@ -873,11 +875,11 @@ TEST_F(TestSegment, EnsureMoveMultiChildren)
         for (unsigned int i = 0; i < NumChildren; ++i)
         {
             std::string node_name{"node_"s + std::to_string(i)};
-            auto node =
-                segment.make_node<std::string, unsigned int>(node_name, rxcpp::operators::map([i](std::string s) {
-                                                                 EXPECT_EQ(s, "this should be moved"s);
-                                                                 return static_cast<unsigned int>(s.size() + i);
-                                                             }));
+            auto node = segment.make_node<std::string, unsigned int>(node_name,
+                                                                     rxcpp::operators::map([i](std::string s) {
+                                                                         EXPECT_EQ(s, "this should be moved"s);
+                                                                         return static_cast<unsigned int>(s.size() + i);
+                                                                     }));
 
             segment.make_edge(*bcast_src, node);
 
@@ -1060,10 +1062,10 @@ TEST_F(TestSegment, SegmentTestRxcppHigherLevelNodes)
 
         segment.make_edge(src, internal_1);
 
-        auto internal_2 =
-            segment.make_node<std::string, std::string>("internal_2", rxcpp::operators::map([](std::string s) {
-                                                            return s;
-                                                        }));
+        auto internal_2 = segment.make_node<std::string, std::string>("internal_2",
+                                                                      rxcpp::operators::map([](std::string s) {
+                                                                          return s;
+                                                                      }));
 
         segment.make_edge(internal_1, internal_2);
 

@@ -326,12 +326,12 @@ TEST_F(TestExecutor, LifeCycleSingleSegmentConcurrentSource)
         rx_source->launch_options().pe_count       = 2;
         rx_source->launch_options().engines_per_pe = 2;
 
-        auto rx_sink =
-            s.make_sink<std::size_t>("rx_sink", rxcpp::make_observer_dynamic<std::size_t>([&](std::size_t x) {
-                                         DVLOG(1) << runnable::Context::get_runtime_context().info();
-                                         LOG(INFO) << x;
-                                         add_thread_id(x);
-                                     }));
+        auto rx_sink = s.make_sink<std::size_t>("rx_sink",
+                                                rxcpp::make_observer_dynamic<std::size_t>([&](std::size_t x) {
+                                                    DVLOG(1) << runnable::Context::get_runtime_context().info();
+                                                    LOG(INFO) << x;
+                                                    add_thread_id(x);
+                                                }));
 
         s.make_edge(rx_source, rx_sink);
     });
@@ -380,12 +380,12 @@ TEST_F(TestExecutor, LifeCycleSingleSegmentConcurrentSourceWithStaggeredShutdown
         rx_source->launch_options().pe_count       = 2;
         rx_source->launch_options().engines_per_pe = 2;
 
-        auto rx_sink =
-            s.make_sink<std::size_t>("rx_sink", rxcpp::make_observer_dynamic<std::size_t>([&](std::size_t x) {
-                                         DVLOG(1) << runnable::Context::get_runtime_context().info();
-                                         LOG(INFO) << x;
-                                         add_thread_id(x);
-                                     }));
+        auto rx_sink = s.make_sink<std::size_t>("rx_sink",
+                                                rxcpp::make_observer_dynamic<std::size_t>([&](std::size_t x) {
+                                                    DVLOG(1) << runnable::Context::get_runtime_context().info();
+                                                    LOG(INFO) << x;
+                                                    add_thread_id(x);
+                                                }));
 
         s.make_edge(rx_source, rx_sink);
     });

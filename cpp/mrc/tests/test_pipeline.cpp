@@ -132,23 +132,22 @@ TEST_F(TestPipeline, TwoSegment)
 
     auto pipeline = pipeline::make_pipeline();
 
-    auto seg_1 =
-        pipeline->make_segment("seg_1", segment::EgressPorts<float>({"float_port"}), [](segment::Builder& seg) {
-            auto rx_source = seg.make_source<float>("rx_source", [](rxcpp::subscriber<float> s) {
-                LOG(INFO) << "emit 1";
-                s.on_next(1.0f);
-                LOG(INFO) << "emit 2";
-                s.on_next(2.0f);
-                LOG(INFO) << "emit 3";
-                s.on_next(3.0f);
-                LOG(INFO) << "issuing complete";
-                s.on_completed();
-            });
-
-            auto my_float_egress = seg.get_egress<float>("float_port");
-
-            seg.make_edge(rx_source, my_float_egress);
+    auto seg_1 = pipeline->make_segment("seg_1", segment::EgressPorts<float>({"float_port"}), [](segment::Builder& seg) {
+        auto rx_source = seg.make_source<float>("rx_source", [](rxcpp::subscriber<float> s) {
+            LOG(INFO) << "emit 1";
+            s.on_next(1.0f);
+            LOG(INFO) << "emit 2";
+            s.on_next(2.0f);
+            LOG(INFO) << "emit 3";
+            s.on_next(3.0f);
+            LOG(INFO) << "issuing complete";
+            s.on_completed();
         });
+
+        auto my_float_egress = seg.get_egress<float>("float_port");
+
+        seg.make_edge(rx_source, my_float_egress);
+    });
 
     auto seg_2 =
         pipeline->make_segment("seg_2", segment::IngressPorts<float>({"float_port"}), [&](segment::Builder& seg) {

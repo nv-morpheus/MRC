@@ -72,8 +72,7 @@ class Manager final : private Service,
     ~Manager() override;
 
     mrc::runtime::RemoteDescriptor make_remote_descriptor(mrc::codable::protos::RemoteDescriptor&& proto);
-    mrc::runtime::RemoteDescriptor make_remote_descriptor(
-        std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> handle);
+    mrc::runtime::RemoteDescriptor make_remote_descriptor(std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> handle);
 
     std::size_t size() const;
 

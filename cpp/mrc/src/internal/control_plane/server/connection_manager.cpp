@@ -129,8 +129,11 @@ Expected<protos::RegisterWorkersResponse> ConnectionManager::register_instances(
     // check if any workers/instances have been registered on the requesting stream
     if (m_instances_by_stream.count(stream_id) != 0)
     {
-        return Error::create(MRC_CONCAT_STR("failed to register instances on immutable stream "
-                                            << stream_id << "; streams are immutable after first registration"));
+        return Error::create(MRC_CONCAT_STR("failed to register instances on immutable stream " << stream_id
+                                                                                                << "; streams are "
+                                                                                                   "immutable after "
+                                                                                                   "first "
+                                                                                                   "registration"));
     }
 
     // set machine id for the current stream

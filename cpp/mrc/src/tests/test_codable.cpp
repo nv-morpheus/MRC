@@ -154,8 +154,8 @@ TEST_F(TestCodable, String)
     static_assert(is_codable<std::string>::value, "should be codable");
 
     std::string str = "Hello MRC";
-    auto str_block =
-        m_runtime->partition(0).resources().network()->data_plane().registration_cache().lookup(str.data());
+    auto str_block  = m_runtime->partition(0).resources().network()->data_plane().registration_cache().lookup(
+        str.data());
     EXPECT_FALSE(str_block);
 
     auto encodable_storage = m_runtime->partition(0).make_codable_storage();

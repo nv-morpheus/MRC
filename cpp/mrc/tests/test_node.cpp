@@ -88,10 +88,10 @@ TEST_F(TestNode, GenericEndToEnd)
             s.on_completed();
         });
 
-        auto intermediate =
-            seg.make_node<std::string, int>("intermediate", rxcpp::operators::map([](const std::string& x) -> int {
-                                                return x.size();
-                                            }));
+        auto intermediate = seg.make_node<std::string, int>("intermediate",
+                                                            rxcpp::operators::map([](const std::string& x) -> int {
+                                                                return x.size();
+                                                            }));
 
         seg.make_edge(sourceStr2, intermediate);
 

@@ -72,8 +72,8 @@ FiberEngines::FiberEngines(mrc::runnable::LaunchOptions launch_options,
 }
 void FiberEngines::initialize_launchers()
 {
-    CHECK_EQ(launch_options().pe_count, m_task_queues.size())
-        << "mismatched fiber pool task queue size with respect to pe_count";
+    CHECK_EQ(launch_options().pe_count, m_task_queues.size()) << "mismatched fiber pool task queue size with respect "
+                                                                 "to pe_count";
 
     for (auto& task_queue : m_task_queues)
     {

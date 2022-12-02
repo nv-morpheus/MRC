@@ -189,11 +189,11 @@ void Server::do_service_start()
 
             // all network runnables use the `mrc_network` engine factory
             DVLOG(10) << "launch network event mananger progress engine";
-            m_progress_engine =
-                runnable()
-                    .launch_control()
-                    .prepare_launcher(mrc::runnable::LaunchOptions("mrc_network"), std::move(progress_engine))
-                    ->ignition();
+            m_progress_engine = runnable()
+                                    .launch_control()
+                                    .prepare_launcher(mrc::runnable::LaunchOptions("mrc_network"),
+                                                      std::move(progress_engine))
+                                    ->ignition();
         })
         .get();
 }

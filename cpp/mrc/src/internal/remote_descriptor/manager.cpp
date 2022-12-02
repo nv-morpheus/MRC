@@ -180,9 +180,9 @@ void Manager::decrement_tokens(std::size_t object_id, std::size_t token_count)
 
 void Manager::do_service_start()
 {
-    m_decrement_channel = std::make_unique<node::SourceChannelWriteable<RemoteDescriptorDecrementMessage>>();
-    auto decrement_handler =
-        std::make_unique<node::RxSink<RemoteDescriptorDecrementMessage>>([this](RemoteDescriptorDecrementMessage msg) {
+    m_decrement_channel    = std::make_unique<node::SourceChannelWriteable<RemoteDescriptorDecrementMessage>>();
+    auto decrement_handler = std::make_unique<node::RxSink<RemoteDescriptorDecrementMessage>>(
+        [this](RemoteDescriptorDecrementMessage msg) {
             decrement_tokens(msg.object_id, msg.tokens);
         });
     decrement_handler->update_channel(

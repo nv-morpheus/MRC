@@ -41,21 +41,21 @@ class LatencyBenchmarkTests : public ::testing::Test
             std::string int_name  = "n1";
             std::string sink_name = "nsink";
 
-            auto src =
-                segment.make_source<data_type_t>(src_name, m_watcher->template create_rx_tracer_source<true>(src_name));
+            auto src = segment.make_source<data_type_t>(src_name,
+                                                        m_watcher->template create_rx_tracer_source<true>(src_name));
 
             auto internal_idx = m_watcher->get_or_create_node_entry(int_name);
-            auto internal =
-                segment.make_node<data_type_t, data_type_t>(int_name,
-                                                            rxcpp::operators::tap([internal_idx](data_type_t tracer) {
-                                                                tracer->receive(internal_idx);
-                                                            }),
-                                                            rxcpp::operators::map([](data_type_t tracer) {
-                                                                return tracer;
-                                                            }),
-                                                            rxcpp::operators::tap([internal_idx](data_type_t tracer) {
-                                                                tracer->emit(internal_idx);
-                                                            }));
+            auto internal     = segment.make_node<data_type_t, data_type_t>(
+                int_name,
+                rxcpp::operators::tap([internal_idx](data_type_t tracer) {
+                    tracer->receive(internal_idx);
+                }),
+                rxcpp::operators::map([](data_type_t tracer) {
+                    return tracer;
+                }),
+                rxcpp::operators::tap([internal_idx](data_type_t tracer) {
+                    tracer->emit(internal_idx);
+                }));
             segment.make_edge(src, internal);
 
             auto sink_idx = m_watcher->get_or_create_node_entry(sink_name);
@@ -107,17 +107,17 @@ class ThroughputBenchmarkTests : public ::testing::Test
                                                         m_watcher->template create_rx_tracer_source<false>(src_name));
 
             auto internal_idx = m_watcher->get_or_create_node_entry(int_name);
-            auto internal =
-                segment.make_node<data_type_t, data_type_t>(int_name,
-                                                            rxcpp::operators::tap([internal_idx](data_type_t tracer) {
-                                                                tracer->receive(internal_idx);
-                                                            }),
-                                                            rxcpp::operators::map([](data_type_t tracer) {
-                                                                return tracer;
-                                                            }),
-                                                            rxcpp::operators::tap([internal_idx](data_type_t tracer) {
-                                                                tracer->emit(internal_idx);
-                                                            }));
+            auto internal     = segment.make_node<data_type_t, data_type_t>(
+                int_name,
+                rxcpp::operators::tap([internal_idx](data_type_t tracer) {
+                    tracer->receive(internal_idx);
+                }),
+                rxcpp::operators::map([](data_type_t tracer) {
+                    return tracer;
+                }),
+                rxcpp::operators::tap([internal_idx](data_type_t tracer) {
+                    tracer->emit(internal_idx);
+                }));
             segment.make_edge(src, internal);
 
             auto sink_idx = m_watcher->get_or_create_node_entry(sink_name);

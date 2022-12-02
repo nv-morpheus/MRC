@@ -136,10 +136,10 @@ TEST_F(TestMemory, CallbackAdaptor)
             bytes -= bytes;
         });
 
-    auto malloc = std::make_unique<mrc::memory::malloc_memory_resource>();
-    auto logger = mrc::memory::make_unique_resource<mrc::memory::logging_resource>(std::move(malloc), "malloc");
-    auto callback =
-        mrc::memory::make_shared_resource<internal::memory::CallbackAdaptor>(std::move(logger), std::move(builder));
+    auto malloc   = std::make_unique<mrc::memory::malloc_memory_resource>();
+    auto logger   = mrc::memory::make_unique_resource<mrc::memory::logging_resource>(std::move(malloc), "malloc");
+    auto callback = mrc::memory::make_shared_resource<internal::memory::CallbackAdaptor>(std::move(logger),
+                                                                                         std::move(builder));
 
     EXPECT_EQ(calls, 0);
     EXPECT_EQ(bytes, 0);
@@ -198,10 +198,10 @@ TEST_F(TestMemory, TransientPool)
             bytes -= bytes;
         });
 
-    auto malloc = std::make_unique<mrc::memory::malloc_memory_resource>();
-    auto logger = mrc::memory::make_unique_resource<mrc::memory::logging_resource>(std::move(malloc), "malloc");
-    auto callback =
-        mrc::memory::make_shared_resource<internal::memory::CallbackAdaptor>(std::move(logger), std::move(builder));
+    auto malloc   = std::make_unique<mrc::memory::malloc_memory_resource>();
+    auto logger   = mrc::memory::make_unique_resource<mrc::memory::logging_resource>(std::move(malloc), "malloc");
+    auto callback = mrc::memory::make_shared_resource<internal::memory::CallbackAdaptor>(std::move(logger),
+                                                                                         std::move(builder));
 
     internal::memory::TransientPool pool(10_MiB, 4, callback);
 

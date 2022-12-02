@@ -206,8 +206,9 @@ void Client::async_get(void* addr,
     const auto& ep = endpoint(instance_id);
 
     {
-        auto rc =
-            ucp_ep_rkey_unpack(ep.handle(), packed_remote_key.data(), reinterpret_cast<ucp_rkey_h*>(&request.m_rkey));
+        auto rc = ucp_ep_rkey_unpack(ep.handle(),
+                                     packed_remote_key.data(),
+                                     reinterpret_cast<ucp_rkey_h*>(&request.m_rkey));
         if (rc != UCS_OK)
         {
             LOG(ERROR) << "ucp_ep_rkey_unpack failed - " << ucs_status_string(rc);
