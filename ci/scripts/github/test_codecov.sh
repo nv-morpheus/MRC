@@ -53,38 +53,38 @@ rapids-logger "Compiling coverage for C++ tests"
 cd ${MRC_ROOT}
 
 # Run gcovr and delete the stats
-gcovr -j ${PARALLEL_LEVEL} --gcov-executable x86_64-conda-linux-gnu-gcov --xml build/gcovr-xml-report-cpp.xml --xml-pretty -r ${MRC_ROOT} --object-directory "$PWD/build" \
-  --exclude-unreachable-branches --exclude-throw-branches \
-  -f '^include/.*' -f '^python/.*' -f '^src/.*' \
-  -e '^python/srf/_pysrf/tests/.*' -e '^python/srf/tests/.*' -e '^src/tests/.*' \
-  -s -v
+# gcovr -j ${PARALLEL_LEVEL} --gcov-executable x86_64-conda-linux-gnu-gcov --xml build/gcovr-xml-report-cpp.xml --xml-pretty -r ${MRC_ROOT} --object-directory "$PWD/build" \
+#   --exclude-unreachable-branches --exclude-throw-branches \
+#   -f '^include/.*' -f '^python/.*' -f '^src/.*' \
+#   -e '^python/srf/_pysrf/tests/.*' -e '^python/srf/tests/.*' -e '^src/tests/.*' \
+#   -s -v
 
-echo "ls MRC_ROOT"
-ls
+# echo "ls MRC_ROOT"
+# ls
 
-echo "ls MRC_ROOT/build"
-ls build
+# echo "ls MRC_ROOT/build"
+# ls build
 
+# Ensure we have a clean slate
 find ./build -type f -name "*.gcov" -exec rm {} \;
 
 rapids-logger "Running gcov manually"
 
 cd ${MRC_ROOT}/build
-find . -type f -name '*.gcno' -exec x86_64-conda_cos6-linux-gnu-gcov -pbc --source-prefix ${PWD} {} +
-ls
+find . -type f -name '*.gcda' -exec x86_64-conda_cos6-linux-gnu-gcov -pbc --source-prefix ${MRC_ROOT} --relative-only {} +
+ls -lah
 
 rapids-logger "Uploading codecov for C++ tests"
 
 # Get the list of files that we are interested in (Keeps the upload small)
-GCOV_FILES=$(find . -type f \( -iname "^#include#*.gcov" -or -iname "^#python#*.gcov" -or -iname "^#src#*.gcov" \))
+GCOV_FILES=$(find . -type f \( -iname "include#*.gcov" -or -iname "python#*.gcov" -or -iname "src#*.gcov" \))
 
 echo "GCOV_FILES: ${GCOV_FILES}"
 
 /opt/conda/envs/mrc/bin/codecov ${CODECOV_ARGS} -f ${GCOV_FILES} -F cpp
 
 # Remove the gcov files and any gcda files to reset counters
-rm *.gcov
-find . -type f -name "*.gcda" -exec rm {} \;
+find . -type f  \( -iname "*.gcov" -or -iname "*.gcda" \) -exec rm {} \;
 
 rapids-logger "Running Python Tests"
 cd ${MRC_ROOT}/build/python
@@ -104,21 +104,20 @@ cd ${MRC_ROOT}/build
 #   -e '^python/srf/_pysrf/tests/.*' -e '^python/srf/tests/.*' -e '^src/tests/.*' \
 #   -d -s -k
 
-find . -type f -name '*.gcno' -exec x86_64-conda_cos6-linux-gnu-gcov -pbc --source-prefix ${PWD} {} +
-ls
+find . -type f -name '*.gcda' -exec x86_64-conda_cos6-linux-gnu-gcov -pbc --source-prefix ${MRC_ROOT} --relative-only {} +
+ls -lah
 
 rapids-logger "Uploading codecov for Python tests"
 
 # Get the list of files that we are interested in (Keeps the upload small)
-GCOV_FILES=$(find . -type f \( -iname "^#include#*.gcov" -or -iname "^#python#*.gcov" -or -iname "^#src#*.gcov" \))
+GCOV_FILES=$(find . -type f \( -iname "include#*.gcov" -or -iname "python#*.gcov" -or -iname "src#*.gcov" \))
 
 echo "GCOV_FILES: ${GCOV_FILES}"
 
 /opt/conda/envs/mrc/bin/codecov ${CODECOV_ARGS} -f ${GCOV_FILES} -F py
 
 # Remove the gcov files and any gcda files to reset counters
-rm *.gcov
-find . -type f -name "*.gcda" -exec rm {} \;
+find . -type f  \( -iname "*.gcov" -or -iname "*.gcda" \) -exec rm {} \;
 
 # rapids-logger "Archiving codecov report"
 # tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${MRC_ROOT}/build/gcovr-xml-report-*.xml
