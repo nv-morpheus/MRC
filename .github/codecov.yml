@@ -31,7 +31,13 @@ flags:
 parsers:
   gcov:
     branch_detection:
-      conditional: no
+      conditional: yes
       loop: no
       method: no
       macro: no
+
+# Ignore the test folders themselves
+ignore:
+  - "python/srf/_pysrf/tests/**/*"
+  - "python/srf/tests/**/*"
+  - "src/tests/**/*"
