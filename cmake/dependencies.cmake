@@ -15,9 +15,6 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "dep")
 
-# Initialize rapids CPM with package overrides
-rapids_cpm_init(OVERRIDE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/rapids_cpm_package_overrides.json")
-
 # Print CMake settings when verbose output is enabled
 message(VERBOSE "PROJECT_NAME: " ${PROJECT_NAME})
 message(VERBOSE "CMAKE_HOST_SYSTEM: ${CMAKE_HOST_SYSTEM}")
