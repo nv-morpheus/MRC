@@ -150,6 +150,8 @@ const std::map<std::string, std::shared_ptr<mrc::runnable::Launchable>>& Builder
 std::function<void(std::int64_t)> Builder::make_throughput_counter(const std::string& name)
 {
     auto counter = m_resources.metrics_registry().make_throughput_counter(name);
-    return [counter](std::int64_t ticks) mutable { counter.increment(ticks); };
+    return [counter](std::int64_t ticks) mutable {
+        counter.increment(ticks);
+    };
 }
 }  // namespace mrc::internal::segment

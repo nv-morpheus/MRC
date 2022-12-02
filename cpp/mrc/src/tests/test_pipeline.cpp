@@ -221,7 +221,9 @@ TEST_F(TestPipeline, Queue)
 TEST_F(TestPipeline, InitializerThrows)
 {
     auto pipeline = pipeline::make_pipeline();
-    auto segment  = pipeline->make_segment("seg_1", [](segment::Builder& s) { throw std::runtime_error("no bueno"); });
+    auto segment  = pipeline->make_segment("seg_1", [](segment::Builder& s) {
+        throw std::runtime_error("no bueno");
+    });
     EXPECT_ANY_THROW(run_manager(std::move(pipeline)));
 }
 
@@ -483,13 +485,17 @@ TEST_F(TestPipeline, Nodes1k)
         });
         auto queue     = s.make_object("queue", std::make_unique<node::Queue<int>>());
         s.make_edge(rx_source, queue);
-        auto node = s.make_node<int>("node_0", rxcpp::operators::map([](int data) { return (data + 1); }));
+        auto node = s.make_node<int>("node_0", rxcpp::operators::map([](int data) {
+                                         return (data + 1);
+                                     }));
         s.make_edge(queue, node);
         for (int i = 1; i < 997; i++)
         {
             std::stringstream ss;
             ss << "node_" << i;
-            auto curr = s.make_node<int>(ss.str(), rxcpp::operators::map([](int data) { return (data + 1); }));
+            auto curr = s.make_node<int>(ss.str(), rxcpp::operators::map([](int data) {
+                                             return (data + 1);
+                                         }));
             s.make_edge(node, curr);
             node = curr;
         }

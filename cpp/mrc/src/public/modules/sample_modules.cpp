@@ -65,8 +65,9 @@ void SimpleModule::initialize(segment::Builder& builder)
 
     builder.make_edge(input1, internal1);
 
-    auto output1 = builder.make_node<std::string, std::string>(
-        "output1", rxcpp::operators::map([](std::string input) { return input; }));
+    auto output1 = builder.make_node<std::string, std::string>("output1", rxcpp::operators::map([](std::string input) {
+                                                                   return input;
+                                                               }));
 
     builder.make_edge(internal1, output1);
 
@@ -85,8 +86,9 @@ void SimpleModule::initialize(segment::Builder& builder)
 
     builder.make_edge(input2, internal2);
 
-    auto output2 = builder.make_node<std::string, std::string>(
-        "output2", rxcpp::operators::map([](std::string input) { return input; }));
+    auto output2 = builder.make_node<std::string, std::string>("output2", rxcpp::operators::map([](std::string input) {
+                                                                   return input;
+                                                               }));
 
     builder.make_edge(internal2, output2);
 
@@ -130,8 +132,10 @@ void ConfigurableModule::initialize(segment::Builder& builder)
 
     builder.make_edge(input1, internal1);
 
-    auto output1 = builder.make_node<std::string, std::string>(
-        "configurable_output_x", rxcpp::operators::map([](std::string input) { return input; }));
+    auto output1 = builder.make_node<std::string, std::string>("configurable_output_x",
+                                                               rxcpp::operators::map([](std::string input) {
+                                                                   return input;
+                                                               }));
 
     builder.make_edge(internal1, output1);
 

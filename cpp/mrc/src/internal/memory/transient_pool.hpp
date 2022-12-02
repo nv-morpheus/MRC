@@ -108,7 +108,7 @@ class Transient final : private TransientBuffer
     Transient& operator=(Transient&& other) noexcept
     {
         TransientBuffer::operator=(std::move(other));
-        m_data                   = std::exchange(other.m_data, nullptr);
+        m_data = std::exchange(other.m_data, nullptr);
         return *this;
     }
 

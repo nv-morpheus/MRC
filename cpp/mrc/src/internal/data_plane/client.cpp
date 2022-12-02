@@ -108,8 +108,12 @@ std::size_t Client::endpoint_count() const
     return m_endpoints.size();
 }
 
-void Client::async_recv(
-    void* addr, std::size_t bytes, std::uint64_t tag, std::uint64_t mask, const ucx::Worker& worker, Request& request)
+void Client::async_recv(void* addr,
+                        std::size_t bytes,
+                        std::uint64_t tag,
+                        std::uint64_t mask,
+                        const ucx::Worker& worker,
+                        Request& request)
 {
     CHECK_EQ(request.m_request, nullptr);
     CHECK(request.m_state == Request::State::Init);
@@ -136,8 +140,11 @@ void Client::async_p2p_recv(void* addr, std::size_t bytes, std::uint64_t tag, Re
     async_recv(addr, bytes, tag, mask, m_ucx.worker(), request);
 }
 
-void Client::async_send(
-    void* addr, std::size_t bytes, std::uint64_t tag, const ucx::Endpoint& endpoint, Request& request)
+void Client::async_send(void* addr,
+                        std::size_t bytes,
+                        std::uint64_t tag,
+                        const ucx::Endpoint& endpoint,
+                        Request& request)
 {
     CHECK_EQ(request.m_request, nullptr);
     CHECK(request.m_state == Request::State::Init);
@@ -153,8 +160,11 @@ void Client::async_send(
     CHECK(!UCS_PTR_IS_ERR(request.m_request));
 }
 
-void Client::async_p2p_send(
-    void* addr, std::size_t bytes, std::uint64_t tag, InstanceID instance_id, Request& request) const
+void Client::async_p2p_send(void* addr,
+                            std::size_t bytes,
+                            std::uint64_t tag,
+                            InstanceID instance_id,
+                            Request& request) const
 {
     CHECK_LE(tag, TAG_USER_MASK);
     tag |= TAG_P2P_MSG;
@@ -213,8 +223,11 @@ void Client::async_get(void* addr,
               request);
 }
 
-void Client::async_am_send(
-    std::uint32_t id, const void* header, std::size_t header_length, const ucx::Endpoint& endpoint, Request& request)
+void Client::async_am_send(std::uint32_t id,
+                           const void* header,
+                           std::size_t header_length,
+                           const ucx::Endpoint& endpoint,
+                           Request& request)
 {
     CHECK_EQ(request.m_request, nullptr);
     CHECK(request.m_state == Request::State::Init);
@@ -276,8 +289,9 @@ void Client::do_service_start()
 {
     CHECK(m_rd_channel);
 
-    auto rd_writer = std::make_unique<node::RxSink<RemoteDescriptorMessage>>(
-        [this](RemoteDescriptorMessage msg) { issue_remote_descriptor(std::move(msg)); });
+    auto rd_writer = std::make_unique<node::RxSink<RemoteDescriptorMessage>>([this](RemoteDescriptorMessage msg) {
+        issue_remote_descriptor(std::move(msg));
+    });
 
     // todo(ryan) - parameterize mrc::data_plane::client::max_queued_remote_descriptor_sends
     rd_writer->update_channel(std::make_unique<channel::BufferedChannel<RemoteDescriptorMessage>>(128));

@@ -41,8 +41,10 @@ Definition::Definition(std::string name,
                        std::map<std::string, ingress_initializer_t> ingress_ports,
                        std::map<std::string, egress_initializer_t> egress_ports,
                        backend_initializer_fn_t backend_initializer) :
-  internal::segment::IDefinition(
-      std::move(name), std::move(ingress_ports), std::move(egress_ports), std::move(backend_initializer))
+  internal::segment::IDefinition(std::move(name),
+                                 std::move(ingress_ports),
+                                 std::move(egress_ports),
+                                 std::move(backend_initializer))
 {}
 
 }  // namespace mrc::segment

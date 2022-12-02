@@ -341,18 +341,30 @@ void TraceStatistics::initialize_lookup_tables()
     if (TraceStatistics::s_trace_operators)
     {
         init();
-        emit_    = [this]() { emit(); };
-        receive_ = [this]() { receive(); };
+        emit_ = [this]() {
+            emit();
+        };
+        receive_ = [this]() {
+            receive();
+        };
     }
 
     if (TraceStatistics::s_trace_channels)
     {
         init();
-        ch_read_start_ = [this]() { channel_read_start(); };
-        ch_read_end_   = [this]() { channel_read_end(); };
+        ch_read_start_ = [this]() {
+            channel_read_start();
+        };
+        ch_read_end_ = [this]() {
+            channel_read_end();
+        };
 
-        ch_write_start_ = [this]() { channel_write_start(); };
-        ch_write_end_   = [this]() { channel_write_end(); };
+        ch_write_start_ = [this]() {
+            channel_write_start();
+        };
+        ch_write_end_ = [this]() {
+            channel_write_end();
+        };
     }
 
     m_entry_lookup_table[static_cast<std::size_t>(WatchableEvent::sink_on_data)]  = receive_;

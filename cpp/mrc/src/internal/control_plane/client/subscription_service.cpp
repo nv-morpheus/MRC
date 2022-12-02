@@ -140,7 +140,8 @@ void SubscriptionService::register_subscription_service()
             req.add_subscribe_to_roles(role);
         }
         auto resp = m_instance.client().await_unary<protos::RegisterSubscriptionServiceResponse>(
-            protos::ClientUnaryRegisterSubscriptionService, std::move(req));
+            protos::ClientUnaryRegisterSubscriptionService,
+            std::move(req));
         MRC_THROW_ON_ERROR(resp);
         m_tag = resp->tag();
     }
@@ -161,8 +162,9 @@ void SubscriptionService::activate_subscription_service()
     {
         req.add_subscribe_to_roles(role);
     }
-    MRC_THROW_ON_ERROR(m_instance.client().template await_unary<protos::Ack>(
-        protos::ClientUnaryActivateSubscriptionService, std::move(req)));
+    MRC_THROW_ON_ERROR(
+        m_instance.client().template await_unary<protos::Ack>(protos::ClientUnaryActivateSubscriptionService,
+                                                              std::move(req)));
 
     DVLOG(10) << "[finish] activate subscription service: " << service_name() << "; role: " << role()
               << "; tag: " << tag();

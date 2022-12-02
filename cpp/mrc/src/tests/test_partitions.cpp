@@ -147,8 +147,9 @@ class TestPartitions : public testing::TestWithParam<const char*>
 
 TEST_P(TestPartitions, Scenario1)
 {
-    auto options =
-        make_options([](Options& options) { options.placement().resources_strategy(PlacementResources::Dedicated); });
+    auto options    = make_options([](Options& options) {
+        options.placement().resources_strategy(PlacementResources::Dedicated);
+    });
     auto partitions = make_partitions(options);
 
     EXPECT_EQ(partitions->device_partitions().size(), 4);
@@ -236,8 +237,9 @@ TEST_P(TestPartitions, Scenario4)
 
 TEST_P(TestPartitions, Scenario5)
 {
-    auto options =
-        make_options([](Options& options) { options.placement().resources_strategy(PlacementResources::Shared); });
+    auto options    = make_options([](Options& options) {
+        options.placement().resources_strategy(PlacementResources::Shared);
+    });
     auto partitions = make_partitions(options);
 
     EXPECT_EQ(partitions->device_partitions().size(), 4);

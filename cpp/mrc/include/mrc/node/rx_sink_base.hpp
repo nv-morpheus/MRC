@@ -67,7 +67,9 @@ class RxSinkBase : public SinkChannel<T>, private Watchable
 template <typename T>
 RxSinkBase<T>::RxSinkBase() :
   SinkChannel<T>(),
-  m_observable(rxcpp::observable<>::create<T>([this](rxcpp::subscriber<T> s) { progress_engine(s); }))
+  m_observable(rxcpp::observable<>::create<T>([this](rxcpp::subscriber<T> s) {
+      progress_engine(s);
+  }))
 {}
 
 template <typename T>

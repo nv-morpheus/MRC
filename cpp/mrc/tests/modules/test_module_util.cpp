@@ -33,12 +33,15 @@ TEST_F(TestModuleUtil, ModuleRegistryUtilTest)
     ModelRegistryUtil::create_registered_module<SourceModule>("SourceModule", registry_namespace, release_version);
     ModelRegistryUtil::create_registered_module<SinkModule>("SinkModule", registry_namespace, release_version);
     ModelRegistryUtil::create_registered_module<NestedModule>("NestedModule", registry_namespace, release_version);
-    ModelRegistryUtil::create_registered_module<ConfigurableModule>(
-        "ConfigurableModule", registry_namespace, release_version);
-    ModelRegistryUtil::create_registered_module<TemplateModule<int>>(
-        "TemplateModuleInt", registry_namespace, release_version);
-    ModelRegistryUtil::create_registered_module<TemplateModule<std::string>>(
-        "TemplateModuleString", registry_namespace, release_version);
+    ModelRegistryUtil::create_registered_module<ConfigurableModule>("ConfigurableModule",
+                                                                    registry_namespace,
+                                                                    release_version);
+    ModelRegistryUtil::create_registered_module<TemplateModule<int>>("TemplateModuleInt",
+                                                                     registry_namespace,
+                                                                     release_version);
+    ModelRegistryUtil::create_registered_module<TemplateModule<std::string>>("TemplateModuleString",
+                                                                             registry_namespace,
+                                                                             release_version);
 
     EXPECT_THROW(
         ModelRegistryUtil::create_registered_module<SimpleModule>("SimpleModule", registry_namespace, release_version),

@@ -128,13 +128,17 @@ class FiberPriorityScheduler : public boost::fibers::algo::algorithm_with_proper
         if ((std::chrono::steady_clock::time_point::max)() == time_point)
         {
             std::unique_lock<std::mutex> lk(m_mtx);
-            m_cnd.wait(lk, [this]() { return m_flag; });
+            m_cnd.wait(lk, [this]() {
+                return m_flag;
+            });
             m_flag = false;
         }
         else
         {
             std::unique_lock<std::mutex> lk(m_mtx);
-            m_cnd.wait_until(lk, time_point, [this]() { return m_flag; });
+            m_cnd.wait_until(lk, time_point, [this]() {
+                return m_flag;
+            });
             m_flag = false;
         }
     }

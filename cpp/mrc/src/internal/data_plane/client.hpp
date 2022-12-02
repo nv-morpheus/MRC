@@ -68,8 +68,11 @@ class Client final : public resources::PartitionResourceBase, private Service
     std::size_t endpoint_count() const;
 
     void async_p2p_recv(void* addr, std::size_t bytes, std::uint64_t tag, Request& request);
-    void async_p2p_send(
-        void* addr, std::size_t bytes, std::uint64_t tag, InstanceID instance_id, Request& request) const;
+    void async_p2p_send(void* addr,
+                        std::size_t bytes,
+                        std::uint64_t tag,
+                        InstanceID instance_id,
+                        Request& request) const;
 
     node::SourceChannelWriteable<RemoteDescriptorMessage>& remote_descriptor_channel();
 
@@ -95,8 +98,11 @@ class Client final : public resources::PartitionResourceBase, private Service
                            std::uint64_t mask,
                            const ucx::Worker& worker,
                            Request& request);
-    static void async_send(
-        void* addr, std::size_t bytes, std::uint64_t tag, const ucx::Endpoint& endpoint, Request& request);
+    static void async_send(void* addr,
+                           std::size_t bytes,
+                           std::uint64_t tag,
+                           const ucx::Endpoint& endpoint,
+                           Request& request);
 
     static void async_am_send(std::uint32_t id,
                               const void* header,

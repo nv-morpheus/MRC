@@ -95,7 +95,9 @@ TEST_F(TestControlPlaneComponents, Tagged)
 TEST_F(TestControlPlaneComponents, TaggedIssuer)
 {
     std::atomic<std::size_t> counter = 0;
-    auto service                     = std::make_unique<TaggedIssuer>([&counter](const TagID& tag) { ++counter; });
+    auto service                     = std::make_unique<TaggedIssuer>([&counter](const TagID& tag) {
+        ++counter;
+    });
 
     std::vector<TagID> tags;
     tags.push_back(service->register_instance_id(1));

@@ -167,16 +167,46 @@ TEST_F(TestSystem, ThreadLocalResource)
     auto i0 = std::make_shared<int>(0);
     auto i1 = std::make_shared<int>(2);
 
-    pool0.enqueue(0, [] { EXPECT_ANY_THROW(utils::ThreadLocalSharedPointer<int>::get()); }).get();
-    pool0.enqueue(1, [] { EXPECT_ANY_THROW(utils::ThreadLocalSharedPointer<int>::get()); }).get();
-    pool1.enqueue(0, [] { EXPECT_ANY_THROW(utils::ThreadLocalSharedPointer<int>::get()); }).get();
-    pool1.enqueue(1, [] { EXPECT_ANY_THROW(utils::ThreadLocalSharedPointer<int>::get()); }).get();
+    pool0
+        .enqueue(0,
+                 [] {
+                     EXPECT_ANY_THROW(utils::ThreadLocalSharedPointer<int>::get());
+                 })
+        .get();
+    pool0
+        .enqueue(1,
+                 [] {
+                     EXPECT_ANY_THROW(utils::ThreadLocalSharedPointer<int>::get());
+                 })
+        .get();
+    pool1
+        .enqueue(0,
+                 [] {
+                     EXPECT_ANY_THROW(utils::ThreadLocalSharedPointer<int>::get());
+                 })
+        .get();
+    pool1
+        .enqueue(1,
+                 [] {
+                     EXPECT_ANY_THROW(utils::ThreadLocalSharedPointer<int>::get());
+                 })
+        .get();
 
     pool0.set_thread_local_resource(i0);
     pool1.set_thread_local_resource(i1);
 
-    auto j0 = pool0.enqueue(0, [] { return *utils::ThreadLocalSharedPointer<int>::get(); }).get();
-    auto j1 = pool1.enqueue(0, [] { return *utils::ThreadLocalSharedPointer<int>::get(); }).get();
+    auto j0 = pool0
+                  .enqueue(0,
+                           [] {
+                               return *utils::ThreadLocalSharedPointer<int>::get();
+                           })
+                  .get();
+    auto j1 = pool1
+                  .enqueue(0,
+                           [] {
+                               return *utils::ThreadLocalSharedPointer<int>::get();
+                           })
+                  .get();
 
     EXPECT_EQ(j0, 0);
     EXPECT_EQ(j1, 2);
@@ -194,14 +224,20 @@ TEST_F(TestSystem, ThreadInitializersAndFinalizers)
     std::atomic<std::size_t> init_counter = 0;
     std::atomic<std::size_t> fini_counter = 0;
 
-    resources->register_thread_local_initializer(system->topology().cpu_set(), [&init_counter] { init_counter++; });
+    resources->register_thread_local_initializer(system->topology().cpu_set(), [&init_counter] {
+        init_counter++;
+    });
 
     EXPECT_EQ(init_counter, 2);
     EXPECT_EQ(fini_counter, 0);
 
-    resources->register_thread_local_finalizer(system->topology().cpu_set(), [&fini_counter] { fini_counter++; });
+    resources->register_thread_local_finalizer(system->topology().cpu_set(), [&fini_counter] {
+        fini_counter++;
+    });
 
-    std::make_unique<system::Thread>(resources->make_thread(CpuSet("0"), [] { VLOG(10) << "test thread"; }))->join();
+    std::make_unique<system::Thread>(resources->make_thread(CpuSet("0"), [] {
+        VLOG(10) << "test thread";
+    }))->join();
 
     EXPECT_EQ(init_counter, 3);
     EXPECT_EQ(fini_counter, 1);

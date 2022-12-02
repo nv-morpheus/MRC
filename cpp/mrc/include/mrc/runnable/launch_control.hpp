@@ -110,15 +110,17 @@ class LaunchControl final
             CHECK(get_engine_factory(options.engine_factory_name).backend() == EngineType::Fiber)
                 << "Requested FiberRunnable to be run on a ThreadEngine";
 
-            contexts = make_contexts<FiberContext<ContextWrapperT<context_t>>>(
-                *engines, std::forward<ContextArgsT>(context_args)...);
+            contexts =
+                make_contexts<FiberContext<ContextWrapperT<context_t>>>(*engines,
+                                                                        std::forward<ContextArgsT>(context_args)...);
         }
         else if constexpr (is_thread_context_v<RunnableT>)
         {
             CHECK(get_engine_factory(options.engine_factory_name).backend() == EngineType::Thread)
                 << "Requested ThreadRunnable to be run on a FiberEngine";
-            contexts = make_contexts<ThreadContext<ContextWrapperT<context_t>>>(
-                *engines, std::forward<ContextArgsT>(context_args)...);
+            contexts =
+                make_contexts<ThreadContext<ContextWrapperT<context_t>>>(*engines,
+                                                                         std::forward<ContextArgsT>(context_args)...);
         }
         else
         {
@@ -126,12 +128,14 @@ class LaunchControl final
             if (backend == EngineType::Fiber)
             {
                 contexts = make_contexts<FiberContext<ContextWrapperT<context_t>>>(
-                    *engines, std::forward<ContextArgsT>(context_args)...);
+                    *engines,
+                    std::forward<ContextArgsT>(context_args)...);
             }
             else if (backend == EngineType::Thread)
             {
                 contexts = make_contexts<ThreadContext<ContextWrapperT<context_t>>>(
-                    *engines, std::forward<ContextArgsT>(context_args)...);
+                    *engines,
+                    std::forward<ContextArgsT>(context_args)...);
             }
             else
             {

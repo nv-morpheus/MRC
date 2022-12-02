@@ -151,8 +151,9 @@ void ConnectionsManager::do_connections_update(const protos::UpdateConnectionsSt
             req.add_instance_ids(id);
         }
 
-        auto resp = client().await_unary<protos::LookupWorkersResponse>(
-            protos::EventType::ClientUnaryLookupWorkerAddresses, std::move(req));
+        auto resp =
+            client().await_unary<protos::LookupWorkersResponse>(protos::EventType::ClientUnaryLookupWorkerAddresses,
+                                                                std::move(req));
 
         if (!resp)
         {

@@ -25,8 +25,11 @@
 
 using namespace mrc::benchmarking;
 
-void stat_check_helper(
-    nlohmann::json metrics, std::size_t ch_read, std::size_t receive, std::size_t ch_write, std::size_t emit)
+void stat_check_helper(nlohmann::json metrics,
+                       std::size_t ch_read,
+                       std::size_t receive,
+                       std::size_t ch_write,
+                       std::size_t emit)
 {
     EXPECT_EQ(metrics["component_channel_read_total"].get<std::size_t>(), ch_read);
     EXPECT_EQ(metrics["component_receive_total"].get<std::size_t>(), receive);

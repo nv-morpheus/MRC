@@ -102,7 +102,11 @@ void map_latency()
 
             return new_value;
         })
-        .subscribe([](double value) { defs::count++; }, []() {});
+        .subscribe(
+            [](double value) {
+                defs::count++;
+            },
+            []() {});
 }
 
 void tap_latency()
@@ -117,8 +121,14 @@ void tap_latency()
         defs::elapsed_total_ns += (TimeUtil::get_current_time_point() - defs::tracing_start_ns).count();
     });
 
-    ints.tap([](int value) { benchmark::DoNotOptimize(defs::real_dist(defs::generator)); })
-        .subscribe([](int value) { defs::count++; }, []() {});
+    ints.tap([](int value) {
+            benchmark::DoNotOptimize(defs::real_dist(defs::generator));
+        })
+        .subscribe(
+            [](int value) {
+                defs::count++;
+            },
+            []() {});
 }
 
 void debug_noop_maptap_sharedptr_latency(const std::size_t packet_count)
@@ -135,13 +145,17 @@ void debug_noop_maptap_sharedptr_latency(const std::size_t packet_count)
         subscriber.on_completed();
     });
 
-    ints.map([](data_type_t data) { return data; })
+    ints.map([](data_type_t data) {
+            return data;
+        })
         .map([](data_type_t data) {
             data->m_data_object_counter++;
             data->m_payload->m_data_payload_counter++;
             return data;
         })
-        .map([](data_type_t data) { return data; })
+        .map([](data_type_t data) {
+            return data;
+        })
         .subscribe(
             [](data_type_t data) {
                 defs::count += 1;
@@ -238,13 +252,17 @@ void debug_tap_sharedptr_latency(const std::size_t packet_count)
         subscriber.on_completed() /**/;
     });
 
-    ints.tap([](data_type_t data) { benchmark::DoNotOptimize(defs::real_dist(defs::generator)); })
+    ints.tap([](data_type_t data) {
+            benchmark::DoNotOptimize(defs::real_dist(defs::generator));
+        })
         .map([](data_type_t data) {
             data->m_data_object_counter++;
             data->m_payload->m_data_payload_counter++;
             return data;
         })
-        .tap([](data_type_t data) { benchmark::DoNotOptimize(defs::real_dist(defs::generator)); })
+        .tap([](data_type_t data) {
+            benchmark::DoNotOptimize(defs::real_dist(defs::generator));
+        })
         .subscribe(
             [](data_type_t data) {
                 defs::count += 1;
@@ -274,11 +292,15 @@ void debug_tap_sharedptr_dynamic_observer_latency(const std::size_t packet_count
         s.on_completed() /**/;
     });
 
-    auto tap_1 =
-        rxcpp::operators::tap([](data_type_t data) { benchmark::DoNotOptimize(defs::real_dist(defs::generator)); });
-    auto map_1 = rxcpp::operators::map([](data_type_t data) { return data; });
-    auto tap_2 =
-        rxcpp::operators::tap([](data_type_t data) { benchmark::DoNotOptimize(defs::real_dist(defs::generator)); });
+    auto tap_1 = rxcpp::operators::tap([](data_type_t data) {
+        benchmark::DoNotOptimize(defs::real_dist(defs::generator));
+    });
+    auto map_1 = rxcpp::operators::map([](data_type_t data) {
+        return data;
+    });
+    auto tap_2 = rxcpp::operators::tap([](data_type_t data) {
+        benchmark::DoNotOptimize(defs::real_dist(defs::generator));
+    });
 
     auto body_observable = ints | tap_1 | map_1 | tap_2;
 
@@ -288,14 +310,18 @@ void debug_tap_sharedptr_dynamic_observer_latency(const std::size_t packet_count
             defs::count++;
             defs::m_tracers.push_back(data);
         },
-        [](rxcpp::util::error_ptr error) { std::cerr << "Error occurred" << std::endl; },
+        [](rxcpp::util::error_ptr error) {
+            std::cerr << "Error occurred" << std::endl;
+        },
         []() {
             defs::count            = defs::m_tracers.size();
             defs::elapsed_total_ns = (TimeUtil::get_current_time_point() - defs::tracing_start_ns).count();
 
             auto trace_aggregator = std::make_shared<TraceAggregator<latency_tracer_t>>();
-            trace_aggregator->process_tracer_data(
-                defs::m_tracers, defs::elapsed_total_ns / 1e9, 3, {{0, "src"}, {1, "n1"}, {2, "sink"}});
+            trace_aggregator->process_tracer_data(defs::m_tracers,
+                                                  defs::elapsed_total_ns / 1e9,
+                                                  3,
+                                                  {{0, "src"}, {1, "n1"}, {2, "sink"}});
             auto jsd =
                 trace_aggregator->to_json()["aggregations"]["metrics"]["counter"]["component_latency_seconds_mean"][0];
             defs::m_mean_latency = jsd["value"].get<double>();
@@ -318,13 +344,17 @@ void sharedptr_nocreate_latency(const std::size_t packet_count)
         subscriber.on_completed() /**/;
     });
 
-    ints.tap([](data_type_t data) { benchmark::DoNotOptimize(defs::real_dist(defs::generator)); })
+    ints.tap([](data_type_t data) {
+            benchmark::DoNotOptimize(defs::real_dist(defs::generator));
+        })
         .map([](data_type_t data) {
             data->m_data_object_counter++;
             data->m_payload->m_data_payload_counter++;
             return data;
         })
-        .tap([](data_type_t data) { benchmark::DoNotOptimize(defs::real_dist(defs::generator)); })
+        .tap([](data_type_t data) {
+            benchmark::DoNotOptimize(defs::real_dist(defs::generator));
+        })
         .subscribe(
             [](data_type_t data) {
                 defs::count += 1;

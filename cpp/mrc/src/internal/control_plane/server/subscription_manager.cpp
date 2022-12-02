@@ -233,7 +233,9 @@ bool SubscriptionService::compare_roles(const std::set<std::string>& roles) cons
     {
         return false;
     }
-    return std::all_of(roles.begin(), roles.end(), [this](auto& role) { return contains(m_roles, role); });
+    return std::all_of(roles.begin(), roles.end(), [this](auto& role) {
+        return contains(m_roles, role);
+    });
 }
 
 bool SubscriptionService::has_role(const std::string& role) const

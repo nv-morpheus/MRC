@@ -74,7 +74,9 @@ RxSourceBase<T>::RxSourceBase() :
           SourceChannel<T>::await_write(std::move(data));
           this->watcher_epilogue(WatchableEvent::channel_write, true, &data);
       },
-      [](std::exception_ptr ptr) { runnable::Context::get_runtime_context().set_exception(std::move(ptr)); }))
+      [](std::exception_ptr ptr) {
+          runnable::Context::get_runtime_context().set_exception(std::move(ptr));
+      }))
 {}
 
 template <typename T>

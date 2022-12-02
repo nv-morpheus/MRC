@@ -142,7 +142,9 @@ Bitmap Bitmap::set_union(const Bitmap& other) const
 
 void Bitmap::append(const Bitmap& bitmap)
 {
-    bitmap.for_each_bit([this](std::uint32_t idx, std::uint32_t bit) { this->on(bit); });
+    bitmap.for_each_bit([this](std::uint32_t idx, std::uint32_t bit) {
+        this->on(bit);
+    });
 }
 
 std::vector<std::uint32_t> Bitmap::vec() const

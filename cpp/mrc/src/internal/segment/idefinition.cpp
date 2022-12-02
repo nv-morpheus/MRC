@@ -27,8 +27,10 @@ IDefinition::IDefinition(std::string name,
                          std::map<std::string, ingress_initializer_t> ingress_initializers,
                          std::map<std::string, egress_initializer_t> egress_initializers,
                          backend_initializer_fn_t backend_initializer) :
-  m_impl(std::make_shared<Definition>(
-      std::move(name), std::move(ingress_initializers), std::move(egress_initializers), std::move(backend_initializer)))
+  m_impl(std::make_shared<Definition>(std::move(name),
+                                      std::move(ingress_initializers),
+                                      std::move(egress_initializers),
+                                      std::move(backend_initializer)))
 {}
 IDefinition::~IDefinition() = default;
 

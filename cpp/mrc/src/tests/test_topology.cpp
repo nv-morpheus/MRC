@@ -77,7 +77,9 @@ TEST_F(TestTopology, Bitmap)
     {
         bitmap.on(cpu);
     }
-    bitmap.for_each_bit([cpus](std::uint32_t i, std::uint32_t bit_index) { EXPECT_EQ(cpus.at(i), bit_index); });
+    bitmap.for_each_bit([cpus](std::uint32_t i, std::uint32_t bit_index) {
+        EXPECT_EQ(cpus.at(i), bit_index);
+    });
 
     auto popped = bitmap.pop(2);
 

@@ -109,7 +109,9 @@ TEST_F(TestControlPlane, SingleClientConnectDisconnect)
     server->service_start();
     server->service_await_live();
 
-    auto cr = make_runtime([](Options& options) { options.architect_url("localhost:13337"); });
+    auto cr = make_runtime([](Options& options) {
+        options.architect_url("localhost:13337");
+    });
 
     // the total number of partition is system dependent
     auto expected_partitions = cr->resources().system().partitions().flattened().size();

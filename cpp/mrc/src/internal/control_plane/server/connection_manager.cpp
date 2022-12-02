@@ -112,7 +112,8 @@ std::vector<ConnectionManager::instance_id_t> ConnectionManager::get_instance_id
 }
 
 Expected<protos::RegisterWorkersResponse> ConnectionManager::register_instances(
-    const writer_t& writer, const protos::RegisterWorkersRequest& req)
+    const writer_t& writer,
+    const protos::RegisterWorkersRequest& req)
 {
     const auto stream_id = writer->get_id();
 

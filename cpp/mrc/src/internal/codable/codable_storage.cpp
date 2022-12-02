@@ -140,8 +140,9 @@ void CodableStorage::encode_descriptor(const InstanceID& instance_id,
 
 mrc::memory::buffer_view CodableStorage::decode_descriptor(const mrc::codable::protos::RemoteMemoryDescriptor& desc)
 {
-    return {
-        reinterpret_cast<void*>(desc.address()), desc.bytes(), mrc::codable::decode_memory_type(desc.memory_kind())};
+    return {reinterpret_cast<void*>(desc.address()),
+            desc.bytes(),
+            mrc::codable::decode_memory_type(desc.memory_kind())};
 }
 
 mrc::codable::protos::EncodedObject& CodableStorage::get_mutable_proto()

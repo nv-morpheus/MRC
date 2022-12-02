@@ -56,8 +56,9 @@ class FiberEngineFactory : public ::mrc::runnable::EngineFactory
     std::shared_ptr<::mrc::runnable::Engines> build_engines(const LaunchOptions& launch_options) final
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        return std::make_shared<FiberEngines>(
-            launch_options, get_next_n_queues(launch_options.pe_count), MRC_DEFAULT_FIBER_PRIORITY);
+        return std::make_shared<FiberEngines>(launch_options,
+                                              get_next_n_queues(launch_options.pe_count),
+                                              MRC_DEFAULT_FIBER_PRIORITY);
     }
 
     ::mrc::runnable::EngineType backend() const final

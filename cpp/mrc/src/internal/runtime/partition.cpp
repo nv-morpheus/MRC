@@ -59,7 +59,8 @@ remote_descriptor::Manager& Partition::remote_descriptor_manager()
 }
 
 std::shared_ptr<mrc::pubsub::IPublisherService> Partition::make_publisher_service(
-    const std::string& name, const mrc::pubsub::PublisherPolicy& policy)
+    const std::string& name,
+    const mrc::pubsub::PublisherPolicy& policy)
 {
     if (policy == mrc::pubsub::PublisherPolicy::RoundRobin)
     {

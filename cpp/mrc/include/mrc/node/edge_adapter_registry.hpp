@@ -45,11 +45,15 @@ namespace mrc::node {
 struct EdgeAdapterRegistry
 {
     // Function to create the adapter function
-    using source_adapter_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(
-        mrc::node::SourcePropertiesBase&, mrc::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle>)>;
+    using source_adapter_fn_t =
+        std::function<std::shared_ptr<channel::IngressHandle>(mrc::node::SourcePropertiesBase&,
+                                                              mrc::node::SinkPropertiesBase&,
+                                                              std::shared_ptr<channel::IngressHandle>)>;
 
-    using sink_adapter_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(
-        std::type_index, mrc::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle>)>;
+    using sink_adapter_fn_t =
+        std::function<std::shared_ptr<channel::IngressHandle>(std::type_index,
+                                                              mrc::node::SinkPropertiesBase&,
+                                                              std::shared_ptr<channel::IngressHandle>)>;
 
     EdgeAdapterRegistry() = delete;
 

@@ -104,7 +104,8 @@ class IPartition
      * @return std::shared_ptr<pubsub::IPublisherService>
      */
     virtual std::shared_ptr<pubsub::IPublisherService> make_publisher_service(
-        const std::string& name, const pubsub::PublisherPolicy& policy) = 0;
+        const std::string& name,
+        const pubsub::PublisherPolicy& policy) = 0;
 
     /**
      * @brief Provides an ISubscriberService backed by resources on this partition.

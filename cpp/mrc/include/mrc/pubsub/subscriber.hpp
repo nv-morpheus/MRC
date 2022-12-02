@@ -101,7 +101,9 @@ class Subscriber final : public node::Queue<T>,
                 return mrc::node::SourceChannelWriteable<T>::await_write(std::move(obj));
             },
             // on_complete
-            [this] { mrc::node::SourceChannelWriteable<T>::release_channel(); });
+            [this] {
+                mrc::node::SourceChannelWriteable<T>::release_channel();
+            });
         mrc::node::make_edge(*m_service, *m_rd_sink);
 
         // After the edges have been formed, we have a complete pipeline from the data plane to a channel. If we started

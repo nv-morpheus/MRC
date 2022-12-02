@@ -58,7 +58,9 @@ class RecentChannel : public Channel<T>
         std::unique_lock<Mutex> lock(m_mutex);
         while (m_deque.empty() && !m_is_shutdown)
         {
-            m_cv.wait(lock, [this] { return m_is_shutdown || !m_deque.empty(); });
+            m_cv.wait(lock, [this] {
+                return m_is_shutdown || !m_deque.empty();
+            });
         }
         if (m_is_shutdown)
         {
@@ -91,7 +93,9 @@ class RecentChannel : public Channel<T>
 
         while (m_deque.empty() && !m_is_shutdown && deadline < clock_t::now())
         {
-            m_cv.wait_until(lock, deadline, [this] { return m_is_shutdown || !m_deque.empty(); });
+            m_cv.wait_until(lock, deadline, [this] {
+                return m_is_shutdown || !m_deque.empty();
+            });
         }
         if (m_is_shutdown)
         {

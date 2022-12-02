@@ -26,7 +26,8 @@ class OperatorComponent final : public Operator<T>
 {
   public:
     OperatorComponent(
-        std::function<mrc::channel::Status(T&&)> on_next, std::function<void()> on_complete = [] {}) :
+        std::function<mrc::channel::Status(T&&)> on_next,
+        std::function<void()> on_complete = [] {}) :
       m_on_next(std::move(on_next)),
       m_on_complete(std::move(on_complete))
     {}

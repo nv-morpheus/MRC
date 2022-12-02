@@ -167,8 +167,11 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
     {
         VLOG(1) << "building partition_resources for partition: " << i;
         auto host_partition_id = partitions.at(i).host_partition_id();
-        m_partitions.emplace_back(
-            m_runnable.at(host_partition_id), i, m_host.at(host_partition_id), m_device.at(i), m_network.at(i));
+        m_partitions.emplace_back(m_runnable.at(host_partition_id),
+                                  i,
+                                  m_host.at(host_partition_id),
+                                  m_device.at(i),
+                                  m_network.at(i));
     }
 
     // set thread local access to resources on all fiber task queues and any future thread created by the runtime
