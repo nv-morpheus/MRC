@@ -166,13 +166,13 @@ endif()
 
 set(COVERAGE_COMPILER_FLAGS "-g" "-fprofile-arcs" "-ftest-coverage"
     CACHE INTERNAL "")
-if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
-  include(CheckCXXCompilerFlag)
-  check_cxx_compiler_flag(-fprofile-abs-path HAVE_fprofile_abs_path)
-  if(HAVE_fprofile_abs_path)
-    set(COVERAGE_COMPILER_FLAGS ${COVERAGE_COMPILER_FLAGS} "-fprofile-abs-path")
-  endif()
-endif()
+# if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
+#   include(CheckCXXCompilerFlag)
+#   check_cxx_compiler_flag(-fprofile-abs-path HAVE_fprofile_abs_path)
+#   if(HAVE_fprofile_abs_path)
+#     set(COVERAGE_COMPILER_FLAGS ${COVERAGE_COMPILER_FLAGS} "-fprofile-abs-path")
+#   endif()
+# endif()
 
 set(CMAKE_Fortran_FLAGS_COVERAGE
     ${COVERAGE_COMPILER_FLAGS}
