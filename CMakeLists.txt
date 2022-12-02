@@ -38,7 +38,6 @@ set(MRC_RAPIDS_VERSION "22.08" CACHE STRING "Which version of RAPIDS to build fo
 set(MRC_CACHE_DIR "${CMAKE_SOURCE_DIR}/.cache" CACHE PATH "Directory to contain all CPM and CCache data")
 mark_as_advanced(MRC_CACHE_DIR)
 
-enable_language(C CXX) # TODO(Devin): temp work around
 enable_testing()
 
 # CMake path
@@ -52,7 +51,7 @@ set(MORPHEUS_UTILS_RAPIDS_CPM_INIT_OVERRIDE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/r
 include(load_morpheus_utils)
 
 # Configure project package manager
-morpheus_utils_initialize_package_manager_2(
+morpheus_utils_initialize_package_manager(
     MRC_USE_CONDA
     BUILD_SHARED_LIBS
     MRC_VCPKG_TOOLCHAIN
