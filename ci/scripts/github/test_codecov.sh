@@ -62,7 +62,7 @@ gcovr --version
 #   -e '^python/srf/_pysrf/tests/.*' -e '^python/srf/tests/.*' -e '^src/tests/.*' \
 #   -d -s -k
 cd ${MRC_ROOT}/build
-find . -type f -name '*.gcno' -exec x86_64-conda_cos6-linux-gnu-gcov -pbc {} +
+find . -type f -name '*.gcno' -exec x86_64-conda_cos6-linux-gnu-gcov -pbc --source-prefix ${MRC_ROOT} {} +
 
 rapids-logger "Uploading codecov for C++ tests"
 
@@ -93,7 +93,7 @@ rapids-logger "Compiling coverage for Python tests"
 #   -e '^python/srf/_pysrf/tests/.*' -e '^python/srf/tests/.*' -e '^src/tests/.*' \
 #   -d -s -k
 
-find . -type f -name '*.gcno' -exec x86_64-conda_cos6-linux-gnu-gcov -pbc {} +
+find . -type f -name '*.gcno' -exec x86_64-conda_cos6-linux-gnu-gcov -pbc --source-prefix ${MRC_ROOT} {} +
 
 rapids-logger "Uploading codecov for Python tests"
 
