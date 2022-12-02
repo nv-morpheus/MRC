@@ -56,7 +56,7 @@ cmake --build build --parallel ${PARALLEL_LEVEL}
 rapids-logger "sccache usage for MRC build:"
 sccache --show-stats
 
-if [[ "${BUILD_CC}" != "gcc-coverage" ]]; then
+# if [[ "${BUILD_CC}" != "gcc-coverage" ]]; then
     rapids-logger "Archiving results"
     tar cfj "${WORKSPACE_TMP}/dot_cache.tar.bz" .cache
     tar cfj "${WORKSPACE_TMP}/build.tar.bz" build
@@ -65,6 +65,6 @@ if [[ "${BUILD_CC}" != "gcc-coverage" ]]; then
     rapids-logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
     aws s3 cp --no-progress "${WORKSPACE_TMP}/build.tar.bz" "${ARTIFACT_URL}/build.tar.bz"
     aws s3 cp --no-progress "${WORKSPACE_TMP}/dot_cache.tar.bz" "${ARTIFACT_URL}/dot_cache.tar.bz"
-fi
+# fi
 
 rapids-logger "Success"
