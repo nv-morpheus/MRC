@@ -50,23 +50,30 @@ cd ${MRC_ROOT}
 
 rapids-logger "Compiling coverage for C++ tests"
 
+which gcovr
+whereis gcovr
+gcovr --version
+#gcovr --help
+
 # Run gcovr and delete the stats
-gcovr -j ${PARALLEL_LEVEL} --gcov-executable x86_64-conda-linux-gnu-gcov --xml build/gcovr-xml-report-cpp.xml --xml-pretty -r ${MRC_ROOT} --object-directory "$PWD/build" \
-  --exclude-unreachable-branches --exclude-throw-branches \
-  -f '^include/.*' -f '^python/.*' -f '^src/.*' \
-  -e '^python/srf/_pysrf/tests/.*' -e '^python/srf/tests/.*' -e '^src/tests/.*' \
-  -d -s -k
+# gcovr -j ${PARALLEL_LEVEL} --gcov-executable x86_64-conda-linux-gnu-gcov --xml build/gcovr-xml-report-cpp.xml --xml-pretty -r ${MRC_ROOT} --object-directory "$PWD/build" \
+#   --exclude-unreachable-branches --exclude-throw-branches \
+#   -f '^include/.*' -f '^python/.*' -f '^src/.*' \
+#   -e '^python/srf/_pysrf/tests/.*' -e '^python/srf/tests/.*' -e '^src/tests/.*' \
+#   -d -s -k
+cd ${MRC_ROOT}/build
+find . -type f -name '*.gcno' -exec x86_64-conda_cos6-linux-gnu-gcov -pbc {} +
 
 rapids-logger "Uploading codecov for C++ tests"
 
 # Get the list of files that we are interested in (Keeps the upload small)
-GCOV_FILES=$(find ./build -type f \( -iname "^#include#*.gcov" -or -iname "^#python#*.gcov" -or -iname "^#src#*.gcov" \))
+GCOV_FILES=$(find . -type f \( -iname "^#include#*.gcov" -or -iname "^#python#*.gcov" -or -iname "^#src#*.gcov" \))
 
 ls
 echo "GCOV_FILES: ${GCOV_FILES}"
 
 /opt/conda/envs/mrc/bin/codecov ${CODECOV_ARGS} -f ${GCOV_FILES} -F cpp
-rm build/*.gcov
+# rm *.gcov
 
 rapids-logger "Running Python Tests"
 cd ${MRC_ROOT}/build/python
@@ -75,39 +82,41 @@ pytest -v --junit-xml=${WORKSPACE_TMP}/report_pytest.xml
 PYTEST_RESULTS=$?
 set -e
 
-cd ${MRC_ROOT}
+cd ${MRC_ROOT}/build
 
 rapids-logger "Compiling coverage for Python tests"
 
 # Need to rerun gcovr for the python code now
-gcovr -j ${PARALLEL_LEVEL} --gcov-executable x86_64-conda-linux-gnu-gcov --xml build/gcovr-xml-report-py.xml --xml-pretty -r ${MRC_ROOT} --object-directory "$PWD/build" \
-  --exclude-unreachable-branches --exclude-throw-branches \
-  -f '^include/.*' -f '^python/.*' -f '^src/.*' \
-  -e '^python/srf/_pysrf/tests/.*' -e '^python/srf/tests/.*' -e '^src/tests/.*' \
-  -d -s -k
+# gcovr -j ${PARALLEL_LEVEL} --gcov-executable x86_64-conda-linux-gnu-gcov --xml build/gcovr-xml-report-py.xml --xml-pretty -r ${MRC_ROOT} --object-directory "$PWD/build" \
+#   --exclude-unreachable-branches --exclude-throw-branches \
+#   -f '^include/.*' -f '^python/.*' -f '^src/.*' \
+#   -e '^python/srf/_pysrf/tests/.*' -e '^python/srf/tests/.*' -e '^src/tests/.*' \
+#   -d -s -k
+
+find . -type f -name '*.gcno' -exec x86_64-conda_cos6-linux-gnu-gcov -pbc {} +
 
 rapids-logger "Uploading codecov for Python tests"
 
 # Get the list of files that we are interested in (Keeps the upload small)
-GCOV_FILES=$(find ./build -type f \( -iname "^#include#*.gcov" -or -iname "^#python#*.gcov" -or -iname "^#src#*.gcov" \))
+GCOV_FILES=$(find . -type f \( -iname "^#include#*.gcov" -or -iname "^#python#*.gcov" -or -iname "^#src#*.gcov" \))
 
 ls
 echo "GCOV_FILES: ${GCOV_FILES}"
 
 /opt/conda/envs/mrc/bin/codecov ${CODECOV_ARGS} -f ${GCOV_FILES} -F py
-rm build/*.gcov
+# rm *.gcov
 
-rapids-logger "Archiving codecov report"
-tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${MRC_ROOT}/build/gcovr-xml-report-*.xml
-aws s3 cp ${WORKSPACE_TMP}/coverage_reports.tar.bz "${ARTIFACT_URL}/coverage_reports.tar.bz"
+# rapids-logger "Archiving codecov report"
+# tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${MRC_ROOT}/build/gcovr-xml-report-*.xml
+# aws s3 cp ${WORKSPACE_TMP}/coverage_reports.tar.bz "${ARTIFACT_URL}/coverage_reports.tar.bz"
 
 
-rapids-logger "Archiving test reports"
-cd $(dirname ${REPORTS_DIR})
-tar cfj ${WORKSPACE_TMP}/test_reports.tar.bz $(basename ${REPORTS_DIR})
+# rapids-logger "Archiving test reports"
+# cd $(dirname ${REPORTS_DIR})
+# tar cfj ${WORKSPACE_TMP}/test_reports.tar.bz $(basename ${REPORTS_DIR})
 
-rapids-logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
-aws s3 cp ${WORKSPACE_TMP}/test_reports.tar.bz "${ARTIFACT_URL}/test_reports.tar.bz"
+# rapids-logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
+# aws s3 cp ${WORKSPACE_TMP}/test_reports.tar.bz "${ARTIFACT_URL}/test_reports.tar.bz"
 
 TEST_RESULTS=$(($CTEST_RESULTS+$PYTEST_RESULTS))
 exit ${TEST_RESULTS}
