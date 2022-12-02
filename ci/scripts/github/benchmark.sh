@@ -20,7 +20,7 @@ source ${WORKSPACE}/ci/scripts/github/common.sh
 
 REPORTS_DIR="${WORKSPACE_TMP}/reports"
 
-BENCHMARKS=($(find ${MRC_ROOT}/build/cpp/benchmarks -name "*.x"))
+BENCHMARKS=($(find ${MRC_ROOT}/build/cpp/mrc/benchmarks -name "*.x"))
 
 rapids-logger "Running Benchmarks..."
 BENCH_RESULTS=0

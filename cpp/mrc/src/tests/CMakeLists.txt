@@ -81,7 +81,7 @@ target_link_libraries(test_mrc_private
 # Necessary include to prevent IWYU from showing absolute paths
 target_include_directories(test_mrc_private
   PRIVATE
-  ${MRC_ROOT_DIR}/cpp/src
+  ${MRC_ROOT_DIR}/cpp/mrc/src
   copy_fixture_files
 )
 
