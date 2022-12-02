@@ -156,6 +156,7 @@ jobs:
         BUILD_CC: "gcc-coverage"
         NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
         PARALLEL_LEVEL: '10'
+        SCCACHE_RECACHE: '1' # TEMP: Overwrite the cache to test gcov output paths
       image: ${{ inputs.test_container }}
     strategy:
       fail-fast: true

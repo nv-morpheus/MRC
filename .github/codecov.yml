@@ -38,6 +38,7 @@ parsers:
 
 # Ignore the test folders themselves
 ignore:
-  - "python/srf/_pysrf/tests/**/*"
-  - "python/srf/tests/**/*"
-  - "src/tests/**/*"
+  - "python/mrc/_pymrc/tests"
+  - "python/mrc/tests"
+  - "src/tests"
+  - "tests"
