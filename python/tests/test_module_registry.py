@@ -45,7 +45,7 @@ def test_contains():
 def test_is_version_compatible():
     registry = mrc.ModuleRegistry
 
-    release_version = mrc.__version__.split(".")
+    release_version = [int(x) for x in mrc.__version__.split(".")]
     old_release_version = [22, 10, 0]
     no_version_patch = [22, 10]
     no_version_minor_and_patch = [22]
