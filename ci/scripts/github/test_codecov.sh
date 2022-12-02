@@ -24,10 +24,6 @@ conda activate mrc
 REPORTS_DIR="${WORKSPACE_TMP}/reports"
 mkdir -p ${WORKSPACE_TMP}/reports
 
-rapids-logger "Installing MRC"
-cmake -P ${MRC_ROOT}/build/cmake_install.cmake
-pip install ${MRC_ROOT}/build/python
-
 rapids-logger "Running C++ Tests"
 cd ${MRC_ROOT}/build
 set +e
@@ -42,7 +38,12 @@ ctest --output-on-failure \
 CTEST_RESULTS=$?
 set -e
 
-CODECOV_ARGS="--root ${MRC_ROOT} --branch ${GITHUB_REF_NAME} --pr ${GITHUB_REF_NAME##*/} --no-gcov-out --disable gcov"
+CODECOV_ARGS="--root ${MRC_ROOT} --branch ${GITHUB_REF_NAME} --no-gcov-out --disable gcov"
+
+if [[ "${GITHUB_REF_NAME}" =~ pull-request/[0-9]+ ]]; then
+  CODECOV_ARGS="${CODECOV_ARGS} --pr ${GITHUB_REF_NAME##*/}"
+fi
+
 echo "CODECOV_ARGS: ${CODECOV_ARGS}"
 
 cd ${MRC_ROOT}
@@ -57,16 +58,15 @@ gcovr -j ${PARALLEL_LEVEL} --gcov-executable x86_64-conda-linux-gnu-gcov --xml b
   -d -s -k
 
 rapids-logger "Uploading codecov for C++ tests"
-cd ${MRC_ROOT}/build
 
 # Get the list of files that we are interested in (Keeps the upload small)
-GCOV_FILES=$(find . -type f \( -iname "^#include#*.gcov" -or -iname "^#python#*.gcov" -or -iname "^#src#*.gcov" \))
+GCOV_FILES=$(find ./build -type f \( -iname "^#include#*.gcov" -or -iname "^#python#*.gcov" -or -iname "^#src#*.gcov" \))
 
 ls
 echo "GCOV_FILES: ${GCOV_FILES}"
 
 /opt/conda/envs/mrc/bin/codecov ${CODECOV_ARGS} -f ${GCOV_FILES} -F cpp
-# rm *.gcov
+rm build/*.gcov
 
 rapids-logger "Running Python Tests"
 cd ${MRC_ROOT}/build/python
@@ -87,16 +87,15 @@ gcovr -j ${PARALLEL_LEVEL} --gcov-executable x86_64-conda-linux-gnu-gcov --xml b
   -d -s -k
 
 rapids-logger "Uploading codecov for Python tests"
-cd ${MRC_ROOT}/build
 
 # Get the list of files that we are interested in (Keeps the upload small)
-GCOV_FILES=$(find . -type f \( -iname "^#include#*.gcov" -or -iname "^#python#*.gcov" -or -iname "^#src#*.gcov" \))
+GCOV_FILES=$(find ./build -type f \( -iname "^#include#*.gcov" -or -iname "^#python#*.gcov" -or -iname "^#src#*.gcov" \))
 
 ls
 echo "GCOV_FILES: ${GCOV_FILES}"
 
 /opt/conda/envs/mrc/bin/codecov ${CODECOV_ARGS} -f ${GCOV_FILES} -F py
-# rm *.gcov
+rm build/*.gcov
 
 rapids-logger "Archiving codecov report"
 tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${MRC_ROOT}/build/gcovr-xml-report-*.xml
