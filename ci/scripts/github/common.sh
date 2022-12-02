@@ -57,6 +57,11 @@ export ARTIFACT_ENDPOINT="/pull-request/${PR_NUM}/${GIT_COMMIT}/${NVARCH}/${BUIL
 export ARTIFACT_URL="${S3_URL}${ARTIFACT_ENDPOINT}"
 export DISPLAY_ARTIFACT_URL="${DISPLAY_URL}${ARTIFACT_ENDPOINT}"
 
+# Unset the default compiler launchers to allow CMake to configure
+unset CMAKE_C_COMPILER_LAUNCHER
+unset CMAKE_CUDA_COMPILER_LAUNCHER
+unset CMAKE_CXX_COMPILER_LAUNCHER
+
 # Set sccache env vars
 export SCCACHE_S3_KEY_PREFIX=mrc-${NVARCH}-${BUILD_CC}
 export SCCACHE_BUCKET=rapids-sccache

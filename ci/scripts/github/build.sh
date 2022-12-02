@@ -36,7 +36,7 @@ elif [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
     rapids-logger "Building with GCC with gcov profile '-g -fprofile-arcs -ftest-coverage"
     gcc --version
     g++ --version
-    CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES} ${CMAKE_BUILD_WITH_CODECOV} ${CMAKE_CACHE_FLAGS}"
+    CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES} ${CMAKE_BUILD_WITH_CODECOV} -DMRC_USE_CCACHE=OFF"
 else
     rapids-logger "Building with Clang"
     clang --version
