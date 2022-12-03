@@ -63,7 +63,7 @@ find . -type f -name '*.gcda' -exec x86_64-conda_cos6-linux-gnu-gcov -pbc --sour
 rapids-logger "Uploading codecov for C++ tests"
 
 # Get the list of files that we are interested in (Keeps the upload small)
-GCOV_FILES=$(find . -type f \( -iname "include#*.gcov" -or -iname "python#*.gcov" -or -iname "src#*.gcov" \))
+GCOV_FILES=$(find . -type f \( -iname "cpp#mrc#include#*.gcov" -or -iname "python#*.gcov" -or -iname "cpp#mrc#src#*.gcov" \))
 
 # Upload the .gcov files directly to codecov. They do a good job at processing the partials
 /opt/conda/envs/mrc/bin/codecov ${CODECOV_ARGS} -f ${GCOV_FILES} -F cpp
@@ -90,7 +90,7 @@ find . -type f -name '*.gcda' -exec x86_64-conda_cos6-linux-gnu-gcov -pbc --sour
 rapids-logger "Uploading codecov for Python tests"
 
 # Get the list of files that we are interested in (Keeps the upload small)
-GCOV_FILES=$(find . -type f \( -iname "include#*.gcov" -or -iname "python#*.gcov" -or -iname "src#*.gcov" \))
+GCOV_FILES=$(find . -type f \( -iname "cpp#mrc#include#*.gcov" -or -iname "python#*.gcov" -or -iname "cpp#mrc#src#*.gcov" \))
 
 # Upload the .gcov files directly to codecov. They do a good job at processing the partials
 /opt/conda/envs/mrc/bin/codecov ${CODECOV_ARGS} -f ${GCOV_FILES} -F py

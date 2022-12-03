@@ -27,13 +27,13 @@ if(MRC_ENABLE_CODECOV)
   message(STATUS "MRC_ENABLE_CODECOV is ON, configuring report exclusions and setting up coverage build targets")
   set(CODECOV_REPORT_EXCLUSIONS
     "${CMAKE_BINARY_DIR}/protos/*" # Remove this if/when we get protobuf code unit tested.
-    "benchmarks/*" # Remove this if/when we get protobuf code unit tested.
     ".cache/*"
+    "cpp/mrc/benchmarks/*" # Remove this if/when we get protobuf code unit tested.
+    "cpp/mrc/src/tests/*"
+    "cpp/mrc/tests/*"
     "docs/*" # Remove this if/when we get protobuf code unit tested.
     "python/mrc/_pymrc/tests/*"
     "python/mrc/tests/*"
-    "src/tests/*"
-    "tests/*"
   )
 
   if (DEFINED CMAKE_BUILD_PARALLEL_LEVEL)
