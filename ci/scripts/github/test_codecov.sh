@@ -37,6 +37,9 @@ echo "CODECOV_ARGS: ${CODECOV_ARGS}"
 rapids-logger "Running C++ Tests"
 cd ${MRC_ROOT}/build
 
+# Ensure we have a clean slate
+find . -type f  \( -iname "*.gcov" -or -iname "*.gcda" \) -exec rm {} \;
+
 set +e
 # Tests known to be failing
 # Issues:
@@ -50,37 +53,19 @@ CTEST_RESULTS=$?
 set -e
 
 rapids-logger "Compiling coverage for C++ tests"
-cd ${MRC_ROOT}
-
-# Run gcovr and delete the stats
-# gcovr -j ${PARALLEL_LEVEL} --gcov-executable x86_64-conda-linux-gnu-gcov --xml build/gcovr-xml-report-cpp.xml --xml-pretty -r ${MRC_ROOT} --object-directory "$PWD/build" \
-#   --exclude-unreachable-branches --exclude-throw-branches \
-#   -f '^include/.*' -f '^python/.*' -f '^src/.*' \
-#   -e '^python/srf/_pysrf/tests/.*' -e '^python/srf/tests/.*' -e '^src/tests/.*' \
-#   -s -v
-
-# echo "ls MRC_ROOT"
-# ls
-
-# echo "ls MRC_ROOT/build"
-# ls build
-
-# Ensure we have a clean slate
-find ./build -type f -name "*.gcov" -exec rm {} \;
-
-rapids-logger "Running gcov manually"
-
 cd ${MRC_ROOT}/build
-find . -type f -name '*.gcda' -exec x86_64-conda_cos6-linux-gnu-gcov -pbc --source-prefix ${MRC_ROOT} --relative-only {} +
-ls -lah
+
+# Run gcov manually. This is necessary since gcovr will only save the outputs to
+# temp directories. Adding the source-prefix enables codecov to function
+# correctly and enabling relative only ignores system and conda files.
+find . -type f -name '*.gcda' -exec x86_64-conda_cos6-linux-gnu-gcov -pbc --source-prefix ${MRC_ROOT} --relative-only {} + 1> /dev/null
 
 rapids-logger "Uploading codecov for C++ tests"
 
 # Get the list of files that we are interested in (Keeps the upload small)
 GCOV_FILES=$(find . -type f \( -iname "include#*.gcov" -or -iname "python#*.gcov" -or -iname "src#*.gcov" \))
 
-echo "GCOV_FILES: ${GCOV_FILES}"
-
+# Upload the .gcov files directly to codecov. They do a good job at processing the partials
 /opt/conda/envs/mrc/bin/codecov ${CODECOV_ARGS} -f ${GCOV_FILES} -F cpp
 
 # Remove the gcov files and any gcda files to reset counters
@@ -97,39 +82,28 @@ set -e
 rapids-logger "Compiling coverage for Python tests"
 cd ${MRC_ROOT}/build
 
-# Need to rerun gcovr for the python code now
-# gcovr -j ${PARALLEL_LEVEL} --gcov-executable x86_64-conda-linux-gnu-gcov --xml build/gcovr-xml-report-py.xml --xml-pretty -r ${MRC_ROOT} --object-directory "$PWD/build" \
-#   --exclude-unreachable-branches --exclude-throw-branches \
-#   -f '^include/.*' -f '^python/.*' -f '^src/.*' \
-#   -e '^python/srf/_pysrf/tests/.*' -e '^python/srf/tests/.*' -e '^src/tests/.*' \
-#   -d -s -k
-
-find . -type f -name '*.gcda' -exec x86_64-conda_cos6-linux-gnu-gcov -pbc --source-prefix ${MRC_ROOT} --relative-only {} +
-ls -lah
+# Run gcov manually. This is necessary since gcovr will only save the outputs to
+# temp directories. Adding the source-prefix enables codecov to function
+# correctly and enabling relative only ignores system and conda files.
+find . -type f -name '*.gcda' -exec x86_64-conda_cos6-linux-gnu-gcov -pbc --source-prefix ${MRC_ROOT} --relative-only {} + 1> /dev/null
 
 rapids-logger "Uploading codecov for Python tests"
 
 # Get the list of files that we are interested in (Keeps the upload small)
 GCOV_FILES=$(find . -type f \( -iname "include#*.gcov" -or -iname "python#*.gcov" -or -iname "src#*.gcov" \))
 
-echo "GCOV_FILES: ${GCOV_FILES}"
-
+# Upload the .gcov files directly to codecov. They do a good job at processing the partials
 /opt/conda/envs/mrc/bin/codecov ${CODECOV_ARGS} -f ${GCOV_FILES} -F py
 
 # Remove the gcov files and any gcda files to reset counters
 find . -type f  \( -iname "*.gcov" -or -iname "*.gcda" \) -exec rm {} \;
 
-# rapids-logger "Archiving codecov report"
-# tar cfj ${WORKSPACE_TMP}/coverage_reports.tar.bz ${MRC_ROOT}/build/gcovr-xml-report-*.xml
-# aws s3 cp ${WORKSPACE_TMP}/coverage_reports.tar.bz "${ARTIFACT_URL}/coverage_reports.tar.bz"
+rapids-logger "Archiving test reports"
+cd $(dirname ${REPORTS_DIR})
+tar cfj ${WORKSPACE_TMP}/test_reports.tar.bz $(basename ${REPORTS_DIR})
 
-
-# rapids-logger "Archiving test reports"
-# cd $(dirname ${REPORTS_DIR})
-# tar cfj ${WORKSPACE_TMP}/test_reports.tar.bz $(basename ${REPORTS_DIR})
-
-# rapids-logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
-# aws s3 cp ${WORKSPACE_TMP}/test_reports.tar.bz "${ARTIFACT_URL}/test_reports.tar.bz"
+rapids-logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
+aws s3 cp ${WORKSPACE_TMP}/test_reports.tar.bz "${ARTIFACT_URL}/test_reports.tar.bz"
 
 TEST_RESULTS=$(($CTEST_RESULTS+$PYTEST_RESULTS))
 exit ${TEST_RESULTS}

@@ -36,11 +36,22 @@ if(MRC_ENABLE_CODECOV)
     "tests/*"
   )
 
+  if (DEFINED CMAKE_BUILD_PARALLEL_LEVEL)
+    set(PARALLEL_LEVEL ${CMAKE_BUILD_PARALLEL_LEVEL})
+  else()
+    # Get the default from the number of cores
+    cmake_host_system_information(RESULT PARALLEL_LEVEL QUERY NUMBER_OF_LOGICAL_CORES)
+  endif()
+
+  # Delete the gcna files after use, and exclude dumb branches
+  set(GCOVR_ADDITIONAL_ARGS "--exclude-unreachable-branches" "--exclude-throw-branches" "--delete" "-j" "${PARALLEL_LEVEL}")
+
   setup_target_for_coverage_gcovr_html(
     NAME gcovr-html-report-cpp
     EXCLUDE ${CODECOV_REPORT_EXCLUSIONS}
     EXECUTABLE "ctest"
-    EXECUTABLE_ARGS "--exclude-regex 'test_srf_private|nvrpc'"
+    EXECUTABLE_ARGS "--exclude-regex"
+    EXECUTABLE_ARGS "'test_srf_private|nvrpc'"
   )
 
   setup_target_for_coverage_gcovr_html(
@@ -49,9 +60,6 @@ if(MRC_ENABLE_CODECOV)
     EXECUTABLE "pytest"
     EXECUTABLE_ARGS "python"
   )
-
-  # Set this flag to delete the coverage after XML files are created (used by CI)
-  set(GCOVR_ADDITIONAL_ARGS "-d")
 
   setup_target_for_coverage_gcovr_xml(
     NAME gcovr-xml-report-cpp

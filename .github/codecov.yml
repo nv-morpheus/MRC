@@ -27,11 +27,11 @@ flags:
   py:
     carryforward: false
 
-# Disable partial count for branches (skews numbers down)
+# Disable partial count for everything (skews numbers down)
 parsers:
   gcov:
     branch_detection:
-      conditional: yes
+      conditional: no
       loop: no
       method: no
       macro: no
