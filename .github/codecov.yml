@@ -12,7 +12,7 @@ coverage:
 comment:
   behavior: new
   require_changes: false
-  layout: "reach, diff, flags, files"
+  layout: "header, reach, diff, flags, files, footer"
 
 # Suggested workaround to fix "missing base report" issue when using Squash and
 # Merge Strategy in GitHub. See this comment from CodeCov support about this
