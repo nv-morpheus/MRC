@@ -42,7 +42,7 @@
                 "ms-vscode.cpptools-themes",
                 "ms-vscode.test-adapter-converter",
                 "twxs.cmake",
-                "xaver.clang-format",
+                "xaver.clang-format"
             ]
         }
     }
