@@ -40,7 +40,8 @@ RUN apt-get update &&\
 # Create conda environment
 COPY ./ci/conda/environments/* /tmp/conda/
 
-RUN CONDA_ALWAYS_YES=true \
+RUN --mount=type=cache,id=conda_pkgs,target=/opt/conda/pkgs,sharing=locked \
+     CONDA_ALWAYS_YES=true \
     /opt/conda/bin/mamba env create -q -n ${PROJ_NAME} --file /tmp/conda/dev_env.yml && \
     /opt/conda/bin/mamba env update -q -n ${PROJ_NAME} --file /tmp/conda/clang_env.yml && \
     /opt/conda/bin/mamba env update -q -n ${PROJ_NAME} --file /tmp/conda/ci_env.yml && \
@@ -60,6 +61,9 @@ RUN apt update && \
 # ========= development ================
 FROM base as dev
 
+# allow non-root users to update the conda envs
+RUN chmod -R 777 /opt/conda
+
 # OS deps
 RUN apt-get update &&\
     apt-get install --no-install-recommends -y \
@@ -68,10 +72,26 @@ RUN apt-get update &&\
         htop \
         openssh-client \
         psmisc \
+        sudo \
         vim-tiny \
         && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
+
+ARG USERNAME=morpheus
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+# Create the user
+RUN groupadd --gid $USER_GID $USERNAME && \
+    useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
+    usermod --shell /bin/bash $USERNAME && \
+    echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME && \
+    chmod 0440 /etc/sudoers.d/$USERNAME && \
+    cp /root/.bashrc /home/$USERNAME/.bashrc
+
+# [Optional] Set the default user. Omit if you want to keep the default as root.
+USER $USERNAME
 
 # default working directory
 WORKDIR /work

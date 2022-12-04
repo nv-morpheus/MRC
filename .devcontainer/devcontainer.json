@@ -1,0 +1,44 @@
+{
+    "name": "mrc-dev",
+    "image": "mrc:dev",
+    "runArgs": [
+        "--gpus=all",
+        "--network=host",
+        "--cap-add=SYS_PTRACE",
+        "--cap-add=SYS_NICE",
+        "--security-opt",
+        "seccomp=unconfined"
+    ],
+    // the image build script will setup a user in the contaienr with the calling user's name
+    // thus it is safe to set remoteUser (the user inside the container) to be name of the caller
+    "remoteUser": "${localEnv:USER}",
+    // vscode will look up uid/gid of the remoteUser on the host machine and map that uid/gid into the container
+    "updateRemoteUserUID": true,
+    "workspaceFolder": "/work",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/work,type=bind,consistency=cached",
+    "overrideCommand": true, // infinite loop of sleeps
+    // this is the command that will build the docker image
+    "initializeCommand": "SKIP_RUN=yes ./scripts/devel.sh",
+    // this will be run inside the container after the container has started before the command is run
+    "postStartCommand": "/work/scripts/devcontainer_post_start.sh",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "eamodio.gitlens",
+                "formulahendry.terminal",
+                "hbenl.vscode-test-explorer",
+                "josetr.cmake-language-support-vscode",
+                "llvm-vs-code-extensions.vscode-clangd",
+                "matepek.vscode-catch2-test-adapter",
+                "ms-dotnettools.vscode-dotnet-runtime",
+                "ms-vscode.cmake-tools",
+                "ms-vscode.cpptools",
+                "ms-vscode.cpptools-extension-pack",
+                "ms-vscode.cpptools-themes",
+                "ms-vscode.test-adapter-converter",
+                "twxs.cmake",
+                "xaver.clang-format",
+            ]
+        }
+    }
+}

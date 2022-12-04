@@ -30,7 +30,7 @@ if [[ "${SKIP_BUILD}" == "" ]]; then
     for build_target in ${DOCKER_TARGET[@]}; do
         FULL_NAME=$(get_image_full_name $build_target)
         echo "Building target \"${build_target}\" as ${FULL_NAME}";
-        docker build --network=host ${DOCKER_EXTRA_ARGS} --target ${build_target} -t ${FULL_NAME} -f ci/runner/Dockerfile .
+        docker buildx build --network=host ${DOCKER_EXTRA_ARGS} --target ${build_target} -t ${FULL_NAME} -f ci/runner/Dockerfile .
     done
 fi
 

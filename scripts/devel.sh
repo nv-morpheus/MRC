@@ -33,6 +33,8 @@ CONTAINER_NAME=$(echo ${IMAGE_NAME} | sed -e 's/:/-/g')
 export SKIP_BUILD=${SKIP_BUILD:-""}
 export SKIP_PUSH=yes
 
+export DOCKER_EXTRA_ARGS="--build-arg USERNAME=${USER} --build-arg USER_UID=$(id -u)"
+
 echo "building development image: " $IMAGE_NAME
 ./ci/runner/build_and_push.sh
 
