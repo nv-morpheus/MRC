@@ -16,6 +16,11 @@
     "updateRemoteUserUID": true,
     "workspaceFolder": "/work",
     "workspaceMount": "source=${localWorkspaceFolder},target=/work,type=bind,consistency=cached",
+    "containerEnv": {
+        // the post_start script will look for these envs, if they are set, git will be configured
+        "VSCODE_CONTAINER_GIT_USER": "${localEnv:VSCODE_CONTAINER_GIT_USER}",
+        "VSCODE_CONTAINER_GIT_EMAIL": "${localEnv:VSCODE_CONTAINER_GIT_EMAIL}"
+    },
     "overrideCommand": true, // infinite loop of sleeps
     // this is the command that will build the docker image
     "initializeCommand": "SKIP_RUN=yes ./scripts/devel.sh",

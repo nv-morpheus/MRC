@@ -64,10 +64,14 @@ FROM base as dev
 # allow non-root users to update the conda envs
 RUN chmod -R 777 /opt/conda
 
+# disable sscache wrappers around compilers
+ENV CMAKE_CUDA_COMPILER_LAUNCHER=""
+ENV CMAKE_CXX_COMPILER_LAUNCHER=""
+ENV CMAKE_C_COMPILER_LAUNCHER=""
+
 # OS deps
 RUN apt-get update &&\
     apt-get install --no-install-recommends -y \
-        git \
         gdb \
         htop \
         openssh-client \
