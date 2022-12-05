@@ -27,7 +27,6 @@ function(configure_iwyu)
       -Xiwyu; --mapping_file=${PROJECT_SOURCE_DIR}/ci/iwyu/mappings.imp;
       -Xiwyu; --max_line_length=120;
       -Xiwyu; --verbose=${MRC_IWYU_VERBOSITY};
-      -Xiwyu; --no_fwd_decls;
       -Xiwyu; --quoted_includes_first;
       -Xiwyu; --cxx17ns;
       -Xiwyu --no_comments)
