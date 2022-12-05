@@ -20,11 +20,14 @@
 #include "internal/resources/partition_resources_base.hpp"
 
 #include "mrc/memory/buffer.hpp"
-#include "mrc/memory/resources/memory_resource.hpp"
 
 #include <cstddef>
 #include <memory>
 #include <optional>
+
+namespace mrc::memory {
+struct memory_resource;
+}  // namespace mrc::memory
 
 namespace mrc::internal::ucx {
 class Resources;

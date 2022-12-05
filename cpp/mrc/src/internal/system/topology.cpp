@@ -37,7 +37,6 @@
 #include <ostream>
 #include <set>
 #include <string>
-#include <type_traits>
 #include <utility>
 
 // work-around for known iwyu issue

@@ -17,30 +17,22 @@
 
 #pragma once
 
-#include "internal/control_plane/client/connections_manager.hpp"
-#include "internal/control_plane/client/instance.hpp"
-#include "internal/control_plane/client/subscription_service.hpp"
+#include "internal/control_plane/client/instance.hpp"  // IWYU pragma: keep
 #include "internal/expected.hpp"
 #include "internal/grpc/client_streaming.hpp"
 #include "internal/grpc/stream_writer.hpp"
-#include "internal/network/resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
-#include "internal/ucx/resources.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/node/source_channel.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/runnable/launch_options.hpp"
-#include "mrc/runnable/runner.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/macros.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
-#include <grpcpp/channel.h>
-#include <grpcpp/completion_queue.h>
 
 #include <cstdint>
 #include <map>
@@ -51,6 +43,25 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+namespace grpc {
+class Channel;
+class CompletionQueue;
+}  // namespace grpc
+namespace mrc::internal::control_plane::client {
+class ConnectionsManager;
+class Instance;
+class SubscriptionService;
+}  // namespace mrc::internal::control_plane::client
+namespace mrc::internal::network {
+class Resources;
+}  // namespace mrc::internal::network
+namespace mrc::internal::ucx {
+class Resources;
+}  // namespace mrc::internal::ucx
+namespace mrc::runnable {
+class Runner;
+}  // namespace mrc::runnable
 
 namespace mrc::internal::control_plane {
 

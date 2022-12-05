@@ -17,6 +17,7 @@
 
 #include "internal/runnable/thread_engines.hpp"
 
+#include "internal/runnable/engine.hpp"
 #include "internal/runnable/thread_engine.hpp"
 
 #include "mrc/core/bitmap.hpp"

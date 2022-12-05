@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "internal/system/fiber_task_queue.hpp"
-
 #include "mrc/core/bitmap.hpp"
 #include "mrc/core/fiber_pool.hpp"
 #include "mrc/core/task_queue.hpp"
@@ -32,12 +30,13 @@
 #include <vector>
 
 namespace mrc::internal::system {
+class FiberTaskQueue;
 
 class FiberPool final : public core::FiberPool
 {
   public:
     FiberPool(CpuSet cpu_set, std::vector<std::reference_wrapper<FiberTaskQueue>>&& queues);
-    ~FiberPool() final = default;
+    ~FiberPool() final;
 
     DELETE_COPYABILITY(FiberPool);
     DELETE_MOVEABILITY(FiberPool);

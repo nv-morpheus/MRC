@@ -17,15 +17,22 @@
 
 #pragma once
 
-#include "internal/runnable/resources.hpp"
 #include "internal/system/host_partition_provider.hpp"
-#include "internal/ucx/registation_callback_builder.hpp"
 
 #include "mrc/memory/buffer.hpp"
-#include "mrc/memory/resources/memory_resource.hpp"
 
 #include <cstddef>
 #include <memory>
+
+namespace mrc::internal::runnable {
+class Resources;
+}  // namespace mrc::internal::runnable
+namespace mrc::internal::ucx {
+class RegistrationCallbackBuilder;
+}  // namespace mrc::internal::ucx
+namespace mrc::memory {
+struct memory_resource;
+}  // namespace mrc::memory
 
 namespace mrc::internal::memory {
 

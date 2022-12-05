@@ -17,14 +17,14 @@
 
 #include "internal/system/fiber_pool.hpp"
 
+#include "internal/system/fiber_task_queue.hpp"
+
 #include "mrc/core/bitmap.hpp"
 #include "mrc/core/task_queue.hpp"
 
-#include <ext/alloc_traits.h>
 #include <glog/logging.h>
 
 #include <cstddef>
-#include <memory>
 #include <utility>
 #include <vector>
 
@@ -34,6 +34,8 @@ FiberPool::FiberPool(CpuSet cpu_set, std::vector<std::reference_wrapper<FiberTas
   m_cpu_set(std::move(cpu_set)),
   m_queues(std::move(queues))
 {}
+
+FiberPool::~FiberPool() = default;
 
 const CpuSet& FiberPool::cpu_set() const
 {

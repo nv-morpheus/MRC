@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "internal/system/fiber_task_queue.hpp"
 #include "internal/system/host_partition_provider.hpp"
 #include "internal/system/resources.hpp"
 
@@ -28,12 +27,18 @@
 #include <cstddef>
 #include <memory>
 
+namespace mrc::internal::system {
+class FiberTaskQueue;
+}  // namespace mrc::internal::system
+
 namespace mrc::internal::runnable {
 
 class Resources final : public system::HostPartitionProvider, public mrc::pipeline::Resources
 {
   public:
     Resources(const system::Resources& system_resources, std::size_t _host_partition_id);
+    Resources(Resources&& other);
+    ~Resources() override;
 
     mrc::core::FiberTaskQueue& main() final;
     const mrc::core::FiberTaskQueue& main() const;

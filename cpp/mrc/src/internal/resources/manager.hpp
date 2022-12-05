@@ -17,15 +17,11 @@
 
 #pragma once
 
-#include "internal/memory/device_resources.hpp"
 #include "internal/memory/host_resources.hpp"
 #include "internal/network/resources.hpp"
-#include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
-#include "internal/system/resources.hpp"
 #include "internal/system/system_provider.hpp"
-#include "internal/ucx/resources.hpp"
 
 #include "mrc/core/task_queue.hpp"
 #include "mrc/types.hpp"
@@ -37,9 +33,21 @@
 #include <optional>
 #include <vector>
 
+namespace mrc::internal::control_plane {
+class Resources;
+}  // namespace mrc::internal::control_plane
+namespace mrc::internal::memory {
+class DeviceResources;
+}  // namespace mrc::internal::memory
+namespace mrc::internal::system {
+class Resources;
+}  // namespace mrc::internal::system
+namespace mrc::internal::ucx {
+class Resources;
+}  // namespace mrc::internal::ucx
 namespace mrc::internal::runtime {
 class Runtime;
-}
+}  // namespace mrc::internal::runtime
 
 namespace mrc::internal::resources {
 
@@ -59,24 +67,7 @@ class Manager final : public system::SystemProvider
     PartitionResources& partition(std::size_t partition_id);
 
   private:
-    Future<void> shutdown()
-    {
-        return m_runnable.at(0).main().enqueue([this] {
-            std::vector<Future<void>> futures;
-            futures.reserve(m_network.size());
-            for (auto& net : m_network)
-            {
-                if (net)
-                {
-                    futures.emplace_back(net->shutdown());
-                }
-            }
-            for (auto& f : futures)
-            {
-                f.get();
-            }
-        });
-    }
+    Future<void> shutdown();
 
     const std::unique_ptr<system::Resources> m_system;
     std::vector<runnable::Resources> m_runnable;                   // one per host partition

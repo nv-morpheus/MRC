@@ -18,9 +18,8 @@
 #include "internal/runnable/fiber_engines.hpp"
 
 #include "internal/runnable/fiber_engine.hpp"
+#include "internal/system/fiber_pool.hpp"
 
-#include "mrc/core/fiber_meta_data.hpp"
-#include "mrc/core/task_queue.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/runnable/types.hpp"
 

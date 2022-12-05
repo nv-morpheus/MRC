@@ -22,12 +22,11 @@
 #include "internal/pipeline/port_graph.hpp"
 #include "internal/pipeline/types.hpp"
 #include "internal/resources/manager.hpp"
+#include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
 
 #include "mrc/core/addresses.hpp"
-#include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/options/options.hpp"
 
 #include <glog/logging.h>
 
@@ -35,7 +34,6 @@
 #include <ostream>
 #include <set>
 #include <string>
-#include <type_traits>
 
 namespace mrc::internal::executor {
 

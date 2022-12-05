@@ -17,6 +17,8 @@
 
 #include "internal/control_plane/server/connection_manager.hpp"
 
+#include "internal/control_plane/server/client_instance.hpp"
+#include "internal/grpc/stream_writer.hpp"
 #include "internal/utils/contains.hpp"
 
 #include "mrc/channel/status.hpp"
@@ -24,12 +26,14 @@
 
 #include <glog/logging.h>
 #include <google/protobuf/any.pb.h>
+#include <stdint.h>
 
-#include <algorithm>
-#include <ostream>
+#include <sstream>
 #include <utility>
 
 namespace mrc::internal::control_plane::server {
+
+ConnectionManager::~ConnectionManager() = default;
 
 void ConnectionManager::add_stream(const stream_t& stream)
 {

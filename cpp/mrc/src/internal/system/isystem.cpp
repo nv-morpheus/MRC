@@ -19,8 +19,6 @@
 
 #include "internal/system/system.hpp"
 
-#include "mrc/options/options.hpp"
-
 #include <utility>
 
 namespace mrc::internal::system {

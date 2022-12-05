@@ -28,7 +28,6 @@
 #include "mrc/core/task_queue.hpp"
 #include "mrc/protos/architect.pb.h"
 
-#include <ext/alloc_traits.h>
 #include <glog/logging.h>
 
 #include <algorithm>

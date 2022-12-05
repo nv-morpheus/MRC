@@ -24,7 +24,9 @@
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
+#include "internal/runtime/partition.hpp"
 
+#include "mrc/codable/encoded_object.hpp"
 #include "mrc/core/utils.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/rx_sink.hpp"

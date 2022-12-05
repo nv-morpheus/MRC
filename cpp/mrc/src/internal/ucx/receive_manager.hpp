@@ -18,7 +18,6 @@
 #pragma once
 
 #include "internal/ucx/common.hpp"
-#include "internal/ucx/worker.hpp"
 
 #include "mrc/types.hpp"
 

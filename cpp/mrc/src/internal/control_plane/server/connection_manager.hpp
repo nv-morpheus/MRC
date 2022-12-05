@@ -17,13 +17,10 @@
 
 #pragma once
 
-#include "internal/control_plane/server/client_instance.hpp"
 #include "internal/control_plane/server/versioned_issuer.hpp"
 #include "internal/expected.hpp"
 #include "internal/grpc/server_streaming.hpp"
-#include "internal/grpc/stream_writer.hpp"
 
-#include "mrc/protos/architect.pb.h"
 #include "mrc/types.hpp"
 
 #include <cstddef>
@@ -33,7 +30,23 @@
 #include <string>
 #include <vector>
 
+namespace mrc::internal::rpc {
+template <typename T>
+struct StreamWriter;
+}  // namespace mrc::internal::rpc
+namespace mrc::protos {
+class Ack;
+class Event;
+class LookupWorkersRequest;
+class LookupWorkersResponse;
+class RegisterWorkersRequest;
+class RegisterWorkersResponse;
+class StateUpdate;
+class TaggedInstance;
+}  // namespace mrc::protos
+
 namespace mrc::internal::control_plane::server {
+class ClientInstance;
 
 /**
  * @brief Control Plane Connection Manager
@@ -65,6 +78,8 @@ class ConnectionManager : public VersionedState
     using instance_t    = std::shared_ptr<server::ClientInstance>;
     using stream_id_t   = std::size_t;
     using instance_id_t = std::size_t;
+
+    ~ConnectionManager() override;
 
     void add_stream(const stream_t& stream);
     void drop_stream(const stream_id_t& stream_id) noexcept;

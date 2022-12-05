@@ -17,17 +17,25 @@
 
 #pragma once
 
-#include "internal/pipeline/forward.hpp"
-#include "internal/resources/manager.hpp"
 #include "internal/service.hpp"
-#include "internal/system/resources.hpp"
 #include "internal/system/system_provider.hpp"
-
-#include "mrc/engine/pipeline/ipipeline.hpp"
-#include "mrc/options/options.hpp"
 
 #include <memory>
 #include <utility>
+
+namespace mrc {
+class Options;
+}  // namespace mrc
+namespace mrc::internal::pipeline {
+class IPipeline;
+class Manager;
+}  // namespace mrc::internal::pipeline
+namespace mrc::internal::resources {
+class Manager;
+}  // namespace mrc::internal::resources
+namespace mrc::internal::system {
+class Resources;
+}  // namespace mrc::internal::system
 
 namespace mrc::internal::executor {
 

@@ -19,14 +19,12 @@
 
 #include "internal/system/fiber_manager.hpp"
 #include "internal/system/fiber_pool.hpp"
-#include "internal/system/fiber_task_queue.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 #include "internal/system/thread.hpp"
 #include "internal/system/topology.hpp"
 
 #include "mrc/core/bitmap.hpp"
-#include "mrc/engine/system/iresources.hpp"
 #include "mrc/utils/thread_local_shared_pointer.hpp"
 
 #include <glog/logging.h>
@@ -38,6 +36,8 @@
 #include <utility>
 
 namespace mrc::internal::system {
+class FiberTaskQueue;
+class IResources;
 
 class Resources final : public SystemProvider
 {

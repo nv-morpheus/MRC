@@ -18,14 +18,20 @@
 #pragma once
 
 #include "internal/pubsub/publisher_service.hpp"
-#include "internal/runtime/partition.hpp"
-#include "internal/ucx/endpoint.hpp"
-
-#include "mrc/runtime/remote_descriptor.hpp"
 
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
+
+namespace mrc::internal::runtime {
+class Partition;
+}  // namespace mrc::internal::runtime
+namespace mrc::internal::ucx {
+class Endpoint;
+}  // namespace mrc::internal::ucx
+namespace mrc::runtime {
+class RemoteDescriptor;
+}  // namespace mrc::runtime
 
 namespace mrc::internal::pubsub {
 

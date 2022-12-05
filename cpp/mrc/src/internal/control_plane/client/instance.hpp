@@ -17,20 +17,34 @@
 
 #pragma once
 
-#include "internal/control_plane/client/state_manager.hpp"
-#include "internal/network/resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
 
-#include "mrc/node/source_channel.hpp"
-#include "mrc/protos/architect.pb.h"
-#include "mrc/runnable/runner.hpp"
 #include "mrc/types.hpp"
 
 #include <cstdint>
 #include <map>
 #include <memory>
 #include <string>
+
+namespace mrc::internal::control_plane {
+class Client;
+}  // namespace mrc::internal::control_plane
+namespace mrc::internal::network {
+class Resources;
+}  // namespace mrc::internal::network
+namespace mrc::node {
+template <typename T>
+class SourceChannel;
+}  // namespace mrc::node
+namespace mrc::protos {
+class DropSubscriptionServiceState;
+class StateUpdate;
+class UpdateSubscriptionServiceState;
+}  // namespace mrc::protos
+namespace mrc::runnable {
+class Runner;
+}  // namespace mrc::runnable
 
 namespace mrc::internal::control_plane::client {
 

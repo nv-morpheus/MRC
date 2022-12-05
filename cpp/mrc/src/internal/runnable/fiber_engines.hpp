@@ -17,18 +17,24 @@
 
 #pragma once
 
-#include "internal/runnable/engine.hpp"
 #include "internal/runnable/engines.hpp"
-#include "internal/system/fiber_pool.hpp"
 
 #include "mrc/constants.hpp"
 #include "mrc/core/fiber_meta_data.hpp"
-#include "mrc/core/task_queue.hpp"
-#include "mrc/runnable/launch_options.hpp"
-#include "mrc/runnable/types.hpp"
 
 #include <functional>
 #include <vector>
+
+namespace mrc::core {
+class FiberTaskQueue;
+}  // namespace mrc::core
+namespace mrc::internal::system {
+class FiberPool;
+}  // namespace mrc::internal::system
+namespace mrc::runnable {
+enum class EngineType;
+struct LaunchOptions;
+}  // namespace mrc::runnable
 
 namespace mrc::internal::runnable {
 

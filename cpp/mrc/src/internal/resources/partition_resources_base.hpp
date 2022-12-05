@@ -17,11 +17,14 @@
 
 #pragma once
 
-#include "internal/runnable/resources.hpp"
 #include "internal/system/partition_provider.hpp"
 
 #include <cstddef>
 #include <functional>
+
+namespace mrc::internal::runnable {
+class Resources;
+}  // namespace mrc::internal::runnable
 
 namespace mrc::internal::resources {
 

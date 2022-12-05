@@ -28,6 +28,8 @@ Storage::Storage(std::unique_ptr<mrc::codable::EncodedStorage> storage) : m_stor
     CHECK(m_storage);
 }
 
+Storage::~Storage() = default;
+
 const mrc::codable::IDecodableStorage& Storage::encoding() const
 {
     CHECK(m_storage);

@@ -19,6 +19,8 @@
 
 #include "internal/control_plane/proto_helpers.hpp"
 #include "internal/control_plane/server/subscription_manager.hpp"
+#include "internal/grpc/stream_writer.hpp"
+#include "internal/runnable/resources.hpp"
 
 #include "mrc/channel/status.hpp"
 #include "mrc/node/edge_builder.hpp"
@@ -38,8 +40,8 @@
 #include <exception>
 #include <future>
 #include <mutex>
-#include <ostream>
 #include <set>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -81,6 +83,8 @@ static Expected<> unary_response(Server::event_t& event, Expected<MessageT>&& me
 }
 
 Server::Server(runnable::Resources& runnable) : m_runnable(runnable), m_server(m_runnable) {}
+
+Server::~Server() = default;
 
 void Server::do_service_start()
 {

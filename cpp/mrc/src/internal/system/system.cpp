@@ -18,6 +18,7 @@
 #include "internal/system/system.hpp"
 
 #include "internal/system/partitions.hpp"
+#include "internal/system/topology.hpp"
 
 #include "mrc/core/bitmap.hpp"
 #include "mrc/engine/system/isystem.hpp"
@@ -67,6 +68,11 @@ CpuSet System::get_current_thread_affinity() const
     CpuSet cpu_set;
     hwloc_get_cpubind(topology().handle(), &cpu_set.bitmap(), HWLOC_CPUBIND_THREAD);
     return cpu_set;
+}
+
+std::shared_ptr<System> make_system(std::shared_ptr<Options> options)
+{
+    return System::create(std::move(options));
 }
 
 }  // namespace mrc::internal::system

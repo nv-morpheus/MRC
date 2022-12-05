@@ -17,15 +17,11 @@
 
 #pragma once
 
-#include "internal/memory/transient_pool.hpp"
 #include "internal/pubsub/base.hpp"
-#include "internal/runtime/partition.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/node/operators/unique_operator.hpp"
 #include "mrc/node/source_channel.hpp"
 #include "mrc/pubsub/api.hpp"
-#include "mrc/runnable/runner.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/macros.hpp"
@@ -36,6 +32,20 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+
+namespace mrc::runnable {
+class Runner;
+}  // namespace mrc::runnable
+
+namespace mrc::channel {
+enum class Status;
+}  // namespace mrc::channel
+namespace mrc::internal::memory {
+class TransientBuffer;
+}  // namespace mrc::internal::memory
+namespace mrc::internal::runtime {
+class Partition;
+}  // namespace mrc::internal::runtime
 
 namespace mrc::internal::pubsub {
 
@@ -50,7 +60,7 @@ class SubscriberService final : public Base,
     SubscriberService(std::string service_name, runtime::Partition& runtime);
 
   public:
-    ~SubscriberService() override = default;
+    ~SubscriberService() override;
 
     DELETE_COPYABILITY(SubscriberService);
     DELETE_MOVEABILITY(SubscriberService);

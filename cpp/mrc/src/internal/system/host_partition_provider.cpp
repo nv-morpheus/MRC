@@ -25,6 +25,7 @@
 #include <vector>
 
 namespace mrc::internal::system {
+class HostPartition;
 
 HostPartitionProvider::HostPartitionProvider(const SystemProvider& _system, std::size_t _host_partition_id) :
   SystemProvider(_system),

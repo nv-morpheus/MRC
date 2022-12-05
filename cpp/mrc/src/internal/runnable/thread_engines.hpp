@@ -21,8 +21,11 @@
 #include "internal/system/resources.hpp"
 
 #include "mrc/core/bitmap.hpp"
-#include "mrc/runnable/launch_options.hpp"
-#include "mrc/runnable/types.hpp"
+
+namespace mrc::runnable {
+enum class EngineType;
+struct LaunchOptions;
+}  // namespace mrc::runnable
 
 namespace mrc::internal::runnable {
 

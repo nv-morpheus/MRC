@@ -17,6 +17,7 @@
 
 #include "internal/segment/instance.hpp"
 
+#include "internal/pipeline/resources.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
@@ -44,6 +45,7 @@
 #include <mutex>
 #include <ostream>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 namespace mrc::internal::segment {
@@ -70,6 +72,8 @@ Instance::Instance(std::shared_ptr<const Definition> definition,
                     })
                     .get();
 }
+
+Instance::~Instance() = default;
 
 const std::string& Instance::name() const
 {

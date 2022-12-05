@@ -21,6 +21,7 @@
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/control_plane/client/instance.hpp"
 #include "internal/control_plane/server.hpp"
+#include "internal/control_plane/server/subscription_manager.hpp"
 #include "internal/network/resources.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"

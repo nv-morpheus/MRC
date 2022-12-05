@@ -31,6 +31,7 @@ class Controller final : public node::GenericSink<ControlMessage>
 {
   public:
     Controller(std::unique_ptr<Instance> pipeline);
+    ~Controller() override;
 
     void await_on_pipeline() const;
 

@@ -18,7 +18,10 @@
 #include "internal/control_plane/resources.hpp"
 
 #include "internal/control_plane/client.hpp"
+#include "internal/control_plane/client/instance.hpp"
+#include "internal/control_plane/client/subscription_service.hpp"
 #include "internal/control_plane/server.hpp"
+#include "internal/control_plane/server/subscription_manager.hpp"
 #include "internal/system/system.hpp"
 
 #include "mrc/options/options.hpp"

@@ -19,18 +19,9 @@
 
 #include "internal/remote_descriptor/messages.hpp"
 #include "internal/remote_descriptor/storage.hpp"
-#include "internal/resources/forward.hpp"
-#include "internal/resources/partition_resources.hpp"
 #include "internal/service.hpp"
 
-#include "mrc/channel/status.hpp"
-#include "mrc/codable/api.hpp"
-#include "mrc/codable/encoded_object.hpp"
-#include "mrc/node/source_channel.hpp"
-#include "mrc/protos/codable.pb.h"
-#include "mrc/runnable/runner.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
-#include "mrc/runtime/remote_descriptor_handle.hpp"
 #include "mrc/runtime/remote_descriptor_manager.hpp"
 #include "mrc/types.hpp"
 
@@ -39,6 +30,31 @@
 #include <map>
 #include <memory>
 #include <mutex>
+
+namespace mrc::codable {
+class EncodedStorage;
+class IDecodableStorage;
+struct ICodableStorage;
+}  // namespace mrc::codable
+namespace mrc::codable::protos {
+class RemoteDescriptor;
+}  // namespace mrc::codable::protos
+namespace mrc::internal::resources {
+class PartitionResources;
+}  // namespace mrc::internal::resources
+namespace mrc::internal::runtime {
+class Partition;
+}  // namespace mrc::internal::runtime
+namespace mrc::node {
+template <typename T>
+class SourceChannelWriteable;
+}  // namespace mrc::node
+namespace mrc::runnable {
+class Runner;
+}  // namespace mrc::runnable
+namespace mrc::runtime {
+struct IRemoteDescriptorHandle;
+}  // namespace mrc::runtime
 
 namespace mrc::internal::remote_descriptor {
 
@@ -83,12 +99,9 @@ class Manager final : private Service,
 
     void release_handle(std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> handle) final;
 
-    static std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> unwrap_handle(mrc::runtime::RemoteDescriptor&& rd)
-    {
-        return rd.release_handle();
-    }
-
     mrc::runtime::RemoteDescriptor register_encoded_object(std::unique_ptr<mrc::codable::EncodedStorage> object) final;
+
+    static std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> unwrap_handle(mrc::runtime::RemoteDescriptor&& rd);
 
   private:
     static std::uint32_t active_message_id();

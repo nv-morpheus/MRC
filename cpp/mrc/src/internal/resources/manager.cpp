@@ -22,13 +22,17 @@
 #include "internal/control_plane/client/instance.hpp"
 #include "internal/control_plane/resources.hpp"
 #include "internal/data_plane/resources.hpp"  // IWYU pragma: keep
+#include "internal/memory/device_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
+#include "internal/runnable/resources.hpp"
 #include "internal/system/engine_factory_cpu_sets.hpp"
 #include "internal/system/host_partition.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/system/partitions.hpp"
+#include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
 #include "internal/ucx/registation_callback_builder.hpp"
+#include "internal/ucx/resources.hpp"
 #include "internal/utils/contains.hpp"
 
 #include "mrc/core/bitmap.hpp"
@@ -36,7 +40,6 @@
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
 
-#include <ext/alloc_traits.h>
 #include <glog/logging.h>
 
 #include <map>
@@ -237,5 +240,24 @@ PartitionResources& Manager::get_partition()
 
         return *m_thread_partition;
     }
+}
+
+Future<void> Manager::shutdown()
+{
+    return m_runnable.at(0).main().enqueue([this] {
+        std::vector<Future<void>> futures;
+        futures.reserve(m_network.size());
+        for (auto& net : m_network)
+        {
+            if (net)
+            {
+                futures.emplace_back(net->shutdown());
+            }
+        }
+        for (auto& f : futures)
+        {
+            f.get();
+        }
+    });
 }
 }  // namespace mrc::internal::resources

@@ -19,11 +19,14 @@
 
 #include "internal/codable/decodable_storage_view.hpp"
 #include "internal/codable/storage_view.hpp"
-#include "internal/resources/forward.hpp"
 
 #include "mrc/protos/codable.pb.h"
 #include "mrc/runtime/remote_descriptor_handle.hpp"
 #include "mrc/utils/macros.hpp"
+
+namespace mrc::internal::resources {
+class PartitionResources;
+}  // namespace mrc::internal::resources
 
 namespace mrc::internal::remote_descriptor {
 
@@ -33,7 +36,7 @@ class DecodableStorage final : public codable::DecodableStorageView,
 {
   public:
     DecodableStorage(mrc::codable::protos::RemoteDescriptor&& proto, resources::PartitionResources& resources);
-    ~DecodableStorage() final = default;
+    ~DecodableStorage() final;
 
     DELETE_COPYABILITY(DecodableStorage);
     DELETE_MOVEABILITY(DecodableStorage);

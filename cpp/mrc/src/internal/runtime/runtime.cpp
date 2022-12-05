@@ -54,14 +54,17 @@ std::size_t Runtime::partition_count() const
 {
     return m_partitions.size();
 }
+
 std::size_t Runtime::gpu_count() const
 {
     return resources().device_count();
 }
+
 Partition& Runtime::partition(std::size_t partition_id)
 {
     DCHECK_LT(partition_id, m_resources->partition_count());
     DCHECK(m_partitions.at(partition_id));
     return *m_partitions.at(partition_id);
 }
+
 }  // namespace mrc::internal::runtime

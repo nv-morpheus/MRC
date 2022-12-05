@@ -17,6 +17,7 @@
 
 #include "internal/resources/partition_resources_base.hpp"
 
+#include "internal/runnable/resources.hpp"
 #include "internal/system/partition.hpp"
 
 #include <glog/logging.h>

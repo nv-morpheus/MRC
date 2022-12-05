@@ -18,12 +18,7 @@
 #pragma once
 
 #include "internal/pubsub/base.hpp"
-#include "internal/runtime/partition.hpp"
-#include "internal/ucx/endpoint.hpp"
 
-#include "mrc/channel/status.hpp"
-#include "mrc/codable/api.hpp"
-#include "mrc/codable/encoded_object.hpp"
 #include "mrc/node/source_channel.hpp"
 #include "mrc/pubsub/api.hpp"
 #include "mrc/runnable/runner.hpp"
@@ -36,6 +31,20 @@
 #include <set>
 #include <string>
 #include <unordered_map>
+
+namespace mrc::channel {
+enum class Status;
+}  // namespace mrc::channel
+namespace mrc::codable {
+class EncodedStorage;
+struct ICodableStorage;
+}  // namespace mrc::codable
+namespace mrc::internal::runtime {
+class Partition;
+}  // namespace mrc::internal::runtime
+namespace mrc::internal::ucx {
+class Endpoint;
+}  // namespace mrc::internal::ucx
 
 namespace mrc::internal::pubsub {
 

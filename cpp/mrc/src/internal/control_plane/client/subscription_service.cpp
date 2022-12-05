@@ -25,9 +25,10 @@
 
 #include "mrc/protos/architect.pb.h"
 
+#include <boost/fiber/future/promise.hpp>
 #include <glog/logging.h>
 
-#include <ostream>
+#include <sstream>
 #include <utility>
 
 namespace mrc::internal::control_plane::client {
@@ -188,17 +189,11 @@ const std::uint64_t& SubscriptionService::tag() const
     return m_tag;
 }
 
-RoleUpdater::RoleUpdater(SubscriptionService& subscription_service, std::string role_name) :
-  m_subscription_service(subscription_service),
-  m_role_name(std::move(role_name))
-{
-    DCHECK(contains(m_subscription_service.subscribe_to_roles(), m_role_name));
-}
-
 void SubscriptionService::await_join()
 {
     service_await_join();
 }
+
 bool SubscriptionService::is_live() const
 {
     auto state = Service::state();
@@ -219,8 +214,27 @@ void SubscriptionService::await_start()
 {
     service_start();
 }
+
 bool SubscriptionService::is_startable() const
 {
     return is_service_startable();
+}
+
+RoleUpdater::RoleUpdater(SubscriptionService& subscription_service, std::string role_name) :
+  m_subscription_service(subscription_service),
+  m_role_name(std::move(role_name))
+{
+    DCHECK(contains(m_subscription_service.subscribe_to_roles(), m_role_name));
+}
+
+void RoleUpdater::update_tagged_instances(const std::unordered_map<std::uint64_t, InstanceID>& tagged_instances)
+{
+    m_subscription_service.update_tagged_instances(m_role_name, tagged_instances);
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    for (auto& p : m_update_promises)
+    {
+        p.set_value();
+    }
+    m_update_promises.clear();
 }
 }  // namespace mrc::internal::control_plane::client
