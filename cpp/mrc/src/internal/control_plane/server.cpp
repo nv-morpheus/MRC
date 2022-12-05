@@ -588,6 +588,7 @@ void Server::drop_stream(writer_t& writer)
 {
     const auto stream_id = writer->get_id();
     drop_stream(stream_id);
+    writer.reset();
 }
 
 void Server::drop_stream(const stream_id_t& stream_id)

@@ -76,19 +76,6 @@ void ConnectionManager::drop_stream(const stream_id_t& stream_id) noexcept
     mark_as_modified();
 }
 
-void ConnectionManager::drop_all_streams() noexcept
-{
-    std::vector<stream_id_t> ids;
-    for (auto& [stream_id, stream] : m_streams)
-    {
-        ids.push_back(stream_id);
-    }
-    for (const auto& id : ids)
-    {
-        drop_stream(id);
-    }
-}
-
 Expected<ConnectionManager::instance_t> ConnectionManager::get_instance(const instance_id_t& instance_id) const
 {
     auto search = m_instances.find(instance_id);
