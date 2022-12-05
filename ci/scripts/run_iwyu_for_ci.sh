@@ -24,5 +24,4 @@ ${IWYU_TOOL_PY:-iwyu_tool.py} "$@" -- \
    -Xiwyu --verbose=${IWYU_VERBOSITY:-1} \
    -Xiwyu --quoted_includes_first \
    -Xiwyu --cxx17ns \
-   -Xiwyu --no_comments \
    --driver-mode=g++
