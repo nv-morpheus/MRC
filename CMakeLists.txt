@@ -41,17 +41,19 @@ set(MRC_RAPIDS_VERSION "22.08" CACHE STRING "Which version of RAPIDS to build fo
 set(MRC_CACHE_DIR "${CMAKE_SOURCE_DIR}/.cache" CACHE PATH "Directory to contain all CPM and CCache data")
 mark_as_advanced(MRC_CACHE_DIR)
 
+enable_language(C CXX)
 enable_testing()
 
 # CMake path
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/utilities/cmake")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # Load morpheus utils and update CMake paths
 set(MORPHEUS_UTILS_VERSION "23.01.01-alpha" CACHE STRING "Version of Morpheus utils")
 set(MORPHEUS_UTILS_RAPIDS_CMAKE_VERSION ${MRC_RAPIDS_VERSION})
 set(MORPHEUS_UTILS_RAPIDS_CPM_INIT_OVERRIDE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/rapids_cpm_package_overrides.json")
-include(load_morpheus_utils)
+include(morpheus_utils/load)
 
 # Configure project package manager
 morpheus_utils_initialize_package_manager(

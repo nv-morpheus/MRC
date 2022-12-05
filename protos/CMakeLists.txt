@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-include(GRPCGenerateCPP)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/utilities/cmake")
+include(morpheus_utils/grpc/GRPCGenerateCPP)
 
 add_library(mrc_protos)
 

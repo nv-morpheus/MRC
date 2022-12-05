@@ -54,27 +54,22 @@ rapids_find_package(CUDAToolkit
 # =====
 # - Use static linking to avoid issues with system-wide installations of Boost.
 # - Use numa=on to ensure the numa component of fiber gets built
-set(BOOST_VERSION "1.74.0" CACHE STRING "Version of boost to use")
-morpheus_utils_configure_boost_boost_cmake(${BOOST_VERSION})
+morpheus_utils_configure_boost_boost_cmake()
 
 # UCX
 # ===
-set(UCX_VERSION "1.13" CACHE STRING "Version of ucx to use")
-morpheus_utils_configure_ucx(${UCX_VERSION})
+morpheus_utils_configure_ucx()
 
 # hwloc
 # =====
-set(HWLOC_VERSION "2.5" CACHE STRING "Version of hwloc to use")
-morpheus_utils_configure_hwloc(${HWLOC_VERSION})
+morpheus_utils_configure_hwloc()
 
 # expected
-set(EXPECTED_VERSION "1.0.0" CACHE STRING "Version of expected to use")
-morpheus_utils_configure_tl_expected(${EXPECTED_VERSION})
+morpheus_utils_configure_tl_expected()
 
 # NVIDIA RAPIDS RMM
 # =================
-set(RMM_VERSION "${MRC_RAPIDS_VERSION}" CACHE STRING "Version of RMM to use. Defaults to \${MRC_RAPIDS_VERSION}")
-morpheus_utils_configure_rmm(${RMM_VERSION})
+morpheus_utils_configure_rmm()
 
 # gflags
 # ======
@@ -88,8 +83,7 @@ rapids_find_package(gflags REQUIRED
 # ====
 # - link against shared
 # - todo: compile with -DWITH_GFLAGS=OFF and remove gflags dependency
-set(GLOG_VERSION "0.6" CACHE STRING "Version of glog to use")
-morpheus_utils_configure_glog(${GLOG_VERSION})
+morpheus_utils_configure_glog()
 
 # nvidia cub
 # ==========
@@ -111,8 +105,7 @@ rapids_find_package(gRPC REQUIRED
 
 # RxCpp
 # =====
-set(RXCPP_VERSION "4.1.1.2" CACHE STRING "Version of RxCpp to use")
-morpheus_utils_configure_rxcpp(${RXCPP_VERSION})
+morpheus_utils_configure_rxcpp()
 
 # JSON
 # ======
@@ -126,12 +119,10 @@ rapids_find_package(nlohmann_json REQUIRED
 
 # prometheus
 # =========
-set(PROMETHEUS_CPP_VERSION "1.0.0" CACHE STRING "Version of Prometheus-cpp to use")
 morpheus_utils_configure_prometheus_cpp(${PROMETHEUS_CPP_VERSION})
 
 # libcudacxx
 # =========
-set(LIBCUDACXX_VERSION "1.8.0" CACHE STRING "Version of libcudacxx to use")
 morpheus_utils_configure_libcudacxx(${LIBCUDACXX_VERSION})
 
 if(MRC_BUILD_BENCHMARKS)

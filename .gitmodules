@@ -1,0 +1,4 @@
+[submodule "utilities"]
+	path = utilities
+	url = git@github.com:nv-morpheus/utilities.git
+	branch = devin-issue-225-87
