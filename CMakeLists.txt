@@ -24,17 +24,20 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "mrc")
 option(BUILD_SHARED_LIBS "Default value for whether or not to build shared or static libraries" ON)
 option(MRC_BUILD_BENCHMARKS "Whether or not to build MRC benchmarks" OFF)
 option(MRC_BUILD_DOCS "Enable building of API documentation" OFF)
-option(MRC_BUILD_LIBRARY "Whether the entire MRC library should be built. If set to OFF, only the pieces needed for a target will be built. Set to ON if installing the library" ON)
+option(MRC_BUILD_LIBRARY "Whether the entire MRC library should be built.
+  If set to OFF, only the pieces needed for a target will be built. Set to ON if installing the library" ON)
 option(MRC_BUILD_PYTHON "Enable building the python bindings for MRC" ON)
 option(MRC_BUILD_TESTS "Whether or not to build MRC tests" ON)
 option(MRC_ENABLE_CODECOV "Enable gcov code coverage" OFF)
 option(MRC_ENABLE_DEBUG_INFO "Enable printing debug information" OFF)
 option(MRC_USE_CCACHE "Enable caching compilation results with ccache" OFF)
 option(MRC_USE_CLANG_TIDY "Enable running clang-tidy as part of the build process" OFF)
-option(MRC_USE_CONDA "Enables finding dependencies via conda instead of vcpkg. Note: This will disable vcpkg. All dependencies must be installed first in the conda environment" ON)
+option(MRC_USE_CONDA "Enables finding dependencies via conda. All dependencies must be installed first in the conda
+  environment" ON)
 option(MRC_USE_IWYU "Enable running include-what-you-use as part of the build process" OFF)
 
-set(MRC_RAPIDS_VERSION "22.08" CACHE STRING "Which version of RAPIDS to build for. Sets default versions for RAPIDS CMake and RMM.")
+set(MRC_RAPIDS_VERSION "22.08" CACHE STRING "Which version of RAPIDS to build for.
+  Sets default versions for RAPIDS CMake and RMM.")
 set(MRC_CACHE_DIR "${CMAKE_SOURCE_DIR}/.cache" CACHE PATH "Directory to contain all CPM and CCache data")
 mark_as_advanced(MRC_CACHE_DIR)
 
@@ -54,8 +57,6 @@ include(load_morpheus_utils)
 morpheus_utils_initialize_package_manager(
     MRC_USE_CONDA
     BUILD_SHARED_LIBS
-    MRC_VCPKG_TOOLCHAIN
-    MRC_VCPKG_DEFAULT_BINARY_CACHE
     )
 
 # Configure CUDA architecture
@@ -88,15 +89,6 @@ set(MRC_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Set a default build type if none was specified
 rapids_cmake_build_type(Release)
-
-# Once the build type is set, remove any dumb vcpkg debug folders from the
-# search paths. Without this FindBoost fails since it defaults to the debug
-# binaries
-if(DEFINED CACHE{MRC_VCPKG_TOOLCHAIN} AND DEFINED CMAKE_BUILD_TYPE AND NOT CMAKE_BUILD_TYPE MATCHES "^[Dd][Ee][Bb][Uu][Gg]$")
-  message(STATUS "Release Build: Removing debug Vcpkg paths from CMAKE_PREFIX_PATH and CMAKE_FIND_ROOT_PATH")
-  list(REMOVE_ITEM CMAKE_PREFIX_PATH "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug")
-  list(REMOVE_ITEM CMAKE_FIND_ROOT_PATH "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug")
-endif()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
