@@ -49,6 +49,7 @@ SKIP_RUN=${SKIP_RUN:-""}
 launch_command=("${DOCKER_EXE}" "run"
     "${DOCKER_GPU_OPTS}"
     "${DOCKER_RUN_OPTS}"
+    "--user $(id -u)"
     "--name ${CONTAINER_NAME}"
     "-v ${PWD}:/work"
     "--workdir /work"
