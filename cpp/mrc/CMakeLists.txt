@@ -119,6 +119,11 @@ add_library(libmrc
   src/public/core/executor.cpp
   src/public/core/fiber_pool.cpp
   src/public/core/logging.cpp
+  src/public/core/thread.cpp
+  src/public/coroutines/event.cpp
+  src/public/coroutines/sync_wait.cpp
+  src/public/coroutines/thread_local_context.cpp
+  src/public/coroutines/thread_pool.cpp
   src/public/cuda/device_guard.cpp
   src/public/cuda/sync.cpp
   src/public/manifold/manifold.cpp
