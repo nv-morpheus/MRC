@@ -62,7 +62,7 @@ RUN apt update && \
 FROM base as dev
 
 # allow non-root users to update the conda envs
-RUN chmod -R 777 /opt/conda
+RUN chmod -R a+rwX /opt/conda
 
 # disable sscache wrappers around compilers
 ENV CMAKE_CUDA_COMPILER_LAUNCHER=""
