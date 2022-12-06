@@ -40,8 +40,8 @@ export SKIP_YAPF=${SKIP_YAPF:-""}
 # Set BUILD_DIR to use a different build folder
 export BUILD_DIR=${BUILD_DIR:-"${REPO_DIR}/build"}
 
-# Speficy the clang-tools version to use. Default 12
-export CLANG_TOOLS_VERSION=${CLANG_TOOLS_VERSION:-12}
+# Speficy the clang-tools version to use. Default 15
+export CLANG_TOOLS_VERSION=${CLANG_TOOLS_VERSION:-15}
 
 # Determine the merge base as the root to compare against. Optionally pass in a
 # result variable otherwise the output is printed to stdout

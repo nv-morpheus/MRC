@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "/home/mdemoret/Repos/morpheus/mrc-dev2/cpp/mrc/tests/test_segment.hpp"
+#include "../test_segment.hpp"
 #include "prometheus/client_metric.h"
 #include "prometheus/metric_family.h"
 #include "test_benchmarking.hpp"
