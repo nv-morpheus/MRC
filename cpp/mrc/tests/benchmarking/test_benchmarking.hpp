@@ -17,10 +17,33 @@
 
 #pragma once
 
-#include "../test_segment.hpp"
+#include "rxcpp/operators/rx-map.hpp"
+#include "rxcpp/operators/rx-tap.hpp"
+#include "rxcpp/sources/rx-iterate.hpp"
 
 #include "mrc/benchmarking/segment_watcher.hpp"
 #include "mrc/benchmarking/tracer.hpp"
+#include "mrc/core/executor.hpp"
+#include "mrc/engine/pipeline/ipipeline.hpp"
+#include "mrc/node/rx_node.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_source.hpp"
+#include "mrc/pipeline/pipeline.hpp"
+#include "mrc/segment/builder.hpp"
+
+#include <boost/hana/if.hpp>
+#include <gtest/gtest.h>
+#include <rxcpp/rx.hpp>
+
+#include <cstddef>
+#include <memory>
+#include <random>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
+
+namespace mrc {
 
 class LatencyBenchmarkTests : public ::testing::Test
 {
@@ -131,3 +154,4 @@ class ThroughputBenchmarkTests : public ::testing::Test
     std::set<std::string> m_components = {"nsrc", "n1", "nsink"};
     std::size_t m_iterations;
 };
+}  // namespace mrc

@@ -17,11 +17,32 @@
 
 #pragma once
 
-#include "../test_segment.hpp"
-
+#include "mrc/node/rx_node.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_source.hpp"
 #include "mrc/pipeline/pipeline.hpp"
+#include "mrc/segment/builder.hpp"
+#include "mrc/segment/segment.hpp"
 
+#include <boost/hana/if.hpp>
+#include <glog/logging.h>
+#include <gtest/gtest.h>
+#include <rxcpp/operators/rx-map.hpp>
+#include <rxcpp/rx.hpp>
+#include <rxcpp/sources/rx-iterate.hpp>
+
+#include <cstddef>
+#include <memory>
+#include <ostream>
 #include <random>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
+
+namespace mrc {
+
+class TestSegmentResources;
 
 class StatGatherTest : public ::testing::Test
 {
@@ -74,3 +95,5 @@ class StatGatherTest : public ::testing::Test
     std::shared_ptr<TestSegmentResources> m_resources;
     std::set<std::string> m_components = {"src", "internal_1", "internal_2", "sink"};
 };
+
+}  // namespace mrc

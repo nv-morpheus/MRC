@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "internal/pipeline/instance.hpp"
 #include "internal/pipeline/types.hpp"
 
 #include "mrc/node/generic_sink.hpp"
@@ -26,6 +25,7 @@
 #include <string>
 
 namespace mrc::internal::pipeline {
+class Instance;
 
 class Controller final : public node::GenericSink<ControlMessage>
 {

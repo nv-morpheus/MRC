@@ -19,7 +19,19 @@
 
 #include "mrc/modules/module_registry_util.hpp"
 #include "mrc/modules/sample_modules.hpp"
+#include "mrc/node/rx_source.hpp"
+#include "mrc/segment/builder.hpp"
 #include "mrc/version.hpp"
+
+#include <boost/hana/if.hpp>
+#include <gtest/gtest.h>
+
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+namespace mrc {
 
 TEST_F(TestModuleUtil, ModuleRegistryUtilTest)
 {
@@ -44,3 +56,5 @@ TEST_F(TestModuleUtil, ModuleRegistryUtilTest)
         ModelRegistryUtil::create_registered_module<SimpleModule>("SimpleModule", registry_namespace, release_version),
         std::invalid_argument);
 }
+
+}  // namespace mrc

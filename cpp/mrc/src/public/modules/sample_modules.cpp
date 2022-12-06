@@ -36,6 +36,7 @@
 #include <vector>
 
 namespace mrc::modules {
+
 SimpleModule::SimpleModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
 
 SimpleModule::SimpleModule(std::string module_name, nlohmann::json config) :

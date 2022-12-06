@@ -16,13 +16,21 @@
  */
 
 #include "mrc/core/utils.hpp"
-#include "mrc/modules/module_registry_util.hpp"
+#include "mrc/modules/module_registry.hpp"
 #include "mrc/modules/segment_modules.hpp"
+#include "mrc/node/rx_source.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/version.hpp"
 
+#include <boost/hana/if.hpp>
 #include <nlohmann/json.hpp>
-#include <rxcpp/rx-subscriber.hpp>
+#include <rxcpp/rx.hpp>
+
+#include <memory>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 namespace mrc::modules {
 class DynamicSourceModule : public SegmentModule

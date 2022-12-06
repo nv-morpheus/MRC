@@ -28,7 +28,6 @@
 #include <chrono>
 #include <condition_variable>
 #include <cstddef>
-#include <memory>
 #include <mutex>  // for mutex & unique_lock
 
 #define TEST_CLASS(name)                      \
@@ -171,5 +170,3 @@ class ParallelTester
 };
 
 }  // namespace mrc
-
-using namespace mrc;

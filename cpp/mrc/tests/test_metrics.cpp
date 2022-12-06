@@ -22,9 +22,11 @@
 
 #include <gtest/gtest.h>  // for AssertionResult, SuiteApiResolver, TestInfo, EXPECT_TRUE, Message, TEST_F, Test, TestFactoryImpl, TestPartResult
 
+#include <memory>
 #include <string>  // for allocator, operator==, basic_string, string
+#include <vector>
 
-using namespace mrc;
+namespace mrc {
 using namespace metrics;
 
 class TestMetrics : public ::testing::Test
@@ -52,3 +54,5 @@ TEST_F(TestMetrics, ThroughputCounter)
     EXPECT_EQ(report[0].name, "test_counter");
     EXPECT_EQ(report[0].count, 43);
 }
+
+}  // namespace mrc

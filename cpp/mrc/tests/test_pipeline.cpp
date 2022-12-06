@@ -17,13 +17,12 @@
 
 #include "test_mrc.hpp"  // IWYU pragma: associated
 
-#include "mrc/channel/status.hpp"
 #include "mrc/core/executor.hpp"
+#include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/memory/memory_kind.hpp"
-#include "mrc/node/edge_builder.hpp"
-#include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
+#include "mrc/node/sink_properties.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/pipeline/pipeline.hpp"
@@ -31,24 +30,16 @@
 #include "mrc/segment/definition.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
-#include "mrc/segment/segment.hpp"
 
+#include <boost/hana/if.hpp>
 #include <gtest/gtest.h>
-#include <rxcpp/operators/rx-map.hpp>
-#include <rxcpp/rx-includes.hpp>
-#include <rxcpp/rx-observable.hpp>
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-operators.hpp>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
-#include <rxcpp/sources/rx-iterate.hpp>
+#include <rxcpp/rx.hpp>
 
 #include <atomic>
 #include <cstdint>
 #include <memory>
 #include <ostream>
 #include <string>
-#include <type_traits>
 #include <utility>
 
 // IWYU thinks we need std::copy, exception, begin/end, map, set & vector for initializer lists
@@ -59,7 +50,7 @@
 // IWYU pragma: no_include <set>
 // IWYU pragma: no_include <vector>
 
-using namespace mrc;
+namespace mrc {
 
 class TestPipeline : public ::testing::Test
 {
@@ -134,11 +125,11 @@ TEST_F(TestPipeline, TwoSegment)
         pipeline->make_segment("seg_1", segment::EgressPorts<float>({"float_port"}), [](segment::Builder& seg) {
             auto rx_source = seg.make_source<float>("rx_source", [](rxcpp::subscriber<float> s) {
                 LOG(INFO) << "emit 1";
-                s.on_next(1.0f);
+                s.on_next(1.0F);
                 LOG(INFO) << "emit 2";
-                s.on_next(2.0f);
+                s.on_next(2.0F);
                 LOG(INFO) << "emit 3";
-                s.on_next(3.0f);
+                s.on_next(3.0F);
                 LOG(INFO) << "issuing complete";
                 s.on_completed();
             });
@@ -363,3 +354,5 @@ TEST_F(TestPipeline, Architect)
     LOG(INFO) << "Done" << std::endl;
 }
 */
+
+}  // namespace mrc

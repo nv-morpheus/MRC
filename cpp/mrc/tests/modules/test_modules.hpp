@@ -39,6 +39,8 @@ namespace mrc::segment {
 struct ObjectProperties;
 }
 
+namespace mrc {
+
 class TestSegmentResources
 {
   public:
@@ -70,3 +72,5 @@ class TestModules : public ::testing::Test
 using TestModuleRegistry = TestModules;  // NOLINT
 using TestModuleUtil     = TestModules;  // NOLINT
 using TestSegmentModules = TestModules;  // NOLINT
+
+}  // namespace mrc

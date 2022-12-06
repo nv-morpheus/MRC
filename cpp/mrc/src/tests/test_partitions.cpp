@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include "internal/system/device_partition.hpp"
 #include "internal/system/engine_factory_cpu_sets.hpp"
 #include "internal/system/host_partition.hpp"
 #include "internal/system/partitions.hpp"

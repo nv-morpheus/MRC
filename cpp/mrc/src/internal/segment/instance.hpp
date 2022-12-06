@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "internal/segment/builder.hpp"
 #include "internal/service.hpp"
 
 #include "mrc/runnable/runner.hpp"
@@ -38,6 +37,7 @@ struct Interface;
 
 namespace mrc::internal::segment {
 class Definition;
+class Builder;
 
 // todo(ryan) - inherit from service
 class Instance final : public Service

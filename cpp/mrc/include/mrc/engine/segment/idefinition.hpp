@@ -18,9 +18,7 @@
 #pragma once
 
 #include "mrc/segment/initializers.hpp"
-#include "mrc/types.hpp"
 
-#include <functional>
 #include <map>
 #include <memory>
 #include <string>

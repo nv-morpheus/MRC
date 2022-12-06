@@ -28,6 +28,9 @@
 #include "mrc/segment/ingress_ports.hpp"
 #include "mrc/segment/segment.hpp"  // IWYU pragma: keep
 
+#include <gtest/gtest.h>
+#include <rxcpp/rx.hpp>
+
 #include <cstddef>
 #include <functional>
 #include <memory>
@@ -38,6 +41,8 @@
 namespace mrc::segment {
 struct ObjectProperties;
 }
+
+namespace mrc {
 
 class TestSegmentResources
 {
@@ -86,3 +91,5 @@ class TestSegment : public ::testing::Test
     std::unique_ptr<pipeline::Pipeline> m_pipeline;
     std::shared_ptr<TestSegmentResources> m_resources;
 };
+
+}  // namespace mrc

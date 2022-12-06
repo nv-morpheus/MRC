@@ -18,7 +18,6 @@
 #include "internal/segment/definition.hpp"
 
 #include "mrc/core/addresses.hpp"
-#include "mrc/engine/segment/idefinition.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/types.hpp"
 

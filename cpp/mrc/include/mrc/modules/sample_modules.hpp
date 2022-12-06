@@ -19,16 +19,13 @@
 
 #include "mrc/core/utils.hpp"
 #include "mrc/modules/segment_modules.hpp"
+#include "mrc/segment/builder.hpp"
 
 #include <nlohmann/json.hpp>
 #include <rxcpp/rx.hpp>
 
 #include <string>
 #include <utility>
-
-namespace mrc::segment {
-class Builder;
-}  // namespace mrc::segment
 
 namespace mrc::modules {
 

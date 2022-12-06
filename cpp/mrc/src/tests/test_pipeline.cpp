@@ -38,7 +38,6 @@
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_properties.hpp"
 #include "mrc/options/engine_groups.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"

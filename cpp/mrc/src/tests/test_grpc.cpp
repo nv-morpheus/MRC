@@ -52,6 +52,7 @@
 #include <rxcpp/rx.hpp>
 
 #include <chrono>
+#include <cstddef>
 #include <memory>
 #include <ostream>
 #include <thread>

@@ -19,6 +19,7 @@
 
 #include "internal/codable/decodable_storage_view.hpp"
 #include "internal/codable/storage_view.hpp"
+#include "internal/resources/forward.hpp"
 
 #include "mrc/protos/codable.pb.h"
 #include "mrc/runtime/remote_descriptor_handle.hpp"

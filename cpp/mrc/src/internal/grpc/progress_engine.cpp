@@ -20,7 +20,6 @@
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 #include <grpc/support/time.h>
-#include <grpcpp/completion_queue.h>
 #include <grpcpp/grpcpp.h>
 
 #include <chrono>

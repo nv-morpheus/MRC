@@ -23,6 +23,7 @@
 #include "internal/control_plane/resources.hpp"
 #include "internal/data_plane/resources.hpp"  // IWYU pragma: keep
 #include "internal/memory/device_resources.hpp"
+#include "internal/network/resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/system/engine_factory_cpu_sets.hpp"
@@ -36,10 +37,12 @@
 #include "internal/utils/contains.hpp"
 
 #include "mrc/core/bitmap.hpp"
+#include "mrc/core/task_queue.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
 
+#include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 
 #include <map>

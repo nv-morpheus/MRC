@@ -17,18 +17,15 @@
 
 #include "common_pipelines.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_properties.hpp"
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/definition.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
-#include "mrc/segment/object.hpp"
 
 #include <boost/hana/if.hpp>
 #include <glog/logging.h>
@@ -37,7 +34,6 @@
 #include <memory>
 #include <ostream>
 #include <string>
-#include <utility>
 #include <vector>
 
 using namespace mrc;

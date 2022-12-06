@@ -17,6 +17,7 @@
 
 #include "internal/runnable/fiber_engines.hpp"
 
+#include "internal/runnable/engine.hpp"
 #include "internal/runnable/fiber_engine.hpp"
 #include "internal/system/fiber_pool.hpp"
 

@@ -22,8 +22,6 @@
 
 #include "mrc/channel/egress.hpp"
 #include "mrc/channel/ingress.hpp"
-#include "mrc/channel/status.hpp"
-#include "mrc/core/bitmap.hpp"
 #include "mrc/data/reusable_pool.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/generic_node.hpp"

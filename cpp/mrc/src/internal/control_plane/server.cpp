@@ -30,6 +30,7 @@
 #include "mrc/protos/architect.pb.h"
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launcher.hpp"
+#include "mrc/runnable/runner.hpp"
 
 #include <boost/fiber/condition_variable.hpp>
 #include <glog/logging.h>

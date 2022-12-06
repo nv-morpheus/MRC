@@ -17,6 +17,8 @@
 
 #include "internal/remote_descriptor/storage.hpp"
 
+#include "mrc/codable/encoded_object.hpp"
+
 #include <glog/logging.h>
 
 #include <utility>

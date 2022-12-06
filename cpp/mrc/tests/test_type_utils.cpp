@@ -21,7 +21,10 @@
 
 #include <gtest/gtest.h>  // for EXPECT_EQ
 
+#include <memory>
 #include <vector>
+
+namespace mrc {
 
 TEST_CLASS(TypeUtils);
 
@@ -53,3 +56,5 @@ TEST_F(TestTypeUtils, DataTypeCopy)
     mrc::DataType d5{d1};
     mrc::DataType d6{d2};
 }
+
+}  // namespace mrc

@@ -42,7 +42,6 @@
 #include <optional>
 #include <ostream>
 #include <string>
-#include <type_traits>
 #include <utility>
 
 // iwyu thinks spdlog, map, set, thread & vector are needed for arena_resource

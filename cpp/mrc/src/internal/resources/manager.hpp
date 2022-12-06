@@ -18,21 +18,20 @@
 #pragma once
 
 #include "internal/memory/host_resources.hpp"
-#include "internal/network/resources.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/system/system_provider.hpp"
 
-#include "mrc/core/task_queue.hpp"
 #include "mrc/types.hpp"
-
-#include <boost/fiber/future/future.hpp>
 
 #include <cstddef>
 #include <memory>
 #include <optional>
 #include <vector>
 
+namespace mrc::internal::network {
+class Resources;
+}  // namespace mrc::internal::network
 namespace mrc::internal::control_plane {
 class Resources;
 }  // namespace mrc::internal::control_plane

@@ -21,7 +21,6 @@
 #include "mrc/utils/macros.hpp"
 
 #include <memory>
-#include <utility>
 
 namespace mrc {
 class Options;

@@ -26,6 +26,7 @@
 #include <memory>  // for enable_shared_from_this
 
 namespace mrc::internal::ucx {
+class Worker;
 
 class TaggedReceiveManager : public std::enable_shared_from_this<TaggedReceiveManager>
 {

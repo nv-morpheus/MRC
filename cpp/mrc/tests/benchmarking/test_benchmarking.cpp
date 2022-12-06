@@ -20,6 +20,8 @@
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 
+namespace mrc {
+
 TEST_F(LatencyBenchmarkTests, BenchmarkingLatencyTracer)
 {
     using nlohmann::json;
@@ -81,3 +83,4 @@ TEST_F(ThroughputBenchmarkTests, BenchmarkingThroughputTracer)
         EXPECT_EQ(counter["value"], m_iterations);
     }
 }
+}  // namespace mrc

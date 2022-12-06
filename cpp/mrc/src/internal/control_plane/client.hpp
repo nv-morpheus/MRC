@@ -50,7 +50,6 @@ class CompletionQueue;
 }  // namespace grpc
 namespace mrc::internal::control_plane::client {
 class ConnectionsManager;
-class Instance;
 class SubscriptionService;
 }  // namespace mrc::internal::control_plane::client
 namespace mrc::internal::network {

@@ -18,6 +18,7 @@
 #include "../segments/common_segments.hpp"
 #include "common_pipelines.hpp"
 
+#include "mrc/engine/segment/ibuilder.hpp"
 #include "mrc/pipeline/pipeline.hpp"
 
 #include <memory>
