@@ -18,16 +18,15 @@
 #include "test_pymrc.hpp"
 
 #include "pymrc/executor.hpp"
+#include "pymrc/forward.hpp"
 #include "pymrc/pipeline.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/segment/builder.hpp"
-#include "mrc/segment/object.hpp"
 
 #include <boost/hana/if.hpp>
 #include <gtest/gtest.h>     // IWYU pragma: keep
@@ -40,11 +39,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-// IWYU pragma: no_include "gtest/gtest_pred_impl.h"
-// IWYU pragma: no_include <pybind11/detail/common.h>
-// IWYU pragma: no_include "rxcpp/sources/rx-iterate.hpp"
-// IWYU pragma: no_include "rx-includes.hpp"
 
 namespace py    = pybind11;
 namespace pymrc = mrc::pymrc;

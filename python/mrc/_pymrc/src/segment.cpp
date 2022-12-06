@@ -21,10 +21,6 @@
 #include "pymrc/types.hpp"
 #include "pymrc/utils.hpp"
 
-#include "mrc/channel/status.hpp"
-#include "mrc/core/utils.hpp"
-#include "mrc/manifold/egress.hpp"
-#include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/port_registry.hpp"
 #include "mrc/node/sink_properties.hpp"
@@ -49,7 +45,6 @@
 #include <map>
 #include <stdexcept>
 #include <string>
-#include <type_traits>
 #include <typeindex>
 #include <utility>
 #include <vector>

@@ -19,6 +19,7 @@
 
 #include "pymrc/operators.hpp"
 #include "pymrc/types.hpp"
+#include "pymrc/utils.hpp"
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>
@@ -31,9 +32,7 @@
 #include <array>
 #include <exception>
 #include <functional>
-#include <memory>
 #include <stdexcept>
-#include <type_traits>
 #include <utility>
 #include <vector>
 

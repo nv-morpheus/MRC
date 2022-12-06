@@ -24,6 +24,7 @@
 #include "mrc/version.hpp"
 
 #include <pybind11/pybind11.h>  // IWYU pragma: keep
+#include <pybind11/pytypes.h>
 
 #include <cstddef>
 #include <memory>

@@ -27,7 +27,6 @@
 
 #include <cassert>
 #include <string>
-#include <type_traits>
 #include <utility>
 
 // IWYU pragma: no_include <listobject.h>

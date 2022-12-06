@@ -18,7 +18,6 @@
 #include "test_pymrc.hpp"
 
 #include "pymrc/module_wrappers/pickle.hpp"
-#include "pymrc/utilities/object_cache.hpp"
 
 #include <gtest/gtest.h>
 #include <pybind11/cast.h>
@@ -27,12 +26,6 @@
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
 
-#include <string>  // IWYU pragma: keep
-
-// IWYU pragma: no_include "gtest/gtest_pred_impl.h"
-// IWYU pragma: no_include <pybind11/detail/common.h>
-// IWYU pragma: no_include "rxcpp/sources/rx-iterate.hpp"
-// IWYU pragma: no_include "rx-includes.hpp"
 #include <string>
 
 namespace py    = pybind11;

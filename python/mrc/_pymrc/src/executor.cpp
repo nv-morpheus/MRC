@@ -22,7 +22,7 @@
 
 #include "mrc/core/executor.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
-#include "mrc/options/options.hpp"
+#include "mrc/pipeline/pipeline.hpp"
 #include "mrc/types.hpp"  // for Future, SharedFuture
 
 #include <boost/fiber/future/async.hpp>
@@ -46,13 +46,6 @@
 
 // IWYU thinks we need array for calling py::print()
 // IWYU pragma: no_include <array>
-
-// IWYU thinks we need system_error for ft_signal_handler
-// IWYU pragma: no_include <system_error>
-
-// IWYU thinks we need map & max for gil_futures
-// IWYU pragma: no_include <algorithm>
-// IWYU pragma: no_include <map>
 
 namespace mrc::pymrc {
 

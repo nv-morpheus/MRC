@@ -17,20 +17,21 @@
 
 #include "pymrc/subscriber.hpp"
 
+#include <pybind11/attr.h>
+#include <pybind11/functional.h>  // IWYU pragma: keep
+#include <pybind11/pybind11.h>
+#include <array>
+#include <memory>
+#include <sstream>
+
 #include "pymrc/types.hpp"  // for PyObjectObserver, PyObjectSubscriber, PyObjectObservable, PySubscription
 #include "pymrc/utils.hpp"
-
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 
-#include <pybind11/attr.h>
-#include <pybind11/functional.h>  // IWYU pragma: keep
-#include <pybind11/gil.h>
-#include <pybind11/pybind11.h>
-
-#include <array>
-#include <memory>
-#include <ostream>
+namespace pybind11 {
+class gil_scoped_release;
+}  // namespace pybind11
 
 namespace mrc::pymrc {
 

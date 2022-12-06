@@ -22,10 +22,10 @@
 
 #include "mrc/node/forward.hpp"
 #include "mrc/node/port_registry.hpp"
+#include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"  // IWYU pragma: keep
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
-#include "mrc/segment/ports.hpp"
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>
@@ -166,6 +166,8 @@ PipelineEgressInfo collect_egress_info(py::list ids)
 }  // namespace
 
 Pipeline::Pipeline() : m_pipeline(mrc::pipeline::make_pipeline()) {}
+
+Pipeline::~Pipeline() = default;
 
 void Pipeline::make_segment(const std::string& name, const std::function<void(mrc::segment::Builder&)>& init)
 {

@@ -17,15 +17,18 @@
 
 #pragma once
 
-#include "mrc/pipeline/pipeline.hpp"      // IWYU pragma: keep
-#include "mrc/segment/builder.hpp"        // IWYU pragma: keep
-#include "mrc/segment/ingress_ports.hpp"  // IWYU pragma: keep
-
 #include <pybind11/pytypes.h>
 
 #include <functional>
 #include <memory>
 #include <string>
+
+namespace mrc::pipeline {
+class Pipeline;
+}  // namespace mrc::pipeline
+namespace mrc::segment {
+class Builder;
+}  // namespace mrc::segment
 
 namespace mrc::pymrc {
 
@@ -36,6 +39,7 @@ class Pipeline
 {
   public:
     Pipeline();
+    ~Pipeline();
 
     /**
      * @brief Create a new MRC segment

@@ -32,7 +32,6 @@
 #include <stdexcept>
 #include <string>
 #include <tuple>
-#include <type_traits>
 
 namespace py = pybind11;
 namespace mrc::pymrc {

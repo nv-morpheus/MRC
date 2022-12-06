@@ -17,6 +17,7 @@
 
 #include "pymrc/executor.hpp"
 
+#include "pymrc/pipeline.hpp"  // IWYU pragma: keep (MDD)
 #include "pymrc/utils.hpp"
 
 #include "mrc/options/options.hpp"
@@ -28,7 +29,7 @@
 #include <pybind11/stl.h>  // IWYU pragma: keep
 
 #include <memory>
-#include <ostream>
+#include <sstream>
 #include <utility>  // for move
 
 // IWYU thinks we need vectir for py::class_<Executor, std::shared_ptr<Executor>>

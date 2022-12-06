@@ -17,13 +17,13 @@
 
 #include "pymrc/watchers.hpp"
 
-#include "pymrc/executor.hpp"  // IWYU pragma: keep
+#include "pymrc/executor.hpp"
 #include "pymrc/segment.hpp"
 
-#include "mrc/segment/builder.hpp"  // IWYU pragma: keep
+#include "mrc/segment/builder.hpp"
 
 #include <pybind11/attr.h>
-#include <pybind11/gil.h>
+#include <pybind11/gil.h>  // IWYU pragma: keep
 #include <pybind11/pybind11.h>
 
 #include <array>
@@ -31,9 +31,6 @@
 #include <functional>
 #include <memory>
 #include <vector>
-
-// IWYU pragma: no_include <pybind11/detail/common.h>
-// IWYU pragma: no_include <pybind11/detail/descr.h>
 
 namespace mrc::pymrc {
 
