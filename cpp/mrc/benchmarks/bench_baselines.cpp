@@ -20,6 +20,7 @@
 
 #include <benchmark/benchmark.h>
 #include <nlohmann/json.hpp>
+#include <rxcpp/operators/rx-lift.hpp>
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/operators/rx-tap.hpp>
 #include <rxcpp/rx.hpp>
@@ -30,12 +31,9 @@
 #include <chrono>
 #include <cstddef>
 #include <iostream>
-#include <map>
 #include <memory>
 #include <random>
 #include <string>
-#include <tuple>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
