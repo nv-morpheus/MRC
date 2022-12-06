@@ -31,38 +31,35 @@ ARG CUDA_SHORT_VER=11.4
 SHELL ["/bin/bash",  "-c"]
 
 # OS deps
-RUN apt-get update &&\
+RUN --mount=type=cache,target=/var/cache/apt \
+    apt-get update &&\
     apt-get install --no-install-recommends -y \
-        libnuma1 && \
-    apt clean && \
+    libnuma1 && \
     rm -rf /var/lib/apt/lists/*
 
 # Create conda environment
 COPY ./ci/conda/environments/* /tmp/conda/
 
 RUN --mount=type=cache,id=conda_pkgs,target=/opt/conda/pkgs,sharing=locked \
-     CONDA_ALWAYS_YES=true \
+    CONDA_ALWAYS_YES=true \
     /opt/conda/bin/mamba env create -q -n ${PROJ_NAME} --file /tmp/conda/dev_env.yml && \
     /opt/conda/bin/mamba env update -q -n ${PROJ_NAME} --file /tmp/conda/clang_env.yml && \
     /opt/conda/bin/mamba env update -q -n ${PROJ_NAME} --file /tmp/conda/ci_env.yml && \
     sed -i "s/conda activate base/conda activate ${PROJ_NAME}/g" ~/.bashrc && \
-    conda clean -afy && \
+    chmod -R a+rwX /opt/conda && \
     rm -rf /tmp/conda
 
 # ============ driver ==================
 FROM base as driver
 
-RUN apt update && \
+RUN --mount=type=cache,target=/var/cache/apt \
+    apt update && \
     DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC \
     apt install --no-install-recommends -y libnvidia-compute-495 && \
-    apt clean && \
     rm -rf /var/lib/apt/lists/*
 
 # ========= development ================
 FROM base as dev
-
-# allow non-root users to update the conda envs
-RUN chmod -R a+rwX /opt/conda
 
 # disable sscache wrappers around compilers
 ENV CMAKE_CUDA_COMPILER_LAUNCHER=""
@@ -70,16 +67,16 @@ ENV CMAKE_CXX_COMPILER_LAUNCHER=""
 ENV CMAKE_C_COMPILER_LAUNCHER=""
 
 # OS deps
-RUN apt-get update &&\
+RUN --mount=type=cache,target=/var/cache/apt \
+    apt-get update &&\
     apt-get install --no-install-recommends -y \
-        gdb \
-        htop \
-        openssh-client \
-        psmisc \
-        sudo \
-        vim-tiny \
-        && \
-    apt clean && \
+    gdb \
+    htop \
+    openssh-client \
+    psmisc \
+    sudo \
+    vim-tiny \
+    && \
     rm -rf /var/lib/apt/lists/*
 
 ARG USERNAME=morpheus
