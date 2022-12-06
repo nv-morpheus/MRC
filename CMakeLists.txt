@@ -287,26 +287,26 @@ add_library(${PROJECT_NAME}::libmrc ALIAS libmrc)
 
 target_link_libraries(libmrc
   PUBLIC
-  mrc_protos
-  mrc_architect_protos
-  rmm::rmm
-  CUDA::nvml
-  CUDA::cudart
-  rxcpp::rxcpp
-  glog::glog
-  libcudacxx::libcudacxx
-  Boost::fiber
-  Boost::context
-  glog::glog
-  gRPC::grpc++
-  gRPC::grpc
-  gRPC::gpr
+    mrc_protos
+    mrc_architect_protos
+    rmm::rmm
+    CUDA::nvml
+    CUDA::cudart
+    rxcpp::rxcpp
+    glog::glog
+    libcudacxx::libcudacxx
+    Boost::fiber
+    Boost::context
+    glog::glog
+    gRPC::grpc++
+    gRPC::grpc
+    gRPC::gpr
   PRIVATE
-  hwloc::hwloc
-  prometheus-cpp::core # private in MR !199
-  ucx::ucs
-  ucx::ucp
-  tl::expected
+    hwloc::hwloc
+    prometheus-cpp::core # private in MR !199
+    ucx::ucs
+    ucx::ucp
+    tl::expected
 )
 
 target_include_directories(libmrc
