@@ -17,9 +17,9 @@
 
 #include "mrc/pipeline/pipeline.hpp"
 
+#include "mrc/segment/definition.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
-#include "mrc/segment/definition.hpp"
 
 namespace mrc::pipeline {
 

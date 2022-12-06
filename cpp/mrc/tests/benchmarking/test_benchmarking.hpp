@@ -17,10 +17,6 @@
 
 #pragma once
 
-#include "rxcpp/operators/rx-map.hpp"
-#include "rxcpp/operators/rx-tap.hpp"
-#include "rxcpp/sources/rx-iterate.hpp"
-
 #include "mrc/benchmarking/segment_watcher.hpp"
 #include "mrc/benchmarking/tracer.hpp"
 #include "mrc/core/executor.hpp"

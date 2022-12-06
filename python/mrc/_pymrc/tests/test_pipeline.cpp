@@ -38,9 +38,7 @@
 #include <pybind11/gil.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep (MDD)
-#include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx.hpp>
-#include <rxcpp/sources/rx-iterate.hpp>
 
 #include <atomic>
 #include <cstddef>

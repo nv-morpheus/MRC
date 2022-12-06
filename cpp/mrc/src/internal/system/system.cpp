@@ -17,15 +17,17 @@
 
 #include "internal/system/system.hpp"
 
-#include <glog/logging.h>
-#include <hwloc.h>
-#include <utility>
-
 #include "internal/system/partitions.hpp"
 #include "internal/system/topology.hpp"
+
 #include "mrc/core/bitmap.hpp"
 #include "mrc/engine/system/isystem.hpp"
 #include "mrc/options/options.hpp"
+
+#include <glog/logging.h>
+#include <hwloc.h>
+
+#include <utility>
 
 namespace mrc::internal::system {
 

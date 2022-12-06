@@ -36,9 +36,7 @@
 
 #include <boost/fiber/future/async.hpp>
 #include <boost/fiber/future/future.hpp>
-#include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx.hpp>
-#include <rxcpp/sources/rx-iterate.hpp>
 
 #include <chrono>
 #include <cstdint>

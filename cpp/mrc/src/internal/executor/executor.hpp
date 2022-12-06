@@ -21,7 +21,6 @@
 #include "internal/system/system_provider.hpp"
 
 #include <memory>
-#include <utility>
 
 namespace mrc {
 class Options;
@@ -64,14 +63,8 @@ class Executor : public Service, public system::SystemProvider
     std::unique_ptr<pipeline::Manager> m_pipeline_manager;
 };
 
-inline std::unique_ptr<Executor> make_executor(std::shared_ptr<Options> options)
-{
-    return std::make_unique<Executor>(std::move(options));
-}
+std::unique_ptr<Executor> make_executor(std::shared_ptr<Options> options);
 
-inline std::unique_ptr<Executor> make_executor(std::unique_ptr<system::Resources> resources)
-{
-    return std::make_unique<Executor>(std::move(resources));
-}
+std::unique_ptr<Executor> make_executor(std::unique_ptr<system::Resources> resources);
 
 }  // namespace mrc::internal::executor

@@ -29,10 +29,7 @@
 
 #include <benchmark/benchmark.h>
 #include <nlohmann/json.hpp>
-#include <rxcpp/operators/rx-map.hpp>
-#include <rxcpp/operators/rx-tap.hpp>
 #include <rxcpp/rx.hpp>  // IWYU pragma: keep
-#include <rxcpp/sources/rx-iterate.hpp>
 
 #include <chrono>
 #include <cstddef>

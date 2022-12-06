@@ -32,7 +32,6 @@
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx.hpp>
 
 #include <exception>

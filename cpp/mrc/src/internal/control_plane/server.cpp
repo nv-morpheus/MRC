@@ -35,7 +35,7 @@
 #include <boost/fiber/condition_variable.hpp>
 #include <glog/logging.h>
 #include <grpcpp/grpcpp.h>
-#include <rxcpp/sources/rx-iterate.hpp>
+#include <rxcpp/rx.hpp>
 
 #include <algorithm>
 #include <exception>

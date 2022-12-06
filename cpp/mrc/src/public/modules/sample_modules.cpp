@@ -17,9 +17,6 @@
 
 #include "mrc/modules/sample_modules.hpp"
 
-#include "rxcpp/operators/rx-map.hpp"
-#include "rxcpp/sources/rx-iterate.hpp"
-
 #include "mrc/core/utils.hpp"
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/rx_node.hpp"

@@ -30,10 +30,7 @@
 #include <nlohmann/json.hpp>
 #include <pybind11/gil.h>
 #include <pybind11/pytypes.h>
-#include <rxcpp/operators/rx-map.hpp>
-#include <rxcpp/operators/rx-tap.hpp>
 #include <rxcpp/rx.hpp>
-#include <rxcpp/sources/rx-iterate.hpp>
 
 #include <cstddef>
 #include <functional>

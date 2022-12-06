@@ -37,9 +37,6 @@
 
 #include <glog/logging.h>
 #include <nlohmann/json.hpp>
-#include <rxcpp/operators/rx-concat_map.hpp>
-#include <rxcpp/operators/rx-map.hpp>
-#include <rxcpp/operators/rx-tap.hpp>
 
 #include <array>
 #include <atomic>

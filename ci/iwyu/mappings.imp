@@ -67,6 +67,10 @@
 { "include": [ "\"rxcpp/rx-connectable_observable.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
 { "include": [ "<rxcpp/rx-grouped_observable.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
 { "include": [ "\"rxcpp/rx-grouped_observable.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "@<rxcpp/operators/.*>", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "@\"rxcpp/operators/.*\"", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "@<rxcpp/sources/.*>", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "@\"rxcpp/sources/.*\"", private, "<rxcpp/rx.hpp>", "public" ] },
 
 # ucp
 { "include": [ "<ucp/api/ucp_def.h>", "public", "<ucp/api/ucp.h>", "public" ] },

@@ -17,9 +17,6 @@
 
 #include "internal/pubsub/subscriber_service.hpp"
 
-#include "rxcpp/operators/rx-map.hpp"
-#include "rxcpp/sources/rx-iterate.hpp"
-
 #include "internal/data_plane/resources.hpp"
 #include "internal/data_plane/server.hpp"
 #include "internal/memory/transient_pool.hpp"

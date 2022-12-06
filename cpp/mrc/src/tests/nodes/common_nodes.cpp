@@ -26,7 +26,6 @@
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>
-#include <rxcpp/sources/rx-iterate.hpp>
 
 #include <chrono>
 #include <memory>
