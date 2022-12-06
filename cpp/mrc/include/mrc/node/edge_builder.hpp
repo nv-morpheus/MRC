@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "mrc/node/forward.hpp"
+#include "mrc/node/forward.hpp"  // IWYU pragma: keep
 
 #include <glog/logging.h>
 
@@ -40,6 +40,8 @@ template <typename T>
 class SinkProperties;
 template <typename T>
 class SourceProperties;
+
+// IWYU pragma: no_forward_declare mrc::node::Edge
 
 struct EdgeBuilder final
 {

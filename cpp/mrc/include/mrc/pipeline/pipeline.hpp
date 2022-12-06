@@ -18,7 +18,6 @@
 #pragma once
 
 #include "mrc/engine/pipeline/ipipeline.hpp"
-#include "mrc/segment/definition.hpp"
 #include "mrc/segment/initializers.hpp"
 #include "mrc/utils/macros.hpp"
 
@@ -29,6 +28,7 @@
 namespace mrc::segment {
 struct EgressPortsBase;
 struct IngressPortsBase;
+class Definition;
 }  // namespace mrc::segment
 
 // work-around for known iwyu issue
