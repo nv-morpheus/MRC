@@ -18,7 +18,7 @@
 #pragma once
 
 #include "mrc/benchmarking/trace_statistics.hpp"
-#include "mrc/engine/segment/ibuilder.hpp"
+#include "mrc/engine/segment/ibuilder.hpp"  // IWYU pragma: export
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/rx_node.hpp"

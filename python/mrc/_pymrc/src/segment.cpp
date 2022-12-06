@@ -38,6 +38,7 @@
 #include <exception>
 #include <fstream>
 #include <functional>
+#include <future>
 #include <map>
 #include <stdexcept>
 #include <string>

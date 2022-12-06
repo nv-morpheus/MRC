@@ -22,7 +22,6 @@
 #include "mrc/segment/builder.hpp"
 #include "mrc/version.hpp"
 
-#include <boost/hana/if.hpp>
 #include <nlohmann/json.hpp>
 #include <rxcpp/rx.hpp>
 

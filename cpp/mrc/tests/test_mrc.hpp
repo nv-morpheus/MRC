@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "mrc/memory/memory_kind.hpp"
 #include "mrc/memory/resources/device/cuda_malloc_resource.hpp"  // IWYU pragma: export
 #include "mrc/memory/resources/host/pinned_memory_resource.hpp"  // IWYU pragma: export
 

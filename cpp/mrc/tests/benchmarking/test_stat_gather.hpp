@@ -24,7 +24,6 @@
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/segment.hpp"
 
-#include <boost/hana/if.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <rxcpp/operators/rx-map.hpp>

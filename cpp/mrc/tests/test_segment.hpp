@@ -38,10 +38,6 @@
 
 // IWYU pragma: no_include "gtest/gtest_pred_impl.h"
 
-namespace mrc::segment {
-struct ObjectProperties;
-}
-
 namespace mrc {
 
 class TestSegmentResources

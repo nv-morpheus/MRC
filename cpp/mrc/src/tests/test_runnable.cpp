@@ -23,6 +23,7 @@
 #include "mrc/options/engine_groups.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
+#include "mrc/runnable/context.hpp"  // IWYU pragma: keep (for static_asserts)
 #include "mrc/runnable/fiber_context.hpp"
 #include "mrc/runnable/forward.hpp"
 #include "mrc/runnable/launch_control.hpp"

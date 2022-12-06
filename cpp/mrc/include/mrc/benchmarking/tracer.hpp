@@ -33,6 +33,8 @@
 #include <type_traits>
 #include <vector>
 
+// IWYU pragma: no_include <compare> (Issues with this header)
+
 namespace mrc::benchmarking {
 using namespace std::chrono_literals;
 

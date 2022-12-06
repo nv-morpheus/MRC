@@ -22,7 +22,6 @@
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
-#include "mrc/node/sink_properties.hpp"
 #include "mrc/options/engine_groups.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
@@ -33,12 +32,10 @@
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
-#include "mrc/segment/object.hpp"
 #include "mrc/segment/segment.hpp"
 
 #include <boost/fiber/future/async.hpp>
 #include <boost/fiber/future/future.hpp>
-#include <boost/hana/if.hpp>
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx.hpp>
 #include <rxcpp/sources/rx-iterate.hpp>

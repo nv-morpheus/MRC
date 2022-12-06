@@ -28,7 +28,6 @@
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
 
-#include <boost/hana/if.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>

@@ -31,7 +31,6 @@
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
 
-#include <boost/hana/if.hpp>
 #include <gtest/gtest.h>
 #include <rxcpp/rx.hpp>
 

@@ -23,7 +23,6 @@
 #include "mrc/segment/builder.hpp"
 #include "mrc/version.hpp"
 
-#include <boost/hana/if.hpp>
 #include <gtest/gtest.h>
 
 #include <memory>

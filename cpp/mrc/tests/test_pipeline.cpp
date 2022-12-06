@@ -19,10 +19,8 @@
 
 #include "mrc/core/executor.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
-#include "mrc/memory/memory_kind.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
-#include "mrc/node/sink_properties.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/pipeline/pipeline.hpp"
@@ -31,7 +29,6 @@
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
 
-#include <boost/hana/if.hpp>
 #include <gtest/gtest.h>
 #include <rxcpp/rx.hpp>
 

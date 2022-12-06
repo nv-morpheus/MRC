@@ -31,7 +31,6 @@
 #include "mrc/version.hpp"
 
 #include <boost/filesystem/path.hpp>
-#include <boost/hana/if.hpp>
 #include <dlfcn.h>
 #include <glog/logging.h>
 #include <gtest/gtest.h>

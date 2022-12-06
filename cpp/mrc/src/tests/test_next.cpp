@@ -35,7 +35,6 @@
 #include "mrc/node/rx_subscribable.hpp"
 #include "mrc/node/sink_channel.hpp"
 #include "mrc/node/source_channel.hpp"
-#include "mrc/node/source_properties.hpp"
 #include "mrc/options/engine_groups.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
@@ -48,14 +47,11 @@
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/definition.hpp"
 #include "mrc/segment/egress_ports.hpp"
-#include "mrc/segment/object.hpp"
-#include "mrc/segment/runnable.hpp"
 #include "mrc/segment/segment.hpp"
 #include "mrc/type_traits.hpp"
 #include "mrc/utils/macros.hpp"
 
 #include <boost/fiber/operations.hpp>
-#include <boost/hana/if.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <rxcpp/operators/rx-map.hpp>

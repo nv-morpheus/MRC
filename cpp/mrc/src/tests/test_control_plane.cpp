@@ -31,10 +31,8 @@
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 
-#include "mrc/codable/fundamental_types.hpp"
-#include "mrc/core/bitmap.hpp"
+#include "mrc/codable/fundamental_types.hpp"  // IWYU pragma: keep
 #include "mrc/core/task_queue.hpp"
-#include "mrc/memory/codable/buffer.hpp"
 #include "mrc/memory/literals.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"

@@ -29,10 +29,8 @@
 #include "mrc/runnable/context.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/segment/builder.hpp"
-#include "mrc/segment/object.hpp"
 #include "mrc/utils/string_utils.hpp"
 
-#include <boost/hana/if.hpp>
 #include <gtest/gtest.h>
 #include <gtest/internal/gtest-internal.h>
 #include <rxcpp/operators/rx-map.hpp>

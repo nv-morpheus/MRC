@@ -27,6 +27,7 @@
 #include "mrc/metrics/registry.hpp"
 #include "mrc/segment/egress_port.hpp"   // IWYU pragma: keep
 #include "mrc/segment/ingress_port.hpp"  // IWYU pragma: keep
+#include "mrc/segment/initializers.hpp"
 #include "mrc/types.hpp"
 
 #include <glog/logging.h>

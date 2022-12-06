@@ -22,9 +22,12 @@
 #include <pybind11/pytypes.h>
 
 #include <memory>
-#include <optional>
 #include <string>
 #include <typeinfo>
+
+namespace pybind11 {
+class gil_scoped_acquire;
+}  // namespace pybind11
 
 namespace mrc::pymrc {
 

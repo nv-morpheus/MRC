@@ -19,7 +19,7 @@
 
 #include "mrc/core/bitmap.hpp"
 #include "mrc/core/fiber_pool.hpp"
-#include "mrc/core/task_queue.hpp"
+#include "mrc/core/task_queue.hpp"  // IWYU pragma: export
 #include "mrc/utils/macros.hpp"
 #include "mrc/utils/thread_local_shared_pointer.hpp"
 

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "mrc/runnable/engine.hpp"
+#include "mrc/runnable/engine.hpp"  // IWYU pragma: export
 #include "mrc/runnable/launch_options.hpp"
 
 #include <cstddef>
