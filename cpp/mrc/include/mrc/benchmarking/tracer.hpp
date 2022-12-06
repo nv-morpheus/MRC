@@ -19,12 +19,12 @@
 
 #include "mrc/benchmarking/util.hpp"
 
-#include <ext/new_allocator.h>
 #include <glog/logging.h>
 #include <nlohmann/json.hpp>
 
 #include <array>
 #include <chrono>
+#include <compare>
 #include <cstddef>
 #include <map>
 #include <memory>

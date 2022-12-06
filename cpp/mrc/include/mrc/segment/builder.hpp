@@ -18,10 +18,8 @@
 #pragma once
 
 #include "mrc/benchmarking/trace_statistics.hpp"
-#include "mrc/core/watcher.hpp"
 #include "mrc/engine/segment/ibuilder.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
@@ -53,6 +51,16 @@
 #include <typeindex>
 #include <utility>
 #include <vector>
+
+namespace mrc {
+struct WatcherInterface;
+}  // namespace mrc
+namespace mrc::modules {
+class SegmentModule;
+}  // namespace mrc::modules
+namespace mrc::segment {
+class Definition;
+}  // namespace mrc::segment
 
 // IWYU pragma: no_include <boost/hana/fwd/core/when.hpp>
 // IWYU pragma: no_include <boost/hana/fwd/if.hpp>

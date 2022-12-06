@@ -17,12 +17,14 @@
 
 #pragma once
 
-#include "mrc/channel/ingress.hpp"
-
 #include <functional>
 #include <map>
 #include <memory>
 #include <typeindex>
+
+namespace mrc::channel {
+struct IngressHandle;
+}  // namespace mrc::channel
 
 namespace mrc::node {
 

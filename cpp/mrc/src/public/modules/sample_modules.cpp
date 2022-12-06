@@ -20,13 +20,12 @@
 #include "rxcpp/operators/rx-map.hpp"
 #include "rxcpp/sources/rx-iterate.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/core/utils.hpp"
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
-#include "mrc/segment/object.hpp"
+#include "mrc/segment/builder.hpp"
 
 #include <boost/hana/if.hpp>
 #include <glog/logging.h>

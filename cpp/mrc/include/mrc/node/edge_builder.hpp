@@ -17,11 +17,7 @@
 
 #pragma once
 
-#include "mrc/channel/ingress.hpp"
-#include "mrc/node/edge_properties.hpp"
 #include "mrc/node/forward.hpp"
-#include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_properties.hpp"
 
 #include <glog/logging.h>
 
@@ -29,7 +25,21 @@
 #include <sstream>
 #include <typeindex>
 
+namespace mrc::channel {
+struct IngressHandle;
+}  // namespace mrc::channel
+
 namespace mrc::node {
+class SinkPropertiesBase;
+class SourcePropertiesBase;
+template <typename T>
+class ChannelAcceptor;
+template <typename T>
+class ChannelProvider;
+template <typename T>
+class SinkProperties;
+template <typename T>
+class SourceProperties;
 
 struct EdgeBuilder final
 {

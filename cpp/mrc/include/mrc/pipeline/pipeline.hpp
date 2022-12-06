@@ -19,12 +19,9 @@
 
 #include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/segment/definition.hpp"
-#include "mrc/types.hpp"
+#include "mrc/segment/initializers.hpp"
 #include "mrc/utils/macros.hpp"
 
-#include <algorithm>
-#include <cstddef>
-#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
@@ -77,21 +74,13 @@ class Pipeline final : public internal::pipeline::IPipeline
      * @tparam InputTypes Segment ingress interface datatypes
      * @tparam OutputTypes Segment egress interface datatypes
      * @param p Parent pipeline
-     * @param ingress_ports Porttypes object describing a Segment's ingress ports
-     * @param egress_ports Porttypes object describing a Segment's egress ports
      * @param segment_name Unique name to assign to segments built from this definition
      * @param segment_initializer User defined lambda function which will be used to initialize
      *  new segments.
      * @return A shared pointer to a new segment::Definition
      */
-    template <typename CallableT>
-    std::shared_ptr<segment::Definition> make_segment(const std::string& segment_name, CallableT&& segment_initializer)
-    {
-        segment::Definition::initializer_fn_t initializer = std::forward<CallableT>(segment_initializer);
-        auto segdef = segment::Definition::create(segment_name, segment_initializer);
-        this->register_segment(segdef);
-        return segdef;
-    };
+    std::shared_ptr<segment::Definition> make_segment(const std::string& segment_name,
+                                                      segment::segment_initializer_fn_t segment_initializer);
 
     /**
      * Create a segment definition, which describes how to create new Segment instances.
@@ -108,7 +97,7 @@ class Pipeline final : public internal::pipeline::IPipeline
     std::shared_ptr<segment::Definition> make_segment(const std::string& segment_name,
                                                       segment::IngressPortsBase ingress_ports,
                                                       segment::EgressPortsBase egress_ports,
-                                                      segment::Definition::initializer_fn_t segment_initializer);
+                                                      segment::segment_initializer_fn_t segment_initializer);
 
     /**
      * Create a segment definition, which describes how to create new Segment instances.
@@ -124,7 +113,7 @@ class Pipeline final : public internal::pipeline::IPipeline
      */
     std::shared_ptr<segment::Definition> make_segment(const std::string& segment_name,
                                                       segment::IngressPortsBase ingress_ports,
-                                                      segment::Definition::initializer_fn_t segment_initializer);
+                                                      segment::segment_initializer_fn_t segment_initializer);
 
     /**
      * Create a segment definition, which describes how to create new Segment instances.
@@ -140,7 +129,7 @@ class Pipeline final : public internal::pipeline::IPipeline
      */
     std::shared_ptr<segment::Definition> make_segment(const std::string& segment_name,
                                                       segment::EgressPortsBase egress_ports,
-                                                      segment::Definition::initializer_fn_t segment_initializer);
+                                                      segment::segment_initializer_fn_t segment_initializer);
 };
 
 std::unique_ptr<Pipeline> make_pipeline();

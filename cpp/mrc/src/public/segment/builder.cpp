@@ -18,11 +18,11 @@
 #include "mrc/segment/builder.hpp"
 
 #include "mrc/modules/module_registry.hpp"
+#include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/port_registry.hpp"
 
 #include <nlohmann/json.hpp>
 
-#include <algorithm>
 #include <numeric>
 #include <stdexcept>
 

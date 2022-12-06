@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "mrc/runnable/context.hpp"
 #include "mrc/runnable/engine.hpp"
 #include "mrc/runnable/fiber_context.hpp"
 #include "mrc/runnable/forward.hpp"
@@ -39,6 +38,8 @@
 #include <vector>
 
 namespace mrc::runnable {
+class Context;
+class Runnable;
 
 /**
  * @brief Runner takes ownership and manages the lifecycle of a Runnable

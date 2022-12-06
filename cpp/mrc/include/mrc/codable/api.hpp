@@ -26,6 +26,10 @@
 #include <optional>
 #include <typeindex>
 
+namespace mrc::memory {
+struct memory_resource;
+}
+
 namespace mrc::codable {
 
 namespace protos {

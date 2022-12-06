@@ -17,7 +17,6 @@
 
 #include "mrc/options/services.hpp"
 
-#include "mrc/runnable/internal_service.hpp"
 #include "mrc/runnable/launch_options.hpp"
 
 #include <utility>

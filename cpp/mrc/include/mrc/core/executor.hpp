@@ -18,11 +18,15 @@
 #pragma once
 
 #include "mrc/engine/executor/iexecutor.hpp"
-#include "mrc/options/options.hpp"
 
 #include <memory>
 
+namespace mrc::internal::system {
+class IResources;
+}  // namespace mrc::internal::system
+
 namespace mrc {
+class Options;
 
 class Executor final : public internal::executor::IExecutor
 {

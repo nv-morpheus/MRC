@@ -24,13 +24,13 @@
 #include <nlohmann/json.hpp>
 
 #include <chrono>
+#include <compare>
 #include <cstdlib>
 #include <iostream>
 #include <map>
 #include <stdexcept>
 #include <string>
 #include <thread>
-#include <type_traits>
 #include <utility>  // for pair, make_pair
 
 using nlohmann::json;

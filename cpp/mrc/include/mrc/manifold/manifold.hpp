@@ -18,12 +18,17 @@
 #pragma once
 
 #include "mrc/manifold/interface.hpp"
-#include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_properties.hpp"
-#include "mrc/pipeline/resources.hpp"
 #include "mrc/types.hpp"
 
 #include <string>
+
+namespace mrc::node {
+class SinkPropertiesBase;
+class SourcePropertiesBase;
+}  // namespace mrc::node
+namespace mrc::pipeline {
+struct Resources;
+}  // namespace mrc::pipeline
 
 namespace mrc::manifold {
 
@@ -37,14 +42,10 @@ class Manifold : public Interface
   protected:
     pipeline::Resources& resources();
 
-    const std::string& info() const
-    {
-        return m_info;
-    }
+    const std::string& info() const;
 
   private:
     void add_input(const SegmentAddress& address, node::SourcePropertiesBase* input_source) final;
-
     void add_output(const SegmentAddress& address, node::SinkPropertiesBase* output_sink) final;
 
     virtual void do_add_input(const SegmentAddress& address, node::SourcePropertiesBase* input_source) = 0;

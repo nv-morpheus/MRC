@@ -17,9 +17,6 @@
 
 #include "mrc/manifold/manifold.hpp"
 
-#include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_properties.hpp"
-#include "mrc/pipeline/resources.hpp"
 #include "mrc/segment/utils.hpp"
 #include "mrc/types.hpp"
 
@@ -44,6 +41,11 @@ const PortName& Manifold::port_name() const
 pipeline::Resources& Manifold::resources()
 {
     return m_resources;
+}
+
+const std::string& Manifold::info() const
+{
+    return m_info;
 }
 
 void Manifold::add_input(const SegmentAddress& address, node::SourcePropertiesBase* input_source)
