@@ -120,6 +120,10 @@
 { "symbol": ["pybind11::detail::get_type_info", "private", "<pybind11/cast.h>", "public"] },
 { "symbol": ["PyGILState_Check", "private", "<pybind11/gil.h>", "public"] },
 
+# pybind11 reroutes for Python.h
+{ "symbol": ["PyObject", "private", "<pybind11/pytypes.h>", "public"] },
+{ "symbol": ["PyTypeObject", "private", "<pybind11/pytypes.h>", "public"] },
+
 # spdlog
 { "symbol": ["spdlog::details::file_helper::~file_helper", "private", "<spdlog/sinks/basic_file_sink.h>", "public"] },
 

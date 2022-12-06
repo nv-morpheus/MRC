@@ -34,12 +34,6 @@
 #include <sstream>
 #include <vector>
 
-// IWYU pragma: no_include <boost/fiber/future/detail/shared_state.hpp>
-// IWYU pragma: no_include <boost/fiber/future/detail/task_base.hpp>
-// IWYU pragma: no_include <boost/smart_ptr/detail/operator_bool.hpp>
-// IWYU pragma: no_include <pybind11/detail/common.h>
-// IWYU pragma: no_include "rx-includes.hpp"
-
 namespace mrc::pymrc {
 
 namespace py = pybind11;

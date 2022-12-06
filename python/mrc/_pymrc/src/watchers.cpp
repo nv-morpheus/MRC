@@ -33,6 +33,7 @@
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/operators/rx-tap.hpp>
 #include <rxcpp/rx.hpp>
+#include <rxcpp/sources/rx-iterate.hpp>
 
 #include <cstddef>
 #include <functional>
@@ -40,11 +41,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-// IWYU pragma: no_include <boost/hana/if.hpp>
-// IWYU pragma: no_include <pybind11/detail/common.h>
-// IWYU pragma: no_include "rxcpp/sources/rx-iterate.hpp"
-// IWYU pragma: no_include "rx-includes.hpp"
 
 namespace mrc::pymrc {
 

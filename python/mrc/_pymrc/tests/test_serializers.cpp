@@ -26,7 +26,7 @@
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <pybind11/stl.h>  // IWYU pragma: keep
+#include <pybind11/stl.h>  // IWYU pragma: keep (MDD)
 
 #include <array>
 #include <ostream>
@@ -34,10 +34,6 @@
 #include <string>
 #include <tuple>
 #include <utility>
-
-// IWYU pragma: no_include "gtest/gtest_pred_impl.h"
-// IWYU pragma: no_include <pybind11/detail/common.h>
-// IWYU pragma: no_include <pybind11/detail/descr.h>
 
 namespace py    = pybind11;
 namespace pymrc = mrc::pymrc;

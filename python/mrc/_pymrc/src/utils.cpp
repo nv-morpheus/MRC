@@ -22,20 +22,14 @@
 #include <nlohmann/json.hpp>
 #include <pybind11/cast.h>
 #include <pybind11/detail/internals.h>
+#include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
 #include <cassert>
+#include <memory>
 #include <string>
 #include <utility>
-
-// IWYU pragma: no_include <listobject.h>
-// IWYU pragma: no_include <map>
-// IWYU pragma: no_include <nlohmann/detail/iterators/iteration_proxy.hpp>
-// IWYU pragma: no_include <nlohmann/detail/iterators/iter_impl.hpp>
-// IWYU pragma: no_include "object.h"
-// IWYU pragma: no_include <pybind11/detail/type_caster_base.h>
-// IWYU pragma: no_include "pystate.h"
 
 namespace mrc::pymrc {
 
@@ -178,6 +172,40 @@ json cast_from_pyobject(const py::object& source)
 
     // else unsupported return null
     return json();
+}
+
+AcquireGIL::AcquireGIL() : m_gil(std::make_unique<py::gil_scoped_acquire>()) {}
+
+AcquireGIL::~AcquireGIL() = default;
+
+inline void AcquireGIL::inc_ref()
+{
+    if (m_gil)
+    {
+        m_gil->inc_ref();
+    }
+}
+
+inline void AcquireGIL::dec_ref()
+{
+    if (m_gil)
+    {
+        m_gil->dec_ref();
+    }
+}
+
+void AcquireGIL::disarm()
+{
+    if (m_gil)
+    {
+        m_gil->disarm();
+    }
+}
+
+void AcquireGIL::release()
+{
+    // Just delete the GIL object early
+    m_gil.reset();
 }
 
 PyObjectWrapper::PyObjectWrapper(pybind11::object&& to_wrap) : m_obj(std::move(to_wrap)) {}
@@ -326,5 +354,4 @@ PyObject* PyObjectHolder::ptr() const
 {
     return m_wrapped->ptr();
 }
-
 }  // namespace mrc::pymrc

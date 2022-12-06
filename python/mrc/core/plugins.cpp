@@ -17,18 +17,20 @@
 
 #include "pymrc/plugins.hpp"
 
-#include <pybind11/cast.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/pytypes.h>
-#include <pybind11/stl.h>  // IWYU pragma: keep
-#include <memory>
-#include <sstream>
-#include <vector>
-
 #include "pymrc/utils.hpp"
+
 #include "mrc/modules/plugins.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
+
+#include <pybind11/cast.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
+#include <pybind11/stl.h>  // IWYU pragma: keep (MDD)
+
+#include <memory>
+#include <sstream>
+#include <vector>
 
 const std::vector<unsigned int> PybindSegmentModuleVersion{mrc_VERSION_MAJOR, mrc_VERSION_MINOR, mrc_VERSION_PATCH};
 

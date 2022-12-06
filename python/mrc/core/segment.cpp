@@ -17,29 +17,30 @@
 
 #include "pymrc/segment.hpp"
 
+#include "pymrc/module_registry.hpp"
+#include "pymrc/node.hpp"  // IWYU pragma: keep (MDD)
+#include "pymrc/segment_modules.hpp"
+#include "pymrc/types.hpp"
+#include "pymrc/utils.hpp"
+
+#include "mrc/modules/segment_modules.hpp"
+#include "mrc/node/edge_connector.hpp"
+#include "mrc/segment/builder.hpp"
+#include "mrc/segment/definition.hpp"
+#include "mrc/utils/string_utils.hpp"
+#include "mrc/version.hpp"
+
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
+
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <map>
 #include <memory>
 #include <sstream>
-#include <array>
 #include <vector>
-
-#include "pymrc/module_registry.hpp"
-#include "pymrc/node.hpp"  // IWYU pragma: keep
-#include "pymrc/segment_modules.hpp"
-#include "pymrc/types.hpp"
-#include "pymrc/utils.hpp"
-#include "mrc/modules/segment_modules.hpp"
-#include "mrc/node/edge_connector.hpp"
-#include "mrc/segment/builder.hpp"
-#include "mrc/segment/definition.hpp"
-#include "mrc/segment/object.hpp"  // IWYU pragma: keep
-#include "mrc/utils/string_utils.hpp"
-#include "mrc/version.hpp"
 
 namespace mrc::pymrc {
 

@@ -23,13 +23,9 @@
 
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/port_registry.hpp"
-#include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_properties.hpp"
 #include "mrc/runnable/context.hpp"
 #include "mrc/segment/builder.hpp"
-#include "mrc/segment/object.hpp"
 
-#include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 #include <pybind11/cast.h>
 #include <pybind11/detail/internals.h>
@@ -50,12 +46,7 @@
 #include <vector>
 
 // IWYU thinks we need array for py::print
-// IWYU pragma: no_include <array>
-// IWYU pragma: no_include <boost/fiber/future/detail/shared_state.hpp>
-// IWYU pragma: no_include <boost/fiber/future/detail/task_base.hpp>
-// IWYU pragma: no_include <boost/hana/if.hpp>
-// IWYU pragma: no_include <boost/smart_ptr/detail/operator_bool.hpp>
-// IWYU pragma: no_include "rx-includes.hpp"
+// IWYU pragma: no_include <array> (MDD)
 
 namespace mrc::pymrc {
 

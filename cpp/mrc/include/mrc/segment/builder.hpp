@@ -24,20 +24,17 @@
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
-#include "mrc/node/sink_properties.hpp"    // IWYU pragma: keep
-#include "mrc/node/source_properties.hpp"  // IWYU pragma: keep
+#include "mrc/node/sink_properties.hpp"    // IWYU pragma: export
+#include "mrc/node/source_properties.hpp"  // IWYU pragma: export
 #include "mrc/runnable/context.hpp"
-#include "mrc/runnable/launchable.hpp"   // IWYU pragma: keep
-#include "mrc/runnable/runnable.hpp"     // IWYU pragma: keep
-#include "mrc/segment/component.hpp"     // IWYU pragma: keep
-#include "mrc/segment/egress_port.hpp"   // IWYU pragma: keep
-#include "mrc/segment/forward.hpp"       // IWYU pragma: keep
-#include "mrc/segment/ingress_port.hpp"  // IWYU pragma: keep
-#include "mrc/segment/object.hpp"        // IWYU pragma: keep
-#include "mrc/segment/runnable.hpp"      // IWYU pragma: keep
+#include "mrc/runnable/runnable.hpp"  // IWYU pragma: export
+#include "mrc/segment/component.hpp"  // IWYU pragma: export
+#include "mrc/segment/object.hpp"     // IWYU pragma: export
+#include "mrc/segment/runnable.hpp"   // IWYU pragma: export
 #include "mrc/utils/macros.hpp"
 
-#include <boost/hana.hpp>  // IWYU pragma: keep
+#include <boost/hana.hpp>     // IWYU pragma: keep
+#include <boost/hana/if.hpp>  // IWYU pragma: export
 #include <glog/logging.h>
 #include <nlohmann/json.hpp>
 #include <rxcpp/rx.hpp>
@@ -359,7 +356,6 @@ class Builder final
 
   private:
     using sp_segment_module_t = std::shared_ptr<mrc::modules::SegmentModule>;
-    using sp_obj_prop_t       = std::shared_ptr<segment::ObjectProperties>;
 
     std::string m_namespace_prefix;
     std::vector<std::string> m_namespace_stack{};

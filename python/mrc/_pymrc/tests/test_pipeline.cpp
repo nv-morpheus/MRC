@@ -17,8 +17,7 @@
 
 #include "test_pymrc.hpp"
 
-#include "pymrc/executor.hpp"  // IWYU pragma: keep
-#include "pymrc/forward.hpp"
+#include "pymrc/executor.hpp"
 #include "pymrc/pipeline.hpp"
 #include "pymrc/port_builders.hpp"
 #include "pymrc/types.hpp"
@@ -28,21 +27,17 @@
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
-#include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_properties.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/segment/builder.hpp"
-#include "mrc/segment/object.hpp"
 
 #include <boost/fiber/future/future.hpp>
-#include <boost/hana/if.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>
 #include <pybind11/pytypes.h>
-#include <pybind11/stl.h>  // IWYU pragma: keep
+#include <pybind11/stl.h>  // IWYU pragma: keep (MDD)
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx.hpp>
 #include <rxcpp/sources/rx-iterate.hpp>

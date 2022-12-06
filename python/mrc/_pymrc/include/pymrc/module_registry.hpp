@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "mrc/modules/segment_modules.hpp"  // IWYU pragma: keep
-
 #include <pybind11/pybind11.h>
 
 #include <functional>

@@ -26,23 +26,23 @@
 #include "mrc/channel/status.hpp"
 #include "mrc/node/edge.hpp"
 #include "mrc/node/edge_connector.hpp"
-#include "mrc/node/forward.hpp"  // IWYU pragma: keep
+#include "mrc/node/forward.hpp"  // IWYU pragma: keep (MDD)
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
-#include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_properties.hpp"
 #include "mrc/runnable/context.hpp"
 
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>
-#include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
 
 #include <functional>
 #include <memory>
 #include <utility>
+
+// Avoid forward declaring template specialization base classes
+// IWYU pragma: no_forward_declare mrc::node::Edge
 
 namespace mrc {
 

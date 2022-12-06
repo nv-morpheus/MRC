@@ -17,17 +17,18 @@
 
 #include "pymrc/pipeline.hpp"
 
-#include <pybind11/functional.h>  // IWYU pragma: keep
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>  // IWYU pragma: keep
-#include <sstream>
-#include <array>
-
 #include "pymrc/segment.hpp"
 #include "pymrc/utils.hpp"
-#include "mrc/segment/builder.hpp"  // IWYU pragma: keep
+
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
+
+#include <pybind11/functional.h>  // IWYU pragma: keep (MDD)
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>  // IWYU pragma: keep (MDD)
+
+#include <array>
+#include <sstream>
 
 namespace mrc::pymrc {
 

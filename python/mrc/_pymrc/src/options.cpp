@@ -24,7 +24,7 @@
 #include "mrc/options/placement.hpp"
 #include "mrc/options/topology.hpp"
 
-#include <pybind11/pybind11.h>  // IWYU pragma: keep
+#include <pybind11/pybind11.h>
 
 #include <cstddef>
 #include <string>

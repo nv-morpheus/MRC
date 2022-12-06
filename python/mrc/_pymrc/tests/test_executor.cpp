@@ -18,7 +18,6 @@
 #include "test_pymrc.hpp"
 
 #include "pymrc/executor.hpp"
-#include "pymrc/forward.hpp"
 #include "pymrc/pipeline.hpp"
 
 #include "mrc/node/rx_node.hpp"
@@ -28,11 +27,11 @@
 #include "mrc/options/topology.hpp"
 #include "mrc/segment/builder.hpp"
 
-#include <boost/hana/if.hpp>
-#include <gtest/gtest.h>     // IWYU pragma: keep
-#include <pybind11/embed.h>  // IWYU pragma: keep
+#include <gtest/gtest.h>
+#include <pybind11/embed.h>  // IWYU pragma: keep (MDD)
 #include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx.hpp>
+#include <rxcpp/sources/rx-iterate.hpp>
 
 #include <atomic>
 #include <memory>

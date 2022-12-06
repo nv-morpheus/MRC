@@ -16,10 +16,7 @@
  */
 #pragma once
 
-#include "pymrc/types.hpp"  // IWYU pragma: keep
-
-#include "mrc/core/runtime.hpp"  // IWYU pragma: keep
-#include "mrc/types.hpp"         // for Future, SharedFuture
+#include "mrc/types.hpp"  // for Future, SharedFuture
 
 #include <pybind11/pytypes.h>
 

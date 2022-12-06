@@ -23,14 +23,12 @@
 #include "mrc/node/forward.hpp"
 #include "mrc/node/port_registry.hpp"
 #include "mrc/pipeline/pipeline.hpp"
-#include "mrc/segment/builder.hpp"  // IWYU pragma: keep
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>
-#include <pybind11/pybind11.h>  // IWYU pragma: keep
 #include <pybind11/pytypes.h>
 
 #include <functional>
@@ -44,9 +42,8 @@
 #include <utility>
 #include <vector>
 
-// IWYU pragma: no_include <pybind11/detail/common.h>
-
 namespace mrc::pymrc {
+
 namespace py = pybind11;
 
 namespace {

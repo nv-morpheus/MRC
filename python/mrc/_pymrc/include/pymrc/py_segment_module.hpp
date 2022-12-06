@@ -20,8 +20,8 @@
 #include "mrc/modules/segment_modules.hpp"
 
 #include <nlohmann/json.hpp>
-#include <pybind11/functional.h>  // IWYU pragma: keep
-#include <pybind11/stl.h>         // IWYU pragma: keep
+#include <pybind11/functional.h>  // IWYU pragma: keep (MDD)
+#include <pybind11/stl.h>         // IWYU pragma: keep (MDD)
 
 #include <functional>
 #include <string>

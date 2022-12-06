@@ -17,18 +17,19 @@
 
 #include "mrc/modules/sample_modules.hpp"
 
-#include <boost/hana/if.hpp>
-#include <pybind11/pybind11.h>
-#include <pybind11/pytypes.h>
-#include <memory>
-#include <sstream>
-#include <vector>
-
 #include "pymrc/utils.hpp"
+
 #include "mrc/modules/module_registry_util.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
+
+#include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
+
+#include <memory>
+#include <sstream>
+#include <vector>
 
 const std::vector<unsigned int> PybindSegmentModuleVersion{mrc_VERSION_MAJOR, mrc_VERSION_MINOR, mrc_VERSION_PATCH};
 

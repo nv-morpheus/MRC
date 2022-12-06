@@ -15,13 +15,11 @@
  * limitations under the License.
  */
 
-#include "pymrc/types.hpp"  // IWYU pragma: keep
-
 #include "mrc/benchmarking/tracer.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <pybind11/stl.h>  // IWYU pragma: keep
+#include <pybind11/stl.h>  // IWYU pragma: keep (MDD)
 
 #include <cstddef>  // for size_t
 #include <memory>

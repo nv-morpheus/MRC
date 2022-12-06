@@ -15,12 +15,23 @@
  * limitations under the License.
  */
 
+#include "pymrc/forward.hpp"
+#include "pymrc/node.hpp"
+#include "pymrc/port_builders.hpp"
+#include "pymrc/utils.hpp"
+
+#include "mrc/channel/status.hpp"
+#include "mrc/node/edge_connector.hpp"
+#include "mrc/segment/builder.hpp"
+#include "mrc/utils/string_utils.hpp"
+#include "mrc/version.hpp"
+
 #include <boost/fiber/future/future.hpp>
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
-#include <boost/hana/if.hpp>
+
 #include <cstddef>
 #include <exception>
 #include <functional>
@@ -29,19 +40,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "pymrc/forward.hpp"
-#include "pymrc/node.hpp"
-#include "pymrc/port_builders.hpp"
-#include "pymrc/utils.hpp"
-#include "mrc/channel/status.hpp"
-#include "mrc/node/edge_connector.hpp"
-#include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_properties.hpp"
-#include "mrc/segment/builder.hpp"
-#include "mrc/segment/object.hpp"
-#include "mrc/utils/string_utils.hpp"
-#include "mrc/version.hpp"
 
 namespace mrc::pytests {
 
