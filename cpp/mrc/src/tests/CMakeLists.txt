@@ -75,7 +75,6 @@ target_link_libraries(test_mrc_private
   ucx::ucp
   pthread
   mrc_test_protos
-  tl::expected
 )
 
 # Necessary include to prevent IWYU from showing absolute paths
