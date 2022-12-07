@@ -15,36 +15,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Args used in FROM commands must come first
+
 ARG FROM_IMAGE="rapidsai/ci"
 ARG CUDA_VER=11.4.1
 ARG LINUX_DISTRO=ubuntu
 ARG LINUX_VER=20.04
 ARG PYTHON_VER=3.8
 
-# Configure the base docker img
+# ============= base ===================
 FROM ${FROM_IMAGE}:cuda${CUDA_VER}-${LINUX_DISTRO}${LINUX_VER}-py${PYTHON_VER} AS base
 
 ARG PROJ_NAME=mrc
-ARG CUDA_SHORT_VER=11.4
 
 SHELL ["/bin/bash",  "-c"]
 
-# OS deps
 RUN --mount=type=cache,target=/var/cache/apt \
-    apt-get update &&\
-    apt-get install --no-install-recommends -y \
+    apt update &&\
+    apt install --no-install-recommends -y \
     libnuma1 && \
     rm -rf /var/lib/apt/lists/*
 
-# Create conda environment
-COPY ./ci/conda/environments/* /tmp/conda/
+COPY ./ci/conda/environments/* /opt/mrc/conda/environments/
 
-RUN --mount=type=cache,id=conda_pkgs,target=/opt/conda/pkgs,sharing=locked \
+RUN --mount=type=cache,target=/opt/conda/pkgs,sharing=locked \
+    echo "create env: ${PROJ_NAME}" && \
     CONDA_ALWAYS_YES=true \
-    /opt/conda/bin/mamba env create -q -n ${PROJ_NAME} --file /tmp/conda/dev_env.yml && \
-    /opt/conda/bin/mamba env update -q -n ${PROJ_NAME} --file /tmp/conda/clang_env.yml && \
-    /opt/conda/bin/mamba env update -q -n ${PROJ_NAME} --file /tmp/conda/ci_env.yml && \
+    /opt/conda/bin/mamba env create -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/dev_env.yml && \
+    /opt/conda/bin/mamba env update -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/clang_env.yml && \
+    /opt/conda/bin/mamba env update -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/ci_env.yml && \
     sed -i "s/conda activate base/conda activate ${PROJ_NAME}/g" ~/.bashrc && \
     chmod -R a+rwX /opt/conda && \
     rm -rf /tmp/conda
@@ -55,18 +53,19 @@ FROM base as driver
 RUN --mount=type=cache,target=/var/cache/apt \
     apt update && \
     DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC \
-    apt install --no-install-recommends -y libnvidia-compute-495 && \
+    apt install --no-install-recommends -y \
+    libnvidia-compute-495 \
+    && \
     rm -rf /var/lib/apt/lists/*
 
 # ========= development ================
-FROM base as dev
+FROM base as development
 
 # disable sscache wrappers around compilers
 ENV CMAKE_CUDA_COMPILER_LAUNCHER=""
 ENV CMAKE_CXX_COMPILER_LAUNCHER=""
 ENV CMAKE_C_COMPILER_LAUNCHER=""
 
-# OS deps
 RUN --mount=type=cache,target=/var/cache/apt \
     apt-get update &&\
     apt-get install --no-install-recommends -y \
@@ -79,11 +78,11 @@ RUN --mount=type=cache,target=/var/cache/apt \
     && \
     rm -rf /var/lib/apt/lists/*
 
+# create a user inside the container
 ARG USERNAME=morpheus
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-# Create the user
 RUN groupadd --gid $USER_GID $USERNAME && \
     useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
     usermod --shell /bin/bash $USERNAME && \
@@ -91,7 +90,6 @@ RUN groupadd --gid $USER_GID $USERNAME && \
     chmod 0440 /etc/sudoers.d/$USERNAME && \
     cp /root/.bashrc /home/$USERNAME/.bashrc
 
-# [Optional] Set the default user. Omit if you want to keep the default as root.
 USER $USERNAME
 
 # default working directory

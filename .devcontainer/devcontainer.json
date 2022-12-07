@@ -1,31 +1,33 @@
 {
     "name": "mrc-dev",
-    "image": "mrc:dev",
+    "build": {
+        "context": "..",
+        "dockerfile": "${localWorkspaceFolder}/Dockerfile",
+        "target": "development",
+        "args": {
+            "USERNAME": "${localEnv:USER}",
+            "USER_ID": "${localEnv:UID}"
+        }
+    },
     "runArgs": [
         "--gpus=all",
+        "--runtime=nvidia",
         "--network=host",
         "--cap-add=SYS_PTRACE",
         "--cap-add=SYS_NICE",
         "--security-opt",
         "seccomp=unconfined"
     ],
-    // the image build script will setup a user in the contaienr with the calling user's name
-    // thus it is safe to set remoteUser (the user inside the container) to be name of the caller
-    "remoteUser": "${localEnv:USER}",
-    // vscode will look up uid/gid of the remoteUser on the host machine and map that uid/gid into the container
-    "updateRemoteUserUID": true,
-    "workspaceFolder": "/work",
     "workspaceMount": "source=${localWorkspaceFolder},target=/work,type=bind,consistency=cached",
+    "workspaceFolder": "/work",
     "containerEnv": {
         // the post_start script will look for these envs, if they are set, git will be configured
-        "VSCODE_CONTAINER_GIT_USER": "${localEnv:VSCODE_CONTAINER_GIT_USER}",
-        "VSCODE_CONTAINER_GIT_EMAIL": "${localEnv:VSCODE_CONTAINER_GIT_EMAIL}"
+        "GIT_AUTHOR_NAME ": "${localEnv:GIT_AUTHOR_NAME}",
+        "GIT_AUTHOR_EMAIL": "${localEnv:GIT_AUTHOR_EMAIL}"
     },
+    "remoteUser": "${localEnv:USER}",
+    "updateRemoteUserUID": true,
     "overrideCommand": true, // infinite loop of sleeps
-    // this is the command that will build the docker image
-    "initializeCommand": "SKIP_RUN=yes ./scripts/devel.sh",
-    // this will be run inside the container after the container has started before the command is run
-    "postStartCommand": "/work/scripts/devcontainer_post_start.sh",
     "customizations": {
         "vscode": {
             "extensions": [
