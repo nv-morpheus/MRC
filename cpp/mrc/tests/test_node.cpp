@@ -31,8 +31,8 @@
 #include "mrc/segment/builder.hpp"
 #include "mrc/utils/string_utils.hpp"
 
+#include <glog/logging.h>
 #include <gtest/gtest.h>
-#include <gtest/internal/gtest-internal.h>
 #include <rxcpp/rx.hpp>
 
 #include <atomic>

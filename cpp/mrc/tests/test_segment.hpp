@@ -17,18 +17,14 @@
 
 #pragma once
 
-#include "test_mrc.hpp"  // IWYU pragma: keep
+#include "test_mrc.hpp"  // IWYU pragma: keep (MDD)
 
-#include "mrc/core/executor.hpp"  // IWYU pragma: keep
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/pipeline/pipeline.hpp"
-#include "mrc/segment/builder.hpp"  // IWYU pragma: keep
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
-#include "mrc/segment/segment.hpp"  // IWYU pragma: keep
 
-#include <gtest/gtest.h>
 #include <rxcpp/rx.hpp>
 
 #include <cstddef>
@@ -36,7 +32,10 @@
 #include <memory>
 #include <string>
 
-// IWYU pragma: no_include "gtest/gtest_pred_impl.h"
+namespace mrc::segment {
+class Builder;
+struct ObjectProperties;
+}  // namespace mrc::segment
 
 namespace mrc {
 

@@ -20,7 +20,7 @@
 #include "mrc/runnable/engine.hpp"
 #include "mrc/runnable/fiber_context.hpp"
 #include "mrc/runnable/forward.hpp"
-#include "mrc/runnable/thread_context.hpp"  // IWYU pragma: keep
+#include "mrc/runnable/thread_context.hpp"
 #include "mrc/runnable/type_traits.hpp"
 #include "mrc/runnable/types.hpp"
 #include "mrc/types.hpp"
@@ -233,7 +233,7 @@ class SpecializedRunner : public Runner
         }
         else if (launcher->engine_type() == EngineType::Thread)
         {
-            using ctx_t = std::conditional_t<is_fiber_context_v<ContextT>, ContextT, FiberContext<ContextT>>;
+            using ctx_t = std::conditional_t<is_thread_context_v<ContextT>, ContextT, ThreadContext<ContextT>>;
             contexts    = make_contexts<ctx_t>(*launcher, std::forward<ArgsT>(args)...);
         }
         return Runner::enqueue(launcher, std::move(contexts));

@@ -31,7 +31,7 @@
 namespace prometheus {
 class Registry;
 template <typename T>
-class Family;  // IWYU pragma: keep
+class Family;
 class Counter;
 
 }  // namespace prometheus

@@ -17,16 +17,16 @@
 
 #pragma once
 
-#include "../test_mrc.hpp"  // IWYU pragma: keep
+#include "../test_mrc.hpp"  // IWYU pragma: keep (MDD)
 
-#include "mrc/core/executor.hpp"  // IWYU pragma: keep
+#include "mrc/core/executor.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/pipeline/pipeline.hpp"
-#include "mrc/segment/builder.hpp"  // IWYU pragma: keep
+#include "mrc/segment/builder.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
-#include "mrc/segment/segment.hpp"  // IWYU pragma: keep
+#include "mrc/segment/segment.hpp"
 
 #include <cstddef>
 #include <functional>

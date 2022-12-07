@@ -18,7 +18,7 @@
 #include "mrc/core/logging.hpp"
 
 #include <gflags/gflags.h>  // for ParseCommandLineFlags
-#include <gtest/gtest.h>    // IWYU pragma: keep
+#include <gtest/gtest.h>    // IWYU pragma: keep (MDD)
 
 // NOLINTNEXTLINE(readability-identifier-naming)
 // void TestFailuresThrowExceptions()

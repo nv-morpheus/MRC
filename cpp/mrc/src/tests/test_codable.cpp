@@ -31,13 +31,13 @@
 #include "mrc/codable/codable_protocol.hpp"
 #include "mrc/codable/decode.hpp"
 #include "mrc/codable/encode.hpp"
-#include "mrc/codable/fundamental_types.hpp"  // IWYU pragma: keep
-#include "mrc/codable/protobuf_message.hpp"   // IWYU pragma: keep
+#include "mrc/codable/fundamental_types.hpp"  // IWYU pragma: keep (MDD)
+#include "mrc/codable/protobuf_message.hpp"   // IWYU pragma: keep (MDD)
 #include "mrc/codable/type_traits.hpp"
-#include "mrc/memory/codable/buffer.hpp"  // IWYU pragma: keep
+#include "mrc/memory/codable/buffer.hpp"  // IWYU pragma: keep (MDD)
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
-#include "mrc/protos/codable.pb.h"  // IWYU pragma: keep
+#include "mrc/protos/codable.pb.h"  // IWYU pragma: keep (MDD)
 
 #include <gtest/gtest.h>
 

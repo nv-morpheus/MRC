@@ -20,8 +20,7 @@
 #include "mrc/memory/resources/device/cuda_malloc_resource.hpp"  // IWYU pragma: export
 #include "mrc/memory/resources/host/pinned_memory_resource.hpp"  // IWYU pragma: export
 
-#include <glog/logging.h>  // IWYU pragma: keep
-#include <gtest/gtest.h>   // IWYU pragma: keep
+#include <gtest/gtest.h>  // IWYU pragma: keep
 
 #include <atomic>
 #include <chrono>

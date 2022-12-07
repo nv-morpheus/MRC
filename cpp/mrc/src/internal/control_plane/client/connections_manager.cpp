@@ -36,7 +36,6 @@
 #include <ostream>
 #include <set>
 #include <string>
-#include <type_traits>  // IWYU pragma: keep
 #include <utility>
 
 namespace mrc::internal::control_plane::client {

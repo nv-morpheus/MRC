@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "internal/control_plane/client/instance.hpp"  // IWYU pragma: keep
+#include "internal/control_plane/client/instance.hpp"  // IWYU pragma: keep (MDD)
 #include "internal/expected.hpp"
 #include "internal/grpc/client_streaming.hpp"
 #include "internal/grpc/stream_writer.hpp"

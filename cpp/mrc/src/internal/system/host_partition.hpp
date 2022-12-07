@@ -25,7 +25,7 @@
 #include <vector>
 
 namespace mrc {
-class Options;  // IWYU pragma: keep
+class Options;
 }
 
 namespace mrc::internal::system {

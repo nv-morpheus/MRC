@@ -29,6 +29,7 @@
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
 
+#include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <rxcpp/rx.hpp>
 
@@ -38,14 +39,7 @@
 #include <ostream>
 #include <string>
 #include <utility>
-
-// IWYU thinks we need std::copy, exception, begin/end, map, set & vector for initializer lists
-// IWYU pragma: no_include <algorithm>
-// IWYU pragma: no_include <exception>
-// IWYU pragma: no_include <iterator>
-// IWYU pragma: no_include <map>
-// IWYU pragma: no_include <set>
-// IWYU pragma: no_include <vector>
+#include <vector>
 
 namespace mrc {
 

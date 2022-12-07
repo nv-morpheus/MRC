@@ -22,7 +22,6 @@
 #include <nlohmann/json.hpp>
 #include <rxcpp/rx.hpp>
 
-#include <algorithm>  // IWYU pragma: keep
 #include <chrono>
 #include <cstddef>
 #include <iostream>

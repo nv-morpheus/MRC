@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "mrc/core/task_queue.hpp"  // IWYU pragma: keep
+#include "mrc/core/task_queue.hpp"  // IWYU pragma: keep (MDD)
 #include "mrc/types.hpp"
 
 #include <cstddef>

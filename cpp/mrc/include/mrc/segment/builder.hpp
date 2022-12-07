@@ -33,8 +33,9 @@
 #include "mrc/segment/runnable.hpp"   // IWYU pragma: export
 #include "mrc/utils/macros.hpp"
 
-#include <boost/hana.hpp>     // IWYU pragma: keep
-#include <boost/hana/if.hpp>  // IWYU pragma: export
+#include <boost/hana/core/when.hpp>  // IWYU pragma: export
+#include <boost/hana/if.hpp>         // IWYU pragma: export
+#include <boost/hana/type.hpp>       // IWYU pragma: export
 #include <glog/logging.h>
 #include <nlohmann/json.hpp>
 #include <rxcpp/rx.hpp>
@@ -58,10 +59,6 @@ class SegmentModule;
 namespace mrc::segment {
 class Definition;
 }  // namespace mrc::segment
-
-// IWYU pragma: no_include <boost/hana/fwd/core/when.hpp>
-// IWYU pragma: no_include <boost/hana/fwd/if.hpp>
-// IWYU pragma: no_include <boost/hana/fwd/type.hpp>
 
 namespace {
 namespace hana = boost::hana;

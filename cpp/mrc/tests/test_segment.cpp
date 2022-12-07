@@ -47,19 +47,6 @@
 #include <utility>
 #include <vector>
 
-// IWYU pragma: no_include <boost/fiber/future/detail/shared_state.hpp>
-// IWYU pragma: no_include <boost/fiber/future/detail/task_base.hpp>
-// IWYU pragma: no_include <boost/hana/if.hpp>
-// IWYU pragma: no_include <boost/smart_ptr/detail/operator_bool.hpp>
-// IWYU pragma: no_include <map>
-// IWYU pragma: no_include <pybind11/detail/common.h>
-// IWYU pragma: no_include <pybind11/detail/descr.h>
-// IWYU pragma: no_include "rxcpp/sources/rx-iterate.hpp"
-// IWYU pragma: no_include "rx-includes.hpp"
-// IWYU pragma: no_include "rx-includes.hpp"
-// IWYU pragma: no_include "gtest/gtest_pred_impl.h"
-// IWYU thinks we need map for segment::Definition::create
-
 using namespace std::literals::string_literals;
 
 namespace mrc {

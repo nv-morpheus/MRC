@@ -34,23 +34,20 @@
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
+#include <spdlog/sinks/basic_file_sink.h>
 
 #include <array>
 #include <atomic>
 #include <cstddef>
+#include <map>
 #include <memory>
 #include <optional>
 #include <ostream>
+#include <set>
 #include <string>
+#include <thread>
 #include <utility>
-
-// iwyu thinks spdlog, map, set, thread & vector are needed for arena_resource
-// IWYU pragma: no_include <spdlog/sinks/basic_file_sink.h>
-// IWYU pragma: no_include "spdlog/sinks/basic_file_sink.h"
-// IWYU pragma: no_include <map>
-// IWYU pragma: no_include <set>
-// IWYU pragma: no_include <thread>
-// IWYU pragma: no_include <vector>
+#include <vector>
 
 using namespace mrc;
 using namespace memory;

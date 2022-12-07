@@ -32,7 +32,6 @@
 
 #include "mrc/channel/buffered_channel.hpp"
 #include "mrc/channel/channel.hpp"
-#include "mrc/codable/protobuf_message.hpp"  // IWYU pragma: keep
 #include "mrc/memory/literals.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/rx_sink.hpp"

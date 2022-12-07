@@ -36,6 +36,7 @@
 
 #include <boost/fiber/future/async.hpp>
 #include <boost/fiber/future/future.hpp>
+#include <glog/logging.h>
 #include <rxcpp/rx.hpp>
 
 #include <chrono>
@@ -43,19 +44,11 @@
 #include <memory>
 #include <mutex>
 #include <ostream>
+#include <set>
 #include <string>
 #include <thread>
 #include <utility>
-
-// IWYU thinks we need exception & vector for segment.make_source
-// IWYU pragma: no_include <exception>
-// IWYU pragma: no_include <vector>
-
-// IWYU thinks we need <algorithm>, <itertor>, <map> & <set> for initializer lists
-// IWYU pragma: no_include <algorithm>
-// IWYU pragma: no_include <iterator>
-// IWYU pragma: no_include <map>
-// IWYU pragma: no_include <set>
+#include <vector>
 
 namespace mrc {
 
