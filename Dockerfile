@@ -47,6 +47,11 @@ RUN --mount=type=cache,target=/opt/conda/pkgs,sharing=locked \
     chmod -R a+rwX /opt/conda && \
     rm -rf /tmp/conda
 
+# disable sscache wrappers around compilers
+ENV CMAKE_CUDA_COMPILER_LAUNCHER=""
+ENV CMAKE_CXX_COMPILER_LAUNCHER=""
+ENV CMAKE_C_COMPILER_LAUNCHER=""
+
 # ============ driver ==================
 FROM base as driver
 
@@ -60,11 +65,6 @@ RUN --mount=type=cache,target=/var/cache/apt \
 
 # ========= development ================
 FROM base as development
-
-# disable sscache wrappers around compilers
-ENV CMAKE_CUDA_COMPILER_LAUNCHER=""
-ENV CMAKE_CXX_COMPILER_LAUNCHER=""
-ENV CMAKE_C_COMPILER_LAUNCHER=""
 
 RUN --mount=type=cache,target=/var/cache/apt \
     apt-get update &&\
