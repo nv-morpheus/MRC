@@ -17,10 +17,13 @@
 
 #pragma once
 
-#include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 
 #include <memory>
+
+namespace mrc::internal::network {
+class Resources;
+}  // namespace mrc::internal::network
 
 namespace mrc::internal::control_plane {
 

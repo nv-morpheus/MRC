@@ -35,7 +35,6 @@
 #include "internal/ucx/memory_block.hpp"
 #include "internal/ucx/registration_cache.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/memory/adaptors.hpp"
 #include "mrc/memory/buffer.hpp"
 #include "mrc/memory/literals.hpp"
@@ -53,14 +52,13 @@
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launcher.hpp"
 #include "mrc/runnable/runner.hpp"
+#include "mrc/types.hpp"
 
-#include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <rxcpp/rx.hpp>
 #include <spdlog/sinks/basic_file_sink.h>
 
-#include <algorithm>
 #include <atomic>
 #include <cstddef>
 #include <cstdint>

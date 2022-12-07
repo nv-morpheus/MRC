@@ -67,6 +67,10 @@
 { "include": [ "\"rxcpp/rx-connectable_observable.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
 { "include": [ "<rxcpp/rx-grouped_observable.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
 { "include": [ "\"rxcpp/rx-grouped_observable.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "@<rxcpp/operators/.*>", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "@\"rxcpp/operators/.*\"", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "@<rxcpp/sources/.*>", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "@\"rxcpp/sources/.*\"", private, "<rxcpp/rx.hpp>", "public" ] },
 
 # ucp
 { "include": [ "<ucp/api/ucp_def.h>", "public", "<ucp/api/ucp.h>", "public" ] },
@@ -82,6 +86,9 @@
 { "symbol": ["boost::context::detail::forced_unwind", "private", "<boost/fiber/future/future.hpp>", "public"] },
 { "symbol": ["boost::intrusive_ptr::operator", "private", "<boost/fiber/future/promise.hpp>", "public"] },
 { "symbol": ["__cxxabiv1::__forced_unwind", "private", "<boost/fiber/future/future.hpp>", "public"] },
+{ "include": [ "<boost/hana/fwd/core/when.hpp>", private, "<boost/hana/core/when.hpp>", "public" ] },
+{ "include": [ "<boost/hana/fwd/if.hpp>", private, "<boost/hana/if.hpp>", "public" ] },
+{ "include": [ "<boost/hana/fwd/type.hpp>", private, "<boost/hana/type.hpp>", "public" ] },
 
 # cuda
 { "symbol": ["cuda::std::declval", "private", "<cuda/memory_resource>", "public"] },
@@ -119,6 +126,10 @@
 { "symbol": ["pybind11::return_value_policy::reference_internal", "private", "<pybind11/pybind11.h>", "public"] },
 { "symbol": ["pybind11::detail::get_type_info", "private", "<pybind11/cast.h>", "public"] },
 { "symbol": ["PyGILState_Check", "private", "<pybind11/gil.h>", "public"] },
+
+# pybind11 reroutes for Python.h
+{ "symbol": ["PyObject", "private", "<pybind11/pytypes.h>", "public"] },
+{ "symbol": ["PyTypeObject", "private", "<pybind11/pytypes.h>", "public"] },
 
 # spdlog
 { "symbol": ["spdlog::details::file_helper::~file_helper", "private", "<spdlog/sinks/basic_file_sink.h>", "public"] },

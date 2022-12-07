@@ -18,7 +18,6 @@
 #pragma once
 
 #include "internal/ucx/common.hpp"
-#include "internal/ucx/worker.hpp"
 
 #include "mrc/types.hpp"
 
@@ -27,6 +26,7 @@
 #include <memory>  // for enable_shared_from_this
 
 namespace mrc::internal::ucx {
+class Worker;
 
 class TaggedReceiveManager : public std::enable_shared_from_this<TaggedReceiveManager>
 {

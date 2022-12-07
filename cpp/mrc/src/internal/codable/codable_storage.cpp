@@ -35,7 +35,6 @@
 #include <cuda_runtime.h>
 #include <glog/logging.h>
 #include <google/protobuf/any.pb.h>
-#include <google/protobuf/message.h>
 
 #include <cstdint>
 #include <optional>
@@ -51,6 +50,8 @@ CodableStorage::CodableStorage(mrc::codable::protos::EncodedObject proto, resour
   m_proto(std::move(proto)),
   m_resources(resources)
 {}
+
+CodableStorage::~CodableStorage() = default;
 
 mrc::codable::IDecodableStorage& CodableStorage::decodable()
 {

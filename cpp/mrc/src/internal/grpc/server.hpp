@@ -17,15 +17,22 @@
 
 #pragma once
 
-#include "internal/runnable/resources.hpp"
 #include "internal/service.hpp"
-
-#include "mrc/runnable/runner.hpp"
 
 #include <grpcpp/grpcpp.h>
 
 #include <memory>
 #include <vector>
+
+namespace grpc {
+class Service;
+}  // namespace grpc
+namespace mrc::internal::runnable {
+class Resources;
+}  // namespace mrc::internal::runnable
+namespace mrc::runnable {
+class Runner;
+}  // namespace mrc::runnable
 
 namespace mrc::internal::rpc {
 

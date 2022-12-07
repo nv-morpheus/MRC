@@ -21,7 +21,6 @@
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/control_plane/client/instance.hpp"
 #include "internal/data_plane/resources.hpp"
-#include "internal/memory/host_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/ucx/resources.hpp"
 

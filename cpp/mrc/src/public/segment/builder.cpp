@@ -18,11 +18,11 @@
 #include "mrc/segment/builder.hpp"
 
 #include "mrc/modules/module_registry.hpp"
+#include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/port_registry.hpp"
 
 #include <nlohmann/json.hpp>
 
-#include <algorithm>
 #include <numeric>
 #include <stdexcept>
 
@@ -118,7 +118,7 @@ void Builder::ns_pop()
         std::accumulate(m_namespace_stack.begin(), m_namespace_stack.end(), std::string(""), ::accum_merge);
 }
 
-void Builder::register_module_input(std::string input_name, sp_obj_prop_t object)
+void Builder::register_module_input(std::string input_name, std::shared_ptr<segment::ObjectProperties> object)
 {
     if (m_module_stack.empty())
     {
@@ -134,7 +134,7 @@ void Builder::register_module_input(std::string input_name, sp_obj_prop_t object
     current_module->register_input_port(std::move(input_name), object);
 }
 
-void Builder::register_module_output(std::string output_name, sp_obj_prop_t object)
+void Builder::register_module_output(std::string output_name, std::shared_ptr<segment::ObjectProperties> object)
 {
     if (m_module_stack.empty())
     {

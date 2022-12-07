@@ -28,7 +28,6 @@
 #include "mrc/options/placement.hpp"
 #include "mrc/utils/bytes_to_string.hpp"
 
-#include <ext/alloc_traits.h>
 #include <glog/logging.h>
 #include <hwloc.h>
 
@@ -39,7 +38,6 @@
 #include <memory>
 #include <ostream>
 #include <string>
-#include <type_traits>
 #include <utility>
 
 static void div_even(std::int32_t n, std::int32_t np, std::int32_t me, std::int32_t& nr, std::int32_t& sr)

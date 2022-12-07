@@ -18,19 +18,18 @@
 #pragma once
 
 #include "internal/system/engine_factory_cpu_sets.hpp"
-#include "internal/system/topology.hpp"
 
 #include "mrc/core/bitmap.hpp"
-#include "mrc/options/options.hpp"
 
 #include <cstddef>
 #include <vector>
 
 namespace mrc {
-class Options;  // IWYU pragma: keep
+class Options;
 }
 
 namespace mrc::internal::system {
+class Topology;
 
 class HostPartition
 {

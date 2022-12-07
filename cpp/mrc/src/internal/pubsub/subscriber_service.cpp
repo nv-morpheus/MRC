@@ -17,9 +17,6 @@
 
 #include "internal/pubsub/subscriber_service.hpp"
 
-#include "rxcpp/operators/rx-map.hpp"
-#include "rxcpp/sources/rx-iterate.hpp"
-
 #include "internal/data_plane/resources.hpp"
 #include "internal/data_plane/server.hpp"
 #include "internal/memory/transient_pool.hpp"
@@ -27,6 +24,7 @@
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
+#include "internal/runtime/partition.hpp"
 
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/operators/router.hpp"
@@ -34,6 +32,7 @@
 #include "mrc/protos/codable.pb.h"
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launcher.hpp"
+#include "mrc/runnable/runner.hpp"
 #include "mrc/utils/bytes_to_string.hpp"
 
 #include <glog/logging.h>
@@ -48,6 +47,8 @@ namespace mrc::internal::pubsub {
 SubscriberService::SubscriberService(std::string service_name, runtime::Partition& runtime) :
   Base(std::move(service_name), runtime)
 {}
+
+SubscriberService::~SubscriberService() = default;
 
 void SubscriberService::do_subscription_service_setup()
 {

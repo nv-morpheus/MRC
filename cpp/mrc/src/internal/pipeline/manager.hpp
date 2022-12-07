@@ -17,18 +17,24 @@
 
 #pragma once
 
-#include "internal/pipeline/pipeline.hpp"
 #include "internal/pipeline/types.hpp"
-#include "internal/resources/manager.hpp"
 #include "internal/service.hpp"
-
-#include "mrc/channel/status.hpp"
-#include "mrc/node/source_channel.hpp"
-#include "mrc/runnable/runner.hpp"
 
 #include <memory>
 
+namespace mrc::internal::resources {
+class Manager;
+}  // namespace mrc::internal::resources
+namespace mrc::node {
+template <typename T>
+class SourceChannelWriteable;
+}  // namespace mrc::node
+namespace mrc::runnable {
+class Runner;
+}  // namespace mrc::runnable
+
 namespace mrc::internal::pipeline {
+class Pipeline;
 
 /**
  * @brief Responsible for coordinating and controlling a Pipeline running on a set of resources/partitions.

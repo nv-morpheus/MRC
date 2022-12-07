@@ -19,7 +19,6 @@
 
 #include "mrc/benchmarking/util.hpp"
 
-#include <ext/new_allocator.h>
 #include <glog/logging.h>
 #include <nlohmann/json.hpp>
 
@@ -33,6 +32,8 @@
 #include <tuple>
 #include <type_traits>
 #include <vector>
+
+// IWYU pragma: no_include <compare> (Issues with this header)
 
 namespace mrc::benchmarking {
 using namespace std::chrono_literals;

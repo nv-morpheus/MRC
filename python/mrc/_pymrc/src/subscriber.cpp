@@ -19,21 +19,20 @@
 
 #include "pymrc/operators.hpp"
 #include "pymrc/types.hpp"
+#include "pymrc/utils.hpp"
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>
 #include <pybind11/eval.h>
 #include <pybind11/gil.h>
-#include <pybind11/pybind11.h>  // IWYU pragma: keep
+#include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
 
 #include <array>
 #include <exception>
 #include <functional>
-#include <memory>
 #include <stdexcept>
-#include <type_traits>
 #include <utility>
 #include <vector>
 

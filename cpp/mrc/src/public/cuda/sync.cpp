@@ -20,8 +20,6 @@
 #include "mrc/cuda/common.hpp"  // IWYU pragma: associated
 #include "mrc/types.hpp"        // for Promise, Future
 
-#include <boost/fiber/future/promise.hpp>
-
 namespace mrc {
 
 static void enqueue_stream_event_callback(void* user_data)

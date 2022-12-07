@@ -22,21 +22,27 @@
 #include "internal/control_plane/client/instance.hpp"
 #include "internal/control_plane/resources.hpp"
 #include "internal/data_plane/resources.hpp"  // IWYU pragma: keep
+#include "internal/memory/device_resources.hpp"
+#include "internal/network/resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
+#include "internal/runnable/resources.hpp"
 #include "internal/system/engine_factory_cpu_sets.hpp"
 #include "internal/system/host_partition.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/system/partitions.hpp"
+#include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
 #include "internal/ucx/registation_callback_builder.hpp"
+#include "internal/ucx/resources.hpp"
 #include "internal/utils/contains.hpp"
 
 #include "mrc/core/bitmap.hpp"
+#include "mrc/core/task_queue.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
 
-#include <ext/alloc_traits.h>
+#include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 
 #include <map>
@@ -146,15 +152,14 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
         {
             VLOG(1) << "building network resources for partition: " << base.partition_id();
             CHECK(m_ucx.at(base.partition_id()));
-            std::optional<network::Resources> network;
             auto instance_id = m_control_plane->client().connections().instance_ids().at(base.partition_id());
             DCHECK(contains(control_instances, instance_id));  // todo(cpp20) contains
             auto instance = std::move(control_instances.at(instance_id));
-            network.emplace(base,
-                            *m_ucx.at(base.partition_id()),
-                            m_host.at(base.partition().host_partition_id()),
-                            std::move(instance));
-            m_network.push_back(std::move(network));
+            network::Resources network(base,
+                                       *m_ucx.at(base.partition_id()),
+                                       m_host.at(base.partition().host_partition_id()),
+                                       std::move(instance));
+            m_network.emplace_back(std::move(network));
         }
         else
         {
@@ -239,5 +244,24 @@ PartitionResources& Manager::get_partition()
 
         return *m_thread_partition;
     }
+}
+
+Future<void> Manager::shutdown()
+{
+    return m_runnable.at(0).main().enqueue([this] {
+        std::vector<Future<void>> futures;
+        futures.reserve(m_network.size());
+        for (auto& net : m_network)
+        {
+            if (net)
+            {
+                futures.emplace_back(net->shutdown());
+            }
+        }
+        for (auto& f : futures)
+        {
+            f.get();
+        }
+    });
 }
 }  // namespace mrc::internal::resources

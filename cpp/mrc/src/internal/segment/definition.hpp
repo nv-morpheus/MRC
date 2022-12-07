@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "mrc/engine/segment/idefinition.hpp"
+#include "mrc/segment/initializers.hpp"
 #include "mrc/types.hpp"
 
 #include <map>
@@ -30,36 +30,27 @@ class Definition final
 {
   public:
     Definition(std::string name,
-               std::map<std::string, IDefinition::ingress_initializer_t> ingress_initializers,
-               std::map<std::string, IDefinition::egress_initializer_t> egress_initializers,
-               IDefinition::backend_initializer_fn_t backend_initializer);
+               std::map<std::string, ::mrc::segment::ingress_initializer_t> ingress_initializers,
+               std::map<std::string, ::mrc::segment::egress_initializer_t> egress_initializers,
+               ::mrc::segment::backend_initializer_fn_t backend_initializer);
 
     const std::string& name() const;
     SegmentID id() const;
     std::vector<std::string> ingress_port_names() const;
     std::vector<std::string> egress_port_names() const;
 
-    const IDefinition::backend_initializer_fn_t& initializer_fn() const
-    {
-        return m_backend_initializer;
-    }
-    const std::map<std::string, IDefinition::egress_initializer_t>& egress_initializers() const
-    {
-        return m_egress_initializers;
-    }
-    const std::map<std::string, IDefinition::ingress_initializer_t>& ingress_initializers() const
-    {
-        return m_ingress_initializers;
-    }
+    const ::mrc::segment::backend_initializer_fn_t& initializer_fn() const;
+    const std::map<std::string, ::mrc::segment::egress_initializer_t>& egress_initializers() const;
+    const std::map<std::string, ::mrc::segment::ingress_initializer_t>& ingress_initializers() const;
 
   private:
     void validate_ports() const;
 
     std::string m_name;
     SegmentID m_id;
-    IDefinition::backend_initializer_fn_t m_backend_initializer;
-    std::map<std::string, IDefinition::egress_initializer_t> m_egress_initializers;
-    std::map<std::string, IDefinition::ingress_initializer_t> m_ingress_initializers;
+    ::mrc::segment::backend_initializer_fn_t m_backend_initializer;
+    std::map<std::string, ::mrc::segment::egress_initializer_t> m_egress_initializers;
+    std::map<std::string, ::mrc::segment::ingress_initializer_t> m_ingress_initializers;
 };
 
 }  // namespace mrc::internal::segment

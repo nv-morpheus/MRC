@@ -20,16 +20,19 @@
 #include "internal/system/device_partition.hpp"
 #include "internal/system/host_partition.hpp"
 #include "internal/system/partition.hpp"
-#include "internal/system/topology.hpp"  // todo(iwyu) - forward declare Topology?
-
-#include "mrc/options/options.hpp"
-#include "mrc/options/placement.hpp"
 
 #include <vector>
+
+namespace mrc {
+class Options;
+enum class PlacementResources;
+enum class PlacementStrategy;
+}  // namespace mrc
 
 namespace mrc::internal::system {
 
 class System;
+class Topology;
 
 class Partitions
 {

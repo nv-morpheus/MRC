@@ -21,7 +21,6 @@
 #include "mrc/node/rx_subscribable.hpp"
 
 #include <glog/logging.h>
-#include <rxcpp/rx-subscription.hpp>
 #include <rxcpp/rx.hpp>
 
 #include <memory>

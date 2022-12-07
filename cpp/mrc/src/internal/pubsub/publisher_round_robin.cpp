@@ -21,6 +21,7 @@
 #include "internal/runnable/resources.hpp"
 
 #include "mrc/core/task_queue.hpp"
+#include "mrc/runtime/remote_descriptor.hpp"
 
 #include <glog/logging.h>
 

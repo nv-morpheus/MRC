@@ -17,6 +17,7 @@
 
 #include "mrc/core/logging.hpp"
 
+#include <gflags/gflags.h>
 #include <gtest/gtest.h>
 
 int main(int argc, char** argv)

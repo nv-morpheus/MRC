@@ -19,7 +19,6 @@
 
 #include "mrc/data/reusable_pool.hpp"
 #include "mrc/memory/buffer.hpp"
-#include "mrc/memory/resources/memory_resource.hpp"
 #include "mrc/utils/macros.hpp"
 
 #include <glog/logging.h>
@@ -28,6 +27,10 @@
 #include <memory>
 #include <new>
 #include <utility>
+
+namespace mrc::memory {
+struct memory_resource;
+}  // namespace mrc::memory
 
 namespace mrc::internal::memory {
 
@@ -108,7 +111,7 @@ class Transient final : private TransientBuffer
     Transient& operator=(Transient&& other) noexcept
     {
         TransientBuffer::operator=(std::move(other));
-        m_data                   = std::exchange(other.m_data, nullptr);
+        m_data = std::exchange(other.m_data, nullptr);
         return *this;
     }
 

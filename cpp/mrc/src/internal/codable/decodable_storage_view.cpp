@@ -27,6 +27,7 @@
 #include "internal/ucx/endpoint.hpp"
 #include "internal/ucx/remote_registration_cache.hpp"
 
+#include "mrc/memory/buffer_view.hpp"
 #include "mrc/memory/memory_kind.hpp"
 #include "mrc/protos/codable.pb.h"
 

@@ -20,11 +20,14 @@
 #include "internal/codable/storage_resources.hpp"
 
 #include "mrc/codable/api.hpp"
-#include "mrc/memory/buffer_view.hpp"
-#include "mrc/memory/resources/memory_resource.hpp"
 
 #include <cstddef>
 #include <memory>
+
+namespace mrc::memory {
+class buffer_view;
+struct memory_resource;
+}  // namespace mrc::memory
 
 namespace mrc::internal::codable {
 

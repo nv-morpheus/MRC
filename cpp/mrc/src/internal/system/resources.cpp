@@ -18,7 +18,8 @@
 #include "internal/system/resources.hpp"
 
 #include "internal/system/fiber_manager.hpp"
-#include "internal/system/fiber_task_queue.hpp"
+
+#include "mrc/engine/system/iresources.hpp"
 
 #include <boost/fiber/future/future.hpp>
 

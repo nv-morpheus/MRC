@@ -37,8 +37,6 @@
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
-#include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_properties.hpp"
 #include "mrc/options/engine_groups.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
@@ -49,17 +47,13 @@
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
-#include "mrc/segment/object.hpp"
 #include "mrc/utils/macros.hpp"
 
 #include <boost/fiber/fiber.hpp>
 #include <boost/fiber/operations.hpp>
-#include <boost/hana/if.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
-#include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx.hpp>
-#include <rxcpp/sources/rx-iterate.hpp>
 
 #include <array>
 #include <chrono>

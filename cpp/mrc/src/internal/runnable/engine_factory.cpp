@@ -17,6 +17,7 @@
 
 #include "internal/runnable/engine_factory.hpp"
 
+#include "internal/runnable/engine.hpp"
 #include "internal/runnable/fiber_engines.hpp"
 #include "internal/runnable/thread_engines.hpp"
 #include "internal/system/fiber_pool.hpp"
@@ -24,9 +25,7 @@
 
 #include "mrc/constants.hpp"
 #include "mrc/core/bitmap.hpp"
-#include "mrc/core/task_queue.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/runnable/engine.hpp"
 #include "mrc/runnable/engine_factory.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/runnable/types.hpp"

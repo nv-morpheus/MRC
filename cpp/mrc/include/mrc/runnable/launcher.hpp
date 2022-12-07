@@ -17,9 +17,6 @@
 
 #pragma once
 
-#include "mrc/runnable/context.hpp"
-#include "mrc/runnable/engine.hpp"
-#include "mrc/runnable/runner.hpp"
 #include "mrc/utils/macros.hpp"
 
 #include <functional>
@@ -28,6 +25,9 @@
 #include <vector>
 
 namespace mrc::runnable {
+class Context;
+class Engines;
+class Runner;
 
 /**
  * @brief This is one-time use object used to launch a Runnable.

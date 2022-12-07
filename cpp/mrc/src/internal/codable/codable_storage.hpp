@@ -19,8 +19,6 @@
 
 #include "internal/codable/decodable_storage_view.hpp"
 #include "internal/codable/storage_view.hpp"
-#include "internal/resources/forward.hpp"
-#include "internal/ucx/forward.hpp"
 
 #include "mrc/codable/api.hpp"
 #include "mrc/memory/buffer.hpp"
@@ -28,14 +26,24 @@
 #include "mrc/protos/codable.pb.h"
 #include "mrc/types.hpp"
 
-#include <google/protobuf/message.h>
-
 #include <cstddef>
 #include <map>
 #include <mutex>
 #include <optional>
 #include <typeindex>
 #include <vector>
+
+namespace google::protobuf {
+class Message;
+}  // namespace google::protobuf
+namespace mrc::internal::resources {
+class PartitionResources;  // IWYU pragma: keep
+}  // namespace mrc::internal::resources
+namespace mrc::internal::ucx {
+struct MemoryBlock;
+}  // namespace mrc::internal::ucx
+
+// IWYU pragma: no_include "internal/resources/partition_resources.hpp"
 
 namespace mrc::internal::codable {
 
@@ -50,6 +58,7 @@ class CodableStorage final : public mrc::codable::ICodableStorage, public Storag
   public:
     CodableStorage(resources::PartitionResources& resources);
     CodableStorage(mrc::codable::protos::EncodedObject proto, resources::PartitionResources& resources);
+    ~CodableStorage() override;
 
     mrc::codable::IEncodableStorage& encodable();
 

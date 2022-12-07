@@ -15,16 +15,32 @@
  * limitations under the License.
  */
 
+#include "../test_segment.hpp"
+#include "prometheus/client_metric.h"
+#include "prometheus/metric_family.h"
 #include "test_benchmarking.hpp"
 #include "test_stat_gather.hpp"
 
+#include "mrc/benchmarking/segment_watcher.hpp"
 #include "mrc/benchmarking/trace_statistics.hpp"
+#include "mrc/benchmarking/tracer.hpp"
 #include "mrc/benchmarking/util.hpp"
+#include "mrc/core/executor.hpp"
+#include "mrc/engine/pipeline/ipipeline.hpp"
+#include "mrc/options/options.hpp"
 
+#include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 #include <prometheus/registry.h>
 
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 using namespace mrc::benchmarking;
+
+namespace mrc {
 
 TEST_F(StatGatherTest, TestPrometheusConversionForFrameworkStats)
 {
@@ -197,3 +213,5 @@ TEST_F(LatencyBenchmarkTests, TestPrometheusConversionForWatcherTraces)
 
     TraceStatistics::reset();
 }
+
+}  // namespace mrc

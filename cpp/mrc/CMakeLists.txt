@@ -141,6 +141,7 @@ add_library(libmrc
   src/public/options/resources.cpp
   src/public/options/services.cpp
   src/public/options/topology.cpp
+  src/public/pipeline/pipeline.cpp
   src/public/runnable/context.cpp
   src/public/runnable/launcher.cpp
   src/public/runnable/runnable.cpp

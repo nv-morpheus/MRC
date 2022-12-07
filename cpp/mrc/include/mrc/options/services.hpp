@@ -17,10 +17,13 @@
 
 #pragma once
 
-#include "mrc/runnable/internal_service.hpp"
 #include "mrc/runnable/launch_options.hpp"
 
 #include <map>
+
+namespace mrc::runnable {
+enum class InternalServiceType;
+}  // namespace mrc::runnable
 
 namespace mrc {
 

@@ -17,14 +17,12 @@
 
 #include "internal/runnable/fiber_engine.hpp"
 
-#include "mrc/core/fiber_meta_data.hpp"
 #include "mrc/core/task_queue.hpp"
 #include "mrc/runnable/types.hpp"
 #include "mrc/types.hpp"
 
 #include <boost/fiber/future/future.hpp>
 
-#include <type_traits>
 #include <utility>
 
 namespace mrc::internal::runnable {

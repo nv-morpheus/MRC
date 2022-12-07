@@ -21,20 +21,18 @@
 #include "internal/expected.hpp"
 #include "internal/runnable/resources.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/source_channel.hpp"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launcher.hpp"
+#include "mrc/runnable/runner.hpp"
 
 #include <boost/fiber/future/promise.hpp>
-#include <ext/alloc_traits.h>
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>
 
-#include <algorithm>
 #include <exception>
 #include <utility>
 

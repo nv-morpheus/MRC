@@ -23,7 +23,6 @@
 #include "internal/ucx/resources.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/core/task_queue.hpp"
 #include "mrc/memory/literals.hpp"
 #include "mrc/node/edge_builder.hpp"

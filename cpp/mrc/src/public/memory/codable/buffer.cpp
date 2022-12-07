@@ -19,7 +19,6 @@
 
 #include "mrc/codable/decode.hpp"
 #include "mrc/codable/encode.hpp"
-#include "mrc/codable/encoding_options.hpp"
 
 #include <glog/logging.h>
 

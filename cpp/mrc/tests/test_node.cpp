@@ -17,43 +17,40 @@
 
 #include "test_mrc.hpp"  // IWYU pragma: associated
 
-#include "mrc/channel/status.hpp"
-#include "mrc/core/addresses.hpp"
 #include "mrc/core/executor.hpp"
-#include "mrc/node/rx_subscribable.hpp"
+#include "mrc/engine/pipeline/ipipeline.hpp"
+#include "mrc/node/rx_node.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_source.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/pipeline/pipeline.hpp"
+#include "mrc/runnable/context.hpp"
+#include "mrc/runnable/launch_options.hpp"
 #include "mrc/segment/builder.hpp"
-#include "mrc/types.hpp"
+#include "mrc/utils/string_utils.hpp"
 
-#include <gtest/gtest-param-test.h>
+#include <glog/logging.h>
 #include <gtest/gtest.h>
-#include <gtest/internal/gtest-internal.h>
-#include <rxcpp/operators/rx-map.hpp>
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
 #include <rxcpp/rx.hpp>
 
 #include <atomic>
-#include <cstdint>
 #include <exception>
-#include <functional>
 #include <memory>
 #include <mutex>
-#include <ostream>
-#include <stdexcept>
+#include <set>
+#include <sstream>
 #include <string>
 #include <thread>
-#include <type_traits>
 #include <utility>
 
 // IWYU thinks we need vector for make_segment
 // IWYU pragma: no_include <vector>
 
 using namespace std::chrono_literals;
+
+namespace mrc {
 
 TEST_CLASS(Node);
 
@@ -650,3 +647,5 @@ TEST_P(ParallelTests, NodeMultiThread)
     EXPECT_EQ(next_count, source_count);
     EXPECT_EQ(complete_count, 1);
 }
+
+}  // namespace mrc

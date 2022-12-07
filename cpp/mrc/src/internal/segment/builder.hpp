@@ -17,13 +17,6 @@
 
 #pragma once
 
-#include "internal/pipeline/resources.hpp"
-#include "internal/segment/definition.hpp"
-
-#include "mrc/engine/segment/ibuilder.hpp"
-#include "mrc/runnable/forward.hpp"
-#include "mrc/segment/forward.hpp"
-#include "mrc/segment/object.hpp"
 #include "mrc/types.hpp"
 
 #include <cstddef>
@@ -33,7 +26,22 @@
 #include <memory>
 #include <string>
 
+namespace mrc::internal::pipeline {
+class Resources;
+}  // namespace mrc::internal::pipeline
+namespace mrc::runnable {
+struct Launchable;
+}  // namespace mrc::runnable
+namespace mrc::segment {
+class EgressPortBase;
+struct IngressPortBase;
+struct ObjectProperties;
+}  // namespace mrc::segment
+
 namespace mrc::internal::segment {
+class Definition;
+class IBuilder;
+
 class Builder final
 {
   public:

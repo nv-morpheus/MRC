@@ -29,6 +29,7 @@
 #include "mrc/memory/resources/arena_resource.hpp"
 #include "mrc/memory/resources/device/cuda_malloc_resource.hpp"
 #include "mrc/memory/resources/logging_resource.hpp"
+#include "mrc/memory/resources/memory_resource.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/resources.hpp"
 #include "mrc/types.hpp"

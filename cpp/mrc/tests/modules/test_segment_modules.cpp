@@ -19,20 +19,30 @@
 
 #include "mrc/core/executor.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
-#include "mrc/modules/module_registry.hpp"
-#include "mrc/modules/plugins.hpp"
 #include "mrc/modules/sample_modules.hpp"
+#include "mrc/modules/segment_modules.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_source.hpp"
 #include "mrc/options/options.hpp"
+#include "mrc/options/topology.hpp"
+#include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
 
-#include <gtest/gtest-message.h>
-#include <gtest/gtest-test-part.h>
-#include <rxcpp/rx-subscriber.hpp>
+#include <glog/logging.h>
+#include <gtest/gtest.h>
+#include <nlohmann/json.hpp>
+#include <rxcpp/rx.hpp>
 
+#include <cassert>
 #include <iostream>
+#include <map>
+#include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
+
+namespace mrc {
 
 TEST_F(TestSegmentModules, ModuleConstructorTest)
 {
@@ -463,3 +473,5 @@ TEST_F(TestSegmentModules, ModuleTemplateWithInitTest)
     EXPECT_EQ(packet_count_1, 42);
     EXPECT_EQ(packet_count_2, 24);
 }
+
+}  // namespace mrc

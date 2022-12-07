@@ -17,15 +17,17 @@
 
 #pragma once
 
-#include "mrc/channel/status.hpp"
 #include "mrc/node/generic_source.hpp"
 #include "mrc/runnable/context.hpp"
 
-#include <grpcpp/completion_queue.h>
 #include <rxcpp/rx.hpp>
 
 #include <memory>
 #include <vector>
+
+namespace grpc {
+class CompletionQueue;
+}  // namespace grpc
 
 namespace mrc::internal::rpc {
 

@@ -17,13 +17,12 @@
 
 #pragma once
 
-#include "internal/system/device_partition.hpp"
-#include "internal/system/host_partition.hpp"
-
 #include <cstddef>
 #include <memory>
 
 namespace mrc::internal::system {
+class DevicePartition;
+class HostPartition;
 
 class Partition final
 {

@@ -17,13 +17,16 @@
 
 #pragma once
 
-#include "mrc/runnable/forward.hpp"
 #include "mrc/utils/macros.hpp"
 
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
+
+namespace mrc::runnable {
+class Launchable;
+}  // namespace mrc::runnable
 
 // todo(ryan) - most base classes that will be owned by the engine will need to be moved to engine api/lib
 namespace mrc::segment {

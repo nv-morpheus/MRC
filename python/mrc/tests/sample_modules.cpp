@@ -19,23 +19,17 @@
 
 #include "pymrc/utils.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/modules/module_registry_util.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 
-#include <boost/hana/if.hpp>
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
 
 #include <memory>
-#include <ostream>
-
-// IWYU thinks the Segment.def calls need array and vector
-// IWYU pragma: no_include <array>
-// IWYU pragma: no_include <vector>
-// IWYU pragma: no_include <pybind11/detail/common.h>
-// IWYU pragma: no_include <pybind11/detail/descr.h>
+#include <sstream>
+#include <vector>
 
 const std::vector<unsigned int> PybindSegmentModuleVersion{mrc_VERSION_MAJOR, mrc_VERSION_MINOR, mrc_VERSION_PATCH};
 

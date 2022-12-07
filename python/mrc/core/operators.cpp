@@ -24,9 +24,10 @@
 
 #include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
 
 #include <array>
-#include <ostream>
+#include <sstream>
 
 namespace mrc::pymrc {
 

@@ -17,6 +17,8 @@
 
 #include "internal/remote_descriptor/storage.hpp"
 
+#include "mrc/codable/encoded_object.hpp"
+
 #include <glog/logging.h>
 
 #include <utility>
@@ -27,6 +29,8 @@ Storage::Storage(std::unique_ptr<mrc::codable::EncodedStorage> storage) : m_stor
 {
     CHECK(m_storage);
 }
+
+Storage::~Storage() = default;
 
 const mrc::codable::IDecodableStorage& Storage::encoding() const
 {

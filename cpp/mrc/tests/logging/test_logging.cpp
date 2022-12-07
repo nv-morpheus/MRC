@@ -21,7 +21,7 @@
 
 #include <glog/logging.h>
 
-using namespace mrc;
+namespace mrc {
 
 TEST_CLASS(Logging);
 
@@ -44,3 +44,5 @@ TEST_F(TestLogging, Logging)
     EXPECT_EQ(get_log_level(), LogLevels::INFO);
     EXPECT_EQ(FLAGS_minloglevel, google::INFO);
 }
+
+}  // namespace mrc

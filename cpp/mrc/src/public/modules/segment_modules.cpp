@@ -19,8 +19,8 @@
 
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
+#include "mrc/segment/object.hpp"
 
-#include <algorithm>
 #include <ostream>
 #include <stdexcept>
 #include <utility>

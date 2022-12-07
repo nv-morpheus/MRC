@@ -25,7 +25,6 @@
 #include <prometheus/registry.h>
 
 #include <chrono>
-#include <map>
 #include <string>
 
 using namespace prometheus;

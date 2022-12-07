@@ -17,12 +17,8 @@
 
 #pragma once
 
-#include "internal/pipeline/resources.hpp"
-#include "internal/segment/builder.hpp"
-#include "internal/segment/definition.hpp"
 #include "internal/service.hpp"
 
-#include "mrc/manifold/interface.hpp"
 #include "mrc/runnable/runner.hpp"
 #include "mrc/types.hpp"
 
@@ -32,7 +28,16 @@
 #include <mutex>
 #include <string>
 
+namespace mrc::internal::pipeline {
+class Resources;
+}  // namespace mrc::internal::pipeline
+namespace mrc::manifold {
+struct Interface;
+}  // namespace mrc::manifold
+
 namespace mrc::internal::segment {
+class Definition;
+class Builder;
 
 // todo(ryan) - inherit from service
 class Instance final : public Service
@@ -42,6 +47,7 @@ class Instance final : public Service
              SegmentRank rank,
              pipeline::Resources& resources,
              std::size_t partition_id);
+    ~Instance() override;
 
     const std::string& name() const;
     const SegmentID& id() const;

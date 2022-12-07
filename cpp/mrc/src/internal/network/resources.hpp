@@ -17,15 +17,31 @@
 
 #pragma once
 
-#include "internal/control_plane/client/state_manager.hpp"
-#include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/ucx/resources.hpp"
 
 #include "mrc/types.hpp"
 #include "mrc/utils/macros.hpp"
 
 #include <memory>
+
+namespace mrc::internal::control_plane {
+class Client;
+}  // namespace mrc::internal::control_plane
+namespace mrc::internal::control_plane::client {
+class Instance;
+}  // namespace mrc::internal::control_plane::client
+namespace mrc::internal::data_plane {
+class Resources;
+}  // namespace mrc::internal::data_plane
+namespace mrc::internal::memory {
+class HostResources;
+}  // namespace mrc::internal::memory
+namespace mrc::internal::resources {
+class Manager;
+}  // namespace mrc::internal::resources
+namespace mrc::internal::ucx {
+class Resources;
+}  // namespace mrc::internal::ucx
 
 namespace mrc::internal::network {
 

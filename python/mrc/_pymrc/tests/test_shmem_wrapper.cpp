@@ -28,8 +28,6 @@
 #include <stdexcept>
 #include <string>
 
-// IWYU pragma: no_include "gtest/gtest_pred_impl.h"
-
 namespace py = pybind11;
 using namespace std::string_literals;
 using namespace pybind11::literals;

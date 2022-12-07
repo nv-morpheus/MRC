@@ -31,7 +31,6 @@
 
 #include <cstdint>
 #include <sstream>
-#include <type_traits>
 
 namespace mrc::internal::system {
 

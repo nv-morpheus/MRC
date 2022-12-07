@@ -17,16 +17,23 @@
 
 #pragma once
 
-#include "pymrc/forward.hpp"
-
-#include "mrc/options/engine_groups.hpp"
-#include "mrc/options/options.hpp"
-#include "mrc/options/placement.hpp"
-#include "mrc/options/topology.hpp"
-#include "mrc/runnable/types.hpp"
-
 #include <cstddef>  // for size_t
 #include <string>
+
+namespace mrc {
+class EngineGroups;
+class Options;
+class PlacementOptions;
+class TopologyOptions;
+enum class PlacementStrategy;
+struct EngineFactoryOptions;
+}  // namespace mrc
+namespace mrc::runnable {
+enum class EngineType;
+}  // namespace mrc::runnable
+namespace pybind11 {
+class object;
+}  // namespace pybind11
 
 namespace mrc::pymrc {
 

@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "mrc/memory/buffer.hpp"
 #include "mrc/memory/memory_kind.hpp"
 
 #include <cstddef>
@@ -25,6 +24,7 @@
 namespace mrc::memory {
 
 class buffer_view;
+class buffer;
 
 /**
  * @brief Generic container for holding the address to a const memory buffer_view.

@@ -19,11 +19,10 @@
 
 #include "internal/pipeline/controller.hpp"
 #include "internal/pipeline/instance.hpp"
-#include "internal/pipeline/pipeline.hpp"
+#include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/source_channel.hpp"
 #include "mrc/runnable/launch_control.hpp"

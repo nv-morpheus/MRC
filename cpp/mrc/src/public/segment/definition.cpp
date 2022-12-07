@@ -17,16 +17,19 @@
 
 #include "mrc/segment/definition.hpp"
 
-#include "mrc/engine/segment/ibuilder.hpp"
 #include "mrc/engine/segment/idefinition.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/segment/egress_ports.hpp"
+#include "mrc/segment/ingress_ports.hpp"
+
+#include <utility>
 
 namespace mrc::segment {
 
 std::shared_ptr<Definition> Definition::create(std::string name,
                                                std::map<std::string, ingress_initializer_t> ingress_initializers,
                                                std::map<std::string, egress_initializer_t> egress_initializers,
-                                               initializer_fn_t initializer)
+                                               segment_initializer_fn_t initializer)
 {
     return std::shared_ptr<Definition>(new Definition(std::move(name),
                                                       std::move(ingress_initializers),
@@ -44,5 +47,36 @@ Definition::Definition(std::string name,
   internal::segment::IDefinition(
       std::move(name), std::move(ingress_ports), std::move(egress_ports), std::move(backend_initializer))
 {}
+
+std::shared_ptr<Definition> Definition::create(std::string name,
+                                               IngressPortsBase ingress_ports,
+                                               EgressPortsBase egress_ports,
+                                               segment_initializer_fn_t initializer)
+{
+    return Definition::create(
+        std::move(name), ingress_ports.m_initializers, egress_ports.m_initializers, std::move(initializer));
+}
+
+std::shared_ptr<Definition> Definition::create(std::string name,
+                                               EgressPortsBase egress_ports,
+                                               segment_initializer_fn_t initializer)
+{
+    return Definition::create(std::move(name), {}, egress_ports.m_initializers, std::move(initializer));
+}
+
+std::shared_ptr<Definition> Definition::create(std::string name,
+                                               IngressPortsBase ingress_ports,
+                                               segment_initializer_fn_t initializer)
+{
+    return Definition::create(std::move(name), ingress_ports.m_initializers, {}, std::move(initializer));
+}
+
+std::shared_ptr<Definition> Definition::create(std::string name, segment_initializer_fn_t initializer)
+{
+    return Definition::create(std::move(name),
+                              std::map<std::string, ingress_initializer_t>{},
+                              std::map<std::string, egress_initializer_t>{},
+                              std::move(initializer));
+}
 
 }  // namespace mrc::segment

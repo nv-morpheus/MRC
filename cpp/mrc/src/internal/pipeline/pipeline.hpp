@@ -19,14 +19,17 @@
 
 #include "internal/utils/collision_detector.hpp"
 
-#include "mrc/engine/pipeline/ipipeline.hpp"
-#include "mrc/engine/segment/forward.hpp"
 #include "mrc/types.hpp"
 
 #include <map>
 #include <memory>
 
+namespace mrc::internal::segment {
+class Definition;
+}  // namespace mrc::internal::segment
+
 namespace mrc::internal::pipeline {
+class IPipeline;
 
 class Pipeline
 {
