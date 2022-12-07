@@ -15,6 +15,11 @@
  * limitations under the License.
  */
 
+/**
+ * Original Source: https://github.com/RishabhRD/expected
+ * Original License: MIT, included below
+ */
+
 /*
  * MIT License
  *
