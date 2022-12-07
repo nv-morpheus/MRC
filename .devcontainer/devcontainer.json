@@ -9,6 +9,13 @@
             "USER_ID": "${localEnv:UID}"
         }
     },
+    // todo(252)
+    // new capability with vs code 1.74 (November 2022 Release)
+    // https://github.com/microsoft/vscode-docs/blob/main/remote-release-notes/v1_74.md#gpu-host-requirement
+    // enable this after more testing is conducted
+    // "hostRequirements": {
+    //     "gpu": true
+    // },
     "runArgs": [
         "--gpus=all",
         "--runtime=nvidia",
