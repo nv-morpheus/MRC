@@ -14,7 +14,7 @@ jobs:
     name: Add issue or PR to project
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/add-to-project@v0.3.0
+      - uses: actions/add-to-project@v0.4.0
         with:
           project-url: https://github.com/orgs/nv-morpheus/projects/2
-          github-token: ${{ github.token}}
+          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
