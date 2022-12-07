@@ -34,7 +34,8 @@
     },
     "remoteUser": "${localEnv:USER}",
     "updateRemoteUserUID": true,
-    "overrideCommand": true, // infinite loop of sleeps
+    "postStartCommand": ".devcontainer/scripts/post_start.sh",
+    "overrideCommand": true, // infinite loop of sleeps,
     "customizations": {
         "vscode": {
             "extensions": [
