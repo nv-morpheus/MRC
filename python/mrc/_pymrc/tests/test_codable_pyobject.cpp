@@ -19,7 +19,7 @@
 
 #include "test_pymrc.hpp"
 
-#include "pymrc/codable_object.hpp"  // IWYU pragma: keep (MDD)
+#include "pymrc/codable_object.hpp"  // IWYU pragma: keep
 #include "pymrc/types.hpp"
 #include "pymrc/utils.hpp"
 

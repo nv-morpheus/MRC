@@ -28,7 +28,7 @@
 #include "mrc/segment/builder.hpp"
 
 #include <gtest/gtest.h>
-#include <pybind11/embed.h>  // IWYU pragma: keep (MDD)
+#include <pybind11/embed.h>  // IWYU pragma: keep
 #include <rxcpp/rx.hpp>
 
 #include <atomic>

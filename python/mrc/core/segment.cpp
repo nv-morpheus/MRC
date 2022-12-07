@@ -18,7 +18,7 @@
 #include "pymrc/segment.hpp"
 
 #include "pymrc/module_registry.hpp"
-#include "pymrc/node.hpp"  // IWYU pragma: keep (MDD)
+#include "pymrc/node.hpp"  // IWYU pragma: keep
 #include "pymrc/segment_modules.hpp"
 #include "pymrc/types.hpp"
 #include "pymrc/utils.hpp"

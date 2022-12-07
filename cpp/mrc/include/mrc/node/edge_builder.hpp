@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "mrc/node/forward.hpp"  // IWYU pragma: keep (MDD)
+#include "mrc/node/forward.hpp"  // IWYU pragma: keep
 
 #include <glog/logging.h>
 

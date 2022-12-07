@@ -19,9 +19,9 @@
 
 #include "mrc/modules/segment_modules.hpp"
 
-#include <pybind11/functional.h>  // IWYU pragma: keep (MDD)
+#include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/pytypes.h>
-#include <pybind11/stl.h>  // IWYU pragma: keep (MDD)
+#include <pybind11/stl.h>  // IWYU pragma: keep
 
 #include <memory>
 #include <string>

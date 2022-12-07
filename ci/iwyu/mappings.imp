@@ -86,6 +86,9 @@
 { "symbol": ["boost::context::detail::forced_unwind", "private", "<boost/fiber/future/future.hpp>", "public"] },
 { "symbol": ["boost::intrusive_ptr::operator", "private", "<boost/fiber/future/promise.hpp>", "public"] },
 { "symbol": ["__cxxabiv1::__forced_unwind", "private", "<boost/fiber/future/future.hpp>", "public"] },
+{ "include": [ "<boost/hana/fwd/core/when.hpp>", private, "<boost/hana/core/when.hpp>", "public" ] },
+{ "include": [ "<boost/hana/fwd/if.hpp>", private, "<boost/hana/if.hpp>", "public" ] },
+{ "include": [ "<boost/hana/fwd/type.hpp>", private, "<boost/hana/type.hpp>", "public" ] },
 
 # cuda
 { "symbol": ["cuda::std::declval", "private", "<cuda/memory_resource>", "public"] },

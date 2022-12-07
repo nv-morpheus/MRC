@@ -22,7 +22,7 @@
 
 #include "mrc/core/executor.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
-#include "mrc/pipeline/pipeline.hpp"  // IWYU pragma: keep (MDD)
+#include "mrc/pipeline/pipeline.hpp"  // IWYU pragma: keep
 #include "mrc/types.hpp"
 
 #include <boost/fiber/future/async.hpp>

@@ -21,7 +21,7 @@
 #include "pymrc/utils.hpp"
 
 #include <pybind11/cast.h>
-#include <pybind11/functional.h>  // IWYU pragma: keep (MDD)
+#include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
@@ -34,7 +34,7 @@
 #include <utility>
 #include <vector>
 
-// IWYU pragma: no_include <array> (MDD)
+// IWYU pragma: no_include <array>
 
 namespace mrc::pymrc {
 

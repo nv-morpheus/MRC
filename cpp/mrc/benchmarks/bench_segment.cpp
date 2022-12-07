@@ -24,8 +24,8 @@
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/pipeline/pipeline.hpp"
-#include "mrc/segment/builder.hpp"  // IWYU pragma: keep (MDD)
-#include "mrc/segment/object.hpp"   // IWYU pragma: keep (MDD)
+#include "mrc/segment/builder.hpp"  // IWYU pragma: keep
+#include "mrc/segment/object.hpp"   // IWYU pragma: keep
 
 #include <benchmark/benchmark.h>
 #include <nlohmann/json.hpp>

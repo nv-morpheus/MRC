@@ -37,7 +37,7 @@
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>
 #include <pybind11/pytypes.h>
-#include <pybind11/stl.h>  // IWYU pragma: keep (MDD)
+#include <pybind11/stl.h>  // IWYU pragma: keep
 #include <rxcpp/rx.hpp>
 
 #include <atomic>

@@ -26,7 +26,7 @@
 #include "mrc/channel/status.hpp"
 #include "mrc/node/edge.hpp"
 #include "mrc/node/edge_connector.hpp"
-#include "mrc/node/forward.hpp"  // IWYU pragma: keep (MDD)
+#include "mrc/node/forward.hpp"  // IWYU pragma: keep
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"

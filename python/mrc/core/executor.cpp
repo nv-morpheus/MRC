@@ -17,7 +17,7 @@
 
 #include "pymrc/executor.hpp"
 
-#include "pymrc/pipeline.hpp"  // IWYU pragma: keep (MDD)
+#include "pymrc/pipeline.hpp"  // IWYU pragma: keep
 #include "pymrc/utils.hpp"
 
 #include "mrc/options/options.hpp"
@@ -26,7 +26,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <pybind11/stl.h>  // IWYU pragma: keep (MDD)
+#include <pybind11/stl.h>  // IWYU pragma: keep
 
 #include <memory>
 #include <sstream>

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "../test_mrc.hpp"  // IWYU pragma: keep (MDD)
+#include "../test_mrc.hpp"  // IWYU pragma: keep
 
 #include "mrc/core/executor.hpp"
 #include "mrc/options/options.hpp"

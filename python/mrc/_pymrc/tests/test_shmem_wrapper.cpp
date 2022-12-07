@@ -22,7 +22,7 @@
 #include <gtest/gtest.h>
 #include <pybind11/buffer_info.h>
 #include <pybind11/pytypes.h>
-#include <pybind11/stl.h>  // IWYU pragma: keep (MDD)
+#include <pybind11/stl.h>  // IWYU pragma: keep
 
 #include <cstring>
 #include <stdexcept>

@@ -25,8 +25,8 @@
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/metrics/counter.hpp"
 #include "mrc/metrics/registry.hpp"
-#include "mrc/segment/egress_port.hpp"   // IWYU pragma: keep (MDD)
-#include "mrc/segment/ingress_port.hpp"  // IWYU pragma: keep (MDD)
+#include "mrc/segment/egress_port.hpp"   // IWYU pragma: keep
+#include "mrc/segment/ingress_port.hpp"  // IWYU pragma: keep
 #include "mrc/segment/initializers.hpp"
 #include "mrc/types.hpp"
 

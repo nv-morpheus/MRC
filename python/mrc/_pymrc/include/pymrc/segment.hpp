@@ -21,9 +21,9 @@
 
 #include "mrc/segment/builder.hpp"  // IWYU pragma: export (needed by wrap functions)
 
-#include <pybind11/functional.h>  // IWYU pragma: keep (MDD)
+#include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/pytypes.h>
-#include <pybind11/stl.h>  // IWYU pragma: keep (MDD)
+#include <pybind11/stl.h>  // IWYU pragma: keep
 
 #include <functional>
 #include <memory>

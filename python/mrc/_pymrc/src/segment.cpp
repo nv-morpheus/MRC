@@ -46,7 +46,7 @@
 #include <vector>
 
 // IWYU thinks we need array for py::print
-// IWYU pragma: no_include <array> (MDD)
+// IWYU pragma: no_include <array>
 
 namespace mrc::pymrc {
 

@@ -24,8 +24,8 @@
 #include "mrc/version.hpp"
 
 #include <pybind11/attr.h>
-#include <pybind11/functional.h>  // IWYU pragma: keep (MDD)
-#include <pybind11/gil.h>         // IWYU pragma: keep (MDD)(for call_guard)
+#include <pybind11/functional.h>  // IWYU pragma: keep
+#include <pybind11/gil.h>         // IWYU pragma: keep(for call_guard)
 #include <pybind11/pybind11.h>
 
 #include <array>
