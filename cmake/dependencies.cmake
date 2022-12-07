@@ -70,10 +70,6 @@ include(deps/Configure_ucx)
 set(HWLOC_VERSION "2.5" CACHE STRING "Version of hwloc to use")
 include(deps/Configure_hwloc)
 
-# expected
-set(EXPECTED_VERSION "1.0.0" CACHE STRING "Version of expected to use")
-include(deps/Configure_expected)
-
 # FlatBuffers
 # ===========
 # rapids_find_package(Flatbuffers REQUIRED
@@ -86,7 +82,7 @@ include(deps/Configure_expected)
 
 # NVIDIA RAPIDS RMM
 # =================
-set(RMM_VERSION "\${SRF_RAPIDS_VERSION}" CACHE STRING "Version of RMM to use. Defaults to \${SRF_RAPIDS_VERSION}")
+set(RMM_VERSION "\${MRC_RAPIDS_VERSION}" CACHE STRING "Version of RMM to use. Defaults to \${MRC_RAPIDS_VERSION}")
 include(deps/Configure_RMM)
 
 # gflags
@@ -150,7 +146,7 @@ include(deps/Configure_prometheus)
 set(LIBCUDACXX_VERSION "1.8.0" CACHE STRING "Version of libcudacxx to use")
 include(deps/Configure_libcudacxx)
 
-if(SRF_BUILD_BENCHMARKS)
+if(MRC_BUILD_BENCHMARKS)
   # google benchmark
   # ================
   rapids_find_package(benchmark REQUIRED
@@ -163,7 +159,7 @@ if(SRF_BUILD_BENCHMARKS)
   )
 endif()
 
-if(SRF_BUILD_TESTS)
+if(MRC_BUILD_TESTS)
   # google test
   # ===========
   rapids_find_package(GTest REQUIRED

@@ -15,14 +15,14 @@
 
 import dataclasses
 
-import srf
-import srf.core.node
-import srf.tests.test_edges_cpp as m
+import mrc
+import mrc.core.node
+import mrc.tests.test_edges_cpp as m
 
 
 def test_connect_cpp_edges():
 
-    def segment_init(seg: srf.Builder):
+    def segment_init(seg: mrc.Builder):
         source = m.SourceDerivedB(seg, "source")
 
         node = m.NodeBase(seg, "node")
@@ -31,16 +31,16 @@ def test_connect_cpp_edges():
         sink = m.SinkBase(seg, "sink")
         seg.make_edge(node, sink)
 
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
 
     pipeline.make_segment("my_seg", segment_init)
 
-    options = srf.Options()
+    options = mrc.Options()
 
     # Set to 1 thread
     options.topology.user_cpuset = "0-0"
 
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
 
     executor.register_pipeline(pipeline)
 
@@ -51,7 +51,7 @@ def test_connect_cpp_edges():
 
 def test_edge_cpp_to_cpp_same():
 
-    def segment_init(seg: srf.Builder):
+    def segment_init(seg: mrc.Builder):
         source = m.SourceDerivedB(seg, "source")
 
         node = m.NodeBase(seg, "node")
@@ -60,16 +60,16 @@ def test_edge_cpp_to_cpp_same():
         sink = m.SinkBase(seg, "sink")
         seg.make_edge(node, sink)
 
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
 
     pipeline.make_segment("my_seg", segment_init)
 
-    options = srf.Options()
+    options = mrc.Options()
 
     # Set to 1 thread
     options.topology.user_cpuset = "0-0"
 
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
 
     executor.register_pipeline(pipeline)
 
@@ -80,7 +80,7 @@ def test_edge_cpp_to_cpp_same():
 
 def test_edge_cpp_to_py_same():
 
-    def segment_init(seg: srf.Builder):
+    def segment_init(seg: mrc.Builder):
         source = m.SourceDerivedB(seg, "source")
 
         def on_next(x: m.Base):
@@ -95,16 +95,16 @@ def test_edge_cpp_to_py_same():
         sink = seg.make_sink("sink", on_next, on_error, on_complete)
         seg.make_edge(source, sink)
 
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
 
     pipeline.make_segment("my_seg", segment_init)
 
-    options = srf.Options()
+    options = mrc.Options()
 
     # Set to 1 thread
     options.topology.user_cpuset = "0-0"
 
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
 
     executor.register_pipeline(pipeline)
 
@@ -115,7 +115,7 @@ def test_edge_cpp_to_py_same():
 
 def test_edge_py_to_cpp_same():
 
-    def segment_init(seg: srf.Builder):
+    def segment_init(seg: mrc.Builder):
 
         def source_fn():
             yield m.DerivedB()
@@ -127,16 +127,16 @@ def test_edge_py_to_cpp_same():
         sink = m.SinkBase(seg, "sink")
         seg.make_edge(source, sink)
 
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
 
     pipeline.make_segment("my_seg", segment_init)
 
-    options = srf.Options()
+    options = mrc.Options()
 
     # Set to 1 thread
     options.topology.user_cpuset = "0-0"
 
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
 
     executor.register_pipeline(pipeline)
 
@@ -148,7 +148,7 @@ def test_edge_py_to_cpp_same():
 def test_edge_wrapper():
     on_next_count = 0
 
-    def segment_init(seg: srf.Builder):
+    def segment_init(seg: mrc.Builder):
 
         def create_source():
             yield 1
@@ -176,16 +176,16 @@ def test_edge_wrapper():
         sink = seg.make_sink("sink", on_next, on_error, on_complete)
         seg.make_edge(node, sink)
 
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
 
     pipeline.make_segment("my_seg", segment_init)
 
-    options = srf.Options()
+    options = mrc.Options()
 
     # Set to 1 thread
     options.topology.user_cpuset = "0-0"
 
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
 
     executor.register_pipeline(pipeline)
 
@@ -199,7 +199,7 @@ def test_edge_wrapper():
 def test_edge_wrapper_component():
     on_next_count = 0
 
-    def segment_init(seg: srf.Builder):
+    def segment_init(seg: mrc.Builder):
 
         def create_source():
             yield 1
@@ -226,16 +226,16 @@ def test_edge_wrapper_component():
         sink = seg.make_sink_component("sink_component", on_next, on_error, on_complete)
         seg.make_edge(source, sink)
 
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
 
     pipeline.make_segment("my_seg", segment_init)
 
-    options = srf.Options()
+    options = mrc.Options()
 
     # Set to 1 thread
     options.topology.user_cpuset = "0-0"
 
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
 
     executor.register_pipeline(pipeline)
 
@@ -254,7 +254,7 @@ class MyCustomClass:
 
 def test_multi_segment():
 
-    def segment_source(seg: srf.Builder):
+    def segment_source(seg: mrc.Builder):
         # Use a generator function as the source
         def source_gen():
             for i in range(5):
@@ -277,7 +277,7 @@ def test_multi_segment():
         egress2 = seg.get_egress("port2")
         seg.make_edge(source2, egress2)
 
-    def segment_sink(seg: srf.Builder):
+    def segment_sink(seg: mrc.Builder):
         ingress = seg.get_ingress("port1")
 
         # This method will get called each time the sink gets a value
@@ -303,10 +303,10 @@ def test_multi_segment():
         ingress2 = seg.get_ingress("port2")
         seg.make_edge(ingress2, sink2)
 
-    srf.Config.default_channel_size = 4
+    mrc.Config.default_channel_size = 4
 
     # Create the pipeline object
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
 
     # Create a segment
     pipeline.make_segment("segment_source", [], [("port1", m.DerivedB), "port2"], segment_source)
@@ -314,13 +314,13 @@ def test_multi_segment():
     pipeline.make_segment("segment_sink", [("port1", m.DerivedB), "port2"], [], segment_sink)
 
     # Build executor options
-    options = srf.Options()
+    options = mrc.Options()
 
     # Set to 1 thread
     options.topology.user_cpuset = "0-0"
 
     # Create the executor
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
 
     # Register pipeline to tell executor what to run
     executor.register_pipeline(pipeline)
@@ -334,26 +334,26 @@ def test_multi_segment():
 
 def test_broadcast_cpp_to_cpp_same():
 
-    def segment_init(seg: srf.Builder):
+    def segment_init(seg: mrc.Builder):
         source = m.SourceDerivedB(seg, "source")
 
-        broadcast = srf.core.node.Broadcast(seg, "broadcast")
+        broadcast = mrc.core.node.Broadcast(seg, "broadcast")
 
         sink = m.SinkDerivedB(seg, "sink")
 
         seg.make_edge(source, broadcast)
         seg.make_edge(broadcast, sink)
 
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
 
     pipeline.make_segment("my_seg", segment_init)
 
-    options = srf.Options()
+    options = mrc.Options()
 
     # Set to 1 thread
     options.topology.user_cpuset = "0-0"
 
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
 
     executor.register_pipeline(pipeline)
 
@@ -364,26 +364,26 @@ def test_broadcast_cpp_to_cpp_same():
 
 def test_broadcast_cpp_to_cpp_different():
 
-    def segment_init(seg: srf.Builder):
+    def segment_init(seg: mrc.Builder):
         source = m.SourceDerivedB(seg, "source")
 
-        broadcast = srf.core.node.Broadcast(seg, "broadcast")
+        broadcast = mrc.core.node.Broadcast(seg, "broadcast")
 
         sink = m.SinkBase(seg, "sink")
 
         seg.make_edge(source, broadcast)
         seg.make_edge(broadcast, sink)
 
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
 
     pipeline.make_segment("my_seg", segment_init)
 
-    options = srf.Options()
+    options = mrc.Options()
 
     # Set to 1 thread
     options.topology.user_cpuset = "0-0"
 
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
 
     executor.register_pipeline(pipeline)
 
@@ -394,11 +394,11 @@ def test_broadcast_cpp_to_cpp_different():
 
 def test_broadcast_cpp_to_cpp_multi():
 
-    def segment_init(seg: srf.Builder):
+    def segment_init(seg: mrc.Builder):
         source_derived = m.SourceDerivedB(seg, "source_derived")
         source_base = m.SourceBase(seg, "source_base")
 
-        broadcast = srf.core.node.Broadcast(seg, "broadcast")
+        broadcast = mrc.core.node.Broadcast(seg, "broadcast")
 
         sink_base = m.SinkBase(seg, "sink_base")
         sink_derived = m.SinkDerivedB(seg, "sink_derived")
@@ -409,16 +409,16 @@ def test_broadcast_cpp_to_cpp_multi():
         seg.make_edge(broadcast, sink_base)
         seg.make_edge(broadcast, sink_derived)
 
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
 
     pipeline.make_segment("my_seg", segment_init)
 
-    options = srf.Options()
+    options = mrc.Options()
 
     # Set to 1 thread
     options.topology.user_cpuset = "0-0"
 
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
 
     executor.register_pipeline(pipeline)
 

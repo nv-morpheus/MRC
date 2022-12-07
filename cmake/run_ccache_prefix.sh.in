@@ -20,4 +20,4 @@ export CCACHE_PREFIX="$1"
 shift
 
 # Pass all remaining arguments to ccache
-${SRF_CCACHE_WRAPPER} "$@"
+${MRC_CCACHE_WRAPPER} "$@"

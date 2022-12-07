@@ -20,7 +20,7 @@ source ${WORKSPACE}/ci/scripts/github/common.sh
 
 update_conda_env
 
-CMAKE_CACHE_FLAGS="-DCCACHE_PROGRAM_PATH=$(which sccache) -DSRF_USE_CCACHE=ON"
+CMAKE_CACHE_FLAGS="-DCCACHE_PROGRAM_PATH=$(which sccache) -DMRC_USE_CCACHE=ON"
 
 rapids-logger "Check versions"
 python3 --version
@@ -50,19 +50,21 @@ show_conda_info
 rapids-logger "Configuring for build and test"
 cmake -B build -G Ninja ${CMAKE_FLAGS} .
 
-rapids-logger "Building SRF"
+rapids-logger "Building MRC"
 cmake --build build --parallel ${PARALLEL_LEVEL}
 
-rapids-logger "sccache usage for SRF build:"
+rapids-logger "sccache usage for MRC build:"
 sccache --show-stats
 
-rapids-logger "Archiving results"
-tar cfj "${WORKSPACE_TMP}/dot_cache.tar.bz" .cache
-tar cfj "${WORKSPACE_TMP}/build.tar.bz" build
-ls -lh ${WORKSPACE_TMP}/
+if [[ "${BUILD_CC}" != "gcc-coverage" ]]; then
+    rapids-logger "Archiving results"
+    tar cfj "${WORKSPACE_TMP}/dot_cache.tar.bz" .cache
+    tar cfj "${WORKSPACE_TMP}/build.tar.bz" build
+    ls -lh ${WORKSPACE_TMP}/
 
-rapids-logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
-aws s3 cp --no-progress "${WORKSPACE_TMP}/build.tar.bz" "${ARTIFACT_URL}/build.tar.bz"
-aws s3 cp --no-progress "${WORKSPACE_TMP}/dot_cache.tar.bz" "${ARTIFACT_URL}/dot_cache.tar.bz"
+    rapids-logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
+    aws s3 cp --no-progress "${WORKSPACE_TMP}/build.tar.bz" "${ARTIFACT_URL}/build.tar.bz"
+    aws s3 cp --no-progress "${WORKSPACE_TMP}/dot_cache.tar.bz" "${ARTIFACT_URL}/dot_cache.tar.bz"
+fi
 
 rapids-logger "Success"

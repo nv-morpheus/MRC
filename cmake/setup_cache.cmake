@@ -1,4 +1,4 @@
-#=============================================================================
+# =============================================================================
 # SPDX-FileCopyrightText: Copyright (c) 2020-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -6,14 +6,14 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#=============================================================================
+# =============================================================================
 
 # ######################################################################################################################
 # * CMake properties ------------------------------------------------------------------------------
@@ -25,11 +25,10 @@ function(configure_ccache cache_dir_name)
 
   find_program(CCACHE_PROGRAM_PATH ccache DOC "Location of ccache executable")
 
-  if (NOT CCACHE_PROGRAM_PATH)
+  if(NOT CCACHE_PROGRAM_PATH)
     message(WARNING "CCache option, ${cache_dir_name}, is enabled but ccache was not found. Check ccache installation.")
     return()
   endif()
-
 
   message(STATUS "Using ccache: ${CCACHE_PROGRAM_PATH}")
 
@@ -59,7 +58,7 @@ function(configure_ccache cache_dir_name)
   set(CCACHE_BASEDIR "${PROJECT_SOURCE_DIR}")
 
   # Configure ccache for C
-  if ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
+  if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
     set(CCACHE_COMPILERTYPE "gcc")
   elseif("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
     set(CCACHE_COMPILERTYPE "clang")
@@ -70,7 +69,7 @@ function(configure_ccache cache_dir_name)
   configure_file("${LOCAL_MODULES_PATH}/run_ccache.sh.in" "${CMAKE_CURRENT_BINARY_DIR}/run_ccache_c.sh" @ONLY)
 
   # Configure ccache for CXX
-  if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(CCACHE_COMPILERTYPE "gcc")
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(CCACHE_COMPILERTYPE "clang")
@@ -91,7 +90,6 @@ function(configure_ccache cache_dir_name)
 
   # PARENT_SCOPE here so others can use this value
   set(CCACHE_DIR "${CCACHE_DIR}" PARENT_SCOPE)
-
 endfunction()
 
 function(configure_cpm cache_dir_name)
@@ -104,13 +102,11 @@ function(configure_cpm cache_dir_name)
 
   # # Set the FetchContent default download folder to be the same as CPM
   # set(FETCHCONTENT_BASE_DIR "${${cache_dir_name}}/fetch" CACHE STRING "" FORCE)
-
 endfunction()
 
 function(check_cache_path cache_dir_name)
   # First, ensure that the current cache dir can be found by find_package/find_path/etc
-  if((NOT "${CMAKE_FIND_ROOT_PATH}" STREQUAL "") AND ("${CMAKE_FIND_ROOT_PATH_MODE_INCLUDE}" STREQUAL "ONLY"))
-
+  if((NOT "${CMAKE_FIND_ROOT_PATH}" STREQUAL "") AND("${CMAKE_FIND_ROOT_PATH_MODE_INCLUDE}" STREQUAL "ONLY"))
     set(is_contained FALSE)
 
     # Now check if ${cache_dir_name} is under anything in CMAKE_FIND_ROOT_PATH
@@ -126,8 +122,8 @@ function(check_cache_path cache_dir_name)
 
     if(NOT is_contained)
       message(WARNING "The value for ${cache_dir_name} (${${cache_dir_name}}) is not contained in any CMAKE_FIND_ROOT_PATH (${CMAKE_FIND_ROOT_PATH}). "
-                      "This will result in cmake being unable to find any downloaded packages. The cache path has been appended to the back "
-                      "of CMAKE_FIND_ROOT_PATH")
+        "This will result in cmake being unable to find any downloaded packages. The cache path has been appended to the back "
+        "of CMAKE_FIND_ROOT_PATH")
 
       list(APPEND CMAKE_FIND_ROOT_PATH ${${cache_dir_name}})
 
@@ -136,13 +132,13 @@ function(check_cache_path cache_dir_name)
   endif()
 endfunction()
 
-check_cache_path(SRF_CACHE_DIR)
+check_cache_path(MRC_CACHE_DIR)
 
 # Configure CCache if requested
-if(SRF_USE_CCACHE)
-  configure_ccache(SRF_CACHE_DIR)
+if(MRC_USE_CCACHE)
+  configure_ccache(MRC_CACHE_DIR)
 endif()
 
-configure_cpm(SRF_CACHE_DIR)
+configure_cpm(MRC_CACHE_DIR)
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

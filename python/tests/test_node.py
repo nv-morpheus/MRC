@@ -15,23 +15,23 @@
 
 import pytest
 
-import srf
+import mrc
 
 
 @pytest.fixture
 def ex_runner():
 
     def run_exec(segment_init):
-        pipeline = srf.Pipeline()
+        pipeline = mrc.Pipeline()
 
         pipeline.make_segment("my_seg", segment_init)
 
-        options = srf.Options()
+        options = mrc.Options()
 
         # Set to 1 thread
         options.topology.user_cpuset = "0-0"
 
-        executor = srf.Executor(options)
+        executor = mrc.Executor(options)
 
         executor.register_pipeline(pipeline)
 
@@ -72,7 +72,7 @@ def test_launch_options_source(source_type: str, pe_count: int, engines_per_pe: 
         # Use a factory function to make the generator
         source = source_gen
 
-    def segment_init(seg: srf.Builder):
+    def segment_init(seg: mrc.Builder):
 
         src_node = seg.make_source("my_src", source)
 
@@ -87,16 +87,16 @@ def test_launch_options_source(source_type: str, pe_count: int, engines_per_pe: 
         hit_counter = seg.make_node("hit_counter", node_fn)
         seg.make_edge(src_node, hit_counter)
 
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
 
     pipeline.make_segment("my_seg", segment_init)
 
-    options = srf.Options()
+    options = mrc.Options()
 
     # Set to 1 thread
     options.topology.user_cpuset = "0-{}".format(pe_count)
 
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
 
     executor.register_pipeline(pipeline)
 
@@ -118,7 +118,7 @@ def test_launch_options_iterable():
 
     hit_count = 0
 
-    def segment_init(seg: srf.Builder):
+    def segment_init(seg: mrc.Builder):
         src_node = seg.make_source("my_src", [1, 2, 3])
 
         src_node.launch_options.pe_count = pe_count
@@ -132,16 +132,16 @@ def test_launch_options_iterable():
         hit_counter = seg.make_node("hit_counter", node_fn)
         seg.make_edge(src_node, hit_counter)
 
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
 
     pipeline.make_segment("my_seg", segment_init)
 
-    options = srf.Options()
+    options = mrc.Options()
 
     # Set to 1 thread
     options.topology.user_cpuset = "0-{}".format(pe_count)
 
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
 
     executor.register_pipeline(pipeline)
 
@@ -155,7 +155,7 @@ def test_launch_options_iterable():
 # @pytest.mark.skip(reason="#172 - awaiting multi-pe safe source work around")
 def test_launch_options_properties():
 
-    def segment_init(seg: srf.Builder):
+    def segment_init(seg: mrc.Builder):
 
         def source_gen():
             yield int(1)
@@ -204,16 +204,16 @@ def test_launch_options_properties():
         # Reset it back to default
         src_node.launch_options.engine_factory_name = "default"
 
-    pipeline = srf.Pipeline()
+    pipeline = mrc.Pipeline()
 
     pipeline.make_segment("my_seg", segment_init)
 
-    options = srf.Options()
+    options = mrc.Options()
 
     # Set to 1 thread
     options.topology.user_cpuset = "0-5"
 
-    executor = srf.Executor(options)
+    executor = mrc.Executor(options)
 
     executor.register_pipeline(pipeline)
 
