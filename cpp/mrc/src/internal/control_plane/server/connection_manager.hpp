@@ -83,7 +83,6 @@ class ConnectionManager : public VersionedState
 
     void add_stream(const stream_t& stream);
     void drop_stream(const stream_id_t& stream_id) noexcept;
-    void drop_all_streams() noexcept;
 
     const std::map<stream_id_t, stream_t>& streams() const;
 

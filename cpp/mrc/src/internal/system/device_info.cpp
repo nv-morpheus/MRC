@@ -116,6 +116,12 @@ struct NvmlState
         return m_using_mig;
     }
 
+    static NvmlState& instance()
+    {
+        static NvmlState state;
+        return state;
+    }
+
   private:
     // this object can also hold the list of device handles that we have access to.
     // - nvmlDeviceGetCount_v2 - will tell us the total number of devices we have access to, i.e. the range of [0, N)
@@ -126,8 +132,6 @@ struct NvmlState
 
     bool m_using_mig{false};
 };
-
-auto nvmlInstatnce = std::make_unique<NvmlState>();
 
 }  // namespace
 
@@ -200,14 +204,12 @@ std::string DeviceInfo::PCIeBusID(int device_id)
 
 std::size_t DeviceInfo::AccessibleDevices()
 {
-    CHECK(nvmlInstatnce) << "Failure to Initialize NVML";
-    return nvmlInstatnce->accessible_nvml_device_indexes().size();
+    return NvmlState::instance().accessible_nvml_device_indexes().size();
 }
 
 std::set<unsigned int> DeviceInfo::AccessibleDeviceIndexes()
 {
-    CHECK(nvmlInstatnce) << "Failure to Initialize NVML";
-    return nvmlInstatnce->accessible_nvml_device_indexes();
+    return NvmlState::instance().accessible_nvml_device_indexes();
 }
 
 nvmlMemory_t DeviceInfo::MemoryInfo(int device_id)

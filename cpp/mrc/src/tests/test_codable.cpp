@@ -123,11 +123,15 @@ class TestCodable : public ::testing::Test
             })));
 
         m_runtime = std::make_unique<internal::runtime::Runtime>(std::move(resources));
+
+        DVLOG(10) << "Setup Complete";
     }
 
     void TearDown() override
     {
+        DVLOG(10) << "Start Teardown";
         m_runtime.reset();
+        DVLOG(10) << "Teardown Complete";
     }
 
     std::unique_ptr<internal::runtime::Runtime> m_runtime;

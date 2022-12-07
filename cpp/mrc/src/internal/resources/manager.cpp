@@ -187,6 +187,8 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
             }
         });
     }
+
+    VLOG(10) << "resources::Manager initialized";
 }
 
 Manager::~Manager()
