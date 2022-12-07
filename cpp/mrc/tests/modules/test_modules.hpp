@@ -19,14 +19,14 @@
 
 #include "../test_mrc.hpp"  // IWYU pragma: keep
 
-#include "mrc/core/executor.hpp"  // IWYU pragma: keep
+#include "mrc/core/executor.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/pipeline/pipeline.hpp"
-#include "mrc/segment/builder.hpp"  // IWYU pragma: keep
+#include "mrc/segment/builder.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
-#include "mrc/segment/segment.hpp"  // IWYU pragma: keep
+#include "mrc/segment/segment.hpp"
 
 #include <cstddef>
 #include <functional>
@@ -38,6 +38,8 @@
 namespace mrc::segment {
 struct ObjectProperties;
 }
+
+namespace mrc {
 
 class TestSegmentResources
 {
@@ -70,3 +72,5 @@ class TestModules : public ::testing::Test
 using TestModuleRegistry = TestModules;  // NOLINT
 using TestModuleUtil     = TestModules;  // NOLINT
 using TestSegmentModules = TestModules;  // NOLINT
+
+}  // namespace mrc

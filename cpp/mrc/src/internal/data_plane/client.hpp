@@ -17,19 +17,10 @@
 
 #pragma once
 
-#include "internal/control_plane/client/connections_manager.hpp"
-#include "internal/data_plane/request.hpp"
-#include "internal/memory/transient_pool.hpp"
-#include "internal/resources/forward.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
-#include "internal/ucx/endpoint.hpp"
-#include "internal/ucx/resources.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include "mrc/channel/status.hpp"
-#include "mrc/node/source_channel.hpp"
-#include "mrc/runnable/runner.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/types.hpp"
 
@@ -41,7 +32,27 @@
 #include <memory>
 #include <string>
 
+namespace mrc::internal::control_plane::client {
+class ConnectionsManager;
+}  // namespace mrc::internal::control_plane::client
+namespace mrc::internal::memory {
+class TransientPool;
+}  // namespace mrc::internal::memory
+namespace mrc::internal::ucx {
+class Endpoint;
+class Resources;
+}  // namespace mrc::internal::ucx
+namespace mrc::node {
+template <typename T>
+class SourceChannelWriteable;
+}  // namespace mrc::node
+namespace mrc::runnable {
+class Runner;
+}  // namespace mrc::runnable
+
 namespace mrc::internal::data_plane {
+class Request;
+class Resources;
 
 struct RemoteDescriptorMessage
 {

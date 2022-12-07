@@ -18,7 +18,6 @@
 #include "internal/system/host_partition.hpp"
 
 #include "mrc/core/bitmap.hpp"
-#include "mrc/options/options.hpp"
 
 #include <utility>
 

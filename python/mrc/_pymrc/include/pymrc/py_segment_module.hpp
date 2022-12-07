@@ -18,7 +18,6 @@
 #pragma once
 
 #include "mrc/modules/segment_modules.hpp"
-#include "mrc/segment/forward.hpp"
 
 #include <nlohmann/json.hpp>
 #include <pybind11/functional.h>  // IWYU pragma: keep
@@ -26,6 +25,10 @@
 
 #include <functional>
 #include <string>
+
+namespace mrc::segment {
+class Builder;
+}  // namespace mrc::segment
 
 namespace mrc::pymrc {
 

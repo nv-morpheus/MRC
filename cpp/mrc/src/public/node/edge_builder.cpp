@@ -17,7 +17,6 @@
 
 #include "mrc/node/edge_builder.hpp"
 
-#include "mrc/channel/ingress.hpp"
 #include "mrc/node/edge_adapter_registry.hpp"
 #include "mrc/node/edge_registry.hpp"
 #include "mrc/node/sink_properties.hpp"

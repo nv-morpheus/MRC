@@ -17,18 +17,21 @@
 
 #include "internal/data_plane/client.hpp"
 
+#include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/data_plane/callbacks.hpp"
+#include "internal/data_plane/request.hpp"
 #include "internal/data_plane/resources.hpp"
 #include "internal/data_plane/tags.hpp"
+#include "internal/memory/transient_pool.hpp"
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/runnable/resources.hpp"
+#include "internal/ucx/common.hpp"
 #include "internal/ucx/endpoint.hpp"
 #include "internal/ucx/resources.hpp"
 #include "internal/ucx/worker.hpp"
 
 #include "mrc/channel/buffered_channel.hpp"
 #include "mrc/channel/channel.hpp"
-#include "mrc/codable/protobuf_message.hpp"  // IWYU pragma: keep
 #include "mrc/memory/literals.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/rx_sink.hpp"
@@ -45,7 +48,6 @@
 #include <ucp/api/ucp.h>
 #include <ucs/type/status.h>
 
-#include <algorithm>
 #include <atomic>
 #include <memory>
 #include <ostream>

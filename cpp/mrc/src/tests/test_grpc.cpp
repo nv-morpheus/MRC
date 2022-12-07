@@ -29,7 +29,6 @@
 #include "mrc/channel/egress.hpp"
 #include "mrc/channel/status.hpp"
 #include "mrc/codable/codable_protocol.hpp"
-#include "mrc/core/bitmap.hpp"
 #include "mrc/core/task_queue.hpp"
 #include "mrc/node/generic_sink.hpp"
 #include "mrc/node/sink_channel.hpp"
@@ -52,6 +51,7 @@
 #include <rxcpp/rx.hpp>
 
 #include <chrono>
+#include <cstddef>
 #include <memory>
 #include <ostream>
 #include <thread>

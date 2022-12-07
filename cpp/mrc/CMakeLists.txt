@@ -141,6 +141,7 @@ add_library(libmrc
   src/public/options/resources.cpp
   src/public/options/services.cpp
   src/public/options/topology.cpp
+  src/public/pipeline/pipeline.cpp
   src/public/runnable/context.cpp
   src/public/runnable/launcher.cpp
   src/public/runnable/runnable.cpp
@@ -177,7 +178,6 @@ target_link_libraries(libmrc
     prometheus-cpp::core # private in MR !199
     ucx::ucs
     ucx::ucp
-    tl::expected
 )
 
 target_include_directories(libmrc
@@ -193,6 +193,8 @@ target_compile_definitions(libmrc
   PUBLIC
     $<$<BOOL:${MRC_BUILD_BENCHMARKS}>:MRC_ENABLE_BENCHMARKING>
 )
+
+target_compile_features(libmrc PUBLIC cxx_std_20)
 
 set_target_properties(libmrc PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 

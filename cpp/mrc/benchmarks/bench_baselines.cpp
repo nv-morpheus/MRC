@@ -20,22 +20,14 @@
 
 #include <benchmark/benchmark.h>
 #include <nlohmann/json.hpp>
-#include <rxcpp/operators/rx-map.hpp>
-#include <rxcpp/operators/rx-tap.hpp>
 #include <rxcpp/rx.hpp>
-#include <rxcpp/sources/rx-create.hpp>
-#include <rxcpp/sources/rx-iterate.hpp>
 
-#include <algorithm>  // IWYU pragma: keep
 #include <chrono>
 #include <cstddef>
 #include <iostream>
-#include <map>
 #include <memory>
 #include <random>
 #include <string>
-#include <tuple>
-#include <type_traits>
 #include <utility>
 #include <vector>
 

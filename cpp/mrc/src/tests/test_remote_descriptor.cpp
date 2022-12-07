@@ -22,6 +22,7 @@
 #include "internal/control_plane/client/instance.hpp"
 #include "internal/network/resources.hpp"
 #include "internal/remote_descriptor/manager.hpp"
+#include "internal/remote_descriptor/storage.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
@@ -29,9 +30,7 @@
 #include "internal/runtime/runtime.hpp"
 #include "internal/system/system_provider.hpp"
 
-#include "mrc/codable/codable_protocol.hpp"
 #include "mrc/codable/fundamental_types.hpp"  // IWYU pragma: keep
-#include "mrc/core/bitmap.hpp"
 #include "mrc/core/task_queue.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
@@ -46,7 +45,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <type_traits>
 #include <utility>
 
 using namespace mrc;

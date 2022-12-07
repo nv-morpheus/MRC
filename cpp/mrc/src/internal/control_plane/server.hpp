@@ -17,21 +17,14 @@
 
 #pragma once
 
-#include "internal/control_plane/server/client_instance.hpp"
 #include "internal/control_plane/server/connection_manager.hpp"
-#include "internal/control_plane/server/subscription_manager.hpp"
 #include "internal/expected.hpp"
 #include "internal/grpc/server.hpp"
 #include "internal/grpc/server_streaming.hpp"
-#include "internal/grpc/stream_writer.hpp"
-#include "internal/runnable/resources.hpp"
 #include "internal/service.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/node/queue.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
-#include "mrc/protos/architect.pb.h"
-#include "mrc/runnable/runner.hpp"
 
 #include <boost/fiber/condition_variable.hpp>
 #include <boost/fiber/mutex.hpp>
@@ -42,6 +35,26 @@
 #include <map>
 #include <memory>
 #include <string>
+
+namespace mrc::internal::control_plane::server {
+class ClientInstance;
+class SubscriptionService;
+}  // namespace mrc::internal::control_plane::server
+namespace mrc::internal::rpc {
+template <typename T>
+struct StreamWriter;
+}  // namespace mrc::internal::rpc
+namespace mrc::internal::runnable {
+class Resources;
+}  // namespace mrc::internal::runnable
+namespace mrc::protos {
+class Ack;
+class Event;
+class RegisterSubscriptionServiceResponse;
+}  // namespace mrc::protos
+namespace mrc::runnable {
+class Runner;
+}  // namespace mrc::runnable
 
 namespace mrc::internal::control_plane {
 
@@ -70,6 +83,7 @@ class Server : public Service
     using instance_id_t = std::size_t;
 
     Server(runnable::Resources& runnable);
+    ~Server() override;
 
   private:
     void do_service_start() final;
@@ -120,6 +134,8 @@ class Server : public Service
 
     void drop_instance(const instance_id_t& instance_id);
     void drop_stream(writer_t& writer);
+    void drop_stream(const stream_id_t& stream_id);
+    void drop_all_streams();
     static void on_fatal_exception();
 
     // convenience methods - these method do not lock internal state

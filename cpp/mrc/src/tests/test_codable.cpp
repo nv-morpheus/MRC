@@ -19,6 +19,7 @@
 
 #include "internal/data_plane/resources.hpp"
 #include "internal/network/resources.hpp"
+#include "internal/remote_descriptor/storage.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runtime/partition.hpp"
@@ -30,16 +31,13 @@
 #include "mrc/codable/codable_protocol.hpp"
 #include "mrc/codable/decode.hpp"
 #include "mrc/codable/encode.hpp"
-#include "mrc/codable/encoding_options.hpp"
 #include "mrc/codable/fundamental_types.hpp"  // IWYU pragma: keep
 #include "mrc/codable/protobuf_message.hpp"   // IWYU pragma: keep
 #include "mrc/codable/type_traits.hpp"
-#include "mrc/core/bitmap.hpp"
-#include "mrc/memory/buffer.hpp"
 #include "mrc/memory/codable/buffer.hpp"  // IWYU pragma: keep
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
-#include "mrc/protos/codable.pb.h"
+#include "mrc/protos/codable.pb.h"  // IWYU pragma: keep
 
 #include <gtest/gtest.h>
 
@@ -50,8 +48,16 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <type_traits>
 #include <utility>
+
+namespace mrc::codable {
+class EncodingOptions;
+}  // namespace mrc::codable
+namespace mrc::memory {
+class buffer;
+}  // namespace mrc::memory
+
+// IWYU pragma: no_forward_declare mrc::codable::codable_protocol
 
 using namespace mrc;
 using namespace mrc::codable;
@@ -117,11 +123,15 @@ class TestCodable : public ::testing::Test
             })));
 
         m_runtime = std::make_unique<internal::runtime::Runtime>(std::move(resources));
+
+        DVLOG(10) << "Setup Complete";
     }
 
     void TearDown() override
     {
+        DVLOG(10) << "Start Teardown";
         m_runtime.reset();
+        DVLOG(10) << "Teardown Complete";
     }
 
     std::unique_ptr<internal::runtime::Runtime> m_runtime;

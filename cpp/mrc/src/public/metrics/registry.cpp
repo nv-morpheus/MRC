@@ -17,6 +17,8 @@
 
 #include "mrc/metrics/registry.hpp"
 
+#include "prometheus/metric_family.h"
+
 #include "mrc/metrics/counter.hpp"
 
 #include <glog/logging.h>

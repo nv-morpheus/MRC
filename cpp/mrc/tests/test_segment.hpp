@@ -19,25 +19,26 @@
 
 #include "test_mrc.hpp"  // IWYU pragma: keep
 
-#include "mrc/core/executor.hpp"  // IWYU pragma: keep
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/pipeline/pipeline.hpp"
-#include "mrc/segment/builder.hpp"  // IWYU pragma: keep
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
-#include "mrc/segment/segment.hpp"  // IWYU pragma: keep
+
+#include <gtest/gtest.h>
+#include <rxcpp/rx.hpp>
 
 #include <cstddef>
 #include <functional>
 #include <memory>
 #include <string>
 
-// IWYU pragma: no_include "gtest/gtest_pred_impl.h"
-
 namespace mrc::segment {
+class Builder;
 struct ObjectProperties;
-}
+}  // namespace mrc::segment
+
+namespace mrc {
 
 class TestSegmentResources
 {
@@ -86,3 +87,5 @@ class TestSegment : public ::testing::Test
     std::unique_ptr<pipeline::Pipeline> m_pipeline;
     std::shared_ptr<TestSegmentResources> m_resources;
 };
+
+}  // namespace mrc

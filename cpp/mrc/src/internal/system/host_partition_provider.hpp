@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include "internal/system/host_partition.hpp"
 #include "internal/system/system_provider.hpp"
 
 #include <cstddef>
 
 namespace mrc::internal::system {
+class HostPartition;
 
 /**
  * @brief Extends SystemProvider to add host_partition_id and host_partition info.

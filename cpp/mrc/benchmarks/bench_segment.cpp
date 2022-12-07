@@ -18,34 +18,25 @@
 #include "mrc/benchmarking/segment_watcher.hpp"
 #include "mrc/benchmarking/tracer.hpp"
 #include "mrc/benchmarking/util.hpp"
-#include "mrc/channel/status.hpp"
 #include "mrc/core/executor.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/pipeline/pipeline.hpp"
-#include "mrc/segment/builder.hpp"
-#include "mrc/segment/object.hpp"
+#include "mrc/segment/builder.hpp"  // IWYU pragma: keep
+#include "mrc/segment/object.hpp"   // IWYU pragma: keep
 
 #include <benchmark/benchmark.h>
-#include <boost/hana/if.hpp>
 #include <nlohmann/json.hpp>
-#include <rxcpp/operators/rx-map.hpp>
-#include <rxcpp/operators/rx-tap.hpp>
-#include <rxcpp/rx.hpp>  // IWYU pragma: keep
-#include <rxcpp/sources/rx-iterate.hpp>
+#include <rxcpp/rx.hpp>
 
-#include <algorithm>
 #include <chrono>
 #include <cstddef>
 #include <iostream>
-#include <map>
 #include <memory>
 #include <set>
 #include <string>
-#include <tuple>
-#include <type_traits>
 #include <utility>
 #include <vector>
 

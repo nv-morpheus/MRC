@@ -19,6 +19,7 @@
 
 #include "internal/pipeline/pipeline.hpp"
 #include "internal/pipeline/resources.hpp"
+#include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/segment/definition.hpp"
@@ -48,6 +49,8 @@ Instance::Instance(std::shared_ptr<const Pipeline> definition, resources::Manage
     CHECK(m_definition);
     m_joinable_future = m_joinable_promise.get_future().share();
 }
+
+Instance::~Instance() = default;
 
 void Instance::update()
 {

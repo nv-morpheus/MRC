@@ -21,11 +21,16 @@
 
 #include "mrc/constants.hpp"
 #include "mrc/core/fiber_meta_data.hpp"
-#include "mrc/core/task_queue.hpp"
-#include "mrc/runnable/types.hpp"
 #include "mrc/types.hpp"
 
 #include <functional>
+
+namespace mrc::core {
+class FiberTaskQueue;
+}  // namespace mrc::core
+namespace mrc::runnable {
+enum class EngineType;
+}  // namespace mrc::runnable
 
 namespace mrc::internal::runnable {
 

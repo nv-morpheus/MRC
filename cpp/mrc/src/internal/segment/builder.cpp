@@ -17,15 +17,17 @@
 
 #include "internal/segment/builder.hpp"
 
+#include "internal/pipeline/resources.hpp"
+#include "internal/segment/definition.hpp"
+
 #include "mrc/core/addresses.hpp"
-#include "mrc/engine/segment/idefinition.hpp"
+#include "mrc/engine/segment/ibuilder.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/metrics/counter.hpp"
 #include "mrc/metrics/registry.hpp"
-#include "mrc/runnable/launchable.hpp"
-#include "mrc/segment/egress_port.hpp"
-#include "mrc/segment/ingress_port.hpp"
-#include "mrc/segment/object.hpp"
+#include "mrc/segment/egress_port.hpp"   // IWYU pragma: keep
+#include "mrc/segment/ingress_port.hpp"  // IWYU pragma: keep
+#include "mrc/segment/initializers.hpp"
 #include "mrc/types.hpp"
 
 #include <glog/logging.h>

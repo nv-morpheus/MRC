@@ -18,13 +18,13 @@
 #pragma once
 
 #include "internal/system/gpu_info.hpp"
-#include "internal/system/host_partition.hpp"
 
 #include <cstddef>
 #include <memory>
 #include <string>
 
 namespace mrc::internal::system {
+class HostPartition;
 
 class DevicePartition final : private GpuInfo
 {

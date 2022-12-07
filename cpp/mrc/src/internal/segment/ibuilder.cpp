@@ -19,8 +19,6 @@
 
 #include "internal/segment/builder.hpp"
 
-#include "mrc/segment/object.hpp"
-
 #include <glog/logging.h>
 
 #include <utility>

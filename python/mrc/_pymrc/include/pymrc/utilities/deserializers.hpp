@@ -17,10 +17,13 @@
 
 #pragma once
 
-#include <pybind11/buffer_info.h>
 #include <pybind11/pytypes.h>
 
 #include <cstddef>
+
+namespace pybind11 {
+struct buffer_info;
+}  // namespace pybind11
 
 namespace mrc::pymrc {
 #pragma GCC visibility push(default)

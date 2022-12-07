@@ -17,9 +17,11 @@
 
 #pragma once
 
-#include "mrc/options/options.hpp"
-
 #include <memory>
+
+namespace mrc {
+class Options;
+}  // namespace mrc
 
 namespace mrc::internal::system {
 

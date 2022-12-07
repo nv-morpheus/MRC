@@ -21,7 +21,6 @@
 #include "internal/segment/definition.hpp"
 
 #include <memory>
-#include <utility>
 #include <vector>
 
 namespace mrc::internal::pipeline {

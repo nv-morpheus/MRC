@@ -18,7 +18,6 @@
 #include "pymrc/system.hpp"
 
 #include "mrc/engine/system/isystem.hpp"
-#include "mrc/options/options.hpp"
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>

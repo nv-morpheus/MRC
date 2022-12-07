@@ -18,6 +18,7 @@
 #pragma once
 
 #include "internal/control_plane/client/subscription_service.hpp"
+#include "internal/network/resources.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runtime/runtime.hpp"
 

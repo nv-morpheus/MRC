@@ -17,11 +17,15 @@
 
 #include "test_stat_gather.hpp"
 
+#include "../test_segment.hpp"
+
 #include "mrc/benchmarking/trace_statistics.hpp"
+#include "mrc/benchmarking/util.hpp"
+#include "mrc/core/executor.hpp"
+#include "mrc/engine/pipeline/ipipeline.hpp"
+#include "mrc/options/options.hpp"
 
 #include <nlohmann/json.hpp>
-
-#include <exception>
 
 using namespace mrc::benchmarking;
 
@@ -33,6 +37,8 @@ void stat_check_helper(
     EXPECT_EQ(metrics["component_channel_write_total"].get<std::size_t>(), ch_write);
     EXPECT_EQ(metrics["component_emissions_total"].get<std::size_t>(), emit);
 }
+
+namespace mrc {
 
 TEST_F(StatGatherTest, TestStatisticsOperatorGather)
 {
@@ -113,3 +119,5 @@ TEST_F(StatGatherTest, TestStatisticsFullGather)
 
     TraceStatistics::reset();
 }
+
+}  // namespace mrc

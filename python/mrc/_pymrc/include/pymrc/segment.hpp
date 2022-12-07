@@ -19,9 +19,7 @@
 
 #include "pymrc/types.hpp"
 
-#include "mrc/modules/segment_modules.hpp"
-#include "mrc/segment/forward.hpp"
-#include "mrc/segment/object.hpp"
+#include "mrc/segment/builder.hpp"  // IWYU pragma: export (needed by wrap functions)
 
 #include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/pytypes.h>
@@ -31,6 +29,10 @@
 #include <memory>
 #include <string>
 #include <utility>
+
+namespace mrc::modules {
+class SegmentModule;
+}  // namespace mrc::modules
 
 namespace mrc::pymrc {
 

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "mrc/runnable/context.hpp"
+#include "mrc/runnable/context.hpp"  // IWYU pragma: keep
 #include "mrc/utils/macros.hpp"
 
 #include <atomic>

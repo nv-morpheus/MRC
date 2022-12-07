@@ -15,44 +15,37 @@
  * limitations under the License.
  */
 
-#include "pymrc/executor.hpp"
+#include "pymrc/executor.hpp"  // IWYU pragma: associated
 
 #include "pymrc/pipeline.hpp"
 #include "pymrc/system.hpp"
 
 #include "mrc/core/executor.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
-#include "mrc/options/options.hpp"
-#include "mrc/types.hpp"  // for Future, SharedFuture
+#include "mrc/pipeline/pipeline.hpp"  // IWYU pragma: keep
+#include "mrc/types.hpp"
 
 #include <boost/fiber/future/async.hpp>
-#include <boost/fiber/future/future.hpp>         // for task_base<>::ptr_type, future
-#include <boost/fiber/future/future_status.hpp>  // for future_status, future_status::ready
+#include <boost/fiber/future/future.hpp>
+#include <boost/fiber/future/future_status.hpp>
 #include <glog/logging.h>
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
-#include <chrono>     // for milliseconds
-#include <csignal>    // for siginfo_t
-#include <exception>  // for exception, exception_ptr
+#include <chrono>
+#include <csignal>
+#include <exception>
 #include <future>
 #include <memory>
 #include <mutex>
-#include <ostream>  // for glog macros
+#include <ostream>
 #include <string>
-#include <thread>  // for get_id, operator!=, thread::id
+#include <thread>
 #include <utility>
 
 // IWYU thinks we need array for calling py::print()
 // IWYU pragma: no_include <array>
-
-// IWYU thinks we need system_error for ft_signal_handler
-// IWYU pragma: no_include <system_error>
-
-// IWYU thinks we need map & max for gil_futures
-// IWYU pragma: no_include <algorithm>
-// IWYU pragma: no_include <map>
 
 namespace mrc::pymrc {
 

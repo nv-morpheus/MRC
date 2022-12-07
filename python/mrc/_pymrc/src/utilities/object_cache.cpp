@@ -30,9 +30,6 @@
 #include <stdexcept>
 #include <utility>
 
-// IWYU pragma: no_include <pybind11/detail/common.h>
-// IWYU pragma: no_include <pybind11/detail/descr.h>
-
 namespace py = pybind11;
 namespace mrc::pymrc {
 

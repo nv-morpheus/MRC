@@ -20,6 +20,7 @@
 #include "internal/runnable/engine_factory.hpp"
 #include "internal/runnable/engines.hpp"
 #include "internal/system/engine_factory_cpu_sets.hpp"
+#include "internal/system/fiber_task_queue.hpp"
 #include "internal/system/host_partition.hpp"
 
 #include "mrc/core/bitmap.hpp"
@@ -33,7 +34,6 @@
 #include <map>
 #include <ostream>
 #include <string>
-#include <type_traits>
 #include <utility>
 
 namespace mrc::internal::runnable {
@@ -77,6 +77,10 @@ Resources::Resources(const system::Resources& system_resources, std::size_t _hos
         })
         .get();
 }
+
+Resources::Resources(Resources&& other) = default;
+
+Resources::~Resources() = default;
 
 core::FiberTaskQueue& Resources::main()
 {

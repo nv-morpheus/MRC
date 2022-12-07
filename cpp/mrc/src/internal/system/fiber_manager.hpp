@@ -36,7 +36,7 @@
 
 namespace mrc::internal::system {
 
-class Resources;  // IWYU pragma: keep
+class Resources;
 
 class FiberManager final
 {

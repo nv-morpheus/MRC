@@ -17,8 +17,6 @@
 
 #include "internal/memory/transient_pool.hpp"
 
-#include "mrc/memory/resources/memory_resource.hpp"
-
 #include <ostream>
 
 #define MRC_DEBUG 1

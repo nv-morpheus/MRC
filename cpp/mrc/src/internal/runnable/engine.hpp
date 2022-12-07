@@ -18,11 +18,14 @@
 #pragma once
 
 #include "mrc/runnable/engine.hpp"
-#include "mrc/runnable/types.hpp"
 #include "mrc/types.hpp"
 
 #include <functional>
 #include <mutex>
+
+namespace mrc::runnable {
+enum class EngineType;
+}  // namespace mrc::runnable
 
 namespace mrc::internal::runnable {
 

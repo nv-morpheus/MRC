@@ -17,10 +17,14 @@
 
 #pragma once
 
-#include "mrc/engine/pipeline/ipipeline.hpp"
-#include "mrc/options/options.hpp"
-
 #include <memory>
+
+namespace mrc {
+class Options;
+}  // namespace mrc
+namespace mrc::internal::pipeline {
+class IPipeline;
+}  // namespace mrc::internal::pipeline
 
 namespace mrc::internal::system {
 class IResources;

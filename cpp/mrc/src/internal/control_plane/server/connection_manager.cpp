@@ -17,6 +17,8 @@
 
 #include "internal/control_plane/server/connection_manager.hpp"
 
+#include "internal/control_plane/server/client_instance.hpp"
+#include "internal/grpc/stream_writer.hpp"
 #include "internal/utils/contains.hpp"
 
 #include "mrc/channel/status.hpp"
@@ -25,11 +27,13 @@
 #include <glog/logging.h>
 #include <google/protobuf/any.pb.h>
 
-#include <algorithm>
-#include <ostream>
+#include <cstdint>
+#include <sstream>
 #include <utility>
 
 namespace mrc::internal::control_plane::server {
+
+ConnectionManager::~ConnectionManager() = default;
 
 void ConnectionManager::add_stream(const stream_t& stream)
 {
@@ -76,19 +80,6 @@ void ConnectionManager::drop_stream(const stream_id_t& stream_id) noexcept
     mark_as_modified();
 }
 
-void ConnectionManager::drop_all_streams() noexcept
-{
-    std::vector<stream_id_t> ids;
-    for (auto& [stream_id, stream] : m_streams)
-    {
-        ids.push_back(stream_id);
-    }
-    for (const auto& id : ids)
-    {
-        drop_stream(id);
-    }
-}
-
 Expected<ConnectionManager::instance_t> ConnectionManager::get_instance(const instance_id_t& instance_id) const
 {
     auto search = m_instances.find(instance_id);
@@ -126,7 +117,7 @@ Expected<protos::RegisterWorkersResponse> ConnectionManager::register_instances(
     }
 
     // check if any workers/instances have been registered on the requesting stream
-    if (m_instances_by_stream.count(stream_id) != 0)
+    if (m_instances_by_stream.contains(stream_id))
     {
         return Error::create(MRC_CONCAT_STR("failed to register instances on immutable stream "
                                             << stream_id << "; streams are immutable after first registration"));

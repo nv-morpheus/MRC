@@ -136,20 +136,20 @@ TEST_F(TestExpected, Examples)
 
     {
         Expected<int> e = 21;
-        auto ret        = e.map(mul2);
+        auto ret        = e.transform(mul2);
         EXPECT_TRUE(ret);
         EXPECT_EQ(ret.value(), 42);
     }
 
     {
-        auto ret = make_int(21).map(mul2).map(inc1);
+        auto ret = make_int(21).transform(mul2).transform(inc1);
         EXPECT_TRUE(ret);
         EXPECT_EQ(ret.value(), 43);
     }
 
     {
         Expected<int> e = 21;
-        auto ret        = e.map(mul2).map(mul2);
+        auto ret        = e.transform(mul2).transform(mul2);
         EXPECT_TRUE(ret);
         EXPECT_EQ(ret.value(), 84);
     }

@@ -21,10 +21,12 @@
 #include "internal/system/device_partition.hpp"
 #include "internal/system/fiber_task_queue.hpp"
 #include "internal/system/partition.hpp"
+#include "internal/ucx/context.hpp"
 #include "internal/ucx/endpoint.hpp"
+#include "internal/ucx/registation_callback_builder.hpp"
+#include "internal/ucx/registration_cache.hpp"
 #include "internal/ucx/worker.hpp"
 
-#include "mrc/core/task_queue.hpp"
 #include "mrc/cuda/common.hpp"
 #include "mrc/types.hpp"
 
@@ -33,6 +35,10 @@
 #include <glog/logging.h>
 
 #include <ostream>
+
+namespace mrc::core {
+class FiberTaskQueue;
+}  // namespace mrc::core
 
 namespace mrc::internal::ucx {
 

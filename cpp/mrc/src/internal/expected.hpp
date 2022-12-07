@@ -17,10 +17,9 @@
 
 #pragma once
 
+#include "mrc/core/std23_expected.hpp"  // IWYU pragma: export
 #include "mrc/utils/macros.hpp"
 #include "mrc/utils/string_utils.hpp"  // IWYU pragma: export
-
-#include <tl/expected.hpp>  // IWYU pragma: export
 
 namespace mrc::internal {
 
@@ -32,7 +31,8 @@ enum class ErrorCode
 
 class Error;
 
-using UnexpectedError = tl::unexpected<Error>;  // NOLINT
+// todo(#219) - update tidy to allow the following typedef
+using UnexpectedError = std23::unexpected<Error>;  // NOLINT
 
 class Error final : public std::exception
 {
@@ -70,7 +70,7 @@ class Error final : public std::exception
 };
 
 template <typename T = void>
-using Expected = tl::expected<T, Error>;  // NOLINT
+using Expected = std23::expected<T, Error>;  // NOLINT
 
 #define MRC_CHECK(condition)                                                  \
     if (!(condition))                                                         \

@@ -17,12 +17,11 @@
 
 #include "mrc/benchmarking/trace_statistics.hpp"
 
-#include "pymrc/types.hpp"  // IWYU pragma: keep
 #include "pymrc/utils.hpp"
 
-#include <nlohmann/json.hpp>  // IWYU pragma: keep
+#include <nlohmann/json.hpp>
 #include <pybind11/cast.h>
-#include <pybind11/pybind11.h>  // IYWU pragma: keep
+#include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
 namespace mrc::pymrc {

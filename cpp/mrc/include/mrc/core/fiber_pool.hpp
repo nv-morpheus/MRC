@@ -17,14 +17,17 @@
 
 #pragma once
 
-#include "mrc/core/bitmap.hpp"
-#include "mrc/core/task_queue.hpp"
+#include "mrc/core/task_queue.hpp"  // IWYU pragma: keep
 #include "mrc/types.hpp"
 
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
 #include <utility>
+
+namespace mrc {
+struct CpuSet;
+}  // namespace mrc
 
 namespace mrc::core {
 

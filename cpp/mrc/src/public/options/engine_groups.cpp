@@ -17,7 +17,6 @@
 #include "mrc/options/engine_groups.hpp"
 
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/runnable/types.hpp"
 
 #include <functional>
 #include <map>

@@ -19,6 +19,8 @@
 
 #include "internal/control_plane/proto_helpers.hpp"
 #include "internal/control_plane/server/subscription_manager.hpp"
+#include "internal/grpc/stream_writer.hpp"
+#include "internal/runnable/resources.hpp"
 
 #include "mrc/channel/status.hpp"
 #include "mrc/node/edge_builder.hpp"
@@ -28,18 +30,19 @@
 #include "mrc/protos/architect.pb.h"
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launcher.hpp"
+#include "mrc/runnable/runner.hpp"
 
 #include <boost/fiber/condition_variable.hpp>
 #include <glog/logging.h>
 #include <grpcpp/grpcpp.h>
-#include <rxcpp/sources/rx-iterate.hpp>
+#include <rxcpp/rx.hpp>
 
 #include <algorithm>
 #include <exception>
 #include <future>
 #include <mutex>
-#include <ostream>
 #include <set>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -81,6 +84,8 @@ static Expected<> unary_response(Server::event_t& event, Expected<MessageT>&& me
 }
 
 Server::Server(runnable::Resources& runnable) : m_runnable(runnable), m_server(m_runnable) {}
+
+Server::~Server() = default;
 
 void Server::do_service_start()
 {
@@ -169,7 +174,7 @@ void Server::do_service_await_join()
 {
     // clear all instances which drops their held stream writers
     DVLOG(10) << "awaiting all streams";
-    m_connections.drop_all_streams();
+    drop_all_streams();
 
     // we keep the event handlers open until the streams are closed
     m_queue->disable_persistence();
@@ -301,9 +306,10 @@ void Server::do_handle_event(event_t&& event)
         }
         else
         {
+            DVLOG(10) << "event.ok failed; close stream";
             drop_stream(event.stream);
         }
-    } catch (const tl::bad_expected_access<Error>& e)
+    } catch (const std23::bad_expected_access<Error>& e)
     {
         LOG(ERROR) << "bad_expected_access: " << e.error().message();
         on_fatal_exception();
@@ -585,9 +591,24 @@ void Server::drop_instance(const instance_id_t& instance_id)
 
 void Server::drop_stream(writer_t& writer)
 {
+    const auto stream_id = writer->get_id();
+    drop_stream(stream_id);
+    writer.reset();
+}
+
+void Server::drop_stream(const stream_id_t& stream_id)
+{
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-    const auto stream_id = writer->get_id();
+    auto search = m_connections.streams().find(stream_id);
+    if (search == m_connections.streams().end())
+    {
+        LOG(WARNING) << "attempting to drop stream_id: " << stream_id
+                     << " which is not found in set of connected streams";
+    }
+
+    auto writer = search->second->writer();
+
     DVLOG(10) << "dropping stream with machine_id: " << stream_id;
 
     // for each instance - iterate over state machines and drop the instance id
@@ -601,6 +622,23 @@ void Server::drop_stream(writer_t& writer)
     writer.reset();
 
     m_connections.drop_stream(stream_id);
+}
+
+void Server::drop_all_streams()
+{
+    std::vector<stream_id_t> stream_ids;
+    {
+        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+        for (const auto& [id, stream] : m_connections.streams())
+        {
+            stream_ids.push_back(id);
+        }
+    }
+
+    for (const auto& id : stream_ids)
+    {
+        drop_stream(id);
+    }
 }
 
 Expected<Server::instance_t> Server::validate_instance_id(const instance_id_t& instance_id, const event_t& event) const

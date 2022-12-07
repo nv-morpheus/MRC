@@ -17,24 +17,34 @@
 
 #pragma once
 
-#include "internal/control_plane/client/state_manager.hpp"
-#include "internal/data_plane/client.hpp"
-#include "internal/data_plane/server.hpp"
-#include "internal/memory/host_resources.hpp"
 #include "internal/memory/transient_pool.hpp"
-#include "internal/network/resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
-#include "internal/ucx/registration_cache.hpp"
-#include "internal/ucx/resources.hpp"
 
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/types.hpp"
 
 #include <cstddef>
+#include <memory>
 #include <string>
 
+namespace mrc::internal::control_plane {
+class Client;
+}  // namespace mrc::internal::control_plane
+namespace mrc::internal::memory {
+class HostResources;
+}  // namespace mrc::internal::memory
+namespace mrc::internal::network {
+class Resources;
+}  // namespace mrc::internal::network
+namespace mrc::internal::ucx {
+class RegistrationCache;
+class Resources;
+}  // namespace mrc::internal::ucx
+
 namespace mrc::internal::data_plane {
+class Client;
+class Server;
 
 /**
  * @brief ArchitectResources hold and is responsible for constructing any object that depending the UCX data plane
@@ -72,8 +82,8 @@ class Resources final : private Service, private resources::PartitionResourceBas
     InstanceID m_instance_id;
 
     memory::TransientPool m_transient_pool;
-    Server m_server;
-    Client m_client;
+    std::unique_ptr<Server> m_server;
+    std::unique_ptr<Client> m_client;
 
     friend network::Resources;
 };

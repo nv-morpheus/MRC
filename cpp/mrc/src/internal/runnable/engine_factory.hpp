@@ -21,10 +21,13 @@
 #include "internal/system/resources.hpp"
 
 #include "mrc/core/bitmap.hpp"
-#include "mrc/runnable/engine_factory.hpp"
-#include "mrc/runnable/types.hpp"
 
 #include <memory>
+
+namespace mrc::runnable {
+enum class EngineType;
+struct EngineFactory;
+}  // namespace mrc::runnable
 
 namespace mrc::internal::runnable {
 

@@ -25,16 +25,12 @@
 
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
 
 #include <memory>
 #include <sstream>
-
-// IWYU thinks the Segment.def calls need array and vector
-// IWYU pragma: no_include <array>
-// IWYU pragma: no_include <vector>
-// IWYU pragma: no_include <pybind11/detail/common.h>
-// IWYU pragma: no_include <pybind11/detail/descr.h>
+#include <vector>
 
 const std::vector<unsigned int> PybindSegmentModuleVersion{mrc_VERSION_MAJOR, mrc_VERSION_MINOR, mrc_VERSION_PATCH};
 

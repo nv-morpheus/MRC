@@ -17,9 +17,6 @@
 
 #pragma once
 
-#include "mrc/node/source_channel.hpp"
-#include "mrc/protos/architect.pb.h"
-#include "mrc/runnable/runner.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/macros.hpp"
 
@@ -27,6 +24,17 @@
 #include <memory>
 #include <mutex>
 #include <vector>
+
+namespace mrc::node {
+template <typename T>
+class SourceChannel;
+}  // namespace mrc::node
+namespace mrc::protos {
+class StateUpdate;
+}  // namespace mrc::protos
+namespace mrc::runnable {
+class Runner;
+}  // namespace mrc::runnable
 
 namespace mrc::internal::control_plane {
 

@@ -18,14 +18,18 @@
 #pragma once
 
 #include "mrc/codable/codable_protocol.hpp"
-#include "mrc/codable/decode.hpp"  // todo(iwyu) - Decoder<>& is forward declared in api.hpp
-#include "mrc/codable/encode.hpp"  // todo(iwyu) - Encoder<>& is forward declared in api.hpp
-#include "mrc/codable/encoding_options.hpp"
 #include "mrc/memory/buffer.hpp"
 
 #include <cstddef>
 
+// IWYU pragma: no_forward_declare mrc::codable::codable_protocol
+
 namespace mrc::codable {
+class EncodingOptions;
+template <typename T>
+class Encoder;
+template <typename T>
+class Decoder;
 
 template <>
 struct codable_protocol<mrc::memory::buffer>

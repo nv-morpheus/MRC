@@ -21,7 +21,7 @@
 
 #include "mrc/segment/object.hpp"
 
-#include <rxcpp/rx.hpp>  // IWYU pragma: keep
+#include <rxcpp/rx.hpp>
 
 #include <functional>
 

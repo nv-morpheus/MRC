@@ -20,7 +20,6 @@
 #include "pymrc/segment.hpp"
 #include "pymrc/utils.hpp"
 
-#include "mrc/segment/builder.hpp"  // IWYU pragma: keep
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 
@@ -28,12 +27,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
 
-#include <ostream>
-
-// IWYU pragma: no_include <pybind11/detail/common.h>
-// IWYU pragma: no_include <pybind11/detail/descr.h>
-// IWYU thinks we need array for py::class_<Pipeline>
-// IWYU pragma: no_include <array>
+#include <array>
+#include <sstream>
 
 namespace mrc::pymrc {
 

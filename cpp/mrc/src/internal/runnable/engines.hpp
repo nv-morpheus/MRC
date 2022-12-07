@@ -17,13 +17,16 @@
 
 #pragma once
 
-#include "mrc/runnable/engine.hpp"
+#include "mrc/runnable/engine.hpp"  // IWYU pragma: export
 #include "mrc/runnable/launch_options.hpp"
-#include "mrc/runnable/types.hpp"
 
 #include <cstddef>
 #include <memory>
 #include <vector>
+
+namespace mrc::runnable {
+enum class EngineType;
+}  // namespace mrc::runnable
 
 namespace mrc::internal::runnable {
 
@@ -34,6 +37,7 @@ class Engines : public ::mrc::runnable::Engines
 {
   public:
     Engines(LaunchOptions launch_options);
+    ~Engines() override;
 
     const std::vector<std::shared_ptr<::mrc::runnable::Engine>>& launchers() const final;
     const LaunchOptions& launch_options() const final;

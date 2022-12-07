@@ -17,19 +17,11 @@
 
 #pragma once
 
-#include "mrc/types.hpp"
+#include "mrc/segment/initializers.hpp"
 
-#include <functional>
 #include <map>
 #include <memory>
 #include <string>
-
-namespace mrc::segment {
-
-class EgressPortBase;
-class IngressPortBase;
-
-}  // namespace mrc::segment
 
 namespace mrc::internal::pipeline {
 class IPipeline;
@@ -38,28 +30,16 @@ class IPipeline;
 namespace mrc::internal::segment {
 
 class Definition;
-class IBuilder;
 
 struct IDefinition
 {
-    using backend_initializer_fn_t = std::function<void(IBuilder&)>;
-    using egress_initializer_t = std::function<std::shared_ptr<::mrc::segment::EgressPortBase>(const SegmentAddress&)>;
-    using ingress_initializer_t =
-        std::function<std::shared_ptr<::mrc::segment::IngressPortBase>(const SegmentAddress&)>;
-
     IDefinition(std::string name,
-                std::map<std::string, ingress_initializer_t> ingress_initializers,
-                std::map<std::string, egress_initializer_t> egress_initializers,
-                backend_initializer_fn_t backend_initializer);
+                std::map<std::string, ::mrc::segment::ingress_initializer_t> ingress_initializers,
+                std::map<std::string, ::mrc::segment::egress_initializer_t> egress_initializers,
+                ::mrc::segment::backend_initializer_fn_t backend_initializer);
     virtual ~IDefinition() = 0;
 
     const std::string& name() const;
-
-    // const SegmentID& id() const;
-    // std::vector<std::string> ingress_port_names() const;
-    // std::vector<std::string> egress_port_names() const;
-    // [[deprecated]] std::string info() const;
-    // [[deprecated]] std::string info(SegmentRank rank) const;
 
   private:
     std::shared_ptr<Definition> m_impl;

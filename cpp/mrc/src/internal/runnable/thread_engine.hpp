@@ -19,16 +19,21 @@
 
 #include "internal/runnable/engine.hpp"
 #include "internal/system/resources.hpp"
-#include "internal/system/thread.hpp"
 
 #include "mrc/core/bitmap.hpp"
-#include "mrc/runnable/types.hpp"
 #include "mrc/types.hpp"
 
 #include <functional>
 #include <memory>
 #include <optional>
 #include <thread>
+
+namespace mrc::internal::system {
+class Thread;
+}  // namespace mrc::internal::system
+namespace mrc::runnable {
+enum class EngineType;
+}  // namespace mrc::runnable
 
 namespace mrc::internal::runnable {
 

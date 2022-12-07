@@ -24,11 +24,17 @@
 
 namespace mrc::runtime {
 
+RemoteDescriptor::RemoteDescriptor() = default;
+
 RemoteDescriptor::RemoteDescriptor(std::shared_ptr<IRemoteDescriptorManager> manager,
                                    std::unique_ptr<IRemoteDescriptorHandle> handle) :
   m_manager(std::move(manager)),
   m_handle(std::move(handle))
 {}
+
+RemoteDescriptor::RemoteDescriptor(RemoteDescriptor&& other) noexcept = default;
+
+RemoteDescriptor& RemoteDescriptor::operator=(RemoteDescriptor&& other) noexcept = default;
 
 RemoteDescriptor::~RemoteDescriptor() = default;
 
@@ -52,6 +58,11 @@ std::unique_ptr<IRemoteDescriptorHandle> RemoteDescriptor::release_handle()
     CHECK(*this);
     m_manager.reset();
     return std::move(m_handle);
+}
+
+RemoteDescriptor::operator bool() const
+{
+    return has_value();
 }
 
 }  // namespace mrc::runtime

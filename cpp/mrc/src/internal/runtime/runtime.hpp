@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "internal/resources/manager.hpp"
 #include "internal/runtime/partition.hpp"
 
 #include "mrc/runtime/api.hpp"
@@ -25,6 +24,10 @@
 #include <cstddef>
 #include <memory>
 #include <vector>
+
+namespace mrc::internal::resources {
+class Manager;
+}  // namespace mrc::internal::resources
 
 namespace mrc::internal::runtime {
 

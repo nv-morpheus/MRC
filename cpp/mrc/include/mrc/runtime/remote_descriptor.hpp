@@ -18,7 +18,7 @@
 #pragma once
 
 #include "mrc/codable/api.hpp"
-#include "mrc/runtime/remote_descriptor_handle.hpp"  // IWYU pragma: keep
+#include "mrc/runtime/remote_descriptor_handle.hpp"
 #include "mrc/utils/macros.hpp"
 
 #include <glog/logging.h>
@@ -56,11 +56,13 @@ class IRemoteDescriptorManager;
 class RemoteDescriptor final
 {
   public:
-    RemoteDescriptor() = default;
+    RemoteDescriptor();
     ~RemoteDescriptor();
 
+    RemoteDescriptor(RemoteDescriptor&& other) noexcept;
+    RemoteDescriptor& operator=(RemoteDescriptor&& other) noexcept;
+
     DELETE_COPYABILITY(RemoteDescriptor);
-    DEFAULT_MOVEABILITY(RemoteDescriptor);
 
     /**
      * @brief Decode the globally accessible object into a local object T constructed from the partition resources which
@@ -77,7 +79,11 @@ class RemoteDescriptor final
     T decode(std::size_t object_idx = 0)
     {
         CHECK(m_handle);
-        return codable::Decoder<T>(*m_handle).deserialize(object_idx);
+
+        // Convert to intermediate type for IWYU
+        codable::IDecodableStorage& storage = *m_handle;
+
+        return codable::Decoder<T>(storage).deserialize(object_idx);
     }
 
     /**
@@ -101,10 +107,7 @@ class RemoteDescriptor final
      * @return true
      * @return false
      */
-    operator bool() const
-    {
-        return has_value();
-    }
+    operator bool() const;
 
   private:
     RemoteDescriptor(std::shared_ptr<IRemoteDescriptorManager> manager,

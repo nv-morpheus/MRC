@@ -18,7 +18,6 @@
 #include "mrc/runnable/context.hpp"
 
 #include "mrc/runnable/runner.hpp"
-#include "mrc/runnable/types.hpp"
 
 #include <boost/fiber/fss.hpp>
 #include <glog/logging.h>

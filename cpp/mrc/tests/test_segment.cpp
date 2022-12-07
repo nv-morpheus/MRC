@@ -21,68 +21,35 @@
 #include "mrc/channel/status.hpp"
 #include "mrc/core/executor.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
-#include "mrc/manifold/egress.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/operators/broadcast.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
-#include "mrc/node/source_channel.hpp"
-#include "mrc/node/source_properties.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/definition.hpp"
 #include "mrc/segment/ingress_port.hpp"
-#include "mrc/segment/object.hpp"
 #include "mrc/segment/ports.hpp"
 #include "mrc/types.hpp"
 
-#include <cxxabi.h>
 #include <glog/logging.h>
-#include <gtest/gtest-message.h>
-#include <gtest/gtest-test-part.h>
 #include <nlohmann/json.hpp>
-#include <nlohmann/json_fwd.hpp>
-#include <rxcpp/operators/rx-concat_map.hpp>
-#include <rxcpp/operators/rx-map.hpp>
-#include <rxcpp/operators/rx-tap.hpp>
-#include <rxcpp/rx-includes.hpp>
-#include <rxcpp/rx-observable.hpp>
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-operators.hpp>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
 
-#include <algorithm>
 #include <array>
 #include <atomic>
+#include <future>
 #include <iostream>
 #include <mutex>
-#include <set>
 #include <string>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
-// IWYU pragma: no_include <boost/fiber/future/detail/shared_state.hpp>
-// IWYU pragma: no_include <boost/fiber/future/detail/task_base.hpp>
-// IWYU pragma: no_include <boost/hana/if.hpp>
-// IWYU pragma: no_include <boost/smart_ptr/detail/operator_bool.hpp>
-// IWYU pragma: no_include <map>
-// IWYU pragma: no_include <pybind11/detail/common.h>
-// IWYU pragma: no_include <pybind11/detail/descr.h>
-// IWYU pragma: no_include "rxcpp/sources/rx-iterate.hpp"
-// IWYU pragma: no_include "rx-includes.hpp"
-// IWYU pragma: no_include "rx-includes.hpp"
-// IWYU pragma: no_include "gtest/gtest_pred_impl.h"
-// IWYU thinks we need map for segment::Definition::create
-
-namespace mrc::exceptions {
-struct MrcRuntimeError;
-}  // namespace mrc::exceptions
-
 using namespace std::literals::string_literals;
+
+namespace mrc {
 
 TEST_F(TestSegment, CreateSegmentDefinition)
 {
@@ -606,7 +573,7 @@ TEST_F(TestSegment, SegmentSingleSourceTwoNodesException)
         auto str_half_length = segment.make_node<std::string, float>(
             "str_half_length", rxcpp::operators::map([](std::string s) {
                 DVLOG(1) << "str_half_length received: '" << s << "'" << std::endl;
-                return s.size() / 2.0f;
+                return s.size() / 2.0F;
             }));
 
         EXPECT_ANY_THROW(segment.make_edge(src, str_half_length));
@@ -662,7 +629,7 @@ TEST_F(TestSegment, SegmentSingleSourceTwoNodes)
         auto str_half_length = segment.make_node<std::string, float>(
             "str_half_length", rxcpp::operators::map([](std::string s) {
                 DVLOG(1) << "str_half_length received: '" << s << "'" << std::endl;
-                return s.size() / 2.0f;
+                return s.size() / 2.0F;
             }));
 
         segment.make_edge(*bcast_src, str_half_length);
@@ -1073,3 +1040,5 @@ TEST_F(TestSegment, SegmentGetEgressNotEgressError)
     }
     */
 }
+
+}  // namespace mrc
