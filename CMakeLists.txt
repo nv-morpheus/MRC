@@ -44,13 +44,20 @@ mark_as_advanced(MRC_CACHE_DIR)
 enable_language(C CXX)
 enable_testing()
 
-# CMake path
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/utilities/cmake")
-list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+# MRC CMake path and module extensions
+set(MRC_CMAKE_MODULE_PATH_EXTENSIONS
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
+    "${CMAKE_CURRENT_SOURCE_DIR}/utilities/cmake")
+
+set(MRC_CMAKE_PREFIX_PATH_EXTENSIONS
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
+    )
+
+# Prepend path and prefix updates so they take priority in this scope.
+list(PREPEND CMAKE_MODULE_PATH "${MRC_CMAKE_MODULE_PATH_EXTENSIONS}")
+list(PREPEND CMAKE_PREFIX_PATH "${MRC_CMAKE_PREFIX_PATH_EXTENSIONS}")
 
 # Load morpheus utils and update CMake paths
-set(MORPHEUS_UTILS_VERSION "23.01.01-alpha" CACHE STRING "Version of Morpheus utils")
 set(MORPHEUS_UTILS_RAPIDS_CMAKE_VERSION ${MRC_RAPIDS_VERSION})
 set(MORPHEUS_UTILS_RAPIDS_CPM_INIT_OVERRIDE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/rapids_cpm_package_overrides.json")
 include(morpheus_utils/load)
@@ -407,5 +414,9 @@ add_subdirectory(src/tools)
 if (MRC_ENABLE_DEBUG_INFO)
   morpheus_utils_print_all_targets()
 endif()
+
+# Cleanup the environment after we exit this scope
+list(REMOVE_ITEM CMAKE_PREFIX_PATH "${MRC_CMAKE_PREFIX_PATH_EXTENSIONS}")
+list(REMOVE_ITEM CMAKE_MODULE_PATH "${MRC_CMAKE_MODULE_PATH_EXTENSIONS}")
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)
