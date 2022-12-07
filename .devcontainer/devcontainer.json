@@ -22,7 +22,7 @@
     "workspaceFolder": "/work",
     "containerEnv": {
         // the post_start script will look for these envs, if they are set, git will be configured
-        "GIT_AUTHOR_NAME ": "${localEnv:GIT_AUTHOR_NAME}",
+        "GIT_AUTHOR_NAME": "${localEnv:GIT_AUTHOR_NAME}",
         "GIT_AUTHOR_EMAIL": "${localEnv:GIT_AUTHOR_EMAIL}"
     },
     "remoteUser": "${localEnv:USER}",
