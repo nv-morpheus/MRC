@@ -47,7 +47,7 @@ enable_testing()
 # MRC CMake path and module extensions
 set(MRC_CMAKE_MODULE_PATH_EXTENSIONS
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
-    "${CMAKE_CURRENT_SOURCE_DIR}/utilities/cmake")
+    "${CMAKE_CURRENT_SOURCE_DIR}/external/utilities/cmake")
 
 set(MRC_CMAKE_PREFIX_PATH_EXTENSIONS
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
