@@ -44,6 +44,10 @@ mark_as_advanced(MRC_CACHE_DIR)
 enable_language(C CXX)
 enable_testing()
 
+if (MRC_USE_IWYU AND MRC_USE_CCACHE)
+  message(FATAL_ERROR "MRC_USE_IWYU and MRC_USE_CCACHE cannot be set simultaneously")
+endif()
+
 # MRC CMake path and module extensions
 set(MRC_CMAKE_MODULE_PATH_EXTENSIONS
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
