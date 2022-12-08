@@ -75,7 +75,7 @@ TEST_F(TestUCX, CreateWorkerAddress)
 TEST_F(TestUCX, EndpointsInProcess)
 {
     // note this test really should use a progress engine
-    skip_if_in_ci();
+    GTEST_SKIP();
 
     auto worker_1 = std::make_shared<Worker>(m_context);
     auto worker_2 = std::make_shared<Worker>(m_context);
