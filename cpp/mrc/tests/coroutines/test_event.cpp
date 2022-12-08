@@ -15,8 +15,10 @@
  * limitations under the License.
  */
 
-// original source code modified to include originators copyright,
-// adapt the code for use with MRC
+/**
+ * Original Source: https://github.com/jbaldwin/libcoro
+ * Original License: Apache License, Version 2.0; included below
+ */
 
 /**
  * Copyright 2021 Josh Baldwin
