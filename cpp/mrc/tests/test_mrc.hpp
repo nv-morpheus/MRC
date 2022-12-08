@@ -37,7 +37,7 @@ namespace mrc {
 
 inline void skip_if_in_ci()
 {
-    if (std::env("CI") != nullptr)
+    if (std::getenv("CI") != nullptr)
     {
         GTEST_SKIP() << "Test skipped in CI";
     }
