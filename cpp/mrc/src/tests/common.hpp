@@ -17,11 +17,14 @@
 
 #pragma once
 
-#include "internal/system/system.hpp"
-
-#include "mrc/options/options.hpp"
-
 #include <functional>
 #include <memory>
+
+namespace mrc {
+class Options;
+}  // namespace mrc
+namespace mrc::internal::system {
+class System;
+}  // namespace mrc::internal::system
 
 std::shared_ptr<mrc::internal::system::System> make_system(std::function<void(mrc::Options&)> updater = nullptr);

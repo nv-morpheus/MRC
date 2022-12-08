@@ -17,6 +17,7 @@
 
 #include "internal/control_plane/server/subscription_manager.hpp"
 
+#include "internal/control_plane/server/client_instance.hpp"
 #include "internal/grpc/stream_writer.hpp"
 #include "internal/utils/contains.hpp"
 
@@ -30,6 +31,11 @@
 #include <ostream>
 
 namespace mrc::internal::control_plane::server {
+
+Role::Role(std::string service_name, std::string role_name) :
+  m_service_name(std::move(service_name)),
+  m_role_name(std::move(role_name))
+{}
 
 void Role::add_member(std::uint64_t tag, std::shared_ptr<server::ClientInstance> instance)
 {
@@ -189,6 +195,8 @@ SubscriptionService::SubscriptionService(std::string name, std::set<std::string>
     DCHECK_EQ(roles.size(), m_roles.size());
 }
 
+SubscriptionService::~SubscriptionService() = default;
+
 Expected<TagID> SubscriptionService::register_instance(std::shared_ptr<server::ClientInstance> instance,
                                                        const std::string& role,
                                                        const std::set<std::string>& subscribe_to_roles)
@@ -282,5 +290,4 @@ Expected<> SubscriptionService::update_role(const protos::UpdateSubscriptionServ
     }
     return {};
 }
-
 }  // namespace mrc::internal::control_plane::server

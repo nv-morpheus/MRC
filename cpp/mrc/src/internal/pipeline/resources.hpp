@@ -17,11 +17,15 @@
 
 #pragma once
 
-#include "internal/resources/manager.hpp"
-
-#include "mrc/metrics/registry.hpp"
-
 #include <memory>
+
+namespace mrc::metrics {
+class Registry;
+}  // namespace mrc::metrics
+
+namespace mrc::internal::resources {
+class Manager;
+}  // namespace mrc::internal::resources
 
 namespace mrc::internal::pipeline {
 
@@ -29,6 +33,7 @@ class Resources
 {
   public:
     Resources(resources::Manager& resources);
+    ~Resources();
 
     resources::Manager& resources() const;
     metrics::Registry& metrics_registry() const;

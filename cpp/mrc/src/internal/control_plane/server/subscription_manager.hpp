@@ -17,12 +17,10 @@
 
 #pragma once
 
-#include "internal/control_plane/server/client_instance.hpp"
 #include "internal/control_plane/server/tagged_issuer.hpp"
 #include "internal/control_plane/server/versioned_issuer.hpp"
 #include "internal/expected.hpp"
 
-#include "mrc/protos/architect.pb.h"
 #include "mrc/types.hpp"
 
 #include <cstdint>
@@ -32,9 +30,15 @@
 #include <string>
 #include <utility>
 
+namespace mrc::protos {
+class StateUpdate;
+class UpdateSubscriptionServiceRequest;
+}  // namespace mrc::protos
+
 namespace mrc::internal::control_plane::server {
 
 class Role;
+class ClientInstance;
 
 /**
  * @brief A specialize TaggedManager to synchronize tag and instance_id information across between a collection of
@@ -62,7 +66,7 @@ class SubscriptionService final : public TaggedIssuer
 {
   public:
     SubscriptionService(std::string name, std::set<std::string> roles);
-    ~SubscriptionService() final = default;
+    ~SubscriptionService() final;
 
     const std::string& service_name() const final;
 
@@ -106,10 +110,7 @@ class SubscriptionService final : public TaggedIssuer
 class Role final : public VersionedState
 {
   public:
-    Role(std::string service_name, std::string role_name) :
-      m_service_name(std::move(service_name)),
-      m_role_name(std::move(role_name))
-    {}
+    Role(std::string service_name, std::string role_name);
 
     // subscribers are notified when new members are added
     void add_member(std::uint64_t tag, std::shared_ptr<server::ClientInstance> instance);

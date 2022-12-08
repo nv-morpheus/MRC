@@ -31,18 +31,14 @@
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 
-#include "mrc/channel/status.hpp"
-#include "mrc/codable/fundamental_types.hpp"
 #include "mrc/codable/fundamental_types.hpp"  // IWYU pragma: keep
-#include "mrc/core/bitmap.hpp"
 #include "mrc/core/task_queue.hpp"
-#include "mrc/memory/codable/buffer.hpp"
-#include "mrc/memory/codable/buffer.hpp"  // IWYU pragma: keep
 #include "mrc/memory/literals.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/pubsub/api.hpp"
+#include "mrc/pubsub/forward.hpp"
 #include "mrc/pubsub/publisher.hpp"
 #include "mrc/pubsub/subscriber.hpp"
 #include "mrc/types.hpp"

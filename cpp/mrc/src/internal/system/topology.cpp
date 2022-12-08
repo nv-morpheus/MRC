@@ -37,14 +37,11 @@
 #include <ostream>
 #include <set>
 #include <string>
-#include <type_traits>
 #include <utility>
 
 // work-around for known iwyu issue
 // https://github.com/include-what-you-use/include-what-you-use/issues/908
 // IWYU pragma: no_include <algorithm>
-// https://github.com/include-what-you-use/include-what-you-use/issues/166
-// IWYU pragma: no_include <ext/alloc_traits.h>
 
 // Topology
 

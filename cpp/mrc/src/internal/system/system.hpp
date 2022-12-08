@@ -17,19 +17,20 @@
 
 #pragma once
 
-#include "internal/system/partitions.hpp"
-#include "internal/system/topology.hpp"
-
 #include "mrc/core/bitmap.hpp"
-#include "mrc/options/options.hpp"
 #include "mrc/utils/macros.hpp"
 
 #include <memory>
-#include <utility>
+
+namespace mrc {
+class Options;
+}  // namespace mrc
 
 namespace mrc::internal::system {
 
 class ISystem;
+class Partitions;
+class Topology;
 
 class System final
 {
@@ -56,9 +57,6 @@ class System final
     std::shared_ptr<Partitions> m_partitions;
 };
 
-inline std::shared_ptr<System> make_system(std::shared_ptr<Options> options)
-{
-    return System::create(std::move(options));
-}
+std::shared_ptr<System> make_system(std::shared_ptr<Options> options);
 
 }  // namespace mrc::internal::system

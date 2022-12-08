@@ -23,23 +23,22 @@
 #include "internal/runnable/resources.hpp"
 #include "internal/utils/contains.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/rx_sink.hpp"
+#include "mrc/node/source_channel.hpp"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launcher.hpp"
+#include "mrc/runnable/runner.hpp"
 #include "mrc/types.hpp"
 
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>
 
-#include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <ostream>
-#include <type_traits>  // IWYU pragma: keep
 #include <unordered_map>
 #include <utility>
 #include <vector>

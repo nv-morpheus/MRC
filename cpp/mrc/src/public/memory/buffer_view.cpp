@@ -17,6 +17,7 @@
 
 #include "mrc/memory/buffer_view.hpp"
 
+#include "mrc/memory/buffer.hpp"
 #include "mrc/memory/memory_kind.hpp"
 
 #include <glog/logging.h>

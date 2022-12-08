@@ -20,8 +20,7 @@
 #include "internal/executor/executor.hpp"
 #include "internal/system/resources.hpp"
 
-#include "mrc/engine/system/iresources.hpp"
-#include "mrc/options/options.hpp"
+#include "mrc/engine/pipeline/ipipeline.hpp"
 
 #include <glog/logging.h>
 

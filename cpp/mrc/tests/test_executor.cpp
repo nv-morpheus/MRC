@@ -17,48 +17,40 @@
 
 #include "test_mrc.hpp"  // IWYU pragma: associated
 
-#include "mrc/channel/status.hpp"
 #include "mrc/core/executor.hpp"
-#include "mrc/core/runtime.hpp"
-#include "mrc/node/operators/muxer.hpp"
+#include "mrc/engine/pipeline/ipipeline.hpp"
+#include "mrc/node/rx_node.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_source.hpp"
+#include "mrc/options/engine_groups.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/pipeline/pipeline.hpp"
+#include "mrc/runnable/context.hpp"
+#include "mrc/runnable/launch_options.hpp"
+#include "mrc/runnable/types.hpp"
 #include "mrc/segment/builder.hpp"
-#include "mrc/segment/context.hpp"
-#include "mrc/segment/definition.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
 #include "mrc/segment/segment.hpp"
-#include "mrc/types.hpp"
 
-#include <boost/fiber/buffered_channel.hpp>
-#include <boost/fiber/channel_op_status.hpp>
 #include <boost/fiber/future/async.hpp>
 #include <boost/fiber/future/future.hpp>
-#include <rxcpp/operators/rx-map.hpp>
-#include <rxcpp/rx-includes.hpp>
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
+#include <glog/logging.h>
+#include <rxcpp/rx.hpp>
 
 #include <chrono>
+#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <ostream>
+#include <set>
 #include <string>
 #include <thread>
 #include <utility>
+#include <vector>
 
-// IWYU thinks we need exception & vector for segment.make_source
-// IWYU pragma: no_include <exception>
-// IWYU pragma: no_include <vector>
-
-// IWYU thinks we need <algorithm>, <itertor>, <map> & <set> for initializer lists
-// IWYU pragma: no_include <algorithm>
-// IWYU pragma: no_include <iterator>
-// IWYU pragma: no_include <map>
-// IWYU pragma: no_include <set>
+namespace mrc {
 
 class TestExecutor : public ::testing::Test
 {
@@ -160,9 +152,9 @@ TEST_F(TestExecutor, LifeCycleSingleSegment)
 
     auto segment = Segment::create("seg_1", [&next_count, &src_count, &node_count](segment::Builder& s) {
         auto rx_source = s.make_source<float>("rx_source", [](rxcpp::subscriber<float> s) {
-            s.on_next(1.0f);
-            s.on_next(2.0f);
-            s.on_next(3.0f);
+            s.on_next(1.0F);
+            s.on_next(2.0F);
+            s.on_next(3.0F);
             s.on_completed();
         });
 
@@ -227,9 +219,9 @@ TEST_F(TestExecutor, LifeCycleSingleSegmentOpMuxer)
     auto segment = Segment::create("seg_1", [&next_count](segment::Builder& s) {
         auto rx_source = s.make_source<float>("rx_source", [](rxcpp::subscriber<float> s) {
             DVLOG(1) << runnable::Context::get_runtime_context().info();
-            s.on_next(1.0f);
-            s.on_next(2.0f);
-            s.on_next(3.0f);
+            s.on_next(1.0F);
+            s.on_next(2.0F);
+            s.on_next(3.0F);
             s.on_completed();
         });
 
@@ -266,9 +258,9 @@ TEST_F(TestExecutor, LifeCycleSingleSegmentOpMuxerOnThreads)
     auto segment = Segment::create("seg_1", [&next_count](segment::Builder& s) {
         auto rx_source = s.make_source<float>("rx_source", [](rxcpp::subscriber<float> s) {
             DVLOG(1) << runnable::Context::get_runtime_context().info();
-            s.on_next(1.0f);
-            s.on_next(2.0f);
-            s.on_next(3.0f);
+            s.on_next(1.0F);
+            s.on_next(2.0F);
+            s.on_next(3.0F);
             s.on_completed();
         });
 
@@ -562,3 +554,5 @@ TEST_F(TestExecutor, MultiNode)
 // }
 
 TEST_F(TestExecutor, ConfigRegex) {}
+
+}  // namespace mrc

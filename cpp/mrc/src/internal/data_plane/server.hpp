@@ -17,17 +17,11 @@
 
 #pragma once
 
-#include "internal/memory/host_resources.hpp"
 #include "internal/memory/transient_pool.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
 #include "internal/ucx/common.hpp"
-#include "internal/ucx/resources.hpp"
 
-#include "mrc/channel/status.hpp"
-#include "mrc/node/operators/router.hpp"
-#include "mrc/node/source_channel.hpp"
-#include "mrc/runnable/runner.hpp"
 #include "mrc/types.hpp"
 
 #include <ucp/api/ucp_def.h>
@@ -37,6 +31,22 @@
 #include <memory>
 #include <utility>
 #include <vector>
+
+namespace mrc::internal::memory {
+class HostResources;
+}  // namespace mrc::internal::memory
+namespace mrc::internal::ucx {
+class Resources;
+}  // namespace mrc::internal::ucx
+namespace mrc::node {
+template <typename KeyT, typename T>
+class Router;
+template <typename T>
+class SourceChannelWriteable;
+}  // namespace mrc::node
+namespace mrc::runnable {
+class Runner;
+}  // namespace mrc::runnable
 
 // this node gets ucx tagged messages from ucp_tag_probe_nb
 // events which do not required a recv get pushed immediately to their downstream

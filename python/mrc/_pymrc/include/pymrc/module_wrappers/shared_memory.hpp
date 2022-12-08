@@ -17,13 +17,13 @@
 
 #pragma once
 
-#include "pymrc/utilities/object_cache.hpp"
-
 #include <pybind11/pytypes.h>
 
 #include <cstddef>
 
 namespace mrc::pymrc {
+class PythonObjectCache;
+
 /**
  * @brief Wrapper around the multiprocess.shared_memory class
  **/

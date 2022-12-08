@@ -17,13 +17,37 @@
 
 #include "test_modules.hpp"
 
+#include "mrc/core/executor.hpp"
+#include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/modules/module_registry.hpp"
 #include "mrc/modules/plugins.hpp"
 #include "mrc/modules/sample_modules.hpp"
+#include "mrc/modules/segment_modules.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/options/options.hpp"
+#include "mrc/options/topology.hpp"
+#include "mrc/pipeline/pipeline.hpp"
+#include "mrc/segment/builder.hpp"
 #include "mrc/version.hpp"
 
-#include <boost/filesystem.hpp>
+#include <boost/filesystem/path.hpp>
 #include <dlfcn.h>
+#include <glog/logging.h>
+#include <gtest/gtest.h>
+#include <nlohmann/json.hpp>
+#include <rxcpp/rx.hpp>
+#include <unistd.h>
+
+#include <algorithm>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+
+namespace mrc {
 
 TEST_F(TestModuleRegistry, RegistryModuleTest)
 {
@@ -369,3 +393,5 @@ TEST_F(TestModuleRegistry, DynamicModuleBadVersionTest)
     EXPECT_FALSE(ModuleRegistry::contains_namespace(module_namespace));
     EXPECT_FALSE(ModuleRegistry::contains(module_name, module_namespace));
 }
+
+}  // namespace mrc

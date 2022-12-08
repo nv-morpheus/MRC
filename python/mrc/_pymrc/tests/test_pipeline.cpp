@@ -17,39 +17,29 @@
 
 #include "test_pymrc.hpp"
 
-#include "pymrc/executor.hpp"  // IWYU pragma: keep
+#include "pymrc/executor.hpp"
 #include "pymrc/pipeline.hpp"
 #include "pymrc/port_builders.hpp"
 #include "pymrc/types.hpp"
 #include "pymrc/utils.hpp"
 
 #include "mrc/channel/status.hpp"
-#include "mrc/core/utils.hpp"
-#include "mrc/manifold/egress.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
-#include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_properties.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/segment/builder.hpp"
-#include "mrc/segment/object.hpp"
 
 #include <boost/fiber/future/future.hpp>
-#include <boost/hana/if.hpp>
-#include <ext/alloc_traits.h>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
-#include <rxcpp/operators/rx-map.hpp>
 #include <rxcpp/rx.hpp>
-#include <rxcpp/sources/rx-iterate.hpp>
 
-#include <algorithm>
 #include <atomic>
 #include <cstddef>
 #include <functional>
@@ -59,14 +49,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-// IWYU pragma: no_include <boost/fiber/future/detail/shared_state.hpp>
-// IWYU pragma: no_include <boost/fiber/future/detail/task_base.hpp>
-// IWYU pragma: no_include <boost/smart_ptr/detail/operator_bool.hpp>
-// IWYU pragma: no_include "gtest/gtest_pred_impl.h"
-// IWYU pragma: no_include <pybind11/detail/common.h>
-// IWYU pragma: no_include "rxcpp/sources/rx-iterate.hpp"
-// IWYU pragma: no_include "rx-includes.hpp"
 
 namespace py    = pybind11;
 namespace pymrc = mrc::pymrc;

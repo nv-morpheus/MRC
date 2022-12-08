@@ -18,15 +18,24 @@
 #pragma once
 
 #include "internal/remote_descriptor/manager.hpp"
-#include "internal/resources/partition_resources.hpp"
 
-#include "mrc/codable/api.hpp"
-#include "mrc/pubsub/api.hpp"
 #include "mrc/runtime/api.hpp"
 #include "mrc/utils/macros.hpp"
 
 #include <memory>
 #include <string>
+
+namespace mrc::codable {
+struct ICodableStorage;
+}  // namespace mrc::codable
+namespace mrc::internal::resources {
+class PartitionResources;
+}  // namespace mrc::internal::resources
+namespace mrc::pubsub {
+class IPublisherService;
+class ISubscriberService;
+enum class PublisherPolicy;
+}  // namespace mrc::pubsub
 
 namespace mrc::internal::runtime {
 

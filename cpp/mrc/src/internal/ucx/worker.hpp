@@ -18,8 +18,6 @@
 #pragma once
 
 #include "internal/ucx/common.hpp"
-#include "internal/ucx/context.hpp"
-#include "internal/ucx/endpoint.hpp"
 #include "internal/ucx/primitive.hpp"
 
 #include "mrc/types.hpp"
@@ -30,6 +28,8 @@
 #include <string>
 
 namespace mrc::internal::ucx {
+class Context;
+class Endpoint;
 
 class Worker : public Primitive<ucp_worker_h>
 {

@@ -17,14 +17,21 @@
 
 #pragma once
 
-#include "internal/memory/device_resources.hpp"
-#include "internal/memory/host_resources.hpp"
-#include "internal/network/resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/runnable/resources.hpp"
 
 #include <cstddef>
 #include <optional>
+
+namespace mrc::internal::memory {
+class DeviceResources;
+class HostResources;
+}  // namespace mrc::internal::memory
+namespace mrc::internal::network {
+class Resources;
+}  // namespace mrc::internal::network
+namespace mrc::internal::runnable {
+class Resources;
+}  // namespace mrc::internal::runnable
 
 namespace mrc::internal::resources {
 

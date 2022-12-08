@@ -41,10 +41,12 @@ const DevicePartition& Partition::device() const
     LOG(ERROR) << "attemping to access an unassigned DevicePartition";
     throw exceptions::MrcRuntimeError("no device partition available");
 }
+
 bool Partition::has_device() const
 {
     return (static_cast<bool>(m_device));
 }
+
 Partition::Partition(std::size_t host_partition_id,
                      std::shared_ptr<const HostPartition> host,
                      std::shared_ptr<const DevicePartition> device) :
@@ -52,8 +54,10 @@ Partition::Partition(std::size_t host_partition_id,
   m_host(std::move(host)),
   m_device(std::move(device))
 {}
+
 size_t Partition::host_partition_id() const
 {
     return m_host_partition_id;
 }
+
 }  // namespace mrc::internal::system

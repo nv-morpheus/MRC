@@ -32,7 +32,7 @@
 #include "mrc/utils/type_utils.hpp"
 
 #include <glog/logging.h>
-#include <rxcpp/rx-subscription.hpp>
+#include <rxcpp/rx.hpp>
 
 #include <exception>
 #include <memory>

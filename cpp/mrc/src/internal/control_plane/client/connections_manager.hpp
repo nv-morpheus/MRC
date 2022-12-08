@@ -20,10 +20,8 @@
 #pragma once
 
 #include "internal/control_plane/client/state_manager.hpp"
-#include "internal/resources/forward.hpp"
 #include "internal/ucx/common.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/node/source_channel.hpp"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/types.hpp"
@@ -33,7 +31,15 @@
 #include <optional>
 #include <vector>
 
+namespace mrc::internal::control_plane {
+class Client;
+}  // namespace mrc::internal::control_plane
+namespace mrc::internal::ucx {
+class Resources;
+}  // namespace mrc::internal::ucx
+
 namespace mrc::internal::control_plane::client {
+class Instance;
 
 class ConnectionsManager : public StateManager
 {

@@ -18,11 +18,14 @@
 #pragma once
 
 #include "mrc/core/bitmap.hpp"
-#include "mrc/options/options.hpp"
 
 #include <cstddef>
 #include <map>
 #include <string>
+
+namespace mrc {
+class Options;
+}  // namespace mrc
 
 namespace mrc::internal::system {
 

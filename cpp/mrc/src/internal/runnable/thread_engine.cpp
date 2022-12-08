@@ -18,6 +18,7 @@
 #include "internal/runnable/thread_engine.hpp"
 
 #include "internal/system/resources.hpp"
+#include "internal/system/thread.hpp"
 
 #include "mrc/core/bitmap.hpp"
 #include "mrc/runnable/types.hpp"
@@ -27,7 +28,6 @@
 #include <boost/fiber/future/packaged_task.hpp>
 
 #include <optional>
-#include <type_traits>
 #include <utility>
 
 namespace mrc::internal::runnable {

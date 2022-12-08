@@ -22,6 +22,9 @@
 #include "internal/pubsub/publisher_round_robin.hpp"
 #include "internal/pubsub/subscriber_service.hpp"
 #include "internal/remote_descriptor/manager.hpp"
+#include "internal/resources/partition_resources.hpp"
+
+#include "mrc/pubsub/api.hpp"
 
 #include <glog/logging.h>
 

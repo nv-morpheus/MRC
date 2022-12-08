@@ -24,7 +24,6 @@
 #include "mrc/types.hpp"
 
 #include <boost/fiber/future/future.hpp>
-#include <ext/alloc_traits.h>
 #include <glog/logging.h>
 
 #include <atomic>

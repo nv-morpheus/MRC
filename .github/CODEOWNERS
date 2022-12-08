@@ -5,9 +5,6 @@
 /python/     @nv-morpheus/mrc-codeowners-python
 
 # Approval from C++ codeowners is required for these files
-/benchmarks/ @nv-morpheus/mrc-codeowners-cpp
 /cmake/      @nv-morpheus/mrc-codeowners-cpp
-/include/    @nv-morpheus/mrc-codeowners-cpp
+/cpp/        @nv-morpheus/mrc-codeowners-cpp
 /protos/     @nv-morpheus/mrc-codeowners-cpp
-/src/        @nv-morpheus/mrc-codeowners-cpp
-/tests/      @nv-morpheus/mrc-codeowners-cpp

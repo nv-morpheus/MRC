@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "mrc/runnable/types.hpp"
-
 #include <glog/logging.h>
 
 #include <cstddef>
@@ -29,6 +27,7 @@
 namespace mrc::runnable {
 
 class Runner;
+enum class EngineType;
 
 /**
  * @brief Provides identity and a means of synchronoization to an instance of a Runnable with respect to other instances

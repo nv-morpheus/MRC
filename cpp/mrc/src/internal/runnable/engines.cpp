@@ -17,7 +17,6 @@
 
 #include "internal/runnable/engines.hpp"
 
-#include "mrc/runnable/engine.hpp"
 #include "mrc/runnable/launch_options.hpp"
 
 #include <utility>
@@ -25,6 +24,8 @@
 namespace mrc::internal::runnable {
 
 Engines::Engines(LaunchOptions launch_options) : m_launch_options(std::move(launch_options)) {}
+
+Engines::~Engines() = default;
 
 const std::vector<std::shared_ptr<::mrc::runnable::Engine>>& Engines::launchers() const
 {

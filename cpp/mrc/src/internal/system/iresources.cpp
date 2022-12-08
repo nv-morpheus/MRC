@@ -22,8 +22,6 @@
 #include "internal/system/system_provider.hpp"
 #include "internal/system/topology.hpp"
 
-#include "mrc/engine/system/isystem.hpp"
-
 #include <memory>
 #include <utility>
 

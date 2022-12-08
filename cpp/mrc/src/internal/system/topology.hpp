@@ -20,7 +20,6 @@
 #include "internal/system/gpu_info.hpp"
 
 #include "mrc/core/bitmap.hpp"
-#include "mrc/options/topology.hpp"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/utils/macros.hpp"
 
@@ -33,6 +32,10 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+namespace mrc {
+class TopologyOptions;
+}  // namespace mrc
 
 #define CHECK_HWLOC(hwloc_call) \
     {                           \

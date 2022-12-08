@@ -24,6 +24,7 @@
 #include "internal/network/resources.hpp"
 #include "internal/remote_descriptor/decodable_storage.hpp"
 #include "internal/remote_descriptor/storage.hpp"
+#include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/ucx/resources.hpp"
 #include "internal/ucx/worker.hpp"
@@ -40,6 +41,7 @@
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/runnable/launcher.hpp"
+#include "mrc/runnable/runner.hpp"
 #include "mrc/runtime/remote_descriptor_handle.hpp"
 #include "mrc/utils/string_utils.hpp"
 
@@ -51,7 +53,7 @@
 
 #include <atomic>
 #include <optional>
-#include <ostream>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -228,20 +230,29 @@ void Manager::do_service_stop()
     // close channel
     m_decrement_channel.reset();
 }
+
 void Manager::do_service_kill()
 {
     do_service_stop();
 }
+
 void Manager::do_service_await_live()
 {
     CHECK(m_decrement_handler);
     m_decrement_handler->await_live();
 }
+
 void Manager::do_service_await_join()
 {
     CHECK(m_decrement_handler);
     m_decrement_handler->await_join();
 }
+
+std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> Manager::unwrap_handle(mrc::runtime::RemoteDescriptor&& rd)
+{
+    return rd.release_handle();
+}
+
 std::uint32_t Manager::active_message_id()
 {
     return 10000;
@@ -254,13 +265,16 @@ const mrc::codable::IDecodableStorage& Manager::encoding(const std::size_t& obje
     CHECK(search != m_stored_objects.end());
     return search->second.encoding();
 }
+
 InstanceID Manager::instance_id() const
 {
     return m_instance_id;
 }
+
 mrc::runtime::RemoteDescriptor Manager::make_remote_descriptor(
     std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> handle)
 {
     return {shared_from_this(), std::move(handle)};
 }
+
 }  // namespace mrc::internal::remote_descriptor

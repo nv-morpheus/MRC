@@ -22,7 +22,6 @@
 #include "mrc/node/rx_source.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/definition.hpp"
-#include "mrc/segment/object.hpp"
 
 #include <rxcpp/rx.hpp>
 

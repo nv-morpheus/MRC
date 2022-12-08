@@ -28,7 +28,6 @@
 #include "mrc/core/task_queue.hpp"
 #include "mrc/protos/architect.pb.h"
 
-#include <ext/alloc_traits.h>
 #include <glog/logging.h>
 
 #include <algorithm>
@@ -37,7 +36,6 @@
 #include <ostream>
 #include <set>
 #include <string>
-#include <type_traits>  // IWYU pragma: keep
 #include <utility>
 
 namespace mrc::internal::control_plane::client {

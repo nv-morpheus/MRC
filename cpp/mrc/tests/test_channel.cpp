@@ -39,7 +39,7 @@
 // IWYU thinks algorithm is needed for: auto channel = std::make_shared<RecentChannel<int>>(2);
 // IWYU pragma: no_include <algorithm>
 
-using namespace mrc;
+namespace mrc {
 
 class TestChannel : public ::testing::Test
 {
@@ -58,9 +58,13 @@ struct TestChannelObserver : public WatcherInterface
     void on_exit(const WatchableEvent& op, bool ok, const void* addr) final
     {
         if (ok && op == WatchableEvent::channel_read)
+        {
             m_read_counter++;
+        }
         if (ok && op == WatchableEvent::channel_write)
+        {
             m_write_counter++;
+        }
     }
 
     std::uint64_t m_read_counter{0};
@@ -268,3 +272,5 @@ TEST_F(TestChannel, AwaitWriteOverloads)
     // New value move in and move out
     check_counter(output, 1, 2, false, false);
 }
+
+}  // namespace mrc

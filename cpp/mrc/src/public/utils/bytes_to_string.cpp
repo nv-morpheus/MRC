@@ -20,7 +20,7 @@
 #include <glog/logging.h>
 
 // cmath for std::log & std::pow
-#include <cmath>    // IWYU pragma: keep
+#include <cmath>
 #include <cstddef>  // for size_t
 #include <cstdint>  // for uint64_t
 #include <cstdio>   // for sprintf

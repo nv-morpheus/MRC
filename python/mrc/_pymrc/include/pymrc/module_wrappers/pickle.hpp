@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "pymrc/utilities/object_cache.hpp"
-
 #include <pybind11/pytypes.h>
 
 namespace mrc::pymrc {
+class PythonObjectCache;
+
 #pragma GCC visibility push(default)
 /****** PythonPickleInterface****************************************/
 /**

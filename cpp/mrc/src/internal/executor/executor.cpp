@@ -22,12 +22,11 @@
 #include "internal/pipeline/port_graph.hpp"
 #include "internal/pipeline/types.hpp"
 #include "internal/resources/manager.hpp"
+#include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
 
 #include "mrc/core/addresses.hpp"
-#include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/options/options.hpp"
 
 #include <glog/logging.h>
 
@@ -35,7 +34,7 @@
 #include <ostream>
 #include <set>
 #include <string>
-#include <type_traits>
+#include <utility>
 
 namespace mrc::internal::executor {
 
@@ -141,6 +140,16 @@ bool valid_pipeline(const pipeline::Pipeline& pipeline)
     }
 
     return valid;
+}
+
+std::unique_ptr<Executor> make_executor(std::shared_ptr<Options> options)
+{
+    return std::make_unique<Executor>(std::move(options));
+}
+
+std::unique_ptr<Executor> make_executor(std::unique_ptr<system::Resources> resources)
+{
+    return std::make_unique<Executor>(std::move(resources));
 }
 
 }  // namespace mrc::internal::executor

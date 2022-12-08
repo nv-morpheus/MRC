@@ -17,25 +17,33 @@
 
 #pragma once
 
-#include "internal/pipeline/pipeline.hpp"
 #include "internal/pipeline/resources.hpp"
-#include "internal/resources/manager.hpp"
-#include "internal/segment/instance.hpp"
 #include "internal/service.hpp"
 
-#include "mrc/manifold/interface.hpp"
 #include "mrc/types.hpp"
 
 #include <cstdint>
 #include <map>
 #include <memory>
 
+namespace mrc::internal::resources {
+class Manager;
+}  // namespace mrc::internal::resources
+namespace mrc::internal::segment {
+class Instance;
+}  // namespace mrc::internal::segment
+namespace mrc::manifold {
+struct Interface;
+}  // namespace mrc::manifold
+
 namespace mrc::internal::pipeline {
+class Pipeline;
 
 class Instance final : public Service, public Resources
 {
   public:
     Instance(std::shared_ptr<const Pipeline> definition, resources::Manager& resources);
+    ~Instance() override;
 
     // currently we are passing the instance back to the executor
     // we should own the instance here in the pipeline instance

@@ -29,6 +29,7 @@
 namespace mrc::internal::ucx {
 
 class RemoteRegistrationCache;
+class Worker;
 
 class Endpoint : public Primitive<ucp_ep_h>
 {

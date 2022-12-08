@@ -17,9 +17,6 @@
 
 #pragma once
 
-#include "mrc/segment/forward.hpp"
-#include "mrc/segment/object.hpp"
-
 #include <nlohmann/json.hpp>
 
 #include <map>
@@ -27,6 +24,11 @@
 #include <string>
 #include <typeindex>
 #include <vector>
+
+namespace mrc::segment {
+class Builder;
+struct ObjectProperties;
+}  // namespace mrc::segment
 
 namespace mrc::modules {
 

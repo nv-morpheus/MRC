@@ -20,11 +20,8 @@
 #include "internal/service.hpp"
 
 #include "mrc/control_plane/api.hpp"
-#include "mrc/runnable/launch_options.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/macros.hpp"
-
-#include <boost/fiber/future/promise.hpp>
 
 #include <cstdint>
 #include <map>
@@ -34,6 +31,10 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+namespace mrc::runnable {
+struct LaunchOptions;
+}  // namespace mrc::runnable
 
 namespace mrc::internal::control_plane::client {
 
@@ -151,16 +152,7 @@ class RoleUpdater final
     DELETE_MOVEABILITY(RoleUpdater);
 
   private:
-    void update_tagged_instances(const std::unordered_map<std::uint64_t, InstanceID>& tagged_instances)
-    {
-        m_subscription_service.update_tagged_instances(m_role_name, tagged_instances);
-        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        for (auto& p : m_update_promises)
-        {
-            p.set_value();
-        }
-        m_update_promises.clear();
-    }
+    void update_tagged_instances(const std::unordered_map<std::uint64_t, InstanceID>& tagged_instances);
 
     SubscriptionService& m_subscription_service;
     const std::string m_role_name;

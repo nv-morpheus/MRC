@@ -17,9 +17,9 @@
 
 #include "internal/pipeline/controller.hpp"
 
+#include "internal/pipeline/instance.hpp"
 #include "internal/pipeline/types.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/core/utils.hpp"
 #include "mrc/runnable/context.hpp"
 #include "mrc/segment/utils.hpp"
@@ -45,6 +45,8 @@ Controller::Controller(std::unique_ptr<Instance> pipeline) : m_pipeline(std::mov
     CHECK(m_pipeline);
     m_pipeline->service_start();
 }
+
+Controller::~Controller() = default;
 
 void Controller::on_data(ControlMessage&& message)
 {

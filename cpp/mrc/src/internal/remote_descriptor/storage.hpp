@@ -17,13 +17,16 @@
 
 #pragma once
 
-#include "mrc/codable/api.hpp"
-#include "mrc/codable/encoded_object.hpp"
 #include "mrc/utils/macros.hpp"
 
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+
+namespace mrc::codable {
+class IDecodableStorage;
+class EncodedStorage;
+}  // namespace mrc::codable
 
 namespace mrc::internal::remote_descriptor {
 
@@ -33,7 +36,7 @@ class Storage final
     Storage() = default;
     explicit Storage(std::unique_ptr<mrc::codable::EncodedStorage> storage);
 
-    ~Storage() = default;
+    ~Storage();
 
     DELETE_COPYABILITY(Storage);
     DEFAULT_MOVEABILITY(Storage);

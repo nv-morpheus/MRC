@@ -18,15 +18,8 @@
 #pragma once
 
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/system/fiber_task_queue.hpp"
-#include "internal/ucx/context.hpp"
-#include "internal/ucx/endpoint.hpp"
-#include "internal/ucx/registation_callback_builder.hpp"
-#include "internal/ucx/registration_cache.hpp"
 #include "internal/ucx/registration_resource.hpp"
-#include "internal/ucx/worker.hpp"
 
-#include "mrc/core/task_queue.hpp"
 #include "mrc/memory/adaptors.hpp"
 #include "mrc/runnable/launch_options.hpp"
 
@@ -34,11 +27,23 @@
 #include <memory>
 #include <string>
 
+namespace mrc::core {
+class FiberTaskQueue;
+}  // namespace mrc::core
+namespace mrc::internal::system {
+class FiberTaskQueue;
+}  // namespace mrc::internal::system
+
 namespace mrc::internal::network {
 class Resources;
 }
 
 namespace mrc::internal::ucx {
+class Context;
+class Endpoint;
+class RegistrationCache;
+class RegistrationCallbackBuilder;
+class Worker;
 
 /**
  * @brief UCX Resources - if networking is enabled, there should be 1 UCX Resource per "flattened" partition

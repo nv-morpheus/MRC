@@ -27,6 +27,8 @@ DecodableStorage::DecodableStorage(mrc::codable::protos::RemoteDescriptor&& prot
   m_resources(resources)
 {}
 
+DecodableStorage::~DecodableStorage() = default;
+
 const mrc::codable::protos::EncodedObject& DecodableStorage::get_proto() const
 {
     return m_proto.encoded_object();
