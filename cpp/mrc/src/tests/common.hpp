@@ -25,7 +25,7 @@
 
 namespace mrc {
 
-#ifdef MRC_CODECOV_ENABLE
+#ifdef MRC_CODECOV_ENABLED
     #define SKIP_IF_CODE_COV() GTEST_SKIP() << "Skipping test when code coverage is enabled";
 #else
     #define SKIP_IF_CODE_COV()
