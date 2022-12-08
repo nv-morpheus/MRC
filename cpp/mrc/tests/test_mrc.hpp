@@ -26,6 +26,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <cstddef>
+#include <cstdlib>
 #include <mutex>  // for mutex & unique_lock
 
 #define TEST_CLASS(name)                      \
@@ -33,6 +34,15 @@
     {}
 
 namespace mrc {
+
+inline void skip_if_in_ci()
+{
+    if (std::env("CI") != nullptr)
+    {
+        GTEST_SKIP() << "Test skipped in CI";
+    }
+}
+
 // class that records when it's moved/copied
 struct CopyMoveCounter
 {

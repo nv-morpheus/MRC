@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#include "common.hpp"
+
 #include "internal/ucx/all.hpp"
 #include "internal/ucx/endpoint.hpp"
 
@@ -72,6 +74,9 @@ TEST_F(TestUCX, CreateWorkerAddress)
 
 TEST_F(TestUCX, EndpointsInProcess)
 {
+    // note this test really should use a progress engine
+    skip_if_in_ci();
+
     auto worker_1 = std::make_shared<Worker>(m_context);
     auto worker_2 = std::make_shared<Worker>(m_context);
 

@@ -17,10 +17,22 @@
 
 #pragma once
 
+#include <gtest/gtest.h>
+
+#include <cstdlib>
 #include <functional>
 #include <memory>
 
 namespace mrc {
+
+inline void skip_if_in_ci()
+{
+    if (std::env("CI") != nullptr)
+    {
+        GTEST_SKIP() << "Test skipped in CI";
+    }
+}
+
 class Options;
 }  // namespace mrc
 namespace mrc::internal::system {
