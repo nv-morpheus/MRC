@@ -41,9 +41,6 @@ cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} .
 rapids-logger "Running C++ Tests"
 cd ${MRC_ROOT}/build
 set +e
-# Tests known to be failing
-# Issues:
-# * test_mrc_private - https://github.com/nv-morpheus/MRC/issues/33
 ctest --output-on-failure \
       --output-junit ${REPORTS_DIR}/report_ctest.xml
 

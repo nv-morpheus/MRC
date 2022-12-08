@@ -35,13 +35,11 @@
 
 namespace mrc {
 
-inline void skip_if_in_ci()
-{
-    if (std::getenv("CI") != nullptr)
-    {
-        GTEST_SKIP() << "Test skipped in CI";
-    }
-}
+#ifdef MRC_CODECOV_ENABLE
+    #define SKIP_IF_CODE_COV() GTEST_SKIP() << "Skipping test when code coverage is enabled";
+#else
+    #define SKIP_IF_CODE_COV()
+#endif
 
 // class that records when it's moved/copied
 struct CopyMoveCounter

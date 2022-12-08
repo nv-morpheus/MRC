@@ -194,6 +194,10 @@ target_compile_definitions(libmrc
     $<$<BOOL:${MRC_BUILD_BENCHMARKS}>:MRC_ENABLE_BENCHMARKING>
 )
 
+if (MRC_ENABLE_CODECOV)
+  target_compile_definitions(libmrc INTERFACE "MRC_CODECOV_ENABLED")
+endif()
+
 target_compile_features(libmrc PUBLIC cxx_std_20)
 
 set_target_properties(libmrc PROPERTIES OUTPUT_NAME ${PROJECT_NAME})

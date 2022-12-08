@@ -25,21 +25,11 @@
 
 namespace mrc {
 
-#define SKIP_IF_IN_CI()                           \
-    {                                             \
-        if (std::getenv("CI") != nullptr)         \
-        {                                         \
-            GTEST_SKIP() << "Test skipped in CI"; \
-        }                                         \
-    }
-
-#define SKIP_IF_CODE_COV()                          \
-    {                                               \
-        if (std::getenv("CODE_COV_RUN") != nullptr) \
-        {                                           \
-            GTEST_SKIP() << "Test skipped in CI";   \
-        }                                           \
-    }
+#ifdef MRC_CODECOV_ENABLE
+    #define SKIP_IF_CODE_COV() GTEST_SKIP() << "Skipping test when code coverage is enabled";
+#else
+    #define SKIP_IF_CODE_COV()
+#endif
 
 class Options;
 }  // namespace mrc

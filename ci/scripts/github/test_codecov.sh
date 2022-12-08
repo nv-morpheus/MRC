@@ -44,9 +44,8 @@ set +e
 # Tests known to be failing
 # Issues:
 # * test_mrc_private - https://github.com/nv-morpheus/MRC/issues/33
-CODE_COV_RUN=y ctest --output-on-failure \
-                     --verbose \
-                     --output-junit ${REPORTS_DIR}/report_ctest.xml
+ctest --output-on-failure \
+      --output-junit ${REPORTS_DIR}/report_ctest.xml
 
 CTEST_RESULTS=$?
 set -e
