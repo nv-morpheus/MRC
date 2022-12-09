@@ -1,7 +1,6 @@
 {
     "name": "mrc-dev",
     "build": {
-<<<<<<< HEAD
         "dockerfile": "Dockerfile"
     },
 
@@ -24,43 +23,6 @@
         {"type":"bind", "source": "${localWorkspaceFolder}/.devcontainer/.conda", "target": "/home/coder/.conda"}
     ],
 
-=======
-        "context": "..",
-        "dockerfile": "${localWorkspaceFolder}/Dockerfile",
-        "target": "development",
-        "args": {
-            "USERNAME": "${localEnv:USER}",
-            "USER_ID": "${localEnv:UID}"
-        }
-    },
-    // todo(252)
-    // new capability with vs code 1.74 (November 2022 Release)
-    // https://github.com/microsoft/vscode-docs/blob/main/remote-release-notes/v1_74.md#gpu-host-requirement
-    // enable this after more testing is conducted
-    // "hostRequirements": {
-    //     "gpu": true
-    // },
-    "runArgs": [
-        "--gpus=all",
-        "--runtime=nvidia",
-        "--network=host",
-        "--cap-add=SYS_PTRACE",
-        "--cap-add=SYS_NICE",
-        "--security-opt",
-        "seccomp=unconfined"
-    ],
-    "workspaceMount": "source=${localWorkspaceFolder},target=/work,type=bind,consistency=cached",
-    "workspaceFolder": "/work",
-    "containerEnv": {
-        // the post_start script will look for these envs, if they are set, git will be configured
-        "GIT_AUTHOR_NAME": "${localEnv:GIT_AUTHOR_NAME}",
-        "GIT_AUTHOR_EMAIL": "${localEnv:GIT_AUTHOR_EMAIL}"
-    },
-    "remoteUser": "${localEnv:USER}",
-    "updateRemoteUserUID": true,
-    "postStartCommand": ".devcontainer/scripts/post_start.sh",
-    "overrideCommand": true, // infinite loop of sleeps,
->>>>>>> 83f64990cfa376c88232faecc8ab6b767d8a14df
     "customizations": {
         "vscode": {
             "extensions": [
@@ -70,30 +32,19 @@
                 "josetr.cmake-language-support-vscode",
                 "llvm-vs-code-extensions.vscode-clangd",
                 "matepek.vscode-catch2-test-adapter",
-<<<<<<< HEAD
                 "ms-vscode.cmake-tools",
                 "ms-vscode.cpptools-extension-pack",
                 "ms-vscode.cpptools-themes",
                 "ms-vscode.cpptools",
-=======
-                "ms-dotnettools.vscode-dotnet-runtime",
-                "ms-vscode.cmake-tools",
-                "ms-vscode.cpptools",
-                "ms-vscode.cpptools-extension-pack",
-                "ms-vscode.cpptools-themes",
->>>>>>> 83f64990cfa376c88232faecc8ab6b767d8a14df
                 "ms-vscode.test-adapter-converter",
                 "twxs.cmake",
                 "xaver.clang-format"
             ]
         }
-<<<<<<< HEAD
     },
 
     "settings": {
         "C_Cpp.intelliSenseEngine": "disabled",
         "python.terminal.activateEnvironment": false
-=======
->>>>>>> 83f64990cfa376c88232faecc8ab6b767d8a14df
     }
 }
