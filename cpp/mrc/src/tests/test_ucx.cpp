@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#include "common.hpp"
+
 #include "internal/ucx/all.hpp"
 #include "internal/ucx/endpoint.hpp"
 
@@ -72,6 +74,9 @@ TEST_F(TestUCX, CreateWorkerAddress)
 
 TEST_F(TestUCX, EndpointsInProcess)
 {
+    // note this test really should use a progress engine
+    GTEST_SKIP();
+
     auto worker_1 = std::make_shared<Worker>(m_context);
     auto worker_2 = std::make_shared<Worker>(m_context);
 
@@ -107,6 +112,8 @@ static void rdma_get_callback(void* request, ucs_status_t status, void* user_dat
 
 TEST_F(TestUCX, Get)
 {
+    SKIP_IF_CODE_COV()
+
     auto context = std::make_shared<Context>();
 
     auto worker_get_src = std::make_shared<Worker>(context);
@@ -205,6 +212,8 @@ class SendRecvManager
 
 TEST_F(TestUCX, Recv)
 {
+    SKIP_IF_CODE_COV();
+
     auto context = std::make_shared<Context>();
 
     auto worker_src = std::make_shared<Worker>(context);
@@ -279,6 +288,8 @@ TEST_F(TestUCX, Recv)
 
 TEST_F(TestUCX, Recv2)
 {
+    SKIP_IF_CODE_COV();
+
     auto context = std::make_shared<Context>();
 
     auto worker_src = std::make_shared<Worker>(context);

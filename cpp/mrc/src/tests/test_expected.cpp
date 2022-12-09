@@ -108,7 +108,7 @@ TEST_F(TestExpected, Chaining3)
 
     EXPECT_FALSE(rc);
     EXPECT_EQ(rc.error().message(), "void fail");
-    EXPECT_ANY_THROW(rc->value());
+    EXPECT_ANY_THROW(rc.value());
 }
 
 TEST_F(TestExpected, UniquePointer)
