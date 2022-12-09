@@ -21,14 +21,8 @@
 #include "pymrc/utils.hpp"
 
 #include "mrc/channel/status.hpp"
-#include "mrc/core/utils.hpp"
-#include "mrc/manifold/egress.hpp"
 #include "mrc/node/edge_connector.hpp"
-#include "mrc/node/rx_sink.hpp"
-#include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_properties.hpp"
 #include "mrc/segment/builder.hpp"
-#include "mrc/segment/object.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 
@@ -40,24 +34,12 @@
 
 #include <cstddef>
 #include <exception>
+#include <functional>
 #include <memory>
-#include <ostream>
+#include <sstream>
 #include <string>
-#include <type_traits>
 #include <utility>
-
-// IWYU thinks we need vector for PythonNode
-// IWYU pragma: no_include <algorithm>
-// IWYU pragma: no_include <vector>
-// IWYU pragma: no_include <boost/hana/if.hpp>
-// IWYU pragma: no_include <boost/fiber/context.hpp>
-// IWYU pragma: no_include <boost/fiber/future/detail/shared_state.hpp>
-// IWYU pragma: no_include <boost/fiber/future/detail/task_base.hpp>
-// IWYU pragma: no_include <boost/smart_ptr/detail/operator_bool.hpp>
-// IWYU pragma: no_include <pybind11/detail/common.h>
-// IWYU pragma: no_include <pybind11/detail/descr.h>
-// IWYU pragma: no_include <pybind11/detail/type_caster_base.h>
-// IWYU pragma: no_include "rx-includes.hpp"
+#include <vector>
 
 namespace mrc::pytests {
 

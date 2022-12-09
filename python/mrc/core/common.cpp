@@ -20,8 +20,6 @@
 #include "pymrc/types.hpp"
 
 #include "mrc/channel/status.hpp"
-#include "mrc/core/utils.hpp"
-#include "mrc/manifold/egress.hpp"
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
 #include "mrc/utils/string_utils.hpp"
@@ -32,16 +30,9 @@
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
 
-#include <algorithm>
 #include <memory>
-#include <ostream>
+#include <sstream>
 #include <vector>
-
-// IWYU pragma: no_include <boost/fiber/future/detail/shared_state.hpp>
-// IWYU pragma: no_include <boost/fiber/future/detail/task_base.hpp>
-// IWYU pragma: no_include <boost/smart_ptr/detail/operator_bool.hpp>
-// IWYU pragma: no_include <pybind11/detail/common.h>
-// IWYU pragma: no_include "rx-includes.hpp"
 
 namespace mrc::pymrc {
 

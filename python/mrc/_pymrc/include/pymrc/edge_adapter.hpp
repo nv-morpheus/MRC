@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "pymrc/types.hpp"  // IWYU pragma: keep
+#include "pymrc/types.hpp"
 #include "pymrc/utils.hpp"
 
 #include "mrc/channel/forward.hpp"
@@ -38,7 +38,7 @@
 #include <glog/logging.h>
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>
-#include <pybind11/pybind11.h>  // IWYU pragma: keep
+#include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx-observable.hpp>
 #include <rxcpp/rx-subscriber.hpp>

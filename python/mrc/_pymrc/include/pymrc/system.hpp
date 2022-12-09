@@ -18,9 +18,12 @@
 
 #include "mrc/engine/system/iresources.hpp"
 #include "mrc/engine/system/isystem.hpp"
-#include "mrc/options/options.hpp"
 
 #include <memory>
+
+namespace mrc {
+class Options;
+}  // namespace mrc
 
 namespace mrc::pymrc {
 

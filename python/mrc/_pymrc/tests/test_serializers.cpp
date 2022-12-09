@@ -35,10 +35,6 @@
 #include <tuple>
 #include <utility>
 
-// IWYU pragma: no_include "gtest/gtest_pred_impl.h"
-// IWYU pragma: no_include <pybind11/detail/common.h>
-// IWYU pragma: no_include <pybind11/detail/descr.h>
-
 namespace py    = pybind11;
 namespace pymrc = mrc::pymrc;
 using namespace std::string_literals;

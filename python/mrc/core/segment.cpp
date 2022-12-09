@@ -23,12 +23,10 @@
 #include "pymrc/types.hpp"
 #include "pymrc/utils.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/edge_connector.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/definition.hpp"
-#include "mrc/segment/object.hpp"  // IWYU pragma: keep
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 
@@ -36,17 +34,13 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <map>
 #include <memory>
-#include <ostream>
-
-// IWYU thinks the Segment.def calls need array and vector
-// IWYU pragma: no_include <array>
-// IWYU pragma: no_include <vector>
-// IWYU pragma: no_include <pybind11/detail/common.h>
-// IWYU pragma: no_include <pybind11/detail/descr.h>
+#include <sstream>
+#include <vector>
 
 namespace mrc::pymrc {
 

@@ -19,13 +19,12 @@
 
 #include "pymrc/types.hpp"
 
-#include <pybind11/pytypes.h>
-
 #include <functional>
 #include <string>
-#include <utility>
 
-// IWYU pragma: no_include "pymrc/node.hpp"
+namespace pybind11 {
+class object;
+}  // namespace pybind11
 
 namespace mrc::pymrc {
 
@@ -35,20 +34,11 @@ namespace mrc::pymrc {
 class PythonOperator
 {
   public:
-    PythonOperator(std::string name, PyObjectOperateFn operate_fn) :
-      m_name(std::move(name)),
-      m_operate_fn(std::move(operate_fn))
-    {}
+    PythonOperator(std::string name, PyObjectOperateFn operate_fn);
 
-    const std::string& get_name() const
-    {
-        return m_name;
-    }
+    const std::string& get_name() const;
 
-    const PyObjectOperateFn& get_operate_fn() const
-    {
-        return m_operate_fn;
-    }
+    const PyObjectOperateFn& get_operate_fn() const;
 
   private:
     std::string m_name;

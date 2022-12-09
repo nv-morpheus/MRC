@@ -28,6 +28,7 @@
 #include "mrc/version.hpp"
 
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
 
 #include <memory>
 #include <sstream>

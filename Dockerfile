@@ -47,6 +47,14 @@ RUN --mount=type=cache,target=/opt/conda/pkgs,sharing=locked \
     chmod -R a+rwX /opt/conda && \
     rm -rf /tmp/conda
 
+<<<<<<< HEAD
+=======
+# disable sscache wrappers around compilers
+ENV CMAKE_CUDA_COMPILER_LAUNCHER=
+ENV CMAKE_CXX_COMPILER_LAUNCHER=
+ENV CMAKE_C_COMPILER_LAUNCHER=
+
+>>>>>>> 83f64990cfa376c88232faecc8ab6b767d8a14df
 # ============ driver ==================
 FROM base as driver
 
@@ -61,16 +69,23 @@ RUN --mount=type=cache,target=/var/cache/apt \
 # ========= development ================
 FROM base as development
 
+<<<<<<< HEAD
 # disable sscache wrappers around compilers
 ENV CMAKE_CUDA_COMPILER_LAUNCHER=""
 ENV CMAKE_CXX_COMPILER_LAUNCHER=""
 ENV CMAKE_C_COMPILER_LAUNCHER=""
 
+=======
+>>>>>>> 83f64990cfa376c88232faecc8ab6b767d8a14df
 RUN --mount=type=cache,target=/var/cache/apt \
     apt-get update &&\
     apt-get install --no-install-recommends -y \
     gdb \
     htop \
+<<<<<<< HEAD
+=======
+    less \
+>>>>>>> 83f64990cfa376c88232faecc8ab6b767d8a14df
     openssh-client \
     psmisc \
     sudo \
@@ -98,4 +113,9 @@ WORKDIR /work
 # Setup git to allow other users to access /work. Requires git 2.35.3 or
 # greater. See https://marc.info/?l=git&m=164989570902912&w=2. Only enable for
 # development
+<<<<<<< HEAD
 RUN git config --global --add safe.directory "*"
+=======
+RUN git config --global --add safe.directory "*" && \
+    git config --global core.editor "vim"
+>>>>>>> 83f64990cfa376c88232faecc8ab6b767d8a14df

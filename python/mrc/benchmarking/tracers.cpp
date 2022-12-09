@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-#include "pymrc/types.hpp"  // IWYU pragma: keep
-
 #include "mrc/benchmarking/tracer.hpp"
 
 #include <pybind11/pybind11.h>

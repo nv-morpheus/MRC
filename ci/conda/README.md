@@ -4,7 +4,11 @@ To build the Conda packages, it's recommended to run the provided scripts from a
 
 ```bash
 cd ${MRC_HOME}
+<<<<<<< HEAD
 docker buildx build --target base -t mrc-conda-build .
+=======
+docker buildx build --target developement -t mrc-conda-build .
+>>>>>>> 83f64990cfa376c88232faecc8ab6b767d8a14df
 ```
 
 This will create the image `mrc-conda-build` that can be used to build MRC conda packages. When running this container, is recommended to set the environment variable `CONDA_PKGS_DIRS` to a path mounted on the host to speed up the build process. Without this variable set, the packages needed during the build will need to be re-downloaded each time the container is run.

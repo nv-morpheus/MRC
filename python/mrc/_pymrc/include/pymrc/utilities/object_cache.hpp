@@ -32,7 +32,7 @@ namespace mrc::pymrc {
 /**
  * @brief Cache python objects in a way that allows them to be freed correctly before the interpreter shuts down.
  **/
-class PythonObjectCache
+class __attribute__((visibility("default"))) PythonObjectCache
 {
   public:
     /**
@@ -46,7 +46,7 @@ class PythonObjectCache
     PythonObjectCache(PythonObjectCache&)  = delete;
     PythonObjectCache(PythonObjectCache&&) = delete;
 
-    PythonObjectCache& operator=(PythonObjectCache&) = delete;
+    PythonObjectCache& operator=(PythonObjectCache&)  = delete;
     PythonObjectCache& operator=(PythonObjectCache&&) = delete;
 
     /**

@@ -50,7 +50,6 @@ env:
   AWS_DEFAULT_REGION: ${{ inputs.aws_region }}
   AWS_ACCESS_KEY_ID: "${{ secrets.GHA_AWS_ACCESS_KEY_ID }}"
   AWS_SECRET_ACCESS_KEY: "${{ secrets.GHA_AWS_SECRET_ACCESS_KEY }}"
-  BUILD_CC: "gcc"
   CHANGE_TARGET: "${{ github.base_ref }}"
   GH_TOKEN: "${{ github.token }}"
   GIT_COMMIT: "${{ github.sha }}"
@@ -97,7 +96,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        build_cc: ["gcc", "gcc-coverage", "clang"]
+        build_cc: ["gcc", "clang"]
 
     steps:
       - name: Checkout
@@ -122,14 +121,14 @@ jobs:
         username: '$oauthtoken'
         password: ${{ secrets.NGC_API_KEY }}
       image: ${{ inputs.test_container }}
-      options: --cap-add=sys_nice
+      options: "--cap-add=sys_nice --cap-add=sys_ptrace"
       env:
         NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
         PARALLEL_LEVEL: '10'
     strategy:
       fail-fast: true
       matrix:
-        build_cc: ["gcc", "gcc-coverage"]
+        build_cc: ["gcc", "clang"]
 
     steps:
       - name: Checkout
@@ -144,6 +143,39 @@ jobs:
           BUILD_CC: ${{ matrix.build_cc }}
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         run: ./mrc/ci/scripts/github/test.sh
+
+  codecov:
+    name: Code Coverage
+    runs-on: [self-hosted, linux, amd64, gpu-v100-495-1]
+    timeout-minutes: 60
+    container:
+      credentials:
+        username: '$oauthtoken'
+        password: ${{ secrets.NGC_API_KEY }}
+      env:
+        BUILD_CC: "gcc-coverage"
+        NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
+        PARALLEL_LEVEL: '10'
+      image: ${{ inputs.test_container }}
+    strategy:
+      fail-fast: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          lfs: false
+          path: 'mrc'
+
+      - name: Build
+        shell: bash
+        run: ./mrc/ci/scripts/github/build.sh
+
+      - name: Test with Codecov
+        shell: bash
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: ./mrc/ci/scripts/github/test_codecov.sh
 
   documentation:
     name: Documentation

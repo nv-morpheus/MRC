@@ -23,13 +23,12 @@
 #include <pybind11/cast.h>
 #include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/gil.h>
-#include <pybind11/pybind11.h>  // IWYU pragma: keep
+#include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
 
 #include <exception>
 #include <functional>
-#include <memory>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -40,6 +39,19 @@
 namespace mrc::pymrc {
 
 namespace py = pybind11;
+
+PythonOperator::PythonOperator(std::string name, PyObjectOperateFn operate_fn) :
+  m_name(std::move(name)),
+  m_operate_fn(std::move(operate_fn))
+{}
+const std::string& PythonOperator::get_name() const
+{
+    return m_name;
+}
+const PyObjectOperateFn& PythonOperator::get_operate_fn() const
+{
+    return m_operate_fn;
+}
 
 std::string OperatorProxy::get_name(PythonOperator& self)
 {
@@ -269,4 +281,5 @@ PythonOperator OperatorsProxy::to_list()
             });
     });
 }
+
 }  // namespace mrc::pymrc
