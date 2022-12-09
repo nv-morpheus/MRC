@@ -146,15 +146,11 @@ template <typename T>
 class EgressProvider : public virtual SourceProperties<T>, public IEgressProvider<T>
 {
   public:
-    // std::shared_ptr<IEdgeReadable<T>> get_egress() const override
-    // {
-    //     return std::dynamic_pointer_cast<IEdgeReadable<T>>(SourceProperties<T>::get_edge());
-    // }
-
-    // std::shared_ptr<EdgeTag> get_egress_typeless() const override
-    // {
-    //     return this->get_egress();
-    // }
+    EgressProvider& operator=(EgressProvider&& other)
+    {
+        // Only call concrete class
+        SourceProperties<T>::operator=(std::move(other));
+    }
 
   private:
     std::shared_ptr<EgressHandleObj> get_egress_obj() const override
@@ -170,15 +166,11 @@ template <typename T>
 class IngressAcceptor : public virtual SourceProperties<T>, public IIngressAcceptor<T>
 {
   public:
-    // void set_ingress(std::shared_ptr<IEdgeWritable<T>> ingress) override
-    // {
-    //     SourceProperties<T>::set_edge(ingress);
-    // }
-
-    // void set_ingress_typeless(std::shared_ptr<EdgeTag> ingress) override
-    // {
-    //     this->set_ingress(std::dynamic_pointer_cast<EdgeWritable<T>>(ingress));
-    // }
+    IngressAcceptor& operator=(IngressAcceptor&& other)
+    {
+        // Only call concrete class
+        SourceProperties<T>::operator=(std::move(other));
+    }
 
   private:
     void set_ingress_obj(std::shared_ptr<IngressHandleObj> ingress) override

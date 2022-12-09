@@ -19,6 +19,7 @@
 
 #include <gflags/gflags.h>  // for ParseCommandLineFlags
 #include <gtest/gtest.h>    // IWYU pragma: keep
+#include <stdnoreturn.h>
 
 // NOLINTNEXTLINE(readability-identifier-naming)
 [[noreturn]] void TestFailuresThrowExceptions()

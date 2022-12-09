@@ -89,7 +89,7 @@ template <typename T>
 class RoundRobinEgress : public node::Router<SegmentAddress, T>, public TypedEgress<T>
 {
   protected:
-    virtual SegmentAddress determine_key_for_value(const T& t)
+    SegmentAddress determine_key_for_value(const T& t) override
     {
         CHECK_LT(m_next, m_pick_list.size());
         auto next = m_next++;
