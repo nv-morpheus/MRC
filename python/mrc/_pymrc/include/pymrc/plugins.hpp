@@ -17,10 +17,12 @@
 
 #pragma once
 
-#include "mrc/modules/plugins.hpp"
-
 #include <memory>
 #include <string>
+
+namespace mrc::modules {
+class PluginModule;
+}  // namespace mrc::modules
 
 namespace mrc::pymrc {
 

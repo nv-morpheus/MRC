@@ -16,12 +16,6 @@
  */
 #pragma once
 
-#include "pymrc/pipeline.hpp"
-#include "pymrc/types.hpp"  // IWYU pragma: keep
-
-#include "mrc/core/executor.hpp"
-#include "mrc/core/runtime.hpp"  // IWYU pragma: keep
-#include "mrc/options/options.hpp"
 #include "mrc/types.hpp"  // for Future, SharedFuture
 
 #include <pybind11/pytypes.h>
@@ -29,7 +23,13 @@
 #include <future>  // for future & promise
 #include <memory>
 
+namespace mrc {
+class Executor;
+class Options;
+}  // namespace mrc
+
 namespace mrc::pymrc {
+class Pipeline;
 
 // Export everything in the mrc::pymrc namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)

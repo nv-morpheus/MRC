@@ -22,30 +22,22 @@
 #include "pymrc/utils.hpp"
 
 #include "mrc/benchmarking/tracer.hpp"
-#include "mrc/channel/status.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/segment/builder.hpp"
-#include "mrc/segment/object.hpp"
 
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 #include <pybind11/gil.h>
 #include <pybind11/pytypes.h>
-#include <rxcpp/operators/rx-map.hpp>
-#include <rxcpp/operators/rx-tap.hpp>
 #include <rxcpp/rx.hpp>
 
+#include <cstddef>
 #include <functional>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
-
-// IWYU pragma: no_include <boost/hana/if.hpp>
-// IWYU pragma: no_include <pybind11/detail/common.h>
-// IWYU pragma: no_include "rxcpp/sources/rx-iterate.hpp"
-// IWYU pragma: no_include "rx-includes.hpp"
 
 namespace mrc::pymrc {
 

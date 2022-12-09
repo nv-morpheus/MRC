@@ -17,6 +17,8 @@
 
 #include "pymrc/plugins.hpp"
 
+#include "mrc/modules/plugins.hpp"
+
 #include <memory>
 
 namespace mrc::pymrc {

@@ -23,10 +23,8 @@
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
 #include "mrc/options/topology.hpp"
-#include "mrc/runnable/types.hpp"
 
-#include <pybind11/pybind11.h>  // IWYU pragma: keep
-#include <pybind11/pytypes.h>
+#include <pybind11/pybind11.h>
 
 #include <cstddef>
 #include <string>

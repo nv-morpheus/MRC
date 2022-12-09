@@ -23,7 +23,7 @@
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 
-#include <ostream>
+#include <sstream>
 #include <stdexcept>
 
 namespace mrc::pytests {

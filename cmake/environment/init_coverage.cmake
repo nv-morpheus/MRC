@@ -27,23 +27,53 @@ if(MRC_ENABLE_CODECOV)
 
   set(CODECOV_REPORT_EXCLUSIONS
     "${CMAKE_BINARY_DIR}/protos/*" # Remove this if/when we get protobuf code unit tested.
-    "benchmarks/*" # Remove this if/when we get protobuf code unit tested.
     ".cache/*"
+    "cpp/mrc/benchmarks/*" # Remove this if/when we get protobuf code unit tested.
+    "cpp/mrc/src/tests/*"
+    "cpp/mrc/tests/*"
     "docs/*" # Remove this if/when we get protobuf code unit tested.
     "python/mrc/_pymrc/tests/*"
     "python/mrc/tests/*"
-    "src/tests/*"
-    "tests/*"
   )
 
-  setup_target_for_coverage_gcovr_xml(
-    NAME gcovr-xml-report
+  if (DEFINED CMAKE_BUILD_PARALLEL_LEVEL)
+    set(PARALLEL_LEVEL ${CMAKE_BUILD_PARALLEL_LEVEL})
+  else()
+    # Get the default from the number of cores
+    cmake_host_system_information(RESULT PARALLEL_LEVEL QUERY NUMBER_OF_LOGICAL_CORES)
+  endif()
+
+  # Delete the gcna files after use, and exclude dumb branches
+  set(GCOVR_ADDITIONAL_ARGS "--exclude-unreachable-branches" "--exclude-throw-branches" "--delete" "-j" "${PARALLEL_LEVEL}")
+
+  setup_target_for_coverage_gcovr_html(
+    NAME gcovr-html-report-cpp
     EXCLUDE ${CODECOV_REPORT_EXCLUSIONS}
+    EXECUTABLE "ctest"
+    EXECUTABLE_ARGS "--exclude-regex"
+    EXECUTABLE_ARGS "'test_srf_private|nvrpc'"
   )
 
   setup_target_for_coverage_gcovr_html(
-    NAME gcovr-html-report
+    NAME gcovr-html-report-python
     EXCLUDE ${CODECOV_REPORT_EXCLUSIONS}
+    EXECUTABLE "pytest"
+    EXECUTABLE_ARGS "python"
+  )
+
+  setup_target_for_coverage_gcovr_xml(
+    NAME gcovr-xml-report-cpp
+    EXCLUDE ${CODECOV_REPORT_EXCLUSIONS}
+    EXECUTABLE "ctest"
+    EXECUTABLE_ARGS "--exclude-regex"
+    EXECUTABLE_ARGS "'test_srf_private|nvrpc'"
+  )
+
+  setup_target_for_coverage_gcovr_xml(
+    NAME gcovr-xml-report-python
+    EXCLUDE ${CODECOV_REPORT_EXCLUSIONS}
+    EXECUTABLE "pytest"
+    EXECUTABLE_ARGS "python"
   )
 
   append_coverage_compiler_flags()
