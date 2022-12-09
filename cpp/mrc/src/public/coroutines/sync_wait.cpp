@@ -61,7 +61,9 @@ auto SyncWaitEvent::reset() noexcept -> void
 auto SyncWaitEvent::wait() noexcept -> void
 {
     std::unique_lock<std::mutex> lk{m_mutex};
-    m_cv.wait(lk, [this] { return m_set; });
+    m_cv.wait(lk, [this] {
+        return m_set;
+    });
 }
 
 }  // namespace mrc::coroutines::detail

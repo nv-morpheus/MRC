@@ -69,7 +69,9 @@ class RemoteRegistrationCache final
     }
     ~RemoteRegistrationCache()
     {
-        m_blocks.for_each_block([this](const MemoryBlock& block) { ucp_rkey_destroy(block.remote_key_handle()); });
+        m_blocks.for_each_block([this](const MemoryBlock& block) {
+            ucp_rkey_destroy(block.remote_key_handle());
+        });
     }
 
     /**

@@ -58,11 +58,13 @@ PYBIND11_MODULE(pipeline, module)
                     &Pipeline::make_segment)))
         .def("make_segment",
              wrap_segment_init_callback(
-                 static_cast<void (Pipeline::*)(
-                     const std::string&, py::list, py::list, const std::function<void(mrc::segment::Builder&)>&)>(
+                 static_cast<void (Pipeline::*)(const std::string&,
+                                                py::list,
+                                                py::list,
+                                                const std::function<void(mrc::segment::Builder&)>&)>(
                      &Pipeline::make_segment)));
 
-    module.attr("__version__") =
-        MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "." << mrc_VERSION_PATCH);
+    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+                                                                  << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

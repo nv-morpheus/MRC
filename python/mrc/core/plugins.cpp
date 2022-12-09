@@ -52,8 +52,9 @@ PYBIND11_MODULE(plugins, module)
     pymrc::import(module, "mrc.core.common");
     pymrc::import_module_object(module, "mrc.core.segment", "SegmentModule");
 
-    auto PluginModule =
-        py::class_<mrc::modules::PluginModule, std::shared_ptr<mrc::modules::PluginModule>>(module, "PluginModule");
+    auto PluginModule = py::class_<mrc::modules::PluginModule, std::shared_ptr<mrc::modules::PluginModule>>(module,
+                                                                                                            "PluginModu"
+                                                                                                            "le");
 
     /** Module Register Interface Declarations **/
     PluginModule.def("create_or_acquire", &PluginProxy::create_or_acquire, py::return_value_policy::reference_internal);
@@ -70,7 +71,7 @@ PYBIND11_MODULE(plugins, module)
 
     PluginModule.def("unload", &mrc::modules::PluginModule::unload, py::arg("throw_on_error") = true);
 
-    module.attr("__version__") =
-        MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "." << mrc_VERSION_PATCH);
+    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+                                                                  << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

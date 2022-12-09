@@ -71,8 +71,9 @@ class Resources final : public resources::PartitionResourceBase
     template <typename UpstreamT>
     auto adapt_to_registered_resource(UpstreamT upstream, int cuda_device_id)
     {
-        return mrc::memory::make_unique_resource<RegistrationResource>(
-            std::move(upstream), m_registration_cache, cuda_device_id);
+        return mrc::memory::make_unique_resource<RegistrationResource>(std::move(upstream),
+                                                                       m_registration_cache,
+                                                                       cuda_device_id);
     }
 
     std::shared_ptr<ucx::Endpoint> make_ep(const std::string& worker_address) const;

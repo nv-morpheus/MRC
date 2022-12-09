@@ -59,8 +59,7 @@ class SegmentModuleProxy
     static std::shared_ptr<mrc::segment::ObjectProperties> output_port(mrc::modules::SegmentModule& self,
                                                                        const std::string& output_id);
 
-    static const mrc::modules::SegmentModule::segment_module_port_map_t& output_ports(
-        mrc::modules::SegmentModule& self);
+    static const mrc::modules::SegmentModule::segment_module_port_map_t& output_ports(mrc::modules::SegmentModule& self);
 };
 
 #pragma GCC visibility pop

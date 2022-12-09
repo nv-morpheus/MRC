@@ -62,8 +62,12 @@ namespace mrc::internal::remote_descriptor {
 
 namespace {
 
-ucs_status_t active_message_callback(
-    void* arg, const void* header, size_t header_length, void* data, size_t length, const ucp_am_recv_param_t* param)
+ucs_status_t active_message_callback(void* arg,
+                                     const void* header,
+                                     size_t header_length,
+                                     void* data,
+                                     size_t length,
+                                     const ucp_am_recv_param_t* param)
 {
     DCHECK_EQ(header_length, sizeof(RemoteDescriptorDecrementMessage));
 
@@ -180,7 +184,9 @@ void Manager::do_service_start()
 {
     m_decrement_channel    = std::make_unique<node::SourceChannelWriteable<RemoteDescriptorDecrementMessage>>();
     auto decrement_handler = std::make_unique<node::RxSink<RemoteDescriptorDecrementMessage>>(
-        [this](RemoteDescriptorDecrementMessage msg) { decrement_tokens(msg.object_id, msg.tokens); });
+        [this](RemoteDescriptorDecrementMessage msg) {
+            decrement_tokens(msg.object_id, msg.tokens);
+        });
     decrement_handler->update_channel(
         std::make_unique<channel::BufferedChannel<RemoteDescriptorDecrementMessage>>(128));
     node::make_edge(*m_decrement_channel, *decrement_handler);

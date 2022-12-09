@@ -71,8 +71,8 @@ HostResources::HostResources(runnable::Resources& runnable, ucx::RegistrationCal
             }
 
             prefix << ":" << host_partition_id();
-            m_system =
-                mrc::memory::make_shared_resource<mrc::memory::logging_resource>(std::move(m_system), prefix.str());
+            m_system = mrc::memory::make_shared_resource<mrc::memory::logging_resource>(std::move(m_system),
+                                                                                        prefix.str());
 
             // adapt to callback resource if we have callbacks
             if (callbacks.size() == 0)
@@ -81,8 +81,8 @@ HostResources::HostResources(runnable::Resources& runnable, ucx::RegistrationCal
             }
             else
             {
-                m_registered =
-                    mrc::memory::make_shared_resource<memory::CallbackAdaptor>(m_system, std::move(callbacks));
+                m_registered = mrc::memory::make_shared_resource<memory::CallbackAdaptor>(m_system,
+                                                                                          std::move(callbacks));
             }
 
             // adapt to arena
@@ -94,8 +94,9 @@ HostResources::HostResources(runnable::Resources& runnable, ucx::RegistrationCal
                          << " constructing arena memory_resource with initial=" << bytes_to_string(opts.block_size())
                          << "; max bytes=" << bytes_to_string(opts.max_aggreate_bytes());
 
-                m_arena = mrc::memory::make_shared_resource<mrc::memory::arena_resource>(
-                    m_registered, opts.block_size(), opts.max_aggreate_bytes());
+                m_arena = mrc::memory::make_shared_resource<mrc::memory::arena_resource>(m_registered,
+                                                                                         opts.block_size(),
+                                                                                         opts.max_aggreate_bytes());
             }
             else
             {

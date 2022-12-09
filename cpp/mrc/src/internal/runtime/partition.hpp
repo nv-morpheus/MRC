@@ -57,7 +57,8 @@ class Partition final : public mrc::runtime::IPartition
 
   private:
     std::shared_ptr<mrc::pubsub::IPublisherService> make_publisher_service(
-        const std::string& name, const mrc::pubsub::PublisherPolicy& policy) final;
+        const std::string& name,
+        const mrc::pubsub::PublisherPolicy& policy) final;
 
     std::shared_ptr<mrc::pubsub::ISubscriberService> make_subscriber_service(const std::string& name) final;
 

@@ -217,7 +217,11 @@ class WhenAllReadyAwaitable<std::tuple<TaskTypesT...>>
 
     auto try_await(std::coroutine_handle<> awaiting_coroutine) noexcept -> bool
     {
-        std::apply([this](auto&&... tasks) { ((tasks.start(m_latch)), ...); }, m_tasks);
+        std::apply(
+            [this](auto&&... tasks) {
+                ((tasks.start(m_latch)), ...);
+            },
+            m_tasks);
         return m_latch.try_await(awaiting_coroutine);
     }
 
@@ -235,8 +239,7 @@ class WhenAllReadyAwaitable
     {}
 
     WhenAllReadyAwaitable(const WhenAllReadyAwaitable&) = delete;
-    WhenAllReadyAwaitable(WhenAllReadyAwaitable&& other) noexcept(
-        std::is_nothrow_move_constructible_v<TaskContainerT>) :
+    WhenAllReadyAwaitable(WhenAllReadyAwaitable&& other) noexcept(std::is_nothrow_move_constructible_v<TaskContainerT>) :
       m_latch(std::move(other.m_latch)),
       m_tasks(std::move(m_tasks))
     {}

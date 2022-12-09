@@ -103,7 +103,8 @@ std::vector<ConnectionManager::instance_id_t> ConnectionManager::get_instance_id
 }
 
 Expected<protos::RegisterWorkersResponse> ConnectionManager::register_instances(
-    const writer_t& writer, const protos::RegisterWorkersRequest& req)
+    const writer_t& writer,
+    const protos::RegisterWorkersRequest& req)
 {
     const auto stream_id = writer->get_id();
 
@@ -119,8 +120,11 @@ Expected<protos::RegisterWorkersResponse> ConnectionManager::register_instances(
     // check if any workers/instances have been registered on the requesting stream
     if (m_instances_by_stream.contains(stream_id))
     {
-        return Error::create(MRC_CONCAT_STR("failed to register instances on immutable stream "
-                                            << stream_id << "; streams are immutable after first registration"));
+        return Error::create(MRC_CONCAT_STR("failed to register instances on immutable stream " << stream_id
+                                                                                                << "; streams are "
+                                                                                                   "immutable after "
+                                                                                                   "first "
+                                                                                                   "registration"));
     }
 
     // set machine id for the current stream

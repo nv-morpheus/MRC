@@ -149,8 +149,9 @@ class TestPartitions : public testing::TestWithParam<const char*>
 
 TEST_P(TestPartitions, Scenario1)
 {
-    auto options =
-        make_options([](Options& options) { options.placement().resources_strategy(PlacementResources::Dedicated); });
+    auto options    = make_options([](Options& options) {
+        options.placement().resources_strategy(PlacementResources::Dedicated);
+    });
     auto partitions = make_partitions(options);
 
     EXPECT_EQ(partitions->device_partitions().size(), 4);
@@ -212,8 +213,9 @@ TEST_P(TestPartitions, Scenario3)
     EXPECT_EQ(partitions->device_partitions().at(3).pcie_bus_id(), "00000000:47:00.0");
     EXPECT_EQ(partitions->device_partitions().at(4).host().cpu_set().str(), "52-63,116-127");
     EXPECT_EQ(partitions->device_partitions().at(4).pcie_bus_id(), "00000000:01:00.0");
-    EXPECT_TRUE(partitions->cpu_strategy() == PlacementStrategy::PerMachine)
-        << "requested PerNuma should fall back to PerMachine if the topology is asymmetric";
+    EXPECT_TRUE(partitions->cpu_strategy() == PlacementStrategy::PerMachine) << "requested PerNuma should fall back to "
+                                                                                "PerMachine if the topology is "
+                                                                                "asymmetric";
 }
 
 TEST_P(TestPartitions, Scenario4)
@@ -238,8 +240,9 @@ TEST_P(TestPartitions, Scenario4)
 
 TEST_P(TestPartitions, Scenario5)
 {
-    auto options =
-        make_options([](Options& options) { options.placement().resources_strategy(PlacementResources::Shared); });
+    auto options    = make_options([](Options& options) {
+        options.placement().resources_strategy(PlacementResources::Shared);
+    });
     auto partitions = make_partitions(options);
 
     EXPECT_EQ(partitions->device_partitions().size(), 4);

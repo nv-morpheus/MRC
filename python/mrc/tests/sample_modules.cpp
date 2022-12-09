@@ -50,22 +50,30 @@ PYBIND11_MODULE(sample_modules, module)
     pymrc::import(module, "mrc.core.common");
 
     /** Register test modules -- necessary for python unit tests**/
-    modules::ModelRegistryUtil::create_registered_module<mrc::modules::SimpleModule>(
-        "SimpleModule", "mrc_unittest", PybindSegmentModuleVersion);
-    modules::ModelRegistryUtil::create_registered_module<mrc::modules::ConfigurableModule>(
-        "ConfigurableModule", "mrc_unittest", PybindSegmentModuleVersion);
-    modules::ModelRegistryUtil::create_registered_module<mrc::modules::SourceModule>(
-        "SourceModule", "mrc_unittest", PybindSegmentModuleVersion);
-    modules::ModelRegistryUtil::create_registered_module<mrc::modules::SinkModule>(
-        "SinkModule", "mrc_unittest", PybindSegmentModuleVersion);
-    modules::ModelRegistryUtil::create_registered_module<mrc::modules::NestedModule>(
-        "NestedModule", "mrc_unittest", PybindSegmentModuleVersion);
-    modules::ModelRegistryUtil::create_registered_module<mrc::modules::TemplateModule<int>>(
-        "TemplateModuleInt", "mrc_unittest", PybindSegmentModuleVersion);
+    modules::ModelRegistryUtil::create_registered_module<mrc::modules::SimpleModule>("SimpleModule",
+                                                                                     "mrc_unittest",
+                                                                                     PybindSegmentModuleVersion);
+    modules::ModelRegistryUtil::create_registered_module<mrc::modules::ConfigurableModule>("ConfigurableModule",
+                                                                                           "mrc_unittest",
+                                                                                           PybindSegmentModuleVersion);
+    modules::ModelRegistryUtil::create_registered_module<mrc::modules::SourceModule>("SourceModule",
+                                                                                     "mrc_unittest",
+                                                                                     PybindSegmentModuleVersion);
+    modules::ModelRegistryUtil::create_registered_module<mrc::modules::SinkModule>("SinkModule",
+                                                                                   "mrc_unittest",
+                                                                                   PybindSegmentModuleVersion);
+    modules::ModelRegistryUtil::create_registered_module<mrc::modules::NestedModule>("NestedModule",
+                                                                                     "mrc_unittest",
+                                                                                     PybindSegmentModuleVersion);
+    modules::ModelRegistryUtil::create_registered_module<mrc::modules::TemplateModule<int>>("TemplateModuleInt",
+                                                                                            "mrc_unittest",
+                                                                                            PybindSegmentModuleVersion);
     modules::ModelRegistryUtil::create_registered_module<mrc::modules::TemplateModule<std::string>>(
-        "TemplateModuleString", "mrc_unittest", PybindSegmentModuleVersion);
+        "TemplateModuleString",
+        "mrc_unittest",
+        PybindSegmentModuleVersion);
 
-    module.attr("__version__") =
-        MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "." << mrc_VERSION_PATCH);
+    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+                                                                  << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

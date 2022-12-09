@@ -112,10 +112,10 @@ void DecodableStorageView::copy_from_registered_buffer(const idx_t& idx, mrc::me
         else
         {
             cached_registration = true;
-            auto block =
-                ep->registration_cache().add_block(reinterpret_cast<const void*>(remote.memory_block_address()),
-                                                   remote.memory_block_size(),
-                                                   remote.remote_key());
+            auto block          = ep->registration_cache().add_block(
+                reinterpret_cast<const void*>(remote.memory_block_address()),
+                remote.memory_block_size(),
+                remote.remote_key());
             rkey = block.remote_key_handle();
         }
 

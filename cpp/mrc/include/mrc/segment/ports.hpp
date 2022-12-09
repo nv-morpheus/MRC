@@ -59,7 +59,9 @@ class Ports
         {
             auto builder         = builder_fns[i];
             auto name            = names[i];
-            m_initializers[name] = [builder, name](const SegmentAddress& address) { return builder(address, name); };
+            m_initializers[name] = [builder, name](const SegmentAddress& address) {
+                return builder(address, name);
+            };
         }
     }
 

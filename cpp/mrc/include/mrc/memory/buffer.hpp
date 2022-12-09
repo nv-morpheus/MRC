@@ -42,7 +42,7 @@ class buffer
         release();
     }
 
-    buffer(const buffer&) = delete;
+    buffer(const buffer&)            = delete;
     buffer& operator=(const buffer&) = delete;
 
     buffer(buffer&& other) noexcept :

@@ -90,8 +90,8 @@ void PublisherService::update_tagged_instances(const std::string& role,
 
     for (const auto& tag : added)
     {
-        m_tagged_endpoints[tag] =
-            resources().network()->data_plane().client().endpoint_shared(tagged_instances.at(tag));
+        m_tagged_endpoints[tag] = resources().network()->data_plane().client().endpoint_shared(
+            tagged_instances.at(tag));
     }
 
     m_tagged_instances = std::move(tagged_instances);
@@ -103,7 +103,9 @@ void PublisherService::update_tagged_instances(const std::string& role,
 void PublisherService::do_subscription_service_setup()
 {
     auto policy_engine = std::make_unique<mrc::node::RxSink<mrc::runtime::RemoteDescriptor>>(
-        [this](mrc::runtime::RemoteDescriptor rd) { apply_policy(std::move(rd)); });
+        [this](mrc::runtime::RemoteDescriptor rd) {
+            apply_policy(std::move(rd));
+        });
 
     // form an edge to this object's SourceChannelWritable
     mrc::node::make_edge(*this, *policy_engine);

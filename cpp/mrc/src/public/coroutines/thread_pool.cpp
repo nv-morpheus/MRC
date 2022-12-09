@@ -106,7 +106,9 @@ ThreadPool::ThreadPool(Options opts) : m_opts(std::move(opts))
 
     for (uint32_t i = 0; i < m_opts.thread_count; ++i)
     {
-        m_threads.emplace_back([this, i](std::stop_token st) { executor(std::move(st), i); });
+        m_threads.emplace_back([this, i](std::stop_token st) {
+            executor(std::move(st), i);
+        });
     }
 }
 
@@ -173,7 +175,9 @@ auto ThreadPool::executor(std::stop_token stop_token, std::size_t idx) -> void
         while (true)
         {
             std::unique_lock<std::mutex> lk{m_wait_mutex};
-            m_wait_cv.wait(lk, stop_token, [this] { return !m_queue.empty(); });
+            m_wait_cv.wait(lk, stop_token, [this] {
+                return !m_queue.empty();
+            });
             if (m_queue.empty())
             {
                 lk.unlock();  // would happen on scope destruction, but being explicit/faster(?)

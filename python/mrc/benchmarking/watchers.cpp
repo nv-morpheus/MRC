@@ -48,19 +48,23 @@ PYBIND11_MODULE(watchers, m)
     // PyLatencyWatcher.def("make_tracer_source", &pymrc::LatencyWatcher::create_rx_tracer_source<false>);
     PyLatencyWatcher.def("is_running", &pymrc::LatencyWatcher::is_running);
     PyLatencyWatcher.def("make_segment", pymrc::wrap_segment_init_callback(&pymrc::LatencyWatcher::make_segment));
-    PyLatencyWatcher.def(
-        "make_tracer_source", &pymrc::LatencyWatcher::make_tracer_source, py::return_value_policy::reference_internal);
-    PyLatencyWatcher.def(
-        "make_traced_node", &pymrc::LatencyWatcher::make_traced_node, py::return_value_policy::reference_internal);
-    PyLatencyWatcher.def(
-        "make_tracer_sink", &pymrc::LatencyWatcher::make_tracer_sink, py::return_value_policy::reference_internal);
+    PyLatencyWatcher.def("make_tracer_source",
+                         &pymrc::LatencyWatcher::make_tracer_source,
+                         py::return_value_policy::reference_internal);
+    PyLatencyWatcher.def("make_traced_node",
+                         &pymrc::LatencyWatcher::make_traced_node,
+                         py::return_value_policy::reference_internal);
+    PyLatencyWatcher.def("make_tracer_sink",
+                         &pymrc::LatencyWatcher::make_tracer_sink,
+                         py::return_value_policy::reference_internal);
     PyLatencyWatcher.def("reset", &pymrc::LatencyWatcher::reset, py::call_guard<py::gil_scoped_release>());
     PyLatencyWatcher.def("run", &pymrc::LatencyWatcher::run, py::call_guard<py::gil_scoped_release>());
     PyLatencyWatcher.def("shutdown", &pymrc::LatencyWatcher::shutdown, py::call_guard<py::gil_scoped_release>());
     PyLatencyWatcher.def("start_trace", &pymrc::LatencyWatcher::start_trace, py::call_guard<py::gil_scoped_release>());
     PyLatencyWatcher.def("stop_trace", &pymrc::LatencyWatcher::stop_trace, py::call_guard<py::gil_scoped_release>());
-    PyLatencyWatcher.def(
-        "trace_until_notified", &pymrc::LatencyWatcher::trace_until_notified, py::call_guard<py::gil_scoped_release>());
+    PyLatencyWatcher.def("trace_until_notified",
+                         &pymrc::LatencyWatcher::trace_until_notified,
+                         py::call_guard<py::gil_scoped_release>());
     PyLatencyWatcher.def("tracer_count", py::overload_cast<std::size_t>(&pymrc::LatencyWatcher::tracer_count));
     PyLatencyWatcher.def("tracing", &pymrc::LatencyWatcher::tracing);
 
@@ -77,17 +81,21 @@ PYBIND11_MODULE(watchers, m)
     PyThroughputWatcher.def("make_tracer_source",
                             &pymrc::ThroughputWatcher::make_tracer_source,
                             py::return_value_policy::reference_internal);
-    PyThroughputWatcher.def(
-        "make_traced_node", &pymrc::ThroughputWatcher::make_traced_node, py::return_value_policy::reference_internal);
-    PyThroughputWatcher.def(
-        "make_tracer_sink", &pymrc::ThroughputWatcher::make_tracer_sink, py::return_value_policy::reference_internal);
+    PyThroughputWatcher.def("make_traced_node",
+                            &pymrc::ThroughputWatcher::make_traced_node,
+                            py::return_value_policy::reference_internal);
+    PyThroughputWatcher.def("make_tracer_sink",
+                            &pymrc::ThroughputWatcher::make_tracer_sink,
+                            py::return_value_policy::reference_internal);
     PyThroughputWatcher.def("reset", &pymrc::ThroughputWatcher::reset, py::call_guard<py::gil_scoped_release>());
     PyThroughputWatcher.def("run", &pymrc::ThroughputWatcher::run, py::call_guard<py::gil_scoped_release>());
     PyThroughputWatcher.def("shutdown", &pymrc::ThroughputWatcher::shutdown, py::call_guard<py::gil_scoped_release>());
-    PyThroughputWatcher.def(
-        "start_trace", &pymrc::ThroughputWatcher::start_trace, py::call_guard<py::gil_scoped_release>());
-    PyThroughputWatcher.def(
-        "stop_trace", &pymrc::ThroughputWatcher::stop_trace, py::call_guard<py::gil_scoped_release>());
+    PyThroughputWatcher.def("start_trace",
+                            &pymrc::ThroughputWatcher::start_trace,
+                            py::call_guard<py::gil_scoped_release>());
+    PyThroughputWatcher.def("stop_trace",
+                            &pymrc::ThroughputWatcher::stop_trace,
+                            py::call_guard<py::gil_scoped_release>());
     PyThroughputWatcher.def("trace_until_notified",
                             &pymrc::ThroughputWatcher::trace_until_notified,
                             py::call_guard<py::gil_scoped_release>());

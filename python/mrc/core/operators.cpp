@@ -56,7 +56,7 @@ PYBIND11_MODULE(operators, module)
     module.def("pairwise", &OperatorsProxy::pairwise);
     module.def("to_list", &OperatorsProxy::to_list);
 
-    module.attr("__version__") =
-        MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "." << mrc_VERSION_PATCH);
+    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+                                                                  << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

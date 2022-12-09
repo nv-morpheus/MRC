@@ -43,13 +43,13 @@ PYBIND11_MODULE(logging, module)
            :toctree: _generate
     )pbdoc";
 
-    module.def(
-        "init_logging",
-        &init_logging,
-        "Initializes MRC's logger, The return value inidicates if the logger was initialized, which will be `True` "
-        "on the first call, and `False` for all subsequant calls.",
-        py::arg("logname"),
-        py::arg("py_level") = py_log_levels::INFO);
+    module.def("init_logging",
+               &init_logging,
+               "Initializes MRC's logger, The return value inidicates if the logger was initialized, which will be "
+               "`True` "
+               "on the first call, and `False` for all subsequant calls.",
+               py::arg("logname"),
+               py::arg("py_level") = py_log_levels::INFO);
 
     module.def("is_initialized", &mrc::is_initialized, "Checks if MRC's logger has been initialized.");
 
@@ -65,7 +65,7 @@ PYBIND11_MODULE(logging, module)
                py::arg("filename") = ""s,
                py::arg("line")     = 0);
 
-    module.attr("__version__") =
-        MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "." << mrc_VERSION_PATCH);
+    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+                                                                  << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

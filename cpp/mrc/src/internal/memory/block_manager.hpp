@@ -48,14 +48,14 @@ class BlockManager final
         return *this;
     }
 
-    BlockManager(const BlockManager&) = delete;
+    BlockManager(const BlockManager&)            = delete;
     BlockManager& operator=(const BlockManager&) = delete;
 
     const block_type& add_block(block_type block)
     {
         auto key = reinterpret_cast<std::uintptr_t>(block.data()) + block.bytes();
-        DCHECK(!owns(block.data()) && !owns(reinterpret_cast<void*>(key - 1)))
-            << "block manager already owns a block with an overlapping address";
+        DCHECK(!owns(block.data()) && !owns(reinterpret_cast<void*>(key - 1))) << "block manager already owns a block "
+                                                                                  "with an overlapping address";
         DVLOG(10) << "adding block: " << key << " - " << block.data() << "; " << block.bytes();
         m_block_map[key] = std::move(block);
         return m_block_map[key];

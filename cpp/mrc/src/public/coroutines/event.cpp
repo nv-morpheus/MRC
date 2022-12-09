@@ -60,8 +60,8 @@ auto Event::Awaiter::await_suspend(std::coroutine_handle<> awaiting_coroutine) n
         }
 
         m_next = static_cast<Awaiter*>(old_value);
-    } while (!m_event.m_state.compare_exchange_weak(
-        old_value, this, std::memory_order::release, std::memory_order::acquire));
+    } while (
+        !m_event.m_state.compare_exchange_weak(old_value, this, std::memory_order::release, std::memory_order::acquire));
 
     ThreadLocalContext::suspend_thread_local_context();
     return true;

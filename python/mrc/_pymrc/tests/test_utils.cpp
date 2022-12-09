@@ -110,13 +110,13 @@ TEST_F(TestUtils, CastFromPyObject)
 
     {
         py::object json = py::module_::import("json");
-        py::dict d =
-            json.attr("loads")(py::str("{\"this\": {\"is\":\"a test\"},"s
-                                       " \"alphabet\": [\"a\", \"b\", \"c\"],"s
-                                       " \"ncc\": 1701,"s
-                                       " \"cost\": 47.47,"s
-                                       " \"long val\": 4294967296,"s
-                                       " \"double val\": 3.4028234663852886e+38}"s));
+        py::dict d      = json.attr("loads")(
+            py::str("{\"this\": {\"is\":\"a test\"},"s
+                         " \"alphabet\": [\"a\", \"b\", \"c\"],"s
+                         " \"ncc\": 1701,"s
+                         " \"cost\": 47.47,"s
+                         " \"long val\": 4294967296,"s
+                         " \"double val\": 3.4028234663852886e+38}"s));
 
         auto j = pymrc::cast_from_pyobject(d);
 

@@ -215,7 +215,9 @@ TEST_F(TestPipeline, Queue)
 TEST_F(TestPipeline, InitializerThrows)
 {
     auto pipeline = pipeline::make_pipeline();
-    auto segment  = pipeline->make_segment("seg_1", [](segment::Builder& s) { throw std::runtime_error("no bueno"); });
+    auto segment  = pipeline->make_segment("seg_1", [](segment::Builder& s) {
+        throw std::runtime_error("no bueno");
+    });
     EXPECT_ANY_THROW(run_manager(std::move(pipeline)));
 }
 
@@ -423,24 +425,24 @@ TEST_F(TestPipeline, ReusableSource)
     }
 
     auto init = [&exec, pool](segment::Builder& segment) {
-        auto src =
-            segment.make_source<data::Reusable<Buffer>>("src", [pool](rxcpp::subscriber<data::Reusable<Buffer>> s) {
-                while (s.is_subscribed())
-                {
-                    auto buffer = pool->await_item();
-                    s.on_next(std::move(buffer));
-                }
-                s.on_completed();
-            });
+        auto src = segment.make_source<data::Reusable<Buffer>>("src",
+                                                               [pool](rxcpp::subscriber<data::Reusable<Buffer>> s) {
+                                                                   while (s.is_subscribed())
+                                                                   {
+                                                                       auto buffer = pool->await_item();
+                                                                       s.on_next(std::move(buffer));
+                                                                   }
+                                                                   s.on_completed();
+                                                               });
 
-        auto sink =
-            segment.make_sink<data::SharedReusable<Buffer>>("sink", [&exec](data::SharedReusable<Buffer> buffer) {
-                static std::size_t counter = 0;
-                if (counter++ > 100)
-                {
-                    exec.stop();
-                }
-            });
+        auto sink = segment.make_sink<data::SharedReusable<Buffer>>("sink",
+                                                                    [&exec](data::SharedReusable<Buffer> buffer) {
+                                                                        static std::size_t counter = 0;
+                                                                        if (counter++ > 100)
+                                                                        {
+                                                                            exec.stop();
+                                                                        }
+                                                                    });
 
         EXPECT_TRUE(src->is_runnable());
         EXPECT_TRUE(sink->is_runnable());
@@ -477,13 +479,17 @@ TEST_F(TestPipeline, Nodes1k)
         });
         auto queue     = s.make_object("queue", std::make_unique<node::Queue<int>>());
         s.make_edge(rx_source, queue);
-        auto node = s.make_node<int>("node_0", rxcpp::operators::map([](int data) { return (data + 1); }));
+        auto node = s.make_node<int>("node_0", rxcpp::operators::map([](int data) {
+                                         return (data + 1);
+                                     }));
         s.make_edge(queue, node);
         for (int i = 1; i < 997; i++)
         {
             std::stringstream ss;
             ss << "node_" << i;
-            auto curr = s.make_node<int>(ss.str(), rxcpp::operators::map([](int data) { return (data + 1); }));
+            auto curr = s.make_node<int>(ss.str(), rxcpp::operators::map([](int data) {
+                                             return (data + 1);
+                                         }));
             s.make_edge(node, curr);
             node = curr;
         }

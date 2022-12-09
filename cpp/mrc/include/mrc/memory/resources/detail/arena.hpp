@@ -200,8 +200,9 @@ constexpr std::size_t align_down(std::size_t value) noexcept
  */
 inline block first_fit(std::set<block>& free_blocks, std::size_t size)
 {
-    auto const iter =
-        std::find_if(free_blocks.cbegin(), free_blocks.cend(), [size](auto const& blk) { return blk.fits(size); });
+    auto const iter = std::find_if(free_blocks.cbegin(), free_blocks.cend(), [size](auto const& blk) {
+        return blk.fits(size);
+    });
 
     if (iter == free_blocks.cend())
     {
@@ -274,8 +275,9 @@ inline block coalesce_block(std::set<block>& free_blocks, block const& blk)
 template <typename T>
 inline auto total_block_size(T const& blocks)
 {
-    return std::accumulate(
-        blocks.cbegin(), blocks.cend(), std::size_t{}, [](auto lhs, auto rhs) { return lhs + rhs.size(); });
+    return std::accumulate(blocks.cbegin(), blocks.cend(), std::size_t{}, [](auto lhs, auto rhs) {
+        return lhs + rhs.size();
+    });
 }
 
 /**
@@ -342,9 +344,9 @@ class global_arena final
     }
 
     // Disable copy (and move) semantics.
-    global_arena(global_arena const&) = delete;
-    global_arena& operator=(global_arena const&) = delete;
-    global_arena(global_arena&&) noexcept        = delete;
+    global_arena(global_arena const&)                = delete;
+    global_arena& operator=(global_arena const&)     = delete;
+    global_arena(global_arena&&) noexcept            = delete;
     global_arena& operator=(global_arena&&) noexcept = delete;
 
     /**
@@ -518,9 +520,9 @@ class arena
     ~arena() = default;
 
     // Disable copy (and move) semantics.
-    arena(arena const&) = delete;
-    arena& operator=(arena const&) = delete;
-    arena(arena&&) noexcept        = delete;
+    arena(arena const&)                = delete;
+    arena& operator=(arena const&)     = delete;
+    arena(arena&&) noexcept            = delete;
     arena& operator=(arena&&) noexcept = delete;
 
     /**
@@ -663,10 +665,10 @@ class arena_cleaner
     explicit arena_cleaner(std::shared_ptr<arena<Upstream>> const& arena) : arena_(arena) {}
 
     // Disable copy (and move) semantics.
-    arena_cleaner(arena_cleaner const&) = delete;
+    arena_cleaner(arena_cleaner const&)            = delete;
     arena_cleaner& operator=(arena_cleaner const&) = delete;
     arena_cleaner(arena_cleaner&&) noexcept        = delete;
-    arena_cleaner& operator=(arena_cleaner&&) = delete;
+    arena_cleaner& operator=(arena_cleaner&&)      = delete;
 
     ~arena_cleaner()
     {

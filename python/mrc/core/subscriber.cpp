@@ -76,7 +76,7 @@ PYBIND11_MODULE(subscriber, module)
              py::call_guard<py::gil_scoped_release>())
         .def("pipe", &ObservableProxy::pipe);
 
-    module.attr("__version__") =
-        MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "." << mrc_VERSION_PATCH);
+    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+                                                                  << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

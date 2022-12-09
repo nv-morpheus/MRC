@@ -71,8 +71,9 @@ std::unique_ptr<runnable::Launcher> Runnable<NodeT>::prepare_launcher(runnable::
     if constexpr (std::is_base_of_v<runnable::Runnable, NodeT>)
     {
         DVLOG(10) << "Preparing launcher for " << this->type_name() << " in segment";
-        return launch_control.prepare_launcher_with_wrapped_context<segment::Context>(
-            this->launch_options(), std::move(m_node), this->name());
+        return launch_control.prepare_launcher_with_wrapped_context<segment::Context>(this->launch_options(),
+                                                                                      std::move(m_node),
+                                                                                      this->name());
     }
     else
     {

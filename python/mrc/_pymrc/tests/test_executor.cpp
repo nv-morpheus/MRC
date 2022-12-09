@@ -64,8 +64,9 @@ TEST_F(TestExecutor, Execute)
                                                               return i;
                                                           }));
 
-        auto sink = seg.make_sink<unsigned int>(
-            "sink", [&counter](unsigned int x) { counter.fetch_add(x, std::memory_order_relaxed); });
+        auto sink = seg.make_sink<unsigned int>("sink", [&counter](unsigned int x) {
+            counter.fetch_add(x, std::memory_order_relaxed);
+        });
 
         seg.make_edge(src, internal);
         seg.make_edge(internal, sink);

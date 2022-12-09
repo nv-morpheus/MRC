@@ -172,8 +172,12 @@ TEST_F(TestCoroEvent, FIFO)
         co_return;
     };
 
-    coroutines::sync_wait(coroutines::when_all(
-        make_waiter(1), make_waiter(2), make_waiter(3), make_waiter(4), make_waiter(5), make_setter()));
+    coroutines::sync_wait(coroutines::when_all(make_waiter(1),
+                                               make_waiter(2),
+                                               make_waiter(3),
+                                               make_waiter(4),
+                                               make_waiter(5),
+                                               make_setter()));
 
     EXPECT_TRUE(counter == 5);
 }
@@ -259,8 +263,12 @@ TEST_F(TestCoroEvent, FIFO_Executor)
         co_return;
     };
 
-    coroutines::sync_wait(coroutines::when_all(
-        make_waiter(1), make_waiter(2), make_waiter(3), make_waiter(4), make_waiter(5), make_setter()));
+    coroutines::sync_wait(coroutines::when_all(make_waiter(1),
+                                               make_waiter(2),
+                                               make_waiter(3),
+                                               make_waiter(4),
+                                               make_waiter(5),
+                                               make_setter()));
 
     EXPECT_TRUE(counter == 5);
 }

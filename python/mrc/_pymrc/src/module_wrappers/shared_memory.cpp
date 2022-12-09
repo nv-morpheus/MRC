@@ -37,8 +37,9 @@ PythonSharedMemoryInterface::~PythonSharedMemoryInterface() = default;
 PythonSharedMemoryInterface::PythonSharedMemoryInterface() : m_pycache(PythonObjectCache::get_handle())
 {
     auto mod          = m_pycache.get_module("multiprocessing.shared_memory");
-    m_shmem_interface = py::cast<py::object>(m_pycache.get_or_load("PythonSharedMemoryInterface.SharedMemory",
-                                                                   [mod]() { return mod.attr("SharedMemory"); }));
+    m_shmem_interface = py::cast<py::object>(m_pycache.get_or_load("PythonSharedMemoryInterface.SharedMemory", [mod]() {
+        return mod.attr("SharedMemory");
+    }));
 }
 
 void PythonSharedMemoryInterface::allocate(std::size_t sz_bytes)

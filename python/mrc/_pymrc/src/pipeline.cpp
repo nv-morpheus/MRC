@@ -144,9 +144,9 @@ PipelineEgressInfo collect_egress_info(py::list ids)
             bool builder_exists        = (cpptype != nullptr && PortRegistry::has_port_util(*cpptype));
             std::type_index type_index = builder_exists ? *cpptype : typeid(PyHolder);
 
-            auto port_util = PortRegistry::find_port_util(type_index);
-            auto builder_fn =
-                flag_sp_variant ? std::get<1>(port_util->m_egress_builders) : std::get<0>(port_util->m_egress_builders);
+            auto port_util  = PortRegistry::find_port_util(type_index);
+            auto builder_fn = flag_sp_variant ? std::get<1>(port_util->m_egress_builders)
+                                              : std::get<0>(port_util->m_egress_builders);
 
             egress_info.m_names.push_back(py_name.cast<std::string>());
             egress_info.m_type_indices.emplace_back(type_index);

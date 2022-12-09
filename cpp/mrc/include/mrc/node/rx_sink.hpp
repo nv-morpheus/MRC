@@ -95,7 +95,9 @@ void RxSink<T, ContextT>::do_subscribe(rxcpp::composite_subscription& subscripti
     auto observable = RxPrologueTap<T>::apply_prologue_taps(RxSinkBase<T>::observable());
 
     auto default_error_handler = rxcpp::make_observer_dynamic<T>(
-        [this](T data) { m_observer.on_next(std::move(data)); },
+        [this](T data) {
+            m_observer.on_next(std::move(data));
+        },
         [this](std::exception_ptr ptr) {
             runnable::Context::get_runtime_context().set_exception(std::move(std::current_exception()));
             try
@@ -106,7 +108,9 @@ void RxSink<T, ContextT>::do_subscribe(rxcpp::composite_subscription& subscripti
                 runnable::Context::get_runtime_context().set_exception(std::move(std::current_exception()));
             }
         },
-        [this] { m_observer.on_completed(); });
+        [this] {
+            m_observer.on_completed();
+        });
 
     observable.subscribe(subscription, default_error_handler);
 }

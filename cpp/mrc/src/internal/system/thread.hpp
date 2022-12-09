@@ -50,7 +50,7 @@ class Thread
     ~Thread();
     const std::thread& thread() const;
 
-    Thread(Thread&&) noexcept = default;
+    Thread(Thread&&) noexcept            = default;
     Thread& operator=(Thread&&) noexcept = default;
 
     void join();

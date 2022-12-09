@@ -174,7 +174,9 @@ void Executor::start()
     m_exec->start();
 
     // Now enqueue a join future
-    m_join_future = boost::fibers::async([this] { m_exec->join(); });
+    m_join_future = boost::fibers::async([this] {
+        m_exec->join();
+    });
 }
 
 void Executor::stop()

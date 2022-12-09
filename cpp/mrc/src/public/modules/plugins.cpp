@@ -166,8 +166,8 @@ bool PluginModule::try_open_library_handle(bool throw_on_error)
         return true;
     }
 
-    std::string library_path =
-        m_plugin_library_dir.empty() ? m_plugin_library_name : m_plugin_library_dir + "/" + m_plugin_library_name;
+    std::string library_path = m_plugin_library_dir.empty() ? m_plugin_library_name
+                                                            : m_plugin_library_dir + "/" + m_plugin_library_name;
 
     m_plugin_handle = dlopen(library_path.c_str(), RTLD_NOW | RTLD_LOCAL);
     if (m_plugin_handle == nullptr)

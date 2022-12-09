@@ -25,8 +25,11 @@ namespace mrc::internal::ucx {
 
 MemoryBlock::MemoryBlock(const void* data, std::size_t bytes) : memory::MemoryBlock(data, bytes) {}
 
-MemoryBlock::MemoryBlock(
-    const void* data, std::size_t bytes, ucp_mem_h local_handle, void* remote_handle, std::size_t remote_handle_size) :
+MemoryBlock::MemoryBlock(const void* data,
+                         std::size_t bytes,
+                         ucp_mem_h local_handle,
+                         void* remote_handle,
+                         std::size_t remote_handle_size) :
   memory::MemoryBlock(data, bytes),
   m_local_handle(local_handle),
   m_remote_handle(remote_handle),

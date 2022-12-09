@@ -37,8 +37,12 @@ PythonPickleInterface::PythonPickleInterface() : m_pycache(PythonObjectCache::ge
 {
     auto mod = m_pycache.get_module("pickle");
 
-    m_func_loads = m_pycache.get_or_load("PythonPickleInterface.loads", [mod]() { return mod.attr("loads"); });
-    m_func_dumps = m_pycache.get_or_load("PythonPickleInterface.dumps", [mod]() { return mod.attr("dumps"); });
+    m_func_loads = m_pycache.get_or_load("PythonPickleInterface.loads", [mod]() {
+        return mod.attr("loads");
+    });
+    m_func_dumps = m_pycache.get_or_load("PythonPickleInterface.dumps", [mod]() {
+        return mod.attr("dumps");
+    });
 }
 
 pybind11::bytes PythonPickleInterface::pickle(pybind11::object obj)

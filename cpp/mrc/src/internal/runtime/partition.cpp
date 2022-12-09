@@ -37,8 +37,8 @@ Partition::Partition(resources::PartitionResources& resources) : m_resources(res
 {
     if (resources.network())
     {
-        m_remote_descriptor_manager =
-            std::make_shared<remote_descriptor::Manager>(resources.network()->instance_id(), resources);
+        m_remote_descriptor_manager = std::make_shared<remote_descriptor::Manager>(resources.network()->instance_id(),
+                                                                                   resources);
     }
 }
 
@@ -62,7 +62,8 @@ remote_descriptor::Manager& Partition::remote_descriptor_manager()
 }
 
 std::shared_ptr<mrc::pubsub::IPublisherService> Partition::make_publisher_service(
-    const std::string& name, const mrc::pubsub::PublisherPolicy& policy)
+    const std::string& name,
+    const mrc::pubsub::PublisherPolicy& policy)
 {
     if (policy == mrc::pubsub::PublisherPolicy::RoundRobin)
     {

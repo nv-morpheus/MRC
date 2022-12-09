@@ -175,8 +175,14 @@ PyObjectObservable ObservableProxy::pipe(PyObjectObservable* self, py::args args
     case 6:
         return pipe_ops(self, operators[0], operators[1], operators[2], operators[3], operators[4], operators[5]);
     case 7:
-        return pipe_ops(
-            self, operators[0], operators[1], operators[2], operators[3], operators[4], operators[5], operators[6]);
+        return pipe_ops(self,
+                        operators[0],
+                        operators[1],
+                        operators[2],
+                        operators[3],
+                        operators[4],
+                        operators[5],
+                        operators[6]);
     case 8:
         return pipe_ops(self,
                         operators[0],

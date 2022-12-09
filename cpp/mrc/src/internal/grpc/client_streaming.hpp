@@ -148,8 +148,8 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         std::weak_ptr<stream_writer_t> stream;
     };
 
-    using prepare_fn_t = std::function<std::unique_ptr<grpc::ClientAsyncReaderWriter<RequestT, ResponseT>>(
-        grpc::ClientContext* context)>;
+    using prepare_fn_t =
+        std::function<std::unique_ptr<grpc::ClientAsyncReaderWriter<RequestT, ResponseT>>(grpc::ClientContext* context)>;
 
     ClientStream(prepare_fn_t prepare_fn, runnable::Resources& runnable) :
       m_prepare_fn(prepare_fn),
@@ -255,13 +255,19 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
 
         // make writer sink
         m_write_channel = std::make_shared<mrc::node::SourceChannelWriteable<writer_t>>();
-        auto writer     = std::make_unique<mrc::node::RxSink<writer_t>>([this](writer_t request) { do_write(request); },
-                                                                    [this] { do_writes_done(); });
+        auto writer     = std::make_unique<mrc::node::RxSink<writer_t>>(
+            [this](writer_t request) {
+                do_write(request);
+            },
+            [this] {
+                do_writes_done();
+            });
         mrc::node::make_edge(*m_write_channel, *writer);
 
         // construct StreamWriter
         m_stream_writer = std::shared_ptr<ClientStreamWriter>(
-            new ClientStreamWriter(m_write_channel, this->shared_from_this()), [this](ClientStreamWriter* ptr) {
+            new ClientStreamWriter(m_write_channel, this->shared_from_this()),
+            [this](ClientStreamWriter* ptr) {
                 delete ptr;
                 m_write_channel.reset();
                 m_stream_writer.reset();

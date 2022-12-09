@@ -159,18 +159,25 @@ TEST_F(TestExecutor, LifeCycleSingleSegment)
         });
 
         // add epilogue count to track the number of floats emitted
-        rx_source->object().add_epilogue_tap([&src_count](const float& value) { src_count++; });
+        rx_source->object().add_epilogue_tap([&src_count](const float& value) {
+            src_count++;
+        });
         s.add_throughput_counter(rx_source);
 
         // we will run the source on a dedicated thread
         rx_source->launch_options().engine_factory_name = "single_use_threads";
 
         // add scalar node
-        auto rx_node =
-            s.make_node<float>("scalar_x2", rxcpp::operators::map([](float value) -> float { return 2.0 * value; }));
+        auto rx_node = s.make_node<float>("scalar_x2", rxcpp::operators::map([](float value) -> float {
+                                              return 2.0 * value;
+                                          }));
 
-        rx_node->object().add_epilogue_tap([&node_count](const float& value) { node_count += 2; });
-        s.add_throughput_counter(rx_node, [](const float& value) { return std::int64_t(value); });
+        rx_node->object().add_epilogue_tap([&node_count](const float& value) {
+            node_count += 2;
+        });
+        s.add_throughput_counter(rx_node, [](const float& value) {
+            return std::int64_t(value);
+        });
 
         auto rx_sink = s.make_sink<float>("rx_sink", rxcpp::make_observer_dynamic<float>([&](float x) {
                                               LOG(INFO) << x;
@@ -311,12 +318,12 @@ TEST_F(TestExecutor, LifeCycleSingleSegmentConcurrentSource)
         rx_source->launch_options().pe_count       = 2;
         rx_source->launch_options().engines_per_pe = 2;
 
-        auto rx_sink =
-            s.make_sink<std::size_t>("rx_sink", rxcpp::make_observer_dynamic<std::size_t>([&](std::size_t x) {
-                                         DVLOG(1) << runnable::Context::get_runtime_context().info();
-                                         LOG(INFO) << x;
-                                         add_thread_id(x);
-                                     }));
+        auto rx_sink = s.make_sink<std::size_t>("rx_sink",
+                                                rxcpp::make_observer_dynamic<std::size_t>([&](std::size_t x) {
+                                                    DVLOG(1) << runnable::Context::get_runtime_context().info();
+                                                    LOG(INFO) << x;
+                                                    add_thread_id(x);
+                                                }));
 
         s.make_edge(rx_source, rx_sink);
     });
@@ -365,12 +372,12 @@ TEST_F(TestExecutor, LifeCycleSingleSegmentConcurrentSourceWithStaggeredShutdown
         rx_source->launch_options().pe_count       = 2;
         rx_source->launch_options().engines_per_pe = 2;
 
-        auto rx_sink =
-            s.make_sink<std::size_t>("rx_sink", rxcpp::make_observer_dynamic<std::size_t>([&](std::size_t x) {
-                                         DVLOG(1) << runnable::Context::get_runtime_context().info();
-                                         LOG(INFO) << x;
-                                         add_thread_id(x);
-                                     }));
+        auto rx_sink = s.make_sink<std::size_t>("rx_sink",
+                                                rxcpp::make_observer_dynamic<std::size_t>([&](std::size_t x) {
+                                                    DVLOG(1) << runnable::Context::get_runtime_context().info();
+                                                    LOG(INFO) << x;
+                                                    add_thread_id(x);
+                                                }));
 
         s.make_edge(rx_source, rx_sink);
     });
@@ -437,8 +444,12 @@ TEST_F(TestExecutor, MultiNode)
     machine_1.register_pipeline(std::move(pipeline_1));
     machine_2.register_pipeline(std::move(pipeline_2));
 
-    auto start_1 = boost::fibers::async([&] { machine_1.start(); });
-    auto start_2 = boost::fibers::async([&] { machine_2.start(); });
+    auto start_1 = boost::fibers::async([&] {
+        machine_1.start();
+    });
+    auto start_2 = boost::fibers::async([&] {
+        machine_2.start();
+    });
 
     start_1.get();
     start_2.get();

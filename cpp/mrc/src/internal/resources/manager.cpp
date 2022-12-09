@@ -88,8 +88,8 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
         if (network_enabled)
         {
             VLOG(1) << "building ucx resources for partition " << base.partition_id();
-            auto network_task_queue_cpuset =
-                base.partition().host().engine_factory_cpu_sets().fiber_cpu_sets.at("mrc_network");
+            auto network_task_queue_cpuset = base.partition().host().engine_factory_cpu_sets().fiber_cpu_sets.at(
+                "mrc_network");
             auto& network_fiber_queue = m_system->get_task_queue(network_task_queue_cpuset.first());
             std::optional<ucx::Resources> ucx;
             ucx.emplace(base, network_fiber_queue);
@@ -172,8 +172,11 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
     {
         VLOG(1) << "building partition_resources for partition: " << i;
         auto host_partition_id = partitions.at(i).host_partition_id();
-        m_partitions.emplace_back(
-            m_runnable.at(host_partition_id), i, m_host.at(host_partition_id), m_device.at(i), m_network.at(i));
+        m_partitions.emplace_back(m_runnable.at(host_partition_id),
+                                  i,
+                                  m_host.at(host_partition_id),
+                                  m_device.at(i),
+                                  m_network.at(i));
     }
 
     // set thread local access to resources on all fiber task queues and any future thread created by the runtime
