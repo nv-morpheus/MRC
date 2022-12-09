@@ -263,7 +263,7 @@ class Broadcast : public IngressProvider<T>, public IIngressAcceptor<T>
         // Save to avoid casting
         m_edge = edge;
 
-        IngressProvider<int>::init_edge(edge);
+        IngressProvider<T>::init_edge(edge);
     }
 
     ~Broadcast()

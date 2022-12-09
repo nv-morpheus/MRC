@@ -68,7 +68,7 @@ Client::Client(resources::PartitionResourceBase& base,
   m_ucx(ucx),
   m_connnection_manager(connections_manager),
   m_transient_pool(transient_pool),
-  m_rd_channel(std::make_unique<node::SourceChannelWriteable<RemoteDescriptorMessage>>())
+  m_rd_channel(std::make_unique<node::WritableSubject<RemoteDescriptorMessage>>())
 {}
 
 Client::~Client() = default;
@@ -268,7 +268,7 @@ void Client::issue_remote_descriptor(RemoteDescriptorMessage&& msg)
     }
 }
 
-node::SourceChannelWriteable<RemoteDescriptorMessage>& Client::remote_descriptor_channel()
+node::WritableSubject<RemoteDescriptorMessage>& Client::remote_descriptor_channel()
 {
     CHECK(m_rd_channel);
     return *m_rd_channel;
@@ -282,7 +282,7 @@ void Client::do_service_start()
         [this](RemoteDescriptorMessage msg) { issue_remote_descriptor(std::move(msg)); });
 
     // todo(ryan) - parameterize mrc::data_plane::client::max_queued_remote_descriptor_sends
-    rd_writer->update_channel(std::make_unique<channel::BufferedChannel<RemoteDescriptorMessage>>(128));
+    rd_writer->set_channel(std::make_unique<channel::BufferedChannel<RemoteDescriptorMessage>>(128));
 
     // form edge
     mrc::node::make_edge(*m_rd_channel, *rd_writer);

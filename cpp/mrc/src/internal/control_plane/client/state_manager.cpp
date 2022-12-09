@@ -85,7 +85,7 @@ Client& StateManager::client()
     return m_client;
 }
 
-void StateManager::start_with_channel(node::SourceChannel<const protos::StateUpdate>& update_channel)
+void StateManager::start_with_channel(node::IIngressAcceptor<const protos::StateUpdate>& update_channel)
 {
     auto sink = std::make_unique<node::RxSink<protos::StateUpdate>>(
         [this](protos::StateUpdate update_msg) { update(std::move(update_msg)); });

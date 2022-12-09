@@ -31,6 +31,7 @@
 #include "mrc/codable/codable_protocol.hpp"
 #include "mrc/core/task_queue.hpp"
 #include "mrc/node/generic_sink.hpp"
+#include "mrc/node/readable_subject.hpp"
 #include "mrc/node/sink_channel.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
@@ -182,7 +183,7 @@ TEST_F(TestRPC, StreamingServerWithHandler)
 
     auto stream  = std::make_shared<stream_server_t>(service_init, m_resources->partition(0).runnable());
     auto handler = std::make_unique<ServerHandler>();
-    handler->enable_persistence();
+    // handler->enable_persistence();
     stream->attach_to(*handler);
 
     auto handler_runner =
@@ -225,7 +226,7 @@ TEST_F(TestRPC, StreamingPingPong)
 
     auto stream  = std::make_shared<stream_server_t>(service_init, m_resources->partition(0).runnable());
     auto handler = std::make_unique<ServerHandler>();
-    handler->enable_persistence();
+    // handler->enable_persistence();
     stream->attach_to(*handler);
 
     auto handler_runner =
@@ -243,9 +244,9 @@ TEST_F(TestRPC, StreamingPingPong)
         return m_stub->PrepareAsyncStreaming(context, cq.get());
     };
 
-    auto client = std::make_shared<stream_client_t>(prepare_fn, m_resources->partition(0).runnable());
-    mrc::node::SinkChannelReadable<typename stream_client_t::IncomingData> client_handler;
-    client->attach_to(client_handler);
+    auto client         = std::make_shared<stream_client_t>(prepare_fn, m_resources->partition(0).runnable());
+    auto client_handler = std::make_shared<mrc::node::ReadableSubject<typename stream_client_t::IncomingData>>();
+    client->attach_to(*client_handler);
 
     auto client_writer = client->await_init();
     ASSERT_TRUE(client_writer);
@@ -258,7 +259,7 @@ TEST_F(TestRPC, StreamingPingPong)
 
         typename stream_client_t::IncomingData response;
         VLOG(1) << "awaiting response " << i;
-        client_handler.egress().await_read(response);
+        client_handler->await_read(response);
         VLOG(1) << "got response " << i;
 
         EXPECT_EQ(response.msg.batch_id(), i);
@@ -296,7 +297,7 @@ TEST_F(TestRPC, StreamingPingPongEarlyServerFinish)
 
     auto stream  = std::make_shared<stream_server_t>(service_init, m_resources->partition(0).runnable());
     auto handler = std::make_unique<ServerHandler>();
-    handler->enable_persistence();
+    // handler->enable_persistence();
     stream->attach_to(*handler);
 
     auto handler_runner =
@@ -314,9 +315,9 @@ TEST_F(TestRPC, StreamingPingPongEarlyServerFinish)
         return m_stub->PrepareAsyncStreaming(context, cq.get());
     };
 
-    auto client = std::make_shared<stream_client_t>(prepare_fn, m_resources->partition(0).runnable());
-    mrc::node::SinkChannelReadable<typename stream_client_t::IncomingData> client_handler;
-    client->attach_to(client_handler);
+    auto client         = std::make_shared<stream_client_t>(prepare_fn, m_resources->partition(0).runnable());
+    auto client_handler = std::make_shared<mrc::node::ReadableSubject<typename stream_client_t::IncomingData>>();
+    client->attach_to(*client_handler);
 
     auto client_writer = client->await_init();
     ASSERT_TRUE(client_writer);
@@ -339,7 +340,7 @@ TEST_F(TestRPC, StreamingPingPongEarlyServerFinish)
         {
             typename stream_client_t::IncomingData response;
             VLOG(1) << "awaiting response " << i;
-            auto status = client_handler.egress().await_read(response);
+            auto status = client_handler->await_read(response);
 
             if (status == mrc::channel::Status::success)
             {
@@ -385,7 +386,7 @@ TEST_F(TestRPC, StreamingPingPongEarlyServerCancel)
 
     auto stream  = std::make_shared<stream_server_t>(service_init, m_resources->partition(0).runnable());
     auto handler = std::make_unique<ServerHandler>();
-    handler->enable_persistence();
+    // handler->enable_persistence();
     stream->attach_to(*handler);
 
     auto handler_runner =
@@ -403,9 +404,9 @@ TEST_F(TestRPC, StreamingPingPongEarlyServerCancel)
         return m_stub->PrepareAsyncStreaming(context, cq.get());
     };
 
-    auto client = std::make_shared<stream_client_t>(prepare_fn, m_resources->partition(0).runnable());
-    mrc::node::SinkChannelReadable<typename stream_client_t::IncomingData> client_handler;
-    client->attach_to(client_handler);
+    auto client         = std::make_shared<stream_client_t>(prepare_fn, m_resources->partition(0).runnable());
+    auto client_handler = std::make_shared<mrc::node::ReadableSubject<typename stream_client_t::IncomingData>>();
+    client->attach_to(*client_handler);
 
     auto client_writer = client->await_init();
     ASSERT_TRUE(client_writer);
@@ -428,7 +429,7 @@ TEST_F(TestRPC, StreamingPingPongEarlyServerCancel)
         {
             typename stream_client_t::IncomingData response;
             VLOG(1) << "awaiting response " << i;
-            auto status = client_handler.egress().await_read(response);
+            auto status = client_handler->await_read(response);
 
             if (status == mrc::channel::Status::success)
             {
@@ -475,7 +476,7 @@ TEST_F(TestRPC, StreamingPingPongClientEarlyTermination)
 
     auto stream  = std::make_shared<stream_server_t>(service_init, m_resources->partition(0).runnable());
     auto handler = std::make_unique<ServerHandler>();
-    handler->enable_persistence();
+    // handler->enable_persistence();
     stream->attach_to(*handler);
 
     auto handler_runner =
@@ -493,9 +494,9 @@ TEST_F(TestRPC, StreamingPingPongClientEarlyTermination)
         return m_stub->PrepareAsyncStreaming(context, cq.get());
     };
 
-    auto client = std::make_shared<stream_client_t>(prepare_fn, m_resources->partition(0).runnable());
-    mrc::node::SinkChannelReadable<typename stream_client_t::IncomingData> client_handler;
-    client->attach_to(client_handler);
+    auto client         = std::make_shared<stream_client_t>(prepare_fn, m_resources->partition(0).runnable());
+    auto client_handler = std::make_shared<mrc::node::ReadableSubject<typename stream_client_t::IncomingData>>();
+    client->attach_to(*client_handler);
 
     auto client_writer = client->await_init();
     ASSERT_TRUE(client_writer);
@@ -508,7 +509,7 @@ TEST_F(TestRPC, StreamingPingPongClientEarlyTermination)
 
         typename stream_client_t::IncomingData response;
         VLOG(1) << "awaiting response " << i;
-        client_handler.egress().await_read(response);
+        client_handler->await_read(response);
         VLOG(1) << "got response " << i;
 
         EXPECT_EQ(response.msg.batch_id(), i);

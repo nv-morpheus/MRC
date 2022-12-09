@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "mrc/node/channel_holder.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/macros.hpp"
 
@@ -73,7 +74,7 @@ class StateManager
     const Client& client() const;
     Client& client();
 
-    void start_with_channel(node::SourceChannel<const protos::StateUpdate>& update_channel);
+    void start_with_channel(node::IIngressAcceptor<const protos::StateUpdate>& update_channel);
     void await_join();
 
   private:

@@ -20,6 +20,7 @@
 #include "internal/pubsub/base.hpp"
 
 #include "mrc/node/source_channel.hpp"
+#include "mrc/node/writable_subject.hpp"
 #include "mrc/pubsub/api.hpp"
 #include "mrc/runnable/runner.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
@@ -50,7 +51,7 @@ namespace mrc::internal::pubsub {
 
 class PublisherService : public Base,
                          public mrc::pubsub::IPublisherService,
-                         public mrc::node::SourceChannelWriteable<mrc::runtime::RemoteDescriptor>
+                         public mrc::node::WritableSubject<mrc::runtime::RemoteDescriptor>
 {
   protected:
     PublisherService(std::string service_name, runtime::Partition& runtime);

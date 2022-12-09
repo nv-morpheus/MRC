@@ -48,7 +48,7 @@ namespace mrc::internal::control_plane::client {
 Instance::Instance(Client& client,
                    InstanceID instance_id,
                    resources::PartitionResourceBase& base,
-                   mrc::node::SourceChannel<const protos::StateUpdate>& update_channel) :
+                   mrc::node::IIngressAcceptor<const protos::StateUpdate>& update_channel) :
   resources::PartitionResourceBase(base),
   m_client(client),
   m_instance_id(instance_id)

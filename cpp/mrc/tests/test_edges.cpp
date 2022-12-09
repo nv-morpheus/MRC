@@ -27,6 +27,7 @@
 #include "mrc/node/forward.hpp"
 #include "mrc/node/operators/broadcast.hpp"
 #include "mrc/node/operators/combine_latest.hpp"
+#include "mrc/node/operators/node_component.hpp"
 #include "mrc/node/operators/router.hpp"
 #include "mrc/node/rx_subscribable.hpp"
 #include "mrc/node/source_properties.hpp"
@@ -261,7 +262,8 @@ class TestSourceComponent : public EgressProvider<int>
     }
 };
 
-class TestNodeComponent : public IngressProvider<int>, public IngressAcceptor<int>
+template <typename T>
+class TestNodeComponent : public NodeComponent<T, T>
 {
   public:
     TestNodeComponent()
@@ -654,7 +656,7 @@ TEST_F(TestEdges, SourceComponentToSink)
 TEST_F(TestEdges, SourceComponentToNodeToSink)
 {
     auto source = std::make_shared<node::TestSource<int>>();
-    auto node   = std::make_shared<node::TestNodeComponent>();
+    auto node   = std::make_shared<node::NodeComponent<int>>();
     auto sink   = std::make_shared<node::TestSink<int>>();
 
     node::make_edge(*source, *node);
@@ -664,7 +666,7 @@ TEST_F(TestEdges, SourceComponentToNodeToSink)
 TEST_F(TestEdges, SourceToNodeComponentToSink)
 {
     auto source = std::make_shared<node::TestSource<int>>();
-    auto node   = std::make_shared<node::TestNodeComponent>();
+    auto node   = std::make_shared<node::NodeComponent<int>>();
     auto sink   = std::make_shared<node::TestSink<int>>();
 
     node::make_edge(*source, *node);
@@ -674,7 +676,7 @@ TEST_F(TestEdges, SourceToNodeComponentToSink)
 TEST_F(TestEdges, SourceToNodeToSinkComponent)
 {
     auto source = std::make_shared<node::TestSource<int>>();
-    auto node   = std::make_shared<node::TestNodeComponent>();
+    auto node   = std::make_shared<node::NodeComponent<int>>();
     auto sink   = std::make_shared<node::TestSink<int>>();
 
     node::make_edge(*source, *node);
@@ -684,7 +686,7 @@ TEST_F(TestEdges, SourceToNodeToSinkComponent)
 TEST_F(TestEdges, SourceToNodeComponentToSinkComponent)
 {
     auto source = std::make_shared<node::TestSource<int>>();
-    auto node   = std::make_shared<node::TestNodeComponent>();
+    auto node   = std::make_shared<node::NodeComponent<int>>();
     auto sink   = std::make_shared<node::TestSinkComponent>();
 
     node::make_edge(*source, *node);

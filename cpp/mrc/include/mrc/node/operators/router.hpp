@@ -100,7 +100,7 @@ class RouterBase : public ForwardingIngressProvider<InputT>, public MultiSourceP
 
     RouterBase() : ForwardingIngressProvider<input_data_t>() {}
 
-    std::shared_ptr<IIngressAcceptor<input_data_t>> get_source(const KeyT& key) const
+    std::shared_ptr<IIngressAcceptor<output_data_t>> get_source(const KeyT& key) const
     {
         // Simply return an object that will set the message to upstream and go away
         return std::make_shared<DownstreamEdge>(*const_cast<RouterBase<KeyT, InputT, OutputT>*>(this), key);
@@ -113,7 +113,7 @@ class RouterBase : public ForwardingIngressProvider<InputT>, public MultiSourceP
 
     void drop_edge(const KeyT& key)
     {
-        MultiSourceProperties<output_data_t, KeyT>::release_edge_connections(key);
+        MultiSourceProperties<output_data_t, KeyT>::release_edge_connection(key);
     }
 
   protected:
@@ -289,7 +289,10 @@ class TaggedRouter : public Router<KeyT, std::pair<KeyT, T>, T>
 
     output_data_t convert_value(input_data_t&& data) override
     {
-        return data.second;
+        // TODO(MDD): Do we need to move the key too?
+
+        output_data_t tmp = std::move(data.second);
+        return tmp;
     }
 };
 

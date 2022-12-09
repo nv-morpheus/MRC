@@ -24,7 +24,7 @@
 namespace mrc::node {
 
 template <typename T>
-class Queue : public IngressProvider<int>, public EgressProvider<int>
+class Queue : public IngressProvider<T>, public EgressProvider<T>
 {
   public:
     Queue()
@@ -33,12 +33,12 @@ class Queue : public IngressProvider<int>, public EgressProvider<int>
     }
     ~Queue() override = default;
 
-    void set_channel(std::unique_ptr<mrc::channel::Channel<int>> channel)
+    void set_channel(std::unique_ptr<mrc::channel::Channel<T>> channel)
     {
-        EdgeChannel<int> edge_channel(std::move(channel));
+        EdgeChannel<T> edge_channel(std::move(channel));
 
-        SinkProperties<int>::init_edge(edge_channel.get_writer());
-        SourceProperties<int>::init_edge(edge_channel.get_reader());
+        SinkProperties<T>::init_edge(edge_channel.get_writer());
+        SourceProperties<T>::init_edge(edge_channel.get_reader());
     }
 };
 

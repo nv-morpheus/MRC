@@ -120,7 +120,7 @@ void PublisherService::do_subscription_service_setup()
 
 void PublisherService::do_subscription_service_teardown()
 {
-    release_channel();
+    this->release_edge_connection();
 }
 
 void PublisherService::do_subscription_service_join()

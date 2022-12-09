@@ -225,13 +225,13 @@ void RxSink<T, ContextT>::do_subscribe(rxcpp::composite_subscription& subscripti
 template <typename T, typename ContextT>
 void RxSink<T, ContextT>::on_stop(const rxcpp::subscription& subscription)
 {
-    this->disable_persistence();
+    // this->disable_persistence();
 }
 
 template <typename T, typename ContextT>
 void RxSink<T, ContextT>::on_kill(const rxcpp::subscription& subscription)
 {
-    this->disable_persistence();
+    // this->disable_persistence();
     subscription.unsubscribe();
 }
 

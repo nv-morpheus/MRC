@@ -18,6 +18,7 @@
 #include "pymrc/py_segment_module.hpp"
 
 #include "mrc/core/utils.hpp"
+#include "mrc/utils/type_utils.hpp"
 
 #include <glog/logging.h>
 
@@ -42,7 +43,7 @@ void PythonSegmentModule::initialize(segment::Builder& builder)
 
 std::string PythonSegmentModule::module_type_name() const
 {
-    return std::string(::mrc::type_name<type_t>());
+    return std::string(mrc::type_name<type_t>());
 }
 
 }  // namespace mrc::pymrc

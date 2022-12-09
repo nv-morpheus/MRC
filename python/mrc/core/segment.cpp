@@ -59,6 +59,7 @@ PYBIND11_MODULE(segment, module)
 
     // Common must be first in every module
     pymrc::import(module, "mrc.core.common");
+    pymrc::import(module, "mrc.core.subscriber");
 
     // Type 'b'
     node::EdgeConnector<bool, PyHolder>::register_converter();

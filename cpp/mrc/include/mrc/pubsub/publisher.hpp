@@ -21,12 +21,15 @@
 #include "mrc/codable/encoded_object.hpp"
 #include "mrc/control_plane/subscription_service_forwarder.hpp"
 #include "mrc/node/edge_builder.hpp"
-#include "mrc/node/operators/unique_operator.hpp"
+#include "mrc/node/generic_sink.hpp"
 #include "mrc/node/source_channel.hpp"
+#include "mrc/node/writable_subject.hpp"
 #include "mrc/pubsub/api.hpp"
 #include "mrc/runtime/api.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/utils/macros.hpp"
+
+#include <memory>
 
 namespace mrc::pubsub {
 
@@ -48,7 +51,7 @@ namespace mrc::pubsub {
  */
 template <typename T>
 class Publisher final : public control_plane::SubscriptionServiceForwarder,
-                        public node::UniqueOperator<T>,
+                        public node::GenericSinkComponent<T>,
                         public channel::Ingress<T>
 {
   public:
@@ -76,7 +79,7 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
     {
         // form a persistent connection to the operator
         // data flowing in from operator edges are forwarded to the public await_write
-        m_persistent_channel = std::make_unique<mrc::node::SourceChannelWriteable<T>>();
+        m_persistent_channel = std::make_shared<mrc::node::WritableSubject<T>>();
         mrc::node::make_edge(*m_persistent_channel, *this);
 
         CHECK(m_service);
@@ -110,7 +113,7 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
     }
 
     // [Operator<T>] forward the operator pass thru write to the publicly exposed await_write method
-    channel::Status on_next(T&& data) final
+    channel::Status on_data(T&& data) final
     {
         return await_write(std::move(data));
     }
@@ -125,7 +128,7 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
     const std::shared_ptr<IPublisherService> m_service;
 
     // this holds the operator open;
-    std::unique_ptr<mrc::node::SourceChannelWriteable<T>> m_persistent_channel;
+    std::shared_ptr<mrc::node::WritableSubject<T>> m_persistent_channel;
 
     friend runtime::IPartition;
 };

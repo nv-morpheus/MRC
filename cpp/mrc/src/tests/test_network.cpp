@@ -341,7 +341,9 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
             r0.server().deserialize_source().drop_edge(tag);
         });
 
-    mrc::node::make_edge(r0.server().deserialize_source().source(tag), *recv_sink);
+    auto deser_source = r0.server().deserialize_source().get_source(tag);
+
+    mrc::node::make_edge(*deser_source, *recv_sink);
 
     auto launch_opts = resources->partition(0).network()->data_plane().launch_options(1);
     auto recv_runner = resources->partition(0)

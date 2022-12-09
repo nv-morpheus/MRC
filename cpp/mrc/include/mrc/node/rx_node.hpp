@@ -226,13 +226,13 @@ void RxNode<InputT, OutputT, ContextT>::do_subscribe(rxcpp::composite_subscripti
 template <typename InputT, typename OutputT, typename ContextT>
 void RxNode<InputT, OutputT, ContextT>::on_stop(const rxcpp::subscription& subscription)
 {
-    this->disable_persistence();
+    // this->disable_persistence();
 }
 
 template <typename InputT, typename OutputT, typename ContextT>
 void RxNode<InputT, OutputT, ContextT>::on_kill(const rxcpp::subscription& subscription)
 {
-    this->disable_persistence();
+    // this->disable_persistence();
     subscription.unsubscribe();
 }
 

@@ -25,6 +25,7 @@
 #include "mrc/channel/channel.hpp"
 #include "mrc/channel/ingress.hpp"
 #include "mrc/channel/status.hpp"
+#include "mrc/node/channel_holder.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/edge_properties.hpp"
 #include "mrc/node/forward.hpp"
@@ -33,6 +34,7 @@
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/node/source_channel.hpp"
+#include "mrc/node/writable_subject.hpp"
 #include "mrc/runnable/runner.hpp"
 
 #include <boost/fiber/all.hpp>
@@ -84,7 +86,7 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
     class ClientStreamWriter final : public stream_writer_t
     {
       public:
-        ClientStreamWriter(std::shared_ptr<mrc::node::SourceChannelWriteable<writer_t>> channel,
+        ClientStreamWriter(std::shared_ptr<mrc::node::WritableSubject<writer_t>> channel,
                            std::shared_ptr<ClientStream> parent) :
           m_parent(parent),
           m_channel(channel)
@@ -138,7 +140,7 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
 
       private:
         std::weak_ptr<ClientStream> m_parent;
-        std::weak_ptr<mrc::node::SourceChannelWriteable<writer_t>> m_channel;
+        std::weak_ptr<mrc::node::WritableSubject<writer_t>> m_channel;
     };
 
   public:
@@ -181,7 +183,13 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
 
     // todo(ryan) - add a method to trigger a writes done
 
-    void attach_to(mrc::node::SinkProperties<IncomingData>& sink)
+    void attach_to(mrc::node::IIngressProvider<IncomingData>& sink)
+    {
+        CHECK(m_reader_source);
+        mrc::node::make_edge(*m_reader_source, sink);
+    }
+
+    void attach_to(mrc::node::IEgressAcceptor<IncomingData>& sink)
     {
         CHECK(m_reader_source);
         mrc::node::make_edge(*m_reader_source, sink);
@@ -254,7 +262,7 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         DVLOG(10) << "initializing client stream resources";
 
         // make writer sink
-        m_write_channel = std::make_shared<mrc::node::SourceChannelWriteable<writer_t>>();
+        m_write_channel = std::make_shared<mrc::node::WritableSubject<writer_t>>();
         auto writer     = std::make_unique<mrc::node::RxSink<writer_t>>([this](writer_t request) { do_write(request); },
                                                                     [this] { do_writes_done(); });
         mrc::node::make_edge(*m_write_channel, *writer);
@@ -353,7 +361,7 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
     std::unique_ptr<mrc::node::RxSource<IncomingData>> m_reader_source;
 
     // channel connected to the writer sink; each ServerStreamWriter will take ownership of a shared_ptr
-    std::shared_ptr<mrc::node::SourceChannelWriteable<writer_t>> m_write_channel;
+    std::shared_ptr<mrc::node::WritableSubject<writer_t>> m_write_channel;
 
     // the destruction of this object also ensures that m_write_channel is reset
     // this object is nullified after the last IncomingData object is passed to the handler

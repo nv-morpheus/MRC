@@ -55,17 +55,17 @@ void SubscriberService::do_subscription_service_setup()
     CHECK_NE(tag(), 0);
 
     // reg
-    auto& network_source = resources().network()->data_plane().server().deserialize_source().source(tag());
+    auto network_source = resources().network()->data_plane().server().deserialize_source().get_source(tag());
 
-    auto network_handler = std::make_unique<mrc::node::RxNode<memory::TransientBuffer, mrc::runtime::RemoteDescriptor>>(
+    auto network_handler = std::make_shared<mrc::node::RxNode<memory::TransientBuffer, mrc::runtime::RemoteDescriptor>>(
         rxcpp::operators::map([this](memory::TransientBuffer buffer) -> mrc::runtime::RemoteDescriptor {
             return this->network_handler(buffer);
         }));
 
     DVLOG(10) << "form edge:  network_soruce -> network_handler";
-    mrc::node::make_edge(network_source, *network_handler);
+    mrc::node::make_edge(*network_source, *network_handler);
 
-    DVLOG(10) << "form edge:  network_handler -> rd_channel (ISubscriberService::SourceChannelWriteable)";
+    DVLOG(10) << "form edge:  network_handler -> rd_channel (ISubscriberService::WritableSubject)";
     mrc::node::make_edge(*network_handler, *this);
 
     DVLOG(10) << "starting network handler node";

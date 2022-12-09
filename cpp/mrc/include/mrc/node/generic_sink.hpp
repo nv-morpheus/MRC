@@ -59,4 +59,64 @@ GenericSink<T, ContextT>::GenericSink()
         rxcpp::make_observer_dynamic<T>([this](T data) { this->on_data(std::move(data)); }));
 }
 
+template <typename T>
+class GenericSinkComponent : public RxSinkComponent<T>
+{
+  public:
+    GenericSinkComponent()
+    {
+        RxSinkComponent<T>::set_observer(rxcpp::make_observer_dynamic<T>(
+            [this](T data) {
+                // Forward to on_data
+                this->on_data(std::move(data));
+            },
+            [this]() {
+                // Forward to on_complete
+                this->on_complete();
+            }));
+    }
+    ~GenericSinkComponent() override = default;
+
+  private:
+    virtual mrc::channel::Status on_data(T&& data) = 0;
+    virtual void on_complete()                     = 0;
+};
+
+template <typename T>
+class LambdaSinkComponent : public GenericSinkComponent<T>
+{
+  public:
+    using on_next_fn_t     = std::function<mrc::channel::Status(T&&)>;
+    using on_complete_fn_t = std::function<void()>;
+
+    LambdaSinkComponent(on_next_fn_t on_next_fn) : GenericSinkComponent<T>(), m_on_next_fn(std::move(on_next_fn)) {}
+
+    LambdaSinkComponent(on_next_fn_t on_next_fn, on_complete_fn_t on_complete_fn) :
+      GenericSinkComponent<T>(),
+      m_on_next_fn(std::move(on_next_fn)),
+      m_on_complete_fn(std::move(on_complete_fn))
+    {}
+
+    ~LambdaSinkComponent() override = default;
+
+  private:
+    channel::Status on_data(T&& t) final
+    {
+        return m_on_next_fn(std::move(t));
+    }
+
+    void on_complete() override
+    {
+        if (m_on_complete_fn)
+        {
+            m_on_complete_fn();
+        }
+
+        SinkProperties<T>::release_edge_connection();
+    }
+
+    on_next_fn_t m_on_next_fn;
+    on_complete_fn_t m_on_complete_fn;
+};
+
 }  // namespace mrc::node

@@ -30,7 +30,7 @@ class UniqueOperator : public SinkProperties<T>
 
   private:
     // SinkProperties
-    std::shared_ptr<channel::Ingress<T>> channel_ingress() final;
+    std::shared_ptr<channel::Ingress<T>> channel_ingress();
 
     // forwarding method
     virtual channel::Status on_next(T&& data) = 0;

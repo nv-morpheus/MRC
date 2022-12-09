@@ -100,7 +100,7 @@ class Client final : public resources::PartitionResourceBase, public Service
     using stream_t         = std::shared_ptr<rpc::ClientStream<mrc::protos::Event, mrc::protos::Event>>;
     using writer_t         = std::shared_ptr<rpc::StreamWriter<mrc::protos::Event>>;
     using event_t          = stream_t::element_type::IncomingData;
-    using update_channel_t = mrc::node::SourceChannelWriteable<protos::StateUpdate>;
+    using update_channel_t = mrc::node::WritableSubject<protos::StateUpdate>;
 
     Client(resources::PartitionResourceBase& base);
 

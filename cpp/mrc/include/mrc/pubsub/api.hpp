@@ -22,6 +22,7 @@
 #include "mrc/control_plane/api.hpp"
 #include "mrc/node/sink_channel.hpp"
 #include "mrc/node/source_channel.hpp"
+#include "mrc/node/writable_subject.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
 
 #include <string>
@@ -46,7 +47,7 @@ class IPublisherService : public virtual control_plane::ISubscriptionService
 };
 
 class ISubscriberService : public virtual control_plane::ISubscriptionService,
-                           public mrc::node::SourceChannelWriteable<mrc::runtime::RemoteDescriptor>
+                           public mrc::node::WritableSubject<mrc::runtime::RemoteDescriptor>
 {
   public:
     ~ISubscriberService() override = default;

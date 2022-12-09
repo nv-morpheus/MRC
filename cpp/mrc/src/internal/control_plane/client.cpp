@@ -97,10 +97,10 @@ void Client::do_service_start()
 
     // make stream and attach event handler
     m_stream = std::make_shared<stream_t::element_type>(prepare_fn, runnable());
-    m_stream->attach_to(*event_handler);
+    // m_stream->attach_to(*event_handler); //TODO(MDD): Reenable
 
     // ensure all downstream event handlers are constructed before constructing and starting the event handler
-    m_connections_update_channel = std::make_unique<mrc::node::SourceChannelWriteable<const protos::StateUpdate>>();
+    m_connections_update_channel = std::make_unique<mrc::node::WritableSubject<const protos::StateUpdate>>();
     m_connections_manager        = std::make_unique<client::ConnectionsManager>(*this, *m_connections_update_channel);
 
     // launch runnables

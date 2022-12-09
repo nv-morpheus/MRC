@@ -24,6 +24,8 @@
 
 #include "mrc/memory/buffer_view.hpp"
 #include "mrc/node/channel_holder.hpp"
+#include "mrc/node/operators/router.hpp"
+#include "mrc/node/writable_subject.hpp"
 #include "mrc/types.hpp"
 
 #include <ucp/api/ucp_def.h>
@@ -40,12 +42,6 @@ class HostResources;
 namespace mrc::internal::ucx {
 class Resources;
 }  // namespace mrc::internal::ucx
-namespace mrc::node {
-template <typename KeyT, typename T>
-class Router;
-template <typename T>
-class SourceChannelWriteable;
-}  // namespace mrc::node
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
@@ -79,7 +75,7 @@ namespace detail {
 struct PrePostedRecvInfo
 {
     ucp_worker_h worker;
-    node::EdgeChannelWriter<network_event_t>* channel;
+    node::WritableSubject<network_event_t>* channel;
     void* request;
     memory::TransientBuffer buffer;
     memory::TransientPool* pool;
@@ -123,7 +119,7 @@ class Server final : public Service, public resources::PartitionResourceBase
 
     // the remote descriptor manager will connect to this source
     // data will be emitted on this source as a conditional branch of data source
-    std::shared_ptr<node::EdgeChannelWriter<network_event_t>> m_prepost_channel;
+    std::shared_ptr<node::WritableSubject<network_event_t>> m_prepost_channel;
 
     // pre-posted recv state
     std::vector<detail::PrePostedRecvInfo> m_pre_posted_recv_info;

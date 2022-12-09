@@ -20,6 +20,7 @@
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
 
+#include "mrc/node/channel_holder.hpp"
 #include "mrc/types.hpp"
 
 #include <cstdint>
@@ -56,7 +57,7 @@ class Instance final : private resources::PartitionResourceBase, private Service
     Instance(Client& client,
              InstanceID instance_id,
              resources::PartitionResourceBase& base,
-             mrc::node::SourceChannel<const protos::StateUpdate>& update_channel);
+             mrc::node::IIngressAcceptor<const protos::StateUpdate>& update_channel);
     ~Instance() final;
 
     Client& client();

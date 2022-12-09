@@ -32,8 +32,8 @@ inline OperatorBase::~OperatorBase() = default;
 template <typename T>
 class Operator : public SinkProperties<T>, public OperatorBase, public std::enable_shared_from_this<Operator<T>>
 {
-    // SinkProperties
-    std::shared_ptr<channel::Ingress<T>> channel_ingress() final;
+    // // SinkProperties
+    // std::shared_ptr<channel::Ingress<T>> channel_ingress() final;
 
     // forwarding method
     virtual channel::Status on_next(T&& data) = 0;
@@ -66,21 +66,22 @@ class Operator : public SinkProperties<T>, public OperatorBase, public std::enab
     friend IngressAdaptor;
 };
 
-template <typename T>
-std::shared_ptr<channel::Ingress<T>> Operator<T>::channel_ingress()
-{
-    std::shared_ptr<IngressAdaptor> ingress;
-    if ((ingress = m_ingress.lock()))
-    {
-        return ingress;
-    }
-    auto this_operator = this->shared_from_this();
-    ingress = std::shared_ptr<IngressAdaptor>(new IngressAdaptor(*this), [this_operator](IngressAdaptor* ptr) mutable {
-        delete ptr;
-        this_operator.reset();
-    });
-    auto m_ingress = ingress;
-    return ingress;
-}
+// template <typename T>
+// std::shared_ptr<channel::Ingress<T>> Operator<T>::channel_ingress()
+// {
+//     std::shared_ptr<IngressAdaptor> ingress;
+//     if ((ingress = m_ingress.lock()))
+//     {
+//         return ingress;
+//     }
+//     auto this_operator = this->shared_from_this();
+//     ingress = std::shared_ptr<IngressAdaptor>(new IngressAdaptor(*this), [this_operator](IngressAdaptor* ptr) mutable
+//     {
+//         delete ptr;
+//         this_operator.reset();
+//     });
+//     auto m_ingress = ingress;
+//     return ingress;
+// }
 
 }  // namespace mrc::node

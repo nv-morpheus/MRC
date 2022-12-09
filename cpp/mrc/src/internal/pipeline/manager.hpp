@@ -28,10 +28,6 @@
 namespace mrc::internal::resources {
 class Manager;
 }  // namespace mrc::internal::resources
-namespace mrc::node {
-template <typename T>
-class SourceChannelWriteable;
-}  // namespace mrc::node
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable

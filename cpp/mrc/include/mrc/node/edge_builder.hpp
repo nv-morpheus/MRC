@@ -399,16 +399,16 @@ class DeferredWritableMultiEdge : public MultiEdgeHolder<T, std::size_t>,
         {
             for (size_t i = indices.size() - 1; i > 0; --i)
             {
-                if constexpr (is_shared_ptr<T>::value)
-                {
-                    if (m_deep_copy)
-                    {
-                        auto deep_copy = std::make_shared<typename T::element_type>(*data);
-                        CHECK(this->get_writable_edge(indices[i])->await_write(std::move(deep_copy)) ==
-                              channel::Status::success);
-                        continue;
-                    }
-                }
+                // if constexpr (is_shared_ptr<T>::value)
+                // {
+                //     if (m_deep_copy)
+                //     {
+                //         auto deep_copy = std::make_shared<typename T::element_type>(*data);
+                //         CHECK(this->get_writable_edge(indices[i])->await_write(std::move(deep_copy)) ==
+                //               channel::Status::success);
+                //         continue;
+                //     }
+                // }
 
                 T shallow_copy(data);
                 CHECK(this->get_writable_edge(indices[i])->await_write(std::move(shallow_copy)) ==

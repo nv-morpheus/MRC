@@ -19,8 +19,10 @@
 
 #include "internal/pubsub/base.hpp"
 
+#include "mrc/node/generic_sink.hpp"
 #include "mrc/node/operators/unique_operator.hpp"
 #include "mrc/node/source_channel.hpp"
+#include "mrc/node/writable_subject.hpp"
 #include "mrc/pubsub/api.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/types.hpp"
@@ -55,7 +57,7 @@ namespace mrc::internal::pubsub {
  */
 class SubscriberService final : public Base,
                                 public mrc::pubsub::ISubscriberService,
-                                public mrc::node::UniqueOperator<mrc::runtime::RemoteDescriptor>
+                                public mrc::node::GenericSinkComponent<mrc::runtime::RemoteDescriptor>
 {
     SubscriberService(std::string service_name, runtime::Partition& runtime);
 
@@ -85,15 +87,15 @@ class SubscriberService final : public Base,
     void do_subscription_service_join() final;
 
     // [Operator]
-    mrc::channel::Status on_next(mrc::runtime::RemoteDescriptor&& rd) final
+    mrc::channel::Status on_data(mrc::runtime::RemoteDescriptor&& rd) final
     {
-        return SourceChannelWriteable<mrc::runtime::RemoteDescriptor>::await_write(std::move(rd));
+        return WritableSubject<mrc::runtime::RemoteDescriptor>::await_write(std::move(rd));
     }
 
     // [Operator] - signifies the channel was dropped
     void on_complete() final
     {
-        SourceChannelWriteable<mrc::runtime::RemoteDescriptor>::release_channel();
+        WritableSubject<mrc::runtime::RemoteDescriptor>::release_edge_connection();
     }
 
     // [internal::control_plane::client::SubscriptionService]

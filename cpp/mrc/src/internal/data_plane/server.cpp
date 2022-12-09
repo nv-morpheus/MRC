@@ -166,7 +166,7 @@ void Server::do_service_start()
         .enqueue([this] {
             // source channel ucx tag recvs masked with the RemoteDescriptor tag
             // this recv has no recv payload, we simply write the tag to the channel
-            m_prepost_channel = std::make_unique<node::SourceChannelWriteable<network_event_t>>();
+            m_prepost_channel = std::make_unique<node::WritableSubject<network_event_t>>();
 
             m_pre_posted_recv_info.resize(m_pre_posted_recv_count);
             for (auto& info : m_pre_posted_recv_info)
