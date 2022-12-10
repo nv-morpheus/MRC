@@ -132,7 +132,7 @@ class EdgeRxObserver : public IEdgeWritable<T>
   public:
     using observer_t = rxcpp::observer<T>;
 
-    EdgeRxObserver() {}
+    EdgeRxObserver() = default;
 
     ~EdgeRxObserver()
     {

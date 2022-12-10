@@ -39,6 +39,7 @@
 #include "mrc/types.hpp"
 
 #include <glog/logging.h>
+#include <gtest/gtest-death-test.h>
 #include <gtest/gtest-param-test.h>
 #include <gtest/gtest.h>
 #include <gtest/internal/gtest-internal.h>
@@ -214,6 +215,8 @@ class TestSink : public IngressProvider<T>, public EgressAcceptor<T>, public Sin
         }
 
         VLOG(10) << "Sink exited run";
+
+        this->release_edge_connection();
     }
 };
 
@@ -572,6 +575,17 @@ class TestConditional : public IngressProvider<int>, public IngressAcceptor<int>
 
 namespace mrc {
 
+TEST_F(TestEdges, NodeDestroyedBeforeEdge)
+{
+    auto source = std::make_shared<node::TestSource<int>>();
+    auto sink   = std::make_shared<node::TestSink<int>>();
+
+    node::make_edge(*source, *sink);
+
+    // Reset the sink before the source which will cause an exception
+    EXPECT_DEATH(sink.reset(), "");
+}
+
 TEST_F(TestEdges, SourceToSink)
 {
     auto source = std::make_shared<node::TestSource<int>>();
@@ -661,6 +675,9 @@ TEST_F(TestEdges, SourceComponentToNodeToSink)
 
     node::make_edge(*source, *node);
     node::make_edge(*node, *sink);
+
+    source->run();
+    sink->run();
 }
 
 TEST_F(TestEdges, SourceToNodeComponentToSink)

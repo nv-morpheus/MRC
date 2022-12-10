@@ -21,7 +21,9 @@
 #include "mrc/codable/encoded_object.hpp"
 #include "mrc/control_plane/api.hpp"
 #include "mrc/node/sink_channel.hpp"
+#include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_channel.hpp"
+#include "mrc/node/source_properties.hpp"
 #include "mrc/node/writable_subject.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
 
@@ -35,7 +37,8 @@ enum class PublisherPolicy
     RoundRobin,
 };
 
-class IPublisherService : public virtual control_plane::ISubscriptionService
+class IPublisherService : public virtual control_plane::ISubscriptionService,
+                          public node::EgressAcceptor<std::unique_ptr<codable::EncodedStorage>>
 {
   public:
     ~IPublisherService() override = default;
@@ -47,7 +50,7 @@ class IPublisherService : public virtual control_plane::ISubscriptionService
 };
 
 class ISubscriberService : public virtual control_plane::ISubscriptionService,
-                           public mrc::node::WritableSubject<mrc::runtime::RemoteDescriptor>
+                           public node::IngressAcceptor<mrc::runtime::RemoteDescriptor>
 {
   public:
     ~ISubscriberService() override = default;

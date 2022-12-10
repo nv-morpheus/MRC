@@ -21,8 +21,11 @@
 #include "mrc/codable/encoded_object.hpp"
 #include "mrc/control_plane/subscription_service_forwarder.hpp"
 #include "mrc/node/edge_builder.hpp"
+#include "mrc/node/edge_channel.hpp"
 #include "mrc/node/generic_sink.hpp"
+#include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_channel.hpp"
+#include "mrc/node/source_properties.hpp"
 #include "mrc/node/writable_subject.hpp"
 #include "mrc/pubsub/api.hpp"
 #include "mrc/runtime/api.hpp"
@@ -51,8 +54,8 @@ namespace mrc::pubsub {
  */
 template <typename T>
 class Publisher final : public control_plane::SubscriptionServiceForwarder,
-                        public node::GenericSinkComponent<T>,
-                        public channel::Ingress<T>
+                        public node::IngressProvider<T>,
+                        private node::EgressProvider<std::unique_ptr<codable::EncodedStorage>>
 {
   public:
     static std::unique_ptr<Publisher> create(std::string name,
@@ -73,7 +76,7 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
 
     // [Ingress<T>] publish T by capturing it as an encoded object, then pushing that encoded object to the internal
     // publisher
-    channel::Status await_write(T&& data) final;
+    channel::Status await_write(T&& data);
 
     void await_start() final
     {
@@ -81,6 +84,10 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
         // data flowing in from operator edges are forwarded to the public await_write
         m_persistent_channel = std::make_shared<mrc::node::WritableSubject<T>>();
         mrc::node::make_edge(*m_persistent_channel, *this);
+
+        // Make a connection from this to the service
+        mrc::node::make_edge<node::EgressProvider<std::unique_ptr<codable::EncodedStorage>>, IPublisherService>(
+            *this, *m_service);
 
         CHECK(m_service);
         m_service->await_start();
@@ -97,6 +104,21 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
     Publisher(std::shared_ptr<IPublisherService> publisher) : m_service(std::move(publisher))
     {
         CHECK(m_service);
+
+        // Create the internal channel
+        node::EdgeChannel<std::unique_ptr<codable::EncodedStorage>> edge_channel(
+            std::make_unique<mrc::channel::BufferedChannel<std::unique_ptr<codable::EncodedStorage>>>());
+
+        // Wrap the upstream with a converting edge to an encoded object
+        auto upstream_edge =
+            std::make_shared<node::LambdaConvertingEdgeWritable<T, std::unique_ptr<codable::EncodedStorage>>>(
+                [this](T&& data) {
+                    return codable::EncodedObject<T>::create(std::move(data), m_service->create_storage());
+                },
+                edge_channel.get_writer());
+
+        node::SinkProperties<T>::init_edge(upstream_edge);
+        node::SourceProperties<std::unique_ptr<codable::EncodedStorage>>::init_edge(edge_channel.get_reader());
     }
 
     // [ISubscriptionServiceControl] - this overrides the SubscriptionServiceForwarder forwarding method
@@ -107,16 +129,16 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
     // [Operator<T>] the trigger of this method signifies that all upstream connections, including the locally held
     // persistent connection, have been released. this should be the signal to initiate a stop on the service, as a stop
     // on the Publisher<T> has already been initiated.
-    void on_complete() final
+    void on_complete()
     {
         request_stop();
     }
 
-    // [Operator<T>] forward the operator pass thru write to the publicly exposed await_write method
-    channel::Status on_data(T&& data) final
-    {
-        return await_write(std::move(data));
-    }
+    // // [Operator<T>] forward the operator pass thru write to the publicly exposed await_write method
+    // channel::Status on_data(T&& data) final
+    // {
+    //     return await_write(std::move(data));
+    // }
 
     // [SubscriptionServiceForwarder] access storage
     ISubscriptionService& service() const final
@@ -136,8 +158,8 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
 template <typename T>
 channel::Status Publisher<T>::await_write(T&& data)
 {
-    auto encoded_object = codable::EncodedObject<T>::create(std::move(data), m_service->create_storage());
-    return m_service->publish(std::move(encoded_object));
+    CHECK(m_persistent_channel) << "Publisher must be started before calling await_write";
+    return m_persistent_channel->await_write(std::move(data));
 }
 
 // template specialization for remote descriptors

@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "internal/data_plane/client.hpp"
 #include "internal/pubsub/base.hpp"
 
 #include "mrc/node/source_channel.hpp"
@@ -26,6 +27,8 @@
 #include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/macros.hpp"
+
+#include <rxcpp/rx.hpp>
 
 #include <cstdint>
 #include <memory>
@@ -49,9 +52,7 @@ class Endpoint;
 
 namespace mrc::internal::pubsub {
 
-class PublisherService : public Base,
-                         public mrc::pubsub::IPublisherService,
-                         public mrc::node::WritableSubject<mrc::runtime::RemoteDescriptor>
+class PublisherService : public Base, public mrc::pubsub::IPublisherService
 {
   protected:
     PublisherService(std::string service_name, runtime::Partition& runtime);
@@ -109,7 +110,8 @@ class PublisherService : public Base,
                                  const std::unordered_map<std::uint64_t, InstanceID>& tagged_instances) final;
 
     // apply policy
-    virtual void apply_policy(mrc::runtime::RemoteDescriptor&& rd) = 0;
+    virtual void apply_policy(rxcpp::subscriber<data_plane::RemoteDescriptorMessage>& sub,
+                              mrc::runtime::RemoteDescriptor&& rd) = 0;
 
     // called immediate on completion of update_tagged_instances
     virtual void on_update() = 0;

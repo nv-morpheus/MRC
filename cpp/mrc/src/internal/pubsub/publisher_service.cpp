@@ -29,7 +29,7 @@
 #include "mrc/codable/encoded_object.hpp"
 #include "mrc/core/utils.hpp"
 #include "mrc/node/edge_builder.hpp"
-#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_source.hpp"
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launcher.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
@@ -48,16 +48,16 @@ PublisherService::PublisherService(std::string service_name, runtime::Partition&
   m_runtime(runtime)
 {}
 
-channel::Status PublisherService::publish(mrc::runtime::RemoteDescriptor&& rd)
-{
-    return this->await_write(std::move(rd));
-}
+// channel::Status PublisherService::publish(mrc::runtime::RemoteDescriptor&& rd)
+// {
+//     return this->await_write(std::move(rd));
+// }
 
-channel::Status PublisherService::publish(std::unique_ptr<mrc::codable::EncodedStorage> encoded_object)
-{
-    auto rd = m_runtime.remote_descriptor_manager().register_encoded_object(std::move(encoded_object));
-    return this->await_write(std::move(rd));
-}
+// channel::Status PublisherService::publish(std::unique_ptr<mrc::codable::EncodedStorage> encoded_object)
+// {
+//     auto rd = m_runtime.remote_descriptor_manager().register_encoded_object(std::move(encoded_object));
+//     return this->await_write(std::move(rd));
+// }
 
 std::unique_ptr<mrc::codable::ICodableStorage> PublisherService::create_storage()
 {
@@ -102,11 +102,25 @@ void PublisherService::update_tagged_instances(const std::string& role,
 
 void PublisherService::do_subscription_service_setup()
 {
-    auto policy_engine = std::make_unique<mrc::node::RxSink<mrc::runtime::RemoteDescriptor>>(
-        [this](mrc::runtime::RemoteDescriptor rd) { apply_policy(std::move(rd)); });
+    auto policy_engine = std::make_unique<mrc::node::RxSource<data_plane::RemoteDescriptorMessage>>(
+        rxcpp::observable<>::create<data_plane::RemoteDescriptorMessage>(
+            [this](rxcpp::subscriber<data_plane::RemoteDescriptorMessage> sub) {
+                std::unique_ptr<mrc::codable::EncodedStorage> storage;
+
+                while (sub.is_subscribed() &&
+                       (this->get_readable_edge()->await_read(storage) == channel::Status::success))
+                {
+                    mrc::runtime::RemoteDescriptor rd =
+                        m_runtime.remote_descriptor_manager().register_encoded_object(std::move(storage));
+
+                    this->apply_policy(sub, std::move(rd));
+                }
+
+                sub.on_completed();
+            }));
 
     // form an edge to this object's SourceChannelWritable
-    mrc::node::make_edge(*this, *policy_engine);
+    mrc::node::make_edge(*policy_engine, resources().network()->data_plane().client().remote_descriptor_channel());
 
     // launch the policy engine on the same fiber pool as the updater
     m_policy_engine = m_runtime.resources()
@@ -134,8 +148,8 @@ void PublisherService::publish(mrc::runtime::RemoteDescriptor&& rd,
 {
     // todo(cpp20) - bracket initializer
     // {.rd = std::move(rd), .endpoint = std::move(endpoint), .tag = tag}
-    resources().network()->data_plane().client().remote_descriptor_channel().await_write(
-        {std::move(rd), std::move(endpoint), tag});
+    // resources().network()->data_plane().client().remote_descriptor_channel().await_write(
+    //     {std::move(rd), std::move(endpoint), tag});
 }
 
 const std::unordered_map<std::uint64_t, InstanceID>& PublisherService::tagged_instances() const

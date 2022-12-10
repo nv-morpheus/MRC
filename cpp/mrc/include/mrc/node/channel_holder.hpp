@@ -451,6 +451,28 @@ class ConvertingEdgeWritableBase : public IEdgeWritable<SourceT>
     std::shared_ptr<IEdgeWritable<SinkT>> m_downstream{};
 };
 
+template <typename SourceT, typename SinkT = SourceT>
+class ConvertingEdgeReadableBase : public IEdgeReadable<SinkT>
+{
+  public:
+    using source_t = SourceT;
+    using sink_t   = SinkT;
+
+    ConvertingEdgeReadableBase(std::shared_ptr<IEdgeReadable<SourceT>> upstream) : m_upstream(upstream)
+    {
+        this->add_linked_edge(upstream);
+    }
+
+  protected:
+    inline IEdgeReadable<SourceT>& upstream() const
+    {
+        return *m_upstream;
+    }
+
+  private:
+    std::shared_ptr<IEdgeReadable<SourceT>> m_upstream{};
+};
+
 template <typename SourceT, typename SinkT = SourceT, typename EnableT = void>
 class ConvertingEdgeWritable;
 
@@ -476,13 +498,14 @@ class ConvertingEdgeReadable;
 
 template <typename SourceT, typename SinkT>
 class ConvertingEdgeReadable<SourceT, SinkT, std::enable_if_t<std::is_convertible_v<SourceT, SinkT>>>
-  : public IEdgeReadable<SinkT>
+  : public ConvertingEdgeReadableBase<SourceT, SinkT>
 {
   public:
-    ConvertingEdgeReadable(std::shared_ptr<IEdgeReadable<SourceT>> upstream) : m_upstream(upstream)
-    {
-        this->add_linked_edge(upstream);
-    }
+    using base_t = ConvertingEdgeReadableBase<SourceT, SinkT>;
+    using typename base_t::sink_t;
+    using typename base_t::source_t;
+
+    using base_t::ConvertingEdgeReadableBase;
 
     channel::Status await_read(SinkT& data) override
     {
@@ -490,7 +513,7 @@ class ConvertingEdgeReadable<SourceT, SinkT, std::enable_if_t<std::is_convertibl
         auto ret_val = this->upstream().await_read(source_data);
 
         // Convert to the sink type
-        data = source_data;
+        data = std::move(source_data);
 
         return ret_val;
     }
@@ -522,6 +545,35 @@ class LambdaConvertingEdgeWritable : public ConvertingEdgeWritableBase<SourceT, 
     channel::Status await_write(source_t&& data) override
     {
         return this->downstream().await_write(m_lambda_fn(std::move(data)));
+    }
+
+  private:
+    lambda_fn_t m_lambda_fn{};
+};
+
+template <typename SourceT, typename SinkT>
+class LambdaConvertingEdgeReadable : public ConvertingEdgeReadableBase<SourceT, SinkT>
+{
+  public:
+    using base_t = ConvertingEdgeReadableBase<SourceT, SinkT>;
+    using typename base_t::sink_t;
+    using typename base_t::source_t;
+    using lambda_fn_t = std::function<sink_t(source_t&&)>;
+
+    LambdaConvertingEdgeReadable(lambda_fn_t lambda_fn, std::shared_ptr<IEdgeReadable<source_t>> upstream) :
+      ConvertingEdgeReadableBase<source_t, sink_t>(upstream),
+      m_lambda_fn(std::move(lambda_fn))
+    {}
+
+    channel::Status await_read(sink_t& data) override
+    {
+        source_t source_data;
+        auto ret_val = this->upstream().await_read(source_data);
+
+        // Convert to the sink type
+        data = m_lambda_fn(std::move(source_data));
+
+        return ret_val;
     }
 
   private:
@@ -612,7 +664,7 @@ class LambdaConvertingEdgeWritable : public ConvertingEdgeWritableBase<SourceT, 
 
 // EdgeHolder keeps shared pointer of EdgeChannel alive and
 template <typename T>
-class EdgeHolder : public virtual_enable_shared_from_this<EdgeHolder<T>>
+class EdgeHolder
 {
   public:
     // void set_channel(std::unique_ptr<mrc::channel::Channel<T>> channel)
@@ -622,14 +674,25 @@ class EdgeHolder : public virtual_enable_shared_from_this<EdgeHolder<T>>
 
     //     this->set_edge(new_edge);
     // }
-    EdgeHolder()          = default;
-    virtual ~EdgeHolder() = default;
+    EdgeHolder() = default;
+    virtual ~EdgeHolder()
+    {
+        CHECK(this->has_alive_connection())
+            << "A node was destructed which still had dependent connections. Nodes must be kept alive while "
+               "dependent connections are still active";
+    }
 
   protected:
+    bool has_alive_connection() const
+    {
+        // Alive connection exists when the lock is true, lifetime is false or a connction object has been set
+        return (m_owned_edge.lock() && !m_owned_edge_lifetime) || m_edge_connection;
+    }
+
     void init_edge(std::shared_ptr<EdgeHandle<T>> edge)
     {
         // Check if set_edge followed by get_edge has been called
-        if ((m_owned_edge.lock() && !m_owned_edge_lifetime) || m_edge_connection)
+        if (this->has_alive_connection())
         {
             // Then someone is using this edge already, cant be changed
             throw std::runtime_error("Cant change edge after a connection has been made");
@@ -651,17 +714,12 @@ class EdgeHolder : public virtual_enable_shared_from_this<EdgeHolder<T>>
             // Convert to full shared_ptr to avoid edge going out of scope
             if (auto e = weak_edge.lock())
             {
-                // this->m_owned_edge_lifetime.reset();
-
-                auto self = this->shared_from_this();
-
-                // Release the lifetime on self
-                self->m_owned_edge_lifetime.reset();
+                this->m_owned_edge_lifetime.reset();
 
                 // Now register a disconnector to keep self alive
-                e->add_disconnector(EdgeLifetime([self]() {
-                    self->m_owned_edge_lifetime.reset();
-                    self->m_owned_edge.reset();
+                e->add_disconnector(EdgeLifetime([this]() {
+                    this->m_owned_edge_lifetime.reset();
+                    this->m_owned_edge.reset();
                 }));
             }
             else
@@ -686,24 +744,6 @@ class EdgeHolder : public virtual_enable_shared_from_this<EdgeHolder<T>>
 
         throw std::runtime_error("Must set an edge before calling get_edge");
     }
-
-    // std::shared_ptr<EdgeHandle<T>> get_edge_OLD() const
-    // {
-    //     if (auto edge = m_owned_edge.lock())
-    //     {
-    //         // // Clear the temp holder edge
-    //         // const_cast<EdgeHolder<T>*>(this)->reset_edge();
-
-    //         // auto self = const_cast<EdgeHolder<T>*>(this)->shared_from_this();
-
-    //         // // Add this object to the lifetime of the edge to ensure we are alive while the channel is held
-    //         // edge->add_lifetime(self);
-
-    //         return edge;
-    //     }
-
-    //     throw std::runtime_error("Must set an edge before calling get_edge");
-    // }
 
     void make_edge_connection(std::shared_ptr<EdgeHandleObj> edge_obj)
     {

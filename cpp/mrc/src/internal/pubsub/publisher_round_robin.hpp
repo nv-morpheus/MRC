@@ -47,7 +47,8 @@ class PublisherRoundRobin final : public PublisherService
     void on_update() final;
 
     // apply the round robin policy
-    void apply_policy(mrc::runtime::RemoteDescriptor&& rd) final;
+    void apply_policy(rxcpp::subscriber<data_plane::RemoteDescriptorMessage>& sub,
+                      mrc::runtime::RemoteDescriptor&& rd) final;
 
     std::unordered_map<std::uint64_t, std::shared_ptr<ucx::Endpoint>>::const_iterator m_next;
 

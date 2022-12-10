@@ -21,6 +21,7 @@
 #include "internal/service.hpp"
 #include "internal/ucx/worker.hpp"
 
+#include "mrc/node/operators/node_component.hpp"
 #include "mrc/node/writable_subject.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/types.hpp"
@@ -79,7 +80,7 @@ class Client final : public resources::PartitionResourceBase, private Service
     void async_p2p_send(
         void* addr, std::size_t bytes, std::uint64_t tag, InstanceID instance_id, Request& request) const;
 
-    node::WritableSubject<RemoteDescriptorMessage>& remote_descriptor_channel();
+    node::IngressProvider<RemoteDescriptorMessage>& remote_descriptor_channel();
 
     // primitive rdma and send/recv call
 
@@ -129,7 +130,7 @@ class Client final : public resources::PartitionResourceBase, private Service
     mutable std::map<InstanceID, std::shared_ptr<ucx::Endpoint>> m_endpoints;
 
     std::unique_ptr<mrc::runnable::Runner> m_rd_writer;
-    std::unique_ptr<node::WritableSubject<RemoteDescriptorMessage>> m_rd_channel;
+    std::unique_ptr<node::NodeComponent<RemoteDescriptorMessage>> m_rd_channel;
 
     friend Resources;
 };

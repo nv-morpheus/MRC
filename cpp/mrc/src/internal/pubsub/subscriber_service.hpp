@@ -55,9 +55,7 @@ namespace mrc::internal::pubsub {
  * @brief The internal type-erased SubscriberService
  *
  */
-class SubscriberService final : public Base,
-                                public mrc::pubsub::ISubscriberService,
-                                public mrc::node::GenericSinkComponent<mrc::runtime::RemoteDescriptor>
+class SubscriberService final : public Base, public mrc::pubsub::ISubscriberService
 {
     SubscriberService(std::string service_name, runtime::Partition& runtime);
 
@@ -86,17 +84,17 @@ class SubscriberService final : public Base,
     // await on the completion of all internal runnables
     void do_subscription_service_join() final;
 
-    // [Operator]
-    mrc::channel::Status on_data(mrc::runtime::RemoteDescriptor&& rd) final
-    {
-        return WritableSubject<mrc::runtime::RemoteDescriptor>::await_write(std::move(rd));
-    }
+    // // [Operator]
+    // mrc::channel::Status on_data(mrc::runtime::RemoteDescriptor&& rd) final
+    // {
+    //     return WritableSubject<mrc::runtime::RemoteDescriptor>::await_write(std::move(rd));
+    // }
 
-    // [Operator] - signifies the channel was dropped
-    void on_complete() final
-    {
-        WritableSubject<mrc::runtime::RemoteDescriptor>::release_edge_connection();
-    }
+    // // [Operator] - signifies the channel was dropped
+    // void on_complete() final
+    // {
+    //     WritableSubject<mrc::runtime::RemoteDescriptor>::release_edge_connection();
+    // }
 
     // [internal::control_plane::client::SubscriptionService]
     // called by the update engine when updates for a given subscribed_to role is received

@@ -34,7 +34,9 @@
 #include "mrc/channel/channel.hpp"
 #include "mrc/memory/literals.hpp"
 #include "mrc/node/edge_builder.hpp"
+#include "mrc/node/operators/node_component.hpp"
 #include "mrc/node/rx_sink.hpp"
+#include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_channel.hpp"
 #include "mrc/protos/codable.pb.h"
 #include "mrc/runnable/launch_control.hpp"
@@ -68,7 +70,7 @@ Client::Client(resources::PartitionResourceBase& base,
   m_ucx(ucx),
   m_connnection_manager(connections_manager),
   m_transient_pool(transient_pool),
-  m_rd_channel(std::make_unique<node::WritableSubject<RemoteDescriptorMessage>>())
+  m_rd_channel(std::make_unique<node::NodeComponent<RemoteDescriptorMessage>>())
 {}
 
 Client::~Client() = default;
@@ -268,7 +270,7 @@ void Client::issue_remote_descriptor(RemoteDescriptorMessage&& msg)
     }
 }
 
-node::WritableSubject<RemoteDescriptorMessage>& Client::remote_descriptor_channel()
+node::IngressProvider<RemoteDescriptorMessage>& Client::remote_descriptor_channel()
 {
     CHECK(m_rd_channel);
     return *m_rd_channel;
