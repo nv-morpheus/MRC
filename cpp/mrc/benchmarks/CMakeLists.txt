@@ -17,6 +17,7 @@ add_executable(bench_mrc
   main.cpp
   bench_mrc.cpp
   bench_coroutines.cpp
+  bench_fibers.cpp
   bench_segment.cpp
 )
 
