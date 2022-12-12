@@ -24,6 +24,7 @@ dependencies:
   - grpc-cpp=1.46
   - gtest=1.10
   - gxx_linux-64=11.2
+  - isort
   - jinja2=3.0
   - lcov=1.15
   - libhwloc=2.5
@@ -46,7 +47,6 @@ dependencies:
   - pip:
     - cython
     - flake8
-    - isort
     - numpy==1.21.2
     - pytest
     - pytest-timeout
