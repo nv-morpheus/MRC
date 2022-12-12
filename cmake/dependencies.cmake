@@ -147,7 +147,6 @@ include(deps/Configure_prometheus)
 
 # libcudacxx
 # =========
-set(LIBCUDACXX_VERSION "1.8.0" CACHE STRING "Version of libcudacxx to use")
 include(deps/Configure_libcudacxx)
 
 if(MRC_BUILD_BENCHMARKS)
