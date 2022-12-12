@@ -64,7 +64,7 @@ class Manager : public Service
 
     resources::Manager& m_resources;
     std::shared_ptr<Pipeline> m_pipeline;
-    std::shared_ptr<node::WritableSubject<ControlMessage>> m_update_channel;
+    std::unique_ptr<node::WritableSubject<ControlMessage>> m_update_channel;
     std::unique_ptr<mrc::runnable::Runner> m_controller;
 };
 

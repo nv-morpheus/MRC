@@ -372,7 +372,7 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
     std::optional<grpc::Status> m_status;
 
     // reader_source - available for handler connections (attach_to method) prior to await_init
-    std::shared_ptr<mrc::node::RxSource<IncomingData>> m_reader_source;
+    std::unique_ptr<mrc::node::RxSource<IncomingData>> m_reader_source;
 
     // channel connected to the writer sink; each ServerStreamWriter will take ownership of a shared_ptr
     std::shared_ptr<mrc::node::WritableSubject<writer_t>> m_write_channel;

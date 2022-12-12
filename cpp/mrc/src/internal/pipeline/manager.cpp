@@ -71,11 +71,11 @@ void Manager::do_service_start()
     main.pe_count            = 1;
     main.engines_per_pe      = 1;
 
-    auto instance   = std::make_unique<Instance>(m_pipeline, m_resources);
-    auto controller = std::make_shared<Controller>(std::move(instance));
+    auto instance    = std::make_unique<Instance>(m_pipeline, m_resources);
+    auto controller  = std::make_unique<Controller>(std::move(instance));
+    m_update_channel = std::make_unique<node::WritableSubject<ControlMessage>>();
 
-    m_update_channel = std::make_shared<node::WritableSubject<ControlMessage>>();
-
+    // form edge
     node::make_edge(*m_update_channel, *controller);
 
     // launch controller

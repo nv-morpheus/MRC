@@ -30,8 +30,8 @@ namespace mrc::manifold {
 
 struct IngressDelegate
 {
-    virtual ~IngressDelegate() = default;
-    virtual void add_input(const SegmentAddress& address, std::shared_ptr<node::IIngressAcceptorBase> input_source) = 0;
+    virtual ~IngressDelegate()                                                                      = default;
+    virtual void add_input(const SegmentAddress& address, node::IIngressAcceptorBase* input_source) = 0;
 };
 
 template <typename T>
@@ -45,16 +45,16 @@ class TypedIngress : public IngressDelegate
     //     return *sink;
     // }
 
-    void add_input(const SegmentAddress& address, std::shared_ptr<node::IIngressAcceptorBase> input_source) final
+    void add_input(const SegmentAddress& address, node::IIngressAcceptorBase* input_source) final
     {
-        auto source = std::dynamic_pointer_cast<node::IIngressAcceptor<T>>(input_source);
+        auto source = dynamic_cast<node::IIngressAcceptor<T>*>(input_source);
         CHECK(source);
         do_add_input(address, source);
     }
 
   private:
     // virtual node::IIngressAcceptorBase& source_base()                                                           = 0;
-    virtual void do_add_input(const SegmentAddress& address, std::shared_ptr<node::IIngressAcceptor<T>> source) = 0;
+    virtual void do_add_input(const SegmentAddress& address, node::IIngressAcceptor<T>* source) = 0;
 };
 
 template <typename T>
@@ -64,7 +64,7 @@ class MuxedIngress : public node::Muxer<T>, public TypedIngress<T>
     // MuxedIngress() : m_muxer(std::make_shared<node::Muxer<T>>()) {}
 
   protected:
-    void do_add_input(const SegmentAddress& address, std::shared_ptr<node::IIngressAcceptor<T>> source) final
+    void do_add_input(const SegmentAddress& address, node::IIngressAcceptor<T>* source) final
     {
         // source->set_ingress(this->get)
         node::make_edge(*source, *this);

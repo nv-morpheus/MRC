@@ -75,15 +75,6 @@ class LaunchControl final
         get_engine_factory(default_engine_factory_name());
     }
 
-    template <template <typename> typename ContextWrapperT, typename RunnableT, typename... ContextArgsT>
-    [[nodiscard]] std::unique_ptr<Launcher> prepare_launcher_with_wrapped_context(const LaunchOptions& options,
-                                                                                  std::unique_ptr<RunnableT> runnable,
-                                                                                  ContextArgsT&&... context_args)
-    {
-        return prepare_launcher_with_wrapped_context(
-            options, std::shared_ptr<RunnableT>(std::move(runnable)), std::forward<ContextArgsT>(context_args)...);
-    }
-
     /**
      * @brief Construct a Launcher for a Runnable
      *
@@ -98,7 +89,7 @@ class LaunchControl final
      */
     template <template <typename> typename ContextWrapperT, typename RunnableT, typename... ContextArgsT>
     [[nodiscard]] std::unique_ptr<Launcher> prepare_launcher_with_wrapped_context(const LaunchOptions& options,
-                                                                                  std::shared_ptr<RunnableT> runnable,
+                                                                                  std::unique_ptr<RunnableT> runnable,
                                                                                   ContextArgsT&&... context_args)
     {
         // inspect runnable to make the proper contexts
@@ -155,15 +146,6 @@ class LaunchControl final
         return std::make_unique<Launcher>(std::move(runner), std::move(contexts), std::move(engines));
     }
 
-    template <typename RunnableT, typename... ContextArgsT>
-    [[nodiscard]] std::unique_ptr<Launcher> prepare_launcher(std::unique_ptr<RunnableT> runnable,
-                                                             ContextArgsT&&... context_args)
-    {
-        LaunchOptions options;
-        return prepare_launcher(
-            options, std::shared_ptr<RunnableT>(std::move(runnable)), std::forward<ContextArgsT>(context_args)...);
-    }
-
     /**
      * @brief Construct a Launcher for a Runnable
      *
@@ -177,20 +159,11 @@ class LaunchControl final
      * @return std::unique_ptr<Launcher>
      */
     template <typename RunnableT, typename... ContextArgsT>
-    [[nodiscard]] std::unique_ptr<Launcher> prepare_launcher(std::shared_ptr<RunnableT> runnable,
+    [[nodiscard]] std::unique_ptr<Launcher> prepare_launcher(std::unique_ptr<RunnableT> runnable,
                                                              ContextArgsT&&... context_args)
     {
         LaunchOptions options;
         return prepare_launcher(options, std::move(runnable), std::forward<ContextArgsT>(context_args)...);
-    }
-
-    template <typename RunnableT, typename... ContextArgsT>
-    [[nodiscard]] std::unique_ptr<Launcher> prepare_launcher(const LaunchOptions& options,
-                                                             std::unique_ptr<RunnableT> runnable,
-                                                             ContextArgsT&&... context_args)
-    {
-        return prepare_launcher(
-            options, std::shared_ptr<RunnableT>(std::move(runnable)), std::forward<ContextArgsT>(context_args)...);
     }
 
     /**
@@ -209,7 +182,7 @@ class LaunchControl final
     // std::enable_if_t<not(is_fiber_runnable_v<RunnableT> and is_thread_runnable_v<RunnableT>)>>
     template <typename RunnableT, typename... ContextArgsT>
     [[nodiscard]] std::unique_ptr<Launcher> prepare_launcher(const LaunchOptions& options,
-                                                             std::shared_ptr<RunnableT> runnable,
+                                                             std::unique_ptr<RunnableT> runnable,
                                                              ContextArgsT&&... context_args)
     {
         // inspect runnable to make the proper contexts

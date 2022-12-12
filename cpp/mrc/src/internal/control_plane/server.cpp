@@ -98,7 +98,7 @@ void Server::do_service_start()
     // create external queue for incoming events
     // as new grpc streams are initialized by the acceptor, they attach as sources to the queue (stream >> queue)
     // these streams issue event (event_t) object which encapsulate the stream_writer for the originating stream
-    m_queue = std::make_shared<mrc::node::Queue<event_t>>();
+    m_queue = std::make_unique<mrc::node::Queue<event_t>>();
     // m_queue->enable_persistence();
 
     // the queue is attached to the event handler which will update the internal state of the server

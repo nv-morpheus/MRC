@@ -283,14 +283,14 @@ TEST_F(TestRunnable, RxSourceToRxSink)
     // this ensures that the Muxer Operator survives
     {
         auto source =
-            std::make_shared<node::RxSource<float>>(rxcpp::observable<>::create<float>([](rxcpp::subscriber<float> s) {
+            std::make_unique<node::RxSource<float>>(rxcpp::observable<>::create<float>([](rxcpp::subscriber<float> s) {
                 s.on_next(1.0f);
                 s.on_next(2.0f);
                 s.on_next(3.0f);
                 s.on_completed();
             }));
         auto sink =
-            std::make_shared<node::RxSink<float>>(rxcpp::make_observer_dynamic<float>([&](float x) { ++counter; }));
+            std::make_unique<node::RxSink<float>>(rxcpp::make_observer_dynamic<float>([&](float x) { ++counter; }));
 
         node::make_edge(*source, *sink);
 
@@ -315,7 +315,7 @@ TEST_F(TestRunnable, RxSourceToMuxerToRxSink)
     // this ensures that the Muxer Operator survives
     {
         auto source =
-            std::make_shared<node::RxSource<float>>(rxcpp::observable<>::create<float>([](rxcpp::subscriber<float> s) {
+            std::make_unique<node::RxSource<float>>(rxcpp::observable<>::create<float>([](rxcpp::subscriber<float> s) {
                 s.on_next(1.0f);
                 s.on_next(2.0f);
                 s.on_next(3.0f);
@@ -323,7 +323,7 @@ TEST_F(TestRunnable, RxSourceToMuxerToRxSink)
             }));
         auto muxer = std::make_shared<node::Muxer<float>>();
         auto sink =
-            std::make_shared<node::RxSink<float>>(rxcpp::make_observer_dynamic<float>([&](float x) { ++counter; }));
+            std::make_unique<node::RxSink<float>>(rxcpp::make_observer_dynamic<float>([&](float x) { ++counter; }));
 
         node::make_edge(*source, *muxer);
         node::make_edge(*muxer, *sink);

@@ -179,7 +179,7 @@ void Server::do_service_start()
             }
 
             // source for ucx tag recvs with data
-            auto progress_engine = std::make_shared<DataPlaneServerWorker>(m_ucx.worker());
+            auto progress_engine = std::make_unique<DataPlaneServerWorker>(m_ucx.worker());
 
             // router for ucx tag recvs with data
             m_deserialize_source = std::make_shared<node::TaggedRouter<PortAddress, memory::TransientBuffer>>();

@@ -38,7 +38,7 @@ class Runnable : public Object<NodeT>, public runnable::Launchable
 {
   public:
     template <typename... ArgsT>
-    Runnable(std::string name, ArgsT&&... args) : m_node(std::make_shared<NodeT>(std::forward<ArgsT>(args)...))
+    Runnable(std::string name, ArgsT&&... args) : m_node(std::make_unique<NodeT>(std::forward<ArgsT>(args)...))
     {
         // Set the name in the Object class
         this->set_name(std::move(name));
@@ -56,8 +56,7 @@ class Runnable : public Object<NodeT>, public runnable::Launchable
     NodeT* get_object() const final;
     std::unique_ptr<runnable::Launcher> prepare_launcher(runnable::LaunchControl& launch_control) final;
 
-    // Stored as a shared_ptr but requires unique_ptr to construct
-    std::shared_ptr<NodeT> m_node;
+    std::unique_ptr<NodeT> m_node;
 };
 
 template <typename NodeT>

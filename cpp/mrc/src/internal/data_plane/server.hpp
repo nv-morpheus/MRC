@@ -119,7 +119,7 @@ class Server final : public Service, public resources::PartitionResourceBase
 
     // the remote descriptor manager will connect to this source
     // data will be emitted on this source as a conditional branch of data source
-    std::shared_ptr<node::WritableSubject<network_event_t>> m_prepost_channel;
+    std::unique_ptr<node::WritableSubject<network_event_t>> m_prepost_channel;
 
     // pre-posted recv state
     std::vector<detail::PrePostedRecvInfo> m_pre_posted_recv_info;

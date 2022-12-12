@@ -61,7 +61,7 @@ class EgressPort final : public Object<node::RxSinkBase<T>>,
     EgressPort(SegmentAddress address, PortName name) :
       m_segment_address(address),
       m_port_name(std::move(name)),
-      m_sink(std::make_shared<node::RxNode<T>>())
+      m_sink(std::make_unique<node::RxNode<T>>())
     {
         this->set_name(m_port_name);
     }
@@ -93,13 +93,13 @@ class EgressPort final : public Object<node::RxSinkBase<T>>,
         DCHECK_EQ(manifold->port_name(), m_port_name);
         CHECK(m_sink);
         CHECK(!m_manifold_connected);
-        manifold->add_input(m_segment_address, m_sink);
+        manifold->add_input(m_segment_address, m_sink.get());
         m_manifold_connected = true;
     }
 
     SegmentAddress m_segment_address;
     PortName m_port_name;
-    std::shared_ptr<node::RxNode<T>> m_sink;
+    std::unique_ptr<node::RxNode<T>> m_sink;
     bool m_manifold_connected{false};
     runnable::LaunchOptions m_launch_options;
     std::mutex m_mutex;

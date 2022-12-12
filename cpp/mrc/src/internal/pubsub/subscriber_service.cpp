@@ -59,7 +59,7 @@ void SubscriberService::do_subscription_service_setup()
     // reg
     auto network_source = resources().network()->data_plane().server().deserialize_source().get_source(tag());
 
-    auto network_handler = std::make_shared<mrc::node::RxSink<memory::TransientBuffer>>();
+    auto network_handler = std::make_unique<mrc::node::RxSink<memory::TransientBuffer>>();
     // [this](memory::TransientBuffer buffer) {
     //     return this->get_writable_edge()->await_write(this->network_handler(buffer));
     // },

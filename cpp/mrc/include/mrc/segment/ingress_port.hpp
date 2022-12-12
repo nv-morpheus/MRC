@@ -55,7 +55,7 @@ class IngressPort : public Object<node::RxSourceBase<T>>, public IngressPortBase
     IngressPort(SegmentAddress address, PortName name) :
       m_segment_address(address),
       m_port_name(std::move(name)),
-      m_source(std::make_shared<node::RxNode<T>>())
+      m_source(std::make_unique<node::RxNode<T>>())
     {
         this->set_name(m_port_name);
     }
@@ -84,12 +84,12 @@ class IngressPort : public Object<node::RxSourceBase<T>>, public IngressPortBase
         // ingress ports connect to manifold outputs
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         CHECK(m_source);
-        manifold->add_output(m_segment_address, m_source);
+        manifold->add_output(m_segment_address, m_source.get());
     }
 
     SegmentAddress m_segment_address;
     PortName m_port_name;
-    std::shared_ptr<node::RxNode<T>> m_source;
+    std::unique_ptr<node::RxNode<T>> m_source;
     std::mutex m_mutex;
 
     friend Instance;

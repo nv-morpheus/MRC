@@ -39,8 +39,8 @@ class CompositeManifold : public Manifold
         this->resources()
             .main()
             .enqueue([this] {
-                m_ingress = std::make_shared<IngressT>();
-                m_egress  = std::make_shared<EgressT>();
+                m_ingress = std::make_unique<IngressT>();
+                m_egress  = std::make_unique<EgressT>();
 
                 // Then link them together
                 node::make_edge(*m_ingress, *m_egress);
@@ -49,8 +49,8 @@ class CompositeManifold : public Manifold
     }
     CompositeManifold(PortName port_name,
                       pipeline::Resources& resources,
-                      std::shared_ptr<IngressT> ingress,
-                      std::shared_ptr<EgressT> egress) :
+                      std::unique_ptr<IngressT> ingress,
+                      std::unique_ptr<EgressT> egress) :
       Manifold(std::move(port_name), resources),
       m_ingress(std::move(ingress)),
       m_egress(std::move(egress))
@@ -73,7 +73,7 @@ class CompositeManifold : public Manifold
     }
 
   private:
-    void do_add_input(const SegmentAddress& address, std::shared_ptr<node::IIngressAcceptorBase> input_source) final
+    void do_add_input(const SegmentAddress& address, node::IIngressAcceptorBase* input_source) final
     {
         // enqueue update to be done later
         m_input_updates.push_back([this, address, input_source] {
@@ -83,7 +83,7 @@ class CompositeManifold : public Manifold
         });
     }
 
-    void do_add_output(const SegmentAddress& address, std::shared_ptr<node::IIngressProviderBase> output_sink) final
+    void do_add_output(const SegmentAddress& address, node::IIngressProviderBase* output_sink) final
     {
         // enqueue update to be done later
         m_output_updates.push_back([this, address, output_sink] {
@@ -138,8 +138,8 @@ class CompositeManifold : public Manifold
     std::vector<std::function<void()>> m_input_updates;
     std::vector<std::function<void()>> m_output_updates;
 
-    std::shared_ptr<IngressT> m_ingress;
-    std::shared_ptr<EgressT> m_egress;
+    std::unique_ptr<IngressT> m_ingress;
+    std::unique_ptr<EgressT> m_egress;
 };
 
 }  // namespace mrc::manifold

@@ -108,7 +108,7 @@ class Server : public Service
     std::map<std::string, std::unique_ptr<server::SubscriptionService>> m_subscription_services;
 
     // operators / queues
-    std::shared_ptr<mrc::node::Queue<event_t>> m_queue;
+    std::unique_ptr<mrc::node::Queue<event_t>> m_queue;
 
     // runners
     std::unique_ptr<mrc::runnable::Runner> m_stream_acceptor;
