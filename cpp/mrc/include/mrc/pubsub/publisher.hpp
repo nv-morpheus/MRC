@@ -82,7 +82,7 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
     {
         // form a persistent connection to the operator
         // data flowing in from operator edges are forwarded to the public await_write
-        m_persistent_channel = std::make_shared<mrc::node::WritableSubject<T>>();
+        m_persistent_channel = std::make_unique<mrc::node::WritableSubject<T>>();
         mrc::node::make_edge(*m_persistent_channel, *this);
 
         // Make a connection from this to the service
@@ -117,8 +117,8 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
                 },
                 edge_channel.get_writer());
 
-        node::SinkProperties<T>::init_edge(upstream_edge);
-        node::SourceProperties<std::unique_ptr<codable::EncodedStorage>>::init_edge(edge_channel.get_reader());
+        node::SinkProperties<T>::init_owned_edge(upstream_edge);
+        node::SourceProperties<std::unique_ptr<codable::EncodedStorage>>::init_owned_edge(edge_channel.get_reader());
     }
 
     // [ISubscriptionServiceControl] - this overrides the SubscriptionServiceForwarder forwarding method
@@ -150,7 +150,7 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
     const std::shared_ptr<IPublisherService> m_service;
 
     // this holds the operator open;
-    std::shared_ptr<mrc::node::WritableSubject<T>> m_persistent_channel;
+    std::unique_ptr<mrc::node::WritableSubject<T>> m_persistent_channel;
 
     friend runtime::IPartition;
 };

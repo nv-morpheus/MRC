@@ -37,8 +37,8 @@ class Queue : public IngressProvider<T>, public EgressProvider<T>
     {
         EdgeChannel<T> edge_channel(std::move(channel));
 
-        SinkProperties<T>::init_edge(edge_channel.get_writer());
-        SourceProperties<T>::init_edge(edge_channel.get_reader());
+        SinkProperties<T>::init_owned_edge(edge_channel.get_writer());
+        SourceProperties<T>::init_owned_edge(edge_channel.get_reader());
     }
 };
 

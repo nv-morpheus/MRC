@@ -142,8 +142,8 @@ class Subscriber final : public control_plane::SubscriptionServiceForwarder,
             },
             edge_channel.get_reader());
 
-        node::SinkProperties<mrc::runtime::RemoteDescriptor>::init_edge(edge_channel.get_writer());
-        node::SourceProperties<T>::init_edge(downstream_edge);
+        node::SinkProperties<mrc::runtime::RemoteDescriptor>::init_owned_edge(edge_channel.get_writer());
+        node::SourceProperties<T>::init_owned_edge(downstream_edge);
     }
 
     ISubscriptionService& service() const final

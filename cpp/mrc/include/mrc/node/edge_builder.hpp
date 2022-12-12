@@ -357,7 +357,7 @@ void make_edge_typeless(SourceT& source, SinkT& sink)
 // }
 
 template <typename T>
-class DeferredWritableMultiEdge : public MultiEdgeHolder<T, std::size_t>,
+class DeferredWritableMultiEdge : public MultiEdgeHolder<std::size_t, T>,
                                   public IEdgeWritable<T>,
                                   public DeferredWritableMultiEdgeBase
 {
@@ -432,17 +432,17 @@ class DeferredWritableMultiEdge : public MultiEdgeHolder<T, std::size_t>,
 
     size_t edge_connection_count() const override
     {
-        return MultiEdgeHolder<T, std::size_t>::edge_connection_count();
+        return MultiEdgeHolder<std::size_t, T>::edge_connection_count();
     }
     std::vector<std::size_t> edge_connection_keys() const override
     {
-        return MultiEdgeHolder<T, std::size_t>::edge_connection_keys();
+        return MultiEdgeHolder<std::size_t, T>::edge_connection_keys();
     }
 
   protected:
     std::shared_ptr<IEdgeWritable<T>> get_writable_edge(std::size_t edge_idx) const
     {
-        return std::dynamic_pointer_cast<IEdgeWritable<T>>(this->get_edge_pair(edge_idx).second);
+        return std::dynamic_pointer_cast<IEdgeWritable<T>>(this->get_connected_edge(edge_idx));
     }
 
     virtual std::vector<std::size_t> determine_indices_for_value(const T& data)
@@ -456,7 +456,7 @@ class DeferredWritableMultiEdge : public MultiEdgeHolder<T, std::size_t>,
         // Do any conversion to the correct type here
         auto adapted_ingress = EdgeBuilder::adapt_ingress<T>(ingress);
 
-        MultiEdgeHolder<T, std::size_t>::make_edge_connection(key, adapted_ingress);
+        MultiEdgeHolder<std::size_t, T>::make_edge_connection(key, adapted_ingress);
     }
 
     bool m_deep_copy{false};

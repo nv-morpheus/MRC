@@ -108,12 +108,12 @@ class SourceProperties : public EdgeHolder<T>, public SourcePropertiesBase
   protected:
     std::shared_ptr<IEdgeWritable<T>> get_writable_edge() const
     {
-        return std::dynamic_pointer_cast<IEdgeWritable<T>>(this->m_edge_connection);
+        return std::dynamic_pointer_cast<IEdgeWritable<T>>(this->get_connected_edge());
     }
 };
 
-template <typename T, typename KeyT>
-class MultiSourceProperties : public MultiEdgeHolder<T, KeyT>, public SourcePropertiesBase
+template <typename KeyT, typename T>
+class MultiSourceProperties : public MultiEdgeHolder<KeyT, T>, public SourcePropertiesBase
 {
   public:
     using source_type_t = T;
@@ -138,7 +138,7 @@ class MultiSourceProperties : public MultiEdgeHolder<T, KeyT>, public SourceProp
   protected:
     std::shared_ptr<IEdgeWritable<T>> get_writable_edge(KeyT edge_key) const
     {
-        return std::dynamic_pointer_cast<IEdgeWritable<T>>(this->get_edge_pair(edge_key).second);
+        return std::dynamic_pointer_cast<IEdgeWritable<T>>(this->get_connected_edge(edge_key));
     }
 };
 
@@ -216,7 +216,7 @@ class ForwardingIngressEdge : public IngressAcceptor<T>, public IEdgeWritable<T>
   public:
     channel::Status await_write(T&& data)
     {
-        return std::dynamic_pointer_cast<IEdgeWritable<T>>(this->m_edge_connection)->await_write(std::move(data));
+        return this->get_writable_edge()->await_write(std::move(data));
     }
 
     void set_ingress_typeless(std::shared_ptr<EdgeTag> ingress) override

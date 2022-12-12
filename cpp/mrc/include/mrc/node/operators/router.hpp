@@ -92,7 +92,7 @@ namespace mrc::node {
 // };
 
 template <typename KeyT, typename InputT, typename OutputT = InputT>
-class RouterBase : public ForwardingIngressProvider<InputT>, public MultiSourceProperties<OutputT, KeyT>
+class RouterBase : public ForwardingIngressProvider<InputT>, public MultiSourceProperties<KeyT, OutputT>
 {
   public:
     using input_data_t  = InputT;
@@ -108,12 +108,12 @@ class RouterBase : public ForwardingIngressProvider<InputT>, public MultiSourceP
 
     bool has_source(const KeyT& key) const
     {
-        return MultiSourceProperties<output_data_t, KeyT>::get_edge_pair(key).first;
+        return MultiSourceProperties<KeyT, output_data_t>::get_edge_pair(key).first;
     }
 
     void drop_edge(const KeyT& key)
     {
-        MultiSourceProperties<output_data_t, KeyT>::release_edge_connection(key);
+        MultiSourceProperties<KeyT, output_data_t>::release_edge_connection(key);
     }
 
   protected:
@@ -127,7 +127,7 @@ class RouterBase : public ForwardingIngressProvider<InputT>, public MultiSourceP
             // Make sure we do any type conversions as needed
             auto adapted_ingress = EdgeBuilder::adapt_ingress<OutputT>(std::move(ingress));
 
-            m_parent.MultiSourceProperties<OutputT, KeyT>::make_edge_connection(m_key, std::move(adapted_ingress));
+            m_parent.MultiSourceProperties<KeyT, OutputT>::make_edge_connection(m_key, std::move(adapted_ingress));
         }
 
       private:
@@ -141,12 +141,12 @@ class RouterBase : public ForwardingIngressProvider<InputT>, public MultiSourceP
 
     //     auto output = this->convert_value(std::move(data));
 
-    //     return MultiSourceProperties<output_data_t, KeyT>::get_writable_edge(key)->await_write(std::move(output));
+    //     return MultiSourceProperties<KeyT, output_data_t>::get_writable_edge(key)->await_write(std::move(output));
     // }
 
     void on_complete() override
     {
-        MultiSourceProperties<output_data_t, KeyT>::release_edge_connections();
+        MultiSourceProperties<KeyT, output_data_t>::release_edge_connections();
     }
 
     // virtual KeyT determine_key_for_value(const input_data_t& t) = 0;
@@ -155,7 +155,7 @@ class RouterBase : public ForwardingIngressProvider<InputT>, public MultiSourceP
 };
 
 // template <typename KeyT, typename T>
-// class RouterBase<KeyT, T, T> : public ForwardingIngressProvider<T>, public MultiSourceProperties<T, KeyT>
+// class RouterBase<KeyT, T, T> : public ForwardingIngressProvider<T>, public MultiSourceProperties<KeyT, T>
 // {
 //   public:
 //     using input_data_t  = T;
@@ -171,12 +171,12 @@ class RouterBase : public ForwardingIngressProvider<InputT>, public MultiSourceP
 
 //     bool has_source(const KeyT& key) const
 //     {
-//         return MultiSourceProperties<output_data_t, KeyT>::get_edge_pair(key).first;
+//         return MultiSourceProperties<KeyT, output_data_t>::get_edge_pair(key).first;
 //     }
 
 //     void drop_edge(const KeyT& key)
 //     {
-//         MultiSourceProperties<output_data_t, KeyT>::release_edge(key);
+//         MultiSourceProperties<KeyT, output_data_t>::release_edge(key);
 //     }
 
 //   protected:
@@ -199,12 +199,12 @@ class RouterBase : public ForwardingIngressProvider<InputT>, public MultiSourceP
 //     {
 //         KeyT key = this->determine_key_for_value(data);
 
-//         return MultiSourceProperties<output_data_t, KeyT>::get_writable_edge(key)->await_write(std::move(data));
+//         return MultiSourceProperties<KeyT, output_data_t>::get_writable_edge(key)->await_write(std::move(data));
 //     }
 
 //     virtual void on_complete()
 //     {
-//         MultiSourceProperties<output_data_t, KeyT>::release_edges();
+//         MultiSourceProperties<KeyT, output_data_t>::release_edges();
 //     }
 
 //     virtual KeyT determine_key_for_value(const input_data_t& t) = 0;
@@ -220,7 +220,7 @@ class Router : public RouterBase<KeyT, InputT, OutputT>
 
         auto output = this->convert_value(std::move(data));
 
-        return MultiSourceProperties<OutputT, KeyT>::get_writable_edge(key)->await_write(std::move(output));
+        return MultiSourceProperties<KeyT, OutputT>::get_writable_edge(key)->await_write(std::move(output));
     }
 
     virtual KeyT determine_key_for_value(const InputT& t) = 0;
@@ -237,7 +237,7 @@ class Router<KeyT, InputT, OutputT, std::enable_if_t<std::is_convertible_v<Input
     {
         KeyT key = this->determine_key_for_value(data);
 
-        return MultiSourceProperties<OutputT, KeyT>::get_writable_edge(key)->await_write(std::move(data));
+        return MultiSourceProperties<KeyT, OutputT>::get_writable_edge(key)->await_write(std::move(data));
     }
 
     virtual KeyT determine_key_for_value(const InputT& t) = 0;
@@ -258,12 +258,12 @@ class Router<KeyT, InputT, OutputT, std::enable_if_t<std::is_convertible_v<Input
 
 //         if constexpr (std::is_convertible_v<InputT, OutputT>)
 //         {
-//             return MultiSourceProperties<OutputT, KeyT>::get_writable_edge(key)->await_write(std::move(data));
+//             return MultiSourceProperties<KeyT, OutputT>::get_writable_edge(key)->await_write(std::move(data));
 //         }
 //         else
 //         {
 //             // If not convertable, call convert_value
-//             return MultiSourceProperties<OutputT, KeyT>::get_writable_edge(key)->await_write(
+//             return MultiSourceProperties<KeyT, OutputT>::get_writable_edge(key)->await_write(
 //                 this->convert_value(std::move(data)));
 //         }
 //     }

@@ -64,11 +64,11 @@ class SourceChannel : public virtual SourceProperties<T>
         //     this->m_set_edge = channel_writer;
         // }));
 
-        SourceProperties<T>::init_edge(channel_reader);
+        SourceProperties<T>::init_owned_edge(channel_reader);
 
-        // Finally, set the other half to m_edge_connection to allow using the channel without it being deleted. If
+        // Finally, set the other half to the connected edge to allow using the channel without it being deleted. If
         // make_edge_connection() is called, then this will be overwritten
-        this->m_edge_connection = channel_writer;
+        SourceProperties<T>::init_connected_edge(channel_writer);
     }
 
     //     inline channel::Status await_write(T&& data) final

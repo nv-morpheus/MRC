@@ -131,7 +131,7 @@ class CombineLatest : public IngressAcceptor<std::tuple<TypesT...>>
       public:
         Upstream(CombineLatest& parent)
         {
-            this->init_edge(std::make_shared<InnerEdge>(parent));
+            this->init_owned_edge(std::make_shared<InnerEdge>(parent));
         }
 
         // ~Upstream()

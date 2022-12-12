@@ -234,8 +234,8 @@ class TestQueue : public IngressProvider<T>, public EgressProvider<T>
     {
         EdgeChannel<T> edge_channel(std::move(channel));
 
-        SinkProperties<T>::init_edge(edge_channel.get_writer());
-        SourceProperties<T>::init_edge(edge_channel.get_reader());
+        SinkProperties<T>::init_owned_edge(edge_channel.get_writer());
+        SourceProperties<T>::init_owned_edge(edge_channel.get_reader());
     }
 };
 
@@ -245,7 +245,7 @@ class TestSourceComponent : public EgressProvider<T>
   public:
     TestSourceComponent()
     {
-        this->init_edge(std::make_shared<EdgeReadableLambda<T>>(
+        this->init_owned_edge(std::make_shared<EdgeReadableLambda<T>>(
             [this](int& t) {
                 // Call this object
                 return this->await_read(t);
@@ -278,7 +278,7 @@ class TestNodeComponent : public NodeComponent<T, T>
   public:
     TestNodeComponent()
     {
-        IngressProvider<T>::init_edge(std::make_shared<EdgeWritableLambda<T>>(
+        IngressProvider<T>::init_owned_edge(std::make_shared<EdgeWritableLambda<T>>(
             [this](int&& t) {
                 // Call this object
                 return this->on_next(std::move(t));
@@ -317,7 +317,7 @@ class TestSinkComponent : public IngressProvider<T>
   public:
     TestSinkComponent()
     {
-        this->init_edge(std::make_shared<EdgeWritableLambda<T>>(
+        this->init_owned_edge(std::make_shared<EdgeWritableLambda<T>>(
             [this](int&& t) {
                 // Call this object
                 return this->await_write(std::move(t));
@@ -350,7 +350,7 @@ class TestRouter : public Router<std::string, int>
 
 // class TestRouter : public IngressProvider<int>
 // {
-//     class UpstreamEdge : public IEdgeWritable<int>, public MultiSourceProperties<int, std::string>
+//     class UpstreamEdge : public IEdgeWritable<int>, public MultiSourceProperties<std::string, int>
 //     {
 //       public:
 //         UpstreamEdge(TestRouter& parent) : m_parent(parent) {}
@@ -413,7 +413,7 @@ class TestRouter : public Router<std::string, int>
 //         // Save it to avoid casting
 //         m_upstream = upstream;
 
-//         IngressProvider<int>::init_edge(upstream);
+//         IngressProvider<int>::init_owned_edge(upstream);
 //     }
 
 //     std::shared_ptr<IIngressAcceptor<int>> get_source(const std::string& key) const
@@ -454,7 +454,7 @@ class TestConditional : public IngressProvider<int>, public IngressAcceptor<int>
   public:
     TestConditional()
     {
-        IngressProvider<int>::init_edge(std::make_shared<EdgeWritableLambda<int>>(
+        IngressProvider<int>::init_owned_edge(std::make_shared<EdgeWritableLambda<int>>(
             [this](int&& t) {
                 // Call this object
                 return this->on_next(std::move(t));
@@ -495,7 +495,7 @@ class TestConditional : public IngressProvider<int>, public IngressAcceptor<int>
 
 // class TestBroadcast : public IngressProvider<int>, public IIngressAcceptor<int>
 // {
-//     class BroadcastEdge : public IEdgeWritable<int>, public MultiSourceProperties<int, size_t>
+//     class BroadcastEdge : public IEdgeWritable<int>, public MultiSourceProperties<size_t, int>
 //     {
 //       public:
 //         BroadcastEdge(TestBroadcast& parent) : m_parent(parent) {}
@@ -546,7 +546,7 @@ class TestConditional : public IngressProvider<int>, public IngressAcceptor<int>
 //         // Save to avoid casting
 //         m_edge = edge;
 
-//         IngressProvider<int>::init_edge(edge);
+//         IngressProvider<int>::init_owned_edge(edge);
 //     }
 
 //     ~TestBroadcast()

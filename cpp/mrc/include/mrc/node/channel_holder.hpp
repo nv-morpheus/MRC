@@ -580,88 +580,6 @@ class LambdaConvertingEdgeReadable : public ConvertingEdgeReadableBase<SourceT, 
     lambda_fn_t m_lambda_fn{};
 };
 
-// // EdgeChannel holds an actual channel object and provides interfaces for reading/writing
-// template <typename T>
-// class EdgeChannel : public EdgeReadable<T>, public EdgeWritable<T>
-// {
-//   public:
-//     EdgeChannel(std::unique_ptr<mrc::channel::Channel<T>> channel) : m_channel(std::move(channel)) {}
-//     virtual ~EdgeChannel()
-//     {
-//         if (m_channel)
-//         {
-//             m_channel->close_channel();
-//             m_channel.reset();
-//         }
-//     }
-
-//     virtual channel::Status await_read(T& t)
-//     {
-//         return m_channel->await_read(t);
-//     }
-
-//     virtual channel::Status await_write(T&& t)
-//     {
-//         return m_channel->await_write(std::move(t));
-//     }
-
-//   private:
-//     std::unique_ptr<mrc::channel::Channel<T>> m_channel;
-// };
-
-// template <typename T>
-// class EdgeChannelReader : public EdgeReadable<T>
-// {
-//   public:
-//     EdgeChannelReader(std::shared_ptr<mrc::channel::Channel<T>> channel) : m_channel(std::move(channel)) {}
-//     virtual ~EdgeChannelReader()
-//     {
-//         if (m_channel)
-//         {
-//             if (this->is_connected())
-//             {
-//                 VLOG(10) << "Closing channel from EdgeChannelReader";
-//             }
-
-//             m_channel->close_channel();
-//         }
-//     }
-
-//     virtual channel::Status await_read(T& t)
-//     {
-//         return m_channel->await_read(t);
-//     }
-
-//   private:
-//     std::shared_ptr<mrc::channel::Channel<T>> m_channel;
-// };
-
-// template <typename T>
-// class EdgeChannelWriter : public EdgeWritable<T>
-// {
-//   public:
-//     EdgeChannelWriter(std::shared_ptr<mrc::channel::Channel<T>> channel) : m_channel(std::move(channel)) {}
-//     virtual ~EdgeChannelWriter()
-//     {
-//         if (m_channel)
-//         {
-//             if (this->is_connected())
-//             {
-//                 VLOG(10) << "Closing channel from EdgeChannelWriter";
-//             }
-//             m_channel->close_channel();
-//         }
-//     }
-
-//     virtual channel::Status await_write(T&& t)
-//     {
-//         return m_channel->await_write(std::move(t));
-//     }
-
-//   private:
-//     std::shared_ptr<mrc::channel::Channel<T>> m_channel;
-// };
-
 // EdgeHolder keeps shared pointer of EdgeChannel alive and
 template <typename T>
 class EdgeHolder
@@ -678,7 +596,7 @@ class EdgeHolder
     virtual ~EdgeHolder()
     {
         // Drop any edge connections before this object goes out of scope. This should execute any disconnectors
-        m_edge_connection.reset();
+        m_connected_edge.reset();
 
         if (this->has_dependent_connection())
         {
@@ -694,24 +612,14 @@ class EdgeHolder
         return m_owned_edge.lock() && !m_owned_edge_lifetime;
     }
 
-    void init_edge(std::shared_ptr<EdgeHandle<T>> edge)
+    void init_owned_edge(std::shared_ptr<EdgeHandle<T>> edge)
     {
         // Check if set_edge followed by get_edge has been called
-        if (this->has_dependent_connection() || m_edge_connection)
+        if (this->has_dependent_connection() || m_connected_edge)
         {
             // Then someone is using this edge already, cant be changed
             throw std::runtime_error("Cant change edge after a connection has been made");
         }
-
-        // // Check for existing edge
-        // if (m_set_edge)
-        // {
-        //     if (m_set_edge->is_connected())
-        //     {
-        //         throw std::runtime_error(
-        //             "Cannot make multiple connections to the same node. Use dedicated Broadcast node");
-        //     }
-        // }
 
         std::weak_ptr<EdgeHandle<T>> weak_edge = edge;
 
@@ -741,6 +649,18 @@ class EdgeHolder
         m_owned_edge = edge;
     }
 
+    void init_connected_edge(std::shared_ptr<EdgeHandle<T>> edge)
+    {
+        // Check if set_edge followed by get_edge has been called
+        if (this->has_dependent_connection() || m_connected_edge)
+        {
+            // Then someone is using this edge already, cant be changed
+            throw std::runtime_error("Cant change edge after a connection has been made");
+        }
+
+        m_connected_edge = edge;
+    }
+
     std::shared_ptr<EdgeHandleObj> get_edge_connection() const
     {
         if (auto edge = m_owned_edge.lock())
@@ -767,17 +687,13 @@ class EdgeHolder
     void release_edge_connection()
     {
         m_owned_edge_lifetime.reset();
-        m_edge_connection.reset();
+        m_connected_edge.reset();
     }
 
-    // Used for retrieving the current edge without altering its lifetime
-    std::weak_ptr<EdgeHandle<T>> m_owned_edge;
-
-    // Holds a pointer to any set edge (different from init edge). Maintains lifetime
-    std::shared_ptr<EdgeHandle<T>> m_edge_connection;
-
-    // This object ensures that any initialized edge is kept alive and is cleared on connection
-    std::shared_ptr<EdgeHandle<T>> m_owned_edge_lifetime;
+    const std::shared_ptr<EdgeHandle<T>>& get_connected_edge() const
+    {
+        return m_connected_edge;
+    }
 
   private:
     void set_edge_handle(std::shared_ptr<EdgeHandle<T>> edge)
@@ -790,9 +706,9 @@ class EdgeHolder
         }
 
         // Check for existing edge
-        if (m_edge_connection)
+        if (m_connected_edge)
         {
-            if (m_edge_connection->is_connected())
+            if (m_connected_edge->is_connected())
             {
                 throw std::runtime_error(
                     "Cannot make multiple connections to the same node. Use dedicated Broadcast node");
@@ -800,7 +716,7 @@ class EdgeHolder
         }
 
         // Set to the temp edge to ensure its alive until get_edge is called
-        m_edge_connection = edge;
+        m_connected_edge = edge;
 
         // Reset the weak_ptr since we dont own this edge
         m_owned_edge.reset();
@@ -812,107 +728,75 @@ class EdgeHolder
         edge->connect();
     }
 
+    // Used for retrieving the current edge without altering its lifetime
+    std::weak_ptr<EdgeHandle<T>> m_owned_edge;
+
+    // This object ensures that any initialized edge is kept alive and is cleared on connection
+    std::shared_ptr<EdgeHandle<T>> m_owned_edge_lifetime;
+
+    // Holds a pointer to any set edge (different from init edge). Maintains lifetime
+    std::shared_ptr<EdgeHandle<T>> m_connected_edge;
+
     // Allow edge builder to call set_edge
     friend EdgeBuilder;
+
+    // Allow multi edge holder to access protected elements
+    template <typename KeyT, typename OtherT>
+    friend class MultiEdgeHolder;
 };
 
-template <typename T, typename KeyT>
-class MultiEdgeHolder : public virtual_enable_shared_from_this<MultiEdgeHolder<T, KeyT>>
+template <typename KeyT, typename T>
+class MultiEdgeHolder
 {
   public:
     MultiEdgeHolder()          = default;
     virtual ~MultiEdgeHolder() = default;
 
   protected:
-    using edge_pair_t = std::pair<std::weak_ptr<EdgeHandle<T>>, std::shared_ptr<EdgeHandle<T>>>;
-
-    void init_edge(KeyT key, std::shared_ptr<EdgeHandle<T>> edge)
+    void init_owned_edge(KeyT key, std::shared_ptr<EdgeHandle<T>> edge)
     {
         auto& edge_pair = this->get_edge_pair(key, true);
 
-        // Check if set_edge followed by get_edge has been called
-        if (edge_pair.first.lock() && !edge_pair.second)
-        {
-            // Then someone is using this edge already, cant be changed
-            throw std::runtime_error("Cant change edge after a connection has been made");
-        }
-
-        // Check for existing edge
-        if (edge_pair.second)
-        {
-            if (edge_pair.second->is_connected())
-            {
-                throw std::runtime_error(
-                    "Cannot make multiple connections to the same node. Use dedicated Broadcast node");
-            }
-        }
-
-        std::weak_ptr<EdgeHandle<T>> weak_edge = edge;
-
-        edge->add_connector(EdgeLifetime([this, weak_edge, key]() {
-            // Convert to full shared_ptr to avoid edge going out of scope
-            if (auto e = weak_edge.lock())
-            {
-                auto self = this->shared_from_this();
-
-                // Reset the edge on self
-                self->reset_edge(key);
-
-                // Now register a disconnector to keep self alive
-                e->add_disconnector(EdgeLifetime([self, key]() {
-                    auto& ep = self->get_edge_pair(key);
-
-                    ep.first.reset();
-                    ep.second.reset();
-                }));
-            }
-            else
-            {
-                LOG(ERROR) << "Lock was destroyed before making connection.";
-            }
-        }));
-
-        // Set to the temp edge to ensure its alive until get_edge is called
-        edge_pair.second = edge;
-
-        // Set to the weak ptr as well
-        edge_pair.first = edge;
+        edge_pair.init_owned_edge(std::move(edge));
     }
 
     std::shared_ptr<EdgeHandleObj> get_edge_connection(const KeyT& key) const
     {
         auto& edge_pair = this->get_edge_pair(key);
 
-        if (auto edge = edge_pair.first.lock())
-        {
-            return std::shared_ptr<EdgeHandleObj>(new EdgeHandleObj(EdgeTypePair::create<T>(), edge));
-        }
-
-        throw std::runtime_error("Must set an edge before calling get_edge");
+        return edge_pair.get_edge_connection();
     }
 
     void make_edge_connection(KeyT key, std::shared_ptr<EdgeHandleObj> edge_obj)
     {
-        CHECK(edge_obj->get_type() == EdgeTypePair::create<T>())
-            << "Incoming edge connection is not the correct type. Make sure to call "
-               "`EdgeBuilder::adapt_ingress<T>(edge)` or `EdgeBuilder::adapt_egress<T>(edge)` before calling "
-               "make_edge_connection";
+        auto& edge_pair = this->get_edge_pair(key, true);
 
-        // Unpack the edge, convert, and call the inner set_edge
-        auto unpacked_edge = edge_obj->get_handle_typed<EdgeHandle<T>>();
-
-        this->set_edge_handle(key, unpacked_edge);
+        edge_pair.make_edge_connection(std::move(edge_obj));
     }
 
     void release_edge_connection(const KeyT& key)
     {
         auto& edge_pair = this->get_edge_pair(key, true);
-        edge_pair.first.reset();
-        edge_pair.second.reset();
+
+        edge_pair.release_edge_connection();
+
+        m_edges.erase(key);
+    }
+
+    const std::shared_ptr<EdgeHandle<T>>& get_connected_edge(const KeyT& key) const
+    {
+        auto& edge_pair = this->get_edge_pair(key);
+
+        return edge_pair.get_connected_edge();
     }
 
     void release_edge_connections()
     {
+        for (auto& [key, edge_pair] : m_edges)
+        {
+            edge_pair.release_edge_connection();
+        }
+
         m_edges.clear();
     }
 
@@ -933,7 +817,7 @@ class MultiEdgeHolder : public virtual_enable_shared_from_this<MultiEdgeHolder<T
         return keys;
     }
 
-    edge_pair_t& get_edge_pair(KeyT key, bool create_if_missing = false)
+    EdgeHolder<T>& get_edge_pair(KeyT key, bool create_if_missing = false)
     {
         auto found = m_edges.find(key);
 
@@ -941,7 +825,7 @@ class MultiEdgeHolder : public virtual_enable_shared_from_this<MultiEdgeHolder<T
         {
             if (create_if_missing)
             {
-                m_edges[key] = edge_pair_t();
+                m_edges[key] = EdgeHolder<T>();
                 return m_edges[key];
             }
 
@@ -951,7 +835,7 @@ class MultiEdgeHolder : public virtual_enable_shared_from_this<MultiEdgeHolder<T
         return found->second;
     }
 
-    const edge_pair_t& get_edge_pair(KeyT key) const
+    EdgeHolder<T>& get_edge_pair(KeyT key)
     {
         auto found = m_edges.find(key);
 
@@ -963,129 +847,32 @@ class MultiEdgeHolder : public virtual_enable_shared_from_this<MultiEdgeHolder<T
         return found->second;
     }
 
-    // Keeps pairs of get_edge/set_edge for each key
-    std::map<KeyT, edge_pair_t> m_edges;
+    const EdgeHolder<T>& get_edge_pair(KeyT key) const
+    {
+        auto found = m_edges.find(key);
+
+        if (found == m_edges.end())
+        {
+            throw std::runtime_error(MRC_CONCAT_STR("Could not find edge pair for key: " << key));
+        }
+
+        return found->second;
+    }
 
   private:
     void set_edge_handle(KeyT key, std::shared_ptr<EdgeHandle<T>> edge)
     {
         auto& edge_pair = this->get_edge_pair(key, true);
 
-        // Check if set_edge followed by get_edge has been called
-        if (edge_pair.first.lock() && !edge_pair.second)
-        {
-            // Then someone is using this edge already, cant be changed
-            throw std::runtime_error("Cant change edge after a connection has been made");
-        }
-
-        // Check for existing edge
-        if (edge_pair.second)
-        {
-            if (edge_pair.second->is_connected())
-            {
-                throw std::runtime_error(
-                    "Cannot make multiple connections to the same node. Use dedicated Broadcast node");
-            }
-        }
-
-        // Set to the temp edge to ensure its alive until get_edge is called
-        edge_pair.first = edge;
-
-        // Set to the weak ptr as well
-        edge_pair.second = edge;
-
-        // Now indicate that we have a connection
-        edge->connect();
+        edge_pair.set_edge_handle(std::move(edge));
     }
+
+    // Keeps pairs of get_edge/set_edge for each key
+    std::map<KeyT, EdgeHolder<T>> m_edges;
 
     // Allow edge builder to call set_edge
     friend EdgeBuilder;
 };
-
-// // Equivalent to SinkProperties
-// template <typename T>
-// class UpstreamEdgeHolder : public EdgeHolder<T>
-// {
-//   protected:
-//     std::shared_ptr<EdgeReadable<T>> get_readable_edge() const
-//     {
-//         return std::dynamic_pointer_cast<EdgeReadable<T>>(this->m_set_edge);
-//     }
-// };
-
-// template <typename T>
-// class DownstreamEdgeHolder : public EdgeHolder<T>
-// {
-//   protected:
-//     std::shared_ptr<EdgeWritable<T>> get_writable_edge() const
-//     {
-//         return std::dynamic_pointer_cast<EdgeWritable<T>>(this->m_set_edge);
-//     }
-// };
-
-// template <typename T, typename KeyT>
-// class DownstreamMultiEdgeHolder : public MultiEdgeHolder<T, KeyT>
-// {
-//   protected:
-//     std::shared_ptr<EdgeWritable<T>> get_writable_edge(KeyT edge_key) const
-//     {
-//         return std::dynamic_pointer_cast<EdgeWritable<T>>(this->get_edge_pair(edge_key).second);
-//     }
-// };
-
-// template <typename T>
-// class UpstreamChannelHolder : public virtual UpstreamEdgeHolder<T>
-// {
-//   public:
-//     void set_channel(std::unique_ptr<mrc::channel::Channel<T>> channel)
-//     {
-//         this->do_set_channel(std::move(channel));
-//     }
-
-//   protected:
-//     void do_set_channel(std::shared_ptr<mrc::channel::Channel<T>> shared_channel)
-//     {
-//         // Create 2 edges, one for reading and writing. On connection, persist the other to allow the node to still
-//         use
-//         // get_readable+edge
-//         auto channel_reader = std::make_shared<EdgeChannelReader<T>>(shared_channel);
-//         auto channel_writer = std::make_shared<EdgeChannelWriter<T>>(shared_channel);
-
-//         channel_writer->add_connector(EdgeLifetime([this, channel_reader]() {
-//             // On connection, save the reader so we can use the channel without it being deleted
-//             this->m_set_edge = channel_reader;
-//         }));
-
-//         UpstreamEdgeHolder<T>::init_edge(channel_writer);
-//     }
-// };
-
-// template <typename T>
-// class DownstreamChannelHolder : public virtual DownstreamEdgeHolder<T>
-// {
-//   public:
-//     void set_channel(std::unique_ptr<mrc::channel::Channel<T>> channel)
-//     {
-//         this->do_set_channel(std::move(channel));
-//     }
-
-//   protected:
-//     void do_set_channel(std::shared_ptr<mrc::channel::Channel<T>> shared_channel)
-//     {
-//         // Create 2 edges, one for reading and writing. On connection, persist the other to allow the node to still
-//         use
-//         // get_writable_edge
-//         auto channel_reader = std::make_shared<EdgeChannelReader<T>>(shared_channel);
-//         auto channel_writer = std::make_shared<EdgeChannelWriter<T>>(shared_channel);
-
-//         channel_reader->add_connector(EdgeLifetime([this, channel_writer]() {
-//             // On connection, save the writer so we can use the channel without it being deleted
-//             this->m_set_edge = channel_writer;
-//         }));
-
-//         DownstreamEdgeHolder<T>::init_edge(channel_reader);
-//     }
-// };
 
 struct DeferredIngressHandleObj;
 
@@ -1317,115 +1104,5 @@ class IIngressAcceptor : public IIngressAcceptorBase
 template <typename T, typename KeyT>
 class IMultiIngressAcceptor : public IMultiIngressAcceptorBase<KeyT>
 {};
-
-// template <typename T>
-// class EgressProvider : public IEgressProvider<T>, public virtual DownstreamEdgeHolder<T>
-// {
-//   public:
-//     std::shared_ptr<EdgeReadable<T>> get_egress() const
-//     {
-//         return std::dynamic_pointer_cast<EdgeReadable<T>>(DownstreamEdgeHolder<T>::get_edge());
-//     }
-//     // virtual std::shared_ptr<EdgeReadable<T>> get_egress() const = 0;
-//   private:
-//     using DownstreamEdgeHolder<T>::set_edge;
-// };
-
-// template <typename T>
-// class EgressAcceptor : public IEgressAcceptor<T>, public virtual UpstreamEdgeHolder<T>
-// {
-//   public:
-//     void set_egress(std::shared_ptr<EdgeReadable<T>> egress)
-//     {
-//         UpstreamEdgeHolder<T>::set_edge(egress);
-//     }
-
-//   private:
-//     using UpstreamEdgeHolder<T>::set_edge;
-// };
-
-// template <typename T>
-// class IngressProvider : public IIngressProvider<T>, public virtual UpstreamEdgeHolder<T>
-// {
-//   public:
-//     std::shared_ptr<EdgeWritable<T>> get_ingress() const
-//     {
-//         return std::dynamic_pointer_cast<EdgeWritable<T>>(UpstreamEdgeHolder<T>::get_edge());
-//     }
-//     // virtual std::shared_ptr<EdgeWritable<T>> get_ingress() const = 0;
-//   private:
-//     using UpstreamEdgeHolder<T>::set_edge;
-// };
-
-// template <typename T>
-// class IngressAcceptor : public IIngressAcceptor<T>, public virtual DownstreamEdgeHolder<T>
-// {
-//   public:
-//     void set_ingress(std::shared_ptr<EdgeWritable<T>> ingress)
-//     {
-//         DownstreamEdgeHolder<T>::set_edge(ingress);
-//     }
-
-//   private:
-//     using DownstreamEdgeHolder<T>::set_edge;
-// };
-
-// template <typename T>
-// class MultiIngressAcceptor : public IIngressAcceptor<T>, public virtual DownstreamMultiEdgeHolder<T, size_t>
-// {
-//   public:
-//     void set_ingress(std::shared_ptr<EdgeWritable<T>> ingress)
-//     {
-//         auto count = DownstreamMultiEdgeHolder<T, size_t>::edge_count();
-//         DownstreamMultiEdgeHolder<T, size_t>::set_edge(count, ingress);
-//     }
-// };
-
-// template <typename SourceT, typename SinkT = SourceT>
-// void make_edge(EgressProvider<SourceT>& source, EgressAcceptor<SinkT>& sink)
-// {
-//     // Get the egress from the provider
-//     auto egress = source.get_egress();
-
-//     // Set the egress to the acceptor
-//     sink.set_egress(egress);
-// }
-
-// template <typename SourceT, typename SinkT = SourceT>
-// void make_edge(IngressAcceptor<SourceT>& source, IngressProvider<SinkT>& sink)
-// {
-//     // Get ingress from provider
-//     auto ingress = sink.get_ingress();
-
-//     // Set to the acceptor
-//     source.set_ingress(ingress);
-// }
-
-// template <template <typename> class SourceT,
-//           template <typename>
-//           class SinkT,
-//           typename SourceValueT,
-//           typename SinkValueT>
-// void make_edge2(SourceT<SourceValueT>& source, SinkT<SinkValueT>& sink)
-// {
-//     using source_full_t = SourceT<SourceValueT>;
-//     using sink_full_t   = SinkT<SinkValueT>;
-
-//     if constexpr (is_base_of_template<IngressAcceptor, source_full_t>::value &&
-//                   is_base_of_template<IngressProvider, sink_full_t>::value)
-//     {
-//         // Get ingress from provider
-//         auto ingress = sink.get_ingress();
-
-//         // Set to the acceptor
-//         source.set_ingress(ingress);
-//     }
-//     else
-//     {
-//         static_assert(!sizeof(source_full_t),
-//                       "Arguments to make_edge were incorrect. Ensure you are providing either "
-//                       "IngressAcceptor->IngressProvider or EgressProvider->EgressAcceptor");
-//     }
-// }
 
 }  // namespace mrc::node

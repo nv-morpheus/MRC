@@ -254,7 +254,7 @@ class RxSinkComponent : public IngressProvider<T>
 
         m_sink_edge = edge;
 
-        IngressProvider<T>::init_edge(edge);
+        IngressProvider<T>::init_owned_edge(edge);
     }
 
     ~RxSinkComponent() = default;
@@ -266,7 +266,7 @@ class RxSinkComponent : public IngressProvider<T>
 
         // m_sink_edge = edge;
 
-        // IngressProvider<T>::init_edge(edge);
+        // IngressProvider<T>::init_owned_edge(edge);
 
         set_observer(std::forward<ArgsT>(args)...);
     }

@@ -211,7 +211,7 @@ class BroadcastTypeless : public IIngressProviderBase, public IIngressAcceptorBa
 template <typename T>
 class Broadcast : public IngressProvider<T>, public IIngressAcceptor<T>
 {
-    class BroadcastEdge : public IEdgeWritable<T>, public MultiSourceProperties<T, size_t>
+    class BroadcastEdge : public IEdgeWritable<T>, public MultiSourceProperties<size_t, T>
     {
       public:
         BroadcastEdge(Broadcast& parent, bool deep_copy) : m_parent(parent), m_deep_copy(deep_copy) {}
@@ -263,7 +263,7 @@ class Broadcast : public IngressProvider<T>, public IIngressAcceptor<T>
         // Save to avoid casting
         m_edge = edge;
 
-        IngressProvider<T>::init_edge(edge);
+        IngressProvider<T>::init_owned_edge(edge);
     }
 
     ~Broadcast()

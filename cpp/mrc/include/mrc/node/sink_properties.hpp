@@ -102,7 +102,7 @@ class SinkProperties : public EdgeHolder<T>, public SinkPropertiesBase
   protected:
     std::shared_ptr<IEdgeReadable<T>> get_readable_edge() const
     {
-        return std::dynamic_pointer_cast<IEdgeReadable<T>>(this->m_edge_connection);
+        return std::dynamic_pointer_cast<IEdgeReadable<T>>(this->get_connected_edge());
     }
 
   private:
@@ -181,7 +181,7 @@ class ForwardingIngressProvider : public IngressProvider<T>
 
     ForwardingIngressProvider()
     {
-        IngressProvider<T>::init_edge(std::make_shared<ForwardingEdge>(*this));
+        IngressProvider<T>::init_owned_edge(std::make_shared<ForwardingEdge>(*this));
     }
 
     virtual channel::Status on_next(T&& t) = 0;
