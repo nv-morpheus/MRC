@@ -15,7 +15,7 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "quickstart")
 
-cmake_minimum_required(VERSION 3.23.1 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.24 FATAL_ERROR)
 
 # Add the Conda environment to the prefix path and add the CMake files
 list(PREPEND CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}")

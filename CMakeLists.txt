@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 3.23.1 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.24 FATAL_ERROR)
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "mrc")
 
@@ -49,9 +49,9 @@ enable_testing()
 # Add the RAPIDS cmake helper scripts
 include(cmake/import_rapids_cmake.cmake)
 
-# Default to using "NATIVE" for CUDA_ARCHITECTURES to build based on GPU in system
+# Default to using "native" (case-sensitive) for CUDA_ARCHITECTURES to build based on GPU in system
 if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-  set(CMAKE_CUDA_ARCHITECTURES "NATIVE")
+  set(CMAKE_CUDA_ARCHITECTURES "native")
   message(STATUS "CMAKE_CUDA_ARCHITECTURES was not defined. Defaulting to '${CMAKE_CUDA_ARCHITECTURES}' to build only for local architecture. Specify -DCMAKE_CUDA_ARCHITECTURES='ALL' to build for all archs.")
 endif()
 
