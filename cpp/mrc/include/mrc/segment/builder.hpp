@@ -20,6 +20,7 @@
 #include "mrc/benchmarking/trace_statistics.hpp"
 #include "mrc/engine/segment/ibuilder.hpp"  // IWYU pragma: export
 #include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/node/channel_holder.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/node/rx_node.hpp"
@@ -235,41 +236,41 @@ class Builder final
         node::make_edge(source->object(), sink->object());
     }
 
-    template <typename InputT, typename SinkNodeTypeT>
-    void make_edge(node::SourceProperties<InputT>& source, std::shared_ptr<Object<SinkNodeTypeT>> sink)
-    {
-        DVLOG(10) << "forming segment edge from node source to segment sink";
-        node::make_edge(source, sink->object());
-    }
+    // template <typename InputT, typename SinkNodeTypeT>
+    // void make_edge(node::SourceProperties<InputT>& source, std::shared_ptr<Object<SinkNodeTypeT>> sink)
+    // {
+    //     DVLOG(10) << "forming segment edge from node source to segment sink";
+    //     node::make_edge(source, sink->object());
+    // }
 
-    template <typename SourceNodeTypeT, typename OutputT>
-    void make_edge(std::shared_ptr<Object<SourceNodeTypeT>>& source, node::SinkProperties<OutputT>& sink)
-    {
-        DVLOG(10) << "forming segment edge between a segment source and node sink";
-        node::make_edge(source->object(), sink);
-    }
+    // template <typename SourceNodeTypeT, typename OutputT>
+    // void make_edge(std::shared_ptr<Object<SourceNodeTypeT>>& source, node::SinkProperties<OutputT>& sink)
+    // {
+    //     DVLOG(10) << "forming segment edge between a segment source and node sink";
+    //     node::make_edge(source->object(), sink);
+    // }
 
-    template <typename InputT, typename OutputT>
-    void make_edge(node::SourceProperties<InputT>& source, node::SinkProperties<OutputT>& sink)
-    {
-        DVLOG(10) << "forming segment edge between two node objects";
-        node::make_edge(source, sink);
-    }
+    // template <typename InputT, typename OutputT>
+    // void make_edge(node::SourceProperties<InputT>& source, node::SinkProperties<OutputT>& sink)
+    // {
+    //     DVLOG(10) << "forming segment edge between two node objects";
+    //     node::make_edge(source, sink);
+    // }
 
-    /**
-     * Given a typed source and a typeless sink, attempt to construct an edge between them -- assumes that source and
-     * sink types are convertible.
-     *
-     * @tparam InputT
-     * @param source
-     * @param sink
-     */
-    template <typename InputT>
-    void make_edge(node::SourceProperties<InputT>& source, std::shared_ptr<segment::ObjectProperties> sink)
-    {
-        DVLOG(10) << "forming segment edge between two node objects";
-        node::make_edge(source, sink->template sink_typed<InputT>());
-    }
+    // /**
+    //  * Given a typed source and a typeless sink, attempt to construct an edge between them -- assumes that source and
+    //  * sink types are convertible.
+    //  *
+    //  * @tparam InputT
+    //  * @param source
+    //  * @param sink
+    //  */
+    // template <typename InputT>
+    // void make_edge(node::SourceProperties<InputT>& source, std::shared_ptr<segment::ObjectProperties> sink)
+    // {
+    //     DVLOG(10) << "forming segment edge between two node objects";
+    //     node::make_edge(source, sink->template sink_typed<InputT>());
+    // }
 
     /**
      * Partial dynamic edge construction:
@@ -284,24 +285,43 @@ class Builder final
     template <typename SourceNodeTypeT>
     void make_edge(std::shared_ptr<Object<SourceNodeTypeT>>& source, std::shared_ptr<segment::ObjectProperties> sink)
     {
-        DVLOG(10) << "forming segment edge between a segment source and typeless Object";
-        this->make_edge(source->object(), sink);
+        if constexpr (is_base_of_template<node::IIngressAcceptor, SourceNodeTypeT>::value)
+        {
+            if (sink->is_ingress_provider())
+            {
+                node::make_edge(source->object(),
+                                sink->template ingress_provider_typed<typename SourceNodeTypeT::source_type_t>());
+                return;
+            }
+        }
+
+        if constexpr (is_base_of_template<node::IEgressProvider, SourceNodeTypeT>::value)
+        {
+            if (sink->is_egress_acceptor())
+            {
+                node::make_edge(source->object(),
+                                sink->template egress_acceptor_typed<typename SourceNodeTypeT::source_type_t>());
+                return;
+            }
+        }
+
+        LOG(ERROR) << "Incorrect node types";
     }
 
-    /**
-     * Given a typeless source and a typed sink, attempt to construct an edge between them -- assumes that
-     * source and sink type's are convertible.
-     *
-     * @tparam OutputT
-     * @param source
-     * @param sink
-     */
-    template <typename OutputT>
-    void make_edge(std::shared_ptr<segment::ObjectProperties> source, node::SinkProperties<OutputT>& sink)
-    {
-        DVLOG(10) << "forming segment edge between two node objects";
-        node::make_edge(source->template source_typed<OutputT>(), sink);
-    }
+    // /**
+    //  * Given a typeless source and a typed sink, attempt to construct an edge between them -- assumes that
+    //  * source and sink type's are convertible.
+    //  *
+    //  * @tparam OutputT
+    //  * @param source
+    //  * @param sink
+    //  */
+    // template <typename OutputT>
+    // void make_edge(std::shared_ptr<segment::ObjectProperties> source, node::SinkProperties<OutputT>& sink)
+    // {
+    //     DVLOG(10) << "forming segment edge between two node objects";
+    //     node::make_edge(source->template source_typed<OutputT>(), sink);
+    // }
 
     /**
      * Partial dynamic edge construction:
@@ -316,8 +336,27 @@ class Builder final
     template <typename SinkNodeTypeT>
     void make_edge(std::shared_ptr<segment::ObjectProperties> source, std::shared_ptr<Object<SinkNodeTypeT>>& sink)
     {
-        DVLOG(10) << "forming segment edge between a typeless object and a segment sink";
-        this->make_edge(source, sink->object());
+        if constexpr (is_base_of_template<node::IIngressProvider, SinkNodeTypeT>::value)
+        {
+            if (source->is_ingress_acceptor())
+            {
+                node::make_edge(source->template ingress_acceptor_typed<typename SinkNodeTypeT::sink_type_t>(),
+                                sink->object());
+                return;
+            }
+        }
+
+        if constexpr (is_base_of_template<node::IEgressAcceptor, SinkNodeTypeT>::value)
+        {
+            if (source->is_egress_provider())
+            {
+                node::make_edge(source->template egress_provider_typed<typename SinkNodeTypeT::sink_type_t>(),
+                                sink->object());
+                return;
+            }
+        }
+
+        LOG(ERROR) << "Incorrect node types";
     }
 
     template <typename SourceNodeTypeT, typename SinkNodeTypeT = SourceNodeTypeT>
@@ -325,14 +364,34 @@ class Builder final
     {
         auto& source_obj = m_backend.find_object(source_name);
         auto& sink_obj   = m_backend.find_object(sink_name);
-        node::make_edge(source_obj.source_typed<SourceNodeTypeT>(), sink_obj.sink_typed<SinkNodeTypeT>());
+        this->make_dynamic_edge<SourceNodeTypeT, SinkNodeTypeT>(source_obj, sink_obj);
     }
 
     template <typename SourceNodeTypeT, typename SinkNodeTypeT = SourceNodeTypeT>
     void make_dynamic_edge(std::shared_ptr<segment::ObjectProperties> source,
                            std::shared_ptr<segment::ObjectProperties> sink)
     {
-        node::make_edge(source->source_typed<SourceNodeTypeT>(), sink->sink_typed<SinkNodeTypeT>());
+        this->make_dynamic_edge<SourceNodeTypeT, SinkNodeTypeT>(*source, *sink);
+    }
+
+    template <typename SourceNodeTypeT, typename SinkNodeTypeT = SourceNodeTypeT>
+    void make_dynamic_edge(segment::ObjectProperties& source, segment::ObjectProperties& sink)
+    {
+        if (source.is_ingress_acceptor() && sink.is_ingress_provider())
+        {
+            node::make_edge(source.template ingress_acceptor_typed<SourceNodeTypeT>(),
+                            sink.template ingress_provider_typed<SinkNodeTypeT>());
+            return;
+        }
+
+        if (source.is_egress_provider() && sink.is_egress_acceptor())
+        {
+            node::make_edge(source.template egress_provider_typed<SourceNodeTypeT>(),
+                            sink.template egress_acceptor_typed<SinkNodeTypeT>());
+            return;
+        }
+
+        LOG(ERROR) << "Incorrect node types";
     }
 
     template <typename ObjectT>
@@ -361,6 +420,13 @@ class Builder final
 
   private:
     using sp_segment_module_t = std::shared_ptr<mrc::modules::SegmentModule>;
+
+    // template <typename SinkNodeT>
+    // void internal_make_edge(std::shared_ptr<segment::ObjectProperties> source,
+    //                         std::shared_ptr<segment::ObjectProperties> sink)
+    // {
+
+    // }
 
     std::string m_namespace_prefix;
     std::vector<std::string> m_namespace_stack{};

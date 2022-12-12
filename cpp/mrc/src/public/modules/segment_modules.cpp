@@ -161,7 +161,7 @@ void SegmentModule::register_input_port(std::string input_name, std::shared_ptr<
 
     m_input_port_ids.push_back(input_name);
     m_input_ports[input_name] = object;
-    m_input_port_type_indices.try_emplace(input_name, object->sink_base().sink_type());
+    m_input_port_type_indices.try_emplace(input_name, object->sink_type());
 }
 
 void SegmentModule::register_output_port(std::string output_name, std::shared_ptr<segment::ObjectProperties> object)
@@ -176,7 +176,7 @@ void SegmentModule::register_output_port(std::string output_name, std::shared_pt
 
     m_output_port_ids.push_back(output_name);
     m_output_ports[output_name] = object;
-    m_output_port_type_indices.try_emplace(output_name, object->source_base().source_type());
+    m_output_port_type_indices.try_emplace(output_name, object->source_type());
 }
 
 }  // namespace mrc::modules

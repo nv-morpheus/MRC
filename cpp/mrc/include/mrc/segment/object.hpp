@@ -45,24 +45,39 @@ struct ObjectProperties
     virtual bool is_sink() const   = 0;
     virtual bool is_source() const = 0;
 
+    virtual std::type_index sink_type(bool ignore_holder = false) const   = 0;
+    virtual std::type_index source_type(bool ignore_holder = false) const = 0;
+
     virtual bool is_ingress_acceptor() const = 0;
     virtual bool is_ingress_provider() const = 0;
     virtual bool is_egress_acceptor() const  = 0;
     virtual bool is_egress_provider() const  = 0;
 
-    virtual node::SinkPropertiesBase& sink_base()     = 0;
-    virtual node::SourcePropertiesBase& source_base() = 0;
+    // virtual node::SinkPropertiesBase& sink_base() = 0;
+    // virtual node::SourcePropertiesBase& source_base() = 0;
 
     virtual node::IIngressAcceptorBase& ingress_acceptor_base() = 0;
     virtual node::IIngressProviderBase& ingress_provider_base() = 0;
     virtual node::IEgressAcceptorBase& egress_acceptor_base()   = 0;
     virtual node::IEgressProviderBase& egress_provider_base()   = 0;
 
-    template <typename T>
-    node::SinkProperties<T>& sink_typed();
+    // template <typename T>
+    // node::SinkProperties<T>& sink_typed();
+
+    // template <typename T>
+    // node::SourceProperties<T>& source_typed();
 
     template <typename T>
-    node::SourceProperties<T>& source_typed();
+    node::IIngressAcceptor<T>& ingress_acceptor_typed();
+
+    template <typename T>
+    node::IEgressProvider<T>& egress_provider_typed();
+
+    template <typename T>
+    node::IIngressProvider<T>& ingress_provider_typed();
+
+    template <typename T>
+    node::IEgressAcceptor<T>& egress_acceptor_typed();
 
     virtual bool is_runnable() const = 0;
 
@@ -72,38 +87,106 @@ struct ObjectProperties
 
 inline ObjectProperties::~ObjectProperties() = default;
 
-template <typename T>
-node::SinkProperties<T>& ObjectProperties::sink_typed()
-{
-    auto& base = sink_base();
-    auto* sink = dynamic_cast<node::SinkProperties<T>*>(&base);
+// template <typename T>
+// node::SinkProperties<T>& ObjectProperties::sink_typed()
+// {
+//     auto& base = sink_base();
+//     auto* sink = dynamic_cast<node::SinkProperties<T>*>(&base);
 
-    if (sink == nullptr)
+//     if (sink == nullptr)
+//     {
+//         LOG(ERROR) << "Failed to cast " << type_name() << " to "
+//                    << "SinkProperties<" << std::string(mrc::type_name<T>()) << "> from "
+//                    << "SinkProperties<" << base.sink_type_name() << ">.";
+//         throw exceptions::MrcRuntimeError("Failed to cast Sink to requested SinkProperties<T>");
+//     }
+
+//     return *sink;
+// }
+
+// template <typename T>
+// node::SourceProperties<T>& ObjectProperties::source_typed()
+// {
+//     auto& base   = source_base();
+//     auto* source = dynamic_cast<node::SourceProperties<T>*>(&base);
+
+//     if (source == nullptr)
+//     {
+//         LOG(ERROR) << "Failed to cast " << type_name() << " to "
+//                    << "SourceProperties<" << std::string(mrc::type_name<T>()) << "> from "
+//                    << "SourceProperties<" << base.source_type_name() << ">.";
+//         throw exceptions::MrcRuntimeError("Failed to cast Source to requested SourceProperties<T>");
+//     }
+
+//     return *source;
+// }
+
+template <typename T>
+node::IIngressAcceptor<T>& ObjectProperties::ingress_acceptor_typed()
+{
+    auto& base             = this->ingress_acceptor_base();
+    auto* ingress_acceptor = dynamic_cast<node::IIngressAcceptor<T>*>(&base);
+
+    if (ingress_acceptor == nullptr)
     {
         LOG(ERROR) << "Failed to cast " << type_name() << " to "
-                   << "SinkProperties<" << std::string(mrc::type_name<T>()) << "> from "
-                   << "SinkProperties<" << base.sink_type_name() << ">.";
-        throw exceptions::MrcRuntimeError("Failed to cast Sink to requested SinkProperties<T>");
+                   << "IIngressAcceptor<" << std::string(mrc::type_name<T>()) << ">"
+                   << "IIngressAcceptor<" << ::mrc::type_name(base.ingress_acceptor_type().full_type()) << ">.";
+        throw exceptions::MrcRuntimeError("Failed to cast Sink to requested IIngressAcceptor<T>");
     }
 
-    return *sink;
+    return *ingress_acceptor;
 }
 
 template <typename T>
-node::SourceProperties<T>& ObjectProperties::source_typed()
+node::IIngressProvider<T>& ObjectProperties::ingress_provider_typed()
 {
-    auto& base   = source_base();
-    auto* source = dynamic_cast<node::SourceProperties<T>*>(&base);
+    auto& base             = this->ingress_provider_base();
+    auto* ingress_provider = dynamic_cast<node::IIngressProvider<T>*>(&base);
 
-    if (source == nullptr)
+    if (ingress_provider == nullptr)
     {
         LOG(ERROR) << "Failed to cast " << type_name() << " to "
-                   << "SourceProperties<" << std::string(mrc::type_name<T>()) << "> from "
-                   << "SourceProperties<" << base.source_type_name() << ">.";
-        throw exceptions::MrcRuntimeError("Failed to cast Source to requested SourceProperties<T>");
+                   << "IIngressProvider<" << std::string(mrc::type_name<T>()) << ">"
+                   << "IIngressProvider<" << ::mrc::type_name(base.ingress_provider_type().full_type()) << ">.";
+        throw exceptions::MrcRuntimeError("Failed to cast Sink to requested IIngressProvider<T>");
     }
 
-    return *source;
+    return *ingress_provider;
+}
+
+template <typename T>
+node::IEgressAcceptor<T>& ObjectProperties::egress_acceptor_typed()
+{
+    auto& base            = this->egress_acceptor_base();
+    auto* egress_acceptor = dynamic_cast<node::IEgressAcceptor<T>*>(&base);
+
+    if (egress_acceptor == nullptr)
+    {
+        LOG(ERROR) << "Failed to cast " << type_name() << " to "
+                   << "IEgressAcceptor<" << std::string(mrc::type_name<T>()) << ">"
+                   << "IEgressAcceptor<" << ::mrc::type_name(base.egress_acceptor_type().full_type()) << ">.";
+        throw exceptions::MrcRuntimeError("Failed to cast Sink to requested IEgressAcceptor<T>");
+    }
+
+    return *egress_acceptor;
+}
+
+template <typename T>
+node::IEgressProvider<T>& ObjectProperties::egress_provider_typed()
+{
+    auto& base            = this->egress_provider_base();
+    auto* egress_provider = dynamic_cast<node::IEgressProvider<T>*>(&base);
+
+    if (egress_provider == nullptr)
+    {
+        LOG(ERROR) << "Failed to cast " << type_name() << " to "
+                   << "IEgressProvider<" << std::string(mrc::type_name<T>()) << ">"
+                   << "IEgressProvider<" << ::mrc::type_name(base.egress_provider_type().full_type()) << ">.";
+        throw exceptions::MrcRuntimeError("Failed to cast Sink to requested IEgressProvider<T>");
+    }
+
+    return *egress_provider;
 }
 
 // Object
@@ -120,13 +203,16 @@ class Object : public virtual ObjectProperties
     bool is_source() const final;
     bool is_sink() const final;
 
+    std::type_index sink_type(bool ignore_holder) const final;
+    std::type_index source_type(bool ignore_holder) const final;
+
     bool is_ingress_acceptor() const final;
     bool is_ingress_provider() const final;
     bool is_egress_acceptor() const final;
     bool is_egress_provider() const final;
 
-    node::SinkPropertiesBase& sink_base() final;
-    node::SourcePropertiesBase& source_base() final;
+    // node::SinkPropertiesBase& sink_base() final;
+    // node::SourcePropertiesBase& source_base() final;
 
     node::IIngressAcceptorBase& ingress_acceptor_base() final;
     node::IIngressProviderBase& ingress_provider_base() final;
@@ -213,6 +299,30 @@ bool Object<ObjectT>::is_sink() const
 }
 
 template <typename ObjectT>
+std::type_index Object<ObjectT>::sink_type(bool ignore_holder) const
+{
+    CHECK(this->is_sink()) << "Object is not a sink";
+
+    auto* base = dynamic_cast<node::SinkPropertiesBase*>(get_object());
+
+    CHECK(base);
+
+    return base->sink_type(ignore_holder);
+}
+
+template <typename ObjectT>
+std::type_index Object<ObjectT>::source_type(bool ignore_holder) const
+{
+    CHECK(this->is_source()) << "Object is not a source";
+
+    auto* base = dynamic_cast<node::SourcePropertiesBase*>(get_object());
+
+    CHECK(base);
+
+    return base->source_type(ignore_holder);
+}
+
+template <typename ObjectT>
 bool Object<ObjectT>::is_ingress_acceptor() const
 {
     return std::is_base_of_v<node::IIngressAcceptorBase, ObjectT>;
@@ -236,33 +346,33 @@ bool Object<ObjectT>::is_egress_provider() const
     return std::is_base_of_v<node::IEgressProviderBase, ObjectT>;
 }
 
-template <typename ObjectT>
-node::SinkPropertiesBase& Object<ObjectT>::sink_base()
-{
-    if constexpr (!std::is_base_of_v<node::SinkPropertiesBase, ObjectT>)
-    {
-        LOG(ERROR) << type_name() << " is not a Sink";
-        throw exceptions::MrcRuntimeError("Object is not a Sink");
-    }
+// template <typename ObjectT>
+// node::SinkPropertiesBase& Object<ObjectT>::sink_base()
+// {
+//     if constexpr (!std::is_base_of_v<node::SinkPropertiesBase, ObjectT>)
+//     {
+//         LOG(ERROR) << type_name() << " is not a Sink";
+//         throw exceptions::MrcRuntimeError("Object is not a Sink");
+//     }
 
-    auto* base = dynamic_cast<node::SinkPropertiesBase*>(get_object());
-    CHECK(base);
-    return *base;
-}
+//     auto* base = dynamic_cast<node::SinkPropertiesBase*>(get_object());
+//     CHECK(base);
+//     return *base;
+// }
 
-template <typename ObjectT>
-node::SourcePropertiesBase& Object<ObjectT>::source_base()
-{
-    if constexpr (!std::is_base_of_v<node::SourcePropertiesBase, ObjectT>)
-    {
-        LOG(ERROR) << type_name() << " is not a Source";
-        throw exceptions::MrcRuntimeError("Object is not a Source");
-    }
+// template <typename ObjectT>
+// node::SourcePropertiesBase& Object<ObjectT>::source_base()
+// {
+//     if constexpr (!std::is_base_of_v<node::SourcePropertiesBase, ObjectT>)
+//     {
+//         LOG(ERROR) << type_name() << " is not a Source";
+//         throw exceptions::MrcRuntimeError("Object is not a Source");
+//     }
 
-    auto* base = dynamic_cast<node::SourcePropertiesBase*>(get_object());
-    CHECK(base);
-    return *base;
-}
+//     auto* base = dynamic_cast<node::SourcePropertiesBase*>(get_object());
+//     CHECK(base);
+//     return *base;
+// }
 
 template <typename ObjectT>
 node::IIngressAcceptorBase& Object<ObjectT>::ingress_acceptor_base()

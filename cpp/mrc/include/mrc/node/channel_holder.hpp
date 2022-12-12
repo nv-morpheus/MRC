@@ -677,22 +677,27 @@ class EdgeHolder
     EdgeHolder() = default;
     virtual ~EdgeHolder()
     {
-        CHECK(this->has_alive_connection())
-            << "A node was destructed which still had dependent connections. Nodes must be kept alive while "
-               "dependent connections are still active";
+        // Drop any edge connections before this object goes out of scope. This should execute any disconnectors
+        m_edge_connection.reset();
+
+        if (this->has_dependent_connection())
+        {
+            LOG(FATAL) << "A node was destructed which still had dependent connections. Nodes must be kept alive while "
+                          "dependent connections are still active";
+        }
     }
 
   protected:
-    bool has_alive_connection() const
+    bool has_dependent_connection() const
     {
         // Alive connection exists when the lock is true, lifetime is false or a connction object has been set
-        return (m_owned_edge.lock() && !m_owned_edge_lifetime) || m_edge_connection;
+        return m_owned_edge.lock() && !m_owned_edge_lifetime;
     }
 
     void init_edge(std::shared_ptr<EdgeHandle<T>> edge)
     {
         // Check if set_edge followed by get_edge has been called
-        if (this->has_alive_connection())
+        if (this->has_dependent_connection() || m_edge_connection)
         {
             // Then someone is using this edge already, cant be changed
             throw std::runtime_error("Cant change edge after a connection has been made");
@@ -714,9 +719,10 @@ class EdgeHolder
             // Convert to full shared_ptr to avoid edge going out of scope
             if (auto e = weak_edge.lock())
             {
+                // Drop the object keeping the weak_edge alive
                 this->m_owned_edge_lifetime.reset();
 
-                // Now register a disconnector to keep self alive
+                // Now register a disconnector to keep clean everything up
                 e->add_disconnector(EdgeLifetime([this]() {
                     this->m_owned_edge_lifetime.reset();
                     this->m_owned_edge.reset();
@@ -777,7 +783,7 @@ class EdgeHolder
     void set_edge_handle(std::shared_ptr<EdgeHandle<T>> edge)
     {
         // Check if set_edge followed by get_edge has been called
-        if (m_owned_edge.lock() && !m_owned_edge_lifetime)
+        if (this->has_dependent_connection())
         {
             // Then someone is using this edge already, cant be changed
             throw std::runtime_error("Cant change edge after a connection has been made");
@@ -796,8 +802,8 @@ class EdgeHolder
         // Set to the temp edge to ensure its alive until get_edge is called
         m_edge_connection = edge;
 
-        // Set to the weak ptr as well
-        m_owned_edge = edge;
+        // Reset the weak_ptr since we dont own this edge
+        m_owned_edge.reset();
 
         // Remove any init lifetime
         m_owned_edge_lifetime.reset();
@@ -1158,6 +1164,18 @@ struct EgressHandleObj : public EdgeHandleObj
     std::shared_ptr<IEdgeReadableBase> get_egress() const
     {
         return std::dynamic_pointer_cast<IEdgeReadableBase>(this->get_handle());
+    }
+
+    template <typename T>
+    std::shared_ptr<IEdgeReadable<T>> get_egress_typed() const
+    {
+        return std::dynamic_pointer_cast<IEdgeReadable<T>>(this->get_handle());
+    }
+
+    void set_egress_handle(std::shared_ptr<IEdgeReadableBase> egress)
+    {
+        this->m_type   = egress->get_type();
+        this->m_handle = egress;
     }
 
     friend EdgeBuilder;

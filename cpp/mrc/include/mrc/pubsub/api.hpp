@@ -45,8 +45,8 @@ class IPublisherService : public virtual control_plane::ISubscriptionService,
 
     virtual std::unique_ptr<codable::ICodableStorage> create_storage() = 0;
 
-    virtual channel::Status publish(std::unique_ptr<codable::EncodedStorage> encoded_object) = 0;
-    virtual channel::Status publish(runtime::RemoteDescriptor&& remote_descriptor)           = 0;
+    // virtual channel::Status publish(std::unique_ptr<codable::EncodedStorage> encoded_object) = 0;
+    // virtual channel::Status publish(runtime::RemoteDescriptor&& remote_descriptor)           = 0;
 };
 
 class ISubscriberService : public virtual control_plane::ISubscriptionService,

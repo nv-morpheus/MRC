@@ -18,16 +18,16 @@ add_executable(test_mrc
   modules/test_module_registry.cpp
   modules/test_module_util.cpp
   modules/test_segment_modules.cpp
-  # test_channel.cpp
+  test_channel.cpp
   test_edges.cpp
-  # test_executor.cpp
+  test_executor.cpp
   test_main.cpp
-  # test_metrics.cpp
+  test_metrics.cpp
   test_mrc.cpp
   test_node.cpp
-  # test_pipeline.cpp
-  # test_segment.cpp
-  # test_type_utils.cpp
+  test_pipeline.cpp
+  test_segment.cpp
+  test_type_utils.cpp
 )
 
 target_link_libraries(test_mrc

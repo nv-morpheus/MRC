@@ -610,8 +610,9 @@ TEST_F(TestSegment, SegmentSingleSourceTwoNodes)
             s.on_completed();
         });
 
-        auto bcast_src = std::make_shared<node::Broadcast<std::string>>();
-        segment.make_edge(src, *bcast_src);
+        auto bcast_src = segment.construct_object<node::Broadcast<std::string>>("broadcast");
+
+        segment.make_edge(src, bcast_src);
 
         auto str_length = segment.make_node<std::string, unsigned int>(
             "str_length", rxcpp::operators::map([](std::string s) {
@@ -619,7 +620,7 @@ TEST_F(TestSegment, SegmentSingleSourceTwoNodes)
                 return static_cast<unsigned int>(s.size());
             }));
 
-        segment.make_edge(*bcast_src, str_length);
+        segment.make_edge(bcast_src, str_length);
 
         auto sink1 = segment.make_sink<unsigned int>(
             "sink1", [&sink1_results](unsigned int x) { sink1_results.fetch_add(x, std::memory_order_relaxed); });
@@ -632,7 +633,7 @@ TEST_F(TestSegment, SegmentSingleSourceTwoNodes)
                 return s.size() / 2.0F;
             }));
 
-        segment.make_edge(*bcast_src, str_half_length);
+        segment.make_edge(bcast_src, str_half_length);
 
         auto sink2 = segment.make_sink<float>("sink2", [&](float x) {
             // C++20 adds fetch_add to atomic<float>
@@ -675,8 +676,8 @@ TEST_F(TestSegment, SegmentSingleSourceMultiNodes)
             s.on_completed();
         });
 
-        auto bcast = std::make_shared<node::Broadcast<std::string>>();
-        segment.make_edge(src, *bcast);
+        auto bcast = segment.construct_object<node::Broadcast<std::string>>("broadcast");
+        segment.make_edge(src, bcast);
 
         for (unsigned int i = 0; i < NumChildren; ++i)
         {
@@ -687,7 +688,7 @@ TEST_F(TestSegment, SegmentSingleSourceMultiNodes)
                     return static_cast<unsigned int>(s.size() + i);
                 }));
 
-            segment.make_edge(*bcast, node);
+            segment.make_edge(bcast, node);
 
             std::string sink_name{"sink"s + std::to_string(i)};
             auto sink = segment.make_sink<unsigned int>(sink_name, [i, &sink_results, &mux](unsigned int x) {
@@ -765,8 +766,8 @@ TEST_F(TestSegment, EnsureMoveMultiChildren)
             s.on_completed();
         });
 
-        auto bcast_src = std::make_shared<node::Broadcast<std::string>>();
-        segment.make_edge(src, *bcast_src);
+        auto bcast_src = segment.construct_object<node::Broadcast<std::string>>("broadcast");
+        segment.make_edge(src, bcast_src);
 
         for (unsigned int i = 0; i < NumChildren; ++i)
         {
@@ -777,7 +778,7 @@ TEST_F(TestSegment, EnsureMoveMultiChildren)
                                                                  return static_cast<unsigned int>(s.size() + i);
                                                              }));
 
-            segment.make_edge(*bcast_src, node);
+            segment.make_edge(bcast_src, node);
 
             std::string sink_name{"sink"s + std::to_string(i)};
             auto sink = segment.make_sink<unsigned int>(sink_name, [i](unsigned int x) {
@@ -888,8 +889,8 @@ TEST_F(TestSegment, EnsureMoveConstructor)
                 s.on_completed();
             });
 
-            auto bcast_src = std::make_shared<node::Broadcast<CopyMoveCounter>>();
-            segment.make_edge(src, *bcast_src);
+            auto bcast_src = segment.construct_object<node::Broadcast<CopyMoveCounter>>("broadcast");
+            segment.make_edge(src, bcast_src);
 
             for (unsigned int i = 0; i < NumChildren; ++i)
             {
@@ -900,7 +901,7 @@ TEST_F(TestSegment, EnsureMoveConstructor)
                     EXPECT_GE(x.copy_count(), 0);
                 });
 
-                segment.make_edge(*bcast_src, sink);
+                segment.make_edge(bcast_src, sink);
             }
         };
 

@@ -63,11 +63,11 @@ class PublisherService : public Base, public mrc::pubsub::IPublisherService
     DELETE_COPYABILITY(PublisherService);
     DELETE_MOVEABILITY(PublisherService);
 
-    // [IPublisherService] publish a remote descriptor
-    channel::Status publish(mrc::runtime::RemoteDescriptor&& rd) final;
+    // // [IPublisherService] publish a remote descriptor
+    // channel::Status publish(mrc::runtime::RemoteDescriptor&& rd) final;
 
-    // [IPublisherService] publish an encoded object
-    channel::Status publish(std::unique_ptr<mrc::codable::EncodedStorage> encoded_object) final;
+    // // [IPublisherService] publish an encoded object
+    // channel::Status publish(std::unique_ptr<mrc::codable::EncodedStorage> encoded_object) final;
 
     // [ISubscriptionServiceIdentity] provide the value for the role of this instance
     const std::string& role() const final;

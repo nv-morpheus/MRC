@@ -78,8 +78,6 @@ std::unique_ptr<pipeline::Pipeline> finite_multisegment()
         auto in   = s.get_ingress<int>("my_int4");
         auto sink = s.make_sink<int>("rx_sink", rxcpp::make_observer_dynamic<int>([&](int x) { LOG(INFO) << x; }));
         s.make_edge(in, sink);
-
-        VLOG(10) << "Test";
     });
 
     pipeline->register_segment(seg_1);

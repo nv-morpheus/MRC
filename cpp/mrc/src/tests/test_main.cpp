@@ -21,18 +21,23 @@
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 
+#include <csignal>
 #include <stdexcept>
 
 // NOLINTNEXTLINE(readability-identifier-naming)
 __attribute__((noreturn)) void TestFailuresThrowExceptions()
 {
-    throw std::runtime_error("exception rather than std::abort");
+    // Generate an interrupt
+    std::raise(SIGINT);
+    // throw std::runtime_error("exception rather than std::abort");
+
+    std::abort();
 }
 
 int main(int argc, char** argv)
 {
     mrc::init_logging("mrc::test_mrc_private");
-    ::google::InstallFailureFunction(&TestFailuresThrowExceptions);
+    // ::google::InstallFailureFunction(&TestFailuresThrowExceptions);
     ::testing::InitGoogleTest(&argc, argv);
     ::google::ParseCommandLineFlags(&argc, &argv, true);
     return RUN_ALL_TESTS();
