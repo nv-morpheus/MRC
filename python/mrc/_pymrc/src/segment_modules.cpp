@@ -20,11 +20,9 @@
 #include "pymrc/utils.hpp"
 
 #include "mrc/modules/segment_modules.hpp"
-#include "mrc/segment/object.hpp"
 
 #include <pybind11/pytypes.h>
 
-#include <algorithm>
 #include <memory>
 
 namespace mrc::pymrc {

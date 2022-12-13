@@ -17,25 +17,17 @@
 
 #pragma once
 
-#include "pymrc/forward.hpp"  // IWYU pragma: keep
-
 #include <nlohmann/json_fwd.hpp>
-#include <pybind11/gil.h>
-#include <pybind11/pybind11.h>  // IWYU pragma: keep
+#include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
 #include <memory>
-#include <optional>
 #include <string>
 #include <typeinfo>
-#include <utility>
 
-// IWYU pragma: no_include <listobject.h>
-// IWYU pragma: no_include <nlohmann/detail/iterators/iteration_proxy.hpp>
-// IWYU pragma: no_include <nlohmann/detail/iterators/iter_impl.hpp>
-// IWYU pragma: no_include <object.h>
-// IWYU pragma: no_include <pybind11/detail/type_caster_base.h>
-// IWYU pragma: no_include <pystate.h>
+namespace pybind11 {
+class gil_scoped_acquire;
+}  // namespace pybind11
 
 namespace mrc::pymrc {
 
@@ -76,45 +68,24 @@ class AcquireGIL
 {
   public:
     //   Create the object in place
-    AcquireGIL() : m_gil(std::in_place) {}
+    AcquireGIL();
+    ~AcquireGIL();
 
-    inline void inc_ref()
-    {
-        if (m_gil.has_value())
-        {
-            m_gil->inc_ref();
-        }
-    }
+    void inc_ref();
 
-    inline void dec_ref()
-    {
-        if (m_gil.has_value())
-        {
-            m_gil->dec_ref();
-        }
-    }
+    void dec_ref();
 
-    inline void disarm()
-    {
-        if (m_gil.has_value())
-        {
-            m_gil->disarm();
-        }
-    }
+    void disarm();
 
     /**
      * @brief Releases the GIL early. The GIL will only be released once.
      *
      */
-    inline void release()
-    {
-        // Just delete the GIL object early
-        m_gil.reset();
-    }
+    void release();
 
   private:
-    //   Use an optional here to allow releasing the GIL early
-    std::optional<pybind11::gil_scoped_acquire> m_gil;
+    // Use an unique_ptr here to allow releasing the GIL early
+    std::unique_ptr<pybind11::gil_scoped_acquire> m_gil;
 };
 
 // Allows you to work with a pybind11::object that will correctly grab the GIL before destruction

@@ -22,8 +22,6 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 ${IWYU_TOOL_PY:-iwyu_tool.py} "$@" -- \
    -Xiwyu --mapping_file=${REPO_DIR:-${SCRIPT_DIR}/../..}/ci/iwyu/mappings.imp \
    -Xiwyu --verbose=${IWYU_VERBOSITY:-1} \
-   -Xiwyu --no_fwd_decls \
    -Xiwyu --quoted_includes_first \
    -Xiwyu --cxx17ns \
-   -Xiwyu --no_comments \
    --driver-mode=g++

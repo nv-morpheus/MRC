@@ -5,24 +5,14 @@ coverage:
       default:
         informational: true
         target: auto
-        threshold: 0%
-        base: auto
-        paths:
-          - "include"
-          - "python"
-          - "src"
     patch:
       default:
         informational: true
         target: auto
-        threshold: 0%
-        base: auto
-        paths:
-          - "include"
-          - "python"
-          - "src"
 comment:
   behavior: new
+  require_changes: false
+  layout: "header, reach, diff, flags, files, footer"
 
 # Suggested workaround to fix "missing base report" issue when using Squash and
 # Merge Strategy in GitHub. See this comment from CodeCov support about this
@@ -30,3 +20,26 @@ comment:
 # https://community.codecov.io/t/unable-to-determine-a-parent-commit-to-compare-against-in-base-branch-after-squash-and-merge/2480/15
 codecov:
   allow_coverage_offsets: true
+  require_ci_to_pass: false
+
+flags:
+  cpp:
+    carryforward: false
+  py:
+    carryforward: false
+
+# Disable partial count for everything (skews numbers down)
+parsers:
+  gcov:
+    branch_detection:
+      conditional: no
+      loop: no
+      method: no
+      macro: no
+
+# Ignore the test folders themselves
+ignore:
+  - "python/mrc/_pymrc/tests"
+  - "python/mrc/tests"
+  - "src/tests"
+  - "tests"

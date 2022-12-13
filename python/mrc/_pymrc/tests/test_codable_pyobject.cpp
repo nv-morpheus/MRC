@@ -20,17 +20,16 @@
 #include "test_pymrc.hpp"
 
 #include "pymrc/codable_object.hpp"  // IWYU pragma: keep
-#include "pymrc/forward.hpp"
 #include "pymrc/types.hpp"
+#include "pymrc/utils.hpp"
 
 #include "mrc/codable/codable_protocol.hpp"
 #include "mrc/codable/type_traits.hpp"
 
 #include <gtest/gtest.h>
-#include <object.h>
 #include <pybind11/pytypes.h>
 
-#include <string>  // IWYU pragma: keep
+#include <string>
 
 // uncomment the following header list when uncommenting the test
 
@@ -58,12 +57,6 @@
 // #include <pybind11/pytypes.h>
 
 // #include <string>  // IWYU pragma: keep
-
-// IWYU pragma: no_include <gtest/gtest-message.h>
-// IWYU pragma: no_include "gtest/gtest_pred_impl.h"
-// IWYU pragma: no_include <gtest/gtest-test-part.h>
-// IWYU pragma: no_include <pybind11/detail/common.h>
-// IWYU pragma: no_include <tupleobject.h>
 
 namespace py    = pybind11;
 namespace pymrc = mrc::pymrc;
