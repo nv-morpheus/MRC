@@ -68,6 +68,8 @@ static void mrc_coro_await_suspend_never(benchmark::State& state)
 }
 
 // not-thread safe awaitable that returns a value
+// this is an always ready non-yielding awaitable and should perform
+// similar to a function call with the construction of the awaiter on the stack
 class IncrementingAwaitable
 {
     std::size_t m_counter{0};

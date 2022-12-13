@@ -22,6 +22,9 @@
 
 static void boost_fibers_create_single_task_and_sync_post(benchmark::State& state)
 {
+    // warmup
+    boost::fibers::async(boost::fibers::launch::post, [] {}).get();
+
     for (auto _ : state)
     {
         boost::fibers::async(boost::fibers::launch::post, [] {}).get();
@@ -30,6 +33,9 @@ static void boost_fibers_create_single_task_and_sync_post(benchmark::State& stat
 
 static void boost_fibers_create_single_task_and_sync_dispatch(benchmark::State& state)
 {
+    // warmup
+    boost::fibers::async(boost::fibers::launch::dispatch, [] {}).get();
+
     for (auto _ : state)
     {
         boost::fibers::async(boost::fibers::launch::dispatch, [] {}).get();
@@ -48,6 +54,9 @@ static void boost_fibers_create_single_task_and_sync_dispatch(benchmark::State& 
 
 static void boost_fibers_schedule(benchmark::State& state)
 {
+    // warmup
+    boost::fibers::async(boost::fibers::launch::dispatch, [] {}).get();
+
     for (auto _ : state)
     {
         boost::this_fiber::yield();
