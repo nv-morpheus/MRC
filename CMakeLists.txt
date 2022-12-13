@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 3.22 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.24 FATAL_ERROR)
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "mrc")
 
@@ -36,8 +36,8 @@ option(MRC_USE_CONDA "Enables finding dependencies via conda. All dependencies m
   environment" ON)
 option(MRC_USE_IWYU "Enable running include-what-you-use as part of the build process" OFF)
 
-set(MRC_RAPIDS_VERSION "22.08" CACHE STRING "Which version of RAPIDS to build for.
-  Sets default versions for RAPIDS CMake and RMM.")
+set(MRC_RAPIDS_VERSION "22.10" CACHE STRING "Which version of RAPIDS to build for. Sets default versions for RAPIDS CMake and RMM.")
+
 set(MRC_CACHE_DIR "${CMAKE_SOURCE_DIR}/.cache" CACHE PATH "Directory to contain all CPM and CCache data")
 mark_as_advanced(MRC_CACHE_DIR)
 
@@ -77,7 +77,7 @@ morpheus_utils_initialize_package_manager(
 morpheus_utils_initialize_cuda_arch(mrc)
 
 project(mrc
-  VERSION 22.11.00
+  VERSION 23.01.00
   LANGUAGES C CXX
 )
 
