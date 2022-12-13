@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.24 FATAL_ERROR)
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "mrc")
 
@@ -33,7 +33,7 @@ option(MRC_USE_CONDA "Enables finding dependencies via conda instead of vcpkg. N
 option(MRC_USE_IWYU "Enable running include-what-you-use as part of the build process" OFF)
 option(MRC_ENABLE_CODECOV "Enable gcov code coverage" OFF)
 
-set(MRC_RAPIDS_VERSION "22.08" CACHE STRING "Which version of RAPIDS to build for. Sets default versions for RAPIDS CMake and RMM.")
+set(MRC_RAPIDS_VERSION "22.10" CACHE STRING "Which version of RAPIDS to build for. Sets default versions for RAPIDS CMake and RMM.")
 
 set(MRC_CACHE_DIR "${CMAKE_SOURCE_DIR}/.cache" CACHE PATH "Directory to contain all CPM and CCache data")
 mark_as_advanced(MRC_CACHE_DIR)
@@ -49,16 +49,16 @@ enable_testing()
 # Add the RAPIDS cmake helper scripts
 include(cmake/import_rapids_cmake.cmake)
 
-# Default to using "NATIVE" for CUDA_ARCHITECTURES to build based on GPU in system
+# Default to using "native" (case-sensitive) for CUDA_ARCHITECTURES to build based on GPU in system
 if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-  set(CMAKE_CUDA_ARCHITECTURES "NATIVE")
+  set(CMAKE_CUDA_ARCHITECTURES "native")
   message(STATUS "CMAKE_CUDA_ARCHITECTURES was not defined. Defaulting to '${CMAKE_CUDA_ARCHITECTURES}' to build only for local architecture. Specify -DCMAKE_CUDA_ARCHITECTURES='ALL' to build for all archs.")
 endif()
 
 rapids_cuda_init_architectures(mrc)
 
 project(mrc
-  VERSION 22.11.00
+  VERSION 23.01.00
   LANGUAGES C CXX
 )
 
