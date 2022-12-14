@@ -24,6 +24,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 
 namespace mrc {
@@ -108,8 +109,8 @@ class Unwinder
         m_function = nullptr;
     }
 
-    Unwinder()                = delete;
-    Unwinder(const Unwinder&) = delete;
+    Unwinder()                           = delete;
+    Unwinder(const Unwinder&)            = delete;
     Unwinder& operator=(const Unwinder&) = delete;
 
   private:
