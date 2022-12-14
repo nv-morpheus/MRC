@@ -17,6 +17,7 @@
 
 #include "mrc/coroutines/sync_wait.hpp"
 #include "mrc/coroutines/task.hpp"
+#include "mrc/runnable/v2/api.hpp"
 
 #include <benchmark/benchmark.h>
 
@@ -70,24 +71,26 @@ static void mrc_coro_await_suspend_never(benchmark::State& state)
 // not-thread safe awaitable that returns a value
 // this is an always ready non-yielding awaitable and should perform
 // similar to a function call with the construction of the awaiter on the stack
-class IncrementingAwaitable
+class IncrementingAwaitable : public runnable::v2::SchedulingTerm<std::size_t, int>
 {
+    using scheduling_type = runnable::v2::SchedulingTerm<std::size_t, int>;
+
     std::size_t m_counter{0};
 
     struct Awaiter
     {
         constexpr Awaiter(IncrementingAwaitable& parent) : m_parent(parent) {}
 
-        constexpr static std::true_type await_ready() noexcept
+        constexpr static bool await_ready() noexcept
         {
-            return {};
+            return true;
         }
 
         constexpr static void await_suspend(std::coroutine_handle<> handle){};
 
-        std::size_t await_resume() noexcept
+        scheduling_type::return_type await_resume() noexcept
         {
-            return ++(m_parent.m_counter);
+            return {++m_parent.m_counter};
         }
 
         IncrementingAwaitable& m_parent;
@@ -100,6 +103,8 @@ class IncrementingAwaitable
     }
 };
 
+static_assert(runnable::v2::concepts::scheduling_term<IncrementingAwaitable>);
+
 static void mrc_coro_await_incrementing_awaitable(benchmark::State& state)
 {
     IncrementingAwaitable awaitable;
@@ -107,7 +112,7 @@ static void mrc_coro_await_incrementing_awaitable(benchmark::State& state)
         std::size_t i;
         for (auto _ : state)
         {
-            benchmark::DoNotOptimize(i = co_await awaitable);
+            benchmark::DoNotOptimize(i = *(co_await awaitable));
         }
         co_return;
     };
@@ -130,9 +135,36 @@ static void mrc_coro_await_incrementing_awaitable_baseline(benchmark::State& sta
     coroutines::sync_wait(task());
 }
 
+static void mrc_coro_schedule_then_operate(benchmark::State& state)
+{
+    std::size_t i{0};
+    IncrementingAwaitable scheduling_term;
+
+    auto operation = [&](size_t& data) -> coroutines::Task<void> {
+        i += data;
+        co_return;
+    };
+
+    auto task = [&]() -> coroutines::Task<void> {
+        for (auto _ : state)
+        {
+            auto data = co_await scheduling_term;
+            if (!data)
+            {
+                break;
+            }
+            co_await operation(*data);
+        }
+        co_return;
+    };
+
+    coroutines::sync_wait(task());
+}
+
 BENCHMARK(mrc_coro_create_single_task_and_sync);
 BENCHMARK(mrc_coro_create_single_task_and_sync_on_when_all);
 BENCHMARK(mrc_coro_create_two_tasks_and_sync_on_when_all);
 BENCHMARK(mrc_coro_await_suspend_never);
 BENCHMARK(mrc_coro_await_incrementing_awaitable_baseline);
 BENCHMARK(mrc_coro_await_incrementing_awaitable);
+BENCHMARK(mrc_coro_schedule_then_operate);
