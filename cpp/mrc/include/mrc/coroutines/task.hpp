@@ -207,7 +207,7 @@ class [[nodiscard]] Task
 
     ~Task()
     {
-        if (m_coroutine != nullptr)
+        if (m_coroutine)
         {
             m_coroutine.destroy();
         }

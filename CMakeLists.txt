@@ -166,6 +166,17 @@ endif()
 # Uncomment the following to print all available targets
 if (MRC_ENABLE_DEBUG_INFO)
   morpheus_utils_print_all_targets()
+
+  morpheus_utils_print_target_properties(
+      TARGETS
+        libmrc
+        pymrc
+      WRITE_TO_FILE
+  )
+
+  morpheus_utils_print_global_properties(
+      WRITE_TO_FILE
+  )
 endif()
 
 # Cleanup the environment after we exit this scope
