@@ -162,9 +162,9 @@ class BuilderProxy
     static std::shared_ptr<mrc::segment::ObjectProperties> make_sink_component(
         mrc::segment::Builder& self,
         const std::string& name,
-        std::function<void(pybind11::object x)> on_next,
-        std::function<void(pybind11::object x)> on_error,
-        std::function<void()> on_completed);
+        pybind11::function on_next,
+        pybind11::function on_error,
+        pybind11::function on_completed);
 
     /**
      * Construct a new 'pure' python::object -> python::object node
@@ -183,6 +183,10 @@ class BuilderProxy
         mrc::segment::Builder& self,
         const std::string& name,
         std::function<void(const pymrc::PyObjectObservable& obs, pymrc::PyObjectSubscriber& sub)> sub_fn);
+
+    static std::shared_ptr<mrc::segment::ObjectProperties> make_node_component(mrc::segment::Builder& self,
+                                                                               const std::string& name,
+                                                                               pybind11::args args);
 
     static void make_edge(mrc::segment::Builder& self,
                           std::shared_ptr<mrc::segment::ObjectProperties> source,

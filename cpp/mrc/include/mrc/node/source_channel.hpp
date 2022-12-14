@@ -59,11 +59,6 @@ class SourceChannel : public virtual SourceProperties<T>
         auto channel_reader = edge_channel.get_reader();
         auto channel_writer = edge_channel.get_writer();
 
-        // channel_reader->add_connector(EdgeLifetime([this, channel_writer]() {
-        //     // On connection, save the writer so we can use the channel without it being deleted
-        //     this->m_set_edge = channel_writer;
-        // }));
-
         SourceProperties<T>::init_owned_edge(channel_reader);
 
         // Finally, set the other half to the connected edge to allow using the channel without it being deleted. If

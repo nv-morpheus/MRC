@@ -76,17 +76,19 @@ struct EgressHandleObj;
 class EdgeLifetime
 {
   public:
-    EdgeLifetime(std::function<void()> fn) : m_fn(std::move(fn)) {}
+    EdgeLifetime(std::function<void()> fn, bool is_armed = true) : m_fn(std::move(fn)), m_is_armed(is_armed) {}
 
     EdgeLifetime(const EdgeLifetime& other) = delete;
     EdgeLifetime(EdgeLifetime&& other)
     {
+        std::swap(m_is_armed, other.m_is_armed);
         std::swap(m_fn, other.m_fn);
     }
 
     EdgeLifetime& operator=(const EdgeLifetime& other) = delete;
     EdgeLifetime& operator=(EdgeLifetime&& other) noexcept
     {
+        std::swap(m_is_armed, other.m_is_armed);
         std::swap(m_fn, other.m_fn);
 
         return *this;
@@ -94,18 +96,29 @@ class EdgeLifetime
 
     ~EdgeLifetime()
     {
-        if (m_fn)
+        if (m_is_armed && m_fn)
         {
             m_fn();
         }
     }
 
+    bool is_armed() const
+    {
+        return m_is_armed;
+    }
+
+    void arm()
+    {
+        m_is_armed = true;
+    }
+
     void disarm()
     {
-        m_fn = nullptr;
+        m_is_armed = false;
     }
 
   private:
+    bool m_is_armed{true};
     std::function<void()> m_fn;
 };
 
@@ -114,13 +127,12 @@ class EdgeTag
   public:
     virtual ~EdgeTag()
     {
-        VLOG(10) << "Destroying EdgeHandle";
-
         for (auto& c : m_connectors)
         {
             c.disarm();
         }
 
+        m_connectors.clear();
         m_disconnectors.clear();
     };
 
@@ -129,13 +141,26 @@ class EdgeTag
         return m_is_connected;
     }
 
+    void add_connector(std::function<void()>&& fn)
+    {
+        this->add_connector(EdgeLifetime(std::move(fn), true));
+    }
+
     void add_connector(EdgeLifetime&& connector)
     {
         m_connectors.emplace_back(std::move(connector));
     }
 
+    void add_disconnector(std::function<void()>&& fn)
+    {
+        this->add_disconnector(EdgeLifetime(std::move(fn), false));
+    }
+
     void add_disconnector(EdgeLifetime&& disconnector)
     {
+        LOG_IF(WARNING, disconnector.is_armed())
+            << "Adding armed disconnector to edge. This will fire even if edge is never connected";
+
         m_disconnectors.emplace_back(std::move(disconnector));
     }
 
@@ -146,6 +171,12 @@ class EdgeTag
 
         // Clear the connectors to execute them
         m_connectors.clear();
+
+        // Arm all of the disconnectors now that we are connected
+        for (auto& c : m_disconnectors)
+        {
+            c.arm();
+        }
 
         // For all linked edges, call connect
         for (auto& linked_edge : m_linked_edges)
@@ -185,70 +216,6 @@ template <typename T>
 class EdgeHandle : public virtual EdgeTag
 {
   public:
-    // ~EdgeHandle() override
-    // {
-    //     VLOG(10) << "Destroying EdgeHandle";
-
-    //     for (auto& c : m_connectors)
-    //     {
-    //         c.disarm();
-    //     }
-
-    //     m_disconnectors.clear();
-    // };
-
-    // bool is_connected() const override
-    // {
-    //     return m_is_connected;
-    // }
-
-    // void add_connector(EdgeLifetime&& connector)
-    // {
-    //     m_connectors.emplace_back(std::move(connector));
-    // }
-
-    // void add_disconnector(EdgeLifetime&& disconnector)
-    // {
-    //     m_disconnectors.emplace_back(std::move(disconnector));
-    // }
-
-    //   protected:
-    //     void connect() override
-    //     {
-    //         m_is_connected = true;
-
-    //         // Clear the connectors to execute them
-    //         m_connectors.clear();
-
-    //         // For all linked edges, call connect
-    //         for (auto& linked_edge : m_linked_edges)
-    //         {
-    //             linked_edge->connect();
-    //         }
-    //     }
-
-    //     void add_linked_edge(std::shared_ptr<EdgeTag> linked_edge)
-    //     {
-    //         if (m_is_connected)
-    //         {
-    //             linked_edge->connect();
-    //         }
-
-    //         m_linked_edges.emplace_back(std::move(linked_edge));
-    //     }
-
-    //     // // Allows keeping a downstream edge holder alive for the lifetime of this edge
-    //     // void add_lifetime(std::shared_ptr<EdgeHolder<T>> downstream)
-    //     // {
-    //     //     m_keep_alive.push_back(downstream);
-    //     // }
-
-    //   private:
-    //     bool m_is_connected{false};
-    //     std::vector<EdgeLifetime> m_connectors;
-    //     std::vector<EdgeLifetime> m_disconnectors;
-    //     std::vector<std::shared_ptr<EdgeTag>> m_linked_edges;
-
     // Friend the holder classes which are required to setup connections
     template <typename>
     friend class EdgeHolder;
@@ -585,20 +552,13 @@ template <typename T>
 class EdgeHolder
 {
   public:
-    // void set_channel(std::unique_ptr<mrc::channel::Channel<T>> channel)
-    // {
-    //     // Create a new edge that will close the channel when all
-    //     auto new_edge = std::make_shared<EdgeChannel<T>>(std::move(channel));
-
-    //     this->set_edge(new_edge);
-    // }
     EdgeHolder() = default;
     virtual ~EdgeHolder()
     {
         // Drop any edge connections before this object goes out of scope. This should execute any disconnectors
         m_connected_edge.reset();
 
-        if (this->has_dependent_connection())
+        if (this->check_active_connection(false))
         {
             LOG(FATAL) << "A node was destructed which still had dependent connections. Nodes must be kept alive while "
                           "dependent connections are still active";
@@ -606,41 +566,50 @@ class EdgeHolder
     }
 
   protected:
-    bool has_dependent_connection() const
+    bool check_active_connection(bool do_throw = true) const
     {
         // Alive connection exists when the lock is true, lifetime is false or a connction object has been set
-        return m_owned_edge.lock() && !m_owned_edge_lifetime;
+        if (m_owned_edge.lock() && !m_owned_edge_lifetime)
+        {
+            // Then someone is using this edge already, cant be changed
+            if (do_throw)
+            {
+                throw std::runtime_error("Cant change edge after a connection has been made");
+            }
+            return true;
+        }
+
+        // Check for set connections. Must be connected to throw error
+        if (m_connected_edge && m_connected_edge->is_connected())
+        {
+            // Then someone is using this edge already, cant be changed
+            if (do_throw)
+            {
+                throw std::runtime_error(
+                    "Cannot make multiple connections to the same node. Use dedicated Broadcast node");
+            }
+            return true;
+        }
+
+        return false;
     }
 
     void init_owned_edge(std::shared_ptr<EdgeHandle<T>> edge)
     {
-        // Check if set_edge followed by get_edge has been called
-        if (this->has_dependent_connection() || m_connected_edge)
-        {
-            // Then someone is using this edge already, cant be changed
-            throw std::runtime_error("Cant change edge after a connection has been made");
-        }
+        // Check for active connections
+        this->check_active_connection();
 
-        std::weak_ptr<EdgeHandle<T>> weak_edge = edge;
+        // Register a connector to run when edge is connected
+        edge->add_connector([this]() {
+            // Drop the object keeping the weak_edge alive
+            this->m_owned_edge_lifetime.reset();
+        });
 
-        edge->add_connector(EdgeLifetime([this, weak_edge]() {
-            // Convert to full shared_ptr to avoid edge going out of scope
-            if (auto e = weak_edge.lock())
-            {
-                // Drop the object keeping the weak_edge alive
-                this->m_owned_edge_lifetime.reset();
-
-                // Now register a disconnector to keep clean everything up
-                e->add_disconnector(EdgeLifetime([this]() {
-                    this->m_owned_edge_lifetime.reset();
-                    this->m_owned_edge.reset();
-                }));
-            }
-            else
-            {
-                LOG(ERROR) << "Lock was destroyed before making connection.";
-            }
-        }));
+        // Now register a disconnector to keep clean everything up. Only runs if connected
+        edge->add_disconnector([this]() {
+            this->m_owned_edge_lifetime.reset();
+            this->m_owned_edge.reset();
+        });
 
         // Set to the temp edge to ensure its alive until get_edge is called
         m_owned_edge_lifetime = edge;
@@ -651,12 +620,8 @@ class EdgeHolder
 
     void init_connected_edge(std::shared_ptr<EdgeHandle<T>> edge)
     {
-        // Check if set_edge followed by get_edge has been called
-        if (this->has_dependent_connection() || m_connected_edge)
-        {
-            // Then someone is using this edge already, cant be changed
-            throw std::runtime_error("Cant change edge after a connection has been made");
-        }
+        // Check for active connections
+        this->check_active_connection();
 
         m_connected_edge = edge;
     }
@@ -698,22 +663,8 @@ class EdgeHolder
   private:
     void set_edge_handle(std::shared_ptr<EdgeHandle<T>> edge)
     {
-        // Check if set_edge followed by get_edge has been called
-        if (this->has_dependent_connection())
-        {
-            // Then someone is using this edge already, cant be changed
-            throw std::runtime_error("Cant change edge after a connection has been made");
-        }
-
-        // Check for existing edge
-        if (m_connected_edge)
-        {
-            if (m_connected_edge->is_connected())
-            {
-                throw std::runtime_error(
-                    "Cannot make multiple connections to the same node. Use dedicated Broadcast node");
-            }
-        }
+        // Check for active connections
+        this->check_active_connection();
 
         // Set to the temp edge to ensure its alive until get_edge is called
         m_connected_edge = edge;

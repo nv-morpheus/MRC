@@ -43,17 +43,18 @@ class NodeComponent<T, T> : public ForwardingIngressProvider<T>, public IngressA
     }
 };
 
-template <typename T>
-class LambdaNodeComponent : public NodeComponent<T, T>
+template <typename InputT, typename OutputT = InputT>
+class LambdaNodeComponent : public NodeComponent<InputT, OutputT>
 {
   public:
-    using on_next_fn_t     = std::function<T(T&&)>;
+    using on_next_fn_t     = std::function<OutputT(InputT&&)>;
     using on_complete_fn_t = std::function<void()>;
 
-    LambdaNodeComponent(on_next_fn_t on_next_fn) : NodeComponent<T, T>(), m_on_next_fn(std::move(on_next_fn)) {}
+    LambdaNodeComponent(on_next_fn_t on_next_fn) : NodeComponent<InputT, OutputT>(), m_on_next_fn(std::move(on_next_fn))
+    {}
 
     LambdaNodeComponent(on_next_fn_t on_next_fn, on_complete_fn_t on_complete_fn) :
-      NodeComponent<T, T>(),
+      NodeComponent<InputT, OutputT>(),
       m_on_next_fn(std::move(on_next_fn)),
       m_on_complete_fn(std::move(on_complete_fn))
     {}
@@ -61,7 +62,7 @@ class LambdaNodeComponent : public NodeComponent<T, T>
     virtual ~LambdaNodeComponent() = default;
 
   protected:
-    channel::Status on_next(T&& t)
+    channel::Status on_next(InputT&& t) override
     {
         return this->get_writable_edge()->await_write(m_on_next_fn(std::move(t)));
     }
@@ -73,7 +74,7 @@ class LambdaNodeComponent : public NodeComponent<T, T>
             m_on_complete_fn();
         }
 
-        SourceProperties<T>::release_edge_connection();
+        SourceProperties<OutputT>::release_edge_connection();
     }
 
   private:

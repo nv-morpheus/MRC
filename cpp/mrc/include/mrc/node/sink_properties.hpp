@@ -167,7 +167,7 @@ class ForwardingIngressProvider : public IngressProvider<T>
 
         ~ForwardingEdge()
         {
-            m_parent.on_complete();
+            // m_parent.on_complete();
         }
 
         channel::Status await_write(T&& t) override
@@ -181,7 +181,14 @@ class ForwardingIngressProvider : public IngressProvider<T>
 
     ForwardingIngressProvider()
     {
-        IngressProvider<T>::init_owned_edge(std::make_shared<ForwardingEdge>(*this));
+        auto inner_edge = std::make_shared<ForwardingEdge>(*this);
+
+        inner_edge->add_disconnector([this]() {
+            // Only call the on_complete if we have been connected
+            this->on_complete();
+        });
+
+        IngressProvider<T>::init_owned_edge(inner_edge);
     }
 
     virtual channel::Status on_next(T&& t) = 0;

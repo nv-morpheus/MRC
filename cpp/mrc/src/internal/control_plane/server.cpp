@@ -26,6 +26,7 @@
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
+#include "mrc/node/writable_subject.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/runnable/launch_control.hpp"
@@ -40,6 +41,7 @@
 #include <algorithm>
 #include <exception>
 #include <future>
+#include <memory>
 #include <mutex>
 #include <set>
 #include <sstream>
@@ -98,8 +100,11 @@ void Server::do_service_start()
     // create external queue for incoming events
     // as new grpc streams are initialized by the acceptor, they attach as sources to the queue (stream >> queue)
     // these streams issue event (event_t) object which encapsulate the stream_writer for the originating stream
-    m_queue = std::make_unique<mrc::node::Queue<event_t>>();
-    // m_queue->enable_persistence();
+    m_queue        = std::make_unique<mrc::node::Queue<event_t>>();
+    m_queue_holder = std::make_unique<mrc::node::WritableSubject<event_t>>();
+
+    // Enable persistance by connecting the queue to a subject that will keep the connection alive
+    mrc::node::make_edge(*m_queue_holder, *m_queue);
 
     // the queue is attached to the event handler which will update the internal state of the server
     auto handler =
@@ -177,7 +182,7 @@ void Server::do_service_await_join()
     drop_all_streams();
 
     // we keep the event handlers open until the streams are closed
-    // m_queue->disable_persistence();
+    m_queue_holder.reset();
 
     DVLOG(10) << "awaiting grpc server join";
     m_server.service_await_join();
@@ -217,10 +222,8 @@ void Server::do_accept_stream(rxcpp::subscriber<stream_t>& s)
         // create stream
         auto stream = std::make_shared<typename stream_t::element_type>(request_fn, m_runnable);
 
-        mrc::node::Queue<event_t>& queue = *m_queue;
-
         // attach to handler
-        stream->attach_to(queue);
+        stream->attach_to(*m_queue);
 
         // await for incoming connection
         auto writer = stream->await_init();

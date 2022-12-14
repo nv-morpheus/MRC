@@ -24,6 +24,7 @@
 #include "internal/service.hpp"
 
 #include "mrc/node/queue.hpp"
+#include "mrc/node/writable_subject.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
 
 #include <boost/fiber/condition_variable.hpp>
@@ -108,6 +109,7 @@ class Server : public Service
     std::map<std::string, std::unique_ptr<server::SubscriptionService>> m_subscription_services;
 
     // operators / queues
+    std::unique_ptr<mrc::node::WritableSubject<event_t>> m_queue_holder;
     std::unique_ptr<mrc::node::Queue<event_t>> m_queue;
 
     // runners

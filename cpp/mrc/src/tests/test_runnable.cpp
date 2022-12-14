@@ -308,6 +308,7 @@ TEST_F(TestRunnable, RxSourceToMuxerToRxSink)
 {
     std::atomic<std::size_t> counter = 0;
     std::unique_ptr<runnable::Runner> runner_source;
+    std::unique_ptr<node::Muxer<float>> muxer;
     std::unique_ptr<runnable::Runner> runner_sink;
 
     // do the construction in its own scope
@@ -321,7 +322,7 @@ TEST_F(TestRunnable, RxSourceToMuxerToRxSink)
                 s.on_next(3.0f);
                 s.on_completed();
             }));
-        auto muxer = std::make_shared<node::Muxer<float>>();
+        muxer = std::make_unique<node::Muxer<float>>();
         auto sink =
             std::make_unique<node::RxSink<float>>(rxcpp::make_observer_dynamic<float>([&](float x) { ++counter; }));
 

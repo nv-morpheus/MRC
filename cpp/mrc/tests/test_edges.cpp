@@ -276,36 +276,22 @@ template <typename T>
 class TestNodeComponent : public NodeComponent<T, T>
 {
   public:
-    TestNodeComponent()
-    {
-        IngressProvider<T>::init_owned_edge(std::make_shared<EdgeWritableLambda<T>>(
-            [this](int&& t) {
-                // Call this object
-                return this->on_next(std::move(t));
-            },
-            [this]() {
-                // Call complete, and then drop the downstream edge
-                this->on_complete();
+    TestNodeComponent() = default;
 
-                // TODO(MDD): Release downstream edge
-                SourceProperties<T>::release_edge_connection();
-            }));
-    }
-
-    ~TestNodeComponent()
+    ~TestNodeComponent() override
     {
         // Debug print
         VLOG(10) << "Destroying TestNodeComponent";
     }
 
-    channel::Status on_next(int&& t)
+    channel::Status on_next(int&& t) override
     {
         VLOG(10) << "TestNodeComponent got value: " << t;
 
         return this->get_writable_edge()->await_write(t + 1);
     }
 
-    void on_complete()
+    void on_complete() override
     {
         VLOG(10) << "TestSinkComponent completed";
     }
@@ -342,9 +328,9 @@ template <typename T>
 class TestRouter : public Router<std::string, int>
 {
   protected:
-    virtual std::string determine_key_for_value(const int& t) override
+    std::string determine_key_for_value(const int& t) override
     {
-        return "test";
+        return t % 2 == 1 ? "odd" : "even";
     }
 };
 
@@ -468,7 +454,7 @@ class TestConditional : public IngressProvider<int>, public IngressAcceptor<int>
             }));
     }
 
-    ~TestConditional()
+    ~TestConditional() override
     {
         // Debug print
         VLOG(10) << "Destroying TestConditional";
@@ -587,6 +573,8 @@ namespace mrc {
 
 TEST_F(TestEdges, NodeDestroyedBeforeEdge)
 {
+    GTEST_SKIP();
+
     auto source = std::make_shared<node::TestSource<int>>();
     auto sink   = std::make_shared<node::TestSink<int>>();
 
@@ -668,6 +656,10 @@ TEST_F(TestEdges, SourceToSinkMultiFail)
 
     node::make_edge(*source, *sink1);
     EXPECT_THROW(node::make_edge(*source, *sink2), std::runtime_error);
+
+    source.reset();
+    sink1.reset();
+    sink2.reset();
 }
 
 TEST_F(TestEdges, SourceToSinkComponent)
@@ -997,6 +989,45 @@ TEST_F(TestEdges, CombineLatest)
     source2->run();
 
     sink->run();
+}
+
+TEST_F(TestEdges, CreateAndDestroy)
+{
+    {
+        auto x = std::make_shared<node::TestSource<int>>();
+    }
+
+    {
+        auto x = std::make_shared<node::TestNode<int>>();
+    }
+
+    {
+        auto x = std::make_shared<node::TestSink<int>>();
+    }
+
+    {
+        auto x = std::make_shared<node::TestSourceComponent<int>>();
+    }
+
+    {
+        auto x = std::make_shared<node::TestNodeComponent<int>>();
+    }
+
+    {
+        auto x = std::make_shared<node::TestSinkComponent<int>>();
+    }
+
+    {
+        auto x = std::make_shared<node::Broadcast<int>>();
+    }
+
+    {
+        auto x = std::make_shared<node::TestRouter<int>>();
+    }
+
+    {
+        auto x = std::make_shared<node::TestConditional<int>>();
+    }
 }
 
 }  // namespace mrc

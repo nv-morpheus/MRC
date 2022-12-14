@@ -255,7 +255,12 @@
                 //     "text": "-interpreter-exec console \"set scheduler-locking step\""
                 // }
             ],
-            "sourceFileMap": "${sourceFileMapObj}",
+            "sourceFileMap": {
+                "${workspaceFolder}": {
+                    "editorPath": "${workspaceFolder}",
+                    "useForBreakpoints": "true"
+                },
+            },
             "testMate.cpp.debug.setEnv": {
                 "GLOG_v": "10",
                 "GTEST_CATCH_EXCEPTIONS": "0", // Allow the debugger to catch exceptions

@@ -108,7 +108,7 @@ class BroadcastTypeless : public IIngressProviderBase, public IIngressAcceptorBa
                 std::weak_ptr<DeferredWritableMultiEdgeBase> weak_deferred_edge = deferred_edge;
 
                 // Use a connector here in case the object never gets set to an edge
-                deferred_edge->add_connector(EdgeLifetime([self, weak_deferred_edge]() {
+                deferred_edge->add_connector([self, weak_deferred_edge]() {
                     // Lock whenever working on the handles
                     std::unique_lock<std::mutex> lock(self->m_mutex);
 
@@ -128,7 +128,7 @@ class BroadcastTypeless : public IIngressProviderBase, public IIngressAcceptorBa
                     }
 
                     // Now add a disconnector that will remove it from the list
-                    deferred_edge->add_disconnector(EdgeLifetime([self, weak_deferred_edge]() {
+                    deferred_edge->add_disconnector([self, weak_deferred_edge]() {
                         // Need to lock here since this could be driven by different progress engines
                         std::unique_lock<std::mutex> lock(self->m_mutex);
 
@@ -158,8 +158,8 @@ class BroadcastTypeless : public IIngressProviderBase, public IIngressAcceptorBa
                         {
                             self->m_downstream_handles.clear();
                         }
-                    }));
-                }));
+                    });
+                });
             });
 
         return deferred_ingress;

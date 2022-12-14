@@ -221,6 +221,54 @@ class SinkDerivedB : public pymrc::PythonSink<std::shared_ptr<DerivedB>>
     SinkDerivedB() : PythonSink(build()) {}
 };
 
+class NodeComponentBase : public pymrc::PythonNodeComponent<std::shared_ptr<Base>, std::shared_ptr<Base>>
+{
+  public:
+    using base_t = pymrc::PythonNodeComponent<std::shared_ptr<Base>, std::shared_ptr<Base>>;
+    using typename base_t::sink_type_t;
+    using typename base_t::source_type_t;
+    using typename base_t::subscribe_fn_t;
+
+    NodeComponentBase() : PythonNodeComponent(base_t::op_factory_from_sub_fn(build_operator())) {}
+
+  private:
+    subscribe_fn_t build_operator()
+    {
+        return [this](rxcpp::observable<sink_type_t> input, rxcpp::subscriber<source_type_t> output) {
+            return input.subscribe(rxcpp::make_observer<sink_type_t>(
+                [this, &output](sink_type_t x) {
+                    // Forward on
+                    output.on_next(std::move(x));
+                },
+                [&](std::exception_ptr error_ptr) { output.on_error(error_ptr); },
+                [&]() { output.on_completed(); }));
+        };
+    }
+};
+
+class SinkComponentBase : public pymrc::PythonSinkComponent<std::shared_ptr<Base>>
+{
+    using base_t = pymrc::PythonSinkComponent<std::shared_ptr<Base>>;
+
+    static rxcpp::observer<std::shared_ptr<Base>> build()
+    {
+        return rxcpp::make_observer_dynamic<sink_type_t>(
+            [](sink_type_t x) {
+
+            },
+            [](std::exception_ptr ex) {},
+            []() {
+                // Complete
+            });
+    }
+
+  public:
+    using typename base_t::observer_t;
+    using typename base_t::sink_type_t;
+
+    SinkComponentBase() : PythonSinkComponent(build()) {}
+};
+
 PYBIND11_MODULE(test_edges_cpp, module)
 {
     module.doc() = R"pbdoc()pbdoc";
@@ -318,6 +366,28 @@ PYBIND11_MODULE(test_edges_cpp, module)
                std::shared_ptr<segment::Object<SinkDerivedB>>>(module, "SinkDerivedB")
         .def(py::init<>([](segment::Builder& parent, const std::string& name) {
                  auto stage = parent.construct_object<SinkDerivedB>(name);
+
+                 return stage;
+             }),
+             py::arg("parent"),
+             py::arg("name"));
+
+    py::class_<segment::Object<NodeComponentBase>,
+               mrc::segment::ObjectProperties,
+               std::shared_ptr<segment::Object<NodeComponentBase>>>(module, "NodeComponentBase")
+        .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name) {
+                 auto stage = parent.construct_object<NodeComponentBase>(name);
+
+                 return stage;
+             }),
+             py::arg("parent"),
+             py::arg("name"));
+
+    py::class_<segment::Object<SinkComponentBase>,
+               segment::ObjectProperties,
+               std::shared_ptr<segment::Object<SinkComponentBase>>>(module, "SinkComponentBase")
+        .def(py::init<>([](segment::Builder& parent, const std::string& name) {
+                 auto stage = parent.construct_object<SinkComponentBase>(name);
 
                  return stage;
              }),

@@ -170,6 +170,13 @@ class PYBIND11_EXPORT PyObjectHolder : public pybind11::detail::object_api<PyObj
     std::shared_ptr<PyObjectWrapper> m_wrapped;
 };
 
+// Wraps a python on_next function to support checking the function signature and unpacking arguments
+std::function<void(PyObjectHolder)> wrap_py_on_next(pybind11::function py_fn);
+
+std::function<void(std::exception_ptr)> wrap_py_on_error(pybind11::function py_fn);
+
+std::function<void()> wrap_py_on_completed(pybind11::function py_fn);
+
 #pragma GCC visibility pop
 
 }  // namespace mrc::pymrc

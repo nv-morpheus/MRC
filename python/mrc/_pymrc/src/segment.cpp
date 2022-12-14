@@ -18,6 +18,7 @@
 #include "pymrc/segment.hpp"
 
 #include "pymrc/node.hpp"
+#include "pymrc/subscriber.hpp"
 #include "pymrc/types.hpp"
 #include "pymrc/utils.hpp"
 
@@ -183,35 +184,15 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_sink(mrc::seg
     return self.make_sink<PyHolder, PythonSink>(name, on_next_w, on_error_w, on_completed_w);
 }
 
-std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_sink_component(
-    mrc::segment::Builder& self,
-    const std::string& name,
-    std::function<void(py::object object)> on_next,
-    std::function<void(py::object object)> on_error,
-    std::function<void()> on_completed)
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_sink_component(mrc::segment::Builder& self,
+                                                                                  const std::string& name,
+                                                                                  py::function on_next,
+                                                                                  py::function on_error,
+                                                                                  py::function on_completed)
 {
-    auto on_next_w = [on_next](PyHolder object) {
-        pybind11::gil_scoped_acquire gil;
-        on_next(std::move(object));  // Move the object into a temporary
-    };
-
-    auto on_error_w = [on_error](std::exception_ptr ptr) {
-        pybind11::gil_scoped_acquire gil;
-
-        // First, translate the exception setting the python exception value
-        py::detail::translate_exception(ptr);
-
-        // Creating py::error_already_set will clear the exception and retrieve the value
-        py::error_already_set active_ex;
-
-        // Now actually pass the exception to the callback
-        on_error(active_ex.value());
-    };
-
-    auto on_completed_w = [on_completed]() {
-        pybind11::gil_scoped_acquire gil;
-        on_completed();
-    };
+    auto on_next_w      = wrap_py_on_next(std::move(on_next));
+    auto on_error_w     = wrap_py_on_error(std::move(on_error));
+    auto on_completed_w = wrap_py_on_completed(std::move(on_completed));
 
     return self.make_sink_component<PyHolder, PythonSinkComponent>(name, on_next_w, on_error_w, on_completed_w);
 }
@@ -301,6 +282,20 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node_full(
                 throw;
             }
         });
+    });
+
+    return node;
+}
+
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node_component(mrc::segment::Builder& self,
+                                                                                  const std::string& name,
+                                                                                  pybind11::args args)
+{
+    auto node = self.make_node_component<PyHolder, PyHolder, PythonNodeComponent>(name);
+
+    node->object().make_stream([args](const PyObjectObservable& input) -> PyObjectObservable {
+        // Call the pipe function to convert all of the args to a new observable
+        return ObservableProxy::pipe(&input, args);
     });
 
     return node;

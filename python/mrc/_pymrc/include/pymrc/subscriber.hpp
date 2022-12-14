@@ -52,7 +52,7 @@ class ObservableProxy
   public:
     static PySubscription subscribe(PyObjectObservable* self, PyObjectObserver& observer);
     static PySubscription subscribe(PyObjectObservable* self, PyObjectSubscriber& subscriber);
-    static PyObjectObservable pipe(PyObjectObservable* self, pybind11::args args);
+    static PyObjectObservable pipe(const PyObjectObservable* self, pybind11::args args);
 };
 
 #pragma GCC visibility pop

@@ -32,6 +32,7 @@
 #include "mrc/version.hpp"
 
 #include <pybind11/cast.h>
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
@@ -147,7 +148,13 @@ PYBIND11_MODULE(segment, module)
      */
     Builder.def("make_sink", &BuilderProxy::make_sink, py::return_value_policy::reference_internal);
 
-    Builder.def("make_sink_component", &BuilderProxy::make_sink_component, py::return_value_policy::reference_internal);
+    Builder.def("make_sink_component",
+                &BuilderProxy::make_sink_component,
+                py::return_value_policy::reference_internal,
+                py::arg("name"),
+                py::arg("on_next")     = py::none(),
+                py::arg("on_error")    = py::none(),
+                py::arg("on_complete") = py::none());
 
     /**
      * Construct a new 'pure' python::object -> python::object node
@@ -158,6 +165,8 @@ PYBIND11_MODULE(segment, module)
      * python-function which will be called on each data element as it flows through the node.
      */
     Builder.def("make_node", &BuilderProxy::make_node, py::return_value_policy::reference_internal);
+
+    Builder.def("make_node_component", &BuilderProxy::make_node_component, py::return_value_policy::reference_internal);
 
     /**
      * Find and return an existing egress port -- throws if `name` does not exist

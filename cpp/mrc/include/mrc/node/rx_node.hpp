@@ -243,13 +243,58 @@ void RxNode<InputT, OutputT, ContextT>::on_shutdown_critical_section()
     RxSourceBase<OutputT>::release_edge_connection();
 }
 
+template <typename T>
+class EdgeRxSubscriber : public IEdgeWritable<T>
+{
+  public:
+    using subscriber_t = rxcpp::subscriber<T>;
+
+    EdgeRxSubscriber(subscriber_t subscriber) : m_subscriber(subscriber) {}
+
+    ~EdgeRxSubscriber()
+    {
+        m_subscriber.on_completed();
+    }
+
+    void set_subscriber(subscriber_t subscriber)
+    {
+        m_subscriber = subscriber;
+    }
+
+    virtual channel::Status await_write(T&& t)
+    {
+        m_subscriber.on_next(std::move(t));
+
+        return channel::Status::success;
+    }
+
+  private:
+    subscriber_t m_subscriber;
+};
+
 template <typename InputT, typename OutputT>
 class RxNodeComponent : public IngressProvider<InputT>, public IngressAcceptor<OutputT>
 {
   public:
     using stream_fn_t = std::function<rxcpp::observable<OutputT>(const rxcpp::observable<InputT>&)>;
 
-    RxNodeComponent() = default;
+    RxNodeComponent()
+    {
+        auto edge = std::make_shared<EdgeRxSubscriber<InputT>>(m_subject.get_subscriber());
+
+        IngressProvider<InputT>::init_owned_edge(edge);
+    }
+
+    RxNodeComponent(stream_fn_t stream_fn) : RxNodeComponent()
+    {
+        this->make_stream(stream_fn);
+    }
+
+    template <typename... OpsT>
+    RxNodeComponent(OpsT&&... ops) : RxNodeComponent()
+    {
+        this->pipe(std::forward<OpsT>(ops)...);
+    }
 
     template <typename... OpsT>
     RxNodeComponent& pipe(OpsT&&... ops)
@@ -260,13 +305,13 @@ class RxNodeComponent : public IngressProvider<InputT>, public IngressAcceptor<O
 
     void make_stream(stream_fn_t fn)
     {
-        if (m_source_subject_subscription.is_subscribed())
+        if (m_subject_subscription.is_subscribed())
         {
-            m_source_subject_subscription.unsubscribe();
+            m_subject_subscription.unsubscribe();
         }
 
         // Start with the base sinke observable
-        auto observable_in = m_sink_subject.get_observable();
+        auto observable_in = m_subject.get_observable();
 
         // // Apply prologue taps
         // observable_in = this->apply_prologue_taps(observable_in);
@@ -278,15 +323,20 @@ class RxNodeComponent : public IngressProvider<InputT>, public IngressAcceptor<O
         // observable_out = this->apply_epilogue_taps(observable_out);
 
         // Subscribe to the observer
-        m_source_subject_subscription = observable_out.subscribe(rxcpp::make_observer(
-            [this](OutputT message) { this->get_writable_edge()->await_write(std::move(message)); }));
+        m_subject_subscription = observable_out.subscribe(rxcpp::make_observer_dynamic<OutputT>(
+            [this](OutputT message) {
+                // Forward to the writable edge
+                this->get_writable_edge()->await_write(std::move(message));
+            },
+            [this]() {
+                // On completion, release connections
+                IngressAcceptor<OutputT>::release_edge_connection();
+            }));
     }
 
   private:
-    rxcpp::subjects::subject<InputT> m_sink_subject;
-    rxcpp::subscription m_sink_subject_subscription;
-    rxcpp::subjects::subject<InputT> m_source_subject;
-    rxcpp::subscription m_source_subject_subscription;
+    rxcpp::subjects::subject<InputT> m_subject;
+    rxcpp::subscription m_subject_subscription;
 };
 
 }  // namespace mrc::node

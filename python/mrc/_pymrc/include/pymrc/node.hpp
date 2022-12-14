@@ -241,6 +241,35 @@ class PythonNode : public node::RxNode<InputT, OutputT, ContextT>,
     }
 };
 
+template <typename InputT, typename OutputT>
+class PythonNodeComponent : public node::RxNodeComponent<InputT, OutputT>,
+                            public pymrc::AutoRegSourceAdapter<OutputT>,
+                            public pymrc::AutoRegSinkAdapter<InputT>,
+                            public pymrc::AutoRegIngressPort<OutputT>,
+                            public pymrc::AutoRegEgressPort<InputT>
+{
+    using base_t = node::RxNodeComponent<InputT, OutputT>;
+
+  public:
+    using typename base_t::stream_fn_t;
+    using subscribe_fn_t = std::function<rxcpp::subscription(rxcpp::observable<InputT>, rxcpp::subscriber<OutputT>)>;
+
+    using node::RxNodeComponent<InputT, OutputT>::RxNodeComponent;
+
+  protected:
+    static auto op_factory_from_sub_fn(subscribe_fn_t sub_fn)
+    {
+        return [=](rxcpp::observable<InputT> input) {
+            // Convert from the `subscription(observable, subscriber)` signature into an operator factor function
+            // `observable(observable)`
+            return rxcpp::observable<>::create<OutputT>([=](rxcpp::subscriber<OutputT> output) {
+                // Call the wrapped function
+                sub_fn(input, output);
+            });
+        };
+    }
+};
+
 template <typename OutputT, typename ContextT = mrc::runnable::Context>
 class PythonSource : public node::RxSource<OutputT, ContextT>,
                      public pymrc::AutoRegSourceAdapter<OutputT>,
@@ -258,6 +287,24 @@ class PythonSource : public node::RxSource<OutputT, ContextT>,
       }))
     {}
 };
+
+// template <typename OutputT>
+// class PythonSourceComponent : public node::RxSourceComponent<OutputT>,
+//                               public pymrc::AutoRegSourceAdapter<OutputT>,
+//                               public pymrc::AutoRegIngressPort<OutputT>
+// {
+//     using base_t = node::RxSource<OutputT>;
+
+//   public:
+//     using subscriber_fn_t = std::function<void(rxcpp::subscriber<OutputT>& sub)>;
+
+//     PythonSourceComponent(const subscriber_fn_t& f) :
+//       base_t(rxcpp::observable<>::create<OutputT>([f](rxcpp::subscriber<OutputT>& s) {
+//           // Call the wrapped subscriber function
+//           f(s);
+//       }))
+//     {}
+// };
 
 class SegmentObjectProxy
 {

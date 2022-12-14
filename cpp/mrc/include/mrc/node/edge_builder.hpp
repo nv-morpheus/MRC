@@ -378,10 +378,10 @@ class DeferredWritableMultiEdge : public MultiEdgeHolder<std::size_t, T>,
         // }
 
         // Set a connector to check that the indices function has been set
-        this->add_connector(EdgeLifetime([this]() {
+        this->add_connector([this]() {
             // Ensure that the indices function is properly set
             CHECK(this->m_indices_fn) << "Must set indices function before connecting edge";
-        }));
+        });
     }
 
     channel::Status await_write(T&& data) override

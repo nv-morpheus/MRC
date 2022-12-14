@@ -176,6 +176,15 @@ class Builder final
         return construct_object<NodeTypeT<SinkTypeT, SourceTypeT>>(name, std::forward<ArgsT>(ops)...);
     }
 
+    template <typename SinkTypeT,
+              typename SourceTypeT,
+              template <class, class> class NodeTypeT = node::RxNodeComponent,
+              typename... ArgsT>
+    auto make_node_component(std::string name, ArgsT&&... ops)
+    {
+        return construct_object<NodeTypeT<SinkTypeT, SourceTypeT>>(name, std::forward<ArgsT>(ops)...);
+    }
+
     /**
      * Instantiate a segment module of `ModuleTypeT`, intialize it, and return it to the caller
      * @tparam ModuleTypeT Type of module to create

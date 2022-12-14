@@ -34,7 +34,6 @@
 #include "mrc/channel/channel.hpp"
 #include "mrc/memory/literals.hpp"
 #include "mrc/node/edge_builder.hpp"
-#include "mrc/node/operators/node_component.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_channel.hpp"

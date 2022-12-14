@@ -139,12 +139,12 @@ std::function<PyObjectObservable(PyObjectObservable&)> test_operator()
 }
 
 template <typename... OpsT>
-PyObjectObservable pipe_ops(PyObjectObservable* self, OpsT&&... ops)
+PyObjectObservable pipe_ops(const PyObjectObservable* self, OpsT&&... ops)
 {
     return (*self | ... | ops);
 }
 
-PyObjectObservable ObservableProxy::pipe(PyObjectObservable* self, py::args args)
+PyObjectObservable ObservableProxy::pipe(const PyObjectObservable* self, py::args args)
 {
     std::vector<PyObjectOperateFn> operators;
 
