@@ -42,7 +42,7 @@ requirements:
     - {{ compiler("cxx") }}
     - autoconf >=2.69
     - ccache
-    - cmake 3.22.*
+    - cmake >=3.24
     - libtool
     - ninja
     - numactl-libs-cos7-x86_64
@@ -87,7 +87,7 @@ outputs:
         - {{ compiler("c") }}
         - {{ compiler("cuda") }}
         - {{ compiler("cxx") }}
-        - cmake 3.22.*
+        - cmake >=3.24
         - numactl-libs-cos7-x86_64
         - sysroot_linux-64 2.17
       host:
