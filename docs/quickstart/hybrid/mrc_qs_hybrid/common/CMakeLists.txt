@@ -18,16 +18,16 @@ morpheus_utils_add_pybind11_library(
   # MODULE_ROOT
   # ${QUICKSTART_HYBRID_HOME}
   SOURCE_FILES
-  data.cpp
+    data.cpp
   LINK_TARGETS
-  mrc::pymrc
+    mrc::pymrc
   OUTPUT_TARGET
-  common_data_target
+    common_data_target
 )
 
 target_include_directories(${common_data_target}
   PUBLIC
-  ./include
+    ./include
 )
 
 morpheus_utils_inplace_build_copy(${common_data_target} ${CMAKE_CURRENT_SOURCE_DIR})
@@ -35,11 +35,11 @@ morpheus_utils_inplace_build_copy(${common_data_target} ${CMAKE_CURRENT_SOURCE_D
 morpheus_utils_add_pybind11_library(
   nodes
   SOURCE_FILES
-  nodes.cpp
+    nodes.cpp
   LINK_TARGETS
-  ${common_data_target}
+    ${common_data_target}
   OUTPUT_TARGET
-  nodes_data_target
+    nodes_data_target
 )
 
 morpheus_utils_inplace_build_copy(${nodes_data_target} ${CMAKE_CURRENT_SOURCE_DIR})

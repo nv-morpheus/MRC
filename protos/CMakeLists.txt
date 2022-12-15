@@ -20,7 +20,7 @@ set(MRC_PROTO_MODULE_PATH_EXTENSIONS
 # Prepend path updates so they take priority in this scope.
 list(PREPEND CMAKE_MODULE_PATH ${MRC_PROTO_MODULE_PATH_EXTENSIONS})
 
-include(morpheus_utils/grpc/GRPCGenerateCPP)
+include(morpheus_utils/grpc/grpc_generate_cpp)
 
 add_library(mrc_protos)
 

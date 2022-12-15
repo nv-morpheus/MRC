@@ -21,9 +21,7 @@ cmake_minimum_required(VERSION 3.24 FATAL_ERROR)
 list(PREPEND CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}")
 list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake")
 
-# Add the RAPIDS cmake helper scripts
-# TODO: Shouldn't be required since we do it at source scope
-# include(morpheus_utils/environment_config/rapids_cmake/setup)
+morpheus_utils_python_modules_ensure_python3()
 
 project(mrc-quickstart
   VERSION 23.01

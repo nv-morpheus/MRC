@@ -91,12 +91,16 @@ if(NOT DEFINED CMAKE_CUDA_HOST_COMPILER)
   # incompatible with CUDA 11.4/11.5/11.6. See Issue #102
   if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
+
   endif()
 endif()
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   # Our version of NVCC officially only supports clang versions 3.2 - 13, we are now using 14
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -allow-unsupported-compiler")
+
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines-ts")
+  #add_compile_options(-fcoroutines-ts) # Required for clang to use the coroutines libraries
 endif()
 
 # Now enable CUDA
@@ -163,7 +167,6 @@ if(MRC_BUILD_DOCS)
   add_subdirectory(docs)
 endif()
 
-# Uncomment the following to print all available targets
 if (MRC_ENABLE_DEBUG_INFO)
   morpheus_utils_print_all_targets()
 
