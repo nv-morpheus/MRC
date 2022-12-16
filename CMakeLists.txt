@@ -41,7 +41,6 @@ set(MRC_RAPIDS_VERSION "22.10" CACHE STRING "Which version of RAPIDS to build fo
 set(MRC_CACHE_DIR "${CMAKE_SOURCE_DIR}/.cache" CACHE PATH "Directory to contain all CPM and CCache data")
 mark_as_advanced(MRC_CACHE_DIR)
 
-enable_language(C CXX)
 enable_testing()
 
 if (MRC_USE_IWYU AND MRC_USE_CCACHE)
