@@ -245,42 +245,6 @@ class Builder final
         node::make_edge(source->object(), sink->object());
     }
 
-    // template <typename InputT, typename SinkNodeTypeT>
-    // void make_edge(node::SourceProperties<InputT>& source, std::shared_ptr<Object<SinkNodeTypeT>> sink)
-    // {
-    //     DVLOG(10) << "forming segment edge from node source to segment sink";
-    //     node::make_edge(source, sink->object());
-    // }
-
-    // template <typename SourceNodeTypeT, typename OutputT>
-    // void make_edge(std::shared_ptr<Object<SourceNodeTypeT>>& source, node::SinkProperties<OutputT>& sink)
-    // {
-    //     DVLOG(10) << "forming segment edge between a segment source and node sink";
-    //     node::make_edge(source->object(), sink);
-    // }
-
-    // template <typename InputT, typename OutputT>
-    // void make_edge(node::SourceProperties<InputT>& source, node::SinkProperties<OutputT>& sink)
-    // {
-    //     DVLOG(10) << "forming segment edge between two node objects";
-    //     node::make_edge(source, sink);
-    // }
-
-    // /**
-    //  * Given a typed source and a typeless sink, attempt to construct an edge between them -- assumes that source and
-    //  * sink types are convertible.
-    //  *
-    //  * @tparam InputT
-    //  * @param source
-    //  * @param sink
-    //  */
-    // template <typename InputT>
-    // void make_edge(node::SourceProperties<InputT>& source, std::shared_ptr<segment::ObjectProperties> sink)
-    // {
-    //     DVLOG(10) << "forming segment edge between two node objects";
-    //     node::make_edge(source, sink->template sink_typed<InputT>());
-    // }
-
     /**
      * Partial dynamic edge construction:
      *
@@ -316,21 +280,6 @@ class Builder final
 
         LOG(ERROR) << "Incorrect node types";
     }
-
-    // /**
-    //  * Given a typeless source and a typed sink, attempt to construct an edge between them -- assumes that
-    //  * source and sink type's are convertible.
-    //  *
-    //  * @tparam OutputT
-    //  * @param source
-    //  * @param sink
-    //  */
-    // template <typename OutputT>
-    // void make_edge(std::shared_ptr<segment::ObjectProperties> source, node::SinkProperties<OutputT>& sink)
-    // {
-    //     DVLOG(10) << "forming segment edge between two node objects";
-    //     node::make_edge(source->template source_typed<OutputT>(), sink);
-    // }
 
     /**
      * Partial dynamic edge construction:

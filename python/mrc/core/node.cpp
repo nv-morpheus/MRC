@@ -52,15 +52,6 @@ PYBIND11_MODULE(node, module)
     pymrc::import(module, "mrc.core.common");
     pymrc::import(module, "mrc.core.segment");  // Needed for Builder and SegmentObject
 
-    // py::class_<mrc::segment::Object<PythonNode<PyHolder, PyHolder>>,
-    //            mrc::segment::ObjectProperties,
-    //            std::shared_ptr<mrc::segment::Object<PythonNode<PyHolder, PyHolder>>>>(m, "Node")
-    //     .def(py::init<>([](mrc::segment::Builder& builder, std::string name) {
-    //         auto node = builder.construct_object<node::BroadcastTypeless>(name);
-
-    //         return node;
-    //     }));
-
     py::class_<mrc::segment::Object<node::BroadcastTypeless>,
                mrc::segment::ObjectProperties,
                std::shared_ptr<mrc::segment::Object<node::BroadcastTypeless>>>(module, "Broadcast")

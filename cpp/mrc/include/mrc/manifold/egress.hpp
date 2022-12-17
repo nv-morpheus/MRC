@@ -53,37 +53,6 @@ class TypedEgress : public EgressDelegate
     virtual void do_add_output(const SegmentAddress& address, node::IIngressProvider<T>* output_sink) = 0;
 };
 
-// template <typename T>
-// class MappedEgress : public TypedEgress<T>
-// {
-//   public:
-//     using channel_map_t = std::unordered_map<SegmentAddress, std::shared_ptr<node::EdgeWritable<T>>>;
-
-//     // const channel_map_t& output_channels() const
-//     // {
-//     //     return m_outputs;
-//     // }
-
-//     // void clear()
-//     // {
-//     //     m_outputs.clear();
-//     // }
-
-//   protected:
-//     void do_add_output(const SegmentAddress& address, std::shared_ptr<node::IIngressProvider<T>> sink) override
-//     {
-//         // auto search = m_outputs.find(address);
-//         // CHECK(search == m_outputs.end());
-//         // auto output_channel = std::make_unique<node::SourceChannelWriteable<T>>();
-//         // node::make_edge(*output_channel, sink);
-//         // m_outputs[address] = std::move(output_channel);
-//         this->set_edge(address, sink->get_ingress());
-//     }
-
-//   private:
-//     // std::unordered_map<SegmentAddress, std::unique_ptr<node::SourceChannelWriteable<T>>> m_outputs;
-// };
-
 template <typename T>
 class RoundRobinEgress : public node::Router<SegmentAddress, T>, public TypedEgress<T>
 {

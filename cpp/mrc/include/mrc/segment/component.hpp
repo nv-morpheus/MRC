@@ -41,8 +41,7 @@ class Component final : public Object<ResourceT>
         return m_resource.get();
     }
 
-    // Stored as a shared_ptr but requires unique_ptr to construct
-    std::shared_ptr<ResourceT> m_resource;
+    std::unique_ptr<ResourceT> m_resource;
 };
 
 }  // namespace mrc::segment

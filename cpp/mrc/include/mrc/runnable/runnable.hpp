@@ -98,6 +98,7 @@ class RunnableWithContext : public Runnable
 
     void main(Context& context) final
     {
+        // Add a default catch for any errors
         try
         {
             run(context.as<ContextType>());

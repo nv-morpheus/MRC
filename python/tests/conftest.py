@@ -37,8 +37,6 @@ def configure_tests_logging(is_debugger_attached: bool):
 
     mrc_logging.init_logging("mrc_testing", py_level=log_level)
 
-    print("Stuff")
-
 
 @pytest.fixture
 def single_segment_defaults() -> dict:

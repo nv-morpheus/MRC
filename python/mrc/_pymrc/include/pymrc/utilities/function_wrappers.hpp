@@ -21,6 +21,7 @@
 
 #include "mrc/utils/string_utils.hpp"
 
+#include <pybind11/detail/common.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
@@ -79,7 +80,7 @@ struct PyFuncHolder<ReturnT(ArgsT...)>
 {
   public:
     using cpp_fn_t       = std::function<ReturnT(ArgsT...)>;
-    using return_t       = ReturnT;
+    using return_t       = std::conditional_t<std::is_same<ReturnT, void>::value, pybind11::detail::void_type, ReturnT>;
     using function_ptr_t = ReturnT (*)(ArgsT...);
 
     // Default construct with an empty object. Needed by pybind11 casters
@@ -252,7 +253,7 @@ struct OnDataFunction : public PyFuncHolder<pybind11::object(pybind11::object)>
 namespace pybind11::detail {
 
 template <typename DerivedWrapperT>
-class py_func_wrapper_caster_base
+class PyFuncWrapperCasterBase
 {
     using type       = DerivedWrapperT;
     using retval_t   = typename DerivedWrapperT::return_t;
@@ -385,27 +386,27 @@ class py_func_wrapper_caster_base
         return cpp_function(std::forward<FuncT>(f), policy).release();
     }
 
-    PYBIND11_TYPE_CASTER(type, DerivedWrapperT::Signature + _("]"));
+    PYBIND11_TYPE_CASTER(type, DerivedWrapperT::Signature);
 };
 
 template <typename ReturnT, typename... ArgsT>
 class type_caster<mrc::pymrc::PyFuncHolder<ReturnT(ArgsT...)>>
-  : public py_func_wrapper_caster_base<mrc::pymrc::PyFuncHolder<ReturnT(ArgsT...)>>
+  : public PyFuncWrapperCasterBase<mrc::pymrc::PyFuncHolder<ReturnT(ArgsT...)>>
 {};
 
 template <>
-class type_caster<mrc::pymrc::OnNextFunction> : public py_func_wrapper_caster_base<mrc::pymrc::OnNextFunction>
+class type_caster<mrc::pymrc::OnNextFunction> : public PyFuncWrapperCasterBase<mrc::pymrc::OnNextFunction>
 {};
 
 template <>
-class type_caster<mrc::pymrc::OnErrorFunction> : public py_func_wrapper_caster_base<mrc::pymrc::OnErrorFunction>
+class type_caster<mrc::pymrc::OnErrorFunction> : public PyFuncWrapperCasterBase<mrc::pymrc::OnErrorFunction>
 {};
 
 template <>
-class type_caster<mrc::pymrc::OnCompleteFunction> : public py_func_wrapper_caster_base<mrc::pymrc::OnCompleteFunction>
+class type_caster<mrc::pymrc::OnCompleteFunction> : public PyFuncWrapperCasterBase<mrc::pymrc::OnCompleteFunction>
 {};
 
 template <>
-class type_caster<mrc::pymrc::OnDataFunction> : public py_func_wrapper_caster_base<mrc::pymrc::OnDataFunction>
+class type_caster<mrc::pymrc::OnDataFunction> : public PyFuncWrapperCasterBase<mrc::pymrc::OnDataFunction>
 {};
 }  // namespace pybind11::detail

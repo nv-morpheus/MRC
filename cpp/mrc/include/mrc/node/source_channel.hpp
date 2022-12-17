@@ -65,66 +65,6 @@ class SourceChannel : public virtual SourceProperties<T>
         // make_edge_connection() is called, then this will be overwritten
         SourceProperties<T>::init_connected_edge(channel_writer);
     }
-
-    //     inline channel::Status await_write(T&& data) final
-    //     {
-    //         if (m_ingress)
-    //         {
-    //             return m_ingress->await_write(std::move(data));
-    //         }
-
-    //         return no_channel(std::move(data));
-    //     }
-
-    //     bool has_channel() const
-    //     {
-    //         return bool(m_ingress);
-    //     }
-
-    //     void release_channel()
-    //     {
-    //         m_ingress.reset();
-    //     }
-
-    //   private:
-    //     virtual channel::Status no_channel(T&& data)
-    //     {
-    //         LOG(ERROR) << "SourceChannel has either not been connected or the channel has been released";
-    //         throw exceptions::MrcRuntimeError(
-    //             "SourceChannel has either not been connected or the channel has been released");
-    //         return channel::Status::error;
-    //     }
-
-    //     void complete_edge(std::shared_ptr<channel::IngressHandle> untyped_ingress) override
-    //     {
-    //         CHECK(untyped_ingress);
-    //         if (m_ingress != nullptr)
-    //         {
-    //             // todo(ryan) - we could specialize this exception, then if we catch it in
-    //             segment::Builder::make_edge, we
-    //             // could enhance the error description and rethrow the same exception
-    //             throw exceptions::MrcRuntimeError(
-    //                 "multiple edges to a source detected; use an operator to select proper behavior");
-    //         }
-    //         m_ingress = std::dynamic_pointer_cast<channel::Ingress<T>>(untyped_ingress);
-    //         CHECK(m_ingress);
-    //     }
-
-    //     std::shared_ptr<channel::Ingress<T>> m_ingress;
 };
-
-// template <typename T>
-// class SourceChannelWriteable : public SourceChannel<T>
-// {
-//   public:
-//     using SourceChannel<T>::await_write;
-
-//   private:
-//     channel::Status no_channel(T&& data) final
-//     {
-//         // unsubscribed - into the ether?
-//         return channel::Status::success;
-//     }
-// };
 
 }  // namespace mrc::node

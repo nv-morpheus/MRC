@@ -60,19 +60,9 @@ void SubscriberService::do_subscription_service_setup()
     auto network_source = resources().network()->data_plane().server().deserialize_source().get_source(tag());
 
     auto network_handler = std::make_unique<mrc::node::RxSink<memory::TransientBuffer>>();
-    // [this](memory::TransientBuffer buffer) {
-    //     return this->get_writable_edge()->await_write(this->network_handler(buffer));
-    // },
-    // [this]() {
-    //     // Drop downstream connections
-    //     this->release_edge_connection();
-    // });
 
     DVLOG(10) << "form edge:  network_soruce -> network_handler";
     mrc::node::make_edge(*network_source, *network_handler);
-
-    // DVLOG(10) << "form edge:  network_handler -> rd_channel (ISubscriberService::WritableSubject)";
-    // mrc::node::make_edge(*network_handler, *this);
 
     DVLOG(10) << "starting network handler node";
     m_network_handler =

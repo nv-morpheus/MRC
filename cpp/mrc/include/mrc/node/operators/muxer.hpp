@@ -18,20 +18,12 @@
 #pragma once
 
 #include "mrc/node/operators/node_component.hpp"
-#include "mrc/node/operators/operator.hpp"
 #include "mrc/node/source_channel.hpp"
 
 namespace mrc::node {
 
 template <typename T>
 class Muxer : public NodeComponent<T, T>
-{
-    //   protected:
-    //     virtual channel::Status on_next(T&& t){
-
-    //     }
-
-    //     virtual void on_complete() {}
-};
+{};
 
 }  // namespace mrc::node

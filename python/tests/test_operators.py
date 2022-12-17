@@ -97,8 +97,6 @@ def test_build(run_segment):
 
         input.subscribe(output)
 
-        print("Subscribe over")
-
     actual, raised_error = run_segment(input_data, node_fn)
 
     assert actual == expected

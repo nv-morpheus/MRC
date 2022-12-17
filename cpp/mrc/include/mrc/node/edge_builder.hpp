@@ -61,40 +61,8 @@ struct EdgeBuilder final
     static std::shared_ptr<IEdgeWritableBase> ingress_adapter_for_sink(
         IIngressAcceptorBase& source, IIngressProviderBase& sink, std::shared_ptr<IEdgeWritableBase> ingress_handle);
 
-    // static std::shared_ptr<IngressHandleObj> adapt_ingress(const EdgeTypePair& target_type,
-    //                                                        std::shared_ptr<IngressHandleObj> ingress);
-
     template <typename T>
     static std::shared_ptr<IngressHandleObj> adapt_ingress(std::shared_ptr<IngressHandleObj> ingress);
-    // {
-    //     // Check if the incoming handle object is dynamic
-    //     if (ingress->is_deferred())
-    //     {
-    //         // Cast to a defferred ingress object
-    //         auto deferred_ingress = std::dynamic_pointer_cast<DeferredIngressHandleObj>(ingress);
-
-    //         CHECK(deferred_ingress) << "Deferred ingress object must derive from DeferredIngressHandleObj";
-
-    //         auto deferred_edge = std::make_shared<DeferredWritableMultiEdge<T>>();
-
-    //         // Create a new edge and update the ingress
-    //         // ingress = deferred_ingress->make_deferred_edge<T>();
-    //     }
-
-    //     auto target_type = EdgeTypePair::create<T>();
-
-    //     // Now try and loop over any ingress adaptors for the sink
-    //     auto adapted_ingress = EdgeBuilder::do_adapt_ingress(target_type, ingress);
-
-    //     // Try it again in case we need a sink adaptor then a source adaptor (Short circuits if we are already there)
-    //     adapted_ingress = EdgeBuilder::do_adapt_ingress(target_type, adapted_ingress);
-
-    //     // Convert if neccessary
-    //     // auto ingress_adapted = EdgeBuilder::ingress_adapter_for_sink(source, sink, ingress);
-
-    //     // Set to the source
-    //     return adapted_ingress;
-    // }
 
     /**
      * @brief Attempt to look-up a registered ingress adapter for the given source type and sink properties. If one
@@ -107,14 +75,6 @@ struct EdgeBuilder final
     static std::shared_ptr<IEdgeWritableBase> ingress_for_source_type(
         std::type_index source_type, IIngressProviderBase& sink, std::shared_ptr<IEdgeWritableBase> ingress_handle);
 
-    /**
-     *
-     * @param source
-     * @param sink
-     * @param allow_narrowing
-     */
-    static void make_edge_typeless(SourcePropertiesBase& source, SinkPropertiesBase& sink, bool allow_narrowing = true);
-
     static void make_edge_ingress_typeless(IIngressAcceptorBase& source,
                                            IIngressProviderBase& sink,
                                            bool allow_narrowing = true);
@@ -122,62 +82,6 @@ struct EdgeBuilder final
     static void make_edge_egress_typeless(IEgressProviderBase& source,
                                           IEgressAcceptorBase& sink,
                                           bool allow_narrowing = true);
-
-    // /**
-    //  *
-    //  * @tparam SourceT
-    //  * @tparam SinkT
-    //  * @tparam AllowNarrowingV
-    //  * @param source
-    //  * @param sink
-    //  */
-    // template <typename SourceT, typename SinkT = SourceT, bool AllowNarrowingV = true>
-    // static void make_edge(SourceProperties<SourceT>& source, SinkProperties<SinkT>& sink)
-    // {
-    //     constexpr bool IsConvertable = std::is_convertible_v<SourceT, SinkT>;
-    //     constexpr bool LessBits      = sizeof(SourceT) > sizeof(SinkT);  // Sink requires more bits than source.
-    //     constexpr bool FloatToInt    = std::is_floating_point_v<SourceT> && std::is_integral_v<SinkT>;  // float ->
-    //     int constexpr bool SignedToUnsigned = std::is_signed_v<SourceT> && !std::is_signed_v<SinkT>;  // signed ->
-    //     unsigned constexpr bool UnsignedToSignedLessBits =
-    //         !std::is_signed_v<SourceT> && std::is_signed_v<SinkT> &&
-    //         (sizeof(SourceT) == sizeof(SinkT));  // Unsigned component could exceed signed limits
-
-    //     // If its convertable but may result in loss of data, it requires narrowing
-    //     constexpr bool RequiresNarrowing =
-    //         IsConvertable && (LessBits || FloatToInt || SignedToUnsigned || UnsignedToSignedLessBits);
-
-    //     std::shared_ptr<channel::IngressHandle> edge;
-
-    //     if constexpr (std::is_same_v<SourceT, SinkT>)
-    //     {
-    //         // Easy case, both nodes are the same type, no conversion required.
-    //         // edge = sink.channel_ingress();
-    //     }
-    //     else if constexpr (IsConvertable && !RequiresNarrowing)
-    //     {
-    //         // Static lookup with implicit conversion. No narrowing required
-    //         edge = std::make_shared<node::Edge<SourceT, SinkT>>(sink.channel_ingress());
-    //     }
-    //     else if constexpr (RequiresNarrowing && AllowNarrowingV)
-    //     {
-    //         // Static lookup with implicit conversion. Narrowing required
-    //         LOG(WARNING) << "WARNING: Automatic edge conversion will result in a narrowing cast.";
-    //         edge = std::make_shared<node::Edge<SourceT, SinkT>>(sink.channel_ingress());
-    //     }
-    //     else
-    //     {
-    //         // todo(cpp20) - use templated lambda to trigger the static fail - make a MRC_STATIC_FAIL macro
-    //         static_assert(!sizeof(SourceT), "No dynamic lookup available for statically typed objects");
-    //     }
-
-    //     // source.complete_edge(edge);
-    // }
-
-    // template <typename T>
-    // static void make_edge(ChannelProvider<T>& source, ChannelAcceptor<T>& sink)
-    // {
-    //     sink.set_channel(source.channel());
-    // }
 
     template <typename SourceT, typename SinkT = SourceT, bool AllowNarrowingV = true>
     static void make_edge_ingress(IIngressAcceptor<SourceT>& source, IIngressProvider<SinkT>& sink)
@@ -278,18 +182,6 @@ struct EdgeBuilder final
                                                               std::shared_ptr<IngressHandleObj> ingress);
 };
 
-// template <typename SourceT, typename SinkT = SourceT>
-// void make_edge(SourceProperties<SourceT>& source, SinkProperties<SinkT>& sink)
-// {
-//     EdgeBuilder::make_edge(source, sink);
-// }
-
-// template <typename SourceT, typename SinkT = SourceT>
-// void make_edge(ChannelProvider<SourceT>& source, ChannelAcceptor<SinkT>& sink)
-// {
-//     EdgeBuilder::make_edge(source, sink);
-// }
-
 template <typename SourceT, typename SinkT>
 void make_edge(SourceT& source, SinkT& sink)
 {
@@ -349,12 +241,6 @@ void make_edge_typeless(SourceT& source, SinkT& sink)
                       "IngressAcceptor->IngressProvider or EgressProvider->EgressAcceptor");
     }
 }
-
-// template <typename SourceT, typename SinkT>
-// void operator|(SourceProperties<SourceT>& source, SinkProperties<SinkT>& sink)
-// {
-//     EdgeBuilder::make_edge(source, sink);
-// }
 
 template <typename T>
 class DeferredWritableMultiEdge : public MultiEdgeHolder<std::size_t, T>,

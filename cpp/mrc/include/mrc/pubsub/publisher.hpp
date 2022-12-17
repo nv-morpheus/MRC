@@ -96,7 +96,7 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
     void request_stop() final
     {
         // drop the persistent channel holding keeping the operator live
-        // when the last connection is dropped, the Operator<T>::on_complete override will be triggered
+        // when the last connection is dropped, the :on_complete override will be triggered
         m_persistent_channel.reset();
     }
 
@@ -126,7 +126,7 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
     // we simply release the persistent channel on stop, then the issue
     // a SuscriptionService::stop() final upstream disconnect.
 
-    // [Operator<T>] the trigger of this method signifies that all upstream connections, including the locally held
+    // the trigger of this method signifies that all upstream connections, including the locally held
     // persistent connection, have been released. this should be the signal to initiate a stop on the service, as a stop
     // on the Publisher<T> has already been initiated.
     void on_complete()
@@ -134,7 +134,7 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
         request_stop();
     }
 
-    // // [Operator<T>] forward the operator pass thru write to the publicly exposed await_write method
+    // // forward the operator pass thru write to the publicly exposed await_write method
     // channel::Status on_data(T&& data) final
     // {
     //     return await_write(std::move(data));

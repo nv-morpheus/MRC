@@ -21,7 +21,6 @@
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/channel_holder.hpp"
 #include "mrc/node/forward.hpp"
-#include "mrc/node/operators/operator.hpp"
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_channel.hpp"
 #include "mrc/node/source_properties.hpp"
@@ -31,65 +30,6 @@
 #include <type_traits>
 
 namespace mrc::node {
-
-// template <typename KeyT, typename T>
-// class RouterBase
-// {
-//     std::map<KeyT, SourceChannelWriteable<T>> m_sources;
-
-//   protected:
-//     inline SourceChannelWriteable<T>& channel_for_key(const KeyT& key)
-//     {
-//         auto search = m_sources.find(key);
-//         if (search == m_sources.end())
-//         {
-//             throw exceptions::MrcRuntimeError("unable to find edge for key");
-//         }
-//         return search->second;
-//     }
-
-//     void release_sources()
-//     {
-//         m_sources.clear();
-//     }
-
-//   public:
-//     SourceChannel<T>& source(KeyT key)
-//     {
-//         return m_sources[key];
-//     }
-
-//     bool has_edge(KeyT key) const
-//     {
-//         auto search = m_sources.find(key);
-//         return (search != m_sources.end());
-//     }
-
-//     void drop_edge(KeyT key)
-//     {
-//         auto search = m_sources.find(key);
-//         if (search != m_sources.end())
-//         {
-//             m_sources.erase(search);
-//         }
-//     }
-// };
-
-// template <typename KeyT, typename T>
-// class Router : public Operator<std::pair<KeyT, T>>, public RouterBase<KeyT, T>
-// {
-//     // Operator::on_next
-//     inline channel::Status on_next(std::pair<KeyT, T>&& tagged_data) final
-//     {
-//         return this->channel_for_key(tagged_data.first).await_write(std::move(tagged_data.second));
-//     }
-
-//     // Operator::on_complete
-//     void on_complete() final
-//     {
-//         this->release_sources();
-//     }
-// };
 
 template <typename KeyT, typename InputT, typename OutputT = InputT>
 class RouterBase : public ForwardingIngressProvider<InputT>, public MultiSourceProperties<KeyT, OutputT>
@@ -148,10 +88,6 @@ class RouterBase : public ForwardingIngressProvider<InputT>, public MultiSourceP
     {
         MultiSourceProperties<KeyT, output_data_t>::release_edge_connections();
     }
-
-    // virtual KeyT determine_key_for_value(const input_data_t& t) = 0;
-
-    // virtual output_data_t convert_value(input_data_t&& t) = 0;
 };
 
 // template <typename KeyT, typename T>

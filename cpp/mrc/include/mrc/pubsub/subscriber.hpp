@@ -24,7 +24,6 @@
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/generic_sink.hpp"
 #include "mrc/node/operators/node_component.hpp"
-#include "mrc/node/operators/operator_component.hpp"
 #include "mrc/node/queue.hpp"
 #include "mrc/node/readable_subject.hpp"
 #include "mrc/node/sink_properties.hpp"

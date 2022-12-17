@@ -67,36 +67,13 @@ class SinkChannel : public virtual SinkProperties<T>
         // is called, then this will be overwritten
         SinkProperties<T>::init_connected_edge(channel_reader);
     }
-
-    //   private:
-    //     using SinkChannelBase<T>::channel;
-    //     using SinkChannelBase<T>::ingress_channel;
-    //     using SinkChannelBase<T>::set_shared_channel;
-
-    //     // implement virtual method from SinkProperties<T>
-    //     [[nodiscard]] std::shared_ptr<channel::Ingress<T>> channel_ingress() final;
-
-    //     // implement virtual method from ChannelAcceptor<T>
-    //     void set_channel(std::shared_ptr<channel::Channel<T>> channel) final;
 };
 
 // template <typename T>
-// std::shared_ptr<channel::Ingress<T>> SinkChannel<T>::channel_ingress()
+// class SinkChannelReadable : public SinkChannel<T>
 // {
-//     return SinkChannelBase<T>::ingress_channel();
-// }
-
-// template <typename T>
-// void SinkChannel<T>::set_channel(std::shared_ptr<Channel<T>> channel)
-// {
-//     SinkChannelBase<T>::set_shared_channel(std::move(channel));
-// }
-
-template <typename T>
-class SinkChannelReadable : public SinkChannel<T>
-{
-  public:
-    using SinkChannel<T>::egress;
-};
+//   public:
+//     using SinkChannel<T>::egress;
+// };
 
 }  // namespace mrc::node

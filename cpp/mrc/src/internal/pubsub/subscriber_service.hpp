@@ -20,7 +20,6 @@
 #include "internal/pubsub/base.hpp"
 
 #include "mrc/node/generic_sink.hpp"
-#include "mrc/node/operators/unique_operator.hpp"
 #include "mrc/node/source_channel.hpp"
 #include "mrc/node/writable_subject.hpp"
 #include "mrc/pubsub/api.hpp"
@@ -83,18 +82,6 @@ class SubscriberService final : public Base, public mrc::pubsub::ISubscriberServ
     // [internal::control_plane::client::SubscriptionService]
     // await on the completion of all internal runnables
     void do_subscription_service_join() final;
-
-    // // [Operator]
-    // mrc::channel::Status on_data(mrc::runtime::RemoteDescriptor&& rd) final
-    // {
-    //     return WritableSubject<mrc::runtime::RemoteDescriptor>::await_write(std::move(rd));
-    // }
-
-    // // [Operator] - signifies the channel was dropped
-    // void on_complete() final
-    // {
-    //     WritableSubject<mrc::runtime::RemoteDescriptor>::release_edge_connection();
-    // }
 
     // [internal::control_plane::client::SubscriptionService]
     // called by the update engine when updates for a given subscribed_to role is received
