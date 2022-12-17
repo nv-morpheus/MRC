@@ -50,7 +50,9 @@ endif()
 # MRC CMake path and module extensions
 set(MRC_CMAKE_MODULE_PATH_EXTENSIONS
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
-    "${CMAKE_CURRENT_SOURCE_DIR}/external/utilities/cmake")
+    "${CMAKE_CURRENT_SOURCE_DIR}/external/utilities/cmake"
+    "${CMAKE_CURRENT_SOURCE_DIR}/external/utilities/cmake/morpheus_utils/package_search"
+    )
 
 set(MRC_CMAKE_PREFIX_PATH_EXTENSIONS
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
@@ -145,7 +147,7 @@ add_subdirectory(protos)
 
 # ###################################
 # - Post dependencies setup --------
-include(environment/init_compiler)
+morpheus_utils_compiler_set_defaults(MRC_USE_CLANG_TIDY)
 
 # Setup code coverage components
 include(environment/init_coverage)
