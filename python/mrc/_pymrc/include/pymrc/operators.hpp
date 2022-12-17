@@ -18,6 +18,8 @@
 #pragma once
 
 #include "pymrc/types.hpp"
+#include "pymrc/utilities/function_wrappers.hpp"
+#include "pymrc/utilities/object_wrappers.hpp"
 
 #include <functional>
 #include <string>
@@ -54,10 +56,11 @@ class OperatorProxy
 class OperatorsProxy
 {
   public:
-    static PythonOperator filter(std::function<bool(pybind11::object x)> filter_fn);
+    static PythonOperator build(PyFuncHolder<void(const PyObjectObservable& obs, PyObjectSubscriber& sub)> build_fn);
+    static PythonOperator filter(PyFuncHolder<bool(pybind11::object x)> filter_fn);
     static PythonOperator flatten();
-    static PythonOperator map(std::function<pybind11::object(pybind11::object x)> map_fn);
-    static PythonOperator on_completed(std::function<pybind11::object()> finally_fn);
+    static PythonOperator map(OnDataFunction map_fn);
+    static PythonOperator on_completed(PyFuncHolder<std::optional<pybind11::object>()> finally_fn);
     static PythonOperator pairwise();
     static PythonOperator to_list();
 };

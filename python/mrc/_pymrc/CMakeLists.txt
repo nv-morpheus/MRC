@@ -29,13 +29,16 @@ add_library(pymrc
   src/pipeline.cpp
   src/plugins.cpp
   src/py_segment_module.cpp
-  src/segment.cpp
   src/segment_modules.cpp
+  src/segment.cpp
   src/subscriber.cpp
   src/system.cpp
   src/types.cpp
+  src/utilities/acquire_gil.cpp
   src/utilities/deserializers.cpp
+  src/utilities/function_wrappers.cpp
   src/utilities/object_cache.cpp
+  src/utilities/object_wrappers.cpp
   src/utilities/serializers.cpp
   src/utils.cpp
   src/watchers.cpp

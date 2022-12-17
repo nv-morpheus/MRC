@@ -55,7 +55,8 @@ def run_segment(ex_runner):
         def segment_fn(seg: mrc.Builder):
             source = seg.make_source("source", producer(input_data))
 
-            node = seg.make_node_full("test", node_fn)
+            node = seg.make_node("test", ops.build(node_fn))
+
             seg.make_edge(source, node)
 
             def sink_on_next(x):
@@ -85,6 +86,22 @@ def producer(to_produce):
 
     for x in to_produce:
         yield x
+
+
+def test_build(run_segment):
+
+    input_data = [1, 2, 3, 4, 5, "one", "two", "three", "four", "five", 1, "two", 3]
+    expected = [1, 2, 3, 4, 5, "one", "two", "three", "four", "five", 1, "two", 3]
+
+    def node_fn(input: mrc.Observable, output: mrc.Subscriber):
+
+        input.subscribe(output)
+
+        print("Subscribe over")
+
+    actual, raised_error = run_segment(input_data, node_fn)
+
+    assert actual == expected
 
 
 def test_map(run_segment):

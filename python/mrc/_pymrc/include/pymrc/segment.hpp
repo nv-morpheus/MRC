@@ -18,6 +18,8 @@
 #pragma once
 
 #include "pymrc/types.hpp"
+#include "pymrc/utilities/function_wrappers.hpp"
+#include "pymrc/utils.hpp"
 
 #include "mrc/segment/builder.hpp"  // IWYU pragma: export (needed by wrap functions)
 
@@ -155,29 +157,30 @@ class BuilderProxy
      */
     static std::shared_ptr<mrc::segment::ObjectProperties> make_sink(mrc::segment::Builder& self,
                                                                      const std::string& name,
-                                                                     std::function<void(pybind11::object x)> on_next,
-                                                                     std::function<void(pybind11::object x)> on_error,
-                                                                     std::function<void()> on_completed);
+                                                                     OnNextFunction on_next,
+                                                                     OnErrorFunction on_error,
+                                                                     OnCompleteFunction on_completed);
 
-    static std::shared_ptr<mrc::segment::ObjectProperties> make_sink_component(
-        mrc::segment::Builder& self,
-        const std::string& name,
-        pybind11::function on_next,
-        pybind11::function on_error,
-        pybind11::function on_completed);
+    static std::shared_ptr<mrc::segment::ObjectProperties> make_sink_component(mrc::segment::Builder& self,
+                                                                               const std::string& name,
+                                                                               OnNextFunction on_next,
+                                                                               OnErrorFunction on_error,
+                                                                               OnCompleteFunction on_completed);
+
+    // Deprecated. This must come first
+    static std::shared_ptr<mrc::segment::ObjectProperties> make_node(mrc::segment::Builder& self,
+                                                                     const std::string& name,
+                                                                     OnDataFunction on_data);
 
     /**
      * Construct a new 'pure' python::object -> python::object node
      *
      * This will create and return a new lambda function with the following signature:
      * (py) @param name : Unique name of the node that will be created in the MRC Segment.
-     * (py) @param map_f : a std::function that takes a pybind11::object and returns a pybind11::object. This is your
-     * python-function which will be called on each data element as it flows through the node.
      */
-    static std::shared_ptr<mrc::segment::ObjectProperties> make_node(
-        mrc::segment::Builder& self,
-        const std::string& name,
-        std::function<pybind11::object(pybind11::object x)> map_f);
+    static std::shared_ptr<mrc::segment::ObjectProperties> make_node(mrc::segment::Builder& self,
+                                                                     const std::string& name,
+                                                                     pybind11::args operators);
 
     static std::shared_ptr<mrc::segment::ObjectProperties> make_node_full(
         mrc::segment::Builder& self,
@@ -186,7 +189,7 @@ class BuilderProxy
 
     static std::shared_ptr<mrc::segment::ObjectProperties> make_node_component(mrc::segment::Builder& self,
                                                                                const std::string& name,
-                                                                               pybind11::args args);
+                                                                               pybind11::args operators);
 
     static void make_edge(mrc::segment::Builder& self,
                           std::shared_ptr<mrc::segment::ObjectProperties> source,

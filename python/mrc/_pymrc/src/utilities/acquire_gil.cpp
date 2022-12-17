@@ -15,26 +15,46 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include "pymrc/utilities/object_wrappers.hpp"  // IWYU Pragma: export
-
-#include "mrc/segment/object.hpp"
-
-#include <rxcpp/rx.hpp>
-
-#include <functional>
+#include "pymrc/utilities/acquire_gil.hpp"
 
 namespace mrc::pymrc {
 
-// NOLINTBEGIN(readability-identifier-naming)
-using PyHolder           = PyObjectHolder;
-using PySubscription     = rxcpp::subscription;
-using PyObjectObserver   = rxcpp::observer<PyHolder, void, void, void, void>;
-using PyObjectSubscriber = rxcpp::subscriber<PyHolder, PyObjectObserver>;
-using PyObjectObservable = rxcpp::observable<PyHolder>;
-using PyNode             = mrc::segment::ObjectProperties;
-using PyObjectOperateFn  = std::function<PyObjectObservable(PyObjectObservable source)>;
-// NOLINTEND(readability-identifier-naming)
+namespace py = pybind11;
+
+using nlohmann::json;
+
+AcquireGIL::AcquireGIL() : m_gil(std::make_unique<py::gil_scoped_acquire>()) {}
+
+AcquireGIL::~AcquireGIL() = default;
+
+inline void AcquireGIL::inc_ref()
+{
+    if (m_gil)
+    {
+        m_gil->inc_ref();
+    }
+}
+
+inline void AcquireGIL::dec_ref()
+{
+    if (m_gil)
+    {
+        m_gil->dec_ref();
+    }
+}
+
+void AcquireGIL::disarm()
+{
+    if (m_gil)
+    {
+        m_gil->disarm();
+    }
+}
+
+void AcquireGIL::release()
+{
+    // Just delete the GIL object early
+    m_gil.reset();
+}
 
 }  // namespace mrc::pymrc

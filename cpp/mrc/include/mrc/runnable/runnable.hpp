@@ -98,7 +98,15 @@ class RunnableWithContext : public Runnable
 
     void main(Context& context) final
     {
-        run(context.as<ContextType>());
+        try
+        {
+            run(context.as<ContextType>());
+        } catch (...)
+        {
+            LOG(ERROR) << context.info() << " Unhandled exception occurred. Rethrowing";
+
+            context.set_exception(std::move(std::current_exception()));
+        }
     }
 };
 

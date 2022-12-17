@@ -18,6 +18,8 @@
 #include "pymrc/operators.hpp"
 
 #include "pymrc/types.hpp"
+#include "pymrc/utilities/acquire_gil.hpp"
+#include "pymrc/utilities/function_wrappers.hpp"
 #include "pymrc/utils.hpp"
 
 #include <pybind11/cast.h>
@@ -58,7 +60,37 @@ std::string OperatorProxy::get_name(PythonOperator& self)
     return self.get_name();
 }
 
-PythonOperator OperatorsProxy::filter(std::function<bool(py::object x)> filter_fn)
+PythonOperator OperatorsProxy::build(
+    PyFuncHolder<void(const PyObjectObservable& obs, PyObjectSubscriber& sub)> build_fn)
+{
+    //  Build and return the map operator
+    return PythonOperator("build", [=](PyObjectObservable source) -> PyObjectObservable {
+        return rxcpp::observable<>::create<PyHolder>([source, build_fn](pymrc::PyObjectSubscriber output) {
+            try
+            {
+                py::gil_scoped_acquire gil;
+
+                // Call the subscribe function
+                build_fn(source, output);
+
+                return output;
+
+            } catch (py::error_already_set& err)
+            {
+                LOG(ERROR) << "Python occurred during full node subscription. Error: " + std::string(err.what());
+
+                // Rethrow python exceptions
+                throw;
+            } catch (std::exception& err)
+            {
+                LOG(ERROR) << "Exception occurred during subscription. Error: " + std::string(err.what());
+                throw;
+            }
+        });
+    });
+}
+
+PythonOperator OperatorsProxy::filter(PyFuncHolder<bool(pybind11::object x)> filter_fn)
 {
     //  Build and return the map operator
     return PythonOperator("filter", [=](PyObjectObservable source) {
@@ -137,7 +169,7 @@ PythonOperator OperatorsProxy::flatten()
     });
 }
 
-PythonOperator OperatorsProxy::map(std::function<py::object(py::object x)> map_fn)
+PythonOperator OperatorsProxy::map(OnDataFunction map_fn)
 {
     // Build and return the map operator
     return PythonOperator("map", [=](PyObjectObservable source) -> PyObjectObservable {
@@ -150,7 +182,7 @@ PythonOperator OperatorsProxy::map(std::function<py::object(py::object x)> map_f
     });
 }
 
-PythonOperator OperatorsProxy::on_completed(std::function<py::object()> finally_fn)
+PythonOperator OperatorsProxy::on_completed(PyFuncHolder<std::optional<pybind11::object>()> finally_fn)
 {
     return PythonOperator("on_completed", [=](PyObjectObservable source) {
         // Make a new observable
@@ -168,9 +200,9 @@ PythonOperator OperatorsProxy::on_completed(std::function<py::object()> finally_
                     // In finally function, call the wrapped function
                     auto ret_val = finally_fn();
 
-                    if (ret_val && !ret_val.is_none())
+                    if (ret_val.has_value() && !ret_val.value().is_none())
                     {
-                        sink.on_next(std::move(ret_val));
+                        sink.on_next(std::move(ret_val.value()));
                     }
 
                     // Call on_completed

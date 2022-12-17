@@ -129,15 +129,6 @@ PySubscription ObservableProxy::subscribe(PyObjectObservable* self, PyObjectSubs
     return self->subscribe(subscriber);
 }
 
-std::function<PyObjectObservable(PyObjectObservable&)> test_operator()
-{
-    return [](PyObjectObservable& source) {
-        return source.tap([](auto x) {
-            // Print stuff
-        });
-    };
-}
-
 template <typename... OpsT>
 PyObjectObservable pipe_ops(const PyObjectObservable* self, OpsT&&... ops)
 {

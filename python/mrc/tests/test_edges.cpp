@@ -18,6 +18,7 @@
 #include "pymrc/forward.hpp"
 #include "pymrc/node.hpp"
 #include "pymrc/port_builders.hpp"
+#include "pymrc/utilities/acquire_gil.hpp"
 #include "pymrc/utils.hpp"
 
 #include "mrc/channel/status.hpp"

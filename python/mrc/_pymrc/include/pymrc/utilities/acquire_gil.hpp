@@ -31,36 +31,44 @@
 #include <typeinfo>
 #include <utility>
 
+namespace pybind11 {
+class gil_scoped_acquire;
+}  // namespace pybind11
+
 namespace mrc::pymrc {
 
 // Export everything in the mrc::pymrc namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
 
-pybind11::object cast_from_json(const nlohmann::json& source);
-nlohmann::json cast_from_pyobject(const pybind11::object& source);
-
-void import_module_object(pybind11::module_&, const std::string&, const std::string&);
-void import_module_object(pybind11::module_& dest, const pybind11::module_& mod);
-
-// Imitates `import {mod}` syntax
-void import(pybind11::module_& dest, const std::string& mod);
-
-// Imitates `from {mod} import {attr}` syntax
-void from_import(pybind11::module_& dest, const std::string& mod, const std::string& attr);
-
-// Imitates `from {mod} import {attr} as {name}` syntax
-void from_import_as(pybind11::module_& dest, const std::string& from, const std::string& import, const std::string& as);
-
 /**
- * @brief Given a pybind11 object, attempt to extract its underlying cpp std::type_info* --
- *  if the wrapped type is something that was registered via pybind, ex: py::class_<...>(...), the return value
- *  will be non-null;
- * @param obj : pybind11 object
- * @return pointer to std::type_info object, or nullptr if none exists.
+ * @brief Wraps a `pybind11::gil_scoped_acquire` with additional functionality to release the GIL before this object
+ * leaves the scope. Useful to avoid unnecessary nested `gil_scoped_acquire` then `gil_scoped_release` which need to
+ * grab the GIL twice
+ *
  */
-const std::type_info* cpptype_info_from_object(pybind11::object& obj);
+class AcquireGIL
+{
+  public:
+    //   Create the object in place
+    AcquireGIL();
+    ~AcquireGIL();
 
-void show_deprecation_warning(const std::string& deprecation_message, ssize_t stack_level = 1);
+    void inc_ref();
+
+    void dec_ref();
+
+    void disarm();
+
+    /**
+     * @brief Releases the GIL early. The GIL will only be released once.
+     *
+     */
+    void release();
+
+  private:
+    // Use an unique_ptr here to allow releasing the GIL early
+    std::unique_ptr<pybind11::gil_scoped_acquire> m_gil;
+};
 
 #pragma GCC visibility pop
 

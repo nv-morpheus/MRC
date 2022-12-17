@@ -146,25 +146,36 @@ PYBIND11_MODULE(segment, module)
      *      sink = segment.make_sink("test", my_on_next, my_on_error, my_on_completed)
      *  ```
      */
-    Builder.def("make_sink", &BuilderProxy::make_sink, py::return_value_policy::reference_internal);
+    Builder.def("make_sink",
+                &BuilderProxy::make_sink,
+                py::return_value_policy::reference_internal,
+                py::arg("name"),
+                py::arg("on_next").none(true)     = py::none(),
+                py::arg("on_error").none(true)    = py::none(),
+                py::arg("on_complete").none(true) = py::none());
 
     Builder.def("make_sink_component",
                 &BuilderProxy::make_sink_component,
                 py::return_value_policy::reference_internal,
                 py::arg("name"),
-                py::arg("on_next")     = py::none(),
-                py::arg("on_error")    = py::none(),
-                py::arg("on_complete") = py::none());
+                py::arg("on_next").none(true)     = py::none(),
+                py::arg("on_error").none(true)    = py::none(),
+                py::arg("on_complete").none(true) = py::none());
+
+    Builder.def("make_node",
+                py::overload_cast<mrc::segment::Builder&, const std::string&, OnDataFunction>(&BuilderProxy::make_node),
+                py::return_value_policy::reference_internal);
 
     /**
      * Construct a new 'pure' python::object -> python::object node
      *
      * This will create and return a new lambda function with the following signature:
      * (py) @param name : Unique name of the node that will be created in the MRC Segment.
-     * (py) @param map_f : a std::function that takes a py::object and returns a py::object. This is your
      * python-function which will be called on each data element as it flows through the node.
      */
-    Builder.def("make_node", &BuilderProxy::make_node, py::return_value_policy::reference_internal);
+    Builder.def("make_node",
+                py::overload_cast<mrc::segment::Builder&, const std::string&, pybind11::args>(&BuilderProxy::make_node),
+                py::return_value_policy::reference_internal);
 
     Builder.def("make_node_component", &BuilderProxy::make_node_component, py::return_value_policy::reference_internal);
 

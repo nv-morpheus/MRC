@@ -20,6 +20,7 @@
 #include "pymrc/edge_adapter.hpp"
 #include "pymrc/port_builders.hpp"
 #include "pymrc/types.hpp"
+#include "pymrc/utilities/acquire_gil.hpp"
 #include "pymrc/utils.hpp"
 
 #include "mrc/channel/ingress.hpp"

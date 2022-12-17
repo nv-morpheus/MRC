@@ -16,6 +16,7 @@
 import pytest
 
 import mrc
+import mrc.core.operators as ops
 
 
 @pytest.fixture
@@ -220,6 +221,176 @@ def test_launch_options_properties():
     executor.start()
 
     executor.join()
+
+
+@pytest.mark.parametrize("use_on_completed", [True, False])
+@pytest.mark.parametrize("use_on_error", [True, False])
+@pytest.mark.parametrize("use_on_next", [True, False])
+@pytest.mark.parametrize("node_type", ["runnable", "component"])
+def test_sink_function_options(single_segment_pipeline,
+                               node_type: str,
+                               use_on_next: bool,
+                               use_on_error: bool,
+                               use_on_completed: bool):
+
+    is_component = node_type == "component"
+
+    on_next_count = 0
+    on_error_count = 0
+    on_completed_count = 0
+
+    def segment_init(seg: mrc.Builder):
+
+        def create_source():
+            for i in range(5):
+                yield i
+
+        source = seg.make_source("source", create_source())
+
+        def on_next(x: int):
+            nonlocal on_next_count
+            on_next_count += 1
+
+        def on_error(e):
+            nonlocal on_error_count
+            on_error_count += 1
+
+        def on_completed():
+            nonlocal on_completed_count
+            on_completed_count += 1
+
+        on_next_fn = on_next if use_on_next else None
+        on_error_fn = on_error if use_on_error else None
+        on_completed_fn = on_completed if use_on_completed else None
+
+        if (is_component):
+            sink = seg.make_sink_component("sink", on_next_fn, on_error_fn, on_completed_fn)
+        else:
+            sink = seg.make_sink("sink", on_next_fn, on_error_fn, on_completed_fn)
+
+        seg.make_edge(source, sink)
+
+    single_segment_pipeline({"user_cpuset": "0-1"}, segment_init)
+
+    assert on_next_count == (5 if use_on_next else 0)
+    assert on_error_count == (0 if use_on_error else 0)
+    assert on_completed_count == (1 if use_on_completed else 0)
+
+
+@pytest.mark.parametrize("node_type", ["runnable", "component"])
+def test_node_function_unpacking(single_segment_pipeline, node_type: str):
+
+    is_component = node_type == "component"
+
+    on_next_values = {}
+    on_error_count = 0
+    on_completed_count = 0
+
+    def segment_init(seg: mrc.Builder):
+
+        def create_source():
+            for s_idx, s in enumerate(["one", "two", "three"]):
+                for i in range(s_idx, 5):
+                    yield s, i + s_idx
+
+        source = seg.make_source("source", create_source())
+
+        def node_on_next(s: str, i: int):
+
+            # Double both values
+            return s + s, i + i
+
+        if (is_component):
+            node = seg.make_node_component("node", ops.map(node_on_next))
+        else:
+            node = seg.make_node("node", ops.map(node_on_next))
+
+        seg.make_edge(source, node)
+
+        def on_next(s: str, i: int):
+            nonlocal on_next_values
+
+            if (s not in on_next_values):
+                on_next_values[s] = []
+
+            on_next_values[s].append(i)
+
+        def on_error(e):
+            nonlocal on_error_count
+            on_error_count += 1
+
+        def on_completed():
+            nonlocal on_completed_count
+            on_completed_count += 1
+
+        if (is_component):
+            sink = seg.make_sink_component("sink", on_next, on_error, on_completed)
+        else:
+            sink = seg.make_sink("sink", on_next, on_error, on_completed)
+
+        seg.make_edge(node, sink)
+
+    single_segment_pipeline({"user_cpuset": "0-1"}, segment_init)
+
+    assert on_next_values == {
+        "oneone": [0, 2, 4, 6, 8],
+        "twotwo": [4, 6, 8, 10],
+        "threethree": [8, 10, 12],
+    }
+    assert on_error_count == 0
+    assert on_completed_count == 1
+
+
+@pytest.mark.parametrize("node_type", ["runnable", "component"])
+def test_sink_function_unpacking(single_segment_pipeline, node_type: str):
+
+    is_component = node_type == "component"
+
+    on_next_values = {}
+    on_error_count = 0
+    on_completed_count = 0
+
+    def segment_init(seg: mrc.Builder):
+
+        def create_source():
+            for s_idx, s in enumerate(["one", "two", "three"]):
+                for i in range(s_idx, 5):
+                    yield s, i + s_idx
+
+        source = seg.make_source("source", create_source())
+
+        def on_next(s: str, i: int):
+            nonlocal on_next_values
+
+            if (s not in on_next_values):
+                on_next_values[s] = []
+
+            on_next_values[s].append(i)
+
+        def on_error(e):
+            nonlocal on_error_count
+            on_error_count += 1
+
+        def on_completed():
+            nonlocal on_completed_count
+            on_completed_count += 1
+
+        if (is_component):
+            sink = seg.make_sink_component("sink", on_next, on_error, on_completed)
+        else:
+            sink = seg.make_sink("sink", on_next, on_error, on_completed)
+
+        seg.make_edge(source, sink)
+
+    single_segment_pipeline({"user_cpuset": "0-1"}, segment_init)
+
+    assert on_next_values == {
+        "one": [0, 1, 2, 3, 4],
+        "two": [2, 3, 4, 5],
+        "three": [4, 5, 6],
+    }
+    assert on_error_count == 0
+    assert on_completed_count == 1
 
 
 if (__name__ == "__main__"):

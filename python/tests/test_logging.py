@@ -21,17 +21,18 @@ from mrc.core import logging as mrc_logging
 
 
 @mock.patch('mrc.core.logging.log')
-def test_logging(mock_mrc_log):
-    assert not mrc_logging.is_initialized()
-    assert mrc_logging.init_logging("log test", logging.ERROR)
+def test_logging(mock_mrc_log, is_debugger_attached: bool):
+
+    # Because we want to initialize the logger for our own testing purposes, and because glog its not possible to
+    # uninitialize the logger, we will just verify that its already initialized and test the other functions
     assert mrc_logging.is_initialized()
-    assert mrc_logging.get_level() == logging.ERROR
+    assert mrc_logging.get_level() == logging.INFO if is_debugger_attached else logging.WARNING
 
     # Calling init_logging a second time is a noop
     assert not mrc_logging.init_logging("log test")
 
-    mrc_logging.set_level(logging.INFO)
-    assert mrc_logging.get_level() == logging.INFO
+    mrc_logging.set_level(logging.ERROR)
+    assert mrc_logging.get_level() == logging.ERROR
 
     handler = mrc_log_handler.MrcHandler()
     handler.setLevel(logging.WARNING)

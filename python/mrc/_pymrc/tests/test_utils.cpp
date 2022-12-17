@@ -18,6 +18,7 @@
 #include "test_pymrc.hpp"
 
 #include "pymrc/forward.hpp"
+#include "pymrc/types.hpp"
 #include "pymrc/utils.hpp"
 
 #include <glog/logging.h>
