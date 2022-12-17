@@ -44,9 +44,7 @@ set +e
 # Tests known to be failing
 # Issues:
 # * test_mrc_private - https://github.com/nv-morpheus/MRC/issues/33
-# * nvrpc - https://github.com/nv-morpheus/MRC/issues/34
 ctest --output-on-failure \
-      --exclude-regex "test_mrc_private|nvrpc" \
       --output-junit ${REPORTS_DIR}/report_ctest.xml
 
 CTEST_RESULTS=$?

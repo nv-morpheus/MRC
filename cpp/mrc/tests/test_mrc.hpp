@@ -26,6 +26,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <cstddef>
+#include <cstdlib>
 #include <mutex>  // for mutex & unique_lock
 
 #define TEST_CLASS(name)                      \
@@ -33,6 +34,13 @@
     {}
 
 namespace mrc {
+
+#ifdef MRC_CODECOV_ENABLED
+    #define SKIP_IF_CODE_COV() GTEST_SKIP() << "Skipping test when code coverage is enabled";
+#else
+    #define SKIP_IF_CODE_COV()
+#endif
+
 // class that records when it's moved/copied
 struct CopyMoveCounter
 {

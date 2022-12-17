@@ -21,6 +21,7 @@ dependencies:
   - graphviz=3.0
   - gtest=1.10
   - gxx_linux-64=11.2
+  - isort
   - libtool
   - ninja=1.10
   - numactl-libs-cos7-x86_64
@@ -30,12 +31,11 @@ dependencies:
   - python=3.8
   - scikit-build>=0.12
   - spdlog=1.8.5
-  - mrc=22.11
+  - mrc=23.01
   - sysroot_linux-64=2.17
   - pip:
     - cython
     - flake8
-    - isort
     - numpy==1.21.2
     - pytest
     - pytest-timeout

@@ -1,4 +1,5 @@
-# SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/bin/bash
+# SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,29 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_executable(bench_mrc
-  main.cpp
-  bench_mrc.cpp
-  bench_coroutines.cpp
-  bench_fibers.cpp
-  bench_segment.cpp
-)
-
-target_link_libraries(bench_mrc
-  PRIVATE
-  ${PROJECT_NAME}::libmrc
-  benchmark::benchmark
-  prometheus-cpp::core
-)
-
-add_executable(bench_rxcpp_components
-  main.cpp
-  bench_baselines.cpp
-)
-
-target_link_libraries(bench_rxcpp_components
-  PRIVATE
-  ${PROJECT_NAME}::libmrc
-  benchmark::benchmark
-  prometheus-cpp::core
-)
+if [[ -n "${GIT_AUTHOR_NAME}" ]] && [[ -n "${GIT_AUTHOR_EMAIL}" ]]
+then
+    echo "setting git config --global user.name ${GIT_AUTHOR_NAME}"
+    echo "setting git config --global user.email ${GIT_AUTHOR_EMAIL}"
+    git config --global user.name ${GIT_AUTHOR_NAME}
+    git config --global user.email ${GIT_AUTHOR_EMAIL}
+else
+    echo "skipping git config setup"
+    echo "set the following envs to configure git on startup: GIT_AUTHOR_NAME, GIT_AUTHOR_EMAIL"
+fi

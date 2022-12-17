@@ -608,8 +608,8 @@ void Server::drop_stream(const stream_id_t& stream_id)
     auto search = m_connections.streams().find(stream_id);
     if (search == m_connections.streams().end())
     {
-        LOG(WARNING) << "attempting to drop stream_id: " << stream_id
-                     << " which is not found in set of connected streams";
+        LOG(FATAL) << "attempting to drop stream_id: " << stream_id
+                   << " which is not found in set of connected streams";
     }
 
     auto writer = search->second->writer();

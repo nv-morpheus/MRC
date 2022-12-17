@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2018-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,24 +17,12 @@
 
 #pragma once
 
-#include <gtest/gtest.h>
+namespace mrc::coroutines {
 
-#include <cstdlib>
-#include <functional>
-#include <memory>
+enum class SchedulePolicy
+{
+    Immediate,
+    Reschedule
+};
 
-namespace mrc {
-
-#ifdef MRC_CODECOV_ENABLED
-    #define SKIP_IF_CODE_COV() GTEST_SKIP() << "Skipping test when code coverage is enabled";
-#else
-    #define SKIP_IF_CODE_COV()
-#endif
-
-class Options;
-}  // namespace mrc
-namespace mrc::internal::system {
-class System;
-}  // namespace mrc::internal::system
-
-std::shared_ptr<mrc::internal::system::System> make_system(std::function<void(mrc::Options&)> updater = nullptr);
+}

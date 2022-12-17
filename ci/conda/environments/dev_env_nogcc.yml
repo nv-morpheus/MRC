@@ -8,7 +8,7 @@ dependencies:
   - benchmark=1.6.0
   - boost-cpp=1.74
   - ccache
-  - cmake>=3.22
+  - cmake>=3.24
   - cython=0.29.24
   - doxygen=1.9.2
   - flatbuffers=2.0
@@ -19,9 +19,10 @@ dependencies:
   - graphviz=3.0
   - grpc-cpp=1.46
   - gtest=1.10
+  - isort
   - libhwloc=2.5
   - libprotobuf=3.20
-  - librmm=22.08
+  - librmm=22.10
   - ninja=1.10
   - nlohmann_json=3.9
   - pkg-config=0.29
@@ -32,7 +33,6 @@ dependencies:
   - pip:
     - cython
     - flake8
-    - isort
     - pytest
     - pytest-timeout
     - yapf

@@ -174,7 +174,7 @@ CheckOptions:
   - key: readability-identifier-naming.StructCase
     value: CamelCase
   - key: readability-identifier-naming.StructIgnoredRegexp
-    value: ^is_.*$
+    value: ^is_.*$|^.*_traits$
   - key: readability-identifier-naming.StructPrefix
     value: ''
   - key: readability-identifier-naming.StructSuffix
@@ -182,7 +182,7 @@ CheckOptions:
   - key: readability-identifier-naming.TypeAliasCase
     value: lower_case
   - key: readability-identifier-naming.TypeAliasIgnoredRegexp
-    value: ''
+    value: ^.*_type$
   - key: readability-identifier-naming.TypeAliasPrefix
     value: ''
   - key: readability-identifier-naming.TypeAliasSuffix
@@ -190,7 +190,7 @@ CheckOptions:
   - key: readability-identifier-naming.TypedefCase
     value: lower_case
   - key: readability-identifier-naming.TypedefIgnoredRegexp
-    value: ''
+    value: ^.*_type$
   - key: readability-identifier-naming.TypedefPrefix
     value: ''
   - key: readability-identifier-naming.TypedefSuffix

@@ -119,6 +119,11 @@ add_library(libmrc
   src/public/core/executor.cpp
   src/public/core/fiber_pool.cpp
   src/public/core/logging.cpp
+  src/public/core/thread.cpp
+  src/public/coroutines/event.cpp
+  src/public/coroutines/sync_wait.cpp
+  src/public/coroutines/thread_local_context.cpp
+  src/public/coroutines/thread_pool.cpp
   src/public/cuda/device_guard.cpp
   src/public/cuda/sync.cpp
   src/public/manifold/manifold.cpp
@@ -193,6 +198,10 @@ target_compile_definitions(libmrc
   PUBLIC
     $<$<BOOL:${MRC_BUILD_BENCHMARKS}>:MRC_ENABLE_BENCHMARKING>
 )
+
+if (MRC_ENABLE_CODECOV)
+  target_compile_definitions(libmrc INTERFACE "MRC_CODECOV_ENABLED")
+endif()
 
 target_compile_features(libmrc PUBLIC cxx_std_20)
 
