@@ -183,7 +183,14 @@ class [[nodiscard]] Task
 
     struct AwaitableBase : protected ThreadLocalContext
     {
-        AwaitableBase(coroutine_type coroutine) noexcept : m_coroutine(coroutine) {}
+        AwaitableBase(coroutine_type&& coroutine) noexcept : m_coroutine((coroutine_type &&) coroutine) {}
+        ~AwaitableBase()
+        {
+            if (m_coroutine)
+            {
+                m_coroutine.destroy();
+            }
+        }
 
         auto await_ready() const noexcept -> bool
         {
@@ -219,7 +226,7 @@ class [[nodiscard]] Task
     {
         if (std::addressof(other) != this)
         {
-            if (m_coroutine != nullptr)
+            if (m_coroutine)
             {
                 m_coroutine.destroy();
             }
@@ -252,7 +259,7 @@ class [[nodiscard]] Task
 
     auto destroy() -> bool
     {
-        if (m_coroutine != nullptr)
+        if (m_coroutine)
         {
             m_coroutine.destroy();
             m_coroutine = nullptr;
@@ -262,29 +269,7 @@ class [[nodiscard]] Task
         return false;
     }
 
-    auto operator co_await() const& noexcept
-    {
-        struct Awaitable : public AwaitableBase
-        {
-            auto await_resume() -> decltype(auto)
-            {
-                if constexpr (std::is_same_v<void, ReturnT>)
-                {
-                    // Propagate uncaught exceptions.
-                    this->m_coroutine.promise().result();
-                    return;
-                }
-                else
-                {
-                    return this->m_coroutine.promise().result();
-                }
-            }
-        };
-
-        return Awaitable{m_coroutine};
-    }
-
-    auto operator co_await() const&& noexcept
+    auto operator co_await()
     {
         struct Awaitable : public AwaitableBase
         {
@@ -303,7 +288,7 @@ class [[nodiscard]] Task
             }
         };
 
-        return Awaitable{m_coroutine};
+        return Awaitable{std::exchange(m_coroutine, nullptr)};
     }
 
     auto promise() & -> promise_type&

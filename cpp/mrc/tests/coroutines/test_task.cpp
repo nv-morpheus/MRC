@@ -36,6 +36,7 @@
  * limitations under the License.
  */
 
+#include "mrc/core/std23_expected.hpp"
 #include "mrc/core/thread.hpp"
 #include "mrc/coroutines/ring_buffer.hpp"
 #include "mrc/coroutines/sync_wait.hpp"
@@ -115,4 +116,39 @@ TEST_F(TestCoroTask, RingBufferStressTest)
 
         coroutines::sync_wait(coroutines::when_all(source(), sink()));
     }
+}
+
+// this is our awaitable
+class AwaitableTaskProvider
+{
+  public:
+    struct Done
+    {};
+
+    AwaitableTaskProvider()
+    {
+        m_task_generator = []() -> coroutines::Task<std23::expected<int, Done>> { co_return{42}; };
+    }
+
+    auto operator co_await() -> decltype(auto)
+    {
+        return m_task_generator().operator co_await();
+    }
+
+  private:
+    std::function<coroutines::Task<std23::expected<int, Done>>()> m_task_generator;
+};
+
+TEST_F(TestCoroTask, AwaitableTaskProvider)
+{
+    auto expected = coroutines::sync_wait(AwaitableTaskProvider{});
+    EXPECT_EQ(*expected, 42);
+
+    auto task = []() -> coroutines::Task<void> {
+        auto expected = co_await AwaitableTaskProvider{};
+        EXPECT_EQ(*expected, 42);
+        co_return;
+    };
+
+    coroutines::sync_wait(task());
 }
