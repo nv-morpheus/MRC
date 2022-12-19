@@ -43,6 +43,8 @@
 
 #include <condition_variable>
 #include <mutex>
+#include <type_traits>
+#include <utility>
 
 namespace mrc::coroutines {
 
@@ -243,7 +245,7 @@ class SyncWaitTask
         }
         else
         {
-            return m_coroutine.promise().result();
+            return std::remove_reference_t<ReturnT>{std::move(m_coroutine.promise().result())};
         }
     }
 
@@ -275,7 +277,12 @@ template <concepts::awaitable AwaitableT>
 auto sync_wait(AwaitableT&& a) -> decltype(auto)
 {
     detail::SyncWaitEvent e{};
-    auto task = detail::make_sync_wait_task(std::forward<AwaitableT>(a));
+    // we force the lvalue ref path on the co_await operator of the AwaitableT
+    // on this path, the return value is maintained as part of the AwaitableT
+    // only after the AwaitableT is complete do we transfer the return value
+    // from the AwaitableT back to the user
+    AwaitableT ca = std::forward<AwaitableT>(a);
+    auto task     = detail::make_sync_wait_task(ca);
     task.start(e);
     e.wait();
 
