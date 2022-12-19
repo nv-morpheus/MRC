@@ -277,12 +277,7 @@ template <concepts::awaitable AwaitableT>
 auto sync_wait(AwaitableT&& a) -> decltype(auto)
 {
     detail::SyncWaitEvent e{};
-    // we force the lvalue ref path on the co_await operator of the AwaitableT
-    // on this path, the return value is maintained as part of the AwaitableT
-    // only after the AwaitableT is complete do we transfer the return value
-    // from the AwaitableT back to the user
-    AwaitableT ca = std::forward<AwaitableT>(a);
-    auto task     = detail::make_sync_wait_task(ca);
+    auto task = detail::make_sync_wait_task(std::forward<AwaitableT>(a));
     task.start(e);
     e.wait();
 

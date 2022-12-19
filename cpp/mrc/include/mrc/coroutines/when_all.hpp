@@ -482,7 +482,7 @@ class when_all_task
 
     ~when_all_task()
     {
-        if (m_coroutine != nullptr)
+        if (m_coroutine)
         {
             m_coroutine.destroy();
         }
@@ -523,7 +523,7 @@ class when_all_task
         }
         else
         {
-            return m_coroutine.promise().return_value();
+            return std::remove_reference_t<ReturnT>{std::move(m_coroutine.promise().return_value())};
         }
     }
 
