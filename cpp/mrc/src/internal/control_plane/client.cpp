@@ -26,7 +26,7 @@
 #include "mrc/channel/status.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/rx_sink.hpp"
-#include "mrc/node/source_channel.hpp"
+#include "mrc/node/writable_subject.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
 #include "mrc/protos/architect.pb.h"
@@ -41,6 +41,11 @@
 #include <rxcpp/rx.hpp>
 
 #include <ostream>
+
+namespace mrc::node {
+template <typename T>
+class IIngressProvider;
+}  // namespace mrc::node
 
 namespace mrc::internal::control_plane {
 

@@ -24,9 +24,6 @@
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
 
-#include "mrc/node/channel_holder.hpp"
-#include "mrc/node/source_channel.hpp"
-#include "mrc/node/writable_subject.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/runnable/launch_options.hpp"
@@ -63,6 +60,10 @@ class Resources;
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
+namespace mrc::node {
+template <typename T>
+class WritableSubject;
+}  // namespace mrc::node
 
 namespace mrc::internal::control_plane {
 
@@ -187,7 +188,7 @@ class Client final : public resources::PartitionResourceBase, public Service
 
     // update channel
     std::unique_ptr<mrc::node::WritableSubject<const protos::StateUpdate>> m_connections_update_channel;
-    std::map<InstanceID, mrc::node::WritableSubject<const protos::StateUpdate>> m_instance_update_channels;
+    // std::map<InstanceID, mrc::node::WritableSubject<const protos::StateUpdate>> m_instance_update_channels;
 
     // Stream Context
     stream_t m_stream;
