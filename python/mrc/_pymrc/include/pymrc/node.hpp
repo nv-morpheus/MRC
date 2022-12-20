@@ -60,7 +60,7 @@ class ConvertingEdgeWritable<SourceT,
     using typename base_t::sink_t;
     using typename base_t::source_t;
 
-    using base_t::ConvertingEdgeWritableBase;
+    using base_t::base_t;
 
     // We need to hold the GIL here, because casting from c++ -> pybind11::object allocates memory with Py_Malloc.
     // Its also important to note that you do not want to hold the GIL when calling m_output->await_write, as
@@ -89,7 +89,7 @@ struct ConvertingEdgeWritable<
     using typename base_t::sink_t;
     using typename base_t::source_t;
 
-    using base_t::ConvertingEdgeWritableBase;
+    using base_t::base_t;
 
     // We don't hold the GIL in any of the *_write because we are explciitly releasing object's pointer, and casting it
     // to a c++ data type.
@@ -119,7 +119,7 @@ struct ConvertingEdgeWritable<pymrc::PyObjectHolder, pybind11::object, void>
     using typename base_t::sink_t;
     using typename base_t::source_t;
 
-    using base_t::ConvertingEdgeWritableBase;
+    using base_t::base_t;
 
     // We need to hold the GIL here, because casting from c++ -> pybind11::object allocates memory with Py_Malloc.
     // Its also important to note that you do not want to hold the GIL when calling m_output->await_write, as
@@ -145,7 +145,7 @@ struct ConvertingEdgeWritable<pybind11::object, pymrc::PyObjectHolder, void>
     using typename base_t::sink_t;
     using typename base_t::source_t;
 
-    using base_t::ConvertingEdgeWritableBase;
+    using base_t::base_t;
 
     // We don't hold the GIL in any of the *_write because we are explciitly releasing object's pointer, and casting it
     // to a c++ data type.
@@ -181,7 +181,7 @@ class PythonSink : public node::RxSink<InputT, ContextT>,
   public:
     using typename base_t::observer_t;
 
-    using node::RxSink<InputT>::RxSink;
+    using base_t::base_t;
 };
 
 template <typename InputT>
@@ -194,7 +194,7 @@ class PythonSinkComponent : public node::RxSinkComponent<InputT>,
   public:
     using typename base_t::observer_t;
 
-    using base_t::RxSinkComponent;
+    using base_t::base_t;
 };
 
 template <typename InputT, typename OutputT, typename ContextT = mrc::runnable::Context>
@@ -210,7 +210,7 @@ class PythonNode : public node::RxNode<InputT, OutputT, ContextT>,
     using typename base_t::stream_fn_t;
     using subscribe_fn_t = std::function<rxcpp::subscription(rxcpp::observable<InputT>, rxcpp::subscriber<OutputT>)>;
 
-    using node::RxNode<InputT, OutputT>::RxNode;
+    using base_t::base_t;
 
   protected:
     static auto op_factory_from_sub_fn(subscribe_fn_t sub_fn)
@@ -255,7 +255,7 @@ class PythonNodeComponent : public node::RxNodeComponent<InputT, OutputT>,
     using typename base_t::stream_fn_t;
     using subscribe_fn_t = std::function<rxcpp::subscription(rxcpp::observable<InputT>, rxcpp::subscriber<OutputT>)>;
 
-    using node::RxNodeComponent<InputT, OutputT>::RxNodeComponent;
+    using base_t::base_t;
 
   protected:
     static auto op_factory_from_sub_fn(subscribe_fn_t sub_fn)

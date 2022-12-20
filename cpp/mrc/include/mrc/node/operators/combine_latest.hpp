@@ -45,7 +45,7 @@ namespace mrc::node {
 // }
 
 namespace detail {
-struct surely
+struct Surely
 {
     template <class... T>
     auto operator()(const T&... t) const -> decltype(std::make_tuple(t.value()...))
@@ -102,7 +102,7 @@ template <typename... TypesT>
 class CombineLatest : public IngressAcceptor<std::tuple<TypesT...>>
 {
     template <std::size_t... Is>
-    static auto build_ingress(CombineLatest* self, std::index_sequence<Is...>)
+    static auto build_ingress(CombineLatest* self, std::index_sequence<Is...> /*unused*/)
     {
         return std::make_tuple(std::make_shared<Upstream<Is>>(*self)...);
     }

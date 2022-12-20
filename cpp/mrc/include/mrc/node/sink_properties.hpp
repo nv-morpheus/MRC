@@ -165,10 +165,7 @@ class ForwardingIngressProvider : public IngressProvider<T>
       public:
         ForwardingEdge(ForwardingIngressProvider<T>& parent) : m_parent(parent) {}
 
-        ~ForwardingEdge()
-        {
-            // m_parent.on_complete();
-        }
+        ~ForwardingEdge() = default;
 
         channel::Status await_write(T&& t) override
         {

@@ -82,39 +82,15 @@ class EdgeChannel
 {
   public:
     EdgeChannel(std::unique_ptr<mrc::channel::Channel<T>> channel) : m_channel(std::move(channel)) {}
-    virtual ~EdgeChannel()
-    {
-        // if (m_channel)
-        // {
-        //     m_channel->close_channel();
-        //     m_channel.reset();
-        // }
-    }
-
-    // virtual channel::Status await_read(T& t)
-    // {
-    //     return m_channel->await_read(t);
-    // }
-
-    // virtual channel::Status await_write(T&& t)
-    // {
-    //     return m_channel->await_write(std::move(t));
-    // }
+    virtual ~EdgeChannel() = default;
 
     [[nodiscard]] std::shared_ptr<EdgeChannelReader<T>> get_reader() const
     {
-        // struct EnableMakeShared : public EdgeChannelReader<T>
-        // {
-        //     EnableMakeShared() : EdgeChannelReader<T> {}
-        // };
-
-        // return std::make_shared<EnableMakeShared>(m_channel);
         return std::shared_ptr<EdgeChannelReader<T>>(new EdgeChannelReader<T>(m_channel));
     }
 
     [[nodiscard]] std::shared_ptr<EdgeChannelWriter<T>> get_writer() const
     {
-        // return std::make_shared<EdgeChannelWriter<T>>(m_channel);
         return std::shared_ptr<EdgeChannelWriter<T>>(new EdgeChannelWriter<T>(m_channel));
     }
 

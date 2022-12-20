@@ -64,152 +64,154 @@ PythonOperator OperatorsProxy::build(
     PyFuncHolder<void(const PyObjectObservable& obs, PyObjectSubscriber& sub)> build_fn)
 {
     //  Build and return the map operator
-    return PythonOperator("build", [=](PyObjectObservable source) -> PyObjectObservable {
-        return rxcpp::observable<>::create<PyHolder>([source, build_fn](pymrc::PyObjectSubscriber output) {
-            try
-            {
-                py::gil_scoped_acquire gil;
+    return {"build", [=](PyObjectObservable source) -> PyObjectObservable {
+                return rxcpp::observable<>::create<PyHolder>([source, build_fn](pymrc::PyObjectSubscriber output) {
+                    try
+                    {
+                        py::gil_scoped_acquire gil;
 
-                // Call the subscribe function
-                build_fn(source, output);
+                        // Call the subscribe function
+                        build_fn(source, output);
 
-                return output;
+                        return output;
 
-            } catch (py::error_already_set& err)
-            {
-                LOG(ERROR) << "Python occurred during full node subscription. Error: " + std::string(err.what());
+                    } catch (py::error_already_set& err)
+                    {
+                        LOG(ERROR) << "Python occurred during full node subscription. Error: " +
+                                          std::string(err.what());
 
-                // Rethrow python exceptions
-                throw;
-            } catch (std::exception& err)
-            {
-                LOG(ERROR) << "Exception occurred during subscription. Error: " + std::string(err.what());
-                throw;
-            }
-        });
-    });
+                        // Rethrow python exceptions
+                        throw;
+                    } catch (std::exception& err)
+                    {
+                        LOG(ERROR) << "Exception occurred during subscription. Error: " + std::string(err.what());
+                        throw;
+                    }
+                });
+            }};
 }
 
 PythonOperator OperatorsProxy::filter(PyFuncHolder<bool(pybind11::object x)> filter_fn)
 {
     //  Build and return the map operator
-    return PythonOperator("filter", [=](PyObjectObservable source) {
-        return source.filter([=](PyHolder data_object) {
-            py::gil_scoped_acquire gil;
+    return {"filter", [=](PyObjectObservable source) {
+                return source.filter([=](PyHolder data_object) {
+                    py::gil_scoped_acquire gil;
 
-            // Must make a copy here!
-            bool returned = filter_fn(data_object.copy_obj());
+                    // Must make a copy here!
+                    bool returned = filter_fn(data_object.copy_obj());
 
-            return returned;
-        });
-    });
+                    return returned;
+                });
+            }};
 }
 
 PythonOperator OperatorsProxy::flatten()
 {
     //  Build and return the map operator
-    return PythonOperator("flatten", [=](PyObjectObservable source) {
-        return rxcpp::observable<>::create<PyHolder>([=](PyObjectSubscriber sink) {
-            source.subscribe(
-                sink,
-                [sink](PyHolder data_object) {
-                    try
-                    {
-                        AcquireGIL gil;
-
-                        // Convert to a vector to allow releasing the GIL
-                        std::vector<PyHolder> obj_list;
-
-                        {
-                            // Convert to C++ vector while we have the GIL. The list will go out of scope in this block
-                            py::list l = py::object(std::move(data_object));
-
-                            for (const auto& item : l)
+    return {"flatten", [=](PyObjectObservable source) {
+                return rxcpp::observable<>::create<PyHolder>([=](PyObjectSubscriber sink) {
+                    source.subscribe(
+                        sink,
+                        [sink](PyHolder data_object) {
+                            try
                             {
-                                // This increases the ref count by one but thats fine since the list will go out of
-                                // scope and deref all its elements
-                                obj_list.emplace_back(std::move(py::reinterpret_borrow<py::object>(item)));
-                            }
-                        }
+                                AcquireGIL gil;
 
-                        if (sink.is_subscribed())
-                        {
-                            // Release the GIL before calling on_next
-                            gil.release();
+                                // Convert to a vector to allow releasing the GIL
+                                std::vector<PyHolder> obj_list;
 
-                            // Loop over the list
-                            for (auto& i : obj_list)
+                                {
+                                    // Convert to C++ vector while we have the GIL. The list will go out of scope in
+                                    // this block
+                                    py::list l = py::object(std::move(data_object));
+
+                                    for (const auto& item : l)
+                                    {
+                                        // This increases the ref count by one but thats fine since the list will go out
+                                        // of scope and deref all its elements
+                                        obj_list.emplace_back(std::move(py::reinterpret_borrow<py::object>(item)));
+                                    }
+                                }
+
+                                if (sink.is_subscribed())
+                                {
+                                    // Release the GIL before calling on_next
+                                    gil.release();
+
+                                    // Loop over the list
+                                    for (auto& i : obj_list)
+                                    {
+                                        sink.on_next(std::move(i));
+                                    }
+                                }
+                            } catch (py::error_already_set& err)
                             {
-                                sink.on_next(std::move(i));
+                                // Need the GIL here
+                                AcquireGIL gil;
+
+                                py::print("Python error in callback hit!");
+                                py::print(err.what());
+
+                                // Release before calling on_error
+                                gil.release();
+
+                                sink.on_error(std::current_exception());
                             }
-                        }
-                    } catch (py::error_already_set& err)
-                    {
-                        // Need the GIL here
-                        AcquireGIL gil;
-
-                        py::print("Python error in callback hit!");
-                        py::print(err.what());
-
-                        // Release before calling on_error
-                        gil.release();
-
-                        sink.on_error(std::current_exception());
-                    }
-                },
-                [sink](std::exception_ptr ex) {
-                    // Forward
-                    sink.on_error(std::move(ex));
-                },
-                [sink]() {
-                    // Forward
-                    sink.on_completed();
+                        },
+                        [sink](std::exception_ptr ex) {
+                            // Forward
+                            sink.on_error(std::move(ex));
+                        },
+                        [sink]() {
+                            // Forward
+                            sink.on_completed();
+                        });
                 });
-        });
-    });
+            }};
 }
 
 PythonOperator OperatorsProxy::map(OnDataFunction map_fn)
 {
     // Build and return the map operator
-    return PythonOperator("map", [=](PyObjectObservable source) -> PyObjectObservable {
-        return source.map([=](PyHolder data_object) -> PyHolder {
-            py::gil_scoped_acquire gil;
+    return {"map", [=](PyObjectObservable source) -> PyObjectObservable {
+                return source.map([=](PyHolder data_object) -> PyHolder {
+                    py::gil_scoped_acquire gil;
 
-            // Call the map function
-            return map_fn(std::move(data_object));
-        });
-    });
+                    // Call the map function
+                    return map_fn(std::move(data_object));
+                });
+            }};
 }
 
 PythonOperator OperatorsProxy::on_completed(PyFuncHolder<std::optional<pybind11::object>()> finally_fn)
 {
-    return PythonOperator("on_completed", [=](PyObjectObservable source) {
-        // Make a new observable
-        return rxcpp::observable<>::create<PyHolder>([=](PyObjectSubscriber sink) {
-            source.subscribe(rxcpp::make_observer_dynamic<PyHolder>(
-                [sink](PyHolder x) {
-                    // Forward
-                    sink.on_next(std::move(x));
-                },
-                [sink](std::exception_ptr ex) {
-                    // Forward
-                    sink.on_error(std::move(ex));
-                },
-                [sink, finally_fn]() {
-                    // In finally function, call the wrapped function
-                    auto ret_val = finally_fn();
+    return {"on_completed", [=](PyObjectObservable source) {
+                // Make a new observable
+                return rxcpp::observable<>::create<PyHolder>([=](PyObjectSubscriber sink) {
+                    source.subscribe(rxcpp::make_observer_dynamic<PyHolder>(
+                        [sink](PyHolder x) {
+                            // Forward
+                            sink.on_next(std::move(x));
+                        },
+                        [sink](std::exception_ptr ex) {
+                            // Forward
+                            sink.on_error(std::move(ex));
+                        },
+                        [sink, finally_fn]() {
+                            // In finally function, call the wrapped function
+                            auto ret_val = finally_fn();
 
-                    if (ret_val.has_value() && !ret_val.value().is_none())
-                    {
-                        sink.on_next(std::move(ret_val.value()));
-                    }
+                            if (ret_val.has_value() && !ret_val.value().is_none())
+                            {
+                                sink.on_next(std::move(ret_val.value()));
+                            }
 
-                    // Call on_completed
-                    sink.on_completed();
-                }));
-        });
-    });
+                            // Call on_completed
+                            sink.on_completed();
+                        }));
+                });
+            }};
 }
 
 PyHolder wrapper_pair_to_tuple(py::object&& left, py::object&& right)
@@ -220,21 +222,21 @@ PyHolder wrapper_pair_to_tuple(py::object&& left, py::object&& right)
 PythonOperator OperatorsProxy::pairwise()
 {
     //  Build and return the map operator
-    return PythonOperator("pairwise", [](PyObjectObservable source) {
-        return source
-            .map([](PyHolder data_object) {
-                // py::gil_scoped_acquire gil;
-                // Move it into a wrapper in case it goes out of scope
-                return PyObjectHolder(std::move(data_object));
-            })
-            .pairwise()
-            .map([](std::tuple<PyObjectHolder, PyObjectHolder> x) {
-                // Convert the C++ tuples back into python tuples. Need the GIL since were making a new object
-                py::gil_scoped_acquire gil;
+    return {"pairwise", [](PyObjectObservable source) {
+                return source
+                    .map([](PyHolder data_object) {
+                        // py::gil_scoped_acquire gil;
+                        // Move it into a wrapper in case it goes out of scope
+                        return PyObjectHolder(std::move(data_object));
+                    })
+                    .pairwise()
+                    .map([](std::tuple<PyObjectHolder, PyObjectHolder> x) {
+                        // Convert the C++ tuples back into python tuples. Need the GIL since were making a new object
+                        py::gil_scoped_acquire gil;
 
-                return std::apply(wrapper_pair_to_tuple, std::move(x));
-            });
-    });
+                        return std::apply(wrapper_pair_to_tuple, std::move(x));
+                    });
+            }};
 }
 
 template <class T>
@@ -290,28 +292,28 @@ struct to_list  // NOLINT
 PythonOperator OperatorsProxy::to_list()
 {
     //  Build and return the map operator
-    return PythonOperator("to_list", [](PyObjectObservable source) {
-        using pyobj_to_list_t = ::mrc::pymrc::to_list<PyHolder>;
+    return {"to_list", [](PyObjectObservable source) {
+                using pyobj_to_list_t = ::mrc::pymrc::to_list<PyHolder>;
 
-        // return source.subscribe(sink);
-        return source.lift<rxcpp::util::value_type_t<pyobj_to_list_t>>(pyobj_to_list_t())
-            .map([](std::vector<PyHolder> obj_list) -> PyHolder {
-                AcquireGIL gil;
+                // return source.subscribe(sink);
+                return source.lift<rxcpp::util::value_type_t<pyobj_to_list_t>>(pyobj_to_list_t())
+                    .map([](std::vector<PyHolder> obj_list) -> PyHolder {
+                        AcquireGIL gil;
 
-                // Convert the list back into a python object
-                py::list values;
+                        // Convert the list back into a python object
+                        py::list values;
 
-                for (auto& x : obj_list)
-                {
-                    values.append(py::object(std::move(x)));
-                }
+                        for (auto& x : obj_list)
+                        {
+                            values.append(py::object(std::move(x)));
+                        }
 
-                // Clear the list while we still have the GIL
-                obj_list.clear();
+                        // Clear the list while we still have the GIL
+                        obj_list.clear();
 
-                return PyHolder(std::move(values));
-            });
-    });
+                        return {std::move(values)};
+                    });
+            }};
 }
 
 }  // namespace mrc::pymrc

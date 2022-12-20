@@ -65,7 +65,7 @@ pybind11::object PyObjectWrapper::copy_obj() const&
     }
 
     // Allow for peaking into the object
-    return py::object(m_obj);
+    return {m_obj};
 }
 
 pybind11::object&& PyObjectWrapper::move_obj() &&

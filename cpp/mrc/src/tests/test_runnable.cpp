@@ -284,9 +284,9 @@ TEST_F(TestRunnable, RxSourceToRxSink)
     {
         auto source =
             std::make_unique<node::RxSource<float>>(rxcpp::observable<>::create<float>([](rxcpp::subscriber<float> s) {
-                s.on_next(1.0f);
-                s.on_next(2.0f);
-                s.on_next(3.0f);
+                s.on_next(1.0F);
+                s.on_next(2.0F);
+                s.on_next(3.0F);
                 s.on_completed();
             }));
         auto sink =
@@ -317,9 +317,9 @@ TEST_F(TestRunnable, RxSourceToMuxerToRxSink)
     {
         auto source =
             std::make_unique<node::RxSource<float>>(rxcpp::observable<>::create<float>([](rxcpp::subscriber<float> s) {
-                s.on_next(1.0f);
-                s.on_next(2.0f);
-                s.on_next(3.0f);
+                s.on_next(1.0F);
+                s.on_next(2.0F);
+                s.on_next(3.0F);
                 s.on_completed();
             }));
         muxer = std::make_unique<node::Muxer<float>>();

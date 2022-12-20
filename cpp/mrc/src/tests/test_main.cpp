@@ -20,12 +20,12 @@
 #include <gflags/gflags.h>  // for ParseCommandLineFlags
 #include <glog/logging.h>
 #include <gtest/gtest.h>
+#include <stdnoreturn.h>
 
 #include <csignal>
 #include <stdexcept>
 
-// NOLINTNEXTLINE(readability-identifier-naming)
-__attribute__((noreturn)) void TestFailuresThrowExceptions()
+__attribute__((__noreturn__)) void test_failures_throw_exceptions()
 {
     // Generate an interrupt
     std::raise(SIGINT);
