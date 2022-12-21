@@ -21,6 +21,7 @@
 #include "mrc/channel/status.hpp"
 #include "mrc/core/addresses.hpp"
 #include "mrc/core/executor.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/channel_holder.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/edge_channel.hpp"
@@ -68,6 +69,8 @@
 using namespace std::chrono_literals;
 
 TEST_CLASS(Edges);
+
+using TestEdgesDeathTest = TestEdges;  // NOLINT(readability-identifier-naming)
 
 namespace mrc::node {
 
@@ -291,7 +294,7 @@ class TestNodeComponent : public NodeComponent<T, T>
         return this->get_writable_edge()->await_write(t + 1);
     }
 
-    void on_complete() override
+    void do_on_complete() override
     {
         VLOG(10) << "TestSinkComponent completed";
     }
@@ -571,17 +574,18 @@ class TestConditional : public IngressProvider<int>, public IngressAcceptor<int>
 
 namespace mrc {
 
-TEST_F(TestEdges, NodeDestroyedBeforeEdge)
+TEST_F(TestEdgesDeathTest, NodeDestroyedBeforeEdge)
 {
-    GTEST_SKIP();
-
-    auto source = std::make_shared<node::TestSource<int>>();
-    auto sink   = std::make_shared<node::TestSink<int>>();
-
-    node::make_edge(*source, *sink);
-
     // Reset the sink before the source which will cause an exception
-    EXPECT_DEATH(sink.reset(), "");
+    EXPECT_DEATH(
+        {
+            auto source = std::make_shared<node::TestSource<int>>();
+            auto sink   = std::make_shared<node::TestSink<int>>();
+
+            node::make_edge(*source, *sink);
+            sink.reset();
+        },
+        "");
 }
 
 TEST_F(TestEdges, SourceToSink)

@@ -25,14 +25,14 @@
 #include <csignal>
 #include <stdexcept>
 
-__attribute__((__noreturn__)) void test_failures_throw_exceptions()
-{
-    // Generate an interrupt
-    std::raise(SIGINT);
-    // throw std::runtime_error("exception rather than std::abort");
+// __attribute__((__noreturn__)) void test_failures_throw_exceptions()
+// {
+//     // Generate an interrupt
+//     std::raise(SIGINT);
+//     // throw std::runtime_error("exception rather than std::abort");
 
-    std::abort();
-}
+//     std::abort();
+// }
 
 int main(int argc, char** argv)
 {

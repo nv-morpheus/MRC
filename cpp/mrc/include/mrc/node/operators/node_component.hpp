@@ -17,9 +17,16 @@ class NodeComponent : public ForwardingIngressProvider<InputT>, public IngressAc
     virtual ~NodeComponent() = default;
 
   protected:
-    void on_complete() override
+    void on_complete() final
     {
+        this->do_on_complete();
+
         SourceProperties<OutputT>::release_edge_connection();
+    }
+
+    virtual void do_on_complete()
+    {
+        // Nothing in base
     }
 };
 
@@ -32,14 +39,21 @@ class NodeComponent<T, T> : public ForwardingIngressProvider<T>, public IngressA
     virtual ~NodeComponent() = default;
 
   protected:
-    channel::Status on_next(T&& t)
+    channel::Status on_next(T&& t) override
     {
         return this->get_writable_edge()->await_write(std::move(t));
     }
 
-    void on_complete()
+    void on_complete() final
     {
+        this->do_on_complete();
+
         SourceProperties<T>::release_edge_connection();
+    }
+
+    virtual void do_on_complete()
+    {
+        // Nothing in base
     }
 };
 
@@ -67,14 +81,12 @@ class LambdaNodeComponent : public NodeComponent<InputT, OutputT>
         return this->get_writable_edge()->await_write(m_on_next_fn(std::move(t)));
     }
 
-    void on_complete() override
+    void do_on_complete() override
     {
         if (m_on_complete_fn)
         {
             m_on_complete_fn();
         }
-
-        SourceProperties<OutputT>::release_edge_connection();
     }
 
   private:

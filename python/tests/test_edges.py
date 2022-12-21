@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import dataclasses
-
 import pytest
 
 import mrc
@@ -624,7 +622,7 @@ def test_cpp_source_base_to_py_sink_component(run_segment):
     def segment_init(seg: mrc.Builder):
 
         source_base = add_cpp_source_base(seg)
-        sink_component = add_py_sink_component_base(seg, source_base)
+        add_py_sink_component_base(seg, source_base)
 
     results = run_segment(segment_init)
 
@@ -641,7 +639,7 @@ def test_cpp_source_base_to_py_node_component_to_py_sink_component(run_segment):
 
         source_base = add_cpp_source_base(seg)
         node_component = add_py_node_component_base(seg, source_base)
-        sink_component = add_py_sink_component_base(seg, node_component)
+        add_py_sink_component_base(seg, node_component)
 
     results = run_segment(segment_init)
 
@@ -659,4 +657,3 @@ if (__name__ == "__main__"):
     test_edge_cpp_to_py_same()
     test_edge_py_to_cpp_same()
     test_edge_wrapper()
-    test_multi_segment()

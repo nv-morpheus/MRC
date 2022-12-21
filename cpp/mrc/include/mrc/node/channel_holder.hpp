@@ -3,6 +3,7 @@
 #include "mrc/channel/channel.hpp"
 #include "mrc/channel/egress.hpp"
 #include "mrc/channel/ingress.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/type_traits.hpp"
 #include "mrc/utils/string_utils.hpp"
@@ -24,42 +25,6 @@
 #include <vector>
 
 namespace mrc::node {
-
-struct virtual_enable_shared_from_this_base  // NOLINT(readability-identifier-naming)
-  : public std::enable_shared_from_this<virtual_enable_shared_from_this_base>
-{
-    virtual ~virtual_enable_shared_from_this_base() = default;
-};
-
-// This class allows enable_shared_from_this to work for virtual inheritance
-template <typename T>
-struct virtual_enable_shared_from_this  // NOLINT(readability-identifier-naming)
-  : public virtual virtual_enable_shared_from_this_base
-{
-    std::shared_ptr<T> shared_from_this()
-    {
-        return std::shared_ptr<T>(virtual_enable_shared_from_this_base::shared_from_this(), static_cast<T*>(this));
-    }
-    std::shared_ptr<const T> shared_from_this() const
-    {
-        return std::shared_ptr<const T>(virtual_enable_shared_from_this_base::shared_from_this(),
-                                        static_cast<const T*>(this));
-    }
-};
-
-// struct virtual_enable_shared_from_this_base : public
-// std::enable_shared_from_this<virtual_enable_shared_from_this_base>
-// {
-//     virtual ~virtual_enable_shared_from_this_base() {}
-// };
-// template <typename T>
-// struct virtual_enable_shared_from_this : public virtual virtual_enable_shared_from_this_base
-// {
-//     std::shared_ptr<T> shared_from_this()
-//     {
-//         return std::dynamic_pointer_cast<T>(virtual_enable_shared_from_this_base::shared_from_this());
-//     }
-// };
 
 template <typename T>
 class EdgeHolder;
