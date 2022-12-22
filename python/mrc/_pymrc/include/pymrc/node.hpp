@@ -28,6 +28,7 @@
 #include "mrc/node/edge.hpp"
 #include "mrc/node/edge_connector.hpp"
 #include "mrc/node/forward.hpp"  // IWYU pragma: keep
+#include "mrc/node/generic_source.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
@@ -287,6 +288,26 @@ class PythonSource : public node::RxSource<OutputT, ContextT>,
           f(s);
       }))
     {}
+};
+
+template <typename OutputT>
+class PythonSourceComponent : public node::LambdaSourceComponent<OutputT>,
+                              public pymrc::AutoRegSourceAdapter<OutputT>,
+                              public pymrc::AutoRegIngressPort<OutputT>
+{
+    using base_t = node::LambdaSourceComponent<OutputT>;
+
+    using base_t::base_t;
+
+    //   public:
+    //     using subscriber_fn_t = std::function<void(rxcpp::subscriber<OutputT>& sub)>;
+
+    //     PythonSourceComponent(const subscriber_fn_t& f) :
+    //       base_t(rxcpp::observable<>::create<OutputT>([f](rxcpp::subscriber<OutputT>& s) {
+    //           // Call the wrapped subscriber function
+    //           f(s);
+    //       }))
+    //     {}
 };
 
 // template <typename OutputT>

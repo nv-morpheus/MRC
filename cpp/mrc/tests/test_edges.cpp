@@ -26,11 +26,13 @@
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/edge_channel.hpp"
 #include "mrc/node/forward.hpp"
+#include "mrc/node/generic_source.hpp"
 #include "mrc/node/operators/broadcast.hpp"
 #include "mrc/node/operators/combine_latest.hpp"
 #include "mrc/node/operators/node_component.hpp"
 #include "mrc/node/operators/router.hpp"
 #include "mrc/node/rx_subscribable.hpp"
+#include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
@@ -243,36 +245,29 @@ class TestQueue : public IngressProvider<T>, public EgressProvider<T>
 };
 
 template <typename T>
-class TestSourceComponent : public EgressProvider<T>
+class TestSourceComponent : public GenericSourceComponent<T>
 {
   public:
-    TestSourceComponent()
-    {
-        this->init_owned_edge(std::make_shared<EdgeReadableLambda<T>>(
-            [this](int& t) {
-                // Call this object
-                return this->await_read(t);
-            },
-            [this]() { this->on_complete(); }));
-    }
+    TestSourceComponent() = default;
 
-    channel::Status await_read(int& t)
+  protected:
+    channel::Status get_data(T& data) override
     {
-        t = m_value++;
+        data = m_value++;
 
-        VLOG(10) << "TestSourceComponent emmitted value: " << t;
+        VLOG(10) << "TestSourceComponent emmitted value: " << data;
 
         // Close after 3
         return m_value >= 3 ? channel::Status::closed : channel::Status::success;
     }
 
-    void on_complete()
+    void on_complete() override
     {
         VLOG(10) << "TestSourceComponent completed";
     }
 
   private:
-    int m_value{1};
+    T m_value{1};
 };
 
 template <typename T>
@@ -438,24 +433,10 @@ class TestRouter : public Router<std::string, int>
 // };
 
 template <typename T>
-class TestConditional : public IngressProvider<int>, public IngressAcceptor<int>
+class TestConditional : public ForwardingIngressProvider<T>, public IngressAcceptor<T>
 {
   public:
-    TestConditional()
-    {
-        IngressProvider<int>::init_owned_edge(std::make_shared<EdgeWritableLambda<int>>(
-            [this](int&& t) {
-                // Call this object
-                return this->on_next(std::move(t));
-            },
-            [this]() {
-                // Call complete, and then drop the downstream edge
-                this->on_complete();
-
-                // TODO(MDD): Release downstream edge
-                SourceProperties<int>::release_edge_connection();
-            }));
-    }
+    TestConditional() = default;
 
     ~TestConditional() override
     {
@@ -463,7 +444,7 @@ class TestConditional : public IngressProvider<int>, public IngressAcceptor<int>
         VLOG(10) << "Destroying TestConditional";
     }
 
-    channel::Status on_next(int&& t)
+    channel::Status on_next(T&& t) override
     {
         VLOG(10) << "TestConditional got value: " << t;
 
@@ -476,99 +457,13 @@ class TestConditional : public IngressProvider<int>, public IngressAcceptor<int>
         return this->get_writable_edge()->await_write(t + 1);
     }
 
-    void on_complete()
+    void on_complete() override
     {
         VLOG(10) << "TestConditional completed";
+
+        IngressAcceptor<T>::release_edge_connection();
     }
 };
-
-// class TestBroadcast : public IngressProvider<int>, public IIngressAcceptor<int>
-// {
-//     class BroadcastEdge : public IEdgeWritable<int>, public MultiSourceProperties<size_t, int>
-//     {
-//       public:
-//         BroadcastEdge(TestBroadcast& parent) : m_parent(parent) {}
-
-//         ~BroadcastEdge()
-//         {
-//             m_parent.on_complete();
-//         }
-
-//         channel::Status await_write(int&& t) override
-//         {
-//             VLOG(10) << "BroadcastEdge got value: " << t;
-
-//             for (size_t i = this->edge_count() - 1; i > 0; i--)
-//             {
-//                 // Make a copy
-//                 int x = t;
-
-//                 auto response = this->get_writable_edge(i)->await_write(std::move(x));
-
-//                 if (response != channel::Status::success)
-//                 {
-//                     return response;
-//                 }
-//             }
-
-//             // Write index 0 last
-//             return this->get_writable_edge(0)->await_write(std::move(t));
-//         }
-
-//         void add_downstream(std::shared_ptr<IEdgeWritable<int>> downstream)
-//         {
-//             auto edge_count = this->edge_count();
-
-//             this->set_edge(edge_count, downstream);
-//         }
-
-//       private:
-//         TestBroadcast& m_parent;
-//         // std::vector<std::shared_ptr<EdgeWritable<int>>> m_outputs;
-//     };
-
-//   public:
-//     TestBroadcast()
-//     {
-//         auto edge = std::make_shared<BroadcastEdge>(*this);
-
-//         // Save to avoid casting
-//         m_edge = edge;
-
-//         IngressProvider<int>::init_owned_edge(edge);
-//     }
-
-//     ~TestBroadcast()
-//     {
-//         // Debug print
-//         VLOG(10) << "Destroying TestBroadcast";
-//     }
-
-//     void set_ingress(std::shared_ptr<IEdgeWritable<int>> ingress) override
-//     {
-//         if (auto e = m_edge.lock())
-//         {
-//             e->add_downstream(ingress);
-//         }
-//         else
-//         {
-//             LOG(ERROR) << "Edge was destroyed";
-//         }
-//     }
-
-//     void set_ingress_typeless(std::shared_ptr<EdgeTag> ingress) override
-//     {
-//         this->set_ingress(std::dynamic_pointer_cast<IEdgeWritable<int>>(ingress));
-//     }
-
-//     void on_complete()
-//     {
-//         VLOG(10) << "TestBroadcast completed";
-//     }
-
-//   private:
-//     std::weak_ptr<BroadcastEdge> m_edge;
-// };
 
 }  // namespace mrc::node
 

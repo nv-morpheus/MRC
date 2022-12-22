@@ -135,6 +135,18 @@ class BuilderProxy
         const std::string& name,
         const std::function<void(pymrc::PyObjectSubscriber& sub)>& f);
 
+    static std::shared_ptr<mrc::segment::ObjectProperties> make_source_component(mrc::segment::Builder& self,
+                                                                                 const std::string& name,
+                                                                                 pybind11::iterator source_iterator);
+
+    static std::shared_ptr<mrc::segment::ObjectProperties> make_source_component(mrc::segment::Builder& self,
+                                                                                 const std::string& name,
+                                                                                 pybind11::iterable source_iter);
+
+    static std::shared_ptr<mrc::segment::ObjectProperties> make_source_component(mrc::segment::Builder& self,
+                                                                                 const std::string& name,
+                                                                                 pybind11::function gen_factory);
+
     /**
      * Construct a new pybind11::object sink.
      * Create and return a Segment node used to sink python objects following out of the Segment.

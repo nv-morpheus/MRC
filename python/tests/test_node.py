@@ -57,7 +57,7 @@ def test_launch_options_source(source_type: str, pe_count: int, engines_per_pe: 
         yield int(3)
 
     if (source_type == "iterator"):
-        if (pe_count > 0 or engines_per_pe > 0):
+        if (pe_count > 1 or engines_per_pe > 1):
             # Currently, errors that occur in pipeline threads do not bubble back up to python and simply cause a
             # segfault. Multi-threaded iterator sources intentionally throw an exception that should be tested. However,
             # there is no current way to catch that error on the python side and test for it. Until that is fixed, these
@@ -79,6 +79,76 @@ def test_launch_options_source(source_type: str, pe_count: int, engines_per_pe: 
 
         src_node.launch_options.pe_count = pe_count
         src_node.launch_options.engines_per_pe = engines_per_pe
+
+        def node_fn(x: int):
+            nonlocal hit_count
+
+            hit_count += 1
+
+        hit_counter = seg.make_node("hit_counter", node_fn)
+        seg.make_edge(src_node, hit_counter)
+
+    pipeline = mrc.Pipeline()
+
+    pipeline.make_segment("my_seg", segment_init)
+
+    options = mrc.Options()
+
+    # Set to 1 thread
+    options.topology.user_cpuset = "0-{}".format(pe_count)
+
+    executor = mrc.Executor(options)
+
+    executor.register_pipeline(pipeline)
+
+    executor.start()
+
+    executor.join()
+
+    if (source_type == "iterator"):
+        # Cant restart iterators. So only 1 loop is expected
+        pe_count = 1
+        engines_per_pe = 1
+
+    assert hit_count == 3 * pe_count * engines_per_pe
+
+
+@pytest.mark.parametrize("engines_per_pe", [1])
+@pytest.mark.parametrize("pe_count", [1])
+@pytest.mark.parametrize("source_type", ["iterator", "iterable", "function"])
+def test_launch_options_source_component(source_type: str, pe_count: int, engines_per_pe: int):
+    hit_count = 0
+
+    source = None
+
+    def source_gen():
+        yield int(1)
+        yield int(2)
+        yield int(3)
+
+    if (source_type == "iterator"):
+        if (pe_count > 1 or engines_per_pe > 1):
+            # Currently, errors that occur in pipeline threads do not bubble back up to python and simply cause a
+            # segfault. Multi-threaded iterator sources intentionally throw an exception that should be tested. However,
+            # there is no current way to catch that error on the python side and test for it. Until that is fixed, these
+            # tests will simply be skipped
+            pytest.skip("Skipping multi-thread iterator sources until pipeline errors can be caught in python.")
+
+        # Create a single instance of the generator
+        source = source_gen()
+    elif (source_type == "iterable"):
+        # Use an iterable object
+        source = [1, 2, 3]
+    elif (source_type == "function"):
+        # Use a factory function to make the generator
+        source = source_gen
+
+    def segment_init(seg: mrc.Builder):
+
+        src_node = seg.make_source_component("my_src", source)
+
+        # src_node.launch_options.pe_count = pe_count
+        # src_node.launch_options.engines_per_pe = engines_per_pe
 
         def node_fn(x: int):
             nonlocal hit_count

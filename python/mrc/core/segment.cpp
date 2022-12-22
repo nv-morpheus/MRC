@@ -126,6 +126,18 @@ PYBIND11_MODULE(segment, module)
                 static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(
                     mrc::segment::Builder&, const std::string&, py::function)>(&BuilderProxy::make_source));
 
+    Builder.def("make_source_component",
+                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(
+                    mrc::segment::Builder&, const std::string&, py::iterator)>(&BuilderProxy::make_source_component));
+
+    Builder.def("make_source_component",
+                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(
+                    mrc::segment::Builder&, const std::string&, py::iterable)>(&BuilderProxy::make_source_component));
+
+    Builder.def("make_source_component",
+                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(
+                    mrc::segment::Builder&, const std::string&, py::function)>(&BuilderProxy::make_source_component));
+
     /**
      * Construct a new py::object sink.
      * Create and return a Segment node used to sink python objects following out of the Segment.

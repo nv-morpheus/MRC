@@ -211,29 +211,40 @@ class MultiIngressAcceptor : public virtual MultiSourceProperties<T, KeyT>, publ
 };
 
 template <typename T>
-class ForwardingIngressEdge : public IngressAcceptor<T>, public IEdgeWritable<T>
+class ForwardingEgressProvider : public EgressProvider<T>
 {
-  public:
-    channel::Status await_write(T&& data)
+  protected:
+    class ForwardingEdge : public IEdgeReadable<T>
     {
-        return this->get_writable_edge()->await_write(std::move(data));
+      public:
+        ForwardingEdge(ForwardingEgressProvider<T>& parent) : m_parent(parent) {}
+
+        ~ForwardingEdge() = default;
+
+        channel::Status await_read(T& t) override
+        {
+            return m_parent.get_next(t);
+        }
+
+      private:
+        ForwardingEgressProvider<T>& m_parent;
+    };
+
+    ForwardingEgressProvider()
+    {
+        auto inner_edge = std::make_shared<ForwardingEdge>(*this);
+
+        inner_edge->add_disconnector([this]() {
+            // Only call the on_complete if we have been connected
+            this->on_complete();
+        });
+
+        IngressProvider<T>::init_owned_edge(inner_edge);
     }
 
-    void set_ingress_typeless(std::shared_ptr<EdgeTag> ingress) override
-    {
-        throw std::runtime_error("Not implemented");
-    }
+    virtual channel::Status get_next(T& t) = 0;
 
-    // void set_ingress_obj(std::shared_ptr<IngressHandleObj> ingress) override
-    // {
-
-    //     EdgeHolder<T>::make_edge_connection(ingress);
-    // }
-
-    std::type_index ingress_acceptor_type(bool ignore_holder = false) const override
-    {
-        throw std::runtime_error("Not implemented");
-    }
+    virtual void on_complete() {}
 };
 
 }  // namespace mrc::node
