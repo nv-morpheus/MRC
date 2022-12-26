@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "internal/expected.hpp"
+#include "mrc/core/expected.hpp"
 
 #include <google/protobuf/any.pb.h>
 

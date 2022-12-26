@@ -21,12 +21,13 @@
 #include "mrc/utils/macros.hpp"
 #include "mrc/utils/string_utils.hpp"  // IWYU pragma: export
 
-namespace mrc::internal {
+namespace mrc {
 
 enum class ErrorCode
 {
     Internal,
     Fatal,
+    ChannelClosed,
 };
 
 class Error;
@@ -42,9 +43,9 @@ class Error final : public std::exception
 
   public:
     template <typename... ArgsT>
-    static UnexpectedError create(ArgsT&&... args)
+    static auto create(ArgsT&&... args) -> decltype(auto)
     {
-        return UnexpectedError(Error(std::forward<ArgsT>(args)...));
+        return std23::unexpected(Error(std::forward<ArgsT>(args)...));
     }
 
     DEFAULT_MOVEABILITY(Error);
@@ -92,4 +93,4 @@ using Expected = std23::expected<T, Error>;  // NOLINT
         throw expected.error();                                       \
     }
 
-}  // namespace mrc::internal
+}  // namespace mrc

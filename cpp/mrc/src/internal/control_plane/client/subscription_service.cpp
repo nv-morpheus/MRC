@@ -19,10 +19,10 @@
 
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/client/instance.hpp"
-#include "internal/expected.hpp"
 #include "internal/service.hpp"
 #include "internal/utils/contains.hpp"
 
+#include "mrc/core/expected.hpp"
 #include "mrc/protos/architect.pb.h"
 
 #include <boost/fiber/future/promise.hpp>
