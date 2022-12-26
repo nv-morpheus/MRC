@@ -15,6 +15,7 @@
 
 # Keep all source files sorted!!!
 add_executable(test_mrc
+  channels/test_immediate_channel.cpp
   coroutines/test_event.cpp
   coroutines/test_latch.cpp
   coroutines/test_ring_buffer.cpp
