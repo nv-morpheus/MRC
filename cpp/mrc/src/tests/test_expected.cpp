@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "mrc/core/expected.hpp"
+#include "mrc/core/error.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>

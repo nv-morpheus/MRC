@@ -22,7 +22,7 @@
 #include "internal/grpc/server_streaming.hpp"
 #include "internal/service.hpp"
 
-#include "mrc/core/expected.hpp"
+#include "mrc/core/error.hpp"
 #include "mrc/node/queue.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
 

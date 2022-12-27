@@ -20,7 +20,7 @@
 #include "internal/control_plane/server/versioned_issuer.hpp"
 #include "internal/grpc/server_streaming.hpp"
 
-#include "mrc/core/expected.hpp"
+#include "mrc/core/error.hpp"
 #include "mrc/types.hpp"
 
 #include <cstddef>

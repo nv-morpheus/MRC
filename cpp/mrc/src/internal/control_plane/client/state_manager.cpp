@@ -20,7 +20,7 @@
 #include "internal/control_plane/client.hpp"
 #include "internal/runnable/resources.hpp"
 
-#include "mrc/core/expected.hpp"
+#include "mrc/core/error.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/source_channel.hpp"

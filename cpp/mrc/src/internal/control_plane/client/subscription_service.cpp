@@ -22,7 +22,7 @@
 #include "internal/service.hpp"
 #include "internal/utils/contains.hpp"
 
-#include "mrc/core/expected.hpp"
+#include "mrc/core/error.hpp"
 #include "mrc/protos/architect.pb.h"
 
 #include <boost/fiber/future/promise.hpp>
