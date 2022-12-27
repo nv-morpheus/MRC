@@ -19,12 +19,12 @@
 
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/client/instance.hpp"
-#include "internal/expected.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/ucx/resources.hpp"
 #include "internal/ucx/worker.hpp"
 #include "internal/utils/contains.hpp"
 
+#include "mrc/core/error.hpp"
 #include "mrc/core/task_queue.hpp"
 #include "mrc/protos/architect.pb.h"
 
