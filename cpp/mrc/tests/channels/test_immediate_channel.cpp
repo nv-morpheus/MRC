@@ -16,6 +16,7 @@
  */
 
 #include "mrc/channel/v2/immediate_channel.hpp"
+#include "mrc/coroutines/latch.hpp"
 #include "mrc/coroutines/sync_wait.hpp"
 #include "mrc/coroutines/task.hpp"
 #include "mrc/coroutines/when_all.hpp"
@@ -36,12 +37,19 @@ class TestChannelV2 : public ::testing::Test
 
     ImmediateChannel<int> m_channel;
 
-    coroutines::Task<void> int_writer(int iterations)
+    coroutines::Task<void> int_writer(int iterations, coroutines::Latch& latch)
     {
         for (int i = 0; i < iterations; i++)
         {
             co_await m_channel.async_write(std::move(i));
         }
+        latch.count_down();
+        co_return;
+    }
+
+    coroutines::Task<> close_on_latch(coroutines::Latch& latch)
+    {
+        co_await latch;
         m_channel.close();
         co_return;
     }
@@ -86,38 +94,48 @@ TEST_F(TestChannelV2, ChannelClosed)
 
 TEST_F(TestChannelV2, SingleWriterSingleReader)
 {
-    coroutines::sync_wait(coroutines::when_all(int_writer(3), int_reader(3)));
+    coroutines::Latch latch{1};
+    coroutines::sync_wait(coroutines::when_all(close_on_latch(latch), int_writer(3, latch), int_reader(3)));
 }
 
 TEST_F(TestChannelV2, Readerx1_Writer_x1)
 {
-    coroutines::sync_wait(coroutines::when_all(int_reader(3), int_writer(3)));
+    coroutines::Latch latch{1};
+    coroutines::sync_wait(coroutines::when_all(int_reader(3), int_writer(3, latch), close_on_latch(latch)));
 }
 
 TEST_F(TestChannelV2, Readerx2_Writer_x1)
 {
-    coroutines::sync_wait(coroutines::when_all(int_reader(2), int_reader(1), int_writer(3)));
+    coroutines::Latch latch{1};
+    coroutines::sync_wait(
+        coroutines::when_all(int_reader(2), int_reader(1), int_writer(3, latch), close_on_latch(latch)));
 }
 
 TEST_F(TestChannelV2, Readerx3_Writer_x1)
 {
-    coroutines::sync_wait(coroutines::when_all(int_reader(1), int_reader(1), int_reader(1), int_writer(3)));
+    coroutines::Latch latch{1};
+    coroutines::sync_wait(
+        coroutines::when_all(close_on_latch(latch), int_reader(1), int_reader(1), int_reader(1), int_writer(3, latch)));
 }
 
 TEST_F(TestChannelV2, Readerx4_Writer_x1)
 {
     // reader are a lifo, so the first reader in the task list will not get a data entry
-    coroutines::sync_wait(
-        coroutines::when_all(int_reader(0), int_reader(1), int_reader(1), int_reader(1), int_writer(3)));
+    coroutines::Latch latch{1};
+    coroutines::sync_wait(coroutines::when_all(
+        close_on_latch(latch), int_reader(0), int_reader(1), int_reader(1), int_reader(1), int_writer(3, latch)));
 }
 
 TEST_F(TestChannelV2, Readerx3_Writer_x1_Reader_x1)
 {
-    coroutines::sync_wait(
-        coroutines::when_all(int_reader(1), int_reader(1), int_reader(1), int_writer(3), int_reader(0)));
+    coroutines::Latch latch{1};
+    coroutines::sync_wait(coroutines::when_all(
+        int_reader(1), int_reader(1), close_on_latch(latch), int_reader(1), int_writer(3, latch), int_reader(0)));
 }
 
 TEST_F(TestChannelV2, Writer_2_Reader_x2)
 {
-    coroutines::sync_wait(coroutines::when_all(int_writer(2), int_writer(2), int_reader(4), int_reader(0)));
+    coroutines::Latch latch{1};
+    coroutines::sync_wait(coroutines::when_all(
+        int_writer(2, latch), int_writer(2, latch), close_on_latch(latch), int_reader(4), int_reader(0)));
 }

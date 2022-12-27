@@ -18,8 +18,8 @@
 #pragma once
 
 #include "mrc/channel/status.hpp"
+#include "mrc/core/error.hpp"
 #include "mrc/core/expected.hpp"
-#include "mrc/core/std23_expected.hpp"
 
 #include <glog/logging.h>
 
@@ -79,7 +79,7 @@ class ImmediateChannel
             else
             {
                 // put current writer at the end of the fifo writer resumer list
-                auto* write_resumer = m_parent.m_write_resumers->m_next;
+                auto* write_resumer = m_parent.m_write_resumers;
                 while (write_resumer->m_next != nullptr)
                 {
                     write_resumer = write_resumer->m_next;
@@ -128,11 +128,11 @@ class ImmediateChannel
             m_parent.m_read_waiters = this;
         }
 
-        auto await_resume() noexcept -> std23::expected<T, Status>
+        auto await_resume() noexcept -> mrc::expected<T, Status>
         {
             if (m_channel_closed) [[unlikely]]
             {
-                return std23::unexpected(Status::closed);
+                return mrc::unexpected(Status::closed);
             }
 
             return {std::move(m_data)};
