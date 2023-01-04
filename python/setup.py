@@ -23,8 +23,8 @@ import versioneer
 # - Python package generation ------------------------------------------------
 
 setup(
-    name='srf',
-    description="srf",
+    name='mrc',
+    description="mrc",
     version=versioneer.get_version(),
     classifiers=[
         "Intended Audience :: Developers",
@@ -36,9 +36,9 @@ setup(
     author="NVIDIA Corporation",
     setup_requires=[],
     include_package_data=True,
-    packages=find_packages(include=['srf', 'srf.*'], exclude=['tests']),
+    packages=find_packages(include=['mrc', 'mrc.*'], exclude=['tests']),
     package_data={
-        "srf": ["_pysrf/*.so"]  # Add the pysrf library for the root package
+        "mrc": ["_pymrc/*.so"]  # Add the pymrc library for the root package
     },
     license="Apache",
     cmdclass=versioneer.get_cmdclass())

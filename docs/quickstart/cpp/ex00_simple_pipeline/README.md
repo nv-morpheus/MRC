@@ -10,9 +10,9 @@ Each of the objects in the Segment is created using the `segment::Builder::make_
 
 Once each object is created, they can be linked together using `segment::Builder::make_edge(SOURCE, SINK)`. There are a few rules when making edges:
 
-- Objects deriving from `srf::node::SourceProperties` can only appear in the left-hand argument of make_edge()
-- Objects deriving from `srf::node::SinkProperties` can only appear in the right-hand argument of make_edge()
-- Node objects can appear in either side since they derive from both `srf::node::SourceProperties` and `srf::node::SinkProperties`
+- Objects deriving from `mrc::node::SourceProperties` can only appear in the left-hand argument of make_edge()
+- Objects deriving from `mrc::node::SinkProperties` can only appear in the right-hand argument of make_edge()
+- Node objects can appear in either side since they derive from both `mrc::node::SourceProperties` and `mrc::node::SinkProperties`
 - Sources can only be connected to one downstream sink
   - To use multiple downstream sinks with broadcast or round-robin functionality, see the guide on operators
 - Sinks can accept multiple upstream sources
@@ -37,7 +37,7 @@ The reason that we pass a lambda to `make_source` is because this function is on
 
 ## Creating the Node
 
-Node objects work as both a source and a sink and are responsible for connecting the upstream source to any downstream sink. Because the upstream source and downstream sink can be different types, `make_node<T, R>` accepts two template arguments for the source type and sink type respectively. To make building nodes easier, SRF supports Reactive operators in the `make_node` function. Please see https://reactivex.io/RxCpp/ and navigate to Operators for more details on Reactive operators. These Reactive operators can be used to chain multiple steps together and simplify node creation.
+Node objects work as both a source and a sink and are responsible for connecting the upstream source to any downstream sink. Because the upstream source and downstream sink can be different types, `make_node<T, R>` accepts two template arguments for the source type and sink type respectively. To make building nodes easier, MRC supports Reactive operators in the `make_node` function. Please see https://reactivex.io/RxCpp/ and navigate to Operators for more details on Reactive operators. These Reactive operators can be used to chain multiple steps together and simplify node creation.
 
 For our example, we will only be using a single Reactive operator: `map`. To build the node, we need to call `make_node` and provide the source type, sink type, node name and node operators:
 
@@ -48,7 +48,7 @@ auto node = s.make_node<int, float>("int_to_float", rxcpp::operators::map([](con
                                     }));
 ```
 
-In our example, the `map` operator takes a lambda that will be called for each value that passes through the node. The result returned by this lambda will be passed on to the next downstream node. Our lambda is very simple, only multipling the input value by `2.5` and returning a `float`. 
+In our example, the `map` operator takes a lambda that will be called for each value that passes through the node. The result returned by this lambda will be passed on to the next downstream node. Our lambda is very simple, only multipling the input value by `2.5` and returning a `float`.
 
 ## Creating the Sink
 
@@ -75,11 +75,11 @@ We can see this simple pipeline in action by running the example in the build fo
 
 ```bash
 $ ${QSG_BUILD_DIR}/docs/quickstart/cpp/ex00_simple_pipeline/ex00_simple_pipeline.x
-srf pipeline starting...
+mrc pipeline starting...
 sink: 2.5
 sink: 5
 sink: 7.5
-srf pipeline complete: counter should be 3; counter=3
+mrc pipeline complete: counter should be 3; counter=3
 ```
 
 Where `${QSG_BUILD_DIR}` is the output location of the CMake build.

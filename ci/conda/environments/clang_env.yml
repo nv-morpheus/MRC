@@ -13,16 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Additional dependencies needed for clang, assumes dependencies from `dev_env.yml` 
+# Additional dependencies needed for clang, assumes dependencies from `dev_env.yml`
 # or `dev_env_nogcc.yml` has already been installed
-name: srf
+name: mrc
 channels:
     - conda-forge
 dependencies:
-    - clang=12
-    - clang-tools=12
-    - clangdev=12
-    - clangxx=12
-    - libclang=12
-    - libclang-cpp=12
-    - llvmdev=12
+    - clang=15
+    - clang-tools=15
+    - clangdev=15
+    - clangxx=15
+    - libclang=15
+    - libclang-cpp=15
+    - llvmdev=15
+    - include-what-you-use=0.19

@@ -20,11 +20,11 @@ source ${WORKSPACE}/ci/scripts/github/common.sh
 
 REPORTS_DIR="${WORKSPACE_TMP}/reports"
 
-gpuci_logger "Archiving benchmark reports"
+rapids-logger "Archiving benchmark reports"
 cd $(dirname ${REPORTS_DIR})
 tar cfj ${WORKSPACE_TMP}/benchmark_reports.tar.bz $(basename ${REPORTS_DIR})
 
-gpuci_logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
+rapids-logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
 aws s3 cp ${WORKSPACE_TMP}/benchmark_reports.tar.bz "${ARTIFACT_URL}/benchmark_reports.tar.bz"
 
 exit $(cat ${WORKSPACE_TMP}/exit_status)

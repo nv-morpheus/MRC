@@ -14,10 +14,8 @@
 # limitations under the License.
 
 # Additional dependencies only needed during a CI build
-name: srf
+name: mrc
 channels:
     - conda-forge
 dependencies:
-    - boa>=0.12
-    - conda-pack=0.7
-    - sccache=0.3
+    - codecov=2.1

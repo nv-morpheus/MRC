@@ -5,6 +5,7 @@
 # stdlib
 { "include": [ "<bits/cxxabi_forced.h>", private, "<mutex>", "public" ] },
 { "include": [ "<bits/cxxabi_forced.h>", private, "<vector>", "public" ] },
+{ "include": [ "<bits/this_thread_sleep.h>", private, "<thread>", "public" ] },
 { "include": [ "<bits/types/siginfo_t.h>", private, "<csignal>", "public" ] },
 { "include": [ "<string.h>", "public", "<cstring>", "public" ] },
 
@@ -66,6 +67,10 @@
 { "include": [ "\"rxcpp/rx-connectable_observable.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
 { "include": [ "<rxcpp/rx-grouped_observable.hpp>", private, "<rxcpp/rx.hpp>", "public" ] },
 { "include": [ "\"rxcpp/rx-grouped_observable.hpp\"", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "@<rxcpp/operators/.*>", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "@\"rxcpp/operators/.*\"", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "@<rxcpp/sources/.*>", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "@\"rxcpp/sources/.*\"", private, "<rxcpp/rx.hpp>", "public" ] },
 
 # ucp
 { "include": [ "<ucp/api/ucp_def.h>", "public", "<ucp/api/ucp.h>", "public" ] },
@@ -81,6 +86,9 @@
 { "symbol": ["boost::context::detail::forced_unwind", "private", "<boost/fiber/future/future.hpp>", "public"] },
 { "symbol": ["boost::intrusive_ptr::operator", "private", "<boost/fiber/future/promise.hpp>", "public"] },
 { "symbol": ["__cxxabiv1::__forced_unwind", "private", "<boost/fiber/future/future.hpp>", "public"] },
+{ "include": [ "<boost/hana/fwd/core/when.hpp>", private, "<boost/hana/core/when.hpp>", "public" ] },
+{ "include": [ "<boost/hana/fwd/if.hpp>", private, "<boost/hana/if.hpp>", "public" ] },
+{ "include": [ "<boost/hana/fwd/type.hpp>", private, "<boost/hana/type.hpp>", "public" ] },
 
 # cuda
 { "symbol": ["cuda::std::declval", "private", "<cuda/memory_resource>", "public"] },
@@ -97,6 +105,8 @@
 { "symbol": ["nlohmann::json", "private", "<nlohmann/json_fwd.hpp>", "public"] },
 
 # pybind11
+{ "include": [ "<pybind11/detail/common.h>", private, "<pybind11/pybind11.h>", "public" ] },
+
 { "symbol": ["pybind11", "private", "<pybind11/cast.h>", "public"] },
 { "symbol": ["pybind11", "private", "<pybind11/embed.h>", "public"] },
 { "symbol": ["pybind11", "private", "<pybind11/pybind11.h>", "public"] },
@@ -117,10 +127,14 @@
 { "symbol": ["pybind11::detail::get_type_info", "private", "<pybind11/cast.h>", "public"] },
 { "symbol": ["PyGILState_Check", "private", "<pybind11/gil.h>", "public"] },
 
+# pybind11 reroutes for Python.h
+{ "symbol": ["PyObject", "private", "<pybind11/pytypes.h>", "public"] },
+{ "symbol": ["PyTypeObject", "private", "<pybind11/pytypes.h>", "public"] },
+
 # spdlog
 { "symbol": ["spdlog::details::file_helper::~file_helper", "private", "<spdlog/sinks/basic_file_sink.h>", "public"] },
 
-# srf
-{ "symbol": ["std::__decay_and_strip<std::shared_ptr<srf::TraceStatistics> &>::__type" , "private", "\"srf/benchmarking/trace_statistics.hpp\"", "public"] },
+# mrc
+{ "symbol": ["std::__decay_and_strip<std::shared_ptr<mrc::TraceStatistics> &>::__type" , "private", "\"mrc/benchmarking/trace_statistics.hpp\"", "public"] },
 
 ]
