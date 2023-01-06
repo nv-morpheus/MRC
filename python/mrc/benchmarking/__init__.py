@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2018-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2018-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,10 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .watchers import LatencyWatcher
+from .watchers import ThroughputWatcher
 from .watchers import get_tracing_stats
 from .watchers import reset_tracing_stats
 from .watchers import sync_tracing_state
 from .watchers import trace_channels
 from .watchers import trace_operators
-from .watchers import LatencyWatcher
-from .watchers import ThroughputWatcher
