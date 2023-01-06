@@ -23,7 +23,7 @@ ARG LINUX_VER=20.04
 ARG PYTHON_VER=3.8
 
 # ============= base ===================
-FROM ${FROM_IMAGE}:cuda${CUDA_VER}-${LINUX_DISTRO}${LINUX_VER}-py${PYTHON_VER} AS base
+FROM ${FROM_IMAGE}:cuda11.4.1-ubuntu20.04-py3.8 AS base
 
 ARG PROJ_NAME=mrc
 
@@ -43,9 +43,12 @@ RUN --mount=type=cache,target=/opt/conda/pkgs,sharing=locked \
     /opt/conda/bin/mamba env create -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/dev_env.yml && \
     /opt/conda/bin/mamba env update -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/clang_env.yml && \
     /opt/conda/bin/mamba env update -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/ci_env.yml && \
-    sed -i "s/conda activate base/conda activate ${PROJ_NAME}/g" ~/.bashrc && \
     chmod -R a+rwX /opt/conda && \
     rm -rf /tmp/conda
+
+RUN /opt/conda/bin/conda init --system &&\
+    sed -i 's/xterm-color)/xterm-color|*-256color)/g' ~/.bashrc &&\
+    echo "conda activate ${PROJ_NAME}" >> ~/.bashrc
 
 # disable sscache wrappers around compilers
 ENV CMAKE_CUDA_COMPILER_LAUNCHER=
