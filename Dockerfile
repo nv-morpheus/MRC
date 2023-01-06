@@ -98,6 +98,6 @@ WORKDIR /work
 
 # Setup git to allow other users to access /work. Requires git 2.35.3 or
 # greater. See https://marc.info/?l=git&m=164989570902912&w=2. Only enable for
-# development
-RUN git config --global --add safe.directory "*" && \
-    git config --global core.editor "vim"
+# development. Utilize --system to not interfere with VS Code
+RUN git config --system --add safe.directory "*" && \
+    git config --system core.editor "vim"
