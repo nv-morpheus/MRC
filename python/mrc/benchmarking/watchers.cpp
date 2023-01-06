@@ -29,13 +29,11 @@
 #include <cstddef>
 #include <functional>
 #include <memory>
-#include <vector>
 
 namespace mrc::pymrc {
     namespace py = pybind11;
 
     void init_tracer_stats_api(py::module_& m);
-    void init_tracer_api(py::module_& m);
 
     PYBIND11_MODULE(watchers, m) {
         m.doc() = R"pbdoc()pbdoc";

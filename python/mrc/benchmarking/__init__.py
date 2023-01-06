@@ -13,10 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .tracers import get_tracing_stats
-from .tracers import reset_tracing_stats
-from .tracers import sync_tracing_state
-from .tracers import trace_channels
-from .tracers import trace_operators
+from .watchers import get_tracing_stats
+from .watchers import reset_tracing_stats
+from .watchers import sync_tracing_state
+from .watchers import trace_channels
+from .watchers import trace_operators
 from .watchers import LatencyWatcher
 from .watchers import ThroughputWatcher
