@@ -14,7 +14,7 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "benchmarking")
 
-mrc_add_pybind11_module(watchers SOURCE_FILES watchers.cpp)
-mrc_add_pybind11_module(tracers SOURCE_FILES tracers.cpp trace_statistics.cpp)
+mrc_add_pybind11_module(watchers SOURCE_FILES watchers.cpp trace_statistics.cpp)
+#mrc_add_pybind11_module(tracers SOURCE_FILES tracers.cpp trace_statistics.cpp)
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

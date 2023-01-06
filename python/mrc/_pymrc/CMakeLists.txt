@@ -33,6 +33,7 @@ add_library(pymrc
   src/segment_modules.cpp
   src/subscriber.cpp
   src/system.cpp
+  src/tracers.cpp
   src/types.cpp
   src/utilities/deserializers.cpp
   src/utilities/object_cache.cpp
