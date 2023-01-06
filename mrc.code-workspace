@@ -164,6 +164,7 @@
             "editor.tabSize": 2
         },
         "[cpp]": {
+            "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
             "editor.detectIndentation": false,
             "editor.formatOnSave": true,
             "editor.semanticHighlighting.enabled": true,
