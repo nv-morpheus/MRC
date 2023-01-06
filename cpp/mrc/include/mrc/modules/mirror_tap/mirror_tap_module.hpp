@@ -37,6 +37,12 @@ namespace mrc::modules {
 
         MirrorTapModule(std::string module_name, nlohmann::json config);
 
+        std::string get_port_name() const;
+
+        segment::IngressPorts<DataTypeT> create_ingress_ports() const;
+
+        segment::EgressPorts<DataTypeT> create_egress_ports() const;
+
     protected:
         void initialize(segment::Builder &builder) override;
 
@@ -44,6 +50,7 @@ namespace mrc::modules {
 
     private:
         static std::atomic<unsigned int> s_tap_index;
+
         std::string m_egress_name;
     };
 
@@ -51,45 +58,56 @@ namespace mrc::modules {
     std::atomic<unsigned int> MirrorTapModule<DataTypeT>::s_tap_index{0};
 
     template<typename DataTypeT>
-    MirrorTapModule<DataTypeT>::MirrorTapModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
+    MirrorTapModule<DataTypeT>::MirrorTapModule(std::string module_name)
+            : SegmentModule(std::move(module_name)) {
+        m_egress_name = "mirror_tap_" + std::to_string(s_tap_index++);
+    }
 
     template<typename DataTypeT>
     MirrorTapModule<DataTypeT>::MirrorTapModule(std::string module_name, nlohmann::json config) :
-            SegmentModule(std::move(module_name), std::move(config)) {}
+            SegmentModule(std::move(module_name), std::move(config)) {
+        m_egress_name = "mirror_tap_" + std::to_string(s_tap_index++);
+    }
+
+    template<typename DataTypeT>
+    std::string MirrorTapModule<DataTypeT>::get_port_name() const {
+        return m_egress_name;
+    }
+
+    template<typename DataTypeT>
+    [[maybe_unused]] segment::EgressPorts<DataTypeT> MirrorTapModule<DataTypeT>::create_egress_ports() const {
+        return segment::EgressPorts<DataTypeT>({m_egress_name});
+    }
+
+    template<typename DataTypeT>
+    [[maybe_unused]] segment::IngressPorts<DataTypeT> MirrorTapModule<DataTypeT>::create_ingress_ports() const {
+        return segment::IngressPorts<DataTypeT>({m_egress_name});
+    }
 
     template<typename DataTypeT>
     void MirrorTapModule<DataTypeT>::initialize(segment::Builder &builder) {
-        // ********** Process config ************ //
-        if (config().contains("mirror_tap_egress")) {
-            m_egress_name = config()["mirror_tap_egress"];
-        }
-
         // ********** Implementation ************ //
-        auto input =
-                builder.template make_node<DataTypeT>("in",
-                                                      rxcpp::operators::map([](DataTypeT input) { return input; }));
+        auto input = builder.template make_node<DataTypeT>("input",
+                                                           rxcpp::operators::tap([](DataTypeT input) {}));
 
         // Create deep-copy broadcast node.
         auto bcast = std::make_shared<node::Broadcast<DataTypeT>>(true);
 
         builder.make_edge(input, *bcast);
 
-        auto output =
-                builder.template make_node<DataTypeT>("in",
-                                                      rxcpp::operators::map([](DataTypeT input) { return input; }));
+        auto output = builder.template make_node<DataTypeT>("output",
+                                                            rxcpp::operators::tap([](DataTypeT input) {}));
 
-        builder.make_edge(*bcast, output);  // To next stage
         builder.make_edge(*bcast, builder.get_egress<DataTypeT>(m_egress_name));  // to mirror tap
+        builder.make_edge(*bcast, output);  // To next stage
 
         // Register the submodules output as one of this module's outputs
-        register_input_port("in", input);
-        register_output_port("out", output);
+        register_input_port("input", input);
+        register_output_port("output", output);
     }
 
     template<typename DataTypeT>
     std::string MirrorTapModule<DataTypeT>::module_type_name() const {
         return std::string(::mrc::type_name<type_t>());
     }
-
-    static MirrorTapModule<std::string> tap("test", {});
 }  // namespace mrc::modules
