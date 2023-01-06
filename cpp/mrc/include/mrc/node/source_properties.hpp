@@ -239,7 +239,7 @@ class ForwardingEgressProvider : public EgressProvider<T>
             this->on_complete();
         });
 
-        IngressProvider<T>::init_owned_edge(inner_edge);
+        EgressProvider<T>::init_owned_edge(inner_edge);
     }
 
     virtual channel::Status get_next(T& t) = 0;
