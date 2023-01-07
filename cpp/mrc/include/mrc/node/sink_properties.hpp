@@ -20,6 +20,7 @@
 #include "mrc/channel/ingress.hpp"
 #include "mrc/node/channel_holder.hpp"
 #include "mrc/node/edge.hpp"
+#include "mrc/node/edge_builder.hpp"
 #include "mrc/node/edge_registry.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/type_traits.hpp"
@@ -129,7 +130,10 @@ class EgressAcceptor : public virtual SinkProperties<T>, public IEgressAcceptor<
   private:
     void set_egress_obj(std::shared_ptr<EgressHandleObj> egress) override
     {
-        SinkProperties<T>::make_edge_connection(egress);
+        // Do any conversion to the correct type here
+        auto adapted_egress = EdgeBuilder::adapt_egress<T>(egress);
+
+        SinkProperties<T>::make_edge_connection(adapted_egress);
     }
 
     //   private:
@@ -151,9 +155,6 @@ class IngressProvider : public virtual SinkProperties<T>, public IIngressProvide
     {
         return IngressHandleObj::from_typeless(SinkProperties<T>::get_edge_connection());
     }
-
-    //   private:
-    //     using SinkProperties<T>::set_edge;
 };
 
 template <typename T>

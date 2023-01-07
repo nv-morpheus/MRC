@@ -31,7 +31,7 @@ namespace mrc::node {
 
 void EdgeRegistry::register_converter(std::type_index writer_type, std::type_index reader_type, build_fn_t converter)
 {
-    // VLOG(2) << "Registering converter for " << type_name(writer_type) << " " << type_name(reader_type);
+    VLOG(20) << "Registering converter for " << type_name(writer_type) << " " << type_name(reader_type);
     auto readers_map = EdgeRegistry::registered_converters[writer_type];
 
     auto reader_found = readers_map.find(reader_type);

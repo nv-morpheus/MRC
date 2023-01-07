@@ -21,17 +21,9 @@
 #include <gtest/gtest.h>    // IWYU pragma: keep
 #include <stdnoreturn.h>
 
-// __attribute__((__noreturn__)) void test_failures_throw_exceptions()
-// {
-//     throw std::runtime_error("exception rather than std::abort");
-
-//     std::abort();
-// }
-
 int main(int argc, char** argv)
 {
     mrc::init_logging("mrc::test_mrc");
-    // ::google::InstallFailureFunction(&test_failures_throw_exceptions);
     ::testing::InitGoogleTest(&argc, argv);
     ::google::ParseCommandLineFlags(&argc, &argv, true);
     return RUN_ALL_TESTS();

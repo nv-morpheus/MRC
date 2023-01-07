@@ -105,23 +105,4 @@ void RxSource<T, ContextT>::on_kill(const rxcpp::subscription& subscription)
     subscription.unsubscribe();
 }
 
-// template <typename T, typename ContextT>
-// class RxSourceComponent : public EgressProvider<T>
-// {
-//   public:
-//     RxSourceComponent() = default;
-//     RxSourceComponent(rxcpp::observable<T> observable);
-//     ~RxSourceComponent() override = default;
-
-//     void set_observable(rxcpp::observable<T> observable);
-
-//   private:
-//     void on_shutdown_critical_section() final;
-//     void do_subscribe(rxcpp::composite_subscription& subscription) final;
-//     void on_stop(const rxcpp::subscription& subscription) override;
-//     void on_kill(const rxcpp::subscription& subscription) final;
-
-//     rxcpp::observable<T> m_observable;
-// };
-
 }  // namespace mrc::node

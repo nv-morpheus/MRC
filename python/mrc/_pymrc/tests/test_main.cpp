@@ -20,14 +20,6 @@
 #include <gflags/gflags.h>
 #include <gtest/gtest.h>
 
-// NOLINTNEXTLINE(readability-identifier-naming)
-/*
-void TestFailuresThrowExceptions()
-{
-    throw std::runtime_error("exception rather than std::abort");
-}
-*/
-
 int main(int argc, char** argv)
 {
     mrc::init_logging("mrc::test_pymrc");

@@ -121,4 +121,72 @@ std::shared_ptr<IngressHandleObj> EdgeBuilder::do_adapt_ingress(const EdgeTypePa
     throw mrc::exceptions::MrcRuntimeError("No conversion found from X to Y");
 }
 
+std::shared_ptr<EgressHandleObj> EdgeBuilder::do_adapt_egress(const EdgeTypePair& target_type,
+                                                              std::shared_ptr<EgressHandleObj> egress)
+{
+    // TODO(MDD): Not implemented yet
+    LOG(WARNING) << "Egress adaptors are not implemented yet. Returing identical object";
+    return egress;
+
+    // // Short circuit if we are already there
+    // if (target_type.full_type() == egress->get_type().full_type())
+    // {
+    //     return egress;
+    // }
+
+    // // Next check the static converters
+    // if (mrc::node::EdgeRegistry::has_converter(target_type.full_type(), egress->get_type().full_type()))
+    // {
+    //     try
+    //     {
+    //         auto fn_converter =
+    //             mrc::node::EdgeRegistry::find_converter(target_type.full_type(), egress->get_type().full_type());
+
+    //         auto converted_edge = fn_converter(egress->get_egress());
+
+    //         return std::make_shared<EgressHandleObj>(converted_edge);
+    //     } catch (std::runtime_error e)
+    //     {
+    //         // Last attempt, check if types are the same and return egress handle.
+    //         if (target_type.full_type() == egress->get_type().full_type())
+    //         {
+    //             return egress;
+    //         }
+
+    //         throw e;
+    //     }
+    // }
+
+    // // Start dynamic lookup
+    // VLOG(2) << "Looking for edge adapter: (" << type_name(target_type.full_type()) << ", "
+    //         << type_name(egress->get_type().full_type()) << ")";
+    // VLOG(2) << "- (" << target_type.full_type().hash_code() << ", " << egress->get_type().full_type().hash_code()
+    //         << ")";
+
+    // // Loop over the registered adaptors
+    // const auto& adaptors = EdgeAdapterRegistry::registered_egress_adapters;
+
+    // for (const auto& adapt : adaptors)
+    // {
+    //     // Try the adaptor out
+    //     auto adapt_out = adapt(target_type, egress->get_egress());
+
+    //     if (adapt_out)
+    //     {
+    //         // Check that the adaptor didnt return the same thing
+    //         if (adapt_out->get_type().full_type() == egress->get_type().full_type())
+    //         {
+    //             LOG(WARNING) << "Adaptor returned the same type as the input. Adaptors should return nullptr if the "
+    //                             "conversion is not supported. Skipping this adaptor";
+    //             continue;
+    //         }
+
+    //         return adapt_out;
+    //     }
+    // }
+
+    // // Unfortunately, no converter was found
+    // throw mrc::exceptions::MrcRuntimeError("No conversion found from X to Y");
+}
+
 }  // namespace mrc::node

@@ -64,6 +64,9 @@ struct EdgeBuilder final
     template <typename T>
     static std::shared_ptr<IngressHandleObj> adapt_ingress(std::shared_ptr<IngressHandleObj> ingress);
 
+    template <typename T>
+    static std::shared_ptr<EgressHandleObj> adapt_egress(std::shared_ptr<EgressHandleObj> ingress);
+
     /**
      * @brief Attempt to look-up a registered ingress adapter for the given source type and sink properties. If one
      * exists, use it, otherwise fall back to default.
@@ -180,6 +183,9 @@ struct EdgeBuilder final
   private:
     static std::shared_ptr<IngressHandleObj> do_adapt_ingress(const EdgeTypePair& target_type,
                                                               std::shared_ptr<IngressHandleObj> ingress);
+
+    static std::shared_ptr<EgressHandleObj> do_adapt_egress(const EdgeTypePair& target_type,
+                                                            std::shared_ptr<EgressHandleObj> ingress);
 };
 
 template <typename SourceT, typename SinkT>
@@ -380,6 +386,39 @@ std::shared_ptr<IngressHandleObj> EdgeBuilder::adapt_ingress(std::shared_ptr<Ing
 
     // Set to the source
     return adapted_ingress;
+}
+
+template <typename T>
+std::shared_ptr<EgressHandleObj> EdgeBuilder::adapt_egress(std::shared_ptr<EgressHandleObj> egress)
+{
+    // // Check if the incoming handle object is dynamic
+    // if (egress->is_deferred())
+    // {
+    //     // Cast to a defferred ingress object
+    //     auto deferred_ingress = std::dynamic_pointer_cast<DeferredEgressHandleObj>(egress);
+
+    //     CHECK(deferred_ingress) << "Deferred ingress object must derive from DeferredEgressHandleObj";
+
+    //     auto deferred_edge = std::make_shared<DeferredReadableMultiEdge<T>>();
+
+    //     // Create a new edge and update the ingress
+    //     // ingress = deferred_ingress->make_deferred_edge<T>();
+    //     egress = deferred_ingress->set_deferred_edge(deferred_edge);
+    // }
+
+    auto target_type = EdgeTypePair::create<T>();
+
+    // Now try and loop over any egress adaptors for the source
+    auto adapted_egress = EdgeBuilder::do_adapt_egress(target_type, egress);
+
+    // Try it again in case we need a source adaptor then a sink adaptor (Short circuits if we are already there)
+    adapted_egress = EdgeBuilder::do_adapt_egress(target_type, adapted_egress);
+
+    // Convert if neccessary
+    // auto egress_adapted = EdgeBuilder::egress_adapter_for_sink(source, sink, egress);
+
+    // Set to the source
+    return adapted_egress;
 }
 
 }  // namespace mrc::node

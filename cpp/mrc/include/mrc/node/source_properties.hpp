@@ -180,8 +180,6 @@ class IngressAcceptor : public virtual SourceProperties<T>, public IIngressAccep
 
         SourceProperties<T>::make_edge_connection(adapted_ingress);
     }
-
-    // using SourceProperties<T>::set_edge;
 };
 
 template <typename T, typename KeyT>

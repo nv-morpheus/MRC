@@ -183,7 +183,6 @@ TEST_F(TestRPC, StreamingServerWithHandler)
 
     auto stream  = std::make_shared<stream_server_t>(service_init, m_resources->partition(0).runnable());
     auto handler = std::make_unique<ServerHandler>();
-    // handler->enable_persistence();
     stream->attach_to(*handler);
 
     auto handler_runner =
@@ -226,7 +225,6 @@ TEST_F(TestRPC, StreamingPingPong)
 
     auto stream  = std::make_shared<stream_server_t>(service_init, m_resources->partition(0).runnable());
     auto handler = std::make_unique<ServerHandler>();
-    // handler->enable_persistence();
     stream->attach_to(*handler);
 
     auto handler_runner =
@@ -297,7 +295,6 @@ TEST_F(TestRPC, StreamingPingPongEarlyServerFinish)
 
     auto stream  = std::make_shared<stream_server_t>(service_init, m_resources->partition(0).runnable());
     auto handler = std::make_unique<ServerHandler>();
-    // handler->enable_persistence();
     stream->attach_to(*handler);
 
     auto handler_runner =
@@ -386,7 +383,6 @@ TEST_F(TestRPC, StreamingPingPongEarlyServerCancel)
 
     auto stream  = std::make_shared<stream_server_t>(service_init, m_resources->partition(0).runnable());
     auto handler = std::make_unique<ServerHandler>();
-    // handler->enable_persistence();
     stream->attach_to(*handler);
 
     auto handler_runner =
@@ -476,7 +472,6 @@ TEST_F(TestRPC, StreamingPingPongClientEarlyTermination)
 
     auto stream  = std::make_shared<stream_server_t>(service_init, m_resources->partition(0).runnable());
     auto handler = std::make_unique<ServerHandler>();
-    // handler->enable_persistence();
     stream->attach_to(*handler);
 
     auto handler_runner =

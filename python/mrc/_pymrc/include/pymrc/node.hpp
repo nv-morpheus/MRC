@@ -66,7 +66,6 @@ class ConvertingEdgeWritable<SourceT,
     // We need to hold the GIL here, because casting from c++ -> pybind11::object allocates memory with Py_Malloc.
     // Its also important to note that you do not want to hold the GIL when calling m_output->await_write, as
     // that can trigger a deadlock with another fiber reading from the end of the channel
-
     channel::Status await_write(source_t&& data) final
     {
         pymrc::PyHolder py_data;
@@ -94,7 +93,6 @@ struct ConvertingEdgeWritable<
 
     // We don't hold the GIL in any of the *_write because we are explciitly releasing object's pointer, and casting it
     // to a c++ data type.
-
     channel::Status await_write(source_t&& data) override
     {
         sink_t _data;
@@ -125,7 +123,6 @@ struct ConvertingEdgeWritable<pymrc::PyObjectHolder, pybind11::object, void>
     // We need to hold the GIL here, because casting from c++ -> pybind11::object allocates memory with Py_Malloc.
     // Its also important to note that you do not want to hold the GIL when calling m_output->await_write, as
     // that can trigger a deadlock with another fiber reading from the end of the channel
-
     channel::Status await_write(source_t&& data) final
     {
         pymrc::AcquireGIL gil;
@@ -298,35 +295,7 @@ class PythonSourceComponent : public node::LambdaSourceComponent<OutputT>,
     using base_t = node::LambdaSourceComponent<OutputT>;
 
     using base_t::base_t;
-
-    //   public:
-    //     using subscriber_fn_t = std::function<void(rxcpp::subscriber<OutputT>& sub)>;
-
-    //     PythonSourceComponent(const subscriber_fn_t& f) :
-    //       base_t(rxcpp::observable<>::create<OutputT>([f](rxcpp::subscriber<OutputT>& s) {
-    //           // Call the wrapped subscriber function
-    //           f(s);
-    //       }))
-    //     {}
 };
-
-// template <typename OutputT>
-// class PythonSourceComponent : public node::RxSourceComponent<OutputT>,
-//                               public pymrc::AutoRegSourceAdapter<OutputT>,
-//                               public pymrc::AutoRegIngressPort<OutputT>
-// {
-//     using base_t = node::RxSource<OutputT>;
-
-//   public:
-//     using subscriber_fn_t = std::function<void(rxcpp::subscriber<OutputT>& sub)>;
-
-//     PythonSourceComponent(const subscriber_fn_t& f) :
-//       base_t(rxcpp::observable<>::create<OutputT>([f](rxcpp::subscriber<OutputT>& s) {
-//           // Call the wrapped subscriber function
-//           f(s);
-//       }))
-//     {}
-// };
 
 class SegmentObjectProxy
 {

@@ -30,20 +30,13 @@
             }
         }
     },
+    "hostRequirements": {
+        "gpu": true
+    },
     "name": "mrc-dev",
     "overrideCommand": true, // infinite loop of sleeps,
-    // "postStartCommand": ".devcontainer/scripts/post_start.sh",
     "remoteUser": "${localEnv:USER}",
-    // todo(252)
-    // new capability with vs code 1.74 (November 2022 Release)
-    // https://github.com/microsoft/vscode-docs/blob/main/remote-release-notes/v1_74.md#gpu-host-requirement
-    // enable this after more testing is conducted
-    // "hostRequirements": {
-    //     "gpu": true
-    // },
     "runArgs": [
-        "--gpus=all",
-        "--runtime=nvidia",
         "--network=host",
         "--cap-add=SYS_PTRACE",
         "--cap-add=SYS_NICE",

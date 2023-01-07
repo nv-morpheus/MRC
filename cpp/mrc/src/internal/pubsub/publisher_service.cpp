@@ -48,17 +48,6 @@ PublisherService::PublisherService(std::string service_name, runtime::Partition&
   m_runtime(runtime)
 {}
 
-// channel::Status PublisherService::publish(mrc::runtime::RemoteDescriptor&& rd)
-// {
-//     return this->await_write(std::move(rd));
-// }
-
-// channel::Status PublisherService::publish(std::unique_ptr<mrc::codable::EncodedStorage> encoded_object)
-// {
-//     auto rd = m_runtime.remote_descriptor_manager().register_encoded_object(std::move(encoded_object));
-//     return this->await_write(std::move(rd));
-// }
-
 std::unique_ptr<mrc::codable::ICodableStorage> PublisherService::create_storage()
 {
     return std::make_unique<codable::CodableStorage>(m_runtime.resources());

@@ -86,30 +86,6 @@ struct PyFuncHolder<ReturnT(ArgsT...)>
     // Default construct with an empty object. Needed by pybind11 casters
     PyFuncHolder() = default;
 
-    // PyFuncHolder(cpp_fn_t&& cpp_fn, std::string repr) : m_cpp_fn(std::move(cpp_fn)), m_repr(std::move(repr)) {}
-
-    // explicit PyFuncHolder(pybind11::function&& fn)
-    // {
-    //     // Save the name of the function to help debugging
-    //     if (fn)
-    //     {
-    //         m_repr = pybind11::str(fn);
-    //     }
-    //     m_cpp_fn = this->build_cpp_function(std::move(fn));
-    // }
-
-    // PyFuncHolder(const PyFuncHolder& other)
-    // {
-    //     operator=(other);
-    // }
-
-    // PyFuncHolder& operator=(const PyFuncHolder& other)
-    // {
-    //     m_cpp_fn = other.m_cpp_fn;
-    //     m_repr = other.m_repr;
-    //     return *this;
-    // }
-
     // Object is default copyable and moveable
     PyFuncHolder(const PyFuncHolder&)            = default;
     PyFuncHolder& operator=(const PyFuncHolder&) = default;

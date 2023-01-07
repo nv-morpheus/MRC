@@ -25,19 +25,9 @@
 #include <csignal>
 #include <stdexcept>
 
-// __attribute__((__noreturn__)) void test_failures_throw_exceptions()
-// {
-//     // Generate an interrupt
-//     std::raise(SIGINT);
-//     // throw std::runtime_error("exception rather than std::abort");
-
-//     std::abort();
-// }
-
 int main(int argc, char** argv)
 {
     mrc::init_logging("mrc::test_mrc_private");
-    // ::google::InstallFailureFunction(&TestFailuresThrowExceptions);
     ::testing::InitGoogleTest(&argc, argv);
     ::google::ParseCommandLineFlags(&argc, &argv, true);
     return RUN_ALL_TESTS();

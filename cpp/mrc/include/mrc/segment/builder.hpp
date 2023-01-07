@@ -379,13 +379,6 @@ class Builder final
   private:
     using sp_segment_module_t = std::shared_ptr<mrc::modules::SegmentModule>;
 
-    // template <typename SinkNodeT>
-    // void internal_make_edge(std::shared_ptr<segment::ObjectProperties> source,
-    //                         std::shared_ptr<segment::ObjectProperties> sink)
-    // {
-
-    // }
-
     std::string m_namespace_prefix;
     std::vector<std::string> m_namespace_stack{};
     std::vector<sp_segment_module_t> m_module_stack{};

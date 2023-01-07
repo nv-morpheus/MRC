@@ -27,7 +27,6 @@
 #include "mrc/node/edge_channel.hpp"
 #include "mrc/node/edge_properties.hpp"
 #include "mrc/node/forward.hpp"
-#include "mrc/node/sink_channel_base.hpp"
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/utils/type_utils.hpp"
 
