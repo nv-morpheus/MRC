@@ -23,6 +23,8 @@ fetch_base_branch
 update_conda_env
 
 rapids-logger "Configuring CMake"
+git submodule init
+git submodule update
 cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} .
 
 rapids-logger "Building targets that generate source code"
