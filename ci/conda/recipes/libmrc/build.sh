@@ -87,6 +87,9 @@ fi
 echo "PYTHON: ${PYTHON}"
 echo "which python: $(which python)"
 
+git submodule init
+git submodule update
+
 # Run configure
 cmake -B ${BUILD_DIR} \
    ${CMAKE_ARGS} \
