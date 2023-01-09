@@ -18,6 +18,7 @@
 #pragma once
 
 #include "pymrc/tracers.hpp"
+
 #include "mrc/benchmarking/segment_watcher.hpp"
 
 #include <pybind11/pytypes.h>  // for object, dict
@@ -27,13 +28,13 @@
 #include <string>
 
 namespace mrc::segment {
-    class Builder;
+class Builder;
 
-    struct ObjectProperties;
+struct ObjectProperties;
 }  // namespace mrc::segment
 
 namespace mrc::pymrc {
-    class Executor;
+class Executor;
 }
 
 namespace mrc::pymrc {
@@ -41,69 +42,69 @@ namespace mrc::pymrc {
 // Export everything in the mrc::pymrc namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
 
-    using latency_ensemble_t = mrc::benchmarking::TracerEnsemble<pybind11::object, mrc::benchmarking::LatencyTracer>;
-    using latency_watcher_t = mrc::benchmarking::SegmentWatcher<latency_ensemble_t>;
+using latency_ensemble_t = mrc::benchmarking::TracerEnsemble<pybind11::object, mrc::benchmarking::LatencyTracer>;
+using latency_watcher_t = mrc::benchmarking::SegmentWatcher<latency_ensemble_t>;
 
-    using throughput_ensemble_t = mrc::benchmarking::TracerEnsemble<pybind11::object, mrc::benchmarking::ThroughputTracer>;
-    using throughput_watcher_t = mrc::benchmarking::SegmentWatcher<throughput_ensemble_t>;
+using throughput_ensemble_t = mrc::benchmarking::TracerEnsemble<pybind11::object, mrc::benchmarking::ThroughputTracer>;
+using throughput_watcher_t = mrc::benchmarking::SegmentWatcher<throughput_ensemble_t>;
 
-    class LatencyWatcher : public latency_watcher_t {
-    public:
-        LatencyWatcher(std::shared_ptr<pymrc::Executor> executor);
+class LatencyWatcher : public latency_watcher_t {
+public:
+    LatencyWatcher(std::shared_ptr<pymrc::Executor> executor);
 
-        LatencyWatcher(std::shared_ptr<pymrc::Executor> executor,
-                       std::function<void(latency_ensemble_t &)> payload_init);
+    LatencyWatcher(std::shared_ptr<pymrc::Executor> executor,
+                   std::function<void(latency_ensemble_t &)> payload_init);
 
-        void make_segment(const std::string &name,
-                          const std::function<void(mrc::segment::Builder &, LatencyWatcher &)> &init);
+    void make_segment(const std::string &name,
+                      const std::function<void(mrc::segment::Builder &, LatencyWatcher &)> &init);
 
-        std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_source(mrc::segment::Builder &seg,
-                                                                           const std::string &name,
-                                                                           bool force_sequential = false);
+    std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_source(mrc::segment::Builder &seg,
+                                                                       const std::string &name,
+                                                                       bool force_sequential = false);
 
-        std::shared_ptr<mrc::segment::ObjectProperties> make_traced_node(
-                mrc::segment::Builder &seg,
-                const std::string &name,
-                std::function<pybind11::object(pybind11::object py_obj)> map_f);
+    std::shared_ptr<mrc::segment::ObjectProperties> make_traced_node(
+            mrc::segment::Builder &seg,
+            const std::string &name,
+            std::function<pybind11::object(pybind11::object py_obj)> map_f);
 
-        std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_sink(
-                mrc::segment::Builder &seg, const std::string &name,
-                std::function<void(pybind11::object py_obj)> sink_f);
+    std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_sink(
+            mrc::segment::Builder &seg, const std::string &name,
+            std::function<void(pybind11::object py_obj)> sink_f);
 
-        pybind11::dict aggregate_tracers_as_pydict();
+    pybind11::dict aggregate_tracers_as_pydict();
 
-    private:
-        std::shared_ptr<pymrc::Executor> m_executor;
-    };
+private:
+    std::shared_ptr<pymrc::Executor> m_executor;
+};
 
-    class ThroughputWatcher : public throughput_watcher_t {
-    public:
-        ThroughputWatcher(std::shared_ptr<pymrc::Executor> executor);
+class ThroughputWatcher : public throughput_watcher_t {
+public:
+    ThroughputWatcher(std::shared_ptr<pymrc::Executor> executor);
 
-        ThroughputWatcher(std::shared_ptr<pymrc::Executor> executor,
-                          std::function<void(throughput_ensemble_t &)> payload_init);
+    ThroughputWatcher(std::shared_ptr<pymrc::Executor> executor,
+                      std::function<void(throughput_ensemble_t &)> payload_init);
 
-        void make_segment(const std::string &name,
-                          const std::function<void(mrc::segment::Builder &, ThroughputWatcher &)> &init);
+    void make_segment(const std::string &name,
+                      const std::function<void(mrc::segment::Builder &, ThroughputWatcher &)> &init);
 
-        std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_source(mrc::segment::Builder &seg,
-                                                                           const std::string &name,
-                                                                           bool force_sequential = false);
+    std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_source(mrc::segment::Builder &seg,
+                                                                       const std::string &name,
+                                                                       bool force_sequential = false);
 
-        std::shared_ptr<mrc::segment::ObjectProperties> make_traced_node(
-                mrc::segment::Builder &seg,
-                const std::string &name,
-                std::function<pybind11::object(pybind11::object py_obj)> map_f);
+    std::shared_ptr<mrc::segment::ObjectProperties> make_traced_node(
+            mrc::segment::Builder &seg,
+            const std::string &name,
+            std::function<pybind11::object(pybind11::object py_obj)> map_f);
 
-        std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_sink(
-                mrc::segment::Builder &seg, const std::string &name,
-                std::function<void(pybind11::object py_obj)> sink_f);
+    std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_sink(
+            mrc::segment::Builder &seg, const std::string &name,
+            std::function<void(pybind11::object py_obj)> sink_f);
 
-        pybind11::dict aggregate_tracers_as_pydict();
+    pybind11::dict aggregate_tracers_as_pydict();
 
-    private:
-        std::shared_ptr<pymrc::Executor> m_executor;
-    };
+private:
+    std::shared_ptr<pymrc::Executor> m_executor;
+};
 
 #pragma GCC visibility pop
 }  // namespace mrc::pymrc
