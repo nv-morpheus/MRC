@@ -124,6 +124,7 @@ class Builder final
     std::shared_ptr<Object<ObjectT>> construct_object(std::string name, ArgsT&&... args)
     {
         auto ns_name = m_namespace_prefix.empty() ? name : m_namespace_prefix + "/" + name;
+        std::cerr << "Creating object: " << ns_name << std::endl;
         auto uptr    = std::make_unique<ObjectT>(std::forward<ArgsT>(args)...);
 
         ::add_stats_watcher_if_rx_source(*uptr, ns_name);

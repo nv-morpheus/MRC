@@ -23,6 +23,7 @@ add_executable(test_mrc
   modules/test_module_registry.cpp
   modules/test_module_util.cpp
   modules/test_segment_modules.cpp
+  modules/test_stream_buffer_module.cpp
   test_channel.cpp
   test_executor.cpp
   test_main.cpp
