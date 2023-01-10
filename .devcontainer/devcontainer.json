@@ -33,6 +33,10 @@
     "hostRequirements": {
         "gpu": true
     },
+    "mounts": [
+        "source=${localWorkspaceFolder}/.devcontainer/home/.gdbinit,target=/home/${localEnv:USER}/.gdbinit,type=bind",
+        "source=${localWorkspaceFolder}/.devcontainer/home/.config/gdb,target=/home/${localEnv:USER}/.config/gdb,type=bind",
+    ],
     "name": "mrc-dev",
     "overrideCommand": true, // infinite loop of sleeps,
     "remoteUser": "${localEnv:USER}",
