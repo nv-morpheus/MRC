@@ -29,8 +29,8 @@ doxygen --version
 show_conda_info
 
 rapids-logger "Configuring for docs"
+git submodule update --init --recursive
 cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} -DMRC_BUILD_DOCS=ON .
-
 
 rapids-logger "Building docs"
 cmake --build build --target mrc_docs

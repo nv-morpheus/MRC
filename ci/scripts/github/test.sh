@@ -35,6 +35,7 @@ rapids-logger "Installing MRC"
 cmake -P ${MRC_ROOT}/build/cmake_install.cmake
 pip install ${MRC_ROOT}/build/python
 
+git submodule update --init --recursive
 cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} .
 
 
