@@ -49,8 +49,13 @@ struct EdgeAdapterRegistry
     using ingress_converter_fn_t =
         std::function<std::shared_ptr<IEdgeWritableBase>(std::shared_ptr<IEdgeWritableBase>)>;
 
+    using egress_converter_fn_t = std::function<std::shared_ptr<IEdgeReadableBase>(std::shared_ptr<IEdgeReadableBase>)>;
+
     using ingress_adapter_fn_t = std::function<std::shared_ptr<node::IngressHandleObj>(
         const node::EdgeTypePair&, std::shared_ptr<node::IEdgeWritableBase>)>;
+
+    using egress_adapter_fn_t = std::function<std::shared_ptr<node::EgressHandleObj>(
+        const node::EdgeTypePair&, std::shared_ptr<node::IEdgeReadableBase>)>;
 
     EdgeAdapterRegistry() = delete;
 
@@ -59,18 +64,32 @@ struct EdgeAdapterRegistry
                                            std::type_index output_type,
                                            ingress_converter_fn_t converter_fn);
 
+    static void register_egress_converter(std::type_index input_type,
+                                          std::type_index output_type,
+                                          egress_converter_fn_t converter_fn);
+
     static bool has_ingress_converter(std::type_index input_type, std::type_index output_type);
+
+    static bool has_egress_converter(std::type_index input_type, std::type_index output_type);
 
     static ingress_converter_fn_t find_ingress_converter(std::type_index input_type, std::type_index output_type);
 
+    static egress_converter_fn_t find_egress_converter(std::type_index input_type, std::type_index output_type);
+
     static void register_ingress_adapter(ingress_adapter_fn_t adapter_fn);
+
+    static void register_egress_adapter(egress_adapter_fn_t adapter_fn);
 
     static const std::vector<ingress_adapter_fn_t>& get_ingress_adapters();
 
+    static const std::vector<egress_adapter_fn_t>& get_egress_adapters();
+
   private:
     static std::map<std::type_index, std::map<std::type_index, ingress_converter_fn_t>> registered_ingress_converters;
+    static std::map<std::type_index, std::map<std::type_index, egress_converter_fn_t>> registered_egress_converters;
 
     static std::vector<ingress_adapter_fn_t> registered_ingress_adapters;
+    static std::vector<egress_adapter_fn_t> registered_egress_adapters;
 
     static std::recursive_mutex s_mutex;
 };

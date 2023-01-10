@@ -222,6 +222,56 @@ class SinkDerivedB : public pymrc::PythonSink<std::shared_ptr<DerivedB>>
     SinkDerivedB() : PythonSink(build()) {}
 };
 
+class SourceComponentBase : public pymrc::PythonSourceComponent<std::shared_ptr<Base>>
+{
+  public:
+    using base_t = pymrc::PythonSourceComponent<std::shared_ptr<Base>>;
+
+    SourceComponentBase() : PythonSourceComponent(build()) {}
+
+  private:
+    base_t::get_data_fn_t build()
+    {
+        return [this](std::shared_ptr<Base>& output) {
+            if (m_count++ < 3)
+            {
+                output = std::make_shared<Base>();
+
+                return channel::Status::success;
+            }
+
+            return channel::Status::closed;
+        };
+    }
+
+    size_t m_count{0};
+};
+
+class SourceComponentDerivedA : public pymrc::PythonSourceComponent<std::shared_ptr<DerivedA>>
+{
+  public:
+    using base_t = pymrc::PythonSourceComponent<std::shared_ptr<DerivedA>>;
+
+    SourceComponentDerivedA() : PythonSourceComponent(build()) {}
+
+  private:
+    base_t::get_data_fn_t build()
+    {
+        return [this](std::shared_ptr<DerivedA>& output) {
+            if (m_count++ < 3)
+            {
+                output = std::make_shared<DerivedA>();
+
+                return channel::Status::success;
+            }
+
+            return channel::Status::closed;
+        };
+    }
+
+    size_t m_count{0};
+};
+
 class NodeComponentBase : public pymrc::PythonNodeComponent<std::shared_ptr<Base>, std::shared_ptr<Base>>
 {
   public:
@@ -367,6 +417,28 @@ PYBIND11_MODULE(test_edges_cpp, module)
                std::shared_ptr<segment::Object<SinkDerivedB>>>(module, "SinkDerivedB")
         .def(py::init<>([](segment::Builder& parent, const std::string& name) {
                  auto stage = parent.construct_object<SinkDerivedB>(name);
+
+                 return stage;
+             }),
+             py::arg("parent"),
+             py::arg("name"));
+
+    py::class_<segment::Object<SourceComponentBase>,
+               mrc::segment::ObjectProperties,
+               std::shared_ptr<segment::Object<SourceComponentBase>>>(module, "SourceComponentBase")
+        .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name) {
+                 auto stage = parent.construct_object<SourceComponentBase>(name);
+
+                 return stage;
+             }),
+             py::arg("parent"),
+             py::arg("name"));
+
+    py::class_<segment::Object<SourceComponentDerivedA>,
+               mrc::segment::ObjectProperties,
+               std::shared_ptr<segment::Object<SourceComponentDerivedA>>>(module, "SourceComponentDerivedA")
+        .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name) {
+                 auto stage = parent.construct_object<SourceComponentDerivedA>(name);
 
                  return stage;
              }),

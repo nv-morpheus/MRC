@@ -871,6 +871,16 @@ TEST_F(TestEdges, SourceToBroadcastToSinkComponents)
     source->run();
 }
 
+TEST_F(TestEdges, SourceComponentDoubleToSinkFloat)
+{
+    auto source = std::make_shared<node::TestSourceComponent<double>>();
+    auto sink   = std::make_shared<node::TestSink<float>>();
+
+    node::make_edge(*source, *sink);
+
+    sink->run();
+}
+
 TEST_F(TestEdges, CombineLatest)
 {
     auto source1 = std::make_shared<node::TestSource<int>>();

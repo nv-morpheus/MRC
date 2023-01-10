@@ -60,11 +60,6 @@ namespace mrc::pymrc {
  */
 struct EdgeAdapterUtil
 {
-    using source_adapter_fn_t = std::function<std::shared_ptr<node::IEdgeWritableBase>(
-        mrc::node::SourcePropertiesBase&, mrc::node::SinkPropertiesBase&, std::shared_ptr<node::IEdgeWritableBase>)>;
-    using sink_adapter_fn_t   = std::function<std::shared_ptr<node::IEdgeWritableBase>(
-        std::type_index, mrc::node::SinkPropertiesBase&, std::shared_ptr<node::IEdgeWritableBase> ingress_handle)>;
-
     using ingress_adapter_fn_t = node::EdgeAdapterRegistry::ingress_adapter_fn_t;
 
     template <typename DataTypeT>

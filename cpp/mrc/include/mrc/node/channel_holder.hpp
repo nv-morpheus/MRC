@@ -366,65 +366,65 @@ class IEdgeReadable : public virtual EdgeHandle<T>, public IEdgeReadableBase
     virtual channel::Status await_read(T& t) = 0;
 };
 
-template <typename SourceT, typename SinkT = SourceT>
-class ConvertingEdgeWritableBase : public IEdgeWritable<SourceT>
+template <typename InputT, typename OutputT = InputT>
+class ConvertingEdgeWritableBase : public IEdgeWritable<InputT>
 {
   public:
-    using source_t = SourceT;
-    using sink_t   = SinkT;
+    using input_t  = InputT;
+    using output_t = OutputT;
 
-    ConvertingEdgeWritableBase(std::shared_ptr<IEdgeWritable<SinkT>> downstream) : m_downstream(downstream)
+    ConvertingEdgeWritableBase(std::shared_ptr<IEdgeWritable<OutputT>> downstream) : m_downstream(downstream)
     {
         this->add_linked_edge(downstream);
     }
 
   protected:
-    inline IEdgeWritable<SinkT>& downstream() const
+    inline IEdgeWritable<OutputT>& downstream() const
     {
         return *m_downstream;
     }
 
   private:
-    std::shared_ptr<IEdgeWritable<SinkT>> m_downstream{};
+    std::shared_ptr<IEdgeWritable<OutputT>> m_downstream{};
 };
 
-template <typename SourceT, typename SinkT = SourceT>
-class ConvertingEdgeReadableBase : public IEdgeReadable<SinkT>
+template <typename InputT, typename OutputT = InputT>
+class ConvertingEdgeReadableBase : public IEdgeReadable<OutputT>
 {
   public:
-    using source_t = SourceT;
-    using sink_t   = SinkT;
+    using input_t  = InputT;
+    using output_t = OutputT;
 
-    ConvertingEdgeReadableBase(std::shared_ptr<IEdgeReadable<SourceT>> upstream) : m_upstream(upstream)
+    ConvertingEdgeReadableBase(std::shared_ptr<IEdgeReadable<InputT>> upstream) : m_upstream(upstream)
     {
         this->add_linked_edge(upstream);
     }
 
   protected:
-    inline IEdgeReadable<SourceT>& upstream() const
+    inline IEdgeReadable<InputT>& upstream() const
     {
         return *m_upstream;
     }
 
   private:
-    std::shared_ptr<IEdgeReadable<SourceT>> m_upstream{};
+    std::shared_ptr<IEdgeReadable<InputT>> m_upstream{};
 };
 
 template <typename SourceT, typename SinkT = SourceT, typename EnableT = void>
 class ConvertingEdgeWritable;
 
-template <typename SourceT, typename SinkT>
-class ConvertingEdgeWritable<SourceT, SinkT, std::enable_if_t<std::is_convertible_v<SourceT, SinkT>>>
-  : public ConvertingEdgeWritableBase<SourceT, SinkT>
+template <typename InputT, typename OutputT>
+class ConvertingEdgeWritable<InputT, OutputT, std::enable_if_t<std::is_convertible_v<InputT, OutputT>>>
+  : public ConvertingEdgeWritableBase<InputT, OutputT>
 {
   public:
-    using base_t = ConvertingEdgeWritableBase<SourceT, SinkT>;
-    using typename base_t::sink_t;
-    using typename base_t::source_t;
+    using base_t = ConvertingEdgeWritableBase<InputT, OutputT>;
+    using typename base_t::input_t;
+    using typename base_t::output_t;
 
-    using base_t::ConvertingEdgeWritableBase;
+    using base_t::base_t;
 
-    channel::Status await_write(source_t&& data) override
+    channel::Status await_write(input_t&& data) override
     {
         return this->downstream().await_write(std::move(data));
     }
@@ -433,20 +433,20 @@ class ConvertingEdgeWritable<SourceT, SinkT, std::enable_if_t<std::is_convertibl
 template <typename SourceT, typename SinkT = SourceT, typename EnableT = void>
 class ConvertingEdgeReadable;
 
-template <typename SourceT, typename SinkT>
-class ConvertingEdgeReadable<SourceT, SinkT, std::enable_if_t<std::is_convertible_v<SourceT, SinkT>>>
-  : public ConvertingEdgeReadableBase<SourceT, SinkT>
+template <typename InputT, typename OutputT>
+class ConvertingEdgeReadable<InputT, OutputT, std::enable_if_t<std::is_convertible_v<InputT, OutputT>>>
+  : public ConvertingEdgeReadableBase<InputT, OutputT>
 {
   public:
-    using base_t = ConvertingEdgeReadableBase<SourceT, SinkT>;
-    using typename base_t::sink_t;
-    using typename base_t::source_t;
+    using base_t = ConvertingEdgeReadableBase<InputT, OutputT>;
+    using typename base_t::input_t;
+    using typename base_t::output_t;
 
-    using base_t::ConvertingEdgeReadableBase;
+    using base_t::base_t;
 
-    channel::Status await_read(SinkT& data) override
+    channel::Status await_read(OutputT& data) override
     {
-        SourceT source_data;
+        InputT source_data;
         auto ret_val = this->upstream().await_read(source_data);
 
         // Convert to the sink type
@@ -454,32 +454,23 @@ class ConvertingEdgeReadable<SourceT, SinkT, std::enable_if_t<std::is_convertibl
 
         return ret_val;
     }
-
-  protected:
-    inline IEdgeReadable<SourceT>& upstream() const
-    {
-        return *m_upstream;
-    }
-
-  private:
-    std::shared_ptr<IEdgeReadable<SourceT>> m_upstream{};
 };
 
-template <typename SourceT, typename SinkT>
-class LambdaConvertingEdgeWritable : public ConvertingEdgeWritableBase<SourceT, SinkT>
+template <typename InputT, typename OutputT>
+class LambdaConvertingEdgeWritable : public ConvertingEdgeWritableBase<InputT, OutputT>
 {
   public:
-    using base_t = ConvertingEdgeWritableBase<SourceT, SinkT>;
-    using typename base_t::sink_t;
-    using typename base_t::source_t;
-    using lambda_fn_t = std::function<sink_t(source_t&&)>;
+    using base_t = ConvertingEdgeWritableBase<InputT, OutputT>;
+    using typename base_t::input_t;
+    using typename base_t::output_t;
+    using lambda_fn_t = std::function<output_t(input_t&&)>;
 
-    LambdaConvertingEdgeWritable(lambda_fn_t lambda_fn, std::shared_ptr<IEdgeWritable<sink_t>> downstream) :
-      ConvertingEdgeWritableBase<source_t, sink_t>(downstream),
+    LambdaConvertingEdgeWritable(lambda_fn_t lambda_fn, std::shared_ptr<IEdgeWritable<output_t>> downstream) :
+      ConvertingEdgeWritableBase<input_t, output_t>(downstream),
       m_lambda_fn(std::move(lambda_fn))
     {}
 
-    channel::Status await_write(source_t&& data) override
+    channel::Status await_write(input_t&& data) override
     {
         return this->downstream().await_write(m_lambda_fn(std::move(data)));
     }
@@ -488,23 +479,23 @@ class LambdaConvertingEdgeWritable : public ConvertingEdgeWritableBase<SourceT, 
     lambda_fn_t m_lambda_fn{};
 };
 
-template <typename SourceT, typename SinkT>
-class LambdaConvertingEdgeReadable : public ConvertingEdgeReadableBase<SourceT, SinkT>
+template <typename InputT, typename OutputT>
+class LambdaConvertingEdgeReadable : public ConvertingEdgeReadableBase<InputT, OutputT>
 {
   public:
-    using base_t = ConvertingEdgeReadableBase<SourceT, SinkT>;
-    using typename base_t::sink_t;
-    using typename base_t::source_t;
-    using lambda_fn_t = std::function<sink_t(source_t&&)>;
+    using base_t = ConvertingEdgeReadableBase<InputT, OutputT>;
+    using typename base_t::input_t;
+    using typename base_t::output_t;
+    using lambda_fn_t = std::function<output_t(input_t&&)>;
 
-    LambdaConvertingEdgeReadable(lambda_fn_t lambda_fn, std::shared_ptr<IEdgeReadable<source_t>> upstream) :
-      ConvertingEdgeReadableBase<source_t, sink_t>(upstream),
+    LambdaConvertingEdgeReadable(lambda_fn_t lambda_fn, std::shared_ptr<IEdgeReadable<input_t>> upstream) :
+      ConvertingEdgeReadableBase<input_t, output_t>(upstream),
       m_lambda_fn(std::move(lambda_fn))
     {}
 
-    channel::Status await_read(sink_t& data) override
+    channel::Status await_read(output_t& data) override
     {
-        source_t source_data;
+        input_t source_data;
         auto ret_val = this->upstream().await_read(source_data);
 
         // Convert to the sink type

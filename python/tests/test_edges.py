@@ -101,6 +101,18 @@ def add_cpp_source_base(seg: mrc.Builder):
     return node
 
 
+def add_cpp_source_component_base(seg: mrc.Builder):
+    node = m.SourceComponentBase(seg, "cpp_source_component_base")
+
+    return node
+
+
+def add_cpp_source_component_derived(seg: mrc.Builder):
+    node = m.SourceComponentDerivedA(seg, "cpp_source_component_derived")
+
+    return node
+
+
 def add_py_node_component_base(seg: mrc.Builder, upstream):
 
     def on_next_node(x: int):
@@ -111,6 +123,15 @@ def add_py_node_component_base(seg: mrc.Builder, upstream):
     init_node_counter("node_component_base.on_next")
 
     node = seg.make_node_component("node_component_base", ops.map(on_next_node))
+
+    seg.make_edge(upstream, node)
+
+    return node
+
+
+def add_cpp_sink_base(seg: mrc.Builder, upstream):
+
+    node = m.SinkBase(seg, "sink_base")
 
     seg.make_edge(upstream, node)
 
@@ -649,6 +670,30 @@ def test_cpp_source_base_to_py_node_component_to_py_sink_component(run_segment):
         "sink_component_base.on_error": 0,
         "sink_component_base.on_completed": 1,
     }
+
+
+def test_cpp_source_component_base_to_cpp_sink_base(run_segment):
+
+    def segment_init(seg: mrc.Builder):
+
+        source_base = add_cpp_source_component_base(seg)
+        add_cpp_sink_base(seg, source_base)
+
+    results = run_segment(segment_init)
+
+    assert results == {}
+
+
+def test_cpp_source_component_derived_to_cpp_sink_base(run_segment):
+
+    def segment_init(seg: mrc.Builder):
+
+        source_base = add_cpp_source_component_derived(seg)
+        add_cpp_sink_base(seg, source_base)
+
+    results = run_segment(segment_init)
+
+    assert results == {}
 
 
 if (__name__ == "__main__"):
