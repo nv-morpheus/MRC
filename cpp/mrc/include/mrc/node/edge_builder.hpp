@@ -65,7 +65,7 @@ struct EdgeBuilder final
     static std::shared_ptr<IngressHandleObj> adapt_ingress(std::shared_ptr<IngressHandleObj> ingress);
 
     template <typename T>
-    static std::shared_ptr<EgressHandleObj> adapt_egress(std::shared_ptr<EgressHandleObj> ingress);
+    static std::shared_ptr<EgressHandleObj> adapt_egress(std::shared_ptr<EgressHandleObj> egress);
 
     /**
      * @brief Attempt to look-up a registered ingress adapter for the given source type and sink properties. If one
@@ -185,7 +185,7 @@ struct EdgeBuilder final
                                                               std::shared_ptr<IngressHandleObj> ingress);
 
     static std::shared_ptr<EgressHandleObj> do_adapt_egress(const EdgeTypePair& target_type,
-                                                            std::shared_ptr<EgressHandleObj> ingress);
+                                                            std::shared_ptr<EgressHandleObj> egress);
 };
 
 template <typename SourceT, typename SinkT>

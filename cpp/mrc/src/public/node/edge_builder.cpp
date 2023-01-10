@@ -23,6 +23,7 @@
 #include "mrc/node/edge_registry.hpp"
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
+#include "mrc/utils/string_utils.hpp"
 #include "mrc/utils/type_utils.hpp"
 
 #include <glog/logging.h>
@@ -118,21 +119,23 @@ std::shared_ptr<IngressHandleObj> EdgeBuilder::do_adapt_ingress(const EdgeTypePa
     }
 
     // Unfortunately, no converter was found
-    throw mrc::exceptions::MrcRuntimeError("No conversion found from X to Y");
+    throw mrc::exceptions::MrcRuntimeError(MRC_CONCAT_STR("No conversion found from "
+                                                          << type_name(ingress->get_type().full_type()) << " to "
+                                                          << type_name(target_type.full_type())));
 }
 
 std::shared_ptr<EgressHandleObj> EdgeBuilder::do_adapt_egress(const EdgeTypePair& target_type,
                                                               std::shared_ptr<EgressHandleObj> egress)
 {
+    // Short circuit if we are already there
+    if (target_type.full_type() == egress->get_type().full_type())
+    {
+        return egress;
+    }
+
     // TODO(MDD): Not implemented yet
     LOG(WARNING) << "Egress adaptors are not implemented yet. Returing identical object";
     return egress;
-
-    // // Short circuit if we are already there
-    // if (target_type.full_type() == egress->get_type().full_type())
-    // {
-    //     return egress;
-    // }
 
     // // Next check the static converters
     // if (mrc::node::EdgeRegistry::has_converter(target_type.full_type(), egress->get_type().full_type()))

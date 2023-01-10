@@ -52,35 +52,38 @@ class MultiEdgeHolder;
 template <typename T>
 class EdgeHandle;
 
-struct IngressHandleObj;
-struct EgressHandleObj;
+class IngressHandleObj;
+class EgressHandleObj;
 
 class EdgeLifetime
 {
   public:
-    EdgeLifetime(std::function<void()> fn, bool is_armed = true) : m_fn(std::move(fn)), m_is_armed(is_armed) {}
+    EdgeLifetime(std::function<void()> destruct_fn, bool is_armed = true) :
+      m_destruct_fn(std::move(destruct_fn)),
+      m_is_armed(is_armed)
+    {}
 
     EdgeLifetime(const EdgeLifetime& other) = delete;
     EdgeLifetime(EdgeLifetime&& other)
     {
         std::swap(m_is_armed, other.m_is_armed);
-        std::swap(m_fn, other.m_fn);
+        std::swap(m_destruct_fn, other.m_destruct_fn);
     }
 
     EdgeLifetime& operator=(const EdgeLifetime& other) = delete;
     EdgeLifetime& operator=(EdgeLifetime&& other) noexcept
     {
         std::swap(m_is_armed, other.m_is_armed);
-        std::swap(m_fn, other.m_fn);
+        std::swap(m_destruct_fn, other.m_destruct_fn);
 
         return *this;
     }
 
     ~EdgeLifetime()
     {
-        if (m_is_armed && m_fn)
+        if (m_is_armed && m_destruct_fn)
         {
-            m_fn();
+            m_destruct_fn();
         }
     }
 
@@ -101,7 +104,7 @@ class EdgeLifetime
 
   private:
     bool m_is_armed{true};
-    std::function<void()> m_fn;
+    std::function<void()> m_destruct_fn;
 };
 
 class EdgeTag
@@ -123,9 +126,9 @@ class EdgeTag
         return m_is_connected;
     }
 
-    void add_connector(std::function<void()>&& fn)
+    void add_connector(std::function<void()>&& on_connect_fn)
     {
-        this->add_connector(EdgeLifetime(std::move(fn), true));
+        this->add_connector(EdgeLifetime(std::move(on_connect_fn), true));
     }
 
     void add_connector(EdgeLifetime&& connector)
@@ -133,9 +136,9 @@ class EdgeTag
         m_connectors.emplace_back(std::move(connector));
     }
 
-    void add_disconnector(std::function<void()>&& fn)
+    void add_disconnector(std::function<void()>&& on_disconnect_fn)
     {
-        this->add_disconnector(EdgeLifetime(std::move(fn), false));
+        this->add_disconnector(EdgeLifetime(std::move(on_disconnect_fn), false));
     }
 
     void add_disconnector(EdgeLifetime&& disconnector)
@@ -177,12 +180,6 @@ class EdgeTag
         m_linked_edges.emplace_back(std::move(linked_edge));
     }
 
-    // // Allows keeping a downstream edge holder alive for the lifetime of this edge
-    // void add_lifetime(std::shared_ptr<EdgeHolder<T>> downstream)
-    // {
-    //     m_keep_alive.push_back(downstream);
-    // }
-
   private:
     bool m_is_connected{false};
     std::vector<EdgeLifetime> m_connectors;
@@ -205,7 +202,7 @@ class EdgeHandle : public virtual EdgeTag
     friend class MultiEdgeHolder;
 };
 
-struct EdgeTypePair
+class EdgeTypePair
 {
   public:
     EdgeTypePair(const EdgeTypePair& other) = default;
@@ -277,7 +274,7 @@ struct EdgeTypePair
     bool m_is_deferred{false};                        // Whether or not this type is deferred or concrete
 };
 
-struct EdgeHandleObj
+class EdgeHandleObj
 {
   public:
     const EdgeTypePair& get_type() const
@@ -356,15 +353,6 @@ class IEdgeWritable : public virtual EdgeHandle<T>, public virtual IEdgeWritable
         return await_write(std::move(data));
     }
 };
-
-// template <typename SourceT, typename SinkT>
-// class EdgeConverter : public EdgeWritable<SinkT>
-// {
-//     inline channel::Status await_write(SourceT&& data) final
-//     {
-//         return this->ingress().await_write(std::move(data));
-//     }
-// };
 
 template <typename T>
 class IEdgeReadable : public virtual EdgeHandle<T>, public IEdgeReadableBase
@@ -807,10 +795,11 @@ class MultiEdgeHolder
     friend EdgeBuilder;
 };
 
-struct DeferredIngressHandleObj;
+class DeferredIngressHandleObj;
 
-struct IngressHandleObj : public EdgeHandleObj
+class IngressHandleObj : public EdgeHandleObj
 {
+  public:
     IngressHandleObj(std::shared_ptr<IEdgeWritableBase> ingress) : IngressHandleObj(ingress->get_type(), ingress) {}
 
     static std::shared_ptr<IngressHandleObj> from_typeless(std::shared_ptr<EdgeHandleObj> other)
@@ -858,17 +847,9 @@ struct IngressHandleObj : public EdgeHandleObj
     friend DeferredIngressHandleObj;
 };
 
-// class DefaultDeferredEdge : public IEdgeWritableBase
-// {
-//   public:
-//     EdgeTypePair get_type() const override
-//     {
-//         throw std::runtime_error("Not implemented");
-//     }
-// };
-
-struct EgressHandleObj : public EdgeHandleObj
+class EgressHandleObj : public EdgeHandleObj
 {
+  public:
     EgressHandleObj(std::shared_ptr<IEdgeReadableBase> egress) : EdgeHandleObj(egress->get_type(), egress) {}
 
     static std::shared_ptr<EgressHandleObj> from_typeless(std::shared_ptr<EdgeHandleObj> other)

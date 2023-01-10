@@ -38,15 +38,12 @@ class EdgeChannelReader : public IEdgeReadable<T>
   public:
     virtual ~EdgeChannelReader()
     {
-        if (m_channel)
+        if (this->is_connected())
         {
-            if (this->is_connected())
-            {
-                VLOG(10) << "Closing channel from EdgeChannelReader";
-            }
-
-            m_channel->close_channel();
+            VLOG(10) << "Closing channel from EdgeChannelReader";
         }
+
+        m_channel->close_channel();
     }
 
     virtual channel::Status await_read(T& t)
@@ -69,14 +66,11 @@ class EdgeChannelWriter : public IEdgeWritable<T>
   public:
     virtual ~EdgeChannelWriter()
     {
-        if (m_channel)
+        if (this->is_connected())
         {
-            if (this->is_connected())
-            {
-                VLOG(10) << "Closing channel from EdgeChannelWriter";
-            }
-            m_channel->close_channel();
+            VLOG(10) << "Closing channel from EdgeChannelWriter";
         }
+        m_channel->close_channel();
     }
 
     virtual channel::Status await_write(T&& t)
@@ -98,7 +92,10 @@ template <typename T>
 class EdgeChannel
 {
   public:
-    EdgeChannel(std::unique_ptr<mrc::channel::Channel<T>> channel) : m_channel(std::move(channel)) {}
+    EdgeChannel(std::unique_ptr<mrc::channel::Channel<T>> channel) : m_channel(std::move(channel))
+    {
+        CHECK(m_channel) << "Cannot create an EdgeChannel from an empty pointer";
+    }
     virtual ~EdgeChannel() = default;
 
     [[nodiscard]] std::shared_ptr<EdgeChannelReader<T>> get_reader() const

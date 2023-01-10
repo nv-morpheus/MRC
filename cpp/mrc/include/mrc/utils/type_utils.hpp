@@ -176,8 +176,6 @@ template <typename T>
 constexpr auto type_name() noexcept
 {
     std::string_view name = "[with T = <UnsupportedType>]";
-    std::string_view prefix;
-    std::string_view suffix;
 #ifdef __clang__
     name       = __PRETTY_FUNCTION__;
     auto start = name.find_first_of('[');
@@ -191,6 +189,8 @@ constexpr auto type_name() noexcept
 
     name = name.substr(start, end - start + 1);
 #elif defined(_MSC_VER)
+    std::string_view prefix;
+    std::string_view suffix;
     name   = __FUNCSIG__;
     prefix = "auto __cdecl type_name<";
     suffix = ">(void) noexcept";
