@@ -137,7 +137,6 @@ add_library(libmrc
   src/public/modules/segment_modules.cpp
   src/public/node/edge_adapter_registry.cpp
   src/public/node/edge_builder.cpp
-  src/public/node/edge_registry.cpp
   src/public/node/port_registry.cpp
   src/public/options/engine_groups.cpp
   src/public/options/fiber_pool.cpp

@@ -28,7 +28,6 @@
 #include "mrc/node/edge_adapter_registry.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/edge_connector.hpp"
-#include "mrc/node/edge_registry.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"

@@ -17,6 +17,9 @@
 
 #include "mrc/node/edge_adapter_registry.hpp"
 
+#include "mrc/utils/string_utils.hpp"
+#include "mrc/utils/type_utils.hpp"
+
 #include <map>
 #include <stdexcept>
 #include <typeindex>
@@ -24,35 +27,67 @@
 
 namespace mrc::node {
 
-std::map<std::type_index, EdgeAdapterRegistry::source_adapter_fn_t> EdgeAdapterRegistry::registered_source_adapters{};
-std::map<std::type_index, EdgeAdapterRegistry::sink_adapter_fn_t> EdgeAdapterRegistry::registered_sink_adapters{};
+// Goes from source type to sink type
+std::map<std::type_index, std::map<std::type_index, EdgeAdapterRegistry::ingress_converter_fn_t>>
+    EdgeAdapterRegistry::registered_ingress_converters{};
 
 std::vector<EdgeAdapterRegistry::ingress_adapter_fn_t> EdgeAdapterRegistry::registered_ingress_adapters{};
 
 std::recursive_mutex EdgeAdapterRegistry::s_mutex{};
 
-void EdgeAdapterRegistry::register_source_adapter(std::type_index source_type, source_adapter_fn_t adapter_fn)
+void EdgeAdapterRegistry::register_ingress_converter(std::type_index input_type,
+                                                     std::type_index output_type,
+                                                     ingress_converter_fn_t converter_fn)
 {
     std::lock_guard<std::recursive_mutex> lock(s_mutex);
-    auto iter_source = EdgeAdapterRegistry::registered_source_adapters.find(source_type);
-    if (iter_source != EdgeAdapterRegistry::registered_source_adapters.end())
+
+    VLOG(20) << "Registering converter for " << type_name(input_type) << " " << type_name(output_type);
+    auto readers_map = EdgeAdapterRegistry::registered_ingress_converters[input_type];
+
+    auto reader_found = readers_map.find(output_type);
+
+    if (reader_found != readers_map.end())
     {
-        throw std::runtime_error("Duplicate edge adapter already registered");
+        throw std::runtime_error("Duplicate converter already registered");
     }
 
-    EdgeAdapterRegistry::registered_source_adapters[source_type] = adapter_fn;
+    EdgeAdapterRegistry::registered_ingress_converters[input_type][output_type] = converter_fn;
 }
 
-void EdgeAdapterRegistry::register_sink_adapter(std::type_index sink_type, sink_adapter_fn_t adapter_fn)
+bool EdgeAdapterRegistry::has_ingress_converter(std::type_index input_type, std::type_index output_type)
 {
     std::lock_guard<std::recursive_mutex> lock(s_mutex);
-    auto iter_sink = EdgeAdapterRegistry::registered_sink_adapters.find(sink_type);
-    if (iter_sink != EdgeAdapterRegistry::registered_sink_adapters.end())
+
+    auto writer_found = EdgeAdapterRegistry::registered_ingress_converters.find(input_type);
+
+    if (writer_found == EdgeAdapterRegistry::registered_ingress_converters.end())
     {
-        throw std::runtime_error("Duplicate edge adapter already registered");
+        return false;
     }
 
-    EdgeAdapterRegistry::registered_sink_adapters[sink_type] = adapter_fn;
+    return writer_found->second.find(output_type) != writer_found->second.end();
+}
+
+EdgeAdapterRegistry::ingress_converter_fn_t EdgeAdapterRegistry::find_ingress_converter(std::type_index input_type,
+                                                                                        std::type_index output_type)
+{
+    std::lock_guard<std::recursive_mutex> lock(s_mutex);
+
+    auto writer_found = EdgeAdapterRegistry::registered_ingress_converters.find(input_type);
+
+    if (writer_found == EdgeAdapterRegistry::registered_ingress_converters.end())
+    {
+        throw std::runtime_error(MRC_CONCAT_STR("Could not find input_type: " << type_name(input_type)));
+    }
+
+    auto reader_found = writer_found->second.find(output_type);
+
+    if (reader_found == writer_found->second.end())
+    {
+        throw std::runtime_error("Could not find output_type");
+    }
+
+    return reader_found->second;
 }
 
 void EdgeAdapterRegistry::register_ingress_adapter(ingress_adapter_fn_t adapter_fn)
@@ -62,37 +97,9 @@ void EdgeAdapterRegistry::register_ingress_adapter(ingress_adapter_fn_t adapter_
     EdgeAdapterRegistry::registered_ingress_adapters.emplace_back(std::move(adapter_fn));
 }
 
-bool EdgeAdapterRegistry::has_source_adapter(std::type_index source_type)
+const std::vector<EdgeAdapterRegistry::ingress_adapter_fn_t>& EdgeAdapterRegistry::get_ingress_adapters()
 {
-    return (EdgeAdapterRegistry::registered_source_adapters.find(source_type) !=
-            EdgeAdapterRegistry::registered_source_adapters.end());
+    return EdgeAdapterRegistry::registered_ingress_adapters;
 }
 
-bool EdgeAdapterRegistry::has_sink_adapter(std::type_index sink_type)
-{
-    return (EdgeAdapterRegistry::registered_sink_adapters.find(sink_type) !=
-            EdgeAdapterRegistry::registered_sink_adapters.end());
-}
-
-EdgeAdapterRegistry::source_adapter_fn_t EdgeAdapterRegistry::find_source_adapter(std::type_index source_type)
-{
-    auto iter_source = EdgeAdapterRegistry::registered_source_adapters.find(source_type);
-    if (iter_source == EdgeAdapterRegistry::registered_source_adapters.end())
-    {
-        throw std::runtime_error("Could not find adapter type");
-    }
-
-    return iter_source->second;
-}
-
-EdgeAdapterRegistry::sink_adapter_fn_t EdgeAdapterRegistry::find_sink_adapter(std::type_index sink_type)
-{
-    auto iter_sink = EdgeAdapterRegistry::registered_sink_adapters.find(sink_type);
-    if (iter_sink == EdgeAdapterRegistry::registered_sink_adapters.end())
-    {
-        throw std::runtime_error("Could not find adapter type");
-    }
-
-    return iter_sink->second;
-}
 }  // namespace mrc::node

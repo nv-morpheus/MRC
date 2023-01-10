@@ -46,46 +46,29 @@ namespace mrc::node {
  */
 struct EdgeAdapterRegistry
 {
-    // Function to create the adapter function
-    using source_adapter_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(
-        mrc::node::SourcePropertiesBase&, mrc::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle>)>;
-
-    using sink_adapter_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(
-        std::type_index, mrc::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle>)>;
+    using ingress_converter_fn_t =
+        std::function<std::shared_ptr<IEdgeWritableBase>(std::shared_ptr<IEdgeWritableBase>)>;
 
     using ingress_adapter_fn_t = std::function<std::shared_ptr<node::IngressHandleObj>(
         const node::EdgeTypePair&, std::shared_ptr<node::IEdgeWritableBase>)>;
 
     EdgeAdapterRegistry() = delete;
 
-    /**
-     * @brief Registers an adapter function to be used for a given `(source|sink)_type`
-     * @param source_type type index of the data type which will use `adapter_fn`
-     * @param adapter_fn adapter function used to attempt to adapt a given source and sink
-     */
-    static void register_source_adapter(std::type_index source_type, source_adapter_fn_t adapter_fn);
-    static void register_sink_adapter(std::type_index sink_type, sink_adapter_fn_t adapter_fn);
+    // To register a converter, supply the reader/writer types and a function for creating the converter
+    static void register_ingress_converter(std::type_index input_type,
+                                           std::type_index output_type,
+                                           ingress_converter_fn_t converter_fn);
+
+    static bool has_ingress_converter(std::type_index input_type, std::type_index output_type);
+
+    static ingress_converter_fn_t find_ingress_converter(std::type_index input_type, std::type_index output_type);
 
     static void register_ingress_adapter(ingress_adapter_fn_t adapter_fn);
 
-    /**
-     * @brief Checks to see if an adapter is registered for a given type index
-     * @param source_type
-     * @return
-     */
-    static bool has_source_adapter(std::type_index source_type);
-    static bool has_sink_adapter(std::type_index sink_type);
+    static const std::vector<ingress_adapter_fn_t>& get_ingress_adapters();
 
-    /**
-     * @brief Attempts to retrieve a source/sink adapter for a given type index
-     * @param source_type
-     * @return:
-     */
-    static source_adapter_fn_t find_source_adapter(std::type_index source_type);
-    static sink_adapter_fn_t find_sink_adapter(std::type_index sink_type);
-
-    static std::map<std::type_index, source_adapter_fn_t> registered_source_adapters;
-    static std::map<std::type_index, sink_adapter_fn_t> registered_sink_adapters;
+  private:
+    static std::map<std::type_index, std::map<std::type_index, ingress_converter_fn_t>> registered_ingress_converters;
 
     static std::vector<ingress_adapter_fn_t> registered_ingress_adapters;
 

@@ -21,7 +21,6 @@
 #include "mrc/node/channel_holder.hpp"
 #include "mrc/node/edge.hpp"
 #include "mrc/node/edge_builder.hpp"
-#include "mrc/node/edge_registry.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/type_traits.hpp"
 #include "mrc/utils/type_utils.hpp"

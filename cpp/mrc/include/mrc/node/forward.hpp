@@ -25,8 +25,6 @@ namespace mrc::node {
 
 class EdgeBuilder;
 
-struct EdgeRegistry;
-
 template <typename SourceT, typename SinkT>
 struct EdgeBase;
 

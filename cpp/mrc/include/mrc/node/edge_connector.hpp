@@ -24,7 +24,7 @@
 #include "mrc/core/watcher.hpp"
 #include "mrc/node/channel_holder.hpp"
 #include "mrc/node/edge.hpp"
-#include "mrc/node/edge_registry.hpp"
+#include "mrc/node/edge_adapter_registry.hpp"
 #include "mrc/type_traits.hpp"
 
 #include <glog/logging.h>
@@ -54,7 +54,7 @@ struct EdgeConnector
 
     static void register_converter()
     {
-        EdgeRegistry::register_converter(
+        EdgeAdapterRegistry::register_ingress_converter(
             typeid(SourceT), typeid(SinkT), [](std::shared_ptr<IEdgeWritableBase> channel) {
                 std::shared_ptr<IEdgeWritable<SinkT>> ingress =
                     std::dynamic_pointer_cast<IEdgeWritable<SinkT>>(channel);
@@ -68,7 +68,7 @@ struct EdgeConnector
 
     static void register_converter(typename LambdaConvertingEdgeWritable<SourceT, SinkT>::lambda_fn_t lambda_fn)
     {
-        EdgeRegistry::register_converter(
+        EdgeAdapterRegistry::register_ingress_converter(
             typeid(SourceT), typeid(SinkT), [lambda_fn](std::shared_ptr<IEdgeWritableBase> channel) {
                 std::shared_ptr<IEdgeWritable<SinkT>> ingress =
                     std::dynamic_pointer_cast<IEdgeWritable<SinkT>>(channel);
@@ -82,7 +82,7 @@ struct EdgeConnector
 
     static void register_dynamic_cast_converter()
     {
-        EdgeRegistry::register_converter(
+        EdgeAdapterRegistry::register_ingress_converter(
             typeid(SourceT), typeid(SinkT), [](std::shared_ptr<IEdgeWritableBase> channel) {
                 std::shared_ptr<IEdgeWritable<SinkT>> ingress =
                     std::dynamic_pointer_cast<IEdgeWritable<SinkT>>(channel);
@@ -126,7 +126,7 @@ struct IdentityEdgeConnector
 
     static void register_converter()
     {
-        EdgeRegistry::register_converter(
+        EdgeAdapterRegistry::register_ingress_converter(
             typeid(T), typeid(T), [](std::shared_ptr<IEdgeWritableBase> channel) { return channel; });
     }
 };

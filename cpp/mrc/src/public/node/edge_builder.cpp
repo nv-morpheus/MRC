@@ -20,7 +20,6 @@
 #include "mrc/exceptions//runtime_error.hpp"
 #include "mrc/node/channel_holder.hpp"
 #include "mrc/node/edge_adapter_registry.hpp"
-#include "mrc/node/edge_registry.hpp"
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
 #include "mrc/utils/string_utils.hpp"
@@ -68,12 +67,12 @@ std::shared_ptr<IngressHandleObj> EdgeBuilder::do_adapt_ingress(const EdgeTypePa
     }
 
     // Next check the static converters
-    if (mrc::node::EdgeRegistry::has_converter(target_type.full_type(), ingress->get_type().full_type()))
+    if (mrc::node::EdgeAdapterRegistry::has_ingress_converter(target_type.full_type(), ingress->get_type().full_type()))
     {
         try
         {
-            auto fn_converter =
-                mrc::node::EdgeRegistry::find_converter(target_type.full_type(), ingress->get_type().full_type());
+            auto fn_converter = mrc::node::EdgeAdapterRegistry::find_ingress_converter(target_type.full_type(),
+                                                                                       ingress->get_type().full_type());
 
             auto converted_edge = fn_converter(ingress->get_ingress());
 
@@ -90,14 +89,14 @@ std::shared_ptr<IngressHandleObj> EdgeBuilder::do_adapt_ingress(const EdgeTypePa
         }
     }
 
-    // Start dynamic lookup
+    // If static conversion failed, now try runtime conversion
     VLOG(2) << "Looking for edge adapter: (" << type_name(target_type.full_type()) << ", "
             << type_name(ingress->get_type().full_type()) << ")";
     VLOG(2) << "- (" << target_type.full_type().hash_code() << ", " << ingress->get_type().full_type().hash_code()
             << ")";
 
     // Loop over the registered adaptors
-    const auto& adaptors = EdgeAdapterRegistry::registered_ingress_adapters;
+    const auto& adaptors = EdgeAdapterRegistry::get_ingress_adapters();
 
     for (const auto& adapt : adaptors)
     {
