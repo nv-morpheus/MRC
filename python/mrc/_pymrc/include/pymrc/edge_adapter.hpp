@@ -61,12 +61,16 @@ namespace mrc::pymrc {
 struct EdgeAdapterUtil
 {
     using ingress_adapter_fn_t = node::EdgeAdapterRegistry::ingress_adapter_fn_t;
+    using egress_adapter_fn_t  = node::EdgeAdapterRegistry::egress_adapter_fn_t;
 
     template <typename DataTypeT>
     static void register_data_adapters()
     {
         node::EdgeAdapterRegistry::register_ingress_adapter(EdgeAdapterUtil::build_sink_ingress_adapter<DataTypeT>());
         node::EdgeAdapterRegistry::register_ingress_adapter(EdgeAdapterUtil::build_source_ingress_adapter<DataTypeT>());
+
+        node::EdgeAdapterRegistry::register_egress_adapter(EdgeAdapterUtil::build_sink_egress_adapter<DataTypeT>());
+        node::EdgeAdapterRegistry::register_egress_adapter(EdgeAdapterUtil::build_source_egress_adapter<DataTypeT>());
     }
 
     template <typename InputT>
@@ -145,6 +149,83 @@ struct EdgeAdapterUtil
             return std::shared_ptr<node::IngressHandleObj>(nullptr);
         };
     }
+
+    template <typename InputT>
+    static egress_adapter_fn_t build_sink_egress_adapter()
+    {
+        return [](const node::EdgeTypePair& target_type, std::shared_ptr<node::IEdgeReadableBase> egress_handle) {
+            // First try to convert the egress to our type
+            auto typed_egress = std::dynamic_pointer_cast<node::IEdgeReadable<InputT>>(egress_handle);
+
+            if (!typed_egress)
+            {
+                // Cant do anything about this egress
+                return std::shared_ptr<node::EgressHandleObj>(nullptr);
+            }
+
+            auto egress_type = egress_handle->get_type();
+
+            // Check to see if we have a conversion in pybind11
+            if (pybind11::detail::get_type_info(egress_type.unwrapped_type(), false))
+            {
+                // Check if we are targeting a python object
+                if (target_type.full_type() == typeid(PyHolder))
+                {
+                    // Create a conversion from our type to PyHolder
+                    auto edge = std::make_shared<node::ConvertingEdgeReadable<PyHolder, InputT>>(typed_egress);
+
+                    return std::make_shared<node::EgressHandleObj>(edge);
+                }
+
+                // If that failed, check if our target type is a python object for a potential slow conversion
+                if (pybind11::detail::get_type_info(target_type.unwrapped_type(), false))
+                {
+                    // Make the foundation of a slow connection. Show warning here
+                    LOG(WARNING)
+                        << "WARNING: A slow edge connection between C++ nodes '" << type_name(target_type.full_type())
+                        << "' and '" << type_name(egress_type.full_type())
+                        << "' has been detected. Performance between "
+                           "these nodes can be improved by registering an EdgeConverter at compile time. Without "
+                           "this, conversion "
+                           "to an intermediate python type will be necessary (i.e. C++ -> Python -> C++).";
+
+                    // Create a conversion from our type to PyHolder
+                    auto edge = std::make_shared<node::ConvertingEdgeReadable<PyHolder, InputT>>(typed_egress);
+
+                    return std::make_shared<node::EgressHandleObj>(edge);
+                }
+            }
+
+            return std::shared_ptr<node::EgressHandleObj>(nullptr);
+        };
+    }
+
+    template <typename OutputT>
+    static egress_adapter_fn_t build_source_egress_adapter()
+    {
+        return [](const node::EdgeTypePair& target_type, std::shared_ptr<node::IEdgeReadableBase> egress_handle) {
+            auto egress_type = egress_handle->get_type();
+
+            // Check to see if we have a conversion in pybind11
+            if (pybind11::detail::get_type_info(target_type.unwrapped_type(), false))
+            {
+                // Check if we are coming from a python object
+                if (egress_type.full_type() == typeid(PyHolder))
+                {
+                    auto py_typed_egress = std::dynamic_pointer_cast<node::IEdgeReadable<PyHolder>>(egress_handle);
+
+                    CHECK(py_typed_egress) << "Invalid conversion. Incoming egress is not a PyHolder";
+
+                    // Create a conversion from PyHolder to our type
+                    auto edge = std::make_shared<node::ConvertingEdgeReadable<OutputT, PyHolder>>(py_typed_egress);
+
+                    return std::make_shared<node::EgressHandleObj>(edge);
+                }
+            }
+
+            return std::shared_ptr<node::EgressHandleObj>(nullptr);
+        };
+    }
 };
 
 /**
@@ -164,6 +245,7 @@ struct AutoRegSourceAdapter
     static bool register_adapter()
     {
         node::EdgeAdapterRegistry::register_ingress_adapter(EdgeAdapterUtil::build_source_ingress_adapter<SourceT>());
+        node::EdgeAdapterRegistry::register_egress_adapter(EdgeAdapterUtil::build_source_egress_adapter<SourceT>());
 
         return true;
     }
@@ -186,6 +268,7 @@ struct AutoRegSinkAdapter
     static bool register_adapter()
     {
         node::EdgeAdapterRegistry::register_ingress_adapter(EdgeAdapterUtil::build_sink_ingress_adapter<SinkT>());
+        node::EdgeAdapterRegistry::register_egress_adapter(EdgeAdapterUtil::build_sink_egress_adapter<SinkT>());
 
         return true;
     }

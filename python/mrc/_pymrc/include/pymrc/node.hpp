@@ -391,6 +391,8 @@ class PythonSource : public node::RxSource<OutputT, ContextT>,
   public:
     using subscriber_fn_t = std::function<void(rxcpp::subscriber<OutputT>& sub)>;
 
+    using base_t::base_t;
+
     PythonSource(const subscriber_fn_t& f) :
       base_t(rxcpp::observable<>::create<OutputT>([f](rxcpp::subscriber<OutputT>& s) {
           // Call the wrapped subscriber function
@@ -406,6 +408,7 @@ class PythonSourceComponent : public node::LambdaSourceComponent<OutputT>,
 {
     using base_t = node::LambdaSourceComponent<OutputT>;
 
+  public:
     using base_t::base_t;
 };
 

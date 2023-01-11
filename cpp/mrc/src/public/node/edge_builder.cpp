@@ -155,42 +155,38 @@ std::shared_ptr<EgressHandleObj> EdgeBuilder::do_adapt_egress(const EdgeTypePair
         }
     }
 
-    // TODO(MDD): Not implemented yet
-    LOG(WARNING) << "Egress adaptors are not implemented yet. Returing identical object";
-    return egress;
+    // If static conversion failed, now try runtime conversion
+    VLOG(2) << "Looking for edge adapter: (" << type_name(target_type.full_type()) << ", "
+            << type_name(egress->get_type().full_type()) << ")";
+    VLOG(2) << "- (" << target_type.full_type().hash_code() << ", " << egress->get_type().full_type().hash_code()
+            << ")";
 
-    // // If static conversion failed, now try runtime conversion
-    // VLOG(2) << "Looking for edge adapter: (" << type_name(target_type.full_type()) << ", "
-    //         << type_name(egress->get_type().full_type()) << ")";
-    // VLOG(2) << "- (" << target_type.full_type().hash_code() << ", " << egress->get_type().full_type().hash_code()
-    //         << ")";
+    // Loop over the registered adaptors
+    const auto& adaptors = EdgeAdapterRegistry::get_egress_adapters();
 
-    // // Loop over the registered adaptors
-    // const auto& adaptors = EdgeAdapterRegistry::get_egress_adapters();
+    for (const auto& adapt : adaptors)
+    {
+        // Try the adaptor out
+        auto adapt_out = adapt(target_type, egress->get_egress());
 
-    // for (const auto& adapt : adaptors)
-    // {
-    //     // Try the adaptor out
-    //     auto adapt_out = adapt(target_type, egress->get_egress());
+        if (adapt_out)
+        {
+            // Check that the adaptor didnt return the same thing
+            if (adapt_out->get_type().full_type() == egress->get_type().full_type())
+            {
+                LOG(WARNING) << "Adaptor returned the same type as the input. Adaptors should return nullptr if the "
+                                "conversion is not supported. Skipping this adaptor";
+                continue;
+            }
 
-    //     if (adapt_out)
-    //     {
-    //         // Check that the adaptor didnt return the same thing
-    //         if (adapt_out->get_type().full_type() == egress->get_type().full_type())
-    //         {
-    //             LOG(WARNING) << "Adaptor returned the same type as the input. Adaptors should return nullptr if the "
-    //                             "conversion is not supported. Skipping this adaptor";
-    //             continue;
-    //         }
+            return adapt_out;
+        }
+    }
 
-    //         return adapt_out;
-    //     }
-    // }
-
-    // // Unfortunately, no converter was found
-    // throw mrc::exceptions::MrcRuntimeError(MRC_CONCAT_STR("No conversion found from "
-    //                                                       << type_name(egress->get_type().full_type()) << " to "
-    //                                                       << type_name(target_type.full_type())));
+    // Unfortunately, no converter was found
+    throw mrc::exceptions::MrcRuntimeError(MRC_CONCAT_STR("No conversion found from "
+                                                          << type_name(egress->get_type().full_type()) << " to "
+                                                          << type_name(target_type.full_type())));
 }
 
 }  // namespace mrc::node
