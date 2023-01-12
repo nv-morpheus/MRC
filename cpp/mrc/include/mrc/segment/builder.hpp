@@ -142,6 +142,13 @@ class Builder final
             name, rxcpp::observable<>::create<SourceTypeT>(std::forward<CreateFnT>(create_fn)));
     }
 
+    template <typename SourceTypeT,
+              template <class, class = mrc::runnable::Context> class NodeTypeT = node::RxSource>
+    auto make_source(std::string name, rxcpp::observable<SourceTypeT> obs)
+    {
+        return construct_object<NodeTypeT<SourceTypeT>>(name, obs);
+    }
+
     template <typename SinkTypeT,
               template <class, class = mrc::runnable::Context> class NodeTypeT = node::RxSink,
               typename... ArgsT>

@@ -105,7 +105,8 @@ TEST_F(TestStreamBufferModule, SinglePipelineStreamBufferTest) {
 
         auto mirror_sink = builder.make_sink<std::string>(test_name + "_mirror_sink",
                                                           [&packets_mirrored](std::string input) {
-                                                              std::cerr << "tick -> " << input << std::endl;
+                                                              std::cerr << "tick -> " << input << std::endl
+                                                                        << std::flush;
                                                               packets_mirrored++;
                                                           });
 

@@ -110,6 +110,7 @@ namespace mrc::modules {
         static std::atomic<unsigned int> s_instance_index;
 
         boost::circular_buffer<DataTypeT> m_ring_buffer;
+        rxcpp::subjects::subject<DataTypeT> m_subject{};
         rxcpp::observable<DataTypeT> m_observable;
         rxcpp::observer<DataTypeT> m_observer;
 
@@ -121,6 +122,9 @@ namespace mrc::modules {
     template<typename DataTypeT>
     SimpleImmediateStreamBuffer<DataTypeT>::SimpleImmediateStreamBuffer(std::string module_name) : SegmentModule(
             std::move(module_name)), m_ring_buffer(128) {
+        auto hot_obs = m_subject.get_observable().publish();
+        hot_obs.connect();
+        m_observable = hot_obs;
     }
 
 
@@ -128,6 +132,9 @@ namespace mrc::modules {
     SimpleImmediateStreamBuffer<DataTypeT>::SimpleImmediateStreamBuffer(std::string module_name, nlohmann::json config)
             : SegmentModule(
             std::move(module_name), std::move(config)), m_ring_buffer{128} {
+        auto hot_obs = m_subject.get_observable().publish();
+        hot_obs.connect();
+        m_observable = hot_obs;
     }
 
     template<typename DataTypeT>
@@ -146,28 +153,57 @@ namespace mrc::modules {
 
     template<typename DataTypeT>
     void SimpleImmediateStreamBuffer<DataTypeT>::initialize(segment::Builder &builder) {
-        auto buffer_sink = builder.template make_sink<DataTypeT>("buffer_sink", [this](DataTypeT data) {
-            // Non-blocking, no fail: we just overwrite data if we run out of space, don't block the ingress queue
-            // under any circumstances.
-            m_ring_buffer.push_back(data);
+        auto buffer_sink = builder.template make_sink<DataTypeT>("buffer_sink_new", m_subject.get_subscriber());
+
+        //auto buffer_sink_old = builder.template make_sink<DataTypeT>("buffer_sink_old", [this](DataTypeT data) {
+        //    // Non-blocking, no fail: we just overwrite data if we run out of space, don't block the ingress queue
+        //    // under any circumstances.
+        //    std::cerr << "Got input data: " << data << std::endl;
+        //    //m_ring_buffer.push_back(data);
+        //    if (m_subject.has_observers()) {
+        //        m_subject.get_subscriber().on_next(std::move(data));
+        //    }
+        //});
+
+        m_observable.subscribe([](DataTypeT data) {
+            std::cerr << "***Got data 1: " << data << std::endl;
+        });
+        m_observable.subscribe([](DataTypeT data) {
+            std::cerr << "***Got data 2: " << data << std::endl;
+        });
+        m_observable.subscribe([](DataTypeT data) {
+            std::cerr << "***Got data 3: " << data << std::endl;
         });
 
+        //auto buffer_source_new = builder.template make_source<DataTypeT>("buffer_source_new", m_observable);
 
         // This should be resolved by Michael's non-linear pipeline updates.
         // Currently, no way to know when to shut down.
-        auto buffer_source = builder.template make_source<DataTypeT>(
-                "buffer_source",
+        auto buffer_source_old = builder.template make_source<DataTypeT>(
+                "buffer_source_old",
                 [this](rxcpp::subscriber<DataTypeT> &subscriber) {
-                    m_observable = create_observable();
-                    auto hot_obs = m_observable.publish();
-                    hot_obs.subscribe([&subscriber](DataTypeT data) {
-                        subscriber.on_next(data);
-                    });
-                    hot_obs.connect();
+                    if (subscriber.is_subscribed()) {
+                        subscriber.on_next(std::to_string(this->m_subject.has_observers()));
+                        subscriber.on_next(std::to_string(this->m_subject.has_observers()));
+                        subscriber.on_next(std::to_string(this->m_subject.has_observers()));
+                        subscriber.on_next(std::to_string(this->m_subject.has_observers()));
+                        boost::this_fiber::sleep_for(std::chrono::seconds(1));
+                    }
+
+                    //m_observable = create_observable();
+                    //auto hot_obs = m_observable.publish();
+                    //hot_obs.subscribe([&subscriber](DataTypeT data) {
+                    //    if (subscriber.is_subscribed()) {
+                    //        subscriber.on_next(data);
+                    //    }
+                    //});
+                    //hot_obs.connect();
+
+                    subscriber.on_completed();
                 });
 
         register_input_port("input", buffer_sink);
-        register_output_port("output", buffer_source);
+        register_output_port("output", buffer_source_old);
     }
 
     template<typename DataTypeT>
