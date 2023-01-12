@@ -61,7 +61,9 @@ TEST_F(TestObjectCache, Interface)
     ASSERT_TRUE(cache.size() == 3);
     ASSERT_TRUE(cache.contains("test_dictionary"));
 
-    auto regex = cache.get_or_load("re", []() { return py::module_::import("re"); });
+    auto regex = cache.get_or_load("re", []() {
+        return py::module_::import("re");
+    });
     ASSERT_TRUE(cache.contains("re"));
 
     EXPECT_THROW(cache.get_module("not_a_real_module"), py::error_already_set);

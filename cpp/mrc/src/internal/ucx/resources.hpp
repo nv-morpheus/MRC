@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -71,8 +71,9 @@ class Resources final : public resources::PartitionResourceBase
     template <typename UpstreamT>
     auto adapt_to_registered_resource(UpstreamT upstream, int cuda_device_id)
     {
-        return mrc::memory::make_unique_resource<RegistrationResource>(
-            std::move(upstream), m_registration_cache, cuda_device_id);
+        return mrc::memory::make_unique_resource<RegistrationResource>(std::move(upstream),
+                                                                       m_registration_cache,
+                                                                       cuda_device_id);
     }
 
     std::shared_ptr<ucx::Endpoint> make_ep(const std::string& worker_address) const;

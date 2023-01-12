@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -185,7 +185,9 @@ TEST_F(TestRunnable, GenericRunnableRunWithFiber)
         runner.on_instance_state_change_callback([&counter](const runnable::Runnable& runnable,
                                                             std::size_t id,
                                                             runnable::Runner::State old_state,
-                                                            runnable::Runner::State new_state) { ++counter; });
+                                                            runnable::Runner::State new_state) {
+            ++counter;
+        });
     });
 
     auto runner = launcher->ignition();

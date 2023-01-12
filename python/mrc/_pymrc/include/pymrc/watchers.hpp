@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -62,7 +62,9 @@ class LatencyWatcher : public latency_watcher_t
         const std::string& name,
         std::function<pybind11::object(pybind11::object py_obj)> map_f);
     std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_sink(
-        mrc::segment::Builder& seg, const std::string& name, std::function<void(pybind11::object py_obj)> sink_f);
+        mrc::segment::Builder& seg,
+        const std::string& name,
+        std::function<void(pybind11::object py_obj)> sink_f);
 
     pybind11::dict aggregate_tracers_as_pydict();
 
@@ -87,7 +89,9 @@ class ThroughputWatcher : public throughput_watcher_t
         const std::string& name,
         std::function<pybind11::object(pybind11::object py_obj)> map_f);
     std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_sink(
-        mrc::segment::Builder& seg, const std::string& name, std::function<void(pybind11::object py_obj)> sink_f);
+        mrc::segment::Builder& seg,
+        const std::string& name,
+        std::function<void(pybind11::object py_obj)> sink_f);
 
     pybind11::dict aggregate_tracers_as_pydict();
 

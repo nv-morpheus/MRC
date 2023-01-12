@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -264,8 +264,10 @@ TEST_F(TestModuleRegistry, DynamicModuleRegistrationTest)
         unsigned int source_count{42};
         config["source_count"] = source_count;
 
-        auto dynamic_source_mod = builder.load_module_from_registry(
-            "DynamicSourceModule", "mrc_unittest_cpp_dynamic", "DynamicModuleSourceTest_mod1", config);
+        auto dynamic_source_mod = builder.load_module_from_registry("DynamicSourceModule",
+                                                                    "mrc_unittest_cpp_dynamic",
+                                                                    "DynamicModuleSourceTest_mod1",
+                                                                    config);
 
         auto sink = builder.make_sink<bool>("sink", [&packet_count](bool input) {
             packet_count++;

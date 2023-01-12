@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -126,7 +126,9 @@ TEST_F(TestRPC, Alternative)
 
     auto stream = std::make_shared<stream_server_t>(service_init, m_resources->partition(0).runnable());
 
-    auto f_writer = m_resources->partition(0).runnable().main().enqueue([stream] { return stream->await_init(); });
+    auto f_writer = m_resources->partition(0).runnable().main().enqueue([stream] {
+        return stream->await_init();
+    });
     m_resources->partition(0).runnable().main().enqueue([] {}).get();
 
     m_server->service_stop();
@@ -192,7 +194,9 @@ TEST_F(TestRPC, StreamingServerWithHandler)
     m_server->service_start();
     m_server->service_await_live();
 
-    auto f_writer = m_resources->partition(0).runnable().main().enqueue([stream] { return stream->await_init(); });
+    auto f_writer = m_resources->partition(0).runnable().main().enqueue([stream] {
+        return stream->await_init();
+    });
     m_resources->partition(0).runnable().main().enqueue([] {}).get();  // this is a fence
 
     m_server->service_stop();
@@ -235,7 +239,9 @@ TEST_F(TestRPC, StreamingPingPong)
     m_server->service_start();
     m_server->service_await_live();
 
-    m_resources->partition(0).runnable().main().enqueue([stream] { return stream->await_init(); });
+    m_resources->partition(0).runnable().main().enqueue([stream] {
+        return stream->await_init();
+    });
     m_resources->partition(0).runnable().main().enqueue([] {}).get();  // this is a fence
 
     // put client here
@@ -306,7 +312,9 @@ TEST_F(TestRPC, StreamingPingPongEarlyServerFinish)
     m_server->service_start();
     m_server->service_await_live();
 
-    m_resources->partition(0).runnable().main().enqueue([stream] { return stream->await_init(); });
+    m_resources->partition(0).runnable().main().enqueue([stream] {
+        return stream->await_init();
+    });
     m_resources->partition(0).runnable().main().enqueue([] {}).get();  // this is a fence
 
     // put client here
@@ -395,7 +403,9 @@ TEST_F(TestRPC, StreamingPingPongEarlyServerCancel)
     m_server->service_start();
     m_server->service_await_live();
 
-    m_resources->partition(0).runnable().main().enqueue([stream] { return stream->await_init(); });
+    m_resources->partition(0).runnable().main().enqueue([stream] {
+        return stream->await_init();
+    });
     m_resources->partition(0).runnable().main().enqueue([] {}).get();  // this is a fence
 
     // put client here
@@ -485,7 +495,9 @@ TEST_F(TestRPC, StreamingPingPongClientEarlyTermination)
     m_server->service_start();
     m_server->service_await_live();
 
-    m_resources->partition(0).runnable().main().enqueue([stream] { return stream->await_init(); });
+    m_resources->partition(0).runnable().main().enqueue([stream] {
+        return stream->await_init();
+    });
     m_resources->partition(0).runnable().main().enqueue([] {}).get();  // this is a fence
 
     // put client here

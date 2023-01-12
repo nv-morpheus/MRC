@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -114,8 +114,12 @@ class NodeBase : public pymrc::PythonNode<std::shared_ptr<Base>, std::shared_ptr
                     // Forward on
                     output.on_next(std::move(x));
                 },
-                [&](std::exception_ptr error_ptr) { output.on_error(error_ptr); },
-                [&]() { output.on_completed(); }));
+                [&](std::exception_ptr error_ptr) {
+                    output.on_error(error_ptr);
+                },
+                [&]() {
+                    output.on_completed();
+                }));
         };
     }
 };
@@ -147,8 +151,12 @@ class NodePyHolder : public pymrc::PythonNode<pymrc::PyObjectHolder, pymrc::PyOb
 
                     output.on_next(std::move(int_val));
                 },
-                [&](std::exception_ptr error_ptr) { output.on_error(error_ptr); },
-                [&]() { output.on_completed(); }));
+                [&](std::exception_ptr error_ptr) {
+                    output.on_error(error_ptr);
+                },
+                [&]() {
+                    output.on_completed();
+                }));
         };
     }
 };
@@ -182,7 +190,9 @@ PYBIND11_MODULE(test_edges_cpp, module)
 
     pymrc::import(module, "mrc");
 
-    py::class_<Base, std::shared_ptr<Base>>(module, "Base").def(py::init<>([]() { return std::make_shared<Base>(); }));
+    py::class_<Base, std::shared_ptr<Base>>(module, "Base").def(py::init<>([]() {
+        return std::make_shared<Base>();
+    }));
     mrc::pymrc::PortBuilderUtil::register_port_util<Base>();
 
     py::class_<DerivedA, Base, std::shared_ptr<DerivedA>>(module, "DerivedA").def(py::init<>([]() {
@@ -221,7 +231,8 @@ PYBIND11_MODULE(test_edges_cpp, module)
              py::arg("name"));
 
     py::class_<segment::Object<NodeBase>, mrc::segment::ObjectProperties, std::shared_ptr<segment::Object<NodeBase>>>(
-        module, "NodeBase")
+        module,
+        "NodeBase")
         .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name) {
                  auto stage = parent.construct_object<NodeBase>(name);
 
@@ -241,8 +252,9 @@ PYBIND11_MODULE(test_edges_cpp, module)
              py::arg("parent"),
              py::arg("name"));
 
-    py::class_<segment::Object<SinkBase>, segment::ObjectProperties, std::shared_ptr<segment::Object<SinkBase>>>(
-        module, "SinkBase")
+    py::class_<segment::Object<SinkBase>, segment::ObjectProperties, std::shared_ptr<segment::Object<SinkBase>>>(module,
+                                                                                                                 "SinkB"
+                                                                                                                 "ase")
         .def(py::init<>([](segment::Builder& parent, const std::string& name) {
                  auto stage = parent.construct_object<SinkBase>(name);
 
@@ -251,7 +263,7 @@ PYBIND11_MODULE(test_edges_cpp, module)
              py::arg("parent"),
              py::arg("name"));
 
-    module.attr("__version__") =
-        MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "." << mrc_VERSION_PATCH);
+    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+                                                                  << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pytests

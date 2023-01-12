@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -83,17 +83,19 @@ struct is_decodable : std::false_type
 
 template <typename T>
 struct is_encodable<T,
-                    std::enable_if_t<std::is_same_v<
-                        decltype(std::declval<codable_protocol<T>&>().serialize(
-                            std::declval<T&>(), std::declval<Encoder<T>&>(), std::declval<const EncodingOptions&>())),
-                        void>>> : std::true_type
+                    std::enable_if_t<std::is_same_v<decltype(std::declval<codable_protocol<T>&>().serialize(
+                                                        std::declval<T&>(),
+                                                        std::declval<Encoder<T>&>(),
+                                                        std::declval<const EncodingOptions&>())),
+                                                    void>>> : std::true_type
 {};
 
 template <typename T>
-struct is_encodable<T,
-                    std::enable_if_t<std::is_same_v<decltype(std::declval<codable_protocol<T>&>().serialize(
-                                                        std::declval<T&>(), std::declval<Encoder<T>&>())),
-                                                    void>>> : std::true_type
+struct is_encodable<
+    T,
+    std::enable_if_t<std::is_same_v<
+        decltype(std::declval<codable_protocol<T>&>().serialize(std::declval<T&>(), std::declval<Encoder<T>&>())),
+        void>>> : std::true_type
 {};
 
 template <typename T>
@@ -112,11 +114,11 @@ struct is_encodable<
 {};
 
 template <typename T>
-struct is_decodable<
-    T,
-    std::enable_if_t<std::is_same_v<decltype(std::declval<codable_protocol<T>&>().deserialize(
-                                        std::declval<const Decoder<T>&>(), std::declval<std::size_t>())),
-                                    T>>> : std::true_type
+struct is_decodable<T,
+                    std::enable_if_t<std::is_same_v<decltype(std::declval<codable_protocol<T>&>().deserialize(
+                                                        std::declval<const Decoder<T>&>(),
+                                                        std::declval<std::size_t>())),
+                                                    T>>> : std::true_type
 {};
 
 template <typename T>

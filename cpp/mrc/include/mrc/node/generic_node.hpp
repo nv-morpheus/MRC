@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,8 +48,13 @@ class GenericNode : public RxNode<InputT, OutputT, ContextT>
     GenericNode() :
       RxNode<InputT, OutputT, ContextT>([this](const rxcpp::observable<InputT>& input) {
           return rxcpp::observable<>::create<OutputT>([this, input](rxcpp::subscriber<OutputT> output) {
-              input.subscribe([this, &output](InputT i) { on_data(std::move(i), output); },
-                              [this, &output] { on_completed(output); });
+              input.subscribe(
+                  [this, &output](InputT i) {
+                      on_data(std::move(i), output);
+                  },
+                  [this, &output] {
+                      on_completed(output);
+                  });
           });
       })
     {}

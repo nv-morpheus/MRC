@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,8 +44,10 @@ Definition::Definition(std::string name,
                        std::map<std::string, ingress_initializer_t> ingress_ports,
                        std::map<std::string, egress_initializer_t> egress_ports,
                        backend_initializer_fn_t backend_initializer) :
-  internal::segment::IDefinition(
-      std::move(name), std::move(ingress_ports), std::move(egress_ports), std::move(backend_initializer))
+  internal::segment::IDefinition(std::move(name),
+                                 std::move(ingress_ports),
+                                 std::move(egress_ports),
+                                 std::move(backend_initializer))
 {}
 
 std::shared_ptr<Definition> Definition::create(std::string name,
@@ -53,8 +55,10 @@ std::shared_ptr<Definition> Definition::create(std::string name,
                                                EgressPortsBase egress_ports,
                                                segment_initializer_fn_t initializer)
 {
-    return Definition::create(
-        std::move(name), ingress_ports.m_initializers, egress_ports.m_initializers, std::move(initializer));
+    return Definition::create(std::move(name),
+                              ingress_ports.m_initializers,
+                              egress_ports.m_initializers,
+                              std::move(initializer));
 }
 
 std::shared_ptr<Definition> Definition::create(std::string name,

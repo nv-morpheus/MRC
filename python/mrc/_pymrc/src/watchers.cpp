@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -66,7 +66,9 @@ void LatencyWatcher::make_segment(const std::string& name,
 {
     pymrc::Pipeline pipeline;
 
-    auto tracer_init_wrapper = [this, init](mrc::segment::Builder& seg) { init(seg, *this); };
+    auto tracer_init_wrapper = [this, init](mrc::segment::Builder& seg) {
+        init(seg, *this);
+    };
 
     pipeline.make_segment(name, tracer_init_wrapper);
     m_executor->register_pipeline(pipeline);
@@ -87,27 +89,36 @@ std::shared_ptr<mrc::segment::ObjectProperties> LatencyWatcher::make_tracer_sour
 }
 
 std::shared_ptr<mrc::segment::ObjectProperties> LatencyWatcher::make_traced_node(
-    mrc::segment::Builder& seg, const std::string& name, std::function<py::object(py::object py_obj)> map_f)
+    mrc::segment::Builder& seg,
+    const std::string& name,
+    std::function<py::object(py::object py_obj)> map_f)
 {
     using data_type_t = std::shared_ptr<pymrc::latency_ensemble_t>;
     auto internal_idx = this->get_or_create_node_entry(name);
 
-    auto trace_node = seg.make_node<data_type_t, data_type_t>(
-        name,
-        rxcpp::operators::tap([internal_idx](data_type_t tracer) { tracer->receive(internal_idx); }),
-        rxcpp::operators::map([map_f](data_type_t tracer) {
-            py::gil_scoped_acquire gil;
-            *tracer = map_f(*tracer);  // Implicit operator conversion, operates on tracer's
+    auto trace_node = seg.make_node<data_type_t, data_type_t>(name,
+                                                              rxcpp::operators::tap([internal_idx](data_type_t tracer) {
+                                                                  tracer->receive(internal_idx);
+                                                              }),
+                                                              rxcpp::operators::map([map_f](data_type_t tracer) {
+                                                                  py::gil_scoped_acquire gil;
+                                                                  *tracer = map_f(*tracer);  // Implicit operator
+                                                                                             // conversion, operates on
+                                                                                             // tracer's
 
-            return tracer;
-        }),
-        rxcpp::operators::tap([internal_idx](data_type_t tracer) { tracer->emit(internal_idx); }));
+                                                                  return tracer;
+                                                              }),
+                                                              rxcpp::operators::tap([internal_idx](data_type_t tracer) {
+                                                                  tracer->emit(internal_idx);
+                                                              }));
 
     return trace_node;  // std::static_pointer_cast<Node>(trace_node);
 }
 
 std::shared_ptr<mrc::segment::ObjectProperties> LatencyWatcher::make_tracer_sink(
-    mrc::segment::Builder& seg, const std::string& name, std::function<void(py::object py_obj)> sink_f)
+    mrc::segment::Builder& seg,
+    const std::string& name,
+    std::function<void(py::object py_obj)> sink_f)
 {
     using data_type_t    = std::shared_ptr<pymrc::latency_ensemble_t>;
     auto compound_sink_f = [sink_f](pymrc::latency_ensemble_t& data) {
@@ -153,7 +164,9 @@ void ThroughputWatcher::make_segment(const std::string& name,
 {
     pymrc::Pipeline pipeline;
 
-    auto tracer_init_wrapper = [this, init](mrc::segment::Builder& seg) { init(seg, *this); };
+    auto tracer_init_wrapper = [this, init](mrc::segment::Builder& seg) {
+        init(seg, *this);
+    };
 
     pipeline.make_segment(name, tracer_init_wrapper);
     m_executor->register_pipeline(pipeline);
@@ -174,27 +187,36 @@ std::shared_ptr<mrc::segment::ObjectProperties> ThroughputWatcher::make_tracer_s
 }
 
 std::shared_ptr<mrc::segment::ObjectProperties> ThroughputWatcher::make_traced_node(
-    mrc::segment::Builder& seg, const std::string& name, std::function<py::object(py::object x)> map_f)
+    mrc::segment::Builder& seg,
+    const std::string& name,
+    std::function<py::object(py::object x)> map_f)
 {
     using data_type_t = std::shared_ptr<pymrc::throughput_ensemble_t>;
     auto internal_idx = this->get_or_create_node_entry(name);
 
-    auto trace_node = seg.make_node<data_type_t, data_type_t>(
-        name,
-        rxcpp::operators::tap([internal_idx](data_type_t tracer) { tracer->receive(internal_idx); }),
-        rxcpp::operators::map([map_f](data_type_t tracer) {
-            py::gil_scoped_acquire gil;
-            *tracer = map_f(*tracer);  // Implicit operator conversion, operates on tracer's
+    auto trace_node = seg.make_node<data_type_t, data_type_t>(name,
+                                                              rxcpp::operators::tap([internal_idx](data_type_t tracer) {
+                                                                  tracer->receive(internal_idx);
+                                                              }),
+                                                              rxcpp::operators::map([map_f](data_type_t tracer) {
+                                                                  py::gil_scoped_acquire gil;
+                                                                  *tracer = map_f(*tracer);  // Implicit operator
+                                                                                             // conversion, operates on
+                                                                                             // tracer's
 
-            return tracer;
-        }),
-        rxcpp::operators::tap([internal_idx](data_type_t tracer) { tracer->emit(internal_idx); }));
+                                                                  return tracer;
+                                                              }),
+                                                              rxcpp::operators::tap([internal_idx](data_type_t tracer) {
+                                                                  tracer->emit(internal_idx);
+                                                              }));
 
     return trace_node;
 }
 
 std::shared_ptr<mrc::segment::ObjectProperties> ThroughputWatcher::make_tracer_sink(
-    mrc::segment::Builder& seg, const std::string& name, std::function<void(py::object x)> sink_f)
+    mrc::segment::Builder& seg,
+    const std::string& name,
+    std::function<void(py::object x)> sink_f)
 {
     using data_type_t    = std::shared_ptr<pymrc::throughput_ensemble_t>;
     auto compound_sink_f = [sink_f](pymrc::throughput_ensemble_t& data) {

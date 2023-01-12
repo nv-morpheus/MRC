@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,11 +49,11 @@ namespace mrc {
 namespace node {
 
 template <typename SourceT>
-struct Edge<SourceT,
-            pymrc::PyHolder,
-            std::enable_if_t<!pybind11::detail::is_pyobject<SourceT>::value &&
-                                 !std::is_convertible_v<SourceT, pybind11::object>,
-                             void>> : public EdgeBase<SourceT, pymrc::PyHolder>
+struct Edge<
+    SourceT,
+    pymrc::PyHolder,
+    std::enable_if_t<!pybind11::detail::is_pyobject<SourceT>::value && !std::is_convertible_v<SourceT, pybind11::object>,
+                     void>> : public EdgeBase<SourceT, pymrc::PyHolder>
 {
     using base_t = EdgeBase<SourceT, pymrc::PyHolder>;
     using typename base_t::sink_t;

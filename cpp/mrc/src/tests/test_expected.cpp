@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -129,10 +129,19 @@ TEST_F(TestExpected, UniquePointer)
 TEST_F(TestExpected, Examples)
 {
     EXPECT_TRUE(make_void().and_then(make_void));
-    EXPECT_EQ(make_void().transform([] { return make_int(1); }).value(), 1);
+    EXPECT_EQ(make_void()
+                  .transform([] {
+                      return make_int(1);
+                  })
+                  .value(),
+              1);
 
-    auto mul2 = [](int a) { return a * 2; };
-    auto inc1 = [](int a) { return a + 1; };
+    auto mul2 = [](int a) {
+        return a * 2;
+    };
+    auto inc1 = [](int a) {
+        return a + 1;
+    };
 
     {
         Expected<int> e = 21;
@@ -157,6 +166,8 @@ TEST_F(TestExpected, Examples)
 
 TEST_F(TestExpected, OrElse)
 {
-    auto status = make_int_fail(42).or_else([](auto& e) { LOG(INFO) << e.message(); });
+    auto status = make_int_fail(42).or_else([](auto& e) {
+        LOG(INFO) << e.message();
+    });
     EXPECT_FALSE(status);
 }

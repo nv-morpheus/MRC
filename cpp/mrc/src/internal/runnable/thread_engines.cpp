@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,8 +36,8 @@ namespace mrc::internal::runnable {
 
 void ThreadEngines::initialize_launchers()
 {
-    CHECK_EQ(launch_options().pe_count, m_cpu_set.weight())
-        << "mismatch in the number of cores in the cpu set with respect to the requested pe_count";
+    CHECK_EQ(launch_options().pe_count, m_cpu_set.weight()) << "mismatch in the number of cores in the cpu set with "
+                                                               "respect to the requested pe_count";
     CHECK_GE(launch_options().engines_per_pe, 1);
 
     m_cpu_set.for_each_bit([this](std::uint32_t idx, std::uint32_t cpu_id) {
