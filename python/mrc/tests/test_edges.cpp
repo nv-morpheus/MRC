@@ -65,7 +65,10 @@ class PythonTestNodeMixin
 
         std::string key = MRC_CONCAT_STR(m_name << "." << counter_name);
 
-        m_counters[key.c_str()] = 0;
+        if (m_counters)
+        {
+            m_counters[key.c_str()] = 0;
+        }
     }
 
     void increment_counter(const std::string& counter_name)
@@ -74,7 +77,10 @@ class PythonTestNodeMixin
 
         std::string key = MRC_CONCAT_STR(m_name << "." << counter_name);
 
-        m_counters[key.c_str()] = m_counters.attr("get")(key.c_str(), 0).cast<int>() + 1;
+        if (m_counters)
+        {
+            m_counters[key.c_str()] = m_counters.attr("get")(key.c_str(), 0).cast<int>() + 1;
+        }
     }
 
     std::string m_name;
@@ -244,180 +250,6 @@ class TestNodeComponent : public pymrc::PythonNodeComponent<std::shared_ptr<T>, 
         this->make_stream(base_t::op_factory_from_sub_fn(this->build_operator()));
     }
 };
-
-// class NodeBase : public TestNode<Base>
-// {};
-
-// class NodeDerivedA : public TestNode<DerivedA>
-// {};
-
-// class NodeDerivedB : public TestNode<DerivedB>
-// {};
-
-// template <typename T>
-// class TestSink : public pymrc::PythonSink<std::shared_ptr<T>>, public PythonTestNodeMixin
-// {
-//   public:
-//     using base_t = pymrc::PythonSink<std::shared_ptr<T>>;
-//     using typename base_t::observer_t;
-//     using typename base_t::sink_type_t;
-
-//     TestSink(std::string name, pymrc::PyHolder counter) :
-//       base_t(build()),
-//       PythonTestNodeMixin(std::move(name), std::move(counter))
-//     {
-//         this->init_counter("on_next");
-//         this->init_counter("on_error");
-//         this->init_counter("on_completed");
-//     }
-
-//     rxcpp::observer<std::shared_ptr<Base>> build()
-//     {
-//         return rxcpp::make_observer_dynamic<sink_type_t>(
-//             [this](sink_type_t x) { this->increment_counter("on_next"); },
-//             [this](std::exception_ptr ex) { this->increment_counter("on_error"); },
-//             [this]() { this->increment_counter("on_completed"); });
-//     }
-// };
-
-// class SinkBase : public TestSink<Base>
-// {};
-
-// class SinkDerivedA : public TestSink<DerivedA>
-// {};
-
-// class SinkDerivedB : public TestSink<DerivedB>
-// {};
-
-// template <typename T>
-// class TestSourceComponent : public pymrc::PythonSourceComponent<std::shared_ptr<Base>>, public PythonTestNodeMixin
-// {
-//   public:
-//     using base_t = pymrc::PythonSourceComponent<std::shared_ptr<Base>>;
-
-//     TestSourceComponent(std::string name, pymrc::PyHolder counter_dict) :
-//       base_t(build()),
-//       PythonTestNodeMixin(std::move(name), std::move(counter_dict))
-//     {
-//         this->init_counter("on_data");
-//         this->init_counter("on_completed");
-//     }
-
-//   private:
-//     base_t::get_data_fn_t build()
-//     {
-//         return [this](std::shared_ptr<Base>& output) {
-//             if (m_count++ < 5)
-//             {
-//                 output = std::make_shared<Base>();
-
-//                 this->increment_counter("on_data");
-
-//                 return channel::Status::success;
-//             }
-
-//             this->increment_counter("on_completed");
-
-//             return channel::Status::closed;
-//         };
-//     }
-
-//     size_t m_count{0};
-// };
-
-// class SourceComponentBase : public TestSourceComponent<Base>
-// {};
-
-// class SourceComponentDerivedA : public TestSourceComponent<DerivedA>
-// {};
-
-// class SourceComponentDerivedB : public TestSourceComponent<DerivedB>
-// {};
-
-// template <typename T>
-// class TestNodeComponent : public pymrc::PythonNodeComponent<std::shared_ptr<T>, std::shared_ptr<T>>,
-//                           public PythonTestNodeMixin
-// {
-//   public:
-//     using base_t = pymrc::PythonNodeComponent<std::shared_ptr<T>, std::shared_ptr<T>>;
-//     using typename base_t::sink_type_t;
-//     using typename base_t::source_type_t;
-//     using typename base_t::subscribe_fn_t;
-
-//     TestNodeComponent(std::string name, pymrc::PyHolder counter) :
-//       base_t(base_t::op_factory_from_sub_fn(build_operator())),
-//       PythonTestNodeMixin(std::move(name), std::move(counter))
-//     {
-//         this->init_counter("on_next");
-//         this->init_counter("on_error");
-//         this->init_counter("on_completed");
-//     }
-
-//   private:
-//     subscribe_fn_t build_operator()
-//     {
-//         return [this](rxcpp::observable<sink_type_t> input, rxcpp::subscriber<source_type_t> output) {
-//             return input.subscribe(rxcpp::make_observer<sink_type_t>(
-//                 [this, &output](sink_type_t x) {
-//                     // Forward on
-//                     this->increment_counter("on_next");
-//                     output.on_next(std::move(x));
-//                 },
-//                 [&](std::exception_ptr error_ptr) {
-//                     this->increment_counter("on_error");
-//                     output.on_error(error_ptr);
-//                 },
-//                 [&]() {
-//                     this->increment_counter("on_completed");
-//                     output.on_completed();
-//                 }));
-//         };
-//     }
-// };
-
-// class NodeComponentBase : public TestNodeComponent<Base>
-// {};
-
-// class NodeComponentDerivedA : public TestNodeComponent<DerivedA>
-// {};
-
-// class NodeComponentDerivedB : public TestNodeComponent<DerivedB>
-// {};
-
-// template <typename T>
-// class TestSinkComponent : public pymrc::PythonSinkComponent<std::shared_ptr<T>>, public PythonTestNodeMixin
-// {
-//   public:
-//     using base_t = pymrc::PythonSinkComponent<std::shared_ptr<T>>;
-//     using typename base_t::observer_t;
-//     using typename base_t::sink_type_t;
-
-//     TestSinkComponent(std::string name, pymrc::PyHolder counter) :
-//       base_t(build()),
-//       PythonTestNodeMixin(std::move(name), std::move(counter))
-//     {
-//         this->init_counter("on_next");
-//         this->init_counter("on_error");
-//         this->init_counter("on_completed");
-//     }
-
-//     rxcpp::observer<std::shared_ptr<Base>> build()
-//     {
-//         return rxcpp::make_observer_dynamic<sink_type_t>(
-//             [this](sink_type_t x) { this->increment_counter("on_next"); },
-//             [this](std::exception_ptr ex) { this->increment_counter("on_error"); },
-//             [this]() { this->increment_counter("on_completed"); });
-//     }
-// };
-
-// class SinkComponentBase : public TestSinkComponent<Base>
-// {};
-
-// class SinkComponentDerivedA : public TestSinkComponent<DerivedA>
-// {};
-
-// class SinkComponentDerivedB : public TestSinkComponent<DerivedB>
-// {};
 
 template <typename T>
 class TestSinkImpl : public PythonTestNodeMixin

@@ -430,7 +430,7 @@ class ConvertingEdgeWritable<InputT, OutputT, std::enable_if_t<std::is_convertib
     }
 };
 
-template <typename SourceT, typename SinkT = SourceT, typename EnableT = void>
+template <typename InputT, typename OutputT = InputT, typename EnableT = void>
 class ConvertingEdgeReadable;
 
 template <typename InputT, typename OutputT>

@@ -180,6 +180,7 @@ class ConvertingEdgeReadable<
         input_t source_data;
         auto ret_val = this->upstream().await_read(source_data);
 
+        if (ret_val == channel::Status::success)
         {
             // We need to hold the GIL here, because casting from c++ -> pybind11::object allocates memory with
             // Py_Malloc.
@@ -212,6 +213,7 @@ struct ConvertingEdgeReadable<pymrc::PyHolder,
         input_t source_data;
         auto ret_val = this->upstream().await_read(source_data);
 
+        if (ret_val == channel::Status::success)
         {
             pymrc::AcquireGIL gil;
 

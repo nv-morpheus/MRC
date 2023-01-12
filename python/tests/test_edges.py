@@ -13,6 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import itertools
+import typing
+
 import pytest
 
 import mrc
@@ -132,6 +135,43 @@ def add_source(seg: mrc.Builder, is_cpp: bool, data_type: type, is_component: bo
             return seg.make_source_component(node_name, source_fn())
         else:
             return seg.make_source(node_name, source_fn())
+
+
+def add_node(seg: mrc.Builder, upstream: mrc.SegmentObject, is_cpp: bool, data_type: type, is_component: bool):
+    global node_counts, expected_node_counts
+
+    prefix = "NodeComponent" if is_component else "Node"
+    node_name = prefix + data_type.__name__
+
+    expected_node_counts.update({
+        f"{node_name}.on_next": 5,
+        f"{node_name}.on_error": 0,
+        f"{node_name}.on_completed": 1,
+    })
+
+    node = None
+
+    if (is_cpp):
+        node = getattr(m, node_name)(seg, node_name, node_counts)
+    else:
+        init_node_counter(f"{node_name}.on_next")
+        init_node_counter(f"{node_name}.on_error")
+        init_node_counter(f"{node_name}.on_completed")
+
+        def on_next(x: int):
+            increment_node_counter(f"{node_name}.on_next")
+
+        def on_completed():
+            increment_node_counter(f"{node_name}.on_completed")
+
+        if (is_component):
+            node = seg.make_node_component(node_name, ops.map(on_next), ops.on_completed(on_completed))
+        else:
+            node = seg.make_node(node_name, ops.map(on_next), ops.on_completed(on_completed))
+
+    seg.make_edge(upstream, node)
+
+    return node
 
 
 def add_sink(seg: mrc.Builder, upstream: mrc.SegmentObject, is_cpp: bool, data_type: type, is_component: bool):
@@ -712,13 +752,42 @@ def test_source_cpp_to_sink_component_py():
     assert on_next_count == 5
 
 
-@pytest.mark.parametrize("source_component,sink_component",
-                         [
-                             pytest.param(False, False, id="runnable-runnable"),
-                             pytest.param(True, False, id="component-runnable"),
-                             pytest.param(False, True, id="runnable-component"),
-                             pytest.param(True, True, id="component-component", marks=pytest.mark.xfail)
-                         ])
+def gen_parameters(*args):
+
+    all_node_names = list(args)
+
+    parameters = []
+
+    for combo in itertools.product([True, False], repeat=len(all_node_names)):
+
+        marks = ()
+
+        # Check for bad combos
+        # for pair in list(zip(combo[0::1], combo[1::1])):
+        #     if (all(pair)):
+        #         marks = (pytest.mark.xfail, )
+        #         break
+        if (all(combo)):
+            marks = (pytest.mark.xfail, )
+
+        p = pytest.param(*combo,
+                         id="-".join(
+                             [f"{all_node_names[idx]}_" + ("com" if val else "run") for idx, val in enumerate(combo)]),
+                         marks=marks)
+
+        parameters.append(p)
+
+    return parameters
+
+
+# @pytest.mark.parametrize("source_component,sink_component",
+#                          [
+#                              pytest.param(False, False, id="source_run-sink_run"),
+#                              pytest.param(True, False, id="source_com-sink_run"),
+#                              pytest.param(False, True, id="source_run-sink_com"),
+#                              pytest.param(True, True, id="source_com-sink_com", marks=pytest.mark.xfail)
+#                          ])
+@pytest.mark.parametrize("source_component,sink_component", gen_parameters("source", "sink"))
 @pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
 @pytest.mark.parametrize("sink_cpp", [True, False], ids=["sink_cpp", "sink_py"])
 def test_source_base_to_sink_base(run_segment,
@@ -731,6 +800,29 @@ def test_source_base_to_sink_base(run_segment,
 
         source = add_source(seg, is_cpp=source_cpp, data_type=m.Base, is_component=source_component)
         add_sink(seg, source, is_cpp=sink_cpp, data_type=m.Base, is_component=sink_component)
+
+    results = run_segment(segment_init)
+
+    assert results == expected_node_counts
+
+
+@pytest.mark.parametrize("source_component,node_component,sink_component", gen_parameters("source", "node", "sink"))
+@pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
+@pytest.mark.parametrize("node_cpp", [True, False], ids=["node_cpp", "node_py"])
+@pytest.mark.parametrize("sink_cpp", [True, False], ids=["sink_cpp", "sink_py"])
+def test_source_to_node_to_sink(run_segment,
+                                source_component: bool,
+                                node_component: bool,
+                                sink_component: bool,
+                                source_cpp: bool,
+                                node_cpp: bool,
+                                sink_cpp: bool):
+
+    def segment_init(seg: mrc.Builder):
+
+        source = add_source(seg, is_cpp=source_cpp, data_type=m.Base, is_component=source_component)
+        node = add_node(seg, source, is_cpp=node_cpp, data_type=m.Base, is_component=node_component)
+        add_sink(seg, node, is_cpp=sink_cpp, data_type=m.Base, is_component=sink_component)
 
     results = run_segment(segment_init)
 

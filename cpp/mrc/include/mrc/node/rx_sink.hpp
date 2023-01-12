@@ -55,7 +55,10 @@ class EdgeRxObserver : public IEdgeWritable<T>
 
     ~EdgeRxObserver()
     {
-        m_observer.on_completed();
+        if (this->is_connected())
+        {
+            m_observer.on_completed();
+        }
     }
 
     void set_observer(observer_t observer)

@@ -154,7 +154,10 @@ class EdgeRxSubscriber : public IEdgeWritable<T>
 
     ~EdgeRxSubscriber()
     {
-        m_subscriber.on_completed();
+        if (this->is_connected())
+        {
+            m_subscriber.on_completed();
+        }
     }
 
     void set_subscriber(subscriber_t subscriber)

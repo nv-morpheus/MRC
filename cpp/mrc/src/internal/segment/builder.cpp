@@ -32,6 +32,7 @@
 
 #include <glog/logging.h>
 
+#include <exception>
 #include <ostream>
 #include <utility>
 
@@ -64,7 +65,20 @@ Builder::Builder(std::shared_ptr<const Definition> segdef,
     }
 
     IBuilder builder(this);
-    definition().initializer_fn()(builder);
+
+    // Call the segment initializer
+    try
+    {
+        definition().initializer_fn()(builder);
+    } catch (const std::exception& e)
+    {
+        LOG(ERROR) << "Exception during segment initializer. Segment name: " << m_definition->name()
+                   << ", Segment Rank: " << rank << ". Exception message:\n"
+                   << e.what();
+
+        // Rethrow after logging
+        std::rethrow_exception(std::current_exception());
+    }
 }
 
 const std::string& Builder::name() const

@@ -62,8 +62,9 @@ void Controller::on_data(ControlMessage&& message)
         } catch (...)
         {
             LOG(ERROR) << "exception caught while performing update - this is fatal - issuing kill";
+
+            // Call kill but do not rethrow the exception to allow for proper shutdown
             kill();
-            std::rethrow_exception(std::current_exception());
         }
         break;
     case ControlMessageType::Stop:
