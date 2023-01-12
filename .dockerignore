@@ -6,3 +6,6 @@ models
 __pycache__
 bazel-*
 ./vcpkg_installed
+
+# Ignore changes to the devcontainer
+.devcontainer/devcontainer.json

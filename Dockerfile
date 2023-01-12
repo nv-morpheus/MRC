@@ -82,6 +82,16 @@ RUN --mount=type=cache,target=/var/cache/apt \
     && \
     rm -rf /var/lib/apt/lists/*
 
+# Install the .NET SDK. This is a workaround for https://github.com/dotnet/vscode-dotnet-runtime/issues/159
+# Once version 1.6.1 of the extension has been release, this can be removed
+RUN --mount=type=cache,target=/var/cache/apt \
+    wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb &&\
+    sudo dpkg -i packages-microsoft-prod.deb &&\
+    rm packages-microsoft-prod.deb &&\
+    apt-get update && \
+    apt-get install --no-install-recommends -y dotnet-sdk-6.0 &&\
+    rm -rf /var/lib/apt/lists/*
+
 # create a user inside the container
 ARG USERNAME=morpheus
 ARG USER_UID=1000
