@@ -15,7 +15,7 @@
 # limitations under the License.
 #=============================================================================
 
-function(find_and_configure_libcudacxx version)
+function(find_and_configure_libcudacxx)
 
   list(APPEND CMAKE_MESSAGE_CONTEXT "libcudacxx")
 
@@ -35,4 +35,4 @@ function(find_and_configure_libcudacxx version)
 
 endfunction()
 
-find_and_configure_libcudacxx(${LIBCUDACXX_VERSION})
+find_and_configure_libcudacxx()
