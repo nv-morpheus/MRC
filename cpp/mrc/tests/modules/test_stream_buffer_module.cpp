@@ -61,26 +61,27 @@ TEST_F(TestStreamBufferModule, SinglePipelineStreamBufferTest) {
     const std::string test_name{"SinglePipelineStreamBufferTest"};
 
     // Create external captures for packet counts.
+    unsigned int packet_count{7};
     unsigned int packets_main{0};
     unsigned int packets_mirrored{0};
 
     auto config = nlohmann::json();
 
     auto mirror_tap = std::make_shared<MirrorTapModule<std::string>>(test_name + "_mirror_tap", config);
-    auto init_wrapper_main = [&packets_main, &mirror_tap, &test_name](segment::Builder &builder) {
+    auto init_wrapper_main = [&packets_main, packet_count, &mirror_tap, &test_name](segment::Builder &builder) {
         builder.init_module(mirror_tap);
 
-        auto source = builder.make_source<std::string>(test_name + "_main_source",
-                                                       [](rxcpp::subscriber<std::string> &sub) {
-                                                           if (sub.is_subscribed()) {
-                                                               sub.on_next("one");
-                                                               sub.on_next("two");
-                                                               sub.on_next("three");
-                                                               sub.on_next("four");
-                                                           }
+        auto source = builder.make_source<std::string>(
+                test_name + "_main_source",
+                [packet_count](rxcpp::subscriber<std::string> &sub) {
+                    if (sub.is_subscribed()) {
+                        for (unsigned int i = 0; i < packet_count; i++) {
+                            sub.on_next(std::to_string(packet_count));
+                        };
+                    }
 
-                                                           sub.on_completed();
-                                                       });
+                    sub.on_completed();
+                });
 
         // mirror tap has an input and output port, and will create an egress port that can be attached to.
         builder.make_edge(source, mirror_tap->input_port("input"));
@@ -92,21 +93,20 @@ TEST_F(TestStreamBufferModule, SinglePipelineStreamBufferTest) {
         builder.make_edge(mirror_tap->output_port("output"), sink);
     };
 
-    auto init_wrapper_mirrored = [&packets_mirrored, &mirror_tap, &test_name](segment::Builder &builder) {
-        auto config = nlohmann::json();
-        config["stream_ingress_name"] = mirror_tap->get_port_name();
+    auto stream_buffer = std::make_shared<SimpleImmediateStreamBuffer<std::string>>(test_name + "_stream_buffer",
+                                                                                    config);
+    auto init_wrapper_mirrored = [&packets_mirrored, &mirror_tap, &stream_buffer, &test_name](
+            segment::Builder &builder) {
+        builder.init_module(stream_buffer);
 
         auto mirror_ingress = builder.get_ingress<std::string>(mirror_tap->get_port_name());
-
-        auto stream_buffer = builder.make_module<SimpleImmediateStreamBuffer<std::string>>(test_name + "_stream_buffer",
-                                                                                           config);
 
         builder.make_edge(mirror_ingress, stream_buffer->input_port("input"));
 
         auto mirror_sink = builder.make_sink<std::string>(test_name + "_mirror_sink",
                                                           [&packets_mirrored](std::string input) {
-                                                              std::cerr << "tick -> " << input << std::endl
-                                                                        << std::flush;
+                                                              VLOG(10) << "tick -> " << input << std::endl
+                                                                       << std::flush;
                                                               packets_mirrored++;
                                                           });
 
@@ -131,6 +131,8 @@ TEST_F(TestStreamBufferModule, SinglePipelineStreamBufferTest) {
     executor.start();
     executor.join();
 
-    EXPECT_EQ(packets_main, 4);
-    EXPECT_EQ(packets_mirrored, 4);
+    // Since we wire everything up before the main source starts pumping data, we should always have the same
+    // number of packets between main and mirrored, even though we're using hot observables internally.
+    EXPECT_EQ(packets_main, packet_count);
+    EXPECT_EQ(packets_mirrored, packet_count);
 }
