@@ -55,7 +55,6 @@ BreakStringLiterals: true
 ColumnLimit: 120
 CommentPragmas: '^ IWYU pragma:'
 CompactNamespaces: false
-# ConstructorInitializerAllOnOneLineOrOnePerLine: true # deprecated -> PackConstructorInitializers: CurrentLine
 # Kept the below 2 to be the same as `IndentWidth` to keep everything uniform
 ConstructorInitializerIndentWidth: 2
 ContinuationIndentWidth: 4
