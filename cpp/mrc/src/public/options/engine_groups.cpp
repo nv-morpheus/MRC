@@ -27,7 +27,7 @@ namespace mrc {
 
 std::string default_engine_factory_name()
 {
-    return std::string("default");
+    return {"default"};
 }
 
 EngineGroups::EngineGroups() = default;

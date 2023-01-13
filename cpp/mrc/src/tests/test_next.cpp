@@ -28,6 +28,7 @@
 #include "mrc/node/generic_sink.hpp"
 #include "mrc/node/generic_source.hpp"
 #include "mrc/node/operators/conditional.hpp"
+#include "mrc/node/readable_subject.hpp"
 #include "mrc/node/rx_execute.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
@@ -35,6 +36,7 @@
 #include "mrc/node/rx_subscribable.hpp"
 #include "mrc/node/sink_channel.hpp"
 #include "mrc/node/source_channel.hpp"
+#include "mrc/node/writable_subject.hpp"
 #include "mrc/options/engine_groups.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
@@ -110,30 +112,14 @@ class TestNext : public ::testing::Test
 };
 
 template <typename T>
-class ExampleSourceChannel : public node::SourceChannel<T>
+class ExampleSinkChannel : public node::ReadableSubject<T>, public node::IngressProvider<T>, public node::SinkChannel<T>
 {
   public:
-    // enable a public accessor for the held ingress
-    channel::Ingress<T>& ingress()
+    ExampleSinkChannel()
     {
-        return *m_ingress;
+        // Set the default channel
+        this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
     }
-
-  private:
-    // hold the ingress from the builder
-    void complete_edge(std::shared_ptr<channel::IngressHandle> untyped_ingress) override
-    {
-        m_ingress = std::dynamic_pointer_cast<channel::Ingress<T>>(untyped_ingress);
-    }
-    std::shared_ptr<channel::Ingress<T>> m_ingress{};
-};
-
-template <typename T>
-class ExampleSinkChannel : public node::SinkChannel<T>
-{
-  public:
-    // make the accessor for the egress public, formerly protected
-    using node::SinkChannel<T>::egress;
 };
 
 class ExGenSource : public node::GenericSource<int>
@@ -148,20 +134,20 @@ TEST_F(TestNext, LifeCycleSink)
 
 TEST_F(TestNext, LifeCycleSource)
 {
-    ExampleSourceChannel<float> source;
+    node::WritableSubject<float> source;
 }
 
 TEST_F(TestNext, MakeEdgeSame)
 {
-    ExampleSourceChannel<float> source;
+    node::WritableSubject<float> source;
     ExampleSinkChannel<float> sink;
     node::make_edge(source, sink);
 
     float input  = 3.14;
     float output = 0.0;
 
-    source.ingress().await_write(input);
-    sink.egress().await_read(output);
+    source.await_write(input);
+    sink.await_read(output);
 
     EXPECT_EQ(input, output);
 }
@@ -174,7 +160,7 @@ TEST_F(TestNext, UniqueToUnique)
     using input_t  = std::unique_ptr<ExampleObject>;
     using output_t = std::unique_ptr<ExampleObject>;
 
-    ExampleSourceChannel<input_t> source;
+    node::WritableSubject<input_t> source;
     ExampleSinkChannel<output_t> sink;
 
     node::make_edge(source, sink);
@@ -184,8 +170,8 @@ TEST_F(TestNext, UniqueToUnique)
 
     void* input_addr = input.get();
 
-    source.ingress().await_write(std::move(input));
-    sink.egress().await_read(output);
+    source.await_write(std::move(input));
+    sink.await_read(output);
 
     void* output_addr = output.get();
 
@@ -197,7 +183,7 @@ TEST_F(TestNext, UniqueToConstShared)
     using input_t  = std::unique_ptr<ExampleObject>;
     using output_t = std::shared_ptr<const ExampleObject>;
 
-    ExampleSourceChannel<input_t> source;
+    node::WritableSubject<input_t> source;
     ExampleSinkChannel<output_t> sink;
 
     node::make_edge(source, sink);
@@ -207,8 +193,8 @@ TEST_F(TestNext, UniqueToConstShared)
 
     void* input_addr = input.get();
 
-    source.ingress().await_write(std::move(input));
-    sink.egress().await_read(output);
+    source.await_write(std::move(input));
+    sink.await_read(output);
 
     const void* output_addr = output.get();
 
@@ -220,7 +206,7 @@ TEST_F(TestNext, MakeEdgeConvertible)
     using input_t  = double;
     using output_t = float;
 
-    ExampleSourceChannel<input_t> source;
+    node::WritableSubject<input_t> source;
     ExampleSinkChannel<output_t> sink;
 
     node::make_edge(source, sink);
@@ -228,8 +214,8 @@ TEST_F(TestNext, MakeEdgeConvertible)
     input_t input   = 3.14;
     output_t output = 0.0;
 
-    source.ingress().await_write(input);
-    sink.egress().await_read(output);
+    source.await_write(input);
+    sink.await_read(output);
 
     EXPECT_FLOAT_EQ(input, output);
 }
@@ -239,7 +225,7 @@ TEST_F(TestNext, MakeEdgeConvertibleFromSinkRx)
     using input_t  = double;
     using output_t = float;
 
-    auto source = std::make_unique<ExampleSourceChannel<input_t>>();
+    auto source = std::make_unique<node::WritableSubject<input_t>>();
     auto sink   = std::make_unique<node::RxSink<output_t>>();
 
     // todo - generalize the method that accepts raw or smart ptrs
@@ -249,7 +235,7 @@ TEST_F(TestNext, MakeEdgeConvertibleFromSinkRx)
     output_t output     = 0.0;
     std::size_t counter = 0;
 
-    source->ingress().await_write(input);
+    source->await_write(input);
     source.reset();
 
     sink->set_observer(rxcpp::make_observer_dynamic<output_t>([input, &counter](output_t output) {
@@ -268,7 +254,7 @@ TEST_F(TestNext, MakeEdgeConvertibleFromSinkRxRunnable)
     using input_t  = double;
     using output_t = float;
 
-    auto source = std::make_unique<ExampleSourceChannel<input_t>>();
+    auto source = std::make_unique<node::WritableSubject<input_t>>();
     auto sink   = std::make_unique<node::RxSink<output_t>>();
 
     // todo - generalize the method that accepts raw or smart ptrs
@@ -278,7 +264,7 @@ TEST_F(TestNext, MakeEdgeConvertibleFromSinkRxRunnable)
     output_t output     = 0.0;
     std::size_t counter = 0;
 
-    source->ingress().await_write(input);
+    source->await_write(input);
     source.reset();
 
     // sink->set_observer(rxcpp::make_observer_dynamic<output_t>([input, &counter](output_t output) {
@@ -340,7 +326,7 @@ TEST_F(TestNext, GenericNodeAndSink)
     using input_t  = int;
     using output_t = int;
 
-    auto source = std::make_unique<ExampleSourceChannel<input_t>>();
+    auto source = std::make_unique<node::WritableSubject<input_t>>();
     auto node   = std::make_unique<ExampleGenericNode>();
     auto sink   = std::make_unique<ExampleGenericSink>();
 
@@ -350,9 +336,9 @@ TEST_F(TestNext, GenericNodeAndSink)
 
     input_t input = 42;
 
-    source->ingress().await_write(input);
-    source->ingress().await_write(input);
-    source->ingress().await_write(input);
+    source->await_write(input);
+    source->await_write(input);
+    source->await_write(input);
     source.reset();
 
     auto runner_node = m_resources->launch_control().prepare_launcher(std::move(node))->ignition();
@@ -376,7 +362,7 @@ TEST_F(TestNext, ConcurrentSinkRxRunnable)
     using input_t  = double;
     using output_t = float;
 
-    auto source = std::make_unique<ExampleSourceChannel<input_t>>();
+    auto source = std::make_unique<node::WritableSubject<input_t>>();
     auto sink   = std::make_unique<node::RxSink<output_t>>();
 
     // todo - generalize the method that accepts raw or smart ptrs
@@ -387,11 +373,11 @@ TEST_F(TestNext, ConcurrentSinkRxRunnable)
     std::atomic<std::size_t> counter_0 = 0;
     std::atomic<std::size_t> counter_1 = 0;
 
-    source->ingress().await_write(input);
-    source->ingress().await_write(input);
-    source->ingress().await_write(input);
-    source->ingress().await_write(input);
-    source->ingress().await_write(input);
+    source->await_write(input);
+    source->await_write(input);
+    source->await_write(input);
+    source->await_write(input);
+    source->await_write(input);
     source.reset();
 
     sink->set_observer([input, &counter_0, &counter_1](output_t output) {
@@ -427,7 +413,7 @@ TEST_F(TestNext, SourceNodeSink)
     using input_t  = double;
     using output_t = float;
 
-    auto source = std::make_unique<ExampleSourceChannel<input_t>>();
+    auto source = std::make_unique<node::WritableSubject<input_t>>();
     auto node   = std::make_unique<node::RxNode<input_t, output_t>>(rxcpp::operators::map([](input_t d) -> output_t {
         return output_t(2.0 * d);
     }));
@@ -447,9 +433,9 @@ TEST_F(TestNext, SourceNodeSink)
     auto runner_sink = m_resources->launch_control().prepare_launcher(std::move(sink))->ignition();
     auto runner_node = m_resources->launch_control().prepare_launcher(std::move(node))->ignition();
 
-    source->ingress().await_write(3.14);
-    source->ingress().await_write(42.);
-    source->ingress().await_write(2.);
+    source->await_write(3.14);
+    source->await_write(42.);
+    source->await_write(2.);
     source.reset();
 
     runner_node->await_join();
@@ -638,7 +624,7 @@ TEST_F(TestNext, Conditional)
         Odd
     };
 
-    auto source = std::make_unique<ExampleSourceChannel<input_t>>();
+    auto source = std::make_unique<node::WritableSubject<input_t>>();
     auto even   = std::make_unique<ExampleSinkChannel<output_t>>();
     auto odd    = std::make_unique<ExampleSinkChannel<output_t>>();
 
@@ -651,22 +637,22 @@ TEST_F(TestNext, Conditional)
     });
 
     // make edge via pipe fn
-    (*source | *cond);
-    (cond->source(Routes::Odd) | *odd);
-    (cond->source(Routes::Even) | *even);
+    node::make_edge(*source, *cond);
+    node::make_edge(*cond->get_source(Routes::Odd), *odd);
+    node::make_edge(*cond->get_source(Routes::Even), *even);
 
-    source->ingress().await_write(0);
-    source->ingress().await_write(1);
-    source->ingress().await_write(2);
+    source->await_write(0);
+    source->await_write(1);
+    source->await_write(2);
     source.reset();
 
     output_t output;
 
-    even->egress().await_read(output);
+    even->await_read(output);
     EXPECT_EQ(output, 0);
-    even->egress().await_read(output);
+    even->await_read(output);
     EXPECT_EQ(output, 2);
-    odd->egress().await_read(output);
+    odd->await_read(output);
     EXPECT_EQ(output, 1);
 }
 

@@ -21,6 +21,7 @@
 #include "mrc/forward.hpp"
 #include "mrc/runnable/context.hpp"
 #include "mrc/runnable/forward.hpp"
+#include "mrc/runnable/types.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/utils/type_utils.hpp"
 

@@ -41,11 +41,11 @@ std::string bytes_to_string(size_t bytes)
     if (bytes < unit)
     {
         sprintf(buffer, "%ld B", bytes);
-        return std::string(buffer);
+        return {buffer};
     }
     int exp = (int)(std::log(bytes) / std::log(unit));
     sprintf(buffer, "%.1f %ciB", bytes / std::pow(unit, exp), prefixes[exp - 1]);
-    return std::string(buffer);
+    return {buffer};
 }
 
 std::uint64_t string_to_bytes(std::string str)

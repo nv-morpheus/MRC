@@ -46,10 +46,10 @@
 #include "mrc/coroutines/when_all.hpp"
 
 #include <gtest/gtest.h>
-#include <stddef.h>
-#include <stdint.h>
 
 #include <coroutine>
+#include <cstddef>
+#include <cstdint>
 #include <utility>
 #include <vector>
 

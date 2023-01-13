@@ -41,9 +41,9 @@
 #include "mrc/coroutines/task.hpp"
 
 #include <gtest/gtest.h>
-#include <stdint.h>
 
 #include <coroutine>
+#include <cstdint>
 
 using namespace mrc;
 

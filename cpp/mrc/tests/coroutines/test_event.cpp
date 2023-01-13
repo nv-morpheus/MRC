@@ -44,10 +44,10 @@
 #include "mrc/coroutines/when_all.hpp"
 
 #include <gtest/gtest.h>
-#include <stdint.h>
 
 #include <atomic>
 #include <coroutine>
+#include <cstdint>
 
 using namespace mrc;
 

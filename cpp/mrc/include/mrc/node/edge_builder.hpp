@@ -240,6 +240,17 @@ void make_edge_typeless(SourceT& source, SinkT& sink)
     }
 }
 
+// template <typename SourceT,
+//           typename SinkT,
+//           typename = std::enable_if_t<is_base_of_template<IIngressAcceptor, SourceT>::value &&
+//                                       is_base_of_template<IIngressProvider, SinkT>::value>>
+// SinkT& operator|(SourceT& source, SinkT& sink)
+// {
+//     make_edge(source, sink);
+
+//     return sink;
+// }
+
 template <typename T>
 class DeferredWritableMultiEdge : public MultiEdgeHolder<std::size_t, T>,
                                   public IEdgeWritable<T>,

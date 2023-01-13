@@ -43,7 +43,7 @@
 // CUDA Runtime error messages
 static std::string __cuda_get_error_string(cudaError_t error)  // NOLINT(readability-identifier-naming)
 {
-    return std::string(cudaGetErrorString(error));
+    return {cudaGetErrorString(error)};
 }
 #endif
 

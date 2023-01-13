@@ -28,6 +28,14 @@ class WritableSubject : public IngressAcceptor<T>
     {
         return this->get_writable_edge()->await_write(std::move(data));
     }
+
+    // If the above overload cannot be matched, copy by value and move into the await_write(T&&) overload. This is only
+    // necessary for lvalues. The template parameters give it lower priority in overload resolution.
+    template <typename TT = T, typename = std::enable_if_t<std::is_copy_constructible_v<TT>>>
+    inline channel::Status await_write(T data)
+    {
+        return await_write(std::move(data));
+    }
 };
 
 }  // namespace mrc::node

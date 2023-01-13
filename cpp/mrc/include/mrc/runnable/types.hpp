@@ -37,7 +37,7 @@ std::string engine_type_string(const EngineType& engine_type);
  */
 inline std::string default_engine_factory_name()
 {
-    return std::string("default");
+    return {"default"};
 }
 
 }  // namespace mrc::runnable

@@ -40,7 +40,7 @@ std::unique_ptr<Runner> Launcher::ignition()
     std::lock_guard<std::mutex> lock(m_mutex);
     CHECK(m_runner);
     CHECK(m_engines);
-    CHECK(m_contexts.size());
+    CHECK(!m_contexts.empty());
     m_runner->enqueue(m_engines, std::move(m_contexts));
     return std::move(m_runner);
 }

@@ -41,12 +41,11 @@
 #include "mrc/coroutines/concepts/range_of.hpp"
 #include "mrc/coroutines/task.hpp"
 
-#include <stdint.h>
-
 #include <atomic>
 #include <condition_variable>
 #include <coroutine>
 #include <cstddef>
+#include <cstdint>
 #include <deque>
 #include <functional>
 #include <iterator>

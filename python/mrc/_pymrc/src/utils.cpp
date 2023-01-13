@@ -157,19 +157,19 @@ json cast_from_pyobject(const py::object& source)
     }
     if (py::isinstance<py::bool_>(source))
     {
-        return json(py::cast<bool>(source));
+        return {py::cast<bool>(source)};
     }
     if (py::isinstance<py::int_>(source))
     {
-        return json(py::cast<long>(source));
+        return {py::cast<long>(source)};
     }
     if (py::isinstance<py::float_>(source))
     {
-        return json(py::cast<double>(source));
+        return {py::cast<double>(source)};
     }
     if (py::isinstance<py::str>(source))
     {
-        return json(py::cast<std::string>(source));
+        return {py::cast<std::string>(source)};
     }
 
     // else unsupported return null

@@ -67,7 +67,7 @@ FiberPool FiberManager::make_pool(CpuSet cpu_set) const
     {
         queues.emplace_back(*m_queues.at(cpu));
     }
-    return FiberPool(std::move(cpu_set), std::move(queues));
+    return {std::move(cpu_set), std::move(queues)};
 }
 
 void FiberManager::stop()

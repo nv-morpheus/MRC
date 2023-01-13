@@ -17,6 +17,7 @@
 
 #include "mrc/coroutines/sync_wait.hpp"
 #include "mrc/coroutines/task.hpp"
+#include "mrc/coroutines/when_all.hpp"
 
 #include <benchmark/benchmark.h>
 
