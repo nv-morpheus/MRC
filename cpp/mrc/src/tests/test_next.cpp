@@ -20,7 +20,7 @@
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 
-#include "mrc/channel/egress.hpp"
+#include "mrc/channel/buffered_channel.hpp"
 #include "mrc/channel/ingress.hpp"
 #include "mrc/data/reusable_pool.hpp"
 #include "mrc/node/edge_builder.hpp"
@@ -63,11 +63,14 @@
 #include <cstddef>
 #include <exception>
 #include <functional>
+#include <map>
 #include <memory>
 #include <ostream>
 #include <string>
 #include <utility>
 #include <vector>
+
+// IWYU pragma: no_forward_declare mrc::channel::BufferedChannel
 
 using namespace mrc;
 

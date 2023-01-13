@@ -20,7 +20,6 @@
 #include "pymrc/types.hpp"
 #include "pymrc/utilities/acquire_gil.hpp"
 #include "pymrc/utilities/function_wrappers.hpp"
-#include "pymrc/utilities/object_wrappers.hpp"
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>

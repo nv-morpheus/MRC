@@ -20,7 +20,6 @@
 #include "mrc/runnable/context.hpp"
 
 #include <atomic>
-#include <sstream>
 #include <string>
 #include <typeinfo>
 

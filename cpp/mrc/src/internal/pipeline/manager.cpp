@@ -24,7 +24,6 @@
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/writable_subject.hpp"
 #include "mrc/runnable/launch_control.hpp"

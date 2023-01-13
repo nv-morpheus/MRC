@@ -20,7 +20,6 @@
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/operators/muxer.hpp"
 #include "mrc/node/rx_sink.hpp"

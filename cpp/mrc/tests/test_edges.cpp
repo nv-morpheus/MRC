@@ -18,6 +18,7 @@
 #include "test_mrc.hpp"  // IWYU pragma: associated
 
 #include "mrc/channel/buffered_channel.hpp"  // IWYU pragma: keep
+#include "mrc/channel/forward.hpp"
 #include "mrc/channel/status.hpp"
 #include "mrc/node/channel_holder.hpp"
 #include "mrc/node/edge_builder.hpp"
@@ -44,6 +45,8 @@
 #include <string>
 #include <tuple>
 #include <utility>
+
+// IWYU pragma: no_forward_declare mrc::channel::Channel
 
 // IWYU thinks we need vector for make_segment
 // IWYU pragma: no_include <vector>

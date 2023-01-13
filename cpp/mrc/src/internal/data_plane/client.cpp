@@ -32,7 +32,6 @@
 
 #include "mrc/channel/buffered_channel.hpp"
 #include "mrc/channel/channel.hpp"
-#include "mrc/channel/status.hpp"
 #include "mrc/memory/literals.hpp"
 #include "mrc/node/channel_holder.hpp"  // IWYU pragma: keep
 #include "mrc/node/edge_builder.hpp"

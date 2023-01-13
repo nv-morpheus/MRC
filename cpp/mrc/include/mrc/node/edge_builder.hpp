@@ -35,7 +35,8 @@
 
 namespace mrc::node {
 
-// IWYU pragma: no_forward_declare mrc::node::Edge
+// IWYU pragma: no_forward_declare mrc::node::ConvertingEdgeReadable
+// IWYU pragma: no_forward_declare mrc::node::ConvertingEdgeWritable
 
 struct EdgeBuilder final
 {

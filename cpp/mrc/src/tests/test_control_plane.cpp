@@ -31,7 +31,6 @@
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/codable/fundamental_types.hpp"  // IWYU pragma: keep
 #include "mrc/core/task_queue.hpp"
 #include "mrc/memory/literals.hpp"
