@@ -22,7 +22,7 @@ export PY_CFG="${PY_ROOT}/setup.cfg"
 export PY_DIRS="${PY_ROOT} ci/scripts"
 
 # Determine the commits to compare against. If running in CI, these will be set. Otherwise, diff with main
-export BASE_SHA=${CHANGE_TARGET:-${BASE_SHA:-main}}
+export BASE_SHA=${CHANGE_TARGET:-${BASE_SHA:-$(${SCRIPT_DIR}/gitutils.py get_merge_target)}}
 export COMMIT_SHA=${GIT_COMMIT:-${COMMIT_SHA:-HEAD}}
 
 export CPP_FILE_REGEX='^(\.\/)?(cpp|python)\/.*\.(cc|cpp|h|hpp)$'
@@ -42,6 +42,13 @@ export BUILD_DIR=${BUILD_DIR:-"${REPO_DIR}/build"}
 
 # Speficy the clang-tools version to use. Default 15
 export CLANG_TOOLS_VERSION=${CLANG_TOOLS_VERSION:-15}
+
+# Returns the `branch-YY.MM` that is used as the base for merging
+function get_base_branch() {
+   local major_minor_version=$(git describe --tags | grep -o -E '[0-9][0-9]\.[0-9][0-9]')
+
+   echo "branch-${major_minor_version}"
+}
 
 # Determine the merge base as the root to compare against. Optionally pass in a
 # result variable otherwise the output is printed to stdout
