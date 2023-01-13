@@ -65,8 +65,8 @@ PYBIND11_MODULE(watchers, m)
     /**
      * @brief ThroughputTracer
      */
-    auto ThroughputTracer =
-        py::class_<throughput_tracer_t, std::shared_ptr<throughput_tracer_t>>(m, "ThroughputTracer");
+    auto ThroughputTracer = py::class_<throughput_tracer_t, std::shared_ptr<throughput_tracer_t>>(m,
+                                                                                                  "ThroughputTracer");
     ThroughputTracer.def(py::init<std::size_t>());
 
     // Segment watcher allows for each tracer object to have a data payload. To simplify, for now, we'll assume
