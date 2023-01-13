@@ -52,23 +52,27 @@ namespace mrc::modules {
     private:
         static std::atomic<unsigned int> s_instance_index;
 
-        boost::circular_buffer<DataTypeT> m_ring_buffer;
+        std::mutex m_mutex;
+
+        boost::circular_buffer<DataTypeT> m_ring_buffer_write;
+        boost::circular_buffer<DataTypeT> m_ring_buffer_read;
         rxcpp::subjects::subject<DataTypeT> m_subject{};
 
         std::string m_ingress_name;
+
     };
 
     template<typename DataTypeT>
     SimpleImmediateStreamBuffer<DataTypeT>::SimpleImmediateStreamBuffer(std::string module_name)
             :   SegmentModule(std::move(module_name)),
-                m_ring_buffer(128) {
+                m_ring_buffer_write(2048), m_ring_buffer_read(2048) {
     }
 
 
     template<typename DataTypeT>
     SimpleImmediateStreamBuffer<DataTypeT>::SimpleImmediateStreamBuffer(std::string module_name, nlohmann::json config)
             :   SegmentModule(std::move(module_name), std::move(config)),
-                m_ring_buffer{128} {
+                m_ring_buffer_write(2048), m_ring_buffer_read(2048) {
     }
 
     template<typename DataTypeT>
@@ -79,7 +83,8 @@ namespace mrc::modules {
         // Consume values from subject and push them to ring buffer
         m_subject.get_observable().subscribe(
                 [this](DataTypeT data) {
-                    m_ring_buffer.push_back(std::move(data));
+                    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+                    m_ring_buffer_write.push_back(std::move(data));
                     VLOG(10) << "Subscriber 1: OnNext -> push to ring buffer: " << data << std::endl;
                 },
                 [this](std::exception_ptr ep) {
@@ -110,9 +115,15 @@ namespace mrc::modules {
                 [this](rxcpp::subscriber<DataTypeT> &subscriber) {
                     // m_subject.get_observable().subscribe(subscriber);
                     while (subscriber.is_subscribed() && m_subject.has_observers()) {
-                        if (!m_ring_buffer.empty()) {
-                            subscriber.on_next(m_ring_buffer.front());
-                            m_ring_buffer.pop_front();
+                        if (!m_ring_buffer_write.empty()) {
+                            {
+                                std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+                                m_ring_buffer_write.swap(m_ring_buffer_read);
+                            }
+                            while (!m_ring_buffer_read.empty()) {
+                                subscriber.on_next(m_ring_buffer_read.front());
+                                m_ring_buffer_read.pop_front();
+                            }
                         } else {
                             boost::this_fiber::yield();
                         }

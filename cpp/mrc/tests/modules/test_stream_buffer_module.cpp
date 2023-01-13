@@ -61,7 +61,7 @@ TEST_F(TestStreamBufferModule, SinglePipelineStreamBufferTest) {
     const std::string test_name{"SinglePipelineStreamBufferTest"};
 
     // Create external captures for packet counts.
-    unsigned int packet_count{7};
+    unsigned int packet_count{100000};
     unsigned int packets_main{0};
     unsigned int packets_mirrored{0};
 
@@ -135,4 +135,5 @@ TEST_F(TestStreamBufferModule, SinglePipelineStreamBufferTest) {
     // number of packets between main and mirrored, even though we're using hot observables internally.
     EXPECT_EQ(packets_main, packet_count);
     EXPECT_EQ(packets_mirrored, packet_count);
+    EXPECT_GE(packets_mirrored, packet_count * 0.99);
 }
