@@ -84,6 +84,7 @@ namespace mrc::modules {
         return segment::IngressPorts<DataTypeT>({m_egress_name});
     }
 
+    // TODO(Devin): This is a little hacky, need to figure out a way to register *bcast as the input and output.
     template<typename DataTypeT>
     void MirrorTapModule<DataTypeT>::initialize(segment::Builder &builder) {
         // ********** Implementation ************ //

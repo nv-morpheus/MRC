@@ -19,6 +19,7 @@
 
 #include "mrc/modules/module_registry.hpp"
 #include "mrc/modules/segment_modules.hpp"
+#include "mrc/modules/properties/persistent.hpp"
 #include "mrc/node/port_registry.hpp"
 
 #include <nlohmann/json.hpp>
@@ -85,6 +86,11 @@ void Builder::init_module(sp_segment_module_t module)
     module->m_module_instance_registered_namespace = m_namespace_prefix;
     module->initialize(*this);
     ns_pop();
+
+    if (std::dynamic_pointer_cast<modules::Persistent>(module) != nullptr) {
+        VLOG(2) << "Registering persistent module -> '" << module->component_prefix() << "'";
+        m_backend.add_module(module->component_prefix(), module);
+    }
 }
 
 std::shared_ptr<mrc::modules::SegmentModule> Builder::load_module_from_registry(const std::string& module_id,

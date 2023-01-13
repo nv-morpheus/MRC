@@ -18,6 +18,7 @@
 #pragma once
 
 #include "mrc/modules/mirror_tap/mirror_tap_module.hpp"
+#include "mrc/modules/properties/persistent.hpp"
 #include "mrc/modules/segment_modules.hpp"
 
 #include <boost/circular_buffer.hpp>
@@ -32,7 +33,7 @@
 namespace mrc::modules {
 
     template<typename DataTypeT>
-    class SimpleImmediateStreamBuffer : public SegmentModule {
+    class SimpleImmediateStreamBuffer : public SegmentModule, public Persistent {
         using type_t = SimpleImmediateStreamBuffer<DataTypeT>;
 
     public:
