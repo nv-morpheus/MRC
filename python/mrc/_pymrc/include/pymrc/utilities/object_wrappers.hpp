@@ -17,23 +17,12 @@
 
 #pragma once
 
-#include "mrc/utils/string_utils.hpp"
-
-#include <nlohmann/json_fwd.hpp>
+#include <pybind11/cast.h>
+#include <pybind11/detail/descr.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
-#include <functional>
 #include <memory>
-#include <stdexcept>
-#include <string>
-#include <type_traits>
-#include <typeinfo>
-#include <utility>
-
-namespace pybind11 {
-class gil_scoped_acquire;
-}  // namespace pybind11
 
 namespace mrc::pymrc {
 

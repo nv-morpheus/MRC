@@ -17,20 +17,23 @@
 
 #pragma once
 
-#include "pymrc/utilities/object_wrappers.hpp"
+#include "pymrc/utilities/object_wrappers.hpp"  // IWYU pragma: keep
 
 #include "mrc/utils/string_utils.hpp"
 
-#include <pybind11/detail/common.h>
+#include <pybind11/cast.h>
+#include <pybind11/detail/descr.h>
+#include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
+#include <array>
+#include <exception>
 #include <functional>
-#include <memory>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
-#include <typeinfo>
 #include <utility>
 
 namespace mrc::pymrc {

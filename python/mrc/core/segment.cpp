@@ -21,22 +21,23 @@
 #include "pymrc/node.hpp"  // IWYU pragma: keep
 #include "pymrc/segment_modules.hpp"
 #include "pymrc/types.hpp"
+#include "pymrc/utilities/function_wrappers.hpp"  // IWYU pragma: keep
 #include "pymrc/utils.hpp"
 
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/edge_connector.hpp"
-#include "mrc/node/operators/broadcast.hpp"
+#include "mrc/runnable/launch_options.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/definition.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 
 #include <pybind11/cast.h>
-#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <map>

@@ -19,6 +19,8 @@
 
 #include "pymrc/utilities/object_wrappers.hpp"
 
+#include <pybind11/detail/internals.h>
+
 namespace mrc::pymrc {
 
 namespace py = pybind11;

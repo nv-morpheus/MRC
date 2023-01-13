@@ -18,10 +18,8 @@
 #pragma once
 
 #include "pymrc/types.hpp"
-#include "pymrc/utilities/function_wrappers.hpp"
-#include "pymrc/utilities/object_wrappers.hpp"
 
-#include <functional>
+#include <optional>
 #include <string>
 
 namespace pybind11 {
@@ -29,6 +27,9 @@ class object;
 }  // namespace pybind11
 
 namespace mrc::pymrc {
+struct OnDataFunction;
+template <typename SignatureT>
+struct PyFuncHolder;
 
 // Export everything in the mrc::pymrc namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)

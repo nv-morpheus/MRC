@@ -19,7 +19,6 @@
 
 #include "pymrc/operators.hpp"
 #include "pymrc/types.hpp"
-#include "pymrc/utils.hpp"
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>

@@ -28,14 +28,15 @@
 #include "mrc/channel/status.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/port_registry.hpp"
+#include "mrc/node/rx_sink_base.hpp"
+#include "mrc/node/rx_source_base.hpp"
 #include "mrc/runnable/context.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/types.hpp"
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>
-#include <pybind11/detail/internals.h>
 #include <pybind11/gil.h>
-#include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
 
@@ -47,6 +48,7 @@
 #include <map>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <typeindex>
 #include <utility>
 #include <vector>

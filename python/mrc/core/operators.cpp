@@ -17,6 +17,7 @@
 
 #include "pymrc/operators.hpp"
 
+#include "pymrc/utilities/function_wrappers.hpp"  // IWYU pragma: keep
 #include "pymrc/utils.hpp"
 
 #include "mrc/utils/string_utils.hpp"

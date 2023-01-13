@@ -15,13 +15,12 @@
  * limitations under the License.
  */
 
-#include "pymrc/edge_adapter.hpp"
 #include "pymrc/port_builders.hpp"
 #include "pymrc/types.hpp"
 
-#include "mrc/channel/status.hpp"
-#include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_properties.hpp"
+#include "mrc/node/rx_sink_base.hpp"
+#include "mrc/node/rx_source_base.hpp"
+#include "mrc/types.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 
@@ -30,6 +29,7 @@
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
 
+#include <map>
 #include <memory>
 #include <sstream>
 #include <vector>

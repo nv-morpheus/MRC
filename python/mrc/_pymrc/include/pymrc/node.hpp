@@ -21,11 +21,10 @@
 #include "pymrc/port_builders.hpp"
 #include "pymrc/types.hpp"
 #include "pymrc/utilities/acquire_gil.hpp"
-#include "pymrc/utils.hpp"
 
 #include "mrc/channel/ingress.hpp"
 #include "mrc/channel/status.hpp"
-#include "mrc/node/edge.hpp"
+#include "mrc/node/channel_holder.hpp"
 #include "mrc/node/edge_connector.hpp"
 #include "mrc/node/forward.hpp"  // IWYU pragma: keep
 #include "mrc/node/generic_source.hpp"
@@ -42,6 +41,13 @@
 #include <functional>
 #include <memory>
 #include <utility>
+
+namespace mrc::node {
+template <typename InputT, typename OutputT, typename EnableT>
+class ConvertingEdgeReadable;
+template <typename SourceT, typename SinkT, typename EnableT>
+class ConvertingEdgeWritable;
+}  // namespace mrc::node
 
 // Avoid forward declaring template specialization base classes
 // IWYU pragma: no_forward_declare mrc::node::Edge

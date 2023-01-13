@@ -17,6 +17,10 @@
 
 #include "pymrc/utilities/acquire_gil.hpp"
 
+#include <nlohmann/json_fwd.hpp>
+#include <pybind11/gil.h>
+#include <pybind11/pybind11.h>
+
 namespace mrc::pymrc {
 
 namespace py = pybind11;

@@ -17,7 +17,6 @@
 
 #include "pymrc/py_segment_module.hpp"
 
-#include "mrc/core/utils.hpp"
 #include "mrc/utils/type_utils.hpp"
 
 #include <glog/logging.h>

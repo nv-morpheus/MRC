@@ -18,8 +18,6 @@
 #pragma once
 
 #include "pymrc/types.hpp"
-#include "pymrc/utilities/function_wrappers.hpp"
-#include "pymrc/utils.hpp"
 
 #include "mrc/segment/builder.hpp"  // IWYU pragma: export (needed by wrap functions)
 
@@ -37,6 +35,10 @@ class SegmentModule;
 }  // namespace mrc::modules
 
 namespace mrc::pymrc {
+struct OnCompleteFunction;
+struct OnDataFunction;
+struct OnErrorFunction;
+struct OnNextFunction;
 
 // Export everything in the mrc::pymrc namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)

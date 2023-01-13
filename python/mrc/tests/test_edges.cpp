@@ -24,8 +24,10 @@
 
 #include "mrc/channel/status.hpp"
 #include "mrc/node/edge_connector.hpp"
-#include "mrc/runnable/context.hpp"
+#include "mrc/node/rx_sink_base.hpp"
+#include "mrc/node/rx_source_base.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/types.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 
@@ -35,9 +37,10 @@
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
 
+#include <array>
 #include <cstddef>
 #include <exception>
-#include <functional>
+#include <map>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -50,6 +53,17 @@ namespace py    = pybind11;
 namespace pymrc = mrc::pymrc;
 
 using namespace py::literals;
+
+struct Base
+{
+    virtual ~Base() = default;
+};
+
+struct DerivedA : public Base
+{};
+
+struct DerivedB : public Base
+{};
 
 class PythonTestNodeMixin
 {
@@ -101,17 +115,6 @@ class PythonTestNodeMixin
       public:                                                  \
         using base_class<DerivedB>::base_class;                \
     };
-
-struct Base
-{
-    virtual ~Base() = default;
-};
-
-struct DerivedA : public Base
-{};
-
-struct DerivedB : public Base
-{};
 
 template <typename T>
 class TestSourceImpl : public PythonTestNodeMixin
