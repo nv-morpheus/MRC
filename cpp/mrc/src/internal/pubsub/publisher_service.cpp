@@ -99,8 +99,8 @@ void PublisherService::do_subscription_service_setup()
                 while (sub.is_subscribed() &&
                        (this->get_readable_edge()->await_read(storage) == channel::Status::success))
                 {
-                    mrc::runtime::RemoteDescriptor rd =
-                        m_runtime.remote_descriptor_manager().register_encoded_object(std::move(storage));
+                    mrc::runtime::RemoteDescriptor rd = m_runtime.remote_descriptor_manager().register_encoded_object(
+                        std::move(storage));
 
                     this->apply_policy(sub, std::move(rd));
                 }

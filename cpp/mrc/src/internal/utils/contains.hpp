@@ -21,11 +21,11 @@
 
 namespace mrc {
 
-template <typename Container, typename Key>
-bool contains(const Container& container, const Key& key)
+template <typename ContainerT, typename KeyT>
+bool contains(const ContainerT& container, const KeyT& key)
 {
     auto search = container.find(key);
-    return (search == container.end() ? false : true);
+    return (static_cast<bool>(search != container.end()));
 }
 
 template <typename C>

@@ -25,7 +25,7 @@ namespace mrc::internal::system {
 class FiberPriorityProps : public boost::fibers::fiber_properties
 {
   public:
-    FiberPriorityProps(boost::fibers::context* ctx) : fiber_properties(ctx), m_priority(0) {}
+    FiberPriorityProps(boost::fibers::context* ctx) : fiber_properties(ctx) {}
 
     int get_priority() const
     {
@@ -46,7 +46,7 @@ class FiberPriorityProps : public boost::fibers::fiber_properties
     }
 
   private:
-    int m_priority;
+    int m_priority{0};
 };
 
 class FiberPriorityScheduler : public boost::fibers::algo::algorithm_with_properties<FiberPriorityProps>

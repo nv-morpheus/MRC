@@ -55,9 +55,11 @@ struct EdgeConnector
     static void register_converter()
     {
         EdgeAdapterRegistry::register_ingress_converter(
-            typeid(InputT), typeid(OutputT), [](std::shared_ptr<IEdgeWritableBase> channel) {
-                std::shared_ptr<IEdgeWritable<OutputT>> ingress =
-                    std::dynamic_pointer_cast<IEdgeWritable<OutputT>>(channel);
+            typeid(InputT),
+            typeid(OutputT),
+            [](std::shared_ptr<IEdgeWritableBase> channel) {
+                std::shared_ptr<IEdgeWritable<OutputT>> ingress = std::dynamic_pointer_cast<IEdgeWritable<OutputT>>(
+                    channel);
 
                 DCHECK(ingress) << "Channel is not an ingress of the correct type";
 
@@ -66,9 +68,11 @@ struct EdgeConnector
             });
 
         EdgeAdapterRegistry::register_egress_converter(
-            typeid(InputT), typeid(OutputT), [](std::shared_ptr<IEdgeReadableBase> channel) {
-                std::shared_ptr<IEdgeReadable<InputT>> egress =
-                    std::dynamic_pointer_cast<IEdgeReadable<InputT>>(channel);
+            typeid(InputT),
+            typeid(OutputT),
+            [](std::shared_ptr<IEdgeReadableBase> channel) {
+                std::shared_ptr<IEdgeReadable<InputT>> egress = std::dynamic_pointer_cast<IEdgeReadable<InputT>>(
+                    channel);
 
                 DCHECK(egress) << "Channel is not an egress of the correct type";
 
@@ -80,9 +84,11 @@ struct EdgeConnector
     static void register_converter(std::function<OutputT(InputT&&)> lambda_fn)
     {
         EdgeAdapterRegistry::register_ingress_converter(
-            typeid(InputT), typeid(OutputT), [lambda_fn](std::shared_ptr<IEdgeWritableBase> channel) {
-                std::shared_ptr<IEdgeWritable<OutputT>> ingress =
-                    std::dynamic_pointer_cast<IEdgeWritable<OutputT>>(channel);
+            typeid(InputT),
+            typeid(OutputT),
+            [lambda_fn](std::shared_ptr<IEdgeWritableBase> channel) {
+                std::shared_ptr<IEdgeWritable<OutputT>> ingress = std::dynamic_pointer_cast<IEdgeWritable<OutputT>>(
+                    channel);
 
                 DCHECK(ingress) << "Channel is not an ingress of the correct type";
 
@@ -91,9 +97,11 @@ struct EdgeConnector
             });
 
         EdgeAdapterRegistry::register_egress_converter(
-            typeid(InputT), typeid(OutputT), [lambda_fn](std::shared_ptr<IEdgeWritableBase> channel) {
-                std::shared_ptr<IEdgeReadable<InputT>> egress =
-                    std::dynamic_pointer_cast<IEdgeReadable<InputT>>(channel);
+            typeid(InputT),
+            typeid(OutputT),
+            [lambda_fn](std::shared_ptr<IEdgeWritableBase> channel) {
+                std::shared_ptr<IEdgeReadable<InputT>> egress = std::dynamic_pointer_cast<IEdgeReadable<InputT>>(
+                    channel);
 
                 DCHECK(egress) << "Channel is not an egress of the correct type";
 
@@ -105,9 +113,11 @@ struct EdgeConnector
     static void register_dynamic_cast_converter()
     {
         EdgeAdapterRegistry::register_ingress_converter(
-            typeid(InputT), typeid(OutputT), [](std::shared_ptr<IEdgeWritableBase> channel) {
-                std::shared_ptr<IEdgeWritable<OutputT>> ingress =
-                    std::dynamic_pointer_cast<IEdgeWritable<OutputT>>(channel);
+            typeid(InputT),
+            typeid(OutputT),
+            [](std::shared_ptr<IEdgeWritableBase> channel) {
+                std::shared_ptr<IEdgeWritable<OutputT>> ingress = std::dynamic_pointer_cast<IEdgeWritable<OutputT>>(
+                    channel);
 
                 DCHECK(ingress) << "Channel is not an ingress of the correct type";
 
@@ -134,9 +144,11 @@ struct EdgeConnector
             });
 
         EdgeAdapterRegistry::register_egress_converter(
-            typeid(InputT), typeid(OutputT), [](std::shared_ptr<IEdgeReadableBase> channel) {
-                std::shared_ptr<IEdgeReadable<InputT>> egress =
-                    std::dynamic_pointer_cast<IEdgeReadable<InputT>>(channel);
+            typeid(InputT),
+            typeid(OutputT),
+            [](std::shared_ptr<IEdgeReadableBase> channel) {
+                std::shared_ptr<IEdgeReadable<InputT>> egress = std::dynamic_pointer_cast<IEdgeReadable<InputT>>(
+                    channel);
 
                 DCHECK(egress) << "Channel is not an egress of the correct type";
 
@@ -175,10 +187,16 @@ struct IdentityEdgeConnector
 
     static void register_converter()
     {
-        EdgeAdapterRegistry::register_ingress_converter(
-            typeid(T), typeid(T), [](std::shared_ptr<IEdgeWritableBase> channel) { return channel; });
-        EdgeAdapterRegistry::register_egress_converter(
-            typeid(T), typeid(T), [](std::shared_ptr<IEdgeReadableBase> channel) { return channel; });
+        EdgeAdapterRegistry::register_ingress_converter(typeid(T),
+                                                        typeid(T),
+                                                        [](std::shared_ptr<IEdgeWritableBase> channel) {
+                                                            return channel;
+                                                        });
+        EdgeAdapterRegistry::register_egress_converter(typeid(T),
+                                                       typeid(T),
+                                                       [](std::shared_ptr<IEdgeReadableBase> channel) {
+                                                           return channel;
+                                                       });
     }
 };
 

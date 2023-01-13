@@ -167,8 +167,8 @@ class PyIteratorWrapper
           // Check if the iterator has been started already
           if (!iterator)
           {
-              LOG(ERROR)
-                  << "Cannot have multiple progress engines for the iterator overload. Iterators cannot be duplicated";
+              LOG(ERROR) << "Cannot have multiple progress engines for the iterator overload. Iterators cannot be "
+                            "duplicated";
               throw std::runtime_error(
                   "Cannot have multiple progress engines for the iterator overload. Iterators cannot be duplicated");
           }

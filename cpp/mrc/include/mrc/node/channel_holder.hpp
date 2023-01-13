@@ -143,8 +143,8 @@ class EdgeTag
 
     void add_disconnector(EdgeLifetime&& disconnector)
     {
-        LOG_IF(WARNING, disconnector.is_armed())
-            << "Adding armed disconnector to edge. This will fire even if edge is never connected";
+        LOG_IF(WARNING, disconnector.is_armed()) << "Adding armed disconnector to edge. This will fire even if edge is "
+                                                    "never connected";
 
         m_disconnectors.emplace_back(std::move(disconnector));
     }
@@ -599,10 +599,12 @@ class EdgeHolder
 
     void make_edge_connection(std::shared_ptr<EdgeHandleObj> edge_obj)
     {
-        CHECK(edge_obj->get_type() == EdgeTypePair::create<T>())
-            << "Incoming edge connection is not the correct type. Make sure to call "
-               "`EdgeBuilder::adapt_ingress<T>(edge)` or `EdgeBuilder::adapt_egress<T>(edge)` before calling "
-               "make_edge_connection";
+        CHECK(edge_obj->get_type() == EdgeTypePair::create<T>()) << "Incoming edge connection is not the correct type. "
+                                                                    "Make sure to call "
+                                                                    "`EdgeBuilder::adapt_ingress<T>(edge)` or "
+                                                                    "`EdgeBuilder::adapt_egress<T>(edge)` before "
+                                                                    "calling "
+                                                                    "make_edge_connection";
 
         // Unpack the edge, convert, and call the inner set_edge
         auto unpacked_edge = edge_obj->get_handle_typed<EdgeHandle<T>>();

@@ -284,15 +284,16 @@ TEST_F(TestRunnable, RxSourceToRxSink)
     // only allow the runners to escape the scope
     // this ensures that the Muxer Operator survives
     {
-        auto source =
-            std::make_unique<node::RxSource<float>>(rxcpp::observable<>::create<float>([](rxcpp::subscriber<float> s) {
+        auto source = std::make_unique<node::RxSource<float>>(
+            rxcpp::observable<>::create<float>([](rxcpp::subscriber<float> s) {
                 s.on_next(1.0F);
                 s.on_next(2.0F);
                 s.on_next(3.0F);
                 s.on_completed();
             }));
-        auto sink =
-            std::make_unique<node::RxSink<float>>(rxcpp::make_observer_dynamic<float>([&](float x) { ++counter; }));
+        auto sink = std::make_unique<node::RxSink<float>>(rxcpp::make_observer_dynamic<float>([&](float x) {
+            ++counter;
+        }));
 
         node::make_edge(*source, *sink);
 
@@ -317,16 +318,17 @@ TEST_F(TestRunnable, RxSourceToMuxerToRxSink)
     // only allow the runners to escape the scope
     // this ensures that the Muxer Operator survives
     {
-        auto source =
-            std::make_unique<node::RxSource<float>>(rxcpp::observable<>::create<float>([](rxcpp::subscriber<float> s) {
+        auto source = std::make_unique<node::RxSource<float>>(
+            rxcpp::observable<>::create<float>([](rxcpp::subscriber<float> s) {
                 s.on_next(1.0F);
                 s.on_next(2.0F);
                 s.on_next(3.0F);
                 s.on_completed();
             }));
-        muxer = std::make_unique<node::Muxer<float>>();
-        auto sink =
-            std::make_unique<node::RxSink<float>>(rxcpp::make_observer_dynamic<float>([&](float x) { ++counter; }));
+        muxer     = std::make_unique<node::Muxer<float>>();
+        auto sink = std::make_unique<node::RxSink<float>>(rxcpp::make_observer_dynamic<float>([&](float x) {
+            ++counter;
+        }));
 
         node::make_edge(*source, *muxer);
         node::make_edge(*muxer, *sink);

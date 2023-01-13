@@ -205,7 +205,9 @@ class RxNodeComponent : public IngressProvider<InputT>, public IngressAcceptor<O
     template <typename... OpsT>
     RxNodeComponent& pipe(OpsT&&... ops)
     {
-        make_stream([=](auto start) { return (start | ... | ops); });
+        make_stream([=](auto start) {
+            return (start | ... | ops);
+        });
         return *this;
     }
 

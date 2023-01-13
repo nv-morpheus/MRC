@@ -101,13 +101,14 @@ struct EdgeAdapterUtil
                     if (pybind11::detail::get_type_info(target_type.unwrapped_type(), false))
                     {
                         // Make the foundation of a slow connection. Show warning here
-                        LOG(WARNING)
-                            << "WARNING: A slow edge connection between C++ nodes '"
-                            << type_name(target_type.full_type()) << "' and '" << type_name(ingress_type.full_type())
-                            << "' has been detected. Performance between "
-                               "these nodes can be improved by registering an EdgeConverter at compile time. Without "
-                               "this, conversion "
-                               "to an intermediate python type will be necessary (i.e. C++ -> Python -> C++).";
+                        LOG(WARNING) << "WARNING: A slow edge connection between C++ nodes '"
+                                     << type_name(target_type.full_type()) << "' and '"
+                                     << type_name(ingress_type.full_type())
+                                     << "' has been detected. Performance between "
+                                        "these nodes can be improved by registering an EdgeConverter at compile time. "
+                                        "Without "
+                                        "this, conversion "
+                                        "to an intermediate python type will be necessary (i.e. C++ -> Python -> C++).";
                     }
                     else
                     {
@@ -226,13 +227,14 @@ struct EdgeAdapterUtil
                     if (pybind11::detail::get_type_info(target_type.unwrapped_type(), false))
                     {
                         // Make the foundation of a slow connection. Show warning here
-                        LOG(WARNING)
-                            << "WARNING: A slow edge connection between C++ nodes '"
-                            << type_name(target_type.full_type()) << "' and '" << type_name(egress_type.full_type())
-                            << "' has been detected. Performance between "
-                               "these nodes can be improved by registering an EdgeConverter at compile time. Without "
-                               "this, conversion "
-                               "to an intermediate python type will be necessary (i.e. C++ -> Python -> C++).";
+                        LOG(WARNING) << "WARNING: A slow edge connection between C++ nodes '"
+                                     << type_name(target_type.full_type()) << "' and '"
+                                     << type_name(egress_type.full_type())
+                                     << "' has been detected. Performance between "
+                                        "these nodes can be improved by registering an EdgeConverter at compile time. "
+                                        "Without "
+                                        "this, conversion "
+                                        "to an intermediate python type will be necessary (i.e. C++ -> Python -> C++).";
                     }
                     else
                     {

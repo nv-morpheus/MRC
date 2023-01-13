@@ -60,8 +60,7 @@ std::string OperatorProxy::get_name(PythonOperator& self)
     return self.get_name();
 }
 
-PythonOperator OperatorsProxy::build(
-    PyFuncHolder<void(const PyObjectObservable& obs, PyObjectSubscriber& sub)> build_fn)
+PythonOperator OperatorsProxy::build(PyFuncHolder<void(const PyObjectObservable& obs, PyObjectSubscriber& sub)> build_fn)
 {
     //  Build and return the map operator
     return {"build", [=](PyObjectObservable source) -> PyObjectObservable {
@@ -77,8 +76,8 @@ PythonOperator OperatorsProxy::build(
 
                     } catch (py::error_already_set& err)
                     {
-                        LOG(ERROR) << "Python occurred during full node subscription. Error: " +
-                                          std::string(err.what());
+                        LOG(ERROR)
+                            << "Python occurred during full node subscription. Error: " + std::string(err.what());
 
                         // Rethrow python exceptions
                         throw;

@@ -280,12 +280,12 @@ CpuSet Topology::cpuset_for_object(int depth, int id) const
 CpuSet Topology::cpuset_for_object(hwloc_topology_t topo, int depth, int id)
 {
     auto* obj = object_at_depth(topo, depth, id);
-    return CpuSet(obj->cpuset);
+    return {obj->cpuset};
 }
 NumaSet Topology::numaset_for_object(int depth, int id) const
 {
     auto* obj = object_at_depth(m_topology, depth, id);
-    return NumaSet(obj->nodeset);
+    return {obj->nodeset};
 }
 const CpuSet& Topology::cpu_set() const
 {

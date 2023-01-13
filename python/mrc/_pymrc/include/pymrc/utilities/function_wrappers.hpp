@@ -103,9 +103,10 @@ struct PyFuncHolder<ReturnT(ArgsT...)>
         return m_cpp_fn(std::forward<ArgsT>(args)...);
     }
 
-    static constexpr auto Signature =
-        pybind11::detail::_("Callable[[") + pybind11::detail::concat(pybind11::detail::make_caster<ArgsT>::name...) +
-        pybind11::detail::_("], ") + pybind11::detail::make_caster<return_t>::name + pybind11::detail::_("]");
+    static constexpr auto Signature = pybind11::detail::_("Callable[[") +
+                                      pybind11::detail::concat(pybind11::detail::make_caster<ArgsT>::name...) +
+                                      pybind11::detail::_("], ") + pybind11::detail::make_caster<return_t>::name +
+                                      pybind11::detail::_("]");
 
     // We require a factory function to get around calling virtual functions inside of the constructor. These objects
     // are default constructable but will throw an error

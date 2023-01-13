@@ -124,7 +124,7 @@ struct PortBuilderUtil
                 VLOG(2) << "Attempting dynamic Ingress cast for: " << type_name<decltype(base)>() << " into "
                         << type_name<segment::Object<node::RxSourceBase<std::shared_ptr<IngressDataT>>>>();
 
-                    segment::Object<node::SourceProperties<std::shared_ptr<IngressDataT>>>>(base);
+                return std::dynamic_pointer_cast<segment::Object<node::RxSourceBase<std::shared_ptr<IngressDataT>>>>(
                     base);
             });
     }

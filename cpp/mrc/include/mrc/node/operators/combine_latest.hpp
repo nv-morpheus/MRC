@@ -81,7 +81,9 @@ struct Surely
 template <class... T>
 inline auto surely2(const std::tuple<T...>& tpl)
 {
-    return std::apply([](auto... args) { return std::make_tuple(args.value()...); });
+    return std::apply([](auto... args) {
+        return std::make_tuple(args.value()...);
+    });
 }
 
 // template <typename... TypesT>

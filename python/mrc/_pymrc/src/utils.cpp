@@ -131,7 +131,7 @@ json cast_from_pyobject(const py::object& source)
 {
     if (source.is_none())
     {
-        return json();
+        return {};
     }
     if (py::isinstance<py::dict>(source))
     {
@@ -173,7 +173,7 @@ json cast_from_pyobject(const py::object& source)
     }
 
     // else unsupported return null
-    return json();
+    return {};
 }
 
 void show_deprecation_warning(const std::string& deprecation_message, ssize_t stack_level)

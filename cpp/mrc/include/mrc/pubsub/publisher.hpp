@@ -87,7 +87,8 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
 
         // Make a connection from this to the service
         mrc::node::make_edge<node::EgressProvider<std::unique_ptr<codable::EncodedStorage>>, IPublisherService>(
-            *this, *m_service);
+            *this,
+            *m_service);
 
         CHECK(m_service);
         m_service->await_start();

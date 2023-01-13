@@ -46,16 +46,15 @@ namespace mrc::node {
  */
 struct EdgeAdapterRegistry
 {
-    using ingress_converter_fn_t =
-        std::function<std::shared_ptr<IEdgeWritableBase>(std::shared_ptr<IEdgeWritableBase>)>;
+    using ingress_converter_fn_t = std::function<std::shared_ptr<IEdgeWritableBase>(std::shared_ptr<IEdgeWritableBase>)>;
 
     using egress_converter_fn_t = std::function<std::shared_ptr<IEdgeReadableBase>(std::shared_ptr<IEdgeReadableBase>)>;
 
-    using ingress_adapter_fn_t = std::function<std::shared_ptr<node::IngressHandleObj>(
-        const node::EdgeTypePair&, std::shared_ptr<node::IEdgeWritableBase>)>;
+    using ingress_adapter_fn_t = std::function<
+        std::shared_ptr<node::IngressHandleObj>(const node::EdgeTypePair&, std::shared_ptr<node::IEdgeWritableBase>)>;
 
-    using egress_adapter_fn_t = std::function<std::shared_ptr<node::EgressHandleObj>(
-        const node::EdgeTypePair&, std::shared_ptr<node::IEdgeReadableBase>)>;
+    using egress_adapter_fn_t = std::function<
+        std::shared_ptr<node::EgressHandleObj>(const node::EdgeTypePair&, std::shared_ptr<node::IEdgeReadableBase>)>;
 
     EdgeAdapterRegistry() = delete;
 

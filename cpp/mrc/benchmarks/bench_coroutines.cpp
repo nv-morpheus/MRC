@@ -26,7 +26,9 @@ using namespace mrc;
 
 static void mrc_coro_create_single_task_and_sync(benchmark::State& state)
 {
-    auto task = []() -> coroutines::Task<void> { co_return; };
+    auto task = []() -> coroutines::Task<void> {
+        co_return;
+    };
 
     for (auto _ : state)
     {
@@ -36,7 +38,9 @@ static void mrc_coro_create_single_task_and_sync(benchmark::State& state)
 
 static void mrc_coro_create_single_task_and_sync_on_when_all(benchmark::State& state)
 {
-    auto task = []() -> coroutines::Task<void> { co_return; };
+    auto task = []() -> coroutines::Task<void> {
+        co_return;
+    };
 
     for (auto _ : state)
     {
@@ -46,7 +50,9 @@ static void mrc_coro_create_single_task_and_sync_on_when_all(benchmark::State& s
 
 static void mrc_coro_create_two_tasks_and_sync_on_when_all(benchmark::State& state)
 {
-    auto task = []() -> coroutines::Task<void> { co_return; };
+    auto task = []() -> coroutines::Task<void> {
+        co_return;
+    };
 
     for (auto _ : state)
     {

@@ -67,7 +67,9 @@ class RxSinkBase : public IngressProvider<T>, public EgressAcceptor<T>, public S
 
 template <typename T>
 RxSinkBase<T>::RxSinkBase() :
-  m_observable(rxcpp::observable<>::create<T>([this](rxcpp::subscriber<T> s) { progress_engine(s); }))
+  m_observable(rxcpp::observable<>::create<T>([this](rxcpp::subscriber<T> s) {
+      progress_engine(s);
+  }))
 {
     // Set the default channel
     this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());

@@ -103,40 +103,54 @@ PYBIND11_MODULE(segment, module)
                                py::overload_cast<>(&mrc::segment::ObjectProperties::launch_options),
                                py::return_value_policy::reference_internal);
 
-    auto Builder    = py::class_<mrc::segment::Builder>(module, "Builder");
-    auto Definition = py::class_<mrc::segment::Definition>(module, "Definition");
-    auto SegmentModule =
-        py::class_<mrc::modules::SegmentModule, std::shared_ptr<mrc::modules::SegmentModule>>(module, "SegmentModule");
+    auto Builder       = py::class_<mrc::segment::Builder>(module, "Builder");
+    auto Definition    = py::class_<mrc::segment::Definition>(module, "Definition");
+    auto SegmentModule = py::class_<mrc::modules::SegmentModule, std::shared_ptr<mrc::modules::SegmentModule>>(module,
+                                                                                                               "Segment"
+                                                                                                               "Modul"
+                                                                                                               "e");
     auto SegmentModuleRegistry = py::class_<ModuleRegistryProxy>(module, "ModuleRegistry");
 
     /** Builder Interface Declarations **/
     /*
      * @brief Make a source node that generates py::object values
      */
-    Builder.def("make_source",
-                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(
-                    mrc::segment::Builder&, const std::string&, py::iterator)>(&BuilderProxy::make_source));
+    Builder.def(
+        "make_source",
+        static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::Builder&,
+                                                                        const std::string&,
+                                                                        py::iterator)>(&BuilderProxy::make_source));
 
-    Builder.def("make_source",
-                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(
-                    mrc::segment::Builder&, const std::string&, py::iterable)>(&BuilderProxy::make_source),
-                py::return_value_policy::reference_internal);
+    Builder.def(
+        "make_source",
+        static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::Builder&,
+                                                                        const std::string&,
+                                                                        py::iterable)>(&BuilderProxy::make_source),
+        py::return_value_policy::reference_internal);
 
-    Builder.def("make_source",
-                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(
-                    mrc::segment::Builder&, const std::string&, py::function)>(&BuilderProxy::make_source));
-
-    Builder.def("make_source_component",
-                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(
-                    mrc::segment::Builder&, const std::string&, py::iterator)>(&BuilderProxy::make_source_component));
-
-    Builder.def("make_source_component",
-                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(
-                    mrc::segment::Builder&, const std::string&, py::iterable)>(&BuilderProxy::make_source_component));
+    Builder.def(
+        "make_source",
+        static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::Builder&,
+                                                                        const std::string&,
+                                                                        py::function)>(&BuilderProxy::make_source));
 
     Builder.def("make_source_component",
-                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(
-                    mrc::segment::Builder&, const std::string&, py::function)>(&BuilderProxy::make_source_component));
+                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::Builder&,
+                                                                                const std::string&,
+                                                                                py::iterator)>(
+                    &BuilderProxy::make_source_component));
+
+    Builder.def("make_source_component",
+                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::Builder&,
+                                                                                const std::string&,
+                                                                                py::iterable)>(
+                    &BuilderProxy::make_source_component));
+
+    Builder.def("make_source_component",
+                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::Builder&,
+                                                                                const std::string&,
+                                                                                py::function)>(
+                    &BuilderProxy::make_source_component));
 
     /**
      * Construct a new py::object sink.

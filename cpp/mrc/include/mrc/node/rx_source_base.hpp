@@ -75,7 +75,9 @@ RxSourceBase<T>::RxSourceBase() :
           this->get_writable_edge()->await_write(std::move(data));
           this->watcher_epilogue(WatchableEvent::channel_write, true, &data);
       },
-      [](std::exception_ptr ptr) { runnable::Context::get_runtime_context().set_exception(std::move(ptr)); }))
+      [](std::exception_ptr ptr) {
+          runnable::Context::get_runtime_context().set_exception(std::move(ptr));
+      }))
 {
     // Set the default channel
     this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());

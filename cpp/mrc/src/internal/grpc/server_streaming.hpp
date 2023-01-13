@@ -295,8 +295,13 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
 
         // make writer sink
         m_write_channel = std::make_shared<mrc::node::WritableSubject<writer_t>>();
-        auto writer     = std::make_unique<mrc::node::RxSink<writer_t>>([this](writer_t request) { do_write(request); },
-                                                                    [this] { do_writes_done(); });
+        auto writer     = std::make_unique<mrc::node::RxSink<writer_t>>(
+            [this](writer_t request) {
+                do_write(request);
+            },
+            [this] {
+                do_writes_done();
+            });
         mrc::node::make_edge(*m_write_channel, *writer);
 
         // construct StreamWriter

@@ -59,7 +59,9 @@ struct EdgeBuilder final
      * @return Ingress handle constructed by the adapter
      */
     static std::shared_ptr<IEdgeWritableBase> ingress_adapter_for_sink(
-        IIngressAcceptorBase& source, IIngressProviderBase& sink, std::shared_ptr<IEdgeWritableBase> ingress_handle);
+        IIngressAcceptorBase& source,
+        IIngressProviderBase& sink,
+        std::shared_ptr<IEdgeWritableBase> ingress_handle);
 
     template <typename T>
     static std::shared_ptr<IngressHandleObj> adapt_ingress(std::shared_ptr<IngressHandleObj> ingress);
@@ -75,8 +77,9 @@ struct EdgeBuilder final
      * @param ingress_handle
      * @return
      */
-    static std::shared_ptr<IEdgeWritableBase> ingress_for_source_type(
-        std::type_index source_type, IIngressProviderBase& sink, std::shared_ptr<IEdgeWritableBase> ingress_handle);
+    static std::shared_ptr<IEdgeWritableBase> ingress_for_source_type(std::type_index source_type,
+                                                                      IIngressProviderBase& sink,
+                                                                      std::shared_ptr<IEdgeWritableBase> ingress_handle);
 
     static void make_edge_ingress_typeless(IIngressAcceptorBase& source,
                                            IIngressProviderBase& sink,
@@ -140,13 +143,13 @@ struct EdgeBuilder final
         constexpr bool LessBits      = sizeof(SinkT) > sizeof(SourceT);  // Sink requires more bits than source.
         constexpr bool FloatToInt    = std::is_floating_point_v<SourceT> && std::is_integral_v<SinkT>;  // float -> int
         constexpr bool SignedToUnsigned = std::is_signed_v<SinkT> && !std::is_signed_v<SourceT>;  // signed -> unsigned
-        constexpr bool UnsignedToSignedLessBits =
-            !std::is_signed_v<SinkT> && std::is_signed_v<SourceT> &&
-            (sizeof(SourceT) == sizeof(SinkT));  // Unsigned component could exceed signed limits
+        constexpr bool UnsignedToSignedLessBits = !std::is_signed_v<SinkT> && std::is_signed_v<SourceT> &&
+                                                  (sizeof(SourceT) == sizeof(SinkT));  // Unsigned component could
+                                                                                       // exceed signed limits
 
         // If its convertable but may result in loss of data, it requires narrowing
-        constexpr bool RequiresNarrowing =
-            IsConvertable && (LessBits || FloatToInt || SignedToUnsigned || UnsignedToSignedLessBits);
+        constexpr bool RequiresNarrowing = IsConvertable &&
+                                           (LessBits || FloatToInt || SignedToUnsigned || UnsignedToSignedLessBits);
 
         std::shared_ptr<EgressHandleObj> edge;
 

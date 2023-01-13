@@ -306,7 +306,9 @@ class TestSinkComponent : public IngressProvider<T>
                 // Call this object
                 return this->await_write(std::move(t));
             },
-            [this]() { this->on_complete(); }));
+            [this]() {
+                this->on_complete();
+            }));
     }
 
     channel::Status await_write(int&& t)

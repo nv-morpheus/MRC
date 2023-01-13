@@ -212,7 +212,9 @@ class TestNodeImpl : public PythonTestNodeMixin
                        // Forward on
                        this->increment_counter("on_next");
                    }) |
-                   rxcpp::operators::finally([this]() { this->increment_counter("on_completed"); });
+                   rxcpp::operators::finally([this]() {
+                       this->increment_counter("on_completed");
+                   });
         };
     }
 };
@@ -258,9 +260,15 @@ class TestSinkImpl : public PythonTestNodeMixin
     rxcpp::observer<std::shared_ptr<T>> build()
     {
         return rxcpp::make_observer_dynamic<sink_type_t>(
-            [this](sink_type_t x) { this->increment_counter("on_next"); },
-            [this](std::exception_ptr ex) { this->increment_counter("on_error"); },
-            [this]() { this->increment_counter("on_completed"); });
+            [this](sink_type_t x) {
+                this->increment_counter("on_next");
+            },
+            [this](std::exception_ptr ex) {
+                this->increment_counter("on_error");
+            },
+            [this]() {
+                this->increment_counter("on_completed");
+            });
     }
 };
 
@@ -357,7 +365,7 @@ PYBIND11_MODULE(test_edges_cpp, module)
     CREATE_TEST_NODE_CLASS(SinkComponentDerivedA);
     CREATE_TEST_NODE_CLASS(SinkComponentDerivedB);
 
-    module.attr("__version__") =
-        MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "." << mrc_VERSION_PATCH);
+    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+                                                                  << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pytests

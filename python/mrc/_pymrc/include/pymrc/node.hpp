@@ -51,11 +51,11 @@ namespace mrc {
 namespace node {
 
 template <typename SourceT>
-class ConvertingEdgeWritable<SourceT,
-                             pymrc::PyHolder,
-                             std::enable_if_t<!pybind11::detail::is_pyobject<SourceT>::value &&
-                                                  !std::is_convertible_v<SourceT, pybind11::object>,
-                                              void>> : public ConvertingEdgeWritableBase<SourceT, pymrc::PyHolder>
+class ConvertingEdgeWritable<
+    SourceT,
+    pymrc::PyHolder,
+    std::enable_if_t<!pybind11::detail::is_pyobject<SourceT>::value && !std::is_convertible_v<SourceT, pybind11::object>,
+                     void>> : public ConvertingEdgeWritableBase<SourceT, pymrc::PyHolder>
 {
     using base_t = ConvertingEdgeWritableBase<SourceT, pymrc::PyHolder>;
     using typename base_t::input_t;
@@ -196,11 +196,11 @@ class ConvertingEdgeReadable<
 };
 
 template <typename OutputT>
-struct ConvertingEdgeReadable<pymrc::PyHolder,
-                              OutputT,
-                              std::enable_if_t<!pybind11::detail::is_pyobject<OutputT>::value &&
-                                                   !std::is_convertible_v<pybind11::object, OutputT>,
-                                               void>> : public ConvertingEdgeReadableBase<pymrc::PyHolder, OutputT>
+struct ConvertingEdgeReadable<
+    pymrc::PyHolder,
+    OutputT,
+    std::enable_if_t<!pybind11::detail::is_pyobject<OutputT>::value && !std::is_convertible_v<pybind11::object, OutputT>,
+                     void>> : public ConvertingEdgeReadableBase<pymrc::PyHolder, OutputT>
 {
     using base_t = ConvertingEdgeReadableBase<pymrc::PyHolder, OutputT>;
     using typename base_t::input_t;
