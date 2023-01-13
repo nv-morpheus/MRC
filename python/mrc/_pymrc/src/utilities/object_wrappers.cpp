@@ -19,6 +19,9 @@
 
 #include "mrc/exceptions/runtime_error.hpp"
 
+#include <type_traits>
+#include <utility>
+
 namespace mrc::pymrc {
 
 namespace py = pybind11;
@@ -129,8 +132,7 @@ PyObjectHolder& PyObjectHolder::operator=(PyObjectHolder&& other)
 
 PyObjectHolder::operator bool() const
 {
-    // Return false if there is no wrapped value or the wrapped value is empty
-    return m_wrapped && (bool)*m_wrapped;
+    return (bool)*m_wrapped;
 }
 
 const pybind11::handle& PyObjectHolder::view_obj() const&
@@ -145,12 +147,6 @@ pybind11::object PyObjectHolder::copy_obj() const&
     return m_wrapped->copy_obj();
 }
 
-pybind11::object PyObjectHolder::copy_obj() &&
-{
-    // Allow for peaking into the object
-    return std::move(*m_wrapped).copy_obj();
-}
-
 PyObjectHolder::operator const pybind11::handle&() const&
 {
     if (PyGILState_Check() == 0)
@@ -163,7 +159,13 @@ PyObjectHolder::operator const pybind11::handle&() const&
 
 PyObjectHolder::operator pybind11::object() &&
 {
-    return std::move(*m_wrapped).copy_obj();
+    // If we are converting to a pybind11::object, then we need to lose the m_wrapped shared_ptr. Make sure to reset to
+    // a new object since m_wrapped should never be null
+    auto tmp = std::exchange(m_wrapped, std::make_shared<PyObjectWrapper>());
+
+    // Return a copy before exiting. This will increment the ref count before the m_wrapped goes away (which could
+    // decrement the ref count)
+    return tmp->copy_obj();
 }
 
 PyObject* PyObjectHolder::ptr() const

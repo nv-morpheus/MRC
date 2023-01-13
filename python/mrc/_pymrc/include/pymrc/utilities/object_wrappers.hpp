@@ -104,8 +104,6 @@ class PYBIND11_EXPORT PyObjectHolder : public pybind11::detail::object_api<PyObj
     // Makes a copy of the underlying object. Requires the GIL
     pybind11::object copy_obj() const&;
 
-    pybind11::object copy_obj() &&;
-
     // Returns const ref. Used by object_api. Should not be used directly. Requires the GIL
     operator const pybind11::handle&() const&;
 

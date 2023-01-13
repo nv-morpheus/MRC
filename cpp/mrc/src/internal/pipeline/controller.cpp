@@ -65,6 +65,9 @@ void Controller::on_data(ControlMessage&& message)
 
             // Call kill but do not rethrow the exception to allow for proper shutdown
             kill();
+
+            // Set the exception in the context so it is correctly reported
+            ctx.set_exception(std::current_exception());
         }
         break;
     case ControlMessageType::Stop:
