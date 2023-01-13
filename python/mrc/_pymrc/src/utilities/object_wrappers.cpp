@@ -129,7 +129,8 @@ PyObjectHolder& PyObjectHolder::operator=(PyObjectHolder&& other)
 
 PyObjectHolder::operator bool() const
 {
-    return (bool)*m_wrapped;
+    // Return false if there is no wrapped value or the wrapped value is empty
+    return m_wrapped && (bool)*m_wrapped;
 }
 
 const pybind11::handle& PyObjectHolder::view_obj() const&
@@ -144,9 +145,10 @@ pybind11::object PyObjectHolder::copy_obj() const&
     return m_wrapped->copy_obj();
 }
 
-pybind11::object&& PyObjectHolder::move_obj() &&
+pybind11::object PyObjectHolder::copy_obj() &&
 {
-    return std::move(*m_wrapped).move_obj();
+    // Allow for peaking into the object
+    return std::move(*m_wrapped).copy_obj();
 }
 
 PyObjectHolder::operator const pybind11::handle&() const&
@@ -159,9 +161,9 @@ PyObjectHolder::operator const pybind11::handle&() const&
     return m_wrapped->view_obj();
 }
 
-PyObjectHolder::operator pybind11::object&&() &&
+PyObjectHolder::operator pybind11::object() &&
 {
-    return std::move(*m_wrapped).move_obj();
+    return std::move(*m_wrapped).copy_obj();
 }
 
 PyObject* PyObjectHolder::ptr() const
@@ -170,3 +172,23 @@ PyObject* PyObjectHolder::ptr() const
 }
 
 }  // namespace mrc::pymrc
+
+namespace pybind11::detail {
+
+bool detail::type_caster<mrc::pymrc::PyObjectHolder>::load(handle src, bool convert)
+{
+    value = reinterpret_borrow<object>(src);
+
+    return true;
+}
+
+handle pybind11::detail::type_caster<mrc::pymrc::PyObjectHolder>::cast(mrc::pymrc::PyObjectHolder src,
+                                                                       return_value_policy /* policy */,
+                                                                       handle /* parent */)
+{
+    // Since the PyObjectHolder is going out of scope, this could potentially decrement the ref. Increment it here
+    // before returning
+    return src.view_obj().inc_ref();
+}
+
+}  // namespace pybind11::detail

@@ -104,16 +104,15 @@ class PYBIND11_EXPORT PyObjectHolder : public pybind11::detail::object_api<PyObj
     // Makes a copy of the underlying object. Requires the GIL
     pybind11::object copy_obj() const&;
 
-    // Moves the underlying object. Does not require the GIL
-    pybind11::object&& move_obj() &&;
+    pybind11::object copy_obj() &&;
 
     // Returns const ref. Used by object_api. Should not be used directly. Requires the GIL
     operator const pybind11::handle&() const&;
 
     // Main method to move values out of the wrapper
-    operator pybind11::object&&() &&;
+    operator pybind11::object() &&;
 
-    operator pybind11::object&&() const&& = delete;
+    operator pybind11::object() const&& = delete;
 
     // Necessary to implement the object_api interface
     PyObject* ptr() const;
@@ -125,3 +124,25 @@ class PYBIND11_EXPORT PyObjectHolder : public pybind11::detail::object_api<PyObj
 #pragma GCC visibility pop
 
 }  // namespace mrc::pymrc
+
+namespace pybind11::detail {
+
+template <>
+struct PYBIND11_EXPORT type_caster<mrc::pymrc::PyObjectHolder>
+{
+  public:
+    /**
+     * This macro establishes the name 'inty' in
+     * function signatures and declares a local variable
+     * 'value' of type inty
+     */
+    PYBIND11_TYPE_CASTER(mrc::pymrc::PyObjectHolder, _("object"));
+
+    // Conversion from Python -> C++
+    bool load(handle src, bool convert);
+
+    // Conversion from C++ -> Python
+    static handle cast(mrc::pymrc::PyObjectHolder src, return_value_policy /* policy */, handle /* parent */);
+};
+
+}  // namespace pybind11::detail

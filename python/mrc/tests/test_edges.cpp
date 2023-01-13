@@ -207,21 +207,12 @@ class TestNodeImpl : public PythonTestNodeMixin
   protected:
     auto build_operator()
     {
-        return [this](rxcpp::observable<sink_type_t> input, rxcpp::subscriber<source_type_t> output) {
-            return input.subscribe(rxcpp::make_observer<sink_type_t>(
-                [this, &output](sink_type_t x) {
-                    // Forward on
-                    this->increment_counter("on_next");
-                    output.on_next(std::move(x));
-                },
-                [&](std::exception_ptr error_ptr) {
-                    this->increment_counter("on_error");
-                    output.on_error(error_ptr);
-                },
-                [&]() {
-                    this->increment_counter("on_completed");
-                    output.on_completed();
-                }));
+        return [this](rxcpp::observable<sink_type_t> input) {
+            return input | rxcpp::operators::tap([this](sink_type_t x) {
+                       // Forward on
+                       this->increment_counter("on_next");
+                   }) |
+                   rxcpp::operators::finally([this]() { this->increment_counter("on_completed"); });
         };
     }
 };
@@ -234,7 +225,7 @@ class TestNode : public pymrc::PythonNode<std::shared_ptr<T>, std::shared_ptr<T>
   public:
     TestNode(std::string name, pymrc::PyHolder counter) : TestNodeImpl<T>(std::move(name), std::move(counter))
     {
-        this->make_stream(base_t::op_factory_from_sub_fn(this->build_operator()));
+        this->make_stream(this->build_operator());
     }
 };
 
@@ -247,7 +238,7 @@ class TestNodeComponent : public pymrc::PythonNodeComponent<std::shared_ptr<T>, 
   public:
     TestNodeComponent(std::string name, pymrc::PyHolder counter) : TestNodeImpl<T>(std::move(name), std::move(counter))
     {
-        this->make_stream(base_t::op_factory_from_sub_fn(this->build_operator()));
+        this->make_stream(this->build_operator());
     }
 };
 

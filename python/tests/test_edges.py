@@ -106,11 +106,12 @@ def assert_node_counts(actual: dict, expected: dict):
     pass
 
 
-def add_source(seg: mrc.Builder, is_cpp: bool, data_type: type, is_component: bool):
+def add_source(seg: mrc.Builder, is_cpp: bool, data_type: type, is_component: bool, suffix: str = ""):
     global node_counts, expected_node_counts
 
     prefix = "SourceComponent" if is_component else "Source"
-    node_name = prefix + data_type.__name__
+    node_type = prefix + data_type.__name__
+    node_name = node_type + suffix
 
     expected_node_counts.update({
         f"{node_name}.on_next": 5,
@@ -119,7 +120,7 @@ def add_source(seg: mrc.Builder, is_cpp: bool, data_type: type, is_component: bo
     })
 
     if (is_cpp):
-        return getattr(m, node_name)(seg, node_name, node_counts)
+        return getattr(m, node_type)(seg, node_name, node_counts)
     else:
         init_node_counter(f"{node_name}.on_next")
         init_node_counter(f"{node_name}.on_error")
@@ -158,8 +159,11 @@ def add_node(seg: mrc.Builder, upstream: mrc.SegmentObject, is_cpp: bool, data_t
         init_node_counter(f"{node_name}.on_error")
         init_node_counter(f"{node_name}.on_completed")
 
-        def on_next(x: int):
+        def on_next(x):
+            assert isinstance(x, data_type)
+
             increment_node_counter(f"{node_name}.on_next")
+            return x
 
         def on_completed():
             increment_node_counter(f"{node_name}.on_completed")
@@ -174,28 +178,41 @@ def add_node(seg: mrc.Builder, upstream: mrc.SegmentObject, is_cpp: bool, data_t
     return node
 
 
-def add_sink(seg: mrc.Builder, upstream: mrc.SegmentObject, is_cpp: bool, data_type: type, is_component: bool):
+def add_sink(seg: mrc.Builder,
+             upstream: mrc.SegmentObject,
+             is_cpp: bool,
+             data_type: type,
+             is_component: bool,
+             suffix: str = "",
+             expected_vals_fn: typing.Callable[[typing.Dict[str, int]], typing.Dict[str, int]] = None):
     global node_counts, expected_node_counts
 
     prefix = "SinkComponent" if is_component else "Sink"
-    node_name = prefix + data_type.__name__
+    node_type = prefix + data_type.__name__
+    node_name = node_type + suffix
 
-    expected_node_counts.update({
-        f"{node_name}.on_next": 5,
-        f"{node_name}.on_error": 0,
-        f"{node_name}.on_completed": 1,
-    })
+    expected_orig = {
+        "on_next": 5,
+        "on_error": 0,
+        "on_completed": 1,
+    }
+
+    if (expected_vals_fn is not None):
+        expected_orig = expected_vals_fn(expected_orig)
+
+    expected_node_counts.update({f"{node_name}.{k}": v for k, v in expected_orig.items()})
 
     sink = None
 
     if (is_cpp):
-        sink = getattr(m, node_name)(seg, node_name, node_counts)
+        sink = getattr(m, node_type)(seg, node_name, node_counts)
     else:
         init_node_counter(f"{node_name}.on_next")
         init_node_counter(f"{node_name}.on_error")
         init_node_counter(f"{node_name}.on_completed")
 
-        def on_next_sink(x: int):
+        def on_next_sink(x):
+            assert isinstance(x, data_type)
             increment_node_counter(f"{node_name}.on_next")
 
         def on_error_sink(err):
@@ -214,290 +231,14 @@ def add_sink(seg: mrc.Builder, upstream: mrc.SegmentObject, is_cpp: bool, data_t
     return sink
 
 
-def add_cpp_source_component_base(seg: mrc.Builder):
-    global node_counts
-    node = m.SourceComponentBase(seg, "source_component_base", node_counts)
+def add_broadcast(seg: mrc.Builder, *upstream: mrc.SegmentObject):
+
+    node = mrc.core.node.Broadcast(seg, "Broadcast")
+
+    for u in upstream:
+        seg.make_edge(u, node)
 
     return node
-
-
-def add_cpp_source_component_derived(seg: mrc.Builder):
-    node = m.SourceComponentDerivedA(seg, "cpp_source_component_derived")
-
-    return node
-
-
-def add_py_node_component_base(seg: mrc.Builder, upstream):
-
-    def on_next_node(x: int):
-        increment_node_counter("node_component_base.on_next")
-
-        return x
-
-    init_node_counter("node_component_base.on_next")
-
-    node = seg.make_node_component("node_component_base", ops.map(on_next_node))
-
-    seg.make_edge(upstream, node)
-
-    return node
-
-
-def add_cpp_sink_base(seg: mrc.Builder, upstream):
-
-    node = m.SinkBase(seg, "sink_base")
-
-    seg.make_edge(upstream, node)
-
-    return node
-
-
-def add_py_sink_component_base(seg: mrc.Builder, upstream):
-
-    def on_next_sink(x: int):
-        increment_node_counter("sink_component_base.on_next")
-
-    def on_error_sink(err):
-        increment_node_counter("sink_component_base.on_error")
-
-    def on_completed_sink():
-        increment_node_counter("sink_component_base.on_completed")
-
-    node = seg.make_sink_component("sink_component_base", on_next_sink, on_error_sink, on_completed_sink)
-
-    init_node_counter("sink_component_base.on_next")
-    init_node_counter("sink_component_base.on_error")
-    init_node_counter("sink_component_base.on_completed")
-
-    seg.make_edge(upstream, node)
-
-    return node
-
-
-def test_connect_cpp_edges():
-
-    def segment_init(seg: mrc.Builder):
-        source = m.SourceDerivedB(seg, "source")
-
-        node = m.NodeBase(seg, "node")
-        seg.make_edge(source, node)
-
-        sink = m.SinkBase(seg, "sink")
-        seg.make_edge(node, sink)
-
-    pipeline = mrc.Pipeline()
-
-    pipeline.make_segment("my_seg", segment_init)
-
-    options = mrc.Options()
-
-    # Set to 1 thread
-    options.topology.user_cpuset = "0-0"
-
-    executor = mrc.Executor(options)
-
-    executor.register_pipeline(pipeline)
-
-    executor.start()
-
-    executor.join()
-
-
-def test_edge_cpp_to_cpp_same():
-
-    def segment_init(seg: mrc.Builder):
-        source = m.SourceDerivedB(seg, "source")
-
-        node = m.NodeBase(seg, "node")
-        seg.make_edge(source, node)
-
-        sink = m.SinkBase(seg, "sink")
-        seg.make_edge(node, sink)
-
-    pipeline = mrc.Pipeline()
-
-    pipeline.make_segment("my_seg", segment_init)
-
-    options = mrc.Options()
-
-    # Set to 1 thread
-    options.topology.user_cpuset = "0-0"
-
-    executor = mrc.Executor(options)
-
-    executor.register_pipeline(pipeline)
-
-    executor.start()
-
-    executor.join()
-
-
-def test_edge_cpp_to_py_same():
-
-    def segment_init(seg: mrc.Builder):
-        source = m.SourceDerivedB(seg, "source")
-
-        def on_next(x: m.Base):
-            pass
-
-        def on_error(e):
-            pass
-
-        def on_complete():
-            pass
-
-        sink = seg.make_sink("sink", on_next, on_error, on_complete)
-        seg.make_edge(source, sink)
-
-    pipeline = mrc.Pipeline()
-
-    pipeline.make_segment("my_seg", segment_init)
-
-    options = mrc.Options()
-
-    # Set to 1 thread
-    options.topology.user_cpuset = "0-0"
-
-    executor = mrc.Executor(options)
-
-    executor.register_pipeline(pipeline)
-
-    executor.start()
-
-    executor.join()
-
-
-def test_edge_py_to_cpp_same():
-
-    def segment_init(seg: mrc.Builder):
-
-        def source_fn():
-            yield m.DerivedB()
-            yield m.DerivedB()
-            yield m.DerivedB()
-
-        source = seg.make_source("source", source_fn())
-
-        sink = m.SinkBase(seg, "sink")
-        seg.make_edge(source, sink)
-
-    pipeline = mrc.Pipeline()
-
-    pipeline.make_segment("my_seg", segment_init)
-
-    options = mrc.Options()
-
-    # Set to 1 thread
-    options.topology.user_cpuset = "0-0"
-
-    executor = mrc.Executor(options)
-
-    executor.register_pipeline(pipeline)
-
-    executor.start()
-
-    executor.join()
-
-
-def test_edge_wrapper():
-    on_next_count = 0
-
-    def segment_init(seg: mrc.Builder):
-
-        def create_source():
-            yield 1
-            yield 2
-            yield 3
-            yield 4
-
-        source = seg.make_source("source", create_source())
-        # source = m.SourcePyHolder(seg, "source")
-
-        node = m.NodePyHolder(seg, "node")
-        seg.make_edge(source, node)
-
-        def on_next(x: int):
-            nonlocal on_next_count
-
-            on_next_count += 1
-
-        def on_error(e):
-            pass
-
-        def on_complete():
-            pass
-
-        sink = seg.make_sink("sink", on_next, on_error, on_complete)
-        seg.make_edge(node, sink)
-
-    pipeline = mrc.Pipeline()
-
-    pipeline.make_segment("my_seg", segment_init)
-
-    options = mrc.Options()
-
-    # Set to 1 thread
-    options.topology.user_cpuset = "0-0"
-
-    executor = mrc.Executor(options)
-
-    executor.register_pipeline(pipeline)
-
-    executor.start()
-
-    executor.join()
-
-    assert on_next_count == 4
-
-
-def test_edge_wrapper_component():
-    on_next_count = 0
-
-    def segment_init(seg: mrc.Builder):
-
-        def create_source():
-            yield 1
-            yield 2
-            yield 3
-            yield 4
-
-        source = seg.make_source("source", create_source())
-
-        # source = m.SourcePyHolder(seg, "source")
-
-        def on_next(x: int):
-            nonlocal on_next_count
-            print("Got: {}".format(type(x)))
-
-            on_next_count += 1
-
-        def on_error(e):
-            pass
-
-        def on_complete():
-            print("Complete")
-
-        sink = seg.make_sink_component("sink_component", on_next, on_error, on_complete)
-        seg.make_edge(source, sink)
-
-    pipeline = mrc.Pipeline()
-
-    pipeline.make_segment("my_seg", segment_init)
-
-    options = mrc.Options()
-
-    # Set to 1 thread
-    options.topology.user_cpuset = "0-1"
-
-    executor = mrc.Executor(options)
-
-    executor.register_pipeline(pipeline)
-
-    executor.start()
-
-    executor.join()
-
-    assert on_next_count == 4
 
 
 # THIS TEST IS CAUSING ISSUES WHEN RUNNING ALL TESTS TOGETHER
@@ -587,226 +328,62 @@ def test_edge_wrapper_component():
 #     executor.join()
 
 
-def test_broadcast_cpp_to_cpp_same():
-
-    def segment_init(seg: mrc.Builder):
-        source = m.SourceDerivedB(seg, "source")
-
-        broadcast = mrc.core.node.Broadcast(seg, "broadcast")
-
-        sink = m.SinkDerivedB(seg, "sink")
-
-        seg.make_edge(source, broadcast)
-        seg.make_edge(broadcast, sink)
-
-    pipeline = mrc.Pipeline()
-
-    pipeline.make_segment("my_seg", segment_init)
-
-    options = mrc.Options()
-
-    # Set to 1 thread
-    options.topology.user_cpuset = "0-0"
-
-    executor = mrc.Executor(options)
-
-    executor.register_pipeline(pipeline)
-
-    executor.start()
-
-    executor.join()
-
-
-def test_broadcast_cpp_to_cpp_different():
-
-    def segment_init(seg: mrc.Builder):
-        source = m.SourceDerivedB(seg, "source")
-
-        broadcast = mrc.core.node.Broadcast(seg, "broadcast")
-
-        sink = m.SinkBase(seg, "sink")
-
-        seg.make_edge(source, broadcast)
-        seg.make_edge(broadcast, sink)
-
-    pipeline = mrc.Pipeline()
-
-    pipeline.make_segment("my_seg", segment_init)
-
-    options = mrc.Options()
-
-    # Set to 1 thread
-    options.topology.user_cpuset = "0-0"
-
-    executor = mrc.Executor(options)
-
-    executor.register_pipeline(pipeline)
-
-    executor.start()
-
-    executor.join()
-
-
-def test_broadcast_cpp_to_cpp_multi():
-
-    def segment_init(seg: mrc.Builder):
-        source_derived = m.SourceDerivedB(seg, "source_derived")
-        source_base = m.SourceBase(seg, "source_base")
-
-        broadcast = mrc.core.node.Broadcast(seg, "broadcast")
-
-        sink_base = m.SinkBase(seg, "sink_base")
-        sink_derived = m.SinkDerivedB(seg, "sink_derived")
-
-        seg.make_edge(source_derived, broadcast)
-        seg.make_edge(source_base, broadcast)
-
-        seg.make_edge(broadcast, sink_base)
-        seg.make_edge(broadcast, sink_derived)
-
-    pipeline = mrc.Pipeline()
-
-    pipeline.make_segment("my_seg", segment_init)
-
-    options = mrc.Options()
-
-    # Set to 1 thread
-    options.topology.user_cpuset = "0-0"
-
-    executor = mrc.Executor(options)
-
-    executor.register_pipeline(pipeline)
-
-    executor.start()
-
-    executor.join()
-
-
-def test_source_cpp_to_sink_component_cpp():
-
-    def segment_init(seg: mrc.Builder):
-        source_base = m.SourceBase(seg, "source_base")
-
-        sink_base = m.SinkComponentBase(seg, "sink_base")
-
-        seg.make_edge(source_base, sink_base)
-
-    pipeline = mrc.Pipeline()
-
-    pipeline.make_segment("my_seg", segment_init)
-
-    options = mrc.Options()
-
-    # Set to 1 thread
-    options.topology.user_cpuset = "0-0"
-
-    executor = mrc.Executor(options)
-
-    executor.register_pipeline(pipeline)
-
-    executor.start()
-
-    executor.join()
-
-
-def test_source_cpp_to_sink_component_py():
-    on_next_count = 0
-
-    def segment_init(seg: mrc.Builder):
-
-        source_base = m.SourceBase(seg, "source_base")
-
-        def on_next(x: int):
-            nonlocal on_next_count
-            print("Got: {}".format(type(x)))
-
-            on_next_count += 1
-
-        def on_error(e):
-            pass
-
-        def on_complete():
-            print("Complete")
-
-        sink = seg.make_sink_component("sink_component", on_next, on_error, on_complete)
-
-        seg.make_edge(source_base, sink)
-
-    pipeline = mrc.Pipeline()
-
-    pipeline.make_segment("my_seg", segment_init)
-
-    options = mrc.Options()
-
-    # Set to 1 thread
-    options.topology.user_cpuset = "0-1"
-
-    executor = mrc.Executor(options)
-
-    executor.register_pipeline(pipeline)
-
-    executor.start()
-
-    executor.join()
-
-    assert on_next_count == 5
-
-
-def gen_parameters(*args):
+def gen_parameters(*args,
+                   is_fail_fn: typing.Callable[[typing.Tuple], bool],
+                   values: typing.Dict[str, typing.Any] = {
+                       "com": True, "run": False
+                   }):
 
     all_node_names = list(args)
 
     parameters = []
 
-    for combo in itertools.product([True, False], repeat=len(all_node_names)):
+    for combo in itertools.product(values.keys(), repeat=len(all_node_names)):
 
         marks = ()
 
-        # Check for bad combos
-        # for pair in list(zip(combo[0::1], combo[1::1])):
-        #     if (all(pair)):
-        #         marks = (pytest.mark.xfail, )
-        #         break
-        if (all(combo)):
+        combo_vals = tuple(values[x] for x in combo)
+
+        if (is_fail_fn(combo_vals)):
             marks = (pytest.mark.xfail, )
 
-        p = pytest.param(*combo,
-                         id="-".join(
-                             [f"{all_node_names[idx]}_" + ("com" if val else "run") for idx, val in enumerate(combo)]),
-                         marks=marks)
+        p = pytest.param(*combo_vals, id="-".join([f"{x[0]}_{x[1]}" for x in zip(args, combo)]), marks=marks)
 
         parameters.append(p)
 
     return parameters
 
 
-# @pytest.mark.parametrize("source_component,sink_component",
-#                          [
-#                              pytest.param(False, False, id="source_run-sink_run"),
-#                              pytest.param(True, False, id="source_com-sink_run"),
-#                              pytest.param(False, True, id="source_run-sink_com"),
-#                              pytest.param(True, True, id="source_com-sink_com", marks=pytest.mark.xfail)
-#                          ])
-@pytest.mark.parametrize("source_component,sink_component", gen_parameters("source", "sink"))
+@pytest.mark.parametrize("source_component,sink_component", gen_parameters("source", "sink", is_fail_fn=all))
 @pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
 @pytest.mark.parametrize("sink_cpp", [True, False], ids=["sink_cpp", "sink_py"])
-def test_source_base_to_sink_base(run_segment,
-                                  source_component: bool,
-                                  source_cpp: bool,
-                                  sink_component: bool,
-                                  sink_cpp: bool):
+@pytest.mark.parametrize("source_type,sink_type",
+                         [
+                             pytest.param(m.Base, m.Base, id="source_base-sink_base"),
+                             pytest.param(m.Base, m.DerivedA, id="source_base-sink_derived", marks=pytest.mark.xfail),
+                             pytest.param(m.DerivedA, m.Base, id="source_derived-sink_base"),
+                             pytest.param(m.DerivedA, m.DerivedA, id="source_derived-sink_derived")
+                         ])
+def test_source_to_sink(run_segment,
+                        source_component: bool,
+                        sink_component: bool,
+                        source_cpp: bool,
+                        sink_cpp: bool,
+                        source_type: type,
+                        sink_type: type):
 
     def segment_init(seg: mrc.Builder):
 
-        source = add_source(seg, is_cpp=source_cpp, data_type=m.Base, is_component=source_component)
-        add_sink(seg, source, is_cpp=sink_cpp, data_type=m.Base, is_component=sink_component)
+        source = add_source(seg, is_cpp=source_cpp, data_type=source_type, is_component=source_component)
+        add_sink(seg, source, is_cpp=sink_cpp, data_type=sink_type, is_component=sink_component)
 
     results = run_segment(segment_init)
 
     assert results == expected_node_counts
 
 
-@pytest.mark.parametrize("source_component,node_component,sink_component", gen_parameters("source", "node", "sink"))
+@pytest.mark.parametrize("source_component,node_component,sink_component",
+                         gen_parameters("source", "node", "sink", is_fail_fn=lambda c: c[0] and c[1]))
 @pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
 @pytest.mark.parametrize("node_cpp", [True, False], ids=["node_cpp", "node_py"])
 @pytest.mark.parametrize("sink_cpp", [True, False], ids=["sink_cpp", "sink_py"])
@@ -829,70 +406,87 @@ def test_source_to_node_to_sink(run_segment,
     assert results == expected_node_counts
 
 
-def test_cpp_source_base_to_py_sink_component(run_segment):
+def fail_fn_test_source_to_broadcast_to_sinks(combo: typing.Tuple[type, type, type]):
+
+    for prev_type, cur_type in zip(combo[0::1], combo[1::1]):
+        if (not issubclass(prev_type, cur_type)):
+            return True
+
+    return False
+
+
+@pytest.mark.parametrize("sink1_component,sink2_component",
+                         gen_parameters("sink1", "sink2", is_fail_fn=lambda x: False))
+@pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
+@pytest.mark.parametrize("sink1_cpp", [True, False], ids=["sink1_cpp", "sink2_py"])
+@pytest.mark.parametrize("sink2_cpp", [True, False], ids=["sink2_cpp", "sink2_py"])
+@pytest.mark.parametrize("source_type,sink1_type,sink2_type",
+                         gen_parameters("source",
+                                        "sink1",
+                                        "sink2",
+                                        is_fail_fn=fail_fn_test_source_to_broadcast_to_sinks,
+                                        values={
+                                            "base": m.Base, "derived": m.DerivedA
+                                        }))
+def test_source_to_broadcast_to_sinks(run_segment,
+                                      sink1_component: bool,
+                                      sink2_component: bool,
+                                      source_cpp: bool,
+                                      sink1_cpp: bool,
+                                      sink2_cpp: bool,
+                                      source_type: type,
+                                      sink1_type: type,
+                                      sink2_type: type):
 
     def segment_init(seg: mrc.Builder):
 
-        source_base = add_cpp_source_base(seg)
-        add_py_sink_component_base(seg, source_base)
+        source = add_source(seg, is_cpp=source_cpp, data_type=source_type, is_component=False)
+        broadcast = add_broadcast(seg, source)
+        add_sink(seg, broadcast, is_cpp=sink1_cpp, data_type=sink1_type, is_component=sink1_component, suffix="1")
+        add_sink(seg, broadcast, is_cpp=sink2_cpp, data_type=sink2_type, is_component=sink2_component, suffix="2")
 
     results = run_segment(segment_init)
 
-    assert results == {
-        "sink_component_base.on_next": 5,
-        "sink_component_base.on_error": 0,
-        "sink_component_base.on_completed": 1,
-    }
+    assert results == expected_node_counts
 
 
-def test_cpp_source_base_to_py_node_component_to_py_sink_component(run_segment):
+@pytest.mark.parametrize("sink1_component,sink2_component",
+                         gen_parameters("sink1", "sink2", is_fail_fn=lambda x: False))
+@pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
+@pytest.mark.parametrize("sink1_cpp", [True, False], ids=["sink1_cpp", "sink2_py"])
+@pytest.mark.parametrize("sink2_cpp", [True, False], ids=["sink2_cpp", "sink2_py"])
+def test_multi_source_to_broadcast_to_multi_sink(run_segment,
+                                                 sink1_component: bool,
+                                                 sink2_component: bool,
+                                                 source_cpp: bool,
+                                                 sink1_cpp: bool,
+                                                 sink2_cpp: bool):
+
+    def double_on_next(exp):
+        exp["on_next"] *= 2
+
+        return exp
 
     def segment_init(seg: mrc.Builder):
 
-        source_base = add_cpp_source_base(seg)
-        node_component = add_py_node_component_base(seg, source_base)
-        add_py_sink_component_base(seg, node_component)
+        source1 = add_source(seg, is_cpp=source_cpp, data_type=m.Base, is_component=False, suffix="1")
+        source2 = add_source(seg, is_cpp=source_cpp, data_type=m.Base, is_component=False, suffix="2")
+        broadcast = add_broadcast(seg, source1, source2)
+        add_sink(seg,
+                 broadcast,
+                 is_cpp=sink1_cpp,
+                 data_type=m.Base,
+                 is_component=sink1_component,
+                 suffix="1",
+                 expected_vals_fn=double_on_next)
+        add_sink(seg,
+                 broadcast,
+                 is_cpp=sink2_cpp,
+                 data_type=m.Base,
+                 is_component=sink2_component,
+                 suffix="2",
+                 expected_vals_fn=double_on_next)
 
     results = run_segment(segment_init)
 
-    assert results == {
-        "node_component_base.on_next": 5,
-        "sink_component_base.on_next": 5,
-        "sink_component_base.on_error": 0,
-        "sink_component_base.on_completed": 1,
-    }
-
-
-def test_cpp_source_component_base_to_cpp_sink_base(run_segment):
-
-    def segment_init(seg: mrc.Builder):
-
-        source_base = add_cpp_source_component_base(seg)
-        add_cpp_sink_base(seg, source_base)
-
-    results = run_segment(segment_init)
-
-    assert results == {
-        "source_component_base.on_next": 5,
-        "source_component_base.on_complete": 1,
-    }
-
-
-def test_cpp_source_component_derived_to_cpp_sink_base(run_segment):
-
-    def segment_init(seg: mrc.Builder):
-
-        source_base = add_cpp_source_component_derived(seg)
-        add_cpp_sink_base(seg, source_base)
-
-    results = run_segment(segment_init)
-
-    assert results == {}
-
-
-if (__name__ == "__main__"):
-    test_connect_cpp_edges()
-    test_edge_cpp_to_cpp_same()
-    test_edge_cpp_to_py_same()
-    test_edge_py_to_cpp_same()
-    test_edge_wrapper()
+    assert results == expected_node_counts
