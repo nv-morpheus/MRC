@@ -320,11 +320,11 @@ void Server::do_handle_event(event_t&& event)
             DVLOG(10) << "event.ok failed; close stream";
             drop_stream(event.stream);
         }
-    } catch (const std23::bad_expected_access<Error>& e)
+    } catch (const mrc::bad_expected_access<Error>& e)
     {
         LOG(ERROR) << "bad_expected_access: " << e.error().message();
         on_fatal_exception();
-    } catch (const UnexpectedError& e)
+    } catch (const mrc::unexpected<Error>& e)
     {
         LOG(ERROR) << "unexpected: " << e.value().message();
         on_fatal_exception();

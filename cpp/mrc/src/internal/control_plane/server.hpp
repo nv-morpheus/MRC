@@ -18,11 +18,11 @@
 #pragma once
 
 #include "internal/control_plane/server/connection_manager.hpp"
-#include "internal/expected.hpp"
 #include "internal/grpc/server.hpp"
 #include "internal/grpc/server_streaming.hpp"
 #include "internal/service.hpp"
 
+#include "mrc/core/error.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
 
 #include <boost/fiber/condition_variable.hpp>

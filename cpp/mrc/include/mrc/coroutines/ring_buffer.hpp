@@ -38,7 +38,7 @@
 
 #pragma once
 
-#include "mrc/core/std23_expected.hpp"
+#include "mrc/core/expected.hpp"
 #include "mrc/coroutines/schedule_policy.hpp"
 #include "mrc/coroutines/thread_local_context.hpp"
 #include "mrc/coroutines/thread_pool.hpp"
@@ -243,13 +243,13 @@ class RingBuffer
         /**
          * @return The consumed element or std::nullopt if the read has failed.
          */
-        auto await_resume() -> std23::expected<ElementT, RingBufferOpStatus>
+        auto await_resume() -> mrc::expected<ElementT, RingBufferOpStatus>
         {
             ThreadLocalContext::resume_thread_local_context();
 
             if (m_stopped)
             {
-                return std23::unexpected<RingBufferOpStatus>(RingBufferOpStatus::Stopped);
+                return mrc::unexpected<RingBufferOpStatus>(RingBufferOpStatus::Stopped);
             }
 
             return std::move(m_e);

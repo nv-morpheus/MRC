@@ -18,9 +18,9 @@
 #include "internal/control_plane/client/state_manager.hpp"
 
 #include "internal/control_plane/client.hpp"
-#include "internal/expected.hpp"
 #include "internal/runnable/resources.hpp"
 
+#include "mrc/core/error.hpp"
 #include "mrc/node/channel_holder.hpp"  // IWYU pragma: keep
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/rx_sink.hpp"

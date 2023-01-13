@@ -36,7 +36,7 @@
  * limitations under the License.
  */
 
-#include "mrc/core/std23_expected.hpp"
+#include "mrc/core/expected.hpp"
 #include "mrc/coroutines/concepts/awaitable.hpp"
 #include "mrc/coroutines/latch.hpp"
 #include "mrc/coroutines/ring_buffer.hpp"
