@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "internal/expected.hpp"
+#include "mrc/core/error.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
@@ -26,7 +26,6 @@
 #include <utility>
 
 using namespace mrc;
-using namespace mrc::internal;
 
 class TestExpected : public ::testing::Test
 {};

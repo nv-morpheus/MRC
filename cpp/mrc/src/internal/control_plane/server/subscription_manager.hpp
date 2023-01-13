@@ -19,8 +19,8 @@
 
 #include "internal/control_plane/server/tagged_issuer.hpp"
 #include "internal/control_plane/server/versioned_issuer.hpp"
-#include "internal/expected.hpp"
 
+#include "mrc/core/error.hpp"
 #include "mrc/types.hpp"
 
 #include <cstdint>
