@@ -15,5 +15,4 @@
  * limitations under the License.
  */
 
-// TODO(Devin)
 #include "pymrc/tracers.hpp"

@@ -101,7 +101,6 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -allow-unsupported-compiler")
 
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines-ts")
-  #add_compile_options(-fcoroutines-ts) # Required for clang to use the coroutines libraries
 endif()
 
 # Now enable CUDA
