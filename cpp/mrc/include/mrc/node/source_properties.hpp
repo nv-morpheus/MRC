@@ -142,73 +142,58 @@ class MultiSourceProperties : public MultiEdgeHolder<KeyT, T>, public SourceProp
 };
 
 template <typename T>
-class EgressProvider : public virtual SourceProperties<T>, public IEgressProvider<T>
+class ReadableProvider : public virtual SourceProperties<T>, public IReadableProvider<T>
 {
   public:
-    EgressProvider& operator=(EgressProvider&& other)
+    ReadableProvider& operator=(ReadableProvider&& other)
     {
         // Only call concrete class
         SourceProperties<T>::operator=(std::move(other));
     }
 
   private:
-    std::shared_ptr<EgressHandleObj> get_egress_obj() const override
+    std::shared_ptr<ReadableEdgeHandle> get_readable_edge_handle() const override
     {
-        return EgressHandleObj::from_typeless(SourceProperties<T>::get_edge_connection());
+        return ReadableEdgeHandle::from_typeless(SourceProperties<T>::get_edge_connection());
     }
-
-    //   private:
-    //     using SourceProperties<T>::set_edge;
 };
 
 template <typename T>
-class IngressAcceptor : public virtual SourceProperties<T>, public IIngressAcceptor<T>
+class WritableAcceptor : public virtual SourceProperties<T>, public IWritableAcceptor<T>
 {
   public:
-    IngressAcceptor& operator=(IngressAcceptor&& other)
+    WritableAcceptor& operator=(WritableAcceptor&& other)
     {
         // Only call concrete class
         SourceProperties<T>::operator=(std::move(other));
     }
 
   private:
-    void set_ingress_obj(std::shared_ptr<IngressHandleObj> ingress) override
+    void set_writable_edge_handle(std::shared_ptr<WritableEdgeHandle> ingress) override
     {
         // Do any conversion to the correct type here
-        auto adapted_ingress = EdgeBuilder::adapt_ingress<T>(ingress);
+        auto adapted_ingress = EdgeBuilder::adapt_writable_edge<T>(ingress);
 
         SourceProperties<T>::make_edge_connection(adapted_ingress);
     }
 };
 
 template <typename T, typename KeyT>
-class MultiIngressAcceptor : public virtual MultiSourceProperties<T, KeyT>, public IMultiIngressAcceptor<T, KeyT>
+class MultiIngressAcceptor : public virtual MultiSourceProperties<T, KeyT>, public IMultiWritableAcceptor<T, KeyT>
 {
   public:
-    // void set_ingress(std::shared_ptr<IEdgeWritable<T>> ingress) override
-    // {
-    //     SourceProperties<T>::set_edge(ingress);
-    // }
-
-    // void set_ingress_typeless(std::shared_ptr<EdgeTag> ingress) override
-    // {
-    //     this->set_ingress(std::dynamic_pointer_cast<EdgeWritable<T>>(ingress));
-    // }
-
   private:
-    void set_ingress_obj(KeyT key, std::shared_ptr<IngressHandleObj> ingress) override
+    void set_writable_edge_handle(KeyT key, std::shared_ptr<WritableEdgeHandle> ingress) override
     {
         // Do any conversion to the correct type here
-        auto adapted_ingress = EdgeBuilder::adapt_ingress<T>(ingress);
+        auto adapted_ingress = EdgeBuilder::adapt_writable_edge<T>(ingress);
 
         MultiSourceProperties<T, KeyT>::make_edge_connection(key, adapted_ingress);
     }
-
-    // using SourceProperties<T>::set_edge;
 };
 
 template <typename T>
-class ForwardingEgressProvider : public EgressProvider<T>
+class ForwardingEgressProvider : public ReadableProvider<T>
 {
   protected:
     class ForwardingEdge : public IEdgeReadable<T>
@@ -236,7 +221,7 @@ class ForwardingEgressProvider : public EgressProvider<T>
             this->on_complete();
         });
 
-        EgressProvider<T>::init_owned_edge(inner_edge);
+        ReadableProvider<T>::init_owned_edge(inner_edge);
     }
 
     virtual channel::Status get_next(T& t) = 0;

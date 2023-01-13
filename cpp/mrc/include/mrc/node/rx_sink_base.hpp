@@ -41,7 +41,7 @@
 namespace mrc::node {
 
 template <typename T>
-class RxSinkBase : public IngressProvider<T>, public EgressAcceptor<T>, public SinkChannel<T>, private Watchable
+class RxSinkBase : public WritableProvider<T>, public ReadableAcceptor<T>, public SinkChannel<T>, private Watchable
 {
   public:
     void sink_add_watcher(std::shared_ptr<WatcherInterface> watcher);

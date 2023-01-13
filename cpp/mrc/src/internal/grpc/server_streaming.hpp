@@ -211,7 +211,7 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
     }
 
     // must be called before await_init()
-    void attach_to(mrc::node::IngressProvider<IncomingData>& sink)
+    void attach_to(mrc::node::WritableProvider<IncomingData>& sink)
     {
         CHECK(m_reader_source);
         mrc::node::make_edge(*m_reader_source, sink);

@@ -21,7 +21,7 @@
 namespace mrc::node {
 
 template <typename T>
-class WritableSubject : public IngressAcceptor<T>
+class WritableSubject : public WritableAcceptor<T>
 {
   public:
     channel::Status await_write(T&& data)

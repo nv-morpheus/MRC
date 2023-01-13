@@ -32,15 +32,15 @@
 namespace mrc::node {
 
 template <typename KeyT, typename InputT, typename OutputT = InputT>
-class RouterBase : public ForwardingIngressProvider<InputT>, public MultiSourceProperties<KeyT, OutputT>
+class RouterBase : public ForwardingWritableProvider<InputT>, public MultiSourceProperties<KeyT, OutputT>
 {
   public:
     using input_data_t  = InputT;
     using output_data_t = OutputT;
 
-    RouterBase() : ForwardingIngressProvider<input_data_t>() {}
+    RouterBase() : ForwardingWritableProvider<input_data_t>() {}
 
-    std::shared_ptr<IIngressAcceptor<output_data_t>> get_source(const KeyT& key) const
+    std::shared_ptr<IWritableAcceptor<output_data_t>> get_source(const KeyT& key) const
     {
         // Simply return an object that will set the message to upstream and go away
         return std::make_shared<DownstreamEdge>(*const_cast<RouterBase<KeyT, InputT, OutputT>*>(this), key);
@@ -57,15 +57,15 @@ class RouterBase : public ForwardingIngressProvider<InputT>, public MultiSourceP
     }
 
   protected:
-    class DownstreamEdge : public IIngressAcceptor<output_data_t>
+    class DownstreamEdge : public IWritableAcceptor<output_data_t>
     {
       public:
         DownstreamEdge(RouterBase& parent, KeyT key) : m_parent(parent), m_key(std::move(key)) {}
 
-        void set_ingress_obj(std::shared_ptr<IngressHandleObj> ingress) override
+        void set_writable_edge_handle(std::shared_ptr<WritableEdgeHandle> ingress) override
         {
             // Make sure we do any type conversions as needed
-            auto adapted_ingress = EdgeBuilder::adapt_ingress<OutputT>(std::move(ingress));
+            auto adapted_ingress = EdgeBuilder::adapt_writable_edge<OutputT>(std::move(ingress));
 
             m_parent.MultiSourceProperties<KeyT, OutputT>::make_edge_connection(m_key, std::move(adapted_ingress));
         }
@@ -75,76 +75,11 @@ class RouterBase : public ForwardingIngressProvider<InputT>, public MultiSourceP
         KeyT m_key;
     };
 
-    // channel::Status on_next(input_data_t&& data) override
-    // {
-    //     KeyT key = this->determine_key_for_value(data);
-
-    //     auto output = this->convert_value(std::move(data));
-
-    //     return MultiSourceProperties<KeyT, output_data_t>::get_writable_edge(key)->await_write(std::move(output));
-    // }
-
     void on_complete() override
     {
         MultiSourceProperties<KeyT, output_data_t>::release_edge_connections();
     }
 };
-
-// template <typename KeyT, typename T>
-// class RouterBase<KeyT, T, T> : public ForwardingIngressProvider<T>, public MultiSourceProperties<KeyT, T>
-// {
-//   public:
-//     using input_data_t  = T;
-//     using output_data_t = T;
-
-//     RouterBase() : ForwardingIngressProvider<input_data_t>() {}
-
-//     std::shared_ptr<IIngressAcceptor<input_data_t>> get_source(const KeyT& key) const
-//     {
-//         // Simply return an object that will set the message to upstream and go away
-//         return std::make_shared<DownstreamEdge>(*this, key);
-//     }
-
-//     bool has_source(const KeyT& key) const
-//     {
-//         return MultiSourceProperties<KeyT, output_data_t>::get_edge_pair(key).first;
-//     }
-
-//     void drop_edge(const KeyT& key)
-//     {
-//         MultiSourceProperties<KeyT, output_data_t>::release_edge(key);
-//     }
-
-//   protected:
-//     class DownstreamEdge : public IIngressAcceptor<output_data_t>
-//     {
-//       public:
-//         DownstreamEdge(RouterBase& parent, KeyT key) : m_parent(parent), m_key(std::move(key)) {}
-
-//         void set_ingress(std::shared_ptr<EdgeWritable<output_data_t>> ingress) override
-//         {
-//             m_parent.set_edge(m_key, std::move(ingress));
-//         }
-
-//       private:
-//         RouterBase<KeyT, input_data_t, output_data_t> m_parent;
-//         KeyT m_key;
-//     };
-
-//     channel::Status on_next(input_data_t&& data) override
-//     {
-//         KeyT key = this->determine_key_for_value(data);
-
-//         return MultiSourceProperties<KeyT, output_data_t>::get_writable_edge(key)->await_write(std::move(data));
-//     }
-
-//     virtual void on_complete()
-//     {
-//         MultiSourceProperties<KeyT, output_data_t>::release_edges();
-//     }
-
-//     virtual KeyT determine_key_for_value(const input_data_t& t) = 0;
-// };
 
 template <typename KeyT, typename InputT, typename OutputT = InputT, typename = void>
 class Router;

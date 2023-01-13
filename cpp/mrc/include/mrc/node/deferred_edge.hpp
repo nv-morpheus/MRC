@@ -28,9 +28,9 @@
 
 namespace mrc::node {
 
-class DeferredWritableMultiEdgeBase : public IMultiIngressAcceptorBase<std::size_t>,
+class DeferredWritableMultiEdgeBase : public IMultiWritableAcceptorBase<std::size_t>,
                                       public virtual IEdgeWritableBase,
-                                      public virtual EdgeTag
+                                      public virtual EdgeBase
 {
   public:
     using determine_indices_fn_t = std::function<std::vector<std::size_t>(DeferredWritableMultiEdgeBase&)>;
@@ -43,13 +43,13 @@ class DeferredWritableMultiEdgeBase : public IMultiIngressAcceptorBase<std::size
   private:
 };
 
-struct DeferredIngressHandleObj : public IngressHandleObj
+struct DeferredWritableHandleObj : public WritableEdgeHandle
 {
   public:
     using on_defer_fn_t = std::function<void(std::shared_ptr<DeferredWritableMultiEdgeBase>)>;
 
-    DeferredIngressHandleObj(on_defer_fn_t on_connect) :
-      IngressHandleObj(EdgeTypePair::create_deferred(), nullptr),
+    DeferredWritableHandleObj(on_defer_fn_t on_connect) :
+      WritableEdgeHandle(EdgeTypeInfo::create_deferred(), nullptr),
       m_on_connect(std::move(on_connect))
     {
         CHECK(m_on_connect) << "Must supply an on connect function";
@@ -61,31 +61,15 @@ struct DeferredIngressHandleObj : public IngressHandleObj
     }
 
   private:
-    std::shared_ptr<IngressHandleObj> set_deferred_edge(std::shared_ptr<DeferredWritableMultiEdgeBase> deferred_edge)
+    std::shared_ptr<WritableEdgeHandle> set_deferred_edge(std::shared_ptr<DeferredWritableMultiEdgeBase> deferred_edge)
     {
         // Call the on_connect function
         m_on_connect(deferred_edge);
 
         // this->set_ingress_handle(deferred_edge);
 
-        return std::make_shared<IngressHandleObj>(deferred_edge);
+        return std::make_shared<WritableEdgeHandle>(deferred_edge);
     }
-
-    // template <typename T>
-    // std::shared_ptr<IngressHandleObj> make_deferred_edge()
-    // {
-    //     auto deferred_edge = std::make_shared<DeferredWritableMultiEdge<T>>();
-
-    //     this->set_ingress_handle(deferred_edge);
-
-    //     // Call the connection event
-    //     if (m_on_connect)
-    //     {
-    //         m_on_connect(deferred_edge);
-    //     }
-
-    //     return std::make_shared<IngressHandleObj>(deferred_edge);
-    // }
 
     DeferredWritableMultiEdgeBase::determine_indices_fn_t m_indices_fn{};
     on_defer_fn_t m_on_connect{};

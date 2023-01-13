@@ -116,7 +116,7 @@ class EdgeWritableLambda : public IEdgeWritable<T>
 };
 
 template <typename T>
-class TestSource : public IngressAcceptor<T>, public EgressProvider<T>, public SourceChannel<T>
+class TestSource : public WritableAcceptor<T>, public ReadableProvider<T>, public SourceChannel<T>
 {
   public:
     TestSource()
@@ -141,10 +141,10 @@ class TestSource : public IngressAcceptor<T>, public EgressProvider<T>, public S
 };
 
 template <typename T>
-class TestNode : public IngressProvider<T>,
-                 public EgressAcceptor<T>,
-                 public IngressAcceptor<T>,
-                 public EgressProvider<T>,
+class TestNode : public WritableProvider<T>,
+                 public ReadableAcceptor<T>,
+                 public WritableAcceptor<T>,
+                 public ReadableProvider<T>,
                  public SinkChannel<T>,
                  public SourceChannel<T>
 {
@@ -184,7 +184,7 @@ class TestNode : public IngressProvider<T>,
 };
 
 template <typename T>
-class TestSink : public IngressProvider<T>, public EgressAcceptor<T>, public SinkChannel<T>
+class TestSink : public WritableProvider<T>, public ReadableAcceptor<T>, public SinkChannel<T>
 {
   public:
     TestSink()
@@ -210,7 +210,7 @@ class TestSink : public IngressProvider<T>, public EgressAcceptor<T>, public Sin
 };
 
 template <typename T>
-class TestQueue : public IngressProvider<T>, public EgressProvider<T>
+class TestQueue : public WritableProvider<T>, public ReadableProvider<T>
 {
   public:
     TestQueue()
@@ -279,7 +279,7 @@ class TestNodeComponent : public NodeComponent<T, T>
 };
 
 template <typename T>
-class TestSinkComponent : public IngressProvider<T>
+class TestSinkComponent : public WritableProvider<T>
 {
   public:
     TestSinkComponent()
@@ -317,7 +317,7 @@ class TestRouter : public Router<std::string, int>
     }
 };
 
-// class TestRouter : public IngressProvider<int>
+// class TestRouter : public WritableProvider<int>
 // {
 //     class UpstreamEdge : public IEdgeWritable<int>, public MultiSourceProperties<std::string, int>
 //     {
@@ -348,7 +348,7 @@ class TestRouter : public Router<std::string, int>
 //         TestRouter& m_parent;
 //     };
 
-//     class DownstreamEdge : public IIngressAcceptor<int>
+//     class DownstreamEdge : public IWritableAcceptor<int>
 //     {
 //       public:
 //         DownstreamEdge(std::weak_ptr<UpstreamEdge> upstream, std::string key) :
@@ -382,10 +382,10 @@ class TestRouter : public Router<std::string, int>
 //         // Save it to avoid casting
 //         m_upstream = upstream;
 
-//         IngressProvider<int>::init_owned_edge(upstream);
+//         WritableProvider<int>::init_owned_edge(upstream);
 //     }
 
-//     std::shared_ptr<IIngressAcceptor<int>> get_source(const std::string& key) const
+//     std::shared_ptr<IWritableAcceptor<int>> get_source(const std::string& key) const
 //     {
 //         auto found = m_downstream.find(key);
 
@@ -418,7 +418,7 @@ class TestRouter : public Router<std::string, int>
 // };
 
 template <typename T>
-class TestConditional : public ForwardingIngressProvider<T>, public IngressAcceptor<T>
+class TestConditional : public ForwardingWritableProvider<T>, public WritableAcceptor<T>
 {
   public:
     TestConditional() = default;
@@ -446,7 +446,7 @@ class TestConditional : public ForwardingIngressProvider<T>, public IngressAccep
     {
         VLOG(10) << "TestConditional completed";
 
-        IngressAcceptor<T>::release_edge_connection();
+        WritableAcceptor<T>::release_edge_connection();
     }
 };
 

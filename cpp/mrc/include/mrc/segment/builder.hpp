@@ -266,7 +266,7 @@ class Builder final
     template <typename SourceNodeTypeT>
     void make_edge(std::shared_ptr<Object<SourceNodeTypeT>>& source, std::shared_ptr<segment::ObjectProperties> sink)
     {
-        if constexpr (is_base_of_template<node::IIngressAcceptor, SourceNodeTypeT>::value)
+        if constexpr (is_base_of_template<node::IWritableAcceptor, SourceNodeTypeT>::value)
         {
             if (sink->is_ingress_provider())
             {
@@ -276,7 +276,7 @@ class Builder final
             }
         }
 
-        if constexpr (is_base_of_template<node::IEgressProvider, SourceNodeTypeT>::value)
+        if constexpr (is_base_of_template<node::IReadableProvider, SourceNodeTypeT>::value)
         {
             if (sink->is_egress_acceptor())
             {
@@ -302,7 +302,7 @@ class Builder final
     template <typename SinkNodeTypeT>
     void make_edge(std::shared_ptr<segment::ObjectProperties> source, std::shared_ptr<Object<SinkNodeTypeT>>& sink)
     {
-        if constexpr (is_base_of_template<node::IIngressProvider, SinkNodeTypeT>::value)
+        if constexpr (is_base_of_template<node::IWritableProvider, SinkNodeTypeT>::value)
         {
             if (source->is_ingress_acceptor())
             {
@@ -312,7 +312,7 @@ class Builder final
             }
         }
 
-        if constexpr (is_base_of_template<node::IEgressAcceptor, SinkNodeTypeT>::value)
+        if constexpr (is_base_of_template<node::IReadableAcceptor, SinkNodeTypeT>::value)
         {
             if (source->is_egress_provider())
             {

@@ -282,7 +282,7 @@ void Client::issue_remote_descriptor(RemoteDescriptorMessage&& msg)
     }
 }
 
-node::IngressProvider<RemoteDescriptorMessage>& Client::remote_descriptor_channel()
+node::WritableProvider<RemoteDescriptorMessage>& Client::remote_descriptor_channel()
 {
     CHECK(m_rd_channel);
     return *m_rd_channel;

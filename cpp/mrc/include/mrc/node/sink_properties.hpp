@@ -116,20 +116,20 @@ class SinkProperties : public EdgeHolder<T>, public SinkPropertiesBase
 };
 
 template <typename T>
-class EgressAcceptor : public virtual SinkProperties<T>, public IEgressAcceptor<T>
+class ReadableAcceptor : public virtual SinkProperties<T>, public IReadableAcceptor<T>
 {
   public:
-    EgressAcceptor& operator=(EgressAcceptor&& other)
+    ReadableAcceptor& operator=(ReadableAcceptor&& other)
     {
         // Only call concrete class
         SinkProperties<T>::operator=(std::move(other));
     }
 
   private:
-    void set_egress_obj(std::shared_ptr<EgressHandleObj> egress) override
+    void set_readable_edge_handle(std::shared_ptr<ReadableEdgeHandle> egress) override
     {
         // Do any conversion to the correct type here
-        auto adapted_egress = EdgeBuilder::adapt_egress<T>(egress);
+        auto adapted_egress = EdgeBuilder::adapt_readable_edge<T>(egress);
 
         SinkProperties<T>::make_edge_connection(adapted_egress);
     }
@@ -139,30 +139,30 @@ class EgressAcceptor : public virtual SinkProperties<T>, public IEgressAcceptor<
 };
 
 template <typename T>
-class IngressProvider : public virtual SinkProperties<T>, public IIngressProvider<T>
+class WritableProvider : public virtual SinkProperties<T>, public IWritableProvider<T>
 {
   public:
-    IngressProvider& operator=(IngressProvider&& other)
+    WritableProvider& operator=(WritableProvider&& other)
     {
         // Only call concrete class
         SinkProperties<T>::operator=(std::move(other));
     }
 
   private:
-    std::shared_ptr<IngressHandleObj> get_ingress_obj() const override
+    std::shared_ptr<WritableEdgeHandle> get_writable_edge_handle() const override
     {
-        return IngressHandleObj::from_typeless(SinkProperties<T>::get_edge_connection());
+        return WritableEdgeHandle::from_typeless(SinkProperties<T>::get_edge_connection());
     }
 };
 
 template <typename T>
-class ForwardingIngressProvider : public IngressProvider<T>
+class ForwardingWritableProvider : public WritableProvider<T>
 {
   protected:
     class ForwardingEdge : public IEdgeWritable<T>
     {
       public:
-        ForwardingEdge(ForwardingIngressProvider<T>& parent) : m_parent(parent) {}
+        ForwardingEdge(ForwardingWritableProvider<T>& parent) : m_parent(parent) {}
 
         ~ForwardingEdge() = default;
 
@@ -172,10 +172,10 @@ class ForwardingIngressProvider : public IngressProvider<T>
         }
 
       private:
-        ForwardingIngressProvider<T>& m_parent;
+        ForwardingWritableProvider<T>& m_parent;
     };
 
-    ForwardingIngressProvider()
+    ForwardingWritableProvider()
     {
         auto inner_edge = std::make_shared<ForwardingEdge>(*this);
 
@@ -184,7 +184,7 @@ class ForwardingIngressProvider : public IngressProvider<T>
             this->on_complete();
         });
 
-        IngressProvider<T>::init_owned_edge(inner_edge);
+        WritableProvider<T>::init_owned_edge(inner_edge);
     }
 
     virtual channel::Status on_next(T&& t) = 0;

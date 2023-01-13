@@ -115,7 +115,9 @@ class TestNext : public ::testing::Test
 };
 
 template <typename T>
-class ExampleSinkChannel : public node::ReadableSubject<T>, public node::IngressProvider<T>, public node::SinkChannel<T>
+class ExampleSinkChannel : public node::ReadableSubject<T>,
+                           public node::WritableProvider<T>,
+                           public node::SinkChannel<T>
 {
   public:
     ExampleSinkChannel()

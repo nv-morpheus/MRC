@@ -44,7 +44,7 @@
 
 namespace mrc::node {
 template <typename T>
-class IIngressProvider;
+class IWritableProvider;
 }  // namespace mrc::node
 
 namespace mrc::internal::control_plane {
@@ -103,7 +103,7 @@ void Client::do_service_start()
 
     // make stream and attach event handler
     m_stream = std::make_shared<stream_t::element_type>(prepare_fn, runnable());
-    m_stream->attach_to(dynamic_cast<mrc::node::IIngressProvider<event_t>&>(*event_handler));
+    m_stream->attach_to(dynamic_cast<mrc::node::IWritableProvider<event_t>&>(*event_handler));
 
     // ensure all downstream event handlers are constructed before constructing and starting the event handler
     m_connections_update_channel = std::make_unique<mrc::node::WritableSubject<const protos::StateUpdate>>();

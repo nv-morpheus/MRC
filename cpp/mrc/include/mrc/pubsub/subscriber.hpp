@@ -56,8 +56,8 @@ namespace mrc::pubsub {
  */
 template <typename T>
 class Subscriber final : public control_plane::SubscriptionServiceForwarder,
-                         public node::EgressProvider<T>,
-                         private node::IngressProvider<mrc::runtime::RemoteDescriptor>
+                         public node::ReadableProvider<T>,
+                         private node::WritableProvider<mrc::runtime::RemoteDescriptor>
 {
   public:
     static std::unique_ptr<Subscriber> create(std::string name, runtime::IPartition& partition)
@@ -94,8 +94,8 @@ class Subscriber final : public control_plane::SubscriptionServiceForwarder,
         mrc::node::make_edge(*this, *m_persistent_channel);
 
         // Make a connection from this to the service
-        mrc::node::make_edge<ISubscriberService, node::IngressProvider<mrc::runtime::RemoteDescriptor>>(*m_service,
-                                                                                                        *this);
+        mrc::node::make_edge<ISubscriberService, node::WritableProvider<mrc::runtime::RemoteDescriptor>>(*m_service,
+                                                                                                         *this);
 
         // LOG(INFO) << "forming first edge: typed_source -> self [Node<T>]";
 

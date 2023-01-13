@@ -27,7 +27,7 @@
 
 namespace mrc::node {
 template <typename T>
-class IIngressAcceptor;
+class IWritableAcceptor;
 }  // namespace mrc::node
 namespace mrc::protos {
 class StateUpdate;
@@ -73,7 +73,7 @@ class StateManager
     const Client& client() const;
     Client& client();
 
-    void start_with_channel(node::IIngressAcceptor<const protos::StateUpdate>& update_channel);
+    void start_with_channel(node::IWritableAcceptor<const protos::StateUpdate>& update_channel);
     void await_join();
 
   private:

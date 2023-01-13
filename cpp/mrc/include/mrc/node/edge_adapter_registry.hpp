@@ -25,11 +25,11 @@
 #include <vector>
 
 namespace mrc::node {
-class EdgeTypePair;
-class EgressHandleObj;
+class EdgeTypeInfo;
+class ReadableEdgeHandle;
 class IEdgeReadableBase;
 class IEdgeWritableBase;
-class IngressHandleObj;
+class WritableEdgeHandle;
 
 /**
  * @brief EdgeAdaptorRegistry used for the registry of adapter routines which allow for customized runtime
@@ -46,10 +46,10 @@ struct EdgeAdapterRegistry
     using egress_converter_fn_t = std::function<std::shared_ptr<IEdgeReadableBase>(std::shared_ptr<IEdgeReadableBase>)>;
 
     using ingress_adapter_fn_t = std::function<
-        std::shared_ptr<node::IngressHandleObj>(const node::EdgeTypePair&, std::shared_ptr<node::IEdgeWritableBase>)>;
+        std::shared_ptr<node::WritableEdgeHandle>(const node::EdgeTypeInfo&, std::shared_ptr<node::IEdgeWritableBase>)>;
 
     using egress_adapter_fn_t = std::function<
-        std::shared_ptr<node::EgressHandleObj>(const node::EdgeTypePair&, std::shared_ptr<node::IEdgeReadableBase>)>;
+        std::shared_ptr<node::ReadableEdgeHandle>(const node::EdgeTypeInfo&, std::shared_ptr<node::IEdgeReadableBase>)>;
 
     EdgeAdapterRegistry() = delete;
 

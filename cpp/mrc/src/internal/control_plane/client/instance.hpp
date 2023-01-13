@@ -29,7 +29,7 @@
 
 namespace mrc::node {
 template <typename T>
-class IIngressAcceptor;
+class IWritableAcceptor;
 }  // namespace mrc::node
 namespace mrc::internal::control_plane {
 class Client;
@@ -56,7 +56,7 @@ class Instance final : private resources::PartitionResourceBase, private Service
     Instance(Client& client,
              InstanceID instance_id,
              resources::PartitionResourceBase& base,
-             mrc::node::IIngressAcceptor<const protos::StateUpdate>& update_channel);
+             mrc::node::IWritableAcceptor<const protos::StateUpdate>& update_channel);
     ~Instance() final;
 
     Client& client();

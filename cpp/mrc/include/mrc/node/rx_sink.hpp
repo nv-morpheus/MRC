@@ -165,7 +165,7 @@ void RxSink<T, ContextT>::on_shutdown_critical_section()
 {}
 
 template <typename T>
-class RxSinkComponent : public IngressProvider<T>
+class RxSinkComponent : public WritableProvider<T>
 {
   public:
     using observer_t       = rxcpp::observer<T>;
@@ -179,7 +179,7 @@ class RxSinkComponent : public IngressProvider<T>
 
         m_sink_edge = edge;
 
-        IngressProvider<T>::init_owned_edge(edge);
+        WritableProvider<T>::init_owned_edge(edge);
     }
 
     ~RxSinkComponent() = default;
@@ -191,7 +191,7 @@ class RxSinkComponent : public IngressProvider<T>
 
         // m_sink_edge = edge;
 
-        // IngressProvider<T>::init_owned_edge(edge);
+        // WritableProvider<T>::init_owned_edge(edge);
 
         set_observer(std::forward<ArgsT>(args)...);
     }

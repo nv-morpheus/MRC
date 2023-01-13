@@ -33,30 +33,30 @@
 
 namespace mrc::node {
 
-void EdgeBuilder::make_edge_ingress_typeless(IIngressAcceptorBase& source,
-                                             IIngressProviderBase& sink,
-                                             bool allow_narrowing)
+void EdgeBuilder::make_edge_writable_typeless(IWritableAcceptorBase& source,
+                                              IWritableProviderBase& sink,
+                                              bool allow_narrowing)
 {
     // Get the ingress
-    auto ingress = sink.get_ingress_obj();
+    auto ingress = sink.get_writable_edge_handle();
 
     // Set to the source
-    source.set_ingress_obj(ingress);
+    source.set_writable_edge_handle(ingress);
 }
 
-void EdgeBuilder::make_edge_egress_typeless(IEgressProviderBase& source,
-                                            IEgressAcceptorBase& sink,
-                                            bool allow_narrowing)
+void EdgeBuilder::make_edge_readable_typeless(IReadableProviderBase& source,
+                                              IReadableAcceptorBase& sink,
+                                              bool allow_narrowing)
 {
     // Get the egress
-    auto egress = source.get_egress_obj();
+    auto egress = source.get_readable_edge_handle();
 
     // Set to the sink
-    sink.set_egress_obj(egress);
+    sink.set_readable_edge_handle(egress);
 }
 
-std::shared_ptr<IngressHandleObj> EdgeBuilder::do_adapt_ingress(const EdgeTypePair& target_type,
-                                                                std::shared_ptr<IngressHandleObj> ingress)
+std::shared_ptr<WritableEdgeHandle> EdgeBuilder::do_adapt_ingress(const EdgeTypeInfo& target_type,
+                                                                  std::shared_ptr<WritableEdgeHandle> ingress)
 {
     // Short circuit if we are already there
     if (target_type.full_type() == ingress->get_type().full_type())
@@ -74,7 +74,7 @@ std::shared_ptr<IngressHandleObj> EdgeBuilder::do_adapt_ingress(const EdgeTypePa
 
             auto converted_edge = fn_converter(ingress->get_ingress());
 
-            return std::make_shared<IngressHandleObj>(converted_edge);
+            return std::make_shared<WritableEdgeHandle>(converted_edge);
         } catch (std::runtime_error e)
         {
             // Last attempt, check if types are the same and return ingress handle.
@@ -121,8 +121,8 @@ std::shared_ptr<IngressHandleObj> EdgeBuilder::do_adapt_ingress(const EdgeTypePa
                                                           << type_name(target_type.full_type())));
 }
 
-std::shared_ptr<EgressHandleObj> EdgeBuilder::do_adapt_egress(const EdgeTypePair& target_type,
-                                                              std::shared_ptr<EgressHandleObj> egress)
+std::shared_ptr<ReadableEdgeHandle> EdgeBuilder::do_adapt_egress(const EdgeTypeInfo& target_type,
+                                                                 std::shared_ptr<ReadableEdgeHandle> egress)
 {
     // Short circuit if we are already there
     if (target_type.full_type() == egress->get_type().full_type())
@@ -140,7 +140,7 @@ std::shared_ptr<EgressHandleObj> EdgeBuilder::do_adapt_egress(const EdgeTypePair
 
             auto converted_edge = fn_converter(egress->get_egress());
 
-            return std::make_shared<EgressHandleObj>(converted_edge);
+            return std::make_shared<ReadableEdgeHandle>(converted_edge);
         } catch (std::runtime_error e)
         {
             // Last attempt, check if types are the same and return ingress handle.

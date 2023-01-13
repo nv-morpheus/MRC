@@ -78,14 +78,14 @@ struct EdgeAdapterUtil
     template <typename InputT>
     static ingress_adapter_fn_t build_sink_ingress_adapter()
     {
-        return [](const node::EdgeTypePair& target_type, std::shared_ptr<node::IEdgeWritableBase> ingress_handle) {
+        return [](const node::EdgeTypeInfo& target_type, std::shared_ptr<node::IEdgeWritableBase> ingress_handle) {
             // First try to convert the ingress to our type
             auto typed_ingress = std::dynamic_pointer_cast<node::IEdgeWritable<InputT>>(ingress_handle);
 
             if (!typed_ingress)
             {
                 // Cant do anything about this ingress
-                return std::shared_ptr<node::IngressHandleObj>(nullptr);
+                return std::shared_ptr<node::WritableEdgeHandle>(nullptr);
             }
 
             auto ingress_type = ingress_handle->get_type();
@@ -112,17 +112,17 @@ struct EdgeAdapterUtil
                     else
                     {
                         // Cant make a slow connection
-                        return std::shared_ptr<node::IngressHandleObj>(nullptr);
+                        return std::shared_ptr<node::WritableEdgeHandle>(nullptr);
                     }
                 }
 
                 // Create a conversion from our type to PyHolder
                 auto edge = std::make_shared<node::ConvertingEdgeWritable<PyHolder, InputT>>(typed_ingress);
 
-                return std::make_shared<node::IngressHandleObj>(edge);
+                return std::make_shared<node::WritableEdgeHandle>(edge);
             }
 
-            return std::shared_ptr<node::IngressHandleObj>(nullptr);
+            return std::shared_ptr<node::WritableEdgeHandle>(nullptr);
         };
     }
 
@@ -132,11 +132,11 @@ struct EdgeAdapterUtil
     template <typename OutputT>
     static ingress_adapter_fn_t build_source_ingress_adapter()
     {
-        return [](const node::EdgeTypePair& target_type, std::shared_ptr<node::IEdgeWritableBase> ingress_handle) {
+        return [](const node::EdgeTypeInfo& target_type, std::shared_ptr<node::IEdgeWritableBase> ingress_handle) {
             // Check to make sure we are targeting this type
-            if (target_type != node::EdgeTypePair::create<OutputT>())
+            if (target_type != node::EdgeTypeInfo::create<OutputT>())
             {
-                return std::shared_ptr<node::IngressHandleObj>(nullptr);
+                return std::shared_ptr<node::WritableEdgeHandle>(nullptr);
             }
 
             auto ingress_type = ingress_handle->get_type();
@@ -154,11 +154,11 @@ struct EdgeAdapterUtil
                     // Create a conversion from PyHolder to our type
                     auto edge = std::make_shared<node::ConvertingEdgeWritable<OutputT, PyHolder>>(py_typed_ingress);
 
-                    return std::make_shared<node::IngressHandleObj>(edge);
+                    return std::make_shared<node::WritableEdgeHandle>(edge);
                 }
             }
 
-            return std::shared_ptr<node::IngressHandleObj>(nullptr);
+            return std::shared_ptr<node::WritableEdgeHandle>(nullptr);
         };
     }
 
@@ -168,11 +168,11 @@ struct EdgeAdapterUtil
     template <typename OutputT>
     static egress_adapter_fn_t build_sink_egress_adapter()
     {
-        return [](const node::EdgeTypePair& target_type, std::shared_ptr<node::IEdgeReadableBase> egress_handle) {
+        return [](const node::EdgeTypeInfo& target_type, std::shared_ptr<node::IEdgeReadableBase> egress_handle) {
             // Check to make sure we are targeting this type
-            if (target_type != node::EdgeTypePair::create<OutputT>())
+            if (target_type != node::EdgeTypeInfo::create<OutputT>())
             {
-                return std::shared_ptr<node::EgressHandleObj>(nullptr);
+                return std::shared_ptr<node::ReadableEdgeHandle>(nullptr);
             }
 
             auto egress_type = egress_handle->get_type();
@@ -190,11 +190,11 @@ struct EdgeAdapterUtil
                     // Create a conversion from PyHolder to our type
                     auto edge = std::make_shared<node::ConvertingEdgeReadable<PyHolder, OutputT>>(py_typed_egress);
 
-                    return std::make_shared<node::EgressHandleObj>(edge);
+                    return std::make_shared<node::ReadableEdgeHandle>(edge);
                 }
             }
 
-            return std::shared_ptr<node::EgressHandleObj>(nullptr);
+            return std::shared_ptr<node::ReadableEdgeHandle>(nullptr);
         };
     }
 
@@ -204,14 +204,14 @@ struct EdgeAdapterUtil
     template <typename InputT>
     static egress_adapter_fn_t build_source_egress_adapter()
     {
-        return [](const node::EdgeTypePair& target_type, std::shared_ptr<node::IEdgeReadableBase> egress_handle) {
+        return [](const node::EdgeTypeInfo& target_type, std::shared_ptr<node::IEdgeReadableBase> egress_handle) {
             // First try to convert the egress to our type
             auto typed_egress = std::dynamic_pointer_cast<node::IEdgeReadable<InputT>>(egress_handle);
 
             if (!typed_egress)
             {
                 // Cant do anything about this egress
-                return std::shared_ptr<node::EgressHandleObj>(nullptr);
+                return std::shared_ptr<node::ReadableEdgeHandle>(nullptr);
             }
 
             auto egress_type = egress_handle->get_type();
@@ -238,17 +238,17 @@ struct EdgeAdapterUtil
                     else
                     {
                         // Cant make a slow connection
-                        return std::shared_ptr<node::EgressHandleObj>(nullptr);
+                        return std::shared_ptr<node::ReadableEdgeHandle>(nullptr);
                     }
                 }
 
                 // Create a conversion from our type to PyHolder
                 auto edge = std::make_shared<node::ConvertingEdgeReadable<InputT, PyHolder>>(typed_egress);
 
-                return std::make_shared<node::EgressHandleObj>(edge);
+                return std::make_shared<node::ReadableEdgeHandle>(edge);
             }
 
-            return std::shared_ptr<node::EgressHandleObj>(nullptr);
+            return std::shared_ptr<node::ReadableEdgeHandle>(nullptr);
         };
     }
 };

@@ -26,10 +26,10 @@ template <typename InputT, typename OutputT = InputT>
 class NodeComponent;
 
 template <typename InputT, typename OutputT>
-class NodeComponent : public ForwardingIngressProvider<InputT>, public IngressAcceptor<OutputT>
+class NodeComponent : public ForwardingWritableProvider<InputT>, public WritableAcceptor<OutputT>
 {
   public:
-    NodeComponent() : ForwardingIngressProvider<InputT>() {}
+    NodeComponent() : ForwardingWritableProvider<InputT>() {}
 
     virtual ~NodeComponent() = default;
 
@@ -48,10 +48,10 @@ class NodeComponent : public ForwardingIngressProvider<InputT>, public IngressAc
 };
 
 template <typename T>
-class NodeComponent<T, T> : public ForwardingIngressProvider<T>, public IngressAcceptor<T>
+class NodeComponent<T, T> : public ForwardingWritableProvider<T>, public WritableAcceptor<T>
 {
   public:
-    NodeComponent() : ForwardingIngressProvider<T>() {}
+    NodeComponent() : ForwardingWritableProvider<T>() {}
 
     virtual ~NodeComponent() = default;
 

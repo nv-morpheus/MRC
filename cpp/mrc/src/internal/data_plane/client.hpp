@@ -35,7 +35,7 @@
 
 namespace mrc::node {
 template <typename T>
-class IngressProvider;
+class WritableProvider;
 }  // namespace mrc::node
 namespace mrc::internal::control_plane::client {
 class ConnectionsManager;
@@ -86,7 +86,7 @@ class Client final : public resources::PartitionResourceBase, private Service
                         InstanceID instance_id,
                         Request& request) const;
 
-    node::IngressProvider<RemoteDescriptorMessage>& remote_descriptor_channel();
+    node::WritableProvider<RemoteDescriptorMessage>& remote_descriptor_channel();
 
     // primitive rdma and send/recv call
 

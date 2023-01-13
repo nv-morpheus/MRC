@@ -73,7 +73,7 @@ class CompositeManifold : public Manifold
     }
 
   private:
-    void do_add_input(const SegmentAddress& address, node::IIngressAcceptorBase* input_source) final
+    void do_add_input(const SegmentAddress& address, node::IWritableAcceptorBase* input_source) final
     {
         // enqueue update to be done later
         m_input_updates.push_back([this, address, input_source] {
@@ -83,7 +83,7 @@ class CompositeManifold : public Manifold
         });
     }
 
-    void do_add_output(const SegmentAddress& address, node::IIngressProviderBase* output_sink) final
+    void do_add_output(const SegmentAddress& address, node::IWritableProviderBase* output_sink) final
     {
         // enqueue update to be done later
         m_output_updates.push_back([this, address, output_sink] {

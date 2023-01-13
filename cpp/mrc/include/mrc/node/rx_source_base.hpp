@@ -46,7 +46,7 @@ namespace mrc::node {
  * @tparam T
  */
 template <typename T>
-class RxSourceBase : public EgressProvider<T>, public IngressAcceptor<T>, public SourceChannel<T>, private Watchable
+class RxSourceBase : public ReadableProvider<T>, public WritableAcceptor<T>, public SourceChannel<T>, private Watchable
 {
   public:
     void source_add_watcher(std::shared_ptr<WatcherInterface> watcher);

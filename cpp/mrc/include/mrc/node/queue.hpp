@@ -24,7 +24,7 @@
 namespace mrc::node {
 
 template <typename T>
-class Queue : public IngressProvider<T>, public EgressProvider<T>
+class Queue : public WritableProvider<T>, public ReadableProvider<T>
 {
   public:
     Queue()

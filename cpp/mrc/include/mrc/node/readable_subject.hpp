@@ -22,7 +22,7 @@
 namespace mrc::node {
 
 template <typename T>
-class ReadableSubject : public EgressAcceptor<T>
+class ReadableSubject : public ReadableAcceptor<T>
 {
   public:
     channel::Status await_read(T& data)

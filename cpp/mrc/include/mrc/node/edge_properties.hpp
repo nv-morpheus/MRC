@@ -25,15 +25,15 @@
 namespace mrc::node {
 
 // If:
-// - SourceChannel<T> is an IngressAcceptor
-// - SinkChannel<T> can be either an IngressProvider or a ChannelAcceptor
-// - Queue<T> is an IngressProivder and a ChannelProvider
+// - SourceChannel<T> is an WritableAcceptor
+// - SinkChannel<T> can be either an WritableProvider or a ChannelAcceptor
+// - Queue<T> is an IngressProvider and a ChannelProvider
 
 // Then, Edges can be from:
-// - make_edge(IngressAcceptor<T>, IngressProivder<T>)
+// - make_edge(WritableAcceptor<T>, IngressProivder<T>)
 // - make_edge(ChannelProvider<T>, ChannelAcceptor<T>)
 
-// Queue<T> is not an IngressAcceptor<T> nor ChannelAcceptor<T>, therefore, edges cannot be formed between Queues
+// Queue<T> is not an WritableAcceptor<T> nor ChannelAcceptor<T>, therefore, edges cannot be formed between Queues
 // - this is a good thing, a Queue is simply a Channel holder with no progress engine, thus unable to driver forward
 // progress.
 

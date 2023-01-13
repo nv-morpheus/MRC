@@ -183,13 +183,13 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
 
     // todo(ryan) - add a method to trigger a writes done
 
-    void attach_to(mrc::node::IIngressProvider<IncomingData>& sink)
+    void attach_to(mrc::node::IWritableProvider<IncomingData>& sink)
     {
         CHECK(m_reader_source);
         mrc::node::make_edge(*m_reader_source, sink);
     }
 
-    void attach_to(mrc::node::IEgressAcceptor<IncomingData>& sink)
+    void attach_to(mrc::node::IReadableAcceptor<IncomingData>& sink)
     {
         CHECK(m_reader_source);
         mrc::node::make_edge(*m_reader_source, sink);

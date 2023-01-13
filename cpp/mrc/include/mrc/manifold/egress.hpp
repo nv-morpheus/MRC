@@ -34,23 +34,23 @@ namespace mrc::manifold {
 
 struct EgressDelegate
 {
-    virtual ~EgressDelegate()                                                                       = default;
-    virtual void add_output(const SegmentAddress& address, node::IIngressProviderBase* output_sink) = 0;
+    virtual ~EgressDelegate()                                                                        = default;
+    virtual void add_output(const SegmentAddress& address, node::IWritableProviderBase* output_sink) = 0;
 };
 
 template <typename T>
 class TypedEgress : public EgressDelegate
 {
   public:
-    void add_output(const SegmentAddress& address, node::IIngressProviderBase* output_sink) final
+    void add_output(const SegmentAddress& address, node::IWritableProviderBase* output_sink) final
     {
-        auto sink = dynamic_cast<node::IIngressProvider<T>*>(output_sink);
+        auto sink = dynamic_cast<node::IWritableProvider<T>*>(output_sink);
         CHECK(sink);
         do_add_output(address, sink);
     }
 
   private:
-    virtual void do_add_output(const SegmentAddress& address, node::IIngressProvider<T>* output_sink) = 0;
+    virtual void do_add_output(const SegmentAddress& address, node::IWritableProvider<T>* output_sink) = 0;
 };
 
 template <typename T>
@@ -71,7 +71,7 @@ class RoundRobinEgress : public node::Router<SegmentAddress, T>, public TypedEgr
     }
 
   private:
-    void do_add_output(const SegmentAddress& address, node::IIngressProvider<T>* sink) override
+    void do_add_output(const SegmentAddress& address, node::IWritableProvider<T>* sink) override
     {
         node::make_edge(*this->get_source(address), *sink);
         update_pick_list();

@@ -510,7 +510,7 @@ void BuilderProxy::make_edge(mrc::segment::Builder& self,
     {
         throw std::runtime_error(
             "Invalid edges. Arguments to make_edge were incorrect. Ensure you are providing either "
-            "IngressAcceptor->IngressProvider or EgressProvider->EgressAcceptor");
+            "WritableAcceptor->WritableProvider or ReadableProvider->ReadableAcceptor");
     }
 }
 

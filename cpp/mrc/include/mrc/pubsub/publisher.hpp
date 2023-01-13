@@ -54,8 +54,8 @@ namespace mrc::pubsub {
  */
 template <typename T>
 class Publisher final : public control_plane::SubscriptionServiceForwarder,
-                        public node::IngressProvider<T>,
-                        private node::EgressProvider<std::unique_ptr<codable::EncodedStorage>>
+                        public node::WritableProvider<T>,
+                        private node::ReadableProvider<std::unique_ptr<codable::EncodedStorage>>
 {
   public:
     static std::unique_ptr<Publisher> create(std::string name,
@@ -86,7 +86,7 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
         mrc::node::make_edge(*m_persistent_channel, *this);
 
         // Make a connection from this to the service
-        mrc::node::make_edge<node::EgressProvider<std::unique_ptr<codable::EncodedStorage>>, IPublisherService>(
+        mrc::node::make_edge<node::ReadableProvider<std::unique_ptr<codable::EncodedStorage>>, IPublisherService>(
             *this,
             *m_service);
 

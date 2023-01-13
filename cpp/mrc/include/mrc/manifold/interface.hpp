@@ -25,12 +25,12 @@ namespace mrc::manifold {
 
 struct Interface
 {
-    virtual ~Interface()                                                                            = default;
-    virtual const PortName& port_name() const                                                       = 0;
-    virtual void start()                                                                            = 0;
-    virtual void join()                                                                             = 0;
-    virtual void add_input(const SegmentAddress& address, node::IIngressAcceptorBase* input_source) = 0;
-    virtual void add_output(const SegmentAddress& address, node::IIngressProviderBase* output_sink) = 0;
+    virtual ~Interface()                                                                             = default;
+    virtual const PortName& port_name() const                                                        = 0;
+    virtual void start()                                                                             = 0;
+    virtual void join()                                                                              = 0;
+    virtual void add_input(const SegmentAddress& address, node::IWritableAcceptorBase* input_source) = 0;
+    virtual void add_output(const SegmentAddress& address, node::IWritableProviderBase* output_sink) = 0;
 
     // updates are ordered
     // first, inputs are updated (upstream segments have not started emitting - this is safe)

@@ -118,7 +118,7 @@ inline auto surely2(const std::tuple<T...>& tpl)
 // using make_index_type_tuple = typename make_index_type_tuple_helper<T...>::tuple_type;
 
 template <typename... TypesT>
-class CombineLatest : public IngressAcceptor<std::tuple<TypesT...>>
+class CombineLatest : public WritableAcceptor<std::tuple<TypesT...>>
 {
     template <std::size_t... Is>
     static auto build_ingress(CombineLatest* self, std::index_sequence<Is...> /*unused*/)
@@ -136,14 +136,14 @@ class CombineLatest : public IngressAcceptor<std::tuple<TypesT...>>
     virtual ~CombineLatest() = default;
 
     template <size_t N>
-    std::shared_ptr<IIngressProvider<NthTypeOf<N, TypesT...>>> get_sink() const
+    std::shared_ptr<IWritableProvider<NthTypeOf<N, TypesT...>>> get_sink() const
     {
         return std::get<N>(m_upstream_holders);
     }
 
   protected:
     template <size_t N>
-    class Upstream : public IngressProvider<NthTypeOf<N, TypesT...>>
+    class Upstream : public WritableProvider<NthTypeOf<N, TypesT...>>
     {
         using upstream_t = NthTypeOf<N, TypesT...>;
 
@@ -152,21 +152,6 @@ class CombineLatest : public IngressAcceptor<std::tuple<TypesT...>>
         {
             this->init_owned_edge(std::make_shared<InnerEdge>(parent));
         }
-
-        // ~Upstream()
-        // {
-        //     m_parent.edge_complete();
-        // }
-
-        // virtual channel::Status await_write(upstream_t&& data)
-        // {
-        //     return m_parent.set_upstream_value<N>(std::move(data));
-        // }
-
-        // std::shared_ptr<IngressHandleObj> get_ingress_obj() const override
-        // {
-        //     return std::make_shared<IngressHandleObj>(const_cast<UpstreamEdge*>(this)->shared_from_this());
-        // }
 
       private:
         class InnerEdge : public IEdgeWritable<NthTypeOf<N, TypesT...>>
@@ -186,8 +171,6 @@ class CombineLatest : public IngressAcceptor<std::tuple<TypesT...>>
           private:
             CombineLatest& m_parent;
         };
-
-        // CombineLatest& m_parent;
     };
 
   private:
@@ -227,7 +210,7 @@ class CombineLatest : public IngressAcceptor<std::tuple<TypesT...>>
 
         if (m_completions == sizeof...(TypesT))
         {
-            IngressAcceptor<std::tuple<TypesT...>>::release_edge_connection();
+            WritableAcceptor<std::tuple<TypesT...>>::release_edge_connection();
         }
     }
 
@@ -236,7 +219,7 @@ class CombineLatest : public IngressAcceptor<std::tuple<TypesT...>>
     size_t m_completions{0};
     std::tuple<std::optional<TypesT>...> m_state;
 
-    std::tuple<std::shared_ptr<IngressProvider<TypesT>>...> m_upstream_holders;
+    std::tuple<std::shared_ptr<WritableProvider<TypesT>>...> m_upstream_holders;
 };
 
 }  // namespace mrc::node

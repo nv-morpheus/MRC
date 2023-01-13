@@ -178,7 +178,7 @@ class EdgeRxSubscriber : public IEdgeWritable<T>
 };
 
 template <typename InputT, typename OutputT>
-class RxNodeComponent : public IngressProvider<InputT>, public IngressAcceptor<OutputT>
+class RxNodeComponent : public WritableProvider<InputT>, public WritableAcceptor<OutputT>
 {
   public:
     using stream_fn_t = std::function<rxcpp::observable<OutputT>(const rxcpp::observable<InputT>&)>;
@@ -187,7 +187,7 @@ class RxNodeComponent : public IngressProvider<InputT>, public IngressAcceptor<O
     {
         auto edge = std::make_shared<EdgeRxSubscriber<InputT>>(m_subject.get_subscriber());
 
-        IngressProvider<InputT>::init_owned_edge(edge);
+        WritableProvider<InputT>::init_owned_edge(edge);
     }
 
     RxNodeComponent(stream_fn_t stream_fn) : RxNodeComponent()
@@ -237,7 +237,7 @@ class RxNodeComponent : public IngressProvider<InputT>, public IngressAcceptor<O
             },
             [this]() {
                 // On completion, release connections
-                IngressAcceptor<OutputT>::release_edge_connection();
+                WritableAcceptor<OutputT>::release_edge_connection();
             }));
     }
 
