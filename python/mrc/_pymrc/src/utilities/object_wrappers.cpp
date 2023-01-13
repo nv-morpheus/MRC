@@ -19,9 +19,9 @@
 
 #include "mrc/exceptions/runtime_error.hpp"
 
-#include <assert.h>
 #include <pybind11/gil.h>
 
+#include <cassert>
 #include <utility>
 
 namespace mrc::pymrc {
