@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022,NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,7 +59,7 @@ class thread_barrier  // NOLINT
         BOOST_ASSERT(0 != initial);
     }
 
-    thread_barrier(thread_barrier const&) = delete;
+    thread_barrier(thread_barrier const&)            = delete;
     thread_barrier& operator=(thread_barrier const&) = delete;
 
     bool wait()
@@ -74,7 +74,9 @@ class thread_barrier  // NOLINT
             cond_.notify_all();
             return true;
         }
-        cond_.wait(lk, [&]() { return cycle != cycle_; });
+        cond_.wait(lk, [&]() {
+            return cycle != cycle_;
+        });
         return false;
     }
 };

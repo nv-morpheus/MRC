@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -124,8 +124,8 @@ void SubscriptionService::register_subscription_service()
         {
             req.add_roles(role);
         }
-        auto resp =
-            m_instance.client().await_unary<protos::Ack>(protos::ClientUnaryCreateSubscriptionService, std::move(req));
+        auto resp = m_instance.client().await_unary<protos::Ack>(protos::ClientUnaryCreateSubscriptionService,
+                                                                 std::move(req));
         MRC_THROW_ON_ERROR(resp);
     }
     DVLOG(10) << "subscribtion_service: " << service_name() << " is live on the control plane server";
@@ -141,7 +141,8 @@ void SubscriptionService::register_subscription_service()
             req.add_subscribe_to_roles(role);
         }
         auto resp = m_instance.client().await_unary<protos::RegisterSubscriptionServiceResponse>(
-            protos::ClientUnaryRegisterSubscriptionService, std::move(req));
+            protos::ClientUnaryRegisterSubscriptionService,
+            std::move(req));
         MRC_THROW_ON_ERROR(resp);
         m_tag = resp->tag();
     }
@@ -162,8 +163,9 @@ void SubscriptionService::activate_subscription_service()
     {
         req.add_subscribe_to_roles(role);
     }
-    MRC_THROW_ON_ERROR(m_instance.client().template await_unary<protos::Ack>(
-        protos::ClientUnaryActivateSubscriptionService, std::move(req)));
+    MRC_THROW_ON_ERROR(
+        m_instance.client().template await_unary<protos::Ack>(protos::ClientUnaryActivateSubscriptionService,
+                                                              std::move(req)));
 
     DVLOG(10) << "[finish] activate subscription service: " << service_name() << "; role: " << role()
               << "; tag: " << tag();
@@ -177,8 +179,8 @@ void SubscriptionService::drop_subscription_service()
     req.set_service_name(service_name());
     req.set_instance_id(m_instance.instance_id());
     req.set_tag(tag());
-    auto resp =
-        m_instance.client().await_unary<protos::Ack>(protos::ClientUnaryDropSubscriptionService, std::move(req));
+    auto resp = m_instance.client().await_unary<protos::Ack>(protos::ClientUnaryDropSubscriptionService,
+                                                             std::move(req));
     MRC_THROW_ON_ERROR(resp);
     DVLOG(10) << "[finish] drop subscription service: " << service_name() << "; role: " << role() << "; tag: " << tag();
 }

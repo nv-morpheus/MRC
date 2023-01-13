@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -62,20 +62,28 @@ class StatGatherTest : public ::testing::Test
                 s.on_completed();
             });
 
-            auto internal_1 = segment.make_node<std::string, std::string>(
-                "internal_1", rxcpp::operators::map([](std::string s) { return s + "-Mapped"; }));
+            auto internal_1 = segment.make_node<std::string, std::string>("internal_1",
+                                                                          rxcpp::operators::map([](std::string s) {
+                                                                              return s + "-Mapped";
+                                                                          }));
 
             segment.make_edge(src, internal_1);
 
-            auto internal_2 = segment.make_node<std::string, std::string>(
-                "internal_2", rxcpp::operators::map([](std::string s) { return s; }));
+            auto internal_2 = segment.make_node<std::string, std::string>("internal_2",
+                                                                          rxcpp::operators::map([](std::string s) {
+                                                                              return s;
+                                                                          }));
 
             segment.make_edge(internal_1, internal_2);
 
             auto sink = segment.make_sink<std::string>(
                 "sink",
-                [](std::string x) { VLOG(10) << x << std::endl; },
-                []() { VLOG(10) << "Completed" << std::endl; });
+                [](std::string x) {
+                    VLOG(10) << x << std::endl;
+                },
+                []() {
+                    VLOG(10) << "Completed" << std::endl;
+                });
 
             segment.make_edge(internal_2, sink);
         };

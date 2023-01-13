@@ -309,7 +309,9 @@ PYBIND11_MODULE(test_edges_cpp, module)
 
     pymrc::import(module, "mrc");
 
-    py::class_<Base, std::shared_ptr<Base>>(module, "Base").def(py::init<>([]() { return std::make_shared<Base>(); }));
+    py::class_<Base, std::shared_ptr<Base>>(module, "Base").def(py::init<>([]() {
+        return std::make_shared<Base>();
+    }));
     mrc::pymrc::PortBuilderUtil::register_port_util<Base>();
 
     py::class_<DerivedA, Base, std::shared_ptr<DerivedA>>(module, "DerivedA").def(py::init<>([]() {

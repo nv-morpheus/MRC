@@ -62,7 +62,9 @@ class RxNode : public RxSinkBase<InputT>,
     template <typename... OpsT>
     RxNode& pipe(OpsT&&... ops)
     {
-        make_stream([=](auto start) { return (start | ... | ops); });
+        make_stream([=](auto start) {
+            return (start | ... | ops);
+        });
         return *this;
     }
 

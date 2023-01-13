@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -231,8 +231,9 @@ Partitions::Partitions(const Topology& topology, const Options& options)
             {
                 // if dedicated, we push back 1 HostPartition for each dedicated partition
                 CHECK_LT(s_id, cpu_sets.size());
-                host_partitions.push_back(std::make_shared<HostPartition>(
-                    cpu_sets[s_id], topology.numaset_for_cpuset(cpu_sets[s_id]), partition_memory));
+                host_partitions.push_back(std::make_shared<HostPartition>(cpu_sets[s_id],
+                                                                          topology.numaset_for_cpuset(cpu_sets[s_id]),
+                                                                          partition_memory));
 
                 VLOG(10) << "host_partition_id: " << host_partitions.size() - 1 << " contains "
                          << host_partitions.back()->cpu_set().weight() << " logical cpus ("

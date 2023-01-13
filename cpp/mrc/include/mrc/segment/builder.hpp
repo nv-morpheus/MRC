@@ -66,14 +66,14 @@ namespace {
 namespace hana = boost::hana;
 
 template <typename T>
-auto has_source_add_watcher =
-    hana::is_valid([](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).source_add_watcher(
-                                        std::declval<std::shared_ptr<mrc::WatcherInterface>>())) {});
+auto has_source_add_watcher = hana::is_valid(
+    [](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).source_add_watcher(
+                         std::declval<std::shared_ptr<mrc::WatcherInterface>>())) {});
 
 template <typename T>
-auto has_sink_add_watcher =
-    hana::is_valid([](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).sink_add_watcher(
-                                        std::declval<std::shared_ptr<mrc::WatcherInterface>>())) {});
+auto has_sink_add_watcher = hana::is_valid(
+    [](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).sink_add_watcher(
+                         std::declval<std::shared_ptr<mrc::WatcherInterface>>())) {});
 
 template <typename T>
 void add_stats_watcher_if_rx_source(T& thing, std::string name)
@@ -140,7 +140,8 @@ class Builder final
     auto make_source(std::string name, CreateFnT&& create_fn)
     {
         return construct_object<NodeTypeT<SourceTypeT>>(
-            name, rxcpp::observable<>::create<SourceTypeT>(std::forward<CreateFnT>(create_fn)));
+            name,
+            rxcpp::observable<>::create<SourceTypeT>(std::forward<CreateFnT>(create_fn)));
     }
 
     template <typename SinkTypeT,
@@ -360,7 +361,9 @@ class Builder final
         CHECK(segment_object->is_source());
         using source_type_t = typename ObjectT::source_type_t;
         auto counter        = m_backend.make_throughput_counter(runnable->name());
-        runnable->object().add_epilogue_tap([counter](const source_type_t& data) { counter(1); });
+        runnable->object().add_epilogue_tap([counter](const source_type_t& data) {
+            counter(1);
+        });
     }
 
     template <typename ObjectT, typename CallableT>
@@ -373,7 +376,9 @@ class Builder final
         using tick_fn_t     = std::function<std::int64_t(const source_type_t&)>;
         tick_fn_t tick_fn   = callable;
         auto counter        = m_backend.make_throughput_counter(runnable->name());
-        runnable->object().add_epilogue_tap([counter, tick_fn](const source_type_t& data) { counter(tick_fn(data)); });
+        runnable->object().add_epilogue_tap([counter, tick_fn](const source_type_t& data) {
+            counter(tick_fn(data));
+        });
     }
 
   private:

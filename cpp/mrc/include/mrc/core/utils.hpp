@@ -103,12 +103,18 @@ std::pair<std::set<T>, std::set<T>> set_compare(const std::set<T>& cur_set, cons
     std::set<T> create;
 
     // set difference to determine which channels to remove
-    std::set_difference(
-        cur_set.begin(), cur_set.end(), new_set.begin(), new_set.end(), std::inserter(remove, remove.end()));
+    std::set_difference(cur_set.begin(),
+                        cur_set.end(),
+                        new_set.begin(),
+                        new_set.end(),
+                        std::inserter(remove, remove.end()));
 
     // set difference to determine which channels to add
-    std::set_difference(
-        new_set.begin(), new_set.end(), cur_set.begin(), cur_set.end(), std::inserter(create, create.end()));
+    std::set_difference(new_set.begin(),
+                        new_set.end(),
+                        cur_set.begin(),
+                        cur_set.end(),
+                        std::inserter(create, create.end()));
 
     return std::make_pair(std::move(create), std::move(remove));
 }

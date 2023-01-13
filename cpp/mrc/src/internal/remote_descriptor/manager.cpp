@@ -63,8 +63,12 @@ namespace mrc::internal::remote_descriptor {
 
 namespace {
 
-ucs_status_t active_message_callback(
-    void* arg, const void* header, size_t header_length, void* data, size_t length, const ucp_am_recv_param_t* param)
+ucs_status_t active_message_callback(void* arg,
+                                     const void* header,
+                                     size_t header_length,
+                                     void* data,
+                                     size_t length,
+                                     const ucp_am_recv_param_t* param)
 {
     DCHECK_EQ(header_length, sizeof(RemoteDescriptorDecrementMessage));
 

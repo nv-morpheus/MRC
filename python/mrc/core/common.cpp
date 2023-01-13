@@ -52,7 +52,7 @@ PYBIND11_MODULE(common, module)
     // EdgeAdapterUtil::register_data_adapters<PyHolder>();
     PortBuilderUtil::register_port_util<PyHolder>();
 
-    module.attr("__version__") =
-        MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "." << mrc_VERSION_PATCH);
+    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+                                                                  << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

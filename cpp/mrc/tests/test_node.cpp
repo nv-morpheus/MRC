@@ -85,8 +85,10 @@ TEST_F(TestNode, GenericEndToEnd)
             s.on_completed();
         });
 
-        auto intermediate = seg.make_node<std::string, int>(
-            "intermediate", rxcpp::operators::map([](const std::string& x) -> int { return x.size(); }));
+        auto intermediate = seg.make_node<std::string, int>("intermediate",
+                                                            rxcpp::operators::map([](const std::string& x) -> int {
+                                                                return x.size();
+                                                            }));
 
         seg.make_edge(sourceStr2, intermediate);
 
@@ -113,7 +115,9 @@ TEST_F(TestNode, GenericEndToEnd)
                 DVLOG(1) << "Sink got value: '" << x << "'" << std::endl;
                 ++next_count;
             },
-            [&](std::exception_ptr x) { DVLOG(1) << "Sink on_error" << std::endl; },
+            [&](std::exception_ptr x) {
+                DVLOG(1) << "Sink on_error" << std::endl;
+            },
             [&]() {
                 ++complete_count;
                 DVLOG(1) << "Sink on_completed" << std::endl;

@@ -55,8 +55,9 @@ class GenericSink : public RxSink<T, ContextT>
 template <typename T, typename ContextT>
 GenericSink<T, ContextT>::GenericSink()
 {
-    RxSink<T, ContextT>::set_observer(
-        rxcpp::make_observer_dynamic<T>([this](T data) { this->on_data(std::move(data)); }));
+    RxSink<T, ContextT>::set_observer(rxcpp::make_observer_dynamic<T>([this](T data) {
+        this->on_data(std::move(data));
+    }));
 }
 
 template <typename T>

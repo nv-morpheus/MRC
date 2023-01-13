@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,7 +42,9 @@ namespace mrc::internal::system {
 FiberTaskQueue::FiberTaskQueue(const Resources& resources, CpuSet cpu_affinity, std::size_t channel_size) :
   m_queue(channel_size),
   m_cpu_affinity(std::move(cpu_affinity)),
-  m_thread(resources.make_thread("fiberq", m_cpu_affinity, [this] { main(); }))
+  m_thread(resources.make_thread("fiberq", m_cpu_affinity, [this] {
+      main();
+  }))
 {
     DVLOG(10) << "awaiting fiber task queue worker thread running on cpus " << m_cpu_affinity;
     enqueue([] {}).get();

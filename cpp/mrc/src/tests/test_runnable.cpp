@@ -191,7 +191,9 @@ TEST_F(TestRunnable, GenericRunnableRunWithFiber)
         runner.on_instance_state_change_callback([&counter](const runnable::Runnable& runnable,
                                                             std::size_t id,
                                                             runnable::Runner::State old_state,
-                                                            runnable::Runner::State new_state) { ++counter; });
+                                                            runnable::Runner::State new_state) {
+            ++counter;
+        });
     });
 
     auto runner = launcher->ignition();

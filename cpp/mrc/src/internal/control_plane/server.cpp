@@ -93,7 +93,9 @@ void Server::do_service_start()
 {
     // node to accept connections
     auto acceptor = std::make_unique<mrc::node::RxSource<stream_t>>(
-        rxcpp::observable<>::create<stream_t>([this](rxcpp::subscriber<stream_t>& s) { do_accept_stream(s); }));
+        rxcpp::observable<>::create<stream_t>([this](rxcpp::subscriber<stream_t>& s) {
+            do_accept_stream(s);
+        }));
 
     // node to periodically issue updates
 
@@ -107,12 +109,15 @@ void Server::do_service_start()
     mrc::node::make_edge(*m_queue_holder, *m_queue);
 
     // the queue is attached to the event handler which will update the internal state of the server
-    auto handler =
-        std::make_unique<mrc::node::RxSink<event_t>>([this](event_t event) { do_handle_event(std::move(event)); });
+    auto handler = std::make_unique<mrc::node::RxSink<event_t>>([this](event_t event) {
+        do_handle_event(std::move(event));
+    });
 
     // node to periodically issue update of the server state to connected clients via the grpc bidi streams
     auto updater = std::make_unique<mrc::node::RxSource<void*>>(
-        rxcpp::observable<>::create<void*>([this](rxcpp::subscriber<void*>& s) { do_issue_update(s); }));
+        rxcpp::observable<>::create<void*>([this](rxcpp::subscriber<void*>& s) {
+            do_issue_update(s);
+        }));
 
     // edge: queue >> handler
     mrc::node::make_edge(*m_queue, *handler);
@@ -442,8 +447,9 @@ Expected<protos::Ack> Server::unary_create_subscription_service(event_t& event)
     {
         DVLOG(10) << "subscription_service: " << req->service_name()
                   << " first request - creating subscription service";
-        m_subscription_services[req->service_name()] =
-            std::make_unique<server::SubscriptionService>(req->service_name(), std::move(roles));
+        m_subscription_services[req->service_name()] = std::make_unique<server::SubscriptionService>(
+            req->service_name(),
+            std::move(roles));
     }
     else
     {

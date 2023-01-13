@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -141,8 +141,9 @@ void CodableStorage::encode_descriptor(const InstanceID& instance_id,
 
 mrc::memory::buffer_view CodableStorage::decode_descriptor(const mrc::codable::protos::RemoteMemoryDescriptor& desc)
 {
-    return {
-        reinterpret_cast<void*>(desc.address()), desc.bytes(), mrc::codable::decode_memory_type(desc.memory_kind())};
+    return {reinterpret_cast<void*>(desc.address()),
+            desc.bytes(),
+            mrc::codable::decode_memory_type(desc.memory_kind())};
 }
 
 mrc::codable::protos::EncodedObject& CodableStorage::get_mutable_proto()

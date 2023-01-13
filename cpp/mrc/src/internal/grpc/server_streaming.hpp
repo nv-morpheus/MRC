@@ -161,8 +161,8 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
         bool ok;
     };
 
-    using request_fn_t = std::function<void(
-        grpc::ServerContext* context, grpc::ServerAsyncReaderWriter<ResponseT, RequestT>* stream, void* tag)>;
+    using request_fn_t = std::function<
+        void(grpc::ServerContext* context, grpc::ServerAsyncReaderWriter<ResponseT, RequestT>* stream, void* tag)>;
 
     ServerStream(request_fn_t request_fn, runnable::Resources& runnable) :
       m_runnable(runnable),
@@ -173,7 +173,9 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
               s.on_completed();
           })))
     {
-        m_init_fn = [this, request_fn](void* tag) { request_fn(&m_context, m_stream.get(), tag); };
+        m_init_fn = [this, request_fn](void* tag) {
+            request_fn(&m_context, m_stream.get(), tag);
+        };
     }
 
     ~ServerStream() override
@@ -300,7 +302,8 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
         // construct StreamWriter
         m_can_write     = true;
         m_stream_writer = std::shared_ptr<ServerStreamWriter>(
-            new ServerStreamWriter(m_write_channel, this->shared_from_this()), [this](ServerStreamWriter* ptr) {
+            new ServerStreamWriter(m_write_channel, this->shared_from_this()),
+            [this](ServerStreamWriter* ptr) {
                 delete ptr;
                 m_write_channel.reset();
             });

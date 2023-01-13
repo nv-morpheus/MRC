@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,8 +29,11 @@
 
 using namespace mrc::benchmarking;
 
-void stat_check_helper(
-    nlohmann::json metrics, std::size_t ch_read, std::size_t receive, std::size_t ch_write, std::size_t emit)
+void stat_check_helper(nlohmann::json metrics,
+                       std::size_t ch_read,
+                       std::size_t receive,
+                       std::size_t ch_write,
+                       std::size_t emit)
 {
     EXPECT_EQ(metrics["component_channel_read_total"].get<std::size_t>(), ch_read);
     EXPECT_EQ(metrics["component_receive_total"].get<std::size_t>(), receive);

@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,7 +46,9 @@ TaggedReceiveManager::~TaggedReceiveManager() = default;
 void TaggedReceiveManager::start()
 {
     m_running           = true;
-    m_shutdown_complete = boost::fibers::async(::boost::fibers::launch::post, [this] { progress_engine(); });
+    m_shutdown_complete = boost::fibers::async(::boost::fibers::launch::post, [this] {
+        progress_engine();
+    });
 }
 
 void TaggedReceiveManager::stop()

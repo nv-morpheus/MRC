@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -428,9 +428,10 @@ TEST_F(TestNext, SourceNodeSink)
     using output_t = float;
 
     auto source = std::make_unique<ExampleSourceChannel<input_t>>();
-    auto node   = std::make_unique<node::RxNode<input_t, output_t>>(
-        rxcpp::operators::map([](input_t d) -> output_t { return output_t(2.0 * d); }));
-    auto sink = std::make_unique<node::RxSink<output_t>>();
+    auto node   = std::make_unique<node::RxNode<input_t, output_t>>(rxcpp::operators::map([](input_t d) -> output_t {
+        return output_t(2.0 * d);
+    }));
+    auto sink   = std::make_unique<node::RxSink<output_t>>();
 
     node::make_edge(*source, *node);
     node::make_edge(*node, *sink);
@@ -439,7 +440,9 @@ TEST_F(TestNext, SourceNodeSink)
         LOG(INFO) << "map: " << i;
         return static_cast<output_t>(i);
     }));
-    sink->set_observer([](output_t o) { LOG(INFO) << "output: " << o; });
+    sink->set_observer([](output_t o) {
+        LOG(INFO) << "output: " << o;
+    });
 
     auto runner_sink = m_resources->launch_control().prepare_launcher(std::move(sink))->ignition();
     auto runner_node = m_resources->launch_control().prepare_launcher(std::move(node))->ignition();
@@ -540,21 +543,26 @@ TEST_F(TestNext, TapUniquePtr)
                           s.on_next(std::make_unique<int>(1));
                           s.on_next(std::make_unique<int>(2));
                           s.on_completed();
-                      }).tap([](const std::unique_ptr<int>& int_ptr) {
-                            LOG(INFO) << *int_ptr;
-                        }).map([](std::unique_ptr<int> i) {
-        *i = *i * 2;
-        return std::move(i);
-    });
+                      })
+                          .tap([](const std::unique_ptr<int>& int_ptr) {
+                              LOG(INFO) << *int_ptr;
+                          })
+                          .map([](std::unique_ptr<int> i) {
+                              *i = *i * 2;
+                              return std::move(i);
+                          });
 
     static_assert(rxcpp::detail::is_on_next_of<int, std::function<void(int)>>::value, " ");
     static_assert(rxcpp::detail::is_on_next_of<std::unique_ptr<int>, std::function<void(std::unique_ptr<int>)>>::value,
                   " ");
 
-    auto observer = rxcpp::make_observer_dynamic<std::unique_ptr<int>>(
-        [](std::unique_ptr<int>&& int_ptr) { LOG(INFO) << "in observer: " << *int_ptr; });
+    auto observer = rxcpp::make_observer_dynamic<std::unique_ptr<int>>([](std::unique_ptr<int>&& int_ptr) {
+        LOG(INFO) << "in observer: " << *int_ptr;
+    });
 
-    observable.subscribe([](std::unique_ptr<int> data) { LOG(INFO) << "in subscriber: " << *data; });
+    observable.subscribe([](std::unique_ptr<int> data) {
+        LOG(INFO) << "in subscriber: " << *data;
+    });
     observable.subscribe(observer);
 }
 
@@ -583,8 +591,13 @@ TEST_F(TestNext, RxWithReusableOnNextAndOnError)
     static_assert(rxcpp::detail::is_on_next_of<data_t, std::function<void(data_t)>>::value, " ");
     static_assert(rxcpp::detail::is_on_next_of<data_t, std::function<void(data_t &&)>>::value, " ");
 
-    auto observer = rxcpp::make_observer_dynamic<data_t>([](data_t&& int_ptr) { EXPECT_EQ(*int_ptr, 42); },
-                                                         [](std::exception_ptr ptr) { std::rethrow_exception(ptr); });
+    auto observer = rxcpp::make_observer_dynamic<data_t>(
+        [](data_t&& int_ptr) {
+            EXPECT_EQ(*int_ptr, 42);
+        },
+        [](std::exception_ptr ptr) {
+            std::rethrow_exception(ptr);
+        });
 
     observable.subscribe(observer);
 }
@@ -595,16 +608,22 @@ TEST_F(TestNext, TapValue)
                           s.on_next(1);
                           s.on_next(2);
                           s.on_completed();
-                      }).tap([](const int& i) {
-                            LOG(INFO) << i;
-                        }).map([](int i) {
-        i = i * 2;
-        return i;
+                      })
+                          .tap([](const int& i) {
+                              LOG(INFO) << i;
+                          })
+                          .map([](int i) {
+                              i = i * 2;
+                              return i;
+                          });
+
+    auto observer = rxcpp::make_observer_dynamic<int>([](int i) {
+        LOG(INFO) << "in observer: " << i;
     });
 
-    auto observer = rxcpp::make_observer_dynamic<int>([](int i) { LOG(INFO) << "in observer: " << i; });
-
-    observable.subscribe([](int i) { LOG(INFO) << "in subscriber: " << i; });
+    observable.subscribe([](int i) {
+        LOG(INFO) << "in subscriber: " << i;
+    });
     observable.subscribe(observer);
 }
 
@@ -712,10 +731,13 @@ TEST_F(TestNext, SegmentBuilder)
 
         auto x = segment.make_node<std::string, std::string>("x");
 
-        auto y = segment.make_node<std::string, double>(
-            "y", rxcpp::operators::map([](std::string s) -> double { return 1.0; }));
+        auto y = segment.make_node<std::string, double>("y", rxcpp::operators::map([](std::string s) -> double {
+                                                            return 1.0;
+                                                        }));
 
-        auto z = segment.make_sink<double>("z", [](double d) { LOG(INFO) << d; });
+        auto z = segment.make_sink<double>("z", [](double d) {
+            LOG(INFO) << d;
+        });
 
         EXPECT_TRUE(src->is_runnable());
         EXPECT_TRUE(x->is_runnable());

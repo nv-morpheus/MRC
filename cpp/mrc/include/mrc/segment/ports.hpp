@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,7 +59,9 @@ class Ports
         {
             auto builder         = builder_fns[i];
             auto name            = names[i];
-            m_initializers[name] = [builder, name](const SegmentAddress& address) { return builder(address, name); };
+            m_initializers[name] = [builder, name](const SegmentAddress& address) {
+                return builder(address, name);
+            };
         }
     }
 

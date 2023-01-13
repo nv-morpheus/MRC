@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,13 +41,13 @@ struct ModelRegistryUtil
         static_assert(std::is_base_of_v<modules::SegmentModule, ModuleTypeT>,
                       "ModuleTypeT must derive from SegmentModule");
 
-        ModuleRegistry::register_module(std::move(name),
-                                        std::move(registry_namespace),
-                                        release_version,
-                                        [](std::string module_name, nlohmann::json config) {
-                                            return std::make_shared<ModuleTypeT>(std::move(module_name),
-                                                                                 std::move(config));
-                                        });
+        ModuleRegistry::register_module(
+            std::move(name),
+            std::move(registry_namespace),
+            release_version,
+            [](std::string module_name, nlohmann::json config) {
+                return std::make_shared<ModuleTypeT>(std::move(module_name), std::move(config));
+            });
     }
 };
 }  // namespace mrc::modules

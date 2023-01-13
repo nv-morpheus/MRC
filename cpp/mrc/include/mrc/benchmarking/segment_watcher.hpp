@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -172,7 +172,9 @@ decltype(auto) SegmentWatcher<TracerTypeT>::create_tracer_emit_tap(const std::st
 {
     auto idx = get_or_create_node_entry(id);
 
-    return rxcpp::operators::tap([idx](std::shared_ptr<TracerTypeT> tracer) { tracer->emit(idx); });
+    return rxcpp::operators::tap([idx](std::shared_ptr<TracerTypeT> tracer) {
+        tracer->emit(idx);
+    });
 }
 
 template <typename TracerTypeT>
@@ -181,7 +183,9 @@ decltype(auto) SegmentWatcher<TracerTypeT>::create_tracer_receive_tap(const std:
 {
     auto idx = get_or_create_node_entry(id);
 
-    return rxcpp::operators::tap([idx](std::shared_ptr<TracerTypeT> tracer) { tracer->receive(idx); });
+    return rxcpp::operators::tap([idx](std::shared_ptr<TracerTypeT> tracer) {
+        tracer->receive(idx);
+    });
 }
 
 template <typename TracerTypeT>

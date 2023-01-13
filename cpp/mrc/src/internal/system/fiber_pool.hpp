@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,7 +59,9 @@ class FiberPool final : public core::FiberPool
     void set_thread_local_resource(std::uint32_t index, std::shared_ptr<ResourceT> resource)
     {
         task_queue(index)
-            .enqueue([resource] { ::mrc::utils::ThreadLocalSharedPointer<ResourceT>::set(resource); })
+            .enqueue([resource] {
+                ::mrc::utils::ThreadLocalSharedPointer<ResourceT>::set(resource);
+            })
             .get();
     }
 

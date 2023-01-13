@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -61,7 +61,9 @@ auto SyncWaitEvent::reset() noexcept -> void
 auto SyncWaitEvent::wait() noexcept -> void
 {
     std::unique_lock<std::mutex> lk{m_mutex};
-    m_cv.wait(lk, [this] { return m_set; });
+    m_cv.wait(lk, [this] {
+        return m_set;
+    });
 }
 
 }  // namespace mrc::coroutines::detail

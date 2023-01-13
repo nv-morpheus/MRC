@@ -463,8 +463,7 @@ std::shared_ptr<mrc::modules::SegmentModule> BuilderProxy::load_module_from_regi
 {
     auto json_config = cast_from_pyobject(config);
 
-    return self.load_module_from_registry(
-        module_id, registry_namespace, std::move(module_name), std::move(json_config));
+    return self.load_module_from_registry(module_id, registry_namespace, std::move(module_name), std::move(json_config));
 }
 
 void BuilderProxy::init_module(mrc::segment::Builder& self, std::shared_ptr<mrc::modules::SegmentModule> module)

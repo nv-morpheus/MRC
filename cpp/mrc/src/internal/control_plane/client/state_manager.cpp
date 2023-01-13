@@ -87,8 +87,9 @@ Client& StateManager::client()
 
 void StateManager::start_with_channel(node::IIngressAcceptor<const protos::StateUpdate>& update_channel)
 {
-    auto sink = std::make_unique<node::RxSink<protos::StateUpdate>>(
-        [this](protos::StateUpdate update_msg) { update(std::move(update_msg)); });
+    auto sink = std::make_unique<node::RxSink<protos::StateUpdate>>([this](protos::StateUpdate update_msg) {
+        update(std::move(update_msg));
+    });
     // sink->update_channel(std::make_unique<channel::RecentChannel<protos::StateUpdate>>(1));
     node::make_edge(update_channel, *sink);
     m_runner =

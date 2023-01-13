@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,7 +26,9 @@ namespace mrc {
 
 void SharedResourceBitMap::insert(const Bitmap& bitmap, const std::uint32_t& object_id)
 {
-    bitmap.for_each_bit([this, object_id](std::uint32_t, std::uint32_t bit_index) { m_map[bit_index].on(object_id); });
+    bitmap.for_each_bit([this, object_id](std::uint32_t, std::uint32_t bit_index) {
+        m_map[bit_index].on(object_id);
+    });
 }
 
 void SharedResourceBitMap::for_objects(std::uint32_t bit_index, std::function<void(const std::uint32_t&)> lambda) const
@@ -35,14 +37,18 @@ void SharedResourceBitMap::for_objects(std::uint32_t bit_index, std::function<vo
     if (search != m_map.end())
     {
         const auto& bitmap = search->second;
-        bitmap.for_each_bit([&](std::uint32_t, std::uint32_t bit_index) { lambda(bit_index); });
+        bitmap.for_each_bit([&](std::uint32_t, std::uint32_t bit_index) {
+            lambda(bit_index);
+        });
     }
 }
 
 std::size_t SharedResourceBitMap::object_count(std::uint32_t bit_index) const
 {
     std::size_t count = 0;
-    for_objects(bit_index, [&](std::uint32_t) mutable { ++count; });
+    for_objects(bit_index, [&](std::uint32_t) mutable {
+        ++count;
+    });
     return count;
 }
 
