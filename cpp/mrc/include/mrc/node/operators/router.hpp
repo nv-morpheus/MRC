@@ -147,7 +147,14 @@ class RouterBase : public ForwardingIngressProvider<InputT>, public MultiSourceP
 // };
 
 template <typename KeyT, typename InputT, typename OutputT = InputT, typename = void>
-class Router : public RouterBase<KeyT, InputT, OutputT>
+class Router;
+
+template <typename KeyT, typename InputT, typename OutputT>
+class Router<KeyT,
+             InputT,
+             OutputT,
+             std::enable_if_t<!std::is_same_v<InputT, OutputT> && !std::is_convertible_v<InputT, OutputT>>>
+  : public RouterBase<KeyT, InputT, OutputT>
 {
   protected:
     channel::Status on_next(InputT&& data) override
@@ -165,7 +172,10 @@ class Router : public RouterBase<KeyT, InputT, OutputT>
 };
 
 template <typename KeyT, typename InputT, typename OutputT>
-class Router<KeyT, InputT, OutputT, std::enable_if_t<std::is_convertible_v<InputT, OutputT>>>
+class Router<KeyT,
+             InputT,
+             OutputT,
+             std::enable_if_t<!std::is_same_v<InputT, OutputT> && std::is_convertible_v<InputT, OutputT>>>
   : public RouterBase<KeyT, InputT, OutputT>
 {
   protected:
@@ -177,39 +187,22 @@ class Router<KeyT, InputT, OutputT, std::enable_if_t<std::is_convertible_v<Input
     }
 
     virtual KeyT determine_key_for_value(const InputT& t) = 0;
-
-    OutputT convert_value(InputT&& data)
-    {
-        return data;
-    }
 };
 
-// template <typename KeyT, typename InputT, typename OutputT = InputT>
-// class Router : public RouterBase<KeyT, InputT, OutputT>
-// {
-//   protected:
-//     channel::Status on_next(InputT&& data) override
-//     {
-//         KeyT key = this->determine_key_for_value(data);
+template <typename KeyT, typename InputT, typename OutputT>
+class Router<KeyT, InputT, OutputT, std::enable_if_t<std::is_same_v<InputT, OutputT>>>
+  : public RouterBase<KeyT, InputT, OutputT>
+{
+  protected:
+    channel::Status on_next(InputT&& data) override
+    {
+        KeyT key = this->determine_key_for_value(data);
 
-//         if constexpr (std::is_convertible_v<InputT, OutputT>)
-//         {
-//             return MultiSourceProperties<KeyT, OutputT>::get_writable_edge(key)->await_write(std::move(data));
-//         }
-//         else
-//         {
-//             // If not convertable, call convert_value
-//             return MultiSourceProperties<KeyT, OutputT>::get_writable_edge(key)->await_write(
-//                 this->convert_value(std::move(data)));
-//         }
-//     }
+        return MultiSourceProperties<KeyT, OutputT>::get_writable_edge(key)->await_write(std::move(data));
+    }
 
-//     // If the value is convertable, implement the abstract method
-//     std::enable_if_t<!std::is_convertible_v<InputT, OutputT>, OutputT> convert_value(InputT&& data) override
-//     {
-//         return data;
-//     }
-// };
+    virtual KeyT determine_key_for_value(const InputT& t) = 0;
+};
 
 template <typename KeyT, typename T>
 class TaggedRouter : public Router<KeyT, std::pair<KeyT, T>, T>

@@ -410,7 +410,7 @@ class ConvertingEdgeReadableBase : public IEdgeReadable<OutputT>
     std::shared_ptr<IEdgeReadable<InputT>> m_upstream{};
 };
 
-template <typename SourceT, typename SinkT = SourceT, typename EnableT = void>
+template <typename InputT, typename OutputT = InputT, typename EnableT = void>
 class ConvertingEdgeWritable;
 
 template <typename InputT, typename OutputT>

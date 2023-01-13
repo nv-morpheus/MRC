@@ -125,9 +125,11 @@ py::object cast_from_json(const json& source)
 
 json cast_from_pyobject(const py::object& source)
 {
+    // Dont return via initializer list with JSON. It performs type deduction and gives different results
+    // NOLINTBEGIN(modernize-return-braced-init-list)
     if (source.is_none())
     {
-        return {};
+        return json();
     }
     if (py::isinstance<py::dict>(source))
     {
@@ -153,23 +155,24 @@ json cast_from_pyobject(const py::object& source)
     }
     if (py::isinstance<py::bool_>(source))
     {
-        return {py::cast<bool>(source)};
+        return json(py::cast<bool>(source));
     }
     if (py::isinstance<py::int_>(source))
     {
-        return {py::cast<long>(source)};
+        return json(py::cast<long>(source));
     }
     if (py::isinstance<py::float_>(source))
     {
-        return {py::cast<double>(source)};
+        return json(py::cast<double>(source));
     }
     if (py::isinstance<py::str>(source))
     {
-        return {py::cast<std::string>(source)};
+        return json(py::cast<std::string>(source));
     }
 
     // else unsupported return null
-    return {};
+    return json();
+    // NOLINTEND(modernize-return-braced-init-list)
 }
 
 void show_deprecation_warning(const std::string& deprecation_message, ssize_t stack_level)

@@ -21,8 +21,8 @@
 
 namespace mrc::node {
 
-template <typename T, typename CaseT>
-class Conditional : public RouterBase<CaseT, T>
+template <typename CaseT, typename T>
+class Conditional : public Router<CaseT, T>
 {
   public:
     Conditional(std::function<CaseT(const T&)> predicate) : m_predicate(std::move(predicate)) {}

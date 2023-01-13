@@ -53,7 +53,7 @@ add_executable(test_mrc_private
   test_main.cpp
   test_memory.cpp
   test_network.cpp
-  # test_next.cpp
+  test_next.cpp
   test_partitions.cpp
   test_pipeline.cpp
   test_ranges.cpp

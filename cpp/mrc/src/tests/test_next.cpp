@@ -139,17 +139,20 @@ TEST_F(TestNext, LifeCycleSource)
 
 TEST_F(TestNext, MakeEdgeSame)
 {
-    node::WritableSubject<float> source;
-    ExampleSinkChannel<float> sink;
-    node::make_edge(source, sink);
+    auto source = std::make_unique<node::WritableSubject<float>>();
+    auto sink   = std::make_unique<ExampleSinkChannel<float>>();
+    node::make_edge(*source, *sink);
 
     float input  = 3.14;
     float output = 0.0;
 
-    source.await_write(input);
-    sink.await_read(output);
+    source->await_write(input);
+    sink->await_read(output);
 
     EXPECT_EQ(input, output);
+
+    // Release the source first
+    source.reset();
 }
 
 struct ExampleObject
@@ -160,22 +163,25 @@ TEST_F(TestNext, UniqueToUnique)
     using input_t  = std::unique_ptr<ExampleObject>;
     using output_t = std::unique_ptr<ExampleObject>;
 
-    node::WritableSubject<input_t> source;
-    ExampleSinkChannel<output_t> sink;
+    auto source = std::make_unique<node::WritableSubject<input_t>>();
+    auto sink   = std::make_unique<ExampleSinkChannel<output_t>>();
 
-    node::make_edge(source, sink);
+    node::make_edge(*source, *sink);
 
     input_t input   = std::make_unique<ExampleObject>();
     output_t output = nullptr;
 
     void* input_addr = input.get();
 
-    source.await_write(std::move(input));
-    sink.await_read(output);
+    source->await_write(std::move(input));
+    sink->await_read(output);
 
     void* output_addr = output.get();
 
     EXPECT_EQ(input_addr, output_addr);
+
+    // Release the source first
+    source.reset();
 }
 
 TEST_F(TestNext, UniqueToConstShared)
@@ -183,22 +189,25 @@ TEST_F(TestNext, UniqueToConstShared)
     using input_t  = std::unique_ptr<ExampleObject>;
     using output_t = std::shared_ptr<const ExampleObject>;
 
-    node::WritableSubject<input_t> source;
-    ExampleSinkChannel<output_t> sink;
+    auto source = std::make_unique<node::WritableSubject<input_t>>();
+    auto sink   = std::make_unique<ExampleSinkChannel<output_t>>();
 
-    node::make_edge(source, sink);
+    node::make_edge(*source, *sink);
 
     input_t input   = std::make_unique<ExampleObject>();
     output_t output = nullptr;
 
     void* input_addr = input.get();
 
-    source.await_write(std::move(input));
-    sink.await_read(output);
+    source->await_write(std::move(input));
+    sink->await_read(output);
 
     const void* output_addr = output.get();
 
     EXPECT_EQ(input_addr, output_addr);
+
+    // Release the source first
+    source.reset();
 }
 
 TEST_F(TestNext, MakeEdgeConvertible)
@@ -206,18 +215,21 @@ TEST_F(TestNext, MakeEdgeConvertible)
     using input_t  = double;
     using output_t = float;
 
-    node::WritableSubject<input_t> source;
-    ExampleSinkChannel<output_t> sink;
+    auto source = std::make_unique<node::WritableSubject<input_t>>();
+    auto sink   = std::make_unique<ExampleSinkChannel<output_t>>();
 
-    node::make_edge(source, sink);
+    node::make_edge(*source, *sink);
 
     input_t input   = 3.14;
     output_t output = 0.0;
 
-    source.await_write(input);
-    sink.await_read(output);
+    source->await_write(input);
+    sink->await_read(output);
 
     EXPECT_FLOAT_EQ(input, output);
+
+    // Release the source first
+    source.reset();
 }
 
 TEST_F(TestNext, MakeEdgeConvertibleFromSinkRx)
@@ -247,6 +259,9 @@ TEST_F(TestNext, MakeEdgeConvertibleFromSinkRx)
     stream.subscribe();
 
     EXPECT_EQ(counter, 1);
+
+    // Release the source first
+    source.reset();
 }
 
 TEST_F(TestNext, MakeEdgeConvertibleFromSinkRxRunnable)
@@ -281,6 +296,9 @@ TEST_F(TestNext, MakeEdgeConvertibleFromSinkRxRunnable)
     runner->await_join();
 
     EXPECT_EQ(counter, 1);
+
+    // Release the source first
+    source.reset();
 }
 
 class Node : public mrc::node::GenericNode<int, double>
@@ -613,22 +631,36 @@ TEST_F(TestNext, TapValue)
     observable.subscribe(observer);
 }
 
+enum class Routes
+{
+    Even,
+    Odd
+};
+
+inline std::ostream& operator<<(std::ostream& os, const Routes cat)
+{
+    switch (cat)
+    {
+    case Routes::Even:
+        os << "Even";
+        break;
+    case Routes::Odd:
+        os << "Odd";
+        break;
+    }
+    return os;
+};
+
 TEST_F(TestNext, Conditional)
 {
     using input_t  = int;
     using output_t = int;
 
-    enum class Routes
-    {
-        Even,
-        Odd
-    };
-
     auto source = std::make_unique<node::WritableSubject<input_t>>();
     auto even   = std::make_unique<ExampleSinkChannel<output_t>>();
     auto odd    = std::make_unique<ExampleSinkChannel<output_t>>();
 
-    auto cond = std::make_shared<node::Conditional<input_t, Routes>>([](const input_t& i) -> Routes {
+    auto cond = std::make_shared<node::Conditional<Routes, input_t>>([](const input_t& i) -> Routes {
         if (i % 2 == 0)
         {
             return Routes::Even;
@@ -703,6 +735,9 @@ TEST_F(TestNext, SegmentRunnable)
     auto sink = std::make_unique<ExampleSinkChannel<int>>();
 
     node::make_edge(node->object(), *sink);
+
+    // Release the node first
+    node.reset();
 }
 
 TEST_F(TestNext, SegmentBuilder)
