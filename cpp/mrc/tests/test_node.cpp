@@ -37,6 +37,7 @@
 
 #include <atomic>
 #include <exception>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <set>

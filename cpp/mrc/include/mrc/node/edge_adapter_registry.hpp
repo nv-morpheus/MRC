@@ -17,24 +17,19 @@
 
 #pragma once
 
-#include "mrc/node/channel_holder.hpp"
-
 #include <functional>
 #include <map>
 #include <memory>
 #include <mutex>
 #include <typeindex>
-
-namespace mrc::channel {
-struct IngressHandle;
-}
+#include <vector>
 
 namespace mrc::node {
-class SinkPropertiesBase;
-class SourcePropertiesBase;
-}  // namespace mrc::node
-
-namespace mrc::node {
+class EdgeTypePair;
+class EgressHandleObj;
+class IEdgeReadableBase;
+class IEdgeWritableBase;
+class IngressHandleObj;
 
 /**
  * @brief EdgeAdaptorRegistry used for the registry of adapter routines which allow for customized runtime

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "pymrc/utilities/object_wrappers.hpp"  // IWYU Pragma: export
+#include "pymrc/utilities/object_wrappers.hpp"  // IWYU pragma: export
 
 #include "mrc/segment/object.hpp"
 

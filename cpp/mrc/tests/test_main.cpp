@@ -19,7 +19,6 @@
 
 #include <gflags/gflags.h>  // for ParseCommandLineFlags
 #include <gtest/gtest.h>    // IWYU pragma: keep
-#include <stdnoreturn.h>
 
 int main(int argc, char** argv)
 {

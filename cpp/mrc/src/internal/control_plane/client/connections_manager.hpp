@@ -20,7 +20,7 @@
 #include "internal/control_plane/client/state_manager.hpp"
 #include "internal/ucx/common.hpp"
 
-#include "mrc/node/source_channel.hpp"
+#include "mrc/channel/status.hpp"
 #include "mrc/node/writable_subject.hpp"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/types.hpp"

@@ -32,11 +32,11 @@
 
 #include "mrc/channel/buffered_channel.hpp"
 #include "mrc/channel/channel.hpp"
+#include "mrc/channel/status.hpp"
 #include "mrc/memory/literals.hpp"
+#include "mrc/node/channel_holder.hpp"  // IWYU pragma: keep
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/rx_sink.hpp"
-#include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_channel.hpp"
 #include "mrc/protos/codable.pb.h"
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launcher.hpp"

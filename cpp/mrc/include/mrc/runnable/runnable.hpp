@@ -20,8 +20,13 @@
 #include "mrc/runnable/context.hpp"  // IWYU pragma: keep
 #include "mrc/utils/macros.hpp"
 
+#include <glog/logging.h>
+
 #include <atomic>
+#include <exception>
+#include <ostream>
 #include <string>
+#include <utility>
 
 namespace mrc::runnable {
 

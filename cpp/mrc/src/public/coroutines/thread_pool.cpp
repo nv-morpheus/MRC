@@ -38,14 +38,10 @@
 
 #include "mrc/coroutines/thread_pool.hpp"
 
-#include "mrc/core/thread.hpp"
-#include "mrc/coroutines/thread_local_context.hpp"
-
-#include <glog/logging.h>
-
 #include <cstddef>
+#include <future>
 #include <iostream>
-#include <sstream>
+#include <stdexcept>
 
 namespace mrc::coroutines {
 

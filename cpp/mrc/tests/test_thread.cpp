@@ -19,12 +19,12 @@
 #include "mrc/coroutines/sync_wait.hpp"
 #include "mrc/coroutines/task.hpp"
 #include "mrc/coroutines/thread_pool.hpp"
-#include "mrc/coroutines/when_all.hpp"
 
+#include <glog/logging.h>
 #include <gtest/gtest.h>
 
-#include <chrono>
-#include <thread>
+#include <coroutine>
+#include <string>
 
 using namespace mrc;
 

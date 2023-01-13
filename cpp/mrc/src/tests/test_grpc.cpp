@@ -26,13 +26,11 @@
 #include "internal/runnable/resources.hpp"
 #include "internal/system/system_provider.hpp"
 
-#include "mrc/channel/egress.hpp"
 #include "mrc/channel/status.hpp"
 #include "mrc/codable/codable_protocol.hpp"
 #include "mrc/core/task_queue.hpp"
 #include "mrc/node/generic_sink.hpp"
 #include "mrc/node/readable_subject.hpp"
-#include "mrc/node/sink_channel.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
 #include "mrc/options/topology.hpp"
@@ -53,6 +51,7 @@
 
 #include <chrono>
 #include <cstddef>
+#include <map>
 #include <memory>
 #include <ostream>
 #include <thread>

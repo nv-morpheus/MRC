@@ -19,10 +19,15 @@
 
 #include "internal/pubsub/publisher_service.hpp"
 
+#include <rxcpp/rx.hpp>
+
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
 
+namespace mrc::internal::data_plane {
+struct RemoteDescriptorMessage;
+}  // namespace mrc::internal::data_plane
 namespace mrc::internal::runtime {
 class Partition;
 }  // namespace mrc::internal::runtime

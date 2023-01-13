@@ -26,8 +26,10 @@
 #include "internal/runnable/resources.hpp"
 #include "internal/runtime/partition.hpp"
 
+#include "mrc/channel/status.hpp"
 #include "mrc/codable/encoded_object.hpp"
 #include "mrc/core/utils.hpp"
+#include "mrc/node/channel_holder.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/runnable/launch_control.hpp"
@@ -37,6 +39,7 @@
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>
 
+#include <map>
 #include <optional>
 #include <utility>
 #include <vector>

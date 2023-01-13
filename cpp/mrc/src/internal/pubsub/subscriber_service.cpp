@@ -17,8 +17,6 @@
 
 #include "internal/pubsub/subscriber_service.hpp"
 
-#include "rxcpp/rx-observer.hpp"
-
 #include "internal/data_plane/resources.hpp"
 #include "internal/data_plane/server.hpp"
 #include "internal/memory/transient_pool.hpp"
@@ -30,7 +28,7 @@
 
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/operators/router.hpp"
-#include "mrc/node/rx_node.hpp"
+#include "mrc/node/rx_sink.hpp"
 #include "mrc/protos/codable.pb.h"
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launcher.hpp"
@@ -42,6 +40,7 @@
 
 #include <optional>
 #include <ostream>
+#include <utility>
 #include <vector>
 
 namespace mrc::internal::pubsub {

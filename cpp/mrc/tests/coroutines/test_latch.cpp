@@ -36,14 +36,14 @@
  * limitations under the License.
  */
 
-#include "mrc/coroutines/event.hpp"
+#include "mrc/coroutines/concepts/awaitable.hpp"
 #include "mrc/coroutines/latch.hpp"
 #include "mrc/coroutines/task.hpp"
 
 #include <gtest/gtest.h>
+#include <stdint.h>
 
-#include <chrono>
-#include <thread>
+#include <coroutine>
 
 using namespace mrc;
 

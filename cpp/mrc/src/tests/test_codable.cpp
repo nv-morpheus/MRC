@@ -39,6 +39,7 @@
 #include "mrc/options/placement.hpp"
 #include "mrc/protos/codable.pb.h"  // IWYU pragma: keep
 
+#include <glog/logging.h>
 #include <gtest/gtest.h>
 
 #include <algorithm>
@@ -47,6 +48,7 @@
 #include <ctime>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <string>
 #include <utility>
 

@@ -17,6 +17,7 @@
 
 #include "mrc/manifold/manifold.hpp"
 
+#include "mrc/node/channel_holder.hpp"  // IWYU pragma: keep
 #include "mrc/segment/utils.hpp"
 #include "mrc/types.hpp"
 

@@ -24,6 +24,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <map>
 #include <ostream>
 #include <utility>
 

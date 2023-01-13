@@ -17,11 +17,9 @@
 
 #pragma once
 
-#include "internal/remote_descriptor/messages.hpp"
 #include "internal/remote_descriptor/storage.hpp"
 #include "internal/service.hpp"
 
-#include "mrc/node/writable_subject.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/runtime/remote_descriptor_manager.hpp"
 #include "mrc/types.hpp"
@@ -32,6 +30,10 @@
 #include <memory>
 #include <mutex>
 
+namespace mrc::node {
+template <typename T>
+class WritableSubject;
+}  // namespace mrc::node
 namespace mrc::codable {
 class EncodedStorage;
 class IDecodableStorage;
@@ -54,6 +56,7 @@ struct IRemoteDescriptorHandle;
 }  // namespace mrc::runtime
 
 namespace mrc::internal::remote_descriptor {
+struct RemoteDescriptorDecrementMessage;
 
 /**
  * @brief Creates and Manages RemoteDescriptors

@@ -17,6 +17,7 @@
 
 #include "internal/pubsub/publisher_round_robin.hpp"
 
+#include "internal/data_plane/client.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 

@@ -22,7 +22,6 @@
 #include "internal/ucx/worker.hpp"
 
 #include "mrc/node/operators/node_component.hpp"
-#include "mrc/node/writable_subject.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/types.hpp"
 
@@ -34,6 +33,10 @@
 #include <memory>
 #include <string>
 
+namespace mrc::node {
+template <typename T>
+class IngressProvider;
+}  // namespace mrc::node
 namespace mrc::internal::control_plane::client {
 class ConnectionsManager;
 }  // namespace mrc::internal::control_plane::client

@@ -17,14 +17,10 @@
 
 #pragma once
 
-#include "internal/data_plane/client.hpp"
 #include "internal/pubsub/base.hpp"
 
-#include "mrc/node/source_channel.hpp"
-#include "mrc/node/writable_subject.hpp"
 #include "mrc/pubsub/api.hpp"
 #include "mrc/runnable/runner.hpp"
-#include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/macros.hpp"
 
@@ -36,11 +32,13 @@
 #include <string>
 #include <unordered_map>
 
-namespace mrc::channel {
-enum class Status;
-}  // namespace mrc::channel
+namespace mrc::internal::data_plane {
+struct RemoteDescriptorMessage;
+}  // namespace mrc::internal::data_plane
+namespace mrc::runtime {
+class RemoteDescriptor;
+}  // namespace mrc::runtime
 namespace mrc::codable {
-class EncodedStorage;
 struct ICodableStorage;
 }  // namespace mrc::codable
 namespace mrc::internal::runtime {

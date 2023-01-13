@@ -19,9 +19,6 @@
 
 #include "internal/pubsub/base.hpp"
 
-#include "mrc/node/generic_sink.hpp"
-#include "mrc/node/source_channel.hpp"
-#include "mrc/node/writable_subject.hpp"
 #include "mrc/pubsub/api.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/types.hpp"
@@ -32,15 +29,10 @@
 #include <set>
 #include <string>
 #include <unordered_map>
-#include <utility>
 
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
-
-namespace mrc::channel {
-enum class Status;
-}  // namespace mrc::channel
 namespace mrc::internal::memory {
 class TransientBuffer;
 }  // namespace mrc::internal::memory

@@ -20,8 +20,6 @@
 #include "mrc/exceptions//runtime_error.hpp"
 #include "mrc/node/channel_holder.hpp"
 #include "mrc/node/edge_adapter_registry.hpp"
-#include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_properties.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/utils/type_utils.hpp"
 

@@ -24,6 +24,7 @@
 
 #include "mrc/channel/status.hpp"
 #include "mrc/node/edge_builder.hpp"
+#include "mrc/node/queue.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/node/writable_subject.hpp"

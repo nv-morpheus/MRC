@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "mrc/node/channel_holder.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/macros.hpp"
 
@@ -25,10 +24,9 @@
 #include <memory>
 #include <mutex>
 #include <vector>
-
 namespace mrc::node {
 template <typename T>
-class SourceChannel;
+class IIngressAcceptor;
 }  // namespace mrc::node
 namespace mrc::protos {
 class StateUpdate;

@@ -15,16 +15,17 @@
  * limitations under the License.
  */
 
-#include "mrc/core/utils.hpp"
 #include "mrc/modules/module_registry.hpp"
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/utils/type_utils.hpp"
 #include "mrc/version.hpp"
 
 #include <nlohmann/json.hpp>
 #include <rxcpp/rx.hpp>
 
+#include <map>
 #include <memory>
 #include <string>
 #include <string_view>

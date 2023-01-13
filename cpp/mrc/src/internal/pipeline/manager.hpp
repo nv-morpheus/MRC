@@ -20,11 +20,12 @@
 #include "internal/pipeline/types.hpp"
 #include "internal/service.hpp"
 
-#include "mrc/node/channel_holder.hpp"
-#include "mrc/node/writable_subject.hpp"
-
 #include <memory>
 
+namespace mrc::node {
+template <typename T>
+class WritableSubject;
+}  // namespace mrc::node
 namespace mrc::internal::resources {
 class Manager;
 }  // namespace mrc::internal::resources

@@ -20,6 +20,7 @@
 #include "mrc/coroutines/thread_pool.hpp"
 
 #include <concepts>
+#include <cstddef>
 #include <iomanip>
 #include <sstream>
 #include <thread>

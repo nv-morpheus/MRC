@@ -39,10 +39,13 @@
 #pragma once
 
 #include "mrc/coroutines/concepts/awaitable.hpp"
-#include "mrc/coroutines/when_all.hpp"
 
 #include <condition_variable>
+#include <coroutine>
+#include <exception>
 #include <mutex>
+#include <type_traits>
+#include <utility>
 
 namespace mrc::coroutines {
 

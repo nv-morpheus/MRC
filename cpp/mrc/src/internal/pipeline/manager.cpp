@@ -24,9 +24,8 @@
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 
-#include "mrc/node/channel_holder.hpp"
+#include "mrc/channel/status.hpp"
 #include "mrc/node/edge_builder.hpp"
-#include "mrc/node/source_channel.hpp"
 #include "mrc/node/writable_subject.hpp"
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launch_options.hpp"
@@ -36,10 +35,12 @@
 #include <glog/logging.h>
 
 #include <exception>
+#include <map>
 #include <memory>
 #include <ostream>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace mrc::internal::pipeline {
 

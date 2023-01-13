@@ -18,12 +18,7 @@
 #include "mrc/core/logging.hpp"
 
 #include <gflags/gflags.h>  // for ParseCommandLineFlags
-#include <glog/logging.h>
 #include <gtest/gtest.h>
-#include <stdnoreturn.h>
-
-#include <csignal>
-#include <stdexcept>
 
 int main(int argc, char** argv)
 {

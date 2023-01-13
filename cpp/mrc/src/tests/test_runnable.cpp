@@ -20,9 +20,9 @@
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 
+#include "mrc/channel/status.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/operators/muxer.hpp"
-#include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/options/engine_groups.hpp"
@@ -43,18 +43,20 @@
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
-#include <rxcpp/rx-observable.hpp>
+#include <rxcpp/rx.hpp>
 
 #include <atomic>
 #include <chrono>
 #include <cstddef>
 #include <functional>
+#include <map>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <thread>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 using namespace mrc;
 

@@ -20,8 +20,12 @@
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/utils/type_utils.hpp"
 
+#include <glog/logging.h>
+
 #include <map>
+#include <sstream>
 #include <stdexcept>
+#include <string>
 #include <typeindex>
 #include <utility>
 

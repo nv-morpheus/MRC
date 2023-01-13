@@ -20,7 +20,6 @@
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
 
-#include "mrc/node/channel_holder.hpp"
 #include "mrc/types.hpp"
 
 #include <cstdint>
@@ -28,16 +27,16 @@
 #include <memory>
 #include <string>
 
+namespace mrc::node {
+template <typename T>
+class IIngressAcceptor;
+}  // namespace mrc::node
 namespace mrc::internal::control_plane {
 class Client;
 }  // namespace mrc::internal::control_plane
 namespace mrc::internal::network {
 class Resources;
 }  // namespace mrc::internal::network
-namespace mrc::node {
-template <typename T>
-class SourceChannel;
-}  // namespace mrc::node
 namespace mrc::protos {
 class DropSubscriptionServiceState;
 class StateUpdate;

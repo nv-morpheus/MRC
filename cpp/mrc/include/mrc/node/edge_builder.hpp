@@ -17,34 +17,23 @@
 
 #pragma once
 
+#include "mrc/channel/status.hpp"
 #include "mrc/node/channel_holder.hpp"
 #include "mrc/node/deferred_edge.hpp"
 #include "mrc/node/forward.hpp"  // IWYU pragma: keep
+#include "mrc/type_traits.hpp"
+#include "mrc/utils/type_utils.hpp"
 
 #include <glog/logging.h>
 
 #include <cstddef>
 #include <memory>
 #include <sstream>
-#include <stdexcept>
-#include <type_traits>
 #include <typeindex>
-
-namespace mrc::channel {
-struct IngressHandle;
-}  // namespace mrc::channel
+#include <utility>
+#include <vector>
 
 namespace mrc::node {
-class SinkPropertiesBase;
-class SourcePropertiesBase;
-template <typename T>
-class ChannelAcceptor;
-template <typename T>
-class ChannelProvider;
-template <typename T>
-class SinkProperties;
-template <typename T>
-class SourceProperties;
 
 // IWYU pragma: no_forward_declare mrc::node::Edge
 

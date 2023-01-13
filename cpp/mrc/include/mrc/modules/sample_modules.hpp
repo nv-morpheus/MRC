@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "mrc/core/utils.hpp"
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/segment/builder.hpp"  // IWYU pragma: keep
+#include "mrc/utils/type_utils.hpp"
 
 #include <nlohmann/json.hpp>
 #include <rxcpp/rx.hpp>

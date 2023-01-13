@@ -39,7 +39,6 @@
 #pragma once
 
 #include <coroutine>
-#include <memory>
 
 namespace mrc::coroutines {
 

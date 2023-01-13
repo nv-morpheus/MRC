@@ -26,7 +26,6 @@
 #include <chrono>
 #include <condition_variable>
 #include <cstddef>
-#include <cstdlib>
 #include <mutex>  // for mutex & unique_lock
 
 #define TEST_CLASS(name)                      \

@@ -23,9 +23,9 @@
 #include "internal/runnable/resources.hpp"
 #include "internal/utils/contains.hpp"
 
+#include "mrc/node/channel_holder.hpp"  // IWYU pragma: keep
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/rx_sink.hpp"
-#include "mrc/node/source_channel.hpp"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launcher.hpp"

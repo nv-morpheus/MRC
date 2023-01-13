@@ -18,14 +18,13 @@
 #pragma once
 
 #include "mrc/manifold/interface.hpp"
-#include "mrc/node/channel_holder.hpp"
 #include "mrc/types.hpp"
 
 #include <string>
 
 namespace mrc::node {
-class SinkPropertiesBase;
-class SourcePropertiesBase;
+class IIngressAcceptorBase;
+class IIngressProviderBase;
 }  // namespace mrc::node
 namespace mrc::pipeline {
 struct Resources;

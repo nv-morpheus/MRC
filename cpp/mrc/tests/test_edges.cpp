@@ -17,52 +17,32 @@
 
 #include "test_mrc.hpp"  // IWYU pragma: associated
 
-#include "mrc/channel/buffered_channel.hpp"
+#include "mrc/channel/buffered_channel.hpp"  // IWYU pragma: keep
 #include "mrc/channel/status.hpp"
-#include "mrc/core/addresses.hpp"
-#include "mrc/core/executor.hpp"
-#include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/channel_holder.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/edge_channel.hpp"
-#include "mrc/node/forward.hpp"
 #include "mrc/node/generic_source.hpp"
 #include "mrc/node/operators/broadcast.hpp"
 #include "mrc/node/operators/combine_latest.hpp"
 #include "mrc/node/operators/node_component.hpp"
 #include "mrc/node/operators/router.hpp"
-#include "mrc/node/rx_subscribable.hpp"
+#include "mrc/node/sink_channel.hpp"
 #include "mrc/node/sink_properties.hpp"
+#include "mrc/node/source_channel.hpp"
 #include "mrc/node/source_properties.hpp"
-#include "mrc/options/options.hpp"
-#include "mrc/options/placement.hpp"
-#include "mrc/options/topology.hpp"
-#include "mrc/pipeline/pipeline.hpp"
-#include "mrc/segment/builder.hpp"
-#include "mrc/types.hpp"
 
 #include <glog/logging.h>
-#include <gtest/gtest-death-test.h>
-#include <gtest/gtest-param-test.h>
 #include <gtest/gtest.h>
 #include <gtest/internal/gtest-internal.h>
-#include <rxcpp/operators/rx-map.hpp>
-#include <rxcpp/rx-observer.hpp>
-#include <rxcpp/rx-predef.hpp>
-#include <rxcpp/rx-subscriber.hpp>
-#include <rxcpp/rx.hpp>
 
-#include <atomic>
-#include <cstdint>
-#include <exception>
 #include <functional>
+#include <map>
 #include <memory>
-#include <mutex>
 #include <ostream>
 #include <stdexcept>
 #include <string>
-#include <thread>
-#include <type_traits>
+#include <tuple>
 #include <utility>
 
 // IWYU thinks we need vector for make_segment

@@ -22,10 +22,6 @@
 #include "internal/service.hpp"
 #include "internal/ucx/common.hpp"
 
-#include "mrc/memory/buffer_view.hpp"
-#include "mrc/node/channel_holder.hpp"
-#include "mrc/node/operators/router.hpp"
-#include "mrc/node/writable_subject.hpp"
 #include "mrc/types.hpp"
 
 #include <ucp/api/ucp_def.h>
@@ -36,6 +32,12 @@
 #include <utility>
 #include <vector>
 
+namespace mrc::node {
+template <typename KeyT, typename T>
+class TaggedRouter;
+template <typename T>
+class WritableSubject;
+}  // namespace mrc::node
 namespace mrc::internal::memory {
 class HostResources;
 }  // namespace mrc::internal::memory

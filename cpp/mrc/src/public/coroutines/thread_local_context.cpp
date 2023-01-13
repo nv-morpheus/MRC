@@ -40,8 +40,6 @@
 
 #include "mrc/coroutines/thread_pool.hpp"
 
-#include <cuda_runtime_api.h>
-
 namespace mrc::coroutines {
 
 void ThreadLocalContext::suspend_thread_local_context()

@@ -23,14 +23,13 @@
 #include "internal/ucx/resources.hpp"
 #include "internal/ucx/worker.hpp"
 
+#include "mrc/channel/status.hpp"
 #include "mrc/core/task_queue.hpp"
-#include "mrc/memory/buffer_view.hpp"
 #include "mrc/memory/literals.hpp"
-#include "mrc/node/channel_holder.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/generic_source.hpp"
 #include "mrc/node/operators/router.hpp"
-#include "mrc/node/source_channel.hpp"
+#include "mrc/node/writable_subject.hpp"
 #include "mrc/runnable/context.hpp"
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launch_options.hpp"
@@ -49,6 +48,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <map>
 #include <ostream>
 #include <utility>
 

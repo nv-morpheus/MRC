@@ -22,7 +22,6 @@
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/channel_holder.hpp"
 #include "mrc/node/edge_builder.hpp"
-#include "mrc/node/forward.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
@@ -33,6 +32,7 @@
 #include "mrc/segment/component.hpp"  // IWYU pragma: export
 #include "mrc/segment/object.hpp"     // IWYU pragma: export
 #include "mrc/segment/runnable.hpp"   // IWYU pragma: export
+#include "mrc/type_traits.hpp"
 #include "mrc/utils/macros.hpp"
 
 #include <boost/hana/core/when.hpp>  // IWYU pragma: export
@@ -51,6 +51,13 @@
 #include <typeindex>
 #include <utility>
 #include <vector>
+
+namespace mrc::node {
+template <typename T>
+class RxSinkBase;
+template <typename T>
+class RxSourceBase;
+}  // namespace mrc::node
 
 namespace mrc {
 struct WatcherInterface;

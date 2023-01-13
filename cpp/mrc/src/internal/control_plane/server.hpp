@@ -23,8 +23,6 @@
 #include "internal/grpc/server_streaming.hpp"
 #include "internal/service.hpp"
 
-#include "mrc/node/queue.hpp"
-#include "mrc/node/writable_subject.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
 
 #include <boost/fiber/condition_variable.hpp>
@@ -36,6 +34,13 @@
 #include <map>
 #include <memory>
 #include <string>
+
+namespace mrc::node {
+template <typename T>
+class Queue;
+template <typename T>
+class WritableSubject;
+}  // namespace mrc::node
 
 namespace mrc::internal::control_plane::server {
 class ClientInstance;
