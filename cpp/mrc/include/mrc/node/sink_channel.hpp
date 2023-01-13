@@ -23,7 +23,6 @@
 #include "mrc/constants.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/channel_holder.hpp"
-#include "mrc/node/edge.hpp"
 #include "mrc/node/edge_channel.hpp"
 #include "mrc/node/edge_properties.hpp"
 #include "mrc/node/forward.hpp"

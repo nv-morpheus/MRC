@@ -21,7 +21,6 @@
 #include "mrc/channel/status.hpp"
 #include "mrc/constants.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/node/edge.hpp"
 #include "mrc/node/edge_channel.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/node/source_properties.hpp"

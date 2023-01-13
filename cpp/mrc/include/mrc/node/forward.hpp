@@ -26,12 +26,6 @@ namespace mrc::node {
 class EdgeBuilder;
 
 template <typename SourceT, typename SinkT>
-struct EdgeBase;
-
-template <typename SourceT, typename SinkT = SourceT, typename EnableT = void>
-struct Edge;
-
-template <typename SourceT, typename SinkT>
 struct EdgeConnector;
 
 class SinkTypeErased;

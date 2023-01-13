@@ -25,7 +25,6 @@
 #include "mrc/core/watcher.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/channel_holder.hpp"
-#include "mrc/node/edge.hpp"
 #include "mrc/node/source_channel.hpp"
 #include "mrc/runnable/context.hpp"
 #include "mrc/utils/type_utils.hpp"

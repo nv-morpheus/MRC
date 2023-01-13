@@ -24,7 +24,6 @@
 #include "mrc/core/utils.hpp"
 #include "mrc/core/watcher.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/node/edge.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/node/rx_epilogue_tap.hpp"
 #include "mrc/node/rx_runnable.hpp"
