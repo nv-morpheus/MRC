@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,9 +18,9 @@
 #include "internal/control_plane/client/state_manager.hpp"
 
 #include "internal/control_plane/client.hpp"
-#include "internal/expected.hpp"
 #include "internal/runnable/resources.hpp"
 
+#include "mrc/core/error.hpp"
 #include "mrc/node/edge_builder.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/source_channel.hpp"
@@ -87,8 +87,9 @@ Client& StateManager::client()
 
 void StateManager::start_with_channel(node::SourceChannel<const protos::StateUpdate>& update_channel)
 {
-    auto sink = std::make_unique<node::RxSink<protos::StateUpdate>>(
-        [this](protos::StateUpdate update_msg) { update(std::move(update_msg)); });
+    auto sink = std::make_unique<node::RxSink<protos::StateUpdate>>([this](protos::StateUpdate update_msg) {
+        update(std::move(update_msg));
+    });
     // sink->update_channel(std::make_unique<channel::RecentChannel<protos::StateUpdate>>(1));
     node::make_edge(update_channel, *sink);
     m_runner =

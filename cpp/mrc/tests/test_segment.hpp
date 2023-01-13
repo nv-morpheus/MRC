@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -75,8 +75,8 @@ class TestSegment : public ::testing::Test
     ingress_types_t m_ingress_multi_port = ingress_types_t(
         {"test_in_int1", "test_in_int2", "test_in_double", "test_in_string", "test_in_float", "test_in_sizet"});
 
-    egress_types_t m_egress_multi_port =
-        egress_types_t({"test_out_float", "test_out_double", "test_out_uint", "test_out_float2"});
+    egress_types_t m_egress_multi_port = egress_types_t(
+        {"test_out_float", "test_out_double", "test_out_uint", "test_out_float2"});
 
     // Sum of nodes created by Ingress Types and Egress Types
     size_t m_InterfaceNodeCount;

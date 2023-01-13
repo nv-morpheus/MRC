@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,7 +43,9 @@ class NullChannel : public Channel<T>
     Status do_await_read(T& t) override
     {
         std::unique_lock<Mutex> lock(m_mutex);
-        m_cv.wait(lock, [this] { return m_is_shutdown; });
+        m_cv.wait(lock, [this] {
+            return m_is_shutdown;
+        });
         return Status::closed;
     }
 
@@ -55,7 +57,9 @@ class NullChannel : public Channel<T>
     Status do_await_read_until(T& t, const time_point_t& deadline) override
     {
         std::unique_lock<Mutex> lock(m_mutex);
-        m_cv.wait_until(lock, deadline, [this] { return m_is_shutdown; });
+        m_cv.wait_until(lock, deadline, [this] {
+            return m_is_shutdown;
+        });
         return (m_is_shutdown ? Status::closed : Status::timeout);
     }
 

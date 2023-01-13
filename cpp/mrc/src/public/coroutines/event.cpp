@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -60,8 +60,8 @@ auto Event::Awaiter::await_suspend(std::coroutine_handle<> awaiting_coroutine) n
         }
 
         m_next = static_cast<Awaiter*>(old_value);
-    } while (!m_event.m_state.compare_exchange_weak(
-        old_value, this, std::memory_order::release, std::memory_order::acquire));
+    } while (
+        !m_event.m_state.compare_exchange_weak(old_value, this, std::memory_order::release, std::memory_order::acquire));
 
     ThreadLocalContext::suspend_thread_local_context();
     return true;

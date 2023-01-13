@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -51,8 +51,9 @@ namespace mrc::modules {
 
 const unsigned int ModuleRegistry::VersionElements{3};
 
-const ModuleRegistry::registry_version_t ModuleRegistry::Version{
-    mrc_VERSION_MAJOR, mrc_VERSION_MINOR, mrc_VERSION_PATCH};
+const ModuleRegistry::registry_version_t ModuleRegistry::Version{mrc_VERSION_MAJOR,
+                                                                 mrc_VERSION_MINOR,
+                                                                 mrc_VERSION_PATCH};
 
 ModuleRegistry::module_namespace_map_t ModuleRegistry::s_module_namespace_registry{
     {"default", ModuleRegistry::module_registry_map_t{}}};

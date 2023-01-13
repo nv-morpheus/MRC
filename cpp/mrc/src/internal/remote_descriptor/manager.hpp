@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -88,8 +88,7 @@ class Manager final : private Service,
     ~Manager() override;
 
     mrc::runtime::RemoteDescriptor make_remote_descriptor(mrc::codable::protos::RemoteDescriptor&& proto);
-    mrc::runtime::RemoteDescriptor make_remote_descriptor(
-        std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> handle);
+    mrc::runtime::RemoteDescriptor make_remote_descriptor(std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> handle);
 
     std::size_t size() const;
 

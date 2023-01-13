@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -75,7 +75,9 @@ void Resources::register_thread_local_resource(const CpuSet& cpu_set, std::share
     CHECK(system().topology().contains(cpu_set));
     auto pool = make_fiber_pool(cpu_set);
     pool.set_thread_local_resource(resource);
-    register_thread_local_initializer([resource] { ::mrc::utils::ThreadLocalSharedPointer<ResourceT>::set(resource); });
+    register_thread_local_initializer([resource] {
+        ::mrc::utils::ThreadLocalSharedPointer<ResourceT>::set(resource);
+    });
 }
 
 template <typename CallableT>

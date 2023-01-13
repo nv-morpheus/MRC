@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,12 +19,12 @@
 
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/client/instance.hpp"
-#include "internal/expected.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/ucx/resources.hpp"
 #include "internal/ucx/worker.hpp"
 #include "internal/utils/contains.hpp"
 
+#include "mrc/core/error.hpp"
 #include "mrc/core/task_queue.hpp"
 #include "mrc/protos/architect.pb.h"
 
@@ -68,8 +68,8 @@ std::map<InstanceID, std::unique_ptr<client::Instance>> ConnectionsManager::regi
         req.add_ucx_worker_addresses(ucx->worker().address());
     }
 
-    auto resp =
-        client().await_unary<protos::RegisterWorkersResponse>(protos::ClientUnaryRegisterWorkers, std::move(req));
+    auto resp = client().await_unary<protos::RegisterWorkersResponse>(protos::ClientUnaryRegisterWorkers,
+                                                                      std::move(req));
     CHECK_EQ(resp->instance_ids_size(), ucx_resources.size());
 
     m_machine_id = resp->machine_id();
@@ -150,7 +150,8 @@ void ConnectionsManager::do_connections_update(const protos::UpdateConnectionsSt
         }
 
         auto resp = client().await_unary<protos::LookupWorkersResponse>(
-            protos::EventType::ClientUnaryLookupWorkerAddresses, std::move(req));
+            protos::EventType::ClientUnaryLookupWorkerAddresses,
+            std::move(req));
 
         if (!resp)
         {
@@ -179,8 +180,8 @@ const std::map<InstanceID, ucx::WorkerAddress>& ConnectionsManager::worker_addre
     return m_worker_addresses;
 }
 
-const std::map<InstanceID, std::unique_ptr<ConnectionsManager::update_channel_t>>&
-ConnectionsManager::instance_channels() const
+const std::map<InstanceID, std::unique_ptr<ConnectionsManager::update_channel_t>>& ConnectionsManager::instance_channels()
+    const
 {
     DCHECK(client().runnable().main().caller_on_same_thread());
     return m_update_channels;

@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,16 +52,17 @@ struct EdgeConnector
 
     static void register_converter()
     {
-        EdgeRegistry::register_converter(
-            typeid(SourceT), typeid(SinkT), [](std::shared_ptr<channel::IngressHandle> channel) {
-                std::shared_ptr<channel::Ingress<SinkT>> ingress =
-                    std::dynamic_pointer_cast<channel::Ingress<SinkT>>(channel);
+        EdgeRegistry::register_converter(typeid(SourceT),
+                                         typeid(SinkT),
+                                         [](std::shared_ptr<channel::IngressHandle> channel) {
+                                             std::shared_ptr<channel::Ingress<SinkT>> ingress =
+                                                 std::dynamic_pointer_cast<channel::Ingress<SinkT>>(channel);
 
-                DCHECK(ingress) << "Channel is not an ingress of the correct type";
+                                             DCHECK(ingress) << "Channel is not an ingress of the correct type";
 
-                // Build a new connector
-                return std::make_shared<Edge<SourceT, SinkT>>(std::move(ingress));
-            });
+                                             // Build a new connector
+                                             return std::make_shared<Edge<SourceT, SinkT>>(std::move(ingress));
+                                         });
     }
 };
 
@@ -76,8 +77,9 @@ struct IdentityEdgeConnector
 
     static void register_converter()
     {
-        EdgeRegistry::register_converter(
-            typeid(T), typeid(T), [](std::shared_ptr<channel::IngressHandle> channel) { return channel; });
+        EdgeRegistry::register_converter(typeid(T), typeid(T), [](std::shared_ptr<channel::IngressHandle> channel) {
+            return channel;
+        });
     }
 };
 

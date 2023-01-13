@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -84,8 +84,9 @@ PYBIND11_MODULE(options, module)
     py::class_<mrc::EngineFactoryOptions>(module, "EngineFactoryOptions")
         .def(py::init<>())
         .def_property("cpu_count", &EngineFactoryOptionsProxy::get_cpu_count, &EngineFactoryOptionsProxy::set_cpu_count)
-        .def_property(
-            "engine_type", &EngineFactoryOptionsProxy::get_engine_type, &EngineFactoryOptionsProxy::set_engine_type)
+        .def_property("engine_type",
+                      &EngineFactoryOptionsProxy::get_engine_type,
+                      &EngineFactoryOptionsProxy::set_engine_type)
         .def_property("reusable", &EngineFactoryOptionsProxy::get_reusable, &EngineFactoryOptionsProxy::set_reusable)
         .def_property("allow_overlap",
                       &EngineFactoryOptionsProxy::get_allow_overlap,
@@ -93,8 +94,9 @@ PYBIND11_MODULE(options, module)
 
     py::class_<mrc::EngineGroups>(module, "EngineGroups")
         .def(py::init<>())
-        .def_property(
-            "default_engine_type", &mrc::EngineGroups::default_engine_type, &mrc::EngineGroups::set_default_engine_type)
+        .def_property("default_engine_type",
+                      &mrc::EngineGroups::default_engine_type,
+                      &mrc::EngineGroups::set_default_engine_type)
         .def_property("dedicated_main_thread",
                       &mrc::EngineGroups::dedicated_main_thread,
                       &mrc::EngineGroups::set_dedicated_main_thread)
@@ -108,14 +110,15 @@ PYBIND11_MODULE(options, module)
         .def(py::init<>())
         .def_property_readonly("placement", &OptionsProxy::get_placement, py::return_value_policy::reference_internal)
         .def_property_readonly("topology", &OptionsProxy::get_topology, py::return_value_policy::reference_internal)
-        .def_property_readonly(
-            "engine_factories", &OptionsProxy::get_engine_factories, py::return_value_policy::reference_internal)
+        .def_property_readonly("engine_factories",
+                               &OptionsProxy::get_engine_factories,
+                               py::return_value_policy::reference_internal)
         .def_property("architect_url",
                       // return a const str
                       static_cast<std::string const& (mrc::Options::*)() const>(&mrc::Options::architect_url),
                       static_cast<void (mrc::Options::*)(std::string)>(&mrc::Options::architect_url));
 
-    module.attr("__version__") =
-        MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "." << mrc_VERSION_PATCH);
+    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+                                                                  << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

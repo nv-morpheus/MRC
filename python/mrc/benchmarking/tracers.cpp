@@ -64,8 +64,8 @@ PYBIND11_MODULE(tracers, m)
     /**
      * @brief ThroughputTracer
      */
-    auto ThroughputTracer =
-        py::class_<throughput_tracer_t, std::shared_ptr<throughput_tracer_t>>(m, "ThroughputTracer");
+    auto ThroughputTracer = py::class_<throughput_tracer_t, std::shared_ptr<throughput_tracer_t>>(m,
+                                                                                                  "ThroughputTracer");
     ThroughputTracer.def(py::init<std::size_t>());
     // ThroughputTracer.def("add_counters", &ThroughputTracerT::add_counters);
     // ThroughputTracer.def("aggregate", &ThroughputTracerT::aggregate);

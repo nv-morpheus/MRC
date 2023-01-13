@@ -17,22 +17,18 @@
 
 #pragma once
 
-#include "mrc/core/std23_expected.hpp"  // IWYU pragma: export
+#include "mrc/core/expected.hpp"  // IWYU pragma: export
 #include "mrc/utils/macros.hpp"
 #include "mrc/utils/string_utils.hpp"  // IWYU pragma: export
 
-namespace mrc::internal {
+namespace mrc {
 
 enum class ErrorCode
 {
     Internal,
     Fatal,
+    ChannelClosed,
 };
-
-class Error;
-
-// todo(#219) - update tidy to allow the following typedef
-using UnexpectedError = std23::unexpected<Error>;  // NOLINT
 
 class Error final : public std::exception
 {
@@ -42,9 +38,9 @@ class Error final : public std::exception
 
   public:
     template <typename... ArgsT>
-    static UnexpectedError create(ArgsT&&... args)
+    static auto create(ArgsT&&... args) -> decltype(auto)
     {
-        return UnexpectedError(Error(std::forward<ArgsT>(args)...));
+        return unexpected(Error(std::forward<ArgsT>(args)...));
     }
 
     DEFAULT_MOVEABILITY(Error);
@@ -70,7 +66,7 @@ class Error final : public std::exception
 };
 
 template <typename T = void>
-using Expected = std23::expected<T, Error>;  // NOLINT
+using Expected = expected<T, Error>;  // NOLINT
 
 #define MRC_CHECK(condition)                                                  \
     if (!(condition))                                                         \
@@ -92,4 +88,4 @@ using Expected = std23::expected<T, Error>;  // NOLINT
         throw expected.error();                                       \
     }
 
-}  // namespace mrc::internal
+}  // namespace mrc

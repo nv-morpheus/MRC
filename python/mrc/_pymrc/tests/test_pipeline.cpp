@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -108,8 +108,9 @@ TEST_F(TestPipeline, Execute)
                                                               return i;
                                                           }));
 
-        auto sink = seg.make_sink<unsigned int>(
-            "sink", [&counter](unsigned int x) { counter.fetch_add(x, std::memory_order_relaxed); });
+        auto sink = seg.make_sink<unsigned int>("sink", [&counter](unsigned int x) {
+            counter.fetch_add(x, std::memory_order_relaxed);
+        });
 
         seg.make_edge(src, internal);
         seg.make_edge(internal, sink);
@@ -234,7 +235,8 @@ TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
             for (int i = 0; i < source_segment_egress_ids.size(); i++)
             {
                 auto src = builder.make_source<pymrc::PyHolder>(
-                    "stage1_source_" + std::to_string(i), [](rxcpp::subscriber<pymrc::PyHolder>& subscriber) {
+                    "stage1_source_" + std::to_string(i),
+                    [](rxcpp::subscriber<pymrc::PyHolder>& subscriber) {
                         if (subscriber.is_subscribed())
                         {
                             py::gil_scoped_acquire gil;
@@ -299,8 +301,10 @@ TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
     pymrc::Pipeline pipe;
 
     pipe.make_segment("TestSegment1", py::list(), py::cast(source_segment_egress_ids), seg1_init);
-    pipe.make_segment(
-        "TestSegment2", py::cast(source_segment_egress_ids), py::cast(intermediate_segment_egress_ids), seg2_init);
+    pipe.make_segment("TestSegment2",
+                      py::cast(source_segment_egress_ids),
+                      py::cast(intermediate_segment_egress_ids),
+                      seg2_init);
     pipe.make_segment("TestSegment3", py::cast(intermediate_segment_egress_ids), py::list(), seg3_init);
 
     auto opt1 = std::make_shared<mrc::Options>();

@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -119,15 +119,23 @@ TEST_F(TestMemory, CallbackAdaptor)
     std::atomic_size_t calls = 0;
     std::atomic_size_t bytes = 0;
 
-    builder.register_callbacks([&calls](void* ptr, std::size_t _bytes) { calls++; },
-                               [](void* ptr, std::size_t bytes) {});
-    builder.register_callbacks([&bytes](void* ptr, std::size_t _bytes) { bytes += _bytes; },
-                               [&bytes](void* ptr, std::size_t _bytes) { bytes -= bytes; });
+    builder.register_callbacks(
+        [&calls](void* ptr, std::size_t _bytes) {
+            calls++;
+        },
+        [](void* ptr, std::size_t bytes) {});
+    builder.register_callbacks(
+        [&bytes](void* ptr, std::size_t _bytes) {
+            bytes += _bytes;
+        },
+        [&bytes](void* ptr, std::size_t _bytes) {
+            bytes -= bytes;
+        });
 
-    auto malloc = std::make_unique<mrc::memory::malloc_memory_resource>();
-    auto logger = mrc::memory::make_unique_resource<mrc::memory::logging_resource>(std::move(malloc), "malloc");
-    auto callback =
-        mrc::memory::make_shared_resource<internal::memory::CallbackAdaptor>(std::move(logger), std::move(builder));
+    auto malloc   = std::make_unique<mrc::memory::malloc_memory_resource>();
+    auto logger   = mrc::memory::make_unique_resource<mrc::memory::logging_resource>(std::move(malloc), "malloc");
+    auto callback = mrc::memory::make_shared_resource<internal::memory::CallbackAdaptor>(std::move(logger),
+                                                                                         std::move(builder));
 
     EXPECT_EQ(calls, 0);
     EXPECT_EQ(bytes, 0);
@@ -173,15 +181,23 @@ TEST_F(TestMemory, TransientPool)
     std::atomic_size_t calls = 0;
     std::atomic_size_t bytes = 0;
 
-    builder.register_callbacks([&calls](void* ptr, std::size_t _bytes) { calls++; },
-                               [](void* ptr, std::size_t bytes) {});
-    builder.register_callbacks([&bytes](void* ptr, std::size_t _bytes) { bytes += _bytes; },
-                               [&bytes](void* ptr, std::size_t _bytes) { bytes -= bytes; });
+    builder.register_callbacks(
+        [&calls](void* ptr, std::size_t _bytes) {
+            calls++;
+        },
+        [](void* ptr, std::size_t bytes) {});
+    builder.register_callbacks(
+        [&bytes](void* ptr, std::size_t _bytes) {
+            bytes += _bytes;
+        },
+        [&bytes](void* ptr, std::size_t _bytes) {
+            bytes -= bytes;
+        });
 
-    auto malloc = std::make_unique<mrc::memory::malloc_memory_resource>();
-    auto logger = mrc::memory::make_unique_resource<mrc::memory::logging_resource>(std::move(malloc), "malloc");
-    auto callback =
-        mrc::memory::make_shared_resource<internal::memory::CallbackAdaptor>(std::move(logger), std::move(builder));
+    auto malloc   = std::make_unique<mrc::memory::malloc_memory_resource>();
+    auto logger   = mrc::memory::make_unique_resource<mrc::memory::logging_resource>(std::move(malloc), "malloc");
+    auto callback = mrc::memory::make_shared_resource<internal::memory::CallbackAdaptor>(std::move(logger),
+                                                                                         std::move(builder));
 
     internal::memory::TransientPool pool(10_MiB, 4, callback);
 

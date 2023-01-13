@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,8 +59,7 @@ class SegmentModuleProxy
     static std::shared_ptr<mrc::segment::ObjectProperties> output_port(mrc::modules::SegmentModule& self,
                                                                        const std::string& output_id);
 
-    static const mrc::modules::SegmentModule::segment_module_port_map_t& output_ports(
-        mrc::modules::SegmentModule& self);
+    static const mrc::modules::SegmentModule::segment_module_port_map_t& output_ports(mrc::modules::SegmentModule& self);
 };
 
 #pragma GCC visibility pop

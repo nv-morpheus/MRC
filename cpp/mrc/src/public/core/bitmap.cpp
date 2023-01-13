@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -142,7 +142,9 @@ Bitmap Bitmap::set_union(const Bitmap& other) const
 
 void Bitmap::append(const Bitmap& bitmap)
 {
-    bitmap.for_each_bit([this](std::uint32_t idx, std::uint32_t bit) { this->on(bit); });
+    bitmap.for_each_bit([this](std::uint32_t idx, std::uint32_t bit) {
+        this->on(bit);
+    });
 }
 
 std::vector<std::uint32_t> Bitmap::vec() const

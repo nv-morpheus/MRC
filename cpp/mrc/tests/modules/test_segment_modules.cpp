@@ -434,12 +434,17 @@ TEST_F(TestSegmentModules, ModuleTemplateWithInitTest)
         config_2["source_count"] = source_count_2;
 
 #if defined(__clang__)
-        auto F_1 = []() -> int { return 15; };
-        auto F_2 = []() -> std::string { return "test string"; };
+        auto F_1 = []() -> int {
+            return 15;
+        };
+        auto F_2 = []() -> std::string {
+            return "test string";
+        };
 #endif
 
         auto source_1_mod = builder.make_module<TemplateWithInitModule<data_type_1_t, F_1>>(
-            "ModuleTemplateWithInitTest_mod1", config_1);
+            "ModuleTemplateWithInitTest_mod1",
+            config_1);
 
         auto sink_1 = builder.make_sink<data_type_1_t>("sink_1", [&packet_count_1](data_type_1_t input) {
             assert(input == 15);
@@ -450,7 +455,8 @@ TEST_F(TestSegmentModules, ModuleTemplateWithInitTest)
         builder.make_edge(source_1_mod->output_port("source"), sink_1);
 
         auto source_2_mod = builder.make_module<TemplateWithInitModule<data_type_2_t, F_2>>(
-            "ModuleTemplateWithInitTest_mod2", config_2);
+            "ModuleTemplateWithInitTest_mod2",
+            config_2);
 
         auto sink_2 = builder.make_sink<data_type_2_t>("sink_2", [&packet_count_2](data_type_2_t input) {
             assert(input == "test string");
@@ -475,4 +481,5 @@ TEST_F(TestSegmentModules, ModuleTemplateWithInitTest)
     EXPECT_EQ(packet_count_1, 42);
     EXPECT_EQ(packet_count_2, 24);
 }
+
 }  // namespace mrc

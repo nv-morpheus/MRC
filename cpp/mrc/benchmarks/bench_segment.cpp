@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -62,9 +62,9 @@ static void add_state_counters(std::shared_ptr<TraceAggregatorBase> aggregator, 
     auto& metadata = json_data["metadata"];
 
     // std::cerr << json_data.dump(2) << std::endl;
-    state.counters["tracers_total"] = metadata["tracer_count"].get<std::size_t>();
-    state.counters["segment_mean_throughput"] =
-        metadata["elapsed_time"].get<double>() / metadata["tracer_count"].get<std::size_t>();
+    state.counters["tracers_total"]           = metadata["tracer_count"].get<std::size_t>();
+    state.counters["segment_mean_throughput"] = metadata["elapsed_time"].get<double>() /
+                                                metadata["tracer_count"].get<std::size_t>();
     state.counters["segment_elapsed_seconds"] = metadata["elapsed_time"].get<double>();
     std::set<std::string> trace_types         = {"component_latency_seconds_mean", "component_mean_throughput"};
     for (auto counter = counters.begin(); counter != counters.end(); ++counter)
@@ -131,7 +131,9 @@ class ManualRxcppFixture : public benchmark::Fixture
         });
 
         auto tap_1 = rxcpp::operators::tap([](data_type_t data) {});
-        auto map_1 = rxcpp::operators::map([](data_type_t data) { return data; });
+        auto map_1 = rxcpp::operators::map([](data_type_t data) {
+            return data;
+        });
         auto tap_2 = rxcpp::operators::tap([](data_type_t data) {});
 
         m_observable = ints | tap_1 | map_1 | tap_2;
@@ -141,14 +143,18 @@ class ManualRxcppFixture : public benchmark::Fixture
                 data->emit(0);
                 m_tracers.push_back(data);
             },
-            [](rxcpp::util::error_ptr error) { std::cerr << "Error occurred" << std::endl; },
+            [](rxcpp::util::error_ptr error) {
+                std::cerr << "Error occurred" << std::endl;
+            },
             [this]() {
                 m_count      = m_tracers.size();
                 m_elapsed_ns = (clock_t::now() - this->m_marker).count();
 
                 auto trace_aggregator = std::make_shared<TraceAggregator<TracerTypeT>>();
-                trace_aggregator->process_tracer_data(
-                    m_tracers, m_elapsed_ns / 1e9, 3, {{0, "src"}, {1, "n1"}, {2, "sink"}});
+                trace_aggregator->process_tracer_data(m_tracers,
+                                                      m_elapsed_ns / 1e9,
+                                                      3,
+                                                      {{0, "src"}, {1, "n1"}, {2, "sink"}});
                 auto jsd = trace_aggregator
                                ->to_json()["aggregations"]["metrics"]["counter"]["component_latency_seconds_mean"][0];
                 m_mean_latency = jsd["value"].template get<double>();
@@ -189,19 +195,22 @@ class SimpleEmitReceiveFixture : public benchmark::Fixture
             std::string sink_name = "nsink";
 
             auto src = segment.make_source<data_type_t>(
-                src_name, m_watcher->template create_rx_tracer_source<OneAtATimeV>(src_name));
+                src_name,
+                m_watcher->template create_rx_tracer_source<OneAtATimeV>(src_name));
 
             auto internal_idx = m_watcher->get_or_create_node_entry(int_name);
-            auto internal     = segment.make_node<data_type_t, data_type_t>(
-                int_name,
-                m_watcher->create_tracer_receive_tap(int_name),
-                rxcpp::operators::map([](data_type_t tracer) { return tracer; }),
-                m_watcher->create_tracer_emit_tap(int_name));
+            auto internal     = segment.make_node<data_type_t, data_type_t>(int_name,
+                                                                        m_watcher->create_tracer_receive_tap(int_name),
+                                                                        rxcpp::operators::map([](data_type_t tracer) {
+                                                                            return tracer;
+                                                                        }),
+                                                                        m_watcher->create_tracer_emit_tap(int_name));
             segment.make_edge(src, internal);
 
             auto sink_idx = m_watcher->get_or_create_node_entry(sink_name);
             auto sink     = segment.make_sink<data_type_t>(
-                sink_name, m_watcher->create_tracer_sink_lambda(sink_name, [](tracer_type_t& data) {}));
+                sink_name,
+                m_watcher->create_tracer_sink_lambda(sink_name, [](tracer_type_t& data) {}));
             segment.make_edge(internal, sink);
         };
 
@@ -245,7 +254,8 @@ class LongEmitReceiveFixture : public benchmark::Fixture
             std::string sink_name = "nsink";
 
             auto src = segment.make_source<data_type_t>(
-                src_name, m_watcher->template create_rx_tracer_source<OneAtATimeV>(src_name));
+                src_name,
+                m_watcher->template create_rx_tracer_source<OneAtATimeV>(src_name));
 
             std::shared_ptr<segment::ObjectProperties> last_node = src;
 
@@ -256,7 +266,9 @@ class LongEmitReceiveFixture : public benchmark::Fixture
                 auto internal     = segment.make_node<data_type_t, data_type_t>(
                     int_name,
                     m_watcher->create_tracer_receive_tap(int_name),
-                    rxcpp::operators::map([](data_type_t tracer) { return tracer; }),
+                    rxcpp::operators::map([](data_type_t tracer) {
+                        return tracer;
+                    }),
                     m_watcher->create_tracer_emit_tap(int_name));
 
                 segment.make_dynamic_edge<data_type_t>(last_node, internal);
@@ -265,7 +277,8 @@ class LongEmitReceiveFixture : public benchmark::Fixture
 
             auto sink_idx = m_watcher->get_or_create_node_entry(sink_name);
             auto sink     = segment.make_sink<data_type_t>(
-                sink_name, m_watcher->create_tracer_sink_lambda(sink_name, [](tracer_type_t& data) {}));
+                sink_name,
+                m_watcher->create_tracer_sink_lambda(sink_name, [](tracer_type_t& data) {}));
 
             segment.make_dynamic_edge<data_type_t>(last_node, sink);
         };

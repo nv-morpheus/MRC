@@ -33,8 +33,12 @@ class RegistrationCallbackBuilder final : public memory::CallbackBuilder
     void add_registration_cache(std::shared_ptr<RegistrationCache> registration_cache)
     {
         register_callbacks(
-            [registration_cache](void* addr, std::size_t bytes) { registration_cache->add_block(addr, bytes); },
-            [registration_cache](void* addr, std::size_t bytes) { registration_cache->drop_block(addr, bytes); });
+            [registration_cache](void* addr, std::size_t bytes) {
+                registration_cache->add_block(addr, bytes);
+            },
+            [registration_cache](void* addr, std::size_t bytes) {
+                registration_cache->drop_block(addr, bytes);
+            });
     }
 
   private:

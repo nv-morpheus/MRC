@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,30 +17,14 @@
 
 #pragma once
 
-#include <cstddef>
+#include <concepts>
 
-namespace prometheus {
-class Counter;
-}
+namespace mrc::core::concepts {
 
-namespace mrc::metrics {
-
-class Counter
+template <typename T>
+concept not_void = requires
 {
-  public:
-    explicit Counter(prometheus::Counter*);
-
-    Counter(const Counter&)            = default;
-    Counter& operator=(const Counter&) = default;
-
-    Counter(Counter&&) noexcept            = default;
-    Counter& operator=(Counter&&) noexcept = default;
-
-    void increment();
-    void increment(const std::size_t& ticks);
-
-  private:
-    prometheus::Counter* m_counter;
+    requires not std::same_as<T, void>;
 };
 
-}  // namespace mrc::metrics
+}  // namespace mrc::core::concepts

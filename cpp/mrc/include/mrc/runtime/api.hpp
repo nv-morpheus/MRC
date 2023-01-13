@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -103,8 +103,8 @@ class IPartition
      * @param policy - the type of publisher, e.g. load-balancer, broadcaster, etc.
      * @return std::shared_ptr<pubsub::IPublisherService>
      */
-    virtual std::shared_ptr<pubsub::IPublisherService> make_publisher_service(
-        const std::string& name, const pubsub::PublisherPolicy& policy) = 0;
+    virtual std::shared_ptr<pubsub::IPublisherService> make_publisher_service(const std::string& name,
+                                                                              const pubsub::PublisherPolicy& policy) = 0;
 
     /**
      * @brief Provides an ISubscriberService backed by resources on this partition.

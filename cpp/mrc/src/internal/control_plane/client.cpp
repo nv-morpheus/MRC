@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -92,8 +92,9 @@ void Client::do_service_start()
     };
 
     // event handler - optionally add concurrency here
-    auto event_handler =
-        std::make_unique<node::RxSink<event_t>>([this](event_t event) { do_handle_event(std::move(event)); });
+    auto event_handler = std::make_unique<node::RxSink<event_t>>([this](event_t event) {
+        do_handle_event(std::move(event));
+    });
 
     // make stream and attach event handler
     m_stream = std::make_shared<stream_t::element_type>(prepare_fn, runnable());

@@ -68,7 +68,9 @@ class LatencyWatcher : public latency_watcher_t
         std::function<pybind11::object(pybind11::object py_obj)> map_f);
 
     std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_sink(
-        mrc::segment::Builder& seg, const std::string& name, std::function<void(pybind11::object py_obj)> sink_f);
+        mrc::segment::Builder& seg,
+        const std::string& name,
+        std::function<void(pybind11::object py_obj)> sink_f);
 
     pybind11::dict aggregate_tracers_as_pydict();
 
@@ -97,7 +99,9 @@ class ThroughputWatcher : public throughput_watcher_t
         std::function<pybind11::object(pybind11::object py_obj)> map_f);
 
     std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_sink(
-        mrc::segment::Builder& seg, const std::string& name, std::function<void(pybind11::object py_obj)> sink_f);
+        mrc::segment::Builder& seg,
+        const std::string& name,
+        std::function<void(pybind11::object py_obj)> sink_f);
 
     pybind11::dict aggregate_tracers_as_pydict();
 

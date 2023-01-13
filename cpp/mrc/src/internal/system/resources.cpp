@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,8 +50,9 @@ void Resources::register_thread_local_initializer(const CpuSet& cpu_set, std::fu
     CHECK_GE(cpu_set.weight(), 0);
     CHECK(system().topology().contains(cpu_set));
     m_thread_resources->register_initializer(cpu_set, initializer);
-    auto futures =
-        m_fiber_manager.enqueue_fiber_on_cpuset(cpu_set, [initializer](std::uint32_t cpu_id) { initializer(); });
+    auto futures = m_fiber_manager.enqueue_fiber_on_cpuset(cpu_set, [initializer](std::uint32_t cpu_id) {
+        initializer();
+    });
     for (auto& f : futures)
     {
         f.get();

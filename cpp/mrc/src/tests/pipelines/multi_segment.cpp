@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -76,7 +76,9 @@ std::unique_ptr<pipeline::Pipeline> finite_multisegment()
     auto seg_4 = segment::Definition::create("seg_4", segment::IngressPorts<int>({"my_int4"}), [](segment::Builder& s) {
         // pure pass-thru
         auto in   = s.get_ingress<int>("my_int4");
-        auto sink = s.make_sink<float>("rx_sink", rxcpp::make_observer_dynamic<int>([&](int x) { LOG(INFO) << x; }));
+        auto sink = s.make_sink<float>("rx_sink", rxcpp::make_observer_dynamic<int>([&](int x) {
+                                           LOG(INFO) << x;
+                                       }));
         s.make_edge(in, sink);
     });
 

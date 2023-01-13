@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,12 +44,15 @@ TEST_F(TestModuleUtil, ModuleRegistryUtilTest)
     ModelRegistryUtil::create_registered_module<SourceModule>("SourceModule", registry_namespace, release_version);
     ModelRegistryUtil::create_registered_module<SinkModule>("SinkModule", registry_namespace, release_version);
     ModelRegistryUtil::create_registered_module<NestedModule>("NestedModule", registry_namespace, release_version);
-    ModelRegistryUtil::create_registered_module<ConfigurableModule>(
-        "ConfigurableModule", registry_namespace, release_version);
-    ModelRegistryUtil::create_registered_module<TemplateModule<int>>(
-        "TemplateModuleInt", registry_namespace, release_version);
-    ModelRegistryUtil::create_registered_module<TemplateModule<std::string>>(
-        "TemplateModuleString", registry_namespace, release_version);
+    ModelRegistryUtil::create_registered_module<ConfigurableModule>("ConfigurableModule",
+                                                                    registry_namespace,
+                                                                    release_version);
+    ModelRegistryUtil::create_registered_module<TemplateModule<int>>("TemplateModuleInt",
+                                                                     registry_namespace,
+                                                                     release_version);
+    ModelRegistryUtil::create_registered_module<TemplateModule<std::string>>("TemplateModuleString",
+                                                                             registry_namespace,
+                                                                             release_version);
 
     EXPECT_THROW(
         ModelRegistryUtil::create_registered_module<SimpleModule>("SimpleModule", registry_namespace, release_version),
