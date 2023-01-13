@@ -5,6 +5,7 @@ channels:
   - rapidsai-nightly
 dependencies:
   - autoconf>=2.69
+  - bash-completion
   - benchmark=1.6.0
   - boost-cpp=1.74
   - ccache
