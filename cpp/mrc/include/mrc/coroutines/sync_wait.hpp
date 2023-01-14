@@ -43,6 +43,8 @@
 
 #include <condition_variable>
 #include <mutex>
+#include <type_traits>
+#include <utility>
 
 namespace mrc::coroutines {
 
@@ -243,7 +245,7 @@ class SyncWaitTask
         }
         else
         {
-            return m_coroutine.promise().result();
+            return std::remove_reference_t<ReturnT>{std::move(m_coroutine.promise().result())};
         }
     }
 
