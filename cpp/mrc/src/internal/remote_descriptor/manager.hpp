@@ -20,6 +20,7 @@
 #include "internal/remote_descriptor/storage.hpp"
 #include "internal/service.hpp"
 
+#include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/runtime/remote_descriptor_manager.hpp"
 #include "mrc/types.hpp"

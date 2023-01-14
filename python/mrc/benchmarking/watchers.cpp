@@ -20,6 +20,7 @@
 #include "pymrc/executor.hpp"  // IWYU pragma: keep
 #include "pymrc/segment.hpp"
 #include "pymrc/tracers.hpp"
+#include "pymrc/utils.hpp"
 
 #include <pybind11/attr.h>
 #include <pybind11/gil.h>  // IWYU pragma: keep

@@ -22,6 +22,7 @@
 #include "internal/service.hpp"
 #include "internal/ucx/common.hpp"
 
+#include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/types.hpp"
 
 #include <ucp/api/ucp_def.h>

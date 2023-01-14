@@ -20,6 +20,8 @@
 #include "internal/pipeline/types.hpp"
 #include "internal/service.hpp"
 
+#include "mrc/node/writable_entrypoint.hpp"
+
 #include <memory>
 
 // IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
