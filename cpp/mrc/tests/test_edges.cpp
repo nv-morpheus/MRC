@@ -22,6 +22,8 @@
 #include "mrc/channel/status.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/edge/edge_channel.hpp"
+#include "mrc/edge/edge_readable.hpp"
+#include "mrc/edge/edge_writable.hpp"
 #include "mrc/node/generic_source.hpp"
 #include "mrc/node/operators/broadcast.hpp"
 #include "mrc/node/operators/combine_latest.hpp"

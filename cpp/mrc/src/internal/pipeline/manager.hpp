@@ -20,9 +20,9 @@
 #include "internal/pipeline/types.hpp"
 #include "internal/service.hpp"
 
-#include "mrc/node/forward.hpp"
-
 #include <memory>
+
+// IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
 
 namespace mrc::internal::resources {
 class Manager;

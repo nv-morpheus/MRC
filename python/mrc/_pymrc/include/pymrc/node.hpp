@@ -25,6 +25,8 @@
 #include "mrc/channel/ingress.hpp"
 #include "mrc/channel/status.hpp"
 #include "mrc/edge/edge_connector.hpp"
+#include "mrc/edge/edge_readable.hpp"
+#include "mrc/edge/edge_writable.hpp"
 #include "mrc/node/forward.hpp"  // IWYU pragma: keep
 #include "mrc/node/generic_source.hpp"
 #include "mrc/node/rx_node.hpp"
@@ -41,15 +43,9 @@
 #include <memory>
 #include <utility>
 
-namespace mrc::node {
-template <typename InputT, typename OutputT, typename EnableT>
-class ConvertingEdgeReadable;
-template <typename SourceT, typename SinkT, typename EnableT>
-class ConvertingEdgeWritable;
-}  // namespace mrc::node
-
 // Avoid forward declaring template specialization base classes
-// IWYU pragma: no_forward_declare mrc::node::Edge
+// IWYU pragma: no_forward_declare mrc::edge::ConvertingEdgeReadable
+// IWYU pragma: no_forward_declare mrc::edge::ConvertingEdgeWritable
 
 namespace mrc {
 

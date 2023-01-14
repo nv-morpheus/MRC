@@ -19,6 +19,7 @@
 
 #include "mrc/channel/status.hpp"
 #include "mrc/edge/deferred_edge.hpp"
+#include "mrc/edge/edge.hpp"
 #include "mrc/edge/edge_holder.hpp"
 #include "mrc/edge/edge_readable.hpp"
 #include "mrc/edge/edge_writable.hpp"

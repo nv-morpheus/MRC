@@ -17,9 +17,6 @@
 
 #pragma once
 
-#include "mrc/edge/edge_readable.hpp"
-#include "mrc/edge/edge_writable.hpp"
-
 #include <functional>
 #include <map>
 #include <memory>
@@ -28,6 +25,11 @@
 #include <vector>
 
 namespace mrc::edge {
+class EdgeTypeInfo;
+class IEdgeReadableBase;
+class IEdgeWritableBase;
+class ReadableEdgeHandle;
+class WritableEdgeHandle;
 
 /**
  * @brief EdgeAdaptorRegistry used for the registry of adapter routines which allow for customized runtime

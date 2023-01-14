@@ -23,7 +23,7 @@
 #include "internal/service.hpp"
 
 #include "mrc/core/error.hpp"
-#include "mrc/node/forward.hpp"
+#include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
 
 #include <boost/fiber/condition_variable.hpp>
@@ -35,6 +35,8 @@
 #include <map>
 #include <memory>
 #include <string>
+
+// IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
 
 namespace mrc::node {
 template <typename T>

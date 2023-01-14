@@ -20,7 +20,6 @@
 #include "internal/remote_descriptor/storage.hpp"
 #include "internal/service.hpp"
 
-#include "mrc/node/forward.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/runtime/remote_descriptor_manager.hpp"
 #include "mrc/types.hpp"
@@ -30,6 +29,8 @@
 #include <map>
 #include <memory>
 #include <mutex>
+
+// IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
 
 namespace mrc::codable {
 class EncodedStorage;

@@ -25,6 +25,7 @@
 
 #include "mrc/core/error.hpp"
 #include "mrc/node/forward.hpp"
+#include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/runnable/launch_options.hpp"
@@ -43,6 +44,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+// IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
 
 namespace grpc {
 class Channel;

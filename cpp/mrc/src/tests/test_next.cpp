@@ -20,7 +20,6 @@
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 
-#include "mrc/channel/buffered_channel.hpp"
 #include "mrc/channel/ingress.hpp"
 #include "mrc/data/reusable_pool.hpp"
 #include "mrc/edge/edge_builder.hpp"
@@ -34,7 +33,6 @@
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/node/rx_subscribable.hpp"
-#include "mrc/node/sink_channel_owner.hpp"
 #include "mrc/node/source_channel_owner.hpp"
 #include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/options/engine_groups.hpp"
@@ -69,8 +67,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-// IWYU pragma: no_forward_declare mrc::channel::BufferedChannel
 
 using namespace mrc;
 
@@ -689,14 +685,14 @@ class PrivateSource : private node::SourceChannelOwner<int>
     }
 };
 
-class PrivateSink : private node::RxSink<int>
-{
-  public:
-    node::SinkChannelOwner<int>& sink()
-    {
-        return *this;
-    }
-};
+// class PrivateSink : private node::RxSink<int>
+// {
+//   public:
+//     node::SinkChannelOwner<int>& sink()
+//     {
+//         return *this;
+//     }
+// };
 
 /*
 TEST_F(TestNext, PrivateInheritance)

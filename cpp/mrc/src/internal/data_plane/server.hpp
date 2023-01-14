@@ -22,7 +22,6 @@
 #include "internal/service.hpp"
 #include "internal/ucx/common.hpp"
 
-#include "mrc/node/forward.hpp"
 #include "mrc/types.hpp"
 
 #include <ucp/api/ucp_def.h>
@@ -32,6 +31,8 @@
 #include <memory>
 #include <utility>
 #include <vector>
+
+// IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
 
 namespace mrc::node {
 template <typename KeyT, typename T>

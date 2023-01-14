@@ -19,6 +19,8 @@
 
 #include "mrc/benchmarking/trace_statistics.hpp"
 #include "mrc/edge/edge_builder.hpp"
+#include "mrc/edge/edge_readable.hpp"
+#include "mrc/edge/edge_writable.hpp"
 #include "mrc/engine/segment/ibuilder.hpp"  // IWYU pragma: export
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/rx_node.hpp"

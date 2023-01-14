@@ -42,11 +42,6 @@
 
 #include <ostream>
 
-namespace mrc::node {
-template <typename T>
-class IWritableProvider;
-}  // namespace mrc::node
-
 namespace mrc::internal::control_plane {
 
 Client::Client(resources::PartitionResourceBase& base, std::shared_ptr<grpc::CompletionQueue> cq) :
