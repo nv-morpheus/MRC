@@ -15,8 +15,10 @@
  * limitations under the License.
  */
 
+#include "mrc/channel/v2/immediate_channel.hpp"
 #include "mrc/coroutines/sync_wait.hpp"
 #include "mrc/coroutines/task.hpp"
+#include "mrc/coroutines/when_all.hpp"
 
 #include <benchmark/benchmark.h>
 
@@ -130,9 +132,55 @@ static void mrc_coro_await_incrementing_awaitable_baseline(benchmark::State& sta
     coroutines::sync_wait(task());
 }
 
+static void mrc_coro_immediate_channel(benchmark::State& state)
+{
+    channel::v2::ImmediateChannel<std::size_t> immediate_channel;
+
+    auto src = [&]() -> coroutines::Task<> {
+        for (auto _ : state)
+        {
+            co_await immediate_channel.async_write(42);
+        }
+        immediate_channel.close();
+        co_return;
+    };
+
+    auto sink = [&]() -> coroutines::Task<> {
+        while (auto val = co_await immediate_channel.async_read()) {}
+        co_return;
+    };
+
+    coroutines::sync_wait(coroutines::when_all(sink(), src()));
+}
+
+static auto bar(std::size_t i) -> std::size_t
+{
+    return i += 5;
+}
+
+static void foo(std::size_t i)
+{
+    benchmark::DoNotOptimize(bar(i));
+}
+
+static void mrc_coro_immedate_channel_composite_fn_baseline(benchmark::State& state)
+{
+    auto task = [&]() -> coroutines::Task<> {
+        for (auto _ : state)
+        {
+            foo(42);
+        }
+        co_return;
+    };
+
+    coroutines::sync_wait(task());
+}
+
 BENCHMARK(mrc_coro_create_single_task_and_sync);
 BENCHMARK(mrc_coro_create_single_task_and_sync_on_when_all);
 BENCHMARK(mrc_coro_create_two_tasks_and_sync_on_when_all);
 BENCHMARK(mrc_coro_await_suspend_never);
 BENCHMARK(mrc_coro_await_incrementing_awaitable_baseline);
 BENCHMARK(mrc_coro_await_incrementing_awaitable);
+BENCHMARK(mrc_coro_immediate_channel);
+BENCHMARK(mrc_coro_immedate_channel_composite_fn_baseline);
