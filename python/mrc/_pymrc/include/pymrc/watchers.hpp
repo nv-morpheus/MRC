@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,8 +17,9 @@
 
 #pragma once
 
+#include "pymrc/tracers.hpp"
+
 #include "mrc/benchmarking/segment_watcher.hpp"
-#include "mrc/benchmarking/tracer.hpp"
 
 #include <pybind11/pytypes.h>  // for object, dict
 
@@ -28,6 +29,7 @@
 
 namespace mrc::segment {
 class Builder;
+
 struct ObjectProperties;
 }  // namespace mrc::segment
 
@@ -50,19 +52,25 @@ class LatencyWatcher : public latency_watcher_t
 {
   public:
     LatencyWatcher(std::shared_ptr<pymrc::Executor> executor);
+
     LatencyWatcher(std::shared_ptr<pymrc::Executor> executor, std::function<void(latency_ensemble_t&)> payload_init);
 
     void make_segment(const std::string& name,
                       const std::function<void(mrc::segment::Builder&, LatencyWatcher&)>& init);
+
     std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_source(mrc::segment::Builder& seg,
                                                                        const std::string& name,
                                                                        bool force_sequential = false);
+
     std::shared_ptr<mrc::segment::ObjectProperties> make_traced_node(
         mrc::segment::Builder& seg,
         const std::string& name,
         std::function<pybind11::object(pybind11::object py_obj)> map_f);
+
     std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_sink(
-        mrc::segment::Builder& seg, const std::string& name, std::function<void(pybind11::object py_obj)> sink_f);
+        mrc::segment::Builder& seg,
+        const std::string& name,
+        std::function<void(pybind11::object py_obj)> sink_f);
 
     pybind11::dict aggregate_tracers_as_pydict();
 
@@ -74,20 +82,26 @@ class ThroughputWatcher : public throughput_watcher_t
 {
   public:
     ThroughputWatcher(std::shared_ptr<pymrc::Executor> executor);
+
     ThroughputWatcher(std::shared_ptr<pymrc::Executor> executor,
                       std::function<void(throughput_ensemble_t&)> payload_init);
 
     void make_segment(const std::string& name,
                       const std::function<void(mrc::segment::Builder&, ThroughputWatcher&)>& init);
+
     std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_source(mrc::segment::Builder& seg,
                                                                        const std::string& name,
                                                                        bool force_sequential = false);
+
     std::shared_ptr<mrc::segment::ObjectProperties> make_traced_node(
         mrc::segment::Builder& seg,
         const std::string& name,
         std::function<pybind11::object(pybind11::object py_obj)> map_f);
+
     std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_sink(
-        mrc::segment::Builder& seg, const std::string& name, std::function<void(pybind11::object py_obj)> sink_f);
+        mrc::segment::Builder& seg,
+        const std::string& name,
+        std::function<void(pybind11::object py_obj)> sink_f);
 
     pybind11::dict aggregate_tracers_as_pydict();
 

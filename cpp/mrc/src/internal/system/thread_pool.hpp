@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -71,7 +71,9 @@ class ThreadPool final
         boost::fibers::packaged_task<return_type_t()> task(std::bind(std::forward<F>(f), std::forward<ArgsT>(args)...));
         boost::fibers::future<return_type_t> future = task.get_future();
 
-        std::packaged_task<void()> wrapped_task([this, t = std::move(task)]() mutable { t(); });
+        std::packaged_task<void()> wrapped_task([this, t = std::move(task)]() mutable {
+            t();
+        });
         auto status = m_channel.push(std::move(wrapped_task));
 
         if (status == boost::fibers::channel_op_status::closed)

@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2018-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2018-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,38 +24,58 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "mrc")
 option(BUILD_SHARED_LIBS "Default value for whether or not to build shared or static libraries" ON)
 option(MRC_BUILD_BENCHMARKS "Whether or not to build MRC benchmarks" OFF)
 option(MRC_BUILD_DOCS "Enable building of API documentation" OFF)
-option(MRC_BUILD_LIBRARY "Whether the entire MRC library should be built. If set to OFF, only the pieces needed for a target will be built. Set to ON if installing the library" ON)
+option(MRC_BUILD_LIBRARY "Whether the entire MRC library should be built.
+  If set to OFF, only the pieces needed for a target will be built. Set to ON if installing the library" ON)
 option(MRC_BUILD_PYTHON "Enable building the python bindings for MRC" ON)
 option(MRC_BUILD_TESTS "Whether or not to build MRC tests" ON)
+option(MRC_ENABLE_CODECOV "Enable gcov code coverage" OFF)
+option(MRC_ENABLE_DEBUG_INFO "Enable printing debug information" OFF)
 option(MRC_USE_CCACHE "Enable caching compilation results with ccache" OFF)
 option(MRC_USE_CLANG_TIDY "Enable running clang-tidy as part of the build process" OFF)
-option(MRC_USE_CONDA "Enables finding dependencies via conda instead of vcpkg. Note: This will disable vcpkg. All dependencies must be installed first in the conda environment" ON)
+option(MRC_USE_CONDA "Enables finding dependencies via conda. All dependencies must be installed first in the conda
+  environment" ON)
 option(MRC_USE_IWYU "Enable running include-what-you-use as part of the build process" OFF)
-option(MRC_ENABLE_CODECOV "Enable gcov code coverage" OFF)
 
 set(MRC_RAPIDS_VERSION "22.10" CACHE STRING "Which version of RAPIDS to build for. Sets default versions for RAPIDS CMake and RMM.")
 
 set(MRC_CACHE_DIR "${CMAKE_SOURCE_DIR}/.cache" CACHE PATH "Directory to contain all CPM and CCache data")
 mark_as_advanced(MRC_CACHE_DIR)
 
-# CMake path
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
-include(cmake/setup_package_manager.cmake)
-
 enable_testing()
 
-# Add the RAPIDS cmake helper scripts
-include(cmake/import_rapids_cmake.cmake)
-
-# Default to using "native" (case-sensitive) for CUDA_ARCHITECTURES to build based on GPU in system
-if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-  set(CMAKE_CUDA_ARCHITECTURES "native")
-  message(STATUS "CMAKE_CUDA_ARCHITECTURES was not defined. Defaulting to '${CMAKE_CUDA_ARCHITECTURES}' to build only for local architecture. Specify -DCMAKE_CUDA_ARCHITECTURES='ALL' to build for all archs.")
+if (MRC_USE_IWYU AND MRC_USE_CCACHE)
+  message(FATAL_ERROR "MRC_USE_IWYU and MRC_USE_CCACHE cannot be set simultaneously")
 endif()
 
-rapids_cuda_init_architectures(mrc)
+# MRC CMake path and module extensions
+set(MRC_CMAKE_MODULE_PATH_EXTENSIONS
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
+    "${CMAKE_CURRENT_SOURCE_DIR}/external/utilities/cmake"
+    "${CMAKE_CURRENT_SOURCE_DIR}/external/utilities/cmake/morpheus_utils/package_search"
+    )
+
+set(MRC_CMAKE_PREFIX_PATH_EXTENSIONS
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
+    )
+
+# Prepend path and prefix updates so they take priority in this scope.
+list(PREPEND CMAKE_MODULE_PATH "${MRC_CMAKE_MODULE_PATH_EXTENSIONS}")
+list(PREPEND CMAKE_PREFIX_PATH "${MRC_CMAKE_PREFIX_PATH_EXTENSIONS}")
+
+# Load morpheus utils and update CMake paths
+set(MORPHEUS_UTILS_RAPIDS_CMAKE_VERSION ${MRC_RAPIDS_VERSION})
+set(MORPHEUS_UTILS_RAPIDS_CPM_INIT_OVERRIDE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/rapids_cpm_package_overrides.json")
+include(morpheus_utils/load)
+
+# Configure project package manager
+morpheus_utils_initialize_package_manager(
+    MRC_USE_CONDA
+    BUILD_SHARED_LIBS
+    )
+
+# Configure CUDA architecture
+# NOTE: This MUST occur before any 'project' calls because of rapids_cmake requirements.
+morpheus_utils_initialize_cuda_arch(mrc)
 
 project(mrc
   VERSION 23.01.00
@@ -72,12 +92,15 @@ if(NOT DEFINED CMAKE_CUDA_HOST_COMPILER)
   # incompatible with CUDA 11.4/11.5/11.6. See Issue #102
   if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
+
   endif()
 endif()
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   # Our version of NVCC officially only supports clang versions 3.2 - 13, we are now using 14
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -allow-unsupported-compiler")
+
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines-ts")
 endif()
 
 # Now enable CUDA
@@ -90,15 +113,6 @@ set(MRC_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 # Set a default build type if none was specified
 rapids_cmake_build_type(Release)
 
-# Once the build type is set, remove any dumb vcpkg debug folders from the
-# search paths. Without this FindBoost fails since it defaults to the debug
-# binaries
-if(DEFINED CACHE{MRC_VCPKG_TOOLCHAIN} AND DEFINED CMAKE_BUILD_TYPE AND NOT CMAKE_BUILD_TYPE MATCHES "^[Dd][Ee][Bb][Uu][Gg]$")
-  message(STATUS "Release Build: Removing debug Vcpkg paths from CMAKE_PREFIX_PATH and CMAKE_FIND_ROOT_PATH")
-  list(REMOVE_ITEM CMAKE_PREFIX_PATH "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug")
-  list(REMOVE_ITEM CMAKE_FIND_ROOT_PATH "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug")
-endif()
-
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
@@ -106,17 +120,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # Setup cache before dependencies
-include(cmake/setup_cache.cmake)
-
-# Configure conda
-if(MRC_USE_CONDA AND DEFINED ENV{CONDA_PREFIX})
-  rapids_cmake_support_conda_env(conda_env MODIFY_PREFIX_PATH)
-
-  if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT AND DEFINED ENV{CONDA_PREFIX})
-    message(STATUS "No CMAKE_INSTALL_PREFIX argument detected, setting to: $ENV{CONDA_PREFIX}")
-    set(CMAKE_INSTALL_PREFIX "$ENV{CONDA_PREFIX}" CACHE STRING "" FORCE)
-  endif()
-endif()
+# Configure CCache if requested
+include(environment/init_ccache)
 
 # Disable exporting compile commands for dependencies
 set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
@@ -127,7 +132,7 @@ add_custom_target(${PROJECT_NAME}_style_checks
 )
 
 # Configure all dependencies
-include(cmake/dependencies.cmake)
+include(dependencies)
 
 # Enable for all first party code
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -141,13 +146,13 @@ add_subdirectory(protos)
 
 # ###################################
 # - Post dependencies setup --------
-include(cmake/setup_compiler.cmake)
+morpheus_utils_compiler_set_defaults(MRC_USE_CLANG_TIDY)
 
 # Setup code coverage components
-include(cmake/setup_coverage.cmake)
+include(environment/init_coverage)
 
 # Setup IWYU if enabled
-include(cmake/setup_iwyu.cmake)
+include(environment/init_iwyu)
 
 # ##################################################################################################
 # - subdirectories ---------------------------------------------------------------------------------
@@ -162,7 +167,23 @@ if(MRC_BUILD_DOCS)
   add_subdirectory(docs)
 endif()
 
-# Uncomment the following to print all available targets
-# include(debug_utils)
-# print_all_targets()
+if (MRC_ENABLE_DEBUG_INFO)
+  morpheus_utils_print_all_targets()
+
+  morpheus_utils_print_target_properties(
+      TARGETS
+        libmrc
+        pymrc
+      WRITE_TO_FILE
+  )
+
+  morpheus_utils_print_global_properties(
+      WRITE_TO_FILE
+  )
+endif()
+
+# Cleanup the environment after we exit this scope
+list(REMOVE_ITEM CMAKE_PREFIX_PATH "${MRC_CMAKE_PREFIX_PATH_EXTENSIONS}")
+list(REMOVE_ITEM CMAKE_MODULE_PATH "${MRC_CMAKE_MODULE_PATH_EXTENSIONS}")
+
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

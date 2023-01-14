@@ -57,8 +57,8 @@ struct PortBuilderUtil
                 },
                 [](SegmentAddress address, PortName name) {
                     VLOG(2) << "Building sp wrapped ingress port: " << type_name<IngressDataT>();
-                    auto ingress_port =
-                        std::make_shared<segment::IngressPort<std::shared_ptr<IngressDataT>>>(address, name);
+                    auto ingress_port = std::make_shared<segment::IngressPort<std::shared_ptr<IngressDataT>>>(address,
+                                                                                                              name);
 
                     return ingress_port;
                 });
@@ -67,8 +67,8 @@ struct PortBuilderUtil
         {
             return node::PortUtil::ingress_tuple_t(nullptr, [](SegmentAddress address, PortName name) {
                 VLOG(2) << "Building sp wrapped ingress port: " << type_name<IngressDataT>();
-                auto ingress_port =
-                    std::make_shared<segment::IngressPort<std::shared_ptr<IngressDataT>>>(address, name);
+                auto ingress_port = std::make_shared<segment::IngressPort<std::shared_ptr<IngressDataT>>>(address,
+                                                                                                          name);
 
                 return ingress_port;
             });
@@ -91,8 +91,8 @@ struct PortBuilderUtil
                 },
                 [](SegmentAddress address, PortName name) {
                     VLOG(2) << "Building sp wrapped egress port: " << type_name<EgressDataT>();
-                    auto egress_port =
-                        std::make_shared<segment::EgressPort<std::shared_ptr<EgressDataT>>>(address, name);
+                    auto egress_port = std::make_shared<segment::EgressPort<std::shared_ptr<EgressDataT>>>(address,
+                                                                                                           name);
 
                     return egress_port;
                 });
@@ -122,8 +122,8 @@ struct PortBuilderUtil
                 VLOG(2) << "Attempting dynamic Ingress cast for: " << type_name<decltype(base)>() << " into "
                         << type_name<segment::Object<node::SourceProperties<std::shared_ptr<IngressDataT>>>>();
 
-                return std::dynamic_pointer_cast<
-                    segment::Object<node::SourceProperties<std::shared_ptr<IngressDataT>>>>(base);
+                return std::dynamic_pointer_cast<segment::Object<node::SourceProperties<std::shared_ptr<IngressDataT>>>>(
+                    base);
             });
     }
 

@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -118,8 +118,8 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source(mrc::s
         // Check if the iterator has been started already
         if (!iterator)
         {
-            LOG(ERROR)
-                << "Cannot have multiple progress engines for the iterator overload. Iterators cannot be duplicated";
+            LOG(ERROR) << "Cannot have multiple progress engines for the iterator overload. Iterators cannot be "
+                          "duplicated";
             throw std::runtime_error(
                 "Cannot have multiple progress engines for the iterator overload. Iterators cannot be duplicated");
         }
@@ -216,7 +216,8 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node(
     std::function<pybind11::object(pybind11::object object)> map_f)
 {
     return self.make_node<PyHolder, PyHolder, PythonNode>(
-        name, rxcpp::operators::map([map_f](PyHolder data_object) -> PyHolder {
+        name,
+        rxcpp::operators::map([map_f](PyHolder data_object) -> PyHolder {
             try
             {
                 py::gil_scoped_acquire gil;
@@ -282,8 +283,7 @@ std::shared_ptr<mrc::modules::SegmentModule> BuilderProxy::load_module_from_regi
 {
     auto json_config = cast_from_pyobject(config);
 
-    return self.load_module_from_registry(
-        module_id, registry_namespace, std::move(module_name), std::move(json_config));
+    return self.load_module_from_registry(module_id, registry_namespace, std::move(module_name), std::move(json_config));
 }
 
 void BuilderProxy::init_module(mrc::segment::Builder& self, std::shared_ptr<mrc::modules::SegmentModule> module)

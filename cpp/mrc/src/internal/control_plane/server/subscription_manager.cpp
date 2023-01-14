@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -241,7 +241,9 @@ bool SubscriptionService::compare_roles(const std::set<std::string>& roles) cons
     {
         return false;
     }
-    return std::all_of(roles.begin(), roles.end(), [this](auto& role) { return contains(m_roles, role); });
+    return std::all_of(roles.begin(), roles.end(), [this](auto& role) {
+        return contains(m_roles, role);
+    });
 }
 
 bool SubscriptionService::has_role(const std::string& role) const

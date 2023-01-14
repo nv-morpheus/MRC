@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -101,29 +101,29 @@ const char* MODULES[] = {"mrc_unittest_cpp_dynamic::DynamicSourceModule",
 
     try
     {
-        ModuleRegistry::register_module("DynamicSourceModule",
-                                        "mrc_unittest_cpp_dynamic",
-                                        DynamicTestModuleVersion,
-                                        [](std::string module_name, nlohmann::json config) {
-                                            return std::make_shared<mrc::modules::DynamicSourceModule>(
-                                                std::move(module_name), std::move(config));
-                                        });
+        ModuleRegistry::register_module(
+            "DynamicSourceModule",
+            "mrc_unittest_cpp_dynamic",
+            DynamicTestModuleVersion,
+            [](std::string module_name, nlohmann::json config) {
+                return std::make_shared<mrc::modules::DynamicSourceModule>(std::move(module_name), std::move(config));
+            });
 
-        ModuleRegistry::register_module("DynamicSourceModule",
-                                        "mrc_unittest_cpp_dynamic_2",
-                                        DynamicTestModuleVersion,
-                                        [](std::string module_name, nlohmann::json config) {
-                                            return std::make_shared<mrc::modules::DynamicSourceModule>(
-                                                std::move(module_name), std::move(config));
-                                        });
+        ModuleRegistry::register_module(
+            "DynamicSourceModule",
+            "mrc_unittest_cpp_dynamic_2",
+            DynamicTestModuleVersion,
+            [](std::string module_name, nlohmann::json config) {
+                return std::make_shared<mrc::modules::DynamicSourceModule>(std::move(module_name), std::move(config));
+            });
 
-        ModuleRegistry::register_module("DynamicSourceModule",
-                                        "mrc_unittest_cpp_dynamic_3",
-                                        DynamicTestModuleVersion,
-                                        [](std::string module_name, nlohmann::json config) {
-                                            return std::make_shared<mrc::modules::DynamicSourceModule>(
-                                                std::move(module_name), std::move(config));
-                                        });
+        ModuleRegistry::register_module(
+            "DynamicSourceModule",
+            "mrc_unittest_cpp_dynamic_3",
+            DynamicTestModuleVersion,
+            [](std::string module_name, nlohmann::json config) {
+                return std::make_shared<mrc::modules::DynamicSourceModule>(std::move(module_name), std::move(config));
+            });
     } catch (...)
     {
         return false;
@@ -162,13 +162,13 @@ const char* MODULES[] = {"mrc_unittest_cpp_dynamic::DynamicSourceModule",
 
     auto BadVersion = std::vector<unsigned int>{13, 14, 15};
 
-    ModuleRegistry::register_module("DynamicSourceModule_BAD",
-                                    "mrc_unittest_cpp_dynamic_BAD",
-                                    BadVersion,
-                                    [](std::string module_name, nlohmann::json config) {
-                                        return std::make_shared<mrc::modules::DynamicSourceModule>(
-                                            std::move(module_name), std::move(config));
-                                    });
+    ModuleRegistry::register_module(
+        "DynamicSourceModule_BAD",
+        "mrc_unittest_cpp_dynamic_BAD",
+        BadVersion,
+        [](std::string module_name, nlohmann::json config) {
+            return std::make_shared<mrc::modules::DynamicSourceModule>(std::move(module_name), std::move(config));
+        });
 
     return true;
 }

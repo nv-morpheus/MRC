@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -80,11 +80,13 @@ PYBIND11_MODULE(executor, module)
         .def("register_pipeline", &Executor::register_pipeline);
 
     py::class_<PyBoostFuture>(module, "Future")
-        .def(py::init<>([]() { return PyBoostFuture(); }))
+        .def(py::init<>([]() {
+            return PyBoostFuture();
+        }))
         .def("result", &PyBoostFuture::py_result)
         .def("set_result", &PyBoostFuture::set_result);
 
-    module.attr("__version__") =
-        MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "." << mrc_VERSION_PATCH);
+    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+                                                                  << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

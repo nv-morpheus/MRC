@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -83,8 +83,9 @@ DeviceResources::DeviceResources(resources::PartitionResourceBase& base, std::op
                          << " constructing arena memory_resource with initial=" << bytes_to_string(opts.block_size())
                          << "; max bytes=" << bytes_to_string(opts.max_aggreate_bytes());
 
-                m_arena = mrc::memory::make_shared_resource<mrc::memory::arena_resource>(
-                    m_registered, opts.block_size(), opts.max_aggreate_bytes());
+                m_arena = mrc::memory::make_shared_resource<mrc::memory::arena_resource>(m_registered,
+                                                                                         opts.block_size(),
+                                                                                         opts.max_aggreate_bytes());
             }
             else
             {

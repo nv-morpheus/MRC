@@ -1,5 +1,5 @@
 # =============================================================================
-# Copyright (c) 2020-2022, NVIDIA CORPORATION.
+# Copyright (c) 2020-2023, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 # in compliance with the License. You may obtain a copy of the License at
@@ -45,18 +45,18 @@ add_library(${PROJECT_NAME}::pymrc ALIAS pymrc)
 
 target_link_libraries(pymrc
   PUBLIC
-  ${PROJECT_NAME}::libmrc
-  ${Python_LIBRARIES}
-  prometheus-cpp::core
-  pybind11::pybind11
+    ${PROJECT_NAME}::libmrc
+    ${Python_LIBRARIES}
+    prometheus-cpp::core
+    pybind11::pybind11
 )
 
 target_include_directories(pymrc
   PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
   PRIVATE
-  ${Python_INCLUDE_DIR}
+    ${Python_INCLUDE_DIR}
 )
 
 set_target_properties(pymrc PROPERTIES OUTPUT_NAME ${PROJECT_NAME}_pymrc)

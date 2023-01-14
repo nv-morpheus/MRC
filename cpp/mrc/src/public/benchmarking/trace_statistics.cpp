@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -341,18 +341,30 @@ void TraceStatistics::initialize_lookup_tables()
     if (TraceStatistics::s_trace_operators)
     {
         init();
-        emit_    = [this]() { emit(); };
-        receive_ = [this]() { receive(); };
+        emit_ = [this]() {
+            emit();
+        };
+        receive_ = [this]() {
+            receive();
+        };
     }
 
     if (TraceStatistics::s_trace_channels)
     {
         init();
-        ch_read_start_ = [this]() { channel_read_start(); };
-        ch_read_end_   = [this]() { channel_read_end(); };
+        ch_read_start_ = [this]() {
+            channel_read_start();
+        };
+        ch_read_end_ = [this]() {
+            channel_read_end();
+        };
 
-        ch_write_start_ = [this]() { channel_write_start(); };
-        ch_write_end_   = [this]() { channel_write_end(); };
+        ch_write_start_ = [this]() {
+            channel_write_start();
+        };
+        ch_write_end_ = [this]() {
+            channel_write_end();
+        };
     }
 
     m_entry_lookup_table[static_cast<std::size_t>(WatchableEvent::sink_on_data)]  = receive_;
@@ -385,10 +397,11 @@ void TraceStatistics::sync_state()
 {
     std::lock_guard<std::recursive_mutex> lock(s_state_mutex);
 
-    TraceStatistics::s_trace_operators =
-        s_trace_operators_set_manually ? s_trace_operators : (std::getenv("MRC_TRACE_OPERATORS") != nullptr);
-    TraceStatistics::s_trace_channels =
-        s_trace_channels_set_manually ? s_trace_channels : (std::getenv("MRC_TRACE_CHANNELS") != nullptr);
+    TraceStatistics::s_trace_operators = s_trace_operators_set_manually
+                                             ? s_trace_operators
+                                             : (std::getenv("MRC_TRACE_OPERATORS") != nullptr);
+    TraceStatistics::s_trace_channels  = s_trace_channels_set_manually ? s_trace_channels
+                                                                       : (std::getenv("MRC_TRACE_CHANNELS") != nullptr);
 
     for (auto& mm_iter : TraceObjectMultimap)
     {

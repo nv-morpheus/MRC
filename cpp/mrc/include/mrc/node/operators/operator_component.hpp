@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,7 +26,8 @@ class OperatorComponent final : public Operator<T>
 {
   public:
     OperatorComponent(
-        std::function<mrc::channel::Status(T&&)> on_next, std::function<void()> on_complete = [] {}) :
+        std::function<mrc::channel::Status(T&&)> on_next,
+        std::function<void()> on_complete = [] {}) :
       m_on_next(std::move(on_next)),
       m_on_complete(std::move(on_complete))
     {}

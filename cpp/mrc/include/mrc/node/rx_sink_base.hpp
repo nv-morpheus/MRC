@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -67,7 +67,9 @@ class RxSinkBase : public SinkChannel<T>, private Watchable
 template <typename T>
 RxSinkBase<T>::RxSinkBase() :
   SinkChannel<T>(),
-  m_observable(rxcpp::observable<>::create<T>([this](rxcpp::subscriber<T> s) { progress_engine(s); }))
+  m_observable(rxcpp::observable<>::create<T>([this](rxcpp::subscriber<T> s) {
+      progress_engine(s);
+  }))
 {}
 
 template <typename T>

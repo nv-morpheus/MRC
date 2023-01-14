@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -91,28 +91,36 @@ PYBIND11_MODULE(segment, module)
     node::EdgeConnector<std::string, PyHolder>::register_converter();
     node::EdgeConnector<PyHolder, std::string>::register_converter();
 
-    auto Builder    = py::class_<mrc::segment::Builder>(module, "Builder");
-    auto Definition = py::class_<mrc::segment::Definition>(module, "Definition");
-    auto SegmentModule =
-        py::class_<mrc::modules::SegmentModule, std::shared_ptr<mrc::modules::SegmentModule>>(module, "SegmentModule");
+    auto Builder       = py::class_<mrc::segment::Builder>(module, "Builder");
+    auto Definition    = py::class_<mrc::segment::Definition>(module, "Definition");
+    auto SegmentModule = py::class_<mrc::modules::SegmentModule, std::shared_ptr<mrc::modules::SegmentModule>>(module,
+                                                                                                               "Segment"
+                                                                                                               "Modul"
+                                                                                                               "e");
     auto SegmentModuleRegistry = py::class_<ModuleRegistryProxy>(module, "ModuleRegistry");
 
     /** Builder Interface Declarations **/
     /*
      * @brief Make a source node that generates py::object values
      */
-    Builder.def("make_source",
-                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(
-                    mrc::segment::Builder&, const std::string&, py::iterator)>(&BuilderProxy::make_source));
+    Builder.def(
+        "make_source",
+        static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::Builder&,
+                                                                        const std::string&,
+                                                                        py::iterator)>(&BuilderProxy::make_source));
 
-    Builder.def("make_source",
-                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(
-                    mrc::segment::Builder&, const std::string&, py::iterable)>(&BuilderProxy::make_source),
-                py::return_value_policy::reference_internal);
+    Builder.def(
+        "make_source",
+        static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::Builder&,
+                                                                        const std::string&,
+                                                                        py::iterable)>(&BuilderProxy::make_source),
+        py::return_value_policy::reference_internal);
 
-    Builder.def("make_source",
-                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(
-                    mrc::segment::Builder&, const std::string&, py::function)>(&BuilderProxy::make_source));
+    Builder.def(
+        "make_source",
+        static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::Builder&,
+                                                                        const std::string&,
+                                                                        py::function)>(&BuilderProxy::make_source));
 
     /**
      * Construct a new py::object sink.
@@ -172,11 +180,12 @@ PYBIND11_MODULE(segment, module)
 
     Builder.def("init_module", &BuilderProxy::init_module, py::arg("module"));
 
-    Builder.def(
-        "register_module_input", &BuilderProxy::register_module_input, py::arg("input_name"), py::arg("object"));
+    Builder.def("register_module_input", &BuilderProxy::register_module_input, py::arg("input_name"), py::arg("object"));
 
-    Builder.def(
-        "register_module_output", &BuilderProxy::register_module_output, py::arg("output_name"), py::arg("object"));
+    Builder.def("register_module_output",
+                &BuilderProxy::register_module_output,
+                py::arg("output_name"),
+                py::arg("object"));
 
     Builder.def("get_current_module_config", &BuilderProxy::get_current_module_config);
 
@@ -210,16 +219,20 @@ PYBIND11_MODULE(segment, module)
     // SegmentModule.def("output_port_type_ids", &SegmentModuleProxy::output_port_type_id)
 
     /** Module Register Interface Declarations **/
-    SegmentModuleRegistry.def_static(
-        "contains", &ModuleRegistryProxy::contains, py::arg("name"), py::arg("registry_namespace"));
+    SegmentModuleRegistry.def_static("contains",
+                                     &ModuleRegistryProxy::contains,
+                                     py::arg("name"),
+                                     py::arg("registry_namespace"));
 
-    SegmentModuleRegistry.def_static(
-        "contains_namespace", &ModuleRegistryProxy::contains_namespace, py::arg("registry_namespace"));
+    SegmentModuleRegistry.def_static("contains_namespace",
+                                     &ModuleRegistryProxy::contains_namespace,
+                                     py::arg("registry_namespace"));
 
     SegmentModuleRegistry.def_static("registered_modules", &ModuleRegistryProxy::registered_modules);
 
-    SegmentModuleRegistry.def_static(
-        "is_version_compatible", &ModuleRegistryProxy::is_version_compatible, py::arg("release_version"));
+    SegmentModuleRegistry.def_static("is_version_compatible",
+                                     &ModuleRegistryProxy::is_version_compatible,
+                                     py::arg("release_version"));
 
     SegmentModuleRegistry.def_static("get_module_constructor",
                                      &ModuleRegistryProxy::get_module_constructor,
@@ -228,8 +241,7 @@ PYBIND11_MODULE(segment, module)
 
     SegmentModuleRegistry.def_static(
         "register_module",
-        static_cast<void (*)(
-            std::string, const std::vector<unsigned int>&, std::function<void(mrc::segment::Builder&)>)>(
+        static_cast<void (*)(std::string, const std::vector<unsigned int>&, std::function<void(mrc::segment::Builder&)>)>(
             &ModuleRegistryProxy::register_module),
         py::arg("name"),
         py::arg("release_version"),
@@ -237,9 +249,10 @@ PYBIND11_MODULE(segment, module)
 
     SegmentModuleRegistry.def_static(
         "register_module",
-        static_cast<void (*)(
-            std::string, std::string, const std::vector<unsigned int>&, std::function<void(mrc::segment::Builder&)>)>(
-            &ModuleRegistryProxy::register_module),
+        static_cast<void (*)(std::string,
+                             std::string,
+                             const std::vector<unsigned int>&,
+                             std::function<void(mrc::segment::Builder&)>)>(&ModuleRegistryProxy::register_module),
         py::arg("name"),
         py::arg("registry_namespace"),
         py::arg("release_version"),
@@ -251,7 +264,7 @@ PYBIND11_MODULE(segment, module)
                                      py::arg("registry_namespace"),
                                      py::arg("optional") = true);
 
-    module.attr("__version__") =
-        MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "." << mrc_VERSION_PATCH);
+    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+                                                                  << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

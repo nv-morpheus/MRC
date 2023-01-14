@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -174,7 +174,9 @@ void Executor::start()
     m_exec->start();
 
     // Now enqueue a join future
-    m_join_future = boost::fibers::async([this] { m_exec->join(); });
+    m_join_future = boost::fibers::async([this] {
+        m_exec->join();
+    });
 }
 
 void Executor::stop()

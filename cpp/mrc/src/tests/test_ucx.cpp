@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -149,8 +149,8 @@ TEST_F(TestUCX, Get)
         ucp_get_nbx(ep->handle(), dst_data, 4096, reinterpret_cast<std::uint64_t>(src_data), user_data->rkey, &params);
     if (get_rc == nullptr /* UCS_OK */)
     {
-        LOG(FATAL)
-            << "should be unreachable";  // UCP_OP_ATTR_FLAG_NO_IMM_CMPL is set - should force the completion handler
+        LOG(FATAL) << "should be unreachable";  // UCP_OP_ATTR_FLAG_NO_IMM_CMPL is set - should force the completion
+                                                // handler
     }
     else if (UCS_PTR_IS_ERR(get_rc))
     {

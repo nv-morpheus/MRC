@@ -43,8 +43,8 @@ PythonObjectCache& PythonObjectCache::get_handle()
         std::lock_guard<std::mutex> lock(s_cache_lock);
         if (!PythonObjectCache::s_py_object_cache)
         {
-            PythonObjectCache::s_py_object_cache =
-                std::move(std::unique_ptr<PythonObjectCache>(new PythonObjectCache()));
+            PythonObjectCache::s_py_object_cache = std::move(
+                std::unique_ptr<PythonObjectCache>(new PythonObjectCache()));
         }
     }
 
@@ -61,7 +61,9 @@ PythonObjectCache::PythonObjectCache()
     }
 
     auto at_exit = pybind11::module_::import("atexit");
-    at_exit.attr("register")(pybind11::cpp_function([this]() { this->atexit_callback(); }));
+    at_exit.attr("register")(pybind11::cpp_function([this]() {
+        this->atexit_callback();
+    }));
 }
 
 bool PythonObjectCache::contains(const std::string& object_id)

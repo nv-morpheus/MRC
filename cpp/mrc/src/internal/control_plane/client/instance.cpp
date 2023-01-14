@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -53,8 +53,9 @@ Instance::Instance(Client& client,
   m_client(client),
   m_instance_id(instance_id)
 {
-    auto update_handler = std::make_unique<mrc::node::RxSink<protos::StateUpdate>>(
-        [this](protos::StateUpdate update) { do_handle_state_update(update); });
+    auto update_handler = std::make_unique<mrc::node::RxSink<protos::StateUpdate>>([this](protos::StateUpdate update) {
+        do_handle_state_update(update);
+    });
 
     mrc::node::make_edge(update_channel, *update_handler);
 
@@ -121,8 +122,9 @@ void Instance::do_handle_state_update(const protos::StateUpdate& update)
     {
         DVLOG(10) << "control plane instance on partition " << partition_id() << " got an update msg for "
                   << update.service_name();
-        return do_update_subscription_state(
-            update.service_name(), update.nonce(), update.update_subscription_service());
+        return do_update_subscription_state(update.service_name(),
+                                            update.nonce(),
+                                            update.update_subscription_service());
     }
 
     if (update.has_drop_subscription_service())

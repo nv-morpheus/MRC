@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,8 +42,9 @@ namespace test::nodes {
 
 std::unique_ptr<node::RxSink<int>> int_sink()
 {
-    return std::make_unique<node::RxSink<int>>(
-        [](int x) { VLOG(1) << runnable::Context::get_runtime_context().info() << ": data=" << x; });
+    return std::make_unique<node::RxSink<int>>([](int x) {
+        VLOG(1) << runnable::Context::get_runtime_context().info() << ": data=" << x;
+    });
 }
 
 std::unique_ptr<node::RxSink<int>> int_sink_throw_on_even()

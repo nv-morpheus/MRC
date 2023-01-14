@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,10 +59,14 @@ namespace mrc::pymrc {
  */
 struct EdgeAdapterUtil
 {
-    using source_adapter_fn_t = std::function<std::shared_ptr<channel::IngressHandle>(
-        mrc::node::SourcePropertiesBase&, mrc::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle>)>;
-    using sink_adapter_fn_t   = std::function<std::shared_ptr<channel::IngressHandle>(
-        std::type_index, mrc::node::SinkPropertiesBase&, std::shared_ptr<channel::IngressHandle> ingress_handle)>;
+    using source_adapter_fn_t =
+        std::function<std::shared_ptr<channel::IngressHandle>(mrc::node::SourcePropertiesBase&,
+                                                              mrc::node::SinkPropertiesBase&,
+                                                              std::shared_ptr<channel::IngressHandle>)>;
+    using sink_adapter_fn_t =
+        std::function<std::shared_ptr<channel::IngressHandle>(std::type_index,
+                                                              mrc::node::SinkPropertiesBase&,
+                                                              std::shared_ptr<channel::IngressHandle> ingress_handle)>;
 
     template <typename DataTypeT>
     static void register_data_adapters()

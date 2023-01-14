@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -53,8 +53,9 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, pybind11::object>>
         serialized_obj = Serializer::serialize(py_object, opts.use_shm(), !opts.force_copy());
 
         // Copy it or not.
-        encoded.add_memory_block(memory::const_buffer_view(
-            std::get<0>(serialized_obj), std::get<1>(serialized_obj), memory::memory_kind::host));
+        encoded.add_memory_block(memory::const_buffer_view(std::get<0>(serialized_obj),
+                                                           std::get<1>(serialized_obj),
+                                                           memory::memory_kind::host));
     }
 
     static T deserialize(const Decoder<T>& encoded, std::size_t object_idx)

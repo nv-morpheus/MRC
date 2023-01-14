@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -74,7 +74,9 @@ RxSourceBase<T>::RxSourceBase() :
           SourceChannel<T>::await_write(std::move(data));
           this->watcher_epilogue(WatchableEvent::channel_write, true, &data);
       },
-      [](std::exception_ptr ptr) { runnable::Context::get_runtime_context().set_exception(std::move(ptr)); }))
+      [](std::exception_ptr ptr) {
+          runnable::Context::get_runtime_context().set_exception(std::move(ptr));
+      }))
 {}
 
 template <typename T>

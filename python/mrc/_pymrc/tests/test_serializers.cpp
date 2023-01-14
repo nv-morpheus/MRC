@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -195,8 +195,8 @@ TEST_F(TestSerializer, cuDFObject)
     ASSERT_TRUE(df_rebuilt.equal(dataframe));
 
     auto df_buffer_info_shmem = pymrc::Serializer::serialize(dataframe, true);
-    auto df_rebuilt_shmem =
-        pymrc::Deserializer::deserialize(std::get<0>(df_buffer_info_shmem), std::get<1>(df_buffer_info_shmem));
+    auto df_rebuilt_shmem     = pymrc::Deserializer::deserialize(std::get<0>(df_buffer_info_shmem),
+                                                             std::get<1>(df_buffer_info_shmem));
     ASSERT_TRUE(df_rebuilt_shmem.equal(dataframe));
 }
 

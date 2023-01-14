@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,8 +55,9 @@ class GenericSink : public RxSink<T, ContextT>
 template <typename T, typename ContextT>
 GenericSink<T, ContextT>::GenericSink()
 {
-    RxSink<T, ContextT>::set_observer(
-        rxcpp::make_observer_dynamic<T>([this](T data) { this->on_data(std::move(data)); }));
+    RxSink<T, ContextT>::set_observer(rxcpp::make_observer_dynamic<T>([this](T data) {
+        this->on_data(std::move(data));
+    }));
 }
 
 }  // namespace mrc::node

@@ -55,7 +55,7 @@
 #include <utility>
 #include <variant>
 
-namespace std23 {
+namespace mrc {
 
 // clang-format off
 // NOLINTBEGIN(*)
@@ -1478,4 +1478,4 @@ class expected<void, E> {
 // NOLINTEND(*)
 // clang-format on
 
-}  // namespace std23
+}  // namespace mrc

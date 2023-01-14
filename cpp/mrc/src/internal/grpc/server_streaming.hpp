@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -159,8 +159,8 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
         bool ok;
     };
 
-    using request_fn_t = std::function<void(
-        grpc::ServerContext* context, grpc::ServerAsyncReaderWriter<ResponseT, RequestT>* stream, void* tag)>;
+    using request_fn_t = std::function<
+        void(grpc::ServerContext* context, grpc::ServerAsyncReaderWriter<ResponseT, RequestT>* stream, void* tag)>;
 
     ServerStream(request_fn_t request_fn, runnable::Resources& runnable) :
       m_runnable(runnable),
@@ -171,7 +171,9 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
               s.on_completed();
           })))
     {
-        m_init_fn = [this, request_fn](void* tag) { request_fn(&m_context, m_stream.get(), tag); };
+        m_init_fn = [this, request_fn](void* tag) {
+            request_fn(&m_context, m_stream.get(), tag);
+        };
     }
 
     ~ServerStream() override
@@ -291,14 +293,20 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
 
         // make writer sink
         m_write_channel = std::make_shared<mrc::node::SourceChannelWriteable<writer_t>>();
-        auto writer     = std::make_unique<mrc::node::RxSink<writer_t>>([this](writer_t request) { do_write(request); },
-                                                                    [this] { do_writes_done(); });
+        auto writer     = std::make_unique<mrc::node::RxSink<writer_t>>(
+            [this](writer_t request) {
+                do_write(request);
+            },
+            [this] {
+                do_writes_done();
+            });
         mrc::node::make_edge(*m_write_channel, *writer);
 
         // construct StreamWriter
         m_can_write     = true;
         m_stream_writer = std::shared_ptr<ServerStreamWriter>(
-            new ServerStreamWriter(m_write_channel, this->shared_from_this()), [this](ServerStreamWriter* ptr) {
+            new ServerStreamWriter(m_write_channel, this->shared_from_this()),
+            [this](ServerStreamWriter* ptr) {
                 delete ptr;
                 m_write_channel.reset();
             });

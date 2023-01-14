@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,8 +38,9 @@ std::vector<std::size_t> sort_indexes(const std::vector<T>& values)
 {
     std::vector<size_t> idx(values.size());
     std::iota(idx.begin(), idx.end(), 0);
-    std::stable_sort(
-        idx.begin(), idx.end(), [&values](size_t i, size_t j) { return CompareFn{}(values[i], values[j]); });
+    std::stable_sort(idx.begin(), idx.end(), [&values](size_t i, size_t j) {
+        return CompareFn{}(values[i], values[j]);
+    });
     return idx;
 }
 
