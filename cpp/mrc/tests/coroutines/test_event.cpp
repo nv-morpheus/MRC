@@ -48,6 +48,7 @@
 #include <atomic>
 #include <coroutine>
 #include <cstdint>
+#include <tuple>
 
 using namespace mrc;
 
