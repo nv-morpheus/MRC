@@ -23,6 +23,8 @@
 #include "mrc/channel/status.hpp"
 #include "mrc/core/watcher.hpp"
 #include "mrc/edge/edge_adapter_registry.hpp"
+#include "mrc/edge/edge_readable.hpp"
+#include "mrc/edge/edge_writable.hpp"
 #include "mrc/type_traits.hpp"
 
 #include <glog/logging.h>
