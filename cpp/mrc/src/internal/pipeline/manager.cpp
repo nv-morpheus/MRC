@@ -24,8 +24,8 @@
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 
-#include "mrc/node/edge_builder.hpp"
-#include "mrc/node/writable_subject.hpp"
+#include "mrc/edge/edge_builder.hpp"
+#include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/runnable/launcher.hpp"
@@ -73,10 +73,10 @@ void Manager::do_service_start()
 
     auto instance    = std::make_unique<Instance>(m_pipeline, m_resources);
     auto controller  = std::make_unique<Controller>(std::move(instance));
-    m_update_channel = std::make_unique<node::WritableSubject<ControlMessage>>();
+    m_update_channel = std::make_unique<node::WritableEntrypoint<ControlMessage>>();
 
     // form edge
-    node::make_edge(*m_update_channel, *controller);
+    mrc::make_edge(*m_update_channel, *controller);
 
     // launch controller
     auto launcher = resources().partition(0).runnable().launch_control().prepare_launcher(main, std::move(controller));

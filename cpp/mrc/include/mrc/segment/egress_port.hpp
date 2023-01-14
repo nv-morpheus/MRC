@@ -17,17 +17,17 @@
 
 #pragma once
 
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/manifold/connectable.hpp"
 #include "mrc/manifold/factory.hpp"
 #include "mrc/manifold/interface.hpp"
-#include "mrc/node/edge_builder.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/node/generic_sink.hpp"
 #include "mrc/node/operators/muxer.hpp"
 #include "mrc/node/rx_node.hpp"
-#include "mrc/node/sink_channel.hpp"
+#include "mrc/node/sink_channel_owner.hpp"
 #include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_channel.hpp"
+#include "mrc/node/source_channel_owner.hpp"
 #include "mrc/node/source_properties.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/runnable/launchable.hpp"

@@ -26,7 +26,7 @@
 #include "pymrc/utils.hpp"
 
 #include "mrc/channel/status.hpp"
-#include "mrc/node/edge_builder.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/port_registry.hpp"
 #include "mrc/node/rx_sink_base.hpp"
 #include "mrc/node/rx_source_base.hpp"
@@ -498,13 +498,13 @@ void BuilderProxy::make_edge(mrc::segment::Builder& self,
                              std::shared_ptr<mrc::segment::ObjectProperties> source,
                              std::shared_ptr<mrc::segment::ObjectProperties> sink)
 {
-    if (source->is_ingress_acceptor() && sink->is_ingress_provider())
+    if (source->is_writable_acceptor() && sink->is_writable_provider())
     {
-        node::make_edge_typeless(source->ingress_acceptor_base(), sink->ingress_provider_base());
+        mrc::make_edge_typeless(source->writable_acceptor_base(), sink->writable_provider_base());
     }
-    else if (source->is_egress_provider() && sink->is_egress_acceptor())
+    else if (source->is_readable_provider() && sink->is_readable_acceptor())
     {
-        node::make_edge_typeless(source->egress_provider_base(), sink->egress_acceptor_base());
+        mrc::make_edge_typeless(source->readable_provider_base(), sink->readable_acceptor_base());
     }
     else
     {

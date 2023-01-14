@@ -21,8 +21,7 @@
 #include "internal/runnable/resources.hpp"
 
 #include "mrc/core/error.hpp"
-#include "mrc/node/channel_holder.hpp"  // IWYU pragma: keep
-#include "mrc/node/edge_builder.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/runnable/launch_control.hpp"
@@ -85,13 +84,13 @@ Client& StateManager::client()
     return m_client;
 }
 
-void StateManager::start_with_channel(node::IWritableAcceptor<const protos::StateUpdate>& update_channel)
+void StateManager::start_with_channel(edge::IWritableAcceptor<const protos::StateUpdate>& update_channel)
 {
     auto sink = std::make_unique<node::RxSink<protos::StateUpdate>>([this](protos::StateUpdate update_msg) {
         update(std::move(update_msg));
     });
     // sink->update_channel(std::make_unique<channel::RecentChannel<protos::StateUpdate>>(1));
-    node::make_edge(update_channel, *sink);
+    mrc::make_edge(update_channel, *sink);
     m_runner =
         client().runnable().launch_control().prepare_launcher(client().launch_options(), std::move(sink))->ignition();
 }

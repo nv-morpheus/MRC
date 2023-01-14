@@ -19,10 +19,9 @@
 
 #include "mrc/channel/status.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/node/channel_holder.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_channel.hpp"
+#include "mrc/node/source_channel_owner.hpp"
 #include "mrc/node/source_properties.hpp"
 
 #include <map>
@@ -40,7 +39,7 @@ class RouterBase : public ForwardingWritableProvider<InputT>, public MultiSource
 
     RouterBase() : ForwardingWritableProvider<input_data_t>() {}
 
-    std::shared_ptr<IWritableAcceptor<output_data_t>> get_source(const KeyT& key) const
+    std::shared_ptr<edge::IWritableAcceptor<output_data_t>> get_source(const KeyT& key) const
     {
         // Simply return an object that will set the message to upstream and go away
         return std::make_shared<DownstreamEdge>(*const_cast<RouterBase<KeyT, InputT, OutputT>*>(this), key);
@@ -57,15 +56,15 @@ class RouterBase : public ForwardingWritableProvider<InputT>, public MultiSource
     }
 
   protected:
-    class DownstreamEdge : public IWritableAcceptor<output_data_t>
+    class DownstreamEdge : public edge::IWritableAcceptor<output_data_t>
     {
       public:
         DownstreamEdge(RouterBase& parent, KeyT key) : m_parent(parent), m_key(std::move(key)) {}
 
-        void set_writable_edge_handle(std::shared_ptr<WritableEdgeHandle> ingress) override
+        void set_writable_edge_handle(std::shared_ptr<edge::WritableEdgeHandle> ingress) override
         {
             // Make sure we do any type conversions as needed
-            auto adapted_ingress = EdgeBuilder::adapt_writable_edge<OutputT>(std::move(ingress));
+            auto adapted_ingress = edge::EdgeBuilder::adapt_writable_edge<OutputT>(std::move(ingress));
 
             m_parent.MultiSourceProperties<KeyT, OutputT>::make_edge_connection(m_key, std::move(adapted_ingress));
         }

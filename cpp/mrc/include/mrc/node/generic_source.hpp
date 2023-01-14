@@ -65,9 +65,7 @@ GenericSource<T, ContextT>::GenericSource() :
       }
       s.on_completed();
   }))
-{
-    // RxSource<T, ContextT>::set_observable();
-}
+{}
 
 template <typename T>
 class GenericSourceComponent : public ForwardingEgressProvider<T>

@@ -25,10 +25,10 @@
 #include <mutex>
 #include <vector>
 
-namespace mrc::node {
+namespace mrc::edge {
 template <typename T>
 class IWritableAcceptor;
-}  // namespace mrc::node
+}  // namespace mrc::edge
 namespace mrc::protos {
 class StateUpdate;
 }  // namespace mrc::protos
@@ -73,7 +73,7 @@ class StateManager
     const Client& client() const;
     Client& client();
 
-    void start_with_channel(node::IWritableAcceptor<const protos::StateUpdate>& update_channel);
+    void start_with_channel(edge::IWritableAcceptor<const protos::StateUpdate>& update_channel);
     void await_join();
 
   private:

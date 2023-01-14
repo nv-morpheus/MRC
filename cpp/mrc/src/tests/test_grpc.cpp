@@ -30,7 +30,7 @@
 #include "mrc/codable/codable_protocol.hpp"
 #include "mrc/core/task_queue.hpp"
 #include "mrc/node/generic_sink.hpp"
-#include "mrc/node/readable_subject.hpp"
+#include "mrc/node/readable_endpoint.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
 #include "mrc/options/topology.hpp"
@@ -248,7 +248,7 @@ TEST_F(TestRPC, StreamingPingPong)
     };
 
     auto client         = std::make_shared<stream_client_t>(prepare_fn, m_resources->partition(0).runnable());
-    auto client_handler = std::make_shared<mrc::node::ReadableSubject<typename stream_client_t::IncomingData>>();
+    auto client_handler = std::make_shared<mrc::node::ReadableEndpoint<typename stream_client_t::IncomingData>>();
     client->attach_to(*client_handler);
 
     auto client_writer = client->await_init();
@@ -320,7 +320,7 @@ TEST_F(TestRPC, StreamingPingPongEarlyServerFinish)
     };
 
     auto client         = std::make_shared<stream_client_t>(prepare_fn, m_resources->partition(0).runnable());
-    auto client_handler = std::make_shared<mrc::node::ReadableSubject<typename stream_client_t::IncomingData>>();
+    auto client_handler = std::make_shared<mrc::node::ReadableEndpoint<typename stream_client_t::IncomingData>>();
     client->attach_to(*client_handler);
 
     auto client_writer = client->await_init();
@@ -410,7 +410,7 @@ TEST_F(TestRPC, StreamingPingPongEarlyServerCancel)
     };
 
     auto client         = std::make_shared<stream_client_t>(prepare_fn, m_resources->partition(0).runnable());
-    auto client_handler = std::make_shared<mrc::node::ReadableSubject<typename stream_client_t::IncomingData>>();
+    auto client_handler = std::make_shared<mrc::node::ReadableEndpoint<typename stream_client_t::IncomingData>>();
     client->attach_to(*client_handler);
 
     auto client_writer = client->await_init();
@@ -501,7 +501,7 @@ TEST_F(TestRPC, StreamingPingPongClientEarlyTermination)
     };
 
     auto client         = std::make_shared<stream_client_t>(prepare_fn, m_resources->partition(0).runnable());
-    auto client_handler = std::make_shared<mrc::node::ReadableSubject<typename stream_client_t::IncomingData>>();
+    auto client_handler = std::make_shared<mrc::node::ReadableEndpoint<typename stream_client_t::IncomingData>>();
     client->attach_to(*client_handler);
 
     auto client_writer = client->await_init();

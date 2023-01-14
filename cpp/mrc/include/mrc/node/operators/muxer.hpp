@@ -18,7 +18,7 @@
 #pragma once
 
 #include "mrc/node/operators/node_component.hpp"
-#include "mrc/node/source_channel.hpp"
+#include "mrc/node/source_channel_owner.hpp"
 
 namespace mrc::node {
 

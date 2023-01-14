@@ -24,8 +24,8 @@
 #include "pymrc/utilities/function_wrappers.hpp"  // IWYU pragma: keep
 #include "pymrc/utils.hpp"
 
+#include "mrc/edge/edge_connector.hpp"
 #include "mrc/modules/segment_modules.hpp"
-#include "mrc/node/edge_connector.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/definition.hpp"
@@ -64,33 +64,33 @@ PYBIND11_MODULE(segment, module)
     pymrc::import(module, "mrc.core.subscriber");
 
     // Type 'b'
-    node::EdgeConnector<bool, PyHolder>::register_converter();
-    node::EdgeConnector<PyHolder, bool>::register_converter();
+    edge::EdgeConnector<bool, PyHolder>::register_converter();
+    edge::EdgeConnector<PyHolder, bool>::register_converter();
 
     // Type 'i'
-    node::EdgeConnector<int32_t, PyHolder>::register_converter();
-    node::EdgeConnector<PyHolder, int32_t>::register_converter();
+    edge::EdgeConnector<int32_t, PyHolder>::register_converter();
+    edge::EdgeConnector<PyHolder, int32_t>::register_converter();
 
-    node::EdgeConnector<int64_t, PyHolder>::register_converter();
-    node::EdgeConnector<PyHolder, int64_t>::register_converter();
+    edge::EdgeConnector<int64_t, PyHolder>::register_converter();
+    edge::EdgeConnector<PyHolder, int64_t>::register_converter();
 
     // Type 'u'
-    node::EdgeConnector<uint32_t, PyHolder>::register_converter();
-    node::EdgeConnector<PyHolder, uint32_t>::register_converter();
+    edge::EdgeConnector<uint32_t, PyHolder>::register_converter();
+    edge::EdgeConnector<PyHolder, uint32_t>::register_converter();
 
-    node::EdgeConnector<uint64_t, PyHolder>::register_converter();
-    node::EdgeConnector<PyHolder, uint64_t>::register_converter();
+    edge::EdgeConnector<uint64_t, PyHolder>::register_converter();
+    edge::EdgeConnector<PyHolder, uint64_t>::register_converter();
 
     // Type 'f'
-    node::EdgeConnector<float, PyHolder>::register_converter();
-    node::EdgeConnector<PyHolder, float>::register_converter();
+    edge::EdgeConnector<float, PyHolder>::register_converter();
+    edge::EdgeConnector<PyHolder, float>::register_converter();
 
-    node::EdgeConnector<double, PyHolder>::register_converter();
-    node::EdgeConnector<PyHolder, double>::register_converter();
+    edge::EdgeConnector<double, PyHolder>::register_converter();
+    edge::EdgeConnector<PyHolder, double>::register_converter();
 
     // Type 'S' and 'U'
-    node::EdgeConnector<std::string, PyHolder>::register_converter();
-    node::EdgeConnector<PyHolder, std::string>::register_converter();
+    edge::EdgeConnector<std::string, PyHolder>::register_converter();
+    edge::EdgeConnector<PyHolder, std::string>::register_converter();
 
     py::class_<mrc::runnable::LaunchOptions>(module, "LaunchOptions")
         .def_readwrite("pe_count", &mrc::runnable::LaunchOptions::pe_count)

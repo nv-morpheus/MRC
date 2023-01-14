@@ -20,6 +20,7 @@
 #include "internal/remote_descriptor/storage.hpp"
 #include "internal/service.hpp"
 
+#include "mrc/node/forward.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/runtime/remote_descriptor_manager.hpp"
 #include "mrc/types.hpp"
@@ -30,10 +31,6 @@
 #include <memory>
 #include <mutex>
 
-namespace mrc::node {
-template <typename T>
-class WritableSubject;
-}  // namespace mrc::node
 namespace mrc::codable {
 class EncodedStorage;
 class IDecodableStorage;
@@ -121,7 +118,7 @@ class Manager final : private Service,
 
     resources::PartitionResources& m_resources;
     std::unique_ptr<mrc::runnable::Runner> m_decrement_handler;
-    std::unique_ptr<mrc::node::WritableSubject<RemoteDescriptorDecrementMessage>> m_decrement_channel;
+    std::unique_ptr<mrc::node::WritableEntrypoint<RemoteDescriptorDecrementMessage>> m_decrement_channel;
 
     mutable std::mutex m_mutex;
 

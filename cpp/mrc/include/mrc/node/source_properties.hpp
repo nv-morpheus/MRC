@@ -18,10 +18,8 @@
 #pragma once
 
 #include "mrc/channel/ingress.hpp"
-#include "mrc/node/channel_holder.hpp"
-#include "mrc/node/edge_builder.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/forward.hpp"
-#include "mrc/node/sink_properties.hpp"
 #include "mrc/type_traits.hpp"
 #include "mrc/utils/type_utils.hpp"
 
@@ -65,15 +63,6 @@ class SourcePropertiesBase
 
   protected:
     SourcePropertiesBase() = default;
-
-  private:
-    // /**
-    //  * @brief Interface to the Channel Writer to accept an Edge from the Builder
-    //  */
-    // virtual void complete_edge(std::shared_ptr<channel::IngressHandle>) = 0;
-
-    // needs to be able to call channel_ingress_for_sink
-    friend EdgeBuilder;
 };
 
 inline SourcePropertiesBase::~SourcePropertiesBase() = default;
@@ -82,7 +71,7 @@ inline SourcePropertiesBase::~SourcePropertiesBase() = default;
  * @brief Typed SourceProperties provides default implementations dependent only on the type T.
  */
 template <typename T>
-class SourceProperties : public EdgeHolder<T>, public SourcePropertiesBase
+class SourceProperties : public edge::EdgeHolder<T>, public SourcePropertiesBase
 {
   public:
     using source_type_t = T;
@@ -105,14 +94,14 @@ class SourceProperties : public EdgeHolder<T>, public SourcePropertiesBase
     }
 
   protected:
-    std::shared_ptr<IEdgeWritable<T>> get_writable_edge() const
+    std::shared_ptr<edge::IEdgeWritable<T>> get_writable_edge() const
     {
-        return std::dynamic_pointer_cast<IEdgeWritable<T>>(this->get_connected_edge());
+        return std::dynamic_pointer_cast<edge::IEdgeWritable<T>>(this->get_connected_edge());
     }
 };
 
 template <typename KeyT, typename T>
-class MultiSourceProperties : public MultiEdgeHolder<KeyT, T>, public SourcePropertiesBase
+class MultiSourceProperties : public edge::MultiEdgeHolder<KeyT, T>, public SourcePropertiesBase
 {
   public:
     using source_type_t = T;
@@ -135,14 +124,14 @@ class MultiSourceProperties : public MultiEdgeHolder<KeyT, T>, public SourceProp
     }
 
   protected:
-    std::shared_ptr<IEdgeWritable<T>> get_writable_edge(KeyT edge_key) const
+    std::shared_ptr<edge::IEdgeWritable<T>> get_writable_edge(KeyT edge_key) const
     {
-        return std::dynamic_pointer_cast<IEdgeWritable<T>>(this->get_connected_edge(edge_key));
+        return std::dynamic_pointer_cast<edge::IEdgeWritable<T>>(this->get_connected_edge(edge_key));
     }
 };
 
 template <typename T>
-class ReadableProvider : public virtual SourceProperties<T>, public IReadableProvider<T>
+class ReadableProvider : public virtual SourceProperties<T>, public edge::IReadableProvider<T>
 {
   public:
     ReadableProvider& operator=(ReadableProvider&& other)
@@ -152,14 +141,14 @@ class ReadableProvider : public virtual SourceProperties<T>, public IReadablePro
     }
 
   private:
-    std::shared_ptr<ReadableEdgeHandle> get_readable_edge_handle() const override
+    std::shared_ptr<edge::ReadableEdgeHandle> get_readable_edge_handle() const override
     {
-        return ReadableEdgeHandle::from_typeless(SourceProperties<T>::get_edge_connection());
+        return edge::ReadableEdgeHandle::from_typeless(SourceProperties<T>::get_edge_connection());
     }
 };
 
 template <typename T>
-class WritableAcceptor : public virtual SourceProperties<T>, public IWritableAcceptor<T>
+class WritableAcceptor : public virtual SourceProperties<T>, public edge::IWritableAcceptor<T>
 {
   public:
     WritableAcceptor& operator=(WritableAcceptor&& other)
@@ -169,24 +158,24 @@ class WritableAcceptor : public virtual SourceProperties<T>, public IWritableAcc
     }
 
   private:
-    void set_writable_edge_handle(std::shared_ptr<WritableEdgeHandle> ingress) override
+    void set_writable_edge_handle(std::shared_ptr<edge::WritableEdgeHandle> ingress) override
     {
         // Do any conversion to the correct type here
-        auto adapted_ingress = EdgeBuilder::adapt_writable_edge<T>(ingress);
+        auto adapted_ingress = edge::EdgeBuilder::adapt_writable_edge<T>(ingress);
 
         SourceProperties<T>::make_edge_connection(adapted_ingress);
     }
 };
 
 template <typename T, typename KeyT>
-class MultiIngressAcceptor : public virtual MultiSourceProperties<T, KeyT>, public IMultiWritableAcceptor<T, KeyT>
+class MultiIngressAcceptor : public virtual MultiSourceProperties<T, KeyT>, public edge::IMultiWritableAcceptor<T, KeyT>
 {
   public:
   private:
-    void set_writable_edge_handle(KeyT key, std::shared_ptr<WritableEdgeHandle> ingress) override
+    void set_writable_edge_handle(KeyT key, std::shared_ptr<edge::WritableEdgeHandle> ingress) override
     {
         // Do any conversion to the correct type here
-        auto adapted_ingress = EdgeBuilder::adapt_writable_edge<T>(ingress);
+        auto adapted_ingress = edge::EdgeBuilder::adapt_writable_edge<T>(ingress);
 
         MultiSourceProperties<T, KeyT>::make_edge_connection(key, adapted_ingress);
     }
@@ -196,7 +185,7 @@ template <typename T>
 class ForwardingEgressProvider : public ReadableProvider<T>
 {
   protected:
-    class ForwardingEdge : public IEdgeReadable<T>
+    class ForwardingEdge : public edge::IEdgeReadable<T>
     {
       public:
         ForwardingEdge(ForwardingEgressProvider<T>& parent) : m_parent(parent) {}

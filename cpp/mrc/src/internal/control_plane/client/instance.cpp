@@ -23,8 +23,7 @@
 #include "internal/runnable/resources.hpp"
 #include "internal/utils/contains.hpp"
 
-#include "mrc/node/channel_holder.hpp"  // IWYU pragma: keep
-#include "mrc/node/edge_builder.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/runnable/launch_control.hpp"
@@ -48,7 +47,7 @@ namespace mrc::internal::control_plane::client {
 Instance::Instance(Client& client,
                    InstanceID instance_id,
                    resources::PartitionResourceBase& base,
-                   mrc::node::IWritableAcceptor<const protos::StateUpdate>& update_channel) :
+                   mrc::edge::IWritableAcceptor<const protos::StateUpdate>& update_channel) :
   resources::PartitionResourceBase(base),
   m_client(client),
   m_instance_id(instance_id)
@@ -57,7 +56,7 @@ Instance::Instance(Client& client,
         do_handle_state_update(update);
     });
 
-    mrc::node::make_edge(update_channel, *update_handler);
+    mrc::make_edge(update_channel, *update_handler);
 
     m_update_handler =
         runnable().launch_control().prepare_launcher(client.launch_options(), std::move(update_handler))->ignition();

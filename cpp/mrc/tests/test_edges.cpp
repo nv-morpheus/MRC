@@ -20,17 +20,16 @@
 #include "mrc/channel/buffered_channel.hpp"  // IWYU pragma: keep
 #include "mrc/channel/forward.hpp"
 #include "mrc/channel/status.hpp"
-#include "mrc/node/channel_holder.hpp"
-#include "mrc/node/edge_builder.hpp"
-#include "mrc/node/edge_channel.hpp"
+#include "mrc/edge/edge_builder.hpp"
+#include "mrc/edge/edge_channel.hpp"
 #include "mrc/node/generic_source.hpp"
 #include "mrc/node/operators/broadcast.hpp"
 #include "mrc/node/operators/combine_latest.hpp"
 #include "mrc/node/operators/node_component.hpp"
 #include "mrc/node/operators/router.hpp"
-#include "mrc/node/sink_channel.hpp"
+#include "mrc/node/sink_channel_owner.hpp"
 #include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_channel.hpp"
+#include "mrc/node/source_channel_owner.hpp"
 #include "mrc/node/source_properties.hpp"
 
 #include <glog/logging.h>
@@ -60,7 +59,7 @@ using TestEdgesDeathTest = TestEdges;  // NOLINT(readability-identifier-naming)
 namespace mrc::node {
 
 template <typename T>
-class EdgeReadableLambda : public IEdgeReadable<T>
+class EdgeReadableLambda : public edge::IEdgeReadable<T>
 {
   public:
     EdgeReadableLambda(std::function<channel::Status(T&)>&& on_await_read,
@@ -88,7 +87,7 @@ class EdgeReadableLambda : public IEdgeReadable<T>
 };
 
 template <typename T>
-class EdgeWritableLambda : public IEdgeWritable<T>
+class EdgeWritableLambda : public edge::IEdgeWritable<T>
 {
   public:
     EdgeWritableLambda(std::function<channel::Status(T&&)>&& on_await_write,
@@ -116,7 +115,7 @@ class EdgeWritableLambda : public IEdgeWritable<T>
 };
 
 template <typename T>
-class TestSource : public WritableAcceptor<T>, public ReadableProvider<T>, public SourceChannel<T>
+class TestSource : public WritableAcceptor<T>, public ReadableProvider<T>, public SourceChannelOwner<T>
 {
   public:
     TestSource()
@@ -145,8 +144,8 @@ class TestNode : public WritableProvider<T>,
                  public ReadableAcceptor<T>,
                  public WritableAcceptor<T>,
                  public ReadableProvider<T>,
-                 public SinkChannel<T>,
-                 public SourceChannel<T>
+                 public SinkChannelOwner<T>,
+                 public SourceChannelOwner<T>
 {
   public:
     TestNode()
@@ -156,10 +155,10 @@ class TestNode : public WritableProvider<T>,
 
     void set_channel(std::unique_ptr<mrc::channel::Channel<T>> channel)
     {
-        EdgeChannel<T> edge_channel(std::move(channel));
+        edge::EdgeChannel<T> edge_channel(std::move(channel));
 
-        SinkChannel<T>::do_set_channel(edge_channel);
-        SourceChannel<T>::do_set_channel(edge_channel);
+        SinkChannelOwner<T>::do_set_channel(edge_channel);
+        SourceChannelOwner<T>::do_set_channel(edge_channel);
     }
 
     void run()
@@ -178,13 +177,13 @@ class TestNode : public WritableProvider<T>,
 
         VLOG(10) << "Node exited run";
 
-        SinkChannel<T>::release_edge_connection();
-        SourceChannel<T>::release_edge_connection();
+        SinkChannelOwner<T>::release_edge_connection();
+        SourceChannelOwner<T>::release_edge_connection();
     }
 };
 
 template <typename T>
-class TestSink : public WritableProvider<T>, public ReadableAcceptor<T>, public SinkChannel<T>
+class TestSink : public WritableProvider<T>, public ReadableAcceptor<T>, public SinkChannelOwner<T>
 {
   public:
     TestSink()
@@ -220,7 +219,7 @@ class TestQueue : public WritableProvider<T>, public ReadableProvider<T>
 
     void set_channel(std::unique_ptr<mrc::channel::Channel<T>> channel)
     {
-        EdgeChannel<T> edge_channel(std::move(channel));
+        edge::EdgeChannel<T> edge_channel(std::move(channel));
 
         SinkProperties<T>::init_owned_edge(edge_channel.get_writer());
         SourceProperties<T>::init_owned_edge(edge_channel.get_reader());
@@ -317,106 +316,6 @@ class TestRouter : public Router<std::string, int>
     }
 };
 
-// class TestRouter : public WritableProvider<int>
-// {
-//     class UpstreamEdge : public IEdgeWritable<int>, public MultiSourceProperties<std::string, int>
-//     {
-//       public:
-//         UpstreamEdge(TestRouter& parent) : m_parent(parent) {}
-
-//         ~UpstreamEdge() override
-//         {
-//             m_parent.on_complete();
-//         }
-
-//         channel::Status await_write(int&& t) override
-//         {
-//             VLOG(10) << "TestRouter got value: " << t;
-
-//             // Determine key for value
-//             auto key = m_parent.determine_key_for_value(t);
-
-//             return this->get_writable_edge(key)->await_write(std::move(t));
-//         }
-
-//         void add_downstream(std::string key, std::shared_ptr<IEdgeWritable<int>> downstream)
-//         {
-//             this->set_edge(std::move(key), std::move(downstream));
-//         }
-
-//       private:
-//         TestRouter& m_parent;
-//     };
-
-//     class DownstreamEdge : public IWritableAcceptor<int>
-//     {
-//       public:
-//         DownstreamEdge(std::weak_ptr<UpstreamEdge> upstream, std::string key) :
-//           m_upstream(std::move(upstream)),
-//           m_key(std::move(key))
-//         {}
-
-//         void set_ingress(std::shared_ptr<IEdgeWritable<int>> ingress) override
-//         {
-//             // Get a lock to the upstream edge
-//             if (auto upstream = m_upstream.lock())
-//             {
-//                 upstream->add_downstream(m_key, ingress);
-//             }
-//             else
-//             {
-//                 LOG(ERROR) << "Could not set ingress to upstream edge. Upstream edge has been destroyed.";
-//             }
-//         }
-
-//       private:
-//         std::weak_ptr<UpstreamEdge> m_upstream;
-//         std::string m_key;
-//     };
-
-//   public:
-//     TestRouter()
-//     {
-//         auto upstream = std::make_shared<UpstreamEdge>(*this);
-
-//         // Save it to avoid casting
-//         m_upstream = upstream;
-
-//         WritableProvider<int>::init_owned_edge(upstream);
-//     }
-
-//     std::shared_ptr<IWritableAcceptor<int>> get_source(const std::string& key) const
-//     {
-//         auto found = m_downstream.find(key);
-
-//         if (found == m_downstream.end())
-//         {
-//             auto new_source = std::make_shared<DownstreamEdge>(m_upstream, key);
-
-//             const_cast<TestRouter*>(this)->m_downstream[key] = new_source;
-
-//             return new_source;
-//         }
-
-//         return found->second;
-//     }
-
-//     void on_complete()
-//     {
-//         VLOG(10) << "TestRouter completed";
-//     }
-
-//   protected:
-//     std::string determine_key_for_value(const int& t)
-//     {
-//         return "test";
-//     }
-
-//   private:
-//     std::weak_ptr<UpstreamEdge> m_upstream;
-//     std::map<std::string, std::shared_ptr<DownstreamEdge>> m_downstream;
-// };
-
 template <typename T>
 class TestConditional : public ForwardingWritableProvider<T>, public WritableAcceptor<T>
 {
@@ -462,7 +361,7 @@ TEST_F(TestEdgesDeathTest, NodeDestroyedBeforeEdge)
             auto source = std::make_shared<node::TestSource<int>>();
             auto sink   = std::make_shared<node::TestSink<int>>();
 
-            node::make_edge(*source, *sink);
+            mrc::make_edge(*source, *sink);
             sink.reset();
         },
         "");
@@ -473,7 +372,7 @@ TEST_F(TestEdges, SourceToSink)
     auto source = std::make_shared<node::TestSource<int>>();
     auto sink   = std::make_shared<node::TestSink<int>>();
 
-    node::make_edge(*source, *sink);
+    mrc::make_edge(*source, *sink);
 
     source->run();
     sink->run();
@@ -484,7 +383,7 @@ TEST_F(TestEdges, SourceToSinkUpcast)
     auto source = std::make_shared<node::TestSource<int>>();
     auto sink   = std::make_shared<node::TestSink<float>>();
 
-    node::make_edge(*source, *sink);
+    mrc::make_edge(*source, *sink);
 
     source->run();
     sink->run();
@@ -495,7 +394,7 @@ TEST_F(TestEdges, SourceToSinkTypeless)
     auto source = std::make_shared<node::TestSource<int>>();
     auto sink   = std::make_shared<node::TestSink<int>>();
 
-    node::make_edge_typeless(*source, *sink);
+    mrc::make_edge_typeless(*source, *sink);
 
     source->run();
     sink->run();
@@ -507,8 +406,8 @@ TEST_F(TestEdges, SourceToNodeToSink)
     auto node   = std::make_shared<node::TestNode<int>>();
     auto sink   = std::make_shared<node::TestSink<int>>();
 
-    node::make_edge(*source, *node);
-    node::make_edge(*node, *sink);
+    mrc::make_edge(*source, *node);
+    mrc::make_edge(*node, *sink);
 
     source->run();
     node->run();
@@ -522,9 +421,9 @@ TEST_F(TestEdges, SourceToNodeToNodeToSink)
     auto node2  = std::make_shared<node::TestNode<int>>();
     auto sink   = std::make_shared<node::TestSink<int>>();
 
-    node::make_edge(*source, *node1);
-    node::make_edge(*node1, *node2);
-    node::make_edge(*node2, *sink);
+    mrc::make_edge(*source, *node1);
+    mrc::make_edge(*node1, *node2);
+    mrc::make_edge(*node2, *sink);
 
     source->run();
     node1->run();
@@ -538,8 +437,8 @@ TEST_F(TestEdges, SourceToSinkMultiFail)
     auto sink1  = std::make_shared<node::TestSink<int>>();
     auto sink2  = std::make_shared<node::TestSink<int>>();
 
-    node::make_edge(*source, *sink1);
-    EXPECT_THROW(node::make_edge(*source, *sink2), std::runtime_error);
+    mrc::make_edge(*source, *sink1);
+    EXPECT_THROW(mrc::make_edge(*source, *sink2), std::runtime_error);
 
     source.reset();
     sink1.reset();
@@ -551,7 +450,7 @@ TEST_F(TestEdges, SourceToSinkComponent)
     auto source = std::make_shared<node::TestSource<int>>();
     auto sink   = std::make_shared<node::TestSinkComponent<int>>();
 
-    node::make_edge(*source, *sink);
+    mrc::make_edge(*source, *sink);
 
     source->run();
 }
@@ -561,7 +460,7 @@ TEST_F(TestEdges, SourceComponentToSink)
     auto source = std::make_shared<node::TestSourceComponent<int>>();
     auto sink   = std::make_shared<node::TestSink<int>>();
 
-    node::make_edge(*source, *sink);
+    mrc::make_edge(*source, *sink);
 
     sink->run();
 }
@@ -572,8 +471,8 @@ TEST_F(TestEdges, SourceComponentToNodeToSink)
     auto node   = std::make_shared<node::TestNode<int>>();
     auto sink   = std::make_shared<node::TestSink<int>>();
 
-    node::make_edge(*source, *node);
-    node::make_edge(*node, *sink);
+    mrc::make_edge(*source, *node);
+    mrc::make_edge(*node, *sink);
 
     node->run();
     sink->run();
@@ -585,8 +484,8 @@ TEST_F(TestEdges, SourceToNodeComponentToSink)
     auto node   = std::make_shared<node::NodeComponent<int>>();
     auto sink   = std::make_shared<node::TestSink<int>>();
 
-    node::make_edge(*source, *node);
-    node::make_edge(*node, *sink);
+    mrc::make_edge(*source, *node);
+    mrc::make_edge(*node, *sink);
 
     source->run();
     sink->run();
@@ -598,8 +497,8 @@ TEST_F(TestEdges, SourceToNodeToSinkComponent)
     auto node   = std::make_shared<node::TestNode<int>>();
     auto sink   = std::make_shared<node::TestSinkComponent<int>>();
 
-    node::make_edge(*source, *node);
-    node::make_edge(*node, *sink);
+    mrc::make_edge(*source, *node);
+    mrc::make_edge(*node, *sink);
 
     source->run();
     node->run();
@@ -611,8 +510,8 @@ TEST_F(TestEdges, SourceToNodeComponentToSinkComponent)
     auto node   = std::make_shared<node::TestNodeComponent<int>>();
     auto sink   = std::make_shared<node::TestSinkComponent<int>>();
 
-    node::make_edge(*source, *node);
-    node::make_edge(*node, *sink);
+    mrc::make_edge(*source, *node);
+    mrc::make_edge(*node, *sink);
 
     source->run();
 }
@@ -623,8 +522,8 @@ TEST_F(TestEdges, SourceComponentToNodeToSinkComponent)
     auto node   = std::make_shared<node::TestNode<int>>();
     auto sink   = std::make_shared<node::TestSinkComponent<int>>();
 
-    node::make_edge(*source, *node);
-    node::make_edge(*node, *sink);
+    mrc::make_edge(*source, *node);
+    mrc::make_edge(*node, *sink);
 
     node->run();
 }
@@ -635,8 +534,8 @@ TEST_F(TestEdges, SourceToQueueToSink)
     auto queue  = std::make_shared<node::TestQueue<int>>();
     auto sink   = std::make_shared<node::TestSink<int>>();
 
-    node::make_edge(*source, *queue);
-    node::make_edge(*queue, *sink);
+    mrc::make_edge(*source, *queue);
+    mrc::make_edge(*queue, *sink);
 
     source->run();
     sink->run();
@@ -649,9 +548,9 @@ TEST_F(TestEdges, SourceToQueueToNodeToSink)
     auto node   = std::make_shared<node::TestNode<int>>();
     auto sink   = std::make_shared<node::TestSink<int>>();
 
-    node::make_edge(*source, *queue);
-    node::make_edge(*queue, *node);
-    node::make_edge(*node, *sink);
+    mrc::make_edge(*source, *queue);
+    mrc::make_edge(*queue, *node);
+    mrc::make_edge(*node, *sink);
 
     source->run();
     node->run();
@@ -665,9 +564,9 @@ TEST_F(TestEdges, SourceToQueueToMultiSink)
     auto sink1  = std::make_shared<node::TestSink<int>>();
     auto sink2  = std::make_shared<node::TestSink<int>>();
 
-    node::make_edge(*source, *queue);
-    node::make_edge(*queue, *sink1);
-    node::make_edge(*queue, *sink2);
+    mrc::make_edge(*source, *queue);
+    mrc::make_edge(*queue, *sink1);
+    mrc::make_edge(*queue, *sink2);
 
     source->run();
     sink1->run();
@@ -682,10 +581,10 @@ TEST_F(TestEdges, SourceToQueueToDifferentSinks)
     auto node   = std::make_shared<node::TestNode<int>>();
     auto sink2  = std::make_shared<node::TestSink<int>>();
 
-    node::make_edge(*source, *queue);
-    node::make_edge(*queue, *sink1);
-    node::make_edge(*queue, *node);
-    node::make_edge(*node, *sink2);
+    mrc::make_edge(*source, *queue);
+    mrc::make_edge(*queue, *sink1);
+    mrc::make_edge(*queue, *node);
+    mrc::make_edge(*node, *sink2);
 
     source->run();
     node->run();
@@ -700,9 +599,9 @@ TEST_F(TestEdges, SourceToRouterToSinks)
     auto sink1  = std::make_shared<node::TestSink<int>>();
     auto sink2  = std::make_shared<node::TestSink<int>>();
 
-    node::make_edge(*source, *router);
-    node::make_edge(*router->get_source("odd"), *sink1);
-    node::make_edge(*router->get_source("even"), *sink2);
+    mrc::make_edge(*source, *router);
+    mrc::make_edge(*router->get_source("odd"), *sink1);
+    mrc::make_edge(*router->get_source("even"), *sink2);
 
     source->run();
     sink1->run();
@@ -716,9 +615,9 @@ TEST_F(TestEdges, SourceToRouterToDifferentSinks)
     auto sink1  = std::make_shared<node::TestSink<int>>();
     auto sink2  = std::make_shared<node::TestSinkComponent<int>>();
 
-    node::make_edge(*source, *router);
-    node::make_edge(*router->get_source("odd"), *sink1);
-    node::make_edge(*router->get_source("even"), *sink2);
+    mrc::make_edge(*source, *router);
+    mrc::make_edge(*router->get_source("odd"), *sink1);
+    mrc::make_edge(*router->get_source("even"), *sink2);
 
     source->run();
     sink1->run();
@@ -730,8 +629,8 @@ TEST_F(TestEdges, SourceToBroadcastToSink)
     auto broadcast = std::make_shared<node::Broadcast<int>>();
     auto sink      = std::make_shared<node::TestSink<int>>();
 
-    node::make_edge(*source, *broadcast);
-    node::make_edge(*broadcast, *sink);
+    mrc::make_edge(*source, *broadcast);
+    mrc::make_edge(*broadcast, *sink);
 
     source->run();
     sink->run();
@@ -743,8 +642,8 @@ TEST_F(TestEdges, SourceToBroadcastTypelessToSinkSinkFirst)
     auto broadcast = std::make_shared<node::BroadcastTypeless>();
     auto sink      = std::make_shared<node::TestSink<int>>();
 
-    node::make_edge(*broadcast, *sink);
-    node::make_edge(*source, *broadcast);
+    mrc::make_edge(*broadcast, *sink);
+    mrc::make_edge(*source, *broadcast);
 
     source->run();
     sink->run();
@@ -756,8 +655,8 @@ TEST_F(TestEdges, SourceToBroadcastTypelessToSinkSourceFirst)
     auto broadcast = std::make_shared<node::BroadcastTypeless>();
     auto sink      = std::make_shared<node::TestSink<int>>();
 
-    node::make_edge(*source, *broadcast);
-    node::make_edge(*broadcast, *sink);
+    mrc::make_edge(*source, *broadcast);
+    mrc::make_edge(*broadcast, *sink);
 
     source->run();
     sink->run();
@@ -770,9 +669,9 @@ TEST_F(TestEdges, SourceToMultipleBroadcastTypelessToSinkSinkFirst)
     auto broadcast2 = std::make_shared<node::BroadcastTypeless>();
     auto sink       = std::make_shared<node::TestSink<int>>();
 
-    node::make_edge(*broadcast2, *sink);
-    node::make_edge(*broadcast1, *broadcast2);
-    node::make_edge(*source, *broadcast1);
+    mrc::make_edge(*broadcast2, *sink);
+    mrc::make_edge(*broadcast1, *broadcast2);
+    mrc::make_edge(*source, *broadcast1);
 
     source->run();
     sink->run();
@@ -785,9 +684,9 @@ TEST_F(TestEdges, SourceToMultipleBroadcastTypelessToSinkSourceFirst)
     auto broadcast2 = std::make_shared<node::BroadcastTypeless>();
     auto sink       = std::make_shared<node::TestSink<int>>();
 
-    node::make_edge(*source, *broadcast1);
-    node::make_edge(*broadcast1, *broadcast2);
-    node::make_edge(*broadcast2, *sink);
+    mrc::make_edge(*source, *broadcast1);
+    mrc::make_edge(*broadcast1, *broadcast2);
+    mrc::make_edge(*broadcast2, *sink);
 
     source->run();
     sink->run();
@@ -802,11 +701,11 @@ TEST_F(TestEdges, MultiSourceToMultipleBroadcastTypelessToMultiSink)
     auto sink1      = std::make_shared<node::TestSink<int>>();
     auto sink2      = std::make_shared<node::TestSink<int>>();
 
-    node::make_edge(*source1, *broadcast1);
-    node::make_edge(*source2, *broadcast1);
-    node::make_edge(*broadcast1, *broadcast2);
-    node::make_edge(*broadcast2, *sink1);
-    node::make_edge(*broadcast2, *sink2);
+    mrc::make_edge(*source1, *broadcast1);
+    mrc::make_edge(*source2, *broadcast1);
+    mrc::make_edge(*broadcast1, *broadcast2);
+    mrc::make_edge(*broadcast2, *sink1);
+    mrc::make_edge(*broadcast2, *sink2);
 
     source1->run();
     source2->run();
@@ -821,9 +720,9 @@ TEST_F(TestEdges, SourceToBroadcastToMultiSink)
     auto sink1     = std::make_shared<node::TestSink<int>>();
     auto sink2     = std::make_shared<node::TestSink<int>>();
 
-    node::make_edge(*source, *broadcast);
-    node::make_edge(*broadcast, *sink1);
-    node::make_edge(*broadcast, *sink2);
+    mrc::make_edge(*source, *broadcast);
+    mrc::make_edge(*broadcast, *sink1);
+    mrc::make_edge(*broadcast, *sink2);
 
     source->run();
 }
@@ -835,9 +734,9 @@ TEST_F(TestEdges, SourceToBroadcastToDifferentSinks)
     auto sink1     = std::make_shared<node::TestSink<int>>();
     auto sink2     = std::make_shared<node::TestSinkComponent<int>>();
 
-    node::make_edge(*source, *broadcast);
-    node::make_edge(*broadcast, *sink1);
-    node::make_edge(*broadcast, *sink2);
+    mrc::make_edge(*source, *broadcast);
+    mrc::make_edge(*broadcast, *sink1);
+    mrc::make_edge(*broadcast, *sink2);
 
     source->run();
 }
@@ -849,9 +748,9 @@ TEST_F(TestEdges, SourceToBroadcastToSinkComponents)
     auto sink1     = std::make_shared<node::TestSinkComponent<int>>();
     auto sink2     = std::make_shared<node::TestSinkComponent<int>>();
 
-    node::make_edge(*source, *broadcast);
-    node::make_edge(*broadcast, *sink1);
-    node::make_edge(*broadcast, *sink2);
+    mrc::make_edge(*source, *broadcast);
+    mrc::make_edge(*broadcast, *sink1);
+    mrc::make_edge(*broadcast, *sink2);
 
     source->run();
 }
@@ -861,7 +760,7 @@ TEST_F(TestEdges, SourceComponentDoubleToSinkFloat)
     auto source = std::make_shared<node::TestSourceComponent<double>>();
     auto sink   = std::make_shared<node::TestSink<float>>();
 
-    node::make_edge(*source, *sink);
+    mrc::make_edge(*source, *sink);
 
     sink->run();
 }
@@ -875,9 +774,9 @@ TEST_F(TestEdges, CombineLatest)
 
     auto sink = std::make_shared<node::TestSink<std::tuple<int, float>>>();
 
-    node::make_edge(*source1, *combine_latest->get_sink<0>());
-    node::make_edge(*source2, *combine_latest->get_sink<1>());
-    node::make_edge(*combine_latest, *sink);
+    mrc::make_edge(*source1, *combine_latest->get_sink<0>());
+    mrc::make_edge(*source2, *combine_latest->get_sink<1>());
+    mrc::make_edge(*combine_latest, *sink);
 
     source1->run();
     source2->run();

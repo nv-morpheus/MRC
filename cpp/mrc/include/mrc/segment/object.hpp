@@ -18,9 +18,8 @@
 #pragma once
 
 #include "mrc/channel/ingress.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/node/channel_holder.hpp"
-#include "mrc/node/edge_builder.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
@@ -48,36 +47,27 @@ struct ObjectProperties
     virtual std::type_index sink_type(bool ignore_holder = false) const   = 0;
     virtual std::type_index source_type(bool ignore_holder = false) const = 0;
 
-    virtual bool is_ingress_acceptor() const = 0;
-    virtual bool is_ingress_provider() const = 0;
-    virtual bool is_egress_acceptor() const  = 0;
-    virtual bool is_egress_provider() const  = 0;
+    virtual bool is_writable_acceptor() const = 0;
+    virtual bool is_writable_provider() const = 0;
+    virtual bool is_readable_acceptor() const = 0;
+    virtual bool is_readable_provider() const = 0;
 
-    // virtual node::SinkPropertiesBase& sink_base() = 0;
-    // virtual node::SourcePropertiesBase& source_base() = 0;
-
-    virtual node::IWritableAcceptorBase& ingress_acceptor_base() = 0;
-    virtual node::IWritableProviderBase& ingress_provider_base() = 0;
-    virtual node::IReadableAcceptorBase& egress_acceptor_base()  = 0;
-    virtual node::IReadableProviderBase& egress_provider_base()  = 0;
-
-    // template <typename T>
-    // node::SinkProperties<T>& sink_typed();
-
-    // template <typename T>
-    // node::SourceProperties<T>& source_typed();
+    virtual edge::IWritableAcceptorBase& writable_acceptor_base() = 0;
+    virtual edge::IWritableProviderBase& writable_provider_base() = 0;
+    virtual edge::IReadableAcceptorBase& readable_acceptor_base() = 0;
+    virtual edge::IReadableProviderBase& readable_provider_base() = 0;
 
     template <typename T>
-    node::IWritableAcceptor<T>& ingress_acceptor_typed();
+    edge::IWritableAcceptor<T>& writable_acceptor_typed();
 
     template <typename T>
-    node::IReadableProvider<T>& egress_provider_typed();
+    edge::IReadableProvider<T>& readable_provider_typed();
 
     template <typename T>
-    node::IWritableProvider<T>& ingress_provider_typed();
+    edge::IWritableProvider<T>& writable_provider_typed();
 
     template <typename T>
-    node::IReadableAcceptor<T>& egress_acceptor_typed();
+    edge::IReadableAcceptor<T>& readable_acceptor_typed();
 
     virtual bool is_runnable() const = 0;
 
@@ -88,12 +78,12 @@ struct ObjectProperties
 inline ObjectProperties::~ObjectProperties() = default;
 
 template <typename T>
-node::IWritableAcceptor<T>& ObjectProperties::ingress_acceptor_typed()
+edge::IWritableAcceptor<T>& ObjectProperties::writable_acceptor_typed()
 {
-    auto& base             = this->ingress_acceptor_base();
-    auto* ingress_acceptor = dynamic_cast<node::IWritableAcceptor<T>*>(&base);
+    auto& base              = this->writable_acceptor_base();
+    auto* writable_acceptor = dynamic_cast<edge::IWritableAcceptor<T>*>(&base);
 
-    if (ingress_acceptor == nullptr)
+    if (writable_acceptor == nullptr)
     {
         LOG(ERROR) << "Failed to cast " << type_name() << " to "
                    << "IWritableAcceptor<" << std::string(mrc::type_name<T>()) << ">"
@@ -101,16 +91,16 @@ node::IWritableAcceptor<T>& ObjectProperties::ingress_acceptor_typed()
         throw exceptions::MrcRuntimeError("Failed to cast Sink to requested IWritableAcceptor<T>");
     }
 
-    return *ingress_acceptor;
+    return *writable_acceptor;
 }
 
 template <typename T>
-node::IWritableProvider<T>& ObjectProperties::ingress_provider_typed()
+edge::IWritableProvider<T>& ObjectProperties::writable_provider_typed()
 {
-    auto& base             = this->ingress_provider_base();
-    auto* ingress_provider = dynamic_cast<node::IWritableProvider<T>*>(&base);
+    auto& base              = this->writable_provider_base();
+    auto* writable_provider = dynamic_cast<edge::IWritableProvider<T>*>(&base);
 
-    if (ingress_provider == nullptr)
+    if (writable_provider == nullptr)
     {
         LOG(ERROR) << "Failed to cast " << type_name() << " to "
                    << "IWritableProvider<" << std::string(mrc::type_name<T>()) << ">"
@@ -118,16 +108,16 @@ node::IWritableProvider<T>& ObjectProperties::ingress_provider_typed()
         throw exceptions::MrcRuntimeError("Failed to cast Sink to requested IWritableProvider<T>");
     }
 
-    return *ingress_provider;
+    return *writable_provider;
 }
 
 template <typename T>
-node::IReadableAcceptor<T>& ObjectProperties::egress_acceptor_typed()
+edge::IReadableAcceptor<T>& ObjectProperties::readable_acceptor_typed()
 {
-    auto& base            = this->egress_acceptor_base();
-    auto* egress_acceptor = dynamic_cast<node::IReadableAcceptor<T>*>(&base);
+    auto& base              = this->readable_acceptor_base();
+    auto* readable_acceptor = dynamic_cast<edge::IReadableAcceptor<T>*>(&base);
 
-    if (egress_acceptor == nullptr)
+    if (readable_acceptor == nullptr)
     {
         LOG(ERROR) << "Failed to cast " << type_name() << " to "
                    << "IReadableAcceptor<" << std::string(mrc::type_name<T>()) << ">"
@@ -135,16 +125,16 @@ node::IReadableAcceptor<T>& ObjectProperties::egress_acceptor_typed()
         throw exceptions::MrcRuntimeError("Failed to cast Sink to requested IReadableAcceptor<T>");
     }
 
-    return *egress_acceptor;
+    return *readable_acceptor;
 }
 
 template <typename T>
-node::IReadableProvider<T>& ObjectProperties::egress_provider_typed()
+edge::IReadableProvider<T>& ObjectProperties::readable_provider_typed()
 {
-    auto& base            = this->egress_provider_base();
-    auto* egress_provider = dynamic_cast<node::IReadableProvider<T>*>(&base);
+    auto& base              = this->readable_provider_base();
+    auto* readable_provider = dynamic_cast<edge::IReadableProvider<T>*>(&base);
 
-    if (egress_provider == nullptr)
+    if (readable_provider == nullptr)
     {
         LOG(ERROR) << "Failed to cast " << type_name() << " to "
                    << "IReadableProvider<" << std::string(mrc::type_name<T>()) << ">"
@@ -152,7 +142,7 @@ node::IReadableProvider<T>& ObjectProperties::egress_provider_typed()
         throw exceptions::MrcRuntimeError("Failed to cast Sink to requested IReadableProvider<T>");
     }
 
-    return *egress_provider;
+    return *readable_provider;
 }
 
 // Object
@@ -172,15 +162,15 @@ class Object : public virtual ObjectProperties
     std::type_index sink_type(bool ignore_holder) const final;
     std::type_index source_type(bool ignore_holder) const final;
 
-    bool is_ingress_acceptor() const final;
-    bool is_ingress_provider() const final;
-    bool is_egress_acceptor() const final;
-    bool is_egress_provider() const final;
+    bool is_writable_acceptor() const final;
+    bool is_writable_provider() const final;
+    bool is_readable_acceptor() const final;
+    bool is_readable_provider() const final;
 
-    node::IWritableAcceptorBase& ingress_acceptor_base() final;
-    node::IWritableProviderBase& ingress_provider_base() final;
-    node::IReadableAcceptorBase& egress_acceptor_base() final;
-    node::IReadableProviderBase& egress_provider_base() final;
+    edge::IWritableAcceptorBase& writable_acceptor_base() final;
+    edge::IWritableProviderBase& writable_provider_base() final;
+    edge::IReadableAcceptorBase& readable_acceptor_base() final;
+    edge::IReadableProviderBase& readable_provider_base() final;
 
     bool is_runnable() const final
     {
@@ -224,8 +214,7 @@ ObjectT& Object<ObjectT>::object()
     if (node == nullptr)
     {
         LOG(ERROR) << "Error accessing the Object API; Nodes are moved from the Segment API to the Executor "
-                      "when the "
-                      "pipeline is started.";
+                      "when the pipeline is started.";
         throw exceptions::MrcRuntimeError("Object API is unavailable - expected if the Pipeline is running.");
     }
     return *node;
@@ -286,81 +275,81 @@ std::type_index Object<ObjectT>::source_type(bool ignore_holder) const
 }
 
 template <typename ObjectT>
-bool Object<ObjectT>::is_ingress_acceptor() const
+bool Object<ObjectT>::is_writable_acceptor() const
 {
-    return std::is_base_of_v<node::IWritableAcceptorBase, ObjectT>;
+    return std::is_base_of_v<edge::IWritableAcceptorBase, ObjectT>;
 }
 
 template <typename ObjectT>
-bool Object<ObjectT>::is_ingress_provider() const
+bool Object<ObjectT>::is_writable_provider() const
 {
-    return std::is_base_of_v<node::IWritableProviderBase, ObjectT>;
+    return std::is_base_of_v<edge::IWritableProviderBase, ObjectT>;
 }
 
 template <typename ObjectT>
-bool Object<ObjectT>::is_egress_acceptor() const
+bool Object<ObjectT>::is_readable_acceptor() const
 {
-    return std::is_base_of_v<node::IReadableAcceptorBase, ObjectT>;
+    return std::is_base_of_v<edge::IReadableAcceptorBase, ObjectT>;
 }
 
 template <typename ObjectT>
-bool Object<ObjectT>::is_egress_provider() const
+bool Object<ObjectT>::is_readable_provider() const
 {
-    return std::is_base_of_v<node::IReadableProviderBase, ObjectT>;
+    return std::is_base_of_v<edge::IReadableProviderBase, ObjectT>;
 }
 
 template <typename ObjectT>
-node::IWritableAcceptorBase& Object<ObjectT>::ingress_acceptor_base()
+edge::IWritableAcceptorBase& Object<ObjectT>::writable_acceptor_base()
 {
-    if constexpr (!std::is_base_of_v<node::IWritableAcceptorBase, ObjectT>)
+    if constexpr (!std::is_base_of_v<edge::IWritableAcceptorBase, ObjectT>)
     {
         LOG(ERROR) << type_name() << " is not a IIngressAcceptorBase";
         throw exceptions::MrcRuntimeError("Object is not a IIngressAcceptorBase");
     }
 
-    auto* base = dynamic_cast<node::IWritableAcceptorBase*>(get_object());
+    auto* base = dynamic_cast<edge::IWritableAcceptorBase*>(get_object());
     CHECK(base);
     return *base;
 }
 
 template <typename ObjectT>
-node::IWritableProviderBase& Object<ObjectT>::ingress_provider_base()
+edge::IWritableProviderBase& Object<ObjectT>::writable_provider_base()
 {
-    if constexpr (!std::is_base_of_v<node::IWritableProviderBase, ObjectT>)
+    if constexpr (!std::is_base_of_v<edge::IWritableProviderBase, ObjectT>)
     {
         LOG(ERROR) << type_name() << " is not a IIngressProviderBase";
         throw exceptions::MrcRuntimeError("Object is not a IIngressProviderBase");
     }
 
-    auto* base = dynamic_cast<node::IWritableProviderBase*>(get_object());
+    auto* base = dynamic_cast<edge::IWritableProviderBase*>(get_object());
     CHECK(base);
     return *base;
 }
 
 template <typename ObjectT>
-node::IReadableAcceptorBase& Object<ObjectT>::egress_acceptor_base()
+edge::IReadableAcceptorBase& Object<ObjectT>::readable_acceptor_base()
 {
-    if constexpr (!std::is_base_of_v<node::IReadableAcceptorBase, ObjectT>)
+    if constexpr (!std::is_base_of_v<edge::IReadableAcceptorBase, ObjectT>)
     {
         LOG(ERROR) << type_name() << " is not a IEgressAcceptorBase";
         throw exceptions::MrcRuntimeError("Object is not a IEgressAcceptorBase");
     }
 
-    auto* base = dynamic_cast<node::IReadableAcceptorBase*>(get_object());
+    auto* base = dynamic_cast<edge::IReadableAcceptorBase*>(get_object());
     CHECK(base);
     return *base;
 }
 
 template <typename ObjectT>
-node::IReadableProviderBase& Object<ObjectT>::egress_provider_base()
+edge::IReadableProviderBase& Object<ObjectT>::readable_provider_base()
 {
-    if constexpr (!std::is_base_of_v<node::IReadableProviderBase, ObjectT>)
+    if constexpr (!std::is_base_of_v<edge::IReadableProviderBase, ObjectT>)
     {
         LOG(ERROR) << type_name() << " is not a IEgressProviderBase";
         throw exceptions::MrcRuntimeError("Object is not a IEgressProviderBase");
     }
 
-    auto* base = dynamic_cast<node::IReadableProviderBase*>(get_object());
+    auto* base = dynamic_cast<edge::IReadableProviderBase*>(get_object());
     CHECK(base);
     return *base;
 }

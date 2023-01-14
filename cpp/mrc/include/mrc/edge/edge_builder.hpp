@@ -18,9 +18,11 @@
 #pragma once
 
 #include "mrc/channel/status.hpp"
-#include "mrc/node/channel_holder.hpp"
-#include "mrc/node/deferred_edge.hpp"
-#include "mrc/node/forward.hpp"  // IWYU pragma: keep
+#include "mrc/edge/deferred_edge.hpp"
+#include "mrc/edge/edge_holder.hpp"
+#include "mrc/edge/edge_readable.hpp"
+#include "mrc/edge/edge_writable.hpp"
+#include "mrc/edge/forward.hpp"  // IWYU pragma: keep
 #include "mrc/type_traits.hpp"
 #include "mrc/utils/type_utils.hpp"
 
@@ -33,10 +35,10 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::node {
+namespace mrc::edge {
 
-// IWYU pragma: no_forward_declare mrc::node::ConvertingEdgeReadable
-// IWYU pragma: no_forward_declare mrc::node::ConvertingEdgeWritable
+// IWYU pragma: no_forward_declare mrc::edge::ConvertingEdgeReadable
+// IWYU pragma: no_forward_declare mrc::edge::ConvertingEdgeWritable
 
 struct EdgeBuilder final
 {
@@ -181,77 +183,6 @@ struct EdgeBuilder final
                                                                std::shared_ptr<ReadableEdgeHandle> egress);
 };
 
-template <typename SourceT, typename SinkT>
-void make_edge(SourceT& source, SinkT& sink)
-{
-    using source_full_t = SourceT;
-    using sink_full_t   = SinkT;
-
-    if constexpr (is_base_of_template<IWritableAcceptor, source_full_t>::value &&
-                  is_base_of_template<IWritableProvider, sink_full_t>::value)
-    {
-        // Call the typed version for ingress provider/acceptor
-        EdgeBuilder::make_edge_writable(source, sink);
-    }
-    else if constexpr (is_base_of_template<IReadableProvider, source_full_t>::value &&
-                       is_base_of_template<IReadableAcceptor, sink_full_t>::value)
-    {
-        // Call the typed version for egress provider/acceptor
-        EdgeBuilder::make_edge_readable(source, sink);
-    }
-    else if constexpr (std::is_base_of_v<IWritableAcceptorBase, source_full_t> &&
-                       std::is_base_of_v<IWritableProviderBase, sink_full_t>)
-    {
-        EdgeBuilder::make_edge_writable_typeless(source, sink);
-    }
-    else if constexpr (std::is_base_of_v<IReadableProviderBase, source_full_t> &&
-                       std::is_base_of_v<IReadableAcceptorBase, sink_full_t>)
-    {
-        EdgeBuilder::make_edge_readable_typeless(source, sink);
-    }
-    else
-    {
-        static_assert(!sizeof(source_full_t),
-                      "Arguments to make_edge were incorrect. Ensure you are providing either "
-                      "WritableAcceptor->WritableProvider or ReadableProvider->ReadableAcceptor");
-    }
-}
-
-template <typename SourceT, typename SinkT>
-void make_edge_typeless(SourceT& source, SinkT& sink)
-{
-    using source_full_t = SourceT;
-    using sink_full_t   = SinkT;
-
-    if constexpr (std::is_base_of_v<IWritableAcceptorBase, source_full_t> &&
-                  std::is_base_of_v<IWritableProviderBase, sink_full_t>)
-    {
-        EdgeBuilder::make_edge_writable_typeless(source, sink);
-    }
-    else if constexpr (std::is_base_of_v<IReadableProviderBase, source_full_t> &&
-                       std::is_base_of_v<IReadableAcceptorBase, sink_full_t>)
-    {
-        EdgeBuilder::make_edge_readable_typeless(source, sink);
-    }
-    else
-    {
-        static_assert(!sizeof(source_full_t),
-                      "Arguments to make_edge were incorrect. Ensure you are providing either "
-                      "WritableAcceptor->WritableProvider or ReadableProvider->ReadableAcceptor");
-    }
-}
-
-// template <typename SourceT,
-//           typename SinkT,
-//           typename = std::enable_if_t<is_base_of_template<IWritableAcceptor, SourceT>::value &&
-//                                       is_base_of_template<IWritableProvider, SinkT>::value>>
-// SinkT& operator|(SourceT& source, SinkT& sink)
-// {
-//     make_edge(source, sink);
-
-//     return sink;
-// }
-
 template <typename T>
 class DeferredWritableMultiEdge : public MultiEdgeHolder<std::size_t, T>,
                                   public IEdgeWritable<T>,
@@ -366,7 +297,7 @@ std::shared_ptr<WritableEdgeHandle> EdgeBuilder::adapt_writable_edge(std::shared
     if (ingress->is_deferred())
     {
         // Cast to a defferred ingress object
-        auto deferred_ingress = std::dynamic_pointer_cast<DeferredWritableHandleObj>(ingress);
+        auto deferred_ingress = std::dynamic_pointer_cast<DeferredWritableEdgeHandle>(ingress);
 
         CHECK(deferred_ingress) << "Deferred ingress object must derive from DeferredIngressHandleObj";
 
@@ -425,4 +356,79 @@ std::shared_ptr<ReadableEdgeHandle> EdgeBuilder::adapt_readable_edge(std::shared
     return adapted_egress;
 }
 
-}  // namespace mrc::node
+}  // namespace mrc::edge
+
+// Put make edge in the mrc namespace since it is used so often
+namespace mrc {
+
+template <typename SourceT, typename SinkT>
+void make_edge(SourceT& source, SinkT& sink)
+{
+    using source_full_t = SourceT;
+    using sink_full_t   = SinkT;
+
+    if constexpr (is_base_of_template<edge::IWritableAcceptor, source_full_t>::value &&
+                  is_base_of_template<edge::IWritableProvider, sink_full_t>::value)
+    {
+        // Call the typed version for ingress provider/acceptor
+        edge::EdgeBuilder::make_edge_writable(source, sink);
+    }
+    else if constexpr (is_base_of_template<edge::IReadableProvider, source_full_t>::value &&
+                       is_base_of_template<edge::IReadableAcceptor, sink_full_t>::value)
+    {
+        // Call the typed version for egress provider/acceptor
+        edge::EdgeBuilder::make_edge_readable(source, sink);
+    }
+    else if constexpr (std::is_base_of_v<edge::IWritableAcceptorBase, source_full_t> &&
+                       std::is_base_of_v<edge::IWritableProviderBase, sink_full_t>)
+    {
+        edge::EdgeBuilder::make_edge_writable_typeless(source, sink);
+    }
+    else if constexpr (std::is_base_of_v<edge::IReadableProviderBase, source_full_t> &&
+                       std::is_base_of_v<edge::IReadableAcceptorBase, sink_full_t>)
+    {
+        edge::EdgeBuilder::make_edge_readable_typeless(source, sink);
+    }
+    else
+    {
+        static_assert(!sizeof(source_full_t),
+                      "Arguments to make_edge were incorrect. Ensure you are providing either "
+                      "WritableAcceptor->WritableProvider or ReadableProvider->ReadableAcceptor");
+    }
+}
+
+template <typename SourceT, typename SinkT>
+void make_edge_typeless(SourceT& source, SinkT& sink)
+{
+    using source_full_t = SourceT;
+    using sink_full_t   = SinkT;
+
+    if constexpr (std::is_base_of_v<edge::IWritableAcceptorBase, source_full_t> &&
+                  std::is_base_of_v<edge::IWritableProviderBase, sink_full_t>)
+    {
+        edge::EdgeBuilder::make_edge_writable_typeless(source, sink);
+    }
+    else if constexpr (std::is_base_of_v<edge::IReadableProviderBase, source_full_t> &&
+                       std::is_base_of_v<edge::IReadableAcceptorBase, sink_full_t>)
+    {
+        edge::EdgeBuilder::make_edge_readable_typeless(source, sink);
+    }
+    else
+    {
+        static_assert(!sizeof(source_full_t),
+                      "Arguments to make_edge were incorrect. Ensure you are providing either "
+                      "WritableAcceptor->WritableProvider or ReadableProvider->ReadableAcceptor");
+    }
+}
+
+// template <typename SourceT,
+//           typename SinkT,
+//           typename = std::enable_if_t<is_base_of_template<IWritableAcceptor, SourceT>::value &&
+//                                       is_base_of_template<IWritableProvider, SinkT>::value>>
+// SinkT& operator|(SourceT& source, SinkT& sink)
+// {
+//     make_edge(source, sink);
+
+//     return sink;
+// }
+}  // namespace mrc

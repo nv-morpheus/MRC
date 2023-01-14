@@ -18,10 +18,9 @@
 #pragma once
 
 #include "mrc/benchmarking/trace_statistics.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/engine/segment/ibuilder.hpp"  // IWYU pragma: export
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/node/channel_holder.hpp"
-#include "mrc/node/edge_builder.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
@@ -250,7 +249,7 @@ class Builder final
     void make_edge(std::shared_ptr<Object<SourceNodeTypeT>> source, std::shared_ptr<Object<SinkNodeTypeT>> sink)
     {
         DVLOG(10) << "forming segment edge between two segment objects";
-        node::make_edge(source->object(), sink->object());
+        mrc::make_edge(source->object(), sink->object());
     }
 
     /**
@@ -266,22 +265,22 @@ class Builder final
     template <typename SourceNodeTypeT>
     void make_edge(std::shared_ptr<Object<SourceNodeTypeT>>& source, std::shared_ptr<segment::ObjectProperties> sink)
     {
-        if constexpr (is_base_of_template<node::IWritableAcceptor, SourceNodeTypeT>::value)
+        if constexpr (is_base_of_template<edge::IWritableAcceptor, SourceNodeTypeT>::value)
         {
-            if (sink->is_ingress_provider())
+            if (sink->is_writable_provider())
             {
-                node::make_edge(source->object(),
-                                sink->template ingress_provider_typed<typename SourceNodeTypeT::source_type_t>());
+                mrc::make_edge(source->object(),
+                               sink->template writable_provider_typed<typename SourceNodeTypeT::source_type_t>());
                 return;
             }
         }
 
-        if constexpr (is_base_of_template<node::IReadableProvider, SourceNodeTypeT>::value)
+        if constexpr (is_base_of_template<edge::IReadableProvider, SourceNodeTypeT>::value)
         {
-            if (sink->is_egress_acceptor())
+            if (sink->is_readable_acceptor())
             {
-                node::make_edge(source->object(),
-                                sink->template egress_acceptor_typed<typename SourceNodeTypeT::source_type_t>());
+                mrc::make_edge(source->object(),
+                               sink->template readable_acceptor_typed<typename SourceNodeTypeT::source_type_t>());
                 return;
             }
         }
@@ -302,22 +301,22 @@ class Builder final
     template <typename SinkNodeTypeT>
     void make_edge(std::shared_ptr<segment::ObjectProperties> source, std::shared_ptr<Object<SinkNodeTypeT>>& sink)
     {
-        if constexpr (is_base_of_template<node::IWritableProvider, SinkNodeTypeT>::value)
+        if constexpr (is_base_of_template<edge::IWritableProvider, SinkNodeTypeT>::value)
         {
-            if (source->is_ingress_acceptor())
+            if (source->is_writable_acceptor())
             {
-                node::make_edge(source->template ingress_acceptor_typed<typename SinkNodeTypeT::sink_type_t>(),
-                                sink->object());
+                mrc::make_edge(source->template writable_acceptor_typed<typename SinkNodeTypeT::sink_type_t>(),
+                               sink->object());
                 return;
             }
         }
 
-        if constexpr (is_base_of_template<node::IReadableAcceptor, SinkNodeTypeT>::value)
+        if constexpr (is_base_of_template<edge::IReadableAcceptor, SinkNodeTypeT>::value)
         {
-            if (source->is_egress_provider())
+            if (source->is_readable_provider())
             {
-                node::make_edge(source->template egress_provider_typed<typename SinkNodeTypeT::sink_type_t>(),
-                                sink->object());
+                mrc::make_edge(source->template readable_provider_typed<typename SinkNodeTypeT::sink_type_t>(),
+                               sink->object());
                 return;
             }
         }
@@ -343,17 +342,17 @@ class Builder final
     template <typename SourceNodeTypeT, typename SinkNodeTypeT = SourceNodeTypeT>
     void make_dynamic_edge(segment::ObjectProperties& source, segment::ObjectProperties& sink)
     {
-        if (source.is_ingress_acceptor() && sink.is_ingress_provider())
+        if (source.is_writable_acceptor() && sink.is_writable_provider())
         {
-            node::make_edge(source.template ingress_acceptor_typed<SourceNodeTypeT>(),
-                            sink.template ingress_provider_typed<SinkNodeTypeT>());
+            mrc::make_edge(source.template writable_acceptor_typed<SourceNodeTypeT>(),
+                           sink.template writable_provider_typed<SinkNodeTypeT>());
             return;
         }
 
-        if (source.is_egress_provider() && sink.is_egress_acceptor())
+        if (source.is_readable_provider() && sink.is_readable_acceptor())
         {
-            node::make_edge(source.template egress_provider_typed<SourceNodeTypeT>(),
-                            sink.template egress_acceptor_typed<SinkNodeTypeT>());
+            mrc::make_edge(source.template readable_provider_typed<SourceNodeTypeT>(),
+                           sink.template readable_acceptor_typed<SinkNodeTypeT>());
             return;
         }
 

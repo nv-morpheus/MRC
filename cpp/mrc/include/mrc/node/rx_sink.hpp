@@ -24,13 +24,12 @@
 #include "mrc/core/utils.hpp"
 #include "mrc/core/watcher.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/node/channel_holder.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/node/rx_prologue_tap.hpp"
 #include "mrc/node/rx_runnable.hpp"
 #include "mrc/node/rx_sink_base.hpp"
 #include "mrc/node/rx_subscribable.hpp"
-#include "mrc/node/sink_channel.hpp"
+#include "mrc/node/sink_channel_owner.hpp"
 #include "mrc/utils/type_utils.hpp"
 
 #include <glog/logging.h>
@@ -45,7 +44,7 @@
 namespace mrc::node {
 
 template <typename T>
-class EdgeRxObserver : public IEdgeWritable<T>
+class EdgeRxObserver : public edge::IEdgeWritable<T>
 {
   public:
     using observer_t = rxcpp::observer<T>;

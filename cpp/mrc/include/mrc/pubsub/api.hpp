@@ -20,11 +20,11 @@
 #include "mrc/codable/api.hpp"
 #include "mrc/codable/encoded_object.hpp"
 #include "mrc/control_plane/api.hpp"
-#include "mrc/node/sink_channel.hpp"
+#include "mrc/node/sink_channel_owner.hpp"
 #include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_channel.hpp"
+#include "mrc/node/source_channel_owner.hpp"
 #include "mrc/node/source_properties.hpp"
-#include "mrc/node/writable_subject.hpp"
+#include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
 
 #include <string>

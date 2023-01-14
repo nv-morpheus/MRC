@@ -27,7 +27,7 @@
 #include "mrc/node/forward.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_sink_base.hpp"
-#include "mrc/node/sink_channel.hpp"
+#include "mrc/node/sink_channel_owner.hpp"
 #include "mrc/utils/type_utils.hpp"
 
 #include <glog/logging.h>

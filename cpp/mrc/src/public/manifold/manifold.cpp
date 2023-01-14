@@ -17,7 +17,6 @@
 
 #include "mrc/manifold/manifold.hpp"
 
-#include "mrc/node/channel_holder.hpp"  // IWYU pragma: keep
 #include "mrc/segment/utils.hpp"
 #include "mrc/types.hpp"
 
@@ -49,7 +48,7 @@ const std::string& Manifold::info() const
     return m_info;
 }
 
-void Manifold::add_input(const SegmentAddress& address, node::IWritableAcceptorBase* input_source)
+void Manifold::add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source)
 {
     DVLOG(3) << "manifold " << this->port_name() << ": connecting to upstream segment " << segment::info(address);
     do_add_input(address, input_source);
@@ -57,7 +56,7 @@ void Manifold::add_input(const SegmentAddress& address, node::IWritableAcceptorB
               << segment::info(address);
 }
 
-void Manifold::add_output(const SegmentAddress& address, node::IWritableProviderBase* output_sink)
+void Manifold::add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink)
 {
     DVLOG(3) << "manifold " << this->port_name() << ": connecting to downstream segment " << segment::info(address);
     do_add_output(address, output_sink);

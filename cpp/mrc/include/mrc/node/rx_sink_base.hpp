@@ -24,9 +24,8 @@
 #include "mrc/core/utils.hpp"
 #include "mrc/core/watcher.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/node/channel_holder.hpp"
 #include "mrc/node/forward.hpp"
-#include "mrc/node/sink_channel.hpp"
+#include "mrc/node/sink_channel_owner.hpp"
 #include "mrc/utils/type_utils.hpp"
 
 #include <glog/logging.h>
@@ -41,7 +40,7 @@
 namespace mrc::node {
 
 template <typename T>
-class RxSinkBase : public WritableProvider<T>, public ReadableAcceptor<T>, public SinkChannel<T>, private Watchable
+class RxSinkBase : public WritableProvider<T>, public ReadableAcceptor<T>, public SinkChannelOwner<T>, private Watchable
 {
   public:
     void sink_add_watcher(std::shared_ptr<WatcherInterface> watcher);
@@ -54,9 +53,6 @@ class RxSinkBase : public WritableProvider<T>, public ReadableAcceptor<T>, publi
     const rxcpp::observable<T>& observable() const;
 
   private:
-    // // the following methods are moved to private from their original scopes to prevent access from deriving classes
-    // using SinkChannel<T>::egress;
-
     // this is our channel reader progress engine
     void progress_engine(rxcpp::subscriber<T>& s);
 

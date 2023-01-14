@@ -29,8 +29,7 @@
 #include "mrc/channel/status.hpp"
 #include "mrc/codable/encoded_object.hpp"
 #include "mrc/core/utils.hpp"
-#include "mrc/node/channel_holder.hpp"
-#include "mrc/node/edge_builder.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launcher.hpp"
@@ -112,7 +111,7 @@ void PublisherService::do_subscription_service_setup()
             }));
 
     // form an edge to this object's SourceChannelWritable
-    mrc::node::make_edge(*policy_engine, resources().network()->data_plane().client().remote_descriptor_channel());
+    mrc::make_edge(*policy_engine, resources().network()->data_plane().client().remote_descriptor_channel());
 
     // launch the policy engine on the same fiber pool as the updater
     m_policy_engine = m_runtime.resources()

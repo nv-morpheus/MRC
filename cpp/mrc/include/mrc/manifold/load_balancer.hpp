@@ -18,13 +18,13 @@
 #pragma once
 
 #include "mrc/core/addresses.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/manifold/composite_manifold.hpp"
 #include "mrc/manifold/interface.hpp"
-#include "mrc/node/edge_builder.hpp"
 #include "mrc/node/generic_sink.hpp"
 #include "mrc/node/operators/muxer.hpp"
 #include "mrc/node/rx_sink.hpp"
-#include "mrc/node/source_channel.hpp"
+#include "mrc/node/source_channel_owner.hpp"
 #include "mrc/pipeline/resources.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/runnable/launchable.hpp"
@@ -79,7 +79,7 @@ class LoadBalancer : public CompositeManifold<MuxedIngress<T>, RoundRobinEgress<
         //     .main()
         //     .enqueue([this] {
         //         m_balancer = std::make_shared<detail::Balancer<T>>(this->egress());
-        //         node::make_edge(this->ingress().source(), *m_balancer);
+        //         mrc::make_edge(this->ingress().source(), *m_balancer);
         //     })
         //     .get();
     }
@@ -92,7 +92,7 @@ class LoadBalancer : public CompositeManifold<MuxedIngress<T>, RoundRobinEgress<
         //         if (m_runner)
         //         {
         //             // todo(#179) - validate this fix and improve test coverage
-        //             // this will be handled now by the default behavior of SourceChannel::no_channel method
+        //             // this will be handled now by the default behavior of SourceChannelOwner::no_channel method
         //             // CHECK(!this->egress().output_channels().empty()) << "no egress channels on manifold";
         //             return;
         //         }

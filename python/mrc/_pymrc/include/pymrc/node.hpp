@@ -24,8 +24,7 @@
 
 #include "mrc/channel/ingress.hpp"
 #include "mrc/channel/status.hpp"
-#include "mrc/node/channel_holder.hpp"
-#include "mrc/node/edge_connector.hpp"
+#include "mrc/edge/edge_connector.hpp"
 #include "mrc/node/forward.hpp"  // IWYU pragma: keep
 #include "mrc/node/generic_source.hpp"
 #include "mrc/node/rx_node.hpp"
@@ -54,7 +53,7 @@ class ConvertingEdgeWritable;
 
 namespace mrc {
 
-namespace node {
+namespace edge {
 
 template <typename SourceT>
 class ConvertingEdgeWritable<
@@ -282,7 +281,7 @@ struct ConvertingEdgeReadable<pybind11::object, pymrc::PyObjectHolder, void>
     }
 };
 
-}  // namespace node
+}  // namespace edge
 
 namespace pymrc {
 

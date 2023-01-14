@@ -24,11 +24,11 @@
 #include "internal/ucx/worker.hpp"
 
 #include "mrc/core/task_queue.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/memory/literals.hpp"
-#include "mrc/node/edge_builder.hpp"
 #include "mrc/node/generic_source.hpp"
 #include "mrc/node/operators/router.hpp"
-#include "mrc/node/writable_subject.hpp"
+#include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/runnable/context.hpp"
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launch_options.hpp"
@@ -165,7 +165,7 @@ void Server::do_service_start()
         .enqueue([this] {
             // source channel ucx tag recvs masked with the RemoteDescriptor tag
             // this recv has no recv payload, we simply write the tag to the channel
-            m_prepost_channel = std::make_unique<node::WritableSubject<network_event_t>>();
+            m_prepost_channel = std::make_unique<node::WritableEntrypoint<network_event_t>>();
 
             m_pre_posted_recv_info.resize(m_pre_posted_recv_count);
             for (auto& info : m_pre_posted_recv_info)
@@ -182,10 +182,10 @@ void Server::do_service_start()
 
             // router for ucx tag recvs with data
             m_deserialize_source = std::make_shared<node::TaggedRouter<PortAddress, memory::TransientBuffer>>();
-            node::make_edge(*m_prepost_channel, *m_deserialize_source);
+            mrc::make_edge(*m_prepost_channel, *m_deserialize_source);
 
             // for edge between source and router - on channel operator driven by the source thread
-            node::make_edge(*progress_engine, *m_deserialize_source);
+            mrc::make_edge(*progress_engine, *m_deserialize_source);
 
             // all network runnables use the `mrc_network` engine factory
             DVLOG(10) << "launch network event mananger progress engine";

@@ -24,7 +24,7 @@
 #include "mrc/core/task_queue.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/forward.hpp"
-#include "mrc/node/source_channel.hpp"
+#include "mrc/node/source_channel_owner.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
 #include "mrc/runnable/context.hpp"

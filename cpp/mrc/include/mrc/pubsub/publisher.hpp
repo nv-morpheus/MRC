@@ -20,13 +20,13 @@
 #include "mrc/channel/ingress.hpp"
 #include "mrc/codable/encoded_object.hpp"
 #include "mrc/control_plane/subscription_service_forwarder.hpp"
-#include "mrc/node/edge_builder.hpp"
-#include "mrc/node/edge_channel.hpp"
+#include "mrc/edge/edge_builder.hpp"
+#include "mrc/edge/edge_channel.hpp"
 #include "mrc/node/generic_sink.hpp"
 #include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_channel.hpp"
+#include "mrc/node/source_channel_owner.hpp"
 #include "mrc/node/source_properties.hpp"
-#include "mrc/node/writable_subject.hpp"
+#include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/pubsub/api.hpp"
 #include "mrc/runtime/api.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
@@ -82,13 +82,12 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
     {
         // form a persistent connection to the operator
         // data flowing in from operator edges are forwarded to the public await_write
-        m_persistent_channel = std::make_unique<mrc::node::WritableSubject<T>>();
-        mrc::node::make_edge(*m_persistent_channel, *this);
+        m_persistent_channel = std::make_unique<mrc::node::WritableEntrypoint<T>>();
+        mrc::make_edge(*m_persistent_channel, *this);
 
         // Make a connection from this to the service
-        mrc::node::make_edge<node::ReadableProvider<std::unique_ptr<codable::EncodedStorage>>, IPublisherService>(
-            *this,
-            *m_service);
+        mrc::make_edge<node::ReadableProvider<std::unique_ptr<codable::EncodedStorage>>, IPublisherService>(*this,
+                                                                                                            *m_service);
 
         CHECK(m_service);
         m_service->await_start();
@@ -107,12 +106,12 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
         CHECK(m_service);
 
         // Create the internal channel
-        node::EdgeChannel<std::unique_ptr<codable::EncodedStorage>> edge_channel(
+        edge::EdgeChannel<std::unique_ptr<codable::EncodedStorage>> edge_channel(
             std::make_unique<mrc::channel::BufferedChannel<std::unique_ptr<codable::EncodedStorage>>>());
 
         // Wrap the upstream with a converting edge to an encoded object
         auto upstream_edge =
-            std::make_shared<node::LambdaConvertingEdgeWritable<T, std::unique_ptr<codable::EncodedStorage>>>(
+            std::make_shared<edge::LambdaConvertingEdgeWritable<T, std::unique_ptr<codable::EncodedStorage>>>(
                 [this](T&& data) {
                     return codable::EncodedObject<T>::create(std::move(data), m_service->create_storage());
                 },
@@ -151,7 +150,7 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
     const std::shared_ptr<IPublisherService> m_service;
 
     // this holds the operator open;
-    std::unique_ptr<mrc::node::WritableSubject<T>> m_persistent_channel;
+    std::unique_ptr<mrc::node::WritableEntrypoint<T>> m_persistent_channel;
 
     friend runtime::IPartition;
 };

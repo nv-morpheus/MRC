@@ -27,10 +27,10 @@
 #include <memory>
 #include <string>
 
-namespace mrc::node {
+namespace mrc::edge {
 template <typename T>
 class IWritableAcceptor;
-}  // namespace mrc::node
+}  // namespace mrc::edge
 namespace mrc::internal::control_plane {
 class Client;
 }  // namespace mrc::internal::control_plane
@@ -56,7 +56,7 @@ class Instance final : private resources::PartitionResourceBase, private Service
     Instance(Client& client,
              InstanceID instance_id,
              resources::PartitionResourceBase& base,
-             mrc::node::IWritableAcceptor<const protos::StateUpdate>& update_channel);
+             mrc::edge::IWritableAcceptor<const protos::StateUpdate>& update_channel);
     ~Instance() final;
 
     Client& client();

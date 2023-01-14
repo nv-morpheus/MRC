@@ -24,8 +24,7 @@
 #include "mrc/core/utils.hpp"
 #include "mrc/core/watcher.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/node/channel_holder.hpp"
-#include "mrc/node/source_channel.hpp"
+#include "mrc/node/source_channel_owner.hpp"
 #include "mrc/runnable/context.hpp"
 #include "mrc/utils/type_utils.hpp"
 
@@ -39,14 +38,17 @@
 namespace mrc::node {
 
 /**
- * @brief Extends SourceChannel<T> to provide observer responsible for writing data to the channel
+ * @brief Extends SourceChannelOwner<T> to provide observer responsible for writing data to the channel
  *
  * RxSource completes RxSourceBase by providing the observable and subscibable interface.
  *
  * @tparam T
  */
 template <typename T>
-class RxSourceBase : public ReadableProvider<T>, public WritableAcceptor<T>, public SourceChannel<T>, private Watchable
+class RxSourceBase : public ReadableProvider<T>,
+                     public WritableAcceptor<T>,
+                     public SourceChannelOwner<T>,
+                     private Watchable
 {
   public:
     void source_add_watcher(std::shared_ptr<WatcherInterface> watcher);
@@ -60,7 +62,7 @@ class RxSourceBase : public ReadableProvider<T>, public WritableAcceptor<T>, pub
 
   private:
     // // the following methods are moved to private from their original scopes to prevent access from deriving classes
-    // using SourceChannel<T>::await_write;
+    // using SourceChannelOwner<T>::await_write;
 
     rxcpp::observer<T> m_observer;
 };

@@ -23,7 +23,7 @@
 #include "pymrc/utils.hpp"
 
 #include "mrc/channel/status.hpp"
-#include "mrc/node/edge_connector.hpp"
+#include "mrc/edge/edge_connector.hpp"
 #include "mrc/node/rx_sink_base.hpp"
 #include "mrc/node/rx_source_base.hpp"
 #include "mrc/segment/builder.hpp"
@@ -335,14 +335,14 @@ PYBIND11_MODULE(test_edges_cpp, module)
     }));
     mrc::pymrc::PortBuilderUtil::register_port_util<DerivedB>();
 
-    mrc::node::EdgeConnector<py::object, pymrc::PyObjectHolder>::register_converter();
-    mrc::node::EdgeConnector<pymrc::PyObjectHolder, py::object>::register_converter();
+    mrc::edge::EdgeConnector<py::object, pymrc::PyObjectHolder>::register_converter();
+    mrc::edge::EdgeConnector<pymrc::PyObjectHolder, py::object>::register_converter();
 
-    mrc::node::EdgeConnector<std::shared_ptr<DerivedA>, std::shared_ptr<Base>>::register_converter();
-    mrc::node::EdgeConnector<std::shared_ptr<DerivedB>, std::shared_ptr<Base>>::register_converter();
+    mrc::edge::EdgeConnector<std::shared_ptr<DerivedA>, std::shared_ptr<Base>>::register_converter();
+    mrc::edge::EdgeConnector<std::shared_ptr<DerivedB>, std::shared_ptr<Base>>::register_converter();
 
-    mrc::node::EdgeConnector<std::shared_ptr<Base>, std::shared_ptr<DerivedA>>::register_dynamic_cast_converter();
-    mrc::node::EdgeConnector<std::shared_ptr<Base>, std::shared_ptr<DerivedB>>::register_dynamic_cast_converter();
+    mrc::edge::EdgeConnector<std::shared_ptr<Base>, std::shared_ptr<DerivedA>>::register_dynamic_cast_converter();
+    mrc::edge::EdgeConnector<std::shared_ptr<Base>, std::shared_ptr<DerivedB>>::register_dynamic_cast_converter();
 
     CREATE_TEST_NODE_CLASS(SourceBase);
     CREATE_TEST_NODE_CLASS(SourceDerivedA);

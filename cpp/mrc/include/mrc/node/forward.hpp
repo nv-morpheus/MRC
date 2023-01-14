@@ -23,11 +23,6 @@ class Context;
 
 namespace mrc::node {
 
-class EdgeBuilder;
-
-template <typename SourceT, typename SinkT>
-struct EdgeConnector;
-
 class SinkTypeErased;
 class SourceTypeErased;
 
@@ -45,10 +40,10 @@ template <typename ObjectT>
 class ObjectProperties;
 
 template <typename T>
-class SinkChannel;
+class SinkChannelOwner;
 
 template <typename T>
-class SourceChannel;
+class SourceChannelOwner;
 
 template <typename T>
 class RxSinkBase;
@@ -80,5 +75,11 @@ class GenericSource;
 
 template <typename InputT, typename OutputT = InputT, typename ContextT = runnable::Context>
 class GenericNode;
+
+template <typename T, typename = void>
+class WritableEntrypoint;
+
+template <typename T, typename = void>
+class ReadableEndpoint;
 
 }  // namespace mrc::node

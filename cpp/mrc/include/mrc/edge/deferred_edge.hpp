@@ -18,7 +18,9 @@
 #pragma once
 
 #include "mrc/channel/status.hpp"
-#include "mrc/node/channel_holder.hpp"
+#include "mrc/edge/edge.hpp"
+#include "mrc/edge/edge_writable.hpp"
+#include "mrc/edge/forward.hpp"
 #include "mrc/utils/type_utils.hpp"
 
 #include <functional>
@@ -26,7 +28,7 @@
 #include <stdexcept>
 #include <type_traits>
 
-namespace mrc::node {
+namespace mrc::edge {
 
 class DeferredWritableMultiEdgeBase : public IMultiWritableAcceptorBase<std::size_t>,
                                       public virtual IEdgeWritableBase,
@@ -43,12 +45,12 @@ class DeferredWritableMultiEdgeBase : public IMultiWritableAcceptorBase<std::siz
   private:
 };
 
-struct DeferredWritableHandleObj : public WritableEdgeHandle
+struct DeferredWritableEdgeHandle : public WritableEdgeHandle
 {
   public:
     using on_defer_fn_t = std::function<void(std::shared_ptr<DeferredWritableMultiEdgeBase>)>;
 
-    DeferredWritableHandleObj(on_defer_fn_t on_connect) :
+    DeferredWritableEdgeHandle(on_defer_fn_t on_connect) :
       WritableEdgeHandle(EdgeTypeInfo::create_deferred(), nullptr),
       m_on_connect(std::move(on_connect))
     {
@@ -77,4 +79,4 @@ struct DeferredWritableHandleObj : public WritableEdgeHandle
     friend EdgeBuilder;
 };
 
-}  // namespace mrc::node
+}  // namespace mrc::edge

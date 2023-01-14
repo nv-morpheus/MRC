@@ -26,7 +26,7 @@
 #include "internal/runnable/resources.hpp"
 #include "internal/runtime/partition.hpp"
 
-#include "mrc/node/edge_builder.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/operators/router.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/protos/codable.pb.h"
@@ -61,7 +61,7 @@ void SubscriberService::do_subscription_service_setup()
     auto network_handler = std::make_unique<mrc::node::RxSink<memory::TransientBuffer>>();
 
     DVLOG(10) << "form edge:  network_soruce -> network_handler";
-    mrc::node::make_edge(*network_source, *network_handler);
+    mrc::make_edge(*network_source, *network_handler);
 
     DVLOG(10) << "starting network handler node";
     m_network_handler = resources().runnable().launch_control().prepare_launcher(std::move(network_handler))->ignition();

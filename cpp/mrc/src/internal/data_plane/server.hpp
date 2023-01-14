@@ -22,6 +22,7 @@
 #include "internal/service.hpp"
 #include "internal/ucx/common.hpp"
 
+#include "mrc/node/forward.hpp"
 #include "mrc/types.hpp"
 
 #include <ucp/api/ucp_def.h>
@@ -35,8 +36,6 @@
 namespace mrc::node {
 template <typename KeyT, typename T>
 class TaggedRouter;
-template <typename T>
-class WritableSubject;
 }  // namespace mrc::node
 namespace mrc::internal::memory {
 class HostResources;
@@ -77,7 +76,7 @@ namespace detail {
 struct PrePostedRecvInfo
 {
     ucp_worker_h worker;
-    node::WritableSubject<network_event_t>* channel;
+    node::WritableEntrypoint<network_event_t>* channel;
     void* request;
     memory::TransientBuffer buffer;
     memory::TransientPool* pool;
@@ -121,7 +120,7 @@ class Server final : public Service, public resources::PartitionResourceBase
 
     // the remote descriptor manager will connect to this source
     // data will be emitted on this source as a conditional branch of data source
-    std::unique_ptr<node::WritableSubject<network_event_t>> m_prepost_channel;
+    std::unique_ptr<node::WritableEntrypoint<network_event_t>> m_prepost_channel;
 
     // pre-posted recv state
     std::vector<detail::PrePostedRecvInfo> m_pre_posted_recv_info;

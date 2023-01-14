@@ -17,14 +17,9 @@
 
 #pragma once
 
-#include "mrc/channel/ingress.hpp"
-#include "mrc/channel/status.hpp"
-#include "mrc/constants.hpp"
-#include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/node/edge_channel.hpp"
+#include "mrc/edge/edge_channel.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/node/source_properties.hpp"
-#include "mrc/utils/type_utils.hpp"
 
 #include <memory>
 
@@ -36,22 +31,22 @@ namespace mrc::node {
  * @tparam T
  */
 template <typename T>
-class SourceChannel : public virtual SourceProperties<T>
+class SourceChannelOwner : public virtual SourceProperties<T>
 {
   public:
-    ~SourceChannel() override = default;
+    ~SourceChannelOwner() override = default;
 
     void set_channel(std::unique_ptr<mrc::channel::Channel<T>> channel)
     {
-        EdgeChannel<T> edge_channel(std::move(channel));
+        edge::EdgeChannel<T> edge_channel(std::move(channel));
 
         this->do_set_channel(edge_channel);
     }
 
   protected:
-    SourceChannel() = default;
+    SourceChannelOwner() = default;
 
-    void do_set_channel(EdgeChannel<T>& edge_channel)
+    void do_set_channel(edge::EdgeChannel<T>& edge_channel)
     {
         // Create 2 edges, one for reading and writing. On connection, persist the other to allow the node to still use
         // get_writable_edge

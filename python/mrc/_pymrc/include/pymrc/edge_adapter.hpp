@@ -23,11 +23,10 @@
 #include "mrc/channel/forward.hpp"
 #include "mrc/channel/ingress.hpp"
 #include "mrc/channel/status.hpp"
-#include "mrc/node/channel_holder.hpp"
-#include "mrc/node/edge_adapter_registry.hpp"
-#include "mrc/node/edge_builder.hpp"
-#include "mrc/node/edge_connector.hpp"
-#include "mrc/node/forward.hpp"
+#include "mrc/edge/edge_adapter_registry.hpp"
+#include "mrc/edge/edge_builder.hpp"
+#include "mrc/edge/edge_connector.hpp"
+#include "mrc/edge/forward.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
@@ -59,17 +58,17 @@ namespace mrc::pymrc {
  */
 struct EdgeAdapterUtil
 {
-    using ingress_adapter_fn_t = node::EdgeAdapterRegistry::ingress_adapter_fn_t;
-    using egress_adapter_fn_t  = node::EdgeAdapterRegistry::egress_adapter_fn_t;
+    using ingress_adapter_fn_t = edge::EdgeAdapterRegistry::ingress_adapter_fn_t;
+    using egress_adapter_fn_t  = edge::EdgeAdapterRegistry::egress_adapter_fn_t;
 
     template <typename DataTypeT>
     static void register_data_adapters()
     {
-        node::EdgeAdapterRegistry::register_ingress_adapter(EdgeAdapterUtil::build_sink_ingress_adapter<DataTypeT>());
-        node::EdgeAdapterRegistry::register_ingress_adapter(EdgeAdapterUtil::build_source_ingress_adapter<DataTypeT>());
+        edge::EdgeAdapterRegistry::register_ingress_adapter(EdgeAdapterUtil::build_sink_ingress_adapter<DataTypeT>());
+        edge::EdgeAdapterRegistry::register_ingress_adapter(EdgeAdapterUtil::build_source_ingress_adapter<DataTypeT>());
 
-        node::EdgeAdapterRegistry::register_egress_adapter(EdgeAdapterUtil::build_sink_egress_adapter<DataTypeT>());
-        node::EdgeAdapterRegistry::register_egress_adapter(EdgeAdapterUtil::build_source_egress_adapter<DataTypeT>());
+        edge::EdgeAdapterRegistry::register_egress_adapter(EdgeAdapterUtil::build_sink_egress_adapter<DataTypeT>());
+        edge::EdgeAdapterRegistry::register_egress_adapter(EdgeAdapterUtil::build_source_egress_adapter<DataTypeT>());
     }
 
     /**
@@ -78,14 +77,14 @@ struct EdgeAdapterUtil
     template <typename InputT>
     static ingress_adapter_fn_t build_sink_ingress_adapter()
     {
-        return [](const node::EdgeTypeInfo& target_type, std::shared_ptr<node::IEdgeWritableBase> ingress_handle) {
+        return [](const edge::EdgeTypeInfo& target_type, std::shared_ptr<edge::IEdgeWritableBase> ingress_handle) {
             // First try to convert the ingress to our type
-            auto typed_ingress = std::dynamic_pointer_cast<node::IEdgeWritable<InputT>>(ingress_handle);
+            auto typed_ingress = std::dynamic_pointer_cast<edge::IEdgeWritable<InputT>>(ingress_handle);
 
             if (!typed_ingress)
             {
                 // Cant do anything about this ingress
-                return std::shared_ptr<node::WritableEdgeHandle>(nullptr);
+                return std::shared_ptr<edge::WritableEdgeHandle>(nullptr);
             }
 
             auto ingress_type = ingress_handle->get_type();
@@ -112,17 +111,17 @@ struct EdgeAdapterUtil
                     else
                     {
                         // Cant make a slow connection
-                        return std::shared_ptr<node::WritableEdgeHandle>(nullptr);
+                        return std::shared_ptr<edge::WritableEdgeHandle>(nullptr);
                     }
                 }
 
                 // Create a conversion from our type to PyHolder
-                auto edge = std::make_shared<node::ConvertingEdgeWritable<PyHolder, InputT>>(typed_ingress);
+                auto edge = std::make_shared<edge::ConvertingEdgeWritable<PyHolder, InputT>>(typed_ingress);
 
-                return std::make_shared<node::WritableEdgeHandle>(edge);
+                return std::make_shared<edge::WritableEdgeHandle>(edge);
             }
 
-            return std::shared_ptr<node::WritableEdgeHandle>(nullptr);
+            return std::shared_ptr<edge::WritableEdgeHandle>(nullptr);
         };
     }
 
@@ -132,11 +131,11 @@ struct EdgeAdapterUtil
     template <typename OutputT>
     static ingress_adapter_fn_t build_source_ingress_adapter()
     {
-        return [](const node::EdgeTypeInfo& target_type, std::shared_ptr<node::IEdgeWritableBase> ingress_handle) {
+        return [](const edge::EdgeTypeInfo& target_type, std::shared_ptr<edge::IEdgeWritableBase> ingress_handle) {
             // Check to make sure we are targeting this type
-            if (target_type != node::EdgeTypeInfo::create<OutputT>())
+            if (target_type != edge::EdgeTypeInfo::create<OutputT>())
             {
-                return std::shared_ptr<node::WritableEdgeHandle>(nullptr);
+                return std::shared_ptr<edge::WritableEdgeHandle>(nullptr);
             }
 
             auto ingress_type = ingress_handle->get_type();
@@ -147,18 +146,18 @@ struct EdgeAdapterUtil
                 // Check if we are coming from a python object
                 if (ingress_type.full_type() == typeid(PyHolder))
                 {
-                    auto py_typed_ingress = std::dynamic_pointer_cast<node::IEdgeWritable<PyHolder>>(ingress_handle);
+                    auto py_typed_ingress = std::dynamic_pointer_cast<edge::IEdgeWritable<PyHolder>>(ingress_handle);
 
                     CHECK(py_typed_ingress) << "Invalid conversion. Incoming ingress is not a PyHolder";
 
                     // Create a conversion from PyHolder to our type
-                    auto edge = std::make_shared<node::ConvertingEdgeWritable<OutputT, PyHolder>>(py_typed_ingress);
+                    auto edge = std::make_shared<edge::ConvertingEdgeWritable<OutputT, PyHolder>>(py_typed_ingress);
 
-                    return std::make_shared<node::WritableEdgeHandle>(edge);
+                    return std::make_shared<edge::WritableEdgeHandle>(edge);
                 }
             }
 
-            return std::shared_ptr<node::WritableEdgeHandle>(nullptr);
+            return std::shared_ptr<edge::WritableEdgeHandle>(nullptr);
         };
     }
 
@@ -168,11 +167,11 @@ struct EdgeAdapterUtil
     template <typename OutputT>
     static egress_adapter_fn_t build_sink_egress_adapter()
     {
-        return [](const node::EdgeTypeInfo& target_type, std::shared_ptr<node::IEdgeReadableBase> egress_handle) {
+        return [](const edge::EdgeTypeInfo& target_type, std::shared_ptr<edge::IEdgeReadableBase> egress_handle) {
             // Check to make sure we are targeting this type
-            if (target_type != node::EdgeTypeInfo::create<OutputT>())
+            if (target_type != edge::EdgeTypeInfo::create<OutputT>())
             {
-                return std::shared_ptr<node::ReadableEdgeHandle>(nullptr);
+                return std::shared_ptr<edge::ReadableEdgeHandle>(nullptr);
             }
 
             auto egress_type = egress_handle->get_type();
@@ -183,18 +182,18 @@ struct EdgeAdapterUtil
                 // Check if we are coming from a python object
                 if (egress_type.full_type() == typeid(PyHolder))
                 {
-                    auto py_typed_egress = std::dynamic_pointer_cast<node::IEdgeReadable<PyHolder>>(egress_handle);
+                    auto py_typed_egress = std::dynamic_pointer_cast<edge::IEdgeReadable<PyHolder>>(egress_handle);
 
                     CHECK(py_typed_egress) << "Invalid conversion. Incoming egress is not a PyHolder";
 
                     // Create a conversion from PyHolder to our type
-                    auto edge = std::make_shared<node::ConvertingEdgeReadable<PyHolder, OutputT>>(py_typed_egress);
+                    auto edge = std::make_shared<edge::ConvertingEdgeReadable<PyHolder, OutputT>>(py_typed_egress);
 
-                    return std::make_shared<node::ReadableEdgeHandle>(edge);
+                    return std::make_shared<edge::ReadableEdgeHandle>(edge);
                 }
             }
 
-            return std::shared_ptr<node::ReadableEdgeHandle>(nullptr);
+            return std::shared_ptr<edge::ReadableEdgeHandle>(nullptr);
         };
     }
 
@@ -204,14 +203,14 @@ struct EdgeAdapterUtil
     template <typename InputT>
     static egress_adapter_fn_t build_source_egress_adapter()
     {
-        return [](const node::EdgeTypeInfo& target_type, std::shared_ptr<node::IEdgeReadableBase> egress_handle) {
+        return [](const edge::EdgeTypeInfo& target_type, std::shared_ptr<edge::IEdgeReadableBase> egress_handle) {
             // First try to convert the egress to our type
-            auto typed_egress = std::dynamic_pointer_cast<node::IEdgeReadable<InputT>>(egress_handle);
+            auto typed_egress = std::dynamic_pointer_cast<edge::IEdgeReadable<InputT>>(egress_handle);
 
             if (!typed_egress)
             {
                 // Cant do anything about this egress
-                return std::shared_ptr<node::ReadableEdgeHandle>(nullptr);
+                return std::shared_ptr<edge::ReadableEdgeHandle>(nullptr);
             }
 
             auto egress_type = egress_handle->get_type();
@@ -238,17 +237,17 @@ struct EdgeAdapterUtil
                     else
                     {
                         // Cant make a slow connection
-                        return std::shared_ptr<node::ReadableEdgeHandle>(nullptr);
+                        return std::shared_ptr<edge::ReadableEdgeHandle>(nullptr);
                     }
                 }
 
                 // Create a conversion from our type to PyHolder
-                auto edge = std::make_shared<node::ConvertingEdgeReadable<InputT, PyHolder>>(typed_egress);
+                auto edge = std::make_shared<edge::ConvertingEdgeReadable<InputT, PyHolder>>(typed_egress);
 
-                return std::make_shared<node::ReadableEdgeHandle>(edge);
+                return std::make_shared<edge::ReadableEdgeHandle>(edge);
             }
 
-            return std::shared_ptr<node::ReadableEdgeHandle>(nullptr);
+            return std::shared_ptr<edge::ReadableEdgeHandle>(nullptr);
         };
     }
 };
@@ -269,8 +268,8 @@ struct AutoRegSourceAdapter
 
     static bool register_adapter()
     {
-        node::EdgeAdapterRegistry::register_ingress_adapter(EdgeAdapterUtil::build_source_ingress_adapter<SourceT>());
-        node::EdgeAdapterRegistry::register_egress_adapter(EdgeAdapterUtil::build_source_egress_adapter<SourceT>());
+        edge::EdgeAdapterRegistry::register_ingress_adapter(EdgeAdapterUtil::build_source_ingress_adapter<SourceT>());
+        edge::EdgeAdapterRegistry::register_egress_adapter(EdgeAdapterUtil::build_source_egress_adapter<SourceT>());
 
         return true;
     }
@@ -292,8 +291,8 @@ struct AutoRegSinkAdapter
 
     static bool register_adapter()
     {
-        node::EdgeAdapterRegistry::register_ingress_adapter(EdgeAdapterUtil::build_sink_ingress_adapter<SinkT>());
-        node::EdgeAdapterRegistry::register_egress_adapter(EdgeAdapterUtil::build_sink_egress_adapter<SinkT>());
+        edge::EdgeAdapterRegistry::register_ingress_adapter(EdgeAdapterUtil::build_sink_ingress_adapter<SinkT>());
+        edge::EdgeAdapterRegistry::register_egress_adapter(EdgeAdapterUtil::build_sink_egress_adapter<SinkT>());
 
         return true;
     }

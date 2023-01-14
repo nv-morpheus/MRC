@@ -21,15 +21,15 @@
 #include "mrc/codable/decode.hpp"
 #include "mrc/codable/encoded_object.hpp"
 #include "mrc/control_plane/subscription_service_forwarder.hpp"
-#include "mrc/node/edge_builder.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/generic_sink.hpp"
 #include "mrc/node/operators/node_component.hpp"
 #include "mrc/node/queue.hpp"
-#include "mrc/node/readable_subject.hpp"
+#include "mrc/node/readable_endpoint.hpp"
 #include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_channel.hpp"
+#include "mrc/node/source_channel_owner.hpp"
 #include "mrc/node/source_properties.hpp"
-#include "mrc/node/writable_subject.hpp"
+#include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/pubsub/api.hpp"
 #include "mrc/runtime/api.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
@@ -90,18 +90,17 @@ class Subscriber final : public control_plane::SubscriptionServiceForwarder,
             return;
         }
 
-        m_persistent_channel = std::make_shared<mrc::node::ReadableSubject<T>>();
-        mrc::node::make_edge(*this, *m_persistent_channel);
+        m_persistent_channel = std::make_shared<mrc::node::ReadableEndpoint<T>>();
+        mrc::make_edge(*this, *m_persistent_channel);
 
         // Make a connection from this to the service
-        mrc::node::make_edge<ISubscriberService, node::WritableProvider<mrc::runtime::RemoteDescriptor>>(*m_service,
-                                                                                                         *this);
+        mrc::make_edge<ISubscriberService, node::WritableProvider<mrc::runtime::RemoteDescriptor>>(*m_service, *this);
 
         // LOG(INFO) << "forming first edge: typed_source -> self [Node<T>]";
 
         // // Edge - SourceChannelWritable<T> -> Queue<T>
-        // mrc::node::WritableSubject<T>& typed_source = *this;
-        // mrc::node::make_edge(typed_source, *this);
+        // mrc::node::WritableEntrypoint<T>& typed_source = *this;
+        // mrc::make_edge(typed_source, *this);
 
         // LOG(INFO) << "forming second edge: IPublisherService -> operator_component";
 
@@ -110,11 +109,11 @@ class Subscriber final : public control_plane::SubscriptionServiceForwarder,
         //     // on_next
         //     [this](mrc::runtime::RemoteDescriptor&& rd) {
         //         auto obj = rd.decode<T>();
-        //         return mrc::node::WritableSubject<T>::await_write(std::move(obj));
+        //         return mrc::node::WritableEntrypoint<T>::await_write(std::move(obj));
         //     },
         //     // on_complete
-        //     [this] { mrc::node::WritableSubject<T>::release_edge_connection(); });
-        // mrc::node::make_edge(*m_service, *m_rd_sink);
+        //     [this] { mrc::node::WritableEntrypoint<T>::release_edge_connection(); });
+        // mrc::make_edge(*m_service, *m_rd_sink);
 
         // After the edges have been formed, we have a complete pipeline from the data plane to a channel. If we started
         // the service prior to the edge construction, we might get data flowing through an incomplete operator chain
@@ -130,11 +129,11 @@ class Subscriber final : public control_plane::SubscriptionServiceForwarder,
         CHECK(m_service);
 
         // Create the internal channel
-        node::EdgeChannel<mrc::runtime::RemoteDescriptor> edge_channel(
+        edge::EdgeChannel<mrc::runtime::RemoteDescriptor> edge_channel(
             std::make_unique<mrc::channel::BufferedChannel<mrc::runtime::RemoteDescriptor>>());
 
         // Wrap the upstream with a converting edge to an encoded object
-        auto downstream_edge = std::make_shared<node::LambdaConvertingEdgeReadable<mrc::runtime::RemoteDescriptor, T>>(
+        auto downstream_edge = std::make_shared<edge::LambdaConvertingEdgeReadable<mrc::runtime::RemoteDescriptor, T>>(
             [this](mrc::runtime::RemoteDescriptor&& rd) {
                 // Perform the decode
                 return rd.decode<T>();
@@ -155,7 +154,7 @@ class Subscriber final : public control_plane::SubscriptionServiceForwarder,
     // std::shared_ptr<node::LambdaSinkComponent<mrc::runtime::RemoteDescriptor>> m_rd_sink;
 
     // this holds the operator open;
-    std::shared_ptr<mrc::node::ReadableSubject<T>> m_persistent_channel;
+    std::shared_ptr<mrc::node::ReadableEndpoint<T>> m_persistent_channel;
 
     friend runtime::IPartition;
 };
@@ -193,7 +192,7 @@ class Subscriber<mrc::runtime::RemoteDescriptor> final : public node::Queue<runt
         }
 
         // Edge - IPublisherService -> Queue
-        mrc::node::make_edge(*m_service, *this);
+        mrc::make_edge(*m_service, *this);
 
         // After the edges have been formed, we have a complete pipeline from the data plane to a channel. If we started
         // the service prior to the edge construction, we might get data flowing through an incomplete operator chain

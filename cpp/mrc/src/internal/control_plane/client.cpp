@@ -24,9 +24,9 @@
 #include "internal/system/system.hpp"
 
 #include "mrc/channel/status.hpp"
-#include "mrc/node/edge_builder.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/rx_sink.hpp"
-#include "mrc/node/writable_subject.hpp"
+#include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
 #include "mrc/protos/architect.pb.h"
@@ -83,7 +83,7 @@ void Client::do_service_start()
         auto progress_engine  = std::make_unique<rpc::ProgressEngine>(m_cq);
         auto progress_handler = std::make_unique<rpc::PromiseHandler>();
 
-        mrc::node::make_edge(*progress_engine, *progress_handler);
+        mrc::make_edge(*progress_engine, *progress_handler);
 
         m_progress_handler =
             runnable().launch_control().prepare_launcher(launch_options(), std::move(progress_handler))->ignition();
@@ -103,10 +103,10 @@ void Client::do_service_start()
 
     // make stream and attach event handler
     m_stream = std::make_shared<stream_t::element_type>(prepare_fn, runnable());
-    m_stream->attach_to(dynamic_cast<mrc::node::IWritableProvider<event_t>&>(*event_handler));
+    m_stream->attach_to(*event_handler);
 
     // ensure all downstream event handlers are constructed before constructing and starting the event handler
-    m_connections_update_channel = std::make_unique<mrc::node::WritableSubject<const protos::StateUpdate>>();
+    m_connections_update_channel = std::make_unique<mrc::node::WritableEntrypoint<const protos::StateUpdate>>();
     m_connections_manager        = std::make_unique<client::ConnectionsManager>(*this, *m_connections_update_channel);
 
     // launch runnables

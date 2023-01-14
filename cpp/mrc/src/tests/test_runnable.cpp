@@ -20,7 +20,7 @@
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 
-#include "mrc/node/edge_builder.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/operators/muxer.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
@@ -296,7 +296,7 @@ TEST_F(TestRunnable, RxSourceToRxSink)
             ++counter;
         }));
 
-        node::make_edge(*source, *sink);
+        mrc::make_edge(*source, *sink);
 
         runner_sink   = m_resources->launch_control().prepare_launcher(std::move(sink))->ignition();
         runner_source = m_resources->launch_control().prepare_launcher(std::move(source))->ignition();
@@ -331,8 +331,8 @@ TEST_F(TestRunnable, RxSourceToMuxerToRxSink)
             ++counter;
         }));
 
-        node::make_edge(*source, *muxer);
-        node::make_edge(*muxer, *sink);
+        mrc::make_edge(*source, *muxer);
+        mrc::make_edge(*muxer, *sink);
 
         runner_sink   = m_resources->launch_control().prepare_launcher(std::move(sink))->ignition();
         runner_source = m_resources->launch_control().prepare_launcher(std::move(source))->ignition();
@@ -383,8 +383,8 @@ TEST_F(TestRunnable, RxSourceToMuxerToRxSink)
 //         auto sink =
 //             std::make_unique<node::RxSink<float>>(rxcpp::make_observer_dynamic<float>([&](float x) { ++counter; }));
 
-//         node::make_edge(*source, *muxer);
-//         node::make_edge(*muxer, *sink);
+//         mrc::make_edge(*source, *muxer);
+//         mrc::make_edge(*muxer, *sink);
 
 //         runner_sink   = m_launch_control->prepare_launcher(std::move(sink))->ignition();
 //         runner_source = m_launch_control->prepare_launcher(std::move(source))->ignition();
@@ -420,8 +420,8 @@ TEST_F(TestRunnable, RxSourceToMuxerToRxSink)
 //         auto sink =
 //             std::make_unique<node::RxSink<float>>(rxcpp::make_observer_dynamic<float>([&](float x) { ++counter; }));
 
-//         node::make_edge(*source, *passthru);
-//         node::make_edge(*passthru, *sink);
+//         mrc::make_edge(*source, *passthru);
+//         mrc::make_edge(*passthru, *sink);
 
 //         runner_sink     = m_launch_control->prepare_launcher(std::move(sink))->ignition();
 //         runner_passthru = m_launch_control->prepare_launcher(std::move(passthru))->ignition();

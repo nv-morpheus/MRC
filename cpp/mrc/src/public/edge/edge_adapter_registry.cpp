@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "mrc/node/edge_adapter_registry.hpp"
+#include "mrc/edge/edge_adapter_registry.hpp"
 
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/utils/type_utils.hpp"
@@ -29,7 +29,7 @@
 #include <typeindex>
 #include <utility>
 
-namespace mrc::node {
+namespace mrc::edge {
 
 // Goes from source type to sink type
 std::map<std::type_index, std::map<std::type_index, EdgeAdapterRegistry::ingress_converter_fn_t>>
@@ -176,4 +176,4 @@ const std::vector<EdgeAdapterRegistry::egress_adapter_fn_t>& EdgeAdapterRegistry
     return EdgeAdapterRegistry::registered_egress_adapters;
 }
 
-}  // namespace mrc::node
+}  // namespace mrc::edge

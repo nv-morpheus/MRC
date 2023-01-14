@@ -23,11 +23,10 @@
 #include "mrc/core/utils.hpp"
 #include "mrc/core/watcher.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/node/channel_holder.hpp"
 #include "mrc/node/rx_epilogue_tap.hpp"
 #include "mrc/node/rx_prologue_tap.hpp"
 #include "mrc/node/rx_sink_base.hpp"
-#include "mrc/node/rx_source.hpp"
+#include "mrc/node/rx_source_base.hpp"
 #include "mrc/node/rx_subscribable.hpp"
 #include "mrc/utils/type_utils.hpp"
 
@@ -146,7 +145,7 @@ void RxNode<InputT, OutputT, ContextT>::on_shutdown_critical_section()
 }
 
 template <typename T>
-class EdgeRxSubscriber : public IEdgeWritable<T>
+class EdgeRxSubscriber : public edge::IEdgeWritable<T>
 {
   public:
     using subscriber_t = rxcpp::subscriber<T>;

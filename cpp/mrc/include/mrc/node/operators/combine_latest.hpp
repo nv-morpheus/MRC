@@ -18,7 +18,6 @@
 #pragma once
 
 #include "mrc/channel/status.hpp"
-#include "mrc/node/channel_holder.hpp"
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
 #include "mrc/utils/type_utils.hpp"
@@ -136,7 +135,7 @@ class CombineLatest : public WritableAcceptor<std::tuple<TypesT...>>
     virtual ~CombineLatest() = default;
 
     template <size_t N>
-    std::shared_ptr<IWritableProvider<NthTypeOf<N, TypesT...>>> get_sink() const
+    std::shared_ptr<edge::IWritableProvider<NthTypeOf<N, TypesT...>>> get_sink() const
     {
         return std::get<N>(m_upstream_holders);
     }
@@ -154,7 +153,7 @@ class CombineLatest : public WritableAcceptor<std::tuple<TypesT...>>
         }
 
       private:
-        class InnerEdge : public IEdgeWritable<NthTypeOf<N, TypesT...>>
+        class InnerEdge : public edge::IEdgeWritable<NthTypeOf<N, TypesT...>>
         {
           public:
             InnerEdge(CombineLatest& parent) : m_parent(parent) {}

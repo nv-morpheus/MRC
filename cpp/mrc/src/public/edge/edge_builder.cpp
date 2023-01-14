@@ -15,11 +15,10 @@
  * limitations under the License.
  */
 
-#include "mrc/node/edge_builder.hpp"
+#include "mrc/edge/edge_builder.hpp"
 
+#include "mrc/edge/edge_adapter_registry.hpp"
 #include "mrc/exceptions//runtime_error.hpp"
-#include "mrc/node/channel_holder.hpp"
-#include "mrc/node/edge_adapter_registry.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/utils/type_utils.hpp"
 
@@ -31,7 +30,7 @@
 #include <string>
 #include <typeindex>
 
-namespace mrc::node {
+namespace mrc::edge {
 
 void EdgeBuilder::make_edge_writable_typeless(IWritableAcceptorBase& source,
                                               IWritableProviderBase& sink,
@@ -65,11 +64,11 @@ std::shared_ptr<WritableEdgeHandle> EdgeBuilder::do_adapt_ingress(const EdgeType
     }
 
     // Next check the static converters
-    if (mrc::node::EdgeAdapterRegistry::has_ingress_converter(target_type.full_type(), ingress->get_type().full_type()))
+    if (mrc::edge::EdgeAdapterRegistry::has_ingress_converter(target_type.full_type(), ingress->get_type().full_type()))
     {
         try
         {
-            auto fn_converter = mrc::node::EdgeAdapterRegistry::find_ingress_converter(target_type.full_type(),
+            auto fn_converter = mrc::edge::EdgeAdapterRegistry::find_ingress_converter(target_type.full_type(),
                                                                                        ingress->get_type().full_type());
 
             auto converted_edge = fn_converter(ingress->get_ingress());
@@ -131,11 +130,11 @@ std::shared_ptr<ReadableEdgeHandle> EdgeBuilder::do_adapt_egress(const EdgeTypeI
     }
 
     // Next check the static converters
-    if (mrc::node::EdgeAdapterRegistry::has_egress_converter(target_type.full_type(), egress->get_type().full_type()))
+    if (mrc::edge::EdgeAdapterRegistry::has_egress_converter(target_type.full_type(), egress->get_type().full_type()))
     {
         try
         {
-            auto fn_converter = mrc::node::EdgeAdapterRegistry::find_egress_converter(egress->get_type().full_type(),
+            auto fn_converter = mrc::edge::EdgeAdapterRegistry::find_egress_converter(egress->get_type().full_type(),
                                                                                       target_type.full_type());
 
             auto converted_edge = fn_converter(egress->get_egress());
@@ -187,4 +186,4 @@ std::shared_ptr<ReadableEdgeHandle> EdgeBuilder::do_adapt_egress(const EdgeTypeI
                                                           << type_name(target_type.full_type())));
 }
 
-}  // namespace mrc::node
+}  // namespace mrc::edge

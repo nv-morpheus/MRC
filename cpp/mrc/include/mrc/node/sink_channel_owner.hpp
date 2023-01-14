@@ -17,17 +17,9 @@
 
 #pragma once
 
-#include "mrc/channel/buffered_channel.hpp"
-#include "mrc/channel/egress.hpp"
-#include "mrc/channel/ingress.hpp"
-#include "mrc/constants.hpp"
-#include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/node/channel_holder.hpp"
-#include "mrc/node/edge_channel.hpp"
-#include "mrc/node/edge_properties.hpp"
+#include "mrc/edge/edge_channel.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/node/sink_properties.hpp"
-#include "mrc/utils/type_utils.hpp"
 
 #include <mutex>
 
@@ -39,20 +31,20 @@ namespace mrc::node {
  * @tparam T
  */
 template <typename T>
-class SinkChannel : public virtual SinkProperties<T>
+class SinkChannelOwner : public virtual SinkProperties<T>
 {
   public:
     void set_channel(std::unique_ptr<mrc::channel::Channel<T>> channel)
     {
-        EdgeChannel<T> edge_channel(std::move(channel));
+        edge::EdgeChannel<T> edge_channel(std::move(channel));
 
         this->do_set_channel(edge_channel);
     }
 
   protected:
-    SinkChannel() = default;
+    SinkChannelOwner() = default;
 
-    void do_set_channel(EdgeChannel<T>& edge_channel)
+    void do_set_channel(edge::EdgeChannel<T>& edge_channel)
     {
         // Create 2 edges, one for reading and writing. On connection, persist the other to allow the node to still use
         // get_readable+edge
@@ -66,12 +58,5 @@ class SinkChannel : public virtual SinkProperties<T>
         SinkProperties<T>::init_connected_edge(channel_reader);
     }
 };
-
-// template <typename T>
-// class SinkChannelReadable : public SinkChannel<T>
-// {
-//   public:
-//     using SinkChannel<T>::egress;
-// };
 
 }  // namespace mrc::node

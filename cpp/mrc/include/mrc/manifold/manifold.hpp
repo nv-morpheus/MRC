@@ -22,10 +22,10 @@
 
 #include <string>
 
-namespace mrc::node {
+namespace mrc::edge {
 class IWritableAcceptorBase;
 class IWritableProviderBase;
-}  // namespace mrc::node
+}  // namespace mrc::edge
 namespace mrc::pipeline {
 struct Resources;
 }  // namespace mrc::pipeline
@@ -45,11 +45,11 @@ class Manifold : public Interface
     const std::string& info() const;
 
   private:
-    void add_input(const SegmentAddress& address, node::IWritableAcceptorBase* input_source) final;
-    void add_output(const SegmentAddress& address, node::IWritableProviderBase* output_sink) final;
+    void add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) final;
+    void add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) final;
 
-    virtual void do_add_input(const SegmentAddress& address, node::IWritableAcceptorBase* input_source) = 0;
-    virtual void do_add_output(const SegmentAddress& address, node::IWritableProviderBase* output_sink) = 0;
+    virtual void do_add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) = 0;
+    virtual void do_add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) = 0;
 
     PortName m_port_name;
     pipeline::Resources& m_resources;

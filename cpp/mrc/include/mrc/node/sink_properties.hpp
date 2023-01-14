@@ -17,9 +17,7 @@
 
 #pragma once
 
-#include "mrc/channel/ingress.hpp"
-#include "mrc/node/channel_holder.hpp"
-#include "mrc/node/edge_builder.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/type_traits.hpp"
 #include "mrc/utils/type_utils.hpp"
@@ -63,11 +61,6 @@ class SinkPropertiesBase
 
   protected:
     SinkPropertiesBase() = default;
-
-  private:
-    // virtual std::shared_ptr<channel::IngressHandle> ingress_handle() = 0;
-
-    friend EdgeBuilder;
 };
 
 inline SinkPropertiesBase::~SinkPropertiesBase() = default;
@@ -76,7 +69,7 @@ inline SinkPropertiesBase::~SinkPropertiesBase() = default;
  * @brief Typed SinkProperties provides default implementations dependent only on the type T.
  */
 template <typename T>
-class SinkProperties : public EdgeHolder<T>, public SinkPropertiesBase
+class SinkProperties : public edge::EdgeHolder<T>, public SinkPropertiesBase
 {
   public:
     using sink_type_t = T;
@@ -99,24 +92,14 @@ class SinkProperties : public EdgeHolder<T>, public SinkPropertiesBase
     }
 
   protected:
-    std::shared_ptr<IEdgeReadable<T>> get_readable_edge() const
+    std::shared_ptr<edge::IEdgeReadable<T>> get_readable_edge() const
     {
-        return std::dynamic_pointer_cast<IEdgeReadable<T>>(this->get_connected_edge());
+        return std::dynamic_pointer_cast<edge::IEdgeReadable<T>>(this->get_connected_edge());
     }
-
-  private:
-    // inline std::shared_ptr<channel::IngressHandle> ingress_handle() final
-    // {
-    //     return channel_ingress();
-    // }
-
-    // virtual std::shared_ptr<channel::Ingress<T>> channel_ingress() = 0;
-
-    friend EdgeBuilder;
 };
 
 template <typename T>
-class ReadableAcceptor : public virtual SinkProperties<T>, public IReadableAcceptor<T>
+class ReadableAcceptor : public virtual SinkProperties<T>, public edge::IReadableAcceptor<T>
 {
   public:
     ReadableAcceptor& operator=(ReadableAcceptor&& other)
@@ -126,20 +109,17 @@ class ReadableAcceptor : public virtual SinkProperties<T>, public IReadableAccep
     }
 
   private:
-    void set_readable_edge_handle(std::shared_ptr<ReadableEdgeHandle> egress) override
+    void set_readable_edge_handle(std::shared_ptr<edge::ReadableEdgeHandle> egress) override
     {
         // Do any conversion to the correct type here
-        auto adapted_egress = EdgeBuilder::adapt_readable_edge<T>(egress);
+        auto adapted_egress = edge::EdgeBuilder::adapt_readable_edge<T>(egress);
 
         SinkProperties<T>::make_edge_connection(adapted_egress);
     }
-
-    //   private:
-    //     using SinkProperties<T>::set_edge;
 };
 
 template <typename T>
-class WritableProvider : public virtual SinkProperties<T>, public IWritableProvider<T>
+class WritableProvider : public virtual SinkProperties<T>, public edge::IWritableProvider<T>
 {
   public:
     WritableProvider& operator=(WritableProvider&& other)
@@ -149,9 +129,9 @@ class WritableProvider : public virtual SinkProperties<T>, public IWritableProvi
     }
 
   private:
-    std::shared_ptr<WritableEdgeHandle> get_writable_edge_handle() const override
+    std::shared_ptr<edge::WritableEdgeHandle> get_writable_edge_handle() const override
     {
-        return WritableEdgeHandle::from_typeless(SinkProperties<T>::get_edge_connection());
+        return edge::WritableEdgeHandle::from_typeless(SinkProperties<T>::get_edge_connection());
     }
 };
 
@@ -159,7 +139,7 @@ template <typename T>
 class ForwardingWritableProvider : public WritableProvider<T>
 {
   protected:
-    class ForwardingEdge : public IEdgeWritable<T>
+    class ForwardingEdge : public edge::IEdgeWritable<T>
     {
       public:
         ForwardingEdge(ForwardingWritableProvider<T>& parent) : m_parent(parent) {}

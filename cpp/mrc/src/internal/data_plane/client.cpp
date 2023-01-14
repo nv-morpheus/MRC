@@ -32,9 +32,8 @@
 
 #include "mrc/channel/buffered_channel.hpp"
 #include "mrc/channel/channel.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/memory/literals.hpp"
-#include "mrc/node/channel_holder.hpp"  // IWYU pragma: keep
-#include "mrc/node/edge_builder.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/protos/codable.pb.h"
 #include "mrc/runnable/launch_control.hpp"
@@ -300,7 +299,7 @@ void Client::do_service_start()
     rd_writer->set_channel(std::make_unique<channel::BufferedChannel<RemoteDescriptorMessage>>(128));
 
     // form edge
-    mrc::node::make_edge(*m_rd_channel, *rd_writer);
+    mrc::make_edge(*m_rd_channel, *rd_writer);
 
     // todo(ryan) - parameterize mrc::data_plane::client::max_inflight_remote_descriptor_sends
     auto launch_options = Resources::launch_options(16);

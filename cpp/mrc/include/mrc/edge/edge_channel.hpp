@@ -17,20 +17,13 @@
 
 #pragma once
 
-#include "mrc/node/channel_holder.hpp"
+#include "mrc/edge/edge_readable.hpp"
+#include "mrc/edge/edge_writable.hpp"
+#include "mrc/edge/forward.hpp"
 
 #include <memory>
 
-namespace mrc::node {
-
-template <typename T>
-class EdgeChannelReader;
-
-template <typename T>
-class EdgeChannelWriter;
-
-template <typename T>
-class EdgeChannel;
+namespace mrc::edge {
 
 template <typename T>
 class EdgeChannelReader : public IEdgeReadable<T>
@@ -112,4 +105,4 @@ class EdgeChannel
     std::shared_ptr<mrc::channel::Channel<T>> m_channel;
 };
 
-}  // namespace mrc::node
+}  // namespace mrc::edge

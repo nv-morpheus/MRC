@@ -18,10 +18,10 @@
 #pragma once
 
 #include "mrc/channel/status.hpp"
-#include "mrc/node/channel_holder.hpp"
-#include "mrc/node/deferred_edge.hpp"
-#include "mrc/node/edge_builder.hpp"
-#include "mrc/node/source_channel.hpp"
+#include "mrc/edge/deferred_edge.hpp"
+#include "mrc/edge/edge_builder.hpp"
+#include "mrc/node/sink_properties.hpp"
+#include "mrc/node/source_channel_owner.hpp"
 #include "mrc/node/source_properties.hpp"
 #include "mrc/type_traits.hpp"
 
@@ -31,24 +31,24 @@
 
 namespace mrc::node {
 
-class BroadcastTypeless : public IWritableProviderBase, public IWritableAcceptorBase
+class BroadcastTypeless : public edge::IWritableProviderBase, public edge::IWritableAcceptorBase
 {
   public:
-    std::shared_ptr<WritableEdgeHandle> get_writable_edge_handle() const override
+    std::shared_ptr<edge::WritableEdgeHandle> get_writable_edge_handle() const override
     {
         auto* self = const_cast<BroadcastTypeless*>(this);
 
         // Create a new upstream edge. On connection, have it attach to any downstreams
-        auto deferred_ingress = std::make_shared<DeferredWritableHandleObj>(
-            [self](std::shared_ptr<DeferredWritableMultiEdgeBase> deferred_edge) {
+        auto deferred_ingress = std::make_shared<edge::DeferredWritableEdgeHandle>(
+            [self](std::shared_ptr<edge::DeferredWritableMultiEdgeBase> deferred_edge) {
                 // Set the broadcast indices function
-                deferred_edge->set_indices_fn([self](DeferredWritableMultiEdgeBase& deferred_edge) {
+                deferred_edge->set_indices_fn([self](edge::DeferredWritableMultiEdgeBase& deferred_edge) {
                     // Just return the keys
                     return deferred_edge.edge_connection_keys();
                 });
 
                 // Need to work with weak ptr here otherwise we will keep it from closing
-                std::weak_ptr<DeferredWritableMultiEdgeBase> weak_deferred_edge = deferred_edge;
+                std::weak_ptr<edge::DeferredWritableMultiEdgeBase> weak_deferred_edge = deferred_edge;
 
                 // Use a connector here in case the object never gets set to an edge
                 deferred_edge->add_connector([self, weak_deferred_edge]() {
@@ -108,12 +108,12 @@ class BroadcastTypeless : public IWritableProviderBase, public IWritableAcceptor
         return deferred_ingress;
     }
 
-    EdgeTypeInfo writable_provider_type() const override
+    edge::EdgeTypeInfo writable_provider_type() const override
     {
-        return EdgeTypeInfo::create_deferred();
+        return edge::EdgeTypeInfo::create_deferred();
     }
 
-    void set_writable_edge_handle(std::shared_ptr<WritableEdgeHandle> ingress) override
+    void set_writable_edge_handle(std::shared_ptr<edge::WritableEdgeHandle> ingress) override
     {
         // Lock whenever working on the handles
         std::unique_lock<std::mutex> lock(m_mutex);
@@ -135,21 +135,21 @@ class BroadcastTypeless : public IWritableProviderBase, public IWritableAcceptor
         }
     }
 
-    EdgeTypeInfo writable_acceptor_type() const override
+    edge::EdgeTypeInfo writable_acceptor_type() const override
     {
-        return EdgeTypeInfo::create_deferred();
+        return edge::EdgeTypeInfo::create_deferred();
     }
 
   private:
     std::mutex m_mutex;
-    std::vector<std::weak_ptr<DeferredWritableMultiEdgeBase>> m_upstream_handles;
-    std::vector<std::shared_ptr<WritableEdgeHandle>> m_downstream_handles;
+    std::vector<std::weak_ptr<edge::DeferredWritableMultiEdgeBase>> m_upstream_handles;
+    std::vector<std::shared_ptr<edge::WritableEdgeHandle>> m_downstream_handles;
 };
 
 template <typename T>
-class Broadcast : public WritableProvider<T>, public IWritableAcceptor<T>
+class Broadcast : public WritableProvider<T>, public edge::IWritableAcceptor<T>
 {
-    class BroadcastEdge : public IEdgeWritable<T>, public MultiSourceProperties<size_t, T>
+    class BroadcastEdge : public edge::IEdgeWritable<T>, public MultiSourceProperties<size_t, T>
     {
       public:
         BroadcastEdge(Broadcast& parent, bool deep_copy) : m_parent(parent), m_deep_copy(deep_copy) {}
@@ -181,7 +181,7 @@ class Broadcast : public WritableProvider<T>, public IWritableAcceptor<T>
             return this->get_writable_edge(0)->await_write(std::move(data));
         }
 
-        void add_downstream(std::shared_ptr<WritableEdgeHandle> downstream)
+        void add_downstream(std::shared_ptr<edge::WritableEdgeHandle> downstream)
         {
             auto edge_count = this->edge_connection_count();
 
@@ -210,7 +210,7 @@ class Broadcast : public WritableProvider<T>, public IWritableAcceptor<T>
         VLOG(10) << "Destroying TestBroadcast";
     }
 
-    void set_writable_edge_handle(std::shared_ptr<WritableEdgeHandle> ingress) override
+    void set_writable_edge_handle(std::shared_ptr<edge::WritableEdgeHandle> ingress) override
     {
         if (auto e = m_edge.lock())
         {

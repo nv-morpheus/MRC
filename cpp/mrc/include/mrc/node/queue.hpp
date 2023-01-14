@@ -17,8 +17,10 @@
 
 #pragma once
 
-#include "mrc/node/edge_channel.hpp"
+#include "mrc/channel/buffered_channel.hpp"
+#include "mrc/edge/edge_channel.hpp"
 #include "mrc/node/forward.hpp"
+#include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
 
 namespace mrc::node {
@@ -35,7 +37,7 @@ class Queue : public WritableProvider<T>, public ReadableProvider<T>
 
     void set_channel(std::unique_ptr<mrc::channel::Channel<T>> channel)
     {
-        EdgeChannel<T> edge_channel(std::move(channel));
+        edge::EdgeChannel<T> edge_channel(std::move(channel));
 
         SinkProperties<T>::init_owned_edge(edge_channel.get_writer());
         SourceProperties<T>::init_owned_edge(edge_channel.get_reader());

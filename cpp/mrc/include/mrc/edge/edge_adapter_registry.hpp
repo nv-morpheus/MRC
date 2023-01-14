@@ -17,6 +17,9 @@
 
 #pragma once
 
+#include "mrc/edge/edge_readable.hpp"
+#include "mrc/edge/edge_writable.hpp"
+
 #include <functional>
 #include <map>
 #include <memory>
@@ -24,12 +27,7 @@
 #include <typeindex>
 #include <vector>
 
-namespace mrc::node {
-class EdgeTypeInfo;
-class ReadableEdgeHandle;
-class IEdgeReadableBase;
-class IEdgeWritableBase;
-class WritableEdgeHandle;
+namespace mrc::edge {
 
 /**
  * @brief EdgeAdaptorRegistry used for the registry of adapter routines which allow for customized runtime
@@ -45,11 +43,11 @@ struct EdgeAdapterRegistry
 
     using egress_converter_fn_t = std::function<std::shared_ptr<IEdgeReadableBase>(std::shared_ptr<IEdgeReadableBase>)>;
 
-    using ingress_adapter_fn_t = std::function<
-        std::shared_ptr<node::WritableEdgeHandle>(const node::EdgeTypeInfo&, std::shared_ptr<node::IEdgeWritableBase>)>;
+    using ingress_adapter_fn_t =
+        std::function<std::shared_ptr<WritableEdgeHandle>(const EdgeTypeInfo&, std::shared_ptr<IEdgeWritableBase>)>;
 
-    using egress_adapter_fn_t = std::function<
-        std::shared_ptr<node::ReadableEdgeHandle>(const node::EdgeTypeInfo&, std::shared_ptr<node::IEdgeReadableBase>)>;
+    using egress_adapter_fn_t =
+        std::function<std::shared_ptr<ReadableEdgeHandle>(const EdgeTypeInfo&, std::shared_ptr<IEdgeReadableBase>)>;
 
     EdgeAdapterRegistry() = delete;
 
@@ -87,4 +85,4 @@ struct EdgeAdapterRegistry
 
     static std::recursive_mutex s_mutex;
 };
-}  // namespace mrc::node
+}  // namespace mrc::edge

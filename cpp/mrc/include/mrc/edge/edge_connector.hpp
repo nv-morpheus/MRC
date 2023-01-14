@@ -22,8 +22,7 @@
 #include "mrc/channel/ingress.hpp"
 #include "mrc/channel/status.hpp"
 #include "mrc/core/watcher.hpp"
-#include "mrc/node/channel_holder.hpp"
-#include "mrc/node/edge_adapter_registry.hpp"
+#include "mrc/edge/edge_adapter_registry.hpp"
 #include "mrc/type_traits.hpp"
 
 #include <glog/logging.h>
@@ -37,7 +36,7 @@
 #include <unordered_set>
 #include <utility>
 
-namespace mrc::node {
+namespace mrc::edge {
 
 /**
  * @brief Convenience object to register Edge converters/adaptors with the EdgeRegistry
@@ -199,4 +198,4 @@ struct IdentityEdgeConnector
     }
 };
 
-}  // namespace mrc::node
+}  // namespace mrc::edge

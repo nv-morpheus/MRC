@@ -17,9 +17,8 @@
 
 #pragma once
 
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/manifold/interface.hpp"
-#include "mrc/node/channel_holder.hpp"
-#include "mrc/node/edge_builder.hpp"
 #include "mrc/node/operators/muxer.hpp"
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
@@ -31,52 +30,33 @@ namespace mrc::manifold {
 struct IngressDelegate
 {
     virtual ~IngressDelegate()                                                                       = default;
-    virtual void add_input(const SegmentAddress& address, node::IWritableAcceptorBase* input_source) = 0;
+    virtual void add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) = 0;
 };
 
 template <typename T>
 class TypedIngress : public IngressDelegate
 {
   public:
-    // node::IWritableAcceptor<T>& source()
-    // {
-    //     auto sink = std::dynamic_pointer_cast<node::IWritableAcceptor<T>>(this->source_base());
-    //     CHECK(sink);
-    //     return *sink;
-    // }
-
-    void add_input(const SegmentAddress& address, node::IWritableAcceptorBase* input_source) final
+    void add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) final
     {
-        auto source = dynamic_cast<node::IWritableAcceptor<T>*>(input_source);
+        auto source = dynamic_cast<edge::IWritableAcceptor<T>*>(input_source);
         CHECK(source);
         do_add_input(address, source);
     }
 
   private:
-    // virtual node::IIngressAcceptorBase& source_base()                                                           = 0;
-    virtual void do_add_input(const SegmentAddress& address, node::IWritableAcceptor<T>* source) = 0;
+    virtual void do_add_input(const SegmentAddress& address, edge::IWritableAcceptor<T>* source) = 0;
 };
 
 template <typename T>
 class MuxedIngress : public node::Muxer<T>, public TypedIngress<T>
 {
-  public:
-    // MuxedIngress() : m_muxer(std::make_shared<node::Muxer<T>>()) {}
-
   protected:
-    void do_add_input(const SegmentAddress& address, node::IWritableAcceptor<T>* source) final
+    void do_add_input(const SegmentAddress& address, edge::IWritableAcceptor<T>* source) final
     {
         // source->set_ingress(this->get)
-        node::make_edge(*source, *this);
+        mrc::make_edge(*source, *this);
     }
-
-  private:
-    // node::IIngressAcceptorBase& source_base() final
-    // {
-    //     return *m_muxer;
-    // }
-
-    // std::shared_ptr<node::Muxer<T>> m_muxer;
 };
 
 }  // namespace mrc::manifold
