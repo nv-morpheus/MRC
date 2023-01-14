@@ -1,5 +1,5 @@
-/**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,27 +17,11 @@
 
 #pragma once
 
-#include <string>
+#include "mrc/benchmarking/tracer.hpp"
 
-namespace mrc::runnable {
+#include <pybind11/pytypes.h>  // for object, dict
 
-enum class EngineType
-{
-    Fiber,
-    Thread,
-    Process,
-};
-
-std::string engine_type_string(const EngineType& engine_type);
-
-/**
- * @brief Name of the Default EngineFactory
- *
- * @return std::string
- */
-inline std::string default_engine_factory_name()
-{
-    return {"default"};
-}
-
-}  // namespace mrc::runnable
+namespace mrc::pymrc {
+using latency_tracer_t    = mrc::benchmarking::TracerEnsemble<pybind11::object, mrc::benchmarking::LatencyTracer>;
+using throughput_tracer_t = mrc::benchmarking::TracerEnsemble<pybind11::object, mrc::benchmarking::ThroughputTracer>;
+}  // namespace mrc::pymrc

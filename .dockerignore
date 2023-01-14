@@ -5,4 +5,3 @@ models
 @eaDir
 __pycache__
 bazel-*
-./vcpkg_installed

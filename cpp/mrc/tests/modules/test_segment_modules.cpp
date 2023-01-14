@@ -406,13 +406,15 @@ TEST_F(TestSegmentModules, ModuleTemplateTest)
 }
 
 #if !defined(__clang__) && defined(__GNUC__)
-// Work around for GCC : https://gcc.gnu.org/bugzilla/show_bug.cgi?id=83258
+    // Work around for GCC : https://gcc.gnu.org/bugzilla/show_bug.cgi?id=83258
+    #pragma GCC visibility push(default)
 auto F_1 = []() -> int {
     return 15;
 };
 auto F_2 = []() -> std::string {
     return "test string";
 };
+    #pragma GCC visibility pop
 #endif
 
 TEST_F(TestSegmentModules, ModuleTemplateWithInitTest)

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "mrc/benchmarking/tracer.hpp"
+#include "pymrc/tracers.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
@@ -27,12 +27,10 @@
 namespace mrc::pymrc {
 
 namespace py = pybind11;
+using namespace mrc::benchmarking;
 
 void init_tracer_stats_api(py::module_& m);
 void init_tracer_api(py::module_& m);
-
-using latency_tracer_t    = mrc::benchmarking::TracerEnsemble<py::object, mrc::benchmarking::LatencyTracer>;
-using throughput_tracer_t = mrc::benchmarking::TracerEnsemble<py::object, mrc::benchmarking::ThroughputTracer>;
 
 // TODO (Devin): Not supporting direct tracers yet, file still needs to be implemented.
 PYBIND11_MODULE(tracers, m)

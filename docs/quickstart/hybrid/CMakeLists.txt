@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,7 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "hybrid")
 
 set(QUICKSTART_HYBRID_HOME "${CMAKE_CURRENT_SOURCE_DIR}")
 
-create_python_package(mrc_qs_hybrid)
+morpheus_utils_create_python_package(mrc_qs_hybrid)
 
 add_subdirectory(mrc_qs_hybrid/common)
 
@@ -34,6 +34,6 @@ if(TARGET mrc-package-install)
   list(APPEND extra_args "PYTHON_DEPENDENCIES" "mrc-package-install")
 endif()
 
-build_python_package(mrc_qs_hybrid ${extra_args})
+morpheus_utils_build_python_package(mrc_qs_hybrid ${extra_args})
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

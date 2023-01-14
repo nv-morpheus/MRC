@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,36 +15,11 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "dep")
 
-# Initialize rapids CPM with package overrides
-rapids_cpm_init(OVERRIDE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/deps/rapids_cpm_package_overrides.json")
+if (VERBOSE)
+  morpheus_utils_print_config()
+endif()
 
-# Print CMake settings when verbose output is enabled
-message(VERBOSE "PROJECT_NAME: " ${PROJECT_NAME})
-message(VERBOSE "CMAKE_HOST_SYSTEM: ${CMAKE_HOST_SYSTEM}")
-message(VERBOSE "CMAKE_BUILD_TYPE: " ${CMAKE_BUILD_TYPE})
-message(VERBOSE "CMAKE_CXX_COMPILER: " ${CMAKE_CXX_COMPILER})
-message(VERBOSE "CMAKE_CXX_COMPILER_ID: " ${CMAKE_CXX_COMPILER_ID})
-message(VERBOSE "CMAKE_CXX_COMPILER_VERSION: " ${CMAKE_CXX_COMPILER_VERSION})
-message(VERBOSE "CMAKE_CXX_FLAGS: " ${CMAKE_CXX_FLAGS})
-message(VERBOSE "CMAKE_CUDA_COMPILER: " ${CMAKE_CUDA_COMPILER})
-message(VERBOSE "CMAKE_CUDA_COMPILER_ID: " ${CMAKE_CUDA_COMPILER_ID})
-message(VERBOSE "CMAKE_CUDA_COMPILER_VERSION: " ${CMAKE_CUDA_COMPILER_VERSION})
-message(VERBOSE "CMAKE_CUDA_FLAGS: " ${CMAKE_CUDA_FLAGS})
-message(VERBOSE "CMAKE_CURRENT_SOURCE_DIR: " ${CMAKE_CURRENT_SOURCE_DIR})
-message(VERBOSE "CMAKE_CURRENT_BINARY_DIR: " ${CMAKE_CURRENT_BINARY_DIR})
-message(VERBOSE "CMAKE_CURRENT_LIST_DIR: " ${CMAKE_CURRENT_LIST_DIR})
-message(VERBOSE "CMAKE_EXE_LINKER_FLAGS: " ${CMAKE_EXE_LINKER_FLAGS})
-message(VERBOSE "CMAKE_INSTALL_PREFIX: " ${CMAKE_INSTALL_PREFIX})
-message(VERBOSE "CMAKE_INSTALL_FULL_INCLUDEDIR: " ${CMAKE_INSTALL_FULL_INCLUDEDIR})
-message(VERBOSE "CMAKE_INSTALL_FULL_LIBDIR: " ${CMAKE_INSTALL_FULL_LIBDIR})
-message(VERBOSE "CMAKE_MODULE_PATH: " ${CMAKE_MODULE_PATH})
-message(VERBOSE "CMAKE_PREFIX_PATH: " ${CMAKE_PREFIX_PATH})
-message(VERBOSE "CMAKE_FIND_ROOT_PATH: " ${CMAKE_FIND_ROOT_PATH})
-message(VERBOSE "CMAKE_LIBRARY_ARCHITECTURE: " ${CMAKE_LIBRARY_ARCHITECTURE})
-message(VERBOSE "FIND_LIBRARY_USE_LIB64_PATHS: " ${FIND_LIBRARY_USE_LIB64_PATHS})
-message(VERBOSE "CMAKE_SYSROOT: " ${CMAKE_SYSROOT})
-message(VERBOSE "CMAKE_STAGING_PREFIX: " ${CMAKE_STAGING_PREFIX})
-message(VERBOSE "CMAKE_FIND_ROOT_PATH_MODE_INCLUDE: " ${CMAKE_FIND_ROOT_PATH_MODE_INCLUDE})
+morpheus_utils_initialize_cpm(MRC_CACHE_DIR)
 
 # Start with CUDA. Need to add it to our export set
 rapids_find_package(CUDAToolkit
@@ -57,33 +32,23 @@ rapids_find_package(CUDAToolkit
 # =====
 # - Use static linking to avoid issues with system-wide installations of Boost.
 # - Use numa=on to ensure the numa component of fiber gets built
-set(BOOST_VERSION "1.74.0" CACHE STRING "Version of boost to use")
-include(deps/Configure_boost)
+morpheus_utils_configure_boost_boost_cmake()
 
 # UCX
 # ===
-set(UCX_VERSION "1.13" CACHE STRING "Version of ucx to use")
-include(deps/Configure_ucx)
+morpheus_utils_configure_ucx()
 
 # hwloc
 # =====
-set(HWLOC_VERSION "2.5" CACHE STRING "Version of hwloc to use")
-include(deps/Configure_hwloc)
+morpheus_utils_configure_hwloc()
 
-# FlatBuffers
-# ===========
-# rapids_find_package(Flatbuffers REQUIRED
-# GLOBAL_TARGETS Flatbuffers
-# BUILD_EXPORT_SET ${PROJECT_NAME}-core-exports
-# INSTALL_EXPORT_SET ${PROJECT_NAME}-core-exports
-# FIND_ARGS
-# CONFIG
-# )
+# expected
+# ========
+morpheus_utils_configure_tl_expected()
 
 # NVIDIA RAPIDS RMM
 # =================
-set(RMM_VERSION "\${MRC_RAPIDS_VERSION}" CACHE STRING "Version of RMM to use. Defaults to \${MRC_RAPIDS_VERSION}")
-include(deps/Configure_RMM)
+morpheus_utils_configure_rmm()
 
 # gflags
 # ======
@@ -91,17 +56,13 @@ rapids_find_package(gflags REQUIRED
   GLOBAL_TARGETS gflags
   BUILD_EXPORT_SET ${PROJECT_NAME}-core-exports
   INSTALL_EXPORT_SET ${PROJECT_NAME}-core-exports
-
-  # FIND_ARGS
-  # CONFIG
 )
 
 # glog
 # ====
 # - link against shared
 # - todo: compile with -DWITH_GFLAGS=OFF and remove gflags dependency
-set(GLOG_VERSION "0.6" CACHE STRING "Version of glog to use")
-include(deps/Configure_glog)
+morpheus_utils_configure_glog()
 
 # nvidia cub
 # ==========
@@ -123,8 +84,7 @@ rapids_find_package(gRPC REQUIRED
 
 # RxCpp
 # =====
-set(RXCPP_VERSION "4.1.1.2" CACHE STRING "Version of RxCpp to use")
-include(deps/Configure_rxcpp)
+morpheus_utils_configure_rxcpp()
 
 # JSON
 # ======
@@ -138,12 +98,11 @@ rapids_find_package(nlohmann_json REQUIRED
 
 # prometheus
 # =========
-set(PROMETHEUS_CPP_VERSION "1.0.0" CACHE STRING "Version of Prometheus-cpp to use")
-include(deps/Configure_prometheus)
+morpheus_utils_configure_prometheus_cpp()
 
 # libcudacxx
 # =========
-include(deps/Configure_libcudacxx)
+morpheus_utils_configure_libcudacxx()
 
 if(MRC_BUILD_BENCHMARKS)
   # google benchmark

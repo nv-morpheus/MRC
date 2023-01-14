@@ -1,5 +1,5 @@
 # =============================================================================
-# SPDX-FileCopyrightText: Copyright (c) 2020-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,9 +22,9 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "coverage")
 
 # Include coverage tools if enabled
 if(MRC_ENABLE_CODECOV)
-  include(cmake/deps/Configure_gcov.cmake)
-
   message(STATUS "MRC_ENABLE_CODECOV is ON, configuring report exclusions and setting up coverage build targets")
+  morpheus_utils_initialize_code_coverage()
+
   set(CODECOV_REPORT_EXCLUSIONS
     "${CMAKE_BINARY_DIR}/protos/*" # Remove this if/when we get protobuf code unit tested.
     ".cache/*"
