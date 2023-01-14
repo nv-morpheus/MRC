@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include "mrc/coroutines/concepts/awaitable.hpp"
 #include "mrc/coroutines/sync_wait.hpp"
 #include "mrc/coroutines/task.hpp"
 #include "mrc/coroutines/when_all.hpp"
@@ -22,6 +23,8 @@
 #include <benchmark/benchmark.h>
 
 #include <coroutine>
+#include <cstddef>
+#include <type_traits>
 
 using namespace mrc;
 

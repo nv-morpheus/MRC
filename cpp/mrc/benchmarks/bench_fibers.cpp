@@ -16,9 +16,10 @@
  */
 
 #include <benchmark/benchmark.h>
-#include <boost/fiber/all.hpp>
+#include <boost/fiber/future/async.hpp>
+#include <boost/fiber/future/future.hpp>
+#include <boost/fiber/operations.hpp>
 #include <boost/fiber/policy.hpp>
-#include <boost/fiber/scheduler.hpp>
 
 static void boost_fibers_create_single_task_and_sync_post(benchmark::State& state)
 {
