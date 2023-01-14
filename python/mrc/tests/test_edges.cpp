@@ -28,7 +28,6 @@
 #include "mrc/node/rx_source_base.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/types.hpp"
-#include "mrc/segment/object.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 

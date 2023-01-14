@@ -30,6 +30,7 @@
 #include <cstddef>
 #include <functional>
 #include <memory>
+#include <vector>
 
 namespace mrc::pymrc {
 namespace py = pybind11;
