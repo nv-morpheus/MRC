@@ -1,4 +1,5 @@
-# SPDX-FileCopyrightText: Copyright (c) 2021-2022,NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# =============================================================================
+# SPDX-FileCopyrightText: Copyright (c) 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,24 +13,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# =============================================================================
 
-diff --git a/Makefile.am b/Makefile.am
-index 073ead3..85f9d01 100644
---- a/Makefile.am
-+++ b/Makefile.am
-@@ -41,15 +41,6 @@ if HAVE_UCG
- SUBDIRS += $(UCG_SUBDIR)
- endif
-
--SUBDIRS += \
--	src/tools/vfs \
--	src/tools/info \
--	src/tools/perf \
--	src/tools/profile \
--	bindings/java \
--	test/apps \
--	examples
--
- if HAVE_GTEST
- SUBDIRS += test/gtest
- endif
+if(MRC_USE_IWYU)
+  morpheus_utils_initialize_iwyu(
+      MRC_USE_IWYU
+      MRC_IWYU_VERBOSITY
+      MRC_IWYU_PROGRAM
+      MRC_IWYU_OPTIONS
+  )
+endif(MRC_USE_IWYU)

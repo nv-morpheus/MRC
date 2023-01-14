@@ -2,7 +2,6 @@
 *.engine
 .Dockerfile
 .gitignore
-/vcpkg_installed
 /*conda-bld*/
 
 # Ignore generated pyi files for pybind and cython modules

@@ -28,6 +28,7 @@
 #include "mrc/node/rx_source_base.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/types.hpp"
+#include "mrc/segment/object.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 
@@ -319,6 +320,7 @@ PYBIND11_MODULE(test_edges_cpp, module)
     module.doc() = R"pbdoc()pbdoc";
 
     pymrc::import(module, "mrc");
+    pymrc::import(module, "mrc.core.segment");
 
     py::class_<Base, std::shared_ptr<Base>>(module, "Base").def(py::init<>([]() {
         return std::make_shared<Base>();

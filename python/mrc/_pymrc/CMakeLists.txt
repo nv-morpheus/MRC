@@ -48,18 +48,18 @@ add_library(${PROJECT_NAME}::pymrc ALIAS pymrc)
 
 target_link_libraries(pymrc
   PUBLIC
-  ${PROJECT_NAME}::libmrc
-  ${Python_LIBRARIES}
-  prometheus-cpp::core
-  pybind11::pybind11
+    ${PROJECT_NAME}::libmrc
+    ${Python_LIBRARIES}
+    prometheus-cpp::core
+    pybind11::pybind11
 )
 
 target_include_directories(pymrc
   PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
   PRIVATE
-  ${Python_INCLUDE_DIR}
+    ${Python_INCLUDE_DIR}
 )
 
 set_target_properties(pymrc PROPERTIES OUTPUT_NAME ${PROJECT_NAME}_pymrc)

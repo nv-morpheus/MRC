@@ -19,6 +19,7 @@
 
 #include "pymrc/executor.hpp"  // IWYU pragma: keep
 #include "pymrc/segment.hpp"
+#include "pymrc/tracers.hpp"
 
 #include <pybind11/attr.h>
 #include <pybind11/gil.h>  // IWYU pragma: keep
@@ -28,15 +29,45 @@
 #include <cstddef>
 #include <functional>
 #include <memory>
-#include <vector>
 
 namespace mrc::pymrc {
-
 namespace py = pybind11;
+
+void init_tracer_stats_api(py::module_& m);
 
 PYBIND11_MODULE(watchers, m)
 {
     m.doc() = R"pbdoc()pbdoc";
+
+    pymrc::import(m, "mrc.core.executor");
+
+    init_tracer_stats_api(m);
+
+    /**
+     * @brief define tracer implementations for use with segment watchers
+     */
+    // pymrc::init_tracer_api(m);
+
+    /**
+     * @brief Tracer objects are packaged into tracer ensembles; we'll just support tracer's with py::object payloads
+     *  for now.
+     */
+    auto LatencyTracer = py::class_<latency_tracer_t, std::shared_ptr<latency_tracer_t>>(m, "LatencyTracer");
+    LatencyTracer.def(py::init<std::size_t>());
+
+    // TODO(devin)
+    // LatencyTracer.def("add_counters", &mrc::LatencyTracer::add_counters);
+    LatencyTracer.def_static("aggregate", [](py::object& obj_type, py::list ensemble_tracers) {
+        // Something is broken with calling static members
+    });
+    LatencyTracer.def("emit", &latency_tracer_t::emit);
+
+    /**
+     * @brief ThroughputTracer
+     */
+    auto ThroughputTracer = py::class_<throughput_tracer_t, std::shared_ptr<throughput_tracer_t>>(m,
+                                                                                                  "ThroughputTracer");
+    ThroughputTracer.def(py::init<std::size_t>());
 
     // Segment watcher allows for each tracer object to have a data payload. To simplify, for now, we'll assume
     // that the payload is a py::object.

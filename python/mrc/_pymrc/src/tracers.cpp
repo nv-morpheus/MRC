@@ -15,29 +15,4 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include <string>
-
-namespace mrc::runnable {
-
-enum class EngineType
-{
-    Fiber,
-    Thread,
-    Process,
-};
-
-std::string engine_type_string(const EngineType& engine_type);
-
-/**
- * @brief Name of the Default EngineFactory
- *
- * @return std::string
- */
-inline std::string default_engine_factory_name()
-{
-    return {"default"};
-}
-
-}  // namespace mrc::runnable
+#include "pymrc/tracers.hpp"

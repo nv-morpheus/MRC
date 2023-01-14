@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-include(GRPCGenerateCPP)
+set(MRC_PROTO_MODULE_PATH_EXTENSIONS
+    "${CMAKE_SOURCE_DIR}/utilities/cmake"
+    )
+
+# Prepend path updates so they take priority in this scope.
+list(PREPEND CMAKE_MODULE_PATH ${MRC_PROTO_MODULE_PATH_EXTENSIONS})
+
+include(morpheus_utils/grpc/grpc_generate_cpp)
 
 add_library(mrc_protos)
 
@@ -90,3 +97,5 @@ install(
   PUBLIC_HEADER
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/protos"
 )
+
+list(REMOVE_ITEM CMAKE_MODULE_PATH ${MRC_PROTO_MODULE_PATH_EXTENSIONS})

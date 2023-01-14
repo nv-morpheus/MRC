@@ -48,6 +48,7 @@ fi
 show_conda_info
 
 rapids-logger "Configuring for build and test"
+git submodule update --init --recursive
 cmake -B build -G Ninja ${CMAKE_FLAGS} .
 
 rapids-logger "Building MRC"
