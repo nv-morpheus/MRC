@@ -246,7 +246,7 @@ class SyncWaitTask
         }
         else
         {
-            return m_coroutine.promise().result();
+            return std::remove_reference_t<ReturnT>{std::move(m_coroutine.promise().result())};
         }
     }
 
