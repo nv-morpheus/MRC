@@ -50,8 +50,6 @@ if(MRC_ENABLE_CODECOV)
     NAME gcovr-html-report-cpp
     EXCLUDE ${CODECOV_REPORT_EXCLUSIONS}
     EXECUTABLE "ctest"
-    EXECUTABLE_ARGS "--exclude-regex"
-    EXECUTABLE_ARGS "'test_srf_private|nvrpc'"
   )
 
   setup_target_for_coverage_gcovr_html(
@@ -65,8 +63,6 @@ if(MRC_ENABLE_CODECOV)
     NAME gcovr-xml-report-cpp
     EXCLUDE ${CODECOV_REPORT_EXCLUSIONS}
     EXECUTABLE "ctest"
-    EXECUTABLE_ARGS "--exclude-regex"
-    EXECUTABLE_ARGS "'test_srf_private|nvrpc'"
   )
 
   setup_target_for_coverage_gcovr_xml(

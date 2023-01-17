@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,25 +17,13 @@
 
 #pragma once
 
-#include "mrc/node/operators/operator.hpp"
-#include "mrc/node/source_channel.hpp"
+#include "mrc/node/operators/node_component.hpp"
+#include "mrc/node/source_channel_owner.hpp"
 
 namespace mrc::node {
 
 template <typename T>
-class Muxer : public Operator<T>, public SourceChannelWriteable<T>
-{
-    // Operator::on_next
-    inline channel::Status on_next(T&& data) final
-    {
-        return SourceChannelWriteable<T>::await_write(std::move(data));
-    }
-
-    // Operator::on_complete
-    void on_complete() final
-    {
-        this->release_channel();
-    }
-};
+class Muxer : public NodeComponent<T, T>
+{};
 
 }  // namespace mrc::node

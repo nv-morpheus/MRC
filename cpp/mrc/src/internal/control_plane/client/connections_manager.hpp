@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,12 +17,10 @@
 
 #pragma once
 
-#pragma once
-
 #include "internal/control_plane/client/state_manager.hpp"
 #include "internal/ucx/common.hpp"
 
-#include "mrc/node/source_channel.hpp"
+#include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/types.hpp"
 
@@ -44,7 +42,7 @@ class Instance;
 class ConnectionsManager : public StateManager
 {
   public:
-    using update_channel_t = mrc::node::SourceChannelWriteable<const protos::StateUpdate>;
+    using update_channel_t = mrc::node::WritableEntrypoint<const protos::StateUpdate>;
 
     ConnectionsManager(Client& client, update_channel_t& update_channel);
     ~ConnectionsManager() override;

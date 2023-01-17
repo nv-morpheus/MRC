@@ -21,15 +21,16 @@
 #include "pymrc/pipeline.hpp"
 #include "pymrc/port_builders.hpp"
 #include "pymrc/types.hpp"
-#include "pymrc/utils.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_sink_base.hpp"
 #include "mrc/node/rx_source.hpp"
+#include "mrc/node/rx_source_base.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/types.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
@@ -44,6 +45,7 @@
 #include <cstddef>
 #include <functional>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>

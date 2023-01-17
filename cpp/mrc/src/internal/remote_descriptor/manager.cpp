@@ -23,6 +23,7 @@
 #include "internal/data_plane/resources.hpp"
 #include "internal/network/resources.hpp"
 #include "internal/remote_descriptor/decodable_storage.hpp"
+#include "internal/remote_descriptor/messages.hpp"
 #include "internal/remote_descriptor/storage.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
@@ -34,9 +35,9 @@
 #include "mrc/channel/status.hpp"
 #include "mrc/codable/api.hpp"
 #include "mrc/codable/encoded_object.hpp"
-#include "mrc/node/edge_builder.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/rx_sink.hpp"
-#include "mrc/node/source_channel.hpp"
+#include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/protos/codable.pb.h"
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launch_options.hpp"
@@ -72,7 +73,7 @@ ucs_status_t active_message_callback(void* arg,
     DCHECK_EQ(header_length, sizeof(RemoteDescriptorDecrementMessage));
 
     const auto* const_msg   = static_cast<const RemoteDescriptorDecrementMessage*>(header);
-    auto* decrement_channel = static_cast<node::SourceChannelWriteable<RemoteDescriptorDecrementMessage>*>(arg);
+    auto* decrement_channel = static_cast<node::WritableEntrypoint<RemoteDescriptorDecrementMessage>*>(arg);
 
     // make a copy of the message and write it to the channel
     auto msg = *const_msg;
@@ -182,14 +183,13 @@ void Manager::decrement_tokens(std::size_t object_id, std::size_t token_count)
 
 void Manager::do_service_start()
 {
-    m_decrement_channel    = std::make_unique<node::SourceChannelWriteable<RemoteDescriptorDecrementMessage>>();
+    m_decrement_channel    = std::make_unique<node::WritableEntrypoint<RemoteDescriptorDecrementMessage>>();
     auto decrement_handler = std::make_unique<node::RxSink<RemoteDescriptorDecrementMessage>>(
         [this](RemoteDescriptorDecrementMessage msg) {
             decrement_tokens(msg.object_id, msg.tokens);
         });
-    decrement_handler->update_channel(
-        std::make_unique<channel::BufferedChannel<RemoteDescriptorDecrementMessage>>(128));
-    node::make_edge(*m_decrement_channel, *decrement_handler);
+    decrement_handler->set_channel(std::make_unique<channel::BufferedChannel<RemoteDescriptorDecrementMessage>>(128));
+    mrc::make_edge(*m_decrement_channel, *decrement_handler);
 
     mrc::runnable::LaunchOptions launch_options;
     launch_options.engine_factory_name = "main";

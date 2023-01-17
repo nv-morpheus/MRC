@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,14 +36,14 @@
  * limitations under the License.
  */
 
-#include "mrc/coroutines/event.hpp"
+#include "mrc/coroutines/concepts/awaitable.hpp"
 #include "mrc/coroutines/latch.hpp"
 #include "mrc/coroutines/task.hpp"
 
 #include <gtest/gtest.h>
 
-#include <chrono>
-#include <thread>
+#include <coroutine>
+#include <cstdint>
 
 using namespace mrc;
 

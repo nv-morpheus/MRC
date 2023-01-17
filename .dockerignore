@@ -5,3 +5,6 @@ models
 @eaDir
 __pycache__
 bazel-*
+
+# Ignore changes to the devcontainer
+.devcontainer/devcontainer.json

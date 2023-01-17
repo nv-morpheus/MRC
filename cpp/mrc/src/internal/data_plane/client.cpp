@@ -32,10 +32,9 @@
 
 #include "mrc/channel/buffered_channel.hpp"
 #include "mrc/channel/channel.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/memory/literals.hpp"
-#include "mrc/node/edge_builder.hpp"
 #include "mrc/node/rx_sink.hpp"
-#include "mrc/node/source_channel.hpp"
 #include "mrc/protos/codable.pb.h"
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launcher.hpp"
@@ -68,7 +67,7 @@ Client::Client(resources::PartitionResourceBase& base,
   m_ucx(ucx),
   m_connnection_manager(connections_manager),
   m_transient_pool(transient_pool),
-  m_rd_channel(std::make_unique<node::SourceChannelWriteable<RemoteDescriptorMessage>>())
+  m_rd_channel(std::make_unique<node::NodeComponent<RemoteDescriptorMessage>>())
 {}
 
 Client::~Client() = default;
@@ -282,7 +281,7 @@ void Client::issue_remote_descriptor(RemoteDescriptorMessage&& msg)
     }
 }
 
-node::SourceChannelWriteable<RemoteDescriptorMessage>& Client::remote_descriptor_channel()
+node::WritableProvider<RemoteDescriptorMessage>& Client::remote_descriptor_channel()
 {
     CHECK(m_rd_channel);
     return *m_rd_channel;
@@ -297,10 +296,10 @@ void Client::do_service_start()
     });
 
     // todo(ryan) - parameterize mrc::data_plane::client::max_queued_remote_descriptor_sends
-    rd_writer->update_channel(std::make_unique<channel::BufferedChannel<RemoteDescriptorMessage>>(128));
+    rd_writer->set_channel(std::make_unique<channel::BufferedChannel<RemoteDescriptorMessage>>(128));
 
     // form edge
-    mrc::node::make_edge(*m_rd_channel, *rd_writer);
+    mrc::make_edge(*m_rd_channel, *rd_writer);
 
     // todo(ryan) - parameterize mrc::data_plane::client::max_inflight_remote_descriptor_sends
     auto launch_options = Resources::launch_options(16);

@@ -36,6 +36,7 @@
  * limitations under the License.
  */
 
+#include "mrc/coroutines/concepts/awaitable.hpp"
 #include "mrc/coroutines/event.hpp"
 #include "mrc/coroutines/sync_wait.hpp"
 #include "mrc/coroutines/task.hpp"
@@ -44,8 +45,10 @@
 
 #include <gtest/gtest.h>
 
-#include <chrono>
-#include <thread>
+#include <atomic>
+#include <coroutine>
+#include <cstdint>
+#include <tuple>
 
 using namespace mrc;
 

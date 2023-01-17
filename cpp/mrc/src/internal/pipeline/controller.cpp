@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -62,8 +62,12 @@ void Controller::on_data(ControlMessage&& message)
         } catch (...)
         {
             LOG(ERROR) << "exception caught while performing update - this is fatal - issuing kill";
+
+            // Call kill but do not rethrow the exception to allow for proper shutdown
             kill();
-            std::rethrow_exception(std::current_exception());
+
+            // Set the exception in the context so it is correctly reported
+            ctx.set_exception(std::current_exception());
         }
         break;
     case ControlMessageType::Stop:

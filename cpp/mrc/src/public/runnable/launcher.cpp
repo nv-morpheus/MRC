@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,7 +40,7 @@ std::unique_ptr<Runner> Launcher::ignition()
     std::lock_guard<std::mutex> lock(m_mutex);
     CHECK(m_runner);
     CHECK(m_engines);
-    CHECK(m_contexts.size());
+    CHECK(!m_contexts.empty());
     m_runner->enqueue(m_engines, std::move(m_contexts));
     return std::move(m_runner);
 }

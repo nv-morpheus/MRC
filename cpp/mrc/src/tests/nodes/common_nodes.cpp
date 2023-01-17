@@ -28,6 +28,7 @@
 #include <rxcpp/rx.hpp>
 
 #include <chrono>
+#include <map>
 #include <memory>
 #include <ostream>
 #include <stdexcept>

@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "internal/remote_descriptor/messages.hpp"
 #include "internal/remote_descriptor/storage.hpp"
 #include "internal/service.hpp"
 
+#include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/runtime/remote_descriptor_manager.hpp"
 #include "mrc/types.hpp"
@@ -30,6 +30,8 @@
 #include <map>
 #include <memory>
 #include <mutex>
+
+// IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
 
 namespace mrc::codable {
 class EncodedStorage;
@@ -45,10 +47,6 @@ class PartitionResources;
 namespace mrc::internal::runtime {
 class Partition;
 }  // namespace mrc::internal::runtime
-namespace mrc::node {
-template <typename T>
-class SourceChannelWriteable;
-}  // namespace mrc::node
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
@@ -57,6 +55,7 @@ struct IRemoteDescriptorHandle;
 }  // namespace mrc::runtime
 
 namespace mrc::internal::remote_descriptor {
+struct RemoteDescriptorDecrementMessage;
 
 /**
  * @brief Creates and Manages RemoteDescriptors
@@ -121,7 +120,7 @@ class Manager final : private Service,
 
     resources::PartitionResources& m_resources;
     std::unique_ptr<mrc::runnable::Runner> m_decrement_handler;
-    std::unique_ptr<mrc::node::SourceChannelWriteable<RemoteDescriptorDecrementMessage>> m_decrement_channel;
+    std::unique_ptr<mrc::node::WritableEntrypoint<RemoteDescriptorDecrementMessage>> m_decrement_channel;
 
     mutable std::mutex m_mutex;
 

@@ -17,7 +17,6 @@
 
 #include "mrc/modules/sample_modules.hpp"
 
-#include "mrc/core/utils.hpp"
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
@@ -26,6 +25,7 @@
 
 #include <glog/logging.h>
 
+#include <map>
 #include <memory>
 #include <ostream>
 #include <string_view>

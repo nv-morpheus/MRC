@@ -39,7 +39,6 @@
 #include "mrc/coroutines/event.hpp"
 
 #include "mrc/coroutines/thread_local_context.hpp"
-#include "mrc/coroutines/thread_pool.hpp"
 
 namespace mrc::coroutines {
 

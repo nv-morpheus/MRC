@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,10 +19,15 @@
 
 #include "internal/pubsub/publisher_service.hpp"
 
+#include <rxcpp/rx.hpp>
+
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
 
+namespace mrc::internal::data_plane {
+struct RemoteDescriptorMessage;
+}  // namespace mrc::internal::data_plane
 namespace mrc::internal::runtime {
 class Partition;
 }  // namespace mrc::internal::runtime
@@ -47,7 +52,8 @@ class PublisherRoundRobin final : public PublisherService
     void on_update() final;
 
     // apply the round robin policy
-    void apply_policy(mrc::runtime::RemoteDescriptor&& rd) final;
+    void apply_policy(rxcpp::subscriber<data_plane::RemoteDescriptorMessage>& sub,
+                      mrc::runtime::RemoteDescriptor&& rd) final;
 
     std::unordered_map<std::uint64_t, std::shared_ptr<ucx::Endpoint>>::const_iterator m_next;
 

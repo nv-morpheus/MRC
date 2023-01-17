@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,14 +20,10 @@
 #include <nlohmann/json_fwd.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
+#include <sys/types.h>
 
-#include <memory>
 #include <string>
 #include <typeinfo>
-
-namespace pybind11 {
-class gil_scoped_acquire;
-}  // namespace pybind11
 
 namespace mrc::pymrc {
 
@@ -58,117 +54,7 @@ void from_import_as(pybind11::module_& dest, const std::string& from, const std:
  */
 const std::type_info* cpptype_info_from_object(pybind11::object& obj);
 
-/**
- * @brief Wraps a `pybind11::gil_scoped_acquire` with additional functionality to release the GIL before this object
- * leaves the scope. Useful to avoid unnecessary nested `gil_scoped_acquire` then `gil_scoped_release` which need to
- * grab the GIL twice
- *
- */
-class AcquireGIL
-{
-  public:
-    //   Create the object in place
-    AcquireGIL();
-    ~AcquireGIL();
-
-    void inc_ref();
-
-    void dec_ref();
-
-    void disarm();
-
-    /**
-     * @brief Releases the GIL early. The GIL will only be released once.
-     *
-     */
-    void release();
-
-  private:
-    // Use an unique_ptr here to allow releasing the GIL early
-    std::unique_ptr<pybind11::gil_scoped_acquire> m_gil;
-};
-
-// Allows you to work with a pybind11::object that will correctly grab the GIL before destruction
-class PYBIND11_EXPORT PyObjectWrapper : public pybind11::detail::object_api<PyObjectWrapper>
-{
-  public:
-    PyObjectWrapper() = default;
-    PyObjectWrapper(pybind11::object&& to_wrap);
-
-    // Disallow copying since that would require the GIL. If it needs to be copied, use PyObjectHolder
-    PyObjectWrapper(const PyObjectWrapper&) = delete;
-
-    ~PyObjectWrapper();
-
-    PyObjectWrapper& operator=(const PyObjectWrapper& other) = delete;
-
-    PyObjectWrapper& operator=(PyObjectWrapper&& other) = default;
-
-    explicit operator bool() const;
-
-    // Returns const ref. Does not require GIL. Use at your own risk!!! Should only be used for testing
-    const pybind11::handle& view_obj() const&;
-
-    // Makes a copy of the underlying object. Requires the GIL
-    pybind11::object copy_obj() const&;
-
-    // Moves the underlying object. Does not require the GIL
-    pybind11::object&& move_obj() &&;
-
-    // Returns const ref. Used by object_api. Should not be used directly. Requires the GIL
-    operator const pybind11::handle&() const&;
-
-    // Main method to move values out of the wrapper
-    operator pybind11::object&&() &&;
-
-    // Necessary to implement the object_api interface
-    PyObject* ptr() const;
-
-  private:
-    pybind11::object m_obj;
-};
-
-// Allows you to move a pybind11::object around without needing the GIL. Uses a shared_ptr under the hood to reference
-// count
-class PYBIND11_EXPORT PyObjectHolder : public pybind11::detail::object_api<PyObjectHolder>
-{
-  public:
-    PyObjectHolder();
-    PyObjectHolder(pybind11::object&& to_wrap);
-
-    PyObjectHolder(const PyObjectHolder& other) = default;
-
-    PyObjectHolder(PyObjectHolder&& other);
-
-    PyObjectHolder& operator=(const PyObjectHolder& other);
-
-    PyObjectHolder& operator=(PyObjectHolder&& other);
-
-    explicit operator bool() const;
-
-    // Returns const ref. Does not require GIL. Use at your own risk!!! Should only be used for testing
-    const pybind11::handle& view_obj() const&;
-
-    // Makes a copy of the underlying object. Requires the GIL
-    pybind11::object copy_obj() const&;
-
-    // Moves the underlying object. Does not require the GIL
-    pybind11::object&& move_obj() &&;
-
-    // Returns const ref. Used by object_api. Should not be used directly. Requires the GIL
-    operator const pybind11::handle&() const&;
-
-    // Main method to move values out of the wrapper
-    operator pybind11::object&&() &&;
-
-    operator pybind11::object&&() const&& = delete;
-
-    // Necessary to implement the object_api interface
-    PyObject* ptr() const;
-
-  private:
-    std::shared_ptr<PyObjectWrapper> m_wrapped;
-};
+void show_deprecation_warning(const std::string& deprecation_message, ssize_t stack_level = 1);
 
 #pragma GCC visibility pop
 

@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,10 +25,10 @@
 #include <mutex>
 #include <vector>
 
-namespace mrc::node {
+namespace mrc::edge {
 template <typename T>
-class SourceChannel;
-}  // namespace mrc::node
+class IWritableAcceptor;
+}  // namespace mrc::edge
 namespace mrc::protos {
 class StateUpdate;
 }  // namespace mrc::protos
@@ -73,7 +73,7 @@ class StateManager
     const Client& client() const;
     Client& client();
 
-    void start_with_channel(node::SourceChannel<const protos::StateUpdate>& update_channel);
+    void start_with_channel(edge::IWritableAcceptor<const protos::StateUpdate>& update_channel);
     void await_join();
 
   private:

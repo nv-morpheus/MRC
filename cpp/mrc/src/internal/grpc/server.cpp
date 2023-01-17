@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,7 @@
 #include "internal/grpc/promise_handler.hpp"
 #include "internal/runnable/resources.hpp"
 
-#include "mrc/node/edge_builder.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launcher.hpp"
 #include "mrc/runnable/runner.hpp"
@@ -50,7 +50,7 @@ void Server::do_service_start()
 
     auto progress_engine = std::make_unique<ProgressEngine>(m_cq);
     auto event_handler   = std::make_unique<PromiseHandler>();
-    mrc::node::make_edge(*progress_engine, *event_handler);
+    mrc::make_edge(*progress_engine, *event_handler);
 
     m_progress_engine = m_runnable.launch_control().prepare_launcher(std::move(progress_engine))->ignition();
     m_event_hander    = m_runnable.launch_control().prepare_launcher(std::move(event_handler))->ignition();

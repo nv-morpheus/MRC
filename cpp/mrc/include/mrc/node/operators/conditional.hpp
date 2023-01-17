@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,29 +17,23 @@
 
 #pragma once
 
-#include "mrc/node/operators/operator.hpp"
 #include "mrc/node/operators/router.hpp"
 
 namespace mrc::node {
 
-template <typename T, typename CaseT>
-class Conditional : public Operator<T>, public RouterBase<CaseT, T>
+template <typename CaseT, typename T>
+class Conditional : public Router<CaseT, T>
 {
   public:
     Conditional(std::function<CaseT(const T&)> predicate) : m_predicate(std::move(predicate)) {}
 
+  protected:
+    virtual CaseT determine_key_for_value(const T& t)
+    {
+        return m_predicate(t);
+    }
+
   private:
-    inline channel::Status on_next(T&& data) final
-    {
-        return this->channel_for_key(m_predicate(data)).await_write(std::move(data));
-    }
-
-    // Operator::on_release
-    void on_complete() final
-    {
-        RouterBase<CaseT, T>::release_sources();
-    }
-
     std::function<CaseT(const T&)> m_predicate;
 };
 

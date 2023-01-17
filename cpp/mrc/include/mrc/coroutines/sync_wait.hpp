@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -39,9 +39,10 @@
 #pragma once
 
 #include "mrc/coroutines/concepts/awaitable.hpp"
-#include "mrc/coroutines/when_all.hpp"
 
 #include <condition_variable>
+#include <coroutine>
+#include <exception>
 #include <mutex>
 #include <type_traits>
 #include <utility>

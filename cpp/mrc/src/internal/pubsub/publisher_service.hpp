@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,12 +19,12 @@
 
 #include "internal/pubsub/base.hpp"
 
-#include "mrc/node/source_channel.hpp"
 #include "mrc/pubsub/api.hpp"
 #include "mrc/runnable/runner.hpp"
-#include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/macros.hpp"
+
+#include <rxcpp/rx.hpp>
 
 #include <cstdint>
 #include <memory>
@@ -32,11 +32,13 @@
 #include <string>
 #include <unordered_map>
 
-namespace mrc::channel {
-enum class Status;
-}  // namespace mrc::channel
+namespace mrc::internal::data_plane {
+struct RemoteDescriptorMessage;
+}  // namespace mrc::internal::data_plane
+namespace mrc::runtime {
+class RemoteDescriptor;
+}  // namespace mrc::runtime
 namespace mrc::codable {
-class EncodedStorage;
 struct ICodableStorage;
 }  // namespace mrc::codable
 namespace mrc::internal::runtime {
@@ -48,9 +50,7 @@ class Endpoint;
 
 namespace mrc::internal::pubsub {
 
-class PublisherService : public Base,
-                         public mrc::pubsub::IPublisherService,
-                         public mrc::node::SourceChannelWriteable<mrc::runtime::RemoteDescriptor>
+class PublisherService : public Base, public mrc::pubsub::IPublisherService
 {
   protected:
     PublisherService(std::string service_name, runtime::Partition& runtime);
@@ -61,11 +61,11 @@ class PublisherService : public Base,
     DELETE_COPYABILITY(PublisherService);
     DELETE_MOVEABILITY(PublisherService);
 
-    // [IPublisherService] publish a remote descriptor
-    channel::Status publish(mrc::runtime::RemoteDescriptor&& rd) final;
+    // // [IPublisherService] publish a remote descriptor
+    // channel::Status publish(mrc::runtime::RemoteDescriptor&& rd) final;
 
-    // [IPublisherService] publish an encoded object
-    channel::Status publish(std::unique_ptr<mrc::codable::EncodedStorage> encoded_object) final;
+    // // [IPublisherService] publish an encoded object
+    // channel::Status publish(std::unique_ptr<mrc::codable::EncodedStorage> encoded_object) final;
 
     // [ISubscriptionServiceIdentity] provide the value for the role of this instance
     const std::string& role() const final;
@@ -108,7 +108,8 @@ class PublisherService : public Base,
                                  const std::unordered_map<std::uint64_t, InstanceID>& tagged_instances) final;
 
     // apply policy
-    virtual void apply_policy(mrc::runtime::RemoteDescriptor&& rd) = 0;
+    virtual void apply_policy(rxcpp::subscriber<data_plane::RemoteDescriptorMessage>& sub,
+                              mrc::runtime::RemoteDescriptor&& rd) = 0;
 
     // called immediate on completion of update_tagged_instances
     virtual void on_update() = 0;

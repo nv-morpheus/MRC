@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,7 +48,7 @@ const std::string& Manifold::info() const
     return m_info;
 }
 
-void Manifold::add_input(const SegmentAddress& address, node::SourcePropertiesBase* input_source)
+void Manifold::add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source)
 {
     DVLOG(3) << "manifold " << this->port_name() << ": connecting to upstream segment " << segment::info(address);
     do_add_input(address, input_source);
@@ -56,7 +56,7 @@ void Manifold::add_input(const SegmentAddress& address, node::SourcePropertiesBa
               << segment::info(address);
 }
 
-void Manifold::add_output(const SegmentAddress& address, node::SinkPropertiesBase* output_sink)
+void Manifold::add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink)
 {
     DVLOG(3) << "manifold " << this->port_name() << ": connecting to downstream segment " << segment::info(address);
     do_add_output(address, output_sink);

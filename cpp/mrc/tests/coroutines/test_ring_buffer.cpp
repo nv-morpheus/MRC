@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,17 +36,22 @@
  * limitations under the License.
  */
 
+#include "mrc/core/expected.hpp"
 #include "mrc/coroutines/latch.hpp"
 #include "mrc/coroutines/ring_buffer.hpp"
-#include "mrc/coroutines/schedule_policy.hpp"
 #include "mrc/coroutines/sync_wait.hpp"
 #include "mrc/coroutines/task.hpp"
+#include "mrc/coroutines/thread_pool.hpp"
 #include "mrc/coroutines/when_all.hpp"
 
 #include <gtest/gtest.h>
 
-#include <chrono>
-#include <thread>
+#include <coroutine>
+#include <cstddef>
+#include <cstdint>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 using namespace mrc;
 

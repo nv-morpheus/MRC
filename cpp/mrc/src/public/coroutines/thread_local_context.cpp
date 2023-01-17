@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -39,8 +39,6 @@
 #include "mrc/coroutines/thread_local_context.hpp"
 
 #include "mrc/coroutines/thread_pool.hpp"
-
-#include <cuda_runtime_api.h>
 
 namespace mrc::coroutines {
 

@@ -23,9 +23,11 @@
 #include "internal/runnable/resources.hpp"
 
 #include "mrc/channel/status.hpp"
-#include "mrc/node/edge_builder.hpp"
+#include "mrc/edge/edge_builder.hpp"
+#include "mrc/node/queue.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
+#include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/runnable/launch_control.hpp"
@@ -40,6 +42,7 @@
 #include <algorithm>
 #include <exception>
 #include <future>
+#include <memory>
 #include <mutex>
 #include <set>
 #include <sstream>
@@ -100,8 +103,11 @@ void Server::do_service_start()
     // create external queue for incoming events
     // as new grpc streams are initialized by the acceptor, they attach as sources to the queue (stream >> queue)
     // these streams issue event (event_t) object which encapsulate the stream_writer for the originating stream
-    m_queue = std::make_unique<mrc::node::Queue<event_t>>();
-    m_queue->enable_persistence();
+    m_queue        = std::make_unique<mrc::node::Queue<event_t>>();
+    m_queue_holder = std::make_unique<mrc::node::WritableEntrypoint<event_t>>();
+
+    // Enable persistance by connecting the queue to a subject that will keep the connection alive
+    mrc::make_edge(*m_queue_holder, *m_queue);
 
     // the queue is attached to the event handler which will update the internal state of the server
     auto handler = std::make_unique<mrc::node::RxSink<event_t>>([this](event_t event) {
@@ -115,7 +121,7 @@ void Server::do_service_start()
         }));
 
     // edge: queue >> handler
-    mrc::node::make_edge(*m_queue, *handler);
+    mrc::make_edge(*m_queue, *handler);
 
     // grpc service
     m_service = std::make_shared<mrc::protos::Architect::AsyncService>();
@@ -182,7 +188,7 @@ void Server::do_service_await_join()
     drop_all_streams();
 
     // we keep the event handlers open until the streams are closed
-    m_queue->disable_persistence();
+    m_queue_holder.reset();
 
     DVLOG(10) << "awaiting grpc server join";
     m_server.service_await_join();

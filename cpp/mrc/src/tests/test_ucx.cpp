@@ -20,7 +20,6 @@
 #include "internal/ucx/all.hpp"
 #include "internal/ucx/endpoint.hpp"
 
-#include "mrc/channel/forward.hpp"
 #include "mrc/types.hpp"
 
 #include <boost/fiber/future/future.hpp>

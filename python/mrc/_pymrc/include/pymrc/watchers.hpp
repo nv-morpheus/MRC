@@ -17,9 +17,8 @@
 
 #pragma once
 
-#include "pymrc/tracers.hpp"
-
 #include "mrc/benchmarking/segment_watcher.hpp"
+#include "mrc/benchmarking/tracer.hpp"
 
 #include <pybind11/pytypes.h>  // for object, dict
 
@@ -29,7 +28,6 @@
 
 namespace mrc::segment {
 class Builder;
-
 struct ObjectProperties;
 }  // namespace mrc::segment
 

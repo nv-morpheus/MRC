@@ -18,19 +18,25 @@
 #include "pymrc/segment.hpp"
 
 #include "pymrc/node.hpp"
+#include "pymrc/operators.hpp"
+#include "pymrc/subscriber.hpp"
 #include "pymrc/types.hpp"
+#include "pymrc/utilities/acquire_gil.hpp"
+#include "pymrc/utilities/function_wrappers.hpp"
 #include "pymrc/utils.hpp"
 
-#include "mrc/node/edge_builder.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/port_registry.hpp"
+#include "mrc/node/rx_sink_base.hpp"
+#include "mrc/node/rx_source_base.hpp"
 #include "mrc/runnable/context.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/types.hpp"
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>
-#include <pybind11/detail/internals.h>
 #include <pybind11/gil.h>
-#include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
 
@@ -38,9 +44,11 @@
 #include <fstream>
 #include <functional>
 #include <future>
+#include <iterator>
 #include <map>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <typeindex>
 #include <utility>
 #include <vector>
@@ -52,54 +60,193 @@ namespace mrc::pymrc {
 
 namespace py = pybind11;
 
+class PyIteratorIterator
+{
+  public:
+    // Iterator traits
+    // NOLINTBEGIN(readability-identifier-naming)
+    using value_type        = PyHolder;
+    using difference_type   = std::ptrdiff_t;
+    using pointer           = const value_type*;
+    using reference         = const value_type&;
+    using iterator_category = std::input_iterator_tag;
+    // NOLINTEND(readability-identifier-naming)
+
+    PyIteratorIterator() = default;
+    PyIteratorIterator(py::iterator iter) : m_iter(std::move(iter))
+    {
+        // When creating this object, we want to save the iterator value while we have the GIL. This way we dont have to
+        // eagerly grab the GIL even if we already have the value
+        DCHECK_EQ(PyGILState_Check(), 1) << "Must have the GIL when creating PyIteratorIterator";
+
+        // This also triggers py::iterator to load the value into memory and avoid needing the GIL unless we are
+        // advancing.
+        m_value = py::cast<py::object>(*m_iter);
+    }
+
+    ~PyIteratorIterator()
+    {
+        if (m_iter)
+        {
+            AcquireGIL gil;
+
+            py::iterator kill = std::move(m_iter);
+            m_value           = py::object();
+        }
+    }
+
+    bool is_initialized() const
+    {
+        return static_cast<bool>(m_iter);
+    }
+
+    // Pre increment
+    PyIteratorIterator& operator++()
+    {
+        advance();
+        return *this;
+    }
+
+    // Post increment
+    PyIteratorIterator operator++(int)
+    {
+        auto rv = *this;
+        advance();
+        return rv;
+    }
+
+    reference operator*() const
+    {
+        return m_value;
+    }
+
+    pointer operator->() const
+    {
+        this->operator*();
+        return &m_value;
+    }
+
+    friend bool operator==(const PyIteratorIterator& a, const PyIteratorIterator& b)
+    {
+        // Define as the opposite. operator!= is used directly more often
+        return !(a != b);
+    }
+
+    friend bool operator!=(const PyIteratorIterator& a, const PyIteratorIterator& b)
+    {
+        // If we use a.m_iter != b.m_iter, the iterators will compare the values by dereferencing the iterator. This may
+        // require the GIL. Since we already have the value, just directly compare that instead. This results in the
+        // same check being performed without requiring the GIL
+        return a.m_value.ptr() != b.m_value.ptr();
+    }
+
+  private:
+    void advance()
+    {
+        // Grab the GIL before advancing
+        AcquireGIL gil;
+
+        ++m_iter;
+
+        // While we have the GIL, preload the next value
+        m_value = py::cast<py::object>(*m_iter);
+    }
+
+    py::iterator m_iter{};
+    PyHolder m_value{};
+};
+
+class PyIteratorWrapper
+{
+  public:
+    // NOLINTBEGIN(readability-identifier-naming)
+    using iterator = PyIteratorIterator;
+    // NOLINTEND(readability-identifier-naming)
+
+    // Create from an iterator
+    PyIteratorWrapper(py::iterator source_iterator) :
+      m_iter_factory([iterator = PyObjectHolder(std::move(source_iterator))]() mutable {
+          // Check if the iterator has been started already
+          if (!iterator)
+          {
+              LOG(ERROR) << "Cannot have multiple progress engines for the iterator overload. Iterators cannot be "
+                            "duplicated";
+              throw std::runtime_error(
+                  "Cannot have multiple progress engines for the iterator overload. Iterators cannot be duplicated");
+          }
+
+          // Move the object into the iterator to ensure its only used once.
+          return py::cast<py::iterator>(py::object(std::move(iterator)));
+      })
+    {}
+
+    // Create from an iterable
+    PyIteratorWrapper(py::iterable source_iterable) :
+      m_iter_factory([iterable = PyObjectHolder(std::move(source_iterable))]() {
+          // Turn the iterable into an iterator
+          return py::iter(iterable);
+      })
+    {}
+
+    // Create from a factory function
+    PyIteratorWrapper(py::function gen_factory) :
+      m_iter_factory([gen_factory = PyObjectHolder(std::move(gen_factory))]() {
+          // Call the generator factory to make a new generator
+          return py::cast<py::iterator>(gen_factory());
+      })
+    {}
+
+    // Create directly
+    PyIteratorWrapper(std::function<py::iterator()> iter_factory) : m_iter_factory(std::move(iter_factory)) {}
+
+    iterator begin()
+    {
+        // Grab the GIL and create the iterator from the factory
+        AcquireGIL gil;
+
+        auto iter = m_iter_factory();
+
+        return iterator{std::move(iter)};
+    }
+
+    iterator end()  // NOLINT(readability-convert-member-functions-to-static)
+    {
+        // Do we need the GIL here?
+        return iterator{};
+    }
+
+  private:
+    std::function<py::iterator()> m_iter_factory;
+};
+
 std::shared_ptr<mrc::segment::ObjectProperties> build_source(mrc::segment::Builder& self,
                                                              const std::string& name,
-                                                             std::function<py::iterator()> iter_factory)
+                                                             PyIteratorWrapper iter_wrapper)
 {
-    auto wrapper = [iter_factory](PyObjectSubscriber& subscriber) mutable {
+    auto wrapper = [iter_wrapper = std::move(iter_wrapper)](PyObjectSubscriber& subscriber) mutable {
         auto& ctx = runnable::Context::get_runtime_context();
-
-        AcquireGIL gil;
 
         try
         {
             DVLOG(10) << ctx.info() << " Starting source";
 
-            // Get the iterator from the factory
-            auto iter = iter_factory();
-
-            // Loop over the iterator
-            while (iter != py::iterator::sentinel())
+            for (auto next_val : iter_wrapper)
             {
-                // Get the next value
-                auto next_val = py::cast<py::object>(*iter);
-
+                //  Only send if its subscribed. Very important to ensure the object has been moved!
+                if (subscriber.is_subscribed())
                 {
-                    // Release the GIL to call on_next
-                    pybind11::gil_scoped_release nogil;
-
-                    //  Only send if its subscribed. Very important to ensure the object has been moved!
-                    if (subscriber.is_subscribed())
-                    {
-                        subscriber.on_next(std::move(next_val));
-                    }
+                    subscriber.on_next(std::move(next_val));
                 }
-
-                // Increment it for next loop
-                ++iter;
             }
 
         } catch (const std::exception& e)
         {
             LOG(ERROR) << ctx.info() << "Error occurred in source. Error msg: " << e.what();
 
-            gil.release();
+            // gil.release();
             subscriber.on_error(std::current_exception());
             return;
         }
-
-        // Release the GIL to call on_complete
-        gil.release();
 
         subscriber.on_completed();
 
@@ -109,78 +256,94 @@ std::shared_ptr<mrc::segment::ObjectProperties> build_source(mrc::segment::Build
     return self.construct_object<PythonSource<PyHolder>>(name, wrapper);
 }
 
+std::shared_ptr<mrc::segment::ObjectProperties> build_source_component(mrc::segment::Builder& self,
+                                                                       const std::string& name,
+                                                                       PyIteratorWrapper iter_wrapper)
+{
+    auto get_next = [iter_wrapper = std::move(iter_wrapper), current = PyIteratorIterator()](PyHolder& data) mutable {
+        // // Unfortunately, all of the below steps need the GIL but will grab it individually. To prevent that grab
+        // // the GIL now to avoid dropping and reacquiring multiple times
+        // AcquireGIL gil;
+
+        if (!current.is_initialized())
+        {
+            // On the first pass, initialize the iterator. This will generate the first value
+            current = iter_wrapper.begin();
+        }
+        else
+        {
+            // Otherwise pre-increment the iterator
+            ++current;
+        }
+
+        // Copy the current value into data. No need for the GIL here due to PyHolder
+        data = *current;
+
+        // Return closed if the current iterator is complete
+        return current == PyIteratorIterator() ? channel::Status::closed : channel::Status::success;
+    };
+
+    return self.construct_object<PythonSourceComponent<PyHolder>>(name, std::move(get_next));
+}
+
 std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source(mrc::segment::Builder& self,
                                                                           const std::string& name,
                                                                           py::iterator source_iterator)
 {
-    // Capture the generator factory
-    return build_source(self, name, [iterator = PyObjectHolder(std::move(source_iterator))]() mutable {
-        // Check if the iterator has been started already
-        if (!iterator)
-        {
-            LOG(ERROR) << "Cannot have multiple progress engines for the iterator overload. Iterators cannot be "
-                          "duplicated";
-            throw std::runtime_error(
-                "Cannot have multiple progress engines for the iterator overload. Iterators cannot be duplicated");
-        }
-
-        // Move the object into the iterator to ensure its only used once.
-        return py::cast<py::iterator>(py::object(std::move(iterator)));
-    });
+    return build_source(self, name, PyIteratorWrapper(std::move(source_iterator)));
 }
 
 std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source(mrc::segment::Builder& self,
                                                                           const std::string& name,
                                                                           py::iterable source_iterable)
 {
-    // Capture the iterator
-    return build_source(self, name, [iterable = PyObjectHolder(std::move(source_iterable))]() {
-        // Turn the iterable into an iterator
-        return py::iter(iterable);
-    });
+    return build_source(self, name, PyIteratorWrapper(std::move(source_iterable)));
 }
 
 std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source(mrc::segment::Builder& self,
                                                                           const std::string& name,
                                                                           py::function gen_factory)
 {
-    // Capture the generator factory
-    return build_source(self, name, [gen_factory = PyObjectHolder(std::move(gen_factory))]() {
-        // Call the generator factory to make a new generator
-        return py::cast<py::iterator>(gen_factory());
-    });
+    return build_source(self, name, PyIteratorWrapper(std::move(gen_factory)));
+}
+
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source_component(mrc::segment::Builder& self,
+                                                                                    const std::string& name,
+                                                                                    pybind11::iterator source_iterator)
+{
+    return build_source_component(self, name, PyIteratorWrapper(std::move(source_iterator)));
+}
+
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source_component(mrc::segment::Builder& self,
+                                                                                    const std::string& name,
+                                                                                    py::iterable source_iterable)
+{
+    return build_source_component(self, name, PyIteratorWrapper(std::move(source_iterable)));
+}
+
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source_component(mrc::segment::Builder& self,
+                                                                                    const std::string& name,
+                                                                                    pybind11::function gen_factory)
+{
+    return build_source_component(self, name, PyIteratorWrapper(std::move(gen_factory)));
 }
 
 std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_sink(mrc::segment::Builder& self,
                                                                         const std::string& name,
-                                                                        std::function<void(py::object object)> on_next,
-                                                                        std::function<void(py::object object)> on_error,
-                                                                        std::function<void()> on_completed)
+                                                                        OnNextFunction on_next,
+                                                                        OnErrorFunction on_error,
+                                                                        OnCompleteFunction on_completed)
 {
-    auto on_next_w = [on_next](PyHolder object) {
-        pybind11::gil_scoped_acquire gil;
-        on_next(std::move(object));  // Move the object into a temporary
-    };
+    return self.make_sink<PyHolder, PythonSink>(name, on_next, on_error, on_completed);
+}
 
-    auto on_error_w = [on_error](std::exception_ptr ptr) {
-        pybind11::gil_scoped_acquire gil;
-
-        // First, translate the exception setting the python exception value
-        py::detail::translate_exception(ptr);
-
-        // Creating py::error_already_set will clear the exception and retrieve the value
-        py::error_already_set active_ex;
-
-        // Now actually pass the exception to the callback
-        on_error(active_ex.value());
-    };
-
-    auto on_completed_w = [on_completed]() {
-        pybind11::gil_scoped_acquire gil;
-        on_completed();
-    };
-
-    return self.make_sink<PyHolder, PythonSink>(name, on_next_w, on_error_w, on_completed_w);
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_sink_component(mrc::segment::Builder& self,
+                                                                                  const std::string& name,
+                                                                                  OnNextFunction on_next,
+                                                                                  OnErrorFunction on_error,
+                                                                                  OnCompleteFunction on_completed)
+{
+    return self.make_sink_component<PyHolder, PythonSinkComponent>(name, on_next, on_error, on_completed);
 }
 
 std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::get_ingress(mrc::segment::Builder& self,
@@ -210,33 +373,33 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::get_egress(mrc::se
     return self.get_egress<PyHolder>(name);
 }
 
-std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node(
-    mrc::segment::Builder& self,
-    const std::string& name,
-    std::function<pybind11::object(pybind11::object object)> map_f)
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node(mrc::segment::Builder& self,
+                                                                        const std::string& name,
+                                                                        OnDataFunction on_data)
 {
-    return self.make_node<PyHolder, PyHolder, PythonNode>(
-        name,
-        rxcpp::operators::map([map_f](PyHolder data_object) -> PyHolder {
-            try
-            {
-                py::gil_scoped_acquire gil;
+    show_deprecation_warning(
+        "Passing a map function object to make_node() is deprecated and will be removed in a future version. "
+        "make_node() now requires an operator. Use "
+        "make_node(name, mrc.core.operators.map(map_fn)) instead.");
 
-                // Call the map function
-                return map_f(std::move(data_object));
-            } catch (py::error_already_set& err)
-            {
-                {
-                    // Need the GIL here
-                    py::gil_scoped_acquire gil;
-                    py::print("Error hit!");
-                    py::print(err.what());
-                }
+    return BuilderProxy::make_node(self, name, py::args(py::make_tuple(py::cast(OperatorsProxy::map(on_data)))));
+}
 
-                throw;
-                // caught by python output.on_error(std::current_exception());
-            }
-        }));
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node(mrc::segment::Builder& self,
+                                                                        const std::string& name,
+                                                                        pybind11::args operators)
+{
+    auto node = self.make_node<PyHolder, PyHolder, PythonNode>(name);
+
+    node->object().make_stream(
+        [operators = PyObjectHolder(std::move(operators))](const PyObjectObservable& input) -> PyObjectObservable {
+            AcquireGIL gil;
+
+            // Call the pipe function to convert all of the args to a new observable
+            return ObservableProxy::pipe(&input, py::cast<py::args>(operators));
+        });
+
+    return node;
 }
 
 std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node_full(
@@ -244,6 +407,10 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node_full(
     const std::string& name,
     std::function<void(const pymrc::PyObjectObservable& obs, pymrc::PyObjectSubscriber& sub)> sub_fn)
 {
+    show_deprecation_warning(
+        "make_node_full(name, sub_fn) is deprecated and will be removed in a future version. Use "
+        "make_node(name, mrc.core.operators.build(sub_fn)) instead.");
+
     auto node = self.make_node<PyHolder, PyHolder, PythonNode>(name);
 
     node->object().make_stream([sub_fn](const PyObjectObservable& input) -> PyObjectObservable {
@@ -270,6 +437,21 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node_full(
             }
         });
     });
+
+    return node;
+}
+
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node_component(mrc::segment::Builder& self,
+                                                                                  const std::string& name,
+                                                                                  pybind11::args operators)
+{
+    auto node = self.make_node_component<PyHolder, PyHolder, PythonNodeComponent>(name);
+
+    node->object().make_stream(
+        [operators = PyObjectHolder(std::move(operators))](const PyObjectObservable& input) -> PyObjectObservable {
+            // Call the pipe function to convert all of the args to a new observable
+            return ObservableProxy::pipe(&input, py::cast<py::args>(operators));
+        });
 
     return node;
 }
@@ -316,7 +498,20 @@ void BuilderProxy::make_edge(mrc::segment::Builder& self,
                              std::shared_ptr<mrc::segment::ObjectProperties> source,
                              std::shared_ptr<mrc::segment::ObjectProperties> sink)
 {
-    node::EdgeBuilder::make_edge_typeless(source->source_base(), sink->sink_base());
+    if (source->is_writable_acceptor() && sink->is_writable_provider())
+    {
+        mrc::make_edge_typeless(source->writable_acceptor_base(), sink->writable_provider_base());
+    }
+    else if (source->is_readable_provider() && sink->is_readable_acceptor())
+    {
+        mrc::make_edge_typeless(source->readable_provider_base(), sink->readable_acceptor_base());
+    }
+    else
+    {
+        throw std::runtime_error(
+            "Invalid edges. Arguments to make_edge were incorrect. Ensure you are providing either "
+            "WritableAcceptor->WritableProvider or ReadableProvider->ReadableAcceptor");
+    }
 }
 
 }  // namespace mrc::pymrc

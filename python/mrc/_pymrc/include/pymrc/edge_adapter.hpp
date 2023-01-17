@@ -23,17 +23,16 @@
 #include "mrc/channel/forward.hpp"
 #include "mrc/channel/ingress.hpp"
 #include "mrc/channel/status.hpp"
-#include "mrc/node/edge.hpp"
-#include "mrc/node/edge_adapter_registry.hpp"
-#include "mrc/node/edge_builder.hpp"
-#include "mrc/node/edge_connector.hpp"
-#include "mrc/node/edge_registry.hpp"
-#include "mrc/node/forward.hpp"
+#include "mrc/edge/edge_adapter_registry.hpp"
+#include "mrc/edge/edge_builder.hpp"
+#include "mrc/edge/edge_connector.hpp"
+#include "mrc/edge/forward.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
+#include "mrc/utils/type_utils.hpp"
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>
@@ -59,145 +58,196 @@ namespace mrc::pymrc {
  */
 struct EdgeAdapterUtil
 {
-    using source_adapter_fn_t =
-        std::function<std::shared_ptr<channel::IngressHandle>(mrc::node::SourcePropertiesBase&,
-                                                              mrc::node::SinkPropertiesBase&,
-                                                              std::shared_ptr<channel::IngressHandle>)>;
-    using sink_adapter_fn_t =
-        std::function<std::shared_ptr<channel::IngressHandle>(std::type_index,
-                                                              mrc::node::SinkPropertiesBase&,
-                                                              std::shared_ptr<channel::IngressHandle> ingress_handle)>;
+    using ingress_adapter_fn_t = edge::EdgeAdapterRegistry::ingress_adapter_fn_t;
+    using egress_adapter_fn_t  = edge::EdgeAdapterRegistry::egress_adapter_fn_t;
 
     template <typename DataTypeT>
     static void register_data_adapters()
     {
-        if (!mrc::node::EdgeAdapterRegistry::has_source_adapter(typeid(DataTypeT)))
-        {
-            std::type_index source_type = typeid(DataTypeT);
-            VLOG(2) << "Registering PyMRC source adapter for: " << type_name<DataTypeT>() << " "
-                    << source_type.hash_code();
-            node::EdgeAdapterRegistry::register_source_adapter(typeid(DataTypeT),
-                                                               EdgeAdapterUtil::build_source_adapter<DataTypeT>());
-        }
+        edge::EdgeAdapterRegistry::register_ingress_adapter(EdgeAdapterUtil::build_sink_ingress_adapter<DataTypeT>());
+        edge::EdgeAdapterRegistry::register_ingress_adapter(EdgeAdapterUtil::build_source_ingress_adapter<DataTypeT>());
 
-        if (!mrc::node::EdgeAdapterRegistry::has_sink_adapter(typeid(DataTypeT)))
-        {
-            std::type_index sink_type = typeid(DataTypeT);
-            VLOG(2) << "Registering PyMRC sink adapter for: " << type_name<DataTypeT>() << " " << sink_type.hash_code();
-            node::EdgeAdapterRegistry::register_sink_adapter(typeid(DataTypeT),
-                                                             EdgeAdapterUtil::build_sink_adapter<DataTypeT>());
-        }
+        edge::EdgeAdapterRegistry::register_egress_adapter(EdgeAdapterUtil::build_sink_egress_adapter<DataTypeT>());
+        edge::EdgeAdapterRegistry::register_egress_adapter(EdgeAdapterUtil::build_source_egress_adapter<DataTypeT>());
     }
 
+    /**
+     * @brief Generates an ingress adaptor for sink objects capable of converting from PyHolder -> InputT
+     */
     template <typename InputT>
-    static sink_adapter_fn_t build_sink_adapter()
+    static ingress_adapter_fn_t build_sink_ingress_adapter()
     {
-        return [](std::type_index source_type,
-                  mrc::node::SinkPropertiesBase& sink,
-                  std::shared_ptr<channel::IngressHandle> ingress_handle) {
-            if (source_type == typeid(PyHolder))
+        return [](const edge::EdgeTypeInfo& target_type, std::shared_ptr<edge::IEdgeWritableBase> ingress_handle) {
+            // First try to convert the ingress to our type
+            auto typed_ingress = std::dynamic_pointer_cast<edge::IEdgeWritable<InputT>>(ingress_handle);
+
+            if (!typed_ingress)
             {
-                // Check to see if we have a conversion in pybind11
-                if (pybind11::detail::get_type_info(sink.sink_type(true), false))
-                {
-                    // Shortcut the check to the registered converters
-                    auto edge = std::make_shared<node::Edge<PyHolder, InputT>>(
-                        std::dynamic_pointer_cast<channel::Ingress<InputT>>(ingress_handle));
-
-                    // Using auto here confuses the lambda's return type with what's returned from
-                    // ingress_for_source_type
-                    std::shared_ptr<channel::IngressHandle> handle =
-                        std::dynamic_pointer_cast<channel::Ingress<PyHolder>>(edge);
-
-                    return handle;
-                }
+                // Cant do anything about this ingress
+                return std::shared_ptr<edge::WritableEdgeHandle>(nullptr);
             }
 
-            return std::shared_ptr<channel::IngressHandle>(nullptr);
+            auto ingress_type = ingress_handle->get_type();
+
+            // Check to see if we have a conversion in pybind11
+            if (pybind11::detail::get_type_info(ingress_type.unwrapped_type(), false))
+            {
+                // Check if we are targeting a python object
+                if (target_type.full_type() != typeid(PyHolder))
+                {
+                    // If that failed, check if our target type is a python object for a potential slow conversion
+                    if (pybind11::detail::get_type_info(target_type.unwrapped_type(), false))
+                    {
+                        // Make the foundation of a slow connection. Show warning here
+                        LOG(WARNING) << "WARNING: A slow edge connection between C++ nodes '"
+                                     << type_name(target_type.full_type()) << "' and '"
+                                     << type_name(ingress_type.full_type())
+                                     << "' has been detected. Performance between "
+                                        "these nodes can be improved by registering an EdgeConverter at compile time. "
+                                        "Without "
+                                        "this, conversion "
+                                        "to an intermediate python type will be necessary (i.e. C++ -> Python -> C++).";
+                    }
+                    else
+                    {
+                        // Cant make a slow connection
+                        return std::shared_ptr<edge::WritableEdgeHandle>(nullptr);
+                    }
+                }
+
+                // Create a conversion from our type to PyHolder
+                auto edge = std::make_shared<edge::ConvertingEdgeWritable<PyHolder, InputT>>(typed_ingress);
+
+                return std::make_shared<edge::WritableEdgeHandle>(edge);
+            }
+
+            return std::shared_ptr<edge::WritableEdgeHandle>(nullptr);
         };
     }
 
+    /**
+     * @brief Generates an ingress adaptor for source objects capable of converting from OutputT -> PyHolder
+     */
     template <typename OutputT>
-    static source_adapter_fn_t build_source_adapter()
+    static ingress_adapter_fn_t build_source_ingress_adapter()
     {
-        return [](mrc::node::SourcePropertiesBase& source,
-                  mrc::node::SinkPropertiesBase& sink,
-                  std::shared_ptr<channel::IngressHandle> ingress_handle) {
-            // First check if there was a defined converter
-            if (node::EdgeRegistry::has_converter(source.source_type(), sink.sink_type()))
+        return [](const edge::EdgeTypeInfo& target_type, std::shared_ptr<edge::IEdgeWritableBase> ingress_handle) {
+            // Check to make sure we are targeting this type
+            if (target_type != edge::EdgeTypeInfo::create<OutputT>())
             {
-                return std::shared_ptr<channel::IngressHandle>(nullptr);
+                return std::shared_ptr<edge::WritableEdgeHandle>(nullptr);
             }
 
-            // Check here to see if we can short circuit if both of the types are the same
-            if (source.source_type(false) == sink.sink_type(false))
-            {
-                // Register an edge identity converter
-                node::IdentityEdgeConnector<OutputT>::register_converter();
+            auto ingress_type = ingress_handle->get_type();
 
-                return std::shared_ptr<channel::IngressHandle>(nullptr);
+            // Check to see if we have a conversion in pybind11
+            if (pybind11::detail::get_type_info(target_type.unwrapped_type(), false))
+            {
+                // Check if we are coming from a python object
+                if (ingress_type.full_type() == typeid(PyHolder))
+                {
+                    auto py_typed_ingress = std::dynamic_pointer_cast<edge::IEdgeWritable<PyHolder>>(ingress_handle);
+
+                    CHECK(py_typed_ingress) << "Invalid conversion. Incoming ingress is not a PyHolder";
+
+                    // Create a conversion from PyHolder to our type
+                    auto edge = std::make_shared<edge::ConvertingEdgeWritable<OutputT, PyHolder>>(py_typed_ingress);
+
+                    return std::make_shared<edge::WritableEdgeHandle>(edge);
+                }
             }
 
-            // By this point several things have happened:
-            // 1. Simple shortcut for matching types has failed. SourceT != SinkT
-            // 2. We do not have a registered converter
-            // 3. Both of our nodes are registered python nodes, but their source and sink types may not be registered
+            return std::shared_ptr<edge::WritableEdgeHandle>(nullptr);
+        };
+    }
 
-            // We can come up with an edge if one of the following is true:
-            // 1. The source is a pybind11::object and the sink is registered with pybind11
-            // 2. The sink is a pybind11::object and the source is registered with pybind11
-            // 3. Neither is a pybind11::object but both types are registered with pybind11 (worst case, C++ -> py ->
-            // C++)
-
-            auto writer_type = source.source_type(true);
-            auto reader_type = sink.sink_type(true);
-
-            // Check registrations with pybind11
-            auto* writer_typei = pybind11::detail::get_type_info(source.source_type(true), false);
-            auto* reader_typei = pybind11::detail::get_type_info(sink.sink_type(true), false);
-
-            // Check if the source is a pybind11::object
-            if (writer_type == typeid(PyHolder) && reader_typei)
+    /**
+     * @brief Generates an egress adaptor for sink objects capable of converting from PyHolder -> OutputT
+     */
+    template <typename OutputT>
+    static egress_adapter_fn_t build_sink_egress_adapter()
+    {
+        return [](const edge::EdgeTypeInfo& target_type, std::shared_ptr<edge::IEdgeReadableBase> egress_handle) {
+            // Check to make sure we are targeting this type
+            if (target_type != edge::EdgeTypeInfo::create<OutputT>())
             {
-                return mrc::node::EdgeBuilder::ingress_for_source_type(source.source_type(), sink, ingress_handle);
-                // return sink_ingress_adapter_for_source_type(sink, writer_type);
+                return std::shared_ptr<edge::ReadableEdgeHandle>(nullptr);
             }
 
-            // Check if the sink is a py::object
-            if (reader_type == typeid(PyHolder) && writer_typei)
-            {
-                // TODO(MDD): To avoid a compound edge here, register an edge converter between OutputT and py::object
-                node::EdgeConnector<OutputT, PyHolder>::register_converter();
+            auto egress_type = egress_handle->get_type();
 
-                // Build the edge with the holder type
-                return mrc::node::EdgeBuilder::ingress_for_source_type(source.source_type(), sink, ingress_handle);
+            // Check to see if we have a conversion in pybind11
+            if (pybind11::detail::get_type_info(target_type.unwrapped_type(), false))
+            {
+                // Check if we are coming from a python object
+                if (egress_type.full_type() == typeid(PyHolder))
+                {
+                    auto py_typed_egress = std::dynamic_pointer_cast<edge::IEdgeReadable<PyHolder>>(egress_handle);
+
+                    CHECK(py_typed_egress) << "Invalid conversion. Incoming egress is not a PyHolder";
+
+                    // Create a conversion from PyHolder to our type
+                    auto edge = std::make_shared<edge::ConvertingEdgeReadable<PyHolder, OutputT>>(py_typed_egress);
+
+                    return std::make_shared<edge::ReadableEdgeHandle>(edge);
+                }
             }
 
-            // Check if both have been registered with pybind 11
-            if (writer_typei && reader_typei)
+            return std::shared_ptr<edge::ReadableEdgeHandle>(nullptr);
+        };
+    }
+
+    /**
+     * @brief Generates an egress adaptor for source objects capable of converting from InputT -> PyHolder
+     */
+    template <typename InputT>
+    static egress_adapter_fn_t build_source_egress_adapter()
+    {
+        return [](const edge::EdgeTypeInfo& target_type, std::shared_ptr<edge::IEdgeReadableBase> egress_handle) {
+            // First try to convert the egress to our type
+            auto typed_egress = std::dynamic_pointer_cast<edge::IEdgeReadable<InputT>>(egress_handle);
+
+            if (!typed_egress)
             {
-                // TODO(MDD): Check python types to see if they are compatible
-
-                // Py types can be converted but need a compound edge. Build that here
-                // auto py_to_sink_edge = std::dynamic_pointer_cast<channel::Ingress<pybind11::object>>(
-                //    sink.ingress_for_source_type(typeid(pybind11::object)));
-                auto py_to_sink_edge = std::dynamic_pointer_cast<channel::Ingress<PyHolder>>(
-                    mrc::node::EdgeBuilder::ingress_for_source_type(typeid(PyHolder), sink, ingress_handle));
-
-                auto source_to_py_edge = std::make_shared<node::Edge<OutputT, PyHolder>>(py_to_sink_edge);
-
-                LOG(WARNING) << "WARNING: A slow edge connection between C++ nodes '" << source.source_type_name()
-                             << "' and '" << sink.sink_type_name()
-                             << "' has been detected. Performance between "
-                                "these nodes can be improved by registering an EdgeConverter at compile time. Without "
-                                "this, conversion "
-                                "to an intermediate python type will be necessary (i.e. C++ -> Python -> C++).";
-
-                return std::dynamic_pointer_cast<channel::IngressHandle>(source_to_py_edge);
+                // Cant do anything about this egress
+                return std::shared_ptr<edge::ReadableEdgeHandle>(nullptr);
             }
 
-            // Otherwise return base which most likely will fail
-            return std::shared_ptr<channel::IngressHandle>(nullptr);
+            auto egress_type = egress_handle->get_type();
+
+            // Check to see if we have a conversion in pybind11
+            if (pybind11::detail::get_type_info(egress_type.unwrapped_type(), false))
+            {
+                // Check if we are targeting a python object
+                if (target_type.full_type() != typeid(PyHolder))
+                {
+                    // If that failed, check if our target type is a python object for a potential slow conversion
+                    if (pybind11::detail::get_type_info(target_type.unwrapped_type(), false))
+                    {
+                        // Make the foundation of a slow connection. Show warning here
+                        LOG(WARNING) << "WARNING: A slow edge connection between C++ nodes '"
+                                     << type_name(target_type.full_type()) << "' and '"
+                                     << type_name(egress_type.full_type())
+                                     << "' has been detected. Performance between "
+                                        "these nodes can be improved by registering an EdgeConverter at compile time. "
+                                        "Without "
+                                        "this, conversion "
+                                        "to an intermediate python type will be necessary (i.e. C++ -> Python -> C++).";
+                    }
+                    else
+                    {
+                        // Cant make a slow connection
+                        return std::shared_ptr<edge::ReadableEdgeHandle>(nullptr);
+                    }
+                }
+
+                // Create a conversion from our type to PyHolder
+                auto edge = std::make_shared<edge::ConvertingEdgeReadable<InputT, PyHolder>>(typed_egress);
+
+                return std::make_shared<edge::ReadableEdgeHandle>(edge);
+            }
+
+            return std::shared_ptr<edge::ReadableEdgeHandle>(nullptr);
         };
     }
 };
@@ -218,14 +268,8 @@ struct AutoRegSourceAdapter
 
     static bool register_adapter()
     {
-        if (!mrc::node::EdgeAdapterRegistry::has_source_adapter(typeid(SourceT)))
-        {
-            std::type_index source_type = typeid(SourceT);
-            VLOG(2) << "Registering PyMRC source adapter for: " << type_name<SourceT>() << " "
-                    << source_type.hash_code();
-            node::EdgeAdapterRegistry::register_source_adapter(typeid(SourceT),
-                                                               EdgeAdapterUtil::build_source_adapter<SourceT>());
-        }
+        edge::EdgeAdapterRegistry::register_ingress_adapter(EdgeAdapterUtil::build_source_ingress_adapter<SourceT>());
+        edge::EdgeAdapterRegistry::register_egress_adapter(EdgeAdapterUtil::build_source_egress_adapter<SourceT>());
 
         return true;
     }
@@ -247,13 +291,8 @@ struct AutoRegSinkAdapter
 
     static bool register_adapter()
     {
-        if (!mrc::node::EdgeAdapterRegistry::has_sink_adapter(typeid(SinkT)))
-        {
-            std::type_index sink_type = typeid(SinkT);
-            VLOG(2) << "Registering PyMRC sink adapter for: " << type_name<SinkT>() << " " << sink_type.hash_code();
-            node::EdgeAdapterRegistry::register_sink_adapter(typeid(SinkT),
-                                                             EdgeAdapterUtil::build_sink_adapter<SinkT>());
-        }
+        edge::EdgeAdapterRegistry::register_ingress_adapter(EdgeAdapterUtil::build_sink_ingress_adapter<SinkT>());
+        edge::EdgeAdapterRegistry::register_egress_adapter(EdgeAdapterUtil::build_sink_egress_adapter<SinkT>());
 
         return true;
     }

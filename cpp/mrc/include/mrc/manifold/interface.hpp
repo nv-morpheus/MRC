@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,19 +17,19 @@
 
 #pragma once
 
-#include "mrc/node/forward.hpp"
+#include "mrc/edge/forward.hpp"
 #include "mrc/types.hpp"
 
 namespace mrc::manifold {
 
 struct Interface
 {
-    virtual ~Interface()                                                                            = default;
-    virtual const PortName& port_name() const                                                       = 0;
-    virtual void start()                                                                            = 0;
-    virtual void join()                                                                             = 0;
-    virtual void add_input(const SegmentAddress& address, node::SourcePropertiesBase* input_source) = 0;
-    virtual void add_output(const SegmentAddress& address, node::SinkPropertiesBase* output_sink)   = 0;
+    virtual ~Interface()                                                                             = default;
+    virtual const PortName& port_name() const                                                        = 0;
+    virtual void start()                                                                             = 0;
+    virtual void join()                                                                              = 0;
+    virtual void add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) = 0;
+    virtual void add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) = 0;
 
     // updates are ordered
     // first, inputs are updated (upstream segments have not started emitting - this is safe)

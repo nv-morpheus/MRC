@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,16 +17,16 @@
 
 #pragma once
 
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/manifold/connectable.hpp"
 #include "mrc/manifold/factory.hpp"
 #include "mrc/manifold/interface.hpp"
-#include "mrc/node/edge_builder.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/node/generic_node.hpp"
 #include "mrc/node/operators/muxer.hpp"
 #include "mrc/node/rx_node.hpp"
-#include "mrc/node/sink_channel.hpp"
-#include "mrc/node/source_channel.hpp"
+#include "mrc/node/sink_channel_owner.hpp"
+#include "mrc/node/source_channel_owner.hpp"
 #include "mrc/runnable/launchable.hpp"
 #include "mrc/segment/object.hpp"
 
@@ -44,7 +44,7 @@ struct IngressPortBase : public runnable::Launchable, public manifold::Connectab
 };
 
 template <typename T>
-class IngressPort : public Object<node::SourceProperties<T>>, public IngressPortBase
+class IngressPort : public Object<node::RxSourceBase<T>>, public IngressPortBase
 {
     // tap for debugging
     // rxcpp::operators::tap([this](const T& t) {
@@ -61,7 +61,7 @@ class IngressPort : public Object<node::SourceProperties<T>>, public IngressPort
     }
 
   private:
-    node::SourceProperties<T>* get_object() const final
+    node::RxSourceBase<T>* get_object() const final
     {
         CHECK(m_source);
         return m_source.get();

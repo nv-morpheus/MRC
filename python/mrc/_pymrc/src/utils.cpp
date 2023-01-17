@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,23 +17,21 @@
 
 #include "pymrc/utils.hpp"
 
-#include "mrc/exceptions/runtime_error.hpp"
-
 #include <nlohmann/json.hpp>
 #include <pybind11/cast.h>
 #include <pybind11/detail/internals.h>
-#include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
+#include <pyerrors.h>
+#include <warnings.h>
 
-#include <cassert>
-#include <memory>
 #include <string>
 #include <utility>
 
 namespace mrc::pymrc {
 
 namespace py = pybind11;
+
 using nlohmann::json;
 
 void import_module_object(py::module_& dest, const std::string& source, const std::string& member)
@@ -127,6 +125,8 @@ py::object cast_from_json(const json& source)
 
 json cast_from_pyobject(const py::object& source)
 {
+    // Dont return via initializer list with JSON. It performs type deduction and gives different results
+    // NOLINTBEGIN(modernize-return-braced-init-list)
     if (source.is_none())
     {
         return json();
@@ -172,186 +172,11 @@ json cast_from_pyobject(const py::object& source)
 
     // else unsupported return null
     return json();
+    // NOLINTEND(modernize-return-braced-init-list)
 }
 
-AcquireGIL::AcquireGIL() : m_gil(std::make_unique<py::gil_scoped_acquire>()) {}
-
-AcquireGIL::~AcquireGIL() = default;
-
-inline void AcquireGIL::inc_ref()
+void show_deprecation_warning(const std::string& deprecation_message, ssize_t stack_level)
 {
-    if (m_gil)
-    {
-        m_gil->inc_ref();
-    }
-}
-
-inline void AcquireGIL::dec_ref()
-{
-    if (m_gil)
-    {
-        m_gil->dec_ref();
-    }
-}
-
-void AcquireGIL::disarm()
-{
-    if (m_gil)
-    {
-        m_gil->disarm();
-    }
-}
-
-void AcquireGIL::release()
-{
-    // Just delete the GIL object early
-    m_gil.reset();
-}
-
-PyObjectWrapper::PyObjectWrapper(pybind11::object&& to_wrap) : m_obj(std::move(to_wrap)) {}
-
-PyObjectWrapper::~PyObjectWrapper()
-{
-    // If we are being destroyed with a wrapped object, grab the GIL before destroying
-    if (m_obj)
-    {
-        // Two paths here make it easy to put breakpoints in for debugging
-        if (PyGILState_Check() == 0)
-        {
-            pybind11::gil_scoped_acquire gil;
-
-            pybind11::object tmp = std::move(m_obj);
-        }
-        else
-        {
-            pybind11::object tmp = std::move(m_obj);
-        }
-
-        assert(!m_obj);
-    }
-}
-
-PyObjectWrapper::operator bool() const
-{
-    return (bool)m_obj;
-}
-
-const pybind11::handle& PyObjectWrapper::view_obj() const&
-{
-    // Allow for peaking into the object
-    return m_obj;
-}
-
-pybind11::object PyObjectWrapper::copy_obj() const&
-{
-    if (PyGILState_Check() == 0)
-    {
-        throw mrc::exceptions::MrcRuntimeError("Must have the GIL copying to py::object");
-    }
-
-    // Allow for peaking into the object
-    return py::object(m_obj);
-}
-
-pybind11::object&& PyObjectWrapper::move_obj() &&
-{
-    if (!m_obj)
-    {
-        throw mrc::exceptions::MrcRuntimeError(
-            "Cannot convert empty wrapper to py::object. Did you accidentally move out the object?");
-    }
-
-    return std::move(m_obj);
-}
-
-PyObjectWrapper::operator const pybind11::handle&() const&
-{
-    return m_obj;
-}
-
-PyObjectWrapper::operator pybind11::object&&() &&
-{
-    return std::move(m_obj);
-}
-
-PyObject* PyObjectWrapper::ptr() const
-{
-    return m_obj.ptr();
-}
-
-PyObjectHolder::PyObjectHolder() : m_wrapped(std::make_shared<PyObjectWrapper>()) {}
-
-PyObjectHolder::PyObjectHolder(pybind11::object&& to_wrap) :
-  m_wrapped(std::make_shared<PyObjectWrapper>(std::move(to_wrap)))
-{}
-
-PyObjectHolder::PyObjectHolder(PyObjectHolder&& other) : m_wrapped(std::move(other.m_wrapped)) {}
-
-PyObjectHolder& PyObjectHolder::operator=(const PyObjectHolder& other)
-{
-    if (this == &other)
-    {
-        return *this;
-    }
-
-    m_wrapped = other.m_wrapped;
-
-    return *this;
-}
-
-PyObjectHolder& PyObjectHolder::operator=(PyObjectHolder&& other)
-{
-    if (this == &other)
-    {
-        return *this;
-    }
-
-    m_wrapped.reset();
-    std::swap(m_wrapped, other.m_wrapped);
-
-    return *this;
-}
-
-PyObjectHolder::operator bool() const
-{
-    return (bool)*m_wrapped;
-}
-
-const pybind11::handle& PyObjectHolder::view_obj() const&
-{
-    // Allow for peaking into the object
-    return m_wrapped->view_obj();
-}
-
-pybind11::object PyObjectHolder::copy_obj() const&
-{
-    // Allow for peaking into the object
-    return m_wrapped->copy_obj();
-}
-
-pybind11::object&& PyObjectHolder::move_obj() &&
-{
-    return std::move(*m_wrapped).move_obj();
-}
-
-PyObjectHolder::operator const pybind11::handle&() const&
-{
-    // TODO(MDD): Do we need the GIL here?
-    if (PyGILState_Check() == 0)
-    {
-        throw mrc::exceptions::MrcRuntimeError("Must have the GIL copying to py::object");
-    }
-
-    return m_wrapped->view_obj();
-}
-
-PyObjectHolder::operator pybind11::object&&() &&
-{
-    return std::move(*m_wrapped).move_obj();
-}
-
-PyObject* PyObjectHolder::ptr() const
-{
-    return m_wrapped->ptr();
+    PyErr_WarnEx(PyExc_DeprecationWarning, deprecation_message.c_str(), stack_level);
 }
 }  // namespace mrc::pymrc

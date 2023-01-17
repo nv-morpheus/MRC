@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,6 +35,7 @@
 #include "internal/ucx/memory_block.hpp"
 #include "internal/ucx/registration_cache.hpp"
 
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/memory/adaptors.hpp"
 #include "mrc/memory/buffer.hpp"
 #include "mrc/memory/literals.hpp"
@@ -42,10 +43,8 @@
 #include "mrc/memory/resources/host/pinned_memory_resource.hpp"
 #include "mrc/memory/resources/logging_resource.hpp"
 #include "mrc/memory/resources/memory_resource.hpp"
-#include "mrc/node/edge_builder.hpp"
 #include "mrc/node/operators/router.hpp"
 #include "mrc/node/rx_sink.hpp"
-#include "mrc/node/source_channel.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
 #include "mrc/options/resources.hpp"
@@ -341,7 +340,9 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
             r0.server().deserialize_source().drop_edge(tag);
         });
 
-    mrc::node::make_edge(r0.server().deserialize_source().source(tag), *recv_sink);
+    auto deser_source = r0.server().deserialize_source().get_source(tag);
+
+    mrc::make_edge(*deser_source, *recv_sink);
 
     auto launch_opts = resources->partition(0).network()->data_plane().launch_options(1);
     auto recv_runner = resources->partition(0)
@@ -397,8 +398,8 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
 //         barrier.wait();
 //     });
 
-//     node::make_edge(m_mutable_nem->deserialize_source().source(0), *sink_0);
-//     node::make_edge(m_mutable_nem->deserialize_source().source(1), *sink_1);
+//     mrc::make_edge(m_mutable_nem->deserialize_source().source(0), *sink_0);
+//     mrc::make_edge(m_mutable_nem->deserialize_source().source(1), *sink_1);
 
 //     auto nem_worker_address = m_mutable_nem->worker_address();
 

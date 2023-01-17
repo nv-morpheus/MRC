@@ -103,7 +103,7 @@ Thread ThreadResources::make_thread(std::string desc, CpuSet cpu_affinity, Calla
         finalize_thread(cpu_affinity);
         DVLOG(10) << "tid: " << std::this_thread::get_id() << "; completed thread";
     });
-    return Thread(shared_from_this(), std::move(thread));
+    return {shared_from_this(), std::move(thread)};
 }
 
 }  // namespace mrc::internal::system
