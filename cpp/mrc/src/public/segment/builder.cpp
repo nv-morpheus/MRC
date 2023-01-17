@@ -87,7 +87,8 @@ void Builder::init_module(sp_segment_module_t module)
     module->initialize(*this);
     ns_pop();
 
-    if (std::dynamic_pointer_cast<modules::Persistent>(module) != nullptr) {
+    // TODO(Devin): Maybe a better way to do this with compile time type ledger.
+    if (std::dynamic_pointer_cast<modules::PersistentModule>(module) != nullptr) {
         VLOG(2) << "Registering persistent module -> '" << module->component_prefix() << "'";
         m_backend.add_module(module->component_prefix(), module);
     }

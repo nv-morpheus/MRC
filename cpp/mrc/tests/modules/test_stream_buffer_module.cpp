@@ -122,7 +122,7 @@ TEST_F(TestStreamBufferModule, SinglePipelineStreamBufferTest) {
                              init_wrapper_mirrored);
 
     auto options = std::make_shared<Options>();
-    options->topology().user_cpuset("0-4");
+    options->topology().user_cpuset("0-2");
     options->topology().restrict_gpus(true);
 
     Executor executor(options);

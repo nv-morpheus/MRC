@@ -32,18 +32,21 @@
 
 namespace mrc::modules {
 
+    /**
+     * @brief Buffers a stream of data; avoiding any stalls by over-writing older data when the buffer is full.
+     * We guarantee not to block the data stream; but, may drop data if the buffer is full.
+     * @tparam DataTypeT The type of data to buffer
+     */
     template<typename DataTypeT>
-    class SimpleImmediateStreamBuffer : public SegmentModule, public Persistent {
+    class SimpleImmediateStreamBuffer : public SegmentModule, public PersistentModule {
         using type_t = SimpleImmediateStreamBuffer<DataTypeT>;
 
     public:
+        ~SimpleImmediateStreamBuffer() = default;
+
         SimpleImmediateStreamBuffer(std::string module_name);
 
         SimpleImmediateStreamBuffer(std::string module_name, nlohmann::json config);
-
-        ~SimpleImmediateStreamBuffer() {
-            std::cerr << "Destructing SimpleImmediateStreamBuffer" << std::endl;
-        }
 
     protected:
         void initialize(segment::Builder &builder) override;
@@ -51,8 +54,6 @@ namespace mrc::modules {
         std::string module_type_name() const override;
 
     private:
-        static std::atomic<unsigned int> s_instance_index;
-
         std::mutex m_mutex;
 
         boost::circular_buffer<DataTypeT> m_ring_buffer_write;
@@ -65,15 +66,19 @@ namespace mrc::modules {
 
     template<typename DataTypeT>
     SimpleImmediateStreamBuffer<DataTypeT>::SimpleImmediateStreamBuffer(std::string module_name)
-            :   SegmentModule(std::move(module_name)),
-                m_ring_buffer_write(2048), m_ring_buffer_read(2048) {
+            :   SegmentModule(std::move(module_name)), PersistentModule(),
+                m_ring_buffer_write(1024), m_ring_buffer_read(1024) {
     }
 
 
     template<typename DataTypeT>
     SimpleImmediateStreamBuffer<DataTypeT>::SimpleImmediateStreamBuffer(std::string module_name, nlohmann::json config)
-            :   SegmentModule(std::move(module_name), std::move(config)),
-                m_ring_buffer_write(2048), m_ring_buffer_read(2048) {
+            :   SegmentModule(std::move(module_name), std::move(config)), PersistentModule(),
+                m_ring_buffer_write(1024), m_ring_buffer_read(1024) {
+                    if (this->config().contains("buffer_size")) {
+                        m_ring_buffer_write.set_capacity(this->config()["buffer_size"]);
+                        m_ring_buffer_read.set_capacity(this->config()["buffer_size"]);
+                    }
     }
 
     template<typename DataTypeT>

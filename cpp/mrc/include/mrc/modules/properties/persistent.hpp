@@ -18,5 +18,5 @@
 #pragma once
 
 namespace mrc::modules {
-    class Persistent {};
+    class PersistentModule {};
 }

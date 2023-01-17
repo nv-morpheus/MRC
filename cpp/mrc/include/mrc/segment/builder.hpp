@@ -54,7 +54,7 @@ namespace mrc {
 struct WatcherInterface;
 }  // namespace mrc
 namespace mrc::modules {
-class Persistent;
+class PersistentModule;
 class SegmentModule;
 }  // namespace mrc::modules
 namespace mrc::segment {

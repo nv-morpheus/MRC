@@ -154,6 +154,10 @@ class SegmentModule
   private:
     const std::string m_module_instance_name;
 
+    std::map<std::string, std::type_index> m_input_port_type_ids;
+    std::map<std::string, std::type_index> m_output_port_type_ids;
+    std::set<std::type_index> m_module_type_trait_ids;
+
     std::string m_module_instance_registered_namespace{};
 
     std::vector<std::string> m_input_port_ids{};
