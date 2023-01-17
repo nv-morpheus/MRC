@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,14 +19,6 @@
 
 #include <gflags/gflags.h>
 #include <gtest/gtest.h>
-
-// NOLINTNEXTLINE(readability-identifier-naming)
-/*
-void TestFailuresThrowExceptions()
-{
-    throw std::runtime_error("exception rather than std::abort");
-}
-*/
 
 int main(int argc, char** argv)
 {

@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,7 +52,7 @@ class ObservableProxy
   public:
     static PySubscription subscribe(PyObjectObservable* self, PyObjectObserver& observer);
     static PySubscription subscribe(PyObjectObservable* self, PyObjectSubscriber& subscriber);
-    static PyObjectObservable pipe(PyObjectObservable* self, pybind11::args args);
+    static PyObjectObservable pipe(const PyObjectObservable* self, pybind11::args args);
 };
 
 #pragma GCC visibility pop

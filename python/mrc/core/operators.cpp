@@ -17,6 +17,7 @@
 
 #include "pymrc/operators.hpp"
 
+#include "pymrc/utilities/function_wrappers.hpp"  // IWYU pragma: keep
 #include "pymrc/utils.hpp"
 
 #include "mrc/utils/string_utils.hpp"
@@ -25,6 +26,7 @@
 #include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
+#include <pybind11/stl.h>  // IWYU pragma: keep
 
 #include <array>
 #include <sstream>
@@ -46,9 +48,11 @@ PYBIND11_MODULE(operators, module)
 
     // Common must be first in every module
     pymrc::import(module, "mrc.core.common");
+    pymrc::import(module, "mrc.core.subscriber");
 
     py::class_<PythonOperator>(module, "Operator").def_property_readonly("name", &OperatorProxy::get_name);
 
+    module.def("build", &OperatorsProxy::build);
     module.def("filter", &OperatorsProxy::filter);
     module.def("flatten", &OperatorsProxy::flatten);
     module.def("map", &OperatorsProxy::map);

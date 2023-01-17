@@ -21,10 +21,12 @@
 #include "pymrc/node.hpp"  // IWYU pragma: keep
 #include "pymrc/segment_modules.hpp"
 #include "pymrc/types.hpp"
+#include "pymrc/utilities/function_wrappers.hpp"  // IWYU pragma: keep
 #include "pymrc/utils.hpp"
 
+#include "mrc/edge/edge_connector.hpp"
 #include "mrc/modules/segment_modules.hpp"
-#include "mrc/node/edge_connector.hpp"
+#include "mrc/runnable/launch_options.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/definition.hpp"
 #include "mrc/utils/string_utils.hpp"
@@ -35,6 +37,7 @@
 #include <pybind11/pytypes.h>
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <map>
@@ -60,36 +63,46 @@ PYBIND11_MODULE(segment, module)
     pymrc::import(module, "mrc.core.common");
     pymrc::import(module, "mrc.core.subscriber");
 
-    pymrc::import_module_object(module, "mrc.core.node", "SegmentObject");
-
     // Type 'b'
-    node::EdgeConnector<bool, PyHolder>::register_converter();
-    node::EdgeConnector<PyHolder, bool>::register_converter();
+    edge::EdgeConnector<bool, PyHolder>::register_converter();
+    edge::EdgeConnector<PyHolder, bool>::register_converter();
 
     // Type 'i'
-    node::EdgeConnector<int32_t, PyHolder>::register_converter();
-    node::EdgeConnector<PyHolder, int32_t>::register_converter();
+    edge::EdgeConnector<int32_t, PyHolder>::register_converter();
+    edge::EdgeConnector<PyHolder, int32_t>::register_converter();
 
-    node::EdgeConnector<int64_t, PyHolder>::register_converter();
-    node::EdgeConnector<PyHolder, int64_t>::register_converter();
+    edge::EdgeConnector<int64_t, PyHolder>::register_converter();
+    edge::EdgeConnector<PyHolder, int64_t>::register_converter();
 
     // Type 'u'
-    node::EdgeConnector<uint32_t, PyHolder>::register_converter();
-    node::EdgeConnector<PyHolder, uint32_t>::register_converter();
+    edge::EdgeConnector<uint32_t, PyHolder>::register_converter();
+    edge::EdgeConnector<PyHolder, uint32_t>::register_converter();
 
-    node::EdgeConnector<uint64_t, PyHolder>::register_converter();
-    node::EdgeConnector<PyHolder, uint64_t>::register_converter();
+    edge::EdgeConnector<uint64_t, PyHolder>::register_converter();
+    edge::EdgeConnector<PyHolder, uint64_t>::register_converter();
 
     // Type 'f'
-    node::EdgeConnector<float, PyHolder>::register_converter();
-    node::EdgeConnector<PyHolder, float>::register_converter();
+    edge::EdgeConnector<float, PyHolder>::register_converter();
+    edge::EdgeConnector<PyHolder, float>::register_converter();
 
-    node::EdgeConnector<double, PyHolder>::register_converter();
-    node::EdgeConnector<PyHolder, double>::register_converter();
+    edge::EdgeConnector<double, PyHolder>::register_converter();
+    edge::EdgeConnector<PyHolder, double>::register_converter();
 
     // Type 'S' and 'U'
-    node::EdgeConnector<std::string, PyHolder>::register_converter();
-    node::EdgeConnector<PyHolder, std::string>::register_converter();
+    edge::EdgeConnector<std::string, PyHolder>::register_converter();
+    edge::EdgeConnector<PyHolder, std::string>::register_converter();
+
+    py::class_<mrc::runnable::LaunchOptions>(module, "LaunchOptions")
+        .def_readwrite("pe_count", &mrc::runnable::LaunchOptions::pe_count)
+        .def_readwrite("engines_per_pe", &mrc::runnable::LaunchOptions::engines_per_pe)
+        .def_readwrite("engine_factory_name", &mrc::runnable::LaunchOptions::engine_factory_name);
+
+    // Base SegmentObject that all object usually derive from
+    py::class_<mrc::segment::ObjectProperties, std::shared_ptr<mrc::segment::ObjectProperties>>(module, "SegmentObject")
+        .def_property_readonly("name", &PyNode::name)
+        .def_property_readonly("launch_options",
+                               py::overload_cast<>(&mrc::segment::ObjectProperties::launch_options),
+                               py::return_value_policy::reference_internal);
 
     auto Builder       = py::class_<mrc::segment::Builder>(module, "Builder");
     auto Definition    = py::class_<mrc::segment::Definition>(module, "Definition");
@@ -122,6 +135,24 @@ PYBIND11_MODULE(segment, module)
                                                                         const std::string&,
                                                                         py::function)>(&BuilderProxy::make_source));
 
+    Builder.def("make_source_component",
+                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::Builder&,
+                                                                                const std::string&,
+                                                                                py::iterator)>(
+                    &BuilderProxy::make_source_component));
+
+    Builder.def("make_source_component",
+                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::Builder&,
+                                                                                const std::string&,
+                                                                                py::iterable)>(
+                    &BuilderProxy::make_source_component));
+
+    Builder.def("make_source_component",
+                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::Builder&,
+                                                                                const std::string&,
+                                                                                py::function)>(
+                    &BuilderProxy::make_source_component));
+
     /**
      * Construct a new py::object sink.
      * Create and return a Segment node used to sink python objects following out of the Segment.
@@ -142,17 +173,38 @@ PYBIND11_MODULE(segment, module)
      *      sink = segment.make_sink("test", my_on_next, my_on_error, my_on_completed)
      *  ```
      */
-    Builder.def("make_sink", &BuilderProxy::make_sink, py::return_value_policy::reference_internal);
+    Builder.def("make_sink",
+                &BuilderProxy::make_sink,
+                py::return_value_policy::reference_internal,
+                py::arg("name"),
+                py::arg("on_next").none(true)     = py::none(),
+                py::arg("on_error").none(true)    = py::none(),
+                py::arg("on_complete").none(true) = py::none());
+
+    Builder.def("make_sink_component",
+                &BuilderProxy::make_sink_component,
+                py::return_value_policy::reference_internal,
+                py::arg("name"),
+                py::arg("on_next").none(true)     = py::none(),
+                py::arg("on_error").none(true)    = py::none(),
+                py::arg("on_complete").none(true) = py::none());
+
+    Builder.def("make_node",
+                py::overload_cast<mrc::segment::Builder&, const std::string&, OnDataFunction>(&BuilderProxy::make_node),
+                py::return_value_policy::reference_internal);
 
     /**
      * Construct a new 'pure' python::object -> python::object node
      *
      * This will create and return a new lambda function with the following signature:
      * (py) @param name : Unique name of the node that will be created in the MRC Segment.
-     * (py) @param map_f : a std::function that takes a py::object and returns a py::object. This is your
      * python-function which will be called on each data element as it flows through the node.
      */
-    Builder.def("make_node", &BuilderProxy::make_node, py::return_value_policy::reference_internal);
+    Builder.def("make_node",
+                py::overload_cast<mrc::segment::Builder&, const std::string&, pybind11::args>(&BuilderProxy::make_node),
+                py::return_value_policy::reference_internal);
+
+    Builder.def("make_node_component", &BuilderProxy::make_node_component, py::return_value_policy::reference_internal);
 
     /**
      * Find and return an existing egress port -- throws if `name` does not exist

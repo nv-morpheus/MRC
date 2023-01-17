@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,8 +17,6 @@
 
 #include "mrc/modules/segment_modules.hpp"
 
-#include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_properties.hpp"
 #include "mrc/segment/object.hpp"
 
 #include <ostream>
@@ -161,7 +159,7 @@ void SegmentModule::register_input_port(std::string input_name, std::shared_ptr<
 
     m_input_port_ids.push_back(input_name);
     m_input_ports[input_name] = object;
-    m_input_port_type_indices.try_emplace(input_name, object->sink_base().sink_type());
+    m_input_port_type_indices.try_emplace(input_name, object->sink_type());
 }
 
 void SegmentModule::register_output_port(std::string output_name, std::shared_ptr<segment::ObjectProperties> object)
@@ -176,7 +174,7 @@ void SegmentModule::register_output_port(std::string output_name, std::shared_pt
 
     m_output_port_ids.push_back(output_name);
     m_output_ports[output_name] = object;
-    m_output_port_type_indices.try_emplace(output_name, object->source_base().source_type());
+    m_output_port_type_indices.try_emplace(output_name, object->source_type());
 }
 
 }  // namespace mrc::modules

@@ -23,11 +23,10 @@
 #include "mrc/core/utils.hpp"
 #include "mrc/core/watcher.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/node/edge.hpp"
 #include "mrc/node/rx_epilogue_tap.hpp"
 #include "mrc/node/rx_prologue_tap.hpp"
 #include "mrc/node/rx_sink_base.hpp"
-#include "mrc/node/rx_source.hpp"
+#include "mrc/node/rx_source_base.hpp"
 #include "mrc/node/rx_subscribable.hpp"
 #include "mrc/utils/type_utils.hpp"
 
@@ -128,13 +127,13 @@ void RxNode<InputT, OutputT, ContextT>::do_subscribe(rxcpp::composite_subscripti
 template <typename InputT, typename OutputT, typename ContextT>
 void RxNode<InputT, OutputT, ContextT>::on_stop(const rxcpp::subscription& subscription)
 {
-    this->disable_persistence();
+    // this->disable_persistence();
 }
 
 template <typename InputT, typename OutputT, typename ContextT>
 void RxNode<InputT, OutputT, ContextT>::on_kill(const rxcpp::subscription& subscription)
 {
-    this->disable_persistence();
+    // this->disable_persistence();
     subscription.unsubscribe();
 }
 
@@ -142,7 +141,108 @@ template <typename InputT, typename OutputT, typename ContextT>
 void RxNode<InputT, OutputT, ContextT>::on_shutdown_critical_section()
 {
     DVLOG(10) << runnable::Context::get_runtime_context().info() << " releasing source channel";
-    RxSourceBase<OutputT>::release_channel();
+    RxSourceBase<OutputT>::release_edge_connection();
 }
+
+template <typename T>
+class EdgeRxSubscriber : public edge::IEdgeWritable<T>
+{
+  public:
+    using subscriber_t = rxcpp::subscriber<T>;
+
+    EdgeRxSubscriber(subscriber_t subscriber) : m_subscriber(subscriber) {}
+
+    ~EdgeRxSubscriber()
+    {
+        if (this->is_connected())
+        {
+            m_subscriber.on_completed();
+        }
+    }
+
+    void set_subscriber(subscriber_t subscriber)
+    {
+        m_subscriber = subscriber;
+    }
+
+    virtual channel::Status await_write(T&& t)
+    {
+        m_subscriber.on_next(std::move(t));
+
+        return channel::Status::success;
+    }
+
+  private:
+    subscriber_t m_subscriber;
+};
+
+template <typename InputT, typename OutputT>
+class RxNodeComponent : public WritableProvider<InputT>, public WritableAcceptor<OutputT>
+{
+  public:
+    using stream_fn_t = std::function<rxcpp::observable<OutputT>(const rxcpp::observable<InputT>&)>;
+
+    RxNodeComponent()
+    {
+        auto edge = std::make_shared<EdgeRxSubscriber<InputT>>(m_subject.get_subscriber());
+
+        WritableProvider<InputT>::init_owned_edge(edge);
+    }
+
+    RxNodeComponent(stream_fn_t stream_fn) : RxNodeComponent()
+    {
+        this->make_stream(stream_fn);
+    }
+
+    template <typename... OpsT>
+    RxNodeComponent(OpsT&&... ops) : RxNodeComponent()
+    {
+        this->pipe(std::forward<OpsT>(ops)...);
+    }
+
+    template <typename... OpsT>
+    RxNodeComponent& pipe(OpsT&&... ops)
+    {
+        make_stream([=](auto start) {
+            return (start | ... | ops);
+        });
+        return *this;
+    }
+
+    void make_stream(stream_fn_t fn)
+    {
+        if (m_subject_subscription.is_subscribed())
+        {
+            m_subject_subscription.unsubscribe();
+        }
+
+        // Start with the base sinke observable
+        auto observable_in = m_subject.get_observable();
+
+        // // Apply prologue taps
+        // observable_in = this->apply_prologue_taps(observable_in);
+
+        // Apply the specified stream
+        auto observable_out = fn(observable_in);
+
+        // // Apply epilogue taps
+        // observable_out = this->apply_epilogue_taps(observable_out);
+
+        // Subscribe to the observer
+        m_subject_subscription = observable_out.subscribe(rxcpp::make_observer_dynamic<OutputT>(
+            [this](OutputT message) {
+                // Forward to the writable edge
+                this->get_writable_edge()->await_write(std::move(message));
+            },
+            [this]() {
+                // On completion, release connections
+                WritableAcceptor<OutputT>::release_edge_connection();
+            }));
+    }
+
+  private:
+    rxcpp::subjects::subject<InputT> m_subject;
+    rxcpp::subscription m_subject_subscription;
+};
 
 }  // namespace mrc::node

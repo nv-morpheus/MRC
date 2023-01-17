@@ -24,8 +24,7 @@
 #include "mrc/core/utils.hpp"
 #include "mrc/core/watcher.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/node/edge.hpp"
-#include "mrc/node/source_channel.hpp"
+#include "mrc/node/source_channel_owner.hpp"
 #include "mrc/runnable/context.hpp"
 #include "mrc/utils/type_utils.hpp"
 
@@ -39,14 +38,17 @@
 namespace mrc::node {
 
 /**
- * @brief Extends SourceChannel<T> to provide observer responsible for writing data to the channel
+ * @brief Extends SourceChannelOwner<T> to provide observer responsible for writing data to the channel
  *
  * RxSource completes RxSourceBase by providing the observable and subscibable interface.
  *
  * @tparam T
  */
 template <typename T>
-class RxSourceBase : public SourceChannel<T>, private Watchable
+class RxSourceBase : public ReadableProvider<T>,
+                     public WritableAcceptor<T>,
+                     public SourceChannelOwner<T>,
+                     private Watchable
 {
   public:
     void source_add_watcher(std::shared_ptr<WatcherInterface> watcher);
@@ -59,8 +61,8 @@ class RxSourceBase : public SourceChannel<T>, private Watchable
     const rxcpp::observer<T>& observer() const;
 
   private:
-    // the following methods are moved to private from their original scopes to prevent access from deriving classes
-    using SourceChannel<T>::await_write;
+    // // the following methods are moved to private from their original scopes to prevent access from deriving classes
+    // using SourceChannelOwner<T>::await_write;
 
     rxcpp::observer<T> m_observer;
 };
@@ -71,13 +73,16 @@ RxSourceBase<T>::RxSourceBase() :
       [this](T data) {
           this->watcher_epilogue(WatchableEvent::sink_on_data, true, &data);
           this->watcher_prologue(WatchableEvent::channel_write, &data);
-          SourceChannel<T>::await_write(std::move(data));
+          this->get_writable_edge()->await_write(std::move(data));
           this->watcher_epilogue(WatchableEvent::channel_write, true, &data);
       },
       [](std::exception_ptr ptr) {
           runnable::Context::get_runtime_context().set_exception(std::move(ptr));
       }))
-{}
+{
+    // Set the default channel
+    this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
+}
 
 template <typename T>
 const rxcpp::observer<T>& RxSourceBase<T>::observer() const

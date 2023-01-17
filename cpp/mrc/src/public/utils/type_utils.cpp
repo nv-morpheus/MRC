@@ -19,6 +19,7 @@
 
 #include "mrc/utils/string_utils.hpp"
 
+#include <boost/core/demangle.hpp>
 #include <glog/logging.h>
 
 #include <cstddef>  // for size_t
@@ -154,5 +155,9 @@ char DataType::type_char() const
     default:
         throw std::invalid_argument("Unknown datatype");
     }
+}
+std::string type_name(std::type_index type_info)
+{
+    return boost::core::demangle(type_info.name());
 }
 }  // namespace mrc

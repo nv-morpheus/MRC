@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2018-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2018-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +25,7 @@ add_executable(test_mrc
   modules/test_segment_modules.cpp
   modules/test_stream_buffer_module.cpp
   test_channel.cpp
+  test_edges.cpp
   test_executor.cpp
   test_main.cpp
   test_metrics.cpp

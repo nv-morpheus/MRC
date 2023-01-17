@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,13 +18,13 @@
 #pragma once
 
 #include "mrc/core/addresses.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/manifold/composite_manifold.hpp"
 #include "mrc/manifold/interface.hpp"
-#include "mrc/node/edge_builder.hpp"
 #include "mrc/node/generic_sink.hpp"
 #include "mrc/node/operators/muxer.hpp"
 #include "mrc/node/rx_sink.hpp"
-#include "mrc/node/source_channel.hpp"
+#include "mrc/node/source_channel_owner.hpp"
 #include "mrc/pipeline/resources.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/runnable/launchable.hpp"
@@ -54,7 +54,7 @@ class Balancer : public node::GenericSink<T>
     void will_complete() final
     {
         DVLOG(10) << "shutdown load-balancer - clear output channels";
-        m_state.clear();
+        // m_state.clear();
     };
 
     RoundRobinEgress<T>& m_state;
@@ -74,40 +74,40 @@ class LoadBalancer : public CompositeManifold<MuxedIngress<T>, RoundRobinEgress<
         m_launch_options.pe_count            = 1;
         m_launch_options.engines_per_pe      = 8;
 
-        // construct any resources
-        this->resources()
-            .main()
-            .enqueue([this] {
-                m_balancer = std::make_unique<detail::Balancer<T>>(this->egress());
-                node::make_edge(this->ingress().source(), *m_balancer);
-            })
-            .get();
+        // // construct any resources
+        // this->resources()
+        //     .main()
+        //     .enqueue([this] {
+        //         m_balancer = std::make_shared<detail::Balancer<T>>(this->egress());
+        //         mrc::make_edge(this->ingress().source(), *m_balancer);
+        //     })
+        //     .get();
     }
 
     void start() final
     {
-        this->resources()
-            .main()
-            .enqueue([this] {
-                if (m_runner)
-                {
-                    // todo(#179) - validate this fix and improve test coverage
-                    // this will be handled now by the default behavior of SourceChannel::no_channel method
-                    // CHECK(!this->egress().output_channels().empty()) << "no egress channels on manifold";
-                    return;
-                }
-                CHECK(m_balancer);
-                m_runner = this->resources()
-                               .launch_control()
-                               .prepare_launcher(launch_options(), std::move(m_balancer))
-                               ->ignition();
-            })
-            .get();
+        // this->resources()
+        //     .main()
+        //     .enqueue([this] {
+        //         if (m_runner)
+        //         {
+        //             // todo(#179) - validate this fix and improve test coverage
+        //             // this will be handled now by the default behavior of SourceChannelOwner::no_channel method
+        //             // CHECK(!this->egress().output_channels().empty()) << "no egress channels on manifold";
+        //             return;
+        //         }
+        //         CHECK(m_balancer);
+        //         m_runner = this->resources()
+        //                        .launch_control()
+        //                        .prepare_launcher(launch_options(), std::move(m_balancer))
+        //                        ->ignition();
+        //     })
+        //     .get();
     }
 
     void join() final
     {
-        m_runner->await_join();
+        // m_runner->await_join();
     }
 
     const runnable::LaunchOptions& launch_options() const
@@ -119,8 +119,8 @@ class LoadBalancer : public CompositeManifold<MuxedIngress<T>, RoundRobinEgress<
     // launch options
     runnable::LaunchOptions m_launch_options;
 
-    // this is the progress engine that will drive the load balancer
-    std::unique_ptr<node::GenericSink<T>> m_balancer;
+    // // this is the progress engine that will drive the load balancer
+    // std::shared_ptr<node::GenericSink<T>> m_balancer;
 
     // runner
     std::unique_ptr<runnable::Runner> m_runner{nullptr};

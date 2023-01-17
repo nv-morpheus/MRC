@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,8 @@
 #include "internal/service.hpp"
 
 #include "mrc/core/error.hpp"
-#include "mrc/node/source_channel.hpp"
+#include "mrc/node/forward.hpp"
+#include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/runnable/launch_options.hpp"
@@ -43,6 +44,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+// IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
 
 namespace grpc {
 class Channel;
@@ -98,7 +101,7 @@ class Client final : public resources::PartitionResourceBase, public Service
     using stream_t         = std::shared_ptr<rpc::ClientStream<mrc::protos::Event, mrc::protos::Event>>;
     using writer_t         = std::shared_ptr<rpc::StreamWriter<mrc::protos::Event>>;
     using event_t          = stream_t::element_type::IncomingData;
-    using update_channel_t = mrc::node::SourceChannelWriteable<protos::StateUpdate>;
+    using update_channel_t = mrc::node::WritableEntrypoint<protos::StateUpdate>;
 
     Client(resources::PartitionResourceBase& base);
 
@@ -184,8 +187,8 @@ class Client final : public resources::PartitionResourceBase, public Service
     std::unique_ptr<client::ConnectionsManager> m_connections_manager;
 
     // update channel
-    std::unique_ptr<mrc::node::SourceChannelWriteable<const protos::StateUpdate>> m_connections_update_channel;
-    std::map<InstanceID, mrc::node::SourceChannelWriteable<const protos::StateUpdate>> m_instance_update_channels;
+    std::unique_ptr<mrc::node::WritableEntrypoint<const protos::StateUpdate>> m_connections_update_channel;
+    // std::map<InstanceID, mrc::node::WritableEntrypoint<const protos::StateUpdate>> m_instance_update_channels;
 
     // Stream Context
     stream_t m_stream;

@@ -15,36 +15,50 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "pymrc/utilities/acquire_gil.hpp"
 
-#include "mrc/node/operators/operator.hpp"
+#include <nlohmann/json_fwd.hpp>
+#include <pybind11/gil.h>
+#include <pybind11/pybind11.h>
 
-namespace mrc::node {
+namespace mrc::pymrc {
 
-template <typename T>
-class OperatorComponent final : public Operator<T>
+namespace py = pybind11;
+
+using nlohmann::json;
+
+AcquireGIL::AcquireGIL() : m_gil(std::make_unique<py::gil_scoped_acquire>()) {}
+
+AcquireGIL::~AcquireGIL() = default;
+
+inline void AcquireGIL::inc_ref()
 {
-  public:
-    OperatorComponent(
-        std::function<mrc::channel::Status(T&&)> on_next,
-        std::function<void()> on_complete = [] {}) :
-      m_on_next(std::move(on_next)),
-      m_on_complete(std::move(on_complete))
-    {}
-
-  private:
-    mrc::channel::Status on_next(T&& obj) final
+    if (m_gil)
     {
-        return m_on_next(std::move(obj));
+        m_gil->inc_ref();
     }
+}
 
-    void on_complete() final
+inline void AcquireGIL::dec_ref()
+{
+    if (m_gil)
     {
-        m_on_complete();
+        m_gil->dec_ref();
     }
+}
 
-    std::function<mrc::channel::Status(T&&)> m_on_next;
-    std::function<void()> m_on_complete;
-};
+void AcquireGIL::disarm()
+{
+    if (m_gil)
+    {
+        m_gil->disarm();
+    }
+}
 
-}  // namespace mrc::node
+void AcquireGIL::release()
+{
+    // Just delete the GIL object early
+    m_gil.reset();
+}
+
+}  // namespace mrc::pymrc

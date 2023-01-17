@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,7 +43,7 @@
 // CUDA Runtime error messages
 static std::string __cuda_get_error_string(cudaError_t error)  // NOLINT(readability-identifier-naming)
 {
-    return std::string(cudaGetErrorString(error));
+    return {cudaGetErrorString(error)};
 }
 #endif
 

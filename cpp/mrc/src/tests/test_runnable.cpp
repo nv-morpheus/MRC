@@ -20,6 +20,10 @@
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 
+#include "mrc/edge/edge_builder.hpp"
+#include "mrc/node/operators/muxer.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_source.hpp"
 #include "mrc/options/engine_groups.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
@@ -38,17 +42,20 @@
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
+#include <rxcpp/rx.hpp>
 
 #include <atomic>
 #include <chrono>
 #include <cstddef>
 #include <functional>
+#include <map>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <thread>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 using namespace mrc;
 
@@ -268,6 +275,75 @@ TEST_F(TestRunnable, RunnerOutOfScope)
     runner->await_live();
 }
 
+TEST_F(TestRunnable, RxSourceToRxSink)
+{
+    std::atomic<std::size_t> counter = 0;
+    std::unique_ptr<runnable::Runner> runner_source;
+    std::unique_ptr<runnable::Runner> runner_sink;
+
+    // do the construction in its own scope
+    // only allow the runners to escape the scope
+    // this ensures that the Muxer Operator survives
+    {
+        auto source = std::make_unique<node::RxSource<float>>(
+            rxcpp::observable<>::create<float>([](rxcpp::subscriber<float> s) {
+                s.on_next(1.0F);
+                s.on_next(2.0F);
+                s.on_next(3.0F);
+                s.on_completed();
+            }));
+        auto sink = std::make_unique<node::RxSink<float>>(rxcpp::make_observer_dynamic<float>([&](float x) {
+            ++counter;
+        }));
+
+        mrc::make_edge(*source, *sink);
+
+        runner_sink   = m_resources->launch_control().prepare_launcher(std::move(sink))->ignition();
+        runner_source = m_resources->launch_control().prepare_launcher(std::move(source))->ignition();
+    }
+
+    runner_source->await_join();
+    runner_sink->await_join();
+
+    EXPECT_EQ(counter, 3);
+}
+
+TEST_F(TestRunnable, RxSourceToMuxerToRxSink)
+{
+    std::atomic<std::size_t> counter = 0;
+    std::unique_ptr<runnable::Runner> runner_source;
+    std::unique_ptr<node::Muxer<float>> muxer;
+    std::unique_ptr<runnable::Runner> runner_sink;
+
+    // do the construction in its own scope
+    // only allow the runners to escape the scope
+    // this ensures that the Muxer Operator survives
+    {
+        auto source = std::make_unique<node::RxSource<float>>(
+            rxcpp::observable<>::create<float>([](rxcpp::subscriber<float> s) {
+                s.on_next(1.0F);
+                s.on_next(2.0F);
+                s.on_next(3.0F);
+                s.on_completed();
+            }));
+        muxer     = std::make_unique<node::Muxer<float>>();
+        auto sink = std::make_unique<node::RxSink<float>>(rxcpp::make_observer_dynamic<float>([&](float x) {
+            ++counter;
+        }));
+
+        mrc::make_edge(*source, *muxer);
+        mrc::make_edge(*muxer, *sink);
+
+        runner_sink   = m_resources->launch_control().prepare_launcher(std::move(sink))->ignition();
+        runner_source = m_resources->launch_control().prepare_launcher(std::move(source))->ignition();
+    }
+
+    runner_source->await_join();
+    runner_sink->await_join();
+
+    EXPECT_EQ(counter, 3);
+}
+
 // Move the remaining tests to TestNode
 
 // TEST_F(TestRunnable, ThreadRunnable)
@@ -307,8 +383,8 @@ TEST_F(TestRunnable, RunnerOutOfScope)
 //         auto sink =
 //             std::make_unique<node::RxSink<float>>(rxcpp::make_observer_dynamic<float>([&](float x) { ++counter; }));
 
-//         node::make_edge(*source, *muxer);
-//         node::make_edge(*muxer, *sink);
+//         mrc::make_edge(*source, *muxer);
+//         mrc::make_edge(*muxer, *sink);
 
 //         runner_sink   = m_launch_control->prepare_launcher(std::move(sink))->ignition();
 //         runner_source = m_launch_control->prepare_launcher(std::move(source))->ignition();
@@ -344,8 +420,8 @@ TEST_F(TestRunnable, RunnerOutOfScope)
 //         auto sink =
 //             std::make_unique<node::RxSink<float>>(rxcpp::make_observer_dynamic<float>([&](float x) { ++counter; }));
 
-//         node::make_edge(*source, *passthru);
-//         node::make_edge(*passthru, *sink);
+//         mrc::make_edge(*source, *passthru);
+//         mrc::make_edge(*passthru, *sink);
 
 //         runner_sink     = m_launch_control->prepare_launcher(std::move(sink))->ignition();
 //         runner_passthru = m_launch_control->prepare_launcher(std::move(passthru))->ignition();

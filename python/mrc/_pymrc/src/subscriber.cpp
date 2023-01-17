@@ -19,7 +19,6 @@
 
 #include "pymrc/operators.hpp"
 #include "pymrc/types.hpp"
-#include "pymrc/utils.hpp"
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>
@@ -129,22 +128,13 @@ PySubscription ObservableProxy::subscribe(PyObjectObservable* self, PyObjectSubs
     return self->subscribe(subscriber);
 }
 
-std::function<PyObjectObservable(PyObjectObservable&)> test_operator()
-{
-    return [](PyObjectObservable& source) {
-        return source.tap([](auto x) {
-            // Print stuff
-        });
-    };
-}
-
 template <typename... OpsT>
-PyObjectObservable pipe_ops(PyObjectObservable* self, OpsT&&... ops)
+PyObjectObservable pipe_ops(const PyObjectObservable* self, OpsT&&... ops)
 {
     return (*self | ... | ops);
 }
 
-PyObjectObservable ObservableProxy::pipe(PyObjectObservable* self, py::args args)
+PyObjectObservable ObservableProxy::pipe(const PyObjectObservable* self, py::args args)
 {
     std::vector<PyObjectOperateFn> operators;
 

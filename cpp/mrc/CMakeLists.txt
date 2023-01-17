@@ -126,6 +126,8 @@ add_library(libmrc
   src/public/coroutines/thread_pool.cpp
   src/public/cuda/device_guard.cpp
   src/public/cuda/sync.cpp
+  src/public/edge/edge_adapter_registry.cpp
+  src/public/edge/edge_builder.cpp
   src/public/manifold/manifold.cpp
   src/public/memory/buffer_view.cpp
   src/public/memory/codable/buffer.cpp
@@ -135,9 +137,6 @@ add_library(libmrc
   src/public/modules/plugins.cpp
   src/public/modules/sample_modules.cpp
   src/public/modules/segment_modules.cpp
-  src/public/node/edge_adapter_registry.cpp
-  src/public/node/edge_builder.cpp
-  src/public/node/edge_registry.cpp
   src/public/node/port_registry.cpp
   src/public/options/engine_groups.cpp
   src/public/options/fiber_pool.cpp

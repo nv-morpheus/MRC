@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022,NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,11 +21,11 @@
 
 namespace mrc {
 
-template <typename Container, typename Key>
-bool contains(const Container& container, const Key& key)
+template <typename ContainerT, typename KeyT>
+bool contains(const ContainerT& container, const KeyT& key)
 {
     auto search = container.find(key);
-    return (search == container.end() ? false : true);
+    return (static_cast<bool>(search != container.end()));
 }
 
 template <typename C>

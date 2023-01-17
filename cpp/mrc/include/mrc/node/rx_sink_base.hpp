@@ -24,9 +24,8 @@
 #include "mrc/core/utils.hpp"
 #include "mrc/core/watcher.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/node/edge.hpp"
 #include "mrc/node/forward.hpp"
-#include "mrc/node/sink_channel.hpp"
+#include "mrc/node/sink_channel_owner.hpp"
 #include "mrc/utils/type_utils.hpp"
 
 #include <glog/logging.h>
@@ -41,7 +40,7 @@
 namespace mrc::node {
 
 template <typename T>
-class RxSinkBase : public SinkChannel<T>, private Watchable
+class RxSinkBase : public WritableProvider<T>, public ReadableAcceptor<T>, public SinkChannelOwner<T>, private Watchable
 {
   public:
     void sink_add_watcher(std::shared_ptr<WatcherInterface> watcher);
@@ -54,9 +53,6 @@ class RxSinkBase : public SinkChannel<T>, private Watchable
     const rxcpp::observable<T>& observable() const;
 
   private:
-    // the following methods are moved to private from their original scopes to prevent access from deriving classes
-    using SinkChannel<T>::egress;
-
     // this is our channel reader progress engine
     void progress_engine(rxcpp::subscriber<T>& s);
 
@@ -66,11 +62,13 @@ class RxSinkBase : public SinkChannel<T>, private Watchable
 
 template <typename T>
 RxSinkBase<T>::RxSinkBase() :
-  SinkChannel<T>(),
   m_observable(rxcpp::observable<>::create<T>([this](rxcpp::subscriber<T> s) {
       progress_engine(s);
   }))
-{}
+{
+    // Set the default channel
+    this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
+}
 
 template <typename T>
 const rxcpp::observable<T>& RxSinkBase<T>::observable() const
@@ -83,7 +81,7 @@ void RxSinkBase<T>::progress_engine(rxcpp::subscriber<T>& s)
 {
     T data;
     this->watcher_prologue(WatchableEvent::channel_read, &data);
-    while (s.is_subscribed() && (SinkChannel<T>::egress().await_read(data) == channel::Status::success))
+    while (s.is_subscribed() && (this->get_readable_edge()->await_read(data) == channel::Status::success))
     {
         this->watcher_epilogue(WatchableEvent::channel_read, true, &data);
         this->watcher_prologue(WatchableEvent::sink_on_data, &data);

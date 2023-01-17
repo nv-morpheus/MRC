@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,13 +17,12 @@
 
 #pragma once
 
-#include "mrc/channel/ingress.hpp"
-#include "mrc/core/utils.hpp"
-#include "mrc/node/edge.hpp"
-#include "mrc/node/edge_registry.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/type_traits.hpp"
+#include "mrc/utils/type_utils.hpp"
 
+#include <memory>
 #include <typeindex>
 
 namespace mrc::node {
@@ -62,11 +61,6 @@ class SinkPropertiesBase
 
   protected:
     SinkPropertiesBase() = default;
-
-  private:
-    virtual std::shared_ptr<channel::IngressHandle> ingress_handle() = 0;
-
-    friend EdgeBuilder;
 };
 
 inline SinkPropertiesBase::~SinkPropertiesBase() = default;
@@ -75,7 +69,7 @@ inline SinkPropertiesBase::~SinkPropertiesBase() = default;
  * @brief Typed SinkProperties provides default implementations dependent only on the type T.
  */
 template <typename T>
-class SinkProperties : public SinkPropertiesBase
+class SinkProperties : public edge::EdgeHolder<T>, public SinkPropertiesBase
 {
   public:
     using sink_type_t = T;
@@ -97,15 +91,85 @@ class SinkProperties : public SinkPropertiesBase
         return std::string(type_name<T>());
     }
 
-  private:
-    inline std::shared_ptr<channel::IngressHandle> ingress_handle() final
+  protected:
+    std::shared_ptr<edge::IEdgeReadable<T>> get_readable_edge() const
     {
-        return channel_ingress();
+        return std::dynamic_pointer_cast<edge::IEdgeReadable<T>>(this->get_connected_edge());
+    }
+};
+
+template <typename T>
+class ReadableAcceptor : public virtual SinkProperties<T>, public edge::IReadableAcceptor<T>
+{
+  public:
+    ReadableAcceptor& operator=(ReadableAcceptor&& other)
+    {
+        // Only call concrete class
+        SinkProperties<T>::operator=(std::move(other));
     }
 
-    virtual std::shared_ptr<channel::Ingress<T>> channel_ingress() = 0;
+  private:
+    void set_readable_edge_handle(std::shared_ptr<edge::ReadableEdgeHandle> egress) override
+    {
+        // Do any conversion to the correct type here
+        auto adapted_egress = edge::EdgeBuilder::adapt_readable_edge<T>(egress);
 
-    friend EdgeBuilder;
+        SinkProperties<T>::make_edge_connection(adapted_egress);
+    }
+};
+
+template <typename T>
+class WritableProvider : public virtual SinkProperties<T>, public edge::IWritableProvider<T>
+{
+  public:
+    WritableProvider& operator=(WritableProvider&& other)
+    {
+        // Only call concrete class
+        SinkProperties<T>::operator=(std::move(other));
+    }
+
+  private:
+    std::shared_ptr<edge::WritableEdgeHandle> get_writable_edge_handle() const override
+    {
+        return edge::WritableEdgeHandle::from_typeless(SinkProperties<T>::get_edge_connection());
+    }
+};
+
+template <typename T>
+class ForwardingWritableProvider : public WritableProvider<T>
+{
+  protected:
+    class ForwardingEdge : public edge::IEdgeWritable<T>
+    {
+      public:
+        ForwardingEdge(ForwardingWritableProvider<T>& parent) : m_parent(parent) {}
+
+        ~ForwardingEdge() = default;
+
+        channel::Status await_write(T&& t) override
+        {
+            return m_parent.on_next(std::move(t));
+        }
+
+      private:
+        ForwardingWritableProvider<T>& m_parent;
+    };
+
+    ForwardingWritableProvider()
+    {
+        auto inner_edge = std::make_shared<ForwardingEdge>(*this);
+
+        inner_edge->add_disconnector([this]() {
+            // Only call the on_complete if we have been connected
+            this->on_complete();
+        });
+
+        WritableProvider<T>::init_owned_edge(inner_edge);
+    }
+
+    virtual channel::Status on_next(T&& t) = 0;
+
+    virtual void on_complete() {}
 };
 
 }  // namespace mrc::node

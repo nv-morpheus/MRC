@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,10 +24,10 @@
 #include "mrc/core/utils.hpp"
 #include "mrc/core/watcher.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/node/edge.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/node/rx_subscribable.hpp"
+#include "mrc/node/source_properties.hpp"
 #include "mrc/utils/type_utils.hpp"
 
 #include <glog/logging.h>
@@ -65,8 +65,40 @@ GenericSource<T, ContextT>::GenericSource() :
       }
       s.on_completed();
   }))
+{}
+
+template <typename T>
+class GenericSourceComponent : public ForwardingEgressProvider<T>
 {
-    // RxSource<T, ContextT>::set_observable();
-}
+  public:
+    GenericSourceComponent()           = default;
+    ~GenericSourceComponent() override = default;
+
+  private:
+    mrc::channel::Status get_next(T& data) override
+    {
+        return this->get_data(data);
+    }
+
+    virtual mrc::channel::Status get_data(T& data) = 0;
+};
+
+template <typename T>
+class LambdaSourceComponent : public GenericSourceComponent<T>
+{
+  public:
+    using get_data_fn_t = std::function<mrc::channel::Status(T&)>;
+
+    LambdaSourceComponent(get_data_fn_t get_data_fn) : m_get_data_fn(std::move(get_data_fn)) {}
+    ~LambdaSourceComponent() override = default;
+
+  private:
+    mrc::channel::Status get_data(T& data) override
+    {
+        return m_get_data_fn(data);
+    }
+
+    get_data_fn_t m_get_data_fn;
+};
 
 }  // namespace mrc::node

@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,7 +23,7 @@
 #include "internal/service.hpp"
 
 #include "mrc/core/error.hpp"
-#include "mrc/node/queue.hpp"
+#include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
 
 #include <boost/fiber/condition_variable.hpp>
@@ -35,6 +35,13 @@
 #include <map>
 #include <memory>
 #include <string>
+
+// IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
+
+namespace mrc::node {
+template <typename T>
+class Queue;
+}  // namespace mrc::node
 
 namespace mrc::internal::control_plane::server {
 class ClientInstance;
@@ -108,6 +115,7 @@ class Server : public Service
     std::map<std::string, std::unique_ptr<server::SubscriptionService>> m_subscription_services;
 
     // operators / queues
+    std::unique_ptr<mrc::node::WritableEntrypoint<event_t>> m_queue_holder;
     std::unique_ptr<mrc::node::Queue<event_t>> m_queue;
 
     // runners

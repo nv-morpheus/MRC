@@ -18,12 +18,16 @@
 #include "pymrc/forward.hpp"
 #include "pymrc/node.hpp"
 #include "pymrc/port_builders.hpp"
+#include "pymrc/types.hpp"
+#include "pymrc/utilities/acquire_gil.hpp"
 #include "pymrc/utils.hpp"
 
 #include "mrc/channel/status.hpp"
-#include "mrc/node/edge_connector.hpp"
+#include "mrc/edge/edge_connector.hpp"
+#include "mrc/node/rx_sink_base.hpp"
+#include "mrc/node/rx_source_base.hpp"
 #include "mrc/segment/builder.hpp"
-#include "mrc/segment/object.hpp"
+#include "mrc/types.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 
@@ -33,9 +37,10 @@
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
 
+#include <array>
 #include <cstddef>
 #include <exception>
-#include <functional>
+#include <map>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -47,8 +52,12 @@ namespace mrc::pytests {
 namespace py    = pybind11;
 namespace pymrc = mrc::pymrc;
 
+using namespace py::literals;
+
 struct Base
-{};
+{
+    virtual ~Base() = default;
+};
 
 struct DerivedA : public Base
 {};
@@ -56,134 +65,254 @@ struct DerivedA : public Base
 struct DerivedB : public Base
 {};
 
-class SourceDerivedB : public pymrc::PythonSource<std::shared_ptr<DerivedB>>
+class PythonTestNodeMixin
+{
+  protected:
+    PythonTestNodeMixin(std::string name, pymrc::PyHolder counter_dict) :
+      m_name(std::move(name)),
+      m_counters(std::move(counter_dict))
+    {}
+
+    void init_counter(const std::string& counter_name)
+    {
+        pymrc::AcquireGIL gil;
+
+        std::string key = MRC_CONCAT_STR(m_name << "." << counter_name);
+
+        if (m_counters)
+        {
+            m_counters[key.c_str()] = 0;
+        }
+    }
+
+    void increment_counter(const std::string& counter_name)
+    {
+        pymrc::AcquireGIL gil;
+
+        std::string key = MRC_CONCAT_STR(m_name << "." << counter_name);
+
+        if (m_counters)
+        {
+            m_counters[key.c_str()] = m_counters.attr("get")(key.c_str(), 0).cast<int>() + 1;
+        }
+    }
+
+    std::string m_name;
+    pymrc::PyHolder m_counters;  // Dict
+};
+
+#define GENERATE_NODE_TYPES(base_class, class_prefix)          \
+    class class_prefix##Base : public base_class<Base>         \
+    {                                                          \
+        using base_class<Base>::base_class;                    \
+    };                                                         \
+    class class_prefix##DerivedA : public base_class<DerivedA> \
+    {                                                          \
+        using base_class<DerivedA>::base_class;                \
+    };                                                         \
+    class class_prefix##DerivedB : public base_class<DerivedB> \
+    {                                                          \
+      public:                                                  \
+        using base_class<DerivedB>::base_class;                \
+    };
+
+template <typename T>
+class TestSourceImpl : public PythonTestNodeMixin
 {
   public:
-    using base_t = pymrc::PythonSource<std::shared_ptr<DerivedB>>;
-    using typename base_t::subscriber_fn_t;
+    using source_t = std::shared_ptr<T>;
 
-    SourceDerivedB() : PythonSource(build()) {}
-
-  private:
-    subscriber_fn_t build()
+    TestSourceImpl(std::string name, pymrc::PyHolder counter) : PythonTestNodeMixin(std::move(name), std::move(counter))
     {
-        return [this](rxcpp::subscriber<std::shared_ptr<DerivedB>>& output) {
+        this->init_counter("on_next");
+        this->init_counter("on_error");
+        this->init_counter("on_completed");
+    }
+
+  protected:
+    auto build()
+    {
+        return rxcpp::observable<>::create<source_t>([this](rxcpp::subscriber<source_t>& output) {
             for (size_t i = 0; i < 5; ++i)
             {
-                output.on_next(std::make_shared<DerivedB>());
+                output.on_next(std::make_shared<T>());
+                this->increment_counter("on_next");
             }
-        };
+
+            this->increment_counter("on_completed");
+            output.on_completed();
+        });
     }
 };
 
-class SourcePyHolder : public pymrc::PythonSource<pymrc::PyObjectHolder>
+template <typename T>
+class TestSource : public pymrc::PythonSource<std::shared_ptr<T>>, public TestSourceImpl<T>
 {
   public:
-    using base_t = pymrc::PythonSource<pymrc::PyObjectHolder>;
-    using typename base_t::subscriber_fn_t;
+    using base_t = pymrc::PythonSource<std::shared_ptr<T>>;
 
-    SourcePyHolder() : PythonSource(build()) {}
+    TestSource(std::string name, pymrc::PyHolder counter) :
+      base_t(),
+      TestSourceImpl<T>(std::move(name), std::move(counter))
+    {
+        this->set_observable(this->build());
+    }
+};
+
+template <typename T>
+class TestSourceComponent : public pymrc::PythonSourceComponent<std::shared_ptr<T>>, public TestSourceImpl<T>
+{
+  public:
+    using base_t = pymrc::PythonSourceComponent<std::shared_ptr<T>>;
+
+    TestSourceComponent(std::string name, pymrc::PyHolder counter) :
+      base_t(build()),
+      TestSourceImpl<T>(std::move(name), std::move(counter))
+    {}
 
   private:
-    subscriber_fn_t build()
+    //   Hide the base build since there is no RxSourceComponent
+    typename base_t::get_data_fn_t build()
     {
-        return [this](rxcpp::subscriber<pymrc::PyObjectHolder>& output) {
-            for (size_t i = 0; i < 5; ++i)
+        return [this](std::shared_ptr<T>& output) {
+            if (m_count++ < 5)
             {
-                output.on_next(py::int_(10 + i));
+                output = std::make_shared<T>();
+
+                this->increment_counter("on_next");
+
+                return channel::Status::success;
             }
+
+            this->increment_counter("on_completed");
+
+            return channel::Status::closed;
         };
     }
+
+    size_t m_count{0};
 };
 
-class NodeBase : public pymrc::PythonNode<std::shared_ptr<Base>, std::shared_ptr<Base>>
+template <typename T>
+class TestNodeImpl : public PythonTestNodeMixin
 {
   public:
-    using base_t = pymrc::PythonNode<std::shared_ptr<Base>, std::shared_ptr<Base>>;
-    using typename base_t::sink_type_t;
-    using typename base_t::source_type_t;
-    using typename base_t::subscribe_fn_t;
+    using sink_type_t   = std::shared_ptr<T>;
+    using source_type_t = std::shared_ptr<T>;
 
-    NodeBase() : PythonNode(base_t::op_factory_from_sub_fn(build_operator())) {}
-
-  private:
-    subscribe_fn_t build_operator()
+    TestNodeImpl(std::string name, pymrc::PyHolder counter) : PythonTestNodeMixin(std::move(name), std::move(counter))
     {
-        return [this](rxcpp::observable<sink_type_t> input, rxcpp::subscriber<source_type_t> output) {
-            return input.subscribe(rxcpp::make_observer<sink_type_t>(
-                [this, &output](sink_type_t x) {
-                    // Forward on
-                    output.on_next(std::move(x));
-                },
-                [&](std::exception_ptr error_ptr) {
-                    output.on_error(error_ptr);
-                },
-                [&]() {
-                    output.on_completed();
-                }));
+        this->init_counter("on_next");
+        this->init_counter("on_error");
+        this->init_counter("on_completed");
+    }
+
+  protected:
+    auto build_operator()
+    {
+        return [this](rxcpp::observable<sink_type_t> input) {
+            return input | rxcpp::operators::tap([this](sink_type_t x) {
+                       // Forward on
+                       this->increment_counter("on_next");
+                   }) |
+                   rxcpp::operators::finally([this]() {
+                       this->increment_counter("on_completed");
+                   });
         };
     }
 };
 
-class NodePyHolder : public pymrc::PythonNode<pymrc::PyObjectHolder, pymrc::PyObjectHolder>
+template <typename T>
+class TestNode : public pymrc::PythonNode<std::shared_ptr<T>, std::shared_ptr<T>>, public TestNodeImpl<T>
+{
+    using base_t = pymrc::PythonNode<std::shared_ptr<T>, std::shared_ptr<T>>;
+
+  public:
+    TestNode(std::string name, pymrc::PyHolder counter) : TestNodeImpl<T>(std::move(name), std::move(counter))
+    {
+        this->make_stream(this->build_operator());
+    }
+};
+
+template <typename T>
+class TestNodeComponent : public pymrc::PythonNodeComponent<std::shared_ptr<T>, std::shared_ptr<T>>,
+                          public TestNodeImpl<T>
+{
+    using base_t = pymrc::PythonNodeComponent<std::shared_ptr<T>, std::shared_ptr<T>>;
+
+  public:
+    TestNodeComponent(std::string name, pymrc::PyHolder counter) : TestNodeImpl<T>(std::move(name), std::move(counter))
+    {
+        this->make_stream(this->build_operator());
+    }
+};
+
+template <typename T>
+class TestSinkImpl : public PythonTestNodeMixin
 {
   public:
-    using base_t = pymrc::PythonNode<pymrc::PyObjectHolder, pymrc::PyObjectHolder>;
-    using typename base_t::sink_type_t;
-    using typename base_t::source_type_t;
-    using typename base_t::subscribe_fn_t;
+    using sink_type_t = std::shared_ptr<T>;
 
-    NodePyHolder() : PythonNode(base_t::op_factory_from_sub_fn(build_operator())) {}
-
-  private:
-    subscribe_fn_t build_operator()
+    TestSinkImpl(std::string name, pymrc::PyHolder counter) : PythonTestNodeMixin(std::move(name), std::move(counter))
     {
-        return [this](rxcpp::observable<sink_type_t> input, rxcpp::subscriber<source_type_t> output) {
-            return input.subscribe(rxcpp::make_observer<sink_type_t>(
-                [this, &output](sink_type_t x) {
-                    // Need to Grab the GIL to temp manipulate the value
-                    pymrc::AcquireGIL gil;
-
-                    py::int_ int_val = py::object(std::move(x));
-
-                    int_val = int_val.cast<int>() + 1;
-
-                    gil.release();
-
-                    output.on_next(std::move(int_val));
-                },
-                [&](std::exception_ptr error_ptr) {
-                    output.on_error(error_ptr);
-                },
-                [&]() {
-                    output.on_completed();
-                }));
-        };
+        this->init_counter("on_next");
+        this->init_counter("on_error");
+        this->init_counter("on_completed");
     }
-};
 
-class SinkBase : public pymrc::PythonSink<std::shared_ptr<Base>>
-{
-    using base_t = pymrc::PythonSink<std::shared_ptr<Base>>;
-
-    static rxcpp::observer<std::shared_ptr<Base>> build()
+    rxcpp::observer<std::shared_ptr<T>> build()
     {
         return rxcpp::make_observer_dynamic<sink_type_t>(
-            [](sink_type_t x) {
-
+            [this](sink_type_t x) {
+                this->increment_counter("on_next");
             },
-            [](std::exception_ptr ex) {},
-            []() {
-                // Complete
+            [this](std::exception_ptr ex) {
+                this->increment_counter("on_error");
+            },
+            [this]() {
+                this->increment_counter("on_completed");
             });
     }
-
-  public:
-    using typename base_t::observer_t;
-    using typename base_t::sink_type_t;
-
-    SinkBase() : PythonSink(build()) {}
 };
+
+template <typename T>
+class TestSink : public pymrc::PythonSink<std::shared_ptr<T>>, public TestSinkImpl<T>
+{
+  public:
+    TestSink(std::string name, pymrc::PyHolder counter) : TestSinkImpl<T>(std::move(name), std::move(counter))
+    {
+        this->set_observer(this->build());
+    }
+};
+
+template <typename T>
+class TestSinkComponent : public pymrc::PythonSinkComponent<std::shared_ptr<T>>, public TestSinkImpl<T>
+{
+  public:
+    TestSinkComponent(std::string name, pymrc::PyHolder counter) : TestSinkImpl<T>(std::move(name), std::move(counter))
+    {
+        this->set_observer(this->build());
+    }
+};
+
+GENERATE_NODE_TYPES(TestSource, Source);
+GENERATE_NODE_TYPES(TestSourceComponent, SourceComponent);
+GENERATE_NODE_TYPES(TestNode, Node);
+GENERATE_NODE_TYPES(TestNodeComponent, NodeComponent);
+GENERATE_NODE_TYPES(TestSink, Sink);
+GENERATE_NODE_TYPES(TestSinkComponent, SinkComponent);
+
+#define CREATE_TEST_NODE_CLASS(class_name)                                                             \
+    py::class_<segment::Object<class_name>,                                                            \
+               mrc::segment::ObjectProperties,                                                         \
+               std::shared_ptr<segment::Object<class_name>>>(module, #class_name)                      \
+        .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name, py::dict counter) { \
+                 auto stage = parent.construct_object<class_name>(name, name, std::move(counter));     \
+                 return stage;                                                                         \
+             }),                                                                                       \
+             py::arg("parent"),                                                                        \
+             py::arg("name"),                                                                          \
+             py::arg("counter"));
 
 PYBIND11_MODULE(test_edges_cpp, module)
 {
@@ -207,63 +336,38 @@ PYBIND11_MODULE(test_edges_cpp, module)
     }));
     mrc::pymrc::PortBuilderUtil::register_port_util<DerivedB>();
 
-    mrc::node::EdgeConnector<py::object, pymrc::PyObjectHolder>::register_converter();
-    mrc::node::EdgeConnector<pymrc::PyObjectHolder, py::object>::register_converter();
+    mrc::edge::EdgeConnector<py::object, pymrc::PyObjectHolder>::register_converter();
+    mrc::edge::EdgeConnector<pymrc::PyObjectHolder, py::object>::register_converter();
 
-    py::class_<segment::Object<SourceDerivedB>,
-               mrc::segment::ObjectProperties,
-               std::shared_ptr<segment::Object<SourceDerivedB>>>(module, "SourceDerivedB")
-        .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name) {
-                 auto stage = parent.construct_object<SourceDerivedB>(name);
+    mrc::edge::EdgeConnector<std::shared_ptr<DerivedA>, std::shared_ptr<Base>>::register_converter();
+    mrc::edge::EdgeConnector<std::shared_ptr<DerivedB>, std::shared_ptr<Base>>::register_converter();
 
-                 return stage;
-             }),
-             py::arg("parent"),
-             py::arg("name"));
+    mrc::edge::EdgeConnector<std::shared_ptr<Base>, std::shared_ptr<DerivedA>>::register_dynamic_cast_converter();
+    mrc::edge::EdgeConnector<std::shared_ptr<Base>, std::shared_ptr<DerivedB>>::register_dynamic_cast_converter();
 
-    py::class_<segment::Object<SourcePyHolder>,
-               mrc::segment::ObjectProperties,
-               std::shared_ptr<segment::Object<SourcePyHolder>>>(module, "SourcePyHolder")
-        .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name) {
-                 auto stage = parent.construct_object<SourcePyHolder>(name);
+    CREATE_TEST_NODE_CLASS(SourceBase);
+    CREATE_TEST_NODE_CLASS(SourceDerivedA);
+    CREATE_TEST_NODE_CLASS(SourceDerivedB);
 
-                 return stage;
-             }),
-             py::arg("parent"),
-             py::arg("name"));
+    CREATE_TEST_NODE_CLASS(NodeBase);
+    CREATE_TEST_NODE_CLASS(NodeDerivedA);
+    CREATE_TEST_NODE_CLASS(NodeDerivedB);
 
-    py::class_<segment::Object<NodeBase>, mrc::segment::ObjectProperties, std::shared_ptr<segment::Object<NodeBase>>>(
-        module,
-        "NodeBase")
-        .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name) {
-                 auto stage = parent.construct_object<NodeBase>(name);
+    CREATE_TEST_NODE_CLASS(SinkBase);
+    CREATE_TEST_NODE_CLASS(SinkDerivedA);
+    CREATE_TEST_NODE_CLASS(SinkDerivedB);
 
-                 return stage;
-             }),
-             py::arg("parent"),
-             py::arg("name"));
+    CREATE_TEST_NODE_CLASS(SourceComponentBase);
+    CREATE_TEST_NODE_CLASS(SourceComponentDerivedA);
+    CREATE_TEST_NODE_CLASS(SourceComponentDerivedB);
 
-    py::class_<segment::Object<NodePyHolder>,
-               mrc::segment::ObjectProperties,
-               std::shared_ptr<segment::Object<NodePyHolder>>>(module, "NodePyHolder")
-        .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name) {
-                 auto stage = parent.construct_object<NodePyHolder>(name);
+    CREATE_TEST_NODE_CLASS(NodeComponentBase);
+    CREATE_TEST_NODE_CLASS(NodeComponentDerivedA);
+    CREATE_TEST_NODE_CLASS(NodeComponentDerivedB);
 
-                 return stage;
-             }),
-             py::arg("parent"),
-             py::arg("name"));
-
-    py::class_<segment::Object<SinkBase>, segment::ObjectProperties, std::shared_ptr<segment::Object<SinkBase>>>(module,
-                                                                                                                 "SinkB"
-                                                                                                                 "ase")
-        .def(py::init<>([](segment::Builder& parent, const std::string& name) {
-                 auto stage = parent.construct_object<SinkBase>(name);
-
-                 return stage;
-             }),
-             py::arg("parent"),
-             py::arg("name"));
+    CREATE_TEST_NODE_CLASS(SinkComponentBase);
+    CREATE_TEST_NODE_CLASS(SinkComponentDerivedA);
+    CREATE_TEST_NODE_CLASS(SinkComponentDerivedB);
 
     module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);

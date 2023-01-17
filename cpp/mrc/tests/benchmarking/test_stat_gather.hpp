@@ -29,6 +29,7 @@
 #include <rxcpp/rx.hpp>
 
 #include <cstddef>
+#include <map>
 #include <memory>
 #include <ostream>
 #include <random>

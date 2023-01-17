@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,16 +17,17 @@
 
 #pragma once
 
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/manifold/connectable.hpp"
 #include "mrc/manifold/factory.hpp"
 #include "mrc/manifold/interface.hpp"
-#include "mrc/node/edge_builder.hpp"
+#include "mrc/node/forward.hpp"
 #include "mrc/node/generic_sink.hpp"
 #include "mrc/node/operators/muxer.hpp"
 #include "mrc/node/rx_node.hpp"
-#include "mrc/node/sink_channel.hpp"
+#include "mrc/node/sink_channel_owner.hpp"
 #include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_channel.hpp"
+#include "mrc/node/source_channel_owner.hpp"
 #include "mrc/node/source_properties.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/runnable/launchable.hpp"
@@ -47,7 +48,7 @@ class EgressPortBase : public runnable::Launchable, public manifold::Connectable
 };
 
 template <typename T>
-class EgressPort final : public Object<node::SinkProperties<T>>,
+class EgressPort final : public Object<node::RxSinkBase<T>>,
                          public EgressPortBase,
                          public std::enable_shared_from_this<EgressPort<T>>
 {
@@ -66,7 +67,7 @@ class EgressPort final : public Object<node::SinkProperties<T>>,
     }
 
   private:
-    node::SinkProperties<T>* get_object() const final
+    node::RxSinkBase<T>* get_object() const final
     {
         CHECK(m_sink) << "failed to acquire backing runnable for egress port " << m_port_name;
         return m_sink.get();

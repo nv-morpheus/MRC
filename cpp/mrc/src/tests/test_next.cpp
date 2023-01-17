@@ -20,21 +20,21 @@
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 
-#include "mrc/channel/egress.hpp"
 #include "mrc/channel/ingress.hpp"
 #include "mrc/data/reusable_pool.hpp"
-#include "mrc/node/edge_builder.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/generic_node.hpp"
 #include "mrc/node/generic_sink.hpp"
 #include "mrc/node/generic_source.hpp"
 #include "mrc/node/operators/conditional.hpp"
+#include "mrc/node/readable_endpoint.hpp"
 #include "mrc/node/rx_execute.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/node/rx_subscribable.hpp"
-#include "mrc/node/sink_channel.hpp"
-#include "mrc/node/source_channel.hpp"
+#include "mrc/node/source_channel_owner.hpp"
+#include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/options/engine_groups.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
@@ -61,6 +61,7 @@
 #include <cstddef>
 #include <exception>
 #include <functional>
+#include <map>
 #include <memory>
 #include <ostream>
 #include <string>
@@ -109,33 +110,6 @@ class TestNext : public ::testing::Test
     std::unique_ptr<internal::runnable::Resources> m_resources;
 };
 
-template <typename T>
-class ExampleSourceChannel : public node::SourceChannel<T>
-{
-  public:
-    // enable a public accessor for the held ingress
-    channel::Ingress<T>& ingress()
-    {
-        return *m_ingress;
-    }
-
-  private:
-    // hold the ingress from the builder
-    void complete_edge(std::shared_ptr<channel::IngressHandle> untyped_ingress) override
-    {
-        m_ingress = std::dynamic_pointer_cast<channel::Ingress<T>>(untyped_ingress);
-    }
-    std::shared_ptr<channel::Ingress<T>> m_ingress{};
-};
-
-template <typename T>
-class ExampleSinkChannel : public node::SinkChannel<T>
-{
-  public:
-    // make the accessor for the egress public, formerly protected
-    using node::SinkChannel<T>::egress;
-};
-
 class ExGenSource : public node::GenericSource<int>
 {
     void data_source(rxcpp::subscriber<int>& s) final {}
@@ -143,27 +117,30 @@ class ExGenSource : public node::GenericSource<int>
 
 TEST_F(TestNext, LifeCycleSink)
 {
-    ExampleSinkChannel<float> sink;
+    node::ReadableEndpoint<float> sink;
 }
 
 TEST_F(TestNext, LifeCycleSource)
 {
-    ExampleSourceChannel<float> source;
+    node::WritableEntrypoint<float> source;
 }
 
 TEST_F(TestNext, MakeEdgeSame)
 {
-    ExampleSourceChannel<float> source;
-    ExampleSinkChannel<float> sink;
-    node::make_edge(source, sink);
+    auto source = std::make_unique<node::WritableEntrypoint<float>>();
+    auto sink   = std::make_unique<node::ReadableEndpoint<float>>();
+    mrc::make_edge(*source, *sink);
 
     float input  = 3.14;
     float output = 0.0;
 
-    source.ingress().await_write(input);
-    sink.egress().await_read(output);
+    source->await_write(input);
+    sink->await_read(output);
 
     EXPECT_EQ(input, output);
+
+    // Release the source first
+    source.reset();
 }
 
 struct ExampleObject
@@ -174,22 +151,25 @@ TEST_F(TestNext, UniqueToUnique)
     using input_t  = std::unique_ptr<ExampleObject>;
     using output_t = std::unique_ptr<ExampleObject>;
 
-    ExampleSourceChannel<input_t> source;
-    ExampleSinkChannel<output_t> sink;
+    auto source = std::make_unique<node::WritableEntrypoint<input_t>>();
+    auto sink   = std::make_unique<node::ReadableEndpoint<output_t>>();
 
-    node::make_edge(source, sink);
+    mrc::make_edge(*source, *sink);
 
     input_t input   = std::make_unique<ExampleObject>();
     output_t output = nullptr;
 
     void* input_addr = input.get();
 
-    source.ingress().await_write(std::move(input));
-    sink.egress().await_read(output);
+    source->await_write(std::move(input));
+    sink->await_read(output);
 
     void* output_addr = output.get();
 
     EXPECT_EQ(input_addr, output_addr);
+
+    // Release the source first
+    source.reset();
 }
 
 TEST_F(TestNext, UniqueToConstShared)
@@ -197,22 +177,25 @@ TEST_F(TestNext, UniqueToConstShared)
     using input_t  = std::unique_ptr<ExampleObject>;
     using output_t = std::shared_ptr<const ExampleObject>;
 
-    ExampleSourceChannel<input_t> source;
-    ExampleSinkChannel<output_t> sink;
+    auto source = std::make_unique<node::WritableEntrypoint<input_t>>();
+    auto sink   = std::make_unique<node::ReadableEndpoint<output_t>>();
 
-    node::make_edge(source, sink);
+    mrc::make_edge(*source, *sink);
 
     input_t input   = std::make_unique<ExampleObject>();
     output_t output = nullptr;
 
     void* input_addr = input.get();
 
-    source.ingress().await_write(std::move(input));
-    sink.egress().await_read(output);
+    source->await_write(std::move(input));
+    sink->await_read(output);
 
     const void* output_addr = output.get();
 
     EXPECT_EQ(input_addr, output_addr);
+
+    // Release the source first
+    source.reset();
 }
 
 TEST_F(TestNext, MakeEdgeConvertible)
@@ -220,18 +203,21 @@ TEST_F(TestNext, MakeEdgeConvertible)
     using input_t  = double;
     using output_t = float;
 
-    ExampleSourceChannel<input_t> source;
-    ExampleSinkChannel<output_t> sink;
+    auto source = std::make_unique<node::WritableEntrypoint<input_t>>();
+    auto sink   = std::make_unique<node::ReadableEndpoint<output_t>>();
 
-    node::make_edge(source, sink);
+    mrc::make_edge(*source, *sink);
 
     input_t input   = 3.14;
     output_t output = 0.0;
 
-    source.ingress().await_write(input);
-    sink.egress().await_read(output);
+    source->await_write(input);
+    sink->await_read(output);
 
     EXPECT_FLOAT_EQ(input, output);
+
+    // Release the source first
+    source.reset();
 }
 
 TEST_F(TestNext, MakeEdgeConvertibleFromSinkRx)
@@ -239,17 +225,17 @@ TEST_F(TestNext, MakeEdgeConvertibleFromSinkRx)
     using input_t  = double;
     using output_t = float;
 
-    auto source = std::make_unique<ExampleSourceChannel<input_t>>();
+    auto source = std::make_unique<node::WritableEntrypoint<input_t>>();
     auto sink   = std::make_unique<node::RxSink<output_t>>();
 
     // todo - generalize the method that accepts raw or smart ptrs
-    node::make_edge(*source, *sink);
+    mrc::make_edge(*source, *sink);
 
     input_t input       = 3.14;
     output_t output     = 0.0;
     std::size_t counter = 0;
 
-    source->ingress().await_write(input);
+    source->await_write(input);
     source.reset();
 
     sink->set_observer(rxcpp::make_observer_dynamic<output_t>([input, &counter](output_t output) {
@@ -261,6 +247,9 @@ TEST_F(TestNext, MakeEdgeConvertibleFromSinkRx)
     stream.subscribe();
 
     EXPECT_EQ(counter, 1);
+
+    // Release the source first
+    source.reset();
 }
 
 TEST_F(TestNext, MakeEdgeConvertibleFromSinkRxRunnable)
@@ -268,17 +257,17 @@ TEST_F(TestNext, MakeEdgeConvertibleFromSinkRxRunnable)
     using input_t  = double;
     using output_t = float;
 
-    auto source = std::make_unique<ExampleSourceChannel<input_t>>();
+    auto source = std::make_unique<node::WritableEntrypoint<input_t>>();
     auto sink   = std::make_unique<node::RxSink<output_t>>();
 
     // todo - generalize the method that accepts raw or smart ptrs
-    node::make_edge(*source, *sink);
+    mrc::make_edge(*source, *sink);
 
     input_t input       = 3.14;
     output_t output     = 0.0;
     std::size_t counter = 0;
 
-    source->ingress().await_write(input);
+    source->await_write(input);
     source.reset();
 
     // sink->set_observer(rxcpp::make_observer_dynamic<output_t>([input, &counter](output_t output) {
@@ -295,6 +284,9 @@ TEST_F(TestNext, MakeEdgeConvertibleFromSinkRxRunnable)
     runner->await_join();
 
     EXPECT_EQ(counter, 1);
+
+    // Release the source first
+    source.reset();
 }
 
 class Node : public mrc::node::GenericNode<int, double>
@@ -340,19 +332,19 @@ TEST_F(TestNext, GenericNodeAndSink)
     using input_t  = int;
     using output_t = int;
 
-    auto source = std::make_unique<ExampleSourceChannel<input_t>>();
+    auto source = std::make_unique<node::WritableEntrypoint<input_t>>();
     auto node   = std::make_unique<ExampleGenericNode>();
     auto sink   = std::make_unique<ExampleGenericSink>();
 
     // todo - generalize the method that accepts raw or smart ptrs
-    node::make_edge(*source, *node);
-    node::make_edge(*node, *sink);
+    mrc::make_edge(*source, *node);
+    mrc::make_edge(*node, *sink);
 
     input_t input = 42;
 
-    source->ingress().await_write(input);
-    source->ingress().await_write(input);
-    source->ingress().await_write(input);
+    source->await_write(input);
+    source->await_write(input);
+    source->await_write(input);
     source.reset();
 
     auto runner_node = m_resources->launch_control().prepare_launcher(std::move(node))->ignition();
@@ -376,22 +368,22 @@ TEST_F(TestNext, ConcurrentSinkRxRunnable)
     using input_t  = double;
     using output_t = float;
 
-    auto source = std::make_unique<ExampleSourceChannel<input_t>>();
+    auto source = std::make_unique<node::WritableEntrypoint<input_t>>();
     auto sink   = std::make_unique<node::RxSink<output_t>>();
 
     // todo - generalize the method that accepts raw or smart ptrs
-    node::make_edge(*source, *sink);
+    mrc::make_edge(*source, *sink);
 
     input_t input                      = 3.14;
     output_t output                    = 0.0;
     std::atomic<std::size_t> counter_0 = 0;
     std::atomic<std::size_t> counter_1 = 0;
 
-    source->ingress().await_write(input);
-    source->ingress().await_write(input);
-    source->ingress().await_write(input);
-    source->ingress().await_write(input);
-    source->ingress().await_write(input);
+    source->await_write(input);
+    source->await_write(input);
+    source->await_write(input);
+    source->await_write(input);
+    source->await_write(input);
     source.reset();
 
     sink->set_observer([input, &counter_0, &counter_1](output_t output) {
@@ -427,14 +419,14 @@ TEST_F(TestNext, SourceNodeSink)
     using input_t  = double;
     using output_t = float;
 
-    auto source = std::make_unique<ExampleSourceChannel<input_t>>();
+    auto source = std::make_unique<node::WritableEntrypoint<input_t>>();
     auto node   = std::make_unique<node::RxNode<input_t, output_t>>(rxcpp::operators::map([](input_t d) -> output_t {
         return output_t(2.0 * d);
     }));
     auto sink   = std::make_unique<node::RxSink<output_t>>();
 
-    node::make_edge(*source, *node);
-    node::make_edge(*node, *sink);
+    mrc::make_edge(*source, *node);
+    mrc::make_edge(*node, *sink);
 
     node->pipe(rxcpp::operators::map([](input_t i) {
         LOG(INFO) << "map: " << i;
@@ -447,9 +439,9 @@ TEST_F(TestNext, SourceNodeSink)
     auto runner_sink = m_resources->launch_control().prepare_launcher(std::move(sink))->ignition();
     auto runner_node = m_resources->launch_control().prepare_launcher(std::move(node))->ignition();
 
-    source->ingress().await_write(3.14);
-    source->ingress().await_write(42.);
-    source->ingress().await_write(2.);
+    source->await_write(3.14);
+    source->await_write(42.);
+    source->await_write(2.);
     source.reset();
 
     runner_node->await_join();
@@ -627,22 +619,36 @@ TEST_F(TestNext, TapValue)
     observable.subscribe(observer);
 }
 
+enum class Routes
+{
+    Even,
+    Odd
+};
+
+inline std::ostream& operator<<(std::ostream& os, const Routes cat)
+{
+    switch (cat)
+    {
+    case Routes::Even:
+        os << "Even";
+        break;
+    case Routes::Odd:
+        os << "Odd";
+        break;
+    }
+    return os;
+};
+
 TEST_F(TestNext, Conditional)
 {
     using input_t  = int;
     using output_t = int;
 
-    enum class Routes
-    {
-        Even,
-        Odd
-    };
+    auto source = std::make_unique<node::WritableEntrypoint<input_t>>();
+    auto even   = std::make_unique<node::ReadableEndpoint<output_t>>();
+    auto odd    = std::make_unique<node::ReadableEndpoint<output_t>>();
 
-    auto source = std::make_unique<ExampleSourceChannel<input_t>>();
-    auto even   = std::make_unique<ExampleSinkChannel<output_t>>();
-    auto odd    = std::make_unique<ExampleSinkChannel<output_t>>();
-
-    auto cond = std::make_shared<node::Conditional<input_t, Routes>>([](const input_t& i) -> Routes {
+    auto cond = std::make_shared<node::Conditional<Routes, input_t>>([](const input_t& i) -> Routes {
         if (i % 2 == 0)
         {
             return Routes::Even;
@@ -651,42 +657,42 @@ TEST_F(TestNext, Conditional)
     });
 
     // make edge via pipe fn
-    (*source | *cond);
-    (cond->source(Routes::Odd) | *odd);
-    (cond->source(Routes::Even) | *even);
+    mrc::make_edge(*source, *cond);
+    mrc::make_edge(*cond->get_source(Routes::Odd), *odd);
+    mrc::make_edge(*cond->get_source(Routes::Even), *even);
 
-    source->ingress().await_write(0);
-    source->ingress().await_write(1);
-    source->ingress().await_write(2);
+    source->await_write(0);
+    source->await_write(1);
+    source->await_write(2);
     source.reset();
 
     output_t output;
 
-    even->egress().await_read(output);
+    even->await_read(output);
     EXPECT_EQ(output, 0);
-    even->egress().await_read(output);
+    even->await_read(output);
     EXPECT_EQ(output, 2);
-    odd->egress().await_read(output);
+    odd->await_read(output);
     EXPECT_EQ(output, 1);
 }
 
-class PrivateSource : private node::SourceChannel<int>
+class PrivateSource : private node::SourceChannelOwner<int>
 {
   public:
-    node::SourceChannel<int>& source()
+    node::SourceChannelOwner<int>& source()
     {
         return *this;
     }
 };
 
-class PrivateSink : private node::RxSink<int>
-{
-  public:
-    node::SinkChannel<int>& sink()
-    {
-        return *this;
-    }
-};
+// class PrivateSink : private node::RxSink<int>
+// {
+//   public:
+//     node::SinkChannelOwner<int>& sink()
+//     {
+//         return *this;
+//     }
+// };
 
 /*
 TEST_F(TestNext, PrivateInheritance)
@@ -714,9 +720,12 @@ TEST_F(TestNext, SegmentRunnable)
     EXPECT_TRUE(node->is_source());
     EXPECT_FALSE(node->is_sink());
 
-    auto sink = std::make_unique<ExampleSinkChannel<int>>();
+    auto sink = std::make_unique<node::ReadableEndpoint<int>>();
 
-    node::make_edge(node->object(), *sink);
+    mrc::make_edge(node->object(), *sink);
+
+    // Release the node first
+    node.reset();
 }
 
 TEST_F(TestNext, SegmentBuilder)

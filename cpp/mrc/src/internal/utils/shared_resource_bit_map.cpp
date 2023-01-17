@@ -59,7 +59,7 @@ Bitmap SharedResourceBitMap::bitmap(std::uint32_t bit_index) const
     {
         return search->second;
     }
-    return Bitmap();
+    return {};
 }
 
 const std::map<std::uint32_t, Bitmap>& SharedResourceBitMap::map() const

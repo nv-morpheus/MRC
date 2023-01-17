@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,7 @@
 
 #include "pymrc/types.hpp"
 
-#include <functional>
+#include <optional>
 #include <string>
 
 namespace pybind11 {
@@ -27,6 +27,9 @@ class object;
 }  // namespace pybind11
 
 namespace mrc::pymrc {
+struct OnDataFunction;
+template <typename SignatureT>
+struct PyFuncHolder;
 
 // Export everything in the mrc::pymrc namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
@@ -54,10 +57,11 @@ class OperatorProxy
 class OperatorsProxy
 {
   public:
-    static PythonOperator filter(std::function<bool(pybind11::object x)> filter_fn);
+    static PythonOperator build(PyFuncHolder<void(const PyObjectObservable& obs, PyObjectSubscriber& sub)> build_fn);
+    static PythonOperator filter(PyFuncHolder<bool(pybind11::object x)> filter_fn);
     static PythonOperator flatten();
-    static PythonOperator map(std::function<pybind11::object(pybind11::object x)> map_fn);
-    static PythonOperator on_completed(std::function<pybind11::object()> finally_fn);
+    static PythonOperator map(OnDataFunction map_fn);
+    static PythonOperator on_completed(PyFuncHolder<std::optional<pybind11::object>()> finally_fn);
     static PythonOperator pairwise();
     static PythonOperator to_list();
 };

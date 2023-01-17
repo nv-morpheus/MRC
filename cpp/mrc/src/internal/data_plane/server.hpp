@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,6 +22,7 @@
 #include "internal/service.hpp"
 #include "internal/ucx/common.hpp"
 
+#include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/types.hpp"
 
 #include <ucp/api/ucp_def.h>
@@ -32,18 +33,18 @@
 #include <utility>
 #include <vector>
 
+// IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
+
+namespace mrc::node {
+template <typename KeyT, typename T>
+class TaggedRouter;
+}  // namespace mrc::node
 namespace mrc::internal::memory {
 class HostResources;
 }  // namespace mrc::internal::memory
 namespace mrc::internal::ucx {
 class Resources;
 }  // namespace mrc::internal::ucx
-namespace mrc::node {
-template <typename KeyT, typename T>
-class Router;
-template <typename T>
-class SourceChannelWriteable;
-}  // namespace mrc::node
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
@@ -77,7 +78,7 @@ namespace detail {
 struct PrePostedRecvInfo
 {
     ucp_worker_h worker;
-    node::SourceChannelWriteable<network_event_t>* channel;
+    node::WritableEntrypoint<network_event_t>* channel;
     void* request;
     memory::TransientBuffer buffer;
     memory::TransientPool* pool;
@@ -96,7 +97,7 @@ class Server final : public Service, public resources::PartitionResourceBase
 
     ucx::WorkerAddress worker_address() const;
 
-    node::Router<PortAddress, memory::TransientBuffer>& deserialize_source();
+    node::TaggedRouter<PortAddress, memory::TransientBuffer>& deserialize_source();
 
   private:
     void do_service_start() final;
@@ -117,11 +118,11 @@ class Server final : public Service, public resources::PartitionResourceBase
 
     // deserialization nodes will connect to this source wtih their port id
     // the source for this router is the private GenericSoruce of this object
-    std::shared_ptr<node::Router<PortAddress, memory::TransientBuffer>> m_deserialize_source;
+    std::shared_ptr<node::TaggedRouter<PortAddress, memory::TransientBuffer>> m_deserialize_source;
 
     // the remote descriptor manager will connect to this source
     // data will be emitted on this source as a conditional branch of data source
-    std::unique_ptr<node::SourceChannelWriteable<network_event_t>> m_prepost_channel;
+    std::unique_ptr<node::WritableEntrypoint<network_event_t>> m_prepost_channel;
 
     // pre-posted recv state
     std::vector<detail::PrePostedRecvInfo> m_pre_posted_recv_info;

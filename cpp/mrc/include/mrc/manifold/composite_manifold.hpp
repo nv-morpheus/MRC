@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/manifold/egress.hpp"
 #include "mrc/manifold/ingress.hpp"
 #include "mrc/manifold/manifold.hpp"
@@ -39,6 +40,9 @@ class CompositeManifold : public Manifold
             .enqueue([this] {
                 m_ingress = std::make_unique<IngressT>();
                 m_egress  = std::make_unique<EgressT>();
+
+                // Then link them together
+                mrc::make_edge(*m_ingress, *m_egress);
             })
             .get();
     }
@@ -49,7 +53,10 @@ class CompositeManifold : public Manifold
       Manifold(std::move(port_name), resources),
       m_ingress(std::move(ingress)),
       m_egress(std::move(egress))
-    {}
+    {
+        // Already created, link them together
+        mrc::make_edge(*m_ingress, *m_egress);
+    }
 
   protected:
     IngressT& ingress()
@@ -65,7 +72,7 @@ class CompositeManifold : public Manifold
     }
 
   private:
-    void do_add_input(const SegmentAddress& address, node::SourcePropertiesBase* input_source) final
+    void do_add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) final
     {
         // enqueue update to be done later
         m_input_updates.push_back([this, address, input_source] {
@@ -75,7 +82,7 @@ class CompositeManifold : public Manifold
         });
     }
 
-    void do_add_output(const SegmentAddress& address, node::SinkPropertiesBase* output_sink) final
+    void do_add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) final
     {
         // enqueue update to be done later
         m_output_updates.push_back([this, address, output_sink] {

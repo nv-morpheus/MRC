@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,6 +35,10 @@ class SegmentModule;
 }  // namespace mrc::modules
 
 namespace mrc::pymrc {
+struct OnCompleteFunction;
+struct OnDataFunction;
+struct OnErrorFunction;
+struct OnNextFunction;
 
 // Export everything in the mrc::pymrc namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
@@ -133,6 +137,18 @@ class BuilderProxy
         const std::string& name,
         const std::function<void(pymrc::PyObjectSubscriber& sub)>& f);
 
+    static std::shared_ptr<mrc::segment::ObjectProperties> make_source_component(mrc::segment::Builder& self,
+                                                                                 const std::string& name,
+                                                                                 pybind11::iterator source_iterator);
+
+    static std::shared_ptr<mrc::segment::ObjectProperties> make_source_component(mrc::segment::Builder& self,
+                                                                                 const std::string& name,
+                                                                                 pybind11::iterable source_iter);
+
+    static std::shared_ptr<mrc::segment::ObjectProperties> make_source_component(mrc::segment::Builder& self,
+                                                                                 const std::string& name,
+                                                                                 pybind11::function gen_factory);
+
     /**
      * Construct a new pybind11::object sink.
      * Create and return a Segment node used to sink python objects following out of the Segment.
@@ -155,27 +171,39 @@ class BuilderProxy
      */
     static std::shared_ptr<mrc::segment::ObjectProperties> make_sink(mrc::segment::Builder& self,
                                                                      const std::string& name,
-                                                                     std::function<void(pybind11::object x)> on_next,
-                                                                     std::function<void(pybind11::object x)> on_error,
-                                                                     std::function<void()> on_completed);
+                                                                     OnNextFunction on_next,
+                                                                     OnErrorFunction on_error,
+                                                                     OnCompleteFunction on_completed);
+
+    static std::shared_ptr<mrc::segment::ObjectProperties> make_sink_component(mrc::segment::Builder& self,
+                                                                               const std::string& name,
+                                                                               OnNextFunction on_next,
+                                                                               OnErrorFunction on_error,
+                                                                               OnCompleteFunction on_completed);
+
+    // Deprecated. This must come first
+    static std::shared_ptr<mrc::segment::ObjectProperties> make_node(mrc::segment::Builder& self,
+                                                                     const std::string& name,
+                                                                     OnDataFunction on_data);
 
     /**
      * Construct a new 'pure' python::object -> python::object node
      *
      * This will create and return a new lambda function with the following signature:
      * (py) @param name : Unique name of the node that will be created in the MRC Segment.
-     * (py) @param map_f : a std::function that takes a pybind11::object and returns a pybind11::object. This is your
-     * python-function which will be called on each data element as it flows through the node.
      */
-    static std::shared_ptr<mrc::segment::ObjectProperties> make_node(
-        mrc::segment::Builder& self,
-        const std::string& name,
-        std::function<pybind11::object(pybind11::object x)> map_f);
+    static std::shared_ptr<mrc::segment::ObjectProperties> make_node(mrc::segment::Builder& self,
+                                                                     const std::string& name,
+                                                                     pybind11::args operators);
 
     static std::shared_ptr<mrc::segment::ObjectProperties> make_node_full(
         mrc::segment::Builder& self,
         const std::string& name,
         std::function<void(const pymrc::PyObjectObservable& obs, pymrc::PyObjectSubscriber& sub)> sub_fn);
+
+    static std::shared_ptr<mrc::segment::ObjectProperties> make_node_component(mrc::segment::Builder& self,
+                                                                               const std::string& name,
+                                                                               pybind11::args operators);
 
     static void make_edge(mrc::segment::Builder& self,
                           std::shared_ptr<mrc::segment::ObjectProperties> source,

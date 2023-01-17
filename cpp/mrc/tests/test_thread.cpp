@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,12 +19,13 @@
 #include "mrc/coroutines/sync_wait.hpp"
 #include "mrc/coroutines/task.hpp"
 #include "mrc/coroutines/thread_pool.hpp"
-#include "mrc/coroutines/when_all.hpp"
 
+#include <glog/logging.h>
 #include <gtest/gtest.h>
 
-#include <chrono>
-#include <thread>
+#include <coroutine>
+#include <string>
+#include <type_traits>
 
 using namespace mrc;
 

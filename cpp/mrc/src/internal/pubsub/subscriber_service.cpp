@@ -26,9 +26,9 @@
 #include "internal/runnable/resources.hpp"
 #include "internal/runtime/partition.hpp"
 
-#include "mrc/node/edge_builder.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/operators/router.hpp"
-#include "mrc/node/rx_node.hpp"
+#include "mrc/node/rx_sink.hpp"
 #include "mrc/protos/codable.pb.h"
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launcher.hpp"
@@ -40,6 +40,7 @@
 
 #include <optional>
 #include <ostream>
+#include <utility>
 #include <vector>
 
 namespace mrc::internal::pubsub {
@@ -55,18 +56,12 @@ void SubscriberService::do_subscription_service_setup()
     CHECK_NE(tag(), 0);
 
     // reg
-    auto& network_source = resources().network()->data_plane().server().deserialize_source().source(tag());
+    auto network_source = resources().network()->data_plane().server().deserialize_source().get_source(tag());
 
-    auto network_handler = std::make_unique<mrc::node::RxNode<memory::TransientBuffer, mrc::runtime::RemoteDescriptor>>(
-        rxcpp::operators::map([this](memory::TransientBuffer buffer) -> mrc::runtime::RemoteDescriptor {
-            return this->network_handler(buffer);
-        }));
+    auto network_handler = std::make_unique<mrc::node::RxSink<memory::TransientBuffer>>();
 
     DVLOG(10) << "form edge:  network_soruce -> network_handler";
-    mrc::node::make_edge(network_source, *network_handler);
-
-    DVLOG(10) << "form edge:  network_handler -> rd_channel (ISubscriberService::SourceChannelWriteable)";
-    mrc::node::make_edge(*network_handler, *this);
+    mrc::make_edge(*network_source, *network_handler);
 
     DVLOG(10) << "starting network handler node";
     m_network_handler = resources().runnable().launch_control().prepare_launcher(std::move(network_handler))->ignition();

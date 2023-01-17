@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "pymrc/utils.hpp"
+#include "pymrc/utilities/object_wrappers.hpp"  // IWYU pragma: export
 
 #include "mrc/segment/object.hpp"
 
@@ -27,14 +27,14 @@
 
 namespace mrc::pymrc {
 
-using PyHolder = PyObjectHolder;  // NOLINT
-
-using PySubscription     = rxcpp::subscription;                                // NOLINT(readability-identifier-naming)
-using PyObjectObserver   = rxcpp::observer<PyHolder, void, void, void, void>;  // NOLINT(readability-identifier-naming)
-using PyObjectSubscriber = rxcpp::subscriber<PyHolder, PyObjectObserver>;      // NOLINT(readability-identifier-naming)
-using PyObjectObservable = rxcpp::observable<PyHolder>;                        // NOLINT(readability-identifier-naming)
-using PyNode             = mrc::segment::ObjectProperties;                     // NOLINT(readability-identifier-naming)
-// NOLINTNEXTLINE(readability-identifier-naming)
-using PyObjectOperateFn = std::function<PyObjectObservable(PyObjectObservable source)>;
+// NOLINTBEGIN(readability-identifier-naming)
+using PyHolder           = PyObjectHolder;
+using PySubscription     = rxcpp::subscription;
+using PyObjectObserver   = rxcpp::observer<PyHolder, void, void, void, void>;
+using PyObjectSubscriber = rxcpp::subscriber<PyHolder, PyObjectObserver>;
+using PyObjectObservable = rxcpp::observable<PyHolder>;
+using PyNode             = mrc::segment::ObjectProperties;
+using PyObjectOperateFn  = std::function<PyObjectObservable(PyObjectObservable source)>;
+// NOLINTEND(readability-identifier-naming)
 
 }  // namespace mrc::pymrc

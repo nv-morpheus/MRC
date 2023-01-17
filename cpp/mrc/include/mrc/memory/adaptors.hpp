@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -94,16 +94,16 @@ class rmm_adaptor_typed final : public rmm_adaptor
     PointerT m_upstream;
 };
 
-template <template <class> class Resource, typename PointerT, typename... Args>
+template <template <class> class ResourceT, typename PointerT, typename... Args>
 auto make_shared_resource(PointerT upstream, Args&&... args)
 {
-    return std::make_shared<Resource<PointerT>>(std::move(upstream), std::forward<Args>(args)...);
+    return std::make_shared<ResourceT<PointerT>>(std::move(upstream), std::forward<Args>(args)...);
 }
 
-template <template <class> class Resource, typename PointerT, typename... Args>
+template <template <class> class ResourceT, typename PointerT, typename... Args>
 auto make_unique_resource(PointerT upstream, Args&&... args)
 {
-    return std::make_unique<Resource<PointerT>>(std::move(upstream), std::forward<Args>(args)...);
+    return std::make_unique<ResourceT<PointerT>>(std::move(upstream), std::forward<Args>(args)...);
 }
 
 }  // namespace mrc::memory

@@ -36,18 +36,22 @@
  * limitations under the License.
  */
 
-#include "mrc/core/thread.hpp"
+#include "mrc/core/expected.hpp"
 #include "mrc/coroutines/ring_buffer.hpp"
 #include "mrc/coroutines/sync_wait.hpp"
 #include "mrc/coroutines/task.hpp"
 #include "mrc/coroutines/thread_pool.hpp"
+#include "mrc/coroutines/when_all.hpp"
 
 #include <gtest/gtest.h>
 
-#include <chrono>
-#include <stop_token>
+#include <coroutine>
+#include <cstdint>
+#include <functional>
+#include <memory>
 #include <string>
-#include <thread>
+#include <tuple>
+#include <type_traits>
 
 using namespace mrc;
 
@@ -117,4 +121,41 @@ TEST_F(TestCoroTask, RingBufferStressTest)
 
         coroutines::sync_wait(coroutines::when_all(source(), sink()));
     }
+}
+
+// this is our awaitable
+class AwaitableTaskProvider
+{
+  public:
+    struct Done
+    {};
+
+    AwaitableTaskProvider()
+    {
+        m_task_generator = []() -> coroutines::Task<mrc::expected<int, Done>> {
+            co_return {42};
+        };
+    }
+
+    auto operator co_await() -> decltype(auto)
+    {
+        return m_task_generator().operator co_await();
+    }
+
+  private:
+    std::function<coroutines::Task<mrc::expected<int, Done>>()> m_task_generator;
+};
+
+TEST_F(TestCoroTask, AwaitableTaskProvider)
+{
+    auto expected = coroutines::sync_wait(AwaitableTaskProvider{});
+    EXPECT_EQ(*expected, 42);
+
+    auto task = []() -> coroutines::Task<void> {
+        auto expected = co_await AwaitableTaskProvider{};
+        EXPECT_EQ(*expected, 42);
+        co_return;
+    };
+
+    coroutines::sync_wait(task());
 }

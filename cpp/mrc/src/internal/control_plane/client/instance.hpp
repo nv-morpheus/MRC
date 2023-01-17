@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,16 +27,16 @@
 #include <memory>
 #include <string>
 
+namespace mrc::edge {
+template <typename T>
+class IWritableAcceptor;
+}  // namespace mrc::edge
 namespace mrc::internal::control_plane {
 class Client;
 }  // namespace mrc::internal::control_plane
 namespace mrc::internal::network {
 class Resources;
 }  // namespace mrc::internal::network
-namespace mrc::node {
-template <typename T>
-class SourceChannel;
-}  // namespace mrc::node
 namespace mrc::protos {
 class DropSubscriptionServiceState;
 class StateUpdate;
@@ -56,7 +56,7 @@ class Instance final : private resources::PartitionResourceBase, private Service
     Instance(Client& client,
              InstanceID instance_id,
              resources::PartitionResourceBase& base,
-             mrc::node::SourceChannel<const protos::StateUpdate>& update_channel);
+             mrc::edge::IWritableAcceptor<const protos::StateUpdate>& update_channel);
     ~Instance() final;
 
     Client& client();

@@ -21,6 +21,7 @@
 #include "internal/service.hpp"
 #include "internal/ucx/worker.hpp"
 
+#include "mrc/node/operators/node_component.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/types.hpp"
 
@@ -32,6 +33,10 @@
 #include <memory>
 #include <string>
 
+namespace mrc::node {
+template <typename T>
+class WritableProvider;
+}  // namespace mrc::node
 namespace mrc::internal::control_plane::client {
 class ConnectionsManager;
 }  // namespace mrc::internal::control_plane::client
@@ -42,10 +47,6 @@ namespace mrc::internal::ucx {
 class Endpoint;
 class Resources;
 }  // namespace mrc::internal::ucx
-namespace mrc::node {
-template <typename T>
-class SourceChannelWriteable;
-}  // namespace mrc::node
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
@@ -85,7 +86,7 @@ class Client final : public resources::PartitionResourceBase, private Service
                         InstanceID instance_id,
                         Request& request) const;
 
-    node::SourceChannelWriteable<RemoteDescriptorMessage>& remote_descriptor_channel();
+    node::WritableProvider<RemoteDescriptorMessage>& remote_descriptor_channel();
 
     // primitive rdma and send/recv call
 
@@ -138,7 +139,7 @@ class Client final : public resources::PartitionResourceBase, private Service
     mutable std::map<InstanceID, std::shared_ptr<ucx::Endpoint>> m_endpoints;
 
     std::unique_ptr<mrc::runnable::Runner> m_rd_writer;
-    std::unique_ptr<node::SourceChannelWriteable<RemoteDescriptorMessage>> m_rd_channel;
+    std::unique_ptr<node::NodeComponent<RemoteDescriptorMessage>> m_rd_channel;
 
     friend Resources;
 };

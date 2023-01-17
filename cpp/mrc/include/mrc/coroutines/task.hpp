@@ -125,7 +125,7 @@ struct Promise final : public PromiseBase
         m_return_value = std::move(value);
     }
 
-    auto result() const& -> const ReturnT&
+    auto result() & -> ReturnT&
     {
         if (m_exception_ptr)
         {
@@ -219,7 +219,7 @@ class [[nodiscard]] Task
     {
         if (std::addressof(other) != this)
         {
-            if (m_coroutine != nullptr)
+            if (m_coroutine)
             {
                 m_coroutine.destroy();
             }
@@ -252,7 +252,7 @@ class [[nodiscard]] Task
 
     auto destroy() -> bool
     {
-        if (m_coroutine != nullptr)
+        if (m_coroutine)
         {
             m_coroutine.destroy();
             m_coroutine = nullptr;
@@ -262,7 +262,7 @@ class [[nodiscard]] Task
         return false;
     }
 
-    auto operator co_await() const& noexcept
+    auto operator co_await() const&
     {
         struct Awaitable : public AwaitableBase
         {
@@ -276,18 +276,28 @@ class [[nodiscard]] Task
                 }
                 else
                 {
+                    // returns a reference to the value held by the promise
                     return this->m_coroutine.promise().result();
                 }
             }
         };
 
+        // the task is responsible for the destruction of the coroutine and promise
         return Awaitable{m_coroutine};
     }
 
-    auto operator co_await() const&& noexcept
+    auto operator co_await() &&
     {
         struct Awaitable : public AwaitableBase
         {
+            ~Awaitable()
+            {
+                if (this->m_coroutine)
+                {
+                    this->m_coroutine.destroy();
+                }
+            }
+
             auto await_resume() -> decltype(auto)
             {
                 if constexpr (std::is_same_v<void, ReturnT>)
@@ -298,12 +308,14 @@ class [[nodiscard]] Task
                 }
                 else
                 {
+                    // moves the value held by the promise to the caller
                     return std::move(this->m_coroutine.promise()).result();
                 }
             }
         };
 
-        return Awaitable{m_coroutine};
+        // the awaiter is responsible for the destruction of the coroutine and promise
+        return Awaitable{std::exchange(m_coroutine, nullptr)};
     }
 
     auto promise() & -> promise_type&

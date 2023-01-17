@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,7 @@
 
 #include "pymrc/py_segment_module.hpp"
 
-#include "mrc/core/utils.hpp"
+#include "mrc/utils/type_utils.hpp"
 
 #include <glog/logging.h>
 
@@ -42,7 +42,7 @@ void PythonSegmentModule::initialize(segment::Builder& builder)
 
 std::string PythonSegmentModule::module_type_name() const
 {
-    return std::string(::mrc::type_name<type_t>());
+    return std::string(mrc::type_name<type_t>());
 }
 
 }  // namespace mrc::pymrc

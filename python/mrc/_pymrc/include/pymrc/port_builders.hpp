@@ -18,9 +18,11 @@
 #pragma once
 
 #include "mrc/node/port_registry.hpp"
+#include "mrc/node/rx_source_base.hpp"
 #include "mrc/segment/egress_port.hpp"
 #include "mrc/segment/ingress_port.hpp"
 #include "mrc/segment/object.hpp"
+#include "mrc/utils/type_utils.hpp"
 
 #include <type_traits>
 #include <typeinfo>
@@ -114,15 +116,15 @@ struct PortBuilderUtil
         return std::tuple(
             [](std::shared_ptr<mrc::segment::IngressPortBase> base) -> std::shared_ptr<segment::ObjectProperties> {
                 VLOG(2) << "Attempting dynamic Ingress cast for: " << type_name<decltype(base)>() << " into "
-                        << type_name<segment::Object<node::SourceProperties<IngressDataT>>>();
+                        << type_name<segment::Object<node::RxSourceBase<IngressDataT>>>();
 
-                return std::dynamic_pointer_cast<segment::Object<node::SourceProperties<IngressDataT>>>(base);
+                return std::dynamic_pointer_cast<segment::Object<node::RxSourceBase<IngressDataT>>>(base);
             },
             [](std::shared_ptr<mrc::segment::IngressPortBase> base) -> std::shared_ptr<segment::ObjectProperties> {
                 VLOG(2) << "Attempting dynamic Ingress cast for: " << type_name<decltype(base)>() << " into "
-                        << type_name<segment::Object<node::SourceProperties<std::shared_ptr<IngressDataT>>>>();
+                        << type_name<segment::Object<node::RxSourceBase<std::shared_ptr<IngressDataT>>>>();
 
-                return std::dynamic_pointer_cast<segment::Object<node::SourceProperties<std::shared_ptr<IngressDataT>>>>(
+                return std::dynamic_pointer_cast<segment::Object<node::RxSourceBase<std::shared_ptr<IngressDataT>>>>(
                     base);
             });
     }
@@ -133,16 +135,15 @@ struct PortBuilderUtil
         return std::tuple(
             [](std::shared_ptr<mrc::segment::EgressPortBase> base) -> std::shared_ptr<segment::ObjectProperties> {
                 VLOG(2) << "Attempting dynamic Egress cast for: " << type_name<decltype(base)>() << " into "
-                        << type_name<segment::Object<node::SinkProperties<EgressDataT>>>();
+                        << type_name<segment::Object<node::RxSinkBase<EgressDataT>>>();
 
-                return std::dynamic_pointer_cast<segment::Object<node::SinkProperties<EgressDataT>>>(base);
+                return std::dynamic_pointer_cast<segment::Object<node::RxSinkBase<EgressDataT>>>(base);
             },
             [](std::shared_ptr<mrc::segment::EgressPortBase> base) -> std::shared_ptr<segment::ObjectProperties> {
                 VLOG(2) << "Attempting dynamic Egress cast for: " << type_name<decltype(base)>() << " into "
-                        << type_name<segment::Object<node::SinkProperties<std::shared_ptr<EgressDataT>>>>();
+                        << type_name<segment::Object<node::RxSinkBase<std::shared_ptr<EgressDataT>>>>();
 
-                return std::dynamic_pointer_cast<segment::Object<node::SinkProperties<std::shared_ptr<EgressDataT>>>>(
-                    base);
+                return std::dynamic_pointer_cast<segment::Object<node::RxSinkBase<std::shared_ptr<EgressDataT>>>>(base);
             });
     }
 
@@ -157,8 +158,8 @@ struct PortBuilderUtil
 
         if (!mrc::node::PortRegistry::has_port_util(type_idx))
         {
-            VLOG(2) << "Registering PyMRC port util for: " << type_name<port_type_t>() << " "
-                    << "=> " << type_name<port_dtype_t>() << " " << type_idx.hash_code();
+            // VLOG(2) << "Registering PyMRC port util for: " << type_name<port_type_t>() << " "
+            //         << "=> " << type_name<port_dtype_t>() << " " << type_idx.hash_code();
 
             auto port_util = std::make_shared<mrc::node::PortUtil>(typeid(port_dtype_t));
 

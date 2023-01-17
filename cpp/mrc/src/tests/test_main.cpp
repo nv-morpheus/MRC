@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2018-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2018-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,21 +18,11 @@
 #include "mrc/core/logging.hpp"
 
 #include <gflags/gflags.h>  // for ParseCommandLineFlags
-#include <glog/logging.h>
 #include <gtest/gtest.h>
-
-#include <stdexcept>
-
-// NOLINTNEXTLINE(readability-identifier-naming)
-__attribute__((noreturn)) void TestFailuresThrowExceptions()
-{
-    throw std::runtime_error("exception rather than std::abort");
-}
 
 int main(int argc, char** argv)
 {
     mrc::init_logging("mrc::test_mrc_private");
-    ::google::InstallFailureFunction(&TestFailuresThrowExceptions);
     ::testing::InitGoogleTest(&argc, argv);
     ::google::ParseCommandLineFlags(&argc, &argv, true);
     return RUN_ALL_TESTS();

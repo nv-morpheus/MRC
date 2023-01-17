@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,8 +20,13 @@
 #include "mrc/runnable/context.hpp"  // IWYU pragma: keep
 #include "mrc/utils/macros.hpp"
 
+#include <glog/logging.h>
+
 #include <atomic>
+#include <exception>
+#include <ostream>
 #include <string>
+#include <utility>
 
 namespace mrc::runnable {
 
@@ -98,7 +103,16 @@ class RunnableWithContext : public Runnable
 
     void main(Context& context) final
     {
-        run(context.as<ContextType>());
+        // Add a default catch for any errors
+        try
+        {
+            run(context.as<ContextType>());
+        } catch (...)
+        {
+            LOG(ERROR) << context.info() << " Unhandled exception occurred. Rethrowing";
+
+            context.set_exception(std::move(std::current_exception()));
+        }
     }
 };
 

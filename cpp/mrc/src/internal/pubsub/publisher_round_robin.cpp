@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@
 
 #include "internal/pubsub/publisher_round_robin.hpp"
 
+#include "internal/data_plane/client.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 
@@ -36,7 +37,8 @@ void PublisherRoundRobin::on_update()
     m_next = this->tagged_endpoints().cbegin();
 }
 
-void PublisherRoundRobin::apply_policy(mrc::runtime::RemoteDescriptor&& rd)
+void PublisherRoundRobin::apply_policy(rxcpp::subscriber<data_plane::RemoteDescriptorMessage>& sub,
+                                       mrc::runtime::RemoteDescriptor&& rd)
 {
     DCHECK(this->resources().runnable().main().caller_on_same_thread());
 
@@ -55,7 +57,7 @@ void PublisherRoundRobin::apply_policy(mrc::runtime::RemoteDescriptor&& rd)
         LOG_EVERY_N(WARNING, 1000) << "publisher dropping object because no subscribers are active";  // NOLINT
     }
 
-    publish(std::move(rd), m_next->first, m_next->second);
+    sub.on_next(data_plane::RemoteDescriptorMessage{std::move(rd), m_next->second, m_next->first});
 
     if (++m_next == this->tagged_endpoints().cend())
     {

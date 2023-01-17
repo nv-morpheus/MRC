@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,6 @@ from .core import operators
 from .core.common import __version__
 from .core.executor import Executor
 from .core.executor import Future
-from .core.node import SegmentObject
 from .core.options import Config
 from .core.options import Options
 from .core.pipeline import Pipeline
@@ -26,6 +25,7 @@ from .core.plugins import PluginModule
 from .core.segment import Builder
 from .core.segment import ModuleRegistry
 from .core.segment import SegmentModule
+from .core.segment import SegmentObject
 from .core.subscriber import Observable
 from .core.subscriber import Observer
 from .core.subscriber import Subscriber

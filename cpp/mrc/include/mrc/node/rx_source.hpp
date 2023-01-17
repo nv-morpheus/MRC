@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,6 @@
 #include "mrc/core/utils.hpp"
 #include "mrc/core/watcher.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/node/edge.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/node/rx_epilogue_tap.hpp"
 #include "mrc/node/rx_runnable.hpp"
@@ -68,7 +67,7 @@ class RxSource : public RxSourceBase<T>, public RxRunnable<ContextT>, public RxE
 };
 
 template <typename T, typename ContextT>
-RxSource<T, ContextT>::RxSource(rxcpp::observable<T> observable)
+RxSource<T, ContextT>::RxSource(rxcpp::observable<T> observable) : RxSourceBase<T>()
 {
     set_observable(observable);
 }
@@ -77,7 +76,7 @@ template <typename T, typename ContextT>
 void RxSource<T, ContextT>::on_shutdown_critical_section()
 {
     DVLOG(10) << runnable::Context::get_runtime_context().info() << " releasing source channel";
-    RxSourceBase<T>::release_channel();
+    RxSourceBase<T>::release_edge_connection();
 }
 
 template <typename T, typename ContextT>

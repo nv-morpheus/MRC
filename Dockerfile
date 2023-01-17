@@ -23,7 +23,7 @@ ARG LINUX_VER=20.04
 ARG PYTHON_VER=3.8
 
 # ============= base ===================
-FROM ${FROM_IMAGE}:cuda${CUDA_VER}-${LINUX_DISTRO}${LINUX_VER}-py${PYTHON_VER} AS base
+FROM ${FROM_IMAGE}:cuda11.4.1-ubuntu20.04-py3.8 AS base
 
 ARG PROJ_NAME=mrc
 
@@ -43,9 +43,12 @@ RUN --mount=type=cache,target=/opt/conda/pkgs,sharing=locked \
     /opt/conda/bin/mamba env create -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/dev_env.yml && \
     /opt/conda/bin/mamba env update -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/clang_env.yml && \
     /opt/conda/bin/mamba env update -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/ci_env.yml && \
-    sed -i "s/conda activate base/conda activate ${PROJ_NAME}/g" ~/.bashrc && \
     chmod -R a+rwX /opt/conda && \
     rm -rf /tmp/conda
+
+RUN /opt/conda/bin/conda init --system &&\
+    sed -i 's/xterm-color)/xterm-color|*-256color)/g' ~/.bashrc &&\
+    echo "conda activate ${PROJ_NAME}" >> ~/.bashrc
 
 # disable sscache wrappers around compilers
 ENV CMAKE_CUDA_COMPILER_LAUNCHER=
@@ -79,6 +82,16 @@ RUN --mount=type=cache,target=/var/cache/apt \
     && \
     rm -rf /var/lib/apt/lists/*
 
+# Install the .NET SDK. This is a workaround for https://github.com/dotnet/vscode-dotnet-runtime/issues/159
+# Once version 1.6.1 of the extension has been release, this can be removed
+RUN --mount=type=cache,target=/var/cache/apt \
+    wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb &&\
+    sudo dpkg -i packages-microsoft-prod.deb &&\
+    rm packages-microsoft-prod.deb &&\
+    apt-get update && \
+    apt-get install --no-install-recommends -y dotnet-sdk-6.0 &&\
+    rm -rf /var/lib/apt/lists/*
+
 # create a user inside the container
 ARG USERNAME=morpheus
 ARG USER_UID=1000
@@ -98,6 +111,6 @@ WORKDIR /work
 
 # Setup git to allow other users to access /work. Requires git 2.35.3 or
 # greater. See https://marc.info/?l=git&m=164989570902912&w=2. Only enable for
-# development
-RUN git config --global --add safe.directory "*" && \
-    git config --global core.editor "vim"
+# development. Utilize --system to not interfere with VS Code
+RUN git config --system --add safe.directory "*" && \
+    git config --system core.editor "vim"

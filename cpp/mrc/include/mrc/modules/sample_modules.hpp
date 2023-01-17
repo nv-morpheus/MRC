@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "mrc/core/utils.hpp"
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/segment/builder.hpp"  // IWYU pragma: keep
+#include "mrc/utils/type_utils.hpp"
 
 #include <nlohmann/json.hpp>
 #include <rxcpp/rx.hpp>

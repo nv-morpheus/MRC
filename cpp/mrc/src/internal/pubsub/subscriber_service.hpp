@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,8 +19,6 @@
 
 #include "internal/pubsub/base.hpp"
 
-#include "mrc/node/operators/unique_operator.hpp"
-#include "mrc/node/source_channel.hpp"
 #include "mrc/pubsub/api.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/types.hpp"
@@ -31,15 +29,10 @@
 #include <set>
 #include <string>
 #include <unordered_map>
-#include <utility>
 
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
-
-namespace mrc::channel {
-enum class Status;
-}  // namespace mrc::channel
 namespace mrc::internal::memory {
 class TransientBuffer;
 }  // namespace mrc::internal::memory
@@ -53,9 +46,7 @@ namespace mrc::internal::pubsub {
  * @brief The internal type-erased SubscriberService
  *
  */
-class SubscriberService final : public Base,
-                                public mrc::pubsub::ISubscriberService,
-                                public mrc::node::UniqueOperator<mrc::runtime::RemoteDescriptor>
+class SubscriberService final : public Base, public mrc::pubsub::ISubscriberService
 {
     SubscriberService(std::string service_name, runtime::Partition& runtime);
 
@@ -83,18 +74,6 @@ class SubscriberService final : public Base,
     // [internal::control_plane::client::SubscriptionService]
     // await on the completion of all internal runnables
     void do_subscription_service_join() final;
-
-    // [Operator]
-    mrc::channel::Status on_next(mrc::runtime::RemoteDescriptor&& rd) final
-    {
-        return SourceChannelWriteable<mrc::runtime::RemoteDescriptor>::await_write(std::move(rd));
-    }
-
-    // [Operator] - signifies the channel was dropped
-    void on_complete() final
-    {
-        SourceChannelWriteable<mrc::runtime::RemoteDescriptor>::release_channel();
-    }
 
     // [internal::control_plane::client::SubscriptionService]
     // called by the update engine when updates for a given subscribed_to role is received

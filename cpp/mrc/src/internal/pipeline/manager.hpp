@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,15 +20,15 @@
 #include "internal/pipeline/types.hpp"
 #include "internal/service.hpp"
 
+#include "mrc/node/writable_entrypoint.hpp"
+
 #include <memory>
+
+// IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
 
 namespace mrc::internal::resources {
 class Manager;
 }  // namespace mrc::internal::resources
-namespace mrc::node {
-template <typename T>
-class SourceChannelWriteable;
-}  // namespace mrc::node
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
@@ -65,7 +65,7 @@ class Manager : public Service
 
     resources::Manager& m_resources;
     std::shared_ptr<Pipeline> m_pipeline;
-    std::unique_ptr<node::SourceChannelWriteable<ControlMessage>> m_update_channel;
+    std::unique_ptr<node::WritableEntrypoint<ControlMessage>> m_update_channel;
     std::unique_ptr<mrc::runnable::Runner> m_controller;
 };
 

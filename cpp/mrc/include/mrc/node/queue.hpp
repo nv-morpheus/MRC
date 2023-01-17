@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,31 +17,30 @@
 
 #pragma once
 
-#include "mrc/channel/ingress.hpp"
-#include "mrc/node/edge_properties.hpp"
+#include "mrc/channel/buffered_channel.hpp"
+#include "mrc/edge/edge_channel.hpp"
 #include "mrc/node/forward.hpp"
-#include "mrc/node/sink_channel_base.hpp"
+#include "mrc/node/sink_properties.hpp"
+#include "mrc/node/source_properties.hpp"
 
 namespace mrc::node {
 
 template <typename T>
-class Queue : public SinkChannelBase<T>, public SinkProperties<T>, public ChannelProvider<T>
+class Queue : public WritableProvider<T>, public ReadableProvider<T>
 {
   public:
-    Queue()           = default;
+    Queue()
+    {
+        this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
+    }
     ~Queue() override = default;
 
-  private:
-    // SinkProperties<T> - aka IngressProvider
-    std::shared_ptr<channel::Ingress<T>> channel_ingress() final
+    void set_channel(std::unique_ptr<mrc::channel::Channel<T>> channel)
     {
-        return SinkChannelBase<T>::ingress_channel();
-    }
+        edge::EdgeChannel<T> edge_channel(std::move(channel));
 
-    // ChannelProvider
-    std::shared_ptr<channel::Channel<T>> channel() final
-    {
-        return SinkChannelBase<T>::channel();
+        SinkProperties<T>::init_owned_edge(edge_channel.get_writer());
+        SourceProperties<T>::init_owned_edge(edge_channel.get_reader());
     }
 };
 

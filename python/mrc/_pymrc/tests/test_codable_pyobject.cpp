@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,6 @@
 
 #include "pymrc/codable_object.hpp"  // IWYU pragma: keep
 #include "pymrc/types.hpp"
-#include "pymrc/utils.hpp"
 
 #include "mrc/codable/codable_protocol.hpp"
 #include "mrc/codable/type_traits.hpp"

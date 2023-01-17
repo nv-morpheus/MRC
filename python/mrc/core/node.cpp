@@ -15,18 +15,18 @@
  * limitations under the License.
  */
 
-#include "pymrc/types.hpp"
+#include "pymrc/node.hpp"
+
 #include "pymrc/utils.hpp"
 
-#include "mrc/runnable/launch_options.hpp"
-#include "mrc/segment/object.hpp"
+#include "mrc/node/operators/broadcast.hpp"
+#include "mrc/segment/builder.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
-#include <cstddef>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -46,17 +46,16 @@ PYBIND11_MODULE(node, module)
 
     // Common must be first in every module
     pymrc::import(module, "mrc.core.common");
+    pymrc::import(module, "mrc.core.segment");  // Needed for Builder and SegmentObject
 
-    py::class_<mrc::runnable::LaunchOptions>(module, "LaunchOptions")
-        .def_readwrite("pe_count", &mrc::runnable::LaunchOptions::pe_count)
-        .def_readwrite("engines_per_pe", &mrc::runnable::LaunchOptions::engines_per_pe)
-        .def_readwrite("engine_factory_name", &mrc::runnable::LaunchOptions::engine_factory_name);
+    py::class_<mrc::segment::Object<node::BroadcastTypeless>,
+               mrc::segment::ObjectProperties,
+               std::shared_ptr<mrc::segment::Object<node::BroadcastTypeless>>>(module, "Broadcast")
+        .def(py::init<>([](mrc::segment::Builder& builder, std::string name) {
+            auto node = builder.construct_object<node::BroadcastTypeless>(name);
 
-    py::class_<mrc::segment::ObjectProperties, std::shared_ptr<mrc::segment::ObjectProperties>>(module, "SegmentObject")
-        .def_property_readonly("name", &PyNode::name)
-        .def_property_readonly("launch_options",
-                               py::overload_cast<>(&mrc::segment::ObjectProperties::launch_options),
-                               py::return_value_policy::reference_internal);
+            return node;
+        }));
 
     module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);
