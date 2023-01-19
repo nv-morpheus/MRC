@@ -43,6 +43,10 @@
 #include <utility>
 #include <vector>
 
+namespace mrc::segment {
+    class Builder;
+}
+
 namespace mrc::edge {
 
 // EdgeHolder keeps shared pointer of EdgeChannel alive and
@@ -188,6 +192,8 @@ class EdgeHolder
 
     // Holds a pointer to any set edge (different from init edge). Maintains lifetime
     std::shared_ptr<Edge<T>> m_connected_edge;
+
+    friend class mrc::segment::Builder;
 
     // Allow edge builder to call set_edge
     friend EdgeBuilder;

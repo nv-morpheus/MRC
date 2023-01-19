@@ -19,7 +19,7 @@
 
 #include "mrc/core/executor.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
-#include "mrc/modules/mirror_tap/mirror_tap_module.hpp"
+#include "mrc/modules/mirror_tap/mirror_tap_source.hpp"
 #include "mrc/modules/module_registry.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/segment/builder.hpp"
@@ -40,28 +40,28 @@ TEST_F(TestMirrorTapModule, ConstructorTest) {
 
     auto config = nlohmann::json();
 
-    auto mod1 = MirrorTapModule<std::string>("mirror_tap", config);
+    auto mod1 = MirrorTapSourceModule<std::string>("mirror_tap", config);
 }
 
 TEST_F(TestMirrorTapModule, TestConstructor) {
     // Test default constructor
-    mrc::modules::MirrorTapModule<int> module1{"module1"};
+    mrc::modules::MirrorTapSourceModule<int> module1{"module1"};
     EXPECT_EQ(module1.get_port_name(), "mirror_tap_0");
 
     // Test constructor with config
     nlohmann::json config;
-    mrc::modules::MirrorTapModule<int> module2{"module2", config};
+    mrc::modules::MirrorTapSourceModule<int> module2{"module2", config};
     EXPECT_EQ(module2.get_port_name(), "mirror_tap_1");
 }
 
 TEST_F(TestMirrorTapModule, TestCreateIngressPorts) {
-    mrc::modules::MirrorTapModule<int> module{ "module" };
+    mrc::modules::MirrorTapSourceModule<int> module{ "module" };
     auto ingress_ports = module.create_ingress_ports();
     EXPECT_EQ(ingress_ports.names().size(), 1);
 }
 
 TEST_F(TestMirrorTapModule, TestCreateEgressPorts) {
-    mrc::modules::MirrorTapModule<int> module{ "module" };
+    mrc::modules::MirrorTapSourceModule<int> module{ "module" };
     auto egress_ports = module.create_egress_ports();
     EXPECT_EQ(egress_ports.names().size(), 1);
 }
@@ -71,7 +71,7 @@ TEST_F(TestMirrorTapModule, InitailizationTest) {
 
     auto init_wrapper = [](segment::Builder &builder) {
         auto config = nlohmann::json();
-        auto mirror_tap = builder.make_module<MirrorTapModule<std::string>>("mirror_tap", config);
+        auto mirror_tap = builder.make_module<MirrorTapSourceModule<std::string>>("mirror_tap", config);
     };
 
     m_pipeline->make_segment("Initialization_Segment", init_wrapper);
@@ -96,7 +96,7 @@ TEST_F(TestMirrorTapModule, SinglePipelineMirrorTapTest) {
 
     auto config = nlohmann::json();
 
-    auto mirror_tap = std::make_shared<MirrorTapModule<std::string>>(test_name + "_mirror_tap", config);
+    auto mirror_tap = std::make_shared<MirrorTapSourceModule<std::string>>(test_name + "_mirror_tap", config);
     auto init_wrapper_main = [&packets_main, &mirror_tap, &test_name](segment::Builder &builder) {
         builder.init_module(mirror_tap);
 

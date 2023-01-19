@@ -334,6 +334,93 @@ class Builder final
         LOG(ERROR) << "Incorrect node types";
     }
 
+    template<typename SourceNodeTypeT, typename SinkNodeTypeT=SourceNodeTypeT>
+    void make_edge(std::shared_ptr<ObjectProperties> source, std::string sink)
+    {
+        auto& sink_object = m_backend.find_object(sink);
+        CHECK(sink_object.is_sink()) << "Sink object is not a sink";
+
+        auto& writable_acceptor = source->writable_acceptor_typed<SourceNodeTypeT>();
+        auto& writable_provider = sink_object.writable_provider_typed<SinkNodeTypeT>();
+
+        // TODO
+        edge::EdgeBuilder::make_edge_writable(writable_acceptor, writable_provider);
+    }
+
+    template<typename SourceNodeTypeT, typename SinkNodeTypeT=SourceNodeTypeT>
+    void make_edge(std::string source, std::shared_ptr<ObjectProperties> sink)
+    {
+        auto& source_object = m_backend.find_object(source);
+        CHECK(source_object.is_source()) << "Source object is not a source";
+
+        auto& writable_acceptor = source_object.writable_acceptor_typed<SourceNodeTypeT>();
+        auto& writable_provider = sink->writable_provider_typed<SinkNodeTypeT>();
+
+        // TODO
+        edge::EdgeBuilder::make_edge_writable(writable_acceptor, writable_provider);
+    }
+
+    template <typename EdgeDataTypeT>
+    void make_edge_tap(const std::string source, const std::string sink,
+                       std::shared_ptr<ObjectProperties> tap_input,
+                       std::shared_ptr<ObjectProperties> tap_output) {
+        auto& source_object = m_backend.find_object(source);
+        auto& sink_object = m_backend.find_object(sink);
+
+        CHECK(source_object.is_source()) << "Source object is not a source";
+        CHECK(sink_object.is_sink()) << "Sink object is not a sink";
+
+        // 'standard' Source->Sink connection
+        if (source_object.is_writable_acceptor()) {
+            if (sink_object.is_writable_provider()) {
+                CHECK(tap_input->is_writable_provider()) << "Tap input must be of type WritableProvider";
+                CHECK(tap_output->is_writable_acceptor()) << "Tap output must be WritableAcceptor";
+
+                // Cast our object into something we can insert as a tap.
+                auto& tap_input_writable_provider = tap_input->writable_provider_typed<EdgeDataTypeT>();
+                auto& tap_output_writable_acceptor = tap_output->writable_acceptor_typed<EdgeDataTypeT>();
+
+                /*
+                 * In this case, the source object has accepted a writable edge from the sink.
+                 *
+                 * Given: [source [edge_handle]] -> [sink]
+                 *
+                 * We will:
+                 * - Get a reference to the edge_handle the source is holding
+                 * - Reset the Source edge connection
+                 * - Create a new edge from the source to our WritableProvider splice node
+                 * - Set the edge_handle for the WritableAcceptor splice node to the edge_handle from the source
+                 *
+                 * This will result in the following:
+                 *
+                 * [source[new_edge_handle]] -> [splice_node[old_edge_handle]] -> [sink]
+                 *
+                 */
+
+                auto& source_acceptor = source_object.writable_acceptor_typed<EdgeDataTypeT>();
+                auto& source_edge_holder = dynamic_cast<edge::EdgeHolder<EdgeDataTypeT>&>(source_acceptor);
+
+                auto& sink_provider = sink_object.writable_provider_typed<EdgeDataTypeT>();
+
+                // Check that an active connection exists before trying to splice.
+                CHECK(source_edge_holder.check_active_connection(false)) << "No active connection to tap";
+
+                // Copy the Acceptor's edge handle and release it from the Acceptor
+                // Make sure we hold the edge handle until the new edge to the tap has been formed.
+                // TODO(Devin): Can we double check that the edge handle from the source matches the one from the sink?
+                auto edge_handle = source_edge_holder.get_connected_edge();
+                source_edge_holder.release_edge_connection();
+
+                edge::EdgeBuilder::make_edge_writable(source_acceptor, tap_input_writable_provider);
+                edge::EdgeBuilder::make_edge_writable(tap_output_writable_acceptor, sink_provider);
+
+                return;
+            }
+        }
+
+        throw std::runtime_error("Attempt to splice unsupported edge types");
+    }
+
     template <typename SourceNodeTypeT, typename SinkNodeTypeT = SourceNodeTypeT>
     void make_dynamic_edge(const std::string& source_name, const std::string& sink_name)
     {
@@ -429,6 +516,7 @@ std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::uni
         auto segment_name = m_backend.name() + "/" + name;
         auto segment_node = std::make_shared<Runnable<ObjectT>>(segment_name, std::move(node));
 
+        std::cerr << "Adding Object: " << name << std::endl << std::flush;
         m_backend.add_runnable(name, segment_node);
         m_backend.add_object(name, segment_node);
         segment_object = segment_node;
@@ -436,6 +524,7 @@ std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::uni
     else
     {
         auto segment_node = std::make_shared<Component<ObjectT>>(std::move(node));
+        std::cerr << "Adding Object: " << name << std::endl << std::flush;
         m_backend.add_object(name, segment_node);
         segment_object = segment_node;
     }

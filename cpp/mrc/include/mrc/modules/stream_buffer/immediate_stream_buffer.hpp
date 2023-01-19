@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "mrc/modules/mirror_tap/mirror_tap_module.hpp"
+#include "mrc/modules/mirror_tap/mirror_tap_source.hpp"
 #include "mrc/modules/properties/persistent.hpp"
 #include "mrc/modules/segment_modules.hpp"
 
@@ -38,15 +38,13 @@ namespace mrc::modules {
      * @tparam DataTypeT The type of data to buffer
      */
     template<typename DataTypeT>
-    class SimpleImmediateStreamBuffer : public SegmentModule, public PersistentModule {
-        using type_t = SimpleImmediateStreamBuffer<DataTypeT>;
+    class ImmediateStreamBufferModule : public SegmentModule, public PersistentModule {
+        using type_t = ImmediateStreamBufferModule<DataTypeT>;
 
     public:
-        ~SimpleImmediateStreamBuffer() = default;
+        ImmediateStreamBufferModule(std::string module_name);
 
-        SimpleImmediateStreamBuffer(std::string module_name);
-
-        SimpleImmediateStreamBuffer(std::string module_name, nlohmann::json config);
+        ImmediateStreamBufferModule(std::string module_name, nlohmann::json config);
 
     protected:
         void initialize(segment::Builder &builder) override;
@@ -61,18 +59,17 @@ namespace mrc::modules {
         rxcpp::subjects::subject<DataTypeT> m_subject{};
 
         std::string m_ingress_name;
-
     };
 
     template<typename DataTypeT>
-    SimpleImmediateStreamBuffer<DataTypeT>::SimpleImmediateStreamBuffer(std::string module_name)
+    ImmediateStreamBufferModule<DataTypeT>::ImmediateStreamBufferModule(std::string module_name)
             :   SegmentModule(std::move(module_name)), PersistentModule(),
                 m_ring_buffer_write(1024), m_ring_buffer_read(1024) {
     }
 
 
     template<typename DataTypeT>
-    SimpleImmediateStreamBuffer<DataTypeT>::SimpleImmediateStreamBuffer(std::string module_name, nlohmann::json config)
+    ImmediateStreamBufferModule<DataTypeT>::ImmediateStreamBufferModule(std::string module_name, nlohmann::json config)
             :   SegmentModule(std::move(module_name), std::move(config)), PersistentModule(),
                 m_ring_buffer_write(1024), m_ring_buffer_read(1024) {
                     if (this->config().contains("buffer_size")) {
@@ -82,7 +79,7 @@ namespace mrc::modules {
     }
 
     template<typename DataTypeT>
-    void SimpleImmediateStreamBuffer<DataTypeT>::initialize(segment::Builder &builder) {
+    void ImmediateStreamBufferModule<DataTypeT>::initialize(segment::Builder &builder) {
         auto buffer_sink = builder.template make_sink<DataTypeT>("buffer_sink_new", m_subject.get_subscriber());
 
         // This is a hack, because we don't correctly support passing observables to RxSource creation yet
@@ -141,7 +138,7 @@ namespace mrc::modules {
     }
 
     template<typename DataTypeT>
-    std::string SimpleImmediateStreamBuffer<DataTypeT>::module_type_name() const {
+    std::string ImmediateStreamBufferModule<DataTypeT>::module_type_name() const {
         return std::string(::mrc::type_name<type_t>());
     }
 }

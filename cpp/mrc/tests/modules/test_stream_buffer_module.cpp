@@ -19,8 +19,8 @@
 
 #include "mrc/core/executor.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
-#include "mrc/modules/mirror_tap/mirror_tap_module.hpp"
-#include "mrc/modules/stream_buffer/stream_buffer_module.hpp"
+#include "mrc/modules/mirror_tap/mirror_tap_source.hpp"
+#include "mrc/modules/stream_buffer/immediate_stream_buffer.hpp"
 #include "mrc/modules/module_registry.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/segment/builder.hpp"
@@ -41,7 +41,7 @@ TEST_F(TestStreamBufferModule, InitailizationTest) {
 
     auto init_wrapper = [](segment::Builder &builder) {
         auto config = nlohmann::json();
-        auto mirror_tap = builder.make_module<SimpleImmediateStreamBuffer<std::string>>("mirror_tap", config);
+        auto mirror_tap = builder.make_module<ImmediateStreamBufferModule<std::string>>("mirror_tap", config);
     };
 
     m_pipeline->make_segment("Initialization_Segment", init_wrapper);
@@ -56,6 +56,21 @@ TEST_F(TestStreamBufferModule, InitailizationTest) {
     executor.join();
 }
 
+template<typename DataTypeT, typename FunctionT>
+auto attach_mirror_tap(FunctionT initializer, const std::string source, const std::string sink, const std::string tap) {
+    using namespace modules;
+    return [initializer, source, sink, tap](segment::Builder &builder) {
+        initializer(builder);
+
+        auto config = nlohmann::json();
+        auto mirror_tap = builder.make_module<MirrorTapSourceModule<std::string>>(tap, config);
+
+        builder.make_edge_tap<DataTypeT>(source, sink,
+                                         mirror_tap->input_port("input"),
+                                         mirror_tap->output_port("output"));
+    };
+}
+
 TEST_F(TestStreamBufferModule, SinglePipelineStreamBufferTest) {
     using namespace modules;
     const std::string test_name{"SinglePipelineStreamBufferTest"};
@@ -67,10 +82,10 @@ TEST_F(TestStreamBufferModule, SinglePipelineStreamBufferTest) {
 
     auto config = nlohmann::json();
 
-    auto mirror_tap = std::make_shared<MirrorTapModule<std::string>>(test_name + "_mirror_tap", config);
-    auto init_wrapper_main = [&packets_main, packet_count, &mirror_tap, &test_name](segment::Builder &builder) {
-        builder.init_module(mirror_tap);
+    // TODO(Devin): Higher level function that creates mirror tap and stream buffer in the same call.
+    auto mirror_tap = std::make_shared<MirrorTapSourceModule<std::string>>(test_name + "mirror_tap", config);
 
+    auto init_wrapper_main = [&packets_main, packet_count, test_name](segment::Builder &builder) {
         auto source = builder.make_source<std::string>(
                 test_name + "_main_source",
                 [packet_count](rxcpp::subscriber<std::string> &sub) {
@@ -83,43 +98,38 @@ TEST_F(TestStreamBufferModule, SinglePipelineStreamBufferTest) {
                     sub.on_completed();
                 });
 
-        // mirror tap has an input and output port, and will create an egress port that can be attached to.
-        builder.make_edge(source, mirror_tap->input_port("input"));
-
         auto sink = builder.make_sink<std::string>(test_name + "_main_sink", [&packets_main](std::string input) {
             packets_main++;
         });
 
-        builder.make_edge(mirror_tap->output_port("output"), sink);
+        // Untapped edge that will be broken and tapped by the mirror tap.
+        builder.make_edge(source, sink);
     };
 
-    auto init_wrapper_mirrored = [&packets_mirrored, &mirror_tap, &test_name](
+    auto tapped_init_wrapper_main = mirror_tap->tap_segment(init_wrapper_main,
+                                                            test_name + "_main_source",
+                                                            test_name + "_main_sink");
+
+    auto init_wrapper_mirrored = [&packets_mirrored, test_name](
             segment::Builder &builder) {
-        auto stream_buffer = builder.make_module<SimpleImmediateStreamBuffer<std::string>>(
-                test_name + "_stream_buffer");
-
-        auto mirror_ingress = builder.get_ingress<std::string>(mirror_tap->get_port_name());
-
-        builder.make_edge(mirror_ingress, stream_buffer->input_port("input"));
-
         auto mirror_sink = builder.make_sink<std::string>(test_name + "_mirror_sink",
                                                           [&packets_mirrored](std::string input) {
                                                               VLOG(10) << "tick -> " << input << std::endl
                                                                        << std::flush;
                                                               packets_mirrored++;
                                                           });
-
-        builder.make_edge(stream_buffer->output_port("output"), mirror_sink);
-
     };
 
+    auto tapped_init_wrapper_mirrored = mirror_tap->attach_tap_output(init_wrapper_mirrored,
+                                                                      test_name + "_mirror_sink");
+
     m_pipeline->make_segment("Main_Segment",
-                             mirror_tap->create_egress_ports(),
-                             init_wrapper_main);
+                             segment::EgressPorts<std::string>({mirror_tap->get_port_name()}),
+                             tapped_init_wrapper_main);
 
     m_pipeline->make_segment("StreamMirror_Segment",
-                             mirror_tap->create_ingress_ports(),
-                             init_wrapper_mirrored);
+                             segment::IngressPorts<std::string>({mirror_tap->get_port_name()}),
+                             tapped_init_wrapper_mirrored);
 
     auto options = std::make_shared<Options>();
     options->topology().user_cpuset("0-2");
