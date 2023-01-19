@@ -101,7 +101,7 @@ void SimpleModule::initialize(segment::Builder& builder)
 
 std::string SimpleModule::module_type_name() const
 {
-    return std::string(::mrc::type_name<type_t>());
+    return std::string(::mrc::boost_type_name<type_t>());
 }
 
 ConfigurableModule::ConfigurableModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
@@ -146,7 +146,7 @@ void ConfigurableModule::initialize(segment::Builder& builder)
 
 std::string ConfigurableModule::module_type_name() const
 {
-    return std::string(::mrc::type_name<type_t>());
+    return std::string(::mrc::boost_type_name<type_t>());
 }
 
 SourceModule::SourceModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
@@ -181,7 +181,7 @@ void SourceModule::initialize(segment::Builder& builder)
 
 std::string SourceModule::module_type_name() const
 {
-    return std::string(::mrc::type_name<type_t>());
+    return std::string(::mrc::boost_type_name<type_t>());
 }
 
 SinkModule::SinkModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
@@ -202,7 +202,7 @@ void SinkModule::initialize(segment::Builder& builder)
 
 std::string SinkModule::module_type_name() const
 {
-    return std::string(::mrc::type_name<type_t>());
+    return std::string(::mrc::boost_type_name<type_t>());
 }
 
 NestedModule::NestedModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
@@ -220,7 +220,7 @@ void NestedModule::initialize(segment::Builder& builder)
     // Create a data source and attach it to our submodule
     auto source1 = builder.make_module<SourceModule>("source", config);
 
-    builder.make_dynamic_edge<bool, bool>(source1->output_port("source"),
+    builder.make_edge_dynamic<bool>(source1->output_port("source"),
                                           configurable_mod->input_port("configurable_input_a"));
 
     // Register the submodules output as one of this module's outputs
@@ -229,6 +229,6 @@ void NestedModule::initialize(segment::Builder& builder)
 
 std::string NestedModule::module_type_name() const
 {
-    return std::string(::mrc::type_name<type_t>());
+    return std::string(::mrc::boost_type_name<type_t>());
 }
 }  // namespace mrc::modules

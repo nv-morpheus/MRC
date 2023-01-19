@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "mrc/modules/mirror_tap/mirror_tap_source.hpp"
+#include "mrc/modules/mirror_tap/mirror_tap.hpp"
 #include "mrc/modules/properties/persistent.hpp"
 #include "mrc/modules/segment_modules.hpp"
 
@@ -139,6 +139,6 @@ namespace mrc::modules {
 
     template<typename DataTypeT>
     std::string ImmediateStreamBufferModule<DataTypeT>::module_type_name() const {
-        return std::string(::mrc::type_name<type_t>());
+        return std::string(::mrc::boost_type_name<type_t>());
     }
 }

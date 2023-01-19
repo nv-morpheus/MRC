@@ -78,7 +78,7 @@ void DynamicSourceModule::initialize(segment::Builder& builder)
 
 std::string DynamicSourceModule::module_type_name() const
 {
-    return std::string(::mrc::type_name<type_t>());
+    return std::string(::mrc::boost_type_name<type_t>());
 }
 
 }  // namespace mrc::modules

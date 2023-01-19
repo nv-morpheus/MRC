@@ -19,8 +19,7 @@
 
 #include "mrc/core/executor.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
-#include "mrc/modules/mirror_tap/mirror_tap_source.hpp"
-#include "mrc/modules/stream_buffer/immediate_stream_buffer.hpp"
+#include "mrc/modules/mirror_tap/mirror_tap_util.hpp"
 #include "mrc/modules/module_registry.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/segment/builder.hpp"
@@ -56,21 +55,6 @@ TEST_F(TestStreamBufferModule, InitailizationTest) {
     executor.join();
 }
 
-template<typename DataTypeT, typename FunctionT>
-auto attach_mirror_tap(FunctionT initializer, const std::string source, const std::string sink, const std::string tap) {
-    using namespace modules;
-    return [initializer, source, sink, tap](segment::Builder &builder) {
-        initializer(builder);
-
-        auto config = nlohmann::json();
-        auto mirror_tap = builder.make_module<MirrorTapSourceModule<std::string>>(tap, config);
-
-        builder.make_edge_tap<DataTypeT>(source, sink,
-                                         mirror_tap->input_port("input"),
-                                         mirror_tap->output_port("output"));
-    };
-}
-
 TEST_F(TestStreamBufferModule, SinglePipelineStreamBufferTest) {
     using namespace modules;
     const std::string test_name{"SinglePipelineStreamBufferTest"};
@@ -82,8 +66,6 @@ TEST_F(TestStreamBufferModule, SinglePipelineStreamBufferTest) {
 
     auto config = nlohmann::json();
 
-    // TODO(Devin): Higher level function that creates mirror tap and stream buffer in the same call.
-    auto mirror_tap = std::make_shared<MirrorTapSourceModule<std::string>>(test_name + "mirror_tap", config);
 
     auto init_wrapper_main = [&packets_main, packet_count, test_name](segment::Builder &builder) {
         auto source = builder.make_source<std::string>(
@@ -106,10 +88,6 @@ TEST_F(TestStreamBufferModule, SinglePipelineStreamBufferTest) {
         builder.make_edge(source, sink);
     };
 
-    auto tapped_init_wrapper_main = mirror_tap->tap_segment(init_wrapper_main,
-                                                            test_name + "_main_source",
-                                                            test_name + "_main_sink");
-
     auto init_wrapper_mirrored = [&packets_mirrored, test_name](
             segment::Builder &builder) {
         auto mirror_sink = builder.make_sink<std::string>(test_name + "_mirror_sink",
@@ -120,15 +98,21 @@ TEST_F(TestStreamBufferModule, SinglePipelineStreamBufferTest) {
                                                           });
     };
 
-    auto tapped_init_wrapper_mirrored = mirror_tap->attach_tap_output(init_wrapper_mirrored,
+    auto mirror_tap = MirrorTap<std::string>(test_name + "mirror_tap", config);
+
+    auto tapped_init_wrapper_main = mirror_tap.tap(init_wrapper_main,
+                                                               test_name + "_main_source",
+                                                               test_name + "_main_sink");
+
+    auto tapped_init_wrapper_mirrored = mirror_tap.stream_to(init_wrapper_mirrored,
                                                                       test_name + "_mirror_sink");
 
     m_pipeline->make_segment("Main_Segment",
-                             segment::EgressPorts<std::string>({mirror_tap->get_port_name()}),
+                             mirror_tap.create_egress_ports(),
                              tapped_init_wrapper_main);
 
     m_pipeline->make_segment("StreamMirror_Segment",
-                             segment::IngressPorts<std::string>({mirror_tap->get_port_name()}),
+                             mirror_tap.create_ingress_ports(),
                              tapped_init_wrapper_mirrored);
 
     auto options = std::make_shared<Options>();

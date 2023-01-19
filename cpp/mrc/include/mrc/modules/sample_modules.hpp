@@ -189,7 +189,7 @@ void TemplateModule<OutputTypeT>::initialize(segment::Builder& builder)
 template <typename OutputTypeT>
 std::string TemplateModule<OutputTypeT>::module_type_name() const
 {
-    return std::string(::mrc::type_name<type_t>());
+    return std::string(::mrc::boost_type_name<type_t>());
 }
 
 /**
@@ -254,7 +254,7 @@ void TemplateWithInitModule<OutputTypeT, Initializer>::initialize(segment::Build
 template <typename OutputTypeT, OutputTypeT (*Initializer)()>
 std::string TemplateWithInitModule<OutputTypeT, Initializer>::module_type_name() const
 {
-    return std::string(::mrc::type_name<type_t>());
+    return std::string(::mrc::boost_type_name<type_t>());
 }
 
 }  // namespace mrc::modules

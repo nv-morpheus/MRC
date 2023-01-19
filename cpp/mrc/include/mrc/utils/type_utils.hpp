@@ -16,6 +16,7 @@
  */
 
 #pragma once
+#include <boost/type_index.hpp>
 
 #include <climits>
 #include <cstddef>
@@ -170,6 +171,11 @@ struct DataType
 
     TypeId m_type_id;
 };
+
+template<typename T>
+std::string boost_type_name() {
+    return boost::typeindex::type_id<T>().pretty_name();
+}
 
 std::string type_name(std::type_index type_info);
 

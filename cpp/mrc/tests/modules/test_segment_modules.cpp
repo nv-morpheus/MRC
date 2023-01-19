@@ -162,7 +162,7 @@ TEST_F(TestSegmentModules, ModuleEndToEndTest)
         });
 
         // Ex2. Dynamic edge construction -- requires type specification
-        builder.make_dynamic_edge<bool, bool>(source2, simple_mod->input_port("input2"));
+        builder.make_edge_dynamic<bool>(source2, simple_mod->input_port("input2"));
 
         auto sink1 = builder.make_sink<std::string>("sink1", [&packets_1](std::string input) {
             packets_1++;
@@ -303,7 +303,7 @@ TEST_F(TestSegmentModules, ModuleChainingTest)
         auto source_mod = builder.make_module<SourceModule>("ModuleChainingTest_mod1", config);
         builder.init_module(sink_mod);
 
-        builder.make_dynamic_edge<bool, bool>(source_mod->output_port("source"), sink_mod->input_port("sink"));
+        builder.make_edge_dynamic<bool>(source_mod->output_port("source"), sink_mod->input_port("sink"));
     };
 
     m_pipeline->make_segment("SimpleModule_Segment", init_wrapper);
