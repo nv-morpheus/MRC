@@ -145,7 +145,7 @@ TEST_F(TestSegmentModules, ModuleEndToEndTest)
         });
 
         // Ex1. Partially dynamic edge construction
-        builder.make_edge(source1, simple_mod->input_port("input1"));
+        builder.make_edge_dynamic<bool>(source1, simple_mod->input_port("input1"));
 
         auto source2 = builder.make_source<bool>("src2", [](rxcpp::subscriber<bool>& sub) {
             if (sub.is_subscribed())
@@ -169,14 +169,14 @@ TEST_F(TestSegmentModules, ModuleEndToEndTest)
             VLOG(10) << "Sinking " << input << std::endl;
         });
 
-        builder.make_edge(simple_mod->output_port("output1"), sink1);
+        builder.make_edge_dynamic<std::string>(simple_mod->output_port("output1"), sink1);
 
         auto sink2 = builder.make_sink<std::string>("sink2", [&packets_2](std::string input) {
             packets_2++;
             VLOG(10) << "Sinking " << input << std::endl;
         });
 
-        builder.make_edge(simple_mod->output_port("output2"), sink2);
+        builder.make_edge_dynamic<std::string>(simple_mod->output_port("output2"), sink2);
 
         auto source3 = builder.make_source<bool>("src3", [](rxcpp::subscriber<bool>& sub) {
             if (sub.is_subscribed())
@@ -190,14 +190,14 @@ TEST_F(TestSegmentModules, ModuleEndToEndTest)
             sub.on_completed();
         });
 
-        builder.make_edge(source3, configurable_mod->input_port("configurable_input_a"));
+        builder.make_edge_dynamic<bool>(source3, configurable_mod->input_port("configurable_input_a"));
 
         auto sink3 = builder.make_sink<std::string>("sink3", [&packets_3](std::string input) {
             packets_3++;
             VLOG(10) << "Sinking " << input << std::endl;
         });
 
-        builder.make_edge(configurable_mod->output_port("configurable_output_x"), sink3);
+        builder.make_edge_dynamic<std::string>(configurable_mod->output_port("configurable_output_x"), sink3);
     };
 
     m_pipeline->make_segment("EndToEnd_Segment", init_wrapper);
@@ -234,7 +234,7 @@ TEST_F(TestSegmentModules, ModuleAsSourceTest)
             VLOG(10) << "Sinking " << input << std::endl;
         });
 
-        builder.make_edge(source_mod->output_port("source"), sink);
+        builder.make_edge_dynamic<bool>(source_mod->output_port("source"), sink);
     };
 
     m_pipeline->make_segment("SimpleModule_Segment", init_wrapper);
@@ -273,7 +273,7 @@ TEST_F(TestSegmentModules, ModuleAsSinkTest)
 
         auto sink_mod = builder.make_module<SinkModule>("ModuleSinkTest_mod1");
 
-        builder.make_edge(source, sink_mod->input_port("sink"));
+        builder.make_edge_dynamic<bool>(source, sink_mod->input_port("sink"));
     };
 
     m_pipeline->make_segment("SimpleModule_Segment", init_wrapper);
@@ -334,7 +334,7 @@ TEST_F(TestSegmentModules, ModuleNestingTest)
             VLOG(10) << "Sinking " << input << std::endl;
         });
 
-        builder.make_edge(nested_mod->output_port("nested_module_output"), nested_sink);
+        builder.make_edge_dynamic<std::string>(nested_mod->output_port("nested_module_output"), nested_sink);
     };
 
     m_pipeline->make_segment("SimpleModule_Segment", init_wrapper);
@@ -378,7 +378,7 @@ TEST_F(TestSegmentModules, ModuleTemplateTest)
             VLOG(10) << "Sinking " << input << std::endl;
         });
 
-        builder.make_edge(source_1_mod->output_port("source"), sink_1);
+        builder.make_edge_dynamic<data_type_1_t>(source_1_mod->output_port("source"), sink_1);
 
         auto source_2_mod = builder.make_module<TemplateModule<data_type_2_t>>("ModuleTemplateTest_mod2", config_2);
 
@@ -387,7 +387,7 @@ TEST_F(TestSegmentModules, ModuleTemplateTest)
             VLOG(10) << "Sinking " << input << std::endl;
         });
 
-        builder.make_edge(source_2_mod->output_port("source"), sink_2);
+        builder.make_edge_dynamic<data_type_2_t>(source_2_mod->output_port("source"), sink_2);
     };
 
     m_pipeline->make_segment("SimpleModule_Segment", init_wrapper);
@@ -456,7 +456,7 @@ TEST_F(TestSegmentModules, ModuleTemplateWithInitTest)
             VLOG(10) << "Sinking " << input << std::endl;
         });
 
-        builder.make_edge(source_1_mod->output_port("source"), sink_1);
+        builder.make_edge_dynamic<data_type_1_t>(source_1_mod->output_port("source"), sink_1);
 
         auto source_2_mod = builder.make_module<TemplateWithInitModule<data_type_2_t, F_2>>(
             "ModuleTemplateWithInitTest_mod2",
@@ -468,7 +468,7 @@ TEST_F(TestSegmentModules, ModuleTemplateWithInitTest)
             VLOG(10) << "Sinking " << input << std::endl;
         });
 
-        builder.make_edge(source_2_mod->output_port("source"), sink_2);
+        builder.make_edge_dynamic<data_type_2_t>(source_2_mod->output_port("source"), sink_2);
     };
 
     m_pipeline->make_segment("SimpleModule_Segment", init_wrapper);

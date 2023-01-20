@@ -362,4 +362,18 @@ template<typename T>
 struct is_object<Object<T>> : public std::true_type {
 };
 
+template <typename T>
+inline constexpr bool is_object_v = is_object<T>::value;  // NOLINT
+
+template<typename T>
+struct is_object_shared_ptr : public std::false_type {
+};
+
+template<typename T>
+struct is_object_shared_ptr<std::shared_ptr<Object<T>>> : public std::true_type {
+};
+
+template <typename T>
+inline constexpr bool is_object_shared_ptr_v = is_object_shared_ptr<T>::value;  // NOLINT
+
 }  // namespace mrc::segment

@@ -441,7 +441,7 @@ TEST_F(TestSegment, RuntimeConversionValuesWorkAsExpected)
                                                          }));
 
         // Note: this will disable narrowing and fail:
-        //      segment.make_edge_dynamic<double, int, false>("convert_1_double", "convert_2_int");
+        //      segment.make_edge<double, int, false>("convert_1_double", "convert_2_int");
         segment.make_edge_dynamic<double, int>("convert_1_double", "convert_2_int");
 
         auto convert_3_sizet = segment.make_node<std::size_t, std::string>(

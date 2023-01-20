@@ -84,7 +84,7 @@ namespace mrc::modules {
         // TODO
         m_stream_buffer = builder.make_module<ImmediateStreamBufferModule<DataTypeT>>("test", {});
 
-        builder.make_edge(mirror_ingress, m_stream_buffer->input_port("input"));
+        builder.make_edge_dynamic<DataTypeT>(mirror_ingress, m_stream_buffer->input_port("input"));
 
         register_output_port("output", m_stream_buffer->output_port("output"));
     }

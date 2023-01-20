@@ -98,13 +98,13 @@ TEST_F(TestMirrorTapModule, SinglePipelineMirrorTapTest) {
                                                        });
 
         // mirror tap has an input and output port, and will create an egress port that can be attached to.
-        builder.make_edge(source, mirror_tap->input_port("input"));
+        builder.make_edge_dynamic<std::string>(source, mirror_tap->input_port("input"));
 
         auto sink = builder.make_sink<std::string>(test_name + "_main_sink", [&packets_main](std::string input) {
             packets_main++;
         });
 
-        builder.make_edge(mirror_tap->output_port("output"), sink);
+        builder.make_edge_dynamic<std::string>(mirror_tap->output_port("output"), sink);
     };
 
     auto init_wrapper_mirrored = [&packets_mirrored, &mirror_tap, &test_name](segment::Builder &builder) {
@@ -168,21 +168,21 @@ TEST_F(TestMirrorTapModule, SinglePipelineMultiInlineMirrorTapTest) {
                                                        });
 
         // mirror tap has an input and output port, and will create an egress port that can be attached to.
-        builder.make_edge(source, mirror_tap_one->input_port("input"));
+        builder.make_edge_dynamic<std::string>(source, mirror_tap_one->input_port("input"));
 
         auto internal = builder.make_node<std::string>(test_name + "_internal",
                                                        rxcpp::operators::map([](std::string input) {
                                                            return input;
                                                        }));
 
-        builder.make_edge(mirror_tap_one->output_port("output"), internal);
-        builder.make_edge(internal, mirror_tap_two->input_port("input"));
+        builder.make_edge_dynamic<std::string>(mirror_tap_one->output_port("output"), internal);
+        builder.make_edge_dynamic<std::string>(internal, mirror_tap_two->input_port("input"));
 
         auto sink = builder.make_sink<std::string>(test_name + "_main_sink", [&packets_main](std::string input) {
             packets_main++;
         });
 
-        builder.make_edge(mirror_tap_two->output_port("output"), sink);
+        builder.make_edge_dynamic<std::string>(mirror_tap_two->output_port("output"), sink);
     };
 
     auto multi_sink_mirror = std::make_shared<mrc::MultiSinkModule<std::string, 2>>(test_name + "_multi_sink_mirror");
@@ -192,8 +192,8 @@ TEST_F(TestMirrorTapModule, SinglePipelineMultiInlineMirrorTapTest) {
         auto mirror_ingress_two = builder.get_ingress<std::string>(mirror_tap_two->tap_egress_port_name());
 
         builder.init_module(multi_sink_mirror);
-        builder.make_edge(mirror_ingress_one, multi_sink_mirror->input_port("input_0"));
-        builder.make_edge(mirror_ingress_two, multi_sink_mirror->input_port("input_1"));
+        builder.make_edge_dynamic<std::string>(mirror_ingress_one, multi_sink_mirror->input_port("input_0"));
+        builder.make_edge_dynamic<std::string>(mirror_ingress_two, multi_sink_mirror->input_port("input_1"));
     };
 
     m_pipeline->make_segment("Main_Segment",
