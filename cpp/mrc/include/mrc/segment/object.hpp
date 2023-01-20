@@ -354,4 +354,12 @@ edge::IReadableProviderBase& Object<ObjectT>::readable_provider_base()
     return *base;
 }
 
+template<typename T>
+struct is_object : public std::false_type {
+};
+
+template<typename T>
+struct is_object<Object<T>> : public std::true_type {
+};
+
 }  // namespace mrc::segment

@@ -286,14 +286,6 @@ namespace mrc::segment {
             LOG(ERROR) << "Incorrect node types";
         }
 
-        template<typename T>
-        struct is_object : public std::false_type {
-        };
-
-        template<typename T>
-        struct is_object<Object<T>> : public std::true_type {
-        };
-
         /**
          * Partial dynamic edge construction:
          *
