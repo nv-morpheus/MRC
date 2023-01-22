@@ -18,8 +18,8 @@
 #include "mrc/segment/builder.hpp"
 
 #include "mrc/modules/module_registry.hpp"
-#include "mrc/modules/segment_modules.hpp"
 #include "mrc/modules/properties/persistent.hpp"
+#include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/port_registry.hpp"
 
 #include <nlohmann/json.hpp>
@@ -88,13 +88,14 @@ void Builder::init_module(sp_segment_module_t module)
     ns_pop();
 
     // TODO(Devin): Maybe a better way to do this with compile time type ledger.
-    if (std::dynamic_pointer_cast<modules::PersistentModule>(module) != nullptr) {
+    if (std::dynamic_pointer_cast<modules::PersistentModule>(module) != nullptr)
+    {
         VLOG(2) << "Registering persistent module -> '" << module->component_prefix() << "'";
         m_backend.add_module(module->component_prefix(), module);
     }
 }
 
-std::shared_ptr<mrc::modules::SegmentModule> Builder::load_module_from_registry(const std::string& module_id,
+[[maybe_unused]] std::shared_ptr<mrc::modules::SegmentModule> Builder::load_module_from_registry(const std::string& module_id,
                                                                                 const std::string& registry_namespace,
                                                                                 std::string module_name,
                                                                                 nlohmann::json config)
@@ -117,7 +118,7 @@ void Builder::ns_push(sp_segment_module_t module)
         std::accumulate(m_namespace_stack.begin(), m_namespace_stack.end(), std::string(""), ::accum_merge);
 }
 
-void Builder::ns_pop()
+[[maybe_unused]] void Builder::ns_pop()
 {
     m_module_stack.pop_back();
     m_namespace_stack.pop_back();
@@ -125,7 +126,7 @@ void Builder::ns_pop()
         std::accumulate(m_namespace_stack.begin(), m_namespace_stack.end(), std::string(""), ::accum_merge);
 }
 
-void Builder::register_module_input(std::string input_name, std::shared_ptr<segment::ObjectProperties> object)
+[[maybe_unused]] void Builder::register_module_input(std::string input_name, std::shared_ptr<segment::ObjectProperties> object)
 {
     if (m_module_stack.empty())
     {
@@ -141,7 +142,7 @@ void Builder::register_module_input(std::string input_name, std::shared_ptr<segm
     current_module->register_input_port(std::move(input_name), object);
 }
 
-void Builder::register_module_output(std::string output_name, std::shared_ptr<segment::ObjectProperties> object)
+[[maybe_unused]] void Builder::register_module_output(std::string output_name, std::shared_ptr<segment::ObjectProperties> object)
 {
     if (m_module_stack.empty())
     {
@@ -158,7 +159,7 @@ void Builder::register_module_output(std::string output_name, std::shared_ptr<se
     current_module->register_output_port(std::move(output_name), object);
 }
 
-nlohmann::json Builder::get_current_module_config()
+[[maybe_unused]] nlohmann::json Builder::get_current_module_config()
 {
     if (m_module_stack.empty())
     {
