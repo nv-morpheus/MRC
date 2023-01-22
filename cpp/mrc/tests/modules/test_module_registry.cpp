@@ -274,7 +274,7 @@ TEST_F(TestModuleRegistry, DynamicModuleRegistrationTest)
             VLOG(10) << "Sinking " << input << std::endl;
         });
 
-        builder.make_edge_dynamic<bool>(dynamic_source_mod->output_port("source"), sink);
+        builder.make_edge(dynamic_source_mod->output_port("source"), sink);
     };
 
     m_pipeline->make_segment("DynamicSourceModule_Segment", init_wrapper);

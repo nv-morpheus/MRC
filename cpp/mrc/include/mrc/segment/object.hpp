@@ -376,4 +376,32 @@ struct is_object_shared_ptr<std::shared_ptr<Object<T>>> : public std::true_type 
 template <typename T>
 inline constexpr bool is_object_shared_ptr_v = is_object_shared_ptr<T>::value;  // NOLINT
 
+struct object_null_type {
+    using source_type_t = std::nullptr_t;
+    using sink_type_t = std::nullptr_t;
+};
+
+template<typename T>
+struct object_shared_ptr_type {
+    using type_t = object_null_type;
+};
+
+template<typename T>
+struct object_shared_ptr_type<std::shared_ptr<Object<T>>> {
+    using type_t = T;
+};
+
+template <typename T, typename... Ts>
+struct FirstNonNullType {
+    using type_t = std::conditional_t<std::is_same<T, std::nullptr_t>::value,
+            typename FirstNonNullType<Ts...>::type_t,
+            T>;
+    static_assert(!std::is_same<type_t, void>::value, "All types passed are nullptr_t");
+};
+
+template <typename T>
+struct FirstNonNullType<T> {
+    using type_t = T;
+    static_assert(!std::is_same<type_t, void>::value, "All types passed are nullptr_t");
+};
 }  // namespace mrc::segment

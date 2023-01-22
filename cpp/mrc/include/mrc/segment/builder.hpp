@@ -152,8 +152,7 @@ namespace mrc::segment {
                     rxcpp::observable<>::create<SourceTypeT>(std::forward<CreateFnT>(create_fn)));
         }
 
-        template<typename SourceTypeT,
-                template<class, class = mrc::runnable::Context> class NodeTypeT = node::RxSource>
+        template<typename SourceTypeT, template<class, class = mrc::runnable::Context> class NodeTypeT = node::RxSource>
         auto make_source(std::string name, rxcpp::observable<SourceTypeT> obs) {
             return construct_object<NodeTypeT<SourceTypeT>>(name, obs);
         }
@@ -249,18 +248,62 @@ namespace mrc::segment {
                                                                                std::string module_name,
                                                                                nlohmann::json config = {});
 
-        template<typename SourceNodeTypeT, typename SinkNodeTypeT>
-        void make_edge(std::shared_ptr<Object<SourceNodeTypeT>> source, std::shared_ptr<Object<SinkNodeTypeT>> sink) {
+        template<typename SourceNodeTypeT=std::nullptr_t, typename SinkNodeTypeT=std::nullptr_t,
+                ObjectPropertiesRep SourceTypeT,
+                ObjectPropertiesRep SinkTypeT>
+        void make_edge(SourceTypeT source, SinkTypeT sink) {
             DVLOG(10) << "forming segment edge between two segment objects";
-            mrc::make_edge(source->object(), sink->object());
+            constexpr bool SourceIsObjectPointer = is_object_shared_ptr_v<SourceTypeT>;
+            constexpr bool SinkIsObjectPointer = is_object_shared_ptr_v<SinkTypeT>;
+
+            // Source and Sink are both Objects -- connect directly
+            if constexpr (SourceIsObjectPointer and SinkIsObjectPointer) {
+                mrc::make_edge(source->object(), sink->object());
+                return;
+            } else {
+                ObjectProperties &source_object = to_object_properties(source);
+                ObjectProperties &sink_object = to_object_properties(sink);
+
+                using deduced_source_type_node_t = FirstNonNullType<
+                        SourceNodeTypeT, // Explicit type hint
+                        typename object_shared_ptr_type<SourceTypeT>::type_t::source_type_t, // Deduced type (if possible)
+                        SinkNodeTypeT, // Fallback to Sink explicit type
+                        typename object_shared_ptr_type<SinkTypeT>::type_t::sink_type_t>::type_t; // Fallback to sink deduced type
+
+                using deduced_sink_type_node_t = FirstNonNullType<
+                        SinkNodeTypeT,
+                        typename object_shared_ptr_type<SinkTypeT>::type_t::sink_type_t,
+                        SourceNodeTypeT,
+                        typename object_shared_ptr_type<SourceTypeT>::type_t::source_type_t>::type_t;
+
+                VLOG(2) << "DEDUCED SOURCE TYPE: " <<
+                          mrc::boost_type_name<deduced_source_type_node_t>() << std::endl;
+
+                VLOG(2) << "DEDUCED SINK TYPE: " <<
+                    mrc::boost_type_name<deduced_sink_type_node_t>() << std::endl;
+
+                static_assert(!std::is_same_v<deduced_source_type_node_t, std::nullptr_t>);
+                static_assert(!std::is_same_v<deduced_sink_type_node_t , std::nullptr_t>);
+
+                // Source is object pointer, sink is not
+                if (source_object.is_writable_acceptor() && sink_object.is_writable_provider()) {
+                    mrc::make_edge(source_object.template writable_acceptor_typed<deduced_source_type_node_t>(),
+                                   sink_object.template writable_provider_typed<deduced_sink_type_node_t>());
+                    return;
+                }
+
+                if (source_object.is_readable_provider() && sink_object.is_readable_acceptor()) {
+                    mrc::make_edge(source_object.template readable_provider_typed<deduced_source_type_node_t>(),
+                                   sink_object.template readable_acceptor_typed<deduced_sink_type_node_t>());
+                    return;
+                }
+                LOG(ERROR) << "Incorrect node types";
+            }
         }
 
-        template<typename SourceNodeTypeT, typename SinkNodeTypeT=SourceNodeTypeT,
-                ObjectPropertiesRep SourceTypeT, ObjectPropertiesRep SinkTypeT>
-        void make_edge_dynamic(SourceTypeT source, SinkTypeT sink);
-
         template<typename EdgeDataTypeT>
-        void make_edge_tap(const std::string source, const std::string sink,
+        void make_edge_tap(const std::string source,
+                           const std::string sink,
                            std::shared_ptr<ObjectProperties> tap_input,
                            std::shared_ptr<ObjectProperties> tap_output);
 
@@ -335,76 +378,9 @@ namespace mrc::segment {
         return *object_properties_ptr;
     }
 
-    template<typename SourceNodeTypeT, typename SinkNodeTypeT,
-            ObjectPropertiesRep SourceTypeT, ObjectPropertiesRep SinkTypeT>
-    void Builder::make_edge_dynamic(SourceTypeT source, SinkTypeT sink) {
-        ObjectProperties &source_object = to_object_properties(source);
-        ObjectProperties &sink_object = to_object_properties(sink);
-
-        // ********* Special cases
-        // Source and Sink are both Objects
-        if constexpr (is_object_shared_ptr_v<SourceTypeT> && is_object_shared_ptr_v<SinkTypeT>) {
-            make_edge(source, sink);
-            return;
-        }
-
-        // Source is an Object
-        if constexpr (is_object_shared_ptr_v<SourceTypeT>) {
-            if constexpr (is_base_of_template<edge::IWritableAcceptor, SourceNodeTypeT>::value) {
-                if (sink->is_writable_provider()) {
-                    mrc::make_edge(source->object(),
-                                   sink_object.template writable_provider_typed<typename SourceNodeTypeT::source_type_t>());
-                    return;
-                }
-            }
-
-            if constexpr (is_base_of_template<edge::IReadableProvider, SourceNodeTypeT>::value) {
-                if (sink->is_readable_acceptor()) {
-                    mrc::make_edge(source->object(),
-                                   sink_object.template readable_acceptor_typed<typename SourceNodeTypeT::source_type_t>());
-                    return;
-                }
-            }
-        }
-
-        // Sink is an Object
-        if constexpr (is_object_shared_ptr_v<SinkTypeT>) {
-            if constexpr (is_base_of_template<edge::IWritableProvider, SinkNodeTypeT>::value) {
-                if (source->is_writable_acceptor()) {
-                    mrc::make_edge(
-                            source_object.template writable_acceptor_typed<typename SinkNodeTypeT::sink_type_t>(),
-                            sink->object());
-                    return;
-                }
-            }
-
-            if constexpr (is_base_of_template<edge::IReadableAcceptor, SinkNodeTypeT>::value) {
-                if (source->is_readable_provider()) {
-                    mrc::make_edge(
-                            source_object.template readable_provider_typed<typename SinkNodeTypeT::sink_type_t>(),
-                            sink->object());
-                    return;
-                }
-            }
-        }
-
-        if (source_object.is_writable_acceptor() && sink_object.is_writable_provider()) {
-            mrc::make_edge(source_object.template writable_acceptor_typed<SourceNodeTypeT>(),
-                           sink_object.template writable_provider_typed<SinkNodeTypeT>());
-            return;
-        }
-
-        if (source_object.is_readable_provider() && sink_object.is_readable_acceptor()) {
-            mrc::make_edge(source_object.template readable_provider_typed<SourceNodeTypeT>(),
-                           sink_object.template readable_acceptor_typed<SinkNodeTypeT>());
-            return;
-        }
-
-        LOG(ERROR) << "Incorrect node types";
-    }
-
     template<typename EdgeDataTypeT>
-    void Builder::make_edge_tap(const std::string source, const std::string sink,
+    void Builder::make_edge_tap(const std::string source,
+                                const std::string sink,
                                 std::shared_ptr<ObjectProperties> tap_input,
                                 std::shared_ptr<ObjectProperties> tap_output) {
         auto &source_object = m_backend.find_object(source);

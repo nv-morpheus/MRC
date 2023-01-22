@@ -60,7 +60,7 @@ namespace mrc::modules {
                 initializer(builder);
 
                 builder.init_module(m_stream);
-                builder.make_edge_dynamic<DataTypeT>(m_stream->output_port("output"), entry_point);
+                builder.make_edge<DataTypeT>(m_stream->output_port("output"), entry_point);
             };
         }
 

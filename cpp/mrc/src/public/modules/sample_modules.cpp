@@ -220,7 +220,7 @@ void NestedModule::initialize(segment::Builder& builder)
     // Create a data source and attach it to our submodule
     auto source1 = builder.make_module<SourceModule>("source", config);
 
-    builder.make_edge_dynamic<bool>(source1->output_port("source"),
+    builder.make_edge<bool>(source1->output_port("source"),
                                           configurable_mod->input_port("configurable_input_a"));
 
     // Register the submodules output as one of this module's outputs
