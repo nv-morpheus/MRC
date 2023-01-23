@@ -23,7 +23,6 @@
 #include "mrc/edge/edge_writable.hpp"
 #include "mrc/engine/segment/ibuilder.hpp"  // IWYU pragma: export
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/node/concepts/node_repr.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
@@ -32,8 +31,9 @@
 #include "mrc/runnable/context.hpp"
 #include "mrc/runnable/runnable.hpp"  // IWYU pragma: export
 #include "mrc/segment/component.hpp"  // IWYU pragma: export
-#include "mrc/segment/object.hpp"     // IWYU pragma: export
-#include "mrc/segment/runnable.hpp"   // IWYU pragma: export
+#include "mrc/segment/concepts/object_traits.hpp"
+#include "mrc/segment/object.hpp"    // IWYU pragma: export
+#include "mrc/segment/runnable.hpp"  // IWYU pragma: export
 #include "mrc/type_traits.hpp"
 #include "mrc/utils/macros.hpp"
 
@@ -260,11 +260,11 @@ class Builder final
 
     template <typename SourceNodeTypeT = std::nullptr_t,
               typename SinkNodeTypeT   = SourceNodeTypeT,
-              ObjectPropertiesRep SourceTypeT,
-              ObjectPropertiesRep SinkTypeT>
+              MRCObjectPropRepr SourceTypeT,
+              MRCObjectPropRepr SinkTypeT>
     void make_edge(SourceTypeT source, SinkTypeT sink);
 
-    template <typename EdgeDataTypeT, ObjectPropertiesRep TapInputReprT, ObjectPropertiesRep TapOutputReprT>
+    template <typename EdgeDataTypeT, MRCObjectPropRepr TapInputReprT, MRCObjectPropRepr TapOutputReprT>
     void make_edge_tap(std::string source, std::string sink, TapInputReprT tap_input, TapOutputReprT tap_output);
 
     template <typename ObjectT>
@@ -308,13 +308,13 @@ class Builder final
 
     void ns_pop();
 
-    template <ObjectPropertiesRep ObjectReprT>
+    template <MRCObjectPropRepr ObjectReprT>
     ObjectProperties& to_object_properties(ObjectReprT& repr);
 
     friend Definition;
 };
 
-template <ObjectPropertiesRep ObjectReprT>
+template <MRCObjectPropRepr ObjectReprT>
 ObjectProperties& Builder::to_object_properties(ObjectReprT& repr)
 {
     ObjectProperties* object_properties_ptr{nullptr};
@@ -354,7 +354,7 @@ ObjectProperties& Builder::to_object_properties(ObjectReprT& repr)
     return *object_properties_ptr;
 }
 
-template <typename SourceNodeTypeT, typename SinkNodeTypeT, ObjectPropertiesRep SourceTypeT, ObjectPropertiesRep SinkTypeT>
+template <typename SourceNodeTypeT, typename SinkNodeTypeT, MRCObjectPropRepr SourceTypeT, MRCObjectPropRepr SinkTypeT>
 void Builder::make_edge(SourceTypeT source, SinkTypeT sink)
 {
     DVLOG(10) << "forming segment edge between two segment objects";
@@ -392,7 +392,7 @@ void Builder::make_edge(SourceTypeT source, SinkTypeT sink)
     LOG(ERROR) << "Incompatible node types";
 }
 
-template <typename EdgeDataTypeT, ObjectPropertiesRep TapInputReprT, ObjectPropertiesRep TapOutputReprT>
+template <typename EdgeDataTypeT, MRCObjectPropRepr TapInputReprT, MRCObjectPropRepr TapOutputReprT>
 void Builder::make_edge_tap(const std::string source,
                             const std::string sink,
                             TapInputReprT tap_input,
