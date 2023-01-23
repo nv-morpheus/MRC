@@ -262,61 +262,10 @@ class Builder final
               typename SinkNodeTypeT   = std::nullptr_t,
               ObjectPropertiesRep SourceTypeT,
               ObjectPropertiesRep SinkTypeT>
-    void make_edge(SourceTypeT source, SinkTypeT sink)
-    {
-        DVLOG(10) << "forming segment edge between two segment objects";
-        constexpr bool SourceIsObjectPointer = is_object_shared_ptr_v<SourceTypeT>;
-        constexpr bool SinkIsObjectPointer   = is_object_shared_ptr_v<SinkTypeT>;
+    void make_edge(SourceTypeT source, SinkTypeT sink);
 
-        if constexpr (SourceIsObjectPointer and SinkIsObjectPointer)
-        {
-            mrc::make_edge(source->object(), sink->object());
-            return;
-        }
-        else
-        {
-            using source_shared_ptr_type_t = ObjectSharedPtrType<SourceTypeT>::type_t::source_type_t;
-            using sink_shared_ptr_type_t   = ObjectSharedPtrType<SinkTypeT>::type_t::sink_type_t;
-
-            ObjectProperties& source_object = to_object_properties(source);
-            ObjectProperties& sink_object   = to_object_properties(sink);
-
-            using deduced_source_type_node_t = FirstNonNullType<SourceNodeTypeT,           // Explicit type hint
-                                                                source_shared_ptr_type_t,  // Deduced type (if possible)
-                                                                SinkNodeTypeT,  // Fallback to Sink explicit type
-                                                                sink_shared_ptr_type_t>::type_t;  // Fallback to sink
-                                                                                                  // deduced type
-
-            using deduced_sink_type_node_t =
-                FirstNonNullType<SinkNodeTypeT, sink_shared_ptr_type_t, SourceNodeTypeT, source_shared_ptr_type_t>::type_t;
-
-            VLOG(2) << "DEDUCED SOURCE TYPE: " << mrc::boost_type_name<deduced_source_type_node_t>() << std::endl;
-
-            VLOG(2) << "DEDUCED SINK TYPE: " << mrc::boost_type_name<deduced_sink_type_node_t>() << std::endl;
-
-            if (source_object.is_writable_acceptor() && sink_object.is_writable_provider())
-            {
-                mrc::make_edge(source_object.template writable_acceptor_typed<deduced_source_type_node_t>(),
-                               sink_object.template writable_provider_typed<deduced_sink_type_node_t>());
-                return;
-            }
-
-            if (source_object.is_readable_provider() && sink_object.is_readable_acceptor())
-            {
-                mrc::make_edge(source_object.template readable_provider_typed<deduced_source_type_node_t>(),
-                               sink_object.template readable_acceptor_typed<deduced_sink_type_node_t>());
-                return;
-            }
-
-            LOG(ERROR) << "Incompatible node types";
-        }
-    }
-
-    template <typename EdgeDataTypeT>
-    void make_edge_tap(const std::string source,
-                       const std::string sink,
-                       std::shared_ptr<ObjectProperties> tap_input,
-                       std::shared_ptr<ObjectProperties> tap_output);
+    template <typename EdgeDataTypeT, ObjectPropertiesRep TapInputReprT, ObjectPropertiesRep TapOutputReprT>
+    void make_edge_tap(std::string source, std::string sink, TapInputReprT tap_input, TapOutputReprT tap_output);
 
     template <typename ObjectT>
     void add_throughput_counter(std::shared_ptr<segment::Object<ObjectT>> segment_object)
@@ -359,40 +308,45 @@ class Builder final
 
     void ns_pop();
 
-    template <ObjectPropertiesRep ObjectTypeT>
-    ObjectProperties& to_object_properties(ObjectTypeT& object);
+    template <ObjectPropertiesRep ObjectReprT>
+    ObjectProperties& to_object_properties(ObjectReprT& repr);
 
     friend Definition;
 };
 
-template <ObjectPropertiesRep ObjectTypeT>
-ObjectProperties& Builder::to_object_properties(ObjectTypeT& object)
+template <ObjectPropertiesRep ObjectReprT>
+ObjectProperties& Builder::to_object_properties(ObjectReprT& repr)
 {
     ObjectProperties* object_properties_ptr{nullptr};
-    if constexpr (is_shared_ptr_v<ObjectTypeT>)
+    if constexpr (is_shared_ptr_v<ObjectReprT>)
     {
-        if constexpr (is_object<typename ObjectTypeT::element_type>::value)
+        // SP to Object
+        if constexpr (is_object_v<typename ObjectReprT::element_type>)
         {
-            auto object_properties_ptr_props_ptr = std::dynamic_pointer_cast<ObjectProperties>(object);
+            auto object_properties_ptr_props_ptr = std::dynamic_pointer_cast<ObjectProperties>(repr);
             object_properties_ptr                = std::addressof(*object_properties_ptr_props_ptr);
         }
-        else if constexpr (std::is_same_v<std::remove_cv_t<std::remove_reference_t<ObjectTypeT>>,
+        // SP to ObjectProperties
+        else if constexpr (std::is_same_v<std::remove_cv_t<std::remove_reference_t<ObjectReprT>>,
                                           std::shared_ptr<ObjectProperties>>)
         {
-            object_properties_ptr = std::addressof(*object);
+            object_properties_ptr = std::addressof(*repr);
         }
     }
-    else if constexpr (is_object<ObjectTypeT>::value)
+    // Object
+    else if constexpr (is_object_v<ObjectReprT>)
     {
-        object_properties_ptr = std::addressof(dynamic_cast<ObjectProperties&>(object));
+        object_properties_ptr = std::addressof(dynamic_cast<ObjectProperties&>(repr));
     }
-    else if constexpr (std::is_same_v<std::remove_cv_t<std::remove_reference_t<ObjectTypeT>>, ObjectProperties>)
+    // ObjectProperties
+    else if constexpr (std::is_same_v<std::remove_cv_t<std::remove_reference_t<ObjectReprT>>, ObjectProperties>)
     {
-        object_properties_ptr = std::addressof(object);
+        object_properties_ptr = std::addressof(repr);
     }
+    // String-like lookup
     else
     {
-        object_properties_ptr = std::addressof(m_backend.find_object(object));
+        object_properties_ptr = std::addressof(m_backend.find_object(repr));
     }
 
     DCHECK(object_properties_ptr != nullptr) << "If this fails, something is wrong with the concept definition";
@@ -400,14 +354,52 @@ ObjectProperties& Builder::to_object_properties(ObjectTypeT& object)
     return *object_properties_ptr;
 }
 
-template <typename EdgeDataTypeT>
+template <typename SourceNodeTypeT, typename SinkNodeTypeT, ObjectPropertiesRep SourceTypeT, ObjectPropertiesRep SinkTypeT>
+void Builder::make_edge(SourceTypeT source, SinkTypeT sink)
+{
+    DVLOG(10) << "forming segment edge between two segment objects";
+    using source_shared_ptr_type_t = ObjectSharedPtrType<SourceTypeT>::type_t::source_type_t;  // Might be nullptr_t
+    using sink_shared_ptr_type_t   = ObjectSharedPtrType<SinkTypeT>::type_t::sink_type_t;      // Might be nullptr_t
+
+    auto& source_object = to_object_properties(source);
+    auto& sink_object   = to_object_properties(sink);
+
+    using deduced_source_type_t = FirstNonNullType<SourceNodeTypeT,                  // Explicit type hint
+                                                   source_shared_ptr_type_t,         // Deduced type (if possible)
+                                                   SinkNodeTypeT,                    // Fallback to Sink explicit hint
+                                                   sink_shared_ptr_type_t>::type_t;  // Fallback to sink
+                                                                                     // deduced type
+    using deduced_sink_type_t =
+        FirstNonNullType<SinkNodeTypeT, sink_shared_ptr_type_t, SourceNodeTypeT, source_shared_ptr_type_t>::type_t;
+
+    VLOG(2) << "Deduced source type: " << mrc::boost_type_name<deduced_source_type_t>() << std::endl;
+    VLOG(2) << "Deduced sink type: " << mrc::boost_type_name<deduced_sink_type_t>() << std::endl;
+
+    if (source_object.is_writable_acceptor() && sink_object.is_writable_provider())
+    {
+        mrc::make_edge(source_object.template writable_acceptor_typed<deduced_source_type_t>(),
+                       sink_object.template writable_provider_typed<deduced_sink_type_t>());
+        return;
+    }
+
+    if (source_object.is_readable_provider() && sink_object.is_readable_acceptor())
+    {
+        mrc::make_edge(source_object.template readable_provider_typed<deduced_source_type_t>(),
+                       sink_object.template readable_acceptor_typed<deduced_sink_type_t>());
+        return;
+    }
+
+    LOG(ERROR) << "Incompatible node types";
+}
+
+template <typename EdgeDataTypeT, ObjectPropertiesRep TapInputReprT, ObjectPropertiesRep TapOutputReprT>
 void Builder::make_edge_tap(const std::string source,
                             const std::string sink,
-                            std::shared_ptr<ObjectProperties> tap_input,
-                            std::shared_ptr<ObjectProperties> tap_output)
+                            TapInputReprT tap_input,
+                            TapOutputReprT tap_output)
 {
-    auto& source_object = m_backend.find_object(source);
-    auto& sink_object   = m_backend.find_object(sink);
+    auto& source_object = to_object_properties(source);
+    auto& sink_object   = to_object_properties(sink);
 
     CHECK(source_object.is_source()) << "Source object is not a source";
     CHECK(sink_object.is_sink()) << "Sink object is not a sink";
@@ -421,8 +413,8 @@ void Builder::make_edge_tap(const std::string source,
             CHECK(tap_output->is_writable_acceptor()) << "Tap output must be WritableAcceptor";
 
             // Cast our object into something we can insert as a tap.
-            auto& tap_input_writable_provider  = tap_input->writable_provider_typed<EdgeDataTypeT>();
-            auto& tap_output_writable_acceptor = tap_output->writable_acceptor_typed<EdgeDataTypeT>();
+            auto& tap_input_writable_provider  = tap_input->template writable_provider_typed<EdgeDataTypeT>();
+            auto& tap_output_writable_acceptor = tap_output->template writable_acceptor_typed<EdgeDataTypeT>();
 
             /*
              * In this case, the source object has accepted a writable edge from the sink.
@@ -440,7 +432,6 @@ void Builder::make_edge_tap(const std::string source,
              * [source[new_edge_handle]] -> [splice_node[old_edge_handle]] -> [sink]
              *
              */
-
             auto& source_acceptor    = source_object.writable_acceptor_typed<EdgeDataTypeT>();
             auto& source_edge_holder = dynamic_cast<edge::EdgeHolder<EdgeDataTypeT>&>(source_acceptor);
 
