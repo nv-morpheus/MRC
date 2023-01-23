@@ -259,7 +259,7 @@ class Builder final
                                                                            nlohmann::json config = {});
 
     template <typename SourceNodeTypeT = std::nullptr_t,
-              typename SinkNodeTypeT   = std::nullptr_t,
+              typename SinkNodeTypeT   = SourceNodeTypeT,
               ObjectPropertiesRep SourceTypeT,
               ObjectPropertiesRep SinkTypeT>
     void make_edge(SourceTypeT source, SinkTypeT sink);
