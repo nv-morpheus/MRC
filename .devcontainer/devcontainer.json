@@ -36,6 +36,7 @@
     "hostRequirements": {
         "gpu": true
     },
+    "initializeCommand": [ "./.devcontainer/init.sh" ],
     "mounts": [
         // Mount the necessary files for GDB pretty-printing to work
         "source=${localWorkspaceFolder}/.devcontainer/home/.gdbinit,target=/home/${localEnv:USER}/.gdbinit,type=bind",
