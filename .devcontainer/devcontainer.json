@@ -43,6 +43,9 @@
         // Mount the Github CLI config directory to allow using the Github CLI
         "source=${localEnv:HOME}/.config/gh,target=/home/${localEnv:USER}/.config/gh,type=bind",
     ],
+    "features": {
+        "ghcr.io/devcontainers/features/git-lfs": {}
+    },
     "name": "mrc-dev",
     "overrideCommand": true, // infinite loop of sleeps,
     "remoteUser": "${localEnv:USER}",
