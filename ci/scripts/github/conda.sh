@@ -19,7 +19,7 @@ set -e
 source ${WORKSPACE}/ci/scripts/github/common.sh
 
 # Its important that we are in the base environment for the build
-rapids-logger "Ensuring base environnment is active"
+rapids-logger "Activating Base Conda Environment"
 
 # update_conda_env
 
@@ -33,8 +33,10 @@ if [[ "${CONDA_DEFAULT_ENV}" != "base" ]]; then
    conda activate base
 fi
 
+# Print the info just to be sure base is active
 conda info
 
 rapids-logger "Building Conda Package"
 
+# Run the conda build and upload
 ${MRC_ROOT}/ci/conda/recipes/run_conda_build.sh
