@@ -25,6 +25,35 @@ namespace mrc::pymrc {
 
 namespace py = pybind11;
 
+/**
+ * @brief Count the number of positional args in a python function by looping
+     over the arguments ignoring keyword only parameters. This is
+     necessary for things like functools.partial which still keep the bound
+     keyword argument in the signature but make it keyword only.
+ */
+size_t count_positional_args(const pybind11::function& py_fn)
+{
+    pybind11::module_ inspect = pybind11::module_::import("inspect");
+
+    auto sig = inspect.attr("signature")(py_fn);
+
+    auto positional_only       = inspect.attr("Parameter").attr("POSITIONAL_ONLY");
+    auto positional_or_keyword = inspect.attr("Parameter").attr("POSITIONAL_OR_KEYWORD");
+
+    size_t positional_arg_count = 0;
+
+    // Loop over the arguments and determine the number of positional args.
+    for (const auto& param : sig.attr("parameters").attr("values")())
+    {
+        if (param.attr("kind").equal(positional_only) || param.attr("kind").equal(positional_or_keyword))
+        {
+            positional_arg_count++;
+        }
+    }
+
+    return positional_arg_count;
+}
+
 PyFuncWrapper::PyFuncWrapper(pybind11::function&& fn) : m_fn(std::move(fn))
 {
     // Save the name of the function to help debugging
@@ -82,14 +111,10 @@ OnNextFunction::cpp_fn_t OnNextFunction::build_cpp_function(pybind11::function&&
         };
     }
 
-    pybind11::module_ inspect = pybind11::module_::import("inspect");
+    // Count only the positional args since we cant push keyword args
+    auto positional_arg_count = count_positional_args(py_fn);
 
-    auto signature_fn = inspect.attr("signature");
-
-    // Get the number of args for the supplied function
-    auto number_of_args = pybind11::len(signature_fn(py_fn).attr("parameters"));
-
-    if (number_of_args == 0)
+    if (positional_arg_count == 0)
     {
         throw std::runtime_error(MRC_CONCAT_STR("Python on_next function '" << std::string(pybind11::str(py_fn))
                                                                             << "', must accept at least one argument"));
@@ -97,7 +122,7 @@ OnNextFunction::cpp_fn_t OnNextFunction::build_cpp_function(pybind11::function&&
     }
 
     // No need to unpack
-    if (number_of_args == 1)
+    if (positional_arg_count == 1)
     {
         // Return the base implementation
         return base_t::build_cpp_function(std::move(py_fn));
@@ -147,14 +172,10 @@ OnDataFunction::cpp_fn_t OnDataFunction::build_cpp_function(pybind11::function&&
                                                 << "', cannot be None since it returns a value"));
     }
 
-    pybind11::module_ inspect = pybind11::module_::import("inspect");
+    // Count only the positional args since we cant push keyword args
+    auto positional_arg_count = count_positional_args(py_fn);
 
-    auto signature_fn = inspect.attr("signature");
-
-    // Get the number of args for the supplied function
-    auto number_of_args = pybind11::len(signature_fn(py_fn).attr("parameters"));
-
-    if (number_of_args == 0)
+    if (positional_arg_count == 0)
     {
         throw std::runtime_error(MRC_CONCAT_STR("Python on_next function '" << std::string(pybind11::str(py_fn))
                                                                             << "', must accept at least one argument"));
@@ -162,7 +183,7 @@ OnDataFunction::cpp_fn_t OnDataFunction::build_cpp_function(pybind11::function&&
     }
 
     // No need to unpack
-    if (number_of_args == 1)
+    if (positional_arg_count == 1)
     {
         // Return the base implementation
         return base_t::build_cpp_function(std::move(py_fn));
