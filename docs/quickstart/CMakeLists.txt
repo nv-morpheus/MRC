@@ -35,7 +35,8 @@ rapids_cpm_init()
 set(OPTION_PREFIX "MRC")
 include(morpheus_utils/python/register_api)
 
-rapids_find_package(mrc REQUIRED)
+
+morpheus_utils_configure_mrc()
 rapids_find_package(CUDAToolkit REQUIRED)
 
 # To make it easier for CI to find output files, set the default executable suffix to .x if not set
