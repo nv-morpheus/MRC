@@ -20,6 +20,7 @@
 #include "pymrc/utilities/object_wrappers.hpp"
 
 #include <pybind11/detail/internals.h>
+
 #include <cstddef>
 
 namespace mrc::pymrc {
