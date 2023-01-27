@@ -21,15 +21,15 @@ source ${WORKSPACE}/ci/scripts/github/common.sh
 # Its important that we are in the base environment for the build
 rapids-logger "Activating Base Conda Environment"
 
-# update_conda_env
-
+# Deactivate any extra environments (There can be a few on the stack)
 while [[ "${CONDA_SHLVL:-0}" -gt 1 ]]; do
-   echo "Deactivating"
+   echo "Deactivating conda environment ${CONDA_DEFAULT_ENV}"
    conda deactivate
 done
 
+# Ensure at least base is activated
 if [[ "${CONDA_DEFAULT_ENV}" != "base" ]]; then
-   echo "Activating base"
+   echo "Activating base conda environment"
    conda activate base
 fi
 
@@ -39,4 +39,4 @@ conda info
 rapids-logger "Building Conda Package"
 
 # Run the conda build and upload
-${MRC_ROOT}/ci/conda/recipes/run_conda_build.sh
+${MRC_ROOT}/ci/conda/recipes/run_conda_build.sh upload
