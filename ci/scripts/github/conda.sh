@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-# SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,8 +18,25 @@ set -e
 
 source ${WORKSPACE}/ci/scripts/github/common.sh
 
-update_conda_env
+# Its important that we are in the base environment for the build
+rapids-logger "Activating Base Conda Environment"
+
+# Deactivate any extra environments (There can be a few on the stack)
+while [[ "${CONDA_SHLVL:-0}" -gt 1 ]]; do
+   echo "Deactivating conda environment ${CONDA_DEFAULT_ENV}"
+   conda deactivate
+done
+
+# Ensure at least base is activated
+if [[ "${CONDA_DEFAULT_ENV}" != "base" ]]; then
+   echo "Activating base conda environment"
+   conda activate base
+fi
+
+# Print the info just to be sure base is active
+conda info
 
 rapids-logger "Building Conda Package"
 
+# Run the conda build and upload
 ${MRC_ROOT}/ci/conda/recipes/run_conda_build.sh upload

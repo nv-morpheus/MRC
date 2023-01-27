@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import functools
+
 import pytest
 
 import mrc
@@ -347,8 +349,9 @@ def test_sink_function_options(single_segment_pipeline,
     assert on_completed_count == (1 if use_on_completed else 0)
 
 
+@pytest.mark.parametrize("use_partial", [True, False])
 @pytest.mark.parametrize("node_type", ["runnable", "component"])
-def test_node_function_unpacking(single_segment_pipeline, node_type: str):
+def test_node_function_unpacking(single_segment_pipeline, node_type: str, use_partial: bool):
 
     is_component = node_type == "component"
 
@@ -356,19 +359,27 @@ def test_node_function_unpacking(single_segment_pipeline, node_type: str):
     on_error_count = 0
     on_completed_count = 0
 
+    max_emissions = 5
+
     def segment_init(seg: mrc.Builder):
 
         def create_source():
             for s_idx, s in enumerate(["one", "two", "three"]):
                 for i in range(s_idx, 5):
-                    yield s, i + s_idx
+                    if (use_partial):
+                        yield s, i + s_idx
+                    else:
+                        yield s, i + s_idx, max_emissions
 
         source = seg.make_source("source", create_source())
 
-        def node_on_next(s: str, i: int):
+        def node_on_next(s: str, i: int, max_e: int):
 
             # Double both values
-            return s + s, i + i
+            return s + s, i + i, max_e
+
+        if (use_partial):
+            node_on_next = functools.partial(node_on_next, max_e=max_emissions)
 
         if (is_component):
             node = seg.make_node_component("node", ops.map(node_on_next))
@@ -377,13 +388,16 @@ def test_node_function_unpacking(single_segment_pipeline, node_type: str):
 
         seg.make_edge(source, node)
 
-        def on_next(s: str, i: int):
+        def on_next(s: str, i: int, max_e: int):
             nonlocal on_next_values
 
             if (s not in on_next_values):
                 on_next_values[s] = []
 
             on_next_values[s].append(i)
+
+            # Make sure this value is set
+            assert max_emissions == max_e
 
         def on_error(e):
             nonlocal on_error_count
@@ -411,8 +425,9 @@ def test_node_function_unpacking(single_segment_pipeline, node_type: str):
     assert on_completed_count == 1
 
 
+@pytest.mark.parametrize("use_partial", [True, False])
 @pytest.mark.parametrize("node_type", ["runnable", "component"])
-def test_sink_function_unpacking(single_segment_pipeline, node_type: str):
+def test_sink_function_unpacking(single_segment_pipeline, node_type: str, use_partial: bool):
 
     is_component = node_type == "component"
 
@@ -420,22 +435,30 @@ def test_sink_function_unpacking(single_segment_pipeline, node_type: str):
     on_error_count = 0
     on_completed_count = 0
 
+    max_emissions = 5
+
     def segment_init(seg: mrc.Builder):
 
         def create_source():
             for s_idx, s in enumerate(["one", "two", "three"]):
-                for i in range(s_idx, 5):
-                    yield s, i + s_idx
+                for i in range(s_idx, max_emissions):
+                    if (use_partial):
+                        yield s, i + s_idx
+                    else:
+                        yield s, i + s_idx, max_emissions
 
         source = seg.make_source("source", create_source())
 
-        def on_next(s: str, i: int):
+        def on_next(s: str, i: int, max_e: int):
             nonlocal on_next_values
 
             if (s not in on_next_values):
                 on_next_values[s] = []
 
             on_next_values[s].append(i)
+
+            # Make sure this value is set
+            assert max_emissions == max_e
 
         def on_error(e):
             nonlocal on_error_count
@@ -444,6 +467,9 @@ def test_sink_function_unpacking(single_segment_pipeline, node_type: str):
         def on_completed():
             nonlocal on_completed_count
             on_completed_count += 1
+
+        if (use_partial):
+            on_next = functools.partial(on_next, max_e=max_emissions)
 
         if (is_component):
             sink = seg.make_sink_component("sink", on_next, on_error, on_completed)

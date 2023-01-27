@@ -97,7 +97,12 @@ if [[ "${CONDA_COMMAND}" == "mambabuild" || "${CONDA_COMMAND}" == "build" ]]; th
 fi
 
 # Choose default variants
-CONDA_ARGS_ARRAY+=("--variants" "{python: 3.8}")
+if hasArg quick; then
+   # For quick build, just do most recent version of rapids
+   CONDA_ARGS_ARRAY+=("--variants" "{python: 3.8, rapids_version: 22.10}")
+else
+   CONDA_ARGS_ARRAY+=("--variants" "{python: 3.8}")
+fi
 
 # And default channels
 CONDA_ARGS_ARRAY+=("-c" "rapidsai" "-c" "nvidia" "-c" "conda-forge" "-c" "main")
