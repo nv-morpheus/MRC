@@ -78,7 +78,7 @@ Some options:
 #### Clone MRC repository
 ```bash
 export MRC_HOME=$(pwd)/mrc
-git clone git@github.com:nv-morpheus/mrc.git $MRC_HOME
+git clone --recurse-submodules git@github.com:nv-morpheus/mrc.git $MRC_HOME
 cd $MRC_HOME
 ```
 
