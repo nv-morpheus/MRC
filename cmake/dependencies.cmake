@@ -32,7 +32,7 @@ rapids_find_package(CUDAToolkit
 # =====
 # - Use static linking to avoid issues with system-wide installations of Boost.
 # - Use numa=on to ensure the numa component of fiber gets built
-morpheus_utils_configure_boost_boost_cmake()
+morpheus_utils_configure_boost()
 
 # UCX
 # ===
