@@ -40,10 +40,6 @@ morpheus_utils_configure_ucx()
 # =====
 morpheus_utils_configure_hwloc()
 
-# expected
-# ========
-morpheus_utils_configure_tl_expected()
-
 # NVIDIA RAPIDS RMM
 # =================
 morpheus_utils_configure_rmm()
