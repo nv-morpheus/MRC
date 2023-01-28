@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "mrc/channel/status.hpp"  // IWYU pragma: export
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/edge/edge_readable.hpp"
 #include "mrc/node/forward.hpp"
