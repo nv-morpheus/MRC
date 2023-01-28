@@ -18,6 +18,7 @@
 #pragma once
 
 #include "mrc/channel/ingress.hpp"
+#include "mrc/channel/status.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/type_traits.hpp"
@@ -28,6 +29,21 @@
 #include <typeindex>
 
 namespace mrc::node {
+
+template <typename T>
+class NullWritableEdge : public edge::IEdgeWritable<T>
+{
+  public:
+    virtual ~NullWritableEdge() = default;
+
+    channel::Status await_write(T&& t) override
+    {
+        // Move to a new object and then let it go out of scope
+        T dummy = std::move(t);
+
+        return channel::Status::success;
+    }
+};
 
 /**
  * @brief Type erased base class for the formation of all edges to a source
@@ -94,6 +110,12 @@ class SourceProperties : public edge::EdgeHolder<T>, public SourcePropertiesBase
     }
 
   protected:
+    SourceProperties()
+    {
+        // Set the default edge to be a null one in case no connection is made
+        this->init_connected_edge(std::make_shared<NullWritableEdge<T>>());
+    }
+
     std::shared_ptr<edge::IEdgeWritable<T>> get_writable_edge() const
     {
         return std::dynamic_pointer_cast<edge::IEdgeWritable<T>>(this->get_connected_edge());

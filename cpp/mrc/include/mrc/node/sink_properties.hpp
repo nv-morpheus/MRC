@@ -18,14 +18,30 @@
 #pragma once
 
 #include "mrc/edge/edge_builder.hpp"
+#include "mrc/edge/edge_readable.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/type_traits.hpp"
 #include "mrc/utils/type_utils.hpp"
 
 #include <memory>
+#include <stdexcept>
 #include <typeindex>
 
 namespace mrc::node {
+
+template <typename T>
+class NullReadableEdge : public edge::IEdgeReadable<T>
+{
+  public:
+    virtual ~NullReadableEdge() = default;
+
+    channel::Status await_read(T& t) override
+    {
+        throw std::runtime_error("Attempting to read from a null edge. Ensure an edge was established for all sinks.");
+
+        return channel::Status::error;
+    }
+};
 
 /**
  * @brief Type erased base class for the formation of all edges to a sink
@@ -92,6 +108,12 @@ class SinkProperties : public edge::EdgeHolder<T>, public SinkPropertiesBase
     }
 
   protected:
+    SinkProperties()
+    {
+        // Set the default edge to be a null one in case no connection is made
+        this->init_connected_edge(std::make_shared<NullReadableEdge<T>>());
+    }
+
     std::shared_ptr<edge::IEdgeReadable<T>> get_readable_edge() const
     {
         return std::dynamic_pointer_cast<edge::IEdgeReadable<T>>(this->get_connected_edge());

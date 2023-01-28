@@ -786,6 +786,24 @@ TEST_F(TestEdges, CombineLatest)
     sink->run();
 }
 
+TEST_F(TestEdges, SourceToNull)
+{
+    auto source = std::make_shared<node::TestSource<int>>();
+
+    source->run();
+}
+
+TEST_F(TestEdges, SourceToNodeToNull)
+{
+    auto source = std::make_shared<node::TestSource<int>>();
+    auto node   = std::make_shared<node::TestNode<int>>();
+
+    mrc::make_edge(*source, *node);
+
+    source->run();
+    node->run();
+}
+
 TEST_F(TestEdges, CreateAndDestroy)
 {
     {

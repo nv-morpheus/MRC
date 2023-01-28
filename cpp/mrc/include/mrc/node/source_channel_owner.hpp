@@ -53,11 +53,14 @@ class SourceChannelOwner : public virtual SourceProperties<T>
         auto channel_reader = edge_channel.get_reader();
         auto channel_writer = edge_channel.get_writer();
 
-        SourceProperties<T>::init_owned_edge(channel_reader);
+        channel_reader->add_connector([this, channel_writer]() {
+            // Finally, set the other half as the connected edge to allow writers the ability to push to the channel.
+            // Only do this after a full connection has been made to avoid writing to a channel that will never be
+            // read from.
+            SourceProperties<T>::init_connected_edge(channel_writer);
+        });
 
-        // Finally, set the other half to the connected edge to allow using the channel without it being deleted. If
-        // make_edge_connection() is called, then this will be overwritten
-        SourceProperties<T>::init_connected_edge(channel_writer);
+        SourceProperties<T>::init_owned_edge(channel_reader);
     }
 };
 
