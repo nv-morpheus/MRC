@@ -19,7 +19,6 @@
 
 #include "mrc/channel/buffered_channel.hpp"  // IWYU pragma: keep
 #include "mrc/channel/forward.hpp"
-#include "mrc/channel/status.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/edge/edge_channel.hpp"
 #include "mrc/edge/edge_readable.hpp"

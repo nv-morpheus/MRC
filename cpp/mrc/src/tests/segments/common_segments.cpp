@@ -17,7 +17,6 @@
 
 #include "../nodes/common_nodes.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/segment/builder.hpp"

@@ -22,7 +22,6 @@
 #include "pymrc/utilities/acquire_gil.hpp"
 #include "pymrc/utils.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/edge/edge_connector.hpp"
 #include "mrc/node/rx_sink_base.hpp"
 #include "mrc/node/rx_source_base.hpp"
