@@ -25,7 +25,6 @@
 #include "pymrc/utilities/function_wrappers.hpp"
 #include "pymrc/utils.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/port_registry.hpp"
 #include "mrc/node/rx_sink_base.hpp"

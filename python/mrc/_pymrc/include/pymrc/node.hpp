@@ -337,22 +337,6 @@ class PythonNode : public node::RxNode<InputT, OutputT, ContextT>,
             });
         };
     }
-
-  private:
-    channel::Status no_channel(OutputT&& data)
-    {
-        if constexpr (pybind11::detail::is_pyobject<OutputT>::value)
-        {
-            pybind11::gil_scoped_acquire gil;
-            OutputT tmp = std::move(data);
-        }
-        else
-        {
-            OutputT tmp = std::move(data);
-        }
-
-        return channel::Status::success;
-    }
 };
 
 template <typename InputT, typename OutputT>

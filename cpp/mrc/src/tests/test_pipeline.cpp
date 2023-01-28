@@ -28,7 +28,6 @@
 #include "internal/utils/collision_detector.hpp"
 
 #include "mrc/channel/channel.hpp"
-#include "mrc/channel/status.hpp"
 #include "mrc/core/addresses.hpp"
 #include "mrc/core/executor.hpp"
 #include "mrc/data/reusable_pool.hpp"

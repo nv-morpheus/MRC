@@ -106,7 +106,12 @@ def assert_node_counts(actual: dict, expected: dict):
     pass
 
 
-def add_source(seg: mrc.Builder, is_cpp: bool, data_type: type, is_component: bool, suffix: str = ""):
+def add_source(seg: mrc.Builder,
+               is_cpp: bool,
+               data_type: type,
+               is_component: bool,
+               suffix: str = "",
+               msg_count: int = 5):
     global node_counts, expected_node_counts
 
     prefix = "SourceComponent" if is_component else "Source"
@@ -114,20 +119,20 @@ def add_source(seg: mrc.Builder, is_cpp: bool, data_type: type, is_component: bo
     node_name = node_type + suffix
 
     expected_node_counts.update({
-        f"{node_name}.on_next": 5,
+        f"{node_name}.on_next": msg_count,
         f"{node_name}.on_error": 0,
         f"{node_name}.on_completed": 1,
     })
 
     if (is_cpp):
-        return getattr(m, node_type)(seg, node_name, node_counts)
+        return getattr(m, node_type)(seg, node_name, node_counts, msg_count=msg_count)
     else:
         init_node_counter(f"{node_name}.on_next")
         init_node_counter(f"{node_name}.on_error")
         init_node_counter(f"{node_name}.on_completed")
 
         def source_fn():
-            for _ in range(5):
+            for _ in range(msg_count):
                 increment_node_counter(f"{node_name}.on_next")
                 yield data_type()
             increment_node_counter(f"{node_name}.on_completed")
@@ -138,14 +143,19 @@ def add_source(seg: mrc.Builder, is_cpp: bool, data_type: type, is_component: bo
             return seg.make_source(node_name, source_fn())
 
 
-def add_node(seg: mrc.Builder, upstream: mrc.SegmentObject, is_cpp: bool, data_type: type, is_component: bool):
+def add_node(seg: mrc.Builder,
+             upstream: mrc.SegmentObject,
+             is_cpp: bool,
+             data_type: type,
+             is_component: bool,
+             msg_count: int = 5):
     global node_counts, expected_node_counts
 
     prefix = "NodeComponent" if is_component else "Node"
     node_name = prefix + data_type.__name__
 
     expected_node_counts.update({
-        f"{node_name}.on_next": 5,
+        f"{node_name}.on_next": msg_count,
         f"{node_name}.on_error": 0,
         f"{node_name}.on_completed": 1,
     })
@@ -153,7 +163,7 @@ def add_node(seg: mrc.Builder, upstream: mrc.SegmentObject, is_cpp: bool, data_t
     node = None
 
     if (is_cpp):
-        node = getattr(m, node_name)(seg, node_name, node_counts)
+        node = getattr(m, node_name)(seg, node_name, node_counts, msg_count=msg_count)
     else:
         init_node_counter(f"{node_name}.on_next")
         init_node_counter(f"{node_name}.on_error")
@@ -184,6 +194,7 @@ def add_sink(seg: mrc.Builder,
              data_type: type,
              is_component: bool,
              suffix: str = "",
+             count: int = 5,
              expected_vals_fn: typing.Callable[[typing.Dict[str, int]], typing.Dict[str, int]] = None):
     global node_counts, expected_node_counts
 
@@ -192,7 +203,7 @@ def add_sink(seg: mrc.Builder,
     node_name = node_type + suffix
 
     expected_orig = {
-        "on_next": 5,
+        "on_next": count,
         "on_error": 0,
         "on_completed": 1,
     }
@@ -406,7 +417,7 @@ def test_source_to_node_to_sink(run_segment,
     assert results == expected_node_counts
 
 
-def fail_fn_test_source_to_broadcast_to_sinks(combo: typing.Tuple[type, type, type]):
+def fail_if_more_derived_type(combo: typing.Tuple):
 
     for prev_type, cur_type in zip(combo[0::1], combo[1::1]):
         if (not issubclass(prev_type, cur_type)):
@@ -424,7 +435,7 @@ def fail_fn_test_source_to_broadcast_to_sinks(combo: typing.Tuple[type, type, ty
                          gen_parameters("source",
                                         "sink1",
                                         "sink2",
-                                        is_fail_fn=fail_fn_test_source_to_broadcast_to_sinks,
+                                        is_fail_fn=fail_if_more_derived_type,
                                         values={
                                             "base": m.Base, "derived": m.DerivedA
                                         }))
@@ -453,7 +464,7 @@ def test_source_to_broadcast_to_sinks(run_segment,
 @pytest.mark.parametrize("sink1_component,sink2_component",
                          gen_parameters("sink1", "sink2", is_fail_fn=lambda x: False))
 @pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
-@pytest.mark.parametrize("sink1_cpp", [True, False], ids=["sink1_cpp", "sink2_py"])
+@pytest.mark.parametrize("sink1_cpp", [True, False], ids=["sink1_cpp", "sink1_py"])
 @pytest.mark.parametrize("sink2_cpp", [True, False], ids=["sink2_cpp", "sink2_py"])
 def test_multi_source_to_broadcast_to_multi_sink(run_segment,
                                                  sink1_component: bool,
@@ -486,6 +497,62 @@ def test_multi_source_to_broadcast_to_multi_sink(run_segment,
                  is_component=sink2_component,
                  suffix="2",
                  expected_vals_fn=double_on_next)
+
+    results = run_segment(segment_init)
+
+    assert results == expected_node_counts
+
+
+@pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
+@pytest.mark.parametrize("source_type",
+                         gen_parameters("source",
+                                        is_fail_fn=lambda _: False,
+                                        values={
+                                            "base": m.Base, "derived": m.DerivedA
+                                        }))
+def test_source_to_null(run_segment, source_cpp: bool, source_type: type):
+
+    def segment_init(seg: mrc.Builder):
+
+        # Add a large enough count to fill a buffered channel
+        add_source(seg, is_cpp=source_cpp, data_type=source_type, is_component=False, msg_count=500)
+
+    results = run_segment(segment_init)
+
+    assert results == expected_node_counts
+
+
+@pytest.mark.parametrize("source_cpp,node_cpp",
+                         gen_parameters("source", "node", is_fail_fn=lambda _: False, values={
+                             "cpp": True, "py": False
+                         }))
+@pytest.mark.parametrize("source_type,node_type",
+                         gen_parameters("source",
+                                        "node",
+                                        is_fail_fn=fail_if_more_derived_type,
+                                        values={
+                                            "base": m.Base, "derived": m.DerivedA
+                                        }))
+@pytest.mark.parametrize("source_component,node_component",
+                         gen_parameters("source",
+                                        "node",
+                                        is_fail_fn=lambda x: x[0] and x[1],
+                                        values={
+                                            "run": False, "com": True
+                                        }))
+def test_source_to_node_to_null(run_segment,
+                                source_cpp: bool,
+                                node_cpp: bool,
+                                source_type: type,
+                                node_type: type,
+                                source_component: bool,
+                                node_component: bool):
+
+    def segment_init(seg: mrc.Builder):
+
+        # Add a large enough count to fill a buffered channel
+        source = add_source(seg, is_cpp=source_cpp, data_type=source_type, is_component=source_component, msg_count=500)
+        add_node(seg, source, is_cpp=node_cpp, data_type=node_type, is_component=node_component, msg_count=500)
 
     results = run_segment(segment_init)
 
