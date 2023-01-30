@@ -473,7 +473,6 @@ std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::uni
         auto segment_name = m_backend.name() + "/" + name;
         auto segment_node = std::make_shared<Runnable<ObjectT>>(segment_name, std::move(node));
 
-        std::cerr << "Adding Object: " << name << std::endl << std::flush;
         m_backend.add_runnable(name, segment_node);
         m_backend.add_object(name, segment_node);
         segment_object = segment_node;
@@ -481,7 +480,6 @@ std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::uni
     else
     {
         auto segment_node = std::make_shared<Component<ObjectT>>(std::move(node));
-        std::cerr << "Adding Object: " << name << std::endl << std::flush;
         m_backend.add_object(name, segment_node);
         segment_object = segment_node;
     }

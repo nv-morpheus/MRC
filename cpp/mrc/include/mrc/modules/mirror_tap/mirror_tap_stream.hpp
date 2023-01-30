@@ -48,15 +48,10 @@ namespace mrc::modules {
         std::string module_type_name() const override;
 
     private:
-        static std::atomic<unsigned int> s_tap_id;
-
         std::shared_ptr<ImmediateStreamBufferModule<DataTypeT>> m_stream_buffer;
 
         std::string m_ingress_name;
     };
-
-    template<typename DataTypeT>
-    std::atomic<unsigned int> MirrorTapStreamModule<DataTypeT>::s_tap_id{0};
 
     template<typename DataTypeT>
     MirrorTapStreamModule<DataTypeT>::MirrorTapStreamModule(std::string module_name)

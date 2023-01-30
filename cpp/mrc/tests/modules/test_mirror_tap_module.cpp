@@ -32,7 +32,8 @@
 
 using namespace mrc;
 
-TEST_F(TestMirrorTapModule, ConstructorTest) {
+TEST_F(TestMirrorTapModule, ConstructorTest)
+{
     using namespace modules;
 
     auto config = nlohmann::json();
@@ -40,26 +41,59 @@ TEST_F(TestMirrorTapModule, ConstructorTest) {
     auto mod1 = MirrorTapModule<std::string>("mirror_tap", config);
 }
 
-TEST_F(TestMirrorTapModule, PortNamingTest) {
+TEST_F(TestMirrorTapModule, PortNamingTest)
+{
     // Test default constructor
     mrc::modules::MirrorTapModule<int> module1{"module1"};
     EXPECT_EQ(module1.tap_egress_port_name(), "mirror_tap_source_0");
 
     // Test constructor with config
-    nlohmann::json config;
-    mrc::modules::MirrorTapModule<int> module2{"module2", config};
+    nlohmann::json config1;
+    mrc::modules::MirrorTapModule<int> module2{"module2", config1};
     EXPECT_EQ(module2.tap_egress_port_name(), "mirror_tap_source_1");
+
+    // Test constructor with config
+    nlohmann::json config2{{"tap_id_override", "mirror_tap_override"}};
+    mrc::modules::MirrorTapModule<int> module3{"module3", config2};
+    EXPECT_EQ(module3.tap_egress_port_name(), "mirror_tap_override");
 }
 
-TEST_F(TestMirrorTapModule, InitailizationTest) {
+TEST_F(TestMirrorTapModule, InitailizationTest)
+{
     using namespace modules;
+    const std::string test_name{"InitializationTest"};
 
-    auto init_wrapper = [](segment::Builder &builder) {
-        auto config = nlohmann::json();
-        auto mirror_tap = builder.make_module<MirrorTapModule<std::string>>("mirror_tap", config);
+    auto config = nlohmann::json();
+
+    auto mirror_tap        = std::make_shared<MirrorTapModule<std::string>>(test_name + "_mirror_tap", config);
+    auto init_wrapper_main = [&mirror_tap, &test_name](segment::Builder& builder) {
+        builder.init_module(mirror_tap);
+
+        auto source = builder.make_source<std::string>(test_name + "_main_source",
+                                                       [](rxcpp::subscriber<std::string>& sub) {});
+
+        // mirror tap has an input and output port, and will create an egress port that can be attached to.
+        builder.make_edge(source, mirror_tap->input_port("input"));
+
+        auto sink = builder.make_sink<std::string>(test_name + "_main_sink", [](std::string input) {});
+
+        builder.make_edge(mirror_tap->output_port("output"), sink);
     };
 
-    m_pipeline->make_segment("Initialization_Segment", init_wrapper);
+    auto init_wrapper_mirrored = [&mirror_tap, &test_name](segment::Builder& builder) {
+        auto mirror_ingress = builder.get_ingress<std::string>(mirror_tap->tap_egress_port_name());
+        auto mirror_sink    = builder.make_sink<std::string>(test_name + "_mirror_sink", [](std::string input) {});
+
+        builder.make_edge(mirror_ingress, mirror_sink);
+    };
+
+    m_pipeline->make_segment("Main_Segment",
+                             segment::EgressPorts<std::string>({mirror_tap->tap_egress_port_name()}),
+                             init_wrapper_main);
+
+    m_pipeline->make_segment("Mirror_Segment",
+                             segment::IngressPorts<std::string>({mirror_tap->tap_egress_port_name()}),
+                             init_wrapper_mirrored);
 
     auto options = std::make_shared<Options>();
     options->topology().user_cpuset("0-1");
@@ -67,11 +101,15 @@ TEST_F(TestMirrorTapModule, InitailizationTest) {
 
     Executor executor(options);
     executor.register_pipeline(std::move(m_pipeline));
-    executor.stop();
+    executor.start();
     executor.join();
+
+    EXPECT_EQ(mirror_tap->input_ports().size(), 1u);
+    EXPECT_EQ(mirror_tap->output_ports().size(), 1u);
 }
 
-TEST_F(TestMirrorTapModule, SinglePipelineMirrorTapTest) {
+TEST_F(TestMirrorTapModule, SinglePipelineMirrorTapTest)
+{
     using namespace modules;
     const std::string test_name{"SinglePipelineMirrorTapTest"};
 
@@ -81,13 +119,14 @@ TEST_F(TestMirrorTapModule, SinglePipelineMirrorTapTest) {
 
     auto config = nlohmann::json();
 
-    auto mirror_tap = std::make_shared<MirrorTapModule<std::string>>(test_name + "_mirror_tap", config);
-    auto init_wrapper_main = [&packets_main, &mirror_tap, &test_name](segment::Builder &builder) {
+    auto mirror_tap        = std::make_shared<MirrorTapModule<std::string>>(test_name + "_mirror_tap", config);
+    auto init_wrapper_main = [&packets_main, &mirror_tap, &test_name](segment::Builder& builder) {
         builder.init_module(mirror_tap);
 
         auto source = builder.make_source<std::string>(test_name + "_main_source",
-                                                       [](rxcpp::subscriber<std::string> &sub) {
-                                                           if (sub.is_subscribed()) {
+                                                       [](rxcpp::subscriber<std::string>& sub) {
+                                                           if (sub.is_subscribed())
+                                                           {
                                                                sub.on_next("one");
                                                                sub.on_next("two");
                                                                sub.on_next("three");
@@ -107,15 +146,14 @@ TEST_F(TestMirrorTapModule, SinglePipelineMirrorTapTest) {
         builder.make_edge(mirror_tap->output_port("output"), sink);
     };
 
-    auto init_wrapper_mirrored = [&packets_mirrored, &mirror_tap, &test_name](segment::Builder &builder) {
+    auto init_wrapper_mirrored = [&packets_mirrored, &mirror_tap, &test_name](segment::Builder& builder) {
         auto mirror_ingress = builder.get_ingress<std::string>(mirror_tap->tap_egress_port_name());
-        auto mirror_sink = builder.make_sink<std::string>(test_name + "_mirror_sink",
+        auto mirror_sink    = builder.make_sink<std::string>(test_name + "_mirror_sink",
                                                           [&packets_mirrored](std::string input) {
                                                               packets_mirrored++;
                                                           });
 
         builder.make_edge(mirror_ingress, mirror_sink);
-
     };
 
     m_pipeline->make_segment("Main_Segment",
@@ -139,7 +177,16 @@ TEST_F(TestMirrorTapModule, SinglePipelineMirrorTapTest) {
     EXPECT_EQ(packets_mirrored, 4);
 }
 
-TEST_F(TestMirrorTapModule, SinglePipelineMultiInlineMirrorTapTest) {
+/**
+ * Test this configuration:
+ *
+ * Segment 0: [ Source ] -- [ MirrorTap1 ] -- [ internal ] -- [ MirrorTap2 ] --[ Sink ]
+ *                                        \                                 \
+ * Segment 1:                              -  [ MirrorSink1]                 \
+ * Segment 2:                                                                 - [ MirrorSink2 ]
+ */
+TEST_F(TestMirrorTapModule, SinglePipelineMultiInlineMirrorTapTest)
+{
     using namespace modules;
     const std::string test_name{"SinglePipelineMultiInlineMirrorTapTest"};
 
@@ -151,13 +198,14 @@ TEST_F(TestMirrorTapModule, SinglePipelineMultiInlineMirrorTapTest) {
     auto mirror_tap_one = std::make_shared<MirrorTapModule<std::string>>(test_name + "_mirror_tap_one", config);
     auto mirror_tap_two = std::make_shared<MirrorTapModule<std::string>>(test_name + "_mirror_tap_two", config);
 
-    auto init_wrapper_main = [&packets_main, &mirror_tap_one, &mirror_tap_two, &test_name](segment::Builder &builder) {
+    auto init_wrapper_main = [&packets_main, &mirror_tap_one, &mirror_tap_two, &test_name](segment::Builder& builder) {
         builder.init_module(mirror_tap_one);
         builder.init_module(mirror_tap_two);
 
         auto source = builder.make_source<std::string>(test_name + "_main_source",
-                                                       [](rxcpp::subscriber<std::string> &sub) {
-                                                           if (sub.is_subscribed()) {
+                                                       [](rxcpp::subscriber<std::string>& sub) {
+                                                           if (sub.is_subscribed())
+                                                           {
                                                                sub.on_next("one");
                                                                sub.on_next("two");
                                                                sub.on_next("three");
@@ -185,26 +233,36 @@ TEST_F(TestMirrorTapModule, SinglePipelineMultiInlineMirrorTapTest) {
         builder.make_edge(mirror_tap_two->output_port("output"), sink);
     };
 
-    auto multi_sink_mirror = std::make_shared<mrc::MultiSinkModule<std::string, 2>>(test_name + "_multi_sink_mirror");
-    auto init_wrapper_mirrored = [&mirror_tap_one, &mirror_tap_two, &multi_sink_mirror](
-            segment::Builder &builder) {
+    auto multi_sink_mirror_one     = std::make_shared<mrc::MultiSinkModule<std::string, 1>>(test_name +
+                                                                                        "_multi_sink_mirror_1");
+    auto init_wrapper_mirrored_one = [&mirror_tap_one, &multi_sink_mirror_one, test_name](segment::Builder& builder) {
         auto mirror_ingress_one = builder.get_ingress<std::string>(mirror_tap_one->tap_egress_port_name());
+
+        builder.init_module(multi_sink_mirror_one);
+        builder.make_edge(mirror_ingress_one, multi_sink_mirror_one->input_port("input_0"));
+    };
+
+    auto multi_sink_mirror_two     = std::make_shared<mrc::MultiSinkModule<std::string, 1>>(test_name +
+                                                                                        "_multi_sink_mirror_2");
+    auto init_wrapper_mirrored_two = [&mirror_tap_two, &multi_sink_mirror_two, test_name](segment::Builder& builder) {
         auto mirror_ingress_two = builder.get_ingress<std::string>(mirror_tap_two->tap_egress_port_name());
 
-        builder.init_module(multi_sink_mirror);
-        builder.make_edge(mirror_ingress_one, multi_sink_mirror->input_port("input_0"));
-        builder.make_edge(mirror_ingress_two, multi_sink_mirror->input_port("input_1"));
+        builder.init_module(multi_sink_mirror_two);
+        builder.make_edge(mirror_ingress_two, multi_sink_mirror_two->input_port("input_0"));
     };
 
     m_pipeline->make_segment("Main_Segment",
-                             segment::EgressPorts<std::string, std::string>({mirror_tap_one->tap_egress_port_name(),
-                                                                             mirror_tap_two->tap_egress_port_name()}),
+                             segment::EgressPorts<std::string, std::string>(
+                                 {mirror_tap_one->tap_egress_port_name(), mirror_tap_two->tap_egress_port_name()}),
                              init_wrapper_main);
 
-    m_pipeline->make_segment("Mirror_Segment",
-                             segment::IngressPorts<std::string, std::string>({mirror_tap_one->tap_egress_port_name(),
-                                                                              mirror_tap_two->tap_egress_port_name()}),
-                             init_wrapper_mirrored);
+    m_pipeline->make_segment("Mirror_Segment_1",
+                             segment::IngressPorts<std::string>({mirror_tap_one->tap_egress_port_name()}),
+                             init_wrapper_mirrored_one);
+
+    m_pipeline->make_segment("Mirror_Segment_2",
+                             segment::IngressPorts<std::string>({mirror_tap_two->tap_egress_port_name()}),
+                             init_wrapper_mirrored_two);
 
     auto options = std::make_shared<Options>();
     options->topology().user_cpuset("0-1");
@@ -216,75 +274,82 @@ TEST_F(TestMirrorTapModule, SinglePipelineMultiInlineMirrorTapTest) {
     executor.join();
 
     EXPECT_EQ(packets_main, 4);
-    for (std::size_t i = 0; i < 2; i++) {
-        EXPECT_EQ(multi_sink_mirror->get_received(i), 4);
-    }
+    EXPECT_EQ(multi_sink_mirror_one->get_received(0), 4);
+    EXPECT_EQ(multi_sink_mirror_two->get_received(0), 4);
 }
 
-TEST_F(TestMirrorTapModule, SinglePipelineMultiMirrorTapTest) {
+/**
+ * Test this configuration:
+ *
+ * Segment 1: [ Source1 ] -- [ MirrorTap1 ] -- [ Sink1 ]
+ *                                         \
+ * Segment 2:                               -- [ MirrorSink1]
+ * Segment 1: [ Source2 ] -- [ MirrorTap2 ] -- [ Sink2 ]
+ *                                         \
+ * Segment 2:                               -- [ MirrorSink2]
+ * Segment 1: [ Source3 ] -- [ MirrorTap3 ] -- [ Sink3 ]
+ *                                         \
+ * Segment 2:                               -- [ MirrorSink3]
+ */
+TEST_F(TestMirrorTapModule, SinglePipelineMultiMirrorTapTest)
+{
     using namespace modules;
     const std::string test_name{"SinglePipelineMultiMirrorTapTest"};
 
     auto config = nlohmann::json();
 
-    auto mirror_tap_one = std::make_shared<MirrorTapModule<std::string>>(test_name + "_mirror_tap_one", config);
-    auto mirror_tap_two = std::make_shared<MirrorTapModule<std::string>>(test_name + "_mirror_tap_two", config);
-    auto mirror_tap_three = std::make_shared<MirrorTapModule<std::string>>(test_name + "_mirror_tap_three", config);
-    auto multi_sink_main = std::make_shared<MultiSinkModule<std::string, 3>>(test_name + "_multi_sink_main");
+    auto mirror_tap_one    = std::make_shared<MirrorTapModule<std::string>>(test_name + "_mirror_tap_one", config);
+    auto mirror_tap_two    = std::make_shared<MirrorTapModule<std::string>>(test_name + "_mirror_tap_two", config);
+    auto mirror_tap_three  = std::make_shared<MirrorTapModule<std::string>>(test_name + "_mirror_tap_three", config);
+    auto multi_sink_main   = std::make_shared<MultiSinkModule<std::string, 3>>(test_name + "_multi_sink_main");
     auto init_wrapper_main = [&mirror_tap_one, &mirror_tap_two, &mirror_tap_three, &multi_sink_main, &test_name](
-            segment::Builder &builder) {
+                                 segment::Builder& builder) {
         builder.init_module(mirror_tap_one);
         builder.init_module(mirror_tap_two);
         builder.init_module(mirror_tap_three);
 
-        auto multi_source_mod = builder.make_module<mrc::MultiSourceModule<std::string, 3, 4>>(
-                test_name + "_multi_source_mod");
+        auto multi_source_mod = builder.make_module<mrc::MultiSourceModule<std::string, 3, 4>>(test_name +
+                                                                                               "_multi_source_mod");
 
-        builder.make_edge<std::string>(multi_source_mod->output_port("output_0"),
-                                       mirror_tap_one->input_port("input"));
-        builder.make_edge<std::string>(multi_source_mod->output_port("output_1"),
-                                       mirror_tap_two->input_port("input"));
+        builder.make_edge<std::string>(multi_source_mod->output_port("output_0"), mirror_tap_one->input_port("input"));
+        builder.make_edge<std::string>(multi_source_mod->output_port("output_1"), mirror_tap_two->input_port("input"));
         builder.make_edge<std::string>(multi_source_mod->output_port("output_2"),
-                                               mirror_tap_three->input_port("input"));
+                                       mirror_tap_three->input_port("input"));
 
         builder.init_module(multi_sink_main);
 
-        builder.make_edge<std::string>(mirror_tap_one->output_port("output"),
-                                       multi_sink_main->input_port("input_0"));
-        builder.make_edge<std::string>(mirror_tap_two->output_port("output"),
-                                       multi_sink_main->input_port("input_1"));
-        builder.make_edge<std::string>(mirror_tap_three->output_port("output"),
-                                               multi_sink_main->input_port("input_2"));
+        builder.make_edge<std::string>(mirror_tap_one->output_port("output"), multi_sink_main->input_port("input_0"));
+        builder.make_edge<std::string>(mirror_tap_two->output_port("output"), multi_sink_main->input_port("input_1"));
+        builder.make_edge<std::string>(mirror_tap_three->output_port("output"), multi_sink_main->input_port("input_2"));
     };
 
     auto multi_sink_mirror = std::make_shared<mrc::MultiSinkModule<std::string, 3>>(test_name + "_multi_sink_mirror");
-    auto init_wrapper_mirrored = [&mirror_tap_one, &mirror_tap_two, &mirror_tap_three,
-            &multi_sink_mirror](
-            segment::Builder &builder) {
-        auto mirror_ingress_one = builder.get_ingress<std::string>(mirror_tap_one->tap_egress_port_name());
-        auto mirror_ingress_two = builder.get_ingress<std::string>(mirror_tap_two->tap_egress_port_name());
-        auto mirror_ingress_three = builder.get_ingress<std::string>(mirror_tap_three->tap_egress_port_name());
+    auto init_wrapper_mirrored =
+        [&mirror_tap_one, &mirror_tap_two, &mirror_tap_three, &multi_sink_mirror](segment::Builder& builder) {
+            auto mirror_ingress_one   = builder.get_ingress<std::string>(mirror_tap_one->tap_egress_port_name());
+            auto mirror_ingress_two   = builder.get_ingress<std::string>(mirror_tap_two->tap_egress_port_name());
+            auto mirror_ingress_three = builder.get_ingress<std::string>(mirror_tap_three->tap_egress_port_name());
 
-        builder.init_module(multi_sink_mirror);
+            builder.init_module(multi_sink_mirror);
 
-        builder.make_edge<std::string>(mirror_ingress_one, multi_sink_mirror->input_port("input_0"));
-        builder.make_edge<std::string>(mirror_ingress_two, multi_sink_mirror->input_port("input_1"));
-        builder.make_edge<std::string>(mirror_ingress_three, multi_sink_mirror->input_port("input_2"));
-    };
+            builder.make_edge<std::string>(mirror_ingress_one, multi_sink_mirror->input_port("input_0"));
+            builder.make_edge<std::string>(mirror_ingress_two, multi_sink_mirror->input_port("input_1"));
+            builder.make_edge<std::string>(mirror_ingress_three, multi_sink_mirror->input_port("input_2"));
+        };
 
-    m_pipeline->make_segment("Main_Segment",
-                             segment::EgressPorts<std::string, std::string, std::string>(
-                                     {mirror_tap_one->tap_egress_port_name(),
-                                      mirror_tap_two->tap_egress_port_name(),
-                                      mirror_tap_three->tap_egress_port_name()}),
-                             init_wrapper_main);
+    m_pipeline->make_segment(
+        "Main_Segment",
+        segment::EgressPorts<std::string, std::string, std::string>({mirror_tap_one->tap_egress_port_name(),
+                                                                     mirror_tap_two->tap_egress_port_name(),
+                                                                     mirror_tap_three->tap_egress_port_name()}),
+        init_wrapper_main);
 
-    m_pipeline->make_segment("Mirror_Segment",
-                             segment::IngressPorts<std::string, std::string, std::string>(
-                                     {mirror_tap_one->tap_egress_port_name(),
-                                      mirror_tap_two->tap_egress_port_name(),
-                                      mirror_tap_three->tap_egress_port_name()}),
-                             init_wrapper_mirrored);
+    m_pipeline->make_segment(
+        "Mirror_Segment",
+        segment::IngressPorts<std::string, std::string, std::string>({mirror_tap_one->tap_egress_port_name(),
+                                                                      mirror_tap_two->tap_egress_port_name(),
+                                                                      mirror_tap_three->tap_egress_port_name()}),
+        init_wrapper_mirrored);
 
     auto options = std::make_shared<Options>();
     options->topology().user_cpuset("0-1");
@@ -295,7 +360,8 @@ TEST_F(TestMirrorTapModule, SinglePipelineMultiMirrorTapTest) {
     executor.start();
     executor.join();
 
-    for (std::size_t i = 0; i < 3; i++) {
+    for (std::size_t i = 0; i < 3; i++)
+    {
         EXPECT_EQ(multi_sink_main->get_received(i), 4);
         EXPECT_EQ(multi_sink_mirror->get_received(i), 4);
     }

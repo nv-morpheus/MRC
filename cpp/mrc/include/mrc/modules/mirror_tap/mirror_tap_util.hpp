@@ -32,13 +32,14 @@
 
 namespace mrc::modules {
     template<typename DataTypeT>
-    class MirrorTap {
-        using type_t = MirrorTap<DataTypeT>;
+    class MirrorTapUtil
+{
+        using type_t = MirrorTapUtil<DataTypeT>;
 
     public:
-        MirrorTap(std::string module_name);
+      MirrorTapUtil(std::string module_name);
 
-        MirrorTap(std::string module_name, nlohmann::json config);
+      MirrorTapUtil(std::string module_name, nlohmann::json config);
 
         template<typename FunctionT>
         auto tap(FunctionT initializer, const std::string tap_from, const std::string tap_to) {
@@ -78,36 +79,36 @@ namespace mrc::modules {
     };
 
     template<typename DataTypeT>
-    MirrorTap<DataTypeT>::MirrorTap(std::string tap_name) :
+    MirrorTapUtil<DataTypeT>::MirrorTapUtil(std::string tap_name) :
             m_tap(std::make_shared<MirrorTapModule<DataTypeT>>(std::move(tap_name))),
             m_stream(std::make_shared<MirrorTapStreamModule<DataTypeT>>(std::move(tap_name))) {
         m_stream->tap_ingress_port_name(m_tap->tap_egress_port_name());
     }
 
     template<typename DataTypeT>
-    MirrorTap<DataTypeT>::MirrorTap(std::string tap_name, nlohmann::json config) :
+    MirrorTapUtil<DataTypeT>::MirrorTapUtil(std::string tap_name, nlohmann::json config) :
             m_tap(std::make_shared<MirrorTapModule<DataTypeT>>(tap_name, config)),
             m_stream(std::make_shared<MirrorTapStreamModule<DataTypeT>>(tap_name, config)) {
         m_stream->tap_ingress_port_name(m_tap->tap_egress_port_name());
     }
 
     template<typename DataTypeT>
-    [[maybe_unused]] segment::EgressPorts<DataTypeT> MirrorTap<DataTypeT>::create_egress_ports() const {
+    [[maybe_unused]] segment::EgressPorts<DataTypeT> MirrorTapUtil<DataTypeT>::create_egress_ports() const {
         return segment::EgressPorts<DataTypeT>({get_egress_tap_name()});
     }
 
     template<typename DataTypeT>
-    [[maybe_unused]] segment::IngressPorts<DataTypeT> MirrorTap<DataTypeT>::create_ingress_ports() const {
+    [[maybe_unused]] segment::IngressPorts<DataTypeT> MirrorTapUtil<DataTypeT>::create_ingress_ports() const {
         return segment::IngressPorts<DataTypeT>({get_ingress_tap_name()});
     }
 
     template<typename DataTypeT>
-    [[maybe_unused]] std::string MirrorTap<DataTypeT>::get_egress_tap_name() const {
+    [[maybe_unused]] std::string MirrorTapUtil<DataTypeT>::get_egress_tap_name() const {
         return m_tap->tap_egress_port_name();
     }
 
     template<typename DataTypeT>
-    [[maybe_unused]] std::string MirrorTap<DataTypeT>::get_ingress_tap_name() const {
+    [[maybe_unused]] std::string MirrorTapUtil<DataTypeT>::get_ingress_tap_name() const {
         return m_stream->tap_ingress_port_name();
     }
 }

@@ -98,7 +98,7 @@ TEST_F(TestStreamBufferModule, SinglePipelineStreamBufferTest) {
                                                           });
     };
 
-    auto mirror_tap = MirrorTap<std::string>(test_name + "mirror_tap", config);
+    auto mirror_tap = MirrorTapUtil<std::string>(test_name + "mirror_tap", config);
 
     auto tapped_init_wrapper_main = mirror_tap.tap(init_wrapper_main,
                                                                test_name + "_main_source",

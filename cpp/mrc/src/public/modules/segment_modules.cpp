@@ -157,6 +157,9 @@ void SegmentModule::register_input_port(std::string input_name, std::shared_ptr<
         throw std::invalid_argument(sstream.str());
     }
 
+    VLOG(5) << "Registering input port: " << input_name << " with type: " << object->sink_type().name()
+            << " for module: " << name();
+
     m_input_port_ids.push_back(input_name);
     m_input_ports[input_name] = object;
     m_input_port_type_indices.try_emplace(input_name, object->sink_type());
@@ -171,6 +174,9 @@ void SegmentModule::register_output_port(std::string output_name, std::shared_pt
         sstream << "Attempt to register duplicate module output port: " + std::move(output_name);
         throw std::invalid_argument(sstream.str());
     }
+
+    VLOG(5) << "Registering output port: " << output_name << " with type: " << object->source_type().name()
+            << " for module: " << name();
 
     m_output_port_ids.push_back(output_name);
     m_output_ports[output_name] = object;
