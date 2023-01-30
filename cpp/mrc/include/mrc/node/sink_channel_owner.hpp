@@ -51,11 +51,14 @@ class SinkChannelOwner : public virtual SinkProperties<T>
         auto channel_reader = edge_channel.get_reader();
         auto channel_writer = edge_channel.get_writer();
 
-        SinkProperties<T>::init_owned_edge(channel_writer);
+        channel_writer->add_connector([this, channel_reader]() {
+            // Finally, set the other half as the connected edge to allow readers the ability to pull from the channel.
+            // Only do this after a full connection has been made to avoid reading from a channel that will never be
+            // written to
+            SinkProperties<T>::init_connected_edge(channel_reader);
+        });
 
-        // Finally, set the other half to m_set_edge to allow using the channel without it being deleted. If set_edge()
-        // is called, then this will be overwritten
-        SinkProperties<T>::init_connected_edge(channel_reader);
+        SinkProperties<T>::init_owned_edge(channel_writer);
     }
 };
 

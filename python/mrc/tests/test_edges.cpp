@@ -22,7 +22,6 @@
 #include "pymrc/utilities/acquire_gil.hpp"
 #include "pymrc/utils.hpp"
 
-#include "mrc/channel/status.hpp"
 #include "mrc/edge/edge_connector.hpp"
 #include "mrc/node/rx_sink_base.hpp"
 #include "mrc/node/rx_source_base.hpp"
@@ -122,7 +121,9 @@ class TestSourceImpl : public PythonTestNodeMixin
   public:
     using source_t = std::shared_ptr<T>;
 
-    TestSourceImpl(std::string name, pymrc::PyHolder counter) : PythonTestNodeMixin(std::move(name), std::move(counter))
+    TestSourceImpl(std::string name, pymrc::PyHolder counter, size_t msg_count = 5) :
+      PythonTestNodeMixin(std::move(name), std::move(counter)),
+      m_msg_count(msg_count)
     {
         this->init_counter("on_next");
         this->init_counter("on_error");
@@ -133,7 +134,7 @@ class TestSourceImpl : public PythonTestNodeMixin
     auto build()
     {
         return rxcpp::observable<>::create<source_t>([this](rxcpp::subscriber<source_t>& output) {
-            for (size_t i = 0; i < 5; ++i)
+            for (size_t i = 0; i < m_msg_count; ++i)
             {
                 output.on_next(std::make_shared<T>());
                 this->increment_counter("on_next");
@@ -143,6 +144,8 @@ class TestSourceImpl : public PythonTestNodeMixin
             output.on_completed();
         });
     }
+
+    size_t m_msg_count{5};
 };
 
 template <typename T>
@@ -151,9 +154,9 @@ class TestSource : public pymrc::PythonSource<std::shared_ptr<T>>, public TestSo
   public:
     using base_t = pymrc::PythonSource<std::shared_ptr<T>>;
 
-    TestSource(std::string name, pymrc::PyHolder counter) :
+    TestSource(std::string name, pymrc::PyHolder counter, size_t msg_count = 5) :
       base_t(),
-      TestSourceImpl<T>(std::move(name), std::move(counter))
+      TestSourceImpl<T>(std::move(name), std::move(counter), msg_count)
     {
         this->set_observable(this->build());
     }
@@ -165,9 +168,9 @@ class TestSourceComponent : public pymrc::PythonSourceComponent<std::shared_ptr<
   public:
     using base_t = pymrc::PythonSourceComponent<std::shared_ptr<T>>;
 
-    TestSourceComponent(std::string name, pymrc::PyHolder counter) :
+    TestSourceComponent(std::string name, pymrc::PyHolder counter, size_t msg_count = 5) :
       base_t(build()),
-      TestSourceImpl<T>(std::move(name), std::move(counter))
+      TestSourceImpl<T>(std::move(name), std::move(counter), msg_count)
     {}
 
   private:
@@ -175,7 +178,7 @@ class TestSourceComponent : public pymrc::PythonSourceComponent<std::shared_ptr<
     typename base_t::get_data_fn_t build()
     {
         return [this](std::shared_ptr<T>& output) {
-            if (m_count++ < 5)
+            if (m_count++ < this->m_msg_count)
             {
                 output = std::make_shared<T>();
 
@@ -228,7 +231,8 @@ class TestNode : public pymrc::PythonNode<std::shared_ptr<T>, std::shared_ptr<T>
     using base_t = pymrc::PythonNode<std::shared_ptr<T>, std::shared_ptr<T>>;
 
   public:
-    TestNode(std::string name, pymrc::PyHolder counter) : TestNodeImpl<T>(std::move(name), std::move(counter))
+    TestNode(std::string name, pymrc::PyHolder counter, size_t msg_count = 5) :
+      TestNodeImpl<T>(std::move(name), std::move(counter))
     {
         this->make_stream(this->build_operator());
     }
@@ -241,7 +245,8 @@ class TestNodeComponent : public pymrc::PythonNodeComponent<std::shared_ptr<T>, 
     using base_t = pymrc::PythonNodeComponent<std::shared_ptr<T>, std::shared_ptr<T>>;
 
   public:
-    TestNodeComponent(std::string name, pymrc::PyHolder counter) : TestNodeImpl<T>(std::move(name), std::move(counter))
+    TestNodeComponent(std::string name, pymrc::PyHolder counter, size_t msg_count = 5) :
+      TestNodeImpl<T>(std::move(name), std::move(counter))
     {
         this->make_stream(this->build_operator());
     }
@@ -279,7 +284,8 @@ template <typename T>
 class TestSink : public pymrc::PythonSink<std::shared_ptr<T>>, public TestSinkImpl<T>
 {
   public:
-    TestSink(std::string name, pymrc::PyHolder counter) : TestSinkImpl<T>(std::move(name), std::move(counter))
+    TestSink(std::string name, pymrc::PyHolder counter, size_t msg_count = 5) :
+      TestSinkImpl<T>(std::move(name), std::move(counter))
     {
         this->set_observer(this->build());
     }
@@ -289,7 +295,8 @@ template <typename T>
 class TestSinkComponent : public pymrc::PythonSinkComponent<std::shared_ptr<T>>, public TestSinkImpl<T>
 {
   public:
-    TestSinkComponent(std::string name, pymrc::PyHolder counter) : TestSinkImpl<T>(std::move(name), std::move(counter))
+    TestSinkComponent(std::string name, pymrc::PyHolder counter, size_t msg_count = 5) :
+      TestSinkImpl<T>(std::move(name), std::move(counter))
     {
         this->set_observer(this->build());
     }
@@ -302,17 +309,19 @@ GENERATE_NODE_TYPES(TestNodeComponent, NodeComponent);
 GENERATE_NODE_TYPES(TestSink, Sink);
 GENERATE_NODE_TYPES(TestSinkComponent, SinkComponent);
 
-#define CREATE_TEST_NODE_CLASS(class_name)                                                             \
-    py::class_<segment::Object<class_name>,                                                            \
-               mrc::segment::ObjectProperties,                                                         \
-               std::shared_ptr<segment::Object<class_name>>>(module, #class_name)                      \
-        .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name, py::dict counter) { \
-                 auto stage = parent.construct_object<class_name>(name, name, std::move(counter));     \
-                 return stage;                                                                         \
-             }),                                                                                       \
-             py::arg("parent"),                                                                        \
-             py::arg("name"),                                                                          \
-             py::arg("counter"));
+#define CREATE_TEST_NODE_CLASS(class_name)                                                                        \
+    py::class_<segment::Object<class_name>,                                                                       \
+               mrc::segment::ObjectProperties,                                                                    \
+               std::shared_ptr<segment::Object<class_name>>>(module, #class_name)                                 \
+        .def(py::init<>(                                                                                          \
+                 [](mrc::segment::Builder& parent, const std::string& name, py::dict counter, size_t msg_count) { \
+                     auto stage = parent.construct_object<class_name>(name, name, std::move(counter), msg_count); \
+                     return stage;                                                                                \
+                 }),                                                                                              \
+             py::arg("parent"),                                                                                   \
+             py::arg("name"),                                                                                     \
+             py::arg("counter"),                                                                                  \
+             py::arg("msg_count") = 5);
 
 PYBIND11_MODULE(test_edges_cpp, module)
 {
