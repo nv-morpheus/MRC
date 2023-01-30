@@ -54,13 +54,67 @@ TEST_F(TestStreamBufferModule, InitailizationTest)
     executor.join();
 }
 
+TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferRawThroughputTest)
+{
+    using namespace modules;
+    const std::string test_name{"SinglePipelineImmediateStreamBufferRawThroughputTest"};
+
+    // Create external captures for packet counts.
+    unsigned int packet_count{100000};
+    unsigned int packets_main{0};
+
+    auto config = nlohmann::json();
+
+    auto init_wrapper_main = [&packets_main, packet_count, test_name](segment::Builder& builder) {
+        auto source = builder.make_source<std::string>(test_name + "_main_source",
+                                                       [packet_count](rxcpp::subscriber<std::string>& sub) {
+                                                           if (sub.is_subscribed())
+                                                           {
+                                                               for (unsigned int i = 0; i < packet_count; i++)
+                                                               {
+                                                                   sub.on_next(std::to_string(packet_count));
+                                                               }
+                                                           }
+
+                                                           sub.on_completed();
+                                                       });
+
+        auto config = nlohmann::json();
+
+        auto stream_buffer = builder.make_module<ImmediateStreamBufferModule<std::string>>("stream_buffer", config);
+        builder.make_edge(source, stream_buffer->input_port("input"));
+
+        auto sink = builder.make_sink<std::string>(test_name + "_main_sink", [&packets_main](std::string input) {
+            packets_main++;
+        });
+        builder.make_edge(stream_buffer->output_port("output"), sink);
+    };
+
+    m_pipeline->make_segment("Main_Segment", init_wrapper_main);
+
+    auto options = std::make_shared<Options>();
+    options->topology().user_cpuset("0-2");
+    options->topology().restrict_gpus(true);
+
+    Executor executor(options);
+    executor.register_pipeline(std::move(m_pipeline));
+    executor.start();
+    executor.join();
+
+    VLOG(1) << "Dropped packets: " << packet_count - packets_main << " -> "
+            << (packet_count - packets_main) / (double)packet_count * 100.0 << "%";
+
+    // Lower tolerances here, because this is just line speed with primitive data types.
+    EXPECT_GE(packet_count, packets_main * 0.95);
+}
+
 TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferConstantRateThroughputTest)
 {
     using namespace modules;
     const std::string test_name{"SinglePipelineImmediateStreamBufferConstantRateThroughputTest"};
 
     // Create external captures for packet counts.
-    unsigned int packet_count{1000};
+    unsigned int packet_count{10000};
     unsigned int packets_main{0};
 
     auto config = nlohmann::json();
@@ -106,7 +160,67 @@ TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferConstantRateTh
     VLOG(1) << "Dropped packets: " << packet_count - packets_main << " -> "
             << (packet_count - packets_main) / (double)packet_count * 100.0 << "%";
 
-    EXPECT_GE(packet_count, packets_main * 0.95);
+    EXPECT_GE(packet_count, packets_main * 0.99);
+}
+
+TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferVariableRateThroughputTest)
+{
+    using namespace modules;
+    const std::string test_name{"SinglePipelineImmediateStreamBufferBurstThroughputTest"};
+
+    // Create external captures for packet counts.
+    unsigned int packet_count{100000};
+    unsigned int packets_main{0};
+
+    auto config = nlohmann::json();
+
+    auto init_wrapper_main = [&packets_main, packet_count, test_name](segment::Builder& builder) {
+        auto source = builder.make_source<std::string>(
+            test_name + "_main_source",
+            [packet_count](rxcpp::subscriber<std::string>& sub) {
+                std::random_device rd;
+                std::mt19937 gen(rd());
+                std::uniform_int_distribution<> sleep_dis_ms(100, 500);
+
+                if (sub.is_subscribed())
+                {
+                    for (unsigned int i = 0; i < packet_count; i++)
+                    {
+                        sub.on_next(std::to_string(packet_count));
+                        std::size_t sleep_ms = sleep_dis_ms(gen);
+                        boost::this_fiber::sleep_for(std::chrono::nanoseconds(sleep_ms));
+                    }
+                }
+
+                sub.on_completed();
+            });
+
+        auto config = nlohmann::json();
+
+        auto stream_buffer = builder.make_module<ImmediateStreamBufferModule<std::string>>("stream_buffer", config);
+        builder.make_edge(source, stream_buffer->input_port("input"));
+
+        auto sink = builder.make_sink<std::string>(test_name + "_main_sink", [&packets_main](std::string input) {
+            packets_main++;
+        });
+        builder.make_edge(stream_buffer->output_port("output"), sink);
+    };
+
+    m_pipeline->make_segment("Main_Segment", init_wrapper_main);
+
+    auto options = std::make_shared<Options>();
+    options->topology().user_cpuset("0-2");
+    options->topology().restrict_gpus(true);
+
+    Executor executor(options);
+    executor.register_pipeline(std::move(m_pipeline));
+    executor.start();
+    executor.join();
+
+    VLOG(1) << "Dropped packets: " << packet_count - packets_main << " -> "
+            << (packet_count - packets_main) / (double)packet_count * 100.0 << "%";
+
+    EXPECT_GE(packet_count, packets_main * 0.99);
 }
 
 TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferBurstThroughputTest)
@@ -174,65 +288,5 @@ TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferBurstThroughpu
     VLOG(1) << "Dropped packets: " << packet_count - packets_main << " -> "
             << (packet_count - packets_main) / (double)packet_count * 100.0 << "%";
 
-    EXPECT_GE(packet_count, packets_main * 0.95);
-}
-
-TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferVariableRateThroughputTest)
-{
-    using namespace modules;
-    const std::string test_name{"SinglePipelineImmediateStreamBufferBurstThroughputTest"};
-
-    // Create external captures for packet counts.
-    unsigned int packet_count{100000};
-    unsigned int packets_main{0};
-
-    auto config = nlohmann::json();
-
-    auto init_wrapper_main = [&packets_main, packet_count, test_name](segment::Builder& builder) {
-        auto source = builder.make_source<std::string>(
-            test_name + "_main_source",
-            [packet_count](rxcpp::subscriber<std::string>& sub) {
-                std::random_device rd;
-                std::mt19937 gen(rd());
-                std::uniform_int_distribution<> sleep_dis_ms(100, 500);
-
-                if (sub.is_subscribed())
-                {
-                    for (unsigned int i = 0; i < packet_count; i++)
-                    {
-                        sub.on_next(std::to_string(packet_count));
-                        std::size_t sleep_ms = sleep_dis_ms(gen);
-                        boost::this_fiber::sleep_for(std::chrono::nanoseconds(sleep_ms));
-                    }
-                }
-
-                sub.on_completed();
-            });
-
-        auto config = nlohmann::json();
-
-        auto stream_buffer = builder.make_module<ImmediateStreamBufferModule<std::string>>("stream_buffer", config);
-        builder.make_edge(source, stream_buffer->input_port("input"));
-
-        auto sink = builder.make_sink<std::string>(test_name + "_main_sink", [&packets_main](std::string input) {
-            packets_main++;
-        });
-        builder.make_edge(stream_buffer->output_port("output"), sink);
-    };
-
-    m_pipeline->make_segment("Main_Segment", init_wrapper_main);
-
-    auto options = std::make_shared<Options>();
-    options->topology().user_cpuset("0-2");
-    options->topology().restrict_gpus(true);
-
-    Executor executor(options);
-    executor.register_pipeline(std::move(m_pipeline));
-    executor.start();
-    executor.join();
-
-    VLOG(1) << "Dropped packets: " << packet_count - packets_main << " -> "
-            << (packet_count - packets_main) / (double)packet_count * 100.0 << "%";
-
-    EXPECT_GE(packet_count, packets_main * 0.95);
+    EXPECT_GE(packet_count, packets_main * 0.99);
 }
