@@ -37,7 +37,7 @@ namespace mrc::modules {
     public:
         MirrorTapStreamModule(std::string module_name);
 
-        MirrorTapStreamModule(std::string module_name, nlohmann::json config);
+        MirrorTapStreamModule(std::string module_name, nlohmann::json _config);
 
         std::string tap_ingress_port_name() const;
         void tap_ingress_port_name(std::string name);
@@ -59,8 +59,13 @@ namespace mrc::modules {
     }
 
     template<typename DataTypeT>
-    MirrorTapStreamModule<DataTypeT>::MirrorTapStreamModule(std::string module_name, nlohmann::json config)
-            : SegmentModule(std::move(module_name), std::move(config)) {
+    MirrorTapStreamModule<DataTypeT>::MirrorTapStreamModule(std::string module_name, nlohmann::json _config)
+            : SegmentModule(std::move(module_name), std::move(_config)) {
+
+        if (config().contains("tap_id_override"))
+        {
+            m_ingress_name = config()["tap_id_override"];
+        }
     }
 
     template<typename DataTypeT>

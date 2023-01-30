@@ -52,7 +52,7 @@ namespace mrc::modules {
         std::string module_type_name() const override;
 
     private:
-        std::mutex m_mutex;
+        std::mutex m_write_mutex;
 
         boost::circular_buffer<DataTypeT> m_ring_buffer_write;
         boost::circular_buffer<DataTypeT> m_ring_buffer_read;
@@ -86,7 +86,7 @@ namespace mrc::modules {
         // Consume values from subject and push them to ring buffer
         m_subject.get_observable().subscribe(
                 [this](DataTypeT data) {
-                    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+                    std::lock_guard<decltype(m_write_mutex)> lock(m_write_mutex);
                     m_ring_buffer_write.push_back(std::move(data));
                     VLOG(10) << "Subscriber 1: OnNext -> push to ring buffer: " << data << std::endl;
                 },
@@ -120,9 +120,11 @@ namespace mrc::modules {
                     while (subscriber.is_subscribed() && m_subject.has_observers()) {
                         if (!m_ring_buffer_write.empty()) {
                             {
-                                std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+                                std::lock_guard<decltype(m_write_mutex)> wlock(m_write_mutex);
+                                // O(1), based on the size of the circular buffer.
                                 m_ring_buffer_write.swap(m_ring_buffer_read);
                             }
+
                             while (!m_ring_buffer_read.empty()) {
                                 subscriber.on_next(m_ring_buffer_read.front());
                                 m_ring_buffer_read.pop_front();

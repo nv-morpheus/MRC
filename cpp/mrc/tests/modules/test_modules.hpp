@@ -171,9 +171,11 @@ namespace mrc {
     }
 
     using TestMirrorTapModule = TestModules;  // NOLINT
-    using TestStreamBufferModule = TestModules;  // NOLINT
+    using TestMirrorTapStream = TestModules;  // NOLINT
+    using TestMirrorTapUtil = TestModules;  // NOLINT
     using TestModuleRegistry = TestModules;  // NOLINT
     using TestModuleUtil = TestModules;  // NOLINT
     using TestSegmentModules = TestModules;  // NOLINT
+    using TestStreamBufferModule = TestModules;  // NOLINT
 
 }  // namespace mrc

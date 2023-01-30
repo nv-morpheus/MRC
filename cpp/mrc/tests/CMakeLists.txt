@@ -24,6 +24,8 @@ add_executable(test_mrc
   modules/test_module_util.cpp
   modules/test_segment_modules.cpp
   modules/test_stream_buffer_module.cpp
+  modules/test_mirror_tap_stream.cpp
+  modules/test_mirror_tap_util.cpp
   test_channel.cpp
   test_edges.cpp
   test_executor.cpp
