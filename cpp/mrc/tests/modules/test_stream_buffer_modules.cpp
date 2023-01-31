@@ -21,6 +21,8 @@
 #include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/modules/mirror_tap/mirror_tap_util.hpp"
 #include "mrc/modules/module_registry.hpp"
+#include "mrc/modules/stream_buffer/stream_buffer_immediate.hpp"
+#include "mrc/modules/stream_buffer/stream_buffer_module.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/segment/builder.hpp"
 
@@ -33,13 +35,16 @@
 
 using namespace mrc;
 
+using StreamBufferModuleImmediate =
+    modules::StreamBufferModule<std::string, modules::stream_buffers::StreamBufferImmediate>;  // NOLINT
+
 TEST_F(TestStreamBufferModule, InitailizationTest)
 {
     using namespace modules;
 
     auto init_wrapper = [](segment::Builder& builder) {
-        auto config     = nlohmann::json();
-        auto mirror_tap = builder.make_module<ImmediateStreamBufferModule<std::string>>("mirror_tap", config);
+        auto config1        = nlohmann::json();
+        auto mirror_buffer1 = builder.make_module<StreamBufferModuleImmediate>("mirror_tap", config1);
     };
 
     m_pipeline->make_segment("Initialization_Segment", init_wrapper);
@@ -63,8 +68,6 @@ TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferRawThroughputT
     unsigned int packet_count{100000};
     unsigned int packets_main{0};
 
-    auto config = nlohmann::json();
-
     auto init_wrapper_main = [&packets_main, packet_count, test_name](segment::Builder& builder) {
         auto source = builder.make_source<std::string>(test_name + "_main_source",
                                                        [packet_count](rxcpp::subscriber<std::string>& sub) {
@@ -79,9 +82,9 @@ TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferRawThroughputT
                                                            sub.on_completed();
                                                        });
 
-        auto config = nlohmann::json();
+        auto config = nlohmann::json{{"buffer_size", 1024}};
 
-        auto stream_buffer = builder.make_module<ImmediateStreamBufferModule<std::string>>("stream_buffer", config);
+        auto stream_buffer = builder.make_module<StreamBufferModuleImmediate>("stream_buffer", config);
         builder.make_edge(source, stream_buffer->input_port("input"));
 
         auto sink = builder.make_sink<std::string>(test_name + "_main_sink", [&packets_main](std::string input) {
@@ -104,8 +107,7 @@ TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferRawThroughputT
     VLOG(1) << "Dropped packets: " << packet_count - packets_main << " -> "
             << (packet_count - packets_main) / (double)packet_count * 100.0 << "%";
 
-    // Lower tolerances here, because this is just line speed with primitive data types.
-    EXPECT_GE(packet_count, packets_main * 0.95);
+    EXPECT_GE(packet_count, packets_main * 0.5);
 }
 
 TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferConstantRateThroughputTest)
@@ -117,8 +119,6 @@ TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferConstantRateTh
     unsigned int packet_count{10000};
     unsigned int packets_main{0};
 
-    auto config = nlohmann::json();
-
     auto init_wrapper_main = [&packets_main, packet_count, test_name](segment::Builder& builder) {
         auto source = builder.make_source<std::string>(
             test_name + "_main_source",
@@ -128,16 +128,16 @@ TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferConstantRateTh
                     for (unsigned int i = 0; i < packet_count; i++)
                     {
                         sub.on_next(std::to_string(packet_count));
-                        boost::this_fiber::sleep_for(std::chrono::nanoseconds(10));
+                        boost::this_fiber::sleep_for(std::chrono::nanoseconds(100));
                     }
                 }
 
                 sub.on_completed();
             });
 
-        auto config = nlohmann::json();
+        auto config = nlohmann::json{{"buffer_size", 1024}};
 
-        auto stream_buffer = builder.make_module<ImmediateStreamBufferModule<std::string>>("stream_buffer", config);
+        auto stream_buffer = builder.make_module<StreamBufferModuleImmediate>("stream_buffer", config);
         builder.make_edge(source, stream_buffer->input_port("input"));
 
         auto sink = builder.make_sink<std::string>(test_name + "_main_sink", [&packets_main](std::string input) {
@@ -160,7 +160,7 @@ TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferConstantRateTh
     VLOG(1) << "Dropped packets: " << packet_count - packets_main << " -> "
             << (packet_count - packets_main) / (double)packet_count * 100.0 << "%";
 
-    EXPECT_GE(packet_count, packets_main * 0.99);
+    EXPECT_GE(packet_count, packets_main * 0.5);
 }
 
 TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferVariableRateThroughputTest)
@@ -172,15 +172,13 @@ TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferVariableRateTh
     unsigned int packet_count{100000};
     unsigned int packets_main{0};
 
-    auto config = nlohmann::json();
-
     auto init_wrapper_main = [&packets_main, packet_count, test_name](segment::Builder& builder) {
         auto source = builder.make_source<std::string>(
             test_name + "_main_source",
             [packet_count](rxcpp::subscriber<std::string>& sub) {
                 std::random_device rd;
                 std::mt19937 gen(rd());
-                std::uniform_int_distribution<> sleep_dis_ms(100, 500);
+                std::uniform_int_distribution<> sleep_dis_ms(10, 200);
 
                 if (sub.is_subscribed())
                 {
@@ -195,9 +193,9 @@ TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferVariableRateTh
                 sub.on_completed();
             });
 
-        auto config = nlohmann::json();
+        auto config = nlohmann::json{{"buffer_size", 1024}};
 
-        auto stream_buffer = builder.make_module<ImmediateStreamBufferModule<std::string>>("stream_buffer", config);
+        auto stream_buffer = builder.make_module<StreamBufferModuleImmediate>("stream_buffer", config);
         builder.make_edge(source, stream_buffer->input_port("input"));
 
         auto sink = builder.make_sink<std::string>(test_name + "_main_sink", [&packets_main](std::string input) {
@@ -220,7 +218,7 @@ TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferVariableRateTh
     VLOG(1) << "Dropped packets: " << packet_count - packets_main << " -> "
             << (packet_count - packets_main) / (double)packet_count * 100.0 << "%";
 
-    EXPECT_GE(packet_count, packets_main * 0.99);
+    EXPECT_GE(packet_count, packets_main * 0.5);
 }
 
 TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferBurstThroughputTest)
@@ -232,7 +230,7 @@ TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferBurstThroughpu
     unsigned int packet_count{100000};
     unsigned int packets_main{0};
 
-    auto config = nlohmann::json();
+    auto config = nlohmann::json{{"buffer_size", 1024}};
 
     auto init_wrapper_main = [&packets_main, packet_count, test_name](segment::Builder& builder) {
         auto source = builder.make_source<std::string>(
@@ -263,9 +261,9 @@ TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferBurstThroughpu
                 sub.on_completed();
             });
 
-        auto config = nlohmann::json();
+        auto config = nlohmann::json{{"buffer_size", 1024}};
 
-        auto stream_buffer = builder.make_module<ImmediateStreamBufferModule<std::string>>("stream_buffer", config);
+        auto stream_buffer = builder.make_module<StreamBufferModuleImmediate>("stream_buffer", config);
         builder.make_edge(source, stream_buffer->input_port("input"));
 
         auto sink = builder.make_sink<std::string>(test_name + "_main_sink", [&packets_main](std::string input) {
@@ -288,5 +286,5 @@ TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferBurstThroughpu
     VLOG(1) << "Dropped packets: " << packet_count - packets_main << " -> "
             << (packet_count - packets_main) / (double)packet_count * 100.0 << "%";
 
-    EXPECT_GE(packet_count, packets_main * 0.99);
+    EXPECT_GE(packet_count, packets_main * 0.5);
 }

@@ -56,11 +56,11 @@ template <typename TypeT>
 concept MRCObjectSharedPtr = is_object_shared_ptr_v<TypeT>;
 
 template <typename TypeT>
-concept MRCObjectProperties = std::is_same_v<TypeT, mrc::segment::ObjectProperties>;
+concept MRCObjProp = std::is_same_v<TypeT, mrc::segment::ObjectProperties>;
 
 template <typename TypeT>
-concept MRCObjectPropertiesSharedPtr = std::is_same_v<TypeT, std::shared_ptr<mrc::segment::ObjectProperties>>;
+concept MRCObjPropSharedPtr = std::is_same_v<TypeT, std::shared_ptr<mrc::segment::ObjectProperties>>;
 
 template <typename TypeT>
-concept MRCObjectPropRepr = MRCObject<TypeT> || MRCObjectSharedPtr<TypeT> || MRCObjectProperties<TypeT> ||
-                              MRCObjectPropertiesSharedPtr<TypeT> || std::is_convertible_v<TypeT, std::string>;
+concept MRCObjectProxy = MRCObject<TypeT> || MRCObjectSharedPtr<TypeT> || MRCObjProp<TypeT> ||
+                         MRCObjPropSharedPtr<TypeT> || std::is_convertible_v<TypeT, std::string>;

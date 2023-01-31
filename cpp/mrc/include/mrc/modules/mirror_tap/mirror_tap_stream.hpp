@@ -20,7 +20,7 @@
 #include "mrc/modules/module_registry_util.hpp"
 #include "mrc/modules/properties/persistent.hpp"
 #include "mrc/modules/segment_modules.hpp"
-#include "mrc/modules/stream_buffer/immediate_stream_buffer.hpp"
+#include "mrc/modules/stream_buffer/stream_buffer_module.hpp"
 #include "mrc/node/operators/broadcast.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/version.hpp"
@@ -48,7 +48,7 @@ namespace mrc::modules {
         std::string module_type_name() const override;
 
     private:
-        std::shared_ptr<ImmediateStreamBufferModule<DataTypeT>> m_stream_buffer;
+        std::shared_ptr<StreamBufferModule<DataTypeT>> m_stream_buffer;
 
         std::string m_ingress_name;
     };
@@ -82,7 +82,7 @@ namespace mrc::modules {
     void MirrorTapStreamModule<DataTypeT>::initialize(segment::Builder &builder) {
         auto mirror_ingress = builder.get_ingress<DataTypeT>(m_ingress_name);
         // TODO
-        m_stream_buffer = builder.make_module<ImmediateStreamBufferModule<DataTypeT>>("test", {});
+        m_stream_buffer = builder.make_module<StreamBufferModule<DataTypeT>>("test", {});
 
         builder.make_edge(mirror_ingress, m_stream_buffer->input_port("input"));
 
