@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,10 +19,10 @@
 
 #include <rxcpp/rx.hpp>
 
-namespace srf::quickstart::cpp::common {
+namespace mrc::quickstart::cpp::common {
 
 IntSource::IntSource() :
-  srf::node::RxSource<int>(rxcpp::observable<>::create<int>([](rxcpp::subscriber<int> s) {
+  mrc::node::RxSource<int>(rxcpp::observable<>::create<int>([](rxcpp::subscriber<int> s) {
       s.on_next(1);
       s.on_next(2);
       s.on_next(3);
@@ -30,4 +30,4 @@ IntSource::IntSource() :
   }))
 {}
 
-}  // namespace srf::quickstart::cpp::common
+}  // namespace mrc::quickstart::cpp::common

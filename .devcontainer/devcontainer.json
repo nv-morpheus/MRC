@@ -1,0 +1,59 @@
+{
+    "build": {
+        "args": {
+            "USERNAME": "${localEnv:USER}",
+            "USER_ID": "${localEnv:UID}"
+        },
+        "context": "..",
+        "dockerfile": "${localWorkspaceFolder}/Dockerfile",
+        "target": "development"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "eamodio.gitlens",
+                "formulahendry.terminal",
+                "hbenl.vscode-test-explorer",
+                "josetr.cmake-language-support-vscode",
+                "llvm-vs-code-extensions.vscode-clangd",
+                "matepek.vscode-catch2-test-adapter",
+                "ms-dotnettools.vscode-dotnet-runtime",
+                "ms-vscode.cmake-tools",
+                "ms-vscode.cpptools-extension-pack",
+                "ms-vscode.cpptools-themes",
+                "ms-vscode.cpptools",
+                "ms-vscode.test-adapter-converter",
+                "xaver.clang-format"
+            ],
+            "settings": {
+                "cmake.cmakePath": "cmake", // Ensure we use the default from the conda environment
+                // Fix for https://github.com/dotnet/vscode-dotnet-runtime/issues/159
+                // Once version 1.6.1 of the extension has been release, this can be removed
+                "cmake.languageSupport.dotnetPath": "/usr/bin/dotnet",
+            }
+        }
+    },
+    "hostRequirements": {
+        "gpu": true
+    },
+    "mounts": [
+        // Mount the necessary files for GDB pretty-printing to work
+        "source=${localWorkspaceFolder}/.devcontainer/home/.gdbinit,target=/home/${localEnv:USER}/.gdbinit,type=bind",
+        "source=${localWorkspaceFolder}/.devcontainer/home/.config/gdb,target=/home/${localEnv:USER}/.config/gdb,type=bind",
+        // Mount the Github CLI config directory to allow using the Github CLI
+        "source=${localEnv:HOME}/.config/gh,target=/home/${localEnv:USER}/.config/gh,type=bind",
+    ],
+    "name": "mrc-dev",
+    "overrideCommand": true, // infinite loop of sleeps,
+    "remoteUser": "${localEnv:USER}",
+    "runArgs": [
+        "--network=host",
+        "--cap-add=SYS_PTRACE",
+        "--cap-add=SYS_NICE",
+        "--security-opt",
+        "seccomp=unconfined"
+    ],
+    "updateRemoteUserUID": true,
+    "workspaceFolder": "/work",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/work,type=bind,consistency=cached"
+}

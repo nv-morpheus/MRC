@@ -1,3 +1,3 @@
 include versioneer.py
-include srf/_version.py
-recursive-include srf *.so py.typed *.pyi
+include mrc/_version.py
+recursive-include mrc *.so py.typed *.pyi

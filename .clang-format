@@ -10,12 +10,14 @@ AlignConsecutiveDeclarations: false
 AlignEscapedNewlines: Left
 AlignOperands: true
 AlignTrailingComments: true
+AllowAllArgumentsOnNextLine: false
 AllowAllConstructorInitializersOnNextLine: false
-AllowAllParametersOfDeclarationOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: false
 AllowShortBlocksOnASingleLine: true
 AllowShortCaseLabelsOnASingleLine: false # Allows placing breakpoint
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: Empty
 AllowShortLoopsOnASingleLine: false
 # This is deprecated
 AlwaysBreakAfterDefinitionReturnType: None
@@ -53,7 +55,6 @@ BreakStringLiterals: true
 ColumnLimit: 120
 CommentPragmas: '^ IWYU pragma:'
 CompactNamespaces: false
-ConstructorInitializerAllOnOneLineOrOnePerLine: true
 # Kept the below 2 to be the same as `IndentWidth` to keep everything uniform
 ConstructorInitializerIndentWidth: 2
 ContinuationIndentWidth: 4
@@ -71,16 +72,16 @@ IncludeCategories:
   # 0 - Main include file for .cpp
   # 1 - source relative files `#include "./some_header.hpp"` (Grouped with 2)
   # 2 - source relative files starting with internal/public `#include "internal/some_header.hpp"`
-  # 3 - Python SRF public API files `#include "pysrf/srf_header.hpp"`
-  # 4 - SRF public API files `#include "srf/srf_header.hpp"`
+  # 3 - Python MRC public API files `#include "pymrc/mrc_header.hpp"`
+  # 4 - MRC public API files `#include "mrc/mrc_header.hpp"`
   # 5 - NVRPC public API files `#include "nvrpc/some_header.hpp"`
   # 6 - External installed libraries `#include <external_lib/some_header.hpp>`
   # 7 - System includes `#include <string>`
-  # First match any Python SRF public API headers with quotes
-  - Regex:           '^"pysrf\/.*\.(h|hpp)"'
+  # First match any Python MRC public API headers with quotes
+  - Regex:           '^"pymrc\/.*\.(h|hpp)"'
     Priority:        3
-  # Next match any SRF public API headers with quotes
-  - Regex:           '^"srf\/.*\.(h|hpp)"'
+  # Next match any MRC public API headers with quotes
+  - Regex:           '^"mrc\/.*\.(h|hpp)"'
     Priority:        4
   # Next match public NVRPC headers with quotes
   - Regex:           '^<nvrpc\/.*\.(h|hpp)>'
@@ -115,14 +116,15 @@ ObjCBinPackProtocolList: Never
 ObjCBlockIndentWidth: 2
 ObjCSpaceAfterProperty: false
 ObjCSpaceBeforeProtocolList: true
-PenaltyBreakAssignment: 2
-PenaltyBreakBeforeFirstCallParameter: 1
-PenaltyBreakComment: 300
-PenaltyBreakFirstLessLess: 120
-PenaltyBreakString: 1000
+PackConstructorInitializers: CurrentLine
+PenaltyBreakAssignment: 80
+PenaltyBreakBeforeFirstCallParameter: 0
+PenaltyBreakComment: 10
+PenaltyBreakFirstLessLess: 10
+PenaltyBreakString: 0
 PenaltyBreakTemplateDeclaration: 10
-PenaltyExcessCharacter: 1000000
-PenaltyReturnTypeOnItsOwnLine: 200
+PenaltyExcessCharacter: 100
+PenaltyReturnTypeOnItsOwnLine: 600
 PointerAlignment: Left
 RawStringFormats:
   - Language: Cpp
@@ -170,7 +172,7 @@ SpacesInContainerLiterals: true
 SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
-Standard: c++17
+Standard: c++20
 StatementMacros:
   - Q_UNUSED
   - QT_REQUIRE_VERSION

@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,14 +17,14 @@
 
 #pragma once
 
-#include <srf/node/rx_source.hpp>
+#include <mrc/node/rx_source.hpp>
 
-namespace srf::quickstart::cpp::ex01_node_library {
+namespace mrc::quickstart::cpp::ex01_node_library {
 
-class IntSource : public srf::node::RxSource<int>
+class IntSource : public mrc::node::RxSource<int>
 {
   public:
     IntSource();
 };
 
-}  // namespace srf::quickstart::cpp::ex01_node_library
+}  // namespace mrc::quickstart::cpp::ex01_node_library

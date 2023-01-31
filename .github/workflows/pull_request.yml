@@ -19,7 +19,8 @@ on:
   push:
     branches:
       - 'pull-request/**'
-      - "branch-*"
+      - 'branch-*'
+      - 'main'
 
 # This allows a subsequently queued workflow run to interrupt previous runs
 concurrency:
@@ -31,9 +32,9 @@ jobs:
     uses: ./.github/workflows/ci_pipe.yml
     with:
       run_check: ${{ startsWith(github.ref_name, 'pull-request/') }}
-      run_package_conda: ${{ startsWith(github.ref_name, 'branch-') }}
-      container: nvcr.io/ea-nvidia-morpheus/morpheus:srf-ci-driver-221103
-      test_container: nvcr.io/ea-nvidia-morpheus/morpheus:srf-ci-base-221103
+      run_package_conda: ${{ !startsWith(github.ref_name, 'pull-request/') }}
+      container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-driver-221130
+      test_container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-base-221130
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       CONDA_TOKEN: ${{ secrets.CONDA_TOKEN }}

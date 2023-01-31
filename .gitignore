@@ -2,7 +2,6 @@
 *.engine
 .Dockerfile
 .gitignore
-/vcpkg_installed
 /*conda-bld*/
 
 # Ignore generated pyi files for pybind and cython modules
@@ -10,7 +9,7 @@ docs/quickstart/**/*.pyi
 python/**/*.pyi
 
 # Ignore version header file
-include/srf/version.hpp
+include/mrc/version.hpp
 
 # Ignore all vscode options that are in the workspace file
 .vscode/extensions.json

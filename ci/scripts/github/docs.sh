@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-# SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,11 +29,11 @@ doxygen --version
 show_conda_info
 
 rapids-logger "Configuring for docs"
-cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} -DSRF_BUILD_DOCS=ON .
-
+git submodule update --init --recursive
+cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} -DMRC_BUILD_DOCS=ON .
 
 rapids-logger "Building docs"
-cmake --build build --target srf_docs
+cmake --build build --target mrc_docs
 
 rapids-logger "Tarring the docs"
 tar cfj "${WORKSPACE_TMP}/docs.tar.bz" build/docs/html

@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-# SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,16 +23,17 @@ fetch_base_branch
 update_conda_env
 
 rapids-logger "Configuring CMake"
+git submodule update --init --recursive
 cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} .
 
 rapids-logger "Building targets that generate source code"
-cmake --build build --target srf_style_checks --parallel ${PARALLEL_LEVEL}
+cmake --build build --target mrc_style_checks --parallel ${PARALLEL_LEVEL}
 
 rapids-logger "Running C++ style checks"
-${SRF_ROOT}/ci/scripts/cpp_checks.sh
+${MRC_ROOT}/ci/scripts/cpp_checks.sh
 
 rapids-logger "Runing Python style checks"
-${SRF_ROOT}/ci/scripts/python_checks.sh
+${MRC_ROOT}/ci/scripts/python_checks.sh
 
 rapids-logger "Checking copyright headers"
-python ${SRF_ROOT}/ci/scripts/copyright.py --verify-apache-v2 --git-diff-commits ${CHANGE_TARGET} ${GIT_COMMIT}
+python ${MRC_ROOT}/ci/scripts/copyright.py --verify-apache-v2 --git-diff-commits ${CHANGE_TARGET} ${GIT_COMMIT}

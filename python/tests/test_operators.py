@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,24 +15,24 @@
 
 import pytest
 
-import srf
-from srf.core import operators as ops
+import mrc
+from mrc.core import operators as ops
 
 
 @pytest.fixture
 def ex_runner():
 
     def run_exec(segment_init):
-        pipeline = srf.Pipeline()
+        pipeline = mrc.Pipeline()
 
         pipeline.make_segment("my_seg", segment_init)
 
-        options = srf.Options()
+        options = mrc.Options()
 
         # Set to 1 thread
         options.topology.user_cpuset = "0-0"
 
-        executor = srf.Executor(options)
+        executor = mrc.Executor(options)
 
         executor.register_pipeline(pipeline)
 
@@ -52,10 +52,11 @@ def run_segment(ex_runner):
         raised_error = None
         did_complete = False
 
-        def segment_fn(seg: srf.Builder):
+        def segment_fn(seg: mrc.Builder):
             source = seg.make_source("source", producer(input_data))
 
-            node = seg.make_node_full("test", node_fn)
+            node = seg.make_node("test", ops.build(node_fn))
+
             seg.make_edge(source, node)
 
             def sink_on_next(x):
@@ -87,13 +88,27 @@ def producer(to_produce):
         yield x
 
 
+def test_build(run_segment):
+
+    input_data = [1, 2, 3, 4, 5, "one", "two", "three", "four", "five", 1, "two", 3]
+    expected = [1, 2, 3, 4, 5, "one", "two", "three", "four", "five", 1, "two", 3]
+
+    def node_fn(input: mrc.Observable, output: mrc.Subscriber):
+
+        input.subscribe(output)
+
+    actual, raised_error = run_segment(input_data, node_fn)
+
+    assert actual == expected
+
+
 def test_map(run_segment):
 
     input_data = [0, 1, 2, 3, 4]
     expected = [1, 2, 3, 4, 5]
     actual = []
 
-    def node_fn(input: srf.Observable, output: srf.Subscriber):
+    def node_fn(input: mrc.Observable, output: mrc.Subscriber):
 
         input.pipe(ops.map(lambda x: x + 1)).subscribe(output)
 
@@ -107,7 +122,7 @@ def test_flatten(run_segment):
     input_data = [[1, 2, 3, 4, 5], ["one", "two", "three", "four", "five"], [1, "two", 3]]
     expected = [1, 2, 3, 4, 5, "one", "two", "three", "four", "five", 1, "two", 3]
 
-    def node_fn(input: srf.Observable, output: srf.Subscriber):
+    def node_fn(input: mrc.Observable, output: mrc.Subscriber):
 
         input.pipe(ops.flatten()).subscribe(output)
 
@@ -121,7 +136,7 @@ def test_filter(run_segment):
     input_data = [1, 2, 3, 4, 5, "one", "two", "three", "four", "five", 1, "two", 3]
     expected = [3, 4, 5, 3]
 
-    def node_fn(input: srf.Observable, output: srf.Subscriber):
+    def node_fn(input: mrc.Observable, output: mrc.Subscriber):
 
         input.pipe(ops.filter(lambda x: isinstance(x, int) and x >= 3)).subscribe(output)
 
@@ -135,7 +150,7 @@ def test_on_complete(run_segment):
     input_data = [1, 2, 3, 4, 5, "one", "two", "three", "four", "five", 1, "two", 3]
     expected = [1, 2, 3, 4, 5, "one", "two", "three", "four", "five", 1, "two", 3, "after_completed"]
 
-    def node_fn(input: srf.Observable, output: srf.Subscriber):
+    def node_fn(input: mrc.Observable, output: mrc.Subscriber):
 
         input.pipe(ops.on_completed(lambda: "after_completed")).subscribe(output)
 
@@ -150,7 +165,7 @@ def test_on_complete_none(run_segment):
     expected = [1, 2, 3, 4, 5, "one", "two", "three", "four", "five", 1, "two", 3]
     on_completed_hit = False
 
-    def node_fn(input: srf.Observable, output: srf.Subscriber):
+    def node_fn(input: mrc.Observable, output: mrc.Subscriber):
 
         def on_completed_fn():
             nonlocal on_completed_hit
@@ -171,7 +186,7 @@ def test_pairwise(run_segment):
     expected = [(1, 2), (2, 3), (3, 4), (4, 5), (5, "one"), ("one", "two"), ("two", "three"), ("three", "four"),
                 ("four", "five"), ("five", 1), (1, "two"), ("two", 3)]
 
-    def node_fn(input: srf.Observable, output: srf.Subscriber):
+    def node_fn(input: mrc.Observable, output: mrc.Subscriber):
 
         input.pipe(ops.pairwise()).subscribe(output)
 
@@ -185,7 +200,7 @@ def test_to_list(run_segment):
     input_data = [1, 2, 3, 4, 5, "one", "two", "three", "four", "five", 1, "two", 3]
     expected = [[1, 2, 3, 4, 5, "one", "two", "three", "four", "five", 1, "two", 3]]
 
-    def node_fn(input: srf.Observable, output: srf.Subscriber):
+    def node_fn(input: mrc.Observable, output: mrc.Subscriber):
 
         input.pipe(ops.to_list()).subscribe(output)
 
@@ -199,7 +214,7 @@ def test_to_list_empty(run_segment):
     input_data = []
     expected = []
 
-    def node_fn(input: srf.Observable, output: srf.Subscriber):
+    def node_fn(input: mrc.Observable, output: mrc.Subscriber):
 
         input.pipe(ops.to_list()).subscribe(output)
 
@@ -213,7 +228,7 @@ def test_combination(run_segment):
     input_data = [1, 2, 3, 4, 5, "one", "two", "three", "four", "five", 1, "two", 3]
     expected = [5, 5, 6, 6, 7, 7, 5, 5, 1, 2, "one", "two", "three", "four", "five", 1, "two"]
 
-    def node_fn(input: srf.Observable, output: srf.Subscriber):
+    def node_fn(input: mrc.Observable, output: mrc.Subscriber):
 
         filtered_out = []
 

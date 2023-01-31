@@ -1,0 +1,76 @@
+---
+# Inherit from parent. Memory uses naming similar to rmm
+InheritParentConfig: true
+
+HeaderFilterRegex: '.*\/include\/mrc\/memory\/.*'
+CheckOptions:
+  - key: readability-identifier-naming.ClassCase
+    value: lower_case
+  - key: readability-identifier-naming.ClassIgnoredRegexp
+    value: ^_.*
+  - key: readability-identifier-naming.ClassPrefix
+    value: ''
+  - key: readability-identifier-naming.ClassSuffix
+    value: ''
+  - key: readability-identifier-naming.EnumCase
+    value: lower_case
+  - key: readability-identifier-naming.EnumConstantIgnoredRegexp
+    value: ''
+  - key: readability-identifier-naming.EnumConstantPrefix
+    value: ''
+  - key: readability-identifier-naming.EnumConstantSuffix
+    value: ''
+  - key: readability-identifier-naming.EnumIgnoredRegexp
+    value: ''
+  - key: readability-identifier-naming.EnumPrefix
+    value: ''
+  - key: readability-identifier-naming.EnumSuffix
+    value: ''
+  - key: readability-identifier-naming.StructCase
+    value: lower_case
+  - key: readability-identifier-naming.StructIgnoredRegexp
+    value: ^_.*
+  - key: readability-identifier-naming.StructPrefix
+    value: ''
+  - key: readability-identifier-naming.StructSuffix
+    value: ''
+  - key: readability-identifier-naming.TypeAliasCase
+    value: lower_case
+  - key: readability-identifier-naming.TypeAliasIgnoredRegexp
+    value: ''
+  - key: readability-identifier-naming.TypeAliasPrefix
+    value: ''
+  - key: readability-identifier-naming.TypeAliasSuffix
+    value: ''
+  - key: readability-identifier-naming.TypedefCase
+    value: lower_case
+  - key: readability-identifier-naming.TypedefIgnoredRegexp
+    value: ''
+  - key: readability-identifier-naming.TypedefPrefix
+    value: ''
+  - key: readability-identifier-naming.TypedefSuffix
+    value: ''
+  - key: readability-identifier-naming.TemplateParameterCase
+    value: aNy_CasE
+  - key: readability-identifier-naming.TemplateParameterIgnoredRegexp
+    value: ^_.*
+  - key: readability-identifier-naming.TemplateParameterPrefix
+    value: ''
+  - key: readability-identifier-naming.TemplateParameterSuffix
+    value: ''
+  - key: readability-identifier-naming.TypeTemplateParameterCase
+    value: aNy_CasE
+  - key: readability-identifier-naming.TypeTemplateParameterIgnoredRegexp
+    value: ^_.*
+  - key: readability-identifier-naming.TypeTemplateParameterPrefix
+    value: ''
+  - key: readability-identifier-naming.TypeTemplateParameterSuffix
+    value: ''
+  - key: readability-identifier-naming.ValueTemplateParameterCase
+    value: aNy_CasE
+  - key: readability-identifier-naming.ValueTemplateParameterIgnoredRegexp
+    value: ^_.*
+  - key: readability-identifier-naming.ValueTemplateParameterPrefix
+    value: ''
+  - key: readability-identifier-naming.ValueTemplateParameterSuffix
+    value: ''

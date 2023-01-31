@@ -1,5 +1,5 @@
 #!/bin/bash
-# SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,8 +23,8 @@ BUILD_DIR=${BUILD_DIR:-"build"}
 echo "Runing CMake configure..."
 cmake -B ${BUILD_DIR} -GNinja \
    -DCMAKE_MESSAGE_CONTEXT_SHOW=ON \
-   -DSRF_PYTHON_INPLACE_BUILD:BOOL=ON \
-   -DSRF_PYTHON_PERFORM_INSTALL:BOOL=ON `# Ensure all of the libraries are installed` \
+   -DMRC_PYTHON_INPLACE_BUILD:BOOL=ON \
+   -DMRC_PYTHON_PERFORM_INSTALL:BOOL=ON `# Ensure all of the libraries are installed` \
    ${CMAKE_CONFIGURE_EXTRA_ARGS:-""} .
 
 echo "Running CMake build..."

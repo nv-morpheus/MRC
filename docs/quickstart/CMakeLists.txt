@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,28 +15,27 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "quickstart")
 
-cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.24 FATAL_ERROR)
 
 # Add the Conda environment to the prefix path and add the CMake files
 list(PREPEND CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}")
 list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake")
 
-# Add the RAPIDS cmake helper scripts
-include(import_rapids_cmake)
+morpheus_utils_python_modules_ensure_python3()
 
-project(srf-quickstart
-  VERSION 22.11.00
+project(mrc-quickstart
+  VERSION 23.01
   LANGUAGES C CXX
 )
 
 # Ensure CPM is initialized
 rapids_cpm_init()
 
-# Set the option prefix to match the outer project before including. Must be before find_package(srf)
-set(OPTION_PREFIX "SRF")
-include(python_module_tools)
+# Set the option prefix to match the outer project before including. Must be before find_package(mrc)
+set(OPTION_PREFIX "MRC")
+include(morpheus_utils/python/register_api)
 
-rapids_find_package(srf REQUIRED)
+rapids_find_package(mrc REQUIRED)
 rapids_find_package(CUDAToolkit REQUIRED)
 
 # To make it easier for CI to find output files, set the default executable suffix to .x if not set

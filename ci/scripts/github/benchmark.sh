@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-# SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,7 @@ source ${WORKSPACE}/ci/scripts/github/common.sh
 
 REPORTS_DIR="${WORKSPACE_TMP}/reports"
 
-BENCHMARKS=($(find ${SRF_ROOT}/build/benchmarks -name "*.x"))
+BENCHMARKS=($(find ${MRC_ROOT}/build/cpp/mrc/benchmarks -name "*.x"))
 
 rapids-logger "Running Benchmarks..."
 BENCH_RESULTS=0

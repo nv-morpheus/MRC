@@ -50,12 +50,11 @@ env:
   AWS_DEFAULT_REGION: ${{ inputs.aws_region }}
   AWS_ACCESS_KEY_ID: "${{ secrets.GHA_AWS_ACCESS_KEY_ID }}"
   AWS_SECRET_ACCESS_KEY: "${{ secrets.GHA_AWS_SECRET_ACCESS_KEY }}"
-  BUILD_CC: "gcc"
   CHANGE_TARGET: "${{ github.base_ref }}"
   GH_TOKEN: "${{ github.token }}"
   GIT_COMMIT: "${{ github.sha }}"
-  SRF_ROOT: "${{ github.workspace }}/srf"
-  WORKSPACE: "${{ github.workspace }}/srf"
+  MRC_ROOT: "${{ github.workspace }}/mrc"
+  WORKSPACE: "${{ github.workspace }}/mrc"
   WORKSPACE_TMP: "${{ github.workspace }}/tmp"
 
 
@@ -78,12 +77,12 @@ jobs:
         uses: actions/checkout@v3
         with:
           lfs: false
-          path: 'srf'
+          path: 'mrc'
           fetch-depth: 0
 
       - name: Check
         shell: bash
-        run: ./srf/ci/scripts/github/checks.sh
+        run: ./mrc/ci/scripts/github/checks.sh
 
   build:
     name: Build
@@ -97,20 +96,20 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        build_cc: ["gcc", "gcc-coverage", "clang"]
+        build_cc: ["gcc", "clang"]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           lfs: false
-          path: 'srf'
+          path: 'mrc'
 
       - name: Build:linux:x86_64
         shell: bash
         env:
           BUILD_CC: ${{ matrix.build_cc }}
-        run: ./srf/ci/scripts/github/build.sh
+        run: ./mrc/ci/scripts/github/build.sh
 
   test:
     name: Test
@@ -122,28 +121,61 @@ jobs:
         username: '$oauthtoken'
         password: ${{ secrets.NGC_API_KEY }}
       image: ${{ inputs.test_container }}
-      options: --cap-add=sys_nice
+      options: "--cap-add=sys_nice --cap-add=sys_ptrace"
       env:
         NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
         PARALLEL_LEVEL: '10'
     strategy:
       fail-fast: true
       matrix:
-        build_cc: ["gcc", "gcc-coverage"]
+        build_cc: ["gcc", "clang"]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           lfs: false
-          path: 'srf'
+          path: 'mrc'
 
       - name: Test:linux:x86_64
         shell: bash
         env:
           BUILD_CC: ${{ matrix.build_cc }}
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        run: ./srf/ci/scripts/github/test.sh
+        run: ./mrc/ci/scripts/github/test.sh
+
+  codecov:
+    name: Code Coverage
+    runs-on: [self-hosted, linux, amd64, gpu-v100-495-1]
+    timeout-minutes: 60
+    container:
+      credentials:
+        username: '$oauthtoken'
+        password: ${{ secrets.NGC_API_KEY }}
+      env:
+        BUILD_CC: "gcc-coverage"
+        NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
+        PARALLEL_LEVEL: '10'
+      image: ${{ inputs.test_container }}
+    strategy:
+      fail-fast: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          lfs: false
+          path: 'mrc'
+
+      - name: Build
+        shell: bash
+        run: ./mrc/ci/scripts/github/build.sh
+
+      - name: Test with Codecov
+        shell: bash
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: ./mrc/ci/scripts/github/test_codecov.sh
 
   documentation:
     name: Documentation
@@ -163,11 +195,11 @@ jobs:
         uses: actions/checkout@v3
         with:
           lfs: false
-          path: 'srf'
+          path: 'mrc'
 
       - name: build_docs
         shell: bash
-        run: ./srf/ci/scripts/github/docs.sh
+        run: ./mrc/ci/scripts/github/docs.sh
 
   benchmark:
     name: Benchmark
@@ -188,17 +220,17 @@ jobs:
         uses: actions/checkout@v3
         with:
           lfs: false
-          path: 'srf'
+          path: 'mrc'
 
       - name: pre_benchmark
         shell: bash
-        run: ./srf/ci/scripts/github/pre_benchmark.sh
+        run: ./mrc/ci/scripts/github/pre_benchmark.sh
       - name: benchmark
         shell: bash
-        run: ./srf/ci/scripts/github/benchmark.sh
+        run: ./mrc/ci/scripts/github/benchmark.sh
       - name: post_benchmark
         shell: bash
-        run: ./srf/ci/scripts/github/benchmark.sh
+        run: ./mrc/ci/scripts/github/benchmark.sh
 
 
   package:
@@ -220,11 +252,11 @@ jobs:
         uses: actions/checkout@v3
         with:
           lfs: false
-          path: 'srf'
+          path: 'mrc'
           fetch-depth: 0
 
       - name: conda
         shell: bash
         env:
           CONDA_TOKEN: "${{ secrets.CONDA_TOKEN }}"
-        run: ./srf/ci/scripts/github/conda.sh
+        run: ./mrc/ci/scripts/github/conda.sh

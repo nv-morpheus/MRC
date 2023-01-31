@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,27 +16,28 @@
 import logging
 from unittest import mock
 
-from srf.core import log_handler as srf_log_handler
-from srf.core import logging as srf_logging
+from mrc.core import log_handler as mrc_log_handler
+from mrc.core import logging as mrc_logging
 
 
-@mock.patch('srf.core.logging.log')
-def test_logging(mock_srf_log):
-    assert not srf_logging.is_initialized()
-    assert srf_logging.init_logging("log test", logging.ERROR)
-    assert srf_logging.is_initialized()
-    assert srf_logging.get_level() == logging.ERROR
+@mock.patch('mrc.core.logging.log')
+def test_logging(mock_mrc_log, is_debugger_attached: bool):
+
+    # Because we want to initialize the logger for our own testing purposes, and because glog its not possible to
+    # uninitialize the logger, we will just verify that its already initialized and test the other functions
+    assert mrc_logging.is_initialized()
+    assert mrc_logging.get_level() == logging.INFO if is_debugger_attached else logging.WARNING
 
     # Calling init_logging a second time is a noop
-    assert not srf_logging.init_logging("log test")
+    assert not mrc_logging.init_logging("log test")
 
-    srf_logging.set_level(logging.INFO)
-    assert srf_logging.get_level() == logging.INFO
+    mrc_logging.set_level(logging.ERROR)
+    assert mrc_logging.get_level() == logging.ERROR
 
-    handler = srf_log_handler.SrfHandler()
+    handler = mrc_log_handler.MrcHandler()
     handler.setLevel(logging.WARNING)
 
-    assert srf_logging.get_level() == logging.WARNING
+    assert mrc_logging.get_level() == logging.WARNING
 
     logger = logging.getLogger()
     logger.addHandler(handler)
@@ -46,7 +47,7 @@ def test_logging(mock_srf_log):
 
     logger.info('test info')
 
-    mock_srf_log.assert_not_called()
+    mock_mrc_log.assert_not_called()
     logger.error('test error')
 
-    mock_srf_log.assert_called_once()
+    mock_mrc_log.assert_called_once()
