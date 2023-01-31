@@ -22,9 +22,6 @@
 namespace mrc::core::concepts {
 
 template <typename T>
-concept not_void = requires
-{
-    requires not std::same_as<T, void>;
-};
+concept not_void = requires { requires not std::same_as<T, void>; };
 
 }  // namespace mrc::core::concepts
