@@ -83,9 +83,10 @@ TEST_F(TestMirrorTapUtil, SinglePipelineTapAndBuffer)
 
     auto tapped_init_wrapper_mirrored = mirror_tap.stream_to(init_wrapper_mirrored, test_name + "_mirror_sink");
 
-    m_pipeline->make_segment("Main_Segment", mirror_tap.create_egress_ports(), tapped_init_wrapper_main);
+    m_pipeline->make_segment("Main_Segment", mirror_tap.create_or_extend_egress_ports(), tapped_init_wrapper_main);
 
-    m_pipeline->make_segment("StreamMirror_Segment", mirror_tap.create_ingress_ports(), tapped_init_wrapper_mirrored);
+    m_pipeline->make_segment("StreamMirror_Segment",
+                             mirror_tap.create_or_extend_ingress_ports(), tapped_init_wrapper_mirrored);
 
     auto options = std::make_shared<Options>();
     options->topology().user_cpuset("0-2");

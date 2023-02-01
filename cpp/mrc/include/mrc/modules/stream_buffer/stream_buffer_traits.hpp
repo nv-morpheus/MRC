@@ -17,29 +17,16 @@
 
 #pragma once
 
-#include <rxcpp/rx.hpp>
+#include "mrc/modules/stream_buffer/stream_buffer_base.hpp"
 
 #include <cstddef>
 #include <type_traits>
 
 namespace mrc::modules::stream_buffers {
 
-template <typename DataTypeT>
-class StreamBufferBase
-{
-  public:
-    virtual ~StreamBufferBase() = default;
-
-    virtual std::size_t buffer_size() = 0;
-
-    virtual void buffer_size(std::size_t size) = 0;
-
-    virtual bool empty() = 0;
-
-    virtual void push_back(DataTypeT&& data) = 0;
-
-    virtual inline void flush_next(rxcpp::subscriber<DataTypeT>& subscriber) = 0;
-
-    virtual inline void flush_all(rxcpp::subscriber<DataTypeT>& subscriber) = 0;
-};
+template <typename DataTypeT, template <typename> class StreamBufferTypeT>
+concept IsStreamBuffer = requires {
+                             typename StreamBufferTypeT<DataTypeT>;
+                             std::is_base_of_v<StreamBufferBase<DataTypeT>, StreamBufferTypeT<DataTypeT>>;
+                         };
 }  // namespace mrc::modules::stream_buffers

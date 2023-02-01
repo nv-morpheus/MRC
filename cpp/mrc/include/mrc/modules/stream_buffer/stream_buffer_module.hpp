@@ -21,6 +21,7 @@
 #include "mrc/modules/properties/persistent.hpp"
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/modules/stream_buffer/stream_buffer_immediate.hpp"
+#include "mrc/modules/stream_buffer/stream_buffer_traits.hpp"
 
 #include <boost/circular_buffer.hpp>
 #include <nlohmann/json.hpp>
