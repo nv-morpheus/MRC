@@ -103,6 +103,7 @@ void StreamBufferModule<DataTypeT, StreamBufferTypeT>::initialize(segment::Build
         });
 
     // Example of adding a second subscriber
+    /*
     m_subject.get_observable().subscribe(
         [this](DataTypeT data) {
             VLOG(10) << "Subscriber 2: OnNext -> " << data << std::endl;
@@ -113,6 +114,7 @@ void StreamBufferModule<DataTypeT, StreamBufferTypeT>::initialize(segment::Build
         [this]() {
             VLOG(10) << "Subscriber 2: OnCompleted" << std::endl;
         });
+    */
 
     // Create our source that reads from the buffer as long as it has a subscriber and
     // our subject hasn't called on_complete()

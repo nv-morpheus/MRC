@@ -65,7 +65,8 @@ class StreamBufferImmediate : StreamBufferBase<DataTypeT>
     }
 
     // Not thread safe for multiple readers
-    inline void flush_next(rxcpp::subscriber<DataTypeT>& subscriber) override {
+    void flush_next(rxcpp::subscriber<DataTypeT>& subscriber) override
+    {
         std::lock_guard<decltype(m_write_mutex)> wlock(m_write_mutex);
 
         subscriber.on_next(m_ring_buffer_write.front());
@@ -73,7 +74,7 @@ class StreamBufferImmediate : StreamBufferBase<DataTypeT>
     }
 
     // Not thread safe for multiple readers
-    inline void flush_all(rxcpp::subscriber<DataTypeT>& subscriber) override
+    void flush_all(rxcpp::subscriber<DataTypeT>& subscriber) override
     {
         {
             std::lock_guard<decltype(m_write_mutex)> wlock(m_write_mutex);
@@ -94,4 +95,4 @@ class StreamBufferImmediate : StreamBufferBase<DataTypeT>
     boost::circular_buffer<DataTypeT> m_ring_buffer_write;
     boost::circular_buffer<DataTypeT> m_ring_buffer_read;
 };
-}  // namespace mrc::modules
+}  // namespace mrc::modules::stream_buffers

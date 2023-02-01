@@ -325,6 +325,9 @@ class Builder final
         CHECK(source_object.is_source()) << "Source object is not a source";
         CHECK(sink_object.is_sink()) << "Sink object is not a sink";
 
+        // TODO(Devin): this is slightly more constrained that it needs to be. We don't actually need to know the
+        // type of a provider, but because of the way type testing is done on the builder, its a bit of a pain to
+        // pass in an untyped Provider. We can fix this later.
         if (source_object.is_writable_acceptor())
         {
             if (sink_object.is_writable_provider())

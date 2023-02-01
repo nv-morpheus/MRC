@@ -38,8 +38,8 @@ class StreamBufferBase
 
     virtual void push_back(DataTypeT&& data) = 0;
 
-    virtual inline void flush_next(rxcpp::subscriber<DataTypeT>& subscriber) = 0;
+    virtual void flush_next(rxcpp::subscriber<DataTypeT>& subscriber) = 0;
 
-    virtual inline void flush_all(rxcpp::subscriber<DataTypeT>& subscriber) = 0;
+    virtual void flush_all(rxcpp::subscriber<DataTypeT>& subscriber) = 0;
 };
 }  // namespace mrc::modules::stream_buffers
