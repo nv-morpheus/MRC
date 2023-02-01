@@ -274,8 +274,9 @@ class Builder final
     void make_edge(SourceObjectT source, SinkObjectT sink)
     {
         DVLOG(10) << "forming edge between two segment objects";
-        using source_shared_ptr_type_t = ObjectSharedPtrType<SourceObjectT>::type_t::source_type_t;  // Might be nullptr_t
-        using sink_shared_ptr_type_t   = ObjectSharedPtrType<SinkObjectT>::type_t::sink_type_t;      // Might be nullptr_t
+        using source_shared_ptr_type_t = ObjectSharedPtrType<SourceObjectT>::type_t::source_type_t;  // Might be
+                                                                                                     // nullptr_t
+        using sink_shared_ptr_type_t = ObjectSharedPtrType<SinkObjectT>::type_t::sink_type_t;  // Might be nullptr_t
 
         auto& source_object = to_object_properties(source);
         auto& sink_object   = to_object_properties(sink);
@@ -310,61 +311,60 @@ class Builder final
 
     template <typename EdgeDataTypeT,
               MRCObjectProxy SourceObjectT,
-              MRCObjectProxy SinkObjecT,
+              MRCObjectProxy SinkObjectT,
               MRCObjectProxy TapInputObjectT,
               MRCObjectProxy TapOutputObjectT>
-    void make_edge_tap(SourceObjectT source, SinkObjecT sink, TapInputObjectT tap_input, TapOutputObjectT tap_output)
+    void make_edge_tap(SourceObjectT source, SinkObjectT sink, TapInputObjectT tap_input, TapOutputObjectT tap_output)
     {
         auto& source_object = to_object_properties(source);
         auto& sink_object   = to_object_properties(sink);
 
+        auto& tap_input_object = to_object_properties(tap_input);
+        auto& tap_output_object = to_object_properties(tap_output);
+
         CHECK(source_object.is_source()) << "Source object is not a source";
         CHECK(sink_object.is_sink()) << "Sink object is not a sink";
 
-        // 'standard' Source->Sink connection
         if (source_object.is_writable_acceptor())
         {
             if (sink_object.is_writable_provider())
             {
-                CHECK(tap_input->is_writable_provider()) << "Tap input must be of type WritableProvider";
-                CHECK(tap_output->is_writable_acceptor()) << "Tap output must be WritableAcceptor";
+                CHECK(tap_input_object.is_writable_provider()) << "Tap input must be of type WritableProvider";
+                CHECK(tap_output_object.is_writable_acceptor()) << "Tap output must be WritableAcceptor";
 
                 // Cast our object into something we can insert as a tap.
-                auto& tap_input_writable_provider  = tap_input->template writable_provider_typed<EdgeDataTypeT>();
-                auto& tap_output_writable_acceptor = tap_output->template writable_acceptor_typed<EdgeDataTypeT>();
+                auto& tap_writable_provider = tap_input_object.template writable_provider_typed<EdgeDataTypeT>();
+                auto& tap_writable_acceptor = tap_output_object.template writable_acceptor_typed<EdgeDataTypeT>();
 
-                /*
-                 * In this case, the source object has accepted a writable edge from the sink.
-                 *
-                 * Given: [source [edge_handle]] -> [sink]
-                 *
-                 * We will:
-                 * - Get a reference to the edge_handle the source is holding
-                 * - Reset the Source edge connection
-                 * - Create a new edge from the source to our WritableProvider splice node
-                 * - Set the edge_handle for the WritableAcceptor splice node to the edge_handle from the source
-                 *
-                 * This will result in the following:
-                 *
-                 * [source[new_edge_handle]] -> [splice_node[old_edge_handle]] -> [sink]
-                 *
-                 */
-                auto& source_acceptor    = source_object.template writable_acceptor_typed<EdgeDataTypeT>();
-                auto& source_edge_holder = dynamic_cast<edge::EdgeHolder<EdgeDataTypeT>&>(source_acceptor);
+                auto& writable_acceptor = source_object.template writable_acceptor_typed<EdgeDataTypeT>();
+                auto& writable_provider = sink_object.template writable_provider_typed<EdgeDataTypeT>();
 
-                auto& sink_provider = sink_object.template writable_provider_typed<EdgeDataTypeT>();
+                edge::EdgeBuilder::make_edge_tap<EdgeDataTypeT>(writable_acceptor,
+                                                                writable_provider,
+                                                                tap_writable_provider,
+                                                                tap_writable_acceptor);
 
-                // Check that an active connection exists before trying to splice.
-                CHECK(source_edge_holder.check_active_connection(false)) << "No active connection to tap";
+                return;
+            }
+        }
+        else if (source_object.is_readable_provider())
+        {
+            if (sink_object.is_readable_acceptor())
+            {
+                CHECK(tap_input_object.is_readable_acceptor()) << "Tap input must be of type ReadableAcceptor";
+                CHECK(tap_output_object.is_readable_provider()) << "Tap output must be ReadableProvider";
 
-                // Copy the Acceptor's edge handle and release it from the Acceptor
-                // Make sure we hold the edge handle until the new edge to the tap has been formed.
-                // TODO(Devin): Can we double check that the edge handle from the source matches the one from the sink?
-                auto edge_handle = source_edge_holder.get_connected_edge();
-                source_edge_holder.release_edge_connection();
+                // Cast our object into something we can insert as a tap.
+                auto& tap_readable_acceptor = tap_input_object.template readable_acceptor_typed<EdgeDataTypeT>();
+                auto& tap_readable_provider = tap_output_object.template readable_provider_typed<EdgeDataTypeT>();
 
-                edge::EdgeBuilder::make_edge_writable(source_acceptor, tap_input_writable_provider);
-                edge::EdgeBuilder::make_edge_writable(tap_output_writable_acceptor, sink_provider);
+                auto& readable_provider = source_object.template readable_provider_typed<EdgeDataTypeT>();
+                auto& readable_acceptor = sink_object.template readable_acceptor_typed<EdgeDataTypeT>();
+
+                edge::EdgeBuilder::make_edge_tap<EdgeDataTypeT>(readable_provider,
+                                                                readable_acceptor,
+                                                                tap_readable_acceptor,
+                                                                tap_readable_provider);
 
                 return;
             }

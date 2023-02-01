@@ -176,6 +176,92 @@ struct EdgeBuilder final
         sink.set_readable_edge_handle(edge);
     }
 
+    template <typename EdgeDataTypeT, typename SourceT, typename SinkT, typename TapInputT, typename TapOutputT>
+    static void make_edge_tap(SourceT& source, SinkT& sink, TapInputT& tap_input, TapOutputT& tap_output)
+    {
+        using source_full_t     = SourceT;
+        using sink_full_t       = SinkT;
+
+        if constexpr (is_base_of_template<edge::IWritableAcceptor, source_full_t>::value &&
+                      is_base_of_template<edge::IWritableProvider, sink_full_t>::value)
+        {
+            /*
+             * In this case, the source object has accepted a writable edge from the sink.
+             *
+             * Given: [source [edge_handle]] -> [sink]
+             *
+             * We will:
+             * - Get a reference to the edge_handle the source is holding
+             * - Reset the Source edge connection
+             * - Create a new edge from the source to our WritableProvider splice node
+             * - Set the edge_handle for the WritableAcceptor splice node to the edge_handle from the source
+             *
+             * This will result in the following:
+             *
+             * [source[new_edge_handle]] -> [splice_node[old_edge_handle]] -> [sink]
+             *
+             */
+            // Cast our object into something we can insert as a tap.
+
+            // Have to jump through some hoops here, mimics what 'writable_acceptor_typed' does, so we get everything
+            // built correctly
+            auto* tap_writable_provider = dynamic_cast<edge::IWritableProvider<EdgeDataTypeT>*>(&tap_input);
+            CHECK(tap_writable_provider != nullptr) << "Tap input is not a writable provider";
+
+            auto* tap_writable_acceptor = dynamic_cast<edge::IWritableAcceptor<EdgeDataTypeT>*>(&tap_output);
+            CHECK(tap_writable_acceptor != nullptr) << "Tap output is not a writable acceptor";
+
+            auto* writable_acceptor = dynamic_cast<edge::IWritableAcceptor<EdgeDataTypeT>*>(&source);
+            CHECK(writable_acceptor != nullptr) << "Source is not a writable acceptor";
+
+            auto* writable_provider = dynamic_cast<edge::IWritableProvider<EdgeDataTypeT>*>(&sink);
+            CHECK(writable_provider != nullptr) << "Sink is not a writable provider";
+
+            auto& edge_holder = dynamic_cast<edge::EdgeHolder<EdgeDataTypeT>&>(*writable_acceptor);
+            CHECK(edge_holder.check_active_connection(false)) << "No active connection to tap into";
+
+            auto edge_handle = edge_holder.get_connected_edge();
+            edge_holder.release_edge_connection();
+
+            make_edge_writable(*writable_acceptor, *tap_writable_provider);
+            make_edge_writable(*tap_writable_acceptor, *writable_provider);
+        }
+        else if constexpr (is_base_of_template<edge::IReadableProvider, source_full_t>::value &&
+                           is_base_of_template<edge::IReadableAcceptor, sink_full_t>::value)
+        {
+
+            auto* tap_readable_provider = dynamic_cast<edge::IReadableProvider<EdgeDataTypeT>*>(&tap_input);
+            CHECK(tap_readable_provider != nullptr) << "Tap input is not a writable provider";
+
+            auto* tap_readable_acceptor = dynamic_cast<edge::IReadableAcceptor<EdgeDataTypeT>*>(&tap_output);
+            CHECK(tap_readable_acceptor != nullptr) << "Tap output is not a writable acceptor";
+
+            auto* readable_provider = dynamic_cast<edge::IReadableProvider<EdgeDataTypeT>*>(&source);
+            CHECK(readable_provider != nullptr) << "Source is not a writable acceptor";
+
+            auto* readable_acceptor = dynamic_cast<edge::IReadableAcceptor<EdgeDataTypeT>*>(&sink);
+            CHECK(readable_acceptor != nullptr) << "Sink is not a writable provider";
+
+            auto& edge_holder = dynamic_cast<edge::EdgeHolder<EdgeDataTypeT>&>(*readable_acceptor);
+            CHECK(edge_holder.check_active_connection(false)) << "No active connection to tap into";
+
+            // Copy the Acceptor's edge handle and release it from the Acceptor
+            // Make sure we hold the edge handle until the new edge to the tap has been formed.
+            // TODO(Devin): Can we double check that the edge handle from the source matches the one from the sink?
+            auto edge_handle = edge_holder.get_connected_edge();
+            edge_holder.release_edge_connection();
+
+            make_edge_readable(*readable_provider, *tap_readable_acceptor);
+            make_edge_readable(*tap_readable_provider, *readable_acceptor);
+        }
+        else
+        {
+            static_assert(!sizeof(source_full_t),
+                          "Arguments to make_edge_tap were incorrect. Ensure you are providing either "
+                          "WritableAcceptor->WritableProvider or ReadableProvider->ReadableAcceptor");
+        }
+    }
+
   private:
     static std::shared_ptr<WritableEdgeHandle> do_adapt_ingress(const EdgeTypeInfo& target_type,
                                                                 std::shared_ptr<WritableEdgeHandle> ingress);

@@ -72,8 +72,7 @@ class MirrorTapUtil
         auto names(ingress_ports.names());
         names.push_back(get_ingress_tap_name());
 
-        return segment::IngressPorts<IngressTypesT..., DataTypeT>(
-            std::move(std::initializer_list<std::string>(names.begin(), names.end())));
+        return segment::IngressPorts<IngressTypesT..., DataTypeT>(std::move(names));
     }
 
     segment::IngressPorts<DataTypeT> create_or_extend_ingress_ports() const
@@ -82,14 +81,13 @@ class MirrorTapUtil
     }
 
     template <typename... EgressTypesT>
-    segment::IngressPorts<EgressTypesT..., DataTypeT> create_or_extend_egress_ports(
+    segment::EgressPorts<EgressTypesT..., DataTypeT> create_or_extend_egress_ports(
         segment::EgressPorts<EgressTypesT...>& egress_ports) const
     {
         auto names(egress_ports.names());
         names.push_back(get_ingress_tap_name());
 
-        return segment::EgressPorts<EgressTypesT..., DataTypeT>(
-            std::move(std::initializer_list<std::string>(names.begin(), names.end())));
+        return segment::EgressPorts<EgressTypesT..., DataTypeT>(std::move(names));
     }
 
     segment::EgressPorts<DataTypeT> create_or_extend_egress_ports() const

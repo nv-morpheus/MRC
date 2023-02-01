@@ -842,4 +842,41 @@ TEST_F(TestEdges, CreateAndDestroy)
     }
 }
 
+TEST_F(TestEdges, EdgeTapWAcceptorWProvider)
+{
+    auto source = std::make_shared<node::TestSource<int>>();
+    auto node   = std::make_shared<node::TestNode<int>>();
+    auto sink   = std::make_shared<node::TestSink<int>>();
+
+    // Original edge
+    mrc::make_edge(*source, *sink);
+
+    // Tap edge
+    mrc::edge::EdgeBuilder::make_edge_tap<int>(*source, *sink, *node, *node);
+
+    source->run();
+    node->run();
+    sink->run();
+}
+
+TEST_F(TestEdges, EdgeTapRProviderRAcceptor)
+{
+    auto source = std::make_shared<node::TestSource<int>>();
+    auto source_rp = std::dynamic_pointer_cast<edge::IReadableProvider<int>>(source);
+
+    auto node   = std::make_shared<node::TestNode<int>>();
+
+    auto sink   = std::make_shared<node::TestSink<int>>();
+    auto sink_ra = std::dynamic_pointer_cast<edge::IReadableAcceptor<int>>(sink);
+
+    // Original edge
+    mrc::make_edge(*source_rp, *sink_ra);
+
+    // Tap edge
+    mrc::edge::EdgeBuilder::make_edge_tap<int>(*source_rp, *sink_ra, *node, *node);
+
+    source->run();
+    node->run();
+    sink->run();
+}
 }  // namespace mrc
