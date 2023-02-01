@@ -37,7 +37,9 @@
 #include <boost/fiber/condition_variable.hpp>
 #include <glog/logging.h>
 #include <grpcpp/grpcpp.h>
+#include <node/node.h>
 #include <rxcpp/rx.hpp>
+#include <v8-initialization.h>
 
 #include <algorithm>
 #include <exception>
@@ -86,7 +88,125 @@ static Expected<> unary_response(Server::event_t& event, Expected<MessageT>&& me
     return {};
 }
 
-Server::Server(runnable::Resources& runnable) : m_runnable(runnable), m_server(m_runnable) {}
+int run_node_instance(::node::MultiIsolatePlatform* platform,
+                      const std::vector<std::string>& args,
+                      const std::vector<std::string>& exec_args)
+{
+    int exit_code = 0;
+
+    std::vector<std::string> errors;
+    std::unique_ptr<::node::CommonEnvironmentSetup> setup =
+        ::node::CommonEnvironmentSetup::Create(platform, &errors, args, exec_args);
+
+    if (!setup)
+    {
+        for (const std::string& err : errors)
+        {
+            fprintf(stderr, "%s: %s\n", args[0].c_str(), err.c_str());
+        }
+        return 1;
+    }
+
+    v8::Isolate* isolate     = setup->isolate();
+    ::node::Environment* env = setup->env();
+
+    {
+        v8::Locker locker(isolate);
+        v8::Isolate::Scope isolate_scope(isolate);
+        v8::HandleScope handle_scope(isolate);
+        v8::Context::Scope context_scope(setup->context());
+
+        v8::MaybeLocal<v8::Value> loadenv_ret = ::node::LoadEnvironment(env,
+                                                                        "const publicRequire ="
+                                                                        "  "
+                                                                        "require('node:module').createRequire(process."
+                                                                        "cwd() + '/');"
+                                                                        "globalThis.require = publicRequire;"
+                                                                        "require('node:vm').runInThisContext(process."
+                                                                        "argv[1]);");
+
+        if (loadenv_ret.IsEmpty())  // There has been a JS exception.
+            return 1;
+
+        exit_code = ::node::SpinEventLoop(env).FromMaybe(1);
+
+        ::node::Stop(env);
+    }
+
+    return exit_code;
+}
+
+std::vector<char*> vec_string_to_char_ptr(std::vector<std::string>& vec_strings)
+{
+    std::vector<char*> vec_pointers;
+
+    // remember the nullptr terminator
+    vec_pointers.reserve(vec_strings.size() + 1);
+
+    std::transform(vec_strings.begin(), vec_strings.end(), std::back_inserter(vec_pointers), [](std::string& s) {
+        return s.data();
+    });
+
+    vec_pointers.push_back(nullptr);
+
+    return vec_pointers;
+}
+
+Server::Server(runnable::Resources& runnable) : m_runnable(runnable), m_server(m_runnable)
+{
+    int argc;
+    char** argv;
+
+    // Create an instance of node
+    // argv = uv_setup_args(argc, argv);
+    // std::vector<std::string> args(argv, argv + argc);
+    std::vector<std::string> args;
+
+    args.emplace_back("/work/build/cpp/mrc/src/tests/test_mrc_private.x");
+    // args.push_back("inspect");
+    args.emplace_back("/work/cpp/mrc/src/internal/control_plane/server.js");
+
+    // Convert the string array to a char**
+    std::vector<char*> raw_pointer_array = vec_string_to_char_ptr(args);
+
+    // This works well but is for some reason deprecated. Trying the example from the embedding documentation did not
+    // work correctly so we will use this for the time being. Example docs: https://nodejs.org/api/embedding.html
+    ::node::Start(args.size(), raw_pointer_array.data());
+
+    // // Parse Node.js CLI options, and print any errors that have occurred while
+    // // trying to parse them.
+    // std::unique_ptr<::node::InitializationResult> result = ::node::InitializeOncePerProcess(
+    //     args,
+    //     {::node::ProcessInitializationFlags::kNoInitializeV8,
+    //      ::node::ProcessInitializationFlags::kNoInitializeNodeV8Platform});
+
+    // for (const std::string& error : result->errors())
+    // {
+    //     fprintf(stderr, "%s: %s\n", args[0].c_str(), error.c_str());
+    // }
+
+    // if (static_cast<int>(result->early_return()) != 0)
+    // {
+    //     // return result->exit_code();
+    //     LOG(ERROR) << "Exited early. Code: " << result->exit_code();
+    // }
+
+    // // Create a v8::Platform instance. `MultiIsolatePlatform::Create()` is a way
+    // // to create a v8::Platform instance that Node.js can use when creating
+    // // Worker threads. When no `MultiIsolatePlatform` instance is present,
+    // // Worker threads are disabled.
+    // std::unique_ptr<::node::MultiIsolatePlatform> platform = ::node::MultiIsolatePlatform::Create(4);
+    // v8::V8::InitializePlatform(platform.get());
+    // v8::V8::Initialize();
+
+    // // See below for the contents of this function.
+    // int ret = run_node_instance(platform.get(), result->args(), result->exec_args());
+
+    // v8::V8::Dispose();
+    // v8::V8::DisposePlatform();
+
+    // ::node::TearDownOncePerProcess();
+}
 
 Server::~Server() = default;
 

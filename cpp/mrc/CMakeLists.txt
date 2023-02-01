@@ -182,6 +182,7 @@ target_link_libraries(libmrc
     prometheus-cpp::core # private in MR !199
     ucx::ucs
     ucx::ucp
+    NodeJs::Node
 )
 
 target_include_directories(libmrc
@@ -277,4 +278,3 @@ rapids_export(BUILD ${PROJECT_NAME}
   DOCUMENTATION doc_string
   FINAL_CODE_BLOCK code_string
 )
-

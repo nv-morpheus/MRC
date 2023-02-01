@@ -35,6 +35,7 @@ dependencies:
   - libtool
   - ninja=1.10
   - nlohmann_json=3.9
+  - nodejs=18.12
   - numactl-libs-cos7-x86_64
   - numpy=1.21.2
   - nvcc_linux-64=11.4
