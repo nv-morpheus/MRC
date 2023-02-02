@@ -1,0 +1,30 @@
+{
+  "name": "control-plane",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build:server": "rimraf dist && tsc",
+    "start:server": "nodemon src/server/server.ts --watch src/server",
+    "start:client": "nodemon src/client/index.ts --watch src/client",
+    "proto:build": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_opt=outputServices=grpc-js,env=node,useOptionals=messages,exportCommonSymbols=false,esModuleInterop=true --ts_proto_out=./src/proto/ -I ../../protos/ ../../protos/mrc/protos/architect.proto",
+    "codegen:buf": "cd proto; buf generate; cd .."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^18.11.18",
+    "grpc_tools_node_protoc_ts": "^5.3.3",
+    "grpc-tools": "^1.12.4",
+    "nodemon": "^2.0.20",
+    "rimraf": "^4.1.2",
+    "ts-proto": "^1.139.0",
+    "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.8.7",
+    "rxjs": "^7.8.0",
+    "ts-node": "^10.9.1"
+  }
+}

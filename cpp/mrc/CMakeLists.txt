@@ -183,6 +183,7 @@ target_link_libraries(libmrc
     ucx::ucs
     ucx::ucp
     NodeJs::Node
+    UV::uv
 )
 
 target_include_directories(libmrc

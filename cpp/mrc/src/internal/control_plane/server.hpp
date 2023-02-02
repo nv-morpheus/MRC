@@ -25,6 +25,8 @@
 #include "mrc/core/error.hpp"
 #include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
+#include "mrc/runnable/context.hpp"
+#include "mrc/runnable/forward.hpp"
 
 #include <boost/fiber/condition_variable.hpp>
 #include <boost/fiber/mutex.hpp>
@@ -37,6 +39,13 @@
 #include <string>
 
 // IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
+
+namespace node {
+class Environment;
+class CommonEnvironmentSetup;
+class InitializationResult;
+class MultiIsolatePlatform;
+}  // namespace node
 
 namespace mrc::node {
 template <typename T>
@@ -64,6 +73,49 @@ class Runner;
 }  // namespace mrc::runnable
 
 namespace mrc::internal::control_plane {
+
+class NodeContext : public ::mrc::runnable::Context
+{
+  public:
+  protected:
+    void do_init() override;
+
+  private:
+    void launch_node(std::vector<std::string> args);
+
+    std::unique_ptr<::node::InitializationResult> m_init_result;
+    std::unique_ptr<::node::MultiIsolatePlatform> m_platform;
+
+    std::unique_ptr<::node::CommonEnvironmentSetup> m_setup;
+};
+
+class NodeRuntime : public ::mrc::runnable::RunnableWithContext<::mrc::runnable::Context>
+{
+  public:
+    NodeRuntime(std::vector<std::string> args);
+    ~NodeRuntime() override;
+
+    void start();
+    void stop();
+    void kill();
+
+  private:
+    void run(::mrc::runnable::Context& ctx) override;
+    void on_state_update(const Runnable::State& state) override;
+
+    // void run_node();
+
+    // std::unique_ptr<::node::CommonEnvironmentSetup> node_init_setup(std::vector<std::string> args);
+    // void node_run_environment(std::unique_ptr<::node::CommonEnvironmentSetup>);
+    void launch_node(std::vector<std::string> args);
+
+    std::unique_ptr<::node::InitializationResult> m_init_result;
+    std::unique_ptr<::node::MultiIsolatePlatform> m_platform;
+
+    std::unique_ptr<::node::CommonEnvironmentSetup> m_setup;
+
+    std::vector<std::string> m_args;
+};
 
 /**
  * @brief Control Plane Server
@@ -122,6 +174,7 @@ class Server : public Service
     std::unique_ptr<mrc::runnable::Runner> m_stream_acceptor;
     std::unique_ptr<mrc::runnable::Runner> m_event_handler;
     std::unique_ptr<mrc::runnable::Runner> m_update_handler;
+    std::unique_ptr<mrc::runnable::Runner> m_node_runner;
 
     // state mutex/cv/timeout
     mutable boost::fibers::mutex m_mutex;

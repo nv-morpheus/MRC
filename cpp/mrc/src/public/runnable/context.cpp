@@ -47,7 +47,10 @@ struct FiberLocalContext
 
 }  // namespace
 
-Context::Context(std::size_t rank, std::size_t size) : m_rank(rank), m_size(size) {}
+Context::Context(std::size_t rank, std::size_t size) : m_rank(rank), m_size(size)
+{
+    VLOG(10) << "Creating context";
+}
 
 EngineType Context::execution_context() const
 {
@@ -99,11 +102,20 @@ void Context::init(const Runner& runner)
     fiber_local.reset(new FiberLocalContext());
     fiber_local->m_context = this;
 
+    m_runner = &runner;
+
+    // Now allow any derived classes to perform initialization
+    this->do_init();
+
+    // Finally, update the info
     std::stringstream ss;
     this->init_info(ss);
     m_info = ss.str();
+}
 
-    m_runner = &runner;
+void Context::do_init()
+{
+    // Nothing in base
 }
 
 void Context::finish()

@@ -24,6 +24,12 @@ package mrc.protos;
 
 service Architect {
     rpc EventStream(stream Event) returns (stream Event) {}
+    rpc Shutdown(ShutdownRequest) returns (ShutdownResponse) {}
+}
+
+message ShutdownRequest{
+}
+message ShutdownResponse{
 }
 
 enum EventType
