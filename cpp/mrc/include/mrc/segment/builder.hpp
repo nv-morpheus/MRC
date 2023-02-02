@@ -274,20 +274,22 @@ class Builder final
     void make_edge(SourceObjectT source, SinkObjectT sink)
     {
         DVLOG(10) << "forming edge between two segment objects";
-        using source_shared_ptr_type_t = ObjectSharedPtrType<SourceObjectT>::type_t::source_type_t;  // Might be
-                                                                                                     // nullptr_t
-        using sink_shared_ptr_type_t = ObjectSharedPtrType<SinkObjectT>::type_t::sink_type_t;  // Might be nullptr_t
+        using source_sp_type_t = mrc_object_sptr_type_t<SourceObjectT>::source_type_t;  // Might be
+                                                                                              // nullptr_t
+        using sink_sp_type_t = mrc_object_sptr_type_t<SinkObjectT>::sink_type_t;        // Might be nullptr_t
 
         auto& source_object = to_object_properties(source);
         auto& sink_object   = to_object_properties(sink);
 
-        using deduced_source_type_t = FirstNonNullType<SourceNodeTypeT,           // Explicit type hint
-                                                       source_shared_ptr_type_t,  // Deduced type (if possible)
-                                                       SinkNodeTypeT,             // Fallback to Sink explicit hint
-                                                       sink_shared_ptr_type_t>::type_t;  // Fallback to sink
-                                                                                         // deduced type
-        using deduced_sink_type_t =
-            FirstNonNullType<SinkNodeTypeT, sink_shared_ptr_type_t, SourceNodeTypeT, source_shared_ptr_type_t>::type_t;
+        using deduced_source_type_t = first_non_null_type_t<SourceNodeTypeT,   // Explicit type hint
+                                                            source_sp_type_t,  // Deduced type (if possible)
+                                                            SinkNodeTypeT,     // Fallback to Sink explicit hint
+                                                            sink_sp_type_t>;   // Fallback to sink
+                                                                               // deduced type
+        using deduced_sink_type_t = first_non_null_type_t<SinkNodeTypeT,       // Explicit type hint
+                                                          sink_sp_type_t,      // Deduced type (if possible)
+                                                          SourceNodeTypeT,     // Fallback to Source explicit hint
+                                                          source_sp_type_t>;   // Fallback to source deduced type
 
         VLOG(2) << "Deduced source type: " << mrc::boost_type_name<deduced_source_type_t>() << std::endl;
         VLOG(2) << "Deduced sink type: " << mrc::boost_type_name<deduced_sink_type_t>() << std::endl;
@@ -319,7 +321,7 @@ class Builder final
         auto& source_object = to_object_properties(source);
         auto& sink_object   = to_object_properties(sink);
 
-        auto& tap_input_object = to_object_properties(tap_input);
+        auto& tap_input_object  = to_object_properties(tap_input);
         auto& tap_output_object = to_object_properties(tap_output);
 
         CHECK(source_object.is_source()) << "Source object is not a source";
@@ -430,25 +432,27 @@ ObjectProperties& Builder::to_object_properties(ObjectReprT& repr)
     if constexpr (is_shared_ptr_v<ObjectReprT>)
     {
         // SP to Object
-        if constexpr (is_object_v<typename ObjectReprT::element_type>)
+        if constexpr (MRCObjectSharedPtr<ObjectReprT>)
         {
             auto object_properties_ptr_props_ptr = std::dynamic_pointer_cast<ObjectProperties>(repr);
             object_properties_ptr                = std::addressof(*object_properties_ptr_props_ptr);
         }
         // SP to ObjectProperties
-        else if constexpr (std::is_same_v<std::remove_cv_t<std::remove_reference_t<ObjectReprT>>,
-                                          std::shared_ptr<ObjectProperties>>)
+        else if constexpr (MRCObjPropSharedPtr<ObjectReprT>)
+        {
+            object_properties_ptr = std::addressof(*repr);
+        }
         {
             object_properties_ptr = std::addressof(*repr);
         }
     }
     // Object
-    else if constexpr (is_object_v<ObjectReprT>)
+    else if constexpr (MRCObject<ObjectReprT>)
     {
         object_properties_ptr = std::addressof(dynamic_cast<ObjectProperties&>(repr));
     }
     // ObjectProperties
-    else if constexpr (std::is_same_v<std::remove_cv_t<std::remove_reference_t<ObjectReprT>>, ObjectProperties>)
+    else if constexpr (MRCObjProp<ObjectReprT>)
     {
         object_properties_ptr = std::addressof(repr);
     }

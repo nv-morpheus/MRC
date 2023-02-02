@@ -9,58 +9,65 @@
 
 #include <concepts>
 
+namespace mrc {
+
 template <typename T>
-struct is_object : public std::false_type
+struct is_mrc_object_type : public std::false_type
 {};
 
 template <typename T>
-struct is_object<mrc::segment::Object<T>> : public std::true_type
+struct is_mrc_object_type<mrc::segment::Object<T>> : public std::true_type
 {};
 
 template <typename T>
-inline constexpr bool is_object_v = is_object<T>::value;  // NOLINT
+inline constexpr bool is_mrc_object_v = is_mrc_object_type<T>::value;  // NOLINT
 
 template <typename T>
-struct is_object_shared_ptr : public std::false_type
+struct is_mrc_object_shared_pointer : public std::false_type
 {};
 
 template <typename T>
-struct is_object_shared_ptr<std::shared_ptr<mrc::segment::Object<T>>> : public std::true_type
+struct is_mrc_object_shared_pointer<std::shared_ptr<mrc::segment::Object<T>>> : public std::true_type
 {};
 
 template <typename T>
-inline constexpr bool is_object_shared_ptr_v = is_object_shared_ptr<T>::value;  // NOLINT
+inline constexpr bool is_mrc_object_shared_ptr_v = is_mrc_object_shared_pointer<T>::value;  // NOLINT
 
-struct ObjectNullType
+struct mrc_object_null_type
 {
     using source_type_t = std::nullptr_t;
     using sink_type_t   = std::nullptr_t;
 };
 
 template <typename T>
-struct ObjectSharedPtrType
+struct mrc_object_sptr_type
 {
-    using type_t = ObjectNullType;
+    using type_t = mrc_object_null_type;
 };
 
 template <typename T>
-struct ObjectSharedPtrType<std::shared_ptr<mrc::segment::Object<T>>>
+struct mrc_object_sptr_type<std::shared_ptr<mrc::segment::Object<T>>>
 {
     using type_t = T;
 };
 
-template <typename TypeT>
-concept MRCObject = is_object_v<TypeT>;
+template <typename T>
+using mrc_object_sptr_type_t = typename mrc_object_sptr_type<T>::type_t;
 
 template <typename TypeT>
-concept MRCObjectSharedPtr = is_object_shared_ptr_v<TypeT>;
+concept MRCObject = is_mrc_object_v<TypeT>;
 
 template <typename TypeT>
-concept MRCObjProp = std::is_same_v<TypeT, mrc::segment::ObjectProperties>;
+concept MRCObjectSharedPtr = is_mrc_object_shared_ptr_v<TypeT>;
 
 template <typename TypeT>
-concept MRCObjPropSharedPtr = std::is_same_v<TypeT, std::shared_ptr<mrc::segment::ObjectProperties>>;
+concept MRCObjProp = std::is_same_v<std::decay_t<TypeT>, mrc::segment::ObjectProperties>;
+
+template <typename TypeT>
+concept MRCObjPropSharedPtr = std::is_same_v<std::decay_t<TypeT>, std::shared_ptr<mrc::segment::ObjectProperties>>;
 
 template <typename TypeT>
 concept MRCObjectProxy = MRCObject<TypeT> || MRCObjectSharedPtr<TypeT> || MRCObjProp<TypeT> ||
                          MRCObjPropSharedPtr<TypeT> || std::is_convertible_v<TypeT, std::string>;
+
+}  // namespace mrc
