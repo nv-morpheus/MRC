@@ -20,6 +20,20 @@ async function main(): Promise<void> {
    // Wait for the architect to shutdown
    await architect.shutdown();
 
+   // Try to shutdown first
+   console.log("Server shutting down...");
+
+   server.tryShutdown((error) => {
+
+      if (error) {
+         console.log("Server shutdown failed. Forcing shutdown");
+         server.forceShutdown();
+      }
+      else {
+         console.log("Server shutdown");
+      }
+   });
+
    console.log("Exiting script");
 }
 

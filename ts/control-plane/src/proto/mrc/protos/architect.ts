@@ -177,6 +177,12 @@ export function errorCodeToJSON(object: ErrorCode): string {
   }
 }
 
+export interface PingRequest {
+}
+
+export interface PingResponse {
+}
+
 export interface ShutdownRequest {
 }
 
@@ -564,6 +570,92 @@ export interface GPU {
 
 export interface NIC {
 }
+
+function createBasePingRequest(): PingRequest {
+  return {};
+}
+
+export const PingRequest = {
+  encode(_: PingRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): PingRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePingRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(_: any): PingRequest {
+    return {};
+  },
+
+  toJSON(_: PingRequest): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<PingRequest>, I>>(base?: I): PingRequest {
+    return PingRequest.fromPartial(base ?? {});
+  },
+
+  fromPartial<I extends Exact<DeepPartial<PingRequest>, I>>(_: I): PingRequest {
+    const message = createBasePingRequest();
+    return message;
+  },
+};
+
+function createBasePingResponse(): PingResponse {
+  return {};
+}
+
+export const PingResponse = {
+  encode(_: PingResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): PingResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePingResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(_: any): PingResponse {
+    return {};
+  },
+
+  toJSON(_: PingResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<PingResponse>, I>>(base?: I): PingResponse {
+    return PingResponse.fromPartial(base ?? {});
+  },
+
+  fromPartial<I extends Exact<DeepPartial<PingResponse>, I>>(_: I): PingResponse {
+    const message = createBasePingResponse();
+    return message;
+  },
+};
 
 function createBaseShutdownRequest(): ShutdownRequest {
   return {};
@@ -3903,6 +3995,15 @@ export const ArchitectService = {
     responseSerialize: (value: Event) => Buffer.from(Event.encode(value).finish()),
     responseDeserialize: (value: Buffer) => Event.decode(value),
   },
+  ping: {
+    path: "/mrc.protos.Architect/Ping",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: PingRequest) => Buffer.from(PingRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => PingRequest.decode(value),
+    responseSerialize: (value: PingResponse) => Buffer.from(PingResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => PingResponse.decode(value),
+  },
   shutdown: {
     path: "/mrc.protos.Architect/Shutdown",
     requestStream: false,
@@ -3916,6 +4017,7 @@ export const ArchitectService = {
 
 export interface ArchitectServer extends UntypedServiceImplementation {
   eventStream: handleBidiStreamingCall<Event, Event>;
+  ping: handleUnaryCall<PingRequest, PingResponse>;
   shutdown: handleUnaryCall<ShutdownRequest, ShutdownResponse>;
 }
 
@@ -3923,6 +4025,18 @@ export interface ArchitectClient extends Client {
   eventStream(): ClientDuplexStream<Event, Event>;
   eventStream(options: Partial<CallOptions>): ClientDuplexStream<Event, Event>;
   eventStream(metadata: Metadata, options?: Partial<CallOptions>): ClientDuplexStream<Event, Event>;
+  ping(request: PingRequest, callback: (error: ServiceError | null, response: PingResponse) => void): ClientUnaryCall;
+  ping(
+    request: PingRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: PingResponse) => void,
+  ): ClientUnaryCall;
+  ping(
+    request: PingRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: PingResponse) => void,
+  ): ClientUnaryCall;
   shutdown(
     request: ShutdownRequest,
     callback: (error: ServiceError | null, response: ShutdownResponse) => void,

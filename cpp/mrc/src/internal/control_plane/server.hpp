@@ -117,6 +117,40 @@ class NodeRuntime : public ::mrc::runnable::RunnableWithContext<::mrc::runnable:
     std::vector<std::string> m_args;
 };
 
+class NodeService : public Service
+{
+  public:
+    NodeService(runnable::Resources& runnable);
+    ~NodeService() override;
+
+    void set_args(std::vector<std::string> args);
+
+  private:
+    void do_service_start() final;
+    void do_service_stop() final;
+    void do_service_kill() final;
+    void do_service_await_live() final;
+    void do_service_await_join() final;
+
+    void launch_node(std::vector<std::string> args);
+
+    // mrc resources
+    runnable::Resources& m_runnable;
+
+    std::unique_ptr<::node::InitializationResult> m_init_result;
+    std::unique_ptr<::node::MultiIsolatePlatform> m_platform;
+
+    std::unique_ptr<::node::CommonEnvironmentSetup> m_setup;
+
+    std::vector<std::string> m_args;
+
+    mutable boost::fibers::mutex m_mutex;
+
+    Promise<void> m_started_promise{};
+    Future<void> m_started_future;
+    Future<void> m_completed_future;
+};
+
 /**
  * @brief Control Plane Server
  *
@@ -158,6 +192,9 @@ class Server : public Service
     // mrc resources
     runnable::Resources& m_runnable;
 
+    // Node service
+    NodeService m_node_service;
+
     // grpc
     rpc::Server m_server;
     std::shared_ptr<mrc::protos::Architect::AsyncService> m_service;
@@ -174,7 +211,7 @@ class Server : public Service
     std::unique_ptr<mrc::runnable::Runner> m_stream_acceptor;
     std::unique_ptr<mrc::runnable::Runner> m_event_handler;
     std::unique_ptr<mrc::runnable::Runner> m_update_handler;
-    std::unique_ptr<mrc::runnable::Runner> m_node_runner;
+    // std::unique_ptr<mrc::runnable::Runner> m_node_runner;
 
     // state mutex/cv/timeout
     mutable boost::fibers::mutex m_mutex;

@@ -24,12 +24,23 @@ package mrc.protos;
 
 service Architect {
     rpc EventStream(stream Event) returns (stream Event) {}
+
+    rpc Ping(PingRequest) returns (PingResponse) {}
     rpc Shutdown(ShutdownRequest) returns (ShutdownResponse) {}
 }
 
+message PingRequest{
+    uint64 tag = 1;
+}
+message PingResponse{
+    uint64 tag = 1;
+}
+
 message ShutdownRequest{
+    uint64 tag = 1;
 }
 message ShutdownResponse{
+    uint64 tag = 1;
 }
 
 enum EventType

@@ -6,7 +6,7 @@ import {
 } from '@grpc/grpc-js';
 import { firstValueFrom, Subject } from "rxjs";
 
-import { ArchitectServer, ArchitectService, Event, EventType, ShutdownRequest, ShutdownResponse } from "../proto/mrc/protos/architect";
+import { ArchitectServer, ArchitectService, Event, EventType, PingRequest, PingResponse, ShutdownRequest, ShutdownResponse } from "../proto/mrc/protos/architect";
 
 class Architect {
    public service: ArchitectServer;
@@ -17,6 +17,9 @@ class Architect {
       this.service = {
          eventStream: (call: ServerDuplexStream<Event, Event>): void => {
             this.do_eventStream(call);
+         },
+         ping: (call: ServerUnaryCall<PingRequest, PingResponse>, callback: sendUnaryData<PingResponse>): void =>{
+            this.do_ping(call, callback);
          },
          shutdown: (call: ServerUnaryCall<ShutdownRequest, ShutdownResponse>, callback: sendUnaryData<ShutdownResponse>): void =>{
             this.do_shutdown(call, callback);
@@ -71,6 +74,15 @@ class Architect {
       console.log(`Issuing shutdown promise from ${call.getPeer()}`);
 
       this.shutdown_subject.next();
+
+      callback(null, ShutdownResponse.create());
+   }
+
+   private do_ping(call: ServerUnaryCall<PingRequest, PingResponse>, callback: sendUnaryData<PingResponse>){
+
+      console.log(`Ping from ${call.getPeer()}`);
+
+      callback(null, PingResponse.create());
    }
 }
 
