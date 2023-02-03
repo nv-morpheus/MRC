@@ -35,8 +35,8 @@ inline constexpr bool is_mrc_object_shared_ptr_v = is_mrc_object_shared_pointer<
 
 struct mrc_object_null_type
 {
-    using source_type_t = std::nullptr_t;
-    using sink_type_t   = std::nullptr_t;
+    using source_type_t = void;
+    using sink_type_t   = void;
 };
 
 template <typename T>

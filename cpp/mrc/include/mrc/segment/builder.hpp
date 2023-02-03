@@ -300,7 +300,7 @@ class Builder final
      * @param source Edge source
      * @param sink Edge Sink
      */
-    template <typename SourceNodeTypeT = std::nullptr_t,
+    template <typename SourceNodeTypeT = void,
               typename SinkNodeTypeT   = SourceNodeTypeT,
               MRCObjectProxy SourceObjectT,
               MRCObjectProxy SinkObjectT>
@@ -426,18 +426,18 @@ void Builder::make_edge(SourceObjectT source, SinkObjectT sink)
 
 {
     DVLOG(10) << "forming edge between two segment objects";
-    using source_sp_type_t = mrc_object_sptr_type_t<SourceObjectT>::source_type_t;  // Might be nullptr_t
-    using sink_sp_type_t   = mrc_object_sptr_type_t<SinkObjectT>::sink_type_t;      // Might be nullptr_t
+    using source_sp_type_t = mrc_object_sptr_type_t<SourceObjectT>::source_type_t;  // Might be void
+    using sink_sp_type_t   = mrc_object_sptr_type_t<SinkObjectT>::sink_type_t;      // Might be void
 
     auto& source_object = to_object_properties(source);
     auto& sink_object   = to_object_properties(sink);
 
     // If we can determine the type from the actual object, use that, then fall back to hints or defaults.
-    using deduced_source_type_t = first_non_null_type_t<source_sp_type_t,  // Deduced type (if possible)
+    using deduced_source_type_t = first_non_void_type_t<source_sp_type_t,  // Deduced type (if possible)
                                                         SourceNodeTypeT,   // Explicit type hint
                                                         sink_sp_type_t,    // Fallback to Sink deduced type
                                                         SinkNodeTypeT>;    // Fallback to Sink explicit hint
-    using deduced_sink_type_t   = first_non_null_type_t<sink_sp_type_t,    // Deduced type (if possible)
+    using deduced_sink_type_t   = first_non_void_type_t<sink_sp_type_t,    // Deduced type (if possible)
                                                       SinkNodeTypeT,     // Explicit type hint
                                                       source_sp_type_t,  // Fallback to Source deduced type
                                                       SourceNodeTypeT>;  // Fallback to Source explicit hint
