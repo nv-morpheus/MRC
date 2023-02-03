@@ -291,6 +291,9 @@ class Builder final
                                                           SourceNodeTypeT,     // Fallback to Source explicit hint
                                                           source_sp_type_t>;   // Fallback to source deduced type
 
+        static_assert(!std::is_same_v<deduced_source_type_t, std::nullptr_t>, "Could not deduce source type");
+        static_assert(!std::is_same_v<deduced_sink_type_t, std::nullptr_t>, "Could not deduce sink type");
+
         VLOG(2) << "Deduced source type: " << mrc::boost_type_name<deduced_source_type_t>() << std::endl;
         VLOG(2) << "Deduced sink type: " << mrc::boost_type_name<deduced_sink_type_t>() << std::endl;
 

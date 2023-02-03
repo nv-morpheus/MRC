@@ -118,19 +118,16 @@ using is_base_of_template = typename is_base_of_template_impl<BaseT, DerivedT>::
 template <typename T, typename... TsT>
 struct first_non_null_type
 {
-    using type_t = std::conditional_t<std::is_same<T, std::nullptr_t>::value,
-            typename first_non_null_type<TsT...>::type_t,
-            T>;
-    static_assert(!std::is_same<type_t, void>::value, "All types passed are nullptr_t");
+    using type_t = std::conditional_t<std::is_same_v<T, std::nullptr_t>,
+            typename first_non_null_type<TsT...>::type_t, T>;
 };
 
 template <typename T>
 struct first_non_null_type<T> {
     using type_t = T;
-    static_assert(!std::is_same<type_t, void>::value, "All types passed are nullptr_t");
 };
 
 template <typename T, typename... TsT>
-using first_non_null_type_t = typename first_non_null_type<TsT...>::type_t;
+using first_non_null_type_t = typename first_non_null_type<T, TsT...>::type_t;
 
 }  // namespace mrc
