@@ -291,8 +291,10 @@ class Builder final
 
     /**
      * Create an edge between two things that are convertible to ObjectProperties
-     * @tparam SourceNodeTypeT Type hint for the source node -- optional
-     * @tparam SinkNodeTypeT Type hint for the sink node -- optional
+     * @tparam SourceNodeTypeT Type hint for the source node -- optional -- this will be used if the type of the source
+     * object cannot be directly determined.
+     * @tparam SinkNodeTypeT Type hint for the sink node -- optional -- this will be used if the type of the sink object
+     * cannot be directly determined.
      * @tparam SourceObjectT Concept conforming type of the source object
      * @tparam SinkObjectT Concept conforming type of the sink object
      * @param source Edge source
@@ -430,18 +432,15 @@ void Builder::make_edge(SourceObjectT source, SinkObjectT sink)
     auto& source_object = to_object_properties(source);
     auto& sink_object   = to_object_properties(sink);
 
-    using deduced_source_type_t = first_non_null_type_t<SourceNodeTypeT,   // Explicit type hint
-                                                        source_sp_type_t,  // Deduced type (if possible)
-                                                        SinkNodeTypeT,     // Fallback to Sink explicit hint
-                                                        sink_sp_type_t>;   // Fallback to sink
-                                                                           // deduced type
-    using deduced_sink_type_t = first_non_null_type_t<SinkNodeTypeT,       // Explicit type hint
-                                                      sink_sp_type_t,      // Deduced type (if possible)
-                                                      SourceNodeTypeT,     // Fallback to Source explicit hint
-                                                      source_sp_type_t>;   // Fallback to source deduced type
-
-    static_assert(!std::is_same_v<deduced_source_type_t, std::nullptr_t>, "Could not deduce source type");
-    static_assert(!std::is_same_v<deduced_sink_type_t, std::nullptr_t>, "Could not deduce sink type");
+    // If we can determine the type from the actual object, use that, then fall back to hints or defaults.
+    using deduced_source_type_t = first_non_null_type_t<source_sp_type_t,  // Deduced type (if possible)
+                                                        SourceNodeTypeT,   // Explicit type hint
+                                                        sink_sp_type_t,    // Fallback to Sink deduced type
+                                                        SinkNodeTypeT>;    // Fallback to Sink explicit hint
+    using deduced_sink_type_t   = first_non_null_type_t<sink_sp_type_t,    // Deduced type (if possible)
+                                                      SinkNodeTypeT,     // Explicit type hint
+                                                      source_sp_type_t,  // Fallback to Source deduced type
+                                                      SourceNodeTypeT>;  // Fallback to Source explicit hint
 
     VLOG(2) << "Deduced source type: " << mrc::boost_type_name<deduced_source_type_t>() << std::endl;
     VLOG(2) << "Deduced sink type: " << mrc::boost_type_name<deduced_sink_type_t>() << std::endl;
