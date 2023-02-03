@@ -222,6 +222,9 @@ PYBIND11_MODULE(segment, module)
 
     Builder.def("make_edge", &BuilderProxy::make_edge, py::arg("source"), py::arg("sink"));
 
+    Builder.def("make_edge_tap", &BuilderProxy::make_edge_tap,
+                py::arg("source"), py::arg("sink"), py::arg("tap_input"), py::arg("tap_output"));
+
     Builder.def("load_module",
                 &BuilderProxy::load_module_from_registry,
                 py::arg("module_id"),

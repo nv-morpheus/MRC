@@ -61,21 +61,6 @@ class MirrorTapUtilProxy
     {
         return std::make_shared<py_mirror_tap_t>(name, cast_from_pyobject(config));
     }
-
-    static initializer_t tap(py_mirror_tap_t& self,
-                             initializer_t initializer,
-                             const std::string tap_from,
-                             const std::string tap_to)
-    {
-        return self.tap(initializer, tap_from, tap_to);
-    }
-
-    static initializer_t stream_to(py_mirror_tap_t& self, initializer_t initializer, const std::string stream_to)
-    {
-        return self.stream_to(initializer, stream_to);
-    }
-
-    // TODO(create or extend ingress ports)
 };
 
 void init_mirror_tap_util(py::module_& module)
@@ -85,10 +70,16 @@ void init_mirror_tap_util(py::module_& module)
 
     MirrorTap.def(py::init(py::overload_cast<const std::string&>(&MirrorTapUtilProxy::create)),
                   py::return_value_policy::take_ownership);
+
     MirrorTap.def(py::init(py::overload_cast<const std::string&, py::dict>(&MirrorTapUtilProxy::create)),
                   py::return_value_policy::take_ownership);
 
-    MirrorTap.def("tap", &MirrorTapUtilProxy::tap, py::arg("initializer"), py::arg("tap_from"), py::arg("tap_to"));
-    MirrorTap.def("stream_to", &MirrorTapUtilProxy::stream_to, py::arg("initializer"), py::arg("stream_to"));
+    MirrorTap.def("tap", &PythonMirrorTapUtil::tap, py::arg("initializer"), py::arg("tap_from"), py::arg("tap_to"));
+
+    MirrorTap.def("stream_to", &PythonMirrorTapUtil::stream_to, py::arg("initializer"), py::arg("stream_to"));
+
+    MirrorTap.def("get_ingress_tap_name", &PythonMirrorTapUtil::get_ingress_tap_name);
+
+    MirrorTap.def("get_egress_tap_name", &PythonMirrorTapUtil::get_egress_tap_name);
 }
 }  // namespace mrc::pymrc

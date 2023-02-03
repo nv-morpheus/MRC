@@ -67,7 +67,7 @@ def test_single_pipeline_tap_and_buffer():
         def on_complete():
             pass
 
-        sink = builder.make_sink(test_name + "_mirror_sink", on_next_sink, on_error, on_complete)
+        builder.make_sink(test_name + "_mirror_sink", on_next_sink, on_error, on_complete)
 
     mirror_tap = mrc.MirrorTap("test_mirror_tap")
     pipe = mrc.Pipeline()
@@ -79,8 +79,8 @@ def test_single_pipeline_tap_and_buffer():
     tapped_init_wrapper_mirrored = mirror_tap.stream_to(init_wrapper_mirrored,
                                                         test_name + "_mirror_sink")
 
-    pipe.make_segment("segment_main", [], ["mirror_tap_source_2"], tapped_init_wrapper_main)
-    pipe.make_segment("segment_mirror", ["mirror_tap_source_2"], [], tapped_init_wrapper_mirrored)
+    pipe.make_segment("segment_main", [], [mirror_tap.get_egress_tap_name()], tapped_init_wrapper_main)
+    pipe.make_segment("segment_mirror", [mirror_tap.get_ingress_tap_name()], [], tapped_init_wrapper_mirrored)
 
     options = mrc.Options()
 
@@ -92,3 +92,6 @@ def test_single_pipeline_tap_and_buffer():
 
     assert (packets_main == packet_count)
     assert (packets_mirrored >= packet_count * 0.5)
+
+def test_single_pipeline_tap_and_buffer_with_additional_ports():
+    pass

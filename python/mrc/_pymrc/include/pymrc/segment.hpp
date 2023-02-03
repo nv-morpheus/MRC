@@ -209,6 +209,13 @@ class BuilderProxy
                           std::shared_ptr<mrc::segment::ObjectProperties> source,
                           std::shared_ptr<mrc::segment::ObjectProperties> sink);
 
+    // TODO(devin) -- we can't pass all the variants, so we need to figure out how to do this
+    static void make_edge_tap(mrc::segment::Builder& self,
+                              std::string& source,
+                              std::string& sink,
+                              std::shared_ptr<mrc::segment::ObjectProperties> tap_input,
+                              std::shared_ptr<mrc::segment::ObjectProperties> tap_output){}
+
     static std::shared_ptr<mrc::segment::ObjectProperties> get_ingress(mrc::segment::Builder& self,
                                                                        const std::string& name);
 
