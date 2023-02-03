@@ -26,6 +26,7 @@
 #include "pymrc/utils.hpp"
 
 #include "mrc/edge/edge_builder.hpp"
+#include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/port_registry.hpp"
 #include "mrc/node/rx_sink_base.hpp"
 #include "mrc/node/rx_source_base.hpp"

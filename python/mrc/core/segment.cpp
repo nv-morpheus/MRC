@@ -17,8 +17,11 @@
 
 #include "pymrc/segment.hpp"
 
+#include "pymrc/module_definitions/mirror_tap_util.hpp"
 #include "pymrc/module_definitions/segment_modules.hpp"
+#include "pymrc/module_registry.hpp"
 #include "pymrc/node.hpp"  // IWYU pragma: keep
+#include "pymrc/py_segment_module.hpp"
 #include "pymrc/types.hpp"
 #include "pymrc/utilities/function_wrappers.hpp"  // IWYU pragma: keep
 #include "pymrc/utils.hpp"
@@ -45,6 +48,7 @@
 namespace mrc::pymrc {
 
 namespace py = pybind11;
+
 
 PYBIND11_MODULE(segment, module)
 {
@@ -101,12 +105,13 @@ PYBIND11_MODULE(segment, module)
                                py::overload_cast<>(&mrc::segment::ObjectProperties::launch_options),
                                py::return_value_policy::reference_internal);
 
-    auto Builder    = py::class_<mrc::segment::Builder>(module, "Builder");
-    auto Definition = py::class_<mrc::segment::Definition>(module, "Definition");
+    auto Builder               = py::class_<mrc::segment::Builder>(module, "Builder");
+    auto Definition            = py::class_<mrc::segment::Definition>(module, "Definition");
+
+    init_segment_modules(module);
+    init_mirror_tap_util(module);
 
     // Initialize definitions for segment modules
-    init_segment_modules(module);
-
     /** Builder Interface Declarations **/
     /*
      * @brief Make a source node that generates py::object values

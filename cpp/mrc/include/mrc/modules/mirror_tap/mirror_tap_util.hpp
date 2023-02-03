@@ -24,8 +24,11 @@
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/operators/broadcast.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/segment/egress_ports.hpp"
+#include "mrc/segment/ingress_ports.hpp"
 #include "mrc/version.hpp"
 
+#include <glog/logging.h>
 #include <nlohmann/json.hpp>
 
 #include <atomic>
@@ -34,6 +37,7 @@ namespace mrc::modules {
 template <typename DataTypeT>
 class MirrorTapUtil
 {
+    using initializer_t = std::function<void(segment::Builder& builder)>;
     using type_t = MirrorTapUtil<DataTypeT>;
 
   public:
@@ -41,8 +45,7 @@ class MirrorTapUtil
 
     MirrorTapUtil(std::string module_name, nlohmann::json config);
 
-    template <typename FunctionT>
-    auto tap(FunctionT initializer, const std::string tap_from, const std::string tap_to)
+    initializer_t tap(initializer_t initializer, const std::string tap_from, const std::string tap_to)
     {
         using namespace modules;
         return [this, initializer, tap_from, tap_to](segment::Builder& builder) {
@@ -53,8 +56,7 @@ class MirrorTapUtil
         };
     }
 
-    template <typename FunctionT>
-    auto stream_to(FunctionT initializer, const std::string entry_point)
+    initializer_t stream_to(initializer_t initializer, const std::string entry_point)
     {
         using namespace modules;
         return [this, initializer, entry_point](segment::Builder& builder) {

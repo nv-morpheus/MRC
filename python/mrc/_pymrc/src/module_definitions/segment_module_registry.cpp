@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "pymrc/module_definitions/segment_modules.hpp"
+#include "pymrc/module_definitions/segment_module_registry.hpp"
 
 #include "nlohmann/json.hpp"
 
@@ -34,55 +34,8 @@ namespace mrc::pymrc {
 
 namespace py = pybind11;
 
-void PySegmentModule::initialize(segment::Builder& builder)
+void init_segment_module_registry(py::module_& module, py_module_registry_type& SegmentModuleRegistry)
 {
-    PYBIND11_OVERLOAD_PURE(void, mrc::modules::SegmentModule, initialize, builder);
-}
-
-std::string PySegmentModule::module_type_name() const
-{
-    PYBIND11_OVERLOAD_PURE(std::string, mrc::modules::SegmentModule, module_type_name);
-}
-
-void init_segment_modules(py::module_& module)
-{
-    auto SegmentModuleRegistry = py::class_<ModuleRegistryProxy>(module, "ModuleRegistry");
-    auto SegmentModule =
-        py::class_<mrc::modules::SegmentModule, PySegmentModule, std::shared_ptr<mrc::modules::SegmentModule>>(module,
-                                                                                                               "Segment"
-                                                                                                               "Modul"
-                                                                                                               "e");
-
-    /** Segment Module Interface Declarations **/
-    SegmentModule.def(py::init<std::string>());
-
-    SegmentModule.def("config", &SegmentModuleProxy::config);
-
-    SegmentModule.def("component_prefix", &SegmentModuleProxy::component_prefix);
-
-    SegmentModule.def("input_port", &SegmentModuleProxy::input_port, py::arg("input_id"));
-
-    SegmentModule.def("input_ports", &SegmentModuleProxy::input_ports);
-
-    SegmentModule.def("module_type_name", &SegmentModuleProxy::module_type_name);
-
-    SegmentModule.def("name", &SegmentModuleProxy::name);
-
-    SegmentModule.def("output_port", &SegmentModuleProxy::output_port, py::arg("output_id"));
-
-    SegmentModule.def("output_ports", &SegmentModuleProxy::output_ports);
-
-    SegmentModule.def("input_ids", &SegmentModuleProxy::input_ids);
-
-    SegmentModule.def("output_ids", &SegmentModuleProxy::output_ids);
-
-    // TODO(devin): need to think about if/how we want to expose type_ids to Python... It might allow for some nice
-    // flexibility
-    // SegmentModule.def("input_port_type_id", &SegmentModuleProxy::input_port_type_id, py::arg("input_id"))
-    // SegmentModule.def("input_port_type_ids", &SegmentModuleProxy::input_port_type_id)
-    // SegmentModule.def("output_port_type_id", &SegmentModuleProxy::output_port_type_id, py::arg("output_id"))
-    // SegmentModule.def("output_port_type_ids", &SegmentModuleProxy::output_port_type_id)
-
     /** Module Register Interface Declarations **/
     SegmentModuleRegistry.def_static("contains",
                                      &ModuleRegistryProxy::contains,

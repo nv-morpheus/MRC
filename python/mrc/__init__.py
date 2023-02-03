@@ -26,6 +26,7 @@ from .core.segment import Builder
 from .core.segment import ModuleRegistry
 from .core.segment import SegmentModule
 from .core.segment import SegmentObject
+from .core.segment import MirrorTap
 from .core.subscriber import Observable
 from .core.subscriber import Observer
 from .core.subscriber import Subscriber

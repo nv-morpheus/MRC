@@ -23,6 +23,7 @@
 #include "mrc/modules/stream_buffer/stream_buffer_base.hpp"
 
 #include <boost/circular_buffer.hpp>
+#include <glog/logging.h>
 #include <nlohmann/json.hpp>
 #include <rxcpp/rx.hpp>
 

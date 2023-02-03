@@ -24,6 +24,8 @@
 #include "mrc/modules/stream_buffer/stream_buffer_traits.hpp"
 
 #include <boost/circular_buffer.hpp>
+#include <boost/fiber/all.hpp>
+#include <glog/logging.h>
 #include <nlohmann/json.hpp>
 #include <rxcpp/rx.hpp>
 
@@ -93,7 +95,7 @@ void StreamBufferModule<DataTypeT, StreamBufferTypeT>::initialize(segment::Build
             m_stream_buffer.push_back(std::move(data));
             // std::lock_guard<decltype(m_write_mutex)> lock(m_write_mutex);
             // m_ring_buffer_write.push_back(std::move(data));
-            VLOG(10) << "Subscriber 1: OnNext -> push to ring buffer: " << data << std::endl;
+            VLOG(10) << "Subscriber 1: OnNext -> push to ring buffer " << std::endl;
         },
         [this](std::exception_ptr ep) {
             VLOG(10) << "Subscriber 1: OnError" << std::endl;

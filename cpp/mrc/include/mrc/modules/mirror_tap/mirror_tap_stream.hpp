@@ -25,72 +25,77 @@
 #include "mrc/segment/builder.hpp"
 #include "mrc/version.hpp"
 
+#include <glog/logging.h>
 #include <nlohmann/json.hpp>
 
 #include <atomic>
 
 namespace mrc::modules {
-    template<typename DataTypeT>
-    class MirrorTapStreamModule : public SegmentModule, public PersistentModule {
-        using type_t = MirrorTapStreamModule<DataTypeT>;
+template <typename DataTypeT>
+class MirrorTapStreamModule : public SegmentModule, public PersistentModule
+{
+    using type_t = MirrorTapStreamModule<DataTypeT>;
 
-    public:
-        MirrorTapStreamModule(std::string module_name);
+  public:
+    MirrorTapStreamModule(std::string module_name);
 
-        MirrorTapStreamModule(std::string module_name, nlohmann::json _config);
+    MirrorTapStreamModule(std::string module_name, nlohmann::json _config);
 
-        std::string tap_ingress_port_name() const;
-        void tap_ingress_port_name(std::string name);
+    std::string tap_ingress_port_name() const;
+    void tap_ingress_port_name(std::string name);
 
-    protected:
-        void initialize(segment::Builder &builder) override;
+  protected:
+    void initialize(segment::Builder& builder) override;
 
-        std::string module_type_name() const override;
+    std::string module_type_name() const override;
 
-    private:
-        std::shared_ptr<StreamBufferModule<DataTypeT>> m_stream_buffer;
+  private:
+    std::shared_ptr<StreamBufferModule<DataTypeT>> m_stream_buffer;
 
-        std::string m_ingress_name;
-    };
+    std::string m_ingress_name;
+};
 
-    template<typename DataTypeT>
-    MirrorTapStreamModule<DataTypeT>::MirrorTapStreamModule(std::string module_name)
-            : SegmentModule(std::move(module_name)) {
-    }
+template <typename DataTypeT>
+MirrorTapStreamModule<DataTypeT>::MirrorTapStreamModule(std::string module_name) : SegmentModule(std::move(module_name))
+{}
 
-    template<typename DataTypeT>
-    MirrorTapStreamModule<DataTypeT>::MirrorTapStreamModule(std::string module_name, nlohmann::json _config)
-            : SegmentModule(std::move(module_name), std::move(_config)) {
-
-        if (config().contains("tap_id_override"))
-        {
-            m_ingress_name = config()["tap_id_override"];
-        }
-    }
-
-    template<typename DataTypeT>
-    std::string MirrorTapStreamModule<DataTypeT>::tap_ingress_port_name() const {
-        return m_ingress_name;
-    }
-
-    template<typename DataTypeT>
-    void MirrorTapStreamModule<DataTypeT>::tap_ingress_port_name(std::string ingress_port_name) {
-        m_ingress_name = std::move(ingress_port_name);
-    }
-
-    template<typename DataTypeT>
-    void MirrorTapStreamModule<DataTypeT>::initialize(segment::Builder &builder) {
-        auto mirror_ingress = builder.get_ingress<DataTypeT>(m_ingress_name);
-        // TODO
-        m_stream_buffer = builder.make_module<StreamBufferModule<DataTypeT>>("test", {});
-
-        builder.make_edge(mirror_ingress, m_stream_buffer->input_port("input"));
-
-        register_output_port("output", m_stream_buffer->output_port("output"));
-    }
-
-    template<typename DataTypeT>
-    std::string MirrorTapStreamModule<DataTypeT>::module_type_name() const {
-        return std::string(::mrc::boost_type_name<type_t>());
+template <typename DataTypeT>
+MirrorTapStreamModule<DataTypeT>::MirrorTapStreamModule(std::string module_name, nlohmann::json _config) :
+  SegmentModule(std::move(module_name), std::move(_config))
+{
+    if (config().contains("tap_id_override"))
+    {
+        m_ingress_name = config()["tap_id_override"];
     }
 }
+
+template <typename DataTypeT>
+std::string MirrorTapStreamModule<DataTypeT>::tap_ingress_port_name() const
+{
+    return m_ingress_name;
+}
+
+template <typename DataTypeT>
+void MirrorTapStreamModule<DataTypeT>::tap_ingress_port_name(std::string ingress_port_name)
+{
+    m_ingress_name = std::move(ingress_port_name);
+}
+
+template <typename DataTypeT>
+void MirrorTapStreamModule<DataTypeT>::initialize(segment::Builder& builder)
+{
+    auto mirror_ingress = builder.get_ingress<DataTypeT>(m_ingress_name);
+    // TODO
+    m_stream_buffer = builder.make_module<StreamBufferModule<DataTypeT>>("test", {});
+
+    builder.make_edge(mirror_ingress, m_stream_buffer->input_port("input"));
+
+    register_output_port("output", m_stream_buffer->output_port("output"));
+}
+
+template <typename DataTypeT>
+std::string MirrorTapStreamModule<DataTypeT>::module_type_name() const
+{
+    return std::string(::mrc::boost_type_name<type_t>());
+}
+}  // namespace mrc::modules
