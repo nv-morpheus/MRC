@@ -143,6 +143,7 @@ class NodeService : public Service
     std::unique_ptr<::node::CommonEnvironmentSetup> m_setup;
 
     std::vector<std::string> m_args;
+    bool m_launch_node{true};
 
     mutable boost::fibers::mutex m_mutex;
 

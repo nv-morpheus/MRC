@@ -11,10 +11,10 @@ async function main(): Promise<void> {
 
    server.addService(ArchitectService, architect.service);
 
-   server.bindAsync('0.0.0.0:4000', ServerCredentials.createInsecure(), () => {
+   server.bindAsync('0.0.0.0:13337', ServerCredentials.createInsecure(), (error, port) => {
       server.start();
 
-      console.log('server is running on 0.0.0.0:4000');
+      console.log(`server is running on 0.0.0.0:${port}`);
    });
 
    // Wait for the architect to shutdown

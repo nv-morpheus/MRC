@@ -1094,6 +1094,13 @@ Expected<decltype(Server::m_subscription_services)::const_iterator> Server::get_
 NodeService::NodeService(runnable::Resources& runnable) : m_runnable(runnable)
 {
     m_started_future = m_started_promise.get_future();
+
+    m_launch_node = std::getenv("MRC_SKIP_LAUNCH_NODE") == nullptr;
+
+    if (!m_launch_node)
+    {
+        LOG(INFO) << "Environment variable MRC_SKIP_LAUNCH_NODE was set and the control plane will not be run.";
+    }
 }
 
 NodeService::~NodeService() {}
@@ -1106,7 +1113,14 @@ void NodeService::set_args(std::vector<std::string> args)
 void NodeService::do_service_start()
 {
     m_completed_future = m_runnable.main().enqueue([this]() {
-        this->launch_node(m_args);
+        if (m_launch_node)
+        {
+            this->launch_node(m_args);
+        }
+        else
+        {
+            this->m_started_promise.set_value();
+        }
     });
 }
 
@@ -1114,16 +1128,19 @@ void NodeService::do_service_stop()
 {
     DVLOG(10) << "[Node] do_service_stop() started";
 
-    // Send a gRPC message to shutdown the server
-    auto channel = grpc::CreateChannel("localhost:4000", grpc::InsecureChannelCredentials());
-    auto stub    = mrc::protos::Architect::NewStub(channel);
+    if (m_launch_node)
+    {
+        // Send a gRPC message to shutdown the server
+        auto channel = grpc::CreateChannel("localhost:4000", grpc::InsecureChannelCredentials());
+        auto stub    = mrc::protos::Architect::NewStub(channel);
 
-    auto context = grpc::ClientContext();
+        auto context = grpc::ClientContext();
 
-    ::mrc::protos::ShutdownRequest request;
-    ::mrc::protos::ShutdownResponse response;
+        ::mrc::protos::ShutdownRequest request;
+        ::mrc::protos::ShutdownResponse response;
 
-    stub->Shutdown(&context, request, &response);
+        stub->Shutdown(&context, request, &response);
+    }
 
     DVLOG(10) << "[Node] do_service_stop() complete";
 }
