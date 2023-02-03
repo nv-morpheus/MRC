@@ -61,6 +61,18 @@ class MirrorTapUtilProxy
     {
         return std::make_shared<py_mirror_tap_t>(name, cast_from_pyobject(config));
     }
+
+    static py::list create_or_extend_ingress_ports(py_mirror_tap_t& self, py::list ingress_ports)
+    {
+        ingress_ports.append(self.get_ingress_tap_name());
+        return ingress_ports;
+    }
+
+    static py::list create_or_extend_egress_ports(py_mirror_tap_t& self, py::list ingress_ports)
+    {
+        ingress_ports.append(self.get_ingress_tap_name());
+        return ingress_ports;
+    }
 };
 
 void init_mirror_tap_util(py::module_& module)
@@ -81,5 +93,13 @@ void init_mirror_tap_util(py::module_& module)
     MirrorTap.def("get_ingress_tap_name", &PythonMirrorTapUtil::get_ingress_tap_name);
 
     MirrorTap.def("get_egress_tap_name", &PythonMirrorTapUtil::get_egress_tap_name);
+
+    MirrorTap.def("create_or_extend_ingress_ports",
+                  &MirrorTapUtilProxy::create_or_extend_ingress_ports,
+                  py::arg("ingress_ports"));
+
+    MirrorTap.def("create_or_extend_egress_ports",
+                  &MirrorTapUtilProxy::create_or_extend_egress_ports,
+                  py::arg("egress_ports"));
 }
 }  // namespace mrc::pymrc

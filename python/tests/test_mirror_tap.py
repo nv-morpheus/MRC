@@ -35,7 +35,7 @@ def test_single_pipeline_tap_and_buffer():
     global test_name
     test_name = "test_single_pipeline_tap_and_buffer"
 
-    def gen_data():
+    def gen_data_one():
         global packet_count
         for i in range(packet_count):
             yield {"data": i}
@@ -51,7 +51,7 @@ def test_single_pipeline_tap_and_buffer():
         def on_complete():
             pass
 
-        source = builder.make_source(test_name + "_main_source", gen_data())
+        source = builder.make_source(test_name + "_main_source", gen_data_one())
         sink = builder.make_sink(test_name + "_main_sink", on_next_sink, on_error, on_complete)
 
         builder.make_edge(source, sink)
@@ -93,5 +93,98 @@ def test_single_pipeline_tap_and_buffer():
     assert (packets_main == packet_count)
     assert (packets_mirrored >= packet_count * 0.5)
 
+
 def test_single_pipeline_tap_and_buffer_with_additional_ports():
-    pass
+    global packet_count, packets_main, packets_mirrored, packets_non_mirrored
+    packet_count, packets_main, packets_mirrored, packets_non_mirrored = 10000, 0, 0, 0
+
+    global test_name
+    test_name = "test_single_pipeline_tap_and_buffer_with_additional_ports"
+
+    def gen_data_one():
+        global packet_count
+        for i in range(packet_count):
+            yield i
+
+    def gen_data_two():
+        global packet_count
+        for i in range(packet_count):
+            yield i
+
+    def init_wrapper_main(builder: mrc.Builder):
+        def on_next_sink(input):
+            global packets_main
+            packets_main += 1
+
+        def on_error():
+            pass
+
+        def on_complete():
+            pass
+
+        source = builder.make_source(test_name + "_main_source", gen_data_one)
+        sink = builder.make_sink(test_name + "_main_sink", on_next_sink, on_error, on_complete)
+        builder.make_edge(source, sink)
+
+        source = builder.make_source(test_name + "_main_extra_source", gen_data_two)
+
+        egress = builder.get_egress("non_mirror_port")
+        builder.make_edge(source, egress)
+
+    def init_wrapper_mirrored(builder: mrc.Builder):
+        def on_next_sink(input):
+            global packets_mirrored
+            packets_mirrored += 1
+
+        def non_mirror_sink(input):
+            global packets_non_mirrored
+            packets_non_mirrored += 1
+
+        def on_error():
+            pass
+
+        def on_complete():
+            pass
+
+        builder.make_sink(test_name + "_mirror_sink", on_next_sink, on_error, on_complete)
+
+        ingress = builder.get_ingress("non_mirror_port")
+        non_mirror_sink = builder.make_sink(test_name + "_mirror_extra_sink", non_mirror_sink, on_error, on_complete)
+
+        builder.make_edge(ingress, non_mirror_sink)
+
+    mirror_tap = mrc.MirrorTap("test_mirror_tap")
+    pipe = mrc.Pipeline()
+
+    tapped_init_wrapper_main = mirror_tap.tap(init_wrapper_main,
+                                              test_name + "_main_source",
+                                              test_name + "_main_sink")
+
+    tapped_init_wrapper_mirrored = mirror_tap.stream_to(init_wrapper_mirrored,
+                                                        test_name + "_mirror_sink")
+
+    egress_ports = mirror_tap.create_or_extend_egress_ports(["non_mirror_port"])
+    pipe.make_segment("segment_main", [], egress_ports,
+                      tapped_init_wrapper_main)
+
+    ingress_ports = mirror_tap.create_or_extend_ingress_ports(["non_mirror_port"])
+    pipe.make_segment("segment_mirror", ingress_ports, [],
+                      tapped_init_wrapper_mirrored)
+
+    options = mrc.Options()
+
+    executor = mrc.Executor(options)
+    executor.register_pipeline(pipe)
+
+    executor.start()
+    executor.join()
+
+    assert (packets_main == packet_count)
+    assert (packets_non_mirrored == packet_count)
+    assert (packets_mirrored >= packet_count * 0.5)
+
+
+if (__name__ == "__main__"):
+    test_mirror_tap_init()
+    test_single_pipeline_tap_and_buffer()
+    test_single_pipeline_tap_and_buffer_with_additional_ports()
