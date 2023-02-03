@@ -19,6 +19,7 @@
 
 #include "pymrc/module_definitions/mirror_tap_util.hpp"
 #include "pymrc/module_definitions/segment_modules.hpp"
+#include "pymrc/module_definitions/segment_module_registry.hpp"
 #include "pymrc/module_registry.hpp"
 #include "pymrc/node.hpp"  // IWYU pragma: keep
 #include "pymrc/py_segment_module.hpp"
@@ -48,7 +49,6 @@
 namespace mrc::pymrc {
 
 namespace py = pybind11;
-
 
 PYBIND11_MODULE(segment, module)
 {
@@ -105,11 +105,14 @@ PYBIND11_MODULE(segment, module)
                                py::overload_cast<>(&mrc::segment::ObjectProperties::launch_options),
                                py::return_value_policy::reference_internal);
 
-    auto Builder               = py::class_<mrc::segment::Builder>(module, "Builder");
-    auto Definition            = py::class_<mrc::segment::Definition>(module, "Definition");
+    auto Builder    = py::class_<mrc::segment::Builder>(module, "Builder");
+    auto Definition = py::class_<mrc::segment::Definition>(module, "Definition");
 
     init_segment_modules(module);
+    init_segment_module_registry(module);
     init_mirror_tap_util(module);
+
+    register_mirror_tap_modules();
 
     // Initialize definitions for segment modules
     /** Builder Interface Declarations **/
@@ -222,8 +225,12 @@ PYBIND11_MODULE(segment, module)
 
     Builder.def("make_edge", &BuilderProxy::make_edge, py::arg("source"), py::arg("sink"));
 
-    Builder.def("make_edge_tap", &BuilderProxy::make_edge_tap,
-                py::arg("source"), py::arg("sink"), py::arg("tap_input"), py::arg("tap_output"));
+    Builder.def("make_edge_tap",
+                &BuilderProxy::make_edge_tap,
+                py::arg("source"),
+                py::arg("sink"),
+                py::arg("tap_input"),
+                py::arg("tap_output"));
 
     Builder.def("load_module",
                 &BuilderProxy::load_module_from_registry,
@@ -245,7 +252,6 @@ PYBIND11_MODULE(segment, module)
     Builder.def("get_current_module_config", &BuilderProxy::get_current_module_config);
 
     Builder.def("make_node_full", &BuilderProxy::make_node_full, py::return_value_policy::reference_internal);
-
 
     module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);

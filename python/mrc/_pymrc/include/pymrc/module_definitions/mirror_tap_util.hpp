@@ -21,6 +21,7 @@
 
 namespace mrc::pymrc {
 #pragma GCC visibility push(default)
+void register_mirror_tap_modules();
 void init_mirror_tap_util(pybind11::module_& module);
 #pragma GCC visibility pop
 }

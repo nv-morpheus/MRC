@@ -214,7 +214,8 @@ class BuilderProxy
                               std::string& source,
                               std::string& sink,
                               std::shared_ptr<mrc::segment::ObjectProperties> tap_input,
-                              std::shared_ptr<mrc::segment::ObjectProperties> tap_output){}
+                              std::shared_ptr<mrc::segment::ObjectProperties> tap_output)
+    {}
 
     static std::shared_ptr<mrc::segment::ObjectProperties> get_ingress(mrc::segment::Builder& self,
                                                                        const std::string& name);

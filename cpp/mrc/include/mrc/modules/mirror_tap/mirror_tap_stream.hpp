@@ -85,8 +85,7 @@ template <typename DataTypeT>
 void MirrorTapStreamModule<DataTypeT>::initialize(segment::Builder& builder)
 {
     auto mirror_ingress = builder.get_ingress<DataTypeT>(m_ingress_name);
-    // TODO
-    m_stream_buffer = builder.make_module<StreamBufferModule<DataTypeT>>("test", {});
+    m_stream_buffer     = builder.make_module<StreamBufferModule<DataTypeT>>("test", config());
 
     builder.make_edge(mirror_ingress, m_stream_buffer->input_port("input"));
 

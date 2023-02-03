@@ -184,7 +184,96 @@ def test_single_pipeline_tap_and_buffer_with_additional_ports():
     assert (packets_mirrored >= packet_count * 0.5)
 
 
+def test_single_pipeline_tap_and_buffer_with_module():
+    global packet_count, packets_main, packets_mirrored
+    packet_count, packets_main, packets_mirrored = 10000, 0, 0
+
+    global test_name
+    test_name = "test_single_pipeline_tap_and_buffer"
+
+    registry = mrc.ModuleRegistry
+    release_version = [int(x) for x in mrc.__version__.split(".")]
+
+    old_release_version = [22, 10, 0]
+    no_version_patch = [22, 10]
+    no_version_minor_and_patch = [22]
+
+    assert registry.is_version_compatible(release_version)
+    assert registry.is_version_compatible(old_release_version) is not True
+    assert registry.is_version_compatible(no_version_patch) is not True
+    assert registry.is_version_compatible(no_version_minor_and_patch) is not True
+
+    tap_name = "py_test_mirror_module_tap"
+
+    def gen_data_one():
+        global packet_count
+        for i in range(packet_count):
+            yield {"data": i}
+
+    def init_wrapper_main(builder: mrc.Builder):
+        mirror_module_id = "MirrorTap"
+        mirror_module_ns = "mrc"
+
+        config = {"tap_id_override": tap_name}
+        mirror_tap_module = builder.load_module(mirror_module_id, mirror_module_ns,
+                                                test_name + "_mirror_tap", config)
+
+        def on_next_sink(input):
+            global packets_main
+            packets_main += 1
+
+        def on_error():
+            pass
+
+        def on_complete():
+            pass
+
+        source = builder.make_source(test_name + "_main_source", gen_data_one())
+        sink = builder.make_sink(test_name + "_main_sink", on_next_sink, on_error, on_complete)
+
+        builder.make_edge(source, mirror_tap_module.input_port("input"))
+        builder.make_edge(mirror_tap_module.output_port("output"), sink)
+
+    def init_wrapper_mirrored(builder: mrc.Builder):
+        stream_buffer_model_id = "MirrorStreamBufferImmediate"
+        stream_buffer_ns = "mrc"
+
+        config = {"buffer_size": 1024, "tap_id_override": tap_name}
+        stream_buffer_module = builder.load_module(stream_buffer_model_id, stream_buffer_ns, "test_mirror_stream",
+                                                   config)
+
+        def on_next_sink(input):
+            global packets_mirrored
+            packets_mirrored += 1
+
+        def on_error():
+            pass
+
+        def on_complete():
+            pass
+
+        sink = builder.make_sink(test_name + "_mirror_sink", on_next_sink, on_error, on_complete)
+        builder.make_edge(stream_buffer_module.output_port("output"), sink)
+
+    pipe = mrc.Pipeline()
+
+    pipe.make_segment("segment_main", [], [tap_name], init_wrapper_main)
+    pipe.make_segment("segment_mirror", [tap_name], [], init_wrapper_mirrored)
+
+    options = mrc.Options()
+
+    executor = mrc.Executor(options)
+    executor.register_pipeline(pipe)
+
+    executor.start()
+    executor.join()
+
+    assert (packets_main == packet_count)
+    assert (packets_mirrored >= packet_count * 0.5)
+
+
 if (__name__ == "__main__"):
     test_mirror_tap_init()
     test_single_pipeline_tap_and_buffer()
     test_single_pipeline_tap_and_buffer_with_additional_ports()
+    test_single_pipeline_tap_and_buffer_with_module()

@@ -22,6 +22,7 @@
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/modules/stream_buffer/stream_buffer_immediate.hpp"
 #include "mrc/modules/stream_buffer/stream_buffer_traits.hpp"
+#include "mrc/segment/builder.hpp"
 
 #include <boost/circular_buffer.hpp>
 #include <boost/fiber/all.hpp>
@@ -93,8 +94,6 @@ void StreamBufferModule<DataTypeT, StreamBufferTypeT>::initialize(segment::Build
     m_subject.get_observable().subscribe(
         [this](DataTypeT data) {
             m_stream_buffer.push_back(std::move(data));
-            // std::lock_guard<decltype(m_write_mutex)> lock(m_write_mutex);
-            // m_ring_buffer_write.push_back(std::move(data));
             VLOG(10) << "Subscriber 1: OnNext -> push to ring buffer " << std::endl;
         },
         [this](std::exception_ptr ep) {
@@ -123,6 +122,7 @@ void StreamBufferModule<DataTypeT, StreamBufferTypeT>::initialize(segment::Build
     auto buffer_source = builder.template make_source<DataTypeT>(
         "buffer_source",
         [this](rxcpp::subscriber<DataTypeT>& subscriber) {
+            // TODO(Devin): not currently supported
             // m_subject.get_observable().subscribe(subscriber);
             while (subscriber.is_subscribed() && m_subject.has_observers())
             {

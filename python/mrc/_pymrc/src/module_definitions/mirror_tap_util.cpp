@@ -17,39 +17,30 @@
 
 #include "pymrc/module_definitions/mirror_tap_util.hpp"
 
+#include "pymrc/module_registry.hpp"
 #include "pymrc/types.hpp"
 #include "pymrc/utils.hpp"
 
 #include "mrc/modules/mirror_tap/mirror_tap_util.hpp"
+#include "mrc/modules/module_registry_util.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/version.hpp"
 
 #include <nlohmann/json.hpp>
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
 
-namespace mrc::pymrc {
+#include <string>
+
+const std::vector<unsigned int> PybindSegmentModuleVersion{mrc_VERSION_MAJOR, mrc_VERSION_MINOR, mrc_VERSION_PATCH};
 
 namespace py = pybind11;
 
-class PySegmentModule : public mrc::modules::SegmentModule
-{
-    using mrc::modules::SegmentModule::SegmentModule;
-
-    void initialize(segment::Builder& builder) override
-    {
-        PYBIND11_OVERLOAD_PURE(void, mrc::modules::SegmentModule, initialize, builder);
-    }
-
-    std::string module_type_name() const override
-    {
-        PYBIND11_OVERLOAD_PURE(std::string, mrc::modules::SegmentModule, module_type_name);
-    }
-};
-
+namespace {
 class MirrorTapUtilProxy
 {
-    using initializer_t   = std::function<void(segment::Builder& builder)>;
-    using py_mirror_tap_t = mrc::modules::MirrorTapUtil<pymrc::PyHolder>;
+    using py_mirror_tap_t = mrc::modules::MirrorTapUtil<mrc::pymrc::PyHolder>;
 
   public:
     static std::shared_ptr<py_mirror_tap_t> create(const std::string& name)
@@ -59,7 +50,7 @@ class MirrorTapUtilProxy
 
     static std::shared_ptr<py_mirror_tap_t> create(const std::string& name, py::dict config)
     {
-        return std::make_shared<py_mirror_tap_t>(name, cast_from_pyobject(config));
+        return std::make_shared<py_mirror_tap_t>(name, mrc::pymrc::cast_from_pyobject(config));
     }
 
     static py::list create_or_extend_ingress_ports(py_mirror_tap_t& self, py::list ingress_ports)
@@ -74,11 +65,32 @@ class MirrorTapUtilProxy
         return ingress_ports;
     }
 };
+}  // namespace
+
+namespace mrc::pymrc {
+void register_mirror_tap_modules()
+{
+    using namespace mrc::modules;
+
+    ModelRegistryUtil::create_registered_module<mrc::modules::MirrorTapModule<pymrc::PyHolder>>(
+        "MirrorTap",
+        "mrc",
+        PybindSegmentModuleVersion);
+
+    ModelRegistryUtil::create_registered_module<MirrorTapStreamModule<pymrc::PyHolder>>("MirrorStreamBufferImmediate",
+                                                                                        "mrc",
+                                                                                        PybindSegmentModuleVersion);
+
+    ModelRegistryUtil::create_registered_module<StreamBufferModule<pymrc::PyHolder>>("StreamBufferImmediate",
+                                                                                     "mrc",
+                                                                                     PybindSegmentModuleVersion);
+}
 
 void init_mirror_tap_util(py::module_& module)
 {
-    using PythonMirrorTapUtil = mrc::modules::MirrorTapUtil<pymrc::PyHolder>;
-    auto MirrorTap = py::class_<PythonMirrorTapUtil, std::shared_ptr<PythonMirrorTapUtil>>(module, "MirrorTap");
+    using python_mirror_tap_util_t = mrc::modules::MirrorTapUtil<pymrc::PyHolder>;
+    auto MirrorTap = py::class_<python_mirror_tap_util_t, std::shared_ptr<python_mirror_tap_util_t>>(module,
+                                                                                                     "MirrorTap");
 
     MirrorTap.def(py::init(py::overload_cast<const std::string&>(&MirrorTapUtilProxy::create)),
                   py::return_value_policy::take_ownership);
@@ -86,13 +98,13 @@ void init_mirror_tap_util(py::module_& module)
     MirrorTap.def(py::init(py::overload_cast<const std::string&, py::dict>(&MirrorTapUtilProxy::create)),
                   py::return_value_policy::take_ownership);
 
-    MirrorTap.def("tap", &PythonMirrorTapUtil::tap, py::arg("initializer"), py::arg("tap_from"), py::arg("tap_to"));
+    MirrorTap.def("tap", &python_mirror_tap_util_t::tap, py::arg("initializer"), py::arg("tap_from"), py::arg("tap_to"));
 
-    MirrorTap.def("stream_to", &PythonMirrorTapUtil::stream_to, py::arg("initializer"), py::arg("stream_to"));
+    MirrorTap.def("stream_to", &python_mirror_tap_util_t::stream_to, py::arg("initializer"), py::arg("stream_to"));
 
-    MirrorTap.def("get_ingress_tap_name", &PythonMirrorTapUtil::get_ingress_tap_name);
+    MirrorTap.def("get_ingress_tap_name", &python_mirror_tap_util_t::get_ingress_tap_name);
 
-    MirrorTap.def("get_egress_tap_name", &PythonMirrorTapUtil::get_egress_tap_name);
+    MirrorTap.def("get_egress_tap_name", &python_mirror_tap_util_t::get_egress_tap_name);
 
     MirrorTap.def("create_or_extend_ingress_ports",
                   &MirrorTapUtilProxy::create_or_extend_ingress_ports,

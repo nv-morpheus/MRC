@@ -49,7 +49,6 @@ PYBIND11_MODULE(common, module)
            :toctree: _generate
     )pbdoc";
 
-    // EdgeAdapterUtil::register_data_adapters<PyHolder>();
     PortBuilderUtil::register_port_util<PyHolder>();
 
     module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."

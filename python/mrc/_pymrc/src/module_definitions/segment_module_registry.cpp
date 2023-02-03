@@ -17,25 +17,27 @@
 
 #include "pymrc/module_definitions/segment_module_registry.hpp"
 
-#include "nlohmann/json.hpp"
-
 #include "pymrc/module_registry.hpp"
-#include "pymrc/segment_modules.hpp"
 
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/segment/builder.hpp"
 
+#include <nlohmann/json.hpp>
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-#include <functional>
 #include <map>
+#include <vector>
 
 namespace mrc::pymrc {
 
 namespace py = pybind11;
 
-void init_segment_module_registry(py::module_& module, py_module_registry_type& SegmentModuleRegistry)
+void init_segment_module_registry(py::module_& module)
 {
+    auto SegmentModuleRegistry = py::class_<ModuleRegistryProxy>(module, "ModuleRegistry");
+
     /** Module Register Interface Declarations **/
     SegmentModuleRegistry.def_static("contains",
                                      &ModuleRegistryProxy::contains,

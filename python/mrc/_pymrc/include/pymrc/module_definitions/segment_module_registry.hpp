@@ -17,18 +17,10 @@
 
 #pragma once
 
-#include "pymrc/module_registry.hpp"
-
-#include "mrc/modules/module_registry.hpp"
-
 #include <pybind11/pybind11.h>
 
 namespace mrc::pymrc {
 #pragma GCC visibility push(default)
-// TODO(devin)
-using py_module_registry_type = decltype(delcpybind11::class_<ModuleRegistryProxy, std::shared_ptr<mrc::modules::SegmentModule>>;
-
-void init_segment_module_registry(pybind11::module_& module, py_module_registry_type& ModuleRegistry);
-
+void init_segment_module_registry(pybind11::module_& module);
 #pragma GCC visibility pop
 }  // namespace mrc::pymrc

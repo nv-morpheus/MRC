@@ -22,6 +22,7 @@ add_library(pymrc
   src/logging.cpp
   src/module_definitions/mirror_tap_util.cpp
   src/module_definitions/segment_modules.cpp
+  src/module_definitions/segment_module_registry.cpp
   src/module_registry.cpp
   src/module_wrappers/pickle.cpp
   src/module_wrappers/shared_memory.cpp

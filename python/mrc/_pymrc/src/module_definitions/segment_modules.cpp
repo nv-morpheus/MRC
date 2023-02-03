@@ -17,18 +17,18 @@
 
 #include "pymrc/module_definitions/segment_modules.hpp"
 
-#include "nlohmann/json.hpp"
-
-#include "pymrc/module_registry.hpp"
 #include "pymrc/segment_modules.hpp"
 
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/segment/builder.hpp"
 
+#include <nlohmann/json.hpp>
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-#include <functional>
 #include <map>
+#include <vector>
 
 namespace mrc::pymrc {
 
@@ -46,7 +46,6 @@ std::string PySegmentModule::module_type_name() const
 
 void init_segment_modules(py::module_& module)
 {
-    auto SegmentModuleRegistry = py::class_<ModuleRegistryProxy>(module, "ModuleRegistry");
     auto SegmentModule =
         py::class_<mrc::modules::SegmentModule, PySegmentModule, std::shared_ptr<mrc::modules::SegmentModule>>(module,
                                                                                                                "Segment"
@@ -82,51 +81,5 @@ void init_segment_modules(py::module_& module)
     // SegmentModule.def("input_port_type_ids", &SegmentModuleProxy::input_port_type_id)
     // SegmentModule.def("output_port_type_id", &SegmentModuleProxy::output_port_type_id, py::arg("output_id"))
     // SegmentModule.def("output_port_type_ids", &SegmentModuleProxy::output_port_type_id)
-
-    /** Module Register Interface Declarations **/
-    SegmentModuleRegistry.def_static("contains",
-                                     &ModuleRegistryProxy::contains,
-                                     py::arg("name"),
-                                     py::arg("registry_namespace"));
-
-    SegmentModuleRegistry.def_static("contains_namespace",
-                                     &ModuleRegistryProxy::contains_namespace,
-                                     py::arg("registry_namespace"));
-
-    SegmentModuleRegistry.def_static("registered_modules", &ModuleRegistryProxy::registered_modules);
-
-    SegmentModuleRegistry.def_static("is_version_compatible",
-                                     &ModuleRegistryProxy::is_version_compatible,
-                                     py::arg("release_version"));
-
-    SegmentModuleRegistry.def_static("get_module_constructor",
-                                     &ModuleRegistryProxy::get_module_constructor,
-                                     py::arg("name"),
-                                     py::arg("registry_namespace"));
-
-    SegmentModuleRegistry.def_static(
-        "register_module",
-        static_cast<void (*)(std::string, const std::vector<unsigned int>&, std::function<void(mrc::segment::Builder&)>)>(
-            &ModuleRegistryProxy::register_module),
-        py::arg("name"),
-        py::arg("release_version"),
-        py::arg("fn_constructor"));
-
-    SegmentModuleRegistry.def_static(
-        "register_module",
-        static_cast<void (*)(std::string,
-                             std::string,
-                             const std::vector<unsigned int>&,
-                             std::function<void(mrc::segment::Builder&)>)>(&ModuleRegistryProxy::register_module),
-        py::arg("name"),
-        py::arg("registry_namespace"),
-        py::arg("release_version"),
-        py::arg("fn_constructor"));
-
-    SegmentModuleRegistry.def_static("unregister_module",
-                                     &ModuleRegistryProxy::unregister_module,
-                                     py::arg("name"),
-                                     py::arg("registry_namespace"),
-                                     py::arg("optional") = true);
 }
 }  // namespace mrc::pymrc
