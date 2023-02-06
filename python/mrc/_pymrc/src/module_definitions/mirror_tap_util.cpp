@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -68,7 +68,7 @@ class MirrorTapUtilProxy
 }  // namespace
 
 namespace mrc::pymrc {
-void register_mirror_tap_modules()
+[[maybe_unused]] void register_mirror_tap_modules()
 {
     using namespace mrc::modules;
 
@@ -86,16 +86,16 @@ void register_mirror_tap_modules()
                                                                                      PybindSegmentModuleVersion);
 }
 
-void init_mirror_tap_util(py::module_& module)
+[[maybe_unused]] void init_mirror_tap_util(py::module_& module)
 {
     using python_mirror_tap_util_t = mrc::modules::MirrorTapUtil<pymrc::PyHolder>;
     auto MirrorTap = py::class_<python_mirror_tap_util_t, std::shared_ptr<python_mirror_tap_util_t>>(module,
                                                                                                      "MirrorTap");
 
-    MirrorTap.def(py::init(py::overload_cast<const std::string&>(&MirrorTapUtilProxy::create)),
+    MirrorTap.def(py::init(py::overload_cast<const std::string&>(&::MirrorTapUtilProxy::create)),
                   py::return_value_policy::take_ownership);
 
-    MirrorTap.def(py::init(py::overload_cast<const std::string&, py::dict>(&MirrorTapUtilProxy::create)),
+    MirrorTap.def(py::init(py::overload_cast<const std::string&, py::dict>(&::MirrorTapUtilProxy::create)),
                   py::return_value_policy::take_ownership);
 
     MirrorTap.def("tap", &python_mirror_tap_util_t::tap, py::arg("initializer"), py::arg("tap_from"), py::arg("tap_to"));
@@ -107,11 +107,11 @@ void init_mirror_tap_util(py::module_& module)
     MirrorTap.def("get_egress_tap_name", &python_mirror_tap_util_t::get_egress_tap_name);
 
     MirrorTap.def("create_or_extend_ingress_ports",
-                  &MirrorTapUtilProxy::create_or_extend_ingress_ports,
+                  &::MirrorTapUtilProxy::create_or_extend_ingress_ports,
                   py::arg("ingress_ports"));
 
     MirrorTap.def("create_or_extend_egress_ports",
-                  &MirrorTapUtilProxy::create_or_extend_egress_ports,
+                  &::MirrorTapUtilProxy::create_or_extend_egress_ports,
                   py::arg("egress_ports"));
 }
 }  // namespace mrc::pymrc

@@ -18,8 +18,8 @@
 #include "pymrc/segment.hpp"
 
 #include "pymrc/module_definitions/mirror_tap_util.hpp"
-#include "pymrc/module_definitions/segment_modules.hpp"
 #include "pymrc/module_definitions/segment_module_registry.hpp"
+#include "pymrc/module_definitions/segment_modules.hpp"
 #include "pymrc/module_registry.hpp"
 #include "pymrc/node.hpp"  // IWYU pragma: keep
 #include "pymrc/py_segment_module.hpp"
@@ -225,12 +225,12 @@ PYBIND11_MODULE(segment, module)
 
     Builder.def("make_edge", &BuilderProxy::make_edge, py::arg("source"), py::arg("sink"));
 
-    Builder.def("make_edge_tap",
-                &BuilderProxy::make_edge_tap,
+    Builder.def("make_edge_splice",
+                &BuilderProxy::make_edge_splice,
                 py::arg("source"),
                 py::arg("sink"),
-                py::arg("tap_input"),
-                py::arg("tap_output"));
+                py::arg("splice_input"),
+                py::arg("splice_output"));
 
     Builder.def("load_module",
                 &BuilderProxy::load_module_from_registry,

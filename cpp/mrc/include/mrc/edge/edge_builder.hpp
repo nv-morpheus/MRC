@@ -176,8 +176,8 @@ struct EdgeBuilder final
         sink.set_readable_edge_handle(edge);
     }
 
-    template <typename EdgeDataTypeT, typename SourceT, typename SinkT, typename TapInputT, typename TapOutputT>
-    static void make_edge_tap(SourceT& source, SinkT& sink, TapInputT& tap_input, TapOutputT& tap_output)
+    template <typename EdgeDataTypeT, typename SourceT, typename SinkT, typename SpliceInputT, typename SpliceOutputT>
+    static void make_edge_splice(SourceT& source, SinkT& sink, SpliceInputT& splice_input, SpliceOutputT& splice_output)
     {
         using source_full_t     = SourceT;
         using sink_full_t       = SinkT;
@@ -206,23 +206,23 @@ struct EdgeBuilder final
             // We don't need to know the data type of the sink, the source node will have the same data type as the
             // splice node, and we already know the sink can provide an edge for the source's data type.
             // [source] -> [sink] => [[source] -> [splice_node]] -> [sink]
-            auto* tap_writable_provider = dynamic_cast<edge::IWritableProvider<EdgeDataTypeT>*>(&tap_input);
-            CHECK(tap_writable_provider != nullptr) << "Tap input is not a writable provider";
+            auto* splice_writable_provider = dynamic_cast<edge::IWritableProvider<EdgeDataTypeT>*>(&splice_input);
+            CHECK(splice_writable_provider != nullptr) << "Tap input is not a writable provider";
 
-            auto* tap_writable_acceptor = dynamic_cast<edge::IWritableAcceptor<EdgeDataTypeT>*>(&tap_output);
-            CHECK(tap_writable_acceptor != nullptr) << "Tap output is not a writable acceptor";
+            auto* splice_writable_acceptor = dynamic_cast<edge::IWritableAcceptor<EdgeDataTypeT>*>(&splice_output);
+            CHECK(splice_writable_acceptor != nullptr) << "Tap output is not a writable acceptor";
 
             auto* writable_acceptor = dynamic_cast<edge::IWritableAcceptor<EdgeDataTypeT>*>(&source);
             CHECK(writable_acceptor != nullptr) << "Source is not a writable acceptor";
 
             auto& edge_holder = dynamic_cast<edge::EdgeHolder<EdgeDataTypeT>&>(*writable_acceptor);
-            CHECK(edge_holder.check_active_connection(false)) << "No active connection to tap into";
+            CHECK(edge_holder.check_active_connection(false)) << "No active connection to splice into";
 
             auto edge_handle = edge_holder.get_connected_edge();
             edge_holder.release_edge_connection();
 
-            make_edge_writable(*writable_acceptor, *tap_writable_provider);
-            make_edge_writable(*tap_writable_acceptor, sink);
+            make_edge_writable(*writable_acceptor, *splice_writable_provider);
+            make_edge_writable(*splice_writable_acceptor, sink);
         }
         else if constexpr (is_base_of_template<edge::IReadableProvider, source_full_t>::value &&
                            is_base_of_template<edge::IReadableAcceptor, sink_full_t>::value)
@@ -230,31 +230,31 @@ struct EdgeBuilder final
             // We don't need to know the data type of the source, the sink node will have the same data type as the
             // splice node, and we already know the source can provide an edge for the sink's data type.
             // [source] -> [sink] => [source] -> [[splice_node] -> [sink]]
-            auto* tap_readable_provider = dynamic_cast<edge::IReadableProvider<EdgeDataTypeT>*>(&tap_input);
-            CHECK(tap_readable_provider != nullptr) << "Tap input is not a writable provider";
+            auto* splice_readable_provider = dynamic_cast<edge::IReadableProvider<EdgeDataTypeT>*>(&splice_input);
+            CHECK(splice_readable_provider != nullptr) << "Tap input is not a writable provider";
 
-            auto* tap_readable_acceptor = dynamic_cast<edge::IReadableAcceptor<EdgeDataTypeT>*>(&tap_output);
-            CHECK(tap_readable_acceptor != nullptr) << "Tap output is not a writable acceptor";
+            auto* splice_readable_acceptor = dynamic_cast<edge::IReadableAcceptor<EdgeDataTypeT>*>(&splice_output);
+            CHECK(splice_readable_acceptor != nullptr) << "Tap output is not a writable acceptor";
 
             auto* readable_acceptor = dynamic_cast<edge::IReadableAcceptor<EdgeDataTypeT>*>(&sink);
             CHECK(readable_acceptor != nullptr) << "Sink is not a writable provider";
 
             auto& edge_holder = dynamic_cast<edge::EdgeHolder<EdgeDataTypeT>&>(*readable_acceptor);
-            CHECK(edge_holder.check_active_connection(false)) << "No active connection to tap into";
+            CHECK(edge_holder.check_active_connection(false)) << "No active connection to splice into";
 
             // Grab the Acceptor's edge handle and release it from the Acceptor
-            // Make sure we hold the edge handle until the new edge to the tap has been formed.
+            // Make sure we hold the edge handle until the new edge to the splice has been formed.
             // TODO(Devin): Can we double check that the edge handle from the source matches the one from the sink?
             auto edge_handle = edge_holder.get_connected_edge();
             edge_holder.release_edge_connection();
 
-            make_edge_readable(source, *tap_readable_acceptor);
-            make_edge_readable(*tap_readable_provider, *readable_acceptor);
+            make_edge_readable(source, *splice_readable_acceptor);
+            make_edge_readable(*splice_readable_provider, *readable_acceptor);
         }
         else
         {
             static_assert(!sizeof(source_full_t),
-                          "Arguments to make_edge_tap were incorrect. Ensure you are providing either "
+                          "Arguments to make_edge_splice were incorrect. Ensure you are providing either "
                           "WritableAcceptor->WritableProvider or ReadableProvider->ReadableAcceptor");
         }
     }
