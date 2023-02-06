@@ -31,9 +31,7 @@
 
 namespace mrc::modules {
 template <typename DataTypeT>
-class MirrorTapModule : public SegmentModule,
-                        public PersistentModule,
-                        public std::enable_shared_from_this<MirrorTapModule<DataTypeT>>
+class MirrorTapModule : public SegmentModule, public PersistentModule
 {
     using type_t = MirrorTapModule<DataTypeT>;
 
@@ -85,16 +83,13 @@ template <typename DataTypeT>
 void MirrorTapModule<DataTypeT>::initialize(segment::Builder& builder)
 {
     // ********** Implementation ************ //
-    auto input = builder.construct_object<node::Broadcast<DataTypeT>>("broadcast");
+    auto bcast = builder.construct_object<node::Broadcast<DataTypeT>>("broadcast");
 
-    auto output = builder.template make_node<DataTypeT>("output", rxcpp::operators::tap([](DataTypeT input) {}));
-
-    builder.make_edge(input, builder.get_egress<DataTypeT>(m_egress_name));  // to mirror tap
-    builder.make_edge(input, output);                                        // To next stage
+    builder.make_edge(bcast, builder.get_egress<DataTypeT>(m_egress_name));  // to mirror tap
 
     // Register the submodules output as one of this module's outputs
-    register_input_port("input", input);
-    register_output_port("output", output);
+    register_input_port("input", bcast);
+    register_output_port("output", bcast);
 }
 
 template <typename DataTypeT>

@@ -95,10 +95,11 @@ void Builder::init_module(sp_segment_module_t module)
     }
 }
 
-[[maybe_unused]] std::shared_ptr<mrc::modules::SegmentModule> Builder::load_module_from_registry(const std::string& module_id,
-                                                                                const std::string& registry_namespace,
-                                                                                std::string module_name,
-                                                                                nlohmann::json config)
+[[maybe_unused]] std::shared_ptr<mrc::modules::SegmentModule> Builder::load_module_from_registry(
+    const std::string& module_id,
+    const std::string& registry_namespace,
+    std::string module_name,
+    nlohmann::json config)
 {
     auto fn_module_constructor = mrc::modules::ModuleRegistry::get_module_constructor(module_id, registry_namespace);
     auto module                = fn_module_constructor(std::move(module_name), std::move(config));
@@ -126,7 +127,8 @@ void Builder::ns_push(sp_segment_module_t module)
         std::accumulate(m_namespace_stack.begin(), m_namespace_stack.end(), std::string(""), ::accum_merge);
 }
 
-[[maybe_unused]] void Builder::register_module_input(std::string input_name, std::shared_ptr<segment::ObjectProperties> object)
+[[maybe_unused]] void Builder::register_module_input(std::string input_name,
+                                                     std::shared_ptr<segment::ObjectProperties> object)
 {
     if (m_module_stack.empty())
     {
@@ -142,7 +144,8 @@ void Builder::ns_push(sp_segment_module_t module)
     current_module->register_input_port(std::move(input_name), object);
 }
 
-[[maybe_unused]] void Builder::register_module_output(std::string output_name, std::shared_ptr<segment::ObjectProperties> object)
+[[maybe_unused]] void Builder::register_module_output(std::string output_name,
+                                                      std::shared_ptr<segment::ObjectProperties> object)
 {
     if (m_module_stack.empty())
     {

@@ -148,11 +148,32 @@ class SegmentModule
     /**
      * Register an output port that should be exposed for the module
      * @param input_name Port name
-     * @param object ObjectProperties object assocaited with the port
+     * @param object ObjectProperties object associated with the port
      */
     void register_output_port(std::string output_name, std::shared_ptr<segment::ObjectProperties> object);
 
   private:
+    /**
+     * Register an input port that should be exposed for the module, with explicit type index. This is
+     * necessary for Objects that aren't explicit Source or Sink types (e.g. a custom object type)
+     * @param input_name Port name
+     * @param object ObjectProperties object associated with the port
+     * @param tidx Type index of the object's payload data type
+     */
+    void register_typed_input_port(std::string input_name,
+                                   std::shared_ptr<segment::ObjectProperties> object,
+                                   std::type_index tidx);
+    /**
+     * Register an output port that should be exposed for the module, with explicit type index. This is
+     * necessary for Objects that aren't explicit Source or Sink types (e.g. a custom object type)
+     * @param output_name Port name
+     * @param object ObjectProperties object associated with the port
+     * @param tidx Type index of the object's payload data type
+     */
+    void register_typed_output_port(std::string output_name,
+                                    std::shared_ptr<segment::ObjectProperties> object,
+                                    std::type_index tidx);
+
     const std::string m_module_instance_name;
 
     std::map<std::string, std::type_index> m_input_port_type_ids;
