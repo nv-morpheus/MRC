@@ -207,10 +207,10 @@ struct EdgeBuilder final
             // splice node, and we already know the sink can provide an edge for the source's data type.
             // [source] -> [sink] => [[source] -> [splice_node]] -> [sink]
             auto* splice_writable_provider = dynamic_cast<edge::IWritableProvider<EdgeDataTypeT>*>(&splice_input);
-            CHECK(splice_writable_provider != nullptr) << "Tap input is not a writable provider";
+            CHECK(splice_writable_provider != nullptr) << "Splice input is not a writable provider";
 
             auto* splice_writable_acceptor = dynamic_cast<edge::IWritableAcceptor<EdgeDataTypeT>*>(&splice_output);
-            CHECK(splice_writable_acceptor != nullptr) << "Tap output is not a writable acceptor";
+            CHECK(splice_writable_acceptor != nullptr) << "Splice output is not a writable acceptor";
 
             auto* writable_acceptor = dynamic_cast<edge::IWritableAcceptor<EdgeDataTypeT>*>(&source);
             CHECK(writable_acceptor != nullptr) << "Source is not a writable acceptor";
@@ -231,10 +231,10 @@ struct EdgeBuilder final
             // splice node, and we already know the source can provide an edge for the sink's data type.
             // [source] -> [sink] => [source] -> [[splice_node] -> [sink]]
             auto* splice_readable_provider = dynamic_cast<edge::IReadableProvider<EdgeDataTypeT>*>(&splice_input);
-            CHECK(splice_readable_provider != nullptr) << "Tap input is not a writable provider";
+            CHECK(splice_readable_provider != nullptr) << "Splice input is not a writable provider";
 
             auto* splice_readable_acceptor = dynamic_cast<edge::IReadableAcceptor<EdgeDataTypeT>*>(&splice_output);
-            CHECK(splice_readable_acceptor != nullptr) << "Tap output is not a writable acceptor";
+            CHECK(splice_readable_acceptor != nullptr) << "Splice output is not a writable acceptor";
 
             auto* readable_acceptor = dynamic_cast<edge::IReadableAcceptor<EdgeDataTypeT>*>(&sink);
             CHECK(readable_acceptor != nullptr) << "Sink is not a writable provider";

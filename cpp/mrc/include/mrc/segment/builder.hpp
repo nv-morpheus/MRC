@@ -311,8 +311,8 @@ class Builder final
      * @tparam EdgeDataTypeT
      * @tparam SourceObjectT Data type that can be resolved to an ObjectProperties, representing the source
      * @tparam SinkObjectT Data type that can be resolved to an ObjectProperties, representing the sink
-     * @tparam TapInputObjectT Data type that can be resolved to an ObjectProperties, representing the splice's input
-     * @tparam TapOutputObjectT Data type that can be resolved to an ObjectProperties, representing the splice's output
+     * @tparam SpliceInputObjectT Data type that can be resolved to an ObjectProperties, representing the splice's input
+     * @tparam SpliceOutputObjectT Data type that can be resolved to an ObjectProperties, representing the splice's output
      * @param source Existing, connected, edge source
      * @param sink Existing, connected, edge sink
      * @param splice_input Existing, unconnected, splice input
@@ -321,9 +321,11 @@ class Builder final
     template <typename EdgeDataTypeT,
               MRCObjectProxy SourceObjectT,
               MRCObjectProxy SinkObjectT,
-              MRCObjectProxy TapInputObjectT,
-              MRCObjectProxy TapOutputObjectT>
-    void make_edge_splice(SourceObjectT source, SinkObjectT sink, TapInputObjectT splice_input, TapOutputObjectT splice_output);
+              MRCObjectProxy SpliceInputObjectT,
+              MRCObjectProxy SpliceOutputObjectT>
+    void make_edge_splice(SourceObjectT source, SinkObjectT sink,
+                          SpliceInputObjectT splice_input,
+                          SpliceOutputObjectT splice_output);
 
     template <typename ObjectT>
     void add_throughput_counter(std::shared_ptr<segment::Object<ObjectT>> segment_object);
@@ -465,12 +467,12 @@ void Builder::make_edge(SourceObjectT source, SinkObjectT sink)
 template <typename EdgeDataTypeT,
           MRCObjectProxy SourceObjectT,
           MRCObjectProxy SinkObjectT,
-          MRCObjectProxy TapInputObjectT,
-          MRCObjectProxy TapOutputObjectT>
+          MRCObjectProxy SpliceInputObjectT,
+          MRCObjectProxy SpliceOutputObjectT>
 void Builder::make_edge_splice(SourceObjectT source,
                             SinkObjectT sink,
-                            TapInputObjectT splice_input,
-                            TapOutputObjectT splice_output)
+                               SpliceInputObjectT splice_input,
+                               SpliceOutputObjectT splice_output)
 
 {
     auto& source_object = to_object_properties(source);
@@ -489,8 +491,8 @@ void Builder::make_edge_splice(SourceObjectT source,
     {
         if (sink_object.is_writable_provider())
         {
-            CHECK(splice_input_object.is_writable_provider()) << "Tap input must be of type WritableProvider";
-            CHECK(splice_output_object.is_writable_acceptor()) << "Tap output must be WritableAcceptor";
+            CHECK(splice_input_object.is_writable_provider()) << "Splice input must be of type WritableProvider";
+            CHECK(splice_output_object.is_writable_acceptor()) << "Splice output must be WritableAcceptor";
 
             // Cast our object into something we can insert as a splice.
             auto& splice_writable_provider = splice_input_object.template writable_provider_typed<EdgeDataTypeT>();
@@ -511,8 +513,8 @@ void Builder::make_edge_splice(SourceObjectT source,
     {
         if (sink_object.is_readable_acceptor())
         {
-            CHECK(splice_input_object.is_readable_acceptor()) << "Tap input must be of type ReadableAcceptor";
-            CHECK(splice_output_object.is_readable_provider()) << "Tap output must be ReadableProvider";
+            CHECK(splice_input_object.is_readable_acceptor()) << "Splice input must be of type ReadableAcceptor";
+            CHECK(splice_output_object.is_readable_provider()) << "Splice output must be ReadableProvider";
 
             // Cast our object into something we can insert as a splice.
             auto& splice_readable_acceptor = splice_input_object.template readable_acceptor_typed<EdgeDataTypeT>();
