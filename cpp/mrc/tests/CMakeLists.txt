@@ -23,7 +23,7 @@ add_executable(test_mrc
   modules/test_module_registry.cpp
   modules/test_module_util.cpp
   modules/test_segment_modules.cpp
-    modules/test_stream_buffer_modules.cpp
+  modules/test_stream_buffer_modules.cpp
   modules/test_mirror_tap_stream.cpp
   modules/test_mirror_tap_util.cpp
   test_channel.cpp
