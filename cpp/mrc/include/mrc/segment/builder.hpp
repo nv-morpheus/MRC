@@ -428,8 +428,8 @@ void Builder::make_edge(SourceObjectT source, SinkObjectT sink)
 
 {
     DVLOG(10) << "forming edge between two segment objects";
-    using source_sp_type_t = mrc_object_sptr_type_t<SourceObjectT>::source_type_t;  // Might be void
-    using sink_sp_type_t   = mrc_object_sptr_type_t<SinkObjectT>::sink_type_t;      // Might be void
+    using source_sp_type_t = typename mrc_object_sptr_type_t<SourceObjectT>::source_type_t;  // Might be void
+    using sink_sp_type_t   = typename mrc_object_sptr_type_t<SinkObjectT>::sink_type_t;      // Might be void
 
     auto& source_object = to_object_properties(source);
     auto& sink_object   = to_object_properties(sink);

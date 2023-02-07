@@ -152,7 +152,7 @@ void SegmentModule::register_input_port(std::string input_name, std::shared_ptr<
     // Seems to be required for ingress ports
     if (object->is_sink())
     {
-        register_typed_input_port(std::move(input_name), std::move(object), object->sink_type());
+        register_typed_input_port(std::move(input_name), object, object->sink_type());
         return;
     }
 
@@ -160,7 +160,7 @@ void SegmentModule::register_input_port(std::string input_name, std::shared_ptr<
     {
         auto& writable_provider = object->writable_provider_base();
         register_typed_output_port(std::move(input_name),
-                                   std::move(object),
+                                   object,
                                    writable_provider.writable_provider_type().unwrapped_type());
         return;
     }
@@ -169,7 +169,7 @@ void SegmentModule::register_input_port(std::string input_name, std::shared_ptr<
     {
         auto& readable_acceptor = object->readable_acceptor_base();
         register_typed_input_port(std::move(input_name),
-                                  std::move(object),
+                                  object,
                                   readable_acceptor.readable_acceptor_type().unwrapped_type());
         return;
     }
@@ -189,8 +189,7 @@ void SegmentModule::register_typed_input_port(std::string input_name,
         throw std::invalid_argument(sstream.str());
     }
 
-    VLOG(5) << "Registering input port: " << input_name << " with type: " << tidx.name()
-            << " for module: " << name();
+    VLOG(5) << "Registering input port: " << input_name << " with type: " << tidx.name() << " for module: " << name();
 
     m_input_port_ids.push_back(input_name);
     m_input_ports[input_name] = object;
@@ -202,7 +201,7 @@ void SegmentModule::register_output_port(std::string output_name, std::shared_pt
     // Seems to be necessary for egress ports.
     if (object->is_source())
     {
-        register_typed_output_port(std::move(output_name), std::move(object), object->source_type());
+        register_typed_output_port(std::move(output_name), object, object->source_type());
         return;
     }
 
@@ -210,7 +209,7 @@ void SegmentModule::register_output_port(std::string output_name, std::shared_pt
     {
         auto& writable_acceptor = object->writable_acceptor_base();
         register_typed_output_port(std::move(output_name),
-                                   std::move(object),
+                                   object,
                                    writable_acceptor.writable_acceptor_type().unwrapped_type());
         return;
     }
@@ -219,7 +218,7 @@ void SegmentModule::register_output_port(std::string output_name, std::shared_pt
     {
         auto& readable_provider = object->readable_provider_base();
         register_typed_output_port(std::move(output_name),
-                                   std::move(object),
+                                   object,
                                    readable_provider.readable_provider_type().unwrapped_type());
         return;
     }
@@ -239,8 +238,7 @@ void SegmentModule::register_typed_output_port(std::string output_name,
         throw std::invalid_argument(sstream.str());
     }
 
-    VLOG(5) << "Registering output port: " << output_name << " with type: " << tidx.name()
-            << " for module: " << name();
+    VLOG(5) << "Registering output port: " << output_name << " with type: " << tidx.name() << " for module: " << name();
 
     m_output_port_ids.push_back(output_name);
     m_output_ports[output_name] = object;
