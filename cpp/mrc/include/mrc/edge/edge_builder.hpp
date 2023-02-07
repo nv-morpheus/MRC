@@ -179,8 +179,8 @@ struct EdgeBuilder final
     template <typename EdgeDataTypeT, typename SourceT, typename SinkT, typename SpliceInputT, typename SpliceOutputT>
     static void make_edge_splice(SourceT& source, SinkT& sink, SpliceInputT& splice_input, SpliceOutputT& splice_output)
     {
-        using source_full_t     = SourceT;
-        using sink_full_t       = SinkT;
+        using source_full_t = SourceT;
+        using sink_full_t   = SinkT;
 
         // Have to jump through some hoops here, mimics what 'writable_acceptor_typed' does, so we get everything
         // aligned correctly.

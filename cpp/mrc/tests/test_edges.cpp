@@ -861,12 +861,12 @@ TEST_F(TestEdges, EdgeTapWAcceptorWProvider)
 
 TEST_F(TestEdges, EdgeTapRProviderRAcceptor)
 {
-    auto source = std::make_shared<node::TestSource<int>>();
+    auto source    = std::make_shared<node::TestSource<int>>();
     auto source_rp = std::dynamic_pointer_cast<edge::IReadableProvider<int>>(source);
 
-    auto node   = std::make_shared<node::TestNode<int>>();
+    auto node = std::make_shared<node::TestNode<int>>();
 
-    auto sink   = std::make_shared<node::TestSink<int>>();
+    auto sink    = std::make_shared<node::TestSink<int>>();
     auto sink_ra = std::dynamic_pointer_cast<edge::IReadableAcceptor<int>>(sink);
 
     // Original edge

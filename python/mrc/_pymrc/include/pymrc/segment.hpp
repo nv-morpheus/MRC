@@ -211,10 +211,10 @@ class BuilderProxy
 
     // TODO(devin) -- we can't pass all the variants, so we need to figure out how to do this
     static void make_edge_splice(mrc::segment::Builder& self,
-                              std::string& source,
-                              std::string& sink,
-                              std::shared_ptr<mrc::segment::ObjectProperties> splice_input,
-                              std::shared_ptr<mrc::segment::ObjectProperties> splice_output)
+                                 std::string& source,
+                                 std::string& sink,
+                                 std::shared_ptr<mrc::segment::ObjectProperties> splice_input,
+                                 std::shared_ptr<mrc::segment::ObjectProperties> splice_output)
     {}
 
     static std::shared_ptr<mrc::segment::ObjectProperties> get_ingress(mrc::segment::Builder& self,

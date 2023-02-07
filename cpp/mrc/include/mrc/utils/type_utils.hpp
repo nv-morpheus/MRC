@@ -172,8 +172,9 @@ struct DataType
     TypeId m_type_id;
 };
 
-template<typename T>
-std::string boost_type_name() {
+template <typename T>
+std::string boost_type_name()
+{
     return boost::typeindex::type_id<T>().pretty_name();
 }
 

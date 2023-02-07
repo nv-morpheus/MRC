@@ -38,7 +38,7 @@ template <typename DataTypeT>
 class MirrorTapUtil
 {
     using initializer_t = std::function<void(segment::Builder& builder)>;
-    using type_t = MirrorTapUtil<DataTypeT>;
+    using type_t        = MirrorTapUtil<DataTypeT>;
 
   public:
     MirrorTapUtil(std::string module_name);

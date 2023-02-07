@@ -118,8 +118,7 @@ using is_base_of_template = typename is_base_of_template_impl<BaseT, DerivedT>::
 template <typename T, typename... TsT>
 struct first_non_void_type
 {
-    using type_t =
-        std::conditional_t<std::is_same_v<T, void>, typename first_non_void_type<TsT...>::type_t, T>;
+    using type_t = std::conditional_t<std::is_same_v<T, void>, typename first_non_void_type<TsT...>::type_t, T>;
 };
 
 template <typename T>

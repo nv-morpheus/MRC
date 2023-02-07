@@ -177,7 +177,6 @@ TEST_F(TestMirrorTapModule, SinglePipelineMirrorTapTest)
     EXPECT_EQ(packets_mirrored, 4);
 }
 
-
 /**
  * Test this configuration:
  *

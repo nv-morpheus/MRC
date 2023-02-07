@@ -32,8 +32,8 @@
 #include "mrc/runnable/runnable.hpp"  // IWYU pragma: export
 #include "mrc/segment/component.hpp"  // IWYU pragma: export
 #include "mrc/segment/concepts/object_traits.hpp"
-#include "mrc/segment/object.hpp"    // IWYU pragma: export
-#include "mrc/segment/runnable.hpp"  // IWYU pragma: export
+#include "mrc/segment/object.hpp"     // IWYU pragma: export
+#include "mrc/segment/runnable.hpp"   // IWYU pragma: export
 #include "mrc/type_traits.hpp"
 #include "mrc/utils/macros.hpp"
 
@@ -312,7 +312,8 @@ class Builder final
      * @tparam SourceObjectT Data type that can be resolved to an ObjectProperties, representing the source
      * @tparam SinkObjectT Data type that can be resolved to an ObjectProperties, representing the sink
      * @tparam SpliceInputObjectT Data type that can be resolved to an ObjectProperties, representing the splice's input
-     * @tparam SpliceOutputObjectT Data type that can be resolved to an ObjectProperties, representing the splice's output
+     * @tparam SpliceOutputObjectT Data type that can be resolved to an ObjectProperties, representing the splice's
+     * output
      * @param source Existing, connected, edge source
      * @param sink Existing, connected, edge sink
      * @param splice_input Existing, unconnected, splice input
@@ -323,7 +324,8 @@ class Builder final
               MRCObjectProxy SinkObjectT,
               MRCObjectProxy SpliceInputObjectT,
               MRCObjectProxy SpliceOutputObjectT>
-    void make_edge_splice(SourceObjectT source, SinkObjectT sink,
+    void make_edge_splice(SourceObjectT source,
+                          SinkObjectT sink,
                           SpliceInputObjectT splice_input,
                           SpliceOutputObjectT splice_output);
 
@@ -470,7 +472,7 @@ template <typename EdgeDataTypeT,
           MRCObjectProxy SpliceInputObjectT,
           MRCObjectProxy SpliceOutputObjectT>
 void Builder::make_edge_splice(SourceObjectT source,
-                            SinkObjectT sink,
+                               SinkObjectT sink,
                                SpliceInputObjectT splice_input,
                                SpliceOutputObjectT splice_output)
 
@@ -478,7 +480,7 @@ void Builder::make_edge_splice(SourceObjectT source,
     auto& source_object = to_object_properties(source);
     auto& sink_object   = to_object_properties(sink);
 
-    auto& splice_input_object = to_object_properties(splice_input);
+    auto& splice_input_object  = to_object_properties(splice_input);
     auto& splice_output_object = to_object_properties(splice_output);
 
     CHECK(source_object.is_source()) << "Source object is not a source";

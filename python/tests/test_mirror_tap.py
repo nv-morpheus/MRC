@@ -41,6 +41,7 @@ def test_single_pipeline_tap_and_buffer():
             yield {"data": i}
 
     def init_wrapper_main(builder: mrc.Builder):
+
         def on_next_sink(input):
             global packets_main
             packets_main += 1
@@ -57,6 +58,7 @@ def test_single_pipeline_tap_and_buffer():
         builder.make_edge(source, sink)
 
     def init_wrapper_mirrored(builder: mrc.Builder):
+
         def on_next_sink(input):
             global packets_mirrored
             packets_mirrored += 1
@@ -72,12 +74,9 @@ def test_single_pipeline_tap_and_buffer():
     mirror_tap = mrc.MirrorTap("test_mirror_tap")
     pipe = mrc.Pipeline()
 
-    tapped_init_wrapper_main = mirror_tap.tap(init_wrapper_main,
-                                              test_name + "_main_source",
-                                              test_name + "_main_sink")
+    tapped_init_wrapper_main = mirror_tap.tap(init_wrapper_main, test_name + "_main_source", test_name + "_main_sink")
 
-    tapped_init_wrapper_mirrored = mirror_tap.stream_to(init_wrapper_mirrored,
-                                                        test_name + "_mirror_sink")
+    tapped_init_wrapper_mirrored = mirror_tap.stream_to(init_wrapper_mirrored, test_name + "_mirror_sink")
 
     pipe.make_segment("segment_main", [], [mirror_tap.get_egress_tap_name()], tapped_init_wrapper_main)
     pipe.make_segment("segment_mirror", [mirror_tap.get_ingress_tap_name()], [], tapped_init_wrapper_mirrored)
@@ -112,6 +111,7 @@ def test_single_pipeline_tap_and_buffer_with_additional_ports():
             yield i
 
     def init_wrapper_main(builder: mrc.Builder):
+
         def on_next_sink(input):
             global packets_main
             packets_main += 1
@@ -132,6 +132,7 @@ def test_single_pipeline_tap_and_buffer_with_additional_ports():
         builder.make_edge(source, egress)
 
     def init_wrapper_mirrored(builder: mrc.Builder):
+
         def on_next_sink(input):
             global packets_mirrored
             packets_mirrored += 1
@@ -156,20 +157,15 @@ def test_single_pipeline_tap_and_buffer_with_additional_ports():
     mirror_tap = mrc.MirrorTap("test_mirror_tap")
     pipe = mrc.Pipeline()
 
-    tapped_init_wrapper_main = mirror_tap.tap(init_wrapper_main,
-                                              test_name + "_main_source",
-                                              test_name + "_main_sink")
+    tapped_init_wrapper_main = mirror_tap.tap(init_wrapper_main, test_name + "_main_source", test_name + "_main_sink")
 
-    tapped_init_wrapper_mirrored = mirror_tap.stream_to(init_wrapper_mirrored,
-                                                        test_name + "_mirror_sink")
+    tapped_init_wrapper_mirrored = mirror_tap.stream_to(init_wrapper_mirrored, test_name + "_mirror_sink")
 
     egress_ports = mirror_tap.create_or_extend_egress_ports(["non_mirror_port"])
-    pipe.make_segment("segment_main", [], egress_ports,
-                      tapped_init_wrapper_main)
+    pipe.make_segment("segment_main", [], egress_ports, tapped_init_wrapper_main)
 
     ingress_ports = mirror_tap.create_or_extend_ingress_ports(["non_mirror_port"])
-    pipe.make_segment("segment_mirror", ingress_ports, [],
-                      tapped_init_wrapper_mirrored)
+    pipe.make_segment("segment_mirror", ingress_ports, [], tapped_init_wrapper_mirrored)
 
     options = mrc.Options()
 
@@ -215,8 +211,7 @@ def test_single_pipeline_tap_and_buffer_with_module():
         mirror_module_ns = "mrc"
 
         config = {"tap_id_override": tap_name}
-        mirror_tap_module = builder.load_module(mirror_module_id, mirror_module_ns,
-                                                test_name + "_mirror_tap", config)
+        mirror_tap_module = builder.load_module(mirror_module_id, mirror_module_ns, test_name + "_mirror_tap", config)
 
         def on_next_sink(input):
             global packets_main
@@ -239,7 +234,9 @@ def test_single_pipeline_tap_and_buffer_with_module():
         stream_buffer_ns = "mrc"
 
         config = {"buffer_size": 1024, "tap_id_override": tap_name}
-        stream_buffer_module = builder.load_module(stream_buffer_model_id, stream_buffer_ns, "test_mirror_stream",
+        stream_buffer_module = builder.load_module(stream_buffer_model_id,
+                                                   stream_buffer_ns,
+                                                   "test_mirror_stream",
                                                    config)
 
         def on_next_sink(input):

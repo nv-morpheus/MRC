@@ -195,7 +195,7 @@ class Broadcast : public WritableProvider<T>, public edge::IWritableAcceptor<T>
 
   public:
     using source_type_t = T;
-    using sink_type_t = T;
+    using sink_type_t   = T;
 
     Broadcast(bool deep_copy = false)
     {

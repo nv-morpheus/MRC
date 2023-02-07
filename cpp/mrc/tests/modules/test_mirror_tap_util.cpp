@@ -86,7 +86,8 @@ TEST_F(TestMirrorTapUtil, SinglePipelineTapAndBufferTest)
     m_pipeline->make_segment("Main_Segment", mirror_tap.create_or_extend_egress_ports(), tapped_init_wrapper_main);
 
     m_pipeline->make_segment("StreamMirror_Segment",
-                             mirror_tap.create_or_extend_ingress_ports(), tapped_init_wrapper_mirrored);
+                             mirror_tap.create_or_extend_ingress_ports(),
+                             tapped_init_wrapper_mirrored);
 
     auto options = std::make_shared<Options>();
     options->topology().user_cpuset("0-2");
@@ -137,31 +138,31 @@ TEST_F(TestMirrorTapUtil, SinglePipelineTapAndBufferWithAdditionalPortsTest)
         builder.make_edge(source, sink);
 
         auto extra_source = builder.make_source<std::string>(test_name + "_main_extra_source",
-                                                       [packet_count](rxcpp::subscriber<std::string>& sub) {
-                                                           if (sub.is_subscribed())
-                                                           {
-                                                               for (unsigned int i = 0; i < packet_count; i++)
-                                                               {
-                                                                   sub.on_next(std::to_string(packet_count));
-                                                               }
-                                                           }
+                                                             [packet_count](rxcpp::subscriber<std::string>& sub) {
+                                                                 if (sub.is_subscribed())
+                                                                 {
+                                                                     for (unsigned int i = 0; i < packet_count; i++)
+                                                                     {
+                                                                         sub.on_next(std::to_string(packet_count));
+                                                                     }
+                                                                 }
 
-                                                           sub.on_completed();
-                                                       });
+                                                                 sub.on_completed();
+                                                             });
         auto extra_egress = builder.get_egress<std::string>("non_mirror_port");
         builder.make_edge(extra_source, extra_egress);
     };
 
     auto init_wrapper_mirrored = [&packets_mirrored, &packets_non_mirrored, test_name](segment::Builder& builder) {
-        auto mirror_sink = builder.make_sink<std::string>(test_name + "_mirror_sink",
+        auto mirror_sink     = builder.make_sink<std::string>(test_name + "_mirror_sink",
                                                           [&packets_mirrored](std::string input) {
                                                               packets_mirrored++;
                                                           });
         auto non_mirror_sink = builder.make_sink<std::string>(test_name + "_non_mirror_sink",
-                                                          [&packets_non_mirrored](std::string input) {
-                                                              packets_non_mirrored++;
-                                                          });
-        auto extra_ingress = builder.get_ingress<std::string>("non_mirror_port");
+                                                              [&packets_non_mirrored](std::string input) {
+                                                                  packets_non_mirrored++;
+                                                              });
+        auto extra_ingress   = builder.get_ingress<std::string>("non_mirror_port");
         builder.make_edge(extra_ingress, non_mirror_sink);
     };
 
@@ -198,4 +199,3 @@ TEST_F(TestMirrorTapUtil, SinglePipelineTapAndBufferWithAdditionalPortsTest)
     EXPECT_EQ(packets_non_mirrored, packet_count);
     EXPECT_GE(packets_mirrored, packet_count * 0.5);
 }
-

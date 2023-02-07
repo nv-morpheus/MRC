@@ -33,6 +33,4 @@
 using namespace mrc;
 
 // TODO(devin): Add tests
-TEST_F(TestMirrorTapStream, InitializationTest) {
-
-}
+TEST_F(TestMirrorTapStream, InitializationTest) {}

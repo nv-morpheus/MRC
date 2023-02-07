@@ -26,7 +26,7 @@ namespace mrc::modules::stream_buffers {
 
 template <typename DataTypeT, template <typename> class StreamBufferTypeT>
 concept IsStreamBuffer = requires {
-                             typename StreamBufferTypeT<DataTypeT>;
-                             std::is_base_of_v<StreamBufferBase<DataTypeT>, StreamBufferTypeT<DataTypeT>>;
-                         };
+    typename StreamBufferTypeT<DataTypeT>;
+    std::is_base_of_v<StreamBufferBase<DataTypeT>, StreamBufferTypeT<DataTypeT>>;
+};
 }  // namespace mrc::modules::stream_buffers
