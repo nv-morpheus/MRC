@@ -104,8 +104,8 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
       OUTPUT_VARIABLE clang_version_info
       ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-  string(REGEX MATCH "version [0-9]+" clang_version_line ${clang_version_info})
-  string(REGEX REPLACE "version ([0-9]+)" "\\1" clang_version ${clang_version_line})
+  string(REGEX MATCH "version [0-9]+" clang_version_value ${clang_version_info})
+  string(REGEX REPLACE "version ([0-9]+)" "\\1" clang_version ${clang_version_value})
 
   if(${clang_version} VERSION_LESS_EQUAL "15")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines-ts")
