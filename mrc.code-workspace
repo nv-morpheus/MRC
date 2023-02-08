@@ -200,6 +200,10 @@
             ],
             "editor.tabSize": 4
         },
+        "[typescript]": {
+            "editor.formatOnSave": true,
+            "editor.wordWrapColumn": 120,
+        },
         "cmake.configureArgs": [
             "-DCMAKE_MESSAGE_CONTEXT_SHOW:BOOL=ON", // Show message context by default
             "-DMRC_PYTHON_INPLACE_BUILD:BOOL=ON" // Allow inplace build for python. Use `pip install -e .` from the python folder to install
@@ -290,6 +294,9 @@
             }
         },
         "testMate.cpp.log.logpanel": true,
-        "testMate.cpp.test.executables": "{build,Build,BUILD,out,Out,OUT}/**/*{test,Test,TEST}_*.x"
+        "testMate.cpp.test.executables": "{build,Build,BUILD,out,Out,OUT}/**/*{test,Test,TEST}_*.x",
+        "typescript.format.semicolons": "insert",
+        "typescript.preferences.quoteStyle": "double",
+        "typescript.referencesCodeLens.enabled": true
     }
 }

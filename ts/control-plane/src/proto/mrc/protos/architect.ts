@@ -178,15 +178,19 @@ export function errorCodeToJSON(object: ErrorCode): string {
 }
 
 export interface PingRequest {
+  tag: number;
 }
 
 export interface PingResponse {
+  tag: number;
 }
 
 export interface ShutdownRequest {
+  tag: number;
 }
 
 export interface ShutdownResponse {
+  tag: number;
 }
 
 export interface Event {
@@ -205,7 +209,7 @@ export interface Ack {
 }
 
 export interface RegisterWorkersRequest {
-  ucxWorkerAddresses: Buffer[];
+  ucxWorkerAddresses: Uint8Array[];
   pipeline?: Pipeline;
 }
 
@@ -541,7 +545,7 @@ export interface SegmentConfiguration_IngressPoliciesEntry {
 export interface WorkerAddress {
   machineId: number;
   instanceId: number;
-  workerAddress: Buffer;
+  workerAddress: Uint8Array;
 }
 
 export interface InstancesResources {
@@ -572,11 +576,14 @@ export interface NIC {
 }
 
 function createBasePingRequest(): PingRequest {
-  return {};
+  return { tag: 0 };
 }
 
 export const PingRequest = {
-  encode(_: PingRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+  encode(message: PingRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.tag !== 0) {
+      writer.uint32(8).uint64(message.tag);
+    }
     return writer;
   },
 
@@ -587,6 +594,9 @@ export const PingRequest = {
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
+        case 1:
+          message.tag = longToNumber(reader.uint64() as Long);
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -595,12 +605,13 @@ export const PingRequest = {
     return message;
   },
 
-  fromJSON(_: any): PingRequest {
-    return {};
+  fromJSON(object: any): PingRequest {
+    return { tag: isSet(object.tag) ? Number(object.tag) : 0 };
   },
 
-  toJSON(_: PingRequest): unknown {
+  toJSON(message: PingRequest): unknown {
     const obj: any = {};
+    message.tag !== undefined && (obj.tag = Math.round(message.tag));
     return obj;
   },
 
@@ -608,18 +619,22 @@ export const PingRequest = {
     return PingRequest.fromPartial(base ?? {});
   },
 
-  fromPartial<I extends Exact<DeepPartial<PingRequest>, I>>(_: I): PingRequest {
+  fromPartial<I extends Exact<DeepPartial<PingRequest>, I>>(object: I): PingRequest {
     const message = createBasePingRequest();
+    message.tag = object.tag ?? 0;
     return message;
   },
 };
 
 function createBasePingResponse(): PingResponse {
-  return {};
+  return { tag: 0 };
 }
 
 export const PingResponse = {
-  encode(_: PingResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+  encode(message: PingResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.tag !== 0) {
+      writer.uint32(8).uint64(message.tag);
+    }
     return writer;
   },
 
@@ -630,6 +645,9 @@ export const PingResponse = {
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
+        case 1:
+          message.tag = longToNumber(reader.uint64() as Long);
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -638,12 +656,13 @@ export const PingResponse = {
     return message;
   },
 
-  fromJSON(_: any): PingResponse {
-    return {};
+  fromJSON(object: any): PingResponse {
+    return { tag: isSet(object.tag) ? Number(object.tag) : 0 };
   },
 
-  toJSON(_: PingResponse): unknown {
+  toJSON(message: PingResponse): unknown {
     const obj: any = {};
+    message.tag !== undefined && (obj.tag = Math.round(message.tag));
     return obj;
   },
 
@@ -651,18 +670,22 @@ export const PingResponse = {
     return PingResponse.fromPartial(base ?? {});
   },
 
-  fromPartial<I extends Exact<DeepPartial<PingResponse>, I>>(_: I): PingResponse {
+  fromPartial<I extends Exact<DeepPartial<PingResponse>, I>>(object: I): PingResponse {
     const message = createBasePingResponse();
+    message.tag = object.tag ?? 0;
     return message;
   },
 };
 
 function createBaseShutdownRequest(): ShutdownRequest {
-  return {};
+  return { tag: 0 };
 }
 
 export const ShutdownRequest = {
-  encode(_: ShutdownRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+  encode(message: ShutdownRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.tag !== 0) {
+      writer.uint32(8).uint64(message.tag);
+    }
     return writer;
   },
 
@@ -673,6 +696,9 @@ export const ShutdownRequest = {
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
+        case 1:
+          message.tag = longToNumber(reader.uint64() as Long);
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -681,12 +707,13 @@ export const ShutdownRequest = {
     return message;
   },
 
-  fromJSON(_: any): ShutdownRequest {
-    return {};
+  fromJSON(object: any): ShutdownRequest {
+    return { tag: isSet(object.tag) ? Number(object.tag) : 0 };
   },
 
-  toJSON(_: ShutdownRequest): unknown {
+  toJSON(message: ShutdownRequest): unknown {
     const obj: any = {};
+    message.tag !== undefined && (obj.tag = Math.round(message.tag));
     return obj;
   },
 
@@ -694,18 +721,22 @@ export const ShutdownRequest = {
     return ShutdownRequest.fromPartial(base ?? {});
   },
 
-  fromPartial<I extends Exact<DeepPartial<ShutdownRequest>, I>>(_: I): ShutdownRequest {
+  fromPartial<I extends Exact<DeepPartial<ShutdownRequest>, I>>(object: I): ShutdownRequest {
     const message = createBaseShutdownRequest();
+    message.tag = object.tag ?? 0;
     return message;
   },
 };
 
 function createBaseShutdownResponse(): ShutdownResponse {
-  return {};
+  return { tag: 0 };
 }
 
 export const ShutdownResponse = {
-  encode(_: ShutdownResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+  encode(message: ShutdownResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.tag !== 0) {
+      writer.uint32(8).uint64(message.tag);
+    }
     return writer;
   },
 
@@ -716,6 +747,9 @@ export const ShutdownResponse = {
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
+        case 1:
+          message.tag = longToNumber(reader.uint64() as Long);
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -724,12 +758,13 @@ export const ShutdownResponse = {
     return message;
   },
 
-  fromJSON(_: any): ShutdownResponse {
-    return {};
+  fromJSON(object: any): ShutdownResponse {
+    return { tag: isSet(object.tag) ? Number(object.tag) : 0 };
   },
 
-  toJSON(_: ShutdownResponse): unknown {
+  toJSON(message: ShutdownResponse): unknown {
     const obj: any = {};
+    message.tag !== undefined && (obj.tag = Math.round(message.tag));
     return obj;
   },
 
@@ -737,8 +772,9 @@ export const ShutdownResponse = {
     return ShutdownResponse.fromPartial(base ?? {});
   },
 
-  fromPartial<I extends Exact<DeepPartial<ShutdownResponse>, I>>(_: I): ShutdownResponse {
+  fromPartial<I extends Exact<DeepPartial<ShutdownResponse>, I>>(object: I): ShutdownResponse {
     const message = createBaseShutdownResponse();
+    message.tag = object.tag ?? 0;
     return message;
   },
 };
@@ -953,7 +989,7 @@ export const RegisterWorkersRequest = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.ucxWorkerAddresses.push(reader.bytes() as Buffer);
+          message.ucxWorkerAddresses.push(reader.bytes());
           break;
         case 2:
           message.pipeline = Pipeline.decode(reader, reader.uint32());
@@ -969,7 +1005,7 @@ export const RegisterWorkersRequest = {
   fromJSON(object: any): RegisterWorkersRequest {
     return {
       ucxWorkerAddresses: Array.isArray(object?.ucxWorkerAddresses)
-        ? object.ucxWorkerAddresses.map((e: any) => Buffer.from(bytesFromBase64(e)))
+        ? object.ucxWorkerAddresses.map((e: any) => bytesFromBase64(e))
         : [],
       pipeline: isSet(object.pipeline) ? Pipeline.fromJSON(object.pipeline) : undefined,
     };
@@ -979,7 +1015,7 @@ export const RegisterWorkersRequest = {
     const obj: any = {};
     if (message.ucxWorkerAddresses) {
       obj.ucxWorkerAddresses = message.ucxWorkerAddresses.map((e) =>
-        base64FromBytes(e !== undefined ? e : Buffer.alloc(0))
+        base64FromBytes(e !== undefined ? e : new Uint8Array())
       );
     } else {
       obj.ucxWorkerAddresses = [];
@@ -3634,7 +3670,7 @@ export const SegmentConfiguration_IngressPoliciesEntry = {
 };
 
 function createBaseWorkerAddress(): WorkerAddress {
-  return { machineId: 0, instanceId: 0, workerAddress: Buffer.alloc(0) };
+  return { machineId: 0, instanceId: 0, workerAddress: new Uint8Array() };
 }
 
 export const WorkerAddress = {
@@ -3665,7 +3701,7 @@ export const WorkerAddress = {
           message.instanceId = longToNumber(reader.uint64() as Long);
           break;
         case 3:
-          message.workerAddress = reader.bytes() as Buffer;
+          message.workerAddress = reader.bytes();
           break;
         default:
           reader.skipType(tag & 7);
@@ -3679,7 +3715,7 @@ export const WorkerAddress = {
     return {
       machineId: isSet(object.machineId) ? Number(object.machineId) : 0,
       instanceId: isSet(object.instanceId) ? Number(object.instanceId) : 0,
-      workerAddress: isSet(object.workerAddress) ? Buffer.from(bytesFromBase64(object.workerAddress)) : Buffer.alloc(0),
+      workerAddress: isSet(object.workerAddress) ? bytesFromBase64(object.workerAddress) : new Uint8Array(),
     };
   },
 
@@ -3689,7 +3725,7 @@ export const WorkerAddress = {
     message.instanceId !== undefined && (obj.instanceId = Math.round(message.instanceId));
     message.workerAddress !== undefined &&
       (obj.workerAddress = base64FromBytes(
-        message.workerAddress !== undefined ? message.workerAddress : Buffer.alloc(0),
+        message.workerAddress !== undefined ? message.workerAddress : new Uint8Array(),
       ));
     return obj;
   },
@@ -3702,7 +3738,7 @@ export const WorkerAddress = {
     const message = createBaseWorkerAddress();
     message.machineId = object.machineId ?? 0;
     message.instanceId = object.instanceId ?? 0;
-    message.workerAddress = object.workerAddress ?? Buffer.alloc(0);
+    message.workerAddress = object.workerAddress ?? new Uint8Array();
     return message;
   },
 };

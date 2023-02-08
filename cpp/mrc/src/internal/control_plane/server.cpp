@@ -1166,7 +1166,7 @@ void NodeService::do_service_await_live()
     m_started_future.get();
 
     // Now ping the server to check its OK
-    auto channel = grpc::CreateChannel("localhost:4000", grpc::InsecureChannelCredentials());
+    auto channel = grpc::CreateChannel("localhost:13337", grpc::InsecureChannelCredentials());
     auto stub    = mrc::protos::Architect::NewStub(channel);
 
     ::mrc::protos::PingRequest request;
