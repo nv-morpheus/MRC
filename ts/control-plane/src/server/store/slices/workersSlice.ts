@@ -1,5 +1,6 @@
 import { CaseReducer, createEntityAdapter, createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { RootState } from "../../store";
+import { createWrappedEntityAdapter } from "../../utils";
+import type { RootState } from "../store";
 import { removeConnection } from "./connectionsSlice";
 // import { nanoid } from '@reduxjs/toolkit';
 
@@ -14,29 +15,10 @@ export interface IWorker {
    activated: boolean,
 }
 
-const workersAdapter = createEntityAdapter<IWorker>({
+const workersAdapter = createWrappedEntityAdapter<IWorker>({
    // sortComparer: (a, b) => b.id.localeCompare(a.date),
    selectId: (w) => w.id,
 });
-
-const localSelectors = workersAdapter.getSelectors();
-
-// interface WorkersState {
-//    [worker_id: number]: Worker,
-// }
-
-// // Define the initial state using that type
-// const initialState: WorkersState = {
-// };
-
-// const addWorker: CaseReducer<WorkersState, PayloadAction<Worker>> = (state, action) => {
-//    // doesn't actually mutate the state because it uses the Immer library,
-//    // which detects changes to a "draft state" and produces a brand new
-//    // immutable state based off those changes
-//    state.workers.push({
-//       id: action.payload.id
-//    });
-// };
 
 export const workersSlice = createSlice({
    name: 'workers',
@@ -80,7 +62,7 @@ export const {
 
 
 
-const selectByMachineId = createSelector([localSelectors.selectAll, (state: WorkersStateType, machine_id: number) => machine_id],
+const selectByMachineId = createSelector([workersAdapter.getAll, (state: WorkersStateType, machine_id: number) => machine_id],
    (workers, machine_id) => workers.filter((w) => w.parent_machine_id === machine_id));
 
 export const workersSelectByMachineId = (state: RootState, machine_id: number) => selectByMachineId(state.workers, machine_id);

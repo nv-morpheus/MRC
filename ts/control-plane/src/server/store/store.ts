@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
-import connectionsReducer from "./features/workers/connectionsSlice";
-import workersReducer from "./features/workers/workersSlice";
+import connectionsReducer from "./slices/connectionsSlice";
+import workersReducer from "./slices/workersSlice";
 
 export const store = configureStore({
    reducer: {

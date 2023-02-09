@@ -8,10 +8,10 @@ import { firstValueFrom, Subject } from "rxjs";
 
 // import { Ack, ArchitectServer, ArchitectService, Event, EventType, PingRequest, PingResponse, RegisterWorkersRequest, RegisterWorkersResponse, ShutdownRequest, ShutdownResponse } from "../proto/mrc/protos/architect";
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { store } from "./store";
-import { addWorker, addWorkers, IWorker, removeWorker, workersSelectById, workersSelectByMachineId } from "./features/workers/workersSlice";
+import { store } from "./store/store";
+import { addWorker, addWorkers, IWorker, removeWorker, workersSelectById, workersSelectByMachineId } from "./store/slices/workersSlice";
 import proto_min from "protobufjs/minimal";
-import { addConnection, removeConnection } from "./features/workers/connectionsSlice";
+import { addConnection, removeConnection } from "./store/slices/connectionsSlice";
 import { IArchitectServer } from "../proto/mrc/protos/architect_grpc_pb";
 import { Ack, Event, EventType, PingRequest, PingResponse, RegisterWorkersRequest, RegisterWorkersResponse, ShutdownRequest, ShutdownResponse, TaggedInstance } from "../proto/mrc/protos/architect_pb";
 import { Any } from "google-protobuf/google/protobuf/any_pb";
