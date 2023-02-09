@@ -2,7 +2,8 @@ import {
    Server,
    ServerCredentials,
 } from '@grpc/grpc-js';
-import { Architect, ArchitectService } from "./architect";
+import { ArchitectService } from "../proto/mrc/protos/architect_grpc_pb";
+import { Architect } from "./architect";
 
 async function main(): Promise<void> {
    const server = new Server();

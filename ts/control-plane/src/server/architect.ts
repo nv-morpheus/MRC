@@ -6,13 +6,16 @@ import {
 } from '@grpc/grpc-js';
 import { firstValueFrom, Subject } from "rxjs";
 
-import { Ack, ArchitectServer, ArchitectService, Event, EventType, PingRequest, PingResponse, RegisterWorkersRequest, RegisterWorkersResponse, ShutdownRequest, ShutdownResponse } from "../proto/mrc/protos/architect";
+// import { Ack, ArchitectServer, ArchitectService, Event, EventType, PingRequest, PingResponse, RegisterWorkersRequest, RegisterWorkersResponse, ShutdownRequest, ShutdownResponse } from "../proto/mrc/protos/architect";
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { store } from "./store";
-import { addWorker, addWorkers, IWorker, workersSelectByMachineId } from "./features/workers/workersSlice";
-import { Any } from "../proto/google/protobuf/any";
+import { addWorker, addWorkers, IWorker, removeWorker, workersSelectById, workersSelectByMachineId } from "./features/workers/workersSlice";
 import proto_min from "protobufjs/minimal";
 import { addConnection, removeConnection } from "./features/workers/connectionsSlice";
+import { IArchitectServer } from "../proto/mrc/protos/architect_grpc_pb";
+import { Ack, Event, EventType, PingRequest, PingResponse, RegisterWorkersRequest, RegisterWorkersResponse, ShutdownRequest, ShutdownResponse, TaggedInstance } from "../proto/mrc/protos/architect_pb";
+import { Any } from "google-protobuf/google/protobuf/any_pb";
+import { Message } from "google-protobuf";
 
 interface IncomingData {
    msg: Event,
@@ -42,45 +45,61 @@ function testResponse<MessageClassT>(message_class: MessageClassT): void {
 
 function typeUrlFromMessageClass(message_class: any) {
 
-   const prefix = "type.googleapis.com/mrc.protos";
+   const prefix = "mrc.protos";
 
-   if (message_class === RegisterWorkersRequest) {
+   if (message_class instanceof RegisterWorkersRequest) {
       return `${prefix}.RegisterWorkersRequest`;
-   } else if (message_class === RegisterWorkersResponse) {
+   } else if (message_class instanceof RegisterWorkersResponse) {
       return `${prefix}.RegisterWorkersResponse`;
+   } else if (message_class instanceof Ack) {
+      return `${prefix}.Ack`;
+   } else {
+      throw new Error(`Unknown message type: ${typeof message_class}`);
    }
-
-   return undefined;
 }
 
 // function unaryResponse<MessageT extends ProtoMessageBase, I extends Exact<DeepPartial<MessageT>, I>>(event: IncomingData, message_class: MessageT, data: I): MessageT {
 // function unaryResponse<MessageDataT extends Exact<DeepPartial<ProtoMessageBase<MessageDataT>>, MessageDataT>, MessageClassT extends ProtoMessageBase<MessageDataT>>(event: IncomingData, message_class: MessageClassT, data: MessageDataT): void {
-function unaryResponse<MessageDataT>(event: IncomingData, message_class: any, data: MessageDataT): void {
+// function unaryResponse<MessageDataT>(event: IncomingData, message_class: any, data: MessageDataT): void {
 
-   const response = message_class.create(data);
+//    const response = message_class.create(data);
 
-   // const writer = new BufferWriter();
+//    // const writer = new BufferWriter();
 
-   // RegisterWorkersResponse.encode(response, writer);
+//    // RegisterWorkersResponse.encode(response, writer);
 
-   const any_msg = Any.create({
-      typeUrl: typeUrlFromMessageClass(message_class),
-      value: message_class.encode(response).finish(),
-   });
+//    const any_msg = Any. .create({
+//       typeUrl: typeUrlFromMessageClass(message_class),
+//       value: message_class.encode(response).finish(),
+//    });
 
-   event.stream.write(Event.create({
-      event: EventType.Response,
-      tag: event.msg.tag,
-      message: any_msg,
-   }));
+//    event.stream.write(Event.create({
+//       event: EventType.RESPONSE,
+//       tag: event.msg.getTag(),
+//       message: any_msg,
+//    }));
+// }
+
+function unaryResponse<MessageDataT extends Message>(event: IncomingData, data: MessageDataT): void {
+
+   const any_msg = new Any();
+   any_msg.pack(data.serializeBinary(), typeUrlFromMessageClass(data) as string);
+
+   const message = new Event();
+   message.setEvent(EventType.RESPONSE);
+   message.setTag(event.msg.getTag());
+   message.setMessage(any_msg);
+
+   event.stream.write(message);
 }
 
 class Architect {
-   public service: ArchitectServer;
+   public service: IArchitectServer;
 
    private shutdown_subject: Subject<void> = new Subject<void>();
 
    constructor() {
+      // Have to do this. Look at https://github.com/paymog/grpc_tools_node_protoc_ts/blob/master/doc/server_impl_signature.md to see about getting around this restriction
       this.service = {
          eventStream: (call: ServerDuplexStream<Event, Event>): void => {
             this.do_eventStream(call);
@@ -117,7 +136,7 @@ class Architect {
       store.dispatch(addConnection(connection));
 
       call.on("data", (req: Event) => {
-         console.log(`Event stream data for ${connection.peer_info} with message: ${req.event.toString()}`);
+         console.log(`Event stream data for ${connection.peer_info} with message: ${req.getEvent().toString()}`);
 
          this.do_handle_event({
             msg: req,
@@ -139,22 +158,23 @@ class Architect {
 
    private do_handle_event(event: IncomingData): void {
       try {
-         switch (event.msg.event) {
-            case EventType.ClientEventRequestStateUpdate:
+         switch (event.msg.getEvent()) {
+            case EventType.CLIENTEVENTREQUESTSTATEUPDATE:
 
                break;
-            case EventType.ClientUnaryRegisterWorkers:
+            case EventType.CLIENTUNARYREGISTERWORKERS:
                {
 
-                  const payload = RegisterWorkersRequest.decode(event.msg.message?.value as Uint8Array);
+                  const payload = RegisterWorkersRequest.deserializeBinary(event.msg.getMessage()?.getValue_asU8() as Uint8Array);
 
                   const machine_id = Number.parseInt(event.stream.metadata.get("mrc-machine-id")[0] as string);
 
-                  const workers: IWorker[] = payload.ucxWorkerAddresses.map((value) => {
+                  const workers: IWorker[] = payload.getUcxWorkerAddressesList_asB64().map((value) => {
                      return {
                         id: 1234,
                         parent_machine_id: machine_id,
                         worker_address: value.toString(),
+                        activated: false,
                      };
                   });
 
@@ -181,18 +201,33 @@ class Architect {
                   //    message: any_msg,
                   // }));
 
-                  unaryResponse(event, RegisterWorkersResponse, {
-                     machineId: machine_id,
-                     instanceIds: workersSelectByMachineId(store.getState(), machine_id).map((worker) => worker.id),
-                  });
+                  const resp = new RegisterWorkersResponse();
+                  resp.setMachineId(machine_id);
+                  resp.setInstanceIdsList(workersSelectByMachineId(store.getState(), machine_id).map((worker) => worker.id));
+
+                  unaryResponse(event, resp);
 
                   break;
                }
-            case EventType.ClientUnaryActivateStream:
+            case EventType.CLIENTUNARYACTIVATESTREAM:
                {
-                  const payload = RegisterWorkersResponse.decode(event.msg.message?.value as Uint8Array);
+                  const payload = RegisterWorkersResponse.deserializeBinary(event.msg.getMessage()?.getValue_asU8() as Uint8Array);
 
-                  unaryResponse(event, Ack, {});
+                  unaryResponse(event, new Ack());
+
+                  break;
+               }
+            case EventType.CLIENTUNARYDROPWORKER:
+               {
+                  const payload = TaggedInstance.deserializeBinary(event.msg.getMessage()?.getValue_asU8() as Uint8Array);
+
+                  const found_worker = workersSelectById(store.getState(), payload.getInstanceId());
+
+                  if (found_worker) {
+                     store.dispatch(removeWorker(found_worker));
+                  }
+
+                  unaryResponse(event, new Ack());
 
                   break;
                }
@@ -201,7 +236,7 @@ class Architect {
                break;
          }
       } catch (error) {
-
+         console.log(`Error occurred handing event. Error: ${error}`);
       }
 
    }
@@ -212,14 +247,14 @@ class Architect {
 
       this.shutdown_subject.next();
 
-      callback(null, ShutdownResponse.create());
+      callback(null, new ShutdownResponse());
    }
 
    private do_ping(call: ServerUnaryCall<PingRequest, PingResponse>, callback: sendUnaryData<PingResponse>) {
 
       console.log(`Ping from ${call.getPeer()}`);
 
-      callback(null, PingResponse.create());
+      callback(null, new PingResponse());
    }
 }
 
@@ -277,5 +312,4 @@ class Architect {
 
 export {
    Architect,
-   ArchitectService,
 };

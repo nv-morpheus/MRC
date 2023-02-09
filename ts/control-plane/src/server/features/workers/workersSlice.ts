@@ -1,6 +1,6 @@
 import { CaseReducer, createEntityAdapter, createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from "../../store";
-import { findConnection } from "./connectionsSlice";
+import { removeConnection } from "./connectionsSlice";
 // import { nanoid } from '@reduxjs/toolkit';
 
 export interface IWorker {
@@ -10,12 +10,16 @@ export interface IWorker {
    worker_address: string,
    // Parent machine this worker belongs to
    parent_machine_id: number,
+   // Whether or not the worker has been activated
+   activated: boolean,
 }
 
 const workersAdapter = createEntityAdapter<IWorker>({
    // sortComparer: (a, b) => b.id.localeCompare(a.date),
    selectId: (w) => w.id,
 });
+
+const localSelectors = workersAdapter.getSelectors();
 
 // interface WorkersState {
 //    [worker_id: number]: Worker,
@@ -52,7 +56,17 @@ export const workersSlice = createSlice({
          workersAdapter.removeOne(state, action.payload.id);
       },
    },
+   extraReducers: (builder) => {
+      builder.addCase(removeConnection, (state, action) => {
+         // Need to delete any workers associated with that connection
+         const connection_workers = selectByMachineId(state, action.payload.id);
+
+         workersAdapter.removeMany(state, connection_workers.map((w) => w.id));
+      });
+   }
 });
+
+type WorkersStateType = ReturnType<typeof workersSlice.getInitialState>;
 
 export const { addWorker, addWorkers, removeWorker } = workersSlice.actions;
 
@@ -64,8 +78,12 @@ export const {
    selectTotal: workersSelectTotal,
 } = workersAdapter.getSelectors((state: RootState) => state.workers);
 
-export const workersSelectByMachineId = createSelector([workersSelectAll, (state: RootState, machine_id: number) => machine_id],
+
+
+const selectByMachineId = createSelector([localSelectors.selectAll, (state: WorkersStateType, machine_id: number) => machine_id],
    (workers, machine_id) => workers.filter((w) => w.parent_machine_id === machine_id));
+
+export const workersSelectByMachineId = (state: RootState, machine_id: number) => selectByMachineId(state.workers, machine_id);
 
 // // Other code such as selectors can use the imported `RootState` type
 // export const findWorker = (state: RootState, id: number) => {
