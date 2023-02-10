@@ -8,7 +8,7 @@
     "start:server": "nodemon -V --watch src/server --exec 'node --inspect --require ts-node/register src/server/server.ts'",
     "start:server:debug": "ts-node-dev --respawn --inspect -- src/server/server.ts",
     "start:client": "nodemon src/client/index.ts --watch src/client",
-    "proto:build": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_opt=outputServices=grpc-js,useOptionals=messages,exportCommonSymbols=false,esModuleInterop=true --ts_proto_out=./src/proto/ -I ../../protos/ ../../protos/mrc/protos/architect.proto",
+    "proto:build": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_opt=outputServices=nice-grpc,outputServices=generic-definitions,useOptionals=messages,exportCommonSymbols=false,esModuleInterop=true,outputTypeRegistry=true --ts_proto_out=./src/proto/ -I ../../protos/ ../../protos/mrc/protos/architect.proto",
     "proto:build2": "grpc_tools_node_protoc --plugin=protoc-gen-grpc=./node_modules/.bin/grpc_tools_node_protoc_plugin --ts_proto_opt=outputServices=grpc-js,useOptionals=messages,exportCommonSymbols=false,esModuleInterop=true --ts_proto_out=./src/proto/ -I ../../protos/ ../../protos/mrc/protos/architect.proto",
     "proto:build3": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./src/proto --grpc_out=grpc_js:./src/proto --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:./src/proto -I ../../protos/ ../../protos/mrc/protos/architect.proto",
     "codegen:buf": "cd proto; buf generate; cd ..",
@@ -19,11 +19,13 @@
   "license": "ISC",
   "devDependencies": {
     "@types/google-protobuf": "^3.15.6",
+    "@types/jest": "^29.4.0",
     "@types/node": "^18.11.18",
     "grpc_tools_node_protoc_ts": "^5.3.3",
     "grpc-tools": "^1.12.4",
     "nodemon": "^2.0.20",
     "rimraf": "^4.1.2",
+    "ts-jest": "^29.0.5",
     "ts-node-dev": "^2.0.0",
     "ts-proto": "^1.139.0",
     "typescript": "^4.9.5"

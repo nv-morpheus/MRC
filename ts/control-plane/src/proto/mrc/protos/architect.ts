@@ -1,21 +1,9 @@
 /* eslint-disable */
-import {
-  CallOptions,
-  ChannelCredentials,
-  Client,
-  ClientDuplexStream,
-  ClientOptions,
-  ClientUnaryCall,
-  handleBidiStreamingCall,
-  handleUnaryCall,
-  makeGenericClientConstructor,
-  Metadata,
-  ServiceError,
-  UntypedServiceImplementation,
-} from "@grpc/grpc-js";
 import Long from "long";
+import type { CallContext, CallOptions } from "nice-grpc-common";
 import _m0 from "protobufjs/minimal";
 import { Any } from "../../google/protobuf/any";
+import { messageTypeRegistry } from "../../typeRegistry";
 
 export enum EventType {
   Unused = 0,
@@ -178,22 +166,27 @@ export function errorCodeToJSON(object: ErrorCode): string {
 }
 
 export interface PingRequest {
+  $type: "mrc.protos.PingRequest";
   tag: number;
 }
 
 export interface PingResponse {
+  $type: "mrc.protos.PingResponse";
   tag: number;
 }
 
 export interface ShutdownRequest {
+  $type: "mrc.protos.ShutdownRequest";
   tag: number;
 }
 
 export interface ShutdownResponse {
+  $type: "mrc.protos.ShutdownResponse";
   tag: number;
 }
 
 export interface Event {
+  $type: "mrc.protos.Event";
   event: EventType;
   tag: number;
   message?: Any | undefined;
@@ -201,46 +194,56 @@ export interface Event {
 }
 
 export interface Error {
+  $type: "mrc.protos.Error";
   code: ErrorCode;
   message: string;
 }
 
 export interface Ack {
+  $type: "mrc.protos.Ack";
 }
 
 export interface RegisterWorkersRequest {
+  $type: "mrc.protos.RegisterWorkersRequest";
   ucxWorkerAddresses: Uint8Array[];
   pipeline?: Pipeline;
 }
 
 export interface RegisterWorkersResponse {
+  $type: "mrc.protos.RegisterWorkersResponse";
   machineId: number;
   instanceIds: number[];
 }
 
 export interface RegisterPipelineRequest {
+  $type: "mrc.protos.RegisterPipelineRequest";
   /** uint32 machine_id = 1; */
   pipeline?: Pipeline;
   requestedConfig: PipelineConfiguration[];
 }
 
 export interface RegisterPipelineResponse {
+  $type: "mrc.protos.RegisterPipelineResponse";
 }
 
 export interface LookupWorkersRequest {
+  $type: "mrc.protos.LookupWorkersRequest";
   instanceIds: number[];
 }
 
 export interface LookupWorkersResponse {
+  $type: "mrc.protos.LookupWorkersResponse";
   workerAddresses: WorkerAddress[];
 }
 
 export interface CreateSubscriptionServiceRequest {
+  $type: "mrc.protos.CreateSubscriptionServiceRequest";
   serviceName: string;
   roles: string[];
 }
 
 export interface RegisterSubscriptionServiceRequest {
+  $type: "mrc.protos.RegisterSubscriptionServiceRequest";
   serviceName: string;
   role: string;
   subscribeToRoles: string[];
@@ -248,12 +251,14 @@ export interface RegisterSubscriptionServiceRequest {
 }
 
 export interface RegisterSubscriptionServiceResponse {
+  $type: "mrc.protos.RegisterSubscriptionServiceResponse";
   serviceName: string;
   role: string;
   tag: number;
 }
 
 export interface ActivateSubscriptionServiceRequest {
+  $type: "mrc.protos.ActivateSubscriptionServiceRequest";
   serviceName: string;
   role: string;
   subscribeToRoles: string[];
@@ -262,12 +267,14 @@ export interface ActivateSubscriptionServiceRequest {
 }
 
 export interface DropSubscriptionServiceRequest {
+  $type: "mrc.protos.DropSubscriptionServiceRequest";
   serviceName: string;
   instanceId: number;
   tag: number;
 }
 
 export interface UpdateSubscriptionServiceRequest {
+  $type: "mrc.protos.UpdateSubscriptionServiceRequest";
   serviceName: string;
   role: string;
   nonce: number;
@@ -275,12 +282,14 @@ export interface UpdateSubscriptionServiceRequest {
 }
 
 export interface TaggedInstance {
+  $type: "mrc.protos.TaggedInstance";
   instanceId: number;
   tag: number;
 }
 
 /** message sent by an UpdateManager */
 export interface StateUpdate {
+  $type: "mrc.protos.StateUpdate";
   serviceName: string;
   nonce: number;
   instanceId: number;
@@ -290,31 +299,38 @@ export interface StateUpdate {
 }
 
 export interface UpdateConnectionsState {
+  $type: "mrc.protos.UpdateConnectionsState";
   taggedInstances: TaggedInstance[];
 }
 
 export interface UpdateSubscriptionServiceState {
+  $type: "mrc.protos.UpdateSubscriptionServiceState";
   role: string;
   taggedInstances: TaggedInstance[];
 }
 
 export interface DropSubscriptionServiceState {
+  $type: "mrc.protos.DropSubscriptionServiceState";
   role: string;
   tag: number;
 }
 
 export interface ControlMessage {
+  $type: "mrc.protos.ControlMessage";
 }
 
 export interface OnComplete {
+  $type: "mrc.protos.OnComplete";
   segmentAddresses: number[];
 }
 
 export interface UpdateAssignments {
+  $type: "mrc.protos.UpdateAssignments";
   assignments: SegmentAssignment[];
 }
 
 export interface SegmentAssignment {
+  $type: "mrc.protos.SegmentAssignment";
   machineId: number;
   instanceId: number;
   address: number;
@@ -324,17 +340,20 @@ export interface SegmentAssignment {
 }
 
 export interface SegmentAssignment_EgressPolicesEntry {
+  $type: "mrc.protos.SegmentAssignment.EgressPolicesEntry";
   key: number;
   value?: EgressPolicy;
 }
 
 export interface Topology {
+  $type: "mrc.protos.Topology";
   hwlocXmlString: string;
   cpuSet: string;
   gpuInfo: GpuInfo[];
 }
 
 export interface GpuInfo {
+  $type: "mrc.protos.GpuInfo";
   cpuSet: string;
   name: string;
   uuid: string;
@@ -344,11 +363,13 @@ export interface GpuInfo {
 }
 
 export interface Pipeline {
+  $type: "mrc.protos.Pipeline";
   name: string;
   segments: SegmentDefinition[];
 }
 
 export interface SegmentDefinition {
+  $type: "mrc.protos.SegmentDefinition";
   name: string;
   id: number;
   ingressPorts: IngressPort[];
@@ -357,6 +378,7 @@ export interface SegmentDefinition {
 }
 
 export interface SegmentOptions {
+  $type: "mrc.protos.SegmentOptions";
   placementStrategy: SegmentOptions_PlacementStrategy;
   scalingOptions?: ScalingOptions;
 }
@@ -401,6 +423,7 @@ export function segmentOptions_PlacementStrategyToJSON(object: SegmentOptions_Pl
 }
 
 export interface ScalingOptions {
+  $type: "mrc.protos.ScalingOptions";
   strategy: ScalingOptions_ScalingStrategy;
   initialCount: number;
 }
@@ -433,11 +456,13 @@ export function scalingOptions_ScalingStrategyToJSON(object: ScalingOptions_Scal
 }
 
 export interface IngressPort {
+  $type: "mrc.protos.IngressPort";
   name: string;
   id: number;
 }
 
 export interface EgressPort {
+  $type: "mrc.protos.EgressPort";
   name: string;
   id: number;
   policyType: EgressPort_PolicyType;
@@ -477,10 +502,12 @@ export function egressPort_PolicyTypeToJSON(object: EgressPort_PolicyType): stri
 }
 
 export interface IngressPolicy {
+  $type: "mrc.protos.IngressPolicy";
   networkEnabled: boolean;
 }
 
 export interface EgressPolicy {
+  $type: "mrc.protos.EgressPolicy";
   policy: EgressPolicy_Policy;
   /** list of allowed pol */
   segmentAddresses: number[];
@@ -520,11 +547,13 @@ export function egressPolicy_PolicyToJSON(object: EgressPolicy_Policy): string {
 }
 
 export interface PipelineConfiguration {
+  $type: "mrc.protos.PipelineConfiguration";
   instanceId: number;
   segments: SegmentConfiguration[];
 }
 
 export interface SegmentConfiguration {
+  $type: "mrc.protos.SegmentConfiguration";
   name: string;
   concurrency: number;
   rank: number;
@@ -533,22 +562,26 @@ export interface SegmentConfiguration {
 }
 
 export interface SegmentConfiguration_EgressPolicesEntry {
+  $type: "mrc.protos.SegmentConfiguration.EgressPolicesEntry";
   key: number;
   value?: EgressPolicy;
 }
 
 export interface SegmentConfiguration_IngressPoliciesEntry {
+  $type: "mrc.protos.SegmentConfiguration.IngressPoliciesEntry";
   key: number;
   value?: IngressPolicy;
 }
 
 export interface WorkerAddress {
+  $type: "mrc.protos.WorkerAddress";
   machineId: number;
   instanceId: number;
   workerAddress: Uint8Array;
 }
 
 export interface InstancesResources {
+  $type: "mrc.protos.InstancesResources";
   hostMemory: number;
   cpus: CPU[];
   gpus: GPU[];
@@ -560,12 +593,14 @@ export interface InstancesResources {
 }
 
 export interface CPU {
+  $type: "mrc.protos.CPU";
   cores: number;
   /** numa_node_masks - which cores are assigned each numa_node */
   numaNodes: number;
 }
 
 export interface GPU {
+  $type: "mrc.protos.GPU";
   name: string;
   cores: number;
   memory: number;
@@ -573,13 +608,16 @@ export interface GPU {
 }
 
 export interface NIC {
+  $type: "mrc.protos.NIC";
 }
 
 function createBasePingRequest(): PingRequest {
-  return { tag: 0 };
+  return { $type: "mrc.protos.PingRequest", tag: 0 };
 }
 
 export const PingRequest = {
+  $type: "mrc.protos.PingRequest" as const,
+
   encode(message: PingRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.tag !== 0) {
       writer.uint32(8).uint64(message.tag);
@@ -606,7 +644,7 @@ export const PingRequest = {
   },
 
   fromJSON(object: any): PingRequest {
-    return { tag: isSet(object.tag) ? Number(object.tag) : 0 };
+    return { $type: PingRequest.$type, tag: isSet(object.tag) ? Number(object.tag) : 0 };
   },
 
   toJSON(message: PingRequest): unknown {
@@ -626,11 +664,15 @@ export const PingRequest = {
   },
 };
 
+messageTypeRegistry.set(PingRequest.$type, PingRequest);
+
 function createBasePingResponse(): PingResponse {
-  return { tag: 0 };
+  return { $type: "mrc.protos.PingResponse", tag: 0 };
 }
 
 export const PingResponse = {
+  $type: "mrc.protos.PingResponse" as const,
+
   encode(message: PingResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.tag !== 0) {
       writer.uint32(8).uint64(message.tag);
@@ -657,7 +699,7 @@ export const PingResponse = {
   },
 
   fromJSON(object: any): PingResponse {
-    return { tag: isSet(object.tag) ? Number(object.tag) : 0 };
+    return { $type: PingResponse.$type, tag: isSet(object.tag) ? Number(object.tag) : 0 };
   },
 
   toJSON(message: PingResponse): unknown {
@@ -677,11 +719,15 @@ export const PingResponse = {
   },
 };
 
+messageTypeRegistry.set(PingResponse.$type, PingResponse);
+
 function createBaseShutdownRequest(): ShutdownRequest {
-  return { tag: 0 };
+  return { $type: "mrc.protos.ShutdownRequest", tag: 0 };
 }
 
 export const ShutdownRequest = {
+  $type: "mrc.protos.ShutdownRequest" as const,
+
   encode(message: ShutdownRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.tag !== 0) {
       writer.uint32(8).uint64(message.tag);
@@ -708,7 +754,7 @@ export const ShutdownRequest = {
   },
 
   fromJSON(object: any): ShutdownRequest {
-    return { tag: isSet(object.tag) ? Number(object.tag) : 0 };
+    return { $type: ShutdownRequest.$type, tag: isSet(object.tag) ? Number(object.tag) : 0 };
   },
 
   toJSON(message: ShutdownRequest): unknown {
@@ -728,11 +774,15 @@ export const ShutdownRequest = {
   },
 };
 
+messageTypeRegistry.set(ShutdownRequest.$type, ShutdownRequest);
+
 function createBaseShutdownResponse(): ShutdownResponse {
-  return { tag: 0 };
+  return { $type: "mrc.protos.ShutdownResponse", tag: 0 };
 }
 
 export const ShutdownResponse = {
+  $type: "mrc.protos.ShutdownResponse" as const,
+
   encode(message: ShutdownResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.tag !== 0) {
       writer.uint32(8).uint64(message.tag);
@@ -759,7 +809,7 @@ export const ShutdownResponse = {
   },
 
   fromJSON(object: any): ShutdownResponse {
-    return { tag: isSet(object.tag) ? Number(object.tag) : 0 };
+    return { $type: ShutdownResponse.$type, tag: isSet(object.tag) ? Number(object.tag) : 0 };
   },
 
   toJSON(message: ShutdownResponse): unknown {
@@ -779,11 +829,15 @@ export const ShutdownResponse = {
   },
 };
 
+messageTypeRegistry.set(ShutdownResponse.$type, ShutdownResponse);
+
 function createBaseEvent(): Event {
-  return { event: 0, tag: 0, message: undefined, error: undefined };
+  return { $type: "mrc.protos.Event", event: 0, tag: 0, message: undefined, error: undefined };
 }
 
 export const Event = {
+  $type: "mrc.protos.Event" as const,
+
   encode(message: Event, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.event !== 0) {
       writer.uint32(8).int32(message.event);
@@ -829,6 +883,7 @@ export const Event = {
 
   fromJSON(object: any): Event {
     return {
+      $type: Event.$type,
       event: isSet(object.event) ? eventTypeFromJSON(object.event) : 0,
       tag: isSet(object.tag) ? Number(object.tag) : 0,
       message: isSet(object.message) ? Any.fromJSON(object.message) : undefined,
@@ -861,11 +916,15 @@ export const Event = {
   },
 };
 
+messageTypeRegistry.set(Event.$type, Event);
+
 function createBaseError(): Error {
-  return { code: 0, message: "" };
+  return { $type: "mrc.protos.Error", code: 0, message: "" };
 }
 
 export const Error = {
+  $type: "mrc.protos.Error" as const,
+
   encode(message: Error, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.code !== 0) {
       writer.uint32(8).int32(message.code);
@@ -899,6 +958,7 @@ export const Error = {
 
   fromJSON(object: any): Error {
     return {
+      $type: Error.$type,
       code: isSet(object.code) ? errorCodeFromJSON(object.code) : 0,
       message: isSet(object.message) ? String(object.message) : "",
     };
@@ -923,11 +983,15 @@ export const Error = {
   },
 };
 
+messageTypeRegistry.set(Error.$type, Error);
+
 function createBaseAck(): Ack {
-  return {};
+  return { $type: "mrc.protos.Ack" };
 }
 
 export const Ack = {
+  $type: "mrc.protos.Ack" as const,
+
   encode(_: Ack, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     return writer;
   },
@@ -948,7 +1012,7 @@ export const Ack = {
   },
 
   fromJSON(_: any): Ack {
-    return {};
+    return { $type: Ack.$type };
   },
 
   toJSON(_: Ack): unknown {
@@ -966,11 +1030,15 @@ export const Ack = {
   },
 };
 
+messageTypeRegistry.set(Ack.$type, Ack);
+
 function createBaseRegisterWorkersRequest(): RegisterWorkersRequest {
-  return { ucxWorkerAddresses: [], pipeline: undefined };
+  return { $type: "mrc.protos.RegisterWorkersRequest", ucxWorkerAddresses: [], pipeline: undefined };
 }
 
 export const RegisterWorkersRequest = {
+  $type: "mrc.protos.RegisterWorkersRequest" as const,
+
   encode(message: RegisterWorkersRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     for (const v of message.ucxWorkerAddresses) {
       writer.uint32(10).bytes(v!);
@@ -1004,6 +1072,7 @@ export const RegisterWorkersRequest = {
 
   fromJSON(object: any): RegisterWorkersRequest {
     return {
+      $type: RegisterWorkersRequest.$type,
       ucxWorkerAddresses: Array.isArray(object?.ucxWorkerAddresses)
         ? object.ucxWorkerAddresses.map((e: any) => bytesFromBase64(e))
         : [],
@@ -1038,11 +1107,15 @@ export const RegisterWorkersRequest = {
   },
 };
 
+messageTypeRegistry.set(RegisterWorkersRequest.$type, RegisterWorkersRequest);
+
 function createBaseRegisterWorkersResponse(): RegisterWorkersResponse {
-  return { machineId: 0, instanceIds: [] };
+  return { $type: "mrc.protos.RegisterWorkersResponse", machineId: 0, instanceIds: [] };
 }
 
 export const RegisterWorkersResponse = {
+  $type: "mrc.protos.RegisterWorkersResponse" as const,
+
   encode(message: RegisterWorkersResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.machineId !== 0) {
       writer.uint32(8).uint64(message.machineId);
@@ -1085,6 +1158,7 @@ export const RegisterWorkersResponse = {
 
   fromJSON(object: any): RegisterWorkersResponse {
     return {
+      $type: RegisterWorkersResponse.$type,
       machineId: isSet(object.machineId) ? Number(object.machineId) : 0,
       instanceIds: Array.isArray(object?.instanceIds) ? object.instanceIds.map((e: any) => Number(e)) : [],
     };
@@ -1113,11 +1187,15 @@ export const RegisterWorkersResponse = {
   },
 };
 
+messageTypeRegistry.set(RegisterWorkersResponse.$type, RegisterWorkersResponse);
+
 function createBaseRegisterPipelineRequest(): RegisterPipelineRequest {
-  return { pipeline: undefined, requestedConfig: [] };
+  return { $type: "mrc.protos.RegisterPipelineRequest", pipeline: undefined, requestedConfig: [] };
 }
 
 export const RegisterPipelineRequest = {
+  $type: "mrc.protos.RegisterPipelineRequest" as const,
+
   encode(message: RegisterPipelineRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.pipeline !== undefined) {
       Pipeline.encode(message.pipeline, writer.uint32(18).fork()).ldelim();
@@ -1151,6 +1229,7 @@ export const RegisterPipelineRequest = {
 
   fromJSON(object: any): RegisterPipelineRequest {
     return {
+      $type: RegisterPipelineRequest.$type,
       pipeline: isSet(object.pipeline) ? Pipeline.fromJSON(object.pipeline) : undefined,
       requestedConfig: Array.isArray(object?.requestedConfig)
         ? object.requestedConfig.map((e: any) => PipelineConfiguration.fromJSON(e))
@@ -1183,11 +1262,15 @@ export const RegisterPipelineRequest = {
   },
 };
 
+messageTypeRegistry.set(RegisterPipelineRequest.$type, RegisterPipelineRequest);
+
 function createBaseRegisterPipelineResponse(): RegisterPipelineResponse {
-  return {};
+  return { $type: "mrc.protos.RegisterPipelineResponse" };
 }
 
 export const RegisterPipelineResponse = {
+  $type: "mrc.protos.RegisterPipelineResponse" as const,
+
   encode(_: RegisterPipelineResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     return writer;
   },
@@ -1208,7 +1291,7 @@ export const RegisterPipelineResponse = {
   },
 
   fromJSON(_: any): RegisterPipelineResponse {
-    return {};
+    return { $type: RegisterPipelineResponse.$type };
   },
 
   toJSON(_: RegisterPipelineResponse): unknown {
@@ -1226,11 +1309,15 @@ export const RegisterPipelineResponse = {
   },
 };
 
+messageTypeRegistry.set(RegisterPipelineResponse.$type, RegisterPipelineResponse);
+
 function createBaseLookupWorkersRequest(): LookupWorkersRequest {
-  return { instanceIds: [] };
+  return { $type: "mrc.protos.LookupWorkersRequest", instanceIds: [] };
 }
 
 export const LookupWorkersRequest = {
+  $type: "mrc.protos.LookupWorkersRequest" as const,
+
   encode(message: LookupWorkersRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     writer.uint32(10).fork();
     for (const v of message.instanceIds) {
@@ -1266,7 +1353,10 @@ export const LookupWorkersRequest = {
   },
 
   fromJSON(object: any): LookupWorkersRequest {
-    return { instanceIds: Array.isArray(object?.instanceIds) ? object.instanceIds.map((e: any) => Number(e)) : [] };
+    return {
+      $type: LookupWorkersRequest.$type,
+      instanceIds: Array.isArray(object?.instanceIds) ? object.instanceIds.map((e: any) => Number(e)) : [],
+    };
   },
 
   toJSON(message: LookupWorkersRequest): unknown {
@@ -1290,11 +1380,15 @@ export const LookupWorkersRequest = {
   },
 };
 
+messageTypeRegistry.set(LookupWorkersRequest.$type, LookupWorkersRequest);
+
 function createBaseLookupWorkersResponse(): LookupWorkersResponse {
-  return { workerAddresses: [] };
+  return { $type: "mrc.protos.LookupWorkersResponse", workerAddresses: [] };
 }
 
 export const LookupWorkersResponse = {
+  $type: "mrc.protos.LookupWorkersResponse" as const,
+
   encode(message: LookupWorkersResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     for (const v of message.workerAddresses) {
       WorkerAddress.encode(v!, writer.uint32(18).fork()).ldelim();
@@ -1322,6 +1416,7 @@ export const LookupWorkersResponse = {
 
   fromJSON(object: any): LookupWorkersResponse {
     return {
+      $type: LookupWorkersResponse.$type,
       workerAddresses: Array.isArray(object?.workerAddresses)
         ? object.workerAddresses.map((e: any) => WorkerAddress.fromJSON(e))
         : [],
@@ -1349,11 +1444,15 @@ export const LookupWorkersResponse = {
   },
 };
 
+messageTypeRegistry.set(LookupWorkersResponse.$type, LookupWorkersResponse);
+
 function createBaseCreateSubscriptionServiceRequest(): CreateSubscriptionServiceRequest {
-  return { serviceName: "", roles: [] };
+  return { $type: "mrc.protos.CreateSubscriptionServiceRequest", serviceName: "", roles: [] };
 }
 
 export const CreateSubscriptionServiceRequest = {
+  $type: "mrc.protos.CreateSubscriptionServiceRequest" as const,
+
   encode(message: CreateSubscriptionServiceRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.serviceName !== "") {
       writer.uint32(10).string(message.serviceName);
@@ -1387,6 +1486,7 @@ export const CreateSubscriptionServiceRequest = {
 
   fromJSON(object: any): CreateSubscriptionServiceRequest {
     return {
+      $type: CreateSubscriptionServiceRequest.$type,
       serviceName: isSet(object.serviceName) ? String(object.serviceName) : "",
       roles: Array.isArray(object?.roles) ? object.roles.map((e: any) => String(e)) : [],
     };
@@ -1419,11 +1519,21 @@ export const CreateSubscriptionServiceRequest = {
   },
 };
 
+messageTypeRegistry.set(CreateSubscriptionServiceRequest.$type, CreateSubscriptionServiceRequest);
+
 function createBaseRegisterSubscriptionServiceRequest(): RegisterSubscriptionServiceRequest {
-  return { serviceName: "", role: "", subscribeToRoles: [], instanceId: 0 };
+  return {
+    $type: "mrc.protos.RegisterSubscriptionServiceRequest",
+    serviceName: "",
+    role: "",
+    subscribeToRoles: [],
+    instanceId: 0,
+  };
 }
 
 export const RegisterSubscriptionServiceRequest = {
+  $type: "mrc.protos.RegisterSubscriptionServiceRequest" as const,
+
   encode(message: RegisterSubscriptionServiceRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.serviceName !== "") {
       writer.uint32(10).string(message.serviceName);
@@ -1469,6 +1579,7 @@ export const RegisterSubscriptionServiceRequest = {
 
   fromJSON(object: any): RegisterSubscriptionServiceRequest {
     return {
+      $type: RegisterSubscriptionServiceRequest.$type,
       serviceName: isSet(object.serviceName) ? String(object.serviceName) : "",
       role: isSet(object.role) ? String(object.role) : "",
       subscribeToRoles: Array.isArray(object?.subscribeToRoles)
@@ -1509,11 +1620,15 @@ export const RegisterSubscriptionServiceRequest = {
   },
 };
 
+messageTypeRegistry.set(RegisterSubscriptionServiceRequest.$type, RegisterSubscriptionServiceRequest);
+
 function createBaseRegisterSubscriptionServiceResponse(): RegisterSubscriptionServiceResponse {
-  return { serviceName: "", role: "", tag: 0 };
+  return { $type: "mrc.protos.RegisterSubscriptionServiceResponse", serviceName: "", role: "", tag: 0 };
 }
 
 export const RegisterSubscriptionServiceResponse = {
+  $type: "mrc.protos.RegisterSubscriptionServiceResponse" as const,
+
   encode(message: RegisterSubscriptionServiceResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.serviceName !== "") {
       writer.uint32(10).string(message.serviceName);
@@ -1553,6 +1668,7 @@ export const RegisterSubscriptionServiceResponse = {
 
   fromJSON(object: any): RegisterSubscriptionServiceResponse {
     return {
+      $type: RegisterSubscriptionServiceResponse.$type,
       serviceName: isSet(object.serviceName) ? String(object.serviceName) : "",
       role: isSet(object.role) ? String(object.role) : "",
       tag: isSet(object.tag) ? Number(object.tag) : 0,
@@ -1584,11 +1700,22 @@ export const RegisterSubscriptionServiceResponse = {
   },
 };
 
+messageTypeRegistry.set(RegisterSubscriptionServiceResponse.$type, RegisterSubscriptionServiceResponse);
+
 function createBaseActivateSubscriptionServiceRequest(): ActivateSubscriptionServiceRequest {
-  return { serviceName: "", role: "", subscribeToRoles: [], instanceId: 0, tag: 0 };
+  return {
+    $type: "mrc.protos.ActivateSubscriptionServiceRequest",
+    serviceName: "",
+    role: "",
+    subscribeToRoles: [],
+    instanceId: 0,
+    tag: 0,
+  };
 }
 
 export const ActivateSubscriptionServiceRequest = {
+  $type: "mrc.protos.ActivateSubscriptionServiceRequest" as const,
+
   encode(message: ActivateSubscriptionServiceRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.serviceName !== "") {
       writer.uint32(10).string(message.serviceName);
@@ -1640,6 +1767,7 @@ export const ActivateSubscriptionServiceRequest = {
 
   fromJSON(object: any): ActivateSubscriptionServiceRequest {
     return {
+      $type: ActivateSubscriptionServiceRequest.$type,
       serviceName: isSet(object.serviceName) ? String(object.serviceName) : "",
       role: isSet(object.role) ? String(object.role) : "",
       subscribeToRoles: Array.isArray(object?.subscribeToRoles)
@@ -1683,11 +1811,15 @@ export const ActivateSubscriptionServiceRequest = {
   },
 };
 
+messageTypeRegistry.set(ActivateSubscriptionServiceRequest.$type, ActivateSubscriptionServiceRequest);
+
 function createBaseDropSubscriptionServiceRequest(): DropSubscriptionServiceRequest {
-  return { serviceName: "", instanceId: 0, tag: 0 };
+  return { $type: "mrc.protos.DropSubscriptionServiceRequest", serviceName: "", instanceId: 0, tag: 0 };
 }
 
 export const DropSubscriptionServiceRequest = {
+  $type: "mrc.protos.DropSubscriptionServiceRequest" as const,
+
   encode(message: DropSubscriptionServiceRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.serviceName !== "") {
       writer.uint32(10).string(message.serviceName);
@@ -1727,6 +1859,7 @@ export const DropSubscriptionServiceRequest = {
 
   fromJSON(object: any): DropSubscriptionServiceRequest {
     return {
+      $type: DropSubscriptionServiceRequest.$type,
       serviceName: isSet(object.serviceName) ? String(object.serviceName) : "",
       instanceId: isSet(object.instanceId) ? Number(object.instanceId) : 0,
       tag: isSet(object.tag) ? Number(object.tag) : 0,
@@ -1756,11 +1889,15 @@ export const DropSubscriptionServiceRequest = {
   },
 };
 
+messageTypeRegistry.set(DropSubscriptionServiceRequest.$type, DropSubscriptionServiceRequest);
+
 function createBaseUpdateSubscriptionServiceRequest(): UpdateSubscriptionServiceRequest {
-  return { serviceName: "", role: "", nonce: 0, tags: [] };
+  return { $type: "mrc.protos.UpdateSubscriptionServiceRequest", serviceName: "", role: "", nonce: 0, tags: [] };
 }
 
 export const UpdateSubscriptionServiceRequest = {
+  $type: "mrc.protos.UpdateSubscriptionServiceRequest" as const,
+
   encode(message: UpdateSubscriptionServiceRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.serviceName !== "") {
       writer.uint32(10).string(message.serviceName);
@@ -1815,6 +1952,7 @@ export const UpdateSubscriptionServiceRequest = {
 
   fromJSON(object: any): UpdateSubscriptionServiceRequest {
     return {
+      $type: UpdateSubscriptionServiceRequest.$type,
       serviceName: isSet(object.serviceName) ? String(object.serviceName) : "",
       role: isSet(object.role) ? String(object.role) : "",
       nonce: isSet(object.nonce) ? Number(object.nonce) : 0,
@@ -1853,11 +1991,15 @@ export const UpdateSubscriptionServiceRequest = {
   },
 };
 
+messageTypeRegistry.set(UpdateSubscriptionServiceRequest.$type, UpdateSubscriptionServiceRequest);
+
 function createBaseTaggedInstance(): TaggedInstance {
-  return { instanceId: 0, tag: 0 };
+  return { $type: "mrc.protos.TaggedInstance", instanceId: 0, tag: 0 };
 }
 
 export const TaggedInstance = {
+  $type: "mrc.protos.TaggedInstance" as const,
+
   encode(message: TaggedInstance, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.instanceId !== 0) {
       writer.uint32(8).uint64(message.instanceId);
@@ -1891,6 +2033,7 @@ export const TaggedInstance = {
 
   fromJSON(object: any): TaggedInstance {
     return {
+      $type: TaggedInstance.$type,
       instanceId: isSet(object.instanceId) ? Number(object.instanceId) : 0,
       tag: isSet(object.tag) ? Number(object.tag) : 0,
     };
@@ -1915,8 +2058,11 @@ export const TaggedInstance = {
   },
 };
 
+messageTypeRegistry.set(TaggedInstance.$type, TaggedInstance);
+
 function createBaseStateUpdate(): StateUpdate {
   return {
+    $type: "mrc.protos.StateUpdate",
     serviceName: "",
     nonce: 0,
     instanceId: 0,
@@ -1927,6 +2073,8 @@ function createBaseStateUpdate(): StateUpdate {
 }
 
 export const StateUpdate = {
+  $type: "mrc.protos.StateUpdate" as const,
+
   encode(message: StateUpdate, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.serviceName !== "") {
       writer.uint32(10).string(message.serviceName);
@@ -1984,6 +2132,7 @@ export const StateUpdate = {
 
   fromJSON(object: any): StateUpdate {
     return {
+      $type: StateUpdate.$type,
       serviceName: isSet(object.serviceName) ? String(object.serviceName) : "",
       nonce: isSet(object.nonce) ? Number(object.nonce) : 0,
       instanceId: isSet(object.instanceId) ? Number(object.instanceId) : 0,
@@ -2038,11 +2187,15 @@ export const StateUpdate = {
   },
 };
 
+messageTypeRegistry.set(StateUpdate.$type, StateUpdate);
+
 function createBaseUpdateConnectionsState(): UpdateConnectionsState {
-  return { taggedInstances: [] };
+  return { $type: "mrc.protos.UpdateConnectionsState", taggedInstances: [] };
 }
 
 export const UpdateConnectionsState = {
+  $type: "mrc.protos.UpdateConnectionsState" as const,
+
   encode(message: UpdateConnectionsState, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     for (const v of message.taggedInstances) {
       TaggedInstance.encode(v!, writer.uint32(10).fork()).ldelim();
@@ -2070,6 +2223,7 @@ export const UpdateConnectionsState = {
 
   fromJSON(object: any): UpdateConnectionsState {
     return {
+      $type: UpdateConnectionsState.$type,
       taggedInstances: Array.isArray(object?.taggedInstances)
         ? object.taggedInstances.map((e: any) => TaggedInstance.fromJSON(e))
         : [],
@@ -2097,11 +2251,15 @@ export const UpdateConnectionsState = {
   },
 };
 
+messageTypeRegistry.set(UpdateConnectionsState.$type, UpdateConnectionsState);
+
 function createBaseUpdateSubscriptionServiceState(): UpdateSubscriptionServiceState {
-  return { role: "", taggedInstances: [] };
+  return { $type: "mrc.protos.UpdateSubscriptionServiceState", role: "", taggedInstances: [] };
 }
 
 export const UpdateSubscriptionServiceState = {
+  $type: "mrc.protos.UpdateSubscriptionServiceState" as const,
+
   encode(message: UpdateSubscriptionServiceState, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.role !== "") {
       writer.uint32(10).string(message.role);
@@ -2135,6 +2293,7 @@ export const UpdateSubscriptionServiceState = {
 
   fromJSON(object: any): UpdateSubscriptionServiceState {
     return {
+      $type: UpdateSubscriptionServiceState.$type,
       role: isSet(object.role) ? String(object.role) : "",
       taggedInstances: Array.isArray(object?.taggedInstances)
         ? object.taggedInstances.map((e: any) => TaggedInstance.fromJSON(e))
@@ -2167,11 +2326,15 @@ export const UpdateSubscriptionServiceState = {
   },
 };
 
+messageTypeRegistry.set(UpdateSubscriptionServiceState.$type, UpdateSubscriptionServiceState);
+
 function createBaseDropSubscriptionServiceState(): DropSubscriptionServiceState {
-  return { role: "", tag: 0 };
+  return { $type: "mrc.protos.DropSubscriptionServiceState", role: "", tag: 0 };
 }
 
 export const DropSubscriptionServiceState = {
+  $type: "mrc.protos.DropSubscriptionServiceState" as const,
+
   encode(message: DropSubscriptionServiceState, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.role !== "") {
       writer.uint32(10).string(message.role);
@@ -2204,7 +2367,11 @@ export const DropSubscriptionServiceState = {
   },
 
   fromJSON(object: any): DropSubscriptionServiceState {
-    return { role: isSet(object.role) ? String(object.role) : "", tag: isSet(object.tag) ? Number(object.tag) : 0 };
+    return {
+      $type: DropSubscriptionServiceState.$type,
+      role: isSet(object.role) ? String(object.role) : "",
+      tag: isSet(object.tag) ? Number(object.tag) : 0,
+    };
   },
 
   toJSON(message: DropSubscriptionServiceState): unknown {
@@ -2226,11 +2393,15 @@ export const DropSubscriptionServiceState = {
   },
 };
 
+messageTypeRegistry.set(DropSubscriptionServiceState.$type, DropSubscriptionServiceState);
+
 function createBaseControlMessage(): ControlMessage {
-  return {};
+  return { $type: "mrc.protos.ControlMessage" };
 }
 
 export const ControlMessage = {
+  $type: "mrc.protos.ControlMessage" as const,
+
   encode(_: ControlMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     return writer;
   },
@@ -2251,7 +2422,7 @@ export const ControlMessage = {
   },
 
   fromJSON(_: any): ControlMessage {
-    return {};
+    return { $type: ControlMessage.$type };
   },
 
   toJSON(_: ControlMessage): unknown {
@@ -2269,11 +2440,15 @@ export const ControlMessage = {
   },
 };
 
+messageTypeRegistry.set(ControlMessage.$type, ControlMessage);
+
 function createBaseOnComplete(): OnComplete {
-  return { segmentAddresses: [] };
+  return { $type: "mrc.protos.OnComplete", segmentAddresses: [] };
 }
 
 export const OnComplete = {
+  $type: "mrc.protos.OnComplete" as const,
+
   encode(message: OnComplete, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     writer.uint32(10).fork();
     for (const v of message.segmentAddresses) {
@@ -2310,6 +2485,7 @@ export const OnComplete = {
 
   fromJSON(object: any): OnComplete {
     return {
+      $type: OnComplete.$type,
       segmentAddresses: Array.isArray(object?.segmentAddresses)
         ? object.segmentAddresses.map((e: any) => Number(e))
         : [],
@@ -2337,11 +2513,15 @@ export const OnComplete = {
   },
 };
 
+messageTypeRegistry.set(OnComplete.$type, OnComplete);
+
 function createBaseUpdateAssignments(): UpdateAssignments {
-  return { assignments: [] };
+  return { $type: "mrc.protos.UpdateAssignments", assignments: [] };
 }
 
 export const UpdateAssignments = {
+  $type: "mrc.protos.UpdateAssignments" as const,
+
   encode(message: UpdateAssignments, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     for (const v of message.assignments) {
       SegmentAssignment.encode(v!, writer.uint32(10).fork()).ldelim();
@@ -2369,6 +2549,7 @@ export const UpdateAssignments = {
 
   fromJSON(object: any): UpdateAssignments {
     return {
+      $type: UpdateAssignments.$type,
       assignments: Array.isArray(object?.assignments)
         ? object.assignments.map((e: any) => SegmentAssignment.fromJSON(e))
         : [],
@@ -2396,8 +2577,11 @@ export const UpdateAssignments = {
   },
 };
 
+messageTypeRegistry.set(UpdateAssignments.$type, UpdateAssignments);
+
 function createBaseSegmentAssignment(): SegmentAssignment {
   return {
+    $type: "mrc.protos.SegmentAssignment",
     machineId: 0,
     instanceId: 0,
     address: 0,
@@ -2408,6 +2592,8 @@ function createBaseSegmentAssignment(): SegmentAssignment {
 }
 
 export const SegmentAssignment = {
+  $type: "mrc.protos.SegmentAssignment" as const,
+
   encode(message: SegmentAssignment, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.machineId !== 0) {
       writer.uint32(8).uint64(message.machineId);
@@ -2419,7 +2605,11 @@ export const SegmentAssignment = {
       writer.uint32(24).uint32(message.address);
     }
     Object.entries(message.egressPolices).forEach(([key, value]) => {
-      SegmentAssignment_EgressPolicesEntry.encode({ key: key as any, value }, writer.uint32(42).fork()).ldelim();
+      SegmentAssignment_EgressPolicesEntry.encode({
+        $type: "mrc.protos.SegmentAssignment.EgressPolicesEntry",
+        key: key as any,
+        value,
+      }, writer.uint32(42).fork()).ldelim();
     });
     if (message.issueEventOnComplete === true) {
       writer.uint32(48).bool(message.issueEventOnComplete);
@@ -2477,6 +2667,7 @@ export const SegmentAssignment = {
 
   fromJSON(object: any): SegmentAssignment {
     return {
+      $type: SegmentAssignment.$type,
       machineId: isSet(object.machineId) ? Number(object.machineId) : 0,
       instanceId: isSet(object.instanceId) ? Number(object.instanceId) : 0,
       address: isSet(object.address) ? Number(object.address) : 0,
@@ -2537,11 +2728,15 @@ export const SegmentAssignment = {
   },
 };
 
+messageTypeRegistry.set(SegmentAssignment.$type, SegmentAssignment);
+
 function createBaseSegmentAssignment_EgressPolicesEntry(): SegmentAssignment_EgressPolicesEntry {
-  return { key: 0, value: undefined };
+  return { $type: "mrc.protos.SegmentAssignment.EgressPolicesEntry", key: 0, value: undefined };
 }
 
 export const SegmentAssignment_EgressPolicesEntry = {
+  $type: "mrc.protos.SegmentAssignment.EgressPolicesEntry" as const,
+
   encode(message: SegmentAssignment_EgressPolicesEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.key !== 0) {
       writer.uint32(8).uint32(message.key);
@@ -2575,6 +2770,7 @@ export const SegmentAssignment_EgressPolicesEntry = {
 
   fromJSON(object: any): SegmentAssignment_EgressPolicesEntry {
     return {
+      $type: SegmentAssignment_EgressPolicesEntry.$type,
       key: isSet(object.key) ? Number(object.key) : 0,
       value: isSet(object.value) ? EgressPolicy.fromJSON(object.value) : undefined,
     };
@@ -2605,11 +2801,15 @@ export const SegmentAssignment_EgressPolicesEntry = {
   },
 };
 
+messageTypeRegistry.set(SegmentAssignment_EgressPolicesEntry.$type, SegmentAssignment_EgressPolicesEntry);
+
 function createBaseTopology(): Topology {
-  return { hwlocXmlString: "", cpuSet: "", gpuInfo: [] };
+  return { $type: "mrc.protos.Topology", hwlocXmlString: "", cpuSet: "", gpuInfo: [] };
 }
 
 export const Topology = {
+  $type: "mrc.protos.Topology" as const,
+
   encode(message: Topology, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.hwlocXmlString !== "") {
       writer.uint32(10).string(message.hwlocXmlString);
@@ -2649,6 +2849,7 @@ export const Topology = {
 
   fromJSON(object: any): Topology {
     return {
+      $type: Topology.$type,
       hwlocXmlString: isSet(object.hwlocXmlString) ? String(object.hwlocXmlString) : "",
       cpuSet: isSet(object.cpuSet) ? String(object.cpuSet) : "",
       gpuInfo: Array.isArray(object?.gpuInfo) ? object.gpuInfo.map((e: any) => GpuInfo.fromJSON(e)) : [],
@@ -2680,11 +2881,23 @@ export const Topology = {
   },
 };
 
+messageTypeRegistry.set(Topology.$type, Topology);
+
 function createBaseGpuInfo(): GpuInfo {
-  return { cpuSet: "", name: "", uuid: "", pcieBusId: "", memoryCapacity: 0, cudaDeviceId: 0 };
+  return {
+    $type: "mrc.protos.GpuInfo",
+    cpuSet: "",
+    name: "",
+    uuid: "",
+    pcieBusId: "",
+    memoryCapacity: 0,
+    cudaDeviceId: 0,
+  };
 }
 
 export const GpuInfo = {
+  $type: "mrc.protos.GpuInfo" as const,
+
   encode(message: GpuInfo, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.cpuSet !== "") {
       writer.uint32(10).string(message.cpuSet);
@@ -2742,6 +2955,7 @@ export const GpuInfo = {
 
   fromJSON(object: any): GpuInfo {
     return {
+      $type: GpuInfo.$type,
       cpuSet: isSet(object.cpuSet) ? String(object.cpuSet) : "",
       name: isSet(object.name) ? String(object.name) : "",
       uuid: isSet(object.uuid) ? String(object.uuid) : "",
@@ -2778,11 +2992,15 @@ export const GpuInfo = {
   },
 };
 
+messageTypeRegistry.set(GpuInfo.$type, GpuInfo);
+
 function createBasePipeline(): Pipeline {
-  return { name: "", segments: [] };
+  return { $type: "mrc.protos.Pipeline", name: "", segments: [] };
 }
 
 export const Pipeline = {
+  $type: "mrc.protos.Pipeline" as const,
+
   encode(message: Pipeline, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.name !== "") {
       writer.uint32(10).string(message.name);
@@ -2816,6 +3034,7 @@ export const Pipeline = {
 
   fromJSON(object: any): Pipeline {
     return {
+      $type: Pipeline.$type,
       name: isSet(object.name) ? String(object.name) : "",
       segments: Array.isArray(object?.segments) ? object.segments.map((e: any) => SegmentDefinition.fromJSON(e)) : [],
     };
@@ -2844,11 +3063,22 @@ export const Pipeline = {
   },
 };
 
+messageTypeRegistry.set(Pipeline.$type, Pipeline);
+
 function createBaseSegmentDefinition(): SegmentDefinition {
-  return { name: "", id: 0, ingressPorts: [], egressPorts: [], options: undefined };
+  return {
+    $type: "mrc.protos.SegmentDefinition",
+    name: "",
+    id: 0,
+    ingressPorts: [],
+    egressPorts: [],
+    options: undefined,
+  };
 }
 
 export const SegmentDefinition = {
+  $type: "mrc.protos.SegmentDefinition" as const,
+
   encode(message: SegmentDefinition, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.name !== "") {
       writer.uint32(10).string(message.name);
@@ -2900,6 +3130,7 @@ export const SegmentDefinition = {
 
   fromJSON(object: any): SegmentDefinition {
     return {
+      $type: SegmentDefinition.$type,
       name: isSet(object.name) ? String(object.name) : "",
       id: isSet(object.id) ? Number(object.id) : 0,
       ingressPorts: Array.isArray(object?.ingressPorts)
@@ -2946,11 +3177,15 @@ export const SegmentDefinition = {
   },
 };
 
+messageTypeRegistry.set(SegmentDefinition.$type, SegmentDefinition);
+
 function createBaseSegmentOptions(): SegmentOptions {
-  return { placementStrategy: 0, scalingOptions: undefined };
+  return { $type: "mrc.protos.SegmentOptions", placementStrategy: 0, scalingOptions: undefined };
 }
 
 export const SegmentOptions = {
+  $type: "mrc.protos.SegmentOptions" as const,
+
   encode(message: SegmentOptions, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.placementStrategy !== 0) {
       writer.uint32(8).int32(message.placementStrategy);
@@ -2984,6 +3219,7 @@ export const SegmentOptions = {
 
   fromJSON(object: any): SegmentOptions {
     return {
+      $type: SegmentOptions.$type,
       placementStrategy: isSet(object.placementStrategy)
         ? segmentOptions_PlacementStrategyFromJSON(object.placementStrategy)
         : 0,
@@ -3014,11 +3250,15 @@ export const SegmentOptions = {
   },
 };
 
+messageTypeRegistry.set(SegmentOptions.$type, SegmentOptions);
+
 function createBaseScalingOptions(): ScalingOptions {
-  return { strategy: 0, initialCount: 0 };
+  return { $type: "mrc.protos.ScalingOptions", strategy: 0, initialCount: 0 };
 }
 
 export const ScalingOptions = {
+  $type: "mrc.protos.ScalingOptions" as const,
+
   encode(message: ScalingOptions, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.strategy !== 0) {
       writer.uint32(8).int32(message.strategy);
@@ -3052,6 +3292,7 @@ export const ScalingOptions = {
 
   fromJSON(object: any): ScalingOptions {
     return {
+      $type: ScalingOptions.$type,
       strategy: isSet(object.strategy) ? scalingOptions_ScalingStrategyFromJSON(object.strategy) : 0,
       initialCount: isSet(object.initialCount) ? Number(object.initialCount) : 0,
     };
@@ -3076,11 +3317,15 @@ export const ScalingOptions = {
   },
 };
 
+messageTypeRegistry.set(ScalingOptions.$type, ScalingOptions);
+
 function createBaseIngressPort(): IngressPort {
-  return { name: "", id: 0 };
+  return { $type: "mrc.protos.IngressPort", name: "", id: 0 };
 }
 
 export const IngressPort = {
+  $type: "mrc.protos.IngressPort" as const,
+
   encode(message: IngressPort, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.name !== "") {
       writer.uint32(10).string(message.name);
@@ -3113,7 +3358,11 @@ export const IngressPort = {
   },
 
   fromJSON(object: any): IngressPort {
-    return { name: isSet(object.name) ? String(object.name) : "", id: isSet(object.id) ? Number(object.id) : 0 };
+    return {
+      $type: IngressPort.$type,
+      name: isSet(object.name) ? String(object.name) : "",
+      id: isSet(object.id) ? Number(object.id) : 0,
+    };
   },
 
   toJSON(message: IngressPort): unknown {
@@ -3135,11 +3384,15 @@ export const IngressPort = {
   },
 };
 
+messageTypeRegistry.set(IngressPort.$type, IngressPort);
+
 function createBaseEgressPort(): EgressPort {
-  return { name: "", id: 0, policyType: 0 };
+  return { $type: "mrc.protos.EgressPort", name: "", id: 0, policyType: 0 };
 }
 
 export const EgressPort = {
+  $type: "mrc.protos.EgressPort" as const,
+
   encode(message: EgressPort, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.name !== "") {
       writer.uint32(10).string(message.name);
@@ -3179,6 +3432,7 @@ export const EgressPort = {
 
   fromJSON(object: any): EgressPort {
     return {
+      $type: EgressPort.$type,
       name: isSet(object.name) ? String(object.name) : "",
       id: isSet(object.id) ? Number(object.id) : 0,
       policyType: isSet(object.policyType) ? egressPort_PolicyTypeFromJSON(object.policyType) : 0,
@@ -3206,11 +3460,15 @@ export const EgressPort = {
   },
 };
 
+messageTypeRegistry.set(EgressPort.$type, EgressPort);
+
 function createBaseIngressPolicy(): IngressPolicy {
-  return { networkEnabled: false };
+  return { $type: "mrc.protos.IngressPolicy", networkEnabled: false };
 }
 
 export const IngressPolicy = {
+  $type: "mrc.protos.IngressPolicy" as const,
+
   encode(message: IngressPolicy, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.networkEnabled === true) {
       writer.uint32(8).bool(message.networkEnabled);
@@ -3237,7 +3495,10 @@ export const IngressPolicy = {
   },
 
   fromJSON(object: any): IngressPolicy {
-    return { networkEnabled: isSet(object.networkEnabled) ? Boolean(object.networkEnabled) : false };
+    return {
+      $type: IngressPolicy.$type,
+      networkEnabled: isSet(object.networkEnabled) ? Boolean(object.networkEnabled) : false,
+    };
   },
 
   toJSON(message: IngressPolicy): unknown {
@@ -3257,11 +3518,15 @@ export const IngressPolicy = {
   },
 };
 
+messageTypeRegistry.set(IngressPolicy.$type, IngressPolicy);
+
 function createBaseEgressPolicy(): EgressPolicy {
-  return { policy: 0, segmentAddresses: [] };
+  return { $type: "mrc.protos.EgressPolicy", policy: 0, segmentAddresses: [] };
 }
 
 export const EgressPolicy = {
+  $type: "mrc.protos.EgressPolicy" as const,
+
   encode(message: EgressPolicy, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.policy !== 0) {
       writer.uint32(24).int32(message.policy);
@@ -3304,6 +3569,7 @@ export const EgressPolicy = {
 
   fromJSON(object: any): EgressPolicy {
     return {
+      $type: EgressPolicy.$type,
       policy: isSet(object.policy) ? egressPolicy_PolicyFromJSON(object.policy) : 0,
       segmentAddresses: Array.isArray(object?.segmentAddresses)
         ? object.segmentAddresses.map((e: any) => Number(e))
@@ -3334,11 +3600,15 @@ export const EgressPolicy = {
   },
 };
 
+messageTypeRegistry.set(EgressPolicy.$type, EgressPolicy);
+
 function createBasePipelineConfiguration(): PipelineConfiguration {
-  return { instanceId: 0, segments: [] };
+  return { $type: "mrc.protos.PipelineConfiguration", instanceId: 0, segments: [] };
 }
 
 export const PipelineConfiguration = {
+  $type: "mrc.protos.PipelineConfiguration" as const,
+
   encode(message: PipelineConfiguration, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.instanceId !== 0) {
       writer.uint32(8).uint64(message.instanceId);
@@ -3372,6 +3642,7 @@ export const PipelineConfiguration = {
 
   fromJSON(object: any): PipelineConfiguration {
     return {
+      $type: PipelineConfiguration.$type,
       instanceId: isSet(object.instanceId) ? Number(object.instanceId) : 0,
       segments: Array.isArray(object?.segments)
         ? object.segments.map((e: any) => SegmentConfiguration.fromJSON(e))
@@ -3402,11 +3673,22 @@ export const PipelineConfiguration = {
   },
 };
 
+messageTypeRegistry.set(PipelineConfiguration.$type, PipelineConfiguration);
+
 function createBaseSegmentConfiguration(): SegmentConfiguration {
-  return { name: "", concurrency: 0, rank: 0, egressPolices: {}, ingressPolicies: {} };
+  return {
+    $type: "mrc.protos.SegmentConfiguration",
+    name: "",
+    concurrency: 0,
+    rank: 0,
+    egressPolices: {},
+    ingressPolicies: {},
+  };
 }
 
 export const SegmentConfiguration = {
+  $type: "mrc.protos.SegmentConfiguration" as const,
+
   encode(message: SegmentConfiguration, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.name !== "") {
       writer.uint32(10).string(message.name);
@@ -3418,10 +3700,18 @@ export const SegmentConfiguration = {
       writer.uint32(24).uint32(message.rank);
     }
     Object.entries(message.egressPolices).forEach(([key, value]) => {
-      SegmentConfiguration_EgressPolicesEntry.encode({ key: key as any, value }, writer.uint32(34).fork()).ldelim();
+      SegmentConfiguration_EgressPolicesEntry.encode({
+        $type: "mrc.protos.SegmentConfiguration.EgressPolicesEntry",
+        key: key as any,
+        value,
+      }, writer.uint32(34).fork()).ldelim();
     });
     Object.entries(message.ingressPolicies).forEach(([key, value]) => {
-      SegmentConfiguration_IngressPoliciesEntry.encode({ key: key as any, value }, writer.uint32(42).fork()).ldelim();
+      SegmentConfiguration_IngressPoliciesEntry.encode({
+        $type: "mrc.protos.SegmentConfiguration.IngressPoliciesEntry",
+        key: key as any,
+        value,
+      }, writer.uint32(42).fork()).ldelim();
     });
     return writer;
   },
@@ -3464,6 +3754,7 @@ export const SegmentConfiguration = {
 
   fromJSON(object: any): SegmentConfiguration {
     return {
+      $type: SegmentConfiguration.$type,
       name: isSet(object.name) ? String(object.name) : "",
       concurrency: isSet(object.concurrency) ? Number(object.concurrency) : 0,
       rank: isSet(object.rank) ? Number(object.rank) : 0,
@@ -3533,11 +3824,15 @@ export const SegmentConfiguration = {
   },
 };
 
+messageTypeRegistry.set(SegmentConfiguration.$type, SegmentConfiguration);
+
 function createBaseSegmentConfiguration_EgressPolicesEntry(): SegmentConfiguration_EgressPolicesEntry {
-  return { key: 0, value: undefined };
+  return { $type: "mrc.protos.SegmentConfiguration.EgressPolicesEntry", key: 0, value: undefined };
 }
 
 export const SegmentConfiguration_EgressPolicesEntry = {
+  $type: "mrc.protos.SegmentConfiguration.EgressPolicesEntry" as const,
+
   encode(message: SegmentConfiguration_EgressPolicesEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.key !== 0) {
       writer.uint32(8).uint32(message.key);
@@ -3571,6 +3866,7 @@ export const SegmentConfiguration_EgressPolicesEntry = {
 
   fromJSON(object: any): SegmentConfiguration_EgressPolicesEntry {
     return {
+      $type: SegmentConfiguration_EgressPolicesEntry.$type,
       key: isSet(object.key) ? Number(object.key) : 0,
       value: isSet(object.value) ? EgressPolicy.fromJSON(object.value) : undefined,
     };
@@ -3601,11 +3897,15 @@ export const SegmentConfiguration_EgressPolicesEntry = {
   },
 };
 
+messageTypeRegistry.set(SegmentConfiguration_EgressPolicesEntry.$type, SegmentConfiguration_EgressPolicesEntry);
+
 function createBaseSegmentConfiguration_IngressPoliciesEntry(): SegmentConfiguration_IngressPoliciesEntry {
-  return { key: 0, value: undefined };
+  return { $type: "mrc.protos.SegmentConfiguration.IngressPoliciesEntry", key: 0, value: undefined };
 }
 
 export const SegmentConfiguration_IngressPoliciesEntry = {
+  $type: "mrc.protos.SegmentConfiguration.IngressPoliciesEntry" as const,
+
   encode(message: SegmentConfiguration_IngressPoliciesEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.key !== 0) {
       writer.uint32(8).uint32(message.key);
@@ -3639,6 +3939,7 @@ export const SegmentConfiguration_IngressPoliciesEntry = {
 
   fromJSON(object: any): SegmentConfiguration_IngressPoliciesEntry {
     return {
+      $type: SegmentConfiguration_IngressPoliciesEntry.$type,
       key: isSet(object.key) ? Number(object.key) : 0,
       value: isSet(object.value) ? IngressPolicy.fromJSON(object.value) : undefined,
     };
@@ -3669,11 +3970,15 @@ export const SegmentConfiguration_IngressPoliciesEntry = {
   },
 };
 
+messageTypeRegistry.set(SegmentConfiguration_IngressPoliciesEntry.$type, SegmentConfiguration_IngressPoliciesEntry);
+
 function createBaseWorkerAddress(): WorkerAddress {
-  return { machineId: 0, instanceId: 0, workerAddress: new Uint8Array() };
+  return { $type: "mrc.protos.WorkerAddress", machineId: 0, instanceId: 0, workerAddress: new Uint8Array() };
 }
 
 export const WorkerAddress = {
+  $type: "mrc.protos.WorkerAddress" as const,
+
   encode(message: WorkerAddress, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.machineId !== 0) {
       writer.uint32(8).uint64(message.machineId);
@@ -3713,6 +4018,7 @@ export const WorkerAddress = {
 
   fromJSON(object: any): WorkerAddress {
     return {
+      $type: WorkerAddress.$type,
       machineId: isSet(object.machineId) ? Number(object.machineId) : 0,
       instanceId: isSet(object.instanceId) ? Number(object.instanceId) : 0,
       workerAddress: isSet(object.workerAddress) ? bytesFromBase64(object.workerAddress) : new Uint8Array(),
@@ -3743,11 +4049,15 @@ export const WorkerAddress = {
   },
 };
 
+messageTypeRegistry.set(WorkerAddress.$type, WorkerAddress);
+
 function createBaseInstancesResources(): InstancesResources {
-  return { hostMemory: 0, cpus: [], gpus: [], nics: [] };
+  return { $type: "mrc.protos.InstancesResources", hostMemory: 0, cpus: [], gpus: [], nics: [] };
 }
 
 export const InstancesResources = {
+  $type: "mrc.protos.InstancesResources" as const,
+
   encode(message: InstancesResources, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.hostMemory !== 0) {
       writer.uint32(8).uint64(message.hostMemory);
@@ -3793,6 +4103,7 @@ export const InstancesResources = {
 
   fromJSON(object: any): InstancesResources {
     return {
+      $type: InstancesResources.$type,
       hostMemory: isSet(object.hostMemory) ? Number(object.hostMemory) : 0,
       cpus: Array.isArray(object?.cpus) ? object.cpus.map((e: any) => CPU.fromJSON(e)) : [],
       gpus: Array.isArray(object?.gpus) ? object.gpus.map((e: any) => GPU.fromJSON(e)) : [],
@@ -3835,11 +4146,15 @@ export const InstancesResources = {
   },
 };
 
+messageTypeRegistry.set(InstancesResources.$type, InstancesResources);
+
 function createBaseCPU(): CPU {
-  return { cores: 0, numaNodes: 0 };
+  return { $type: "mrc.protos.CPU", cores: 0, numaNodes: 0 };
 }
 
 export const CPU = {
+  $type: "mrc.protos.CPU" as const,
+
   encode(message: CPU, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.cores !== 0) {
       writer.uint32(8).uint32(message.cores);
@@ -3873,6 +4188,7 @@ export const CPU = {
 
   fromJSON(object: any): CPU {
     return {
+      $type: CPU.$type,
       cores: isSet(object.cores) ? Number(object.cores) : 0,
       numaNodes: isSet(object.numaNodes) ? Number(object.numaNodes) : 0,
     };
@@ -3897,11 +4213,15 @@ export const CPU = {
   },
 };
 
+messageTypeRegistry.set(CPU.$type, CPU);
+
 function createBaseGPU(): GPU {
-  return { name: "", cores: 0, memory: 0, computeCapability: 0 };
+  return { $type: "mrc.protos.GPU", name: "", cores: 0, memory: 0, computeCapability: 0 };
 }
 
 export const GPU = {
+  $type: "mrc.protos.GPU" as const,
+
   encode(message: GPU, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.name !== "") {
       writer.uint32(10).string(message.name);
@@ -3947,6 +4267,7 @@ export const GPU = {
 
   fromJSON(object: any): GPU {
     return {
+      $type: GPU.$type,
       name: isSet(object.name) ? String(object.name) : "",
       cores: isSet(object.cores) ? Number(object.cores) : 0,
       memory: isSet(object.memory) ? Number(object.memory) : 0,
@@ -3977,11 +4298,15 @@ export const GPU = {
   },
 };
 
+messageTypeRegistry.set(GPU.$type, GPU);
+
 function createBaseNIC(): NIC {
-  return {};
+  return { $type: "mrc.protos.NIC" };
 }
 
 export const NIC = {
+  $type: "mrc.protos.NIC" as const,
+
   encode(_: NIC, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     return writer;
   },
@@ -4002,7 +4327,7 @@ export const NIC = {
   },
 
   fromJSON(_: any): NIC {
-    return {};
+    return { $type: NIC.$type };
   },
 
   toJSON(_: NIC): unknown {
@@ -4020,80 +4345,54 @@ export const NIC = {
   },
 };
 
-export type ArchitectService = typeof ArchitectService;
-export const ArchitectService = {
-  eventStream: {
-    path: "/mrc.protos.Architect/EventStream",
-    requestStream: true,
-    responseStream: true,
-    requestSerialize: (value: Event) => Buffer.from(Event.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => Event.decode(value),
-    responseSerialize: (value: Event) => Buffer.from(Event.encode(value).finish()),
-    responseDeserialize: (value: Buffer) => Event.decode(value),
-  },
-  ping: {
-    path: "/mrc.protos.Architect/Ping",
-    requestStream: false,
-    responseStream: false,
-    requestSerialize: (value: PingRequest) => Buffer.from(PingRequest.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => PingRequest.decode(value),
-    responseSerialize: (value: PingResponse) => Buffer.from(PingResponse.encode(value).finish()),
-    responseDeserialize: (value: Buffer) => PingResponse.decode(value),
-  },
-  shutdown: {
-    path: "/mrc.protos.Architect/Shutdown",
-    requestStream: false,
-    responseStream: false,
-    requestSerialize: (value: ShutdownRequest) => Buffer.from(ShutdownRequest.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => ShutdownRequest.decode(value),
-    responseSerialize: (value: ShutdownResponse) => Buffer.from(ShutdownResponse.encode(value).finish()),
-    responseDeserialize: (value: Buffer) => ShutdownResponse.decode(value),
+messageTypeRegistry.set(NIC.$type, NIC);
+
+export type ArchitectDefinition = typeof ArchitectDefinition;
+export const ArchitectDefinition = {
+  name: "Architect",
+  fullName: "mrc.protos.Architect",
+  methods: {
+    eventStream: {
+      name: "EventStream",
+      requestType: Event,
+      requestStream: true,
+      responseType: Event,
+      responseStream: true,
+      options: {},
+    },
+    ping: {
+      name: "Ping",
+      requestType: PingRequest,
+      requestStream: false,
+      responseType: PingResponse,
+      responseStream: false,
+      options: {},
+    },
+    shutdown: {
+      name: "Shutdown",
+      requestType: ShutdownRequest,
+      requestStream: false,
+      responseType: ShutdownResponse,
+      responseStream: false,
+      options: {},
+    },
   },
 } as const;
 
-export interface ArchitectServer extends UntypedServiceImplementation {
-  eventStream: handleBidiStreamingCall<Event, Event>;
-  ping: handleUnaryCall<PingRequest, PingResponse>;
-  shutdown: handleUnaryCall<ShutdownRequest, ShutdownResponse>;
+export interface ArchitectServiceImplementation<CallContextExt = {}> {
+  eventStream(
+    request: AsyncIterable<Event>,
+    context: CallContext & CallContextExt,
+  ): ServerStreamingMethodResult<DeepPartial<Event>>;
+  ping(request: PingRequest, context: CallContext & CallContextExt): Promise<DeepPartial<PingResponse>>;
+  shutdown(request: ShutdownRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ShutdownResponse>>;
 }
 
-export interface ArchitectClient extends Client {
-  eventStream(): ClientDuplexStream<Event, Event>;
-  eventStream(options: Partial<CallOptions>): ClientDuplexStream<Event, Event>;
-  eventStream(metadata: Metadata, options?: Partial<CallOptions>): ClientDuplexStream<Event, Event>;
-  ping(request: PingRequest, callback: (error: ServiceError | null, response: PingResponse) => void): ClientUnaryCall;
-  ping(
-    request: PingRequest,
-    metadata: Metadata,
-    callback: (error: ServiceError | null, response: PingResponse) => void,
-  ): ClientUnaryCall;
-  ping(
-    request: PingRequest,
-    metadata: Metadata,
-    options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: PingResponse) => void,
-  ): ClientUnaryCall;
-  shutdown(
-    request: ShutdownRequest,
-    callback: (error: ServiceError | null, response: ShutdownResponse) => void,
-  ): ClientUnaryCall;
-  shutdown(
-    request: ShutdownRequest,
-    metadata: Metadata,
-    callback: (error: ServiceError | null, response: ShutdownResponse) => void,
-  ): ClientUnaryCall;
-  shutdown(
-    request: ShutdownRequest,
-    metadata: Metadata,
-    options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: ShutdownResponse) => void,
-  ): ClientUnaryCall;
+export interface ArchitectClient<CallOptionsExt = {}> {
+  eventStream(request: AsyncIterable<DeepPartial<Event>>, options?: CallOptions & CallOptionsExt): AsyncIterable<Event>;
+  ping(request: DeepPartial<PingRequest>, options?: CallOptions & CallOptionsExt): Promise<PingResponse>;
+  shutdown(request: DeepPartial<ShutdownRequest>, options?: CallOptions & CallOptionsExt): Promise<ShutdownResponse>;
 }
-
-export const ArchitectClient = makeGenericClientConstructor(ArchitectService, "mrc.protos.Architect") as unknown as {
-  new (address: string, credentials: ChannelCredentials, options?: Partial<ClientOptions>): ArchitectClient;
-  service: typeof ArchitectService;
-};
 
 declare var self: any | undefined;
 declare var window: any | undefined;
@@ -4143,12 +4442,12 @@ type Builtin = Date | Function | Uint8Array | string | number | boolean | undefi
 
 type DeepPartial<T> = T extends Builtin ? T
   : T extends Array<infer U> ? Array<DeepPartial<U>> : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
-  : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
+  : T extends {} ? { [K in Exclude<keyof T, "$type">]?: DeepPartial<T[K]> }
   : Partial<T>;
 
 type KeysOfUnion<T> = T extends T ? keyof T : never;
 type Exact<P, I extends P> = P extends Builtin ? P
-  : P & { [K in keyof P]: Exact<P[K], I[K]> } & { [K in Exclude<keyof I, KeysOfUnion<P>>]: never };
+  : P & { [K in keyof P]: Exact<P[K], I[K]> } & { [K in Exclude<keyof I, KeysOfUnion<P> | "$type">]: never };
 
 function longToNumber(long: Long): number {
   if (long.gt(Number.MAX_SAFE_INTEGER)) {
@@ -4169,3 +4468,5 @@ function isObject(value: any): boolean {
 function isSet(value: any): boolean {
   return value !== null && value !== undefined;
 }
+
+export type ServerStreamingMethodResult<Response> = { [Symbol.asyncIterator](): AsyncIterator<Response, void> };

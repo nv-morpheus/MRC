@@ -26,16 +26,29 @@ export const workersSlice = createSlice({
    reducers: {
       // addWorker,
       addWorker: (state, action: PayloadAction<IWorker>) => {
+         if (workersAdapter.getOne(state, action.payload.id)) {
+            throw new Error(`Worker with ID: ${action.payload.id} already exists`);
+         }
          workersAdapter.addOne(state, action.payload);
       },
       addWorkers: (state, action: PayloadAction<IWorker[]>) => {
          workersAdapter.addMany(state, action.payload);
       },
       removeWorker: (state, action: PayloadAction<IWorker>) => {
+         if (!workersAdapter.getOne(state, action.payload.id)) {
+            throw new Error(`Worker with ID: ${action.payload.id} not found`);
+         }
          workersAdapter.removeOne(state, action.payload.id);
       },
-      activateWorkers: (state, action: PayloadAction<IWorker>) => {
-         workersAdapter.removeOne(state, action.payload.id);
+      activateWorkers: (state, action: PayloadAction<IWorker[]>) => {
+         // Check for incorrect IDs
+         action.payload.forEach((w) => {
+            if (!workersAdapter.getOne(state, w.id)) {
+               throw new Error(`Worker with ID: ${w.id} not found`);
+            }
+         });
+
+         workersAdapter.getMany(state, action.payload.map((w) => w.id)).forEach((w) => w.activated = true);
       },
    },
    extraReducers: (builder) => {
@@ -50,7 +63,7 @@ export const workersSlice = createSlice({
 
 type WorkersStateType = ReturnType<typeof workersSlice.getInitialState>;
 
-export const { addWorker, addWorkers, removeWorker } = workersSlice.actions;
+export const { addWorker, addWorkers, removeWorker, activateWorkers } = workersSlice.actions;
 
 export const {
    selectAll: workersSelectAll,

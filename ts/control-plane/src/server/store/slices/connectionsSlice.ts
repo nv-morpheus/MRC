@@ -2,9 +2,9 @@ import { createEntityAdapter, createSlice, current, EntityState, EntityStateAdap
 import { EntityAdapter, EntityId, PreventAny } from "@reduxjs/toolkit/dist/entities/models";
 import { createWrappedEntityAdapter } from "../../utils";
 import type { RootState } from "../store";
-import { addWorker, addWorkers, removeWorker } from "./workersSlice";
+import { addWorker, addWorkers, IWorker, removeWorker } from "./workersSlice";
 
-interface IConnection {
+export interface IConnection {
    // id is the per machine assigned connection id
    id: number,
    peer_info: string,
@@ -17,7 +17,16 @@ const connectionsAdapter = createWrappedEntityAdapter<IConnection>({
    selectId: (x) => x.id,
 });
 
-const localSelectors = connectionsAdapter.getSelectors();
+function workerAdded(state: ConnectionsStateType, worker: IWorker) {
+   // Handle synchronizing a new added worker
+   const found_connection = connectionsAdapter.getOne(state, worker.parent_machine_id);
+
+   if (found_connection) {
+      found_connection.worker_ids.push(worker.id);
+   } else {
+      throw new Error("Must add a connection before a worker!");
+   }
+}
 
 export const connectionsSlice = createSlice({
    name: 'connections',
@@ -32,14 +41,13 @@ export const connectionsSlice = createSlice({
    },
    extraReducers: (builder) => {
       builder.addCase(addWorker, (state, action) => {
-         // Handle synchronizing a new added worker
-         connectionsAdapter.getOne(state, action.payload.parent_machine_id)?.worker_ids.push(action.payload.id);
+         workerAdded(state, action.payload);
       });
       builder.addCase(addWorkers, (state, action) => {
 
          // Handle synchronizing a new added worker
          action.payload.forEach((p) => {
-            connectionsAdapter.getOne(state, p.parent_machine_id)?.worker_ids.push(p.id);
+            workerAdded(state, p);
          });
       });
       builder.addCase(removeWorker, (state, action) => {
@@ -53,10 +61,14 @@ export const connectionsSlice = createSlice({
             if (index !== -1) {
                foundConnection.worker_ids.splice(index, 1);
             }
+         } else {
+            throw new Error("Must drop all workers before removing a connection");
          }
       });
    }
 });
+
+type ConnectionsStateType = ReturnType<typeof connectionsSlice.getInitialState>;
 
 export const { addConnection, removeConnection } = connectionsSlice.actions;
 

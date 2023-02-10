@@ -105,7 +105,8 @@ class Architect {
             this.do_eventStream(call);
          },
          ping: (call: ServerUnaryCall<PingRequest, PingResponse>, callback: sendUnaryData<PingResponse>): void => {
-            this.do_ping(call, callback);
+            console.log(`Ping from ${call.getPeer()}`);
+            this.do_ping(call.request, callback);
          },
          shutdown: (call: ServerUnaryCall<ShutdownRequest, ShutdownResponse>, callback: sendUnaryData<ShutdownResponse>): void => {
             this.do_shutdown(call, callback);
@@ -250,11 +251,11 @@ class Architect {
       callback(null, new ShutdownResponse());
    }
 
-   private do_ping(call: ServerUnaryCall<PingRequest, PingResponse>, callback: sendUnaryData<PingResponse>) {
+   private do_ping(req: PingRequest, callback: sendUnaryData<PingResponse>) {
 
-      console.log(`Ping from ${call.getPeer()}`);
-
-      callback(null, new PingResponse());
+      const res = new PingResponse();
+      res.setTag(req.getTag());
+      callback(null, res);
    }
 }
 
