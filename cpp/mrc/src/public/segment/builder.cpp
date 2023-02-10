@@ -42,6 +42,23 @@ std::string accum_merge(std::string lhs, std::string rhs)
 }  // namespace
 
 namespace mrc::segment {
+
+void Builder::init_module(std::shared_ptr<mrc::modules::SegmentModule> smodule)
+{
+    ns_push(smodule);
+    VLOG(2) << "Initializing module: " << m_namespace_prefix;
+    smodule->m_module_instance_registered_namespace = m_namespace_prefix;
+    smodule->initialize(*this);
+    ns_pop();
+
+    // TODO(Devin): Maybe a better way to do this with compile time type ledger.
+    if (std::dynamic_pointer_cast<modules::PersistentModule>(smodule) != nullptr)
+    {
+        VLOG(2) << "Registering persistent module -> '" << smodule->component_prefix() << "'";
+        m_backend.add_module(smodule->component_prefix(), smodule);
+    }
+}
+
 std::shared_ptr<ObjectProperties> Builder::get_ingress(std::string name, std::type_index type_index)
 {
     auto base = m_backend.get_ingress_base(name);
@@ -79,47 +96,30 @@ std::shared_ptr<ObjectProperties> Builder::get_egress(std::string name, std::typ
     return port;
 }
 
-void Builder::init_module(sp_segment_module_t module)
-{
-    ns_push(module);
-    VLOG(2) << "Initializing module: " << m_namespace_prefix;
-    module->m_module_instance_registered_namespace = m_namespace_prefix;
-    module->initialize(*this);
-    ns_pop();
-
-    // TODO(Devin): Maybe a better way to do this with compile time type ledger.
-    if (std::dynamic_pointer_cast<modules::PersistentModule>(module) != nullptr)
-    {
-        VLOG(2) << "Registering persistent module -> '" << module->component_prefix() << "'";
-        m_backend.add_module(module->component_prefix(), module);
-    }
-}
-
-[[maybe_unused]] std::shared_ptr<mrc::modules::SegmentModule> Builder::load_module_from_registry(
-    const std::string& module_id,
-    const std::string& registry_namespace,
-    std::string module_name,
-    nlohmann::json config)
+std::shared_ptr<mrc::modules::SegmentModule> Builder::load_module_from_registry(const std::string& module_id,
+                                                                                const std::string& registry_namespace,
+                                                                                std::string module_name,
+                                                                                nlohmann::json config)
 {
     auto fn_module_constructor = mrc::modules::ModuleRegistry::get_module_constructor(module_id, registry_namespace);
-    auto module                = fn_module_constructor(std::move(module_name), std::move(config));
+    auto smodule               = fn_module_constructor(std::move(module_name), std::move(config));
 
-    init_module(module);
+    init_module(smodule);
 
-    return module;
+    return smodule;
 }
 
 /** private implementations **/
 
-void Builder::ns_push(sp_segment_module_t module)
+void Builder::ns_push(sp_segment_module_t smodule)
 {
-    m_module_stack.push_back(module);
-    m_namespace_stack.push_back(module->component_prefix());
+    m_module_stack.push_back(smodule);
+    m_namespace_stack.push_back(smodule->component_prefix());
     m_namespace_prefix =
         std::accumulate(m_namespace_stack.begin(), m_namespace_stack.end(), std::string(""), ::accum_merge);
 }
 
-[[maybe_unused]] void Builder::ns_pop()
+void Builder::ns_pop()
 {
     m_module_stack.pop_back();
     m_namespace_stack.pop_back();
@@ -127,8 +127,7 @@ void Builder::ns_push(sp_segment_module_t module)
         std::accumulate(m_namespace_stack.begin(), m_namespace_stack.end(), std::string(""), ::accum_merge);
 }
 
-[[maybe_unused]] void Builder::register_module_input(std::string input_name,
-                                                     std::shared_ptr<segment::ObjectProperties> object)
+void Builder::register_module_input(std::string input_name, std::shared_ptr<segment::ObjectProperties> object)
 {
     if (m_module_stack.empty())
     {

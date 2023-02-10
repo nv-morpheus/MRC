@@ -468,9 +468,9 @@ std::shared_ptr<mrc::modules::SegmentModule> BuilderProxy::load_module_from_regi
     return self.load_module_from_registry(module_id, registry_namespace, std::move(module_name), std::move(json_config));
 }
 
-void BuilderProxy::init_module(mrc::segment::Builder& self, std::shared_ptr<mrc::modules::SegmentModule> module)
+void BuilderProxy::init_module(mrc::segment::Builder& self, std::shared_ptr<mrc::modules::SegmentModule> smodule)
 {
-    self.init_module(module);
+    self.init_module(smodule);
 }
 
 void BuilderProxy::register_module_input(mrc::segment::Builder& self,

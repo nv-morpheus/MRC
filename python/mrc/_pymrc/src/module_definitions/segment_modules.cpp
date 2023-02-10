@@ -44,10 +44,10 @@ std::string PySegmentModule::module_type_name() const
     PYBIND11_OVERLOAD_PURE(std::string, mrc::modules::SegmentModule, module_type_name);
 }
 
-void init_segment_modules(py::module_& module)
+void init_segment_modules(py::module_& smodule)
 {
     auto SegmentModule =
-        py::class_<mrc::modules::SegmentModule, PySegmentModule, std::shared_ptr<mrc::modules::SegmentModule>>(module,
+        py::class_<mrc::modules::SegmentModule, PySegmentModule, std::shared_ptr<mrc::modules::SegmentModule>>(smodule,
                                                                                                                "Segment"
                                                                                                                "Modul"
                                                                                                                "e");

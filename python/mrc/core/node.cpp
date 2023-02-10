@@ -34,9 +34,9 @@
 namespace mrc::pymrc {
 namespace py = pybind11;
 
-PYBIND11_MODULE(node, module)
+PYBIND11_MODULE(node, py_mod)
 {
-    module.doc() = R"pbdoc(
+    py_mod.doc() = R"pbdoc(
         Python bindings for MRC nodes
         -------------------------------
         .. currentmodule:: node
@@ -45,19 +45,19 @@ PYBIND11_MODULE(node, module)
     )pbdoc";
 
     // Common must be first in every module
-    pymrc::import(module, "mrc.core.common");
-    pymrc::import(module, "mrc.core.segment");  // Needed for Builder and SegmentObject
+    pymrc::import(py_mod, "mrc.core.common");
+    pymrc::import(py_mod, "mrc.core.segment");  // Needed for Builder and SegmentObject
 
     py::class_<mrc::segment::Object<node::BroadcastTypeless>,
                mrc::segment::ObjectProperties,
-               std::shared_ptr<mrc::segment::Object<node::BroadcastTypeless>>>(module, "Broadcast")
+               std::shared_ptr<mrc::segment::Object<node::BroadcastTypeless>>>(py_mod, "Broadcast")
         .def(py::init<>([](mrc::segment::Builder& builder, std::string name) {
             auto node = builder.construct_object<node::BroadcastTypeless>(name);
 
             return node;
         }));
 
-    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+    py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

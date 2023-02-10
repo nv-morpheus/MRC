@@ -34,9 +34,9 @@ namespace mrc::pymrc {
 
 namespace py = pybind11;
 
-void init_segment_module_registry(py::module_& module)
+void init_segment_module_registry(py::module_& smodule)
 {
-    auto SegmentModuleRegistry = py::class_<ModuleRegistryProxy>(module, "ModuleRegistry");
+    auto SegmentModuleRegistry = py::class_<ModuleRegistryProxy>(smodule, "ModuleRegistry");
 
     /** Module Register Interface Declarations **/
     SegmentModuleRegistry.def_static("contains",

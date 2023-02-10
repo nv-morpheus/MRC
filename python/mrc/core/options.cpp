@@ -41,9 +41,9 @@ class Config
 {};
 
 // Define the pybind11 module m, as 'pipeline'.
-PYBIND11_MODULE(options, module)
+PYBIND11_MODULE(options, py_mod)
 {
-    module.doc() = R"pbdoc(
+    py_mod.doc() = R"pbdoc(
         Python bindings for MRC options
         -------------------------------
         .. currentmodule:: options
@@ -52,9 +52,9 @@ PYBIND11_MODULE(options, module)
     )pbdoc";
 
     // Common must be first in every module
-    pymrc::import(module, "mrc.core.common");
+    pymrc::import(py_mod, "mrc.core.common");
 
-    py::class_<Config>(module, "Config")
+    py::class_<Config>(py_mod, "Config")
         .def_property_static("default_channel_size",
                              &ConfigProxy::get_default_channel_size,
                              &ConfigProxy::set_default_channel_size,
@@ -62,26 +62,26 @@ PYBIND11_MODULE(options, module)
                 Sets the default size of the buffers between edges for all newly created edges. Larger size will reduce backpressure at the cost of memory.
             )doc");
 
-    py::enum_<mrc::PlacementStrategy>(module, "PlacementStrategy")
+    py::enum_<mrc::PlacementStrategy>(py_mod, "PlacementStrategy")
         .value("PerMachine", mrc::PlacementStrategy::PerMachine)
         .value("PerNumaNode", mrc::PlacementStrategy::PerNumaNode)
         .export_values();
 
-    py::enum_<mrc::runnable::EngineType>(module, "EngineType")
+    py::enum_<mrc::runnable::EngineType>(py_mod, "EngineType")
         .value("Fiber", mrc::runnable::EngineType::Fiber)
         .value("Process", mrc::runnable::EngineType::Process)
         .value("Thread", mrc::runnable::EngineType::Thread)
         .export_values();
 
-    py::class_<mrc::TopologyOptions>(module, "TopologyOptions")
+    py::class_<mrc::TopologyOptions>(py_mod, "TopologyOptions")
         .def(py::init<>())
         .def_property("user_cpuset", &OptionsProxy::get_user_cpuset, &OptionsProxy::set_user_cpuset);
 
-    py::class_<mrc::PlacementOptions>(module, "PlacementOptions")
+    py::class_<mrc::PlacementOptions>(py_mod, "PlacementOptions")
         .def(py::init<>())
         .def_property("cpu_strategy", &OptionsProxy::get_cpu_strategy, &OptionsProxy::set_cpu_strategy);
 
-    py::class_<mrc::EngineFactoryOptions>(module, "EngineFactoryOptions")
+    py::class_<mrc::EngineFactoryOptions>(py_mod, "EngineFactoryOptions")
         .def(py::init<>())
         .def_property("cpu_count", &EngineFactoryOptionsProxy::get_cpu_count, &EngineFactoryOptionsProxy::set_cpu_count)
         .def_property("engine_type",
@@ -92,7 +92,7 @@ PYBIND11_MODULE(options, module)
                       &EngineFactoryOptionsProxy::get_allow_overlap,
                       &EngineFactoryOptionsProxy::set_allow_overlap);
 
-    py::class_<mrc::EngineGroups>(module, "EngineGroups")
+    py::class_<mrc::EngineGroups>(py_mod, "EngineGroups")
         .def(py::init<>())
         .def_property("default_engine_type",
                       &mrc::EngineGroups::default_engine_type,
@@ -106,7 +106,7 @@ PYBIND11_MODULE(options, module)
              &mrc::EngineGroups::engine_group_options,
              py::return_value_policy::reference_internal);
 
-    py::class_<mrc::Options, std::shared_ptr<mrc::Options>>(module, "Options")
+    py::class_<mrc::Options, std::shared_ptr<mrc::Options>>(py_mod, "Options")
         .def(py::init<>())
         .def_property_readonly("placement", &OptionsProxy::get_placement, py::return_value_policy::reference_internal)
         .def_property_readonly("topology", &OptionsProxy::get_topology, py::return_value_policy::reference_internal)
@@ -118,7 +118,7 @@ PYBIND11_MODULE(options, module)
                       static_cast<std::string const& (mrc::Options::*)() const>(&mrc::Options::architect_url),
                       static_cast<void (mrc::Options::*)(std::string)>(&mrc::Options::architect_url));
 
-    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+    py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

@@ -312,7 +312,7 @@ GENERATE_NODE_TYPES(TestSinkComponent, SinkComponent);
 #define CREATE_TEST_NODE_CLASS(class_name)                                                                        \
     py::class_<segment::Object<class_name>,                                                                       \
                mrc::segment::ObjectProperties,                                                                    \
-               std::shared_ptr<segment::Object<class_name>>>(module, #class_name)                                 \
+               std::shared_ptr<segment::Object<class_name>>>(py_mod, #class_name)                                 \
         .def(py::init<>(                                                                                          \
                  [](mrc::segment::Builder& parent, const std::string& name, py::dict counter, size_t msg_count) { \
                      auto stage = parent.construct_object<class_name>(name, name, std::move(counter), msg_count); \
@@ -323,24 +323,24 @@ GENERATE_NODE_TYPES(TestSinkComponent, SinkComponent);
              py::arg("counter"),                                                                                  \
              py::arg("msg_count") = 5);
 
-PYBIND11_MODULE(test_edges_cpp, module)
+PYBIND11_MODULE(test_edges_cpp, py_mod)
 {
-    module.doc() = R"pbdoc()pbdoc";
+    py_mod.doc() = R"pbdoc()pbdoc";
 
-    pymrc::import(module, "mrc");
-    pymrc::import(module, "mrc.core.segment");
+    pymrc::import(py_mod, "mrc");
+    pymrc::import(py_mod, "mrc.core.segment");
 
-    py::class_<Base, std::shared_ptr<Base>>(module, "Base").def(py::init<>([]() {
+    py::class_<Base, std::shared_ptr<Base>>(py_mod, "Base").def(py::init<>([]() {
         return std::make_shared<Base>();
     }));
     mrc::pymrc::PortBuilderUtil::register_port_util<Base>();
 
-    py::class_<DerivedA, Base, std::shared_ptr<DerivedA>>(module, "DerivedA").def(py::init<>([]() {
+    py::class_<DerivedA, Base, std::shared_ptr<DerivedA>>(py_mod, "DerivedA").def(py::init<>([]() {
         return std::make_shared<DerivedA>();
     }));
     mrc::pymrc::PortBuilderUtil::register_port_util<DerivedA>();
 
-    py::class_<DerivedB, Base, std::shared_ptr<DerivedB>>(module, "DerivedB").def(py::init<>([]() {
+    py::class_<DerivedB, Base, std::shared_ptr<DerivedB>>(py_mod, "DerivedB").def(py::init<>([]() {
         return std::make_shared<DerivedB>();
     }));
     mrc::pymrc::PortBuilderUtil::register_port_util<DerivedB>();
@@ -378,7 +378,7 @@ PYBIND11_MODULE(test_edges_cpp, module)
     CREATE_TEST_NODE_CLASS(SinkComponentDerivedA);
     CREATE_TEST_NODE_CLASS(SinkComponentDerivedB);
 
-    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+    py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pytests

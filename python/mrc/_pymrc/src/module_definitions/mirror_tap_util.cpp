@@ -86,10 +86,10 @@ namespace mrc::pymrc {
                                                                                      PybindSegmentModuleVersion);
 }
 
-[[maybe_unused]] void init_mirror_tap_util(py::module_& module)
+[[maybe_unused]] void init_mirror_tap_util(py::module_& smodule)
 {
     using python_mirror_tap_util_t = mrc::modules::MirrorTapUtil<pymrc::PyHolder>;
-    auto MirrorTap = py::class_<python_mirror_tap_util_t, std::shared_ptr<python_mirror_tap_util_t>>(module,
+    auto MirrorTap = py::class_<python_mirror_tap_util_t, std::shared_ptr<python_mirror_tap_util_t>>(smodule,
                                                                                                      "MirrorTap");
 
     MirrorTap.def(py::init(py::overload_cast<const std::string&>(&::MirrorTapUtilProxy::create)),

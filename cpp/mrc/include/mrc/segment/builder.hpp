@@ -32,8 +32,8 @@
 #include "mrc/runnable/runnable.hpp"  // IWYU pragma: export
 #include "mrc/segment/component.hpp"  // IWYU pragma: export
 #include "mrc/segment/concepts/object_traits.hpp"
-#include "mrc/segment/object.hpp"     // IWYU pragma: export
-#include "mrc/segment/runnable.hpp"   // IWYU pragma: export
+#include "mrc/segment/object.hpp"    // IWYU pragma: export
+#include "mrc/segment/runnable.hpp"  // IWYU pragma: export
 #include "mrc/type_traits.hpp"
 #include "mrc/utils/macros.hpp"
 
@@ -250,7 +250,7 @@ class Builder final
      * Initialize a SegmentModule that was instantiated outside of the builder.
      * @param module Module to initialize
      */
-    void init_module(std::shared_ptr<mrc::modules::SegmentModule> module);
+    void init_module(std::shared_ptr<mrc::modules::SegmentModule> smodule);
 
     /**
      * Register an input port on the given module -- note: this in generally only necessary for dynamically
@@ -344,7 +344,7 @@ class Builder final
 
     internal::segment::IBuilder& m_backend;
 
-    void ns_push(sp_segment_module_t module);
+    void ns_push(sp_segment_module_t smodule);
 
     void ns_pop();
 
@@ -419,10 +419,10 @@ std::shared_ptr<ModuleTypeT> Builder::make_module(std::string module_name, nlohm
 {
     static_assert(std::is_base_of_v<modules::SegmentModule, ModuleTypeT>);
 
-    auto module = std::make_shared<ModuleTypeT>(std::move(module_name), std::move(config));
-    init_module(module);
+    auto smodule = std::make_shared<ModuleTypeT>(std::move(module_name), std::move(config));
+    init_module(smodule);
 
-    return std::move(module);
+    return std::move(smodule);
 }
 
 template <typename SourceNodeTypeT, typename SinkNodeTypeT, MRCObjectProxy SourceObjectT, MRCObjectProxy SinkObjectT>

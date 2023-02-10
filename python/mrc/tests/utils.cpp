@@ -30,13 +30,13 @@ namespace mrc::pytests {
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(utils, module)
+PYBIND11_MODULE(utils, py_mod)
 {
-    module.doc() = R"pbdoc()pbdoc";
+    py_mod.doc() = R"pbdoc()pbdoc";
 
-    pymrc::import(module, "mrc");
+    pymrc::import(py_mod, "mrc");
 
-    module.def(
+    py_mod.def(
         "throw_cpp_error",
         [](std::string msg = "") {
             if (msg.empty())
@@ -48,7 +48,7 @@ PYBIND11_MODULE(utils, module)
         },
         py::arg("msg") = "");
 
-    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+    py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pytests

@@ -50,9 +50,9 @@ namespace mrc::pymrc {
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(segment, module)
+PYBIND11_MODULE(segment, py_mod)
 {
-    module.doc() = R"pbdoc(
+    py_mod.doc() = R"pbdoc(
         Python bindings for MRC Segments
         -------------------------------
         .. currentmodule:: segment
@@ -61,8 +61,8 @@ PYBIND11_MODULE(segment, module)
     )pbdoc";
 
     // Common must be first in every module
-    pymrc::import(module, "mrc.core.common");
-    pymrc::import(module, "mrc.core.subscriber");
+    pymrc::import(py_mod, "mrc.core.common");
+    pymrc::import(py_mod, "mrc.core.subscriber");
 
     // Type 'b'
     edge::EdgeConnector<bool, PyHolder>::register_converter();
@@ -93,24 +93,24 @@ PYBIND11_MODULE(segment, module)
     edge::EdgeConnector<std::string, PyHolder>::register_converter();
     edge::EdgeConnector<PyHolder, std::string>::register_converter();
 
-    py::class_<mrc::runnable::LaunchOptions>(module, "LaunchOptions")
+    py::class_<mrc::runnable::LaunchOptions>(py_mod, "LaunchOptions")
         .def_readwrite("pe_count", &mrc::runnable::LaunchOptions::pe_count)
         .def_readwrite("engines_per_pe", &mrc::runnable::LaunchOptions::engines_per_pe)
         .def_readwrite("engine_factory_name", &mrc::runnable::LaunchOptions::engine_factory_name);
 
     // Base SegmentObject that all object usually derive from
-    py::class_<mrc::segment::ObjectProperties, std::shared_ptr<mrc::segment::ObjectProperties>>(module, "SegmentObject")
+    py::class_<mrc::segment::ObjectProperties, std::shared_ptr<mrc::segment::ObjectProperties>>(py_mod, "SegmentObject")
         .def_property_readonly("name", &PyNode::name)
         .def_property_readonly("launch_options",
                                py::overload_cast<>(&mrc::segment::ObjectProperties::launch_options),
                                py::return_value_policy::reference_internal);
 
-    auto Builder    = py::class_<mrc::segment::Builder>(module, "Builder");
-    auto Definition = py::class_<mrc::segment::Definition>(module, "Definition");
+    auto Builder    = py::class_<mrc::segment::Builder>(py_mod, "Builder");
+    auto Definition = py::class_<mrc::segment::Definition>(py_mod, "Definition");
 
-    init_segment_modules(module);
-    init_segment_module_registry(module);
-    init_mirror_tap_util(module);
+    init_segment_modules(py_mod);
+    init_segment_module_registry(py_mod);
+    init_mirror_tap_util(py_mod);
 
     register_mirror_tap_modules();
 
@@ -253,7 +253,7 @@ PYBIND11_MODULE(segment, module)
 
     Builder.def("make_node_full", &BuilderProxy::make_node_full, py::return_value_policy::reference_internal);
 
-    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+    py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc
