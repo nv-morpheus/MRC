@@ -1,25 +1,22 @@
 
 
 import {
-   handleBidiStreamingCall, handleUnaryCall, sendUnaryData, ServerDuplexStream, ServerReadableStream, ServerUnaryCall, ServerWritableStream,
-   status, UntypedHandleCall
+   ServerDuplexStream, ServerUnaryCall
 } from '@grpc/grpc-js';
-import { firstValueFrom, Subject } from "rxjs";
+import { firstValueFrom, Observable, Subject } from "rxjs";
 
-// import { Ack, ArchitectServer, ArchitectService, Event, EventType, PingRequest, PingResponse, RegisterWorkersRequest, RegisterWorkersResponse, ShutdownRequest, ShutdownResponse } from "../proto/mrc/protos/architect";
-import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { store } from "./store/store";
-import { addWorker, addWorkers, IWorker, removeWorker, workersSelectById, workersSelectByMachineId } from "./store/slices/workersSlice";
-import proto_min from "protobufjs/minimal";
+import { getRootStore, RootState, RootStore } from "./store/store";
+import { addWorkers, IWorker, removeWorker, workersSelectById, workersSelectByMachineId } from "./store/slices/workersSlice";
 import { addConnection, removeConnection } from "./store/slices/connectionsSlice";
-import { IArchitectServer } from "../proto/mrc/protos/architect_grpc_pb";
-import { Ack, Event, EventType, PingRequest, PingResponse, RegisterWorkersRequest, RegisterWorkersResponse, ShutdownRequest, ShutdownResponse, TaggedInstance } from "../proto/mrc/protos/architect_pb";
-import { Any } from "google-protobuf/google/protobuf/any_pb";
-import { Message } from "google-protobuf";
+import { RegisterWorkersRequest, RegisterWorkersResponse, Event, Ack, EventType, PingRequest, PingResponse, ShutdownRequest, ShutdownResponse, TaggedInstance, ArchitectServiceImplementation, ServerStreamingMethodResult, StateUpdate } from "../proto/mrc/protos/architect";
+import { Any } from "../proto/google/protobuf/any";
+import { MessageType, messageTypeRegistry, UnknownMessage } from "../proto/typeRegistry";
+import { CallContext } from "nice-grpc";
+import { as, AsyncSink, concat, from, merge, zip } from 'ix/asynciterable';
 
 interface IncomingData {
    msg: Event,
-   stream: ServerDuplexStream<Event, Event>,
+   stream?: ServerDuplexStream<Event, Event>,
 }
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
@@ -43,134 +40,238 @@ function testResponse<MessageClassT>(message_class: MessageClassT): void {
 
 }
 
-function typeUrlFromMessageClass(message_class: any) {
+// function typeUrlFromMessageClass(message_class: any) {
 
-   const prefix = "mrc.protos";
+//    const prefix = "mrc.protos";
 
-   if (message_class instanceof RegisterWorkersRequest) {
-      return `${prefix}.RegisterWorkersRequest`;
-   } else if (message_class instanceof RegisterWorkersResponse) {
-      return `${prefix}.RegisterWorkersResponse`;
-   } else if (message_class instanceof Ack) {
-      return `${prefix}.Ack`;
-   } else {
-      throw new Error(`Unknown message type: ${typeof message_class}`);
-   }
-}
+//    if (message_class instanceof RegisterWorkersRequest) {
+//       return `${prefix}.RegisterWorkersRequest`;
+//    } else if (message_class instanceof RegisterWorkersResponse) {
+//       return `${prefix}.RegisterWorkersResponse`;
+//    } else if (message_class instanceof Ack) {
+//       return `${prefix}.Ack`;
+//    } else {
+//       throw new Error(`Unknown message type: ${typeof message_class}`);
+//    }
+// }
 
 // function unaryResponse<MessageT extends ProtoMessageBase, I extends Exact<DeepPartial<MessageT>, I>>(event: IncomingData, message_class: MessageT, data: I): MessageT {
 // function unaryResponse<MessageDataT extends Exact<DeepPartial<ProtoMessageBase<MessageDataT>>, MessageDataT>, MessageClassT extends ProtoMessageBase<MessageDataT>>(event: IncomingData, message_class: MessageClassT, data: MessageDataT): void {
-// function unaryResponse<MessageDataT>(event: IncomingData, message_class: any, data: MessageDataT): void {
+function unaryResponse2<MessageDataT extends UnknownMessage, MessageClass extends MessageType<MessageDataT>>(event: IncomingData, message_class: MessageClass, data: MessageDataT): void {
 
-//    const response = message_class.create(data);
+   const registered_type = messageTypeRegistry.get(message_class.$type);
 
-//    // const writer = new BufferWriter();
+}
+function unaryResponse<MessageDataT>(event: IncomingData, message_class: any, data: MessageDataT): Event {
 
-//    // RegisterWorkersResponse.encode(response, writer);
+   // Lookup message type
+   const type_registry = messageTypeRegistry.get(message_class.$type);
 
-//    const any_msg = Any. .create({
-//       typeUrl: typeUrlFromMessageClass(message_class),
-//       value: message_class.encode(response).finish(),
-//    });
+   const response = message_class.create(data);
 
-//    event.stream.write(Event.create({
-//       event: EventType.RESPONSE,
-//       tag: event.msg.getTag(),
-//       message: any_msg,
-//    }));
-// }
+   // const writer = new BufferWriter();
 
-function unaryResponse<MessageDataT extends Message>(event: IncomingData, data: MessageDataT): void {
+   // RegisterWorkersResponse.encode(response, writer);
 
-   const any_msg = new Any();
-   any_msg.pack(data.serializeBinary(), typeUrlFromMessageClass(data) as string);
+   const any_msg = Any.create({
+      typeUrl: `type.googleapis.com/${message_class.$type}`,
+      value: message_class.encode(response).finish(),
+   });
 
-   const message = new Event();
-   message.setEvent(EventType.RESPONSE);
-   message.setTag(event.msg.getTag());
-   message.setMessage(any_msg);
-
-   event.stream.write(message);
+   return Event.create({
+      event: EventType.Response,
+      tag: event.msg.tag,
+      message: any_msg,
+   });
 }
 
+function unpack<MessageT extends UnknownMessage>(event: IncomingData) {
+   const message_type_str = event.msg.message?.typeUrl.split('/').pop();
+
+   // Load the type from the registry
+   const message_type = messageTypeRegistry.get(message_type_str ?? "");
+
+   if (!message_type) {
+      throw new Error(`Could not unpack message with type: ${event.msg.message?.typeUrl}`);
+   }
+
+   const message = message_type.decode(event.msg.message?.value as Uint8Array) as MessageT;
+
+   return message;
+}
+
+// function unaryResponse<MessageDataT extends Message>(event: IncomingData, data: MessageDataT): void {
+
+//    const any_msg = new Any();
+//    any_msg.pack(data.serializeBinary(), typeUrlFromMessageClass(data) as string);
+
+//    const message = new Event();
+//    message.setEvent(EventType.RESPONSE);
+//    message.setTag(event.msg.getTag());
+//    message.setMessage(any_msg);
+
+//    event.stream.write(message);
+// }
+
 class Architect {
-   public service: IArchitectServer;
+   public service: ArchitectServiceImplementation;
+
+   private _store: RootStore;
 
    private shutdown_subject: Subject<void> = new Subject<void>();
 
-   constructor() {
+   constructor(store?: RootStore) {
+
+      // Use the default store if not supplied
+      if (!store) {
+         store = getRootStore();
+      }
+
+      this._store = store;
+
       // Have to do this. Look at https://github.com/paymog/grpc_tools_node_protoc_ts/blob/master/doc/server_impl_signature.md to see about getting around this restriction
       this.service = {
-         eventStream: (call: ServerDuplexStream<Event, Event>): void => {
-            this.do_eventStream(call);
+         eventStream: (request, context) => {
+            return this.do_eventStream(request, context);
          },
-         ping: (call: ServerUnaryCall<PingRequest, PingResponse>, callback: sendUnaryData<PingResponse>): void => {
-            console.log(`Ping from ${call.getPeer()}`);
-            this.do_ping(call.request, callback);
+         ping: async (request, context): Promise<DeepPartial<PingResponse>> => {
+            return await this.do_ping(request, context);
          },
-         shutdown: (call: ServerUnaryCall<ShutdownRequest, ShutdownResponse>, callback: sendUnaryData<ShutdownResponse>): void => {
-            this.do_shutdown(call, callback);
-         },
+         shutdown: async (request, context): Promise<DeepPartial<ShutdownResponse>> => {
+            return await this.do_shutdown(request, context);
+         }
       };
    }
 
-   public getShutdownPromise() {
+   public onShutdownSignaled() {
       return firstValueFrom(this.shutdown_subject);
    }
 
-   public async shutdown() {
-      await firstValueFrom(this.shutdown_subject);
-   }
-
-   private do_eventStream(call: ServerDuplexStream<Event, Event>): void {
-      console.log(`Event stream created for ${call.getPeer()}`);
+   private async *do_eventStream(stream: AsyncIterable<Event>, context: CallContext): AsyncIterable<DeepPartial<Event>> {
+      console.log(`Event stream created for ${context.peer}`);
 
       const connection = {
          id: 1111,
-         peer_info: call.getPeer(),
+         peer_info: context.peer,
          worker_ids: [],
       };
 
-      call.metadata.add("mrc-machine-id", connection.id.toString());
+      context.metadata.set("mrc-machine-id", connection.id.toString());
+
+
+
+      // const state_updates$ = new Observable<Event>((subscriber) => {
+
+
+      //    async function* pull_messages(){
+      //       for await (const req of stream) {
+      //          console.log(`Event stream data for ${connection.peer_info} with message: ${req.event.toString()}`);
+
+      //          yield* this.do_handle_event({
+      //             msg: req,
+      //          }, context);
+      //       }
+      //    }
+
+      //    store_unsub
+      // });
+
+      // const send_events = new Subject<Event>();
+
+      // merge();
+
+      const store_update_sink = new AsyncSink<Event>();
+
+      // Subscribe to the stores next update
+      const store_unsub = this._store.subscribe(() => {
+         const state = this._store.getState();
+
+         // // Convert to an event
+         // subscriber.next(Event.create({
+         //    event: EventType.ServerStateUpdate,
+         // }));
+
+         store_update_sink.write(Event.create({
+            event: EventType.ServerStateUpdate,
+         }));
+      });
 
       // Create a new connection
-      store.dispatch(addConnection(connection));
+      this._store.dispatch(addConnection(connection));
 
-      call.on("data", (req: Event) => {
-         console.log(`Event stream data for ${connection.peer_info} with message: ${req.getEvent().toString()}`);
+      const self = this;
 
-         this.do_handle_event({
-            msg: req,
-            stream: call
-         });
-      });
+      const event_stream = async function* () {
+         for await (const req of stream) {
+            console.log(`Event stream data for ${connection.peer_info} with message: ${req.event.toString()}`);
 
-      call.on("error", (err: Error) => {
-         console.log(`Event stream errored for ${connection.peer_info} with message: ${err.message}`);
-      });
+            yield* self.do_handle_event({
+               msg: req,
+            }, context);
+         }
 
-      call.on("end", () => {
-         console.log(`Event stream closed for ${connection.peer_info}. Deleting connection.`);
+         // Input stream has completed so stop pushing events
+         store_unsub();
 
-         // Create a new connection
-         store.dispatch(removeConnection(connection));
-      });
+         store_update_sink.end();
+      };
+
+      for await (const out_event of merge(as(event_stream()), as<Event>(store_update_sink))) {
+         yield out_event;
+      }
+
+
+      // for await (const req of stream) {
+      //    console.log(`Event stream data for ${connection.peer_info} with message: ${req.event.toString()}`);
+
+      //    yield* this.do_handle_event({
+      //       msg: req,
+      //    }, context);
+      // }
+
+      console.log(`Event stream closed for ${connection.peer_info}. Deleting connection.`);
+
+      // Create a new connection
+      this._store.dispatch(removeConnection(connection));
+
+      // call.on("data", (req: Event) => {
+      //    console.log(`Event stream data for ${connection.peer_info} with message: ${req.getEvent().toString()}`);
+
+      //    this.do_handle_event({
+      //       msg: req,
+      //       stream: call
+      //    });
+      // });
+
+      // call.on("error", (err: Error) => {
+      //    console.log(`Event stream errored for ${connection.peer_info} with message: ${err.message}`);
+      // });
+
+      // call.on("end", () => {
+      //    console.log(`Event stream closed for ${connection.peer_info}. Deleting connection.`);
+
+      //    // Create a new connection
+      //    store.dispatch(removeConnection(connection));
+      // });
    }
 
-   private do_handle_event(event: IncomingData): void {
+   private async *do_handle_event(event: IncomingData, context: CallContext) {
       try {
-         switch (event.msg.getEvent()) {
-            case EventType.CLIENTEVENTREQUESTSTATEUPDATE:
+         switch (event.msg.event) {
+            case EventType.ClientEventRequestStateUpdate:
+
+               yield unaryResponse(event, StateUpdate, StateUpdate.create({
+
+               }));
 
                break;
-            case EventType.CLIENTUNARYREGISTERWORKERS:
+            case EventType.ClientUnaryRegisterWorkers:
                {
+                  const payload = unpack<RegisterWorkersRequest>(event);
 
-                  const payload = RegisterWorkersRequest.deserializeBinary(event.msg.getMessage()?.getValue_asU8() as Uint8Array);
+                  const machine_id = Number.parseInt(context.metadata.get("mrc-machine-id") as string);
 
-                  const machine_id = Number.parseInt(event.stream.metadata.get("mrc-machine-id")[0] as string);
-
-                  const workers: IWorker[] = payload.getUcxWorkerAddressesList_asB64().map((value) => {
+                  const workers: IWorker[] = payload.ucxWorkerAddresses.map((value) => {
                      return {
                         id: 1234,
                         parent_machine_id: machine_id,
@@ -180,55 +281,36 @@ class Architect {
                   });
 
                   // Add the workers
-                  store.dispatch(addWorkers(workers));
+                  this._store.dispatch(addWorkers(workers));
 
-                  // const response = RegisterWorkersResponse.create({
-                  //    machineId: machine_id,
-                  //    instanceIds: workersSelectByMachineId(store.getState(), machine_id).map((worker) => worker.id),
-                  // });
+                  const resp = RegisterWorkersResponse.create({
+                     machineId: machine_id,
+                     instanceIds: workersSelectByMachineId(this._store.getState(), machine_id).map((worker) => worker.id)
+                  });
 
-                  // // const writer = new BufferWriter();
-
-                  // // RegisterWorkersResponse.encode(response, writer);
-
-                  // const any_msg = Any.create({
-                  //    typeUrl: `type.googleapis.com/mrc.protos.RegisterWorkersResponse`,
-                  //    value: RegisterWorkersResponse.encode(response).finish(),
-                  // });
-
-                  // event.stream.write(Event.create({
-                  //    event: EventType.Response,
-                  //    tag: event.msg.tag,
-                  //    message: any_msg,
-                  // }));
-
-                  const resp = new RegisterWorkersResponse();
-                  resp.setMachineId(machine_id);
-                  resp.setInstanceIdsList(workersSelectByMachineId(store.getState(), machine_id).map((worker) => worker.id));
-
-                  unaryResponse(event, resp);
+                  yield unaryResponse(event, RegisterWorkersResponse, resp);
 
                   break;
                }
-            case EventType.CLIENTUNARYACTIVATESTREAM:
+            case EventType.ClientUnaryActivateStream:
                {
-                  const payload = RegisterWorkersResponse.deserializeBinary(event.msg.getMessage()?.getValue_asU8() as Uint8Array);
+                  const payload = unpack<RegisterWorkersResponse>(event);
 
-                  unaryResponse(event, new Ack());
+                  yield unaryResponse(event, Ack, {});
 
                   break;
                }
-            case EventType.CLIENTUNARYDROPWORKER:
+            case EventType.ClientUnaryDropWorker:
                {
-                  const payload = TaggedInstance.deserializeBinary(event.msg.getMessage()?.getValue_asU8() as Uint8Array);
+                  const payload = unpack<TaggedInstance>(event);
 
-                  const found_worker = workersSelectById(store.getState(), payload.getInstanceId());
+                  const found_worker = workersSelectById(this._store.getState(), payload.instanceId);
 
                   if (found_worker) {
-                     store.dispatch(removeWorker(found_worker));
+                     this._store.dispatch(removeWorker(found_worker));
                   }
 
-                  unaryResponse(event, new Ack());
+                  yield unaryResponse(event, Ack, {});
 
                   break;
                }
@@ -239,23 +321,24 @@ class Architect {
       } catch (error) {
          console.log(`Error occurred handing event. Error: ${error}`);
       }
-
    }
 
-   private do_shutdown(call: ServerUnaryCall<ShutdownRequest, ShutdownResponse>, callback: sendUnaryData<ShutdownResponse>) {
+   private async do_shutdown(req: ShutdownRequest, context: CallContext): Promise<DeepPartial<ShutdownResponse>> {
 
-      console.log(`Issuing shutdown promise from ${call.getPeer()}`);
+      console.log(`Issuing shutdown promise from ${context.peer}`);
 
+      // Signal that shutdown was requested
       this.shutdown_subject.next();
 
-      callback(null, new ShutdownResponse());
+      return ShutdownResponse.create();
    }
 
-   private do_ping(req: PingRequest, callback: sendUnaryData<PingResponse>) {
+   private async do_ping(req: PingRequest, context: CallContext): Promise<DeepPartial<PingResponse>> {
+      console.log(`Ping from ${context.peer}`);
 
-      const res = new PingResponse();
-      res.setTag(req.getTag());
-      callback(null, res);
+      return PingResponse.create({
+         tag: req.tag,
+      });
    }
 }
 

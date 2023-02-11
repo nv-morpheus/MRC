@@ -15,9 +15,13 @@ export const setupStore = (preloadedState?: PreloadedState<RootState>) => {
    });
 };
 
-export const store = setupStore();
+const rootStore = setupStore();
+
+export function getRootStore() {
+   return rootStore;
+}
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
 export type RootStore = ReturnType<typeof setupStore>;
 export type RootState = ReturnType<typeof rootReducer>;
-export type AppDispatch = typeof store.dispatch;
+export type AppDispatch = typeof rootStore.dispatch;

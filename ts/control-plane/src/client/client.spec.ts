@@ -1,68 +1,124 @@
-import { credentials, Deadline, Server, ServerCredentials } from "@grpc/grpc-js";
-import { ServiceClient } from "@grpc/grpc-js/build/src/make-client";
+import { Channel, credentials, ServerCredentials } from "@grpc/grpc-js";
+import { ConnectivityState } from "@grpc/grpc-js/build/src/connectivity-state";
 import assert from "assert";
+import { createChannel, createClient, createServer, Server, waitForChannelReady } from "nice-grpc";
+import { ArchitectClient, ArchitectDefinition, PingRequest, Event, EventType } from "../proto/mrc/protos/architect";
 
-import { ArchitectClient, ArchitectService } from "../proto/mrc/protos/architect_grpc_pb";
 import { Architect } from "../server/architect";
-import { Event, PingRequest } from "../proto/mrc/protos/architect_pb";
-import { PromisifiedClient, promisifyClient } from "./utils";
+import { ArchitectServer } from "../server/server";
+import { connectionsSelectAll, IConnection } from "../server/store/slices/connectionsSlice";
+import { RootState, RootStore, setupStore } from "../server/store/store";
+import { AsyncSink, from, zip } from 'ix/asynciterable';
+import { Observable, Subject } from 'rxjs';
 
 describe("Client", () => {
 
-   let server: Server;
-   let client: PromisifiedClient<ArchitectClient>;
+   let store: RootStore;
+   let server: ArchitectServer;
+   let client_channel: Channel;
+   let client: ArchitectClient;
 
-   beforeEach(done => {
-      server = new Server();
-      const architect = new Architect();
+   beforeEach(async () => {
+      store = setupStore();
 
-      server.addService(ArchitectService, architect.service);
+      server = new ArchitectServer(store);
 
-      server.bindAsync('0.0.0.0:13337', ServerCredentials.createInsecure(), (error, port) => {
-         assert.ifError(error);
+      const port = await server.start();
 
-         // Now make the client
-         client = promisifyClient(new ArchitectClient(`localhost:${port}`, credentials.createInsecure()));
+      client_channel = createChannel(`localhost:${port}`, credentials.createInsecure());
 
-         server.start();
+      // Now make the client
+      client = createClient(ArchitectDefinition, client_channel);
 
-         done();
-      });
+      // Important to ensure the channel is ready before continuing
+      await waitForChannelReady(client_channel, new Date(Date.now() + 1000));
    });
 
-   afterEach(done => {
-      client.$.close();
-      server.tryShutdown(done);
+   afterEach(async () => {
+      client_channel.close();
+      await server.stop();
+      await server.join();
    });
 
    describe("connection", () => {
       it("is ready", () => {
-         client.$.waitForReady(10, (error) => {
-            assert.ifError(error);
-         });
+         expect(client_channel.getConnectivityState(true)).toBe(ConnectivityState.READY);
       });
 
       it("ping", async () => {
-         // client.$.waitForReady(10, (error) => {
-         //    assert.ifError(error);
-         // });
-
-         const req = new PingRequest();
-         req.setTag(1234);
+         const req = PingRequest.create({
+            tag: 1234,
+         });
 
          const resp = await client.ping(req);
 
-         expect(resp.getTag()).toBe(req.getTag());
+         expect(resp.tag).toBe(req.tag);
       });
 
-      it("open bidi event stream", () => {
+      it("no connections on start", async () => {
+         expect(connectionsSelectAll(store.getState())).toHaveLength(0);
+      });
 
-         const stream = client.$.eventStream();
+      it("connect to event stream", async () => {
 
-         const event = new Event();
-         // event.setEvent();
+         let connections: IConnection[];
+         const send_events = new AsyncSink<Event>();
 
-         // stream.write();
+         const state_update_sink = new AsyncSink<RootState>();
+
+         // Subscribe to the stores next update
+         const store_unsub = store.subscribe(() => {
+            const state = store.getState();
+            state_update_sink.write(state);
+         });
+
+         const resp_stream = client.eventStream(send_events);
+
+         // Wait for the next state update
+         // const first_update = await state_update_sink.next() as IteratorYieldResult<RootState>;
+
+         // let connections = connectionsSelectAll(first_update.value);
+
+         // expect(connections).toHaveLength(1);
+
+         // // Send a start message
+         // send_events.write(Event.create({
+         //    event: EventType.ClientEventRequestStateUpdate
+         // }));
+
+         for await (const req of resp_stream) {
+            fail("Should not have recieved any responses");
+         }
+
+         store_unsub();
+         state_update_sink.end();
+
+         connections = connectionsSelectAll(store.getState());
+
+         expect(connections).toHaveLength(0);
+      });
+
+      it("abort after connection", async () => {
+
+         const abort_controller = new AbortController();
+
+         const event_generator = async function* (events: Event[]) {
+            yield* events;
+         };
+
+         const resp_stream = client.eventStream(event_generator([]), {
+            signal: abort_controller.signal,
+         });
+
+         abort_controller.abort();
+
+         try {
+            for await (const req of resp_stream) {
+               fail("Should not have recieved any responses");
+            }
+         } catch (error: any) {
+            expect(error.message).toMatch("The operation has been aborted");
+         }
       });
    });
 });
