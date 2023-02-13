@@ -34,13 +34,13 @@ export function unpack<MessageT extends UnknownMessage>(message: Any) {
    return decoded;
 }
 
-export function packEvent<MessageDataT extends UnknownMessage>(data: MessageDataT, incoming_event?: Event, event_type?: EventType): Event {
+export function packEvent<MessageDataT extends UnknownMessage>(event_type: EventType, event_tag: number, data: MessageDataT): Event {
 
    const any_msg = pack<MessageDataT>(data);
 
    return Event.create({
-      event: event_type ?? EventType.Response,
-      tag: incoming_event?.tag,
+      event: event_type,
+      tag: event_tag,
       message: any_msg,
    });
 }
@@ -52,4 +52,15 @@ export function unpackEvent<MessageT extends UnknownMessage>(message: Event): Me
    }
 
    return unpack<MessageT>(message.message);
+}
+
+export function packEventResponse<MessageDataT extends UnknownMessage>(incoming_event: Event, data: MessageDataT): Event {
+
+   const any_msg = pack<MessageDataT>(data);
+
+   return Event.create({
+      event: EventType.Response,
+      tag: incoming_event.tag,
+      message: any_msg,
+   });
 }

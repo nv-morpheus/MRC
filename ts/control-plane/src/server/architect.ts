@@ -6,7 +6,7 @@ import {
 import { firstValueFrom, Observable, Subject } from "rxjs";
 
 import { getRootStore, RootState, RootStore } from "./store/store";
-import { addWorkers, IWorker, removeWorker, workersSelectById, workersSelectByMachineId } from "./store/slices/workersSlice";
+import { activateWorkers, addWorkers, IWorker, removeWorker, workersSelectById, workersSelectByMachineId, workersSelectIds } from "./store/slices/workersSlice";
 import { addConnection, removeConnection } from "./store/slices/connectionsSlice";
 import { RegisterWorkersRequest, RegisterWorkersResponse, Event, Ack, EventType, PingRequest, PingResponse, ShutdownRequest, ShutdownResponse, TaggedInstance, ArchitectServiceImplementation, ServerStreamingMethodResult, StateUpdate, ErrorCode, ClientConnectedResponse } from "../proto/mrc/protos/architect";
 import { Any } from "../proto/google/protobuf/any";
@@ -329,6 +329,19 @@ class Architect implements ArchitectServiceImplementation {
             case EventType.ClientUnaryActivateStream:
                {
                   const payload = unpack<RegisterWorkersResponse>(event);
+
+                  const workers = payload.instanceIds.map((id) => {
+
+                     const w = workersSelectById(this._store.getState(), id);
+
+                     if (!w) {
+                        throw new Error(`Cannot activate Worker ${id}. ID does not exist`);
+                     }
+
+                     return w;
+                  });
+
+                  this._store.dispatch(activateWorkers(workers));
 
                   yield unaryResponse(event, Ack, {});
 
