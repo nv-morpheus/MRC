@@ -2,14 +2,15 @@ import { Channel, credentials, ServerCredentials } from "@grpc/grpc-js";
 import { ConnectivityState } from "@grpc/grpc-js/build/src/connectivity-state";
 import assert from "assert";
 import { createChannel, createClient, createServer, Server, waitForChannelReady } from "nice-grpc";
-import { ArchitectClient, ArchitectDefinition, PingRequest, Event, EventType } from "../proto/mrc/protos/architect";
+import { ArchitectClient, ArchitectDefinition, PingRequest, Event, EventType, ClientConnectedResponse } from "../proto/mrc/protos/architect";
 
 import { Architect } from "../server/architect";
 import { ArchitectServer } from "../server/server";
-import { connectionsSelectAll, IConnection } from "../server/store/slices/connectionsSlice";
+import { connectionsSelectAll, connectionsSelectById, IConnection } from "../server/store/slices/connectionsSlice";
 import { RootState, RootStore, setupStore } from "../server/store/store";
 import { AsyncSink, from, zip } from 'ix/asynciterable';
 import { Observable, Subject } from 'rxjs';
+import { unpackEvent } from "../common/utils";
 
 describe("Client", () => {
 
@@ -66,32 +67,31 @@ describe("Client", () => {
 
          const state_update_sink = new AsyncSink<RootState>();
 
-         // Subscribe to the stores next update
-         const store_unsub = store.subscribe(() => {
-            const state = store.getState();
-            state_update_sink.write(state);
-         });
+         // // Subscribe to the stores next update
+         // const store_unsub = store.subscribe(() => {
+         //    const state = store.getState();
+         //    state_update_sink.write(state);
+         // });
 
          const resp_stream = client.eventStream(send_events);
 
-         // Wait for the next state update
-         // const first_update = await state_update_sink.next() as IteratorYieldResult<RootState>;
+         for await (const resp of resp_stream) {
+            if (resp.event === EventType.ClientEventStreamConnected) {
 
-         // let connections = connectionsSelectAll(first_update.value);
+               const connected_event = unpackEvent<ClientConnectedResponse>(resp);
 
-         // expect(connections).toHaveLength(1);
+               // Verify the number of connections is 1
+               const connection = connectionsSelectById(store.getState(), connected_event.machineId);
 
-         // // Send a start message
-         // send_events.write(Event.create({
-         //    event: EventType.ClientEventRequestStateUpdate
-         // }));
+               expect(connection).toBeDefined();
+               expect(connection?.id).toBe(connected_event.machineId);
 
-         for await (const req of resp_stream) {
-            fail("Should not have recieved any responses");
+               send_events.end();
+            }
          }
 
-         store_unsub();
-         state_update_sink.end();
+         // store_unsub();
+         // state_update_sink.end();
 
          connections = connectionsSelectAll(store.getState());
 
@@ -102,19 +102,17 @@ describe("Client", () => {
 
          const abort_controller = new AbortController();
 
-         const event_generator = async function* (events: Event[]) {
-            yield* events;
-         };
+         const send_events = new AsyncSink<Event>();
 
-         const resp_stream = client.eventStream(event_generator([]), {
+         const resp_stream = client.eventStream(send_events, {
             signal: abort_controller.signal,
          });
 
-         abort_controller.abort();
-
          try {
             for await (const req of resp_stream) {
-               fail("Should not have recieved any responses");
+               abort_controller.abort();
+
+               send_events.end();
             }
          } catch (error: any) {
             expect(error.message).toMatch("The operation has been aborted");

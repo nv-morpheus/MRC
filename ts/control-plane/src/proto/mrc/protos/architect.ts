@@ -5,12 +5,15 @@ import _m0 from "protobufjs/minimal";
 import { Any } from "../../google/protobuf/any";
 import { messageTypeRegistry } from "../../typeRegistry";
 
+export const protobufPackage = "mrc.protos";
+
 export enum EventType {
   Unused = 0,
   Response = 1,
   ControlStop = 2,
   /** ClientEventRequestStateUpdate - Client Events - No Response */
   ClientEventRequestStateUpdate = 100,
+  ClientEventStreamConnected = 101,
   /** ClientUnaryRegisterWorkers - Connection Management */
   ClientUnaryRegisterWorkers = 201,
   ClientUnaryActivateStream = 202,
@@ -42,6 +45,9 @@ export function eventTypeFromJSON(object: any): EventType {
     case 100:
     case "ClientEventRequestStateUpdate":
       return EventType.ClientEventRequestStateUpdate;
+    case 101:
+    case "ClientEventStreamConnected":
+      return EventType.ClientEventStreamConnected;
     case 201:
     case "ClientUnaryRegisterWorkers":
       return EventType.ClientUnaryRegisterWorkers;
@@ -92,6 +98,8 @@ export function eventTypeToJSON(object: EventType): string {
       return "ControlStop";
     case EventType.ClientEventRequestStateUpdate:
       return "ClientEventRequestStateUpdate";
+    case EventType.ClientEventStreamConnected:
+      return "ClientEventStreamConnected";
     case EventType.ClientUnaryRegisterWorkers:
       return "ClientUnaryRegisterWorkers";
     case EventType.ClientUnaryActivateStream:
@@ -201,6 +209,11 @@ export interface Error {
 
 export interface Ack {
   $type: "mrc.protos.Ack";
+}
+
+export interface ClientConnectedResponse {
+  $type: "mrc.protos.ClientConnectedResponse";
+  machineId: number;
 }
 
 export interface RegisterWorkersRequest {
@@ -1031,6 +1044,61 @@ export const Ack = {
 };
 
 messageTypeRegistry.set(Ack.$type, Ack);
+
+function createBaseClientConnectedResponse(): ClientConnectedResponse {
+  return { $type: "mrc.protos.ClientConnectedResponse", machineId: 0 };
+}
+
+export const ClientConnectedResponse = {
+  $type: "mrc.protos.ClientConnectedResponse" as const,
+
+  encode(message: ClientConnectedResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.machineId !== 0) {
+      writer.uint32(8).uint64(message.machineId);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): ClientConnectedResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseClientConnectedResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.machineId = longToNumber(reader.uint64() as Long);
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ClientConnectedResponse {
+    return { $type: ClientConnectedResponse.$type, machineId: isSet(object.machineId) ? Number(object.machineId) : 0 };
+  },
+
+  toJSON(message: ClientConnectedResponse): unknown {
+    const obj: any = {};
+    message.machineId !== undefined && (obj.machineId = Math.round(message.machineId));
+    return obj;
+  },
+
+  create(base?: DeepPartial<ClientConnectedResponse>): ClientConnectedResponse {
+    return ClientConnectedResponse.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<ClientConnectedResponse>): ClientConnectedResponse {
+    const message = createBaseClientConnectedResponse();
+    message.machineId = object.machineId ?? 0;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(ClientConnectedResponse.$type, ClientConnectedResponse);
 
 function createBaseRegisterWorkersRequest(): RegisterWorkersRequest {
   return { $type: "mrc.protos.RegisterWorkersRequest", ucxWorkerAddresses: [], pipeline: undefined };
@@ -4406,7 +4474,7 @@ function base64FromBytes(arr: Uint8Array): string {
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
-type DeepPartial<T> = T extends Builtin ? T
+export type DeepPartial<T> = T extends Builtin ? T
   : T extends Array<infer U> ? Array<DeepPartial<U>> : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
   : T extends {} ? { [K in Exclude<keyof T, "$type">]?: DeepPartial<T[K]> }
   : Partial<T>;

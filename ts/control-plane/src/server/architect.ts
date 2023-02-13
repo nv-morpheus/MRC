@@ -8,9 +8,9 @@ import { firstValueFrom, Observable, Subject } from "rxjs";
 import { getRootStore, RootState, RootStore } from "./store/store";
 import { addWorkers, IWorker, removeWorker, workersSelectById, workersSelectByMachineId } from "./store/slices/workersSlice";
 import { addConnection, removeConnection } from "./store/slices/connectionsSlice";
-import { RegisterWorkersRequest, RegisterWorkersResponse, Event, Ack, EventType, PingRequest, PingResponse, ShutdownRequest, ShutdownResponse, TaggedInstance, ArchitectServiceImplementation, ServerStreamingMethodResult, StateUpdate } from "../proto/mrc/protos/architect";
+import { RegisterWorkersRequest, RegisterWorkersResponse, Event, Ack, EventType, PingRequest, PingResponse, ShutdownRequest, ShutdownResponse, TaggedInstance, ArchitectServiceImplementation, ServerStreamingMethodResult, StateUpdate, ErrorCode, ClientConnectedResponse } from "../proto/mrc/protos/architect";
 import { Any } from "../proto/google/protobuf/any";
-import { MessageType, messageTypeRegistry, UnknownMessage } from "../proto/typeRegistry";
+import { DeepPartial, MessageType, messageTypeRegistry, UnknownMessage } from "../proto/typeRegistry";
 import { CallContext } from "nice-grpc";
 import { as, AsyncSink, concat, from, merge, zip } from 'ix/asynciterable';
 
@@ -19,26 +19,26 @@ interface IncomingData {
    stream?: ServerDuplexStream<Event, Event>,
 }
 
-type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
+// type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
-type DeepPartial<T> = T extends Builtin ? T
-   : T extends Array<infer U> ? Array<DeepPartial<U>> : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
-   : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
-   : Partial<T>;
+// type DeepPartial<T> = T extends Builtin ? T
+//    : T extends Array<infer U> ? Array<DeepPartial<U>> : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
+//    : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
+//    : Partial<T>;
 
-type KeysOfUnion<T> = T extends T ? keyof T : never;
-type Exact<P, I extends P> = P extends Builtin ? P
-   : P & { [K in keyof P]: Exact<P[K], I[K]> } & { [K in Exclude<keyof I, KeysOfUnion<P>>]: never };
+// type KeysOfUnion<T> = T extends T ? keyof T : never;
+// type Exact<P, I extends P> = P extends Builtin ? P
+//    : P & { [K in keyof P]: Exact<P[K], I[K]> } & { [K in Exclude<keyof I, KeysOfUnion<P>>]: never };
 
-interface ProtoMessageBase<MessageDataT> {
-   create<I extends Exact<DeepPartial<MessageDataT>, I>>(base?: I): ProtoMessageBase<MessageDataT>;
-   // create(base?: MessageDataT): ProtoMessageBase<MessageDataT>;
-   // encode(message: ProtoMessageBase<MessageDataT>, writer?: proto_min.Writer): proto_min.Writer;
-}
+// interface ProtoMessageBase<MessageDataT> {
+//    create<I extends Exact<DeepPartial<MessageDataT>, I>>(base?: I): ProtoMessageBase<MessageDataT>;
+//    // create(base?: MessageDataT): ProtoMessageBase<MessageDataT>;
+//    // encode(message: ProtoMessageBase<MessageDataT>, writer?: proto_min.Writer): proto_min.Writer;
+// }
 
-function testResponse<MessageClassT>(message_class: MessageClassT): void {
+// function testResponse<MessageClassT>(message_class: MessageClassT): void {
 
-}
+// }
 
 // function typeUrlFromMessageClass(message_class: any) {
 
@@ -62,7 +62,7 @@ function unaryResponse2<MessageDataT extends UnknownMessage, MessageClass extend
    const registered_type = messageTypeRegistry.get(message_class.$type);
 
 }
-function unaryResponse<MessageDataT>(event: IncomingData, message_class: any, data: MessageDataT): Event {
+function unaryResponse<MessageDataT>(event: IncomingData | undefined, message_class: any, data: MessageDataT): Event {
 
    // Lookup message type
    const type_registry = messageTypeRegistry.get(message_class.$type);
@@ -80,9 +80,26 @@ function unaryResponse<MessageDataT>(event: IncomingData, message_class: any, da
 
    return Event.create({
       event: EventType.Response,
-      tag: event.msg.tag,
+      tag: event?.msg.tag ?? 0,
       message: any_msg,
    });
+}
+
+function pack<MessageDataT extends UnknownMessage>(data: MessageDataT): Any {
+
+   // Load the type from the registry
+   const message_type = messageTypeRegistry.get(data.$type);
+
+   if (!message_type) {
+      throw new Error("Unknown type in type registry");
+   }
+
+   const any_msg = Any.create({
+      typeUrl: `type.googleapis.com/${message_type.$type}`,
+      value: message_type.encode(data).finish(),
+   });
+
+   return any_msg;
 }
 
 function unpack<MessageT extends UnknownMessage>(event: IncomingData) {
@@ -113,7 +130,7 @@ function unpack<MessageT extends UnknownMessage>(event: IncomingData) {
 //    event.stream.write(message);
 // }
 
-class Architect {
+class Architect implements ArchitectServiceImplementation {
    public service: ArchitectServiceImplementation;
 
    private _store: RootStore;
@@ -141,6 +158,15 @@ class Architect {
             return await this.do_shutdown(request, context);
          }
       };
+   }
+   eventStream(request: AsyncIterable<Event>, context: CallContext): ServerStreamingMethodResult<{ error?: { message?: string | undefined; code?: ErrorCode | undefined; } | undefined; event?: EventType | undefined; tag?: number | undefined; message?: { typeUrl?: string | undefined; value?: Uint8Array | undefined; } | undefined; }> {
+      return this.do_eventStream(request, context);
+   }
+   ping(request: PingRequest, context: CallContext): Promise<{ tag?: number | undefined; }> {
+      return this.do_ping(request, context);
+   }
+   shutdown(request: ShutdownRequest, context: CallContext): Promise<{ tag?: number | undefined; }> {
+      return this.do_shutdown(request, context);
    }
 
    public onShutdownSignaled() {
@@ -215,6 +241,14 @@ class Architect {
 
          store_update_sink.end();
       };
+
+      // Yield a connected even
+      yield Event.create({
+         event: EventType.ClientEventStreamConnected,
+         message: pack(ClientConnectedResponse.create({
+            machineId: connection.id,
+         }))
+      });
 
       for await (const out_event of merge(as(event_stream()), as<Event>(store_update_sink))) {
          yield out_event;

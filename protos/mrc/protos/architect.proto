@@ -51,6 +51,7 @@ enum EventType
 
     // Client Events - No Response
     ClientEventRequestStateUpdate = 100;
+    ClientEventStreamConnected = 101;
 
     // Connection Management
     ClientUnaryRegisterWorkers = 201;
@@ -96,6 +97,11 @@ message Error
 
 message Ack
 {
+}
+
+message ClientConnectedResponse
+{
+    uint64 machine_id = 1;
 }
 
 // Initialization - Step 1

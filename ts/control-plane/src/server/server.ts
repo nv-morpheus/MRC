@@ -52,7 +52,7 @@ export class ArchitectServer {
       // Create the architect
       this._architect = new Architect(store);
 
-      this._server.add(ArchitectDefinition, this._architect.service);
+      this._server.add(ArchitectDefinition, this._architect);
    }
 
    public async start() {
