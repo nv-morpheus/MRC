@@ -26,6 +26,7 @@ rapids-logger "Check versions"
 python3 --version
 cmake --version
 ninja --version
+sccache --version
 
 if [[ "${BUILD_CC}" == "gcc" ]]; then
     rapids-logger "Building with GCC"
