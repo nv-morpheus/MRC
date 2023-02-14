@@ -409,7 +409,10 @@ std::vector<char*> vec_string_to_char_ptr(std::vector<std::string>& vec_strings)
 //     ::node::TearDownOncePerProcess();
 // }
 
-Server::Server(runnable::Resources& runnable) : m_runnable(runnable), m_server(m_runnable), m_node_service(m_runnable)
+Server::Server(runnable::RunnableResources& runnable) :
+  m_runnable(runnable),
+  m_server(m_runnable),
+  m_node_service(m_runnable)
 {
     std::vector<std::string> args;
 
@@ -1091,7 +1094,7 @@ Expected<decltype(Server::m_subscription_services)::const_iterator> Server::get_
     return search;
 }
 
-NodeService::NodeService(runnable::Resources& runnable) : m_runnable(runnable)
+NodeService::NodeService(runnable::RunnableResources& runnable) : m_runnable(runnable)
 {
     m_started_future = m_started_promise.get_future();
 

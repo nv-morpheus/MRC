@@ -35,7 +35,7 @@ class FiberTaskQueue;
 }  // namespace mrc::internal::system
 
 namespace mrc::internal::network {
-class Resources;
+class NetworkResources;
 }
 
 namespace mrc::internal::ucx {
@@ -48,10 +48,10 @@ class Worker;
 /**
  * @brief UCX Resources - if networking is enabled, there should be 1 UCX Resource per "flattened" partition
  */
-class Resources final : public resources::PartitionResourceBase
+class UcxResources final : public resources::PartitionResourceBase
 {
   public:
-    Resources(resources::PartitionResourceBase& base, system::FiberTaskQueue& network_task_queue);
+    UcxResources(resources::PartitionResourceBase& base, system::FiberTaskQueue& network_task_queue);
 
     using resources::PartitionResourceBase::partition;
 
@@ -87,7 +87,7 @@ class Resources final : public resources::PartitionResourceBase
     std::shared_ptr<RegistrationCache> m_registration_cache;
 
     // enable direct access to context and workers
-    friend network::Resources;
+    friend network::NetworkResources;
 };
 
 }  // namespace mrc::internal::ucx

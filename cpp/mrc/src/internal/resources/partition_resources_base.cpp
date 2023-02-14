@@ -24,18 +24,18 @@
 
 namespace mrc::internal::resources {
 
-PartitionResourceBase::PartitionResourceBase(runnable::Resources& runnable, std::size_t partition_id) :
+PartitionResourceBase::PartitionResourceBase(runnable::RunnableResources& runnable, std::size_t partition_id) :
   system::PartitionProvider(runnable, partition_id),
   m_runnable(runnable)
 {
     CHECK_EQ(runnable.host_partition_id(), partition().host_partition_id());
 }
-runnable::Resources& PartitionResourceBase::runnable()
+runnable::RunnableResources& PartitionResourceBase::runnable()
 {
     return m_runnable;
 }
 
-const runnable::Resources& PartitionResourceBase::runnable() const
+const runnable::RunnableResources& PartitionResourceBase::runnable() const
 {
     return m_runnable;
 }

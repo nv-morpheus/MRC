@@ -163,7 +163,7 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
     using request_fn_t = std::function<
         void(grpc::ServerContext* context, grpc::ServerAsyncReaderWriter<ResponseT, RequestT>* stream, void* tag)>;
 
-    ServerStream(request_fn_t request_fn, runnable::Resources& runnable) :
+    ServerStream(request_fn_t request_fn, runnable::RunnableResources& runnable) :
       m_runnable(runnable),
       m_stream(std::make_unique<grpc::ServerAsyncReaderWriter<ResponseT, RequestT>>(&m_context)),
       m_reader_source(std::make_unique<mrc::node::RxSource<IncomingData>>(
@@ -356,7 +356,7 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
     }
 
     // resources for launching runnables
-    runnable::Resources& m_runnable;
+    runnable::RunnableResources& m_runnable;
 
     // grpc context
     grpc::ServerContext m_context;

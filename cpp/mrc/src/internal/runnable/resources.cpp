@@ -38,7 +38,7 @@
 
 namespace mrc::internal::runnable {
 
-Resources::Resources(const system::Resources& system_resources, std::size_t _host_partition_id) :
+RunnableResources::RunnableResources(const system::SystemResources& system_resources, std::size_t _host_partition_id) :
   HostPartitionProvider(system_resources, _host_partition_id),
   m_main(system_resources.get_task_queue(host_partition().engine_factory_cpu_sets().main_cpu_id()))
 {
@@ -78,22 +78,22 @@ Resources::Resources(const system::Resources& system_resources, std::size_t _hos
         .get();
 }
 
-Resources::Resources(Resources&& other) = default;
+RunnableResources::RunnableResources(RunnableResources&& other) = default;
 
-Resources::~Resources() = default;
+RunnableResources::~RunnableResources() = default;
 
-core::FiberTaskQueue& Resources::main()
+core::FiberTaskQueue& RunnableResources::main()
 {
     return m_main;
 }
 
-mrc::runnable::LaunchControl& Resources::launch_control()
+mrc::runnable::LaunchControl& RunnableResources::launch_control()
 {
     CHECK(m_launch_control);
     return *m_launch_control;
 }
 
-const mrc::core::FiberTaskQueue& Resources::main() const
+const mrc::core::FiberTaskQueue& RunnableResources::main() const
 {
     return m_main;
 }

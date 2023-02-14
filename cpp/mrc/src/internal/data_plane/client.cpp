@@ -60,7 +60,7 @@ namespace mrc::internal::data_plane {
 using namespace mrc::memory::literals;
 
 Client::Client(resources::PartitionResourceBase& base,
-               ucx::Resources& ucx,
+               ucx::UcxResources& ucx,
                control_plane::client::ConnectionsManager& connections_manager,
                memory::TransientPool& transient_pool) :
   resources::PartitionResourceBase(base),
@@ -302,7 +302,7 @@ void Client::do_service_start()
     mrc::make_edge(*m_rd_channel, *rd_writer);
 
     // todo(ryan) - parameterize mrc::data_plane::client::max_inflight_remote_descriptor_sends
-    auto launch_options = Resources::launch_options(16);
+    auto launch_options = DataPlaneResources::launch_options(16);
 
     // launch rd_writer
     m_rd_writer = runnable().launch_control().prepare_launcher(launch_options, std::move(rd_writer))->ignition();

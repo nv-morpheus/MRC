@@ -143,7 +143,7 @@ class DataPlaneServerWorker final : public node::GenericSource<network_event_t>
 };
 
 Server::Server(resources::PartitionResourceBase& provider,
-               ucx::Resources& ucx,
+               ucx::UcxResources& ucx,
                memory::HostResources& host,
                memory::TransientPool& transient_pool,
                InstanceID instance_id) :

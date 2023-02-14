@@ -25,7 +25,7 @@
 #include <memory>
 
 namespace mrc::internal::runnable {
-class Resources;
+class RunnableResources;
 }  // namespace mrc::internal::runnable
 namespace mrc::internal::ucx {
 class RegistrationCallbackBuilder;
@@ -42,7 +42,7 @@ namespace mrc::internal::memory {
 class HostResources final : private system::HostPartitionProvider
 {
   public:
-    HostResources(runnable::Resources& runnable, ucx::RegistrationCallbackBuilder&& callbacks);
+    HostResources(runnable::RunnableResources& runnable, ucx::RegistrationCallbackBuilder&& callbacks);
 
     mrc::memory::buffer make_buffer(std::size_t bytes);
 

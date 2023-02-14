@@ -57,9 +57,9 @@ namespace mrc::internal::resources {
 thread_local Manager* Manager::m_thread_resources{nullptr};
 thread_local PartitionResources* Manager::m_thread_partition{nullptr};
 
-Manager::Manager(const system::SystemProvider& system) : Manager(std::make_unique<system::Resources>(system)) {}
+Manager::Manager(const system::SystemProvider& system) : Manager(std::make_unique<system::SystemResources>(system)) {}
 
-Manager::Manager(std::unique_ptr<system::Resources> resources) :
+Manager::Manager(std::unique_ptr<system::SystemResources> resources) :
   SystemProvider(*resources),
   m_system(std::move(resources))
 {
@@ -91,7 +91,7 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
             auto network_task_queue_cpuset = base.partition().host().engine_factory_cpu_sets().fiber_cpu_sets.at(
                 "mrc_network");
             auto& network_fiber_queue = m_system->get_task_queue(network_task_queue_cpuset.first());
-            std::optional<ucx::Resources> ucx;
+            std::optional<ucx::UcxResources> ucx;
             ucx.emplace(base, network_fiber_queue);
             m_ucx.push_back(std::move(ucx));
         }
@@ -105,7 +105,7 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
     std::map<InstanceID, std::unique_ptr<control_plane::client::Instance>> control_instances;
     if (network_enabled)
     {
-        m_control_plane   = std::make_shared<control_plane::Resources>(base_partition_resources.at(0));
+        m_control_plane   = std::make_shared<control_plane::ControlPlaneResources>(base_partition_resources.at(0));
         control_instances = m_control_plane->client().register_ucx_addresses(m_ucx);
         CHECK_EQ(m_control_plane->client().connections().instance_ids().size(), m_ucx.size());
     }
@@ -155,10 +155,10 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
             auto instance_id = m_control_plane->client().connections().instance_ids().at(base.partition_id());
             DCHECK(contains(control_instances, instance_id));  // todo(cpp20) contains
             auto instance = std::move(control_instances.at(instance_id));
-            network::Resources network(base,
-                                       *m_ucx.at(base.partition_id()),
-                                       m_host.at(base.partition().host_partition_id()),
-                                       std::move(instance));
+            network::NetworkResources network(base,
+                                              *m_ucx.at(base.partition_id()),
+                                              m_host.at(base.partition().host_partition_id()),
+                                              std::move(instance));
             m_network.emplace_back(std::move(network));
         }
         else

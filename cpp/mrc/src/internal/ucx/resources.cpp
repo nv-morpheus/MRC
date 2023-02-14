@@ -42,7 +42,7 @@ class FiberTaskQueue;
 
 namespace mrc::internal::ucx {
 
-Resources::Resources(resources::PartitionResourceBase& base, system::FiberTaskQueue& network_task_queue) :
+UcxResources::UcxResources(resources::PartitionResourceBase& base, system::FiberTaskQueue& network_task_queue) :
   resources::PartitionResourceBase(base),
   m_network_task_queue(network_task_queue)
 {
@@ -76,34 +76,34 @@ Resources::Resources(resources::PartitionResourceBase& base, system::FiberTaskQu
         .get();
 }
 
-void Resources::add_registration_cache_to_builder(RegistrationCallbackBuilder& builder)
+void UcxResources::add_registration_cache_to_builder(RegistrationCallbackBuilder& builder)
 {
     builder.add_registration_cache(m_registration_cache);
 }
 
-mrc::core::FiberTaskQueue& Resources::network_task_queue()
+mrc::core::FiberTaskQueue& UcxResources::network_task_queue()
 {
     return m_network_task_queue;
 }
 
-RegistrationCache& Resources::registration_cache()
+RegistrationCache& UcxResources::registration_cache()
 {
     CHECK(m_registration_cache);
     return *m_registration_cache;
 }
 
-Worker& Resources::worker()
+Worker& UcxResources::worker()
 {
     CHECK(m_worker);
     return *m_worker;
 }
 
-std::shared_ptr<ucx::Endpoint> Resources::make_ep(const std::string& worker_address) const
+std::shared_ptr<ucx::Endpoint> UcxResources::make_ep(const std::string& worker_address) const
 {
     return std::make_shared<ucx::Endpoint>(m_worker, worker_address);
 }
 
-mrc::runnable::LaunchOptions Resources::launch_options(std::uint64_t concurrency)
+mrc::runnable::LaunchOptions UcxResources::launch_options(std::uint64_t concurrency)
 {
     mrc::runnable::LaunchOptions launch_options;
     launch_options.engine_factory_name = "mrc_network";

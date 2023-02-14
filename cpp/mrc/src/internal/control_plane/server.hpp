@@ -61,7 +61,7 @@ template <typename T>
 struct StreamWriter;
 }  // namespace mrc::internal::rpc
 namespace mrc::internal::runnable {
-class Resources;
+class RunnableResources;
 }  // namespace mrc::internal::runnable
 namespace mrc::protos {
 class Ack;
@@ -120,7 +120,7 @@ class NodeRuntime : public ::mrc::runnable::RunnableWithContext<::mrc::runnable:
 class NodeService : public Service
 {
   public:
-    NodeService(runnable::Resources& runnable);
+    NodeService(runnable::RunnableResources& runnable);
     ~NodeService() override;
 
     void set_args(std::vector<std::string> args);
@@ -135,7 +135,7 @@ class NodeService : public Service
     void launch_node(std::vector<std::string> args);
 
     // mrc resources
-    runnable::Resources& m_runnable;
+    runnable::RunnableResources& m_runnable;
 
     std::unique_ptr<::node::InitializationResult> m_init_result;
     std::unique_ptr<::node::MultiIsolatePlatform> m_platform;
@@ -176,7 +176,7 @@ class Server : public Service
     using stream_id_t   = std::size_t;
     using instance_id_t = std::size_t;
 
-    Server(runnable::Resources& runnable);
+    Server(runnable::RunnableResources& runnable);
     ~Server() override;
 
   private:
@@ -191,7 +191,7 @@ class Server : public Service
     void do_issue_update(rxcpp::subscriber<void*>& s);
 
     // mrc resources
-    runnable::Resources& m_runnable;
+    runnable::RunnableResources& m_runnable;
 
     // Node service
     NodeService m_node_service;

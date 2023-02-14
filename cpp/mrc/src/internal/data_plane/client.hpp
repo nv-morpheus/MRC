@@ -45,7 +45,7 @@ class TransientPool;
 }  // namespace mrc::internal::memory
 namespace mrc::internal::ucx {
 class Endpoint;
-class Resources;
+class UcxResources;
 }  // namespace mrc::internal::ucx
 namespace mrc::runnable {
 class Runner;
@@ -53,7 +53,7 @@ class Runner;
 
 namespace mrc::internal::data_plane {
 class Request;
-class Resources;
+class DataPlaneResources;
 
 struct RemoteDescriptorMessage
 {
@@ -66,7 +66,7 @@ class Client final : public resources::PartitionResourceBase, private Service
 {
   public:
     Client(resources::PartitionResourceBase& base,
-           ucx::Resources& ucx,
+           ucx::UcxResources& ucx,
            control_plane::client::ConnectionsManager& connections_manager,
            memory::TransientPool& transient_pool);
     ~Client() final;
@@ -133,7 +133,7 @@ class Client final : public resources::PartitionResourceBase, private Service
     void do_service_kill() final;
     void do_service_await_join() final;
 
-    ucx::Resources& m_ucx;
+    ucx::UcxResources& m_ucx;
     control_plane::client::ConnectionsManager& m_connnection_manager;
     memory::TransientPool& m_transient_pool;
     mutable std::map<InstanceID, std::shared_ptr<ucx::Endpoint>> m_endpoints;
@@ -141,7 +141,7 @@ class Client final : public resources::PartitionResourceBase, private Service
     std::unique_ptr<mrc::runnable::Runner> m_rd_writer;
     std::unique_ptr<node::NodeComponent<RemoteDescriptorMessage>> m_rd_channel;
 
-    friend Resources;
+    friend DataPlaneResources;
 };
 
 }  // namespace mrc::internal::data_plane

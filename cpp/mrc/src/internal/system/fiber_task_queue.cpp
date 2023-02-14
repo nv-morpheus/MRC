@@ -39,7 +39,7 @@
 
 namespace mrc::internal::system {
 
-FiberTaskQueue::FiberTaskQueue(const Resources& resources, CpuSet cpu_affinity, std::size_t channel_size) :
+FiberTaskQueue::FiberTaskQueue(const SystemResources& resources, CpuSet cpu_affinity, std::size_t channel_size) :
   m_queue(channel_size),
   m_cpu_affinity(std::move(cpu_affinity)),
   m_thread(resources.make_thread("fiberq", m_cpu_affinity, [this] {

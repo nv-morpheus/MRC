@@ -31,7 +31,7 @@ namespace mrc::internal::control_plane::client {
 class Instance;
 }  // namespace mrc::internal::control_plane::client
 namespace mrc::internal::data_plane {
-class Resources;
+class DataPlaneResources;
 }  // namespace mrc::internal::data_plane
 namespace mrc::internal::memory {
 class HostResources;
@@ -40,41 +40,41 @@ namespace mrc::internal::resources {
 class Manager;
 }  // namespace mrc::internal::resources
 namespace mrc::internal::ucx {
-class Resources;
+class UcxResources;
 }  // namespace mrc::internal::ucx
 
 namespace mrc::internal::network {
 
-class Resources final : private resources::PartitionResourceBase
+class NetworkResources final : private resources::PartitionResourceBase
 {
   public:
-    Resources(resources::PartitionResourceBase& base,
-              ucx::Resources& ucx,
-              memory::HostResources& host,
-              std::unique_ptr<control_plane::client::Instance> control_plane);
-    ~Resources() final;
+    NetworkResources(resources::PartitionResourceBase& base,
+                     ucx::UcxResources& ucx,
+                     memory::HostResources& host,
+                     std::unique_ptr<control_plane::client::Instance> control_plane);
+    ~NetworkResources() final;
 
-    DELETE_COPYABILITY(Resources);
+    DELETE_COPYABILITY(NetworkResources);
 
     // todo(clang-format-15)
     // clang-format off
-    Resources(Resources&&) noexcept            = default;
-    Resources& operator=(Resources&&) noexcept = delete;
+    NetworkResources(NetworkResources&&) noexcept            = default;
+    NetworkResources& operator=(NetworkResources&&) noexcept = delete;
     // clang-format on
 
     const InstanceID& instance_id() const;
 
-    ucx::Resources& ucx();
+    ucx::UcxResources& ucx();
     control_plane::client::Instance& control_plane();
-    data_plane::Resources& data_plane();
+    data_plane::DataPlaneResources& data_plane();
 
   private:
     Future<void> shutdown();
 
     InstanceID m_instance_id;
-    ucx::Resources& m_ucx;
+    ucx::UcxResources& m_ucx;
     control_plane::Client& m_control_plane_client;
-    std::unique_ptr<data_plane::Resources> m_data_plane;
+    std::unique_ptr<data_plane::DataPlaneResources> m_data_plane;
 
     // this must be the first variable destroyed
     std::unique_ptr<control_plane::client::Instance> m_control_plane;

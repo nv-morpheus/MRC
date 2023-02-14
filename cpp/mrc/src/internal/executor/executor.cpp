@@ -17,6 +17,9 @@
 
 #include "internal/executor/executor.hpp"
 
+#include "internal/control_plane/client.hpp"
+#include "internal/control_plane/client/instance.hpp"
+#include "internal/network/resources.hpp"
 #include "internal/pipeline/manager.hpp"
 #include "internal/pipeline/pipeline.hpp"
 #include "internal/pipeline/port_graph.hpp"
@@ -45,7 +48,7 @@ Executor::Executor(std::shared_ptr<Options> options) :
   m_resources_manager(std::make_unique<resources::Manager>(*this))
 {}
 
-Executor::Executor(std::unique_ptr<system::Resources> resources) :
+Executor::Executor(std::unique_ptr<system::SystemResources> resources) :
   SystemProvider(*resources),
   m_resources_manager(std::make_unique<resources::Manager>(std::move(resources)))
 {}
@@ -74,6 +77,8 @@ void Executor::do_service_start()
 {
     CHECK(m_pipeline_manager);
     m_pipeline_manager->service_start();
+
+    // m_resources_manager->get_partition().network()->control_plane().client()
 
     pipeline::SegmentAddresses initial_segments;
     for (const auto& [id, segment] : m_pipeline_manager->pipeline().segments())
@@ -147,7 +152,7 @@ std::unique_ptr<Executor> make_executor(std::shared_ptr<Options> options)
     return std::make_unique<Executor>(std::move(options));
 }
 
-std::unique_ptr<Executor> make_executor(std::unique_ptr<system::Resources> resources)
+std::unique_ptr<Executor> make_executor(std::unique_ptr<system::SystemResources> resources)
 {
     return std::make_unique<Executor>(std::move(resources));
 }

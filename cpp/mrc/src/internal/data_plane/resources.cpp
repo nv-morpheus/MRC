@@ -32,11 +32,11 @@ namespace mrc::internal::data_plane {
 
 using namespace mrc::memory::literals;
 
-Resources::Resources(resources::PartitionResourceBase& base,
-                     ucx::Resources& ucx,
-                     memory::HostResources& host,
-                     const InstanceID& instance_id,
-                     control_plane::Client& control_plane_client) :
+DataPlaneResources::DataPlaneResources(resources::PartitionResourceBase& base,
+                                       ucx::UcxResources& ucx,
+                                       memory::HostResources& host,
+                                       const InstanceID& instance_id,
+                                       control_plane::Client& control_plane_client) :
   resources::PartitionResourceBase(base),
   m_ucx(ucx),
   m_host(host),
@@ -51,12 +51,12 @@ Resources::Resources(resources::PartitionResourceBase& base,
     service_await_live();
 }
 
-Resources::~Resources()
+DataPlaneResources::~DataPlaneResources()
 {
     Service::call_in_destructor();
 }
 
-Client& Resources::client()
+Client& DataPlaneResources::client()
 {
     return *m_client;
 }
@@ -66,58 +66,58 @@ Client& Resources::client()
 //     return m_server;
 // }
 
-std::string Resources::ucx_address() const
+std::string DataPlaneResources::ucx_address() const
 {
     return m_ucx.worker().address();
 }
 
-const ucx::RegistrationCache& Resources::registration_cache() const
+const ucx::RegistrationCache& DataPlaneResources::registration_cache() const
 {
     return m_ucx.registration_cache();
 }
 
-void Resources::do_service_start()
+void DataPlaneResources::do_service_start()
 {
     m_server->service_start();
     m_client->service_start();
 }
 
-void Resources::do_service_await_live()
+void DataPlaneResources::do_service_await_live()
 {
     m_server->service_await_live();
     m_client->service_await_live();
 }
 
-void Resources::do_service_stop()
+void DataPlaneResources::do_service_stop()
 {
     // we only issue
     m_client->service_stop();
 }
 
-void Resources::do_service_kill()
+void DataPlaneResources::do_service_kill()
 {
     m_server->service_kill();
     m_client->service_kill();
 }
 
-void Resources::do_service_await_join()
+void DataPlaneResources::do_service_await_join()
 {
     m_client->service_await_join();
     m_server->service_stop();
     m_server->service_await_join();
 }
 
-Server& Resources::server()
+Server& DataPlaneResources::server()
 {
     return *m_server;
 }
 
-mrc::runnable::LaunchOptions Resources::launch_options(std::size_t concurrency)
+mrc::runnable::LaunchOptions DataPlaneResources::launch_options(std::size_t concurrency)
 {
-    return ucx::Resources::launch_options(concurrency);
+    return ucx::UcxResources::launch_options(concurrency);
 }
 
-const InstanceID& Resources::instance_id() const
+const InstanceID& DataPlaneResources::instance_id() const
 {
     return m_instance_id;
 }

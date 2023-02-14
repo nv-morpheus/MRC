@@ -35,11 +35,11 @@ namespace mrc::internal::memory {
 class HostResources;
 }  // namespace mrc::internal::memory
 namespace mrc::internal::network {
-class Resources;
+class NetworkResources;
 }  // namespace mrc::internal::network
 namespace mrc::internal::ucx {
 class RegistrationCache;
-class Resources;
+class UcxResources;
 }  // namespace mrc::internal::ucx
 
 namespace mrc::internal::data_plane {
@@ -50,15 +50,15 @@ class Server;
  * @brief ArchitectResources hold and is responsible for constructing any object that depending the UCX data plane
  *
  */
-class Resources final : private Service, private resources::PartitionResourceBase
+class DataPlaneResources final : private Service, private resources::PartitionResourceBase
 {
   public:
-    Resources(resources::PartitionResourceBase& base,
-              ucx::Resources& ucx,
-              memory::HostResources& host,
-              const InstanceID& instance_id,
-              control_plane::Client& control_plane_client);
-    ~Resources() final;
+    DataPlaneResources(resources::PartitionResourceBase& base,
+                       ucx::UcxResources& ucx,
+                       memory::HostResources& host,
+                       const InstanceID& instance_id,
+                       control_plane::Client& control_plane_client);
+    ~DataPlaneResources() final;
 
     Client& client();
     Server& server();
@@ -76,7 +76,7 @@ class Resources final : private Service, private resources::PartitionResourceBas
     void do_service_kill() final;
     void do_service_await_join() final;
 
-    ucx::Resources& m_ucx;
+    ucx::UcxResources& m_ucx;
     memory::HostResources& m_host;
     control_plane::Client& m_control_plane_client;
     InstanceID m_instance_id;
@@ -85,7 +85,7 @@ class Resources final : private Service, private resources::PartitionResourceBas
     std::unique_ptr<Server> m_server;
     std::unique_ptr<Client> m_client;
 
-    friend network::Resources;
+    friend network::NetworkResources;
 };
 
 }  // namespace mrc::internal::data_plane

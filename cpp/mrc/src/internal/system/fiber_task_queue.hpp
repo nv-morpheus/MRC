@@ -31,12 +31,12 @@
 
 namespace mrc::internal::system {
 
-class Resources;
+class SystemResources;
 
 class FiberTaskQueue final : public core::FiberTaskQueue
 {
   public:
-    FiberTaskQueue(const Resources& resources, CpuSet cpu_affinity, std::size_t channel_size = 64);
+    FiberTaskQueue(const SystemResources& resources, CpuSet cpu_affinity, std::size_t channel_size = 64);
     ~FiberTaskQueue() final;
 
     DELETE_COPYABILITY(FiberTaskQueue);

@@ -22,7 +22,7 @@
 #include <memory>
 
 namespace mrc::internal::network {
-class Resources;
+class NetworkResources;
 }  // namespace mrc::internal::network
 
 namespace mrc::internal::control_plane {
@@ -30,11 +30,11 @@ namespace mrc::internal::control_plane {
 class Client;
 class Server;
 
-class Resources final : private resources::PartitionResourceBase
+class ControlPlaneResources final : private resources::PartitionResourceBase
 {
   public:
-    Resources(resources::PartitionResourceBase& base);
-    ~Resources() final;
+    ControlPlaneResources(resources::PartitionResourceBase& base);
+    ~ControlPlaneResources() final;
 
     Client& client()
     {
@@ -45,7 +45,7 @@ class Resources final : private resources::PartitionResourceBase
     std::unique_ptr<Server> m_server;
     const std::unique_ptr<Client> m_client;
 
-    friend network::Resources;
+    friend network::NetworkResources;
 };
 
 }  // namespace mrc::internal::control_plane

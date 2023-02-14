@@ -28,7 +28,7 @@ namespace grpc {
 class Service;
 }  // namespace grpc
 namespace mrc::internal::runnable {
-class Resources;
+class RunnableResources;
 }  // namespace mrc::internal::runnable
 namespace mrc::runnable {
 class Runner;
@@ -39,14 +39,14 @@ namespace mrc::internal::rpc {
 class Server : public Service
 {
   public:
-    Server(runnable::Resources& runnable);
+    Server(runnable::RunnableResources& runnable);
     ~Server() override;
 
     void register_service(std::shared_ptr<grpc::Service> service);
 
     std::shared_ptr<grpc::ServerCompletionQueue> get_cq() const;
 
-    runnable::Resources& runnable();
+    runnable::RunnableResources& runnable();
 
   private:
     void do_service_start() final;
@@ -56,7 +56,7 @@ class Server : public Service
     void do_service_await_join() final;
 
     grpc::ServerBuilder m_builder;
-    runnable::Resources& m_runnable;
+    runnable::RunnableResources& m_runnable;
     std::vector<std::shared_ptr<grpc::Service>> m_services;
     std::shared_ptr<grpc::ServerCompletionQueue> m_cq;
     std::unique_ptr<grpc::Server> m_server;

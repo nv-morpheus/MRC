@@ -49,7 +49,7 @@
 
 namespace mrc::internal::memory {
 
-DeviceResources::DeviceResources(resources::PartitionResourceBase& base, std::optional<ucx::Resources>& ucx) :
+DeviceResources::DeviceResources(resources::PartitionResourceBase& base, std::optional<ucx::UcxResources>& ucx) :
   resources::PartitionResourceBase(base)
 {
     CHECK(partition().has_device());

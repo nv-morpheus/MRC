@@ -86,7 +86,7 @@ class TestNext : public ::testing::Test
   protected:
     void SetUp() override
     {
-        m_system_resources = std::make_unique<internal::system::Resources>(
+        m_system_resources = std::make_unique<internal::system::SystemResources>(
             internal::system::SystemProvider(make_system([](Options& options) {
                 options.topology().user_cpuset("0-3");
                 options.topology().restrict_gpus(true);
@@ -97,7 +97,7 @@ class TestNext : public ::testing::Test
                 });
             })));
 
-        m_resources = std::make_unique<internal::runnable::Resources>(*m_system_resources, 0);
+        m_resources = std::make_unique<internal::runnable::RunnableResources>(*m_system_resources, 0);
     }
 
     void TearDown() override
@@ -106,8 +106,8 @@ class TestNext : public ::testing::Test
         m_system_resources.reset();
     }
 
-    std::unique_ptr<internal::system::Resources> m_system_resources;
-    std::unique_ptr<internal::runnable::Resources> m_resources;
+    std::unique_ptr<internal::system::SystemResources> m_system_resources;
+    std::unique_ptr<internal::runnable::RunnableResources> m_resources;
 };
 
 class ExGenSource : public node::GenericSource<int>

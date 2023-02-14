@@ -30,7 +30,7 @@ struct memory_resource;
 }  // namespace mrc::memory
 
 namespace mrc::internal::ucx {
-class Resources;
+class UcxResources;
 }
 
 namespace mrc::internal::memory {
@@ -41,7 +41,7 @@ namespace mrc::internal::memory {
 class DeviceResources : private resources::PartitionResourceBase
 {
   public:
-    DeviceResources(resources::PartitionResourceBase& base, std::optional<ucx::Resources>& ucx);
+    DeviceResources(resources::PartitionResourceBase& base, std::optional<ucx::UcxResources>& ucx);
 
     int cuda_device_id() const;
 

@@ -33,7 +33,7 @@
 
 namespace mrc::internal::rpc {
 
-Server::Server(runnable::Resources& runnable) : m_runnable(runnable)
+Server::Server(runnable::RunnableResources& runnable) : m_runnable(runnable)
 {
     m_cq = m_builder.AddCompletionQueue();
     m_builder.AddListeningPort("0.0.0.0:13337", grpc::InsecureServerCredentials());
@@ -88,7 +88,7 @@ void Server::do_service_await_join()
     }
 }
 
-runnable::Resources& Server::runnable()
+runnable::RunnableResources& Server::runnable()
 {
     return m_runnable;
 }

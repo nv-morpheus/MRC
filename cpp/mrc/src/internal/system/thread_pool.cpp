@@ -26,7 +26,7 @@
 
 namespace mrc::internal::system {
 
-ThreadPool::ThreadPool(const system::Resources& resources, CpuSet cpuset, std::size_t channel_size) :
+ThreadPool::ThreadPool(const system::SystemResources& resources, CpuSet cpuset, std::size_t channel_size) :
   m_cpuset(std::move(cpuset)),
   m_channel(channel_size)
 {
