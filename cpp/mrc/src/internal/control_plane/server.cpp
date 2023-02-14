@@ -418,7 +418,7 @@ Server::Server(runnable::RunnableResources& runnable) :
 
     args.emplace_back("/work/build/cpp/mrc/src/tests/test_mrc_private.x");
     args.emplace_back("--inspect");
-    args.emplace_back("/work/ts/control-plane/dist/server/server.js");
+    args.emplace_back("/work/ts/control-plane/dist/server/run_server.js");
 
     m_node_service.set_args(args);
     // // Parse Node.js CLI options, and print any errors that have occurred while
