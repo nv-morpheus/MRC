@@ -65,7 +65,7 @@ Manager::Manager(std::unique_ptr<system::SystemResources> resources) :
 {
     const auto& partitions      = system().partitions().flattened();
     const auto& host_partitions = system().partitions().host_partitions();
-    const bool network_enabled  = !system().options().architect_url().empty();
+    const bool network_enabled  = true;  //! system().options().architect_url().empty();
 
     // construct the runnable resources on each host_partition - launch control and main
     for (std::size_t i = 0; i < host_partitions.size(); ++i)
@@ -249,6 +249,11 @@ PartitionResources& Manager::get_partition()
     }
 }
 
+control_plane::ControlPlaneResources& Manager::control_plane() const
+{
+    return *m_control_plane;
+}
+
 Future<void> Manager::shutdown()
 {
     return m_runnable.at(0).main().enqueue([this] {
@@ -267,4 +272,5 @@ Future<void> Manager::shutdown()
         }
     });
 }
+
 }  // namespace mrc::internal::resources

@@ -19,6 +19,7 @@
 
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/client/instance.hpp"
+#include "internal/control_plane/resources.hpp"
 #include "internal/network/resources.hpp"
 #include "internal/pipeline/manager.hpp"
 #include "internal/pipeline/pipeline.hpp"
@@ -28,16 +29,23 @@
 #include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
 
+#include "mrc/channel/status.hpp"
 #include "mrc/core/addresses.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/node/generic_sink.hpp"
+#include "mrc/protos/architect.pb.h"
+#include "mrc/protos/architect_state.pb.h"
 
 #include <glog/logging.h>
 
 #include <map>
+#include <memory>
 #include <ostream>
 #include <set>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace mrc::internal::executor {
 
@@ -70,23 +78,70 @@ void Executor::register_pipeline(std::unique_ptr<pipeline::IPipeline> ipipeline)
         throw exceptions::MrcRuntimeError("pipeline validation failed");
     }
 
-    m_pipeline_manager = std::make_unique<pipeline::Manager>(pipeline, *m_resources_manager);
+    // m_pipeline_manager = std::make_unique<pipeline::Manager>(pipeline, *m_resources_manager);
+
+    m_registered_pipeline_defs[0] = pipeline;
 }
 
 void Executor::do_service_start()
 {
-    CHECK(m_pipeline_manager);
-    m_pipeline_manager->service_start();
+    auto state_update_subscription = m_resources_manager->control_plane().client().state_update_obs().subscribe(
+        [this](protos::ControlPlaneState state) {
+            LOG(INFO) << "Got state update";
+        });
 
-    // m_resources_manager->get_partition().network()->control_plane().client()
-
-    pipeline::SegmentAddresses initial_segments;
-    for (const auto& [id, segment] : m_pipeline_manager->pipeline().segments())
+    // Now make the request for which segments to run
+    for (const auto& [pipeline_id, pipeline] : m_registered_pipeline_defs)
     {
-        auto address              = segment_address_encode(id, 0);  // rank 0
-        initial_segments[address] = 0;                              // partition 0;
+        auto request = protos::PipelineRequestAssignmentRequest();
+        request.set_pipeline_id(0);
+
+        for (const auto& [segment_id, segment] : pipeline->segments())
+        {
+            auto address = segment_address_encode(segment_id, 0);  // rank 0
+            request.add_segment_ids(address);
+        }
+
+        m_resources_manager->control_plane().client().issue_event(
+            protos::EventType::ClientUnaryRequestPipelineAssignment,
+            request);
     }
-    m_pipeline_manager->push_updates(std::move(initial_segments));
+
+    // // Start by making an edge to the control plane udpates
+    // m_update_sink = std::make_unique<node::LambdaSinkComponent<const protos::ControlPlaneState>>(
+    //     [this](const protos::ControlPlaneState&& state) -> channel::Status {
+    //         // On update, check for pipelines that are different than the current set of pipelines
+    //         auto instances = std::vector<protos::PipelineInstance>(state.pipeline_instances().entities().begin(),
+    //                                                                state.pipeline_instances().entities().end());
+
+    //         for (const auto& ins : instances)
+    //         {
+    //             // TEMP: Should check against running instances
+    //             if (!m_pipeline_manager)
+    //             {
+    //                 m_pipeline_manager = std::make_unique<pipeline::Manager>(m_registered_pipeline_defs[0],
+    //                                                                          *m_resources_manager);
+
+    //                 m_pipeline_manager->service_start();
+    //             }
+    //         }
+
+    //         return channel::Status::success;
+    //     });
+
+    // // Make an edge between the update and the sink
+    // mrc::make_edge(m_resources_manager->control_plane().client().state_update_stream(), *m_update_sink);
+
+    // CHECK(m_pipeline_manager);
+    // m_pipeline_manager->service_start();
+
+    // pipeline::SegmentAddresses initial_segments;
+    // for (const auto& [id, segment] : m_pipeline_manager->pipeline().segments())
+    // {
+    //     auto address              = segment_address_encode(id, 0);  // rank 0
+    //     initial_segments[address] = 0;                              // partition 0;
+    // }
+    // m_pipeline_manager->push_updates(std::move(initial_segments));
 }
 
 void Executor::do_service_stop()

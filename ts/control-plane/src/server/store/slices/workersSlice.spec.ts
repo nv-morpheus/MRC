@@ -9,15 +9,17 @@ describe("Workers", () => {
 
    const connection: IConnection = {
       id: 1111,
-      peer_info: "localhost:1234",
-      worker_ids: []
+      peerInfo: "localhost:1234",
+      workerIds: [],
+      assignedPipelineIds: [],
    };
 
    const worker: IWorker = {
       id: 1234,
       activated: false,
-      parent_machine_id: 1111,
-      worker_address: "-----",
+      machineId: 1111,
+      workerAddress: "-----",
+      assignedSegmentIds: [],
    };
 
    // Get a clean store each time

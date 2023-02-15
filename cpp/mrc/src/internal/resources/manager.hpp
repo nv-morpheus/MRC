@@ -65,6 +65,8 @@ class Manager final : public system::SystemProvider
 
     PartitionResources& partition(std::size_t partition_id);
 
+    control_plane::ControlPlaneResources& control_plane() const;
+
   private:
     Future<void> shutdown();
 

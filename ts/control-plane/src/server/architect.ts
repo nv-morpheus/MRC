@@ -1,69 +1,63 @@
 
 
+import {ServerDuplexStream, ServerUnaryCall} from '@grpc/grpc-js';
+import {as, AsyncSink, concat, from, merge, zip} from 'ix/asynciterable';
+import {debounce, throttle} from 'ix/asynciterable/operators';
+import {CallContext} from "nice-grpc";
+import {firstValueFrom, Observable, Subject} from "rxjs";
+
+import {pack, packEvent, unpack, unpackEvent} from "../common/utils";
+import {Any} from "../proto/google/protobuf/any";
 import {
-   ServerDuplexStream, ServerUnaryCall
-} from '@grpc/grpc-js';
-import { firstValueFrom, Observable, Subject } from "rxjs";
+   Ack,
+   ArchitectServiceImplementation,
+   ClientConnectedResponse,
+   ErrorCode,
+   Event,
+   EventType,
+   PingRequest,
+   PingResponse,
+   PipelineRequestAssignmentRequest,
+   PipelineRequestAssignmentResponse,
+   RegisterWorkersRequest,
+   RegisterWorkersResponse,
+   ServerStreamingMethodResult,
+   ShutdownRequest,
+   ShutdownResponse,
+   StateUpdate,
+   TaggedInstance,
+} from "../proto/mrc/protos/architect";
+import {ControlPlaneState} from "../proto/mrc/protos/architect_state";
+import {DeepPartial, MessageType, messageTypeRegistry, UnknownMessage} from "../proto/typeRegistry";
 
-import { getRootStore, RootState, RootStore } from "./store/store";
-import { activateWorkers, addWorkers, IWorker, removeWorker, workersSelectById, workersSelectByMachineId, workersSelectIds } from "./store/slices/workersSlice";
-import { addConnection, removeConnection } from "./store/slices/connectionsSlice";
-import { RegisterWorkersRequest, RegisterWorkersResponse, Event, Ack, EventType, PingRequest, PingResponse, ShutdownRequest, ShutdownResponse, TaggedInstance, ArchitectServiceImplementation, ServerStreamingMethodResult, StateUpdate, ErrorCode, ClientConnectedResponse } from "../proto/mrc/protos/architect";
-import { Any } from "../proto/google/protobuf/any";
-import { DeepPartial, MessageType, messageTypeRegistry, UnknownMessage } from "../proto/typeRegistry";
-import { CallContext } from "nice-grpc";
-import { as, AsyncSink, concat, from, merge, zip } from 'ix/asynciterable';
+import {addConnection, IConnection, removeConnection} from "./store/slices/connectionsSlice";
+import {assignPipelineInstance} from "./store/slices/pipelineInstancesSlice";
+import {
+   activateWorkers,
+   addWorkers,
+   IWorker,
+   removeWorker,
+   workersSelectById,
+   workersSelectByMachineId,
+   workersSelectIds,
+} from "./store/slices/workersSlice";
+import {getRootStore, RootState, RootStore} from "./store/store";
+import {generateId} from "./utils";
 
-interface IncomingData {
-   msg: Event,
-   stream?: ServerDuplexStream<Event, Event>,
+interface IncomingData
+{
+   msg: Event, stream?: ServerDuplexStream<Event, Event>, machineId: number,
 }
 
-// type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
-
-// type DeepPartial<T> = T extends Builtin ? T
-//    : T extends Array<infer U> ? Array<DeepPartial<U>> : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
-//    : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
-//    : Partial<T>;
-
-// type KeysOfUnion<T> = T extends T ? keyof T : never;
-// type Exact<P, I extends P> = P extends Builtin ? P
-//    : P & { [K in keyof P]: Exact<P[K], I[K]> } & { [K in Exclude<keyof I, KeysOfUnion<P>>]: never };
-
-// interface ProtoMessageBase<MessageDataT> {
-//    create<I extends Exact<DeepPartial<MessageDataT>, I>>(base?: I): ProtoMessageBase<MessageDataT>;
-//    // create(base?: MessageDataT): ProtoMessageBase<MessageDataT>;
-//    // encode(message: ProtoMessageBase<MessageDataT>, writer?: proto_min.Writer): proto_min.Writer;
-// }
-
-// function testResponse<MessageClassT>(message_class: MessageClassT): void {
-
-// }
-
-// function typeUrlFromMessageClass(message_class: any) {
-
-//    const prefix = "mrc.protos";
-
-//    if (message_class instanceof RegisterWorkersRequest) {
-//       return `${prefix}.RegisterWorkersRequest`;
-//    } else if (message_class instanceof RegisterWorkersResponse) {
-//       return `${prefix}.RegisterWorkersResponse`;
-//    } else if (message_class instanceof Ack) {
-//       return `${prefix}.Ack`;
-//    } else {
-//       throw new Error(`Unknown message type: ${typeof message_class}`);
-//    }
-// }
-
-// function unaryResponse<MessageT extends ProtoMessageBase, I extends Exact<DeepPartial<MessageT>, I>>(event: IncomingData, message_class: MessageT, data: I): MessageT {
-// function unaryResponse<MessageDataT extends Exact<DeepPartial<ProtoMessageBase<MessageDataT>>, MessageDataT>, MessageClassT extends ProtoMessageBase<MessageDataT>>(event: IncomingData, message_class: MessageClassT, data: MessageDataT): void {
-function unaryResponse2<MessageDataT extends UnknownMessage, MessageClass extends MessageType<MessageDataT>>(event: IncomingData, message_class: MessageClass, data: MessageDataT): void {
-
+function unaryResponse2<MessageDataT extends UnknownMessage, MessageClass extends MessageType<MessageDataT>>(
+    event: IncomingData,
+    message_class: MessageClass,
+    data: MessageDataT): void
+{
    const registered_type = messageTypeRegistry.get(message_class.$type);
-
 }
-function unaryResponse<MessageDataT>(event: IncomingData | undefined, message_class: any, data: MessageDataT): Event {
-
+function unaryResponse<MessageDataT>(event: IncomingData|undefined, message_class: any, data: MessageDataT): Event
+{
    // Lookup message type
    const type_registry = messageTypeRegistry.get(message_class.$type);
 
@@ -85,37 +79,37 @@ function unaryResponse<MessageDataT>(event: IncomingData | undefined, message_cl
    });
 }
 
-function pack<MessageDataT extends UnknownMessage>(data: MessageDataT): Any {
+// function pack<MessageDataT extends UnknownMessage>(data: MessageDataT): Any {
 
-   // Load the type from the registry
-   const message_type = messageTypeRegistry.get(data.$type);
+//    // Load the type from the registry
+//    const message_type = messageTypeRegistry.get(data.$type);
 
-   if (!message_type) {
-      throw new Error("Unknown type in type registry");
-   }
+//    if (!message_type) {
+//       throw new Error("Unknown type in type registry");
+//    }
 
-   const any_msg = Any.create({
-      typeUrl: `type.googleapis.com/${message_type.$type}`,
-      value: message_type.encode(data).finish(),
-   });
+//    const any_msg = Any.create({
+//       typeUrl: `type.googleapis.com/${message_type.$type}`,
+//       value: message_type.encode(data).finish(),
+//    });
 
-   return any_msg;
-}
+//    return any_msg;
+// }
 
-function unpack<MessageT extends UnknownMessage>(event: IncomingData) {
-   const message_type_str = event.msg.message?.typeUrl.split('/').pop();
+// function unpack<MessageT extends UnknownMessage>(event: IncomingData) {
+//    const message_type_str = event.msg.message?.typeUrl.split('/').pop();
 
-   // Load the type from the registry
-   const message_type = messageTypeRegistry.get(message_type_str ?? "");
+//    // Load the type from the registry
+//    const message_type = messageTypeRegistry.get(message_type_str ?? "");
 
-   if (!message_type) {
-      throw new Error(`Could not unpack message with type: ${event.msg.message?.typeUrl}`);
-   }
+//    if (!message_type) {
+//       throw new Error(`Could not unpack message with type: ${event.msg.message?.typeUrl}`);
+//    }
 
-   const message = message_type.decode(event.msg.message?.value as Uint8Array) as MessageT;
+//    const message = message_type.decode(event.msg.message?.value as Uint8Array) as MessageT;
 
-   return message;
-}
+//    return message;
+// }
 
 // function unaryResponse<MessageDataT extends Message>(event: IncomingData, data: MessageDataT): void {
 
@@ -130,81 +124,74 @@ function unpack<MessageT extends UnknownMessage>(event: IncomingData) {
 //    event.stream.write(message);
 // }
 
-class Architect implements ArchitectServiceImplementation {
+class Architect implements ArchitectServiceImplementation
+{
    public service: ArchitectServiceImplementation;
 
    private _store: RootStore;
 
    private shutdown_subject: Subject<void> = new Subject<void>();
 
-   constructor(store?: RootStore) {
-
+   constructor(store?: RootStore)
+   {
       // Use the default store if not supplied
-      if (!store) {
+      if (!store)
+      {
          store = getRootStore();
       }
 
       this._store = store;
 
-      // Have to do this. Look at https://github.com/paymog/grpc_tools_node_protoc_ts/blob/master/doc/server_impl_signature.md to see about getting around this restriction
+      // Have to do this. Look at
+      // https://github.com/paymog/grpc_tools_node_protoc_ts/blob/master/doc/server_impl_signature.md to see about
+      // getting around this restriction
       this.service = {
          eventStream: (request, context) => {
             return this.do_eventStream(request, context);
          },
-         ping: async (request, context): Promise<DeepPartial<PingResponse>> => {
+         ping: async(request, context): Promise<DeepPartial<PingResponse>> => {
             return await this.do_ping(request, context);
          },
-         shutdown: async (request, context): Promise<DeepPartial<ShutdownResponse>> => {
+         shutdown: async(request, context): Promise<DeepPartial<ShutdownResponse>> => {
             return await this.do_shutdown(request, context);
-         }
+         },
       };
    }
-   eventStream(request: AsyncIterable<Event>, context: CallContext): ServerStreamingMethodResult<{ error?: { message?: string | undefined; code?: ErrorCode | undefined; } | undefined; event?: EventType | undefined; tag?: number | undefined; message?: { typeUrl?: string | undefined; value?: Uint8Array | undefined; } | undefined; }> {
+   eventStream(request: AsyncIterable<Event>, context: CallContext): ServerStreamingMethodResult<{
+      error?: {message?: string | undefined; code?: ErrorCode | undefined;} | undefined;
+      event?: EventType | undefined;
+      tag?: number | undefined;
+      message?: {typeUrl?: string | undefined; value?: Uint8Array | undefined;} | undefined;
+   }>
+   {
       return this.do_eventStream(request, context);
    }
-   ping(request: PingRequest, context: CallContext): Promise<{ tag?: number | undefined; }> {
+   ping(request: PingRequest, context: CallContext): Promise<{tag?: number | undefined;}>
+   {
       return this.do_ping(request, context);
    }
-   shutdown(request: ShutdownRequest, context: CallContext): Promise<{ tag?: number | undefined; }> {
+   shutdown(request: ShutdownRequest, context: CallContext): Promise<{tag?: number | undefined;}>
+   {
       return this.do_shutdown(request, context);
    }
 
-   public onShutdownSignaled() {
+   public onShutdownSignaled()
+   {
       return firstValueFrom(this.shutdown_subject);
    }
 
-   private async *do_eventStream(stream: AsyncIterable<Event>, context: CallContext): AsyncIterable<DeepPartial<Event>> {
+   private async * do_eventStream(stream: AsyncIterable<Event>, context: CallContext): AsyncIterable<DeepPartial<Event>>
+   {
       console.log(`Event stream created for ${context.peer}`);
 
-      const connection = {
-         id: 1111,
-         peer_info: context.peer,
-         worker_ids: [],
+      const connection: IConnection = {
+         id: generateId(),
+         peerInfo: context.peer,
+         workerIds: [],
+         assignedPipelineIds: [],
       };
 
       context.metadata.set("mrc-machine-id", connection.id.toString());
-
-
-
-      // const state_updates$ = new Observable<Event>((subscriber) => {
-
-
-      //    async function* pull_messages(){
-      //       for await (const req of stream) {
-      //          console.log(`Event stream data for ${connection.peer_info} with message: ${req.event.toString()}`);
-
-      //          yield* this.do_handle_event({
-      //             msg: req,
-      //          }, context);
-      //       }
-      //    }
-
-      //    store_unsub
-      // });
-
-      // const send_events = new Subject<Event>();
-
-      // merge();
 
       const store_update_sink = new AsyncSink<Event>();
 
@@ -212,28 +199,28 @@ class Architect implements ArchitectServiceImplementation {
       const store_unsub = this._store.subscribe(() => {
          const state = this._store.getState();
 
-         // // Convert to an event
-         // subscriber.next(Event.create({
-         //    event: EventType.ServerStateUpdate,
-         // }));
-
-         store_update_sink.write(Event.create({
-            event: EventType.ServerStateUpdate,
-         }));
+         // Push out the state update
+         store_update_sink.write(packEvent<ControlPlaneState>(EventType.ServerStateUpdate,
+                                                              0,
+                                                              ControlPlaneState.create(state as ControlPlaneState)));
       });
 
       // Create a new connection
       this._store.dispatch(addConnection(connection));
 
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this;
 
-      const event_stream = async function* () {
-         for await (const req of stream) {
-            console.log(`Event stream data for ${connection.peer_info} with message: ${req.event.toString()}`);
+      const event_stream = async function*() {
+         for await (const req of stream)
+         {
+            console.log(`Event stream data for ${connection.peerInfo} with message: ${req.event.toString()}`);
 
             yield* self.do_handle_event({
                msg: req,
-            }, context);
+               machineId: connection.id,
+            },
+                                        context);
          }
 
          // Input stream has completed so stop pushing events
@@ -247,29 +234,21 @@ class Architect implements ArchitectServiceImplementation {
          event: EventType.ClientEventStreamConnected,
          message: pack(ClientConnectedResponse.create({
             machineId: connection.id,
-         }))
+         })),
       });
 
-      for await (const out_event of merge(as(event_stream()), as<Event>(store_update_sink))) {
+      for await (const out_event of merge(as (event_stream()), as<Event>(store_update_sink).pipe(debounce(100))))
+      {
          yield out_event;
       }
 
-
-      // for await (const req of stream) {
-      //    console.log(`Event stream data for ${connection.peer_info} with message: ${req.event.toString()}`);
-
-      //    yield* this.do_handle_event({
-      //       msg: req,
-      //    }, context);
-      // }
-
-      console.log(`Event stream closed for ${connection.peer_info}. Deleting connection.`);
+      console.log(`Event stream closed for ${connection.peerInfo}. Deleting connection.`);
 
       // Create a new connection
       this._store.dispatch(removeConnection(connection));
 
       // call.on("data", (req: Event) => {
-      //    console.log(`Event stream data for ${connection.peer_info} with message: ${req.getEvent().toString()}`);
+      //    console.log(`Event stream data for ${connection.peerInfo} with message: ${req.getEvent().toString()}`);
 
       //    this.do_handle_event({
       //       msg: req,
@@ -278,100 +257,119 @@ class Architect implements ArchitectServiceImplementation {
       // });
 
       // call.on("error", (err: Error) => {
-      //    console.log(`Event stream errored for ${connection.peer_info} with message: ${err.message}`);
+      //    console.log(`Event stream errored for ${connection.peerInfo} with message: ${err.message}`);
       // });
 
       // call.on("end", () => {
-      //    console.log(`Event stream closed for ${connection.peer_info}. Deleting connection.`);
+      //    console.log(`Event stream closed for ${connection.peerInfo}. Deleting connection.`);
 
       //    // Create a new connection
       //    store.dispatch(removeConnection(connection));
       // });
    }
 
-   private async *do_handle_event(event: IncomingData, context: CallContext) {
-      try {
-         switch (event.msg.event) {
-            case EventType.ClientEventRequestStateUpdate:
+   private async * do_handle_event(event: IncomingData, context: CallContext)
+   {
+      try
+      {
+         switch (event.msg.event)
+         {
+         case EventType.ClientEventRequestStateUpdate:
 
-               yield unaryResponse(event, StateUpdate, StateUpdate.create({
+            yield unaryResponse(event,
+                                StateUpdate,
+                                StateUpdate.create({
 
-               }));
+                                }));
 
-               break;
-            case EventType.ClientUnaryRegisterWorkers:
-               {
-                  const payload = unpack<RegisterWorkersRequest>(event);
+            break;
+         case EventType.ClientUnaryRegisterWorkers: {
+            const payload = unpackEvent<RegisterWorkersRequest>(event.msg);
 
-                  const machine_id = Number.parseInt(context.metadata.get("mrc-machine-id") as string);
+            const workers: IWorker[] = payload.ucxWorkerAddresses.map((value): IWorker => {
+               return {
+                  id: generateId(),
+                  machineId: event.machineId,
+                  workerAddress: value,
+                  activated: false,
+                  assignedSegmentIds: [],
+               };
+            });
 
-                  const workers: IWorker[] = payload.ucxWorkerAddresses.map((value) => {
-                     return {
-                        id: 1234,
-                        parent_machine_id: machine_id,
-                        worker_address: value.toString(),
-                        activated: false,
-                     };
-                  });
+            // Add the workers
+            this._store.dispatch(addWorkers(workers));
 
-                  // Add the workers
-                  this._store.dispatch(addWorkers(workers));
+            const resp = RegisterWorkersResponse.create({
+               machineId: event.machineId,
+               instanceIds: workersSelectByMachineId(this._store.getState(), event.machineId).map((worker) => worker.id)
+            });
 
-                  const resp = RegisterWorkersResponse.create({
-                     machineId: machine_id,
-                     instanceIds: workersSelectByMachineId(this._store.getState(), machine_id).map((worker) => worker.id)
-                  });
+            yield unaryResponse(event, RegisterWorkersResponse, resp);
 
-                  yield unaryResponse(event, RegisterWorkersResponse, resp);
-
-                  break;
-               }
-            case EventType.ClientUnaryActivateStream:
-               {
-                  const payload = unpack<RegisterWorkersResponse>(event);
-
-                  const workers = payload.instanceIds.map((id) => {
-
-                     const w = workersSelectById(this._store.getState(), id);
-
-                     if (!w) {
-                        throw new Error(`Cannot activate Worker ${id}. ID does not exist`);
-                     }
-
-                     return w;
-                  });
-
-                  this._store.dispatch(activateWorkers(workers));
-
-                  yield unaryResponse(event, Ack, {});
-
-                  break;
-               }
-            case EventType.ClientUnaryDropWorker:
-               {
-                  const payload = unpack<TaggedInstance>(event);
-
-                  const found_worker = workersSelectById(this._store.getState(), payload.instanceId);
-
-                  if (found_worker) {
-                     this._store.dispatch(removeWorker(found_worker));
-                  }
-
-                  yield unaryResponse(event, Ack, {});
-
-                  break;
-               }
-
-            default:
-               break;
+            break;
          }
-      } catch (error) {
+         case EventType.ClientUnaryActivateStream: {
+            const payload = unpackEvent<RegisterWorkersResponse>(event.msg);
+
+            const workers = payload.instanceIds.map((id) => {
+               const w = workersSelectById(this._store.getState(), id);
+
+               if (!w)
+               {
+                  throw new Error(`Cannot activate Worker ${id}. ID does not exist`);
+               }
+
+               return w;
+            });
+
+            this._store.dispatch(activateWorkers(workers));
+
+            yield unaryResponse(event, Ack, {});
+
+            break;
+         }
+         case EventType.ClientUnaryDropWorker: {
+            const payload = unpackEvent<TaggedInstance>(event.msg);
+
+            const found_worker = workersSelectById(this._store.getState(), payload.instanceId);
+
+            if (found_worker)
+            {
+               this._store.dispatch(removeWorker(found_worker));
+            }
+
+            yield unaryResponse(event, Ack, {});
+
+            break;
+         }
+         case EventType.ClientUnaryRequestPipelineAssignment: {
+            const payload = unpackEvent<PipelineRequestAssignmentRequest>(event.msg);
+
+            // Check if we already have an assignment
+
+            // Add a pipeline assignment to the machine
+            const addedInstances = this._store.dispatch(assignPipelineInstance({
+               ...payload,
+               machineId: event.machineId,
+            }));
+
+            yield unaryResponse(event,
+                                PipelineRequestAssignmentResponse,
+                                PipelineRequestAssignmentResponse.create(addedInstances));
+
+            break;
+         }
+         default:
+            break;
+         }
+      } catch (error)
+      {
          console.log(`Error occurred handing event. Error: ${error}`);
       }
    }
 
-   private async do_shutdown(req: ShutdownRequest, context: CallContext): Promise<DeepPartial<ShutdownResponse>> {
-
+   private async do_shutdown(req: ShutdownRequest, context: CallContext): Promise<DeepPartial<ShutdownResponse>>
+   {
       console.log(`Issuing shutdown promise from ${context.peer}`);
 
       // Signal that shutdown was requested
@@ -380,7 +378,8 @@ class Architect implements ArchitectServiceImplementation {
       return ShutdownResponse.create();
    }
 
-   private async do_ping(req: PingRequest, context: CallContext): Promise<DeepPartial<PingResponse>> {
+   private async do_ping(req: PingRequest, context: CallContext): Promise<DeepPartial<PingResponse>>
+   {
       console.log(`Ping from ${context.peer}`);
 
       return PingResponse.create({

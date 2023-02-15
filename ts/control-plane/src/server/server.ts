@@ -7,39 +7,6 @@ import { ArchitectDefinition } from "../proto/mrc/protos/architect";
 import { Architect } from "./architect";
 import { RootStore } from "./store/store";
 
-// async function main(): Promise<void> {
-//    const server = createServer();
-
-//    const architect = new Architect();
-
-//    server.add(ArchitectDefinition, architect.service);
-
-//    const port = await server.listen('0.0.0.0:13337', ServerCredentials.createInsecure());
-
-//    console.log(`server is running on 0.0.0.0:${port}`);
-
-//    // Wait for the architect to shutdown
-//    await architect.shutdown();
-
-//    // Try to shutdown first
-//    console.log("Server shutting down...");
-
-//    try {
-//       await server.shutdown();
-
-//       console.log("Server shutdown");
-
-//    } catch (error) {
-//       console.log("Server shutdown failed. Forcing shutdown");
-//       server.forceShutdown();
-//    }
-
-//    console.log("Exiting script");
-// }
-
-// main();
-
-
 export class ArchitectServer {
 
    private _server = createServer();
@@ -56,7 +23,7 @@ export class ArchitectServer {
    }
 
    public async start() {
-      const port = await this._server.listen('0.0.0.0:13338', ServerCredentials.createInsecure());
+      const port = await this._server.listen('0.0.0.0:13337', ServerCredentials.createInsecure());
 
       console.log(`server is running on 0.0.0.0:${port}`);
 

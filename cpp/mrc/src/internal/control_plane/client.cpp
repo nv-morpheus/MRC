@@ -25,11 +25,13 @@
 
 #include "mrc/channel/status.hpp"
 #include "mrc/edge/edge_builder.hpp"
+#include "mrc/node/operators/broadcast.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
 #include "mrc/protos/architect.pb.h"
+#include "mrc/protos/architect_state.pb.h"
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launcher.hpp"
 #include "mrc/runnable/runner.hpp"
@@ -69,6 +71,13 @@ void Client::do_service_start()
 
     auto url = runnable().system().options().architect_url();
     CHECK(!url.empty());
+
+    // If no URL is supplied, we are creating a local server
+    if (url.empty())
+    {
+        url = "localhost:13337";
+    }
+
     auto channel = grpc::CreateChannel(url, grpc::InsecureChannelCredentials());
     m_stub       = mrc::protos::Architect::NewStub(channel);
 
@@ -99,6 +108,11 @@ void Client::do_service_start()
     // make stream and attach event handler
     m_stream = std::make_shared<stream_t::element_type>(prepare_fn, runnable());
     m_stream->attach_to(*event_handler);
+
+    // Create the stream for events from the server
+    m_state_update_entrypoint = std::make_unique<mrc::node::WritableEntrypoint<const protos::ControlPlaneState>>();
+    m_state_update_stream     = std::make_unique<mrc::node::Broadcast<const protos::ControlPlaneState>>();
+    mrc::make_edge(*m_state_update_entrypoint, *m_state_update_stream);
 
     // ensure all downstream event handlers are constructed before constructing and starting the event handler
     m_connections_update_channel = std::make_unique<mrc::node::WritableEntrypoint<const protos::StateUpdate>>();
@@ -172,23 +186,28 @@ void Client::do_handle_event(event_t&& event)
     break;
 
     case protos::EventType::ServerStateUpdate: {
-        protos::StateUpdate update;
+        protos::ControlPlaneState update;
         CHECK(event.msg.has_message() && event.msg.message().UnpackTo(&update));
 
-        if (update.has_connections())
-        {
-            DCHECK(m_connections_update_channel);
-            CHECK(m_connections_update_channel->await_write(std::move(update)) == channel::Status::success);
-        }
-        else
-        {
-            route_state_update(event.msg.tag(), std::move(update));
-        }
+        m_state_update_sub.get_subscriber().on_next(std::move(update));
+
+        // DCHECK(m_state_update_entrypoint);
+        // CHECK(m_state_update_entrypoint->await_write(std::move(update)) == channel::Status::success);
+
+        // if (update.has_connections())
+        // {
+        //     DCHECK(m_connections_update_channel);
+        //     CHECK(m_connections_update_channel->await_write(std::move(update)) == channel::Status::success);
+        // }
+        // else
+        // {
+        //     route_state_update(event.msg.tag(), std::move(update));
+        // }
     }
     break;
 
     default:
-        LOG(FATAL) << "event channel not implemented";
+        LOG(ERROR) << "event channel not implemented. Not supported event: " << event.msg.event();
     }
 }
 
@@ -262,4 +281,13 @@ void Client::request_update()
     // }
 }
 
+edge::IWritableAcceptor<const protos::ControlPlaneState>& Client::state_update_stream() const
+{
+    return *m_state_update_stream;
+}
+
+rxcpp::observable<protos::ControlPlaneState> Client::state_update_obs() const
+{
+    return m_state_update_sub.get_observable();
+}
 }  // namespace mrc::internal::control_plane

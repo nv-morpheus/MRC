@@ -1,24 +1,39 @@
-import { Channel, credentials, ServerCredentials } from "@grpc/grpc-js";
-import { ConnectivityState } from "@grpc/grpc-js/build/src/connectivity-state";
-import assert from "assert";
-import { createChannel, createClient, createServer, Server, waitForChannelReady } from "nice-grpc";
-import { ArchitectClient, ArchitectDefinition, PingRequest, Event, EventType, ClientConnectedResponse, RegisterWorkersRequest, RegisterWorkersResponse, Ack } from "../proto/mrc/protos/architect";
-
-import { Architect } from "../server/architect";
-import { ArchitectServer } from "../server/server";
-import { connectionsSelectAll, connectionsSelectById, IConnection } from "../server/store/slices/connectionsSlice";
-import { RootState, RootStore, setupStore } from "../server/store/store";
-import { as, AsyncIterableX, AsyncSink, from, zip } from 'ix/asynciterable';
-import { Observable, Subject } from 'rxjs';
-import { pack, packEvent, unpackEvent } from "../common/utils";
-import { pluck, share } from 'ix/asynciterable/operators';
 import "ix/add/asynciterable-operators/first";
 import "ix/add/asynciterable-operators/finalize";
-import { unary_event, unpack_first_event, unpack_unary_event } from "./utils";
-import { workersSelectById } from "../server/store/slices/workersSlice";
+
+import {Channel, credentials, ServerCredentials} from "@grpc/grpc-js";
+import {ConnectivityState} from "@grpc/grpc-js/build/src/connectivity-state";
+import assert from "assert";
+import {as, AsyncIterableX, AsyncSink, from, zip} from "ix/asynciterable";
+import {pluck, share} from "ix/asynciterable/operators";
+import {createChannel, createClient, createServer, Server, waitForChannelReady} from "nice-grpc";
+import {Observable, Subject} from "rxjs";
+
+import {pack, packEvent, unpackEvent} from "../common/utils";
+import {
+   Ack,
+   ArchitectClient,
+   ArchitectDefinition,
+   ClientConnectedResponse,
+   Event,
+   EventType,
+   PingRequest,
+   PipelineRequestAssignmentRequest,
+   PipelineRequestAssignmentResponse,
+   RegisterWorkersRequest,
+   RegisterWorkersResponse,
+} from "../proto/mrc/protos/architect";
+import {Architect} from "../server/architect";
+import {ArchitectServer} from "../server/server";
+import {connectionsSelectAll, connectionsSelectById, IConnection} from "../server/store/slices/connectionsSlice";
+import {pipelineInstancesSelectById} from "../server/store/slices/pipelineInstancesSlice";
+import {segmentInstancesSelectByIds} from "../server/store/slices/segmentInstancesSlice";
+import {workersSelectById} from "../server/store/slices/workersSlice";
+import {RootState, RootStore, setupStore} from "../server/store/store";
+
+import {unary_event, unpack_first_event, unpack_unary_event} from "./utils";
 
 describe("Client", () => {
-
    let store: RootStore;
    let server: ArchitectServer;
    let client_channel: Channel;
@@ -66,7 +81,6 @@ describe("Client", () => {
       });
 
       describe("eventStream", () => {
-
          let abort_controller: AbortController;
          let send_events: AsyncSink<Event>;
          let recieve_events: AsyncIterableX<Event>;
@@ -74,15 +88,15 @@ describe("Client", () => {
 
          beforeEach(async () => {
             abort_controller = new AbortController();
-            send_events = new AsyncSink<Event>();
+            send_events      = new AsyncSink<Event>();
 
-            recieve_events = as(client.eventStream(send_events, {
-               signal: abort_controller.signal,
-            })).pipe(share());
+            recieve_events = as (client.eventStream(send_events, {
+                                   signal: abort_controller.signal,
+                                })).pipe(share());
 
-            connected_response = await unpack_first_event<ClientConnectedResponse>(recieve_events, {
-               predicate: (event) => event.event === EventType.ClientEventStreamConnected
-            });
+            connected_response = await unpack_first_event<ClientConnectedResponse>(
+                recieve_events,
+                {predicate: (event) => event.event === EventType.ClientEventStreamConnected});
          });
 
          afterEach(async () => {
@@ -91,7 +105,6 @@ describe("Client", () => {
          });
 
          it("connect to event stream", async () => {
-
             let connections: IConnection[];
 
             // Verify the number of connections is 1
@@ -108,27 +121,30 @@ describe("Client", () => {
 
                expect(connections).toHaveLength(0);
             });
-
          });
 
          it("abort after connection", async () => {
-
-            try {
-               for await (const req of recieve_events) {
+            try
+            {
+               for await (const req of recieve_events)
+               {
                   abort_controller.abort();
 
                   send_events.end();
                }
-            } catch (error: any) {
+            } catch (error: any)
+            {
                expect(error.message).toMatch("The operation has been aborted");
             }
          });
 
          it("add one worker", async () => {
-
-            const registered_response = await unpack_unary_event<RegisterWorkersResponse>(recieve_events, send_events, packEvent(EventType.ClientUnaryRegisterWorkers, 9876, RegisterWorkersRequest.create({
-               ucxWorkerAddresses: [new TextEncoder().encode("test data")],
-            })));
+            const registered_response = await unpack_unary_event<RegisterWorkersResponse>(
+                recieve_events,
+                send_events,
+                packEvent(EventType.ClientUnaryRegisterWorkers, 9876, RegisterWorkersRequest.create({
+                   ucxWorkerAddresses: ["test data"],
+                })));
 
             expect(registered_response.machineId).toBe(connected_response.machineId);
 
@@ -136,17 +152,68 @@ describe("Client", () => {
          });
 
          it("activate stream", async () => {
+            const registered_response = await unpack_unary_event<RegisterWorkersResponse>(
+                recieve_events,
+                send_events,
+                packEvent(EventType.ClientUnaryRegisterWorkers, 9876, RegisterWorkersRequest.create({
+                   ucxWorkerAddresses: ["test data"],
+                })));
 
-            const registered_response = await unpack_unary_event<RegisterWorkersResponse>(recieve_events, send_events, packEvent(EventType.ClientUnaryRegisterWorkers, 9876, RegisterWorkersRequest.create({
-               ucxWorkerAddresses: [new TextEncoder().encode("test data")],
-            })));
-
-            const activated_response = await unpack_unary_event<Ack>(recieve_events, send_events, packEvent(EventType.ClientUnaryActivateStream, 2, registered_response));
+            const activated_response = await unpack_unary_event<Ack>(
+                recieve_events,
+                send_events,
+                packEvent(EventType.ClientUnaryActivateStream, 2, registered_response));
 
             // Check to make sure its activated
             const found_worker = workersSelectById(store.getState(), registered_response.instanceIds[0]);
 
             expect(found_worker?.activated).toBe(true);
+         });
+
+         describe("pipeline", () => {
+            it("request pipeline", async () => {
+               const registered_response = await unpack_unary_event<RegisterWorkersResponse>(
+                   recieve_events,
+                   send_events,
+                   packEvent(EventType.ClientUnaryRegisterWorkers, 9876, RegisterWorkersRequest.create({
+                      ucxWorkerAddresses: ["test data", "test data 2"],
+                   })));
+
+               const activated_response = await unpack_unary_event<Ack>(
+                   recieve_events,
+                   send_events,
+                   packEvent(EventType.ClientUnaryActivateStream, 2, registered_response));
+
+               const segmentAssignments = [
+                  [0, registered_response.instanceIds[0]],
+                  [1, registered_response.instanceIds[1]],
+               ];
+
+               // Now request to run a pipeline
+               const request_pipeline_response = await unpack_unary_event<PipelineRequestAssignmentResponse>(
+                   recieve_events,
+                   send_events,
+                   packEvent(EventType.ClientUnaryRequestPipelineAssignment,
+                             12345,
+                             PipelineRequestAssignmentRequest.create({
+                                machineId: connected_response.machineId,
+                                pipelineId: 0,
+                                segmentAssignments: Object.fromEntries(segmentAssignments),
+                             })));
+
+               const foundPipelineInstance = pipelineInstancesSelectById(store.getState(),
+                                                                         request_pipeline_response.pipelineId);
+
+               // Check pipeline properties
+               expect(foundPipelineInstance?.machineId).toBe(connected_response.machineId);
+               expect(foundPipelineInstance?.segmentIds).toEqual(request_pipeline_response.segmentIds);
+
+               // Check segments exist in state
+               const foundSegmentInstances = segmentInstancesSelectByIds(store.getState(),
+                                                                         request_pipeline_response.segmentIds);
+
+               expect(foundSegmentInstances).toHaveLength(segmentAssignments.length);
+            });
          });
       });
    });

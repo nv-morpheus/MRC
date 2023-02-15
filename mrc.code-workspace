@@ -53,11 +53,11 @@
                     // }
                 ],
                 "stopAtEntry": false,
-                "type": "cppdbg",
                 "symbolLoadInfo": {
                     "exceptionList": "libmrc*.so",
                     "loadAll": false
                 },
+                "type": "cppdbg"
             },
             {
                 "MIMode": "gdb",
@@ -205,14 +205,18 @@
             "editor.tabSize": 4
         },
         "[typescript]": {
+            "editor.defaultFormatter": "xaver.clang-format",
             "editor.formatOnSave": true,
-            "editor.wordWrapColumn": 120,
+            "editor.wordWrapColumn": 120
         },
         "cmake.configureArgs": [
             "-DCMAKE_MESSAGE_CONTEXT_SHOW:BOOL=ON", // Show message context by default
             "-DMRC_PYTHON_INPLACE_BUILD:BOOL=ON" // Allow inplace build for python. Use `pip install -e .` from the python folder to install
         ],
         "cmake.format.allowOptionalArgumentIndentation": true,
+        "eslint.workingDirectories": [
+            "./ts/control-plane"
+        ],
         "files.insertFinalNewline": true,
         "files.trimTrailingWhitespace": true,
         "files.watcherExclude": {

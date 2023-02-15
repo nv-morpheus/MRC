@@ -4,6 +4,7 @@ import type { CallContext, CallOptions } from "nice-grpc-common";
 import _m0 from "protobufjs/minimal";
 import { Any } from "../../google/protobuf/any";
 import { messageTypeRegistry } from "../../typeRegistry";
+import { EgressPolicy, IngressPolicy, SegmentDefinition } from "./architect_state";
 
 export const protobufPackage = "mrc.protos";
 
@@ -25,6 +26,8 @@ export enum EventType {
   ClientUnaryActivateSubscriptionService = 303,
   ClientUnaryDropSubscriptionService = 304,
   ClientEventUpdateSubscriptionService = 305,
+  /** ClientUnaryRequestPipelineAssignment - Pipeline Management */
+  ClientUnaryRequestPipelineAssignment = 401,
   /** ServerEvent - Server Event issues to Client(s) */
   ServerEvent = 1000,
   ServerStateUpdate = 1001,
@@ -75,6 +78,9 @@ export function eventTypeFromJSON(object: any): EventType {
     case 305:
     case "ClientEventUpdateSubscriptionService":
       return EventType.ClientEventUpdateSubscriptionService;
+    case 401:
+    case "ClientUnaryRequestPipelineAssignment":
+      return EventType.ClientUnaryRequestPipelineAssignment;
     case 1000:
     case "ServerEvent":
       return EventType.ServerEvent;
@@ -118,6 +124,8 @@ export function eventTypeToJSON(object: EventType): string {
       return "ClientUnaryDropSubscriptionService";
     case EventType.ClientEventUpdateSubscriptionService:
       return "ClientEventUpdateSubscriptionService";
+    case EventType.ClientUnaryRequestPipelineAssignment:
+      return "ClientUnaryRequestPipelineAssignment";
     case EventType.ServerEvent:
       return "ServerEvent";
     case EventType.ServerStateUpdate:
@@ -218,7 +226,7 @@ export interface ClientConnectedResponse {
 
 export interface RegisterWorkersRequest {
   $type: "mrc.protos.RegisterWorkersRequest";
-  ucxWorkerAddresses: Uint8Array[];
+  ucxWorkerAddresses: string[];
   pipeline?: Pipeline;
 }
 
@@ -298,6 +306,31 @@ export interface TaggedInstance {
   $type: "mrc.protos.TaggedInstance";
   instanceId: number;
   tag: number;
+}
+
+/** Pipeline */
+export interface PipelineRequestAssignmentRequest {
+  $type: "mrc.protos.PipelineRequestAssignmentRequest";
+  /** The requesting machine ID (May not be needed) */
+  machineId: number;
+  /** The pipeline definition this segment wants to run */
+  pipelineId: number;
+  /** The segment definitions and what partition they should be assigned to */
+  segmentAssignments: { [key: number]: number };
+}
+
+export interface PipelineRequestAssignmentRequest_SegmentAssignmentsEntry {
+  $type: "mrc.protos.PipelineRequestAssignmentRequest.SegmentAssignmentsEntry";
+  key: number;
+  value: number;
+}
+
+export interface PipelineRequestAssignmentResponse {
+  $type: "mrc.protos.PipelineRequestAssignmentResponse";
+  /** The pipeline instance that was added */
+  pipelineId: number;
+  /** The segment instance that was added */
+  segmentIds: number[];
 }
 
 /** message sent by an UpdateManager */
@@ -381,184 +414,6 @@ export interface Pipeline {
   segments: SegmentDefinition[];
 }
 
-export interface SegmentDefinition {
-  $type: "mrc.protos.SegmentDefinition";
-  name: string;
-  id: number;
-  ingressPorts: IngressPort[];
-  egressPorts: EgressPort[];
-  options?: SegmentOptions;
-}
-
-export interface SegmentOptions {
-  $type: "mrc.protos.SegmentOptions";
-  placementStrategy: SegmentOptions_PlacementStrategy;
-  scalingOptions?: ScalingOptions;
-}
-
-export enum SegmentOptions_PlacementStrategy {
-  ResourceGroup = 0,
-  PhysicalMachine = 1,
-  Global = 2,
-  UNRECOGNIZED = -1,
-}
-
-export function segmentOptions_PlacementStrategyFromJSON(object: any): SegmentOptions_PlacementStrategy {
-  switch (object) {
-    case 0:
-    case "ResourceGroup":
-      return SegmentOptions_PlacementStrategy.ResourceGroup;
-    case 1:
-    case "PhysicalMachine":
-      return SegmentOptions_PlacementStrategy.PhysicalMachine;
-    case 2:
-    case "Global":
-      return SegmentOptions_PlacementStrategy.Global;
-    case -1:
-    case "UNRECOGNIZED":
-    default:
-      return SegmentOptions_PlacementStrategy.UNRECOGNIZED;
-  }
-}
-
-export function segmentOptions_PlacementStrategyToJSON(object: SegmentOptions_PlacementStrategy): string {
-  switch (object) {
-    case SegmentOptions_PlacementStrategy.ResourceGroup:
-      return "ResourceGroup";
-    case SegmentOptions_PlacementStrategy.PhysicalMachine:
-      return "PhysicalMachine";
-    case SegmentOptions_PlacementStrategy.Global:
-      return "Global";
-    case SegmentOptions_PlacementStrategy.UNRECOGNIZED:
-    default:
-      return "UNRECOGNIZED";
-  }
-}
-
-export interface ScalingOptions {
-  $type: "mrc.protos.ScalingOptions";
-  strategy: ScalingOptions_ScalingStrategy;
-  initialCount: number;
-}
-
-export enum ScalingOptions_ScalingStrategy {
-  Static = 0,
-  UNRECOGNIZED = -1,
-}
-
-export function scalingOptions_ScalingStrategyFromJSON(object: any): ScalingOptions_ScalingStrategy {
-  switch (object) {
-    case 0:
-    case "Static":
-      return ScalingOptions_ScalingStrategy.Static;
-    case -1:
-    case "UNRECOGNIZED":
-    default:
-      return ScalingOptions_ScalingStrategy.UNRECOGNIZED;
-  }
-}
-
-export function scalingOptions_ScalingStrategyToJSON(object: ScalingOptions_ScalingStrategy): string {
-  switch (object) {
-    case ScalingOptions_ScalingStrategy.Static:
-      return "Static";
-    case ScalingOptions_ScalingStrategy.UNRECOGNIZED:
-    default:
-      return "UNRECOGNIZED";
-  }
-}
-
-export interface IngressPort {
-  $type: "mrc.protos.IngressPort";
-  name: string;
-  id: number;
-}
-
-export interface EgressPort {
-  $type: "mrc.protos.EgressPort";
-  name: string;
-  id: number;
-  policyType: EgressPort_PolicyType;
-}
-
-export enum EgressPort_PolicyType {
-  PolicyDefined = 0,
-  UserDefined = 1,
-  UNRECOGNIZED = -1,
-}
-
-export function egressPort_PolicyTypeFromJSON(object: any): EgressPort_PolicyType {
-  switch (object) {
-    case 0:
-    case "PolicyDefined":
-      return EgressPort_PolicyType.PolicyDefined;
-    case 1:
-    case "UserDefined":
-      return EgressPort_PolicyType.UserDefined;
-    case -1:
-    case "UNRECOGNIZED":
-    default:
-      return EgressPort_PolicyType.UNRECOGNIZED;
-  }
-}
-
-export function egressPort_PolicyTypeToJSON(object: EgressPort_PolicyType): string {
-  switch (object) {
-    case EgressPort_PolicyType.PolicyDefined:
-      return "PolicyDefined";
-    case EgressPort_PolicyType.UserDefined:
-      return "UserDefined";
-    case EgressPort_PolicyType.UNRECOGNIZED:
-    default:
-      return "UNRECOGNIZED";
-  }
-}
-
-export interface IngressPolicy {
-  $type: "mrc.protos.IngressPolicy";
-  networkEnabled: boolean;
-}
-
-export interface EgressPolicy {
-  $type: "mrc.protos.EgressPolicy";
-  policy: EgressPolicy_Policy;
-  /** list of allowed pol */
-  segmentAddresses: number[];
-}
-
-export enum EgressPolicy_Policy {
-  LoadBalance = 0,
-  Broadcast = 1,
-  UNRECOGNIZED = -1,
-}
-
-export function egressPolicy_PolicyFromJSON(object: any): EgressPolicy_Policy {
-  switch (object) {
-    case 0:
-    case "LoadBalance":
-      return EgressPolicy_Policy.LoadBalance;
-    case 1:
-    case "Broadcast":
-      return EgressPolicy_Policy.Broadcast;
-    case -1:
-    case "UNRECOGNIZED":
-    default:
-      return EgressPolicy_Policy.UNRECOGNIZED;
-  }
-}
-
-export function egressPolicy_PolicyToJSON(object: EgressPolicy_Policy): string {
-  switch (object) {
-    case EgressPolicy_Policy.LoadBalance:
-      return "LoadBalance";
-    case EgressPolicy_Policy.Broadcast:
-      return "Broadcast";
-    case EgressPolicy_Policy.UNRECOGNIZED:
-    default:
-      return "UNRECOGNIZED";
-  }
-}
-
 export interface PipelineConfiguration {
   $type: "mrc.protos.PipelineConfiguration";
   instanceId: number;
@@ -590,7 +445,7 @@ export interface WorkerAddress {
   $type: "mrc.protos.WorkerAddress";
   machineId: number;
   instanceId: number;
-  workerAddress: Uint8Array;
+  workerAddress: string;
 }
 
 export interface InstancesResources {
@@ -1109,7 +964,7 @@ export const RegisterWorkersRequest = {
 
   encode(message: RegisterWorkersRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     for (const v of message.ucxWorkerAddresses) {
-      writer.uint32(10).bytes(v!);
+      writer.uint32(10).string(v!);
     }
     if (message.pipeline !== undefined) {
       Pipeline.encode(message.pipeline, writer.uint32(18).fork()).ldelim();
@@ -1125,7 +980,7 @@ export const RegisterWorkersRequest = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.ucxWorkerAddresses.push(reader.bytes());
+          message.ucxWorkerAddresses.push(reader.string());
           break;
         case 2:
           message.pipeline = Pipeline.decode(reader, reader.uint32());
@@ -1142,7 +997,7 @@ export const RegisterWorkersRequest = {
     return {
       $type: RegisterWorkersRequest.$type,
       ucxWorkerAddresses: Array.isArray(object?.ucxWorkerAddresses)
-        ? object.ucxWorkerAddresses.map((e: any) => bytesFromBase64(e))
+        ? object.ucxWorkerAddresses.map((e: any) => String(e))
         : [],
       pipeline: isSet(object.pipeline) ? Pipeline.fromJSON(object.pipeline) : undefined,
     };
@@ -1151,9 +1006,7 @@ export const RegisterWorkersRequest = {
   toJSON(message: RegisterWorkersRequest): unknown {
     const obj: any = {};
     if (message.ucxWorkerAddresses) {
-      obj.ucxWorkerAddresses = message.ucxWorkerAddresses.map((e) =>
-        base64FromBytes(e !== undefined ? e : new Uint8Array())
-      );
+      obj.ucxWorkerAddresses = message.ucxWorkerAddresses.map((e) => e);
     } else {
       obj.ucxWorkerAddresses = [];
     }
@@ -2105,6 +1958,264 @@ export const TaggedInstance = {
 };
 
 messageTypeRegistry.set(TaggedInstance.$type, TaggedInstance);
+
+function createBasePipelineRequestAssignmentRequest(): PipelineRequestAssignmentRequest {
+  return { $type: "mrc.protos.PipelineRequestAssignmentRequest", machineId: 0, pipelineId: 0, segmentAssignments: {} };
+}
+
+export const PipelineRequestAssignmentRequest = {
+  $type: "mrc.protos.PipelineRequestAssignmentRequest" as const,
+
+  encode(message: PipelineRequestAssignmentRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.machineId !== 0) {
+      writer.uint32(8).uint64(message.machineId);
+    }
+    if (message.pipelineId !== 0) {
+      writer.uint32(16).uint64(message.pipelineId);
+    }
+    Object.entries(message.segmentAssignments).forEach(([key, value]) => {
+      PipelineRequestAssignmentRequest_SegmentAssignmentsEntry.encode({
+        $type: "mrc.protos.PipelineRequestAssignmentRequest.SegmentAssignmentsEntry",
+        key: key as any,
+        value,
+      }, writer.uint32(26).fork()).ldelim();
+    });
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): PipelineRequestAssignmentRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePipelineRequestAssignmentRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.machineId = longToNumber(reader.uint64() as Long);
+          break;
+        case 2:
+          message.pipelineId = longToNumber(reader.uint64() as Long);
+          break;
+        case 3:
+          const entry3 = PipelineRequestAssignmentRequest_SegmentAssignmentsEntry.decode(reader, reader.uint32());
+          if (entry3.value !== undefined) {
+            message.segmentAssignments[entry3.key] = entry3.value;
+          }
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PipelineRequestAssignmentRequest {
+    return {
+      $type: PipelineRequestAssignmentRequest.$type,
+      machineId: isSet(object.machineId) ? Number(object.machineId) : 0,
+      pipelineId: isSet(object.pipelineId) ? Number(object.pipelineId) : 0,
+      segmentAssignments: isObject(object.segmentAssignments)
+        ? Object.entries(object.segmentAssignments).reduce<{ [key: number]: number }>((acc, [key, value]) => {
+          acc[Number(key)] = Number(value);
+          return acc;
+        }, {})
+        : {},
+    };
+  },
+
+  toJSON(message: PipelineRequestAssignmentRequest): unknown {
+    const obj: any = {};
+    message.machineId !== undefined && (obj.machineId = Math.round(message.machineId));
+    message.pipelineId !== undefined && (obj.pipelineId = Math.round(message.pipelineId));
+    obj.segmentAssignments = {};
+    if (message.segmentAssignments) {
+      Object.entries(message.segmentAssignments).forEach(([k, v]) => {
+        obj.segmentAssignments[k] = Math.round(v);
+      });
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<PipelineRequestAssignmentRequest>): PipelineRequestAssignmentRequest {
+    return PipelineRequestAssignmentRequest.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<PipelineRequestAssignmentRequest>): PipelineRequestAssignmentRequest {
+    const message = createBasePipelineRequestAssignmentRequest();
+    message.machineId = object.machineId ?? 0;
+    message.pipelineId = object.pipelineId ?? 0;
+    message.segmentAssignments = Object.entries(object.segmentAssignments ?? {}).reduce<{ [key: number]: number }>(
+      (acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[Number(key)] = Number(value);
+        }
+        return acc;
+      },
+      {},
+    );
+    return message;
+  },
+};
+
+messageTypeRegistry.set(PipelineRequestAssignmentRequest.$type, PipelineRequestAssignmentRequest);
+
+function createBasePipelineRequestAssignmentRequest_SegmentAssignmentsEntry(): PipelineRequestAssignmentRequest_SegmentAssignmentsEntry {
+  return { $type: "mrc.protos.PipelineRequestAssignmentRequest.SegmentAssignmentsEntry", key: 0, value: 0 };
+}
+
+export const PipelineRequestAssignmentRequest_SegmentAssignmentsEntry = {
+  $type: "mrc.protos.PipelineRequestAssignmentRequest.SegmentAssignmentsEntry" as const,
+
+  encode(
+    message: PipelineRequestAssignmentRequest_SegmentAssignmentsEntry,
+    writer: _m0.Writer = _m0.Writer.create(),
+  ): _m0.Writer {
+    if (message.key !== 0) {
+      writer.uint32(8).uint64(message.key);
+    }
+    if (message.value !== 0) {
+      writer.uint32(16).uint64(message.value);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): PipelineRequestAssignmentRequest_SegmentAssignmentsEntry {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePipelineRequestAssignmentRequest_SegmentAssignmentsEntry();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.key = longToNumber(reader.uint64() as Long);
+          break;
+        case 2:
+          message.value = longToNumber(reader.uint64() as Long);
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PipelineRequestAssignmentRequest_SegmentAssignmentsEntry {
+    return {
+      $type: PipelineRequestAssignmentRequest_SegmentAssignmentsEntry.$type,
+      key: isSet(object.key) ? Number(object.key) : 0,
+      value: isSet(object.value) ? Number(object.value) : 0,
+    };
+  },
+
+  toJSON(message: PipelineRequestAssignmentRequest_SegmentAssignmentsEntry): unknown {
+    const obj: any = {};
+    message.key !== undefined && (obj.key = Math.round(message.key));
+    message.value !== undefined && (obj.value = Math.round(message.value));
+    return obj;
+  },
+
+  create(
+    base?: DeepPartial<PipelineRequestAssignmentRequest_SegmentAssignmentsEntry>,
+  ): PipelineRequestAssignmentRequest_SegmentAssignmentsEntry {
+    return PipelineRequestAssignmentRequest_SegmentAssignmentsEntry.fromPartial(base ?? {});
+  },
+
+  fromPartial(
+    object: DeepPartial<PipelineRequestAssignmentRequest_SegmentAssignmentsEntry>,
+  ): PipelineRequestAssignmentRequest_SegmentAssignmentsEntry {
+    const message = createBasePipelineRequestAssignmentRequest_SegmentAssignmentsEntry();
+    message.key = object.key ?? 0;
+    message.value = object.value ?? 0;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(
+  PipelineRequestAssignmentRequest_SegmentAssignmentsEntry.$type,
+  PipelineRequestAssignmentRequest_SegmentAssignmentsEntry,
+);
+
+function createBasePipelineRequestAssignmentResponse(): PipelineRequestAssignmentResponse {
+  return { $type: "mrc.protos.PipelineRequestAssignmentResponse", pipelineId: 0, segmentIds: [] };
+}
+
+export const PipelineRequestAssignmentResponse = {
+  $type: "mrc.protos.PipelineRequestAssignmentResponse" as const,
+
+  encode(message: PipelineRequestAssignmentResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.pipelineId !== 0) {
+      writer.uint32(8).uint64(message.pipelineId);
+    }
+    writer.uint32(18).fork();
+    for (const v of message.segmentIds) {
+      writer.uint64(v);
+    }
+    writer.ldelim();
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): PipelineRequestAssignmentResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePipelineRequestAssignmentResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.pipelineId = longToNumber(reader.uint64() as Long);
+          break;
+        case 2:
+          if ((tag & 7) === 2) {
+            const end2 = reader.uint32() + reader.pos;
+            while (reader.pos < end2) {
+              message.segmentIds.push(longToNumber(reader.uint64() as Long));
+            }
+          } else {
+            message.segmentIds.push(longToNumber(reader.uint64() as Long));
+          }
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PipelineRequestAssignmentResponse {
+    return {
+      $type: PipelineRequestAssignmentResponse.$type,
+      pipelineId: isSet(object.pipelineId) ? Number(object.pipelineId) : 0,
+      segmentIds: Array.isArray(object?.segmentIds) ? object.segmentIds.map((e: any) => Number(e)) : [],
+    };
+  },
+
+  toJSON(message: PipelineRequestAssignmentResponse): unknown {
+    const obj: any = {};
+    message.pipelineId !== undefined && (obj.pipelineId = Math.round(message.pipelineId));
+    if (message.segmentIds) {
+      obj.segmentIds = message.segmentIds.map((e) => Math.round(e));
+    } else {
+      obj.segmentIds = [];
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<PipelineRequestAssignmentResponse>): PipelineRequestAssignmentResponse {
+    return PipelineRequestAssignmentResponse.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<PipelineRequestAssignmentResponse>): PipelineRequestAssignmentResponse {
+    const message = createBasePipelineRequestAssignmentResponse();
+    message.pipelineId = object.pipelineId ?? 0;
+    message.segmentIds = object.segmentIds?.map((e) => e) || [];
+    return message;
+  },
+};
+
+messageTypeRegistry.set(PipelineRequestAssignmentResponse.$type, PipelineRequestAssignmentResponse);
 
 function createBaseStateUpdate(): StateUpdate {
   return {
@@ -3105,543 +3216,6 @@ export const Pipeline = {
 
 messageTypeRegistry.set(Pipeline.$type, Pipeline);
 
-function createBaseSegmentDefinition(): SegmentDefinition {
-  return {
-    $type: "mrc.protos.SegmentDefinition",
-    name: "",
-    id: 0,
-    ingressPorts: [],
-    egressPorts: [],
-    options: undefined,
-  };
-}
-
-export const SegmentDefinition = {
-  $type: "mrc.protos.SegmentDefinition" as const,
-
-  encode(message: SegmentDefinition, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.name !== "") {
-      writer.uint32(10).string(message.name);
-    }
-    if (message.id !== 0) {
-      writer.uint32(16).uint32(message.id);
-    }
-    for (const v of message.ingressPorts) {
-      IngressPort.encode(v!, writer.uint32(26).fork()).ldelim();
-    }
-    for (const v of message.egressPorts) {
-      EgressPort.encode(v!, writer.uint32(34).fork()).ldelim();
-    }
-    if (message.options !== undefined) {
-      SegmentOptions.encode(message.options, writer.uint32(42).fork()).ldelim();
-    }
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): SegmentDefinition {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseSegmentDefinition();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          message.name = reader.string();
-          break;
-        case 2:
-          message.id = reader.uint32();
-          break;
-        case 3:
-          message.ingressPorts.push(IngressPort.decode(reader, reader.uint32()));
-          break;
-        case 4:
-          message.egressPorts.push(EgressPort.decode(reader, reader.uint32()));
-          break;
-        case 5:
-          message.options = SegmentOptions.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-    return message;
-  },
-
-  fromJSON(object: any): SegmentDefinition {
-    return {
-      $type: SegmentDefinition.$type,
-      name: isSet(object.name) ? String(object.name) : "",
-      id: isSet(object.id) ? Number(object.id) : 0,
-      ingressPorts: Array.isArray(object?.ingressPorts)
-        ? object.ingressPorts.map((e: any) => IngressPort.fromJSON(e))
-        : [],
-      egressPorts: Array.isArray(object?.egressPorts) ? object.egressPorts.map((e: any) => EgressPort.fromJSON(e)) : [],
-      options: isSet(object.options) ? SegmentOptions.fromJSON(object.options) : undefined,
-    };
-  },
-
-  toJSON(message: SegmentDefinition): unknown {
-    const obj: any = {};
-    message.name !== undefined && (obj.name = message.name);
-    message.id !== undefined && (obj.id = Math.round(message.id));
-    if (message.ingressPorts) {
-      obj.ingressPorts = message.ingressPorts.map((e) => e ? IngressPort.toJSON(e) : undefined);
-    } else {
-      obj.ingressPorts = [];
-    }
-    if (message.egressPorts) {
-      obj.egressPorts = message.egressPorts.map((e) => e ? EgressPort.toJSON(e) : undefined);
-    } else {
-      obj.egressPorts = [];
-    }
-    message.options !== undefined &&
-      (obj.options = message.options ? SegmentOptions.toJSON(message.options) : undefined);
-    return obj;
-  },
-
-  create(base?: DeepPartial<SegmentDefinition>): SegmentDefinition {
-    return SegmentDefinition.fromPartial(base ?? {});
-  },
-
-  fromPartial(object: DeepPartial<SegmentDefinition>): SegmentDefinition {
-    const message = createBaseSegmentDefinition();
-    message.name = object.name ?? "";
-    message.id = object.id ?? 0;
-    message.ingressPorts = object.ingressPorts?.map((e) => IngressPort.fromPartial(e)) || [];
-    message.egressPorts = object.egressPorts?.map((e) => EgressPort.fromPartial(e)) || [];
-    message.options = (object.options !== undefined && object.options !== null)
-      ? SegmentOptions.fromPartial(object.options)
-      : undefined;
-    return message;
-  },
-};
-
-messageTypeRegistry.set(SegmentDefinition.$type, SegmentDefinition);
-
-function createBaseSegmentOptions(): SegmentOptions {
-  return { $type: "mrc.protos.SegmentOptions", placementStrategy: 0, scalingOptions: undefined };
-}
-
-export const SegmentOptions = {
-  $type: "mrc.protos.SegmentOptions" as const,
-
-  encode(message: SegmentOptions, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.placementStrategy !== 0) {
-      writer.uint32(8).int32(message.placementStrategy);
-    }
-    if (message.scalingOptions !== undefined) {
-      ScalingOptions.encode(message.scalingOptions, writer.uint32(18).fork()).ldelim();
-    }
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): SegmentOptions {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseSegmentOptions();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          message.placementStrategy = reader.int32() as any;
-          break;
-        case 2:
-          message.scalingOptions = ScalingOptions.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-    return message;
-  },
-
-  fromJSON(object: any): SegmentOptions {
-    return {
-      $type: SegmentOptions.$type,
-      placementStrategy: isSet(object.placementStrategy)
-        ? segmentOptions_PlacementStrategyFromJSON(object.placementStrategy)
-        : 0,
-      scalingOptions: isSet(object.scalingOptions) ? ScalingOptions.fromJSON(object.scalingOptions) : undefined,
-    };
-  },
-
-  toJSON(message: SegmentOptions): unknown {
-    const obj: any = {};
-    message.placementStrategy !== undefined &&
-      (obj.placementStrategy = segmentOptions_PlacementStrategyToJSON(message.placementStrategy));
-    message.scalingOptions !== undefined &&
-      (obj.scalingOptions = message.scalingOptions ? ScalingOptions.toJSON(message.scalingOptions) : undefined);
-    return obj;
-  },
-
-  create(base?: DeepPartial<SegmentOptions>): SegmentOptions {
-    return SegmentOptions.fromPartial(base ?? {});
-  },
-
-  fromPartial(object: DeepPartial<SegmentOptions>): SegmentOptions {
-    const message = createBaseSegmentOptions();
-    message.placementStrategy = object.placementStrategy ?? 0;
-    message.scalingOptions = (object.scalingOptions !== undefined && object.scalingOptions !== null)
-      ? ScalingOptions.fromPartial(object.scalingOptions)
-      : undefined;
-    return message;
-  },
-};
-
-messageTypeRegistry.set(SegmentOptions.$type, SegmentOptions);
-
-function createBaseScalingOptions(): ScalingOptions {
-  return { $type: "mrc.protos.ScalingOptions", strategy: 0, initialCount: 0 };
-}
-
-export const ScalingOptions = {
-  $type: "mrc.protos.ScalingOptions" as const,
-
-  encode(message: ScalingOptions, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.strategy !== 0) {
-      writer.uint32(8).int32(message.strategy);
-    }
-    if (message.initialCount !== 0) {
-      writer.uint32(16).uint32(message.initialCount);
-    }
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): ScalingOptions {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseScalingOptions();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          message.strategy = reader.int32() as any;
-          break;
-        case 2:
-          message.initialCount = reader.uint32();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-    return message;
-  },
-
-  fromJSON(object: any): ScalingOptions {
-    return {
-      $type: ScalingOptions.$type,
-      strategy: isSet(object.strategy) ? scalingOptions_ScalingStrategyFromJSON(object.strategy) : 0,
-      initialCount: isSet(object.initialCount) ? Number(object.initialCount) : 0,
-    };
-  },
-
-  toJSON(message: ScalingOptions): unknown {
-    const obj: any = {};
-    message.strategy !== undefined && (obj.strategy = scalingOptions_ScalingStrategyToJSON(message.strategy));
-    message.initialCount !== undefined && (obj.initialCount = Math.round(message.initialCount));
-    return obj;
-  },
-
-  create(base?: DeepPartial<ScalingOptions>): ScalingOptions {
-    return ScalingOptions.fromPartial(base ?? {});
-  },
-
-  fromPartial(object: DeepPartial<ScalingOptions>): ScalingOptions {
-    const message = createBaseScalingOptions();
-    message.strategy = object.strategy ?? 0;
-    message.initialCount = object.initialCount ?? 0;
-    return message;
-  },
-};
-
-messageTypeRegistry.set(ScalingOptions.$type, ScalingOptions);
-
-function createBaseIngressPort(): IngressPort {
-  return { $type: "mrc.protos.IngressPort", name: "", id: 0 };
-}
-
-export const IngressPort = {
-  $type: "mrc.protos.IngressPort" as const,
-
-  encode(message: IngressPort, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.name !== "") {
-      writer.uint32(10).string(message.name);
-    }
-    if (message.id !== 0) {
-      writer.uint32(16).uint32(message.id);
-    }
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): IngressPort {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseIngressPort();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          message.name = reader.string();
-          break;
-        case 2:
-          message.id = reader.uint32();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-    return message;
-  },
-
-  fromJSON(object: any): IngressPort {
-    return {
-      $type: IngressPort.$type,
-      name: isSet(object.name) ? String(object.name) : "",
-      id: isSet(object.id) ? Number(object.id) : 0,
-    };
-  },
-
-  toJSON(message: IngressPort): unknown {
-    const obj: any = {};
-    message.name !== undefined && (obj.name = message.name);
-    message.id !== undefined && (obj.id = Math.round(message.id));
-    return obj;
-  },
-
-  create(base?: DeepPartial<IngressPort>): IngressPort {
-    return IngressPort.fromPartial(base ?? {});
-  },
-
-  fromPartial(object: DeepPartial<IngressPort>): IngressPort {
-    const message = createBaseIngressPort();
-    message.name = object.name ?? "";
-    message.id = object.id ?? 0;
-    return message;
-  },
-};
-
-messageTypeRegistry.set(IngressPort.$type, IngressPort);
-
-function createBaseEgressPort(): EgressPort {
-  return { $type: "mrc.protos.EgressPort", name: "", id: 0, policyType: 0 };
-}
-
-export const EgressPort = {
-  $type: "mrc.protos.EgressPort" as const,
-
-  encode(message: EgressPort, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.name !== "") {
-      writer.uint32(10).string(message.name);
-    }
-    if (message.id !== 0) {
-      writer.uint32(16).uint32(message.id);
-    }
-    if (message.policyType !== 0) {
-      writer.uint32(24).int32(message.policyType);
-    }
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): EgressPort {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseEgressPort();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          message.name = reader.string();
-          break;
-        case 2:
-          message.id = reader.uint32();
-          break;
-        case 3:
-          message.policyType = reader.int32() as any;
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-    return message;
-  },
-
-  fromJSON(object: any): EgressPort {
-    return {
-      $type: EgressPort.$type,
-      name: isSet(object.name) ? String(object.name) : "",
-      id: isSet(object.id) ? Number(object.id) : 0,
-      policyType: isSet(object.policyType) ? egressPort_PolicyTypeFromJSON(object.policyType) : 0,
-    };
-  },
-
-  toJSON(message: EgressPort): unknown {
-    const obj: any = {};
-    message.name !== undefined && (obj.name = message.name);
-    message.id !== undefined && (obj.id = Math.round(message.id));
-    message.policyType !== undefined && (obj.policyType = egressPort_PolicyTypeToJSON(message.policyType));
-    return obj;
-  },
-
-  create(base?: DeepPartial<EgressPort>): EgressPort {
-    return EgressPort.fromPartial(base ?? {});
-  },
-
-  fromPartial(object: DeepPartial<EgressPort>): EgressPort {
-    const message = createBaseEgressPort();
-    message.name = object.name ?? "";
-    message.id = object.id ?? 0;
-    message.policyType = object.policyType ?? 0;
-    return message;
-  },
-};
-
-messageTypeRegistry.set(EgressPort.$type, EgressPort);
-
-function createBaseIngressPolicy(): IngressPolicy {
-  return { $type: "mrc.protos.IngressPolicy", networkEnabled: false };
-}
-
-export const IngressPolicy = {
-  $type: "mrc.protos.IngressPolicy" as const,
-
-  encode(message: IngressPolicy, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.networkEnabled === true) {
-      writer.uint32(8).bool(message.networkEnabled);
-    }
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): IngressPolicy {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseIngressPolicy();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          message.networkEnabled = reader.bool();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-    return message;
-  },
-
-  fromJSON(object: any): IngressPolicy {
-    return {
-      $type: IngressPolicy.$type,
-      networkEnabled: isSet(object.networkEnabled) ? Boolean(object.networkEnabled) : false,
-    };
-  },
-
-  toJSON(message: IngressPolicy): unknown {
-    const obj: any = {};
-    message.networkEnabled !== undefined && (obj.networkEnabled = message.networkEnabled);
-    return obj;
-  },
-
-  create(base?: DeepPartial<IngressPolicy>): IngressPolicy {
-    return IngressPolicy.fromPartial(base ?? {});
-  },
-
-  fromPartial(object: DeepPartial<IngressPolicy>): IngressPolicy {
-    const message = createBaseIngressPolicy();
-    message.networkEnabled = object.networkEnabled ?? false;
-    return message;
-  },
-};
-
-messageTypeRegistry.set(IngressPolicy.$type, IngressPolicy);
-
-function createBaseEgressPolicy(): EgressPolicy {
-  return { $type: "mrc.protos.EgressPolicy", policy: 0, segmentAddresses: [] };
-}
-
-export const EgressPolicy = {
-  $type: "mrc.protos.EgressPolicy" as const,
-
-  encode(message: EgressPolicy, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.policy !== 0) {
-      writer.uint32(24).int32(message.policy);
-    }
-    writer.uint32(34).fork();
-    for (const v of message.segmentAddresses) {
-      writer.uint32(v);
-    }
-    writer.ldelim();
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): EgressPolicy {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseEgressPolicy();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 3:
-          message.policy = reader.int32() as any;
-          break;
-        case 4:
-          if ((tag & 7) === 2) {
-            const end2 = reader.uint32() + reader.pos;
-            while (reader.pos < end2) {
-              message.segmentAddresses.push(reader.uint32());
-            }
-          } else {
-            message.segmentAddresses.push(reader.uint32());
-          }
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-    return message;
-  },
-
-  fromJSON(object: any): EgressPolicy {
-    return {
-      $type: EgressPolicy.$type,
-      policy: isSet(object.policy) ? egressPolicy_PolicyFromJSON(object.policy) : 0,
-      segmentAddresses: Array.isArray(object?.segmentAddresses)
-        ? object.segmentAddresses.map((e: any) => Number(e))
-        : [],
-    };
-  },
-
-  toJSON(message: EgressPolicy): unknown {
-    const obj: any = {};
-    message.policy !== undefined && (obj.policy = egressPolicy_PolicyToJSON(message.policy));
-    if (message.segmentAddresses) {
-      obj.segmentAddresses = message.segmentAddresses.map((e) => Math.round(e));
-    } else {
-      obj.segmentAddresses = [];
-    }
-    return obj;
-  },
-
-  create(base?: DeepPartial<EgressPolicy>): EgressPolicy {
-    return EgressPolicy.fromPartial(base ?? {});
-  },
-
-  fromPartial(object: DeepPartial<EgressPolicy>): EgressPolicy {
-    const message = createBaseEgressPolicy();
-    message.policy = object.policy ?? 0;
-    message.segmentAddresses = object.segmentAddresses?.map((e) => e) || [];
-    return message;
-  },
-};
-
-messageTypeRegistry.set(EgressPolicy.$type, EgressPolicy);
-
 function createBasePipelineConfiguration(): PipelineConfiguration {
   return { $type: "mrc.protos.PipelineConfiguration", instanceId: 0, segments: [] };
 }
@@ -4007,7 +3581,7 @@ export const SegmentConfiguration_IngressPoliciesEntry = {
 messageTypeRegistry.set(SegmentConfiguration_IngressPoliciesEntry.$type, SegmentConfiguration_IngressPoliciesEntry);
 
 function createBaseWorkerAddress(): WorkerAddress {
-  return { $type: "mrc.protos.WorkerAddress", machineId: 0, instanceId: 0, workerAddress: new Uint8Array() };
+  return { $type: "mrc.protos.WorkerAddress", machineId: 0, instanceId: 0, workerAddress: "" };
 }
 
 export const WorkerAddress = {
@@ -4020,8 +3594,8 @@ export const WorkerAddress = {
     if (message.instanceId !== 0) {
       writer.uint32(16).uint64(message.instanceId);
     }
-    if (message.workerAddress.length !== 0) {
-      writer.uint32(26).bytes(message.workerAddress);
+    if (message.workerAddress !== "") {
+      writer.uint32(26).string(message.workerAddress);
     }
     return writer;
   },
@@ -4040,7 +3614,7 @@ export const WorkerAddress = {
           message.instanceId = longToNumber(reader.uint64() as Long);
           break;
         case 3:
-          message.workerAddress = reader.bytes();
+          message.workerAddress = reader.string();
           break;
         default:
           reader.skipType(tag & 7);
@@ -4055,7 +3629,7 @@ export const WorkerAddress = {
       $type: WorkerAddress.$type,
       machineId: isSet(object.machineId) ? Number(object.machineId) : 0,
       instanceId: isSet(object.instanceId) ? Number(object.instanceId) : 0,
-      workerAddress: isSet(object.workerAddress) ? bytesFromBase64(object.workerAddress) : new Uint8Array(),
+      workerAddress: isSet(object.workerAddress) ? String(object.workerAddress) : "",
     };
   },
 
@@ -4063,10 +3637,7 @@ export const WorkerAddress = {
     const obj: any = {};
     message.machineId !== undefined && (obj.machineId = Math.round(message.machineId));
     message.instanceId !== undefined && (obj.instanceId = Math.round(message.instanceId));
-    message.workerAddress !== undefined &&
-      (obj.workerAddress = base64FromBytes(
-        message.workerAddress !== undefined ? message.workerAddress : new Uint8Array(),
-      ));
+    message.workerAddress !== undefined && (obj.workerAddress = message.workerAddress);
     return obj;
   },
 
@@ -4078,7 +3649,7 @@ export const WorkerAddress = {
     const message = createBaseWorkerAddress();
     message.machineId = object.machineId ?? 0;
     message.instanceId = object.instanceId ?? 0;
-    message.workerAddress = object.workerAddress ?? new Uint8Array();
+    message.workerAddress = object.workerAddress ?? "";
     return message;
   },
 };
@@ -4446,31 +4017,6 @@ var tsProtoGlobalThis: any = (() => {
   }
   throw "Unable to locate global object";
 })();
-
-function bytesFromBase64(b64: string): Uint8Array {
-  if (tsProtoGlobalThis.Buffer) {
-    return Uint8Array.from(tsProtoGlobalThis.Buffer.from(b64, "base64"));
-  } else {
-    const bin = tsProtoGlobalThis.atob(b64);
-    const arr = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; ++i) {
-      arr[i] = bin.charCodeAt(i);
-    }
-    return arr;
-  }
-}
-
-function base64FromBytes(arr: Uint8Array): string {
-  if (tsProtoGlobalThis.Buffer) {
-    return tsProtoGlobalThis.Buffer.from(arr).toString("base64");
-  } else {
-    const bin: string[] = [];
-    arr.forEach((byte) => {
-      bin.push(String.fromCharCode(byte));
-    });
-    return tsProtoGlobalThis.btoa(bin.join(""));
-  }
-}
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
