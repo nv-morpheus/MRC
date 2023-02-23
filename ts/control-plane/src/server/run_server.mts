@@ -18,7 +18,7 @@ if (process.env.NODE_ENV !== "production")
     // Wait for it to be ready
     await devToolsServer.ready;
 
-    console.log(`Started Redux DevTools server at https://${hostname}:${port}. Open the URL in a browser to view the Redux state`);
+    console.log(`Started Redux DevTools server at http://${hostname}:${port}. Open the URL in a browser to view the Redux state`);
 }
 
 const server = new ArchitectServer();
@@ -32,4 +32,3 @@ await server.start();
 await server.join();
 
 console.log("Exiting script");
-

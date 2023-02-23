@@ -10,7 +10,7 @@ import {
 } from "@reduxjs/toolkit";
 
 import connectionsReducer from "./slices/connectionsSlice";
-import devToolsReducer from "./slices/devToolsSlice";
+// import devToolsReducer from "./slices/devToolsSlice";
 import pipelineInstancesReducer from "./slices/pipelineInstancesSlice";
 import segmentInstancesReducer from "./slices/segmentInstancesSlice";
 import workersReducer from "./slices/workersSlice";
@@ -47,7 +47,15 @@ const rootReducer = createReducer({} as RootState, (builder) => {
    })
 });
 
-export const setupStore = (preloadedState?: PreloadedState<RootState>) => {
+export const setupStore = (preloadedState?: PreloadedState<RootState>, addDevTools: boolean = false) => {
+   let enhancers = undefined;
+
+   if (addDevTools)
+   {
+      enhancers = [devToolsEnhancer(
+          {realtime: true, sendOnError: 1, suppressConnectErrors: false, stopOn: stopAction.type})]
+   }
+
    return configureStore({
       reducer: rootReducer,
       preloadedState,
@@ -59,9 +67,8 @@ export const setupStore = (preloadedState?: PreloadedState<RootState>) => {
          },
       }),
       // Disable devtools and add it in manually
-      devTools: false,
-      enhancers:
-          [devToolsEnhancer({realtime: true, sendOnError: 1, suppressConnectErrors: false, stopOn: stopAction.type})],
+      devTools: !addDevTools,
+      enhancers,
    });
 };
 

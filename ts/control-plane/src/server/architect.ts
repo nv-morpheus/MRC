@@ -235,7 +235,7 @@ class Architect implements ArchitectServiceImplementation
             console.log(`Error occurred in stream. Error: ${error}`);
          } finally
          {
-            console.log(`Event stream closed for ${connection.peerInfo}. Deleting connection.`);
+            console.log(`Event stream closed for ${connection.peerInfo}.`);
 
             // Input stream has completed so stop pushing events
             store_unsub();
@@ -255,7 +255,7 @@ class Architect implements ArchitectServiceImplementation
          console.log(`Error occurred in stream. Error: ${error}`);
       } finally
       {
-         console.log(`Event stream closed for ${connection.peerInfo}. Deleting connection.`);
+         console.log(`All streams closed for ${connection.peerInfo}. Deleting connection.`);
 
          // Ensure the other streams are cleaned up
          store_unsub();

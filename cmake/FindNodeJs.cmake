@@ -1,6 +1,31 @@
 
 
-set(CMAKE_FIND_DEBUG_MODE ON)
+# set(CMAKE_FIND_DEBUG_MODE ON)
+
+# First find the executable
+find_program(NodeJs_EXECUTABLE
+  NAMES node nodejs
+  HINTS $ENV{NODE_DIR}
+  PATH_SUFFIXES bin
+  DOC "Node.js interpreter"
+)
+
+# Find `npm`
+find_program(NodeJs_NPM_EXECUTABLE
+  NAMES npm
+  HINTS $ENV{NODE_DIR}
+  PATH_SUFFIXES bin
+  DOC "Node Package Manager (NPM) executable"
+)
+
+# Find `npx`
+find_program(NodeJs_NPX_EXECUTABLE
+  NAMES npx
+  HINTS $ENV{NODE_DIR}
+  PATH_SUFFIXES bin
+  DOC "NPM executable runner"
+)
+
 find_path(NodeJs_INCLUDE_DIR
   NAMES node.h
   PATH_SUFFIXES node
@@ -9,7 +34,6 @@ find_path(NodeJs_INCLUDE_DIR
 macro(parse_define_number define_name file_string output_variable)
   string(REGEX MATCH "#define ${define_name} ([0-9]+)" _ "${file_string}")
   set(${output_variable} "${CMAKE_MATCH_1}")
-  message(STATUS "${output_variable}: ${${output_variable}}")
 endmacro()
 
 if (DEFINED NodeJs_INCLUDE_DIR)
@@ -35,6 +59,8 @@ if (DEFINED NodeJs_INCLUDE_DIR)
     # Set the version variable
     set(NodeJs_VERSION "${NodeJs_NODE_MAJOR_VERSION}.${NodeJs_NODE_MINOR_VERSION}.${NodeJs_NODE_PATCH_VERSION}")
 
+    message(VERBOSE "Detected Node Version ${NodeJs_VERSION}, Module Version: ${NodeJs_NODE_MODULE_VERSION}")
+
     # With the module version, append this suffix to the search
     list(APPEND CMAKE_FIND_LIBRARY_SUFFIXES ".so.${NodeJs_NODE_MODULE_VERSION}")
     find_library(NodeJs_LIBRARY
@@ -43,18 +69,21 @@ if (DEFINED NodeJs_INCLUDE_DIR)
     list(POP_BACK CMAKE_FIND_LIBRARY_SUFFIXES)
   endif()
 
-  set(CMAKE_FIND_DEBUG_MODE OFF)
 endif()
+
+# set(CMAKE_FIND_DEBUG_MODE OFF)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(NodeJs
   FOUND_VAR NodeJs_FOUND
   REQUIRED_VARS
-    NodeJs_LIBRARY
+    NodeJs_EXECUTABLE
     NodeJs_INCLUDE_DIR
+    NodeJs_LIBRARY
+    NodeJs_NPM_EXECUTABLE
+    NodeJs_NPX_EXECUTABLE
   VERSION_VAR NodeJs_VERSION
 )
-
 
 if(NodeJs_FOUND)
   set(NodeJs_LIBRARIES ${NodeJs_LIBRARY})
@@ -72,7 +101,10 @@ if(NodeJs_FOUND AND NOT TARGET NodeJs::Node)
 endif()
 
 mark_as_advanced(
+  NodeJs_EXECUTABLE
   NodeJs_INCLUDE_DIR
   NodeJs_LIBRARY
+  NodeJs_NPM_EXECUTABLE
+  NodeJs_NPX_EXECUTABLE
   NodeJs_VERSION_FILE
 )

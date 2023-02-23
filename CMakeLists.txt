@@ -159,6 +159,8 @@ include(environment/init_iwyu)
 
 add_subdirectory(cpp)
 
+add_subdirectory(ts)
+
 if(MRC_BUILD_PYTHON)
   add_subdirectory(python)
 endif()

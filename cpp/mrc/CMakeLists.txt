@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+list(APPEND CMAKE_MESSAGE_CONTEXT "mrc")
+
 # ##################################################################################################
 # - libmrc -----------------------------------------------------------------------------------------
 
@@ -29,6 +31,7 @@ add_library(libmrc
   src/internal/control_plane/resources.cpp
   src/internal/control_plane/server.cpp
   src/internal/control_plane/server/connection_manager.cpp
+  src/internal/control_plane/server/node_service.cpp
   src/internal/control_plane/server/subscription_manager.cpp
   src/internal/control_plane/server/tagged_issuer.cpp
   src/internal/data_plane/callbacks.cpp
@@ -155,6 +158,7 @@ add_library(libmrc
   src/public/segment/builder.cpp
   src/public/segment/definition.cpp
   src/public/utils/bytes_to_string.cpp
+  src/public/utils/library_utils.cpp
   src/public/utils/thread_utils.cpp
   src/public/utils/type_utils.cpp
 )
@@ -279,3 +283,5 @@ rapids_export(BUILD ${PROJECT_NAME}
   DOCUMENTATION doc_string
   FINAL_CODE_BLOCK code_string
 )
+
+list(POP_BACK CMAKE_MESSAGE_CONTEXT)

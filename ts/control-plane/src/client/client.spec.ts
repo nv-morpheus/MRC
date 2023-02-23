@@ -222,3 +222,42 @@ describe("Client", () => {
       });
    });
 });
+
+describe("ClientWithDevTools", () => {
+   let store: RootStore;
+   let server: ArchitectServer;
+   let client_channel: Channel;
+   let client: ArchitectClient;
+
+   beforeEach(async () => {
+      store = setupStore(undefined, true);
+
+      server = new ArchitectServer(store);
+
+      const port = await server.start();
+
+      client_channel = createChannel(`localhost:${port}`, credentials.createInsecure());
+
+      // Now make the client
+      client = createClient(ArchitectDefinition, client_channel);
+
+      // Important to ensure the channel is ready before continuing
+      await waitForChannelReady(client_channel, new Date(Date.now() + 1000));
+   });
+
+   it("ping", async () => {
+      const req = PingRequest.create({
+         tag: 1234,
+      });
+
+      const resp = await client.ping(req);
+
+      expect(resp.tag).toBe(req.tag);
+   });
+
+   afterEach(async () => {
+      client_channel.close();
+      await server.stop();
+      await server.join();
+   });
+});
