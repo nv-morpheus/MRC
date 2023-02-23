@@ -85,7 +85,9 @@ class TestControlPlane : public ::testing::Test
 
 TEST_F(TestControlPlane, LifeCycle)
 {
-    auto sr     = make_runtime();
+    auto sr     = make_runtime([](Options& options) {
+        options.enable_server(false);
+    });
     auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).resources().runnable());
 
     server->service_start();
@@ -99,7 +101,10 @@ TEST_F(TestControlPlane, LifeCycle)
 
 TEST_F(TestControlPlane, SingleClientConnectDisconnect)
 {
-    auto sr     = make_runtime();
+    auto sr     = make_runtime([](Options& options) {
+        // Diable the server because we will set it manually
+        options.enable_server(false);
+    });
     auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).resources().runnable());
 
     server->service_start();

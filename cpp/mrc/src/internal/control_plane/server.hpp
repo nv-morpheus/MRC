@@ -147,6 +147,7 @@ class NodeService : public Service
 
     mutable boost::fibers::mutex m_mutex;
 
+    std::thread m_node_thread;
     Promise<void> m_started_promise{};
     Future<void> m_started_future;
     Future<void> m_completed_future;

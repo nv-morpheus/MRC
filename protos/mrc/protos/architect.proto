@@ -112,7 +112,7 @@ message ClientConnectedResponse
 
 message RegisterWorkersRequest
 {
-    repeated string ucx_worker_addresses = 1;
+    repeated bytes ucx_worker_addresses = 1;
     Pipeline pipeline = 2;
 }
 

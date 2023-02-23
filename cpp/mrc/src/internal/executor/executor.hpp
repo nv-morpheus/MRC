@@ -23,6 +23,7 @@
 
 #include "mrc/node/generic_sink.hpp"
 #include "mrc/protos/architect_state.pb.h"
+#include "mrc/types.hpp"
 
 #include <memory>
 
@@ -31,7 +32,7 @@ class Options;
 }  // namespace mrc
 namespace mrc::internal::pipeline {
 class IPipeline;
-class Manager;
+class PipelineManager;
 }  // namespace mrc::internal::pipeline
 namespace mrc::internal::resources {
 class Manager;
@@ -64,11 +65,14 @@ class Executor : public Service, public system::SystemProvider
     void do_service_await_join() final;
 
     std::unique_ptr<resources::Manager> m_resources_manager;
-    std::unique_ptr<pipeline::Manager> m_pipeline_manager;
+    std::vector<std::shared_ptr<pipeline::PipelineManager>> m_pipeline_managers;
 
     std::map<int, std::shared_ptr<pipeline::Pipeline>> m_registered_pipeline_defs;
 
     std::unique_ptr<node::LambdaSinkComponent<const protos::ControlPlaneState>> m_update_sink;
+
+    Mutex m_pipelines_mutex;
+    CondV m_pipelines_cv;
 };
 
 std::unique_ptr<Executor> make_executor(std::shared_ptr<Options> options);

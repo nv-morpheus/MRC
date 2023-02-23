@@ -28,6 +28,7 @@
 #include "internal/resources/manager.hpp"
 #include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
+#include "internal/utils/contains.hpp"
 
 #include "mrc/channel/status.hpp"
 #include "mrc/core/addresses.hpp"
@@ -69,7 +70,7 @@ Executor::~Executor()
 void Executor::register_pipeline(std::unique_ptr<pipeline::IPipeline> ipipeline)
 {
     CHECK(ipipeline);
-    CHECK(m_pipeline_manager == nullptr);
+    // CHECK(m_pipeline_manager == nullptr);
 
     auto pipeline = pipeline::Pipeline::unwrap(*ipipeline);
 
@@ -78,33 +79,74 @@ void Executor::register_pipeline(std::unique_ptr<pipeline::IPipeline> ipipeline)
         throw exceptions::MrcRuntimeError("pipeline validation failed");
     }
 
+    // Check to make sure this pipeline ID isnt already used
+    CHECK(!contains(m_registered_pipeline_defs, pipeline->get_id()))
+        << "Pipeline with ID: " << pipeline->get_id() << " already exists";
+
     // m_pipeline_manager = std::make_unique<pipeline::Manager>(pipeline, *m_resources_manager);
 
-    m_registered_pipeline_defs[0] = pipeline;
+    m_registered_pipeline_defs[pipeline->get_id()] = pipeline;
 }
 
 void Executor::do_service_start()
 {
+    // Get a lock on the pipelines
+    std::unique_lock<typeof(m_pipelines_mutex)> lock(m_pipelines_mutex);
+
     auto state_update_subscription = m_resources_manager->control_plane().client().state_update_obs().subscribe(
         [this](protos::ControlPlaneState state) {
             LOG(INFO) << "Got state update";
+
+            // Lock for updates
         });
 
     // Now make the request for which segments to run
     for (const auto& [pipeline_id, pipeline] : m_registered_pipeline_defs)
     {
         auto request = protos::PipelineRequestAssignmentRequest();
+        request.set_machine_id(0);
         request.set_pipeline_id(0);
 
         for (const auto& [segment_id, segment] : pipeline->segments())
         {
             auto address = segment_address_encode(segment_id, 0);  // rank 0
-            request.add_segment_ids(address);
+
+            (*request.mutable_segment_assignments())[segment_id] = 0;
         }
 
-        m_resources_manager->control_plane().client().issue_event(
-            protos::EventType::ClientUnaryRequestPipelineAssignment,
-            request);
+        auto response =
+            m_resources_manager->control_plane().client().await_unary<protos::PipelineRequestAssignmentResponse>(
+                protos::EventType::ClientUnaryRequestPipelineAssignment,
+                request);
+
+        // Create a manager for the pipeline in the response
+        auto pipeline_manager = std::make_shared<pipeline::PipelineManager>(pipeline,
+                                                                            *m_resources_manager,
+                                                                            response->pipeline_id());
+
+        // Save to the managers before starting
+        m_pipeline_managers.push_back(pipeline_manager);
+
+        // Create a fiber to join on the pipeline manager
+        m_resources_manager->partition(0).runnable().main().enqueue([this, pipeline_manager]() {
+            // Start the manager
+            pipeline_manager->service_start();
+
+            // Await on joining
+            pipeline_manager->service_await_join();
+
+            // Get a lock on the pipelines
+            std::unique_lock<typeof(m_pipelines_mutex)> lock(m_pipelines_mutex);
+
+            // Remove this from the list of pipelines
+            m_pipeline_managers.erase(
+                std::find(m_pipeline_managers.begin(), m_pipeline_managers.end(), pipeline_manager));
+
+            // Signal the CV to check if we are done
+            m_pipelines_cv.notify_all();
+        });
+
+        LOG(INFO) << "Registered pipeline";
     }
 
     // // Start by making an edge to the control plane udpates
@@ -144,25 +186,46 @@ void Executor::do_service_start()
     // m_pipeline_manager->push_updates(std::move(initial_segments));
 }
 
-void Executor::do_service_stop()
-{
-    CHECK(m_pipeline_manager);
-    m_pipeline_manager->service_stop();
-}
-void Executor::do_service_kill()
-{
-    CHECK(m_pipeline_manager);
-    return m_pipeline_manager->service_kill();
-}
 void Executor::do_service_await_live()
 {
-    CHECK(m_pipeline_manager);
-    m_pipeline_manager->service_await_live();
+    // CHECK(m_pipeline_manager);
+    // m_pipeline_manager->service_await_live();
 }
+
+void Executor::do_service_stop()
+{
+    // Get a lock on the pipelines
+    std::unique_lock<typeof(m_pipelines_mutex)> lock(m_pipelines_mutex);
+
+    for (const auto& pipeline : m_pipeline_managers)
+    {
+        pipeline->service_stop();
+    }
+}
+
+void Executor::do_service_kill()
+{
+    // Get a lock on the pipelines
+    std::unique_lock<typeof(m_pipelines_mutex)> lock(m_pipelines_mutex);
+
+    for (const auto& pipeline : m_pipeline_managers)
+    {
+        pipeline->service_kill();
+    }
+}
+
 void Executor::do_service_await_join()
 {
-    CHECK(m_pipeline_manager);
-    m_pipeline_manager->service_await_join();
+    // CHECK(m_pipeline_manager);
+
+    // Get a lock on the pipelines
+    std::unique_lock<typeof(m_pipelines_mutex)> lock(m_pipelines_mutex);
+
+    m_pipelines_cv.wait(lock, [this]() {
+        return m_pipeline_managers.empty();
+    });
+
+    DVLOG(10) << "Exiting Executor::do_service_await_join()";
 }
 
 // convert to std::expect

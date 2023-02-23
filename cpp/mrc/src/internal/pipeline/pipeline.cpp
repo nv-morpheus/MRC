@@ -32,6 +32,12 @@
 
 namespace mrc::internal::pipeline {
 
+uint32_t Pipeline::get_id() const
+{
+    // TODO(MDD): Need to come up with a way to generate IDs for pipelines
+    return 0;
+}
+
 void Pipeline::add_segment(std::shared_ptr<const segment::Definition> segment)
 {
     auto id = m_segment_hasher.register_name(segment->name());

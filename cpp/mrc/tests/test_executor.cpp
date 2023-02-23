@@ -409,10 +409,8 @@ TEST_F(TestExecutor, LifeCycle)
 
 TEST_F(TestExecutor, LifeCycleArchitect)
 {
-    GTEST_SKIP();
-
     auto options = make_options();
-    options->architect_url("127.0.0.1:13337");
+    // options->architect_url("127.0.0.1:13337");
     options->enable_server(true);
 
     Executor executor(std::move(options));

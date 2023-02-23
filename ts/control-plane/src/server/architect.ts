@@ -1,12 +1,12 @@
 
 
-import {ServerDuplexStream, ServerUnaryCall} from '@grpc/grpc-js';
-import {as, AsyncSink, concat, from, merge, zip} from 'ix/asynciterable';
-import {debounce, throttle} from 'ix/asynciterable/operators';
+import {ServerDuplexStream} from "@grpc/grpc-js";
+import {as, AsyncSink, merge} from "ix/asynciterable";
+import {debounce} from "ix/asynciterable/operators";
 import {CallContext} from "nice-grpc";
-import {firstValueFrom, Observable, Subject} from "rxjs";
+import {firstValueFrom, Subject} from "rxjs";
 
-import {pack, packEvent, unpack, unpackEvent} from "../common/utils";
+import {pack, packEvent, unpackEvent} from "../common/utils";
 import {Any} from "../proto/google/protobuf/any";
 import {
    Ack,
@@ -28,7 +28,7 @@ import {
    TaggedInstance,
 } from "../proto/mrc/protos/architect";
 import {ControlPlaneState} from "../proto/mrc/protos/architect_state";
-import {DeepPartial, MessageType, messageTypeRegistry, UnknownMessage} from "../proto/typeRegistry";
+import {DeepPartial, messageTypeRegistry} from "../proto/typeRegistry";
 
 import {addConnection, IConnection, removeConnection} from "./store/slices/connectionsSlice";
 import {assignPipelineInstance} from "./store/slices/pipelineInstancesSlice";
@@ -39,9 +39,8 @@ import {
    removeWorker,
    workersSelectById,
    workersSelectByMachineId,
-   workersSelectIds,
 } from "./store/slices/workersSlice";
-import {getRootStore, RootState, RootStore} from "./store/store";
+import {getRootStore, RootStore, startAction, stopAction} from "./store/store";
 import {generateId} from "./utils";
 
 interface IncomingData
@@ -49,13 +48,6 @@ interface IncomingData
    msg: Event, stream?: ServerDuplexStream<Event, Event>, machineId: number,
 }
 
-function unaryResponse2<MessageDataT extends UnknownMessage, MessageClass extends MessageType<MessageDataT>>(
-    event: IncomingData,
-    message_class: MessageClass,
-    data: MessageDataT): void
-{
-   const registered_type = messageTypeRegistry.get(message_class.$type);
-}
 function unaryResponse<MessageDataT>(event: IncomingData|undefined, message_class: any, data: MessageDataT): Event
 {
    // Lookup message type
@@ -157,7 +149,13 @@ class Architect implements ArchitectServiceImplementation
          },
       };
    }
-   eventStream(request: AsyncIterable<Event>, context: CallContext): ServerStreamingMethodResult<{
+
+   public stop()
+   {
+      this._store.dispatch(stopAction());
+   }
+
+   public eventStream(request: AsyncIterable<Event>, context: CallContext): ServerStreamingMethodResult<{
       error?: {message?: string | undefined; code?: ErrorCode | undefined;} | undefined;
       event?: EventType | undefined;
       tag?: number | undefined;
@@ -166,11 +164,11 @@ class Architect implements ArchitectServiceImplementation
    {
       return this.do_eventStream(request, context);
    }
-   ping(request: PingRequest, context: CallContext): Promise<{tag?: number | undefined;}>
+   public ping(request: PingRequest, context: CallContext): Promise<{tag?: number | undefined;}>
    {
       return this.do_ping(request, context);
    }
-   shutdown(request: ShutdownRequest, context: CallContext): Promise<{tag?: number | undefined;}>
+   public shutdown(request: ShutdownRequest, context: CallContext): Promise<{tag?: number | undefined;}>
    {
       return this.do_shutdown(request, context);
    }
@@ -211,24 +209,6 @@ class Architect implements ArchitectServiceImplementation
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this;
 
-      const event_stream = async function*() {
-         for await (const req of stream)
-         {
-            console.log(`Event stream data for ${connection.peerInfo} with message: ${req.event.toString()}`);
-
-            yield* self.do_handle_event({
-               msg: req,
-               machineId: connection.id,
-            },
-                                        context);
-         }
-
-         // Input stream has completed so stop pushing events
-         store_unsub();
-
-         store_update_sink.end();
-      };
-
       // Yield a connected even
       yield Event.create({
          event: EventType.ClientEventStreamConnected,
@@ -237,35 +217,54 @@ class Architect implements ArchitectServiceImplementation
          })),
       });
 
-      for await (const out_event of merge(as (event_stream()), as<Event>(store_update_sink).pipe(debounce(100))))
+      const event_stream = async function*() {
+         try
+         {
+            for await (const req of stream)
+            {
+               console.log(`Event stream data for ${connection.peerInfo} with message: ${req.event.toString()}`);
+
+               yield* self.do_handle_event({
+                  msg: req,
+                  machineId: connection.id,
+               },
+                                           context);
+            }
+         } catch (error)
+         {
+            console.log(`Error occurred in stream. Error: ${error}`);
+         } finally
+         {
+            console.log(`Event stream closed for ${connection.peerInfo}. Deleting connection.`);
+
+            // Input stream has completed so stop pushing events
+            store_unsub();
+
+            store_update_sink.end();
+         }
+      };
+
+      try
       {
-         yield out_event;
+         for await (const out_event of merge(as (event_stream()), as<Event>(store_update_sink)))
+         {
+            yield out_event;
+         }
+      } catch (error)
+      {
+         console.log(`Error occurred in stream. Error: ${error}`);
+      } finally
+      {
+         console.log(`Event stream closed for ${connection.peerInfo}. Deleting connection.`);
+
+         // Ensure the other streams are cleaned up
+         store_unsub();
+
+         store_update_sink.end();
+
+         // Create a new connection
+         this._store.dispatch(removeConnection(connection));
       }
-
-      console.log(`Event stream closed for ${connection.peerInfo}. Deleting connection.`);
-
-      // Create a new connection
-      this._store.dispatch(removeConnection(connection));
-
-      // call.on("data", (req: Event) => {
-      //    console.log(`Event stream data for ${connection.peerInfo} with message: ${req.getEvent().toString()}`);
-
-      //    this.do_handle_event({
-      //       msg: req,
-      //       stream: call
-      //    });
-      // });
-
-      // call.on("error", (err: Error) => {
-      //    console.log(`Event stream errored for ${connection.peerInfo} with message: ${err.message}`);
-      // });
-
-      // call.on("end", () => {
-      //    console.log(`Event stream closed for ${connection.peerInfo}. Deleting connection.`);
-
-      //    // Create a new connection
-      //    store.dispatch(removeConnection(connection));
-      // });
    }
 
    private async * do_handle_event(event: IncomingData, context: CallContext)

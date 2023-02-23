@@ -1,15 +1,13 @@
 import "ix/add/asynciterable-operators/first";
 import "ix/add/asynciterable-operators/finalize";
 
-import {Channel, credentials, ServerCredentials} from "@grpc/grpc-js";
+import {Channel, credentials} from "@grpc/grpc-js";
 import {ConnectivityState} from "@grpc/grpc-js/build/src/connectivity-state";
-import assert from "assert";
-import {as, AsyncIterableX, AsyncSink, from, zip} from "ix/asynciterable";
-import {pluck, share} from "ix/asynciterable/operators";
-import {createChannel, createClient, createServer, Server, waitForChannelReady} from "nice-grpc";
-import {Observable, Subject} from "rxjs";
+import {as, AsyncIterableX, AsyncSink} from "ix/asynciterable";
+import {share} from "ix/asynciterable/operators";
+import {createChannel, createClient, waitForChannelReady} from "nice-grpc";
 
-import {pack, packEvent, unpackEvent} from "../common/utils";
+import {packEvent, stringToBytes} from "../common/utils";
 import {
    Ack,
    ArchitectClient,
@@ -23,15 +21,14 @@ import {
    RegisterWorkersRequest,
    RegisterWorkersResponse,
 } from "../proto/mrc/protos/architect";
-import {Architect} from "../server/architect";
 import {ArchitectServer} from "../server/server";
 import {connectionsSelectAll, connectionsSelectById, IConnection} from "../server/store/slices/connectionsSlice";
 import {pipelineInstancesSelectById} from "../server/store/slices/pipelineInstancesSlice";
 import {segmentInstancesSelectByIds} from "../server/store/slices/segmentInstancesSlice";
 import {workersSelectById} from "../server/store/slices/workersSlice";
-import {RootState, RootStore, setupStore} from "../server/store/store";
+import {RootStore, setupStore} from "../server/store/store";
 
-import {unary_event, unpack_first_event, unpack_unary_event} from "./utils";
+import {unpack_first_event, unpack_unary_event} from "./utils";
 
 describe("Client", () => {
    let store: RootStore;
@@ -143,7 +140,7 @@ describe("Client", () => {
                 recieve_events,
                 send_events,
                 packEvent(EventType.ClientUnaryRegisterWorkers, 9876, RegisterWorkersRequest.create({
-                   ucxWorkerAddresses: ["test data"],
+                   ucxWorkerAddresses: stringToBytes(["test data"]),
                 })));
 
             expect(registered_response.machineId).toBe(connected_response.machineId);
@@ -156,7 +153,7 @@ describe("Client", () => {
                 recieve_events,
                 send_events,
                 packEvent(EventType.ClientUnaryRegisterWorkers, 9876, RegisterWorkersRequest.create({
-                   ucxWorkerAddresses: ["test data"],
+                   ucxWorkerAddresses: stringToBytes(["test data"]),
                 })));
 
             const activated_response = await unpack_unary_event<Ack>(
@@ -172,17 +169,21 @@ describe("Client", () => {
 
          describe("pipeline", () => {
             it("request pipeline", async () => {
+               await new Promise(r => setTimeout(r, 2000));
+
                const registered_response = await unpack_unary_event<RegisterWorkersResponse>(
                    recieve_events,
                    send_events,
                    packEvent(EventType.ClientUnaryRegisterWorkers, 9876, RegisterWorkersRequest.create({
-                      ucxWorkerAddresses: ["test data", "test data 2"],
+                      ucxWorkerAddresses: stringToBytes(["test data", "test data 2"]),
                    })));
 
                const activated_response = await unpack_unary_event<Ack>(
                    recieve_events,
                    send_events,
                    packEvent(EventType.ClientUnaryActivateStream, 2, registered_response));
+
+               await new Promise(r => setTimeout(r, 2000));
 
                const segmentAssignments = [
                   [0, registered_response.instanceIds[0]],
@@ -212,7 +213,10 @@ describe("Client", () => {
                const foundSegmentInstances = segmentInstancesSelectByIds(store.getState(),
                                                                          request_pipeline_response.segmentIds);
 
-               expect(foundSegmentInstances).toHaveLength(segmentAssignments.length);
+               expect(foundSegmentInstances)
+                   .toHaveLength(segmentAssignments.length * registered_response.instanceIds.length);
+
+               // await new Promise(r => setTimeout(r, 10000));
             });
          });
       });

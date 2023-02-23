@@ -22,6 +22,9 @@
 
 #include "mrc/node/writable_entrypoint.hpp"
 
+#include <rxcpp/rx.hpp>
+
+#include <cstdint>
 #include <memory>
 
 // IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
@@ -43,11 +46,11 @@ class Pipeline;
  * options, the Manager object is responsible for constructing PartitionControllers for each partition in the set of
  * resources and optionally wiring up the control plane and data plane for multi-machine pipelines.
  */
-class Manager : public Service
+class PipelineManager : public Service
 {
   public:
-    Manager(std::shared_ptr<Pipeline> pipeline, resources::Manager& resources);
-    ~Manager() override;
+    PipelineManager(std::shared_ptr<Pipeline> pipeline, resources::Manager& resources, uint64_t instance_id);
+    ~PipelineManager() override;
 
     const Pipeline& pipeline() const;
 
@@ -65,8 +68,10 @@ class Manager : public Service
 
     resources::Manager& m_resources;
     std::shared_ptr<Pipeline> m_pipeline;
+    uint64_t m_instance_id;
     std::unique_ptr<node::WritableEntrypoint<ControlMessage>> m_update_channel;
     std::unique_ptr<mrc::runnable::Runner> m_controller;
+    rxcpp::composite_subscription m_state_subscription;
 };
 
 }  // namespace mrc::internal::pipeline

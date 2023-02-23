@@ -51,6 +51,7 @@
 #include <mutex>
 #include <set>
 #include <sstream>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -417,8 +418,10 @@ Server::Server(runnable::RunnableResources& runnable) :
     std::vector<std::string> args;
 
     args.emplace_back("/work/build/cpp/mrc/src/tests/test_mrc_private.x");
+    // args.emplace_back("--loader");
+    // args.emplace_back("ts-node/esm");
     args.emplace_back("--inspect");
-    args.emplace_back("/work/ts/control-plane/dist/server/run_server.js");
+    args.emplace_back("/work/ts/control-plane/dist/server/run_server.mjs");
 
     m_node_service.set_args(args);
     // // Parse Node.js CLI options, and print any errors that have occurred while
@@ -1115,7 +1118,7 @@ void NodeService::set_args(std::vector<std::string> args)
 
 void NodeService::do_service_start()
 {
-    m_completed_future = m_runnable.main().enqueue([this]() {
+    boost::fibers::packaged_task<void()> pkg_task(std::move([this]() {
         if (m_launch_node)
         {
             this->launch_node(m_args);
@@ -1124,7 +1127,10 @@ void NodeService::do_service_start()
         {
             this->m_started_promise.set_value();
         }
-    });
+    }));
+    m_completed_future = pkg_task.get_future();
+
+    m_node_thread = std::thread(std::move(pkg_task));
 }
 
 void NodeService::do_service_stop()
@@ -1134,7 +1140,7 @@ void NodeService::do_service_stop()
     if (m_launch_node)
     {
         // Send a gRPC message to shutdown the server
-        auto channel = grpc::CreateChannel("localhost:4000", grpc::InsecureChannelCredentials());
+        auto channel = grpc::CreateChannel("localhost:13337", grpc::InsecureChannelCredentials());
         auto stub    = mrc::protos::Architect::NewStub(channel);
 
         auto context = grpc::ClientContext();

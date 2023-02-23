@@ -17,9 +17,6 @@
 
 #pragma once
 
-#include "rxcpp/rx-observable.hpp"
-#include "rxcpp/subjects/rx-behavior.hpp"
-
 #include "internal/control_plane/client/instance.hpp"  // IWYU pragma: keep
 #include "internal/grpc/client_streaming.hpp"
 #include "internal/grpc/stream_writer.hpp"
@@ -39,6 +36,7 @@
 
 #include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
+#include <rxcpp/rx.hpp>
 
 #include <cstdint>
 #include <map>

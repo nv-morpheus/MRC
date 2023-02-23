@@ -226,7 +226,7 @@ export interface ClientConnectedResponse {
 
 export interface RegisterWorkersRequest {
   $type: "mrc.protos.RegisterWorkersRequest";
-  ucxWorkerAddresses: string[];
+  ucxWorkerAddresses: Uint8Array[];
   pipeline?: Pipeline;
 }
 
@@ -964,7 +964,7 @@ export const RegisterWorkersRequest = {
 
   encode(message: RegisterWorkersRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     for (const v of message.ucxWorkerAddresses) {
-      writer.uint32(10).string(v!);
+      writer.uint32(10).bytes(v!);
     }
     if (message.pipeline !== undefined) {
       Pipeline.encode(message.pipeline, writer.uint32(18).fork()).ldelim();
@@ -980,7 +980,7 @@ export const RegisterWorkersRequest = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.ucxWorkerAddresses.push(reader.string());
+          message.ucxWorkerAddresses.push(reader.bytes());
           break;
         case 2:
           message.pipeline = Pipeline.decode(reader, reader.uint32());
@@ -997,7 +997,7 @@ export const RegisterWorkersRequest = {
     return {
       $type: RegisterWorkersRequest.$type,
       ucxWorkerAddresses: Array.isArray(object?.ucxWorkerAddresses)
-        ? object.ucxWorkerAddresses.map((e: any) => String(e))
+        ? object.ucxWorkerAddresses.map((e: any) => bytesFromBase64(e))
         : [],
       pipeline: isSet(object.pipeline) ? Pipeline.fromJSON(object.pipeline) : undefined,
     };
@@ -1006,7 +1006,9 @@ export const RegisterWorkersRequest = {
   toJSON(message: RegisterWorkersRequest): unknown {
     const obj: any = {};
     if (message.ucxWorkerAddresses) {
-      obj.ucxWorkerAddresses = message.ucxWorkerAddresses.map((e) => e);
+      obj.ucxWorkerAddresses = message.ucxWorkerAddresses.map((e) =>
+        base64FromBytes(e !== undefined ? e : new Uint8Array())
+      );
     } else {
       obj.ucxWorkerAddresses = [];
     }
@@ -4017,6 +4019,31 @@ var tsProtoGlobalThis: any = (() => {
   }
   throw "Unable to locate global object";
 })();
+
+function bytesFromBase64(b64: string): Uint8Array {
+  if (tsProtoGlobalThis.Buffer) {
+    return Uint8Array.from(tsProtoGlobalThis.Buffer.from(b64, "base64"));
+  } else {
+    const bin = tsProtoGlobalThis.atob(b64);
+    const arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; ++i) {
+      arr[i] = bin.charCodeAt(i);
+    }
+    return arr;
+  }
+}
+
+function base64FromBytes(arr: Uint8Array): string {
+  if (tsProtoGlobalThis.Buffer) {
+    return tsProtoGlobalThis.Buffer.from(arr).toString("base64");
+  } else {
+    const bin: string[] = [];
+    arr.forEach((byte) => {
+      bin.push(String.fromCharCode(byte));
+    });
+    return tsProtoGlobalThis.btoa(bin.join(""));
+  }
+}
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 

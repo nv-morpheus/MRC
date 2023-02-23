@@ -70,7 +70,6 @@ void Client::do_service_start()
     m_launch_options.engines_per_pe      = 1;
 
     auto url = runnable().system().options().architect_url();
-    CHECK(!url.empty());
 
     // If no URL is supplied, we are creating a local server
     if (url.empty())

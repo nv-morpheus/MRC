@@ -18,10 +18,12 @@
 #include "nodes/common_nodes.hpp"
 #include "pipelines/common_pipelines.hpp"
 
+#include "internal/control_plane/server.hpp"
 #include "internal/pipeline/manager.hpp"
 #include "internal/pipeline/pipeline.hpp"
 #include "internal/pipeline/types.hpp"
 #include "internal/resources/manager.hpp"
+#include "internal/runtime/runtime.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 #include "internal/system/topology.hpp"
@@ -91,6 +93,20 @@ static std::shared_ptr<internal::system::System> make_system(std::function<void(
     return internal::system::make_system(std::move(options));
 }
 
+static auto make_runtime(std::function<void(Options& options)> options_lambda = [](Options& options) {})
+{
+    auto resources = std::make_unique<internal::resources::Manager>(
+        internal::system::SystemProvider(make_system([&](Options& options) {
+            options.topology().user_cpuset("0-3");
+            options.topology().restrict_gpus(true);
+            options.placement().resources_strategy(PlacementResources::Dedicated);
+            options.placement().cpu_strategy(PlacementStrategy::PerMachine);
+            options_lambda(options);
+        })));
+
+    return std::make_unique<internal::runtime::Runtime>(std::move(resources));
+}
+
 static std::shared_ptr<internal::pipeline::Pipeline> unwrap(internal::pipeline::IPipeline& pipeline)
 {
     return internal::pipeline::Pipeline::unwrap(pipeline);
@@ -105,7 +121,7 @@ static void run_custom_manager(std::unique_ptr<internal::pipeline::IPipeline> pi
         options.topology().restrict_gpus(true);
     })));
 
-    auto manager = std::make_unique<internal::pipeline::Manager>(unwrap(*pipeline), resources);
+    auto manager = std::make_unique<internal::pipeline::PipelineManager>(unwrap(*pipeline), resources, 0);
 
     auto f = std::async([&] {
         if (delayed_stop)
@@ -130,7 +146,7 @@ static void run_manager(std::unique_ptr<internal::pipeline::IPipeline> pipeline,
         mrc::channel::set_default_channel_size(64);
     })));
 
-    auto manager = std::make_unique<internal::pipeline::Manager>(unwrap(*pipeline), resources);
+    auto manager = std::make_unique<internal::pipeline::PipelineManager>(unwrap(*pipeline), resources, 0);
 
     internal::pipeline::SegmentAddresses update;
     update[segment_address_encode(segment_name_hash("seg_1"), 0)] = 0;
@@ -204,7 +220,7 @@ TEST_F(TestPipeline, Queue)
 
     auto segment = pipeline->make_segment("seg_1", [](segment::Builder& s) {
         auto source = s.make_object("source", test::nodes::infinite_int_rx_source());
-        auto queue  = s.make_object("queue", std::make_unique<node::Queue<int>>());
+        auto queue  = s.make_object("queue", std::make_unique<mrc::node::Queue<int>>());
         auto sink   = s.make_object("sink", test::nodes::int_sink());
         s.make_edge(source, queue);
         s.make_edge(queue, sink);
@@ -238,9 +254,21 @@ TEST_F(TestPipeline, DuplicateNameInSegment)
 
 TEST_F(TestPipeline, ExecutorLifeCycle)
 {
+    // auto sr     = make_runtime([](Options& options) {
+    //     // Diable the server because we will set it manually
+    //     options.enable_server(false);
+    // });
+    // auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).resources().runnable());
+
+    // server->service_start();
+    // server->service_await_live();
+
     auto options = std::make_shared<Options>();
-    options->topology().user_cpuset("0-1");
+    // options->architect_url("localhost:13337");
+    options->topology().user_cpuset("0-3");
     options->topology().restrict_gpus(true);
+    options->placement().resources_strategy(PlacementResources::Dedicated);
+    options->placement().cpu_strategy(PlacementStrategy::PerMachine);
 
     Executor executor(options);
     executor.register_pipeline(test::pipelines::finite_single_segment());
@@ -478,7 +506,7 @@ TEST_F(TestPipeline, Nodes1k)
             }
             s.on_completed();
         });
-        auto queue     = s.make_object("queue", std::make_unique<node::Queue<int>>());
+        auto queue     = s.make_object("queue", std::make_unique<mrc::node::Queue<int>>());
         s.make_edge(rx_source, queue);
         auto node = s.make_node<int>("node_0", rxcpp::operators::map([](int data) {
                                          return (data + 1);

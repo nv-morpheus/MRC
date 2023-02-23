@@ -36,6 +36,8 @@ class Pipeline
   public:
     static std::shared_ptr<Pipeline> unwrap(IPipeline& pipeline);
 
+    uint32_t get_id() const;
+
     void add_segment(std::shared_ptr<const segment::Definition> segment);
 
     const std::map<SegmentID, std::shared_ptr<const segment::Definition>>& segments() const;

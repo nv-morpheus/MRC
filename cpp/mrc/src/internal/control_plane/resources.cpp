@@ -33,11 +33,19 @@ ControlPlaneResources::ControlPlaneResources(resources::PartitionResourceBase& b
   resources::PartitionResourceBase(base),
   m_client(std::make_unique<internal::control_plane::Client>(base))
 {
-    if (system().options().enable_server())
+    if (system().options().architect_url().empty())
     {
-        m_server = std::make_unique<Server>(runnable());
-        m_server->service_start();
-        m_server->service_await_live();
+        if (system().options().enable_server())
+        {
+            m_server = std::make_unique<Server>(runnable());
+            m_server->service_start();
+            m_server->service_await_live();
+        }
+        else
+        {
+            LOG(WARNING) << "No Architect URL has been specified but enable_server = false. Ensure you know what you "
+                            "are doing";
+        }
     }
 
     CHECK(m_client);

@@ -1,8 +1,11 @@
+import {expect} from "@jest/globals";
 import assert from "assert";
-import { RootStore, setupStore } from "../store";
-import { activateWorkers, addWorker, IWorker, removeWorker, workersSelectAll, workersSelectById } from "./workersSlice";
-import { addConnection, IConnection } from "./connectionsSlice";
-import { expect, jest, test } from '@jest/globals';
+
+import {stringToBytes} from "../../../common/utils";
+import {RootStore, setupStore} from "../store";
+
+import {addConnection, IConnection} from "./connectionsSlice";
+import {activateWorkers, addWorker, IWorker, removeWorker, workersSelectAll, workersSelectById} from "./workersSlice";
 
 describe("Workers", () => {
    let store: RootStore;
@@ -18,7 +21,7 @@ describe("Workers", () => {
       id: 1234,
       activated: false,
       machineId: 1111,
-      workerAddress: "-----",
+      workerAddress: stringToBytes("-----"),
       assignedSegmentIds: [],
    };
 
@@ -53,7 +56,6 @@ describe("Workers", () => {
    });
 
    describe("remove", () => {
-
       it("worker before connection", () => {
          assert.throws(() => store.dispatch(removeWorker(worker)));
       });

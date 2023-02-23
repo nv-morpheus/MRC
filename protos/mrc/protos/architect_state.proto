@@ -37,7 +37,7 @@ message Worker {
    uint64 id = 1;
 
    // Serialized worker address
-   string worker_address = 2;
+   bytes worker_address = 2;
 
    // Parent machine this worker belongs to
    uint64 machine_id = 3;

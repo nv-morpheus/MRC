@@ -1,13 +1,38 @@
-import { Any } from "../proto/google/protobuf/any";
-import { Event, EventType } from "../proto/mrc/protos/architect";
-import { messageTypeRegistry, UnknownMessage } from "../proto/typeRegistry";
+import {Any} from "../proto/google/protobuf/any";
+import {Event, EventType} from "../proto/mrc/protos/architect";
+import {messageTypeRegistry, UnknownMessage} from "../proto/typeRegistry";
 
-export function pack<MessageDataT extends UnknownMessage>(data: MessageDataT): Any {
+export function stringToBytes(value: string[]): Uint8Array[];
+export function stringToBytes(value: string): Uint8Array;
+export function stringToBytes(value: string|string[])
+{
+   if (value instanceof Array<string>)
+   {
+      return value.map((s) => new TextEncoder().encode(s));
+   }
 
+   return new TextEncoder().encode(value);
+}
+
+export function bytesToString(value: Uint8Array[]): string[];
+export function bytesToString(value: Uint8Array): string;
+export function bytesToString(value: Uint8Array|Uint8Array[])
+{
+   if (value instanceof Array<Uint8Array>)
+   {
+      return value.map((s) => new TextDecoder().decode(s));
+   }
+
+   return new TextDecoder().decode(value);
+}
+
+export function pack<MessageDataT extends UnknownMessage>(data: MessageDataT): Any
+{
    // Load the type from the registry
    const message_type = messageTypeRegistry.get(data.$type);
 
-   if (!message_type) {
+   if (!message_type)
+   {
       throw new Error("Unknown type in type registry");
    }
 
@@ -19,13 +44,15 @@ export function pack<MessageDataT extends UnknownMessage>(data: MessageDataT): A
    return any_msg;
 }
 
-export function unpack<MessageT extends UnknownMessage>(message: Any) {
-   const message_type_str = message.typeUrl.split('/').pop();
+export function unpack<MessageT extends UnknownMessage>(message: Any)
+{
+   const message_type_str = message.typeUrl.split("/").pop();
 
    // Load the type from the registry
    const message_type = messageTypeRegistry.get(message_type_str ?? "");
 
-   if (!message_type) {
+   if (!message_type)
+   {
       throw new Error(`Could not unpack message with type: ${message.typeUrl}`);
    }
 
@@ -34,8 +61,10 @@ export function unpack<MessageT extends UnknownMessage>(message: Any) {
    return decoded;
 }
 
-export function packEvent<MessageDataT extends UnknownMessage>(event_type: EventType, event_tag: number, data: MessageDataT): Event {
-
+export function packEvent<MessageDataT extends UnknownMessage>(event_type: EventType,
+                                                               event_tag: number,
+                                                               data: MessageDataT): Event
+{
    const any_msg = pack<MessageDataT>(data);
 
    return Event.create({
@@ -45,17 +74,18 @@ export function packEvent<MessageDataT extends UnknownMessage>(event_type: Event
    });
 }
 
-export function unpackEvent<MessageT extends UnknownMessage>(message: Event): MessageT {
-
-   if (!message.message) {
+export function unpackEvent<MessageT extends UnknownMessage>(message: Event): MessageT
+{
+   if (!message.message)
+   {
       throw new Error("Message body for event was undefined. Cannot unpack");
    }
 
    return unpack<MessageT>(message.message);
 }
 
-export function packEventResponse<MessageDataT extends UnknownMessage>(incoming_event: Event, data: MessageDataT): Event {
-
+export function packEventResponse<MessageDataT extends UnknownMessage>(incoming_event: Event, data: MessageDataT): Event
+{
    const any_msg = pack<MessageDataT>(data);
 
    return Event.create({

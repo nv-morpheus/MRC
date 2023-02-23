@@ -17,13 +17,17 @@
 
 #include "internal/pipeline/manager.hpp"
 
+#include "internal/control_plane/client.hpp"
+#include "internal/control_plane/resources.hpp"
 #include "internal/pipeline/controller.hpp"
 #include "internal/pipeline/instance.hpp"
 #include "internal/pipeline/types.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
+#include "internal/utils/contains.hpp"
 
+#include "mrc/core/addresses.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/runnable/launch_control.hpp"
@@ -43,28 +47,31 @@
 
 namespace mrc::internal::pipeline {
 
-Manager::Manager(std::shared_ptr<Pipeline> pipeline, resources::Manager& resources) :
+PipelineManager::PipelineManager(std::shared_ptr<Pipeline> pipeline,
+                                 resources::Manager& resources,
+                                 uint64_t instance_id) :
   m_pipeline(std::move(pipeline)),
-  m_resources(resources)
+  m_resources(resources),
+  m_instance_id(instance_id)
 {
     CHECK(m_pipeline);
     CHECK_GE(m_resources.partition_count(), 1);
-    service_start();
+    // service_start();
 }
 
-Manager::~Manager()
+PipelineManager::~PipelineManager()
 {
     Service::call_in_destructor();
 }
 
-void Manager::push_updates(SegmentAddresses&& segment_addresses)
+void PipelineManager::push_updates(SegmentAddresses&& segment_addresses)
 {
     CHECK(m_update_channel);
 
     m_update_channel->await_write({ControlMessageType::Update, std::move(segment_addresses)});
 }
 
-void Manager::do_service_start()
+void PipelineManager::do_service_start()
 {
     mrc::runnable::LaunchOptions main;
     main.engine_factory_name = "main";
@@ -91,26 +98,56 @@ void Manager::do_service_start()
         });
     });
     m_controller = launcher->ignition();
+
+    // Now subscribe to the state updates
+    m_state_subscription =
+        m_resources.control_plane()
+            .client()
+            .state_update_obs()
+            .filter([this](const protos::ControlPlaneState& state) {
+                return std::find(state.pipeline_instances().ids().begin(),
+                                 state.pipeline_instances().ids().end(),
+                                 m_instance_id) != state.pipeline_instances().ids().end();
+            })
+            //    .map([this](const protos::ControlPlaneState& state) {
+            //        return state.pipeline_instances().entities().at(m_instance_id);
+            //    })
+            .subscribe([this](const protos::ControlPlaneState& state) {
+                auto pipeline_instance = state.pipeline_instances().entities().at(m_instance_id);
+
+                pipeline::SegmentAddresses segment_addresses;
+
+                for (const auto& seg_instance_id : pipeline_instance.segment_ids())
+                {
+                    // Get the segment instance object
+                    auto segment_instance = state.segment_instances().entities().at(seg_instance_id);
+
+                    auto address               = segment_address_encode(segment_instance.definition_id(), 0);  // rank 0
+                    segment_addresses[address] = 0;  // partition 0;
+                }
+
+                m_update_channel->await_write({ControlMessageType::Update, std::move(segment_addresses)});
+            });
 }
 
-void Manager::do_service_await_live()
+void PipelineManager::do_service_await_live()
 {
     m_controller->await_live();
 }
 
-void Manager::do_service_stop()
+void PipelineManager::do_service_stop()
 {
     VLOG(10) << "stop: closing update channels";
     m_update_channel->await_write({ControlMessageType::Stop});
 }
 
-void Manager::do_service_kill()
+void PipelineManager::do_service_kill()
 {
     VLOG(10) << "kill: closing update channels; issuing kill to controllers";
     m_update_channel->await_write({ControlMessageType::Kill});
 }
 
-void Manager::do_service_await_join()
+void PipelineManager::do_service_await_join()
 {
     std::exception_ptr ptr;
     try
@@ -120,6 +157,7 @@ void Manager::do_service_await_join()
     {
         ptr = std::current_exception();
     }
+    m_state_subscription.unsubscribe();
     m_update_channel.reset();
     m_controller->await_join();
     if (ptr)
@@ -128,12 +166,12 @@ void Manager::do_service_await_join()
     }
 }
 
-resources::Manager& Manager::resources()
+resources::Manager& PipelineManager::resources()
 {
     return m_resources;
 }
 
-const Pipeline& Manager::pipeline() const
+const Pipeline& PipelineManager::pipeline() const
 {
     CHECK(m_pipeline);
     return *m_pipeline;

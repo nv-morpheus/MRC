@@ -39,9 +39,7 @@
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <rxcpp/rx-observable.hpp>
-#include <rxcpp/rx-subscriber.hpp>
-#include <rxcpp/rx-subscription.hpp>
+#include <rxcpp/rx.hpp>
 
 #include <functional>  // for function, ref
 #include <memory>      // for shared_ptr, __shared_ptr_access, dynamic_pointer_cast, allocator, make_shared
