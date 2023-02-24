@@ -1,4 +1,8 @@
 const inspector = require('inspector');
+const { pathsToModuleNameMapper } = require('ts-jest');
+const requireJSON5 = require("require-json5");
+
+const { compilerOptions } = requireJSON5("./tsconfig");
 
 function isDebuggerAttached() {
   return inspector.url() !== undefined;
@@ -17,5 +21,10 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   testTimeout: timeout,
-  modulePathIgnorePatterns: ["<rootDir>/dist/"]
+  modulePathIgnorePatterns: ["<rootDir>/dist/"],
+  testPathIgnorePatterns: ["<rootDir>/dist/"],
+  roots: ['<rootDir>'],
+  modulePaths: [compilerOptions.baseUrl],
+  moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, { prefix: `<rootDir>/${compilerOptions.baseUrl}` }),
+  transform: {"^.+\\.tsx?$": "@swc/jest"},
 };
