@@ -1,4 +1,3 @@
-/** @type {import('ts-jest').JestConfigWithTsJest} */
 const inspector = require('inspector');
 
 function isDebuggerAttached() {
@@ -13,6 +12,7 @@ if (isDebuggerAttached()) {
   console.log(`Detected attached debugger. Setting Jest timeout to ${timeout}`);
 }
 
+/** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',

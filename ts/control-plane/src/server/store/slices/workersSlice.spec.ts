@@ -31,6 +31,10 @@ describe("Workers", () => {
       done();
    });
 
+   afterEach(() => {
+      console.log("after each");
+   })
+
    describe("add", () => {
       it("worker before connection", () => {
          assert.throws(() => store.dispatch(addWorker(worker)));

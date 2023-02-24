@@ -1,6 +1,5 @@
 import {devToolsEnhancer} from "@redux-devtools/remote";
 import {
-   AnyAction,
    combineReducers,
    configureStore,
    createAction,
@@ -67,7 +66,7 @@ export const setupStore = (preloadedState?: PreloadedState<RootState>, addDevToo
          },
       }),
       // Disable devtools and add it in manually
-      devTools: !addDevTools,
+      devTools: false,
       enhancers,
    });
 };

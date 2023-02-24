@@ -9,6 +9,8 @@ if (process.env.NODE_ENV !== "production")
     const hostname = "localhost";
     const port     = "8000";
 
+    console.log("Launching server");
+
     // If not in production, start the redux-devtools service
     const devToolsServer = await reduxDevToolsServer({
         "hostname" : hostname,
