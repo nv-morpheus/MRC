@@ -2,7 +2,7 @@
 
 import {ServerDuplexStream} from "@grpc/grpc-js";
 import {as, AsyncSink, merge} from "ix/asynciterable";
-import {debounce} from "ix/asynciterable/operators";
+import {debounce, withAbort} from "ix/asynciterable/operators";
 import {CallContext} from "nice-grpc";
 import {firstValueFrom, Subject} from "rxjs";
 
@@ -123,6 +123,7 @@ class Architect implements ArchitectServiceImplementation
    private _store: RootStore;
 
    private shutdown_subject: Subject<void> = new Subject<void>();
+   private _stop_controller: AbortController;
 
    constructor(store?: RootStore)
    {
@@ -133,6 +134,8 @@ class Architect implements ArchitectServiceImplementation
       }
 
       this._store = store;
+
+      this._stop_controller = new AbortController();
 
       // Have to do this. Look at
       // https://github.com/paymog/grpc_tools_node_protoc_ts/blob/master/doc/server_impl_signature.md to see about
@@ -152,6 +155,9 @@ class Architect implements ArchitectServiceImplementation
 
    public stop()
    {
+      // Trigger a stop cancellation for any connected streams
+      this._stop_controller.abort("Stop signaled");
+
       this._store.dispatch(stopAction());
    }
 
@@ -246,10 +252,15 @@ class Architect implements ArchitectServiceImplementation
 
       try
       {
-         for await (const out_event of merge(as (event_stream()), as<Event>(store_update_sink)))
+         // Make the combined async iterable
+         const combined_iterable =
+             merge(as<Event>(event_stream()).pipe(withAbort(this._stop_controller.signal)), as<Event>(store_update_sink));
+
+         for await (const out_event of combined_iterable)
          {
             yield out_event;
          }
+
       } catch (error)
       {
          console.log(`Error occurred in stream. Error: ${error}`);

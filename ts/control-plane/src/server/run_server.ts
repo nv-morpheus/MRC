@@ -15,10 +15,6 @@ async function main()
 
    await server.start();
 
-   // process.on("SIGINT", async () => {
-
-   // });
-
    await server.join();
 
    console.log("Exiting script");

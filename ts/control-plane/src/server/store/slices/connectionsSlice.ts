@@ -1,32 +1,15 @@
-import {
-   createEntityAdapter,
-   createSlice,
-   current,
-   EntityState,
-   EntityStateAdapter,
-   PayloadAction,
-} from "@reduxjs/toolkit";
-import {EntityAdapter, EntityId, PreventAny} from "@reduxjs/toolkit/dist/entities/models";
+import {Connection} from "@mrc/proto/mrc/protos/architect_state";
+import {createSlice, PayloadAction} from "@reduxjs/toolkit";
 
-import {Connection} from "../../../proto/mrc/protos/architect_state";
 import {createWrappedEntityAdapter} from "../../utils";
 
 import type {RootState} from "../store";
-import {addPipelineInstance} from "./pipelineInstancesSlice";
+import {addPipelineInstance, removePipelineInstance} from "./pipelineInstancesSlice";
 import {addWorker, addWorkers, IWorker, removeWorker} from "./workersSlice";
-
-// export interface IConnection {
-//    // id is the per machine assigned connection id
-//    id: number,
-//    peer_info: string,
-//    // List of worker IDs associated with this connection
-//    worker_ids: number[],
-// }
 
 export type IConnection = Omit<Connection, "$type">;
 
 const connectionsAdapter = createWrappedEntityAdapter<IConnection>({
-   // sortComparer: (a, b) => b.id.localeCompare(a.date),
    selectId: (x) => x.id,
 });
 
@@ -49,10 +32,22 @@ export const connectionsSlice = createSlice({
    name: "connections",
    initialState: connectionsAdapter.getInitialState(),
    reducers: {
-      addConnection: (state, action: PayloadAction<IConnection>) => {
-         connectionsAdapter.addOne(state, action.payload);
+      addConnection: (state, action: PayloadAction<Pick<IConnection, "id"|"peerInfo">>) => {
+         if (connectionsAdapter.getOne(state, action.payload.id))
+         {
+            throw new Error(`Connection with ID: ${action.payload.id} already exists`);
+         }
+         connectionsAdapter.addOne(state, {
+            ...action.payload,
+            workerIds: [],
+            assignedPipelineIds: [],
+         });
       },
-      removeConnection: (state, action: PayloadAction<IConnection>) => {
+      removeConnection: (state, action: PayloadAction<Pick<IConnection, "id">>) => {
+         if (!connectionsAdapter.getOne(state, action.payload.id))
+         {
+            throw new Error(`Connection with ID: ${action.payload.id} not found`);
+         }
          connectionsAdapter.removeOne(state, action.payload.id);
       },
    },
@@ -94,7 +89,25 @@ export const connectionsSlice = createSlice({
          }
          else
          {
-            throw new Error("Must drop all workers before removing a connection");
+            throw new Error("Cannot add a pipeline. Connection does not exist");
+         }
+      });
+      builder.addCase(removePipelineInstance, (state, action) => {
+         // Handle removing a worker
+         const foundConnection = connectionsAdapter.getOne(state, action.payload.machineId);
+
+         if (foundConnection)
+         {
+            const index = foundConnection.assignedPipelineIds.findIndex(x => x === action.payload.id);
+
+            if (index !== -1)
+            {
+               foundConnection.assignedPipelineIds.splice(index, 1);
+            }
+         }
+         else
+         {
+            throw new Error("Cannot remove pipeline instance, connection not found.");
          }
       });
    },

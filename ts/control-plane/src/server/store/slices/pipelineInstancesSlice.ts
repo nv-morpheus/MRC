@@ -10,7 +10,6 @@ import {workersSelectByMachineId} from "./workersSlice";
 export type IPipelineInstance = Omit<PipelineInstance, "$type">;
 
 const pipelineInstancesAdapter = createWrappedEntityAdapter<IPipelineInstance>({
-   // sortComparer: (a, b) => b.id.localeCompare(a.date),
    selectId: (w) => w.id,
 });
 
@@ -19,14 +18,14 @@ export const pipelineInstancesSlice = createSlice({
    initialState: pipelineInstancesAdapter.getInitialState(),
    reducers: {
       // addWorker,
-      addPipelineInstance: (state, action: PayloadAction<IPipelineInstance>) => {
+      addPipelineInstance: (state, action: PayloadAction<Pick<IPipelineInstance, "id"|"definitionId"|"machineId">>) => {
          if (pipelineInstancesAdapter.getOne(state, action.payload.id))
          {
             throw new Error(`Pipeline Instance with ID: ${action.payload.id} already exists`);
          }
-         pipelineInstancesAdapter.addOne(state, action.payload);
+         pipelineInstancesAdapter.addOne(state, {...action.payload, segmentIds: []});
       },
-      removePipelineInstance: (state, action: PayloadAction<IPipelineInstance>) => {
+      removePipelineInstance: (state, action: PayloadAction<Pick<IPipelineInstance, "id"|"machineId">>) => {
          if (!pipelineInstancesAdapter.getOne(state, action.payload.id))
          {
             throw new Error(`Worker with ID: ${action.payload.id} not found`);

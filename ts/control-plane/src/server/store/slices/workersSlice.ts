@@ -1,23 +1,11 @@
+import {Worker} from "@mrc/proto/mrc/protos/architect_state";
 import {createSelector, createSlice, PayloadAction} from "@reduxjs/toolkit";
 
-import {Worker} from "../../../proto/mrc/protos/architect_state";
 import {createWrappedEntityAdapter} from "../../utils";
 
 import type {RootState} from "../store";
 import {removeConnection} from "./connectionsSlice";
 import {addSegmentInstances} from "./segmentInstancesSlice";
-// import { nanoid } from '@reduxjs/toolkit';
-
-// export interface IWorker {
-//    // Generated worker ID
-//    id: number,
-//    // Serialized worker address
-//    worker_address: string,
-//    // Parent machine this worker belongs to
-//    parent_machine_id: number,
-//    // Whether or not the worker has been activated
-//    activated: boolean,
-// }
 
 export type IWorker = Omit<Worker, "$type">;
 

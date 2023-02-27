@@ -101,7 +101,7 @@ describe("Workers", () => {
          expect(workersSelectById(store.getState(), worker.id)).toHaveProperty("activated", false);
       });
 
-      it("activate a worker", () => {
+      it("once", () => {
          store.dispatch(addConnection(connection));
 
          store.dispatch(addWorker(worker));
@@ -111,7 +111,7 @@ describe("Workers", () => {
          expect(workersSelectById(store.getState(), worker.id)).toHaveProperty("activated", true);
       });
 
-      it("activate a worker again", () => {
+      it("twice", () => {
          store.dispatch(addConnection(connection));
 
          store.dispatch(addWorker(worker));
