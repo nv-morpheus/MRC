@@ -87,7 +87,7 @@ class NodeRuntime : public ::mrc::runnable::RunnableWithContext<::mrc::runnable:
 class NodeService : public Service
 {
   public:
-    NodeService(runnable::RunnableResources& runnable);
+    NodeService();
     ~NodeService() override;
 
     void set_args(std::vector<std::string> args);
@@ -101,8 +101,8 @@ class NodeService : public Service
 
     void launch_node(std::vector<std::string> args);
 
-    // mrc resources
-    runnable::RunnableResources& m_runnable;
+    // // mrc resources
+    // runnable::RunnableResources& m_runnable;
 
     std::unique_ptr<::node::InitializationResult> m_init_result;
     std::unique_ptr<::node::MultiIsolatePlatform> m_platform;

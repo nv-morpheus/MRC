@@ -92,7 +92,8 @@ class Server : public Service
     using stream_id_t   = std::size_t;
     using instance_id_t = std::size_t;
 
-    Server(runnable::RunnableResources& runnable);
+    Server();
+    // Server(runnable::RunnableResources& runnable);
     ~Server() override;
 
   private:
@@ -102,61 +103,62 @@ class Server : public Service
     void do_service_await_live() final;
     void do_service_await_join() final;
 
-    void do_accept_stream(rxcpp::subscriber<stream_t>& s);
-    void do_handle_event(event_t&& event);
-    void do_issue_update(rxcpp::subscriber<void*>& s);
+    // void do_accept_stream(rxcpp::subscriber<stream_t>& s);
+    // void do_handle_event(event_t&& event);
+    // void do_issue_update(rxcpp::subscriber<void*>& s);
 
-    // mrc resources
-    runnable::RunnableResources& m_runnable;
+    // // mrc resources
+    // runnable::RunnableResources& m_runnable;
 
     // Node service
     NodeService m_node_service;
 
-    // grpc
-    rpc::Server m_server;
-    std::shared_ptr<mrc::protos::Architect::AsyncService> m_service;
+    // // grpc
+    // rpc::Server m_server;
+    // std::shared_ptr<mrc::protos::Architect::AsyncService> m_service;
 
-    // client state
-    server::ConnectionManager m_connections;
-    std::map<std::string, std::unique_ptr<server::SubscriptionService>> m_subscription_services;
+    // // client state
+    // server::ConnectionManager m_connections;
+    // std::map<std::string, std::unique_ptr<server::SubscriptionService>> m_subscription_services;
 
-    // operators / queues
-    std::unique_ptr<mrc::node::WritableEntrypoint<event_t>> m_queue_holder;
-    std::unique_ptr<mrc::node::Queue<event_t>> m_queue;
+    // // operators / queues
+    // std::unique_ptr<mrc::node::WritableEntrypoint<event_t>> m_queue_holder;
+    // std::unique_ptr<mrc::node::Queue<event_t>> m_queue;
 
-    // runners
-    std::unique_ptr<mrc::runnable::Runner> m_stream_acceptor;
-    std::unique_ptr<mrc::runnable::Runner> m_event_handler;
-    std::unique_ptr<mrc::runnable::Runner> m_update_handler;
-    // std::unique_ptr<mrc::runnable::Runner> m_node_runner;
+    // // runners
+    // std::unique_ptr<mrc::runnable::Runner> m_stream_acceptor;
+    // std::unique_ptr<mrc::runnable::Runner> m_event_handler;
+    // std::unique_ptr<mrc::runnable::Runner> m_update_handler;
+    // // std::unique_ptr<mrc::runnable::Runner> m_node_runner;
 
-    // state mutex/cv/timeout
-    mutable boost::fibers::mutex m_mutex;
-    boost::fibers::condition_variable m_update_cv;
-    std::chrono::milliseconds m_update_period{30000};
+    // // state mutex/cv/timeout
+    // mutable boost::fibers::mutex m_mutex;
+    // boost::fibers::condition_variable m_update_cv;
+    // std::chrono::milliseconds m_update_period{30000};
 
-    // top-level event handlers - these methods lock internal state
-    Expected<> unary_register_workers(event_t& event);
-    Expected<> unary_activate_stream(event_t& event);
-    Expected<> unary_lookup_workers(event_t& event);
-    Expected<> unary_drop_worker(event_t& event);
+    // // top-level event handlers - these methods lock internal state
+    // Expected<> unary_register_workers(event_t& event);
+    // Expected<> unary_activate_stream(event_t& event);
+    // Expected<> unary_lookup_workers(event_t& event);
+    // Expected<> unary_drop_worker(event_t& event);
 
-    Expected<protos::Ack> unary_create_subscription_service(event_t& event);
-    Expected<protos::RegisterSubscriptionServiceResponse> unary_register_subscription_service(event_t& event);
-    Expected<protos::Ack> unary_activate_subscription_service(event_t& event);
-    Expected<protos::Ack> unary_drop_subscription_service(event_t& event);
-    Expected<> event_update_subscription_service(event_t& event);
+    // Expected<protos::Ack> unary_create_subscription_service(event_t& event);
+    // Expected<protos::RegisterSubscriptionServiceResponse> unary_register_subscription_service(event_t& event);
+    // Expected<protos::Ack> unary_activate_subscription_service(event_t& event);
+    // Expected<protos::Ack> unary_drop_subscription_service(event_t& event);
+    // Expected<> event_update_subscription_service(event_t& event);
 
-    void drop_instance(const instance_id_t& instance_id);
-    void drop_stream(writer_t& writer);
-    void drop_stream(const stream_id_t& stream_id);
-    void drop_all_streams();
-    static void on_fatal_exception();
+    // void drop_instance(const instance_id_t& instance_id);
+    // void drop_stream(writer_t& writer);
+    // void drop_stream(const stream_id_t& stream_id);
+    // void drop_all_streams();
+    // static void on_fatal_exception();
 
-    // convenience methods - these method do not lock internal state
-    Expected<instance_t> get_instance(const instance_id_t& instance_id) const;
-    Expected<instance_t> validate_instance_id(const instance_id_t& instance_id, const event_t& event) const;
-    Expected<decltype(m_subscription_services)::const_iterator> get_subscription_service(const std::string& name) const;
+    // // convenience methods - these method do not lock internal state
+    // Expected<instance_t> get_instance(const instance_id_t& instance_id) const;
+    // Expected<instance_t> validate_instance_id(const instance_id_t& instance_id, const event_t& event) const;
+    // Expected<decltype(m_subscription_services)::const_iterator> get_subscription_service(const std::string& name)
+    // const;
 };
 
 }  // namespace mrc::internal::control_plane

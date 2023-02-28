@@ -26,6 +26,7 @@
 #include "internal/pipeline/port_graph.hpp"
 #include "internal/pipeline/types.hpp"
 #include "internal/resources/manager.hpp"
+#include "internal/runtime/runtime.hpp"
 #include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
 #include "internal/utils/contains.hpp"
@@ -54,13 +55,13 @@ static bool valid_pipeline(const pipeline::Pipeline& pipeline);
 
 Executor::Executor(std::shared_ptr<Options> options) :
   SystemProvider(system::make_system(std::move(options))),
-  m_resources_manager(std::make_unique<resources::Manager>(*this))
+  m_runtime(std::make_unique<runtime::Runtime>(*this))
 {}
 
-Executor::Executor(std::unique_ptr<system::SystemResources> resources) :
-  SystemProvider(*resources),
-  m_resources_manager(std::make_unique<resources::Manager>(std::move(resources)))
-{}
+// Executor::Executor(std::unique_ptr<system::SystemResources> resources) :
+//   SystemProvider(*resources),
+//   m_resources_manager(std::make_unique<resources::Manager>(std::move(resources)))
+// {}
 
 Executor::~Executor()
 {
@@ -93,7 +94,10 @@ void Executor::do_service_start()
     // Get a lock on the pipelines
     std::unique_lock<typeof(m_pipelines_mutex)> lock(m_pipelines_mutex);
 
-    auto state_update_subscription = m_resources_manager->control_plane().client().state_update_obs().subscribe(
+    m_runtime->service_start();
+    m_runtime->service_await_live();
+
+    auto state_update_subscription = m_runtime->control_plane().state_update_obs().subscribe(
         [this](protos::ControlPlaneState state) {
             LOG(INFO) << "Got state update";
 
@@ -114,21 +118,20 @@ void Executor::do_service_start()
             (*request.mutable_segment_assignments())[segment_id] = 0;
         }
 
-        auto response =
-            m_resources_manager->control_plane().client().await_unary<protos::PipelineRequestAssignmentResponse>(
-                protos::EventType::ClientUnaryRequestPipelineAssignment,
-                request);
+        auto response = m_runtime->control_plane().await_unary<protos::PipelineRequestAssignmentResponse>(
+            protos::EventType::ClientUnaryRequestPipelineAssignment,
+            request);
 
         // Create a manager for the pipeline in the response
         auto pipeline_manager = std::make_shared<pipeline::PipelineManager>(pipeline,
-                                                                            *m_resources_manager,
+                                                                            m_runtime->resources(),
                                                                             response->pipeline_id());
 
         // Save to the managers before starting
         m_pipeline_managers.push_back(pipeline_manager);
 
         // Create a fiber to join on the pipeline manager
-        m_resources_manager->partition(0).runnable().main().enqueue([this, pipeline_manager]() {
+        m_runtime->partition(0).resources().runnable().main().enqueue([this, pipeline_manager]() {
             // Start the manager
             pipeline_manager->service_start();
 
@@ -270,9 +273,9 @@ std::unique_ptr<Executor> make_executor(std::shared_ptr<Options> options)
     return std::make_unique<Executor>(std::move(options));
 }
 
-std::unique_ptr<Executor> make_executor(std::unique_ptr<system::SystemResources> resources)
-{
-    return std::make_unique<Executor>(std::move(resources));
-}
+// std::unique_ptr<Executor> make_executor(std::unique_ptr<system::SystemResources> resources)
+// {
+//     return std::make_unique<Executor>(std::move(resources));
+// }
 
 }  // namespace mrc::internal::executor

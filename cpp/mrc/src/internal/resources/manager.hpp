@@ -61,11 +61,14 @@ class Manager final : public system::SystemProvider
     static PartitionResources& get_partition();
 
     std::size_t device_count() const;
-    std::size_t partition_count() const;
 
+    std::size_t partition_count() const;
+    const std::vector<PartitionResources>& partitions() const;
     PartitionResources& partition(std::size_t partition_id);
 
-    control_plane::ControlPlaneResources& control_plane() const;
+    // control_plane::ControlPlaneResources& control_plane() const;
+
+    void initialize();
 
   private:
     Future<void> shutdown();
@@ -73,8 +76,8 @@ class Manager final : public system::SystemProvider
     const std::unique_ptr<system::SystemResources> m_system;
     std::vector<runnable::RunnableResources> m_runnable;  // one per host partition
     std::vector<std::optional<ucx::UcxResources>> m_ucx;  // one per flattened partition if network is enabled
-    std::shared_ptr<control_plane::ControlPlaneResources> m_control_plane;  // one per instance of resources::Manager
-    std::vector<memory::HostResources> m_host;                              // one per host partition
+    // std::shared_ptr<control_plane::ControlPlaneResources> m_control_plane;  // one per instance of resources::Manager
+    std::vector<memory::HostResources> m_host;                     // one per host partition
     std::vector<std::optional<memory::DeviceResources>> m_device;  // one per flattened partition upto device_count
     std::vector<PartitionResources> m_partitions;                  // one per flattened partition
 

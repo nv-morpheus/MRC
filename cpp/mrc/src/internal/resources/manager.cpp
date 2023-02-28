@@ -34,6 +34,7 @@
 #include "internal/system/system.hpp"
 #include "internal/ucx/registation_callback_builder.hpp"
 #include "internal/ucx/resources.hpp"
+#include "internal/ucx/worker.hpp"
 #include "internal/utils/contains.hpp"
 
 #include "mrc/core/bitmap.hpp"
@@ -66,6 +67,47 @@ Manager::Manager(std::unique_ptr<system::SystemResources> resources) :
     const auto& partitions      = system().partitions().flattened();
     const auto& host_partitions = system().partitions().host_partitions();
     const bool network_enabled  = system().options().enable_server();
+
+    // // Initialization process:
+
+    // // Optionally initialize the control plane server if needed
+
+    // // Create the initial task queue for the control plane client to make connections using the lowest CpuSet
+    // available
+
+    // // Construct the control plane client and establish connection to server
+    // auto client = control_plane::Client();
+
+    // // Once connection is established, the client sends it's topology to the server and recieves the "cloud options"
+
+    // // With the response, create a UCX resource object for each partition (generating a worker address)
+    // std::vector<std::optional<ucx::UcxResources>> m_ucx;
+    // std::vector<std::string> ucx_addresses;
+
+    // for (int i = 0; i < partitions.size(); i++)
+    // {
+    //     const auto& partition = partitions.at(i);
+
+    //     VLOG(1) << "building ucx resources for partition " << i;
+    //     auto network_task_queue_cpuset = partition.host().engine_factory_cpu_sets().fiber_cpu_sets.at("mrc_network");
+    //     auto& network_fiber_queue      = m_system->get_task_queue(network_task_queue_cpuset.first());
+    //     std::optional<ucx::UcxResources> ucx;
+    //     // ucx.emplace(base, network_fiber_queue);
+    //     m_ucx.push_back(std::move(ucx));
+
+    //     ucx_addresses.push_back(ucx->worker().address());
+    // }
+
+    // // Instruct the client to register the worker addresses with the server, returning a partition ID
+    // auto instance_ids = client.register_ucx_addresses(ucx_addresses);
+
+    // // At this point, we need to create the partitions. With the returned partition IDs, create one passing in the
+    // UCX
+    // // resources
+    // for (size_t i = 0; i < partitions.size(); i++)
+    // {
+    //     m_partition_managers.emplace_back(i, m_ucx.at(i));
+    // }
 
     // construct the runnable resources on each host_partition - launch control and main
     for (std::size_t i = 0; i < host_partitions.size(); ++i)
@@ -101,14 +143,14 @@ Manager::Manager(std::unique_ptr<system::SystemResources> resources) :
         }
     }
 
-    // create control plane and register worker addresses
-    std::map<InstanceID, std::unique_ptr<control_plane::client::Instance>> control_instances;
-    if (network_enabled)
-    {
-        m_control_plane   = std::make_shared<control_plane::ControlPlaneResources>(base_partition_resources.at(0));
-        control_instances = m_control_plane->client().register_ucx_addresses(m_ucx);
-        CHECK_EQ(m_control_plane->client().connections().instance_ids().size(), m_ucx.size());
-    }
+    // // create control plane and register worker addresses
+    // std::map<InstanceID, std::unique_ptr<control_plane::client::Instance>> control_instances;
+    // if (network_enabled)
+    // {
+    //     m_control_plane   = std::make_shared<control_plane::ControlPlaneResources>(base_partition_resources.at(0));
+    //     control_instances = m_control_plane->client().register_ucx_addresses(m_ucx);
+    //     CHECK_EQ(m_control_plane->client().connections().instance_ids().size(), m_ucx.size());
+    // }
 
     // construct the host memory resources for each host_partition
     for (std::size_t i = 0; i < host_partitions.size(); ++i)
@@ -151,15 +193,16 @@ Manager::Manager(std::unique_ptr<system::SystemResources> resources) :
         if (network_enabled)
         {
             VLOG(1) << "building network resources for partition: " << base.partition_id();
-            CHECK(m_ucx.at(base.partition_id()));
-            auto instance_id = m_control_plane->client().connections().instance_ids().at(base.partition_id());
-            DCHECK(contains(control_instances, instance_id));  // todo(cpp20) contains
-            auto instance = std::move(control_instances.at(instance_id));
-            network::NetworkResources network(base,
-                                              *m_ucx.at(base.partition_id()),
-                                              m_host.at(base.partition().host_partition_id()),
-                                              std::move(instance));
-            m_network.emplace_back(std::move(network));
+            // CHECK(m_ucx.at(base.partition_id()));
+            // auto instance_id = m_control_plane->client().connections().instance_ids().at(base.partition_id());
+            // DCHECK(contains(control_instances, instance_id));  // todo(cpp20) contains
+            // auto instance = std::move(control_instances.at(instance_id));
+            // network::NetworkResources network(base,
+            //                                   *m_ucx.at(base.partition_id()),
+            //                                   m_host.at(base.partition().host_partition_id()),
+            //                                   std::move(instance));
+            // m_network.emplace_back(std::move(network));
+            m_network.emplace_back(std::nullopt);
         }
         else
         {
@@ -199,22 +242,6 @@ Manager::~Manager()
     m_network.clear();
 }
 
-std::size_t Manager::partition_count() const
-{
-    return system().partitions().flattened().size();
-};
-
-std::size_t Manager::device_count() const
-{
-    return system().partitions().device_partitions().size();
-};
-
-PartitionResources& Manager::partition(std::size_t partition_id)
-{
-    CHECK_LT(partition_id, m_partitions.size());
-    return m_partitions.at(partition_id);
-}
-
 Manager& Manager::get_resources()
 {
     if (m_thread_resources == nullptr)  // todo(cpp20) [[unlikely]]
@@ -249,10 +276,33 @@ PartitionResources& Manager::get_partition()
     }
 }
 
-control_plane::ControlPlaneResources& Manager::control_plane() const
+std::size_t Manager::device_count() const
 {
-    return *m_control_plane;
+    return system().partitions().device_partitions().size();
+};
+
+std::size_t Manager::partition_count() const
+{
+    return system().partitions().flattened().size();
+};
+
+const std::vector<PartitionResources>& Manager::partitions() const
+{
+    return m_partitions;
 }
+
+PartitionResources& Manager::partition(std::size_t partition_id)
+{
+    CHECK_LT(partition_id, m_partitions.size());
+    return m_partitions.at(partition_id);
+}
+
+// control_plane::ControlPlaneResources& Manager::control_plane() const
+// {
+//     return *m_control_plane;
+// }
+
+void Manager::initialize() {}
 
 Future<void> Manager::shutdown()
 {
@@ -272,5 +322,4 @@ Future<void> Manager::shutdown()
         }
     });
 }
-
 }  // namespace mrc::internal::resources

@@ -27,8 +27,8 @@ namespace mrc {
 
 Executor::Executor() : internal::executor::IExecutor(std::make_shared<Options>()) {}
 Executor::Executor(std::shared_ptr<Options> options) : internal::executor::IExecutor(std::move(options)) {}
-Executor::Executor(std::unique_ptr<internal::system::IResources> resources) :
-  internal::executor::IExecutor(std::move(resources))
-{}
+// Executor::Executor(std::unique_ptr<internal::system::IResources> resources) :
+//   internal::executor::IExecutor(std::move(resources))
+// {}
 
 }  // namespace mrc

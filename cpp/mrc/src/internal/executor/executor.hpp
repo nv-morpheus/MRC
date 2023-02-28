@@ -18,6 +18,7 @@
 #pragma once
 
 #include "internal/pipeline/pipeline.hpp"
+#include "internal/runtime/runtime.hpp"
 #include "internal/service.hpp"
 #include "internal/system/system_provider.hpp"
 
@@ -52,7 +53,7 @@ class Executor : public Service, public system::SystemProvider
 {
   public:
     Executor(std::shared_ptr<Options> options);
-    Executor(std::unique_ptr<system::SystemResources> resources);
+    // Executor(std::unique_ptr<system::SystemResources> resources);
     ~Executor() override;
 
     void register_pipeline(std::unique_ptr<pipeline::IPipeline> ipipeline);
@@ -64,7 +65,8 @@ class Executor : public Service, public system::SystemProvider
     void do_service_await_live() final;
     void do_service_await_join() final;
 
-    std::unique_ptr<resources::Manager> m_resources_manager;
+    std::unique_ptr<runtime::Runtime> m_runtime;
+    // std::unique_ptr<resources::Manager> m_resources_manager;
     std::vector<std::shared_ptr<pipeline::PipelineManager>> m_pipeline_managers;
 
     std::map<int, std::shared_ptr<pipeline::Pipeline>> m_registered_pipeline_defs;
@@ -77,6 +79,6 @@ class Executor : public Service, public system::SystemProvider
 
 std::unique_ptr<Executor> make_executor(std::shared_ptr<Options> options);
 
-std::unique_ptr<Executor> make_executor(std::unique_ptr<system::SystemResources> resources);
+// std::unique_ptr<Executor> make_executor(std::unique_ptr<system::SystemResources> resources);
 
 }  // namespace mrc::internal::executor

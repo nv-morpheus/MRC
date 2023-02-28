@@ -360,7 +360,7 @@ std::vector<char*> vec_string_to_char_ptr(std::vector<std::string>& vec_strings)
 //     ::node::TearDownOncePerProcess();
 // }
 
-NodeService::NodeService(runnable::RunnableResources& runnable) : m_runnable(runnable)
+NodeService::NodeService()
 {
     auto mrc_lib_location = std::filesystem::path(utils::get_mrc_lib_location());
 
@@ -376,7 +376,15 @@ NodeService::NodeService(runnable::RunnableResources& runnable) : m_runnable(run
     }
 }
 
-NodeService::~NodeService() = default;
+NodeService::~NodeService()
+{
+    if (m_node_thread.joinable())
+    {
+        m_node_thread.join();
+    }
+
+    Service::call_in_destructor();
+}
 
 void NodeService::set_args(std::vector<std::string> args)
 {

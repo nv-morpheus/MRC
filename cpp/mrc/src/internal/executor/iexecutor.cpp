@@ -30,11 +30,11 @@
 namespace mrc::internal::executor {
 
 IExecutor::IExecutor(std::shared_ptr<Options> options) : m_impl(make_executor(std::move(options))) {}
-IExecutor::IExecutor(std::unique_ptr<system::IResources> resources) :
-  m_impl(make_executor(system::SystemResources::unwrap(*resources)))
-{
-    CHECK(m_impl);
-}
+// IExecutor::IExecutor(std::unique_ptr<system::IResources> resources) :
+//   m_impl(make_executor(system::SystemResources::unwrap(*resources)))
+// {
+//     CHECK(m_impl);
+// }
 
 IExecutor::~IExecutor() = default;
 

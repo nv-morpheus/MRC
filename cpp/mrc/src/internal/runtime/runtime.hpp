@@ -17,7 +17,11 @@
 
 #pragma once
 
+#include "internal/control_plane/client.hpp"
+#include "internal/control_plane/server.hpp"
 #include "internal/runtime/partition.hpp"
+#include "internal/runtime/partition_manager.hpp"
+#include "internal/system/resources.hpp"
 
 #include "mrc/runtime/api.hpp"
 
@@ -36,10 +40,12 @@ namespace mrc::internal::runtime {
  * manager which are built on partition resources. The Runtime object is responsible for bringing up and tearing down
  * core resources manager.
  */
-class Runtime final : public mrc::runtime::IRuntime
+class Runtime final : public mrc::runtime::IRuntime, public Service, public system::SystemProvider
 {
   public:
-    Runtime(std::unique_ptr<resources::Manager> resources);
+    Runtime(const system::SystemProvider& system);
+
+    // Runtime(std::unique_ptr<resources::Manager> resources);
     ~Runtime() override;
 
     // IRuntime - total number of partitions
@@ -54,9 +60,22 @@ class Runtime final : public mrc::runtime::IRuntime
     // access the full set of internal resources
     resources::Manager& resources() const;
 
+    control_plane::Client& control_plane() const;
+
   private:
+    void do_service_start() final;
+    void do_service_stop() final;
+    void do_service_kill() final;
+    void do_service_await_live() final;
+    void do_service_await_join() final;
+
     std::unique_ptr<resources::Manager> m_resources;
     std::vector<std::unique_ptr<Partition>> m_partitions;
+
+    std::unique_ptr<control_plane::Server> m_control_plane_server;
+    std::unique_ptr<control_plane::Client> m_control_plane_client;
+
+    std::vector<std::unique_ptr<PartitionManager>> m_partition_managers;
 };
 
 }  // namespace mrc::internal::runtime

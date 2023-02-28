@@ -106,6 +106,8 @@ class Client final : public resources::PartitionResourceBase, public Service
     using event_t          = stream_t::element_type::IncomingData;
     using update_channel_t = mrc::node::WritableEntrypoint<protos::StateUpdate>;
 
+    Client();
+
     Client(resources::PartitionResourceBase& base);
 
     // if we already have an grpc progress engine running, we don't need run another, just use that cq
@@ -120,6 +122,8 @@ class Client final : public resources::PartitionResourceBase, public Service
 
     // MachineID machine_id() const;
     // const std::vector<InstanceID>& instance_ids() const;
+
+    std::vector<InstanceID> register_ucx_addresses(const std::vector<std::string>& worker_addresses);
 
     std::map<InstanceID, std::unique_ptr<client::Instance>> register_ucx_addresses(
         std::vector<std::optional<ucx::UcxResources>>& ucx_resources);
@@ -152,7 +156,7 @@ class Client final : public resources::PartitionResourceBase, public Service
     // request that the server start an update
     void request_update();
 
-    edge::IWritableAcceptor<const protos::ControlPlaneState>& state_update_stream() const;
+    // edge::IWritableAcceptor<const protos::ControlPlaneState>& state_update_stream() const;
 
     rxcpp::observable<protos::ControlPlaneState> state_update_obs() const;
 

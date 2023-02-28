@@ -108,10 +108,10 @@ void Client::do_service_start()
     m_stream = std::make_shared<stream_t::element_type>(prepare_fn, runnable());
     m_stream->attach_to(*event_handler);
 
-    // Create the stream for events from the server
-    m_state_update_entrypoint = std::make_unique<mrc::node::WritableEntrypoint<const protos::ControlPlaneState>>();
-    m_state_update_stream     = std::make_unique<mrc::node::Broadcast<const protos::ControlPlaneState>>();
-    mrc::make_edge(*m_state_update_entrypoint, *m_state_update_stream);
+    // // Create the stream for events from the server
+    // m_state_update_entrypoint = std::make_unique<mrc::node::WritableEntrypoint<const protos::ControlPlaneState>>();
+    // m_state_update_stream     = std::make_unique<mrc::node::Broadcast<const protos::ControlPlaneState>>();
+    // mrc::make_edge(*m_state_update_entrypoint, *m_state_update_stream);
 
     // ensure all downstream event handlers are constructed before constructing and starting the event handler
     m_connections_update_channel = std::make_unique<mrc::node::WritableEntrypoint<const protos::StateUpdate>>();
@@ -280,10 +280,10 @@ void Client::request_update()
     // }
 }
 
-edge::IWritableAcceptor<const protos::ControlPlaneState>& Client::state_update_stream() const
-{
-    return *m_state_update_stream;
-}
+// edge::IWritableAcceptor<const protos::ControlPlaneState>& Client::state_update_stream() const
+// {
+//     return *m_state_update_stream;
+// }
 
 rxcpp::observable<protos::ControlPlaneState> Client::state_update_obs() const
 {

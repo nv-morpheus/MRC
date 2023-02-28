@@ -17,25 +17,34 @@
 
 #include "internal/runtime/runtime.hpp"
 
+#include "internal/control_plane/client.hpp"
 #include "internal/resources/manager.hpp"
+#include "internal/runnable/resources.hpp"
 #include "internal/runtime/partition.hpp"
+#include "internal/runtime/partition_manager.hpp"
+#include "internal/system/partitions.hpp"
+#include "internal/system/system_provider.hpp"
 
 #include "mrc/types.hpp"
 
 #include <glog/logging.h>
 
+#include <memory>
+#include <optional>
 #include <utility>
 
 namespace mrc::internal::runtime {
 
-Runtime::Runtime(std::unique_ptr<resources::Manager> resources) : m_resources(std::move(resources))
-{
-    CHECK(m_resources);
-    for (int i = 0; i < m_resources->partition_count(); i++)
-    {
-        m_partitions.push_back(std::make_unique<Partition>(m_resources->partition(i)));
-    }
-}
+// Runtime::Runtime(std::unique_ptr<resources::Manager> resources) : m_resources(std::move(resources))
+// {
+//     CHECK(m_resources);
+//     for (int i = 0; i < m_resources->partition_count(); i++)
+//     {
+//         m_partitions.push_back(std::make_unique<Partition>(m_resources->partition(i)));
+//     }
+// }
+
+Runtime::Runtime(const system::SystemProvider& system) : system::SystemProvider(system) {}
 
 Runtime::~Runtime()
 {
@@ -43,6 +52,8 @@ Runtime::~Runtime()
     // when not all Publishers/Subscribers which were created with a ref to a Partition
     // might not yet be finished
     m_resources->shutdown().get();
+
+    Service::call_in_destructor();
 }
 
 resources::Manager& Runtime::resources() const
@@ -67,4 +78,121 @@ Partition& Runtime::partition(std::size_t partition_id)
     return *m_partitions.at(partition_id);
 }
 
+control_plane::Client& Runtime::control_plane() const
+{
+    return *m_control_plane_client;
+}
+
+void Runtime::do_service_start()
+{
+    // First, optionally create the control plane server
+    if (system().options().architect_url().empty())
+    {
+        if (system().options().enable_server())
+        {
+            m_control_plane_server = std::make_unique<control_plane::Server>();
+            m_control_plane_server->service_start();
+            m_control_plane_server->service_await_live();
+        }
+        else
+        {
+            LOG(WARNING) << "No Architect URL has been specified but enable_server = false. Ensure you know what you "
+                            "are doing";
+        }
+    }
+
+    // Create the system resources first
+    auto sys_resources = std::make_unique<system::SystemResources>(*this);
+
+    // Now create the control plane client
+    auto runnable          = runnable::RunnableResources(*sys_resources, 0);
+    auto part_base         = resources::PartitionResourceBase(runnable, 0);
+    m_control_plane_client = std::make_unique<control_plane::Client>(part_base);
+    m_control_plane_client->service_start();
+    m_control_plane_client->service_await_live();
+
+    // Create/Initialize the runtime resources object (Could go before the control plane client)
+    m_resources = std::make_unique<resources::Manager>(std::move(sys_resources));
+    m_resources->initialize();
+
+    // For each partition, create and start a partition manager
+    for (const auto& part : m_resources->partitions())
+    {
+        m_partition_managers.emplace_back(std::make_unique<PartitionManager>(part, *m_control_plane_client));
+
+        m_partition_managers.back()->service_start();
+    }
+}
+
+void Runtime::do_service_stop()
+{
+    for (auto& part : m_partition_managers)
+    {
+        part->service_stop();
+    }
+
+    if (m_control_plane_client)
+    {
+        m_control_plane_client->service_stop();
+    }
+
+    if (m_control_plane_server)
+    {
+        m_control_plane_server->service_stop();
+    }
+}
+
+void Runtime::do_service_kill()
+{
+    for (auto& part : m_partition_managers)
+    {
+        part->service_kill();
+    }
+
+    if (m_control_plane_client)
+    {
+        m_control_plane_client->service_kill();
+    }
+
+    if (m_control_plane_server)
+    {
+        m_control_plane_server->service_kill();
+    }
+}
+
+void Runtime::do_service_await_live()
+{
+    for (auto& part : m_partition_managers)
+    {
+        part->service_await_live();
+    }
+
+    if (m_control_plane_client)
+    {
+        m_control_plane_client->service_await_live();
+    }
+
+    if (m_control_plane_server)
+    {
+        m_control_plane_server->service_await_live();
+    }
+}
+
+void Runtime::do_service_await_join()
+{
+    for (auto& part : m_partition_managers)
+    {
+        part->service_await_join();
+    }
+
+    if (m_control_plane_client)
+    {
+        m_control_plane_client->service_await_join();
+    }
+
+    if (m_control_plane_server)
+    {
+        m_control_plane_server->service_await_join();
+    }
+}
 }  // namespace mrc::internal::runtime

@@ -99,35 +99,35 @@ void PipelineManager::do_service_start()
     });
     m_controller = launcher->ignition();
 
-    // Now subscribe to the state updates
-    m_state_subscription =
-        m_resources.control_plane()
-            .client()
-            .state_update_obs()
-            .filter([this](const protos::ControlPlaneState& state) {
-                return std::find(state.pipeline_instances().ids().begin(),
-                                 state.pipeline_instances().ids().end(),
-                                 m_instance_id) != state.pipeline_instances().ids().end();
-            })
-            //    .map([this](const protos::ControlPlaneState& state) {
-            //        return state.pipeline_instances().entities().at(m_instance_id);
-            //    })
-            .subscribe([this](const protos::ControlPlaneState& state) {
-                auto pipeline_instance = state.pipeline_instances().entities().at(m_instance_id);
+    // // Now subscribe to the state updates
+    // m_state_subscription =
+    //     m_resources.control_plane()
+    //         .client()
+    //         .state_update_obs()
+    //         .filter([this](const protos::ControlPlaneState& state) {
+    //             return std::find(state.pipeline_instances().ids().begin(),
+    //                              state.pipeline_instances().ids().end(),
+    //                              m_instance_id) != state.pipeline_instances().ids().end();
+    //         })
+    //         //    .map([this](const protos::ControlPlaneState& state) {
+    //         //        return state.pipeline_instances().entities().at(m_instance_id);
+    //         //    })
+    //         .subscribe([this](const protos::ControlPlaneState& state) {
+    //             auto pipeline_instance = state.pipeline_instances().entities().at(m_instance_id);
 
-                pipeline::SegmentAddresses segment_addresses;
+    //             pipeline::SegmentAddresses segment_addresses;
 
-                for (const auto& seg_instance_id : pipeline_instance.segment_ids())
-                {
-                    // Get the segment instance object
-                    auto segment_instance = state.segment_instances().entities().at(seg_instance_id);
+    //             for (const auto& seg_instance_id : pipeline_instance.segment_ids())
+    //             {
+    //                 // Get the segment instance object
+    //                 auto segment_instance = state.segment_instances().entities().at(seg_instance_id);
 
-                    auto address               = segment_address_encode(segment_instance.definition_id(), 0);  // rank 0
-                    segment_addresses[address] = 0;  // partition 0;
-                }
+    //                 auto address               = segment_address_encode(segment_instance.definition_id(), 0);  //
+    //                 rank 0 segment_addresses[address] = 0;  // partition 0;
+    //             }
 
-                m_update_channel->await_write({ControlMessageType::Update, std::move(segment_addresses)});
-            });
+    //             m_update_channel->await_write({ControlMessageType::Update, std::move(segment_addresses)});
+    //         });
 }
 
 void PipelineManager::do_service_await_live()

@@ -33,7 +33,7 @@ class Executor final : public internal::executor::IExecutor
   public:
     Executor();
     Executor(std::shared_ptr<Options> options);
-    Executor(std::unique_ptr<internal::system::IResources> resources);
+    // Executor(std::unique_ptr<internal::system::IResources> resources);
     ~Executor() final = default;
 };
 

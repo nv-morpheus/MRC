@@ -49,7 +49,7 @@ class IExecutor
   public:
     IExecutor();
     IExecutor(std::shared_ptr<Options>);
-    IExecutor(std::unique_ptr<system::IResources>);
+    // IExecutor(std::unique_ptr<system::IResources>);
     virtual ~IExecutor() = 0;
 
     void register_pipeline(std::unique_ptr<internal::pipeline::IPipeline> pipeline);

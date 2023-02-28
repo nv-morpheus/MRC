@@ -66,7 +66,6 @@ export function assignPipelineInstance(
          id: pipeline_id,
          definitionId: payload.pipelineId,
          machineId: payload.machineId,
-         segmentIds: [],  // Empty for now
       }));
 
       // Get the workers for this machine

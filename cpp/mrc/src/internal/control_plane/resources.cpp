@@ -37,7 +37,7 @@ ControlPlaneResources::ControlPlaneResources(resources::PartitionResourceBase& b
     {
         if (system().options().enable_server())
         {
-            m_server = std::make_unique<Server>(runnable());
+            m_server = std::make_unique<Server>();
             m_server->service_start();
             m_server->service_await_live();
         }

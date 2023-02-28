@@ -5,13 +5,15 @@ import {setupStore} from "./store/store";
 
 async function main()
 {
-   if (process.env.NODE_ENV !== "production")
+   const addDevTools = process.env.NODE_ENV !== "production" && false;
+
+   if (addDevTools)
    {
       // If not in production, start the redux-devtools service
       await launchDevtoolsCli("localhost", "8000");
    }
 
-   const server = new ArchitectServer(setupStore(undefined, true));
+   const server = new ArchitectServer(setupStore(undefined, addDevTools));
 
    await server.start();
 

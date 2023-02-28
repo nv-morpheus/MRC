@@ -93,7 +93,7 @@ static std::shared_ptr<internal::system::System> make_system(std::function<void(
     return internal::system::make_system(std::move(options));
 }
 
-static auto make_runtime(std::function<void(Options& options)> options_lambda = [](Options& options) {})
+static auto make_resources(std::function<void(Options& options)> options_lambda = [](Options& options) {})
 {
     auto resources = std::make_unique<internal::resources::Manager>(
         internal::system::SystemProvider(make_system([&](Options& options) {
@@ -104,7 +104,7 @@ static auto make_runtime(std::function<void(Options& options)> options_lambda = 
             options_lambda(options);
         })));
 
-    return std::make_unique<internal::runtime::Runtime>(std::move(resources));
+    return resources;
 }
 
 static std::shared_ptr<internal::pipeline::Pipeline> unwrap(internal::pipeline::IPipeline& pipeline)
