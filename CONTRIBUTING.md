@@ -77,41 +77,41 @@ Some options:
 
 #### Clone MRC repository
 ```bash
-export MRC_HOME=$(pwd)/mrc
-git clone --recurse-submodules git@github.com:nv-morpheus/mrc.git $MRC_HOME
-cd $MRC_HOME
+export MRC_ROOT=$(pwd)/mrc
+git clone --recurse-submodules git@github.com:nv-morpheus/mrc.git $MRC_ROOT
+cd $MRC_ROOT
 ```
 
 #### Create MRC Conda environment
 ```bash
 # note: `mamba` may be used in place of `conda` for better performance.
-conda env create -n mrc --file $MRC_HOME/ci/conda/environments/dev_env.yml
+conda env create -n mrc --file $MRC_ROOT/ci/conda/environments/dev_env.yml
 conda activate mrc
 ```
 #### Build MRC
 ```bash
-mkdir $MRC_HOME/build
-cd $MRC_HOME/build
+mkdir $MRC_ROOT/build
+cd $MRC_ROOT/build
 cmake ..
 make -j $(nproc)
 ```
 
 #### Run MRC C++ Tests
 ```bash
-export MRC_TEST_INTERNAL_DATA_PATH=$MRC_HOME/src/tests
-$MRC_HOME/build/src/tests/test_mrc_private.x
-$MRC_HOME/build/tests/test_mrc.x
-$MRC_HOME/build/tests/logging/test_mrc_logging.x
+export MRC_TEST_INTERNAL_DATA_PATH=$MRC_ROOT/cpp/mrc/src/tests
+$MRC_ROOT/build/cpp/mrcsrc/tests/test_mrc_private.x
+$MRC_ROOT/build/cpp/mrctests/test_mrc.x
+$MRC_ROOT/build/cpp/mrctests/logging/test_mrc_logging.x
 ```
 
 ### Install MRC Python
 ```bash
-pip install -e $MRC_HOME/build/python
+pip install -e $MRC_ROOT/build/python
 ```
 
 #### Run MRC Python Tests
 ```bash
-pytest $MRC_HOME/python
+pytest $MRC_ROOT/python
 ```
 
 ### Building API Documentation
