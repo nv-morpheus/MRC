@@ -29,7 +29,7 @@
     #define MRC_PTR_CAST(PTR_T, ptr) DCHECK_NOTNULL(std::dynamic_pointer_cast<PTR_T>(ptr))
 #endif
 
-#ifndef DELETE_COPYABILITYp
+#ifndef DELETE_COPYABILITY
     #define DELETE_COPYABILITY(foo)                \
         foo(const foo&)                  = delete; \
         foo& operator=(const foo& other) = delete;
