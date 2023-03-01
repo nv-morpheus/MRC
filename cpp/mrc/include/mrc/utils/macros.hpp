@@ -23,7 +23,13 @@
 // __COUNTER__ isnt standard but is supported by msvc, gcc and clang
 #define MRC_UNIQUE_VAR_NAME(prefix) MRC_CONCAT_EVAL(prefix, __COUNTER__)
 
-#ifndef DELETE_COPYABILITY
+#if defined(NDEBUG)
+    #define MRC_PTR_CAST(PTR_T, ptr) std::static_pointer_cast<PTR_T>(ptr)
+#else
+    #define MRC_PTR_CAST(PTR_T, ptr) DCHECK_NOTNULL(std::dynamic_pointer_cast<PTR_T>(ptr))
+#endif
+
+#ifndef DELETE_COPYABILITYp
     #define DELETE_COPYABILITY(foo)                \
         foo(const foo&)                  = delete; \
         foo& operator=(const foo& other) = delete;
