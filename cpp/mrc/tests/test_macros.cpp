@@ -19,7 +19,7 @@
 
 #include "mrc/utils/macros.hpp"
 
-#include <glog/logging.h>
+#include <glog/logging.h>  // IWYU pragma: keep
 #include <gtest/gtest.h>
 
 #include <memory>
