@@ -23,7 +23,6 @@
 #include <gtest/gtest.h>
 
 #include <memory>
-#include <type_traits>
 
 namespace {
 class A
@@ -34,7 +33,10 @@ class A
 };
 
 class B : public A
-{};
+{
+  public:
+    B(int val) : A(val) {}
+};
 }  // namespace
 
 TEST_CLASS(Macros);
