@@ -115,13 +115,12 @@ class Client final : public resources::PartitionResourceBase, public Service
 
     ~Client() final;
 
-    const State& state() const
-    {
-        return m_state;
-    }
+    const State& state() const;
 
-    // MachineID machine_id() const;
+    MachineID machine_id() const;
     // const std::vector<InstanceID>& instance_ids() const;
+
+    InstanceID register_ucx_address(const std::string& worker_address);
 
     std::vector<InstanceID> register_ucx_addresses(const std::vector<std::string>& worker_addresses);
 
@@ -174,10 +173,12 @@ class Client final : public resources::PartitionResourceBase, public Service
 
     State m_state{State::Disconnected};
 
-    // MachineID m_machine_id;
+    MachineID m_machine_id;
     // std::vector<InstanceID> m_instance_ids;
     // std::map<InstanceID, std::unique_ptr<update_channel_t>> m_update_channels;
     // std::map<InstanceID, std::shared_ptr<client::Instance>> m_instances;
+
+    SharedPromise<void> m_connected_promise;
 
     std::shared_ptr<grpc::CompletionQueue> m_cq;
     std::shared_ptr<grpc::Channel> m_channel;
@@ -198,6 +199,7 @@ class Client final : public resources::PartitionResourceBase, public Service
     std::unique_ptr<client::ConnectionsManager> m_connections_manager;
 
     // update channel
+    size_t m_state_update_count{0};
     rxcpp::subjects::behavior<protos::ControlPlaneState> m_state_update_sub{protos::ControlPlaneState{}};
     std::unique_ptr<mrc::node::WritableEntrypoint<const protos::StateUpdate>> m_connections_update_channel;
     std::unique_ptr<mrc::node::WritableEntrypoint<const protos::ControlPlaneState>> m_state_update_entrypoint;

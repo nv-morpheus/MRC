@@ -17,11 +17,13 @@
 
 #pragma once
 
+#include "internal/async_service.hpp"
 #include "internal/control_plane/client.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/service.hpp"
 #include "internal/ucx/resources.hpp"
+
+#include "mrc/types.hpp"
 
 #include <cstddef>
 #include <optional>
@@ -45,10 +47,10 @@ namespace mrc::internal::runtime {
  * This class does not own the actual resources, that honor is bestowed on the resources::Manager. This class is
  * constructed and owned by the resources::Manager to ensure validity of the references.
  */
-class PartitionManager : public Service
+class PartitionManager : public AsyncService
 {
   public:
-    PartitionManager(const resources::PartitionResources& resources, control_plane::Client& control_plane_client);
+    PartitionManager(resources::PartitionResources& resources, control_plane::Client& control_plane_client);
     ~PartitionManager() override;
     // PartitionManager(runnable::RunnableResources& runnable_resources,
     //                  std::size_t partition_id,
@@ -61,14 +63,21 @@ class PartitionManager : public Service
     // std::optional<network::NetworkResources>& network();
 
   private:
-    void do_service_start() final {}
-    void do_service_stop() final {}
-    void do_service_kill() final {}
-    void do_service_await_live() final {}
-    void do_service_await_join() final {}
+    void do_service_start(std::stop_token stop_token) final;
+    // void do_service_stop() final;
+    // void do_service_kill() final;
+    // void do_service_await_live() final;
+    // void do_service_await_join() final;
 
-    const resources::PartitionResources& m_resources;
+    void process_state_update(mrc::protos::Worker& worker);
+
+    resources::PartitionResources& m_resources;
     control_plane::Client& m_control_plane_client;
+
+    InstanceID m_instance_id{0};
+
+    Future<void> m_shutdown_future;
+    SharedPromise<void> m_live_promise;
 
     // memory::HostResources& m_host;
     // std::optional<memory::DeviceResources>& m_device;

@@ -33,7 +33,16 @@ message Connection {
    repeated uint64 assigned_pipeline_ids = 4;
 }
 
+enum WorkerStates
+{
+   Registered = 0;
+   Activated = 1;
+   Deactivated = 2;
+   Destroyed = 3;
+}
+
 message Worker {
+
    uint64 id = 1;
 
    // Serialized worker address
@@ -42,8 +51,8 @@ message Worker {
    // Parent machine this worker belongs to
    uint64 machine_id = 3;
 
-   // Whether or not the worker has been activated
-   bool activated = 4;
+   // Current state of the worker
+   WorkerStates state = 4;
 
    // The segment instances that are assigned to this worker
    repeated uint64 assigned_segment_ids = 5;

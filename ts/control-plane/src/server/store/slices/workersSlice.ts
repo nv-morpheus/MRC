@@ -1,4 +1,4 @@
-import {Worker} from "@mrc/proto/mrc/protos/architect_state";
+import {Worker, WorkerStates} from "@mrc/proto/mrc/protos/architect_state";
 import {createSelector, createSlice, PayloadAction} from "@reduxjs/toolkit";
 
 import {createWrappedEntityAdapter} from "../../utils";
@@ -45,7 +45,7 @@ export const workersSlice = createSlice({
             }
          });
 
-         workersAdapter.getMany(state, action.payload.map((w) => w.id)).forEach((w) => w.activated = true);
+         workersAdapter.getMany(state, action.payload.map((w) => w.id)).forEach((w) => w.state = WorkerStates.Activated);
       },
    },
    extraReducers: (builder) => {

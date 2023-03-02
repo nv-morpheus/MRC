@@ -1,4 +1,5 @@
 import {expect} from "@jest/globals";
+import {WorkerStates} from "@mrc/proto/mrc/protos/architect_state";
 import assert from "assert";
 
 import {stringToBytes} from "../../../common/utils";
@@ -19,9 +20,9 @@ describe("Workers", () => {
 
    const worker: IWorker = {
       id: 1234,
-      activated: false,
       machineId: 1111,
       workerAddress: stringToBytes("-----"),
+      state: WorkerStates.Registered,
       assignedSegmentIds: [],
    };
 

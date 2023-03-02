@@ -83,6 +83,11 @@ control_plane::Client& Runtime::control_plane() const
     return *m_control_plane_client;
 }
 
+void Runtime::register_pipelines_defs(std::map<int, std::shared_ptr<pipeline::Pipeline>> pipeline_defs)
+{
+    // Save the pipeline definitions
+}
+
 void Runtime::do_service_start()
 {
     // First, optionally create the control plane server
@@ -116,9 +121,10 @@ void Runtime::do_service_start()
     m_resources->initialize();
 
     // For each partition, create and start a partition manager
-    for (const auto& part : m_resources->partitions())
+    for (size_t i = 0; i < m_resources->partition_count(); i++)
     {
-        m_partition_managers.emplace_back(std::make_unique<PartitionManager>(part, *m_control_plane_client));
+        m_partition_managers.emplace_back(
+            std::make_unique<PartitionManager>(m_resources->partition(i), *m_control_plane_client));
 
         m_partition_managers.back()->service_start();
     }

@@ -4,6 +4,7 @@ import "ix/add/asynciterable-operators/finalize";
 import {Channel, credentials} from "@grpc/grpc-js";
 import {ConnectivityState} from "@grpc/grpc-js/build/src/connectivity-state";
 import {launchDevtoolsCli} from "@mrc/common/dev_tools";
+import {WorkerStates} from "@mrc/proto/mrc/protos/architect_state";
 import {as, AsyncIterableX, AsyncSink} from "ix/asynciterable";
 import {share} from "ix/asynciterable/operators";
 import {createChannel, createClient, waitForChannelReady} from "nice-grpc";
@@ -173,7 +174,7 @@ describe("Client", () => {
             // Check to make sure its activated
             const found_worker = workersSelectById(store.getState(), registered_response.instanceIds[0]);
 
-            expect(found_worker?.activated).toBe(true);
+            expect(found_worker?.state).toBe(WorkerStates.Activated);
          });
 
          describe("pipeline", () => {

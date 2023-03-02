@@ -116,7 +116,7 @@ class NodeService : public Service
 
     std::thread m_node_thread;
     Promise<void> m_started_promise{};
-    Future<void> m_started_future;
-    Future<void> m_completed_future;
+    SharedFuture<void> m_started_future;
+    SharedFuture<void> m_completed_future;
 };
 }  // namespace mrc::internal::control_plane

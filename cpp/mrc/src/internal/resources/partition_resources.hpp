@@ -17,7 +17,10 @@
 
 #pragma once
 
+#include "internal/data_plane/resources.hpp"
+#include "internal/network/resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
+#include "internal/ucx/resources.hpp"
 
 #include <cstddef>
 #include <optional>
@@ -48,16 +51,19 @@ class PartitionResources final : public PartitionResourceBase
                        std::size_t partition_id,
                        memory::HostResources& host,
                        std::optional<memory::DeviceResources>& device,
-                       std::optional<network::NetworkResources>& network);
+                       std::optional<ucx::UcxResources>& ucx);
 
     memory::HostResources& host();
     std::optional<memory::DeviceResources>& device();
     std::optional<network::NetworkResources>& network();
+    std::optional<ucx::UcxResources>& ucx() const;
+    // data_plane::DataPlaneResources& data_plane() const;
 
   private:
     memory::HostResources& m_host;
     std::optional<memory::DeviceResources>& m_device;
-    std::optional<network::NetworkResources>& m_network;
+    std::optional<ucx::UcxResources>& m_ucx;
+    std::optional<network::NetworkResources> m_network;
 };
 
 }  // namespace mrc::internal::resources

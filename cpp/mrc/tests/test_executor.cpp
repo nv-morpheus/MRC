@@ -397,7 +397,7 @@ TEST_F(TestExecutor, LifeCycleSingleSegmentConcurrentSourceWithStaggeredShutdown
 
 TEST_F(TestExecutor, LifeCycle)
 {
-    GTEST_SKIP() << "#185";
+    // GTEST_SKIP() << "#185";
 
     Executor executor(make_options());
     executor.register_pipeline(make_pipeline());

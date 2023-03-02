@@ -62,6 +62,8 @@ class Runtime final : public mrc::runtime::IRuntime, public Service, public syst
 
     control_plane::Client& control_plane() const;
 
+    void register_pipelines_defs(std::map<int, std::shared_ptr<pipeline::Pipeline>> pipeline_defs);
+
   private:
     void do_service_start() final;
     void do_service_stop() final;
@@ -76,6 +78,8 @@ class Runtime final : public mrc::runtime::IRuntime, public Service, public syst
     std::unique_ptr<control_plane::Client> m_control_plane_client;
 
     std::vector<std::unique_ptr<PartitionManager>> m_partition_managers;
+
+    std::map<int, std::shared_ptr<pipeline::Pipeline>> m_registered_pipeline_defs;
 };
 
 }  // namespace mrc::internal::runtime

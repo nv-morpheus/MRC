@@ -219,7 +219,7 @@ Manager::Manager(std::unique_ptr<system::SystemResources> resources) :
                                   i,
                                   m_host.at(host_partition_id),
                                   m_device.at(i),
-                                  m_network.at(i));
+                                  m_ucx.at(i));
     }
 
     // set thread local access to resources on all fiber task queues and any future thread created by the runtime

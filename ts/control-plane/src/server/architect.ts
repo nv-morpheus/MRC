@@ -27,7 +27,7 @@ import {
    StateUpdate,
    TaggedInstance,
 } from "../proto/mrc/protos/architect";
-import {ControlPlaneState} from "../proto/mrc/protos/architect_state";
+import {ControlPlaneState, WorkerStates} from "../proto/mrc/protos/architect_state";
 import {DeepPartial, messageTypeRegistry} from "../proto/typeRegistry";
 
 import {addConnection, IConnection, removeConnection} from "./store/slices/connectionsSlice";
@@ -301,7 +301,7 @@ class Architect implements ArchitectServiceImplementation
                   id: generateId(),
                   machineId: event.machineId,
                   workerAddress: value,
-                  activated: false,
+                  state: WorkerStates.Registered,
                   assignedSegmentIds: [],
                };
             });

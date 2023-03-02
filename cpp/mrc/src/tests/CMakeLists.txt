@@ -54,6 +54,7 @@ add_executable(test_mrc_private
   test_memory.cpp
   test_network.cpp
   test_next.cpp
+  test_partition_manager.cpp
   test_partitions.cpp
   test_pipeline.cpp
   test_ranges.cpp
@@ -61,6 +62,7 @@ add_executable(test_mrc_private
   test_resources.cpp
   test_reusable_pool.cpp
   test_runnable.cpp
+  test_runtime.cpp
   test_system.cpp
   test_topology.cpp
   test_ucx.cpp

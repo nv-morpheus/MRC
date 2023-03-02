@@ -119,6 +119,9 @@ TEST_F(TestControlPlane, SingleClientConnectDisconnect)
     client->service_start();
     client->service_await_live();
 
+    // Should have a non-zero machine ID set
+    EXPECT_NE(client->machine_id(), 0);
+
     client->service_stop();
     client->service_await_join();
 
@@ -129,6 +132,38 @@ TEST_F(TestControlPlane, SingleClientConnectDisconnect)
 
     // // destroying the resources should gracefully shutdown the data plane and the control plane.
     // cr.reset();
+
+    server->service_stop();
+    server->service_await_join();
+}
+
+TEST_F(TestControlPlane, SingleClientGetState)
+{
+    auto server = std::make_unique<internal::control_plane::Server>();
+
+    server->service_start();
+    server->service_await_live();
+
+    auto cr = make_resources([](Options& options) {
+        options.architect_url("localhost:13337");
+    });
+
+    auto client = std::make_unique<internal::control_plane::Client>(cr->partition(0));
+
+    client->service_start();
+    client->service_await_live();
+
+    // Get the current state after connection
+    auto current_state = client->state_update_obs().as_blocking().first();
+
+    EXPECT_EQ(current_state.connections().ids_size(), 1);
+    EXPECT_TRUE(current_state.connections().entities().contains(client->machine_id()));
+
+    auto this_connection = current_state.connections().entities().at(client->machine_id());
+    EXPECT_EQ(this_connection.id(), client->machine_id());
+
+    client->service_stop();
+    client->service_await_join();
 
     server->service_stop();
     server->service_await_join();

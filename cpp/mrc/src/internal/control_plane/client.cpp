@@ -63,6 +63,16 @@ Client::~Client()
     Service::call_in_destructor();
 }
 
+const Client::State& Client::state() const
+{
+    return m_state;
+}
+
+MachineID Client::machine_id() const
+{
+    return m_machine_id;
+}
+
 void Client::do_service_start()
 {
     m_launch_options.engine_factory_name = "main";
@@ -153,6 +163,9 @@ void Client::do_service_await_live()
         m_progress_handler->await_live();
     }
     m_event_handler->await_live();
+
+    // Finally, await on the connection promise
+    m_connected_promise.get_future().wait();
 }
 
 void Client::do_service_await_join()
@@ -173,7 +186,19 @@ void Client::do_handle_event(event_t&& event)
 {
     switch (event.msg.event())
     {
-        // handle a subset of events directly on the event handler
+    // This is the first event that should be recieved after connecting and sets up the machine ID
+    case protos::EventType::ClientEventStreamConnected: {
+        protos::ClientConnectedResponse response;
+        CHECK(event.msg.message().UnpackTo(&response)) << "Failed to deserialize ClientConnectedResponse";
+
+        // Set the machine id
+        m_machine_id = response.machine_id();
+
+        // Set the connected promise to indicate we are live
+        m_connected_promise.set_value();
+
+        break;
+    }
 
     case protos::EventType::Response: {
         auto* promise = reinterpret_cast<Promise<protos::Event>*>(event.msg.tag());
@@ -188,6 +213,7 @@ void Client::do_handle_event(event_t&& event)
         protos::ControlPlaneState update;
         CHECK(event.msg.has_message() && event.msg.message().UnpackTo(&update));
 
+        m_state_update_count++;
         m_state_update_sub.get_subscriber().on_next(std::move(update));
 
         // DCHECK(m_state_update_entrypoint);
@@ -208,6 +234,19 @@ void Client::do_handle_event(event_t&& event)
     default:
         LOG(ERROR) << "event channel not implemented. Not supported event: " << event.msg.event();
     }
+}
+
+InstanceID Client::register_ucx_address(const std::string& worker_address)
+{
+    protos::RegisterWorkersRequest req;
+
+    req.add_ucx_worker_addresses(worker_address);
+
+    auto resp = this->await_unary<protos::RegisterWorkersResponse>(protos::ClientUnaryRegisterWorkers, std::move(req));
+
+    CHECK_EQ(resp->instance_ids_size(), 1);
+
+    return resp->instance_ids(0);
 }
 
 std::map<InstanceID, std::unique_ptr<client::Instance>> Client::register_ucx_addresses(
@@ -287,6 +326,10 @@ void Client::request_update()
 
 rxcpp::observable<protos::ControlPlaneState> Client::state_update_obs() const
 {
-    return m_state_update_sub.get_observable();
+    // Return the observable but skip the first, default value so we only return values sent from the server
+    return m_state_update_sub.get_observable().filter([this](auto& x) {
+        return this->m_state_update_count > 0;
+    });
 }
+
 }  // namespace mrc::internal::control_plane

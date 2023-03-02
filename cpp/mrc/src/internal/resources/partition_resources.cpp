@@ -17,17 +17,19 @@
 
 #include "internal/resources/partition_resources.hpp"
 
+#include <optional>
+
 namespace mrc::internal::resources {
 
 PartitionResources::PartitionResources(runnable::RunnableResources& runnable_resources,
                                        std::size_t partition_id,
                                        memory::HostResources& host,
                                        std::optional<memory::DeviceResources>& device,
-                                       std::optional<network::NetworkResources>& network) :
+                                       std::optional<ucx::UcxResources>& ucx) :
   PartitionResourceBase(runnable_resources, partition_id),
   m_host(host),
   m_device(device),
-  m_network(network)
+  m_ucx(ucx)
 {}
 
 memory::HostResources& PartitionResources::host()
@@ -44,4 +46,10 @@ std::optional<network::NetworkResources>& PartitionResources::network()
 {
     return m_network;
 }
+
+std::optional<ucx::UcxResources>& PartitionResources::ucx() const
+{
+    return m_ucx;
+}
+
 }  // namespace mrc::internal::resources

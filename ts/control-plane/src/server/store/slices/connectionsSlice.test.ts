@@ -1,4 +1,5 @@
 import {expect} from "@jest/globals";
+import {WorkerStates} from "@mrc/proto/mrc/protos/architect_state";
 import {
    addPipelineInstance,
    IPipelineInstance,
@@ -38,9 +39,9 @@ const connection: IConnection = {
 
 const worker: IWorker = {
    id: 1234,
-   activated: false,
    machineId: 1111,
    workerAddress: stringToBytes("-----"),
+   state: WorkerStates.Registered,
    assignedSegmentIds: [],
 };
 

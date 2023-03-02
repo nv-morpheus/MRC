@@ -20,6 +20,7 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "mrc")
 
 # Keep all source files sorted!!!
 add_library(libmrc
+  src/internal/async_service.cpp
   src/internal/codable/codable_storage.cpp
   src/internal/codable/decodable_storage_view.cpp
   src/internal/codable/storage_view.cpp
