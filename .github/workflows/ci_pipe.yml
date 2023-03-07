@@ -77,6 +77,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 43200 # 12h
 
       - name: Check
         shell: bash
@@ -110,6 +111,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 43200 # 12h
 
       - name: Build:linux:x86_64
         shell: bash
@@ -150,6 +152,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 43200 # 12h
 
       - name: Test:linux:x86_64
         shell: bash
@@ -188,6 +191,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 43200 # 12h
 
       - name: Build
         shell: bash
@@ -226,6 +230,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 43200 # 12h
 
       - name: build_docs
         shell: bash
@@ -259,6 +264,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 43200 # 12h
 
       - name: pre_benchmark
         shell: bash
@@ -300,6 +306,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 43200 # 12h
 
       - name: conda
         shell: bash
