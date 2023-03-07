@@ -36,16 +36,10 @@ on:
         required: true
       CONDA_TOKEN:
         required: true
-      GHA_AWS_ACCESS_KEY_ID:
-        required: true
-      GHA_AWS_SECRET_ACCESS_KEY:
-        required: true
       NGC_API_KEY:
         required: true
 
 env:
-  AWS_ACCESS_KEY_ID: "${{ secrets.GHA_AWS_ACCESS_KEY_ID }}"
-  AWS_SECRET_ACCESS_KEY: "${{ secrets.GHA_AWS_SECRET_ACCESS_KEY }}"
   CHANGE_TARGET: "${{ github.base_ref }}"
   GH_TOKEN: "${{ github.token }}"
   GIT_COMMIT: "${{ github.sha }}"
@@ -67,6 +61,8 @@ jobs:
       image: ${{ inputs.container }}
     strategy:
       fail-fast: true
+    permissions:
+      id-token: write
 
     steps:
       - name: Checkout
@@ -75,6 +71,12 @@ jobs:
           lfs: false
           path: 'mrc'
           fetch-depth: 0
+
+      - name: Get AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Check
         shell: bash
@@ -93,6 +95,8 @@ jobs:
       fail-fast: true
       matrix:
         build_cc: ["gcc", "clang"]
+    permissions:
+      id-token: write
 
     steps:
       - name: Checkout
@@ -100,6 +104,12 @@ jobs:
         with:
           lfs: false
           path: 'mrc'
+
+      - name: Get AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Build:linux:x86_64
         shell: bash
@@ -125,6 +135,8 @@ jobs:
       fail-fast: true
       matrix:
         build_cc: ["gcc", "clang"]
+    permissions:
+      id-token: write
 
     steps:
       - name: Checkout
@@ -132,6 +144,12 @@ jobs:
         with:
           lfs: false
           path: 'mrc'
+
+      - name: Get AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Test:linux:x86_64
         shell: bash
@@ -155,6 +173,8 @@ jobs:
       image: ${{ inputs.test_container }}
     strategy:
       fail-fast: true
+    permissions:
+      id-token: write
 
     steps:
       - name: Checkout
@@ -162,6 +182,12 @@ jobs:
         with:
           lfs: false
           path: 'mrc'
+
+      - name: Get AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Build
         shell: bash
@@ -185,6 +211,8 @@ jobs:
       image: ${{ inputs.container }}
     strategy:
       fail-fast: true
+    permissions:
+      id-token: write
 
     steps:
       - name: Checkout
@@ -192,6 +220,12 @@ jobs:
         with:
           lfs: false
           path: 'mrc'
+
+      - name: Get AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: build_docs
         shell: bash
@@ -210,6 +244,8 @@ jobs:
       options: --cap-add=sys_nice
     strategy:
       fail-fast: true
+    permissions:
+      id-token: write
 
     steps:
       - name: Checkout
@@ -217,6 +253,12 @@ jobs:
         with:
           lfs: false
           path: 'mrc'
+
+      - name: Get AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: pre_benchmark
         shell: bash
@@ -242,6 +284,8 @@ jobs:
       image: ${{ inputs.container }}
     strategy:
       fail-fast: true
+    permissions:
+      id-token: write
 
     steps:
       - name: Checkout
@@ -250,6 +294,12 @@ jobs:
           lfs: false
           path: 'mrc'
           fetch-depth: 0
+
+      - name: Get AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: conda
         shell: bash
