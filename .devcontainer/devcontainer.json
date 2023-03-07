@@ -41,12 +41,17 @@
     "remoteUser": "coder",
     "mounts": [
         {
-            "type":"bind",
-            "source": "${localWorkspaceFolder}/../.conda",
+            "type": "bind",
+            "source": "${localWorkspaceFolder}/.cache/conda",
             "target": "/home/coder/.conda"
         },
         {
-            "type":"bind",
+            "type": "bind",
+            "source": "${localWorkspaceFolder}/../.conda/pkgs",
+            "target": "/home/coder/.conda/pkgs"
+        },
+        {
+            "type": "bind",
             "source": "${localWorkspaceFolder}/../.config", // parent folder because sister repos are sibling dirs
             "target": "/home/coder/.config"
         },
