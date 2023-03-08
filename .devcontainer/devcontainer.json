@@ -42,8 +42,8 @@
     "mounts": [
         {
             "type": "bind",
-            "source": "${localWorkspaceFolder}/.cache/conda",
-            "target": "/home/coder/.conda"
+            "source": "${localWorkspaceFolder}/.cache/conda/envs",
+            "target": "/home/coder/.conda/envs"
         },
         {
             "type": "bind",
