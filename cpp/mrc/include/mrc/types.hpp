@@ -24,9 +24,6 @@
 
 namespace mrc {
 
-// template<class T>
-// using blocking_queue = boost::fibers::buffered_channel<T>;
-
 // Typedefs
 template <typename T>
 using Promise = userspace_threads::promise<T>;  // NOLINT(readability-identifier-naming)
@@ -45,27 +42,15 @@ using MachineID  = std::uint64_t;  // NOLINT(readability-identifier-naming)
 using InstanceID = std::uint64_t;  // NOLINT(readability-identifier-naming)
 using TagID      = std::uint64_t;  // NOLINT(readability-identifier-naming)
 
-using NodeID   = std::uint32_t;  // NOLINT(readability-identifier-naming)
-using ObjectID = std::uint32_t;  // NOLINT(readability-identifier-naming)
-
 template <typename T>
 using Handle = std::shared_ptr<T>;  // NOLINT(readability-identifier-naming)
 
-using SegmentName    = std::string;    // NOLINT(readability-identifier-naming)
 using SegmentID      = std::uint16_t;  // NOLINT(readability-identifier-naming)
 using SegmentRank    = std::uint16_t;  // NOLINT(readability-identifier-naming)
 using SegmentAddress = std::uint32_t;  // NOLINT(readability-identifier-naming) // id + rank
 
 using PortName    = std::string;    // NOLINT(readability-identifier-naming)
 using PortID      = std::uint16_t;  // NOLINT(readability-identifier-naming)
-using PortGroup   = std::uint32_t;  // NOLINT(readability-identifier-naming)  // port + group_id
 using PortAddress = std::uint64_t;  // NOLINT(readability-identifier-naming)  // id + rank + port
-
-using CpuID = std::uint32_t;  // NOLINT(readability-identifier-naming)
-using GpuID = std::uint32_t;  // NOLINT(readability-identifier-naming)
-
-using ResourceGroupID = std::size_t;  // NOLINT(readability-identifier-naming)
-
-using Tags = std::vector<SegmentAddress>;  // NOLINT
 
 }  // namespace mrc
