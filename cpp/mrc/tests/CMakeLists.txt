@@ -29,6 +29,7 @@ add_executable(test_mrc
   test_channel.cpp
   test_edges.cpp
   test_executor.cpp
+  test_macros.cpp
   test_main.cpp
   test_metrics.cpp
   test_mrc.cpp
