@@ -55,7 +55,7 @@ void Builder::init_module(std::shared_ptr<mrc::modules::SegmentModule> smodule)
     if (std::dynamic_pointer_cast<modules::PersistentModule>(smodule) != nullptr)
     {
         VLOG(2) << "Registering persistent module -> '" << smodule->component_prefix() << "'";
-        m_backend.add_module(smodule->component_prefix(), smodule);
+        m_backend.add_module(m_namespace_prefix, smodule);
     }
 }
 
