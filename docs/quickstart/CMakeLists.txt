@@ -24,7 +24,7 @@ list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake")
 morpheus_utils_python_modules_ensure_python3()
 
 project(mrc-quickstart
-  VERSION 23.01
+  VERSION 23.03
   LANGUAGES C CXX
 )
 

@@ -12,9 +12,7 @@
 # the License.
 # =============================================================================
 
-find_package(Python 3.8 REQUIRED COMPONENTS Development Interpreter)
-find_package(pybind11 REQUIRED)
-find_package(prometheus-cpp REQUIRED)
+# find_package(prometheus-cpp REQUIRED)
 
 # Keep all source files sorted!!!
 add_library(pymrc

@@ -17,22 +17,31 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "python")
 
 find_package(CUDAToolkit REQUIRED)
 
+# Load the pybind11 dependency
+morpheus_utils_configure_pybind11()
+
 # Get the project name in uppercase if OPTION_PREFIX is not defined
 if(NOT DEFINED OPTION_PREFIX)
   string(TOUPPER "${PROJECT_NAME}" OPTION_PREFIX)
 endif()
 
+option(${OPTION_PREFIX}_PYTHON_BUILD_STUBS "Whether or not to generated .pyi stub files for C++ Python modules. Disable to avoid requiring loading the NVIDIA GPU Driver during build" ON)
+option(${OPTION_PREFIX}_PYTHON_BUILD_WHEEL "Whether or not to build the morpheus .whl file" OFF)
 option(${OPTION_PREFIX}_PYTHON_INPLACE_BUILD "Whether or not to copy built python modules back to the source tree for debug purposes." OFF)
 option(${OPTION_PREFIX}_PYTHON_PERFORM_INSTALL "Whether or not to automatically `pip install` any built python library. WARNING: This may overwrite any existing installation of the same name." OFF)
-option(${OPTION_PREFIX}_PYTHON_BUILD_STUBS "Whether or not to generated .pyi stub files for C++ Python modules. Disable to avoid requiring loading the NVIDIA GPU Driver during build" ON)
 
-set(Python3_FIND_VIRTUALENV "FIRST")
-set(Python3_FIND_STRATEGY "LOCATION")
+# Ensure python is configured
+morpheus_utils_python_configure()
 
-morpheus_utils_print_python_info()
+# set(Python3_FIND_VIRTUALENV "FIRST")
+# set(Python3_FIND_STRATEGY "LOCATION")
+
+# morpheus_utils_print_python_info()
 
 # Create the mrc python package
 morpheus_utils_create_python_package(mrc)
+
+
 
 # Add a few additional files to be copied
 file(GLOB pymrc_test_files "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.py")
@@ -42,29 +51,13 @@ morpheus_utils_add_python_sources(
     ${pymrc_test_files}
 )
 
-
-# Save the root of the python for relative paths
-set(MRC_PY_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
-
-# A common macro for adding some default arguments to add_pybind11_module
-macro(mrc_add_pybind11_module)
-  # Build up the common arguments for add_pybind11_module
-  set(_common_args)
-  list(APPEND _common_args "LINK_TARGETS" "pymrc")
-
-  if(MRC_PYTHON_INPLACE_BUILD)
-    list(APPEND _common_args "COPY_INPLACE")
-  endif()
-
-  if(MRC_PYTHON_BUILD_STUBS)
-    list(APPEND _common_args "BUILD_STUBS")
-  endif()
-
-  # Forward all common arguments plus any arguments passed in
-  morpheus_utils_add_pybind11_module(${ARGN} ${_common_args})
-endmacro()
-
+# Build the pymrc library
 add_subdirectory(mrc/_pymrc)
+
+# Set the default link targets to avoid repeating this
+morpheus_utils_python_package_set_default_link_targets(pymrc)
+
+# Now add the python bindings
 add_subdirectory(mrc/core)
 
 # ##################################################################################################
@@ -78,10 +71,12 @@ if(MRC_BUILD_TESTS)
 endif()
 
 # Complete the python package
-set(extra_args "")
-
 if(MRC_PYTHON_INPLACE_BUILD)
   list(APPEND extra_args "IS_INPLACE")
+endif()
+
+if(MRC_PYTHON_BUILD_WHEEL)
+  list(APPEND extra_args "BUILD_WHEEL")
 endif()
 
 if(MRC_PYTHON_PERFORM_INSTALL)
