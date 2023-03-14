@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-morpheus_utils_add_pybind11_module(
+mrc_quickstart_add_pybind11_module(
   nodes
   MODULE_ROOT
     ${QUICKSTART_HYBRID_HOME}
@@ -24,5 +24,3 @@ morpheus_utils_add_pybind11_module(
   OUTPUT_TARGET
     nodes_target
 )
-
-morpheus_utils_inplace_build_copy(${nodes_target} ${CMAKE_CURRENT_SOURCE_DIR})

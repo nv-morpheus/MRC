@@ -17,31 +17,15 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "python")
 
 find_package(CUDAToolkit REQUIRED)
 
-# Load the pybind11 dependency
-morpheus_utils_configure_pybind11()
-
-# Get the project name in uppercase if OPTION_PREFIX is not defined
-if(NOT DEFINED OPTION_PREFIX)
-  string(TOUPPER "${PROJECT_NAME}" OPTION_PREFIX)
-endif()
-
-option(${OPTION_PREFIX}_PYTHON_BUILD_STUBS "Whether or not to generated .pyi stub files for C++ Python modules. Disable to avoid requiring loading the NVIDIA GPU Driver during build" ON)
-option(${OPTION_PREFIX}_PYTHON_BUILD_WHEEL "Whether or not to build the morpheus .whl file" OFF)
-option(${OPTION_PREFIX}_PYTHON_INPLACE_BUILD "Whether or not to copy built python modules back to the source tree for debug purposes." OFF)
-option(${OPTION_PREFIX}_PYTHON_PERFORM_INSTALL "Whether or not to automatically `pip install` any built python library. WARNING: This may overwrite any existing installation of the same name." OFF)
 
 # Ensure python is configured
-morpheus_utils_python_configure()
+morpheus_utils_python_ensure_loaded()
 
-# set(Python3_FIND_VIRTUALENV "FIRST")
-# set(Python3_FIND_STRATEGY "LOCATION")
 
-# morpheus_utils_print_python_info()
+morpheus_utils_print_python_info()
 
 # Create the mrc python package
 morpheus_utils_create_python_package(mrc)
-
-
 
 # Add a few additional files to be copied
 file(GLOB pymrc_test_files "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.py")
