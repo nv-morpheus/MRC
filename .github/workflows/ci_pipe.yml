@@ -132,7 +132,7 @@ jobs:
   test:
     name: Test
     needs: [build]
-    runs-on: [self-hosted, linux, amd64, gpu-latest]
+    runs-on: [self-hosted, linux, amd64, gpu-v100-525-1]
     timeout-minutes: 60
     container:
       credentials:
@@ -171,7 +171,7 @@ jobs:
 
   codecov:
     name: Code Coverage
-    runs-on: [self-hosted, linux, amd64, gpu-latest]
+    runs-on: [self-hosted, linux, amd64, gpu-v100-525-1]
     timeout-minutes: 60
     container:
       credentials:
