@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "pymrc/module_definitions/segment_modules.hpp"
+#include "segment_modules.hpp"
 
 #include "pymrc/segment_modules.hpp"
 
@@ -74,12 +74,5 @@ void init_segment_modules(py::module_& smodule)
     SegmentModule.def("input_ids", &SegmentModuleProxy::input_ids);
 
     SegmentModule.def("output_ids", &SegmentModuleProxy::output_ids);
-
-    // TODO(devin): need to think about if/how we want to expose type_ids to Python... It might allow for some nice
-    // flexibility
-    // SegmentModule.def("input_port_type_id", &SegmentModuleProxy::input_port_type_id, py::arg("input_id"))
-    // SegmentModule.def("input_port_type_ids", &SegmentModuleProxy::input_port_type_id)
-    // SegmentModule.def("output_port_type_id", &SegmentModuleProxy::output_port_type_id, py::arg("output_id"))
-    // SegmentModule.def("output_port_type_ids", &SegmentModuleProxy::output_port_type_id)
 }
 }  // namespace mrc::pymrc

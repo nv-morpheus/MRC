@@ -177,7 +177,7 @@ struct EdgeBuilder final
     }
 
     template <typename EdgeDataTypeT, typename SourceT, typename SinkT, typename SpliceInputT, typename SpliceOutputT>
-    static void make_edge_splice(SourceT& source, SinkT& sink, SpliceInputT& splice_input, SpliceOutputT& splice_output)
+    static void splice_edge(SourceT& source, SinkT& sink, SpliceInputT& splice_input, SpliceOutputT& splice_output)
     {
         using source_full_t = SourceT;
         using sink_full_t   = SinkT;
@@ -215,7 +215,13 @@ struct EdgeBuilder final
             auto* writable_acceptor = dynamic_cast<edge::IWritableAcceptor<EdgeDataTypeT>*>(&source);
             CHECK(writable_acceptor != nullptr) << "Source is not a writable acceptor";
 
-            auto& edge_holder = dynamic_cast<edge::EdgeHolder<EdgeDataTypeT>&>(*writable_acceptor);
+            auto* edge_holder_ptr = dynamic_cast<edge::EdgeHolder<EdgeDataTypeT>*>(writable_acceptor);
+            if (edge_holder_ptr == nullptr)
+            {
+                LOG(FATAL) << "Writable acceptor failed to cast to EdgeHolder";
+            }
+
+            auto& edge_holder = *edge_holder_ptr;
             CHECK(edge_holder.check_active_connection(false)) << "No active connection to splice into";
 
             auto edge_handle = edge_holder.get_connected_edge();
@@ -239,7 +245,13 @@ struct EdgeBuilder final
             auto* readable_acceptor = dynamic_cast<edge::IReadableAcceptor<EdgeDataTypeT>*>(&sink);
             CHECK(readable_acceptor != nullptr) << "Sink is not a writable provider";
 
-            auto& edge_holder = dynamic_cast<edge::EdgeHolder<EdgeDataTypeT>&>(*readable_acceptor);
+            auto* edge_holder_ptr = dynamic_cast<edge::EdgeHolder<EdgeDataTypeT>*>(readable_acceptor);
+            if (edge_holder_ptr == nullptr)
+            {
+                LOG(FATAL) << "Readable acceptor failed to cast to EdgeHolder";
+            }
+
+            auto& edge_holder = *edge_holder_ptr;
             CHECK(edge_holder.check_active_connection(false)) << "No active connection to splice into";
 
             // Grab the Acceptor's edge handle and release it from the Acceptor
@@ -254,7 +266,7 @@ struct EdgeBuilder final
         else
         {
             static_assert(!sizeof(source_full_t),
-                          "Arguments to make_edge_splice were incorrect. Ensure you are providing either "
+                          "Arguments to splice_edge were incorrect. Ensure you are providing either "
                           "WritableAcceptor->WritableProvider or ReadableProvider->ReadableAcceptor");
         }
     }

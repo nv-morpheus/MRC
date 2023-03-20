@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-#include "pymrc/module_definitions/mirror_tap_util.hpp"
+#include "mirror_tap_orchestrator.hpp"
 
 #include "pymrc/module_registry.hpp"
 #include "pymrc/types.hpp"
 #include "pymrc/utils.hpp"
 
-#include "mrc/modules/mirror_tap/mirror_tap_util.hpp"
+#include "mrc/modules/mirror_tap/mirror_tap_orchestrator.hpp"
 #include "mrc/modules/module_registry_util.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/version.hpp"
@@ -40,7 +40,7 @@ namespace py = pybind11;
 namespace {
 class MirrorTapUtilProxy
 {
-    using py_mirror_tap_t = mrc::modules::MirrorTapUtil<mrc::pymrc::PyHolder>;
+    using py_mirror_tap_t = mrc::modules::MirrorTapOrchestrator<mrc::pymrc::PyHolder>;
 
   public:
     static std::shared_ptr<py_mirror_tap_t> create(const std::string& name)
@@ -86,9 +86,9 @@ namespace mrc::pymrc {
                                                                                      PybindSegmentModuleVersion);
 }
 
-[[maybe_unused]] void init_mirror_tap_util(py::module_& smodule)
+[[maybe_unused]] void init_mirror_tap_orchestrator(py::module_& smodule)
 {
-    using python_mirror_tap_util_t = mrc::modules::MirrorTapUtil<pymrc::PyHolder>;
+    using python_mirror_tap_util_t = mrc::modules::MirrorTapOrchestrator<pymrc::PyHolder>;
     auto MirrorTap = py::class_<python_mirror_tap_util_t, std::shared_ptr<python_mirror_tap_util_t>>(smodule,
                                                                                                      "MirrorTap");
 

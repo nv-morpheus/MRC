@@ -209,8 +209,7 @@ class BuilderProxy
                           std::shared_ptr<mrc::segment::ObjectProperties> source,
                           std::shared_ptr<mrc::segment::ObjectProperties> sink);
 
-    // TODO(devin) -- we can't pass all the variants, so we need to figure out how to do this
-    static void make_edge_splice(mrc::segment::Builder& self,
+    static void splice_edge(mrc::segment::Builder& self,
                                  std::string& source,
                                  std::string& sink,
                                  std::shared_ptr<mrc::segment::ObjectProperties> splice_input,

@@ -852,7 +852,7 @@ TEST_F(TestEdges, EdgeTapWAcceptorWProvider)
     mrc::make_edge(*source, *sink);
 
     // Tap edge
-    mrc::edge::EdgeBuilder::make_edge_splice<int>(*source, *sink, *node, *node);
+    mrc::edge::EdgeBuilder::splice_edge<int>(*source, *sink, *node, *node);
 
     source->run();
     node->run();
@@ -873,7 +873,7 @@ TEST_F(TestEdges, EdgeTapRProviderRAcceptor)
     mrc::make_edge(*source_rp, *sink_ra);
 
     // Tap edge
-    mrc::edge::EdgeBuilder::make_edge_splice<int>(*source_rp, *sink_ra, *node, *node);
+    mrc::edge::EdgeBuilder::splice_edge<int>(*source_rp, *sink_ra, *node, *node);
 
     source->run();
     node->run();

@@ -19,7 +19,7 @@
 
 #include "mrc/core/executor.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
-#include "mrc/modules/mirror_tap/mirror_tap_util.hpp"
+#include "mrc/modules/mirror_tap/mirror_tap_orchestrator.hpp"
 #include "mrc/modules/module_registry.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/segment/builder.hpp"
@@ -75,7 +75,7 @@ TEST_F(TestMirrorTapUtil, SinglePipelineTapAndBufferTest)
                                                           });
     };
 
-    auto mirror_tap = MirrorTapUtil<std::string>(test_name + "mirror_tap", config);
+    auto mirror_tap = MirrorTapOrchestrator<std::string>(test_name + "mirror_tap", config);
 
     auto tapped_init_wrapper_main = mirror_tap.tap(init_wrapper_main,
                                                    test_name + "_main_source",
@@ -166,7 +166,7 @@ TEST_F(TestMirrorTapUtil, SinglePipelineTapAndBufferWithAdditionalPortsTest)
         builder.make_edge(extra_ingress, non_mirror_sink);
     };
 
-    auto mirror_tap = MirrorTapUtil<std::string>(test_name + "mirror_tap", config);
+    auto mirror_tap = MirrorTapOrchestrator<std::string>(test_name + "mirror_tap", config);
 
     auto tapped_init_wrapper_main = mirror_tap.tap(init_wrapper_main,
                                                    test_name + "_main_source",

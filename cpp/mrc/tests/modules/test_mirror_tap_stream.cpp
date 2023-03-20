@@ -19,7 +19,7 @@
 
 #include "mrc/core/executor.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
-#include "mrc/modules/mirror_tap/mirror_tap_util.hpp"
+#include "mrc/modules/mirror_tap/mirror_tap_orchestrator.hpp"
 #include "mrc/modules/module_registry.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/segment/builder.hpp"

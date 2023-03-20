@@ -324,7 +324,7 @@ class Builder final
               MRCObjectProxy SinkObjectT,
               MRCObjectProxy SpliceInputObjectT,
               MRCObjectProxy SpliceOutputObjectT>
-    void make_edge_splice(SourceObjectT source,
+    void splice_edge(SourceObjectT source,
                           SinkObjectT sink,
                           SpliceInputObjectT splice_input,
                           SpliceOutputObjectT splice_output);
@@ -471,7 +471,7 @@ template <typename EdgeDataTypeT,
           MRCObjectProxy SinkObjectT,
           MRCObjectProxy SpliceInputObjectT,
           MRCObjectProxy SpliceOutputObjectT>
-void Builder::make_edge_splice(SourceObjectT source,
+void Builder::splice_edge(SourceObjectT source,
                                SinkObjectT sink,
                                SpliceInputObjectT splice_input,
                                SpliceOutputObjectT splice_output)
@@ -503,10 +503,10 @@ void Builder::make_edge_splice(SourceObjectT source,
             auto& writable_acceptor = source_object.template writable_acceptor_typed<EdgeDataTypeT>();
             auto& writable_provider = sink_object.template writable_provider_typed<EdgeDataTypeT>();
 
-            edge::EdgeBuilder::make_edge_splice<EdgeDataTypeT>(writable_acceptor,
-                                                               writable_provider,
-                                                               splice_writable_provider,
-                                                               splice_writable_acceptor);
+            edge::EdgeBuilder::splice_edge<EdgeDataTypeT>(writable_acceptor,
+                                                          writable_provider,
+                                                          splice_writable_provider,
+                                                          splice_writable_acceptor);
 
             return;
         }
@@ -525,10 +525,10 @@ void Builder::make_edge_splice(SourceObjectT source,
             auto& readable_provider = source_object.template readable_provider_typed<EdgeDataTypeT>();
             auto& readable_acceptor = sink_object.template readable_acceptor_typed<EdgeDataTypeT>();
 
-            edge::EdgeBuilder::make_edge_splice<EdgeDataTypeT>(readable_provider,
-                                                               readable_acceptor,
-                                                               splice_readable_acceptor,
-                                                               splice_readable_provider);
+            edge::EdgeBuilder::splice_edge<EdgeDataTypeT>(readable_provider,
+                                                          readable_acceptor,
+                                                          splice_readable_acceptor,
+                                                          splice_readable_provider);
 
             return;
         }

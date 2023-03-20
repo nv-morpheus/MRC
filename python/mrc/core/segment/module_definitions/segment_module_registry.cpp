@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "pymrc/module_definitions/segment_module_registry.hpp"
+#include "segment_module_registry.hpp"
 
 #include "pymrc/module_registry.hpp"
 

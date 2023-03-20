@@ -35,15 +35,15 @@
 
 namespace mrc::modules {
 template <typename DataTypeT>
-class MirrorTapUtil
+class MirrorTapOrchestrator
 {
     using initializer_t = std::function<void(segment::Builder& builder)>;
-    using type_t        = MirrorTapUtil<DataTypeT>;
+    using type_t        = MirrorTapOrchestrator<DataTypeT>;
 
   public:
-    MirrorTapUtil(std::string module_name);
+    MirrorTapOrchestrator(std::string module_name);
 
-    MirrorTapUtil(std::string module_name, nlohmann::json config);
+    MirrorTapOrchestrator(std::string module_name, nlohmann::json config);
 
     initializer_t tap(initializer_t initializer, const std::string tap_from, const std::string tap_to)
     {
@@ -52,10 +52,7 @@ class MirrorTapUtil
             initializer(builder);
             builder.init_module(m_tap);
 
-            builder.make_edge_splice<DataTypeT>(tap_from,
-                                                tap_to,
-                                                m_tap->input_port("input"),
-                                                m_tap->output_port("output"));
+            builder.splice_edge<DataTypeT>(tap_from, tap_to, m_tap->input_port("input"), m_tap->output_port("output"));
         };
     }
 
@@ -110,7 +107,7 @@ class MirrorTapUtil
 };
 
 template <typename DataTypeT>
-MirrorTapUtil<DataTypeT>::MirrorTapUtil(std::string tap_name) :
+MirrorTapOrchestrator<DataTypeT>::MirrorTapOrchestrator(std::string tap_name) :
   m_tap(std::make_shared<MirrorTapModule<DataTypeT>>(std::move(tap_name))),
   m_stream(std::make_shared<MirrorTapStreamModule<DataTypeT>>(std::move(tap_name)))
 {
@@ -118,7 +115,7 @@ MirrorTapUtil<DataTypeT>::MirrorTapUtil(std::string tap_name) :
 }
 
 template <typename DataTypeT>
-MirrorTapUtil<DataTypeT>::MirrorTapUtil(std::string tap_name, nlohmann::json config) :
+MirrorTapOrchestrator<DataTypeT>::MirrorTapOrchestrator(std::string tap_name, nlohmann::json config) :
   m_tap(std::make_shared<MirrorTapModule<DataTypeT>>(tap_name, config)),
   m_stream(std::make_shared<MirrorTapStreamModule<DataTypeT>>(tap_name, config))
 {
@@ -126,13 +123,13 @@ MirrorTapUtil<DataTypeT>::MirrorTapUtil(std::string tap_name, nlohmann::json con
 }
 
 template <typename DataTypeT>
-[[maybe_unused]] std::string MirrorTapUtil<DataTypeT>::get_egress_tap_name() const
+[[maybe_unused]] std::string MirrorTapOrchestrator<DataTypeT>::get_egress_tap_name() const
 {
     return m_tap->tap_egress_port_name();
 }
 
 template <typename DataTypeT>
-[[maybe_unused]] std::string MirrorTapUtil<DataTypeT>::get_ingress_tap_name() const
+[[maybe_unused]] std::string MirrorTapOrchestrator<DataTypeT>::get_ingress_tap_name() const
 {
     return m_stream->tap_ingress_port_name();
 }
