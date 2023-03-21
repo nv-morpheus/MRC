@@ -32,6 +32,7 @@
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>

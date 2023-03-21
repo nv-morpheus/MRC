@@ -29,6 +29,7 @@
 #include "mrc/options/topology.hpp"
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
 #include "mrc/version.hpp"
 
 #include <boost/filesystem/path.hpp>

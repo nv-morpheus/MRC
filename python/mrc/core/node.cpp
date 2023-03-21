@@ -21,6 +21,7 @@
 
 #include "mrc/node/operators/broadcast.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 

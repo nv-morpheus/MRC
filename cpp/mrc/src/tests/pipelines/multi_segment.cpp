@@ -25,6 +25,7 @@
 #include "mrc/segment/definition.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>

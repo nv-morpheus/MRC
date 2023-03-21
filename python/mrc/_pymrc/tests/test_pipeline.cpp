@@ -30,6 +30,7 @@
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
 #include "mrc/types.hpp"
 
 #include <boost/fiber/future/future.hpp>
@@ -38,7 +39,7 @@
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>
 #include <pybind11/pytypes.h>
-#include <pybind11/stl.h>  // IWYU pragma: keep
+#include <pybind11/stl.h>
 #include <rxcpp/rx.hpp>
 
 #include <atomic>

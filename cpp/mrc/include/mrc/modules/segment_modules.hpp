@@ -28,6 +28,9 @@
 
 namespace mrc::segment {
 class Builder;
+}  // namespace mrc::segment
+
+namespace mrc::segment {
 struct ObjectProperties;
 }  // namespace mrc::segment
 

@@ -24,13 +24,13 @@
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
-#include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_properties.hpp"
+#include "mrc/node/sink_properties.hpp"    // IWYU pragma: keep
+#include "mrc/node/source_properties.hpp"  // IWYU pragma: keep
 #include "mrc/runnable/context.hpp"
-#include "mrc/runnable/runnable.hpp"
-#include "mrc/segment/component.hpp"
+#include "mrc/runnable/runnable.hpp"  // IWYU pragma: keep
+#include "mrc/segment/component.hpp"  // IWYU pragma: keep
 #include "mrc/segment/concepts/object_traits.hpp"
-#include "mrc/segment/object.hpp"
+#include "mrc/segment/object.hpp"  // IWYU pragma: keep
 #include "mrc/segment/runnable.hpp"
 #include "mrc/type_traits.hpp"
 #include "mrc/utils/macros.hpp"

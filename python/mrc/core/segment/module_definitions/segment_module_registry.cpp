@@ -19,24 +19,20 @@
 
 #include "pymrc/module_registry.hpp"
 
-#include "mrc/modules/segment_modules.hpp"  // IWYU pragma: keep
-#include "mrc/segment/builder.hpp"          // IWYU pragma: keep
+#include "mrc/modules/segment_modules.hpp"
+#include "mrc/segment/builder.hpp"
 
 #include <pybind11/cast.h>
-#include <pybind11/functional.h>
+#include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <pybind11/stl.h>
+#include <pybind11/stl.h>  //  IWYU pragma: keep
 
 #include <array>
 #include <functional>
 #include <map>
 #include <string>
 #include <vector>
-
-namespace mrc::segment {
-class Builder;
-}
 
 namespace mrc::pymrc {
 

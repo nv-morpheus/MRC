@@ -21,6 +21,7 @@
 #include "mrc/cuda/device_guard.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/modules/properties/persistent.hpp"
+#include "mrc/modules/stream_buffer/stream_buffer_base.hpp"
 #include "mrc/modules/stream_buffer/stream_buffer_immediate.hpp"
 #include "mrc/modules/stream_buffer/stream_buffer_module.hpp"
 #include "mrc/node/rx_sink.hpp"
@@ -29,6 +30,7 @@
 #include "mrc/options/topology.hpp"
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>

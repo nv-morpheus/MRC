@@ -17,11 +17,15 @@
 
 #pragma once
 
-#include "mrc/modules/segment_modules.hpp"
+#include "mrc/modules/segment_modules.hpp"  // for SegmentModule
 
-#include <pybind11/pybind11.h>  // IWYU pragma: keep
+#include <pybind11/pybind11.h>  // for module_ (ptr only)
 
-#include <string>
+#include <string>  // for string
+
+namespace mrc::segment {
+class Builder;
+}
 
 namespace mrc::pymrc {
 #pragma GCC visibility push(default)

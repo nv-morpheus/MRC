@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-#include "test_mrc.hpp"
-
 #include "mrc/core/executor.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/node/rx_node.hpp"
@@ -32,14 +30,18 @@
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
+#include "mrc/segment/object.hpp"
 #include "mrc/segment/segment.hpp"
 
 #include <boost/fiber/future/async.hpp>
 #include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
+#include <gtest/gtest.h>
 #include <rxcpp/rx.hpp>
 
+#include <atomic>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <map>
 #include <memory>

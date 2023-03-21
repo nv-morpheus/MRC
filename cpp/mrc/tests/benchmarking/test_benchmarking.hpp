@@ -26,6 +26,7 @@
 #include "mrc/node/rx_source.hpp"
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <gtest/gtest.h>
 #include <rxcpp/rx.hpp>

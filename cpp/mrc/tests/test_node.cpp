@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "test_mrc.hpp"  // IWYU pragma: associated
+#include "test_mrc.hpp"
 
 #include "mrc/core/executor.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
@@ -29,6 +29,7 @@
 #include "mrc/runnable/context.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
 #include "mrc/utils/string_utils.hpp"
 
 #include <glog/logging.h>

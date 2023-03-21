@@ -32,9 +32,9 @@
 #include "mrc/version.hpp"
 
 #include <pybind11/cast.h>
+#include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <pybind11/functional.h>
 
 #include <array>
 #include <map>

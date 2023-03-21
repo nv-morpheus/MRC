@@ -22,10 +22,12 @@
 #include "pymrc/utilities/acquire_gil.hpp"
 #include "pymrc/utils.hpp"
 
+#include "mrc/channel/status.hpp"
 #include "mrc/edge/edge_connector.hpp"
 #include "mrc/node/rx_sink_base.hpp"
 #include "mrc/node/rx_source_base.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"

@@ -19,11 +19,11 @@
 
 #include "pymrc/types.hpp"
 
-#include "mrc/segment/builder.hpp"  // IWYU pragma: export (needed by wrap functions)
+#include "mrc/segment/builder.hpp"
 
-#include <pybind11/functional.h>  // IWYU pragma: keep
+#include <pybind11/functional.h>
 #include <pybind11/pytypes.h>
-#include <pybind11/stl.h>  // IWYU pragma: keep
+#include <pybind11/stl.h>
 
 #include <functional>
 #include <memory>
@@ -36,10 +36,21 @@ class SegmentModule;
 
 namespace mrc::pymrc {
 struct OnCompleteFunction;
+}
+namespace mrc::pymrc {
 struct OnDataFunction;
+}
+namespace mrc::pymrc {
 struct OnErrorFunction;
+}
+namespace mrc::pymrc {
 struct OnNextFunction;
+}
+namespace mrc::segment {
+struct ObjectProperties;
+}
 
+namespace mrc::pymrc {
 // Export everything in the mrc::pymrc namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
 

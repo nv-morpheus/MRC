@@ -32,6 +32,7 @@
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/definition.hpp"
 #include "mrc/segment/ingress_port.hpp"
+#include "mrc/segment/object.hpp"
 #include "mrc/segment/ports.hpp"
 #include "mrc/types.hpp"
 

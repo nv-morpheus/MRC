@@ -22,6 +22,7 @@
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <glog/logging.h>
 
