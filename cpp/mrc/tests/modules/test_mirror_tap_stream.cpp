@@ -17,21 +17,10 @@
 
 #include "test_modules.hpp"
 
-#include "mrc/core/executor.hpp"
-#include "mrc/engine/pipeline/ipipeline.hpp"
-#include "mrc/modules/mirror_tap/mirror_tap_orchestrator.hpp"
-#include "mrc/modules/module_registry.hpp"
-#include "mrc/options/options.hpp"
-#include "mrc/segment/builder.hpp"
+#include "mrc/cuda/device_guard.hpp"
 
-#include <gtest/gtest-message.h>
-#include <gtest/gtest-test-part.h>
-
-#include <utility>
-#include <vector>
+#include <gtest/gtest.h>
 
 using namespace mrc;
 
-TEST_F(TestMirrorTapStream, InitializationTest) {
-
-}
+TEST_F(TestMirrorTapStream, InitializationTest) {}
