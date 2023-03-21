@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "mrc/modules/segment_modules.hpp"  // for SegmentModule
+#include "mrc/modules/segment_modules.hpp"
 
-#include <pybind11/pybind11.h>  // for module_ (ptr only)
+#include <pybind11/pybind11.h>  // IWYU pragma: keep
 
-#include <string>  // for string
+#include <string>
 
 namespace mrc::segment {
 class Builder;

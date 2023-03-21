@@ -50,14 +50,14 @@ struct is_mrc_object_shared_pointer<std::shared_ptr<mrc::segment::Object<T>>> : 
 template <typename T>
 inline constexpr bool is_mrc_object_shared_ptr_v = is_mrc_object_shared_pointer<T>::value;  // NOLINT
 
-struct mrc_object_null_type
+struct mrc_object_null_type  // NOLINT
 {
     using source_type_t = void;
     using sink_type_t   = void;
 };
 
 template <typename T>
-struct mrc_object_sptr_type
+struct mrc_object_sptr_type  // NOLINT
 {
     using type_t = mrc_object_null_type;
 };

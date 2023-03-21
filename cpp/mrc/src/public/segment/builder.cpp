@@ -18,7 +18,7 @@
 #include "mrc/segment/builder.hpp"
 
 #include "mrc/modules/module_registry.hpp"
-#include "mrc/modules/properties/persistent.hpp"
+#include "mrc/modules/properties/persistent.hpp"  // IWYU pragma: keep
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/port_registry.hpp"
 
@@ -26,10 +26,6 @@
 
 #include <numeric>
 #include <stdexcept>
-
-namespace mrc::segment {
-struct ObjectProperties;
-}
 
 namespace {
 

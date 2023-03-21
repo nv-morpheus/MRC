@@ -45,8 +45,6 @@ class TestSegmentResources;
 
 namespace mrc {
 
-class TestSegmentResources;
-
 class StatGatherTest : public ::testing::Test
 {
   protected:

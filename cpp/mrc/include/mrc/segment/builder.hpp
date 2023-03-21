@@ -30,8 +30,8 @@
 #include "mrc/runnable/runnable.hpp"  // IWYU pragma: keep
 #include "mrc/segment/component.hpp"  // IWYU pragma: keep
 #include "mrc/segment/concepts/object_traits.hpp"
-#include "mrc/segment/object.hpp"  // IWYU pragma: keep
-#include "mrc/segment/runnable.hpp"
+#include "mrc/segment/object.hpp"    // IWYU pragma: keep
+#include "mrc/segment/runnable.hpp"  // IWYU pragma: keep
 #include "mrc/type_traits.hpp"
 #include "mrc/utils/macros.hpp"
 #include "mrc/utils/type_utils.hpp"

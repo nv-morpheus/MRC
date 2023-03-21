@@ -35,8 +35,10 @@
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <rxcpp/rx.hpp>
+#include <stddef.h>
 
 #include <atomic>
+#include <chrono>
 #include <exception>
 #include <map>
 #include <memory>

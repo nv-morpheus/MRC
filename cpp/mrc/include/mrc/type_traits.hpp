@@ -116,7 +116,7 @@ template <template <typename...> class BaseT, typename DerivedT>
 using is_base_of_template = typename is_base_of_template_impl<BaseT, DerivedT>::type;
 
 template <typename T, typename... TsT>
-struct first_non_void_type
+struct first_non_void_type  // NOLINT
 {
     using type_t = std::conditional_t<std::is_same_v<T, void>, typename first_non_void_type<TsT...>::type_t, T>;
 };
@@ -128,7 +128,7 @@ struct first_non_void_type<T>
 };
 
 template <typename... TsT>
-struct first_non_void_type_error_check : first_non_void_type<TsT...>
+struct first_non_void_type_error_check : first_non_void_type<TsT...>  // NOLINT
 {
     static_assert(!std::is_same_v<typename first_non_void_type<TsT...>::type_t, void>,
                   "Error: All types in the list are void");
