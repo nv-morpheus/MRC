@@ -41,9 +41,9 @@ class MirrorTapOrchestrator
     using type_t        = MirrorTapOrchestrator<DataTypeT>;
 
   public:
-    MirrorTapOrchestrator(std::string module_name);
+    MirrorTapOrchestrator(std::string tap_name);
 
-    MirrorTapOrchestrator(std::string module_name, nlohmann::json config);
+    MirrorTapOrchestrator(std::string tap_name, nlohmann::json config);
 
     initializer_t tap(initializer_t initializer, const std::string tap_from, const std::string tap_to)
     {

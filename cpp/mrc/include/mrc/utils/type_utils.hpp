@@ -16,15 +16,17 @@
  */
 
 #pragma once
+
 #include <boost/type_index.hpp>
 
+#include <array>
 #include <climits>
 #include <cstddef>
 #include <cstdint>
 #include <string>
 #include <string_view>
 #include <typeindex>
-#include <utility>
+#include <variant>
 
 namespace mrc {
 

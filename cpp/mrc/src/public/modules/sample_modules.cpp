@@ -28,7 +28,6 @@
 #include <map>
 #include <memory>
 #include <ostream>
-#include <string_view>
 #include <vector>
 
 namespace mrc::modules {

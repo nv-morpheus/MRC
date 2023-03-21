@@ -21,15 +21,12 @@
 #include "segment/module_definitions/segment_module_registry.hpp"
 #include "segment/module_definitions/segment_modules.hpp"
 
-#include "pymrc/module_registry.hpp"
-#include "pymrc/node.hpp"  // IWYU pragma: keep
-#include "pymrc/py_segment_module.hpp"
+#include "pymrc/node.hpp"
 #include "pymrc/types.hpp"
-#include "pymrc/utilities/function_wrappers.hpp"  // IWYU pragma: keep
+#include "pymrc/utilities/function_wrappers.hpp"
 #include "pymrc/utils.hpp"
 
 #include "mrc/edge/edge_connector.hpp"
-#include "mrc/modules/segment_modules.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/definition.hpp"

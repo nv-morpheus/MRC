@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include <pybind11/pybind11.h>  // IWYU pragma: keep
 
 namespace mrc::pymrc {
 #pragma GCC visibility push(default)

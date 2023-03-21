@@ -19,9 +19,7 @@
 
 #include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/node/rx_sink.hpp"
-#include "mrc/node/rx_sink_base.hpp"
 #include "mrc/node/rx_source.hpp"
-#include "mrc/node/rx_source_base.hpp"
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/definition.hpp"

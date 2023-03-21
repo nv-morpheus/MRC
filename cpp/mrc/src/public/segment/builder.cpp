@@ -14,11 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "mrc/segment/builder.hpp"
 
 #include "mrc/modules/module_registry.hpp"
-#include "mrc/modules/properties/persistent.hpp"
+#include "mrc/modules/properties/persistent.hpp"  // IWYU pragma: keep
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/port_registry.hpp"
 

@@ -18,15 +18,29 @@
 #include "test_modules.hpp"
 
 #include "mrc/core/executor.hpp"
+#include "mrc/cuda/device_guard.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/modules/mirror_tap/mirror_tap_orchestrator.hpp"
-#include "mrc/modules/module_registry.hpp"
+#include "mrc/modules/properties/persistent.hpp"
+#include "mrc/node/operators/broadcast.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_source.hpp"
 #include "mrc/options/options.hpp"
+#include "mrc/options/topology.hpp"
+#include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/segment/egress_ports.hpp"
+#include "mrc/segment/ingress_ports.hpp"
 
-#include <gtest/gtest-message.h>
-#include <gtest/gtest-test-part.h>
+#include <glog/logging.h>
+#include <gtest/gtest.h>
+#include <nlohmann/json.hpp>
+#include <rxcpp/rx.hpp>
 
+#include <map>
+#include <memory>
+#include <ostream>
+#include <string>
 #include <utility>
 #include <vector>
 

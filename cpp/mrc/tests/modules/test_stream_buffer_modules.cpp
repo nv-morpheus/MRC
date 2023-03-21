@@ -18,25 +18,39 @@
 #include "test_modules.hpp"
 
 #include "mrc/core/executor.hpp"
+#include "mrc/cuda/device_guard.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
-#include "mrc/modules/mirror_tap/mirror_tap_orchestrator.hpp"
-#include "mrc/modules/module_registry.hpp"
+#include "mrc/modules/properties/persistent.hpp"
 #include "mrc/modules/stream_buffer/stream_buffer_immediate.hpp"
 #include "mrc/modules/stream_buffer/stream_buffer_module.hpp"
+#include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_source.hpp"
 #include "mrc/options/options.hpp"
+#include "mrc/options/topology.hpp"
+#include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
 
-#include <gtest/gtest-message.h>
-#include <gtest/gtest-test-part.h>
+#include <boost/fiber/operations.hpp>
+#include <glog/logging.h>
+#include <gtest/gtest.h>
+#include <nlohmann/json.hpp>
+#include <rxcpp/rx.hpp>
 
+#include <chrono>
+#include <cstddef>
+#include <map>
+#include <memory>
+#include <ostream>
 #include <random>
+#include <string>
 #include <utility>
 #include <vector>
 
 using namespace mrc;
+using namespace mrc::modules::stream_buffers;
 
-using StreamBufferModuleImmediate =
-    modules::StreamBufferModule<std::string, modules::stream_buffers::StreamBufferImmediate>;  // NOLINT
+using StreamBufferModuleImmediate =                                        // NOLINT
+    mrc::modules::StreamBufferModule<std::string, StreamBufferImmediate>;  // NOLINT
 
 TEST_F(TestStreamBufferModule, InitailizationTest)
 {

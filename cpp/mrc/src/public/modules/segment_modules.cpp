@@ -17,7 +17,12 @@
 
 #include "mrc/modules/segment_modules.hpp"
 
+#include "mrc/edge/edge.hpp"
+#include "mrc/edge/edge_readable.hpp"
+#include "mrc/edge/edge_writable.hpp"
 #include "mrc/segment/object.hpp"
+
+#include <glog/logging.h>
 
 #include <ostream>
 #include <stdexcept>

@@ -20,15 +20,13 @@
 #include "pymrc/segment_modules.hpp"
 
 #include "mrc/modules/segment_modules.hpp"
-#include "mrc/segment/builder.hpp"
+#include "mrc/segment/builder.hpp"  // IWYU pragma: keep
 
-#include <nlohmann/json.hpp>
-#include <pybind11/functional.h>
+#include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
 
 #include <map>
-#include <vector>
+#include <memory>
 
 namespace mrc::pymrc {
 

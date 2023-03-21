@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "mrc/modules/mirror_tap/mirror_tap_stream.hpp"
 #include "mrc/modules/module_registry_util.hpp"
+#include "mrc/modules/properties/persistent.hpp"
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/operators/broadcast.hpp"
 #include "mrc/segment/builder.hpp"

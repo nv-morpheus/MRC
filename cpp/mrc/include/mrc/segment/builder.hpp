@@ -19,27 +19,26 @@
 
 #include "mrc/benchmarking/trace_statistics.hpp"
 #include "mrc/edge/edge_builder.hpp"
-#include "mrc/edge/edge_readable.hpp"
-#include "mrc/edge/edge_writable.hpp"
-#include "mrc/engine/segment/ibuilder.hpp"  // IWYU pragma: export
+#include "mrc/engine/segment/ibuilder.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
-#include "mrc/node/sink_properties.hpp"    // IWYU pragma: export
-#include "mrc/node/source_properties.hpp"  // IWYU pragma: export
+#include "mrc/node/sink_properties.hpp"
+#include "mrc/node/source_properties.hpp"
 #include "mrc/runnable/context.hpp"
-#include "mrc/runnable/runnable.hpp"  // IWYU pragma: export
-#include "mrc/segment/component.hpp"  // IWYU pragma: export
+#include "mrc/runnable/runnable.hpp"
+#include "mrc/segment/component.hpp"
 #include "mrc/segment/concepts/object_traits.hpp"
-#include "mrc/segment/object.hpp"    // IWYU pragma: export
-#include "mrc/segment/runnable.hpp"  // IWYU pragma: export
+#include "mrc/segment/object.hpp"
+#include "mrc/segment/runnable.hpp"
 #include "mrc/type_traits.hpp"
 #include "mrc/utils/macros.hpp"
+#include "mrc/utils/type_utils.hpp"
 
-#include <boost/hana/core/when.hpp>  // IWYU pragma: export
-#include <boost/hana/if.hpp>         // IWYU pragma: export
-#include <boost/hana/type.hpp>       // IWYU pragma: export
+#include <boost/hana/core/when.hpp>
+#include <boost/hana/if.hpp>
+#include <boost/hana/type.hpp>
 #include <glog/logging.h>
 #include <nlohmann/json.hpp>
 #include <rxcpp/rx.hpp>
@@ -48,28 +47,31 @@
 #include <functional>
 #include <memory>
 #include <ostream>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <typeindex>
 #include <utility>
 #include <vector>
 
+namespace mrc {
+struct WatcherInterface;
+}  // namespace mrc
+
+namespace mrc::modules {
+class SegmentModule;
+}  // namespace mrc::modules
+
 namespace mrc::node {
 template <typename T>
 class RxSinkBase;
+}  // namespace mrc::node
 
+namespace mrc::node {
 template <typename T>
 class RxSourceBase;
 }  // namespace mrc::node
 
-namespace mrc {
-struct WatcherInterface;
-}  // namespace mrc
-namespace mrc::modules {
-class PersistentModule;
-
-class SegmentModule;
-}  // namespace mrc::modules
 namespace mrc::segment {
 class Definition;
 }  // namespace mrc::segment
@@ -325,9 +327,9 @@ class Builder final
               MRCObjectProxy SpliceInputObjectT,
               MRCObjectProxy SpliceOutputObjectT>
     void splice_edge(SourceObjectT source,
-                          SinkObjectT sink,
-                          SpliceInputObjectT splice_input,
-                          SpliceOutputObjectT splice_output);
+                     SinkObjectT sink,
+                     SpliceInputObjectT splice_input,
+                     SpliceOutputObjectT splice_output);
 
     template <typename ObjectT>
     void add_throughput_counter(std::shared_ptr<segment::Object<ObjectT>> segment_object);
@@ -472,9 +474,9 @@ template <typename EdgeDataTypeT,
           MRCObjectProxy SpliceInputObjectT,
           MRCObjectProxy SpliceOutputObjectT>
 void Builder::splice_edge(SourceObjectT source,
-                               SinkObjectT sink,
-                               SpliceInputObjectT splice_input,
-                               SpliceOutputObjectT splice_output)
+                          SinkObjectT sink,
+                          SpliceInputObjectT splice_input,
+                          SpliceOutputObjectT splice_output)
 
 {
     auto& source_object = to_object_properties(source);

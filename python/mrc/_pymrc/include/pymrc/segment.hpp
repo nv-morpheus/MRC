@@ -210,10 +210,10 @@ class BuilderProxy
                           std::shared_ptr<mrc::segment::ObjectProperties> sink);
 
     static void splice_edge(mrc::segment::Builder& self,
-                                 std::string& source,
-                                 std::string& sink,
-                                 std::shared_ptr<mrc::segment::ObjectProperties> splice_input,
-                                 std::shared_ptr<mrc::segment::ObjectProperties> splice_output)
+                            std::string& source,
+                            std::string& sink,
+                            std::shared_ptr<mrc::segment::ObjectProperties> splice_input,
+                            std::shared_ptr<mrc::segment::ObjectProperties> splice_output)
     {}
 
     static std::shared_ptr<mrc::segment::ObjectProperties> get_ingress(mrc::segment::Builder& self,

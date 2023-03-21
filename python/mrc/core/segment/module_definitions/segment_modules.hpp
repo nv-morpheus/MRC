@@ -19,7 +19,9 @@
 
 #include "mrc/modules/segment_modules.hpp"
 
-#include <pybind11/pybind11.h>
+#include <pybind11/pybind11.h>  // IWYU pragma: keep
+
+#include <string>
 
 namespace mrc::pymrc {
 #pragma GCC visibility push(default)

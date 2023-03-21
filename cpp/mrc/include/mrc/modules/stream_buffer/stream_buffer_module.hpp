@@ -43,7 +43,8 @@ namespace mrc::modules {
  * We guarantee not to block the data stream; but, may drop data if the buffer is full.
  * @tparam DataTypeT The type of data to buffer
  */
-template <typename DataTypeT, template <typename> class StreamBufferTypeT = stream_buffers::StreamBufferImmediate>
+template <typename DataTypeT,
+          template <typename> class StreamBufferTypeT = mrc::modules::stream_buffers::StreamBufferImmediate>
 class StreamBufferModule : public SegmentModule, public PersistentModule
 {
     static_assert(stream_buffers::IsStreamBuffer<DataTypeT, StreamBufferTypeT>,

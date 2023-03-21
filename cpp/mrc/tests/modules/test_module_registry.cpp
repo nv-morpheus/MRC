@@ -21,6 +21,7 @@
 #include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/modules/module_registry.hpp"
 #include "mrc/modules/plugins.hpp"
+#include "mrc/modules/properties/persistent.hpp"
 #include "mrc/modules/sample_modules.hpp"
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/rx_sink.hpp"

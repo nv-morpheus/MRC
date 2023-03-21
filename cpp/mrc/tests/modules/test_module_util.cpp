@@ -18,9 +18,9 @@
 #include "test_modules.hpp"
 
 #include "mrc/modules/module_registry_util.hpp"
+#include "mrc/modules/properties/persistent.hpp"
 #include "mrc/modules/sample_modules.hpp"
 #include "mrc/node/rx_source.hpp"
-#include "mrc/segment/builder.hpp"
 #include "mrc/version.hpp"
 
 #include <gtest/gtest.h>

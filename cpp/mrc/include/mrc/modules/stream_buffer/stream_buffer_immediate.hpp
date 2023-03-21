@@ -30,12 +30,13 @@
 #include <cstddef>
 #include <deque>
 #include <iostream>
+#include <mutex>
 #include <string>
 
 namespace mrc::modules::stream_buffers {
 
 template <typename DataTypeT>
-class StreamBufferImmediate : StreamBufferBase<DataTypeT>
+class StreamBufferImmediate : public StreamBufferBase<DataTypeT>
 {
   public:
     StreamBufferImmediate() : m_ring_buffer_write(128), m_ring_buffer_read(128) {}
