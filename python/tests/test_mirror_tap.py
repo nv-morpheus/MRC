@@ -13,11 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
-import random
-
-import pytest
-
 import mrc
 
 VERSION = [int(cmpt) for cmpt in mrc.__version__.split(".")]
@@ -26,6 +21,9 @@ VERSION = [int(cmpt) for cmpt in mrc.__version__.split(".")]
 def test_mirror_tap_init():
     mirror_tap_one = mrc.MirrorTap("test_mirror_tap")
     mirror_tap_two = mrc.MirrorTap("test_mirror_tap", {"test": "test"})
+
+    assert (mirror_tap_one != None)
+    assert (mirror_tap_two != None)
 
 
 def test_single_pipeline_tap_and_buffer():
@@ -41,7 +39,6 @@ def test_single_pipeline_tap_and_buffer():
             yield {"data": i}
 
     def init_wrapper_main(builder: mrc.Builder):
-
         def on_next_sink(input):
             global packets_main
             packets_main += 1
@@ -58,7 +55,6 @@ def test_single_pipeline_tap_and_buffer():
         builder.make_edge(source, sink)
 
     def init_wrapper_mirrored(builder: mrc.Builder):
-
         def on_next_sink(input):
             global packets_mirrored
             packets_mirrored += 1
