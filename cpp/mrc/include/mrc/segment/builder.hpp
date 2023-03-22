@@ -448,8 +448,8 @@ void Builder::make_edge(SourceObjectT source, SinkObjectT sink)
                                                       source_sp_type_t,  // Fallback to Source deduced type
                                                       SourceNodeTypeT>;  // Fallback to Source explicit hint
 
-    VLOG(2) << "Deduced source type: " << mrc::boost_type_name<deduced_source_type_t>() << std::endl;
-    VLOG(2) << "Deduced sink type: " << mrc::boost_type_name<deduced_sink_type_t>() << std::endl;
+    VLOG(2) << "Deduced source type: " << mrc::type_name<deduced_source_type_t>() << std::endl;
+    VLOG(2) << "Deduced sink type: " << mrc::type_name<deduced_sink_type_t>() << std::endl;
 
     if (source_object.is_writable_acceptor() && sink_object.is_writable_provider())
     {

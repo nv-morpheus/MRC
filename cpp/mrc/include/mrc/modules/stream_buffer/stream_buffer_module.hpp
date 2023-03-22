@@ -145,6 +145,6 @@ void StreamBufferModule<DataTypeT, StreamBufferTypeT>::initialize(segment::Build
 template <typename DataTypeT, template <typename> class StreamBufferTypeT>
 std::string StreamBufferModule<DataTypeT, StreamBufferTypeT>::module_type_name() const
 {
-    return std::string(::mrc::boost_type_name<type_t>());
+    return std::string(::mrc::type_name<type_t>());
 }
 }  // namespace mrc::modules

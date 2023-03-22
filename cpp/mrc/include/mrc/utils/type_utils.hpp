@@ -174,42 +174,38 @@ struct DataType
     TypeId m_type_id;
 };
 
-template <typename T>
-std::string boost_type_name()
-{
-    return boost::typeindex::type_id<T>().pretty_name();
-}
-
 std::string type_name(std::type_index type_info);
 
 template <typename T>
 constexpr auto type_name() noexcept
 {
-    std::string_view name = "[with T = <UnsupportedType>]";
-#ifdef __clang__
-    name       = __PRETTY_FUNCTION__;
-    auto start = name.find_first_of('[');
-    auto end   = name.find_last_of(']');
-
-    name = name.substr(start, end - start + 1);
-#elif defined(__GNUC__)
-    name       = __PRETTY_FUNCTION__;
-    auto start = name.find_first_of('[');
-    auto end   = name.find_last_of(']');
-
-    name = name.substr(start, end - start + 1);
-#elif defined(_MSC_VER)
-    std::string_view prefix;
-    std::string_view suffix;
-    name   = __FUNCSIG__;
-    prefix = "auto __cdecl type_name<";
-    suffix = ">(void) noexcept";
-
-    name.remove_prefix(prefix.size());
-    name.remove_suffix(suffix.size());
-#endif
-
-    return name;
+    return boost::typeindex::type_id<T>().pretty_name();
+    // Previous implementation for posterity
+    //    std::string_view name = "[with T = <UnsupportedType>]";
+    // #ifdef __clang__
+    //    name       = __PRETTY_FUNCTION__;
+    //    auto start = name.find_first_of('[');
+    //    auto end   = name.find_last_of(']');
+    //
+    //    name = name.substr(start, end - start + 1);
+    // #elif defined(__GNUC__)
+    //    name       = __PRETTY_FUNCTION__;
+    //    auto start = name.find_first_of('[');
+    //    auto end   = name.find_last_of(']');
+    //
+    //    name = name.substr(start, end - start + 1);
+    // #elif defined(_MSC_VER)
+    //    std::string_view prefix;
+    //    std::string_view suffix;
+    //    name   = __FUNCSIG__;
+    //    prefix = "auto __cdecl type_name<";
+    //    suffix = ">(void) noexcept";
+    //
+    //    name.remove_prefix(prefix.size());
+    //    name.remove_suffix(suffix.size());
+    // #endif
+    //
+    //    return name;
 }
 
 }  // namespace mrc

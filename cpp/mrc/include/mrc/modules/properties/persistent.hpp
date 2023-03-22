@@ -18,6 +18,11 @@
 #pragma once
 
 namespace mrc::modules {
+/**
+ * @brief A module that is persistent across segment restarts.
+ * @note This module is not intended to be used directly. It is used as a property indicator for other segment modules.
+ * It is intentionally empty.
+ */
 class PersistentModule
 {};
 }  // namespace mrc::modules

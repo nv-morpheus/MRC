@@ -95,6 +95,6 @@ void MirrorTapStreamModule<DataTypeT>::initialize(segment::Builder& builder)
 template <typename DataTypeT>
 std::string MirrorTapStreamModule<DataTypeT>::module_type_name() const
 {
-    return std::string(::mrc::boost_type_name<type_t>());
+    return std::string(::mrc::type_name<type_t>());
 }
 }  // namespace mrc::modules

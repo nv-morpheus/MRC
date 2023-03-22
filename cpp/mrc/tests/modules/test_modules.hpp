@@ -126,7 +126,7 @@ void MultiSourceModule<DataTypeT, SourceCountV, EmissionCountV>::initialize(segm
 template <typename DataTypeT, std::size_t SinkCountV, std::size_t EmissionCountV>
 std::string MultiSourceModule<DataTypeT, SinkCountV, EmissionCountV>::module_type_name() const
 {
-    return std::string(::mrc::boost_type_name<type_t>());
+    return std::string(::mrc::type_name<type_t>());
 }
 
 template <typename DataTypeT, std::size_t SinkCountV>
@@ -175,7 +175,7 @@ void MultiSinkModule<DataTypeT, SinkCountV>::initialize(segment::Builder& builde
 template <typename DataTypeT, std::size_t SinkCountV>
 std::string MultiSinkModule<DataTypeT, SinkCountV>::module_type_name() const
 {
-    return std::string(::mrc::boost_type_name<type_t>());
+    return std::string(::mrc::type_name<type_t>());
 }
 
 using TestMirrorTapModule    = TestModules;  // NOLINT
