@@ -22,8 +22,8 @@ def test_mirror_tap_init():
     mirror_tap_one = mrc.MirrorTap("test_mirror_tap")
     mirror_tap_two = mrc.MirrorTap("test_mirror_tap", {"test": "test"})
 
-    assert (mirror_tap_one != None)
-    assert (mirror_tap_two != None)
+    assert (mirror_tap_one is not None)
+    assert (mirror_tap_two is not None)
 
 
 def test_single_pipeline_tap_and_buffer():
@@ -39,6 +39,7 @@ def test_single_pipeline_tap_and_buffer():
             yield {"data": i}
 
     def init_wrapper_main(builder: mrc.Builder):
+
         def on_next_sink(input):
             global packets_main
             packets_main += 1
@@ -55,6 +56,7 @@ def test_single_pipeline_tap_and_buffer():
         builder.make_edge(source, sink)
 
     def init_wrapper_mirrored(builder: mrc.Builder):
+
         def on_next_sink(input):
             global packets_mirrored
             packets_mirrored += 1
