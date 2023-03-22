@@ -179,7 +179,6 @@ std::string MultiSinkModule<DataTypeT, SinkCountV>::module_type_name() const
 }
 
 using TestMirrorTapModule    = TestModules;  // NOLINT
-using TestMirrorTapStream    = TestModules;  // NOLINT
 using TestMirrorTapUtil      = TestModules;  // NOLINT
 using TestModuleRegistry     = TestModules;  // NOLINT
 using TestModuleUtil         = TestModules;  // NOLINT

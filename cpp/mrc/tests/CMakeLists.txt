@@ -21,7 +21,6 @@ add_executable(test_mrc
   coroutines/test_task.cpp
   modules/test_mirror_tap_module.cpp
   modules/test_mirror_tap_orchestrator.cpp
-  modules/test_mirror_tap_stream.cpp
   modules/test_module_registry.cpp
   modules/test_module_util.cpp
   modules/test_segment_modules.cpp
