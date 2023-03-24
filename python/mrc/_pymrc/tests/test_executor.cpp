@@ -26,9 +26,10 @@
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <gtest/gtest.h>
-#include <pybind11/embed.h>  // IWYU pragma: keep
+#include <pybind11/embed.h>
 #include <rxcpp/rx.hpp>
 
 #include <atomic>

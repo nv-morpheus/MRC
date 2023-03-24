@@ -30,6 +30,7 @@
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
 #include "mrc/types.hpp"
 
 #include <boost/fiber/future/future.hpp>

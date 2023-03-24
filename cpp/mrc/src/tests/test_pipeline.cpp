@@ -28,6 +28,7 @@
 #include "internal/utils/collision_detector.hpp"
 
 #include "mrc/channel/channel.hpp"
+#include "mrc/channel/status.hpp"
 #include "mrc/core/addresses.hpp"
 #include "mrc/core/executor.hpp"
 #include "mrc/data/reusable_pool.hpp"
@@ -35,9 +36,7 @@
 #include "mrc/node/queue.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
-#include "mrc/node/rx_sink_base.hpp"
 #include "mrc/node/rx_source.hpp"
-#include "mrc/node/rx_source_base.hpp"
 #include "mrc/options/engine_groups.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
@@ -48,6 +47,7 @@
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
+#include "mrc/segment/object.hpp"
 #include "mrc/utils/macros.hpp"
 
 #include <boost/fiber/fiber.hpp>

@@ -19,6 +19,7 @@
 
 #include "mrc/core/executor.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
+#include "mrc/modules/properties/persistent.hpp"
 #include "mrc/modules/sample_modules.hpp"
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/rx_sink.hpp"
@@ -27,6 +28,7 @@
 #include "mrc/options/topology.hpp"
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
@@ -162,7 +164,7 @@ TEST_F(TestSegmentModules, ModuleEndToEndTest)
         });
 
         // Ex2. Dynamic edge construction -- requires type specification
-        builder.make_dynamic_edge<bool, bool>(source2, simple_mod->input_port("input2"));
+        builder.make_edge(source2, simple_mod->input_port("input2"));
 
         auto sink1 = builder.make_sink<std::string>("sink1", [&packets_1](std::string input) {
             packets_1++;
@@ -303,7 +305,7 @@ TEST_F(TestSegmentModules, ModuleChainingTest)
         auto source_mod = builder.make_module<SourceModule>("ModuleChainingTest_mod1", config);
         builder.init_module(sink_mod);
 
-        builder.make_dynamic_edge<bool, bool>(source_mod->output_port("source"), sink_mod->input_port("sink"));
+        builder.make_edge<bool>(source_mod->output_port("source"), sink_mod->input_port("sink"));
     };
 
     m_pipeline->make_segment("SimpleModule_Segment", init_wrapper);

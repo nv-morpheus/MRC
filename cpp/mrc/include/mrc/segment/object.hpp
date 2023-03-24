@@ -353,5 +353,4 @@ edge::IReadableProviderBase& Object<ObjectT>::readable_provider_base()
     CHECK(base);
     return *base;
 }
-
 }  // namespace mrc::segment

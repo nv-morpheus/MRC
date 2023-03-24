@@ -17,18 +17,20 @@
 
 #include "pymrc/segment.hpp"
 
-#include "pymrc/module_registry.hpp"
+#include "segment/module_definitions/mirror_tap_orchestrator.hpp"
+#include "segment/module_definitions/segment_module_registry.hpp"
+#include "segment/module_definitions/segment_modules.hpp"
+
 #include "pymrc/node.hpp"  // IWYU pragma: keep
-#include "pymrc/segment_modules.hpp"
 #include "pymrc/types.hpp"
 #include "pymrc/utilities/function_wrappers.hpp"  // IWYU pragma: keep
 #include "pymrc/utils.hpp"
 
 #include "mrc/edge/edge_connector.hpp"
-#include "mrc/modules/segment_modules.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/definition.hpp"
+#include "mrc/segment/object.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 
@@ -39,8 +41,6 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
-#include <functional>
-#include <map>
 #include <memory>
 #include <sstream>
 #include <vector>
@@ -49,9 +49,9 @@ namespace mrc::pymrc {
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(segment, module)
+PYBIND11_MODULE(segment, py_mod)
 {
-    module.doc() = R"pbdoc(
+    py_mod.doc() = R"pbdoc(
         Python bindings for MRC Segments
         -------------------------------
         .. currentmodule:: segment
@@ -60,8 +60,8 @@ PYBIND11_MODULE(segment, module)
     )pbdoc";
 
     // Common must be first in every module
-    pymrc::import(module, "mrc.core.common");
-    pymrc::import(module, "mrc.core.subscriber");
+    pymrc::import(py_mod, "mrc.core.common");
+    pymrc::import(py_mod, "mrc.core.subscriber");
 
     // Type 'b'
     edge::EdgeConnector<bool, PyHolder>::register_converter();
@@ -92,26 +92,28 @@ PYBIND11_MODULE(segment, module)
     edge::EdgeConnector<std::string, PyHolder>::register_converter();
     edge::EdgeConnector<PyHolder, std::string>::register_converter();
 
-    py::class_<mrc::runnable::LaunchOptions>(module, "LaunchOptions")
+    py::class_<mrc::runnable::LaunchOptions>(py_mod, "LaunchOptions")
         .def_readwrite("pe_count", &mrc::runnable::LaunchOptions::pe_count)
         .def_readwrite("engines_per_pe", &mrc::runnable::LaunchOptions::engines_per_pe)
         .def_readwrite("engine_factory_name", &mrc::runnable::LaunchOptions::engine_factory_name);
 
     // Base SegmentObject that all object usually derive from
-    py::class_<mrc::segment::ObjectProperties, std::shared_ptr<mrc::segment::ObjectProperties>>(module, "SegmentObject")
+    py::class_<mrc::segment::ObjectProperties, std::shared_ptr<mrc::segment::ObjectProperties>>(py_mod, "SegmentObject")
         .def_property_readonly("name", &PyNode::name)
         .def_property_readonly("launch_options",
                                py::overload_cast<>(&mrc::segment::ObjectProperties::launch_options),
                                py::return_value_policy::reference_internal);
 
-    auto Builder       = py::class_<mrc::segment::Builder>(module, "Builder");
-    auto Definition    = py::class_<mrc::segment::Definition>(module, "Definition");
-    auto SegmentModule = py::class_<mrc::modules::SegmentModule, std::shared_ptr<mrc::modules::SegmentModule>>(module,
-                                                                                                               "Segment"
-                                                                                                               "Modul"
-                                                                                                               "e");
-    auto SegmentModuleRegistry = py::class_<ModuleRegistryProxy>(module, "ModuleRegistry");
+    auto Builder    = py::class_<mrc::segment::Builder>(py_mod, "Builder");
+    auto Definition = py::class_<mrc::segment::Definition>(py_mod, "Definition");
 
+    init_segment_modules(py_mod);
+    init_segment_module_registry(py_mod);
+    init_mirror_tap_orchestrator(py_mod);
+
+    register_mirror_tap_modules();
+
+    // Initialize definitions for segment modules
     /** Builder Interface Declarations **/
     /*
      * @brief Make a source node that generates py::object values
@@ -222,6 +224,13 @@ PYBIND11_MODULE(segment, module)
 
     Builder.def("make_edge", &BuilderProxy::make_edge, py::arg("source"), py::arg("sink"));
 
+    Builder.def("splice_edge",
+                &BuilderProxy::splice_edge,
+                py::arg("source"),
+                py::arg("sink"),
+                py::arg("splice_input"),
+                py::arg("splice_output"));
+
     Builder.def("load_module",
                 &BuilderProxy::load_module_from_registry,
                 py::arg("module_id"),
@@ -243,80 +252,7 @@ PYBIND11_MODULE(segment, module)
 
     Builder.def("make_node_full", &BuilderProxy::make_node_full, py::return_value_policy::reference_internal);
 
-    /** Segment Module Interface Declarations **/
-    SegmentModule.def("config", &SegmentModuleProxy::config);
-
-    SegmentModule.def("component_prefix", &SegmentModuleProxy::component_prefix);
-
-    SegmentModule.def("input_port", &SegmentModuleProxy::input_port, py::arg("input_id"));
-
-    SegmentModule.def("input_ports", &SegmentModuleProxy::input_ports);
-
-    SegmentModule.def("module_type_name", &SegmentModuleProxy::module_type_name);
-
-    SegmentModule.def("name", &SegmentModuleProxy::name);
-
-    SegmentModule.def("output_port", &SegmentModuleProxy::output_port, py::arg("output_id"));
-
-    SegmentModule.def("output_ports", &SegmentModuleProxy::output_ports);
-
-    SegmentModule.def("input_ids", &SegmentModuleProxy::input_ids);
-
-    SegmentModule.def("output_ids", &SegmentModuleProxy::output_ids);
-
-    // TODO(drobison): need to think about if/how we want to expose type_ids to Python... It might allow for some nice
-    // flexibility SegmentModule.def("input_port_type_id", &SegmentModuleProxy::input_port_type_id, py::arg("input_id"))
-    // SegmentModule.def("input_port_type_ids", &SegmentModuleProxy::input_port_type_id)
-    // SegmentModule.def("output_port_type_id", &SegmentModuleProxy::output_port_type_id, py::arg("output_id"))
-    // SegmentModule.def("output_port_type_ids", &SegmentModuleProxy::output_port_type_id)
-
-    /** Module Register Interface Declarations **/
-    SegmentModuleRegistry.def_static("contains",
-                                     &ModuleRegistryProxy::contains,
-                                     py::arg("name"),
-                                     py::arg("registry_namespace"));
-
-    SegmentModuleRegistry.def_static("contains_namespace",
-                                     &ModuleRegistryProxy::contains_namespace,
-                                     py::arg("registry_namespace"));
-
-    SegmentModuleRegistry.def_static("registered_modules", &ModuleRegistryProxy::registered_modules);
-
-    SegmentModuleRegistry.def_static("is_version_compatible",
-                                     &ModuleRegistryProxy::is_version_compatible,
-                                     py::arg("release_version"));
-
-    SegmentModuleRegistry.def_static("get_module_constructor",
-                                     &ModuleRegistryProxy::get_module_constructor,
-                                     py::arg("name"),
-                                     py::arg("registry_namespace"));
-
-    SegmentModuleRegistry.def_static(
-        "register_module",
-        static_cast<void (*)(std::string, const std::vector<unsigned int>&, std::function<void(mrc::segment::Builder&)>)>(
-            &ModuleRegistryProxy::register_module),
-        py::arg("name"),
-        py::arg("release_version"),
-        py::arg("fn_constructor"));
-
-    SegmentModuleRegistry.def_static(
-        "register_module",
-        static_cast<void (*)(std::string,
-                             std::string,
-                             const std::vector<unsigned int>&,
-                             std::function<void(mrc::segment::Builder&)>)>(&ModuleRegistryProxy::register_module),
-        py::arg("name"),
-        py::arg("registry_namespace"),
-        py::arg("release_version"),
-        py::arg("fn_constructor"));
-
-    SegmentModuleRegistry.def_static("unregister_module",
-                                     &ModuleRegistryProxy::unregister_module,
-                                     py::arg("name"),
-                                     py::arg("registry_namespace"),
-                                     py::arg("optional") = true);
-
-    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+    py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

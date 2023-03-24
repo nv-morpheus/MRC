@@ -92,7 +92,6 @@ if(NOT DEFINED CMAKE_CUDA_HOST_COMPILER)
   # incompatible with CUDA 11.4/11.5/11.6. See Issue #102
   if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
-
   endif()
 endif()
 

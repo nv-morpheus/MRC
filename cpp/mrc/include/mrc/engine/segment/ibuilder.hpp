@@ -29,12 +29,13 @@ class Launchable;
 }  // namespace mrc::runnable
 
 // todo(ryan) - most base classes that will be owned by the engine will need to be moved to engine api/lib
+namespace mrc::modules {
+class SegmentModule;
+}
 namespace mrc::segment {
-
 class ObjectProperties;
 class EgressPortBase;
 class IngressPortBase;
-
 }  // namespace mrc::segment
 
 namespace mrc::internal::segment {
@@ -54,6 +55,7 @@ class IBuilder final
     bool has_object(const std::string& name) const;
     ::mrc::segment::ObjectProperties& find_object(const std::string& name);
     void add_object(const std::string& name, std::shared_ptr<::mrc::segment::ObjectProperties> object);
+    void add_module(const std::string& name, std::shared_ptr<mrc::modules::SegmentModule> module);
     void add_runnable(const std::string& name, std::shared_ptr<mrc::runnable::Launchable> runnable);
     std::shared_ptr<::mrc::segment::IngressPortBase> get_ingress_base(const std::string& name);
     std::shared_ptr<::mrc::segment::EgressPortBase> get_egress_base(const std::string& name);
