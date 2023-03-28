@@ -66,7 +66,7 @@ jobs:
   check:
     if: ${{ inputs.run_check }}
     name: Check
-    runs-on: [self-hosted, linux, amd64, cpu4]
+    runs-on: linux-amd64-cpu4
     timeout-minutes: 60
     container:
       credentials:
@@ -97,7 +97,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: [self-hosted, linux, amd64, cpu16]
+    runs-on: linux-amd64-cpu16
     timeout-minutes: 60
     container:
       credentials:
@@ -212,7 +212,7 @@ jobs:
   documentation:
     name: Documentation
     needs: [build]
-    runs-on: [self-hosted, linux, amd64, cpu4]
+    runs-on: linux-amd64-cpu4
     timeout-minutes: 60
     container:
       credentials:
@@ -243,7 +243,7 @@ jobs:
   benchmark:
     name: Benchmark
     needs: [build]
-    runs-on: [self-hosted, linux, amd64, cpu4]
+    runs-on: linux-amd64-cpu4
     timeout-minutes: 60
     container:
       credentials:
@@ -283,7 +283,7 @@ jobs:
     name: Package
     if: ${{ inputs.run_package_conda }}
     needs: [benchmark, documentation, test]
-    runs-on: [self-hosted, linux, amd64, cpu16]
+    runs-on: linux-amd64-cpu16
     timeout-minutes: 60
     container:
       credentials:
