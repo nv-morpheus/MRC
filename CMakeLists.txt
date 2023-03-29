@@ -78,7 +78,7 @@ morpheus_utils_initialize_package_manager(
 morpheus_utils_initialize_cuda_arch(mrc)
 
 project(mrc
-  VERSION 23.01.00
+  VERSION 23.03.00
   LANGUAGES C CXX
 )
 
@@ -92,7 +92,6 @@ if(NOT DEFINED CMAKE_CUDA_HOST_COMPILER)
   # incompatible with CUDA 11.4/11.5/11.6. See Issue #102
   if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
-
   endif()
 endif()
 
@@ -100,7 +99,18 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   # Our version of NVCC officially only supports clang versions 3.2 - 13, we are now using 14
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -allow-unsupported-compiler")
 
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines-ts")
+  # Check if the major version of Clang is greater than 15
+  execute_process(COMMAND "${CMAKE_CXX_COMPILER}" "--version"
+      OUTPUT_VARIABLE clang_version_info
+      ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+  string(REGEX MATCH "version [0-9]+" clang_version_value ${clang_version_info})
+  string(REGEX REPLACE "version ([0-9]+)" "\\1" clang_version ${clang_version_value})
+
+  if(${clang_version} VERSION_LESS_EQUAL "15")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines-ts")
+  endif()
+
 endif()
 
 # Now enable CUDA

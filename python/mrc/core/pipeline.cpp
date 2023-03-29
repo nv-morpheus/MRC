@@ -35,9 +35,9 @@ namespace mrc::pymrc {
 namespace py = pybind11;
 
 // Define the pybind11 module m, as 'pipeline'.
-PYBIND11_MODULE(pipeline, module)
+PYBIND11_MODULE(pipeline, py_mod)
 {
-    module.doc() = R"pbdoc(
+    py_mod.doc() = R"pbdoc(
         Python bindings for MRC pipelines
         -------------------------------
         .. currentmodule:: pipeline
@@ -46,10 +46,10 @@ PYBIND11_MODULE(pipeline, module)
     )pbdoc";
 
     // Common must be first in every module
-    pymrc::import(module, "mrc.core.common");
-    pymrc::import(module, "mrc.core.segment");
+    pymrc::import(py_mod, "mrc.core.common");
+    pymrc::import(py_mod, "mrc.core.segment");
 
-    py::class_<Pipeline>(module, "Pipeline")
+    py::class_<Pipeline>(py_mod, "Pipeline")
         .def(py::init<>())
         .def(
             "make_segment",
@@ -64,7 +64,7 @@ PYBIND11_MODULE(pipeline, module)
                                                 const std::function<void(mrc::segment::Builder&)>&)>(
                      &Pipeline::make_segment)));
 
-    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+    py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

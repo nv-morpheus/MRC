@@ -19,9 +19,6 @@ run-name: CI Pipeline
 on:
   workflow_call:
     inputs:
-      aws_region:
-        default: 'us-west-2'
-        type: string
       run_check:
         required: true
         type: boolean
@@ -39,17 +36,10 @@ on:
         required: true
       CONDA_TOKEN:
         required: true
-      GHA_AWS_ACCESS_KEY_ID:
-        required: true
-      GHA_AWS_SECRET_ACCESS_KEY:
-        required: true
       NGC_API_KEY:
         required: true
 
 env:
-  AWS_DEFAULT_REGION: ${{ inputs.aws_region }}
-  AWS_ACCESS_KEY_ID: "${{ secrets.GHA_AWS_ACCESS_KEY_ID }}"
-  AWS_SECRET_ACCESS_KEY: "${{ secrets.GHA_AWS_SECRET_ACCESS_KEY }}"
   CHANGE_TARGET: "${{ github.base_ref }}"
   GH_TOKEN: "${{ github.token }}"
   GIT_COMMIT: "${{ github.sha }}"
@@ -57,6 +47,20 @@ env:
   WORKSPACE: "${{ github.workspace }}/mrc"
   WORKSPACE_TMP: "${{ github.workspace }}/tmp"
 
+permissions:
+  actions: none
+  checks: none
+  contents: read
+  deployments: none
+  discussions: none
+  id-token: write
+  issues: none
+  packages: read
+  pages: none
+  pull-requests: read
+  repository-projects: none
+  security-events: none
+  statuses: none
 
 jobs:
   check:
@@ -79,6 +83,13 @@ jobs:
           lfs: false
           path: 'mrc'
           fetch-depth: 0
+
+      - name: Get AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 43200 # 12h
 
       - name: Check
         shell: bash
@@ -105,6 +116,13 @@ jobs:
           lfs: false
           path: 'mrc'
 
+      - name: Get AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 43200 # 12h
+
       - name: Build:linux:x86_64
         shell: bash
         env:
@@ -114,7 +132,7 @@ jobs:
   test:
     name: Test
     needs: [build]
-    runs-on: [self-hosted, linux, amd64, gpu-v100-495-1]
+    runs-on: [self-hosted, linux, amd64, gpu-v100-525-1]
     timeout-minutes: 60
     container:
       credentials:
@@ -137,6 +155,13 @@ jobs:
           lfs: false
           path: 'mrc'
 
+      - name: Get AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 43200 # 12h
+
       - name: Test:linux:x86_64
         shell: bash
         env:
@@ -146,7 +171,7 @@ jobs:
 
   codecov:
     name: Code Coverage
-    runs-on: [self-hosted, linux, amd64, gpu-v100-495-1]
+    runs-on: [self-hosted, linux, amd64, gpu-v100-525-1]
     timeout-minutes: 60
     container:
       credentials:
@@ -166,6 +191,13 @@ jobs:
         with:
           lfs: false
           path: 'mrc'
+
+      - name: Get AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 43200 # 12h
 
       - name: Build
         shell: bash
@@ -197,6 +229,13 @@ jobs:
           lfs: false
           path: 'mrc'
 
+      - name: Get AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 43200 # 12h
+
       - name: build_docs
         shell: bash
         run: ./mrc/ci/scripts/github/docs.sh
@@ -221,6 +260,13 @@ jobs:
         with:
           lfs: false
           path: 'mrc'
+
+      - name: Get AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 43200 # 12h
 
       - name: pre_benchmark
         shell: bash
@@ -254,6 +300,13 @@ jobs:
           lfs: false
           path: 'mrc'
           fetch-depth: 0
+
+      - name: Get AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 43200 # 12h
 
       - name: conda
         shell: bash

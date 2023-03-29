@@ -31,7 +31,7 @@ dependencies:
   - python=3.8
   - scikit-build>=0.12
   - spdlog=1.8.5
-  - mrc=23.01
+  - mrc=23.03
   - sysroot_linux-64=2.17
   - pip:
     - cython

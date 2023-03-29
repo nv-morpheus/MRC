@@ -36,9 +36,9 @@ namespace mrc::pymrc {
 namespace py = pybind11;
 
 // Define the pybind11 module m, as 'pipeline'.
-PYBIND11_MODULE(operators, module)
+PYBIND11_MODULE(operators, py_mod)
 {
-    module.doc() = R"pbdoc(
+    py_mod.doc() = R"pbdoc(
         Python bindings for MRC operators
         -------------------------------
         .. currentmodule:: operators
@@ -47,20 +47,20 @@ PYBIND11_MODULE(operators, module)
     )pbdoc";
 
     // Common must be first in every module
-    pymrc::import(module, "mrc.core.common");
-    pymrc::import(module, "mrc.core.subscriber");
+    pymrc::import(py_mod, "mrc.core.common");
+    pymrc::import(py_mod, "mrc.core.subscriber");
 
-    py::class_<PythonOperator>(module, "Operator").def_property_readonly("name", &OperatorProxy::get_name);
+    py::class_<PythonOperator>(py_mod, "Operator").def_property_readonly("name", &OperatorProxy::get_name);
 
-    module.def("build", &OperatorsProxy::build);
-    module.def("filter", &OperatorsProxy::filter);
-    module.def("flatten", &OperatorsProxy::flatten);
-    module.def("map", &OperatorsProxy::map);
-    module.def("on_completed", &OperatorsProxy::on_completed);
-    module.def("pairwise", &OperatorsProxy::pairwise);
-    module.def("to_list", &OperatorsProxy::to_list);
+    py_mod.def("build", &OperatorsProxy::build);
+    py_mod.def("filter", &OperatorsProxy::filter);
+    py_mod.def("flatten", &OperatorsProxy::flatten);
+    py_mod.def("map", &OperatorsProxy::map);
+    py_mod.def("on_completed", &OperatorsProxy::on_completed);
+    py_mod.def("pairwise", &OperatorsProxy::pairwise);
+    py_mod.def("to_list", &OperatorsProxy::to_list);
 
-    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+    py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

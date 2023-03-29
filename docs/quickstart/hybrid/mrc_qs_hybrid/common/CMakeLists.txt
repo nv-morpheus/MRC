@@ -15,8 +15,6 @@
 
 morpheus_utils_add_pybind11_library(
   data
-  # MODULE_ROOT
-  # ${QUICKSTART_HYBRID_HOME}
   SOURCE_FILES
     data.cpp
   LINK_TARGETS
@@ -30,8 +28,6 @@ target_include_directories(${common_data_target}
     ./include
 )
 
-morpheus_utils_inplace_build_copy(${common_data_target} ${CMAKE_CURRENT_SOURCE_DIR})
-
 morpheus_utils_add_pybind11_library(
   nodes
   SOURCE_FILES
@@ -41,8 +37,6 @@ morpheus_utils_add_pybind11_library(
   OUTPUT_TARGET
     nodes_data_target
 )
-
-morpheus_utils_inplace_build_copy(${nodes_data_target} ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Set this variable in the parent scope so other examples can link to it
 set(common_data_target ${common_data_target} PARENT_SCOPE)

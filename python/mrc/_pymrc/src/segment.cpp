@@ -25,12 +25,14 @@
 #include "pymrc/utilities/function_wrappers.hpp"
 #include "pymrc/utils.hpp"
 
+#include "mrc/channel/status.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/port_registry.hpp"
 #include "mrc/node/rx_sink_base.hpp"
 #include "mrc/node/rx_source_base.hpp"
 #include "mrc/runnable/context.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
 #include "mrc/types.hpp"
 
 #include <glog/logging.h>
@@ -467,9 +469,9 @@ std::shared_ptr<mrc::modules::SegmentModule> BuilderProxy::load_module_from_regi
     return self.load_module_from_registry(module_id, registry_namespace, std::move(module_name), std::move(json_config));
 }
 
-void BuilderProxy::init_module(mrc::segment::Builder& self, std::shared_ptr<mrc::modules::SegmentModule> module)
+void BuilderProxy::init_module(mrc::segment::Builder& self, std::shared_ptr<mrc::modules::SegmentModule> smodule)
 {
-    self.init_module(module);
+    self.init_module(smodule);
 }
 
 void BuilderProxy::register_module_input(mrc::segment::Builder& self,

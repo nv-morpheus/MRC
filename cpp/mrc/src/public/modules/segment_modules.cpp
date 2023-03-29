@@ -17,7 +17,12 @@
 
 #include "mrc/modules/segment_modules.hpp"
 
+#include "mrc/edge/edge.hpp"
+#include "mrc/edge/edge_readable.hpp"
+#include "mrc/edge/edge_writable.hpp"
 #include "mrc/segment/object.hpp"
+
+#include <glog/logging.h>
 
 #include <ostream>
 #include <stdexcept>
@@ -149,6 +154,38 @@ void SegmentModule::operator()(segment::Builder& builder)
 
 void SegmentModule::register_input_port(std::string input_name, std::shared_ptr<segment::ObjectProperties> object)
 {
+    // Seems to be required for ingress ports
+    if (object->is_sink())
+    {
+        register_typed_input_port(std::move(input_name), object, object->sink_type());
+        return;
+    }
+
+    if (object->is_writable_provider())
+    {
+        auto& writable_provider = object->writable_provider_base();
+        register_typed_output_port(std::move(input_name),
+                                   object,
+                                   writable_provider.writable_provider_type().unwrapped_type());
+        return;
+    }
+
+    if (object->is_readable_acceptor())
+    {
+        auto& readable_acceptor = object->readable_acceptor_base();
+        register_typed_input_port(std::move(input_name),
+                                  object,
+                                  readable_acceptor.readable_acceptor_type().unwrapped_type());
+        return;
+    }
+
+    throw std::invalid_argument("Input port object must be a writable provider or readable acceptor");
+}
+
+void SegmentModule::register_typed_input_port(std::string input_name,
+                                              std::shared_ptr<segment::ObjectProperties> object,
+                                              std::type_index tidx)
+{
     if (m_input_ports.find(input_name) != m_input_ports.end())
     {
         std::stringstream sstream;
@@ -157,12 +194,46 @@ void SegmentModule::register_input_port(std::string input_name, std::shared_ptr<
         throw std::invalid_argument(sstream.str());
     }
 
+    VLOG(5) << "Registering input port: " << input_name << " with type: " << tidx.name() << " for module: " << name();
+
     m_input_port_ids.push_back(input_name);
     m_input_ports[input_name] = object;
-    m_input_port_type_indices.try_emplace(input_name, object->sink_type());
+    m_input_port_type_indices.try_emplace(input_name, tidx);
 }
 
 void SegmentModule::register_output_port(std::string output_name, std::shared_ptr<segment::ObjectProperties> object)
+{
+    // Seems to be necessary for egress ports.
+    if (object->is_source())
+    {
+        register_typed_output_port(std::move(output_name), object, object->source_type());
+        return;
+    }
+
+    if (object->is_writable_acceptor())
+    {
+        auto& writable_acceptor = object->writable_acceptor_base();
+        register_typed_output_port(std::move(output_name),
+                                   object,
+                                   writable_acceptor.writable_acceptor_type().unwrapped_type());
+        return;
+    }
+
+    if (object->is_readable_provider())
+    {
+        auto& readable_provider = object->readable_provider_base();
+        register_typed_output_port(std::move(output_name),
+                                   object,
+                                   readable_provider.readable_provider_type().unwrapped_type());
+        return;
+    }
+
+    throw std::invalid_argument("Output port object must be a writable acceptor or readable provider");
+}
+
+void SegmentModule::register_typed_output_port(std::string output_name,
+                                               std::shared_ptr<segment::ObjectProperties> object,
+                                               std::type_index tidx)
 {
     if (m_output_ports.find(output_name) != m_output_ports.end())
     {
@@ -172,9 +243,11 @@ void SegmentModule::register_output_port(std::string output_name, std::shared_pt
         throw std::invalid_argument(sstream.str());
     }
 
+    VLOG(5) << "Registering output port: " << output_name << " with type: " << tidx.name() << " for module: " << name();
+
     m_output_port_ids.push_back(output_name);
     m_output_ports[output_name] = object;
-    m_output_port_type_indices.try_emplace(output_name, object->source_type());
+    m_output_port_type_indices.try_emplace(output_name, tidx);
 }
 
 }  // namespace mrc::modules

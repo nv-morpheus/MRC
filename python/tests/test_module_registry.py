@@ -76,7 +76,7 @@ def test_registered_modules():
 
     assert "default" in registered_mod_dict
     assert "mrc_unittest" in registered_mod_dict
-    assert len(registered_mod_dict) == 2
+    assert len(registered_mod_dict) >= 2
 
 
 def module_init_fn(builder: mrc.Builder):

@@ -272,7 +272,7 @@ class LongEmitReceiveFixture : public benchmark::Fixture
                     }),
                     m_watcher->create_tracer_emit_tap(int_name));
 
-                segment.make_dynamic_edge<data_type_t>(last_node, internal);
+                segment.make_edge(last_node, internal);
                 last_node = internal;
             }
 
@@ -281,7 +281,7 @@ class LongEmitReceiveFixture : public benchmark::Fixture
                 sink_name,
                 m_watcher->create_tracer_sink_lambda(sink_name, [](tracer_type_t& data) {}));
 
-            segment.make_dynamic_edge<data_type_t>(last_node, sink);
+            segment.make_edge(last_node, sink);
         };
 
         auto pipeline = pipeline::make_pipeline();

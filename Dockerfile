@@ -62,9 +62,15 @@ RUN --mount=type=cache,target=/var/cache/apt \
     apt update && \
     DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC \
     apt install --no-install-recommends -y \
-    libnvidia-compute-495 \
+    libnvidia-compute-525 \
     && \
     rm -rf /var/lib/apt/lists/*
+
+# ============ test ==================
+FROM base as test
+
+# Add any test only dependencies here. For now there is none but we need the
+# target to get the CI runner build scripts to work
 
 # ========= development ================
 FROM base as development

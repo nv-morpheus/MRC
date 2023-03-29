@@ -81,10 +81,10 @@ void ModuleRegistryProxy::register_module(std::string name,
 {
     VLOG(2) << "Registering python module: " << registry_namespace << "::" << name;
     auto fn_constructor = [fn_py_initializer](std::string name, nlohmann::json config) {
-        auto module             = std::make_shared<PythonSegmentModule>(std::move(name), std::move(config));
-        module->m_py_initialize = fn_py_initializer;
+        auto smodule             = std::make_shared<PythonSegmentModule>(std::move(name), std::move(config));
+        smodule->m_py_initialize = fn_py_initializer;
 
-        return module;
+        return smodule;
     };
 
     mrc::modules::ModuleRegistry::register_module(name, registry_namespace, release_version, fn_constructor);
