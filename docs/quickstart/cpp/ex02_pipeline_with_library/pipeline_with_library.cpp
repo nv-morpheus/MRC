@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -50,8 +50,9 @@ int main(int argc, char* argv[])
         // A Node is both a Source and a Sink, it connects to an upstream provider/source and a downstream
         // subscriber/sink. This examples accects an upstream int and provides a downstream float which is the input
         // value scaled by 2.5.
-        auto node = s.make_node<int, float>("int_x2_to_float",
-                                            rxcpp::operators::map([](const int& data) { return float(2.5F * data); }));
+        auto node = s.make_node<int, float>("int_x2_to_float", rxcpp::operators::map([](const int& data) {
+                                                return float(2.5F * data);
+                                            }));
 
         // Sink
         // Sinks are terminators. They only accept upstream connections and do not provide the ability to pass data on.
