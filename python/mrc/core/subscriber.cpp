@@ -37,9 +37,9 @@ namespace mrc::pymrc {
 namespace py = pybind11;
 using namespace py::literals;
 
-PYBIND11_MODULE(subscriber, module)
+PYBIND11_MODULE(subscriber, py_mod)
 {
-    module.doc() = R"pbdoc(
+    py_mod.doc() = R"pbdoc(
         Python bindings for MRC subscribers
         -------------------------------
         .. currentmodule:: subscriber
@@ -48,11 +48,11 @@ PYBIND11_MODULE(subscriber, module)
     )pbdoc";
 
     // Common must be first in every module
-    pymrc::import(module, "mrc.core.common");
+    pymrc::import(py_mod, "mrc.core.common");
 
-    py::class_<PySubscription>(module, "Subscription");
+    py::class_<PySubscription>(py_mod, "Subscription");
 
-    py::class_<PyObjectObserver>(module, "Observer")
+    py::class_<PyObjectObserver>(py_mod, "Observer")
         .def("on_next",
              &ObserverProxy::on_next,
              py::call_guard<py::gil_scoped_release>(),
@@ -61,13 +61,13 @@ PYBIND11_MODULE(subscriber, module)
         .def("on_completed", &PyObjectObserver::on_completed, py::call_guard<py::gil_scoped_release>())
         .def_static("make_observer", &ObserverProxy::make_observer);
 
-    py::class_<PyObjectSubscriber>(module, "Subscriber")
+    py::class_<PyObjectSubscriber>(py_mod, "Subscriber")
         .def("on_next", &SubscriberProxy::on_next, py::call_guard<py::gil_scoped_release>())
         .def("on_error", &SubscriberProxy::on_error)
         .def("on_completed", &PyObjectSubscriber::on_completed, py::call_guard<py::gil_scoped_release>())
         .def("is_subscribed", &SubscriberProxy::is_subscribed, py::call_guard<py::gil_scoped_release>());
 
-    py::class_<PyObjectObservable>(module, "Observable")
+    py::class_<PyObjectObservable>(py_mod, "Observable")
         .def("subscribe",
              py::overload_cast<PyObjectObservable*, PyObjectObserver&>(&ObservableProxy::subscribe),
              py::call_guard<py::gil_scoped_release>())
@@ -76,7 +76,7 @@ PYBIND11_MODULE(subscriber, module)
              py::call_guard<py::gil_scoped_release>())
         .def("pipe", &ObservableProxy::pipe);
 
-    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+    py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

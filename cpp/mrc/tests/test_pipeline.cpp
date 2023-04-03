@@ -15,14 +15,10 @@
  * limitations under the License.
  */
 
-#include "test_mrc.hpp"  // IWYU pragma: associated
-
 #include "mrc/core/executor.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/node/rx_sink.hpp"
-#include "mrc/node/rx_sink_base.hpp"
 #include "mrc/node/rx_source.hpp"
-#include "mrc/node/rx_source_base.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/pipeline/pipeline.hpp"
@@ -30,6 +26,7 @@
 #include "mrc/segment/definition.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>

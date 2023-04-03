@@ -62,7 +62,7 @@ RUN --mount=type=cache,target=/var/cache/apt \
     apt update && \
     DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC \
     apt install --no-install-recommends -y \
-    libnvidia-compute-520 \
+    libnvidia-compute-525 \
     && \
     rm -rf /var/lib/apt/lists/*
 
