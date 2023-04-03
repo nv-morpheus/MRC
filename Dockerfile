@@ -17,13 +17,13 @@
 
 
 ARG FROM_IMAGE="rapidsai/ci"
-ARG CUDA_VER=11.4.1
+ARG CUDA_VER=11.8.0
 ARG LINUX_DISTRO=ubuntu
 ARG LINUX_VER=20.04
 ARG PYTHON_VER=3.8
 
 # ============= base ===================
-FROM ${FROM_IMAGE}:cuda11.4.1-ubuntu20.04-py3.8 AS base
+FROM ${FROM_IMAGE}:cuda11.8.0-ubuntu20.04-py3.8 AS base
 
 ARG PROJ_NAME=mrc
 
