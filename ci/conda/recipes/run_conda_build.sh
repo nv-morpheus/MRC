@@ -42,7 +42,7 @@ export MRC_ROOT=${MRC_ROOT:-$(git rev-parse --show-toplevel)}
 
 export CUDA="$(conda list | grep cudatoolkit | egrep -o "[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+")"
 export PYTHON_VER="$(python -c "import sys; print('.'.join(map(str, sys.version_info[:2])))")"
-export CUDA=11.4.1
+export CUDA=11.8.0
 echo "CUDA       : ${CUDA}"
 echo "PYTHON_VER : ${PYTHON_VER}"
 echo ""
@@ -99,7 +99,7 @@ fi
 # Choose default variants
 if hasArg quick; then
    # For quick build, just do most recent version of rapids
-   CONDA_ARGS_ARRAY+=("--variants" "{python: 3.8, rapids_version: 22.10}")
+   CONDA_ARGS_ARRAY+=("--variants" "{python: 3.8, rapids_version: 23.02}")
 else
    CONDA_ARGS_ARRAY+=("--variants" "{python: 3.8}")
 fi

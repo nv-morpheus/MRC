@@ -16,7 +16,7 @@
 {% set version = environ.get('GIT_VERSION', '0.0.0.dev').lstrip('v') + environ.get('VERSION_SUFFIX', '') %}
 {% set minor_version = version.split('.')[0] + '.' + version.split('.')[1] %}
 {% set py_version = environ.get('CONDA_PY', '3.8') %}
-{% set cuda_version = '.'.join(environ.get('CUDA', '11.4').split('.')[:2]) %}
+{% set cuda_version = '.'.join(environ.get('CUDA', '11.8').split('.')[:2]) %}
 {% set cuda_major = cuda_version.split('.')[0] %}
 
 package:
@@ -50,7 +50,7 @@ requirements:
     - sysroot_linux-64 >=2.17
   host:
     # Libraries necessary to build. Keep sorted!
-    - abseil-cpp
+    - libaseil
     - boost-cpp
     - cuda-nvml-dev {{ cuda_version }}.*
     - cudatoolkit {{ cuda_version }}.*
@@ -92,7 +92,7 @@ outputs:
         - sysroot_linux-64 2.17
       host:
         # Any libraries with weak run_exports need to go here to be added to the run. Keep sorted!
-        - abseil-cpp # Needed for transitive run_exports from grpc-cpp. Does not need a version
+        - libaseil # Needed for transitive run_exports from grpc-cpp. Does not need a version
         - boost-cpp
         - flatbuffers 2.0.*
         - gflags
@@ -127,7 +127,7 @@ outputs:
       host:
         # Only should need libmrc and python. Keep sorted!
         - {{ pin_subpackage('libmrc', exact=True) }}
-        - abseil-cpp # mrc does not require abseil at build time. See https://github.com/conda-forge/arrow-cpp-feedstock/issues/814
+        - libaseil # mrc does not require abseil at build time. See https://github.com/conda-forge/arrow-cpp-feedstock/issues/814
         - python {{ python }}
       run:
         - {{ pin_subpackage('libmrc', exact=True) }}
@@ -146,7 +146,7 @@ outputs:
         - numpy
         - nvtx
         - pytest
-        - cuml {{ rapids_version }}.* # Ensure we can install cuml. This can cause issues solving abseil-cpp
+        - cuml {{ rapids_version }}.* # Ensure we can install cuml. This can cause issues solving libaseil
 
 about:
   home: https://www.nvidia.com/
