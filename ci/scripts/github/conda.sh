@@ -38,5 +38,5 @@ conda info
 
 rapids-logger "Building Conda Package"
 
-# Run the conda build and upload
-${MRC_ROOT}/ci/conda/recipes/run_conda_build.sh upload
+# Run the conda build
+${MRC_ROOT}/ci/conda/recipes/run_conda_build.sh
