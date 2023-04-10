@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -80,14 +80,14 @@ namespace {
 namespace hana = boost::hana;
 
 template <typename T>
-auto has_source_add_watcher = hana::is_valid(
-    [](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).source_add_watcher(
-                         std::declval<std::shared_ptr<mrc::WatcherInterface>>())) {});
+auto has_source_add_watcher =
+    hana::is_valid([](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).source_add_watcher(
+                                        std::declval<std::shared_ptr<mrc::WatcherInterface>>())) {});
 
 template <typename T>
-auto has_sink_add_watcher = hana::is_valid(
-    [](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).sink_add_watcher(
-                         std::declval<std::shared_ptr<mrc::WatcherInterface>>())) {});
+auto has_sink_add_watcher =
+    hana::is_valid([](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).sink_add_watcher(
+                                        std::declval<std::shared_ptr<mrc::WatcherInterface>>())) {});
 
 template <typename T>
 void add_stats_watcher_if_rx_source(T& thing, std::string name)
