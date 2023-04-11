@@ -1,4 +1,4 @@
-//  SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+//  SPDX-FileCopyrightText: Copyright (c) 2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 //  SPDX-License-Identifier: Apache-2.0
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,56 +13,14 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 {
-    "name": "mrc-dev",
     "build": {
-        "dockerfile": "Dockerfile"
-    },
-    "hostRequirements": {
-        "gpu": true
-    },
-    "capAdd":[
-        "SYS_NICE",
-        "SYS_PTRACE"
-    ],
-    "securityOpt": [
-        "seccomp=unconfined"
-    ],
-    "runArgs": [
-        "--network=host"
-    ],
-    "containerEnv": {
-        "HOST_MRC_ROOT": "${localWorkspaceFolder}",
-        "MRC_ROOT": "${containerWorkspaceFolder}",
-        "DEFAULT_CONDA_ENV": "mrc",
-        "MAMBA_NO_BANNER": "1",
-        "VAULT_HOST": "https://vault.ops.k8s.rapids.ai"
-    },
-    "initializeCommand": [ "${localWorkspaceFolder}/.devcontainer/initialize-command.sh" ],
-    "remoteUser": "coder",
-    "mounts": [
-        {
-            "type": "bind",
-            "source": "${localWorkspaceFolder}/.cache/conda/envs",
-            "target": "/home/coder/.conda/envs"
+        "args": {
+            "USERNAME": "${localEnv:USER}",
+            "USER_ID": "${localEnv:UID}"
         },
-        {
-            "type": "bind",
-            "source": "${localWorkspaceFolder}/../.conda/pkgs",
-            "target": "/home/coder/.conda/pkgs"
-        },
-        {
-            "type": "bind",
-            "source": "${localWorkspaceFolder}/../.config", // parent folder because sister repos are sibling dirs
-            "target": "/home/coder/.config"
-        },
-        {
-            "type": "bind",
-            "source": "${localWorkspaceFolder}/.devcontainer/opt/mrc",
-            "target": "/opt/mrc"
-        },
-    ],
-    "features": {
-        "ghcr.io/devcontainers/features/dotnet:1": {}
+        "context": "..",
+        "dockerfile": "${localWorkspaceFolder}/Dockerfile",
+        "target": "development"
     },
     "customizations": {
         "vscode": {
@@ -82,11 +40,36 @@
                 "xaver.clang-format"
             ],
             "settings": {
-                "cmake.cmakePath": "/tmp/.current-conda-env/bin/cmake",
+                "cmake.cmakePath": "cmake", // Ensure we use the default from the conda environment
+                // Fix for https://github.com/dotnet/vscode-dotnet-runtime/issues/159
+                // Once version 1.6.1 of the extension has been release, this can be removed
                 "cmake.languageSupport.dotnetPath": "/usr/bin/dotnet",
-                "C_Cpp.intelliSenseEngine": "disabled",
-                "python.terminal.activateEnvironment": false
             }
         }
     },
+    "hostRequirements": {
+        "gpu": true
+    },
+    "initializeCommand": [ "${localWorkspaceFolder}/.devcontainer/initialize-command.sh" ],
+    "mounts": [
+        "source=${localEnv:HOME}/.config,target=/home/${localEnv:USER}/.config,type=bind",
+        // Mount the necessary files for GDB pretty-printing to work
+        "source=${localWorkspaceFolder}/.devcontainer/opt/mrc/etc/.gdbinit,target=/home/${localEnv:USER}/.gdbinit,type=bind",
+    ],
+    "features": {
+        "ghcr.io/devcontainers/features/git-lfs": {}
+    },
+    "name": "mrc-dev",
+    "overrideCommand": true, // infinite loop of sleeps,
+    "remoteUser": "${localEnv:USER}",
+    "runArgs": [
+        "--network=host",
+        "--cap-add=SYS_PTRACE",
+        "--cap-add=SYS_NICE",
+        "--security-opt",
+        "seccomp=unconfined"
+    ],
+    "updateRemoteUserUID": true,
+    "workspaceFolder": "/work",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/work,type=bind,consistency=cached"
 }
