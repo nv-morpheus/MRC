@@ -182,6 +182,7 @@ jobs:
         NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
         PARALLEL_LEVEL: '10'
       image: ${{ inputs.test_container }}
+      options: "--cap-add=sys_nice --cap-add=sys_ptrace"
     strategy:
       fail-fast: true
 

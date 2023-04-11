@@ -196,7 +196,7 @@ Thirdparty code included in the source tree (that is not pulled in as an externa
 
 Ex:
 ```
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2018-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
