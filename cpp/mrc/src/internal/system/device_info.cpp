@@ -60,6 +60,14 @@ struct NvmlState;
         throw std::runtime_error("Failed to load symbol " #function_var " from libnvidia-ml.so.1"); \
     }
 
+/**
+ * @brief This class wraps all calls to NVML and ensures that the library is dynamically loaded at runtime using
+ * `dlopen`. This is necessary to remove the link dependency to `libnvidia-ml.so` which is a driver library. Because
+ * driver libraries are loaded into the docker container via the NVIDIA container runtime, we do not want to directly
+ * link to them. As well, if the driver is not found, we can still run MRC without GPUs. This gives us an oportunity to
+ * catch the missing library instead of the OS throwing an error.
+ *
+ */
 struct NvmlHandle
 {
     NvmlHandle()
@@ -67,6 +75,7 @@ struct NvmlHandle
         // First, try to open the library dynamically
         m_nvml_dll = dlopen("libnvidia-ml.so.1", RTLD_LOCAL | RTLD_LAZY);
 
+        // Throw an error if missing
         if (m_nvml_dll == nullptr)
         {
             throw std::runtime_error("Could not open libnvidia-ml.so.1");
@@ -92,6 +101,7 @@ struct NvmlHandle
 
     ~NvmlHandle()
     {
+        // Close the library on shutdown
         if (m_nvml_dll != nullptr)
         {
             dlclose(m_nvml_dll);
@@ -102,7 +112,7 @@ struct NvmlHandle
     // Keep the init function up top
     decltype(&::nvmlInit_v2) nvmlInit_v2{nullptr};
 
-    // Keep the rest of the functions sorted
+    // Keep the rest of the functions sorted. Add new ones as necessary
     decltype(&::nvmlDeviceGetCount_v2) nvmlDeviceGetCount_v2{nullptr};
     decltype(&::nvmlDeviceGetHandleByIndex_v2) nvmlDeviceGetHandleByIndex_v2{nullptr};
     decltype(&::nvmlDeviceGetMemoryInfo) nvmlDeviceGetMemoryInfo{nullptr};
@@ -127,6 +137,7 @@ struct NvmlState
     {
         try
         {
+            // Try to load the NVML library. If its not found, operate without GPUs
             m_nvml_handle = std::make_unique<NvmlHandle>();
         } catch (std::runtime_error e)
         {
@@ -134,7 +145,9 @@ struct NvmlState
             return;
         }
 
+        // Initialize NVML. Must happen first
         auto nvml_status = m_nvml_handle->nvmlInit_v2();
+
         if (nvml_status != NVML_SUCCESS)
         {
             LOG(WARNING) << "NVML: Error initializing due to '" << m_nvml_handle->nvmlErrorString(nvml_status)
@@ -209,12 +222,22 @@ struct NvmlState
         return m_using_mig;
     }
 
+    /**
+     * @brief Gets the singleton instance to NvmlState
+     *
+     * @return NvmlState&
+     */
     static NvmlState& instance()
     {
         static NvmlState state;
         return state;
     }
 
+    /**
+     * @brief Static method to shorten `NvmlState::instance().get_handle()`
+     *
+     * @return NvmlHandle&
+     */
     static NvmlHandle& handle()
     {
         return NvmlState::instance().get_handle();
