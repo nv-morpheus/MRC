@@ -132,13 +132,13 @@ jobs:
   test:
     name: Test
     needs: [build]
-    runs-on: [self-hosted, linux, amd64, gpu-v100-525-1]
+    runs-on: [self-hosted, linux, amd64, gpu-v100-latest-1]
     timeout-minutes: 60
     container:
       credentials:
         username: '$oauthtoken'
         password: ${{ secrets.NGC_API_KEY }}
-      image: ${{ inputs.test_container }}
+      image: ${{ inputs.container }}
       options: "--cap-add=sys_nice --cap-add=sys_ptrace"
       env:
         NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
@@ -181,7 +181,7 @@ jobs:
         BUILD_CC: "gcc-coverage"
         NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
         PARALLEL_LEVEL: '10'
-      image: ${{ inputs.test_container }}
+      image: ${{ inputs.container }}
       options: "--cap-add=sys_nice --cap-add=sys_ptrace"
     strategy:
       fail-fast: true
