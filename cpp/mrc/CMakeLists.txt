@@ -166,7 +166,6 @@ target_link_libraries(libmrc
     mrc_protos
     mrc_architect_protos
     rmm::rmm
-    CUDA::nvml
     CUDA::cudart
     rxcpp::rxcpp
     glog::glog
@@ -180,8 +179,8 @@ target_link_libraries(libmrc
   PRIVATE
     hwloc::hwloc
     prometheus-cpp::core # private in MR !199
-    ucx::ucs
     ucx::ucp
+    ucx::ucs
 )
 
 target_include_directories(libmrc
@@ -205,10 +204,6 @@ endif()
 target_compile_features(libmrc PUBLIC cxx_std_20)
 
 set_target_properties(libmrc PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
-
-# Finally, set the install RPATH to include the stubs folder for CUDA::nvml. If thats made private, this can be removed
-set_target_properties(libmrc PROPERTIES INSTALL_RPATH
-    "${CMAKE_INSTALL_PREFIX}/lib:\$ORIGIN:${CMAKE_INSTALL_PREFIX}/lib/stubs")
 
 # ##################################################################################################
 # - install targets --------------------------------------------------------------------------------
@@ -277,4 +272,3 @@ rapids_export(BUILD ${PROJECT_NAME}
   DOCUMENTATION doc_string
   FINAL_CODE_BLOCK code_string
 )
-
