@@ -28,6 +28,9 @@ on:
       container:
         required: true
         type: string
+      test_container:
+        required: true
+        type: string
     secrets:
       CODECOV_TOKEN:
         required: true
@@ -135,7 +138,7 @@ jobs:
       credentials:
         username: '$oauthtoken'
         password: ${{ secrets.NGC_API_KEY }}
-      image: ${{ inputs.container }}
+      image: ${{ inputs.test_container }}
       options: "--cap-add=sys_nice --cap-add=sys_ptrace"
       env:
         NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
@@ -178,7 +181,7 @@ jobs:
         BUILD_CC: "gcc-coverage"
         NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
         PARALLEL_LEVEL: '10'
-      image: ${{ inputs.container }}
+      image: ${{ inputs.test_container }}
       options: "--cap-add=sys_nice --cap-add=sys_ptrace"
     strategy:
       fail-fast: true

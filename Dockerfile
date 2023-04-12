@@ -55,8 +55,13 @@ ENV CMAKE_CUDA_COMPILER_LAUNCHER=
 ENV CMAKE_CXX_COMPILER_LAUNCHER=
 ENV CMAKE_C_COMPILER_LAUNCHER=
 
+# ============ build ==================
+FROM base as build
+
+# Add any build only dependencies here. For now there is none but we need the
+# target to get the CI runner build scripts to work
+
 # ============ test ==================
-# Specific target for the CI test runner
 FROM base as test
 
 # Add any test only dependencies here. For now there is none but we need the
