@@ -17,23 +17,29 @@
 
 #include "internal/system/device_info.hpp"
 
-#include "mrc/cuda/common.hpp"  // IWYU pragma: associated
+#include "mrc/cuda/common.hpp"
 
 #include <cuda_runtime.h>
 #include <dlfcn.h>
 #include <glog/logging.h>
 #include <hwloc.h>
+#include <hwloc/bitmap.h>
 #include <hwloc/linux.h>
 #include <nvml.h>
 
 #include <array>
 #include <cerrno>
 #include <cstddef>
+#include <cstdio>
 #include <memory>
 #include <ostream>
 #include <set>
 #include <stdexcept>
 #include <string>
+
+namespace mrc::internal::system {
+struct NvmlHandle;
+struct NvmlState;
 
 #define TEST_BIT(_n, _p) (_n & (1UL << _p))
 
@@ -46,8 +52,6 @@
                        << "'. Error msg: " << NvmlState::handle().nvmlErrorString(__status); \
         }                                                                                    \
     }
-
-namespace {
 
 #define LOAD_NVTX_SYM(dll_ptr, function_var)                                                        \
     function_var = reinterpret_cast<decltype(function_var)>(dlsym(dll_ptr, #function_var));         \
@@ -228,10 +232,6 @@ struct NvmlState
 
     std::unique_ptr<NvmlHandle> m_nvml_handle;
 };
-
-}  // namespace
-
-namespace mrc::internal::system {
 
 nvmlDevice_t get_handle_by_id(unsigned int device_id)
 {
