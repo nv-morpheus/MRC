@@ -28,9 +28,6 @@ on:
       container:
         required: true
         type: string
-      test_container:
-        required: true
-        type: string
     secrets:
       CODECOV_TOKEN:
         required: true
@@ -171,7 +168,7 @@ jobs:
 
   codecov:
     name: Code Coverage
-    runs-on: [self-hosted, linux, amd64, gpu-v100-525-1]
+    runs-on: [self-hosted, linux, amd64, gpu-v100-latest-1]
     timeout-minutes: 60
     container:
       credentials:
