@@ -25,10 +25,10 @@ dependencies:
   - libtool
   - ninja=1.10
   - numactl-libs-cos7-x86_64
-  - numpy=1.21.2
+  - numpy>=1.21
   - nvcc_linux-64=11.8
   - pkg-config=0.29
-  - python=3.8
+  - python=3.10
   - scikit-build>=0.12
   - spdlog=1.8.5
   - mrc=23.07

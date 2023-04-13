@@ -20,10 +20,10 @@ ARG FROM_IMAGE="rapidsai/ci"
 ARG CUDA_VER=11.8.0
 ARG LINUX_DISTRO=ubuntu
 ARG LINUX_VER=20.04
-ARG PYTHON_VER=3.8
+ARG PYTHON_VER=3.10
 
 # ============= base ===================
-FROM ${FROM_IMAGE}:cuda11.8.0-ubuntu20.04-py3.8 AS base
+FROM ${FROM_IMAGE}:cuda11.8.0-ubuntu20.04-py3.10 AS base
 
 ARG PROJ_NAME=mrc
 
@@ -98,8 +98,7 @@ ARG USERNAME=morpheus
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-RUN groupadd --gid $USER_GID $USERNAME && \
-    useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
+RUN useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
     usermod --shell /bin/bash $USERNAME && \
     echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME && \
     chmod 0440 /etc/sudoers.d/$USERNAME && \
