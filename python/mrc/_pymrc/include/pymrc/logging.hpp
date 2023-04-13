@@ -25,7 +25,7 @@ namespace mrc::pymrc {
 /**
  * @brief Python's logging lib is a pure-python impl, as such the log levels are not defined
  * in the C API.
- * https://docs.python.org/3.8/library/logging.html#logging-levels
+ * https://docs.python.org/3.10/library/logging.html#logging-levels
  */
 namespace py_log_levels {
 constexpr int NOTSET   = 0;
