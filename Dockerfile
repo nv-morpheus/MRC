@@ -55,16 +55,11 @@ ENV CMAKE_CUDA_COMPILER_LAUNCHER=
 ENV CMAKE_CXX_COMPILER_LAUNCHER=
 ENV CMAKE_C_COMPILER_LAUNCHER=
 
-# ============ driver ==================
-FROM base as driver
+# ============ build ==================
+FROM base as build
 
-RUN --mount=type=cache,target=/var/cache/apt \
-    apt update && \
-    DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC \
-    apt install --no-install-recommends -y \
-    libnvidia-compute-525 \
-    && \
-    rm -rf /var/lib/apt/lists/*
+# Add any build only dependencies here. For now there is none but we need the
+# target to get the CI runner build scripts to work
 
 # ============ test ==================
 FROM base as test
