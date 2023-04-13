@@ -28,6 +28,7 @@
 #include <nvml.h>
 
 #include <array>
+#include <atomic>
 #include <cerrno>
 #include <cstddef>
 #include <cstdio>
@@ -81,6 +82,9 @@ struct NvmlHandle
             throw std::runtime_error("Could not open libnvidia-ml.so.1");
         }
 
+        // Increment the dll counter since this was successfully loaded
+        s_dll_counter++;
+
         // Now load the symbols. Keep init first
         LOAD_NVTX_SYM(m_nvml_dll, nvmlInit_v2);
 
@@ -101,8 +105,8 @@ struct NvmlHandle
 
     ~NvmlHandle()
     {
-        // Close the library on shutdown
-        if (m_nvml_dll != nullptr)
+        // Close the library on shutdown. Double check we only call dlclose when the last instance is being destroyed
+        if (m_nvml_dll != nullptr && --s_dll_counter == 0)
         {
             dlclose(m_nvml_dll);
         }
@@ -129,7 +133,12 @@ struct NvmlHandle
 
   private:
     void* m_nvml_dll{nullptr};
+
+    static std::atomic_int s_dll_counter;
 };
+
+// Init the dll counter
+std::atomic_int NvmlHandle::s_dll_counter = 0;
 
 struct NvmlState
 {
