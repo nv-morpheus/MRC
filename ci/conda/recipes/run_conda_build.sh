@@ -99,9 +99,7 @@ fi
 # Choose default variants
 if hasArg quick; then
    # For quick build, just do most recent version of rapids
-   CONDA_ARGS_ARRAY+=("--variants" "{python: 3.10, rapids_version: 23.02}")
-else
-   CONDA_ARGS_ARRAY+=("--variants" "{python: 3.10}")
+   CONDA_ARGS_ARRAY+=("rapids_version: 23.02}")
 fi
 
 # And default channels
