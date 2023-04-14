@@ -29,6 +29,9 @@ cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} .
 rapids-logger "Building targets that generate source code"
 cmake --build build --target mrc_style_checks --parallel ${PARALLEL_LEVEL}
 
+rapids-logger "Checking versions"
+${MRC_ROOT}/ci/scripts/version_checks.sh
+
 rapids-logger "Running C++ style checks"
 ${MRC_ROOT}/ci/scripts/cpp_checks.sh
 

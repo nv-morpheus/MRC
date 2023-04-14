@@ -12,7 +12,7 @@
 # the License.
 # =============================================================================
 
-find_package(Python 3.8 REQUIRED COMPONENTS Development Interpreter)
+find_package(Python 3.10 REQUIRED COMPONENTS Development Interpreter)
 find_package(pybind11 REQUIRED)
 find_package(prometheus-cpp REQUIRED)
 
