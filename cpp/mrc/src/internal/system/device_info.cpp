@@ -213,7 +213,10 @@ struct NvmlState
     }
     ~NvmlState()
     {
-        MRC_CHECK_NVML(m_nvml_handle->nvmlShutdown());
+        if (m_nvml_handle)
+        {
+            MRC_CHECK_NVML(m_nvml_handle->nvmlShutdown());
+        }
     }
 
     NvmlHandle& get_handle()
