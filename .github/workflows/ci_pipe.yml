@@ -291,8 +291,6 @@ jobs:
         username: '$oauthtoken'
         password: ${{ secrets.NGC_API_KEY }}
       image: ${{ inputs.container }}
-      env:
-        CONDA_ARGS: --no-test
     strategy:
       fail-fast: true
 
