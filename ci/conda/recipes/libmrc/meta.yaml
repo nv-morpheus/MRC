@@ -50,8 +50,8 @@ requirements:
     - sysroot_linux-64 >=2.17
   host:
     # Libraries necessary to build. Keep sorted!
-    - libabseil
     - boost-cpp
+    - cuda-cudart-dev {{ cuda_version }}.*
     - cuda-nvml-dev {{ cuda_version }}.*
     - cudatoolkit {{ cuda_version }}.*
     - cython 0.29.*
@@ -62,6 +62,7 @@ requirements:
     - gmock 1.10.*
     - grpc-cpp
     - gtest 1.10.*
+    - libabseil
     - libhwloc 2.5.*
     - libprotobuf
     - librmm {{ rapids_version }}
@@ -69,7 +70,7 @@ requirements:
     - pybind11-abi # See: https://conda-forge.org/docs/maintainer/knowledge_base.html#pybind11-abi-constraints
     - pybind11-stubgen 0.10
     - python {{ python }}
-    - scikit-build >=0.12
+    - scikit-build >=0.17
     - spdlog 1.8.5
     - ucx
 
@@ -92,12 +93,12 @@ outputs:
         - sysroot_linux-64 2.17
       host:
         # Any libraries with weak run_exports need to go here to be added to the run. Keep sorted!
-        - libabseil # Needed for transitive run_exports from grpc-cpp. Does not need a version
         - boost-cpp
         - flatbuffers 2.0.*
         - gflags
         - glog
         - grpc-cpp
+        - libabseil # Needed for transitive run_exports from grpc-cpp. Does not need a version
         - libhwloc 2.5.*
         - libprotobuf # Needed for transitive run_exports from grpc-cpp. Does not need a version
         - librmm {{ rapids_version }}
