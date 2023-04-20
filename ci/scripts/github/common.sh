@@ -98,6 +98,9 @@ function update_conda_env() {
 
     # Finally, reactivate
     conda activate mrc
+
+    rapids-logger "Final Conda Environment"
+    conda list
 }
 
 print_env_vars
