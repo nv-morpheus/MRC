@@ -97,7 +97,6 @@ outputs:
         # Any libraries with weak run_exports need to go here to be added to the run. Keep sorted!
         - boost-cpp
         - cuda-cudart
-        - flatbuffers 2.0.*
         - glog
         - grpc-cpp
         - libabseil # Needed for transitive run_exports from grpc-cpp. Does not need a version
