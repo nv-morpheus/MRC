@@ -23,7 +23,12 @@ mrc_add_pybind11_module(operators SOURCE_FILES operators.cpp)
 mrc_add_pybind11_module(options SOURCE_FILES options.cpp)
 mrc_add_pybind11_module(pipeline SOURCE_FILES pipeline.cpp)
 mrc_add_pybind11_module(plugins SOURCE_FILES plugins.cpp)
-mrc_add_pybind11_module(segment SOURCE_FILES segment.cpp)
+mrc_add_pybind11_module(segment SOURCE_FILES
+    segment.cpp
+    segment/module_definitions/mirror_tap_orchestrator.cpp
+    segment/module_definitions/segment_module_registry.cpp
+    segment/module_definitions/segment_modules.cpp
+)
 mrc_add_pybind11_module(subscriber SOURCE_FILES subscriber.cpp)
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

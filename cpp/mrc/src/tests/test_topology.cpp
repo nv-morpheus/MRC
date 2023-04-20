@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -26,7 +26,6 @@
 #include <gtest/gtest.h>
 #include <hwloc.h>
 #include <hwloc/bitmap.h>
-#include <hwloc/nvml.h>
 
 #include <cstdint>
 #include <cstdio>
@@ -142,10 +141,8 @@ TEST_F(TestTopology, HwlocDev)
     hwloc_topology_t topology;
     hwloc_topology_init(&topology);
 
-    auto* device  = internal::system::DeviceInfo::GetHandleById(0);
     auto* cpu_set = hwloc_bitmap_alloc();
-    auto rc       = hwloc_nvml_get_device_cpuset(topology, device, cpu_set);
-    EXPECT_EQ(rc, 0);
+    EXPECT_EQ(mrc::internal::system::DeviceInfo::GetDeviceCpuset(topology, 0, cpu_set), 0);
 
     char* cpuset_string = nullptr;
     hwloc_bitmap_asprintf(&cpuset_string, cpu_set);

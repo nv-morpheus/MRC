@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -29,9 +29,15 @@
 namespace mrc::internal::pipeline {
 class Resources;
 }  // namespace mrc::internal::pipeline
+
+namespace mrc::modules {
+class SegmentModule;
+}
+
 namespace mrc::runnable {
 struct Launchable;
 }  // namespace mrc::runnable
+
 namespace mrc::segment {
 class EgressPortBase;
 struct IngressPortBase;
@@ -60,9 +66,11 @@ class Builder final
     const std::string& name() const;
 
     bool has_object(const std::string& name) const;
+    bool has_module(const std::string& name) const;
     ::mrc::segment::ObjectProperties& find_object(const std::string& name);
 
     void add_object(const std::string& name, std::shared_ptr<::mrc::segment::ObjectProperties> object);
+    void add_module(const std::string& name, std::shared_ptr<mrc::modules::SegmentModule> module);
     void add_runnable(const std::string& name, std::shared_ptr<mrc::runnable::Launchable> runnable);
 
     std::shared_ptr<::mrc::segment::IngressPortBase> get_ingress_base(const std::string& name);
@@ -76,6 +84,9 @@ class Builder final
 
     // all objects - ports, runnables, etc.
     std::map<std::string, std::shared_ptr<::mrc::segment::ObjectProperties>> m_objects;
+
+    // only modules
+    std::map<std::string, std::shared_ptr<::mrc::modules::SegmentModule>> m_modules;
 
     // only runnables
     std::map<std::string, std::shared_ptr<mrc::runnable::Launchable>> m_nodes;

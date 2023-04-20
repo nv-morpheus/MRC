@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -38,9 +38,9 @@ namespace mrc::pymrc {
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(plugins, module)
+PYBIND11_MODULE(plugins, py_mod)
 {
-    module.doc() = R"pbdoc(
+    py_mod.doc() = R"pbdoc(
         Python bindings for MRC Plugins
         -------------------------------
         .. currentmodule:: plugins
@@ -49,10 +49,10 @@ PYBIND11_MODULE(plugins, module)
     )pbdoc";
 
     // Common must be first in every module
-    pymrc::import(module, "mrc.core.common");
-    pymrc::import_module_object(module, "mrc.core.segment", "SegmentModule");
+    pymrc::import(py_mod, "mrc.core.common");
+    pymrc::import_module_object(py_mod, "mrc.core.segment", "SegmentModule");
 
-    auto PluginModule = py::class_<mrc::modules::PluginModule, std::shared_ptr<mrc::modules::PluginModule>>(module,
+    auto PluginModule = py::class_<mrc::modules::PluginModule, std::shared_ptr<mrc::modules::PluginModule>>(py_mod,
                                                                                                             "PluginModu"
                                                                                                             "le");
 
@@ -71,7 +71,7 @@ PYBIND11_MODULE(plugins, module)
 
     PluginModule.def("unload", &mrc::modules::PluginModule::unload, py::arg("throw_on_error") = true);
 
-    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+    py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

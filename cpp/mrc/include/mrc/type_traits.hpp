@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -114,5 +114,27 @@ struct is_base_of_template_impl  // NOLINT(readability-identifier-naming)
 template <template <typename...> class BaseT, typename DerivedT>
 // NOLINTNEXTLINE(readability-identifier-naming)
 using is_base_of_template = typename is_base_of_template_impl<BaseT, DerivedT>::type;
+
+template <typename T, typename... TsT>
+struct first_non_void_type  // NOLINT
+{
+    using type_t = std::conditional_t<std::is_same_v<T, void>, typename first_non_void_type<TsT...>::type_t, T>;
+};
+
+template <typename T>
+struct first_non_void_type<T>
+{
+    using type_t = T;
+};
+
+template <typename... TsT>
+struct first_non_void_type_error_check : first_non_void_type<TsT...>  // NOLINT
+{
+    static_assert(!std::is_same_v<typename first_non_void_type<TsT...>::type_t, void>,
+                  "Error: All types in the list are void");
+};
+
+template <typename T, typename... TsT>
+using first_non_void_type_t = typename first_non_void_type_error_check<T, TsT...>::type_t;
 
 }  // namespace mrc

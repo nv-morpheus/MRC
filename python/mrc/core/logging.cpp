@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -33,9 +33,9 @@ namespace mrc::pymrc {
 namespace py = pybind11;
 using namespace std::string_literals;
 
-PYBIND11_MODULE(logging, module)
+PYBIND11_MODULE(logging, py_mod)
 {
-    module.doc() = R"pbdoc(
+    py_mod.doc() = R"pbdoc(
         Python bindings for MRC logging
         -------------------------------
         .. currentmodule:: logging
@@ -43,7 +43,7 @@ PYBIND11_MODULE(logging, module)
            :toctree: _generate
     )pbdoc";
 
-    module.def("init_logging",
+    py_mod.def("init_logging",
                &init_logging,
                "Initializes MRC's logger, The return value inidicates if the logger was initialized, which will be "
                "`True` "
@@ -51,13 +51,13 @@ PYBIND11_MODULE(logging, module)
                py::arg("logname"),
                py::arg("py_level") = py_log_levels::INFO);
 
-    module.def("is_initialized", &mrc::is_initialized, "Checks if MRC's logger has been initialized.");
+    py_mod.def("is_initialized", &mrc::is_initialized, "Checks if MRC's logger has been initialized.");
 
-    module.def("get_level", &get_level, "Gets the log level for MRC's logger.");
+    py_mod.def("get_level", &get_level, "Gets the log level for MRC's logger.");
 
-    module.def("set_level", &set_level, "Sets the log level for MRC's logger.", py::arg("py_level"));
+    py_mod.def("set_level", &set_level, "Sets the log level for MRC's logger.", py::arg("py_level"));
 
-    module.def("log",
+    py_mod.def("log",
                &log,
                "Logs a message to MRC's logger.",
                py::arg("msg"),
@@ -65,7 +65,7 @@ PYBIND11_MODULE(logging, module)
                py::arg("filename") = ""s,
                py::arg("line")     = 0);
 
-    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+    py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

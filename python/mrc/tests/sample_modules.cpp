@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -38,9 +38,9 @@ namespace mrc::pymrc {
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(sample_modules, module)
+PYBIND11_MODULE(sample_modules, py_mod)
 {
-    module.doc() = R"pbdoc(
+    py_mod.doc() = R"pbdoc(
        Python bindings for MRC Unittest Exports
        -------------------------------
        .. currentmodule:: plugins
@@ -48,7 +48,7 @@ PYBIND11_MODULE(sample_modules, module)
           :toctree: _generate
    )pbdoc";
 
-    pymrc::import(module, "mrc.core.common");
+    pymrc::import(py_mod, "mrc.core.common");
 
     /** Register test modules -- necessary for python unit tests**/
     modules::ModelRegistryUtil::create_registered_module<mrc::modules::SimpleModule>("SimpleModule",
@@ -74,7 +74,7 @@ PYBIND11_MODULE(sample_modules, module)
         "mrc_unittest",
         PybindSegmentModuleVersion);
 
-    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+    py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

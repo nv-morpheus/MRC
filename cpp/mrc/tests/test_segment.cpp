@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -32,6 +32,7 @@
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/definition.hpp"
 #include "mrc/segment/ingress_port.hpp"
+#include "mrc/segment/object.hpp"
 #include "mrc/segment/ports.hpp"
 #include "mrc/types.hpp"
 
@@ -422,7 +423,7 @@ TEST_F(TestSegment, RuntimeConversionValuesWorkAsExpected)
                                                                   return 1.0;
                                                               }));
 
-        segment.make_dynamic_edge<std::string, std::string>("src", "internal");
+        segment.make_edge<std::string, std::string>("src", "internal");
 
         auto convert_1_double = segment.make_node<double, double>("convert_1_double",
                                                                   rxcpp::operators::map([](double d) -> double {
@@ -432,7 +433,7 @@ TEST_F(TestSegment, RuntimeConversionValuesWorkAsExpected)
                                                                       return d * 1.1;
                                                                   }));
 
-        segment.make_dynamic_edge<float, double>("internal", "convert_1_double");
+        segment.make_edge<float, double>("internal", "convert_1_double");
 
         auto convert_2_int = segment.make_node<int, int>("convert_2_int", rxcpp::operators::map([](int i) -> int {
                                                              VLOG(9) << "convert_2_int: " << i << std::endl;
@@ -441,8 +442,8 @@ TEST_F(TestSegment, RuntimeConversionValuesWorkAsExpected)
                                                          }));
 
         // Note: this will disable narrowing and fail:
-        //      segment.make_dynamic_edge<double, int, false>("convert_1_double", "convert_2_int");
-        segment.make_dynamic_edge<double, int>("convert_1_double", "convert_2_int");
+        //      segment.make_edge<double, int, false>("convert_1_double", "convert_2_int");
+        segment.make_edge<double, int>("convert_1_double", "convert_2_int");
 
         auto convert_3_sizet = segment.make_node<std::size_t, std::string>(
             "convert_3_sizet",
@@ -451,7 +452,7 @@ TEST_F(TestSegment, RuntimeConversionValuesWorkAsExpected)
                 return std::to_string(szt);
             }));
 
-        segment.make_dynamic_edge<int, std::size_t>("convert_2_int", "convert_3_sizet");
+        segment.make_edge<int, std::size_t>("convert_2_int", "convert_3_sizet");
 
         auto sink = segment.make_sink<std::string>(
             "sink",
@@ -462,7 +463,7 @@ TEST_F(TestSegment, RuntimeConversionValuesWorkAsExpected)
                 VLOG(10) << "Completed" << std::endl;
             });
 
-        segment.make_dynamic_edge<std::string>("convert_3_sizet", "sink");
+        segment.make_edge<std::string>("convert_3_sizet", "sink");
     };
 
     auto segdef = segment::Definition::create("segment_test", init);

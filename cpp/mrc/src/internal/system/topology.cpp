@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -29,8 +29,6 @@
 #include <glog/logging.h>
 #include <hwloc.h>
 #include <hwloc/bitmap.h>
-#include <hwloc/nvml.h>
-#include <nvml.h>
 
 #include <cstdio>
 #include <cstring>
@@ -81,13 +79,12 @@ std::shared_ptr<Topology> Topology::Create(const TopologyOptions& options)
     {
         GpuInfo info;
 
-        auto* device           = DeviceInfo::GetHandleById(i);
         info.m_name            = DeviceInfo::Name(i);
         info.m_uuid            = DeviceInfo::UUID(i);
         info.m_pcie_bus_id     = DeviceInfo::PCIeBusID(i);
-        info.m_memory_capacity = DeviceInfo::MemoryInfo(i).total;
-        auto rc                = hwloc_nvml_get_device_cpuset(system_topology, device, &info.m_cpu_set.bitmap());
-        CHECK_EQ(rc, 0);
+        info.m_memory_capacity = DeviceInfo::DeviceTotalMemory(i);
+        CHECK_EQ(DeviceInfo::GetDeviceCpuset(system_topology, i, &info.m_cpu_set.bitmap()), 0) << "Invalid GPU device "
+                                                                                                  "CPU set";
 
         auto v        = info.cpu_set().vec();
         info.m_cpustr = print_ranges(find_ranges(v));

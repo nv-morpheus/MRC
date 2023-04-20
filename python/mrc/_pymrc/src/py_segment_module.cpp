@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -23,7 +23,6 @@
 
 #include <ostream>
 #include <string>
-#include <string_view>
 #include <utility>
 
 namespace mrc::pymrc {

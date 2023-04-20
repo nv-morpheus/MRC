@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -22,6 +22,7 @@
 #include "mrc/node/rx_source.hpp"
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
 #include "mrc/segment/segment.hpp"
 
 #include <glog/logging.h>
@@ -39,8 +40,10 @@
 #include <vector>
 
 namespace mrc {
-
 class TestSegmentResources;
+}  // namespace mrc
+
+namespace mrc {
 
 class StatGatherTest : public ::testing::Test
 {

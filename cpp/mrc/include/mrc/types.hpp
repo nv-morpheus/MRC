@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -26,9 +26,6 @@
 // NOLINTBEGIN(readability-identifier-naming)
 
 namespace mrc {
-
-// template<class T>
-// using blocking_queue = boost::fibers::buffered_channel<T>;
 
 // Typedefs
 template <typename T>

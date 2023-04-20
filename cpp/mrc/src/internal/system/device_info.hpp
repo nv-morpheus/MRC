@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2018-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -17,28 +17,35 @@
 
 #pragma once
 
-#include <nvml.h>
-
 #include <cstddef>
 #include <set>
 #include <string>
+
+// DO NOT INCLUDE <nvml.h>!!!!
+
+// NOLINTBEGIN(readability-identifier-naming)
+using hwloc_cpuset_t   = struct hwloc_bitmap_s*;
+using hwloc_topology_t = struct hwloc_topology*;
+using nvmlDevice_t     = struct nvmlDevice_st*;
+// NOLINTEND(readability-identifier-naming)
 
 namespace mrc::internal::system {
 
 struct DeviceInfo
 {
-    static nvmlDevice_t GetHandleById(unsigned int device_id);  // NOLINT
-    // static auto Affinity(int device_id) -> cpu_set;
-    static auto Alignment() -> std::size_t;                           // NOLINT
-    static auto EnergyConsumption(int device_id) -> double;           // NOLINT
-    static auto MemoryInfo(int device_id) -> nvmlMemory_t;            // NOLINT
-    static auto PowerUsage(int device_id) -> double;                  // NOLINT
-    static auto PowerLimit(int device_id) -> double;                  // NOLINT
-    static auto UUID(int device_id) -> std::string;                   // NOLINT
-    static auto PCIeBusID(int device_id) -> std::string;              // NOLINT
-    static auto Name(int) -> std::string;                             // NOLINT
-    static auto AccessibleDeviceIndexes() -> std::set<unsigned int>;  // NOLINT
-    static auto AccessibleDevices() -> std::size_t;                   // NOLINT
+    // NOLINTBEGIN(readability-identifier-naming)
+    static auto AccessibleDeviceCount() -> std::size_t;
+    static auto AccessibleDeviceIndexes() -> std::set<unsigned int>;
+    static auto Alignment() -> std::size_t;
+    static auto DeviceTotalMemory(unsigned int device_id) -> unsigned long long;
+    static auto EnergyConsumption(unsigned int device_id) -> double;
+    static auto GetDeviceCpuset(hwloc_topology_t topology, unsigned int device_id, hwloc_cpuset_t set) -> int;
+    static auto Name(unsigned int device_id) -> std::string;
+    static auto PCIeBusID(unsigned int device_id) -> std::string;
+    static auto PowerLimit(unsigned int device_id) -> double;
+    static auto PowerUsage(unsigned int device_id) -> double;
+    static auto UUID(unsigned int device_id) -> std::string;
+    // NOLINTEND(readability-identifier-naming)
 };
 
 }  // namespace mrc::internal::system

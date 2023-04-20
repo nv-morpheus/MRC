@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -28,7 +28,6 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <string_view>
 #include <utility>
 #include <vector>
 

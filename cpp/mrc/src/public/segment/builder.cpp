@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -18,6 +18,7 @@
 #include "mrc/segment/builder.hpp"
 
 #include "mrc/modules/module_registry.hpp"
+#include "mrc/modules/properties/persistent.hpp"  // IWYU pragma: keep
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/port_registry.hpp"
 
@@ -41,6 +42,23 @@ std::string accum_merge(std::string lhs, std::string rhs)
 }  // namespace
 
 namespace mrc::segment {
+
+void Builder::init_module(std::shared_ptr<mrc::modules::SegmentModule> smodule)
+{
+    ns_push(smodule);
+    VLOG(2) << "Initializing module: " << m_namespace_prefix;
+    smodule->m_module_instance_registered_namespace = m_namespace_prefix;
+    smodule->initialize(*this);
+    ns_pop();
+
+    // TODO(Devin): Maybe a better way to do this with compile time type ledger.
+    if (std::dynamic_pointer_cast<modules::PersistentModule>(smodule) != nullptr)
+    {
+        VLOG(2) << "Registering persistent module -> '" << smodule->component_prefix() << "'";
+        m_backend.add_module(m_namespace_prefix, smodule);
+    }
+}
+
 std::shared_ptr<ObjectProperties> Builder::get_ingress(std::string name, std::type_index type_index)
 {
     auto base = m_backend.get_ingress_base(name);
@@ -78,34 +96,25 @@ std::shared_ptr<ObjectProperties> Builder::get_egress(std::string name, std::typ
     return port;
 }
 
-void Builder::init_module(sp_segment_module_t module)
-{
-    ns_push(module);
-    VLOG(2) << "Initializing module: " << m_namespace_prefix;
-    module->m_module_instance_registered_namespace = m_namespace_prefix;
-    module->initialize(*this);
-    ns_pop();
-}
-
 std::shared_ptr<mrc::modules::SegmentModule> Builder::load_module_from_registry(const std::string& module_id,
                                                                                 const std::string& registry_namespace,
                                                                                 std::string module_name,
                                                                                 nlohmann::json config)
 {
     auto fn_module_constructor = mrc::modules::ModuleRegistry::get_module_constructor(module_id, registry_namespace);
-    auto module                = fn_module_constructor(std::move(module_name), std::move(config));
+    auto smodule               = fn_module_constructor(std::move(module_name), std::move(config));
 
-    init_module(module);
+    init_module(smodule);
 
-    return module;
+    return smodule;
 }
 
 /** private implementations **/
 
-void Builder::ns_push(sp_segment_module_t module)
+void Builder::ns_push(sp_segment_module_t smodule)
 {
-    m_module_stack.push_back(module);
-    m_namespace_stack.push_back(module->component_prefix());
+    m_module_stack.push_back(smodule);
+    m_namespace_stack.push_back(smodule->component_prefix());
     m_namespace_prefix =
         std::accumulate(m_namespace_stack.begin(), m_namespace_stack.end(), std::string(""), ::accum_merge);
 }
@@ -134,7 +143,8 @@ void Builder::register_module_input(std::string input_name, std::shared_ptr<segm
     current_module->register_input_port(std::move(input_name), object);
 }
 
-void Builder::register_module_output(std::string output_name, std::shared_ptr<segment::ObjectProperties> object)
+[[maybe_unused]] void Builder::register_module_output(std::string output_name,
+                                                      std::shared_ptr<segment::ObjectProperties> object)
 {
     if (m_module_stack.empty())
     {
@@ -151,7 +161,7 @@ void Builder::register_module_output(std::string output_name, std::shared_ptr<se
     current_module->register_output_port(std::move(output_name), object);
 }
 
-nlohmann::json Builder::get_current_module_config()
+[[maybe_unused]] nlohmann::json Builder::get_current_module_config()
 {
     if (m_module_stack.empty())
     {

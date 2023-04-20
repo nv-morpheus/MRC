@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -17,12 +17,15 @@
 
 #include "mrc/segment/definition.hpp"
 
-#include "mrc/engine/segment/idefinition.hpp"
-#include "mrc/segment/builder.hpp"
-#include "mrc/segment/egress_ports.hpp"
-#include "mrc/segment/ingress_ports.hpp"
+#include "mrc/engine/segment/idefinition.hpp"  // for IDefinition
+#include "mrc/segment/builder.hpp"             // for Builder
+#include "mrc/segment/egress_ports.hpp"        // for EgressPortsBase
+#include "mrc/segment/ingress_ports.hpp"       // for IngressPortsBase
 
-#include <utility>
+#include <utility>  // for move
+namespace mrc::internal::segment {
+class IBuilder;
+}
 
 namespace mrc::segment {
 

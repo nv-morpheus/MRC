@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -22,13 +22,13 @@
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <glog/logging.h>
 
 #include <map>
 #include <memory>
 #include <ostream>
-#include <string_view>
 #include <vector>
 
 namespace mrc::modules {
@@ -220,8 +220,7 @@ void NestedModule::initialize(segment::Builder& builder)
     // Create a data source and attach it to our submodule
     auto source1 = builder.make_module<SourceModule>("source", config);
 
-    builder.make_dynamic_edge<bool, bool>(source1->output_port("source"),
-                                          configurable_mod->input_port("configurable_input_a"));
+    builder.make_edge<bool>(source1->output_port("source"), configurable_mod->input_port("configurable_input_a"));
 
     // Register the submodules output as one of this module's outputs
     register_output_port("nested_module_output", configurable_mod->output_port("configurable_output_x"));

@@ -57,7 +57,7 @@ If you choose to use Mamba rather than Conda, simply replace `conda` with `mamba
 #### Python Bindings
 ```bash
 # If needed, create a new conda environment
-conda create --name mrc python=3.8
+conda create --name mrc python=3.10
 
 # Activate the newly created conda environment
 conda activate mrc
@@ -69,7 +69,7 @@ conda install -c rapidsai -c nvidia -c conda-forge mrc
 #### C++ Bindings
 ```bash
 # If needed, create a new conda environment
-conda create --name mrc python=3.8
+conda create --name mrc python=3.10
 
 # Activate the newly created conda environment
 conda activate mrc
@@ -81,7 +81,7 @@ conda install -c rapidsai -c nvidia -c conda-forge libmrc
 #### Full MRC Library
 ```bash
 # If needed, create a new conda environment
-conda create --name mrc python=3.8
+conda create --name mrc python=3.10
 
 # Activate the newly created conda environment
 conda activate mrc
@@ -196,7 +196,7 @@ Thirdparty code included in the source tree (that is not pulled in as an externa
 
 Ex:
 ```
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2018-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *

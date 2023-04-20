@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -132,6 +132,16 @@ void Builder::add_object(const std::string& name, std::shared_ptr<::mrc::segment
         throw exceptions::MrcRuntimeError("duplicate name detected - name owned by a node");
     }
     m_objects[name] = std::move(object);
+}
+
+void Builder::add_module(const std::string& name, std::shared_ptr<mrc::modules::SegmentModule> smodule)
+{
+    if (has_object(name))
+    {
+        LOG(ERROR) << "A Module named " << name << " is already registered";
+        throw exceptions::MrcRuntimeError("duplicate name detected - name owned by a module");
+    }
+    m_modules[name] = std::move(smodule);
 }
 
 void Builder::add_runnable(const std::string& name, std::shared_ptr<mrc::runnable::Launchable> runnable)

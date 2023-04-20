@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -19,7 +19,7 @@
 
 #include "pymrc/types.hpp"
 
-#include "mrc/segment/builder.hpp"  // IWYU pragma: export (needed by wrap functions)
+#include "mrc/segment/builder.hpp"  // IWYU pragma: keep
 
 #include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/pytypes.h>
@@ -36,10 +36,21 @@ class SegmentModule;
 
 namespace mrc::pymrc {
 struct OnCompleteFunction;
+}
+namespace mrc::pymrc {
 struct OnDataFunction;
+}
+namespace mrc::pymrc {
 struct OnErrorFunction;
+}
+namespace mrc::pymrc {
 struct OnNextFunction;
+}
+namespace mrc::segment {
+struct ObjectProperties;
+}
 
+namespace mrc::pymrc {
 // Export everything in the mrc::pymrc namespace by default since we compile with -fvisibility=hidden
 #pragma GCC visibility push(default)
 
@@ -208,6 +219,13 @@ class BuilderProxy
     static void make_edge(mrc::segment::Builder& self,
                           std::shared_ptr<mrc::segment::ObjectProperties> source,
                           std::shared_ptr<mrc::segment::ObjectProperties> sink);
+
+    static void splice_edge(mrc::segment::Builder& self,
+                            std::string& source,
+                            std::string& sink,
+                            std::shared_ptr<mrc::segment::ObjectProperties> splice_input,
+                            std::shared_ptr<mrc::segment::ObjectProperties> splice_output)
+    {}
 
     static std::shared_ptr<mrc::segment::ObjectProperties> get_ingress(mrc::segment::Builder& self,
                                                                        const std::string& name);

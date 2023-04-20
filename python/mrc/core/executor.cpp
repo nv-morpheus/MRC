@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -39,9 +39,9 @@ namespace mrc::pymrc {
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(executor, module)
+PYBIND11_MODULE(executor, py_mod)
 {
-    module.doc() = R"pbdoc(
+    py_mod.doc() = R"pbdoc(
         Python bindings for MRC executors
         -------------------------------
         .. currentmodule:: executor
@@ -50,17 +50,17 @@ PYBIND11_MODULE(executor, module)
     )pbdoc";
 
     // Common must be first in every module
-    pymrc::import(module, "mrc.core.common");
-    pymrc::import(module, "mrc.core.options");
-    pymrc::import(module, "mrc.core.pipeline");
+    pymrc::import(py_mod, "mrc.core.common");
+    pymrc::import(py_mod, "mrc.core.options");
+    pymrc::import(py_mod, "mrc.core.pipeline");
 
-    py::class_<Awaitable, std::shared_ptr<Awaitable>>(module, "Awaitable")
+    py::class_<Awaitable, std::shared_ptr<Awaitable>>(py_mod, "Awaitable")
         .def(py::init<>())
         .def("__iter__", &Awaitable::iter)
         .def("__await__", &Awaitable::await)
         .def("__next__", &Awaitable::next);
 
-    py::class_<Executor, std::shared_ptr<Executor>>(module, "Executor")
+    py::class_<Executor, std::shared_ptr<Executor>>(py_mod, "Executor")
         .def(py::init<>([]() {
             auto options = std::make_shared<mrc::Options>();
 
@@ -79,14 +79,14 @@ PYBIND11_MODULE(executor, module)
         .def("join_async", &Executor::join_async)
         .def("register_pipeline", &Executor::register_pipeline);
 
-    py::class_<PyBoostFuture>(module, "Future")
+    py::class_<PyBoostFuture>(py_mod, "Future")
         .def(py::init<>([]() {
             return PyBoostFuture();
         }))
         .def("result", &PyBoostFuture::py_result)
         .def("set_result", &PyBoostFuture::set_result);
 
-    module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+    py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc

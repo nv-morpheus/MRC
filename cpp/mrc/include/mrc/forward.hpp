@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -20,36 +20,15 @@
 namespace mrc {
 
 class Executor;
-class ExecutorBase;
 
-template <typename T>
-class NetworkDeserializer;
-
-class Options;
-
-class Runtime;
-
-class Placement;
-class PlacementGroup;
+struct PlacementGroup;
 
 namespace pipeline {
 class Pipeline;
 }  // namespace pipeline
 
-class PipelineConfiguration;
-
-class SegmentResources;
-
-class PipelineInstanceResources;
-
-class PipelineConfiguration;
-class SegmentConfiguration;
-
-class PipelineAssignment;
-class SegmentAssignment;
-
-class Cpuset;
-class NumaSet;
+struct CpuSet;
+struct NumaSet;
 
 class Options;
 class FiberPoolOptions;

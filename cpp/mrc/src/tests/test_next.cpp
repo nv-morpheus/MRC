@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -47,6 +47,8 @@
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/definition.hpp"
 #include "mrc/segment/egress_ports.hpp"
+#include "mrc/segment/object.hpp"
+#include "mrc/segment/runnable.hpp"
 #include "mrc/segment/segment.hpp"
 #include "mrc/type_traits.hpp"
 #include "mrc/utils/macros.hpp"

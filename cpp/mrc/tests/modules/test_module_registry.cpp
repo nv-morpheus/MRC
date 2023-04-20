@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -21,6 +21,7 @@
 #include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/modules/module_registry.hpp"
 #include "mrc/modules/plugins.hpp"
+#include "mrc/modules/properties/persistent.hpp"
 #include "mrc/modules/sample_modules.hpp"
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/rx_sink.hpp"
@@ -28,6 +29,7 @@
 #include "mrc/options/topology.hpp"
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
 #include "mrc/version.hpp"
 
 #include <boost/filesystem/path.hpp>

@@ -17,13 +17,13 @@
 
 
 ARG FROM_IMAGE="rapidsai/ci"
-ARG CUDA_VER=11.4.1
+ARG CUDA_VER=11.8.0
 ARG LINUX_DISTRO=ubuntu
 ARG LINUX_VER=20.04
-ARG PYTHON_VER=3.8
+ARG PYTHON_VER=3.10
 
 # ============= base ===================
-FROM ${FROM_IMAGE}:cuda11.4.1-ubuntu20.04-py3.8 AS base
+FROM ${FROM_IMAGE}:cuda11.8.0-ubuntu20.04-py3.10 AS base
 
 ARG PROJ_NAME=mrc
 
@@ -55,16 +55,11 @@ ENV CMAKE_CUDA_COMPILER_LAUNCHER=
 ENV CMAKE_CXX_COMPILER_LAUNCHER=
 ENV CMAKE_C_COMPILER_LAUNCHER=
 
-# ============ driver ==================
-FROM base as driver
+# ============ build ==================
+FROM base as build
 
-RUN --mount=type=cache,target=/var/cache/apt \
-    apt update && \
-    DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC \
-    apt install --no-install-recommends -y \
-    libnvidia-compute-520 \
-    && \
-    rm -rf /var/lib/apt/lists/*
+# Add any build only dependencies here. For now there is none but we need the
+# target to get the CI runner build scripts to work
 
 # ============ test ==================
 FROM base as test
@@ -103,8 +98,7 @@ ARG USERNAME=morpheus
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-RUN groupadd --gid $USER_GID $USERNAME && \
-    useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
+RUN useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
     usermod --shell /bin/bash $USERNAME && \
     echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME && \
     chmod 0440 /etc/sudoers.d/$USERNAME && \

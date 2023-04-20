@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -26,9 +26,10 @@
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <gtest/gtest.h>
-#include <pybind11/embed.h>  // IWYU pragma: keep
+#include <pybind11/embed.h>
 #include <rxcpp/rx.hpp>
 
 #include <atomic>
