@@ -47,7 +47,7 @@ jobs:
     uses: ./.github/workflows/ci_pipe.yml
     with:
       run_check: ${{ startsWith(github.ref_name, 'pull-request/') }}
-      run_package_conda: true # ${{ !startsWith(github.ref_name, 'pull-request/') }}
+      run_package_conda: ${{ !startsWith(github.ref_name, 'pull-request/') }}
       container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-build-230412
       test_container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-test-230412
     secrets:
