@@ -90,14 +90,13 @@ outputs:
         - {{ compiler("cuda") }}
         - {{ compiler("cxx") }}
         - cmake >=3.24
-        - cuda-cudart-dev
+        - cuda-cudart-dev {{ cuda_version }}.*
         - numactl-libs-cos7-x86_64
         - sysroot_linux-64 2.17
       host:
         # Any libraries with weak run_exports need to go here to be added to the run. Keep sorted!
         - boost-cpp
         - flatbuffers 2.0.*
-        - gflags
         - glog
         - grpc-cpp
         - libabseil # Needed for transitive run_exports from grpc-cpp. Does not need a version
@@ -106,10 +105,11 @@ outputs:
         - librmm {{ rapids_version }}
         - nlohmann_json 3.9.*
         - ucx
+        # Need to specify cudatoolkit to get correct version. Remove once all libraries migrate to cuda-toolkit
+        - cudatoolkit {{ cuda_version }}.*
       run:
         # Manually add any packages necessary for run that do not have run_exports. Keep sorted!
         - {{ pin_compatible('cuda-cudart', min_pin='x.x', max_pin='x') }}
-        - {{ pin_compatible('flatbuffers', max_pin='x.x')}}
         - {{ pin_compatible('nlohmann_json', max_pin='x.x')}}
         - {{ pin_compatible('ucx', max_pin='x.x')}}
         - boost-cpp # Needed to use pin_run_as_build
@@ -128,6 +128,10 @@ outputs:
         - {{ pin_subpackage("mrc", max_pin="x.x") }}
       ignore_run_exports:
         - pypy
+      missing_dso_whitelist:
+        - $RPATH/ld-linux-x86-64.so.2 # From python
+        - $RPATH/libc.so.6 # From python
+        - $RPATH/libpthread.so.0 # Sample modules
       include_recipe: False
     script: move_mrc_files.sh
     requirements:
@@ -155,8 +159,8 @@ outputs:
         - cuml {{ rapids_version }}.* # Ensure we can install cuml. This can cause issues solving libabseil
 
 about:
-  home: https://www.nvidia.com/
-  summary: A GPU accelerated streaming data library with python bindings
-  license: Apache-2.0
+  home: https://github.com/nv-morpheus/MRC
   license_family: Apache
   license_file: LICENSE
+  license: Apache-2.0
+  summary: A GPU accelerated streaming data library with python bindings
