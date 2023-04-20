@@ -37,6 +37,7 @@ export BUILD_CC=${BUILD_CC:-"gcc"}
 
 export CONDA_ENV_YML="${MRC_ROOT}/ci/conda/environments/dev_env.yml"
 export CONDA_CLANG_ENV_YML="${MRC_ROOT}/ci/conda/environments/clang_env.yml"
+export CONDA_CI_ENV_YML="${MRC_ROOT}/ci/conda/environments/ci_env.yml"
 
 export CMAKE_BUILD_ALL_FEATURES="-DCMAKE_MESSAGE_CONTEXT_SHOW=ON -DMRC_BUILD_BENCHMARKS=ON -DMRC_BUILD_EXAMPLES=ON -DMRC_BUILD_PYTHON=ON -DMRC_BUILD_TESTS=ON -DMRC_USE_CONDA=ON -DMRC_PYTHON_BUILD_STUBS=ON"
 export CMAKE_BUILD_WITH_CODECOV="-DCMAKE_BUILD_TYPE=Debug -DMRC_ENABLE_CODECOV=ON -DMRC_PYTHON_PERFORM_INSTALL:BOOL=ON -DMRC_PYTHON_INPLACE_BUILD:BOOL=ON"
@@ -73,9 +74,29 @@ function print_env_vars() {
 
 function update_conda_env() {
     rapids-logger "Checking for updates to conda env"
-    rapids-mamba-retry env update -n mrc -q --file ${CONDA_ENV_YML}
-    rapids-mamba-retry env update -n mrc -q --file ${CONDA_CLANG_ENV_YML}
+
+    # Deactivate the environment first before updating
     conda deactivate
+
+    # Make sure we have the conda-merge package installed
+    if [[ -z "$(conda list | grep conda-merge)" ]]; then
+        rapids-mamba-retry install -n mrc -c conda-forge "conda-merge>=0.2"
+    fi
+
+    # Create a temp directory which we store the combined environment file in
+    condatmpdir=$(mktemp -d)
+
+    # Merge the environments together so we can use --prune. Otherwise --prune
+    # will clobber the last env update
+    conda run -n mrc --live-stream conda-merge ${CONDA_ENV_YML} ${CONDA_CLANG_ENV_YML} ${CONDA_CI_ENV_YML} > ${condatmpdir}/merged_env.yml
+
+    # Update the conda env with prune remove excess packages (in case one was removed from the env)
+    rapids-mamba-retry env update -n mrc -q --prune --file ${condatmpdir}/merged_env.yml
+
+    # Delete the temp directory
+    rm -rf ${condatmpdir}
+
+    # Finally, reactivate
     conda activate mrc
 }
 
