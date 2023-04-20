@@ -43,7 +43,7 @@ requirements:
     - autoconf >=2.69
     - ccache
     - cmake >=3.24
-    - cuda-cudart-dev # Needed by CMake to compile a test application
+    - cuda-cudart-dev {{ cuda_version }}.* # Needed by CMake to compile a test application
     - libtool
     - ninja
     - numactl-libs-cos7-x86_64
@@ -52,7 +52,7 @@ requirements:
   host:
     # Libraries necessary to build. Keep sorted!
     - boost-cpp
-    - cuda-cudart-dev
+    - cuda-cudart-dev {{ cuda_version }}.*
     - cuda-nvml-dev
     - doxygen 1.9.2.*
     - flatbuffers 2.0.*
@@ -96,6 +96,7 @@ outputs:
       host:
         # Any libraries with weak run_exports need to go here to be added to the run. Keep sorted!
         - boost-cpp
+        - cuda-cudart
         - flatbuffers 2.0.*
         - glog
         - grpc-cpp
