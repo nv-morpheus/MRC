@@ -32,8 +32,7 @@ setup(
     author="NVIDIA Corporation",
     setup_requires=[],
     include_package_data=True,
-    packages=find_namespace_packages(include=["mrc*"],
-                                     exclude=["tests", "mrc.core.segment.module_definitions"]),
+    packages=find_namespace_packages(include=["mrc*"], exclude=["tests", "mrc.core.segment.module_definitions"]),
     package_data={
         "mrc": ["_pymrc/*.so"]  # Add the pymrc library for the root package
     },
