@@ -32,9 +32,11 @@ setup(
     author="NVIDIA Corporation",
     setup_requires=[],
     include_package_data=True,
-    packages=find_packages(include=['mrc', 'mrc.*'], exclude=['tests']),
+    packages=find_packages(include=['mrc*'], exclude=['tests']),
     package_data={
         "mrc": ["_pymrc/*.so"]  # Add the pymrc library for the root package
     },
     license="Apache",
-    cmdclass=versioneer.get_cmdclass())
+    cmdclass=versioneer.get_cmdclass(),
+    zip_safe=False
+)
