@@ -43,7 +43,7 @@ requirements:
     - autoconf >=2.69
     - ccache
     - cmake >=3.24
-    - cuda-cudart-dev {{ cuda_version }}.* # Needed by CMake to compile a test application
+    - cuda-cudart-dev # Needed by CMake to compile a test application
     - libtool
     - ninja
     - numactl-libs-cos7-x86_64
@@ -52,7 +52,7 @@ requirements:
   host:
     # Libraries necessary to build. Keep sorted!
     - boost-cpp
-    - cuda-cudart-dev {{ cuda_version }}.*
+    - cuda-cudart-dev
     - cuda-nvml-dev
     - doxygen 1.9.2.*
     - flatbuffers 2.0.*
@@ -90,13 +90,12 @@ outputs:
         - {{ compiler("cuda") }}
         - {{ compiler("cxx") }}
         - cmake >=3.24
-        - cuda-cudart-dev {{ cuda_version }}.*
         - numactl-libs-cos7-x86_64
         - sysroot_linux-64 2.17
       host:
         # Any libraries with weak run_exports need to go here to be added to the run. Keep sorted!
         - boost-cpp
-        - cuda-cudart
+        - cuda-cudart # Needed to allow pin_compatible to work
         - glog
         - grpc-cpp
         - libabseil # Needed for transitive run_exports from grpc-cpp. Does not need a version

@@ -11,7 +11,7 @@ dependencies:
   - boost-cpp=1.74
   - ccache
   - cmake=3.24
-  - cuda-toolkit=11.8
+  - cuda-toolkit # Version comes from the channel above
   - cxx-compiler # Sets up the distro versions of our compilers
   - doxygen=1.9.2
   - flake8
