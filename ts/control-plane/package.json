@@ -13,7 +13,7 @@
     "proto:build2": "grpc_tools_node_protoc --plugin=protoc-gen-grpc=./node_modules/.bin/grpc_tools_node_protoc_plugin --ts_proto_opt=outputServices=grpc-js,useOptionals=messages,exportCommonSymbols=false,esModuleInterop=true --ts_proto_out=./src/proto/ -I ../../protos/ ../../protos/mrc/protos/architect.proto",
     "proto:build3": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./src/proto --grpc_out=grpc_js:./src/proto --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:./src/proto -I ../../protos/ ../../protos/mrc/protos/architect.proto",
     "codegen:buf": "cd proto; buf generate; cd ..",
-    "test": "gulp test",
+    "test": "jest",
     "start:devtools": "redux-devtools"
   },
   "keywords": [],
