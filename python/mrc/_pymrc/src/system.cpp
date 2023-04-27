@@ -53,9 +53,10 @@ void SystemResources::add_gil_initializer()
 
     if (!trace_func.is_none())
     {
-        auto trace_module = pybind11::getattr(trace_func, "__module__", pybind11::none());
+        // Convert it to a string to quickly get its module and name
+        auto trace_func_str = pybind11::str(trace_func);
 
-        if (!trace_module.is_none() && !trace_module.attr("find")("pydevd").equal(pybind11::int_(-1)))
+        if (!trace_func_str.attr("find")("pydevd").equal(pybind11::int_(-1)))
         {
             VLOG(10) << "Found pydevd trace function. Will attempt to enable debugging for MRC threads.";
             has_pydevd_trace = true;
