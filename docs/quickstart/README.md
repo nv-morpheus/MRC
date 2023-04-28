@@ -23,7 +23,7 @@ If you've alredy followed the MRC library installation instructions in the [main
 
 ```bash
 # Change directory to the quickstart root
-cd ${MRC_HOME}/docs/quickstart/
+cd ${MRC_ROOT}/docs/quickstart/
 
 # Update the existing MRC conda environment. Here, we assume the environment is named `mrc`, but you can change this to the environment name you used, if different
 conda env update -n mrc -f environment_cpp.yml
@@ -39,7 +39,7 @@ pip install -e python
 If you haven't installed MRC or would like to create an entirely new Conda environment for the Quick Start Guide, run:
 ```bash
 # Change directory to the quickstart root
-cd ${MRC_HOME}/docs/quickstart/
+cd ${MRC_ROOT}/docs/quickstart/
 
 # Create a new MRC conda environment. Here, we assume the environment is named `mrc-quickstart`
 conda env create -n mrc-quickstart -f environment_cpp.yml
@@ -62,7 +62,7 @@ If you encounter errors building the examples, this is mostly likely caused for 
 A comprehensive overview of building MRC from source is provided in the [MRC README](../../README.md#source-installation). To build the Quick Start Guide examples, simply run
 
 ```bash
-cd ${MRC_HOME}/docs/quickstart
+cd ${MRC_ROOT}/docs/quickstart
 
 # Build the QSG including the C++ examples
 ./compile.sh
