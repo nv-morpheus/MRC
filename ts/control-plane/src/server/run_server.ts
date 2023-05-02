@@ -5,7 +5,9 @@ import {setupStore} from "./store/store";
 
 async function main()
 {
-   const addDevTools = process.env.NODE_ENV !== "production" && false;
+   const addDevTools = process.env.NODE_ENV !== "production";
+
+   console.log(`addDevTools: ${addDevTools}`);
 
    if (addDevTools)
    {

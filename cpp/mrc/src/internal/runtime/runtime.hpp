@@ -21,6 +21,7 @@
 #include "internal/control_plane/server.hpp"
 #include "internal/runtime/partition.hpp"
 #include "internal/runtime/partition_manager.hpp"
+#include "internal/runtime/pipelines_manager.hpp"
 #include "internal/system/resources.hpp"
 
 #include "mrc/runtime/api.hpp"
@@ -62,6 +63,11 @@ class Runtime final : public mrc::runtime::IRuntime, public Service, public syst
 
     control_plane::Client& control_plane() const;
 
+    PipelinesManager& pipelines_manager() const
+    {
+        return *m_pipelines_manager;
+    }
+
     void register_pipelines_defs(std::map<int, std::shared_ptr<pipeline::Pipeline>> pipeline_defs);
 
   private:
@@ -79,7 +85,9 @@ class Runtime final : public mrc::runtime::IRuntime, public Service, public syst
 
     std::vector<std::unique_ptr<PartitionManager>> m_partition_managers;
 
-    std::map<int, std::shared_ptr<pipeline::Pipeline>> m_registered_pipeline_defs;
+    std::unique_ptr<PipelinesManager> m_pipelines_manager;
+
+    // std::map<int, std::shared_ptr<pipeline::Pipeline>> m_registered_pipeline_defs;
 };
 
 }  // namespace mrc::internal::runtime

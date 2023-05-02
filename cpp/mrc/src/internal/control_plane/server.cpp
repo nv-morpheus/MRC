@@ -102,7 +102,17 @@ Server::Server()
     // args.emplace_back("--loader");
     // args.emplace_back("ts-node/esm");
     args.emplace_back("--inspect");
-    args.emplace_back("/work/ts/control-plane/dist/server/run_server.js");
+
+    // Find the location relative to the build folder
+    auto mrc_lib_location = std::filesystem::path(utils::get_mrc_lib_location());
+
+    auto node_service_js = mrc_lib_location.parent_path() / ".." / ".." / "ts" / "control-plane" / "dist" /
+                           "index.bundle.js";
+
+    // Convert to absolute just to be sure
+    node_service_js = std::filesystem::canonical(node_service_js);
+
+    args.emplace_back(node_service_js);
 
     m_node_service.set_args(args);
     // // Parse Node.js CLI options, and print any errors that have occurred while

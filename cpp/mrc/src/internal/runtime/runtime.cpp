@@ -22,6 +22,7 @@
 #include "internal/runnable/resources.hpp"
 #include "internal/runtime/partition.hpp"
 #include "internal/runtime/partition_manager.hpp"
+#include "internal/runtime/pipelines_manager.hpp"
 #include "internal/system/partitions.hpp"
 #include "internal/system/system_provider.hpp"
 
@@ -128,6 +129,15 @@ void Runtime::do_service_start()
 
         m_partition_managers.back()->service_start();
     }
+
+    // Now ensure they are all alive
+    for (auto& part_manager : m_partition_managers)
+    {
+        part_manager->service_await_live();
+    }
+
+    // Finally, create the pipelines manager
+    m_pipelines_manager = std::make_unique<PipelinesManager>(*m_control_plane_client);
 }
 
 void Runtime::do_service_stop()

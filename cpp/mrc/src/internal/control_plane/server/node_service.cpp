@@ -20,6 +20,7 @@
 #include "mrc/protos/architect.grpc.pb.h"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/utils/library_utils.hpp"
+#include "mrc/utils/string_utils.hpp"
 
 #include <grpcpp/client_context.h>
 #include <grpcpp/grpcpp.h>
@@ -483,7 +484,7 @@ void NodeService::do_service_await_join()
 
 void NodeService::launch_node(std::vector<std::string> args)
 {
-    DVLOG(10) << "[Node] Launching node";
+    DVLOG(10) << "[Node] Launching node with args: " << utils::StringUtil::array_to_str(args.begin(), args.end());
 
     if (!m_init_result)
     {

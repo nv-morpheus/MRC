@@ -50,6 +50,9 @@ enum EventType
     Response = 1;
     ControlStop = 2;
 
+    // Meta Events
+    Ping = 10;
+
     // Client Events - No Response
     ClientEventRequestStateUpdate = 100;
     ClientEventStreamConnected = 101;

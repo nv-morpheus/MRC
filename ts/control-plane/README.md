@@ -6,4 +6,5 @@ Process is very manually currenly. Follow these steps:
 2. Change directory to the node folder: `cd ts/control-plane/`
 3. Install the node dependencies: `npm install`
 4. Build the proto files: `npm run proto:build`
-5. Run the tests: `npm run test`
+5. Build the server files: `npm run build:server`
+6. Run the tests: `npm run test`
