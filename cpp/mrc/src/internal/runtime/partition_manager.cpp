@@ -19,6 +19,7 @@
 
 #include "internal/async_service.hpp"
 #include "internal/runnable/resources.hpp"
+#include "internal/runtime/partition_runtime.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/ucx/worker.hpp"
 
@@ -32,14 +33,10 @@
 
 namespace mrc::internal::runtime {
 
-PartitionManager::PartitionManager(resources::PartitionResources& resources,
-                                   control_plane::Client& control_plane_client,
-                                   PipelinesManager& pipelines_manager) :
-  AsyncService(resources.runnable()),
-  m_resources(resources),
-  m_control_plane_client(control_plane_client),
-  m_pipelines_manager(pipelines_manager),
-  m_partition_id(resources.partition_id())
+PartitionManager::PartitionManager(PartitionRuntime& runtime) :
+  AsyncService(runtime.resources().runnable()),
+  m_runtime(runtime),
+  m_partition_id(runtime.idx())
 {}
 
 PartitionManager::~PartitionManager() = default;
@@ -49,10 +46,11 @@ void PartitionManager::do_service_start(std::stop_token stop_token)
     // First thing, need to register this worker with the control plane
     protos::RegisterWorkersRequest req;
 
-    req.add_ucx_worker_addresses(m_resources.ucx()->worker().address());
+    req.add_ucx_worker_addresses(m_runtime.resources().ucx()->worker().address());
 
-    auto resp = m_control_plane_client.await_unary<protos::RegisterWorkersResponse>(protos::ClientUnaryRegisterWorkers,
-                                                                                    std::move(req));
+    auto resp = m_runtime.control_plane().await_unary<protos::RegisterWorkersResponse>(
+        protos::ClientUnaryRegisterWorkers,
+        std::move(req));
 
     CHECK_EQ(resp->instance_ids_size(), 1);
 
@@ -61,7 +59,8 @@ void PartitionManager::do_service_start(std::stop_token stop_token)
     Promise<void> completed_promise;
 
     // Now, subscribe to the control plane state updates and filter only on updates to this instance ID
-    m_control_plane_client.state_update_obs()
+    m_runtime.control_plane()
+        .state_update_obs()
         .map([this](control_plane::state::ControlPlaneState state) -> control_plane::state::Worker {
             return state.workers().at(m_worker_id);
         })
@@ -88,7 +87,7 @@ void PartitionManager::do_service_start(std::stop_token stop_token)
     protos::TaggedInstance msg;
     msg.set_instance_id(m_worker_id);
 
-    CHECK(m_control_plane_client.await_unary<protos::Ack>(protos::ClientUnaryDropWorker, std::move(msg)));
+    CHECK(m_runtime.control_plane().await_unary<protos::Ack>(protos::ClientUnaryDropWorker, std::move(msg)));
 }
 
 // void PartitionManager::do_service_stop() {}
@@ -114,7 +113,7 @@ void PartitionManager::process_state_update(mrc::internal::control_plane::state:
         resp.add_instance_ids(m_worker_id);
 
         // Need to activate our worker
-        m_control_plane_client.await_unary<protos::Ack>(protos::ClientUnaryActivateStream, std::move(resp));
+        m_runtime.control_plane().await_unary<protos::Ack>(protos::ClientUnaryActivateStream, std::move(resp));
 
         // Indicate this is now live
         this->mark_started();
@@ -170,20 +169,21 @@ void PartitionManager::process_state_update(mrc::internal::control_plane::state:
 }
 void PartitionManager::create_segment(uint64_t pipeline_id, SegmentAddress address)
 {
-    m_resources.runnable()
+    m_runtime.resources()
+        .runnable()
         .main()
         .enqueue([this, pipeline_id, address] {
             // Get a reference to the pipeline we are creating the segment in
-            auto& pipeline_def = m_pipelines_manager.get_def(pipeline_id);
+            auto& pipeline_def = m_runtime.pipelines_manager().get_def(pipeline_id);
 
-            auto pipeline_instance = m_pipelines_manager.get_instance(pipeline_id);
+            auto pipeline_instance = m_runtime.pipelines_manager().get_instance(pipeline_id);
 
             //     auto search = m_segments.find(address);
             // CHECK(search == m_segments.end());
 
             auto [id, rank] = segment_address_decode(address);
             auto definition = pipeline_def.find_segment(id);
-            auto segment    = std::make_unique<segment::Instance>(definition, rank, m_resources, m_partition_id);
+            auto segment    = std::make_unique<segment::SegmentInstance>(m_runtime, definition, rank);
 
             // for (const auto& name : definition->egress_port_names())
             // {

@@ -30,7 +30,7 @@ namespace mrc::internal::resources {
 class Manager;
 }  // namespace mrc::internal::resources
 namespace mrc::internal::segment {
-class Instance;
+class SegmentInstance;
 }  // namespace mrc::internal::segment
 namespace mrc::manifold {
 struct Interface;
@@ -78,7 +78,7 @@ class Instance final : public Service, public Resources
 
     std::shared_ptr<const Pipeline> m_definition;  // convert to pipeline::Pipeline
 
-    std::map<SegmentAddress, std::unique_ptr<segment::Instance>> m_segments;
+    std::map<SegmentAddress, std::unique_ptr<segment::SegmentInstance>> m_segments;
     std::map<PortName, std::shared_ptr<manifold::Interface>> m_manifolds;
 
     bool m_joinable{false};

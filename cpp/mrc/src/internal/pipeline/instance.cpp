@@ -23,7 +23,7 @@
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/segment/definition.hpp"
-#include "internal/segment/instance.hpp"
+#include "internal/segment/segment_instance.hpp"
 
 #include "mrc/core/addresses.hpp"
 #include "mrc/core/task_queue.hpp"
@@ -114,7 +114,7 @@ void Instance::create_segment(const SegmentAddress& address, std::uint32_t parti
 
             auto [id, rank] = segment_address_decode(address);
             auto definition = m_definition->find_segment(id);
-            auto segment    = std::make_unique<segment::Instance>(definition, rank, *this, partition_id);
+            auto segment    = std::make_unique<segment::SegmentInstance>(definition, rank, *this, partition_id);
 
             for (const auto& name : definition->egress_port_names())
             {

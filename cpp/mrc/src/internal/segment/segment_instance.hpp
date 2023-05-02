@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "internal/remote_descriptor/manager.hpp"
 #include "internal/service.hpp"
 
 #include "mrc/runnable/runner.hpp"
@@ -44,11 +45,11 @@ class Definition;
 class Builder;
 
 // todo(ryan) - inherit from service
-class Instance final : public Service
+class SegmentInstance final : public Service
 {
   public:
-    Instance(std::shared_ptr<const Definition> definition, SegmentRank rank, runtime::PartitionRuntime& partition);
-    ~Instance() override;
+    SegmentInstance(runtime::PartitionRuntime& runtime, std::shared_ptr<const Definition> definition, SegmentRank rank);
+    ~SegmentInstance() override;
 
     const std::string& name() const;
     const SegmentID& id() const;
@@ -77,7 +78,7 @@ class Instance final : public Service
     std::string m_info;
 
     std::unique_ptr<Builder> m_builder;
-    runtime::PartitionRuntime& m_partition_runtime;
+    runtime::PartitionRuntime& m_runtime;
     const std::size_t m_default_partition_id;
 
     std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_runners;

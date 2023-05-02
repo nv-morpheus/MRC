@@ -82,7 +82,7 @@ add_library(libmrc
   src/internal/segment/definition.cpp
   src/internal/segment/ibuilder.cpp
   src/internal/segment/idefinition.cpp
-  src/internal/segment/instance.cpp
+  src/internal/segment/segment_instance.cpp
   src/internal/service.cpp
   src/internal/system/device_info.cpp
   src/internal/system/device_partition.cpp

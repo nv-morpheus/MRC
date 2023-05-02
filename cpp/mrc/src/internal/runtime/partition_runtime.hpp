@@ -53,6 +53,10 @@ class PartitionRuntime final : public mrc::runtime::IPartitionRuntime
 
     resources::PartitionResources& resources();
 
+    control_plane::Client& control_plane() const;
+
+    PipelinesManager& pipelines_manager() const;
+
     // IPartition -> IRemoteDescriptorManager& is covariant
     remote_descriptor::Manager& remote_descriptor_manager() final;
 

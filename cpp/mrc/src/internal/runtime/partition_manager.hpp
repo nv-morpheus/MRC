@@ -20,10 +20,11 @@
 #include "internal/async_service.hpp"
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/state/root_state.hpp"
+#include "internal/remote_descriptor/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/runtime/pipelines_manager.hpp"
-#include "internal/segment/instance.hpp"
+#include "internal/segment/segment_instance.hpp"
 #include "internal/ucx/resources.hpp"
 
 #include "mrc/types.hpp"
@@ -53,9 +54,7 @@ namespace mrc::internal::runtime {
 class PartitionManager : public AsyncService
 {
   public:
-    PartitionManager(resources::PartitionResources& resources,
-                     control_plane::Client& control_plane_client,
-                     PipelinesManager& pipelines_manager);
+    PartitionManager(PartitionRuntime& runtime);
     ~PartitionManager() override;
     // PartitionManager(runnable::RunnableResources& runnable_resources,
     //                  std::size_t partition_id,
@@ -79,9 +78,7 @@ class PartitionManager : public AsyncService
     void create_segment(uint64_t pipeline_id, SegmentAddress address);
     void erase_segment(SegmentAddress address);
 
-    resources::PartitionResources& m_resources;
-    control_plane::Client& m_control_plane_client;
-    PipelinesManager& m_pipelines_manager;
+    PartitionRuntime& m_runtime;
 
     size_t m_partition_id{0};
     InstanceID m_worker_id{0};
@@ -90,7 +87,7 @@ class PartitionManager : public AsyncService
     SharedPromise<void> m_live_promise;
 
     // Running segment instances
-    std::map<SegmentAddress, std::unique_ptr<segment::Instance>> m_segments;
+    std::map<SegmentAddress, std::unique_ptr<segment::SegmentInstance>> m_segments;
 
     // memory::HostResources& m_host;
     // std::optional<memory::DeviceResources>& m_device;
