@@ -18,6 +18,7 @@
 #include "internal/control_plane/client.hpp"
 
 #include "internal/control_plane/client/connections_manager.hpp"
+#include "internal/control_plane/state/root_state.hpp"
 #include "internal/grpc/progress_engine.hpp"
 #include "internal/grpc/promise_handler.hpp"
 #include "internal/runnable/resources.hpp"
@@ -214,7 +215,7 @@ void Client::do_handle_event(event_t&& event)
         CHECK(event.msg.has_message() && event.msg.message().UnpackTo(&update));
 
         m_state_update_count++;
-        m_state_update_sub.get_subscriber().on_next(std::move(update));
+        m_state_update_sub.get_subscriber().on_next(state::ControlPlaneState(update));
 
         // DCHECK(m_state_update_entrypoint);
         // CHECK(m_state_update_entrypoint->await_write(std::move(update)) == channel::Status::success);
@@ -324,7 +325,7 @@ void Client::request_update()
 //     return *m_state_update_stream;
 // }
 
-rxcpp::observable<protos::ControlPlaneState> Client::state_update_obs() const
+rxcpp::observable<state::ControlPlaneState> Client::state_update_obs() const
 {
     // Return the observable but skip the first, default value so we only return values sent from the server
     return m_state_update_sub.get_observable().filter([this](auto& x) {

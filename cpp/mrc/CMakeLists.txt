@@ -35,6 +35,7 @@ add_library(libmrc
   src/internal/control_plane/server/node_service.cpp
   src/internal/control_plane/server/subscription_manager.cpp
   src/internal/control_plane/server/tagged_issuer.cpp
+  src/internal/control_plane/state/root_state.cpp
   src/internal/data_plane/callbacks.cpp
   src/internal/data_plane/client.cpp
   src/internal/data_plane/request.cpp

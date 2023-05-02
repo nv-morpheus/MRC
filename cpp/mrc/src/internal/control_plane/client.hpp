@@ -18,6 +18,7 @@
 #pragma once
 
 #include "internal/control_plane/client/instance.hpp"  // IWYU pragma: keep
+#include "internal/control_plane/state/root_state.hpp"
 #include "internal/grpc/client_streaming.hpp"
 #include "internal/grpc/stream_writer.hpp"
 #include "internal/resources/partition_resources_base.hpp"
@@ -29,7 +30,6 @@
 #include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
 #include "mrc/protos/architect.pb.h"
-#include "mrc/protos/architect_state.pb.h"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/macros.hpp"
@@ -157,7 +157,7 @@ class Client final : public resources::PartitionResourceBase, public Service
 
     // edge::IWritableAcceptor<const protos::ControlPlaneState>& state_update_stream() const;
 
-    rxcpp::observable<protos::ControlPlaneState> state_update_obs() const;
+    rxcpp::observable<state::ControlPlaneState> state_update_obs() const;
 
   private:
     void route_state_update(std::uint64_t tag, protos::StateUpdate&& update);
@@ -200,7 +200,7 @@ class Client final : public resources::PartitionResourceBase, public Service
 
     // update channel
     size_t m_state_update_count{0};
-    rxcpp::subjects::behavior<protos::ControlPlaneState> m_state_update_sub{protos::ControlPlaneState{}};
+    rxcpp::subjects::subject<state::ControlPlaneState> m_state_update_sub;
     std::unique_ptr<mrc::node::WritableEntrypoint<const protos::StateUpdate>> m_connections_update_channel;
     std::unique_ptr<mrc::node::WritableEntrypoint<const protos::ControlPlaneState>> m_state_update_entrypoint;
     std::unique_ptr<mrc::node::Broadcast<const protos::ControlPlaneState>> m_state_update_stream;

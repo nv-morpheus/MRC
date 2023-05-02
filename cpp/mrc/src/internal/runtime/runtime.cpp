@@ -125,8 +125,9 @@ void Runtime::do_service_start()
     // For each partition, create and start a partition manager
     for (size_t i = 0; i < m_resources->partition_count(); i++)
     {
-        m_partition_managers.emplace_back(
-            std::make_unique<PartitionManager>(m_resources->partition(i), *m_control_plane_client));
+        m_partition_managers.emplace_back(std::make_unique<PartitionManager>(m_resources->partition(i),
+                                                                             *m_control_plane_client,
+                                                                             *m_pipelines_manager));
 
         m_partition_managers.back()->service_start();
     }

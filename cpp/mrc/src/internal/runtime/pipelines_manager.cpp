@@ -47,11 +47,9 @@ void PipelinesManager::register_defs(std::map<int, std::shared_ptr<pipeline::Pip
             (*request.mutable_segment_assignments())[segment_id] = 0;
         }
 
-        m_control_plane_client.issue_event(protos::EventType::ClientUnaryRequestPipelineAssignment, request);
-
-        // auto response = m_control_plane_client.await_unary<protos::PipelineRequestAssignmentResponse>(
-        //     protos::EventType::ClientUnaryRequestPipelineAssignment,
-        //     request);
+        auto response = m_control_plane_client.await_unary<protos::PipelineRequestAssignmentResponse>(
+            protos::EventType::ClientUnaryRequestPipelineAssignment,
+            request);
     }
 }
 

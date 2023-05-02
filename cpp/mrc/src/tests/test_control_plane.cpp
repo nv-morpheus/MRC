@@ -156,10 +156,10 @@ TEST_F(TestControlPlane, SingleClientGetState)
     // Get the current state after connection
     auto current_state = client->state_update_obs().as_blocking().first();
 
-    EXPECT_EQ(current_state.connections().ids_size(), 1);
-    EXPECT_TRUE(current_state.connections().entities().contains(client->machine_id()));
+    EXPECT_EQ(current_state.connections().size(), 1);
+    EXPECT_TRUE(current_state.connections().contains(client->machine_id()));
 
-    auto this_connection = current_state.connections().entities().at(client->machine_id());
+    auto this_connection = current_state.connections().at(client->machine_id());
     EXPECT_EQ(this_connection.id(), client->machine_id());
 
     client->service_stop();

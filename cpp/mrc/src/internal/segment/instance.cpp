@@ -50,21 +50,17 @@
 
 namespace mrc::internal::segment {
 
-Instance::Instance(std::shared_ptr<const Definition> definition,
-                   SegmentRank rank,
-                   pipeline::Resources& resources,
-                   std::size_t partition_id) :
+Instance::Instance(std::shared_ptr<const Definition> definition, SegmentRank rank, runtime::Partition& partition) :
   m_name(definition->name()),
   m_id(definition->id()),
   m_rank(rank),
   m_address(segment_address_encode(m_id, m_rank)),
   m_info(::mrc::segment::info(segment_address_encode(m_id, rank))),
-  m_resources(resources),
-  m_default_partition_id(partition_id)
+  m_partition_runtime(partition),
+  m_default_partition_id(0)
 {
     // construct the segment definition on the intended numa node
-    m_builder = m_resources.resources()
-                    .partition(m_default_partition_id)
+    m_builder = m_partition_runtime.resources()
                     .runnable()
                     .main()
                     .enqueue([&]() mutable {

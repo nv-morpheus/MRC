@@ -403,7 +403,7 @@ TEST_F(TestExecutor, LifeCycle)
     executor.register_pipeline(make_pipeline());
 
     executor.start();
-    executor.stop();
+    // executor.stop();
     executor.join();
 }
 

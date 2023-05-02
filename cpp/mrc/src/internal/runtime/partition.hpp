@@ -48,6 +48,8 @@ class Partition final : public mrc::runtime::IPartition
     DELETE_COPYABILITY(Partition);
     DELETE_MOVEABILITY(Partition);
 
+    size_t idx() const;
+
     resources::PartitionResources& resources();
 
     // IPartition -> IRemoteDescriptorManager& is covariant
