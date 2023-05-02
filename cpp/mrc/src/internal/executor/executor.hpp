@@ -36,7 +36,7 @@ class IPipeline;
 class PipelineManager;
 }  // namespace mrc::internal::pipeline
 namespace mrc::internal::resources {
-class Manager;
+class SystemResources;
 }  // namespace mrc::internal::resources
 namespace mrc::internal::system {
 class SystemResources;

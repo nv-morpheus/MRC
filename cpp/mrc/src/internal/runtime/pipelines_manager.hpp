@@ -25,6 +25,7 @@
 #include "mrc/types.hpp"
 
 #include <cstddef>
+#include <memory>
 #include <optional>
 #include <utility>
 

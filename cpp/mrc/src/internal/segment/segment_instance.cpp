@@ -18,9 +18,10 @@
 #include "internal/segment/segment_instance.hpp"
 
 #include "internal/pipeline/resources.hpp"
-#include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
+#include "internal/resources/system_resources.hpp"
 #include "internal/runnable/resources.hpp"
+#include "internal/runtime/partition_runtime.hpp"
 #include "internal/segment/builder.hpp"
 #include "internal/segment/definition.hpp"
 
@@ -50,23 +51,22 @@
 
 namespace mrc::internal::segment {
 
-SegmentInstance::SegmentInstance(std::shared_ptr<const Definition> definition,
-                                 SegmentRank rank,
-                                 runtime::PartitionRuntime& partition) :
+SegmentInstance::SegmentInstance(runtime::PartitionRuntime& runtime,
+                                 std::shared_ptr<const Definition> definition,
+                                 SegmentRank rank) :
+  m_runtime(runtime),
   m_name(definition->name()),
   m_id(definition->id()),
   m_rank(rank),
   m_address(segment_address_encode(m_id, m_rank)),
-  m_info(::mrc::segment::info(segment_address_encode(m_id, rank))),
-  m_runtime(partition),
-  m_default_partition_id(0)
+  m_info(::mrc::segment::info(segment_address_encode(m_id, rank)))
 {
     // construct the segment definition on the intended numa node
     m_builder = m_runtime.resources()
                     .runnable()
                     .main()
                     .enqueue([&]() mutable {
-                        return std::make_unique<Builder>(definition, rank, m_resources, m_default_partition_id);
+                        return std::make_unique<Builder>(m_runtime, definition, rank);
                     })
                     .get();
 }
@@ -115,24 +115,21 @@ void SegmentInstance::do_service_start()
     for (const auto& [name, node] : m_builder->nodes())
     {
         DVLOG(10) << info() << " constructing launcher for " << name;
-        m_launchers[name] = node->prepare_launcher(
-            m_resources.resources().partition(m_default_partition_id).runnable().launch_control());
+        m_launchers[name] = node->prepare_launcher(m_runtime.resources().runnable().launch_control());
         apply_callback(m_launchers[name], name);
     }
 
     for (const auto& [name, node] : m_builder->egress_ports())
     {
         DVLOG(10) << info() << " constructing launcher egress port " << name;
-        m_egress_launchers[name] = node->prepare_launcher(
-            m_resources.resources().partition(m_default_partition_id).runnable().launch_control());
+        m_egress_launchers[name] = node->prepare_launcher(m_runtime.resources().runnable().launch_control());
         apply_callback(m_egress_launchers[name], name);
     }
 
     for (const auto& [name, node] : m_builder->ingress_ports())
     {
         DVLOG(10) << info() << " constructing launcher ingress port " << name;
-        m_ingress_launchers[name] = node->prepare_launcher(
-            m_resources.resources().partition(m_default_partition_id).runnable().launch_control());
+        m_ingress_launchers[name] = node->prepare_launcher(m_runtime.resources().runnable().launch_control());
         apply_callback(m_ingress_launchers[name], name);
     }
 
@@ -306,14 +303,14 @@ std::shared_ptr<manifold::Interface> SegmentInstance::create_manifold(const Port
         auto search = m_builder->egress_ports().find(name);
         if (search != m_builder->egress_ports().end())
         {
-            return search->second->make_manifold(m_resources.resources().partition(m_default_partition_id).runnable());
+            return search->second->make_manifold(m_runtime.resources().runnable());
         }
     }
     {
         auto search = m_builder->ingress_ports().find(name);
         if (search != m_builder->ingress_ports().end())
         {
-            return search->second->make_manifold(m_resources.resources().partition(m_default_partition_id).runnable());
+            return search->second->make_manifold(m_runtime.resources().runnable());
         }
     }
     LOG(FATAL) << info() << " unable to match ingress or egress port name";

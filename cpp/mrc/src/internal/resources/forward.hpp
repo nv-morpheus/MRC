@@ -24,7 +24,7 @@ class PartitionRuntime;
 }
 
 namespace resources {
-class Manager;
+class SystemResources;
 class PartitionResourceBase;
 class PartitionResources;
 }  // namespace resources

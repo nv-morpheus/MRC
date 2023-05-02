@@ -18,7 +18,7 @@
 #include "internal/runtime/runtime.hpp"
 
 #include "internal/control_plane/client.hpp"
-#include "internal/resources/manager.hpp"
+#include "internal/resources/system_resources.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/runtime/partition_manager.hpp"
 #include "internal/runtime/partition_runtime.hpp"
@@ -53,12 +53,12 @@ Runtime::~Runtime()
     // the problem is that m_partitions goes away, then m_resources is destroyed
     // when not all Publishers/Subscribers which were created with a ref to a Partition
     // might not yet be finished
-    m_resources->shutdown().get();
+    // m_resources->shutdown().get();
 
     Service::call_in_destructor();
 }
 
-resources::Manager& Runtime::resources() const
+resources::SystemResources& Runtime::resources() const
 {
     CHECK(m_resources);
     return *m_resources;
@@ -83,11 +83,6 @@ PartitionRuntime& Runtime::partition(std::size_t partition_id)
 control_plane::Client& Runtime::control_plane() const
 {
     return *m_control_plane_client;
-}
-
-void Runtime::register_pipelines_defs(std::map<int, std::shared_ptr<pipeline::Pipeline>> pipeline_defs)
-{
-    // Save the pipeline definitions
 }
 
 void Runtime::do_service_start()
@@ -119,15 +114,13 @@ void Runtime::do_service_start()
     m_control_plane_client->service_await_live();
 
     // Create/Initialize the runtime resources object (Could go before the control plane client)
-    m_resources = std::make_unique<resources::Manager>(std::move(sys_resources));
+    m_resources = std::make_unique<resources::SystemResources>(std::move(sys_resources));
     m_resources->initialize();
 
     // For each partition, create and start a partition manager
     for (size_t i = 0; i < m_resources->partition_count(); i++)
     {
-        m_partition_managers.emplace_back(std::make_unique<PartitionManager>(m_resources->partition(i),
-                                                                             *m_control_plane_client,
-                                                                             *m_pipelines_manager));
+        m_partition_managers.emplace_back(std::make_unique<PartitionManager>(this->partition(i)));
 
         m_partition_managers.back()->service_start();
     }

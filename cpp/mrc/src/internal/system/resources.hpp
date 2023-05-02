@@ -39,7 +39,7 @@ namespace mrc::internal::system {
 class FiberTaskQueue;
 class IResources;
 
-class SystemResources final : public SystemProvider
+class SystemResources final : public SystemProvider  // TODO(MDD): Rename to ThreadResources
 {
   public:
     static std::unique_ptr<SystemResources> unwrap(IResources& resources);

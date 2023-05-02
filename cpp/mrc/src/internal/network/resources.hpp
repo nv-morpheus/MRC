@@ -37,7 +37,7 @@ namespace mrc::internal::memory {
 class HostResources;
 }  // namespace mrc::internal::memory
 namespace mrc::internal::resources {
-class Manager;
+class SystemResources;
 }  // namespace mrc::internal::resources
 namespace mrc::internal::ucx {
 class UcxResources;
@@ -79,7 +79,7 @@ class NetworkResources final : private resources::PartitionResourceBase
     // this must be the first variable destroyed
     std::unique_ptr<control_plane::client::Instance> m_control_plane;
 
-    friend resources::Manager;
+    friend resources::SystemResources;
 };
 
 }  // namespace mrc::internal::network

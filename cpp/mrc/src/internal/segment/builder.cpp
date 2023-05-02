@@ -18,6 +18,7 @@
 #include "internal/segment/builder.hpp"
 
 #include "internal/pipeline/resources.hpp"
+#include "internal/runtime/partition_runtime.hpp"
 #include "internal/segment/definition.hpp"
 
 #include "mrc/core/addresses.hpp"
@@ -38,13 +39,9 @@
 
 namespace mrc::internal::segment {
 
-Builder::Builder(std::shared_ptr<const Definition> segdef,
-                 SegmentRank rank,
-                 pipeline::Resources& resources,
-                 std::size_t default_partition_id) :
-  m_definition(std::move(segdef)),
-  m_resources(resources),
-  m_default_partition_id(default_partition_id)
+Builder::Builder(runtime::PartitionRuntime& runtime, std::shared_ptr<const Definition> segdef, SegmentRank rank) :
+  m_runtime(runtime),
+  m_definition(std::move(segdef))
 {
     auto address = segment_address_encode(definition().id(), rank);
 
@@ -175,7 +172,7 @@ const std::map<std::string, std::shared_ptr<mrc::runnable::Launchable>>& Builder
 }
 std::function<void(std::int64_t)> Builder::make_throughput_counter(const std::string& name)
 {
-    auto counter = m_resources.metrics_registry().make_throughput_counter(name);
+    auto counter = m_runtime.metrics_registry().make_throughput_counter(name);
     return [counter](std::int64_t ticks) mutable {
         counter.increment(ticks);
     };

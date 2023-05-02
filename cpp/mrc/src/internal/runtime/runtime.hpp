@@ -17,11 +17,13 @@
 
 #pragma once
 
+#include "internal/async_service.hpp"
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/server.hpp"
 #include "internal/runtime/partition_manager.hpp"
 #include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/pipelines_manager.hpp"
+#include "internal/service.hpp"
 #include "internal/system/resources.hpp"
 
 #include "mrc/runtime/api.hpp"
@@ -31,7 +33,7 @@
 #include <vector>
 
 namespace mrc::internal::resources {
-class Manager;
+class SystemResources;
 }  // namespace mrc::internal::resources
 
 namespace mrc::internal::runtime {
@@ -59,7 +61,7 @@ class Runtime final : public mrc::runtime::IRuntime, public Service, public syst
     PartitionRuntime& partition(std::size_t partition_id) final;
 
     // access the full set of internal resources
-    resources::Manager& resources() const;
+    resources::SystemResources& resources() const;
 
     control_plane::Client& control_plane() const;
 
@@ -68,6 +70,8 @@ class Runtime final : public mrc::runtime::IRuntime, public Service, public syst
         return *m_pipelines_manager;
     }
 
+    metrics::Registry& metrics_registry() const;
+
   private:
     void do_service_start() final;
     void do_service_stop() final;
@@ -75,7 +79,7 @@ class Runtime final : public mrc::runtime::IRuntime, public Service, public syst
     void do_service_await_live() final;
     void do_service_await_join() final;
 
-    std::unique_ptr<resources::Manager> m_resources;
+    std::unique_ptr<resources::SystemResources> m_resources;
     std::vector<std::unique_ptr<PartitionRuntime>> m_partitions;
 
     std::unique_ptr<control_plane::Server> m_control_plane_server;
@@ -84,6 +88,7 @@ class Runtime final : public mrc::runtime::IRuntime, public Service, public syst
     std::vector<std::unique_ptr<PartitionManager>> m_partition_managers;
 
     std::unique_ptr<PipelinesManager> m_pipelines_manager;
+    std::unique_ptr<metrics::Registry> m_metrics_registry;
 
     // std::map<int, std::shared_ptr<pipeline::Pipeline>> m_registered_pipeline_defs;
 };

@@ -22,8 +22,8 @@
 #include "internal/control_plane/client/instance.hpp"
 #include "internal/control_plane/server.hpp"
 #include "internal/network/resources.hpp"
-#include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
+#include "internal/resources/system_resources.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/runtime.hpp"
@@ -62,7 +62,7 @@ namespace mrc::internal::runtime {
 
 static auto make_resources(std::function<void(Options& options)> options_lambda = [](Options& options) {})
 {
-    auto resources = std::make_unique<internal::resources::Manager>(
+    auto resources = std::make_unique<internal::resources::SystemResources>(
         internal::system::SystemProvider(make_system([&](Options& options) {
             options.topology().user_cpuset("0-3");
             options.topology().restrict_gpus(true);

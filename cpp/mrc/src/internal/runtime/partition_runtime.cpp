@@ -23,6 +23,7 @@
 #include "internal/pubsub/subscriber_service.hpp"
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
+#include "internal/resources/system_resources.hpp"
 
 #include "mrc/pubsub/api.hpp"
 
@@ -33,16 +34,19 @@
 
 namespace mrc::internal::runtime {
 
-Partition::Partition(resources::PartitionResources& resources) : m_resources(resources)
+PartitionRuntime::PartitionRuntime(Runtime& system_runtime, size_t partition_id) :
+  m_system_runtime(system_runtime),
+  m_partition_id(partition_id),
+  m_resources(system_runtime.resources().partition(partition_id))
 {
-    if (resources.network())
+    if (resources().network())
     {
-        m_remote_descriptor_manager = std::make_shared<remote_descriptor::Manager>(resources.network()->instance_id(),
-                                                                                   resources);
+        m_remote_descriptor_manager = std::make_shared<remote_descriptor::Manager>(resources().network()->instance_id(),
+                                                                                   resources());
     }
 }
 
-Partition::~Partition()
+PartitionRuntime::~PartitionRuntime()
 {
     if (m_remote_descriptor_manager)
     {
@@ -51,17 +55,18 @@ Partition::~Partition()
     }
 }
 
-resources::PartitionResources& Partition::resources()
+resources::PartitionResources& PartitionRuntime::resources()
 {
     return m_resources;
 }
-remote_descriptor::Manager& Partition::remote_descriptor_manager()
+
+remote_descriptor::Manager& PartitionRuntime::remote_descriptor_manager()
 {
     CHECK(m_remote_descriptor_manager);
     return *m_remote_descriptor_manager;
 }
 
-std::shared_ptr<mrc::pubsub::IPublisherService> Partition::make_publisher_service(
+std::shared_ptr<mrc::pubsub::IPublisherService> PartitionRuntime::make_publisher_service(
     const std::string& name,
     const mrc::pubsub::PublisherPolicy& policy)
 {
@@ -74,12 +79,12 @@ std::shared_ptr<mrc::pubsub::IPublisherService> Partition::make_publisher_servic
     return nullptr;
 }
 
-std::shared_ptr<mrc::pubsub::ISubscriberService> Partition::make_subscriber_service(const std::string& name)
+std::shared_ptr<mrc::pubsub::ISubscriberService> PartitionRuntime::make_subscriber_service(const std::string& name)
 {
     return std::shared_ptr<pubsub::SubscriberService>(new pubsub::SubscriberService(name, *this));
 }
 
-std::unique_ptr<mrc::codable::ICodableStorage> Partition::make_codable_storage()
+std::unique_ptr<mrc::codable::ICodableStorage> PartitionRuntime::make_codable_storage()
 {
     return std::make_unique<codable::CodableStorage>(m_resources);
 }

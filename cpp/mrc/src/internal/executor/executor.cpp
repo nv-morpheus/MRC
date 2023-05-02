@@ -25,7 +25,7 @@
 #include "internal/pipeline/pipeline.hpp"
 #include "internal/pipeline/port_graph.hpp"
 #include "internal/pipeline/types.hpp"
-#include "internal/resources/manager.hpp"
+#include "internal/resources/system_resources.hpp"
 #include "internal/runtime/runtime.hpp"
 #include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"

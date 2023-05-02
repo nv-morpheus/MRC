@@ -50,28 +50,26 @@ class Runtime;
 
 namespace mrc::internal::resources {
 
-class Manager final : public system::SystemProvider
+class SystemResources final : public system::SystemProvider
 {
   public:
-    Manager(const system::SystemProvider& system);
-    Manager(std::unique_ptr<system::SystemResources> resources);
-    ~Manager() override;
+    SystemResources(const system::SystemProvider& system);
+    SystemResources(std::unique_ptr<system::SystemResources> resources);
+    ~SystemResources() override;
 
-    static Manager& get_resources();
-    static PartitionResources& get_partition();
+    static SystemResources& get_resources();
+    static PartitionResources& get_partition();  // TODO(MDD): MOve to PartitionResources
 
     std::size_t device_count() const;
-
     std::size_t partition_count() const;
+
     const std::vector<PartitionResources>& partitions() const;
     PartitionResources& partition(std::size_t partition_id);
-
-    // control_plane::ControlPlaneResources& control_plane() const;
 
     void initialize();
 
   private:
-    Future<void> shutdown();
+    // Future<void> shutdown();
 
     const std::unique_ptr<system::SystemResources> m_system;
     std::vector<runnable::RunnableResources> m_runnable;  // one per host partition
@@ -88,7 +86,7 @@ class Manager final : public system::SystemProvider
     std::vector<std::optional<network::NetworkResources>> m_network;  // one per flattened partition
 
     static thread_local PartitionResources* m_thread_partition;
-    static thread_local Manager* m_thread_resources;
+    static thread_local SystemResources* m_thread_resources;
 
     friend runtime::Runtime;
 };

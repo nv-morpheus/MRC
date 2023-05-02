@@ -18,7 +18,6 @@
 #pragma once
 
 #include "internal/remote_descriptor/manager.hpp"
-#include "internal/runtime/runtime.hpp"
 
 #include "mrc/runtime/api.hpp"
 #include "mrc/utils/macros.hpp"
@@ -38,24 +37,36 @@ class ISubscriberService;
 enum class PublisherPolicy;
 }  // namespace mrc::pubsub
 
+namespace mrc::internal::control_plane {
+class Client;
+}
+namespace mrc::metrics {
+class Registry;
+}
+
 namespace mrc::internal::runtime {
+
+class Runtime;
+class PipelinesManager;
 
 class PartitionRuntime final : public mrc::runtime::IPartitionRuntime
 {
   public:
-    PartitionRuntime(Runtime& runtime, resources::PartitionResources& resources);
+    PartitionRuntime(Runtime& system_runtime, size_t partition_id);
     ~PartitionRuntime() final;
 
     DELETE_COPYABILITY(PartitionRuntime);
     DELETE_MOVEABILITY(PartitionRuntime);
 
-    size_t idx() const;
+    size_t partition_id() const;
 
     resources::PartitionResources& resources();
 
     control_plane::Client& control_plane() const;
 
     PipelinesManager& pipelines_manager() const;
+
+    metrics::Registry& metrics_registry() const;
 
     // IPartition -> IRemoteDescriptorManager& is covariant
     remote_descriptor::Manager& remote_descriptor_manager() final;
@@ -68,6 +79,9 @@ class PartitionRuntime final : public mrc::runtime::IPartitionRuntime
         const mrc::pubsub::PublisherPolicy& policy) final;
 
     std::shared_ptr<mrc::pubsub::ISubscriberService> make_subscriber_service(const std::string& name) final;
+
+    Runtime& m_system_runtime;
+    size_t m_partition_id;
 
     resources::PartitionResources& m_resources;
     std::shared_ptr<remote_descriptor::Manager> m_remote_descriptor_manager;

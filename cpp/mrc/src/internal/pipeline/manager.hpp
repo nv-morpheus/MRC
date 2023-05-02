@@ -18,6 +18,7 @@
 #pragma once
 
 #include "internal/pipeline/types.hpp"
+#include "internal/runtime/runtime.hpp"
 #include "internal/service.hpp"
 
 #include "mrc/node/writable_entrypoint.hpp"
@@ -30,7 +31,7 @@
 // IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
 
 namespace mrc::internal::resources {
-class Manager;
+class SystemResources;
 }  // namespace mrc::internal::resources
 namespace mrc::runnable {
 class Runner;
@@ -49,15 +50,12 @@ class Pipeline;
 class PipelineManager : public Service
 {
   public:
-    PipelineManager(std::shared_ptr<Pipeline> pipeline, resources::Manager& resources, uint64_t instance_id);
+    PipelineManager(runtime::Runtime& runtime, std::shared_ptr<Pipeline> pipeline, uint64_t instance_id);
     ~PipelineManager() override;
 
     const Pipeline& pipeline() const;
 
     void push_updates(SegmentAddresses&& segment_addresses);
-
-  protected:
-    resources::Manager& resources();
 
   private:
     void do_service_start() final;
@@ -66,7 +64,8 @@ class PipelineManager : public Service
     void do_service_kill() final;
     void do_service_await_join() final;
 
-    resources::Manager& m_resources;
+    runtime::Runtime& m_runtime;
+
     std::shared_ptr<Pipeline> m_pipeline;
     uint64_t m_instance_id;
     std::unique_ptr<node::WritableEntrypoint<ControlMessage>> m_update_channel;

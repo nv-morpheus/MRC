@@ -22,8 +22,8 @@
 #include "internal/pipeline/controller.hpp"
 #include "internal/pipeline/pipeline_instance.hpp"
 #include "internal/pipeline/types.hpp"
-#include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
+#include "internal/resources/system_resources.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/utils/contains.hpp"
 
@@ -47,15 +47,13 @@
 
 namespace mrc::internal::pipeline {
 
-PipelineManager::PipelineManager(std::shared_ptr<Pipeline> pipeline,
-                                 resources::Manager& resources,
-                                 uint64_t instance_id) :
+PipelineManager::PipelineManager(runtime::Runtime& runtime, std::shared_ptr<Pipeline> pipeline, uint64_t instance_id) :
+  m_runtime(runtime),
   m_pipeline(std::move(pipeline)),
-  m_resources(resources),
   m_instance_id(instance_id)
 {
     CHECK(m_pipeline);
-    CHECK_GE(m_resources.partition_count(), 1);
+    CHECK_GE(m_runtime.partition_count(), 1);
     // service_start();
 }
 
@@ -78,7 +76,7 @@ void PipelineManager::do_service_start()
     main.pe_count            = 1;
     main.engines_per_pe      = 1;
 
-    auto instance    = std::make_unique<PipelineInstance>(m_pipeline, m_resources);
+    auto instance    = std::make_unique<PipelineInstance>(m_runtime, m_pipeline);
     auto controller  = std::make_unique<Controller>(std::move(instance));
     m_update_channel = std::make_unique<node::WritableEntrypoint<ControlMessage>>();
 
@@ -86,7 +84,9 @@ void PipelineManager::do_service_start()
     mrc::make_edge(*m_update_channel, *controller);
 
     // launch controller
-    auto launcher = resources().partition(0).runnable().launch_control().prepare_launcher(main, std::move(controller));
+    auto launcher = m_runtime.partition(0).resources().runnable().launch_control().prepare_launcher(
+        main,
+        std::move(controller));
 
     // explicit capture and rethrow the error
     launcher->apply([this](mrc::runnable::Runner& runner) {
@@ -164,11 +164,6 @@ void PipelineManager::do_service_await_join()
     {
         std::rethrow_exception(ptr);
     }
-}
-
-resources::Manager& PipelineManager::resources()
-{
-    return m_resources;
 }
 
 const Pipeline& PipelineManager::pipeline() const

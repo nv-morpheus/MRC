@@ -63,7 +63,7 @@ add_library(libmrc
   src/internal/remote_descriptor/manager.cpp
   src/internal/remote_descriptor/remote_descriptor.cpp
   src/internal/remote_descriptor/storage.cpp
-  src/internal/resources/manager.cpp
+  src/internal/resources/system_resources.cpp
   src/internal/resources/partition_resources_base.cpp
   src/internal/resources/partition_resources.cpp
   src/internal/runnable/engine_factory.cpp

@@ -24,7 +24,7 @@ class Registry;
 }  // namespace mrc::metrics
 
 namespace mrc::internal::resources {
-class Manager;
+class SystemResources;
 }  // namespace mrc::internal::resources
 
 namespace mrc::internal::pipeline {
@@ -32,14 +32,14 @@ namespace mrc::internal::pipeline {
 class Resources
 {
   public:
-    Resources(resources::Manager& resources);
+    Resources(resources::SystemResources& resources);
     ~Resources();
 
-    resources::Manager& resources() const;
+    resources::SystemResources& resources() const;
     metrics::Registry& metrics_registry() const;
 
   private:
-    resources::Manager& m_resources;
+    resources::SystemResources& m_resources;
     std::unique_ptr<metrics::Registry> m_metrics_registry;
 };
 

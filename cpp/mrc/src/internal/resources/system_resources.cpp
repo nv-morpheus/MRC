@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "internal/resources/manager.hpp"
+#include "internal/resources/system_resources.hpp"
 
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/client/connections_manager.hpp"
@@ -55,12 +55,14 @@
 
 namespace mrc::internal::resources {
 
-thread_local Manager* Manager::m_thread_resources{nullptr};
-thread_local PartitionResources* Manager::m_thread_partition{nullptr};
+thread_local SystemResources* SystemResources::m_thread_resources{nullptr};
+thread_local PartitionResources* SystemResources::m_thread_partition{nullptr};
 
-Manager::Manager(const system::SystemProvider& system) : Manager(std::make_unique<system::SystemResources>(system)) {}
+SystemResources::SystemResources(const system::SystemProvider& system) :
+  SystemResources(std::make_unique<system::SystemResources>(system))
+{}
 
-Manager::Manager(std::unique_ptr<system::SystemResources> resources) :
+SystemResources::SystemResources(std::unique_ptr<system::SystemResources> resources) :
   SystemProvider(*resources),
   m_system(std::move(resources))
 {
@@ -237,12 +239,12 @@ Manager::Manager(std::unique_ptr<system::SystemResources> resources) :
     VLOG(10) << "resources::Manager initialized";
 }
 
-Manager::~Manager()
+SystemResources::~SystemResources()
 {
     m_network.clear();
 }
 
-Manager& Manager::get_resources()
+SystemResources& SystemResources::get_resources()
 {
     if (m_thread_resources == nullptr)  // todo(cpp20) [[unlikely]]
     {
@@ -254,12 +256,12 @@ Manager& Manager::get_resources()
     return *m_thread_resources;
 }
 
-PartitionResources& Manager::get_partition()
+PartitionResources& SystemResources::get_partition()
 {
     {
         if (m_thread_partition == nullptr)  // todo(cpp20) [[unlikely]]
         {
-            auto& resources = Manager::get_resources();
+            auto& resources = SystemResources::get_resources();
 
             if (resources.system().partitions().device_to_host_strategy() == PlacementResources::Shared)
             {
@@ -276,22 +278,22 @@ PartitionResources& Manager::get_partition()
     }
 }
 
-std::size_t Manager::device_count() const
+std::size_t SystemResources::device_count() const
 {
     return system().partitions().device_partitions().size();
 };
 
-std::size_t Manager::partition_count() const
+std::size_t SystemResources::partition_count() const
 {
     return system().partitions().flattened().size();
 };
 
-const std::vector<PartitionResources>& Manager::partitions() const
+const std::vector<PartitionResources>& SystemResources::partitions() const
 {
     return m_partitions;
 }
 
-PartitionResources& Manager::partition(std::size_t partition_id)
+PartitionResources& SystemResources::partition(std::size_t partition_id)
 {
     CHECK_LT(partition_id, m_partitions.size());
     return m_partitions.at(partition_id);
@@ -302,24 +304,24 @@ PartitionResources& Manager::partition(std::size_t partition_id)
 //     return *m_control_plane;
 // }
 
-void Manager::initialize() {}
+void SystemResources::initialize() {}
 
-Future<void> Manager::shutdown()
-{
-    return m_runnable.at(0).main().enqueue([this] {
-        std::vector<Future<void>> futures;
-        futures.reserve(m_network.size());
-        for (auto& net : m_network)
-        {
-            if (net)
-            {
-                futures.emplace_back(net->shutdown());
-            }
-        }
-        for (auto& f : futures)
-        {
-            f.get();
-        }
-    });
-}
+// Future<void> SystemResources::shutdown()
+// {
+//     return m_runnable.at(0).main().enqueue([this] {
+//         std::vector<Future<void>> futures;
+//         futures.reserve(m_network.size());
+//         for (auto& net : m_network)
+//         {
+//             if (net)
+//             {
+//                 futures.emplace_back(net->shutdown());
+//             }
+//         }
+//         for (auto& f : futures)
+//         {
+//             f.get();
+//         }
+//     });
+// }
 }  // namespace mrc::internal::resources

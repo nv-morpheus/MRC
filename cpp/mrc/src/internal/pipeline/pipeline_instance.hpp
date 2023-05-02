@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "internal/pipeline/resources.hpp"
-#include "internal/runtime/runtime.hpp"
 #include "internal/service.hpp"
 
 #include "mrc/types.hpp"
@@ -27,8 +25,11 @@
 #include <map>
 #include <memory>
 
+namespace mrc::internal::runtime {
+class Runtime;
+}
 namespace mrc::internal::resources {
-class Manager;
+class SystemResources;
 }  // namespace mrc::internal::resources
 namespace mrc::internal::segment {
 class SegmentInstance;

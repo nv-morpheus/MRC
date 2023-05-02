@@ -79,7 +79,6 @@ class SegmentInstance final : public Service
 
     std::unique_ptr<Builder> m_builder;
     runtime::PartitionRuntime& m_runtime;
-    const std::size_t m_default_partition_id;
 
     std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_runners;
     std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_egress_runners;

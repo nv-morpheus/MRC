@@ -23,7 +23,6 @@
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/runtime/pipelines_manager.hpp"
 #include "internal/segment/segment_instance.hpp"
 #include "internal/ucx/resources.hpp"
 

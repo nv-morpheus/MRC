@@ -23,14 +23,14 @@
 
 namespace mrc::internal::pipeline {
 
-Resources::Resources(resources::Manager& resources) :
+Resources::Resources(resources::SystemResources& resources) :
   m_resources(resources),
   m_metrics_registry(std::make_unique<metrics::Registry>())
 {}
 
 Resources::~Resources() = default;
 
-resources::Manager& Resources::resources() const
+resources::SystemResources& Resources::resources() const
 {
     return m_resources;
 }

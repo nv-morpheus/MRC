@@ -22,7 +22,7 @@
 #include "internal/pipeline/manager.hpp"
 #include "internal/pipeline/pipeline.hpp"
 #include "internal/pipeline/types.hpp"
-#include "internal/resources/manager.hpp"
+#include "internal/resources/system_resources.hpp"
 #include "internal/runtime/runtime.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
@@ -95,7 +95,7 @@ static std::shared_ptr<internal::system::System> make_system(std::function<void(
 
 static auto make_resources(std::function<void(Options& options)> options_lambda = [](Options& options) {})
 {
-    auto resources = std::make_unique<internal::resources::Manager>(
+    auto resources = std::make_unique<internal::resources::SystemResources>(
         internal::system::SystemProvider(make_system([&](Options& options) {
             options.topology().user_cpuset("0-3");
             options.topology().restrict_gpus(true);
@@ -116,10 +116,11 @@ static void run_custom_manager(std::unique_ptr<internal::pipeline::IPipeline> pi
                                internal::pipeline::SegmentAddresses&& update,
                                bool delayed_stop = false)
 {
-    auto resources = internal::resources::Manager(internal::system::SystemProvider(make_system([](Options& options) {
-        options.topology().user_cpuset("0-1");
-        options.topology().restrict_gpus(true);
-    })));
+    auto resources = internal::resources::SystemResources(
+        internal::system::SystemProvider(make_system([](Options& options) {
+            options.topology().user_cpuset("0-1");
+            options.topology().restrict_gpus(true);
+        })));
 
     auto manager = std::make_unique<internal::pipeline::PipelineManager>(unwrap(*pipeline), resources, 0);
 
@@ -140,11 +141,12 @@ static void run_custom_manager(std::unique_ptr<internal::pipeline::IPipeline> pi
 
 static void run_manager(std::unique_ptr<internal::pipeline::IPipeline> pipeline, bool delayed_stop = false)
 {
-    auto resources = internal::resources::Manager(internal::system::SystemProvider(make_system([](Options& options) {
-        options.topology().user_cpuset("0");
-        options.topology().restrict_gpus(true);
-        mrc::channel::set_default_channel_size(64);
-    })));
+    auto resources = internal::resources::SystemResources(
+        internal::system::SystemProvider(make_system([](Options& options) {
+            options.topology().user_cpuset("0");
+            options.topology().restrict_gpus(true);
+            mrc::channel::set_default_channel_size(64);
+        })));
 
     auto manager = std::make_unique<internal::pipeline::PipelineManager>(unwrap(*pipeline), resources, 0);
 

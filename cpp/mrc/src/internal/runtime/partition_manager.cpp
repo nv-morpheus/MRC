@@ -20,6 +20,7 @@
 #include "internal/async_service.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/runtime/partition_runtime.hpp"
+#include "internal/runtime/pipelines_manager.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/ucx/worker.hpp"
 
@@ -36,7 +37,7 @@ namespace mrc::internal::runtime {
 PartitionManager::PartitionManager(PartitionRuntime& runtime) :
   AsyncService(runtime.resources().runnable()),
   m_runtime(runtime),
-  m_partition_id(runtime.idx())
+  m_partition_id(runtime.partition_id())
 {}
 
 PartitionManager::~PartitionManager() = default;

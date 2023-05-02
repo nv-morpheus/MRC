@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "internal/remote_descriptor/manager.hpp"
+
 #include "mrc/types.hpp"
 
 #include <cstddef>
@@ -51,10 +53,7 @@ class IBuilder;
 class Builder final
 {
   public:
-    Builder(std::shared_ptr<const Definition> segdef,
-            SegmentRank rank,
-            pipeline::Resources& resources,
-            std::size_t default_partition_id);
+    Builder(runtime::PartitionRuntime& runtime, std::shared_ptr<const Definition> segdef, SegmentRank rank);
 
     const Definition& definition() const;
 
@@ -79,6 +78,8 @@ class Builder final
     // temporary metrics interface
     std::function<void(std::int64_t)> make_throughput_counter(const std::string& name);
 
+    runtime::PartitionRuntime& m_runtime;
+
     // definition
     std::shared_ptr<const Definition> m_definition;
 
@@ -94,9 +95,6 @@ class Builder final
     // ingress/egress - these are also nodes/objects
     std::map<std::string, std::shared_ptr<::mrc::segment::IngressPortBase>> m_ingress_ports;
     std::map<std::string, std::shared_ptr<::mrc::segment::EgressPortBase>> m_egress_ports;
-
-    pipeline::Resources& m_resources;
-    const std::size_t m_default_partition_id;
 
     friend IBuilder;
 };

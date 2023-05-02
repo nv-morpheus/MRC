@@ -15,12 +15,14 @@
  * limitations under the License.
  */
 
-#include "internal/pipeline/pipeline.hpp"
 #include "internal/pipeline/pipeline_instance.hpp"
+
+#include "internal/pipeline/pipeline.hpp"
 #include "internal/pipeline/resources.hpp"
-#include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
+#include "internal/resources/system_resources.hpp"
 #include "internal/runnable/resources.hpp"
+#include "internal/runtime/runtime.hpp"
 #include "internal/segment/definition.hpp"
 #include "internal/segment/segment_instance.hpp"
 
@@ -113,7 +115,9 @@ void PipelineInstance::create_segment(const SegmentAddress& address, std::uint32
 
             auto [id, rank] = segment_address_decode(address);
             auto definition = m_definition->find_segment(id);
-            auto segment    = std::make_unique<segment::SegmentInstance>(definition, rank, *this, partition_id);
+            auto segment    = std::make_unique<segment::SegmentInstance>(m_runtime.partition(partition_id),
+                                                                      definition,
+                                                                      rank);
 
             for (const auto& name : definition->egress_port_names())
             {
