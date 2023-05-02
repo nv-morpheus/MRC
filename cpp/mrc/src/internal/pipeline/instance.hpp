@@ -18,6 +18,7 @@
 #pragma once
 
 #include "internal/pipeline/resources.hpp"
+#include "internal/runtime/runtime.hpp"
 #include "internal/service.hpp"
 
 #include "mrc/types.hpp"
@@ -39,11 +40,11 @@ struct Interface;
 namespace mrc::internal::pipeline {
 class Pipeline;
 
-class Instance final : public Service, public Resources
+class PipelineInstance final : public Service
 {
   public:
-    Instance(std::shared_ptr<const Pipeline> definition, resources::Manager& resources);
-    ~Instance() override;
+    PipelineInstance(runtime::Runtime& runtime, std::shared_ptr<const Pipeline> definition);
+    ~PipelineInstance() override;
 
     // currently we are passing the instance back to the executor
     // we should own the instance here in the pipeline instance
@@ -75,6 +76,8 @@ class Instance final : public Service, public Resources
 
     manifold::Interface& manifold(const PortName& port_name);
     std::shared_ptr<manifold::Interface> get_manifold(const PortName& port_name);
+
+    runtime::Runtime& m_runtime;
 
     std::shared_ptr<const Pipeline> m_definition;  // convert to pipeline::Pipeline
 

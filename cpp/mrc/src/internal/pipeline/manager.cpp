@@ -20,7 +20,7 @@
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/resources.hpp"
 #include "internal/pipeline/controller.hpp"
-#include "internal/pipeline/instance.hpp"
+#include "internal/pipeline/pipeline_instance.hpp"
 #include "internal/pipeline/types.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
@@ -78,7 +78,7 @@ void PipelineManager::do_service_start()
     main.pe_count            = 1;
     main.engines_per_pe      = 1;
 
-    auto instance    = std::make_unique<Instance>(m_pipeline, m_resources);
+    auto instance    = std::make_unique<PipelineInstance>(m_pipeline, m_resources);
     auto controller  = std::make_unique<Controller>(std::move(instance));
     m_update_channel = std::make_unique<node::WritableEntrypoint<ControlMessage>>();
 

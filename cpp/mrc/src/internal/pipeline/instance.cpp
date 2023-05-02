@@ -15,9 +15,8 @@
  * limitations under the License.
  */
 
-#include "internal/pipeline/instance.hpp"
-
 #include "internal/pipeline/pipeline.hpp"
+#include "internal/pipeline/pipeline_instance.hpp"
 #include "internal/pipeline/resources.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
@@ -42,17 +41,17 @@
 
 namespace mrc::internal::pipeline {
 
-Instance::Instance(std::shared_ptr<const Pipeline> definition, resources::Manager& resources) :
-  Resources(resources),
+PipelineInstance::PipelineInstance(runtime::Runtime& runtime, std::shared_ptr<const Pipeline> definition) :
+  m_runtime(runtime),
   m_definition(std::move(definition))
 {
     CHECK(m_definition);
     m_joinable_future = m_joinable_promise.get_future().share();
 }
 
-Instance::~Instance() = default;
+PipelineInstance::~PipelineInstance() = default;
 
-void Instance::update()
+void PipelineInstance::update()
 {
     for (const auto& [name, manifold] : m_manifolds)
     {
@@ -68,21 +67,21 @@ void Instance::update()
     mark_joinable();
 }
 
-void Instance::remove_segment(const SegmentAddress& address)
+void PipelineInstance::remove_segment(const SegmentAddress& address)
 {
     auto search = m_segments.find(address);
     CHECK(search != m_segments.end());
     m_segments.erase(search);
 }
 
-void Instance::join_segment(const SegmentAddress& address)
+void PipelineInstance::join_segment(const SegmentAddress& address)
 {
     auto search = m_segments.find(address);
     CHECK(search != m_segments.end());
     search->second->service_await_join();
 }
 
-void Instance::stop_segment(const SegmentAddress& address)
+void PipelineInstance::stop_segment(const SegmentAddress& address)
 {
     auto search = m_segments.find(address);
     CHECK(search != m_segments.end());
@@ -99,13 +98,13 @@ void Instance::stop_segment(const SegmentAddress& address)
     search->second->service_stop();
 }
 
-void Instance::create_segment(const SegmentAddress& address, std::uint32_t partition_id)
+void PipelineInstance::create_segment(const SegmentAddress& address, std::uint32_t partition_id)
 {
     // perform our allocations on the numa domain of the intended target
     // CHECK_LT(partition_id, m_resources->host_resources().size());
-    CHECK_LT(partition_id, resources().partition_count());
-    resources()
-        .partition(partition_id)
+    CHECK_LT(partition_id, m_runtime.partition_count());
+    m_runtime.partition(partition_id)
+        .resources()
         .runnable()
         .main()
         .enqueue([this, address, partition_id] {
@@ -147,14 +146,14 @@ void Instance::create_segment(const SegmentAddress& address, std::uint32_t parti
         .get();
 }
 
-manifold::Interface& Instance::manifold(const PortName& port_name)
+manifold::Interface& PipelineInstance::manifold(const PortName& port_name)
 {
     auto manifold = get_manifold(port_name);
     CHECK(manifold);
     return *manifold;
 }
 
-std::shared_ptr<manifold::Interface> Instance::get_manifold(const PortName& port_name)
+std::shared_ptr<manifold::Interface> PipelineInstance::get_manifold(const PortName& port_name)
 {
     auto search = m_manifolds.find(port_name);
     if (search == m_manifolds.end())
@@ -165,7 +164,7 @@ std::shared_ptr<manifold::Interface> Instance::get_manifold(const PortName& port
     return m_manifolds.at(port_name);
 }
 
-void Instance::mark_joinable()
+void PipelineInstance::mark_joinable()
 {
     if (!m_joinable)
     {
@@ -174,14 +173,14 @@ void Instance::mark_joinable()
     }
 }
 
-void Instance::do_service_start() {}
+void PipelineInstance::do_service_start() {}
 
-void Instance::do_service_await_live()
+void PipelineInstance::do_service_await_live()
 {
     m_joinable_future.get();
 }
 
-void Instance::do_service_stop()
+void PipelineInstance::do_service_stop()
 {
     mark_joinable();
 
@@ -191,7 +190,7 @@ void Instance::do_service_stop()
     }
 }
 
-void Instance::do_service_kill()
+void PipelineInstance::do_service_kill()
 {
     mark_joinable();
     for (auto& [id, segment] : m_segments)
@@ -201,7 +200,7 @@ void Instance::do_service_kill()
     }
 }
 
-void Instance::do_service_await_join()
+void PipelineInstance::do_service_await_join()
 {
     std::exception_ptr first_exception = nullptr;
     m_joinable_future.get();

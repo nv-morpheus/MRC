@@ -68,8 +68,6 @@ class Runtime final : public mrc::runtime::IRuntime, public Service, public syst
         return *m_pipelines_manager;
     }
 
-    void register_pipelines_defs(std::map<int, std::shared_ptr<pipeline::Pipeline>> pipeline_defs);
-
   private:
     void do_service_start() final;
     void do_service_stop() final;

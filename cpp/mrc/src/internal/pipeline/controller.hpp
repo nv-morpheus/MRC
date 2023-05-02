@@ -25,12 +25,12 @@
 #include <string>
 
 namespace mrc::internal::pipeline {
-class Instance;
+class PipelineInstance;
 
 class Controller final : public node::GenericSink<ControlMessage>
 {
   public:
-    Controller(std::unique_ptr<Instance> pipeline);
+    Controller(std::unique_ptr<PipelineInstance> pipeline);
     ~Controller() override;
 
     void await_on_pipeline() const;
@@ -45,7 +45,7 @@ class Controller final : public node::GenericSink<ControlMessage>
 
     static const std::string& info();
 
-    std::unique_ptr<Instance> m_pipeline;
+    std::unique_ptr<PipelineInstance> m_pipeline;
     SegmentAddresses m_current_segments;
 };
 

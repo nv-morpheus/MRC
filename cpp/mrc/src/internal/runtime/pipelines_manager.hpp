@@ -18,8 +18,8 @@
 #pragma once
 
 #include "internal/control_plane/client.hpp"
-#include "internal/pipeline/instance.hpp"
 #include "internal/pipeline/pipeline.hpp"
+#include "internal/pipeline/pipeline_instance.hpp"
 #include "internal/resources/partition_resources.hpp"
 
 #include "mrc/types.hpp"
@@ -46,7 +46,7 @@ class PipelinesManager
 
     pipeline::Pipeline& get_def(int pipeline_id);
 
-    std::shared_ptr<pipeline::Instance> get_instance(uint64_t definition_id);
+    std::shared_ptr<pipeline::PipelineInstance> get_instance(uint64_t definition_id);
 
   private:
     // resources::PartitionResources& m_resources;

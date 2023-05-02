@@ -50,7 +50,7 @@ add_library(libmrc
   src/internal/memory/transient_pool.cpp
   src/internal/network/resources.cpp
   src/internal/pipeline/controller.cpp
-  src/internal/pipeline/instance.cpp
+  src/internal/pipeline/pipeline_instance.cpp
   src/internal/pipeline/ipipeline.cpp
   src/internal/pipeline/manager.cpp
   src/internal/pipeline/pipeline.cpp
