@@ -39,9 +39,9 @@ class EdgeChannelReader : public IEdgeReadable<T>
         m_channel->close_channel();
     }
 
-    virtual channel::Status await_read(T& t)
+    virtual channel::Status await_read_until(T& t, const channel::time_point_t& timeout)
     {
-        return m_channel->await_read(t);
+        return m_channel->await_read_until(t, timeout);
     }
 
   private:

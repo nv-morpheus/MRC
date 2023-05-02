@@ -19,6 +19,7 @@
 
 #include "mrc/channel/buffered_channel.hpp"  // IWYU pragma: keep
 #include "mrc/channel/forward.hpp"
+#include "mrc/channel/types.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/edge/edge_channel.hpp"
 #include "mrc/edge/edge_readable.hpp"
@@ -77,8 +78,10 @@ class EdgeReadableLambda : public edge::IEdgeReadable<T>
         }
     }
 
-    channel::Status await_read(T& t) override
+    channel::Status await_read_until(T& t, const channel::time_point_t& timeout) override
     {
+        CHECK(timeout == channel::time_point_t::max()) << "EdgeReadableLambda only supports infinite await_read_until";
+
         return m_on_await_read(t);
     }
 

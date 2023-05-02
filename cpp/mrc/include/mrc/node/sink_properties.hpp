@@ -36,7 +36,7 @@ class NullReadableEdge : public edge::IEdgeReadable<T>
   public:
     virtual ~NullReadableEdge() = default;
 
-    channel::Status await_read(T& t) override
+    channel::Status await_read_until(T& t, const channel::time_point_t& timeout) override
     {
         throw std::runtime_error("Attempting to read from a null edge. Ensure an edge was established for all sinks.");
 

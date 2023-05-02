@@ -26,6 +26,7 @@
 #include "internal/system/partitions.hpp"
 #include "internal/system/system_provider.hpp"
 
+#include "mrc/protos/architect.pb.h"
 #include "mrc/types.hpp"
 
 #include <glog/logging.h>

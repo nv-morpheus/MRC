@@ -257,6 +257,8 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
             [this] {
                 do_writes_done();
             });
+        writer->set_timeout(std::chrono::milliseconds(1000));
+
         mrc::make_edge(*m_write_channel, *writer);
 
         // construct StreamWriter

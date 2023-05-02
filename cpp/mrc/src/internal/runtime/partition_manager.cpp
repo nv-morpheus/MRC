@@ -25,6 +25,7 @@
 #include "internal/ucx/worker.hpp"
 
 #include "mrc/protos/architect.pb.h"
+#include "mrc/types.hpp"
 
 #include <glog/logging.h>
 #include <google/protobuf/util/message_differencer.h>
@@ -54,6 +55,8 @@ void PartitionManager::do_service_start(std::stop_token stop_token)
 
     m_instance_id = resp->instance_ids(0);
 
+    Promise<void> completed_promise;
+
     // Now, subscribe to the control plane state updates and filter only on updates to this instance ID
     m_control_plane_client.state_update_obs()
         .map([this](protos::ControlPlaneState state) -> mrc::protos::Worker {
@@ -66,11 +69,17 @@ void PartitionManager::do_service_start(std::stop_token stop_token)
         .distinct_until_changed([](const mrc::protos::Worker& curr, const mrc::protos::Worker& prev) {
             return google::protobuf::util::MessageDifferencer::Equals(curr, prev);
         })
-        .as_blocking()
-        .subscribe([this](mrc::protos::Worker worker) {
-            // Handle updates to the worker
-            this->process_state_update(worker);
-        });
+        .subscribe(
+            [this](mrc::protos::Worker worker) {
+                // Handle updates to the worker
+                this->process_state_update(worker);
+            },
+            [&completed_promise] {
+                completed_promise.set_value();
+            });
+
+    // Yield until the observable is finished
+    completed_promise.get_future().wait();
 
     // Now that we are unsubscribed, drop the worker
     protos::TaggedInstance msg;

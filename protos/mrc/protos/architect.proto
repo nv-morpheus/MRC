@@ -51,7 +51,7 @@ enum EventType
     ControlStop = 2;
 
     // Meta Events
-    Ping = 10;
+    ClientEventPing = 10;
 
     // Client Events - No Response
     ClientEventRequestStateUpdate = 100;

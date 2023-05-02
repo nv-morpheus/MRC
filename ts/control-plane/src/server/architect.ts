@@ -284,8 +284,15 @@ class Architect implements ArchitectServiceImplementation
       {
          switch (event.msg.event)
          {
-         case EventType.Ping:
-            console.log(`Ping from ${context.peer}.`);
+         case EventType.ClientEventPing:
+            const payload = unpackEvent<PingRequest>(event.msg);
+
+            console.log(`Ping from ${context.peer}. Tag: ${payload.tag}.`);
+
+            yield unaryResponse(event, PingResponse, PingResponse.create({
+               tag: payload.tag,
+            }));
+
             break;
 
          case EventType.ClientEventRequestStateUpdate:

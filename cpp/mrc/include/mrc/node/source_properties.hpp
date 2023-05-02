@@ -19,6 +19,7 @@
 
 #include "mrc/channel/ingress.hpp"
 #include "mrc/channel/status.hpp"  // IWYU pragma: export
+#include "mrc/channel/types.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/edge/edge_writable.hpp"
 #include "mrc/node/forward.hpp"
@@ -215,8 +216,11 @@ class ForwardingEgressProvider : public ReadableProvider<T>
 
         ~ForwardingEdge() = default;
 
-        channel::Status await_read(T& t) override
+        channel::Status await_read_until(T& t, const channel::time_point_t& timeout) override
         {
+            CHECK(timeout == channel::time_point_t::max()) << "ForwardingEgressProvider only supports infinite "
+                                                              "await_read_until";
+
             return m_parent.get_next(t);
         }
 

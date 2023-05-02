@@ -12,7 +12,7 @@ async function main()
    if (addDevTools)
    {
       // If not in production, start the redux-devtools service
-      await launchDevtoolsCli("localhost", "8000");
+      await launchDevtoolsCli("localhost", "9000");
    }
 
    const server = new ArchitectServer(setupStore(undefined, addDevTools));

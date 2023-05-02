@@ -1,5 +1,5 @@
 
-export async function launchDevtoolsCli(hostname: string = "localhost", port: string = "8000")
+export async function launchDevtoolsCli(hostname: string = "localhost", port: string = "9000")
 {
    // const reduxDevToolsServer = await import("@redux-devtools/cli");
 

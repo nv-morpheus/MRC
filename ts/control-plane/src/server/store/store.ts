@@ -52,7 +52,7 @@ export const setupStore = (preloadedState?: PreloadedState<RootState>, addDevToo
    if (addDevTools)
    {
       enhancers = [devToolsEnhancer(
-          {realtime: true, sendOnError: 1, suppressConnectErrors: false, stopOn: stopAction.type})]
+          {port: 9000, realtime: true, sendOnError: 1, suppressConnectErrors: false, stopOn: stopAction.type})]
    }
 
    return configureStore({

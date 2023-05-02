@@ -12,8 +12,8 @@ export enum EventType {
   Unused = 0,
   Response = 1,
   ControlStop = 2,
-  /** Ping - Meta Events */
-  Ping = 10,
+  /** ClientEventPing - Meta Events */
+  ClientEventPing = 10,
   /** ClientEventRequestStateUpdate - Client Events - No Response */
   ClientEventRequestStateUpdate = 100,
   ClientEventStreamConnected = 101,
@@ -48,8 +48,8 @@ export function eventTypeFromJSON(object: any): EventType {
     case "ControlStop":
       return EventType.ControlStop;
     case 10:
-    case "Ping":
-      return EventType.Ping;
+    case "ClientEventPing":
+      return EventType.ClientEventPing;
     case 100:
     case "ClientEventRequestStateUpdate":
       return EventType.ClientEventRequestStateUpdate;
@@ -107,8 +107,8 @@ export function eventTypeToJSON(object: EventType): string {
       return "Response";
     case EventType.ControlStop:
       return "ControlStop";
-    case EventType.Ping:
-      return "Ping";
+    case EventType.ClientEventPing:
+      return "ClientEventPing";
     case EventType.ClientEventRequestStateUpdate:
       return "ClientEventRequestStateUpdate";
     case EventType.ClientEventStreamConnected:
