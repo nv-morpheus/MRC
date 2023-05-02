@@ -37,7 +37,7 @@ namespace mrc::internal::memory {
 class TransientBuffer;
 }  // namespace mrc::internal::memory
 namespace mrc::internal::runtime {
-class Partition;
+class PartitionRuntime;
 }  // namespace mrc::internal::runtime
 
 namespace mrc::internal::pubsub {
@@ -48,7 +48,7 @@ namespace mrc::internal::pubsub {
  */
 class SubscriberService final : public Base, public mrc::pubsub::ISubscriberService
 {
-    SubscriberService(std::string service_name, runtime::Partition& runtime);
+    SubscriberService(std::string service_name, runtime::PartitionRuntime& runtime);
 
   public:
     ~SubscriberService() override;
@@ -87,7 +87,7 @@ class SubscriberService final : public Base, public mrc::pubsub::ISubscriberServ
     std::unique_ptr<mrc::runnable::Runner> m_network_handler;
 
     // limit access to the constructor; this object must be constructed as a shared_ptr
-    friend runtime::Partition;
+    friend runtime::PartitionRuntime;
 };
 
 }  // namespace mrc::internal::pubsub

@@ -20,7 +20,7 @@
 namespace mrc::internal {
 
 namespace runtime {
-class Partition;
+class PartitionRuntime;
 }
 
 namespace resources {

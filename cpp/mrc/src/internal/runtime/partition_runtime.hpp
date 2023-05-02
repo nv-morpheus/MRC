@@ -18,6 +18,7 @@
 #pragma once
 
 #include "internal/remote_descriptor/manager.hpp"
+#include "internal/runtime/runtime.hpp"
 
 #include "mrc/runtime/api.hpp"
 #include "mrc/utils/macros.hpp"
@@ -39,14 +40,14 @@ enum class PublisherPolicy;
 
 namespace mrc::internal::runtime {
 
-class Partition final : public mrc::runtime::IPartition
+class PartitionRuntime final : public mrc::runtime::IPartitionRuntime
 {
   public:
-    Partition(resources::PartitionResources& resources);
-    ~Partition() final;
+    PartitionRuntime(Runtime& runtime, resources::PartitionResources& resources);
+    ~PartitionRuntime() final;
 
-    DELETE_COPYABILITY(Partition);
-    DELETE_MOVEABILITY(Partition);
+    DELETE_COPYABILITY(PartitionRuntime);
+    DELETE_MOVEABILITY(PartitionRuntime);
 
     size_t idx() const;
 

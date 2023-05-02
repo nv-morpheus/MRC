@@ -20,8 +20,8 @@
 #include "internal/control_plane/client.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/runnable/resources.hpp"
-#include "internal/runtime/partition.hpp"
 #include "internal/runtime/partition_manager.hpp"
+#include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/pipelines_manager.hpp"
 #include "internal/system/partitions.hpp"
 #include "internal/system/system_provider.hpp"
@@ -73,7 +73,7 @@ std::size_t Runtime::gpu_count() const
     return resources().device_count();
 }
 
-Partition& Runtime::partition(std::size_t partition_id)
+PartitionRuntime& Runtime::partition(std::size_t partition_id)
 {
     DCHECK_LT(partition_id, m_resources->partition_count());
     DCHECK(m_partitions.at(partition_id));

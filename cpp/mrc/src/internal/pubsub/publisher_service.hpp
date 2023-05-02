@@ -42,7 +42,7 @@ namespace mrc::codable {
 struct ICodableStorage;
 }  // namespace mrc::codable
 namespace mrc::internal::runtime {
-class Partition;
+class PartitionRuntime;
 }  // namespace mrc::internal::runtime
 namespace mrc::internal::ucx {
 class Endpoint;
@@ -53,7 +53,7 @@ namespace mrc::internal::pubsub {
 class PublisherService : public Base, public mrc::pubsub::IPublisherService
 {
   protected:
-    PublisherService(std::string service_name, runtime::Partition& runtime);
+    PublisherService(std::string service_name, runtime::PartitionRuntime& runtime);
 
   public:
     ~PublisherService() override = default;
@@ -115,7 +115,7 @@ class PublisherService : public Base, public mrc::pubsub::IPublisherService
     virtual void on_update() = 0;
 
     // resources - needs to be a PartitionRuntime
-    runtime::Partition& m_runtime;
+    runtime::PartitionRuntime& m_runtime;
 
     // policy engine runner
     std::unique_ptr<mrc::runnable::Runner> m_policy_engine;

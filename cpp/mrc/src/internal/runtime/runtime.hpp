@@ -19,8 +19,8 @@
 
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/server.hpp"
-#include "internal/runtime/partition.hpp"
 #include "internal/runtime/partition_manager.hpp"
+#include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/pipelines_manager.hpp"
 #include "internal/system/resources.hpp"
 
@@ -56,7 +56,7 @@ class Runtime final : public mrc::runtime::IRuntime, public Service, public syst
     std::size_t gpu_count() const final;
 
     // access the partition specific resources for a given partition_id
-    Partition& partition(std::size_t partition_id) final;
+    PartitionRuntime& partition(std::size_t partition_id) final;
 
     // access the full set of internal resources
     resources::Manager& resources() const;
@@ -78,7 +78,7 @@ class Runtime final : public mrc::runtime::IRuntime, public Service, public syst
     void do_service_await_join() final;
 
     std::unique_ptr<resources::Manager> m_resources;
-    std::vector<std::unique_ptr<Partition>> m_partitions;
+    std::vector<std::unique_ptr<PartitionRuntime>> m_partitions;
 
     std::unique_ptr<control_plane::Server> m_control_plane_server;
     std::unique_ptr<control_plane::Client> m_control_plane_client;

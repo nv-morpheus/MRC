@@ -24,7 +24,7 @@
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
-#include "internal/runtime/partition.hpp"
+#include "internal/runtime/partition_runtime.hpp"
 
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/operators/router.hpp"
@@ -45,7 +45,7 @@
 
 namespace mrc::internal::pubsub {
 
-SubscriberService::SubscriberService(std::string service_name, runtime::Partition& runtime) :
+SubscriberService::SubscriberService(std::string service_name, runtime::PartitionRuntime& runtime) :
   Base(std::move(service_name), runtime)
 {}
 

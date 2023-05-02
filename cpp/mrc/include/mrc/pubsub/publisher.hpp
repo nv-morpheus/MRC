@@ -60,7 +60,7 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
   public:
     static std::unique_ptr<Publisher> create(std::string name,
                                              const PublisherPolicy& policy,
-                                             runtime::IPartition& partition)
+                                             runtime::IPartitionRuntime& partition)
     {
         return std::unique_ptr<Publisher>{new Publisher(partition.make_publisher_service(name, policy))};
     }
@@ -152,7 +152,7 @@ class Publisher final : public control_plane::SubscriptionServiceForwarder,
     // this holds the operator open;
     std::unique_ptr<mrc::node::WritableEntrypoint<T>> m_persistent_channel;
 
-    friend runtime::IPartition;
+    friend runtime::IPartitionRuntime;
 };
 
 template <typename T>

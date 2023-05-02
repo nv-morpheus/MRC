@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "internal/runtime/partition.hpp"
+#include "internal/runtime/partition_runtime.hpp"
 
 #include "internal/codable/codable_storage.hpp"
 #include "internal/network/resources.hpp"

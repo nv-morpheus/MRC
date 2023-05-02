@@ -24,7 +24,7 @@
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
-#include "internal/runtime/partition.hpp"
+#include "internal/runtime/partition_runtime.hpp"
 
 #include "mrc/channel/status.hpp"
 #include "mrc/codable/encoded_object.hpp"
@@ -46,7 +46,7 @@
 
 namespace mrc::internal::pubsub {
 
-PublisherService::PublisherService(std::string service_name, runtime::Partition& runtime) :
+PublisherService::PublisherService(std::string service_name, runtime::PartitionRuntime& runtime) :
   Base(std::move(service_name), runtime),
   m_runtime(runtime)
 {}

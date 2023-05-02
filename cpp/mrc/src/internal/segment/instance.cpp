@@ -50,7 +50,9 @@
 
 namespace mrc::internal::segment {
 
-Instance::Instance(std::shared_ptr<const Definition> definition, SegmentRank rank, runtime::Partition& partition) :
+Instance::Instance(std::shared_ptr<const Definition> definition,
+                   SegmentRank rank,
+                   runtime::PartitionRuntime& partition) :
   m_name(definition->name()),
   m_id(definition->id()),
   m_rank(rank),

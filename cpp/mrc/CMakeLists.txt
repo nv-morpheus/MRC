@@ -75,7 +75,7 @@ add_library(libmrc
   src/internal/runnable/thread_engine.cpp
   src/internal/runnable/thread_engines.cpp
   src/internal/runtime/partition_manager.cpp
-  src/internal/runtime/partition.cpp
+  src/internal/runtime/partition_runtime.cpp
   src/internal/runtime/pipelines_manager.cpp
   src/internal/runtime/runtime.cpp
   src/internal/segment/builder.cpp

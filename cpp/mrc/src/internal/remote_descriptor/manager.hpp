@@ -45,7 +45,7 @@ namespace mrc::internal::resources {
 class PartitionResources;
 }  // namespace mrc::internal::resources
 namespace mrc::internal::runtime {
-class Partition;
+class PartitionRuntime;
 }  // namespace mrc::internal::runtime
 namespace mrc::runnable {
 class Runner;
@@ -124,7 +124,7 @@ class Manager final : private Service,
 
     mutable std::mutex m_mutex;
 
-    friend internal::runtime::Partition;
+    friend internal::runtime::PartitionRuntime;
 };
 
 }  // namespace mrc::internal::remote_descriptor

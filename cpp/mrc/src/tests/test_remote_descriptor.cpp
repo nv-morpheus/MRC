@@ -26,7 +26,7 @@
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/resources.hpp"
-#include "internal/runtime/partition.hpp"
+#include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/runtime.hpp"
 #include "internal/system/system_provider.hpp"
 

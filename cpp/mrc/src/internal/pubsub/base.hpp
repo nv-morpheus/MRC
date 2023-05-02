@@ -34,7 +34,7 @@ namespace mrc::internal::pubsub {
 class Base : public control_plane::client::SubscriptionService
 {
   public:
-    Base(std::string name, runtime::Partition& runtime) :
+    Base(std::string name, runtime::PartitionRuntime& runtime) :
       SubscriptionService(std::move(name), runtime.resources().network()->control_plane()),
       m_runtime(runtime)
     {}
@@ -59,7 +59,7 @@ class Base : public control_plane::client::SubscriptionService
     }
 
   protected:
-    inline runtime::Partition& runtime()
+    inline runtime::PartitionRuntime& runtime()
     {
         return m_runtime;
     }
@@ -70,7 +70,7 @@ class Base : public control_plane::client::SubscriptionService
     }
 
   private:
-    runtime::Partition& m_runtime;
+    runtime::PartitionRuntime& m_runtime;
 };
 
 }  // namespace mrc::internal::pubsub

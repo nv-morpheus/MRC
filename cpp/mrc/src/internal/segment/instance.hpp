@@ -29,7 +29,7 @@
 #include <string>
 
 namespace mrc::internal::runtime {
-class Partition;
+class PartitionRuntime;
 }
 
 namespace mrc::internal::pipeline {
@@ -47,7 +47,7 @@ class Builder;
 class Instance final : public Service
 {
   public:
-    Instance(std::shared_ptr<const Definition> definition, SegmentRank rank, runtime::Partition& partition);
+    Instance(std::shared_ptr<const Definition> definition, SegmentRank rank, runtime::PartitionRuntime& partition);
     ~Instance() override;
 
     const std::string& name() const;
@@ -77,7 +77,7 @@ class Instance final : public Service
     std::string m_info;
 
     std::unique_ptr<Builder> m_builder;
-    runtime::Partition& m_partition_runtime;
+    runtime::PartitionRuntime& m_partition_runtime;
     const std::size_t m_default_partition_id;
 
     std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_runners;

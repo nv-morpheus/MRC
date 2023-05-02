@@ -29,7 +29,7 @@ namespace mrc::internal::data_plane {
 struct RemoteDescriptorMessage;
 }  // namespace mrc::internal::data_plane
 namespace mrc::internal::runtime {
-class Partition;
+class PartitionRuntime;
 }  // namespace mrc::internal::runtime
 namespace mrc::internal::ucx {
 class Endpoint;
@@ -57,7 +57,7 @@ class PublisherRoundRobin final : public PublisherService
 
     std::unordered_map<std::uint64_t, std::shared_ptr<ucx::Endpoint>>::const_iterator m_next;
 
-    friend runtime::Partition;
+    friend runtime::PartitionRuntime;
 };
 
 }  // namespace mrc::internal::pubsub
