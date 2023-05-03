@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "internal/system/resources.hpp"
 #include "internal/system/thread.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/core/bitmap.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
@@ -60,7 +60,7 @@ namespace mrc::internal::system {
 class ThreadPool final
 {
   public:
-    ThreadPool(const system::SystemResources&, CpuSet cpuset, std::size_t channel_size = 128);
+    ThreadPool(const system::ThreadingResources&, CpuSet cpuset, std::size_t channel_size = 128);
     ~ThreadPool();
 
     template <class F, class... ArgsT>

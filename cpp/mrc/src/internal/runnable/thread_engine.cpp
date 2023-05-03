@@ -17,8 +17,8 @@
 
 #include "internal/runnable/thread_engine.hpp"
 
-#include "internal/system/resources.hpp"
 #include "internal/system/thread.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/core/bitmap.hpp"
 #include "mrc/runnable/types.hpp"
@@ -32,7 +32,7 @@
 
 namespace mrc::internal::runnable {
 
-ThreadEngine::ThreadEngine(CpuSet cpu_set, const system::SystemResources& system) :
+ThreadEngine::ThreadEngine(CpuSet cpu_set, const system::ThreadingResources& system) :
   m_cpu_set(std::move(cpu_set)),
   m_system(system)
 {}

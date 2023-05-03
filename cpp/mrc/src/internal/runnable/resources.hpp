@@ -18,7 +18,7 @@
 #pragma once
 
 #include "internal/system/host_partition_provider.hpp"
-#include "internal/system/resources.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/core/task_queue.hpp"
 #include "mrc/pipeline/resources.hpp"
@@ -36,7 +36,7 @@ namespace mrc::internal::runnable {
 class RunnableResources final : public system::HostPartitionProvider, public mrc::pipeline::Resources
 {
   public:
-    RunnableResources(const system::SystemResources& system_resources, std::size_t _host_partition_id);
+    RunnableResources(const system::ThreadingResources& system_resources, std::size_t _host_partition_id);
     RunnableResources(RunnableResources&& other);
     ~RunnableResources() override;
 

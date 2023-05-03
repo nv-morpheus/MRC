@@ -25,7 +25,7 @@
 #include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/pipelines_manager.hpp"
 #include "internal/service.hpp"
-#include "internal/system/resources.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/runtime/api.hpp"
 
@@ -83,7 +83,7 @@ class Runtime final : public mrc::runtime::IRuntime, public AsyncService, public
 
     std::unique_ptr<resources::SystemResources> m_sys_resources;
 
-    std::unique_ptr<system::SystemResources> m_sys_threading_resources;
+    std::unique_ptr<system::ThreadingResources> m_sys_threading_resources;
     std::unique_ptr<runnable::RunnableResources> m_sys_runnable_resources;
 
     std::vector<std::unique_ptr<PartitionRuntime>> m_partitions;

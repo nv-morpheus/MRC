@@ -34,13 +34,13 @@ namespace mrc::pymrc {
 
 System::System(std::shared_ptr<Options> options) : internal::system::ISystem(std::move(options)) {}
 
-SystemResources::SystemResources(std::shared_ptr<System> system) : internal::system::IResources(std::move(system))
+ThreadingResources::ThreadingResources(std::shared_ptr<System> system) : internal::system::IResources(std::move(system))
 {
     add_gil_initializer();
     add_gil_finalizer();
 }
 
-void SystemResources::add_gil_initializer()
+void ThreadingResources::add_gil_initializer()
 {
     bool has_pydevd_trace = false;
 
@@ -101,7 +101,7 @@ void SystemResources::add_gil_initializer()
     });
 }
 
-void SystemResources::add_gil_finalizer()
+void ThreadingResources::add_gil_finalizer()
 {
     bool python_finalizing = _Py_IsFinalizing() != 0;
 

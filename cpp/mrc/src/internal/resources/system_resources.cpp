@@ -30,8 +30,8 @@
 #include "internal/system/host_partition.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/system/partitions.hpp"
-#include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
+#include "internal/system/threading_resources.hpp"
 #include "internal/ucx/registation_callback_builder.hpp"
 #include "internal/ucx/resources.hpp"
 #include "internal/ucx/worker.hpp"
@@ -59,12 +59,12 @@ thread_local SystemResources* SystemResources::m_thread_resources{nullptr};
 thread_local PartitionResources* SystemResources::m_thread_partition{nullptr};
 
 SystemResources::SystemResources(const system::SystemProvider& system) :
-  SystemResources(std::make_unique<system::SystemResources>(system))
+  SystemResources(std::make_unique<system::ThreadingResources>(system))
 {}
 
-SystemResources::SystemResources(std::unique_ptr<system::SystemResources> resources) :
+SystemResources::SystemResources(std::unique_ptr<system::ThreadingResources> resources) :
   SystemProvider(*resources),
-  m_system(std::move(resources))
+  m_threading_resources(std::move(resources))
 {
     const auto& partitions      = system().partitions().flattened();
     const auto& host_partitions = system().partitions().host_partitions();
@@ -115,7 +115,7 @@ SystemResources::SystemResources(std::unique_ptr<system::SystemResources> resour
     for (std::size_t i = 0; i < host_partitions.size(); ++i)
     {
         VLOG(1) << "building runnable/launch_control resources on host_partition: " << i;
-        m_runnable.emplace_back(*m_system, i);
+        m_runnable.emplace_back(*m_threading_resources, i);
     }
 
     std::vector<PartitionResourceBase> base_partition_resources;
@@ -134,7 +134,7 @@ SystemResources::SystemResources(std::unique_ptr<system::SystemResources> resour
             VLOG(1) << "building ucx resources for partition " << base.partition_id();
             auto network_task_queue_cpuset = base.partition().host().engine_factory_cpu_sets().fiber_cpu_sets.at(
                 "mrc_network");
-            auto& network_fiber_queue = m_system->get_task_queue(network_task_queue_cpuset.first());
+            auto& network_fiber_queue = m_threading_resources->get_task_queue(network_task_queue_cpuset.first());
             std::optional<ucx::UcxResources> ucx;
             ucx.emplace(base, network_fiber_queue);
             m_ucx.push_back(std::move(ucx));
@@ -227,13 +227,15 @@ SystemResources::SystemResources(std::unique_ptr<system::SystemResources> resour
     // set thread local access to resources on all fiber task queues and any future thread created by the runtime
     for (auto& partition : m_partitions)
     {
-        m_system->register_thread_local_initializer(partition.partition().host().cpu_set(), [this, &partition] {
-            m_thread_resources = this;
-            if (system().partitions().device_to_host_strategy() == PlacementResources::Dedicated)
-            {
-                m_thread_partition = &partition;
-            }
-        });
+        m_threading_resources->register_thread_local_initializer(
+            partition.partition().host().cpu_set(),
+            [this, &partition] {
+                m_thread_resources = this;
+                if (system().partitions().device_to_host_strategy() == PlacementResources::Dedicated)
+                {
+                    m_thread_partition = &partition;
+                }
+            });
     }
 
     VLOG(10) << "resources::Manager initialized";

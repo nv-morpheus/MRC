@@ -17,9 +17,9 @@
 
 #include "mrc/engine/system/iresources.hpp"
 
-#include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
+#include "internal/system/threading_resources.hpp"
 #include "internal/system/topology.hpp"
 
 #include <memory>
@@ -27,17 +27,17 @@
 
 namespace mrc::internal::system {
 
-IResources::IResources(std::shared_ptr<ISystem> system) :
-  m_impl(std::make_unique<SystemResources>(SystemProvider(System::unwrap(*system))))
+IThreadingResources::IThreadingResources(std::shared_ptr<ISystem> system) :
+  m_impl(std::make_unique<ThreadingResources>(SystemProvider(System::unwrap(*system))))
 {}
-IResources::~IResources() = default;
+IThreadingResources::~IThreadingResources() = default;
 
-void IResources::add_thread_initializer(std::function<void()> initializer_fn)
+void IThreadingResources::add_thread_initializer(std::function<void()> initializer_fn)
 {
     m_impl->register_thread_local_initializer(m_impl->system().topology().cpu_set(), std::move(initializer_fn));
 }
 
-void IResources::add_thread_finalizer(std::function<void()> finalizer_fn)
+void IThreadingResources::add_thread_finalizer(std::function<void()> finalizer_fn)
 {
     m_impl->register_thread_local_finalizer(m_impl->system().topology().cpu_set(), std::move(finalizer_fn));
 }

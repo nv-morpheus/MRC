@@ -27,7 +27,7 @@ class IPipeline;
 }  // namespace mrc::internal::pipeline
 
 namespace mrc::internal::system {
-class IResources;
+class IThreadingResources;
 }
 
 namespace mrc::internal::executor {

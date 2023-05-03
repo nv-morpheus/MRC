@@ -22,7 +22,7 @@
 #include <memory>
 
 namespace mrc::internal::system {
-class IResources;
+class IThreadingResources;
 }  // namespace mrc::internal::system
 
 namespace mrc {

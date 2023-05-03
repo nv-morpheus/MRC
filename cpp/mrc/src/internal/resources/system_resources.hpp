@@ -39,7 +39,7 @@ namespace mrc::internal::memory {
 class DeviceResources;
 }  // namespace mrc::internal::memory
 namespace mrc::internal::system {
-class SystemResources;
+class ThreadingResources;
 }  // namespace mrc::internal::system
 namespace mrc::internal::ucx {
 class UcxResources;
@@ -54,7 +54,7 @@ class SystemResources final : public system::SystemProvider
 {
   public:
     SystemResources(const system::SystemProvider& system);
-    SystemResources(std::unique_ptr<system::SystemResources> resources);
+    SystemResources(std::unique_ptr<system::ThreadingResources> threading_resources);
     ~SystemResources() override;
 
     static SystemResources& get_resources();
@@ -71,10 +71,10 @@ class SystemResources final : public system::SystemProvider
   private:
     // Future<void> shutdown();
 
-    const std::unique_ptr<system::SystemResources> m_system;
-    std::vector<runnable::RunnableResources> m_runnable;  // one per host partition
-    std::vector<std::optional<ucx::UcxResources>> m_ucx;  // one per flattened partition if network is enabled
-    // std::shared_ptr<control_plane::ControlPlaneResources> m_control_plane;  // one per instance of resources::Manager
+    const std::unique_ptr<system::ThreadingResources> m_threading_resources;
+
+    std::vector<runnable::RunnableResources> m_runnable;           // one per host partition
+    std::vector<std::optional<ucx::UcxResources>> m_ucx;           // one per flattened partition if network is enabled
     std::vector<memory::HostResources> m_host;                     // one per host partition
     std::vector<std::optional<memory::DeviceResources>> m_device;  // one per flattened partition upto device_count
     std::vector<PartitionResources> m_partitions;                  // one per flattened partition

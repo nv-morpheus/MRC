@@ -98,7 +98,7 @@ add_library(libmrc
   src/internal/system/partition_provider.cpp
   src/internal/system/partition.cpp
   src/internal/system/partitions.cpp
-  src/internal/system/resources.cpp
+  src/internal/system/threading_resources.cpp
   src/internal/system/system_provider.cpp
   src/internal/system/system.cpp
   src/internal/system/thread_pool.cpp

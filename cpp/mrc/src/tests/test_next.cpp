@@ -16,9 +16,9 @@
  */
 
 #include "internal/runnable/resources.hpp"
-#include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/channel/ingress.hpp"
 #include "mrc/data/reusable_pool.hpp"
@@ -88,7 +88,7 @@ class TestNext : public ::testing::Test
   protected:
     void SetUp() override
     {
-        m_system_resources = std::make_unique<internal::system::SystemResources>(
+        m_system_resources = std::make_unique<internal::system::ThreadingResources>(
             internal::system::SystemProvider(make_system([](Options& options) {
                 options.topology().user_cpuset("0-3");
                 options.topology().restrict_gpus(true);
@@ -108,7 +108,7 @@ class TestNext : public ::testing::Test
         m_system_resources.reset();
     }
 
-    std::unique_ptr<internal::system::SystemResources> m_system_resources;
+    std::unique_ptr<internal::system::ThreadingResources> m_system_resources;
     std::unique_ptr<internal::runnable::RunnableResources> m_resources;
 };
 

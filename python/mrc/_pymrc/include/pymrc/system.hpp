@@ -34,11 +34,11 @@ class System final : public internal::system::ISystem
     ~System() final = default;
 };
 
-class SystemResources final : public internal::system::IResources
+class ThreadingResources final : public internal::system::IThreadingResources
 {
   public:
-    SystemResources(std::shared_ptr<System> system);
-    ~SystemResources() final = default;
+    ThreadingResources(std::shared_ptr<System> system);
+    ~ThreadingResources() final = default;
 
   private:
     void add_gil_initializer();

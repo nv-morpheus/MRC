@@ -23,21 +23,21 @@
 namespace mrc::internal::system {
 
 class ISystem;
-class SystemResources;
+class ThreadingResources;
 
-class IResources
+class IThreadingResources
 {
   public:
-    IResources(std::shared_ptr<ISystem> system);
-    virtual ~IResources() = 0;
+    IThreadingResources(std::shared_ptr<ISystem> system);
+    virtual ~IThreadingResources() = 0;
 
   protected:
     void add_thread_initializer(std::function<void()> initializer_fn);
     void add_thread_finalizer(std::function<void()> finalizer_fn);
 
   private:
-    std::unique_ptr<SystemResources> m_impl;
-    friend SystemResources;
+    std::unique_ptr<ThreadingResources> m_impl;
+    friend ThreadingResources;
 };
 
 }  // namespace mrc::internal::system

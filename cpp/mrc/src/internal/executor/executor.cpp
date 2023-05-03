@@ -27,8 +27,8 @@
 #include "internal/pipeline/types.hpp"
 #include "internal/resources/system_resources.hpp"
 #include "internal/runtime/runtime.hpp"
-#include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
+#include "internal/system/threading_resources.hpp"
 #include "internal/utils/contains.hpp"
 
 #include "mrc/channel/status.hpp"
@@ -58,7 +58,7 @@ Executor::Executor(std::shared_ptr<Options> options) :
   m_runtime(std::make_unique<runtime::Runtime>(*this))
 {}
 
-// Executor::Executor(std::unique_ptr<system::SystemResources> resources) :
+// Executor::Executor(std::unique_ptr<system::ThreadingResources> resources) :
 //   SystemProvider(*resources),
 //   m_resources_manager(std::make_unique<resources::Manager>(std::move(resources)))
 // {}
@@ -283,7 +283,7 @@ std::unique_ptr<Executor> make_executor(std::shared_ptr<Options> options)
     return std::make_unique<Executor>(std::move(options));
 }
 
-// std::unique_ptr<Executor> make_executor(std::unique_ptr<system::SystemResources> resources)
+// std::unique_ptr<Executor> make_executor(std::unique_ptr<system::ThreadingResources> resources)
 // {
 //     return std::make_unique<Executor>(std::move(resources));
 // }

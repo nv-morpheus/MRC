@@ -17,7 +17,7 @@
 
 #include "internal/system/thread_pool.hpp"
 
-#include "internal/system/resources.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/core/bitmap.hpp"
 
@@ -26,7 +26,7 @@
 
 namespace mrc::internal::system {
 
-ThreadPool::ThreadPool(const system::SystemResources& resources, CpuSet cpuset, std::size_t channel_size) :
+ThreadPool::ThreadPool(const system::ThreadingResources& resources, CpuSet cpuset, std::size_t channel_size) :
   m_cpuset(std::move(cpuset)),
   m_channel(channel_size)
 {

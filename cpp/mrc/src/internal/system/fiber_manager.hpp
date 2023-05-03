@@ -36,12 +36,12 @@
 
 namespace mrc::internal::system {
 
-class SystemResources;
+class ThreadingResources;
 
 class FiberManager final
 {
   public:
-    FiberManager(const SystemResources& resources);
+    FiberManager(const ThreadingResources& resources);
     ~FiberManager();
 
     DELETE_COPYABILITY(FiberManager);

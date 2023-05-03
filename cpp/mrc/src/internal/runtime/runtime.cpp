@@ -49,12 +49,12 @@ Runtime::Runtime(std::unique_ptr<resources::SystemResources> resources) :
     // }
 
     // Now create the threading resources and system wide runnable so it is available to AsyncService
-    m_sys_threading_resources = std::make_unique<system::SystemResources>(*this);
+    m_sys_threading_resources = std::make_unique<system::ThreadingResources>(*this);
 
     m_sys_runnable_resources = std::make_unique<runnable::RunnableResources>(*m_sys_threading_resources, 0);
 }
 
-// Call the other constructor with a new SystemResources
+// Call the other constructor with a new ThreadingResources
 Runtime::Runtime(const system::SystemProvider& system) : Runtime(std::make_unique<resources::SystemResources>(system))
 {}
 
@@ -129,7 +129,7 @@ void Runtime::do_service_start(std::stop_token stop_token)
     }
 
     // Create the system resources first
-    auto sys_resources = std::make_unique<system::SystemResources>(*this);
+    auto sys_resources = std::make_unique<system::ThreadingResources>(*this);
 
     // Now create the control plane client
     auto runnable          = runnable::RunnableResources(*sys_resources, 0);
@@ -188,7 +188,7 @@ void Runtime::do_service_start(std::stop_token stop_token)
 //     }
 
 //     // Create the system resources first
-//     auto sys_resources = std::make_unique<system::SystemResources>(*this);
+//     auto sys_resources = std::make_unique<system::ThreadingResources>(*this);
 
 //     // Now create the control plane client
 //     auto runnable          = runnable::RunnableResources(*sys_resources, 0);

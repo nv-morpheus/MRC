@@ -18,7 +18,7 @@
 #pragma once
 
 #include "internal/runnable/engines.hpp"
-#include "internal/system/resources.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/core/bitmap.hpp"
 
@@ -31,7 +31,7 @@ struct EngineFactory;
 
 namespace mrc::internal::runnable {
 
-std::shared_ptr<::mrc::runnable::EngineFactory> make_engine_factory(const system::SystemResources& system,
+std::shared_ptr<::mrc::runnable::EngineFactory> make_engine_factory(const system::ThreadingResources& system,
                                                                     EngineType engine_type,
                                                                     const CpuSet& cpu_set,
                                                                     bool reusable);

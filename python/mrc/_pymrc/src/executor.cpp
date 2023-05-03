@@ -137,7 +137,7 @@ Executor::Executor(std::shared_ptr<Options> options)
 
     // Now create the executor
     auto system    = std::make_unique<System>(options);
-    auto resources = std::make_unique<SystemResources>(std::move(system));
+    auto resources = std::make_unique<ThreadingResources>(std::move(system));
     m_exec         = std::make_shared<mrc::Executor>(std::move(resources));
 }
 

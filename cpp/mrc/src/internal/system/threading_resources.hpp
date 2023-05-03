@@ -37,16 +37,16 @@
 
 namespace mrc::internal::system {
 class FiberTaskQueue;
-class IResources;
+class IThreadingResources;
 
-class SystemResources final : public SystemProvider  // TODO(MDD): Rename to ThreadResources
+class ThreadingResources final : public SystemProvider  // TODO(MDD): Rename to ThreadResources
 {
   public:
-    static std::unique_ptr<SystemResources> unwrap(IResources& resources);
-    static std::unique_ptr<SystemResources> create(const SystemProvider& system);
-    static std::unique_ptr<SystemResources> create(std::shared_ptr<const SystemProvider> system);
+    static std::unique_ptr<ThreadingResources> unwrap(IThreadingResources& resources);
+    static std::unique_ptr<ThreadingResources> create(const SystemProvider& system);
+    static std::unique_ptr<ThreadingResources> create(std::shared_ptr<const SystemProvider> system);
 
-    SystemResources(SystemProvider system);
+    ThreadingResources(SystemProvider system);
 
     template <typename CallableT>
     [[nodiscard]] Thread make_thread(CpuSet cpu_affinity, CallableT&& callable) const;
@@ -69,7 +69,7 @@ class SystemResources final : public SystemProvider  // TODO(MDD): Rename to Thr
 };
 
 template <typename ResourceT>
-void SystemResources::register_thread_local_resource(const CpuSet& cpu_set, std::shared_ptr<ResourceT> resource)
+void ThreadingResources::register_thread_local_resource(const CpuSet& cpu_set, std::shared_ptr<ResourceT> resource)
 {
     CHECK(resource);
     CHECK(system().topology().contains(cpu_set));
@@ -81,14 +81,14 @@ void SystemResources::register_thread_local_resource(const CpuSet& cpu_set, std:
 }
 
 template <typename CallableT>
-Thread SystemResources::make_thread(CpuSet cpu_affinity, CallableT&& callable) const
+Thread ThreadingResources::make_thread(CpuSet cpu_affinity, CallableT&& callable) const
 {
     CHECK(m_thread_resources);
     return m_thread_resources->make_thread("thread", std::move(cpu_affinity), std::move(callable));
 }
 
 template <typename CallableT>
-Thread SystemResources::make_thread(std::string desc, CpuSet cpu_affinity, CallableT&& callable) const
+Thread ThreadingResources::make_thread(std::string desc, CpuSet cpu_affinity, CallableT&& callable) const
 {
     CHECK(m_thread_resources);
     return m_thread_resources->make_thread(std::move(desc), std::move(cpu_affinity), std::move(callable));

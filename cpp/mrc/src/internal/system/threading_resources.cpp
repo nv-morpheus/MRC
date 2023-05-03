@@ -15,9 +15,8 @@
  * limitations under the License.
  */
 
-#include "internal/system/resources.hpp"
-
 #include "internal/system/fiber_manager.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/engine/system/iresources.hpp"
 
@@ -28,23 +27,23 @@
 
 namespace mrc::internal::system {
 
-SystemResources::SystemResources(SystemProvider system) :
+ThreadingResources::ThreadingResources(SystemProvider system) :
   SystemProvider(system),
   m_thread_resources(std::make_shared<ThreadResources>(*this)),
   m_fiber_manager(*this)
 {}
 
-FiberTaskQueue& SystemResources::get_task_queue(std::uint32_t cpu_id) const
+FiberTaskQueue& ThreadingResources::get_task_queue(std::uint32_t cpu_id) const
 {
     return m_fiber_manager.task_queue(cpu_id);
 }
 
-FiberPool SystemResources::make_fiber_pool(const CpuSet& cpu_set) const
+FiberPool ThreadingResources::make_fiber_pool(const CpuSet& cpu_set) const
 {
     return m_fiber_manager.make_pool(cpu_set);
 }
 
-void SystemResources::register_thread_local_initializer(const CpuSet& cpu_set, std::function<void()> initializer)
+void ThreadingResources::register_thread_local_initializer(const CpuSet& cpu_set, std::function<void()> initializer)
 {
     CHECK(initializer);
     CHECK_GE(cpu_set.weight(), 0);
@@ -59,7 +58,7 @@ void SystemResources::register_thread_local_initializer(const CpuSet& cpu_set, s
     }
 }
 
-void SystemResources::register_thread_local_finalizer(const CpuSet& cpu_set, std::function<void()> finalizer)
+void ThreadingResources::register_thread_local_finalizer(const CpuSet& cpu_set, std::function<void()> finalizer)
 {
     CHECK(finalizer);
     CHECK_GE(cpu_set.weight(), 0);
@@ -67,7 +66,7 @@ void SystemResources::register_thread_local_finalizer(const CpuSet& cpu_set, std
     m_thread_resources->register_finalizer(cpu_set, finalizer);
 }
 
-std::unique_ptr<SystemResources> SystemResources::unwrap(IResources& resources)
+std::unique_ptr<ThreadingResources> ThreadingResources::unwrap(IThreadingResources& resources)
 {
     return std::move(resources.m_impl);
 }

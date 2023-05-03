@@ -18,7 +18,7 @@
 #include "internal/system/fiber_task_queue.hpp"
 
 #include "internal/system/fiber_priority_scheduler.hpp"
-#include "internal/system/resources.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/core/bitmap.hpp"
 #include "mrc/core/fiber_meta_data.hpp"
@@ -39,7 +39,7 @@
 
 namespace mrc::internal::system {
 
-FiberTaskQueue::FiberTaskQueue(const SystemResources& resources, CpuSet cpu_affinity, std::size_t channel_size) :
+FiberTaskQueue::FiberTaskQueue(const ThreadingResources& resources, CpuSet cpu_affinity, std::size_t channel_size) :
   m_queue(channel_size),
   m_cpu_affinity(std::move(cpu_affinity)),
   m_thread(resources.make_thread("fiberq", m_cpu_affinity, [this] {

@@ -18,7 +18,7 @@
 #pragma once
 
 #include "internal/runnable/engines.hpp"
-#include "internal/system/resources.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/core/bitmap.hpp"
 
@@ -32,8 +32,8 @@ namespace mrc::internal::runnable {
 class ThreadEngines final : public Engines
 {
   public:
-    ThreadEngines(CpuSet cpu_set, const system::SystemResources& system);
-    ThreadEngines(LaunchOptions launch_options, CpuSet cpu_set, const system::SystemResources& system);
+    ThreadEngines(CpuSet cpu_set, const system::ThreadingResources& system);
+    ThreadEngines(LaunchOptions launch_options, CpuSet cpu_set, const system::ThreadingResources& system);
     ~ThreadEngines() final = default;
 
     EngineType engine_type() const final;
@@ -42,7 +42,7 @@ class ThreadEngines final : public Engines
     void initialize_launchers();
 
     CpuSet m_cpu_set;
-    const system::SystemResources& m_system;
+    const system::ThreadingResources& m_system;
 };
 
 }  // namespace mrc::internal::runnable

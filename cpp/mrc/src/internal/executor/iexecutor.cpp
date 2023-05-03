@@ -18,7 +18,7 @@
 #include "mrc/engine/executor/iexecutor.hpp"
 
 #include "internal/executor/executor.hpp"
-#include "internal/system/resources.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/engine/pipeline/ipipeline.hpp"
 
@@ -31,7 +31,7 @@ namespace mrc::internal::executor {
 
 IExecutor::IExecutor(std::shared_ptr<Options> options) : m_impl(make_executor(std::move(options))) {}
 // IExecutor::IExecutor(std::unique_ptr<system::IResources> resources) :
-//   m_impl(make_executor(system::SystemResources::unwrap(*resources)))
+//   m_impl(make_executor(system::ThreadingResources::unwrap(*resources)))
 // {
 //     CHECK(m_impl);
 // }
