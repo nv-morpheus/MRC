@@ -216,4 +216,7 @@ void PartitionManager::create_segment(uint64_t pipeline_id, SegmentAddress addre
         })
         .get();
 }
+
+void PartitionManager::erase_segment(SegmentAddress address) {}
+
 }  // namespace mrc::internal::runtime

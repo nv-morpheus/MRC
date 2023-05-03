@@ -122,7 +122,9 @@ static void run_custom_manager(std::unique_ptr<internal::pipeline::IPipeline> pi
             options.topology().restrict_gpus(true);
         })));
 
-    auto manager = std::make_unique<internal::pipeline::PipelineManager>(unwrap(*pipeline), resources, 0);
+    auto runtime = internal::runtime::Runtime(resources);
+
+    auto manager = std::make_unique<internal::pipeline::PipelineManager>(runtime, unwrap(*pipeline), 0);
 
     auto f = std::async([&] {
         if (delayed_stop)
@@ -148,7 +150,9 @@ static void run_manager(std::unique_ptr<internal::pipeline::IPipeline> pipeline,
             mrc::channel::set_default_channel_size(64);
         })));
 
-    auto manager = std::make_unique<internal::pipeline::PipelineManager>(unwrap(*pipeline), resources, 0);
+    auto runtime = internal::runtime::Runtime(resources);
+
+    auto manager = std::make_unique<internal::pipeline::PipelineManager>(runtime, unwrap(*pipeline), 0);
 
     internal::pipeline::SegmentAddresses update;
     update[segment_address_encode(segment_name_hash("seg_1"), 0)] = 0;

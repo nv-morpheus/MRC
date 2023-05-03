@@ -85,6 +85,16 @@ control_plane::Client& Runtime::control_plane() const
     return *m_control_plane_client;
 }
 
+PipelinesManager& Runtime::pipelines_manager() const
+{
+    return *m_pipelines_manager;
+}
+
+metrics::Registry& Runtime::metrics_registry() const
+{
+    return *m_metrics_registry;
+}
+
 void Runtime::do_service_start()
 {
     // First, optionally create the control plane server
@@ -120,6 +130,8 @@ void Runtime::do_service_start()
     // For each partition, create and start a partition manager
     for (size_t i = 0; i < m_resources->partition_count(); i++)
     {
+        m_partitions.emplace_back(std::make_unique<PartitionRuntime>(*this, i));
+
         m_partition_managers.emplace_back(std::make_unique<PartitionManager>(this->partition(i)));
 
         m_partition_managers.back()->service_start();
@@ -206,4 +218,5 @@ void Runtime::do_service_await_join()
         m_control_plane_server->service_await_join();
     }
 }
+
 }  // namespace mrc::internal::runtime

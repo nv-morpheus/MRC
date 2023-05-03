@@ -55,7 +55,17 @@ void PipelinesManager::register_defs(std::map<int, std::shared_ptr<pipeline::Pip
 
 pipeline::Pipeline& PipelinesManager::get_def(int pipeline_id)
 {
+    CHECK(m_pipeline_defs.contains(pipeline_id))
+        << "Pipeline with ID: " << pipeline_id << " not found in registered pipeline definitions";
+
     return *m_pipeline_defs[pipeline_id];
+}
+
+std::shared_ptr<pipeline::PipelineInstance> PipelinesManager::get_instance(uint64_t definition_id)
+{
+    // TODO(MDD): Get or create a pipeline instance on demand
+
+    return nullptr;
 }
 
 }  // namespace mrc::internal::runtime

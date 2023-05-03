@@ -65,10 +65,7 @@ class Runtime final : public mrc::runtime::IRuntime, public Service, public syst
 
     control_plane::Client& control_plane() const;
 
-    PipelinesManager& pipelines_manager() const
-    {
-        return *m_pipelines_manager;
-    }
+    PipelinesManager& pipelines_manager() const;
 
     metrics::Registry& metrics_registry() const;
 

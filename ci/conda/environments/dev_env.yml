@@ -12,6 +12,7 @@ dependencies:
   - cmake=3.24
   - cuda-nvml-dev=11.8
   - cudatoolkit=11.8
+  - cxx-compiler # Does not need a version. Specified by compiler packages
   - cython>=0.29,<0.30
   - doxygen=1.9.2
   - flatbuffers=2.0

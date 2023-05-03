@@ -55,9 +55,29 @@ PartitionRuntime::~PartitionRuntime()
     }
 }
 
+size_t PartitionRuntime::partition_id() const
+{
+    return m_partition_id;
+}
+
 resources::PartitionResources& PartitionRuntime::resources()
 {
     return m_resources;
+}
+
+control_plane::Client& PartitionRuntime::control_plane() const
+{
+    return m_system_runtime.control_plane();
+}
+
+PipelinesManager& PartitionRuntime::pipelines_manager() const
+{
+    return m_system_runtime.pipelines_manager();
+}
+
+metrics::Registry& PartitionRuntime::metrics_registry() const
+{
+    return m_system_runtime.metrics_registry();
 }
 
 remote_descriptor::Manager& PartitionRuntime::remote_descriptor_manager()
