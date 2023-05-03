@@ -200,7 +200,10 @@ class Client final : public resources::PartitionResourceBase, public Service
 
     // update channel
     size_t m_state_update_count{0};
-    rxcpp::subjects::subject<state::ControlPlaneState> m_state_update_sub;
+    // rxcpp::subjects::behavior<state::ControlPlaneState> m_state_update_sub{{nullptr}};
+    rxcpp::subjects::replay<state::ControlPlaneState, rxcpp::identity_one_worker> m_state_update_sub{
+        1,
+        rxcpp::identity_current_thread()};
     std::unique_ptr<mrc::node::WritableEntrypoint<const protos::StateUpdate>> m_connections_update_channel;
     std::unique_ptr<mrc::node::WritableEntrypoint<const protos::ControlPlaneState>> m_state_update_entrypoint;
     std::unique_ptr<mrc::node::Broadcast<const protos::ControlPlaneState>> m_state_update_stream;

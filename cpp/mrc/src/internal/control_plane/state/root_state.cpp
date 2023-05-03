@@ -6,15 +6,21 @@
 
 namespace mrc::internal::control_plane::state {
 
-ControlPlaneStateBase::ControlPlaneStateBase(const google::protobuf::Message& message) : m_internal_message(message) {}
+ControlPlaneStateBase::ControlPlaneStateBase(const google::protobuf::Message* message) : m_internal_message(message) {}
 
 bool ControlPlaneStateBase::operator==(const ControlPlaneStateBase& other) const
 {
-    return google::protobuf::util::MessageDifferencer::Equals(m_internal_message, other.m_internal_message);
+    // Make sure neither are null
+    if (m_internal_message == nullptr || other.m_internal_message == nullptr)
+    {
+        return m_internal_message == other.m_internal_message;
+    }
+
+    return google::protobuf::util::MessageDifferencer::Equals(*m_internal_message, *other.m_internal_message);
 }
 
 ControlPlaneState::ControlPlaneState(protos::ControlPlaneState& message) :
-  ControlPlaneStateBase(message),
+  ControlPlaneStateBase(&message),
   m_message(message)
 {
     // For each message type, create a wrapper
@@ -80,7 +86,7 @@ const std::map<uint64_t, SegmentInstance>& ControlPlaneState::segment_instances(
 }
 
 Connection::Connection(ControlPlaneState& root, const protos::Connection& message) :
-  ControlPlaneStateBase(message),
+  ControlPlaneStateBase(&message),
   m_root(root),
   m_message(message)
 {}
@@ -120,7 +126,7 @@ std::map<uint64_t, const PipelineInstance&> Connection::assigned_pipelines() con
 }
 
 Worker::Worker(ControlPlaneState& root, const protos::Worker& message) :
-  ControlPlaneStateBase(message),
+  ControlPlaneStateBase(&message),
   m_root(root),
   m_message(message)
 {}
@@ -158,7 +164,7 @@ std::map<uint64_t, const SegmentInstance&> Worker::assigned_segments() const
 }
 
 PipelineDefinition::PipelineDefinition(ControlPlaneState& root, const protos::PipelineDefinition& message) :
-  ControlPlaneStateBase(message),
+  ControlPlaneStateBase(&message),
   m_root(root),
   m_message(message)
 {}
@@ -193,7 +199,7 @@ std::map<uint64_t, std::reference_wrapper<const PipelineInstance>> PipelineDefin
 }
 
 PipelineInstance::PipelineInstance(ControlPlaneState& root, const protos::PipelineInstance& message) :
-  ControlPlaneStateBase(message),
+  ControlPlaneStateBase(&message),
   m_root(root),
   m_message(message)
 {}
@@ -226,7 +232,7 @@ std::map<uint64_t, std::reference_wrapper<const SegmentInstance>> PipelineInstan
 }
 
 SegmentDefinition::SegmentDefinition(ControlPlaneState& root, const protos::SegmentDefinition& message) :
-  ControlPlaneStateBase(message),
+  ControlPlaneStateBase(&message),
   m_root(root),
   m_message(message)
 {}
@@ -259,7 +265,7 @@ std::map<uint64_t, std::reference_wrapper<const SegmentInstance>> SegmentDefinit
 }
 
 SegmentInstance::SegmentInstance(ControlPlaneState& root, const protos::SegmentInstance& message) :
-  ControlPlaneStateBase(message),
+  ControlPlaneStateBase(&message),
   m_root(root),
   m_message(message)
 {}

@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -40,12 +41,12 @@ struct SegmentInstance;
 
 struct ControlPlaneStateBase
 {
-    ControlPlaneStateBase(const google::protobuf::Message& message);
+    ControlPlaneStateBase(const google::protobuf::Message* message);
 
     bool operator==(const ControlPlaneStateBase& other) const;
 
   private:
-    const google::protobuf::Message& m_internal_message;
+    const google::protobuf::Message* m_internal_message;
 };
 
 struct ControlPlaneState : public ControlPlaneStateBase
@@ -64,7 +65,6 @@ struct ControlPlaneState : public ControlPlaneStateBase
 
     const std::map<uint64_t, SegmentInstance>& segment_instances() const;
 
-  protected:
   private:
     protos::ControlPlaneState& m_message;
 

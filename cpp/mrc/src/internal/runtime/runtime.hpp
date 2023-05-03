@@ -70,6 +70,7 @@ class Runtime final : public mrc::runtime::IRuntime, public Service, public syst
     metrics::Registry& metrics_registry() const;
 
   private:
+    // void do_service_start(std::stop_token stop_token) final;
     void do_service_start() final;
     void do_service_stop() final;
     void do_service_kill() final;
