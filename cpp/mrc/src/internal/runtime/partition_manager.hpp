@@ -23,6 +23,7 @@
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
+#include "internal/runnable/resources.hpp"
 #include "internal/segment/segment_instance.hpp"
 #include "internal/ucx/resources.hpp"
 
@@ -50,7 +51,7 @@ namespace mrc::internal::runtime {
  * This class does not own the actual resources, that honor is bestowed on the resources::Manager. This class is
  * constructed and owned by the resources::Manager to ensure validity of the references.
  */
-class PartitionManager : public AsyncService
+class PartitionManager : public AsyncService, public runnable::RunnableResourcesProvider
 {
   public:
     PartitionManager(PartitionRuntime& runtime);

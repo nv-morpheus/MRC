@@ -35,7 +35,7 @@
 namespace mrc::internal::runtime {
 
 PartitionManager::PartitionManager(PartitionRuntime& runtime) :
-  AsyncService(runtime.resources().runnable()),
+  runnable::RunnableResourcesProvider(runtime.resources().runnable()),
   m_runtime(runtime),
   m_partition_id(runtime.partition_id())
 {}

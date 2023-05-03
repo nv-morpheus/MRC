@@ -21,6 +21,7 @@
 
 #include "mrc/types.hpp"
 
+#include <functional>
 #include <mutex>
 #include <stop_token>
 #include <string>
@@ -37,10 +38,10 @@ enum class AsyncServiceState
     Completed,
 };
 
-class AsyncService  // : public IService
+class AsyncService : public virtual runnable::IRunnableResourcesProvider
 {
   public:
-    AsyncService(runnable::RunnableResources& runnable);
+    AsyncService();
     virtual ~AsyncService();
 
     bool is_service_startable() const;
@@ -68,8 +69,6 @@ class AsyncService  // : public IService
     virtual void do_service_kill();
     // virtual void do_service_await_join() = 0;
 
-    runnable::RunnableResources& m_runnable;
-
     AsyncServiceState m_state{AsyncServiceState::Initialized};
     std::string m_description{"mrc::internal::service"};
 
@@ -77,6 +76,7 @@ class AsyncService  // : public IService
     CondVarAny m_cv;
     mutable RecursiveMutex m_mutex;
 
+    std::vector<std::reference_wrapper<AsyncService>> m_children;
     std::vector<Future<void>> m_child_futures;
 };
 

@@ -26,7 +26,7 @@
 
 namespace mrc::internal {
 
-AsyncService::AsyncService(runnable::RunnableResources& runnable) : m_runnable(runnable) {}
+AsyncService::AsyncService() = default;
 
 AsyncService::~AsyncService()
 {
@@ -61,7 +61,7 @@ Future<void> AsyncService::service_start(std::stop_source stop_source)
     // Copy the stop_source state (either it was passed in or created)
     m_stop_source = stop_source;
 
-    return m_runnable.main().enqueue([this]() {
+    return this->runnable().main().enqueue([this]() {
         // Add a stop callback to notify the cv anytime a stop is requested
         std::stop_callback stop_callback(m_stop_source.get_token(), [this]() {
             m_cv.notify_all();
@@ -69,12 +69,12 @@ Future<void> AsyncService::service_start(std::stop_source stop_source)
 
         do_service_start(m_stop_source.get_token());
 
+        // Get the mutex to prevent changes to m_child_futures
+        std::unique_lock<decltype(m_mutex)> lock(m_mutex);
+
         // Set the state to stopping to prevent any changes while we wait for children. Dont check the response
         // since it could have been requested by external users
         forward_state(AsyncServiceState::Stopping);
-
-        // Get the mutex to prevent changes to m_child_futures
-        std::unique_lock<decltype(m_mutex)> lock(m_mutex);
 
         for (auto& f : m_child_futures)
         {
@@ -115,6 +115,12 @@ void AsyncService::service_kill()
     // Ensures this only gets executed once
     if (forward_state(AsyncServiceState::Killing))
     {
+        // Kill all children first
+        for (auto& child : m_children)
+        {
+            child.get().service_kill();
+        }
+
         // Attempt the service specific kill operation
         do_service_kill();
     }
@@ -155,6 +161,15 @@ void AsyncService::service_set_description(std::string description)
 
 void AsyncService::mark_started()
 {
+    // Lock to prevent changes to the state and children
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+
+    // Before indicating that we are running, we need any children added during startup to be marked as ready
+    for (auto& child : m_children)
+    {
+        child.get().service_await_live();
+    }
+
     forward_state(AsyncServiceState::Running, true);
 }
 
@@ -165,6 +180,7 @@ void AsyncService::child_service_start(AsyncService& child)
     // The state must be running
     CHECK(m_state == AsyncServiceState::Running) << "Can only start child service in Running state";
 
+    m_children.emplace_back(child);
     m_child_futures.emplace_back(child.service_start(m_stop_source));
 }
 

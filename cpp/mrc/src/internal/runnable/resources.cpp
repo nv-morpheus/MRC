@@ -97,4 +97,18 @@ const mrc::core::FiberTaskQueue& RunnableResources::main() const
 {
     return m_main;
 }
+
+const RunnableResources& IRunnableResourcesProvider::runnable() const
+{
+    // Return the other overload
+    return const_cast<IRunnableResourcesProvider*>(this)->runnable();
+}
+
+RunnableResourcesProvider::RunnableResourcesProvider(RunnableResources& runnable) : m_runnable(runnable) {}
+
+RunnableResources& RunnableResourcesProvider::runnable()
+{
+    return m_runnable;
+}
+
 }  // namespace mrc::internal::runnable

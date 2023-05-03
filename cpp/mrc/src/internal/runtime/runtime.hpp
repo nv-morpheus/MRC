@@ -20,6 +20,7 @@
 #include "internal/async_service.hpp"
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/server.hpp"
+#include "internal/runnable/resources.hpp"
 #include "internal/runtime/partition_manager.hpp"
 #include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/pipelines_manager.hpp"
@@ -43,12 +44,12 @@ namespace mrc::internal::runtime {
  * manager which are built on partition resources. The Runtime object is responsible for bringing up and tearing down
  * core resources manager.
  */
-class Runtime final : public mrc::runtime::IRuntime, public Service, public system::SystemProvider
+class Runtime final : public mrc::runtime::IRuntime, public AsyncService, public system::SystemProvider
 {
   public:
     Runtime(const system::SystemProvider& system);
 
-    // Runtime(std::unique_ptr<resources::Manager> resources);
+    Runtime(std::unique_ptr<resources::SystemResources> resources);
     ~Runtime() override;
 
     // IRuntime - total number of partitions
@@ -69,15 +70,22 @@ class Runtime final : public mrc::runtime::IRuntime, public Service, public syst
 
     metrics::Registry& metrics_registry() const;
 
-  private:
-    // void do_service_start(std::stop_token stop_token) final;
-    void do_service_start() final;
-    void do_service_stop() final;
-    void do_service_kill() final;
-    void do_service_await_live() final;
-    void do_service_await_join() final;
+  protected:
+    runnable::RunnableResources& runnable() override;
 
-    std::unique_ptr<resources::SystemResources> m_resources;
+  private:
+    void do_service_start(std::stop_token stop_token) final;
+    // void do_service_start() final;
+    // void do_service_stop() final;
+    void do_service_kill() final;
+    // void do_service_await_live() final;
+    // void do_service_await_join() final;
+
+    std::unique_ptr<resources::SystemResources> m_sys_resources;
+
+    std::unique_ptr<system::SystemResources> m_sys_threading_resources;
+    std::unique_ptr<runnable::RunnableResources> m_sys_runnable_resources;
+
     std::vector<std::unique_ptr<PartitionRuntime>> m_partitions;
 
     std::unique_ptr<control_plane::Server> m_control_plane_server;
