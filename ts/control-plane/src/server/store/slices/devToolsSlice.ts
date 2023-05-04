@@ -13,8 +13,8 @@ import {Connection} from "../../../proto/mrc/protos/architect_state";
 import {createWrappedEntityAdapter} from "../../utils";
 
 import type {RootState} from "../store";
-import {addPipelineInstance} from "./pipelineInstancesSlice";
-import {addWorker, addWorkers, IWorker, removeWorker} from "./workersSlice";
+import {pipelineInstancesAdd} from "./pipelineInstancesSlice";
+import {workersAdd, workersAddMany, IWorker, workersRemove} from "./workersSlice";
 
 export const devToolsReducer = createReducer({},
                                              (builder) => {

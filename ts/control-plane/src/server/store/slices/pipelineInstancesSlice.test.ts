@@ -1,72 +1,31 @@
 import {expect} from "@jest/globals";
-import {WorkerStates} from "@mrc/proto/mrc/protos/architect_state";
+import {SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
 import {
-   addPipelineInstance,
-   IPipelineInstance,
+   pipelineInstancesAdd,
+   pipelineInstancesRemove,
    pipelineInstancesSelectAll,
    pipelineInstancesSelectById,
    pipelineInstancesSelectTotal,
-   removePipelineInstance,
 } from "@mrc/server/store/slices/pipelineInstancesSlice";
 import {
-   addSegmentInstance,
-   ISegmentInstance,
-   removeSegmentInstance,
+   segmentInstancesAdd,
+   segmentInstancesRemove,
+   segmentInstancesUpdateState,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
+import {connection, pipeline, segment, worker} from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
-import {stringToBytes} from "../../../common/utils";
 import {RootStore, setupStore} from "../store";
 
 import {
-   addConnection,
-   connectionsSelectAll,
-   connectionsSelectById,
-   connectionsSelectTotal,
-   IConnection,
-   removeConnection,
+   connectionsAdd,
+   connectionsDropOne,
 } from "./connectionsSlice";
 import {
-   activateWorkers,
-   addWorker,
-   IWorker,
-   removeWorker,
-   workersSelectAll,
-   workersSelectById,
-   workersSelectTotal,
+   workersAdd,
 } from "./workersSlice";
 
 let store: RootStore;
-
-const connection: IConnection = {
-   id: 1111,
-   peerInfo: "localhost:1234",
-   workerIds: [],
-   assignedPipelineIds: [],
-};
-
-const worker: IWorker = {
-   id: 1234,
-   machineId: 1111,
-   workerAddress: stringToBytes("-----"),
-   state: WorkerStates.Registered,
-   assignedSegmentIds: [],
-};
-
-const pipeline: IPipelineInstance = {
-   id: 1122,
-   definitionId: 1133,
-   machineId: connection.id,
-   segmentIds: [],
-};
-
-const segment: ISegmentInstance = {
-   id: 1123,
-   address: 2222,
-   definitionId: 0,
-   pipelineId: pipeline.id,
-   workerId: worker.id,
-};
 
 // Get a clean store each time
 beforeEach(() => {
@@ -83,41 +42,41 @@ describe("Empty", () => {
    });
 
    test("Remove", () => {
-      assert.throws(() => store.dispatch(removePipelineInstance({id: pipeline.id, machineId: pipeline.machineId})));
+      assert.throws(() => store.dispatch(pipelineInstancesRemove(pipeline)));
    });
 
    test("Before Connection", () => {
       assert.throws(() => {
-         store.dispatch(addPipelineInstance(pipeline));
+         store.dispatch(pipelineInstancesAdd(pipeline));
       });
    });
 });
 
 describe("Single", () => {
    beforeEach(() => {
-      store.dispatch(addConnection(connection));
+      store.dispatch(connectionsAdd(connection));
 
-      store.dispatch(addPipelineInstance(pipeline));
+      store.dispatch(pipelineInstancesAdd(pipeline));
    });
 
    test("Select All", () => {
-      const allPipelines = pipelineInstancesSelectAll(store.getState());
+      const found = pipelineInstancesSelectAll(store.getState());
 
-      expect(allPipelines).toHaveLength(1);
+      expect(found).toHaveLength(1);
 
-      expect(allPipelines[0]).toHaveProperty("id", pipeline.id);
-      expect(allPipelines[0]).toHaveProperty("definitionId", pipeline.definitionId);
-      expect(allPipelines[0]).toHaveProperty("machineId", pipeline.machineId);
-      expect(allPipelines[0]).toHaveProperty("segmentIds", []);
+      expect(found[0]).toHaveProperty("id", pipeline.id);
+      expect(found[0]).toHaveProperty("definitionId", pipeline.definitionId);
+      expect(found[0]).toHaveProperty("machineId", pipeline.machineId);
+      expect(found[0]).toHaveProperty("segmentIds", []);
    });
 
    test("Select One", () => {
-      const foundPipeline = pipelineInstancesSelectById(store.getState(), pipeline.id);
+      const found = pipelineInstancesSelectById(store.getState(), pipeline.id);
 
-      expect(foundPipeline).toHaveProperty("id", pipeline.id);
-      expect(foundPipeline).toHaveProperty("definitionId", pipeline.definitionId);
-      expect(foundPipeline).toHaveProperty("machineId", pipeline.machineId);
-      expect(foundPipeline).toHaveProperty("segmentIds", []);
+      expect(found).toHaveProperty("id", pipeline.id);
+      expect(found).toHaveProperty("definitionId", pipeline.definitionId);
+      expect(found).toHaveProperty("machineId", pipeline.machineId);
+      expect(found).toHaveProperty("segmentIds", []);
    });
 
    test("Total", () => {
@@ -125,53 +84,69 @@ describe("Single", () => {
    });
 
    test("Add Duplicate", () => {
-      assert.throws(() => store.dispatch(addPipelineInstance(pipeline)));
+      assert.throws(() => store.dispatch(pipelineInstancesAdd(pipeline)));
    });
 
    it("Remove Valid ID", () => {
-      store.dispatch(removePipelineInstance({
-         id: pipeline.id,
-         machineId: pipeline.machineId,
-      }));
+      store.dispatch(pipelineInstancesRemove(pipeline));
 
       expect(pipelineInstancesSelectAll(store.getState())).toHaveLength(0);
    });
 
    test("Remove Unknown ID", () => {
-      assert.throws(() => store.dispatch(removePipelineInstance({
+      assert.throws(() => store.dispatch(pipelineInstancesRemove({
+         ...pipeline,
          id: -9999,
-         machineId: 1,
       })));
    });
 
    test("Remove Incorrect Machine ID", () => {
-      assert.throws(() => store.dispatch(removePipelineInstance({
-         id: pipeline.id,
+      assert.throws(() => store.dispatch(pipelineInstancesRemove({
+         ...pipeline,
          machineId: 1,
       })));
+   });
+
+   test("Drop Connection", () => {
+      store.dispatch(connectionsDropOne({id: connection.id}));
+
+      expect(pipelineInstancesSelectAll(store.getState())).toHaveLength(0);
    });
 
    describe("With Segment", () => {
       beforeEach(() => {
          // Add a worker first, then a segment
-         store.dispatch(addWorker(worker));
+         store.dispatch(workersAdd(worker));
 
          // Now add a segment
-         store.dispatch(addSegmentInstance(segment));
+         store.dispatch(segmentInstancesAdd(segment));
       });
 
-      test("Contains Segment ID", () => {
+      test("Contains Segment", () => {
          const foundPipeline = pipelineInstancesSelectById(store.getState(), pipeline.id);
 
          expect(foundPipeline?.segmentIds).toContain(segment.id);
       });
 
-      test("Remove Segment ID", () => {
-         store.dispatch(removeSegmentInstance(segment));
+      test("Remove Segment", () => {
+         store.dispatch(segmentInstancesUpdateState({id: segment.id, state: SegmentStates.Completed}));
+         store.dispatch(segmentInstancesRemove(segment));
 
          const foundPipeline = pipelineInstancesSelectById(store.getState(), pipeline.id);
 
          expect(foundPipeline?.segmentIds).not.toContain(segment.id);
+
+         // Then remove the pipeline
+         store.dispatch(pipelineInstancesRemove(pipeline));
+
+         expect(pipelineInstancesSelectAll(store.getState())).toHaveLength(0);
+      });
+
+      test("Remove Pipeline Before Segment", () => {
+         assert.throws(() => {
+            // Remove the pipeline with running segments
+            store.dispatch(pipelineInstancesRemove(pipeline));
+         });
       });
    });
 });

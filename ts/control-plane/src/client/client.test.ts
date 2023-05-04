@@ -43,7 +43,8 @@ describe("Client", () => {
 
       store = setupStore();
 
-      server = new ArchitectServer(store);
+      // Use localhost:0 to bind to a random port to avoid collisions when testing
+      server = new ArchitectServer(store, "localhost:0");
 
       const port = await server.start();
 

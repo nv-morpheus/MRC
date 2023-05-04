@@ -1,11 +1,20 @@
-import {Connection} from "@mrc/proto/mrc/protos/architect_state";
-import {createSlice, PayloadAction} from "@reduxjs/toolkit";
+import {Connection, SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
+import {
+   createSlice,
+   PayloadAction,
+} from "@reduxjs/toolkit";
 
 import {createWrappedEntityAdapter} from "../../utils";
 
-import type {RootState} from "../store";
-import {addPipelineInstance, removePipelineInstance} from "./pipelineInstancesSlice";
-import {addWorker, addWorkers, IWorker, removeWorker} from "./workersSlice";
+import type {AppDispatch, AppGetState, RootState} from "../store";
+import {pipelineInstancesAdd, pipelineInstancesRemove, pipelineInstancesSelectByIds} from "./pipelineInstancesSlice";
+import {workersAdd, workersAddMany, IWorker, workersRemove, workersSelectByIds} from "./workersSlice";
+import {
+   segmentInstancesRemove,
+   segmentInstancesSelectByIds,
+   segmentInstancesUpdateState,
+} from "@mrc/server/store/slices/segmentInstancesSlice";
+import {systemStartRequest, systemStopRequest} from "@mrc/server/store/slices/systemSlice";
 
 export type IConnection = Omit<Connection, "$type">;
 
@@ -32,7 +41,7 @@ export const connectionsSlice = createSlice({
    name: "connections",
    initialState: connectionsAdapter.getInitialState(),
    reducers: {
-      addConnection: (state, action: PayloadAction<Pick<IConnection, "id"|"peerInfo">>) => {
+      add: (state, action: PayloadAction<Pick<IConnection, "id"|"peerInfo">>) => {
          if (connectionsAdapter.getOne(state, action.payload.id))
          {
             throw new Error(`Connection with ID: ${action.payload.id} already exists`);
@@ -43,25 +52,42 @@ export const connectionsSlice = createSlice({
             assignedPipelineIds: [],
          });
       },
-      removeConnection: (state, action: PayloadAction<Pick<IConnection, "id">>) => {
-         if (!connectionsAdapter.getOne(state, action.payload.id))
+      remove: (state, action: PayloadAction<IConnection>) => {
+         const found = connectionsAdapter.getOne(state, action.payload.id);
+
+         if (!found)
          {
             throw new Error(`Connection with ID: ${action.payload.id} not found`);
          }
+
+         if (found.workerIds.length > 0)
+         {
+            throw new Error(`Attempting to delete Connection with ID: ${
+                action.payload.id} while it still has active workers. Active workers: ${
+                found.workerIds}. Delete workers first`);
+         }
+
+         if (found.assignedPipelineIds.length > 0)
+         {
+            throw new Error(`Attempting to delete Connection with ID: ${
+                action.payload.id} while it still has active pipeline instances. Active PipelineInstances: ${
+                found.assignedPipelineIds}. Delete PipelineInstances first`);
+         }
+
          connectionsAdapter.removeOne(state, action.payload.id);
       },
    },
    extraReducers: (builder) => {
-      builder.addCase(addWorker, (state, action) => {
+      builder.addCase(workersAdd, (state, action) => {
          workerAdded(state, action.payload);
       });
-      builder.addCase(addWorkers, (state, action) => {
+      builder.addCase(workersAddMany, (state, action) => {
          // Handle synchronizing a new added worker
          action.payload.forEach((p) => {
             workerAdded(state, p);
          });
       });
-      builder.addCase(removeWorker, (state, action) => {
+      builder.addCase(workersRemove, (state, action) => {
          // Handle removing a worker
          const foundConnection = connectionsAdapter.getOne(state, action.payload.machineId);
 
@@ -79,7 +105,7 @@ export const connectionsSlice = createSlice({
             throw new Error("Must drop all workers before removing a connection");
          }
       });
-      builder.addCase(addPipelineInstance, (state, action) => {
+      builder.addCase(pipelineInstancesAdd, (state, action) => {
          // Handle removing a worker
          const foundConnection = connectionsAdapter.getOne(state, action.payload.machineId);
 
@@ -92,7 +118,7 @@ export const connectionsSlice = createSlice({
             throw new Error("Cannot add a pipeline. Connection does not exist");
          }
       });
-      builder.addCase(removePipelineInstance, (state, action) => {
+      builder.addCase(pipelineInstancesRemove, (state, action) => {
          // Handle removing a worker
          const foundConnection = connectionsAdapter.getOne(state, action.payload.machineId);
 
@@ -113,9 +139,61 @@ export const connectionsSlice = createSlice({
    },
 });
 
+export function connectionsDropOne(payload: Pick<IConnection, "id">)
+{
+   return (dispatch: AppDispatch, getState: AppGetState) => {
+      // Get the state once and use that to make sure we are consistent
+      const state_snapshot = getState();
+
+      // First, find the matching connection
+      const connection = connectionsSelectById(state_snapshot, payload.id);
+
+      if (!connection)
+      {
+         console.warn(`Connection '${payload.id}' lost, but it was not found in the state. Ignoring'`);
+         return;
+      }
+
+      // Then, find any matching workers
+      const workers = workersSelectByIds(state_snapshot, connection.workerIds);
+
+      // Now find matching pipelines
+      const pipelines = pipelineInstancesSelectByIds(state_snapshot, connection.assignedPipelineIds);
+
+      // Finally, find matching segments
+      const seg_ids = pipelines.reduce((sum_ids: number[], curr) => sum_ids.concat(curr.segmentIds), []);
+
+      const segments = segmentInstancesSelectByIds(state_snapshot, seg_ids);
+
+      // Remove them all in reverse order
+      try
+      {
+         // Start a batch to avoid many notifications
+         dispatch(systemStartRequest());
+
+         segments.forEach((x) => {
+            // Need to set the state first
+            dispatch(segmentInstancesUpdateState({id: x.id, state: SegmentStates.Completed}));
+
+            dispatch(segmentInstancesRemove(x));
+         });
+
+         pipelines.forEach((x) => dispatch(pipelineInstancesRemove(x)));
+
+         workers.forEach((x) => dispatch(workersRemove(x)));
+
+         dispatch(connectionsRemove(connection));
+
+      } finally
+      {
+         dispatch(systemStopRequest());
+      }
+   };
+}
+
 type ConnectionsStateType = ReturnType<typeof connectionsSlice.getInitialState>;
 
-export const {addConnection, removeConnection} = connectionsSlice.actions;
+export const {add: connectionsAdd, remove: connectionsRemove} = connectionsSlice.actions;
 
 export const {
    selectAll: connectionsSelectAll,

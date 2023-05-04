@@ -63,8 +63,7 @@ Other Notes:
   - Will be converted to pull-based queues
     - Downstream ingress ports will need to have a progress engine to pull from
 
-
-Resources:
+Resources functionality:
 - `system::Options`
   - Configurable options that can be specified by the user
 - `system::System`
@@ -99,3 +98,10 @@ Resources:
     - Creates `PipelineManager` <== Seems out of place
   - Creats the child `runtime::PartitionRuntime` object
     - Adds each as a child service
+
+Resources:
+- `IResources`
+  - `runnable()`
+    - `main()`
+      - For enqueuing fiber work
+    -

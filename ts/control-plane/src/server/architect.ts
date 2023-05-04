@@ -1,6 +1,7 @@
 
 
 import {ServerDuplexStream} from "@grpc/grpc-js";
+import {systemStartRequest, systemStopRequest} from "@mrc/server/store/slices/systemSlice";
 import {as, AsyncSink, merge} from "ix/asynciterable";
 import {debounce, withAbort} from "ix/asynciterable/operators";
 import {CallContext} from "nice-grpc";
@@ -15,6 +16,7 @@ import {
    ErrorCode,
    Event,
    EventType,
+   eventTypeToJSON,
    PingRequest,
    PingResponse,
    PipelineRequestAssignmentRequest,
@@ -30,13 +32,13 @@ import {
 import {ControlPlaneState, WorkerStates} from "../proto/mrc/protos/architect_state";
 import {DeepPartial, messageTypeRegistry} from "../proto/typeRegistry";
 
-import {addConnection, IConnection, removeConnection} from "./store/slices/connectionsSlice";
-import {assignPipelineInstance} from "./store/slices/pipelineInstancesSlice";
+import {connectionsAdd, connectionsDropOne, connectionsRemove, IConnection} from "./store/slices/connectionsSlice";
+import {pipelineInstancesAssign} from "./store/slices/pipelineInstancesSlice";
 import {
-   activateWorkers,
-   addWorkers,
    IWorker,
-   removeWorker,
+   workersActivate,
+   workersAddMany,
+   workersRemove,
    workersSelectById,
    workersSelectByMachineId,
 } from "./store/slices/workersSlice";
@@ -203,14 +205,18 @@ class Architect implements ArchitectServiceImplementation
       const store_unsub = this._store.subscribe(() => {
          const state = this._store.getState();
 
+         // Remove the system object from the state
+         const {system: _, ...out_state} = {...state, system: {extra: true}};
+
          // Push out the state update
-         store_update_sink.write(packEvent<ControlPlaneState>(EventType.ServerStateUpdate,
-                                                              0,
-                                                              ControlPlaneState.create(state as ControlPlaneState)));
+         store_update_sink.write(
+             packEvent<ControlPlaneState>(EventType.ServerStateUpdate,
+                                          0,
+                                          ControlPlaneState.create(out_state as ControlPlaneState)));
       });
 
       // Create a new connection
-      this._store.dispatch(addConnection(connection));
+      this._store.dispatch(connectionsAdd(connection));
 
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this;
@@ -228,13 +234,25 @@ class Architect implements ArchitectServiceImplementation
          {
             for await (const req of stream)
             {
-               console.log(`Event stream data for ${connection.peerInfo} with message: ${req.event.toString()}`);
+               try
+               {
+                  console.log(
+                      `Event stream start for ${connection.peerInfo} with message: ${eventTypeToJSON(req.event)}`);
 
-               yield* self.do_handle_event({
-                  msg: req,
-                  machineId: connection.id,
-               },
-                                           context);
+                  self._store.dispatch(systemStartRequest());
+
+                  yield* self.do_handle_event({
+                     msg: req,
+                     machineId: connection.id,
+                  },
+                                              context);
+               } finally
+               {
+                  self._store.dispatch(systemStopRequest());
+
+                  console.log(
+                      `Event stream end for ${connection.peerInfo} with message: ${eventTypeToJSON(req.event)}`);
+               }
             }
          } catch (error)
          {
@@ -273,8 +291,8 @@ class Architect implements ArchitectServiceImplementation
 
          store_update_sink.end();
 
-         // Create a new connection
-         this._store.dispatch(removeConnection(connection));
+         // Use the Lost Connection action to force all child objects to be removed too
+         this._store.dispatch(connectionsDropOne(connection));
       }
    }
 
@@ -318,7 +336,7 @@ class Architect implements ArchitectServiceImplementation
             });
 
             // Add the workers
-            this._store.dispatch(addWorkers(workers));
+            this._store.dispatch(workersAddMany(workers));
 
             const resp = RegisterWorkersResponse.create({
                machineId: event.machineId,
@@ -343,7 +361,7 @@ class Architect implements ArchitectServiceImplementation
                return w;
             });
 
-            this._store.dispatch(activateWorkers(workers));
+            this._store.dispatch(workersActivate(workers));
 
             yield unaryResponse(event, Ack, {});
 
@@ -356,7 +374,7 @@ class Architect implements ArchitectServiceImplementation
 
             if (found_worker)
             {
-               this._store.dispatch(removeWorker(found_worker));
+               this._store.dispatch(workersRemove(found_worker));
             }
 
             yield unaryResponse(event, Ack, {});
@@ -369,7 +387,7 @@ class Architect implements ArchitectServiceImplementation
             // Check if we already have an assignment
 
             // Add a pipeline assignment to the machine
-            const addedInstances = this._store.dispatch(assignPipelineInstance({
+            const addedInstances = this._store.dispatch(pipelineInstancesAssign({
                ...payload,
                machineId: event.machineId,
             }));

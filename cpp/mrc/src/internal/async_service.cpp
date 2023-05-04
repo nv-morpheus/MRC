@@ -17,8 +17,11 @@
 
 #include "internal/async_service.hpp"
 
+#include "mrc/channel/status.hpp"
+
 #include <glog/logging.h>
 
+#include <chrono>
 #include <mutex>
 #include <ostream>
 #include <stop_token>
@@ -69,17 +72,22 @@ Future<void> AsyncService::service_start(std::stop_source stop_source)
 
         do_service_start(m_stop_source.get_token());
 
-        // Get the mutex to prevent changes to m_child_futures
-        std::unique_lock<decltype(m_mutex)> lock(m_mutex);
+        {
+            // Get the mutex to prevent changes to m_child_futures
+            std::unique_lock<decltype(m_mutex)> lock(m_mutex);
 
-        CHECK(m_state >= AsyncServiceState::Running) << this->debug_prefix()
-                                                     << " did not start up properly. Must call mark_started() inside "
-                                                        "of do_service_start()";
+            CHECK(m_state >= AsyncServiceState::Running) << this->debug_prefix()
+                                                         << " did not start up properly. Must call mark_started() "
+                                                            "inside "
+                                                            "of do_service_start()";
 
-        // Set the state to stopping to prevent any changes while we wait for children. Dont check the response
-        // since it could have been requested by external users
-        forward_state(AsyncServiceState::Stopping);
+            // Set the state to stopping to prevent any changes while we wait for children. Dont check the response
+            // since it could have been requested by external users
+            forward_state(AsyncServiceState::Stopping);
+        }
 
+        // Wait for all children to have completed. Make sure not to hold the lock when waiting on children.
+        // m_child_futures cant be changed after the state is set to stopping
         for (auto& f : m_child_futures)
         {
             f.wait();
@@ -93,14 +101,14 @@ void AsyncService::service_await_live()
 {
     std::unique_lock<decltype(m_mutex)> lock(m_mutex);
 
-    DVLOG(20) << this->debug_prefix() << " entering service_await_live(). State: " << m_state;
+    // DVLOG(20) << this->debug_prefix() << " entering service_await_live(). State: " << m_state;
 
     m_cv.wait(lock, [this]() {
-        DVLOG(20) << this->debug_prefix() << " checking service_await_live(). State: " << m_state;
+        // DVLOG(20) << this->debug_prefix() << " checking service_await_live(). State: " << m_state;
         return m_state >= AsyncServiceState::Running || m_stop_source.stop_requested();
     });
 
-    DVLOG(20) << this->debug_prefix() << " leaving service_await_live(). State: " << m_state;
+    // DVLOG(20) << this->debug_prefix() << " leaving service_await_live(). State: " << m_state;
 }
 
 void AsyncService::service_stop()
@@ -176,11 +184,18 @@ void AsyncService::service_set_description(std::string description)
 
 void AsyncService::mark_started()
 {
-    // Lock to prevent changes to the state and children
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    decltype(m_children) children;
+    {
+        // Lock to prevent changes to the state and children
+        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+
+        // Copy the children outside of the lock
+        children = m_children;
+    }
 
     // Before indicating that we are running, we need any children added during startup to be marked as ready
-    for (auto& child : m_children)
+    // DO NOT HOLD THE LOCK HERE!
+    for (auto& child : children)
     {
         child.get().service_await_live();
     }

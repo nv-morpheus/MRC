@@ -28,6 +28,14 @@ enum WorkerStates
    Destroyed = 3;
 }
 
+enum SegmentStates
+{
+   Initialized = 0;
+   Running = 1;
+   Stopped = 2;
+   Completed = 3;
+}
+
 message Connection {
    uint64 id = 1;
 
@@ -116,6 +124,9 @@ message SegmentInstance {
 
    // The running pipeline instance id
    uint64 pipeline_id = 5;
+
+   // The state of the segment
+   SegmentStates state = 6;
 }
 
 message ControlPlaneState {

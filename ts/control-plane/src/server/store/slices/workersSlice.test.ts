@@ -1,126 +1,157 @@
 import {expect} from "@jest/globals";
-import {WorkerStates} from "@mrc/proto/mrc/protos/architect_state";
+import {SegmentStates, WorkerStates} from "@mrc/proto/mrc/protos/architect_state";
+import {pipelineInstancesAdd} from "@mrc/server/store/slices/pipelineInstancesSlice";
+import {
+   segmentInstancesAdd,
+   segmentInstancesRemove,
+   segmentInstancesUpdateState,
+} from "@mrc/server/store/slices/segmentInstancesSlice";
+import {connection, pipeline, segment, worker} from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
-import {stringToBytes} from "../../../common/utils";
 import {RootStore, setupStore} from "../store";
 
-import {addConnection, IConnection} from "./connectionsSlice";
-import {activateWorkers, addWorker, IWorker, removeWorker, workersSelectAll, workersSelectById} from "./workersSlice";
+import {connectionsAdd, connectionsDropOne, IConnection} from "./connectionsSlice";
+import {
+   IWorker,
+   workersActivate,
+   workersAdd,
+   workersRemove,
+   workersSelectAll,
+   workersSelectById,
+   workersSelectTotal,
+} from "./workersSlice";
 
-describe("Workers", () => {
-   let store: RootStore;
+let store: RootStore;
 
-   const connection: IConnection = {
-      id: 1111,
-      peerInfo: "localhost:1234",
-      workerIds: [],
-      assignedPipelineIds: [],
-   };
+// Get a clean store each time
+beforeEach(() => {
+   store = setupStore();
+});
 
-   const worker: IWorker = {
-      id: 1234,
-      machineId: 1111,
-      workerAddress: stringToBytes("-----"),
-      state: WorkerStates.Registered,
-      assignedSegmentIds: [],
-   };
-
-   // Get a clean store each time
-   beforeEach((done) => {
-      store = setupStore();
-      done();
+describe("Empty", () => {
+   test("Select All", () => {
+      expect(workersSelectAll(store.getState())).toHaveLength(0);
    });
 
-   afterEach(() => {
-      console.log("after each");
-   })
-
-   describe("add", () => {
-      it("worker before connection", () => {
-         assert.throws(() => store.dispatch(addWorker(worker)));
-      });
-
-      it("adds a worker", () => {
-         store.dispatch(addConnection(connection));
-
-         store.dispatch(addWorker(worker));
-
-         expect(workersSelectById(store.getState(), worker.id)).toBe(worker);
-      });
-
-      it("adds a worker with duplicate ID", () => {
-         store.dispatch(addConnection(connection));
-
-         store.dispatch(addWorker(worker));
-
-         expect(workersSelectById(store.getState(), worker.id)).toBe(worker);
-
-         assert.throws(() => store.dispatch(addWorker(worker)));
-      });
+   test("Total", () => {
+      expect(workersSelectTotal(store.getState())).toBe(0);
    });
 
-   describe("remove", () => {
-      it("worker before connection", () => {
-         assert.throws(() => store.dispatch(removeWorker(worker)));
+   test("Remove", () => {
+      assert.throws(() => store.dispatch(workersRemove(worker)));
+   });
+
+   test("Before Connection", () => {
+      assert.throws(() => {
+         store.dispatch(workersAdd(worker));
+      });
+   });
+});
+
+describe("Single", () => {
+   beforeEach(() => {
+      store.dispatch(connectionsAdd(connection));
+
+      store.dispatch(workersAdd(worker));
+   });
+
+   test("Select All", () => {
+      const found = workersSelectAll(store.getState());
+
+      expect(found).toHaveLength(1);
+
+      expect(found[0]).toHaveProperty("id", worker.id);
+      expect(found[0]).toHaveProperty("assignedSegmentIds", []);
+      expect(found[0]).toHaveProperty("machineId", connection.id);
+      expect(found[0]).toHaveProperty("state", WorkerStates.Registered);
+      expect(found[0]).toHaveProperty("workerAddress", worker.workerAddress);
+   });
+
+   test("Select One", () => {
+      const found = workersSelectById(store.getState(), worker.id);
+
+      expect(found).toHaveProperty("id", worker.id);
+      expect(found).toHaveProperty("assignedSegmentIds", []);
+      expect(found).toHaveProperty("machineId", connection.id);
+      expect(found).toHaveProperty("state", WorkerStates.Registered);
+      expect(found).toHaveProperty("workerAddress", worker.workerAddress);
+   });
+
+   test("Total", () => {
+      expect(workersSelectTotal(store.getState())).toBe(1);
+   });
+
+   test("Add Duplicate", () => {
+      assert.throws(() => store.dispatch(workersAdd(worker)));
+   });
+
+   test("Remove Valid ID", () => {
+      store.dispatch(workersRemove(worker));
+
+      expect(workersSelectAll(store.getState())).toHaveLength(0);
+   });
+
+   test("Remove Unknown ID", () => {
+      assert.throws(() => store.dispatch(workersRemove({
+         ...worker,
+         id: -9999,
+      })));
+   });
+
+   test("Activate", () => {
+      store.dispatch(workersActivate([worker]));
+
+      expect(workersSelectById(store.getState(), worker.id)).toHaveProperty("state", WorkerStates.Activated);
+   });
+
+   test("Activate Twice", () => {
+      store.dispatch(workersActivate([worker]));
+      store.dispatch(workersActivate([worker]));
+
+      expect(workersSelectById(store.getState(), worker.id)).toHaveProperty("state", WorkerStates.Activated);
+   });
+
+   test("Connection Dropped", () => {
+      store.dispatch(connectionsDropOne({id: connection.id}));
+
+      expect(workersSelectAll(store.getState())).toHaveLength(0);
+   });
+
+   describe("With Segment", () => {
+      beforeEach(() => {
+         // Add a pipeline and then a segment
+         store.dispatch(pipelineInstancesAdd(pipeline));
+
+         // Now add a segment
+         store.dispatch(segmentInstancesAdd(segment));
       });
 
-      it("remove a worker", () => {
-         store.dispatch(addConnection(connection));
+      test("Contains Segment", () => {
+         const found = workersSelectById(store.getState(), worker.id);
 
-         store.dispatch(addWorker(worker));
+         expect(found?.assignedSegmentIds).toContain(segment.id);
+      });
 
-         expect(workersSelectById(store.getState(), worker.id)).toBe(worker);
+      test("Remove Segment", () => {
+         store.dispatch(segmentInstancesUpdateState({id: segment.id, state: SegmentStates.Completed}));
+         store.dispatch(segmentInstancesRemove(segment));
 
-         store.dispatch(removeWorker(worker));
+         const found = workersSelectById(store.getState(), worker.id);
+
+         expect(found?.assignedSegmentIds).not.toContain(segment.id);
+
+         // Then remove the object to check that we dont get an error
+         store.dispatch(workersRemove(worker));
 
          expect(workersSelectAll(store.getState())).toHaveLength(0);
       });
 
-      it("remove a non existant worker", () => {
-         store.dispatch(addConnection(connection));
-
-         store.dispatch(addWorker(worker));
-
-         expect(workersSelectById(store.getState(), worker.id)).toBe(worker);
-
+      test("Remove Before Segment", () => {
          assert.throws(() => {
-            store.dispatch(removeWorker({
-               ...worker,
-               id: 2222,
-            }));
+            // Remove the pipeline with running segments
+            store.dispatch(workersRemove(worker));
          });
-      });
-   });
-
-   describe("activate", () => {
-      it("default value", () => {
-         store.dispatch(addConnection(connection));
-
-         store.dispatch(addWorker(worker));
-
-         expect(workersSelectById(store.getState(), worker.id)).toHaveProperty("activated", false);
-      });
-
-      it("once", () => {
-         store.dispatch(addConnection(connection));
-
-         store.dispatch(addWorker(worker));
-
-         store.dispatch(activateWorkers([worker]));
-
-         expect(workersSelectById(store.getState(), worker.id)).toHaveProperty("activated", true);
-      });
-
-      it("twice", () => {
-         store.dispatch(addConnection(connection));
-
-         store.dispatch(addWorker(worker));
-
-         store.dispatch(activateWorkers([worker]));
-         store.dispatch(activateWorkers([worker]));
-
-         expect(workersSelectById(store.getState(), worker.id)).toHaveProperty("activated", true);
       });
    });
 });

@@ -17,7 +17,7 @@ export class ArchitectServer
    private _completed_signal?: (value: void|PromiseLike<void>) => void = undefined;
    private _completed_promise: Promise<void>|undefined;
 
-   constructor(store?: RootStore)
+   constructor(store?: RootStore, private hostname: string = "0.0.0.0:13337")
    {
       // Create the architect
       this._architect = new Architect(store);
@@ -27,7 +27,7 @@ export class ArchitectServer
 
    public async start()
    {
-      const port = await this._server.listen("0.0.0.0:13337", ServerCredentials.createInsecure());
+      const port = await this._server.listen(this.hostname, ServerCredentials.createInsecure());
 
       console.log(`server is running on 0.0.0.0:${port}`);
 

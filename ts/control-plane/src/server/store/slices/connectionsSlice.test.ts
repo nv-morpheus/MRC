@@ -1,56 +1,31 @@
 import {expect} from "@jest/globals";
 import {WorkerStates} from "@mrc/proto/mrc/protos/architect_state";
 import {
-   addPipelineInstance,
    IPipelineInstance,
-   removePipelineInstance,
+   pipelineInstancesAdd,
+   pipelineInstancesRemove,
 } from "@mrc/server/store/slices/pipelineInstancesSlice";
+import {connection, pipeline, segment, worker} from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
 import {stringToBytes} from "../../../common/utils";
 import {RootStore, setupStore} from "../store";
 
 import {
-   addConnection,
+   connectionsAdd,
+   connectionsRemove,
    connectionsSelectAll,
    connectionsSelectById,
    connectionsSelectTotal,
    IConnection,
-   removeConnection,
 } from "./connectionsSlice";
 import {
-   activateWorkers,
-   addWorker,
    IWorker,
-   removeWorker,
-   workersSelectAll,
-   workersSelectById,
-   workersSelectTotal,
+   workersAdd,
+   workersRemove,
 } from "./workersSlice";
 
 let store: RootStore;
-
-const connection: IConnection = {
-   id: 1111,
-   peerInfo: "localhost:1234",
-   workerIds: [],
-   assignedPipelineIds: [],
-};
-
-const worker: IWorker = {
-   id: 1234,
-   machineId: 1111,
-   workerAddress: stringToBytes("-----"),
-   state: WorkerStates.Registered,
-   assignedSegmentIds: [],
-};
-
-const pipeline: IPipelineInstance = {
-   id: 1122,
-   definitionId: 1133,
-   machineId: connection.id,
-   segmentIds: [],
-};
 
 // Get a clean store each time
 beforeEach(() => {
@@ -67,15 +42,13 @@ describe("Empty", () => {
    });
 
    test("Remove", () => {
-      assert.throws(() => store.dispatch(removeConnection({
-         id: connection.id,
-      })));
+      assert.throws(() => store.dispatch(connectionsRemove(connection)));
    });
 });
 
 describe("Single", () => {
    beforeEach(() => {
-      store.dispatch(addConnection(connection));
+      store.dispatch(connectionsAdd(connection));
    });
 
    test("Select All", () => {
@@ -103,29 +76,28 @@ describe("Single", () => {
    });
 
    test("Add Duplicate", () => {
-      assert.throws(() => store.dispatch(addConnection({
+      assert.throws(() => store.dispatch(connectionsAdd({
          id: connection.id,
          peerInfo: connection.peerInfo,
       })));
    });
 
    it("Remove Valid ID", () => {
-      store.dispatch(removeConnection({
-         id: connection.id,
-      }));
+      store.dispatch(connectionsRemove(connection));
 
       expect(connectionsSelectAll(store.getState())).toHaveLength(0);
    });
 
    test("Remove Unknown ID", () => {
-      assert.throws(() => store.dispatch(removeConnection({
+      assert.throws(() => store.dispatch(connectionsRemove({
+         ...connection,
          id: -9999,
       })));
    });
 
    describe("With Worker", () => {
       beforeEach(() => {
-         store.dispatch(addWorker(worker));
+         store.dispatch(workersAdd(worker));
       });
 
       test("Contains Worker ID", () => {
@@ -134,21 +106,27 @@ describe("Single", () => {
 
       test("Add Duplicate", () => {
          assert.throws(() => {
-            store.dispatch(addWorker(worker));
+            store.dispatch(workersAdd(worker));
          });
       });
 
       test("Remove Worker ID", () => {
-         store.dispatch(removeWorker(worker));
+         store.dispatch(workersRemove(worker));
 
          expect(connectionsSelectById(store.getState(), connection.id)?.workerIds).not.toContain(worker.id);
          expect(connectionsSelectById(store.getState(), connection.id)?.workerIds).toHaveLength(0);
+      });
+
+      test("Remove Connection First", () => {
+         assert.throws(() => {
+            store.dispatch(connectionsRemove(connection));
+         });
       });
    });
 
    describe("With Pipeline", () => {
       beforeEach(() => {
-         store.dispatch(addPipelineInstance(pipeline));
+         store.dispatch(pipelineInstancesAdd(pipeline));
       });
 
       test("Contains Pipeline ID", () => {
@@ -157,15 +135,21 @@ describe("Single", () => {
 
       test("Add Duplicate", () => {
          assert.throws(() => {
-            store.dispatch(addPipelineInstance(pipeline));
+            store.dispatch(pipelineInstancesAdd(pipeline));
          });
       });
 
       test("Remove Pipeline ID", () => {
-         store.dispatch(removePipelineInstance(pipeline));
+         store.dispatch(pipelineInstancesRemove(pipeline));
 
          expect(connectionsSelectById(store.getState(), connection.id)?.assignedPipelineIds).not.toContain(pipeline.id);
          expect(connectionsSelectById(store.getState(), connection.id)?.assignedPipelineIds).toHaveLength(0);
+      });
+
+      test("Remove Connection First", () => {
+         assert.throws(() => {
+            store.dispatch(connectionsRemove(connection));
+         });
       });
    });
 });

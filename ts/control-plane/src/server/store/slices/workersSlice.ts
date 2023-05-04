@@ -1,11 +1,11 @@
 import {Worker, WorkerStates} from "@mrc/proto/mrc/protos/architect_state";
-import {createSelector, createSlice, PayloadAction} from "@reduxjs/toolkit";
+import {createSelector, createSlice, PayloadAction, prepareAutoBatched} from "@reduxjs/toolkit";
 
 import {createWrappedEntityAdapter} from "../../utils";
 
 import type {RootState} from "../store";
-import {removeConnection} from "./connectionsSlice";
-import {addSegmentInstances} from "./segmentInstancesSlice";
+import {connectionsRemove} from "./connectionsSlice";
+import {segmentInstancesAdd, segmentInstancesAddMany, segmentInstancesRemove} from "./segmentInstancesSlice";
 
 export type IWorker = Omit<Worker, "$type">;
 
@@ -18,25 +18,34 @@ export const workersSlice = createSlice({
    name: "workers",
    initialState: workersAdapter.getInitialState(),
    reducers: {
-      // addWorker,
-      addWorker: (state, action: PayloadAction<IWorker>) => {
+      add: (state, action: PayloadAction<IWorker>) => {
          if (workersAdapter.getOne(state, action.payload.id))
          {
             throw new Error(`Worker with ID: ${action.payload.id} already exists`);
          }
          workersAdapter.addOne(state, action.payload);
       },
-      addWorkers: (state, action: PayloadAction<IWorker[]>) => {
+      addMany: (state, action: PayloadAction<IWorker[]>) => {
          workersAdapter.addMany(state, action.payload);
       },
-      removeWorker: (state, action: PayloadAction<IWorker>) => {
-         if (!workersAdapter.getOne(state, action.payload.id))
+      remove: (state, action: PayloadAction<IWorker>) => {
+         const found = workersAdapter.getOne(state, action.payload.id);
+
+         if (!found)
          {
             throw new Error(`Worker with ID: ${action.payload.id} not found`);
          }
+
+         if (found.assignedSegmentIds.length > 0)
+         {
+            throw new Error(`Attempting to delete Worker with ID: ${
+                action.payload.id} while it still has active SegmentInstances. Active SegmentInstances: ${
+                found.assignedSegmentIds}. Delete SegmentInstances first`);
+         }
+
          workersAdapter.removeOne(state, action.payload.id);
       },
-      activateWorkers: (state, action: PayloadAction<IWorker[]>) => {
+      activate: (state, action: PayloadAction<IWorker[]>) => {
          // Check for incorrect IDs
          action.payload.forEach((w) => {
             if (!workersAdapter.getOne(state, w.id))
@@ -49,13 +58,24 @@ export const workersSlice = createSlice({
       },
    },
    extraReducers: (builder) => {
-      builder.addCase(removeConnection, (state, action) => {
+      builder.addCase(connectionsRemove, (state, action) => {
          // Need to delete any workers associated with that connection
          const connection_workers = selectByMachineId(state, action.payload.id);
 
          workersAdapter.removeMany(state, connection_workers.map((w) => w.id));
       });
-      builder.addCase(addSegmentInstances, (state, action) => {
+      builder.addCase(segmentInstancesAdd, (state, action) => {
+         // For each, update the worker with the new running instance
+         const found = workersAdapter.getOne(state, action.payload.workerId);
+
+         if (!found)
+         {
+            throw new Error("No matching worker ID found");
+         }
+
+         found.assignedSegmentIds.push(action.payload.id);
+      });
+      builder.addCase(segmentInstancesAddMany, (state, action) => {
          // For each, update the worker with the new running instance
          action.payload.forEach((instance) => {
             const foundWorker = workersAdapter.getOne(state, instance.workerId);
@@ -68,17 +88,39 @@ export const workersSlice = createSlice({
             foundWorker.assignedSegmentIds.push(instance.id);
          });
       });
+      builder.addCase(segmentInstancesRemove, (state, action) => {
+         const found = workersAdapter.getOne(state, action.payload.workerId);
+
+         if (found)
+         {
+            const index = found.assignedSegmentIds.findIndex(x => x === action.payload.id);
+
+            if (index !== -1)
+            {
+               found.assignedSegmentIds.splice(index, 1);
+            }
+         }
+         else
+         {
+            throw new Error("Must drop all SegmentInstances before removing a Worker");
+         }
+      });
    },
 });
 
 type WorkersStateType = ReturnType<typeof workersSlice.getInitialState>;
 
-export const {addWorker, addWorkers, removeWorker, activateWorkers} = workersSlice.actions;
+export const {
+   add: workersAdd,
+   addMany: workersAddMany,
+   remove: workersRemove,
+   activate: workersActivate,
+} = workersSlice.actions;
 
 export const {
    selectAll: workersSelectAll,
    selectById: workersSelectById,
-   selectByIds: workersInstancesSelectByIds,
+   selectByIds: workersSelectByIds,
    selectEntities: workersSelectEntities,
    selectIds: workersSelectIds,
    selectTotal: workersSelectTotal,
