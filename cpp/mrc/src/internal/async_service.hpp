@@ -20,6 +20,7 @@
 #include "internal/runnable/resources.hpp"
 
 #include "mrc/types.hpp"
+#include "mrc/utils/string_utils.hpp"
 
 #include <functional>
 #include <mutex>
@@ -38,10 +39,50 @@ enum class AsyncServiceState
     Completed,
 };
 
+/**
+ * @brief Converts a `AsyncServiceState` enum to a string
+ *
+ * @param f
+ * @return std::string
+ */
+inline std::string asyncservicestate_to_str(const AsyncServiceState& s)
+{
+    switch (s)
+    {
+    case AsyncServiceState::Initialized:
+        return "Initialized";
+    case AsyncServiceState::Starting:
+        return "Starting";
+    case AsyncServiceState::Running:
+        return "Running";
+    case AsyncServiceState::Stopping:
+        return "Stopping";
+    case AsyncServiceState::Killing:
+        return "Killing";
+    case AsyncServiceState::Completed:
+        return "Completed";
+    default:
+        throw std::logic_error("Unsupported AsyncServiceState enum. Was a new value added recently?");
+    }
+}
+
+/**
+ * @brief Stream operator for `AsyncServiceState`
+ *
+ * @param os
+ * @param f
+ * @return std::ostream&
+ */
+static inline std::ostream& operator<<(std::ostream& os, const AsyncServiceState& f)
+{
+    os << asyncservicestate_to_str(f);
+    return os;
+}
+
 class AsyncService : public virtual runnable::IRunnableResourcesProvider
 {
   public:
-    AsyncService();
+    AsyncService(std::string service_name);
     virtual ~AsyncService();
 
     bool is_service_startable() const;
@@ -54,6 +95,8 @@ class AsyncService : public virtual runnable::IRunnableResourcesProvider
     void service_await_join();
 
   protected:
+    std::string debug_prefix() const;
+
     void call_in_destructor();
     void service_set_description(std::string description);
     void mark_started();
@@ -70,7 +113,7 @@ class AsyncService : public virtual runnable::IRunnableResourcesProvider
     // virtual void do_service_await_join() = 0;
 
     AsyncServiceState m_state{AsyncServiceState::Initialized};
-    std::string m_description{"mrc::internal::service"};
+    std::string m_service_name{"mrc::internal::AsyncService"};
 
     std::stop_source m_stop_source;
     CondVarAny m_cv;

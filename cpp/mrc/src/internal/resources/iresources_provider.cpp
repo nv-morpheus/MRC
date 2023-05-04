@@ -15,40 +15,6 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "internal/resources/iresources_provider.hpp"
 
-namespace mrc::internal {
-
-namespace runtime {
-class PartitionRuntime;
-}
-
-namespace resources {
-class SystemResources;
-class PartitionResourceBase;
-class PartitionResources;
-}  // namespace resources
-
-namespace runnable {
-class RunnableResources;
-}  // namespace runnable
-
-namespace memory {
-class HostResources;
-class DeviceResources;
-}  // namespace memory
-
-// control plane and data plane
-namespace network {
-class NetworkResources;
-}  // namespace network
-
-namespace ucx {
-class UcxResources;
-}  // namespace ucx
-
-namespace data_plane {
-class DataPlaneResources;
-}  // namespace data_plane
-
-}  // namespace mrc::internal
+namespace mrc::internal::runnable {}  // namespace mrc::internal::runnable

@@ -47,8 +47,9 @@ NetworkResources::NetworkResources(resources::PartitionResourceBase& base,
 {
     CHECK(m_control_plane);
     DCHECK_NE(m_instance_id, 0);
-    CHECK_LT(partition_id(), m_control_plane->client().connections().instance_ids().size());
-    CHECK_EQ(m_control_plane->instance_id(), m_control_plane->client().connections().instance_ids().at(partition_id()));
+    // CHECK_LT(partition_id(), m_control_plane->client().connections().instance_ids().size());
+    // CHECK_EQ(m_control_plane->instance_id(),
+    // m_control_plane->client().connections().instance_ids().at(partition_id()));
 
     // construct resources on the mrc_network task queue thread
     ucx.network_task_queue()

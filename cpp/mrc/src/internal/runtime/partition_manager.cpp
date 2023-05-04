@@ -27,6 +27,7 @@
 #include "mrc/core/addresses.hpp"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/types.hpp"
+#include "mrc/utils/string_utils.hpp"
 
 #include <glog/logging.h>
 #include <google/protobuf/util/message_differencer.h>
@@ -35,6 +36,7 @@
 namespace mrc::internal::runtime {
 
 PartitionManager::PartitionManager(PartitionRuntime& runtime) :
+  AsyncService(MRC_CONCAT_STR("PartitionManager[" << runtime.partition_id() << "]")),
   runnable::RunnableResourcesProvider(runtime.resources().runnable()),
   m_runtime(runtime),
   m_partition_id(runtime.partition_id())
@@ -69,9 +71,10 @@ void PartitionManager::do_service_start(std::stop_token stop_token)
             // Process events until the worker is indicated to be destroyed
             return worker.state() < control_plane::state::WorkerStates::Destroyed && !stop_token.stop_requested();
         })
-        .distinct_until_changed([](const control_plane::state::Worker& curr, const control_plane::state::Worker& prev) {
-            return curr == prev;
-        })
+        // .distinct_until_changed([](const control_plane::state::Worker& curr, const control_plane::state::Worker&
+        // prev) {
+        //     return curr == prev;
+        // })
         .subscribe(
             [this](control_plane::state::Worker worker) {
                 // Handle updates to the worker

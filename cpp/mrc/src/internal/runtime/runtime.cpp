@@ -39,6 +39,7 @@
 namespace mrc::internal::runtime {
 
 Runtime::Runtime(std::unique_ptr<resources::SystemResources> resources) :
+  AsyncService("Runtime"),
   system::SystemProvider(*resources),
   m_sys_resources(std::move(resources))
 {
@@ -48,10 +49,10 @@ Runtime::Runtime(std::unique_ptr<resources::SystemResources> resources) :
     //     m_partitions.push_back(std::make_unique<Partition>(m_sys_resources->partition(i)));
     // }
 
-    // Now create the threading resources and system wide runnable so it is available to AsyncService
-    m_sys_threading_resources = std::make_unique<system::ThreadingResources>(*this);
+    // // Now create the threading resources and system wide runnable so it is available to AsyncService
+    // m_sys_threading_resources = std::make_unique<system::ThreadingResources>(*this);
 
-    m_sys_runnable_resources = std::make_unique<runnable::RunnableResources>(*m_sys_threading_resources, 0);
+    // m_sys_runnable_resources = std::make_unique<runnable::RunnableResources>(*m_sys_threading_resources, 0);
 }
 
 // Call the other constructor with a new ThreadingResources
@@ -107,7 +108,7 @@ metrics::Registry& Runtime::metrics_registry() const
 
 runnable::RunnableResources& Runtime::runnable()
 {
-    return *m_sys_runnable_resources;
+    return m_sys_resources->runnable();
 }
 
 void Runtime::do_service_start(std::stop_token stop_token)
@@ -128,24 +129,27 @@ void Runtime::do_service_start(std::stop_token stop_token)
         }
     }
 
-    // Create the system resources first
-    auto sys_resources = std::make_unique<system::ThreadingResources>(*this);
+    // // Create the system resources first
+    // auto sys_resources = std::make_unique<system::ThreadingResources>(*this);
 
-    // Now create the control plane client
-    auto runnable          = runnable::RunnableResources(*sys_resources, 0);
-    auto part_base         = resources::PartitionResourceBase(runnable, 0);
-    m_control_plane_client = std::make_unique<control_plane::Client>(part_base);
+    // // Now create the control plane client
+    // auto runnable          = runnable::RunnableResources(*sys_resources, 0);
+    // auto part_base         = resources::PartitionResourceBase(runnable, 0);
+
+    m_control_plane_client = std::make_unique<control_plane::Client>(*m_sys_resources);
     m_control_plane_client->service_start();
     m_control_plane_client->service_await_live();
 
-    // Create/Initialize the runtime resources object (Could go before the control plane client)
-    m_sys_resources = std::make_unique<resources::SystemResources>(std::move(sys_resources));
-    m_sys_resources->initialize();
+    // // Create/Initialize the runtime resources object (Could go before the control plane client)
+    // m_sys_resources = std::make_unique<resources::SystemResources>(std::move(sys_resources));
+    // m_sys_resources->initialize();
 
     // For each partition, create and start a partition manager
     for (size_t i = 0; i < m_sys_resources->partition_count(); i++)
     {
-        m_partitions.emplace_back(std::make_unique<PartitionRuntime>(*this, i));
+        auto& part_runtime = m_partitions.emplace_back(std::make_unique<PartitionRuntime>(*this, i));
+
+        // this->child_service_start(*part_runtime);
 
         auto& part = m_partition_managers.emplace_back(std::make_unique<PartitionManager>(this->partition(i)));
 

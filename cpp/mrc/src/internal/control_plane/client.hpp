@@ -17,11 +17,12 @@
 
 #pragma once
 
-#include "internal/control_plane/client/instance.hpp"  // IWYU pragma: keep
 #include "internal/control_plane/state/root_state.hpp"
 #include "internal/grpc/client_streaming.hpp"
 #include "internal/grpc/stream_writer.hpp"
+#include "internal/resources/iresources_provider.hpp"
 #include "internal/resources/partition_resources_base.hpp"
+#include "internal/runnable/resources.hpp"
 #include "internal/service.hpp"
 
 #include "mrc/core/error.hpp"
@@ -67,6 +68,9 @@ class UcxResources;
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
+namespace mrc::internal::resources {
+class IResourcesProvider;
+}  // namespace mrc::internal::resources
 
 namespace mrc::internal::control_plane {
 
@@ -89,7 +93,7 @@ class AsyncStatus;
 
 // todo: client should be a holder of the stream (private) and the connection manager (public)
 
-class Client final : public resources::PartitionResourceBase, public Service
+class Client final : public Service, public virtual runnable::RunnableResourcesProvider
 {
   public:
     enum class State
@@ -106,12 +110,12 @@ class Client final : public resources::PartitionResourceBase, public Service
     using event_t          = stream_t::element_type::IncomingData;
     using update_channel_t = mrc::node::WritableEntrypoint<protos::StateUpdate>;
 
-    Client();
+    Client(runnable::IRunnableResourcesProvider& resources);
 
-    Client(resources::PartitionResourceBase& base);
+    // Client(resources::PartitionResourceBase& base);
 
     // if we already have an grpc progress engine running, we don't need run another, just use that cq
-    Client(resources::PartitionResourceBase& base, std::shared_ptr<grpc::CompletionQueue> cq);
+    // Client(resources::PartitionResourceBase& base, std::shared_ptr<grpc::CompletionQueue> cq);
 
     ~Client() final;
 
@@ -120,12 +124,12 @@ class Client final : public resources::PartitionResourceBase, public Service
     MachineID machine_id() const;
     // const std::vector<InstanceID>& instance_ids() const;
 
-    InstanceID register_ucx_address(const std::string& worker_address);
+    // InstanceID register_ucx_address(const std::string& worker_address);
 
-    std::vector<InstanceID> register_ucx_addresses(const std::vector<std::string>& worker_addresses);
+    // std::vector<InstanceID> register_ucx_addresses(const std::vector<std::string>& worker_addresses);
 
-    std::map<InstanceID, std::unique_ptr<client::Instance>> register_ucx_addresses(
-        std::vector<std::optional<ucx::UcxResources>>& ucx_resources);
+    // std::map<InstanceID, std::unique_ptr<client::Instance>> register_ucx_addresses(
+    //     std::vector<std::optional<ucx::UcxResources>>& ucx_resources);
 
     // void register_port_publisher(InstanceID instance_id, const std::string& port_name);
     // void register_port_subscriber(InstanceID instance_id, const std::string& port_name);
@@ -146,11 +150,11 @@ class Client final : public resources::PartitionResourceBase, public Service
 
     const mrc::runnable::LaunchOptions& launch_options() const;
 
-    client::ConnectionsManager& connections() const
-    {
-        CHECK(m_connections_manager);
-        return *m_connections_manager;
-    }
+    // client::ConnectionsManager& connections() const
+    // {
+    //     CHECK(m_connections_manager);
+    //     return *m_connections_manager;
+    // }
 
     // request that the server start an update
     void request_update();
@@ -196,7 +200,7 @@ class Client final : public resources::PartitionResourceBase, public Service
     // std::map<std::string, std::unique_ptr<client::SubscriptionService>> m_subscription_services;
 
     // connection manager - connected to the update channel
-    std::unique_ptr<client::ConnectionsManager> m_connections_manager;
+    // std::unique_ptr<client::ConnectionsManager> m_connections_manager;
 
     // update channel
     size_t m_state_update_count{0};
@@ -204,9 +208,9 @@ class Client final : public resources::PartitionResourceBase, public Service
     rxcpp::subjects::replay<state::ControlPlaneState, rxcpp::identity_one_worker> m_state_update_sub{
         1,
         rxcpp::identity_current_thread()};
-    std::unique_ptr<mrc::node::WritableEntrypoint<const protos::StateUpdate>> m_connections_update_channel;
-    std::unique_ptr<mrc::node::WritableEntrypoint<const protos::ControlPlaneState>> m_state_update_entrypoint;
-    std::unique_ptr<mrc::node::Broadcast<const protos::ControlPlaneState>> m_state_update_stream;
+    // std::unique_ptr<mrc::node::WritableEntrypoint<const protos::StateUpdate>> m_connections_update_channel;
+    // std::unique_ptr<mrc::node::WritableEntrypoint<const protos::ControlPlaneState>> m_state_update_entrypoint;
+    // std::unique_ptr<mrc::node::Broadcast<const protos::ControlPlaneState>> m_state_update_stream;
     // std::map<InstanceID, mrc::node::WritableEntrypoint<const protos::StateUpdate>> m_instance_update_channels;
 
     // Stream Context

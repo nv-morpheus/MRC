@@ -17,6 +17,7 @@
 
 #include "internal/runtime/partition_runtime.hpp"
 
+#include "internal/async_service.hpp"
 #include "internal/codable/codable_storage.hpp"
 #include "internal/network/resources.hpp"
 #include "internal/pubsub/publisher_round_robin.hpp"
@@ -26,6 +27,7 @@
 #include "internal/resources/system_resources.hpp"
 
 #include "mrc/pubsub/api.hpp"
+#include "mrc/utils/string_utils.hpp"
 
 #include <glog/logging.h>
 
@@ -35,6 +37,7 @@
 namespace mrc::internal::runtime {
 
 PartitionRuntime::PartitionRuntime(Runtime& system_runtime, size_t partition_id) :
+  AsyncService(MRC_CONCAT_STR("PartitionRuntime[" << partition_id << "]")),
   m_system_runtime(system_runtime),
   m_partition_id(partition_id),
   m_resources(system_runtime.resources().partition(partition_id))
@@ -86,6 +89,23 @@ remote_descriptor::Manager& PartitionRuntime::remote_descriptor_manager()
     return *m_remote_descriptor_manager;
 }
 
+std::unique_ptr<mrc::codable::ICodableStorage> PartitionRuntime::make_codable_storage()
+{
+    return std::make_unique<codable::CodableStorage>(m_resources);
+}
+
+runnable::RunnableResources& PartitionRuntime::runnable()
+{
+    return m_resources.runnable();
+}
+
+void PartitionRuntime::do_service_start(std::stop_token stop_token)
+{
+    this->mark_started();
+
+    // Do nothing for now
+}
+
 std::shared_ptr<mrc::pubsub::IPublisherService> PartitionRuntime::make_publisher_service(
     const std::string& name,
     const mrc::pubsub::PublisherPolicy& policy)
@@ -102,11 +122,6 @@ std::shared_ptr<mrc::pubsub::IPublisherService> PartitionRuntime::make_publisher
 std::shared_ptr<mrc::pubsub::ISubscriberService> PartitionRuntime::make_subscriber_service(const std::string& name)
 {
     return std::shared_ptr<pubsub::SubscriberService>(new pubsub::SubscriberService(name, *this));
-}
-
-std::unique_ptr<mrc::codable::ICodableStorage> PartitionRuntime::make_codable_storage()
-{
-    return std::make_unique<codable::CodableStorage>(m_resources);
 }
 
 }  // namespace mrc::internal::runtime

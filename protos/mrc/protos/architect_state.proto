@@ -20,6 +20,14 @@ syntax = "proto3";
 
 package mrc.protos;
 
+enum WorkerStates
+{
+   Registered = 0;
+   Activated = 1;
+   Deactivated = 2;
+   Destroyed = 3;
+}
+
 message Connection {
    uint64 id = 1;
 
@@ -31,14 +39,6 @@ message Connection {
 
    // The pipeline instances that are assigned to this machine
    repeated uint64 assigned_pipeline_ids = 4;
-}
-
-enum WorkerStates
-{
-   Registered = 0;
-   Activated = 1;
-   Deactivated = 2;
-   Destroyed = 3;
 }
 
 message Worker {

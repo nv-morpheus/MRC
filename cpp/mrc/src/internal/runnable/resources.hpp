@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "internal/system/host_partition.hpp"
 #include "internal/system/host_partition_provider.hpp"
 #include "internal/system/threading_resources.hpp"
 
@@ -37,6 +38,7 @@ class RunnableResources final : public system::HostPartitionProvider, public mrc
 {
   public:
     RunnableResources(const system::ThreadingResources& system_resources, std::size_t _host_partition_id);
+    RunnableResources(const system::ThreadingResources& system_resources, const system::HostPartition& host_partition);
     RunnableResources(RunnableResources&& other);
     ~RunnableResources() override;
 
@@ -55,6 +57,9 @@ class IRunnableResourcesProvider
     virtual RunnableResources& runnable() = 0;
 
     const RunnableResources& runnable() const;
+
+  private:
+    friend class RunnableResourcesProvider;
 };
 
 // Concrete implementation of IRunnableResourcesProvider. Use this if RunnableResources is available during
@@ -62,6 +67,8 @@ class IRunnableResourcesProvider
 class RunnableResourcesProvider : public virtual IRunnableResourcesProvider
 {
   protected:
+    RunnableResourcesProvider(const RunnableResourcesProvider& other);
+    RunnableResourcesProvider(IRunnableResourcesProvider& other);
     RunnableResourcesProvider(RunnableResources& runnable);
 
     RunnableResources& runnable() override;

@@ -83,8 +83,8 @@ class Runtime final : public mrc::runtime::IRuntime, public AsyncService, public
 
     std::unique_ptr<resources::SystemResources> m_sys_resources;
 
-    std::unique_ptr<system::ThreadingResources> m_sys_threading_resources;
-    std::unique_ptr<runnable::RunnableResources> m_sys_runnable_resources;
+    // std::unique_ptr<system::ThreadingResources> m_sys_threading_resources;
+    // std::unique_ptr<runnable::RunnableResources> m_sys_runnable_resources;
 
     std::vector<std::unique_ptr<PartitionRuntime>> m_partitions;
 

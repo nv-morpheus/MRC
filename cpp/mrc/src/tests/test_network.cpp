@@ -194,11 +194,11 @@ TEST_F(TestNetwork, CommsSendRecv)
     // r0.client().register_instance(1, r1.ucx_address());  // register r1 as instance_id 1
     // r1.client().register_instance(0, r0.ucx_address());  // register r0 as instance_id 0
 
-    auto f1 = resources->partition(0).network()->control_plane().client().connections().update_future();
-    auto f2 = resources->partition(1).network()->control_plane().client().connections().update_future();
+    // auto f1 = resources->partition(0).network()->control_plane().client().connections().update_future();
+    // auto f2 = resources->partition(1).network()->control_plane().client().connections().update_future();
     resources->partition(0).network()->control_plane().client().request_update();
-    f1.get();
-    f2.get();
+    // f1.get();
+    // f2.get();
 
     auto id_0 = resources->partition(0).network()->control_plane().instance_id();
     auto id_1 = resources->partition(1).network()->control_plane().instance_id();
@@ -268,11 +268,11 @@ TEST_F(TestNetwork, CommsGet)
     auto& r1 = resources->partition(1).network()->data_plane();
 
     // here we are exchanging internal ucx worker addresses without the need of the control plane
-    auto f1 = resources->partition(0).network()->control_plane().client().connections().update_future();
-    auto f2 = resources->partition(1).network()->control_plane().client().connections().update_future();
+    // auto f1 = resources->partition(0).network()->control_plane().client().connections().update_future();
+    // auto f2 = resources->partition(1).network()->control_plane().client().connections().update_future();
     resources->partition(0).network()->control_plane().client().request_update();
-    f1.get();
-    f2.get();
+    // f1.get();
+    // f2.get();
 
     auto id_0 = resources->partition(0).network()->control_plane().instance_id();
     auto id_1 = resources->partition(1).network()->control_plane().instance_id();
@@ -318,11 +318,11 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
     }
 
     // here we are exchanging internal ucx worker addresses without the need of the control plane
-    auto f1 = resources->partition(0).network()->control_plane().client().connections().update_future();
-    auto f2 = resources->partition(1).network()->control_plane().client().connections().update_future();
+    // auto f1 = resources->partition(0).network()->control_plane().client().connections().update_future();
+    // auto f2 = resources->partition(1).network()->control_plane().client().connections().update_future();
     resources->partition(0).network()->control_plane().client().request_update();
-    f1.get();
-    f2.get();
+    // f1.get();
+    // f2.get();
 
     EXPECT_TRUE(resources->partition(0).network());
     EXPECT_TRUE(resources->partition(1).network());

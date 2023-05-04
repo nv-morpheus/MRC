@@ -26,7 +26,7 @@
 
 namespace mrc::internal {
 
-AsyncService::AsyncService() = default;
+AsyncService::AsyncService(std::string service_name) : m_service_name(std::move(service_name)) {}
 
 AsyncService::~AsyncService()
 {
@@ -72,6 +72,10 @@ Future<void> AsyncService::service_start(std::stop_source stop_source)
         // Get the mutex to prevent changes to m_child_futures
         std::unique_lock<decltype(m_mutex)> lock(m_mutex);
 
+        CHECK(m_state >= AsyncServiceState::Running) << this->debug_prefix()
+                                                     << " did not start up properly. Must call mark_started() inside "
+                                                        "of do_service_start()";
+
         // Set the state to stopping to prevent any changes while we wait for children. Dont check the response
         // since it could have been requested by external users
         forward_state(AsyncServiceState::Stopping);
@@ -89,9 +93,14 @@ void AsyncService::service_await_live()
 {
     std::unique_lock<decltype(m_mutex)> lock(m_mutex);
 
+    DVLOG(20) << this->debug_prefix() << " entering service_await_live(). State: " << m_state;
+
     m_cv.wait(lock, [this]() {
+        DVLOG(20) << this->debug_prefix() << " checking service_await_live(). State: " << m_state;
         return m_state >= AsyncServiceState::Running || m_stop_source.stop_requested();
     });
+
+    DVLOG(20) << this->debug_prefix() << " leaving service_await_live(). State: " << m_state;
 }
 
 void AsyncService::service_stop()
@@ -101,7 +110,7 @@ void AsyncService::service_stop()
     // Ensures this only gets executed once
     if (forward_state(AsyncServiceState::Stopping))
     {
-        DCHECK(m_stop_source.stop_possible()) << "Invalid state. Cannot request a stop";
+        DCHECK(m_stop_source.stop_possible()) << this->debug_prefix() << " Invalid state. Cannot request a stop";
 
         m_stop_source.request_stop();
     }
@@ -135,6 +144,11 @@ void AsyncService::service_await_join()
     });
 }
 
+std::string AsyncService::debug_prefix() const
+{
+    return MRC_CONCAT_STR("Service[" << m_service_name << "]:");
+}
+
 void AsyncService::call_in_destructor()
 {
     auto state = this->state();
@@ -142,13 +156,14 @@ void AsyncService::call_in_destructor()
     {
         if (state == AsyncServiceState::Running)
         {
-            LOG(ERROR) << m_description << ": service was not stopped/killed before being destructed; issuing kill";
+            LOG(ERROR) << this->debug_prefix()
+                       << " service was not stopped/killed before being destructed; issuing kill";
             service_kill();
         }
 
         if (state != AsyncServiceState::Completed)
         {
-            LOG(ERROR) << m_description << ": service was not joined before being destructed; issuing join";
+            LOG(ERROR) << this->debug_prefix() << " service was not joined before being destructed; issuing join";
             service_await_join();
         }
     }
@@ -156,7 +171,7 @@ void AsyncService::call_in_destructor()
 
 void AsyncService::service_set_description(std::string description)
 {
-    m_description = std::move(description);
+    m_service_name = std::move(description);
 }
 
 void AsyncService::mark_started()
@@ -178,7 +193,9 @@ void AsyncService::child_service_start(AsyncService& child)
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
     // The state must be running
-    CHECK(m_state == AsyncServiceState::Running) << "Can only start child service in Running state";
+    CHECK(m_state == AsyncServiceState::Starting || m_state == AsyncServiceState::Running) << "Can only start child "
+                                                                                              "service in Starting or "
+                                                                                              "Running state";
 
     m_children.emplace_back(child);
     m_child_futures.emplace_back(child.service_start(m_stop_source));
@@ -190,13 +207,15 @@ bool AsyncService::forward_state(AsyncServiceState new_state, bool assert_forwar
 
     if (assert_forward)
     {
-        CHECK(m_state <= new_state) << m_description
-                                    << ": invalid AsyncServiceState requested; AsyncServiceState is only allowed to "
+        CHECK(m_state <= new_state) << this->debug_prefix()
+                                    << " invalid AsyncServiceState requested; AsyncServiceState is only allowed to "
                                        "advance";
     }
 
     if (m_state < new_state)
     {
+        DVLOG(20) << this->debug_prefix() << " changing state. From: " << m_state << " to " << new_state;
+
         m_state = new_state;
 
         // Notify the CV for anyone waiting on this service

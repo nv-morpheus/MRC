@@ -62,3 +62,40 @@ Other Notes:
 - Egress ports
   - Will be converted to pull-based queues
     - Downstream ingress ports will need to have a progress engine to pull from
+
+
+Resources:
+- `system::Options`
+  - Configurable options that can be specified by the user
+- `system::System`
+  - Uses the `system::Options` to configure the system
+  - Describes the available hardware
+  - Configures the default partition layout
+- `system::SystemProvider`
+  - Returns a `system::System` object
+- `system::ThreadingResources`
+  - Created with a `system::SystemProvider`
+  - Manages creating all threads/fibers
+    - Stores any thread initializers/finalizers
+  - Holds onto the ThreadManager/FiberManager
+  - `FiberManager`
+    - For system cpuset, create a thread on each cpu and set up `FiberTaskQueue` on each
+- `resources::SystemResources`
+  - Created with a `system::SystemProvider`
+  - Creates or uses `system::ThreadingResources`
+  - Generates resource objects from the partition info in `system::System`
+    - Create resources for runnable, host, device, ucx, and network
+    - Creates a root `IResources` object with the full cpuset
+      - Adds the root `RunnableResources`
+    - Create child partition `IResources` object called `PartitionResources`
+- `resources::PartitionResources`
+  - Inherits from `IResources`
+  - Created using
+- `runtime::Runtime`
+  - Created with `resources::SystemResources`
+  - Begins service startup procedure
+    - Creates `control_plane::Server`
+    - Creates `control_plane::Client`
+    - Creates `PipelineManager` <== Seems out of place
+  - Creats the child `runtime::PartitionRuntime` object
+    - Adds each as a child service

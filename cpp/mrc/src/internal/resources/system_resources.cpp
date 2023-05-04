@@ -47,6 +47,7 @@
 #include <glog/logging.h>
 
 #include <map>
+#include <memory>
 #include <optional>
 #include <ostream>
 #include <string>
@@ -66,6 +67,10 @@ SystemResources::SystemResources(std::unique_ptr<system::ThreadingResources> res
   SystemProvider(*resources),
   m_threading_resources(std::move(resources))
 {
+    // Create the system-wide runnable first
+    m_sys_runnable = std::make_unique<runnable::RunnableResources>(*m_threading_resources,
+                                                                   this->system().partitions().sys_host_partition());
+
     const auto& partitions      = system().partitions().flattened();
     const auto& host_partitions = system().partitions().host_partitions();
     const bool network_enabled  = system().options().enable_server();
@@ -112,10 +117,10 @@ SystemResources::SystemResources(std::unique_ptr<system::ThreadingResources> res
     // }
 
     // construct the runnable resources on each host_partition - launch control and main
-    for (std::size_t i = 0; i < host_partitions.size(); ++i)
+    for (const auto& host_part : host_partitions)
     {
-        VLOG(1) << "building runnable/launch_control resources on host_partition: " << i;
-        m_runnable.emplace_back(*m_threading_resources, i);
+        // VLOG(1) << "building runnable/launch_control resources on host_partition: " << i;
+        m_runnable.emplace_back(*m_threading_resources, host_part);
     }
 
     std::vector<PartitionResourceBase> base_partition_resources;

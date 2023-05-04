@@ -110,7 +110,7 @@ TEST_F(TestRD, RemoteRelease)
         GTEST_SKIP() << "this test only works with 2 or more partitions";
     }
 
-    auto f1 = m_runtime->partition(0).resources().network()->control_plane().client().connections().update_future();
+    // auto f1 = m_runtime->partition(0).resources().network()->control_plane().client().connections().update_future();
     m_runtime->partition(0).resources().network()->control_plane().client().request_update();
 
     m_runtime->partition(0)

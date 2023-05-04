@@ -32,9 +32,6 @@
 namespace mrc::internal::network {
 class NetworkResources;
 }  // namespace mrc::internal::network
-namespace mrc::internal::control_plane {
-class ControlPlaneResources;
-}  // namespace mrc::internal::control_plane
 namespace mrc::internal::memory {
 class DeviceResources;
 }  // namespace mrc::internal::memory
@@ -50,7 +47,7 @@ class Runtime;
 
 namespace mrc::internal::resources {
 
-class SystemResources final : public system::SystemProvider
+class SystemResources final : public system::SystemProvider, public virtual runnable::IRunnableResourcesProvider
 {
   public:
     SystemResources(const system::SystemProvider& system);
@@ -63,6 +60,12 @@ class SystemResources final : public system::SystemProvider
     std::size_t device_count() const;
     std::size_t partition_count() const;
 
+    // Returns the runnable resources for the entire system
+    runnable::RunnableResources& runnable() override
+    {
+        return *m_sys_runnable;
+    }
+
     const std::vector<PartitionResources>& partitions() const;
     PartitionResources& partition(std::size_t partition_id);
 
@@ -72,6 +75,8 @@ class SystemResources final : public system::SystemProvider
     // Future<void> shutdown();
 
     const std::unique_ptr<system::ThreadingResources> m_threading_resources;
+
+    std::unique_ptr<runnable::RunnableResources> m_sys_runnable;
 
     std::vector<runnable::RunnableResources> m_runnable;           // one per host partition
     std::vector<std::optional<ucx::UcxResources>> m_ucx;           // one per flattened partition if network is enabled

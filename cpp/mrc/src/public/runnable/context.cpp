@@ -49,7 +49,7 @@ struct FiberLocalContext
 
 Context::Context(std::size_t rank, std::size_t size) : m_rank(rank), m_size(size)
 {
-    VLOG(10) << "Creating context";
+    // VLOG(10) << "Creating context";
 }
 
 EngineType Context::execution_context() const

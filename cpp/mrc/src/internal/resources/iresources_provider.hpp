@@ -17,38 +17,23 @@
 
 #pragma once
 
-namespace mrc::internal {
+#include "internal/runnable/resources.hpp"
 
-namespace runtime {
-class PartitionRuntime;
-}
+namespace mrc::internal::resources {
 
-namespace resources {
-class SystemResources;
-class PartitionResourceBase;
-class PartitionResources;
-}  // namespace resources
+class IResourcesProvider : public virtual runnable::IRunnableResourcesProvider
+{};
 
-namespace runnable {
-class RunnableResources;
-}  // namespace runnable
+// Concrete implementation of IResourcesProvider.
+class ResourcesProvider : public virtual IResourcesProvider
+{
+    //   protected:
+    //     ResourcesProvider(runnable::RunnableResources& runnable);
 
-namespace memory {
-class HostResources;
-class DeviceResources;
-}  // namespace memory
+    //     RunnableResources& runnable() override;
 
-// control plane and data plane
-namespace network {
-class NetworkResources;
-}  // namespace network
+    //   private:
+    //     RunnableResources& m_runnable;
+};
 
-namespace ucx {
-class UcxResources;
-}  // namespace ucx
-
-namespace data_plane {
-class DataPlaneResources;
-}  // namespace data_plane
-
-}  // namespace mrc::internal
+}  // namespace mrc::internal::resources

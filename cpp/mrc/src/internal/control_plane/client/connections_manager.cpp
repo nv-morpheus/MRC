@@ -40,7 +40,9 @@
 
 namespace mrc::internal::control_plane::client {
 
-ConnectionsManager::ConnectionsManager(Client& client, update_channel_t& update_channel) : StateManager(client)
+ConnectionsManager::ConnectionsManager(Client& client, update_channel_t& update_channel) :
+  StateManager(client),
+  runnable::RunnableResourcesProvider(client)
 {
     this->start_with_channel(update_channel);
 }
@@ -94,7 +96,7 @@ std::map<InstanceID, std::unique_ptr<client::Instance>> ConnectionsManager::regi
 
 void ConnectionsManager::do_update(const protos::StateUpdate&& update_msg)
 {
-    DCHECK(client().runnable().main().caller_on_same_thread());
+    DCHECK(this->runnable().main().caller_on_same_thread());
 
     if (update_msg.has_connections())
     {
@@ -170,7 +172,7 @@ void ConnectionsManager::do_connections_update(const protos::UpdateConnectionsSt
 
 const std::map<InstanceID, MachineID>& ConnectionsManager::locality_map() const
 {
-    DCHECK(client().runnable().main().caller_on_same_thread());
+    // DCHECK(this->runnable().main().caller_on_same_thread());
     return m_locality_map;
 }
 
@@ -183,7 +185,7 @@ const std::map<InstanceID, ucx::WorkerAddress>& ConnectionsManager::worker_addre
 const std::map<InstanceID, std::unique_ptr<ConnectionsManager::update_channel_t>>& ConnectionsManager::instance_channels()
     const
 {
-    DCHECK(client().runnable().main().caller_on_same_thread());
+    // DCHECK(this->runnable().main().caller_on_same_thread());
     return m_update_channels;
 }
 

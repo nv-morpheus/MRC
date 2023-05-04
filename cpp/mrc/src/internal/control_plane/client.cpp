@@ -43,21 +43,26 @@
 #include <grpcpp/security/credentials.h>
 #include <rxcpp/rx.hpp>
 
+#include <memory>
 #include <ostream>
 
 namespace mrc::internal::control_plane {
 
-Client::Client(resources::PartitionResourceBase& base, std::shared_ptr<grpc::CompletionQueue> cq) :
-  resources::PartitionResourceBase(base),
-  m_cq(std::move(cq)),
-  m_owns_progress_engine(false)
-{}
-
-Client::Client(resources::PartitionResourceBase& base) :
-  resources::PartitionResourceBase(base),
+Client::Client(runnable::IRunnableResourcesProvider& resources) :
+  runnable::RunnableResourcesProvider(resources),
   m_cq(std::make_shared<grpc::CompletionQueue>()),
   m_owns_progress_engine(true)
 {}
+
+// Client::Client(resources::PartitionResourceBase& base, std::shared_ptr<grpc::CompletionQueue> cq) :
+//   m_cq(std::move(cq)),
+//   m_owns_progress_engine(false)
+// {}
+
+// Client::Client(resources::PartitionResourceBase& base) :
+//   m_cq(std::make_shared<grpc::CompletionQueue>()),
+//   m_owns_progress_engine(true)
+// {}
 
 Client::~Client()
 {
@@ -124,9 +129,10 @@ void Client::do_service_start()
     // m_state_update_stream     = std::make_unique<mrc::node::Broadcast<const protos::ControlPlaneState>>();
     // mrc::make_edge(*m_state_update_entrypoint, *m_state_update_stream);
 
-    // ensure all downstream event handlers are constructed before constructing and starting the event handler
-    m_connections_update_channel = std::make_unique<mrc::node::WritableEntrypoint<const protos::StateUpdate>>();
-    m_connections_manager        = std::make_unique<client::ConnectionsManager>(*this, *m_connections_update_channel);
+    // // ensure all downstream event handlers are constructed before constructing and starting the event handler
+    // m_connections_update_channel = std::make_unique<mrc::node::WritableEntrypoint<const protos::StateUpdate>>();
+    // m_connections_manager        = std::make_unique<client::ConnectionsManager>(*this,
+    // *m_connections_update_channel);
 
     // launch runnables
     m_event_handler =
@@ -173,7 +179,7 @@ void Client::do_service_await_join()
 {
     auto status = m_stream->await_fini();
     m_event_handler->await_join();
-    m_connections_update_channel.reset();
+    // m_connections_update_channel.reset();
 
     if (m_owns_progress_engine)
     {
@@ -211,11 +217,18 @@ void Client::do_handle_event(event_t&& event)
     break;
 
     case protos::EventType::ServerStateUpdate: {
-        protos::ControlPlaneState update;
-        CHECK(event.msg.has_message() && event.msg.message().UnpackTo(&update));
+        auto update = std::make_unique<protos::ControlPlaneState>();
+        CHECK(event.msg.has_message() && event.msg.message().UnpackTo(update.get()));
+
+        if (!update->workers().entities().empty())
+        {
+            auto assigned_segments = update->workers().entities().begin()->second.assigned_segment_ids();
+
+            VLOG(10) << "Assigned Segments: " << assigned_segments.size();
+        }
 
         m_state_update_count++;
-        m_state_update_sub.get_subscriber().on_next(state::ControlPlaneState(update));
+        m_state_update_sub.get_subscriber().on_next(state::ControlPlaneState(std::move(update)));
 
         // DCHECK(m_state_update_entrypoint);
         // CHECK(m_state_update_entrypoint->await_write(std::move(update)) == channel::Status::success);
@@ -237,27 +250,28 @@ void Client::do_handle_event(event_t&& event)
     }
 }
 
-InstanceID Client::register_ucx_address(const std::string& worker_address)
-{
-    protos::RegisterWorkersRequest req;
+// InstanceID Client::register_ucx_address(const std::string& worker_address)
+// {
+//     protos::RegisterWorkersRequest req;
 
-    req.add_ucx_worker_addresses(worker_address);
+//     req.add_ucx_worker_addresses(worker_address);
 
-    auto resp = this->await_unary<protos::RegisterWorkersResponse>(protos::ClientUnaryRegisterWorkers, std::move(req));
+//     auto resp = this->await_unary<protos::RegisterWorkersResponse>(protos::ClientUnaryRegisterWorkers,
+//     std::move(req));
 
-    CHECK_EQ(resp->instance_ids_size(), 1);
+//     CHECK_EQ(resp->instance_ids_size(), 1);
 
-    return resp->instance_ids(0);
-}
+//     return resp->instance_ids(0);
+// }
 
-std::map<InstanceID, std::unique_ptr<client::Instance>> Client::register_ucx_addresses(
-    std::vector<std::optional<ucx::UcxResources>>& ucx_resources)
-{
-    forward_state(State::RegisteringWorkers);
-    auto instances = m_connections_manager->register_ucx_addresses(ucx_resources);
-    forward_state(State::Operational);
-    return instances;
-}
+// std::map<InstanceID, std::unique_ptr<client::Instance>> Client::register_ucx_addresses(
+//     std::vector<std::optional<ucx::UcxResources>>& ucx_resources)
+// {
+//     forward_state(State::RegisteringWorkers);
+//     auto instances = m_connections_manager->register_ucx_addresses(ucx_resources);
+//     forward_state(State::Operational);
+//     return instances;
+// }
 
 void Client::forward_state(State state)
 {
@@ -266,30 +280,30 @@ void Client::forward_state(State state)
     m_state = state;
 }
 
-void Client::route_state_update(std::uint64_t tag, protos::StateUpdate&& update)
-{
-    DCHECK(!m_connections_manager->instance_channels().empty());
+// void Client::route_state_update(std::uint64_t tag, protos::StateUpdate&& update)
+// {
+//     DCHECK(!m_connections_manager->instance_channels().empty());
 
-    if (tag == 0)
-    {
-        DVLOG(10) << "broadcasting " << update.service_name() << " update to all instances";
-        for (const auto& [id, instance] : m_connections_manager->instance_channels())
-        {
-            auto copy   = update;
-            auto status = instance->await_write(std::move(copy));
-            LOG_IF(WARNING, status != mrc::channel::Status::success)
-                << "unable to route update for service: " << update.service_name();
-        }
-    }
-    else
-    {
-        auto instance = m_connections_manager->instance_channels().find(tag);
-        CHECK(instance != m_connections_manager->instance_channels().end());
-        auto status = instance->second->await_write(std::move(update));
-        LOG_IF(WARNING, status != mrc::channel::Status::success)
-            << "unable to route update for service: " << update.service_name();
-    }
-}
+//     if (tag == 0)
+//     {
+//         DVLOG(10) << "broadcasting " << update.service_name() << " update to all instances";
+//         for (const auto& [id, instance] : m_connections_manager->instance_channels())
+//         {
+//             auto copy   = update;
+//             auto status = instance->await_write(std::move(copy));
+//             LOG_IF(WARNING, status != mrc::channel::Status::success)
+//                 << "unable to route update for service: " << update.service_name();
+//         }
+//     }
+//     else
+//     {
+//         auto instance = m_connections_manager->instance_channels().find(tag);
+//         CHECK(instance != m_connections_manager->instance_channels().end());
+//         auto status = instance->second->await_write(std::move(update));
+//         LOG_IF(WARNING, status != mrc::channel::Status::success)
+//             << "unable to route update for service: " << update.service_name();
+//     }
+// }
 
 // bool Client::has_subscription_service(const std::string& name) const
 // {

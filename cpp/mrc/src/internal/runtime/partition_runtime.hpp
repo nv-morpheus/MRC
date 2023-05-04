@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "internal/async_service.hpp"
 #include "internal/remote_descriptor/manager.hpp"
 
 #include "mrc/runtime/api.hpp"
@@ -49,7 +50,7 @@ namespace mrc::internal::runtime {
 class Runtime;
 class PipelinesManager;
 
-class PartitionRuntime final : public mrc::runtime::IPartitionRuntime
+class PartitionRuntime final : public mrc::runtime::IPartitionRuntime, public AsyncService
 {
   public:
     PartitionRuntime(Runtime& system_runtime, size_t partition_id);
@@ -73,7 +74,12 @@ class PartitionRuntime final : public mrc::runtime::IPartitionRuntime
 
     std::unique_ptr<mrc::codable::ICodableStorage> make_codable_storage() final;
 
+  protected:
+    runnable::RunnableResources& runnable() override;
+
   private:
+    void do_service_start(std::stop_token stop_token) final;
+
     std::shared_ptr<mrc::pubsub::IPublisherService> make_publisher_service(
         const std::string& name,
         const mrc::pubsub::PublisherPolicy& policy) final;

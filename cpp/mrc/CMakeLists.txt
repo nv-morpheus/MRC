@@ -29,7 +29,7 @@ add_library(libmrc
   src/internal/control_plane/client/instance.cpp
   src/internal/control_plane/client/state_manager.cpp
   src/internal/control_plane/client/subscription_service.cpp
-  src/internal/control_plane/resources.cpp
+  # src/internal/control_plane/resources.cpp
   src/internal/control_plane/server.cpp
   src/internal/control_plane/server/connection_manager.cpp
   src/internal/control_plane/server/node_service.cpp
@@ -50,9 +50,9 @@ add_library(libmrc
   src/internal/memory/transient_pool.cpp
   src/internal/network/resources.cpp
   src/internal/pipeline/controller.cpp
-  src/internal/pipeline/pipeline_instance.cpp
   src/internal/pipeline/ipipeline.cpp
   src/internal/pipeline/manager.cpp
+  src/internal/pipeline/pipeline_instance.cpp
   src/internal/pipeline/pipeline.cpp
   src/internal/pipeline/port_graph.cpp
   src/internal/pipeline/resources.cpp
@@ -63,9 +63,9 @@ add_library(libmrc
   src/internal/remote_descriptor/manager.cpp
   src/internal/remote_descriptor/remote_descriptor.cpp
   src/internal/remote_descriptor/storage.cpp
-  src/internal/resources/system_resources.cpp
   src/internal/resources/partition_resources_base.cpp
   src/internal/resources/partition_resources.cpp
+  src/internal/resources/system_resources.cpp
   src/internal/runnable/engine_factory.cpp
   src/internal/runnable/engine.cpp
   src/internal/runnable/engines.cpp
@@ -98,11 +98,11 @@ add_library(libmrc
   src/internal/system/partition_provider.cpp
   src/internal/system/partition.cpp
   src/internal/system/partitions.cpp
-  src/internal/system/threading_resources.cpp
   src/internal/system/system_provider.cpp
   src/internal/system/system.cpp
   src/internal/system/thread_pool.cpp
   src/internal/system/thread.cpp
+  src/internal/system/threading_resources.cpp
   src/internal/system/topology.cpp
   src/internal/ucx/context.cpp
   src/internal/ucx/endpoint.cpp

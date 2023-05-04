@@ -37,7 +37,7 @@ void ProgressEngine::data_source(rxcpp::subscriber<ProgressEvent>& s)
     ProgressEvent event;
     std::uint64_t backoff = 128;
 
-    DVLOG(10) << "starting progress engine";
+    // DVLOG(10) << "starting progress engine";
 
     while (s.is_subscribed())
     {

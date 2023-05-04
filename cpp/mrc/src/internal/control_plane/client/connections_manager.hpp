@@ -18,6 +18,7 @@
 #pragma once
 
 #include "internal/control_plane/client/state_manager.hpp"
+#include "internal/runnable/resources.hpp"
 #include "internal/ucx/common.hpp"
 
 #include "mrc/node/writable_entrypoint.hpp"
@@ -39,7 +40,7 @@ class UcxResources;
 namespace mrc::internal::control_plane::client {
 class Instance;
 
-class ConnectionsManager : public StateManager
+class ConnectionsManager : public StateManager, public virtual runnable::RunnableResourcesProvider
 {
   public:
     using update_channel_t = mrc::node::WritableEntrypoint<const protos::StateUpdate>;

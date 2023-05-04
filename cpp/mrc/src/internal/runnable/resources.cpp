@@ -39,6 +39,45 @@
 namespace mrc::internal::runnable {
 
 RunnableResources::RunnableResources(const system::ThreadingResources& system_resources,
+                                     const system::HostPartition& host_partition) :
+  HostPartitionProvider(system_resources, 0),
+  m_main(system_resources.get_task_queue(host_partition.engine_factory_cpu_sets().main_cpu_id()))
+{
+    DVLOG(10) << "main fiber task queue for host partition " << host_partition_id() << " assigned to cpu_id "
+              << host_partition.engine_factory_cpu_sets().main_cpu_id();
+
+    // construct all other resources on main
+    main()
+        .enqueue([this, &system_resources, &host_partition]() mutable {
+            DVLOG(10) << "constructing engine factories on main for host partition " << host_partition.cpu_set().str();
+            mrc::runnable::LaunchControlConfig config;
+
+            for (const auto& [name, cpu_set] : host_partition.engine_factory_cpu_sets().fiber_cpu_sets)
+            {
+                auto reusable = host_partition.engine_factory_cpu_sets().is_resuable(name);
+                DVLOG(10) << "fiber engine factory: " << name << " using " << cpu_set.str() << " is "
+                          << (reusable ? "resuable" : "not reusable");
+                config.resource_groups[name] =
+                    runnable::make_engine_factory(system_resources, runnable::EngineType::Fiber, cpu_set, reusable);
+            }
+
+            for (const auto& [name, cpu_set] : host_partition.engine_factory_cpu_sets().thread_cpu_sets)
+            {
+                auto reusable = host_partition.engine_factory_cpu_sets().is_resuable(name);
+                DVLOG(10) << "thread engine factory: " << name << " using " << cpu_set.str() << " is "
+                          << (reusable ? "resuable" : "not reusable");
+                config.resource_groups[name] =
+                    runnable::make_engine_factory(system_resources, runnable::EngineType::Thread, cpu_set, reusable);
+            }
+
+            // construct launch control
+            DVLOG(10) << "constructing launch control on main for host partition " << host_partition.cpu_set().str();
+            m_launch_control = std::make_unique<::mrc::runnable::LaunchControl>(std::move(config));
+        })
+        .get();
+}
+
+RunnableResources::RunnableResources(const system::ThreadingResources& system_resources,
                                      std::size_t _host_partition_id) :
   HostPartitionProvider(system_resources, _host_partition_id),
   m_main(system_resources.get_task_queue(host_partition().engine_factory_cpu_sets().main_cpu_id()))
@@ -104,6 +143,13 @@ const RunnableResources& IRunnableResourcesProvider::runnable() const
     // Return the other overload
     return const_cast<IRunnableResourcesProvider*>(this)->runnable();
 }
+
+RunnableResourcesProvider::RunnableResourcesProvider(const RunnableResourcesProvider& other) :
+  m_runnable(other.m_runnable)
+{}
+
+RunnableResourcesProvider::RunnableResourcesProvider(IRunnableResourcesProvider& other) : m_runnable(other.runnable())
+{}
 
 RunnableResourcesProvider::RunnableResourcesProvider(RunnableResources& runnable) : m_runnable(runnable) {}
 
