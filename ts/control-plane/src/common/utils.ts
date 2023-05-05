@@ -66,7 +66,7 @@ export function unpack<MessageT extends UnknownMessage>(message: Any)
 }
 
 export function packEvent<MessageDataT extends UnknownMessage>(event_type: EventType,
-                                                               event_tag: number,
+                                                               event_tag: string,
                                                                data: MessageDataT): Event
 {
    const any_msg = pack<MessageDataT>(data);
@@ -100,20 +100,21 @@ export function packEventResponse<MessageDataT extends UnknownMessage>(incoming_
 }
 
 // Generats a hash for a serialized object in string or buffer form
-export function hashObject(data: BinaryLike): number
+export function hashObject(data: BinaryLike): string
 {
    const hash = createHash("md5");
 
-   // Get the hash of the object
+   // Get the hash of the object encoded in base64
    const hash_str = hash.update(data).digest();
 
-   // Result will be 128 bytes. Use this to convert to an a uint64
-   const fingerprint = hash_str.readBigInt64LE(0);
+   // Only take the first 64 bits so it fits into uint64
+   const hash_uint = hash_str.readBigUInt64LE(0);
 
-   return fingerprint
+   // Write it out as a string
+   return hash_uint.toString();
 }
 
-export function hashProtoMessage<MessageDataT extends UnknownMessage>(data: MessageDataT): number
+export function hashProtoMessage<MessageDataT extends UnknownMessage>(data: MessageDataT): string
 {
    // Load the type from the registry
    const message_type = messageTypeRegistry.get(data.$type);

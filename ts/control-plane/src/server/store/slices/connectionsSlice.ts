@@ -161,7 +161,7 @@ export function connectionsDropOne(payload: Pick<IConnection, "id">)
       const pipelines = pipelineInstancesSelectByIds(state_snapshot, connection.assignedPipelineIds);
 
       // Finally, find matching segments
-      const seg_ids = pipelines.reduce((sum_ids: number[], curr) => sum_ids.concat(curr.segmentIds), []);
+      const seg_ids = pipelines.reduce((sum_ids: string[], curr) => sum_ids.concat(curr.segmentIds), []);
 
       const segments = segmentInstancesSelectByIds(state_snapshot, seg_ids);
 

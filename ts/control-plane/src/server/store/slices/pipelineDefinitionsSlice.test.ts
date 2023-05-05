@@ -43,7 +43,7 @@ describe("Empty", () => {
 });
 
 describe("From Config", () => {
-   let created_def_id: number;
+   let created_def_id: string;
 
    beforeEach(() => {
       created_def_id = store.dispatch(pipelineDefinitionsCreate(pipeline_config)).pipeline;
@@ -119,7 +119,7 @@ describe("Single", () => {
    test("Remove Unknown ID", () => {
       assert.throws(() => store.dispatch(pipelineDefinitionsRemove({
          ...pipeline_def,
-         id: -9999,
+         id: "9999",
       })));
    });
 

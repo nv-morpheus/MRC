@@ -95,7 +95,7 @@ describe("Single", () => {
    test("Remove Unknown ID", () => {
       assert.throws(() => store.dispatch(workersRemove({
          ...worker,
-         id: -9999,
+         id: "9999",
       })));
    });
 

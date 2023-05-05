@@ -108,14 +108,14 @@ describe("Single", () => {
    test("Remove Unknown ID", () => {
       assert.throws(() => store.dispatch(pipelineInstancesRemove({
          ...pipeline,
-         id: -9999,
+         id: "9999",
       })));
    });
 
    test("Remove Incorrect Machine ID", () => {
       assert.throws(() => store.dispatch(pipelineInstancesRemove({
          ...pipeline,
-         machineId: 1,
+         machineId: "1",
       })));
    });
 

@@ -190,28 +190,28 @@ export function errorCodeToJSON(object: ErrorCode): string {
 
 export interface PingRequest {
   $type: "mrc.protos.PingRequest";
-  tag: bigint;
+  tag: string;
 }
 
 export interface PingResponse {
   $type: "mrc.protos.PingResponse";
-  tag: bigint;
+  tag: string;
 }
 
 export interface ShutdownRequest {
   $type: "mrc.protos.ShutdownRequest";
-  tag: bigint;
+  tag: string;
 }
 
 export interface ShutdownResponse {
   $type: "mrc.protos.ShutdownResponse";
-  tag: bigint;
+  tag: string;
 }
 
 export interface Event {
   $type: "mrc.protos.Event";
   event: EventType;
-  tag: bigint;
+  tag: string;
   message?: Any | undefined;
   error?: Error | undefined;
 }
@@ -228,24 +228,24 @@ export interface Ack {
 
 export interface ClientConnectedResponse {
   $type: "mrc.protos.ClientConnectedResponse";
-  machineId: bigint;
+  machineId: string;
 }
 
 export interface RegisterWorkersRequest {
   $type: "mrc.protos.RegisterWorkersRequest";
   ucxWorkerAddresses: Uint8Array[];
-  pipeline?: Pipeline;
+  pipeline: Pipeline | undefined;
 }
 
 export interface RegisterWorkersResponse {
   $type: "mrc.protos.RegisterWorkersResponse";
-  machineId: bigint;
-  instanceIds: bigint[];
+  machineId: string;
+  instanceIds: string[];
 }
 
 export interface LookupWorkersRequest {
   $type: "mrc.protos.LookupWorkersRequest";
-  instanceIds: bigint[];
+  instanceIds: string[];
 }
 
 export interface LookupWorkersResponse {
@@ -264,14 +264,14 @@ export interface RegisterSubscriptionServiceRequest {
   serviceName: string;
   role: string;
   subscribeToRoles: string[];
-  instanceId: bigint;
+  instanceId: string;
 }
 
 export interface RegisterSubscriptionServiceResponse {
   $type: "mrc.protos.RegisterSubscriptionServiceResponse";
   serviceName: string;
   role: string;
-  tag: bigint;
+  tag: string;
 }
 
 export interface ActivateSubscriptionServiceRequest {
@@ -279,35 +279,37 @@ export interface ActivateSubscriptionServiceRequest {
   serviceName: string;
   role: string;
   subscribeToRoles: string[];
-  instanceId: bigint;
-  tag: bigint;
+  instanceId: string;
+  tag: string;
 }
 
 export interface DropSubscriptionServiceRequest {
   $type: "mrc.protos.DropSubscriptionServiceRequest";
   serviceName: string;
-  instanceId: bigint;
-  tag: bigint;
+  instanceId: string;
+  tag: string;
 }
 
 export interface UpdateSubscriptionServiceRequest {
   $type: "mrc.protos.UpdateSubscriptionServiceRequest";
   serviceName: string;
   role: string;
-  nonce: bigint;
-  tags: bigint[];
+  nonce: string;
+  tags: string[];
 }
 
 export interface TaggedInstance {
   $type: "mrc.protos.TaggedInstance";
-  instanceId: bigint;
-  tag: bigint;
+  instanceId: string;
+  tag: string;
 }
 
 export interface PipelineRequestAssignmentRequest {
   $type: "mrc.protos.PipelineRequestAssignmentRequest";
   /** The pipeline definition object */
-  pipeline?: PipelineConfiguration;
+  pipeline:
+    | PipelineConfiguration
+    | undefined;
   /** The mapping of segment definitions to assigned workers */
   assignments: PipelineRequestAssignmentRequest_SegmentMapping[];
 }
@@ -317,25 +319,25 @@ export interface PipelineRequestAssignmentRequest_SegmentMapping {
   /** The segment definition ID */
   segmentName: string;
   /** The workers to assign this segment to */
-  workerIds: bigint[];
+  workerIds: string[];
 }
 
 export interface PipelineRequestAssignmentResponse {
   $type: "mrc.protos.PipelineRequestAssignmentResponse";
   /** The pipeline definition that was added (since its generated) */
-  pipelineDefinitionId: bigint;
+  pipelineDefinitionId: string;
   /** The pipeline instance that was added */
-  pipelineInstanceId: bigint;
+  pipelineInstanceId: string;
   /** The segment instance that was added */
-  segmentInstanceIds: bigint[];
+  segmentInstanceIds: string[];
 }
 
 /** message sent by an UpdateManager */
 export interface StateUpdate {
   $type: "mrc.protos.StateUpdate";
   serviceName: string;
-  nonce: bigint;
-  instanceId: bigint;
+  nonce: string;
+  instanceId: string;
   connections?: UpdateConnectionsState | undefined;
   updateSubscriptionService?: UpdateSubscriptionServiceState | undefined;
   dropSubscriptionService?: DropSubscriptionServiceState | undefined;
@@ -355,7 +357,7 @@ export interface UpdateSubscriptionServiceState {
 export interface DropSubscriptionServiceState {
   $type: "mrc.protos.DropSubscriptionServiceState";
   role: string;
-  tag: bigint;
+  tag: string;
 }
 
 export interface ControlMessage {
@@ -374,8 +376,8 @@ export interface UpdateAssignments {
 
 export interface SegmentAssignment {
   $type: "mrc.protos.SegmentAssignment";
-  machineId: bigint;
-  instanceId: bigint;
+  machineId: string;
+  instanceId: string;
   address: number;
   egressPolices: { [key: number]: EgressPolicy };
   issueEventOnComplete: boolean;
@@ -385,7 +387,7 @@ export interface SegmentAssignment {
 export interface SegmentAssignment_EgressPolicesEntry {
   $type: "mrc.protos.SegmentAssignment.EgressPolicesEntry";
   key: number;
-  value?: EgressPolicy;
+  value: EgressPolicy | undefined;
 }
 
 export interface Topology {
@@ -401,7 +403,7 @@ export interface GpuInfo {
   name: string;
   uuid: string;
   pcieBusId: string;
-  memoryCapacity: bigint;
+  memoryCapacity: string;
   cudaDeviceId: number;
 }
 
@@ -413,14 +415,14 @@ export interface Pipeline {
 
 export interface WorkerAddress {
   $type: "mrc.protos.WorkerAddress";
-  machineId: bigint;
-  instanceId: bigint;
+  machineId: string;
+  instanceId: string;
   workerAddress: string;
 }
 
 export interface InstancesResources {
   $type: "mrc.protos.InstancesResources";
-  hostMemory: bigint;
+  hostMemory: string;
   cpus: CPU[];
   gpus: GPU[];
   /**
@@ -441,7 +443,7 @@ export interface GPU {
   $type: "mrc.protos.GPU";
   name: string;
   cores: number;
-  memory: bigint;
+  memory: string;
   computeCapability: number;
 }
 
@@ -450,15 +452,15 @@ export interface NIC {
 }
 
 function createBasePingRequest(): PingRequest {
-  return { $type: "mrc.protos.PingRequest", tag: BigInt("0") };
+  return { $type: "mrc.protos.PingRequest", tag: "0" };
 }
 
 export const PingRequest = {
   $type: "mrc.protos.PingRequest" as const,
 
   encode(message: PingRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.tag !== BigInt("0")) {
-      writer.uint32(8).uint64(message.tag.toString());
+    if (message.tag !== "0") {
+      writer.uint32(8).uint64(message.tag);
     }
     return writer;
   },
@@ -471,7 +473,7 @@ export const PingRequest = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.tag = longToBigint(reader.uint64() as Long);
+          message.tag = longToString(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -482,22 +484,22 @@ export const PingRequest = {
   },
 
   fromJSON(object: any): PingRequest {
-    return { $type: PingRequest.$type, tag: isSet(object.tag) ? BigInt(object.tag) : BigInt("0") };
+    return { $type: PingRequest.$type, tag: isSet(object.tag) ? String(object.tag) : "0" };
   },
 
   toJSON(message: PingRequest): unknown {
     const obj: any = {};
-    message.tag !== undefined && (obj.tag = message.tag.toString());
+    message.tag !== undefined && (obj.tag = message.tag);
     return obj;
   },
 
-  create(base?: DeepPartial<PingRequest>): PingRequest {
+  create<I extends Exact<DeepPartial<PingRequest>, I>>(base?: I): PingRequest {
     return PingRequest.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<PingRequest>): PingRequest {
+  fromPartial<I extends Exact<DeepPartial<PingRequest>, I>>(object: I): PingRequest {
     const message = createBasePingRequest();
-    message.tag = object.tag ?? BigInt("0");
+    message.tag = object.tag ?? "0";
     return message;
   },
 };
@@ -505,15 +507,15 @@ export const PingRequest = {
 messageTypeRegistry.set(PingRequest.$type, PingRequest);
 
 function createBasePingResponse(): PingResponse {
-  return { $type: "mrc.protos.PingResponse", tag: BigInt("0") };
+  return { $type: "mrc.protos.PingResponse", tag: "0" };
 }
 
 export const PingResponse = {
   $type: "mrc.protos.PingResponse" as const,
 
   encode(message: PingResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.tag !== BigInt("0")) {
-      writer.uint32(8).uint64(message.tag.toString());
+    if (message.tag !== "0") {
+      writer.uint32(8).uint64(message.tag);
     }
     return writer;
   },
@@ -526,7 +528,7 @@ export const PingResponse = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.tag = longToBigint(reader.uint64() as Long);
+          message.tag = longToString(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -537,22 +539,22 @@ export const PingResponse = {
   },
 
   fromJSON(object: any): PingResponse {
-    return { $type: PingResponse.$type, tag: isSet(object.tag) ? BigInt(object.tag) : BigInt("0") };
+    return { $type: PingResponse.$type, tag: isSet(object.tag) ? String(object.tag) : "0" };
   },
 
   toJSON(message: PingResponse): unknown {
     const obj: any = {};
-    message.tag !== undefined && (obj.tag = message.tag.toString());
+    message.tag !== undefined && (obj.tag = message.tag);
     return obj;
   },
 
-  create(base?: DeepPartial<PingResponse>): PingResponse {
+  create<I extends Exact<DeepPartial<PingResponse>, I>>(base?: I): PingResponse {
     return PingResponse.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<PingResponse>): PingResponse {
+  fromPartial<I extends Exact<DeepPartial<PingResponse>, I>>(object: I): PingResponse {
     const message = createBasePingResponse();
-    message.tag = object.tag ?? BigInt("0");
+    message.tag = object.tag ?? "0";
     return message;
   },
 };
@@ -560,15 +562,15 @@ export const PingResponse = {
 messageTypeRegistry.set(PingResponse.$type, PingResponse);
 
 function createBaseShutdownRequest(): ShutdownRequest {
-  return { $type: "mrc.protos.ShutdownRequest", tag: BigInt("0") };
+  return { $type: "mrc.protos.ShutdownRequest", tag: "0" };
 }
 
 export const ShutdownRequest = {
   $type: "mrc.protos.ShutdownRequest" as const,
 
   encode(message: ShutdownRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.tag !== BigInt("0")) {
-      writer.uint32(8).uint64(message.tag.toString());
+    if (message.tag !== "0") {
+      writer.uint32(8).uint64(message.tag);
     }
     return writer;
   },
@@ -581,7 +583,7 @@ export const ShutdownRequest = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.tag = longToBigint(reader.uint64() as Long);
+          message.tag = longToString(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -592,22 +594,22 @@ export const ShutdownRequest = {
   },
 
   fromJSON(object: any): ShutdownRequest {
-    return { $type: ShutdownRequest.$type, tag: isSet(object.tag) ? BigInt(object.tag) : BigInt("0") };
+    return { $type: ShutdownRequest.$type, tag: isSet(object.tag) ? String(object.tag) : "0" };
   },
 
   toJSON(message: ShutdownRequest): unknown {
     const obj: any = {};
-    message.tag !== undefined && (obj.tag = message.tag.toString());
+    message.tag !== undefined && (obj.tag = message.tag);
     return obj;
   },
 
-  create(base?: DeepPartial<ShutdownRequest>): ShutdownRequest {
+  create<I extends Exact<DeepPartial<ShutdownRequest>, I>>(base?: I): ShutdownRequest {
     return ShutdownRequest.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<ShutdownRequest>): ShutdownRequest {
+  fromPartial<I extends Exact<DeepPartial<ShutdownRequest>, I>>(object: I): ShutdownRequest {
     const message = createBaseShutdownRequest();
-    message.tag = object.tag ?? BigInt("0");
+    message.tag = object.tag ?? "0";
     return message;
   },
 };
@@ -615,15 +617,15 @@ export const ShutdownRequest = {
 messageTypeRegistry.set(ShutdownRequest.$type, ShutdownRequest);
 
 function createBaseShutdownResponse(): ShutdownResponse {
-  return { $type: "mrc.protos.ShutdownResponse", tag: BigInt("0") };
+  return { $type: "mrc.protos.ShutdownResponse", tag: "0" };
 }
 
 export const ShutdownResponse = {
   $type: "mrc.protos.ShutdownResponse" as const,
 
   encode(message: ShutdownResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.tag !== BigInt("0")) {
-      writer.uint32(8).uint64(message.tag.toString());
+    if (message.tag !== "0") {
+      writer.uint32(8).uint64(message.tag);
     }
     return writer;
   },
@@ -636,7 +638,7 @@ export const ShutdownResponse = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.tag = longToBigint(reader.uint64() as Long);
+          message.tag = longToString(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -647,22 +649,22 @@ export const ShutdownResponse = {
   },
 
   fromJSON(object: any): ShutdownResponse {
-    return { $type: ShutdownResponse.$type, tag: isSet(object.tag) ? BigInt(object.tag) : BigInt("0") };
+    return { $type: ShutdownResponse.$type, tag: isSet(object.tag) ? String(object.tag) : "0" };
   },
 
   toJSON(message: ShutdownResponse): unknown {
     const obj: any = {};
-    message.tag !== undefined && (obj.tag = message.tag.toString());
+    message.tag !== undefined && (obj.tag = message.tag);
     return obj;
   },
 
-  create(base?: DeepPartial<ShutdownResponse>): ShutdownResponse {
+  create<I extends Exact<DeepPartial<ShutdownResponse>, I>>(base?: I): ShutdownResponse {
     return ShutdownResponse.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<ShutdownResponse>): ShutdownResponse {
+  fromPartial<I extends Exact<DeepPartial<ShutdownResponse>, I>>(object: I): ShutdownResponse {
     const message = createBaseShutdownResponse();
-    message.tag = object.tag ?? BigInt("0");
+    message.tag = object.tag ?? "0";
     return message;
   },
 };
@@ -670,7 +672,7 @@ export const ShutdownResponse = {
 messageTypeRegistry.set(ShutdownResponse.$type, ShutdownResponse);
 
 function createBaseEvent(): Event {
-  return { $type: "mrc.protos.Event", event: 0, tag: BigInt("0"), message: undefined, error: undefined };
+  return { $type: "mrc.protos.Event", event: 0, tag: "0", message: undefined, error: undefined };
 }
 
 export const Event = {
@@ -680,8 +682,8 @@ export const Event = {
     if (message.event !== 0) {
       writer.uint32(8).int32(message.event);
     }
-    if (message.tag !== BigInt("0")) {
-      writer.uint32(16).uint64(message.tag.toString());
+    if (message.tag !== "0") {
+      writer.uint32(16).uint64(message.tag);
     }
     if (message.message !== undefined) {
       Any.encode(message.message, writer.uint32(26).fork()).ldelim();
@@ -703,7 +705,7 @@ export const Event = {
           message.event = reader.int32() as any;
           break;
         case 2:
-          message.tag = longToBigint(reader.uint64() as Long);
+          message.tag = longToString(reader.uint64() as Long);
           break;
         case 3:
           message.message = Any.decode(reader, reader.uint32());
@@ -723,7 +725,7 @@ export const Event = {
     return {
       $type: Event.$type,
       event: isSet(object.event) ? eventTypeFromJSON(object.event) : 0,
-      tag: isSet(object.tag) ? BigInt(object.tag) : BigInt("0"),
+      tag: isSet(object.tag) ? String(object.tag) : "0",
       message: isSet(object.message) ? Any.fromJSON(object.message) : undefined,
       error: isSet(object.error) ? Error.fromJSON(object.error) : undefined,
     };
@@ -732,20 +734,20 @@ export const Event = {
   toJSON(message: Event): unknown {
     const obj: any = {};
     message.event !== undefined && (obj.event = eventTypeToJSON(message.event));
-    message.tag !== undefined && (obj.tag = message.tag.toString());
+    message.tag !== undefined && (obj.tag = message.tag);
     message.message !== undefined && (obj.message = message.message ? Any.toJSON(message.message) : undefined);
     message.error !== undefined && (obj.error = message.error ? Error.toJSON(message.error) : undefined);
     return obj;
   },
 
-  create(base?: DeepPartial<Event>): Event {
+  create<I extends Exact<DeepPartial<Event>, I>>(base?: I): Event {
     return Event.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<Event>): Event {
+  fromPartial<I extends Exact<DeepPartial<Event>, I>>(object: I): Event {
     const message = createBaseEvent();
     message.event = object.event ?? 0;
-    message.tag = object.tag ?? BigInt("0");
+    message.tag = object.tag ?? "0";
     message.message = (object.message !== undefined && object.message !== null)
       ? Any.fromPartial(object.message)
       : undefined;
@@ -809,11 +811,11 @@ export const Error = {
     return obj;
   },
 
-  create(base?: DeepPartial<Error>): Error {
+  create<I extends Exact<DeepPartial<Error>, I>>(base?: I): Error {
     return Error.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<Error>): Error {
+  fromPartial<I extends Exact<DeepPartial<Error>, I>>(object: I): Error {
     const message = createBaseError();
     message.code = object.code ?? 0;
     message.message = object.message ?? "";
@@ -858,11 +860,11 @@ export const Ack = {
     return obj;
   },
 
-  create(base?: DeepPartial<Ack>): Ack {
+  create<I extends Exact<DeepPartial<Ack>, I>>(base?: I): Ack {
     return Ack.fromPartial(base ?? {});
   },
 
-  fromPartial(_: DeepPartial<Ack>): Ack {
+  fromPartial<I extends Exact<DeepPartial<Ack>, I>>(_: I): Ack {
     const message = createBaseAck();
     return message;
   },
@@ -871,15 +873,15 @@ export const Ack = {
 messageTypeRegistry.set(Ack.$type, Ack);
 
 function createBaseClientConnectedResponse(): ClientConnectedResponse {
-  return { $type: "mrc.protos.ClientConnectedResponse", machineId: BigInt("0") };
+  return { $type: "mrc.protos.ClientConnectedResponse", machineId: "0" };
 }
 
 export const ClientConnectedResponse = {
   $type: "mrc.protos.ClientConnectedResponse" as const,
 
   encode(message: ClientConnectedResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.machineId !== BigInt("0")) {
-      writer.uint32(8).uint64(message.machineId.toString());
+    if (message.machineId !== "0") {
+      writer.uint32(8).uint64(message.machineId);
     }
     return writer;
   },
@@ -892,7 +894,7 @@ export const ClientConnectedResponse = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.machineId = longToBigint(reader.uint64() as Long);
+          message.machineId = longToString(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -905,23 +907,23 @@ export const ClientConnectedResponse = {
   fromJSON(object: any): ClientConnectedResponse {
     return {
       $type: ClientConnectedResponse.$type,
-      machineId: isSet(object.machineId) ? BigInt(object.machineId) : BigInt("0"),
+      machineId: isSet(object.machineId) ? String(object.machineId) : "0",
     };
   },
 
   toJSON(message: ClientConnectedResponse): unknown {
     const obj: any = {};
-    message.machineId !== undefined && (obj.machineId = message.machineId.toString());
+    message.machineId !== undefined && (obj.machineId = message.machineId);
     return obj;
   },
 
-  create(base?: DeepPartial<ClientConnectedResponse>): ClientConnectedResponse {
+  create<I extends Exact<DeepPartial<ClientConnectedResponse>, I>>(base?: I): ClientConnectedResponse {
     return ClientConnectedResponse.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<ClientConnectedResponse>): ClientConnectedResponse {
+  fromPartial<I extends Exact<DeepPartial<ClientConnectedResponse>, I>>(object: I): ClientConnectedResponse {
     const message = createBaseClientConnectedResponse();
-    message.machineId = object.machineId ?? BigInt("0");
+    message.machineId = object.machineId ?? "0";
     return message;
   },
 };
@@ -989,11 +991,11 @@ export const RegisterWorkersRequest = {
     return obj;
   },
 
-  create(base?: DeepPartial<RegisterWorkersRequest>): RegisterWorkersRequest {
+  create<I extends Exact<DeepPartial<RegisterWorkersRequest>, I>>(base?: I): RegisterWorkersRequest {
     return RegisterWorkersRequest.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<RegisterWorkersRequest>): RegisterWorkersRequest {
+  fromPartial<I extends Exact<DeepPartial<RegisterWorkersRequest>, I>>(object: I): RegisterWorkersRequest {
     const message = createBaseRegisterWorkersRequest();
     message.ucxWorkerAddresses = object.ucxWorkerAddresses?.map((e) => e) || [];
     message.pipeline = (object.pipeline !== undefined && object.pipeline !== null)
@@ -1006,19 +1008,19 @@ export const RegisterWorkersRequest = {
 messageTypeRegistry.set(RegisterWorkersRequest.$type, RegisterWorkersRequest);
 
 function createBaseRegisterWorkersResponse(): RegisterWorkersResponse {
-  return { $type: "mrc.protos.RegisterWorkersResponse", machineId: BigInt("0"), instanceIds: [] };
+  return { $type: "mrc.protos.RegisterWorkersResponse", machineId: "0", instanceIds: [] };
 }
 
 export const RegisterWorkersResponse = {
   $type: "mrc.protos.RegisterWorkersResponse" as const,
 
   encode(message: RegisterWorkersResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.machineId !== BigInt("0")) {
-      writer.uint32(8).uint64(message.machineId.toString());
+    if (message.machineId !== "0") {
+      writer.uint32(8).uint64(message.machineId);
     }
     writer.uint32(18).fork();
     for (const v of message.instanceIds) {
-      writer.uint64(v.toString());
+      writer.uint64(v);
     }
     writer.ldelim();
     return writer;
@@ -1032,16 +1034,16 @@ export const RegisterWorkersResponse = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.machineId = longToBigint(reader.uint64() as Long);
+          message.machineId = longToString(reader.uint64() as Long);
           break;
         case 2:
           if ((tag & 7) === 2) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.instanceIds.push(longToBigint(reader.uint64() as Long));
+              message.instanceIds.push(longToString(reader.uint64() as Long));
             }
           } else {
-            message.instanceIds.push(longToBigint(reader.uint64() as Long));
+            message.instanceIds.push(longToString(reader.uint64() as Long));
           }
           break;
         default:
@@ -1055,29 +1057,29 @@ export const RegisterWorkersResponse = {
   fromJSON(object: any): RegisterWorkersResponse {
     return {
       $type: RegisterWorkersResponse.$type,
-      machineId: isSet(object.machineId) ? BigInt(object.machineId) : BigInt("0"),
-      instanceIds: Array.isArray(object?.instanceIds) ? object.instanceIds.map((e: any) => BigInt(e)) : [],
+      machineId: isSet(object.machineId) ? String(object.machineId) : "0",
+      instanceIds: Array.isArray(object?.instanceIds) ? object.instanceIds.map((e: any) => String(e)) : [],
     };
   },
 
   toJSON(message: RegisterWorkersResponse): unknown {
     const obj: any = {};
-    message.machineId !== undefined && (obj.machineId = message.machineId.toString());
+    message.machineId !== undefined && (obj.machineId = message.machineId);
     if (message.instanceIds) {
-      obj.instanceIds = message.instanceIds.map((e) => e.toString());
+      obj.instanceIds = message.instanceIds.map((e) => e);
     } else {
       obj.instanceIds = [];
     }
     return obj;
   },
 
-  create(base?: DeepPartial<RegisterWorkersResponse>): RegisterWorkersResponse {
+  create<I extends Exact<DeepPartial<RegisterWorkersResponse>, I>>(base?: I): RegisterWorkersResponse {
     return RegisterWorkersResponse.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<RegisterWorkersResponse>): RegisterWorkersResponse {
+  fromPartial<I extends Exact<DeepPartial<RegisterWorkersResponse>, I>>(object: I): RegisterWorkersResponse {
     const message = createBaseRegisterWorkersResponse();
-    message.machineId = object.machineId ?? BigInt("0");
+    message.machineId = object.machineId ?? "0";
     message.instanceIds = object.instanceIds?.map((e) => e) || [];
     return message;
   },
@@ -1095,7 +1097,7 @@ export const LookupWorkersRequest = {
   encode(message: LookupWorkersRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     writer.uint32(10).fork();
     for (const v of message.instanceIds) {
-      writer.uint64(v.toString());
+      writer.uint64(v);
     }
     writer.ldelim();
     return writer;
@@ -1112,10 +1114,10 @@ export const LookupWorkersRequest = {
           if ((tag & 7) === 2) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.instanceIds.push(longToBigint(reader.uint64() as Long));
+              message.instanceIds.push(longToString(reader.uint64() as Long));
             }
           } else {
-            message.instanceIds.push(longToBigint(reader.uint64() as Long));
+            message.instanceIds.push(longToString(reader.uint64() as Long));
           }
           break;
         default:
@@ -1129,25 +1131,25 @@ export const LookupWorkersRequest = {
   fromJSON(object: any): LookupWorkersRequest {
     return {
       $type: LookupWorkersRequest.$type,
-      instanceIds: Array.isArray(object?.instanceIds) ? object.instanceIds.map((e: any) => BigInt(e)) : [],
+      instanceIds: Array.isArray(object?.instanceIds) ? object.instanceIds.map((e: any) => String(e)) : [],
     };
   },
 
   toJSON(message: LookupWorkersRequest): unknown {
     const obj: any = {};
     if (message.instanceIds) {
-      obj.instanceIds = message.instanceIds.map((e) => e.toString());
+      obj.instanceIds = message.instanceIds.map((e) => e);
     } else {
       obj.instanceIds = [];
     }
     return obj;
   },
 
-  create(base?: DeepPartial<LookupWorkersRequest>): LookupWorkersRequest {
+  create<I extends Exact<DeepPartial<LookupWorkersRequest>, I>>(base?: I): LookupWorkersRequest {
     return LookupWorkersRequest.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<LookupWorkersRequest>): LookupWorkersRequest {
+  fromPartial<I extends Exact<DeepPartial<LookupWorkersRequest>, I>>(object: I): LookupWorkersRequest {
     const message = createBaseLookupWorkersRequest();
     message.instanceIds = object.instanceIds?.map((e) => e) || [];
     return message;
@@ -1207,11 +1209,11 @@ export const LookupWorkersResponse = {
     return obj;
   },
 
-  create(base?: DeepPartial<LookupWorkersResponse>): LookupWorkersResponse {
+  create<I extends Exact<DeepPartial<LookupWorkersResponse>, I>>(base?: I): LookupWorkersResponse {
     return LookupWorkersResponse.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<LookupWorkersResponse>): LookupWorkersResponse {
+  fromPartial<I extends Exact<DeepPartial<LookupWorkersResponse>, I>>(object: I): LookupWorkersResponse {
     const message = createBaseLookupWorkersResponse();
     message.workerAddresses = object.workerAddresses?.map((e) => WorkerAddress.fromPartial(e)) || [];
     return message;
@@ -1277,11 +1279,15 @@ export const CreateSubscriptionServiceRequest = {
     return obj;
   },
 
-  create(base?: DeepPartial<CreateSubscriptionServiceRequest>): CreateSubscriptionServiceRequest {
+  create<I extends Exact<DeepPartial<CreateSubscriptionServiceRequest>, I>>(
+    base?: I,
+  ): CreateSubscriptionServiceRequest {
     return CreateSubscriptionServiceRequest.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<CreateSubscriptionServiceRequest>): CreateSubscriptionServiceRequest {
+  fromPartial<I extends Exact<DeepPartial<CreateSubscriptionServiceRequest>, I>>(
+    object: I,
+  ): CreateSubscriptionServiceRequest {
     const message = createBaseCreateSubscriptionServiceRequest();
     message.serviceName = object.serviceName ?? "";
     message.roles = object.roles?.map((e) => e) || [];
@@ -1297,7 +1303,7 @@ function createBaseRegisterSubscriptionServiceRequest(): RegisterSubscriptionSer
     serviceName: "",
     role: "",
     subscribeToRoles: [],
-    instanceId: BigInt("0"),
+    instanceId: "0",
   };
 }
 
@@ -1314,8 +1320,8 @@ export const RegisterSubscriptionServiceRequest = {
     for (const v of message.subscribeToRoles) {
       writer.uint32(26).string(v!);
     }
-    if (message.instanceId !== BigInt("0")) {
-      writer.uint32(32).uint64(message.instanceId.toString());
+    if (message.instanceId !== "0") {
+      writer.uint32(32).uint64(message.instanceId);
     }
     return writer;
   },
@@ -1337,7 +1343,7 @@ export const RegisterSubscriptionServiceRequest = {
           message.subscribeToRoles.push(reader.string());
           break;
         case 4:
-          message.instanceId = longToBigint(reader.uint64() as Long);
+          message.instanceId = longToString(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -1355,7 +1361,7 @@ export const RegisterSubscriptionServiceRequest = {
       subscribeToRoles: Array.isArray(object?.subscribeToRoles)
         ? object.subscribeToRoles.map((e: any) => String(e))
         : [],
-      instanceId: isSet(object.instanceId) ? BigInt(object.instanceId) : BigInt("0"),
+      instanceId: isSet(object.instanceId) ? String(object.instanceId) : "0",
     };
   },
 
@@ -1368,20 +1374,24 @@ export const RegisterSubscriptionServiceRequest = {
     } else {
       obj.subscribeToRoles = [];
     }
-    message.instanceId !== undefined && (obj.instanceId = message.instanceId.toString());
+    message.instanceId !== undefined && (obj.instanceId = message.instanceId);
     return obj;
   },
 
-  create(base?: DeepPartial<RegisterSubscriptionServiceRequest>): RegisterSubscriptionServiceRequest {
+  create<I extends Exact<DeepPartial<RegisterSubscriptionServiceRequest>, I>>(
+    base?: I,
+  ): RegisterSubscriptionServiceRequest {
     return RegisterSubscriptionServiceRequest.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<RegisterSubscriptionServiceRequest>): RegisterSubscriptionServiceRequest {
+  fromPartial<I extends Exact<DeepPartial<RegisterSubscriptionServiceRequest>, I>>(
+    object: I,
+  ): RegisterSubscriptionServiceRequest {
     const message = createBaseRegisterSubscriptionServiceRequest();
     message.serviceName = object.serviceName ?? "";
     message.role = object.role ?? "";
     message.subscribeToRoles = object.subscribeToRoles?.map((e) => e) || [];
-    message.instanceId = object.instanceId ?? BigInt("0");
+    message.instanceId = object.instanceId ?? "0";
     return message;
   },
 };
@@ -1389,7 +1399,7 @@ export const RegisterSubscriptionServiceRequest = {
 messageTypeRegistry.set(RegisterSubscriptionServiceRequest.$type, RegisterSubscriptionServiceRequest);
 
 function createBaseRegisterSubscriptionServiceResponse(): RegisterSubscriptionServiceResponse {
-  return { $type: "mrc.protos.RegisterSubscriptionServiceResponse", serviceName: "", role: "", tag: BigInt("0") };
+  return { $type: "mrc.protos.RegisterSubscriptionServiceResponse", serviceName: "", role: "", tag: "0" };
 }
 
 export const RegisterSubscriptionServiceResponse = {
@@ -1402,8 +1412,8 @@ export const RegisterSubscriptionServiceResponse = {
     if (message.role !== "") {
       writer.uint32(18).string(message.role);
     }
-    if (message.tag !== BigInt("0")) {
-      writer.uint32(24).uint64(message.tag.toString());
+    if (message.tag !== "0") {
+      writer.uint32(24).uint64(message.tag);
     }
     return writer;
   },
@@ -1422,7 +1432,7 @@ export const RegisterSubscriptionServiceResponse = {
           message.role = reader.string();
           break;
         case 3:
-          message.tag = longToBigint(reader.uint64() as Long);
+          message.tag = longToString(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -1437,7 +1447,7 @@ export const RegisterSubscriptionServiceResponse = {
       $type: RegisterSubscriptionServiceResponse.$type,
       serviceName: isSet(object.serviceName) ? String(object.serviceName) : "",
       role: isSet(object.role) ? String(object.role) : "",
-      tag: isSet(object.tag) ? BigInt(object.tag) : BigInt("0"),
+      tag: isSet(object.tag) ? String(object.tag) : "0",
     };
   },
 
@@ -1445,19 +1455,23 @@ export const RegisterSubscriptionServiceResponse = {
     const obj: any = {};
     message.serviceName !== undefined && (obj.serviceName = message.serviceName);
     message.role !== undefined && (obj.role = message.role);
-    message.tag !== undefined && (obj.tag = message.tag.toString());
+    message.tag !== undefined && (obj.tag = message.tag);
     return obj;
   },
 
-  create(base?: DeepPartial<RegisterSubscriptionServiceResponse>): RegisterSubscriptionServiceResponse {
+  create<I extends Exact<DeepPartial<RegisterSubscriptionServiceResponse>, I>>(
+    base?: I,
+  ): RegisterSubscriptionServiceResponse {
     return RegisterSubscriptionServiceResponse.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<RegisterSubscriptionServiceResponse>): RegisterSubscriptionServiceResponse {
+  fromPartial<I extends Exact<DeepPartial<RegisterSubscriptionServiceResponse>, I>>(
+    object: I,
+  ): RegisterSubscriptionServiceResponse {
     const message = createBaseRegisterSubscriptionServiceResponse();
     message.serviceName = object.serviceName ?? "";
     message.role = object.role ?? "";
-    message.tag = object.tag ?? BigInt("0");
+    message.tag = object.tag ?? "0";
     return message;
   },
 };
@@ -1470,8 +1484,8 @@ function createBaseActivateSubscriptionServiceRequest(): ActivateSubscriptionSer
     serviceName: "",
     role: "",
     subscribeToRoles: [],
-    instanceId: BigInt("0"),
-    tag: BigInt("0"),
+    instanceId: "0",
+    tag: "0",
   };
 }
 
@@ -1488,11 +1502,11 @@ export const ActivateSubscriptionServiceRequest = {
     for (const v of message.subscribeToRoles) {
       writer.uint32(26).string(v!);
     }
-    if (message.instanceId !== BigInt("0")) {
-      writer.uint32(32).uint64(message.instanceId.toString());
+    if (message.instanceId !== "0") {
+      writer.uint32(32).uint64(message.instanceId);
     }
-    if (message.tag !== BigInt("0")) {
-      writer.uint32(40).uint64(message.tag.toString());
+    if (message.tag !== "0") {
+      writer.uint32(40).uint64(message.tag);
     }
     return writer;
   },
@@ -1514,10 +1528,10 @@ export const ActivateSubscriptionServiceRequest = {
           message.subscribeToRoles.push(reader.string());
           break;
         case 4:
-          message.instanceId = longToBigint(reader.uint64() as Long);
+          message.instanceId = longToString(reader.uint64() as Long);
           break;
         case 5:
-          message.tag = longToBigint(reader.uint64() as Long);
+          message.tag = longToString(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -1535,8 +1549,8 @@ export const ActivateSubscriptionServiceRequest = {
       subscribeToRoles: Array.isArray(object?.subscribeToRoles)
         ? object.subscribeToRoles.map((e: any) => String(e))
         : [],
-      instanceId: isSet(object.instanceId) ? BigInt(object.instanceId) : BigInt("0"),
-      tag: isSet(object.tag) ? BigInt(object.tag) : BigInt("0"),
+      instanceId: isSet(object.instanceId) ? String(object.instanceId) : "0",
+      tag: isSet(object.tag) ? String(object.tag) : "0",
     };
   },
 
@@ -1549,22 +1563,26 @@ export const ActivateSubscriptionServiceRequest = {
     } else {
       obj.subscribeToRoles = [];
     }
-    message.instanceId !== undefined && (obj.instanceId = message.instanceId.toString());
-    message.tag !== undefined && (obj.tag = message.tag.toString());
+    message.instanceId !== undefined && (obj.instanceId = message.instanceId);
+    message.tag !== undefined && (obj.tag = message.tag);
     return obj;
   },
 
-  create(base?: DeepPartial<ActivateSubscriptionServiceRequest>): ActivateSubscriptionServiceRequest {
+  create<I extends Exact<DeepPartial<ActivateSubscriptionServiceRequest>, I>>(
+    base?: I,
+  ): ActivateSubscriptionServiceRequest {
     return ActivateSubscriptionServiceRequest.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<ActivateSubscriptionServiceRequest>): ActivateSubscriptionServiceRequest {
+  fromPartial<I extends Exact<DeepPartial<ActivateSubscriptionServiceRequest>, I>>(
+    object: I,
+  ): ActivateSubscriptionServiceRequest {
     const message = createBaseActivateSubscriptionServiceRequest();
     message.serviceName = object.serviceName ?? "";
     message.role = object.role ?? "";
     message.subscribeToRoles = object.subscribeToRoles?.map((e) => e) || [];
-    message.instanceId = object.instanceId ?? BigInt("0");
-    message.tag = object.tag ?? BigInt("0");
+    message.instanceId = object.instanceId ?? "0";
+    message.tag = object.tag ?? "0";
     return message;
   },
 };
@@ -1572,12 +1590,7 @@ export const ActivateSubscriptionServiceRequest = {
 messageTypeRegistry.set(ActivateSubscriptionServiceRequest.$type, ActivateSubscriptionServiceRequest);
 
 function createBaseDropSubscriptionServiceRequest(): DropSubscriptionServiceRequest {
-  return {
-    $type: "mrc.protos.DropSubscriptionServiceRequest",
-    serviceName: "",
-    instanceId: BigInt("0"),
-    tag: BigInt("0"),
-  };
+  return { $type: "mrc.protos.DropSubscriptionServiceRequest", serviceName: "", instanceId: "0", tag: "0" };
 }
 
 export const DropSubscriptionServiceRequest = {
@@ -1587,11 +1600,11 @@ export const DropSubscriptionServiceRequest = {
     if (message.serviceName !== "") {
       writer.uint32(10).string(message.serviceName);
     }
-    if (message.instanceId !== BigInt("0")) {
-      writer.uint32(16).uint64(message.instanceId.toString());
+    if (message.instanceId !== "0") {
+      writer.uint32(16).uint64(message.instanceId);
     }
-    if (message.tag !== BigInt("0")) {
-      writer.uint32(24).uint64(message.tag.toString());
+    if (message.tag !== "0") {
+      writer.uint32(24).uint64(message.tag);
     }
     return writer;
   },
@@ -1607,10 +1620,10 @@ export const DropSubscriptionServiceRequest = {
           message.serviceName = reader.string();
           break;
         case 2:
-          message.instanceId = longToBigint(reader.uint64() as Long);
+          message.instanceId = longToString(reader.uint64() as Long);
           break;
         case 3:
-          message.tag = longToBigint(reader.uint64() as Long);
+          message.tag = longToString(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -1624,28 +1637,30 @@ export const DropSubscriptionServiceRequest = {
     return {
       $type: DropSubscriptionServiceRequest.$type,
       serviceName: isSet(object.serviceName) ? String(object.serviceName) : "",
-      instanceId: isSet(object.instanceId) ? BigInt(object.instanceId) : BigInt("0"),
-      tag: isSet(object.tag) ? BigInt(object.tag) : BigInt("0"),
+      instanceId: isSet(object.instanceId) ? String(object.instanceId) : "0",
+      tag: isSet(object.tag) ? String(object.tag) : "0",
     };
   },
 
   toJSON(message: DropSubscriptionServiceRequest): unknown {
     const obj: any = {};
     message.serviceName !== undefined && (obj.serviceName = message.serviceName);
-    message.instanceId !== undefined && (obj.instanceId = message.instanceId.toString());
-    message.tag !== undefined && (obj.tag = message.tag.toString());
+    message.instanceId !== undefined && (obj.instanceId = message.instanceId);
+    message.tag !== undefined && (obj.tag = message.tag);
     return obj;
   },
 
-  create(base?: DeepPartial<DropSubscriptionServiceRequest>): DropSubscriptionServiceRequest {
+  create<I extends Exact<DeepPartial<DropSubscriptionServiceRequest>, I>>(base?: I): DropSubscriptionServiceRequest {
     return DropSubscriptionServiceRequest.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<DropSubscriptionServiceRequest>): DropSubscriptionServiceRequest {
+  fromPartial<I extends Exact<DeepPartial<DropSubscriptionServiceRequest>, I>>(
+    object: I,
+  ): DropSubscriptionServiceRequest {
     const message = createBaseDropSubscriptionServiceRequest();
     message.serviceName = object.serviceName ?? "";
-    message.instanceId = object.instanceId ?? BigInt("0");
-    message.tag = object.tag ?? BigInt("0");
+    message.instanceId = object.instanceId ?? "0";
+    message.tag = object.tag ?? "0";
     return message;
   },
 };
@@ -1653,13 +1668,7 @@ export const DropSubscriptionServiceRequest = {
 messageTypeRegistry.set(DropSubscriptionServiceRequest.$type, DropSubscriptionServiceRequest);
 
 function createBaseUpdateSubscriptionServiceRequest(): UpdateSubscriptionServiceRequest {
-  return {
-    $type: "mrc.protos.UpdateSubscriptionServiceRequest",
-    serviceName: "",
-    role: "",
-    nonce: BigInt("0"),
-    tags: [],
-  };
+  return { $type: "mrc.protos.UpdateSubscriptionServiceRequest", serviceName: "", role: "", nonce: "0", tags: [] };
 }
 
 export const UpdateSubscriptionServiceRequest = {
@@ -1672,12 +1681,12 @@ export const UpdateSubscriptionServiceRequest = {
     if (message.role !== "") {
       writer.uint32(18).string(message.role);
     }
-    if (message.nonce !== BigInt("0")) {
-      writer.uint32(24).uint64(message.nonce.toString());
+    if (message.nonce !== "0") {
+      writer.uint32(24).uint64(message.nonce);
     }
     writer.uint32(34).fork();
     for (const v of message.tags) {
-      writer.uint64(v.toString());
+      writer.uint64(v);
     }
     writer.ldelim();
     return writer;
@@ -1697,16 +1706,16 @@ export const UpdateSubscriptionServiceRequest = {
           message.role = reader.string();
           break;
         case 3:
-          message.nonce = longToBigint(reader.uint64() as Long);
+          message.nonce = longToString(reader.uint64() as Long);
           break;
         case 4:
           if ((tag & 7) === 2) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.tags.push(longToBigint(reader.uint64() as Long));
+              message.tags.push(longToString(reader.uint64() as Long));
             }
           } else {
-            message.tags.push(longToBigint(reader.uint64() as Long));
+            message.tags.push(longToString(reader.uint64() as Long));
           }
           break;
         default:
@@ -1722,8 +1731,8 @@ export const UpdateSubscriptionServiceRequest = {
       $type: UpdateSubscriptionServiceRequest.$type,
       serviceName: isSet(object.serviceName) ? String(object.serviceName) : "",
       role: isSet(object.role) ? String(object.role) : "",
-      nonce: isSet(object.nonce) ? BigInt(object.nonce) : BigInt("0"),
-      tags: Array.isArray(object?.tags) ? object.tags.map((e: any) => BigInt(e)) : [],
+      nonce: isSet(object.nonce) ? String(object.nonce) : "0",
+      tags: Array.isArray(object?.tags) ? object.tags.map((e: any) => String(e)) : [],
     };
   },
 
@@ -1731,24 +1740,28 @@ export const UpdateSubscriptionServiceRequest = {
     const obj: any = {};
     message.serviceName !== undefined && (obj.serviceName = message.serviceName);
     message.role !== undefined && (obj.role = message.role);
-    message.nonce !== undefined && (obj.nonce = message.nonce.toString());
+    message.nonce !== undefined && (obj.nonce = message.nonce);
     if (message.tags) {
-      obj.tags = message.tags.map((e) => e.toString());
+      obj.tags = message.tags.map((e) => e);
     } else {
       obj.tags = [];
     }
     return obj;
   },
 
-  create(base?: DeepPartial<UpdateSubscriptionServiceRequest>): UpdateSubscriptionServiceRequest {
+  create<I extends Exact<DeepPartial<UpdateSubscriptionServiceRequest>, I>>(
+    base?: I,
+  ): UpdateSubscriptionServiceRequest {
     return UpdateSubscriptionServiceRequest.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<UpdateSubscriptionServiceRequest>): UpdateSubscriptionServiceRequest {
+  fromPartial<I extends Exact<DeepPartial<UpdateSubscriptionServiceRequest>, I>>(
+    object: I,
+  ): UpdateSubscriptionServiceRequest {
     const message = createBaseUpdateSubscriptionServiceRequest();
     message.serviceName = object.serviceName ?? "";
     message.role = object.role ?? "";
-    message.nonce = object.nonce ?? BigInt("0");
+    message.nonce = object.nonce ?? "0";
     message.tags = object.tags?.map((e) => e) || [];
     return message;
   },
@@ -1757,18 +1770,18 @@ export const UpdateSubscriptionServiceRequest = {
 messageTypeRegistry.set(UpdateSubscriptionServiceRequest.$type, UpdateSubscriptionServiceRequest);
 
 function createBaseTaggedInstance(): TaggedInstance {
-  return { $type: "mrc.protos.TaggedInstance", instanceId: BigInt("0"), tag: BigInt("0") };
+  return { $type: "mrc.protos.TaggedInstance", instanceId: "0", tag: "0" };
 }
 
 export const TaggedInstance = {
   $type: "mrc.protos.TaggedInstance" as const,
 
   encode(message: TaggedInstance, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.instanceId !== BigInt("0")) {
-      writer.uint32(8).uint64(message.instanceId.toString());
+    if (message.instanceId !== "0") {
+      writer.uint32(8).uint64(message.instanceId);
     }
-    if (message.tag !== BigInt("0")) {
-      writer.uint32(16).uint64(message.tag.toString());
+    if (message.tag !== "0") {
+      writer.uint32(16).uint64(message.tag);
     }
     return writer;
   },
@@ -1781,10 +1794,10 @@ export const TaggedInstance = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.instanceId = longToBigint(reader.uint64() as Long);
+          message.instanceId = longToString(reader.uint64() as Long);
           break;
         case 2:
-          message.tag = longToBigint(reader.uint64() as Long);
+          message.tag = longToString(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -1797,26 +1810,26 @@ export const TaggedInstance = {
   fromJSON(object: any): TaggedInstance {
     return {
       $type: TaggedInstance.$type,
-      instanceId: isSet(object.instanceId) ? BigInt(object.instanceId) : BigInt("0"),
-      tag: isSet(object.tag) ? BigInt(object.tag) : BigInt("0"),
+      instanceId: isSet(object.instanceId) ? String(object.instanceId) : "0",
+      tag: isSet(object.tag) ? String(object.tag) : "0",
     };
   },
 
   toJSON(message: TaggedInstance): unknown {
     const obj: any = {};
-    message.instanceId !== undefined && (obj.instanceId = message.instanceId.toString());
-    message.tag !== undefined && (obj.tag = message.tag.toString());
+    message.instanceId !== undefined && (obj.instanceId = message.instanceId);
+    message.tag !== undefined && (obj.tag = message.tag);
     return obj;
   },
 
-  create(base?: DeepPartial<TaggedInstance>): TaggedInstance {
+  create<I extends Exact<DeepPartial<TaggedInstance>, I>>(base?: I): TaggedInstance {
     return TaggedInstance.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<TaggedInstance>): TaggedInstance {
+  fromPartial<I extends Exact<DeepPartial<TaggedInstance>, I>>(object: I): TaggedInstance {
     const message = createBaseTaggedInstance();
-    message.instanceId = object.instanceId ?? BigInt("0");
-    message.tag = object.tag ?? BigInt("0");
+    message.instanceId = object.instanceId ?? "0";
+    message.tag = object.tag ?? "0";
     return message;
   },
 };
@@ -1885,11 +1898,15 @@ export const PipelineRequestAssignmentRequest = {
     return obj;
   },
 
-  create(base?: DeepPartial<PipelineRequestAssignmentRequest>): PipelineRequestAssignmentRequest {
+  create<I extends Exact<DeepPartial<PipelineRequestAssignmentRequest>, I>>(
+    base?: I,
+  ): PipelineRequestAssignmentRequest {
     return PipelineRequestAssignmentRequest.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<PipelineRequestAssignmentRequest>): PipelineRequestAssignmentRequest {
+  fromPartial<I extends Exact<DeepPartial<PipelineRequestAssignmentRequest>, I>>(
+    object: I,
+  ): PipelineRequestAssignmentRequest {
     const message = createBasePipelineRequestAssignmentRequest();
     message.pipeline = (object.pipeline !== undefined && object.pipeline !== null)
       ? PipelineConfiguration.fromPartial(object.pipeline)
@@ -1918,7 +1935,7 @@ export const PipelineRequestAssignmentRequest_SegmentMapping = {
     }
     writer.uint32(18).fork();
     for (const v of message.workerIds) {
-      writer.uint64(v.toString());
+      writer.uint64(v);
     }
     writer.ldelim();
     return writer;
@@ -1938,10 +1955,10 @@ export const PipelineRequestAssignmentRequest_SegmentMapping = {
           if ((tag & 7) === 2) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.workerIds.push(longToBigint(reader.uint64() as Long));
+              message.workerIds.push(longToString(reader.uint64() as Long));
             }
           } else {
-            message.workerIds.push(longToBigint(reader.uint64() as Long));
+            message.workerIds.push(longToString(reader.uint64() as Long));
           }
           break;
         default:
@@ -1956,7 +1973,7 @@ export const PipelineRequestAssignmentRequest_SegmentMapping = {
     return {
       $type: PipelineRequestAssignmentRequest_SegmentMapping.$type,
       segmentName: isSet(object.segmentName) ? String(object.segmentName) : "",
-      workerIds: Array.isArray(object?.workerIds) ? object.workerIds.map((e: any) => BigInt(e)) : [],
+      workerIds: Array.isArray(object?.workerIds) ? object.workerIds.map((e: any) => String(e)) : [],
     };
   },
 
@@ -1964,21 +1981,21 @@ export const PipelineRequestAssignmentRequest_SegmentMapping = {
     const obj: any = {};
     message.segmentName !== undefined && (obj.segmentName = message.segmentName);
     if (message.workerIds) {
-      obj.workerIds = message.workerIds.map((e) => e.toString());
+      obj.workerIds = message.workerIds.map((e) => e);
     } else {
       obj.workerIds = [];
     }
     return obj;
   },
 
-  create(
-    base?: DeepPartial<PipelineRequestAssignmentRequest_SegmentMapping>,
+  create<I extends Exact<DeepPartial<PipelineRequestAssignmentRequest_SegmentMapping>, I>>(
+    base?: I,
   ): PipelineRequestAssignmentRequest_SegmentMapping {
     return PipelineRequestAssignmentRequest_SegmentMapping.fromPartial(base ?? {});
   },
 
-  fromPartial(
-    object: DeepPartial<PipelineRequestAssignmentRequest_SegmentMapping>,
+  fromPartial<I extends Exact<DeepPartial<PipelineRequestAssignmentRequest_SegmentMapping>, I>>(
+    object: I,
   ): PipelineRequestAssignmentRequest_SegmentMapping {
     const message = createBasePipelineRequestAssignmentRequest_SegmentMapping();
     message.segmentName = object.segmentName ?? "";
@@ -1995,8 +2012,8 @@ messageTypeRegistry.set(
 function createBasePipelineRequestAssignmentResponse(): PipelineRequestAssignmentResponse {
   return {
     $type: "mrc.protos.PipelineRequestAssignmentResponse",
-    pipelineDefinitionId: BigInt("0"),
-    pipelineInstanceId: BigInt("0"),
+    pipelineDefinitionId: "0",
+    pipelineInstanceId: "0",
     segmentInstanceIds: [],
   };
 }
@@ -2005,15 +2022,15 @@ export const PipelineRequestAssignmentResponse = {
   $type: "mrc.protos.PipelineRequestAssignmentResponse" as const,
 
   encode(message: PipelineRequestAssignmentResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.pipelineDefinitionId !== BigInt("0")) {
-      writer.uint32(8).uint64(message.pipelineDefinitionId.toString());
+    if (message.pipelineDefinitionId !== "0") {
+      writer.uint32(8).uint64(message.pipelineDefinitionId);
     }
-    if (message.pipelineInstanceId !== BigInt("0")) {
-      writer.uint32(16).uint64(message.pipelineInstanceId.toString());
+    if (message.pipelineInstanceId !== "0") {
+      writer.uint32(16).uint64(message.pipelineInstanceId);
     }
     writer.uint32(26).fork();
     for (const v of message.segmentInstanceIds) {
-      writer.uint64(v.toString());
+      writer.uint64(v);
     }
     writer.ldelim();
     return writer;
@@ -2027,19 +2044,19 @@ export const PipelineRequestAssignmentResponse = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.pipelineDefinitionId = longToBigint(reader.uint64() as Long);
+          message.pipelineDefinitionId = longToString(reader.uint64() as Long);
           break;
         case 2:
-          message.pipelineInstanceId = longToBigint(reader.uint64() as Long);
+          message.pipelineInstanceId = longToString(reader.uint64() as Long);
           break;
         case 3:
           if ((tag & 7) === 2) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.segmentInstanceIds.push(longToBigint(reader.uint64() as Long));
+              message.segmentInstanceIds.push(longToString(reader.uint64() as Long));
             }
           } else {
-            message.segmentInstanceIds.push(longToBigint(reader.uint64() as Long));
+            message.segmentInstanceIds.push(longToString(reader.uint64() as Long));
           }
           break;
         default:
@@ -2053,34 +2070,38 @@ export const PipelineRequestAssignmentResponse = {
   fromJSON(object: any): PipelineRequestAssignmentResponse {
     return {
       $type: PipelineRequestAssignmentResponse.$type,
-      pipelineDefinitionId: isSet(object.pipelineDefinitionId) ? BigInt(object.pipelineDefinitionId) : BigInt("0"),
-      pipelineInstanceId: isSet(object.pipelineInstanceId) ? BigInt(object.pipelineInstanceId) : BigInt("0"),
+      pipelineDefinitionId: isSet(object.pipelineDefinitionId) ? String(object.pipelineDefinitionId) : "0",
+      pipelineInstanceId: isSet(object.pipelineInstanceId) ? String(object.pipelineInstanceId) : "0",
       segmentInstanceIds: Array.isArray(object?.segmentInstanceIds)
-        ? object.segmentInstanceIds.map((e: any) => BigInt(e))
+        ? object.segmentInstanceIds.map((e: any) => String(e))
         : [],
     };
   },
 
   toJSON(message: PipelineRequestAssignmentResponse): unknown {
     const obj: any = {};
-    message.pipelineDefinitionId !== undefined && (obj.pipelineDefinitionId = message.pipelineDefinitionId.toString());
-    message.pipelineInstanceId !== undefined && (obj.pipelineInstanceId = message.pipelineInstanceId.toString());
+    message.pipelineDefinitionId !== undefined && (obj.pipelineDefinitionId = message.pipelineDefinitionId);
+    message.pipelineInstanceId !== undefined && (obj.pipelineInstanceId = message.pipelineInstanceId);
     if (message.segmentInstanceIds) {
-      obj.segmentInstanceIds = message.segmentInstanceIds.map((e) => e.toString());
+      obj.segmentInstanceIds = message.segmentInstanceIds.map((e) => e);
     } else {
       obj.segmentInstanceIds = [];
     }
     return obj;
   },
 
-  create(base?: DeepPartial<PipelineRequestAssignmentResponse>): PipelineRequestAssignmentResponse {
+  create<I extends Exact<DeepPartial<PipelineRequestAssignmentResponse>, I>>(
+    base?: I,
+  ): PipelineRequestAssignmentResponse {
     return PipelineRequestAssignmentResponse.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<PipelineRequestAssignmentResponse>): PipelineRequestAssignmentResponse {
+  fromPartial<I extends Exact<DeepPartial<PipelineRequestAssignmentResponse>, I>>(
+    object: I,
+  ): PipelineRequestAssignmentResponse {
     const message = createBasePipelineRequestAssignmentResponse();
-    message.pipelineDefinitionId = object.pipelineDefinitionId ?? BigInt("0");
-    message.pipelineInstanceId = object.pipelineInstanceId ?? BigInt("0");
+    message.pipelineDefinitionId = object.pipelineDefinitionId ?? "0";
+    message.pipelineInstanceId = object.pipelineInstanceId ?? "0";
     message.segmentInstanceIds = object.segmentInstanceIds?.map((e) => e) || [];
     return message;
   },
@@ -2092,8 +2113,8 @@ function createBaseStateUpdate(): StateUpdate {
   return {
     $type: "mrc.protos.StateUpdate",
     serviceName: "",
-    nonce: BigInt("0"),
-    instanceId: BigInt("0"),
+    nonce: "0",
+    instanceId: "0",
     connections: undefined,
     updateSubscriptionService: undefined,
     dropSubscriptionService: undefined,
@@ -2107,11 +2128,11 @@ export const StateUpdate = {
     if (message.serviceName !== "") {
       writer.uint32(10).string(message.serviceName);
     }
-    if (message.nonce !== BigInt("0")) {
-      writer.uint32(16).uint64(message.nonce.toString());
+    if (message.nonce !== "0") {
+      writer.uint32(16).uint64(message.nonce);
     }
-    if (message.instanceId !== BigInt("0")) {
-      writer.uint32(24).uint64(message.instanceId.toString());
+    if (message.instanceId !== "0") {
+      writer.uint32(24).uint64(message.instanceId);
     }
     if (message.connections !== undefined) {
       UpdateConnectionsState.encode(message.connections, writer.uint32(34).fork()).ldelim();
@@ -2136,10 +2157,10 @@ export const StateUpdate = {
           message.serviceName = reader.string();
           break;
         case 2:
-          message.nonce = longToBigint(reader.uint64() as Long);
+          message.nonce = longToString(reader.uint64() as Long);
           break;
         case 3:
-          message.instanceId = longToBigint(reader.uint64() as Long);
+          message.instanceId = longToString(reader.uint64() as Long);
           break;
         case 4:
           message.connections = UpdateConnectionsState.decode(reader, reader.uint32());
@@ -2162,8 +2183,8 @@ export const StateUpdate = {
     return {
       $type: StateUpdate.$type,
       serviceName: isSet(object.serviceName) ? String(object.serviceName) : "",
-      nonce: isSet(object.nonce) ? BigInt(object.nonce) : BigInt("0"),
-      instanceId: isSet(object.instanceId) ? BigInt(object.instanceId) : BigInt("0"),
+      nonce: isSet(object.nonce) ? String(object.nonce) : "0",
+      instanceId: isSet(object.instanceId) ? String(object.instanceId) : "0",
       connections: isSet(object.connections) ? UpdateConnectionsState.fromJSON(object.connections) : undefined,
       updateSubscriptionService: isSet(object.updateSubscriptionService)
         ? UpdateSubscriptionServiceState.fromJSON(object.updateSubscriptionService)
@@ -2177,8 +2198,8 @@ export const StateUpdate = {
   toJSON(message: StateUpdate): unknown {
     const obj: any = {};
     message.serviceName !== undefined && (obj.serviceName = message.serviceName);
-    message.nonce !== undefined && (obj.nonce = message.nonce.toString());
-    message.instanceId !== undefined && (obj.instanceId = message.instanceId.toString());
+    message.nonce !== undefined && (obj.nonce = message.nonce);
+    message.instanceId !== undefined && (obj.instanceId = message.instanceId);
     message.connections !== undefined &&
       (obj.connections = message.connections ? UpdateConnectionsState.toJSON(message.connections) : undefined);
     message.updateSubscriptionService !== undefined &&
@@ -2191,15 +2212,15 @@ export const StateUpdate = {
     return obj;
   },
 
-  create(base?: DeepPartial<StateUpdate>): StateUpdate {
+  create<I extends Exact<DeepPartial<StateUpdate>, I>>(base?: I): StateUpdate {
     return StateUpdate.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<StateUpdate>): StateUpdate {
+  fromPartial<I extends Exact<DeepPartial<StateUpdate>, I>>(object: I): StateUpdate {
     const message = createBaseStateUpdate();
     message.serviceName = object.serviceName ?? "";
-    message.nonce = object.nonce ?? BigInt("0");
-    message.instanceId = object.instanceId ?? BigInt("0");
+    message.nonce = object.nonce ?? "0";
+    message.instanceId = object.instanceId ?? "0";
     message.connections = (object.connections !== undefined && object.connections !== null)
       ? UpdateConnectionsState.fromPartial(object.connections)
       : undefined;
@@ -2268,11 +2289,11 @@ export const UpdateConnectionsState = {
     return obj;
   },
 
-  create(base?: DeepPartial<UpdateConnectionsState>): UpdateConnectionsState {
+  create<I extends Exact<DeepPartial<UpdateConnectionsState>, I>>(base?: I): UpdateConnectionsState {
     return UpdateConnectionsState.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<UpdateConnectionsState>): UpdateConnectionsState {
+  fromPartial<I extends Exact<DeepPartial<UpdateConnectionsState>, I>>(object: I): UpdateConnectionsState {
     const message = createBaseUpdateConnectionsState();
     message.taggedInstances = object.taggedInstances?.map((e) => TaggedInstance.fromPartial(e)) || [];
     return message;
@@ -2340,11 +2361,13 @@ export const UpdateSubscriptionServiceState = {
     return obj;
   },
 
-  create(base?: DeepPartial<UpdateSubscriptionServiceState>): UpdateSubscriptionServiceState {
+  create<I extends Exact<DeepPartial<UpdateSubscriptionServiceState>, I>>(base?: I): UpdateSubscriptionServiceState {
     return UpdateSubscriptionServiceState.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<UpdateSubscriptionServiceState>): UpdateSubscriptionServiceState {
+  fromPartial<I extends Exact<DeepPartial<UpdateSubscriptionServiceState>, I>>(
+    object: I,
+  ): UpdateSubscriptionServiceState {
     const message = createBaseUpdateSubscriptionServiceState();
     message.role = object.role ?? "";
     message.taggedInstances = object.taggedInstances?.map((e) => TaggedInstance.fromPartial(e)) || [];
@@ -2355,7 +2378,7 @@ export const UpdateSubscriptionServiceState = {
 messageTypeRegistry.set(UpdateSubscriptionServiceState.$type, UpdateSubscriptionServiceState);
 
 function createBaseDropSubscriptionServiceState(): DropSubscriptionServiceState {
-  return { $type: "mrc.protos.DropSubscriptionServiceState", role: "", tag: BigInt("0") };
+  return { $type: "mrc.protos.DropSubscriptionServiceState", role: "", tag: "0" };
 }
 
 export const DropSubscriptionServiceState = {
@@ -2365,8 +2388,8 @@ export const DropSubscriptionServiceState = {
     if (message.role !== "") {
       writer.uint32(10).string(message.role);
     }
-    if (message.tag !== BigInt("0")) {
-      writer.uint32(16).uint64(message.tag.toString());
+    if (message.tag !== "0") {
+      writer.uint32(16).uint64(message.tag);
     }
     return writer;
   },
@@ -2382,7 +2405,7 @@ export const DropSubscriptionServiceState = {
           message.role = reader.string();
           break;
         case 2:
-          message.tag = longToBigint(reader.uint64() as Long);
+          message.tag = longToString(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -2396,25 +2419,25 @@ export const DropSubscriptionServiceState = {
     return {
       $type: DropSubscriptionServiceState.$type,
       role: isSet(object.role) ? String(object.role) : "",
-      tag: isSet(object.tag) ? BigInt(object.tag) : BigInt("0"),
+      tag: isSet(object.tag) ? String(object.tag) : "0",
     };
   },
 
   toJSON(message: DropSubscriptionServiceState): unknown {
     const obj: any = {};
     message.role !== undefined && (obj.role = message.role);
-    message.tag !== undefined && (obj.tag = message.tag.toString());
+    message.tag !== undefined && (obj.tag = message.tag);
     return obj;
   },
 
-  create(base?: DeepPartial<DropSubscriptionServiceState>): DropSubscriptionServiceState {
+  create<I extends Exact<DeepPartial<DropSubscriptionServiceState>, I>>(base?: I): DropSubscriptionServiceState {
     return DropSubscriptionServiceState.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<DropSubscriptionServiceState>): DropSubscriptionServiceState {
+  fromPartial<I extends Exact<DeepPartial<DropSubscriptionServiceState>, I>>(object: I): DropSubscriptionServiceState {
     const message = createBaseDropSubscriptionServiceState();
     message.role = object.role ?? "";
-    message.tag = object.tag ?? BigInt("0");
+    message.tag = object.tag ?? "0";
     return message;
   },
 };
@@ -2456,11 +2479,11 @@ export const ControlMessage = {
     return obj;
   },
 
-  create(base?: DeepPartial<ControlMessage>): ControlMessage {
+  create<I extends Exact<DeepPartial<ControlMessage>, I>>(base?: I): ControlMessage {
     return ControlMessage.fromPartial(base ?? {});
   },
 
-  fromPartial(_: DeepPartial<ControlMessage>): ControlMessage {
+  fromPartial<I extends Exact<DeepPartial<ControlMessage>, I>>(_: I): ControlMessage {
     const message = createBaseControlMessage();
     return message;
   },
@@ -2528,11 +2551,11 @@ export const OnComplete = {
     return obj;
   },
 
-  create(base?: DeepPartial<OnComplete>): OnComplete {
+  create<I extends Exact<DeepPartial<OnComplete>, I>>(base?: I): OnComplete {
     return OnComplete.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<OnComplete>): OnComplete {
+  fromPartial<I extends Exact<DeepPartial<OnComplete>, I>>(object: I): OnComplete {
     const message = createBaseOnComplete();
     message.segmentAddresses = object.segmentAddresses?.map((e) => e) || [];
     return message;
@@ -2592,11 +2615,11 @@ export const UpdateAssignments = {
     return obj;
   },
 
-  create(base?: DeepPartial<UpdateAssignments>): UpdateAssignments {
+  create<I extends Exact<DeepPartial<UpdateAssignments>, I>>(base?: I): UpdateAssignments {
     return UpdateAssignments.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<UpdateAssignments>): UpdateAssignments {
+  fromPartial<I extends Exact<DeepPartial<UpdateAssignments>, I>>(object: I): UpdateAssignments {
     const message = createBaseUpdateAssignments();
     message.assignments = object.assignments?.map((e) => SegmentAssignment.fromPartial(e)) || [];
     return message;
@@ -2608,8 +2631,8 @@ messageTypeRegistry.set(UpdateAssignments.$type, UpdateAssignments);
 function createBaseSegmentAssignment(): SegmentAssignment {
   return {
     $type: "mrc.protos.SegmentAssignment",
-    machineId: BigInt("0"),
-    instanceId: BigInt("0"),
+    machineId: "0",
+    instanceId: "0",
     address: 0,
     egressPolices: {},
     issueEventOnComplete: false,
@@ -2621,11 +2644,11 @@ export const SegmentAssignment = {
   $type: "mrc.protos.SegmentAssignment" as const,
 
   encode(message: SegmentAssignment, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.machineId !== BigInt("0")) {
-      writer.uint32(8).uint64(message.machineId.toString());
+    if (message.machineId !== "0") {
+      writer.uint32(8).uint64(message.machineId);
     }
-    if (message.instanceId !== BigInt("0")) {
-      writer.uint32(16).uint64(message.instanceId.toString());
+    if (message.instanceId !== "0") {
+      writer.uint32(16).uint64(message.instanceId);
     }
     if (message.address !== 0) {
       writer.uint32(24).uint32(message.address);
@@ -2656,10 +2679,10 @@ export const SegmentAssignment = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.machineId = longToBigint(reader.uint64() as Long);
+          message.machineId = longToString(reader.uint64() as Long);
           break;
         case 2:
-          message.instanceId = longToBigint(reader.uint64() as Long);
+          message.instanceId = longToString(reader.uint64() as Long);
           break;
         case 3:
           message.address = reader.uint32();
@@ -2694,8 +2717,8 @@ export const SegmentAssignment = {
   fromJSON(object: any): SegmentAssignment {
     return {
       $type: SegmentAssignment.$type,
-      machineId: isSet(object.machineId) ? BigInt(object.machineId) : BigInt("0"),
-      instanceId: isSet(object.instanceId) ? BigInt(object.instanceId) : BigInt("0"),
+      machineId: isSet(object.machineId) ? String(object.machineId) : "0",
+      instanceId: isSet(object.instanceId) ? String(object.instanceId) : "0",
       address: isSet(object.address) ? Number(object.address) : 0,
       egressPolices: isObject(object.egressPolices)
         ? Object.entries(object.egressPolices).reduce<{ [key: number]: EgressPolicy }>((acc, [key, value]) => {
@@ -2712,8 +2735,8 @@ export const SegmentAssignment = {
 
   toJSON(message: SegmentAssignment): unknown {
     const obj: any = {};
-    message.machineId !== undefined && (obj.machineId = message.machineId.toString());
-    message.instanceId !== undefined && (obj.instanceId = message.instanceId.toString());
+    message.machineId !== undefined && (obj.machineId = message.machineId);
+    message.instanceId !== undefined && (obj.instanceId = message.instanceId);
     message.address !== undefined && (obj.address = Math.round(message.address));
     obj.egressPolices = {};
     if (message.egressPolices) {
@@ -2730,14 +2753,14 @@ export const SegmentAssignment = {
     return obj;
   },
 
-  create(base?: DeepPartial<SegmentAssignment>): SegmentAssignment {
+  create<I extends Exact<DeepPartial<SegmentAssignment>, I>>(base?: I): SegmentAssignment {
     return SegmentAssignment.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<SegmentAssignment>): SegmentAssignment {
+  fromPartial<I extends Exact<DeepPartial<SegmentAssignment>, I>>(object: I): SegmentAssignment {
     const message = createBaseSegmentAssignment();
-    message.machineId = object.machineId ?? BigInt("0");
-    message.instanceId = object.instanceId ?? BigInt("0");
+    message.machineId = object.machineId ?? "0";
+    message.instanceId = object.instanceId ?? "0";
     message.address = object.address ?? 0;
     message.egressPolices = Object.entries(object.egressPolices ?? {}).reduce<{ [key: number]: EgressPolicy }>(
       (acc, [key, value]) => {
@@ -2809,11 +2832,15 @@ export const SegmentAssignment_EgressPolicesEntry = {
     return obj;
   },
 
-  create(base?: DeepPartial<SegmentAssignment_EgressPolicesEntry>): SegmentAssignment_EgressPolicesEntry {
+  create<I extends Exact<DeepPartial<SegmentAssignment_EgressPolicesEntry>, I>>(
+    base?: I,
+  ): SegmentAssignment_EgressPolicesEntry {
     return SegmentAssignment_EgressPolicesEntry.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<SegmentAssignment_EgressPolicesEntry>): SegmentAssignment_EgressPolicesEntry {
+  fromPartial<I extends Exact<DeepPartial<SegmentAssignment_EgressPolicesEntry>, I>>(
+    object: I,
+  ): SegmentAssignment_EgressPolicesEntry {
     const message = createBaseSegmentAssignment_EgressPolicesEntry();
     message.key = object.key ?? 0;
     message.value = (object.value !== undefined && object.value !== null)
@@ -2890,11 +2917,11 @@ export const Topology = {
     return obj;
   },
 
-  create(base?: DeepPartial<Topology>): Topology {
+  create<I extends Exact<DeepPartial<Topology>, I>>(base?: I): Topology {
     return Topology.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<Topology>): Topology {
+  fromPartial<I extends Exact<DeepPartial<Topology>, I>>(object: I): Topology {
     const message = createBaseTopology();
     message.hwlocXmlString = object.hwlocXmlString ?? "";
     message.cpuSet = object.cpuSet ?? "";
@@ -2912,7 +2939,7 @@ function createBaseGpuInfo(): GpuInfo {
     name: "",
     uuid: "",
     pcieBusId: "",
-    memoryCapacity: BigInt("0"),
+    memoryCapacity: "0",
     cudaDeviceId: 0,
   };
 }
@@ -2933,8 +2960,8 @@ export const GpuInfo = {
     if (message.pcieBusId !== "") {
       writer.uint32(34).string(message.pcieBusId);
     }
-    if (message.memoryCapacity !== BigInt("0")) {
-      writer.uint32(40).uint64(message.memoryCapacity.toString());
+    if (message.memoryCapacity !== "0") {
+      writer.uint32(40).uint64(message.memoryCapacity);
     }
     if (message.cudaDeviceId !== 0) {
       writer.uint32(48).int32(message.cudaDeviceId);
@@ -2962,7 +2989,7 @@ export const GpuInfo = {
           message.pcieBusId = reader.string();
           break;
         case 5:
-          message.memoryCapacity = longToBigint(reader.uint64() as Long);
+          message.memoryCapacity = longToString(reader.uint64() as Long);
           break;
         case 6:
           message.cudaDeviceId = reader.int32();
@@ -2982,7 +3009,7 @@ export const GpuInfo = {
       name: isSet(object.name) ? String(object.name) : "",
       uuid: isSet(object.uuid) ? String(object.uuid) : "",
       pcieBusId: isSet(object.pcieBusId) ? String(object.pcieBusId) : "",
-      memoryCapacity: isSet(object.memoryCapacity) ? BigInt(object.memoryCapacity) : BigInt("0"),
+      memoryCapacity: isSet(object.memoryCapacity) ? String(object.memoryCapacity) : "0",
       cudaDeviceId: isSet(object.cudaDeviceId) ? Number(object.cudaDeviceId) : 0,
     };
   },
@@ -2993,22 +3020,22 @@ export const GpuInfo = {
     message.name !== undefined && (obj.name = message.name);
     message.uuid !== undefined && (obj.uuid = message.uuid);
     message.pcieBusId !== undefined && (obj.pcieBusId = message.pcieBusId);
-    message.memoryCapacity !== undefined && (obj.memoryCapacity = message.memoryCapacity.toString());
+    message.memoryCapacity !== undefined && (obj.memoryCapacity = message.memoryCapacity);
     message.cudaDeviceId !== undefined && (obj.cudaDeviceId = Math.round(message.cudaDeviceId));
     return obj;
   },
 
-  create(base?: DeepPartial<GpuInfo>): GpuInfo {
+  create<I extends Exact<DeepPartial<GpuInfo>, I>>(base?: I): GpuInfo {
     return GpuInfo.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<GpuInfo>): GpuInfo {
+  fromPartial<I extends Exact<DeepPartial<GpuInfo>, I>>(object: I): GpuInfo {
     const message = createBaseGpuInfo();
     message.cpuSet = object.cpuSet ?? "";
     message.name = object.name ?? "";
     message.uuid = object.uuid ?? "";
     message.pcieBusId = object.pcieBusId ?? "";
-    message.memoryCapacity = object.memoryCapacity ?? BigInt("0");
+    message.memoryCapacity = object.memoryCapacity ?? "0";
     message.cudaDeviceId = object.cudaDeviceId ?? 0;
     return message;
   },
@@ -3073,11 +3100,11 @@ export const Pipeline = {
     return obj;
   },
 
-  create(base?: DeepPartial<Pipeline>): Pipeline {
+  create<I extends Exact<DeepPartial<Pipeline>, I>>(base?: I): Pipeline {
     return Pipeline.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<Pipeline>): Pipeline {
+  fromPartial<I extends Exact<DeepPartial<Pipeline>, I>>(object: I): Pipeline {
     const message = createBasePipeline();
     message.name = object.name ?? "";
     message.segments = object.segments?.map((e) => SegmentDefinition.fromPartial(e)) || [];
@@ -3088,18 +3115,18 @@ export const Pipeline = {
 messageTypeRegistry.set(Pipeline.$type, Pipeline);
 
 function createBaseWorkerAddress(): WorkerAddress {
-  return { $type: "mrc.protos.WorkerAddress", machineId: BigInt("0"), instanceId: BigInt("0"), workerAddress: "" };
+  return { $type: "mrc.protos.WorkerAddress", machineId: "0", instanceId: "0", workerAddress: "" };
 }
 
 export const WorkerAddress = {
   $type: "mrc.protos.WorkerAddress" as const,
 
   encode(message: WorkerAddress, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.machineId !== BigInt("0")) {
-      writer.uint32(8).uint64(message.machineId.toString());
+    if (message.machineId !== "0") {
+      writer.uint32(8).uint64(message.machineId);
     }
-    if (message.instanceId !== BigInt("0")) {
-      writer.uint32(16).uint64(message.instanceId.toString());
+    if (message.instanceId !== "0") {
+      writer.uint32(16).uint64(message.instanceId);
     }
     if (message.workerAddress !== "") {
       writer.uint32(26).string(message.workerAddress);
@@ -3115,10 +3142,10 @@ export const WorkerAddress = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.machineId = longToBigint(reader.uint64() as Long);
+          message.machineId = longToString(reader.uint64() as Long);
           break;
         case 2:
-          message.instanceId = longToBigint(reader.uint64() as Long);
+          message.instanceId = longToString(reader.uint64() as Long);
           break;
         case 3:
           message.workerAddress = reader.string();
@@ -3134,28 +3161,28 @@ export const WorkerAddress = {
   fromJSON(object: any): WorkerAddress {
     return {
       $type: WorkerAddress.$type,
-      machineId: isSet(object.machineId) ? BigInt(object.machineId) : BigInt("0"),
-      instanceId: isSet(object.instanceId) ? BigInt(object.instanceId) : BigInt("0"),
+      machineId: isSet(object.machineId) ? String(object.machineId) : "0",
+      instanceId: isSet(object.instanceId) ? String(object.instanceId) : "0",
       workerAddress: isSet(object.workerAddress) ? String(object.workerAddress) : "",
     };
   },
 
   toJSON(message: WorkerAddress): unknown {
     const obj: any = {};
-    message.machineId !== undefined && (obj.machineId = message.machineId.toString());
-    message.instanceId !== undefined && (obj.instanceId = message.instanceId.toString());
+    message.machineId !== undefined && (obj.machineId = message.machineId);
+    message.instanceId !== undefined && (obj.instanceId = message.instanceId);
     message.workerAddress !== undefined && (obj.workerAddress = message.workerAddress);
     return obj;
   },
 
-  create(base?: DeepPartial<WorkerAddress>): WorkerAddress {
+  create<I extends Exact<DeepPartial<WorkerAddress>, I>>(base?: I): WorkerAddress {
     return WorkerAddress.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<WorkerAddress>): WorkerAddress {
+  fromPartial<I extends Exact<DeepPartial<WorkerAddress>, I>>(object: I): WorkerAddress {
     const message = createBaseWorkerAddress();
-    message.machineId = object.machineId ?? BigInt("0");
-    message.instanceId = object.instanceId ?? BigInt("0");
+    message.machineId = object.machineId ?? "0";
+    message.instanceId = object.instanceId ?? "0";
     message.workerAddress = object.workerAddress ?? "";
     return message;
   },
@@ -3164,15 +3191,15 @@ export const WorkerAddress = {
 messageTypeRegistry.set(WorkerAddress.$type, WorkerAddress);
 
 function createBaseInstancesResources(): InstancesResources {
-  return { $type: "mrc.protos.InstancesResources", hostMemory: BigInt("0"), cpus: [], gpus: [], nics: [] };
+  return { $type: "mrc.protos.InstancesResources", hostMemory: "0", cpus: [], gpus: [], nics: [] };
 }
 
 export const InstancesResources = {
   $type: "mrc.protos.InstancesResources" as const,
 
   encode(message: InstancesResources, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.hostMemory !== BigInt("0")) {
-      writer.uint32(8).uint64(message.hostMemory.toString());
+    if (message.hostMemory !== "0") {
+      writer.uint32(8).uint64(message.hostMemory);
     }
     for (const v of message.cpus) {
       CPU.encode(v!, writer.uint32(18).fork()).ldelim();
@@ -3194,7 +3221,7 @@ export const InstancesResources = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.hostMemory = longToBigint(reader.uint64() as Long);
+          message.hostMemory = longToString(reader.uint64() as Long);
           break;
         case 2:
           message.cpus.push(CPU.decode(reader, reader.uint32()));
@@ -3216,7 +3243,7 @@ export const InstancesResources = {
   fromJSON(object: any): InstancesResources {
     return {
       $type: InstancesResources.$type,
-      hostMemory: isSet(object.hostMemory) ? BigInt(object.hostMemory) : BigInt("0"),
+      hostMemory: isSet(object.hostMemory) ? String(object.hostMemory) : "0",
       cpus: Array.isArray(object?.cpus) ? object.cpus.map((e: any) => CPU.fromJSON(e)) : [],
       gpus: Array.isArray(object?.gpus) ? object.gpus.map((e: any) => GPU.fromJSON(e)) : [],
       nics: Array.isArray(object?.nics) ? object.nics.map((e: any) => NIC.fromJSON(e)) : [],
@@ -3225,7 +3252,7 @@ export const InstancesResources = {
 
   toJSON(message: InstancesResources): unknown {
     const obj: any = {};
-    message.hostMemory !== undefined && (obj.hostMemory = message.hostMemory.toString());
+    message.hostMemory !== undefined && (obj.hostMemory = message.hostMemory);
     if (message.cpus) {
       obj.cpus = message.cpus.map((e) => e ? CPU.toJSON(e) : undefined);
     } else {
@@ -3244,13 +3271,13 @@ export const InstancesResources = {
     return obj;
   },
 
-  create(base?: DeepPartial<InstancesResources>): InstancesResources {
+  create<I extends Exact<DeepPartial<InstancesResources>, I>>(base?: I): InstancesResources {
     return InstancesResources.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<InstancesResources>): InstancesResources {
+  fromPartial<I extends Exact<DeepPartial<InstancesResources>, I>>(object: I): InstancesResources {
     const message = createBaseInstancesResources();
-    message.hostMemory = object.hostMemory ?? BigInt("0");
+    message.hostMemory = object.hostMemory ?? "0";
     message.cpus = object.cpus?.map((e) => CPU.fromPartial(e)) || [];
     message.gpus = object.gpus?.map((e) => GPU.fromPartial(e)) || [];
     message.nics = object.nics?.map((e) => NIC.fromPartial(e)) || [];
@@ -3313,11 +3340,11 @@ export const CPU = {
     return obj;
   },
 
-  create(base?: DeepPartial<CPU>): CPU {
+  create<I extends Exact<DeepPartial<CPU>, I>>(base?: I): CPU {
     return CPU.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<CPU>): CPU {
+  fromPartial<I extends Exact<DeepPartial<CPU>, I>>(object: I): CPU {
     const message = createBaseCPU();
     message.cores = object.cores ?? 0;
     message.numaNodes = object.numaNodes ?? 0;
@@ -3328,7 +3355,7 @@ export const CPU = {
 messageTypeRegistry.set(CPU.$type, CPU);
 
 function createBaseGPU(): GPU {
-  return { $type: "mrc.protos.GPU", name: "", cores: 0, memory: BigInt("0"), computeCapability: 0 };
+  return { $type: "mrc.protos.GPU", name: "", cores: 0, memory: "0", computeCapability: 0 };
 }
 
 export const GPU = {
@@ -3341,8 +3368,8 @@ export const GPU = {
     if (message.cores !== 0) {
       writer.uint32(16).uint32(message.cores);
     }
-    if (message.memory !== BigInt("0")) {
-      writer.uint32(24).uint64(message.memory.toString());
+    if (message.memory !== "0") {
+      writer.uint32(24).uint64(message.memory);
     }
     if (message.computeCapability !== 0) {
       writer.uint32(37).float(message.computeCapability);
@@ -3364,7 +3391,7 @@ export const GPU = {
           message.cores = reader.uint32();
           break;
         case 3:
-          message.memory = longToBigint(reader.uint64() as Long);
+          message.memory = longToString(reader.uint64() as Long);
           break;
         case 4:
           message.computeCapability = reader.float();
@@ -3382,7 +3409,7 @@ export const GPU = {
       $type: GPU.$type,
       name: isSet(object.name) ? String(object.name) : "",
       cores: isSet(object.cores) ? Number(object.cores) : 0,
-      memory: isSet(object.memory) ? BigInt(object.memory) : BigInt("0"),
+      memory: isSet(object.memory) ? String(object.memory) : "0",
       computeCapability: isSet(object.computeCapability) ? Number(object.computeCapability) : 0,
     };
   },
@@ -3391,20 +3418,20 @@ export const GPU = {
     const obj: any = {};
     message.name !== undefined && (obj.name = message.name);
     message.cores !== undefined && (obj.cores = Math.round(message.cores));
-    message.memory !== undefined && (obj.memory = message.memory.toString());
+    message.memory !== undefined && (obj.memory = message.memory);
     message.computeCapability !== undefined && (obj.computeCapability = message.computeCapability);
     return obj;
   },
 
-  create(base?: DeepPartial<GPU>): GPU {
+  create<I extends Exact<DeepPartial<GPU>, I>>(base?: I): GPU {
     return GPU.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<GPU>): GPU {
+  fromPartial<I extends Exact<DeepPartial<GPU>, I>>(object: I): GPU {
     const message = createBaseGPU();
     message.name = object.name ?? "";
     message.cores = object.cores ?? 0;
-    message.memory = object.memory ?? BigInt("0");
+    message.memory = object.memory ?? "0";
     message.computeCapability = object.computeCapability ?? 0;
     return message;
   },
@@ -3447,11 +3474,11 @@ export const NIC = {
     return obj;
   },
 
-  create(base?: DeepPartial<NIC>): NIC {
+  create<I extends Exact<DeepPartial<NIC>, I>>(base?: I): NIC {
     return NIC.fromPartial(base ?? {});
   },
 
-  fromPartial(_: DeepPartial<NIC>): NIC {
+  fromPartial<I extends Exact<DeepPartial<NIC>, I>>(_: I): NIC {
     const message = createBaseNIC();
     return message;
   },
@@ -3557,8 +3584,12 @@ export type DeepPartial<T> = T extends Builtin ? T
   : T extends {} ? { [K in Exclude<keyof T, "$type">]?: DeepPartial<T[K]> }
   : Partial<T>;
 
-function longToBigint(long: Long) {
-  return BigInt(long.toString());
+type KeysOfUnion<T> = T extends T ? keyof T : never;
+export type Exact<P, I extends P> = P extends Builtin ? P
+  : P & { [K in keyof P]: Exact<P[K], I[K]> } & { [K in Exclude<keyof I, KeysOfUnion<P> | "$type">]: never };
+
+function longToString(long: Long) {
+  return long.toString();
 }
 
 if (_m0.util.Long !== Long) {

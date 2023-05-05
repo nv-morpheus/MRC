@@ -87,7 +87,7 @@ describe("Single", () => {
    test("Remove Unknown ID", () => {
       assert.throws(() => store.dispatch(connectionsRemove({
          ...connection,
-         id: -9999,
+         id: "9999",
       })));
    });
 

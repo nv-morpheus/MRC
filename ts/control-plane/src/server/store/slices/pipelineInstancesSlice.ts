@@ -102,7 +102,7 @@ export const pipelineInstancesSlice = createSlice({
 });
 
 export function pipelineInstancesAssign(payload: {
-   machineId: number,
+   machineId: string,
    pipeline: IPipelineConfiguration,
    assignments: ISegmentMapping[],
 })
@@ -170,10 +170,10 @@ export const {
 } = pipelineInstancesAdapter.getSelectors((state: RootState) => state.pipelineInstances);
 
 const selectByMachineId = createSelector(
-    [pipelineInstancesAdapter.getAll, (state: PipelineInstancesStateType, machine_id: number) => machine_id],
+    [pipelineInstancesAdapter.getAll, (state: PipelineInstancesStateType, machine_id: string) => machine_id],
     (pipelineInstances, machine_id) => pipelineInstances.filter((p) => p.machineId === machine_id));
 
-export const pipelineInstancesSelectByMachineId = (state: RootState, machine_id: number) => selectByMachineId(
+export const pipelineInstancesSelectByMachineId = (state: RootState, machine_id: string) => selectByMachineId(
     state.pipelineInstances,
     machine_id);
 

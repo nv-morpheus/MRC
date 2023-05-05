@@ -127,10 +127,10 @@ export const {
 } = workersAdapter.getSelectors((state: RootState) => state.workers);
 
 const selectByMachineId = createSelector(
-    [workersAdapter.getAll, (state: WorkersStateType, machine_id: number) => machine_id],
+    [workersAdapter.getAll, (state: WorkersStateType, machine_id: string) => machine_id],
     (workers, machine_id) => workers.filter((w) => w.machineId === machine_id));
 
-export const workersSelectByMachineId = (state: RootState, machine_id: number) => selectByMachineId(state.workers,
+export const workersSelectByMachineId = (state: RootState, machine_id: string) => selectByMachineId(state.workers,
                                                                                                     machine_id);
 
 // // Other code such as selectors can use the imported `RootState` type

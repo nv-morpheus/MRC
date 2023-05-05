@@ -139,7 +139,7 @@ describe("Single", () => {
 
       assert.throws(() => store.dispatch(segmentInstancesRemove({
          ...segments[0],
-         id: -9999,
+         id: "9999",
       })));
    });
 

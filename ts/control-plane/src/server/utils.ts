@@ -1,9 +1,8 @@
 import {createDraftSafeSelector, createEntityAdapter, EntityState, Selector} from "@reduxjs/toolkit";
 import {Dictionary, EntityAdapter, EntityId, EntitySelectors, PreventAny} from "@reduxjs/toolkit/dist/entities/models";
-import {BinaryLike, createHash} from "crypto";
-export function generateId(max: number = 4294967295): bigint
+export function generateId(max: number = 4294967295): string
 {
-   return BigInt(Math.floor(Math.random() * max));
+   return Math.floor(Math.random() * max).toString();
 }
 
 type createEntityAdapterParameters<T> = Parameters<typeof createEntityAdapter<T>>;

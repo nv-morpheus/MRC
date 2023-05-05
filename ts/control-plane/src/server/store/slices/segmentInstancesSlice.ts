@@ -103,18 +103,18 @@ export const {
 } = segmentInstancesAdapter.getSelectors((state: RootState) => state.segmentInstances);
 
 const selectByWorkerId = createSelector(
-    [segmentInstancesAdapter.getAll, (state: SegmentInstancesStateType, worker_id: number) => worker_id],
+    [segmentInstancesAdapter.getAll, (state: SegmentInstancesStateType, worker_id: string) => worker_id],
     (segmentInstances, worker_id) => segmentInstances.filter((x) => x.workerId === worker_id));
 
-export const segmentInstancesSelectByWorkerId = (state: RootState, worker_id: number) => selectByWorkerId(
+export const segmentInstancesSelectByWorkerId = (state: RootState, worker_id: string) => selectByWorkerId(
     state.segmentInstances,
     worker_id);
 
 const selectByPipelineId = createSelector(
-    [segmentInstancesAdapter.getAll, (state: SegmentInstancesStateType, pipeline_id: number) => pipeline_id],
+    [segmentInstancesAdapter.getAll, (state: SegmentInstancesStateType, pipeline_id: string) => pipeline_id],
     (segmentInstances, pipeline_id) => segmentInstances.filter((x) => x.pipelineInstanceId === pipeline_id));
 
-export const segmentInstancesSelectByPipelineId = (state: RootState, pipeline_id: number) => selectByPipelineId(
+export const segmentInstancesSelectByPipelineId = (state: RootState, pipeline_id: string) => selectByPipelineId(
     state.segmentInstances,
     pipeline_id);
 

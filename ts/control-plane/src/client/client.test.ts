@@ -80,7 +80,7 @@ describe("Client", () => {
 
       it("ping", async () => {
          const req = PingRequest.create({
-            tag: 1234,
+            tag: "1234",
          });
 
          const resp = await client.ping(req);
@@ -154,7 +154,7 @@ describe("Client", () => {
             const registered_response = await unpack_unary_event<RegisterWorkersResponse>(
                 recieve_events,
                 send_events,
-                packEvent(EventType.ClientUnaryRegisterWorkers, 9876, RegisterWorkersRequest.create({
+                packEvent(EventType.ClientUnaryRegisterWorkers, "9876", RegisterWorkersRequest.create({
                    ucxWorkerAddresses: stringToBytes(["test data"]),
                 })));
 
@@ -167,14 +167,14 @@ describe("Client", () => {
             const registered_response = await unpack_unary_event<RegisterWorkersResponse>(
                 recieve_events,
                 send_events,
-                packEvent(EventType.ClientUnaryRegisterWorkers, 9876, RegisterWorkersRequest.create({
+                packEvent(EventType.ClientUnaryRegisterWorkers, "9876", RegisterWorkersRequest.create({
                    ucxWorkerAddresses: stringToBytes(["test data"]),
                 })));
 
             const activated_response = await unpack_unary_event<Ack>(
                 recieve_events,
                 send_events,
-                packEvent(EventType.ClientUnaryActivateStream, 2, registered_response));
+                packEvent(EventType.ClientUnaryActivateStream, "2", registered_response));
 
             // Check to make sure its activated
             const found_worker = workersSelectById(store.getState(), registered_response.instanceIds[0]);
@@ -187,14 +187,14 @@ describe("Client", () => {
                const registered_response = await unpack_unary_event<RegisterWorkersResponse>(
                    recieve_events,
                    send_events,
-                   packEvent(EventType.ClientUnaryRegisterWorkers, 9876, RegisterWorkersRequest.create({
+                   packEvent(EventType.ClientUnaryRegisterWorkers, "9876", RegisterWorkersRequest.create({
                       ucxWorkerAddresses: stringToBytes(["test data", "test data 2"]),
                    })));
 
                const activated_response = await unpack_unary_event<Ack>(
                    recieve_events,
                    send_events,
-                   packEvent(EventType.ClientUnaryActivateStream, 2, registered_response));
+                   packEvent(EventType.ClientUnaryActivateStream, "2", registered_response));
 
                const pipeline_config: IPipelineConfiguration = {
                   segments: {
@@ -223,7 +223,7 @@ describe("Client", () => {
                    recieve_events,
                    send_events,
                    packEvent(EventType.ClientUnaryRequestPipelineAssignment,
-                             12345,
+                             "12345",
                              PipelineRequestAssignmentRequest.create({
                                 pipeline: pipeline_config,
                                 assignments: segment_assignments,

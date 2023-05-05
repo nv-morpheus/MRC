@@ -47,7 +47,7 @@ import {generateId} from "./utils";
 
 interface IncomingData
 {
-   msg: Event, stream?: ServerDuplexStream<Event, Event>, machineId: number,
+   msg: Event, stream?: ServerDuplexStream<Event, Event>, machineId: string,
 }
 
 function unaryResponse<MessageDataT>(event: IncomingData|undefined, message_class: any, data: MessageDataT): Event
@@ -68,7 +68,7 @@ function unaryResponse<MessageDataT>(event: IncomingData|undefined, message_clas
 
    return Event.create({
       event: EventType.Response,
-      tag: event?.msg.tag ?? 0,
+      tag: event?.msg.tag ?? "0",
       message: any_msg,
    });
 }
@@ -166,17 +166,17 @@ class Architect implements ArchitectServiceImplementation
    public eventStream(request: AsyncIterable<Event>, context: CallContext): ServerStreamingMethodResult<{
       error?: {message?: string | undefined; code?: ErrorCode | undefined;} | undefined;
       event?: EventType | undefined;
-      tag?: number | undefined;
+      tag?: string | undefined;
       message?: {typeUrl?: string | undefined; value?: Uint8Array | undefined;} | undefined;
    }>
    {
       return this.do_eventStream(request, context);
    }
-   public ping(request: PingRequest, context: CallContext): Promise<{tag?: number | undefined;}>
+   public ping(request: PingRequest, context: CallContext): Promise<{tag?: string | undefined;}>
    {
       return this.do_ping(request, context);
    }
-   public shutdown(request: ShutdownRequest, context: CallContext): Promise<{tag?: number | undefined;}>
+   public shutdown(request: ShutdownRequest, context: CallContext): Promise<{tag?: string | undefined;}>
    {
       return this.do_shutdown(request, context);
    }
@@ -211,7 +211,7 @@ class Architect implements ArchitectServiceImplementation
          // Push out the state update
          store_update_sink.write(
              packEvent<ControlPlaneState>(EventType.ServerStateUpdate,
-                                          0,
+                                          "0",
                                           ControlPlaneState.create(out_state as ControlPlaneState)));
       });
 
