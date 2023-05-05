@@ -1,19 +1,19 @@
 import {expect} from "@jest/globals";
 import {SegmentStates, WorkerStates} from "@mrc/proto/mrc/protos/architect_state";
+import {pipelineDefinitionsAdd} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 import {pipelineInstancesAdd} from "@mrc/server/store/slices/pipelineInstancesSlice";
 import {
-   segmentInstancesAdd,
+   segmentInstancesAddMany,
    segmentInstancesRemove,
    segmentInstancesUpdateState,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
-import {connection, pipeline, segment, worker} from "@mrc/tests/defaultObjects";
+import {connection, pipeline, pipeline_def, segments, worker} from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
 import {RootStore, setupStore} from "../store";
 
-import {connectionsAdd, connectionsDropOne, IConnection} from "./connectionsSlice";
+import {connectionsAdd, connectionsDropOne} from "./connectionsSlice";
 import {
-   IWorker,
    workersActivate,
    workersAdd,
    workersRemove,
@@ -120,26 +120,29 @@ describe("Single", () => {
 
    describe("With Segment", () => {
       beforeEach(() => {
+         store.dispatch(pipelineDefinitionsAdd(pipeline_def));
+
          // Add a pipeline and then a segment
          store.dispatch(pipelineInstancesAdd(pipeline));
 
          // Now add a segment
-         store.dispatch(segmentInstancesAdd(segment));
+         store.dispatch(segmentInstancesAddMany(segments));
       });
 
       test("Contains Segment", () => {
          const found = workersSelectById(store.getState(), worker.id);
 
-         expect(found?.assignedSegmentIds).toContain(segment.id);
+         segments.forEach((s) => expect(found?.assignedSegmentIds).toContain(s.id));
       });
 
       test("Remove Segment", () => {
-         store.dispatch(segmentInstancesUpdateState({id: segment.id, state: SegmentStates.Completed}));
-         store.dispatch(segmentInstancesRemove(segment));
+         segments.forEach(
+             (s) => store.dispatch(segmentInstancesUpdateState({id: s.id, state: SegmentStates.Completed})));
+         segments.forEach((s) => store.dispatch(segmentInstancesRemove(s)));
 
          const found = workersSelectById(store.getState(), worker.id);
 
-         expect(found?.assignedSegmentIds).not.toContain(segment.id);
+         segments.forEach((s) => expect(found?.assignedSegmentIds).not.toContain(s.id));
 
          // Then remove the object to check that we dont get an error
          store.dispatch(workersRemove(worker));

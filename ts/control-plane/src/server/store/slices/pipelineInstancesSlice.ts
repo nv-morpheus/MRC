@@ -1,19 +1,20 @@
+import {PipelineRequestAssignmentRequest_SegmentMapping} from "@mrc/proto/mrc/protos/architect";
+import {PipelineInstance, SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
+import {connectionsRemove} from "@mrc/server/store/slices/connectionsSlice";
+import {IPipelineConfiguration, pipelineDefinitionsCreate} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
+import {AppDispatch, AppGetState, RootState} from "@mrc/server/store/store";
+import {createWrappedEntityAdapter, generateId} from "@mrc/server/utils";
 import {createSelector, createSlice, PayloadAction} from "@reduxjs/toolkit";
 
-import {PipelineInstance, SegmentStates} from "../../../proto/mrc/protos/architect_state";
-import {createWrappedEntityAdapter, generateId} from "../../utils";
-
-import type {AppDispatch, AppGetState, RootState} from "../store";
 import {
+   ISegmentInstance,
    segmentInstancesAdd,
    segmentInstancesAddMany,
-   ISegmentInstance,
    segmentInstancesRemove,
 } from "./segmentInstancesSlice";
 import {workersSelectByMachineId} from "./workersSlice";
-import {connectionsRemove} from "@mrc/server/store/slices/connectionsSlice";
-import {IPipelineDefinition, pipelineDefinitionsCreate} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
-import {ISegmentDefinition, ISegmentMapping} from "@mrc/server/store/slices/segmentDefinitionsSlice";
+
+export type ISegmentMapping = Omit<PipelineRequestAssignmentRequest_SegmentMapping, "$type">;
 
 export type IPipelineInstance = Omit<PipelineInstance, "$type">;
 
@@ -24,7 +25,7 @@ const pipelineInstancesAdapter = createWrappedEntityAdapter<IPipelineInstance>({
 function segmentInstanceAdded(state: PipelineInstancesStateType, instance: ISegmentInstance)
 {
    // Handle synchronizing a new added instance
-   const found = pipelineInstancesAdapter.getOne(state, instance.pipelineId);
+   const found = pipelineInstancesAdapter.getOne(state, instance.pipelineInstanceId);
 
    if (found)
    {
@@ -80,7 +81,7 @@ export const pipelineInstancesSlice = createSlice({
          });
       });
       builder.addCase(segmentInstancesRemove, (state, action) => {
-         const found = pipelineInstancesAdapter.getOne(state, action.payload.pipelineId);
+         const found = pipelineInstancesAdapter.getOne(state, action.payload.pipelineInstanceId);
 
          if (found)
          {
@@ -102,17 +103,13 @@ export const pipelineInstancesSlice = createSlice({
 
 export function pipelineInstancesAssign(payload: {
    machineId: number,
-   pipeline: IPipelineDefinition,
-   segments: ISegmentDefinition[],
+   pipeline: IPipelineConfiguration,
    assignments: ISegmentMapping[],
 })
 {
    return (dispatch: AppDispatch, getState: AppGetState) => {
       // Dispatch the definition to get the definition IDs
-      const definition_ids = dispatch(pipelineDefinitionsCreate({
-         pipeline: payload.pipeline,
-         segments: payload.segments,
-      }));
+      const definition_ids = dispatch(pipelineDefinitionsCreate(payload.pipeline));
 
       const pipeline_id = generateId();
 
@@ -129,20 +126,18 @@ export function pipelineInstancesAssign(payload: {
       if (payload.assignments.length == 0)
       {
          // Default to auto assignment of one segment instance per worker per definition
-         payload.assignments = payload.segments.map((seg_def) => {
-            return {segmentName: seg_def.name, workerIds: workers.map((x) => x.id)} as ISegmentMapping;
+         payload.assignments = Object.entries(payload.pipeline.segments).map(([seg_name, seg_config]) => {
+            return {segmentName: seg_name, workerIds: workers.map((x) => x.id)} as ISegmentMapping;
          });
       }
 
       const segments = payload.assignments.flatMap((assign) => {  // For each worker, create a segment instance
-         // Find the segment definition ID from the name
-         const def_idx = payload.segments.findIndex((x) => x.name == assign.segmentName);
-
          return assign.workerIds.map((wid) => {
             return {
                id: generateId(),
-               definitionId: Number(definition_ids.segments[def_idx]),
-               pipelineId: pipeline_id,
+               pipelineDefinitionId: definition_ids.pipeline,
+               pipelineInstanceId: pipeline_id,
+               name: assign.segmentName,
                address: 0,
                workerId: wid,
                state: SegmentStates.Initialized,
@@ -155,7 +150,6 @@ export function pipelineInstancesAssign(payload: {
 
       return {
          pipelineDefinitionId: definition_ids.pipeline,
-         segmentDefinitionIds: definition_ids.segments,
          pipelineInstanceId: pipeline_id,
          segmentInstanceIds: segments.map((x) => x.id),
       };

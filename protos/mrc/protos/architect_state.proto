@@ -66,21 +66,59 @@ message Worker {
    repeated uint64 assigned_segment_ids = 5;
 }
 
-message PipelineDefinition {
-   uint64 id = 1;
+message PipelineConfiguration{
+   message SegmentConfiguration{
+      // Name of the segment
+      string name = 1;
 
-   // Segment Definition IDs
-   repeated uint64 segment_ids = 2;
+      // Ingress ports for this segment
+      repeated IngressPort ingress_ports = 2;
+
+      // Egress ports for this segment
+      repeated EgressPort egress_ports = 3;
+
+      // Segment options
+      SegmentOptions options = 4;
+   }
+
+   map<string, SegmentConfiguration> segments = 1;
+}
+
+message PipelineDefinition {
+
+   message SegmentDefinition{
+
+      // Generated ID of the definition
+      uint64 id = 1;
+
+      // ID of the parent for back referencing
+      uint64 parent_id = 2;
+
+      // Name of the segment
+      string name = 3;
+
+      // Running Segment Instance IDs
+      repeated uint64 instance_ids = 4;
+   }
+
+   // Generated ID of the definition (int64 because the hash algorithms can give negative values)
+   int64 id = 1;
+
+   // Object that holds all of the configurable properties
+   PipelineConfiguration config = 2;
 
    // Running Pipeline Instance IDs
    repeated uint64 instance_ids = 3;
+
+   // Running Segment Info
+   map<string, SegmentDefinition> segments = 4;
 }
 
 message PipelineInstance {
    uint64 id = 1;
 
    // Deinition this belongs to
-   uint64 definition_id = 2;
+   int64 definition_id = 2;
 
    // The machine this instance is running on
    uint64 machine_id = 3;
@@ -90,43 +128,53 @@ message PipelineInstance {
 }
 
 message SegmentDefinition {
+   // message Properties{
+   //    // Name of the segment
+   //    string name = 1;
+
+   //    // Parent Pipeline ID
+   //    uint64 pipeline_id = 2;
+
+   //    // Ingress ports for this segment
+   //    repeated IngressPort ingress_ports = 3;
+
+   //    // Egress ports for this segment
+   //    repeated EgressPort egress_ports = 4;
+
+   //    // Segment options
+   //    SegmentOptions options = 5;
+   // }
+
+   // Generated ID of the definition
    uint64 id = 1;
 
-   string name = 2;
-
-   // Parent Pipeline ID
-   uint64 pipeline_id = 3;
+   // // Object that holds all of the configurable properties
+   // Properties properties = 2;
 
    // Running Segment Instance IDs
-   repeated uint64 instance_ids = 4;
-
-   // Ingress ports for this segment
-   repeated IngressPort ingress_ports = 5;
-
-   // Egress ports for this segment
-   repeated EgressPort egress_ports = 6;
-
-   // Segment options
-   SegmentOptions options = 7;
+   repeated uint64 instance_ids = 3;
 }
 
 message SegmentInstance {
    uint64 id = 1;
 
-   // The encoded address of this instance
-   uint32 address = 2;
+   // Pipeline Deinition this belongs to
+   int64 pipeline_definition_id = 2;
 
-   // Deinition this belongs to
-   uint64 definition_id = 3;
+   // Segment name (Lookup segment config from pipeline def ID and name)
+   string name = 3;
+
+   // The encoded address of this instance
+   uint32 address = 4;
 
    // The worker/partition that this belongs to
-   uint64 worker_id = 4;
+   uint64 worker_id = 5;
 
    // The running pipeline instance id
-   uint64 pipeline_id = 5;
+   uint64 pipeline_instance_id = 6;
 
    // The state of the segment
-   SegmentStates state = 6;
+   SegmentStates state = 7;
 }
 
 message ControlPlaneState {

@@ -1,3 +1,7 @@
+import {BinaryLike, createHash} from "node:crypto";
+import {isBigUint64Array} from "node:util/types";
+import {BufferWriter} from "protobufjs";
+
 import {Any} from "../proto/google/protobuf/any";
 import {Event, EventType} from "../proto/mrc/protos/architect";
 import {messageTypeRegistry, UnknownMessage} from "../proto/typeRegistry";
@@ -93,4 +97,35 @@ export function packEventResponse<MessageDataT extends UnknownMessage>(incoming_
       tag: incoming_event.tag,
       message: any_msg,
    });
+}
+
+// Generats a hash for a serialized object in string or buffer form
+export function hashObject(data: BinaryLike): number
+{
+   const hash = createHash("md5");
+
+   // Get the hash of the object
+   const hash_str = hash.update(data).digest();
+
+   // Result will be 128 bytes. Use this to convert to an a uint64
+   const fingerprint = hash_str.readBigInt64LE(0);
+
+   return fingerprint
+}
+
+export function hashProtoMessage<MessageDataT extends UnknownMessage>(data: MessageDataT): number
+{
+   // Load the type from the registry
+   const message_type = messageTypeRegistry.get(data.$type);
+
+   if (!message_type)
+   {
+      throw new Error("Unknown type in type registry");
+   }
+
+   const buffer = new BufferWriter();
+
+   message_type.encode(data, buffer);
+
+   return hashObject(buffer.finish());
 }

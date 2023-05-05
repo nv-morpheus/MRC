@@ -112,7 +112,7 @@ export const segmentInstancesSelectByWorkerId = (state: RootState, worker_id: nu
 
 const selectByPipelineId = createSelector(
     [segmentInstancesAdapter.getAll, (state: SegmentInstancesStateType, pipeline_id: number) => pipeline_id],
-    (segmentInstances, pipeline_id) => segmentInstances.filter((x) => x.pipelineId === pipeline_id));
+    (segmentInstances, pipeline_id) => segmentInstances.filter((x) => x.pipelineInstanceId === pipeline_id));
 
 export const segmentInstancesSelectByPipelineId = (state: RootState, pipeline_id: number) => selectByPipelineId(
     state.segmentInstances,

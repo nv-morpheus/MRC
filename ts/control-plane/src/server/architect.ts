@@ -387,13 +387,13 @@ class Architect implements ArchitectServiceImplementation
             // Check to make sure its not null
             if (!payload.pipeline)
             {
-               // throw new Error("`pipeline` cannot be undefined");
+               throw new Error("`pipeline` cannot be undefined");
                // Use default values for now since the pipeline def is empty
-               payload.pipeline = PipelineDefinition.create({
-                  id: 0,
-                  instanceIds: [],
-                  segmentIds: [],
-               });
+               // payload.pipeline = PipelineDefinition.create({
+               //    id: 0,
+               //    instanceIds: [],
+               //    segmentIds: [],
+               // });
             }
 
             // Add a pipeline assignment to the machine

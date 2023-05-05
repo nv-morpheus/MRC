@@ -4,7 +4,7 @@ import type { CallContext, CallOptions } from "nice-grpc-common";
 import _m0 from "protobufjs/minimal";
 import { Any } from "../../google/protobuf/any";
 import { messageTypeRegistry } from "../../typeRegistry";
-import { EgressPolicy, IngressPolicy, PipelineDefinition, SegmentDefinition } from "./architect_state";
+import { EgressPolicy, PipelineConfiguration, SegmentDefinition } from "./architect_state";
 
 export const protobufPackage = "mrc.protos";
 
@@ -190,28 +190,28 @@ export function errorCodeToJSON(object: ErrorCode): string {
 
 export interface PingRequest {
   $type: "mrc.protos.PingRequest";
-  tag: number;
+  tag: bigint;
 }
 
 export interface PingResponse {
   $type: "mrc.protos.PingResponse";
-  tag: number;
+  tag: bigint;
 }
 
 export interface ShutdownRequest {
   $type: "mrc.protos.ShutdownRequest";
-  tag: number;
+  tag: bigint;
 }
 
 export interface ShutdownResponse {
   $type: "mrc.protos.ShutdownResponse";
-  tag: number;
+  tag: bigint;
 }
 
 export interface Event {
   $type: "mrc.protos.Event";
   event: EventType;
-  tag: number;
+  tag: bigint;
   message?: Any | undefined;
   error?: Error | undefined;
 }
@@ -228,7 +228,7 @@ export interface Ack {
 
 export interface ClientConnectedResponse {
   $type: "mrc.protos.ClientConnectedResponse";
-  machineId: number;
+  machineId: bigint;
 }
 
 export interface RegisterWorkersRequest {
@@ -239,24 +239,13 @@ export interface RegisterWorkersRequest {
 
 export interface RegisterWorkersResponse {
   $type: "mrc.protos.RegisterWorkersResponse";
-  machineId: number;
-  instanceIds: number[];
-}
-
-export interface RegisterPipelineRequest {
-  $type: "mrc.protos.RegisterPipelineRequest";
-  /** uint32 machine_id = 1; */
-  pipeline?: Pipeline;
-  requestedConfig: PipelineConfiguration[];
-}
-
-export interface RegisterPipelineResponse {
-  $type: "mrc.protos.RegisterPipelineResponse";
+  machineId: bigint;
+  instanceIds: bigint[];
 }
 
 export interface LookupWorkersRequest {
   $type: "mrc.protos.LookupWorkersRequest";
-  instanceIds: number[];
+  instanceIds: bigint[];
 }
 
 export interface LookupWorkersResponse {
@@ -275,14 +264,14 @@ export interface RegisterSubscriptionServiceRequest {
   serviceName: string;
   role: string;
   subscribeToRoles: string[];
-  instanceId: number;
+  instanceId: bigint;
 }
 
 export interface RegisterSubscriptionServiceResponse {
   $type: "mrc.protos.RegisterSubscriptionServiceResponse";
   serviceName: string;
   role: string;
-  tag: number;
+  tag: bigint;
 }
 
 export interface ActivateSubscriptionServiceRequest {
@@ -290,38 +279,35 @@ export interface ActivateSubscriptionServiceRequest {
   serviceName: string;
   role: string;
   subscribeToRoles: string[];
-  instanceId: number;
-  tag: number;
+  instanceId: bigint;
+  tag: bigint;
 }
 
 export interface DropSubscriptionServiceRequest {
   $type: "mrc.protos.DropSubscriptionServiceRequest";
   serviceName: string;
-  instanceId: number;
-  tag: number;
+  instanceId: bigint;
+  tag: bigint;
 }
 
 export interface UpdateSubscriptionServiceRequest {
   $type: "mrc.protos.UpdateSubscriptionServiceRequest";
   serviceName: string;
   role: string;
-  nonce: number;
-  tags: number[];
+  nonce: bigint;
+  tags: bigint[];
 }
 
 export interface TaggedInstance {
   $type: "mrc.protos.TaggedInstance";
-  instanceId: number;
-  tag: number;
+  instanceId: bigint;
+  tag: bigint;
 }
 
-/** Pipeline */
 export interface PipelineRequestAssignmentRequest {
   $type: "mrc.protos.PipelineRequestAssignmentRequest";
   /** The pipeline definition object */
-  pipeline?: PipelineDefinition;
-  /** The segment objects */
-  segments: SegmentDefinition[];
+  pipeline?: PipelineConfiguration;
   /** The mapping of segment definitions to assigned workers */
   assignments: PipelineRequestAssignmentRequest_SegmentMapping[];
 }
@@ -331,27 +317,25 @@ export interface PipelineRequestAssignmentRequest_SegmentMapping {
   /** The segment definition ID */
   segmentName: string;
   /** The workers to assign this segment to */
-  workerIds: number[];
+  workerIds: bigint[];
 }
 
 export interface PipelineRequestAssignmentResponse {
   $type: "mrc.protos.PipelineRequestAssignmentResponse";
   /** The pipeline definition that was added (since its generated) */
-  pipelineDefinitionId: number;
+  pipelineDefinitionId: bigint;
   /** The pipeline instance that was added */
-  pipelineInstanceId: number;
-  /** The segment definition that was added (since they are generated) */
-  segmentDefinitionIds: number[];
+  pipelineInstanceId: bigint;
   /** The segment instance that was added */
-  segmentInstanceIds: number[];
+  segmentInstanceIds: bigint[];
 }
 
 /** message sent by an UpdateManager */
 export interface StateUpdate {
   $type: "mrc.protos.StateUpdate";
   serviceName: string;
-  nonce: number;
-  instanceId: number;
+  nonce: bigint;
+  instanceId: bigint;
   connections?: UpdateConnectionsState | undefined;
   updateSubscriptionService?: UpdateSubscriptionServiceState | undefined;
   dropSubscriptionService?: DropSubscriptionServiceState | undefined;
@@ -371,7 +355,7 @@ export interface UpdateSubscriptionServiceState {
 export interface DropSubscriptionServiceState {
   $type: "mrc.protos.DropSubscriptionServiceState";
   role: string;
-  tag: number;
+  tag: bigint;
 }
 
 export interface ControlMessage {
@@ -390,8 +374,8 @@ export interface UpdateAssignments {
 
 export interface SegmentAssignment {
   $type: "mrc.protos.SegmentAssignment";
-  machineId: number;
-  instanceId: number;
+  machineId: bigint;
+  instanceId: bigint;
   address: number;
   egressPolices: { [key: number]: EgressPolicy };
   issueEventOnComplete: boolean;
@@ -417,7 +401,7 @@ export interface GpuInfo {
   name: string;
   uuid: string;
   pcieBusId: string;
-  memoryCapacity: number;
+  memoryCapacity: bigint;
   cudaDeviceId: number;
 }
 
@@ -427,43 +411,16 @@ export interface Pipeline {
   segments: SegmentDefinition[];
 }
 
-export interface PipelineConfiguration {
-  $type: "mrc.protos.PipelineConfiguration";
-  instanceId: number;
-  segments: SegmentConfiguration[];
-}
-
-export interface SegmentConfiguration {
-  $type: "mrc.protos.SegmentConfiguration";
-  name: string;
-  concurrency: number;
-  rank: number;
-  egressPolices: { [key: number]: EgressPolicy };
-  ingressPolicies: { [key: number]: IngressPolicy };
-}
-
-export interface SegmentConfiguration_EgressPolicesEntry {
-  $type: "mrc.protos.SegmentConfiguration.EgressPolicesEntry";
-  key: number;
-  value?: EgressPolicy;
-}
-
-export interface SegmentConfiguration_IngressPoliciesEntry {
-  $type: "mrc.protos.SegmentConfiguration.IngressPoliciesEntry";
-  key: number;
-  value?: IngressPolicy;
-}
-
 export interface WorkerAddress {
   $type: "mrc.protos.WorkerAddress";
-  machineId: number;
-  instanceId: number;
+  machineId: bigint;
+  instanceId: bigint;
   workerAddress: string;
 }
 
 export interface InstancesResources {
   $type: "mrc.protos.InstancesResources";
-  hostMemory: number;
+  hostMemory: bigint;
   cpus: CPU[];
   gpus: GPU[];
   /**
@@ -484,7 +441,7 @@ export interface GPU {
   $type: "mrc.protos.GPU";
   name: string;
   cores: number;
-  memory: number;
+  memory: bigint;
   computeCapability: number;
 }
 
@@ -493,15 +450,15 @@ export interface NIC {
 }
 
 function createBasePingRequest(): PingRequest {
-  return { $type: "mrc.protos.PingRequest", tag: 0 };
+  return { $type: "mrc.protos.PingRequest", tag: BigInt("0") };
 }
 
 export const PingRequest = {
   $type: "mrc.protos.PingRequest" as const,
 
   encode(message: PingRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.tag !== 0) {
-      writer.uint32(8).uint64(message.tag);
+    if (message.tag !== BigInt("0")) {
+      writer.uint32(8).uint64(message.tag.toString());
     }
     return writer;
   },
@@ -514,7 +471,7 @@ export const PingRequest = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.tag = longToNumber(reader.uint64() as Long);
+          message.tag = longToBigint(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -525,12 +482,12 @@ export const PingRequest = {
   },
 
   fromJSON(object: any): PingRequest {
-    return { $type: PingRequest.$type, tag: isSet(object.tag) ? Number(object.tag) : 0 };
+    return { $type: PingRequest.$type, tag: isSet(object.tag) ? BigInt(object.tag) : BigInt("0") };
   },
 
   toJSON(message: PingRequest): unknown {
     const obj: any = {};
-    message.tag !== undefined && (obj.tag = Math.round(message.tag));
+    message.tag !== undefined && (obj.tag = message.tag.toString());
     return obj;
   },
 
@@ -540,7 +497,7 @@ export const PingRequest = {
 
   fromPartial(object: DeepPartial<PingRequest>): PingRequest {
     const message = createBasePingRequest();
-    message.tag = object.tag ?? 0;
+    message.tag = object.tag ?? BigInt("0");
     return message;
   },
 };
@@ -548,15 +505,15 @@ export const PingRequest = {
 messageTypeRegistry.set(PingRequest.$type, PingRequest);
 
 function createBasePingResponse(): PingResponse {
-  return { $type: "mrc.protos.PingResponse", tag: 0 };
+  return { $type: "mrc.protos.PingResponse", tag: BigInt("0") };
 }
 
 export const PingResponse = {
   $type: "mrc.protos.PingResponse" as const,
 
   encode(message: PingResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.tag !== 0) {
-      writer.uint32(8).uint64(message.tag);
+    if (message.tag !== BigInt("0")) {
+      writer.uint32(8).uint64(message.tag.toString());
     }
     return writer;
   },
@@ -569,7 +526,7 @@ export const PingResponse = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.tag = longToNumber(reader.uint64() as Long);
+          message.tag = longToBigint(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -580,12 +537,12 @@ export const PingResponse = {
   },
 
   fromJSON(object: any): PingResponse {
-    return { $type: PingResponse.$type, tag: isSet(object.tag) ? Number(object.tag) : 0 };
+    return { $type: PingResponse.$type, tag: isSet(object.tag) ? BigInt(object.tag) : BigInt("0") };
   },
 
   toJSON(message: PingResponse): unknown {
     const obj: any = {};
-    message.tag !== undefined && (obj.tag = Math.round(message.tag));
+    message.tag !== undefined && (obj.tag = message.tag.toString());
     return obj;
   },
 
@@ -595,7 +552,7 @@ export const PingResponse = {
 
   fromPartial(object: DeepPartial<PingResponse>): PingResponse {
     const message = createBasePingResponse();
-    message.tag = object.tag ?? 0;
+    message.tag = object.tag ?? BigInt("0");
     return message;
   },
 };
@@ -603,15 +560,15 @@ export const PingResponse = {
 messageTypeRegistry.set(PingResponse.$type, PingResponse);
 
 function createBaseShutdownRequest(): ShutdownRequest {
-  return { $type: "mrc.protos.ShutdownRequest", tag: 0 };
+  return { $type: "mrc.protos.ShutdownRequest", tag: BigInt("0") };
 }
 
 export const ShutdownRequest = {
   $type: "mrc.protos.ShutdownRequest" as const,
 
   encode(message: ShutdownRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.tag !== 0) {
-      writer.uint32(8).uint64(message.tag);
+    if (message.tag !== BigInt("0")) {
+      writer.uint32(8).uint64(message.tag.toString());
     }
     return writer;
   },
@@ -624,7 +581,7 @@ export const ShutdownRequest = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.tag = longToNumber(reader.uint64() as Long);
+          message.tag = longToBigint(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -635,12 +592,12 @@ export const ShutdownRequest = {
   },
 
   fromJSON(object: any): ShutdownRequest {
-    return { $type: ShutdownRequest.$type, tag: isSet(object.tag) ? Number(object.tag) : 0 };
+    return { $type: ShutdownRequest.$type, tag: isSet(object.tag) ? BigInt(object.tag) : BigInt("0") };
   },
 
   toJSON(message: ShutdownRequest): unknown {
     const obj: any = {};
-    message.tag !== undefined && (obj.tag = Math.round(message.tag));
+    message.tag !== undefined && (obj.tag = message.tag.toString());
     return obj;
   },
 
@@ -650,7 +607,7 @@ export const ShutdownRequest = {
 
   fromPartial(object: DeepPartial<ShutdownRequest>): ShutdownRequest {
     const message = createBaseShutdownRequest();
-    message.tag = object.tag ?? 0;
+    message.tag = object.tag ?? BigInt("0");
     return message;
   },
 };
@@ -658,15 +615,15 @@ export const ShutdownRequest = {
 messageTypeRegistry.set(ShutdownRequest.$type, ShutdownRequest);
 
 function createBaseShutdownResponse(): ShutdownResponse {
-  return { $type: "mrc.protos.ShutdownResponse", tag: 0 };
+  return { $type: "mrc.protos.ShutdownResponse", tag: BigInt("0") };
 }
 
 export const ShutdownResponse = {
   $type: "mrc.protos.ShutdownResponse" as const,
 
   encode(message: ShutdownResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.tag !== 0) {
-      writer.uint32(8).uint64(message.tag);
+    if (message.tag !== BigInt("0")) {
+      writer.uint32(8).uint64(message.tag.toString());
     }
     return writer;
   },
@@ -679,7 +636,7 @@ export const ShutdownResponse = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.tag = longToNumber(reader.uint64() as Long);
+          message.tag = longToBigint(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -690,12 +647,12 @@ export const ShutdownResponse = {
   },
 
   fromJSON(object: any): ShutdownResponse {
-    return { $type: ShutdownResponse.$type, tag: isSet(object.tag) ? Number(object.tag) : 0 };
+    return { $type: ShutdownResponse.$type, tag: isSet(object.tag) ? BigInt(object.tag) : BigInt("0") };
   },
 
   toJSON(message: ShutdownResponse): unknown {
     const obj: any = {};
-    message.tag !== undefined && (obj.tag = Math.round(message.tag));
+    message.tag !== undefined && (obj.tag = message.tag.toString());
     return obj;
   },
 
@@ -705,7 +662,7 @@ export const ShutdownResponse = {
 
   fromPartial(object: DeepPartial<ShutdownResponse>): ShutdownResponse {
     const message = createBaseShutdownResponse();
-    message.tag = object.tag ?? 0;
+    message.tag = object.tag ?? BigInt("0");
     return message;
   },
 };
@@ -713,7 +670,7 @@ export const ShutdownResponse = {
 messageTypeRegistry.set(ShutdownResponse.$type, ShutdownResponse);
 
 function createBaseEvent(): Event {
-  return { $type: "mrc.protos.Event", event: 0, tag: 0, message: undefined, error: undefined };
+  return { $type: "mrc.protos.Event", event: 0, tag: BigInt("0"), message: undefined, error: undefined };
 }
 
 export const Event = {
@@ -723,8 +680,8 @@ export const Event = {
     if (message.event !== 0) {
       writer.uint32(8).int32(message.event);
     }
-    if (message.tag !== 0) {
-      writer.uint32(16).uint64(message.tag);
+    if (message.tag !== BigInt("0")) {
+      writer.uint32(16).uint64(message.tag.toString());
     }
     if (message.message !== undefined) {
       Any.encode(message.message, writer.uint32(26).fork()).ldelim();
@@ -746,7 +703,7 @@ export const Event = {
           message.event = reader.int32() as any;
           break;
         case 2:
-          message.tag = longToNumber(reader.uint64() as Long);
+          message.tag = longToBigint(reader.uint64() as Long);
           break;
         case 3:
           message.message = Any.decode(reader, reader.uint32());
@@ -766,7 +723,7 @@ export const Event = {
     return {
       $type: Event.$type,
       event: isSet(object.event) ? eventTypeFromJSON(object.event) : 0,
-      tag: isSet(object.tag) ? Number(object.tag) : 0,
+      tag: isSet(object.tag) ? BigInt(object.tag) : BigInt("0"),
       message: isSet(object.message) ? Any.fromJSON(object.message) : undefined,
       error: isSet(object.error) ? Error.fromJSON(object.error) : undefined,
     };
@@ -775,7 +732,7 @@ export const Event = {
   toJSON(message: Event): unknown {
     const obj: any = {};
     message.event !== undefined && (obj.event = eventTypeToJSON(message.event));
-    message.tag !== undefined && (obj.tag = Math.round(message.tag));
+    message.tag !== undefined && (obj.tag = message.tag.toString());
     message.message !== undefined && (obj.message = message.message ? Any.toJSON(message.message) : undefined);
     message.error !== undefined && (obj.error = message.error ? Error.toJSON(message.error) : undefined);
     return obj;
@@ -788,7 +745,7 @@ export const Event = {
   fromPartial(object: DeepPartial<Event>): Event {
     const message = createBaseEvent();
     message.event = object.event ?? 0;
-    message.tag = object.tag ?? 0;
+    message.tag = object.tag ?? BigInt("0");
     message.message = (object.message !== undefined && object.message !== null)
       ? Any.fromPartial(object.message)
       : undefined;
@@ -914,15 +871,15 @@ export const Ack = {
 messageTypeRegistry.set(Ack.$type, Ack);
 
 function createBaseClientConnectedResponse(): ClientConnectedResponse {
-  return { $type: "mrc.protos.ClientConnectedResponse", machineId: 0 };
+  return { $type: "mrc.protos.ClientConnectedResponse", machineId: BigInt("0") };
 }
 
 export const ClientConnectedResponse = {
   $type: "mrc.protos.ClientConnectedResponse" as const,
 
   encode(message: ClientConnectedResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.machineId !== 0) {
-      writer.uint32(8).uint64(message.machineId);
+    if (message.machineId !== BigInt("0")) {
+      writer.uint32(8).uint64(message.machineId.toString());
     }
     return writer;
   },
@@ -935,7 +892,7 @@ export const ClientConnectedResponse = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.machineId = longToNumber(reader.uint64() as Long);
+          message.machineId = longToBigint(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -946,12 +903,15 @@ export const ClientConnectedResponse = {
   },
 
   fromJSON(object: any): ClientConnectedResponse {
-    return { $type: ClientConnectedResponse.$type, machineId: isSet(object.machineId) ? Number(object.machineId) : 0 };
+    return {
+      $type: ClientConnectedResponse.$type,
+      machineId: isSet(object.machineId) ? BigInt(object.machineId) : BigInt("0"),
+    };
   },
 
   toJSON(message: ClientConnectedResponse): unknown {
     const obj: any = {};
-    message.machineId !== undefined && (obj.machineId = Math.round(message.machineId));
+    message.machineId !== undefined && (obj.machineId = message.machineId.toString());
     return obj;
   },
 
@@ -961,7 +921,7 @@ export const ClientConnectedResponse = {
 
   fromPartial(object: DeepPartial<ClientConnectedResponse>): ClientConnectedResponse {
     const message = createBaseClientConnectedResponse();
-    message.machineId = object.machineId ?? 0;
+    message.machineId = object.machineId ?? BigInt("0");
     return message;
   },
 };
@@ -1046,19 +1006,19 @@ export const RegisterWorkersRequest = {
 messageTypeRegistry.set(RegisterWorkersRequest.$type, RegisterWorkersRequest);
 
 function createBaseRegisterWorkersResponse(): RegisterWorkersResponse {
-  return { $type: "mrc.protos.RegisterWorkersResponse", machineId: 0, instanceIds: [] };
+  return { $type: "mrc.protos.RegisterWorkersResponse", machineId: BigInt("0"), instanceIds: [] };
 }
 
 export const RegisterWorkersResponse = {
   $type: "mrc.protos.RegisterWorkersResponse" as const,
 
   encode(message: RegisterWorkersResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.machineId !== 0) {
-      writer.uint32(8).uint64(message.machineId);
+    if (message.machineId !== BigInt("0")) {
+      writer.uint32(8).uint64(message.machineId.toString());
     }
     writer.uint32(18).fork();
     for (const v of message.instanceIds) {
-      writer.uint64(v);
+      writer.uint64(v.toString());
     }
     writer.ldelim();
     return writer;
@@ -1072,16 +1032,16 @@ export const RegisterWorkersResponse = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.machineId = longToNumber(reader.uint64() as Long);
+          message.machineId = longToBigint(reader.uint64() as Long);
           break;
         case 2:
           if ((tag & 7) === 2) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.instanceIds.push(longToNumber(reader.uint64() as Long));
+              message.instanceIds.push(longToBigint(reader.uint64() as Long));
             }
           } else {
-            message.instanceIds.push(longToNumber(reader.uint64() as Long));
+            message.instanceIds.push(longToBigint(reader.uint64() as Long));
           }
           break;
         default:
@@ -1095,16 +1055,16 @@ export const RegisterWorkersResponse = {
   fromJSON(object: any): RegisterWorkersResponse {
     return {
       $type: RegisterWorkersResponse.$type,
-      machineId: isSet(object.machineId) ? Number(object.machineId) : 0,
-      instanceIds: Array.isArray(object?.instanceIds) ? object.instanceIds.map((e: any) => Number(e)) : [],
+      machineId: isSet(object.machineId) ? BigInt(object.machineId) : BigInt("0"),
+      instanceIds: Array.isArray(object?.instanceIds) ? object.instanceIds.map((e: any) => BigInt(e)) : [],
     };
   },
 
   toJSON(message: RegisterWorkersResponse): unknown {
     const obj: any = {};
-    message.machineId !== undefined && (obj.machineId = Math.round(message.machineId));
+    message.machineId !== undefined && (obj.machineId = message.machineId.toString());
     if (message.instanceIds) {
-      obj.instanceIds = message.instanceIds.map((e) => Math.round(e));
+      obj.instanceIds = message.instanceIds.map((e) => e.toString());
     } else {
       obj.instanceIds = [];
     }
@@ -1117,135 +1077,13 @@ export const RegisterWorkersResponse = {
 
   fromPartial(object: DeepPartial<RegisterWorkersResponse>): RegisterWorkersResponse {
     const message = createBaseRegisterWorkersResponse();
-    message.machineId = object.machineId ?? 0;
+    message.machineId = object.machineId ?? BigInt("0");
     message.instanceIds = object.instanceIds?.map((e) => e) || [];
     return message;
   },
 };
 
 messageTypeRegistry.set(RegisterWorkersResponse.$type, RegisterWorkersResponse);
-
-function createBaseRegisterPipelineRequest(): RegisterPipelineRequest {
-  return { $type: "mrc.protos.RegisterPipelineRequest", pipeline: undefined, requestedConfig: [] };
-}
-
-export const RegisterPipelineRequest = {
-  $type: "mrc.protos.RegisterPipelineRequest" as const,
-
-  encode(message: RegisterPipelineRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.pipeline !== undefined) {
-      Pipeline.encode(message.pipeline, writer.uint32(18).fork()).ldelim();
-    }
-    for (const v of message.requestedConfig) {
-      PipelineConfiguration.encode(v!, writer.uint32(26).fork()).ldelim();
-    }
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): RegisterPipelineRequest {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseRegisterPipelineRequest();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 2:
-          message.pipeline = Pipeline.decode(reader, reader.uint32());
-          break;
-        case 3:
-          message.requestedConfig.push(PipelineConfiguration.decode(reader, reader.uint32()));
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-    return message;
-  },
-
-  fromJSON(object: any): RegisterPipelineRequest {
-    return {
-      $type: RegisterPipelineRequest.$type,
-      pipeline: isSet(object.pipeline) ? Pipeline.fromJSON(object.pipeline) : undefined,
-      requestedConfig: Array.isArray(object?.requestedConfig)
-        ? object.requestedConfig.map((e: any) => PipelineConfiguration.fromJSON(e))
-        : [],
-    };
-  },
-
-  toJSON(message: RegisterPipelineRequest): unknown {
-    const obj: any = {};
-    message.pipeline !== undefined && (obj.pipeline = message.pipeline ? Pipeline.toJSON(message.pipeline) : undefined);
-    if (message.requestedConfig) {
-      obj.requestedConfig = message.requestedConfig.map((e) => e ? PipelineConfiguration.toJSON(e) : undefined);
-    } else {
-      obj.requestedConfig = [];
-    }
-    return obj;
-  },
-
-  create(base?: DeepPartial<RegisterPipelineRequest>): RegisterPipelineRequest {
-    return RegisterPipelineRequest.fromPartial(base ?? {});
-  },
-
-  fromPartial(object: DeepPartial<RegisterPipelineRequest>): RegisterPipelineRequest {
-    const message = createBaseRegisterPipelineRequest();
-    message.pipeline = (object.pipeline !== undefined && object.pipeline !== null)
-      ? Pipeline.fromPartial(object.pipeline)
-      : undefined;
-    message.requestedConfig = object.requestedConfig?.map((e) => PipelineConfiguration.fromPartial(e)) || [];
-    return message;
-  },
-};
-
-messageTypeRegistry.set(RegisterPipelineRequest.$type, RegisterPipelineRequest);
-
-function createBaseRegisterPipelineResponse(): RegisterPipelineResponse {
-  return { $type: "mrc.protos.RegisterPipelineResponse" };
-}
-
-export const RegisterPipelineResponse = {
-  $type: "mrc.protos.RegisterPipelineResponse" as const,
-
-  encode(_: RegisterPipelineResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): RegisterPipelineResponse {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseRegisterPipelineResponse();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-    return message;
-  },
-
-  fromJSON(_: any): RegisterPipelineResponse {
-    return { $type: RegisterPipelineResponse.$type };
-  },
-
-  toJSON(_: RegisterPipelineResponse): unknown {
-    const obj: any = {};
-    return obj;
-  },
-
-  create(base?: DeepPartial<RegisterPipelineResponse>): RegisterPipelineResponse {
-    return RegisterPipelineResponse.fromPartial(base ?? {});
-  },
-
-  fromPartial(_: DeepPartial<RegisterPipelineResponse>): RegisterPipelineResponse {
-    const message = createBaseRegisterPipelineResponse();
-    return message;
-  },
-};
-
-messageTypeRegistry.set(RegisterPipelineResponse.$type, RegisterPipelineResponse);
 
 function createBaseLookupWorkersRequest(): LookupWorkersRequest {
   return { $type: "mrc.protos.LookupWorkersRequest", instanceIds: [] };
@@ -1257,7 +1095,7 @@ export const LookupWorkersRequest = {
   encode(message: LookupWorkersRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     writer.uint32(10).fork();
     for (const v of message.instanceIds) {
-      writer.uint64(v);
+      writer.uint64(v.toString());
     }
     writer.ldelim();
     return writer;
@@ -1274,10 +1112,10 @@ export const LookupWorkersRequest = {
           if ((tag & 7) === 2) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.instanceIds.push(longToNumber(reader.uint64() as Long));
+              message.instanceIds.push(longToBigint(reader.uint64() as Long));
             }
           } else {
-            message.instanceIds.push(longToNumber(reader.uint64() as Long));
+            message.instanceIds.push(longToBigint(reader.uint64() as Long));
           }
           break;
         default:
@@ -1291,14 +1129,14 @@ export const LookupWorkersRequest = {
   fromJSON(object: any): LookupWorkersRequest {
     return {
       $type: LookupWorkersRequest.$type,
-      instanceIds: Array.isArray(object?.instanceIds) ? object.instanceIds.map((e: any) => Number(e)) : [],
+      instanceIds: Array.isArray(object?.instanceIds) ? object.instanceIds.map((e: any) => BigInt(e)) : [],
     };
   },
 
   toJSON(message: LookupWorkersRequest): unknown {
     const obj: any = {};
     if (message.instanceIds) {
-      obj.instanceIds = message.instanceIds.map((e) => Math.round(e));
+      obj.instanceIds = message.instanceIds.map((e) => e.toString());
     } else {
       obj.instanceIds = [];
     }
@@ -1459,7 +1297,7 @@ function createBaseRegisterSubscriptionServiceRequest(): RegisterSubscriptionSer
     serviceName: "",
     role: "",
     subscribeToRoles: [],
-    instanceId: 0,
+    instanceId: BigInt("0"),
   };
 }
 
@@ -1476,8 +1314,8 @@ export const RegisterSubscriptionServiceRequest = {
     for (const v of message.subscribeToRoles) {
       writer.uint32(26).string(v!);
     }
-    if (message.instanceId !== 0) {
-      writer.uint32(32).uint64(message.instanceId);
+    if (message.instanceId !== BigInt("0")) {
+      writer.uint32(32).uint64(message.instanceId.toString());
     }
     return writer;
   },
@@ -1499,7 +1337,7 @@ export const RegisterSubscriptionServiceRequest = {
           message.subscribeToRoles.push(reader.string());
           break;
         case 4:
-          message.instanceId = longToNumber(reader.uint64() as Long);
+          message.instanceId = longToBigint(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -1517,7 +1355,7 @@ export const RegisterSubscriptionServiceRequest = {
       subscribeToRoles: Array.isArray(object?.subscribeToRoles)
         ? object.subscribeToRoles.map((e: any) => String(e))
         : [],
-      instanceId: isSet(object.instanceId) ? Number(object.instanceId) : 0,
+      instanceId: isSet(object.instanceId) ? BigInt(object.instanceId) : BigInt("0"),
     };
   },
 
@@ -1530,7 +1368,7 @@ export const RegisterSubscriptionServiceRequest = {
     } else {
       obj.subscribeToRoles = [];
     }
-    message.instanceId !== undefined && (obj.instanceId = Math.round(message.instanceId));
+    message.instanceId !== undefined && (obj.instanceId = message.instanceId.toString());
     return obj;
   },
 
@@ -1543,7 +1381,7 @@ export const RegisterSubscriptionServiceRequest = {
     message.serviceName = object.serviceName ?? "";
     message.role = object.role ?? "";
     message.subscribeToRoles = object.subscribeToRoles?.map((e) => e) || [];
-    message.instanceId = object.instanceId ?? 0;
+    message.instanceId = object.instanceId ?? BigInt("0");
     return message;
   },
 };
@@ -1551,7 +1389,7 @@ export const RegisterSubscriptionServiceRequest = {
 messageTypeRegistry.set(RegisterSubscriptionServiceRequest.$type, RegisterSubscriptionServiceRequest);
 
 function createBaseRegisterSubscriptionServiceResponse(): RegisterSubscriptionServiceResponse {
-  return { $type: "mrc.protos.RegisterSubscriptionServiceResponse", serviceName: "", role: "", tag: 0 };
+  return { $type: "mrc.protos.RegisterSubscriptionServiceResponse", serviceName: "", role: "", tag: BigInt("0") };
 }
 
 export const RegisterSubscriptionServiceResponse = {
@@ -1564,8 +1402,8 @@ export const RegisterSubscriptionServiceResponse = {
     if (message.role !== "") {
       writer.uint32(18).string(message.role);
     }
-    if (message.tag !== 0) {
-      writer.uint32(24).uint64(message.tag);
+    if (message.tag !== BigInt("0")) {
+      writer.uint32(24).uint64(message.tag.toString());
     }
     return writer;
   },
@@ -1584,7 +1422,7 @@ export const RegisterSubscriptionServiceResponse = {
           message.role = reader.string();
           break;
         case 3:
-          message.tag = longToNumber(reader.uint64() as Long);
+          message.tag = longToBigint(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -1599,7 +1437,7 @@ export const RegisterSubscriptionServiceResponse = {
       $type: RegisterSubscriptionServiceResponse.$type,
       serviceName: isSet(object.serviceName) ? String(object.serviceName) : "",
       role: isSet(object.role) ? String(object.role) : "",
-      tag: isSet(object.tag) ? Number(object.tag) : 0,
+      tag: isSet(object.tag) ? BigInt(object.tag) : BigInt("0"),
     };
   },
 
@@ -1607,7 +1445,7 @@ export const RegisterSubscriptionServiceResponse = {
     const obj: any = {};
     message.serviceName !== undefined && (obj.serviceName = message.serviceName);
     message.role !== undefined && (obj.role = message.role);
-    message.tag !== undefined && (obj.tag = Math.round(message.tag));
+    message.tag !== undefined && (obj.tag = message.tag.toString());
     return obj;
   },
 
@@ -1619,7 +1457,7 @@ export const RegisterSubscriptionServiceResponse = {
     const message = createBaseRegisterSubscriptionServiceResponse();
     message.serviceName = object.serviceName ?? "";
     message.role = object.role ?? "";
-    message.tag = object.tag ?? 0;
+    message.tag = object.tag ?? BigInt("0");
     return message;
   },
 };
@@ -1632,8 +1470,8 @@ function createBaseActivateSubscriptionServiceRequest(): ActivateSubscriptionSer
     serviceName: "",
     role: "",
     subscribeToRoles: [],
-    instanceId: 0,
-    tag: 0,
+    instanceId: BigInt("0"),
+    tag: BigInt("0"),
   };
 }
 
@@ -1650,11 +1488,11 @@ export const ActivateSubscriptionServiceRequest = {
     for (const v of message.subscribeToRoles) {
       writer.uint32(26).string(v!);
     }
-    if (message.instanceId !== 0) {
-      writer.uint32(32).uint64(message.instanceId);
+    if (message.instanceId !== BigInt("0")) {
+      writer.uint32(32).uint64(message.instanceId.toString());
     }
-    if (message.tag !== 0) {
-      writer.uint32(40).uint64(message.tag);
+    if (message.tag !== BigInt("0")) {
+      writer.uint32(40).uint64(message.tag.toString());
     }
     return writer;
   },
@@ -1676,10 +1514,10 @@ export const ActivateSubscriptionServiceRequest = {
           message.subscribeToRoles.push(reader.string());
           break;
         case 4:
-          message.instanceId = longToNumber(reader.uint64() as Long);
+          message.instanceId = longToBigint(reader.uint64() as Long);
           break;
         case 5:
-          message.tag = longToNumber(reader.uint64() as Long);
+          message.tag = longToBigint(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -1697,8 +1535,8 @@ export const ActivateSubscriptionServiceRequest = {
       subscribeToRoles: Array.isArray(object?.subscribeToRoles)
         ? object.subscribeToRoles.map((e: any) => String(e))
         : [],
-      instanceId: isSet(object.instanceId) ? Number(object.instanceId) : 0,
-      tag: isSet(object.tag) ? Number(object.tag) : 0,
+      instanceId: isSet(object.instanceId) ? BigInt(object.instanceId) : BigInt("0"),
+      tag: isSet(object.tag) ? BigInt(object.tag) : BigInt("0"),
     };
   },
 
@@ -1711,8 +1549,8 @@ export const ActivateSubscriptionServiceRequest = {
     } else {
       obj.subscribeToRoles = [];
     }
-    message.instanceId !== undefined && (obj.instanceId = Math.round(message.instanceId));
-    message.tag !== undefined && (obj.tag = Math.round(message.tag));
+    message.instanceId !== undefined && (obj.instanceId = message.instanceId.toString());
+    message.tag !== undefined && (obj.tag = message.tag.toString());
     return obj;
   },
 
@@ -1725,8 +1563,8 @@ export const ActivateSubscriptionServiceRequest = {
     message.serviceName = object.serviceName ?? "";
     message.role = object.role ?? "";
     message.subscribeToRoles = object.subscribeToRoles?.map((e) => e) || [];
-    message.instanceId = object.instanceId ?? 0;
-    message.tag = object.tag ?? 0;
+    message.instanceId = object.instanceId ?? BigInt("0");
+    message.tag = object.tag ?? BigInt("0");
     return message;
   },
 };
@@ -1734,7 +1572,12 @@ export const ActivateSubscriptionServiceRequest = {
 messageTypeRegistry.set(ActivateSubscriptionServiceRequest.$type, ActivateSubscriptionServiceRequest);
 
 function createBaseDropSubscriptionServiceRequest(): DropSubscriptionServiceRequest {
-  return { $type: "mrc.protos.DropSubscriptionServiceRequest", serviceName: "", instanceId: 0, tag: 0 };
+  return {
+    $type: "mrc.protos.DropSubscriptionServiceRequest",
+    serviceName: "",
+    instanceId: BigInt("0"),
+    tag: BigInt("0"),
+  };
 }
 
 export const DropSubscriptionServiceRequest = {
@@ -1744,11 +1587,11 @@ export const DropSubscriptionServiceRequest = {
     if (message.serviceName !== "") {
       writer.uint32(10).string(message.serviceName);
     }
-    if (message.instanceId !== 0) {
-      writer.uint32(16).uint64(message.instanceId);
+    if (message.instanceId !== BigInt("0")) {
+      writer.uint32(16).uint64(message.instanceId.toString());
     }
-    if (message.tag !== 0) {
-      writer.uint32(24).uint64(message.tag);
+    if (message.tag !== BigInt("0")) {
+      writer.uint32(24).uint64(message.tag.toString());
     }
     return writer;
   },
@@ -1764,10 +1607,10 @@ export const DropSubscriptionServiceRequest = {
           message.serviceName = reader.string();
           break;
         case 2:
-          message.instanceId = longToNumber(reader.uint64() as Long);
+          message.instanceId = longToBigint(reader.uint64() as Long);
           break;
         case 3:
-          message.tag = longToNumber(reader.uint64() as Long);
+          message.tag = longToBigint(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -1781,16 +1624,16 @@ export const DropSubscriptionServiceRequest = {
     return {
       $type: DropSubscriptionServiceRequest.$type,
       serviceName: isSet(object.serviceName) ? String(object.serviceName) : "",
-      instanceId: isSet(object.instanceId) ? Number(object.instanceId) : 0,
-      tag: isSet(object.tag) ? Number(object.tag) : 0,
+      instanceId: isSet(object.instanceId) ? BigInt(object.instanceId) : BigInt("0"),
+      tag: isSet(object.tag) ? BigInt(object.tag) : BigInt("0"),
     };
   },
 
   toJSON(message: DropSubscriptionServiceRequest): unknown {
     const obj: any = {};
     message.serviceName !== undefined && (obj.serviceName = message.serviceName);
-    message.instanceId !== undefined && (obj.instanceId = Math.round(message.instanceId));
-    message.tag !== undefined && (obj.tag = Math.round(message.tag));
+    message.instanceId !== undefined && (obj.instanceId = message.instanceId.toString());
+    message.tag !== undefined && (obj.tag = message.tag.toString());
     return obj;
   },
 
@@ -1801,8 +1644,8 @@ export const DropSubscriptionServiceRequest = {
   fromPartial(object: DeepPartial<DropSubscriptionServiceRequest>): DropSubscriptionServiceRequest {
     const message = createBaseDropSubscriptionServiceRequest();
     message.serviceName = object.serviceName ?? "";
-    message.instanceId = object.instanceId ?? 0;
-    message.tag = object.tag ?? 0;
+    message.instanceId = object.instanceId ?? BigInt("0");
+    message.tag = object.tag ?? BigInt("0");
     return message;
   },
 };
@@ -1810,7 +1653,13 @@ export const DropSubscriptionServiceRequest = {
 messageTypeRegistry.set(DropSubscriptionServiceRequest.$type, DropSubscriptionServiceRequest);
 
 function createBaseUpdateSubscriptionServiceRequest(): UpdateSubscriptionServiceRequest {
-  return { $type: "mrc.protos.UpdateSubscriptionServiceRequest", serviceName: "", role: "", nonce: 0, tags: [] };
+  return {
+    $type: "mrc.protos.UpdateSubscriptionServiceRequest",
+    serviceName: "",
+    role: "",
+    nonce: BigInt("0"),
+    tags: [],
+  };
 }
 
 export const UpdateSubscriptionServiceRequest = {
@@ -1823,12 +1672,12 @@ export const UpdateSubscriptionServiceRequest = {
     if (message.role !== "") {
       writer.uint32(18).string(message.role);
     }
-    if (message.nonce !== 0) {
-      writer.uint32(24).uint64(message.nonce);
+    if (message.nonce !== BigInt("0")) {
+      writer.uint32(24).uint64(message.nonce.toString());
     }
     writer.uint32(34).fork();
     for (const v of message.tags) {
-      writer.uint64(v);
+      writer.uint64(v.toString());
     }
     writer.ldelim();
     return writer;
@@ -1848,16 +1697,16 @@ export const UpdateSubscriptionServiceRequest = {
           message.role = reader.string();
           break;
         case 3:
-          message.nonce = longToNumber(reader.uint64() as Long);
+          message.nonce = longToBigint(reader.uint64() as Long);
           break;
         case 4:
           if ((tag & 7) === 2) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.tags.push(longToNumber(reader.uint64() as Long));
+              message.tags.push(longToBigint(reader.uint64() as Long));
             }
           } else {
-            message.tags.push(longToNumber(reader.uint64() as Long));
+            message.tags.push(longToBigint(reader.uint64() as Long));
           }
           break;
         default:
@@ -1873,8 +1722,8 @@ export const UpdateSubscriptionServiceRequest = {
       $type: UpdateSubscriptionServiceRequest.$type,
       serviceName: isSet(object.serviceName) ? String(object.serviceName) : "",
       role: isSet(object.role) ? String(object.role) : "",
-      nonce: isSet(object.nonce) ? Number(object.nonce) : 0,
-      tags: Array.isArray(object?.tags) ? object.tags.map((e: any) => Number(e)) : [],
+      nonce: isSet(object.nonce) ? BigInt(object.nonce) : BigInt("0"),
+      tags: Array.isArray(object?.tags) ? object.tags.map((e: any) => BigInt(e)) : [],
     };
   },
 
@@ -1882,9 +1731,9 @@ export const UpdateSubscriptionServiceRequest = {
     const obj: any = {};
     message.serviceName !== undefined && (obj.serviceName = message.serviceName);
     message.role !== undefined && (obj.role = message.role);
-    message.nonce !== undefined && (obj.nonce = Math.round(message.nonce));
+    message.nonce !== undefined && (obj.nonce = message.nonce.toString());
     if (message.tags) {
-      obj.tags = message.tags.map((e) => Math.round(e));
+      obj.tags = message.tags.map((e) => e.toString());
     } else {
       obj.tags = [];
     }
@@ -1899,7 +1748,7 @@ export const UpdateSubscriptionServiceRequest = {
     const message = createBaseUpdateSubscriptionServiceRequest();
     message.serviceName = object.serviceName ?? "";
     message.role = object.role ?? "";
-    message.nonce = object.nonce ?? 0;
+    message.nonce = object.nonce ?? BigInt("0");
     message.tags = object.tags?.map((e) => e) || [];
     return message;
   },
@@ -1908,18 +1757,18 @@ export const UpdateSubscriptionServiceRequest = {
 messageTypeRegistry.set(UpdateSubscriptionServiceRequest.$type, UpdateSubscriptionServiceRequest);
 
 function createBaseTaggedInstance(): TaggedInstance {
-  return { $type: "mrc.protos.TaggedInstance", instanceId: 0, tag: 0 };
+  return { $type: "mrc.protos.TaggedInstance", instanceId: BigInt("0"), tag: BigInt("0") };
 }
 
 export const TaggedInstance = {
   $type: "mrc.protos.TaggedInstance" as const,
 
   encode(message: TaggedInstance, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.instanceId !== 0) {
-      writer.uint32(8).uint64(message.instanceId);
+    if (message.instanceId !== BigInt("0")) {
+      writer.uint32(8).uint64(message.instanceId.toString());
     }
-    if (message.tag !== 0) {
-      writer.uint32(16).uint64(message.tag);
+    if (message.tag !== BigInt("0")) {
+      writer.uint32(16).uint64(message.tag.toString());
     }
     return writer;
   },
@@ -1932,10 +1781,10 @@ export const TaggedInstance = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.instanceId = longToNumber(reader.uint64() as Long);
+          message.instanceId = longToBigint(reader.uint64() as Long);
           break;
         case 2:
-          message.tag = longToNumber(reader.uint64() as Long);
+          message.tag = longToBigint(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -1948,15 +1797,15 @@ export const TaggedInstance = {
   fromJSON(object: any): TaggedInstance {
     return {
       $type: TaggedInstance.$type,
-      instanceId: isSet(object.instanceId) ? Number(object.instanceId) : 0,
-      tag: isSet(object.tag) ? Number(object.tag) : 0,
+      instanceId: isSet(object.instanceId) ? BigInt(object.instanceId) : BigInt("0"),
+      tag: isSet(object.tag) ? BigInt(object.tag) : BigInt("0"),
     };
   },
 
   toJSON(message: TaggedInstance): unknown {
     const obj: any = {};
-    message.instanceId !== undefined && (obj.instanceId = Math.round(message.instanceId));
-    message.tag !== undefined && (obj.tag = Math.round(message.tag));
+    message.instanceId !== undefined && (obj.instanceId = message.instanceId.toString());
+    message.tag !== undefined && (obj.tag = message.tag.toString());
     return obj;
   },
 
@@ -1966,8 +1815,8 @@ export const TaggedInstance = {
 
   fromPartial(object: DeepPartial<TaggedInstance>): TaggedInstance {
     const message = createBaseTaggedInstance();
-    message.instanceId = object.instanceId ?? 0;
-    message.tag = object.tag ?? 0;
+    message.instanceId = object.instanceId ?? BigInt("0");
+    message.tag = object.tag ?? BigInt("0");
     return message;
   },
 };
@@ -1975,7 +1824,7 @@ export const TaggedInstance = {
 messageTypeRegistry.set(TaggedInstance.$type, TaggedInstance);
 
 function createBasePipelineRequestAssignmentRequest(): PipelineRequestAssignmentRequest {
-  return { $type: "mrc.protos.PipelineRequestAssignmentRequest", pipeline: undefined, segments: [], assignments: [] };
+  return { $type: "mrc.protos.PipelineRequestAssignmentRequest", pipeline: undefined, assignments: [] };
 }
 
 export const PipelineRequestAssignmentRequest = {
@@ -1983,13 +1832,10 @@ export const PipelineRequestAssignmentRequest = {
 
   encode(message: PipelineRequestAssignmentRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.pipeline !== undefined) {
-      PipelineDefinition.encode(message.pipeline, writer.uint32(10).fork()).ldelim();
-    }
-    for (const v of message.segments) {
-      SegmentDefinition.encode(v!, writer.uint32(18).fork()).ldelim();
+      PipelineConfiguration.encode(message.pipeline, writer.uint32(10).fork()).ldelim();
     }
     for (const v of message.assignments) {
-      PipelineRequestAssignmentRequest_SegmentMapping.encode(v!, writer.uint32(26).fork()).ldelim();
+      PipelineRequestAssignmentRequest_SegmentMapping.encode(v!, writer.uint32(18).fork()).ldelim();
     }
     return writer;
   },
@@ -2002,12 +1848,9 @@ export const PipelineRequestAssignmentRequest = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.pipeline = PipelineDefinition.decode(reader, reader.uint32());
+          message.pipeline = PipelineConfiguration.decode(reader, reader.uint32());
           break;
         case 2:
-          message.segments.push(SegmentDefinition.decode(reader, reader.uint32()));
-          break;
-        case 3:
           message.assignments.push(PipelineRequestAssignmentRequest_SegmentMapping.decode(reader, reader.uint32()));
           break;
         default:
@@ -2021,8 +1864,7 @@ export const PipelineRequestAssignmentRequest = {
   fromJSON(object: any): PipelineRequestAssignmentRequest {
     return {
       $type: PipelineRequestAssignmentRequest.$type,
-      pipeline: isSet(object.pipeline) ? PipelineDefinition.fromJSON(object.pipeline) : undefined,
-      segments: Array.isArray(object?.segments) ? object.segments.map((e: any) => SegmentDefinition.fromJSON(e)) : [],
+      pipeline: isSet(object.pipeline) ? PipelineConfiguration.fromJSON(object.pipeline) : undefined,
       assignments: Array.isArray(object?.assignments)
         ? object.assignments.map((e: any) => PipelineRequestAssignmentRequest_SegmentMapping.fromJSON(e))
         : [],
@@ -2032,12 +1874,7 @@ export const PipelineRequestAssignmentRequest = {
   toJSON(message: PipelineRequestAssignmentRequest): unknown {
     const obj: any = {};
     message.pipeline !== undefined &&
-      (obj.pipeline = message.pipeline ? PipelineDefinition.toJSON(message.pipeline) : undefined);
-    if (message.segments) {
-      obj.segments = message.segments.map((e) => e ? SegmentDefinition.toJSON(e) : undefined);
-    } else {
-      obj.segments = [];
-    }
+      (obj.pipeline = message.pipeline ? PipelineConfiguration.toJSON(message.pipeline) : undefined);
     if (message.assignments) {
       obj.assignments = message.assignments.map((e) =>
         e ? PipelineRequestAssignmentRequest_SegmentMapping.toJSON(e) : undefined
@@ -2055,9 +1892,8 @@ export const PipelineRequestAssignmentRequest = {
   fromPartial(object: DeepPartial<PipelineRequestAssignmentRequest>): PipelineRequestAssignmentRequest {
     const message = createBasePipelineRequestAssignmentRequest();
     message.pipeline = (object.pipeline !== undefined && object.pipeline !== null)
-      ? PipelineDefinition.fromPartial(object.pipeline)
+      ? PipelineConfiguration.fromPartial(object.pipeline)
       : undefined;
-    message.segments = object.segments?.map((e) => SegmentDefinition.fromPartial(e)) || [];
     message.assignments =
       object.assignments?.map((e) => PipelineRequestAssignmentRequest_SegmentMapping.fromPartial(e)) || [];
     return message;
@@ -2082,7 +1918,7 @@ export const PipelineRequestAssignmentRequest_SegmentMapping = {
     }
     writer.uint32(18).fork();
     for (const v of message.workerIds) {
-      writer.uint64(v);
+      writer.uint64(v.toString());
     }
     writer.ldelim();
     return writer;
@@ -2102,10 +1938,10 @@ export const PipelineRequestAssignmentRequest_SegmentMapping = {
           if ((tag & 7) === 2) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.workerIds.push(longToNumber(reader.uint64() as Long));
+              message.workerIds.push(longToBigint(reader.uint64() as Long));
             }
           } else {
-            message.workerIds.push(longToNumber(reader.uint64() as Long));
+            message.workerIds.push(longToBigint(reader.uint64() as Long));
           }
           break;
         default:
@@ -2120,7 +1956,7 @@ export const PipelineRequestAssignmentRequest_SegmentMapping = {
     return {
       $type: PipelineRequestAssignmentRequest_SegmentMapping.$type,
       segmentName: isSet(object.segmentName) ? String(object.segmentName) : "",
-      workerIds: Array.isArray(object?.workerIds) ? object.workerIds.map((e: any) => Number(e)) : [],
+      workerIds: Array.isArray(object?.workerIds) ? object.workerIds.map((e: any) => BigInt(e)) : [],
     };
   },
 
@@ -2128,7 +1964,7 @@ export const PipelineRequestAssignmentRequest_SegmentMapping = {
     const obj: any = {};
     message.segmentName !== undefined && (obj.segmentName = message.segmentName);
     if (message.workerIds) {
-      obj.workerIds = message.workerIds.map((e) => Math.round(e));
+      obj.workerIds = message.workerIds.map((e) => e.toString());
     } else {
       obj.workerIds = [];
     }
@@ -2159,9 +1995,8 @@ messageTypeRegistry.set(
 function createBasePipelineRequestAssignmentResponse(): PipelineRequestAssignmentResponse {
   return {
     $type: "mrc.protos.PipelineRequestAssignmentResponse",
-    pipelineDefinitionId: 0,
-    pipelineInstanceId: 0,
-    segmentDefinitionIds: [],
+    pipelineDefinitionId: BigInt("0"),
+    pipelineInstanceId: BigInt("0"),
     segmentInstanceIds: [],
   };
 }
@@ -2170,20 +2005,15 @@ export const PipelineRequestAssignmentResponse = {
   $type: "mrc.protos.PipelineRequestAssignmentResponse" as const,
 
   encode(message: PipelineRequestAssignmentResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.pipelineDefinitionId !== 0) {
-      writer.uint32(8).uint64(message.pipelineDefinitionId);
+    if (message.pipelineDefinitionId !== BigInt("0")) {
+      writer.uint32(8).uint64(message.pipelineDefinitionId.toString());
     }
-    if (message.pipelineInstanceId !== 0) {
-      writer.uint32(16).uint64(message.pipelineInstanceId);
+    if (message.pipelineInstanceId !== BigInt("0")) {
+      writer.uint32(16).uint64(message.pipelineInstanceId.toString());
     }
     writer.uint32(26).fork();
-    for (const v of message.segmentDefinitionIds) {
-      writer.uint64(v);
-    }
-    writer.ldelim();
-    writer.uint32(34).fork();
     for (const v of message.segmentInstanceIds) {
-      writer.uint64(v);
+      writer.uint64(v.toString());
     }
     writer.ldelim();
     return writer;
@@ -2197,29 +2027,19 @@ export const PipelineRequestAssignmentResponse = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.pipelineDefinitionId = longToNumber(reader.uint64() as Long);
+          message.pipelineDefinitionId = longToBigint(reader.uint64() as Long);
           break;
         case 2:
-          message.pipelineInstanceId = longToNumber(reader.uint64() as Long);
+          message.pipelineInstanceId = longToBigint(reader.uint64() as Long);
           break;
         case 3:
           if ((tag & 7) === 2) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.segmentDefinitionIds.push(longToNumber(reader.uint64() as Long));
+              message.segmentInstanceIds.push(longToBigint(reader.uint64() as Long));
             }
           } else {
-            message.segmentDefinitionIds.push(longToNumber(reader.uint64() as Long));
-          }
-          break;
-        case 4:
-          if ((tag & 7) === 2) {
-            const end2 = reader.uint32() + reader.pos;
-            while (reader.pos < end2) {
-              message.segmentInstanceIds.push(longToNumber(reader.uint64() as Long));
-            }
-          } else {
-            message.segmentInstanceIds.push(longToNumber(reader.uint64() as Long));
+            message.segmentInstanceIds.push(longToBigint(reader.uint64() as Long));
           }
           break;
         default:
@@ -2233,28 +2053,20 @@ export const PipelineRequestAssignmentResponse = {
   fromJSON(object: any): PipelineRequestAssignmentResponse {
     return {
       $type: PipelineRequestAssignmentResponse.$type,
-      pipelineDefinitionId: isSet(object.pipelineDefinitionId) ? Number(object.pipelineDefinitionId) : 0,
-      pipelineInstanceId: isSet(object.pipelineInstanceId) ? Number(object.pipelineInstanceId) : 0,
-      segmentDefinitionIds: Array.isArray(object?.segmentDefinitionIds)
-        ? object.segmentDefinitionIds.map((e: any) => Number(e))
-        : [],
+      pipelineDefinitionId: isSet(object.pipelineDefinitionId) ? BigInt(object.pipelineDefinitionId) : BigInt("0"),
+      pipelineInstanceId: isSet(object.pipelineInstanceId) ? BigInt(object.pipelineInstanceId) : BigInt("0"),
       segmentInstanceIds: Array.isArray(object?.segmentInstanceIds)
-        ? object.segmentInstanceIds.map((e: any) => Number(e))
+        ? object.segmentInstanceIds.map((e: any) => BigInt(e))
         : [],
     };
   },
 
   toJSON(message: PipelineRequestAssignmentResponse): unknown {
     const obj: any = {};
-    message.pipelineDefinitionId !== undefined && (obj.pipelineDefinitionId = Math.round(message.pipelineDefinitionId));
-    message.pipelineInstanceId !== undefined && (obj.pipelineInstanceId = Math.round(message.pipelineInstanceId));
-    if (message.segmentDefinitionIds) {
-      obj.segmentDefinitionIds = message.segmentDefinitionIds.map((e) => Math.round(e));
-    } else {
-      obj.segmentDefinitionIds = [];
-    }
+    message.pipelineDefinitionId !== undefined && (obj.pipelineDefinitionId = message.pipelineDefinitionId.toString());
+    message.pipelineInstanceId !== undefined && (obj.pipelineInstanceId = message.pipelineInstanceId.toString());
     if (message.segmentInstanceIds) {
-      obj.segmentInstanceIds = message.segmentInstanceIds.map((e) => Math.round(e));
+      obj.segmentInstanceIds = message.segmentInstanceIds.map((e) => e.toString());
     } else {
       obj.segmentInstanceIds = [];
     }
@@ -2267,9 +2079,8 @@ export const PipelineRequestAssignmentResponse = {
 
   fromPartial(object: DeepPartial<PipelineRequestAssignmentResponse>): PipelineRequestAssignmentResponse {
     const message = createBasePipelineRequestAssignmentResponse();
-    message.pipelineDefinitionId = object.pipelineDefinitionId ?? 0;
-    message.pipelineInstanceId = object.pipelineInstanceId ?? 0;
-    message.segmentDefinitionIds = object.segmentDefinitionIds?.map((e) => e) || [];
+    message.pipelineDefinitionId = object.pipelineDefinitionId ?? BigInt("0");
+    message.pipelineInstanceId = object.pipelineInstanceId ?? BigInt("0");
     message.segmentInstanceIds = object.segmentInstanceIds?.map((e) => e) || [];
     return message;
   },
@@ -2281,8 +2092,8 @@ function createBaseStateUpdate(): StateUpdate {
   return {
     $type: "mrc.protos.StateUpdate",
     serviceName: "",
-    nonce: 0,
-    instanceId: 0,
+    nonce: BigInt("0"),
+    instanceId: BigInt("0"),
     connections: undefined,
     updateSubscriptionService: undefined,
     dropSubscriptionService: undefined,
@@ -2296,11 +2107,11 @@ export const StateUpdate = {
     if (message.serviceName !== "") {
       writer.uint32(10).string(message.serviceName);
     }
-    if (message.nonce !== 0) {
-      writer.uint32(16).uint64(message.nonce);
+    if (message.nonce !== BigInt("0")) {
+      writer.uint32(16).uint64(message.nonce.toString());
     }
-    if (message.instanceId !== 0) {
-      writer.uint32(24).uint64(message.instanceId);
+    if (message.instanceId !== BigInt("0")) {
+      writer.uint32(24).uint64(message.instanceId.toString());
     }
     if (message.connections !== undefined) {
       UpdateConnectionsState.encode(message.connections, writer.uint32(34).fork()).ldelim();
@@ -2325,10 +2136,10 @@ export const StateUpdate = {
           message.serviceName = reader.string();
           break;
         case 2:
-          message.nonce = longToNumber(reader.uint64() as Long);
+          message.nonce = longToBigint(reader.uint64() as Long);
           break;
         case 3:
-          message.instanceId = longToNumber(reader.uint64() as Long);
+          message.instanceId = longToBigint(reader.uint64() as Long);
           break;
         case 4:
           message.connections = UpdateConnectionsState.decode(reader, reader.uint32());
@@ -2351,8 +2162,8 @@ export const StateUpdate = {
     return {
       $type: StateUpdate.$type,
       serviceName: isSet(object.serviceName) ? String(object.serviceName) : "",
-      nonce: isSet(object.nonce) ? Number(object.nonce) : 0,
-      instanceId: isSet(object.instanceId) ? Number(object.instanceId) : 0,
+      nonce: isSet(object.nonce) ? BigInt(object.nonce) : BigInt("0"),
+      instanceId: isSet(object.instanceId) ? BigInt(object.instanceId) : BigInt("0"),
       connections: isSet(object.connections) ? UpdateConnectionsState.fromJSON(object.connections) : undefined,
       updateSubscriptionService: isSet(object.updateSubscriptionService)
         ? UpdateSubscriptionServiceState.fromJSON(object.updateSubscriptionService)
@@ -2366,8 +2177,8 @@ export const StateUpdate = {
   toJSON(message: StateUpdate): unknown {
     const obj: any = {};
     message.serviceName !== undefined && (obj.serviceName = message.serviceName);
-    message.nonce !== undefined && (obj.nonce = Math.round(message.nonce));
-    message.instanceId !== undefined && (obj.instanceId = Math.round(message.instanceId));
+    message.nonce !== undefined && (obj.nonce = message.nonce.toString());
+    message.instanceId !== undefined && (obj.instanceId = message.instanceId.toString());
     message.connections !== undefined &&
       (obj.connections = message.connections ? UpdateConnectionsState.toJSON(message.connections) : undefined);
     message.updateSubscriptionService !== undefined &&
@@ -2387,8 +2198,8 @@ export const StateUpdate = {
   fromPartial(object: DeepPartial<StateUpdate>): StateUpdate {
     const message = createBaseStateUpdate();
     message.serviceName = object.serviceName ?? "";
-    message.nonce = object.nonce ?? 0;
-    message.instanceId = object.instanceId ?? 0;
+    message.nonce = object.nonce ?? BigInt("0");
+    message.instanceId = object.instanceId ?? BigInt("0");
     message.connections = (object.connections !== undefined && object.connections !== null)
       ? UpdateConnectionsState.fromPartial(object.connections)
       : undefined;
@@ -2544,7 +2355,7 @@ export const UpdateSubscriptionServiceState = {
 messageTypeRegistry.set(UpdateSubscriptionServiceState.$type, UpdateSubscriptionServiceState);
 
 function createBaseDropSubscriptionServiceState(): DropSubscriptionServiceState {
-  return { $type: "mrc.protos.DropSubscriptionServiceState", role: "", tag: 0 };
+  return { $type: "mrc.protos.DropSubscriptionServiceState", role: "", tag: BigInt("0") };
 }
 
 export const DropSubscriptionServiceState = {
@@ -2554,8 +2365,8 @@ export const DropSubscriptionServiceState = {
     if (message.role !== "") {
       writer.uint32(10).string(message.role);
     }
-    if (message.tag !== 0) {
-      writer.uint32(16).uint64(message.tag);
+    if (message.tag !== BigInt("0")) {
+      writer.uint32(16).uint64(message.tag.toString());
     }
     return writer;
   },
@@ -2571,7 +2382,7 @@ export const DropSubscriptionServiceState = {
           message.role = reader.string();
           break;
         case 2:
-          message.tag = longToNumber(reader.uint64() as Long);
+          message.tag = longToBigint(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -2585,14 +2396,14 @@ export const DropSubscriptionServiceState = {
     return {
       $type: DropSubscriptionServiceState.$type,
       role: isSet(object.role) ? String(object.role) : "",
-      tag: isSet(object.tag) ? Number(object.tag) : 0,
+      tag: isSet(object.tag) ? BigInt(object.tag) : BigInt("0"),
     };
   },
 
   toJSON(message: DropSubscriptionServiceState): unknown {
     const obj: any = {};
     message.role !== undefined && (obj.role = message.role);
-    message.tag !== undefined && (obj.tag = Math.round(message.tag));
+    message.tag !== undefined && (obj.tag = message.tag.toString());
     return obj;
   },
 
@@ -2603,7 +2414,7 @@ export const DropSubscriptionServiceState = {
   fromPartial(object: DeepPartial<DropSubscriptionServiceState>): DropSubscriptionServiceState {
     const message = createBaseDropSubscriptionServiceState();
     message.role = object.role ?? "";
-    message.tag = object.tag ?? 0;
+    message.tag = object.tag ?? BigInt("0");
     return message;
   },
 };
@@ -2797,8 +2608,8 @@ messageTypeRegistry.set(UpdateAssignments.$type, UpdateAssignments);
 function createBaseSegmentAssignment(): SegmentAssignment {
   return {
     $type: "mrc.protos.SegmentAssignment",
-    machineId: 0,
-    instanceId: 0,
+    machineId: BigInt("0"),
+    instanceId: BigInt("0"),
     address: 0,
     egressPolices: {},
     issueEventOnComplete: false,
@@ -2810,11 +2621,11 @@ export const SegmentAssignment = {
   $type: "mrc.protos.SegmentAssignment" as const,
 
   encode(message: SegmentAssignment, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.machineId !== 0) {
-      writer.uint32(8).uint64(message.machineId);
+    if (message.machineId !== BigInt("0")) {
+      writer.uint32(8).uint64(message.machineId.toString());
     }
-    if (message.instanceId !== 0) {
-      writer.uint32(16).uint64(message.instanceId);
+    if (message.instanceId !== BigInt("0")) {
+      writer.uint32(16).uint64(message.instanceId.toString());
     }
     if (message.address !== 0) {
       writer.uint32(24).uint32(message.address);
@@ -2845,10 +2656,10 @@ export const SegmentAssignment = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.machineId = longToNumber(reader.uint64() as Long);
+          message.machineId = longToBigint(reader.uint64() as Long);
           break;
         case 2:
-          message.instanceId = longToNumber(reader.uint64() as Long);
+          message.instanceId = longToBigint(reader.uint64() as Long);
           break;
         case 3:
           message.address = reader.uint32();
@@ -2883,8 +2694,8 @@ export const SegmentAssignment = {
   fromJSON(object: any): SegmentAssignment {
     return {
       $type: SegmentAssignment.$type,
-      machineId: isSet(object.machineId) ? Number(object.machineId) : 0,
-      instanceId: isSet(object.instanceId) ? Number(object.instanceId) : 0,
+      machineId: isSet(object.machineId) ? BigInt(object.machineId) : BigInt("0"),
+      instanceId: isSet(object.instanceId) ? BigInt(object.instanceId) : BigInt("0"),
       address: isSet(object.address) ? Number(object.address) : 0,
       egressPolices: isObject(object.egressPolices)
         ? Object.entries(object.egressPolices).reduce<{ [key: number]: EgressPolicy }>((acc, [key, value]) => {
@@ -2901,8 +2712,8 @@ export const SegmentAssignment = {
 
   toJSON(message: SegmentAssignment): unknown {
     const obj: any = {};
-    message.machineId !== undefined && (obj.machineId = Math.round(message.machineId));
-    message.instanceId !== undefined && (obj.instanceId = Math.round(message.instanceId));
+    message.machineId !== undefined && (obj.machineId = message.machineId.toString());
+    message.instanceId !== undefined && (obj.instanceId = message.instanceId.toString());
     message.address !== undefined && (obj.address = Math.round(message.address));
     obj.egressPolices = {};
     if (message.egressPolices) {
@@ -2925,8 +2736,8 @@ export const SegmentAssignment = {
 
   fromPartial(object: DeepPartial<SegmentAssignment>): SegmentAssignment {
     const message = createBaseSegmentAssignment();
-    message.machineId = object.machineId ?? 0;
-    message.instanceId = object.instanceId ?? 0;
+    message.machineId = object.machineId ?? BigInt("0");
+    message.instanceId = object.instanceId ?? BigInt("0");
     message.address = object.address ?? 0;
     message.egressPolices = Object.entries(object.egressPolices ?? {}).reduce<{ [key: number]: EgressPolicy }>(
       (acc, [key, value]) => {
@@ -3101,7 +2912,7 @@ function createBaseGpuInfo(): GpuInfo {
     name: "",
     uuid: "",
     pcieBusId: "",
-    memoryCapacity: 0,
+    memoryCapacity: BigInt("0"),
     cudaDeviceId: 0,
   };
 }
@@ -3122,8 +2933,8 @@ export const GpuInfo = {
     if (message.pcieBusId !== "") {
       writer.uint32(34).string(message.pcieBusId);
     }
-    if (message.memoryCapacity !== 0) {
-      writer.uint32(40).uint64(message.memoryCapacity);
+    if (message.memoryCapacity !== BigInt("0")) {
+      writer.uint32(40).uint64(message.memoryCapacity.toString());
     }
     if (message.cudaDeviceId !== 0) {
       writer.uint32(48).int32(message.cudaDeviceId);
@@ -3151,7 +2962,7 @@ export const GpuInfo = {
           message.pcieBusId = reader.string();
           break;
         case 5:
-          message.memoryCapacity = longToNumber(reader.uint64() as Long);
+          message.memoryCapacity = longToBigint(reader.uint64() as Long);
           break;
         case 6:
           message.cudaDeviceId = reader.int32();
@@ -3171,7 +2982,7 @@ export const GpuInfo = {
       name: isSet(object.name) ? String(object.name) : "",
       uuid: isSet(object.uuid) ? String(object.uuid) : "",
       pcieBusId: isSet(object.pcieBusId) ? String(object.pcieBusId) : "",
-      memoryCapacity: isSet(object.memoryCapacity) ? Number(object.memoryCapacity) : 0,
+      memoryCapacity: isSet(object.memoryCapacity) ? BigInt(object.memoryCapacity) : BigInt("0"),
       cudaDeviceId: isSet(object.cudaDeviceId) ? Number(object.cudaDeviceId) : 0,
     };
   },
@@ -3182,7 +2993,7 @@ export const GpuInfo = {
     message.name !== undefined && (obj.name = message.name);
     message.uuid !== undefined && (obj.uuid = message.uuid);
     message.pcieBusId !== undefined && (obj.pcieBusId = message.pcieBusId);
-    message.memoryCapacity !== undefined && (obj.memoryCapacity = Math.round(message.memoryCapacity));
+    message.memoryCapacity !== undefined && (obj.memoryCapacity = message.memoryCapacity.toString());
     message.cudaDeviceId !== undefined && (obj.cudaDeviceId = Math.round(message.cudaDeviceId));
     return obj;
   },
@@ -3197,7 +3008,7 @@ export const GpuInfo = {
     message.name = object.name ?? "";
     message.uuid = object.uuid ?? "";
     message.pcieBusId = object.pcieBusId ?? "";
-    message.memoryCapacity = object.memoryCapacity ?? 0;
+    message.memoryCapacity = object.memoryCapacity ?? BigInt("0");
     message.cudaDeviceId = object.cudaDeviceId ?? 0;
     return message;
   },
@@ -3276,383 +3087,19 @@ export const Pipeline = {
 
 messageTypeRegistry.set(Pipeline.$type, Pipeline);
 
-function createBasePipelineConfiguration(): PipelineConfiguration {
-  return { $type: "mrc.protos.PipelineConfiguration", instanceId: 0, segments: [] };
-}
-
-export const PipelineConfiguration = {
-  $type: "mrc.protos.PipelineConfiguration" as const,
-
-  encode(message: PipelineConfiguration, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.instanceId !== 0) {
-      writer.uint32(8).uint64(message.instanceId);
-    }
-    for (const v of message.segments) {
-      SegmentConfiguration.encode(v!, writer.uint32(18).fork()).ldelim();
-    }
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): PipelineConfiguration {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBasePipelineConfiguration();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          message.instanceId = longToNumber(reader.uint64() as Long);
-          break;
-        case 2:
-          message.segments.push(SegmentConfiguration.decode(reader, reader.uint32()));
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-    return message;
-  },
-
-  fromJSON(object: any): PipelineConfiguration {
-    return {
-      $type: PipelineConfiguration.$type,
-      instanceId: isSet(object.instanceId) ? Number(object.instanceId) : 0,
-      segments: Array.isArray(object?.segments)
-        ? object.segments.map((e: any) => SegmentConfiguration.fromJSON(e))
-        : [],
-    };
-  },
-
-  toJSON(message: PipelineConfiguration): unknown {
-    const obj: any = {};
-    message.instanceId !== undefined && (obj.instanceId = Math.round(message.instanceId));
-    if (message.segments) {
-      obj.segments = message.segments.map((e) => e ? SegmentConfiguration.toJSON(e) : undefined);
-    } else {
-      obj.segments = [];
-    }
-    return obj;
-  },
-
-  create(base?: DeepPartial<PipelineConfiguration>): PipelineConfiguration {
-    return PipelineConfiguration.fromPartial(base ?? {});
-  },
-
-  fromPartial(object: DeepPartial<PipelineConfiguration>): PipelineConfiguration {
-    const message = createBasePipelineConfiguration();
-    message.instanceId = object.instanceId ?? 0;
-    message.segments = object.segments?.map((e) => SegmentConfiguration.fromPartial(e)) || [];
-    return message;
-  },
-};
-
-messageTypeRegistry.set(PipelineConfiguration.$type, PipelineConfiguration);
-
-function createBaseSegmentConfiguration(): SegmentConfiguration {
-  return {
-    $type: "mrc.protos.SegmentConfiguration",
-    name: "",
-    concurrency: 0,
-    rank: 0,
-    egressPolices: {},
-    ingressPolicies: {},
-  };
-}
-
-export const SegmentConfiguration = {
-  $type: "mrc.protos.SegmentConfiguration" as const,
-
-  encode(message: SegmentConfiguration, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.name !== "") {
-      writer.uint32(10).string(message.name);
-    }
-    if (message.concurrency !== 0) {
-      writer.uint32(16).uint32(message.concurrency);
-    }
-    if (message.rank !== 0) {
-      writer.uint32(24).uint32(message.rank);
-    }
-    Object.entries(message.egressPolices).forEach(([key, value]) => {
-      SegmentConfiguration_EgressPolicesEntry.encode({
-        $type: "mrc.protos.SegmentConfiguration.EgressPolicesEntry",
-        key: key as any,
-        value,
-      }, writer.uint32(34).fork()).ldelim();
-    });
-    Object.entries(message.ingressPolicies).forEach(([key, value]) => {
-      SegmentConfiguration_IngressPoliciesEntry.encode({
-        $type: "mrc.protos.SegmentConfiguration.IngressPoliciesEntry",
-        key: key as any,
-        value,
-      }, writer.uint32(42).fork()).ldelim();
-    });
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): SegmentConfiguration {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseSegmentConfiguration();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          message.name = reader.string();
-          break;
-        case 2:
-          message.concurrency = reader.uint32();
-          break;
-        case 3:
-          message.rank = reader.uint32();
-          break;
-        case 4:
-          const entry4 = SegmentConfiguration_EgressPolicesEntry.decode(reader, reader.uint32());
-          if (entry4.value !== undefined) {
-            message.egressPolices[entry4.key] = entry4.value;
-          }
-          break;
-        case 5:
-          const entry5 = SegmentConfiguration_IngressPoliciesEntry.decode(reader, reader.uint32());
-          if (entry5.value !== undefined) {
-            message.ingressPolicies[entry5.key] = entry5.value;
-          }
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-    return message;
-  },
-
-  fromJSON(object: any): SegmentConfiguration {
-    return {
-      $type: SegmentConfiguration.$type,
-      name: isSet(object.name) ? String(object.name) : "",
-      concurrency: isSet(object.concurrency) ? Number(object.concurrency) : 0,
-      rank: isSet(object.rank) ? Number(object.rank) : 0,
-      egressPolices: isObject(object.egressPolices)
-        ? Object.entries(object.egressPolices).reduce<{ [key: number]: EgressPolicy }>((acc, [key, value]) => {
-          acc[Number(key)] = EgressPolicy.fromJSON(value);
-          return acc;
-        }, {})
-        : {},
-      ingressPolicies: isObject(object.ingressPolicies)
-        ? Object.entries(object.ingressPolicies).reduce<{ [key: number]: IngressPolicy }>((acc, [key, value]) => {
-          acc[Number(key)] = IngressPolicy.fromJSON(value);
-          return acc;
-        }, {})
-        : {},
-    };
-  },
-
-  toJSON(message: SegmentConfiguration): unknown {
-    const obj: any = {};
-    message.name !== undefined && (obj.name = message.name);
-    message.concurrency !== undefined && (obj.concurrency = Math.round(message.concurrency));
-    message.rank !== undefined && (obj.rank = Math.round(message.rank));
-    obj.egressPolices = {};
-    if (message.egressPolices) {
-      Object.entries(message.egressPolices).forEach(([k, v]) => {
-        obj.egressPolices[k] = EgressPolicy.toJSON(v);
-      });
-    }
-    obj.ingressPolicies = {};
-    if (message.ingressPolicies) {
-      Object.entries(message.ingressPolicies).forEach(([k, v]) => {
-        obj.ingressPolicies[k] = IngressPolicy.toJSON(v);
-      });
-    }
-    return obj;
-  },
-
-  create(base?: DeepPartial<SegmentConfiguration>): SegmentConfiguration {
-    return SegmentConfiguration.fromPartial(base ?? {});
-  },
-
-  fromPartial(object: DeepPartial<SegmentConfiguration>): SegmentConfiguration {
-    const message = createBaseSegmentConfiguration();
-    message.name = object.name ?? "";
-    message.concurrency = object.concurrency ?? 0;
-    message.rank = object.rank ?? 0;
-    message.egressPolices = Object.entries(object.egressPolices ?? {}).reduce<{ [key: number]: EgressPolicy }>(
-      (acc, [key, value]) => {
-        if (value !== undefined) {
-          acc[Number(key)] = EgressPolicy.fromPartial(value);
-        }
-        return acc;
-      },
-      {},
-    );
-    message.ingressPolicies = Object.entries(object.ingressPolicies ?? {}).reduce<{ [key: number]: IngressPolicy }>(
-      (acc, [key, value]) => {
-        if (value !== undefined) {
-          acc[Number(key)] = IngressPolicy.fromPartial(value);
-        }
-        return acc;
-      },
-      {},
-    );
-    return message;
-  },
-};
-
-messageTypeRegistry.set(SegmentConfiguration.$type, SegmentConfiguration);
-
-function createBaseSegmentConfiguration_EgressPolicesEntry(): SegmentConfiguration_EgressPolicesEntry {
-  return { $type: "mrc.protos.SegmentConfiguration.EgressPolicesEntry", key: 0, value: undefined };
-}
-
-export const SegmentConfiguration_EgressPolicesEntry = {
-  $type: "mrc.protos.SegmentConfiguration.EgressPolicesEntry" as const,
-
-  encode(message: SegmentConfiguration_EgressPolicesEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.key !== 0) {
-      writer.uint32(8).uint32(message.key);
-    }
-    if (message.value !== undefined) {
-      EgressPolicy.encode(message.value, writer.uint32(18).fork()).ldelim();
-    }
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): SegmentConfiguration_EgressPolicesEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseSegmentConfiguration_EgressPolicesEntry();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          message.key = reader.uint32();
-          break;
-        case 2:
-          message.value = EgressPolicy.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-    return message;
-  },
-
-  fromJSON(object: any): SegmentConfiguration_EgressPolicesEntry {
-    return {
-      $type: SegmentConfiguration_EgressPolicesEntry.$type,
-      key: isSet(object.key) ? Number(object.key) : 0,
-      value: isSet(object.value) ? EgressPolicy.fromJSON(object.value) : undefined,
-    };
-  },
-
-  toJSON(message: SegmentConfiguration_EgressPolicesEntry): unknown {
-    const obj: any = {};
-    message.key !== undefined && (obj.key = Math.round(message.key));
-    message.value !== undefined && (obj.value = message.value ? EgressPolicy.toJSON(message.value) : undefined);
-    return obj;
-  },
-
-  create(base?: DeepPartial<SegmentConfiguration_EgressPolicesEntry>): SegmentConfiguration_EgressPolicesEntry {
-    return SegmentConfiguration_EgressPolicesEntry.fromPartial(base ?? {});
-  },
-
-  fromPartial(object: DeepPartial<SegmentConfiguration_EgressPolicesEntry>): SegmentConfiguration_EgressPolicesEntry {
-    const message = createBaseSegmentConfiguration_EgressPolicesEntry();
-    message.key = object.key ?? 0;
-    message.value = (object.value !== undefined && object.value !== null)
-      ? EgressPolicy.fromPartial(object.value)
-      : undefined;
-    return message;
-  },
-};
-
-messageTypeRegistry.set(SegmentConfiguration_EgressPolicesEntry.$type, SegmentConfiguration_EgressPolicesEntry);
-
-function createBaseSegmentConfiguration_IngressPoliciesEntry(): SegmentConfiguration_IngressPoliciesEntry {
-  return { $type: "mrc.protos.SegmentConfiguration.IngressPoliciesEntry", key: 0, value: undefined };
-}
-
-export const SegmentConfiguration_IngressPoliciesEntry = {
-  $type: "mrc.protos.SegmentConfiguration.IngressPoliciesEntry" as const,
-
-  encode(message: SegmentConfiguration_IngressPoliciesEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.key !== 0) {
-      writer.uint32(8).uint32(message.key);
-    }
-    if (message.value !== undefined) {
-      IngressPolicy.encode(message.value, writer.uint32(18).fork()).ldelim();
-    }
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): SegmentConfiguration_IngressPoliciesEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseSegmentConfiguration_IngressPoliciesEntry();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          message.key = reader.uint32();
-          break;
-        case 2:
-          message.value = IngressPolicy.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-    return message;
-  },
-
-  fromJSON(object: any): SegmentConfiguration_IngressPoliciesEntry {
-    return {
-      $type: SegmentConfiguration_IngressPoliciesEntry.$type,
-      key: isSet(object.key) ? Number(object.key) : 0,
-      value: isSet(object.value) ? IngressPolicy.fromJSON(object.value) : undefined,
-    };
-  },
-
-  toJSON(message: SegmentConfiguration_IngressPoliciesEntry): unknown {
-    const obj: any = {};
-    message.key !== undefined && (obj.key = Math.round(message.key));
-    message.value !== undefined && (obj.value = message.value ? IngressPolicy.toJSON(message.value) : undefined);
-    return obj;
-  },
-
-  create(base?: DeepPartial<SegmentConfiguration_IngressPoliciesEntry>): SegmentConfiguration_IngressPoliciesEntry {
-    return SegmentConfiguration_IngressPoliciesEntry.fromPartial(base ?? {});
-  },
-
-  fromPartial(
-    object: DeepPartial<SegmentConfiguration_IngressPoliciesEntry>,
-  ): SegmentConfiguration_IngressPoliciesEntry {
-    const message = createBaseSegmentConfiguration_IngressPoliciesEntry();
-    message.key = object.key ?? 0;
-    message.value = (object.value !== undefined && object.value !== null)
-      ? IngressPolicy.fromPartial(object.value)
-      : undefined;
-    return message;
-  },
-};
-
-messageTypeRegistry.set(SegmentConfiguration_IngressPoliciesEntry.$type, SegmentConfiguration_IngressPoliciesEntry);
-
 function createBaseWorkerAddress(): WorkerAddress {
-  return { $type: "mrc.protos.WorkerAddress", machineId: 0, instanceId: 0, workerAddress: "" };
+  return { $type: "mrc.protos.WorkerAddress", machineId: BigInt("0"), instanceId: BigInt("0"), workerAddress: "" };
 }
 
 export const WorkerAddress = {
   $type: "mrc.protos.WorkerAddress" as const,
 
   encode(message: WorkerAddress, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.machineId !== 0) {
-      writer.uint32(8).uint64(message.machineId);
+    if (message.machineId !== BigInt("0")) {
+      writer.uint32(8).uint64(message.machineId.toString());
     }
-    if (message.instanceId !== 0) {
-      writer.uint32(16).uint64(message.instanceId);
+    if (message.instanceId !== BigInt("0")) {
+      writer.uint32(16).uint64(message.instanceId.toString());
     }
     if (message.workerAddress !== "") {
       writer.uint32(26).string(message.workerAddress);
@@ -3668,10 +3115,10 @@ export const WorkerAddress = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.machineId = longToNumber(reader.uint64() as Long);
+          message.machineId = longToBigint(reader.uint64() as Long);
           break;
         case 2:
-          message.instanceId = longToNumber(reader.uint64() as Long);
+          message.instanceId = longToBigint(reader.uint64() as Long);
           break;
         case 3:
           message.workerAddress = reader.string();
@@ -3687,16 +3134,16 @@ export const WorkerAddress = {
   fromJSON(object: any): WorkerAddress {
     return {
       $type: WorkerAddress.$type,
-      machineId: isSet(object.machineId) ? Number(object.machineId) : 0,
-      instanceId: isSet(object.instanceId) ? Number(object.instanceId) : 0,
+      machineId: isSet(object.machineId) ? BigInt(object.machineId) : BigInt("0"),
+      instanceId: isSet(object.instanceId) ? BigInt(object.instanceId) : BigInt("0"),
       workerAddress: isSet(object.workerAddress) ? String(object.workerAddress) : "",
     };
   },
 
   toJSON(message: WorkerAddress): unknown {
     const obj: any = {};
-    message.machineId !== undefined && (obj.machineId = Math.round(message.machineId));
-    message.instanceId !== undefined && (obj.instanceId = Math.round(message.instanceId));
+    message.machineId !== undefined && (obj.machineId = message.machineId.toString());
+    message.instanceId !== undefined && (obj.instanceId = message.instanceId.toString());
     message.workerAddress !== undefined && (obj.workerAddress = message.workerAddress);
     return obj;
   },
@@ -3707,8 +3154,8 @@ export const WorkerAddress = {
 
   fromPartial(object: DeepPartial<WorkerAddress>): WorkerAddress {
     const message = createBaseWorkerAddress();
-    message.machineId = object.machineId ?? 0;
-    message.instanceId = object.instanceId ?? 0;
+    message.machineId = object.machineId ?? BigInt("0");
+    message.instanceId = object.instanceId ?? BigInt("0");
     message.workerAddress = object.workerAddress ?? "";
     return message;
   },
@@ -3717,15 +3164,15 @@ export const WorkerAddress = {
 messageTypeRegistry.set(WorkerAddress.$type, WorkerAddress);
 
 function createBaseInstancesResources(): InstancesResources {
-  return { $type: "mrc.protos.InstancesResources", hostMemory: 0, cpus: [], gpus: [], nics: [] };
+  return { $type: "mrc.protos.InstancesResources", hostMemory: BigInt("0"), cpus: [], gpus: [], nics: [] };
 }
 
 export const InstancesResources = {
   $type: "mrc.protos.InstancesResources" as const,
 
   encode(message: InstancesResources, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.hostMemory !== 0) {
-      writer.uint32(8).uint64(message.hostMemory);
+    if (message.hostMemory !== BigInt("0")) {
+      writer.uint32(8).uint64(message.hostMemory.toString());
     }
     for (const v of message.cpus) {
       CPU.encode(v!, writer.uint32(18).fork()).ldelim();
@@ -3747,7 +3194,7 @@ export const InstancesResources = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.hostMemory = longToNumber(reader.uint64() as Long);
+          message.hostMemory = longToBigint(reader.uint64() as Long);
           break;
         case 2:
           message.cpus.push(CPU.decode(reader, reader.uint32()));
@@ -3769,7 +3216,7 @@ export const InstancesResources = {
   fromJSON(object: any): InstancesResources {
     return {
       $type: InstancesResources.$type,
-      hostMemory: isSet(object.hostMemory) ? Number(object.hostMemory) : 0,
+      hostMemory: isSet(object.hostMemory) ? BigInt(object.hostMemory) : BigInt("0"),
       cpus: Array.isArray(object?.cpus) ? object.cpus.map((e: any) => CPU.fromJSON(e)) : [],
       gpus: Array.isArray(object?.gpus) ? object.gpus.map((e: any) => GPU.fromJSON(e)) : [],
       nics: Array.isArray(object?.nics) ? object.nics.map((e: any) => NIC.fromJSON(e)) : [],
@@ -3778,7 +3225,7 @@ export const InstancesResources = {
 
   toJSON(message: InstancesResources): unknown {
     const obj: any = {};
-    message.hostMemory !== undefined && (obj.hostMemory = Math.round(message.hostMemory));
+    message.hostMemory !== undefined && (obj.hostMemory = message.hostMemory.toString());
     if (message.cpus) {
       obj.cpus = message.cpus.map((e) => e ? CPU.toJSON(e) : undefined);
     } else {
@@ -3803,7 +3250,7 @@ export const InstancesResources = {
 
   fromPartial(object: DeepPartial<InstancesResources>): InstancesResources {
     const message = createBaseInstancesResources();
-    message.hostMemory = object.hostMemory ?? 0;
+    message.hostMemory = object.hostMemory ?? BigInt("0");
     message.cpus = object.cpus?.map((e) => CPU.fromPartial(e)) || [];
     message.gpus = object.gpus?.map((e) => GPU.fromPartial(e)) || [];
     message.nics = object.nics?.map((e) => NIC.fromPartial(e)) || [];
@@ -3881,7 +3328,7 @@ export const CPU = {
 messageTypeRegistry.set(CPU.$type, CPU);
 
 function createBaseGPU(): GPU {
-  return { $type: "mrc.protos.GPU", name: "", cores: 0, memory: 0, computeCapability: 0 };
+  return { $type: "mrc.protos.GPU", name: "", cores: 0, memory: BigInt("0"), computeCapability: 0 };
 }
 
 export const GPU = {
@@ -3894,8 +3341,8 @@ export const GPU = {
     if (message.cores !== 0) {
       writer.uint32(16).uint32(message.cores);
     }
-    if (message.memory !== 0) {
-      writer.uint32(24).uint64(message.memory);
+    if (message.memory !== BigInt("0")) {
+      writer.uint32(24).uint64(message.memory.toString());
     }
     if (message.computeCapability !== 0) {
       writer.uint32(37).float(message.computeCapability);
@@ -3917,7 +3364,7 @@ export const GPU = {
           message.cores = reader.uint32();
           break;
         case 3:
-          message.memory = longToNumber(reader.uint64() as Long);
+          message.memory = longToBigint(reader.uint64() as Long);
           break;
         case 4:
           message.computeCapability = reader.float();
@@ -3935,7 +3382,7 @@ export const GPU = {
       $type: GPU.$type,
       name: isSet(object.name) ? String(object.name) : "",
       cores: isSet(object.cores) ? Number(object.cores) : 0,
-      memory: isSet(object.memory) ? Number(object.memory) : 0,
+      memory: isSet(object.memory) ? BigInt(object.memory) : BigInt("0"),
       computeCapability: isSet(object.computeCapability) ? Number(object.computeCapability) : 0,
     };
   },
@@ -3944,7 +3391,7 @@ export const GPU = {
     const obj: any = {};
     message.name !== undefined && (obj.name = message.name);
     message.cores !== undefined && (obj.cores = Math.round(message.cores));
-    message.memory !== undefined && (obj.memory = Math.round(message.memory));
+    message.memory !== undefined && (obj.memory = message.memory.toString());
     message.computeCapability !== undefined && (obj.computeCapability = message.computeCapability);
     return obj;
   },
@@ -3957,7 +3404,7 @@ export const GPU = {
     const message = createBaseGPU();
     message.name = object.name ?? "";
     message.cores = object.cores ?? 0;
-    message.memory = object.memory ?? 0;
+    message.memory = object.memory ?? BigInt("0");
     message.computeCapability = object.computeCapability ?? 0;
     return message;
   },
@@ -4110,11 +3557,8 @@ export type DeepPartial<T> = T extends Builtin ? T
   : T extends {} ? { [K in Exclude<keyof T, "$type">]?: DeepPartial<T[K]> }
   : Partial<T>;
 
-function longToNumber(long: Long): number {
-  if (long.gt(Number.MAX_SAFE_INTEGER)) {
-    throw new tsProtoGlobalThis.Error("Value is larger than Number.MAX_SAFE_INTEGER");
-  }
-  return long.toNumber();
+function longToBigint(long: Long) {
+  return BigInt(long.toString());
 }
 
 if (_m0.util.Long !== Long) {

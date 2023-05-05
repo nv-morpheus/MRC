@@ -1,14 +1,12 @@
 import {expect} from "@jest/globals";
-import {WorkerStates} from "@mrc/proto/mrc/protos/architect_state";
+import {pipelineDefinitionsAdd} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 import {
-   IPipelineInstance,
    pipelineInstancesAdd,
    pipelineInstancesRemove,
 } from "@mrc/server/store/slices/pipelineInstancesSlice";
-import {connection, pipeline, segment, worker} from "@mrc/tests/defaultObjects";
+import {connection, pipeline, pipeline_def, worker} from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
-import {stringToBytes} from "../../../common/utils";
 import {RootStore, setupStore} from "../store";
 
 import {
@@ -17,10 +15,8 @@ import {
    connectionsSelectAll,
    connectionsSelectById,
    connectionsSelectTotal,
-   IConnection,
 } from "./connectionsSlice";
 import {
-   IWorker,
    workersAdd,
    workersRemove,
 } from "./workersSlice";
@@ -126,6 +122,8 @@ describe("Single", () => {
 
    describe("With Pipeline", () => {
       beforeEach(() => {
+         store.dispatch(pipelineDefinitionsAdd(pipeline_def));
+
          store.dispatch(pipelineInstancesAdd(pipeline));
       });
 

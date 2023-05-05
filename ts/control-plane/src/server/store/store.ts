@@ -16,7 +16,7 @@ import connectionsReducer from "./slices/connectionsSlice";
 import pipelineDefinitionsReducer from "./slices/pipelineDefinitionsSlice";
 // import devToolsReducer from "./slices/devToolsSlice";
 import pipelineInstancesReducer from "./slices/pipelineInstancesSlice";
-import segmentDefinitionsReducer from "./slices/segmentDefinitionsSlice";
+// import segmentDefinitionsReducer from "./slices/segmentDefinitionsSlice";
 import segmentInstancesReducer from "./slices/segmentInstancesSlice";
 import systemReducer, {systemStartRequest, systemStopRequest} from "./slices/systemSlice";
 import workersReducer from "./slices/workersSlice";
@@ -28,7 +28,7 @@ const slicesReducer = combineReducers({
    workers: workersReducer,
    pipelineDefinitions: pipelineDefinitionsReducer,
    pipelineInstances: pipelineInstancesReducer,
-   segmentDefinitions: segmentDefinitionsReducer,
+   // segmentDefinitions: segmentDefinitionsReducer,
    segmentInstances: segmentInstancesReducer,
 });
 

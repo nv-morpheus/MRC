@@ -127,16 +127,16 @@ message RegisterWorkersResponse
 
 // Initialization - Step 2
 
-message RegisterPipelineRequest
-{
-    // uint32 machine_id = 1;
-    Pipeline pipeline = 2;
-    repeated PipelineConfiguration requested_config = 3;
-}
+// message RegisterPipelineRequest
+// {
+//     // uint32 machine_id = 1;
+//     Pipeline pipeline = 2;
+//     repeated PipelineConfiguration requested_config = 3;
+// }
 
-message RegisterPipelineResponse
-{
-}
+// message RegisterPipelineResponse
+// {
+// }
 
 message LookupWorkersRequest
 {
@@ -201,7 +201,6 @@ message TaggedInstance
     uint64 tag = 2;
 }
 
-// Pipeline
 message PipelineRequestAssignmentRequest
 {
     message SegmentMapping {
@@ -213,13 +212,10 @@ message PipelineRequestAssignmentRequest
     }
 
     // The pipeline definition object
-    PipelineDefinition pipeline = 1;
-
-    // The segment objects
-    repeated SegmentDefinition segments = 2;
+    PipelineConfiguration pipeline = 1;
 
     // The mapping of segment definitions to assigned workers
-    repeated SegmentMapping assignments = 3;
+    repeated SegmentMapping assignments = 2;
 }
 
 message PipelineRequestAssignmentResponse
@@ -230,11 +226,8 @@ message PipelineRequestAssignmentResponse
     // The pipeline instance that was added
     uint64 pipeline_instance_id = 2;
 
-    // The segment definition that was added (since they are generated)
-    repeated uint64 segment_definition_ids = 3;
-
     // The segment instance that was added
-    repeated uint64 segment_instance_ids = 4;
+    repeated uint64 segment_instance_ids = 3;
 }
 
 
@@ -404,20 +397,20 @@ message Pipeline
 //     repeated uint32 segment_addresses = 4; // segment_address, not port_address
 // }
 
-message PipelineConfiguration
-{
-    uint64 instance_id = 1;
-    repeated SegmentConfiguration segments = 2;
-}
+// message PipelineConfiguration
+// {
+//     uint64 instance_id = 1;
+//     repeated SegmentConfiguration segments = 2;
+// }
 
-message SegmentConfiguration
-{
-    string name = 1;
-    uint32 concurrency = 2;
-    uint32 rank = 3;
-    map<uint32, EgressPolicy> egress_polices = 4;
-    map<uint32, IngressPolicy> ingress_policies = 5;
-}
+// message SegmentConfiguration
+// {
+//     string name = 1;
+//     uint32 concurrency = 2;
+//     uint32 rank = 3;
+//     map<uint32, EgressPolicy> egress_polices = 4;
+//     map<uint32, IngressPolicy> ingress_policies = 5;
+// }
 
 
 message WorkerAddress
