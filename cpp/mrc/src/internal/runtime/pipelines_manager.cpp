@@ -18,6 +18,7 @@
 #include "internal/runtime/pipelines_manager.hpp"
 
 #include "internal/pipeline/pipeline.hpp"
+#include "internal/segment/definition.hpp"
 
 #include "mrc/core/addresses.hpp"
 
@@ -29,27 +30,41 @@ PipelinesManager::PipelinesManager(control_plane::Client& control_plane_client) 
 
 PipelinesManager::~PipelinesManager() = default;
 
-void PipelinesManager::register_defs(std::map<int, std::shared_ptr<pipeline::Pipeline>> pipeline_defs)
+void PipelinesManager::register_defs(std::vector<std::shared_ptr<pipeline::Pipeline>> pipeline_defs)
 {
-    m_pipeline_defs = std::move(pipeline_defs);
-
     // Now loop over all and register with the control plane
-    for (const auto& [pipeline_id, pipeline] : m_pipeline_defs)
+    for (const auto& pipeline : pipeline_defs)
     {
         auto request = protos::PipelineRequestAssignmentRequest();
-        request.set_machine_id(0);
-        request.set_pipeline_id(0);
 
         for (const auto& [segment_id, segment] : pipeline->segments())
         {
-            auto address = segment_address_encode(segment_id, 0);  // rank 0
+            auto* next_seg = request.mutable_segments()->Add();
 
-            (*request.mutable_segment_assignments())[segment_id] = 0;
+            next_seg->set_name(segment->name());
+
+            for (const auto& egress_port_name : segment->egress_port_names())
+            {
+                auto* egress = next_seg->mutable_egress_ports()->Add();
+                egress->set_name(egress_port_name);
+            }
+
+            for (const auto& ingress_port_name : segment->ingress_port_names())
+            {
+                auto* ingress = next_seg->mutable_ingress_ports()->Add();
+                ingress->set_name(ingress_port_name);
+            }
+
+            auto address = segment_address_encode(segment_id, 0);  // rank 0
         }
+
+        // Leave assignments blank for now to allow auto assignment
 
         auto response = m_control_plane_client.await_unary<protos::PipelineRequestAssignmentResponse>(
             protos::EventType::ClientUnaryRequestPipelineAssignment,
             request);
+
+        m_pipeline_defs[response->pipeline_definition_id()] = pipeline;
     }
 }
 

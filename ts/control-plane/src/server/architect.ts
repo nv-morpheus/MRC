@@ -29,7 +29,7 @@ import {
    StateUpdate,
    TaggedInstance,
 } from "../proto/mrc/protos/architect";
-import {ControlPlaneState, WorkerStates} from "../proto/mrc/protos/architect_state";
+import {ControlPlaneState, PipelineDefinition, WorkerStates} from "../proto/mrc/protos/architect_state";
 import {DeepPartial, messageTypeRegistry} from "../proto/typeRegistry";
 
 import {connectionsAdd, connectionsDropOne, connectionsRemove, IConnection} from "./store/slices/connectionsSlice";
@@ -384,11 +384,22 @@ class Architect implements ArchitectServiceImplementation
          case EventType.ClientUnaryRequestPipelineAssignment: {
             const payload = unpackEvent<PipelineRequestAssignmentRequest>(event.msg);
 
-            // Check if we already have an assignment
+            // Check to make sure its not null
+            if (!payload.pipeline)
+            {
+               // throw new Error("`pipeline` cannot be undefined");
+               // Use default values for now since the pipeline def is empty
+               payload.pipeline = PipelineDefinition.create({
+                  id: 0,
+                  instanceIds: [],
+                  segmentIds: [],
+               });
+            }
 
             // Add a pipeline assignment to the machine
             const addedInstances = this._store.dispatch(pipelineInstancesAssign({
                ...payload,
+               pipeline: payload.pipeline,
                machineId: event.machineId,
             }));
 

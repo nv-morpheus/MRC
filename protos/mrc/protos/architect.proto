@@ -204,23 +204,37 @@ message TaggedInstance
 // Pipeline
 message PipelineRequestAssignmentRequest
 {
-    // The requesting machine ID (May not be needed)
-    uint64 machine_id = 1;
+    message SegmentMapping {
+        // The segment definition ID
+        string segment_name = 1;
 
-    // The pipeline definition this segment wants to run
-    uint64 pipeline_id = 2;
+        // The workers to assign this segment to
+        repeated uint64 worker_ids = 2;
+    }
 
-    // The segment definitions and what partition they should be assigned to
-    map<uint64, uint64> segment_assignments = 3;
+    // The pipeline definition object
+    PipelineDefinition pipeline = 1;
+
+    // The segment objects
+    repeated SegmentDefinition segments = 2;
+
+    // The mapping of segment definitions to assigned workers
+    repeated SegmentMapping assignments = 3;
 }
 
 message PipelineRequestAssignmentResponse
 {
+    // The pipeline definition that was added (since its generated)
+    uint64 pipeline_definition_id = 1;
+
     // The pipeline instance that was added
-    uint64 pipeline_id = 1;
+    uint64 pipeline_instance_id = 2;
+
+    // The segment definition that was added (since they are generated)
+    repeated uint64 segment_definition_ids = 3;
 
     // The segment instance that was added
-    repeated uint64 segment_ids = 2;
+    repeated uint64 segment_instance_ids = 4;
 }
 
 

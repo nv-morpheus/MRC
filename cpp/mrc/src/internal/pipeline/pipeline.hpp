@@ -21,6 +21,7 @@
 
 #include "mrc/types.hpp"
 
+#include <atomic>
 #include <map>
 #include <memory>
 
@@ -34,9 +35,9 @@ class IPipeline;
 class Pipeline
 {
   public:
-    static std::shared_ptr<Pipeline> unwrap(IPipeline& pipeline);
+    // Pipeline();
 
-    uint32_t get_id() const;
+    // uint32_t get_id() const;
 
     void add_segment(std::shared_ptr<const segment::Definition> segment);
 
@@ -44,11 +45,17 @@ class Pipeline
 
     std::shared_ptr<const segment::Definition> find_segment(SegmentID segment_id) const;
 
+    static std::shared_ptr<Pipeline> unwrap(IPipeline& pipeline);
+
   private:
+    uint32_t m_definition_id;
+
     utils::CollisionDetector m_segment_hasher;
     utils::CollisionDetector m_port_hasher;
 
     std::map<SegmentID, std::shared_ptr<const segment::Definition>> m_segments;
+
+    // static std::atomic_uint32_t s_pipeline_ids_counter;
 };
 
 }  // namespace mrc::internal::pipeline

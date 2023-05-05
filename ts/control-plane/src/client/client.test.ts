@@ -5,6 +5,12 @@ import {Channel, credentials} from "@grpc/grpc-js";
 import {ConnectivityState} from "@grpc/grpc-js/build/src/connectivity-state";
 import {launchDevtoolsCli} from "@mrc/common/dev_tools";
 import {WorkerStates} from "@mrc/proto/mrc/protos/architect_state";
+import {IPipelineDefinition, pipelineDefinitionsSelectById} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
+import {
+   ISegmentDefinition,
+   ISegmentMapping,
+   segmentDefinitionsSelectById,
+} from "@mrc/server/store/slices/segmentDefinitionsSlice";
 import {as, AsyncIterableX, AsyncSink} from "ix/asynciterable";
 import {share} from "ix/asynciterable/operators";
 import {createChannel, createClient, waitForChannelReady} from "nice-grpc";
@@ -179,7 +185,7 @@ describe("Client", () => {
          });
 
          describe("pipeline", () => {
-            it("request pipeline", async () => {
+            test("request pipeline", async () => {
                const registered_response = await unpack_unary_event<RegisterWorkersResponse>(
                    recieve_events,
                    send_events,
@@ -192,10 +198,37 @@ describe("Client", () => {
                    send_events,
                    packEvent(EventType.ClientUnaryActivateStream, 2, registered_response));
 
-               const segmentAssignments = [
-                  [0, registered_response.instanceIds[0]],
-                  [1, registered_response.instanceIds[1]],
+               const pipeline_definition: IPipelineDefinition = {
+                  id: 0,
+                  instanceIds: [],
+                  segmentIds: [],
+               };
+
+               const segment_definitions: ISegmentDefinition[] = [
+                  {
+                     egressPorts: [],
+                     id: 0,
+                     ingressPorts: [],
+                     instanceIds: [],
+                     name: "my_seg",
+                     pipelineId: pipeline_definition.id,
+                  },
+                  {
+                     egressPorts: [],
+                     id: 0,
+                     ingressPorts: [],
+                     instanceIds: [],
+                     name: "my_seg2",
+                     pipelineId: pipeline_definition.id,
+                  },
                ];
+
+               const segment_assignments: ISegmentMapping[] = segment_definitions.flatMap((seg_def) => {
+                  return {
+                     segmentName: seg_def.name,
+                     workerIds: registered_response.instanceIds,
+                  } as ISegmentMapping;
+               });
 
                // Now request to run a pipeline
                const request_pipeline_response = await unpack_unary_event<PipelineRequestAssignmentResponse>(
@@ -204,26 +237,38 @@ describe("Client", () => {
                    packEvent(EventType.ClientUnaryRequestPipelineAssignment,
                              12345,
                              PipelineRequestAssignmentRequest.create({
-                                machineId: connected_response.machineId,
-                                pipelineId: 0,
-                                segmentAssignments: Object.fromEntries(segmentAssignments),
+                                pipeline: pipeline_definition,
+                                segments: segment_definitions,
+                                assignments: segment_assignments,
                              })));
 
-               const foundPipelineInstance = pipelineInstancesSelectById(store.getState(),
-                                                                         request_pipeline_response.pipelineId);
+               // Check the pipeline definition
+               const foundPipelineDefinition = pipelineDefinitionsSelectById(
+                   store.getState(),
+                   request_pipeline_response.pipelineDefinitionId);
 
-               // Check pipeline properties
+               expect(foundPipelineDefinition?.id).toBe(request_pipeline_response.pipelineDefinitionId);
+
+               // Check the segment definitions
+               request_pipeline_response.segmentDefinitionIds.forEach((seg_def_id) => {
+                  const foundSegmentDefinition = segmentDefinitionsSelectById(store.getState(), seg_def_id);
+
+                  expect(foundSegmentDefinition).toBeDefined();
+               });
+
+               // Check pipeline instances
+               const foundPipelineInstance = pipelineInstancesSelectById(store.getState(),
+                                                                         request_pipeline_response.pipelineInstanceId);
+
                expect(foundPipelineInstance?.machineId).toBe(connected_response.machineId);
-               expect(foundPipelineInstance?.segmentIds).toEqual(request_pipeline_response.segmentIds);
+               expect(foundPipelineInstance?.segmentIds).toEqual(request_pipeline_response.segmentInstanceIds);
 
                // Check segments exist in state
                const foundSegmentInstances = segmentInstancesSelectByIds(store.getState(),
-                                                                         request_pipeline_response.segmentIds);
+                                                                         request_pipeline_response.segmentInstanceIds);
 
                expect(foundSegmentInstances)
-                   .toHaveLength(segmentAssignments.length * registered_response.instanceIds.length);
-
-               // await new Promise(r => setTimeout(r, 10000));
+                   .toHaveLength(segment_assignments.length * registered_response.instanceIds.length);
             });
          });
       });

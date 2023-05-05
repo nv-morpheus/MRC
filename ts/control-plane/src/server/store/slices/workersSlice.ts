@@ -1,5 +1,5 @@
 import {Worker, WorkerStates} from "@mrc/proto/mrc/protos/architect_state";
-import {createSelector, createSlice, PayloadAction, prepareAutoBatched} from "@reduxjs/toolkit";
+import {createSelector, createSlice, PayloadAction} from "@reduxjs/toolkit";
 
 import {createWrappedEntityAdapter} from "../../utils";
 

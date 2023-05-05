@@ -43,7 +43,7 @@ class PipelinesManager
     PipelinesManager(control_plane::Client& control_plane_client);
     ~PipelinesManager();
 
-    void register_defs(std::map<int, std::shared_ptr<pipeline::Pipeline>> pipeline_defs);
+    void register_defs(std::vector<std::shared_ptr<pipeline::Pipeline>> pipeline_defs);
 
     pipeline::Pipeline& get_def(int pipeline_id);
 

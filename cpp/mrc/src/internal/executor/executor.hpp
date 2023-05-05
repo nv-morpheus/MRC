@@ -69,7 +69,7 @@ class Executor : public Service, public system::SystemProvider
     // std::unique_ptr<resources::Manager> m_resources_manager;
     std::vector<std::shared_ptr<pipeline::PipelineManager>> m_pipeline_managers;
 
-    std::map<int, std::shared_ptr<pipeline::Pipeline>> m_registered_pipeline_defs;
+    std::vector<std::shared_ptr<pipeline::Pipeline>> m_registered_pipeline_defs;
 
     std::unique_ptr<node::LambdaSinkComponent<const protos::ControlPlaneState>> m_update_sink;
 

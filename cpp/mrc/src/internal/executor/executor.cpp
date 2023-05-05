@@ -80,13 +80,9 @@ void Executor::register_pipeline(std::unique_ptr<pipeline::IPipeline> ipipeline)
         throw exceptions::MrcRuntimeError("pipeline validation failed");
     }
 
-    // Check to make sure this pipeline ID isnt already used
-    CHECK(!contains(m_registered_pipeline_defs, pipeline->get_id()))
-        << "Pipeline with ID: " << pipeline->get_id() << " already exists";
-
     // m_pipeline_manager = std::make_unique<pipeline::Manager>(pipeline, *m_resources_manager);
 
-    m_registered_pipeline_defs[pipeline->get_id()] = pipeline;
+    m_registered_pipeline_defs.emplace_back(std::move(pipeline));
 }
 
 void Executor::do_service_start()

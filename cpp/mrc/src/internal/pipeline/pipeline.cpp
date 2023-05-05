@@ -25,6 +25,7 @@
 
 #include <glog/logging.h>
 
+#include <atomic>
 #include <ostream>
 #include <string>
 #include <utility>
@@ -32,11 +33,14 @@
 
 namespace mrc::internal::pipeline {
 
-uint32_t Pipeline::get_id() const
-{
-    // TODO(MDD): Need to come up with a way to generate IDs for pipelines
-    return 0;
-}
+// std::atomic_uint32_t Pipeline::s_pipeline_ids_counter = 0;
+
+// Pipeline::Pipeline() : m_definition_id(s_pipeline_ids_counter++) {}
+
+// uint32_t Pipeline::get_id() const
+// {
+//     return m_definition_id;
+// }
 
 void Pipeline::add_segment(std::shared_ptr<const segment::Definition> segment)
 {
@@ -76,6 +80,7 @@ const std::map<SegmentID, std::shared_ptr<const segment::Definition>>& Pipeline:
 {
     return m_segments;
 }
+
 std::shared_ptr<Pipeline> Pipeline::unwrap(IPipeline& pipeline)
 {
     return pipeline.m_impl;

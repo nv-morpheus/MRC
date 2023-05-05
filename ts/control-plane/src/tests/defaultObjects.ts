@@ -1,36 +1,54 @@
 import {stringToBytes} from "@mrc/common/utils";
-import {SegmentStates, WorkerStates} from "@mrc/proto/mrc/protos/architect_state";
+import {SegmentOptions_PlacementStrategy, SegmentStates, WorkerStates} from "@mrc/proto/mrc/protos/architect_state";
 import {IConnection} from "@mrc/server/store/slices/connectionsSlice";
+import {IPipelineDefinition} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 import {IPipelineInstance} from "@mrc/server/store/slices/pipelineInstancesSlice";
+import {ISegmentDefinition} from "@mrc/server/store/slices/segmentDefinitionsSlice";
 import {ISegmentInstance} from "@mrc/server/store/slices/segmentInstancesSlice";
 import {IWorker} from "@mrc/server/store/slices/workersSlice";
+import {generateId} from "@mrc/server/utils";
 
 export const connection: IConnection = {
-   id: 1111,
+   id: generateId(),
    peerInfo: "localhost:1234",
    workerIds: [],
    assignedPipelineIds: [],
 };
 
 export const worker: IWorker = {
-   id: 1234,
-   machineId: 1111,
+   id: generateId(),
+   machineId: connection.id,
    workerAddress: stringToBytes("-----"),
    state: WorkerStates.Registered,
    assignedSegmentIds: [],
 };
 
+export const pipeline_def: IPipelineDefinition = {
+   id: generateId(),
+   instanceIds: [],
+   segmentIds: [],
+};
+
 export const pipeline: IPipelineInstance = {
-   id: 1122,
-   definitionId: 1133,
+   id: generateId(),
+   definitionId: pipeline_def.id,
    machineId: connection.id,
    segmentIds: [],
 };
 
+export const segment_def: ISegmentDefinition = {
+   id: generateId(),
+   egressPorts: [],
+   ingressPorts: [],
+   instanceIds: [],
+   name: "my_segment",
+   pipelineId: pipeline_def.id,
+};
+
 export const segment: ISegmentInstance = {
-   id: 1123,
+   id: generateId(),
    address: 2222,
-   definitionId: 0,
+   definitionId: segment_def.id,
    pipelineId: pipeline.id,
    workerId: worker.id,
    state: SegmentStates.Initialized,

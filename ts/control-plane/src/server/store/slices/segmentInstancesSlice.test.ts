@@ -12,7 +12,7 @@ import {
    segmentInstancesUpdateState,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
 import {workersAdd} from "@mrc/server/store/slices/workersSlice";
-import {connection, pipeline, segment, worker} from "@mrc/tests/defaultObjects";
+import {connection, pipeline, segment, segment_def, worker} from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
 import {RootStore, setupStore} from "../store";
@@ -85,7 +85,7 @@ describe("Single", () => {
 
       expect(found[0]).toHaveProperty("id", segment.id);
       expect(found[0]).toHaveProperty("address", segment.address);
-      expect(found[0]).toHaveProperty("definitionId", 0);
+      expect(found[0]).toHaveProperty("definitionId", segment_def.id);
       expect(found[0]).toHaveProperty("pipelineId", pipeline.id);
       expect(found[0]).toHaveProperty("workerId", worker.id);
    });
@@ -95,7 +95,7 @@ describe("Single", () => {
 
       expect(found).toHaveProperty("id", segment.id);
       expect(found).toHaveProperty("address", segment.address);
-      expect(found).toHaveProperty("definitionId", 0);
+      expect(found).toHaveProperty("definitionId", segment_def.id);
       expect(found).toHaveProperty("pipelineId", pipeline.id);
       expect(found).toHaveProperty("workerId", worker.id);
    });

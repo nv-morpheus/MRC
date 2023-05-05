@@ -8,27 +8,21 @@ export const systemSlice = createSlice({
    name: "system",
    initialState: {requestRunning: false} as ISystem,
    reducers: {
-      startRequest: {
-         reducer: (state, action: PayloadAction<void>) => {
-            if (state.requestRunning)
-            {
-               console.warn("Request is already running. Did you forget to call endRequest?");
-            }
+      startRequest: (state, action: PayloadAction<void>) => {
+         if (state.requestRunning)
+         {
+            console.warn("Request is already running. Did you forget to call endRequest?");
+         }
 
-            state.requestRunning = true;
-         },
-         prepare: prepareAutoBatched<void>(),
+         state.requestRunning = true;
       },
-      stopRequest: {
-         reducer: (state, action: PayloadAction<void>) => {
-            if (!state.requestRunning)
-            {
-               console.warn("No request is running. Did you forget to call startRequest?");
-            }
+      stopRequest: (state, action: PayloadAction<void>) => {
+         if (!state.requestRunning)
+         {
+            console.warn("No request is running. Did you forget to call startRequest?");
+         }
 
-            state.requestRunning = false;
-         },
-         prepare: prepareAutoBatched<void>(),
+         state.requestRunning = false;
       },
    },
 });
