@@ -60,12 +60,12 @@ void ControlPlaneNormalizedState::initialize()
             PipelineInstance(this->shared_from_this(), root_message->pipeline_instances().entities().at(id)));
     }
 
-    for (const auto& id : root_message->segment_definitions().ids())
-    {
-        segment_definitions.emplace(
-            id,
-            SegmentDefinition(this->shared_from_this(), root_message->segment_definitions().entities().at(id)));
-    }
+    // for (const auto& id : root_message->segment_definitions().ids())
+    // {
+    //     segment_definitions.emplace(
+    //         id,
+    //         SegmentDefinition(this->shared_from_this(), root_message->segment_definitions().entities().at(id)));
+    // }
 
     for (const auto& id : root_message->segment_instances().ids())
     {
@@ -112,10 +112,10 @@ const std::map<uint64_t, PipelineInstance>& ControlPlaneState::pipeline_instance
     return m_state->pipeline_instances;
 }
 
-const std::map<uint64_t, SegmentDefinition>& ControlPlaneState::segment_definitions() const
-{
-    return m_state->segment_definitions;
-}
+// const std::map<uint64_t, SegmentDefinition>& ControlPlaneState::segment_definitions() const
+// {
+//     return m_state->segment_definitions;
+// }
 
 const std::map<uint64_t, SegmentInstance>& ControlPlaneState::segment_instances() const
 {
@@ -200,28 +200,68 @@ std::map<uint64_t, const SegmentInstance&> Worker::assigned_segments() const
     return child_objs;
 }
 
+PipelineConfiguration::PipelineConfiguration(const protos::PipelineConfiguration& message) :
+  ControlPlaneStateBase(message),
+  m_message(message)
+{}
+
+PipelineDefinition::SegmentDefinition::SegmentDefinition(std::shared_ptr<ControlPlaneNormalizedState> state,
+                                                         const protos::PipelineDefinition_SegmentDefinition& message) :
+  ControlPlaneStateBase(message),
+  m_message(message)
+{}
+
+uint64_t PipelineDefinition::SegmentDefinition::id() const
+{
+    return m_message.id();
+}
+
+const PipelineDefinition& PipelineDefinition::SegmentDefinition::parent() const
+{
+    return m_state->pipeline_definitions.at(m_message.parent_id());
+}
+
+std::string PipelineDefinition::SegmentDefinition::name() const
+{
+    return m_message.name();
+}
+
+std::map<uint64_t, std::reference_wrapper<const SegmentInstance>> PipelineDefinition::SegmentDefinition::instances()
+    const
+{
+    std::map<uint64_t, std::reference_wrapper<const SegmentInstance>> child_objs;
+
+    for (const auto& id : m_message.instance_ids())
+    {
+        child_objs.emplace(id, m_state->segment_instances.at(id));
+    }
+
+    return child_objs;
+}
+
 PipelineDefinition::PipelineDefinition(std::shared_ptr<ControlPlaneNormalizedState> state,
                                        const protos::PipelineDefinition& message) :
   ControlPlaneStateBase(message),
   m_state(std::move(state)),
-  m_message(message)
-{}
+  m_message(message),
+  m_config(message.config())
+{
+    // Now setup the segments
+    for (const auto& [seg_id, seg_def] : m_message.segments())
+    {
+        SegmentDefinition def(m_state, seg_def);
+        // m_segments.emplace(seg_id, SegmentDefinition(m_state, seg_def));
+    }
+}
 
 uint64_t PipelineDefinition::id() const
 {
     return m_message.id();
 }
 
-std::map<uint64_t, std::reference_wrapper<const SegmentInstance>> PipelineDefinition::segments() const
+const PipelineConfiguration& PipelineDefinition::config() const
 {
-    std::map<uint64_t, std::reference_wrapper<const SegmentInstance>> child_objs;
-
-    for (const auto& id : m_message.segment_ids())
-    {
-        child_objs.emplace(id, m_state->segment_instances.at(id));
-    }
-
-    return child_objs;
+    return m_config;
 }
 
 std::map<uint64_t, std::reference_wrapper<const PipelineInstance>> PipelineDefinition::instances() const
@@ -234,6 +274,11 @@ std::map<uint64_t, std::reference_wrapper<const PipelineInstance>> PipelineDefin
     }
 
     return child_objs;
+}
+
+const std::map<uint64_t, PipelineDefinition::SegmentDefinition>& PipelineDefinition::segments() const
+{
+    return m_segments;
 }
 
 PipelineInstance::PipelineInstance(std::shared_ptr<ControlPlaneNormalizedState> state,
@@ -270,39 +315,39 @@ std::map<uint64_t, std::reference_wrapper<const SegmentInstance>> PipelineInstan
     return child_objs;
 }
 
-SegmentDefinition::SegmentDefinition(std::shared_ptr<ControlPlaneNormalizedState> state,
-                                     const protos::SegmentDefinition& message) :
-  ControlPlaneStateBase(message),
-  m_state(std::move(state)),
-  m_message(message)
-{}
+// SegmentDefinition::SegmentDefinition(std::shared_ptr<ControlPlaneNormalizedState> state,
+//                                      const protos::SegmentDefinition& message) :
+//   ControlPlaneStateBase(message),
+//   m_state(std::move(state)),
+//   m_message(message)
+// {}
 
-uint64_t SegmentDefinition::id() const
-{
-    return m_message.id();
-}
+// uint64_t SegmentDefinition::id() const
+// {
+//     return m_message.id();
+// }
 
-std::string SegmentDefinition::name() const
-{
-    return m_message.name();
-}
+// std::string SegmentDefinition::name() const
+// {
+//     return m_message.name();
+// }
 
-const PipelineDefinition& SegmentDefinition::pipeline() const
-{
-    return m_state->pipeline_definitions.at(m_message.pipeline_id());
-}
+// const PipelineDefinition& SegmentDefinition::pipeline() const
+// {
+//     return m_state->pipeline_definitions.at(m_message.pipeline_id());
+// }
 
-std::map<uint64_t, std::reference_wrapper<const SegmentInstance>> SegmentDefinition::instances() const
-{
-    std::map<uint64_t, std::reference_wrapper<const SegmentInstance>> child_objs;
+// std::map<uint64_t, std::reference_wrapper<const SegmentInstance>> SegmentDefinition::instances() const
+// {
+//     std::map<uint64_t, std::reference_wrapper<const SegmentInstance>> child_objs;
 
-    for (const auto& id : m_message.instance_ids())
-    {
-        child_objs.emplace(id, m_state->segment_instances.at(id));
-    }
+//     for (const auto& id : m_message.instance_ids())
+//     {
+//         child_objs.emplace(id, m_state->segment_instances.at(id));
+//     }
 
-    return child_objs;
-}
+//     return child_objs;
+// }
 
 SegmentInstance::SegmentInstance(std::shared_ptr<ControlPlaneNormalizedState> state,
                                  const protos::SegmentInstance& message) :
@@ -316,14 +361,19 @@ uint64_t SegmentInstance::id() const
     return m_message.id();
 }
 
+const PipelineDefinition& SegmentInstance::pipeline_definition() const
+{
+    return m_state->pipeline_definitions.at(m_message.pipeline_definition_id());
+}
+
+std::string SegmentInstance::name() const
+{
+    return m_message.name();
+}
+
 uint32_t SegmentInstance::address() const
 {
     return m_message.address();
-}
-
-const SegmentDefinition& SegmentInstance::definition() const
-{
-    return m_state->segment_definitions.at(m_message.definition_id());
 }
 
 const Worker& SegmentInstance::worker() const
@@ -331,9 +381,14 @@ const Worker& SegmentInstance::worker() const
     return m_state->workers.at(m_message.worker_id());
 }
 
-const PipelineInstance& SegmentInstance::pipeline() const
+const PipelineInstance& SegmentInstance::pipeline_instance() const
 {
-    return m_state->pipeline_instances.at(m_message.pipeline_id());
+    return m_state->pipeline_instances.at(m_message.pipeline_instance_id());
+}
+
+SegmentStates SegmentInstance::state() const
+{
+    return static_cast<SegmentStates>(m_message.state());
 }
 
 }  // namespace mrc::internal::control_plane::state

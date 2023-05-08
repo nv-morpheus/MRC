@@ -45,7 +45,7 @@ class PipelinesManager
 
     void register_defs(std::vector<std::shared_ptr<pipeline::Pipeline>> pipeline_defs);
 
-    pipeline::Pipeline& get_def(int pipeline_id);
+    pipeline::Pipeline& get_def(uint64_t pipeline_id);
 
     std::shared_ptr<pipeline::PipelineInstance> get_instance(uint64_t definition_id);
 
@@ -53,7 +53,7 @@ class PipelinesManager
     // resources::PartitionResources& m_resources;
     control_plane::Client& m_control_plane_client;
 
-    std::map<int, std::shared_ptr<pipeline::Pipeline>> m_pipeline_defs;
+    std::map<uint64_t, std::shared_ptr<pipeline::Pipeline>> m_pipeline_defs;
 };
 
 }  // namespace mrc::internal::runtime

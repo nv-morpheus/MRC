@@ -17,6 +17,7 @@
 
 #include "internal/runtime/pipelines_manager.hpp"
 
+#include "internal/control_plane/state/root_state.hpp"
 #include "internal/pipeline/pipeline.hpp"
 #include "internal/segment/definition.hpp"
 
@@ -37,25 +38,27 @@ void PipelinesManager::register_defs(std::vector<std::shared_ptr<pipeline::Pipel
     {
         auto request = protos::PipelineRequestAssignmentRequest();
 
+        auto* config = request.mutable_pipeline();
+
         for (const auto& [segment_id, segment] : pipeline->segments())
         {
-            auto* next_seg = request.mutable_segments()->Add();
+            protos::PipelineConfiguration_SegmentConfiguration next_seg;
 
-            next_seg->set_name(segment->name());
+            next_seg.set_name(segment->name());
 
             for (const auto& egress_port_name : segment->egress_port_names())
             {
-                auto* egress = next_seg->mutable_egress_ports()->Add();
+                auto* egress = next_seg.mutable_egress_ports()->Add();
                 egress->set_name(egress_port_name);
             }
 
             for (const auto& ingress_port_name : segment->ingress_port_names())
             {
-                auto* ingress = next_seg->mutable_ingress_ports()->Add();
+                auto* ingress = next_seg.mutable_ingress_ports()->Add();
                 ingress->set_name(ingress_port_name);
             }
 
-            auto address = segment_address_encode(segment_id, 0);  // rank 0
+            config->mutable_segments()->emplace(segment->name(), std::move(next_seg));
         }
 
         // Leave assignments blank for now to allow auto assignment
@@ -68,7 +71,7 @@ void PipelinesManager::register_defs(std::vector<std::shared_ptr<pipeline::Pipel
     }
 }
 
-pipeline::Pipeline& PipelinesManager::get_def(int pipeline_id)
+pipeline::Pipeline& PipelinesManager::get_def(uint64_t pipeline_id)
 {
     CHECK(m_pipeline_defs.contains(pipeline_id))
         << "Pipeline with ID: " << pipeline_id << " not found in registered pipeline definitions";

@@ -152,7 +152,7 @@ void PartitionManager::process_state_update(mrc::internal::control_plane::state:
             // auto partition_id = new_segments_map.at(address);
             // DVLOG(10) << info() << ": create segment for address " << ::mrc::segment::info(address)
             //           << " on resource partition: " << partition_id;
-            this->create_segment(worker.assigned_segments().at(address).pipeline().definition().id(), address);
+            this->create_segment(worker.assigned_segments().at(address).pipeline_instance().definition().id(), address);
         }
 
         // detach from manifold or stop old segments
