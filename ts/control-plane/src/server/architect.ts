@@ -164,10 +164,10 @@ class Architect implements ArchitectServiceImplementation
    }
 
    public eventStream(request: AsyncIterable<Event>, context: CallContext): ServerStreamingMethodResult<{
-      error?: {message?: string | undefined; code?: ErrorCode | undefined;} | undefined;
       event?: EventType | undefined;
       tag?: string | undefined;
-      message?: {typeUrl?: string | undefined; value?: Uint8Array | undefined;} | undefined;
+      message?: {value?: Uint8Array | undefined; typeUrl?: string | undefined;} | undefined;
+      error?: {message?: string | undefined; code?: ErrorCode | undefined;} | undefined;
    }>
    {
       return this.do_eventStream(request, context);
