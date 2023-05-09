@@ -17,16 +17,27 @@
 
 #include "internal/runtime/pipelines_manager.hpp"
 
+#include "internal/async_service.hpp"
 #include "internal/control_plane/state/root_state.hpp"
 #include "internal/pipeline/pipeline.hpp"
+#include "internal/pipeline/pipeline_instance.hpp"
+#include "internal/resources/system_resources.hpp"
+#include "internal/runnable/resources.hpp"
+#include "internal/runtime/runtime.hpp"
 #include "internal/segment/definition.hpp"
 
 #include "mrc/core/addresses.hpp"
+#include "mrc/protos/architect.pb.h"
+#include "mrc/protos/architect_state.pb.h"
+
+#include <memory>
 
 namespace mrc::internal::runtime {
 
-PipelinesManager::PipelinesManager(control_plane::Client& control_plane_client) :
-  m_control_plane_client(control_plane_client)
+PipelinesManager::PipelinesManager(Runtime& system_runtime) :
+  AsyncService("PipelinesManager"),
+  runnable::RunnableResourcesProvider(system_runtime),
+  m_system_runtime(system_runtime)
 {}
 
 PipelinesManager::~PipelinesManager() = default;
@@ -63,27 +74,92 @@ void PipelinesManager::register_defs(std::vector<std::shared_ptr<pipeline::Pipel
 
         // Leave assignments blank for now to allow auto assignment
 
-        auto response = m_control_plane_client.await_unary<protos::PipelineRequestAssignmentResponse>(
+        auto response = m_system_runtime.control_plane().await_unary<protos::PipelineRequestAssignmentResponse>(
             protos::EventType::ClientUnaryRequestPipelineAssignment,
             request);
 
-        m_pipeline_defs[response->pipeline_definition_id()] = pipeline;
+        m_definitions[response->pipeline_definition_id()] = pipeline;
     }
 }
 
-pipeline::Pipeline& PipelinesManager::get_def(uint64_t pipeline_id)
+pipeline::Pipeline& PipelinesManager::get_definition(uint64_t definition_id)
 {
-    CHECK(m_pipeline_defs.contains(pipeline_id))
-        << "Pipeline with ID: " << pipeline_id << " not found in registered pipeline definitions";
+    CHECK(m_definitions.contains(definition_id))
+        << "Pipeline with ID: " << definition_id << " not found in registered pipeline definitions";
 
-    return *m_pipeline_defs[pipeline_id];
+    return *m_definitions[definition_id];
 }
 
-std::shared_ptr<pipeline::PipelineInstance> PipelinesManager::get_instance(uint64_t definition_id)
+pipeline::PipelineInstance& PipelinesManager::get_instance(uint64_t instance_id)
 {
     // TODO(MDD): Get or create a pipeline instance on demand
 
-    return nullptr;
+    throw std::runtime_error("not implemented");
+}
+
+void PipelinesManager::do_service_start(std::stop_token stop_token)
+{
+    Promise<void> completed_promise;
+
+    // Now, subscribe to the control plane state updates and filter only on updates to this instance ID
+    m_system_runtime.control_plane()
+        .state_update_obs()
+        .tap([](const control_plane::state::ControlPlaneState& state) {
+            VLOG(10) << "State Update: PipelinesManager";
+        })
+        .subscribe(
+            [this](control_plane::state::ControlPlaneState state) {
+                // Handle updates to the worker
+                this->process_state_update(state);
+            },
+            [&completed_promise] {
+                completed_promise.set_value();
+            });
+
+    // Need to mark this started before waiting
+    this->mark_started();
+
+    // Yield until the observable is finished
+    completed_promise.get_future().wait();
+}
+
+void PipelinesManager::process_state_update(control_plane::state::ControlPlaneState& state)
+{
+    // Loop over all pipeline instances
+    for (const auto& [pipe_instance_id, pipe_instance] : state.pipeline_instances())
+    {
+        // TODO(MDD): Need to filter based on our machine ID
+
+        // Check to see if this was newly created
+        if (pipe_instance.state().status() == control_plane::state::ResourceStatus::Registered)
+        {
+            // Get the definition for this instance
+            auto def_id = pipe_instance.definition().id();
+
+            CHECK(m_definitions.contains(def_id)) << "Unknown definition ID: " << def_id;
+
+            auto definition = m_definitions[def_id];
+
+            // First, double check if this still needs to be created by trying to activate it
+            auto request = protos::ResourceUpdateStatusRequest();
+
+            request.set_resource_type("PipelineInstances");
+            request.set_resource_id(pipe_instance_id);
+            request.set_status(protos::ResourceStatus::Activated);
+
+            auto response = m_system_runtime.control_plane().await_unary<protos::ResourceUpdateStatusResponse>(
+                protos::EventType::ClientUnaryResourceUpdateStatus,
+                request);
+
+            // Resource was activated, lets now create the object
+            auto [added_iterator, did_add] = m_instances.emplace(
+                pipe_instance_id,
+                std::make_unique<pipeline::PipelineInstance>(m_system_runtime, definition, pipe_instance_id));
+
+            // Now start as a child service
+            this->child_service_start(*added_iterator->second);
+        }
+    }
 }
 
 }  // namespace mrc::internal::runtime

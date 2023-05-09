@@ -45,7 +45,7 @@ void ProgressEngine::data_source(rxcpp::subscriber<ProgressEvent>& s)
         {
         case grpc::CompletionQueue::NextStatus::GOT_EVENT: {
             backoff = 1;
-            DVLOG(20) << "progress engine got event";
+            DVLOG(20) << "progress engine got event. Tag: " << event.tag << ", Ok: " << event.ok;
             s.on_next(event);
         }
         break;

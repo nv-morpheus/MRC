@@ -14,7 +14,7 @@ import {createWrappedEntityAdapter} from "../../utils";
 
 import type {RootState} from "../store";
 import {pipelineInstancesAdd} from "./pipelineInstancesSlice";
-import {workersAdd, workersAddMany, IWorker, workersRemove} from "./workersSlice";
+import {workersAdd, workersAddMany, workersRemove} from "./workersSlice";
 
 export const devToolsReducer = createReducer({},
                                              (builder) => {

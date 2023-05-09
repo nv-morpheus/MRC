@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "internal/async_service.hpp"
+#include "internal/control_plane/state/root_state.hpp"
 #include "internal/service.hpp"
 
 #include "mrc/types.hpp"
@@ -41,10 +43,10 @@ struct Interface;
 namespace mrc::internal::pipeline {
 class Pipeline;
 
-class PipelineInstance final : public Service
+class PipelineInstance final : public AsyncService, public runnable::RunnableResourcesProvider
 {
   public:
-    PipelineInstance(runtime::Runtime& runtime, std::shared_ptr<const Pipeline> definition);
+    PipelineInstance(runtime::Runtime& runtime, std::shared_ptr<const Pipeline> definition, uint64_t instance_id);
     ~PipelineInstance() override;
 
     // currently we are passing the instance back to the executor
@@ -67,11 +69,13 @@ class PipelineInstance final : public Service
     void update();
 
   private:
-    void do_service_start() final;
-    void do_service_await_live() final;
-    void do_service_stop() final;
-    void do_service_kill() final;
-    void do_service_await_join() final;
+    void do_service_start(std::stop_token stop_token) final;
+    void process_state_update(control_plane::state::PipelineInstance& instance);
+    // void do_service_start() final;
+    // void do_service_await_live() final;
+    // void do_service_stop() final;
+    // void do_service_kill() final;
+    // void do_service_await_join() final;
 
     void mark_joinable();
 
@@ -81,6 +85,8 @@ class PipelineInstance final : public Service
     runtime::Runtime& m_runtime;
 
     std::shared_ptr<const Pipeline> m_definition;  // convert to pipeline::Pipeline
+
+    uint64_t m_instance_id;
 
     std::map<SegmentAddress, std::unique_ptr<segment::SegmentInstance>> m_segments;
     std::map<PortName, std::shared_ptr<manifold::Interface>> m_manifolds;

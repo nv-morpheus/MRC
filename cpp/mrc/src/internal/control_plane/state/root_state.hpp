@@ -12,6 +12,7 @@ class Message;
 
 namespace mrc::protos {
 class ControlPlaneState;
+class ResourceState;
 class Connection;
 class Worker;
 class PipelineConfiguration;
@@ -25,12 +26,23 @@ class SegmentInstance;
 namespace mrc::internal::control_plane::state {
 
 // Mirror this enum so we dont have to include all the proto classes
-enum class WorkerStates : int
+enum class ResourceStatus : int
 {
-    Registered  = 0,
-    Activated   = 1,
-    Deactivated = 2,
-    Destroyed   = 3,
+    // Control Plane indicates a resource should be created on the client
+    Registered = 0,
+    // Client has created resource but it is not ready
+    Activated = 1,
+    // Client and Control Plane can use the resource
+    Ready = 2,
+    // Control Plane has indicated the resource should be destroyed on the client. All users of the resource should stop
+    // using it and decrement the ref count. Object is still running
+    Deactivating = 3,
+    // All ref counts have been decremented. Owner of the object on the client can begin destroying object
+    Deactivated = 4,
+    // Client owner of resource has begun destroying the object
+    Unregistered = 5,
+    // Object has been destroyed on the client (and may be removed from the server)
+    Destroyed = 6,
 };
 
 enum class SegmentStates : int
@@ -83,7 +95,7 @@ struct ControlPlaneNormalizedState : public std::enable_shared_from_this<Control
     friend struct ControlPlaneState;
 };
 
-struct ControlPlaneState : public ControlPlaneStateBase
+struct ControlPlaneState
 {
     ControlPlaneState(std::unique_ptr<protos::ControlPlaneState> message);
 
@@ -101,7 +113,19 @@ struct ControlPlaneState : public ControlPlaneStateBase
 
   private:
     // Store as shared ptr to allow for trivial copies of this class without copying underlying data
-    std::shared_ptr<ControlPlaneNormalizedState> m_state;
+    std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
+};
+
+struct ResourceState : public ControlPlaneStateBase
+{
+    ResourceState(const protos::ResourceState& message);
+
+    ResourceStatus status() const;
+
+    int32_t ref_count() const;
+
+  private:
+    const protos::ResourceState& m_message;
 };
 
 struct Connection : public ControlPlaneStateBase
@@ -117,7 +141,7 @@ struct Connection : public ControlPlaneStateBase
     std::map<uint64_t, const PipelineInstance&> assigned_pipelines() const;
 
   private:
-    std::shared_ptr<ControlPlaneNormalizedState> m_state;
+    std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
     const protos::Connection& m_message;
 };
 
@@ -131,13 +155,15 @@ struct Worker : public ControlPlaneStateBase
 
     uint64_t machine_id() const;
 
-    WorkerStates state() const;
+    const ResourceState& state() const;
 
     std::map<uint64_t, const SegmentInstance&> assigned_segments() const;
 
   private:
-    std::shared_ptr<ControlPlaneNormalizedState> m_state;
+    std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
     const protos::Worker& m_message;
+
+    ResourceState m_state;
 };
 
 struct PipelineConfiguration : public ControlPlaneStateBase
@@ -164,7 +190,7 @@ struct PipelineDefinition : public ControlPlaneStateBase
         std::map<uint64_t, std::reference_wrapper<const SegmentInstance>> instances() const;
 
       private:
-        std::shared_ptr<ControlPlaneNormalizedState> m_state;
+        std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
         const protos::PipelineDefinition_SegmentDefinition& m_message;
     };
 
@@ -179,7 +205,7 @@ struct PipelineDefinition : public ControlPlaneStateBase
     const std::map<uint64_t, SegmentDefinition>& segments() const;
 
   private:
-    std::shared_ptr<ControlPlaneNormalizedState> m_state;
+    std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
     const protos::PipelineDefinition& m_message;
 
     // Child messages
@@ -197,11 +223,15 @@ struct PipelineInstance : public ControlPlaneStateBase
 
     uint64_t machine_id() const;
 
+    const ResourceState& state() const;
+
     std::map<uint64_t, std::reference_wrapper<const SegmentInstance>> segments() const;
 
   private:
-    std::shared_ptr<ControlPlaneNormalizedState> m_state;
+    std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
     const protos::PipelineInstance& m_message;
+
+    ResourceState m_state;
 };
 
 // struct SegmentDefinition : public ControlPlaneStateBase
@@ -244,7 +274,7 @@ struct SegmentInstance : public ControlPlaneStateBase
     SegmentStates state() const;
 
   private:
-    std::shared_ptr<ControlPlaneNormalizedState> m_state;
+    std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
     const protos::SegmentInstance& m_message;
 };
 

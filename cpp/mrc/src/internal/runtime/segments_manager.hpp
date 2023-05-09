@@ -51,12 +51,12 @@ namespace mrc::internal::runtime {
  * This class does not own the actual resources, that honor is bestowed on the resources::Manager. This class is
  * constructed and owned by the resources::Manager to ensure validity of the references.
  */
-class PartitionManager : public AsyncService, public runnable::RunnableResourcesProvider
+class SegmentsManager : public AsyncService, public runnable::RunnableResourcesProvider
 {
   public:
-    PartitionManager(PartitionRuntime& runtime);
-    ~PartitionManager() override;
-    // PartitionManager(runnable::RunnableResources& runnable_resources,
+    SegmentsManager(PartitionRuntime& runtime);
+    ~SegmentsManager() override;
+    // SegmentsManager(runnable::RunnableResources& runnable_resources,
     //                  std::size_t partition_id,
     //                  memory::HostResources& host,
     //                  std::optional<memory::DeviceResources>& device,

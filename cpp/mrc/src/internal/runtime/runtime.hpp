@@ -21,9 +21,9 @@
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/server.hpp"
 #include "internal/runnable/resources.hpp"
-#include "internal/runtime/partition_manager.hpp"
 #include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/pipelines_manager.hpp"
+#include "internal/runtime/segments_manager.hpp"
 #include "internal/service.hpp"
 #include "internal/system/threading_resources.hpp"
 
@@ -91,7 +91,7 @@ class Runtime final : public mrc::runtime::IRuntime, public AsyncService, public
     std::unique_ptr<control_plane::Server> m_control_plane_server;
     std::unique_ptr<control_plane::Client> m_control_plane_client;
 
-    std::vector<std::unique_ptr<PartitionManager>> m_partition_managers;
+    std::vector<std::unique_ptr<SegmentsManager>> m_partition_managers;
 
     std::unique_ptr<PipelinesManager> m_pipelines_manager;
     std::unique_ptr<metrics::Registry> m_metrics_registry;

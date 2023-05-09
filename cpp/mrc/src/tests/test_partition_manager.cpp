@@ -102,7 +102,7 @@ class TestPartitionManager : public ::testing::Test
 //     client->service_await_live();
 
 //     // Create a partition manager
-//     auto partition_manager = std::make_unique<PartitionManager>(partition, *client);
+//     auto partition_manager = std::make_unique<SegmentsManager>(partition, *client);
 
 //     partition_manager->service_start();
 //     partition_manager->service_await_live();

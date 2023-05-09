@@ -1,14 +1,13 @@
 import {createSelector, createSlice, PayloadAction} from "@reduxjs/toolkit";
 
-import {SegmentInstance, SegmentStates} from "../../../proto/mrc/protos/architect_state";
 import {createWrappedEntityAdapter} from "../../utils";
 
 import type {RootState} from "../store";
 import {connectionsRemove} from "@mrc/server/store/slices/connectionsSlice";
 import {pipelineInstancesRemove} from "@mrc/server/store/slices/pipelineInstancesSlice";
 import {workersRemove} from "@mrc/server/store/slices/workersSlice";
-
-export type ISegmentInstance = Omit<SegmentInstance, "$type">;
+import {ISegmentInstance} from "@mrc/common/entities";
+import {SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
 
 const segmentInstancesAdapter = createWrappedEntityAdapter<ISegmentInstance>({
    selectId: (w) => w.id,

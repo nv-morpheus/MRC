@@ -4,7 +4,14 @@ import type { CallContext, CallOptions } from "nice-grpc-common";
 import _m0 from "protobufjs/minimal";
 import { Any } from "../../google/protobuf/any";
 import { messageTypeRegistry } from "../../typeRegistry";
-import { EgressPolicy, PipelineConfiguration, SegmentDefinition } from "./architect_state";
+import {
+  EgressPolicy,
+  PipelineConfiguration,
+  ResourceStatus,
+  resourceStatusFromJSON,
+  resourceStatusToJSON,
+  SegmentDefinition,
+} from "./architect_state";
 
 export const protobufPackage = "mrc.protos";
 
@@ -30,6 +37,8 @@ export enum EventType {
   ClientEventUpdateSubscriptionService = 305,
   /** ClientUnaryRequestPipelineAssignment - Pipeline Management */
   ClientUnaryRequestPipelineAssignment = 401,
+  /** ClientUnaryResourceUpdateStatus - Resource Management */
+  ClientUnaryResourceUpdateStatus = 501,
   /** ServerEvent - Server Event issues to Client(s) */
   ServerEvent = 1000,
   ServerStateUpdate = 1001,
@@ -86,6 +95,9 @@ export function eventTypeFromJSON(object: any): EventType {
     case 401:
     case "ClientUnaryRequestPipelineAssignment":
       return EventType.ClientUnaryRequestPipelineAssignment;
+    case 501:
+    case "ClientUnaryResourceUpdateStatus":
+      return EventType.ClientUnaryResourceUpdateStatus;
     case 1000:
     case "ServerEvent":
       return EventType.ServerEvent;
@@ -133,6 +145,8 @@ export function eventTypeToJSON(object: EventType): string {
       return "ClientEventUpdateSubscriptionService";
     case EventType.ClientUnaryRequestPipelineAssignment:
       return "ClientUnaryRequestPipelineAssignment";
+    case EventType.ClientUnaryResourceUpdateStatus:
+      return "ClientUnaryResourceUpdateStatus";
     case EventType.ServerEvent:
       return "ServerEvent";
     case EventType.ServerStateUpdate:
@@ -241,6 +255,18 @@ export interface RegisterWorkersResponse {
   $type: "mrc.protos.RegisterWorkersResponse";
   machineId: string;
   instanceIds: string[];
+}
+
+export interface ResourceUpdateStatusRequest {
+  $type: "mrc.protos.ResourceUpdateStatusRequest";
+  resourceType: string;
+  resourceId: string;
+  status: ResourceStatus;
+}
+
+export interface ResourceUpdateStatusResponse {
+  $type: "mrc.protos.ResourceUpdateStatusResponse";
+  ok: boolean;
 }
 
 export interface LookupWorkersRequest {
@@ -1086,6 +1112,137 @@ export const RegisterWorkersResponse = {
 };
 
 messageTypeRegistry.set(RegisterWorkersResponse.$type, RegisterWorkersResponse);
+
+function createBaseResourceUpdateStatusRequest(): ResourceUpdateStatusRequest {
+  return { $type: "mrc.protos.ResourceUpdateStatusRequest", resourceType: "", resourceId: "0", status: 0 };
+}
+
+export const ResourceUpdateStatusRequest = {
+  $type: "mrc.protos.ResourceUpdateStatusRequest" as const,
+
+  encode(message: ResourceUpdateStatusRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.resourceType !== "") {
+      writer.uint32(10).string(message.resourceType);
+    }
+    if (message.resourceId !== "0") {
+      writer.uint32(16).uint64(message.resourceId);
+    }
+    if (message.status !== 0) {
+      writer.uint32(24).int32(message.status);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): ResourceUpdateStatusRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseResourceUpdateStatusRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.resourceType = reader.string();
+          break;
+        case 2:
+          message.resourceId = longToString(reader.uint64() as Long);
+          break;
+        case 3:
+          message.status = reader.int32() as any;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ResourceUpdateStatusRequest {
+    return {
+      $type: ResourceUpdateStatusRequest.$type,
+      resourceType: isSet(object.resourceType) ? String(object.resourceType) : "",
+      resourceId: isSet(object.resourceId) ? String(object.resourceId) : "0",
+      status: isSet(object.status) ? resourceStatusFromJSON(object.status) : 0,
+    };
+  },
+
+  toJSON(message: ResourceUpdateStatusRequest): unknown {
+    const obj: any = {};
+    message.resourceType !== undefined && (obj.resourceType = message.resourceType);
+    message.resourceId !== undefined && (obj.resourceId = message.resourceId);
+    message.status !== undefined && (obj.status = resourceStatusToJSON(message.status));
+    return obj;
+  },
+
+  create(base?: DeepPartial<ResourceUpdateStatusRequest>): ResourceUpdateStatusRequest {
+    return ResourceUpdateStatusRequest.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<ResourceUpdateStatusRequest>): ResourceUpdateStatusRequest {
+    const message = createBaseResourceUpdateStatusRequest();
+    message.resourceType = object.resourceType ?? "";
+    message.resourceId = object.resourceId ?? "0";
+    message.status = object.status ?? 0;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(ResourceUpdateStatusRequest.$type, ResourceUpdateStatusRequest);
+
+function createBaseResourceUpdateStatusResponse(): ResourceUpdateStatusResponse {
+  return { $type: "mrc.protos.ResourceUpdateStatusResponse", ok: false };
+}
+
+export const ResourceUpdateStatusResponse = {
+  $type: "mrc.protos.ResourceUpdateStatusResponse" as const,
+
+  encode(message: ResourceUpdateStatusResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.ok === true) {
+      writer.uint32(8).bool(message.ok);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): ResourceUpdateStatusResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseResourceUpdateStatusResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.ok = reader.bool();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ResourceUpdateStatusResponse {
+    return { $type: ResourceUpdateStatusResponse.$type, ok: isSet(object.ok) ? Boolean(object.ok) : false };
+  },
+
+  toJSON(message: ResourceUpdateStatusResponse): unknown {
+    const obj: any = {};
+    message.ok !== undefined && (obj.ok = message.ok);
+    return obj;
+  },
+
+  create(base?: DeepPartial<ResourceUpdateStatusResponse>): ResourceUpdateStatusResponse {
+    return ResourceUpdateStatusResponse.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<ResourceUpdateStatusResponse>): ResourceUpdateStatusResponse {
+    const message = createBaseResourceUpdateStatusResponse();
+    message.ok = object.ok ?? false;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(ResourceUpdateStatusResponse.$type, ResourceUpdateStatusResponse);
 
 function createBaseLookupWorkersRequest(): LookupWorkersRequest {
   return { $type: "mrc.protos.LookupWorkersRequest", instanceIds: [] };

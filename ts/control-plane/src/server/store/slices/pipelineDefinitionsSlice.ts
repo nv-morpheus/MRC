@@ -2,57 +2,27 @@ import {createSlice, PayloadAction} from "@reduxjs/toolkit";
 
 import type {AppDispatch, AppGetState, RootState} from "../store";
 import {
-   EgressPort,
-   IngressPort,
    PipelineConfiguration,
    PipelineConfiguration_SegmentConfiguration,
-   PipelineDefinition,
-   PipelineDefinition_SegmentDefinition,
-   ScalingOptions,
-   SegmentOptions,
 } from "@mrc/proto/mrc/protos/architect_state";
 import {createWrappedEntityAdapter} from "@mrc/server/utils";
 import {hashProtoMessage} from "@mrc/common/utils";
 import {
-   ISegmentInstance,
    segmentInstancesAdd,
    segmentInstancesAddMany,
    segmentInstancesRemove,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
 import {
-   IPipelineInstance,
    pipelineInstancesAdd,
    pipelineInstancesRemove,
 } from "@mrc/server/store/slices/pipelineInstancesSlice";
-
-export type IIngressPort    = Omit<IngressPort, "$type">;
-export type IEgressPort     = Omit<EgressPort, "$type">;
-export type IScalingOptions = Omit<ScalingOptions, "$type">;
-export type ISegmentOptions = Omit<SegmentOptions, "$type">&{
-   scalingOptions?: IScalingOptions,
-};
-
-export type ISegmentConfiguration =
-    Omit<PipelineConfiguration_SegmentConfiguration, "$type"|"ingressPorts"|"egressPorts"|"options">&{
-       ingressPorts: IIngressPort[],
-       egressPorts: IEgressPort[],
-       options?: ISegmentOptions,
-    };
-
-export type IPipelineConfiguration = Omit<PipelineConfiguration, "$type"|"segments">&{
-   segments: {[key: string]: ISegmentConfiguration},
-};
-
-export type ISegmentDefinition = Omit<PipelineDefinition_SegmentDefinition, "$type">;
-
-export type IPipelineDefinition = Omit<PipelineDefinition, "$type"|"config"|"segments">&{
-   config: IPipelineConfiguration,
-   segments: {[key: string]: ISegmentDefinition},
-};
-
-export type IPipelineDefinitionNested = {
-   segments: Map<string, Omit<ISegmentDefinition, "id">>;
-};
+import {
+   IPipelineConfiguration,
+   IPipelineDefinition,
+   IPipelineInstance,
+   ISegmentDefinition,
+   ISegmentInstance,
+} from "@mrc/common/entities";
 
 const pipelineDefinitionsAdapter = createWrappedEntityAdapter<IPipelineDefinition>({
    selectId: (w) => w.id,

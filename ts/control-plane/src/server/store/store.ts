@@ -124,46 +124,39 @@ export function customBatcherEnhancer(options: CustomBatcherOptions): StoreEnhan
          // Override the base `store.dispatch` method so that we can check actions
          // for the `shouldAutoBatch` flag and determine if batching is active
          dispatch(action: any) {
-            try
-            {
-               const action_type_name = action?.type;
+            const action_type_name = action?.type;
 
-               // Trigger notifying based on the action type
-               if (action_type_name == options.startBatchAction)
-               {
-                  notifying = false;
-               }
-               else if (action_type_name == options.stopBatchAction)
-               {
-                  notifying = true;
-               }
-
-               // // If a `notifyListeners` microtask was queued, you can't cancel it.
-               // // Instead, we set a flag so that it's a no-op when it does run
-               // shouldNotifyAtEndOfTick = !notifying;
-               // if (shouldNotifyAtEndOfTick)
-               // {
-               //    // We've seen at least 1 action with `SHOULD_AUTOBATCH`. Try to queue
-               //    // a microtask to notify listeners at the end of the event loop tick.
-               //    // Make sure we only enqueue this _once_ per tick.
-               //    if (!notificationQueued)
-               //    {
-               //       notificationQueued = true;
-               //       queueCallback(notifyListeners);
-               //    }
-               // }
-               // Go ahead and process the action as usual, including reducers.
-               // If normal notification behavior is enabled, the store will notify
-               // all of its own listeners, and the wrapper callbacks above will
-               // see `notifying` is true and pass on to the real listener callbacks.
-               // If we're "batching" behavior, then the wrapped callbacks will
-               // bail out, causing the base store notification behavior to be no-ops.
-               return store.dispatch(action);
-            } finally
+            // Trigger notifying based on the action type
+            if (action_type_name == options.startBatchAction)
             {
-               // Assume we're back to normal behavior after each action
+               notifying = false;
+            }
+            else if (action_type_name == options.stopBatchAction)
+            {
                notifying = true;
             }
+
+            // // If a `notifyListeners` microtask was queued, you can't cancel it.
+            // // Instead, we set a flag so that it's a no-op when it does run
+            // shouldNotifyAtEndOfTick = !notifying;
+            // if (shouldNotifyAtEndOfTick)
+            // {
+            //    // We've seen at least 1 action with `SHOULD_AUTOBATCH`. Try to queue
+            //    // a microtask to notify listeners at the end of the event loop tick.
+            //    // Make sure we only enqueue this _once_ per tick.
+            //    if (!notificationQueued)
+            //    {
+            //       notificationQueued = true;
+            //       queueCallback(notifyListeners);
+            //    }
+            // }
+            // Go ahead and process the action as usual, including reducers.
+            // If normal notification behavior is enabled, the store will notify
+            // all of its own listeners, and the wrapper callbacks above will
+            // see `notifying` is true and pass on to the real listener callbacks.
+            // If we're "batching" behavior, then the wrapped callbacks will
+            // bail out, causing the base store notification behavior to be no-ops.
+            return store.dispatch(action);
          },
       });
    };

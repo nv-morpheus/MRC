@@ -8,15 +8,14 @@ import {createWrappedEntityAdapter} from "../../utils";
 
 import type {AppDispatch, AppGetState, RootState} from "../store";
 import {pipelineInstancesAdd, pipelineInstancesRemove, pipelineInstancesSelectByIds} from "./pipelineInstancesSlice";
-import {workersAdd, workersAddMany, IWorker, workersRemove, workersSelectByIds} from "./workersSlice";
+import {workersAdd, workersAddMany, workersRemove, workersSelectByIds} from "./workersSlice";
 import {
    segmentInstancesRemove,
    segmentInstancesSelectByIds,
    segmentInstancesUpdateState,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
 import {systemStartRequest, systemStopRequest} from "@mrc/server/store/slices/systemSlice";
-
-export type IConnection = Omit<Connection, "$type">;
+import {IConnection, IWorker} from "@mrc/common/entities";
 
 const connectionsAdapter = createWrappedEntityAdapter<IConnection>({
    selectId: (x) => x.id,

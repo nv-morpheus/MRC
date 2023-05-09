@@ -17,6 +17,8 @@
 
 #include "internal/pipeline/pipeline_instance.hpp"
 
+#include "internal/async_service.hpp"
+#include "internal/control_plane/state/root_state.hpp"
 #include "internal/pipeline/pipeline.hpp"
 #include "internal/pipeline/resources.hpp"
 #include "internal/resources/partition_resources.hpp"
@@ -31,6 +33,7 @@
 #include "mrc/manifold/interface.hpp"
 #include "mrc/segment/utils.hpp"
 #include "mrc/types.hpp"
+#include "mrc/utils/string_utils.hpp"
 
 #include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
@@ -43,9 +46,14 @@
 
 namespace mrc::internal::pipeline {
 
-PipelineInstance::PipelineInstance(runtime::Runtime& runtime, std::shared_ptr<const Pipeline> definition) :
+PipelineInstance::PipelineInstance(runtime::Runtime& runtime,
+                                   std::shared_ptr<const Pipeline> definition,
+                                   uint64_t instance_id) :
+  AsyncService(MRC_CONCAT_STR("PipelineInstance[" << instance_id << "]")),
+  runnable::RunnableResourcesProvider(runtime),
   m_runtime(runtime),
-  m_definition(std::move(definition))
+  m_definition(std::move(definition)),
+  m_instance_id(instance_id)
 {
     CHECK(m_definition);
     m_joinable_future = m_joinable_promise.get_future().share();
@@ -177,55 +185,106 @@ void PipelineInstance::mark_joinable()
     }
 }
 
-void PipelineInstance::do_service_start() {}
-
-void PipelineInstance::do_service_await_live()
+void PipelineInstance::do_service_start(std::stop_token stop_token)
 {
-    m_joinable_future.get();
+    Promise<void> completed_promise;
+
+    // Now, subscribe to the control plane state updates and filter only on updates to this instance ID
+    m_runtime.control_plane()
+        .state_update_obs()
+        .tap([this](const control_plane::state::ControlPlaneState& state) {
+            VLOG(10) << "State Update: PipelineInstance[" << m_instance_id << "]";
+        })
+        .map([this](control_plane::state::ControlPlaneState state) -> control_plane::state::PipelineInstance {
+            return state.pipeline_instances().at(m_instance_id);
+        })
+        .take_while([](control_plane::state::PipelineInstance& state) {
+            // Process events until the worker is indicated to be destroyed
+            return state.state().status() < control_plane::state::ResourceStatus::Destroyed;
+        })
+        .subscribe(
+            [this](control_plane::state::PipelineInstance state) {
+                // Handle updates to the worker
+                this->process_state_update(state);
+            },
+            [&completed_promise] {
+                completed_promise.set_value();
+            });
+
+    // Yield until the observable is finished
+    completed_promise.get_future().wait();
 }
 
-void PipelineInstance::do_service_stop()
+void PipelineInstance::process_state_update(control_plane::state::PipelineInstance& instance)
 {
-    mark_joinable();
-
-    for (auto& [id, segment] : m_segments)
+    if (instance.state().status() == control_plane::state::ResourceStatus::Activated)
     {
-        stop_segment(id);
+        // If we are activated, we need to setup the instance and then inform the control plane we are ready
+        // Create the manifold objects
+
+        auto request = protos::ResourceUpdateStatusRequest();
+
+        request.set_resource_type("PipelineInstances");
+        request.set_resource_id(instance.id());
+        request.set_status(protos::ResourceStatus::Ready);
+
+        auto response = m_runtime.control_plane().await_unary<protos::ResourceUpdateStatusResponse>(
+            protos::EventType::ClientUnaryResourceUpdateStatus,
+            request);
+
+        CHECK(response->ok()) << "Failed to set PipelineInstance to Ready";
     }
 }
 
-void PipelineInstance::do_service_kill()
-{
-    mark_joinable();
-    for (auto& [id, segment] : m_segments)
-    {
-        stop_segment(id);
-        segment->service_kill();
-    }
-}
+// void PipelineInstance::do_service_start() {}
 
-void PipelineInstance::do_service_await_join()
-{
-    std::exception_ptr first_exception = nullptr;
-    m_joinable_future.get();
-    for (const auto& [address, segment] : m_segments)
-    {
-        try
-        {
-            segment->service_await_join();
-        } catch (...)
-        {
-            if (first_exception == nullptr)
-            {
-                first_exception = std::current_exception();
-            }
-        }
-    }
-    if (first_exception)
-    {
-        LOG(ERROR) << "pipeline::Instance - an exception was caught while awaiting on segments - rethrowing";
-        std::rethrow_exception(std::move(first_exception));
-    }
-}
+// void PipelineInstance::do_service_await_live()
+// {
+//     m_joinable_future.get();
+// }
+
+// void PipelineInstance::do_service_stop()
+// {
+//     mark_joinable();
+
+//     for (auto& [id, segment] : m_segments)
+//     {
+//         stop_segment(id);
+//     }
+// }
+
+// void PipelineInstance::do_service_kill()
+// {
+//     mark_joinable();
+//     for (auto& [id, segment] : m_segments)
+//     {
+//         stop_segment(id);
+//         segment->service_kill();
+//     }
+// }
+
+// void PipelineInstance::do_service_await_join()
+// {
+//     std::exception_ptr first_exception = nullptr;
+//     m_joinable_future.get();
+//     for (const auto& [address, segment] : m_segments)
+//     {
+//         try
+//         {
+//             segment->service_await_join();
+//         } catch (...)
+//         {
+//             if (first_exception == nullptr)
+//             {
+//                 first_exception = std::current_exception();
+//             }
+//         }
+//     }
+//     if (first_exception)
+//     {
+//         LOG(ERROR) << "pipeline::Instance - an exception was caught while awaiting on segments - rethrowing";
+//         std::rethrow_exception(std::move(first_exception));
+//     }
+// }
 
 }  // namespace mrc::internal::pipeline

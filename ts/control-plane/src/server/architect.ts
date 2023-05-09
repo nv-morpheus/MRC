@@ -1,9 +1,10 @@
 
 
 import {ServerDuplexStream} from "@grpc/grpc-js";
+import {IConnection, IWorker} from "@mrc/common/entities";
 import {systemStartRequest, systemStopRequest} from "@mrc/server/store/slices/systemSlice";
 import {as, AsyncSink, merge} from "ix/asynciterable";
-import {debounce, withAbort} from "ix/asynciterable/operators";
+import {withAbort} from "ix/asynciterable/operators";
 import {CallContext} from "nice-grpc";
 import {firstValueFrom, Subject} from "rxjs";
 
@@ -23,26 +24,31 @@ import {
    PipelineRequestAssignmentResponse,
    RegisterWorkersRequest,
    RegisterWorkersResponse,
+   ResourceUpdateStatusRequest,
+   ResourceUpdateStatusResponse,
    ServerStreamingMethodResult,
    ShutdownRequest,
    ShutdownResponse,
    StateUpdate,
    TaggedInstance,
 } from "../proto/mrc/protos/architect";
-import {ControlPlaneState, PipelineDefinition, WorkerStates} from "../proto/mrc/protos/architect_state";
+import {ControlPlaneState, ResourceStatus} from "../proto/mrc/protos/architect_state";
 import {DeepPartial, messageTypeRegistry} from "../proto/typeRegistry";
 
-import {connectionsAdd, connectionsDropOne, connectionsRemove, IConnection} from "./store/slices/connectionsSlice";
-import {pipelineInstancesAssign} from "./store/slices/pipelineInstancesSlice";
+import {connectionsAdd, connectionsDropOne} from "./store/slices/connectionsSlice";
 import {
-   IWorker,
-   workersActivate,
+   pipelineInstancesAssign,
+   pipelineInstancesSelectById,
+   pipelineInstancesUpdateResourceState,
+} from "./store/slices/pipelineInstancesSlice";
+import {
    workersAddMany,
    workersRemove,
    workersSelectById,
    workersSelectByMachineId,
+   workersUpdateResourceState,
 } from "./store/slices/workersSlice";
-import {getRootStore, RootStore, startAction, stopAction} from "./store/store";
+import {getRootStore, RootStore, stopAction} from "./store/store";
 import {generateId} from "./utils";
 
 interface IncomingData
@@ -208,6 +214,8 @@ class Architect implements ArchitectServiceImplementation
          // Remove the system object from the state
          const {system: _, ...out_state} = {...state, system: {extra: true}};
 
+         console.log("Pushing state update");
+
          // Push out the state update
          store_update_sink.write(
              packEvent<ControlPlaneState>(EventType.ServerStateUpdate,
@@ -330,7 +338,10 @@ class Architect implements ArchitectServiceImplementation
                   id: generateId(),
                   machineId: event.machineId,
                   workerAddress: value,
-                  state: WorkerStates.Registered,
+                  state: {
+                     status: ResourceStatus.Registered,
+                     refCount: 0,
+                  },
                   assignedSegmentIds: [],
                };
             });
@@ -361,7 +372,7 @@ class Architect implements ArchitectServiceImplementation
                return w;
             });
 
-            this._store.dispatch(workersActivate(workers));
+            this._store.dispatch(workersUpdateResourceState({resources: workers, status: ResourceStatus.Activated}));
 
             yield unaryResponse(event, Ack, {});
 
@@ -406,6 +417,35 @@ class Architect implements ArchitectServiceImplementation
             yield unaryResponse(event,
                                 PipelineRequestAssignmentResponse,
                                 PipelineRequestAssignmentResponse.create(addedInstances));
+
+            break;
+         }
+         case EventType.ClientUnaryResourceUpdateStatus: {
+            const payload = unpackEvent<ResourceUpdateStatusRequest>(event.msg);
+
+            // Check to make sure its not null
+            switch (payload.resourceType)
+            {
+            case "PipelineInstances": {
+               const found = pipelineInstancesSelectById(this._store.getState(), payload.resourceId);
+
+               if (!found)
+               {
+                  throw new Error(`Could not find PipelineInstance for ID: ${payload.resourceId}`);
+               }
+
+               this._store.dispatch(pipelineInstancesUpdateResourceState({
+                  resource: found,
+                  status: payload.status,
+               }));
+
+               break;
+            }
+            default:
+               throw new Error("Unsupported resource type");
+            }
+
+            yield unaryResponse(event, ResourceUpdateStatusResponse, ResourceUpdateStatusResponse.create({ok: true}));
 
             break;
          }

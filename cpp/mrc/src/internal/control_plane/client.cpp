@@ -27,6 +27,7 @@
 #include "mrc/channel/status.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/operators/broadcast.hpp"
+#include "mrc/node/operators/conditional.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/options/options.hpp"
@@ -115,14 +116,31 @@ void Client::do_service_start()
         return m_stub->PrepareAsyncEventStream(context, m_cq.get());
     };
 
+    m_response_conditional = std::make_unique<node::Conditional<bool, event_t>>([](const event_t& e) {
+        return e.msg.event() == protos::EventType::Response;
+    });
+
+    // response handler - optionally add concurrency here
+    auto response_handler = std::make_unique<node::RxSink<event_t>>([](event_t event) {
+        auto* promise = reinterpret_cast<Promise<protos::Event>*>(event.msg.tag());
+        if (promise != nullptr)
+        {
+            promise->set_value(std::move(event.msg));
+        }
+    });
+
     // event handler - optionally add concurrency here
     auto event_handler = std::make_unique<node::RxSink<event_t>>([this](event_t event) {
-        do_handle_event(std::move(event));
+        this->do_handle_event(event);
     });
+
+    mrc::make_edge(*m_response_conditional->get_source(true), *response_handler);
+
+    mrc::make_edge(*m_response_conditional->get_source(false), *event_handler);
 
     // make stream and attach event handler
     m_stream = std::make_shared<stream_t::element_type>(prepare_fn, runnable());
-    m_stream->attach_to(*event_handler);
+    m_stream->attach_to(*m_response_conditional);
 
     // // Create the stream for events from the server
     // m_state_update_entrypoint = std::make_unique<mrc::node::WritableEntrypoint<const protos::ControlPlaneState>>();
@@ -135,6 +153,8 @@ void Client::do_service_start()
     // *m_connections_update_channel);
 
     // launch runnables
+    m_response_handler =
+        runnable().launch_control().prepare_launcher(launch_options(), std::move(response_handler))->ignition();
     m_event_handler =
         runnable().launch_control().prepare_launcher(launch_options(), std::move(event_handler))->ignition();
 
@@ -189,8 +209,15 @@ void Client::do_service_await_join()
     }
 }
 
-void Client::do_handle_event(event_t&& event)
+void Client::do_handle_event(event_t& event)
 {
+    auto saved_event_type = event.msg.event();
+    auto saved_event_tag  = event.msg.tag();
+
+    // VLOG(10) << "Client: Start handling event: " << saved_event_type << ". With tag: " << saved_event_tag;
+
+    CHECK_NE(event.msg.event(), protos::EventType::Response) << "Responses should be handled by another node";
+
     switch (event.msg.event())
     {
     // This is the first event that should be recieved after connecting and sets up the machine ID
@@ -207,16 +234,9 @@ void Client::do_handle_event(event_t&& event)
         break;
     }
 
-    case protos::EventType::Response: {
-        auto* promise = reinterpret_cast<Promise<protos::Event>*>(event.msg.tag());
-        if (promise != nullptr)
-        {
-            promise->set_value(std::move(event.msg));
-        }
-    }
-    break;
-
     case protos::EventType::ServerStateUpdate: {
+        VLOG(10) << "Client: ======State Update Start======";
+
         auto update = std::make_unique<protos::ControlPlaneState>();
         CHECK(event.msg.has_message() && event.msg.message().UnpackTo(update.get()));
 
@@ -229,6 +249,8 @@ void Client::do_handle_event(event_t&& event)
 
         m_state_update_count++;
         m_state_update_sub.get_subscriber().on_next(state::ControlPlaneState(std::move(update)));
+
+        VLOG(10) << "Client: ======State Update End======";
 
         // DCHECK(m_state_update_entrypoint);
         // CHECK(m_state_update_entrypoint->await_write(std::move(update)) == channel::Status::success);
@@ -248,6 +270,8 @@ void Client::do_handle_event(event_t&& event)
     default:
         LOG(ERROR) << "event channel not implemented. Not supported event: " << event.msg.event();
     }
+
+    VLOG(10) << "Client: End handling event: " << saved_event_type << ". With tag: " << saved_event_tag;
 }
 
 // InstanceID Client::register_ucx_address(const std::string& worker_address)

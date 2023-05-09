@@ -28,6 +28,7 @@
 #include "mrc/core/error.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/node/operators/broadcast.hpp"
+#include "mrc/node/operators/conditional.hpp"
 #include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
 #include "mrc/protos/architect.pb.h"
@@ -171,7 +172,7 @@ class Client final : public Service, public virtual runnable::RunnableResourcesP
     void do_service_kill() final;
     void do_service_await_live() final;
     void do_service_await_join() final;
-    void do_handle_event(event_t&& event);
+    void do_handle_event(event_t& event);
 
     void forward_state(State state);
 
@@ -193,6 +194,9 @@ class Client final : public Service, public virtual runnable::RunnableResourcesP
     const bool m_owns_progress_engine;
     std::unique_ptr<mrc::runnable::Runner> m_progress_handler;
     std::unique_ptr<mrc::runnable::Runner> m_progress_engine;
+
+    std::unique_ptr<node::Conditional<bool, event_t>> m_response_conditional;
+    std::unique_ptr<mrc::runnable::Runner> m_response_handler;
     std::unique_ptr<mrc::runnable::Runner> m_event_handler;
 
     // std::map<std::string, std::unique_ptr<node::SourceChannelWriteable<protos::StateUpdate>>> m_update_channels;
@@ -204,10 +208,11 @@ class Client final : public Service, public virtual runnable::RunnableResourcesP
 
     // update channel
     size_t m_state_update_count{0};
-    // rxcpp::subjects::behavior<state::ControlPlaneState> m_state_update_sub{{nullptr}};
-    rxcpp::subjects::replay<state::ControlPlaneState, rxcpp::identity_one_worker> m_state_update_sub{
-        1,
-        rxcpp::identity_current_thread()};
+    rxcpp::subjects::behavior<state::ControlPlaneState> m_state_update_sub{
+        state::ControlPlaneState{std::make_unique<protos::ControlPlaneState>()}};
+    // rxcpp::subjects::replay<state::ControlPlaneState, rxcpp::identity_one_worker> m_state_update_sub{
+    //     1,
+    //     rxcpp::identity_current_thread()};
     // std::unique_ptr<mrc::node::WritableEntrypoint<const protos::StateUpdate>> m_connections_update_channel;
     // std::unique_ptr<mrc::node::WritableEntrypoint<const protos::ControlPlaneState>> m_state_update_entrypoint;
     // std::unique_ptr<mrc::node::Broadcast<const protos::ControlPlaneState>> m_state_update_stream;

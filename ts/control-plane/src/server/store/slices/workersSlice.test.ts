@@ -1,5 +1,5 @@
 import {expect} from "@jest/globals";
-import {SegmentStates, WorkerStates} from "@mrc/proto/mrc/protos/architect_state";
+import {ResourceStatus, SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
 import {pipelineDefinitionsAdd} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 import {pipelineInstancesAdd} from "@mrc/server/store/slices/pipelineInstancesSlice";
 import {
@@ -14,12 +14,12 @@ import {RootStore, setupStore} from "../store";
 
 import {connectionsAdd, connectionsDropOne} from "./connectionsSlice";
 import {
-   workersActivate,
    workersAdd,
    workersRemove,
    workersSelectAll,
    workersSelectById,
    workersSelectTotal,
+   workersUpdateResourceState,
 } from "./workersSlice";
 
 let store: RootStore;
@@ -64,7 +64,7 @@ describe("Single", () => {
       expect(found[0]).toHaveProperty("id", worker.id);
       expect(found[0]).toHaveProperty("assignedSegmentIds", []);
       expect(found[0]).toHaveProperty("machineId", connection.id);
-      expect(found[0]).toHaveProperty("state", WorkerStates.Registered);
+      expect(found[0]).toHaveProperty("state.status", ResourceStatus.Registered);
       expect(found[0]).toHaveProperty("workerAddress", worker.workerAddress);
    });
 
@@ -74,7 +74,7 @@ describe("Single", () => {
       expect(found).toHaveProperty("id", worker.id);
       expect(found).toHaveProperty("assignedSegmentIds", []);
       expect(found).toHaveProperty("machineId", connection.id);
-      expect(found).toHaveProperty("state", WorkerStates.Registered);
+      expect(found).toHaveProperty("state.status", ResourceStatus.Registered);
       expect(found).toHaveProperty("workerAddress", worker.workerAddress);
    });
 
@@ -100,16 +100,16 @@ describe("Single", () => {
    });
 
    test("Activate", () => {
-      store.dispatch(workersActivate([worker]));
+      store.dispatch(workersUpdateResourceState({resources: [worker], status: ResourceStatus.Activated}));
 
-      expect(workersSelectById(store.getState(), worker.id)).toHaveProperty("state", WorkerStates.Activated);
+      expect(workersSelectById(store.getState(), worker.id)).toHaveProperty("state.status", ResourceStatus.Activated);
    });
 
    test("Activate Twice", () => {
-      store.dispatch(workersActivate([worker]));
-      store.dispatch(workersActivate([worker]));
+      store.dispatch(workersUpdateResourceState({resources: [worker], status: ResourceStatus.Activated}));
+      store.dispatch(workersUpdateResourceState({resources: [worker], status: ResourceStatus.Activated}));
 
-      expect(workersSelectById(store.getState(), worker.id)).toHaveProperty("state", WorkerStates.Activated);
+      expect(workersSelectById(store.getState(), worker.id)).toHaveProperty("state.status", ResourceStatus.Activated);
    });
 
    test("Connection Dropped", () => {

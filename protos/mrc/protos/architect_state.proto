@@ -20,12 +20,23 @@ syntax = "proto3";
 
 package mrc.protos;
 
-enum WorkerStates
+enum ResourceStatus
 {
+   // Control Plane indicates a resource should be created on the client
    Registered = 0;
+   // Client has created resource but it is not ready
    Activated = 1;
-   Deactivated = 2;
-   Destroyed = 3;
+   // Client and Control Plane can use the resource
+   Ready = 2;
+   // Control Plane has indicated the resource should be destroyed on the client. All users of the resource should stop
+   // using it and decrement the ref count. Object is still running
+   Deactivating = 3;
+   // All ref counts have been decremented. Owner of the object on the client can begin destroying object
+   Deactivated = 4;
+   // Client owner of resource has begun destroying the object
+   Unregistered = 5;
+   // Object has been destroyed on the client (and may be removed from the server)
+   Destroyed = 6;
 }
 
 enum SegmentStates
@@ -34,6 +45,13 @@ enum SegmentStates
    Running = 1;
    Stopped = 2;
    Completed = 3;
+}
+
+message ResourceState {
+   // Current status of the resource
+   ResourceStatus status = 1;
+   // Number of users besides the owner of this resource
+   int32 ref_count = 2;
 }
 
 message Connection {
@@ -60,7 +78,7 @@ message Worker {
    uint64 machine_id = 3;
 
    // Current state of the worker
-   WorkerStates state = 4;
+   ResourceState state = 4;
 
    // The segment instances that are assigned to this worker
    repeated uint64 assigned_segment_ids = 5;
@@ -123,8 +141,11 @@ message PipelineInstance {
    // The machine this instance is running on
    uint64 machine_id = 3;
 
+   // The current state of this resource
+   ResourceState state = 4;
+
    // Running Segment Instance IDs
-   repeated uint64 segment_ids = 4;
+   repeated uint64 segment_ids = 5;
 }
 
 message SegmentDefinition {

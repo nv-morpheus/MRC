@@ -3,10 +3,9 @@ import "ix/add/asynciterable-operators/finalize";
 
 import {Channel, credentials} from "@grpc/grpc-js";
 import {ConnectivityState} from "@grpc/grpc-js/build/src/connectivity-state";
-import {WorkerStates} from "@mrc/proto/mrc/protos/architect_state";
+import {IConnection, IPipelineConfiguration, ISegmentMapping} from "@mrc/common/entities";
+import {ResourceStatus} from "@mrc/proto/mrc/protos/architect_state";
 import {
-   IPipelineConfiguration,
-   IPipelineDefinition,
    pipelineDefinitionsSelectById,
 } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 import {as, AsyncIterableX, AsyncSink} from "ix/asynciterable";
@@ -28,8 +27,8 @@ import {
    RegisterWorkersResponse,
 } from "../proto/mrc/protos/architect";
 import {ArchitectServer} from "../server/server";
-import {connectionsSelectAll, connectionsSelectById, IConnection} from "../server/store/slices/connectionsSlice";
-import {ISegmentMapping, pipelineInstancesSelectById} from "../server/store/slices/pipelineInstancesSlice";
+import {connectionsSelectAll, connectionsSelectById} from "../server/store/slices/connectionsSlice";
+import {pipelineInstancesSelectById} from "../server/store/slices/pipelineInstancesSlice";
 import {segmentInstancesSelectByIds} from "../server/store/slices/segmentInstancesSlice";
 import {workersSelectById} from "../server/store/slices/workersSlice";
 import {RootStore, setupStore} from "../server/store/store";
@@ -179,7 +178,7 @@ describe("Client", () => {
             // Check to make sure its activated
             const found_worker = workersSelectById(store.getState(), registered_response.instanceIds[0]);
 
-            expect(found_worker?.state).toBe(WorkerStates.Activated);
+            expect(found_worker?.state.status).toBe(ResourceStatus.Activated);
          });
 
          describe("pipeline", () => {

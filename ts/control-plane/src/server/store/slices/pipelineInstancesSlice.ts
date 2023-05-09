@@ -1,22 +1,17 @@
-import {PipelineRequestAssignmentRequest_SegmentMapping} from "@mrc/proto/mrc/protos/architect";
-import {PipelineInstance, SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
+import {IPipelineConfiguration, IPipelineInstance, ISegmentInstance, ISegmentMapping} from "@mrc/common/entities";
+import {ResourceStatus, SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
 import {connectionsRemove} from "@mrc/server/store/slices/connectionsSlice";
-import {IPipelineConfiguration, pipelineDefinitionsCreate} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
+import {pipelineDefinitionsCreate} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 import {AppDispatch, AppGetState, RootState} from "@mrc/server/store/store";
 import {createWrappedEntityAdapter, generateId} from "@mrc/server/utils";
 import {createSelector, createSlice, PayloadAction} from "@reduxjs/toolkit";
 
 import {
-   ISegmentInstance,
    segmentInstancesAdd,
    segmentInstancesAddMany,
    segmentInstancesRemove,
 } from "./segmentInstancesSlice";
 import {workersSelectByMachineId} from "./workersSlice";
-
-export type ISegmentMapping = Omit<PipelineRequestAssignmentRequest_SegmentMapping, "$type">;
-
-export type IPipelineInstance = Omit<PipelineInstance, "$type">;
 
 const pipelineInstancesAdapter = createWrappedEntityAdapter<IPipelineInstance>({
    selectId: (w) => w.id,
@@ -46,7 +41,14 @@ export const pipelineInstancesSlice = createSlice({
          {
             throw new Error(`Pipeline Instance with ID: ${action.payload.id} already exists`);
          }
-         pipelineInstancesAdapter.addOne(state, {...action.payload, segmentIds: []});
+         pipelineInstancesAdapter.addOne(state, {
+            ...action.payload,
+            segmentIds: [],
+            state: {
+               status: ResourceStatus.Registered,
+               refCount: 0,
+            },
+         });
       },
       remove: (state, action: PayloadAction<IPipelineInstance>) => {
          const found = pipelineInstancesAdapter.getOne(state, action.payload.id);
@@ -63,6 +65,16 @@ export const pipelineInstancesSlice = createSlice({
          }
 
          pipelineInstancesAdapter.removeOne(state, action.payload.id);
+      },
+      updateResourceState: (state, action: PayloadAction<{resource: IPipelineInstance, status: ResourceStatus}>) => {
+         const found = pipelineInstancesAdapter.getOne(state, action.payload.resource.id);
+
+         if (!found)
+         {
+            throw new Error(`Pipeline Instance with ID: ${action.payload.resource.id} not found`);
+         }
+
+         found.state.status = action.payload.status;
       },
    },
    extraReducers: (builder) => {
@@ -158,7 +170,11 @@ export function pipelineInstancesAssign(payload: {
 
 type PipelineInstancesStateType = ReturnType<typeof pipelineInstancesSlice.getInitialState>;
 
-export const {add: pipelineInstancesAdd, remove: pipelineInstancesRemove} = pipelineInstancesSlice.actions;
+export const {
+   add: pipelineInstancesAdd,
+   remove: pipelineInstancesRemove,
+   updateResourceState: pipelineInstancesUpdateResourceState,
+} = pipelineInstancesSlice.actions;
 
 export const {
    selectAll: pipelineInstancesSelectAll,

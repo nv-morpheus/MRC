@@ -15,9 +15,10 @@
  * limitations under the License.
  */
 
-#include "internal/runtime/partition_manager.hpp"
+#include "internal/runtime/segments_manager.hpp"
 
 #include "internal/async_service.hpp"
+#include "internal/control_plane/state/root_state.hpp"
 #include "internal/runnable/resources.hpp"
 #include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/pipelines_manager.hpp"
@@ -35,16 +36,16 @@
 
 namespace mrc::internal::runtime {
 
-PartitionManager::PartitionManager(PartitionRuntime& runtime) :
-  AsyncService(MRC_CONCAT_STR("PartitionManager[" << runtime.partition_id() << "]")),
+SegmentsManager::SegmentsManager(PartitionRuntime& runtime) :
+  AsyncService(MRC_CONCAT_STR("SegmentsManager[" << runtime.partition_id() << "]")),
   runnable::RunnableResourcesProvider(runtime.resources().runnable()),
   m_runtime(runtime),
   m_partition_id(runtime.partition_id())
 {}
 
-PartitionManager::~PartitionManager() = default;
+SegmentsManager::~SegmentsManager() = default;
 
-void PartitionManager::do_service_start(std::stop_token stop_token)
+void SegmentsManager::do_service_start(std::stop_token stop_token)
 {
     // First thing, need to register this worker with the control plane
     protos::RegisterWorkersRequest req;
@@ -64,12 +65,19 @@ void PartitionManager::do_service_start(std::stop_token stop_token)
     // Now, subscribe to the control plane state updates and filter only on updates to this instance ID
     m_runtime.control_plane()
         .state_update_obs()
+        .tap([](const control_plane::state::ControlPlaneState& state) {
+            VLOG(10) << "State Update: SegmentsManager";
+        })
+        .filter([this](const control_plane::state::ControlPlaneState& state) {
+            return state.workers().contains(m_worker_id);
+        })
         .map([this](control_plane::state::ControlPlaneState state) -> control_plane::state::Worker {
             return state.workers().at(m_worker_id);
         })
         .take_while([stop_token](control_plane::state::Worker& worker) {
             // Process events until the worker is indicated to be destroyed
-            return worker.state() < control_plane::state::WorkerStates::Destroyed && !stop_token.stop_requested();
+            return worker.state().status() < control_plane::state::ResourceStatus::Destroyed &&
+                   !stop_token.stop_requested();
         })
         // .distinct_until_changed([](const control_plane::state::Worker& curr, const control_plane::state::Worker&
         // prev) {
@@ -94,23 +102,25 @@ void PartitionManager::do_service_start(std::stop_token stop_token)
     CHECK(m_runtime.control_plane().await_unary<protos::Ack>(protos::ClientUnaryDropWorker, std::move(msg)));
 }
 
-// void PartitionManager::do_service_stop() {}
+// void SegmentsManager::do_service_stop() {}
 
-// void PartitionManager::do_service_kill() {}
+// void SegmentsManager::do_service_kill() {}
 
-// void PartitionManager::do_service_await_live()
+// void SegmentsManager::do_service_await_live()
 // {
 //     m_live_promise.get_future().wait();
 // }
 
-// void PartitionManager::do_service_await_join()
+// void SegmentsManager::do_service_await_join()
 // {
 //     m_shutdown_future.wait();
 // }
 
-void PartitionManager::process_state_update(mrc::internal::control_plane::state::Worker& worker)
+void SegmentsManager::process_state_update(mrc::internal::control_plane::state::Worker& worker)
 {
-    if (worker.state() == control_plane::state::WorkerStates::Registered)
+    auto status = worker.state().status();
+
+    if (status == control_plane::state::ResourceStatus::Registered)
     {
         protos::RegisterWorkersResponse resp;
         resp.set_machine_id(0);
@@ -122,65 +132,66 @@ void PartitionManager::process_state_update(mrc::internal::control_plane::state:
         // Indicate this is now live
         this->mark_started();
     }
-    else if (worker.state() == control_plane::state::WorkerStates::Activated)
+    else if (status == control_plane::state::ResourceStatus::Activated)
     {
-        // Check for assignments
-        auto cur_segments = extract_keys(m_segments);
-        auto new_segments = extract_keys(worker.assigned_segments());
+        // // Check for assignments
+        // auto cur_segments = extract_keys(m_segments);
+        // auto new_segments = extract_keys(worker.assigned_segments());
 
-        // set of segments to remove
-        std::set<SegmentAddress> create_segments;
-        std::set_difference(new_segments.begin(),
-                            new_segments.end(),
-                            cur_segments.begin(),
-                            cur_segments.end(),
-                            std::inserter(create_segments, create_segments.end()));
-        DVLOG(10) << create_segments.size() << " segments will be created";
+        // // set of segments to remove
+        // std::set<SegmentAddress> create_segments;
+        // std::set_difference(new_segments.begin(),
+        //                     new_segments.end(),
+        //                     cur_segments.begin(),
+        //                     cur_segments.end(),
+        //                     std::inserter(create_segments, create_segments.end()));
+        // DVLOG(10) << create_segments.size() << " segments will be created";
 
-        // set of segments to remove
-        std::set<SegmentAddress> remove_segments;
-        std::set_difference(cur_segments.begin(),
-                            cur_segments.end(),
-                            new_segments.begin(),
-                            new_segments.end(),
-                            std::inserter(remove_segments, remove_segments.end()));
-        DVLOG(10) << remove_segments.size() << " segments marked for removal";
+        // // set of segments to remove
+        // std::set<SegmentAddress> remove_segments;
+        // std::set_difference(cur_segments.begin(),
+        //                     cur_segments.end(),
+        //                     new_segments.begin(),
+        //                     new_segments.end(),
+        //                     std::inserter(remove_segments, remove_segments.end()));
+        // DVLOG(10) << remove_segments.size() << " segments marked for removal";
 
-        // construct new segments and attach to manifold
-        for (const auto& address : create_segments)
-        {
-            // auto partition_id = new_segments_map.at(address);
-            // DVLOG(10) << info() << ": create segment for address " << ::mrc::segment::info(address)
-            //           << " on resource partition: " << partition_id;
-            this->create_segment(worker.assigned_segments().at(address).pipeline_instance().definition().id(), address);
-        }
+        // // construct new segments and attach to manifold
+        // for (const auto& address : create_segments)
+        // {
+        //     // auto partition_id = new_segments_map.at(address);
+        //     // DVLOG(10) << info() << ": create segment for address " << ::mrc::segment::info(address)
+        //     //           << " on resource partition: " << partition_id;
+        //     this->create_segment(worker.assigned_segments().at(address).pipeline_instance().definition().id(),
+        //     address);
+        // }
 
-        // detach from manifold or stop old segments
-        for (const auto& address : remove_segments)
-        {
-            // DVLOG(10) << info() << ": stop segment for address " << ::mrc::segment::info(address);
-            this->erase_segment(address);
-        }
+        // // detach from manifold or stop old segments
+        // for (const auto& address : remove_segments)
+        // {
+        //     // DVLOG(10) << info() << ": stop segment for address " << ::mrc::segment::info(address);
+        //     this->erase_segment(address);
+        // }
     }
-    else if (worker.state() == control_plane::state::WorkerStates::Deactivated)
+    else if (status == control_plane::state::ResourceStatus::Deactivated)
     {
         // Handle deactivation
     }
     else
     {
-        CHECK(false) << "Unknown worker state: " << static_cast<int>(worker.state());
+        CHECK(false) << "Unknown worker state: " << static_cast<int>(status);
     }
 }
-void PartitionManager::create_segment(uint64_t pipeline_id, SegmentAddress address)
+void SegmentsManager::create_segment(uint64_t pipeline_id, SegmentAddress address)
 {
     m_runtime.resources()
         .runnable()
         .main()
         .enqueue([this, pipeline_id, address] {
             // Get a reference to the pipeline we are creating the segment in
-            auto& pipeline_def = m_runtime.pipelines_manager().get_def(pipeline_id);
+            auto& pipeline_def = m_runtime.pipelines_manager().get_definition(pipeline_id);
 
-            auto pipeline_instance = m_runtime.pipelines_manager().get_instance(pipeline_id);
+            // auto pipeline_instance = m_runtime.pipelines_manager().get_instance(pipeline_id);
 
             //     auto search = m_segments.find(address);
             // CHECK(search == m_segments.end());
@@ -220,6 +231,6 @@ void PartitionManager::create_segment(uint64_t pipeline_id, SegmentAddress addre
         .get();
 }
 
-void PartitionManager::erase_segment(SegmentAddress address) {}
+void SegmentsManager::erase_segment(SegmentAddress address) {}
 
 }  // namespace mrc::internal::runtime

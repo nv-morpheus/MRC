@@ -25,6 +25,7 @@
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/system_resources.hpp"
+#include "internal/runtime/segments_manager.hpp"
 
 #include "mrc/pubsub/api.hpp"
 #include "mrc/utils/string_utils.hpp"
@@ -101,9 +102,12 @@ runnable::RunnableResources& PartitionRuntime::runnable()
 
 void PartitionRuntime::do_service_start(std::stop_token stop_token)
 {
-    this->mark_started();
+    m_segments_manager = std::make_unique<SegmentsManager>(*this);
 
-    // Do nothing for now
+    // Start the child service
+    this->child_service_start(*m_segments_manager);
+
+    this->mark_started();
 }
 
 std::shared_ptr<mrc::pubsub::IPublisherService> PartitionRuntime::make_publisher_service(

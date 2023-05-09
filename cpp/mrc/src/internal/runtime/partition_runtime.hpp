@@ -19,6 +19,7 @@
 
 #include "internal/async_service.hpp"
 #include "internal/remote_descriptor/manager.hpp"
+#include "internal/runtime/segments_manager.hpp"
 
 #include "mrc/runtime/api.hpp"
 #include "mrc/utils/macros.hpp"
@@ -91,6 +92,8 @@ class PartitionRuntime final : public mrc::runtime::IPartitionRuntime, public As
 
     resources::PartitionResources& m_resources;
     std::shared_ptr<remote_descriptor::Manager> m_remote_descriptor_manager;
+
+    std::unique_ptr<SegmentsManager> m_segments_manager;
 };
 
 }  // namespace mrc::internal::runtime

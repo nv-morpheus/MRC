@@ -1,4 +1,3 @@
-import {Worker, WorkerStates} from "@mrc/proto/mrc/protos/architect_state";
 import {createSelector, createSlice, PayloadAction} from "@reduxjs/toolkit";
 
 import {createWrappedEntityAdapter} from "../../utils";
@@ -6,8 +5,8 @@ import {createWrappedEntityAdapter} from "../../utils";
 import type {RootState} from "../store";
 import {connectionsRemove} from "./connectionsSlice";
 import {segmentInstancesAdd, segmentInstancesAddMany, segmentInstancesRemove} from "./segmentInstancesSlice";
-
-export type IWorker = Omit<Worker, "$type">;
+import {IWorker} from "@mrc/common/entities";
+import {ResourceStatus} from "@mrc/proto/mrc/protos/architect_state";
 
 const workersAdapter = createWrappedEntityAdapter<IWorker>({
    // sortComparer: (a, b) => b.id.localeCompare(a.date),
@@ -45,16 +44,17 @@ export const workersSlice = createSlice({
 
          workersAdapter.removeOne(state, action.payload.id);
       },
-      activate: (state, action: PayloadAction<IWorker[]>) => {
+      updateResourceState: (state, action: PayloadAction<{resources: IWorker[], status: ResourceStatus}>) => {
          // Check for incorrect IDs
-         action.payload.forEach((w) => {
+         action.payload.resources.forEach((w) => {
             if (!workersAdapter.getOne(state, w.id))
             {
                throw new Error(`Worker with ID: ${w.id} not found`);
             }
          });
 
-         workersAdapter.getMany(state, action.payload.map((w) => w.id)).forEach((w) => w.state = WorkerStates.Activated);
+         workersAdapter.getMany(state, action.payload.resources.map((w) => w.id))
+             .forEach((w) => w.state.status = action.payload.status);
       },
    },
    extraReducers: (builder) => {
@@ -114,7 +114,7 @@ export const {
    add: workersAdd,
    addMany: workersAddMany,
    remove: workersRemove,
-   activate: workersActivate,
+   updateResourceState: workersUpdateResourceState,
 } = workersSlice.actions;
 
 export const {

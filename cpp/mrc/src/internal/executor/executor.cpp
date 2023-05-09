@@ -93,13 +93,6 @@ void Executor::do_service_start()
     m_runtime->service_start();
     m_runtime->service_await_live();
 
-    // auto state_update_subscription = m_runtime->control_plane().state_update_obs().subscribe(
-    //     [this](protos::ControlPlaneState state) {
-    //         LOG(INFO) << "Got state update";
-
-    //         // Lock for updates
-    //     });
-
     // Now move the registered pipelines into the pipelines manager
     m_runtime->pipelines_manager().register_defs(m_registered_pipeline_defs);
 

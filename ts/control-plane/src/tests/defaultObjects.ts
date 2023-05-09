@@ -1,19 +1,19 @@
+import {
+   IConnection,
+   IPipelineConfiguration,
+   IPipelineDefinition,
+   IPipelineInstance,
+   ISegmentDefinition,
+   ISegmentInstance,
+   IWorker,
+} from "@mrc/common/entities";
 import {hashProtoMessage, stringToBytes} from "@mrc/common/utils";
 import {
    PipelineConfiguration,
    PipelineConfiguration_SegmentConfiguration,
+   ResourceStatus,
    SegmentStates,
-   WorkerStates,
 } from "@mrc/proto/mrc/protos/architect_state";
-import {IConnection} from "@mrc/server/store/slices/connectionsSlice";
-import {
-   IPipelineConfiguration,
-   IPipelineDefinition,
-   ISegmentDefinition,
-} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
-import {IPipelineInstance} from "@mrc/server/store/slices/pipelineInstancesSlice";
-import {ISegmentInstance} from "@mrc/server/store/slices/segmentInstancesSlice";
-import {IWorker} from "@mrc/server/store/slices/workersSlice";
 import {generateId} from "@mrc/server/utils";
 
 export const connection: IConnection = {
@@ -27,7 +27,10 @@ export const worker: IWorker = {
    id: generateId(),
    machineId: connection.id,
    workerAddress: stringToBytes("-----"),
-   state: WorkerStates.Registered,
+   state: {
+      status: ResourceStatus.Registered,
+      refCount: 0,
+   },
    assignedSegmentIds: [],
 };
 
@@ -69,6 +72,10 @@ export const pipeline: IPipelineInstance = {
    id: generateId(),
    definitionId: pipeline_def.id,
    machineId: connection.id,
+   state: {
+      status: ResourceStatus.Registered,
+      refCount: 0,
+   },
    segmentIds: [],
 };
 

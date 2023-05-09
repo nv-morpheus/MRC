@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "internal/async_service.hpp"
 #include "internal/control_plane/client.hpp"
 #include "internal/pipeline/pipeline.hpp"
 #include "internal/pipeline/pipeline_instance.hpp"
@@ -37,23 +38,28 @@ namespace mrc::internal::runtime {
  * This class does not own the actual resources, that honor is bestowed on the resources::Manager. This class is
  * constructed and owned by the resources::Manager to ensure validity of the references.
  */
-class PipelinesManager
+class PipelinesManager : public AsyncService, public runnable::RunnableResourcesProvider
 {
   public:
-    PipelinesManager(control_plane::Client& control_plane_client);
-    ~PipelinesManager();
+    PipelinesManager(Runtime& system_runtime);
+    ~PipelinesManager() override;
 
     void register_defs(std::vector<std::shared_ptr<pipeline::Pipeline>> pipeline_defs);
 
-    pipeline::Pipeline& get_def(uint64_t pipeline_id);
+    pipeline::Pipeline& get_definition(uint64_t definition_id);
 
-    std::shared_ptr<pipeline::PipelineInstance> get_instance(uint64_t definition_id);
+    pipeline::PipelineInstance& get_instance(uint64_t instance_id);
 
   private:
-    // resources::PartitionResources& m_resources;
-    control_plane::Client& m_control_plane_client;
+    void do_service_start(std::stop_token stop_token) final;
 
-    std::map<uint64_t, std::shared_ptr<pipeline::Pipeline>> m_pipeline_defs;
+    void process_state_update(control_plane::state::ControlPlaneState& state);
+
+    Runtime& m_system_runtime;
+
+    std::map<uint64_t, std::shared_ptr<pipeline::Pipeline>> m_definitions;
+
+    std::map<uint64_t, std::unique_ptr<pipeline::PipelineInstance>> m_instances;
 };
 
 }  // namespace mrc::internal::runtime

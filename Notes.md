@@ -41,10 +41,10 @@
       1. TBD, lets just use the functionality there now
    4. Initializes the `RuntimeResources`
       1. This builds the host/device/network resources as needed for each partition
-   5. Creates the `PartitionManager` for each partition
-      1. Each `PartitionManager` managest the lifetime of each partition
+   5. Creates the `SegmentsManager` for each partition
+      1. Each `SegmentsManager` managest the lifetime of each partition
       2. Including registering, activating, unregistering each worker
-      3. `PartitionManager` holds onto the data plane pieces
+      3. `SegmentsManager` holds onto the data plane pieces
 
 
 Hierarchy

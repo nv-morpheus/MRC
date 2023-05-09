@@ -21,9 +21,9 @@
 #include "internal/control_plane/client.hpp"
 #include "internal/resources/system_resources.hpp"
 #include "internal/runnable/resources.hpp"
-#include "internal/runtime/partition_manager.hpp"
 #include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/pipelines_manager.hpp"
+#include "internal/runtime/segments_manager.hpp"
 #include "internal/system/partitions.hpp"
 #include "internal/system/system_provider.hpp"
 
@@ -144,17 +144,17 @@ void Runtime::do_service_start(std::stop_token stop_token)
     // m_sys_resources = std::make_unique<resources::SystemResources>(std::move(sys_resources));
     // m_sys_resources->initialize();
 
+    // Before creating the partitions, create the pipelines manager
+    m_pipelines_manager = std::make_unique<PipelinesManager>(*this);
+
+    this->child_service_start(*m_pipelines_manager);
+
     // For each partition, create and start a partition manager
     for (size_t i = 0; i < m_sys_resources->partition_count(); i++)
     {
         auto& part_runtime = m_partitions.emplace_back(std::make_unique<PartitionRuntime>(*this, i));
 
-        // this->child_service_start(*part_runtime);
-
-        auto& part = m_partition_managers.emplace_back(std::make_unique<PartitionManager>(this->partition(i)));
-
-        // Start the child service
-        this->child_service_start(*part);
+        this->child_service_start(*part_runtime);
     }
 
     // // Now ensure they are all alive
@@ -162,9 +162,6 @@ void Runtime::do_service_start(std::stop_token stop_token)
     // {
     //     part_manager->service_await_live();
     // }
-
-    // Finally, create the pipelines manager
-    m_pipelines_manager = std::make_unique<PipelinesManager>(*m_control_plane_client);
 
     // Indicate we have started (forces children to be ready before returning)
     this->mark_started();
@@ -210,7 +207,7 @@ void Runtime::do_service_start(std::stop_token stop_token)
 //     {
 //         m_partitions.emplace_back(std::make_unique<PartitionRuntime>(*this, i));
 
-//         m_partition_managers.emplace_back(std::make_unique<PartitionManager>(this->partition(i)));
+//         m_partition_managers.emplace_back(std::make_unique<SegmentsManager>(this->partition(i)));
 
 //         m_partition_managers.back()->service_start();
 //     }

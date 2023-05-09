@@ -63,6 +63,8 @@ enum EventType
     ClientUnaryLookupWorkerAddresses = 203;
     ClientUnaryDropWorker = 204;
 
+
+
     // SubscriptionService
     ClientUnaryCreateSubscriptionService = 301;
     ClientUnaryRegisterSubscriptionService = 302;
@@ -72,6 +74,9 @@ enum EventType
 
     // Pipeline Management
     ClientUnaryRequestPipelineAssignment = 401;
+
+    // Resource Management
+    ClientUnaryResourceUpdateStatus = 501;
 
     // Server Event issues to Client(s)
     ServerEvent = 1000;
@@ -126,6 +131,18 @@ message RegisterWorkersResponse
 }
 
 // Initialization - Step 2
+
+message ResourceUpdateStatusRequest
+{
+    string resource_type = 1;
+    uint64 resource_id = 2;
+    ResourceStatus status = 3;
+}
+
+message ResourceUpdateStatusResponse
+{
+    bool ok = 1;
+}
 
 // message RegisterPipelineRequest
 // {
