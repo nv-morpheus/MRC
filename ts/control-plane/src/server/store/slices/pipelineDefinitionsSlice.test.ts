@@ -1,5 +1,5 @@
 import {expect} from "@jest/globals";
-import {SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
+import {ResourceStatus, SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
 import {connectionsAdd} from "@mrc/server/store/slices/connectionsSlice";
 import {
    pipelineDefinitionsAdd,
@@ -13,7 +13,7 @@ import {pipelineInstancesAdd, pipelineInstancesRemove} from "@mrc/server/store/s
 import {
    segmentInstancesAddMany,
    segmentInstancesRemove,
-   segmentInstancesUpdateState,
+   segmentInstancesUpdateResourceState,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
 import {workersAdd} from "@mrc/server/store/slices/workersSlice";
 import {
@@ -186,7 +186,7 @@ describe("Single", () => {
          test("Remove Instance", () => {
             segments.forEach((x) => {
                // Need to set the state first
-               store.dispatch(segmentInstancesUpdateState({id: x.id, state: SegmentStates.Completed}));
+               store.dispatch(segmentInstancesUpdateResourceState({resource: x, status: ResourceStatus.Destroyed}));
 
                store.dispatch(segmentInstancesRemove(x));
             });

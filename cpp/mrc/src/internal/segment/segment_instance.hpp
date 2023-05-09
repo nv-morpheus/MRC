@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "internal/async_service.hpp"
+#include "internal/control_plane/state/root_state.hpp"
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/service.hpp"
 
@@ -45,10 +47,12 @@ class Definition;
 class Builder;
 
 // todo(ryan) - inherit from service
-class SegmentInstance final : public Service
+class SegmentInstance final : public AsyncService, public runnable::RunnableResourcesProvider
 {
   public:
-    SegmentInstance(runtime::PartitionRuntime& runtime, std::shared_ptr<const Definition> definition, SegmentRank rank);
+    SegmentInstance(runtime::PartitionRuntime& runtime,
+                    std::shared_ptr<const Definition> definition,
+                    SegmentAddress instance_id);
     ~SegmentInstance() override;
 
     const std::string& name() const;
@@ -63,11 +67,14 @@ class SegmentInstance final : public Service
     const std::string& info() const;
 
   private:
-    void do_service_start() final;
-    void do_service_await_live() final;
-    void do_service_stop() final;
-    void do_service_kill() final;
-    void do_service_await_join() final;
+    void do_service_start(std::stop_token stop_token) final;
+    void process_state_update(control_plane::state::SegmentInstance& instance);
+
+    void service_start_impl();
+    // void do_service_await_live() final;
+    // void do_service_stop() final;
+    // void do_service_kill() final;
+    // void do_service_await_join() final;
 
     void callback_on_state_change(const std::string& name, const mrc::runnable::Runner::State& new_state);
 

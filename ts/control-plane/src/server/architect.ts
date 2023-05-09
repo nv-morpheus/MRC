@@ -2,6 +2,10 @@
 
 import {ServerDuplexStream} from "@grpc/grpc-js";
 import {IConnection, IWorker} from "@mrc/common/entities";
+import {
+   segmentInstancesSelectById,
+   segmentInstancesUpdateResourceState,
+} from "@mrc/server/store/slices/segmentInstancesSlice";
 import {systemStartRequest, systemStopRequest} from "@mrc/server/store/slices/systemSlice";
 import {as, AsyncSink, merge} from "ix/asynciterable";
 import {withAbort} from "ix/asynciterable/operators";
@@ -412,6 +416,15 @@ class Architect implements ArchitectServiceImplementation
                throw new Error("`mapping` cannot be undefined");
             }
 
+            if (payload.mapping.machineId == "0")
+            {
+               payload.mapping.machineId = event.machineId;
+            }
+            else if (payload.mapping.machineId != event.machineId)
+            {
+               throw new Error("Incorrect machineId");
+            }
+
             // Add a pipeline assignment to the machine
             const addedInstances = this._store.dispatch(pipelineInstancesAssign({
                pipeline: payload.pipeline,
@@ -439,6 +452,21 @@ class Architect implements ArchitectServiceImplementation
                }
 
                this._store.dispatch(pipelineInstancesUpdateResourceState({
+                  resource: found,
+                  status: payload.status,
+               }));
+
+               break;
+            }
+            case "SegmentInstances": {
+               const found = segmentInstancesSelectById(this._store.getState(), payload.resourceId);
+
+               if (!found)
+               {
+                  throw new Error(`Could not find SegmentInstance for ID: ${payload.resourceId}`);
+               }
+
+               this._store.dispatch(segmentInstancesUpdateResourceState({
                   resource: found,
                   status: payload.status,
                }));

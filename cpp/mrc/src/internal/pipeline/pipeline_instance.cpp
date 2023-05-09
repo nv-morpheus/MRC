@@ -207,6 +207,15 @@ void PipelineInstance::do_service_start(std::stop_token stop_token)
                 // Handle updates to the worker
                 this->process_state_update(state);
             },
+            [this](std::exception_ptr ex_ptr) {
+                try
+                {
+                    std::rethrow_exception(ex_ptr);
+                } catch (std::exception ex)
+                {
+                    LOG(ERROR) << "Error in " << this->debug_prefix() << ex.what();
+                }
+            },
             [&completed_promise] {
                 completed_promise.set_value();
             });

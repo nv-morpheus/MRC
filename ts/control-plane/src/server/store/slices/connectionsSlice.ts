@@ -1,4 +1,4 @@
-import {Connection, SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
+import {ResourceStatus} from "@mrc/proto/mrc/protos/architect_state";
 import {
    createSlice,
    PayloadAction,
@@ -12,7 +12,7 @@ import {workersAdd, workersAddMany, workersRemove, workersSelectByIds} from "./w
 import {
    segmentInstancesRemove,
    segmentInstancesSelectByIds,
-   segmentInstancesUpdateState,
+   segmentInstancesUpdateResourceState,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
 import {systemStartRequest, systemStopRequest} from "@mrc/server/store/slices/systemSlice";
 import {IConnection, IWorker} from "@mrc/common/entities";
@@ -172,7 +172,7 @@ export function connectionsDropOne(payload: Pick<IConnection, "id">)
 
          segments.forEach((x) => {
             // Need to set the state first
-            dispatch(segmentInstancesUpdateState({id: x.id, state: SegmentStates.Completed}));
+            dispatch(segmentInstancesUpdateResourceState({resource: x, status: ResourceStatus.Destroyed}));
 
             dispatch(segmentInstancesRemove(x));
          });

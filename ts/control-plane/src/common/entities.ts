@@ -61,4 +61,6 @@ export type IPipelineInstance = Omit<PipelineInstance, "$type"|"state">&{
    state: IResourceState,
 };
 
-export type ISegmentInstance = Omit<SegmentInstance, "$type">;
+export type ISegmentInstance = Omit<SegmentInstance, "$type"|"state">&{
+   state: IResourceState,
+};

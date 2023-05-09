@@ -88,6 +88,15 @@ void SegmentsManager::do_service_start(std::stop_token stop_token)
                 // Handle updates to the worker
                 this->process_state_update(worker);
             },
+            [this](std::exception_ptr ex_ptr) {
+                try
+                {
+                    std::rethrow_exception(ex_ptr);
+                } catch (std::exception ex)
+                {
+                    LOG(ERROR) << "Error in " << this->debug_prefix() << ex.what();
+                }
+            },
             [&completed_promise] {
                 completed_promise.set_value();
             });
@@ -134,44 +143,43 @@ void SegmentsManager::process_state_update(mrc::internal::control_plane::state::
     }
     else if (status == control_plane::state::ResourceStatus::Activated)
     {
-        // // Check for assignments
-        // auto cur_segments = extract_keys(m_segments);
-        // auto new_segments = extract_keys(worker.assigned_segments());
+        // Check for assignments
+        auto cur_segments = extract_keys(m_segments);
+        auto new_segments = extract_keys(worker.assigned_segments());
 
-        // // set of segments to remove
-        // std::set<SegmentAddress> create_segments;
-        // std::set_difference(new_segments.begin(),
-        //                     new_segments.end(),
-        //                     cur_segments.begin(),
-        //                     cur_segments.end(),
-        //                     std::inserter(create_segments, create_segments.end()));
-        // DVLOG(10) << create_segments.size() << " segments will be created";
+        // set of segments to remove
+        std::set<SegmentAddress> create_segments;
+        std::set_difference(new_segments.begin(),
+                            new_segments.end(),
+                            cur_segments.begin(),
+                            cur_segments.end(),
+                            std::inserter(create_segments, create_segments.end()));
+        DVLOG(10) << create_segments.size() << " segments will be created";
 
-        // // set of segments to remove
-        // std::set<SegmentAddress> remove_segments;
-        // std::set_difference(cur_segments.begin(),
-        //                     cur_segments.end(),
-        //                     new_segments.begin(),
-        //                     new_segments.end(),
-        //                     std::inserter(remove_segments, remove_segments.end()));
-        // DVLOG(10) << remove_segments.size() << " segments marked for removal";
+        // set of segments to remove
+        std::set<SegmentAddress> remove_segments;
+        std::set_difference(cur_segments.begin(),
+                            cur_segments.end(),
+                            new_segments.begin(),
+                            new_segments.end(),
+                            std::inserter(remove_segments, remove_segments.end()));
+        DVLOG(10) << remove_segments.size() << " segments marked for removal";
 
-        // // construct new segments and attach to manifold
-        // for (const auto& address : create_segments)
-        // {
-        //     // auto partition_id = new_segments_map.at(address);
-        //     // DVLOG(10) << info() << ": create segment for address " << ::mrc::segment::info(address)
-        //     //           << " on resource partition: " << partition_id;
-        //     this->create_segment(worker.assigned_segments().at(address).pipeline_instance().definition().id(),
-        //     address);
-        // }
+        // construct new segments and attach to manifold
+        for (const auto& address : create_segments)
+        {
+            // auto partition_id = new_segments_map.at(address);
+            // DVLOG(10) << info() << ": create segment for address " << ::mrc::segment::info(address)
+            //           << " on resource partition: " << partition_id;
+            this->create_segment(worker.assigned_segments().at(address).pipeline_instance().definition().id(), address);
+        }
 
-        // // detach from manifold or stop old segments
-        // for (const auto& address : remove_segments)
-        // {
-        //     // DVLOG(10) << info() << ": stop segment for address " << ::mrc::segment::info(address);
-        //     this->erase_segment(address);
-        // }
+        // detach from manifold or stop old segments
+        for (const auto& address : remove_segments)
+        {
+            // DVLOG(10) << info() << ": stop segment for address " << ::mrc::segment::info(address);
+            this->erase_segment(address);
+        }
     }
     else if (status == control_plane::state::ResourceStatus::Deactivated)
     {
@@ -184,6 +192,24 @@ void SegmentsManager::process_state_update(mrc::internal::control_plane::state::
 }
 void SegmentsManager::create_segment(uint64_t pipeline_id, SegmentAddress address)
 {
+    // First, double check if this still needs to be created by trying to activate it
+    auto request = protos::ResourceUpdateStatusRequest();
+
+    request.set_resource_type("SegmentInstances");
+    request.set_resource_id(address);
+    request.set_status(protos::ResourceStatus::Activated);
+
+    auto response = m_runtime.control_plane().await_unary<protos::ResourceUpdateStatusResponse>(
+        protos::EventType::ClientUnaryResourceUpdateStatus,
+        request);
+
+    if (!response->ok())
+    {
+        LOG(WARNING) << "Declined to make resource of type: " << request.resource_type() << ", and id: " << address;
+        return;
+    }
+
+    // Create the resource on the correct runnable
     m_runtime.resources()
         .runnable()
         .main()
@@ -191,7 +217,7 @@ void SegmentsManager::create_segment(uint64_t pipeline_id, SegmentAddress addres
             // Get a reference to the pipeline we are creating the segment in
             auto& pipeline_def = m_runtime.pipelines_manager().get_definition(pipeline_id);
 
-            // auto pipeline_instance = m_runtime.pipelines_manager().get_instance(pipeline_id);
+            auto& pipeline_instance = m_runtime.pipelines_manager().get_instance(pipeline_id);
 
             //     auto search = m_segments.find(address);
             // CHECK(search == m_segments.end());

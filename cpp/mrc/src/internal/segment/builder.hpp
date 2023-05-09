@@ -53,7 +53,7 @@ class IBuilder;
 class Builder final
 {
   public:
-    Builder(runtime::PartitionRuntime& runtime, std::shared_ptr<const Definition> segdef, SegmentRank rank);
+    Builder(runtime::PartitionRuntime& runtime, std::shared_ptr<const Definition> segdef, SegmentAddress address);
 
     const Definition& definition() const;
 

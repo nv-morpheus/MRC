@@ -39,11 +39,11 @@
 
 namespace mrc::internal::segment {
 
-Builder::Builder(runtime::PartitionRuntime& runtime, std::shared_ptr<const Definition> segdef, SegmentRank rank) :
+Builder::Builder(runtime::PartitionRuntime& runtime, std::shared_ptr<const Definition> segdef, SegmentAddress address) :
   m_runtime(runtime),
   m_definition(std::move(segdef))
 {
-    auto address = segment_address_encode(definition().id(), rank);
+    auto rank = std::get<1>(segment_address_decode(address));
 
     // construct ingress ports
     for (const auto& [name, initializer] : definition().ingress_initializers())

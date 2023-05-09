@@ -1,5 +1,5 @@
 import {expect} from "@jest/globals";
-import {SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
+import {ResourceStatus, resourceStatusFromJSON, SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
 import {pipelineDefinitionsAdd} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 import {
    pipelineInstancesAdd,
@@ -11,7 +11,7 @@ import {
    segmentInstancesSelectAll,
    segmentInstancesSelectById,
    segmentInstancesSelectTotal,
-   segmentInstancesUpdateState,
+   segmentInstancesUpdateResourceState,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
 import {workersAdd} from "@mrc/server/store/slices/workersSlice";
 import {connection, pipeline, pipeline_def, segments, segments_map, worker} from "@mrc/tests/defaultObjects";
@@ -93,7 +93,7 @@ describe("Single", () => {
          expect(s.name).toEqual(segments_map[s.name].name);
          expect(s.pipelineDefinitionId).toEqual(pipeline_def.id);
          expect(s.pipelineInstanceId).toEqual(pipeline.id);
-         expect(s.state).toEqual(SegmentStates.Initialized);
+         expect(s.state.status).toEqual(ResourceStatus.Registered);
          expect(s.workerId).toEqual(worker.id);
       });
    });
@@ -107,26 +107,28 @@ describe("Single", () => {
    });
 
    test("Update State", () => {
-      for (const s of [SegmentStates.Running, SegmentStates.Stopped, SegmentStates.Completed])
+      for (const s of [1, 2, 3, 4, 5, 6])
       {
-         store.dispatch(segmentInstancesUpdateState({id: segments[0].id, state: s}));
+         const status = resourceStatusFromJSON(s);
 
-         expect(segmentInstancesSelectById(store.getState(), segments[0].id)).toHaveProperty("state", s);
+         store.dispatch(segmentInstancesUpdateResourceState({resource: segments[0], status: status}));
+
+         expect(segmentInstancesSelectById(store.getState(), segments[0].id)?.state.status).toBe(status);
       }
    });
 
    test("Update State Backwards", () => {
       // Set the state running first
-      store.dispatch(segmentInstancesUpdateState({id: segments[0].id, state: SegmentStates.Running}));
+      store.dispatch(segmentInstancesUpdateResourceState({resource: segments[0], status: ResourceStatus.Ready}));
 
       // Try to set it back to initialized
-      assert.throws(
-          () => store.dispatch(segmentInstancesUpdateState({id: segments[0].id, state: SegmentStates.Initialized})));
+      assert.throws(() => store.dispatch(segmentInstancesUpdateResourceState(
+                        {resource: segments[0], status: ResourceStatus.Registered})));
    });
 
    it("Remove Valid ID", () => {
       // Set the instance to completed first
-      store.dispatch(segmentInstancesUpdateState({id: segments[0].id, state: SegmentStates.Completed}));
+      store.dispatch(segmentInstancesUpdateResourceState({resource: segments[0], status: ResourceStatus.Destroyed}));
 
       store.dispatch(segmentInstancesRemove(segments[0]));
 
@@ -135,7 +137,7 @@ describe("Single", () => {
 
    test("Remove Unknown ID", () => {
       // Set the instance to completed first
-      store.dispatch(segmentInstancesUpdateState({id: segments[0].id, state: SegmentStates.Completed}));
+      store.dispatch(segmentInstancesUpdateResourceState({resource: segments[0], status: ResourceStatus.Destroyed}));
 
       assert.throws(() => store.dispatch(segmentInstancesRemove({
          ...segments[0],

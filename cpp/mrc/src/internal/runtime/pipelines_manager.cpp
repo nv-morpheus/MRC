@@ -49,30 +49,37 @@ void PipelinesManager::register_defs(std::vector<std::shared_ptr<pipeline::Pipel
     {
         auto request = protos::PipelineRequestAssignmentRequest();
 
-        auto* config = request.mutable_pipeline();
+        auto* config  = request.mutable_pipeline();
+        auto* mapping = request.mutable_mapping();
 
         for (const auto& [segment_id, segment] : pipeline->segments())
         {
-            protos::PipelineConfiguration_SegmentConfiguration next_seg;
+            protos::PipelineConfiguration_SegmentConfiguration seg_config;
 
-            next_seg.set_name(segment->name());
+            seg_config.set_name(segment->name());
 
             for (const auto& egress_port_name : segment->egress_port_names())
             {
-                auto* egress = next_seg.mutable_egress_ports()->Add();
+                auto* egress = seg_config.mutable_egress_ports()->Add();
                 egress->set_name(egress_port_name);
             }
 
             for (const auto& ingress_port_name : segment->ingress_port_names())
             {
-                auto* ingress = next_seg.mutable_ingress_ports()->Add();
+                auto* ingress = seg_config.mutable_ingress_ports()->Add();
                 ingress->set_name(ingress_port_name);
             }
 
-            config->mutable_segments()->emplace(segment->name(), std::move(next_seg));
-        }
+            config->mutable_segments()->emplace(segment->name(), std::move(seg_config));
 
-        // Leave assignments blank for now to allow auto assignment
+            protos::PipelineMapping_SegmentMapping seg_mapping;
+
+            seg_mapping.set_segment_name(segment->name());
+
+            seg_mapping.mutable_by_policy()->set_value(::mrc::protos::SegmentMappingPolicies::OnePerWorker);
+
+            mapping->mutable_segments()->emplace(segment->name(), std::move(seg_mapping));
+        }
 
         auto response = m_system_runtime.control_plane().await_unary<protos::PipelineRequestAssignmentResponse>(
             protos::EventType::ClientUnaryRequestPipelineAssignment,
@@ -92,9 +99,10 @@ pipeline::Pipeline& PipelinesManager::get_definition(uint64_t definition_id)
 
 pipeline::PipelineInstance& PipelinesManager::get_instance(uint64_t instance_id)
 {
-    // TODO(MDD): Get or create a pipeline instance on demand
+    CHECK(m_definitions.contains(instance_id))
+        << "Pipeline with ID: " << instance_id << " not found in pipeline instances";
 
-    throw std::runtime_error("not implemented");
+    return *m_instances[instance_id];
 }
 
 void PipelinesManager::do_service_start(std::stop_token stop_token)
@@ -111,6 +119,15 @@ void PipelinesManager::do_service_start(std::stop_token stop_token)
             [this](control_plane::state::ControlPlaneState state) {
                 // Handle updates to the worker
                 this->process_state_update(state);
+            },
+            [this](std::exception_ptr ex_ptr) {
+                try
+                {
+                    std::rethrow_exception(ex_ptr);
+                } catch (std::exception ex)
+                {
+                    LOG(ERROR) << "Error in " << this->debug_prefix() << ex.what();
+                }
             },
             [&completed_promise] {
                 completed_promise.set_value();

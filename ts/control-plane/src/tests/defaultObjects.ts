@@ -109,7 +109,10 @@ export const segments: ISegmentInstance[] = Object.entries(pipeline_def.segments
       address: address,
       workerId: worker.id,
       pipelineId: pipeline.id,
-      state: SegmentStates.Initialized,
+      state: {
+         refCount: 0,
+         status: ResourceStatus.Registered,
+      },
    } as ISegmentInstance;
 });
 

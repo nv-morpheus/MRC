@@ -5,7 +5,7 @@ import {pipelineInstancesAdd} from "@mrc/server/store/slices/pipelineInstancesSl
 import {
    segmentInstancesAddMany,
    segmentInstancesRemove,
-   segmentInstancesUpdateState,
+   segmentInstancesUpdateResourceState,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
 import {connection, pipeline, pipeline_def, segments, worker} from "@mrc/tests/defaultObjects";
 import assert from "assert";
@@ -136,8 +136,8 @@ describe("Single", () => {
       });
 
       test("Remove Segment", () => {
-         segments.forEach(
-             (s) => store.dispatch(segmentInstancesUpdateState({id: s.id, state: SegmentStates.Completed})));
+         segments.forEach((s) => store.dispatch(
+                              segmentInstancesUpdateResourceState({resource: s, status: ResourceStatus.Destroyed})));
          segments.forEach((s) => store.dispatch(segmentInstancesRemove(s)));
 
          const found = workersSelectById(store.getState(), worker.id);

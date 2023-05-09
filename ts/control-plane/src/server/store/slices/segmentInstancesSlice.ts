@@ -13,7 +13,7 @@ import {ISegmentInstance} from "@mrc/common/entities";
 import {ResourceStatus, SegmentMappingPolicies, SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
 import {pipelineDefinitionsSelectById} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 import {startAppListening} from "@mrc/server/store/listener_middleware";
-import {generateSegmentHash, hashName16} from "@mrc/common/utils";
+import {generateSegmentHash} from "@mrc/common/utils";
 
 const segmentInstancesAdapter = createWrappedEntityAdapter<ISegmentInstance>({
    selectId: (w) => w.id,
@@ -41,7 +41,7 @@ export const segmentInstancesSlice = createSlice({
             throw new Error(`Segment Instance with ID: ${action.payload.id} not found`);
          }
 
-         if (found.state != SegmentStates.Completed)
+         if (found.state?.status != ResourceStatus.Destroyed)
          {
             throw new Error(`Attempting to delete Segment Instance with ID: ${
                 action.payload.id} while it has not finished. Stop SegmentInstance first!`)
@@ -49,21 +49,21 @@ export const segmentInstancesSlice = createSlice({
 
          segmentInstancesAdapter.removeOne(state, action.payload.id);
       },
-      updateState: (state, action: PayloadAction<Pick<ISegmentInstance, "id"|"state">>) => {
-         const found = segmentInstancesAdapter.getOne(state, action.payload.id);
+      updateResourceState: (state, action: PayloadAction<{resource: ISegmentInstance, status: ResourceStatus}>) => {
+         const found = segmentInstancesAdapter.getOne(state, action.payload.resource.id);
 
          if (!found)
          {
-            throw new Error(`Segment Instance with ID: ${action.payload.id} not found`);
+            throw new Error(`Segment Instance with ID: ${action.payload.resource.id} not found`);
          }
 
-         if (found.state > action.payload.state)
+         if (found.state?.status! > action.payload.status)
          {
-            throw new Error(`Cannot update state of Instance with ID: ${action.payload.id}. Current state ${
-                found.state} is greater than requested state ${action.payload.state}`);
+            throw new Error(`Cannot update state of Instance with ID: ${action.payload.resource.id}. Current state ${
+                found.state} is greater than requested state ${action.payload.status}`);
          }
 
-         found.state = action.payload.state;
+         found.state.status = action.payload.status;
       },
    },
    extraReducers: (builder) => {
@@ -95,7 +95,7 @@ export const {
    add: segmentInstancesAdd,
    addMany: segmentInstancesAddMany,
    remove: segmentInstancesRemove,
-   updateState: segmentInstancesUpdateState,
+   updateResourceState: segmentInstancesUpdateResourceState,
 } = segmentInstancesSlice.actions;
 
 export const {
@@ -193,7 +193,10 @@ export function segmentInstancesConfigureListeners()
                      name: seg_name,
                      address: address,
                      workerId: wid,
-                     state: SegmentStates.Initialized,
+                     state: {
+                        refCount: 0,
+                        status: ResourceStatus.Registered,
+                     },
                   } as ISegmentInstance;
                });
             });

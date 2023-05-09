@@ -233,8 +233,8 @@ message SegmentInstance {
    // The running pipeline instance id
    uint64 pipeline_instance_id = 6;
 
-   // The state of the segment
-   SegmentStates state = 7;
+   // The current state of this resource
+   ResourceState state = 7;
 }
 
 message ControlPlaneState {

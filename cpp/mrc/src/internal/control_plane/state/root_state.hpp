@@ -271,11 +271,13 @@ struct SegmentInstance : public ControlPlaneStateBase
 
     const PipelineInstance& pipeline_instance() const;
 
-    SegmentStates state() const;
+    const ResourceState& state() const;
 
   private:
     std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
     const protos::SegmentInstance& m_message;
+
+    ResourceState m_state;
 };
 
 }  // namespace mrc::internal::control_plane::state

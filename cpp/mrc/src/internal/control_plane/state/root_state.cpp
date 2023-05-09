@@ -372,7 +372,8 @@ SegmentInstance::SegmentInstance(std::shared_ptr<ControlPlaneNormalizedState> st
                                  const protos::SegmentInstance& message) :
   ControlPlaneStateBase(message),
   m_root_state(std::move(state)),
-  m_message(message)
+  m_message(message),
+  m_state(message.state())
 {}
 
 uint64_t SegmentInstance::id() const
@@ -405,9 +406,9 @@ const PipelineInstance& SegmentInstance::pipeline_instance() const
     return m_root_state->pipeline_instances.at(m_message.pipeline_instance_id());
 }
 
-SegmentStates SegmentInstance::state() const
+const ResourceState& SegmentInstance::state() const
 {
-    return static_cast<SegmentStates>(m_message.state());
+    return m_state;
 }
 
 }  // namespace mrc::internal::control_plane::state
