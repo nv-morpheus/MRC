@@ -3,7 +3,7 @@ import {SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
 import {connectionsAdd} from "@mrc/server/store/slices/connectionsSlice";
 import {
    pipelineDefinitionsAdd,
-   pipelineDefinitionsCreate,
+   pipelineDefinitionsCreateOrUpdate,
    pipelineDefinitionsRemove,
    pipelineDefinitionsSelectAll,
    pipelineDefinitionsSelectById,
@@ -16,7 +16,15 @@ import {
    segmentInstancesUpdateState,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
 import {workersAdd} from "@mrc/server/store/slices/workersSlice";
-import {connection, pipeline, pipeline_config, pipeline_def, segments, worker} from "@mrc/tests/defaultObjects";
+import {
+   connection,
+   pipeline,
+   pipeline_config,
+   pipeline_def,
+   pipeline_mappings,
+   segments,
+   worker,
+} from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
 import {RootStore, setupStore} from "../store";
@@ -46,7 +54,8 @@ describe("From Config", () => {
    let created_def_id: string;
 
    beforeEach(() => {
-      created_def_id = store.dispatch(pipelineDefinitionsCreate(pipeline_config)).pipeline;
+      created_def_id =
+          store.dispatch(pipelineDefinitionsCreateOrUpdate(pipeline_config, pipeline_mappings[connection.id])).pipeline;
    });
 
    test("Select One", () => {

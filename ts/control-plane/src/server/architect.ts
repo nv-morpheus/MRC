@@ -407,11 +407,15 @@ class Architect implements ArchitectServiceImplementation
                // });
             }
 
+            if (!payload.mapping)
+            {
+               throw new Error("`mapping` cannot be undefined");
+            }
+
             // Add a pipeline assignment to the machine
             const addedInstances = this._store.dispatch(pipelineInstancesAssign({
-               ...payload,
                pipeline: payload.pipeline,
-               machineId: event.machineId,
+               mapping: payload.mapping,
             }));
 
             yield unaryResponse(event,

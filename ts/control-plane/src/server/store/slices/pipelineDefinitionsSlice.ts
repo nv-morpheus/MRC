@@ -20,6 +20,7 @@ import {
    IPipelineConfiguration,
    IPipelineDefinition,
    IPipelineInstance,
+   IPipelineMapping,
    ISegmentDefinition,
    ISegmentInstance,
 } from "@mrc/common/entities";
@@ -100,6 +101,16 @@ export const pipelineDefinitionsSlice = createSlice({
 
          pipelineDefinitionsAdapter.removeOne(state, action.payload.id);
       },
+      setMapping: (state, action: PayloadAction<{definition_id: string, mapping: IPipelineMapping}>) => {
+         const found = pipelineDefinitionsAdapter.getOne(state, action.payload.definition_id);
+
+         if (!found)
+         {
+            throw new Error(`Pipeline Definition with ID: ${action.payload.definition_id} not found`);
+         }
+
+         found.mappings[action.payload.mapping.machineId] = action.payload.mapping;
+      },
    },
    extraReducers: (builder) => {
       builder.addCase(pipelineInstancesAdd, (state, action) => {
@@ -162,36 +173,58 @@ export const pipelineDefinitionsSlice = createSlice({
    },
 });
 
-export function pipelineDefinitionsCreate(payload: IPipelineConfiguration)
+export function pipelineDefinitionsCreateOrUpdate(pipeline_config: IPipelineConfiguration,
+                                                  pipeline_mapping: IPipelineMapping)
 {
    return (dispatch: AppDispatch, getState: AppGetState) => {
       // Compute the hash of the pipeline
-      const pipeline_hash = hashProtoMessage(PipelineConfiguration.create(payload));
+      const pipeline_hash = hashProtoMessage(PipelineConfiguration.create(pipeline_config));
 
-      // Generate a full pipeline definition with the ID as the hash
-      const pipeline: IPipelineDefinition = {id: pipeline_hash, config: payload, instanceIds: [], segments: {}};
+      // Check if this already exists
+      let pipeline_def = pipelineDefinitionsSelectById(getState(), pipeline_hash);
 
-      const segs = Object.fromEntries(Object.entries(payload.segments).map(([seg_name, seg_config]) => {
-         // Compute the hash of the segment
-         const segment_hash = hashProtoMessage(PipelineConfiguration_SegmentConfiguration.create(seg_config));
+      if (!pipeline_def)
+      {
+         // Generate a full pipeline definition with the ID as the hash
+         pipeline_def = {id: pipeline_hash, config: pipeline_config, instanceIds: [], segments: {}, mappings: {}};
 
-         return [
-            seg_name,
-            {
-               id: segment_hash,
-               parentId: pipeline.id,
-               name: seg_name,
-               instanceIds: [],
-            } as ISegmentDefinition,
-         ]
+         const segs = Object.fromEntries(Object.entries(pipeline_config.segments).map(([seg_name, seg_config]) => {
+            // Compute the hash of the segment
+            const segment_hash = hashProtoMessage(PipelineConfiguration_SegmentConfiguration.create(seg_config));
+
+            return [
+               seg_name,
+               {
+                  id: segment_hash,
+                  parentId: pipeline_def?.id,
+                  name: seg_name,
+                  instanceIds: [],
+               } as ISegmentDefinition,
+            ]
+         }));
+
+         pipeline_def.segments = segs;
+
+         dispatch(pipelineDefinitionsAdd(pipeline_def));
+      }
+      else
+      {
+         // Check to make sure we dont already have a matching mapping
+         if (pipeline_mapping.machineId in pipeline_def.mappings)
+         {
+            throw new Error(`PipelineDefinition with ID: ${pipeline_hash}, already contains a mapping for machine ID: ${
+                pipeline_mapping.machineId}`);
+         }
+      }
+
+      // Add the mapping to the pipeline config
+      dispatch(pipelineDefinitionsSlice.actions.setMapping({
+         definition_id: pipeline_hash,
+         mapping: pipeline_mapping,
       }));
 
-      pipeline.segments = segs;
-
-      dispatch(pipelineDefinitionsAdd(pipeline));
-
       return {
-         pipeline: pipeline.id,
+         pipeline: pipeline_def.id,
       };
    };
 }

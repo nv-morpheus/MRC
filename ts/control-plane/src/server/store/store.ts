@@ -1,12 +1,10 @@
+import {listenerMiddleware} from "@mrc/server/store/listener_middleware";
 import {devToolsEnhancer} from "@redux-devtools/remote";
 import {
-   Action,
-   autoBatchEnhancer,
    combineReducers,
    configureStore,
    createAction,
    createReducer,
-   Dispatch,
    isPlain,
    PreloadedState,
    StoreEnhancer,
@@ -17,7 +15,7 @@ import pipelineDefinitionsReducer from "./slices/pipelineDefinitionsSlice";
 // import devToolsReducer from "./slices/devToolsSlice";
 import pipelineInstancesReducer from "./slices/pipelineInstancesSlice";
 // import segmentDefinitionsReducer from "./slices/segmentDefinitionsSlice";
-import segmentInstancesReducer from "./slices/segmentInstancesSlice";
+import segmentInstancesReducer, {segmentInstancesConfigureListeners} from "./slices/segmentInstancesSlice";
 import systemReducer, {systemStartRequest, systemStopRequest} from "./slices/systemSlice";
 import workersReducer from "./slices/workersSlice";
 
@@ -31,6 +29,9 @@ const slicesReducer = combineReducers({
    // segmentDefinitions: segmentDefinitionsReducer,
    segmentInstances: segmentInstancesReducer,
 });
+
+// Configure all of the listeners
+segmentInstancesConfigureListeners();
 
 export const startAction = createAction("start");
 export const stopAction  = createAction("stop");
@@ -181,12 +182,12 @@ export const setupStore = (preloadedState?: PreloadedState<RootState>, addDevToo
       reducer: rootReducer,
       preloadedState,
       middleware: (getDefaultMiddleware) => getDefaultMiddleware({
-         serializableCheck: {
-            isSerializable: (value: unknown) => {
-               return isPlain(value) || (value instanceof Uint8Array);
-            },
-         },
-      }),
+                                               serializableCheck: {
+                                                  isSerializable: (value: unknown) => {
+                                                     return isPlain(value) || (value instanceof Uint8Array);
+                                                  },
+                                               },
+                                            }).prepend(listenerMiddleware.middleware),
       // Disable devtools and add it in manually
       devTools: false,
       enhancers,

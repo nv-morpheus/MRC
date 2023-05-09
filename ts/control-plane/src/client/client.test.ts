@@ -3,11 +3,12 @@ import "ix/add/asynciterable-operators/finalize";
 
 import {Channel, credentials} from "@grpc/grpc-js";
 import {ConnectivityState} from "@grpc/grpc-js/build/src/connectivity-state";
-import {IConnection, IPipelineConfiguration, ISegmentMapping} from "@mrc/common/entities";
+import {IConnection, IPipelineConfiguration, IPipelineMapping, ISegmentMapping} from "@mrc/common/entities";
 import {ResourceStatus} from "@mrc/proto/mrc/protos/architect_state";
 import {
    pipelineDefinitionsSelectById,
 } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
+import {pipeline_mappings} from "@mrc/tests/defaultObjects";
 import {as, AsyncIterableX, AsyncSink} from "ix/asynciterable";
 import {share} from "ix/asynciterable/operators";
 import {createChannel, createClient, waitForChannelReady} from "nice-grpc";
@@ -25,11 +26,17 @@ import {
    PipelineRequestAssignmentResponse,
    RegisterWorkersRequest,
    RegisterWorkersResponse,
+   ResourceUpdateStatusRequest,
+   ResourceUpdateStatusResponse,
 } from "../proto/mrc/protos/architect";
 import {ArchitectServer} from "../server/server";
 import {connectionsSelectAll, connectionsSelectById} from "../server/store/slices/connectionsSlice";
 import {pipelineInstancesSelectById} from "../server/store/slices/pipelineInstancesSlice";
-import {segmentInstancesSelectByIds} from "../server/store/slices/segmentInstancesSlice";
+import {
+   segmentInstancesSelectByIds,
+   segmentInstancesSelectByPipelineId,
+   segmentInstancesSelectByWorkerId,
+} from "../server/store/slices/segmentInstancesSlice";
 import {workersSelectById} from "../server/store/slices/workersSlice";
 import {RootStore, setupStore} from "../server/store/store";
 
@@ -210,12 +217,17 @@ describe("Client", () => {
                   },
                };
 
-               const segment_assignments: ISegmentMapping[] = Object.keys(pipeline_config.segments).map((s) => {
-                  return {
-                     segmentName: s,
-                     workerIds: registered_response.instanceIds,
-                  } as ISegmentMapping;
-               });
+               const pipeline_mapping: IPipelineMapping = {
+                  machineId: connected_response.machineId,
+                  segments:
+                      Object.fromEntries(Object.entries(pipeline_config.segments).map(([seg_name, seg_config]) => {
+                         return [
+                            seg_name,
+                            {segmentName: seg_name, byWorker: {workerIds: registered_response.instanceIds}} as
+                                ISegmentMapping,
+                         ];
+                      })),
+               };
 
                // Now request to run a pipeline
                const request_pipeline_response = await unpack_unary_event<PipelineRequestAssignmentResponse>(
@@ -225,7 +237,7 @@ describe("Client", () => {
                              "12345",
                              PipelineRequestAssignmentRequest.create({
                                 pipeline: pipeline_config,
-                                assignments: segment_assignments,
+                                mapping: pipeline_mapping,
                              })));
 
                // Check the pipeline definition
@@ -243,11 +255,28 @@ describe("Client", () => {
                expect(foundPipelineInstance?.segmentIds).toEqual(request_pipeline_response.segmentInstanceIds);
 
                // Check segments exist in state
-               const foundSegmentInstances = segmentInstancesSelectByIds(store.getState(),
-                                                                         request_pipeline_response.segmentInstanceIds);
+               let foundSegmentInstances = segmentInstancesSelectByIds(store.getState(),
+                                                                       request_pipeline_response.segmentInstanceIds);
+
+               expect(foundSegmentInstances).toHaveLength(0);
+
+               //  Update the PipelineInstance state to assign segment instances
+               const update_pipeline_status_response = await unpack_unary_event<ResourceUpdateStatusResponse>(
+                   recieve_events,
+                   send_events,
+                   packEvent(EventType.ClientUnaryResourceUpdateStatus, "12345", ResourceUpdateStatusRequest.create({
+                      resourceId: foundPipelineInstance?.id,
+                      resourceType: "PipelineInstances",
+                      status: ResourceStatus.Ready,
+                   })));
+
+               expect(update_pipeline_status_response.ok).toBeTruthy();
+
+               foundSegmentInstances = segmentInstancesSelectByPipelineId(store.getState(), foundPipelineInstance?.id!);
 
                expect(foundSegmentInstances)
-                   .toHaveLength(segment_assignments.length * registered_response.instanceIds.length);
+                   .toHaveLength(Object.keys(pipeline_mapping.segments).length *
+                                 registered_response.instanceIds.length);
             });
          });
       });

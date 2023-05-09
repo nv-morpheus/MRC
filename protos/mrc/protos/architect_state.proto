@@ -102,6 +102,42 @@ message PipelineConfiguration{
    map<string, SegmentConfiguration> segments = 1;
 }
 
+enum SegmentMappingPolicies
+{
+   OnePerWorker = 0;
+}
+
+message PipelineMapping {
+
+   message SegmentMapping {
+
+      message ByPolicy {
+         // Specify a general policy
+         SegmentMappingPolicies value = 1;
+      }
+
+      message ByWorker {
+         // The workers to assign this segment to
+         repeated uint64 worker_ids = 1;
+      }
+
+      // The segment definition ID
+      string segment_name = 1;
+
+      oneof mapping_type {
+         // General policy
+         ByPolicy by_policy = 2;
+
+         // Manually specified
+         ByWorker by_worker = 3;
+      }
+  }
+
+   uint64 machine_id = 1;
+
+   map<string, SegmentMapping> segments = 2;
+}
+
 message PipelineDefinition {
 
    message SegmentDefinition{
@@ -125,11 +161,14 @@ message PipelineDefinition {
    // Object that holds all of the configurable properties
    PipelineConfiguration config = 2;
 
+   // Machine IDs to mappings for all connections
+   map<uint64, PipelineMapping> mappings = 3;
+
    // Running Pipeline Instance IDs
-   repeated uint64 instance_ids = 3;
+   repeated uint64 instance_ids = 4;
 
    // Running Segment Info
-   map<string, SegmentDefinition> segments = 4;
+   map<string, SegmentDefinition> segments = 5;
 }
 
 message PipelineInstance {

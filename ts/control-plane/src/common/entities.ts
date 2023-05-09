@@ -1,4 +1,3 @@
-import {PipelineRequestAssignmentRequest_SegmentMapping} from "@mrc/proto/mrc/protos/architect";
 import {
    Connection,
    EgressPort,
@@ -8,6 +7,8 @@ import {
    PipelineDefinition,
    PipelineDefinition_SegmentDefinition,
    PipelineInstance,
+   PipelineMapping,
+   PipelineMapping_SegmentMapping,
    ResourceState,
    ScalingOptions,
    SegmentInstance,
@@ -37,18 +38,24 @@ export type ISegmentConfiguration =
        options?: ISegmentOptions,
     };
 
+export type ISegmentMapping = Omit<PipelineMapping_SegmentMapping, "$type">;
+
+export type IPipelineMapping = Omit<PipelineMapping, "$type"|"segments">&
+{
+   segments: {[key: string]: ISegmentMapping},
+}
+
 export type IPipelineConfiguration = Omit<PipelineConfiguration, "$type"|"segments">&{
    segments: {[key: string]: ISegmentConfiguration},
 };
 
 export type ISegmentDefinition = Omit<PipelineDefinition_SegmentDefinition, "$type">;
 
-export type IPipelineDefinition = Omit<PipelineDefinition, "$type"|"config"|"segments">&{
+export type IPipelineDefinition = Omit<PipelineDefinition, "$type"|"config"|"mappings"|"segments">&{
    config: IPipelineConfiguration,
+   mappings: {[key: string]: IPipelineMapping},
    segments: {[key: string]: ISegmentDefinition},
 };
-
-export type ISegmentMapping = Omit<PipelineRequestAssignmentRequest_SegmentMapping, "$type">;
 
 export type IPipelineInstance = Omit<PipelineInstance, "$type"|"state">&{
    state: IResourceState,

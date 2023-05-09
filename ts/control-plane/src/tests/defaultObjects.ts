@@ -3,11 +3,13 @@ import {
    IPipelineConfiguration,
    IPipelineDefinition,
    IPipelineInstance,
+   IPipelineMapping,
    ISegmentDefinition,
    ISegmentInstance,
+   ISegmentMapping,
    IWorker,
 } from "@mrc/common/entities";
-import {hashProtoMessage, stringToBytes} from "@mrc/common/utils";
+import {generateSegmentHash, hashProtoMessage, stringToBytes} from "@mrc/common/utils";
 import {
    PipelineConfiguration,
    PipelineConfiguration_SegmentConfiguration,
@@ -34,6 +36,8 @@ export const worker: IWorker = {
    assignedSegmentIds: [],
 };
 
+export const workers: IWorker[] = [worker];
+
 export const pipeline_config: IPipelineConfiguration = {
    segments: {
       seg1: {
@@ -51,10 +55,25 @@ export const pipeline_config: IPipelineConfiguration = {
 
 const pipeline_config_hash = hashProtoMessage(PipelineConfiguration.create(pipeline_config));
 
+export const pipeline_mappings = Object.fromEntries(workers.map(
+    (w) => {return [
+       w.machineId,
+       {
+          machineId: w.machineId,
+          segments: Object.fromEntries(Object.entries(pipeline_config.segments).map(([seg_name, seg_config]) => {
+             return [
+                seg_name,
+                {segmentName: seg_name, byWorker: {workerIds: [worker.id]}} as ISegmentMapping,
+             ];
+          })),
+       } as IPipelineMapping,
+    ]}));
+
 export const pipeline_def: IPipelineDefinition = {
    id: pipeline_config_hash,
-   instanceIds: [],
    config: pipeline_config,
+   mappings: pipeline_mappings,
+   instanceIds: [],
    segments: Object.fromEntries(Object.entries(pipeline_config.segments).map(([seg_name, seg_config]) => {
       return [
          seg_name,
@@ -80,12 +99,14 @@ export const pipeline: IPipelineInstance = {
 };
 
 export const segments: ISegmentInstance[] = Object.entries(pipeline_def.segments).map(([seg_name, seg_def]) => {
+   const address = generateSegmentHash(seg_name, worker.id);
+
    return {
-      id: generateId(),
+      id: address.toString(),
       pipelineDefinitionId: seg_def.parentId,
       pipelineInstanceId: pipeline.id,
       name: seg_name,
-      address: 2222,
+      address: address,
       workerId: worker.id,
       pipelineId: pipeline.id,
       state: SegmentStates.Initialized,

@@ -1,5 +1,5 @@
 import {expect} from "@jest/globals";
-import {SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
+import {ResourceStatus, SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
 import {pipelineDefinitionsAdd} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 import {
    pipelineInstancesAdd,
@@ -7,6 +7,7 @@ import {
    pipelineInstancesSelectAll,
    pipelineInstancesSelectById,
    pipelineInstancesSelectTotal,
+   pipelineInstancesUpdateResourceState,
 } from "@mrc/server/store/slices/pipelineInstancesSlice";
 import {
    segmentInstancesAdd,
@@ -130,8 +131,8 @@ describe("Single", () => {
          // Add a worker first, then a segment
          store.dispatch(workersAdd(worker));
 
-         // Now add a segment
-         store.dispatch(segmentInstancesAddMany(segments));
+         // Update the instance state to ready and the instances should auto assign
+         store.dispatch(pipelineInstancesUpdateResourceState({resource: pipeline, status: ResourceStatus.Ready}));
       });
 
       test("Contains Instance", () => {

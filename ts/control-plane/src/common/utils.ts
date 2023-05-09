@@ -1,5 +1,4 @@
 import {BinaryLike, createHash} from "node:crypto";
-import {isBigUint64Array} from "node:util/types";
 import {BufferWriter} from "protobufjs";
 
 import {Any} from "../proto/google/protobuf/any";
@@ -97,6 +96,35 @@ export function packEventResponse<MessageDataT extends UnknownMessage>(incoming_
       tag: incoming_event.tag,
       message: any_msg,
    });
+}
+
+function hashName16(name: string): bigint
+{
+   // Implement the fnvla algorighm: https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
+   const hash_32_offset = 2_166_136_261n;  // 0x811C9DC5
+   const hash_32_prime  = 16_777_619n;     // 0x01000193
+
+   let hash_u32 = hash_32_offset;
+
+   for (let index = 0; index < name.length; index++)
+   {
+      const element = name.charCodeAt(index);
+
+      hash_u32 ^= BigInt(element);
+      hash_u32 = BigInt.asUintN(32, hash_u32 * hash_32_prime);
+   }
+
+   // Only take the last 16 bits
+   return BigInt.asUintN(16, hash_u32);
+}
+
+export function generateSegmentHash(seg_name: string, worker_id: string): number
+{
+   const name_hash   = hashName16(seg_name);
+   const worker_hash = hashName16(worker_id);
+
+   // Shift the name over 16
+   return Number((name_hash << 16n) | worker_hash);
 }
 
 // Generats a hash for a serialized object in string or buffer form

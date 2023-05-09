@@ -7,6 +7,7 @@ import { messageTypeRegistry } from "../../typeRegistry";
 import {
   EgressPolicy,
   PipelineConfiguration,
+  PipelineMapping,
   ResourceStatus,
   resourceStatusFromJSON,
   resourceStatusToJSON,
@@ -337,15 +338,7 @@ export interface PipelineRequestAssignmentRequest {
     | PipelineConfiguration
     | undefined;
   /** The mapping of segment definitions to assigned workers */
-  assignments: PipelineRequestAssignmentRequest_SegmentMapping[];
-}
-
-export interface PipelineRequestAssignmentRequest_SegmentMapping {
-  $type: "mrc.protos.PipelineRequestAssignmentRequest.SegmentMapping";
-  /** The segment definition ID */
-  segmentName: string;
-  /** The workers to assign this segment to */
-  workerIds: string[];
+  mapping: PipelineMapping | undefined;
 }
 
 export interface PipelineRequestAssignmentResponse {
@@ -1972,7 +1965,7 @@ export const TaggedInstance = {
 messageTypeRegistry.set(TaggedInstance.$type, TaggedInstance);
 
 function createBasePipelineRequestAssignmentRequest(): PipelineRequestAssignmentRequest {
-  return { $type: "mrc.protos.PipelineRequestAssignmentRequest", pipeline: undefined, assignments: [] };
+  return { $type: "mrc.protos.PipelineRequestAssignmentRequest", pipeline: undefined, mapping: undefined };
 }
 
 export const PipelineRequestAssignmentRequest = {
@@ -1982,8 +1975,8 @@ export const PipelineRequestAssignmentRequest = {
     if (message.pipeline !== undefined) {
       PipelineConfiguration.encode(message.pipeline, writer.uint32(10).fork()).ldelim();
     }
-    for (const v of message.assignments) {
-      PipelineRequestAssignmentRequest_SegmentMapping.encode(v!, writer.uint32(18).fork()).ldelim();
+    if (message.mapping !== undefined) {
+      PipelineMapping.encode(message.mapping, writer.uint32(18).fork()).ldelim();
     }
     return writer;
   },
@@ -1999,7 +1992,7 @@ export const PipelineRequestAssignmentRequest = {
           message.pipeline = PipelineConfiguration.decode(reader, reader.uint32());
           break;
         case 2:
-          message.assignments.push(PipelineRequestAssignmentRequest_SegmentMapping.decode(reader, reader.uint32()));
+          message.mapping = PipelineMapping.decode(reader, reader.uint32());
           break;
         default:
           reader.skipType(tag & 7);
@@ -2013,9 +2006,7 @@ export const PipelineRequestAssignmentRequest = {
     return {
       $type: PipelineRequestAssignmentRequest.$type,
       pipeline: isSet(object.pipeline) ? PipelineConfiguration.fromJSON(object.pipeline) : undefined,
-      assignments: Array.isArray(object?.assignments)
-        ? object.assignments.map((e: any) => PipelineRequestAssignmentRequest_SegmentMapping.fromJSON(e))
-        : [],
+      mapping: isSet(object.mapping) ? PipelineMapping.fromJSON(object.mapping) : undefined,
     };
   },
 
@@ -2023,13 +2014,8 @@ export const PipelineRequestAssignmentRequest = {
     const obj: any = {};
     message.pipeline !== undefined &&
       (obj.pipeline = message.pipeline ? PipelineConfiguration.toJSON(message.pipeline) : undefined);
-    if (message.assignments) {
-      obj.assignments = message.assignments.map((e) =>
-        e ? PipelineRequestAssignmentRequest_SegmentMapping.toJSON(e) : undefined
-      );
-    } else {
-      obj.assignments = [];
-    }
+    message.mapping !== undefined &&
+      (obj.mapping = message.mapping ? PipelineMapping.toJSON(message.mapping) : undefined);
     return obj;
   },
 
@@ -2042,103 +2028,14 @@ export const PipelineRequestAssignmentRequest = {
     message.pipeline = (object.pipeline !== undefined && object.pipeline !== null)
       ? PipelineConfiguration.fromPartial(object.pipeline)
       : undefined;
-    message.assignments =
-      object.assignments?.map((e) => PipelineRequestAssignmentRequest_SegmentMapping.fromPartial(e)) || [];
+    message.mapping = (object.mapping !== undefined && object.mapping !== null)
+      ? PipelineMapping.fromPartial(object.mapping)
+      : undefined;
     return message;
   },
 };
 
 messageTypeRegistry.set(PipelineRequestAssignmentRequest.$type, PipelineRequestAssignmentRequest);
-
-function createBasePipelineRequestAssignmentRequest_SegmentMapping(): PipelineRequestAssignmentRequest_SegmentMapping {
-  return { $type: "mrc.protos.PipelineRequestAssignmentRequest.SegmentMapping", segmentName: "", workerIds: [] };
-}
-
-export const PipelineRequestAssignmentRequest_SegmentMapping = {
-  $type: "mrc.protos.PipelineRequestAssignmentRequest.SegmentMapping" as const,
-
-  encode(
-    message: PipelineRequestAssignmentRequest_SegmentMapping,
-    writer: _m0.Writer = _m0.Writer.create(),
-  ): _m0.Writer {
-    if (message.segmentName !== "") {
-      writer.uint32(10).string(message.segmentName);
-    }
-    writer.uint32(18).fork();
-    for (const v of message.workerIds) {
-      writer.uint64(v);
-    }
-    writer.ldelim();
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): PipelineRequestAssignmentRequest_SegmentMapping {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBasePipelineRequestAssignmentRequest_SegmentMapping();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          message.segmentName = reader.string();
-          break;
-        case 2:
-          if ((tag & 7) === 2) {
-            const end2 = reader.uint32() + reader.pos;
-            while (reader.pos < end2) {
-              message.workerIds.push(longToString(reader.uint64() as Long));
-            }
-          } else {
-            message.workerIds.push(longToString(reader.uint64() as Long));
-          }
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-    return message;
-  },
-
-  fromJSON(object: any): PipelineRequestAssignmentRequest_SegmentMapping {
-    return {
-      $type: PipelineRequestAssignmentRequest_SegmentMapping.$type,
-      segmentName: isSet(object.segmentName) ? String(object.segmentName) : "",
-      workerIds: Array.isArray(object?.workerIds) ? object.workerIds.map((e: any) => String(e)) : [],
-    };
-  },
-
-  toJSON(message: PipelineRequestAssignmentRequest_SegmentMapping): unknown {
-    const obj: any = {};
-    message.segmentName !== undefined && (obj.segmentName = message.segmentName);
-    if (message.workerIds) {
-      obj.workerIds = message.workerIds.map((e) => e);
-    } else {
-      obj.workerIds = [];
-    }
-    return obj;
-  },
-
-  create(
-    base?: DeepPartial<PipelineRequestAssignmentRequest_SegmentMapping>,
-  ): PipelineRequestAssignmentRequest_SegmentMapping {
-    return PipelineRequestAssignmentRequest_SegmentMapping.fromPartial(base ?? {});
-  },
-
-  fromPartial(
-    object: DeepPartial<PipelineRequestAssignmentRequest_SegmentMapping>,
-  ): PipelineRequestAssignmentRequest_SegmentMapping {
-    const message = createBasePipelineRequestAssignmentRequest_SegmentMapping();
-    message.segmentName = object.segmentName ?? "";
-    message.workerIds = object.workerIds?.map((e) => e) || [];
-    return message;
-  },
-};
-
-messageTypeRegistry.set(
-  PipelineRequestAssignmentRequest_SegmentMapping.$type,
-  PipelineRequestAssignmentRequest_SegmentMapping,
-);
 
 function createBasePipelineRequestAssignmentResponse(): PipelineRequestAssignmentResponse {
   return {

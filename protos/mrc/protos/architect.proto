@@ -220,19 +220,11 @@ message TaggedInstance
 
 message PipelineRequestAssignmentRequest
 {
-    message SegmentMapping {
-        // The segment definition ID
-        string segment_name = 1;
-
-        // The workers to assign this segment to
-        repeated uint64 worker_ids = 2;
-    }
-
     // The pipeline definition object
     PipelineConfiguration pipeline = 1;
 
     // The mapping of segment definitions to assigned workers
-    repeated SegmentMapping assignments = 2;
+    PipelineMapping mapping = 2;
 }
 
 message PipelineRequestAssignmentResponse

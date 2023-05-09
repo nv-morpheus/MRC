@@ -4,10 +4,16 @@ import {createWrappedEntityAdapter} from "../../utils";
 
 import type {RootState} from "../store";
 import {connectionsRemove} from "@mrc/server/store/slices/connectionsSlice";
-import {pipelineInstancesRemove} from "@mrc/server/store/slices/pipelineInstancesSlice";
-import {workersRemove} from "@mrc/server/store/slices/workersSlice";
+import {
+   pipelineInstancesRemove,
+   pipelineInstancesUpdateResourceState,
+} from "@mrc/server/store/slices/pipelineInstancesSlice";
+import {workersRemove, workersSelectByMachineId} from "@mrc/server/store/slices/workersSlice";
 import {ISegmentInstance} from "@mrc/common/entities";
-import {SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
+import {ResourceStatus, SegmentMappingPolicies, SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
+import {pipelineDefinitionsSelectById} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
+import {startAppListening} from "@mrc/server/store/listener_middleware";
+import {generateSegmentHash, hashName16} from "@mrc/common/utils";
 
 const segmentInstancesAdapter = createWrappedEntityAdapter<ISegmentInstance>({
    selectId: (w) => w.id,
@@ -116,5 +122,89 @@ const selectByPipelineId = createSelector(
 export const segmentInstancesSelectByPipelineId = (state: RootState, pipeline_id: string) => selectByPipelineId(
     state.segmentInstances,
     pipeline_id);
+
+export function segmentInstancesConfigureListeners()
+{
+   startAppListening({
+      actionCreator: pipelineInstancesUpdateResourceState,
+      effect: (action, listenerApi) => {
+         if (action.payload.status == ResourceStatus.Ready)
+         {
+            // Pipeline has been marked as ready. Update segment instances based on the pipeline config
+            const pipeline_def = pipelineDefinitionsSelectById(listenerApi.getState(),
+                                                               action.payload.resource.definitionId);
+
+            if (!pipeline_def)
+            {
+               throw new Error(`Could not find Pipeline Definition ID: ${
+                   action.payload.resource.definitionId}, for Pipeline Instance: ${action.payload.resource.id}`);
+            }
+
+            // Get the mapping for this machine ID
+            if (!(action.payload.resource.machineId in pipeline_def.mappings))
+            {
+               throw new Error(`Could not find Mapping for Machine: ${
+                   action.payload.resource.machineId}, for Pipeline Definition: ${
+                   action.payload.resource.definitionId}`);
+            }
+
+            // Get the workers for this machine
+            const workers = workersSelectByMachineId(listenerApi.getState(), action.payload.resource.machineId);
+
+            const mapping = pipeline_def.mappings[action.payload.resource.machineId];
+
+            // Now determine the segment instances that should be created
+            const seg_to_workers = Object.fromEntries(Object.entries(mapping.segments).map(([seg_name, seg_map]) => {
+               let workerIds: string[] = [];
+
+               if (seg_map.byPolicy)
+               {
+                  if (seg_map.byPolicy.value == SegmentMappingPolicies.OnePerWorker)
+                  {
+                     workerIds = workers.map((x) => x.id);
+                  }
+                  else
+                  {
+                     throw new Error(`Unsupported policy: ${seg_map.byPolicy.value}`);
+                  }
+               }
+               else if (seg_map.byWorker)
+               {
+                  workerIds = seg_map.byWorker.workerIds;
+               }
+               else
+               {
+                  throw new Error(`Invalid SegmentMap for ${seg_name}. No option set`);
+               }
+
+               return [seg_name, workerIds];
+            }));
+
+            // Now generate the segments that would need to be created
+            const segments = Object.entries(seg_to_workers).flatMap(([seg_name, seg_assignment]) => {
+               // For each assignment, create a segment instance
+               return seg_assignment.map((wid) => {
+                  const address = generateSegmentHash(seg_name, wid);
+
+                  return {
+                     id: address.toString(),
+                     pipelineDefinitionId: pipeline_def.id,
+                     pipelineInstanceId: action.payload.resource.id,
+                     name: seg_name,
+                     address: address,
+                     workerId: wid,
+                     state: SegmentStates.Initialized,
+                  } as ISegmentInstance;
+               });
+            });
+
+            // Filter out any running ones
+
+            // Then dispatch the segment instances update
+            listenerApi.dispatch(segmentInstancesAddMany(segments));
+         }
+      },
+   });
+}
 
 export default segmentInstancesSlice.reducer;
