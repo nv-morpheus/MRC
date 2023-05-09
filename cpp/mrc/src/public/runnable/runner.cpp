@@ -180,14 +180,10 @@ void Runner::await_join() const
         {
             if (first_exception == nullptr)
             {
-                std::cerr << "\n\n\n**********DONT MERGE: setting exception\n" << std::flush;
                 first_exception = std::current_exception();
-                std::cerr << "\n\n\n**********DONT MERGE: set exception\n" << std::flush;
             }
         }
     }
-
-    std::cerr << "\n\n\n**********DONT MERGE: clearing\n" << std::flush;
     m_instances.clear();
     if (first_exception)
     {
