@@ -169,7 +169,6 @@ void Runner::await_live() const
 
 void Runner::await_join() const
 {
-    std::cerr << "\n\n\n**********DONT MERGE: await_join()\n" << std::flush;
     std::exception_ptr first_exception{nullptr};
     for (const auto& instance : instances())
     {
