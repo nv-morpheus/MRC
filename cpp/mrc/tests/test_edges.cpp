@@ -543,7 +543,7 @@ TEST_F(TestEdges, SourceToNodeComponentToSinkComponent)
     source->run();
 }
 
-TEST_F(TestEdges, SourceToNodeRxComponentToSinkComponent)
+TEST_F(TestEdges, SourceToRxNodeComponentToSinkComponent)
 {
     auto source = std::make_shared<node::TestSource<int>>();
     auto node   = std::make_shared<node::TestRxNodeComponent<int>>();
