@@ -37,6 +37,7 @@
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <gtest/internal/gtest-internal.h>
+#include <rxcpp/rx.hpp>  // for observable_member
 
 #include <functional>
 #include <map>
@@ -290,18 +291,12 @@ class TestRxNodeComponent : public RxNodeComponent<T, T>
     void make_stream(stream_fn_t fn)
     {
         return base_t::make_stream([this, fn](auto&&... args) {
-            m_stream_fn_called = true;
+            stream_fn_called = true;
             return fn(std::forward<decltype(args)>(args)...);
         });
     }
 
-    ~TestRxNodeComponent() override
-    {
-        // Debug print
-        VLOG(10) << "Destroying TestRxNodeComponent";
-    }
-
-    bool m_stream_fn_called = false;
+    bool stream_fn_called = false;
 };
 
 template <typename T>
@@ -560,7 +555,7 @@ TEST_F(TestEdges, SourceToRxNodeComponentToSinkComponent)
 
     source->run();
 
-    EXPECT_TRUE(node->m_stream_fn_called);
+    EXPECT_TRUE(node->stream_fn_called);
 }
 
 TEST_F(TestEdges, SourceComponentToNodeToSinkComponent)
@@ -999,6 +994,6 @@ TEST_F(TestEdges, EdgeTapWithSpliceRxComponent)
     source->run();
     sink->run();
 
-    EXPECT_TRUE(node->m_stream_fn_called);
+    EXPECT_TRUE(node->stream_fn_called);
 }
 }  // namespace mrc

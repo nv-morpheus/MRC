@@ -17,6 +17,7 @@
 
 #include "test_mrc.hpp"
 
+#include "mrc/channel/status.hpp"  // for Status
 #include "mrc/core/executor.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/node/rx_node.hpp"
@@ -45,6 +46,7 @@
 #include <mutex>
 #include <set>
 #include <sstream>
+#include <stdexcept>  // for runtime_error
 #include <string>
 #include <thread>
 #include <utility>
@@ -510,11 +512,9 @@ TEST_F(TestNode, RxNodeComponentThrows)
             "sinkInt",
             [&](const int& x) {
                 ++sink_call_count;
-                DVLOG(1) << "Sink got value: '" << x << "'" << std::endl;
             },
             [&]() {
                 ++complete_count;
-                DVLOG(1) << "Sink on_completed" << std::endl;
             });
 
         seg.make_edge(source, node_comp);
