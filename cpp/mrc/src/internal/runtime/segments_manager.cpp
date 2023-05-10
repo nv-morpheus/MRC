@@ -144,7 +144,7 @@ void SegmentsManager::process_state_update(mrc::internal::control_plane::state::
     else if (status == control_plane::state::ResourceStatus::Activated)
     {
         // Check for assignments
-        auto cur_segments = extract_keys(m_segments);
+        auto cur_segments = extract_keys(m_instances);
         auto new_segments = extract_keys(worker.assigned_segments());
 
         // set of segments to remove
@@ -171,7 +171,7 @@ void SegmentsManager::process_state_update(mrc::internal::control_plane::state::
             // auto partition_id = new_segments_map.at(address);
             // DVLOG(10) << info() << ": create segment for address " << ::mrc::segment::info(address)
             //           << " on resource partition: " << partition_id;
-            this->create_segment(worker.assigned_segments().at(address).pipeline_instance().definition().id(), address);
+            this->create_segment(worker.assigned_segments().at(address));
         }
 
         // detach from manifold or stop old segments
@@ -190,13 +190,13 @@ void SegmentsManager::process_state_update(mrc::internal::control_plane::state::
         CHECK(false) << "Unknown worker state: " << static_cast<int>(status);
     }
 }
-void SegmentsManager::create_segment(uint64_t pipeline_id, SegmentAddress address)
+void SegmentsManager::create_segment(const mrc::internal::control_plane::state::SegmentInstance& instance_state)
 {
     // First, double check if this still needs to be created by trying to activate it
     auto request = protos::ResourceUpdateStatusRequest();
 
     request.set_resource_type("SegmentInstances");
-    request.set_resource_id(address);
+    request.set_resource_id(instance_state.address());
     request.set_status(protos::ResourceStatus::Activated);
 
     auto response = m_runtime.control_plane().await_unary<protos::ResourceUpdateStatusResponse>(
@@ -205,7 +205,8 @@ void SegmentsManager::create_segment(uint64_t pipeline_id, SegmentAddress addres
 
     if (!response->ok())
     {
-        LOG(WARNING) << "Declined to make resource of type: " << request.resource_type() << ", and id: " << address;
+        LOG(WARNING) << "Declined to make resource of type: " << request.resource_type()
+                     << ", and id: " << request.resource_id();
         return;
     }
 
@@ -213,18 +214,23 @@ void SegmentsManager::create_segment(uint64_t pipeline_id, SegmentAddress addres
     m_runtime.resources()
         .runnable()
         .main()
-        .enqueue([this, pipeline_id, address] {
+        .enqueue([this, instance_state] {
             // Get a reference to the pipeline we are creating the segment in
-            auto& pipeline_def = m_runtime.pipelines_manager().get_definition(pipeline_id);
+            auto& pipeline_def = m_runtime.pipelines_manager().get_definition(
+                instance_state.pipeline_definition().id());
 
-            auto& pipeline_instance = m_runtime.pipelines_manager().get_instance(pipeline_id);
+            auto& pipeline_instance = m_runtime.pipelines_manager().get_instance(
+                instance_state.pipeline_instance().id());
 
-            //     auto search = m_segments.find(address);
-            // CHECK(search == m_segments.end());
-
-            auto [id, rank] = segment_address_decode(address);
+            auto [id, rank] = segment_address_decode(instance_state.address());
             auto definition = pipeline_def.find_segment(id);
-            auto segment    = std::make_unique<segment::SegmentInstance>(m_runtime, definition, rank);
+
+            auto [added_iterator, did_add] = m_instances.emplace(
+                instance_state.address(),
+                std::make_unique<segment::SegmentInstance>(m_runtime, definition, instance_state.address()));
+
+            // Now start as a child service
+            this->child_service_start(*added_iterator->second);
 
             // for (const auto& name : definition->egress_port_names())
             // {

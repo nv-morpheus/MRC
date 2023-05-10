@@ -99,7 +99,7 @@ pipeline::Pipeline& PipelinesManager::get_definition(uint64_t definition_id)
 
 pipeline::PipelineInstance& PipelinesManager::get_instance(uint64_t instance_id)
 {
-    CHECK(m_definitions.contains(instance_id))
+    CHECK(m_instances.contains(instance_id))
         << "Pipeline with ID: " << instance_id << " not found in pipeline instances";
 
     return *m_instances[instance_id];

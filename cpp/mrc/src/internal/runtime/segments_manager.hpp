@@ -75,7 +75,7 @@ class SegmentsManager : public AsyncService, public runnable::RunnableResourcesP
 
     void process_state_update(control_plane::state::Worker& worker);
 
-    void create_segment(uint64_t pipeline_id, SegmentAddress address);
+    void create_segment(const control_plane::state::SegmentInstance& instance);
     void erase_segment(SegmentAddress address);
 
     PartitionRuntime& m_runtime;
@@ -87,7 +87,7 @@ class SegmentsManager : public AsyncService, public runnable::RunnableResourcesP
     SharedPromise<void> m_live_promise;
 
     // Running segment instances
-    std::map<SegmentAddress, std::unique_ptr<segment::SegmentInstance>> m_segments;
+    std::map<SegmentAddress, std::unique_ptr<segment::SegmentInstance>> m_instances;
 
     // memory::HostResources& m_host;
     // std::optional<memory::DeviceResources>& m_device;
