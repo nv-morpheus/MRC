@@ -33,7 +33,7 @@ namespace mrc::internal::network {
 class Resources;
 }  // namespace mrc::internal::network
 namespace mrc::internal::control_plane {
-class Resources;
+class ControlPlaneResources;
 }  // namespace mrc::internal::control_plane
 namespace mrc::internal::memory {
 class DeviceResources;
@@ -69,10 +69,10 @@ class Manager final : public system::SystemProvider
     Future<void> shutdown();
 
     const std::unique_ptr<system::Resources> m_system;
-    std::vector<runnable::Resources> m_runnable;                   // one per host partition
-    std::vector<std::optional<ucx::Resources>> m_ucx;              // one per flattened partition if network is enabled
-    std::shared_ptr<control_plane::Resources> m_control_plane;     // one per instance of resources::Manager
-    std::vector<memory::HostResources> m_host;                     // one per host partition
+    std::vector<runnable::Resources> m_runnable;       // one per host partition
+    std::vector<std::optional<ucx::Resources>> m_ucx;  // one per flattened partition if network is enabled
+    std::shared_ptr<control_plane::ControlPlaneResources> m_control_plane;  // one per instance of resources::Manager
+    std::vector<memory::HostResources> m_host;                              // one per host partition
     std::vector<std::optional<memory::DeviceResources>> m_device;  // one per flattened partition upto device_count
     std::vector<PartitionResources> m_partitions;                  // one per flattened partition
 

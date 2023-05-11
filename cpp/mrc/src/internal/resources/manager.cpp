@@ -105,7 +105,7 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
     std::map<InstanceID, std::unique_ptr<control_plane::client::Instance>> control_instances;
     if (network_enabled)
     {
-        m_control_plane   = std::make_shared<control_plane::Resources>(base_partition_resources.at(0));
+        m_control_plane   = std::make_shared<control_plane::ControlPlaneResources>(base_partition_resources.at(0));
         control_instances = m_control_plane->client().register_ucx_addresses(m_ucx);
         CHECK_EQ(m_control_plane->client().connections().instance_ids().size(), m_ucx.size());
     }

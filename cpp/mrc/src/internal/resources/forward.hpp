@@ -48,7 +48,7 @@ class Resources;
 }  // namespace ucx
 
 namespace control_plane {
-class Resources;
+class ControlPlaneResources;
 namespace client {
 class Instance;
 }

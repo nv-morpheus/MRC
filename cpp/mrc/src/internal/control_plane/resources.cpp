@@ -29,7 +29,7 @@
 
 namespace mrc::internal::control_plane {
 
-Resources::Resources(resources::PartitionResourceBase& base) :
+ControlPlaneResources::ControlPlaneResources(resources::PartitionResourceBase& base) :
   resources::PartitionResourceBase(base),
   m_client(std::make_unique<internal::control_plane::Client>(base))
 {
@@ -45,7 +45,7 @@ Resources::Resources(resources::PartitionResourceBase& base) :
     m_client->service_await_live();
 }
 
-Resources::~Resources()
+ControlPlaneResources::~ControlPlaneResources()
 {
     if (m_client)
     {

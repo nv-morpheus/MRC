@@ -30,11 +30,11 @@ namespace mrc::internal::control_plane {
 class Client;
 class Server;
 
-class Resources final : private resources::PartitionResourceBase
+class ControlPlaneResources final : private resources::PartitionResourceBase
 {
   public:
-    Resources(resources::PartitionResourceBase& base);
-    ~Resources() final;
+    ControlPlaneResources(resources::PartitionResourceBase& base);
+    ~ControlPlaneResources() final;
 
     Client& client()
     {
