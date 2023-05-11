@@ -27,7 +27,7 @@ namespace mrc::manifold {
 template <typename T>
 struct Factory final
 {
-    static std::shared_ptr<Interface> make_manifold(PortName port_name, pipeline::Resources& resources)
+    static std::shared_ptr<Interface> make_manifold(PortName port_name, pipeline::PipelineResources& resources)
     {
         return std::make_shared<LoadBalancer<T>>(std::move(port_name), resources);
     }

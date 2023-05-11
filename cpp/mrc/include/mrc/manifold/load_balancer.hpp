@@ -68,7 +68,7 @@ class LoadBalancer : public CompositeManifold<MuxedIngress<T>, RoundRobinEgress<
     using base_t = CompositeManifold<MuxedIngress<T>, RoundRobinEgress<T>>;
 
   public:
-    LoadBalancer(PortName port_name, pipeline::Resources& resources) : base_t(std::move(port_name), resources)
+    LoadBalancer(PortName port_name, pipeline::PipelineResources& resources) : base_t(std::move(port_name), resources)
     {
         m_launch_options.engine_factory_name = "main";
         m_launch_options.pe_count            = 1;

@@ -33,7 +33,7 @@ class FiberTaskQueue;
 
 namespace mrc::internal::runnable {
 
-class Resources final : public system::HostPartitionProvider, public mrc::pipeline::Resources
+class Resources final : public system::HostPartitionProvider, public mrc::pipeline::PipelineResources
 {
   public:
     Resources(const system::Resources& system_resources, std::size_t _host_partition_id);
