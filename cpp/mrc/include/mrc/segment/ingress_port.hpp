@@ -74,7 +74,7 @@ class IngressPort : public Object<node::RxSourceBase<T>>, public IngressPortBase
         return launch_control.prepare_launcher(std::move(m_source));
     }
 
-    std::shared_ptr<manifold::Interface> make_manifold(pipeline::PipelineResources& resources) final
+    std::shared_ptr<manifold::Interface> make_manifold(pipeline::IRunnableResources& resources) final
     {
         return manifold::Factory<T>::make_manifold(m_port_name, resources);
     }

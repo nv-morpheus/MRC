@@ -24,9 +24,9 @@
 
 namespace mrc::pipeline {
 
-struct PipelineResources
+struct IRunnableResources
 {
-    virtual ~PipelineResources() = default;
+    virtual ~IRunnableResources() = default;
 
     virtual core::FiberTaskQueue& main()              = 0;
     virtual runnable::LaunchControl& launch_control() = 0;

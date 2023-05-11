@@ -32,7 +32,7 @@ class CompositeManifold : public Manifold
     static_assert(std::is_base_of_v<EgressDelegate, EgressT>, "ingress must be derived from EgressDelegate");
 
   public:
-    CompositeManifold(PortName port_name, pipeline::PipelineResources& resources) :
+    CompositeManifold(PortName port_name, pipeline::IRunnableResources& resources) :
       Manifold(std::move(port_name), resources)
     {
         // construct IngressT and EgressT on the NUMA node / memory domain in which the object will run
@@ -48,7 +48,7 @@ class CompositeManifold : public Manifold
             .get();
     }
     CompositeManifold(PortName port_name,
-                      pipeline::PipelineResources& resources,
+                      pipeline::IRunnableResources& resources,
                       std::unique_ptr<IngressT> ingress,
                       std::unique_ptr<EgressT> egress) :
       Manifold(std::move(port_name), resources),

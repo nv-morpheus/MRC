@@ -27,7 +27,7 @@ class IWritableAcceptorBase;
 class IWritableProviderBase;
 }  // namespace mrc::edge
 namespace mrc::pipeline {
-struct PipelineResources;
+struct IRunnableResources;
 }  // namespace mrc::pipeline
 
 namespace mrc::manifold {
@@ -35,12 +35,12 @@ namespace mrc::manifold {
 class Manifold : public Interface
 {
   public:
-    Manifold(PortName port_name, pipeline::PipelineResources& resources);
+    Manifold(PortName port_name, pipeline::IRunnableResources& resources);
 
     const PortName& port_name() const final;
 
   protected:
-    pipeline::PipelineResources& resources();
+    pipeline::IRunnableResources& resources();
 
     const std::string& info() const;
 
@@ -52,7 +52,7 @@ class Manifold : public Interface
     virtual void do_add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) = 0;
 
     PortName m_port_name;
-    pipeline::PipelineResources& m_resources;
+    pipeline::IRunnableResources& m_resources;
     std::string m_info;
 };
 
