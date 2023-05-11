@@ -29,11 +29,11 @@ class Manager;
 
 namespace mrc::internal::pipeline {
 
-class Resources
+class PipelineResources
 {
   public:
-    Resources(resources::Manager& resources);
-    ~Resources();
+    PipelineResources(resources::Manager& resources);
+    ~PipelineResources();
 
     resources::Manager& resources() const;
     metrics::Registry& metrics_registry() const;

@@ -43,7 +43,7 @@
 namespace mrc::internal::pipeline {
 
 Instance::Instance(std::shared_ptr<const Pipeline> definition, resources::Manager& resources) :
-  Resources(resources),
+  PipelineResources(resources),
   m_definition(std::move(definition))
 {
     CHECK(m_definition);

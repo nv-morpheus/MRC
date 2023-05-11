@@ -27,7 +27,7 @@
 #include <string>
 
 namespace mrc::internal::pipeline {
-class Resources;
+class PipelineResources;
 }  // namespace mrc::internal::pipeline
 
 namespace mrc::modules {
@@ -53,7 +53,7 @@ class Builder final
   public:
     Builder(std::shared_ptr<const Definition> segdef,
             SegmentRank rank,
-            pipeline::Resources& resources,
+            pipeline::PipelineResources& resources,
             std::size_t default_partition_id);
 
     const Definition& definition() const;
@@ -95,7 +95,7 @@ class Builder final
     std::map<std::string, std::shared_ptr<::mrc::segment::IngressPortBase>> m_ingress_ports;
     std::map<std::string, std::shared_ptr<::mrc::segment::EgressPortBase>> m_egress_ports;
 
-    pipeline::Resources& m_resources;
+    pipeline::PipelineResources& m_resources;
     const std::size_t m_default_partition_id;
 
     friend IBuilder;

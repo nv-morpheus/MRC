@@ -39,7 +39,7 @@ struct Interface;
 namespace mrc::internal::pipeline {
 class Pipeline;
 
-class Instance final : public Service, public Resources
+class Instance final : public Service, public PipelineResources
 {
   public:
     Instance(std::shared_ptr<const Pipeline> definition, resources::Manager& resources);

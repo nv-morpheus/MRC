@@ -40,7 +40,7 @@ namespace mrc::internal::segment {
 
 Builder::Builder(std::shared_ptr<const Definition> segdef,
                  SegmentRank rank,
-                 pipeline::Resources& resources,
+                 pipeline::PipelineResources& resources,
                  std::size_t default_partition_id) :
   m_definition(std::move(segdef)),
   m_resources(resources),

@@ -29,7 +29,7 @@
 #include <string>
 
 namespace mrc::internal::pipeline {
-class Resources;
+class PipelineResources;
 }  // namespace mrc::internal::pipeline
 namespace mrc::manifold {
 struct Interface;
@@ -45,7 +45,7 @@ class Instance final : public Service
   public:
     Instance(std::shared_ptr<const Definition> definition,
              SegmentRank rank,
-             pipeline::Resources& resources,
+             pipeline::PipelineResources& resources,
              std::size_t partition_id);
     ~Instance() override;
 
@@ -76,7 +76,7 @@ class Instance final : public Service
     std::string m_info;
 
     std::unique_ptr<Builder> m_builder;
-    pipeline::Resources& m_resources;
+    pipeline::PipelineResources& m_resources;
     const std::size_t m_default_partition_id;
 
     std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_runners;

@@ -52,7 +52,7 @@ namespace mrc::internal::segment {
 
 Instance::Instance(std::shared_ptr<const Definition> definition,
                    SegmentRank rank,
-                   pipeline::Resources& resources,
+                   pipeline::PipelineResources& resources,
                    std::size_t partition_id) :
   m_name(definition->name()),
   m_id(definition->id()),
