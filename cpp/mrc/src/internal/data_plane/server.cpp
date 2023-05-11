@@ -51,7 +51,7 @@
 #include <ostream>
 #include <utility>
 
-namespace mrc::internal::data_plane {
+namespace mrc::data_plane {
 
 namespace {
 
@@ -348,4 +348,4 @@ void DataPlaneServerWorker::on_tagged_msg(rxcpp::subscriber<network_event_t>& su
     }
 }
 
-}  // namespace mrc::internal::data_plane
+}  // namespace mrc::data_plane

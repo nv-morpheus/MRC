@@ -52,7 +52,7 @@
 #include <thread>
 #include <utility>
 
-namespace mrc::internal::resources {
+namespace mrc::resources {
 
 thread_local Manager* Manager::m_thread_resources{nullptr};
 thread_local PartitionResources* Manager::m_thread_partition{nullptr};
@@ -268,4 +268,4 @@ Future<void> Manager::shutdown()
         }
     });
 }
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources

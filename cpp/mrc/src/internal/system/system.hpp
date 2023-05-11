@@ -26,7 +26,7 @@ namespace mrc {
 class Options;
 }  // namespace mrc
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 class ISystem;
 class Partitions;
@@ -59,4 +59,4 @@ class System final
 
 std::shared_ptr<System> make_system(std::shared_ptr<Options> options);
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

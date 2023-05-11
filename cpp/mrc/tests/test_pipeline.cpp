@@ -56,7 +56,7 @@ class TestPipeline : public ::testing::Test
 
     void TearDown() override {}
 
-    std::unique_ptr<pipeline::Pipeline> m_pipeline;
+    std::unique_ptr<pipeline::IPipelineBase> m_pipeline;
     std::unique_ptr<Options> m_options;
 };
 

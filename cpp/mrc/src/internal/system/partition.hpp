@@ -20,7 +20,7 @@
 #include <cstddef>
 #include <memory>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 class DevicePartition;
 class HostPartition;
 
@@ -43,4 +43,4 @@ class Partition final
     std::shared_ptr<const DevicePartition> m_device;
 };
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

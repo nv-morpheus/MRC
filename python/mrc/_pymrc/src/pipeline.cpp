@@ -202,7 +202,7 @@ void Pipeline::make_segment(const std::string& name,
     m_pipeline->make_segment(name, ingress_ports, egress_ports, init_wrapper);
 }
 
-std::unique_ptr<mrc::pipeline::Pipeline> Pipeline::swap()
+std::unique_ptr<mrc::pipeline::IPipelineBase> Pipeline::swap()
 {
     auto tmp   = std::move(m_pipeline);
     m_pipeline = mrc::pipeline::make_pipeline();

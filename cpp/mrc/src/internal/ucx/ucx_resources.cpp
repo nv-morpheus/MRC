@@ -40,7 +40,7 @@ namespace mrc::core {
 class FiberTaskQueue;
 }  // namespace mrc::core
 
-namespace mrc::internal::ucx {
+namespace mrc::ucx {
 
 UcxResources::UcxResources(resources::PartitionResourceBase& base, system::FiberTaskQueue& network_task_queue) :
   resources::PartitionResourceBase(base),
@@ -111,4 +111,4 @@ mrc::runnable::LaunchOptions UcxResources::launch_options(std::uint64_t concurre
     launch_options.pe_count            = 1;
     return launch_options;
 }
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx

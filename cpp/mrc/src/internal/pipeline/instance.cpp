@@ -40,7 +40,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 
 Instance::Instance(std::shared_ptr<const Pipeline> definition, resources::Manager& resources) :
   PipelineResources(resources),
@@ -225,4 +225,4 @@ void Instance::do_service_await_join()
     }
 }
 
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline

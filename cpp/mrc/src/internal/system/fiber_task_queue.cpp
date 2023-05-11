@@ -37,7 +37,7 @@
 #include <thread>
 #include <utility>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 FiberTaskQueue::FiberTaskQueue(const ThreadingResources& resources, CpuSet cpu_affinity, std::size_t channel_size) :
   m_queue(channel_size),
@@ -133,4 +133,4 @@ bool FiberTaskQueue::caller_on_same_thread() const
 {
     return std::this_thread::get_id() == m_thread.thread().get_id();
 }
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

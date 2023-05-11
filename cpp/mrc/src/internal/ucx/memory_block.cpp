@@ -21,7 +21,7 @@
 
 #include <cstring>
 
-namespace mrc::internal::ucx {
+namespace mrc::ucx {
 
 MemoryBlock::MemoryBlock(const void* data, std::size_t bytes) : memory::MemoryBlock(data, bytes) {}
 
@@ -80,4 +80,4 @@ std::string MemoryBlock::packed_remote_keys() const
     return keys;
 }
 
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx

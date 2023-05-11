@@ -49,7 +49,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::control_plane {
+namespace mrc::control_plane {
 
 template <typename T>
 static Expected<T> unpack_request(Server::event_t& event)
@@ -681,4 +681,4 @@ Expected<decltype(Server::m_subscription_services)::const_iterator> Server::get_
     return search;
 }
 
-}  // namespace mrc::internal::control_plane
+}  // namespace mrc::control_plane

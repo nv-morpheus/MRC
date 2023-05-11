@@ -55,15 +55,14 @@ class TestRD : public ::testing::Test
   protected:
     void SetUp() override
     {
-        auto resources = std::make_unique<internal::resources::Manager>(
-            internal::system::SystemProvider(make_system([](Options& options) {
-                // todo(#114) - propose: remove this option entirely
-                options.enable_server(true);
-                options.architect_url("localhost:13337");
-                options.placement().resources_strategy(PlacementResources::Dedicated);
-            })));
+        auto resources = std::make_unique<resources::Manager>(system::SystemProvider(make_system([](Options& options) {
+            // todo(#114) - propose: remove this option entirely
+            options.enable_server(true);
+            options.architect_url("localhost:13337");
+            options.placement().resources_strategy(PlacementResources::Dedicated);
+        })));
 
-        m_runtime = std::make_unique<internal::runtime::Runtime>(std::move(resources));
+        m_runtime = std::make_unique<runtime::Runtime>(std::move(resources));
     }
 
     void TearDown() override
@@ -71,7 +70,7 @@ class TestRD : public ::testing::Test
         m_runtime.reset();
     }
 
-    std::unique_ptr<internal::runtime::Runtime> m_runtime;
+    std::unique_ptr<runtime::Runtime> m_runtime;
 };
 
 TEST_F(TestRD, LifeCycle)
@@ -91,7 +90,7 @@ TEST_F(TestRD, LifeCycle)
             EXPECT_EQ(rd_manager.size(), 1);
 
             // use the internal implementation to transfer ownership and recreate
-            auto handle = internal::remote_descriptor::Manager::unwrap_handle(std::move(rd));
+            auto handle = remote_descriptor::Manager::unwrap_handle(std::move(rd));
             EXPECT_FALSE(rd);
 
             // recreate from handle
@@ -132,7 +131,7 @@ TEST_F(TestRD, RemoteRelease)
             EXPECT_EQ(rd_manager_0.size(), 1);
             EXPECT_EQ(rd_manager_1.size(), 0);
 
-            auto handle = internal::remote_descriptor::Manager::unwrap_handle(std::move(rd));
+            auto handle = remote_descriptor::Manager::unwrap_handle(std::move(rd));
             EXPECT_FALSE(rd);
 
             auto rd2 = rd_manager_1.make_remote_descriptor(std::move(handle));

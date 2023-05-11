@@ -28,7 +28,7 @@ class IDecodableStorage;
 class EncodedStorage;
 }  // namespace mrc::codable
 
-namespace mrc::internal::remote_descriptor {
+namespace mrc::remote_descriptor {
 
 class Storage final
 {
@@ -52,4 +52,4 @@ class Storage final
     std::int32_t m_tokens{INT32_MAX};
 };
 
-}  // namespace mrc::internal::remote_descriptor
+}  // namespace mrc::remote_descriptor

@@ -19,20 +19,20 @@
 
 #include <memory>
 
-namespace mrc::internal::segment {
+namespace mrc::segment {
 class IDefinition;
 class Definition;
-}  // namespace mrc::internal::segment
+}  // namespace mrc::segment
 
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 
-class Pipeline;
+class PipelineDefinition;
 
-class IPipeline
+class IPipelineBase
 {
   public:
-    IPipeline();
-    virtual ~IPipeline() = 0;
+    IPipelineBase();
+    virtual ~IPipelineBase() = 0;
 
   protected:
     void register_segment(std::shared_ptr<const segment::IDefinition> segment);
@@ -40,8 +40,8 @@ class IPipeline
   private:
     void add_segment(std::shared_ptr<const segment::Definition> segment);
 
-    std::shared_ptr<Pipeline> m_impl;
-    friend Pipeline;
+    std::shared_ptr<PipelineDefinition> m_impl;
+    friend PipelineDefinition;
 };
 
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline

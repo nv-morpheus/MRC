@@ -38,7 +38,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 
 Controller::Controller(std::unique_ptr<Instance> pipeline) : m_pipeline(std::move(pipeline))
 {
@@ -166,4 +166,4 @@ const std::string& Controller::info()
     return str;
 }
 
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline

@@ -36,7 +36,7 @@
 #include <string>
 #include <utility>
 
-namespace mrc::internal::runnable {
+namespace mrc::runnable {
 
 RunnableResources::RunnableResources(const system::ThreadingResources& system_resources,
                                      std::size_t _host_partition_id) :
@@ -98,4 +98,4 @@ const mrc::core::FiberTaskQueue& RunnableResources::main() const
 {
     return m_main;
 }
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable

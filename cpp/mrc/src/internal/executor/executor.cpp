@@ -36,9 +36,9 @@
 #include <string>
 #include <utility>
 
-namespace mrc::internal::executor {
+namespace mrc::executor {
 
-static bool valid_pipeline(const pipeline::Pipeline& pipeline);
+static bool valid_pipeline(const pipeline::IPipelineBase& pipeline);
 
 Executor::Executor(std::shared_ptr<Options> options) :
   SystemProvider(system::make_system(std::move(options))),
@@ -60,7 +60,7 @@ void Executor::register_pipeline(std::unique_ptr<pipeline::IPipeline> ipipeline)
     CHECK(ipipeline);
     CHECK(m_pipeline_manager == nullptr);
 
-    auto pipeline = pipeline::Pipeline::unwrap(*ipipeline);
+    auto pipeline = pipeline::IPipelineBase::unwrap(*ipipeline);
 
     if (!valid_pipeline(*pipeline))
     {
@@ -106,7 +106,7 @@ void Executor::do_service_await_join()
 }
 
 // convert to std::expect
-bool valid_pipeline(const pipeline::Pipeline& pipeline)
+bool valid_pipeline(const pipeline::IPipelineBase& pipeline)
 {
     bool valid = true;
     pipeline::PortGraph pg(pipeline);
@@ -152,4 +152,4 @@ std::unique_ptr<Executor> make_executor(std::unique_ptr<system::ThreadingResourc
     return std::make_unique<Executor>(std::move(resources));
 }
 
-}  // namespace mrc::internal::executor
+}  // namespace mrc::executor

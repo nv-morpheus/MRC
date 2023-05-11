@@ -17,7 +17,7 @@
 
 #include "internal/resources/partition_resources.hpp"
 
-namespace mrc::internal::resources {
+namespace mrc::resources {
 
 PartitionResources::PartitionResources(runnable::RunnableResources& runnable_resources,
                                        std::size_t partition_id,
@@ -44,4 +44,4 @@ std::optional<network::NetworkResources>& PartitionResources::network()
 {
     return m_network;
 }
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources

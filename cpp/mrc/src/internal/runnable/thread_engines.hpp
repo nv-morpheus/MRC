@@ -27,7 +27,7 @@ enum class EngineType;
 struct LaunchOptions;
 }  // namespace mrc::runnable
 
-namespace mrc::internal::runnable {
+namespace mrc::runnable {
 
 class ThreadEngines final : public Engines
 {
@@ -45,4 +45,4 @@ class ThreadEngines final : public Engines
     const system::ThreadingResources& m_system;
 };
 
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable

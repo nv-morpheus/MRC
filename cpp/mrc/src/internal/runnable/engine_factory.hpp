@@ -29,11 +29,11 @@ enum class EngineType;
 struct EngineFactory;
 }  // namespace mrc::runnable
 
-namespace mrc::internal::runnable {
+namespace mrc::runnable {
 
 std::shared_ptr<::mrc::runnable::EngineFactory> make_engine_factory(const system::ThreadingResources& system,
                                                                     EngineType engine_type,
                                                                     const CpuSet& cpu_set,
                                                                     bool reusable);
 
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable

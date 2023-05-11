@@ -46,7 +46,6 @@
 #include <vector>
 
 using namespace mrc;
-using namespace internal;
 
 using system::System;
 using system::ThreadPool;

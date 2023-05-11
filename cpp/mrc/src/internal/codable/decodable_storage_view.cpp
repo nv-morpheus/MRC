@@ -39,7 +39,7 @@
 #include <ostream>
 #include <string>
 
-namespace mrc::internal::codable {
+namespace mrc::codable {
 
 std::size_t DecodableStorageView::buffer_size(const idx_t& idx) const
 {
@@ -163,4 +163,4 @@ std::shared_ptr<mrc::memory::memory_resource> DecodableStorageView::device_memor
     return nullptr;
 }
 
-}  // namespace mrc::internal::codable
+}  // namespace mrc::codable

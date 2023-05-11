@@ -26,14 +26,14 @@
 
 // IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
 
-namespace mrc::internal::resources {
+namespace mrc::resources {
 class Manager;
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
 
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 class Pipeline;
 
 /**
@@ -69,4 +69,4 @@ class Manager : public Service
     std::unique_ptr<mrc::runnable::Runner> m_controller;
 };
 
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline

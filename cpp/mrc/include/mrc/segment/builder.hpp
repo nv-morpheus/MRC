@@ -80,14 +80,14 @@ namespace {
 namespace hana = boost::hana;
 
 template <typename T>
-auto has_source_add_watcher =
-    hana::is_valid([](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).source_add_watcher(
-                                        std::declval<std::shared_ptr<mrc::WatcherInterface>>())) {});
+auto has_source_add_watcher = hana::is_valid(
+    [](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).source_add_watcher(
+                         std::declval<std::shared_ptr<mrc::WatcherInterface>>())) {});
 
 template <typename T>
-auto has_sink_add_watcher =
-    hana::is_valid([](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).sink_add_watcher(
-                                        std::declval<std::shared_ptr<mrc::WatcherInterface>>())) {});
+auto has_sink_add_watcher = hana::is_valid(
+    [](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).sink_add_watcher(
+                         std::declval<std::shared_ptr<mrc::WatcherInterface>>())) {});
 
 template <typename T>
 void add_stats_watcher_if_rx_source(T& thing, std::string name)
@@ -118,7 +118,7 @@ namespace mrc::segment {
 
 class Builder final
 {
-    Builder(internal::segment::IBuilder& backend) : m_backend(backend) {}
+    Builder(segment::IBuilder& backend) : m_backend(backend) {}
 
   public:
     DELETE_COPYABILITY(Builder);
@@ -344,7 +344,7 @@ class Builder final
     std::vector<std::string> m_namespace_stack{};
     std::vector<sp_segment_module_t> m_module_stack{};
 
-    internal::segment::IBuilder& m_backend;
+    segment::IBuilder& m_backend;
 
     void ns_push(sp_segment_module_t smodule);
 

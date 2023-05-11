@@ -32,9 +32,9 @@
 
 namespace mrc::pymrc {
 
-System::System(std::shared_ptr<Options> options) : internal::system::ISystem(std::move(options)) {}
+System::System(std::shared_ptr<Options> options) : system::ISystem(std::move(options)) {}
 
-SystemResources::SystemResources(std::shared_ptr<System> system) : internal::system::IResources(std::move(system))
+SystemResources::SystemResources(std::shared_ptr<System> system) : system::IResources(std::move(system))
 {
     add_gil_initializer();
     add_gil_finalizer();
@@ -66,7 +66,7 @@ void SystemResources::add_gil_initializer()
     // Release the GIL for the remainder
     pybind11::gil_scoped_release nogil;
 
-    internal::system::IResources::add_thread_initializer([has_pydevd_trace] {
+    system::IResources::add_thread_initializer([has_pydevd_trace] {
         pybind11::gil_scoped_acquire gil;
 
         // Increment the ref once to prevent creating and destroying the thread state constantly
@@ -114,7 +114,7 @@ void SystemResources::add_gil_finalizer()
 
     // Ensure we dont have the GIL here otherwise this deadlocks.
 
-    internal::system::IResources::add_thread_finalizer([] {
+    system::IResources::add_thread_finalizer([] {
         bool python_finalizing = _Py_IsFinalizing() != 0;
 
         if (python_finalizing)

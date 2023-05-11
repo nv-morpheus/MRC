@@ -35,7 +35,7 @@
 #include <string>
 #include <utility>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 class FiberTaskQueue;
 class IResources;
 
@@ -94,4 +94,4 @@ Thread ThreadingResources::make_thread(std::string desc, CpuSet cpu_affinity, Ca
     return m_thread_resources->make_thread(std::move(desc), std::move(cpu_affinity), std::move(callable));
 }
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

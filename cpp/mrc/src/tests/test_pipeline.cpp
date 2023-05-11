@@ -80,7 +80,7 @@ using namespace mrc;
 class TestPipeline : public ::testing::Test
 {};
 
-static std::shared_ptr<internal::system::System> make_system(std::function<void(Options&)> updater = nullptr)
+static std::shared_ptr<system::System> make_system(std::function<void(Options&)> updater = nullptr)
 {
     auto options = std::make_shared<Options>();
     if (updater)
@@ -88,24 +88,24 @@ static std::shared_ptr<internal::system::System> make_system(std::function<void(
         updater(*options);
     }
 
-    return internal::system::make_system(std::move(options));
+    return system::make_system(std::move(options));
 }
 
-static std::shared_ptr<internal::pipeline::Pipeline> unwrap(internal::pipeline::IPipeline& pipeline)
+static std::shared_ptr<pipeline::IPipelineBase> unwrap(pipeline::IPipeline& pipeline)
 {
-    return internal::pipeline::Pipeline::unwrap(pipeline);
+    return pipeline::Pipeline::unwrap(pipeline);
 }
 
-static void run_custom_manager(std::unique_ptr<internal::pipeline::IPipeline> pipeline,
-                               internal::pipeline::SegmentAddresses&& update,
+static void run_custom_manager(std::unique_ptr<pipeline::IPipeline> pipeline,
+                               pipeline::SegmentAddresses&& update,
                                bool delayed_stop = false)
 {
-    auto resources = internal::resources::Manager(internal::system::SystemProvider(make_system([](Options& options) {
+    auto resources = resources::Manager(system::SystemProvider(make_system([](Options& options) {
         options.topology().user_cpuset("0-1");
         options.topology().restrict_gpus(true);
     })));
 
-    auto manager = std::make_unique<internal::pipeline::Manager>(unwrap(*pipeline), resources);
+    auto manager = std::make_unique<pipeline::Manager>(unwrap(*pipeline), resources);
 
     auto f = std::async([&] {
         if (delayed_stop)
@@ -122,17 +122,17 @@ static void run_custom_manager(std::unique_ptr<internal::pipeline::IPipeline> pi
     f.get();
 }
 
-static void run_manager(std::unique_ptr<internal::pipeline::IPipeline> pipeline, bool delayed_stop = false)
+static void run_manager(std::unique_ptr<pipeline::IPipeline> pipeline, bool delayed_stop = false)
 {
-    auto resources = internal::resources::Manager(internal::system::SystemProvider(make_system([](Options& options) {
+    auto resources = resources::Manager(system::SystemProvider(make_system([](Options& options) {
         options.topology().user_cpuset("0");
         options.topology().restrict_gpus(true);
         mrc::channel::set_default_channel_size(64);
     })));
 
-    auto manager = std::make_unique<internal::pipeline::Manager>(unwrap(*pipeline), resources);
+    auto manager = std::make_unique<pipeline::Manager>(unwrap(*pipeline), resources);
 
-    internal::pipeline::SegmentAddresses update;
+    pipeline::SegmentAddresses update;
     update[segment_address_encode(segment_name_hash("seg_1"), 0)] = 0;
 
     auto f = std::async([&] {
@@ -152,7 +152,7 @@ static void run_manager(std::unique_ptr<internal::pipeline::IPipeline> pipeline,
 
 TEST_F(TestPipeline, PortNamingService)
 {
-    internal::utils::CollisionDetector hasher;
+    utils::CollisionDetector hasher;
 
     auto p1 = hasher.register_name("test 1");
     auto p2 = hasher.register_name("test 2");
@@ -290,7 +290,7 @@ TEST_F(TestPipeline, MultiSegmentLoadBalancer)
     });
 
     // run 1 copy of seg_1 and 2 copies of seg_2 all on parition 0
-    internal::pipeline::SegmentAddresses update;
+    pipeline::SegmentAddresses update;
     update[segment_address_encode(segment_name_hash("seg_1"), 0)] = 0;
     update[segment_address_encode(segment_name_hash("seg_2"), 0)] = 0;
     update[segment_address_encode(segment_name_hash("seg_2"), 1)] = 0;
@@ -515,7 +515,7 @@ TEST_F(TestPipeline, Nodes1k)
 
 TEST_F(TestPipeline, EngineFactories)
 {
-    auto topology = mrc::internal::system::Topology::Create();
+    auto topology = mrc::system::Topology::Create();
 
     if (topology->core_count() < 8)
     {

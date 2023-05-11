@@ -24,7 +24,7 @@
 #include <functional>
 #include <memory>
 
-namespace mrc::internal::segment {
+namespace mrc::segment {
 class IBuilder;
 }
 
@@ -33,6 +33,6 @@ namespace mrc::segment {
 using segment_initializer_fn_t = std::function<void(Builder&)>;
 using egress_initializer_t     = std::function<std::shared_ptr<EgressPortBase>(const SegmentAddress&)>;
 using ingress_initializer_t    = std::function<std::shared_ptr<IngressPortBase>(const SegmentAddress&)>;
-using backend_initializer_fn_t = std::function<void(internal::segment::IBuilder&)>;
+using backend_initializer_fn_t = std::function<void(segment::IBuilder&)>;
 
 }  // namespace mrc::segment

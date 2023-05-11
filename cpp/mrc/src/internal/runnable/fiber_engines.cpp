@@ -31,7 +31,7 @@
 #include <string>
 #include <utility>
 
-namespace mrc::internal::runnable {
+namespace mrc::runnable {
 
 FiberEngines::FiberEngines(system::FiberPool& pool, int priority) :
   FiberEngines(::mrc::runnable::LaunchOptions("custom_options", pool.thread_count()), pool, priority)
@@ -88,4 +88,4 @@ runnable::EngineType FiberEngines::engine_type() const
 {
     return EngineType::Fiber;
 }
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable

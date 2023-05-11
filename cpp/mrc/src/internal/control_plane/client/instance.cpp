@@ -42,7 +42,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::control_plane::client {
+namespace mrc::control_plane::client {
 
 Instance::Instance(Client& client,
                    InstanceID instance_id,
@@ -220,4 +220,4 @@ Client& Instance::client()
 //     }
 // }
 
-}  // namespace mrc::internal::control_plane::client
+}  // namespace mrc::control_plane::client

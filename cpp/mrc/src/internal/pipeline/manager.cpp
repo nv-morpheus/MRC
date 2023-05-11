@@ -41,7 +41,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 
 Manager::Manager(std::shared_ptr<Pipeline> pipeline, resources::Manager& resources) :
   m_pipeline(std::move(pipeline)),
@@ -138,4 +138,4 @@ const Pipeline& Manager::pipeline() const
     CHECK(m_pipeline);
     return *m_pipeline;
 }
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline

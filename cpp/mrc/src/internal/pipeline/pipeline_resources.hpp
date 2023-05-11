@@ -23,11 +23,11 @@ namespace mrc::metrics {
 class Registry;
 }  // namespace mrc::metrics
 
-namespace mrc::internal::resources {
+namespace mrc::resources {
 class Manager;
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources
 
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 
 class PipelineResources
 {
@@ -43,4 +43,4 @@ class PipelineResources
     std::unique_ptr<metrics::Registry> m_metrics_registry;
 };
 
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline

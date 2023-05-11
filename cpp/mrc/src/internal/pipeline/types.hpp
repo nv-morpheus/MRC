@@ -21,7 +21,7 @@
 
 #include <map>
 
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 
 using PartitionID      = std::uint32_t;                          // NOLINT
 using SegmentAddresses = std::map<SegmentAddress, PartitionID>;  // NOLINT
@@ -39,4 +39,4 @@ struct ControlMessage
     SegmentAddresses addresses;
 };
 
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline

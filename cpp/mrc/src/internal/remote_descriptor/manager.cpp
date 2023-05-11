@@ -59,7 +59,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::remote_descriptor {
+namespace mrc::remote_descriptor {
 
 namespace {
 
@@ -283,4 +283,4 @@ mrc::runtime::RemoteDescriptor Manager::make_remote_descriptor(
     return {shared_from_this(), std::move(handle)};
 }
 
-}  // namespace mrc::internal::remote_descriptor
+}  // namespace mrc::remote_descriptor

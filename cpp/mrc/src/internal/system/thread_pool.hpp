@@ -37,7 +37,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 /**
  * @brief Fiber-friendly ThreadPool
@@ -93,4 +93,4 @@ class ThreadPool final
     std::vector<system::Thread> m_threads;
 };
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

@@ -24,26 +24,26 @@
 
 #include <memory>
 
-namespace mrc::internal::control_plane {
+namespace mrc::control_plane {
 class Client;
-}  // namespace mrc::internal::control_plane
-namespace mrc::internal::control_plane::client {
+}  // namespace mrc::control_plane
+namespace mrc::control_plane::client {
 class Instance;
-}  // namespace mrc::internal::control_plane::client
-namespace mrc::internal::data_plane {
+}  // namespace mrc::control_plane::client
+namespace mrc::data_plane {
 class DataPlaneResources;
-}  // namespace mrc::internal::data_plane
-namespace mrc::internal::memory {
+}  // namespace mrc::data_plane
+namespace mrc::memory {
 class HostResources;
-}  // namespace mrc::internal::memory
-namespace mrc::internal::resources {
+}  // namespace mrc::memory
+namespace mrc::resources {
 class Manager;
-}  // namespace mrc::internal::resources
-namespace mrc::internal::ucx {
+}  // namespace mrc::resources
+namespace mrc::ucx {
 class UcxResources;
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx
 
-namespace mrc::internal::network {
+namespace mrc::network {
 
 class NetworkResources final : private resources::PartitionResourceBase
 {
@@ -82,4 +82,4 @@ class NetworkResources final : private resources::PartitionResourceBase
     friend resources::Manager;
 };
 
-}  // namespace mrc::internal::network
+}  // namespace mrc::network

@@ -28,14 +28,14 @@
 #include <mutex>
 #include <string>
 
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 class PipelineResources;
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline
 namespace mrc::manifold {
 struct Interface;
 }  // namespace mrc::manifold
 
-namespace mrc::internal::segment {
+namespace mrc::segment {
 class Definition;
 class Builder;
 
@@ -86,4 +86,4 @@ class Instance final : public Service
     mutable std::mutex m_mutex;
 };
 
-}  // namespace mrc::internal::segment
+}  // namespace mrc::segment

@@ -40,7 +40,7 @@ using namespace mrc;
 
 namespace test::pipelines {
 
-std::unique_ptr<pipeline::Pipeline> finite_multisegment()
+std::unique_ptr<pipeline::IPipelineBase> finite_multisegment()
 {
     auto pipeline = pipeline::make_pipeline();
 

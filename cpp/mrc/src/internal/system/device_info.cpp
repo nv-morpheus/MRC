@@ -38,7 +38,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 struct NvmlHandle;
 struct NvmlState;
 
@@ -396,4 +396,4 @@ std::string DeviceInfo::UUID(unsigned int device_id)
     return buffer.data();
 }
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

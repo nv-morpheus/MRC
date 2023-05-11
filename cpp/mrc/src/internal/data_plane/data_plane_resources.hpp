@@ -28,21 +28,21 @@
 #include <memory>
 #include <string>
 
-namespace mrc::internal::control_plane {
+namespace mrc::control_plane {
 class Client;
-}  // namespace mrc::internal::control_plane
-namespace mrc::internal::memory {
+}  // namespace mrc::control_plane
+namespace mrc::memory {
 class HostResources;
-}  // namespace mrc::internal::memory
-namespace mrc::internal::network {
+}  // namespace mrc::memory
+namespace mrc::network {
 class NetworkResources;
-}  // namespace mrc::internal::network
-namespace mrc::internal::ucx {
+}  // namespace mrc::network
+namespace mrc::ucx {
 class RegistrationCache;
 class UcxResources;
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx
 
-namespace mrc::internal::data_plane {
+namespace mrc::data_plane {
 class Client;
 class Server;
 
@@ -88,4 +88,4 @@ class DataPlaneResources final : private Service, private resources::PartitionRe
     friend network::NetworkResources;
 };
 
-}  // namespace mrc::internal::data_plane
+}  // namespace mrc::data_plane

@@ -25,18 +25,18 @@
 namespace mrc {
 class Options;
 }  // namespace mrc
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 class IPipeline;
 class Manager;
-}  // namespace mrc::internal::pipeline
-namespace mrc::internal::resources {
+}  // namespace mrc::pipeline
+namespace mrc::resources {
 class Manager;
-}  // namespace mrc::internal::resources
-namespace mrc::internal::system {
+}  // namespace mrc::resources
+namespace mrc::system {
 class ThreadingResources;
-}  // namespace mrc::internal::system
+}  // namespace mrc::system
 
-namespace mrc::internal::executor {
+namespace mrc::executor {
 
 /**
  * @brief Common Executor code used by both the Standalone and Architect Executors
@@ -67,4 +67,4 @@ std::unique_ptr<Executor> make_executor(std::shared_ptr<Options> options);
 
 std::unique_ptr<Executor> make_executor(std::unique_ptr<system::ThreadingResources> resources);
 
-}  // namespace mrc::internal::executor
+}  // namespace mrc::executor

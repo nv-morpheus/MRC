@@ -32,7 +32,7 @@ namespace mrc::runnable {
 enum class EngineType;
 }  // namespace mrc::runnable
 
-namespace mrc::internal::runnable {
+namespace mrc::runnable {
 
 class FiberEngine final : public Engine
 {
@@ -51,4 +51,4 @@ class FiberEngine final : public Engine
     FiberMetaData m_meta;
 };
 
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable

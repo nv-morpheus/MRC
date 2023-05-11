@@ -19,10 +19,10 @@
 
 #include "mrc/engine/segment/idefinition.hpp"
 
-namespace mrc::internal::segment {
+namespace mrc::segment {
 
 class Definition;
 class IDefinition;
 class IBuilder;
 
-}  // namespace mrc::internal::segment
+}  // namespace mrc::segment

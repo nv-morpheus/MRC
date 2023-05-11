@@ -48,7 +48,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace mrc::internal::segment {
+namespace mrc::segment {
 
 Instance::Instance(std::shared_ptr<const Definition> definition,
                    SegmentRank rank,
@@ -322,4 +322,4 @@ std::shared_ptr<manifold::Interface> Instance::create_manifold(const PortName& n
     return nullptr;
 }
 
-}  // namespace mrc::internal::segment
+}  // namespace mrc::segment

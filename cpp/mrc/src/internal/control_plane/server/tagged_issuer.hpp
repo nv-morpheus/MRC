@@ -28,7 +28,7 @@
 #include <map>
 #include <memory>
 
-namespace mrc::internal::control_plane::server {
+namespace mrc::control_plane::server {
 
 /**
  * @brief Creates masked tags.
@@ -103,4 +103,4 @@ class TaggedIssuer : public Tagged, public UpdateIssuer
     decltype(m_instance_tags)::iterator drop_tag(decltype(m_instance_tags)::iterator it);
 };
 
-}  // namespace mrc::internal::control_plane::server
+}  // namespace mrc::control_plane::server

@@ -34,7 +34,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 class ThreadingResources;
 
@@ -111,4 +111,4 @@ class FiberManager final
     std::map<std::uint32_t, std::unique_ptr<FiberTaskQueue>> m_queues;
 };
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

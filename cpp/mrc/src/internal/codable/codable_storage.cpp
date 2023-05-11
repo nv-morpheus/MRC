@@ -43,7 +43,7 @@
 
 using namespace mrc::memory::literals;
 
-namespace mrc::internal::codable {
+namespace mrc::codable {
 
 CodableStorage::CodableStorage(resources::PartitionResources& resources) : m_resources(resources) {}
 CodableStorage::CodableStorage(mrc::codable::protos::EncodedObject proto, resources::PartitionResources& resources) :
@@ -221,4 +221,4 @@ CodableStorage::idx_t CodableStorage::add_meta_data(const google::protobuf::Mess
     return index;
 }
 
-}  // namespace mrc::internal::codable
+}  // namespace mrc::codable

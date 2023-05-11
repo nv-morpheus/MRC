@@ -30,7 +30,7 @@
 #include <ostream>
 #include <utility>
 
-namespace mrc::internal::pubsub {
+namespace mrc::pubsub {
 
 void PublisherRoundRobin::on_update()
 {
@@ -65,4 +65,4 @@ void PublisherRoundRobin::apply_policy(rxcpp::subscriber<data_plane::RemoteDescr
     }
 }
 
-}  // namespace mrc::internal::pubsub
+}  // namespace mrc::pubsub

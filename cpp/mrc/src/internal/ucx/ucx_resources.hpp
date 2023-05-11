@@ -30,15 +30,15 @@
 namespace mrc::core {
 class FiberTaskQueue;
 }  // namespace mrc::core
-namespace mrc::internal::system {
+namespace mrc::system {
 class FiberTaskQueue;
-}  // namespace mrc::internal::system
+}  // namespace mrc::system
 
-namespace mrc::internal::network {
+namespace mrc::network {
 class NetworkResources;
 }
 
-namespace mrc::internal::ucx {
+namespace mrc::ucx {
 class Context;
 class Endpoint;
 class RegistrationCache;
@@ -90,4 +90,4 @@ class UcxResources final : public resources::PartitionResourceBase
     friend network::NetworkResources;
 };
 
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx

@@ -22,18 +22,18 @@
 #include <cstddef>
 #include <optional>
 
-namespace mrc::internal::memory {
+namespace mrc::memory {
 class DeviceResources;
 class HostResources;
-}  // namespace mrc::internal::memory
-namespace mrc::internal::network {
+}  // namespace mrc::memory
+namespace mrc::network {
 class NetworkResources;
-}  // namespace mrc::internal::network
-namespace mrc::internal::runnable {
+}  // namespace mrc::network
+namespace mrc::runnable {
 class RunnableResources;
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable
 
-namespace mrc::internal::resources {
+namespace mrc::resources {
 
 /**
  * @brief Partition Resources define the set of Resources available to a given Partition
@@ -60,4 +60,4 @@ class PartitionResources final : public PartitionResourceBase
     std::optional<network::NetworkResources>& m_network;
 };
 
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources

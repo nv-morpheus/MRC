@@ -74,7 +74,7 @@
 using namespace mrc;
 using namespace mrc::memory::literals;
 
-static std::shared_ptr<internal::system::System> make_system(std::function<void(Options&)> updater = nullptr)
+static std::shared_ptr<system::System> make_system(std::function<void(Options&)> updater = nullptr)
 {
     auto options = std::make_shared<Options>();
     if (updater)
@@ -82,7 +82,7 @@ static std::shared_ptr<internal::system::System> make_system(std::function<void(
         updater(*options);
     }
 
-    return internal::system::make_system(std::move(options));
+    return system::make_system(std::move(options));
 }
 
 class TestNetwork : public ::testing::Test
@@ -106,18 +106,17 @@ TEST_F(TestNetwork, ResourceManager)
     // using options.placement().resources_strategy(PlacementResources::Shared)
     // will test if cudaSetDevice is being properly called by the network services
     // since all network services for potentially multiple devices are colocated on a single thread
-    auto resources = std::make_unique<internal::resources::Manager>(
-        internal::system::SystemProvider(make_system([](Options& options) {
-            options.enable_server(true);
-            options.architect_url("localhost:13337");
-            options.placement().resources_strategy(PlacementResources::Dedicated);
-            options.resources().enable_device_memory_pool(true);
-            options.resources().enable_host_memory_pool(true);
-            options.resources().host_memory_pool().block_size(32_MiB);
-            options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
-            options.resources().device_memory_pool().block_size(64_MiB);
-            options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
-        })));
+    auto resources = std::make_unique<resources::Manager>(system::SystemProvider(make_system([](Options& options) {
+        options.enable_server(true);
+        options.architect_url("localhost:13337");
+        options.placement().resources_strategy(PlacementResources::Dedicated);
+        options.resources().enable_device_memory_pool(true);
+        options.resources().enable_host_memory_pool(true);
+        options.resources().host_memory_pool().block_size(32_MiB);
+        options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
+        options.resources().device_memory_pool().block_size(64_MiB);
+        options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
+    })));
 
     if (resources->partition_count() < 2 && resources->device_count() < 2)
     {
@@ -166,18 +165,17 @@ TEST_F(TestNetwork, CommsSendRecv)
     // using options.placement().resources_strategy(PlacementResources::Shared)
     // will test if cudaSetDevice is being properly called by the network services
     // since all network services for potentially multiple devices are colocated on a single thread
-    auto resources = std::make_unique<internal::resources::Manager>(
-        internal::system::SystemProvider(make_system([](Options& options) {
-            options.enable_server(true);
-            options.architect_url("localhost:13337");
-            options.placement().resources_strategy(PlacementResources::Dedicated);
-            options.resources().enable_device_memory_pool(true);
-            options.resources().enable_host_memory_pool(true);
-            options.resources().host_memory_pool().block_size(32_MiB);
-            options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
-            options.resources().device_memory_pool().block_size(64_MiB);
-            options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
-        })));
+    auto resources = std::make_unique<resources::Manager>(system::SystemProvider(make_system([](Options& options) {
+        options.enable_server(true);
+        options.architect_url("localhost:13337");
+        options.placement().resources_strategy(PlacementResources::Dedicated);
+        options.resources().enable_device_memory_pool(true);
+        options.resources().enable_host_memory_pool(true);
+        options.resources().host_memory_pool().block_size(32_MiB);
+        options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
+        options.resources().device_memory_pool().block_size(64_MiB);
+        options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
+    })));
 
     if (resources->partition_count() < 2 && resources->device_count() < 2)
     {
@@ -206,8 +204,8 @@ TEST_F(TestNetwork, CommsSendRecv)
     int src = 42;
     int dst = -1;
 
-    internal::data_plane::Request send_req;
-    internal::data_plane::Request recv_req;
+    data_plane::Request send_req;
+    data_plane::Request recv_req;
 
     r1.client().async_p2p_recv(&dst, sizeof(int), 0, recv_req);
     r0.client().async_p2p_send(&src, sizeof(int), 0, id_1, send_req);
@@ -228,18 +226,17 @@ TEST_F(TestNetwork, CommsGet)
     // using options.placement().resources_strategy(PlacementResources::Shared)
     // will test if cudaSetDevice is being properly called by the network services
     // since all network services for potentially multiple devices are colocated on a single thread
-    auto resources = std::make_unique<internal::resources::Manager>(
-        internal::system::SystemProvider(make_system([](Options& options) {
-            options.enable_server(true);
-            options.architect_url("localhost:13337");
-            options.placement().resources_strategy(PlacementResources::Dedicated);
-            options.resources().enable_device_memory_pool(true);
-            options.resources().enable_host_memory_pool(true);
-            options.resources().host_memory_pool().block_size(32_MiB);
-            options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
-            options.resources().device_memory_pool().block_size(64_MiB);
-            options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
-        })));
+    auto resources = std::make_unique<resources::Manager>(system::SystemProvider(make_system([](Options& options) {
+        options.enable_server(true);
+        options.architect_url("localhost:13337");
+        options.placement().resources_strategy(PlacementResources::Dedicated);
+        options.resources().enable_device_memory_pool(true);
+        options.resources().enable_host_memory_pool(true);
+        options.resources().host_memory_pool().block_size(32_MiB);
+        options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
+        options.resources().device_memory_pool().block_size(64_MiB);
+        options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
+    })));
 
     if (resources->partition_count() < 2 && resources->device_count() < 2)
     {
@@ -277,7 +274,7 @@ TEST_F(TestNetwork, CommsGet)
     auto id_0 = resources->partition(0).network()->control_plane().instance_id();
     auto id_1 = resources->partition(1).network()->control_plane().instance_id();
 
-    internal::data_plane::Request get_req;
+    data_plane::Request get_req;
 
     r1.client().async_get(dst.data(), 1_MiB, id_0, src.data(), src_keys, get_req);
 
@@ -299,18 +296,17 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
     // using options.placement().resources_strategy(PlacementResources::Shared)
     // will test if cudaSetDevice is being properly called by the network services
     // since all network services for potentially multiple devices are colocated on a single thread
-    auto resources = std::make_unique<internal::resources::Manager>(
-        internal::system::SystemProvider(make_system([](Options& options) {
-            options.enable_server(true);
-            options.architect_url("localhost:13337");
-            options.placement().resources_strategy(PlacementResources::Dedicated);
-            options.resources().enable_device_memory_pool(true);
-            options.resources().enable_host_memory_pool(true);
-            options.resources().host_memory_pool().block_size(32_MiB);
-            options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
-            options.resources().device_memory_pool().block_size(64_MiB);
-            options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
-        })));
+    auto resources = std::make_unique<resources::Manager>(system::SystemProvider(make_system([](Options& options) {
+        options.enable_server(true);
+        options.architect_url("localhost:13337");
+        options.placement().resources_strategy(PlacementResources::Dedicated);
+        options.resources().enable_device_memory_pool(true);
+        options.resources().enable_host_memory_pool(true);
+        options.resources().host_memory_pool().block_size(32_MiB);
+        options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
+        options.resources().device_memory_pool().block_size(64_MiB);
+        options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
+    })));
 
     if (resources->partition_count() < 2 && resources->device_count() < 2)
     {
@@ -333,12 +329,11 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
     const std::uint64_t tag          = 20919;
     std::atomic<std::size_t> counter = 0;
 
-    auto recv_sink = std::make_unique<node::RxSink<internal::memory::TransientBuffer>>(
-        [&](internal::memory::TransientBuffer buffer) {
-            EXPECT_EQ(buffer.bytes(), 128);
-            counter++;
-            r0.server().deserialize_source().drop_edge(tag);
-        });
+    auto recv_sink = std::make_unique<node::RxSink<memory::TransientBuffer>>([&](memory::TransientBuffer buffer) {
+        EXPECT_EQ(buffer.bytes(), 128);
+        counter++;
+        r0.server().deserialize_source().drop_edge(tag);
+    });
 
     auto deser_source = r0.server().deserialize_source().get_source(tag);
 
@@ -353,7 +348,7 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
 
     auto endpoint = r1.client().endpoint_shared(r0.instance_id());
 
-    internal::data_plane::Request req;
+    data_plane::Request req;
     auto buffer   = resources->partition(1).host().make_buffer(128);
     auto send_tag = tag | TAG_EGR_MSG;
     r1.client().async_send(buffer.data(), buffer.bytes(), send_tag, *endpoint, req);

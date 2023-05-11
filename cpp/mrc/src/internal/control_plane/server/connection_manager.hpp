@@ -30,10 +30,10 @@
 #include <string>
 #include <vector>
 
-namespace mrc::internal::rpc {
+namespace mrc::rpc {
 template <typename T>
 struct StreamWriter;
-}  // namespace mrc::internal::rpc
+}  // namespace mrc::rpc
 namespace mrc::protos {
 class Ack;
 class Event;
@@ -45,13 +45,13 @@ class StateUpdate;
 class TaggedInstance;
 }  // namespace mrc::protos
 
-namespace mrc::internal::control_plane::server {
+namespace mrc::control_plane::server {
 class ClientInstance;
 
 /**
  * @brief Control Plane Connection Manager
  *
- * Manages each gRPC bidirectional stream via the mrc::internal::rpc::ServerStream connection.
+ * Manages each gRPC bidirectional stream via the mrc::rpc::ServerStream connection.
  *
  * Each stream/connection is allowed a one-time registration of client instances (client-side partitions) to be
  * associated with the stream.
@@ -120,4 +120,4 @@ class ConnectionManager : public VersionedState
     std::multimap<stream_id_t, instance_id_t> m_instances_by_stream;
 };
 
-}  // namespace mrc::internal::control_plane::server
+}  // namespace mrc::control_plane::server

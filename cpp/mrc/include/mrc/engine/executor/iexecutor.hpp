@@ -22,15 +22,15 @@
 namespace mrc {
 class Options;
 }  // namespace mrc
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 class IPipeline;
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline
 
-namespace mrc::internal::system {
+namespace mrc::system {
 class IResources;
 }
 
-namespace mrc::internal::executor {
+namespace mrc::executor {
 
 class Executor;
 
@@ -52,7 +52,7 @@ class IExecutor
     IExecutor(std::unique_ptr<system::IResources>);
     virtual ~IExecutor() = 0;
 
-    void register_pipeline(std::unique_ptr<internal::pipeline::IPipeline> pipeline);
+    void register_pipeline(std::unique_ptr<pipeline::IPipeline> pipeline);
 
     void start();
     void stop();
@@ -66,4 +66,4 @@ class IExecutor
     friend Executor;
 };
 
-}  // namespace mrc::internal::executor
+}  // namespace mrc::executor

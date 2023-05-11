@@ -48,7 +48,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::memory {
+namespace mrc::memory {
 
 HostResources::HostResources(runnable::RunnableResources& runnable, ucx::RegistrationCallbackBuilder&& callbacks) :
   system::HostPartitionProvider(runnable)
@@ -122,4 +122,4 @@ std::shared_ptr<mrc::memory::memory_resource> HostResources::arena_memory_resour
 {
     return m_arena;
 }
-}  // namespace mrc::internal::memory
+}  // namespace mrc::memory

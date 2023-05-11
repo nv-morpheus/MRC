@@ -21,13 +21,13 @@
 
 #include <utility>
 
-namespace mrc::internal::runnable {
+namespace mrc::runnable {
 
 Engines::Engines(LaunchOptions launch_options) : m_launch_options(std::move(launch_options)) {}
 
 Engines::~Engines() = default;
 
-const std::vector<std::shared_ptr<::mrc::runnable::Engine>>& Engines::launchers() const
+const std::vector<std::shared_ptr<::mrc::runnable::IEngine>>& Engines::launchers() const
 {
     return m_launchers;
 }
@@ -42,7 +42,7 @@ const LaunchOptions& Engines::launch_options() const
     return m_launch_options;
 }
 
-void Engines::add_launcher(std::shared_ptr<::mrc::runnable::Engine> launcher)
+void Engines::add_launcher(std::shared_ptr<::mrc::runnable::IEngine> launcher)
 {
     m_launchers.push_back(std::move(launcher));
 }
@@ -52,4 +52,4 @@ void Engines::clear_launchers()
     m_launchers.clear();
 }
 
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable

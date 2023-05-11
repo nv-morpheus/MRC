@@ -35,7 +35,7 @@
 #include <exception>
 #include <utility>
 
-namespace mrc::internal::control_plane::client {
+namespace mrc::control_plane::client {
 
 StateManager::StateManager(Client& client) : m_client(client) {}
 
@@ -100,4 +100,4 @@ void StateManager::await_join()
     CHECK(m_runner);
     m_runner->await_join();
 }
-}  // namespace mrc::internal::control_plane::client
+}  // namespace mrc::control_plane::client

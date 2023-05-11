@@ -24,7 +24,7 @@
 #include <string>
 
 namespace mrc::pipeline {
-class Pipeline;
+class IPipelineBase;
 }  // namespace mrc::pipeline
 namespace mrc::segment {
 class Builder;
@@ -62,10 +62,10 @@ class Pipeline
                       pybind11::list egress_port_info,
                       const std::function<void(mrc::segment::Builder&)>& init);
 
-    std::unique_ptr<mrc::pipeline::Pipeline> swap();
+    std::unique_ptr<mrc::pipeline::IPipelineBase> swap();
 
   private:
-    std::unique_ptr<mrc::pipeline::Pipeline> m_pipeline;
+    std::unique_ptr<mrc::pipeline::IPipelineBase> m_pipeline;
 };
 
 #pragma GCC visibility pop

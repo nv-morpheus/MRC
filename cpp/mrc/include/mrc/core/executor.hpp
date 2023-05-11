@@ -21,19 +21,19 @@
 
 #include <memory>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 class IResources;
-}  // namespace mrc::internal::system
+}  // namespace mrc::system
 
 namespace mrc {
 class Options;
 
-class Executor final : public internal::executor::IExecutor
+class Executor final : public executor::IExecutor
 {
   public:
     Executor();
     Executor(std::shared_ptr<Options> options);
-    Executor(std::unique_ptr<internal::system::IResources> resources);
+    Executor(std::unique_ptr<system::IResources> resources);
     ~Executor() final = default;
 };
 

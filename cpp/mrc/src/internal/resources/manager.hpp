@@ -29,26 +29,26 @@
 #include <optional>
 #include <vector>
 
-namespace mrc::internal::network {
+namespace mrc::network {
 class NetworkResources;
-}  // namespace mrc::internal::network
-namespace mrc::internal::control_plane {
+}  // namespace mrc::network
+namespace mrc::control_plane {
 class ControlPlaneResources;
-}  // namespace mrc::internal::control_plane
-namespace mrc::internal::memory {
+}  // namespace mrc::control_plane
+namespace mrc::memory {
 class DeviceResources;
-}  // namespace mrc::internal::memory
-namespace mrc::internal::system {
+}  // namespace mrc::memory
+namespace mrc::system {
 class ThreadingResources;
-}  // namespace mrc::internal::system
-namespace mrc::internal::ucx {
+}  // namespace mrc::system
+namespace mrc::ucx {
 class UcxResources;
-}  // namespace mrc::internal::ucx
-namespace mrc::internal::runtime {
+}  // namespace mrc::ucx
+namespace mrc::runtime {
 class Runtime;
-}  // namespace mrc::internal::runtime
+}  // namespace mrc::runtime
 
-namespace mrc::internal::resources {
+namespace mrc::resources {
 
 class Manager final : public system::SystemProvider
 {
@@ -88,4 +88,4 @@ class Manager final : public system::SystemProvider
     friend runtime::Runtime;
 };
 
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources

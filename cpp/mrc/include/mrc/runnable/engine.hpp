@@ -43,10 +43,10 @@ class Runner;
 /**
  * @brief Provides a one-time use method to execute a task on a supplied execution context
  */
-class Engine
+class IEngine
 {
   public:
-    virtual ~Engine() = default;
+    virtual ~IEngine() = default;
 
     virtual EngineType engine_type() const = 0;
 
@@ -60,15 +60,15 @@ class Engine
  * @brief Provides a set of Engines that
  *
  */
-class Engines
+class IEngines
 {
   public:
-    virtual ~Engines() = default;
+    virtual ~IEngines() = default;
 
-    virtual const std::vector<std::shared_ptr<Engine>>& launchers() const = 0;
-    virtual const LaunchOptions& launch_options() const                   = 0;
-    virtual EngineType engine_type() const                                = 0;
-    virtual std::size_t size() const                                      = 0;
+    virtual const std::vector<std::shared_ptr<IEngine>>& launchers() const = 0;
+    virtual const LaunchOptions& launch_options() const                    = 0;
+    virtual EngineType engine_type() const                                 = 0;
+    virtual std::size_t size() const                                       = 0;
 };
 
 }  // namespace mrc::runnable

@@ -74,7 +74,7 @@ class TestExecutor : public ::testing::Test
     //     return std::make_pair(std::move(pipeline), std::move(source));
     // }
 
-    static std::unique_ptr<pipeline::Pipeline> make_pipeline()
+    static std::unique_ptr<pipeline::IPipelineBase> make_pipeline()
     {
         auto pipeline = pipeline::make_pipeline();
 

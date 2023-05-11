@@ -55,7 +55,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::data_plane {
+namespace mrc::data_plane {
 
 using namespace mrc::memory::literals;
 
@@ -329,4 +329,4 @@ void Client::do_service_await_join()
     m_rd_writer->await_join();
 }
 
-}  // namespace mrc::internal::data_plane
+}  // namespace mrc::data_plane

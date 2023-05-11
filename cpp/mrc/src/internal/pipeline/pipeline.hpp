@@ -24,17 +24,17 @@
 #include <map>
 #include <memory>
 
-namespace mrc::internal::segment {
+namespace mrc::segment {
 class Definition;
-}  // namespace mrc::internal::segment
+}  // namespace mrc::segment
 
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 class IPipeline;
 
-class Pipeline
+class PipelineDefinition
 {
   public:
-    static std::shared_ptr<Pipeline> unwrap(IPipeline& pipeline);
+    static std::shared_ptr<PipelineDefinition> unwrap(IPipeline& pipeline);
 
     void add_segment(std::shared_ptr<const segment::Definition> segment);
 
@@ -49,4 +49,4 @@ class Pipeline
     std::map<SegmentID, std::shared_ptr<const segment::Definition>> m_segments;
 };
 
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline

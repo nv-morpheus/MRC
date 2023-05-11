@@ -23,4 +23,4 @@
 #include "internal/ucx/worker.hpp"
 // IWYU pragma: end_exports
 
-namespace mrc::internal::ucx {}  // namespace mrc::internal::ucx
+namespace mrc::ucx {}  // namespace mrc::ucx

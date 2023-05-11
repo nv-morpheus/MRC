@@ -25,7 +25,7 @@
 #include <set>
 #include <utility>
 
-namespace mrc::internal::segment {
+namespace mrc::segment {
 
 Definition::Definition(std::string name,
                        std::map<std::string, ::mrc::segment::ingress_initializer_t> ingress_initializers,
@@ -119,4 +119,4 @@ void Definition::validate_ports() const
     }
 }
 
-}  // namespace mrc::internal::segment
+}  // namespace mrc::segment

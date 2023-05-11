@@ -23,7 +23,7 @@
 #include <memory>
 #include <vector>
 
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 
 PortGraph::PortGraph(const Pipeline& pipeline)
 {
@@ -72,4 +72,4 @@ const std::set<std::string>& PortGraph::segments_with_only_egress_ports() const
 {
     return m_sinks;
 }
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline

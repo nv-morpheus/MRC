@@ -47,7 +47,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::memory {
+namespace mrc::memory {
 
 DeviceResources::DeviceResources(resources::PartitionResourceBase& base, std::optional<ucx::UcxResources>& ucx) :
   resources::PartitionResourceBase(base)
@@ -116,4 +116,4 @@ std::shared_ptr<mrc::memory::memory_resource> DeviceResources::arena_memory_reso
 {
     return m_arena;
 }
-}  // namespace mrc::internal::memory
+}  // namespace mrc::memory

@@ -35,7 +35,7 @@ class StateUpdate;
 class UpdateSubscriptionServiceRequest;
 }  // namespace mrc::protos
 
-namespace mrc::internal::control_plane::server {
+namespace mrc::control_plane::server {
 
 class Role;
 class ClientInstance;
@@ -158,4 +158,4 @@ class Role final : public VersionedState
     std::map<std::uint64_t, std::pair<std::uint64_t, std::shared_ptr<server::ClientInstance>>> m_latched_members;
 };
 
-}  // namespace mrc::internal::control_plane::server
+}  // namespace mrc::control_plane::server

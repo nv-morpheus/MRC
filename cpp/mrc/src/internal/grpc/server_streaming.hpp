@@ -54,7 +54,7 @@
 #include <optional>
 #include <tuple>
 
-namespace mrc::internal::rpc {
+namespace mrc::rpc {
 
 /**
  * @brief Implementation of a gRPC bidirectional streaming server using MRC primitives
@@ -389,4 +389,4 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
     friend ServerStreamWriter;
 };
 
-}  // namespace mrc::internal::rpc
+}  // namespace mrc::rpc

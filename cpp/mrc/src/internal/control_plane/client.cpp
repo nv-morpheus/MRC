@@ -42,7 +42,7 @@
 
 #include <ostream>
 
-namespace mrc::internal::control_plane {
+namespace mrc::control_plane {
 
 Client::Client(resources::PartitionResourceBase& base, std::shared_ptr<grpc::CompletionQueue> cq) :
   resources::PartitionResourceBase(base),
@@ -262,4 +262,4 @@ void Client::request_update()
     // }
 }
 
-}  // namespace mrc::internal::control_plane
+}  // namespace mrc::control_plane

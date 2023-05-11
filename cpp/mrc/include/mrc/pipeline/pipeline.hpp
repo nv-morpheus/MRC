@@ -37,18 +37,18 @@ class Definition;
 
 namespace mrc::pipeline {
 
-class Pipeline final : public internal::pipeline::IPipeline
+class IPipeline final : public pipeline::IPipeline
 {
-    Pipeline()   = default;
-    using base_t = internal::pipeline::IPipeline;
+    IPipeline()  = default;
+    using base_t = pipeline::IPipeline;
 
   public:
-    static std::unique_ptr<Pipeline> create();
+    static std::unique_ptr<IPipeline> create();
 
-    ~Pipeline() final = default;
+    ~IPipeline() final = default;
 
-    DELETE_COPYABILITY(Pipeline);
-    DELETE_MOVEABILITY(Pipeline);
+    DELETE_COPYABILITY(IPipeline);
+    DELETE_MOVEABILITY(IPipeline);
 
     /**
      * @brief register a segment
@@ -132,6 +132,6 @@ class Pipeline final : public internal::pipeline::IPipeline
                                                       segment::segment_initializer_fn_t segment_initializer);
 };
 
-std::unique_ptr<Pipeline> make_pipeline();
+std::unique_ptr<PipelineDefinition> make_pipeline();
 
 }  // namespace mrc::pipeline

@@ -17,7 +17,7 @@
 
 #pragma once
 
-namespace mrc::internal::ucx {
+namespace mrc::ucx {
 
 class Context;
 class Worker;
@@ -25,4 +25,4 @@ class Endpoint;
 
 class MemoryBlock;
 
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx

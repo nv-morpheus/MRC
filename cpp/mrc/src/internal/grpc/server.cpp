@@ -31,7 +31,7 @@
 #include <memory>
 #include <utility>
 
-namespace mrc::internal::rpc {
+namespace mrc::rpc {
 
 Server::Server(runnable::RunnableResources& runnable) : m_runnable(runnable)
 {
@@ -101,4 +101,4 @@ void Server::register_service(std::shared_ptr<grpc::Service> service)
     m_builder.RegisterService(service.get());
     m_services.push_back(service);
 }
-}  // namespace mrc::internal::rpc
+}  // namespace mrc::rpc

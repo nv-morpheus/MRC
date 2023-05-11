@@ -23,7 +23,7 @@ namespace mrc {
 class Options;
 }  // namespace mrc
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 class System;
 
@@ -45,4 +45,4 @@ class ISystem
     friend System;
 };
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

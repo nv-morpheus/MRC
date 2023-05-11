@@ -22,11 +22,11 @@
 #include <cstddef>
 #include <functional>
 
-namespace mrc::internal::runnable {
+namespace mrc::runnable {
 class RunnableResources;
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable
 
-namespace mrc::internal::resources {
+namespace mrc::resources {
 
 /**
  * @brief Provider of both a system::PartitionProvider and a runnable::Resource assigned to the particular partition
@@ -46,4 +46,4 @@ class PartitionResourceBase : public system::PartitionProvider
     std::reference_wrapper<runnable::RunnableResources> m_runnable;
 };
 
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources

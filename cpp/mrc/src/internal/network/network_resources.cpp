@@ -33,7 +33,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::network {
+namespace mrc::network {
 
 NetworkResources::NetworkResources(resources::PartitionResourceBase& base,
                                    ucx::UcxResources& ucx,
@@ -102,4 +102,4 @@ Future<void> NetworkResources::shutdown()
     return m_control_plane->shutdown();
 }
 
-}  // namespace mrc::internal::network
+}  // namespace mrc::network

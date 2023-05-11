@@ -29,7 +29,7 @@ using hwloc_topology_t = struct hwloc_topology*;
 using nvmlDevice_t     = struct nvmlDevice_st*;
 // NOLINTEND(readability-identifier-naming)
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 struct DeviceInfo
 {
@@ -48,4 +48,4 @@ struct DeviceInfo
     // NOLINTEND(readability-identifier-naming)
 };
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

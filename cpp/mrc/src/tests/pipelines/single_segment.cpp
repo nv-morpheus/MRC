@@ -29,14 +29,14 @@ using namespace mrc;
 
 namespace test::pipelines {
 
-std::unique_ptr<pipeline::Pipeline> finite_single_segment()
+std::unique_ptr<pipeline::IPipelineBase> finite_single_segment()
 {
     auto pipeline = pipeline::make_pipeline();
     pipeline->register_segment(test::segments::single_finite_no_ports("seg_1"));
     return pipeline;
 }
 
-std::unique_ptr<pipeline::Pipeline> finite_single_segment_will_throw()
+std::unique_ptr<pipeline::IPipelineBase> finite_single_segment_will_throw()
 {
     auto pipeline = pipeline::make_pipeline();
     pipeline->register_segment(test::segments::single_finite_no_ports_will_throw("seg_1"));

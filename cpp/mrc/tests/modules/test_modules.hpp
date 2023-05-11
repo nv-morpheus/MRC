@@ -68,7 +68,7 @@ class TestModules : public ::testing::Test
 
     void TearDown() override {}
 
-    std::unique_ptr<pipeline::Pipeline> m_pipeline;
+    std::unique_ptr<pipeline::IPipelineBase> m_pipeline;
     std::shared_ptr<TestSegmentResources> m_resources;
 };
 

@@ -510,7 +510,7 @@ TEST_F(TestSegment, SegmentEndToEndTestRx)
     // auto builder =  std::make_unique<segment::Builder>(segdef, 42);
 }
 
-void execute_pipeline(std::unique_ptr<pipeline::Pipeline> pipeline)
+void execute_pipeline(std::unique_ptr<pipeline::IPipelineBase> pipeline)
 {
     auto options = std::make_unique<Options>();
     options->topology().user_cpuset("0");

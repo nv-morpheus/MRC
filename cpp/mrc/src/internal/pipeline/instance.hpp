@@ -26,17 +26,17 @@
 #include <map>
 #include <memory>
 
-namespace mrc::internal::resources {
+namespace mrc::resources {
 class Manager;
-}  // namespace mrc::internal::resources
-namespace mrc::internal::segment {
+}  // namespace mrc::resources
+namespace mrc::segment {
 class Instance;
-}  // namespace mrc::internal::segment
+}  // namespace mrc::segment
 namespace mrc::manifold {
 struct Interface;
 }  // namespace mrc::manifold
 
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 class Pipeline;
 
 class Instance final : public Service, public PipelineResources
@@ -86,4 +86,4 @@ class Instance final : public Service, public PipelineResources
     SharedFuture<void> m_joinable_future;
 };
 
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline

@@ -23,7 +23,7 @@
 
 #include <utility>
 
-namespace mrc::internal::segment {
+namespace mrc::segment {
 
 IBuilder::IBuilder(Builder* impl) : m_impl(impl)
 {
@@ -86,4 +86,4 @@ std::function<void(std::int64_t)> IBuilder::make_throughput_counter(const std::s
     return m_impl->make_throughput_counter(name);
 }
 
-}  // namespace mrc::internal::segment
+}  // namespace mrc::segment

@@ -43,7 +43,7 @@ class TopologyOptions;
         CHECK_NE(rc, -1);       \
     }
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 class Topology final
 {
@@ -207,4 +207,4 @@ class Topology final
     std::map<int, GpuInfo> m_gpu_info;
 };
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

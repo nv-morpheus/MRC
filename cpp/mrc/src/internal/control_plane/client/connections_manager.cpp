@@ -38,7 +38,7 @@
 #include <string>
 #include <utility>
 
-namespace mrc::internal::control_plane::client {
+namespace mrc::control_plane::client {
 
 ConnectionsManager::ConnectionsManager(Client& client, update_channel_t& update_channel) : StateManager(client)
 {
@@ -187,4 +187,4 @@ const std::map<InstanceID, std::unique_ptr<ConnectionsManager::update_channel_t>
     return m_update_channels;
 }
 
-}  // namespace mrc::internal::control_plane::client
+}  // namespace mrc::control_plane::client

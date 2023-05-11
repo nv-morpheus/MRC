@@ -23,7 +23,7 @@
 #include <cstddef>
 #include <optional>
 
-namespace mrc::internal::codable {
+namespace mrc::codable {
 
 /**
  * @brief StorageView implements the methods on IEncodedObject with a reference to a protos::EncodedObject as the
@@ -56,4 +56,4 @@ class StorageView : public virtual mrc::codable::IStorage
     virtual const mrc::codable::protos::EncodedObject& get_proto() const = 0;
 };
 
-}  // namespace mrc::internal::codable
+}  // namespace mrc::codable

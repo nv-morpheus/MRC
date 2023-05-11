@@ -100,7 +100,7 @@ class StatGatherTest : public ::testing::Test
     void TearDown() override {}
 
     std::size_t m_iterations;
-    std::unique_ptr<pipeline::Pipeline> m_pipeline;
+    std::unique_ptr<pipeline::IPipelineBase> m_pipeline;
     std::shared_ptr<TestSegmentResources> m_resources;
     std::set<std::string> m_components = {"src", "internal_1", "internal_2", "sink"};
 };

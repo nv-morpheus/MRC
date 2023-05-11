@@ -26,7 +26,7 @@
 #include <map>
 #include <vector>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 ThreadingResources::ThreadingResources(SystemProvider system) :
   SystemProvider(system),
@@ -71,4 +71,4 @@ std::unique_ptr<ThreadingResources> ThreadingResources::unwrap(IResources& resou
 {
     return std::move(resources.m_impl);
 }
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

@@ -44,7 +44,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::pubsub {
+namespace mrc::pubsub {
 
 PublisherService::PublisherService(std::string service_name, runtime::Partition& runtime) :
   Base(std::move(service_name), runtime),
@@ -152,4 +152,4 @@ const std::unordered_map<std::uint64_t, std::shared_ptr<ucx::Endpoint>>& Publish
 {
     return m_tagged_endpoints;
 }
-}  // namespace mrc::internal::pubsub
+}  // namespace mrc::pubsub

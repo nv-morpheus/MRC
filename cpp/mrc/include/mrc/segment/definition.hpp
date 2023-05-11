@@ -29,7 +29,7 @@ namespace mrc::segment {
 struct EgressPortsBase;
 struct IngressPortsBase;
 
-class Definition final : public internal::segment::IDefinition
+class Definition final : public segment::IDefinition
 {
   private:
     Definition(std::string name,

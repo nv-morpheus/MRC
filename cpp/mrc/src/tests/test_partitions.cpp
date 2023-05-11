@@ -42,7 +42,6 @@
 #include <vector>
 
 using namespace mrc;
-using namespace internal;
 using namespace system;
 
 // iwyu is getting confused between std::uint32_t and boost::uint32_t

@@ -23,11 +23,11 @@
 #include <memory>
 #include <string>
 
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 class IPipeline;
 }
 
-namespace mrc::internal::segment {
+namespace mrc::segment {
 
 class Definition;
 
@@ -46,4 +46,4 @@ struct IDefinition
     friend pipeline::IPipeline;
 };
 
-}  // namespace mrc::internal::segment
+}  // namespace mrc::segment

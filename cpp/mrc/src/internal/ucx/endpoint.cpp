@@ -33,7 +33,7 @@
 #include <ostream>  // for logging
 #include <utility>
 
-namespace mrc::internal::ucx {
+namespace mrc::ucx {
 
 Endpoint::Endpoint(Handle<Worker> local_worker, WorkerAddress remote_worker) : m_worker(std::move(local_worker))
 {
@@ -91,4 +91,4 @@ const RemoteRegistrationCache& Endpoint::registration_cache() const
     return *m_registration_cache;
 }
 
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx

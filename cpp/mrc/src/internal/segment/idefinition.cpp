@@ -21,7 +21,7 @@
 
 #include <utility>
 
-namespace mrc::internal::segment {
+namespace mrc::segment {
 
 IDefinition::IDefinition(std::string name,
                          std::map<std::string, ::mrc::segment::ingress_initializer_t> ingress_initializers,
@@ -40,4 +40,4 @@ const std::string& IDefinition::name() const
     return m_impl->name();
 }
 
-}  // namespace mrc::internal::segment
+}  // namespace mrc::segment

@@ -21,7 +21,7 @@
 
 #include <glog/logging.h>
 
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 
 PipelineResources::PipelineResources(resources::Manager& resources) :
   m_resources(resources),
@@ -41,4 +41,4 @@ metrics::Registry& PipelineResources::metrics_registry() const
     return *m_metrics_registry;
 }
 
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline

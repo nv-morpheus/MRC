@@ -23,7 +23,7 @@
 
 #include <utility>
 
-std::shared_ptr<mrc::internal::system::System> make_system(std::function<void(mrc::Options&)> updater)
+std::shared_ptr<mrc::system::System> make_system(std::function<void(mrc::Options&)> updater)
 {
     auto options = std::make_shared<mrc::Options>();
     if (updater)
@@ -31,5 +31,5 @@ std::shared_ptr<mrc::internal::system::System> make_system(std::function<void(mr
         updater(*options);
     }
 
-    return mrc::internal::system::make_system(std::move(options));
+    return mrc::system::make_system(std::move(options));
 }

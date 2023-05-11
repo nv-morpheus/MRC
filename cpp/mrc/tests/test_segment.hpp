@@ -84,7 +84,7 @@ class TestSegment : public ::testing::Test
     std::function<void(segment::Builder&)> m_initializer = [this](segment::Builder& s) {
         this->m_initializer_called = true;
     };
-    std::unique_ptr<pipeline::Pipeline> m_pipeline;
+    std::unique_ptr<pipeline::IPipelineBase> m_pipeline;
     std::shared_ptr<TestSegmentResources> m_resources;
 };
 

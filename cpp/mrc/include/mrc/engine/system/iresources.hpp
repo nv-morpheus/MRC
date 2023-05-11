@@ -20,7 +20,7 @@
 #include <functional>
 #include <memory>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 class ISystem;
 class ThreadingResources;
@@ -40,4 +40,4 @@ class IResources
     friend ThreadingResources;
 };
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

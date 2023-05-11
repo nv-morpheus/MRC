@@ -25,7 +25,7 @@
 #include <memory>
 #include <utility>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 IResources::IResources(std::shared_ptr<ISystem> system) :
   m_impl(std::make_unique<ThreadingResources>(SystemProvider(System::unwrap(*system))))
@@ -42,4 +42,4 @@ void IResources::add_thread_finalizer(std::function<void()> finalizer_fn)
     m_impl->register_thread_local_finalizer(m_impl->system().topology().cpu_set(), std::move(finalizer_fn));
 }
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

@@ -38,7 +38,7 @@ class EgressPortBase;
 class IngressPortBase;
 }  // namespace mrc::segment
 
-namespace mrc::internal::segment {
+namespace mrc::segment {
 
 class Builder;
 
@@ -65,4 +65,4 @@ class IBuilder final
     Builder* m_impl;
 };
 
-}  // namespace mrc::internal::segment
+}  // namespace mrc::segment

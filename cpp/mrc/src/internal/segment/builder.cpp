@@ -36,7 +36,7 @@
 #include <ostream>
 #include <utility>
 
-namespace mrc::internal::segment {
+namespace mrc::segment {
 
 Builder::Builder(std::shared_ptr<const Definition> segdef,
                  SegmentRank rank,
@@ -180,4 +180,4 @@ std::function<void(std::int64_t)> Builder::make_throughput_counter(const std::st
         counter.increment(ticks);
     };
 }
-}  // namespace mrc::internal::segment
+}  // namespace mrc::segment

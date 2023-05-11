@@ -27,11 +27,11 @@
 
 #include <memory>
 
-namespace mrc::internal::control_plane {
+namespace mrc::control_plane {
 
 ControlPlaneResources::ControlPlaneResources(resources::PartitionResourceBase& base) :
   resources::PartitionResourceBase(base),
-  m_client(std::make_unique<internal::control_plane::Client>(base))
+  m_client(std::make_unique<control_plane::Client>(base))
 {
     if (system().options().enable_server())
     {
@@ -60,4 +60,4 @@ ControlPlaneResources::~ControlPlaneResources()
     }
 }
 
-}  // namespace mrc::internal::control_plane
+}  // namespace mrc::control_plane

@@ -28,7 +28,7 @@
 
 #include <memory>
 
-namespace mrc::internal::data_plane {
+namespace mrc::data_plane {
 
 using namespace mrc::memory::literals;
 
@@ -117,4 +117,4 @@ const InstanceID& DataPlaneResources::instance_id() const
     return m_instance_id;
 }
 
-}  // namespace mrc::internal::data_plane
+}  // namespace mrc::data_plane

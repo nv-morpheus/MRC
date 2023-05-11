@@ -27,11 +27,11 @@
 #include <cstddef>
 #include <memory>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 class FiberTaskQueue;
-}  // namespace mrc::internal::system
+}  // namespace mrc::system
 
-namespace mrc::internal::runnable {
+namespace mrc::runnable {
 
 class RunnableResources final : public system::HostPartitionProvider, public mrc::pipeline::IRunnableResources
 {
@@ -49,4 +49,4 @@ class RunnableResources final : public system::HostPartitionProvider, public mrc
     std::unique_ptr<mrc::runnable::LaunchControl> m_launch_control;
 };
 
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable

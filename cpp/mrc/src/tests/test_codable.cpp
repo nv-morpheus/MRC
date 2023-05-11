@@ -116,15 +116,14 @@ class TestCodable : public ::testing::Test
   protected:
     void SetUp() override
     {
-        auto resources = std::make_unique<internal::resources::Manager>(
-            internal::system::SystemProvider(make_system([](Options& options) {
-                // todo(#114) - propose: remove this option entirely
-                options.enable_server(true);
-                options.architect_url("localhost:13337");
-                options.placement().resources_strategy(PlacementResources::Dedicated);
-            })));
+        auto resources = std::make_unique<resources::Manager>(system::SystemProvider(make_system([](Options& options) {
+            // todo(#114) - propose: remove this option entirely
+            options.enable_server(true);
+            options.architect_url("localhost:13337");
+            options.placement().resources_strategy(PlacementResources::Dedicated);
+        })));
 
-        m_runtime = std::make_unique<internal::runtime::Runtime>(std::move(resources));
+        m_runtime = std::make_unique<runtime::Runtime>(std::move(resources));
 
         DVLOG(10) << "Setup Complete";
     }
@@ -136,7 +135,7 @@ class TestCodable : public ::testing::Test
         DVLOG(10) << "Teardown Complete";
     }
 
-    std::unique_ptr<internal::runtime::Runtime> m_runtime;
+    std::unique_ptr<runtime::Runtime> m_runtime;
 };
 
 TEST_F(TestCodable, Objects)

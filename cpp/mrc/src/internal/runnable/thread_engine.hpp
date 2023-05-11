@@ -28,14 +28,14 @@
 #include <optional>
 #include <thread>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 class Thread;
-}  // namespace mrc::internal::system
+}  // namespace mrc::system
 namespace mrc::runnable {
 enum class EngineType;
 }  // namespace mrc::runnable
 
-namespace mrc::internal::runnable {
+namespace mrc::runnable {
 
 class ThreadEngine final : public Engine
 {
@@ -56,4 +56,4 @@ class ThreadEngine final : public Engine
     std::unique_ptr<system::Thread> m_thread;
 };
 
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable

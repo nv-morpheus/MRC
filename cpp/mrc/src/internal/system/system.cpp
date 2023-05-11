@@ -29,7 +29,7 @@
 
 #include <utility>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 std::shared_ptr<System> System::create(std::shared_ptr<Options> options)
 {
@@ -77,4 +77,4 @@ std::shared_ptr<System> make_system(std::shared_ptr<Options> options)
     return System::create(std::move(options));
 }
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

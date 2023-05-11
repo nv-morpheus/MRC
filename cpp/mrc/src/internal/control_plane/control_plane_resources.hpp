@@ -21,11 +21,11 @@
 
 #include <memory>
 
-namespace mrc::internal::network {
+namespace mrc::network {
 class NetworkResources;
-}  // namespace mrc::internal::network
+}  // namespace mrc::network
 
-namespace mrc::internal::control_plane {
+namespace mrc::control_plane {
 
 class Client;
 class Server;
@@ -48,4 +48,4 @@ class ControlPlaneResources final : private resources::PartitionResourceBase
     friend network::NetworkResources;
 };
 
-}  // namespace mrc::internal::control_plane
+}  // namespace mrc::control_plane

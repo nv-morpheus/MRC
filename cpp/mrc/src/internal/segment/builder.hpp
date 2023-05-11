@@ -26,9 +26,9 @@
 #include <memory>
 #include <string>
 
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 class PipelineResources;
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline
 
 namespace mrc::modules {
 class SegmentModule;
@@ -44,7 +44,7 @@ struct IngressPortBase;
 struct ObjectProperties;
 }  // namespace mrc::segment
 
-namespace mrc::internal::segment {
+namespace mrc::segment {
 class Definition;
 class IBuilder;
 
@@ -101,4 +101,4 @@ class Builder final
     friend IBuilder;
 };
 
-}  // namespace mrc::internal::segment
+}  // namespace mrc::segment

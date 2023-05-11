@@ -27,14 +27,14 @@
 namespace grpc {
 class Service;
 }  // namespace grpc
-namespace mrc::internal::runnable {
+namespace mrc::runnable {
 class RunnableResources;
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
 
-namespace mrc::internal::rpc {
+namespace mrc::rpc {
 
 class Server : public Service
 {
@@ -64,4 +64,4 @@ class Server : public Service
     std::unique_ptr<mrc::runnable::Runner> m_event_hander;
 };
 
-}  // namespace mrc::internal::rpc
+}  // namespace mrc::rpc

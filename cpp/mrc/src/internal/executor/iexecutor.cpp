@@ -27,7 +27,7 @@
 #include <memory>
 #include <utility>
 
-namespace mrc::internal::executor {
+namespace mrc::executor {
 
 IExecutor::IExecutor(std::shared_ptr<Options> options) : m_impl(make_executor(std::move(options))) {}
 IExecutor::IExecutor(std::unique_ptr<system::IResources> resources) :
@@ -38,7 +38,7 @@ IExecutor::IExecutor(std::unique_ptr<system::IResources> resources) :
 
 IExecutor::~IExecutor() = default;
 
-void IExecutor::register_pipeline(std::unique_ptr<internal::pipeline::IPipeline> pipeline)
+void IExecutor::register_pipeline(std::unique_ptr<pipeline::IPipeline> pipeline)
 {
     CHECK(m_impl);
     m_impl->register_pipeline(std::move(pipeline));
@@ -62,4 +62,4 @@ void IExecutor::join()
     m_impl->service_await_join();
 }
 
-}  // namespace mrc::internal::executor
+}  // namespace mrc::executor
