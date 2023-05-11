@@ -61,11 +61,6 @@ Client& DataPlaneResources::client()
     return *m_client;
 }
 
-// Server& Resources::server()
-// {
-//     return m_server;
-// }
-
 std::string DataPlaneResources::ucx_address() const
 {
     return m_ucx.worker().address();
