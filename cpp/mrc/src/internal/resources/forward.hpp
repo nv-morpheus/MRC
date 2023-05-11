@@ -40,7 +40,7 @@ class DeviceResources;
 
 // control plane and data plane
 namespace network {
-class Resources;
+class NetworkResources;
 }  // namespace network
 
 namespace ucx {

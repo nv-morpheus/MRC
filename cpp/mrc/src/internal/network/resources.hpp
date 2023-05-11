@@ -45,21 +45,21 @@ class UcxResources;
 
 namespace mrc::internal::network {
 
-class Resources final : private resources::PartitionResourceBase
+class NetworkResources final : private resources::PartitionResourceBase
 {
   public:
-    Resources(resources::PartitionResourceBase& base,
-              ucx::UcxResources& ucx,
-              memory::HostResources& host,
-              std::unique_ptr<control_plane::client::Instance> control_plane);
-    ~Resources() final;
+    NetworkResources(resources::PartitionResourceBase& base,
+                     ucx::UcxResources& ucx,
+                     memory::HostResources& host,
+                     std::unique_ptr<control_plane::client::Instance> control_plane);
+    ~NetworkResources() final;
 
-    DELETE_COPYABILITY(Resources);
+    DELETE_COPYABILITY(NetworkResources);
 
     // todo(clang-format-15)
     // clang-format off
-    Resources(Resources&&) noexcept            = default;
-    Resources& operator=(Resources&&) noexcept = delete;
+    NetworkResources(NetworkResources&&) noexcept            = default;
+    NetworkResources& operator=(NetworkResources&&) noexcept = delete;
     // clang-format on
 
     const InstanceID& instance_id() const;

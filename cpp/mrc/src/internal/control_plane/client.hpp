@@ -56,7 +56,7 @@ class ConnectionsManager;
 class SubscriptionService;
 }  // namespace mrc::internal::control_plane::client
 namespace mrc::internal::network {
-class Resources;
+class NetworkResources;
 }  // namespace mrc::internal::network
 namespace mrc::internal::ucx {
 class UcxResources;
@@ -201,7 +201,7 @@ class Client final : public resources::PartitionResourceBase, public Service
 
     std::mutex m_mutex;
 
-    friend network::Resources;
+    friend network::NetworkResources;
 };
 
 // todo: create this object from the client which will own the stop_source

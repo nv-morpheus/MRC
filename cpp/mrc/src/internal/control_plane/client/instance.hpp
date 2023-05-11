@@ -35,7 +35,7 @@ namespace mrc::internal::control_plane {
 class Client;
 }  // namespace mrc::internal::control_plane
 namespace mrc::internal::network {
-class Resources;
+class NetworkResources;
 }  // namespace mrc::internal::network
 namespace mrc::protos {
 class DropSubscriptionServiceState;
@@ -86,7 +86,7 @@ class Instance final : private resources::PartitionResourceBase, private Service
     std::multimap<std::string, std::shared_ptr<ISubscriptionServiceUpdater>> m_subscription_services;
     std::unique_ptr<mrc::runnable::Runner> m_update_handler;
 
-    friend network::Resources;
+    friend network::NetworkResources;
 };
 
 }  // namespace mrc::internal::control_plane::client

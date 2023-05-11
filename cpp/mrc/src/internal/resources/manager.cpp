@@ -156,10 +156,10 @@ Manager::Manager(std::unique_ptr<system::ThreadingResources> resources) :
             auto instance_id = m_control_plane->client().connections().instance_ids().at(base.partition_id());
             DCHECK(contains(control_instances, instance_id));  // todo(cpp20) contains
             auto instance = std::move(control_instances.at(instance_id));
-            network::Resources network(base,
-                                       *m_ucx.at(base.partition_id()),
-                                       m_host.at(base.partition().host_partition_id()),
-                                       std::move(instance));
+            network::NetworkResources network(base,
+                                              *m_ucx.at(base.partition_id()),
+                                              m_host.at(base.partition().host_partition_id()),
+                                              std::move(instance));
             m_network.emplace_back(std::move(network));
         }
         else

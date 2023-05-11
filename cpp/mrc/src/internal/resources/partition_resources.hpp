@@ -27,7 +27,7 @@ class DeviceResources;
 class HostResources;
 }  // namespace mrc::internal::memory
 namespace mrc::internal::network {
-class Resources;
+class NetworkResources;
 }  // namespace mrc::internal::network
 namespace mrc::internal::runnable {
 class Resources;
@@ -48,16 +48,16 @@ class PartitionResources final : public PartitionResourceBase
                        std::size_t partition_id,
                        memory::HostResources& host,
                        std::optional<memory::DeviceResources>& device,
-                       std::optional<network::Resources>& network);
+                       std::optional<network::NetworkResources>& network);
 
     memory::HostResources& host();
     std::optional<memory::DeviceResources>& device();
-    std::optional<network::Resources>& network();
+    std::optional<network::NetworkResources>& network();
 
   private:
     memory::HostResources& m_host;
     std::optional<memory::DeviceResources>& m_device;
-    std::optional<network::Resources>& m_network;
+    std::optional<network::NetworkResources>& m_network;
 };
 
 }  // namespace mrc::internal::resources

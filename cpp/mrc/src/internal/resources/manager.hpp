@@ -30,7 +30,7 @@
 #include <vector>
 
 namespace mrc::internal::network {
-class Resources;
+class NetworkResources;
 }  // namespace mrc::internal::network
 namespace mrc::internal::control_plane {
 class ControlPlaneResources;
@@ -80,7 +80,7 @@ class Manager final : public system::SystemProvider
     // so it can be the first variable destroyed
     // this is the owner of the control_plane::Client::Instance
     // which must be destroyed before all other
-    std::vector<std::optional<network::Resources>> m_network;  // one per flattened partition
+    std::vector<std::optional<network::NetworkResources>> m_network;  // one per flattened partition
 
     static thread_local PartitionResources* m_thread_partition;
     static thread_local Manager* m_thread_resources;

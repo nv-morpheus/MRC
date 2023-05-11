@@ -35,7 +35,7 @@ namespace mrc::internal::memory {
 class HostResources;
 }  // namespace mrc::internal::memory
 namespace mrc::internal::network {
-class Resources;
+class NetworkResources;
 }  // namespace mrc::internal::network
 namespace mrc::internal::ucx {
 class RegistrationCache;
@@ -85,7 +85,7 @@ class DataPlaneResources final : private Service, private resources::PartitionRe
     std::unique_ptr<Server> m_server;
     std::unique_ptr<Client> m_client;
 
-    friend network::Resources;
+    friend network::NetworkResources;
 };
 
 }  // namespace mrc::internal::data_plane

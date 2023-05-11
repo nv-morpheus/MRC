@@ -35,10 +35,10 @@
 
 namespace mrc::internal::network {
 
-Resources::Resources(resources::PartitionResourceBase& base,
-                     ucx::UcxResources& ucx,
-                     memory::HostResources& host,
-                     std::unique_ptr<control_plane::client::Instance> control_plane) :
+NetworkResources::NetworkResources(resources::PartitionResourceBase& base,
+                                   ucx::UcxResources& ucx,
+                                   memory::HostResources& host,
+                                   std::unique_ptr<control_plane::client::Instance> control_plane) :
   resources::PartitionResourceBase(base),
   m_instance_id(control_plane->instance_id()),
   m_ucx(ucx),
@@ -62,7 +62,7 @@ Resources::Resources(resources::PartitionResourceBase& base,
         .get();
 }
 
-Resources::~Resources()
+NetworkResources::~NetworkResources()
 {
     // this will sync with the control plane server to drop the instance
     // when this completes, we can disable the data plane
@@ -75,29 +75,29 @@ Resources::~Resources()
     }
 }
 
-data_plane::DataPlaneResources& Resources::data_plane()
+data_plane::DataPlaneResources& NetworkResources::data_plane()
 {
     CHECK(m_data_plane);
     return *m_data_plane;
 }
 
-control_plane::client::Instance& Resources::control_plane()
+control_plane::client::Instance& NetworkResources::control_plane()
 {
     CHECK(m_control_plane);
     return *m_control_plane;
 }
 
-const InstanceID& Resources::instance_id() const
+const InstanceID& NetworkResources::instance_id() const
 {
     return m_instance_id;
 }
 
-ucx::UcxResources& Resources::ucx()
+ucx::UcxResources& NetworkResources::ucx()
 {
     return m_ucx;
 }
 
-Future<void> Resources::shutdown()
+Future<void> NetworkResources::shutdown()
 {
     return m_control_plane->shutdown();
 }

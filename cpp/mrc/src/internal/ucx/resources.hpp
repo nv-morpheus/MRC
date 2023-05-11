@@ -35,7 +35,7 @@ class FiberTaskQueue;
 }  // namespace mrc::internal::system
 
 namespace mrc::internal::network {
-class Resources;
+class NetworkResources;
 }
 
 namespace mrc::internal::ucx {
@@ -87,7 +87,7 @@ class UcxResources final : public resources::PartitionResourceBase
     std::shared_ptr<RegistrationCache> m_registration_cache;
 
     // enable direct access to context and workers
-    friend network::Resources;
+    friend network::NetworkResources;
 };
 
 }  // namespace mrc::internal::ucx
