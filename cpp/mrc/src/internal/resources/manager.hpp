@@ -42,7 +42,7 @@ namespace mrc::internal::system {
 class ThreadingResources;
 }  // namespace mrc::internal::system
 namespace mrc::internal::ucx {
-class Resources;
+class UcxResources;
 }  // namespace mrc::internal::ucx
 namespace mrc::internal::runtime {
 class Runtime;
@@ -69,8 +69,8 @@ class Manager final : public system::SystemProvider
     Future<void> shutdown();
 
     const std::unique_ptr<system::ThreadingResources> m_system;
-    std::vector<runnable::Resources> m_runnable;       // one per host partition
-    std::vector<std::optional<ucx::Resources>> m_ucx;  // one per flattened partition if network is enabled
+    std::vector<runnable::Resources> m_runnable;          // one per host partition
+    std::vector<std::optional<ucx::UcxResources>> m_ucx;  // one per flattened partition if network is enabled
     std::shared_ptr<control_plane::ControlPlaneResources> m_control_plane;  // one per instance of resources::Manager
     std::vector<memory::HostResources> m_host;                              // one per host partition
     std::vector<std::optional<memory::DeviceResources>> m_device;  // one per flattened partition upto device_count

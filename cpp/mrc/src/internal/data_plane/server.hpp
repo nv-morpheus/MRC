@@ -43,7 +43,7 @@ namespace mrc::internal::memory {
 class HostResources;
 }  // namespace mrc::internal::memory
 namespace mrc::internal::ucx {
-class Resources;
+class UcxResources;
 }  // namespace mrc::internal::ucx
 namespace mrc::runnable {
 class Runner;
@@ -89,7 +89,7 @@ class Server final : public Service, public resources::PartitionResourceBase
 {
   public:
     Server(resources::PartitionResourceBase& provider,
-           ucx::Resources& ucx,
+           ucx::UcxResources& ucx,
            memory::HostResources& host,
            memory::TransientPool& transient_pool,
            InstanceID instance_id);
@@ -109,7 +109,7 @@ class Server final : public Service, public resources::PartitionResourceBase
     const std::size_t m_pre_posted_recv_count{16};
 
     // ucx resources
-    ucx::Resources& m_ucx;
+    ucx::UcxResources& m_ucx;
     memory::HostResources& m_host;
     InstanceID m_instance_id;
 

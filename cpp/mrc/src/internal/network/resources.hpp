@@ -40,7 +40,7 @@ namespace mrc::internal::resources {
 class Manager;
 }  // namespace mrc::internal::resources
 namespace mrc::internal::ucx {
-class Resources;
+class UcxResources;
 }  // namespace mrc::internal::ucx
 
 namespace mrc::internal::network {
@@ -49,7 +49,7 @@ class Resources final : private resources::PartitionResourceBase
 {
   public:
     Resources(resources::PartitionResourceBase& base,
-              ucx::Resources& ucx,
+              ucx::UcxResources& ucx,
               memory::HostResources& host,
               std::unique_ptr<control_plane::client::Instance> control_plane);
     ~Resources() final;
@@ -64,7 +64,7 @@ class Resources final : private resources::PartitionResourceBase
 
     const InstanceID& instance_id() const;
 
-    ucx::Resources& ucx();
+    ucx::UcxResources& ucx();
     control_plane::client::Instance& control_plane();
     data_plane::DataPlaneResources& data_plane();
 
@@ -72,7 +72,7 @@ class Resources final : private resources::PartitionResourceBase
     Future<void> shutdown();
 
     InstanceID m_instance_id;
-    ucx::Resources& m_ucx;
+    ucx::UcxResources& m_ucx;
     control_plane::Client& m_control_plane_client;
     std::unique_ptr<data_plane::DataPlaneResources> m_data_plane;
 

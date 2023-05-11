@@ -60,7 +60,7 @@ namespace mrc::internal::data_plane {
 using namespace mrc::memory::literals;
 
 Client::Client(resources::PartitionResourceBase& base,
-               ucx::Resources& ucx,
+               ucx::UcxResources& ucx,
                control_plane::client::ConnectionsManager& connections_manager,
                memory::TransientPool& transient_pool) :
   resources::PartitionResourceBase(base),

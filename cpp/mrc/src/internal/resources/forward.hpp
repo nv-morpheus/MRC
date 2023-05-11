@@ -44,7 +44,7 @@ class Resources;
 }  // namespace network
 
 namespace ucx {
-class Resources;
+class UcxResources;
 }  // namespace ucx
 
 namespace control_plane {

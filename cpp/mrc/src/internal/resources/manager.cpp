@@ -92,7 +92,7 @@ Manager::Manager(std::unique_ptr<system::ThreadingResources> resources) :
             auto network_task_queue_cpuset = base.partition().host().engine_factory_cpu_sets().fiber_cpu_sets.at(
                 "mrc_network");
             auto& network_fiber_queue = m_system->get_task_queue(network_task_queue_cpuset.first());
-            std::optional<ucx::Resources> ucx;
+            std::optional<ucx::UcxResources> ucx;
             ucx.emplace(base, network_fiber_queue);
             m_ucx.push_back(std::move(ucx));
         }

@@ -33,7 +33,7 @@ namespace mrc::internal::data_plane {
 using namespace mrc::memory::literals;
 
 DataPlaneResources::DataPlaneResources(resources::PartitionResourceBase& base,
-                                       ucx::Resources& ucx,
+                                       ucx::UcxResources& ucx,
                                        memory::HostResources& host,
                                        const InstanceID& instance_id,
                                        control_plane::Client& control_plane_client) :
@@ -114,7 +114,7 @@ Server& DataPlaneResources::server()
 
 mrc::runnable::LaunchOptions DataPlaneResources::launch_options(std::size_t concurrency)
 {
-    return ucx::Resources::launch_options(concurrency);
+    return ucx::UcxResources::launch_options(concurrency);
 }
 
 const InstanceID& DataPlaneResources::instance_id() const

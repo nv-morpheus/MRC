@@ -57,7 +57,7 @@ const std::vector<InstanceID>& ConnectionsManager::instance_ids() const
 }
 
 std::map<InstanceID, std::unique_ptr<client::Instance>> ConnectionsManager::register_ucx_addresses(
-    std::vector<std::optional<ucx::Resources>>& ucx_resources)
+    std::vector<std::optional<ucx::UcxResources>>& ucx_resources)
 {
     CHECK(client().state() == Client::State::RegisteringWorkers);
 

@@ -59,7 +59,7 @@ namespace mrc::internal::network {
 class Resources;
 }  // namespace mrc::internal::network
 namespace mrc::internal::ucx {
-class Resources;
+class UcxResources;
 }  // namespace mrc::internal::ucx
 namespace mrc::runnable {
 class Runner;
@@ -119,7 +119,7 @@ class Client final : public resources::PartitionResourceBase, public Service
     // const std::vector<InstanceID>& instance_ids() const;
 
     std::map<InstanceID, std::unique_ptr<client::Instance>> register_ucx_addresses(
-        std::vector<std::optional<ucx::Resources>>& ucx_resources);
+        std::vector<std::optional<ucx::UcxResources>>& ucx_resources);
 
     // void register_port_publisher(InstanceID instance_id, const std::string& port_name);
     // void register_port_subscriber(InstanceID instance_id, const std::string& port_name);

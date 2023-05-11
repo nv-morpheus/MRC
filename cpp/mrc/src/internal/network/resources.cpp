@@ -36,7 +36,7 @@
 namespace mrc::internal::network {
 
 Resources::Resources(resources::PartitionResourceBase& base,
-                     ucx::Resources& ucx,
+                     ucx::UcxResources& ucx,
                      memory::HostResources& host,
                      std::unique_ptr<control_plane::client::Instance> control_plane) :
   resources::PartitionResourceBase(base),
@@ -92,7 +92,7 @@ const InstanceID& Resources::instance_id() const
     return m_instance_id;
 }
 
-ucx::Resources& Resources::ucx()
+ucx::UcxResources& Resources::ucx()
 {
     return m_ucx;
 }

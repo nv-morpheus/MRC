@@ -193,7 +193,7 @@ void Client::do_handle_event(event_t&& event)
 }
 
 std::map<InstanceID, std::unique_ptr<client::Instance>> Client::register_ucx_addresses(
-    std::vector<std::optional<ucx::Resources>>& ucx_resources)
+    std::vector<std::optional<ucx::UcxResources>>& ucx_resources)
 {
     forward_state(State::RegisteringWorkers);
     auto instances = m_connections_manager->register_ucx_addresses(ucx_resources);

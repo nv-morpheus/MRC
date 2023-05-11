@@ -48,10 +48,10 @@ class Worker;
 /**
  * @brief UCX Resources - if networking is enabled, there should be 1 UCX Resource per "flattened" partition
  */
-class Resources final : public resources::PartitionResourceBase
+class UcxResources final : public resources::PartitionResourceBase
 {
   public:
-    Resources(resources::PartitionResourceBase& base, system::FiberTaskQueue& network_task_queue);
+    UcxResources(resources::PartitionResourceBase& base, system::FiberTaskQueue& network_task_queue);
 
     using resources::PartitionResourceBase::partition;
 

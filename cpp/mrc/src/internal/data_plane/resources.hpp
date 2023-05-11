@@ -39,7 +39,7 @@ class Resources;
 }  // namespace mrc::internal::network
 namespace mrc::internal::ucx {
 class RegistrationCache;
-class Resources;
+class UcxResources;
 }  // namespace mrc::internal::ucx
 
 namespace mrc::internal::data_plane {
@@ -54,7 +54,7 @@ class DataPlaneResources final : private Service, private resources::PartitionRe
 {
   public:
     DataPlaneResources(resources::PartitionResourceBase& base,
-                       ucx::Resources& ucx,
+                       ucx::UcxResources& ucx,
                        memory::HostResources& host,
                        const InstanceID& instance_id,
                        control_plane::Client& control_plane_client);
@@ -76,7 +76,7 @@ class DataPlaneResources final : private Service, private resources::PartitionRe
     void do_service_kill() final;
     void do_service_await_join() final;
 
-    ucx::Resources& m_ucx;
+    ucx::UcxResources& m_ucx;
     memory::HostResources& m_host;
     control_plane::Client& m_control_plane_client;
     InstanceID m_instance_id;
