@@ -19,7 +19,7 @@
 
 namespace mrc::internal::resources {
 
-PartitionResources::PartitionResources(runnable::Resources& runnable_resources,
+PartitionResources::PartitionResources(runnable::RunnableResources& runnable_resources,
                                        std::size_t partition_id,
                                        memory::HostResources& host,
                                        std::optional<memory::DeviceResources>& device,

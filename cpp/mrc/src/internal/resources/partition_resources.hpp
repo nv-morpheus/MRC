@@ -30,7 +30,7 @@ namespace mrc::internal::network {
 class NetworkResources;
 }  // namespace mrc::internal::network
 namespace mrc::internal::runnable {
-class Resources;
+class RunnableResources;
 }  // namespace mrc::internal::runnable
 
 namespace mrc::internal::resources {
@@ -44,7 +44,7 @@ namespace mrc::internal::resources {
 class PartitionResources final : public PartitionResourceBase
 {
   public:
-    PartitionResources(runnable::Resources& runnable_resources,
+    PartitionResources(runnable::RunnableResources& runnable_resources,
                        std::size_t partition_id,
                        memory::HostResources& host,
                        std::optional<memory::DeviceResources>& device,

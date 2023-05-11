@@ -69,7 +69,7 @@ class Manager final : public system::SystemProvider
     Future<void> shutdown();
 
     const std::unique_ptr<system::ThreadingResources> m_system;
-    std::vector<runnable::Resources> m_runnable;          // one per host partition
+    std::vector<runnable::RunnableResources> m_runnable;  // one per host partition
     std::vector<std::optional<ucx::UcxResources>> m_ucx;  // one per flattened partition if network is enabled
     std::shared_ptr<control_plane::ControlPlaneResources> m_control_plane;  // one per instance of resources::Manager
     std::vector<memory::HostResources> m_host;                              // one per host partition

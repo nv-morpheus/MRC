@@ -86,7 +86,7 @@ static Expected<> unary_response(Server::event_t& event, Expected<MessageT>&& me
     return {};
 }
 
-Server::Server(runnable::Resources& runnable) : m_runnable(runnable), m_server(m_runnable) {}
+Server::Server(runnable::RunnableResources& runnable) : m_runnable(runnable), m_server(m_runnable) {}
 
 Server::~Server() = default;
 

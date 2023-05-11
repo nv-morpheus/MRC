@@ -52,7 +52,7 @@ template <typename T>
 struct StreamWriter;
 }  // namespace mrc::internal::rpc
 namespace mrc::internal::runnable {
-class Resources;
+class RunnableResources;
 }  // namespace mrc::internal::runnable
 namespace mrc::protos {
 class Ack;
@@ -89,7 +89,7 @@ class Server : public Service
     using stream_id_t   = std::size_t;
     using instance_id_t = std::size_t;
 
-    Server(runnable::Resources& runnable);
+    Server(runnable::RunnableResources& runnable);
     ~Server() override;
 
   private:
@@ -104,7 +104,7 @@ class Server : public Service
     void do_issue_update(rxcpp::subscriber<void*>& s);
 
     // mrc resources
-    runnable::Resources& m_runnable;
+    runnable::RunnableResources& m_runnable;
 
     // grpc
     rpc::Server m_server;

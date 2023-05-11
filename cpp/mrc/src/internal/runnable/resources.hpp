@@ -33,12 +33,12 @@ class FiberTaskQueue;
 
 namespace mrc::internal::runnable {
 
-class Resources final : public system::HostPartitionProvider, public mrc::pipeline::IRunnableResources
+class RunnableResources final : public system::HostPartitionProvider, public mrc::pipeline::IRunnableResources
 {
   public:
-    Resources(const system::ThreadingResources& system_resources, std::size_t _host_partition_id);
-    Resources(Resources&& other);
-    ~Resources() override;
+    RunnableResources(const system::ThreadingResources& system_resources, std::size_t _host_partition_id);
+    RunnableResources(RunnableResources&& other);
+    ~RunnableResources() override;
 
     mrc::core::FiberTaskQueue& main() final;
     const mrc::core::FiberTaskQueue& main() const;

@@ -99,7 +99,7 @@ class TestNext : public ::testing::Test
                 });
             })));
 
-        m_resources = std::make_unique<internal::runnable::Resources>(*m_system_resources, 0);
+        m_resources = std::make_unique<internal::runnable::RunnableResources>(*m_system_resources, 0);
     }
 
     void TearDown() override
@@ -109,7 +109,7 @@ class TestNext : public ::testing::Test
     }
 
     std::unique_ptr<internal::system::ThreadingResources> m_system_resources;
-    std::unique_ptr<internal::runnable::Resources> m_resources;
+    std::unique_ptr<internal::runnable::RunnableResources> m_resources;
 };
 
 class ExGenSource : public node::GenericSource<int>

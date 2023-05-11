@@ -30,7 +30,7 @@ class PartitionResources;
 }  // namespace resources
 
 namespace runnable {
-class Resources;
+class RunnableResources;
 }  // namespace runnable
 
 namespace memory {

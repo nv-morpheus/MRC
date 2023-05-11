@@ -151,7 +151,7 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
     using prepare_fn_t =
         std::function<std::unique_ptr<grpc::ClientAsyncReaderWriter<RequestT, ResponseT>>(grpc::ClientContext* context)>;
 
-    ClientStream(prepare_fn_t prepare_fn, runnable::Resources& runnable) :
+    ClientStream(prepare_fn_t prepare_fn, runnable::RunnableResources& runnable) :
       m_prepare_fn(prepare_fn),
       m_runnable(runnable),
       m_reader_source(std::make_unique<mrc::node::RxSource<IncomingData>>(
@@ -335,7 +335,7 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
     }
 
     // resources for launching runnables
-    runnable::Resources& m_runnable;
+    runnable::RunnableResources& m_runnable;
 
     // grpc context
     grpc::ClientContext m_context;

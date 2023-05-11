@@ -50,7 +50,7 @@
 
 namespace mrc::internal::memory {
 
-HostResources::HostResources(runnable::Resources& runnable, ucx::RegistrationCallbackBuilder&& callbacks) :
+HostResources::HostResources(runnable::RunnableResources& runnable, ucx::RegistrationCallbackBuilder&& callbacks) :
   system::HostPartitionProvider(runnable)
 {
     runnable.main()
