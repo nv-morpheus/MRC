@@ -60,7 +60,7 @@ namespace mrc::internal::system {
 class ThreadPool final
 {
   public:
-    ThreadPool(const system::Resources&, CpuSet cpuset, std::size_t channel_size = 128);
+    ThreadPool(const system::ThreadingResources&, CpuSet cpuset, std::size_t channel_size = 128);
     ~ThreadPool();
 
     template <class F, class... ArgsT>

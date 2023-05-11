@@ -39,7 +39,7 @@ namespace mrc::internal::memory {
 class DeviceResources;
 }  // namespace mrc::internal::memory
 namespace mrc::internal::system {
-class Resources;
+class ThreadingResources;
 }  // namespace mrc::internal::system
 namespace mrc::internal::ucx {
 class Resources;
@@ -54,7 +54,7 @@ class Manager final : public system::SystemProvider
 {
   public:
     Manager(const system::SystemProvider& system);
-    Manager(std::unique_ptr<system::Resources> resources);
+    Manager(std::unique_ptr<system::ThreadingResources> resources);
     ~Manager() override;
 
     static Manager& get_resources();
@@ -68,7 +68,7 @@ class Manager final : public system::SystemProvider
   private:
     Future<void> shutdown();
 
-    const std::unique_ptr<system::Resources> m_system;
+    const std::unique_ptr<system::ThreadingResources> m_system;
     std::vector<runnable::Resources> m_runnable;       // one per host partition
     std::vector<std::optional<ucx::Resources>> m_ucx;  // one per flattened partition if network is enabled
     std::shared_ptr<control_plane::ControlPlaneResources> m_control_plane;  // one per instance of resources::Manager

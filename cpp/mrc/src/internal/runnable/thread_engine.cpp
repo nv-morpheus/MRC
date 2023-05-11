@@ -32,7 +32,7 @@
 
 namespace mrc::internal::runnable {
 
-ThreadEngine::ThreadEngine(CpuSet cpu_set, const system::Resources& system) :
+ThreadEngine::ThreadEngine(CpuSet cpu_set, const system::ThreadingResources& system) :
   m_cpu_set(std::move(cpu_set)),
   m_system(system)
 {}

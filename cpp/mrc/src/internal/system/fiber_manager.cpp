@@ -32,7 +32,7 @@
 
 namespace mrc::internal::system {
 
-FiberManager::FiberManager(const Resources& resources) : m_cpu_set(resources.system().topology().cpu_set())
+FiberManager::FiberManager(const ThreadingResources& resources) : m_cpu_set(resources.system().topology().cpu_set())
 {
     auto cpu_count       = m_cpu_set.weight();
     const auto& options  = resources.system().options();

@@ -38,7 +38,7 @@
 
 namespace mrc::internal::runnable {
 
-Resources::Resources(const system::Resources& system_resources, std::size_t _host_partition_id) :
+Resources::Resources(const system::ThreadingResources& system_resources, std::size_t _host_partition_id) :
   HostPartitionProvider(system_resources, _host_partition_id),
   m_main(system_resources.get_task_queue(host_partition().engine_factory_cpu_sets().main_cpu_id()))
 {

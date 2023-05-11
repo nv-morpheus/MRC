@@ -28,7 +28,7 @@
 namespace mrc::internal::system {
 
 IResources::IResources(std::shared_ptr<ISystem> system) :
-  m_impl(std::make_unique<Resources>(SystemProvider(System::unwrap(*system))))
+  m_impl(std::make_unique<ThreadingResources>(SystemProvider(System::unwrap(*system))))
 {}
 IResources::~IResources() = default;
 

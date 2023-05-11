@@ -23,7 +23,7 @@
 namespace mrc::internal::system {
 
 class ISystem;
-class Resources;
+class ThreadingResources;
 
 class IResources
 {
@@ -36,8 +36,8 @@ class IResources
     void add_thread_finalizer(std::function<void()> finalizer_fn);
 
   private:
-    std::unique_ptr<Resources> m_impl;
-    friend Resources;
+    std::unique_ptr<ThreadingResources> m_impl;
+    friend ThreadingResources;
 };
 
 }  // namespace mrc::internal::system

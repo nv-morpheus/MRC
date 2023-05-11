@@ -33,7 +33,7 @@ namespace mrc::internal::resources {
 class Manager;
 }  // namespace mrc::internal::resources
 namespace mrc::internal::system {
-class Resources;
+class ThreadingResources;
 }  // namespace mrc::internal::system
 
 namespace mrc::internal::executor {
@@ -47,7 +47,7 @@ class Executor : public Service, public system::SystemProvider
 {
   public:
     Executor(std::shared_ptr<Options> options);
-    Executor(std::unique_ptr<system::Resources> resources);
+    Executor(std::unique_ptr<system::ThreadingResources> resources);
     ~Executor() override;
 
     void register_pipeline(std::unique_ptr<pipeline::IPipeline> ipipeline);
@@ -65,6 +65,6 @@ class Executor : public Service, public system::SystemProvider
 
 std::unique_ptr<Executor> make_executor(std::shared_ptr<Options> options);
 
-std::unique_ptr<Executor> make_executor(std::unique_ptr<system::Resources> resources);
+std::unique_ptr<Executor> make_executor(std::unique_ptr<system::ThreadingResources> resources);
 
 }  // namespace mrc::internal::executor

@@ -39,14 +39,14 @@ namespace mrc::internal::system {
 class FiberTaskQueue;
 class IResources;
 
-class Resources final : public SystemProvider
+class ThreadingResources final : public SystemProvider
 {
   public:
-    static std::unique_ptr<Resources> unwrap(IResources& resources);
-    static std::unique_ptr<Resources> create(const SystemProvider& system);
-    static std::unique_ptr<Resources> create(std::shared_ptr<const SystemProvider> system);
+    static std::unique_ptr<ThreadingResources> unwrap(IResources& resources);
+    static std::unique_ptr<ThreadingResources> create(const SystemProvider& system);
+    static std::unique_ptr<ThreadingResources> create(std::shared_ptr<const SystemProvider> system);
 
-    Resources(SystemProvider system);
+    ThreadingResources(SystemProvider system);
 
     template <typename CallableT>
     [[nodiscard]] Thread make_thread(CpuSet cpu_affinity, CallableT&& callable) const;
@@ -69,7 +69,7 @@ class Resources final : public SystemProvider
 };
 
 template <typename ResourceT>
-void Resources::register_thread_local_resource(const CpuSet& cpu_set, std::shared_ptr<ResourceT> resource)
+void ThreadingResources::register_thread_local_resource(const CpuSet& cpu_set, std::shared_ptr<ResourceT> resource)
 {
     CHECK(resource);
     CHECK(system().topology().contains(cpu_set));
@@ -81,14 +81,14 @@ void Resources::register_thread_local_resource(const CpuSet& cpu_set, std::share
 }
 
 template <typename CallableT>
-Thread Resources::make_thread(CpuSet cpu_affinity, CallableT&& callable) const
+Thread ThreadingResources::make_thread(CpuSet cpu_affinity, CallableT&& callable) const
 {
     CHECK(m_thread_resources);
     return m_thread_resources->make_thread("thread", std::move(cpu_affinity), std::move(callable));
 }
 
 template <typename CallableT>
-Thread Resources::make_thread(std::string desc, CpuSet cpu_affinity, CallableT&& callable) const
+Thread ThreadingResources::make_thread(std::string desc, CpuSet cpu_affinity, CallableT&& callable) const
 {
     CHECK(m_thread_resources);
     return m_thread_resources->make_thread(std::move(desc), std::move(cpu_affinity), std::move(callable));

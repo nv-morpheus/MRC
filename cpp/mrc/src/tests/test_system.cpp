@@ -86,7 +86,7 @@ TEST_F(TestSystem, FiberPool)
     cpu_set.on(2);
     EXPECT_EQ(cpu_set.weight(), 2);
 
-    system::Resources resources((system::SystemProvider(system)));
+    system::ThreadingResources resources((system::SystemProvider(system)));
 
     auto pool = resources.make_fiber_pool(cpu_set);
 
@@ -148,7 +148,7 @@ TEST_F(TestSystem, ImpossibleCoreCount)
     cpu_set.on(99999999);
     EXPECT_EQ(cpu_set.weight(), 2);
 
-    system::Resources resources((system::SystemProvider(system)));
+    system::ThreadingResources resources((system::SystemProvider(system)));
 
     EXPECT_ANY_THROW(auto pool = resources.make_fiber_pool(cpu_set));
 }
@@ -157,7 +157,7 @@ TEST_F(TestSystem, ThreadLocalResource)
 {
     auto system = system::make_system(make_options());
 
-    system::Resources resources((system::SystemProvider(system)));
+    system::ThreadingResources resources((system::SystemProvider(system)));
 
     auto pool0 = resources.make_fiber_pool(CpuSet("0,1"));
     auto pool1 = resources.make_fiber_pool(CpuSet("2,3"));
@@ -217,7 +217,7 @@ TEST_F(TestSystem, ThreadInitializersAndFinalizers)
         options.topology().restrict_gpus(true);
     }));
 
-    auto resources = std::make_unique<system::Resources>((system::SystemProvider(system)));
+    auto resources = std::make_unique<system::ThreadingResources>((system::SystemProvider(system)));
 
     std::atomic<std::size_t> init_counter = 0;
     std::atomic<std::size_t> fini_counter = 0;
@@ -255,7 +255,7 @@ TEST_F(TestSystem, ThreadPool)
 
     std::atomic<std::size_t> counter = 0;
 
-    system::Resources resources((system::SystemProvider(system)));
+    system::ThreadingResources resources((system::SystemProvider(system)));
 
     auto thread_pool = std::make_unique<ThreadPool>(resources, CpuSet("2-3"), 2);
 

@@ -57,9 +57,10 @@ namespace mrc::internal::resources {
 thread_local Manager* Manager::m_thread_resources{nullptr};
 thread_local PartitionResources* Manager::m_thread_partition{nullptr};
 
-Manager::Manager(const system::SystemProvider& system) : Manager(std::make_unique<system::Resources>(system)) {}
+Manager::Manager(const system::SystemProvider& system) : Manager(std::make_unique<system::ThreadingResources>(system))
+{}
 
-Manager::Manager(std::unique_ptr<system::Resources> resources) :
+Manager::Manager(std::unique_ptr<system::ThreadingResources> resources) :
   SystemProvider(*resources),
   m_system(std::move(resources))
 {

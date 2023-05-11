@@ -28,23 +28,23 @@
 
 namespace mrc::internal::system {
 
-Resources::Resources(SystemProvider system) :
+ThreadingResources::ThreadingResources(SystemProvider system) :
   SystemProvider(system),
   m_thread_resources(std::make_shared<ThreadResources>(*this)),
   m_fiber_manager(*this)
 {}
 
-FiberTaskQueue& Resources::get_task_queue(std::uint32_t cpu_id) const
+FiberTaskQueue& ThreadingResources::get_task_queue(std::uint32_t cpu_id) const
 {
     return m_fiber_manager.task_queue(cpu_id);
 }
 
-FiberPool Resources::make_fiber_pool(const CpuSet& cpu_set) const
+FiberPool ThreadingResources::make_fiber_pool(const CpuSet& cpu_set) const
 {
     return m_fiber_manager.make_pool(cpu_set);
 }
 
-void Resources::register_thread_local_initializer(const CpuSet& cpu_set, std::function<void()> initializer)
+void ThreadingResources::register_thread_local_initializer(const CpuSet& cpu_set, std::function<void()> initializer)
 {
     CHECK(initializer);
     CHECK_GE(cpu_set.weight(), 0);
@@ -59,7 +59,7 @@ void Resources::register_thread_local_initializer(const CpuSet& cpu_set, std::fu
     }
 }
 
-void Resources::register_thread_local_finalizer(const CpuSet& cpu_set, std::function<void()> finalizer)
+void ThreadingResources::register_thread_local_finalizer(const CpuSet& cpu_set, std::function<void()> finalizer)
 {
     CHECK(finalizer);
     CHECK_GE(cpu_set.weight(), 0);
@@ -67,7 +67,7 @@ void Resources::register_thread_local_finalizer(const CpuSet& cpu_set, std::func
     m_thread_resources->register_finalizer(cpu_set, finalizer);
 }
 
-std::unique_ptr<Resources> Resources::unwrap(IResources& resources)
+std::unique_ptr<ThreadingResources> ThreadingResources::unwrap(IResources& resources)
 {
     return std::move(resources.m_impl);
 }

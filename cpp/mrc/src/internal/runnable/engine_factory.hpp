@@ -31,7 +31,7 @@ struct EngineFactory;
 
 namespace mrc::internal::runnable {
 
-std::shared_ptr<::mrc::runnable::EngineFactory> make_engine_factory(const system::Resources& system,
+std::shared_ptr<::mrc::runnable::EngineFactory> make_engine_factory(const system::ThreadingResources& system,
                                                                     EngineType engine_type,
                                                                     const CpuSet& cpu_set,
                                                                     bool reusable);

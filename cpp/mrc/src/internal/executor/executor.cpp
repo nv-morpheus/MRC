@@ -45,7 +45,7 @@ Executor::Executor(std::shared_ptr<Options> options) :
   m_resources_manager(std::make_unique<resources::Manager>(*this))
 {}
 
-Executor::Executor(std::unique_ptr<system::Resources> resources) :
+Executor::Executor(std::unique_ptr<system::ThreadingResources> resources) :
   SystemProvider(*resources),
   m_resources_manager(std::make_unique<resources::Manager>(std::move(resources)))
 {}
@@ -147,7 +147,7 @@ std::unique_ptr<Executor> make_executor(std::shared_ptr<Options> options)
     return std::make_unique<Executor>(std::move(options));
 }
 
-std::unique_ptr<Executor> make_executor(std::unique_ptr<system::Resources> resources)
+std::unique_ptr<Executor> make_executor(std::unique_ptr<system::ThreadingResources> resources)
 {
     return std::make_unique<Executor>(std::move(resources));
 }

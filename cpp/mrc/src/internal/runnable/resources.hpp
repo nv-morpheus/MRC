@@ -36,7 +36,7 @@ namespace mrc::internal::runnable {
 class Resources final : public system::HostPartitionProvider, public mrc::pipeline::PipelineResources
 {
   public:
-    Resources(const system::Resources& system_resources, std::size_t _host_partition_id);
+    Resources(const system::ThreadingResources& system_resources, std::size_t _host_partition_id);
     Resources(Resources&& other);
     ~Resources() override;
 
