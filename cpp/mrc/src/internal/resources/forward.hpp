@@ -55,7 +55,7 @@ class Instance;
 }  // namespace control_plane
 
 namespace data_plane {
-class Resources;
+class DataPlaneResources;
 }  // namespace data_plane
 
 }  // namespace mrc::internal

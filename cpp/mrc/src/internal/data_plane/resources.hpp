@@ -50,15 +50,15 @@ class Server;
  * @brief ArchitectResources hold and is responsible for constructing any object that depending the UCX data plane
  *
  */
-class Resources final : private Service, private resources::PartitionResourceBase
+class DataPlaneResources final : private Service, private resources::PartitionResourceBase
 {
   public:
-    Resources(resources::PartitionResourceBase& base,
-              ucx::Resources& ucx,
-              memory::HostResources& host,
-              const InstanceID& instance_id,
-              control_plane::Client& control_plane_client);
-    ~Resources() final;
+    DataPlaneResources(resources::PartitionResourceBase& base,
+                       ucx::Resources& ucx,
+                       memory::HostResources& host,
+                       const InstanceID& instance_id,
+                       control_plane::Client& control_plane_client);
+    ~DataPlaneResources() final;
 
     Client& client();
     Server& server();

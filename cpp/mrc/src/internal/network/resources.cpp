@@ -53,8 +53,11 @@ Resources::Resources(resources::PartitionResourceBase& base,
     // construct resources on the mrc_network task queue thread
     ucx.network_task_queue()
         .enqueue([this, &base, &ucx, &host] {
-            m_data_plane =
-                std::make_unique<data_plane::Resources>(base, ucx, host, m_instance_id, m_control_plane_client);
+            m_data_plane = std::make_unique<data_plane::DataPlaneResources>(base,
+                                                                            ucx,
+                                                                            host,
+                                                                            m_instance_id,
+                                                                            m_control_plane_client);
         })
         .get();
 }
@@ -72,7 +75,7 @@ Resources::~Resources()
     }
 }
 
-data_plane::Resources& Resources::data_plane()
+data_plane::DataPlaneResources& Resources::data_plane()
 {
     CHECK(m_data_plane);
     return *m_data_plane;

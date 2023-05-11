@@ -53,7 +53,7 @@ class Runner;
 
 namespace mrc::internal::data_plane {
 class Request;
-class Resources;
+class DataPlaneResources;
 
 struct RemoteDescriptorMessage
 {
@@ -141,7 +141,7 @@ class Client final : public resources::PartitionResourceBase, private Service
     std::unique_ptr<mrc::runnable::Runner> m_rd_writer;
     std::unique_ptr<node::NodeComponent<RemoteDescriptorMessage>> m_rd_channel;
 
-    friend Resources;
+    friend DataPlaneResources;
 };
 
 }  // namespace mrc::internal::data_plane

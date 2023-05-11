@@ -31,7 +31,7 @@ namespace mrc::internal::control_plane::client {
 class Instance;
 }  // namespace mrc::internal::control_plane::client
 namespace mrc::internal::data_plane {
-class Resources;
+class DataPlaneResources;
 }  // namespace mrc::internal::data_plane
 namespace mrc::internal::memory {
 class HostResources;
@@ -66,7 +66,7 @@ class Resources final : private resources::PartitionResourceBase
 
     ucx::Resources& ucx();
     control_plane::client::Instance& control_plane();
-    data_plane::Resources& data_plane();
+    data_plane::DataPlaneResources& data_plane();
 
   private:
     Future<void> shutdown();
@@ -74,7 +74,7 @@ class Resources final : private resources::PartitionResourceBase
     InstanceID m_instance_id;
     ucx::Resources& m_ucx;
     control_plane::Client& m_control_plane_client;
-    std::unique_ptr<data_plane::Resources> m_data_plane;
+    std::unique_ptr<data_plane::DataPlaneResources> m_data_plane;
 
     // this must be the first variable destroyed
     std::unique_ptr<control_plane::client::Instance> m_control_plane;
