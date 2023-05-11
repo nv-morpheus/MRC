@@ -17,7 +17,7 @@
 
 #include "internal/segment/builder.hpp"
 
-#include "internal/pipeline/resources.hpp"
+#include "internal/pipeline/pipeline_resources.hpp"
 #include "internal/segment/definition.hpp"
 
 #include "mrc/core/addresses.hpp"

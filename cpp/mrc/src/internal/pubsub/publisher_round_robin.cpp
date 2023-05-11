@@ -19,7 +19,7 @@
 
 #include "internal/data_plane/client.hpp"
 #include "internal/resources/partition_resources.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 
 #include "mrc/core/task_queue.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"

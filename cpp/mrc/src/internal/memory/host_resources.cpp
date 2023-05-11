@@ -18,7 +18,7 @@
 #include "internal/memory/host_resources.hpp"
 
 #include "internal/memory/callback_adaptor.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/system/host_partition.hpp"
 #include "internal/system/system.hpp"
 #include "internal/ucx/registation_callback_builder.hpp"

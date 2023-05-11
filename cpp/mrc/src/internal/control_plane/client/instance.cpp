@@ -20,7 +20,7 @@
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/client/subscription_service.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/utils/contains.hpp"
 
 #include "mrc/edge/edge_builder.hpp"

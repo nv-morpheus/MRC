@@ -18,11 +18,11 @@
 #include "internal/codable/decodable_storage_view.hpp"
 
 #include "internal/data_plane/client.hpp"
+#include "internal/data_plane/data_plane_resources.hpp"
 #include "internal/data_plane/request.hpp"
-#include "internal/data_plane/resources.hpp"
 #include "internal/memory/device_resources.hpp"
 #include "internal/memory/host_resources.hpp"
-#include "internal/network/resources.hpp"
+#include "internal/network/network_resources.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/ucx/endpoint.hpp"
 #include "internal/ucx/remote_registration_cache.hpp"

@@ -19,8 +19,8 @@
 
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/client/instance.hpp"
-#include "internal/runnable/resources.hpp"
-#include "internal/ucx/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
+#include "internal/ucx/ucx_resources.hpp"
 #include "internal/ucx/worker.hpp"
 #include "internal/utils/contains.hpp"
 

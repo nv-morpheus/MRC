@@ -18,9 +18,9 @@
 #include "internal/data_plane/server.hpp"
 
 #include "internal/data_plane/tags.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/ucx/common.hpp"
-#include "internal/ucx/resources.hpp"
+#include "internal/ucx/ucx_resources.hpp"
 #include "internal/ucx/worker.hpp"
 
 #include "mrc/core/task_queue.hpp"

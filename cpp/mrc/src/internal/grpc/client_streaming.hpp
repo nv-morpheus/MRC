@@ -19,7 +19,7 @@
 
 #include "internal/grpc/progress_engine.hpp"
 #include "internal/grpc/stream_writer.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/service.hpp"
 
 #include "mrc/channel/channel.hpp"

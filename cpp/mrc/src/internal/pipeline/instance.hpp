@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "internal/pipeline/resources.hpp"
+#include "internal/pipeline/pipeline_resources.hpp"
 #include "internal/service.hpp"
 
 #include "mrc/types.hpp"

@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "internal/system/resources.hpp"
 #include "internal/system/thread.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/core/bitmap.hpp"
 #include "mrc/exceptions/runtime_error.hpp"

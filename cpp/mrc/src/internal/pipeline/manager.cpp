@@ -22,7 +22,7 @@
 #include "internal/pipeline/types.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/writable_entrypoint.hpp"

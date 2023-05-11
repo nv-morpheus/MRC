@@ -18,7 +18,7 @@
 #pragma once
 
 #include "mrc/manifold/interface.hpp"
-#include "mrc/pipeline/resources.hpp"
+#include "mrc/pipeline/runnable_resources.hpp"
 
 namespace mrc::manifold {
 

@@ -18,10 +18,10 @@
 #include "internal/pipeline/instance.hpp"
 
 #include "internal/pipeline/pipeline.hpp"
-#include "internal/pipeline/resources.hpp"
+#include "internal/pipeline/pipeline_resources.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/segment/definition.hpp"
 #include "internal/segment/instance.hpp"
 

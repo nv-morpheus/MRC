@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-#include "internal/network/resources.hpp"
+#include "internal/network/network_resources.hpp"
 
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/control_plane/client/instance.hpp"
-#include "internal/data_plane/resources.hpp"
+#include "internal/data_plane/data_plane_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/ucx/resources.hpp"
+#include "internal/ucx/ucx_resources.hpp"
 
 #include "mrc/core/task_queue.hpp"
 #include "mrc/types.hpp"

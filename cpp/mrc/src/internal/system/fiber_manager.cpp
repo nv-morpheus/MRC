@@ -18,8 +18,8 @@
 #include "internal/system/fiber_manager.hpp"
 
 #include "internal/system/fiber_pool.hpp"
-#include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
+#include "internal/system/threading_resources.hpp"
 #include "internal/system/topology.hpp"
 
 #include "mrc/core/bitmap.hpp"

@@ -20,7 +20,7 @@
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/grpc/progress_engine.hpp"
 #include "internal/grpc/promise_handler.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/system/system.hpp"
 
 #include "mrc/channel/status.hpp"

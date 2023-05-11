@@ -17,9 +17,9 @@
 
 #include "mrc/engine/system/iresources.hpp"
 
-#include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
+#include "internal/system/threading_resources.hpp"
 #include "internal/system/topology.hpp"
 
 #include <memory>

@@ -18,7 +18,7 @@
 #include "internal/system/fiber_task_queue.hpp"
 
 #include "internal/system/fiber_priority_scheduler.hpp"
-#include "internal/system/resources.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/core/bitmap.hpp"
 #include "mrc/core/fiber_meta_data.hpp"

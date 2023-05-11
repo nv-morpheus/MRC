@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 
 #include "internal/runnable/engine_factory.hpp"
 #include "internal/runnable/engines.hpp"

@@ -21,7 +21,7 @@
 #include "internal/runnable/fiber_engines.hpp"
 #include "internal/runnable/thread_engines.hpp"
 #include "internal/system/fiber_pool.hpp"
-#include "internal/system/resources.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/constants.hpp"
 #include "mrc/core/bitmap.hpp"

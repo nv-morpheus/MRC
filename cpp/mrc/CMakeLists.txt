@@ -21,20 +21,20 @@ add_library(libmrc
   src/internal/codable/codable_storage.cpp
   src/internal/codable/decodable_storage_view.cpp
   src/internal/codable/storage_view.cpp
-  src/internal/control_plane/client/connections_manager.cpp
   src/internal/control_plane/client.cpp
+  src/internal/control_plane/client/connections_manager.cpp
   src/internal/control_plane/client/instance.cpp
   src/internal/control_plane/client/state_manager.cpp
   src/internal/control_plane/client/subscription_service.cpp
-  src/internal/control_plane/resources.cpp
-  src/internal/control_plane/server/connection_manager.cpp
+  src/internal/control_plane/control_plane_resources.cpp
   src/internal/control_plane/server.cpp
+  src/internal/control_plane/server/connection_manager.cpp
   src/internal/control_plane/server/subscription_manager.cpp
   src/internal/control_plane/server/tagged_issuer.cpp
   src/internal/data_plane/callbacks.cpp
   src/internal/data_plane/client.cpp
+  src/internal/data_plane/data_plane_resources.cpp
   src/internal/data_plane/request.cpp
-  src/internal/data_plane/resources.cpp
   src/internal/data_plane/server.cpp
   src/internal/executor/executor.cpp
   src/internal/executor/iexecutor.cpp
@@ -43,14 +43,14 @@ add_library(libmrc
   src/internal/memory/device_resources.cpp
   src/internal/memory/host_resources.cpp
   src/internal/memory/transient_pool.cpp
-  src/internal/network/resources.cpp
+  src/internal/network/network_resources.cpp
   src/internal/pipeline/controller.cpp
   src/internal/pipeline/instance.cpp
   src/internal/pipeline/ipipeline.cpp
   src/internal/pipeline/manager.cpp
+  src/internal/pipeline/pipeline_resources.cpp
   src/internal/pipeline/pipeline.cpp
   src/internal/pipeline/port_graph.cpp
-  src/internal/pipeline/resources.cpp
   src/internal/pubsub/publisher_round_robin.cpp
   src/internal/pubsub/publisher_service.cpp
   src/internal/pubsub/subscriber_service.cpp
@@ -61,12 +61,12 @@ add_library(libmrc
   src/internal/resources/manager.cpp
   src/internal/resources/partition_resources_base.cpp
   src/internal/resources/partition_resources.cpp
-  src/internal/runnable/engine.cpp
   src/internal/runnable/engine_factory.cpp
+  src/internal/runnable/engine.cpp
   src/internal/runnable/engines.cpp
   src/internal/runnable/fiber_engine.cpp
   src/internal/runnable/fiber_engines.cpp
-  src/internal/runnable/resources.cpp
+  src/internal/runnable/runnable_resources.cpp
   src/internal/runnable/thread_engine.cpp
   src/internal/runnable/thread_engines.cpp
   src/internal/runtime/partition.cpp
@@ -84,32 +84,32 @@ add_library(libmrc
   src/internal/system/fiber_pool.cpp
   src/internal/system/fiber_task_queue.cpp
   src/internal/system/gpu_info.cpp
-  src/internal/system/host_partition.cpp
   src/internal/system/host_partition_provider.cpp
+  src/internal/system/host_partition.cpp
   src/internal/system/iresources.cpp
   src/internal/system/isystem.cpp
-  src/internal/system/partition.cpp
   src/internal/system/partition_provider.cpp
+  src/internal/system/partition.cpp
   src/internal/system/partitions.cpp
-  src/internal/system/resources.cpp
-  src/internal/system/system.cpp
   src/internal/system/system_provider.cpp
-  src/internal/system/thread.cpp
+  src/internal/system/system.cpp
   src/internal/system/thread_pool.cpp
+  src/internal/system/thread.cpp
+  src/internal/system/threading_resources.cpp
   src/internal/system/topology.cpp
   src/internal/ucx/context.cpp
   src/internal/ucx/endpoint.cpp
   src/internal/ucx/memory_block.cpp
   src/internal/ucx/receive_manager.cpp
-  src/internal/ucx/resources.cpp
+  src/internal/ucx/ucx_resources.cpp
   src/internal/ucx/worker.cpp
   src/internal/utils/collision_detector.cpp
   src/internal/utils/exception_guard.cpp
   src/internal/utils/parse_config.cpp
   src/internal/utils/parse_ints.cpp
   src/internal/utils/shared_resource_bit_map.cpp
-  src/public/benchmarking/tracer.cpp
   src/public/benchmarking/trace_statistics.cpp
+  src/public/benchmarking/tracer.cpp
   src/public/benchmarking/util.cpp
   src/public/channel/channel.cpp
   src/public/codable/encoded_object.cpp

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "internal/ucx/resources.hpp"
+#include "internal/ucx/ucx_resources.hpp"
 
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/system/device_partition.hpp"

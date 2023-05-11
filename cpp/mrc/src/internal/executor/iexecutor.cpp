@@ -18,7 +18,7 @@
 #include "mrc/engine/executor/iexecutor.hpp"
 
 #include "internal/executor/executor.hpp"
-#include "internal/system/resources.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/engine/pipeline/ipipeline.hpp"
 

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "internal/system/resources.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "internal/system/fiber_manager.hpp"
 

@@ -17,7 +17,7 @@
 
 #include "internal/system/thread_pool.hpp"
 
-#include "internal/system/resources.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/core/bitmap.hpp"
 

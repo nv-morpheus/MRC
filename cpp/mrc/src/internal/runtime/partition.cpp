@@ -18,7 +18,7 @@
 #include "internal/runtime/partition.hpp"
 
 #include "internal/codable/codable_storage.hpp"
-#include "internal/network/resources.hpp"
+#include "internal/network/network_resources.hpp"
 #include "internal/pubsub/publisher_round_robin.hpp"
 #include "internal/pubsub/subscriber_service.hpp"
 #include "internal/remote_descriptor/manager.hpp"

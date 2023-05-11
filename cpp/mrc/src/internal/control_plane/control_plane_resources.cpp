@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "internal/control_plane/resources.hpp"
+#include "internal/control_plane/control_plane_resources.hpp"
 
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/server.hpp"

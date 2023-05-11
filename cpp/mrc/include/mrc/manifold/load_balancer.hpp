@@ -25,7 +25,7 @@
 #include "mrc/node/operators/muxer.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/source_channel_owner.hpp"
-#include "mrc/pipeline/resources.hpp"
+#include "mrc/pipeline/runnable_resources.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/runnable/launchable.hpp"
 #include "mrc/runnable/types.hpp"

@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-#include "internal/data_plane/resources.hpp"
+#include "internal/data_plane/data_plane_resources.hpp"
 
 #include "internal/control_plane/client.hpp"
 #include "internal/data_plane/client.hpp"
 #include "internal/data_plane/server.hpp"
 #include "internal/memory/host_resources.hpp"
-#include "internal/ucx/resources.hpp"
+#include "internal/ucx/ucx_resources.hpp"
 #include "internal/ucx/worker.hpp"
 
 #include "mrc/memory/literals.hpp"

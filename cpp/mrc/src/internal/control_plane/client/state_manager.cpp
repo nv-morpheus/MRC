@@ -18,7 +18,7 @@
 #include "internal/control_plane/client/state_manager.hpp"
 
 #include "internal/control_plane/client.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 
 #include "mrc/core/error.hpp"
 #include "mrc/edge/edge_builder.hpp"

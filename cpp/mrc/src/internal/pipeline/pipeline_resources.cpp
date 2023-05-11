@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "internal/pipeline/resources.hpp"
+#include "internal/pipeline/pipeline_resources.hpp"
 
 #include "mrc/metrics/registry.hpp"
 
