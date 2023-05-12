@@ -29,7 +29,8 @@
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/port_registry.hpp"
 #include "mrc/runnable/launchable.hpp"
-#include "mrc/segment/egress_port.hpp"   // IWYU pragma: keep
+#include "mrc/segment/egress_port.hpp"  // IWYU pragma: keep
+#include "mrc/segment/forward.hpp"
 #include "mrc/segment/ingress_port.hpp"  // IWYU pragma: keep
 #include "mrc/segment/initializers.hpp"
 #include "mrc/types.hpp"
@@ -66,6 +67,16 @@ BuilderDefinition::BuilderDefinition(std::shared_ptr<const SegmentDefinition> de
   m_resources(resources),
   m_default_partition_id(default_partition_id)
 {}
+
+std::shared_ptr<BuilderDefinition> BuilderDefinition::unwrap(std::shared_ptr<IBuilder> object)
+{
+    // Convert to the full implementation
+    auto full_object = std::dynamic_pointer_cast<BuilderDefinition>(object);
+
+    CHECK(full_object) << "Invalid cast for BuilderDefinition. Please report to the developers";
+
+    return full_object;
+}
 
 std::string BuilderDefinition::prefix_name(const std::string& name) const
 {

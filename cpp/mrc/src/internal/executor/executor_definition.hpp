@@ -52,6 +52,8 @@ class ExecutorDefinition : public pipeline::IExecutor, public Service, public sy
     ExecutorDefinition(std::unique_ptr<system::ThreadingResources> resources);
     ~ExecutorDefinition() override;
 
+    static std::shared_ptr<ExecutorDefinition> unwrap(std::shared_ptr<IExecutor> object);
+
     void register_pipeline(std::shared_ptr<pipeline::IPipeline> pipeline) override;
     void start() override;
     void stop() override;

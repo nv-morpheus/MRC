@@ -58,6 +58,8 @@ class BuilderDefinition : public IBuilder
                       pipeline::PipelineResources& resources,
                       std::size_t default_partition_id);
 
+    static std::shared_ptr<BuilderDefinition> unwrap(std::shared_ptr<IBuilder> object);
+
     std::string prefix_name(const std::string& name) const override;
 
     std::shared_ptr<ObjectProperties> get_ingress(std::string name, std::type_index type_index) override;

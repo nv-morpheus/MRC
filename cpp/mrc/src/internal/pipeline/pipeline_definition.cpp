@@ -17,7 +17,10 @@
 
 #include "internal/pipeline/pipeline_definition.hpp"
 
+#include "internal/segment/segment_definition.hpp"
+
 #include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/segment.hpp"
 #include "mrc/types.hpp"
 
@@ -32,6 +35,16 @@ namespace mrc::pipeline {
 
 PipelineDefinition::~PipelineDefinition() = default;
 
+std::shared_ptr<PipelineDefinition> PipelineDefinition::unwrap(std::shared_ptr<IPipeline> object)
+{
+    // Convert to the full implementation
+    auto full_object = std::dynamic_pointer_cast<PipelineDefinition>(object);
+
+    CHECK(full_object) << "Invalid cast for PipelineDefinition. Please report to the developers";
+
+    return full_object;
+}
+
 std::shared_ptr<const segment::ISegment> PipelineDefinition::register_segment(
     std::shared_ptr<const segment::ISegment> segment)
 {
@@ -45,19 +58,23 @@ std::shared_ptr<const segment::ISegment> PipelineDefinition::register_segment(
         throw exceptions::MrcRuntimeError("duplicate segment registration");
     }
 
+    auto full_segment = segment::SegmentDefinition::unwrap(std::move(segment));
+
     // check for name collisions
-    for (auto& name : segment->ingress_port_names())
+    for (auto& name : full_segment->ingress_port_names())
     {
         auto pid = m_port_hasher.register_name(name);
-        DVLOG(10) << "segment: " << segment->name() << " [" << id << "] - ingress port " << name << " [" << pid << "]";
+        DVLOG(10) << "segment: " << full_segment->name() << " [" << id << "] - ingress port " << name << " [" << pid
+                  << "]";
     }
-    for (auto& name : segment->egress_port_names())
+    for (auto& name : full_segment->egress_port_names())
     {
         auto pid = m_port_hasher.register_name(name);
-        DVLOG(10) << "segment: " << segment->name() << " [" << id << "] - egress port " << name << " [" << pid << "]";
+        DVLOG(10) << "segment: " << full_segment->name() << " [" << id << "] - egress port " << name << " [" << pid
+                  << "]";
     }
 
-    const auto& [inserted_iterator, was_inserted] = m_segments.emplace(id, std::move(segment));
+    const auto& [inserted_iterator, was_inserted] = m_segments.emplace(id, std::move(full_segment));
 
     return inserted_iterator->second;
 }
@@ -98,20 +115,16 @@ std::shared_ptr<const segment::ISegment> PipelineDefinition::make_segment(
     return this->register_segment(std::move(segdef));
 }
 
-std::shared_ptr<const segment::ISegment> PipelineDefinition::find_segment(SegmentID segment_id) const
+std::shared_ptr<const segment::SegmentDefinition> PipelineDefinition::find_segment(SegmentID segment_id) const
 {
     auto search = m_segments.find(segment_id);
     CHECK(search != m_segments.end());
     return search->second;
 }
 
-const std::map<SegmentID, std::shared_ptr<const segment::ISegment>>& PipelineDefinition::segments() const
+const std::map<SegmentID, std::shared_ptr<const segment::SegmentDefinition>>& PipelineDefinition::segments() const
 {
     return m_segments;
 }
-// std::shared_ptr<Pipeline> PipelineDefinition::unwrap(IPipeline& pipeline)
-// {
-//     return pipeline.m_impl;
-// }
 
 }  // namespace mrc::pipeline
