@@ -46,17 +46,17 @@ template <typename T>
 class Queue;
 }  // namespace mrc::node
 
-namespace mrc::internal::control_plane::server {
+namespace mrc::control_plane::server {
 class ClientInstance;
 class SubscriptionService;
-}  // namespace mrc::internal::control_plane::server
-namespace mrc::internal::rpc {
+}  // namespace mrc::control_plane::server
+namespace mrc::rpc {
 template <typename T>
 struct StreamWriter;
-}  // namespace mrc::internal::rpc
-namespace mrc::internal::runnable {
+}  // namespace mrc::rpc
+namespace mrc::runnable {
 class RunnableResources;
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable
 namespace mrc::protos {
 class Ack;
 class Event;
@@ -66,7 +66,7 @@ namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
 
-namespace mrc::internal::control_plane {
+namespace mrc::control_plane {
 
 /**
  * @brief Control Plane Server
@@ -76,7 +76,7 @@ namespace mrc::internal::control_plane {
  * to exchange connection information like UCX worker addresses.
  *
  * The server must be resilient to termination, meaning we can not use glog's CHECK statement to validate assumptions.
- * We will use C++ exceptions that throw a mrc::internal::Error to replace the std::abort of a failed CHECK/ASSERT.
+ * We will use C++ exceptions that throw a mrc::Error to replace the std::abort of a failed CHECK/ASSERT.
  * To indicate "softer" errors, perhaps configuration errors by the client or mismatched state between client and server
  * as failed Expected. All top-level event handlers should return an Expected<Message> where message is the type of
  * message which will be returned to the client. The write methods will check the state of the Expected<Message> and
@@ -93,7 +93,7 @@ class Server : public Service
     using instance_id_t = std::size_t;
 
     Server();
-    // Server(runnable::RunnableResources& runnable);
+    // Server(runnable::Resources& runnable);
     ~Server() override;
 
   private:
@@ -161,4 +161,4 @@ class Server : public Service
     // const;
 };
 
-}  // namespace mrc::internal::control_plane
+}  // namespace mrc::control_plane

@@ -30,9 +30,9 @@
 namespace mrc::codable {
 struct ICodableStorage;
 }  // namespace mrc::codable
-namespace mrc::internal::resources {
+namespace mrc::resources {
 class PartitionResources;
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources
 namespace mrc::pubsub {
 class IPublisherService;
 class ISubscriberService;
@@ -46,7 +46,7 @@ namespace mrc::metrics {
 class Registry;
 }
 
-namespace mrc::internal::runtime {
+namespace mrc::runtime {
 
 class Runtime;
 class PipelinesManager;
@@ -96,4 +96,4 @@ class PartitionRuntime final : public mrc::runtime::IPartitionRuntime, public As
     std::unique_ptr<SegmentsManager> m_segments_manager;
 };
 
-}  // namespace mrc::internal::runtime
+}  // namespace mrc::runtime

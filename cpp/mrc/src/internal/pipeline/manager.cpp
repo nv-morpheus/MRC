@@ -24,7 +24,7 @@
 #include "internal/pipeline/types.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/system_resources.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/utils/contains.hpp"
 
 #include "mrc/core/addresses.hpp"
@@ -45,9 +45,9 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 
-PipelineManager::PipelineManager(runtime::Runtime& runtime, std::shared_ptr<Pipeline> pipeline, uint64_t instance_id) :
+PipelineManager::PipelineManager(runtime::Runtime& runtime, std::shared_ptr<PipelineDefinition> pipeline, uint64_t instance_id) :
   m_runtime(runtime),
   m_pipeline(std::move(pipeline)),
   m_instance_id(instance_id)
@@ -166,9 +166,9 @@ void PipelineManager::do_service_await_join()
     }
 }
 
-const Pipeline& PipelineManager::pipeline() const
+const PipelineDefinition& PipelineManager::pipeline() const
 {
     CHECK(m_pipeline);
     return *m_pipeline;
 }
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline

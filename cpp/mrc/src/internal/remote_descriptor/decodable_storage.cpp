@@ -19,7 +19,7 @@
 
 #include <utility>
 
-namespace mrc::internal::remote_descriptor {
+namespace mrc::remote_descriptor {
 
 DecodableStorage::DecodableStorage(mrc::codable::protos::RemoteDescriptor&& proto,
                                    resources::PartitionResources& resources) :
@@ -43,4 +43,4 @@ const mrc::codable::protos::RemoteDescriptor& DecodableStorage::remote_descripto
 {
     return m_proto;
 }
-}  // namespace mrc::internal::remote_descriptor
+}  // namespace mrc::remote_descriptor

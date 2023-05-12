@@ -37,21 +37,21 @@ namespace mrc::node {
 template <typename T>
 class WritableProvider;
 }  // namespace mrc::node
-namespace mrc::internal::control_plane::client {
+namespace mrc::control_plane::client {
 class ConnectionsManager;
-}  // namespace mrc::internal::control_plane::client
-namespace mrc::internal::memory {
+}  // namespace mrc::control_plane::client
+namespace mrc::memory {
 class TransientPool;
-}  // namespace mrc::internal::memory
-namespace mrc::internal::ucx {
+}  // namespace mrc::memory
+namespace mrc::ucx {
 class Endpoint;
 class UcxResources;
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
 
-namespace mrc::internal::data_plane {
+namespace mrc::data_plane {
 class Request;
 class DataPlaneResources;
 
@@ -144,4 +144,4 @@ class Client final : public resources::PartitionResourceBase, private Service
     friend DataPlaneResources;
 };
 
-}  // namespace mrc::internal::data_plane
+}  // namespace mrc::data_plane

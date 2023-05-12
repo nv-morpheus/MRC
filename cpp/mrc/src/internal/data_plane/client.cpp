@@ -19,15 +19,15 @@
 
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/data_plane/callbacks.hpp"
+#include "internal/data_plane/data_plane_resources.hpp"
 #include "internal/data_plane/request.hpp"
-#include "internal/data_plane/resources.hpp"
 #include "internal/data_plane/tags.hpp"
 #include "internal/memory/transient_pool.hpp"
 #include "internal/remote_descriptor/manager.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/endpoint.hpp"
-#include "internal/ucx/resources.hpp"
+#include "internal/ucx/ucx_resources.hpp"
 #include "internal/ucx/worker.hpp"
 
 #include "mrc/channel/buffered_channel.hpp"
@@ -55,7 +55,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::data_plane {
+namespace mrc::data_plane {
 
 using namespace mrc::memory::literals;
 
@@ -329,4 +329,4 @@ void Client::do_service_await_join()
     m_rd_writer->await_join();
 }
 
-}  // namespace mrc::internal::data_plane
+}  // namespace mrc::data_plane

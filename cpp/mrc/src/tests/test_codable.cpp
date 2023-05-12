@@ -17,8 +17,8 @@
 
 #include "common.hpp"
 
-#include "internal/data_plane/resources.hpp"
-#include "internal/network/resources.hpp"
+#include "internal/data_plane/data_plane_resources.hpp"
+#include "internal/network/network_resources.hpp"
 #include "internal/remote_descriptor/storage.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/system_resources.hpp"
@@ -116,8 +116,8 @@ class TestCodable : public ::testing::Test
   protected:
     void SetUp() override
     {
-        m_runtime = std::make_unique<internal::runtime::Runtime>(
-            internal::system::SystemProvider(make_system([](Options& options) {
+        m_runtime = std::make_unique<runtime::Runtime>(
+            system::SystemProvider(make_system([](Options& options) {
                 // todo(#114) - propose: remove this option entirely
                 options.enable_server(true);
                 options.architect_url("localhost:13337");
@@ -134,7 +134,7 @@ class TestCodable : public ::testing::Test
         DVLOG(10) << "Teardown Complete";
     }
 
-    std::unique_ptr<internal::runtime::Runtime> m_runtime;
+    std::unique_ptr<runtime::Runtime> m_runtime;
 };
 
 TEST_F(TestCodable, Objects)

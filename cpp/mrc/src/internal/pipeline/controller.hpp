@@ -24,7 +24,7 @@
 #include <memory>
 #include <string>
 
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 class PipelineInstance;
 
 class Controller final : public node::GenericSink<ControlMessage>
@@ -49,4 +49,4 @@ class Controller final : public node::GenericSink<ControlMessage>
     SegmentAddresses m_current_segments;
 };
 
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline

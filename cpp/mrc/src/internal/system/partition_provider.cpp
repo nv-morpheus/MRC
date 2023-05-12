@@ -24,7 +24,7 @@
 
 #include <vector>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 PartitionProvider::PartitionProvider(SystemProvider& system, std::size_t partition_id) :
   SystemProvider(system),
@@ -41,4 +41,4 @@ const Partition& PartitionProvider::partition() const
 {
     return system().partitions().flattened().at(m_partition_id);
 }
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

@@ -28,7 +28,7 @@
 #include <ostream>
 #include <utility>
 
-namespace mrc::internal::rpc {
+namespace mrc::rpc {
 
 ProgressEngine::ProgressEngine(std::shared_ptr<grpc::CompletionQueue> cq) : m_cq(std::move(cq)) {}
 
@@ -68,4 +68,4 @@ void ProgressEngine::data_source(rxcpp::subscriber<ProgressEvent>& s)
 
 void ProgressEngine::on_stop(const rxcpp::subscription& subscription) {}
 
-}  // namespace mrc::internal::rpc
+}  // namespace mrc::rpc

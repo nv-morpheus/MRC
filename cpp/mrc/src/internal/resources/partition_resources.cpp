@@ -19,7 +19,7 @@
 
 #include <optional>
 
-namespace mrc::internal::resources {
+namespace mrc::resources {
 
 PartitionResources::PartitionResources(runnable::RunnableResources& runnable_resources,
                                        std::size_t partition_id,
@@ -52,4 +52,4 @@ std::optional<ucx::UcxResources>& PartitionResources::ucx() const
     return m_ucx;
 }
 
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources

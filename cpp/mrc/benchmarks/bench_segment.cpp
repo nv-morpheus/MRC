@@ -18,8 +18,6 @@
 #include "mrc/benchmarking/segment_watcher.hpp"
 #include "mrc/benchmarking/tracer.hpp"
 #include "mrc/benchmarking/util.hpp"
-#include "mrc/core/executor.hpp"
-#include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
@@ -190,7 +188,7 @@ class SimpleEmitReceiveFixture : public benchmark::Fixture
     void SetUp(const ::benchmark::State& state) override
     {
         TimeUtil::estimate_steady_clock_delay();
-        auto init = [this](segment::Builder& segment) {
+        auto init = [this](segment::IBuilder& segment) {
             std::string src_name  = "nsrc";
             std::string int_name  = "n1";
             std::string sink_name = "nsink";
@@ -215,7 +213,7 @@ class SimpleEmitReceiveFixture : public benchmark::Fixture
             segment.make_edge(internal, sink);
         };
 
-        auto pipeline = pipeline::make_pipeline();
+        auto pipeline = mrc::make_pipeline();
         auto segment  = pipeline->make_segment("bench_segment", init);
 
         std::shared_ptr<Executor> executor = std::make_shared<Executor>();
@@ -250,7 +248,7 @@ class LongEmitReceiveFixture : public benchmark::Fixture
     void SetUp(const ::benchmark::State& state) override
     {
         TimeUtil::estimate_steady_clock_delay();
-        auto init = [this](segment::Builder& segment) {
+        auto init = [this](segment::IBuilder& segment) {
             std::string src_name  = "nsrc";
             std::string sink_name = "nsink";
 
@@ -284,7 +282,7 @@ class LongEmitReceiveFixture : public benchmark::Fixture
             segment.make_edge(last_node, sink);
         };
 
-        auto pipeline = pipeline::make_pipeline();
+        auto pipeline = mrc::make_pipeline();
         auto segment  = pipeline->make_segment("bench_segment", init);
 
         std::shared_ptr<Executor> executor = std::make_shared<Executor>();

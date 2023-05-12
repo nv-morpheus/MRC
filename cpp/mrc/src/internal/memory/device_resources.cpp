@@ -17,11 +17,11 @@
 
 #include "internal/memory/device_resources.hpp"
 
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/system/device_partition.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/system/system.hpp"
-#include "internal/ucx/resources.hpp"
+#include "internal/ucx/ucx_resources.hpp"
 
 #include "mrc/core/task_queue.hpp"
 #include "mrc/cuda/device_guard.hpp"
@@ -47,7 +47,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::memory {
+namespace mrc::memory {
 
 DeviceResources::DeviceResources(resources::PartitionResourceBase& base, std::optional<ucx::UcxResources>& ucx) :
   resources::PartitionResourceBase(base)
@@ -116,4 +116,4 @@ std::shared_ptr<mrc::memory::memory_resource> DeviceResources::arena_memory_reso
 {
     return m_arena;
 }
-}  // namespace mrc::internal::memory
+}  // namespace mrc::memory

@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/segment/initializers.hpp"
 #include "mrc/utils/macros.hpp"
 
@@ -28,7 +27,7 @@
 namespace mrc::segment {
 struct EgressPortsBase;
 struct IngressPortsBase;
-class Definition;
+class ISegment;
 }  // namespace mrc::segment
 
 // work-around for known iwyu issue
@@ -37,25 +36,21 @@ class Definition;
 
 namespace mrc::pipeline {
 
-class Pipeline final : public internal::pipeline::IPipeline
+class IPipeline
 {
-    Pipeline()   = default;
-    using base_t = internal::pipeline::IPipeline;
-
   public:
-    static std::unique_ptr<Pipeline> create();
+    IPipeline()          = default;
+    virtual ~IPipeline() = default;
 
-    ~Pipeline() final = default;
-
-    DELETE_COPYABILITY(Pipeline);
-    DELETE_MOVEABILITY(Pipeline);
+    DELETE_COPYABILITY(IPipeline);
 
     /**
      * @brief register a segment
      * @param [in] segment
      * @throws
      **/
-    void register_segment(std::shared_ptr<segment::Definition> segment);
+    virtual std::shared_ptr<const segment::ISegment> register_segment(
+        std::shared_ptr<const segment::ISegment> segment) = 0;
 
     /**
      * @brief register multiple segments
@@ -63,10 +58,13 @@ class Pipeline final : public internal::pipeline::IPipeline
      * @tparam SegmentDefs
      * @param segment_defs
      */
-    template <typename... SegmentDefs>  // NOLINT
-    void register_segments(SegmentDefs&&... segment_defs)
+    template <typename... SegmentDefsT>
+    std::vector<std::shared_ptr<const segment::ISegment>> register_segments(SegmentDefsT&&... segment_defs)
     {
-        (register_segment(std::forward<SegmentDefs>(segment_defs)), ...);
+        auto segments = std::vector<std::shared_ptr<const segment::ISegment>>{
+            {this->register_segment(std::forward<SegmentDefsT>(segment_defs))...}};
+
+        return segments;
     }
 
     /**
@@ -77,10 +75,11 @@ class Pipeline final : public internal::pipeline::IPipeline
      * @param segment_name Unique name to assign to segments built from this definition
      * @param segment_initializer User defined lambda function which will be used to initialize
      *  new segments.
-     * @return A shared pointer to a new segment::Definition
+     * @return A shared pointer to a new segment::ISegment
      */
-    std::shared_ptr<segment::Definition> make_segment(const std::string& segment_name,
-                                                      segment::segment_initializer_fn_t segment_initializer);
+    virtual std::shared_ptr<const segment::ISegment> make_segment(
+        const std::string& segment_name,
+        segment::segment_initializer_fn_t segment_initializer) = 0;
 
     /**
      * Create a segment definition, which describes how to create new Segment instances.
@@ -92,12 +91,13 @@ class Pipeline final : public internal::pipeline::IPipeline
      * @param segment_name Unique name to assign to segments built from this definition
      * @param segment_initializer User defined lambda function which will be used to initialize
      *  new segments.
-     * @return A shared pointer to a new segment::Definition
+     * @return A shared pointer to a new segment::ISegment
      */
-    std::shared_ptr<segment::Definition> make_segment(const std::string& segment_name,
-                                                      segment::IngressPortsBase ingress_ports,
-                                                      segment::EgressPortsBase egress_ports,
-                                                      segment::segment_initializer_fn_t segment_initializer);
+    virtual std::shared_ptr<const segment::ISegment> make_segment(
+        const std::string& segment_name,
+        segment::IngressPortsBase ingress_ports,
+        segment::EgressPortsBase egress_ports,
+        segment::segment_initializer_fn_t segment_initializer) = 0;
 
     /**
      * Create a segment definition, which describes how to create new Segment instances.
@@ -109,11 +109,12 @@ class Pipeline final : public internal::pipeline::IPipeline
      * @param segment_name Unique name to assign to segments built from this definition
      * @param segment_initializer User defined lambda function which will be used to initialize
      *  new segments.
-     * @return A shared pointer to a new segment::Definition
+     * @return A shared pointer to a new segment::ISegment
      */
-    std::shared_ptr<segment::Definition> make_segment(const std::string& segment_name,
-                                                      segment::IngressPortsBase ingress_ports,
-                                                      segment::segment_initializer_fn_t segment_initializer);
+    virtual std::shared_ptr<const segment::ISegment> make_segment(
+        const std::string& segment_name,
+        segment::IngressPortsBase ingress_ports,
+        segment::segment_initializer_fn_t segment_initializer) = 0;
 
     /**
      * Create a segment definition, which describes how to create new Segment instances.
@@ -125,13 +126,16 @@ class Pipeline final : public internal::pipeline::IPipeline
      * @param segment_name Unique name to assign to segments built from this definition
      * @param segment_initializer User defined lambda function which will be used to initialize
      *  new segments.
-     * @return A shared pointer to a new segment::Definition
+     * @return A shared pointer to a new segment::ISegment
      */
-    std::shared_ptr<segment::Definition> make_segment(const std::string& segment_name,
-                                                      segment::EgressPortsBase egress_ports,
-                                                      segment::segment_initializer_fn_t segment_initializer);
+    virtual std::shared_ptr<const segment::ISegment> make_segment(
+        const std::string& segment_name,
+        segment::EgressPortsBase egress_ports,
+        segment::segment_initializer_fn_t segment_initializer) = 0;
 };
 
-std::unique_ptr<Pipeline> make_pipeline();
-
 }  // namespace mrc::pipeline
+
+namespace mrc {
+std::unique_ptr<pipeline::IPipeline> make_pipeline();
+}

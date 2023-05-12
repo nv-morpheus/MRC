@@ -30,7 +30,7 @@
 #include <functional>
 #include <memory>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 FiberManager::FiberManager(const ThreadingResources& resources) : m_cpu_set(resources.system().topology().cpu_set())
 {
@@ -94,4 +94,4 @@ FiberTaskQueue& FiberManager::task_queue(std::uint32_t cpu_id) const
     return *search->second;
 }
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

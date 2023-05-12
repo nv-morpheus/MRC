@@ -32,7 +32,7 @@
 #include <string>
 #include <utility>
 
-namespace mrc::internal::runnable {
+namespace mrc::runnable {
 
 void ThreadEngines::initialize_launchers()
 {
@@ -66,4 +66,4 @@ runnable::EngineType ThreadEngines::engine_type() const
 {
     return EngineType::Thread;
 }
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable

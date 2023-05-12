@@ -31,12 +31,12 @@ namespace mrc::edge {
 template <typename T>
 class IWritableAcceptor;
 }  // namespace mrc::edge
-namespace mrc::internal::control_plane {
+namespace mrc::control_plane {
 class Client;
-}  // namespace mrc::internal::control_plane
-namespace mrc::internal::network {
+}  // namespace mrc::control_plane
+namespace mrc::network {
 class NetworkResources;
-}  // namespace mrc::internal::network
+}  // namespace mrc::network
 namespace mrc::protos {
 class DropSubscriptionServiceState;
 class StateUpdate;
@@ -46,7 +46,7 @@ namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
 
-namespace mrc::internal::control_plane::client {
+namespace mrc::control_plane::client {
 
 class ISubscriptionServiceUpdater;
 
@@ -89,4 +89,4 @@ class Instance final : private resources::PartitionResourceBase, private Service
     friend network::NetworkResources;
 };
 
-}  // namespace mrc::internal::control_plane::client
+}  // namespace mrc::control_plane::client

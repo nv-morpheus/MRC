@@ -41,12 +41,12 @@ struct ICodableStorage;
 namespace mrc::codable::protos {
 class RemoteDescriptor;
 }  // namespace mrc::codable::protos
-namespace mrc::internal::resources {
+namespace mrc::resources {
 class PartitionResources;
-}  // namespace mrc::internal::resources
-namespace mrc::internal::runtime {
+}  // namespace mrc::resources
+namespace mrc::runtime {
 class PartitionRuntime;
-}  // namespace mrc::internal::runtime
+}  // namespace mrc::runtime
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
@@ -54,7 +54,7 @@ namespace mrc::runtime {
 struct IRemoteDescriptorHandle;
 }  // namespace mrc::runtime
 
-namespace mrc::internal::remote_descriptor {
+namespace mrc::remote_descriptor {
 struct RemoteDescriptorDecrementMessage;
 
 /**
@@ -124,7 +124,7 @@ class Manager final : private Service,
 
     mutable std::mutex m_mutex;
 
-    friend internal::runtime::PartitionRuntime;
+    friend internal::runtime::Partition;
 };
 
-}  // namespace mrc::internal::remote_descriptor
+}  // namespace mrc::remote_descriptor

@@ -30,7 +30,7 @@
 #include <cstdint>
 #include <ostream>
 
-namespace mrc::internal::control_plane::server {
+namespace mrc::control_plane::server {
 
 Role::Role(std::string service_name, std::string role_name) :
   m_service_name(std::move(service_name)),
@@ -292,4 +292,4 @@ Expected<> SubscriptionService::update_role(const protos::UpdateSubscriptionServ
     }
     return {};
 }
-}  // namespace mrc::internal::control_plane::server
+}  // namespace mrc::control_plane::server

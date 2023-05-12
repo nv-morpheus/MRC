@@ -30,7 +30,7 @@ enum class PlacementResources;
 enum class PlacementStrategy;
 }  // namespace mrc
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 class System;
 class Topology;
@@ -72,4 +72,4 @@ class Partitions
     PlacementResources m_device_to_host_strategy;
 };
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

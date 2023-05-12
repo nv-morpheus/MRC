@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 #include "internal/system/threading_resources.hpp"
@@ -45,7 +45,6 @@
 #include "mrc/runnable/runner.hpp"
 #include "mrc/runnable/types.hpp"
 #include "mrc/segment/builder.hpp"
-#include "mrc/segment/definition.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/object.hpp"
 #include "mrc/segment/runnable.hpp"
@@ -72,7 +71,7 @@
 
 using namespace mrc;
 
-static std::shared_ptr<internal::system::System> make_system(std::function<void(Options&)> updater = nullptr)
+static std::shared_ptr<system::System> make_system(std::function<void(Options&)> updater = nullptr)
 {
     auto options = std::make_shared<Options>();
     if (updater)
@@ -80,7 +79,7 @@ static std::shared_ptr<internal::system::System> make_system(std::function<void(
         updater(*options);
     }
 
-    return internal::system::make_system(std::move(options));
+    return system::make_system(std::move(options));
 }
 
 class TestNext : public ::testing::Test
@@ -88,8 +87,8 @@ class TestNext : public ::testing::Test
   protected:
     void SetUp() override
     {
-        m_system_resources = std::make_unique<internal::system::ThreadingResources>(
-            internal::system::SystemProvider(make_system([](Options& options) {
+        m_system_resources = std::make_unique<system::ThreadingResources>(
+            system::SystemProvider(make_system([](Options& options) {
                 options.topology().user_cpuset("0-3");
                 options.topology().restrict_gpus(true);
                 options.engine_factories().set_engine_factory_options("thread_pool", [](EngineFactoryOptions& options) {
@@ -99,7 +98,7 @@ class TestNext : public ::testing::Test
                 });
             })));
 
-        m_resources = std::make_unique<internal::runnable::RunnableResources>(*m_system_resources, 0);
+        m_resources = std::make_unique<runnable::RunnableResources>(*m_system_resources, 0);
     }
 
     void TearDown() override
@@ -108,8 +107,8 @@ class TestNext : public ::testing::Test
         m_system_resources.reset();
     }
 
-    std::unique_ptr<internal::system::ThreadingResources> m_system_resources;
-    std::unique_ptr<internal::runnable::RunnableResources> m_resources;
+    std::unique_ptr<system::ThreadingResources> m_system_resources;
+    std::unique_ptr<runnable::RunnableResources> m_resources;
 };
 
 class ExGenSource : public node::GenericSource<int>
@@ -708,11 +707,11 @@ TEST_F(TestNext, PrivateInheritance)
 
 TEST_F(TestNext, Segment)
 {
-    auto segment = segment::Definition::create("test", segment::EgressPorts<int>({"test"}), [](segment::Builder& s) {});
+    auto segment = Segment::create("test", segment::EgressPorts<int>({"test"}), [](segment::IBuilder& s) {});
 
     segment::EgressPorts<int> ports({"test"});
 
-    // segment::Segment seg("test", ports, [](segment::Builder& builder) {});
+    // segment::Segment seg("test", ports, [](segment::IBuilder& builder) {});
 }
 
 TEST_F(TestNext, SegmentRunnable)
@@ -732,7 +731,7 @@ TEST_F(TestNext, SegmentRunnable)
 
 TEST_F(TestNext, SegmentBuilder)
 {
-    auto init = [](segment::Builder& segment) {
+    auto init = [](segment::IBuilder& segment) {
         auto src = segment.make_source<std::string>("x_src", [&](rxcpp::subscriber<std::string> s) {
             s.on_next("One");
             s.on_next("Two");

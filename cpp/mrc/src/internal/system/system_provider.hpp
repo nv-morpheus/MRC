@@ -19,7 +19,7 @@
 
 #include <memory>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 class System;
 
@@ -45,4 +45,4 @@ class SystemProvider
     std::shared_ptr<const System> m_system;
 };
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

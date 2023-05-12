@@ -23,7 +23,7 @@
 
 #include <boost/fiber/all.hpp>
 
-namespace mrc::internal::rpc {
+namespace mrc::rpc {
 
 /**
  * @brief MRC Sink to handle ProgressEvents which correspond to Promise<bool> tags
@@ -37,4 +37,4 @@ class PromiseHandler final : public mrc::node::GenericSink<ProgressEvent>
     }
 };
 
-}  // namespace mrc::internal::rpc
+}  // namespace mrc::rpc

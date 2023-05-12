@@ -19,7 +19,6 @@
 
 #include "../test_mrc.hpp"  // IWYU pragma: keep
 
-#include "mrc/core/executor.hpp"
 #include "mrc/modules/properties/persistent.hpp"
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/options/options.hpp"
@@ -62,13 +61,13 @@ class TestModules : public ::testing::Test
   protected:
     void SetUp() override
     {
-        m_pipeline  = pipeline::make_pipeline();
+        m_pipeline  = mrc::make_pipeline();
         m_resources = std::make_shared<TestSegmentResources>();
     }
 
     void TearDown() override {}
 
-    std::unique_ptr<pipeline::Pipeline> m_pipeline;
+    std::unique_ptr<pipeline::IPipeline> m_pipeline;
     std::shared_ptr<TestSegmentResources> m_resources;
 };
 
@@ -85,13 +84,13 @@ class [[maybe_unused]] MultiSourceModule : public modules::SegmentModule
     {}
 
   protected:
-    void initialize(segment::Builder& builder) override;
+    void initialize(segment::IBuilder& builder) override;
 
     std::string module_type_name() const override;
 };
 
 template <typename DataTypeT, std::size_t SourceCountV, std::size_t EmissionCountV>
-void MultiSourceModule<DataTypeT, SourceCountV, EmissionCountV>::initialize(segment::Builder& builder)
+void MultiSourceModule<DataTypeT, SourceCountV, EmissionCountV>::initialize(segment::IBuilder& builder)
 {
     for (std::size_t i = 0; i < SourceCountV; ++i)
     {
@@ -144,7 +143,7 @@ class [[maybe_unused]] MultiSinkModule : public modules::SegmentModule, public m
     std::size_t get_received(std::size_t index) const;
 
   protected:
-    void initialize(segment::Builder& builder) override;
+    void initialize(segment::IBuilder& builder) override;
 
     std::string module_type_name() const override;
 
@@ -160,7 +159,7 @@ std::size_t MultiSinkModule<DataTypeT, SinkCountV>::get_received(std::size_t ind
 }
 
 template <typename DataTypeT, std::size_t SinkCountV>
-void MultiSinkModule<DataTypeT, SinkCountV>::initialize(segment::Builder& builder)
+void MultiSinkModule<DataTypeT, SinkCountV>::initialize(segment::IBuilder& builder)
 {
     for (std::size_t i = 0; i < SinkCountV; ++i)
     {

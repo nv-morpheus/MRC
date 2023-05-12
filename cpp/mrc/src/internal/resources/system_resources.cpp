@@ -20,12 +20,12 @@
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/control_plane/client/instance.hpp"
-#include "internal/control_plane/resources.hpp"
-#include "internal/data_plane/resources.hpp"  // IWYU pragma: keep
+#include "internal/control_plane/control_plane_resources.hpp"
+#include "internal/data_plane/data_plane_resources.hpp"  // IWYU pragma: keep
 #include "internal/memory/device_resources.hpp"
-#include "internal/network/resources.hpp"
+#include "internal/network/network_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/system/engine_factory_cpu_sets.hpp"
 #include "internal/system/host_partition.hpp"
 #include "internal/system/partition.hpp"
@@ -33,7 +33,7 @@
 #include "internal/system/system.hpp"
 #include "internal/system/threading_resources.hpp"
 #include "internal/ucx/registation_callback_builder.hpp"
-#include "internal/ucx/resources.hpp"
+#include "internal/ucx/ucx_resources.hpp"
 #include "internal/ucx/worker.hpp"
 #include "internal/utils/contains.hpp"
 
@@ -54,7 +54,7 @@
 #include <thread>
 #include <utility>
 
-namespace mrc::internal::resources {
+namespace mrc::resources {
 
 thread_local SystemResources* SystemResources::m_thread_resources{nullptr};
 thread_local PartitionResources* SystemResources::m_thread_partition{nullptr};
@@ -331,4 +331,4 @@ void SystemResources::initialize() {}
 //         }
 //     });
 // }
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources

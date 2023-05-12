@@ -27,7 +27,7 @@ namespace mrc::runnable {
 
 Launcher::Launcher(std::unique_ptr<Runner> runner,
                    std::vector<std::shared_ptr<Context>>&& contexts,
-                   std::shared_ptr<Engines> engines) :
+                   std::shared_ptr<IEngines> engines) :
   m_runner(std::move(runner)),
   m_contexts(std::move(contexts)),
   m_engines(std::move(engines))

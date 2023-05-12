@@ -30,23 +30,23 @@
 namespace mrc::internal::runtime {
 class Runtime;
 }
-namespace mrc::internal::resources {
+namespace mrc::resources {
 class SystemResources;
-}  // namespace mrc::internal::resources
-namespace mrc::internal::segment {
+}  // namespace mrc::resources
+namespace mrc::segment {
 class SegmentInstance;
-}  // namespace mrc::internal::segment
+}  // namespace mrc::segment
 namespace mrc::manifold {
 struct Interface;
 }  // namespace mrc::manifold
 
-namespace mrc::internal::pipeline {
-class Pipeline;
+namespace mrc::pipeline {
+class PipelineDefinition;
 
 class PipelineInstance final : public AsyncService, public runnable::RunnableResourcesProvider
 {
   public:
-    PipelineInstance(runtime::Runtime& runtime, std::shared_ptr<const Pipeline> definition, uint64_t instance_id);
+    PipelineInstance(runtime::Runtime& runtime, std::shared_ptr<const PipelineDefinition> definition, uint64_t instance_id);
     ~PipelineInstance() override;
 
     // currently we are passing the instance back to the executor
@@ -84,7 +84,7 @@ class PipelineInstance final : public AsyncService, public runnable::RunnableRes
 
     runtime::Runtime& m_runtime;
 
-    std::shared_ptr<const Pipeline> m_definition;  // convert to pipeline::Pipeline
+    std::shared_ptr<const PipelineDefinition> m_definition;  // convert to pipeline::Pipeline
 
     uint64_t m_instance_id;
 
@@ -96,4 +96,4 @@ class PipelineInstance final : public AsyncService, public runnable::RunnableRes
     SharedFuture<void> m_joinable_future;
 };
 
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline

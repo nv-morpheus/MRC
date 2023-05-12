@@ -43,7 +43,7 @@ class MirrorTapModule : public SegmentModule, public PersistentModule
     std::string tap_egress_port_name() const;
 
   protected:
-    void initialize(segment::Builder& builder) override;
+    void initialize(segment::IBuilder& builder) override;
 
     std::string module_type_name() const override;
 
@@ -80,7 +80,7 @@ std::string MirrorTapModule<DataTypeT>::tap_egress_port_name() const
 }
 
 template <typename DataTypeT>
-void MirrorTapModule<DataTypeT>::initialize(segment::Builder& builder)
+void MirrorTapModule<DataTypeT>::initialize(segment::IBuilder& builder)
 {
     // ********** Implementation ************ //
     auto bcast = builder.construct_object<node::Broadcast<DataTypeT>>("broadcast");

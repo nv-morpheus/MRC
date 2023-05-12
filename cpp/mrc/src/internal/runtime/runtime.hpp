@@ -33,11 +33,11 @@
 #include <memory>
 #include <vector>
 
-namespace mrc::internal::resources {
+namespace mrc::resources {
 class SystemResources;
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources
 
-namespace mrc::internal::runtime {
+namespace mrc::runtime {
 
 /**
  * @brief Implements the public Runtime interface and owns any high-level runtime resources, e.g. the remote descriptor
@@ -99,4 +99,4 @@ class Runtime final : public mrc::runtime::IRuntime, public AsyncService, public
     // std::map<int, std::shared_ptr<pipeline::Pipeline>> m_registered_pipeline_defs;
 };
 
-}  // namespace mrc::internal::runtime
+}  // namespace mrc::runtime

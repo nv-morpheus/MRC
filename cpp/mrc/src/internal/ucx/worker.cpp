@@ -36,7 +36,7 @@
 #include <string>
 #include <utility>
 
-namespace mrc::internal::ucx {
+namespace mrc::ucx {
 
 Worker::Worker(Handle<Context> context) : m_context(std::move(context)), m_address_pointer(nullptr), m_address_length(0)
 {
@@ -114,4 +114,4 @@ Context& Worker::context()
     return *m_context;
 }
 
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx

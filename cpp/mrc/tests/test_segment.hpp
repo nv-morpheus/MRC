@@ -22,6 +22,7 @@
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/pipeline/pipeline.hpp"
+#include "mrc/segment/builder.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
 
@@ -34,7 +35,7 @@
 #include <string>
 
 namespace mrc::segment {
-class Builder;
+class IBuilder;
 struct ObjectProperties;
 }  // namespace mrc::segment
 
@@ -58,7 +59,7 @@ class TestSegment : public ::testing::Test
   protected:
     void SetUp() override
     {
-        m_pipeline  = pipeline::make_pipeline();
+        m_pipeline  = mrc::make_pipeline();
         m_resources = std::make_shared<TestSegmentResources>();
     }
 
@@ -81,10 +82,10 @@ class TestSegment : public ::testing::Test
     // Sum of nodes created by Ingress Types and Egress Types
     size_t m_InterfaceNodeCount;
 
-    std::function<void(segment::Builder&)> m_initializer = [this](segment::Builder& s) {
+    std::function<void(segment::IBuilder&)> m_initializer = [this](segment::IBuilder& s) {
         this->m_initializer_called = true;
     };
-    std::unique_ptr<pipeline::Pipeline> m_pipeline;
+    std::unique_ptr<pipeline::IPipeline> m_pipeline;
     std::shared_ptr<TestSegmentResources> m_resources;
 };
 

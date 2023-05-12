@@ -56,16 +56,16 @@ namespace grpc {
 class Channel;
 class CompletionQueue;
 }  // namespace grpc
-namespace mrc::internal::control_plane::client {
+namespace mrc::control_plane::client {
 class ConnectionsManager;
 class SubscriptionService;
-}  // namespace mrc::internal::control_plane::client
-namespace mrc::internal::network {
+}  // namespace mrc::control_plane::client
+namespace mrc::network {
 class NetworkResources;
-}  // namespace mrc::internal::network
-namespace mrc::internal::ucx {
+}  // namespace mrc::network
+namespace mrc::ucx {
 class UcxResources;
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
@@ -73,7 +73,7 @@ namespace mrc::internal::resources {
 class IResourcesProvider;
 }  // namespace mrc::internal::resources
 
-namespace mrc::internal::control_plane {
+namespace mrc::control_plane {
 
 template <typename ResponseT>
 class AsyncStatus;
@@ -295,4 +295,4 @@ void Client::issue_event(const protos::EventType& event_type, MessageT&& message
     m_writer->await_write(std::move(event));
 }
 
-}  // namespace mrc::internal::control_plane
+}  // namespace mrc::control_plane

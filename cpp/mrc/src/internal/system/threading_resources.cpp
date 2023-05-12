@@ -15,8 +15,9 @@
  * limitations under the License.
  */
 
-#include "internal/system/fiber_manager.hpp"
 #include "internal/system/threading_resources.hpp"
+
+#include "internal/system/fiber_manager.hpp"
 
 #include "mrc/engine/system/iresources.hpp"
 
@@ -25,7 +26,7 @@
 #include <map>
 #include <vector>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 ThreadingResources::ThreadingResources(SystemProvider system) :
   SystemProvider(system),
@@ -70,4 +71,4 @@ std::unique_ptr<ThreadingResources> ThreadingResources::unwrap(IThreadingResourc
 {
     return std::move(resources.m_impl);
 }
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

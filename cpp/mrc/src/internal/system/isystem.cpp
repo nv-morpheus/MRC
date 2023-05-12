@@ -21,9 +21,9 @@
 
 #include <utility>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 ISystem::ISystem(std::shared_ptr<Options> options) : m_impl(make_system(std::move(options))) {}
 ISystem::~ISystem() = default;
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

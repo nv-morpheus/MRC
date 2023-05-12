@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "internal/pipeline/pipeline_definition.hpp"
 #include "internal/pipeline/types.hpp"
 #include "internal/runtime/runtime.hpp"
 #include "internal/service.hpp"
@@ -30,15 +31,15 @@
 
 // IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
 
-namespace mrc::internal::resources {
+namespace mrc::resources {
 class SystemResources;
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
 
-namespace mrc::internal::pipeline {
-class Pipeline;
+namespace mrc::pipeline {
+class PipelineDefinition;
 
 /**
  * @brief Responsible for coordinating and controlling a Pipeline running on a set of resources/partitions.
@@ -50,10 +51,10 @@ class Pipeline;
 class PipelineManager : public Service
 {
   public:
-    PipelineManager(runtime::Runtime& runtime, std::shared_ptr<Pipeline> pipeline, uint64_t instance_id);
+    PipelineManager(runtime::Runtime& runtime, std::shared_ptr<PipelineDefinition> pipeline, uint64_t instance_id);
     ~PipelineManager() override;
 
-    const Pipeline& pipeline() const;
+    const PipelineDefinition& pipeline() const;
 
     void push_updates(SegmentAddresses&& segment_addresses);
 
@@ -66,11 +67,11 @@ class PipelineManager : public Service
 
     runtime::Runtime& m_runtime;
 
-    std::shared_ptr<Pipeline> m_pipeline;
+    std::shared_ptr<PipelineDefinition> m_pipeline;
     uint64_t m_instance_id;
     std::unique_ptr<node::WritableEntrypoint<ControlMessage>> m_update_channel;
     std::unique_ptr<mrc::runnable::Runner> m_controller;
     rxcpp::composite_subscription m_state_subscription;
 };
 
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline

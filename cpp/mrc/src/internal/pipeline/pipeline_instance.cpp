@@ -31,6 +31,7 @@
 #include "mrc/core/addresses.hpp"
 #include "mrc/core/task_queue.hpp"
 #include "mrc/manifold/interface.hpp"
+#include "mrc/segment/segment.hpp"
 #include "mrc/segment/utils.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/string_utils.hpp"
@@ -39,6 +40,7 @@
 #include <glog/logging.h>
 
 #include <exception>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <utility>
@@ -122,7 +124,8 @@ void PipelineInstance::create_segment(const SegmentAddress& address, std::uint32
             CHECK(search == m_segments.end());
 
             auto [id, rank] = segment_address_decode(address);
-            auto definition = m_definition->find_segment(id);
+            auto definition = std::static_pointer_cast<const segment::SegmentDefinition>(
+                m_definition->find_segment(id));
             auto segment    = std::make_unique<segment::SegmentInstance>(m_runtime.partition(partition_id),
                                                                       definition,
                                                                       rank);

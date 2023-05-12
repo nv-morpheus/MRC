@@ -20,8 +20,7 @@
 #include "pymrc/pipeline.hpp"
 #include "pymrc/system.hpp"
 
-#include "mrc/core/executor.hpp"
-#include "mrc/engine/pipeline/ipipeline.hpp"
+#include "mrc/pipeline/executor.hpp"
 #include "mrc/pipeline/pipeline.hpp"  // IWYU pragma: keep
 #include "mrc/types.hpp"
 
@@ -136,9 +135,8 @@ Executor::Executor(std::shared_ptr<Options> options)
     auto result = pthread_sigmask(SIG_BLOCK, &sigset, &pysigset);
 
     // Now create the executor
-    auto system    = std::make_unique<System>(options);
-    auto resources = std::make_unique<ThreadingResources>(std::move(system));
-    m_exec         = std::make_shared<mrc::Executor>(std::move(resources));
+
+    m_exec         = mrc::make_executor(options);
 }
 
 Executor::~Executor()
@@ -217,7 +215,7 @@ std::shared_ptr<Awaitable> Executor::join_async()
     return std::make_shared<Awaitable>(std::move(py_fiber_future));
 }
 
-std::shared_ptr<mrc::Executor> Executor::get_executor() const
+std::shared_ptr<pipeline::IExecutor> Executor::get_executor() const
 {
     return m_exec;
 }

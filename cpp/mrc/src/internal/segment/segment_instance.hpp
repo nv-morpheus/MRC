@@ -35,23 +35,23 @@ namespace mrc::internal::runtime {
 class PartitionRuntime;
 }
 
-namespace mrc::internal::pipeline {
-class Resources;
-}  // namespace mrc::internal::pipeline
+namespace mrc::pipeline {
+class PipelineResources;
+}  // namespace mrc::pipeline
 namespace mrc::manifold {
 struct Interface;
 }  // namespace mrc::manifold
 
-namespace mrc::internal::segment {
-class Definition;
-class Builder;
+namespace mrc::segment {
+class SegmentDefinition;
+class BuilderDefinition;
 
 // todo(ryan) - inherit from service
 class SegmentInstance final : public AsyncService, public runnable::RunnableResourcesProvider
 {
   public:
     SegmentInstance(runtime::PartitionRuntime& runtime,
-                    std::shared_ptr<const Definition> definition,
+                    std::shared_ptr<const SegmentDefinition> definition,
                     SegmentAddress instance_id);
     ~SegmentInstance() override;
 
@@ -84,7 +84,7 @@ class SegmentInstance final : public AsyncService, public runnable::RunnableReso
     SegmentAddress m_address;
     std::string m_info;
 
-    std::unique_ptr<Builder> m_builder;
+    std::unique_ptr<BuilderDefinition> m_builder;
     runtime::PartitionRuntime& m_runtime;
 
     std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_runners;
@@ -94,4 +94,4 @@ class SegmentInstance final : public AsyncService, public runnable::RunnableReso
     mutable std::mutex m_mutex;
 };
 
-}  // namespace mrc::internal::segment
+}  // namespace mrc::segment

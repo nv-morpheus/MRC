@@ -21,7 +21,7 @@
 
 #define MRC_DEBUG 1
 
-namespace mrc::internal::memory {
+namespace mrc::memory {
 
 TransientBuffer::TransientBuffer(void* addr, std::size_t bytes, mrc::data::SharedReusable<mrc::memory::buffer> buffer) :
   m_addr(addr),
@@ -125,4 +125,4 @@ TransientBuffer TransientPool::await_buffer(std::size_t bytes)
     return {addr, bytes, m_buffer};
 }
 
-}  // namespace mrc::internal::memory
+}  // namespace mrc::memory

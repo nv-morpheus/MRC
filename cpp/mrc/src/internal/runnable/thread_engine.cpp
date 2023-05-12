@@ -30,7 +30,7 @@
 #include <optional>
 #include <utility>
 
-namespace mrc::internal::runnable {
+namespace mrc::runnable {
 
 ThreadEngine::ThreadEngine(CpuSet cpu_set, const system::ThreadingResources& system) :
   m_cpu_set(std::move(cpu_set)),
@@ -61,4 +61,4 @@ runnable::EngineType ThreadEngine::engine_type() const
     return EngineType::Thread;
 }
 
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable

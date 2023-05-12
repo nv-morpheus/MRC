@@ -86,7 +86,7 @@ Runner::~Runner()
     }
 }
 
-void Runner::enqueue(std::shared_ptr<Engines> launcher, std::vector<std::shared_ptr<Context>>&& contexts)
+void Runner::enqueue(std::shared_ptr<IEngines> launcher, std::vector<std::shared_ptr<Context>>&& contexts)
 {
     DCHECK(launcher);
     DCHECK_EQ(launcher->size(), contexts.size());

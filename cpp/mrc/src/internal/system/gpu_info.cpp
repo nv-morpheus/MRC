@@ -19,7 +19,7 @@
 
 #include "mrc/core/bitmap.hpp"
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 const CpuSet& GpuInfo::cpu_set() const
 {
@@ -76,4 +76,4 @@ GpuInfo GpuInfo::deserialize(const protos::GpuInfo& msg)
     return info;
 }
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

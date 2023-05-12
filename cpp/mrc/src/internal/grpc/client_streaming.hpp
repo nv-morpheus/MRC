@@ -19,7 +19,7 @@
 
 #include "internal/grpc/progress_engine.hpp"
 #include "internal/grpc/stream_writer.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/service.hpp"
 
 #include "mrc/channel/channel.hpp"
@@ -49,7 +49,7 @@
 #include <optional>
 #include <tuple>
 
-namespace mrc::internal::rpc {
+namespace mrc::rpc {
 
 /**
  * @brief Implementation of a gRPC bidirectional streaming client using MRC primitives
@@ -369,4 +369,4 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
     friend ClientStreamWriter;
 };
 
-}  // namespace mrc::internal::rpc
+}  // namespace mrc::rpc

@@ -32,9 +32,9 @@
 
 namespace mrc::pymrc {
 
-System::System(std::shared_ptr<Options> options) : internal::system::ISystem(std::move(options)) {}
+System::System(std::shared_ptr<Options> options) : system::ISystem(std::move(options)) {}
 
-ThreadingResources::ThreadingResources(std::shared_ptr<System> system) : internal::system::IResources(std::move(system))
+ThreadingResources::ThreadingResources(std::shared_ptr<System> system) : system::IResources(std::move(system))
 {
     add_gil_initializer();
     add_gil_finalizer();
@@ -53,9 +53,10 @@ void ThreadingResources::add_gil_initializer()
 
     if (!trace_func.is_none())
     {
-        auto trace_module = pybind11::getattr(trace_func, "__module__", pybind11::none());
+        // Convert it to a string to quickly get its module and name
+        auto trace_func_str = pybind11::str(trace_func);
 
-        if (!trace_module.is_none() && !trace_module.attr("find")("pydevd").equal(pybind11::int_(-1)))
+        if (!trace_func_str.attr("find")("pydevd").equal(pybind11::int_(-1)))
         {
             VLOG(10) << "Found pydevd trace function. Will attempt to enable debugging for MRC threads.";
             has_pydevd_trace = true;
@@ -65,7 +66,7 @@ void ThreadingResources::add_gil_initializer()
     // Release the GIL for the remainder
     pybind11::gil_scoped_release nogil;
 
-    internal::system::IResources::add_thread_initializer([has_pydevd_trace] {
+    system::IResources::add_thread_initializer([has_pydevd_trace] {
         pybind11::gil_scoped_acquire gil;
 
         // Increment the ref once to prevent creating and destroying the thread state constantly
@@ -113,7 +114,7 @@ void ThreadingResources::add_gil_finalizer()
 
     // Ensure we dont have the GIL here otherwise this deadlocks.
 
-    internal::system::IResources::add_thread_finalizer([] {
+    system::IResources::add_thread_finalizer([] {
         bool python_finalizing = _Py_IsFinalizing() != 0;
 
         if (python_finalizing)

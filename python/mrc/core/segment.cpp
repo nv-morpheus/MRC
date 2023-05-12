@@ -29,8 +29,8 @@
 #include "mrc/edge/edge_connector.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/segment/builder.hpp"
-#include "mrc/segment/definition.hpp"
 #include "mrc/segment/object.hpp"
+#include "mrc/segment/segment.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 
@@ -104,8 +104,8 @@ PYBIND11_MODULE(segment, py_mod)
                                py::overload_cast<>(&mrc::segment::ObjectProperties::launch_options),
                                py::return_value_policy::reference_internal);
 
-    auto Builder    = py::class_<mrc::segment::Builder>(py_mod, "Builder");
-    auto Definition = py::class_<mrc::segment::Definition>(py_mod, "Definition");
+    auto Builder = py::class_<mrc::segment::IBuilder>(py_mod, "Builder");
+    auto Segment = py::class_<mrc::segment::ISegment>(py_mod, "Segment");
 
     init_segment_modules(py_mod);
     init_segment_module_registry(py_mod);
@@ -120,37 +120,37 @@ PYBIND11_MODULE(segment, py_mod)
      */
     Builder.def(
         "make_source",
-        static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::Builder&,
+        static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::IBuilder&,
                                                                         const std::string&,
                                                                         py::iterator)>(&BuilderProxy::make_source));
 
     Builder.def(
         "make_source",
-        static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::Builder&,
+        static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::IBuilder&,
                                                                         const std::string&,
                                                                         py::iterable)>(&BuilderProxy::make_source),
         py::return_value_policy::reference_internal);
 
     Builder.def(
         "make_source",
-        static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::Builder&,
+        static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::IBuilder&,
                                                                         const std::string&,
                                                                         py::function)>(&BuilderProxy::make_source));
 
     Builder.def("make_source_component",
-                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::Builder&,
+                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::IBuilder&,
                                                                                 const std::string&,
                                                                                 py::iterator)>(
                     &BuilderProxy::make_source_component));
 
     Builder.def("make_source_component",
-                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::Builder&,
+                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::IBuilder&,
                                                                                 const std::string&,
                                                                                 py::iterable)>(
                     &BuilderProxy::make_source_component));
 
     Builder.def("make_source_component",
-                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::Builder&,
+                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::IBuilder&,
                                                                                 const std::string&,
                                                                                 py::function)>(
                     &BuilderProxy::make_source_component));
@@ -191,9 +191,10 @@ PYBIND11_MODULE(segment, py_mod)
                 py::arg("on_error").none(true)    = py::none(),
                 py::arg("on_complete").none(true) = py::none());
 
-    Builder.def("make_node",
-                py::overload_cast<mrc::segment::Builder&, const std::string&, OnDataFunction>(&BuilderProxy::make_node),
-                py::return_value_policy::reference_internal);
+    Builder.def(
+        "make_node",
+        py::overload_cast<mrc::segment::IBuilder&, const std::string&, OnDataFunction>(&BuilderProxy::make_node),
+        py::return_value_policy::reference_internal);
 
     /**
      * Construct a new 'pure' python::object -> python::object node
@@ -202,9 +203,10 @@ PYBIND11_MODULE(segment, py_mod)
      * (py) @param name : Unique name of the node that will be created in the MRC Segment.
      * python-function which will be called on each data element as it flows through the node.
      */
-    Builder.def("make_node",
-                py::overload_cast<mrc::segment::Builder&, const std::string&, pybind11::args>(&BuilderProxy::make_node),
-                py::return_value_policy::reference_internal);
+    Builder.def(
+        "make_node",
+        py::overload_cast<mrc::segment::IBuilder&, const std::string&, pybind11::args>(&BuilderProxy::make_node),
+        py::return_value_policy::reference_internal);
 
     Builder.def("make_node_component", &BuilderProxy::make_node_component, py::return_value_policy::reference_internal);
 

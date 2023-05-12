@@ -57,7 +57,7 @@ class StreamBufferModule : public SegmentModule, public PersistentModule
     StreamBufferModule(std::string module_name, nlohmann::json config);
 
   protected:
-    void initialize(segment::Builder& builder) override;
+    void initialize(segment::IBuilder& builder) override;
 
     std::string module_type_name() const override;
 
@@ -86,7 +86,7 @@ StreamBufferModule<DataTypeT, StreamBufferTypeT>::StreamBufferModule(std::string
 }
 
 template <typename DataTypeT, template <typename> class StreamBufferTypeT>
-void StreamBufferModule<DataTypeT, StreamBufferTypeT>::initialize(segment::Builder& builder)
+void StreamBufferModule<DataTypeT, StreamBufferTypeT>::initialize(segment::IBuilder& builder)
 {
     auto buffer_sink = builder.template make_sink<DataTypeT>("buffer_sink_new", m_subject.get_subscriber());
 

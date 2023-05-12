@@ -26,7 +26,7 @@
 
 #include <memory>
 
-namespace mrc::internal::ucx {
+namespace mrc::ucx {
 
 class RemoteRegistrationCache;
 class Worker;
@@ -45,4 +45,4 @@ class Endpoint : public Primitive<ucp_ep_h>
     std::unique_ptr<RemoteRegistrationCache> m_registration_cache;
 };
 
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx

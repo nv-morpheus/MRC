@@ -52,13 +52,11 @@
     "hostRequirements": {
         "gpu": true
     },
-    "initializeCommand": [ "./.devcontainer/init.sh" ],
+    "initializeCommand": [ "${localWorkspaceFolder}/.devcontainer/initialize-command.sh" ],
     "mounts": [
+        "source=${localEnv:HOME}/.config,target=/home/${localEnv:USER}/.config,type=bind",
         // Mount the necessary files for GDB pretty-printing to work
-        "source=${localWorkspaceFolder}/.devcontainer/home/.gdbinit,target=/home/${localEnv:USER}/.gdbinit,type=bind",
-        "source=${localWorkspaceFolder}/.devcontainer/home/.config/gdb,target=/home/${localEnv:USER}/.config/gdb,type=bind",
-        // Mount the Github CLI config directory to allow using the Github CLI
-        "source=${localEnv:HOME}/.config/gh,target=/home/${localEnv:USER}/.config/gh,type=bind",
+        "source=${localWorkspaceFolder}/.devcontainer/opt/mrc/etc/.gdbinit,target=/home/${localEnv:USER}/.gdbinit,type=bind",
     ],
     "features": {
         "ghcr.io/devcontainers/features/git-lfs": {}

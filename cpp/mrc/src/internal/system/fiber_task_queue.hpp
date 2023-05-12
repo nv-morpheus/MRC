@@ -29,7 +29,7 @@
 #include <iosfwd>
 #include <thread>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 class ThreadingResources;
 
@@ -62,4 +62,4 @@ class FiberTaskQueue final : public core::FiberTaskQueue
     Thread m_thread;
 };
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

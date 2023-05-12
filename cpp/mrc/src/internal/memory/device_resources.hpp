@@ -29,11 +29,11 @@ namespace mrc::memory {
 struct memory_resource;
 }  // namespace mrc::memory
 
-namespace mrc::internal::ucx {
+namespace mrc::ucx {
 class UcxResources;
 }
 
-namespace mrc::internal::memory {
+namespace mrc::memory {
 
 /**
  * @brief Object that provides access to device memory_resource objects for a "flattened" partition
@@ -57,4 +57,4 @@ class DeviceResources : private resources::PartitionResourceBase
     std::shared_ptr<mrc::memory::memory_resource> m_arena;
 };
 
-}  // namespace mrc::internal::memory
+}  // namespace mrc::memory

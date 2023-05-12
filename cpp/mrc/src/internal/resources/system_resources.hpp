@@ -19,7 +19,7 @@
 
 #include "internal/memory/host_resources.hpp"
 #include "internal/resources/partition_resources.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/system/system_provider.hpp"
 
 #include "mrc/types.hpp"
@@ -96,4 +96,4 @@ class SystemResources final : public system::SystemProvider, public virtual runn
     friend runtime::Runtime;
 };
 
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources

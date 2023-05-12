@@ -25,7 +25,7 @@
 #include <atomic>
 #include <ostream>
 
-namespace mrc::internal::data_plane {
+namespace mrc::data_plane {
 
 void Callbacks::send(void* request, ucs_status_t status, void* user_data)
 {
@@ -87,4 +87,4 @@ void Callbacks::recv(void* request, ucs_status_t status, const ucp_tag_recv_info
     }
 }
 
-}  // namespace mrc::internal::data_plane
+}  // namespace mrc::data_plane

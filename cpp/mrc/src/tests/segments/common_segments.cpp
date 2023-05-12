@@ -21,8 +21,8 @@
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/segment/builder.hpp"
-#include "mrc/segment/definition.hpp"
 #include "mrc/segment/object.hpp"
+#include "mrc/segment/segment.hpp"
 
 #include <rxcpp/rx.hpp>
 
@@ -34,18 +34,18 @@ using namespace mrc;
 
 namespace test::segments {
 
-std::shared_ptr<segment::Definition> single_finite_no_ports(std::string segment_name)
+std::shared_ptr<const segment::ISegment> single_finite_no_ports(std::string segment_name)
 {
-    return segment::Definition::create(segment_name, [](segment::Builder& s) {
+    return Segment::create(segment_name, [](segment::IBuilder& s) {
         auto rx_source = s.make_object("rx_source", test::nodes::finite_int_rx_source());
         auto rx_sink   = s.make_object("rx_sink", test::nodes::int_sink());
         s.make_edge(rx_source, rx_sink);
     });
 }
 
-std::shared_ptr<segment::Definition> single_finite_no_ports_will_throw(std::string segment_name)
+std::shared_ptr<const segment::ISegment> single_finite_no_ports_will_throw(std::string segment_name)
 {
-    return segment::Definition::create(segment_name, [](segment::Builder& s) {
+    return Segment::create(segment_name, [](segment::IBuilder& s) {
         auto rx_source = s.make_object("rx_source", test::nodes::finite_int_rx_source());
         auto rx_sink   = s.make_object("rx_sink", test::nodes::int_sink_throw_on_even());
         s.make_edge(rx_source, rx_sink);

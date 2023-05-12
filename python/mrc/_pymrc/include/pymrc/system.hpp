@@ -27,14 +27,14 @@ class Options;
 
 namespace mrc::pymrc {
 
-class System final : public internal::system::ISystem
+class System final : public system::ISystem
 {
   public:
     System(std::shared_ptr<Options> options);
     ~System() final = default;
 };
 
-class ThreadingResources final : public internal::system::IThreadingResources
+class ThreadingResources final : public system::IThreadingResources
 {
   public:
     ThreadingResources(std::shared_ptr<System> system);

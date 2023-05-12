@@ -39,7 +39,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::runnable {
+namespace mrc::runnable {
 
 class FiberEngineFactory : public ::mrc::runnable::EngineFactory
 {
@@ -52,7 +52,7 @@ class FiberEngineFactory : public ::mrc::runnable::EngineFactory
      *
      * @return std::shared_ptr<Engines>
      */
-    std::shared_ptr<::mrc::runnable::Engines> build_engines(const LaunchOptions& launch_options) final
+    std::shared_ptr<::mrc::runnable::IEngines> build_engines(const LaunchOptions& launch_options) final
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         return std::make_shared<FiberEngines>(launch_options,
@@ -154,7 +154,7 @@ class ThreadEngineFactory : public ::mrc::runnable::EngineFactory
         CHECK(!m_cpu_set.empty());
     }
 
-    std::shared_ptr<::mrc::runnable::Engines> build_engines(const LaunchOptions& launch_options) final
+    std::shared_ptr<::mrc::runnable::IEngines> build_engines(const LaunchOptions& launch_options) final
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         auto cpu_set = get_next_n_cpus(launch_options.pe_count);
@@ -264,4 +264,4 @@ std::shared_ptr<::mrc::runnable::EngineFactory> make_engine_factory(const system
     LOG(FATAL) << "unsupported engine type";
 }
 
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable

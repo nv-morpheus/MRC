@@ -28,7 +28,7 @@
 #include <stdexcept>  // for runtime_error
 #include <tuple>      // for make_tuple, tuple
 
-namespace mrc::internal::ucx {
+namespace mrc::ucx {
 
 Context::Context()
 {
@@ -124,4 +124,4 @@ void Context::unregister_memory(ucp_mem_h handle, void* rbuffer)
     }
 }
 
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx

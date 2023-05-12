@@ -20,7 +20,7 @@
 #include "internal/control_plane/proto_helpers.hpp"
 #include "internal/control_plane/server/subscription_manager.hpp"
 #include "internal/grpc/stream_writer.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 
 #include "mrc/channel/status.hpp"
 #include "mrc/edge/edge_builder.hpp"
@@ -57,7 +57,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::control_plane {
+namespace mrc::control_plane {
 
 template <typename T>
 static Expected<T> unpack_request(Server::event_t& event)

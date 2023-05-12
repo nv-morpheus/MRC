@@ -81,7 +81,7 @@ class EgressPort final : public Object<node::RxSinkBase<T>>,
         return launch_control.prepare_launcher(std::move(m_sink));
     }
 
-    std::shared_ptr<manifold::Interface> make_manifold(pipeline::Resources& resources) final
+    std::shared_ptr<manifold::Interface> make_manifold(runnable::IRunnableResources& resources) final
     {
         return manifold::Factory<T>::make_manifold(m_port_name, resources);
     }

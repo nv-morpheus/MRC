@@ -19,7 +19,7 @@
 
 #include "internal/async_service.hpp"
 #include "internal/codable/codable_storage.hpp"
-#include "internal/network/resources.hpp"
+#include "internal/network/network_resources.hpp"
 #include "internal/pubsub/publisher_round_robin.hpp"
 #include "internal/pubsub/subscriber_service.hpp"
 #include "internal/remote_descriptor/manager.hpp"
@@ -35,7 +35,7 @@
 #include <optional>
 #include <ostream>
 
-namespace mrc::internal::runtime {
+namespace mrc::runtime {
 
 PartitionRuntime::PartitionRuntime(Runtime& system_runtime, size_t partition_id) :
   AsyncService(MRC_CONCAT_STR("PartitionRuntime[" << partition_id << "]")),
@@ -128,4 +128,4 @@ std::shared_ptr<mrc::pubsub::ISubscriberService> PartitionRuntime::make_subscrib
     return std::shared_ptr<pubsub::SubscriberService>(new pubsub::SubscriberService(name, *this));
 }
 
-}  // namespace mrc::internal::runtime
+}  // namespace mrc::runtime

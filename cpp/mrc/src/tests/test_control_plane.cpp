@@ -21,10 +21,10 @@
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/control_plane/client/instance.hpp"
 #include "internal/control_plane/server.hpp"
-#include "internal/network/resources.hpp"
+#include "internal/network/network_resources.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/system_resources.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/runtime.hpp"
 #include "internal/system/partitions.hpp"
@@ -64,8 +64,8 @@ using namespace mrc::memory::literals;
 
 static auto make_resources(std::function<void(Options& options)> options_lambda = [](Options& options) {})
 {
-    auto resources = std::make_unique<internal::resources::SystemResources>(
-        internal::system::SystemProvider(make_system([&](Options& options) {
+    auto resources = std::make_unique<resources::SystemResources>(
+        system::SystemProvider(make_system([&](Options& options) {
             options.topology().user_cpuset("0-3");
             options.topology().restrict_gpus(true);
             options.placement().resources_strategy(PlacementResources::Dedicated);
@@ -88,7 +88,7 @@ TEST_F(TestControlPlane, LifeCycle)
     // auto sr     = make_runtime([](Options& options) {
     //     options.enable_server(false);
     // });
-    auto server = std::make_unique<internal::control_plane::Server>();
+    auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).resources().runnable());
 
     server->service_start();
     server->service_await_live();
@@ -105,7 +105,7 @@ TEST_F(TestControlPlane, SingleClientConnectDisconnect)
     //     // Diable the server because we will set it manually
     //     options.enable_server(false);
     // });
-    auto server = std::make_unique<internal::control_plane::Server>();
+    auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).resources().runnable());
 
     server->service_start();
     server->service_await_live();
@@ -171,7 +171,7 @@ TEST_F(TestControlPlane, SingleClientGetState)
 
 TEST_F(TestControlPlane, DoubleClientConnectExchangeDisconnect)
 {
-    auto server = std::make_unique<internal::control_plane::Server>();
+    auto server = std::make_unique<control_plane::Server>();
 
     server->service_start();
     server->service_await_live();
@@ -322,7 +322,7 @@ TEST_F(TestControlPlane, DoubleClientConnectExchangeDisconnect)
 // TEST_F(TestControlPlane, DoubleClientPubSubBuffers)
 // {
 //     auto sr     = make_runtime();
-//     auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).resources().runnable());
+//     auto server = std::make_unique<control_plane::Server>(sr->partition(0).resources().runnable());
 
 //     server->service_start();
 //     server->service_await_live();

@@ -19,17 +19,17 @@
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/control_plane/client/instance.hpp"
 #include "internal/data_plane/client.hpp"
+#include "internal/data_plane/data_plane_resources.hpp"
 #include "internal/data_plane/request.hpp"
-#include "internal/data_plane/resources.hpp"
 #include "internal/data_plane/server.hpp"
 #include "internal/data_plane/tags.hpp"
 #include "internal/memory/device_resources.hpp"
 #include "internal/memory/host_resources.hpp"
 #include "internal/memory/transient_pool.hpp"
-#include "internal/network/resources.hpp"
+#include "internal/network/network_resources.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/system_resources.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 #include "internal/ucx/memory_block.hpp"
@@ -74,7 +74,7 @@
 using namespace mrc;
 using namespace mrc::memory::literals;
 
-static std::shared_ptr<internal::system::System> make_system(std::function<void(Options&)> updater = nullptr)
+static std::shared_ptr<system::System> make_system(std::function<void(Options&)> updater = nullptr)
 {
     auto options = std::make_shared<Options>();
     if (updater)
@@ -82,7 +82,7 @@ static std::shared_ptr<internal::system::System> make_system(std::function<void(
         updater(*options);
     }
 
-    return internal::system::make_system(std::move(options));
+    return system::make_system(std::move(options));
 }
 
 class TestNetwork : public ::testing::Test
@@ -106,8 +106,8 @@ TEST_F(TestNetwork, ResourceManager)
     // using options.placement().resources_strategy(PlacementResources::Shared)
     // will test if cudaSetDevice is being properly called by the network services
     // since all network services for potentially multiple devices are colocated on a single thread
-    auto resources = std::make_unique<internal::resources::SystemResources>(
-        internal::system::SystemProvider(make_system([](Options& options) {
+    auto resources = std::make_unique<resources::SystemResources>(
+        system::SystemProvider(make_system([](Options& options) {
             options.enable_server(true);
             options.architect_url("localhost:13337");
             options.placement().resources_strategy(PlacementResources::Dedicated);
@@ -166,8 +166,8 @@ TEST_F(TestNetwork, CommsSendRecv)
     // using options.placement().resources_strategy(PlacementResources::Shared)
     // will test if cudaSetDevice is being properly called by the network services
     // since all network services for potentially multiple devices are colocated on a single thread
-    auto resources = std::make_unique<internal::resources::SystemResources>(
-        internal::system::SystemProvider(make_system([](Options& options) {
+    auto resources = std::make_unique<resources::SystemResources>(
+        system::SystemProvider(make_system([](Options& options) {
             options.enable_server(true);
             options.architect_url("localhost:13337");
             options.placement().resources_strategy(PlacementResources::Dedicated);
@@ -206,8 +206,8 @@ TEST_F(TestNetwork, CommsSendRecv)
     int src = 42;
     int dst = -1;
 
-    internal::data_plane::Request send_req;
-    internal::data_plane::Request recv_req;
+    data_plane::Request send_req;
+    data_plane::Request recv_req;
 
     r1.client().async_p2p_recv(&dst, sizeof(int), 0, recv_req);
     r0.client().async_p2p_send(&src, sizeof(int), 0, id_1, send_req);
@@ -228,8 +228,8 @@ TEST_F(TestNetwork, CommsGet)
     // using options.placement().resources_strategy(PlacementResources::Shared)
     // will test if cudaSetDevice is being properly called by the network services
     // since all network services for potentially multiple devices are colocated on a single thread
-    auto resources = std::make_unique<internal::resources::SystemResources>(
-        internal::system::SystemProvider(make_system([](Options& options) {
+    auto resources = std::make_unique<resources::SystemResources>(
+        system::SystemProvider(make_system([](Options& options) {
             options.enable_server(true);
             options.architect_url("localhost:13337");
             options.placement().resources_strategy(PlacementResources::Dedicated);
@@ -277,7 +277,7 @@ TEST_F(TestNetwork, CommsGet)
     auto id_0 = resources->partition(0).network()->control_plane().instance_id();
     auto id_1 = resources->partition(1).network()->control_plane().instance_id();
 
-    internal::data_plane::Request get_req;
+    data_plane::Request get_req;
 
     r1.client().async_get(dst.data(), 1_MiB, id_0, src.data(), src_keys, get_req);
 
@@ -299,8 +299,8 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
     // using options.placement().resources_strategy(PlacementResources::Shared)
     // will test if cudaSetDevice is being properly called by the network services
     // since all network services for potentially multiple devices are colocated on a single thread
-    auto resources = std::make_unique<internal::resources::SystemResources>(
-        internal::system::SystemProvider(make_system([](Options& options) {
+    auto resources = std::make_unique<resources::SystemResources>(
+        system::SystemProvider(make_system([](Options& options) {
             options.enable_server(true);
             options.architect_url("localhost:13337");
             options.placement().resources_strategy(PlacementResources::Dedicated);
@@ -333,12 +333,11 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
     const std::uint64_t tag          = 20919;
     std::atomic<std::size_t> counter = 0;
 
-    auto recv_sink = std::make_unique<node::RxSink<internal::memory::TransientBuffer>>(
-        [&](internal::memory::TransientBuffer buffer) {
-            EXPECT_EQ(buffer.bytes(), 128);
-            counter++;
-            r0.server().deserialize_source().drop_edge(tag);
-        });
+    auto recv_sink = std::make_unique<node::RxSink<memory::TransientBuffer>>([&](memory::TransientBuffer buffer) {
+        EXPECT_EQ(buffer.bytes(), 128);
+        counter++;
+        r0.server().deserialize_source().drop_edge(tag);
+    });
 
     auto deser_source = r0.server().deserialize_source().get_source(tag);
 
@@ -353,7 +352,7 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
 
     auto endpoint = r1.client().endpoint_shared(r0.instance_id());
 
-    internal::data_plane::Request req;
+    data_plane::Request req;
     auto buffer   = resources->partition(1).host().make_buffer(128);
     auto send_tag = tag | TAG_EGR_MSG;
     r1.client().async_send(buffer.data(), buffer.bytes(), send_tag, *endpoint, req);

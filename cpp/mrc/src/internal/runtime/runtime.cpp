@@ -36,7 +36,7 @@
 #include <optional>
 #include <utility>
 
-namespace mrc::internal::runtime {
+namespace mrc::runtime {
 
 Runtime::Runtime(std::unique_ptr<resources::SystemResources> resources) :
   AsyncService("Runtime"),
@@ -294,4 +294,4 @@ void Runtime::do_service_kill()
 //     }
 // }
 
-}  // namespace mrc::internal::runtime
+}  // namespace mrc::runtime

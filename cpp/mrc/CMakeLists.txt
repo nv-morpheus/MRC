@@ -29,6 +29,7 @@ add_library(libmrc
   src/internal/control_plane/client/instance.cpp
   src/internal/control_plane/client/state_manager.cpp
   src/internal/control_plane/client/subscription_service.cpp
+  src/internal/control_plane/control_plane_resources.cpp
   src/internal/control_plane/server.cpp
   src/internal/control_plane/server/connection_manager.cpp
   src/internal/control_plane/server/node_service.cpp
@@ -37,24 +38,22 @@ add_library(libmrc
   src/internal/control_plane/state/root_state.cpp
   src/internal/data_plane/callbacks.cpp
   src/internal/data_plane/client.cpp
+  src/internal/data_plane/data_plane_resources.cpp
   src/internal/data_plane/request.cpp
-  src/internal/data_plane/resources.cpp
   src/internal/data_plane/server.cpp
-  src/internal/executor/executor.cpp
-  src/internal/executor/iexecutor.cpp
+  src/internal/executor/executor_definition.cpp
   src/internal/grpc/progress_engine.cpp
   src/internal/grpc/server.cpp
   src/internal/memory/device_resources.cpp
   src/internal/memory/host_resources.cpp
   src/internal/memory/transient_pool.cpp
-  src/internal/network/resources.cpp
+  src/internal/network/network_resources.cpp
   src/internal/pipeline/controller.cpp
-  src/internal/pipeline/ipipeline.cpp
   src/internal/pipeline/manager.cpp
+  src/internal/pipeline/pipeline_definition.cpp
   src/internal/pipeline/pipeline_instance.cpp
-  src/internal/pipeline/pipeline.cpp
+  src/internal/pipeline/pipeline_resources.cpp
   src/internal/pipeline/port_graph.cpp
-  src/internal/pipeline/resources.cpp
   src/internal/pubsub/publisher_round_robin.cpp
   src/internal/pubsub/publisher_service.cpp
   src/internal/pubsub/subscriber_service.cpp
@@ -70,17 +69,15 @@ add_library(libmrc
   src/internal/runnable/engines.cpp
   src/internal/runnable/fiber_engine.cpp
   src/internal/runnable/fiber_engines.cpp
-  src/internal/runnable/resources.cpp
+  src/internal/runnable/runnable_resources.cpp
   src/internal/runnable/thread_engine.cpp
   src/internal/runnable/thread_engines.cpp
   src/internal/runtime/partition_runtime.cpp
   src/internal/runtime/pipelines_manager.cpp
   src/internal/runtime/runtime.cpp
   src/internal/runtime/segments_manager.cpp
-  src/internal/segment/builder.cpp
-  src/internal/segment/definition.cpp
-  src/internal/segment/ibuilder.cpp
-  src/internal/segment/idefinition.cpp
+  src/internal/segment/builder_definition.cpp
+  src/internal/segment/segment_definition.cpp
   src/internal/segment/segment_instance.cpp
   src/internal/service.cpp
   src/internal/system/device_info.cpp
@@ -107,7 +104,7 @@ add_library(libmrc
   src/internal/ucx/endpoint.cpp
   src/internal/ucx/memory_block.cpp
   src/internal/ucx/receive_manager.cpp
-  src/internal/ucx/resources.cpp
+  src/internal/ucx/ucx_resources.cpp
   src/internal/ucx/worker.cpp
   src/internal/utils/collision_detector.cpp
   src/internal/utils/exception_guard.cpp
@@ -122,7 +119,6 @@ add_library(libmrc
   src/public/codable/memory.cpp
   src/public/core/addresses.cpp
   src/public/core/bitmap.cpp
-  src/public/core/executor.cpp
   src/public/core/fiber_pool.cpp
   src/public/core/logging.cpp
   src/public/core/thread.cpp
@@ -151,6 +147,7 @@ add_library(libmrc
   src/public/options/resources.cpp
   src/public/options/services.cpp
   src/public/options/topology.cpp
+  src/public/pipeline/executor.cpp
   src/public/pipeline/pipeline.cpp
   src/public/runnable/context.cpp
   src/public/runnable/launcher.cpp
@@ -158,8 +155,7 @@ add_library(libmrc
   src/public/runnable/runner.cpp
   src/public/runnable/types.cpp
   src/public/runtime/remote_descriptor.cpp
-  src/public/segment/builder.cpp
-  src/public/segment/definition.cpp
+  src/public/segment/segment.cpp
   src/public/utils/bytes_to_string.cpp
   src/public/utils/library_utils.cpp
   src/public/utils/thread_utils.cpp

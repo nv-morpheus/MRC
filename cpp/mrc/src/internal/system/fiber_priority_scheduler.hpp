@@ -20,7 +20,7 @@
 #include <boost/fiber/all.hpp>
 #include <boost/fiber/scheduler.hpp>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 class FiberPriorityProps : public boost::fibers::fiber_properties
 {
@@ -152,4 +152,4 @@ class FiberPriorityScheduler : public boost::fibers::algo::algorithm_with_proper
     }
 };
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system
