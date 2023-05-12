@@ -76,14 +76,13 @@ static bool valid_pipeline(const pipeline::PipelineDefinition& pipeline)
 }
 
 ExecutorDefinition::ExecutorDefinition(std::shared_ptr<Options> options) :
-  SystemProvider(system::make_system(std::move(options))),
-  m_resources_manager(std::make_unique<resources::Manager>(*this))
+  SystemProvider(system::make_system(std::move(options)))
 {}
 
-ExecutorDefinition::ExecutorDefinition(std::unique_ptr<system::ThreadingResources> resources) :
-  SystemProvider(*resources),
-  m_resources_manager(std::make_unique<resources::Manager>(std::move(resources)))
-{}
+// ExecutorDefinition::ExecutorDefinition(std::unique_ptr<system::ThreadingResources> resources) :
+//   SystemProvider(*resources),
+//   m_resources_manager(std::make_unique<resources::Manager>(std::move(resources)))
+// {}
 
 ExecutorDefinition::~ExecutorDefinition()
 {
@@ -102,19 +101,18 @@ std::shared_ptr<ExecutorDefinition> ExecutorDefinition::unwrap(std::shared_ptr<p
 
 void ExecutorDefinition::register_pipeline(std::shared_ptr<pipeline::IPipeline> pipeline)
 {
-    CHECK(ipipeline);
-    // CHECK(m_pipeline_manager == nullptr);
+    CHECK(pipeline);
 
-    auto pipeline = pipeline::PipelineDefinition(*ipipeline);
+    auto full_pipeline = pipeline::PipelineDefinition::unwrap(std::move(pipeline));
 
-    if (!valid_pipeline(*pipeline))
+    if (!valid_pipeline(*full_pipeline))
     {
         throw exceptions::MrcRuntimeError("pipeline validation failed");
     }
 
     // m_pipeline_manager = std::make_unique<pipeline::Manager>(pipeline, *m_resources_manager);
 
-    m_registered_pipeline_defs.emplace_back(std::move(pipeline));
+    m_registered_pipeline_defs.emplace_back(std::move(full_pipeline));
 }
 
 void ExecutorDefinition::start()

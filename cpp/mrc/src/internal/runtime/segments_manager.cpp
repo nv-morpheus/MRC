@@ -226,7 +226,7 @@ void SegmentsManager::create_segment(const mrc::control_plane::state::SegmentIns
                 instance_state.pipeline_instance().id());
 
             auto [id, rank] = segment_address_decode(instance_state.address());
-            auto definition = std::static_pointer_cast<segment::SegmentDefinition>(pipeline_def.find_segment(id));
+            auto definition = pipeline_def.find_segment(id);
 
             auto [added_iterator, did_add] = m_instances.emplace(
                 instance_state.address(),
