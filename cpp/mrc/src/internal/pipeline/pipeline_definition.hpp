@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "internal/segment/segment_definition.hpp"
 #include "internal/utils/collision_detector.hpp"
 
 #include "mrc/pipeline/pipeline.hpp"
@@ -35,6 +36,8 @@ class PipelineDefinition : public IPipeline
 {
   public:
     ~PipelineDefinition() override;
+
+    static std::shared_ptr<PipelineDefinition> unwrap(std::shared_ptr<IPipeline> object);
 
     std::shared_ptr<const segment::ISegment> register_segment(std::shared_ptr<const segment::ISegment> segment) override;
 
@@ -60,17 +63,15 @@ class PipelineDefinition : public IPipeline
 
     // static std::shared_ptr<PipelineDefinition> unwrap(IPipeline& pipeline);
 
-    const std::map<SegmentID, std::shared_ptr<const segment::ISegment>>& segments() const;
+    const std::map<SegmentID, std::shared_ptr<const segment::SegmentDefinition>>& segments() const;
 
-    std::shared_ptr<const segment::ISegment> find_segment(SegmentID segment_id) const;
+    std::shared_ptr<const segment::SegmentDefinition> find_segment(SegmentID segment_id) const;
 
   private:
-    void add_segment(std::shared_ptr<const segment::ISegment> segment);
-
     utils::CollisionDetector m_segment_hasher;
     utils::CollisionDetector m_port_hasher;
 
-    std::map<SegmentID, std::shared_ptr<const segment::ISegment>> m_segments;
+    std::map<SegmentID, std::shared_ptr<const segment::SegmentDefinition>> m_segments;
 };
 
 }  // namespace mrc::pipeline

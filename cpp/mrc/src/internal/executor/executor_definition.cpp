@@ -90,6 +90,16 @@ ExecutorDefinition::~ExecutorDefinition()
     Service::call_in_destructor();
 }
 
+std::shared_ptr<ExecutorDefinition> ExecutorDefinition::unwrap(std::shared_ptr<pipeline::IExecutor> object)
+{
+    // Convert to the full implementation
+    auto full_object = std::dynamic_pointer_cast<ExecutorDefinition>(object);
+
+    CHECK(full_object) << "Invalid cast for ExecutorDefinition. Please report to the developers";
+
+    return full_object;
+}
+
 void ExecutorDefinition::register_pipeline(std::shared_ptr<pipeline::IPipeline> pipeline)
 {
     CHECK(ipipeline);

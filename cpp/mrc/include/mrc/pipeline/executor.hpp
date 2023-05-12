@@ -68,7 +68,7 @@ class Executor : public pipeline::IExecutor
   public:
     Executor();
     Executor(std::shared_ptr<Options> options);
-    Executor(std::unique_ptr<system::IResources> resources);
+    // Executor(std::unique_ptr<system::IResources> resources);
     ~Executor() override;
 
     void register_pipeline(std::shared_ptr<pipeline::IPipeline> pipeline) override;
@@ -82,6 +82,6 @@ class Executor : public pipeline::IExecutor
 
 std::unique_ptr<pipeline::IExecutor> make_executor(std::shared_ptr<Options> options);
 
-std::unique_ptr<pipeline::IExecutor> make_executor(std::unique_ptr<system::IResources> resources);
+// std::unique_ptr<pipeline::IExecutor> make_executor(std::unique_ptr<system::IResources> resources);
 
 }  // namespace mrc

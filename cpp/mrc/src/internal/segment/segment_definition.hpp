@@ -35,6 +35,8 @@ class SegmentDefinition final : public ISegment
                       EgressPortsBase egress_ports,
                       segment_initializer_fn_t initializer);
 
+    static std::shared_ptr<const SegmentDefinition> unwrap(std::shared_ptr<const ISegment> object);
+
     SegmentID id() const override;
     const std::string& name() const override;
     std::vector<std::string> ingress_port_names() const override;

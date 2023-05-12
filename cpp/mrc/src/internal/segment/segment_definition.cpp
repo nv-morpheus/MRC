@@ -41,6 +41,16 @@ SegmentDefinition::SegmentDefinition(std::string name,
     validate_ports();
 }
 
+std::shared_ptr<const SegmentDefinition> SegmentDefinition::unwrap(std::shared_ptr<const ISegment> object)
+{
+    // Convert to the full implementation
+    auto full_object = std::dynamic_pointer_cast<const SegmentDefinition>(object);
+
+    CHECK(full_object) << "Invalid cast for SegmentDefinition. Please report to the developers";
+
+    return full_object;
+}
+
 SegmentID SegmentDefinition::id() const
 {
     return m_id;

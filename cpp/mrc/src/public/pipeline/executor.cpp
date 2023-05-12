@@ -27,11 +27,11 @@
 
 namespace mrc {
 
-Executor::Executor() : Executor(std::make_shared<Options>()) {}
+Executor::Executor() : m_impl(make_executor(std::make_shared<Options>())) {}
 
 Executor::Executor(std::shared_ptr<Options> options) : m_impl(make_executor(options)) {}
 
-Executor::Executor(std::unique_ptr<system::IResources> resources) : m_impl(make_executor(std::move(resources))) {}
+// Executor::Executor(std::unique_ptr<system::IResources> resources) : m_impl(make_executor(std::move(resources))) {}
 
 Executor::~Executor() = default;
 
@@ -57,12 +57,7 @@ void Executor::join()
 
 std::unique_ptr<pipeline::IExecutor> make_executor(std::shared_ptr<Options> options)
 {
-    return std::make_unique<Executor>(std::move(options));
-}
-
-std::unique_ptr<pipeline::IExecutor> make_executor(std::unique_ptr<system::IResources> resources)
-{
-    return std::make_unique<Executor>(std::move(resources));
+    return std::make_unique<executor::ExecutorDefinition>(std::move(options));
 }
 
 }  // namespace mrc
