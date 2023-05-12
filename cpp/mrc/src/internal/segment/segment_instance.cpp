@@ -68,7 +68,12 @@ SegmentInstance::SegmentInstance(runtime::PartitionRuntime& runtime,
                     .runnable()
                     .main()
                     .enqueue([&]() mutable {
-                        return std::make_unique<BuilderDefinition>(m_runtime, definition, m_address);
+                        auto builder =
+                            std::make_unique<BuilderDefinition>(m_runtime, definition, m_address);
+
+                        builder->initialize();
+
+                        return builder;
                     })
                     .get();
 }
