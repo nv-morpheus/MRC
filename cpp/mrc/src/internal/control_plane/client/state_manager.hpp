@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 
 #include "mrc/types.hpp"
 #include "mrc/utils/macros.hpp"

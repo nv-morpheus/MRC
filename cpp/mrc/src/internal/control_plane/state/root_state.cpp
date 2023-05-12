@@ -8,7 +8,7 @@
 #include <memory>
 #include <utility>
 
-namespace mrc::internal::control_plane::state {
+namespace mrc::control_plane::state {
 
 ControlPlaneStateBase::ControlPlaneStateBase(const google::protobuf::Message& message) : m_internal_message(message) {}
 
@@ -411,4 +411,4 @@ const ResourceState& SegmentInstance::state() const
     return m_state;
 }
 
-}  // namespace mrc::internal::control_plane::state
+}  // namespace mrc::control_plane::state

@@ -23,7 +23,7 @@ class PipelineInstance;
 class SegmentInstance;
 }  // namespace mrc::protos
 
-namespace mrc::internal::control_plane::state {
+namespace mrc::control_plane::state {
 
 // Mirror this enum so we dont have to include all the proto classes
 enum class ResourceStatus : int
@@ -280,4 +280,4 @@ struct SegmentInstance : public ControlPlaneStateBase
     ResourceState m_state;
 };
 
-}  // namespace mrc::internal::control_plane::state
+}  // namespace mrc::control_plane::state

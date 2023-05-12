@@ -23,27 +23,27 @@
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/segment/segment_instance.hpp"
-#include "internal/ucx/resources.hpp"
+#include "internal/ucx/ucx_resources.hpp"
 
 #include "mrc/types.hpp"
 
 #include <cstddef>
 #include <optional>
 
-namespace mrc::internal::memory {
+namespace mrc::memory {
 class DeviceResources;
 class HostResources;
-}  // namespace mrc::internal::memory
-namespace mrc::internal::network {
+}  // namespace mrc::memory
+namespace mrc::network {
 class NetworkResources;
-}  // namespace mrc::internal::network
-namespace mrc::internal::runnable {
+}  // namespace mrc::network
+namespace mrc::runnable {
 class RunnableResources;
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable
 
-namespace mrc::internal::runtime {
+namespace mrc::runtime {
 
 /**
  * @brief Partition Resources define the set of Resources available to a given Partition
@@ -94,4 +94,4 @@ class SegmentsManager : public AsyncService, public runnable::RunnableResourcesP
     // std::optional<network::NetworkResources>& m_network;
 };
 
-}  // namespace mrc::internal::runtime
+}  // namespace mrc::runtime

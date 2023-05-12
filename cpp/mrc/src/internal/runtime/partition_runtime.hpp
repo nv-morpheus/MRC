@@ -39,7 +39,7 @@ class ISubscriberService;
 enum class PublisherPolicy;
 }  // namespace mrc::pubsub
 
-namespace mrc::internal::control_plane {
+namespace mrc::control_plane {
 class Client;
 }
 namespace mrc::metrics {

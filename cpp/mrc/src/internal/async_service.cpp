@@ -27,7 +27,7 @@
 #include <stop_token>
 #include <utility>
 
-namespace mrc::internal {
+namespace mrc {
 
 AsyncService::AsyncService(std::string service_name) : m_service_name(std::move(service_name)) {}
 
@@ -246,4 +246,4 @@ void AsyncService::do_service_kill()
     // Nothing in base
 }
 
-}  // namespace mrc::internal
+}  // namespace mrc

@@ -20,7 +20,7 @@
 #include "internal/async_service.hpp"
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/server.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/pipelines_manager.hpp"
 #include "internal/runtime/segments_manager.hpp"

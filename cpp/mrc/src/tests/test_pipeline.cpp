@@ -94,8 +94,8 @@ static std::shared_ptr<system::System> make_system(std::function<void(Options&)>
 
 static auto make_resources(std::function<void(Options& options)> options_lambda = [](Options& options) {})
 {
-    auto resources = std::make_unique<internal::resources::SystemResources>(
-        internal::system::SystemProvider(make_system([&](Options& options) {
+    auto resources = std::make_unique<resources::SystemResources>(
+        system::SystemProvider(make_system([&](Options& options) {
             options.topology().user_cpuset("0-3");
             options.topology().restrict_gpus(true);
             options.placement().resources_strategy(PlacementResources::Dedicated);
@@ -122,13 +122,12 @@ static void run_custom_manager(std::unique_ptr<pipeline::IPipeline> pipeline,
                                pipeline::SegmentAddresses&& update,
                                bool delayed_stop = false)
 {
-    auto resources = resources::SystemResources(
-        system::SystemProvider(make_system([](Options& options) {
-            options.topology().user_cpuset("0-1");
-            options.topology().restrict_gpus(true);
-        })));
+    auto resources = resources::SystemResources(system::SystemProvider(make_system([](Options& options) {
+        options.topology().user_cpuset("0-1");
+        options.topology().restrict_gpus(true);
+    })));
 
-    auto runtime = internal::runtime::Runtime(resources);
+    auto runtime = runtime::Runtime(resources);
 
     auto manager = std::make_unique<pipeline::PipelineManager>(runtime, unwrap(*pipeline), 0);
 
@@ -149,14 +148,13 @@ static void run_custom_manager(std::unique_ptr<pipeline::IPipeline> pipeline,
 
 static void run_manager(std::unique_ptr<pipeline::IPipeline> pipeline, bool delayed_stop = false)
 {
-    auto resources = resources::SystemResources(
-        system::SystemProvider(make_system([](Options& options) {
-            options.topology().user_cpuset("0");
-            options.topology().restrict_gpus(true);
-            mrc::channel::set_default_channel_size(64);
-        })));
+    auto resources = resources::SystemResources(system::SystemProvider(make_system([](Options& options) {
+        options.topology().user_cpuset("0");
+        options.topology().restrict_gpus(true);
+        mrc::channel::set_default_channel_size(64);
+    })));
 
-    auto runtime = internal::runtime::Runtime(resources);
+    auto runtime = runtime::Runtime(resources);
 
     auto manager = std::make_unique<pipeline::PipelineManager>(runtime, unwrap(*pipeline), 0);
 
@@ -270,7 +268,7 @@ TEST_F(TestPipeline, ExecutorLifeCycle)
     //     // Diable the server because we will set it manually
     //     options.enable_server(false);
     // });
-    // auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).resources().runnable());
+    // auto server = std::make_unique<control_plane::Server>(sr->partition(0).resources().runnable());
 
     // server->service_start();
     // server->service_await_live();

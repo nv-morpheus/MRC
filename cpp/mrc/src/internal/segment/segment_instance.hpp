@@ -31,7 +31,7 @@
 #include <mutex>
 #include <string>
 
-namespace mrc::internal::runtime {
+namespace mrc::runtime {
 class PartitionRuntime;
 }
 

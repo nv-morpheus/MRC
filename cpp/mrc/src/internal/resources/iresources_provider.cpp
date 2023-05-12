@@ -17,4 +17,4 @@
 
 #include "internal/resources/iresources_provider.hpp"
 
-namespace mrc::internal::runnable {}  // namespace mrc::internal::runnable
+namespace mrc::runnable {}  // namespace mrc::runnable

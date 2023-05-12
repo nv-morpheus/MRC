@@ -22,7 +22,7 @@
 #include "internal/grpc/stream_writer.hpp"
 #include "internal/resources/iresources_provider.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/service.hpp"
 
 #include "mrc/core/error.hpp"
@@ -69,9 +69,9 @@ class UcxResources;
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
-namespace mrc::internal::resources {
+namespace mrc::resources {
 class IResourcesProvider;
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources
 
 namespace mrc::control_plane {
 

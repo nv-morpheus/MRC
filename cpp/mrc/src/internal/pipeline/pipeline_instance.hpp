@@ -27,7 +27,7 @@
 #include <map>
 #include <memory>
 
-namespace mrc::internal::runtime {
+namespace mrc::runtime {
 class Runtime;
 }
 namespace mrc::resources {
@@ -46,7 +46,9 @@ class PipelineDefinition;
 class PipelineInstance final : public AsyncService, public runnable::RunnableResourcesProvider
 {
   public:
-    PipelineInstance(runtime::Runtime& runtime, std::shared_ptr<const PipelineDefinition> definition, uint64_t instance_id);
+    PipelineInstance(runtime::Runtime& runtime,
+                     std::shared_ptr<const PipelineDefinition> definition,
+                     uint64_t instance_id);
     ~PipelineInstance() override;
 
     // currently we are passing the instance back to the executor

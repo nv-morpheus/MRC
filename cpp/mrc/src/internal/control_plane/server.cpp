@@ -795,4 +795,4 @@ void Server::do_service_await_join()
 //     return search;
 // }
 
-}  // namespace mrc::internal::control_plane
+}  // namespace mrc::control_plane

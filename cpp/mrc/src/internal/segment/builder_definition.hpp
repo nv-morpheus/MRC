@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "internal/runtime/partition_runtime.hpp"
 #include "internal/segment/segment_definition.hpp"
 
 #include "mrc/segment/builder.hpp"
@@ -53,10 +54,9 @@ class Definition;
 class BuilderDefinition : public IBuilder
 {
   public:
-    BuilderDefinition(std::shared_ptr<const SegmentDefinition> definition,
-                      SegmentRank rank,
-                      pipeline::PipelineResources& resources,
-                      std::size_t default_partition_id);
+    BuilderDefinition(runtime::PartitionRuntime& runtime,
+                      std::shared_ptr<const SegmentDefinition> definition,
+                      SegmentAddress address);
 
     std::string prefix_name(const std::string& name) const override;
 
@@ -129,13 +129,12 @@ class BuilderDefinition : public IBuilder
 
     void ns_pop();
 
+    // Resource info
+    runtime::PartitionRuntime& m_runtime;
+
     // definition
     std::shared_ptr<const SegmentDefinition> m_definition;
-    SegmentRank m_rank;
-
-    // Resource info
-    pipeline::PipelineResources& m_resources;
-    const std::size_t m_default_partition_id;
+    SegmentAddress m_address;
 
     // Module info
     std::string m_namespace_prefix;

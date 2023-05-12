@@ -19,9 +19,10 @@
 
 #include "internal/async_service.hpp"
 #include "internal/control_plane/state/root_state.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/pipelines_manager.hpp"
+#include "internal/segment/segment_definition.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/ucx/worker.hpp"
 
@@ -34,7 +35,9 @@
 #include <google/protobuf/util/message_differencer.h>
 #include <rxcpp/rx.hpp>
 
-namespace mrc::internal::runtime {
+#include <memory>
+
+namespace mrc::runtime {
 
 SegmentsManager::SegmentsManager(PartitionRuntime& runtime) :
   AsyncService(MRC_CONCAT_STR("SegmentsManager[" << runtime.partition_id() << "]")),
@@ -125,7 +128,7 @@ void SegmentsManager::do_service_start(std::stop_token stop_token)
 //     m_shutdown_future.wait();
 // }
 
-void SegmentsManager::process_state_update(mrc::internal::control_plane::state::Worker& worker)
+void SegmentsManager::process_state_update(mrc::control_plane::state::Worker& worker)
 {
     auto status = worker.state().status();
 
@@ -190,7 +193,7 @@ void SegmentsManager::process_state_update(mrc::internal::control_plane::state::
         CHECK(false) << "Unknown worker state: " << static_cast<int>(status);
     }
 }
-void SegmentsManager::create_segment(const mrc::internal::control_plane::state::SegmentInstance& instance_state)
+void SegmentsManager::create_segment(const mrc::control_plane::state::SegmentInstance& instance_state)
 {
     // First, double check if this still needs to be created by trying to activate it
     auto request = protos::ResourceUpdateStatusRequest();
@@ -223,7 +226,7 @@ void SegmentsManager::create_segment(const mrc::internal::control_plane::state::
                 instance_state.pipeline_instance().id());
 
             auto [id, rank] = segment_address_decode(instance_state.address());
-            auto definition = pipeline_def.find_segment(id);
+            auto definition = std::static_pointer_cast<segment::SegmentDefinition>(pipeline_def.find_segment(id));
 
             auto [added_iterator, did_add] = m_instances.emplace(
                 instance_state.address(),
@@ -265,4 +268,4 @@ void SegmentsManager::create_segment(const mrc::internal::control_plane::state::
 
 void SegmentsManager::erase_segment(SegmentAddress address) {}
 
-}  // namespace mrc::internal::runtime
+}  // namespace mrc::runtime

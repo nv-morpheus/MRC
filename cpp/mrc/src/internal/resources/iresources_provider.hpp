@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 
-namespace mrc::internal::resources {
+namespace mrc::resources {
 
 class IResourcesProvider : public virtual runnable::IRunnableResourcesProvider
 {};
@@ -36,4 +36,4 @@ class ResourcesProvider : public virtual IResourcesProvider
     //     RunnableResources& m_runnable;
 };
 
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources

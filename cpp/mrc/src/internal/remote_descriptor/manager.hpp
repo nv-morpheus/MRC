@@ -124,7 +124,7 @@ class Manager final : private Service,
 
     mutable std::mutex m_mutex;
 
-    friend internal::runtime::Partition;
+    friend class runtime::PartitionRuntime;
 };
 
 }  // namespace mrc::remote_descriptor

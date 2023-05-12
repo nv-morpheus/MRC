@@ -47,7 +47,7 @@
 #include <memory>
 #include <ostream>
 
-namespace mrc::internal::control_plane {
+namespace mrc::control_plane {
 
 Client::Client(runnable::IRunnableResourcesProvider& resources) :
   runnable::RunnableResourcesProvider(resources),

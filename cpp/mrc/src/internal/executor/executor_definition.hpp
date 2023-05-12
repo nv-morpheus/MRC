@@ -17,11 +17,12 @@
 
 #pragma once
 
-#include "internal/pipeline/pipeline.hpp"
+#include "internal/pipeline/pipeline_definition.hpp"
 #include "internal/runtime/runtime.hpp"
 #include "internal/service.hpp"
 #include "internal/system/system_provider.hpp"
 
+#include "mrc/node/generic_sink.hpp"
 #include "mrc/pipeline/executor.hpp"
 #include "mrc/protos/architect_state.pb.h"
 #include "mrc/types.hpp"
@@ -72,7 +73,7 @@ class ExecutorDefinition : public pipeline::IExecutor, public Service, public sy
     // std::unique_ptr<resources::Manager> m_resources_manager;
     std::vector<std::shared_ptr<pipeline::PipelineManager>> m_pipeline_managers;
 
-    std::vector<std::shared_ptr<pipeline::Pipeline>> m_registered_pipeline_defs;
+    std::vector<std::shared_ptr<pipeline::PipelineDefinition>> m_registered_pipeline_defs;
 
     std::unique_ptr<node::LambdaSinkComponent<const protos::ControlPlaneState>> m_update_sink;
 

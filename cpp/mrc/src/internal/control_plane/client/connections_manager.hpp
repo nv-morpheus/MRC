@@ -18,7 +18,7 @@
 #pragma once
 
 #include "internal/control_plane/client/state_manager.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/ucx/common.hpp"
 
 #include "mrc/node/writable_entrypoint.hpp"

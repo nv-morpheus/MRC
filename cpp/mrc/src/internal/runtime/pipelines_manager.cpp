@@ -19,12 +19,12 @@
 
 #include "internal/async_service.hpp"
 #include "internal/control_plane/state/root_state.hpp"
-#include "internal/pipeline/pipeline.hpp"
+#include "internal/pipeline/pipeline_definition.hpp"
 #include "internal/pipeline/pipeline_instance.hpp"
 #include "internal/resources/system_resources.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/runtime.hpp"
-#include "internal/segment/definition.hpp"
+#include "internal/segment/segment_definition.hpp"
 
 #include "mrc/core/addresses.hpp"
 #include "mrc/protos/architect.pb.h"
@@ -32,7 +32,7 @@
 
 #include <memory>
 
-namespace mrc::internal::runtime {
+namespace mrc::runtime {
 
 PipelinesManager::PipelinesManager(Runtime& system_runtime) :
   AsyncService("PipelinesManager"),
@@ -42,7 +42,7 @@ PipelinesManager::PipelinesManager(Runtime& system_runtime) :
 
 PipelinesManager::~PipelinesManager() = default;
 
-void PipelinesManager::register_defs(std::vector<std::shared_ptr<pipeline::Pipeline>> pipeline_defs)
+void PipelinesManager::register_defs(std::vector<std::shared_ptr<pipeline::PipelineDefinition>> pipeline_defs)
 {
     // Now loop over all and register with the control plane
     for (const auto& pipeline : pipeline_defs)
@@ -89,7 +89,7 @@ void PipelinesManager::register_defs(std::vector<std::shared_ptr<pipeline::Pipel
     }
 }
 
-pipeline::Pipeline& PipelinesManager::get_definition(uint64_t definition_id)
+pipeline::PipelineDefinition& PipelinesManager::get_definition(uint64_t definition_id)
 {
     CHECK(m_definitions.contains(definition_id))
         << "Pipeline with ID: " << definition_id << " not found in registered pipeline definitions";
@@ -179,4 +179,4 @@ void PipelinesManager::process_state_update(control_plane::state::ControlPlaneSt
     }
 }
 
-}  // namespace mrc::internal::runtime
+}  // namespace mrc::runtime

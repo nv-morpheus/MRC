@@ -88,7 +88,7 @@ TEST_F(TestControlPlane, LifeCycle)
     // auto sr     = make_runtime([](Options& options) {
     //     options.enable_server(false);
     // });
-    auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).resources().runnable());
+    auto server = std::make_unique<control_plane::Server>(sr->partition(0).resources().runnable());
 
     server->service_start();
     server->service_await_live();
@@ -105,7 +105,7 @@ TEST_F(TestControlPlane, SingleClientConnectDisconnect)
     //     // Diable the server because we will set it manually
     //     options.enable_server(false);
     // });
-    auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).resources().runnable());
+    auto server = std::make_unique<control_plane::Server>(sr->partition(0).resources().runnable());
 
     server->service_start();
     server->service_await_live();
@@ -114,7 +114,7 @@ TEST_F(TestControlPlane, SingleClientConnectDisconnect)
         options.architect_url("localhost:13337");
     });
 
-    auto client = std::make_unique<internal::control_plane::Client>(*cr);
+    auto client = std::make_unique<control_plane::Client>(*cr);
 
     client->service_start();
     client->service_await_live();
@@ -139,7 +139,7 @@ TEST_F(TestControlPlane, SingleClientConnectDisconnect)
 
 TEST_F(TestControlPlane, SingleClientGetState)
 {
-    auto server = std::make_unique<internal::control_plane::Server>();
+    auto server = std::make_unique<control_plane::Server>();
 
     server->service_start();
     server->service_await_live();
@@ -148,7 +148,7 @@ TEST_F(TestControlPlane, SingleClientGetState)
         options.architect_url("localhost:13337");
     });
 
-    auto client = std::make_unique<internal::control_plane::Client>(*cr);
+    auto client = std::make_unique<control_plane::Client>(*cr);
 
     client->service_start();
     client->service_await_live();
@@ -229,7 +229,7 @@ TEST_F(TestControlPlane, DoubleClientConnectExchangeDisconnect)
 //     GTEST_SKIP();
 
 //     auto sr     = make_resources();
-//     auto server = std::make_unique<internal::control_plane::Server>(sr->partition(0).runnable());
+//     auto server = std::make_unique<control_plane::Server>(sr->partition(0).runnable());
 
 //     server->service_start();
 //     server->service_await_live();

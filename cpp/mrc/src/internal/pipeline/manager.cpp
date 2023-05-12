@@ -18,7 +18,6 @@
 #include "internal/pipeline/manager.hpp"
 
 #include "internal/control_plane/client.hpp"
-#include "internal/control_plane/resources.hpp"
 #include "internal/pipeline/controller.hpp"
 #include "internal/pipeline/pipeline_instance.hpp"
 #include "internal/pipeline/types.hpp"
@@ -47,7 +46,9 @@
 
 namespace mrc::pipeline {
 
-PipelineManager::PipelineManager(runtime::Runtime& runtime, std::shared_ptr<PipelineDefinition> pipeline, uint64_t instance_id) :
+PipelineManager::PipelineManager(runtime::Runtime& runtime,
+                                 std::shared_ptr<PipelineDefinition> pipeline,
+                                 uint64_t instance_id) :
   m_runtime(runtime),
   m_pipeline(std::move(pipeline)),
   m_instance_id(instance_id)

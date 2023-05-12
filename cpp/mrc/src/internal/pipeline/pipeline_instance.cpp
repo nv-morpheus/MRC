@@ -19,13 +19,12 @@
 
 #include "internal/async_service.hpp"
 #include "internal/control_plane/state/root_state.hpp"
-#include "internal/pipeline/pipeline.hpp"
-#include "internal/pipeline/resources.hpp"
+#include "internal/pipeline/pipeline_definition.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/system_resources.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/runtime.hpp"
-#include "internal/segment/definition.hpp"
+#include "internal/segment/segment_definition.hpp"
 #include "internal/segment/segment_instance.hpp"
 
 #include "mrc/core/addresses.hpp"
@@ -46,10 +45,10 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 
 PipelineInstance::PipelineInstance(runtime::Runtime& runtime,
-                                   std::shared_ptr<const Pipeline> definition,
+                                   std::shared_ptr<const PipelineDefinition> definition,
                                    uint64_t instance_id) :
   AsyncService(MRC_CONCAT_STR("PipelineInstance[" << instance_id << "]")),
   runnable::RunnableResourcesProvider(runtime),
@@ -126,7 +125,7 @@ void PipelineInstance::create_segment(const SegmentAddress& address, std::uint32
             auto [id, rank] = segment_address_decode(address);
             auto definition = std::static_pointer_cast<const segment::SegmentDefinition>(
                 m_definition->find_segment(id));
-            auto segment    = std::make_unique<segment::SegmentInstance>(m_runtime.partition(partition_id),
+            auto segment = std::make_unique<segment::SegmentInstance>(m_runtime.partition(partition_id),
                                                                       definition,
                                                                       rank);
 
@@ -299,4 +298,4 @@ void PipelineInstance::process_state_update(control_plane::state::PipelineInstan
 //     }
 // }
 
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline

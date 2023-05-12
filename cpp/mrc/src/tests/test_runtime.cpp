@@ -21,10 +21,10 @@
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/control_plane/client/instance.hpp"
 #include "internal/control_plane/server.hpp"
-#include "internal/network/resources.hpp"
+#include "internal/network/network_resources.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/system_resources.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/runtime.hpp"
 #include "internal/system/partitions.hpp"
@@ -58,15 +58,15 @@
 #include <utility>
 #include <vector>
 
-using namespace mrc::internal::runtime;
+using namespace mrc::runtime;
 using namespace mrc::memory::literals;
 
-namespace mrc::internal::runtime {
+namespace mrc::runtime {
 
 static auto make_resources(std::function<void(Options& options)> options_lambda = [](Options& options) {})
 {
-    auto resources = std::make_unique<internal::resources::SystemResources>(
-        internal::system::SystemProvider(make_system([&](Options& options) {
+    auto resources = std::make_unique<resources::SystemResources>(
+        system::SystemProvider(make_system([&](Options& options) {
             options.topology().user_cpuset("0-3");
             options.topology().restrict_gpus(true);
             options.placement().resources_strategy(PlacementResources::Dedicated);
@@ -96,4 +96,4 @@ TEST_F(TestRuntime, LifeCycle)
     runtime->service_stop();
     runtime->service_await_join();
 }
-}  // namespace mrc::internal::runtime
+}  // namespace mrc::runtime

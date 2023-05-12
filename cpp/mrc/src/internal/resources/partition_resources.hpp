@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "internal/data_plane/resources.hpp"
-#include "internal/network/resources.hpp"
+#include "internal/data_plane/data_plane_resources.hpp"
+#include "internal/network/network_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/ucx/resources.hpp"
+#include "internal/ucx/ucx_resources.hpp"
 
 #include <cstddef>
 #include <optional>

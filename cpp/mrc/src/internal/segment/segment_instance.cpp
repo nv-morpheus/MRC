@@ -18,13 +18,12 @@
 #include "internal/segment/segment_instance.hpp"
 
 #include "internal/control_plane/state/root_state.hpp"
-#include "internal/pipeline/resources.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/system_resources.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/partition_runtime.hpp"
-#include "internal/segment/builder.hpp"
-#include "internal/segment/definition.hpp"
+#include "internal/segment/builder_definition.hpp"
+#include "internal/segment/segment_definition.hpp"
 
 #include "mrc/core/addresses.hpp"
 #include "mrc/core/task_queue.hpp"
@@ -50,10 +49,10 @@
 #include <type_traits>
 #include <utility>
 
-namespace mrc::internal::segment {
+namespace mrc::segment {
 
 SegmentInstance::SegmentInstance(runtime::PartitionRuntime& runtime,
-                                 std::shared_ptr<const Definition> definition,
+                                 std::shared_ptr<const SegmentDefinition> definition,
                                  SegmentAddress instance_id) :
   AsyncService(MRC_CONCAT_STR("SegmentInstance[" << instance_id << "]")),
   runnable::RunnableResourcesProvider(runtime),
@@ -69,7 +68,7 @@ SegmentInstance::SegmentInstance(runtime::PartitionRuntime& runtime,
                     .runnable()
                     .main()
                     .enqueue([&]() mutable {
-                        return std::make_unique<Builder>(m_runtime, definition, m_address);
+                        return std::make_unique<BuilderDefinition>(m_runtime, definition, m_address);
                     })
                     .get();
 }
@@ -379,4 +378,4 @@ void SegmentInstance::process_state_update(control_plane::state::SegmentInstance
         CHECK(response->ok()) << "Failed to set PipelineInstance to Ready";
     }
 }
-}  // namespace mrc::internal::segment
+}  // namespace mrc::segment

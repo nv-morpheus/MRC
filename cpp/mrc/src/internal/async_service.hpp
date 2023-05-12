@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 
 #include "mrc/types.hpp"
 #include "mrc/utils/string_utils.hpp"
@@ -27,7 +27,7 @@
 #include <stop_token>
 #include <string>
 
-namespace mrc::internal {
+namespace mrc {
 
 enum class AsyncServiceState
 {
@@ -113,7 +113,7 @@ class AsyncService : public virtual runnable::IRunnableResourcesProvider
     // virtual void do_service_await_join() = 0;
 
     AsyncServiceState m_state{AsyncServiceState::Initialized};
-    std::string m_service_name{"mrc::internal::AsyncService"};
+    std::string m_service_name{"mrc::AsyncService"};
 
     std::stop_source m_stop_source;
     CondVarAny m_cv;
@@ -123,4 +123,4 @@ class AsyncService : public virtual runnable::IRunnableResourcesProvider
     std::vector<Future<void>> m_child_futures;
 };
 
-}  // namespace mrc::internal
+}  // namespace mrc

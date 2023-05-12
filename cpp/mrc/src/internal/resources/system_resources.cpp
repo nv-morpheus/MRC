@@ -20,7 +20,6 @@
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/control_plane/client/instance.hpp"
-#include "internal/control_plane/control_plane_resources.hpp"
 #include "internal/data_plane/data_plane_resources.hpp"  // IWYU pragma: keep
 #include "internal/memory/device_resources.hpp"
 #include "internal/network/network_resources.hpp"
@@ -305,11 +304,6 @@ PartitionResources& SystemResources::partition(std::size_t partition_id)
     CHECK_LT(partition_id, m_partitions.size());
     return m_partitions.at(partition_id);
 }
-
-// control_plane::ControlPlaneResources& Manager::control_plane() const
-// {
-//     return *m_control_plane;
-// }
 
 void SystemResources::initialize() {}
 

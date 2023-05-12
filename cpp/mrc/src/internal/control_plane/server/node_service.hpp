@@ -39,7 +39,7 @@ class InitializationResult;
 class MultiIsolatePlatform;
 }  // namespace node
 
-namespace mrc::internal::control_plane {
+namespace mrc::control_plane {
 
 class NodeContext : public ::mrc::runnable::Context
 {
@@ -119,4 +119,4 @@ class NodeService : public Service
     SharedFuture<void> m_started_future;
     SharedFuture<void> m_completed_future;
 };
-}  // namespace mrc::internal::control_plane
+}  // namespace mrc::control_plane

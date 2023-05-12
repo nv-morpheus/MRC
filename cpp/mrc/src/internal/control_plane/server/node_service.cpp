@@ -41,7 +41,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::control_plane {
+namespace mrc::control_plane {
 
 std::vector<char*> vec_string_to_char_ptr(std::vector<std::string>& vec_strings)
 {
@@ -599,4 +599,4 @@ void NodeService::launch_node(std::vector<std::string> args)
     DVLOG(10) << "[Node] Node teardown complete";
 }
 
-}  // namespace mrc::internal::control_plane
+}  // namespace mrc::control_plane

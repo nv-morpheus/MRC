@@ -57,14 +57,12 @@ std::string accum_merge(std::string lhs, std::string rhs)
 
 namespace mrc::segment {
 
-BuilderDefinition::BuilderDefinition(std::shared_ptr<const SegmentDefinition> definition,
-                                     SegmentRank rank,
-                                     pipeline::PipelineResources& resources,
-                                     std::size_t default_partition_id) :
+BuilderDefinition::BuilderDefinition(runtime::PartitionRuntime& runtime,
+                                     std::shared_ptr<const SegmentDefinition> definition,
+                                     SegmentAddress address) :
+  m_runtime(runtime),
   m_definition(std::move(definition)),
-  m_rank(rank),
-  m_resources(resources),
-  m_default_partition_id(default_partition_id)
+  m_address(address)
 {}
 
 std::string BuilderDefinition::prefix_name(const std::string& name) const
@@ -204,13 +202,13 @@ const std::string& BuilderDefinition::name() const
 
 void BuilderDefinition::initialize()
 {
-    auto address = segment_address_encode(this->definition().id(), m_rank);
+    auto rank = std::get<1>(segment_address_decode(m_address));
 
     // construct ingress ports
     for (const auto& [name, initializer] : this->definition().ingress_initializers())
     {
         DVLOG(10) << "constructing ingress_port: " << name;
-        m_ingress_ports[name] = initializer(address);
+        m_ingress_ports[name] = initializer(m_address);
         m_objects[name]       = m_ingress_ports[name];
     }
 
@@ -218,7 +216,7 @@ void BuilderDefinition::initialize()
     for (const auto& [name, initializer] : this->definition().egress_initializers())
     {
         DVLOG(10) << "constructing egress_port: " << name;
-        m_egress_ports[name] = initializer(address);
+        m_egress_ports[name] = initializer(m_address);
         m_objects[name]      = m_egress_ports[name];
     }
 
@@ -229,7 +227,7 @@ void BuilderDefinition::initialize()
     } catch (const std::exception& e)
     {
         LOG(ERROR) << "Exception during segment initializer. Segment name: " << m_definition->name()
-                   << ", Segment Rank: " << m_rank << ". Exception message:\n"
+                   << ", Segment Rank: " << rank << ". Exception message:\n"
                    << e.what();
 
         // Rethrow after logging
@@ -321,7 +319,7 @@ std::shared_ptr<::mrc::segment::EgressPortBase> BuilderDefinition::get_egress_ba
 
 std::function<void(std::int64_t)> BuilderDefinition::make_throughput_counter(const std::string& name)
 {
-    auto counter = m_resources.metrics_registry().make_throughput_counter(name);
+    auto counter = m_runtime.metrics_registry().make_throughput_counter(name);
     return [counter](std::int64_t ticks) mutable {
         counter.increment(ticks);
     };
