@@ -226,7 +226,7 @@ void PipelineInstance::do_service_start(std::stop_token stop_token)
     completed_promise.get_future().wait();
 }
 
-void PipelineInstance::process_state_update(control_plane::state::PipelineInstance& instance)
+void Instance::do_service_kill()
 {
     if (instance.state().status() == control_plane::state::ResourceStatus::Activated)
     {
