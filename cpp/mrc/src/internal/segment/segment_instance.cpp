@@ -49,10 +49,10 @@
 
 namespace mrc::segment {
 
-Instance::Instance(std::shared_ptr<const SegmentDefinition> definition,
-                   SegmentRank rank,
-                   pipeline::PipelineResources& resources,
-                   std::size_t partition_id) :
+SegmentInstance::SegmentInstance(std::shared_ptr<const SegmentDefinition> definition,
+                                 SegmentRank rank,
+                                 pipeline::PipelineResources& resources,
+                                 std::size_t partition_id) :
   m_name(definition->name()),
   m_id(definition->id()),
   m_rank(rank),
@@ -73,29 +73,29 @@ Instance::Instance(std::shared_ptr<const SegmentDefinition> definition,
             .get();
 }
 
-Instance::~Instance() = default;
+SegmentInstance::~SegmentInstance() = default;
 
-const std::string& Instance::name() const
+const std::string& SegmentInstance::name() const
 {
     return m_name;
 }
 
-const SegmentID& Instance::id() const
+const SegmentID& SegmentInstance::id() const
 {
     return m_id;
 }
 
-const SegmentRank& Instance::rank() const
+const SegmentRank& SegmentInstance::rank() const
 {
     return m_rank;
 }
 
-const SegmentAddress& Instance::address() const
+const SegmentAddress& SegmentInstance::address() const
 {
     return m_address;
 }
 
-void Instance::do_service_start()
+void SegmentInstance::do_service_start()
 {
     // prepare launchers from m_builder
     std::map<std::string, std::unique_ptr<mrc::runnable::Launcher>> m_launchers;
@@ -165,7 +165,7 @@ void Instance::do_service_start()
     DVLOG(10) << info() << " start has been initiated; use the is_running future to await on startup";
 }
 
-void Instance::do_service_stop()
+void SegmentInstance::do_service_stop()
 {
     DVLOG(10) << info() << " issuing stop request";
 
@@ -180,7 +180,7 @@ void Instance::do_service_stop()
     DVLOG(10) << info() << " stop has been initiated; use the is_completed future to await on shutdown";
 }
 
-void Instance::do_service_kill()
+void SegmentInstance::do_service_kill()
 {
     DVLOG(10) << info() << " issuing kill request";
 
@@ -205,7 +205,7 @@ void Instance::do_service_kill()
     DVLOG(10) << info() << " kill has been initiated; use the is_completed future to await on shutdown";
 }
 
-void Instance::do_service_await_live()
+void SegmentInstance::do_service_await_live()
 {
     DVLOG(10) << info() << " await_live started";
     for (const auto& [name, runner] : m_ingress_runners)
@@ -226,7 +226,7 @@ void Instance::do_service_await_live()
     DVLOG(10) << info() << " join complete";
 }
 
-void Instance::do_service_await_join()
+void SegmentInstance::do_service_await_join()
 {
     DVLOG(10) << info() << " join started";
     std::exception_ptr first_exception = nullptr;
@@ -262,12 +262,13 @@ void Instance::do_service_await_join()
     DVLOG(10) << info() << " join complete";
     if (first_exception)
     {
-        LOG(ERROR) << "segment::Instance - an exception was caught while awaiting on one or more nodes - rethrowing";
+        LOG(ERROR) << "segment::SegmentInstance - an exception was caught while awaiting on one or more nodes - "
+                      "rethrowing";
         rethrow_exception(std::move(first_exception));
     }
 }
 
-void Instance::attach_manifold(std::shared_ptr<manifold::Interface> manifold)
+void SegmentInstance::attach_manifold(std::shared_ptr<manifold::Interface> manifold)
 {
     auto port_name = manifold->port_name();
 
@@ -295,12 +296,12 @@ void Instance::attach_manifold(std::shared_ptr<manifold::Interface> manifold)
     throw exceptions::MrcRuntimeError("invalid manifold for segment");
 }
 
-const std::string& Instance::info() const
+const std::string& SegmentInstance::info() const
 {
     return m_info;
 }
 
-std::shared_ptr<manifold::Interface> Instance::create_manifold(const PortName& name)
+std::shared_ptr<manifold::Interface> SegmentInstance::create_manifold(const PortName& name)
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
     DVLOG(10) << info() << " attempting to build manifold for port " << name;

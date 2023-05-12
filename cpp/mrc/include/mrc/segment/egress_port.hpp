@@ -40,11 +40,11 @@
 
 namespace mrc::segment {
 
-class Instance;
+class SegmentInstance;
 
 class EgressPortBase : public runnable::Launchable, public manifold::Connectable, public virtual ObjectProperties
 {
-    friend Instance;
+    friend SegmentInstance;
 };
 
 template <typename T>

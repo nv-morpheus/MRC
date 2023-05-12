@@ -40,7 +40,7 @@
 
 namespace mrc::pipeline {
 
-Controller::Controller(std::unique_ptr<Instance> pipeline) : m_pipeline(std::move(pipeline))
+Controller::Controller(std::unique_ptr<PipelineInstance> pipeline) : m_pipeline(std::move(pipeline))
 {
     CHECK(m_pipeline);
     m_pipeline->service_start();

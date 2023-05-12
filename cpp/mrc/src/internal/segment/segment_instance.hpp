@@ -40,14 +40,14 @@ class SegmentDefinition;
 class BuilderDefinition;
 
 // todo(ryan) - inherit from service
-class Instance final : public Service
+class SegmentInstance final : public Service
 {
   public:
-    Instance(std::shared_ptr<const SegmentDefinition> definition,
-             SegmentRank rank,
-             pipeline::PipelineResources& resources,
-             std::size_t partition_id);
-    ~Instance() override;
+    SegmentInstance(std::shared_ptr<const SegmentDefinition> definition,
+                    SegmentRank rank,
+                    pipeline::PipelineResources& resources,
+                    std::size_t partition_id);
+    ~SegmentInstance() override;
 
     const std::string& name() const;
     const SegmentID& id() const;

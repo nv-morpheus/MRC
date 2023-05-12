@@ -30,7 +30,7 @@ namespace mrc::resources {
 class Manager;
 }  // namespace mrc::resources
 namespace mrc::segment {
-class Instance;
+class SegmentInstance;
 }  // namespace mrc::segment
 namespace mrc::manifold {
 struct Interface;
@@ -39,11 +39,11 @@ struct Interface;
 namespace mrc::pipeline {
 class PipelineDefinition;
 
-class Instance final : public Service, public PipelineResources
+class PipelineInstance final : public Service, public PipelineResources
 {
   public:
-    Instance(std::shared_ptr<const PipelineDefinition> definition, resources::Manager& resources);
-    ~Instance() override;
+    PipelineInstance(std::shared_ptr<const PipelineDefinition> definition, resources::Manager& resources);
+    ~PipelineInstance() override;
 
     // currently we are passing the instance back to the executor
     // we should own the instance here in the pipeline instance
@@ -78,7 +78,7 @@ class Instance final : public Service, public PipelineResources
 
     std::shared_ptr<const PipelineDefinition> m_definition;  // convert to pipeline::Pipeline
 
-    std::map<SegmentAddress, std::unique_ptr<segment::Instance>> m_segments;
+    std::map<SegmentAddress, std::unique_ptr<segment::SegmentInstance>> m_segments;
     std::map<PortName, std::shared_ptr<manifold::Interface>> m_manifolds;
 
     bool m_joinable{false};
