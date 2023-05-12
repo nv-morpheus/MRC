@@ -17,7 +17,7 @@
 
 #include "internal/pipeline/controller.hpp"
 
-#include "internal/pipeline/instance.hpp"
+#include "internal/pipeline/pipeline_instance.hpp"
 #include "internal/pipeline/types.hpp"
 
 #include "mrc/core/utils.hpp"

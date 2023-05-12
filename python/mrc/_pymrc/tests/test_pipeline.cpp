@@ -79,9 +79,9 @@ PYMRC_TEST_CLASS(Pipeline);
 // TEST_F(TestPipeline, MakeSegment)
 // {
 //     pymrc::Pipeline p;
-//     p.make_segment("turtle"s, [](mrc::segment::Builder& seg) {});
-//     p.make_segment("lizard"s, [](mrc::segment::Builder& seg) {});
-//     p.make_segment("frog"s, [](mrc::segment::Builder& seg) {});
+//     p.make_segment("turtle"s, [](mrc::segment::IBuilder& seg) {});
+//     p.make_segment("lizard"s, [](mrc::segment::IBuilder& seg) {});
+//     p.make_segment("frog"s, [](mrc::segment::IBuilder& seg) {});
 
 //     auto pipe_ptr = p.swap();
 //     EXPECT_EQ(pipe_ptr->segment_count(), 3);
@@ -95,7 +95,7 @@ TEST_F(TestPipeline, Execute)
     std::atomic<unsigned int> counter = 0;
     pymrc::Pipeline p;
 
-    auto init = [&counter](mrc::segment::Builder& seg) {
+    auto init = [&counter](mrc::segment::IBuilder& seg) {
         auto src = seg.make_source<bool>("src", [](rxcpp::subscriber<bool>& s) {
             if (s.is_subscribed())
             {
@@ -140,8 +140,8 @@ TEST_F(TestPipeline, DynamicPortConstructionGood)
 {
     pymrc::PortBuilderUtil::register_port_util<pymrc::PyHolder>();
 
-    std::string name                                 = "xyz";
-    std::function<void(mrc::segment::Builder&)> init = [](mrc::segment::Builder& builder) {
+    std::string name                                  = "xyz";
+    std::function<void(mrc::segment::IBuilder&)> init = [](mrc::segment::IBuilder& builder) {
         std::cerr << "Builder called" << std::endl;
     };
 
@@ -186,8 +186,8 @@ TEST_F(TestPipeline, DynamicPortConstructionBadDuplicatePorts)
 {
     pymrc::PortBuilderUtil::register_port_util<pymrc::PyHolder>();
 
-    std::string name                                 = "xyz";
-    std::function<void(mrc::segment::Builder&)> init = [](mrc::segment::Builder& builder) {
+    std::string name                                  = "xyz";
+    std::function<void(mrc::segment::IBuilder&)> init = [](mrc::segment::IBuilder& builder) {
         std::cerr << "Builder called" << std::endl;
     };
 
@@ -233,8 +233,8 @@ TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
     std::vector<std::string> source_segment_egress_ids{"source_1", "source_2", "source_3", "source_4"};
     std::vector<std::string> intermediate_segment_egress_ids{"internal_1", "internal_2", "internal_3", "internal_4"};
 
-    std::function<void(mrc::segment::Builder&)> seg1_init =
-        [source_segment_egress_ids](mrc::segment::Builder& builder) {
+    std::function<void(mrc::segment::IBuilder&)> seg1_init =
+        [source_segment_egress_ids](mrc::segment::IBuilder& builder) {
             for (int i = 0; i < source_segment_egress_ids.size(); i++)
             {
                 auto src = builder.make_source<pymrc::PyHolder>(
@@ -265,8 +265,8 @@ TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
             LOG(INFO) << "Finished TestSegment1 Initialization";
         };
 
-    std::function<void(mrc::segment::Builder&)> seg2_init =
-        [source_segment_egress_ids, intermediate_segment_egress_ids](mrc::segment::Builder& builder) {
+    std::function<void(mrc::segment::IBuilder&)> seg2_init =
+        [source_segment_egress_ids, intermediate_segment_egress_ids](mrc::segment::IBuilder& builder) {
             for (auto ingress_it : source_segment_egress_ids)
             {
                 auto ingress_test = builder.get_ingress<pymrc::PyHolder>(ingress_it);
@@ -284,8 +284,8 @@ TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
             LOG(INFO) << "Finished TestSegment2 Initialization";
         };
 
-    std::function<void(mrc::segment::Builder&)> seg3_init =
-        [&sink_count, intermediate_segment_egress_ids](mrc::segment::Builder& builder) {
+    std::function<void(mrc::segment::IBuilder&)> seg3_init =
+        [&sink_count, intermediate_segment_egress_ids](mrc::segment::IBuilder& builder) {
             for (int i = 0; i < intermediate_segment_egress_ids.size(); ++i)
             {
                 auto ingress = builder.get_ingress<pymrc::PyHolder>(intermediate_segment_egress_ids[i]);

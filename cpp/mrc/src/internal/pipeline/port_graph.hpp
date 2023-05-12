@@ -27,7 +27,7 @@
 
 namespace mrc::pipeline {
 
-class Pipeline;
+class PipelineDefinition;
 
 struct PortConnections
 {
@@ -41,7 +41,7 @@ using PortMap = std::map<std::string, PortConnections>;  // NOLINT
 class PortGraph
 {
   public:
-    PortGraph(const Pipeline& pipeline);
+    PortGraph(const PipelineDefinition& pipeline);
 
     const PortMap& port_map() const;
 

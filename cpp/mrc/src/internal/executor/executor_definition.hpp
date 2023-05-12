@@ -20,6 +20,8 @@
 #include "internal/service.hpp"
 #include "internal/system/system_provider.hpp"
 
+#include "mrc/pipeline/executor.hpp"
+
 #include <memory>
 
 namespace mrc {
@@ -43,14 +45,17 @@ namespace mrc::executor {
  *
  * Issues #149 will begin to separate some of the functionality of ExeuctorBase into individual components.
  */
-class Executor : public Service, public system::SystemProvider
+class ExecutorDefinition : public pipeline::IExecutor, public Service, public system::SystemProvider
 {
   public:
-    Executor(std::shared_ptr<Options> options);
-    Executor(std::unique_ptr<system::ThreadingResources> resources);
-    ~Executor() override;
+    ExecutorDefinition(std::shared_ptr<Options> options);
+    ExecutorDefinition(std::unique_ptr<system::ThreadingResources> resources);
+    ~ExecutorDefinition() override;
 
-    void register_pipeline(std::unique_ptr<pipeline::IPipeline> ipipeline);
+    void register_pipeline(std::shared_ptr<pipeline::IPipeline> pipeline) override;
+    void start() override;
+    void stop() override;
+    void join() override;
 
   private:
     void do_service_start() final;
@@ -63,8 +68,8 @@ class Executor : public Service, public system::SystemProvider
     std::unique_ptr<pipeline::Manager> m_pipeline_manager;
 };
 
-std::unique_ptr<Executor> make_executor(std::shared_ptr<Options> options);
+// std::unique_ptr<Executor> make_executor(std::shared_ptr<Options> options);
 
-std::unique_ptr<Executor> make_executor(std::unique_ptr<system::ThreadingResources> resources);
+// std::unique_ptr<Executor> make_executor(std::unique_ptr<system::ThreadingResources> resources);
 
 }  // namespace mrc::executor

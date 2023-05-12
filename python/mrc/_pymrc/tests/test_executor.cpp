@@ -50,7 +50,7 @@ TEST_F(TestExecutor, Execute)
     std::atomic<unsigned int> counter = 0;
     pymrc::Pipeline p;
 
-    auto init = [&counter](mrc::segment::Builder& seg) {
+    auto init = [&counter](mrc::segment::IBuilder& seg) {
         auto src = seg.make_source<bool>("src", [](rxcpp::subscriber<bool>& s) {
             if (s.is_subscribed())
             {

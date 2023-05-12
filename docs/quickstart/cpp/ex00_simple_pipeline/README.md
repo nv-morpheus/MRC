@@ -6,9 +6,9 @@ This example illustrates how to create a simple pipeline with a single source, n
 - Node: Transforms the `int` to a `float` by multiplying it by 2.5, resulting in a float
 - Sink: Prints any received `float` value and counts the number of emitted items
 
-Each of the objects in the Segment is created using the `segment::Builder::make_XXX(NAME, ...)` function where `XXX` is replace with either `source`, `sink` or `node`.
+Each of the objects in the Segment is created using the `segment::IBuilder::make_XXX(NAME, ...)` function where `XXX` is replace with either `source`, `sink` or `node`.
 
-Once each object is created, they can be linked together using `segment::Builder::make_edge(SOURCE, SINK)`. There are a few rules when making edges:
+Once each object is created, they can be linked together using `segment::IBuilder::make_edge(SOURCE, SINK)`. There are a few rules when making edges:
 
 - Objects deriving from `mrc::node::SourceProperties` can only appear in the left-hand argument of make_edge()
 - Objects deriving from `mrc::node::SinkProperties` can only appear in the right-hand argument of make_edge()
@@ -22,7 +22,7 @@ Once each object is created, they can be linked together using `segment::Builder
 
 The first "node" that we will be creating is a source. Source objects have no upstream dependencies and are responsible for producing data to be consume by downstream object.
 
-To create a source, you call `make_source<T>` on the `segment::Builder` object passing a name and a lambda of type `std::function<(rxcpp::subscriber<T>)>` Please see https://reactivex.io/RxCpp/ and navigate to rxcpp::subscriber<T, Observer> for more detail on the lambda type. where `T` is the type of object that the source will be producing. In our example, we are creating integers so the source object looks like:
+To create a source, you call `make_source<T>` on the `segment::IBuilder` object passing a name and a lambda of type `std::function<(rxcpp::subscriber<T>)>` Please see https://reactivex.io/RxCpp/ and navigate to rxcpp::subscriber<T, Observer> for more detail on the lambda type. where `T` is the type of object that the source will be producing. In our example, we are creating integers so the source object looks like:
 
 ```cpp
 auto source = s.make_source<int>("int_source", [](rxcpp::subscriber<int> s) {

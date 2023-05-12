@@ -17,12 +17,10 @@
 
 #include "common_pipelines.hpp"
 
-#include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
-#include "mrc/segment/definition.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
 #include "mrc/segment/object.hpp"
@@ -40,14 +38,14 @@ using namespace mrc;
 
 namespace test::pipelines {
 
-std::unique_ptr<pipeline::IPipelineBase> finite_multisegment()
+std::unique_ptr<pipeline::IPipeline> finite_multisegment()
 {
-    auto pipeline = pipeline::make_pipeline();
+    auto pipeline = mrc::make_pipeline();
 
-    auto segment_initializer = [](segment::Builder& seg) {};
+    auto segment_initializer = [](segment::IBuilder& seg) {};
 
     // ideally we make this a true source (seg_1) and true source (seg_4)
-    auto seg_1 = segment::Definition::create("seg_1", segment::EgressPorts<int>({"my_int2"}), [](segment::Builder& s) {
+    pipeline->make_segment("seg_1", segment::EgressPorts<int>({"my_int2"}), [](segment::IBuilder& s) {
         auto src    = s.make_source<int>("rx_source", [](rxcpp::subscriber<int> s) {
             s.on_next(1);
             s.on_next(2);
@@ -57,25 +55,25 @@ std::unique_ptr<pipeline::IPipelineBase> finite_multisegment()
         auto egress = s.get_egress<int>("my_int2");
         s.make_edge(src, egress);
     });
-    auto seg_2 = segment::Definition::create("seg_2",
-                                             segment::IngressPorts<int>({"my_int2"}),
-                                             segment::EgressPorts<int>({"my_int3"}),
-                                             [](segment::Builder& s) {
-                                                 // pure pass-thru
-                                                 auto in  = s.get_ingress<int>("my_int2");
-                                                 auto out = s.get_egress<int>("my_int3");
-                                                 s.make_edge(in, out);
-                                             });
-    auto seg_3 = segment::Definition::create("seg_3",
-                                             segment::IngressPorts<int>({"my_int3"}),
-                                             segment::EgressPorts<int>({"my_int4"}),
-                                             [](segment::Builder& s) {
-                                                 // pure pass-thru
-                                                 auto in  = s.get_ingress<int>("my_int3");
-                                                 auto out = s.get_egress<int>("my_int4");
-                                                 s.make_edge(in, out);
-                                             });
-    auto seg_4 = segment::Definition::create("seg_4", segment::IngressPorts<int>({"my_int4"}), [](segment::Builder& s) {
+    pipeline->make_segment("seg_2",
+                           segment::IngressPorts<int>({"my_int2"}),
+                           segment::EgressPorts<int>({"my_int3"}),
+                           [](segment::IBuilder& s) {
+                               // pure pass-thru
+                               auto in  = s.get_ingress<int>("my_int2");
+                               auto out = s.get_egress<int>("my_int3");
+                               s.make_edge(in, out);
+                           });
+    pipeline->make_segment("seg_3",
+                           segment::IngressPorts<int>({"my_int3"}),
+                           segment::EgressPorts<int>({"my_int4"}),
+                           [](segment::IBuilder& s) {
+                               // pure pass-thru
+                               auto in  = s.get_ingress<int>("my_int3");
+                               auto out = s.get_egress<int>("my_int4");
+                               s.make_edge(in, out);
+                           });
+    pipeline->make_segment("seg_4", segment::IngressPorts<int>({"my_int4"}), [](segment::IBuilder& s) {
         // pure pass-thru
         auto in   = s.get_ingress<int>("my_int4");
         auto sink = s.make_sink<int>("rx_sink", rxcpp::make_observer_dynamic<int>([&](int x) {
@@ -83,11 +81,6 @@ std::unique_ptr<pipeline::IPipelineBase> finite_multisegment()
                                      }));
         s.make_edge(in, sink);
     });
-
-    pipeline->register_segment(seg_1);
-    pipeline->register_segment(seg_2);
-    pipeline->register_segment(seg_3);
-    pipeline->register_segment(seg_4);
 
     return pipeline;
 }

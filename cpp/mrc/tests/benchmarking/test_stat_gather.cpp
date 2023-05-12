@@ -21,9 +21,8 @@
 
 #include "mrc/benchmarking/trace_statistics.hpp"
 #include "mrc/benchmarking/util.hpp"
-#include "mrc/core/executor.hpp"
-#include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/options/options.hpp"
+#include "mrc/pipeline/executor.hpp"
 
 #include <nlohmann/json.hpp>
 

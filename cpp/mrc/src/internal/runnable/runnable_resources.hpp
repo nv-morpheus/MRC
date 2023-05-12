@@ -21,8 +21,8 @@
 #include "internal/system/threading_resources.hpp"
 
 #include "mrc/core/task_queue.hpp"
-#include "mrc/pipeline/runnable_resources.hpp"
 #include "mrc/runnable/launch_control.hpp"
+#include "mrc/runnable/runnable_resources.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -33,7 +33,7 @@ class FiberTaskQueue;
 
 namespace mrc::runnable {
 
-class RunnableResources final : public system::HostPartitionProvider, public mrc::pipeline::IRunnableResources
+class RunnableResources final : public system::HostPartitionProvider, public IRunnableResources
 {
   public:
     RunnableResources(const system::ThreadingResources& system_resources, std::size_t _host_partition_id);

@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mrc/utils/macros.hpp"
+
 #include <memory>
 
 namespace mrc {
@@ -30,9 +32,7 @@ namespace mrc::system {
 class IResources;
 }
 
-namespace mrc::executor {
-
-class Executor;
+namespace mrc::pipeline {
 
 /**
  * @brief The I-classes in mrc/internal enable the building and customization of an Executor.
@@ -47,23 +47,41 @@ class Executor;
 class IExecutor
 {
   public:
-    IExecutor();
-    IExecutor(std::shared_ptr<Options>);
-    IExecutor(std::unique_ptr<system::IResources>);
-    virtual ~IExecutor() = 0;
+    IExecutor()          = default;
+    virtual ~IExecutor() = default;
 
-    void register_pipeline(std::unique_ptr<pipeline::IPipeline> pipeline);
+    DELETE_COPYABILITY(IExecutor);
 
-    void start();
-    void stop();
-    void join();
-
-  protected:
-    // this method will be applied
-
-  private:
-    std::shared_ptr<Executor> m_impl;
-    friend Executor;
+    virtual void register_pipeline(std::shared_ptr<IPipeline> pipeline) = 0;
+    virtual void start()                                                = 0;
+    virtual void stop()                                                 = 0;
+    virtual void join()                                                 = 0;
 };
 
-}  // namespace mrc::executor
+}  // namespace mrc::pipeline
+
+namespace mrc {
+
+// For backwards compatibility, make utility implementation which holds onto a unique_ptr
+class Executor : public pipeline::IExecutor
+{
+  public:
+    Executor();
+    Executor(std::shared_ptr<Options> options);
+    Executor(std::unique_ptr<system::IResources> resources);
+    ~Executor() override;
+
+    void register_pipeline(std::shared_ptr<pipeline::IPipeline> pipeline) override;
+    void start() override;
+    void stop() override;
+    void join() override;
+
+  private:
+    std::unique_ptr<IExecutor> m_impl;
+};
+
+std::unique_ptr<pipeline::IExecutor> make_executor(std::shared_ptr<Options> options);
+
+std::unique_ptr<pipeline::IExecutor> make_executor(std::unique_ptr<system::IResources> resources);
+
+}  // namespace mrc

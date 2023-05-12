@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "mrc/segment/definition.hpp"
+#include "mrc/segment/segment.hpp"
 
 namespace test::segments {
 
-std::shared_ptr<mrc::segment::Definition> single_finite_no_ports(std::string name);
-std::shared_ptr<mrc::segment::Definition> single_finite_no_ports_will_throw(std::string name);
+std::shared_ptr<const mrc::segment::ISegment> single_finite_no_ports(std::string name);
+std::shared_ptr<const mrc::segment::ISegment> single_finite_no_ports_will_throw(std::string name);
 
 }  // namespace test::segments

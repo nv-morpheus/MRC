@@ -36,14 +36,14 @@ struct Interface;
 }  // namespace mrc::manifold
 
 namespace mrc::segment {
-class Definition;
-class Builder;
+class SegmentDefinition;
+class BuilderDefinition;
 
 // todo(ryan) - inherit from service
 class Instance final : public Service
 {
   public:
-    Instance(std::shared_ptr<const Definition> definition,
+    Instance(std::shared_ptr<const SegmentDefinition> definition,
              SegmentRank rank,
              pipeline::PipelineResources& resources,
              std::size_t partition_id);
@@ -75,7 +75,7 @@ class Instance final : public Service
     SegmentAddress m_address;
     std::string m_info;
 
-    std::unique_ptr<Builder> m_builder;
+    std::unique_ptr<BuilderDefinition> m_builder;
     pipeline::PipelineResources& m_resources;
     const std::size_t m_default_partition_id;
 

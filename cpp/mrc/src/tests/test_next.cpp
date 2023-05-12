@@ -45,7 +45,6 @@
 #include "mrc/runnable/runner.hpp"
 #include "mrc/runnable/types.hpp"
 #include "mrc/segment/builder.hpp"
-#include "mrc/segment/definition.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/object.hpp"
 #include "mrc/segment/runnable.hpp"
@@ -708,11 +707,11 @@ TEST_F(TestNext, PrivateInheritance)
 
 TEST_F(TestNext, Segment)
 {
-    auto segment = segment::Definition::create("test", segment::EgressPorts<int>({"test"}), [](segment::Builder& s) {});
+    auto segment = Segment::create("test", segment::EgressPorts<int>({"test"}), [](segment::IBuilder& s) {});
 
     segment::EgressPorts<int> ports({"test"});
 
-    // segment::Segment seg("test", ports, [](segment::Builder& builder) {});
+    // segment::Segment seg("test", ports, [](segment::IBuilder& builder) {});
 }
 
 TEST_F(TestNext, SegmentRunnable)
@@ -732,7 +731,7 @@ TEST_F(TestNext, SegmentRunnable)
 
 TEST_F(TestNext, SegmentBuilder)
 {
-    auto init = [](segment::Builder& segment) {
+    auto init = [](segment::IBuilder& segment) {
         auto src = segment.make_source<std::string>("x_src", [&](rxcpp::subscriber<std::string> s) {
             s.on_next("One");
             s.on_next("Two");

@@ -15,10 +15,11 @@
  * limitations under the License.
  */
 
-#include "internal/segment/definition.hpp"
+#include "internal/segment/segment_definition.hpp"
 
 #include "mrc/core/addresses.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/segment/segment.hpp"
 #include "mrc/types.hpp"
 
 #include <cstdint>
@@ -27,30 +28,30 @@
 
 namespace mrc::segment {
 
-Definition::Definition(std::string name,
-                       std::map<std::string, ::mrc::segment::ingress_initializer_t> ingress_initializers,
-                       std::map<std::string, ::mrc::segment::egress_initializer_t> egress_initializers,
-                       ::mrc::segment::backend_initializer_fn_t backend_initializer) :
-  m_name(name),
+SegmentDefinition::SegmentDefinition(std::string name,
+                                     IngressPortsBase ingress_ports,
+                                     EgressPortsBase egress_ports,
+                                     segment_initializer_fn_t initializer) :
   m_id(segment_name_hash(name)),
-  m_backend_initializer(std::move(backend_initializer)),
-  m_ingress_initializers(std::move(ingress_initializers)),
-  m_egress_initializers(std::move(egress_initializers))
+  m_name(std::move(name)),
+  m_ingress_initializers(ingress_ports.get_initializers()),
+  m_egress_initializers(egress_ports.get_initializers()),
+  m_initializer_fn(std::move(initializer))
 {
     validate_ports();
 }
 
-const std::string& Definition::name() const
-{
-    return m_name;
-}
-
-SegmentID Definition::id() const
+SegmentID SegmentDefinition::id() const
 {
     return m_id;
 }
 
-std::vector<std::string> Definition::ingress_port_names() const
+const std::string& SegmentDefinition::name() const
+{
+    return m_name;
+}
+
+std::vector<std::string> SegmentDefinition::ingress_port_names() const
 {
     std::vector<std::string> names;
     for (const auto& [name, init] : m_ingress_initializers)
@@ -59,7 +60,7 @@ std::vector<std::string> Definition::ingress_port_names() const
     }
     return names;
 }
-std::vector<std::string> Definition::egress_port_names() const
+std::vector<std::string> SegmentDefinition::egress_port_names() const
 {
     std::vector<std::string> names;
     for (const auto& [name, init] : m_egress_initializers)
@@ -69,22 +70,22 @@ std::vector<std::string> Definition::egress_port_names() const
     return names;
 }
 
-const ::mrc::segment::backend_initializer_fn_t& Definition::initializer_fn() const
+const segment_initializer_fn_t& SegmentDefinition::initializer_fn() const
 {
-    return m_backend_initializer;
+    return m_initializer_fn;
 }
 
-const std::map<std::string, ::mrc::segment::egress_initializer_t>& Definition::egress_initializers() const
+const std::map<std::string, ::mrc::segment::egress_initializer_t>& SegmentDefinition::egress_initializers() const
 {
     return m_egress_initializers;
 }
 
-const std::map<std::string, ::mrc::segment::ingress_initializer_t>& Definition::ingress_initializers() const
+const std::map<std::string, ::mrc::segment::ingress_initializer_t>& SegmentDefinition::ingress_initializers() const
 {
     return m_ingress_initializers;
 }
 
-void Definition::validate_ports() const
+void SegmentDefinition::validate_ports() const
 {
     std::vector<std::string> names;
 

@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "mrc/engine/segment/ibuilder.hpp"
 #include "mrc/segment/forward.hpp"  // IWYU pragma: export
 #include "mrc/types.hpp"
 
@@ -30,9 +29,8 @@ class IBuilder;
 
 namespace mrc::segment {
 
-using segment_initializer_fn_t = std::function<void(Builder&)>;
+using segment_initializer_fn_t = std::function<void(IBuilder&)>;
 using egress_initializer_t     = std::function<std::shared_ptr<EgressPortBase>(const SegmentAddress&)>;
 using ingress_initializer_t    = std::function<std::shared_ptr<IngressPortBase>(const SegmentAddress&)>;
-using backend_initializer_fn_t = std::function<void(segment::IBuilder&)>;
 
 }  // namespace mrc::segment

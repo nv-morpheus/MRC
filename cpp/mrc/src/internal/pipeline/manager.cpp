@@ -18,7 +18,7 @@
 #include "internal/pipeline/manager.hpp"
 
 #include "internal/pipeline/controller.hpp"
-#include "internal/pipeline/instance.hpp"
+#include "internal/pipeline/pipeline_instance.hpp"
 #include "internal/pipeline/types.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
@@ -43,7 +43,7 @@
 
 namespace mrc::pipeline {
 
-Manager::Manager(std::shared_ptr<Pipeline> pipeline, resources::Manager& resources) :
+Manager::Manager(std::shared_ptr<PipelineDefinition> pipeline, resources::Manager& resources) :
   m_pipeline(std::move(pipeline)),
   m_resources(resources)
 {
@@ -133,7 +133,7 @@ resources::Manager& Manager::resources()
     return m_resources;
 }
 
-const Pipeline& Manager::pipeline() const
+const PipelineDefinition& Manager::pipeline() const
 {
     CHECK(m_pipeline);
     return *m_pipeline;

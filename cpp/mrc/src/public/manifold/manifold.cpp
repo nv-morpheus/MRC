@@ -28,17 +28,19 @@
 
 namespace mrc::manifold {
 
-Manifold::Manifold(PortName port_name, pipeline::IRunnableResources& resources) :
+Manifold::Manifold(PortName port_name, runnable::IRunnableResources& resources) :
   m_port_name(std::move(port_name)),
   m_resources(resources)
 {}
+
+Manifold::~Manifold() = default;
 
 const PortName& Manifold::port_name() const
 {
     return m_port_name;
 }
 
-pipeline::IRunnableResources& Manifold::resources()
+runnable::IRunnableResources& Manifold::resources()
 {
     return m_resources;
 }

@@ -37,12 +37,12 @@ struct Interface;
 }  // namespace mrc::manifold
 
 namespace mrc::pipeline {
-class Pipeline;
+class PipelineDefinition;
 
 class Instance final : public Service, public PipelineResources
 {
   public:
-    Instance(std::shared_ptr<const Pipeline> definition, resources::Manager& resources);
+    Instance(std::shared_ptr<const PipelineDefinition> definition, resources::Manager& resources);
     ~Instance() override;
 
     // currently we are passing the instance back to the executor
@@ -76,7 +76,7 @@ class Instance final : public Service, public PipelineResources
     manifold::Interface& manifold(const PortName& port_name);
     std::shared_ptr<manifold::Interface> get_manifold(const PortName& port_name);
 
-    std::shared_ptr<const Pipeline> m_definition;  // convert to pipeline::Pipeline
+    std::shared_ptr<const PipelineDefinition> m_definition;  // convert to pipeline::Pipeline
 
     std::map<SegmentAddress, std::unique_ptr<segment::Instance>> m_segments;
     std::map<PortName, std::shared_ptr<manifold::Interface>> m_manifolds;

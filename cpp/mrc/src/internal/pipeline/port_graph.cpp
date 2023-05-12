@@ -17,15 +17,16 @@
 
 #include "internal/pipeline/port_graph.hpp"
 
-#include "internal/pipeline/pipeline.hpp"
-#include "internal/segment/definition.hpp"
+#include "internal/pipeline/pipeline_definition.hpp"
+
+#include "mrc/segment/segment.hpp"
 
 #include <memory>
 #include <vector>
 
 namespace mrc::pipeline {
 
-PortGraph::PortGraph(const Pipeline& pipeline)
+PortGraph::PortGraph(const PipelineDefinition& pipeline)
 {
     for (const auto& [seg_id, seg_definition] : pipeline.segments())
     {

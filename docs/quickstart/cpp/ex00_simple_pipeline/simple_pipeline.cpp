@@ -31,13 +31,13 @@ int main(int argc, char* argv[])
     Executor executor(std::move(options));
 
     // create pipeline object
-    auto pipeline = pipeline::make_pipeline();
+    auto pipeline = mrc::make_pipeline();
 
     // counter external to the segment object that will be incremented by the sink
     std::atomic<long> counter = 0;
 
     // create a segment - a pipeline can consist of multiple segments; however in this example we will use only one
-    auto seg = segment::Definition::create("quickstart", [&counter](segment::Builder& s) {
+    auto seg = Segment::create("quickstart", [&counter](segment::IBuilder& s) {
         // Source
         // This first "node" is a source node which has no upstream dependencies. It is responsible for producing data
         // to be consume by downstream nodes

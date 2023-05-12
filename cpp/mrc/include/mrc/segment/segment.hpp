@@ -19,21 +19,68 @@
 
 #include "mrc/core/addresses.hpp"
 #include "mrc/segment/builder.hpp"
-#include "mrc/segment/definition.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/forward.hpp"
 #include "mrc/segment/ingress_ports.hpp"
+#include "mrc/segment/initializers.hpp"
+#include "mrc/utils/macros.hpp"
+
+namespace mrc::segment {
+
+struct EgressPortsBase;
+struct IngressPortsBase;
+
+class ISegment
+{
+  public:
+    ISegment()          = default;
+    virtual ~ISegment() = default;
+
+    DELETE_COPYABILITY(ISegment);
+
+    virtual SegmentID id() const                                = 0;
+    virtual const std::string& name() const                     = 0;
+    virtual std::vector<std::string> ingress_port_names() const = 0;
+    virtual std::vector<std::string> egress_port_names() const  = 0;
+};
+}  // namespace mrc::segment
 
 namespace mrc {
 
+// This helper class if for backwards compatibility only
 class Segment final
 {
   public:
-    template <typename... ArgsT>
-    static std::shared_ptr<segment::Definition> create(std::string name, ArgsT&&... args)
-    {
-        return segment::Definition::create(std::move(name), std::forward<ArgsT>(args)...);
-    }
+    static std::unique_ptr<const segment::ISegment> create(std::string name,
+                                                           segment::IngressPortsBase ingress_ports,
+                                                           segment::EgressPortsBase egress_ports,
+                                                           segment::segment_initializer_fn_t initializer);
+
+    static std::unique_ptr<const segment::ISegment> create(std::string name,
+                                                           segment::EgressPortsBase egress_ports,
+                                                           segment::segment_initializer_fn_t initializer);
+
+    static std::unique_ptr<const segment::ISegment> create(std::string name,
+                                                           segment::IngressPortsBase ingress_ports,
+                                                           segment::segment_initializer_fn_t initializer);
+
+    static std::unique_ptr<const segment::ISegment> create(std::string name,
+                                                           segment::segment_initializer_fn_t initializer);
 };
+
+std::unique_ptr<const segment::ISegment> make_segment(std::string name,
+                                                      segment::IngressPortsBase ingress_ports,
+                                                      segment::EgressPortsBase egress_ports,
+                                                      segment::segment_initializer_fn_t initializer);
+
+std::unique_ptr<const segment::ISegment> make_segment(std::string name,
+                                                      segment::EgressPortsBase egress_ports,
+                                                      segment::segment_initializer_fn_t initializer);
+
+std::unique_ptr<const segment::ISegment> make_segment(std::string name,
+                                                      segment::IngressPortsBase ingress_ports,
+                                                      segment::segment_initializer_fn_t initializer);
+
+std::unique_ptr<const segment::ISegment> make_segment(std::string name, segment::segment_initializer_fn_t initializer);
 
 }  // namespace mrc

@@ -27,7 +27,6 @@
 
 namespace mrc::segment {
 class IBuilder;
-class BuilderDefinition;
 }  // namespace mrc::segment
 
 namespace mrc::segment {
@@ -38,6 +37,8 @@ namespace mrc::modules {
 
 class SegmentModule
 {
+    friend mrc::segment::IBuilder;
+
   public:
     using segment_module_port_map_t      = std::map<std::string, std::shared_ptr<segment::ObjectProperties>>;
     using segment_module_port_t          = std::shared_ptr<segment::ObjectProperties>;
@@ -189,8 +190,6 @@ class SegmentModule
     segment_module_port_map_t m_output_ports{};
 
     const nlohmann::json m_config;
-
-    friend class segment::BuilderDefinition;
 };
 
 }  // namespace mrc::modules

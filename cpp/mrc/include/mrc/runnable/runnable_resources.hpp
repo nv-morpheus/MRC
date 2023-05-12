@@ -15,32 +15,22 @@
  * limitations under the License.
  */
 
-#include "mrc/engine/pipeline/ipipeline.hpp"
+#pragma once
 
-#include "internal/pipeline/pipeline.hpp"
+#include "mrc/core/fiber_meta_data.hpp"
+#include "mrc/core/task_queue.hpp"
+#include "mrc/metrics/registry.hpp"
+#include "mrc/runnable/launch_control.hpp"
 
-#include "mrc/engine/segment/idefinition.hpp"
+namespace mrc::runnable {
 
-#include <glog/logging.h>
-
-#include <utility>
-
-namespace mrc::pipeline {
-
-IPipeline::IPipeline() : m_impl(std::make_shared<Pipeline>()) {}
-IPipeline::~IPipeline() = default;
-
-void IPipeline::register_segment(std::shared_ptr<const segment::IDefinition> segment)
+struct IRunnableResources
 {
-    CHECK(segment);
-    add_segment(segment->m_impl);
-}
+    virtual ~IRunnableResources() = default;
 
-void IPipeline::add_segment(std::shared_ptr<const segment::Definition> segment)
-{
-    CHECK(segment);
-    CHECK(m_impl);
-    m_impl->add_segment(std::move(segment));
-}
+    virtual core::FiberTaskQueue& main()              = 0;
+    virtual runnable::LaunchControl& launch_control() = 0;
+    // virtual std::shared_ptr<metrics::Registry> metrics_registry() = 0;
+};
 
-}  // namespace mrc::pipeline
+}  // namespace mrc::runnable

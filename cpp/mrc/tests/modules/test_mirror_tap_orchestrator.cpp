@@ -17,9 +17,7 @@
 
 #include "test_modules.hpp"
 
-#include "mrc/core/executor.hpp"
 #include "mrc/cuda/device_guard.hpp"
-#include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/experimental/modules/mirror_tap/mirror_tap_orchestrator.hpp"
 #include "mrc/modules/properties/persistent.hpp"
 #include "mrc/node/operators/broadcast.hpp"
@@ -27,6 +25,7 @@
 #include "mrc/node/rx_source.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
+#include "mrc/pipeline/executor.hpp"
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/egress_ports.hpp"
@@ -59,7 +58,7 @@ TEST_F(TestMirrorTapUtil, SinglePipelineTapAndBufferTest)
 
     auto config = nlohmann::json();
 
-    auto init_wrapper_main = [&packets_main, packet_count, test_name](segment::Builder& builder) {
+    auto init_wrapper_main = [&packets_main, packet_count, test_name](segment::IBuilder& builder) {
         auto source = builder.make_source<std::string>(test_name + "_main_source",
                                                        [packet_count](rxcpp::subscriber<std::string>& sub) {
                                                            if (sub.is_subscribed())
@@ -81,7 +80,7 @@ TEST_F(TestMirrorTapUtil, SinglePipelineTapAndBufferTest)
         builder.make_edge(source, sink);
     };
 
-    auto init_wrapper_mirrored = [&packets_mirrored, test_name](segment::Builder& builder) {
+    auto init_wrapper_mirrored = [&packets_mirrored, test_name](segment::IBuilder& builder) {
         auto mirror_sink = builder.make_sink<std::string>(test_name + "_mirror_sink",
                                                           [&packets_mirrored](std::string input) {
                                                               VLOG(10) << "tick -> " << input << std::endl
@@ -134,7 +133,7 @@ TEST_F(TestMirrorTapUtil, SinglePipelineTapAndBufferWithAdditionalPortsTest)
 
     auto config = nlohmann::json();
 
-    auto init_wrapper_main = [&packets_main, packet_count, test_name](segment::Builder& builder) {
+    auto init_wrapper_main = [&packets_main, packet_count, test_name](segment::IBuilder& builder) {
         auto source = builder.make_source<std::string>(test_name + "_main_source",
                                                        [packet_count](rxcpp::subscriber<std::string>& sub) {
                                                            if (sub.is_subscribed())
@@ -170,7 +169,7 @@ TEST_F(TestMirrorTapUtil, SinglePipelineTapAndBufferWithAdditionalPortsTest)
         builder.make_edge(extra_source, extra_egress);
     };
 
-    auto init_wrapper_mirrored = [&packets_mirrored, &packets_non_mirrored, test_name](segment::Builder& builder) {
+    auto init_wrapper_mirrored = [&packets_mirrored, &packets_non_mirrored, test_name](segment::IBuilder& builder) {
         auto mirror_sink     = builder.make_sink<std::string>(test_name + "_mirror_sink",
                                                           [&packets_mirrored](std::string input) {
                                                               packets_mirrored++;

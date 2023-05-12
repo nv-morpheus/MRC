@@ -15,14 +15,13 @@
  * limitations under the License.
  */
 
-#include "internal/segment/instance.hpp"
+#include "internal/segment/segment_instance.hpp"
 
 #include "internal/pipeline/pipeline_resources.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/runnable_resources.hpp"
-#include "internal/segment/builder.hpp"
-#include "internal/segment/definition.hpp"
+#include "internal/segment/builder_definition.hpp"
 
 #include "mrc/core/addresses.hpp"
 #include "mrc/core/task_queue.hpp"
@@ -50,7 +49,7 @@
 
 namespace mrc::segment {
 
-Instance::Instance(std::shared_ptr<const Definition> definition,
+Instance::Instance(std::shared_ptr<const SegmentDefinition> definition,
                    SegmentRank rank,
                    pipeline::PipelineResources& resources,
                    std::size_t partition_id) :
@@ -63,14 +62,15 @@ Instance::Instance(std::shared_ptr<const Definition> definition,
   m_default_partition_id(partition_id)
 {
     // construct the segment definition on the intended numa node
-    m_builder = m_resources.resources()
-                    .partition(m_default_partition_id)
-                    .runnable()
-                    .main()
-                    .enqueue([&]() mutable {
-                        return std::make_unique<Builder>(definition, rank, m_resources, m_default_partition_id);
-                    })
-                    .get();
+    m_builder =
+        m_resources.resources()
+            .partition(m_default_partition_id)
+            .runnable()
+            .main()
+            .enqueue([&]() mutable {
+                return std::make_unique<BuilderDefinition>(definition, rank, m_resources, m_default_partition_id);
+            })
+            .get();
 }
 
 Instance::~Instance() = default;

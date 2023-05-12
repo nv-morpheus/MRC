@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "internal/pipeline/pipeline_definition.hpp"
 #include "internal/pipeline/types.hpp"
 #include "internal/service.hpp"
 
@@ -34,7 +35,7 @@ class Runner;
 }  // namespace mrc::runnable
 
 namespace mrc::pipeline {
-class Pipeline;
+class PipelineDefinition;
 
 /**
  * @brief Responsible for coordinating and controlling a Pipeline running on a set of resources/partitions.
@@ -46,10 +47,10 @@ class Pipeline;
 class Manager : public Service
 {
   public:
-    Manager(std::shared_ptr<Pipeline> pipeline, resources::Manager& resources);
+    Manager(std::shared_ptr<PipelineDefinition> pipeline, resources::Manager& resources);
     ~Manager() override;
 
-    const Pipeline& pipeline() const;
+    const PipelineDefinition& pipeline() const;
 
     void push_updates(SegmentAddresses&& segment_addresses);
 
@@ -64,7 +65,7 @@ class Manager : public Service
     void do_service_await_join() final;
 
     resources::Manager& m_resources;
-    std::shared_ptr<Pipeline> m_pipeline;
+    std::shared_ptr<PipelineDefinition> m_pipeline;
     std::unique_ptr<node::WritableEntrypoint<ControlMessage>> m_update_channel;
     std::unique_ptr<mrc::runnable::Runner> m_controller;
 };

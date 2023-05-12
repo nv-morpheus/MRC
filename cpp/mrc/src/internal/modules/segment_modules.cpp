@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "mrc/modules/segment_modules.hpp"
+#include "internal/modules/segment_modules.hpp"
 
 #include "mrc/edge/edge.hpp"
 #include "mrc/edge/edge_readable.hpp"

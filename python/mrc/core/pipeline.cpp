@@ -54,14 +54,14 @@ PYBIND11_MODULE(pipeline, py_mod)
         .def(
             "make_segment",
             wrap_segment_init_callback(
-                static_cast<void (Pipeline::*)(const std::string&, const std::function<void(mrc::segment::Builder&)>&)>(
+                static_cast<void (Pipeline::*)(const std::string&, const std::function<void(mrc::segment::IBuilder&)>&)>(
                     &Pipeline::make_segment)))
         .def("make_segment",
              wrap_segment_init_callback(
                  static_cast<void (Pipeline::*)(const std::string&,
                                                 py::list,
                                                 py::list,
-                                                const std::function<void(mrc::segment::Builder&)>&)>(
+                                                const std::function<void(mrc::segment::IBuilder&)>&)>(
                      &Pipeline::make_segment)));
 
     py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."

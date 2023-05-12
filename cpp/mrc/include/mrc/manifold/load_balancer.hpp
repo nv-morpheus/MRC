@@ -25,9 +25,9 @@
 #include "mrc/node/operators/muxer.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/source_channel_owner.hpp"
-#include "mrc/pipeline/runnable_resources.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/runnable/launchable.hpp"
+#include "mrc/runnable/runnable_resources.hpp"
 #include "mrc/runnable/types.hpp"
 #include "mrc/types.hpp"
 
@@ -68,7 +68,7 @@ class LoadBalancer : public CompositeManifold<MuxedIngress<T>, RoundRobinEgress<
     using base_t = CompositeManifold<MuxedIngress<T>, RoundRobinEgress<T>>;
 
   public:
-    LoadBalancer(PortName port_name, pipeline::IRunnableResources& resources) : base_t(std::move(port_name), resources)
+    LoadBalancer(PortName port_name, runnable::IRunnableResources& resources) : base_t(std::move(port_name), resources)
     {
         m_launch_options.engine_factory_name = "main";
         m_launch_options.pe_count            = 1;

@@ -17,61 +17,18 @@
 
 #include "mrc/pipeline/pipeline.hpp"
 
-#include "mrc/segment/definition.hpp"
+#include "internal/pipeline/pipeline_definition.hpp"
+
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
 
-namespace mrc::pipeline {
+#include <memory>
 
-std::unique_ptr<IPipeline> IPipeline::create()
+namespace mrc {
+
+std::unique_ptr<pipeline::IPipeline> make_pipeline()
 {
-    return std::unique_ptr<IPipeline>(new IPipeline());
+    return std::make_unique<pipeline::PipelineDefinition>();
 }
 
-void IPipeline::register_segment(std::shared_ptr<segment::Definition> segment)
-{
-    base_t::register_segment(std::move(segment));
-}
-
-std::shared_ptr<segment::Definition> IPipeline::make_segment(const std::string& segment_name,
-                                                             segment::segment_initializer_fn_t segment_initializer)
-{
-    auto segdef = segment::Definition::create(segment_name, segment_initializer);
-    this->register_segment(segdef);
-    return segdef;
-};
-
-std::shared_ptr<segment::Definition> IPipeline::make_segment(const std::string& segment_name,
-                                                             segment::IngressPortsBase ingress_ports,
-                                                             segment::EgressPortsBase egress_ports,
-                                                             segment::segment_initializer_fn_t segment_initializer)
-{
-    auto segdef = segment::Definition::create(segment_name, ingress_ports, egress_ports, segment_initializer);
-    this->register_segment(segdef);
-    return segdef;
-};
-
-std::shared_ptr<segment::Definition> IPipeline::make_segment(const std::string& segment_name,
-                                                             segment::IngressPortsBase ingress_ports,
-                                                             segment::segment_initializer_fn_t segment_initializer)
-{
-    auto segdef = segment::Definition::create(segment_name, ingress_ports, segment_initializer);
-    this->register_segment(segdef);
-    return segdef;
-};
-
-std::shared_ptr<segment::Definition> IPipeline::make_segment(const std::string& segment_name,
-                                                             segment::EgressPortsBase egress_ports,
-                                                             segment::segment_initializer_fn_t segment_initializer)
-{
-    auto segdef = segment::Definition::create(segment_name, egress_ports, segment_initializer);
-    this->register_segment(segdef);
-    return segdef;
-};
-
-std::unique_ptr<IPipeline> make_pipeline()
-{
-    return IPipeline::create();
-}
-
-}  // namespace mrc::pipeline
+}  // namespace mrc

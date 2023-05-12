@@ -15,19 +15,20 @@
  * limitations under the License.
  */
 
-#include "internal/pipeline/instance.hpp"
+#include "internal/pipeline/pipeline_instance.hpp"
 
-#include "internal/pipeline/pipeline.hpp"
+#include "internal/pipeline/pipeline_definition.hpp"
 #include "internal/pipeline/pipeline_resources.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/runnable_resources.hpp"
-#include "internal/segment/definition.hpp"
-#include "internal/segment/instance.hpp"
+#include "internal/segment/segment_definition.hpp"
+#include "internal/segment/segment_instance.hpp"
 
 #include "mrc/core/addresses.hpp"
 #include "mrc/core/task_queue.hpp"
 #include "mrc/manifold/interface.hpp"
+#include "mrc/segment/segment.hpp"
 #include "mrc/segment/utils.hpp"
 #include "mrc/types.hpp"
 
@@ -35,6 +36,7 @@
 #include <glog/logging.h>
 
 #include <exception>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <utility>
@@ -42,7 +44,7 @@
 
 namespace mrc::pipeline {
 
-Instance::Instance(std::shared_ptr<const Pipeline> definition, resources::Manager& resources) :
+Instance::Instance(std::shared_ptr<const PipelineDefinition> definition, resources::Manager& resources) :
   PipelineResources(resources),
   m_definition(std::move(definition))
 {
@@ -113,8 +115,9 @@ void Instance::create_segment(const SegmentAddress& address, std::uint32_t parti
             CHECK(search == m_segments.end());
 
             auto [id, rank] = segment_address_decode(address);
-            auto definition = m_definition->find_segment(id);
-            auto segment    = std::make_unique<segment::Instance>(definition, rank, *this, partition_id);
+            auto definition = std::static_pointer_cast<const segment::SegmentDefinition>(
+                m_definition->find_segment(id));
+            auto segment = std::make_unique<segment::Instance>(definition, rank, *this, partition_id);
 
             for (const auto& name : definition->egress_port_names())
             {
