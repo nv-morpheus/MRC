@@ -116,9 +116,8 @@ void PipelineInstance::create_segment(const SegmentAddress& address, std::uint32
             CHECK(search == m_segments.end());
 
             auto [id, rank] = segment_address_decode(address);
-            auto definition = std::static_pointer_cast<const segment::SegmentDefinition>(
-                m_definition->find_segment(id));
-            auto segment = std::make_unique<segment::SegmentInstance>(definition, rank, *this, partition_id);
+            auto definition = m_definition->find_segment(id);
+            auto segment    = std::make_unique<segment::SegmentInstance>(definition, rank, *this, partition_id);
 
             for (const auto& name : definition->egress_port_names())
             {

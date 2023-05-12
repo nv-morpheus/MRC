@@ -62,15 +62,19 @@ SegmentInstance::SegmentInstance(std::shared_ptr<const SegmentDefinition> defini
   m_default_partition_id(partition_id)
 {
     // construct the segment definition on the intended numa node
-    m_builder =
-        m_resources.resources()
-            .partition(m_default_partition_id)
-            .runnable()
-            .main()
-            .enqueue([&]() mutable {
-                return std::make_unique<BuilderDefinition>(definition, rank, m_resources, m_default_partition_id);
-            })
-            .get();
+    m_builder = m_resources.resources()
+                    .partition(m_default_partition_id)
+                    .runnable()
+                    .main()
+                    .enqueue([&]() mutable {
+                        auto builder =
+                            std::make_unique<BuilderDefinition>(definition, rank, m_resources, m_default_partition_id);
+
+                        builder->initialize();
+
+                        return builder;
+                    })
+                    .get();
 }
 
 SegmentInstance::~SegmentInstance() = default;
