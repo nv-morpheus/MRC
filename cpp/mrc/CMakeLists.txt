@@ -29,7 +29,6 @@ add_library(libmrc
   src/internal/control_plane/client/instance.cpp
   src/internal/control_plane/client/state_manager.cpp
   src/internal/control_plane/client/subscription_service.cpp
-  # src/internal/control_plane/resources.cpp
   src/internal/control_plane/server.cpp
   src/internal/control_plane/server/connection_manager.cpp
   src/internal/control_plane/server/node_service.cpp
@@ -74,10 +73,10 @@ add_library(libmrc
   src/internal/runnable/resources.cpp
   src/internal/runnable/thread_engine.cpp
   src/internal/runnable/thread_engines.cpp
-  src/internal/runtime/segments_manager.cpp
   src/internal/runtime/partition_runtime.cpp
   src/internal/runtime/pipelines_manager.cpp
   src/internal/runtime/runtime.cpp
+  src/internal/runtime/segments_manager.cpp
   src/internal/segment/builder.cpp
   src/internal/segment/definition.cpp
   src/internal/segment/ibuilder.cpp
