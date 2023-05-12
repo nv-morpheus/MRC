@@ -716,7 +716,7 @@ TEST_F(TestNext, Segment)
 
 TEST_F(TestNext, SegmentRunnable)
 {
-    auto node = std::make_shared<segment::Runnable<ExGenSource>>("ex_gen_source");
+    auto node = std::make_shared<segment::Runnable<ExGenSource>>();
 
     EXPECT_TRUE(node->is_source());
     EXPECT_FALSE(node->is_sink());

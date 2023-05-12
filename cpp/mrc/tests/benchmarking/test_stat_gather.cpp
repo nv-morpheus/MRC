@@ -52,13 +52,15 @@ TEST_F(StatGatherTest, TestStatisticsOperatorGather)
     executor.start();
     executor.join();
 
+    std::string segment_name                  = "segment_stats_test";
     std::set<std::string> required_components = {"src", "internal_1", "internal_2", "sink"};
 
     auto framework_stats_info = TraceStatistics::aggregate();
     auto& component_metrics   = framework_stats_info["aggregations"]["components"]["metrics"];
     for (const auto& component : required_components)
     {
-        EXPECT_EQ(component_metrics.contains(component), true) << component << " not found";
+        auto global_name = "/" + segment_name + "/" + component;
+        EXPECT_EQ(component_metrics.contains(global_name), true) << global_name << " not found";
     }
 
     stat_check_helper(component_metrics["src"], 0, 0, 0, m_iterations);
