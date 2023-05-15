@@ -19,6 +19,7 @@
 #include "common_pipelines.hpp"
 
 #include "mrc/pipeline/pipeline.hpp"
+#include "mrc/segment/forward.hpp"
 
 #include <memory>
 

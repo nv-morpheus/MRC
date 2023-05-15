@@ -19,11 +19,11 @@
 
 #include "internal/segment/segment_definition.hpp"
 
-#include <memory>
+#include "mrc/segment/egress_ports.hpp"
+#include "mrc/segment/ingress_ports.hpp"
 
-namespace mrc::segment {
-class IBuilder;
-}
+#include <memory>
+#include <utility>
 
 namespace mrc {
 

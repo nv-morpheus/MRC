@@ -22,6 +22,7 @@
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/egress_ports.hpp"
+#include "mrc/segment/forward.hpp"
 #include "mrc/segment/ingress_ports.hpp"
 #include "mrc/segment/object.hpp"
 

@@ -30,7 +30,6 @@
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
 #include "mrc/segment/object.hpp"
-#include "mrc/segment/segment.hpp"
 
 #include <boost/fiber/future/async.hpp>
 #include <boost/fiber/future/future.hpp>

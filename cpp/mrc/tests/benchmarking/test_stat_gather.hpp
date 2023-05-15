@@ -23,7 +23,6 @@
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
-#include "mrc/segment/segment.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>

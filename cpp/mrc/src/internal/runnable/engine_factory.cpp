@@ -17,7 +17,6 @@
 
 #include "internal/runnable/engine_factory.hpp"
 
-#include "internal/runnable/engine.hpp"
 #include "internal/runnable/fiber_engines.hpp"
 #include "internal/runnable/thread_engines.hpp"
 #include "internal/system/fiber_pool.hpp"
@@ -40,6 +39,7 @@
 #include <vector>
 
 namespace mrc::runnable {
+class IEngines;
 
 class FiberEngineFactory : public ::mrc::runnable::EngineFactory
 {

@@ -25,21 +25,22 @@
 #include "mrc/metrics/counter.hpp"
 #include "mrc/metrics/registry.hpp"
 #include "mrc/modules/module_registry.hpp"
-#include "mrc/modules/properties/persistent.hpp"
+#include "mrc/modules/properties/persistent.hpp"  // IWYU pragma: keep
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/port_registry.hpp"
-#include "mrc/runnable/launchable.hpp"
-#include "mrc/segment/egress_port.hpp"  // IWYU pragma: keep
-#include "mrc/segment/forward.hpp"
+#include "mrc/segment/egress_port.hpp"   // IWYU pragma: keep
 #include "mrc/segment/ingress_port.hpp"  // IWYU pragma: keep
 #include "mrc/segment/initializers.hpp"
+#include "mrc/segment/object.hpp"
 #include "mrc/types.hpp"
 
 #include <glog/logging.h>
 
 #include <exception>
 #include <memory>
+#include <numeric>
 #include <ostream>
+#include <stdexcept>
 #include <utility>
 
 namespace {

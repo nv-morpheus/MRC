@@ -17,18 +17,22 @@
 
 #pragma once
 
-#include "internal/segment/segment_definition.hpp"
 #include "internal/utils/collision_detector.hpp"
 
 #include "mrc/pipeline/pipeline.hpp"
+#include "mrc/segment/initializers.hpp"
 #include "mrc/types.hpp"
 
 #include <map>
 #include <memory>
+#include <string>
 
 namespace mrc::segment {
 class ISegment;
-}
+class SegmentDefinition;
+struct EgressPortsBase;
+struct IngressPortsBase;
+}  // namespace mrc::segment
 
 namespace mrc::pipeline {
 

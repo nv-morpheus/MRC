@@ -19,7 +19,7 @@
 #include "pipelines/common_pipelines.hpp"
 
 #include "internal/pipeline/manager.hpp"
-#include "internal/pipeline/pipeline_definition.hpp"
+#include "internal/pipeline/pipeline_definition.hpp"  // IWYU pragma: keep
 #include "internal/pipeline/types.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/system/system.hpp"

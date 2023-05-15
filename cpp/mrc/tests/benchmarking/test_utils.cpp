@@ -27,6 +27,7 @@
 #include "mrc/benchmarking/util.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/pipeline/executor.hpp"
+#include "mrc/pipeline/pipeline.hpp"
 
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>

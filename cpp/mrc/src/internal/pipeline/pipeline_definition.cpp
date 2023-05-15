@@ -20,7 +20,8 @@
 #include "internal/segment/segment_definition.hpp"
 
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/pipeline/pipeline.hpp"
+#include "mrc/segment/egress_ports.hpp"
+#include "mrc/segment/ingress_ports.hpp"
 #include "mrc/segment/segment.hpp"
 #include "mrc/types.hpp"
 

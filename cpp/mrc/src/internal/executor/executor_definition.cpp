@@ -27,7 +27,6 @@
 
 #include "mrc/core/addresses.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/pipeline/pipeline.hpp"
 
 #include <glog/logging.h>
 

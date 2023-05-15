@@ -19,11 +19,10 @@
 
 #include "internal/executor/executor_definition.hpp"
 
-#include "mrc/engine/system/iresources.hpp"
 #include "mrc/options/options.hpp"
-#include "mrc/pipeline/pipeline.hpp"
 
 #include <memory>
+#include <utility>
 
 namespace mrc {
 

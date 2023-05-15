@@ -22,6 +22,7 @@
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/segment/builder_definition.hpp"
+#include "internal/segment/segment_definition.hpp"
 
 #include "mrc/core/addresses.hpp"
 #include "mrc/core/task_queue.hpp"

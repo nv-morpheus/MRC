@@ -19,10 +19,14 @@
 
 #include "mrc/core/addresses.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/segment/segment.hpp"
+#include "mrc/segment/egress_ports.hpp"
+#include "mrc/segment/ingress_ports.hpp"
 #include "mrc/types.hpp"
 
+#include <glog/logging.h>
+
 #include <cstdint>
+#include <ostream>
 #include <set>
 #include <utility>
 

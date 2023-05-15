@@ -22,10 +22,13 @@
 #include "mrc/types.hpp"
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
 namespace mrc::segment {
+struct EgressPortsBase;
+struct IngressPortsBase;
 
 class SegmentDefinition final : public ISegment
 {

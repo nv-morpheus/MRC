@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "mrc/utils/macros.hpp"
-
 #include <memory>
+
+#include "mrc/utils/macros.hpp"
 
 namespace mrc {
 class Options;
@@ -27,10 +27,6 @@ class Options;
 namespace mrc::pipeline {
 class IPipeline;
 }  // namespace mrc::pipeline
-
-namespace mrc::system {
-class IResources;
-}
 
 namespace mrc::pipeline {
 

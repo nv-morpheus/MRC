@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "internal/segment/segment_definition.hpp"
-
 #include "mrc/segment/builder.hpp"
 #include "mrc/types.hpp"
+
+#include <nlohmann/json.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -28,6 +28,9 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <tuple>
+#include <typeindex>
+#include <vector>
 
 namespace mrc::pipeline {
 class PipelineResources;
@@ -49,7 +52,7 @@ struct ObjectProperties;
 }  // namespace mrc::segment
 
 namespace mrc::segment {
-class Definition;
+class SegmentDefinition;
 
 class BuilderDefinition : public IBuilder
 {
