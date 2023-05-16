@@ -50,6 +50,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -257,7 +258,7 @@ TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
 
                 py::gil_scoped_acquire gil;
                 auto egress_test = builder.get_egress<pymrc::PyHolder>(source_segment_egress_ids[i]);
-                EXPECT_TRUE(source_segment_egress_ids[i] == egress_test->name());
+                EXPECT_TRUE(std::get<0>(builder.normalize_name(source_segment_egress_ids[i])) == egress_test->name());
                 EXPECT_TRUE(egress_test->is_sink());
                 builder.make_edge(src, egress_test);
             }
@@ -270,7 +271,7 @@ TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
             for (auto ingress_it : source_segment_egress_ids)
             {
                 auto ingress_test = builder.get_ingress<pymrc::PyHolder>(ingress_it);
-                EXPECT_TRUE(ingress_it == ingress_test->name());
+                EXPECT_TRUE(std::get<0>(builder.normalize_name(ingress_it)) == ingress_test->name());
                 EXPECT_TRUE(ingress_test->is_source());
             }
 

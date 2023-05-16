@@ -19,9 +19,6 @@
 
 #include "internal/pipeline/pipeline_definition.hpp"
 
-#include "mrc/segment/egress_ports.hpp"
-#include "mrc/segment/ingress_ports.hpp"
-
 #include <memory>
 
 namespace mrc {

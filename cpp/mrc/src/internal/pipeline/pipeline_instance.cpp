@@ -30,7 +30,6 @@
 #include "mrc/core/addresses.hpp"
 #include "mrc/core/task_queue.hpp"
 #include "mrc/manifold/interface.hpp"
-#include "mrc/segment/segment.hpp"
 #include "mrc/segment/utils.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/string_utils.hpp"

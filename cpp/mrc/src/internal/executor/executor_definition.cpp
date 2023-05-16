@@ -22,11 +22,9 @@
 #include "internal/pipeline/port_graph.hpp"
 #include "internal/pipeline/types.hpp"
 #include "internal/system/system.hpp"
-#include "internal/system/threading_resources.hpp"
 
 #include "mrc/core/addresses.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/pipeline/pipeline.hpp"
 
 #include <glog/logging.h>
 
@@ -75,8 +73,8 @@ static bool valid_pipeline(const pipeline::PipelineDefinition& pipeline)
     return valid;
 }
 
-ExecutorDefinition::ExecutorDefinition(std::shared_ptr<Options> options) :
-  SystemProvider(system::make_system(std::move(options)))
+ExecutorDefinition::ExecutorDefinition(std::unique_ptr<system::SystemDefinition> system) :
+  SystemProvider(std::move(system))
 {}
 
 // ExecutorDefinition::ExecutorDefinition(std::unique_ptr<system::ThreadingResources> resources) :

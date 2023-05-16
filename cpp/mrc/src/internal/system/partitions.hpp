@@ -32,14 +32,14 @@ enum class PlacementStrategy;
 
 namespace mrc::system {
 
-class System;
+class SystemDefinition;
 class Topology;
 
 class Partitions
 {
   public:
     Partitions(const Topology& topology, const Options& options);
-    Partitions(const System& system);
+    Partitions(const SystemDefinition& system);
 
     // The host partition which spans the entire system
     const HostPartition& sys_host_partition() const;

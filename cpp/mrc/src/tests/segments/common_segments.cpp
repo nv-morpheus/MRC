@@ -20,9 +20,9 @@
 #include "mrc/channel/status.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
+#include "mrc/pipeline/segment.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
-#include "mrc/segment/segment.hpp"
 
 #include <rxcpp/rx.hpp>
 

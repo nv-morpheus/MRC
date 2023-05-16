@@ -65,7 +65,7 @@ using namespace mrc::memory::literals;
 static auto make_resources(std::function<void(Options& options)> options_lambda = [](Options& options) {})
 {
     auto resources = std::make_unique<resources::SystemResources>(
-        system::SystemProvider(make_system([&](Options& options) {
+        system::SystemProvider(tests::make_system([&](Options& options) {
             options.topology().user_cpuset("0-3");
             options.topology().restrict_gpus(true);
             options.placement().resources_strategy(PlacementResources::Dedicated);

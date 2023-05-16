@@ -37,15 +37,10 @@
 
 namespace mrc::system {
 class FiberTaskQueue;
-class IThreadingResources;
 
-class ThreadingResources final : public SystemProvider  // TODO(MDD): Rename to ThreadResources
+class ThreadingResources final : public SystemProvider 
 {
   public:
-    static std::unique_ptr<ThreadingResources> unwrap(IThreadingResources& resources);
-    static std::unique_ptr<ThreadingResources> create(const SystemProvider& system);
-    static std::unique_ptr<ThreadingResources> create(std::shared_ptr<const SystemProvider> system);
-
     ThreadingResources(SystemProvider system);
 
     template <typename CallableT>

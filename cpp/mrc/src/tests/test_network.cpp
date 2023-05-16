@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#include "tests/common.hpp"
+
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/control_plane/client/instance.hpp"
@@ -61,7 +63,6 @@
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
-#include <functional>
 #include <map>
 #include <memory>
 #include <optional>
@@ -73,17 +74,6 @@
 
 using namespace mrc;
 using namespace mrc::memory::literals;
-
-static std::shared_ptr<system::System> make_system(std::function<void(Options&)> updater = nullptr)
-{
-    auto options = std::make_shared<Options>();
-    if (updater)
-    {
-        updater(*options);
-    }
-
-    return system::make_system(std::move(options));
-}
 
 class TestNetwork : public ::testing::Test
 {};
@@ -107,7 +97,7 @@ TEST_F(TestNetwork, ResourceManager)
     // will test if cudaSetDevice is being properly called by the network services
     // since all network services for potentially multiple devices are colocated on a single thread
     auto resources = std::make_unique<resources::SystemResources>(
-        system::SystemProvider(make_system([](Options& options) {
+        system::SystemProvider(tests::make_system([](Options& options) {
             options.enable_server(true);
             options.architect_url("localhost:13337");
             options.placement().resources_strategy(PlacementResources::Dedicated);
@@ -167,7 +157,7 @@ TEST_F(TestNetwork, CommsSendRecv)
     // will test if cudaSetDevice is being properly called by the network services
     // since all network services for potentially multiple devices are colocated on a single thread
     auto resources = std::make_unique<resources::SystemResources>(
-        system::SystemProvider(make_system([](Options& options) {
+        system::SystemProvider(tests::make_system([](Options& options) {
             options.enable_server(true);
             options.architect_url("localhost:13337");
             options.placement().resources_strategy(PlacementResources::Dedicated);
@@ -229,7 +219,7 @@ TEST_F(TestNetwork, CommsGet)
     // will test if cudaSetDevice is being properly called by the network services
     // since all network services for potentially multiple devices are colocated on a single thread
     auto resources = std::make_unique<resources::SystemResources>(
-        system::SystemProvider(make_system([](Options& options) {
+        system::SystemProvider(tests::make_system([](Options& options) {
             options.enable_server(true);
             options.architect_url("localhost:13337");
             options.placement().resources_strategy(PlacementResources::Dedicated);
@@ -300,7 +290,7 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
     // will test if cudaSetDevice is being properly called by the network services
     // since all network services for potentially multiple devices are colocated on a single thread
     auto resources = std::make_unique<resources::SystemResources>(
-        system::SystemProvider(make_system([](Options& options) {
+        system::SystemProvider(tests::make_system([](Options& options) {
             options.enable_server(true);
             options.architect_url("localhost:13337");
             options.placement().resources_strategy(PlacementResources::Dedicated);

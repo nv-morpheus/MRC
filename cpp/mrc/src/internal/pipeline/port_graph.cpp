@@ -18,8 +18,7 @@
 #include "internal/pipeline/port_graph.hpp"
 
 #include "internal/pipeline/pipeline_definition.hpp"
-
-#include "mrc/segment/segment.hpp"
+#include "internal/segment/segment_definition.hpp"
 
 #include <memory>
 #include <vector>

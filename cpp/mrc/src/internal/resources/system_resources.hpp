@@ -51,7 +51,7 @@ class SystemResources final : public system::SystemProvider, public virtual runn
 {
   public:
     SystemResources(const system::SystemProvider& system);
-    SystemResources(std::unique_ptr<system::ThreadingResources> threading_resources);
+
     ~SystemResources() override;
 
     static SystemResources& get_resources();

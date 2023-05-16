@@ -18,10 +18,10 @@
 #pragma once
 
 #include "internal/runtime/partition_runtime.hpp"
-#include "internal/segment/segment_definition.hpp"
-
 #include "mrc/segment/builder.hpp"
 #include "mrc/types.hpp"
+
+#include <nlohmann/json.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -29,6 +29,9 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <tuple>
+#include <typeindex>
+#include <vector>
 
 namespace mrc::pipeline {
 class PipelineResources;
@@ -36,7 +39,8 @@ class PipelineResources;
 
 namespace mrc::modules {
 class SegmentModule;
-}
+class PersistentModule;
+}  // namespace mrc::modules
 
 namespace mrc::runnable {
 struct Launchable;
@@ -49,7 +53,7 @@ struct ObjectProperties;
 }  // namespace mrc::segment
 
 namespace mrc::segment {
-class Definition;
+class SegmentDefinition;
 
 class BuilderDefinition : public IBuilder
 {
@@ -60,7 +64,10 @@ class BuilderDefinition : public IBuilder
 
     static std::shared_ptr<BuilderDefinition> unwrap(std::shared_ptr<IBuilder> object);
 
-    std::string prefix_name(const std::string& name) const override;
+    const std::string& name() const override;
+
+    std::tuple<std::string, std::string> normalize_name(const std::string& name,
+                                                        bool ignore_namespace = false) const override;
 
     std::shared_ptr<ObjectProperties> get_ingress(std::string name, std::type_index type_index) override;
 
@@ -79,7 +86,7 @@ class BuilderDefinition : public IBuilder
      * @param input_name Unique name of the input port
      * @param object shared pointer to type erased Object associated with 'input_name' on this module instance.
      */
-    void register_module_input(std::string input_name, std::shared_ptr<segment::ObjectProperties> object) override;
+    void register_module_input(std::string input_name, std::shared_ptr<ObjectProperties> object) override;
 
     /**
      * Get the json configuration for the current module under configuration.
@@ -94,7 +101,7 @@ class BuilderDefinition : public IBuilder
      * @param output_name Unique name of the output port
      * @param object shared pointer to type erased Object associated with 'output_name' on this module instance.
      */
-    void register_module_output(std::string output_name, std::shared_ptr<segment::ObjectProperties> object) override;
+    void register_module_output(std::string output_name, std::shared_ptr<ObjectProperties> object) override;
 
     /**
      * Load an existing, registered module, initialize it, and return it to the caller
@@ -110,25 +117,25 @@ class BuilderDefinition : public IBuilder
                                                                            nlohmann::json config = {}) override;
 
     const SegmentDefinition& definition() const;
-    const std::string& name() const override;
 
     void initialize();
 
-    const std::map<std::string, std::shared_ptr<mrc::runnable::Launchable>>& nodes() const;
-    const std::map<std::string, std::shared_ptr<mrc::segment::EgressPortBase>>& egress_ports() const;
-    const std::map<std::string, std::shared_ptr<mrc::segment::IngressPortBase>>& ingress_ports() const;
+    const std::map<std::string, std::shared_ptr<runnable::Launchable>>& nodes() const;
+    const std::map<std::string, std::shared_ptr<EgressPortBase>>& egress_ports() const;
+    const std::map<std::string, std::shared_ptr<IngressPortBase>>& ingress_ports() const;
 
   private:
-    bool has_object(const std::string& name) const override;
+    // Overriding methods
     ObjectProperties& find_object(const std::string& name) override;
     void add_object(const std::string& name, std::shared_ptr<ObjectProperties> object) override;
-    void add_module(const std::string& name, std::shared_ptr<mrc::modules::SegmentModule> module) override;
     std::shared_ptr<IngressPortBase> get_ingress_base(const std::string& name) override;
     std::shared_ptr<EgressPortBase> get_egress_base(const std::string& name) override;
     std::function<void(std::int64_t)> make_throughput_counter(const std::string& name) override;
 
-    void ns_push(std::shared_ptr<mrc::modules::SegmentModule> smodule);
+    // Local methods
+    bool has_object(const std::string& name) const;
 
+    void ns_push(std::shared_ptr<mrc::modules::SegmentModule> smodule);
     void ns_pop();
 
     // Resource info
@@ -144,17 +151,17 @@ class BuilderDefinition : public IBuilder
     std::vector<std::shared_ptr<mrc::modules::SegmentModule>> m_module_stack{};
 
     // all objects - ports, runnables, etc.
-    std::map<std::string, std::shared_ptr<::mrc::segment::ObjectProperties>> m_objects;
+    std::map<std::string, std::shared_ptr<ObjectProperties>> m_objects;
 
-    // only modules
-    std::map<std::string, std::shared_ptr<::mrc::modules::SegmentModule>> m_modules;
+    // Saved modules to guarantee lifetime
+    std::vector<std::shared_ptr<modules::PersistentModule>> m_modules;
 
     // only runnables
     std::map<std::string, std::shared_ptr<mrc::runnable::Launchable>> m_nodes;
 
     // ingress/egress - these are also nodes/objects
-    std::map<std::string, std::shared_ptr<::mrc::segment::IngressPortBase>> m_ingress_ports;
-    std::map<std::string, std::shared_ptr<::mrc::segment::EgressPortBase>> m_egress_ports;
+    std::map<std::string, std::shared_ptr<IngressPortBase>> m_ingress_ports;
+    std::map<std::string, std::shared_ptr<EgressPortBase>> m_egress_ports;
 };
 
 }  // namespace mrc::segment

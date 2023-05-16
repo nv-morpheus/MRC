@@ -59,20 +59,16 @@ thread_local SystemResources* SystemResources::m_thread_resources{nullptr};
 thread_local PartitionResources* SystemResources::m_thread_partition{nullptr};
 
 SystemResources::SystemResources(const system::SystemProvider& system) :
-  SystemResources(std::make_unique<system::ThreadingResources>(system))
-{}
-
-SystemResources::SystemResources(std::unique_ptr<system::ThreadingResources> resources) :
-  SystemProvider(*resources),
-  m_threading_resources(std::move(resources))
+  SystemProvider(system),
+  m_threading(std::make_unique<system::ThreadingResources>(system))
 {
     // Create the system-wide runnable first
     m_sys_runnable = std::make_unique<runnable::RunnableResources>(*m_threading_resources,
                                                                    this->system().partitions().sys_host_partition());
 
-    const auto& partitions      = system().partitions().flattened();
-    const auto& host_partitions = system().partitions().host_partitions();
-    const bool network_enabled  = system().options().enable_server();
+    const auto& partitions      = this->system().partitions().flattened();
+    const auto& host_partitions = this->system().partitions().host_partitions();
+    const bool network_enabled  = this->system().options().enable_server();
 
     // // Initialization process:
 
@@ -138,7 +134,7 @@ SystemResources::SystemResources(std::unique_ptr<system::ThreadingResources> res
             VLOG(1) << "building ucx resources for partition " << base.partition_id();
             auto network_task_queue_cpuset = base.partition().host().engine_factory_cpu_sets().fiber_cpu_sets.at(
                 "mrc_network");
-            auto& network_fiber_queue = m_threading_resources->get_task_queue(network_task_queue_cpuset.first());
+            auto& network_fiber_queue = m_system->get_task_queue(network_task_queue_cpuset.first());
             std::optional<ucx::UcxResources> ucx;
             ucx.emplace(base, network_fiber_queue);
             m_ucx.push_back(std::move(ucx));
@@ -235,7 +231,7 @@ SystemResources::SystemResources(std::unique_ptr<system::ThreadingResources> res
             partition.partition().host().cpu_set(),
             [this, &partition] {
                 m_thread_resources = this;
-                if (system().partitions().device_to_host_strategy() == PlacementResources::Dedicated)
+                if (this->system().partitions().device_to_host_strategy() == PlacementResources::Dedicated)
                 {
                     m_thread_partition = &partition;
                 }

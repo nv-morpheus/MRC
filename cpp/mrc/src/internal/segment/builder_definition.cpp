@@ -25,21 +25,22 @@
 #include "mrc/metrics/counter.hpp"
 #include "mrc/metrics/registry.hpp"
 #include "mrc/modules/module_registry.hpp"
-#include "mrc/modules/properties/persistent.hpp"
+#include "mrc/modules/properties/persistent.hpp"  // IWYU pragma: keep
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/port_registry.hpp"
-#include "mrc/runnable/launchable.hpp"
-#include "mrc/segment/egress_port.hpp"  // IWYU pragma: keep
-#include "mrc/segment/forward.hpp"
+#include "mrc/segment/egress_port.hpp"   // IWYU pragma: keep
 #include "mrc/segment/ingress_port.hpp"  // IWYU pragma: keep
 #include "mrc/segment/initializers.hpp"
+#include "mrc/segment/object.hpp"
 #include "mrc/types.hpp"
 
 #include <glog/logging.h>
 
 #include <exception>
 #include <memory>
+#include <numeric>
 #include <ostream>
+#include <stdexcept>
 #include <utility>
 
 namespace {
@@ -52,6 +53,22 @@ std::string accum_merge(std::string lhs, std::string rhs)
     }
 
     return std::move(lhs) + "/" + std::move(rhs);
+}
+
+/**
+ * @brief Checks for invalid characters in a name. Throws an exception if invalid characters are found.
+ *
+ * @param name The name to check
+ */
+void validate_name(const std::string& name)
+{
+    auto found_bad_characters = name.find_first_of("/");
+
+    if (found_bad_characters != std::string::npos)
+    {
+        throw mrc::exceptions::MrcRuntimeError("Invalid name `" + name +
+                                               "'. Cannot contain any of these characters: '/'");
+    }
 }
 
 }  // namespace
@@ -76,11 +93,34 @@ std::shared_ptr<BuilderDefinition> BuilderDefinition::unwrap(std::shared_ptr<IBu
     return full_object;
 }
 
-std::string BuilderDefinition::prefix_name(const std::string& name) const
+const std::string& BuilderDefinition::name() const
 {
-    auto ns_name = m_namespace_prefix.empty() ? name : m_namespace_prefix + "/" + name;
+    return m_definition->name();
+}
 
-    return this->name() + "/" + ns_name;
+std::tuple<std::string, std::string> BuilderDefinition::normalize_name(const std::string& name,
+                                                                       bool ignore_namespace) const
+{
+    // Prefix all nodes with `/<SegmentName>/`
+    auto global_prefix = "/" + this->name() + "/";
+
+    // Check and see if the name starts with "/" which means its global
+    bool is_global = name.starts_with(global_prefix);
+
+    if (is_global)
+    {
+        // Local is everything after the global prefix
+        auto local_name = name.substr(global_prefix.length());
+
+        return std::make_tuple(name, local_name);
+    }
+
+    // Otherwise build up the local name from any module prefix
+    auto local_name = (ignore_namespace || m_namespace_prefix.empty()) ? name : m_namespace_prefix + "/" + name;
+
+    auto global_name = global_prefix + local_name;
+
+    return std::make_tuple(global_name, local_name);
 }
 
 std::shared_ptr<ObjectProperties> BuilderDefinition::get_ingress(std::string name, std::type_index type_index)
@@ -129,15 +169,19 @@ void BuilderDefinition::init_module(std::shared_ptr<mrc::modules::SegmentModule>
     this->ns_pop();
 
     // TODO(Devin): Maybe a better way to do this with compile time type ledger.
-    if (std::dynamic_pointer_cast<modules::PersistentModule>(smodule) != nullptr)
+    if (auto persist = std::dynamic_pointer_cast<modules::PersistentModule>(smodule))
     {
         VLOG(2) << "Registering persistent module -> '" << smodule->component_prefix() << "'";
-        this->add_module(m_namespace_prefix, smodule);
+
+        // Just save to a vector to keep it alive
+        m_modules.push_back(persist);
     }
 }
 
 void BuilderDefinition::register_module_input(std::string input_name, std::shared_ptr<segment::ObjectProperties> object)
 {
+    validate_name(input_name);
+
     if (m_module_stack.empty())
     {
         std::stringstream sstream;
@@ -172,6 +216,8 @@ void BuilderDefinition::register_module_input(std::string input_name, std::share
 [[maybe_unused]] void BuilderDefinition::register_module_output(std::string output_name,
                                                                 std::shared_ptr<segment::ObjectProperties> object)
 {
+    validate_name(output_name);
+
     if (m_module_stack.empty())
     {
         std::stringstream sstream;
@@ -206,11 +252,6 @@ const SegmentDefinition& BuilderDefinition::definition() const
     return *m_definition;
 }
 
-const std::string& BuilderDefinition::name() const
-{
-    return m_definition->name();
-}
-
 void BuilderDefinition::initialize()
 {
     auto rank = std::get<1>(segment_address_decode(m_address));
@@ -219,16 +260,16 @@ void BuilderDefinition::initialize()
     for (const auto& [name, initializer] : this->definition().ingress_initializers())
     {
         DVLOG(10) << "constructing ingress_port: " << name;
-        m_ingress_ports[name] = initializer(m_address);
-        m_objects[name]       = m_ingress_ports[name];
+        auto port = initializer(m_address);
+        this->add_object(name, port);
     }
 
     // construct egress ports
     for (const auto& [name, initializer] : this->definition().egress_initializers())
     {
         DVLOG(10) << "constructing egress_port: " << name;
-        m_egress_ports[name] = initializer(m_address);
-        m_objects[name]      = m_egress_ports[name];
+        auto port = initializer(m_address);
+        this->add_object(name, port);
     }
 
     // Call the segment initializer
@@ -263,13 +304,17 @@ const std::map<std::string, std::shared_ptr<::mrc::segment::IngressPortBase>>& B
 
 bool BuilderDefinition::has_object(const std::string& name) const
 {
-    auto search = m_objects.find(name);
+    auto [global_name, local_name] = this->normalize_name(name);
+
+    auto search = m_objects.find(local_name);
     return bool(search != m_objects.end());
 }
 
 mrc::segment::ObjectProperties& BuilderDefinition::find_object(const std::string& name)
 {
-    auto search = m_objects.find(name);
+    auto [global_name, local_name] = this->normalize_name(name);
+
+    auto search = m_objects.find(local_name);
     if (search == m_objects.end())
     {
         LOG(ERROR) << "Unable to find segment object with name: " << name;
@@ -280,12 +325,21 @@ mrc::segment::ObjectProperties& BuilderDefinition::find_object(const std::string
 
 void BuilderDefinition::add_object(const std::string& name, std::shared_ptr<::mrc::segment::ObjectProperties> object)
 {
+    // First, ensure that the name is properly formatted
+    validate_name(name);
+
     if (has_object(name))
     {
         LOG(ERROR) << "A Object named " << name << " is already registered";
         throw exceptions::MrcRuntimeError("duplicate name detected - name owned by a node");
     }
-    m_objects[name] = object;
+
+    auto [global_name, local_name] = this->normalize_name(name);
+
+    m_objects[local_name] = object;
+
+    // Now set the name on the object
+    object->set_name(global_name);
 
     if (object->is_runnable())
     {
@@ -294,23 +348,29 @@ void BuilderDefinition::add_object(const std::string& name, std::shared_ptr<::mr
         CHECK(launchable) << "Invalid conversion. Object returned is_runnable() == true, but was not of type "
                              "Launchable";
 
-        m_nodes[name] = launchable;
+        m_nodes[local_name] = launchable;
     }
-}
 
-void BuilderDefinition::add_module(const std::string& name, std::shared_ptr<mrc::modules::SegmentModule> smodule)
-{
-    if (has_object(name))
+    // Add to ingress ports list if it is the right type
+    if (auto ingress_port = std::dynamic_pointer_cast<IngressPortBase>(object))
     {
-        LOG(ERROR) << "A Module named " << name << " is already registered";
-        throw exceptions::MrcRuntimeError("duplicate name detected - name owned by a module");
+        // Save by the original name
+        m_ingress_ports[local_name] = ingress_port;
     }
-    m_modules[name] = std::move(smodule);
+
+    // Add to egress ports list if it is the right type
+    if (auto egress_port = std::dynamic_pointer_cast<EgressPortBase>(object))
+    {
+        // Save by the original name
+        m_egress_ports[local_name] = egress_port;
+    }
 }
 
 std::shared_ptr<::mrc::segment::IngressPortBase> BuilderDefinition::get_ingress_base(const std::string& name)
 {
-    auto search = m_ingress_ports.find(name);
+    auto [global_name, local_name] = this->normalize_name(name, true);
+
+    auto search = m_ingress_ports.find(local_name);
     if (search != m_ingress_ports.end())
     {
         return search->second;
@@ -320,7 +380,9 @@ std::shared_ptr<::mrc::segment::IngressPortBase> BuilderDefinition::get_ingress_
 
 std::shared_ptr<::mrc::segment::EgressPortBase> BuilderDefinition::get_egress_base(const std::string& name)
 {
-    auto search = m_egress_ports.find(name);
+    auto [global_name, local_name] = this->normalize_name(name, true);
+
+    auto search = m_egress_ports.find(local_name);
     if (search != m_egress_ports.end())
     {
         return search->second;
@@ -330,7 +392,9 @@ std::shared_ptr<::mrc::segment::EgressPortBase> BuilderDefinition::get_egress_ba
 
 std::function<void(std::int64_t)> BuilderDefinition::make_throughput_counter(const std::string& name)
 {
-    auto counter = m_runtime.metrics_registry().make_throughput_counter(name);
+    auto [global_name, local_name] = this->normalize_name(name);
+
+    auto counter = m_runtime.metrics_registry().make_throughput_counter(global_name);
     return [counter](std::int64_t ticks) mutable {
         counter.increment(ticks);
     };

@@ -17,13 +17,13 @@
 
 #pragma once
 
-#include "mrc/core/addresses.hpp"
-#include "mrc/segment/builder.hpp"
-#include "mrc/segment/egress_ports.hpp"
-#include "mrc/segment/forward.hpp"
-#include "mrc/segment/ingress_ports.hpp"
 #include "mrc/segment/initializers.hpp"
+#include "mrc/types.hpp"
 #include "mrc/utils/macros.hpp"
+
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace mrc::segment {
 
@@ -33,7 +33,6 @@ struct IngressPortsBase;
 class ISegment
 {
   public:
-    ISegment()          = default;
     virtual ~ISegment() = default;
 
     DELETE_COPYABILITY(ISegment);
@@ -42,6 +41,9 @@ class ISegment
     virtual const std::string& name() const                     = 0;
     virtual std::vector<std::string> ingress_port_names() const = 0;
     virtual std::vector<std::string> egress_port_names() const  = 0;
+
+  protected:
+    ISegment() = default;
 };
 }  // namespace mrc::segment
 

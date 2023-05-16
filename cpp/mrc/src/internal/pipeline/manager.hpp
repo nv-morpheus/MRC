@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "internal/pipeline/pipeline_definition.hpp"
 #include "internal/pipeline/types.hpp"
 #include "internal/runtime/runtime.hpp"
 #include "internal/service.hpp"

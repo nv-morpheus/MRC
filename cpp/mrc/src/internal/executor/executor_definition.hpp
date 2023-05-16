@@ -29,9 +29,10 @@
 
 #include <memory>
 
-namespace mrc {
-class Options;
-}  // namespace mrc
+namespace mrc::system {
+class SystemDefinition;
+}  // namespace mrc::system
+
 namespace mrc::pipeline {
 class IPipeline;
 class PipelineManager;
@@ -39,9 +40,6 @@ class PipelineManager;
 namespace mrc::resources {
 class SystemResources;
 }  // namespace mrc::resources
-namespace mrc::system {
-class ThreadingResources;
-}  // namespace mrc::system
 
 namespace mrc::executor {
 
@@ -53,8 +51,7 @@ namespace mrc::executor {
 class ExecutorDefinition : public pipeline::IExecutor, public Service, public system::SystemProvider
 {
   public:
-    ExecutorDefinition(std::shared_ptr<Options> options);
-    // Executor(std::unique_ptr<system::Resources> resources);
+    ExecutorDefinition(std::unique_ptr<system::SystemDefinition> system);
     ~ExecutorDefinition() override;
 
     static std::shared_ptr<ExecutorDefinition> unwrap(std::shared_ptr<IExecutor> object);
@@ -82,9 +79,5 @@ class ExecutorDefinition : public pipeline::IExecutor, public Service, public sy
     Mutex m_pipelines_mutex;
     CondV m_pipelines_cv;
 };
-
-// std::unique_ptr<Executor> make_executor(std::shared_ptr<Options> options);
-
-// std::unique_ptr<Executor> make_executor(std::unique_ptr<system::ThreadingResources> resources);
 
 }  // namespace mrc::executor

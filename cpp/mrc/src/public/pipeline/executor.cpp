@@ -18,20 +18,19 @@
 #include "mrc/pipeline/executor.hpp"
 
 #include "internal/executor/executor_definition.hpp"
+#include "internal/system/system.hpp"
 
-#include "mrc/engine/system/iresources.hpp"
 #include "mrc/options/options.hpp"
-#include "mrc/pipeline/pipeline.hpp"
+#include "mrc/pipeline/system.hpp"
 
 #include <memory>
+#include <utility>
 
 namespace mrc {
 
 Executor::Executor() : m_impl(make_executor(std::make_shared<Options>())) {}
 
 Executor::Executor(std::shared_ptr<Options> options) : m_impl(make_executor(options)) {}
-
-// Executor::Executor(std::unique_ptr<system::IResources> resources) : m_impl(make_executor(std::move(resources))) {}
 
 Executor::~Executor() = default;
 
@@ -57,7 +56,19 @@ void Executor::join()
 
 std::unique_ptr<pipeline::IExecutor> make_executor(std::shared_ptr<Options> options)
 {
-    return std::make_unique<executor::ExecutorDefinition>(std::move(options));
+    // Convert options to a system object first
+    auto system = mrc::make_system(std::move(options));
+
+    auto full_system = system::SystemDefinition::unwrap(std::move(system));
+
+    return std::make_unique<executor::ExecutorDefinition>(std::move(full_system));
+}
+
+std::unique_ptr<pipeline::IExecutor> make_executor(std::unique_ptr<pipeline::ISystem> system)
+{
+    auto full_system = system::SystemDefinition::unwrap(std::move(system));
+
+    return std::make_unique<executor::ExecutorDefinition>(std::move(full_system));
 }
 
 }  // namespace mrc

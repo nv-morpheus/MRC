@@ -35,6 +35,9 @@ class Options
   public:
     Options();
 
+    Options(const Options&);
+    Options& operator=(const Options&);
+
     EngineGroups& engine_factories();
     FiberPoolOptions& fiber_pool();
     PlacementOptions& placement();

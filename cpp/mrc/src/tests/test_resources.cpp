@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 
-#include "internal/resources/forward.hpp"
+#include "tests/common.hpp"
+
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/system_resources.hpp"
 #include "internal/runnable/runnable_resources.hpp"
@@ -30,9 +31,7 @@
 #include <boost/fiber/future/future.hpp>
 #include <gtest/gtest.h>
 
-#include <functional>
 #include <memory>
-#include <utility>
 
 using namespace mrc;
 
@@ -40,24 +39,17 @@ using namespace mrc;
 // IWYU pragma: no_include <boost/cstdint.hpp>
 
 class TestResources : public ::testing::Test
-{
-  protected:
-    static std::shared_ptr<system::System> make_system(std::function<void(Options&)> updater = nullptr)
-    {
-        auto options = std::make_shared<Options>();
-        if (updater)
-        {
-            updater(*options);
-        }
+{};
 
-        return system::make_system(std::move(options));
-    }
-};
+TEST_F(TestResources, Lifetime)
+{
+    auto resources = tests::make_threading_resources();
+}
 
 TEST_F(TestResources, GetRuntime)
 {
     auto resources = std::make_unique<resources::SystemResources>(
-        system::SystemProvider(make_system([](Options& options) {
+        system::SystemProvider(tests::make_system([](Options& options) {
             // todo(#114) - propose: this is the default and only option
             options.placement().resources_strategy(PlacementResources::Dedicated);
         })));
@@ -79,7 +71,7 @@ TEST_F(TestResources, GetRuntime)
 TEST_F(TestResources, GetRuntimeShared)
 {
     auto resources = std::make_unique<resources::SystemResources>(
-        system::SystemProvider(make_system([](Options& options) {
+        system::SystemProvider(tests::make_system([](Options& options) {
             // todo(#114) - propose: remove this option entirely
             options.placement().resources_strategy(PlacementResources::Shared);
         })));

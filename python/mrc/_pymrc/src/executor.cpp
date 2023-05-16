@@ -18,16 +18,17 @@
 #include "pymrc/executor.hpp"  // IWYU pragma: associated
 
 #include "pymrc/pipeline.hpp"
-#include "pymrc/system.hpp"
 
 #include "mrc/pipeline/executor.hpp"
 #include "mrc/pipeline/pipeline.hpp"  // IWYU pragma: keep
+#include "mrc/pipeline/system.hpp"
 #include "mrc/types.hpp"
 
 #include <boost/fiber/future/async.hpp>
 #include <boost/fiber/future/future.hpp>
 #include <boost/fiber/future/future_status.hpp>
 #include <glog/logging.h>
+#include <pybind11/cast.h>
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
@@ -35,6 +36,7 @@
 #include <chrono>
 #include <csignal>
 #include <exception>
+#include <functional>
 #include <future>
 #include <memory>
 #include <mutex>
@@ -49,6 +51,92 @@
 namespace mrc::pymrc {
 
 namespace py = pybind11;
+
+std::function<void()> create_gil_initializer()
+{
+    bool has_pydevd_trace = false;
+
+    // We check if there is a debugger by looking at sys.gettrace() and seeing if the function contains 'pydevd'
+    // somewhere in the module name. Its important to get this right because calling `debugpy.debug_this_thread()`
+    // will fail if there is no debugger and can dramatically alter performanc
+    auto sys = pybind11::module_::import("sys");
+
+    auto trace_func = sys.attr("gettrace")();
+
+    if (!trace_func.is_none())
+    {
+        // Convert it to a string to quickly get its module and name
+        auto trace_func_str = pybind11::str(trace_func);
+
+        if (!trace_func_str.attr("find")("pydevd").equal(pybind11::int_(-1)))
+        {
+            VLOG(10) << "Found pydevd trace function. Will attempt to enable debugging for MRC threads.";
+            has_pydevd_trace = true;
+        }
+    }
+
+    return [has_pydevd_trace] {
+        pybind11::gil_scoped_acquire gil;
+
+        // Increment the ref once to prevent creating and destroying the thread state constantly
+        gil.inc_ref();
+
+        try
+        {
+            // Try to load debugpy only if we found a trace function
+            if (has_pydevd_trace)
+            {
+                auto debugpy = pybind11::module_::import("debugpy");
+
+                auto debug_this_thread = debugpy.attr("debug_this_thread");
+
+                debug_this_thread();
+
+                VLOG(10) << "Debugging enabled from mrc threads";
+            }
+        } catch (pybind11::error_already_set& err)
+        {
+            if (err.matches(PyExc_ImportError))
+            {
+                VLOG(10) << "Debugging disabled. Breakpoints will not be hit. Could import error on debugpy";
+                // Fail silently
+            }
+            else
+            {
+                VLOG(10) << "Debugging disabled. Breakpoints will not be hit. Unknown error: " << err.what();
+                // Rethrow everything else
+                throw;
+            }
+        }
+    };
+}
+
+std::function<void()> create_gil_finalizer()
+{
+    bool python_finalizing = _Py_IsFinalizing() != 0;
+
+    if (python_finalizing)
+    {
+        // If python if finalizing, dont worry about thread state
+        return nullptr;
+    }
+
+    // Ensure we dont have the GIL here otherwise this deadlocks.
+    return [] {
+        bool python_finalizing = _Py_IsFinalizing() != 0;
+
+        if (python_finalizing)
+        {
+            // If python if finalizing, dont worry about thread state
+            return;
+        }
+
+        pybind11::gil_scoped_acquire gil;
+
+        // Decrement the ref to destroy the GIL states
+        gil.dec_ref();
+    };
+}
 
 class StopIteration : public py::stop_iteration
 {
@@ -135,8 +223,16 @@ Executor::Executor(std::shared_ptr<Options> options)
     auto result = pthread_sigmask(SIG_BLOCK, &sigset, &pysigset);
 
     // Now create the executor
+    auto system = mrc::make_system(options);
 
-    m_exec         = mrc::make_executor(options);
+    // Now add the gil initializers and finalizers
+    system->add_thread_initializer(create_gil_initializer());
+    system->add_thread_finalizer(create_gil_finalizer());
+
+    // Must release the GIL while we create the executor
+    pybind11::gil_scoped_release nogil;
+
+    m_exec = mrc::make_executor(std::move(system));
 }
 
 Executor::~Executor()
@@ -161,7 +257,7 @@ Executor::~Executor()
 
 void Executor::register_pipeline(pymrc::Pipeline& pipeline)
 {
-    m_exec->register_pipeline(pipeline.swap());
+    m_exec->register_pipeline(pipeline.get_wrapped());
 }
 
 void Executor::start()

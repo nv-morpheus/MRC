@@ -21,7 +21,7 @@
 
 namespace mrc::system {
 
-class System;
+class SystemDefinition;
 
 /**
  * @brief SystemProvider is a base class designed provide access to the System object.
@@ -36,13 +36,13 @@ class System;
 class SystemProvider
 {
   public:
-    SystemProvider(std::shared_ptr<const System> system);
+    SystemProvider(std::shared_ptr<const SystemDefinition> system);
     virtual ~SystemProvider() = default;
 
-    const System& system() const;
+    const SystemDefinition& system() const;
 
   private:
-    std::shared_ptr<const System> m_system;
+    std::shared_ptr<const SystemDefinition> m_system;
 };
 
 }  // namespace mrc::system

@@ -17,15 +17,18 @@
 
 #pragma once
 
+#include "mrc/pipeline/segment.hpp"
 #include "mrc/segment/initializers.hpp"
-#include "mrc/segment/segment.hpp"
 #include "mrc/types.hpp"
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
 namespace mrc::segment {
+struct EgressPortsBase;
+struct IngressPortsBase;
 
 class SegmentDefinition final : public ISegment
 {

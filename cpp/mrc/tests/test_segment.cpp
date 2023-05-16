@@ -28,11 +28,11 @@
 #include "mrc/options/topology.hpp"
 #include "mrc/pipeline/executor.hpp"
 #include "mrc/pipeline/pipeline.hpp"
+#include "mrc/pipeline/segment.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/ingress_port.hpp"
 #include "mrc/segment/object.hpp"
 #include "mrc/segment/ports.hpp"
-#include "mrc/segment/segment.hpp"
 #include "mrc/types.hpp"
 
 #include <glog/logging.h>
@@ -1060,20 +1060,20 @@ TEST_F(TestSegment, SegmentTestRxcppHigherLevelNodes)
     nlohmann::json j = TraceStatistics::aggregate();
     auto _j          = j["aggregations"]["components"]["metrics"];
     // std::cerr << j.dump(2);
-    EXPECT_EQ(_j.contains("src"), true);
-    auto src_json = j["src"];
+    EXPECT_EQ(_j.contains("/segment_stats_test/src"), true);
+    auto src_json = j["/segment_stats_test/src"];
     // stat_check_helper(src_json, 0, 0, iterations, iterations);
 
-    EXPECT_EQ(_j.contains("internal_1"), true);
-    auto i1_json = j["internal_1"];
+    EXPECT_EQ(_j.contains("/segment_stats_test/internal_1"), true);
+    auto i1_json = j["/segment_stats_test/internal_1"];
     // stat_check_helper(i1_json, iterations, iterations, iterations, iterations);
 
-    EXPECT_EQ(_j.contains("internal_2"), true);
-    auto i2_json = j["internal_1"];
+    EXPECT_EQ(_j.contains("/segment_stats_test/internal_2"), true);
+    auto i2_json = j["/segment_stats_test/internal_1"];
     // stat_check_helper(i2_json, iterations, iterations, iterations, iterations);
 
-    EXPECT_EQ(_j.contains("sink"), true);
-    auto sink_json = j["sink"];
+    EXPECT_EQ(_j.contains("/segment_stats_test/sink"), true);
+    auto sink_json = j["/segment_stats_test/sink"];
     // stat_check_helper(sink_json, iterations, iterations, 0, 0);
     TraceStatistics::reset();
 }

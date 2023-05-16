@@ -125,7 +125,17 @@ class IBuilder
 
     virtual const std::string& name() const = 0;
 
-    virtual std::string prefix_name(const std::string& name) const = 0;
+    /**
+     * @brief Takes either a local or global object name and returns the global name and local name separately. Global
+     * names contain '/<SegmentName>/<m_namespace_prefix>/<name>' (leading '/') where local names are
+     * '<m_namespace_prefix>/<name>' (no leading '/')
+     *
+     * @param name Name to normalize
+     * @param ignore_namespace Whether or not to ignore the '<m_namespace_prefix>' portion. Useful for ports.
+     * @return std::tuple<std::string, std::string> Global name, Local name
+     */
+    virtual std::tuple<std::string, std::string> normalize_name(const std::string& name,
+                                                                bool ignore_namespace = false) const = 0;
 
     virtual std::shared_ptr<ObjectProperties> get_ingress(std::string name, std::type_index type_index) = 0;
 
@@ -144,7 +154,7 @@ class IBuilder
      * @param input_name Unique name of the input port
      * @param object shared pointer to type erased Object associated with 'input_name' on this module instance.
      */
-    virtual void register_module_input(std::string input_name, std::shared_ptr<segment::ObjectProperties> object) = 0;
+    virtual void register_module_input(std::string input_name, std::shared_ptr<ObjectProperties> object) = 0;
 
     /**
      * Get the json configuration for the current module under configuration.
@@ -159,7 +169,7 @@ class IBuilder
      * @param output_name Unique name of the output port
      * @param object shared pointer to type erased Object associated with 'output_name' on this module instance.
      */
-    virtual void register_module_output(std::string output_name, std::shared_ptr<segment::ObjectProperties> object) = 0;
+    virtual void register_module_output(std::string output_name, std::shared_ptr<ObjectProperties> object) = 0;
 
     /**
      * Load an existing, registered module, initialize it, and return it to the caller
@@ -335,19 +345,17 @@ class IBuilder
                      SpliceOutputObjectT splice_output);
 
     template <typename ObjectT>
-    void add_throughput_counter(std::shared_ptr<segment::Object<ObjectT>> segment_object);
+    void add_throughput_counter(std::shared_ptr<Object<ObjectT>> segment_object);
 
     template <typename ObjectT, typename CallableT>
-    void add_throughput_counter(std::shared_ptr<segment::Object<ObjectT>> segment_object, CallableT&& callable);
+    void add_throughput_counter(std::shared_ptr<Object<ObjectT>> segment_object, CallableT&& callable);
 
   private:
-    virtual bool has_object(const std::string& name) const                                                     = 0;
-    virtual ::mrc::segment::ObjectProperties& find_object(const std::string& name)                             = 0;
-    virtual void add_object(const std::string& name, std::shared_ptr<::mrc::segment::ObjectProperties> object) = 0;
-    virtual void add_module(const std::string& name, std::shared_ptr<mrc::modules::SegmentModule> module)      = 0;
-    virtual std::shared_ptr<::mrc::segment::IngressPortBase> get_ingress_base(const std::string& name)         = 0;
-    virtual std::shared_ptr<::mrc::segment::EgressPortBase> get_egress_base(const std::string& name)           = 0;
-    virtual std::function<void(std::int64_t)> make_throughput_counter(const std::string& name)                 = 0;
+    virtual ObjectProperties& find_object(const std::string& name)                             = 0;
+    virtual void add_object(const std::string& name, std::shared_ptr<ObjectProperties> object) = 0;
+    virtual std::shared_ptr<IngressPortBase> get_ingress_base(const std::string& name)         = 0;
+    virtual std::shared_ptr<EgressPortBase> get_egress_base(const std::string& name)           = 0;
+    virtual std::function<void(std::int64_t)> make_throughput_counter(const std::string& name) = 0;
 
     template <MRCObjectProxy ObjectReprT>
     ObjectProperties& to_object_properties(ObjectReprT& repr);
@@ -364,34 +372,25 @@ std::shared_ptr<Object<ObjectT>> IBuilder::construct_object(std::string name, Ar
 template <typename ObjectT>
 std::shared_ptr<Object<ObjectT>> IBuilder::make_object(std::string name, std::unique_ptr<ObjectT> node)
 {
-    // Determine the final name of the object
-    auto final_name = this->prefix_name(name);
-
-    if (this->has_object(final_name))
-    {
-        LOG(ERROR) << "A Object named " << name << " is already registered";
-        throw exceptions::MrcRuntimeError("duplicate name detected - name owned by a node");
-    }
-
-    ::add_stats_watcher_if_rx_source(*node, final_name);
-    ::add_stats_watcher_if_rx_sink(*node, final_name);
-
     std::shared_ptr<Object<ObjectT>> segment_object{nullptr};
 
     if constexpr (std::is_base_of_v<runnable::Runnable, ObjectT>)
     {
-        auto segment_node = std::make_shared<Runnable<ObjectT>>(final_name, std::move(node));
-        this->add_object(final_name, segment_node);
-        segment_object = segment_node;
+        segment_object = std::make_shared<Runnable<ObjectT>>(std::move(node));
+        this->add_object(name, segment_object);
     }
     else
     {
-        auto segment_node = std::make_shared<Component<ObjectT>>(std::move(node));
-        this->add_object(final_name, segment_node);
-        segment_object = segment_node;
+        segment_object = std::make_shared<Component<ObjectT>>(std::move(node));
+        this->add_object(name, segment_object);
     }
 
     CHECK(segment_object);
+
+    // Now that we have been added, set the stats watchers using the object name
+    ::add_stats_watcher_if_rx_source(segment_object->object(), segment_object->name());
+    ::add_stats_watcher_if_rx_sink(segment_object->object(), segment_object->name());
+
     return segment_object;
 }
 
@@ -603,7 +602,7 @@ std::shared_ptr<Object<node::RxSourceBase<T>>> IBuilder::get_ingress(std::string
 }
 
 template <typename ObjectT>
-void IBuilder::add_throughput_counter(std::shared_ptr<segment::Object<ObjectT>> segment_object)
+void IBuilder::add_throughput_counter(std::shared_ptr<Object<ObjectT>> segment_object)
 {
     auto runnable = std::dynamic_pointer_cast<Runnable<ObjectT>>(segment_object);
     CHECK(runnable);
@@ -616,7 +615,7 @@ void IBuilder::add_throughput_counter(std::shared_ptr<segment::Object<ObjectT>> 
 }
 
 template <typename ObjectT, typename CallableT>
-void IBuilder::add_throughput_counter(std::shared_ptr<segment::Object<ObjectT>> segment_object, CallableT&& callable)
+void IBuilder::add_throughput_counter(std::shared_ptr<Object<ObjectT>> segment_object, CallableT&& callable)
 {
     auto runnable = std::dynamic_pointer_cast<Runnable<ObjectT>>(segment_object);
     CHECK(runnable);

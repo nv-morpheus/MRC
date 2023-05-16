@@ -21,60 +21,83 @@
 #include "internal/system/topology.hpp"
 
 #include "mrc/core/bitmap.hpp"
-#include "mrc/engine/system/isystem.hpp"
 #include "mrc/options/options.hpp"
 
 #include <glog/logging.h>
 #include <hwloc.h>
 
+#include <memory>
+#include <ostream>
 #include <utility>
 
 namespace mrc::system {
 
-std::shared_ptr<System> System::create(std::shared_ptr<Options> options)
-{
-    return std::shared_ptr<System>(new System(std::move(options)));
-}
-
-std::shared_ptr<System> System::unwrap(const ISystem& system)
-{
-    return system.m_impl;
-}
-
-System::System(std::shared_ptr<Options> options) :
-  m_options(options),
-  m_topology(Topology::Create(options->topology())),
+SystemDefinition::SystemDefinition(const Options& options) :
+  m_options(std::make_unique<Options>(options)),  // Run the copy constructor to make a copy
+  m_topology(Topology::Create(m_options->topology())),
   m_partitions(std::make_shared<Partitions>(*this))
 {}
 
-const Options& System::options() const
+SystemDefinition::SystemDefinition(std::shared_ptr<Options> options) : SystemDefinition(*options) {}
+
+SystemDefinition::~SystemDefinition() = default;
+
+std::unique_ptr<SystemDefinition> SystemDefinition::unwrap(std::unique_ptr<ISystem> object)
+{
+    // Convert to the full implementation
+    auto* full_object_ptr = dynamic_cast<SystemDefinition*>(object.get());
+
+    CHECK(full_object_ptr) << "Invalid cast for SystemDefinition. Please report to the developers";
+
+    // At this point, the object is a valid cast. Release the pointer so it doesnt get deallocated
+    object.release();
+
+    return std::unique_ptr<SystemDefinition>(full_object_ptr);
+}
+
+const Options& SystemDefinition::options() const
 {
     CHECK(m_options);
     return *m_options;
 }
 
-const Topology& System::topology() const
+const Topology& SystemDefinition::topology() const
 {
     CHECK(m_topology);
     return *m_topology;
 }
 
-const Partitions& System::partitions() const
+const Partitions& SystemDefinition::partitions() const
 {
     CHECK(m_partitions);
     return *m_partitions;
 }
 
-CpuSet System::get_current_thread_affinity() const
+void SystemDefinition::add_thread_initializer(std::function<void()> initializer_fn)
+{
+    m_thread_initializers.emplace_back(std::move(initializer_fn));
+}
+
+void SystemDefinition::add_thread_finalizer(std::function<void()> finalizer_fn)
+{
+    m_thread_finalizers.emplace_back(std::move(finalizer_fn));
+}
+
+const std::vector<std::function<void()>>& SystemDefinition::thread_initializers() const
+{
+    return m_thread_initializers;
+}
+
+const std::vector<std::function<void()>>& SystemDefinition::thread_finalizers() const
+{
+    return m_thread_finalizers;
+}
+
+CpuSet SystemDefinition::get_current_thread_affinity() const
 {
     CpuSet cpu_set;
     hwloc_get_cpubind(topology().handle(), &cpu_set.bitmap(), HWLOC_CPUBIND_THREAD);
     return cpu_set;
-}
-
-std::shared_ptr<System> make_system(std::shared_ptr<Options> options)
-{
-    return System::create(std::move(options));
 }
 
 }  // namespace mrc::system

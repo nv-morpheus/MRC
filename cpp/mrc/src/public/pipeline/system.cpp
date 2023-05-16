@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,34 +15,25 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "mrc/pipeline/system.hpp"
+
+#include "internal/system/system.hpp"
+
+#include "mrc/options/options.hpp"
 
 #include <memory>
+#include <utility>
 
 namespace mrc {
-class Options;
-}  // namespace mrc
 
-namespace mrc::system {
-
-class System;
-
-/**
- * @brief System object
- *
- * Core class that could be used to transfer Topology and Partition information from the MRC runtime.
- *
- * Currently, this is only an opaque handle for constructing a system::IResource.
- */
-class ISystem
+std::unique_ptr<pipeline::ISystem> make_system(std::shared_ptr<Options> options)
 {
-  public:
-    ISystem(std::shared_ptr<Options> options);
-    virtual ~ISystem() = 0;
+    if (!options)
+    {
+        options = std::make_shared<Options>();
+    }
 
-  private:
-    std::shared_ptr<System> m_impl;
-    friend System;
-};
+    return std::make_unique<system::SystemDefinition>(std::move(options));
+}
 
-}  // namespace mrc::system
+}  // namespace mrc

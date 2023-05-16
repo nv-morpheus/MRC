@@ -23,6 +23,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace mrc::segment {
 struct EgressPortsBase;
@@ -39,7 +40,6 @@ namespace mrc::pipeline {
 class IPipeline
 {
   public:
-    IPipeline()          = default;
     virtual ~IPipeline() = default;
 
     DELETE_COPYABILITY(IPipeline);
@@ -132,6 +132,9 @@ class IPipeline
         const std::string& segment_name,
         segment::EgressPortsBase egress_ports,
         segment::segment_initializer_fn_t segment_initializer) = 0;
+
+  protected:
+    IPipeline() = default;
 };
 
 }  // namespace mrc::pipeline

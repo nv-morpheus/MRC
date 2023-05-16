@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
+#include "tests/common.hpp"
+
 #include "internal/runnable/runnable_resources.hpp"
-#include "internal/system/system.hpp"
-#include "internal/system/system_provider.hpp"
 #include "internal/system/threading_resources.hpp"
 
 #include "mrc/edge/edge_builder.hpp"
@@ -47,7 +47,6 @@
 #include <atomic>
 #include <chrono>
 #include <cstddef>
-#include <functional>
 #include <map>
 #include <memory>
 #include <sstream>
@@ -61,32 +60,20 @@ using namespace mrc;
 
 #define MRC_DEFAULT_FIBER_PRIORITY 0
 
-static std::shared_ptr<system::System> make_system(std::function<void(Options&)> updater = nullptr)
-{
-    auto options = std::make_shared<Options>();
-    if (updater)
-    {
-        updater(*options);
-    }
-
-    return system::make_system(std::move(options));
-}
-
 class TestRunnable : public ::testing::Test
 {
   protected:
     void SetUp() override
     {
-        m_system_resources = std::make_unique<system::ThreadingResources>(
-            system::SystemProvider(make_system([](Options& options) {
-                options.topology().user_cpuset("0-3");
-                options.topology().restrict_gpus(true);
-                options.engine_factories().set_engine_factory_options("thread_pool", [](EngineFactoryOptions& options) {
-                    options.engine_type   = runnable::EngineType::Thread;
-                    options.allow_overlap = false;
-                    options.cpu_count     = 2;
-                });
-            })));
+        m_system_resources = tests::make_threading_resources([](Options& options) {
+            options.topology().user_cpuset("0-3");
+            options.topology().restrict_gpus(true);
+            options.engine_factories().set_engine_factory_options("thread_pool", [](EngineFactoryOptions& options) {
+                options.engine_type   = runnable::EngineType::Thread;
+                options.allow_overlap = false;
+                options.cpu_count     = 2;
+            });
+        });
 
         m_resources = std::make_unique<runnable::RunnableResources>(*m_system_resources, 0);
     }

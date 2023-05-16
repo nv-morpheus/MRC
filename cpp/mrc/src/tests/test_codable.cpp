@@ -24,6 +24,7 @@
 #include "internal/resources/system_resources.hpp"
 #include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/runtime.hpp"
+#include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 #include "internal/ucx/registration_cache.hpp"
 
@@ -117,7 +118,7 @@ class TestCodable : public ::testing::Test
     void SetUp() override
     {
         m_runtime = std::make_unique<runtime::Runtime>(
-            system::SystemProvider(make_system([](Options& options) {
+            system::SystemProvider(tests::make_system([](Options& options) {
                 // todo(#114) - propose: remove this option entirely
                 options.enable_server(true);
                 options.architect_url("localhost:13337");

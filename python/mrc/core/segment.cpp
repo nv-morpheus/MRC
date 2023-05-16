@@ -27,10 +27,10 @@
 #include "pymrc/utils.hpp"
 
 #include "mrc/edge/edge_connector.hpp"
+#include "mrc/pipeline/segment.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
-#include "mrc/segment/segment.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 

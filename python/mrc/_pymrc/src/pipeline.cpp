@@ -39,7 +39,6 @@
 #include <tuple>
 #include <typeindex>
 #include <typeinfo>
-#include <utility>
 #include <vector>
 
 namespace mrc::pymrc {
@@ -202,10 +201,9 @@ void Pipeline::make_segment(const std::string& name,
     m_pipeline->make_segment(name, ingress_ports, egress_ports, init_wrapper);
 }
 
-std::unique_ptr<mrc::pipeline::IPipeline> Pipeline::swap()
+std::shared_ptr<pipeline::IPipeline> Pipeline::get_wrapped() const
 {
-    auto tmp   = std::move(m_pipeline);
-    m_pipeline = mrc::make_pipeline();
-    return std::move(tmp);
+    return m_pipeline;
 }
+
 }  // namespace mrc::pymrc

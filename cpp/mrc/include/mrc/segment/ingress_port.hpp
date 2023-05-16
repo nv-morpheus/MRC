@@ -56,9 +56,7 @@ class IngressPort : public Object<node::RxSourceBase<T>>, public IngressPortBase
       m_segment_address(address),
       m_port_name(std::move(name)),
       m_source(std::make_unique<node::RxNode<T>>())
-    {
-        this->set_name(m_port_name);
-    }
+    {}
 
   private:
     node::RxSourceBase<T>* get_object() const final

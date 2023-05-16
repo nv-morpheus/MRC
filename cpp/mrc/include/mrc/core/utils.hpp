@@ -19,6 +19,8 @@
 
 #include "mrc/utils/macros.hpp"
 
+#include <glog/logging.h>
+
 #include <algorithm>
 #include <exception>
 #include <map>
@@ -26,6 +28,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 
 namespace mrc {
 
@@ -54,47 +57,47 @@ std::set<KeyT> extract_keys(const std::map<KeyT, ValT>& stdmap)
 }
 
 // RAII will execute a function when destroyed.
-template <typename FunctionT>
 class Unwinder
 {
   public:
+    explicit Unwinder(std::function<void()> unwind_fn) : m_unwind_fn(std::move(unwind_fn)) {}
+
     ~Unwinder()
     {
-        if (!!m_function)
+        if (!!m_unwind_fn)
         {
             try
             {
-                (*m_function)();
+                m_unwind_fn();
             } catch (...)
             {
+                LOG(ERROR) << "Fatal error during unwinder function";
                 std::terminate();
             }
         }
     }
 
-    explicit Unwinder(FunctionT* function_arg) : m_function(function_arg) {}
-
     void detach()
     {
-        m_function = nullptr;
+        m_unwind_fn = nullptr;
     }
 
     Unwinder()                           = delete;
     Unwinder(const Unwinder&)            = delete;
     Unwinder& operator=(const Unwinder&) = delete;
 
+    static Unwinder create(std::function<void()> unwind_fn)
+    {
+        return Unwinder(std::move(unwind_fn));
+    }
+
   private:
-    FunctionT* m_function;
+    std::function<void()> m_unwind_fn;
 };
 
-#define MRC_UNWIND(var_name, function) MRC_UNWIND_EXPLICIT(uw_func_##var_name, var_name, function)
+#define MRC_UNWIND(unwinder_name, function) mrc::Unwinder unwinder_name(function);
 
-#define MRC_UNWIND_AUTO(function) \
-    MRC_UNWIND_EXPLICIT(MRC_UNIQUE_VAR_NAME(uw_func_), MRC_UNIQUE_VAR_NAME(un_obj_), function)
-
-#define MRC_UNWIND_EXPLICIT(function_name, unwinder_name, function) \
-    auto function_name = (function);                                \
-    mrc::Unwinder<decltype(function_name)> unwinder_name(std::addressof(function_name))
+#define MRC_UNWIND_AUTO(function) MRC_UNWIND(MRC_UNIQUE_VAR_NAME(__un_obj_), function)
 
 template <typename T>
 std::pair<std::set<T>, std::set<T>> set_compare(const std::set<T>& cur_set, const std::set<T>& new_set)
