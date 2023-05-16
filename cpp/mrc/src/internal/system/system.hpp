@@ -21,7 +21,9 @@
 #include "mrc/pipeline/system.hpp"
 #include "mrc/utils/macros.hpp"
 
+#include <functional>
 #include <memory>
+#include <vector>
 
 namespace mrc {
 class Options;

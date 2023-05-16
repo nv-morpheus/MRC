@@ -18,16 +18,16 @@
 #pragma once
 
 #include "internal/service.hpp"
-#include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 
 #include "mrc/pipeline/executor.hpp"
 
 #include <memory>
 
-namespace mrc {
-class Options;
-}  // namespace mrc
+namespace mrc::system {
+class SystemDefinition;
+}  // namespace mrc::system
+
 namespace mrc::pipeline {
 class IPipeline;
 class Manager;
@@ -35,9 +35,6 @@ class Manager;
 namespace mrc::resources {
 class Manager;
 }  // namespace mrc::resources
-namespace mrc::system {
-class ThreadingResources;
-}  // namespace mrc::system
 
 namespace mrc::executor {
 

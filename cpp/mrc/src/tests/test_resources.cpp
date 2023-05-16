@@ -17,7 +17,6 @@
 
 #include "tests/common.hpp"
 
-#include "internal/resources/forward.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/runnable_resources.hpp"
@@ -32,9 +31,7 @@
 #include <boost/fiber/future/future.hpp>
 #include <gtest/gtest.h>
 
-#include <functional>
 #include <memory>
-#include <utility>
 
 using namespace mrc;
 

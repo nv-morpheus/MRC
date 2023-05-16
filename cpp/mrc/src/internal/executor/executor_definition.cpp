@@ -23,7 +23,6 @@
 #include "internal/pipeline/types.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/system/system.hpp"
-#include "internal/system/threading_resources.hpp"
 
 #include "mrc/core/addresses.hpp"
 #include "mrc/exceptions/runtime_error.hpp"

@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "mrc/pipeline/system.hpp"
 #include "mrc/utils/macros.hpp"
 
 #include <memory>
@@ -30,6 +29,7 @@ class IPipeline;
 }  // namespace mrc::pipeline
 
 namespace mrc::pipeline {
+class ISystem;
 
 class IExecutor
 {

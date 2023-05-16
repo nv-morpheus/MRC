@@ -28,6 +28,7 @@
 #include <boost/fiber/future/future.hpp>
 #include <boost/fiber/future/future_status.hpp>
 #include <glog/logging.h>
+#include <pybind11/cast.h>
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
@@ -35,6 +36,7 @@
 #include <chrono>
 #include <csignal>
 #include <exception>
+#include <functional>
 #include <future>
 #include <memory>
 #include <mutex>

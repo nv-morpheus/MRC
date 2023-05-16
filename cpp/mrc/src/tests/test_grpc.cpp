@@ -24,6 +24,7 @@
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/runnable_resources.hpp"
+#include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 
 #include "mrc/channel/status.hpp"

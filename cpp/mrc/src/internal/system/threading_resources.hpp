@@ -37,7 +37,6 @@
 
 namespace mrc::system {
 class FiberTaskQueue;
-class IResources;
 
 class ThreadingResources final : public SystemProvider
 {

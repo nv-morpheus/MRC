@@ -24,6 +24,7 @@
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runtime/partition.hpp"
 #include "internal/runtime/runtime.hpp"
+#include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 #include "internal/ucx/registration_cache.hpp"
 

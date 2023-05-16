@@ -27,6 +27,7 @@
 #include <hwloc.h>
 
 #include <memory>
+#include <ostream>
 #include <utility>
 
 namespace mrc::system {
