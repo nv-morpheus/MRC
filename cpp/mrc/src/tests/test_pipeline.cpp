@@ -17,6 +17,7 @@
 
 #include "nodes/common_nodes.hpp"
 #include "pipelines/common_pipelines.hpp"
+#include "tests/common.hpp"
 
 #include "internal/pipeline/manager.hpp"
 #include "internal/pipeline/pipeline_definition.hpp"  // IWYU pragma: keep
@@ -79,17 +80,6 @@ using namespace mrc;
 class TestPipeline : public ::testing::Test
 {};
 
-static std::shared_ptr<system::System> make_system(std::function<void(Options&)> updater = nullptr)
-{
-    auto options = std::make_shared<Options>();
-    if (updater)
-    {
-        updater(*options);
-    }
-
-    return system::make_system(std::move(options));
-}
-
 static std::shared_ptr<pipeline::PipelineDefinition> unwrap(std::unique_ptr<pipeline::IPipeline> pipeline)
 {
     std::shared_ptr<pipeline::IPipeline> shared_pipeline = std::move(pipeline);
@@ -106,7 +96,7 @@ static void run_custom_manager(std::unique_ptr<pipeline::IPipeline> pipeline,
                                pipeline::SegmentAddresses&& update,
                                bool delayed_stop = false)
 {
-    auto resources = resources::Manager(system::SystemProvider(make_system([](Options& options) {
+    auto resources = resources::Manager(system::SystemProvider(tests::make_system([](Options& options) {
         options.topology().user_cpuset("0-1");
         options.topology().restrict_gpus(true);
     })));
@@ -130,7 +120,7 @@ static void run_custom_manager(std::unique_ptr<pipeline::IPipeline> pipeline,
 
 static void run_manager(std::unique_ptr<pipeline::IPipeline> pipeline, bool delayed_stop = false)
 {
-    auto resources = resources::Manager(system::SystemProvider(make_system([](Options& options) {
+    auto resources = resources::Manager(system::SystemProvider(tests::make_system([](Options& options) {
         options.topology().user_cpuset("0");
         options.topology().restrict_gpus(true);
         mrc::channel::set_default_channel_size(64);

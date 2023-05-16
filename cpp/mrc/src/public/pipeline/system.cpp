@@ -14,35 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
 
-#include "mrc/engine/system/iresources.hpp"
-#include "mrc/engine/system/isystem.hpp"
+#include "mrc/pipeline/system.hpp"
+
+#include "internal/system/system.hpp"
+
+#include "mrc/options/options.hpp"
 
 #include <memory>
 
 namespace mrc {
-class Options;
+
+std::unique_ptr<pipeline::ISystem> make_system(std::shared_ptr<Options> options)
+{
+    if (!options)
+    {
+        options = std::make_shared<Options>();
+    }
+
+    return std::make_unique<system::SystemDefinition>(std::move(options));
+}
+
 }  // namespace mrc
-
-namespace mrc::pymrc {
-
-class System final : public system::ISystem
-{
-  public:
-    System(std::shared_ptr<Options> options);
-    ~System() final = default;
-};
-
-class SystemResources final : public system::IResources
-{
-  public:
-    SystemResources(std::shared_ptr<System> system);
-    ~SystemResources() final = default;
-
-  private:
-    void add_gil_initializer();
-    void add_gil_finalizer();
-};
-
-}  // namespace mrc::pymrc

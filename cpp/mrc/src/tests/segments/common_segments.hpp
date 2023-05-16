@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "mrc/segment/segment.hpp"
+#include "mrc/pipeline/segment.hpp"
 
 namespace test::segments {
 

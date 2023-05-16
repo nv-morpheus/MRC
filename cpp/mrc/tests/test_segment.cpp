@@ -28,11 +28,11 @@
 #include "mrc/options/topology.hpp"
 #include "mrc/pipeline/executor.hpp"
 #include "mrc/pipeline/pipeline.hpp"
+#include "mrc/pipeline/segment.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/ingress_port.hpp"
 #include "mrc/segment/object.hpp"
 #include "mrc/segment/ports.hpp"
-#include "mrc/segment/segment.hpp"
 #include "mrc/types.hpp"
 
 #include <glog/logging.h>

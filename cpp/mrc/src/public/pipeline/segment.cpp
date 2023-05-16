@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "mrc/segment/segment.hpp"
+#include "mrc/pipeline/segment.hpp"
 
 #include "internal/segment/segment_definition.hpp"
 

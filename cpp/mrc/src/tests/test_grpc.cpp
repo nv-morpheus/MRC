@@ -66,13 +66,14 @@ class TestRPC : public ::testing::Test
   protected:
     void SetUp() override
     {
-        m_resources = std::make_unique<resources::Manager>(system::SystemProvider(make_system([](Options& options) {
-            // todo(#114) - propose: remove this option entirely
-            // options.architect_url("localhost:13337");
-            options.topology().user_cpuset("0-8");
-            options.topology().restrict_gpus(true);
-            options.placement().resources_strategy(PlacementResources::Dedicated);
-        })));
+        m_resources = std::make_unique<resources::Manager>(
+            system::SystemProvider(tests::make_system([](Options& options) {
+                // todo(#114) - propose: remove this option entirely
+                // options.architect_url("localhost:13337");
+                options.topology().user_cpuset("0-8");
+                options.topology().restrict_gpus(true);
+                options.placement().resources_strategy(PlacementResources::Dedicated);
+            })));
 
         m_server = std::make_unique<rpc::Server>(m_resources->partition(0).runnable());
 

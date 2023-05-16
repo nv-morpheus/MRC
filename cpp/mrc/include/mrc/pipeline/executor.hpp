@@ -17,9 +17,10 @@
 
 #pragma once
 
-#include <memory>
-
+#include "mrc/pipeline/system.hpp"
 #include "mrc/utils/macros.hpp"
+
+#include <memory>
 
 namespace mrc {
 class Options;
@@ -30,20 +31,9 @@ class IPipeline;
 
 namespace mrc::pipeline {
 
-/**
- * @brief The I-classes in mrc/internal enable the building and customization of an Executor.
- *
- * The build order should be:
- * - ISystem
- * - ISystemResources
- * - IExecutor
- *
- * Over time, new customization points will be added between ISystemResources and IExecutor.
- */
 class IExecutor
 {
   public:
-    IExecutor()          = default;
     virtual ~IExecutor() = default;
 
     DELETE_COPYABILITY(IExecutor);
@@ -52,6 +42,9 @@ class IExecutor
     virtual void start()                                                = 0;
     virtual void stop()                                                 = 0;
     virtual void join()                                                 = 0;
+
+  protected:
+    IExecutor() = default;
 };
 
 }  // namespace mrc::pipeline
@@ -64,7 +57,6 @@ class Executor : public pipeline::IExecutor
   public:
     Executor();
     Executor(std::shared_ptr<Options> options);
-    // Executor(std::unique_ptr<system::IResources> resources);
     ~Executor() override;
 
     void register_pipeline(std::shared_ptr<pipeline::IPipeline> pipeline) override;
@@ -78,6 +70,6 @@ class Executor : public pipeline::IExecutor
 
 std::unique_ptr<pipeline::IExecutor> make_executor(std::shared_ptr<Options> options);
 
-// std::unique_ptr<pipeline::IExecutor> make_executor(std::unique_ptr<system::IResources> resources);
+std::unique_ptr<pipeline::IExecutor> make_executor(std::unique_ptr<pipeline::ISystem> system);
 
 }  // namespace mrc

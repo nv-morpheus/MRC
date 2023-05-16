@@ -18,6 +18,7 @@
 #pragma once
 
 #include "internal/service.hpp"
+#include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 
 #include "mrc/pipeline/executor.hpp"
@@ -48,8 +49,7 @@ namespace mrc::executor {
 class ExecutorDefinition : public pipeline::IExecutor, public Service, public system::SystemProvider
 {
   public:
-    ExecutorDefinition(std::shared_ptr<Options> options);
-    ExecutorDefinition(std::unique_ptr<system::ThreadingResources> resources);
+    ExecutorDefinition(std::unique_ptr<system::SystemDefinition> system);
     ~ExecutorDefinition() override;
 
     static std::shared_ptr<ExecutorDefinition> unwrap(std::shared_ptr<IExecutor> object);
@@ -69,9 +69,5 @@ class ExecutorDefinition : public pipeline::IExecutor, public Service, public sy
     std::unique_ptr<resources::Manager> m_resources_manager;
     std::unique_ptr<pipeline::Manager> m_pipeline_manager;
 };
-
-// std::unique_ptr<Executor> make_executor(std::shared_ptr<Options> options);
-
-// std::unique_ptr<Executor> make_executor(std::unique_ptr<system::ThreadingResources> resources);
 
 }  // namespace mrc::executor

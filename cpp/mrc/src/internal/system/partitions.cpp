@@ -58,7 +58,7 @@ static void div_even(std::int32_t n, std::int32_t np, std::int32_t me, std::int3
 
 namespace mrc::system {
 
-Partitions::Partitions(const System& system) : Partitions(system.topology(), system.options()) {}
+Partitions::Partitions(const SystemDefinition& system) : Partitions(system.topology(), system.options()) {}
 
 Partitions::Partitions(const Topology& topology, const Options& options)
 {

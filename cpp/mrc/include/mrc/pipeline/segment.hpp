@@ -33,7 +33,6 @@ struct IngressPortsBase;
 class ISegment
 {
   public:
-    ISegment()          = default;
     virtual ~ISegment() = default;
 
     DELETE_COPYABILITY(ISegment);
@@ -42,6 +41,9 @@ class ISegment
     virtual const std::string& name() const                     = 0;
     virtual std::vector<std::string> ingress_port_names() const = 0;
     virtual std::vector<std::string> egress_port_names() const  = 0;
+
+  protected:
+    ISegment() = default;
 };
 }  // namespace mrc::segment
 

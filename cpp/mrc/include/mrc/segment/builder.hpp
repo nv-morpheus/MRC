@@ -125,6 +125,18 @@ class IBuilder
 
     virtual const std::string& name() const = 0;
 
+    /**
+     * @brief Takes either a local or global object name and returns the global name and local name separately. Global
+     * names contain '/<SegmentName>/<m_namespace_prefix>/<name>' (leading '/') where local names are
+     * '<m_namespace_prefix>/<name>' (no leading '/')
+     *
+     * @param name Name to normalize
+     * @param ignore_namespace Whether or not to ignore the '<m_namespace_prefix>' portion. Useful for ports.
+     * @return std::tuple<std::string, std::string> Global name, Local name
+     */
+    virtual std::tuple<std::string, std::string> normalize_name(const std::string& name,
+                                                                bool ignore_namespace = false) const = 0;
+
     virtual std::shared_ptr<ObjectProperties> get_ingress(std::string name, std::type_index type_index) = 0;
 
     virtual std::shared_ptr<ObjectProperties> get_egress(std::string name, std::type_index type_index) = 0;

@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#include "tests/common.hpp"
+
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/control_plane/client/instance.hpp"
@@ -74,17 +76,6 @@
 using namespace mrc;
 using namespace mrc::memory::literals;
 
-static std::shared_ptr<system::System> make_system(std::function<void(Options&)> updater = nullptr)
-{
-    auto options = std::make_shared<Options>();
-    if (updater)
-    {
-        updater(*options);
-    }
-
-    return system::make_system(std::move(options));
-}
-
 class TestNetwork : public ::testing::Test
 {};
 
@@ -106,17 +97,18 @@ TEST_F(TestNetwork, ResourceManager)
     // using options.placement().resources_strategy(PlacementResources::Shared)
     // will test if cudaSetDevice is being properly called by the network services
     // since all network services for potentially multiple devices are colocated on a single thread
-    auto resources = std::make_unique<resources::Manager>(system::SystemProvider(make_system([](Options& options) {
-        options.enable_server(true);
-        options.architect_url("localhost:13337");
-        options.placement().resources_strategy(PlacementResources::Dedicated);
-        options.resources().enable_device_memory_pool(true);
-        options.resources().enable_host_memory_pool(true);
-        options.resources().host_memory_pool().block_size(32_MiB);
-        options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
-        options.resources().device_memory_pool().block_size(64_MiB);
-        options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
-    })));
+    auto resources = std::make_unique<resources::Manager>(
+        system::SystemProvider(tests::make_system([](Options& options) {
+            options.enable_server(true);
+            options.architect_url("localhost:13337");
+            options.placement().resources_strategy(PlacementResources::Dedicated);
+            options.resources().enable_device_memory_pool(true);
+            options.resources().enable_host_memory_pool(true);
+            options.resources().host_memory_pool().block_size(32_MiB);
+            options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
+            options.resources().device_memory_pool().block_size(64_MiB);
+            options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
+        })));
 
     if (resources->partition_count() < 2 && resources->device_count() < 2)
     {
@@ -165,17 +157,18 @@ TEST_F(TestNetwork, CommsSendRecv)
     // using options.placement().resources_strategy(PlacementResources::Shared)
     // will test if cudaSetDevice is being properly called by the network services
     // since all network services for potentially multiple devices are colocated on a single thread
-    auto resources = std::make_unique<resources::Manager>(system::SystemProvider(make_system([](Options& options) {
-        options.enable_server(true);
-        options.architect_url("localhost:13337");
-        options.placement().resources_strategy(PlacementResources::Dedicated);
-        options.resources().enable_device_memory_pool(true);
-        options.resources().enable_host_memory_pool(true);
-        options.resources().host_memory_pool().block_size(32_MiB);
-        options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
-        options.resources().device_memory_pool().block_size(64_MiB);
-        options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
-    })));
+    auto resources = std::make_unique<resources::Manager>(
+        system::SystemProvider(tests::make_system([](Options& options) {
+            options.enable_server(true);
+            options.architect_url("localhost:13337");
+            options.placement().resources_strategy(PlacementResources::Dedicated);
+            options.resources().enable_device_memory_pool(true);
+            options.resources().enable_host_memory_pool(true);
+            options.resources().host_memory_pool().block_size(32_MiB);
+            options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
+            options.resources().device_memory_pool().block_size(64_MiB);
+            options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
+        })));
 
     if (resources->partition_count() < 2 && resources->device_count() < 2)
     {
@@ -226,17 +219,18 @@ TEST_F(TestNetwork, CommsGet)
     // using options.placement().resources_strategy(PlacementResources::Shared)
     // will test if cudaSetDevice is being properly called by the network services
     // since all network services for potentially multiple devices are colocated on a single thread
-    auto resources = std::make_unique<resources::Manager>(system::SystemProvider(make_system([](Options& options) {
-        options.enable_server(true);
-        options.architect_url("localhost:13337");
-        options.placement().resources_strategy(PlacementResources::Dedicated);
-        options.resources().enable_device_memory_pool(true);
-        options.resources().enable_host_memory_pool(true);
-        options.resources().host_memory_pool().block_size(32_MiB);
-        options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
-        options.resources().device_memory_pool().block_size(64_MiB);
-        options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
-    })));
+    auto resources = std::make_unique<resources::Manager>(
+        system::SystemProvider(tests::make_system([](Options& options) {
+            options.enable_server(true);
+            options.architect_url("localhost:13337");
+            options.placement().resources_strategy(PlacementResources::Dedicated);
+            options.resources().enable_device_memory_pool(true);
+            options.resources().enable_host_memory_pool(true);
+            options.resources().host_memory_pool().block_size(32_MiB);
+            options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
+            options.resources().device_memory_pool().block_size(64_MiB);
+            options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
+        })));
 
     if (resources->partition_count() < 2 && resources->device_count() < 2)
     {
@@ -296,17 +290,18 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
     // using options.placement().resources_strategy(PlacementResources::Shared)
     // will test if cudaSetDevice is being properly called by the network services
     // since all network services for potentially multiple devices are colocated on a single thread
-    auto resources = std::make_unique<resources::Manager>(system::SystemProvider(make_system([](Options& options) {
-        options.enable_server(true);
-        options.architect_url("localhost:13337");
-        options.placement().resources_strategy(PlacementResources::Dedicated);
-        options.resources().enable_device_memory_pool(true);
-        options.resources().enable_host_memory_pool(true);
-        options.resources().host_memory_pool().block_size(32_MiB);
-        options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
-        options.resources().device_memory_pool().block_size(64_MiB);
-        options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
-    })));
+    auto resources = std::make_unique<resources::Manager>(
+        system::SystemProvider(tests::make_system([](Options& options) {
+            options.enable_server(true);
+            options.architect_url("localhost:13337");
+            options.placement().resources_strategy(PlacementResources::Dedicated);
+            options.resources().enable_device_memory_pool(true);
+            options.resources().enable_host_memory_pool(true);
+            options.resources().host_memory_pool().block_size(32_MiB);
+            options.resources().host_memory_pool().max_aggregate_bytes(128_MiB);
+            options.resources().device_memory_pool().block_size(64_MiB);
+            options.resources().device_memory_pool().max_aggregate_bytes(128_MiB);
+        })));
 
     if (resources->partition_count() < 2 && resources->device_count() < 2)
     {

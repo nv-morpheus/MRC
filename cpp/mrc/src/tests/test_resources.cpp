@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#include "tests/common.hpp"
+
 #include "internal/resources/forward.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
@@ -40,26 +42,20 @@ using namespace mrc;
 // IWYU pragma: no_include <boost/cstdint.hpp>
 
 class TestResources : public ::testing::Test
-{
-  protected:
-    static std::shared_ptr<system::System> make_system(std::function<void(Options&)> updater = nullptr)
-    {
-        auto options = std::make_shared<Options>();
-        if (updater)
-        {
-            updater(*options);
-        }
+{};
 
-        return system::make_system(std::move(options));
-    }
-};
+TEST_F(TestResources, Lifetime)
+{
+    auto resources = tests::make_threading_resources();
+}
 
 TEST_F(TestResources, GetRuntime)
 {
-    auto resources = std::make_unique<resources::Manager>(system::SystemProvider(make_system([](Options& options) {
-        // todo(#114) - propose: this is the default and only option
-        options.placement().resources_strategy(PlacementResources::Dedicated);
-    })));
+    auto resources = std::make_unique<resources::Manager>(
+        system::SystemProvider(tests::make_system([](Options& options) {
+            // todo(#114) - propose: this is the default and only option
+            options.placement().resources_strategy(PlacementResources::Dedicated);
+        })));
 
     EXPECT_ANY_THROW(resources::Manager::get_resources());
     EXPECT_ANY_THROW(resources::Manager::get_partition());
@@ -77,10 +73,11 @@ TEST_F(TestResources, GetRuntime)
 
 TEST_F(TestResources, GetRuntimeShared)
 {
-    auto resources = std::make_unique<resources::Manager>(system::SystemProvider(make_system([](Options& options) {
-        // todo(#114) - propose: remove this option entirely
-        options.placement().resources_strategy(PlacementResources::Shared);
-    })));
+    auto resources = std::make_unique<resources::Manager>(
+        system::SystemProvider(tests::make_system([](Options& options) {
+            // todo(#114) - propose: remove this option entirely
+            options.placement().resources_strategy(PlacementResources::Shared);
+        })));
 
     EXPECT_ANY_THROW(resources::Manager::get_resources());
     EXPECT_ANY_THROW(resources::Manager::get_partition());

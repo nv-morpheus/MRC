@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#include "tests/common.hpp"
+
 #include "internal/system/fiber_pool.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
@@ -24,6 +26,7 @@
 #include "internal/system/topology.hpp"
 
 #include "mrc/core/bitmap.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/types.hpp"
@@ -47,7 +50,7 @@
 
 using namespace mrc;
 
-using system::System;
+using system::SystemDefinition;
 using system::ThreadPool;
 
 // iwyu is getting confused between std::uint32_t and boost::uint32_t
@@ -70,24 +73,22 @@ class TestSystem : public ::testing::Test
 
 TEST_F(TestSystem, LifeCycle)
 {
-    auto system = system::make_system(make_options());
+    auto system = mrc::make_system(make_options());
 }
 
 TEST_F(TestSystem, FiberPool)
 {
-    auto system = system::make_system(make_options([](Options& options) {
+    auto resources = tests::make_threading_resources([](Options& options) {
         // ensure we have 4 logical cpus
         options.topology().user_cpuset("0-255");
-    }));
+    });
 
     CpuSet cpu_set;
     cpu_set.on(0);
     cpu_set.on(2);
     EXPECT_EQ(cpu_set.weight(), 2);
 
-    system::ThreadingResources resources((system::SystemProvider(system)));
-
-    auto pool = resources.make_fiber_pool(cpu_set);
+    auto pool = resources->make_fiber_pool(cpu_set);
 
     EXPECT_EQ(pool.thread_count(), 2);
 
@@ -137,29 +138,25 @@ TEST_F(TestSystem, FiberPool)
 
 TEST_F(TestSystem, ImpossibleCoreCount)
 {
-    auto system = system::make_system(make_options([](Options& options) {
+    auto resources = tests::make_threading_resources([](Options& options) {
         // ensure we have 2 logical cpus
         options.topology().user_cpuset("0,1");
-    }));
+    });
 
     CpuSet cpu_set;
     cpu_set.on(0);
     cpu_set.on(99999999);
     EXPECT_EQ(cpu_set.weight(), 2);
 
-    system::ThreadingResources resources((system::SystemProvider(system)));
-
-    EXPECT_ANY_THROW(auto pool = resources.make_fiber_pool(cpu_set));
+    EXPECT_ANY_THROW(auto pool = resources->make_fiber_pool(cpu_set));
 }
 
 TEST_F(TestSystem, ThreadLocalResource)
 {
-    auto system = system::make_system(make_options());
+    auto resources = tests::make_threading_resources();
 
-    system::ThreadingResources resources((system::SystemProvider(system)));
-
-    auto pool0 = resources.make_fiber_pool(CpuSet("0,1"));
-    auto pool1 = resources.make_fiber_pool(CpuSet("2,3"));
+    auto pool0 = resources->make_fiber_pool(CpuSet("0,1"));
+    auto pool1 = resources->make_fiber_pool(CpuSet("2,3"));
 
     auto i0 = std::make_shared<int>(0);
     auto i1 = std::make_shared<int>(2);
@@ -209,26 +206,67 @@ TEST_F(TestSystem, ThreadLocalResource)
     EXPECT_EQ(j1, 2);
 }
 
-TEST_F(TestSystem, ThreadInitializersAndFinalizers)
+TEST_F(TestSystem, ThreadInitializersAndFinalizersOnSystem)
 {
-    auto system = system::make_system(make_options([](Options& options) {
+    auto system = tests::make_system([](Options& options) {
         options.topology().user_cpuset("0-1");
         options.topology().restrict_gpus(true);
-    }));
-
-    auto resources = std::make_unique<system::ThreadingResources>((system::SystemProvider(system)));
+    });
 
     std::atomic<std::size_t> init_counter = 0;
     std::atomic<std::size_t> fini_counter = 0;
 
-    resources->register_thread_local_initializer(system->topology().cpu_set(), [&init_counter] {
+    system->add_thread_initializer([&init_counter] {
+        init_counter++;
+    });
+
+    system->add_thread_finalizer([&fini_counter] {
+        fini_counter++;
+    });
+
+    EXPECT_EQ(init_counter, 0);
+    EXPECT_EQ(fini_counter, 0);
+
+    auto resources = tests::make_threading_resources(std::move(system));
+
+    EXPECT_EQ(init_counter, 2);
+    EXPECT_EQ(fini_counter, 0);
+
+    std::make_unique<system::Thread>(resources->make_thread(CpuSet("0"), [] {
+        VLOG(10) << "test thread";
+    }))->join();
+
+    EXPECT_EQ(init_counter, 3);
+    EXPECT_EQ(fini_counter, 1);
+
+    resources.reset();
+
+    EXPECT_EQ(init_counter, 3);
+    EXPECT_EQ(fini_counter, 3);
+}
+
+TEST_F(TestSystem, ThreadInitializersAndFinalizersOnResources)
+{
+    auto system = tests::make_system([](Options& options) {
+        options.topology().user_cpuset("0-1");
+        options.topology().restrict_gpus(true);
+    });
+
+    auto system_cpuset = system->topology().cpu_set();
+
+    auto resources = tests::make_threading_resources(std::move(system));
+
+    std::atomic<std::size_t> init_counter = 0;
+    std::atomic<std::size_t> fini_counter = 0;
+
+    resources->register_thread_local_initializer(system_cpuset, [&init_counter] {
         init_counter++;
     });
 
     EXPECT_EQ(init_counter, 2);
     EXPECT_EQ(fini_counter, 0);
 
-    resources->register_thread_local_finalizer(system->topology().cpu_set(), [&fini_counter] {
+    resources->register_thread_local_finalizer(system_cpuset, [&fini_counter] {
         fini_counter++;
     });
 
@@ -247,16 +285,14 @@ TEST_F(TestSystem, ThreadInitializersAndFinalizers)
 
 TEST_F(TestSystem, ThreadPool)
 {
-    auto system = system::make_system(make_options([](Options& options) {
+    auto resources = tests::make_threading_resources([](Options& options) {
         options.topology().user_cpuset("0-3");
         options.topology().restrict_gpus(true);
-    }));
+    });
 
     std::atomic<std::size_t> counter = 0;
 
-    system::ThreadingResources resources((system::SystemProvider(system)));
-
-    auto thread_pool = std::make_unique<ThreadPool>(resources, CpuSet("2-3"), 2);
+    auto thread_pool = std::make_unique<ThreadPool>(*resources, CpuSet("2-3"), 2);
 
     auto f = [&counter] {
         ++counter;
@@ -278,4 +314,17 @@ TEST_F(TestSystem, ThreadPool)
 
     EXPECT_EQ(counter, 3);
     EXPECT_EQ(ids.size(), 2);
+}
+
+TEST_F(TestSystem, ThreadFiberPoolException)
+{
+    auto resources = tests::make_threading_resources();
+
+    auto pool = resources->make_fiber_pool(CpuSet("0"));
+
+    auto future = pool.enqueue(0, []() -> int {
+        throw exceptions::MrcRuntimeError("Test exception");
+    });
+
+    EXPECT_ANY_THROW(future.get());
 }

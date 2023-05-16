@@ -62,10 +62,15 @@ class Pipeline
                       pybind11::list egress_port_info,
                       const std::function<void(mrc::segment::IBuilder&)>& init);
 
-    std::unique_ptr<mrc::pipeline::IPipeline> swap();
+    /**
+     * @brief Get the wrapped object held by this Python proxy object
+     *
+     * @return std::shared_ptr<pipeline::IPipeline>
+     */
+    std::shared_ptr<pipeline::IPipeline> get_wrapped() const;
 
   private:
-    std::unique_ptr<mrc::pipeline::IPipeline> m_pipeline;
+    std::shared_ptr<mrc::pipeline::IPipeline> m_pipeline;
 };
 
 #pragma GCC visibility pop

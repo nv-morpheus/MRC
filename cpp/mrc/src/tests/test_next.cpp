@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#include "tests/common.hpp"
+
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
@@ -38,6 +40,7 @@
 #include "mrc/options/engine_groups.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
+#include "mrc/pipeline/segment.hpp"
 #include "mrc/runnable/context.hpp"
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launch_options.hpp"
@@ -48,7 +51,6 @@
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/object.hpp"
 #include "mrc/segment/runnable.hpp"
-#include "mrc/segment/segment.hpp"
 #include "mrc/type_traits.hpp"
 #include "mrc/utils/macros.hpp"
 
@@ -71,24 +73,13 @@
 
 using namespace mrc;
 
-static std::shared_ptr<system::System> make_system(std::function<void(Options&)> updater = nullptr)
-{
-    auto options = std::make_shared<Options>();
-    if (updater)
-    {
-        updater(*options);
-    }
-
-    return system::make_system(std::move(options));
-}
-
 class TestNext : public ::testing::Test
 {
   protected:
     void SetUp() override
     {
         m_system_resources = std::make_unique<system::ThreadingResources>(
-            system::SystemProvider(make_system([](Options& options) {
+            system::SystemProvider(tests::make_system([](Options& options) {
                 options.topology().user_cpuset("0-3");
                 options.topology().restrict_gpus(true);
                 options.engine_factories().set_engine_factory_options("thread_pool", [](EngineFactoryOptions& options) {

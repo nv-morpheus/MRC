@@ -64,6 +64,11 @@ class BuilderDefinition : public IBuilder
 
     static std::shared_ptr<BuilderDefinition> unwrap(std::shared_ptr<IBuilder> object);
 
+    const std::string& name() const override;
+
+    std::tuple<std::string, std::string> normalize_name(const std::string& name,
+                                                        bool ignore_namespace = false) const override;
+
     std::shared_ptr<ObjectProperties> get_ingress(std::string name, std::type_index type_index) override;
 
     std::shared_ptr<ObjectProperties> get_egress(std::string name, std::type_index type_index) override;
@@ -112,7 +117,6 @@ class BuilderDefinition : public IBuilder
                                                                            nlohmann::json config = {}) override;
 
     const SegmentDefinition& definition() const;
-    const std::string& name() const override;
 
     void initialize();
 
@@ -129,7 +133,6 @@ class BuilderDefinition : public IBuilder
     std::function<void(std::int64_t)> make_throughput_counter(const std::string& name) override;
 
     // Local methods
-    std::tuple<std::string, std::string> normalize_name(const std::string& name, bool ignore_namespace = false) const;
     bool has_object(const std::string& name) const;
 
     void ns_push(std::shared_ptr<mrc::modules::SegmentModule> smodule);

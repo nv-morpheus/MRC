@@ -31,14 +31,14 @@ enum class PlacementStrategy;
 
 namespace mrc::system {
 
-class System;
+class SystemDefinition;
 class Topology;
 
 class Partitions
 {
   public:
     Partitions(const Topology& topology, const Options& options);
-    Partitions(const System& system);
+    Partitions(const SystemDefinition& system);
 
     // The host and device partitions are hierarchical where there is a possibility, depending on options provided,
     // where more than one cuda device shares the same host partition, so those host resources are shared.

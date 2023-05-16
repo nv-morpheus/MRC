@@ -42,10 +42,6 @@ class IResources;
 class ThreadingResources final : public SystemProvider
 {
   public:
-    static std::unique_ptr<ThreadingResources> unwrap(IResources& resources);
-    static std::unique_ptr<ThreadingResources> create(const SystemProvider& system);
-    static std::unique_ptr<ThreadingResources> create(std::shared_ptr<const SystemProvider> system);
-
     ThreadingResources(SystemProvider system);
 
     template <typename CallableT>

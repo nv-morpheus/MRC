@@ -82,8 +82,6 @@ add_library(libmrc
   src/internal/system/gpu_info.cpp
   src/internal/system/host_partition_provider.cpp
   src/internal/system/host_partition.cpp
-  src/internal/system/iresources.cpp
-  src/internal/system/isystem.cpp
   src/internal/system/partition_provider.cpp
   src/internal/system/partition.cpp
   src/internal/system/partitions.cpp
@@ -142,13 +140,14 @@ add_library(libmrc
   src/public/options/topology.cpp
   src/public/pipeline/executor.cpp
   src/public/pipeline/pipeline.cpp
+  src/public/pipeline/segment.cpp
+  src/public/pipeline/system.cpp
   src/public/runnable/context.cpp
   src/public/runnable/launcher.cpp
   src/public/runnable/runnable.cpp
   src/public/runnable/runner.cpp
   src/public/runnable/types.cpp
   src/public/runtime/remote_descriptor.cpp
-  src/public/segment/segment.cpp
   src/public/utils/bytes_to_string.cpp
   src/public/utils/thread_utils.cpp
   src/public/utils/type_utils.cpp

@@ -17,19 +17,39 @@
 
 #include "common.hpp"
 
+#include "internal/system/fiber_task_queue.hpp"
 #include "internal/system/system.hpp"
+#include "internal/system/system_provider.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/options/options.hpp"
 
+#include <memory>
 #include <utility>
 
-std::shared_ptr<mrc::system::System> make_system(std::function<void(mrc::Options&)> updater)
+namespace mrc::tests {
+
+std::unique_ptr<system::SystemDefinition> make_system(std::function<void(Options&)> updater)
 {
-    auto options = std::make_shared<mrc::Options>();
+    auto options = std::make_shared<Options>();
     if (updater)
     {
         updater(*options);
     }
 
-    return mrc::system::make_system(std::move(options));
+    return std::make_unique<system::SystemDefinition>(std::move(options));
 }
+
+std::unique_ptr<system::ThreadingResources> make_threading_resources(std::function<void(Options&)> updater)
+{
+    auto system = make_system(updater);
+
+    return make_threading_resources(std::move(system));
+}
+
+std::unique_ptr<system::ThreadingResources> make_threading_resources(std::unique_ptr<system::SystemDefinition> system)
+{
+    return std::make_unique<system::ThreadingResources>(system::SystemProvider(std::move(system)));
+}
+
+}  // namespace mrc::tests

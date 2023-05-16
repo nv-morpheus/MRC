@@ -19,8 +19,6 @@
 
 #include "internal/system/fiber_manager.hpp"
 
-#include "mrc/engine/system/iresources.hpp"
-
 #include <boost/fiber/future/future.hpp>
 
 #include <map>
@@ -32,7 +30,18 @@ ThreadingResources::ThreadingResources(SystemProvider system) :
   SystemProvider(system),
   m_thread_resources(std::make_shared<ThreadResources>(*this)),
   m_fiber_manager(*this)
-{}
+{
+    // Register any initializers and finalizers set on the system object
+    for (const auto& f : this->system().thread_initializers())
+    {
+        this->register_thread_local_initializer(this->system().topology().cpu_set(), f);
+    }
+
+    for (const auto& f : this->system().thread_finalizers())
+    {
+        this->register_thread_local_finalizer(this->system().topology().cpu_set(), f);
+    }
+}
 
 FiberTaskQueue& ThreadingResources::get_task_queue(std::uint32_t cpu_id) const
 {
@@ -67,8 +76,4 @@ void ThreadingResources::register_thread_local_finalizer(const CpuSet& cpu_set, 
     m_thread_resources->register_finalizer(cpu_set, finalizer);
 }
 
-std::unique_ptr<ThreadingResources> ThreadingResources::unwrap(IResources& resources)
-{
-    return std::move(resources.m_impl);
-}
 }  // namespace mrc::system

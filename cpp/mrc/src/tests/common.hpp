@@ -30,8 +30,16 @@ namespace mrc {
 
 class Options;
 }  // namespace mrc
+
 namespace mrc::system {
-class System;
+class SystemDefinition;
+class ThreadingResources;
 }  // namespace mrc::system
 
-std::shared_ptr<mrc::system::System> make_system(std::function<void(mrc::Options&)> updater = nullptr);
+namespace mrc::tests {
+std::unique_ptr<system::SystemDefinition> make_system(std::function<void(Options&)> updater = nullptr);
+
+std::unique_ptr<system::ThreadingResources> make_threading_resources(std::function<void(Options&)> updater = nullptr);
+
+std::unique_ptr<system::ThreadingResources> make_threading_resources(std::unique_ptr<system::SystemDefinition> system);
+}  // namespace mrc::tests

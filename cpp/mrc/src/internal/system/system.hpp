@@ -18,6 +18,7 @@
 #pragma once
 
 #include "mrc/core/bitmap.hpp"
+#include "mrc/pipeline/system.hpp"
 #include "mrc/utils/macros.hpp"
 
 #include <memory>
@@ -28,35 +29,40 @@ class Options;
 
 namespace mrc::system {
 
-class ISystem;
 class Partitions;
 class Topology;
 
-class System final
+class SystemDefinition final : public pipeline::ISystem
 {
-    System(std::shared_ptr<Options> options);
-
   public:
-    static std::shared_ptr<System> create(std::shared_ptr<Options> options);
-    static std::shared_ptr<System> unwrap(const ISystem& system);
+    SystemDefinition(const Options& options);
+    SystemDefinition(std::shared_ptr<Options> options);
+    ~SystemDefinition() override;
 
-    ~System() = default;
+    static std::unique_ptr<SystemDefinition> unwrap(std::unique_ptr<ISystem> object);
 
-    DELETE_COPYABILITY(System);
-    DELETE_MOVEABILITY(System);
+    DELETE_COPYABILITY(SystemDefinition);
+    DELETE_MOVEABILITY(SystemDefinition);
 
-    const Options& options() const;
+    const Options& options() const override;
     const Topology& topology() const;
     const Partitions& partitions() const;
+
+    void add_thread_initializer(std::function<void()> initializer_fn) override;
+    void add_thread_finalizer(std::function<void()> finalizer_fn) override;
+
+    const std::vector<std::function<void()>>& thread_initializers() const;
+    const std::vector<std::function<void()>>& thread_finalizers() const;
 
     CpuSet get_current_thread_affinity() const;
 
   private:
-    std::shared_ptr<Options> m_options;
+    std::unique_ptr<const Options> m_options;
     std::shared_ptr<Topology> m_topology;
     std::shared_ptr<Partitions> m_partitions;
-};
 
-std::shared_ptr<System> make_system(std::shared_ptr<Options> options);
+    std::vector<std::function<void()>> m_thread_initializers;
+    std::vector<std::function<void()>> m_thread_finalizers;
+};
 
 }  // namespace mrc::system

@@ -17,15 +17,16 @@
 
 #pragma once
 
+#include "mrc/utils/macros.hpp"
+
+#include <functional>
 #include <memory>
 
 namespace mrc {
 class Options;
 }  // namespace mrc
 
-namespace mrc::system {
-
-class System;
+namespace mrc::pipeline {
 
 /**
  * @brief System object
@@ -37,12 +38,20 @@ class System;
 class ISystem
 {
   public:
-    ISystem(std::shared_ptr<Options> options);
-    virtual ~ISystem() = 0;
+    virtual ~ISystem() = default;
+    DELETE_COPYABILITY(ISystem);
 
-  private:
-    std::shared_ptr<System> m_impl;
-    friend System;
+    virtual const Options& options() const = 0;
+
+    virtual void add_thread_initializer(std::function<void()> initializer_fn) = 0;
+    virtual void add_thread_finalizer(std::function<void()> finalizer_fn)     = 0;
+
+  protected:
+    ISystem() = default;
 };
 
-}  // namespace mrc::system
+}  // namespace mrc::pipeline
+
+namespace mrc {
+std::unique_ptr<pipeline::ISystem> make_system(std::shared_ptr<Options> options = nullptr);
+}

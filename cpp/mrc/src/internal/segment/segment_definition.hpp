@@ -17,8 +17,8 @@
 
 #pragma once
 
+#include "mrc/pipeline/segment.hpp"
 #include "mrc/segment/initializers.hpp"
-#include "mrc/segment/segment.hpp"
 #include "mrc/types.hpp"
 
 #include <map>

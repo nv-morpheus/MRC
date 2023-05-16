@@ -23,11 +23,11 @@
 
 namespace mrc::system {
 
-SystemProvider::SystemProvider(std::shared_ptr<const System> system) : m_system(std::move(system))
+SystemProvider::SystemProvider(std::shared_ptr<const SystemDefinition> system) : m_system(std::move(system))
 {
     CHECK(m_system);
 }
-const System& mrc::system::SystemProvider::system() const
+const SystemDefinition& mrc::system::SystemProvider::system() const
 {
     DCHECK(m_system);
     return *m_system;

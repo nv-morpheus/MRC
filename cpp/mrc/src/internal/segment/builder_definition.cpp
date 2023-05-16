@@ -95,6 +95,36 @@ std::shared_ptr<BuilderDefinition> BuilderDefinition::unwrap(std::shared_ptr<IBu
     return full_object;
 }
 
+const std::string& BuilderDefinition::name() const
+{
+    return m_definition->name();
+}
+
+std::tuple<std::string, std::string> BuilderDefinition::normalize_name(const std::string& name,
+                                                                       bool ignore_namespace) const
+{
+    // Prefix all nodes with `/<SegmentName>/`
+    auto global_prefix = "/" + this->name() + "/";
+
+    // Check and see if the name starts with "/" which means its global
+    bool is_global = name.starts_with(global_prefix);
+
+    if (is_global)
+    {
+        // Local is everything after the global prefix
+        auto local_name = name.substr(global_prefix.length());
+
+        return std::make_tuple(name, local_name);
+    }
+
+    // Otherwise build up the local name from any module prefix
+    auto local_name = (ignore_namespace || m_namespace_prefix.empty()) ? name : m_namespace_prefix + "/" + name;
+
+    auto global_name = global_prefix + local_name;
+
+    return std::make_tuple(global_name, local_name);
+}
+
 std::shared_ptr<ObjectProperties> BuilderDefinition::get_ingress(std::string name, std::type_index type_index)
 {
     auto base = this->get_ingress_base(name);
@@ -224,11 +254,6 @@ const SegmentDefinition& BuilderDefinition::definition() const
     return *m_definition;
 }
 
-const std::string& BuilderDefinition::name() const
-{
-    return m_definition->name();
-}
-
 void BuilderDefinition::initialize()
 {
     auto address = segment_address_encode(this->definition().id(), m_rank);
@@ -277,40 +302,6 @@ const std::map<std::string, std::shared_ptr<::mrc::segment::EgressPortBase>>& Bu
 const std::map<std::string, std::shared_ptr<::mrc::segment::IngressPortBase>>& BuilderDefinition::ingress_ports() const
 {
     return m_ingress_ports;
-}
-
-/**
- * @brief Takes either a local or global object name and returns the global name and local name separately. Global names
- * contain '/<SegmentName>/<m_namespace_prefix>/<name>' (leading '/') where local names are
- * '<m_namespace_prefix>/<name>' (no leading '/')
- *
- * @param name Name to normalize
- * @param ignore_namespace Whether or not to ignore the '<m_namespace_prefix>' portion. Useful for ports.
- * @return std::tuple<std::string, std::string> Global name, Local name
- */
-std::tuple<std::string, std::string> BuilderDefinition::normalize_name(const std::string& name,
-                                                                       bool ignore_namespace) const
-{
-    // Prefix all nodes with `/<SegmentName>/`
-    auto global_prefix = "/" + this->name() + "/";
-
-    // Check and see if the name starts with "/" which means its global
-    bool is_global = name.starts_with(global_prefix);
-
-    if (is_global)
-    {
-        // Local is everything after the global prefix
-        auto local_name = name.substr(global_prefix.length());
-
-        return std::make_tuple(name, local_name);
-    }
-
-    // Otherwise build up the local name from any module prefix
-    auto local_name = (ignore_namespace || m_namespace_prefix.empty()) ? name : m_namespace_prefix + "/" + name;
-
-    auto global_name = global_prefix + local_name;
-
-    return std::make_tuple(global_name, local_name);
 }
 
 bool BuilderDefinition::has_object(const std::string& name) const

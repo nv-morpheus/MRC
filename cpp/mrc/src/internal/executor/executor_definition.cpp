@@ -75,14 +75,9 @@ static bool valid_pipeline(const pipeline::PipelineDefinition& pipeline)
     return valid;
 }
 
-ExecutorDefinition::ExecutorDefinition(std::shared_ptr<Options> options) :
-  SystemProvider(system::make_system(std::move(options))),
+ExecutorDefinition::ExecutorDefinition(std::unique_ptr<system::SystemDefinition> system) :
+  SystemProvider(std::move(system)),
   m_resources_manager(std::make_unique<resources::Manager>(*this))
-{}
-
-ExecutorDefinition::ExecutorDefinition(std::unique_ptr<system::ThreadingResources> resources) :
-  SystemProvider(*resources),
-  m_resources_manager(std::make_unique<resources::Manager>(std::move(resources)))
 {}
 
 ExecutorDefinition::~ExecutorDefinition()
@@ -106,9 +101,7 @@ void ExecutorDefinition::register_pipeline(std::shared_ptr<pipeline::IPipeline> 
     CHECK(m_pipeline_manager == nullptr);
 
     // Convert it to the full implementation
-    auto full_pipeline = std::dynamic_pointer_cast<pipeline::PipelineDefinition>(pipeline);
-
-    CHECK(full_pipeline) << "Incorrect type for `pipeline`";
+    auto full_pipeline = pipeline::PipelineDefinition::unwrap(pipeline);
 
     if (!valid_pipeline(*full_pipeline))
     {
