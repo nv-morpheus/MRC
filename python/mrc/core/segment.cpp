@@ -105,7 +105,7 @@ PYBIND11_MODULE(segment, py_mod)
                                py::return_value_policy::reference_internal);
 
     auto Builder = py::class_<mrc::segment::IBuilder>(py_mod, "Builder");
-    auto Segment = py::class_<mrc::segment::ISegment>(py_mod, "Segment");
+    auto Segment = py::class_<mrc::pipeline::ISegment>(py_mod, "Segment");
 
     init_segment_modules(py_mod);
     init_segment_module_registry(py_mod);

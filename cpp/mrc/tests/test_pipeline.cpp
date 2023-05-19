@@ -94,11 +94,11 @@ TEST_F(TestPipeline, LifeCycle)
 
 TEST_F(TestPipeline, DuplicateSegments)
 {
-    auto segment_initializer                       = [](segment::IBuilder& seg) {};
-    std::shared_ptr<const segment::ISegment> seg_1 = Segment::create("seg_1",
-                                                                     segment::IngressPorts<int>({"my_int1"}),
-                                                                     segment::EgressPorts<int>({"my_int2"}),
-                                                                     segment_initializer);
+    auto segment_initializer                        = [](segment::IBuilder& seg) {};
+    std::shared_ptr<const pipeline::ISegment> seg_1 = Segment::create("seg_1",
+                                                                      segment::IngressPorts<int>({"my_int1"}),
+                                                                      segment::EgressPorts<int>({"my_int2"}),
+                                                                      segment_initializer);
     m_pipeline->register_segment(seg_1);
     EXPECT_ANY_THROW(m_pipeline->register_segment(seg_1));
 }

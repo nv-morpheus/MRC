@@ -43,27 +43,23 @@ class PipelineDefinition : public IPipeline
 
     static std::shared_ptr<PipelineDefinition> unwrap(std::shared_ptr<IPipeline> object);
 
-    std::shared_ptr<const segment::ISegment> register_segment(std::shared_ptr<const segment::ISegment> segment) override;
+    std::shared_ptr<const ISegment> register_segment(std::shared_ptr<const ISegment> segment) override;
 
-    std::shared_ptr<const segment::ISegment> make_segment(
-        const std::string& segment_name,
-        segment::segment_initializer_fn_t segment_initializer) override;
+    std::shared_ptr<const ISegment> make_segment(const std::string& segment_name,
+                                                 segment::segment_initializer_fn_t segment_initializer) override;
 
-    std::shared_ptr<const segment::ISegment> make_segment(
-        const std::string& segment_name,
-        segment::IngressPortsBase ingress_ports,
-        segment::EgressPortsBase egress_ports,
-        segment::segment_initializer_fn_t segment_initializer) override;
+    std::shared_ptr<const ISegment> make_segment(const std::string& segment_name,
+                                                 segment::IngressPortsBase ingress_ports,
+                                                 segment::EgressPortsBase egress_ports,
+                                                 segment::segment_initializer_fn_t segment_initializer) override;
 
-    std::shared_ptr<const segment::ISegment> make_segment(
-        const std::string& segment_name,
-        segment::IngressPortsBase ingress_ports,
-        segment::segment_initializer_fn_t segment_initializer) override;
+    std::shared_ptr<const ISegment> make_segment(const std::string& segment_name,
+                                                 segment::IngressPortsBase ingress_ports,
+                                                 segment::segment_initializer_fn_t segment_initializer) override;
 
-    std::shared_ptr<const segment::ISegment> make_segment(
-        const std::string& segment_name,
-        segment::EgressPortsBase egress_ports,
-        segment::segment_initializer_fn_t segment_initializer) override;
+    std::shared_ptr<const ISegment> make_segment(const std::string& segment_name,
+                                                 segment::EgressPortsBase egress_ports,
+                                                 segment::segment_initializer_fn_t segment_initializer) override;
 
     // static std::shared_ptr<PipelineDefinition> unwrap(IPipeline& pipeline);
 

@@ -27,10 +27,10 @@
 
 namespace mrc {
 
-std::unique_ptr<const segment::ISegment> Segment::create(std::string name,
-                                                         segment::IngressPortsBase ingress_ports,
-                                                         segment::EgressPortsBase egress_ports,
-                                                         segment::segment_initializer_fn_t initializer)
+std::unique_ptr<const pipeline::ISegment> Segment::create(std::string name,
+                                                          segment::IngressPortsBase ingress_ports,
+                                                          segment::EgressPortsBase egress_ports,
+                                                          segment::segment_initializer_fn_t initializer)
 {
     return std::make_unique<segment::SegmentDefinition>(std::move(name),
                                                         std::move(ingress_ports),
@@ -38,49 +38,49 @@ std::unique_ptr<const segment::ISegment> Segment::create(std::string name,
                                                         std::move(initializer));
 }
 
-std::unique_ptr<const segment::ISegment> Segment::create(std::string name,
-                                                         segment::EgressPortsBase egress_ports,
-                                                         segment::segment_initializer_fn_t initializer)
+std::unique_ptr<const pipeline::ISegment> Segment::create(std::string name,
+                                                          segment::EgressPortsBase egress_ports,
+                                                          segment::segment_initializer_fn_t initializer)
 {
     return Segment::create(std::move(name), {}, std::move(egress_ports), std::move(initializer));
 }
 
-std::unique_ptr<const segment::ISegment> Segment::create(std::string name,
-                                                         segment::IngressPortsBase ingress_ports,
-                                                         segment::segment_initializer_fn_t initializer)
+std::unique_ptr<const pipeline::ISegment> Segment::create(std::string name,
+                                                          segment::IngressPortsBase ingress_ports,
+                                                          segment::segment_initializer_fn_t initializer)
 {
     return Segment::create(std::move(name), std::move(ingress_ports), {}, std::move(initializer));
 }
 
-std::unique_ptr<const segment::ISegment> Segment::create(std::string name,
-                                                         segment::segment_initializer_fn_t initializer)
+std::unique_ptr<const pipeline::ISegment> Segment::create(std::string name,
+                                                          segment::segment_initializer_fn_t initializer)
 {
     return Segment::create(std::move(name), {}, {}, std::move(initializer));
 }
 
-std::unique_ptr<const segment::ISegment> make_segment(std::string name,
-                                                      segment::IngressPortsBase ingress_ports,
-                                                      segment::EgressPortsBase egress_ports,
-                                                      segment::segment_initializer_fn_t initializer)
+std::unique_ptr<const pipeline::ISegment> make_segment(std::string name,
+                                                       segment::IngressPortsBase ingress_ports,
+                                                       segment::EgressPortsBase egress_ports,
+                                                       segment::segment_initializer_fn_t initializer)
 {
     return Segment::create(std::move(name), std::move(ingress_ports), std::move(egress_ports), std::move(initializer));
 }
 
-std::unique_ptr<const segment::ISegment> make_segment(std::string name,
-                                                      segment::EgressPortsBase egress_ports,
-                                                      segment::segment_initializer_fn_t initializer)
+std::unique_ptr<const pipeline::ISegment> make_segment(std::string name,
+                                                       segment::EgressPortsBase egress_ports,
+                                                       segment::segment_initializer_fn_t initializer)
 {
     return Segment::create(std::move(name), {}, std::move(egress_ports), std::move(initializer));
 }
 
-std::unique_ptr<const segment::ISegment> make_segment(std::string name,
-                                                      segment::IngressPortsBase ingress_ports,
-                                                      segment::segment_initializer_fn_t initializer)
+std::unique_ptr<const pipeline::ISegment> make_segment(std::string name,
+                                                       segment::IngressPortsBase ingress_ports,
+                                                       segment::segment_initializer_fn_t initializer)
 {
     return Segment::create(std::move(name), std::move(ingress_ports), {}, std::move(initializer));
 }
 
-std::unique_ptr<const segment::ISegment> make_segment(std::string name, segment::segment_initializer_fn_t initializer)
+std::unique_ptr<const pipeline::ISegment> make_segment(std::string name, segment::segment_initializer_fn_t initializer)
 {
     return Segment::create(std::move(name), {}, {}, std::move(initializer));
 }

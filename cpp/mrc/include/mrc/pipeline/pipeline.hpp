@@ -28,7 +28,7 @@
 namespace mrc::segment {
 struct EgressPortsBase;
 struct IngressPortsBase;
-class ISegment;
+
 }  // namespace mrc::segment
 
 // work-around for known iwyu issue
@@ -36,6 +36,8 @@ class ISegment;
 // IWYU pragma: no_include <algorithm>
 
 namespace mrc::pipeline {
+
+class ISegment;
 
 class IPipeline
 {
@@ -49,8 +51,7 @@ class IPipeline
      * @param [in] segment
      * @throws
      **/
-    virtual std::shared_ptr<const segment::ISegment> register_segment(
-        std::shared_ptr<const segment::ISegment> segment) = 0;
+    virtual std::shared_ptr<const ISegment> register_segment(std::shared_ptr<const ISegment> segment) = 0;
 
     /**
      * @brief register multiple segments
@@ -59,9 +60,9 @@ class IPipeline
      * @param segment_defs
      */
     template <typename... SegmentDefsT>
-    std::vector<std::shared_ptr<const segment::ISegment>> register_segments(SegmentDefsT&&... segment_defs)
+    std::vector<std::shared_ptr<const ISegment>> register_segments(SegmentDefsT&&... segment_defs)
     {
-        auto segments = std::vector<std::shared_ptr<const segment::ISegment>>{
+        auto segments = std::vector<std::shared_ptr<const ISegment>>{
             {this->register_segment(std::forward<SegmentDefsT>(segment_defs))...}};
 
         return segments;
@@ -77,9 +78,8 @@ class IPipeline
      *  new segments.
      * @return A shared pointer to a new segment::ISegment
      */
-    virtual std::shared_ptr<const segment::ISegment> make_segment(
-        const std::string& segment_name,
-        segment::segment_initializer_fn_t segment_initializer) = 0;
+    virtual std::shared_ptr<const ISegment> make_segment(const std::string& segment_name,
+                                                         segment::segment_initializer_fn_t segment_initializer) = 0;
 
     /**
      * Create a segment definition, which describes how to create new Segment instances.
@@ -93,11 +93,10 @@ class IPipeline
      *  new segments.
      * @return A shared pointer to a new segment::ISegment
      */
-    virtual std::shared_ptr<const segment::ISegment> make_segment(
-        const std::string& segment_name,
-        segment::IngressPortsBase ingress_ports,
-        segment::EgressPortsBase egress_ports,
-        segment::segment_initializer_fn_t segment_initializer) = 0;
+    virtual std::shared_ptr<const ISegment> make_segment(const std::string& segment_name,
+                                                         segment::IngressPortsBase ingress_ports,
+                                                         segment::EgressPortsBase egress_ports,
+                                                         segment::segment_initializer_fn_t segment_initializer) = 0;
 
     /**
      * Create a segment definition, which describes how to create new Segment instances.
@@ -111,10 +110,9 @@ class IPipeline
      *  new segments.
      * @return A shared pointer to a new segment::ISegment
      */
-    virtual std::shared_ptr<const segment::ISegment> make_segment(
-        const std::string& segment_name,
-        segment::IngressPortsBase ingress_ports,
-        segment::segment_initializer_fn_t segment_initializer) = 0;
+    virtual std::shared_ptr<const ISegment> make_segment(const std::string& segment_name,
+                                                         segment::IngressPortsBase ingress_ports,
+                                                         segment::segment_initializer_fn_t segment_initializer) = 0;
 
     /**
      * Create a segment definition, which describes how to create new Segment instances.
@@ -128,10 +126,9 @@ class IPipeline
      *  new segments.
      * @return A shared pointer to a new segment::ISegment
      */
-    virtual std::shared_ptr<const segment::ISegment> make_segment(
-        const std::string& segment_name,
-        segment::EgressPortsBase egress_ports,
-        segment::segment_initializer_fn_t segment_initializer) = 0;
+    virtual std::shared_ptr<const ISegment> make_segment(const std::string& segment_name,
+                                                         segment::EgressPortsBase egress_ports,
+                                                         segment::segment_initializer_fn_t segment_initializer) = 0;
 
   protected:
     IPipeline() = default;

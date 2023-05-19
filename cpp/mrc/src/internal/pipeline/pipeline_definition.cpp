@@ -46,8 +46,7 @@ std::shared_ptr<PipelineDefinition> PipelineDefinition::unwrap(std::shared_ptr<I
     return full_object;
 }
 
-std::shared_ptr<const segment::ISegment> PipelineDefinition::register_segment(
-    std::shared_ptr<const segment::ISegment> segment)
+std::shared_ptr<const ISegment> PipelineDefinition::register_segment(std::shared_ptr<const ISegment> segment)
 {
     auto id = m_segment_hasher.register_name(segment->name());
 
@@ -80,37 +79,33 @@ std::shared_ptr<const segment::ISegment> PipelineDefinition::register_segment(
     return inserted_iterator->second;
 }
 
-std::shared_ptr<const segment::ISegment> PipelineDefinition::make_segment(
-    const std::string& segment_name,
-    segment::segment_initializer_fn_t segment_initializer)
+std::shared_ptr<const ISegment> PipelineDefinition::make_segment(const std::string& segment_name,
+                                                                 segment::segment_initializer_fn_t segment_initializer)
 {
     auto segdef = Segment::create(segment_name, segment_initializer);
     return this->register_segment(std::move(segdef));
 }
 
-std::shared_ptr<const segment::ISegment> PipelineDefinition::make_segment(
-    const std::string& segment_name,
-    segment::IngressPortsBase ingress_ports,
-    segment::EgressPortsBase egress_ports,
-    segment::segment_initializer_fn_t segment_initializer)
+std::shared_ptr<const ISegment> PipelineDefinition::make_segment(const std::string& segment_name,
+                                                                 segment::IngressPortsBase ingress_ports,
+                                                                 segment::EgressPortsBase egress_ports,
+                                                                 segment::segment_initializer_fn_t segment_initializer)
 {
     auto segdef = Segment::create(segment_name, ingress_ports, egress_ports, segment_initializer);
     return this->register_segment(std::move(segdef));
 }
 
-std::shared_ptr<const segment::ISegment> PipelineDefinition::make_segment(
-    const std::string& segment_name,
-    segment::IngressPortsBase ingress_ports,
-    segment::segment_initializer_fn_t segment_initializer)
+std::shared_ptr<const ISegment> PipelineDefinition::make_segment(const std::string& segment_name,
+                                                                 segment::IngressPortsBase ingress_ports,
+                                                                 segment::segment_initializer_fn_t segment_initializer)
 {
     auto segdef = Segment::create(segment_name, ingress_ports, segment_initializer);
     return this->register_segment(std::move(segdef));
 }
 
-std::shared_ptr<const segment::ISegment> PipelineDefinition::make_segment(
-    const std::string& segment_name,
-    segment::EgressPortsBase egress_ports,
-    segment::segment_initializer_fn_t segment_initializer)
+std::shared_ptr<const ISegment> PipelineDefinition::make_segment(const std::string& segment_name,
+                                                                 segment::EgressPortsBase egress_ports,
+                                                                 segment::segment_initializer_fn_t segment_initializer)
 {
     auto segdef = Segment::create(segment_name, egress_ports, segment_initializer);
     return this->register_segment(std::move(segdef));
