@@ -123,7 +123,7 @@ void PipelineInstance::create_segment(const SegmentAddress& address, std::uint32
 
             auto [id, rank] = segment_address_decode(address);
             auto definition = m_definition->find_segment(id);
-            auto segment = std::make_unique<segment::SegmentInstance>(m_runtime.partition(partition_id),
+            auto segment    = std::make_unique<segment::SegmentInstance>(m_runtime.partition(partition_id),
                                                                       definition,
                                                                       rank);
 
@@ -224,7 +224,7 @@ void PipelineInstance::do_service_start(std::stop_token stop_token)
     completed_promise.get_future().wait();
 }
 
-void Instance::do_service_kill()
+void PipelineInstance::process_state_update(control_plane::state::PipelineInstance& instance)
 {
     if (instance.state().status() == control_plane::state::ResourceStatus::Activated)
     {

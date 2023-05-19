@@ -60,7 +60,7 @@ thread_local PartitionResources* SystemResources::m_thread_partition{nullptr};
 
 SystemResources::SystemResources(const system::SystemProvider& system) :
   SystemProvider(system),
-  m_threading(std::make_unique<system::ThreadingResources>(system))
+  m_threading_resources(std::make_unique<system::ThreadingResources>(system))
 {
     // Create the system-wide runnable first
     m_sys_runnable = std::make_unique<runnable::RunnableResources>(*m_threading_resources,
@@ -134,7 +134,7 @@ SystemResources::SystemResources(const system::SystemProvider& system) :
             VLOG(1) << "building ucx resources for partition " << base.partition_id();
             auto network_task_queue_cpuset = base.partition().host().engine_factory_cpu_sets().fiber_cpu_sets.at(
                 "mrc_network");
-            auto& network_fiber_queue = m_system->get_task_queue(network_task_queue_cpuset.first());
+            auto& network_fiber_queue = m_threading_resources->get_task_queue(network_task_queue_cpuset.first());
             std::optional<ucx::UcxResources> ucx;
             ucx.emplace(base, network_fiber_queue);
             m_ucx.push_back(std::move(ucx));

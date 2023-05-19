@@ -85,7 +85,7 @@ class TestPipeline : public ::testing::Test
 static auto make_resources(std::function<void(Options& options)> options_lambda = [](Options& options) {})
 {
     auto resources = std::make_unique<resources::SystemResources>(
-        system::SystemProvider(make_system([&](Options& options) {
+        system::SystemProvider(tests::make_system([&](Options& options) {
             options.topology().user_cpuset("0-3");
             options.topology().restrict_gpus(true);
             options.placement().resources_strategy(PlacementResources::Dedicated);
@@ -94,18 +94,6 @@ static auto make_resources(std::function<void(Options& options)> options_lambda 
         })));
 
     return resources;
-}
-
-static std::shared_ptr<pipeline::PipelineDefinition> unwrap(std::unique_ptr<pipeline::IPipeline> pipeline)
-{
-    std::shared_ptr<pipeline::IPipeline> shared_pipeline = std::move(pipeline);
-
-    // Convert it to the full implementation
-    auto full_pipeline = std::dynamic_pointer_cast<pipeline::PipelineDefinition>(shared_pipeline);
-
-    CHECK(full_pipeline) << "Must pass a non-null pipeline pointer to register_pipeline";
-
-    return std::move(full_pipeline);
 }
 
 static void run_custom_manager(std::unique_ptr<pipeline::IPipeline> pipeline,
@@ -119,7 +107,10 @@ static void run_custom_manager(std::unique_ptr<pipeline::IPipeline> pipeline,
 
     auto runtime = runtime::Runtime(resources);
 
-    auto manager = std::make_unique<pipeline::PipelineManager>(runtime, unwrap(*pipeline), 0);
+    auto manager = std::make_unique<pipeline::PipelineManager>(
+        runtime,
+        pipeline::PipelineDefinition::unwrap(std::move(pipeline)),
+        0);
 
     auto f = std::async([&] {
         if (delayed_stop)
@@ -138,7 +129,7 @@ static void run_custom_manager(std::unique_ptr<pipeline::IPipeline> pipeline,
 
 static void run_manager(std::unique_ptr<pipeline::IPipeline> pipeline, bool delayed_stop = false)
 {
-    auto resources = resources::SystemResources(tests::make_system([](Options& options) {
+    auto resources = resources::SystemResources(system::SystemProvider(tests::make_system([](Options& options) {
         options.topology().user_cpuset("0");
         options.topology().restrict_gpus(true);
         mrc::channel::set_default_channel_size(64);
@@ -146,7 +137,10 @@ static void run_manager(std::unique_ptr<pipeline::IPipeline> pipeline, bool dela
 
     auto runtime = runtime::Runtime(resources);
 
-    auto manager = std::make_unique<pipeline::PipelineManager>(runtime, unwrap(*pipeline), 0);
+    auto manager = std::make_unique<pipeline::PipelineManager>(
+        runtime,
+        pipeline::PipelineDefinition::unwrap(std::move(pipeline)),
+        0);
 
     pipeline::SegmentAddresses update;
     update[segment_address_encode(segment_name_hash("seg_1"), 0)] = 0;

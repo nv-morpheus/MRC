@@ -51,10 +51,10 @@ if (DEFINED NodeJs_INCLUDE_DIR)
 
     file(READ ${NodeJs_VERSION_FILE} version_file_string)
 
-    parse_define_number(NODE_MODULE_VERSION ${version_file_string} NodeJs_NODE_MODULE_VERSION)
-    parse_define_number(NODE_MAJOR_VERSION ${version_file_string} NodeJs_NODE_MAJOR_VERSION)
-    parse_define_number(NODE_MINOR_VERSION ${version_file_string} NodeJs_NODE_MINOR_VERSION)
-    parse_define_number(NODE_PATCH_VERSION ${version_file_string} NodeJs_NODE_PATCH_VERSION)
+    parse_define_number(NODE_MODULE_VERSION "${version_file_string}" NodeJs_NODE_MODULE_VERSION)
+    parse_define_number(NODE_MAJOR_VERSION "${version_file_string}" NodeJs_NODE_MAJOR_VERSION)
+    parse_define_number(NODE_MINOR_VERSION "${version_file_string}" NodeJs_NODE_MINOR_VERSION)
+    parse_define_number(NODE_PATCH_VERSION "${version_file_string}" NodeJs_NODE_PATCH_VERSION)
 
     # Set the version variable
     set(NodeJs_VERSION "${NodeJs_NODE_MAJOR_VERSION}.${NodeJs_NODE_MINOR_VERSION}.${NodeJs_NODE_PATCH_VERSION}")

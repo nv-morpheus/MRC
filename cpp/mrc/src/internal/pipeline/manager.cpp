@@ -77,7 +77,7 @@ void PipelineManager::do_service_start()
     main.pe_count            = 1;
     main.engines_per_pe      = 1;
 
-    auto instance    = std::make_unique<Instance>(m_pipeline, m_resources);
+    auto instance    = std::make_unique<PipelineInstance>(m_runtime, m_pipeline, 0);
     auto controller  = std::make_unique<Controller>(std::move(instance));
     m_update_channel = std::make_unique<node::WritableEntrypoint<ControlMessage>>();
 
