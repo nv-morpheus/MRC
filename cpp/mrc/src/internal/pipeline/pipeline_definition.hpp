@@ -28,13 +28,13 @@
 #include <string>
 
 namespace mrc::segment {
-class ISegment;
 class SegmentDefinition;
 struct EgressPortsBase;
 struct IngressPortsBase;
 }  // namespace mrc::segment
 
 namespace mrc::pipeline {
+class ISegment;
 
 class PipelineDefinition : public IPipeline
 {
