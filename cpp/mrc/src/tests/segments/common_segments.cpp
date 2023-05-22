@@ -34,7 +34,7 @@ using namespace mrc;
 
 namespace test::segments {
 
-std::shared_ptr<const segment::ISegment> single_finite_no_ports(std::string segment_name)
+std::shared_ptr<const pipeline::ISegment> single_finite_no_ports(std::string segment_name)
 {
     return Segment::create(segment_name, [](segment::IBuilder& s) {
         auto rx_source = s.make_object("rx_source", test::nodes::finite_int_rx_source());
@@ -43,7 +43,7 @@ std::shared_ptr<const segment::ISegment> single_finite_no_ports(std::string segm
     });
 }
 
-std::shared_ptr<const segment::ISegment> single_finite_no_ports_will_throw(std::string segment_name)
+std::shared_ptr<const pipeline::ISegment> single_finite_no_ports_will_throw(std::string segment_name)
 {
     return Segment::create(segment_name, [](segment::IBuilder& s) {
         auto rx_source = s.make_object("rx_source", test::nodes::finite_int_rx_source());

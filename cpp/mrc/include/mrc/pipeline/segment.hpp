@@ -26,9 +26,11 @@
 #include <vector>
 
 namespace mrc::segment {
-
 struct EgressPortsBase;
 struct IngressPortsBase;
+}  // namespace mrc::segment
+
+namespace mrc::pipeline {
 
 class ISegment
 {
@@ -45,7 +47,7 @@ class ISegment
   protected:
     ISegment() = default;
 };
-}  // namespace mrc::segment
+}  // namespace mrc::pipeline
 
 namespace mrc {
 
@@ -53,36 +55,36 @@ namespace mrc {
 class Segment final
 {
   public:
-    static std::unique_ptr<const segment::ISegment> create(std::string name,
-                                                           segment::IngressPortsBase ingress_ports,
-                                                           segment::EgressPortsBase egress_ports,
-                                                           segment::segment_initializer_fn_t initializer);
+    static std::unique_ptr<const pipeline::ISegment> create(std::string name,
+                                                            segment::IngressPortsBase ingress_ports,
+                                                            segment::EgressPortsBase egress_ports,
+                                                            segment::segment_initializer_fn_t initializer);
 
-    static std::unique_ptr<const segment::ISegment> create(std::string name,
-                                                           segment::EgressPortsBase egress_ports,
-                                                           segment::segment_initializer_fn_t initializer);
+    static std::unique_ptr<const pipeline::ISegment> create(std::string name,
+                                                            segment::EgressPortsBase egress_ports,
+                                                            segment::segment_initializer_fn_t initializer);
 
-    static std::unique_ptr<const segment::ISegment> create(std::string name,
-                                                           segment::IngressPortsBase ingress_ports,
-                                                           segment::segment_initializer_fn_t initializer);
+    static std::unique_ptr<const pipeline::ISegment> create(std::string name,
+                                                            segment::IngressPortsBase ingress_ports,
+                                                            segment::segment_initializer_fn_t initializer);
 
-    static std::unique_ptr<const segment::ISegment> create(std::string name,
-                                                           segment::segment_initializer_fn_t initializer);
+    static std::unique_ptr<const pipeline::ISegment> create(std::string name,
+                                                            segment::segment_initializer_fn_t initializer);
 };
 
-std::unique_ptr<const segment::ISegment> make_segment(std::string name,
-                                                      segment::IngressPortsBase ingress_ports,
-                                                      segment::EgressPortsBase egress_ports,
-                                                      segment::segment_initializer_fn_t initializer);
+std::unique_ptr<const pipeline::ISegment> make_segment(std::string name,
+                                                       segment::IngressPortsBase ingress_ports,
+                                                       segment::EgressPortsBase egress_ports,
+                                                       segment::segment_initializer_fn_t initializer);
 
-std::unique_ptr<const segment::ISegment> make_segment(std::string name,
-                                                      segment::EgressPortsBase egress_ports,
-                                                      segment::segment_initializer_fn_t initializer);
+std::unique_ptr<const pipeline::ISegment> make_segment(std::string name,
+                                                       segment::EgressPortsBase egress_ports,
+                                                       segment::segment_initializer_fn_t initializer);
 
-std::unique_ptr<const segment::ISegment> make_segment(std::string name,
-                                                      segment::IngressPortsBase ingress_ports,
-                                                      segment::segment_initializer_fn_t initializer);
+std::unique_ptr<const pipeline::ISegment> make_segment(std::string name,
+                                                       segment::IngressPortsBase ingress_ports,
+                                                       segment::segment_initializer_fn_t initializer);
 
-std::unique_ptr<const segment::ISegment> make_segment(std::string name, segment::segment_initializer_fn_t initializer);
+std::unique_ptr<const pipeline::ISegment> make_segment(std::string name, segment::segment_initializer_fn_t initializer);
 
 }  // namespace mrc

@@ -23,7 +23,10 @@
 // Then the rest of the includes
 #include "mrc/core/context.hpp"
 #include "mrc/options/options.hpp"
+#include "mrc/pipeline/executor.hpp"
 #include "mrc/pipeline/pipeline.hpp"
+#include "mrc/pipeline/segment.hpp"
+#include "mrc/pipeline/system.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"

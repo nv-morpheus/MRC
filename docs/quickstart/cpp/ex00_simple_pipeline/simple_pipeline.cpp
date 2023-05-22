@@ -18,7 +18,6 @@
 #include <glog/logging.h>
 #include <mrc/mrc.hpp>
 #include <mrc/node/rx_sink.hpp>
-#include <mrc/pipeline/pipeline.hpp>
 
 using namespace mrc;
 
@@ -78,7 +77,7 @@ int main(int argc, char* argv[])
     });
 
     // register segments with the pipeline
-    pipeline->register_segment(seg);
+    pipeline->register_segment(std::move(seg));
 
     // register the pipeline with the executor
     executor.register_pipeline(std::move(pipeline));

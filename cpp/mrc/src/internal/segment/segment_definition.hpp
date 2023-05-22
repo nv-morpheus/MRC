@@ -30,7 +30,7 @@ namespace mrc::segment {
 struct EgressPortsBase;
 struct IngressPortsBase;
 
-class SegmentDefinition final : public ISegment
+class SegmentDefinition final : public pipeline::ISegment
 {
   public:
     SegmentDefinition(std::string name,
@@ -38,7 +38,7 @@ class SegmentDefinition final : public ISegment
                       EgressPortsBase egress_ports,
                       segment_initializer_fn_t initializer);
 
-    static std::shared_ptr<const SegmentDefinition> unwrap(std::shared_ptr<const ISegment> object);
+    static std::shared_ptr<const SegmentDefinition> unwrap(std::shared_ptr<const pipeline::ISegment> object);
 
     SegmentID id() const override;
     const std::string& name() const override;
