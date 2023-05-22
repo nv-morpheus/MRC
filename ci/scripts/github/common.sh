@@ -37,6 +37,7 @@ export BUILD_CC=${BUILD_CC:-"gcc"}
 
 export CONDA_ENV_YML="${MRC_ROOT}/ci/conda/environments/dev_env.yml"
 export CONDA_CLANG_ENV_YML="${MRC_ROOT}/ci/conda/environments/clang_env.yml"
+export CONDA_CI_ENV_YML="${MRC_ROOT}/ci/conda/environments/ci_env.yml"
 
 export CMAKE_BUILD_ALL_FEATURES="-DCMAKE_MESSAGE_CONTEXT_SHOW=ON -DMRC_BUILD_BENCHMARKS=ON -DMRC_BUILD_EXAMPLES=ON -DMRC_BUILD_PYTHON=ON -DMRC_BUILD_TESTS=ON -DMRC_USE_CONDA=ON -DMRC_PYTHON_BUILD_STUBS=ON"
 export CMAKE_BUILD_WITH_CODECOV="-DCMAKE_BUILD_TYPE=Debug -DMRC_ENABLE_CODECOV=ON -DMRC_PYTHON_PERFORM_INSTALL:BOOL=ON -DMRC_PYTHON_INPLACE_BUILD:BOOL=ON"
@@ -79,7 +80,7 @@ function update_conda_env() {
 
     # Make sure we have the conda-merge package installed
     if [[ -z "$(conda list | grep conda-merge)" ]]; then
-        rapids-mamba-retry install -n mrc -c conda-forge "conda-merge>=0.2"
+        rapids-mamba-retry install -q -n mrc -c conda-forge "conda-merge>=0.2"
     fi
 
     # Create a temp directory which we store the combined environment file in
