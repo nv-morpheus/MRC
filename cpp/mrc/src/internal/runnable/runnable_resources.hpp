@@ -66,6 +66,9 @@ class IRunnableResourcesProvider
 // construction. Inherits virtually to ensure only one IRunnableResourcesProvider
 class RunnableResourcesProvider : public virtual IRunnableResourcesProvider
 {
+  public:
+    static RunnableResourcesProvider create(RunnableResources& runnable);
+
   protected:
     RunnableResourcesProvider(const RunnableResourcesProvider& other);
     RunnableResourcesProvider(IRunnableResourcesProvider& other);

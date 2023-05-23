@@ -17,8 +17,8 @@
 
 #pragma once
 
+#include "internal/async_service.hpp"
 #include "internal/control_plane/server/connection_manager.hpp"
-#include "internal/service.hpp"
 
 #include "mrc/core/error.hpp"
 
@@ -84,20 +84,21 @@ class NodeRuntime : public ::mrc::runnable::RunnableWithContext<::mrc::runnable:
     std::vector<std::string> m_args;
 };
 
-class NodeService : public Service
+class NodeService : public AsyncService, public runnable::RunnableResourcesProvider
 {
   public:
-    NodeService();
+    NodeService(runnable::IRunnableResourcesProvider& resources, std::vector<std::string> args);
     ~NodeService() override;
 
-    void set_args(std::vector<std::string> args);
-
   private:
-    void do_service_start() final;
-    void do_service_stop() final;
+    // void do_service_start() final;
+    // void do_service_stop() final;
+    // void do_service_kill() final;
+    // void do_service_await_live() final;
+    // void do_service_await_join() final;
+
+    void do_service_start(std::stop_token stop_token) final;
     void do_service_kill() final;
-    void do_service_await_live() final;
-    void do_service_await_join() final;
 
     void launch_node(std::vector<std::string> args);
 
@@ -110,7 +111,6 @@ class NodeService : public Service
     std::unique_ptr<::node::CommonEnvironmentSetup> m_setup;
 
     std::vector<std::string> m_args;
-    bool m_launch_node{true};
 
     mutable boost::fibers::mutex m_mutex;
 

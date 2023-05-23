@@ -17,7 +17,9 @@
 
 #include "internal/control_plane/server.hpp"
 
+#include "internal/async_service.hpp"
 #include "internal/control_plane/proto_helpers.hpp"
+#include "internal/control_plane/server/node_service.hpp"
 #include "internal/control_plane/server/subscription_manager.hpp"
 #include "internal/grpc/stream_writer.hpp"
 #include "internal/runnable/runnable_resources.hpp"
@@ -94,27 +96,10 @@ static Expected<> unary_response(Server::event_t& event, Expected<MessageT>&& me
     return {};
 }
 
-Server::Server()
+Server::Server(runnable::IRunnableResourcesProvider& resources) :
+  AsyncService("ControlPlaneServer"),
+  runnable::RunnableResourcesProvider(resources)
 {
-    std::vector<std::string> args;
-
-    args.emplace_back(utils::get_exe_location());
-    // args.emplace_back("--loader");
-    // args.emplace_back("ts-node/esm");
-    args.emplace_back("--inspect");
-
-    // Find the location relative to the build folder
-    auto mrc_lib_location = std::filesystem::path(utils::get_mrc_lib_location());
-
-    auto node_service_js = mrc_lib_location.parent_path() / ".." / ".." / "ts" / "control-plane" / "dist" /
-                           "index.bundle.js";
-
-    // Convert to absolute just to be sure
-    node_service_js = std::filesystem::canonical(node_service_js);
-
-    args.emplace_back(node_service_js);
-
-    m_node_service.set_args(args);
     // // Parse Node.js CLI options, and print any errors that have occurred while
     // // trying to parse them.
     // std::unique_ptr<::node::InitializationResult> result = ::node::InitializeOncePerProcess(
@@ -152,164 +137,206 @@ Server::Server()
 
 Server::~Server()
 {
-    Service::call_in_destructor();
+    AsyncService::call_in_destructor();
 }
 
-void Server::do_service_start()
+void Server::do_service_start(std::stop_token stop_token)
 {
-    m_node_service.service_start();
+    // Check if we need to launch node
+    m_launch_node = std::getenv("MRC_SKIP_LAUNCH_NODE") == nullptr;
 
-    // // auto node_runnable = std::make_unique<NodeRuntime>();
+    if (!m_launch_node)
+    {
+        LOG(INFO) << "Environment variable MRC_SKIP_LAUNCH_NODE was set and the control plane will not be run.";
+    }
+    else
+    {
+        std::vector<std::string> args;
 
-    // std::vector<std::string> args;
+        args.emplace_back(utils::get_exe_location());
+        // args.emplace_back("--loader");
+        // args.emplace_back("ts-node/esm");
+        args.emplace_back("--inspect");
 
-    // args.emplace_back("/work/build/cpp/mrc/src/tests/test_mrc_private.x");
-    // args.emplace_back("--inspect");
-    // args.emplace_back("/work/ts/control-plane/dist/server/server.js");
+        // Find the location relative to the build folder
+        auto mrc_lib_location = std::filesystem::path(utils::get_mrc_lib_location());
 
-    // // m_node_runner = m_runnable.launch_control().prepare_launcher(std::move(node_runnable), args)->ignition();
+        auto node_service_js = mrc_lib_location.parent_path() / ".." / ".." / "ts" / "control-plane" / "dist" /
+                               "index.bundle.js";
 
-    // // int argc;
-    // // char** argv;
+        // Convert to absolute just to be sure
+        node_service_js = std::filesystem::canonical(node_service_js);
 
-    // // // Create an instance of node
-    // // // argv = uv_setup_args(argc, argv);
-    // // // std::vector<std::string> args(argv, argv + argc);
-    // // std::vector<std::string> args;
+        args.emplace_back(node_service_js);
 
-    // // args.emplace_back("/work/build/cpp/mrc/src/tests/test_mrc_private.x");
-    // // args.emplace_back("--inspect");
-    // // args.emplace_back("/work/ts/control-plane/dist/server/server.js");
-    // // // args.emplace_back("/work/cpp/mrc/src/internal/control_plane/server.js");
+        m_node_service = std::make_unique<NodeService>(*this, args);
 
-    // // // Now start node
-    // // run_node(args);
+        this->child_service_start(*m_node_service);
+    }
 
-    // // // Convert the string array to a char**
-    // // std::vector<char*> raw_pointer_array = vec_string_to_char_ptr(args);
-
-    // // // This works well but is for some reason deprecated. Trying the example from the embedding documentation did
-    // not
-    // // // work correctly so we will use this for the time being. Example docs: https://nodejs.org/api/embedding.html
-    // // ::node::Start(args.size(), raw_pointer_array.data());
-
-    // // node to accept connections
-    // auto acceptor = std::make_unique<mrc::node::RxSource<stream_t>>(
-    //     rxcpp::observable<>::create<stream_t>([this](rxcpp::subscriber<stream_t>& s) {
-    //         do_accept_stream(s);
-    //     }));
-
-    // // node to periodically issue updates
-
-    // // create external queue for incoming events
-    // // as new grpc streams are initialized by the acceptor, they attach as sources to the queue (stream >> queue)
-    // // these streams issue event (event_t) object which encapsulate the stream_writer for the originating stream
-    // m_queue        = std::make_unique<mrc::node::Queue<event_t>>();
-    // m_queue_holder = std::make_unique<mrc::node::WritableEntrypoint<event_t>>();
-
-    // // Enable persistance by connecting the queue to a subject that will keep the connection alive
-    // mrc::make_edge(*m_queue_holder, *m_queue);
-
-    // // the queue is attached to the event handler which will update the internal state of the server
-    // auto handler = std::make_unique<mrc::node::RxSink<event_t>>([this](event_t event) {
-    //     do_handle_event(std::move(event));
-    // });
-
-    // // node to periodically issue update of the server state to connected clients via the grpc bidi streams
-    // auto updater = std::make_unique<mrc::node::RxSource<void*>>(
-    //     rxcpp::observable<>::create<void*>([this](rxcpp::subscriber<void*>& s) {
-    //         do_issue_update(s);
-    //     }));
-
-    // // edge: queue >> handler
-    // mrc::make_edge(*m_queue, *handler);
-
-    // // grpc service
-    // m_service = std::make_shared<mrc::protos::Architect::AsyncService>();
-
-    // // bring up the grpc server and the progress engine
-    // m_server.register_service(m_service);
-    // m_server.service_start();
-
-    // // start the handler
-    // // if required, this is the runnable which most users would want to increase the level of concurrency
-    // // mrc::runnable::LaunchOptions options;
-    // // options.engine_factory_name = "default";
-    // // options.pe_count = N;       // number of thread/cores
-    // // options.engines_per_pe = M; // number of fibers/user-threads per thread/core
-    // m_event_handler = m_runnable.launch_control().prepare_launcher(std::move(handler))->ignition();
-
-    // // periodic updater
-    // m_update_handler = m_runnable.launch_control().prepare_launcher(std::move(updater))->ignition();
-
-    // // start the acceptor - this should be one of the last runnables launch
-    // // once this goes live, connections will be accepted and data/events can be coming in
-    // m_stream_acceptor = m_runnable.launch_control().prepare_launcher(std::move(acceptor))->ignition();
+    // Mark that we have started
+    this->mark_started();
 }
 
-void Server::do_service_await_live()
-{
-    m_node_service.service_await_live();
-    // m_node_runner->await_live();
-    // m_server.service_await_live();
-    // m_event_handler->await_live();
-    // m_stream_acceptor->await_live();
-}
+void Server::do_service_kill() {}
 
-void Server::do_service_stop()
-{
-    // if we are stopping the control plane and we are not in HA mode,
-    // then all connections will be shutdown
-    // to gracefully shutdown connections, we need to alert all services to go in to shutdown
-    // mode which requires communication back and forth to the control, so we should not just
-    // shutdown the server and the cq immeditately.
-    // this is future work, for now we will be hard killing the server which will be hard killing the streams, the
-    // clients will not gracefully shutdown and enter a kill mode.
-    m_node_service.service_stop();
-    // m_node_runner->stop();
-    // m_stream_acceptor->stop();
-    // m_update_handler->stop();
-    // m_update_cv.notify_all();
+// void Server::do_service_start()
+// {
+//     m_node_service.service_start();
 
-    // service_kill();
-}
+//     // // auto node_runnable = std::make_unique<NodeRuntime>();
 
-void Server::do_service_kill()
-{
-    // this is a hard stop, we are shutting everything down in the proper sequence to ensure clients get the kill
-    // signal.
-    m_node_service.service_kill();
-    // m_node_runner->kill();
-    // m_stream_acceptor->kill();
-    // m_update_handler->kill();
-    // m_update_cv.notify_all();
+//     // std::vector<std::string> args;
 
-    // shutdown server and cqs
-    // m_server.service_kill();
-}
+//     // args.emplace_back("/work/build/cpp/mrc/src/tests/test_mrc_private.x");
+//     // args.emplace_back("--inspect");
+//     // args.emplace_back("/work/ts/control-plane/dist/server/server.js");
 
-void Server::do_service_await_join()
-{
-    // // clear all instances which drops their held stream writers
-    // DVLOG(10) << "awaiting all streams";
-    // drop_all_streams();
+//     // // m_node_runner = m_runnable.launch_control().prepare_launcher(std::move(node_runnable), args)->ignition();
 
-    // // we keep the event handlers open until the streams are closed
-    // m_queue_holder.reset();
+//     // // int argc;
+//     // // char** argv;
 
-    m_node_service.service_await_join();
-    // m_node_runner->await_join();
+//     // // // Create an instance of node
+//     // // // argv = uv_setup_args(argc, argv);
+//     // // // std::vector<std::string> args(argv, argv + argc);
+//     // // std::vector<std::string> args;
 
-    // DVLOG(10) << "awaiting grpc server join";
-    // m_server.service_await_join();
-    // DVLOG(10) << "awaiting acceptor join";
-    // m_stream_acceptor->await_join();
-    // DVLOG(10) << "awaiting updater join";
-    // m_update_handler->await_join();
-    // DVLOG(10) << "awaiting event handler join";
-    // m_event_handler->await_join();
-    // DVLOG(10) << "finished await_join";
-}
+//     // // args.emplace_back("/work/build/cpp/mrc/src/tests/test_mrc_private.x");
+//     // // args.emplace_back("--inspect");
+//     // // args.emplace_back("/work/ts/control-plane/dist/server/server.js");
+//     // // // args.emplace_back("/work/cpp/mrc/src/internal/control_plane/server.js");
+
+//     // // // Now start node
+//     // // run_node(args);
+
+//     // // // Convert the string array to a char**
+//     // // std::vector<char*> raw_pointer_array = vec_string_to_char_ptr(args);
+
+//     // // // This works well but is for some reason deprecated. Trying the example from the embedding documentation
+//     did
+//     // not
+//     // // // work correctly so we will use this for the time being. Example docs:
+//     https://nodejs.org/api/embedding.html
+//     // // ::node::Start(args.size(), raw_pointer_array.data());
+
+//     // // node to accept connections
+//     // auto acceptor = std::make_unique<mrc::node::RxSource<stream_t>>(
+//     //     rxcpp::observable<>::create<stream_t>([this](rxcpp::subscriber<stream_t>& s) {
+//     //         do_accept_stream(s);
+//     //     }));
+
+//     // // node to periodically issue updates
+
+//     // // create external queue for incoming events
+//     // // as new grpc streams are initialized by the acceptor, they attach as sources to the queue (stream >> queue)
+//     // // these streams issue event (event_t) object which encapsulate the stream_writer for the originating stream
+//     // m_queue        = std::make_unique<mrc::node::Queue<event_t>>();
+//     // m_queue_holder = std::make_unique<mrc::node::WritableEntrypoint<event_t>>();
+
+//     // // Enable persistance by connecting the queue to a subject that will keep the connection alive
+//     // mrc::make_edge(*m_queue_holder, *m_queue);
+
+//     // // the queue is attached to the event handler which will update the internal state of the server
+//     // auto handler = std::make_unique<mrc::node::RxSink<event_t>>([this](event_t event) {
+//     //     do_handle_event(std::move(event));
+//     // });
+
+//     // // node to periodically issue update of the server state to connected clients via the grpc bidi streams
+//     // auto updater = std::make_unique<mrc::node::RxSource<void*>>(
+//     //     rxcpp::observable<>::create<void*>([this](rxcpp::subscriber<void*>& s) {
+//     //         do_issue_update(s);
+//     //     }));
+
+//     // // edge: queue >> handler
+//     // mrc::make_edge(*m_queue, *handler);
+
+//     // // grpc service
+//     // m_service = std::make_shared<mrc::protos::Architect::AsyncService>();
+
+//     // // bring up the grpc server and the progress engine
+//     // m_server.register_service(m_service);
+//     // m_server.service_start();
+
+//     // // start the handler
+//     // // if required, this is the runnable which most users would want to increase the level of concurrency
+//     // // mrc::runnable::LaunchOptions options;
+//     // // options.engine_factory_name = "default";
+//     // // options.pe_count = N;       // number of thread/cores
+//     // // options.engines_per_pe = M; // number of fibers/user-threads per thread/core
+//     // m_event_handler = m_runnable.launch_control().prepare_launcher(std::move(handler))->ignition();
+
+//     // // periodic updater
+//     // m_update_handler = m_runnable.launch_control().prepare_launcher(std::move(updater))->ignition();
+
+//     // // start the acceptor - this should be one of the last runnables launch
+//     // // once this goes live, connections will be accepted and data/events can be coming in
+//     // m_stream_acceptor = m_runnable.launch_control().prepare_launcher(std::move(acceptor))->ignition();
+// }
+
+// void Server::do_service_await_live()
+// {
+//     m_node_service.service_await_live();
+//     // m_node_runner->await_live();
+//     // m_server.service_await_live();
+//     // m_event_handler->await_live();
+//     // m_stream_acceptor->await_live();
+// }
+
+// void Server::do_service_stop()
+// {
+//     // if we are stopping the control plane and we are not in HA mode,
+//     // then all connections will be shutdown
+//     // to gracefully shutdown connections, we need to alert all services to go in to shutdown
+//     // mode which requires communication back and forth to the control, so we should not just
+//     // shutdown the server and the cq immeditately.
+//     // this is future work, for now we will be hard killing the server which will be hard killing the streams, the
+//     // clients will not gracefully shutdown and enter a kill mode.
+//     m_node_service.service_stop();
+//     // m_node_runner->stop();
+//     // m_stream_acceptor->stop();
+//     // m_update_handler->stop();
+//     // m_update_cv.notify_all();
+
+//     // service_kill();
+// }
+
+// void Server::do_service_kill()
+// {
+//     // this is a hard stop, we are shutting everything down in the proper sequence to ensure clients get the kill
+//     // signal.
+//     m_node_service.service_kill();
+//     // m_node_runner->kill();
+//     // m_stream_acceptor->kill();
+//     // m_update_handler->kill();
+//     // m_update_cv.notify_all();
+
+//     // shutdown server and cqs
+//     // m_server.service_kill();
+// }
+
+// void Server::do_service_await_join()
+// {
+//     // // clear all instances which drops their held stream writers
+//     // DVLOG(10) << "awaiting all streams";
+//     // drop_all_streams();
+
+//     // // we keep the event handlers open until the streams are closed
+//     // m_queue_holder.reset();
+
+//     m_node_service.service_await_join();
+//     // m_node_runner->await_join();
+
+//     // DVLOG(10) << "awaiting grpc server join";
+//     // m_server.service_await_join();
+//     // DVLOG(10) << "awaiting acceptor join";
+//     // m_stream_acceptor->await_join();
+//     // DVLOG(10) << "awaiting updater join";
+//     // m_update_handler->await_join();
+//     // DVLOG(10) << "awaiting event handler join";
+//     // m_event_handler->await_join();
+//     // DVLOG(10) << "finished await_join";
+// }
 
 // /**
 //  * @brief Stream Acceptor

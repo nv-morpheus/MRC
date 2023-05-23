@@ -18,10 +18,12 @@
 #include "internal/async_service.hpp"
 
 #include "mrc/channel/status.hpp"
+#include "mrc/runnable/runner.hpp"
 
 #include <glog/logging.h>
 
 #include <chrono>
+#include <memory>
 #include <mutex>
 #include <ostream>
 #include <stop_token>
@@ -39,6 +41,11 @@ AsyncService::~AsyncService()
 
     CHECK(!is_running) << "Must call AsyncService::call_in_destructor to ensure service is cleaned up before being "
                           "destroyed";
+}
+
+const std::string& AsyncService::service_name() const
+{
+    return m_service_name;
 }
 
 bool AsyncService::is_service_startable() const
@@ -81,9 +88,8 @@ Future<void> AsyncService::service_start(std::stop_source stop_source)
                                                             "inside "
                                                             "of do_service_start()";
 
-            // Set the state to stopping to prevent any changes while we wait for children. Dont check the response
-            // since it could have been requested by external users
-            forward_state(AsyncServiceState::Stopping);
+            // Set the state to awaiting children to prevent any changes while we wait for children.
+            DCHECK(forward_state(AsyncServiceState::AwaitingChildren));
         }
 
         // Wait for all children to have completed. Make sure not to hold the lock when waiting on children.
@@ -215,6 +221,44 @@ void AsyncService::child_service_start(AsyncService& child)
     m_children.emplace_back(child);
     m_child_futures.emplace_back(child.service_start(m_stop_source));
 }
+
+void AsyncService::child_service_start(std::unique_ptr<AsyncService> child)
+{
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+
+    const auto& name = child->service_name();
+
+    CHECK(!m_owned_children.contains(name)) << "Child service with name '" << name << "' already added!";
+
+    // Save it to the owned children list
+    auto [added_iterator, did_add] = m_owned_children.emplace(name, std::move(child));
+
+    // Now add the child reference
+    this->child_service_start(*added_iterator->second);
+}
+
+// void AsyncService::child_runnable_start(const mrc::runnable::LaunchOptions& options,
+// std::unique_ptr<runnable::Launcher> launcher)
+// {
+//     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+
+//     // The state must be running
+//     CHECK(m_state == AsyncServiceState::Starting || m_state == AsyncServiceState::Running) << "Can only start child "
+//                                                                                               "service in Starting or
+//                                                                                               " "Running state";
+
+//     m_child_futures.emplace_back(this->runnable().main().enqueue([this]() {
+//         std::shared_ptr<runnable::Runner> runner =
+//             this->runnable().launch_control().prepare_launcher(options, std::move(runnable))->ignition();
+
+//         // Add a stop callback to notify the cv anytime a stop is requested
+//         std::stop_callback stop_callback(m_stop_source.get_token(), [this]() {
+//             runner->stop();
+//         });
+
+//         runner->await_join();
+//     }));
+// }
 
 bool AsyncService::forward_state(AsyncServiceState new_state, bool assert_forward)
 {

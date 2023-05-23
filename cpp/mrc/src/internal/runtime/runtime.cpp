@@ -118,9 +118,9 @@ void Runtime::do_service_start(std::stop_token stop_token)
     {
         if (system().options().enable_server())
         {
-            m_control_plane_server = std::make_unique<control_plane::Server>();
-            m_control_plane_server->service_start();
-            m_control_plane_server->service_await_live();
+            m_control_plane_server = std::make_unique<control_plane::Server>(*m_sys_resources);
+
+            this->child_service_start(*m_control_plane_server);
         }
         else
         {
@@ -137,7 +137,10 @@ void Runtime::do_service_start(std::stop_token stop_token)
     // auto part_base         = resources::PartitionResourceBase(runnable, 0);
 
     m_control_plane_client = std::make_unique<control_plane::Client>(*m_sys_resources);
-    m_control_plane_client->service_start();
+
+    this->child_service_start(*m_control_plane_client);
+
+    // Before continuing, make sure that we are started
     m_control_plane_client->service_await_live();
 
     // // Create/Initialize the runtime resources object (Could go before the control plane client)

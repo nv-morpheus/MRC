@@ -19,10 +19,14 @@
 
 #include "internal/runnable/runnable_resources.hpp"
 
+#include "mrc/runnable/launch_options.hpp"
+#include "mrc/runnable/launcher.hpp"
+#include "mrc/runnable/runner.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/string_utils.hpp"
 
 #include <functional>
+#include <memory>
 #include <mutex>
 #include <stop_token>
 #include <string>
@@ -34,6 +38,7 @@ enum class AsyncServiceState
     Initialized,
     Starting,
     Running,
+    AwaitingChildren,  // The parent main loop has finished by child ones are still running
     Stopping,
     Killing,
     Completed,
@@ -55,6 +60,8 @@ inline std::string asyncservicestate_to_str(const AsyncServiceState& s)
         return "Starting";
     case AsyncServiceState::Running:
         return "Running";
+    case AsyncServiceState::AwaitingChildren:
+        return "AwaitingChildren";
     case AsyncServiceState::Stopping:
         return "Stopping";
     case AsyncServiceState::Killing:
@@ -85,6 +92,8 @@ class AsyncService : public virtual runnable::IRunnableResourcesProvider
     AsyncService(std::string service_name);
     virtual ~AsyncService();
 
+    const std::string& service_name() const;
+
     bool is_service_startable() const;
     const AsyncServiceState& state() const;
 
@@ -102,6 +111,13 @@ class AsyncService : public virtual runnable::IRunnableResourcesProvider
     void mark_started();
 
     void child_service_start(AsyncService& child);
+    void child_service_start(std::unique_ptr<AsyncService> child);
+
+    template <typename RunnableT, typename... ContextArgsT>
+    void child_runnable_start(std::string name,
+                              const mrc::runnable::LaunchOptions& options,
+                              std::unique_ptr<RunnableT> runnable,
+                              ContextArgsT&&... context_args);
 
   private:
     bool forward_state(AsyncServiceState new_state, bool assert_forward = false);
@@ -119,8 +135,114 @@ class AsyncService : public virtual runnable::IRunnableResourcesProvider
     CondVarAny m_cv;
     mutable RecursiveMutex m_mutex;
 
+    std::map<std::string, std::unique_ptr<AsyncService>> m_owned_children;
     std::vector<std::reference_wrapper<AsyncService>> m_children;
     std::vector<Future<void>> m_child_futures;
 };
+
+class AsyncServiceRunnerWrapper : public AsyncService, public runnable::RunnableResourcesProvider
+{
+  public:
+    // AsyncServiceRunnerWrapper(const runnable::RunnableResourcesProvider& resources,
+    //                           std::string name,
+    //                           std::unique_ptr<runnable::Launcher> launcher) :
+    //   AsyncService(name + "(Runnable)"),
+    //   runnable::RunnableResourcesProvider(resources),
+    //   m_launcher(std::move(launcher))
+    // {}
+
+    // AsyncServiceRunnerWrapper(runnable::RunnableResources& resources,
+    //                           std::string name,
+    //                           std::unique_ptr<runnable::Launcher> launcher) :
+    //   AsyncService(name + "(Runnable)"),
+    //   runnable::RunnableResourcesProvider(resources),
+    //   m_launcher(std::move(launcher))
+    // {}
+
+    template <typename RunnableT, typename... ContextArgsT>
+    AsyncServiceRunnerWrapper(runnable::IRunnableResourcesProvider& resources,
+                              std::string name,
+                              const runnable::LaunchOptions& options,
+                              std::unique_ptr<RunnableT> runnable,
+                              ContextArgsT&&... context_args) :
+      AsyncService(name + "(Runnable)"),
+      runnable::RunnableResourcesProvider(resources),
+      m_launcher(this->runnable().launch_control().prepare_launcher(options,
+                                                                    std::move(runnable),
+                                                                    std::forward<ContextArgsT>(context_args)...))
+    {}
+
+    // template <typename RunnableT, typename... ContextArgsT>
+    // [[nodiscard]] static std::unique_ptr<AsyncServiceRunnerWrapper> create(
+    //     runnable::IRunnableResourcesProvider& resources,
+    //     std::string name,
+    //     const runnable::LaunchOptions& options,
+    //     std::unique_ptr<RunnableT> runnable,
+    //     ContextArgsT&&... context_args)
+    // {
+    //     auto launcher = resources.runnable().launch_control().prepare_launcher(
+    //         options,
+    //         std::move(runnable),
+    //         std::forward<ContextArgsT>(context_args)...);
+
+    //     auto a = std::make_unique<AsyncServiceRunnerWrapper>(resources, std::move(name), std::move(launcher));
+
+    //     a->runnable().launch_control();
+
+    //     return a;
+    // }
+
+  private:
+    void do_service_start(std::stop_token stop_token) final
+    {
+        {
+            // Prevent changes while we are using m_runner
+            std::lock_guard<decltype(m_runner_mutex)> lock(m_runner_mutex);
+
+            m_runner = m_launcher->ignition();
+        }
+
+        std::stop_callback stop_callback(stop_token, [this]() {
+            // Prevent changes while we are using m_runner
+            std::lock_guard<decltype(m_runner_mutex)> lock(m_runner_mutex);
+
+            m_runner->stop();
+        });
+
+        this->mark_started();
+
+        m_runner->await_join();
+    }
+    void do_service_kill() final
+    {
+        // Prevent changes while we are using m_runner
+        std::lock_guard<decltype(m_runner_mutex)> lock(m_runner_mutex);
+
+        if (m_runner)
+        {
+            m_runner->kill();
+        }
+    }
+
+    mutable RecursiveMutex m_runner_mutex;
+
+    std::unique_ptr<runnable::Launcher> m_launcher;
+    std::unique_ptr<runnable::Runner> m_runner;
+};
+
+template <typename RunnableT, typename... ContextArgsT>
+void AsyncService::child_runnable_start(std::string name,
+                                        const mrc::runnable::LaunchOptions& options,
+                                        std::unique_ptr<RunnableT> runnable,
+                                        ContextArgsT&&... context_args)
+{
+    auto wrapper = std::make_unique<AsyncServiceRunnerWrapper>(*this,
+                                                               std::move(name),
+                                                               options,
+                                                               std::move(runnable),
+                                                               std::forward<ContextArgsT>(context_args)...);
+
+    this->child_service_start(std::move(wrapper));
+}
 
 }  // namespace mrc

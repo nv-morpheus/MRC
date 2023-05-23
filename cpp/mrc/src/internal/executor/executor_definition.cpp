@@ -21,6 +21,7 @@
 #include "internal/pipeline/pipeline_definition.hpp"
 #include "internal/pipeline/port_graph.hpp"
 #include "internal/pipeline/types.hpp"
+#include "internal/runtime/runtime.hpp"
 #include "internal/system/system.hpp"
 
 #include "mrc/core/addresses.hpp"
@@ -132,6 +133,8 @@ void ExecutorDefinition::do_service_start()
 {
     // Get a lock on the pipelines
     std::unique_lock<typeof(m_pipelines_mutex)> lock(m_pipelines_mutex);
+
+    m_runtime = std::make_unique<runtime::Runtime>(*this);
 
     m_runtime->service_start();
     m_runtime->service_await_live();

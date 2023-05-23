@@ -17,13 +17,13 @@
 
 #pragma once
 
+#include "internal/async_service.hpp"
 #include "internal/control_plane/state/root_state.hpp"
 #include "internal/grpc/client_streaming.hpp"
 #include "internal/grpc/stream_writer.hpp"
 #include "internal/resources/iresources_provider.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/runnable/runnable_resources.hpp"
-#include "internal/service.hpp"
 
 #include "mrc/core/error.hpp"
 #include "mrc/node/forward.hpp"
@@ -94,7 +94,7 @@ class AsyncStatus;
 
 // todo: client should be a holder of the stream (private) and the connection manager (public)
 
-class Client final : public Service, public virtual runnable::RunnableResourcesProvider
+class Client final : public AsyncService, public virtual runnable::RunnableResourcesProvider
 {
   public:
     enum class State
@@ -165,13 +165,16 @@ class Client final : public Service, public virtual runnable::RunnableResourcesP
     rxcpp::observable<state::ControlPlaneState> state_update_obs() const;
 
   private:
+    void do_service_start(std::stop_token stop_token) final;
+    void do_service_kill() final;
+
     void route_state_update(std::uint64_t tag, protos::StateUpdate&& update);
 
-    void do_service_start() final;
-    void do_service_stop() final;
-    void do_service_kill() final;
-    void do_service_await_live() final;
-    void do_service_await_join() final;
+    // void do_service_start() final;
+    // void do_service_stop() final;
+    // void do_service_kill() final;
+    // void do_service_await_live() final;
+    // void do_service_await_join() final;
     void do_handle_event(event_t& event);
 
     void forward_state(State state);
@@ -193,11 +196,15 @@ class Client final : public Service, public virtual runnable::RunnableResourcesP
     // if false, then the following runners must be null
     const bool m_owns_progress_engine;
     std::unique_ptr<mrc::runnable::Runner> m_progress_handler;
+    std::unique_ptr<AsyncServiceRunnerWrapper> m_progress_handler_wrapper;
     std::unique_ptr<mrc::runnable::Runner> m_progress_engine;
+    std::unique_ptr<AsyncServiceRunnerWrapper> m_progress_engine_wrapper;
 
     std::unique_ptr<node::Conditional<bool, event_t>> m_response_conditional;
     std::unique_ptr<mrc::runnable::Runner> m_response_handler;
     std::unique_ptr<mrc::runnable::Runner> m_event_handler;
+
+    std::unique_ptr<AsyncServiceRunnerWrapper> m_event_handler_wrapper;
 
     // std::map<std::string, std::unique_ptr<node::SourceChannelWriteable<protos::StateUpdate>>> m_update_channels;
     // std::unique_ptr<client::ConnectionsManager> m_connections_manager;

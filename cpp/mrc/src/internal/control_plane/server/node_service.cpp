@@ -17,6 +17,8 @@
 
 #include "internal/control_plane/server/node_service.hpp"
 
+#include "internal/async_service.hpp"
+
 #include "mrc/protos/architect.grpc.pb.h"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/utils/library_utils.hpp"
@@ -37,6 +39,7 @@
 #include <mutex>
 #include <set>
 #include <sstream>
+#include <stop_token>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -361,7 +364,10 @@ std::vector<char*> vec_string_to_char_ptr(std::vector<std::string>& vec_strings)
 //     ::node::TearDownOncePerProcess();
 // }
 
-NodeService::NodeService()
+NodeService::NodeService(runnable::IRunnableResourcesProvider& resources, std::vector<std::string> args) :
+  AsyncService("NodeService"),
+  runnable::RunnableResourcesProvider(resources),
+  m_args(std::move(args))
 {
     auto mrc_lib_location = std::filesystem::path(utils::get_mrc_lib_location());
 
@@ -369,12 +375,12 @@ NodeService::NodeService()
 
     m_started_future = m_started_promise.get_future();
 
-    m_launch_node = std::getenv("MRC_SKIP_LAUNCH_NODE") == nullptr;
+    // m_launch_node = std::getenv("MRC_SKIP_LAUNCH_NODE") == nullptr;
 
-    if (!m_launch_node)
-    {
-        LOG(INFO) << "Environment variable MRC_SKIP_LAUNCH_NODE was set and the control plane will not be run.";
-    }
+    // if (!m_launch_node)
+    // {
+    //     LOG(INFO) << "Environment variable MRC_SKIP_LAUNCH_NODE was set and the control plane will not be run.";
+    // }
 }
 
 NodeService::~NodeService()
@@ -384,52 +390,24 @@ NodeService::~NodeService()
         m_node_thread.join();
     }
 
-    Service::call_in_destructor();
+    AsyncService::call_in_destructor();
 }
 
-void NodeService::set_args(std::vector<std::string> args)
-{
-    m_args = std::move(args);
-}
+// void NodeService::set_args(std::vector<std::string> args)
+// {
+//     m_args = std::move(args);
+// }
 
-void NodeService::do_service_start()
+void NodeService::do_service_start(std::stop_token stop_token)
 {
-    boost::fibers::packaged_task<void()> pkg_task(std::move([this]() {
-        if (m_launch_node)
-        {
-            this->launch_node(m_args);
-        }
-        else
-        {
-            this->m_started_promise.set_value();
-        }
+    boost::fibers::packaged_task<void()> pkg_task(std::move([this, stop_token]() {
+        this->launch_node(m_args);
     }));
+
     m_completed_future = pkg_task.get_future();
 
     m_node_thread = std::thread(std::move(pkg_task));
 }
-
-void NodeService::do_service_stop()
-{
-    DVLOG(10) << "[Node] do_service_stop() started";
-
-    if (m_launch_node)
-    {
-        // Send a gRPC message to shutdown the server
-        auto channel = grpc::CreateChannel("localhost:13337", grpc::InsecureChannelCredentials());
-        auto stub    = mrc::protos::Architect::NewStub(channel);
-
-        auto context = grpc::ClientContext();
-
-        ::mrc::protos::ShutdownRequest request;
-        ::mrc::protos::ShutdownResponse response;
-
-        stub->Shutdown(&context, request, &response);
-    }
-
-    DVLOG(10) << "[Node] do_service_stop() complete";
-}
-
 void NodeService::do_service_kill()
 {
     DVLOG(10) << "[Node] do_service_kill() started";
@@ -443,44 +421,65 @@ void NodeService::do_service_kill()
     DVLOG(10) << "[Node] do_service_kill() complete";
 }
 
-void NodeService::do_service_await_live()
-{
-    DVLOG(10) << "[Node] do_service_await_live() started";
+// void NodeService::do_service_stop()
+// {
+//     DVLOG(10) << "[Node] do_service_stop() started";
 
-    // Wait for the service to start
-    m_started_future.get();
+//     if (m_launch_node)
+//     {
+//         // Send a gRPC message to shutdown the server
+//         auto channel = grpc::CreateChannel("localhost:13337", grpc::InsecureChannelCredentials());
+//         auto stub    = mrc::protos::Architect::NewStub(channel);
 
-    // Now ping the server to check its OK
-    auto channel = grpc::CreateChannel("localhost:13337", grpc::InsecureChannelCredentials());
-    auto stub    = mrc::protos::Architect::NewStub(channel);
+//         auto context = grpc::ClientContext();
 
-    ::mrc::protos::PingRequest request;
-    ::mrc::protos::PingResponse response;
+//         ::mrc::protos::ShutdownRequest request;
+//         ::mrc::protos::ShutdownResponse response;
 
-    request.set_tag(1235);
+//         stub->Shutdown(&context, request, &response);
+//     }
 
-    grpc::Status status;
+//     DVLOG(10) << "[Node] do_service_stop() complete";
+// }
 
-    do
-    {
-        auto context = grpc::ClientContext();
-        status       = stub->Ping(&context, request, &response);
-    } while (!status.ok());
+// void NodeService::do_service_await_live()
+// {
+//     DVLOG(10) << "[Node] do_service_await_live() started";
 
-    DVLOG(10) << "Ping response: " << response.tag();
+//     // Wait for the service to start
+//     m_started_future.get();
 
-    DVLOG(10) << "[Node] do_service_await_live() complete";
-}
+//     // Now ping the server to check its OK
+//     auto channel = grpc::CreateChannel("localhost:13337", grpc::InsecureChannelCredentials());
+//     auto stub    = mrc::protos::Architect::NewStub(channel);
 
-void NodeService::do_service_await_join()
-{
-    DVLOG(10) << "[Node] do_service_await_join() started";
+//     ::mrc::protos::PingRequest request;
+//     ::mrc::protos::PingResponse response;
 
-    // Wait for the completed future to be done
-    m_completed_future.get();
+//     request.set_tag(1235);
 
-    DVLOG(10) << "[Node] do_service_await_join() complete";
-}
+//     grpc::Status status;
+
+//     do
+//     {
+//         auto context = grpc::ClientContext();
+//         status       = stub->Ping(&context, request, &response);
+//     } while (!status.ok());
+
+//     DVLOG(10) << "Ping response: " << response.tag();
+
+//     DVLOG(10) << "[Node] do_service_await_live() complete";
+// }
+
+// void NodeService::do_service_await_join()
+// {
+//     DVLOG(10) << "[Node] do_service_await_join() started";
+
+//     // Wait for the completed future to be done
+//     m_completed_future.get();
+
+//     DVLOG(10) << "[Node] do_service_await_join() complete";
+// }
 
 void NodeService::launch_node(std::vector<std::string> args)
 {

@@ -143,6 +143,11 @@ const RunnableResources& IRunnableResourcesProvider::runnable() const
     return const_cast<IRunnableResourcesProvider*>(this)->runnable();
 }
 
+RunnableResourcesProvider RunnableResourcesProvider::create(RunnableResources& runnable)
+{
+    return {runnable};
+}
+
 RunnableResourcesProvider::RunnableResourcesProvider(const RunnableResourcesProvider& other) :
   m_runnable(other.m_runnable)
 {}

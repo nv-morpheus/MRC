@@ -17,6 +17,7 @@
 
 #include "internal/control_plane/client.hpp"
 
+#include "internal/async_service.hpp"
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/control_plane/state/root_state.hpp"
 #include "internal/grpc/progress_engine.hpp"
@@ -50,6 +51,7 @@
 namespace mrc::control_plane {
 
 Client::Client(runnable::IRunnableResourcesProvider& resources) :
+  AsyncService("ControlPlaneClient"),
   runnable::RunnableResourcesProvider(resources),
   m_cq(std::make_shared<grpc::CompletionQueue>()),
   m_owns_progress_engine(true)
@@ -67,7 +69,7 @@ Client::Client(runnable::IRunnableResourcesProvider& resources) :
 
 Client::~Client()
 {
-    Service::call_in_destructor();
+    AsyncService::call_in_destructor();
 }
 
 const Client::State& Client::state() const
@@ -80,7 +82,36 @@ MachineID Client::machine_id() const
     return m_machine_id;
 }
 
-void Client::do_service_start()
+const mrc::runnable::LaunchOptions& Client::launch_options() const
+{
+    return m_launch_options;
+}
+
+void Client::request_update()
+{
+    issue_event(protos::ClientEventRequestStateUpdate);
+    // std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    // if (!m_update_in_progress && !m_update_requested)
+    // {
+    //     m_update_requested = true;
+    //     issue_event(protos::ClientEventRequestStateUpdate);
+    // }
+}
+
+// edge::IWritableAcceptor<const protos::ControlPlaneState>& Client::state_update_stream() const
+// {
+//     return *m_state_update_stream;
+// }
+
+rxcpp::observable<state::ControlPlaneState> Client::state_update_obs() const
+{
+    // Return the observable but skip the first, default value so we only return values sent from the server
+    return m_state_update_sub.get_observable().filter([this](auto& x) {
+        return this->m_state_update_count > 0;
+    });
+}
+
+void Client::do_service_start(std::stop_token stop_token)
 {
     m_launch_options.engine_factory_name = "main";
     m_launch_options.pe_count            = 1;
@@ -105,10 +136,14 @@ void Client::do_service_start()
 
         mrc::make_edge(*progress_engine, *progress_handler);
 
-        m_progress_handler =
-            runnable().launch_control().prepare_launcher(launch_options(), std::move(progress_handler))->ignition();
-        m_progress_engine =
-            runnable().launch_control().prepare_launcher(launch_options(), std::move(progress_engine))->ignition();
+        // m_progress_handler =
+        //     runnable().launch_control().prepare_launcher(launch_options(), std::move(progress_handler))->ignition();
+
+        this->child_runnable_start("ProgressHandler", launch_options(), std::move(progress_handler));
+
+        // m_progress_engine =
+        //     runnable().launch_control().prepare_launcher(launch_options(), std::move(progress_engine))->ignition();
+        this->child_runnable_start("ProgressEngine", launch_options(), std::move(progress_engine));
     }
 
     auto prepare_fn = [this](grpc::ClientContext* context) {
@@ -153,61 +188,93 @@ void Client::do_service_start()
     // *m_connections_update_channel);
 
     // launch runnables
-    m_response_handler =
-        runnable().launch_control().prepare_launcher(launch_options(), std::move(response_handler))->ignition();
-    m_event_handler =
-        runnable().launch_control().prepare_launcher(launch_options(), std::move(event_handler))->ignition();
+    // m_response_handler =
+    //     runnable().launch_control().prepare_launcher(launch_options(), std::move(response_handler))->ignition();
+    this->child_runnable_start("ResponseHandler", launch_options(), std::move(response_handler));
+    // m_event_handler =
+    //     runnable().launch_control().prepare_launcher(launch_options(), std::move(event_handler))->ignition();
+    this->child_runnable_start("EventHandler", launch_options(), std::move(event_handler));
 
     // await initialization
     m_writer = m_stream->await_init();
 
     if (!m_writer)
     {
-        forward_state(State::FailedToConnect);
+        // forward_state(State::FailedToConnect);
         LOG(FATAL) << "unable to connect to control plane";
     }
 
-    forward_state(State::Connected);
-}
+    // Now, on stop, shutdown the writer
+    std::stop_callback stop_callback(stop_token, [this]() {
+        if (m_writer)
+        {
+            m_writer->finish();
+            m_writer.reset();
+        }
+    });
 
-void Client::do_service_stop()
-{
-    m_writer->finish();
-    m_writer.reset();
-}
+    this->mark_started();
 
-void Client::do_service_kill()
-{
-    m_writer->cancel();
-    m_writer.reset();
-}
-
-void Client::do_service_await_live()
-{
-    if (m_owns_progress_engine)
-    {
-        m_progress_engine->await_live();
-        m_progress_handler->await_live();
-    }
-    m_event_handler->await_live();
-
-    // Finally, await on the connection promise
-    m_connected_promise.get_future().wait();
-}
-
-void Client::do_service_await_join()
-{
     auto status = m_stream->await_fini();
-    m_event_handler->await_join();
+    // m_event_handler->await_join();
     // m_connections_update_channel.reset();
 
     if (m_owns_progress_engine)
     {
         m_cq->Shutdown();
-        m_progress_engine->await_join();
-        m_progress_handler->await_join();
+        // m_progress_engine->await_join();
+        // m_progress_handler->await_join();
     }
 }
+void Client::do_service_kill()
+{
+    if (m_writer)
+    {
+        m_writer->cancel();
+        m_writer.reset();
+    }
+}
+
+// void Client::do_service_start() {}
+
+// void Client::do_service_stop()
+// {
+//     m_writer->finish();
+//     m_writer.reset();
+// }
+
+// void Client::do_service_kill()
+// {
+//     m_writer->cancel();
+//     m_writer.reset();
+// }
+
+// void Client::do_service_await_live()
+// {
+//     if (m_owns_progress_engine)
+//     {
+//         m_progress_engine->await_live();
+//         m_progress_handler->await_live();
+//     }
+//     m_event_handler->await_live();
+
+//     // Finally, await on the connection promise
+//     m_connected_promise.get_future().wait();
+// }
+
+// void Client::do_service_await_join()
+// {
+//     auto status = m_stream->await_fini();
+//     m_event_handler->await_join();
+//     // m_connections_update_channel.reset();
+
+//     if (m_owns_progress_engine)
+//     {
+//         m_cq->Shutdown();
+//         m_progress_engine->await_join();
+//         m_progress_handler->await_join();
+//     }
+// }
 
 void Client::do_handle_event(event_t& event)
 {
@@ -335,40 +402,11 @@ void Client::forward_state(State state)
 //     return contains(m_subscription_services, name);
 // }
 
-const mrc::runnable::LaunchOptions& Client::launch_options() const
-{
-    return m_launch_options;
-}
-
 void Client::issue_event(const protos::EventType& event_type)
 {
     protos::Event event;
     event.set_event(event_type);
     m_writer->await_write(std::move(event));
-}
-
-void Client::request_update()
-{
-    issue_event(protos::ClientEventRequestStateUpdate);
-    // std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    // if (!m_update_in_progress && !m_update_requested)
-    // {
-    //     m_update_requested = true;
-    //     issue_event(protos::ClientEventRequestStateUpdate);
-    // }
-}
-
-// edge::IWritableAcceptor<const protos::ControlPlaneState>& Client::state_update_stream() const
-// {
-//     return *m_state_update_stream;
-// }
-
-rxcpp::observable<state::ControlPlaneState> Client::state_update_obs() const
-{
-    // Return the observable but skip the first, default value so we only return values sent from the server
-    return m_state_update_sub.get_observable().filter([this](auto& x) {
-        return this->m_state_update_count > 0;
-    });
 }
 
 }  // namespace mrc::control_plane

@@ -17,11 +17,12 @@
 
 #pragma once
 
+#include "internal/async_service.hpp"
 #include "internal/control_plane/server/connection_manager.hpp"
 #include "internal/control_plane/server/node_service.hpp"
 #include "internal/grpc/server.hpp"
 #include "internal/grpc/server_streaming.hpp"
-#include "internal/service.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 
 #include "mrc/core/error.hpp"
 #include "mrc/node/writable_entrypoint.hpp"
@@ -82,7 +83,7 @@ namespace mrc::control_plane {
  * message which will be returned to the client. The write methods will check the state of the Expected<Message> and
  * send back either the Message or an Error with the proper error code and error message.
  */
-class Server : public Service
+class Server : public AsyncService, public runnable::RunnableResourcesProvider
 {
   public:
     using stream_t      = std::shared_ptr<rpc::ServerStream<mrc::protos::Event, mrc::protos::Event>>;
@@ -92,16 +93,19 @@ class Server : public Service
     using stream_id_t   = std::size_t;
     using instance_id_t = std::size_t;
 
-    Server();
+    Server(runnable::IRunnableResourcesProvider& resources);
     // Server(runnable::Resources& runnable);
     ~Server() override;
 
   private:
-    void do_service_start() final;
-    void do_service_stop() final;
+    // void do_service_start() final;
+    // void do_service_stop() final;
+    // void do_service_kill() final;
+    // void do_service_await_live() final;
+    // void do_service_await_join() final;
+
+    void do_service_start(std::stop_token stop_token) final;
     void do_service_kill() final;
-    void do_service_await_live() final;
-    void do_service_await_join() final;
 
     // void do_accept_stream(rxcpp::subscriber<stream_t>& s);
     // void do_handle_event(event_t&& event);
@@ -110,8 +114,10 @@ class Server : public Service
     // // mrc resources
     // runnable::RunnableResources& m_runnable;
 
+    bool m_launch_node{true};
+
     // Node service
-    NodeService m_node_service;
+    std::unique_ptr<NodeService> m_node_service;
 
     // // grpc
     // rpc::Server m_server;
