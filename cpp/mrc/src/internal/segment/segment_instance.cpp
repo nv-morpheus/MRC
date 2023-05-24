@@ -22,6 +22,7 @@
 #include "internal/resources/system_resources.hpp"
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/partition_runtime.hpp"
+#include "internal/runtime/pipelines_manager.hpp"
 #include "internal/segment/builder_definition.hpp"
 #include "internal/segment/segment_definition.hpp"
 
@@ -53,55 +54,51 @@ namespace mrc::segment {
 
 SegmentInstance::SegmentInstance(runtime::PartitionRuntime& runtime,
                                  std::shared_ptr<const SegmentDefinition> definition,
-                                 SegmentAddress instance_id) :
+                                 SegmentAddress instance_id,
+                                 uint64_t pipeline_instance_id) :
   AsyncService(MRC_CONCAT_STR("SegmentInstance[" << instance_id << "]")),
   runnable::RunnableResourcesProvider(runtime),
   m_runtime(runtime),
-  m_name(definition->name()),
-  m_id(definition->id()),
-  m_rank(std::get<1>(segment_address_decode(instance_id))),
+  m_definition(std::move(definition)),
+  m_instance_id(instance_id),
+  m_pipeline_instance_id(pipeline_instance_id),
   m_address(instance_id),
+  m_rank(std::get<1>(segment_address_decode(instance_id))),
   m_info(::mrc::segment::info(instance_id))
-{
-    // construct the segment definition on the intended numa node
-    m_builder = m_runtime.resources()
-                    .runnable()
-                    .main()
-                    .enqueue([&]() mutable {
-                        auto builder =
-                            std::make_unique<BuilderDefinition>(m_runtime, definition, m_address);
-
-                        builder->initialize();
-
-                        return builder;
-                    })
-                    .get();
-}
+{}
 
 SegmentInstance::~SegmentInstance() = default;
 
 const std::string& SegmentInstance::name() const
 {
-    return m_name;
+    return m_definition->name();
 }
 
-const SegmentID& SegmentInstance::id() const
+SegmentID SegmentInstance::id() const
 {
-    return m_id;
+    return m_definition->id();
 }
 
-const SegmentRank& SegmentInstance::rank() const
+SegmentRank SegmentInstance::rank() const
 {
     return m_rank;
 }
 
-const SegmentAddress& SegmentInstance::address() const
+SegmentAddress SegmentInstance::address() const
 {
     return m_address;
 }
 
 void SegmentInstance::service_start_impl()
 {
+    // We construct the builder resources here since we are on the correct numa node
+    m_builder = std::make_unique<BuilderDefinition>(m_runtime, m_definition, m_address);
+
+    m_builder->initialize();
+
+    // Get a reference to the pipeline instance
+    auto& pipeline_instance = m_runtime.pipelines_manager().get_instance(m_pipeline_instance_id);
+
     // prepare launchers from m_builder
     std::map<std::string, std::unique_ptr<mrc::runnable::Launcher>> launchers;
     std::map<std::string, std::unique_ptr<mrc::runnable::Launcher>> egress_launchers;
@@ -129,6 +126,9 @@ void SegmentInstance::service_start_impl()
     for (const auto& [name, node] : m_builder->egress_ports())
     {
         DVLOG(10) << info() << " constructing launcher egress port " << name;
+
+        node->connect_to_manifold(pipeline_instance.get_manifold(name));
+
         egress_launchers[name] = node->prepare_launcher(m_runtime.resources().runnable().launch_control());
         apply_callback(egress_launchers[name], name);
     }
@@ -136,6 +136,9 @@ void SegmentInstance::service_start_impl()
     for (const auto& [name, node] : m_builder->ingress_ports())
     {
         DVLOG(10) << info() << " constructing launcher ingress port " << name;
+
+        node->connect_to_manifold(pipeline_instance.get_manifold(name));
+
         ingress_launchers[name] = node->prepare_launcher(m_runtime.resources().runnable().launch_control());
         apply_callback(ingress_launchers[name], name);
     }

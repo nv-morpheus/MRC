@@ -123,25 +123,25 @@ std::tuple<std::string, std::string> BuilderDefinition::normalize_name(const std
     return std::make_tuple(global_name, local_name);
 }
 
-std::shared_ptr<ObjectProperties> BuilderDefinition::get_ingress(std::string name, std::type_index type_index)
+std::shared_ptr<ObjectProperties> BuilderDefinition::get_ingress_typeless(std::string name)
 {
     auto base = this->get_ingress_base(name);
     if (!base)
     {
-        throw exceptions::MrcRuntimeError("Egress port name not found: " + name);
+        throw exceptions::MrcRuntimeError("Ingress port name not found: " + name);
     }
 
-    auto port_util = node::PortRegistry::find_port_util(type_index);
-    auto port      = port_util->try_cast_ingress_base_to_object(base);
+    auto port = std::dynamic_pointer_cast<ObjectProperties>(base);
+
     if (port == nullptr)
     {
-        throw exceptions::MrcRuntimeError("Egress port type mismatch: " + name);
+        throw exceptions::MrcRuntimeError("Ingress port type mismatch: " + name);
     }
 
     return port;
 }
 
-std::shared_ptr<ObjectProperties> BuilderDefinition::get_egress(std::string name, std::type_index type_index)
+std::shared_ptr<ObjectProperties> BuilderDefinition::get_egress_typeless(std::string name)
 {
     auto base = this->get_egress_base(name);
     if (!base)
@@ -149,9 +149,8 @@ std::shared_ptr<ObjectProperties> BuilderDefinition::get_egress(std::string name
         throw exceptions::MrcRuntimeError("Egress port name not found: " + name);
     }
 
-    auto port_util = node::PortRegistry::find_port_util(type_index);
+    auto port = std::dynamic_pointer_cast<ObjectProperties>(base);
 
-    auto port = port_util->try_cast_egress_base_to_object(base);
     if (port == nullptr)
     {
         throw exceptions::MrcRuntimeError("Egress port type mismatch: " + name);
@@ -257,18 +256,18 @@ void BuilderDefinition::initialize()
     auto rank = std::get<1>(segment_address_decode(m_address));
 
     // construct ingress ports
-    for (const auto& [name, initializer] : this->definition().ingress_initializers())
+    for (const auto& [name, info] : this->definition().ingress_port_infos())
     {
         DVLOG(10) << "constructing ingress_port: " << name;
-        auto port = initializer(m_address);
+        auto port = info->port_builder_fn(m_address, name);
         this->add_object(name, port);
     }
 
     // construct egress ports
-    for (const auto& [name, initializer] : this->definition().egress_initializers())
+    for (const auto& [name, info] : this->definition().egress_port_infos())
     {
         DVLOG(10) << "constructing egress_port: " << name;
-        auto port = initializer(m_address);
+        auto port = info->port_builder_fn(m_address, name);
         this->add_object(name, port);
     }
 

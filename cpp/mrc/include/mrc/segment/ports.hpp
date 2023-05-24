@@ -24,6 +24,7 @@
 #include <set>
 #include <string>
 #include <tuple>
+#include <typeindex>
 #include <vector>
 
 namespace mrc::segment {
@@ -31,55 +32,129 @@ namespace mrc::segment {
 class Definition;
 
 template <typename BaseT>
+struct PortInfo
+{
+    using port_builder_fn_t = std::function<std::shared_ptr<BaseT>(const SegmentAddress&, const PortName&)>;
+
+    PortInfo(std::string n, std::type_index t, port_builder_fn_t builder) :
+      name(std::move(n)),
+      type_index(std::move(t)),
+      port_builder_fn(std::move(builder))
+    {}
+
+    // Port name
+    std::string name;
+
+    // Type info
+    std::type_index type_index;
+
+    // Function that builds the port object
+    port_builder_fn_t port_builder_fn;
+};
+
+template <typename BaseT>
 class Ports
 {
   public:
+    using port_info_t       = PortInfo<BaseT>;
     using port_builder_fn_t = std::function<std::shared_ptr<BaseT>(const SegmentAddress&, const PortName&)>;
 
     Ports() = default;
 
-    Ports(std::vector<std::string> names, std::vector<port_builder_fn_t> builder_fns)
+    Ports(std::vector<std::shared_ptr<port_info_t>> port_infos)
     {
-        if (names.size() != builder_fns.size())
+        for (const auto& info : port_infos)
         {
-            LOG(ERROR) << "expected " << builder_fns.size() << " port names; got " << names.size();
-            throw exceptions::MrcRuntimeError("invalid number of port names");
-        }
+            CHECK(!m_info.contains(info->name)) << "Duplicate port name '" << info->name << "' detected";
 
-        // test for uniqueness
-        std::set<std::string> unique_names(names.begin(), names.end());
-        if (unique_names.size() != builder_fns.size())
-        {
-            LOG(ERROR) << "error: port names must be unique";
-            throw exceptions::MrcRuntimeError("port names must be unique");
+            m_info[info->name] = info;
         }
+        // if (names.size() != builder_fns.size())
+        // {
+        //     LOG(ERROR) << "expected " << builder_fns.size() << " port names; got " << names.size();
+        //     throw exceptions::MrcRuntimeError("invalid number of port names");
+        // }
 
-        // store names
-        m_names = names;
+        // // test for uniqueness
+        // std::set<std::string> unique_names(names.begin(), names.end());
+        // if (unique_names.size() != builder_fns.size())
+        // {
+        //     LOG(ERROR) << "error: port names must be unique";
+        //     throw exceptions::MrcRuntimeError("port names must be unique");
+        // }
 
-        for (int i = 0; i < names.size(); ++i)  // NOLINT
-        {
-            auto builder         = builder_fns[i];
-            auto name            = names[i];
-            m_initializers[name] = [builder, name](const SegmentAddress& address) {
-                return builder(address, name);
-            };
-        }
+        // // store names
+        // m_names = names;
+
+        // for (int i = 0; i < names.size(); ++i)  // NOLINT
+        // {
+        //     auto builder         = builder_fns[i];
+        //     auto name            = names[i];
+        //     m_initializers[name] = [builder, name](const SegmentAddress& address) {
+        //         return builder(address, name);
+        //     };
+        // }
     }
 
-    const std::vector<std::string>& names() const
+    // Ports(std::vector<std::string> names, std::vector<port_builder_fn_t> builder_fns)
+    // {
+    //     if (names.size() != builder_fns.size())
+    //     {
+    //         LOG(ERROR) << "expected " << builder_fns.size() << " port names; got " << names.size();
+    //         throw exceptions::MrcRuntimeError("invalid number of port names");
+    //     }
+
+    //     // test for uniqueness
+    //     std::set<std::string> unique_names(names.begin(), names.end());
+    //     if (unique_names.size() != builder_fns.size())
+    //     {
+    //         LOG(ERROR) << "error: port names must be unique";
+    //         throw exceptions::MrcRuntimeError("port names must be unique");
+    //     }
+
+    //     // store names
+    //     m_names = names;
+
+    //     for (int i = 0; i < names.size(); ++i)  // NOLINT
+    //     {
+    //         auto builder         = builder_fns[i];
+    //         auto name            = names[i];
+    //         m_initializers[name] = [builder, name](const SegmentAddress& address) {
+    //             return builder(address, name);
+    //         };
+    //     }
+    // }
+
+    std::vector<std::string> names() const
     {
-        return m_names;
+        std::vector<std::string> names;
+
+        for (const auto& [name, info] : m_info)
+        {
+            names.push_back(name);
+        }
+
+        return names;
     }
+
+    // const std::vector<std::string>& names() const
+    // {
+    //     return m_names;
+    // }
 
   private:
-    const std::map<std::string, std::function<std::shared_ptr<BaseT>(const SegmentAddress&)>>& get_initializers() const
+    // const std::map<std::string, std::function<std::shared_ptr<BaseT>(const SegmentAddress&)>>& get_initializers()
+    // const
+    // {
+    //     return m_initializers;
+    // }
+
+    const std::map<std::string, std::shared_ptr<const port_info_t>>& get_info() const
     {
-        return m_initializers;
+        return m_info;
     }
 
-    std::vector<std::string> m_names;
-    std::map<std::string, std::function<std::shared_ptr<BaseT>(const SegmentAddress&)>> m_initializers;
+    std::map<std::string, std::shared_ptr<const port_info_t>> m_info;
 
     friend Definition;
     friend class SegmentDefinition;

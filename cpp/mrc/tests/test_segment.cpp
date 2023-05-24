@@ -30,12 +30,14 @@
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/pipeline/segment.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/segment/forward.hpp"
 #include "mrc/segment/ingress_port.hpp"
 #include "mrc/segment/object.hpp"
 #include "mrc/segment/ports.hpp"
 #include "mrc/types.hpp"
 
 #include <glog/logging.h>
+#include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 
 #include <array>
@@ -110,29 +112,26 @@ TEST_F(TestSegment, InitializeSegmentIngressEgressFromDefinition)
     */
 }
 
-TEST_F(TestSegment, PortsConstructorBadNameBuilderSizeMismatch)
-{
-    using port_type_t = segment::Ports<segment::IngressPortBase>;
+// TEST_F(TestSegment, PortsConstructorBadNameBuilderSizeMismatch)
+// {
+//     using port_type_t = segment::Ports<segment::IngressPortBase>;
 
-    std::vector<std::string> port_names{"a", "b", "c"};
-    std::vector<port_type_t::port_builder_fn_t> port_builder_fns{};
+//     std::array<std::string, 3> port_names{"a", "b", "c"};
+//     std::vector<port_type_t::port_builder_fn_t> port_builder_fns{};
 
-    EXPECT_THROW(port_type_t BadPorts(port_names, port_builder_fns), exceptions::MrcRuntimeError);
-}
+//     EXPECT_THROW(port_type_t BadPorts(port_names, port_builder_fns), exceptions::MrcRuntimeError);
+// }
 
 TEST_F(TestSegment, PortsConstructorBadDuplicateName)
 {
-    using port_type_t = segment::Ports<segment::IngressPortBase>;
+    using port_type_t = segment::IngressPorts<int, int, int>;
 
-    auto port_builder = [](const SegmentAddress& address,
-                           const PortName& name) -> std::shared_ptr<segment::IngressPortBase> {
-        return std::make_shared<segment::IngressPort<int>>(address, name);
-    };
-
-    std::vector<std::string> port_names{"a", "b", "a"};
-    std::vector<port_type_t::port_builder_fn_t> port_builder_fns{port_builder, port_builder, port_builder};
-
-    EXPECT_THROW(port_type_t BadPorts(port_names, port_builder_fns), exceptions::MrcRuntimeError);
+    EXPECT_THROW(
+        {
+            // Create duplicate port names
+            port_type_t BadPorts({"a", "b", "a"});
+        },
+        exceptions::MrcRuntimeError);
 }
 
 TEST_F(TestSegment, UserLambdaIsCalled)

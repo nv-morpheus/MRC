@@ -158,6 +158,11 @@ class WritableProvider : public virtual SinkProperties<T>, public edge::IWritabl
     }
 };
 
+// Sink that can work in push or pull modes
+template <typename T>
+class ReadableWritableSink : public WritableProvider<T>, public ReadableAcceptor<T>
+{};
+
 template <typename T>
 class ForwardingWritableProvider : public WritableProvider<T>
 {

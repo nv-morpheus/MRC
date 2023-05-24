@@ -191,6 +191,11 @@ class WritableAcceptor : public virtual SourceProperties<T>, public edge::IWrita
     }
 };
 
+// Source that can work in push or pull modes
+template <typename T>
+class ReadableWritableSource : public ReadableProvider<T>, public WritableAcceptor<T>
+{};
+
 template <typename T, typename KeyT>
 class MultiIngressAcceptor : public virtual MultiSourceProperties<T, KeyT>, public edge::IMultiWritableAcceptor<T, KeyT>
 {

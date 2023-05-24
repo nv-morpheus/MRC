@@ -18,7 +18,6 @@
 #pragma once
 
 #include "pymrc/edge_adapter.hpp"
-#include "pymrc/port_builders.hpp"
 #include "pymrc/types.hpp"
 #include "pymrc/utilities/acquire_gil.hpp"
 
@@ -29,6 +28,7 @@
 #include "mrc/edge/edge_writable.hpp"
 #include "mrc/node/forward.hpp"  // IWYU pragma: keep
 #include "mrc/node/generic_source.hpp"
+#include "mrc/node/port_builders.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
@@ -176,10 +176,10 @@ class ConvertingEdgeReadable<
 
     using base_t::base_t;
 
-    channel::Status await_read(output_t& data) override
+    channel::Status await_read_until(output_t& data, const channel::time_point_t& timeout) override
     {
         input_t source_data;
-        auto ret_val = this->upstream().await_read(source_data);
+        auto ret_val = this->upstream().await_read_until(source_data, timeout);
 
         if (ret_val == channel::Status::success)
         {
@@ -209,10 +209,10 @@ struct ConvertingEdgeReadable<
 
     using base_t::base_t;
 
-    channel::Status await_read(output_t& data) override
+    channel::Status await_read_until(output_t& data, const channel::time_point_t& timeout) override
     {
         input_t source_data;
-        auto ret_val = this->upstream().await_read(source_data);
+        auto ret_val = this->upstream().await_read_until(source_data, timeout);
 
         if (ret_val == channel::Status::success)
         {
@@ -240,12 +240,15 @@ struct ConvertingEdgeReadable<pymrc::PyObjectHolder, pybind11::object, void>
 
     using base_t::base_t;
 
-    channel::Status await_read(output_t& data) override
+    channel::Status await_read_until(output_t& data, const channel::time_point_t& timeout) override
     {
         input_t source_data;
-        auto ret_val = this->upstream().await_read(source_data);
+        auto ret_val = this->upstream().await_read_until(source_data, timeout);
 
-        data = std::move(source_data);
+        if (ret_val == channel::Status::success)
+        {
+            data = std::move(source_data);
+        }
 
         return ret_val;
     }
@@ -261,12 +264,15 @@ struct ConvertingEdgeReadable<pybind11::object, pymrc::PyObjectHolder, void>
 
     using base_t::base_t;
 
-    channel::Status await_read(output_t& data) override
+    channel::Status await_read_until(output_t& data, const channel::time_point_t& timeout) override
     {
         input_t source_data;
-        auto ret_val = this->upstream().await_read(source_data);
+        auto ret_val = this->upstream().await_read_until(source_data, timeout);
 
-        data = pymrc::PyObjectHolder(std::move(source_data));
+        if (ret_val == channel::Status::success)
+        {
+            data = pymrc::PyObjectHolder(std::move(source_data));
+        }
 
         return ret_val;
     }
@@ -287,7 +293,7 @@ namespace pymrc {
 template <typename InputT, typename ContextT = mrc::runnable::Context>
 class PythonSink : public node::RxSink<InputT, ContextT>,
                    public pymrc::AutoRegSinkAdapter<InputT>,
-                   public pymrc::AutoRegEgressPort<InputT>
+                   public node::AutoRegEgressPort<InputT>
 {
     using base_t = node::RxSink<InputT>;
 
@@ -300,7 +306,7 @@ class PythonSink : public node::RxSink<InputT, ContextT>,
 template <typename InputT>
 class PythonSinkComponent : public node::RxSinkComponent<InputT>,
                             public pymrc::AutoRegSinkAdapter<InputT>,
-                            public pymrc::AutoRegEgressPort<InputT>
+                            public node::AutoRegEgressPort<InputT>
 {
     using base_t = node::RxSinkComponent<InputT>;
 
@@ -314,8 +320,8 @@ template <typename InputT, typename OutputT, typename ContextT = mrc::runnable::
 class PythonNode : public node::RxNode<InputT, OutputT, ContextT>,
                    public pymrc::AutoRegSourceAdapter<OutputT>,
                    public pymrc::AutoRegSinkAdapter<InputT>,
-                   public pymrc::AutoRegIngressPort<OutputT>,
-                   public pymrc::AutoRegEgressPort<InputT>
+                   public node::AutoRegIngressPort<OutputT>,
+                   public node::AutoRegEgressPort<InputT>
 {
     using base_t = node::RxNode<InputT, OutputT>;
 
@@ -343,8 +349,8 @@ template <typename InputT, typename OutputT>
 class PythonNodeComponent : public node::RxNodeComponent<InputT, OutputT>,
                             public pymrc::AutoRegSourceAdapter<OutputT>,
                             public pymrc::AutoRegSinkAdapter<InputT>,
-                            public pymrc::AutoRegIngressPort<OutputT>,
-                            public pymrc::AutoRegEgressPort<InputT>
+                            public node::AutoRegIngressPort<OutputT>,
+                            public node::AutoRegEgressPort<InputT>
 {
     using base_t = node::RxNodeComponent<InputT, OutputT>;
 
@@ -371,7 +377,7 @@ class PythonNodeComponent : public node::RxNodeComponent<InputT, OutputT>,
 template <typename OutputT, typename ContextT = mrc::runnable::Context>
 class PythonSource : public node::RxSource<OutputT, ContextT>,
                      public pymrc::AutoRegSourceAdapter<OutputT>,
-                     public pymrc::AutoRegIngressPort<OutputT>
+                     public node::AutoRegIngressPort<OutputT>
 {
     using base_t = node::RxSource<OutputT>;
 
@@ -391,7 +397,7 @@ class PythonSource : public node::RxSource<OutputT, ContextT>,
 template <typename OutputT>
 class PythonSourceComponent : public node::LambdaSourceComponent<OutputT>,
                               public pymrc::AutoRegSourceAdapter<OutputT>,
-                              public pymrc::AutoRegIngressPort<OutputT>
+                              public node::AutoRegIngressPort<OutputT>
 {
     using base_t = node::LambdaSourceComponent<OutputT>;
 

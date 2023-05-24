@@ -18,6 +18,9 @@
 #pragma once
 
 #include "mrc/pipeline/segment.hpp"
+#include "mrc/segment/egress_ports.hpp"
+#include "mrc/segment/forward.hpp"
+#include "mrc/segment/ingress_ports.hpp"
 #include "mrc/segment/initializers.hpp"
 #include "mrc/types.hpp"
 
@@ -42,21 +45,29 @@ class SegmentDefinition final : public pipeline::ISegment
 
     SegmentID id() const override;
     const std::string& name() const override;
+
     std::vector<std::string> ingress_port_names() const override;
     std::vector<std::string> egress_port_names() const override;
 
     const segment_initializer_fn_t& initializer_fn() const;
 
-    const std::map<std::string, egress_initializer_t>& egress_initializers() const;
-    const std::map<std::string, ingress_initializer_t>& ingress_initializers() const;
+    // const std::map<std::string, egress_initializer_t>& egress_initializers() const;
+    // const std::map<std::string, ingress_initializer_t>& ingress_initializers() const;
+
+    const std::map<std::string, std::shared_ptr<const EgressPortsBase::port_info_t>>& egress_port_infos() const;
+    const std::map<std::string, std::shared_ptr<const IngressPortsBase::port_info_t>>& ingress_port_infos() const;
 
   private:
     void validate_ports() const;
 
     SegmentID m_id;
     std::string m_name;
-    std::map<std::string, egress_initializer_t> m_egress_initializers;
-    std::map<std::string, ingress_initializer_t> m_ingress_initializers;
+    // std::map<std::string, egress_initializer_t> m_egress_initializers;
+    // std::map<std::string, ingress_initializer_t> m_ingress_initializers;
+
+    std::map<std::string, std::shared_ptr<const EgressPortsBase::port_info_t>> m_egress_port_infos;
+    std::map<std::string, std::shared_ptr<const IngressPortsBase::port_info_t>> m_ingress_port_infos;
+
     segment_initializer_fn_t m_initializer_fn;
 };
 

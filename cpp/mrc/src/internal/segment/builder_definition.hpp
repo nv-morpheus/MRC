@@ -18,6 +18,7 @@
 #pragma once
 
 #include "internal/runtime/partition_runtime.hpp"
+
 #include "mrc/segment/builder.hpp"
 #include "mrc/types.hpp"
 
@@ -69,9 +70,9 @@ class BuilderDefinition : public IBuilder
     std::tuple<std::string, std::string> normalize_name(const std::string& name,
                                                         bool ignore_namespace = false) const override;
 
-    std::shared_ptr<ObjectProperties> get_ingress(std::string name, std::type_index type_index) override;
+    std::shared_ptr<ObjectProperties> get_ingress_typeless(std::string name) override;
 
-    std::shared_ptr<ObjectProperties> get_egress(std::string name, std::type_index type_index) override;
+    std::shared_ptr<ObjectProperties> get_egress_typeless(std::string name) override;
 
     /**
      * Initialize a SegmentModule that was instantiated outside of the builder.

@@ -52,13 +52,14 @@ class SegmentInstance final : public AsyncService, public runnable::RunnableReso
   public:
     SegmentInstance(runtime::PartitionRuntime& runtime,
                     std::shared_ptr<const SegmentDefinition> definition,
-                    SegmentAddress instance_id);
+                    SegmentAddress instance_id,
+                    uint64_t pipeline_instance_id);
     ~SegmentInstance() override;
 
     const std::string& name() const;
-    const SegmentID& id() const;
-    const SegmentRank& rank() const;
-    const SegmentAddress& address() const;
+    SegmentID id() const;
+    SegmentRank rank() const;
+    SegmentAddress address() const;
 
     std::shared_ptr<manifold::Interface> create_manifold(const PortName& name);
     void attach_manifold(std::shared_ptr<manifold::Interface> manifold);
@@ -78,8 +79,10 @@ class SegmentInstance final : public AsyncService, public runnable::RunnableReso
 
     void callback_on_state_change(const std::string& name, const mrc::runnable::Runner::State& new_state);
 
-    std::string m_name;
-    SegmentID m_id;
+    std::shared_ptr<const SegmentDefinition> m_definition;
+    SegmentAddress m_instance_id;
+    uint64_t m_pipeline_instance_id;
+
     SegmentRank m_rank;
     SegmentAddress m_address;
     std::string m_info;

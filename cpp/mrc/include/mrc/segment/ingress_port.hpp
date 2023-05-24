@@ -27,6 +27,7 @@
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/sink_channel_owner.hpp"
 #include "mrc/node/source_channel_owner.hpp"
+#include "mrc/node/source_properties.hpp"
 #include "mrc/runnable/launchable.hpp"
 #include "mrc/segment/object.hpp"
 
@@ -44,7 +45,7 @@ struct IngressPortBase : public runnable::Launchable, public manifold::Connectab
 };
 
 template <typename T>
-class IngressPort : public Object<node::RxSourceBase<T>>, public IngressPortBase
+class IngressPort : public Object<node::ReadableWritableSource<T>>, public IngressPortBase
 {
     // tap for debugging
     // rxcpp::operators::tap([this](const T& t) {
@@ -59,7 +60,7 @@ class IngressPort : public Object<node::RxSourceBase<T>>, public IngressPortBase
     {}
 
   private:
-    node::RxSourceBase<T>* get_object() const final
+    node::ReadableWritableSource<T>* get_object() const final
     {
         CHECK(m_source);
         return m_source.get();

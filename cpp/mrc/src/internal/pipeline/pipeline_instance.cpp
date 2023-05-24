@@ -19,6 +19,7 @@
 
 #include "internal/async_service.hpp"
 #include "internal/control_plane/state/root_state.hpp"
+#include "internal/pipeline/manifold_definition.hpp"
 #include "internal/pipeline/pipeline_definition.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/system_resources.hpp"
@@ -60,6 +61,19 @@ PipelineInstance::PipelineInstance(runtime::Runtime& runtime,
 }
 
 PipelineInstance::~PipelineInstance() = default;
+
+std::shared_ptr<manifold::Interface> PipelineInstance::get_manifold(const PortName& port_name)
+{
+    if (!m_manifolds.contains(port_name))
+    {
+        auto manifold_def = m_definition->find_manifold(port_name);
+
+        // Create a new manifold
+        m_manifolds[port_name] = manifold_def->build(m_runtime.resources().runnable());
+    }
+
+    return m_manifolds.at(port_name);
+}
 
 void PipelineInstance::update()
 {
@@ -123,9 +137,8 @@ void PipelineInstance::create_segment(const SegmentAddress& address, std::uint32
 
             auto [id, rank] = segment_address_decode(address);
             auto definition = m_definition->find_segment(id);
-            auto segment    = std::make_unique<segment::SegmentInstance>(m_runtime.partition(partition_id),
-                                                                      definition,
-                                                                      rank);
+            auto segment =
+                std::make_unique<segment::SegmentInstance>(m_runtime.partition(partition_id), definition, rank, 0);
 
             for (const auto& name : definition->egress_port_names())
             {
@@ -163,17 +176,6 @@ manifold::Interface& PipelineInstance::manifold(const PortName& port_name)
     auto manifold = get_manifold(port_name);
     CHECK(manifold);
     return *manifold;
-}
-
-std::shared_ptr<manifold::Interface> PipelineInstance::get_manifold(const PortName& port_name)
-{
-    auto search = m_manifolds.find(port_name);
-    if (search == m_manifolds.end())
-    {
-        return nullptr;
-    }
-
-    return m_manifolds.at(port_name);
 }
 
 void PipelineInstance::mark_joinable()

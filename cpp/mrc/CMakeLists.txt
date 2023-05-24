@@ -49,6 +49,7 @@ add_library(libmrc
   src/internal/network/network_resources.cpp
   src/internal/pipeline/controller.cpp
   src/internal/pipeline/manager.cpp
+  src/internal/pipeline/manifold_definition.cpp
   src/internal/pipeline/pipeline_definition.cpp
   src/internal/pipeline/pipeline_instance.cpp
   src/internal/pipeline/pipeline_resources.cpp
@@ -204,6 +205,9 @@ target_compile_definitions(libmrc
 if (MRC_ENABLE_CODECOV)
   target_compile_definitions(libmrc INTERFACE "MRC_CODECOV_ENABLED")
 endif()
+
+# In debug mode, dont allow missing symbols
+target_link_options(libmrc PUBLIC "$<$<CONFIG:Debug>:-Wl,--no-allow-shlib-undefined>")
 
 target_compile_features(libmrc PUBLIC cxx_std_20)
 

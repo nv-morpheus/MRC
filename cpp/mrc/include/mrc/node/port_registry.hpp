@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "mrc/segment/initializers.hpp"
 #include "mrc/types.hpp"
 
 #include <functional>
@@ -71,15 +72,17 @@ struct PortUtil
     std::shared_ptr<segment::ObjectProperties> try_cast_egress_base_to_object(
         std::shared_ptr<segment::EgressPortBase> base);
 
-    const std::type_index m_port_data_type;
+    const std::type_index port_data_type;
 
     // Builders for ingress/egress ports
-    ingress_tuple_t m_ingress_builders{nullptr, nullptr};
-    egress_tuple_t m_egress_builders{nullptr, nullptr};
+    ingress_tuple_t ingress_builders{nullptr, nullptr};
+    egress_tuple_t egress_builders{nullptr, nullptr};
 
     // Used to recover Source/SinkProperties from an ingress/egress base
-    ingress_caster_tuple_t m_ingress_casters{nullptr, nullptr};
-    egress_caster_tuple_t m_egress_casters{nullptr, nullptr};
+    ingress_caster_tuple_t ingress_casters{nullptr, nullptr};
+    egress_caster_tuple_t egress_casters{nullptr, nullptr};
+
+    segment::manifold_initializer_fn_t manifold_builder_fn{nullptr};
 };
 /**
  * @brief Collection of static methods and data used to associate and retrieve PortUtil objects with std::type_index

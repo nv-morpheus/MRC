@@ -27,6 +27,7 @@
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/node/sink_channel_owner.hpp"
+#include "mrc/node/sink_properties.hpp"
 #include "mrc/runnable/context.hpp"
 #include "mrc/utils/type_utils.hpp"
 
@@ -42,7 +43,7 @@
 namespace mrc::node {
 
 template <typename T>
-class RxSinkBase : public WritableProvider<T>, public ReadableAcceptor<T>, public SinkChannelOwner<T>, private Watchable
+class RxSinkBase : public ReadableWritableSink<T>, public SinkChannelOwner<T>, private Watchable
 {
   public:
     void sink_add_watcher(std::shared_ptr<WatcherInterface> watcher);

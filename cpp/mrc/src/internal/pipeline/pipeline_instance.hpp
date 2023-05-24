@@ -51,6 +51,8 @@ class PipelineInstance final : public AsyncService, public runnable::RunnableRes
                      uint64_t instance_id);
     ~PipelineInstance() override;
 
+    std::shared_ptr<manifold::Interface> get_manifold(const PortName& port_name);
+
     // currently we are passing the instance back to the executor
     // we should own the instance here in the pipeline instance
     // we need to stage those object that are created into some struct/container so we can mass start them after all
@@ -82,7 +84,6 @@ class PipelineInstance final : public AsyncService, public runnable::RunnableRes
     void mark_joinable();
 
     manifold::Interface& manifold(const PortName& port_name);
-    std::shared_ptr<manifold::Interface> get_manifold(const PortName& port_name);
 
     runtime::Runtime& m_runtime;
 

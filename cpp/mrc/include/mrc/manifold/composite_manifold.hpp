@@ -32,21 +32,6 @@ class CompositeManifold : public Manifold
     static_assert(std::is_base_of_v<EgressDelegate, EgressT>, "ingress must be derived from EgressDelegate");
 
   public:
-    CompositeManifold(PortName port_name, runnable::IRunnableResources& resources) :
-      Manifold(std::move(port_name), resources)
-    {
-        // construct IngressT and EgressT on the NUMA node / memory domain in which the object will run
-        this->resources()
-            .main()
-            .enqueue([this] {
-                m_ingress = std::make_unique<IngressT>();
-                m_egress  = std::make_unique<EgressT>();
-
-                // Then link them together
-                mrc::make_edge(*m_ingress, *m_egress);
-            })
-            .get();
-    }
     CompositeManifold(PortName port_name,
                       runnable::IRunnableResources& resources,
                       std::unique_ptr<IngressT> ingress,
@@ -57,6 +42,21 @@ class CompositeManifold : public Manifold
     {
         // Already created, link them together
         mrc::make_edge(*m_ingress, *m_egress);
+    }
+
+    CompositeManifold(PortName port_name, runnable::IRunnableResources& resources) :
+      CompositeManifold(std::move(port_name), resources, std::make_unique<IngressT>(), std::make_unique<EgressT>())
+    {
+        // Then link them together
+        // mrc::make_edge(*m_ingress, *m_egress);
+
+        // // construct IngressT and EgressT on the NUMA node / memory domain in which the object will run
+        // this->resources()
+        //     .main()
+        //     .enqueue([this] {
+
+        //     })
+        //     .get();
     }
 
   protected:
@@ -95,15 +95,15 @@ class CompositeManifold : public Manifold
 
     void update(std::vector<std::function<void()>>& updates)
     {
-        resources()
-            .main()
-            .enqueue([&] {
-                for (auto& update_fn : updates)
-                {
-                    update_fn();
-                }
-            })
-            .get();
+        // resources()
+        //     .main()
+        //     .enqueue([&] {
+        //         for (auto& update_fn : updates)
+        //         {
+        //             update_fn();
+        //         }
+        //     })
+        //     .get();
         updates.clear();
     }
 

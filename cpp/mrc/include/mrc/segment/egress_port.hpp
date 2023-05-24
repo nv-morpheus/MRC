@@ -48,7 +48,7 @@ class EgressPortBase : public runnable::Launchable, public manifold::Connectable
 };
 
 template <typename T>
-class EgressPort final : public Object<node::RxSinkBase<T>>,
+class EgressPort final : public Object<node::ReadableWritableSink<T>>,
                          public EgressPortBase,
                          public std::enable_shared_from_this<EgressPort<T>>
 {
@@ -65,7 +65,7 @@ class EgressPort final : public Object<node::RxSinkBase<T>>,
     {}
 
   private:
-    node::RxSinkBase<T>* get_object() const final
+    node::ReadableWritableSink<T>* get_object() const final
     {
         CHECK(m_sink) << "failed to acquire backing runnable for egress port " << m_port_name;
         return m_sink.get();

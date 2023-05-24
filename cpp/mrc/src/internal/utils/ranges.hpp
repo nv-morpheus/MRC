@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <numeric>
+#include <set>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -64,6 +65,74 @@ std::string print_ranges(const std::vector<std::pair<T, T>>& ranges)
 
         return r + (r.empty() ? "" : ",") + std::to_string(p.first) + "-" + std::to_string(p.second);
     });
+}
+
+// Returns a tuple of [added, removed]
+template <typename T>
+std::pair<std::set<T>, std::set<T>> compare_difference(const std::set<T>& cur_set, const std::set<T>& new_set)
+{
+    std::set<T> remove;
+    std::set<T> create;
+
+    // set difference to determine which channels to remove
+    std::set_difference(cur_set.begin(),
+                        cur_set.end(),
+                        new_set.begin(),
+                        new_set.end(),
+                        std::inserter(remove, remove.end()));
+
+    // set difference to determine which channels to add
+    std::set_difference(new_set.begin(),
+                        new_set.end(),
+                        cur_set.begin(),
+                        cur_set.end(),
+                        std::inserter(create, create.end()));
+
+    return std::make_pair(std::move(create), std::move(remove));
+}
+
+// Returns a tuple of [added, removed]
+template <typename T>
+std::pair<std::set<T>, std::set<T>> compare_difference(const std::vector<T>& curr, const std::vector<T>& next)
+{
+    // Convert the vectors to sets
+    std::set<T> curr_set(curr.begin(), curr.end());
+    std::set<T> next_set(next.begin(), next.end());
+
+    return compare_difference(curr_set, next_set);
+}
+
+// Returns a tuple of [duplicates, unique]
+template <typename T>
+std::pair<std::set<T>, std::set<T>> compare_intersecton(const std::set<T>& curr, const std::set<T>& next)
+{
+    std::set<T> duplicates;
+    std::set<T> unique;
+
+    std::set_intersection(curr.begin(),
+                          curr.end(),
+                          next.begin(),
+                          next.end(),
+                          std::inserter(duplicates, duplicates.end()));
+
+    std::set_symmetric_difference(curr.begin(),
+                                  curr.end(),
+                                  next.begin(),
+                                  next.end(),
+                                  std::inserter(unique, unique.end()));
+
+    return std::make_pair(std::move(duplicates), std::move(unique));
+}
+
+// Returns a tuple of [duplicates, unique]
+template <typename T>
+std::pair<std::set<T>, std::set<T>> compare_intersecton(const std::vector<T>& curr, const std::vector<T>& next)
+{
+    // Convert the vectors to sets
+    std::set<T> curr_set(curr.begin(), curr.end());
+    std::set<T> next_set(next.begin(), next.end());
+
+    return compare_intersecton(curr_set, next_set);
 }
 
 }  // namespace mrc

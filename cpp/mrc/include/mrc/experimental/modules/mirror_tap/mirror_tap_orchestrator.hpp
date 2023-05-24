@@ -71,8 +71,10 @@ class MirrorTapOrchestrator
     segment::IngressPorts<IngressTypesT..., DataTypeT> create_or_extend_ingress_ports(
         segment::IngressPorts<IngressTypesT...>& ingress_ports) const
     {
-        auto names(ingress_ports.names());
-        names.push_back(get_ingress_tap_name());
+        std::array<std::string, ingress_ports.Count + 1> names;
+        std::copy_n(ingress_ports.names().begin(), ingress_ports.Count, names.begin());
+
+        names[ingress_ports.Count] = get_ingress_tap_name();
 
         return segment::IngressPorts<IngressTypesT..., DataTypeT>(std::move(names));
     }
@@ -86,8 +88,10 @@ class MirrorTapOrchestrator
     segment::EgressPorts<EgressTypesT..., DataTypeT> create_or_extend_egress_ports(
         segment::EgressPorts<EgressTypesT...>& egress_ports) const
     {
-        auto names(egress_ports.names());
-        names.push_back(get_ingress_tap_name());
+        std::array<std::string, egress_ports.Count + 1> names;
+        std::copy_n(egress_ports.names().begin(), egress_ports.Count, names.begin());
+
+        names[egress_ports.Count] = get_ingress_tap_name();
 
         return segment::EgressPorts<EgressTypesT..., DataTypeT>(std::move(names));
     }

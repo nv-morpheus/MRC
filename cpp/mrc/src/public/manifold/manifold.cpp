@@ -31,6 +31,7 @@ namespace mrc::manifold {
 Manifold::Manifold(PortName port_name, runnable::IRunnableResources& resources) :
   m_port_name(std::move(port_name)),
   m_resources(resources)
+
 {}
 
 Manifold::~Manifold() = default;

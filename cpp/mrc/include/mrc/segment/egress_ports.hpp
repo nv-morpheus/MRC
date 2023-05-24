@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "mrc/node/port_builders.hpp"
 #include "mrc/segment/egress_port.hpp"
 #include "mrc/segment/ports.hpp"
 
@@ -24,26 +25,43 @@ namespace mrc::segment {
 
 struct EgressPortsBase : public Ports<EgressPortBase>
 {
+    using Ports<EgressPortBase>::port_info_t;
     using Ports<EgressPortBase>::Ports;
+};
+
+// Derive from AutoRegEgressPort so we register the initializers for this type on creation
+template <typename T>
+struct EgressPortInfo : public EgressPortsBase::port_info_t, public node::AutoRegEgressPort<T>
+{
+    using EgressPortsBase::port_info_t::PortInfo;
 };
 
 template <typename... TypesT>
 struct EgressPorts : public EgressPortsBase
 {
-    using port_builder_fn_t = typename EgressPortsBase::port_builder_fn_t;
+    using EgressPortsBase::port_info_t;
 
-    EgressPorts(std::vector<std::string> names) : EgressPortsBase(std::move(names), get_builders()) {}
+    static constexpr size_t Count = sizeof...(TypesT);
+
+    EgressPorts(std::array<std::string, Count> names) :
+      EgressPortsBase(get_infos(names, std::index_sequence_for<TypesT...>{}))
+    {}
 
   private:
-    static std::vector<port_builder_fn_t> get_builders()
+    template <std::size_t... Is>
+    static std::vector<std::shared_ptr<port_info_t>> get_infos(const std::array<std::string, Count>& names,
+                                                               std::index_sequence<Is...> _)
     {
-        std::vector<port_builder_fn_t> builders;
-        (builders.push_back([](const SegmentAddress& address, const PortName& name) {
-            return std::make_shared<EgressPort<TypesT>>(address, name);
-        }),
+        std::vector<std::shared_ptr<port_info_t>> infos;
+        (infos.push_back(
+             std::make_shared<EgressPortInfo<TypesT>>(names[Is],
+                                                      std::type_index(typeid(TypesT)),
+                                                      [](const SegmentAddress& address, const PortName& name) {
+                                                          return std::make_shared<EgressPort<TypesT>>(address, name);
+                                                      })),
          ...);
 
-        return builders;
+        return infos;
     }
 };
 }  // namespace mrc::segment

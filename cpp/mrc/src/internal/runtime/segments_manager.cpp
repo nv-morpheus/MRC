@@ -25,6 +25,7 @@
 #include "internal/segment/segment_definition.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/ucx/worker.hpp"
+#include "internal/utils/ranges.hpp"
 
 #include "mrc/core/addresses.hpp"
 #include "mrc/protos/architect.pb.h"
@@ -150,6 +151,8 @@ void SegmentsManager::process_state_update(mrc::control_plane::state::Worker& wo
         auto cur_segments = extract_keys(m_instances);
         auto new_segments = extract_keys(worker.assigned_segments());
 
+        // auto [create_segments, remove_segments] = compare_difference(cur_segments, new_segments);
+
         // set of segments to remove
         std::set<SegmentAddress> create_segments;
         std::set_difference(new_segments.begin(),
@@ -222,15 +225,15 @@ void SegmentsManager::create_segment(const mrc::control_plane::state::SegmentIns
             auto& pipeline_def = m_runtime.pipelines_manager().get_definition(
                 instance_state.pipeline_definition().id());
 
-            auto& pipeline_instance = m_runtime.pipelines_manager().get_instance(
-                instance_state.pipeline_instance().id());
-
             auto [id, rank] = segment_address_decode(instance_state.address());
             auto definition = pipeline_def.find_segment(id);
 
             auto [added_iterator, did_add] = m_instances.emplace(
                 instance_state.address(),
-                std::make_unique<segment::SegmentInstance>(m_runtime, definition, instance_state.address()));
+                std::make_unique<segment::SegmentInstance>(m_runtime,
+                                                           definition,
+                                                           instance_state.address(),
+                                                           instance_state.pipeline_instance().id()));
 
             // Now start as a child service
             this->child_service_start(*added_iterator->second);

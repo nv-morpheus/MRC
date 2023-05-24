@@ -140,13 +140,16 @@ class LambdaConvertingEdgeReadable : public ConvertingEdgeReadableBase<InputT, O
       m_lambda_fn(std::move(lambda_fn))
     {}
 
-    channel::Status await_read(output_t& data) override
+    channel::Status await_read_until(output_t& data, const channel::time_point_t& timeout) override
     {
         input_t source_data;
-        auto ret_val = this->upstream().await_read(source_data);
+        auto ret_val = this->upstream().await_read_until(source_data, timeout);
 
-        // Convert to the sink type
-        data = m_lambda_fn(std::move(source_data));
+        if (ret_val == channel::Status::success)
+        {
+            // Convert to the sink type
+            data = m_lambda_fn(std::move(source_data));
+        }
 
         return ret_val;
     }

@@ -137,9 +137,9 @@ class IBuilder
     virtual std::tuple<std::string, std::string> normalize_name(const std::string& name,
                                                                 bool ignore_namespace = false) const = 0;
 
-    virtual std::shared_ptr<ObjectProperties> get_ingress(std::string name, std::type_index type_index) = 0;
+    virtual std::shared_ptr<ObjectProperties> get_ingress_typeless(std::string name) = 0;
 
-    virtual std::shared_ptr<ObjectProperties> get_egress(std::string name, std::type_index type_index) = 0;
+    virtual std::shared_ptr<ObjectProperties> get_egress_typeless(std::string name) = 0;
 
     /**
      * Initialize a SegmentModule that was instantiated outside of the builder.
@@ -191,10 +191,10 @@ class IBuilder
     std::shared_ptr<Object<ObjectT>> make_object(std::string name, std::unique_ptr<ObjectT> node);
 
     template <typename T>
-    std::shared_ptr<Object<node::RxSinkBase<T>>> get_egress(std::string name);
+    std::shared_ptr<Object<node::ReadableWritableSink<T>>> get_egress(std::string name);
 
     template <typename T>
-    std::shared_ptr<Object<node::RxSourceBase<T>>> get_ingress(std::string name);
+    std::shared_ptr<Object<node::ReadableWritableSource<T>>> get_ingress(std::string name);
 
     /**
      * Create a source node using the provided name and function, the function is lifted to an observable
@@ -566,7 +566,7 @@ void IBuilder::splice_edge(SourceObjectT source,
 }
 
 template <typename T>
-std::shared_ptr<Object<node::RxSinkBase<T>>> IBuilder::get_egress(std::string name)
+std::shared_ptr<Object<node::ReadableWritableSink<T>>> IBuilder::get_egress(std::string name)
 {
     auto base = this->get_egress_base(name);
     if (!base)
@@ -574,7 +574,7 @@ std::shared_ptr<Object<node::RxSinkBase<T>>> IBuilder::get_egress(std::string na
         throw exceptions::MrcRuntimeError("Egress port name not found: " + name);
     }
 
-    auto port = std::dynamic_pointer_cast<Object<node::RxSinkBase<T>>>(base);
+    auto port = std::dynamic_pointer_cast<Object<node::ReadableWritableSink<T>>>(base);
     if (port == nullptr)
     {
         throw exceptions::MrcRuntimeError("Egress port type mismatch: " + name);
@@ -584,7 +584,7 @@ std::shared_ptr<Object<node::RxSinkBase<T>>> IBuilder::get_egress(std::string na
 }
 
 template <typename T>
-std::shared_ptr<Object<node::RxSourceBase<T>>> IBuilder::get_ingress(std::string name)
+std::shared_ptr<Object<node::ReadableWritableSource<T>>> IBuilder::get_ingress(std::string name)
 {
     auto base = this->get_ingress_base(name);
     if (!base)
@@ -592,7 +592,7 @@ std::shared_ptr<Object<node::RxSourceBase<T>>> IBuilder::get_ingress(std::string
         throw exceptions::MrcRuntimeError("Ingress port name not found: " + name);
     }
 
-    auto port = std::dynamic_pointer_cast<Object<node::RxSourceBase<T>>>(base);
+    auto port = std::dynamic_pointer_cast<Object<node::ReadableWritableSource<T>>>(base);
     if (port == nullptr)
     {
         throw exceptions::MrcRuntimeError("Ingress port type mismatch: " + name);

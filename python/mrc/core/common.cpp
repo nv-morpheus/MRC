@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include "pymrc/port_builders.hpp"
 #include "pymrc/types.hpp"
 
+#include "mrc/node/port_builders.hpp"
 #include "mrc/node/rx_sink_base.hpp"
 #include "mrc/node/rx_source_base.hpp"
 #include "mrc/types.hpp"
@@ -49,7 +49,7 @@ PYBIND11_MODULE(common, py_mod)
            :toctree: _generate
     )pbdoc";
 
-    PortBuilderUtil::register_port_util<PyHolder>();
+    node::PortBuilderUtil::register_port_util<PyHolder>();
 
     py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);

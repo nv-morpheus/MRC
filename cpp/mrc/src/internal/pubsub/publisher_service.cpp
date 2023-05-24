@@ -25,6 +25,7 @@
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/partition_runtime.hpp"
+#include "internal/utils/ranges.hpp"
 
 #include "mrc/channel/status.hpp"
 #include "mrc/codable/encoded_object.hpp"
@@ -73,7 +74,7 @@ void PublisherService::update_tagged_instances(const std::string& role,
 
     auto cur_tags         = extract_keys(m_tagged_instances);
     auto new_tags         = extract_keys(tagged_instances);
-    auto [added, removed] = set_compare(cur_tags, new_tags);
+    auto [added, removed] = compare_difference(cur_tags, new_tags);
 
     for (const auto& tag : removed)
     {

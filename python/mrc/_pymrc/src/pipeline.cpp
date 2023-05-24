@@ -74,7 +74,7 @@ PipelineIngressInfo collect_ingress_info(py::list ids)
             ingress_info.m_type_indices.emplace_back(typeid(PyHolder));
 
             auto port_util = PortRegistry::find_port_util(typeid(PyHolder));
-            ingress_info.m_ingress_builders.push_back(std::get<0>(port_util->m_ingress_builders));
+            ingress_info.m_ingress_builders.push_back(std::get<0>(port_util->ingress_builders));
         }
         else if (item.get_type().equal(py::tuple().get_type()))
         {
@@ -93,8 +93,8 @@ PipelineIngressInfo collect_ingress_info(py::list ids)
             std::type_index type_index = builder_exists ? *cpptype : typeid(PyHolder);
 
             auto port_util  = PortRegistry::find_port_util(type_index);
-            auto builder_fn = flag_sp_variant ? std::get<1>(port_util->m_ingress_builders)
-                                              : std::get<0>(port_util->m_ingress_builders);
+            auto builder_fn = flag_sp_variant ? std::get<1>(port_util->ingress_builders)
+                                              : std::get<0>(port_util->ingress_builders);
 
             ingress_info.m_names.push_back(py_name.cast<std::string>());
             ingress_info.m_type_indices.emplace_back(type_index);
@@ -124,7 +124,7 @@ PipelineEgressInfo collect_egress_info(py::list ids)
             egress_info.m_type_indices.emplace_back(typeid(PyHolder));
 
             auto port_util = PortRegistry::find_port_util(typeid(PyHolder));
-            egress_info.m_egress_builders.push_back(std::get<0>(port_util->m_egress_builders));
+            egress_info.m_egress_builders.push_back(std::get<0>(port_util->egress_builders));
         }
         else if (item.get_type().equal(py::tuple().get_type()))
         {
@@ -144,8 +144,8 @@ PipelineEgressInfo collect_egress_info(py::list ids)
             std::type_index type_index = builder_exists ? *cpptype : typeid(PyHolder);
 
             auto port_util  = PortRegistry::find_port_util(type_index);
-            auto builder_fn = flag_sp_variant ? std::get<1>(port_util->m_egress_builders)
-                                              : std::get<0>(port_util->m_egress_builders);
+            auto builder_fn = flag_sp_variant ? std::get<1>(port_util->egress_builders)
+                                              : std::get<0>(port_util->egress_builders);
 
             egress_info.m_names.push_back(py_name.cast<std::string>());
             egress_info.m_type_indices.emplace_back(type_index);

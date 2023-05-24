@@ -25,6 +25,7 @@
 #include "mrc/core/watcher.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/source_channel_owner.hpp"
+#include "mrc/node/source_properties.hpp"
 #include "mrc/runnable/context.hpp"
 #include "mrc/utils/type_utils.hpp"
 
@@ -45,10 +46,7 @@ namespace mrc::node {
  * @tparam T
  */
 template <typename T>
-class RxSourceBase : public ReadableProvider<T>,
-                     public WritableAcceptor<T>,
-                     public SourceChannelOwner<T>,
-                     private Watchable
+class RxSourceBase : public ReadableWritableSource<T>, public SourceChannelOwner<T>, private Watchable
 {
   public:
     void source_add_watcher(std::shared_ptr<WatcherInterface> watcher);
