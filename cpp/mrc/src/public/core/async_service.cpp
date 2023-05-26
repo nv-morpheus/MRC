@@ -15,9 +15,10 @@
  * limitations under the License.
  */
 
-#include "internal/async_service.hpp"
+#include "mrc/core/async_service.hpp"
 
 #include "mrc/channel/status.hpp"
+#include "mrc/core/utils.hpp"
 #include "mrc/runnable/runner.hpp"
 
 #include <glog/logging.h>
@@ -35,12 +36,11 @@ AsyncService::AsyncService(std::string service_name) : m_service_name(std::move(
 
 AsyncService::~AsyncService()
 {
-    auto state = this->state();
-
-    bool is_running = state > AsyncServiceState::Initialized && state < AsyncServiceState::Completed;
-
-    CHECK(!is_running) << "Must call AsyncService::call_in_destructor to ensure service is cleaned up before being "
-                          "destroyed";
+    if (!m_call_in_destructor_called)
+    {
+        LOG(FATAL) << "Must call AsyncService::call_in_destructor to ensure service is cleaned up before being "
+                      "destroyed";
+    }
 }
 
 const std::string& AsyncService::service_name() const
@@ -60,7 +60,7 @@ const AsyncServiceState& AsyncService::state() const
     return m_state;
 }
 
-Future<void> AsyncService::service_start(std::stop_source stop_source)
+SharedFuture<void> AsyncService::service_start(std::stop_source stop_source)
 {
     // Lock here since we do stuff after checking the state which should be synced
     std::unique_lock<decltype(m_mutex)> lock(m_mutex);
@@ -71,7 +71,14 @@ Future<void> AsyncService::service_start(std::stop_source stop_source)
     // Copy the stop_source state (either it was passed in or created)
     m_stop_source = stop_source;
 
-    return this->runnable().main().enqueue([this]() {
+    // Save to a shared future so we can also check the return in join()
+    m_completed_future = this->runnable().main().enqueue([this]() {
+        Unwinder ensure_completed([this]() {
+            // Ensure that the state gets set to completed even if we error
+            LOG_IF(ERROR, !forward_state(AsyncServiceState::Completed))
+                << this->debug_prefix() << " Inconsistent state. Could not set to Completed";
+        });
+
         // Add a stop callback to notify the cv anytime a stop is requested
         std::stop_callback stop_callback(m_stop_source.get_token(), [this]() {
             m_cv.notify_all();
@@ -96,11 +103,11 @@ Future<void> AsyncService::service_start(std::stop_source stop_source)
         // m_child_futures cant be changed after the state is set to stopping
         for (auto& f : m_child_futures)
         {
-            f.wait();
+            f.get();
         }
-
-        DCHECK(forward_state(AsyncServiceState::Completed));
     });
+
+    return m_completed_future;
 }
 
 void AsyncService::service_await_live()
@@ -151,11 +158,26 @@ void AsyncService::service_kill()
 
 void AsyncService::service_await_join()
 {
+    // Guarantee that we set the flag that this was called
+    Unwinder ensure_flag([this]() {
+        m_service_await_join_called = true;
+    });
+
+    {
+        std::unique_lock<decltype(m_mutex)> lock(m_mutex);
+
+        // Check to make sure we have started before joining
+        CHECK(m_completed_future.valid())
+            << this->debug_prefix() << " Must call service_start() before calling service_await_join()";
+    }
+
+    // Wait on the completed future
+    m_completed_future.get();
+
     std::unique_lock<decltype(m_mutex)> lock(m_mutex);
 
-    m_cv.wait(lock, [this]() {
-        return m_state >= AsyncServiceState::Completed;
-    });
+    CHECK(m_state >= AsyncServiceState::Completed)
+        << this->debug_prefix() << " Invalid state. Was not set to Completed before exiting";
 }
 
 std::string AsyncService::debug_prefix() const
@@ -165,7 +187,13 @@ std::string AsyncService::debug_prefix() const
 
 void AsyncService::call_in_destructor()
 {
+    // Guarantee that we set the flag that this was called
+    Unwinder ensure_flag([this]() {
+        m_call_in_destructor_called = true;
+    });
+
     auto state = this->state();
+
     if (state > AsyncServiceState::Initialized)
     {
         if (state == AsyncServiceState::Running)
@@ -179,6 +207,18 @@ void AsyncService::call_in_destructor()
         {
             LOG(ERROR) << this->debug_prefix() << " service was not joined before being destructed; issuing join";
             service_await_join();
+        }
+    }
+
+    // Extra careful to lock here just in case
+    std::unique_lock<decltype(m_mutex)> lock(m_mutex);
+
+    if (m_completed_future.valid() && !m_service_await_join_called)
+    {
+        if (m_completed_future.get_exception_ptr())
+        {
+            LOG(ERROR) << this->debug_prefix()
+                       << " An exception was missed. Ensure service_await_join() is called to handle any exceptions";
         }
     }
 }

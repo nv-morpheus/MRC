@@ -97,7 +97,7 @@ class AsyncService : public virtual runnable::IRunnableResourcesProvider
     bool is_service_startable() const;
     const AsyncServiceState& state() const;
 
-    Future<void> service_start(std::stop_source stop_source = {});
+    SharedFuture<void> service_start(std::stop_source stop_source = {});
     void service_await_live();
     void service_stop();
     void service_kill();
@@ -130,6 +130,9 @@ class AsyncService : public virtual runnable::IRunnableResourcesProvider
 
     AsyncServiceState m_state{AsyncServiceState::Initialized};
     std::string m_service_name{"mrc::AsyncService"};
+    SharedFuture<void> m_completed_future;
+    bool m_service_await_join_called{false};
+    bool m_call_in_destructor_called{false};
 
     std::stop_source m_stop_source;
     CondVarAny m_cv;
@@ -137,7 +140,7 @@ class AsyncService : public virtual runnable::IRunnableResourcesProvider
 
     std::map<std::string, std::unique_ptr<AsyncService>> m_owned_children;
     std::vector<std::reference_wrapper<AsyncService>> m_children;
-    std::vector<Future<void>> m_child_futures;
+    std::vector<SharedFuture<void>> m_child_futures;
 };
 
 class AsyncServiceRunnerWrapper : public AsyncService, public runnable::RunnableResourcesProvider

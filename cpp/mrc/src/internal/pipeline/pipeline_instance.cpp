@@ -17,9 +17,9 @@
 
 #include "internal/pipeline/pipeline_instance.hpp"
 
-#include "internal/async_service.hpp"
 #include "internal/control_plane/state/root_state.hpp"
 #include "internal/pipeline/manifold_definition.hpp"
+#include "internal/pipeline/manifold_instance.hpp"
 #include "internal/pipeline/pipeline_definition.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/system_resources.hpp"
@@ -29,6 +29,7 @@
 #include "internal/segment/segment_instance.hpp"
 
 #include "mrc/core/addresses.hpp"
+#include "mrc/core/async_service.hpp"
 #include "mrc/core/task_queue.hpp"
 #include "mrc/manifold/interface.hpp"
 #include "mrc/segment/utils.hpp"
@@ -64,25 +65,32 @@ PipelineInstance::~PipelineInstance() = default;
 
 std::shared_ptr<manifold::Interface> PipelineInstance::get_manifold(const PortName& port_name)
 {
-    if (!m_manifolds.contains(port_name))
+    if (!m_manifold_instances.contains(port_name))
     {
         auto manifold_def = m_definition->find_manifold(port_name);
 
         // Create a new manifold
-        m_manifolds[port_name] = manifold_def->build(m_runtime.resources().runnable());
+        auto [added_iterator, did_add] = m_manifold_instances.emplace(
+            port_name,
+            std::make_shared<ManifoldInstance>(m_runtime, manifold_def, 0));
+
+        this->child_service_start(*added_iterator->second);
+
+        // Need to wait for it to be live before continuing
+        added_iterator->second->service_await_live();
     }
 
-    return m_manifolds.at(port_name);
+    return m_manifold_instances.at(port_name)->get_interface();
 }
 
 void PipelineInstance::update()
 {
-    for (const auto& [name, manifold] : m_manifolds)
-    {
-        manifold->update_inputs();
-        manifold->update_outputs();
-        manifold->start();
-    }
+    // for (const auto& [name, manifold] : m_manifold_instances)
+    // {
+    //     manifold->update_inputs();
+    //     manifold->update_outputs();
+    //     manifold->start();
+    // }
     for (const auto& [address, segment] : m_segments)
     {
         segment->service_start();
@@ -147,8 +155,8 @@ void PipelineInstance::create_segment(const SegmentAddress& address, std::uint32
                 if (!manifold)
                 {
                     VLOG(10) << ::mrc::segment::info(address) << " creating manifold for egress port " << name;
-                    manifold          = segment->create_manifold(name);
-                    m_manifolds[name] = manifold;
+                    manifold = segment->create_manifold(name);
+                    // m_manifold_instances[name] = manifold;
                 }
                 segment->attach_manifold(manifold);
             }
@@ -160,8 +168,8 @@ void PipelineInstance::create_segment(const SegmentAddress& address, std::uint32
                 if (!manifold)
                 {
                     VLOG(10) << ::mrc::segment::info(address) << " creating manifold for ingress port " << name;
-                    manifold          = segment->create_manifold(name);
-                    m_manifolds[name] = manifold;
+                    manifold = segment->create_manifold(name);
+                    // m_manifold_instances[name] = manifold;
                 }
                 segment->attach_manifold(manifold);
             }
@@ -223,7 +231,7 @@ void PipelineInstance::do_service_start(std::stop_token stop_token)
             });
 
     // Yield until the observable is finished
-    completed_promise.get_future().wait();
+    completed_promise.get_future().get();
 }
 
 void PipelineInstance::process_state_update(control_plane::state::PipelineInstance& instance)

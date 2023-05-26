@@ -17,13 +17,145 @@
 
 #pragma once
 
+#include "mrc/channel/buffered_channel.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/channel/types.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/manifold/egress.hpp"
 #include "mrc/manifold/ingress.hpp"
 #include "mrc/manifold/manifold.hpp"
+#include "mrc/node/operators/router.hpp"
+#include "mrc/node/sink_channel_owner.hpp"
+#include "mrc/node/sink_properties.hpp"
+#include "mrc/node/source_properties.hpp"
+#include "mrc/runnable/context.hpp"
+#include "mrc/runnable/runnable.hpp"
 #include "mrc/segment/utils.hpp"
+#include "mrc/types.hpp"
+
+#include <boost/fiber/future/future.hpp>
+#include <boost/fiber/operations.hpp>
+
+#include <chrono>
 
 namespace mrc::manifold {
+
+template <typename T>
+class ManifoldNode : public node::RouterReadableAcceptor<T, SegmentAddress>,
+                     public node::RouterWritableAcceptor<T, SegmentAddress>,
+                     public runnable::RunnableWithContext<runnable::Context>
+{
+  public:
+    ManifoldNode() {}
+
+    void add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source)
+    {
+        boost::fibers::packaged_task<void()> update_task([this, address, input_source] {
+            mrc::make_edge(*input_source, *this->get_sink(address));
+        });
+
+        auto update_future = update_task.get_future();
+
+        CHECK_EQ(m_updates.await_write(std::move(update_task)), channel::Status::success);
+
+        // Before continuing, wait for the update to be processed
+        update_future.get();
+    }
+
+    void add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink)
+    {
+        boost::fibers::packaged_task<void()> update_task([this, address, output_sink] {
+            mrc::make_edge(*this->get_source(address), *output_sink);
+        });
+
+        auto update_future = update_task.get_future();
+
+        CHECK_EQ(m_updates.await_write(std::move(update_task)), channel::Status::success);
+
+        // Before continuing, wait for the update to be processed
+        update_future.get();
+    }
+
+    void remove_input(const SegmentAddress& address)
+    {
+        boost::fibers::packaged_task<void()> update_task([this, address] {
+            this->drop_source(address);
+        });
+
+        auto update_future = update_task.get_future();
+
+        CHECK_EQ(m_updates.await_write(std::move(update_task)), channel::Status::success);
+
+        // Before continuing, wait for the update to be processed
+        update_future.get();
+    }
+
+    void remove_output(const SegmentAddress& address)
+    {
+        boost::fibers::packaged_task<void()> update_task([this, address] {
+            this->drop_sink(address);
+        });
+
+        auto update_future = update_task.get_future();
+
+        CHECK_EQ(m_updates.await_write(std::move(update_task)), channel::Status::success);
+
+        // Before continuing, wait for the update to be processed
+        update_future.get();
+    }
+
+  private:
+    void run(runnable::Context& ctx) final
+    {
+        std::uint64_t backoff = 128;
+        T data;
+
+        while (m_is_running)
+        {
+            // if we are rank 0, check for updates
+            if (ctx.rank() == 0)
+            {
+                channel::Status update_status;
+                boost::fibers::packaged_task<void()> next_update;
+
+                while ((update_status = m_updates.try_read(next_update)) == channel::Status::success)
+                {
+                    // Run the next update
+                    next_update();
+                }
+            }
+
+            // Barrier to sync threads
+            ctx.barrier();
+
+            // Now pull from the queue. Dont wait for any time if there isnt a message
+            auto status = this->get_readable_edge()->await_read_for(data, channel::duration_t::zero());
+
+            if (status == channel::Status::success)
+            {
+                backoff = 1;
+                this->get_writable_edge()->await_write(std::move(data));
+            }
+            else if (status == channel::Status::timeout)
+            {
+                // If there are no pending updates, sleep
+                if (backoff < 1024)
+                {
+                    backoff = (backoff << 1);
+                }
+                boost::this_fiber::sleep_for(std::chrono::microseconds(backoff));
+            }
+            else
+            {
+                // Should not happen
+                throw exceptions::MrcRuntimeError("Unexpected channel status in manifold: " << status);
+            }
+        }
+    }
+
+    bool m_is_running{true};
+    channel::BufferedChannel<boost::fibers::packaged_task<void()>> m_updates;
+};
 
 template <typename IngressT, typename EgressT>
 class CompositeManifold : public Manifold

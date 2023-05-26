@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include "internal/async_service.hpp"
 #include "internal/control_plane/client.hpp"
 #include "internal/pipeline/pipeline_definition.hpp"
 #include "internal/pipeline/pipeline_instance.hpp"
 #include "internal/resources/partition_resources.hpp"
 
+#include "mrc/core/async_service.hpp"
 #include "mrc/types.hpp"
 
 #include <cstddef>

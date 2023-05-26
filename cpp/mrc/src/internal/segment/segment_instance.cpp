@@ -335,7 +335,7 @@ void SegmentInstance::do_service_start(std::stop_token stop_token)
     m_runtime.control_plane()
         .state_update_obs()
         .tap([this](const control_plane::state::ControlPlaneState& state) {
-            VLOG(10) << "State Update: SegmentInstance[" << m_address << "]";
+            VLOG(10) << "State Update: SegmentInstance[" << m_address << "/" << m_definition->name() << "]";
         })
         .map([this](control_plane::state::ControlPlaneState state) -> control_plane::state::SegmentInstance {
             return state.segment_instances().at(m_address);
@@ -363,27 +363,59 @@ void SegmentInstance::do_service_start(std::stop_token stop_token)
             });
 
     // Yield until the observable is finished
-    completed_promise.get_future().wait();
+    completed_promise.get_future().get();
 }
 
 void SegmentInstance::process_state_update(control_plane::state::SegmentInstance& instance)
 {
-    if (instance.state().status() == control_plane::state::ResourceStatus::Activated)
+    switch (instance.state().status())
     {
-        // If we are activated, we need to setup the instance and then inform the control plane we are ready
-        this->service_start_impl();
+    case control_plane::state::ResourceStatus::Registered: {
+        LOG_IF(WARNING, m_local_status != control_plane::state::ResourceStatus::Registered) << "Got Registered status "
+                                                                                               "after Segment has "
+                                                                                               "started";
+        break;
+    }
+    case control_plane::state::ResourceStatus::Activated: {
+        if (m_local_status == control_plane::state::ResourceStatus::Registered)
+        {
+            // Set local status
+            m_local_status = control_plane::state::ResourceStatus::Activated;
 
-        auto request = protos::ResourceUpdateStatusRequest();
+            // If we are activated, we need to setup the instance and then inform the control plane we are ready
+            this->service_start_impl();
 
-        request.set_resource_type("SegmentInstances");
-        request.set_resource_id(instance.id());
-        request.set_status(protos::ResourceStatus::Ready);
+            auto request = protos::ResourceUpdateStatusRequest();
 
-        auto response = m_runtime.control_plane().await_unary<protos::ResourceUpdateStatusResponse>(
-            protos::EventType::ClientUnaryResourceUpdateStatus,
-            request);
+            request.set_resource_type("SegmentInstances");
+            request.set_resource_id(instance.id());
+            request.set_status(protos::ResourceStatus::Ready);
 
-        CHECK(response->ok()) << "Failed to set PipelineInstance to Ready";
+            auto response = m_runtime.control_plane().await_unary<protos::ResourceUpdateStatusResponse>(
+                protos::EventType::ClientUnaryResourceUpdateStatus,
+                request);
+
+            CHECK(response->ok()) << "Failed to set PipelineInstance to Ready";
+
+            // Set the local status to ready now so we dont run this again
+            m_local_status = control_plane::state::ResourceStatus::Ready;
+
+            // Finally, mark this as started for any awaiters
+            this->mark_started();
+        }
+
+        break;
+    }
+    case control_plane::state::ResourceStatus::Ready: {
+        // Nothing for Ready
+        break;
+    }
+    case control_plane::state::ResourceStatus::Deactivating:
+    case control_plane::state::ResourceStatus::Deactivated:
+    case control_plane::state::ResourceStatus::Unregistered:
+    case control_plane::state::ResourceStatus::Destroyed:
+    default:
+        LOG(ERROR) << "State not handled yet";
     }
 }
 }  // namespace mrc::segment

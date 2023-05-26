@@ -209,8 +209,15 @@ class IReadableAcceptorBase
     virtual EdgeTypeInfo readable_acceptor_type() const = 0;
 };
 
+template <typename KeyT>
+class IMultiReadableAcceptorBase
+{
+  public:
+    virtual void set_readable_edge_handle(KeyT key, std::shared_ptr<ReadableEdgeHandle> egress) = 0;
+};
+
 template <typename T>
-class IReadableProvider : public IReadableProviderBase
+class IReadableProvider : public virtual IReadableProviderBase
 {
   public:
     EdgeTypeInfo readable_provider_type() const override
@@ -220,7 +227,7 @@ class IReadableProvider : public IReadableProviderBase
 };
 
 template <typename T>
-class IReadableAcceptor : public IReadableAcceptorBase
+class IReadableAcceptor : public virtual IReadableAcceptorBase
 {
   public:
     EdgeTypeInfo readable_acceptor_type() const override
@@ -228,5 +235,9 @@ class IReadableAcceptor : public IReadableAcceptorBase
         return EdgeTypeInfo::create<T>();
     }
 };
+
+template <typename KeyT, typename T>
+class IMultiReadableAcceptor : public virtual IMultiWritableAcceptorBase<KeyT>
+{};
 
 }  // namespace mrc::edge

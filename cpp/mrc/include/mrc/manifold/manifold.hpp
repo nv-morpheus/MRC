@@ -17,10 +17,23 @@
 
 #pragma once
 
+#include "mrc/channel/buffered_channel.hpp"
+#include "mrc/edge/edge_builder.hpp"
+#include "mrc/edge/edge_writable.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/manifold/interface.hpp"
+#include "mrc/node/operators/router.hpp"
+#include "mrc/node/sink_channel_owner.hpp"
+#include "mrc/runnable/runnable.hpp"
+#include "mrc/runnable/runnable_resources.hpp"
+#include "mrc/runnable/runner.hpp"
 #include "mrc/types.hpp"
+#include "mrc/utils/string_utils.hpp"
 
+#include <atomic>
+#include <memory>
 #include <string>
+#include <utility>
 
 namespace mrc::edge {
 class IWritableAcceptorBase;
@@ -56,5 +69,145 @@ class Manifold : public Interface
     runnable::IRunnableResources& m_resources;
     std::string m_info;
 };
+
+class ManifoldNodeBase : public virtual edge::IWritableProviderBase,
+                         public virtual edge::IMultiWritableAcceptorBase<SegmentAddress>,
+                         public runnable::RunnableWithContext<runnable::Context>
+{
+  public:
+    virtual void add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source);
+
+    virtual void add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink);
+
+  private:
+    void run(runnable::Context& ctx) final;
+
+    virtual edge::IWritableAcceptorBase& get_output(SegmentAddress address) const = 0;
+    virtual channel::Status process_one()                                         = 0;
+
+    bool m_is_running{true};
+    channel::BufferedChannel<mrc::PackagedTask<void()>> m_updates;
+
+    friend class ManifoldBase;
+};
+
+// Utility class to avoid tagger and untagger getting mixed up
+class ManifoldTaggerBase : public ManifoldNodeBase
+{
+  public:
+    void add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) override;
+
+  protected:
+    SegmentAddress get_next_tag();
+
+  private:
+    std::atomic_size_t m_msg_counter{0};
+    std::vector<SegmentAddress> m_available_outputs;
+};
+
+// Utility class to avoid tagger and untagger getting mixed up
+class ManifoldUnTaggerBase : public ManifoldNodeBase
+{};
+
+// template <typename T>
+// class ManifoldTagger : public ManifoldTaggerBase,
+//                        public edge::IWritableProvider<T>,
+//                        public node::SinkChannelOwner<T>,
+//                        public node::RouterWritableAcceptor<SegmentAddress, std::pair<SegmentAddress, T>>
+// {
+//     edge::IWritableAcceptorBase& get_output(SegmentAddress address) const override
+//     {
+//         return *this->get_source(address);
+//     }
+//     channel::Status process_one() override
+//     {
+//         T data;
+
+//         auto status = this->get_readable_edge()->await_read_for(data, channel::duration_t::zero());
+
+//         if (status == channel::Status::success)
+//         {
+//             auto tag = this->get_next_tag();
+
+//             this->get_writable_edge(tag)->await_write(std::make_pair(tag, std::move(data)));
+//         }
+
+//         return status;
+//     }
+// };
+
+// template <typename T>
+// class ManifoldUnTagger : public ManifoldUnTaggerBase,
+//                          public edge::IWritableProvider<std::pair<SegmentAddress, T>>,
+//                          public node::SinkChannelOwner<std::pair<SegmentAddress, T>>,
+//                          public node::RouterWritableAcceptor<SegmentAddress, T>
+// {
+//     edge::IWritableAcceptorBase& get_output(SegmentAddress address) const override
+//     {
+//         return *this->get_source(address);
+//     }
+
+//     channel::Status process_one() override
+//     {
+//         std::pair<SegmentAddress, T> data;
+
+//         auto status = this->get_readable_edge()->await_read_for(data, channel::duration_t::zero());
+
+//         if (status == channel::Status::success)
+//         {
+//             // Use the tag to determine where it should go
+//             auto tag = data.first;
+
+//             this->get_writable_edge(tag)->await_write(std::move(data.second));
+//         }
+
+//         return status;
+//     }
+// };
+
+class ManifoldBase : public Interface, runnable::RunnableResourcesProvider
+{
+  public:
+    ManifoldBase(runnable::IRunnableResources& resources,
+                 std::string port_name,
+                 std::unique_ptr<ManifoldTaggerBase> tagger,
+                 std::unique_ptr<ManifoldUnTaggerBase> untagger);
+
+    const PortName& port_name() const override;
+
+    void start() override;
+
+    void join() override;
+
+  protected:
+    const std::string& info() const;
+
+  private:
+    void add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) final;
+
+    void add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) final;
+
+    void update_inputs() override;
+    void update_outputs() override;
+
+    PortName m_port_name;
+    // runnable::IRunnableResources& m_resources;
+    std::string m_info;
+
+    std::unique_ptr<ManifoldTaggerBase> m_tagger_node;
+    std::unique_ptr<ManifoldUnTaggerBase> m_untagger_node;
+
+    std::unique_ptr<runnable::Runner> m_tagger_runner;
+    std::unique_ptr<runnable::Runner> m_untagger_runner;
+};
+
+// template <typename T>
+// class TypedManifold : public ManifoldBase
+// {
+//     TypedManifold(std::string port_name) :
+//       ManifoldBase(std::move(port_name), std::make_shared<ManifoldTagger<T>>(),
+//       std::make_shared<ManifoldUnTagger<T>>())
+//     {}
+// };
 
 }  // namespace mrc::manifold

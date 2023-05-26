@@ -211,7 +211,7 @@ class IMultiWritableAcceptorBase
 };
 
 template <typename T>
-class IWritableProvider : public IWritableProviderBase
+class IWritableProvider : public virtual IWritableProviderBase
 {
   public:
     EdgeTypeInfo writable_provider_type() const override
@@ -221,7 +221,7 @@ class IWritableProvider : public IWritableProviderBase
 };
 
 template <typename T>
-class IWritableAcceptor : public IWritableAcceptorBase
+class IWritableAcceptor : public virtual IWritableAcceptorBase
 {
   public:
     EdgeTypeInfo writable_acceptor_type() const override
@@ -230,8 +230,8 @@ class IWritableAcceptor : public IWritableAcceptorBase
     }
 };
 
-template <typename T, typename KeyT>
-class IMultiWritableAcceptor : public IMultiWritableAcceptorBase<KeyT>
+template <typename KeyT, typename T>
+class IMultiWritableAcceptor : public virtual IMultiWritableAcceptorBase<KeyT>
 {};
 
 }  // namespace mrc::edge

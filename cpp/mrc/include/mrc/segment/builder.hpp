@@ -191,10 +191,10 @@ class IBuilder
     std::shared_ptr<Object<ObjectT>> make_object(std::string name, std::unique_ptr<ObjectT> node);
 
     template <typename T>
-    std::shared_ptr<Object<node::ReadableWritableSink<T>>> get_egress(std::string name);
+    std::shared_ptr<Object<node::RxSinkBase<T>>> get_egress(std::string name);
 
     template <typename T>
-    std::shared_ptr<Object<node::ReadableWritableSource<T>>> get_ingress(std::string name);
+    std::shared_ptr<Object<node::RxSourceBase<T>>> get_ingress(std::string name);
 
     /**
      * Create a source node using the provided name and function, the function is lifted to an observable
@@ -566,7 +566,7 @@ void IBuilder::splice_edge(SourceObjectT source,
 }
 
 template <typename T>
-std::shared_ptr<Object<node::ReadableWritableSink<T>>> IBuilder::get_egress(std::string name)
+std::shared_ptr<Object<node::RxSinkBase<T>>> IBuilder::get_egress(std::string name)
 {
     auto base = this->get_egress_base(name);
     if (!base)
@@ -574,7 +574,7 @@ std::shared_ptr<Object<node::ReadableWritableSink<T>>> IBuilder::get_egress(std:
         throw exceptions::MrcRuntimeError("Egress port name not found: " + name);
     }
 
-    auto port = std::dynamic_pointer_cast<Object<node::ReadableWritableSink<T>>>(base);
+    auto port = std::dynamic_pointer_cast<Object<node::RxSinkBase<T>>>(base);
     if (port == nullptr)
     {
         throw exceptions::MrcRuntimeError("Egress port type mismatch: " + name);
@@ -584,7 +584,7 @@ std::shared_ptr<Object<node::ReadableWritableSink<T>>> IBuilder::get_egress(std:
 }
 
 template <typename T>
-std::shared_ptr<Object<node::ReadableWritableSource<T>>> IBuilder::get_ingress(std::string name)
+std::shared_ptr<Object<node::RxSourceBase<T>>> IBuilder::get_ingress(std::string name)
 {
     auto base = this->get_ingress_base(name);
     if (!base)
@@ -592,7 +592,7 @@ std::shared_ptr<Object<node::ReadableWritableSource<T>>> IBuilder::get_ingress(s
         throw exceptions::MrcRuntimeError("Ingress port name not found: " + name);
     }
 
-    auto port = std::dynamic_pointer_cast<Object<node::ReadableWritableSource<T>>>(base);
+    auto port = std::dynamic_pointer_cast<Object<node::RxSourceBase<T>>>(base);
     if (port == nullptr)
     {
         throw exceptions::MrcRuntimeError("Ingress port type mismatch: " + name);

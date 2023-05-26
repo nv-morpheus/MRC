@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "internal/async_service.hpp"
 #include "internal/control_plane/state/root_state.hpp"
 #include "internal/grpc/client_streaming.hpp"
 #include "internal/grpc/stream_writer.hpp"
@@ -25,6 +24,7 @@
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/runnable/runnable_resources.hpp"
 
+#include "mrc/core/async_service.hpp"
 #include "mrc/core/error.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/node/operators/broadcast.hpp"
@@ -37,9 +37,12 @@
 #include "mrc/utils/macros.hpp"
 
 #include <boost/fiber/future/future.hpp>
+#include <boost/fiber/future/future_status.hpp>
+#include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>
 
+#include <chrono>
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -253,8 +256,15 @@ class AsyncStatus
 
     Expected<ResponseT> await_response()
     {
+        auto future = m_promise.get_future();
+
         // todo(ryan): expand this into a wait_until with a deadline and a stop token
-        auto event = m_promise.get_future().get();
+        while (future.wait_for(std::chrono::milliseconds(10)) != boost::fibers::future_status::ready)
+        {
+            boost::this_fiber::yield();
+        }
+
+        auto event = future.get();
 
         if (event.has_error())
         {
@@ -280,6 +290,7 @@ Expected<ResponseT> Client::await_unary(const protos::EventType& event_type, Req
 {
     AsyncStatus<ResponseT> status;
     async_unary(event_type, std::move(request), status);
+    DVLOG(20) << "Awaiting on tag: " << reinterpret_cast<std::uint64_t>(&status.m_promise);
     return status.await_response();
 }
 

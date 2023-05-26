@@ -237,6 +237,32 @@ message SegmentInstance {
    ResourceState state = 7;
 }
 
+message ManifoldDefinition {
+   uint64 id = 1;
+
+   // Pipeline Deinition this belongs to
+   int64 pipeline_definition_id = 2;
+
+   // Port name for matching ingress/egress nodes
+   string port_name = 3;
+
+   // Running Segment Instance IDs
+   repeated uint64 instance_ids = 4;
+}
+
+message ManifoldInstance {
+   uint64 id = 1;
+
+   // Deinition this belongs to
+   int64 definition_id = 2;
+
+   // The machine this instance is running on
+   uint64 machine_id = 3;
+
+   // The current state of this resource
+   ResourceState state = 4;
+}
+
 message ControlPlaneState {
    message ConnectionsState {
       repeated uint64 ids = 1;

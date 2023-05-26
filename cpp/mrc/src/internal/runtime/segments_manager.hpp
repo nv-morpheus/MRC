@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "internal/async_service.hpp"
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/state/root_state.hpp"
 #include "internal/remote_descriptor/manager.hpp"
@@ -27,6 +26,7 @@
 #include "internal/segment/segment_instance.hpp"
 #include "internal/ucx/ucx_resources.hpp"
 
+#include "mrc/core/async_service.hpp"
 #include "mrc/types.hpp"
 
 #include <cstddef>

@@ -26,6 +26,7 @@
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/options/fiber_pool.hpp"
 #include "mrc/options/options.hpp"
+#include "mrc/utils/string_utils.hpp"
 
 #include <functional>
 #include <memory>
@@ -44,7 +45,7 @@ FiberManager::FiberManager(const ThreadingResources& resources) : m_cpu_set(reso
 
     topology.cpu_set().for_each_bit([&](std::int32_t idx, std::int32_t cpu_id) {
         DVLOG(10) << "initializing fiber queue " << idx << " of " << cpu_count << " on cpu_id " << cpu_id;
-        m_queues[cpu_id] = std::make_unique<FiberTaskQueue>(resources, cpu_id);
+        m_queues[cpu_id] = std::make_unique<FiberTaskQueue>(resources, cpu_id, MRC_CONCAT_STR("fibq[" << idx << "]"));
     });
 }
 

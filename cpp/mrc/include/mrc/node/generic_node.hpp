@@ -60,7 +60,11 @@ class GenericNode : public RxNode<InputT, OutputT, ContextT>
 
   private:
     virtual void on_data(InputT&& data, rxcpp::subscriber<OutputT>& subscriber) = 0;
-    virtual void on_completed(rxcpp::subscriber<OutputT>& subscriber) {}
+    virtual void on_completed(rxcpp::subscriber<OutputT>& subscriber)
+    {
+        // By default, forward onto the subscriber
+        subscriber.on_completed();
+    }
 };
 
 }  // namespace mrc::node

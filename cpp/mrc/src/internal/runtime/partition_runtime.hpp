@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "internal/async_service.hpp"
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/runtime/segments_manager.hpp"
 
+#include "mrc/core/async_service.hpp"
 #include "mrc/runtime/api.hpp"
 #include "mrc/utils/macros.hpp"
 

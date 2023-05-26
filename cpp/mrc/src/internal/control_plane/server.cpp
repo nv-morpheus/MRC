@@ -17,7 +17,6 @@
 
 #include "internal/control_plane/server.hpp"
 
-#include "internal/async_service.hpp"
 #include "internal/control_plane/proto_helpers.hpp"
 #include "internal/control_plane/server/node_service.hpp"
 #include "internal/control_plane/server/subscription_manager.hpp"
@@ -25,6 +24,7 @@
 #include "internal/runnable/runnable_resources.hpp"
 
 #include "mrc/channel/status.hpp"
+#include "mrc/core/async_service.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/queue.hpp"
 #include "mrc/node/rx_sink.hpp"

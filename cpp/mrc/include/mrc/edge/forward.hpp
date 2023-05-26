@@ -83,7 +83,7 @@ class IWritableProvider;
 template <typename T>
 class IWritableAcceptor;
 
-template <typename T, typename KeyT>
+template <typename KeyT, typename T>
 class IMultiWritableAcceptor;
 
 }  // namespace mrc::edge

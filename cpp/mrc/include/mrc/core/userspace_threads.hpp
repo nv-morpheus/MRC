@@ -155,8 +155,8 @@ using future = boost::fibers::future<T>;
 template <typename T>
 using shared_future = boost::fibers::shared_future<T>;
 
-template <class R, class... Args>
-using packaged_task = boost::fibers::packaged_task<R(Args...)>;
+template <typename Signature>
+using packaged_task = boost::fibers::packaged_task<Signature>;
 
 template <class Function, class... Args>
 static auto async(Function&& f, Args&&... args)

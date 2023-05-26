@@ -17,7 +17,6 @@
 
 #include "internal/runtime/runtime.hpp"
 
-#include "internal/async_service.hpp"
 #include "internal/control_plane/client.hpp"
 #include "internal/resources/system_resources.hpp"
 #include "internal/runnable/runnable_resources.hpp"
@@ -27,6 +26,7 @@
 #include "internal/system/partitions.hpp"
 #include "internal/system/system_provider.hpp"
 
+#include "mrc/core/async_service.hpp"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/types.hpp"
 

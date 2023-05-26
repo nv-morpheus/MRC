@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "rxcpp/operators/rx-map.hpp"
+
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/manifold/connectable.hpp"
 #include "mrc/manifold/factory.hpp"
@@ -48,7 +50,7 @@ class EgressPortBase : public runnable::Launchable, public manifold::Connectable
 };
 
 template <typename T>
-class EgressPort final : public Object<node::ReadableWritableSink<T>>,
+class EgressPort final : public Object<node::RxSinkBase<T>>,
                          public EgressPortBase,
                          public std::enable_shared_from_this<EgressPort<T>>
 {
@@ -61,11 +63,13 @@ class EgressPort final : public Object<node::ReadableWritableSink<T>>,
     EgressPort(SegmentAddress address, PortName name) :
       m_segment_address(address),
       m_port_name(std::move(name)),
-      m_sink(std::make_unique<node::RxNode<T>>())
+      m_sink(std::make_unique<node::RxNode<T>>(rxcpp::operators::map([this](T data) {
+          return data;
+      })))
     {}
 
   private:
-    node::ReadableWritableSink<T>* get_object() const final
+    node::RxSinkBase<T>* get_object() const final
     {
         CHECK(m_sink) << "failed to acquire backing runnable for egress port " << m_port_name;
         return m_sink.get();

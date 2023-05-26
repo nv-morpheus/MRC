@@ -31,6 +31,37 @@ struct IRunnableResources
     virtual core::FiberTaskQueue& main()              = 0;
     virtual runnable::LaunchControl& launch_control() = 0;
     // virtual std::shared_ptr<metrics::Registry> metrics_registry() = 0;
+
+    const mrc::core::FiberTaskQueue& main() const;
+};
+
+class IRunnableResourcesProvider
+{
+  protected:
+    virtual IRunnableResources& runnable() = 0;
+
+    const IRunnableResources& runnable() const;
+
+  private:
+    friend class RunnableResourcesProvider;
+};
+
+// Concrete implementation of IRunnableResourcesProvider. Use this if RunnableResources is available during
+// construction. Inherits virtually to ensure only one IRunnableResourcesProvider
+class RunnableResourcesProvider : public virtual IRunnableResourcesProvider
+{
+  public:
+    static RunnableResourcesProvider create(IRunnableResources& runnable);
+
+  protected:
+    RunnableResourcesProvider(const RunnableResourcesProvider& other);
+    RunnableResourcesProvider(IRunnableResourcesProvider& other);
+    RunnableResourcesProvider(IRunnableResources& runnable);
+
+    IRunnableResources& runnable() override;
+
+  private:
+    IRunnableResources& m_runnable;
 };
 
 }  // namespace mrc::runnable

@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "internal/async_service.hpp"
 #include "internal/control_plane/state/root_state.hpp"
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/service.hpp"
 
+#include "mrc/core/async_service.hpp"
 #include "mrc/runnable/runner.hpp"
 #include "mrc/types.hpp"
 
@@ -89,6 +89,8 @@ class SegmentInstance final : public AsyncService, public runnable::RunnableReso
 
     std::unique_ptr<BuilderDefinition> m_builder;
     runtime::PartitionRuntime& m_runtime;
+
+    control_plane::state::ResourceStatus m_local_status{control_plane::state::ResourceStatus::Registered};
 
     std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_runners;
     std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_egress_runners;

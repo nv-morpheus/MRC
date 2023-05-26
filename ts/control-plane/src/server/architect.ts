@@ -8,7 +8,7 @@ import {
 } from "@mrc/server/store/slices/segmentInstancesSlice";
 import {systemStartRequest, systemStopRequest} from "@mrc/server/store/slices/systemSlice";
 import {as, AsyncSink, merge} from "ix/asynciterable";
-import {withAbort} from "ix/asynciterable/operators";
+import {tap, withAbort} from "ix/asynciterable/operators";
 import {CallContext} from "nice-grpc";
 import {firstValueFrom, Subject} from "rxjs";
 
@@ -288,6 +288,7 @@ class Architect implements ArchitectServiceImplementation
 
          for await (const out_event of combined_iterable)
          {
+            console.log(`Sending event to ${connection.peerInfo}. EventID: ${eventTypeToJSON(out_event.event)}, Tag: ${out_event.tag}`);
             yield out_event;
          }
 
@@ -314,7 +315,7 @@ class Architect implements ArchitectServiceImplementation
       {
          switch (event.msg.event)
          {
-         case EventType.ClientEventPing:
+         case EventType.ClientEventPing:{
             const payload = unpackEvent<PingRequest>(event.msg);
 
             console.log(`Ping from ${context.peer}. Tag: ${payload.tag}.`);
@@ -324,7 +325,7 @@ class Architect implements ArchitectServiceImplementation
             }));
 
             break;
-
+         }
          case EventType.ClientEventRequestStateUpdate:
 
             yield unaryResponse(event,

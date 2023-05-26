@@ -17,7 +17,6 @@
 
 #include "internal/runtime/pipelines_manager.hpp"
 
-#include "internal/async_service.hpp"
 #include "internal/control_plane/state/root_state.hpp"
 #include "internal/pipeline/pipeline_definition.hpp"
 #include "internal/pipeline/pipeline_instance.hpp"
@@ -27,6 +26,7 @@
 #include "internal/segment/segment_definition.hpp"
 
 #include "mrc/core/addresses.hpp"
+#include "mrc/core/async_service.hpp"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/protos/architect_state.pb.h"
 
@@ -137,7 +137,7 @@ void PipelinesManager::do_service_start(std::stop_token stop_token)
     this->mark_started();
 
     // Yield until the observable is finished
-    completed_promise.get_future().wait();
+    completed_promise.get_future().get();
 }
 
 void PipelinesManager::process_state_update(control_plane::state::ControlPlaneState& state)

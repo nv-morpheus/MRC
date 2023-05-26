@@ -121,6 +121,36 @@ class SinkProperties : public edge::EdgeHolder<T>, public SinkPropertiesBase
     }
 };
 
+template <typename KeyT, typename T>
+class MultiSinkProperties : public edge::MultiEdgeHolder<KeyT, T>, public SinkPropertiesBase
+{
+  public:
+    using sink_type_t = T;
+
+    std::type_index sink_type(bool ignore_holder = false) const final
+    {
+        if (ignore_holder)
+        {
+            if constexpr (is_smart_ptr<T>::value)
+            {
+                return typeid(typename T::element_type);
+            }
+        }
+        return typeid(T);
+    }
+
+    std::string sink_type_name() const final
+    {
+        return std::string(type_name<T>());
+    }
+
+  protected:
+    std::shared_ptr<edge::IEdgeReadable<T>> get_readable_edge(KeyT edge_key) const
+    {
+        return std::dynamic_pointer_cast<edge::IEdgeReadable<T>>(this->get_connected_edge(edge_key));
+    }
+};
+
 template <typename T>
 class ReadableAcceptor : public virtual SinkProperties<T>, public edge::IReadableAcceptor<T>
 {
@@ -162,6 +192,20 @@ class WritableProvider : public virtual SinkProperties<T>, public edge::IWritabl
 template <typename T>
 class ReadableWritableSink : public WritableProvider<T>, public ReadableAcceptor<T>
 {};
+
+template <typename KeyT, typename T>
+class MultiReadableAcceptor : public virtual MultiSinkProperties<KeyT, T>, public edge::IMultiReadableAcceptor<KeyT, T>
+{
+  public:
+  private:
+    void set_readable_edge_handle(KeyT key, std::shared_ptr<edge::WritableEdgeHandle> egress) override
+    {
+        // Do any conversion to the correct type here
+        auto adapted_egress = edge::EdgeBuilder::adapt_readable_edge<T>(egress);
+
+        MultiSinkProperties<KeyT, T>::make_edge_connection(key, adapted_egress);
+    }
+};
 
 template <typename T>
 class ForwardingWritableProvider : public WritableProvider<T>

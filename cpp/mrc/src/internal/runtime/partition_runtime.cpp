@@ -17,7 +17,6 @@
 
 #include "internal/runtime/partition_runtime.hpp"
 
-#include "internal/async_service.hpp"
 #include "internal/codable/codable_storage.hpp"
 #include "internal/network/network_resources.hpp"
 #include "internal/pubsub/publisher_round_robin.hpp"
@@ -27,6 +26,7 @@
 #include "internal/resources/system_resources.hpp"
 #include "internal/runtime/segments_manager.hpp"
 
+#include "mrc/core/async_service.hpp"
 #include "mrc/pubsub/api.hpp"
 #include "mrc/utils/string_utils.hpp"
 

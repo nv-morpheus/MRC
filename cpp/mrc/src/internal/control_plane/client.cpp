@@ -17,7 +17,6 @@
 
 #include "internal/control_plane/client.hpp"
 
-#include "internal/async_service.hpp"
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/control_plane/state/root_state.hpp"
 #include "internal/grpc/progress_engine.hpp"
@@ -25,8 +24,11 @@
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/system/system.hpp"
 
+#include "mrc/channel/recent_channel.hpp"
 #include "mrc/channel/status.hpp"
+#include "mrc/core/async_service.hpp"
 #include "mrc/edge/edge_builder.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/operators/broadcast.hpp"
 #include "mrc/node/operators/conditional.hpp"
 #include "mrc/node/rx_sink.hpp"
@@ -39,6 +41,7 @@
 #include "mrc/runnable/launcher.hpp"
 #include "mrc/runnable/runner.hpp"
 
+#include <boost/fiber/future/async.hpp>
 #include <google/protobuf/any.pb.h>
 #include <grpcpp/completion_queue.h>
 #include <grpcpp/grpcpp.h>
@@ -79,6 +82,7 @@ const Client::State& Client::state() const
 
 MachineID Client::machine_id() const
 {
+    throw exceptions::MrcRuntimeError("Not implemented: machine_id()");
     return m_machine_id;
 }
 
@@ -117,7 +121,9 @@ void Client::do_service_start(std::stop_token stop_token)
     m_launch_options.pe_count            = 1;
     m_launch_options.engines_per_pe      = 1;
 
-    auto url = runnable().system().options().architect_url();
+    // TODO(MDD): Figure out how to get the options back into this object
+    // auto url = this-> runnable().system().options().architect_url();
+    std::string url;
 
     // If no URL is supplied, we are creating a local server
     if (url.empty())
@@ -128,22 +134,57 @@ void Client::do_service_start(std::stop_token stop_token)
     auto channel = grpc::CreateChannel(url, grpc::InsecureChannelCredentials());
     m_stub       = mrc::protos::Architect::NewStub(channel);
 
+    Future<void> progress_engine_future;
+
     if (m_owns_progress_engine)
     {
-        CHECK(m_cq);
-        auto progress_engine  = std::make_unique<rpc::ProgressEngine>(m_cq);
-        auto progress_handler = std::make_unique<rpc::PromiseHandler>();
+        // CHECK(m_cq);
+        // auto progress_engine  = std::make_unique<rpc::ProgressEngine>(m_cq);
+        // auto progress_handler = std::make_unique<rpc::PromiseHandler>();
 
-        mrc::make_edge(*progress_engine, *progress_handler);
+        // mrc::make_edge(*progress_engine, *progress_handler);
 
-        // m_progress_handler =
-        //     runnable().launch_control().prepare_launcher(launch_options(), std::move(progress_handler))->ignition();
+        // // m_progress_handler =
+        // //     runnable().launch_control().prepare_launcher(launch_options(),
+        // std::move(progress_handler))->ignition();
 
-        this->child_runnable_start("ProgressHandler", launch_options(), std::move(progress_handler));
+        // this->child_runnable_start("ProgressHandler", launch_options(), std::move(progress_handler));
 
-        // m_progress_engine =
-        //     runnable().launch_control().prepare_launcher(launch_options(), std::move(progress_engine))->ignition();
-        this->child_runnable_start("ProgressEngine", launch_options(), std::move(progress_engine));
+        // // m_progress_engine =
+        // //     runnable().launch_control().prepare_launcher(launch_options(),
+        // std::move(progress_engine))->ignition(); this->child_runnable_start("ProgressEngine", launch_options(),
+        // std::move(progress_engine));
+
+        progress_engine_future = this->runnable().main().enqueue([this, stop_token]() {
+            rpc::ProgressEvent event;
+            std::uint64_t backoff = 128;
+
+            while (!stop_token.stop_requested())
+            {
+                switch (m_cq->AsyncNext<gpr_timespec>(&event.tag, &event.ok, gpr_time_0(GPR_CLOCK_REALTIME)))
+                {
+                case grpc::CompletionQueue::NextStatus::GOT_EVENT: {
+                    backoff       = 1;
+                    auto* promise = static_cast<boost::fibers::promise<bool>*>(event.tag);
+                    promise->set_value(event.ok);
+                }
+                break;
+                case grpc::CompletionQueue::NextStatus::TIMEOUT: {
+                    // if (backoff < 1048576)
+                    if (backoff < 1024)
+                    {
+                        backoff = (backoff << 1);
+                    }
+                    boost::this_fiber::sleep_for(std::chrono::microseconds(backoff));
+                }
+                break;
+                case grpc::CompletionQueue::NextStatus::SHUTDOWN: {
+                    DVLOG(10) << "progress engine complete";
+                    return;
+                }
+                }
+            }
+        });
     }
 
     auto prepare_fn = [this](grpc::ClientContext* context) {
@@ -222,6 +263,7 @@ void Client::do_service_start(std::stop_token stop_token)
     if (m_owns_progress_engine)
     {
         m_cq->Shutdown();
+        progress_engine_future.get();
         // m_progress_engine->await_join();
         // m_progress_handler->await_join();
     }
@@ -259,7 +301,7 @@ void Client::do_service_kill()
 //     m_event_handler->await_live();
 
 //     // Finally, await on the connection promise
-//     m_connected_promise.get_future().wait();
+//     m_connected_promise.get_future().get();
 // }
 
 // void Client::do_service_await_join()
@@ -281,7 +323,7 @@ void Client::do_handle_event(event_t& event)
     auto saved_event_type = event.msg.event();
     auto saved_event_tag  = event.msg.tag();
 
-    // VLOG(10) << "Client: Start handling event: " << saved_event_type << ". With tag: " << saved_event_tag;
+    VLOG(10) << "Client: Start handling event: " << saved_event_type << ". With tag: " << saved_event_tag;
 
     CHECK_NE(event.msg.event(), protos::EventType::Response) << "Responses should be handled by another node";
 

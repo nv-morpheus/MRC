@@ -20,7 +20,6 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "mrc")
 
 # Keep all source files sorted!!!
 add_library(libmrc
-  src/internal/async_service.cpp
   src/internal/codable/codable_storage.cpp
   src/internal/codable/decodable_storage_view.cpp
   src/internal/codable/storage_view.cpp
@@ -50,6 +49,7 @@ add_library(libmrc
   src/internal/pipeline/controller.cpp
   src/internal/pipeline/manager.cpp
   src/internal/pipeline/manifold_definition.cpp
+  src/internal/pipeline/manifold_instance.cpp
   src/internal/pipeline/pipeline_definition.cpp
   src/internal/pipeline/pipeline_instance.cpp
   src/internal/pipeline/pipeline_resources.cpp
@@ -116,6 +116,7 @@ add_library(libmrc
   src/public/codable/encoded_object.cpp
   src/public/codable/memory.cpp
   src/public/core/addresses.cpp
+  src/public/core/async_service.cpp
   src/public/core/bitmap.cpp
   src/public/core/fiber_pool.cpp
   src/public/core/logging.cpp
@@ -151,6 +152,7 @@ add_library(libmrc
   src/public/pipeline/system.cpp
   src/public/runnable/context.cpp
   src/public/runnable/launcher.cpp
+  src/public/runnable/runnable_resources.cpp
   src/public/runnable/runnable.cpp
   src/public/runnable/runner.cpp
   src/public/runnable/types.cpp

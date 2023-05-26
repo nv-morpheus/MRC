@@ -17,8 +17,7 @@
 
 #include "internal/control_plane/server/node_service.hpp"
 
-#include "internal/async_service.hpp"
-
+#include "mrc/core/async_service.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/utils/library_utils.hpp"

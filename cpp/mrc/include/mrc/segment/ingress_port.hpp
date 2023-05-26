@@ -45,7 +45,7 @@ struct IngressPortBase : public runnable::Launchable, public manifold::Connectab
 };
 
 template <typename T>
-class IngressPort : public Object<node::ReadableWritableSource<T>>, public IngressPortBase
+class IngressPort : public Object<node::RxSourceBase<T>>, public IngressPortBase
 {
     // tap for debugging
     // rxcpp::operators::tap([this](const T& t) {
@@ -60,7 +60,7 @@ class IngressPort : public Object<node::ReadableWritableSource<T>>, public Ingre
     {}
 
   private:
-    node::ReadableWritableSource<T>* get_object() const final
+    node::RxSourceBase<T>* get_object() const final
     {
         CHECK(m_source);
         return m_source.get();

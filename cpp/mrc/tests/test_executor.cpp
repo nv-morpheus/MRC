@@ -33,6 +33,7 @@
 
 #include <boost/fiber/future/async.hpp>
 #include <boost/fiber/future/future.hpp>
+#include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <rxcpp/rx.hpp>
@@ -78,41 +79,59 @@ class TestExecutor : public ::testing::Test
 
         auto segment_initializer = [](segment::IBuilder& seg) {};
 
+        // pipeline->make_segment("test_seg", [](segment::IBuilder& s) {
+        //     auto src  = s.make_source<int>("rx_source", [](rxcpp::subscriber<int> s) {
+        //         // Temp sleep to allow other processes to finish
+        //         boost::this_fiber::sleep_for(std::chrono::milliseconds(1000));
+        //         s.on_next(1);
+        //         s.on_next(2);
+        //         s.on_next(3);
+        //         s.on_completed();
+        //     });
+        //     auto sink = s.make_sink<float>("rx_sink", rxcpp::make_observer_dynamic<int>([&](int x) {
+        //                                        // Write to the log
+        //                                        VLOG(10) << x;
+        //                                    }));
+
+        //     s.make_edge(src, sink);
+        // });
+
         // ideally we make this a true source (seg_1) and true source (seg_4)
         pipeline->make_segment("seg_1", segment::EgressPorts<int>({"my_int2"}), [](segment::IBuilder& s) {
-            auto src    = s.make_source<int>("rx_source", [](rxcpp::subscriber<int> s) {
+            auto src = s.make_source<int>("rx_source", [](rxcpp::subscriber<int> s) {
                 s.on_next(1);
                 s.on_next(2);
                 s.on_next(3);
                 s.on_completed();
             });
+
             auto egress = s.get_egress<int>("my_int2");
             s.make_edge(src, egress);
         });
-        pipeline->make_segment("seg_2",
-                               segment::IngressPorts<int>({"my_int2"}),
-                               segment::EgressPorts<int>({"my_int3"}),
-                               [](segment::IBuilder& s) {
-                                   // pure pass-thru
-                                   auto in  = s.get_ingress<int>("my_int2");
-                                   auto out = s.get_egress<int>("my_int3");
-                                   s.make_edge(in, out);
-                               });
-        pipeline->make_segment("seg_3",
-                               segment::IngressPorts<int>({"my_int3"}),
-                               segment::EgressPorts<int>({"my_int4"}),
-                               [](segment::IBuilder& s) {
-                                   // pure pass-thru
-                                   auto in  = s.get_ingress<int>("my_int3");
-                                   auto out = s.get_egress<int>("my_int4");
-                                   s.make_edge(in, out);
-                               });
-        pipeline->make_segment("seg_4", segment::IngressPorts<int>({"my_int4"}), [](segment::IBuilder& s) {
+        // pipeline->make_segment("seg_2",
+        //                        segment::IngressPorts<int>({"my_int2"}),
+        //                        segment::EgressPorts<int>({"my_int3"}),
+        //                        [](segment::IBuilder& s) {
+        //                            // pure pass-thru
+        //                            auto in  = s.get_ingress<int>("my_int2");
+        //                            auto out = s.get_egress<int>("my_int3");
+        //                            s.make_edge(in, out);
+        //                        });
+        // pipeline->make_segment("seg_3",
+        //                        segment::IngressPorts<int>({"my_int3"}),
+        //                        segment::EgressPorts<int>({"my_int4"}),
+        //                        [](segment::IBuilder& s) {
+        //                            // pure pass-thru
+        //                            auto in  = s.get_ingress<int>("my_int3");
+        //                            auto out = s.get_egress<int>("my_int4");
+        //                            s.make_edge(in, out);
+        //                        });
+        pipeline->make_segment("seg_4", segment::IngressPorts<int>({"my_int2"}), [](segment::IBuilder& s) {
             // pure pass-thru
-            auto in   = s.get_ingress<int>("my_int4");
+            auto in   = s.get_ingress<int>("my_int2");
             auto sink = s.make_sink<float>("rx_sink", rxcpp::make_observer_dynamic<int>([&](int x) {
                                                // Write to the log
-                                               LOG(INFO) << x;
+                                               VLOG(10) << x;
                                            }));
             s.make_edge(in, sink);
         });
@@ -123,7 +142,7 @@ class TestExecutor : public ::testing::Test
     static std::unique_ptr<Options> make_options()
     {
         auto options = std::make_unique<Options>();
-        options->topology().user_cpuset("0-3");
+        options->topology().user_cpuset("0");
         options->topology().restrict_gpus(true);
         return options;
     }

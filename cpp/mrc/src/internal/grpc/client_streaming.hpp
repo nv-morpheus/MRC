@@ -33,6 +33,7 @@
 #include "mrc/node/rx_source.hpp"
 #include "mrc/node/source_channel_owner.hpp"
 #include "mrc/node/writable_entrypoint.hpp"
+#include "mrc/runnable/launch_options.hpp"
 #include "mrc/runnable/runner.hpp"
 
 #include <boost/fiber/all.hpp>
@@ -45,6 +46,7 @@
 
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <tuple>
@@ -151,7 +153,7 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
     using prepare_fn_t =
         std::function<std::unique_ptr<grpc::ClientAsyncReaderWriter<RequestT, ResponseT>>(grpc::ClientContext* context)>;
 
-    ClientStream(prepare_fn_t prepare_fn, runnable::RunnableResources& runnable) :
+    ClientStream(prepare_fn_t prepare_fn, runnable::IRunnableResources& runnable) :
       m_prepare_fn(prepare_fn),
       m_runnable(runnable),
       m_reader_source(std::make_unique<mrc::node::RxSource<IncomingData>>(
@@ -197,8 +199,19 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
             CHECK(m_stream);
             Promise<bool> read;
             IncomingData data;
+            // DVLOG(20) << "ClientStream: Read with Promise: " << &read;
             m_stream->Read(&data.msg, &read);
-            auto ok = read.get_future().get();
+            // DVLOG(20) << "ClientStream: Read returned with Promise: " << &read;
+
+            auto future = read.get_future();
+
+            while (future.wait_for(std::chrono::milliseconds(100)) != boost::fibers::future_status::ready)
+            {
+                boost::this_fiber::yield();
+            }
+
+            auto ok = future.get();
+            // DVLOG(20) << "ClientStream: Read future returned Promise: " << &read << ", Status: " << ok;
             if (!ok)
             {
                 m_write_channel.reset();
@@ -206,7 +219,9 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
                 return;
             }
             data.stream = m_stream_writer;
+            // DVLOG(20) << "ClientStream: on_next with Promise: " << &read;
             s.on_next(std::move(data));
+            // DVLOG(20) << "ClientStream: on_next returned with Promise: " << &read;
         }
     }
 
@@ -270,9 +285,12 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
                 m_stream_writer.reset();
             });
 
+        runnable::LaunchOptions options;
+        options.engine_factory_name = "main";
+
         // launch reader and writer
-        m_writer = m_runnable.launch_control().prepare_launcher(std::move(writer))->ignition();
-        m_reader = m_runnable.launch_control().prepare_launcher(std::move(m_reader_source))->ignition();
+        m_writer = m_runnable.launch_control().prepare_launcher(options, std::move(writer))->ignition();
+        m_reader = m_runnable.launch_control().prepare_launcher(options, std::move(m_reader_source))->ignition();
 
         // await live
         m_writer->await_live();
@@ -337,7 +355,7 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
     }
 
     // resources for launching runnables
-    runnable::RunnableResources& m_runnable;
+    runnable::IRunnableResources& m_runnable;
 
     // grpc context
     grpc::ClientContext m_context;

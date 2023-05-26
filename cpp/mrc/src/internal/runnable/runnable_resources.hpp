@@ -51,33 +51,4 @@ class RunnableResources final : public system::HostPartitionProvider, public IRu
     std::unique_ptr<mrc::runnable::LaunchControl> m_launch_control;
 };
 
-class IRunnableResourcesProvider
-{
-  protected:
-    virtual RunnableResources& runnable() = 0;
-
-    const RunnableResources& runnable() const;
-
-  private:
-    friend class RunnableResourcesProvider;
-};
-
-// Concrete implementation of IRunnableResourcesProvider. Use this if RunnableResources is available during
-// construction. Inherits virtually to ensure only one IRunnableResourcesProvider
-class RunnableResourcesProvider : public virtual IRunnableResourcesProvider
-{
-  public:
-    static RunnableResourcesProvider create(RunnableResources& runnable);
-
-  protected:
-    RunnableResourcesProvider(const RunnableResourcesProvider& other);
-    RunnableResourcesProvider(IRunnableResourcesProvider& other);
-    RunnableResourcesProvider(RunnableResources& runnable);
-
-    RunnableResources& runnable() override;
-
-  private:
-    RunnableResources& m_runnable;
-};
-
 }  // namespace mrc::runnable

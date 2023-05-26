@@ -196,8 +196,9 @@ template <typename T>
 class ReadableWritableSource : public ReadableProvider<T>, public WritableAcceptor<T>
 {};
 
-template <typename T, typename KeyT>
-class MultiIngressAcceptor : public virtual MultiSourceProperties<T, KeyT>, public edge::IMultiWritableAcceptor<T, KeyT>
+template <typename KeyT, typename T>
+class MultiWritableAcceptor : public virtual MultiSourceProperties<KeyT, T>,
+                              public edge::IMultiWritableAcceptor<KeyT, T>
 {
   public:
   private:
@@ -206,7 +207,7 @@ class MultiIngressAcceptor : public virtual MultiSourceProperties<T, KeyT>, publ
         // Do any conversion to the correct type here
         auto adapted_ingress = edge::EdgeBuilder::adapt_writable_edge<T>(ingress);
 
-        MultiSourceProperties<T, KeyT>::make_edge_connection(key, adapted_ingress);
+        MultiSourceProperties<KeyT, T>::make_edge_connection(key, adapted_ingress);
     }
 };
 

@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "internal/async_service.hpp"
 #include "internal/control_plane/server/connection_manager.hpp"
 
+#include "mrc/core/async_service.hpp"
 #include "mrc/core/error.hpp"
 
 #include <boost/fiber/condition_variable.hpp>

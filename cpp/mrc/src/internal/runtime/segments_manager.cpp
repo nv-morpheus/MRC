@@ -17,7 +17,6 @@
 
 #include "internal/runtime/segments_manager.hpp"
 
-#include "internal/async_service.hpp"
 #include "internal/control_plane/state/root_state.hpp"
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/partition_runtime.hpp"
@@ -28,6 +27,7 @@
 #include "internal/utils/ranges.hpp"
 
 #include "mrc/core/addresses.hpp"
+#include "mrc/core/async_service.hpp"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/types.hpp"
 #include "mrc/utils/string_utils.hpp"
@@ -106,7 +106,7 @@ void SegmentsManager::do_service_start(std::stop_token stop_token)
             });
 
     // Yield until the observable is finished
-    completed_promise.get_future().wait();
+    completed_promise.get_future().get();
 
     // Now that we are unsubscribed, drop the worker
     protos::TaggedInstance msg;
@@ -121,12 +121,12 @@ void SegmentsManager::do_service_start(std::stop_token stop_token)
 
 // void SegmentsManager::do_service_await_live()
 // {
-//     m_live_promise.get_future().wait();
+//     m_live_promise.get_future().get();
 // }
 
 // void SegmentsManager::do_service_await_join()
 // {
-//     m_shutdown_future.wait();
+//     m_shutdown_future.get();
 // }
 
 void SegmentsManager::process_state_update(mrc::control_plane::state::Worker& worker)
@@ -216,57 +216,61 @@ void SegmentsManager::create_segment(const mrc::control_plane::state::SegmentIns
         return;
     }
 
-    // Create the resource on the correct runnable
-    m_runtime.resources()
-        .runnable()
-        .main()
-        .enqueue([this, instance_state] {
-            // Get a reference to the pipeline we are creating the segment in
-            auto& pipeline_def = m_runtime.pipelines_manager().get_definition(
-                instance_state.pipeline_definition().id());
+    // Get a reference to the pipeline we are creating the segment in
+    auto& pipeline_def = m_runtime.pipelines_manager().get_definition(instance_state.pipeline_definition().id());
 
-            auto [id, rank] = segment_address_decode(instance_state.address());
-            auto definition = pipeline_def.find_segment(id);
+    auto [id, rank] = segment_address_decode(instance_state.address());
+    auto definition = pipeline_def.find_segment(id);
 
-            auto [added_iterator, did_add] = m_instances.emplace(
-                instance_state.address(),
-                std::make_unique<segment::SegmentInstance>(m_runtime,
-                                                           definition,
-                                                           instance_state.address(),
-                                                           instance_state.pipeline_instance().id()));
+    auto [added_iterator, did_add] = m_instances.emplace(
+        instance_state.address(),
+        std::make_unique<segment::SegmentInstance>(m_runtime,
+                                                   definition,
+                                                   instance_state.address(),
+                                                   instance_state.pipeline_instance().id()));
 
-            // Now start as a child service
-            this->child_service_start(*added_iterator->second);
+    // Now start as a child service
+    this->child_service_start(*added_iterator->second);
 
-            // for (const auto& name : definition->egress_port_names())
-            // {
-            //     VLOG(10) << ::mrc::segment::info(address) << " configuring manifold for egress port " << name;
-            //     std::shared_ptr<manifold::Interface> manifold = get_manifold(name);
-            //     if (!manifold)
-            //     {
-            //         VLOG(10) << ::mrc::segment::info(address) << " creating manifold for egress port " << name;
-            //         manifold          = segment->create_manifold(name);
-            //         m_manifolds[name] = manifold;
-            //     }
-            //     segment->attach_manifold(manifold);
-            // }
+    // // Create the resource on the correct runnable
+    // m_runtime.resources()
+    //     .runnable()
+    //     .main()
+    //     .enqueue([this, instance_state] {
+    //         // Make sure the segment is live before continuing
+    //         // added_iterator->second->service_await_live();
 
-            // for (const auto& name : definition->ingress_port_names())
-            // {
-            //     VLOG(10) << ::mrc::segment::info(address) << " configuring manifold for ingress port " << name;
-            //     std::shared_ptr<manifold::Interface> manifold = get_manifold(name);
-            //     if (!manifold)
-            //     {
-            //         VLOG(10) << ::mrc::segment::info(address) << " creating manifold for ingress port " << name;
-            //         manifold          = segment->create_manifold(name);
-            //         m_manifolds[name] = manifold;
-            //     }
-            //     segment->attach_manifold(manifold);
-            // }
+    //         // for (const auto& name : definition->egress_port_names())
+    //         // {
+    //         //     VLOG(10) << ::mrc::segment::info(address) << " configuring manifold for egress port " << name;
+    //         //     std::shared_ptr<manifold::Interface> manifold = get_manifold(name);
+    //         //     if (!manifold)
+    //         //     {
+    //         //         VLOG(10) << ::mrc::segment::info(address) << " creating manifold for egress port " << name;
+    //         //         manifold          = segment->create_manifold(name);
+    //         //         m_manifolds[name] = manifold;
+    //         //     }
+    //         //     segment->attach_manifold(manifold);
+    //         // }
 
-            // m_segments[address] = std::move(segment);
-        })
-        .get();
+    //         // for (const auto& name : definition->ingress_port_names())
+    //         // {
+    //         //     VLOG(10) << ::mrc::segment::info(address) << " configuring manifold for ingress port " << name;
+    //         //     std::shared_ptr<manifold::Interface> manifold = get_manifold(name);
+    //         //     if (!manifold)
+    //         //     {
+    //         //         VLOG(10) << ::mrc::segment::info(address) << " creating manifold for ingress port " << name;
+    //         //         manifold          = segment->create_manifold(name);
+    //         //         m_manifolds[name] = manifold;
+    //         //     }
+    //         //     segment->attach_manifold(manifold);
+    //         // }
+
+    //         // m_segments[address] = std::move(segment);
+    //     })
+    //     .get();
+
+    DVLOG(10) << "Manager created SegmentInstance: " << instance_state.id() << "/" << instance_state.name();
 }
 
 void SegmentsManager::erase_segment(SegmentAddress address) {}

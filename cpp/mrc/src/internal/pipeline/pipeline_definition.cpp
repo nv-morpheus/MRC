@@ -89,7 +89,7 @@ std::shared_ptr<const ISegment> PipelineDefinition::register_segment(std::shared
             << ". Registering Type: " << mrc::type_name(type_index);
     }
 
-    for (const auto& [name, port_info] : full_segment->ingress_port_infos())
+    for (const auto& [name, port_info] : full_segment->egress_port_infos())
     {
         auto pid = m_port_hasher.register_name(name);
         DVLOG(10) << "segment: " << full_segment->name() << " [" << id << "] - egress port " << name << " [" << pid

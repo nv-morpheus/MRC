@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "internal/async_service.hpp"
 #include "internal/control_plane/state/root_state.hpp"
 #include "internal/service.hpp"
 
+#include "mrc/core/async_service.hpp"
 #include "mrc/types.hpp"
 
 #include <cstdint>
@@ -42,6 +42,7 @@ struct Interface;
 
 namespace mrc::pipeline {
 class PipelineDefinition;
+class ManifoldInstance;
 
 class PipelineInstance final : public AsyncService, public runnable::RunnableResourcesProvider
 {
@@ -92,7 +93,7 @@ class PipelineInstance final : public AsyncService, public runnable::RunnableRes
     uint64_t m_instance_id;
 
     std::map<SegmentAddress, std::unique_ptr<segment::SegmentInstance>> m_segments;
-    std::map<PortName, std::shared_ptr<manifold::Interface>> m_manifolds;
+    std::map<PortName, std::shared_ptr<ManifoldInstance>> m_manifold_instances;
 
     bool m_joinable{false};
     Promise<void> m_joinable_promise;

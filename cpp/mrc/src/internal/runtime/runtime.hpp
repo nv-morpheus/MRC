@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "internal/async_service.hpp"
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/server.hpp"
 #include "internal/runnable/runnable_resources.hpp"
@@ -27,6 +26,7 @@
 #include "internal/service.hpp"
 #include "internal/system/threading_resources.hpp"
 
+#include "mrc/core/async_service.hpp"
 #include "mrc/runtime/api.hpp"
 
 #include <cstddef>

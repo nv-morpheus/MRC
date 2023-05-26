@@ -40,6 +40,9 @@ using Future = userspace_threads::future<T>;
 template <typename T>
 using SharedFuture = userspace_threads::shared_future<T>;
 
+template <typename SignatureT>
+using PackagedTask = userspace_threads::packaged_task<SignatureT>;
+
 using Mutex = userspace_threads::mutex;
 
 using RecursiveMutex = userspace_threads::recursive_mutex;

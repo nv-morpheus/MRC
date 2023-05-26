@@ -57,7 +57,7 @@ export const segmentInstancesSlice = createSlice({
             throw new Error(`Segment Instance with ID: ${action.payload.resource.id} not found`);
          }
 
-         if (found.state?.status! > action.payload.status)
+         if (found.state.status > action.payload.status)
          {
             throw new Error(`Cannot update state of Instance with ID: ${action.payload.resource.id}. Current state ${
                 found.state} is greater than requested state ${action.payload.status}`);

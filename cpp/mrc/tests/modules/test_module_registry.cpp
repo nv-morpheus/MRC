@@ -31,7 +31,6 @@
 #include "mrc/segment/object.hpp"
 #include "mrc/version.hpp"
 
-#include <boost/filesystem/path.hpp>
 #include <dlfcn.h>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
@@ -40,6 +39,7 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <filesystem>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -188,7 +188,7 @@ std::string get_modules_path()
     std::vector<char> path_buffer(sz_path_buffer + 1);
     readlink(link_id.c_str(), path_buffer.data(), sz_path_buffer);
 
-    boost::filesystem::path whereami(path_buffer.data());
+    std::filesystem::path whereami(path_buffer.data());
 
     std::string modules_path = whereami.parent_path().string() + "/modules/";
 
