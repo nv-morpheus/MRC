@@ -3,9 +3,8 @@ import {
    IPipelineInstance,
    IPipelineMapping,
    ISegmentInstance,
-   ISegmentMapping,
 } from "@mrc/common/entities";
-import {ResourceStatus, SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
+import {ResourceActualStatus, ResourceRequestedStatus} from "@mrc/proto/mrc/protos/architect_state";
 import {connectionsRemove} from "@mrc/server/store/slices/connectionsSlice";
 import {pipelineDefinitionsCreateOrUpdate} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 import {AppDispatch, AppGetState, RootState} from "@mrc/server/store/store";
@@ -17,7 +16,6 @@ import {
    segmentInstancesAddMany,
    segmentInstancesRemove,
 } from "./segmentInstancesSlice";
-import {workersSelectByMachineId} from "./workersSlice";
 
 const pipelineInstancesAdapter = createWrappedEntityAdapter<IPipelineInstance>({
    selectId: (w) => w.id,
@@ -50,8 +48,10 @@ export const pipelineInstancesSlice = createSlice({
          pipelineInstancesAdapter.addOne(state, {
             ...action.payload,
             segmentIds: [],
+            manifoldIds: [],
             state: {
-               status: ResourceStatus.Registered,
+               requestedStatus: ResourceRequestedStatus.Requested_Created,
+               actualStatus: ResourceActualStatus.Actual_Unknown,
                refCount: 0,
             },
          });
@@ -72,7 +72,7 @@ export const pipelineInstancesSlice = createSlice({
 
          pipelineInstancesAdapter.removeOne(state, action.payload.id);
       },
-      updateResourceState: (state, action: PayloadAction<{resource: IPipelineInstance, status: ResourceStatus}>) => {
+      updateResourceRequestedState: (state, action: PayloadAction<{resource: IPipelineInstance, status: ResourceRequestedStatus}>) => {
          const found = pipelineInstancesAdapter.getOne(state, action.payload.resource.id);
 
          if (!found)
@@ -80,7 +80,17 @@ export const pipelineInstancesSlice = createSlice({
             throw new Error(`Pipeline Instance with ID: ${action.payload.resource.id} not found`);
          }
 
-         found.state.status = action.payload.status;
+         found.state.requestedStatus = action.payload.status;
+      },
+      updateResourceActualState: (state, action: PayloadAction<{resource: IPipelineInstance, status: ResourceActualStatus}>) => {
+         const found = pipelineInstancesAdapter.getOne(state, action.payload.resource.id);
+
+         if (!found)
+         {
+            throw new Error(`Pipeline Instance with ID: ${action.payload.resource.id} not found`);
+         }
+
+         found.state.actualStatus = action.payload.status;
       },
    },
    extraReducers: (builder) => {
@@ -177,7 +187,7 @@ type PipelineInstancesStateType = ReturnType<typeof pipelineInstancesSlice.getIn
 export const {
    add: pipelineInstancesAdd,
    remove: pipelineInstancesRemove,
-   updateResourceState: pipelineInstancesUpdateResourceState,
+   updateResourceActualState: pipelineInstancesUpdateResourceActualState,
 } = pipelineInstancesSlice.actions;
 
 export const {

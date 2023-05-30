@@ -7,23 +7,23 @@ export const protobufPackage = "mrc.protos";
 
 export enum ResourceStatus {
   /** Registered - Control Plane indicates a resource should be created on the client */
-  Registered = 0,
+  Registered = "Registered",
   /** Activated - Client has created resource but it is not ready */
-  Activated = 1,
+  Activated = "Activated",
   /** Ready - Client and Control Plane can use the resource */
-  Ready = 2,
+  Ready = "Ready",
   /**
    * Deactivating - Control Plane has indicated the resource should be destroyed on the client. All users of the resource should stop
    * using it and decrement the ref count. Object is still running
    */
-  Deactivating = 3,
+  Deactivating = "Deactivating",
   /** Deactivated - All ref counts have been decremented. Owner of the object on the client can begin destroying object */
-  Deactivated = 4,
+  Deactivated = "Deactivated",
   /** Unregistered - Client owner of resource has begun destroying the object */
-  Unregistered = 5,
+  Unregistered = "Unregistered",
   /** Destroyed - Object has been destroyed on the client (and may be removed from the server) */
-  Destroyed = 6,
-  UNRECOGNIZED = -1,
+  Destroyed = "Destroyed",
+  UNRECOGNIZED = "UNRECOGNIZED",
 }
 
 export function resourceStatusFromJSON(object: any): ResourceStatus {
@@ -78,12 +78,227 @@ export function resourceStatusToJSON(object: ResourceStatus): string {
   }
 }
 
+export function resourceStatusToNumber(object: ResourceStatus): number {
+  switch (object) {
+    case ResourceStatus.Registered:
+      return 0;
+    case ResourceStatus.Activated:
+      return 1;
+    case ResourceStatus.Ready:
+      return 2;
+    case ResourceStatus.Deactivating:
+      return 3;
+    case ResourceStatus.Deactivated:
+      return 4;
+    case ResourceStatus.Unregistered:
+      return 5;
+    case ResourceStatus.Destroyed:
+      return 6;
+    case ResourceStatus.UNRECOGNIZED:
+    default:
+      return -1;
+  }
+}
+
+export enum ResourceRequestedStatus {
+  /** Requested_Unknown - Should never be used. Must start with 0 */
+  Requested_Unknown = "Requested_Unknown",
+  /** Requested_Initialized - Requested that a placeholder be reserved for this resource */
+  Requested_Initialized = "Requested_Initialized",
+  /** Requested_Created - Requested that the resource be created but not started */
+  Requested_Created = "Requested_Created",
+  /** Requested_Ready - Requested that the resource be started and marked ready */
+  Requested_Ready = "Requested_Ready",
+  /** Requested_Stopped - Requested that the resource be stopped (by any party) */
+  Requested_Stopped = "Requested_Stopped",
+  /** Requested_Destroyed - Requested that the resource be destroyed (and removed from the control plane) */
+  Requested_Destroyed = "Requested_Destroyed",
+  UNRECOGNIZED = "UNRECOGNIZED",
+}
+
+export function resourceRequestedStatusFromJSON(object: any): ResourceRequestedStatus {
+  switch (object) {
+    case 0:
+    case "Requested_Unknown":
+      return ResourceRequestedStatus.Requested_Unknown;
+    case 1:
+    case "Requested_Initialized":
+      return ResourceRequestedStatus.Requested_Initialized;
+    case 3:
+    case "Requested_Created":
+      return ResourceRequestedStatus.Requested_Created;
+    case 4:
+    case "Requested_Ready":
+      return ResourceRequestedStatus.Requested_Ready;
+    case 6:
+    case "Requested_Stopped":
+      return ResourceRequestedStatus.Requested_Stopped;
+    case 8:
+    case "Requested_Destroyed":
+      return ResourceRequestedStatus.Requested_Destroyed;
+    case -1:
+    case "UNRECOGNIZED":
+    default:
+      return ResourceRequestedStatus.UNRECOGNIZED;
+  }
+}
+
+export function resourceRequestedStatusToJSON(object: ResourceRequestedStatus): string {
+  switch (object) {
+    case ResourceRequestedStatus.Requested_Unknown:
+      return "Requested_Unknown";
+    case ResourceRequestedStatus.Requested_Initialized:
+      return "Requested_Initialized";
+    case ResourceRequestedStatus.Requested_Created:
+      return "Requested_Created";
+    case ResourceRequestedStatus.Requested_Ready:
+      return "Requested_Ready";
+    case ResourceRequestedStatus.Requested_Stopped:
+      return "Requested_Stopped";
+    case ResourceRequestedStatus.Requested_Destroyed:
+      return "Requested_Destroyed";
+    case ResourceRequestedStatus.UNRECOGNIZED:
+    default:
+      return "UNRECOGNIZED";
+  }
+}
+
+export function resourceRequestedStatusToNumber(object: ResourceRequestedStatus): number {
+  switch (object) {
+    case ResourceRequestedStatus.Requested_Unknown:
+      return 0;
+    case ResourceRequestedStatus.Requested_Initialized:
+      return 1;
+    case ResourceRequestedStatus.Requested_Created:
+      return 3;
+    case ResourceRequestedStatus.Requested_Ready:
+      return 4;
+    case ResourceRequestedStatus.Requested_Stopped:
+      return 6;
+    case ResourceRequestedStatus.Requested_Destroyed:
+      return 8;
+    case ResourceRequestedStatus.UNRECOGNIZED:
+    default:
+      return -1;
+  }
+}
+
+export enum ResourceActualStatus {
+  /** Actual_Unknown - Resource has not informed its status */
+  Actual_Unknown = "Actual_Unknown",
+  /** Actual_Initialized - Owner of resource has acknowledged it should be created */
+  Actual_Initialized = "Actual_Initialized",
+  /** Actual_Creating - Resource has acknowledged it should be created and has begun the process */
+  Actual_Creating = "Actual_Creating",
+  /** Actual_Created - Resource is created and can be moved to ready when requested */
+  Actual_Created = "Actual_Created",
+  /** Actual_Ready - Resource is ready and can be used by other resources */
+  Actual_Ready = "Actual_Ready",
+  /** Actual_Stopping - Resource has acknowledged it should be stopped and has begun the process */
+  Actual_Stopping = "Actual_Stopping",
+  /** Actual_Stopped - Resource has completed the stopped process */
+  Actual_Stopped = "Actual_Stopped",
+  /** Actual_Destroying - Owner of resource has begun destroying the object */
+  Actual_Destroying = "Actual_Destroying",
+  /** Actual_Destroyed - Owner of resource has destroyed the object. Can be removed from control plane */
+  Actual_Destroyed = "Actual_Destroyed",
+  UNRECOGNIZED = "UNRECOGNIZED",
+}
+
+export function resourceActualStatusFromJSON(object: any): ResourceActualStatus {
+  switch (object) {
+    case 0:
+    case "Actual_Unknown":
+      return ResourceActualStatus.Actual_Unknown;
+    case 1:
+    case "Actual_Initialized":
+      return ResourceActualStatus.Actual_Initialized;
+    case 2:
+    case "Actual_Creating":
+      return ResourceActualStatus.Actual_Creating;
+    case 3:
+    case "Actual_Created":
+      return ResourceActualStatus.Actual_Created;
+    case 4:
+    case "Actual_Ready":
+      return ResourceActualStatus.Actual_Ready;
+    case 5:
+    case "Actual_Stopping":
+      return ResourceActualStatus.Actual_Stopping;
+    case 6:
+    case "Actual_Stopped":
+      return ResourceActualStatus.Actual_Stopped;
+    case 7:
+    case "Actual_Destroying":
+      return ResourceActualStatus.Actual_Destroying;
+    case 8:
+    case "Actual_Destroyed":
+      return ResourceActualStatus.Actual_Destroyed;
+    case -1:
+    case "UNRECOGNIZED":
+    default:
+      return ResourceActualStatus.UNRECOGNIZED;
+  }
+}
+
+export function resourceActualStatusToJSON(object: ResourceActualStatus): string {
+  switch (object) {
+    case ResourceActualStatus.Actual_Unknown:
+      return "Actual_Unknown";
+    case ResourceActualStatus.Actual_Initialized:
+      return "Actual_Initialized";
+    case ResourceActualStatus.Actual_Creating:
+      return "Actual_Creating";
+    case ResourceActualStatus.Actual_Created:
+      return "Actual_Created";
+    case ResourceActualStatus.Actual_Ready:
+      return "Actual_Ready";
+    case ResourceActualStatus.Actual_Stopping:
+      return "Actual_Stopping";
+    case ResourceActualStatus.Actual_Stopped:
+      return "Actual_Stopped";
+    case ResourceActualStatus.Actual_Destroying:
+      return "Actual_Destroying";
+    case ResourceActualStatus.Actual_Destroyed:
+      return "Actual_Destroyed";
+    case ResourceActualStatus.UNRECOGNIZED:
+    default:
+      return "UNRECOGNIZED";
+  }
+}
+
+export function resourceActualStatusToNumber(object: ResourceActualStatus): number {
+  switch (object) {
+    case ResourceActualStatus.Actual_Unknown:
+      return 0;
+    case ResourceActualStatus.Actual_Initialized:
+      return 1;
+    case ResourceActualStatus.Actual_Creating:
+      return 2;
+    case ResourceActualStatus.Actual_Created:
+      return 3;
+    case ResourceActualStatus.Actual_Ready:
+      return 4;
+    case ResourceActualStatus.Actual_Stopping:
+      return 5;
+    case ResourceActualStatus.Actual_Stopped:
+      return 6;
+    case ResourceActualStatus.Actual_Destroying:
+      return 7;
+    case ResourceActualStatus.Actual_Destroyed:
+      return 8;
+    case ResourceActualStatus.UNRECOGNIZED:
+    default:
+      return -1;
+  }
+}
+
 export enum SegmentStates {
-  Initialized = 0,
-  Running = 1,
-  Stopped = 2,
-  Completed = 3,
-  UNRECOGNIZED = -1,
+  Initialized = "Initialized",
+  Running = "Running",
+  Stopped = "Stopped",
+  Completed = "Completed",
+  UNRECOGNIZED = "UNRECOGNIZED",
 }
 
 export function segmentStatesFromJSON(object: any): SegmentStates {
@@ -123,9 +338,25 @@ export function segmentStatesToJSON(object: SegmentStates): string {
   }
 }
 
+export function segmentStatesToNumber(object: SegmentStates): number {
+  switch (object) {
+    case SegmentStates.Initialized:
+      return 0;
+    case SegmentStates.Running:
+      return 1;
+    case SegmentStates.Stopped:
+      return 2;
+    case SegmentStates.Completed:
+      return 3;
+    case SegmentStates.UNRECOGNIZED:
+    default:
+      return -1;
+  }
+}
+
 export enum SegmentMappingPolicies {
-  OnePerWorker = 0,
-  UNRECOGNIZED = -1,
+  OnePerWorker = "OnePerWorker",
+  UNRECOGNIZED = "UNRECOGNIZED",
 }
 
 export function segmentMappingPoliciesFromJSON(object: any): SegmentMappingPolicies {
@@ -150,10 +381,26 @@ export function segmentMappingPoliciesToJSON(object: SegmentMappingPolicies): st
   }
 }
 
+export function segmentMappingPoliciesToNumber(object: SegmentMappingPolicies): number {
+  switch (object) {
+    case SegmentMappingPolicies.OnePerWorker:
+      return 0;
+    case SegmentMappingPolicies.UNRECOGNIZED:
+    default:
+      return -1;
+  }
+}
+
+/**
+ * // Current status of the resource
+ * ResourceStatus status = 1;
+ */
 export interface ResourceState {
   $type: "mrc.protos.ResourceState";
-  /** Current status of the resource */
-  status: ResourceStatus;
+  /** What the control plane would like the resource to be */
+  requestedStatus: ResourceRequestedStatus;
+  /** What the local resource has reported its state as */
+  actualStatus: ResourceActualStatus;
   /** Number of users besides the owner of this resource */
   refCount: number;
 }
@@ -167,6 +414,14 @@ export interface Connection {
   workerIds: string[];
   /** The pipeline instances that are assigned to this machine */
   assignedPipelineIds: string[];
+  /** The ref counts owned by this connection. If the connection is dropped, the ref counts will be decremented */
+  refCounts: { [key: string]: number };
+}
+
+export interface Connection_RefCountsEntry {
+  $type: "mrc.protos.Connection.RefCountsEntry";
+  key: string;
+  value: number;
 }
 
 export interface Worker {
@@ -187,6 +442,7 @@ export interface Worker {
 export interface PipelineConfiguration {
   $type: "mrc.protos.PipelineConfiguration";
   segments: { [key: string]: PipelineConfiguration_SegmentConfiguration };
+  manifolds: { [key: string]: PipelineConfiguration_ManifoldConfiguration };
 }
 
 export interface PipelineConfiguration_SegmentConfiguration {
@@ -194,17 +450,43 @@ export interface PipelineConfiguration_SegmentConfiguration {
   /** Name of the segment */
   name: string;
   /** Ingress ports for this segment */
-  ingressPorts: IngressPort[];
+  ingressPorts: { [key: string]: PortInfo };
   /** Egress ports for this segment */
-  egressPorts: EgressPort[];
+  egressPorts: { [key: string]: PortInfo };
   /** Segment options */
   options: SegmentOptions | undefined;
+}
+
+export interface PipelineConfiguration_SegmentConfiguration_IngressPortsEntry {
+  $type: "mrc.protos.PipelineConfiguration.SegmentConfiguration.IngressPortsEntry";
+  key: string;
+  value: PortInfo | undefined;
+}
+
+export interface PipelineConfiguration_SegmentConfiguration_EgressPortsEntry {
+  $type: "mrc.protos.PipelineConfiguration.SegmentConfiguration.EgressPortsEntry";
+  key: string;
+  value: PortInfo | undefined;
+}
+
+export interface PipelineConfiguration_ManifoldConfiguration {
+  $type: "mrc.protos.PipelineConfiguration.ManifoldConfiguration";
+  /** Name of the manifold */
+  name: string;
+  /** All options for this config */
+  options: ManifoldOptions | undefined;
 }
 
 export interface PipelineConfiguration_SegmentsEntry {
   $type: "mrc.protos.PipelineConfiguration.SegmentsEntry";
   key: string;
   value: PipelineConfiguration_SegmentConfiguration | undefined;
+}
+
+export interface PipelineConfiguration_ManifoldsEntry {
+  $type: "mrc.protos.PipelineConfiguration.ManifoldsEntry";
+  key: string;
+  value: PipelineConfiguration_ManifoldConfiguration | undefined;
 }
 
 export interface PipelineMapping {
@@ -257,6 +539,8 @@ export interface PipelineDefinition {
   instanceIds: string[];
   /** Running Segment Info */
   segments: { [key: string]: PipelineDefinition_SegmentDefinition };
+  /** Running Manifold Info */
+  manifolds: { [key: string]: PipelineDefinition_ManifoldDefinition };
 }
 
 export interface PipelineDefinition_SegmentDefinition {
@@ -268,6 +552,18 @@ export interface PipelineDefinition_SegmentDefinition {
   /** Name of the segment */
   name: string;
   /** Running Segment Instance IDs */
+  instanceIds: string[];
+}
+
+export interface PipelineDefinition_ManifoldDefinition {
+  $type: "mrc.protos.PipelineDefinition.ManifoldDefinition";
+  /** Generated ID of the definition */
+  id: string;
+  /** ID of the parent for back referencing */
+  parentId: string;
+  /** Port name for matching ingress/egress nodes */
+  portName: string;
+  /** Running ManifoldInstance IDs */
   instanceIds: string[];
 }
 
@@ -283,6 +579,12 @@ export interface PipelineDefinition_SegmentsEntry {
   value: PipelineDefinition_SegmentDefinition | undefined;
 }
 
+export interface PipelineDefinition_ManifoldsEntry {
+  $type: "mrc.protos.PipelineDefinition.ManifoldsEntry";
+  key: string;
+  value: PipelineDefinition_ManifoldDefinition | undefined;
+}
+
 export interface PipelineInstance {
   $type: "mrc.protos.PipelineInstance";
   id: string;
@@ -296,6 +598,8 @@ export interface PipelineInstance {
     | undefined;
   /** Running Segment Instance IDs */
   segmentIds: string[];
+  /** Running Manifold Instance IDs */
+  manifoldIds: string[];
 }
 
 /**
@@ -328,6 +632,55 @@ export interface SegmentInstance {
   state: ResourceState | undefined;
 }
 
+export interface ManifoldInstance {
+  $type: "mrc.protos.ManifoldInstance";
+  id: string;
+  /** Pipeline Deinition this belongs to */
+  pipelineDefinitionId: string;
+  /** Port name (Lookup manifold config from pipeline def ID and name) */
+  portName: string;
+  /** The machine this instance is running on */
+  machineId: string;
+  /** The running pipeline instance id */
+  pipelineInstanceId: string;
+  /** The current state of this resource */
+  state:
+    | ResourceState
+    | undefined;
+  /** The requested ingress connections. True = Local, False = Remote */
+  requestedIngressSegments: { [key: number]: boolean };
+  /** The requested egress connections. True = Local, False = Remote */
+  requestedEgressSegments: { [key: number]: boolean };
+  /** The actual ingress connections. True = Local, False = Remote */
+  actualIngressSegments: { [key: number]: boolean };
+  /** The actual egress connections. True = Local, False = Remote */
+  actualEgressSegments: { [key: number]: boolean };
+}
+
+export interface ManifoldInstance_RequestedIngressSegmentsEntry {
+  $type: "mrc.protos.ManifoldInstance.RequestedIngressSegmentsEntry";
+  key: number;
+  value: boolean;
+}
+
+export interface ManifoldInstance_RequestedEgressSegmentsEntry {
+  $type: "mrc.protos.ManifoldInstance.RequestedEgressSegmentsEntry";
+  key: number;
+  value: boolean;
+}
+
+export interface ManifoldInstance_ActualIngressSegmentsEntry {
+  $type: "mrc.protos.ManifoldInstance.ActualIngressSegmentsEntry";
+  key: number;
+  value: boolean;
+}
+
+export interface ManifoldInstance_ActualEgressSegmentsEntry {
+  $type: "mrc.protos.ManifoldInstance.ActualEgressSegmentsEntry";
+  key: number;
+  value: boolean;
+}
+
 export interface ControlPlaneState {
   $type: "mrc.protos.ControlPlaneState";
   connections: ControlPlaneState_ConnectionsState | undefined;
@@ -336,6 +689,7 @@ export interface ControlPlaneState {
   pipelineInstances: ControlPlaneState_PipelineInstancesState | undefined;
   segmentDefinitions: ControlPlaneState_SegmentDefinitionsState | undefined;
   segmentInstances: ControlPlaneState_SegmentInstancesState | undefined;
+  manifoldInstances: ControlPlaneState_ManifoldInstancesState | undefined;
 }
 
 export interface ControlPlaneState_ConnectionsState {
@@ -410,6 +764,18 @@ export interface ControlPlaneState_SegmentInstancesState_EntitiesEntry {
   value: SegmentInstance | undefined;
 }
 
+export interface ControlPlaneState_ManifoldInstancesState {
+  $type: "mrc.protos.ControlPlaneState.ManifoldInstancesState";
+  ids: string[];
+  entities: { [key: string]: ManifoldInstance };
+}
+
+export interface ControlPlaneState_ManifoldInstancesState_EntitiesEntry {
+  $type: "mrc.protos.ControlPlaneState.ManifoldInstancesState.EntitiesEntry";
+  key: string;
+  value: ManifoldInstance | undefined;
+}
+
 export interface SegmentOptions {
   $type: "mrc.protos.SegmentOptions";
   placementStrategy: SegmentOptions_PlacementStrategy;
@@ -417,10 +783,10 @@ export interface SegmentOptions {
 }
 
 export enum SegmentOptions_PlacementStrategy {
-  ResourceGroup = 0,
-  PhysicalMachine = 1,
-  Global = 2,
-  UNRECOGNIZED = -1,
+  ResourceGroup = "ResourceGroup",
+  PhysicalMachine = "PhysicalMachine",
+  Global = "Global",
+  UNRECOGNIZED = "UNRECOGNIZED",
 }
 
 export function segmentOptions_PlacementStrategyFromJSON(object: any): SegmentOptions_PlacementStrategy {
@@ -455,6 +821,20 @@ export function segmentOptions_PlacementStrategyToJSON(object: SegmentOptions_Pl
   }
 }
 
+export function segmentOptions_PlacementStrategyToNumber(object: SegmentOptions_PlacementStrategy): number {
+  switch (object) {
+    case SegmentOptions_PlacementStrategy.ResourceGroup:
+      return 0;
+    case SegmentOptions_PlacementStrategy.PhysicalMachine:
+      return 1;
+    case SegmentOptions_PlacementStrategy.Global:
+      return 2;
+    case SegmentOptions_PlacementStrategy.UNRECOGNIZED:
+    default:
+      return -1;
+  }
+}
+
 export interface ScalingOptions {
   $type: "mrc.protos.ScalingOptions";
   strategy: ScalingOptions_ScalingStrategy;
@@ -462,8 +842,8 @@ export interface ScalingOptions {
 }
 
 export enum ScalingOptions_ScalingStrategy {
-  Static = 0,
-  UNRECOGNIZED = -1,
+  Static = "Static",
+  UNRECOGNIZED = "UNRECOGNIZED",
 }
 
 export function scalingOptions_ScalingStrategyFromJSON(object: any): ScalingOptions_ScalingStrategy {
@@ -488,6 +868,73 @@ export function scalingOptions_ScalingStrategyToJSON(object: ScalingOptions_Scal
   }
 }
 
+export function scalingOptions_ScalingStrategyToNumber(object: ScalingOptions_ScalingStrategy): number {
+  switch (object) {
+    case ScalingOptions_ScalingStrategy.Static:
+      return 0;
+    case ScalingOptions_ScalingStrategy.UNRECOGNIZED:
+    default:
+      return -1;
+  }
+}
+
+export interface ManifoldOptions {
+  $type: "mrc.protos.ManifoldOptions";
+  policy: ManifoldOptions_Policy;
+}
+
+export enum ManifoldOptions_Policy {
+  LoadBalance = "LoadBalance",
+  Broadcast = "Broadcast",
+  UNRECOGNIZED = "UNRECOGNIZED",
+}
+
+export function manifoldOptions_PolicyFromJSON(object: any): ManifoldOptions_Policy {
+  switch (object) {
+    case 0:
+    case "LoadBalance":
+      return ManifoldOptions_Policy.LoadBalance;
+    case 1:
+    case "Broadcast":
+      return ManifoldOptions_Policy.Broadcast;
+    case -1:
+    case "UNRECOGNIZED":
+    default:
+      return ManifoldOptions_Policy.UNRECOGNIZED;
+  }
+}
+
+export function manifoldOptions_PolicyToJSON(object: ManifoldOptions_Policy): string {
+  switch (object) {
+    case ManifoldOptions_Policy.LoadBalance:
+      return "LoadBalance";
+    case ManifoldOptions_Policy.Broadcast:
+      return "Broadcast";
+    case ManifoldOptions_Policy.UNRECOGNIZED:
+    default:
+      return "UNRECOGNIZED";
+  }
+}
+
+export function manifoldOptions_PolicyToNumber(object: ManifoldOptions_Policy): number {
+  switch (object) {
+    case ManifoldOptions_Policy.LoadBalance:
+      return 0;
+    case ManifoldOptions_Policy.Broadcast:
+      return 1;
+    case ManifoldOptions_Policy.UNRECOGNIZED:
+    default:
+      return -1;
+  }
+}
+
+export interface PortInfo {
+  $type: "mrc.protos.PortInfo";
+  portName: string;
+  typeId: number;
+  typeString: string;
+}
+
 export interface IngressPort {
   $type: "mrc.protos.IngressPort";
   name: string;
@@ -502,9 +949,9 @@ export interface EgressPort {
 }
 
 export enum EgressPort_PolicyType {
-  PolicyDefined = 0,
-  UserDefined = 1,
-  UNRECOGNIZED = -1,
+  PolicyDefined = "PolicyDefined",
+  UserDefined = "UserDefined",
+  UNRECOGNIZED = "UNRECOGNIZED",
 }
 
 export function egressPort_PolicyTypeFromJSON(object: any): EgressPort_PolicyType {
@@ -534,6 +981,18 @@ export function egressPort_PolicyTypeToJSON(object: EgressPort_PolicyType): stri
   }
 }
 
+export function egressPort_PolicyTypeToNumber(object: EgressPort_PolicyType): number {
+  switch (object) {
+    case EgressPort_PolicyType.PolicyDefined:
+      return 0;
+    case EgressPort_PolicyType.UserDefined:
+      return 1;
+    case EgressPort_PolicyType.UNRECOGNIZED:
+    default:
+      return -1;
+  }
+}
+
 export interface IngressPolicy {
   $type: "mrc.protos.IngressPolicy";
   networkEnabled: boolean;
@@ -547,9 +1006,9 @@ export interface EgressPolicy {
 }
 
 export enum EgressPolicy_Policy {
-  LoadBalance = 0,
-  Broadcast = 1,
-  UNRECOGNIZED = -1,
+  LoadBalance = "LoadBalance",
+  Broadcast = "Broadcast",
+  UNRECOGNIZED = "UNRECOGNIZED",
 }
 
 export function egressPolicy_PolicyFromJSON(object: any): EgressPolicy_Policy {
@@ -579,19 +1038,39 @@ export function egressPolicy_PolicyToJSON(object: EgressPolicy_Policy): string {
   }
 }
 
+export function egressPolicy_PolicyToNumber(object: EgressPolicy_Policy): number {
+  switch (object) {
+    case EgressPolicy_Policy.LoadBalance:
+      return 0;
+    case EgressPolicy_Policy.Broadcast:
+      return 1;
+    case EgressPolicy_Policy.UNRECOGNIZED:
+    default:
+      return -1;
+  }
+}
+
 function createBaseResourceState(): ResourceState {
-  return { $type: "mrc.protos.ResourceState", status: 0, refCount: 0 };
+  return {
+    $type: "mrc.protos.ResourceState",
+    requestedStatus: ResourceRequestedStatus.Requested_Unknown,
+    actualStatus: ResourceActualStatus.Actual_Unknown,
+    refCount: 0,
+  };
 }
 
 export const ResourceState = {
   $type: "mrc.protos.ResourceState" as const,
 
   encode(message: ResourceState, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.status !== 0) {
-      writer.uint32(8).int32(message.status);
+    if (message.requestedStatus !== ResourceRequestedStatus.Requested_Unknown) {
+      writer.uint32(16).int32(resourceRequestedStatusToNumber(message.requestedStatus));
+    }
+    if (message.actualStatus !== ResourceActualStatus.Actual_Unknown) {
+      writer.uint32(24).int32(resourceActualStatusToNumber(message.actualStatus));
     }
     if (message.refCount !== 0) {
-      writer.uint32(16).int32(message.refCount);
+      writer.uint32(32).int32(message.refCount);
     }
     return writer;
   },
@@ -603,10 +1082,13 @@ export const ResourceState = {
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
-        case 1:
-          message.status = reader.int32() as any;
-          break;
         case 2:
+          message.requestedStatus = resourceRequestedStatusFromJSON(reader.int32());
+          break;
+        case 3:
+          message.actualStatus = resourceActualStatusFromJSON(reader.int32());
+          break;
+        case 4:
           message.refCount = reader.int32();
           break;
         default:
@@ -620,14 +1102,21 @@ export const ResourceState = {
   fromJSON(object: any): ResourceState {
     return {
       $type: ResourceState.$type,
-      status: isSet(object.status) ? resourceStatusFromJSON(object.status) : 0,
+      requestedStatus: isSet(object.requestedStatus)
+        ? resourceRequestedStatusFromJSON(object.requestedStatus)
+        : ResourceRequestedStatus.Requested_Unknown,
+      actualStatus: isSet(object.actualStatus)
+        ? resourceActualStatusFromJSON(object.actualStatus)
+        : ResourceActualStatus.Actual_Unknown,
       refCount: isSet(object.refCount) ? Number(object.refCount) : 0,
     };
   },
 
   toJSON(message: ResourceState): unknown {
     const obj: any = {};
-    message.status !== undefined && (obj.status = resourceStatusToJSON(message.status));
+    message.requestedStatus !== undefined &&
+      (obj.requestedStatus = resourceRequestedStatusToJSON(message.requestedStatus));
+    message.actualStatus !== undefined && (obj.actualStatus = resourceActualStatusToJSON(message.actualStatus));
     message.refCount !== undefined && (obj.refCount = Math.round(message.refCount));
     return obj;
   },
@@ -638,7 +1127,8 @@ export const ResourceState = {
 
   fromPartial(object: DeepPartial<ResourceState>): ResourceState {
     const message = createBaseResourceState();
-    message.status = object.status ?? 0;
+    message.requestedStatus = object.requestedStatus ?? ResourceRequestedStatus.Requested_Unknown;
+    message.actualStatus = object.actualStatus ?? ResourceActualStatus.Actual_Unknown;
     message.refCount = object.refCount ?? 0;
     return message;
   },
@@ -647,7 +1137,14 @@ export const ResourceState = {
 messageTypeRegistry.set(ResourceState.$type, ResourceState);
 
 function createBaseConnection(): Connection {
-  return { $type: "mrc.protos.Connection", id: "0", peerInfo: "", workerIds: [], assignedPipelineIds: [] };
+  return {
+    $type: "mrc.protos.Connection",
+    id: "0",
+    peerInfo: "",
+    workerIds: [],
+    assignedPipelineIds: [],
+    refCounts: {},
+  };
 }
 
 export const Connection = {
@@ -670,6 +1167,12 @@ export const Connection = {
       writer.uint64(v);
     }
     writer.ldelim();
+    Object.entries(message.refCounts).forEach(([key, value]) => {
+      Connection_RefCountsEntry.encode(
+        { $type: "mrc.protos.Connection.RefCountsEntry", key: key as any, value },
+        writer.uint32(42).fork(),
+      ).ldelim();
+    });
     return writer;
   },
 
@@ -706,6 +1209,12 @@ export const Connection = {
             message.assignedPipelineIds.push(longToString(reader.uint64() as Long));
           }
           break;
+        case 5:
+          const entry5 = Connection_RefCountsEntry.decode(reader, reader.uint32());
+          if (entry5.value !== undefined) {
+            message.refCounts[entry5.key] = entry5.value;
+          }
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -723,6 +1232,12 @@ export const Connection = {
       assignedPipelineIds: Array.isArray(object?.assignedPipelineIds)
         ? object.assignedPipelineIds.map((e: any) => String(e))
         : [],
+      refCounts: isObject(object.refCounts)
+        ? Object.entries(object.refCounts).reduce<{ [key: string]: number }>((acc, [key, value]) => {
+          acc[key] = Number(value);
+          return acc;
+        }, {})
+        : {},
     };
   },
 
@@ -740,6 +1255,12 @@ export const Connection = {
     } else {
       obj.assignedPipelineIds = [];
     }
+    obj.refCounts = {};
+    if (message.refCounts) {
+      Object.entries(message.refCounts).forEach(([k, v]) => {
+        obj.refCounts[k] = Math.round(v);
+      });
+    }
     return obj;
   },
 
@@ -753,11 +1274,87 @@ export const Connection = {
     message.peerInfo = object.peerInfo ?? "";
     message.workerIds = object.workerIds?.map((e) => e) || [];
     message.assignedPipelineIds = object.assignedPipelineIds?.map((e) => e) || [];
+    message.refCounts = Object.entries(object.refCounts ?? {}).reduce<{ [key: string]: number }>(
+      (acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = Number(value);
+        }
+        return acc;
+      },
+      {},
+    );
     return message;
   },
 };
 
 messageTypeRegistry.set(Connection.$type, Connection);
+
+function createBaseConnection_RefCountsEntry(): Connection_RefCountsEntry {
+  return { $type: "mrc.protos.Connection.RefCountsEntry", key: "", value: 0 };
+}
+
+export const Connection_RefCountsEntry = {
+  $type: "mrc.protos.Connection.RefCountsEntry" as const,
+
+  encode(message: Connection_RefCountsEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.key !== "") {
+      writer.uint32(10).string(message.key);
+    }
+    if (message.value !== 0) {
+      writer.uint32(16).int32(message.value);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): Connection_RefCountsEntry {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseConnection_RefCountsEntry();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.key = reader.string();
+          break;
+        case 2:
+          message.value = reader.int32();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): Connection_RefCountsEntry {
+    return {
+      $type: Connection_RefCountsEntry.$type,
+      key: isSet(object.key) ? String(object.key) : "",
+      value: isSet(object.value) ? Number(object.value) : 0,
+    };
+  },
+
+  toJSON(message: Connection_RefCountsEntry): unknown {
+    const obj: any = {};
+    message.key !== undefined && (obj.key = message.key);
+    message.value !== undefined && (obj.value = Math.round(message.value));
+    return obj;
+  },
+
+  create(base?: DeepPartial<Connection_RefCountsEntry>): Connection_RefCountsEntry {
+    return Connection_RefCountsEntry.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<Connection_RefCountsEntry>): Connection_RefCountsEntry {
+    const message = createBaseConnection_RefCountsEntry();
+    message.key = object.key ?? "";
+    message.value = object.value ?? 0;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(Connection_RefCountsEntry.$type, Connection_RefCountsEntry);
 
 function createBaseWorker(): Worker {
   return {
@@ -881,7 +1478,7 @@ export const Worker = {
 messageTypeRegistry.set(Worker.$type, Worker);
 
 function createBasePipelineConfiguration(): PipelineConfiguration {
-  return { $type: "mrc.protos.PipelineConfiguration", segments: {} };
+  return { $type: "mrc.protos.PipelineConfiguration", segments: {}, manifolds: {} };
 }
 
 export const PipelineConfiguration = {
@@ -894,6 +1491,13 @@ export const PipelineConfiguration = {
         key: key as any,
         value,
       }, writer.uint32(10).fork()).ldelim();
+    });
+    Object.entries(message.manifolds).forEach(([key, value]) => {
+      PipelineConfiguration_ManifoldsEntry.encode({
+        $type: "mrc.protos.PipelineConfiguration.ManifoldsEntry",
+        key: key as any,
+        value,
+      }, writer.uint32(18).fork()).ldelim();
     });
     return writer;
   },
@@ -909,6 +1513,12 @@ export const PipelineConfiguration = {
           const entry1 = PipelineConfiguration_SegmentsEntry.decode(reader, reader.uint32());
           if (entry1.value !== undefined) {
             message.segments[entry1.key] = entry1.value;
+          }
+          break;
+        case 2:
+          const entry2 = PipelineConfiguration_ManifoldsEntry.decode(reader, reader.uint32());
+          if (entry2.value !== undefined) {
+            message.manifolds[entry2.key] = entry2.value;
           }
           break;
         default:
@@ -931,6 +1541,15 @@ export const PipelineConfiguration = {
           {},
         )
         : {},
+      manifolds: isObject(object.manifolds)
+        ? Object.entries(object.manifolds).reduce<{ [key: string]: PipelineConfiguration_ManifoldConfiguration }>(
+          (acc, [key, value]) => {
+            acc[key] = PipelineConfiguration_ManifoldConfiguration.fromJSON(value);
+            return acc;
+          },
+          {},
+        )
+        : {},
     };
   },
 
@@ -940,6 +1559,12 @@ export const PipelineConfiguration = {
     if (message.segments) {
       Object.entries(message.segments).forEach(([k, v]) => {
         obj.segments[k] = PipelineConfiguration_SegmentConfiguration.toJSON(v);
+      });
+    }
+    obj.manifolds = {};
+    if (message.manifolds) {
+      Object.entries(message.manifolds).forEach(([k, v]) => {
+        obj.manifolds[k] = PipelineConfiguration_ManifoldConfiguration.toJSON(v);
       });
     }
     return obj;
@@ -959,6 +1584,14 @@ export const PipelineConfiguration = {
       }
       return acc;
     }, {});
+    message.manifolds = Object.entries(object.manifolds ?? {}).reduce<
+      { [key: string]: PipelineConfiguration_ManifoldConfiguration }
+    >((acc, [key, value]) => {
+      if (value !== undefined) {
+        acc[key] = PipelineConfiguration_ManifoldConfiguration.fromPartial(value);
+      }
+      return acc;
+    }, {});
     return message;
   },
 };
@@ -969,8 +1602,8 @@ function createBasePipelineConfiguration_SegmentConfiguration(): PipelineConfigu
   return {
     $type: "mrc.protos.PipelineConfiguration.SegmentConfiguration",
     name: "",
-    ingressPorts: [],
-    egressPorts: [],
+    ingressPorts: {},
+    egressPorts: {},
     options: undefined,
   };
 }
@@ -982,12 +1615,20 @@ export const PipelineConfiguration_SegmentConfiguration = {
     if (message.name !== "") {
       writer.uint32(10).string(message.name);
     }
-    for (const v of message.ingressPorts) {
-      IngressPort.encode(v!, writer.uint32(18).fork()).ldelim();
-    }
-    for (const v of message.egressPorts) {
-      EgressPort.encode(v!, writer.uint32(26).fork()).ldelim();
-    }
+    Object.entries(message.ingressPorts).forEach(([key, value]) => {
+      PipelineConfiguration_SegmentConfiguration_IngressPortsEntry.encode({
+        $type: "mrc.protos.PipelineConfiguration.SegmentConfiguration.IngressPortsEntry",
+        key: key as any,
+        value,
+      }, writer.uint32(18).fork()).ldelim();
+    });
+    Object.entries(message.egressPorts).forEach(([key, value]) => {
+      PipelineConfiguration_SegmentConfiguration_EgressPortsEntry.encode({
+        $type: "mrc.protos.PipelineConfiguration.SegmentConfiguration.EgressPortsEntry",
+        key: key as any,
+        value,
+      }, writer.uint32(26).fork()).ldelim();
+    });
     if (message.options !== undefined) {
       SegmentOptions.encode(message.options, writer.uint32(34).fork()).ldelim();
     }
@@ -1005,10 +1646,16 @@ export const PipelineConfiguration_SegmentConfiguration = {
           message.name = reader.string();
           break;
         case 2:
-          message.ingressPorts.push(IngressPort.decode(reader, reader.uint32()));
+          const entry2 = PipelineConfiguration_SegmentConfiguration_IngressPortsEntry.decode(reader, reader.uint32());
+          if (entry2.value !== undefined) {
+            message.ingressPorts[entry2.key] = entry2.value;
+          }
           break;
         case 3:
-          message.egressPorts.push(EgressPort.decode(reader, reader.uint32()));
+          const entry3 = PipelineConfiguration_SegmentConfiguration_EgressPortsEntry.decode(reader, reader.uint32());
+          if (entry3.value !== undefined) {
+            message.egressPorts[entry3.key] = entry3.value;
+          }
           break;
         case 4:
           message.options = SegmentOptions.decode(reader, reader.uint32());
@@ -1025,10 +1672,18 @@ export const PipelineConfiguration_SegmentConfiguration = {
     return {
       $type: PipelineConfiguration_SegmentConfiguration.$type,
       name: isSet(object.name) ? String(object.name) : "",
-      ingressPorts: Array.isArray(object?.ingressPorts)
-        ? object.ingressPorts.map((e: any) => IngressPort.fromJSON(e))
-        : [],
-      egressPorts: Array.isArray(object?.egressPorts) ? object.egressPorts.map((e: any) => EgressPort.fromJSON(e)) : [],
+      ingressPorts: isObject(object.ingressPorts)
+        ? Object.entries(object.ingressPorts).reduce<{ [key: string]: PortInfo }>((acc, [key, value]) => {
+          acc[key] = PortInfo.fromJSON(value);
+          return acc;
+        }, {})
+        : {},
+      egressPorts: isObject(object.egressPorts)
+        ? Object.entries(object.egressPorts).reduce<{ [key: string]: PortInfo }>((acc, [key, value]) => {
+          acc[key] = PortInfo.fromJSON(value);
+          return acc;
+        }, {})
+        : {},
       options: isSet(object.options) ? SegmentOptions.fromJSON(object.options) : undefined,
     };
   },
@@ -1036,15 +1691,17 @@ export const PipelineConfiguration_SegmentConfiguration = {
   toJSON(message: PipelineConfiguration_SegmentConfiguration): unknown {
     const obj: any = {};
     message.name !== undefined && (obj.name = message.name);
+    obj.ingressPorts = {};
     if (message.ingressPorts) {
-      obj.ingressPorts = message.ingressPorts.map((e) => e ? IngressPort.toJSON(e) : undefined);
-    } else {
-      obj.ingressPorts = [];
+      Object.entries(message.ingressPorts).forEach(([k, v]) => {
+        obj.ingressPorts[k] = PortInfo.toJSON(v);
+      });
     }
+    obj.egressPorts = {};
     if (message.egressPorts) {
-      obj.egressPorts = message.egressPorts.map((e) => e ? EgressPort.toJSON(e) : undefined);
-    } else {
-      obj.egressPorts = [];
+      Object.entries(message.egressPorts).forEach(([k, v]) => {
+        obj.egressPorts[k] = PortInfo.toJSON(v);
+      });
     }
     message.options !== undefined &&
       (obj.options = message.options ? SegmentOptions.toJSON(message.options) : undefined);
@@ -1060,8 +1717,24 @@ export const PipelineConfiguration_SegmentConfiguration = {
   ): PipelineConfiguration_SegmentConfiguration {
     const message = createBasePipelineConfiguration_SegmentConfiguration();
     message.name = object.name ?? "";
-    message.ingressPorts = object.ingressPorts?.map((e) => IngressPort.fromPartial(e)) || [];
-    message.egressPorts = object.egressPorts?.map((e) => EgressPort.fromPartial(e)) || [];
+    message.ingressPorts = Object.entries(object.ingressPorts ?? {}).reduce<{ [key: string]: PortInfo }>(
+      (acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = PortInfo.fromPartial(value);
+        }
+        return acc;
+      },
+      {},
+    );
+    message.egressPorts = Object.entries(object.egressPorts ?? {}).reduce<{ [key: string]: PortInfo }>(
+      (acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = PortInfo.fromPartial(value);
+        }
+        return acc;
+      },
+      {},
+    );
     message.options = (object.options !== undefined && object.options !== null)
       ? SegmentOptions.fromPartial(object.options)
       : undefined;
@@ -1070,6 +1743,243 @@ export const PipelineConfiguration_SegmentConfiguration = {
 };
 
 messageTypeRegistry.set(PipelineConfiguration_SegmentConfiguration.$type, PipelineConfiguration_SegmentConfiguration);
+
+function createBasePipelineConfiguration_SegmentConfiguration_IngressPortsEntry(): PipelineConfiguration_SegmentConfiguration_IngressPortsEntry {
+  return {
+    $type: "mrc.protos.PipelineConfiguration.SegmentConfiguration.IngressPortsEntry",
+    key: "",
+    value: undefined,
+  };
+}
+
+export const PipelineConfiguration_SegmentConfiguration_IngressPortsEntry = {
+  $type: "mrc.protos.PipelineConfiguration.SegmentConfiguration.IngressPortsEntry" as const,
+
+  encode(
+    message: PipelineConfiguration_SegmentConfiguration_IngressPortsEntry,
+    writer: _m0.Writer = _m0.Writer.create(),
+  ): _m0.Writer {
+    if (message.key !== "") {
+      writer.uint32(10).string(message.key);
+    }
+    if (message.value !== undefined) {
+      PortInfo.encode(message.value, writer.uint32(18).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: _m0.Reader | Uint8Array,
+    length?: number,
+  ): PipelineConfiguration_SegmentConfiguration_IngressPortsEntry {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePipelineConfiguration_SegmentConfiguration_IngressPortsEntry();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.key = reader.string();
+          break;
+        case 2:
+          message.value = PortInfo.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PipelineConfiguration_SegmentConfiguration_IngressPortsEntry {
+    return {
+      $type: PipelineConfiguration_SegmentConfiguration_IngressPortsEntry.$type,
+      key: isSet(object.key) ? String(object.key) : "",
+      value: isSet(object.value) ? PortInfo.fromJSON(object.value) : undefined,
+    };
+  },
+
+  toJSON(message: PipelineConfiguration_SegmentConfiguration_IngressPortsEntry): unknown {
+    const obj: any = {};
+    message.key !== undefined && (obj.key = message.key);
+    message.value !== undefined && (obj.value = message.value ? PortInfo.toJSON(message.value) : undefined);
+    return obj;
+  },
+
+  create(
+    base?: DeepPartial<PipelineConfiguration_SegmentConfiguration_IngressPortsEntry>,
+  ): PipelineConfiguration_SegmentConfiguration_IngressPortsEntry {
+    return PipelineConfiguration_SegmentConfiguration_IngressPortsEntry.fromPartial(base ?? {});
+  },
+
+  fromPartial(
+    object: DeepPartial<PipelineConfiguration_SegmentConfiguration_IngressPortsEntry>,
+  ): PipelineConfiguration_SegmentConfiguration_IngressPortsEntry {
+    const message = createBasePipelineConfiguration_SegmentConfiguration_IngressPortsEntry();
+    message.key = object.key ?? "";
+    message.value = (object.value !== undefined && object.value !== null)
+      ? PortInfo.fromPartial(object.value)
+      : undefined;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(
+  PipelineConfiguration_SegmentConfiguration_IngressPortsEntry.$type,
+  PipelineConfiguration_SegmentConfiguration_IngressPortsEntry,
+);
+
+function createBasePipelineConfiguration_SegmentConfiguration_EgressPortsEntry(): PipelineConfiguration_SegmentConfiguration_EgressPortsEntry {
+  return { $type: "mrc.protos.PipelineConfiguration.SegmentConfiguration.EgressPortsEntry", key: "", value: undefined };
+}
+
+export const PipelineConfiguration_SegmentConfiguration_EgressPortsEntry = {
+  $type: "mrc.protos.PipelineConfiguration.SegmentConfiguration.EgressPortsEntry" as const,
+
+  encode(
+    message: PipelineConfiguration_SegmentConfiguration_EgressPortsEntry,
+    writer: _m0.Writer = _m0.Writer.create(),
+  ): _m0.Writer {
+    if (message.key !== "") {
+      writer.uint32(10).string(message.key);
+    }
+    if (message.value !== undefined) {
+      PortInfo.encode(message.value, writer.uint32(18).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): PipelineConfiguration_SegmentConfiguration_EgressPortsEntry {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePipelineConfiguration_SegmentConfiguration_EgressPortsEntry();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.key = reader.string();
+          break;
+        case 2:
+          message.value = PortInfo.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PipelineConfiguration_SegmentConfiguration_EgressPortsEntry {
+    return {
+      $type: PipelineConfiguration_SegmentConfiguration_EgressPortsEntry.$type,
+      key: isSet(object.key) ? String(object.key) : "",
+      value: isSet(object.value) ? PortInfo.fromJSON(object.value) : undefined,
+    };
+  },
+
+  toJSON(message: PipelineConfiguration_SegmentConfiguration_EgressPortsEntry): unknown {
+    const obj: any = {};
+    message.key !== undefined && (obj.key = message.key);
+    message.value !== undefined && (obj.value = message.value ? PortInfo.toJSON(message.value) : undefined);
+    return obj;
+  },
+
+  create(
+    base?: DeepPartial<PipelineConfiguration_SegmentConfiguration_EgressPortsEntry>,
+  ): PipelineConfiguration_SegmentConfiguration_EgressPortsEntry {
+    return PipelineConfiguration_SegmentConfiguration_EgressPortsEntry.fromPartial(base ?? {});
+  },
+
+  fromPartial(
+    object: DeepPartial<PipelineConfiguration_SegmentConfiguration_EgressPortsEntry>,
+  ): PipelineConfiguration_SegmentConfiguration_EgressPortsEntry {
+    const message = createBasePipelineConfiguration_SegmentConfiguration_EgressPortsEntry();
+    message.key = object.key ?? "";
+    message.value = (object.value !== undefined && object.value !== null)
+      ? PortInfo.fromPartial(object.value)
+      : undefined;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(
+  PipelineConfiguration_SegmentConfiguration_EgressPortsEntry.$type,
+  PipelineConfiguration_SegmentConfiguration_EgressPortsEntry,
+);
+
+function createBasePipelineConfiguration_ManifoldConfiguration(): PipelineConfiguration_ManifoldConfiguration {
+  return { $type: "mrc.protos.PipelineConfiguration.ManifoldConfiguration", name: "", options: undefined };
+}
+
+export const PipelineConfiguration_ManifoldConfiguration = {
+  $type: "mrc.protos.PipelineConfiguration.ManifoldConfiguration" as const,
+
+  encode(message: PipelineConfiguration_ManifoldConfiguration, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.name !== "") {
+      writer.uint32(10).string(message.name);
+    }
+    if (message.options !== undefined) {
+      ManifoldOptions.encode(message.options, writer.uint32(18).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): PipelineConfiguration_ManifoldConfiguration {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePipelineConfiguration_ManifoldConfiguration();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.name = reader.string();
+          break;
+        case 2:
+          message.options = ManifoldOptions.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PipelineConfiguration_ManifoldConfiguration {
+    return {
+      $type: PipelineConfiguration_ManifoldConfiguration.$type,
+      name: isSet(object.name) ? String(object.name) : "",
+      options: isSet(object.options) ? ManifoldOptions.fromJSON(object.options) : undefined,
+    };
+  },
+
+  toJSON(message: PipelineConfiguration_ManifoldConfiguration): unknown {
+    const obj: any = {};
+    message.name !== undefined && (obj.name = message.name);
+    message.options !== undefined &&
+      (obj.options = message.options ? ManifoldOptions.toJSON(message.options) : undefined);
+    return obj;
+  },
+
+  create(base?: DeepPartial<PipelineConfiguration_ManifoldConfiguration>): PipelineConfiguration_ManifoldConfiguration {
+    return PipelineConfiguration_ManifoldConfiguration.fromPartial(base ?? {});
+  },
+
+  fromPartial(
+    object: DeepPartial<PipelineConfiguration_ManifoldConfiguration>,
+  ): PipelineConfiguration_ManifoldConfiguration {
+    const message = createBasePipelineConfiguration_ManifoldConfiguration();
+    message.name = object.name ?? "";
+    message.options = (object.options !== undefined && object.options !== null)
+      ? ManifoldOptions.fromPartial(object.options)
+      : undefined;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(PipelineConfiguration_ManifoldConfiguration.$type, PipelineConfiguration_ManifoldConfiguration);
 
 function createBasePipelineConfiguration_SegmentsEntry(): PipelineConfiguration_SegmentsEntry {
   return { $type: "mrc.protos.PipelineConfiguration.SegmentsEntry", key: "", value: undefined };
@@ -1140,6 +2050,76 @@ export const PipelineConfiguration_SegmentsEntry = {
 };
 
 messageTypeRegistry.set(PipelineConfiguration_SegmentsEntry.$type, PipelineConfiguration_SegmentsEntry);
+
+function createBasePipelineConfiguration_ManifoldsEntry(): PipelineConfiguration_ManifoldsEntry {
+  return { $type: "mrc.protos.PipelineConfiguration.ManifoldsEntry", key: "", value: undefined };
+}
+
+export const PipelineConfiguration_ManifoldsEntry = {
+  $type: "mrc.protos.PipelineConfiguration.ManifoldsEntry" as const,
+
+  encode(message: PipelineConfiguration_ManifoldsEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.key !== "") {
+      writer.uint32(10).string(message.key);
+    }
+    if (message.value !== undefined) {
+      PipelineConfiguration_ManifoldConfiguration.encode(message.value, writer.uint32(18).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): PipelineConfiguration_ManifoldsEntry {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePipelineConfiguration_ManifoldsEntry();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.key = reader.string();
+          break;
+        case 2:
+          message.value = PipelineConfiguration_ManifoldConfiguration.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PipelineConfiguration_ManifoldsEntry {
+    return {
+      $type: PipelineConfiguration_ManifoldsEntry.$type,
+      key: isSet(object.key) ? String(object.key) : "",
+      value: isSet(object.value) ? PipelineConfiguration_ManifoldConfiguration.fromJSON(object.value) : undefined,
+    };
+  },
+
+  toJSON(message: PipelineConfiguration_ManifoldsEntry): unknown {
+    const obj: any = {};
+    message.key !== undefined && (obj.key = message.key);
+    message.value !== undefined &&
+      (obj.value = message.value ? PipelineConfiguration_ManifoldConfiguration.toJSON(message.value) : undefined);
+    return obj;
+  },
+
+  create(base?: DeepPartial<PipelineConfiguration_ManifoldsEntry>): PipelineConfiguration_ManifoldsEntry {
+    return PipelineConfiguration_ManifoldsEntry.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<PipelineConfiguration_ManifoldsEntry>): PipelineConfiguration_ManifoldsEntry {
+    const message = createBasePipelineConfiguration_ManifoldsEntry();
+    message.key = object.key ?? "";
+    message.value = (object.value !== undefined && object.value !== null)
+      ? PipelineConfiguration_ManifoldConfiguration.fromPartial(object.value)
+      : undefined;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(PipelineConfiguration_ManifoldsEntry.$type, PipelineConfiguration_ManifoldsEntry);
 
 function createBasePipelineMapping(): PipelineMapping {
   return { $type: "mrc.protos.PipelineMapping", machineId: "0", segments: {} };
@@ -1324,15 +2304,15 @@ export const PipelineMapping_SegmentMapping = {
 messageTypeRegistry.set(PipelineMapping_SegmentMapping.$type, PipelineMapping_SegmentMapping);
 
 function createBasePipelineMapping_SegmentMapping_ByPolicy(): PipelineMapping_SegmentMapping_ByPolicy {
-  return { $type: "mrc.protos.PipelineMapping.SegmentMapping.ByPolicy", value: 0 };
+  return { $type: "mrc.protos.PipelineMapping.SegmentMapping.ByPolicy", value: SegmentMappingPolicies.OnePerWorker };
 }
 
 export const PipelineMapping_SegmentMapping_ByPolicy = {
   $type: "mrc.protos.PipelineMapping.SegmentMapping.ByPolicy" as const,
 
   encode(message: PipelineMapping_SegmentMapping_ByPolicy, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.value !== 0) {
-      writer.uint32(8).int32(message.value);
+    if (message.value !== SegmentMappingPolicies.OnePerWorker) {
+      writer.uint32(8).int32(segmentMappingPoliciesToNumber(message.value));
     }
     return writer;
   },
@@ -1345,7 +2325,7 @@ export const PipelineMapping_SegmentMapping_ByPolicy = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.value = reader.int32() as any;
+          message.value = segmentMappingPoliciesFromJSON(reader.int32());
           break;
         default:
           reader.skipType(tag & 7);
@@ -1358,7 +2338,7 @@ export const PipelineMapping_SegmentMapping_ByPolicy = {
   fromJSON(object: any): PipelineMapping_SegmentMapping_ByPolicy {
     return {
       $type: PipelineMapping_SegmentMapping_ByPolicy.$type,
-      value: isSet(object.value) ? segmentMappingPoliciesFromJSON(object.value) : 0,
+      value: isSet(object.value) ? segmentMappingPoliciesFromJSON(object.value) : SegmentMappingPolicies.OnePerWorker,
     };
   },
 
@@ -1374,7 +2354,7 @@ export const PipelineMapping_SegmentMapping_ByPolicy = {
 
   fromPartial(object: DeepPartial<PipelineMapping_SegmentMapping_ByPolicy>): PipelineMapping_SegmentMapping_ByPolicy {
     const message = createBasePipelineMapping_SegmentMapping_ByPolicy();
-    message.value = object.value ?? 0;
+    message.value = object.value ?? SegmentMappingPolicies.OnePerWorker;
     return message;
   },
 };
@@ -1530,6 +2510,7 @@ function createBasePipelineDefinition(): PipelineDefinition {
     mappings: {},
     instanceIds: [],
     segments: {},
+    manifolds: {},
   };
 }
 
@@ -1561,6 +2542,13 @@ export const PipelineDefinition = {
         key: key as any,
         value,
       }, writer.uint32(42).fork()).ldelim();
+    });
+    Object.entries(message.manifolds).forEach(([key, value]) => {
+      PipelineDefinition_ManifoldsEntry.encode({
+        $type: "mrc.protos.PipelineDefinition.ManifoldsEntry",
+        key: key as any,
+        value,
+      }, writer.uint32(50).fork()).ldelim();
     });
     return writer;
   },
@@ -1600,6 +2588,12 @@ export const PipelineDefinition = {
             message.segments[entry5.key] = entry5.value;
           }
           break;
+        case 6:
+          const entry6 = PipelineDefinition_ManifoldsEntry.decode(reader, reader.uint32());
+          if (entry6.value !== undefined) {
+            message.manifolds[entry6.key] = entry6.value;
+          }
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -1624,6 +2618,15 @@ export const PipelineDefinition = {
         ? Object.entries(object.segments).reduce<{ [key: string]: PipelineDefinition_SegmentDefinition }>(
           (acc, [key, value]) => {
             acc[key] = PipelineDefinition_SegmentDefinition.fromJSON(value);
+            return acc;
+          },
+          {},
+        )
+        : {},
+      manifolds: isObject(object.manifolds)
+        ? Object.entries(object.manifolds).reduce<{ [key: string]: PipelineDefinition_ManifoldDefinition }>(
+          (acc, [key, value]) => {
+            acc[key] = PipelineDefinition_ManifoldDefinition.fromJSON(value);
             return acc;
           },
           {},
@@ -1654,6 +2657,12 @@ export const PipelineDefinition = {
         obj.segments[k] = PipelineDefinition_SegmentDefinition.toJSON(v);
       });
     }
+    obj.manifolds = {};
+    if (message.manifolds) {
+      Object.entries(message.manifolds).forEach(([k, v]) => {
+        obj.manifolds[k] = PipelineDefinition_ManifoldDefinition.toJSON(v);
+      });
+    }
     return obj;
   },
 
@@ -1682,6 +2691,14 @@ export const PipelineDefinition = {
     >((acc, [key, value]) => {
       if (value !== undefined) {
         acc[key] = PipelineDefinition_SegmentDefinition.fromPartial(value);
+      }
+      return acc;
+    }, {});
+    message.manifolds = Object.entries(object.manifolds ?? {}).reduce<
+      { [key: string]: PipelineDefinition_ManifoldDefinition }
+    >((acc, [key, value]) => {
+      if (value !== undefined) {
+        acc[key] = PipelineDefinition_ManifoldDefinition.fromPartial(value);
       }
       return acc;
     }, {});
@@ -1794,6 +2811,110 @@ export const PipelineDefinition_SegmentDefinition = {
 };
 
 messageTypeRegistry.set(PipelineDefinition_SegmentDefinition.$type, PipelineDefinition_SegmentDefinition);
+
+function createBasePipelineDefinition_ManifoldDefinition(): PipelineDefinition_ManifoldDefinition {
+  return {
+    $type: "mrc.protos.PipelineDefinition.ManifoldDefinition",
+    id: "0",
+    parentId: "0",
+    portName: "",
+    instanceIds: [],
+  };
+}
+
+export const PipelineDefinition_ManifoldDefinition = {
+  $type: "mrc.protos.PipelineDefinition.ManifoldDefinition" as const,
+
+  encode(message: PipelineDefinition_ManifoldDefinition, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.id !== "0") {
+      writer.uint32(8).uint64(message.id);
+    }
+    if (message.parentId !== "0") {
+      writer.uint32(16).uint64(message.parentId);
+    }
+    if (message.portName !== "") {
+      writer.uint32(26).string(message.portName);
+    }
+    writer.uint32(34).fork();
+    for (const v of message.instanceIds) {
+      writer.uint64(v);
+    }
+    writer.ldelim();
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): PipelineDefinition_ManifoldDefinition {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePipelineDefinition_ManifoldDefinition();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.id = longToString(reader.uint64() as Long);
+          break;
+        case 2:
+          message.parentId = longToString(reader.uint64() as Long);
+          break;
+        case 3:
+          message.portName = reader.string();
+          break;
+        case 4:
+          if ((tag & 7) === 2) {
+            const end2 = reader.uint32() + reader.pos;
+            while (reader.pos < end2) {
+              message.instanceIds.push(longToString(reader.uint64() as Long));
+            }
+          } else {
+            message.instanceIds.push(longToString(reader.uint64() as Long));
+          }
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PipelineDefinition_ManifoldDefinition {
+    return {
+      $type: PipelineDefinition_ManifoldDefinition.$type,
+      id: isSet(object.id) ? String(object.id) : "0",
+      parentId: isSet(object.parentId) ? String(object.parentId) : "0",
+      portName: isSet(object.portName) ? String(object.portName) : "",
+      instanceIds: Array.isArray(object?.instanceIds) ? object.instanceIds.map((e: any) => String(e)) : [],
+    };
+  },
+
+  toJSON(message: PipelineDefinition_ManifoldDefinition): unknown {
+    const obj: any = {};
+    message.id !== undefined && (obj.id = message.id);
+    message.parentId !== undefined && (obj.parentId = message.parentId);
+    message.portName !== undefined && (obj.portName = message.portName);
+    if (message.instanceIds) {
+      obj.instanceIds = message.instanceIds.map((e) => e);
+    } else {
+      obj.instanceIds = [];
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<PipelineDefinition_ManifoldDefinition>): PipelineDefinition_ManifoldDefinition {
+    return PipelineDefinition_ManifoldDefinition.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<PipelineDefinition_ManifoldDefinition>): PipelineDefinition_ManifoldDefinition {
+    const message = createBasePipelineDefinition_ManifoldDefinition();
+    message.id = object.id ?? "0";
+    message.parentId = object.parentId ?? "0";
+    message.portName = object.portName ?? "";
+    message.instanceIds = object.instanceIds?.map((e) => e) || [];
+    return message;
+  },
+};
+
+messageTypeRegistry.set(PipelineDefinition_ManifoldDefinition.$type, PipelineDefinition_ManifoldDefinition);
 
 function createBasePipelineDefinition_MappingsEntry(): PipelineDefinition_MappingsEntry {
   return { $type: "mrc.protos.PipelineDefinition.MappingsEntry", key: "0", value: undefined };
@@ -1934,6 +3055,76 @@ export const PipelineDefinition_SegmentsEntry = {
 
 messageTypeRegistry.set(PipelineDefinition_SegmentsEntry.$type, PipelineDefinition_SegmentsEntry);
 
+function createBasePipelineDefinition_ManifoldsEntry(): PipelineDefinition_ManifoldsEntry {
+  return { $type: "mrc.protos.PipelineDefinition.ManifoldsEntry", key: "", value: undefined };
+}
+
+export const PipelineDefinition_ManifoldsEntry = {
+  $type: "mrc.protos.PipelineDefinition.ManifoldsEntry" as const,
+
+  encode(message: PipelineDefinition_ManifoldsEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.key !== "") {
+      writer.uint32(10).string(message.key);
+    }
+    if (message.value !== undefined) {
+      PipelineDefinition_ManifoldDefinition.encode(message.value, writer.uint32(18).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): PipelineDefinition_ManifoldsEntry {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePipelineDefinition_ManifoldsEntry();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.key = reader.string();
+          break;
+        case 2:
+          message.value = PipelineDefinition_ManifoldDefinition.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PipelineDefinition_ManifoldsEntry {
+    return {
+      $type: PipelineDefinition_ManifoldsEntry.$type,
+      key: isSet(object.key) ? String(object.key) : "",
+      value: isSet(object.value) ? PipelineDefinition_ManifoldDefinition.fromJSON(object.value) : undefined,
+    };
+  },
+
+  toJSON(message: PipelineDefinition_ManifoldsEntry): unknown {
+    const obj: any = {};
+    message.key !== undefined && (obj.key = message.key);
+    message.value !== undefined &&
+      (obj.value = message.value ? PipelineDefinition_ManifoldDefinition.toJSON(message.value) : undefined);
+    return obj;
+  },
+
+  create(base?: DeepPartial<PipelineDefinition_ManifoldsEntry>): PipelineDefinition_ManifoldsEntry {
+    return PipelineDefinition_ManifoldsEntry.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<PipelineDefinition_ManifoldsEntry>): PipelineDefinition_ManifoldsEntry {
+    const message = createBasePipelineDefinition_ManifoldsEntry();
+    message.key = object.key ?? "";
+    message.value = (object.value !== undefined && object.value !== null)
+      ? PipelineDefinition_ManifoldDefinition.fromPartial(object.value)
+      : undefined;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(PipelineDefinition_ManifoldsEntry.$type, PipelineDefinition_ManifoldsEntry);
+
 function createBasePipelineInstance(): PipelineInstance {
   return {
     $type: "mrc.protos.PipelineInstance",
@@ -1942,6 +3133,7 @@ function createBasePipelineInstance(): PipelineInstance {
     machineId: "0",
     state: undefined,
     segmentIds: [],
+    manifoldIds: [],
   };
 }
 
@@ -1963,6 +3155,11 @@ export const PipelineInstance = {
     }
     writer.uint32(42).fork();
     for (const v of message.segmentIds) {
+      writer.uint64(v);
+    }
+    writer.ldelim();
+    writer.uint32(50).fork();
+    for (const v of message.manifoldIds) {
       writer.uint64(v);
     }
     writer.ldelim();
@@ -1998,6 +3195,16 @@ export const PipelineInstance = {
             message.segmentIds.push(longToString(reader.uint64() as Long));
           }
           break;
+        case 6:
+          if ((tag & 7) === 2) {
+            const end2 = reader.uint32() + reader.pos;
+            while (reader.pos < end2) {
+              message.manifoldIds.push(longToString(reader.uint64() as Long));
+            }
+          } else {
+            message.manifoldIds.push(longToString(reader.uint64() as Long));
+          }
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -2014,6 +3221,7 @@ export const PipelineInstance = {
       machineId: isSet(object.machineId) ? String(object.machineId) : "0",
       state: isSet(object.state) ? ResourceState.fromJSON(object.state) : undefined,
       segmentIds: Array.isArray(object?.segmentIds) ? object.segmentIds.map((e: any) => String(e)) : [],
+      manifoldIds: Array.isArray(object?.manifoldIds) ? object.manifoldIds.map((e: any) => String(e)) : [],
     };
   },
 
@@ -2027,6 +3235,11 @@ export const PipelineInstance = {
       obj.segmentIds = message.segmentIds.map((e) => e);
     } else {
       obj.segmentIds = [];
+    }
+    if (message.manifoldIds) {
+      obj.manifoldIds = message.manifoldIds.map((e) => e);
+    } else {
+      obj.manifoldIds = [];
     }
     return obj;
   },
@@ -2044,6 +3257,7 @@ export const PipelineInstance = {
       ? ResourceState.fromPartial(object.state)
       : undefined;
     message.segmentIds = object.segmentIds?.map((e) => e) || [];
+    message.manifoldIds = object.manifoldIds?.map((e) => e) || [];
     return message;
   },
 };
@@ -2253,6 +3467,545 @@ export const SegmentInstance = {
 
 messageTypeRegistry.set(SegmentInstance.$type, SegmentInstance);
 
+function createBaseManifoldInstance(): ManifoldInstance {
+  return {
+    $type: "mrc.protos.ManifoldInstance",
+    id: "0",
+    pipelineDefinitionId: "0",
+    portName: "",
+    machineId: "0",
+    pipelineInstanceId: "0",
+    state: undefined,
+    requestedIngressSegments: {},
+    requestedEgressSegments: {},
+    actualIngressSegments: {},
+    actualEgressSegments: {},
+  };
+}
+
+export const ManifoldInstance = {
+  $type: "mrc.protos.ManifoldInstance" as const,
+
+  encode(message: ManifoldInstance, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.id !== "0") {
+      writer.uint32(8).uint64(message.id);
+    }
+    if (message.pipelineDefinitionId !== "0") {
+      writer.uint32(16).int64(message.pipelineDefinitionId);
+    }
+    if (message.portName !== "") {
+      writer.uint32(26).string(message.portName);
+    }
+    if (message.machineId !== "0") {
+      writer.uint32(32).uint64(message.machineId);
+    }
+    if (message.pipelineInstanceId !== "0") {
+      writer.uint32(40).uint64(message.pipelineInstanceId);
+    }
+    if (message.state !== undefined) {
+      ResourceState.encode(message.state, writer.uint32(50).fork()).ldelim();
+    }
+    Object.entries(message.requestedIngressSegments).forEach(([key, value]) => {
+      ManifoldInstance_RequestedIngressSegmentsEntry.encode({
+        $type: "mrc.protos.ManifoldInstance.RequestedIngressSegmentsEntry",
+        key: key as any,
+        value,
+      }, writer.uint32(58).fork()).ldelim();
+    });
+    Object.entries(message.requestedEgressSegments).forEach(([key, value]) => {
+      ManifoldInstance_RequestedEgressSegmentsEntry.encode({
+        $type: "mrc.protos.ManifoldInstance.RequestedEgressSegmentsEntry",
+        key: key as any,
+        value,
+      }, writer.uint32(66).fork()).ldelim();
+    });
+    Object.entries(message.actualIngressSegments).forEach(([key, value]) => {
+      ManifoldInstance_ActualIngressSegmentsEntry.encode({
+        $type: "mrc.protos.ManifoldInstance.ActualIngressSegmentsEntry",
+        key: key as any,
+        value,
+      }, writer.uint32(74).fork()).ldelim();
+    });
+    Object.entries(message.actualEgressSegments).forEach(([key, value]) => {
+      ManifoldInstance_ActualEgressSegmentsEntry.encode({
+        $type: "mrc.protos.ManifoldInstance.ActualEgressSegmentsEntry",
+        key: key as any,
+        value,
+      }, writer.uint32(82).fork()).ldelim();
+    });
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldInstance {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseManifoldInstance();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.id = longToString(reader.uint64() as Long);
+          break;
+        case 2:
+          message.pipelineDefinitionId = longToString(reader.int64() as Long);
+          break;
+        case 3:
+          message.portName = reader.string();
+          break;
+        case 4:
+          message.machineId = longToString(reader.uint64() as Long);
+          break;
+        case 5:
+          message.pipelineInstanceId = longToString(reader.uint64() as Long);
+          break;
+        case 6:
+          message.state = ResourceState.decode(reader, reader.uint32());
+          break;
+        case 7:
+          const entry7 = ManifoldInstance_RequestedIngressSegmentsEntry.decode(reader, reader.uint32());
+          if (entry7.value !== undefined) {
+            message.requestedIngressSegments[entry7.key] = entry7.value;
+          }
+          break;
+        case 8:
+          const entry8 = ManifoldInstance_RequestedEgressSegmentsEntry.decode(reader, reader.uint32());
+          if (entry8.value !== undefined) {
+            message.requestedEgressSegments[entry8.key] = entry8.value;
+          }
+          break;
+        case 9:
+          const entry9 = ManifoldInstance_ActualIngressSegmentsEntry.decode(reader, reader.uint32());
+          if (entry9.value !== undefined) {
+            message.actualIngressSegments[entry9.key] = entry9.value;
+          }
+          break;
+        case 10:
+          const entry10 = ManifoldInstance_ActualEgressSegmentsEntry.decode(reader, reader.uint32());
+          if (entry10.value !== undefined) {
+            message.actualEgressSegments[entry10.key] = entry10.value;
+          }
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ManifoldInstance {
+    return {
+      $type: ManifoldInstance.$type,
+      id: isSet(object.id) ? String(object.id) : "0",
+      pipelineDefinitionId: isSet(object.pipelineDefinitionId) ? String(object.pipelineDefinitionId) : "0",
+      portName: isSet(object.portName) ? String(object.portName) : "",
+      machineId: isSet(object.machineId) ? String(object.machineId) : "0",
+      pipelineInstanceId: isSet(object.pipelineInstanceId) ? String(object.pipelineInstanceId) : "0",
+      state: isSet(object.state) ? ResourceState.fromJSON(object.state) : undefined,
+      requestedIngressSegments: isObject(object.requestedIngressSegments)
+        ? Object.entries(object.requestedIngressSegments).reduce<{ [key: number]: boolean }>((acc, [key, value]) => {
+          acc[Number(key)] = Boolean(value);
+          return acc;
+        }, {})
+        : {},
+      requestedEgressSegments: isObject(object.requestedEgressSegments)
+        ? Object.entries(object.requestedEgressSegments).reduce<{ [key: number]: boolean }>((acc, [key, value]) => {
+          acc[Number(key)] = Boolean(value);
+          return acc;
+        }, {})
+        : {},
+      actualIngressSegments: isObject(object.actualIngressSegments)
+        ? Object.entries(object.actualIngressSegments).reduce<{ [key: number]: boolean }>((acc, [key, value]) => {
+          acc[Number(key)] = Boolean(value);
+          return acc;
+        }, {})
+        : {},
+      actualEgressSegments: isObject(object.actualEgressSegments)
+        ? Object.entries(object.actualEgressSegments).reduce<{ [key: number]: boolean }>((acc, [key, value]) => {
+          acc[Number(key)] = Boolean(value);
+          return acc;
+        }, {})
+        : {},
+    };
+  },
+
+  toJSON(message: ManifoldInstance): unknown {
+    const obj: any = {};
+    message.id !== undefined && (obj.id = message.id);
+    message.pipelineDefinitionId !== undefined && (obj.pipelineDefinitionId = message.pipelineDefinitionId);
+    message.portName !== undefined && (obj.portName = message.portName);
+    message.machineId !== undefined && (obj.machineId = message.machineId);
+    message.pipelineInstanceId !== undefined && (obj.pipelineInstanceId = message.pipelineInstanceId);
+    message.state !== undefined && (obj.state = message.state ? ResourceState.toJSON(message.state) : undefined);
+    obj.requestedIngressSegments = {};
+    if (message.requestedIngressSegments) {
+      Object.entries(message.requestedIngressSegments).forEach(([k, v]) => {
+        obj.requestedIngressSegments[k] = v;
+      });
+    }
+    obj.requestedEgressSegments = {};
+    if (message.requestedEgressSegments) {
+      Object.entries(message.requestedEgressSegments).forEach(([k, v]) => {
+        obj.requestedEgressSegments[k] = v;
+      });
+    }
+    obj.actualIngressSegments = {};
+    if (message.actualIngressSegments) {
+      Object.entries(message.actualIngressSegments).forEach(([k, v]) => {
+        obj.actualIngressSegments[k] = v;
+      });
+    }
+    obj.actualEgressSegments = {};
+    if (message.actualEgressSegments) {
+      Object.entries(message.actualEgressSegments).forEach(([k, v]) => {
+        obj.actualEgressSegments[k] = v;
+      });
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ManifoldInstance>): ManifoldInstance {
+    return ManifoldInstance.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<ManifoldInstance>): ManifoldInstance {
+    const message = createBaseManifoldInstance();
+    message.id = object.id ?? "0";
+    message.pipelineDefinitionId = object.pipelineDefinitionId ?? "0";
+    message.portName = object.portName ?? "";
+    message.machineId = object.machineId ?? "0";
+    message.pipelineInstanceId = object.pipelineInstanceId ?? "0";
+    message.state = (object.state !== undefined && object.state !== null)
+      ? ResourceState.fromPartial(object.state)
+      : undefined;
+    message.requestedIngressSegments = Object.entries(object.requestedIngressSegments ?? {}).reduce<
+      { [key: number]: boolean }
+    >((acc, [key, value]) => {
+      if (value !== undefined) {
+        acc[Number(key)] = Boolean(value);
+      }
+      return acc;
+    }, {});
+    message.requestedEgressSegments = Object.entries(object.requestedEgressSegments ?? {}).reduce<
+      { [key: number]: boolean }
+    >((acc, [key, value]) => {
+      if (value !== undefined) {
+        acc[Number(key)] = Boolean(value);
+      }
+      return acc;
+    }, {});
+    message.actualIngressSegments = Object.entries(object.actualIngressSegments ?? {}).reduce<
+      { [key: number]: boolean }
+    >((acc, [key, value]) => {
+      if (value !== undefined) {
+        acc[Number(key)] = Boolean(value);
+      }
+      return acc;
+    }, {});
+    message.actualEgressSegments = Object.entries(object.actualEgressSegments ?? {}).reduce<{ [key: number]: boolean }>(
+      (acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[Number(key)] = Boolean(value);
+        }
+        return acc;
+      },
+      {},
+    );
+    return message;
+  },
+};
+
+messageTypeRegistry.set(ManifoldInstance.$type, ManifoldInstance);
+
+function createBaseManifoldInstance_RequestedIngressSegmentsEntry(): ManifoldInstance_RequestedIngressSegmentsEntry {
+  return { $type: "mrc.protos.ManifoldInstance.RequestedIngressSegmentsEntry", key: 0, value: false };
+}
+
+export const ManifoldInstance_RequestedIngressSegmentsEntry = {
+  $type: "mrc.protos.ManifoldInstance.RequestedIngressSegmentsEntry" as const,
+
+  encode(
+    message: ManifoldInstance_RequestedIngressSegmentsEntry,
+    writer: _m0.Writer = _m0.Writer.create(),
+  ): _m0.Writer {
+    if (message.key !== 0) {
+      writer.uint32(8).uint32(message.key);
+    }
+    if (message.value === true) {
+      writer.uint32(16).bool(message.value);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldInstance_RequestedIngressSegmentsEntry {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseManifoldInstance_RequestedIngressSegmentsEntry();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.key = reader.uint32();
+          break;
+        case 2:
+          message.value = reader.bool();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ManifoldInstance_RequestedIngressSegmentsEntry {
+    return {
+      $type: ManifoldInstance_RequestedIngressSegmentsEntry.$type,
+      key: isSet(object.key) ? Number(object.key) : 0,
+      value: isSet(object.value) ? Boolean(object.value) : false,
+    };
+  },
+
+  toJSON(message: ManifoldInstance_RequestedIngressSegmentsEntry): unknown {
+    const obj: any = {};
+    message.key !== undefined && (obj.key = Math.round(message.key));
+    message.value !== undefined && (obj.value = message.value);
+    return obj;
+  },
+
+  create(
+    base?: DeepPartial<ManifoldInstance_RequestedIngressSegmentsEntry>,
+  ): ManifoldInstance_RequestedIngressSegmentsEntry {
+    return ManifoldInstance_RequestedIngressSegmentsEntry.fromPartial(base ?? {});
+  },
+
+  fromPartial(
+    object: DeepPartial<ManifoldInstance_RequestedIngressSegmentsEntry>,
+  ): ManifoldInstance_RequestedIngressSegmentsEntry {
+    const message = createBaseManifoldInstance_RequestedIngressSegmentsEntry();
+    message.key = object.key ?? 0;
+    message.value = object.value ?? false;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(
+  ManifoldInstance_RequestedIngressSegmentsEntry.$type,
+  ManifoldInstance_RequestedIngressSegmentsEntry,
+);
+
+function createBaseManifoldInstance_RequestedEgressSegmentsEntry(): ManifoldInstance_RequestedEgressSegmentsEntry {
+  return { $type: "mrc.protos.ManifoldInstance.RequestedEgressSegmentsEntry", key: 0, value: false };
+}
+
+export const ManifoldInstance_RequestedEgressSegmentsEntry = {
+  $type: "mrc.protos.ManifoldInstance.RequestedEgressSegmentsEntry" as const,
+
+  encode(message: ManifoldInstance_RequestedEgressSegmentsEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.key !== 0) {
+      writer.uint32(8).uint32(message.key);
+    }
+    if (message.value === true) {
+      writer.uint32(16).bool(message.value);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldInstance_RequestedEgressSegmentsEntry {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseManifoldInstance_RequestedEgressSegmentsEntry();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.key = reader.uint32();
+          break;
+        case 2:
+          message.value = reader.bool();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ManifoldInstance_RequestedEgressSegmentsEntry {
+    return {
+      $type: ManifoldInstance_RequestedEgressSegmentsEntry.$type,
+      key: isSet(object.key) ? Number(object.key) : 0,
+      value: isSet(object.value) ? Boolean(object.value) : false,
+    };
+  },
+
+  toJSON(message: ManifoldInstance_RequestedEgressSegmentsEntry): unknown {
+    const obj: any = {};
+    message.key !== undefined && (obj.key = Math.round(message.key));
+    message.value !== undefined && (obj.value = message.value);
+    return obj;
+  },
+
+  create(
+    base?: DeepPartial<ManifoldInstance_RequestedEgressSegmentsEntry>,
+  ): ManifoldInstance_RequestedEgressSegmentsEntry {
+    return ManifoldInstance_RequestedEgressSegmentsEntry.fromPartial(base ?? {});
+  },
+
+  fromPartial(
+    object: DeepPartial<ManifoldInstance_RequestedEgressSegmentsEntry>,
+  ): ManifoldInstance_RequestedEgressSegmentsEntry {
+    const message = createBaseManifoldInstance_RequestedEgressSegmentsEntry();
+    message.key = object.key ?? 0;
+    message.value = object.value ?? false;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(
+  ManifoldInstance_RequestedEgressSegmentsEntry.$type,
+  ManifoldInstance_RequestedEgressSegmentsEntry,
+);
+
+function createBaseManifoldInstance_ActualIngressSegmentsEntry(): ManifoldInstance_ActualIngressSegmentsEntry {
+  return { $type: "mrc.protos.ManifoldInstance.ActualIngressSegmentsEntry", key: 0, value: false };
+}
+
+export const ManifoldInstance_ActualIngressSegmentsEntry = {
+  $type: "mrc.protos.ManifoldInstance.ActualIngressSegmentsEntry" as const,
+
+  encode(message: ManifoldInstance_ActualIngressSegmentsEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.key !== 0) {
+      writer.uint32(8).uint32(message.key);
+    }
+    if (message.value === true) {
+      writer.uint32(16).bool(message.value);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldInstance_ActualIngressSegmentsEntry {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseManifoldInstance_ActualIngressSegmentsEntry();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.key = reader.uint32();
+          break;
+        case 2:
+          message.value = reader.bool();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ManifoldInstance_ActualIngressSegmentsEntry {
+    return {
+      $type: ManifoldInstance_ActualIngressSegmentsEntry.$type,
+      key: isSet(object.key) ? Number(object.key) : 0,
+      value: isSet(object.value) ? Boolean(object.value) : false,
+    };
+  },
+
+  toJSON(message: ManifoldInstance_ActualIngressSegmentsEntry): unknown {
+    const obj: any = {};
+    message.key !== undefined && (obj.key = Math.round(message.key));
+    message.value !== undefined && (obj.value = message.value);
+    return obj;
+  },
+
+  create(base?: DeepPartial<ManifoldInstance_ActualIngressSegmentsEntry>): ManifoldInstance_ActualIngressSegmentsEntry {
+    return ManifoldInstance_ActualIngressSegmentsEntry.fromPartial(base ?? {});
+  },
+
+  fromPartial(
+    object: DeepPartial<ManifoldInstance_ActualIngressSegmentsEntry>,
+  ): ManifoldInstance_ActualIngressSegmentsEntry {
+    const message = createBaseManifoldInstance_ActualIngressSegmentsEntry();
+    message.key = object.key ?? 0;
+    message.value = object.value ?? false;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(ManifoldInstance_ActualIngressSegmentsEntry.$type, ManifoldInstance_ActualIngressSegmentsEntry);
+
+function createBaseManifoldInstance_ActualEgressSegmentsEntry(): ManifoldInstance_ActualEgressSegmentsEntry {
+  return { $type: "mrc.protos.ManifoldInstance.ActualEgressSegmentsEntry", key: 0, value: false };
+}
+
+export const ManifoldInstance_ActualEgressSegmentsEntry = {
+  $type: "mrc.protos.ManifoldInstance.ActualEgressSegmentsEntry" as const,
+
+  encode(message: ManifoldInstance_ActualEgressSegmentsEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.key !== 0) {
+      writer.uint32(8).uint32(message.key);
+    }
+    if (message.value === true) {
+      writer.uint32(16).bool(message.value);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldInstance_ActualEgressSegmentsEntry {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseManifoldInstance_ActualEgressSegmentsEntry();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.key = reader.uint32();
+          break;
+        case 2:
+          message.value = reader.bool();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ManifoldInstance_ActualEgressSegmentsEntry {
+    return {
+      $type: ManifoldInstance_ActualEgressSegmentsEntry.$type,
+      key: isSet(object.key) ? Number(object.key) : 0,
+      value: isSet(object.value) ? Boolean(object.value) : false,
+    };
+  },
+
+  toJSON(message: ManifoldInstance_ActualEgressSegmentsEntry): unknown {
+    const obj: any = {};
+    message.key !== undefined && (obj.key = Math.round(message.key));
+    message.value !== undefined && (obj.value = message.value);
+    return obj;
+  },
+
+  create(base?: DeepPartial<ManifoldInstance_ActualEgressSegmentsEntry>): ManifoldInstance_ActualEgressSegmentsEntry {
+    return ManifoldInstance_ActualEgressSegmentsEntry.fromPartial(base ?? {});
+  },
+
+  fromPartial(
+    object: DeepPartial<ManifoldInstance_ActualEgressSegmentsEntry>,
+  ): ManifoldInstance_ActualEgressSegmentsEntry {
+    const message = createBaseManifoldInstance_ActualEgressSegmentsEntry();
+    message.key = object.key ?? 0;
+    message.value = object.value ?? false;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(ManifoldInstance_ActualEgressSegmentsEntry.$type, ManifoldInstance_ActualEgressSegmentsEntry);
+
 function createBaseControlPlaneState(): ControlPlaneState {
   return {
     $type: "mrc.protos.ControlPlaneState",
@@ -2262,6 +4015,7 @@ function createBaseControlPlaneState(): ControlPlaneState {
     pipelineInstances: undefined,
     segmentDefinitions: undefined,
     segmentInstances: undefined,
+    manifoldInstances: undefined,
   };
 }
 
@@ -2286,6 +4040,9 @@ export const ControlPlaneState = {
     }
     if (message.segmentInstances !== undefined) {
       ControlPlaneState_SegmentInstancesState.encode(message.segmentInstances, writer.uint32(50).fork()).ldelim();
+    }
+    if (message.manifoldInstances !== undefined) {
+      ControlPlaneState_ManifoldInstancesState.encode(message.manifoldInstances, writer.uint32(58).fork()).ldelim();
     }
     return writer;
   },
@@ -2315,6 +4072,9 @@ export const ControlPlaneState = {
         case 6:
           message.segmentInstances = ControlPlaneState_SegmentInstancesState.decode(reader, reader.uint32());
           break;
+        case 7:
+          message.manifoldInstances = ControlPlaneState_ManifoldInstancesState.decode(reader, reader.uint32());
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -2342,6 +4102,9 @@ export const ControlPlaneState = {
       segmentInstances: isSet(object.segmentInstances)
         ? ControlPlaneState_SegmentInstancesState.fromJSON(object.segmentInstances)
         : undefined,
+      manifoldInstances: isSet(object.manifoldInstances)
+        ? ControlPlaneState_ManifoldInstancesState.fromJSON(object.manifoldInstances)
+        : undefined,
     };
   },
 
@@ -2363,6 +4126,9 @@ export const ControlPlaneState = {
       : undefined);
     message.segmentInstances !== undefined && (obj.segmentInstances = message.segmentInstances
       ? ControlPlaneState_SegmentInstancesState.toJSON(message.segmentInstances)
+      : undefined);
+    message.manifoldInstances !== undefined && (obj.manifoldInstances = message.manifoldInstances
+      ? ControlPlaneState_ManifoldInstancesState.toJSON(message.manifoldInstances)
       : undefined);
     return obj;
   },
@@ -2390,6 +4156,9 @@ export const ControlPlaneState = {
       : undefined;
     message.segmentInstances = (object.segmentInstances !== undefined && object.segmentInstances !== null)
       ? ControlPlaneState_SegmentInstancesState.fromPartial(object.segmentInstances)
+      : undefined;
+    message.manifoldInstances = (object.manifoldInstances !== undefined && object.manifoldInstances !== null)
+      ? ControlPlaneState_ManifoldInstancesState.fromPartial(object.manifoldInstances)
       : undefined;
     return message;
   },
@@ -3499,16 +5268,204 @@ messageTypeRegistry.set(
   ControlPlaneState_SegmentInstancesState_EntitiesEntry,
 );
 
+function createBaseControlPlaneState_ManifoldInstancesState(): ControlPlaneState_ManifoldInstancesState {
+  return { $type: "mrc.protos.ControlPlaneState.ManifoldInstancesState", ids: [], entities: {} };
+}
+
+export const ControlPlaneState_ManifoldInstancesState = {
+  $type: "mrc.protos.ControlPlaneState.ManifoldInstancesState" as const,
+
+  encode(message: ControlPlaneState_ManifoldInstancesState, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    writer.uint32(10).fork();
+    for (const v of message.ids) {
+      writer.uint64(v);
+    }
+    writer.ldelim();
+    Object.entries(message.entities).forEach(([key, value]) => {
+      ControlPlaneState_ManifoldInstancesState_EntitiesEntry.encode({
+        $type: "mrc.protos.ControlPlaneState.ManifoldInstancesState.EntitiesEntry",
+        key: key as any,
+        value,
+      }, writer.uint32(18).fork()).ldelim();
+    });
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): ControlPlaneState_ManifoldInstancesState {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseControlPlaneState_ManifoldInstancesState();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if ((tag & 7) === 2) {
+            const end2 = reader.uint32() + reader.pos;
+            while (reader.pos < end2) {
+              message.ids.push(longToString(reader.uint64() as Long));
+            }
+          } else {
+            message.ids.push(longToString(reader.uint64() as Long));
+          }
+          break;
+        case 2:
+          const entry2 = ControlPlaneState_ManifoldInstancesState_EntitiesEntry.decode(reader, reader.uint32());
+          if (entry2.value !== undefined) {
+            message.entities[entry2.key] = entry2.value;
+          }
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ControlPlaneState_ManifoldInstancesState {
+    return {
+      $type: ControlPlaneState_ManifoldInstancesState.$type,
+      ids: Array.isArray(object?.ids) ? object.ids.map((e: any) => String(e)) : [],
+      entities: isObject(object.entities)
+        ? Object.entries(object.entities).reduce<{ [key: string]: ManifoldInstance }>((acc, [key, value]) => {
+          acc[key] = ManifoldInstance.fromJSON(value);
+          return acc;
+        }, {})
+        : {},
+    };
+  },
+
+  toJSON(message: ControlPlaneState_ManifoldInstancesState): unknown {
+    const obj: any = {};
+    if (message.ids) {
+      obj.ids = message.ids.map((e) => e);
+    } else {
+      obj.ids = [];
+    }
+    obj.entities = {};
+    if (message.entities) {
+      Object.entries(message.entities).forEach(([k, v]) => {
+        obj.entities[k] = ManifoldInstance.toJSON(v);
+      });
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ControlPlaneState_ManifoldInstancesState>): ControlPlaneState_ManifoldInstancesState {
+    return ControlPlaneState_ManifoldInstancesState.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<ControlPlaneState_ManifoldInstancesState>): ControlPlaneState_ManifoldInstancesState {
+    const message = createBaseControlPlaneState_ManifoldInstancesState();
+    message.ids = object.ids?.map((e) => e) || [];
+    message.entities = Object.entries(object.entities ?? {}).reduce<{ [key: string]: ManifoldInstance }>(
+      (acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = ManifoldInstance.fromPartial(value);
+        }
+        return acc;
+      },
+      {},
+    );
+    return message;
+  },
+};
+
+messageTypeRegistry.set(ControlPlaneState_ManifoldInstancesState.$type, ControlPlaneState_ManifoldInstancesState);
+
+function createBaseControlPlaneState_ManifoldInstancesState_EntitiesEntry(): ControlPlaneState_ManifoldInstancesState_EntitiesEntry {
+  return { $type: "mrc.protos.ControlPlaneState.ManifoldInstancesState.EntitiesEntry", key: "0", value: undefined };
+}
+
+export const ControlPlaneState_ManifoldInstancesState_EntitiesEntry = {
+  $type: "mrc.protos.ControlPlaneState.ManifoldInstancesState.EntitiesEntry" as const,
+
+  encode(
+    message: ControlPlaneState_ManifoldInstancesState_EntitiesEntry,
+    writer: _m0.Writer = _m0.Writer.create(),
+  ): _m0.Writer {
+    if (message.key !== "0") {
+      writer.uint32(8).uint64(message.key);
+    }
+    if (message.value !== undefined) {
+      ManifoldInstance.encode(message.value, writer.uint32(18).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): ControlPlaneState_ManifoldInstancesState_EntitiesEntry {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseControlPlaneState_ManifoldInstancesState_EntitiesEntry();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.key = longToString(reader.uint64() as Long);
+          break;
+        case 2:
+          message.value = ManifoldInstance.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ControlPlaneState_ManifoldInstancesState_EntitiesEntry {
+    return {
+      $type: ControlPlaneState_ManifoldInstancesState_EntitiesEntry.$type,
+      key: isSet(object.key) ? String(object.key) : "0",
+      value: isSet(object.value) ? ManifoldInstance.fromJSON(object.value) : undefined,
+    };
+  },
+
+  toJSON(message: ControlPlaneState_ManifoldInstancesState_EntitiesEntry): unknown {
+    const obj: any = {};
+    message.key !== undefined && (obj.key = message.key);
+    message.value !== undefined && (obj.value = message.value ? ManifoldInstance.toJSON(message.value) : undefined);
+    return obj;
+  },
+
+  create(
+    base?: DeepPartial<ControlPlaneState_ManifoldInstancesState_EntitiesEntry>,
+  ): ControlPlaneState_ManifoldInstancesState_EntitiesEntry {
+    return ControlPlaneState_ManifoldInstancesState_EntitiesEntry.fromPartial(base ?? {});
+  },
+
+  fromPartial(
+    object: DeepPartial<ControlPlaneState_ManifoldInstancesState_EntitiesEntry>,
+  ): ControlPlaneState_ManifoldInstancesState_EntitiesEntry {
+    const message = createBaseControlPlaneState_ManifoldInstancesState_EntitiesEntry();
+    message.key = object.key ?? "0";
+    message.value = (object.value !== undefined && object.value !== null)
+      ? ManifoldInstance.fromPartial(object.value)
+      : undefined;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(
+  ControlPlaneState_ManifoldInstancesState_EntitiesEntry.$type,
+  ControlPlaneState_ManifoldInstancesState_EntitiesEntry,
+);
+
 function createBaseSegmentOptions(): SegmentOptions {
-  return { $type: "mrc.protos.SegmentOptions", placementStrategy: 0, scalingOptions: undefined };
+  return {
+    $type: "mrc.protos.SegmentOptions",
+    placementStrategy: SegmentOptions_PlacementStrategy.ResourceGroup,
+    scalingOptions: undefined,
+  };
 }
 
 export const SegmentOptions = {
   $type: "mrc.protos.SegmentOptions" as const,
 
   encode(message: SegmentOptions, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.placementStrategy !== 0) {
-      writer.uint32(8).int32(message.placementStrategy);
+    if (message.placementStrategy !== SegmentOptions_PlacementStrategy.ResourceGroup) {
+      writer.uint32(8).int32(segmentOptions_PlacementStrategyToNumber(message.placementStrategy));
     }
     if (message.scalingOptions !== undefined) {
       ScalingOptions.encode(message.scalingOptions, writer.uint32(18).fork()).ldelim();
@@ -3524,7 +5481,7 @@ export const SegmentOptions = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.placementStrategy = reader.int32() as any;
+          message.placementStrategy = segmentOptions_PlacementStrategyFromJSON(reader.int32());
           break;
         case 2:
           message.scalingOptions = ScalingOptions.decode(reader, reader.uint32());
@@ -3542,7 +5499,7 @@ export const SegmentOptions = {
       $type: SegmentOptions.$type,
       placementStrategy: isSet(object.placementStrategy)
         ? segmentOptions_PlacementStrategyFromJSON(object.placementStrategy)
-        : 0,
+        : SegmentOptions_PlacementStrategy.ResourceGroup,
       scalingOptions: isSet(object.scalingOptions) ? ScalingOptions.fromJSON(object.scalingOptions) : undefined,
     };
   },
@@ -3562,7 +5519,7 @@ export const SegmentOptions = {
 
   fromPartial(object: DeepPartial<SegmentOptions>): SegmentOptions {
     const message = createBaseSegmentOptions();
-    message.placementStrategy = object.placementStrategy ?? 0;
+    message.placementStrategy = object.placementStrategy ?? SegmentOptions_PlacementStrategy.ResourceGroup;
     message.scalingOptions = (object.scalingOptions !== undefined && object.scalingOptions !== null)
       ? ScalingOptions.fromPartial(object.scalingOptions)
       : undefined;
@@ -3573,15 +5530,15 @@ export const SegmentOptions = {
 messageTypeRegistry.set(SegmentOptions.$type, SegmentOptions);
 
 function createBaseScalingOptions(): ScalingOptions {
-  return { $type: "mrc.protos.ScalingOptions", strategy: 0, initialCount: 0 };
+  return { $type: "mrc.protos.ScalingOptions", strategy: ScalingOptions_ScalingStrategy.Static, initialCount: 0 };
 }
 
 export const ScalingOptions = {
   $type: "mrc.protos.ScalingOptions" as const,
 
   encode(message: ScalingOptions, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.strategy !== 0) {
-      writer.uint32(8).int32(message.strategy);
+    if (message.strategy !== ScalingOptions_ScalingStrategy.Static) {
+      writer.uint32(8).int32(scalingOptions_ScalingStrategyToNumber(message.strategy));
     }
     if (message.initialCount !== 0) {
       writer.uint32(16).uint32(message.initialCount);
@@ -3597,7 +5554,7 @@ export const ScalingOptions = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.strategy = reader.int32() as any;
+          message.strategy = scalingOptions_ScalingStrategyFromJSON(reader.int32());
           break;
         case 2:
           message.initialCount = reader.uint32();
@@ -3613,7 +5570,9 @@ export const ScalingOptions = {
   fromJSON(object: any): ScalingOptions {
     return {
       $type: ScalingOptions.$type,
-      strategy: isSet(object.strategy) ? scalingOptions_ScalingStrategyFromJSON(object.strategy) : 0,
+      strategy: isSet(object.strategy)
+        ? scalingOptions_ScalingStrategyFromJSON(object.strategy)
+        : ScalingOptions_ScalingStrategy.Static,
       initialCount: isSet(object.initialCount) ? Number(object.initialCount) : 0,
     };
   },
@@ -3631,13 +5590,147 @@ export const ScalingOptions = {
 
   fromPartial(object: DeepPartial<ScalingOptions>): ScalingOptions {
     const message = createBaseScalingOptions();
-    message.strategy = object.strategy ?? 0;
+    message.strategy = object.strategy ?? ScalingOptions_ScalingStrategy.Static;
     message.initialCount = object.initialCount ?? 0;
     return message;
   },
 };
 
 messageTypeRegistry.set(ScalingOptions.$type, ScalingOptions);
+
+function createBaseManifoldOptions(): ManifoldOptions {
+  return { $type: "mrc.protos.ManifoldOptions", policy: ManifoldOptions_Policy.LoadBalance };
+}
+
+export const ManifoldOptions = {
+  $type: "mrc.protos.ManifoldOptions" as const,
+
+  encode(message: ManifoldOptions, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.policy !== ManifoldOptions_Policy.LoadBalance) {
+      writer.uint32(8).int32(manifoldOptions_PolicyToNumber(message.policy));
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldOptions {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseManifoldOptions();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.policy = manifoldOptions_PolicyFromJSON(reader.int32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ManifoldOptions {
+    return {
+      $type: ManifoldOptions.$type,
+      policy: isSet(object.policy) ? manifoldOptions_PolicyFromJSON(object.policy) : ManifoldOptions_Policy.LoadBalance,
+    };
+  },
+
+  toJSON(message: ManifoldOptions): unknown {
+    const obj: any = {};
+    message.policy !== undefined && (obj.policy = manifoldOptions_PolicyToJSON(message.policy));
+    return obj;
+  },
+
+  create(base?: DeepPartial<ManifoldOptions>): ManifoldOptions {
+    return ManifoldOptions.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<ManifoldOptions>): ManifoldOptions {
+    const message = createBaseManifoldOptions();
+    message.policy = object.policy ?? ManifoldOptions_Policy.LoadBalance;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(ManifoldOptions.$type, ManifoldOptions);
+
+function createBasePortInfo(): PortInfo {
+  return { $type: "mrc.protos.PortInfo", portName: "", typeId: 0, typeString: "" };
+}
+
+export const PortInfo = {
+  $type: "mrc.protos.PortInfo" as const,
+
+  encode(message: PortInfo, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.portName !== "") {
+      writer.uint32(10).string(message.portName);
+    }
+    if (message.typeId !== 0) {
+      writer.uint32(16).uint32(message.typeId);
+    }
+    if (message.typeString !== "") {
+      writer.uint32(26).string(message.typeString);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): PortInfo {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePortInfo();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.portName = reader.string();
+          break;
+        case 2:
+          message.typeId = reader.uint32();
+          break;
+        case 3:
+          message.typeString = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PortInfo {
+    return {
+      $type: PortInfo.$type,
+      portName: isSet(object.portName) ? String(object.portName) : "",
+      typeId: isSet(object.typeId) ? Number(object.typeId) : 0,
+      typeString: isSet(object.typeString) ? String(object.typeString) : "",
+    };
+  },
+
+  toJSON(message: PortInfo): unknown {
+    const obj: any = {};
+    message.portName !== undefined && (obj.portName = message.portName);
+    message.typeId !== undefined && (obj.typeId = Math.round(message.typeId));
+    message.typeString !== undefined && (obj.typeString = message.typeString);
+    return obj;
+  },
+
+  create(base?: DeepPartial<PortInfo>): PortInfo {
+    return PortInfo.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<PortInfo>): PortInfo {
+    const message = createBasePortInfo();
+    message.portName = object.portName ?? "";
+    message.typeId = object.typeId ?? 0;
+    message.typeString = object.typeString ?? "";
+    return message;
+  },
+};
+
+messageTypeRegistry.set(PortInfo.$type, PortInfo);
 
 function createBaseIngressPort(): IngressPort {
   return { $type: "mrc.protos.IngressPort", name: "", id: 0 };
@@ -3707,7 +5800,7 @@ export const IngressPort = {
 messageTypeRegistry.set(IngressPort.$type, IngressPort);
 
 function createBaseEgressPort(): EgressPort {
-  return { $type: "mrc.protos.EgressPort", name: "", id: 0, policyType: 0 };
+  return { $type: "mrc.protos.EgressPort", name: "", id: 0, policyType: EgressPort_PolicyType.PolicyDefined };
 }
 
 export const EgressPort = {
@@ -3720,8 +5813,8 @@ export const EgressPort = {
     if (message.id !== 0) {
       writer.uint32(16).uint32(message.id);
     }
-    if (message.policyType !== 0) {
-      writer.uint32(24).int32(message.policyType);
+    if (message.policyType !== EgressPort_PolicyType.PolicyDefined) {
+      writer.uint32(24).int32(egressPort_PolicyTypeToNumber(message.policyType));
     }
     return writer;
   },
@@ -3740,7 +5833,7 @@ export const EgressPort = {
           message.id = reader.uint32();
           break;
         case 3:
-          message.policyType = reader.int32() as any;
+          message.policyType = egressPort_PolicyTypeFromJSON(reader.int32());
           break;
         default:
           reader.skipType(tag & 7);
@@ -3755,7 +5848,9 @@ export const EgressPort = {
       $type: EgressPort.$type,
       name: isSet(object.name) ? String(object.name) : "",
       id: isSet(object.id) ? Number(object.id) : 0,
-      policyType: isSet(object.policyType) ? egressPort_PolicyTypeFromJSON(object.policyType) : 0,
+      policyType: isSet(object.policyType)
+        ? egressPort_PolicyTypeFromJSON(object.policyType)
+        : EgressPort_PolicyType.PolicyDefined,
     };
   },
 
@@ -3775,7 +5870,7 @@ export const EgressPort = {
     const message = createBaseEgressPort();
     message.name = object.name ?? "";
     message.id = object.id ?? 0;
-    message.policyType = object.policyType ?? 0;
+    message.policyType = object.policyType ?? EgressPort_PolicyType.PolicyDefined;
     return message;
   },
 };
@@ -3841,15 +5936,15 @@ export const IngressPolicy = {
 messageTypeRegistry.set(IngressPolicy.$type, IngressPolicy);
 
 function createBaseEgressPolicy(): EgressPolicy {
-  return { $type: "mrc.protos.EgressPolicy", policy: 0, segmentAddresses: [] };
+  return { $type: "mrc.protos.EgressPolicy", policy: EgressPolicy_Policy.LoadBalance, segmentAddresses: [] };
 }
 
 export const EgressPolicy = {
   $type: "mrc.protos.EgressPolicy" as const,
 
   encode(message: EgressPolicy, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.policy !== 0) {
-      writer.uint32(24).int32(message.policy);
+    if (message.policy !== EgressPolicy_Policy.LoadBalance) {
+      writer.uint32(24).int32(egressPolicy_PolicyToNumber(message.policy));
     }
     writer.uint32(34).fork();
     for (const v of message.segmentAddresses) {
@@ -3867,7 +5962,7 @@ export const EgressPolicy = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 3:
-          message.policy = reader.int32() as any;
+          message.policy = egressPolicy_PolicyFromJSON(reader.int32());
           break;
         case 4:
           if ((tag & 7) === 2) {
@@ -3890,7 +5985,7 @@ export const EgressPolicy = {
   fromJSON(object: any): EgressPolicy {
     return {
       $type: EgressPolicy.$type,
-      policy: isSet(object.policy) ? egressPolicy_PolicyFromJSON(object.policy) : 0,
+      policy: isSet(object.policy) ? egressPolicy_PolicyFromJSON(object.policy) : EgressPolicy_Policy.LoadBalance,
       segmentAddresses: Array.isArray(object?.segmentAddresses)
         ? object.segmentAddresses.map((e: any) => Number(e))
         : [],
@@ -3914,7 +6009,7 @@ export const EgressPolicy = {
 
   fromPartial(object: DeepPartial<EgressPolicy>): EgressPolicy {
     const message = createBaseEgressPolicy();
-    message.policy = object.policy ?? 0;
+    message.policy = object.policy ?? EgressPolicy_Policy.LoadBalance;
     message.segmentAddresses = object.segmentAddresses?.map((e) => e) || [];
     return message;
   },

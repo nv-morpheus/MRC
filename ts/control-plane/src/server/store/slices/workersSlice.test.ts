@@ -1,18 +1,18 @@
-import {expect} from "@jest/globals";
-import {ResourceStatus, SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
-import {pipelineDefinitionsAdd} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
-import {pipelineInstancesAdd} from "@mrc/server/store/slices/pipelineInstancesSlice";
+import { expect } from "@jest/globals";
+import { ResourceActualStatus } from "@mrc/proto/mrc/protos/architect_state";
+import { pipelineDefinitionsAdd } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
+import { pipelineInstancesAdd } from "@mrc/server/store/slices/pipelineInstancesSlice";
 import {
    segmentInstancesAddMany,
    segmentInstancesRemove,
-   segmentInstancesUpdateResourceState,
+   segmentInstancesUpdateResourceActualState,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
-import {connection, pipeline, pipeline_def, segments, worker} from "@mrc/tests/defaultObjects";
+import { connection, pipeline, pipeline_def, segments, worker } from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
-import {RootStore, setupStore} from "../store";
+import { RootStore, setupStore } from "../store";
 
-import {connectionsAdd, connectionsDropOne} from "./connectionsSlice";
+import { connectionsAdd, connectionsDropOne } from "./connectionsSlice";
 import {
    workersAdd,
    workersRemove,
@@ -61,21 +61,23 @@ describe("Single", () => {
 
       expect(found).toHaveLength(1);
 
-      expect(found[0]).toHaveProperty("id", worker.id);
-      expect(found[0]).toHaveProperty("assignedSegmentIds", []);
-      expect(found[0]).toHaveProperty("machineId", connection.id);
-      expect(found[0]).toHaveProperty("state.status", ResourceStatus.Registered);
-      expect(found[0]).toHaveProperty("workerAddress", worker.workerAddress);
+      expect(found[0].id).toEqual(worker.id);
+      expect(found[0].assignedSegmentIds).toEqual([]);
+      expect(found[0].machineId).toEqual(connection.id);
+      expect(found[0].state.actualStatus).toEqual(ResourceActualStatus.Actual_Unknown);
+      expect(found[0].workerAddress).toEqual(worker.workerAddress);
    });
 
    test("Select One", () => {
       const found = workersSelectById(store.getState(), worker.id);
 
-      expect(found).toHaveProperty("id", worker.id);
-      expect(found).toHaveProperty("assignedSegmentIds", []);
-      expect(found).toHaveProperty("machineId", connection.id);
-      expect(found).toHaveProperty("state.status", ResourceStatus.Registered);
-      expect(found).toHaveProperty("workerAddress", worker.workerAddress);
+      expect(found).toBeDefined();
+
+      expect(found?.id).toEqual(worker.id);
+      expect(found?.assignedSegmentIds).toEqual([]);
+      expect(found?.machineId).toEqual(connection.id);
+      expect(found?.state.actualStatus).toEqual(ResourceActualStatus.Actual_Unknown);
+      expect(found?.workerAddress).toEqual(worker.workerAddress);
    });
 
    test("Total", () => {
@@ -93,27 +95,35 @@ describe("Single", () => {
    });
 
    test("Remove Unknown ID", () => {
-      assert.throws(() => store.dispatch(workersRemove({
-         ...worker,
-         id: "9999",
-      })));
+      assert.throws(() =>
+         store.dispatch(
+            workersRemove({
+               ...worker,
+               id: "9999",
+            })
+         )
+      );
    });
 
    test("Activate", () => {
-      store.dispatch(workersUpdateResourceState({resources: [worker], status: ResourceStatus.Activated}));
+      store.dispatch(workersUpdateResourceState({ resources: [worker], status: ResourceActualStatus.Actual_Ready }));
 
-      expect(workersSelectById(store.getState(), worker.id)).toHaveProperty("state.status", ResourceStatus.Activated);
+      expect(workersSelectById(store.getState(), worker.id)?.state.actualStatus).toEqual(
+         ResourceActualStatus.Actual_Ready
+      );
    });
 
    test("Activate Twice", () => {
-      store.dispatch(workersUpdateResourceState({resources: [worker], status: ResourceStatus.Activated}));
-      store.dispatch(workersUpdateResourceState({resources: [worker], status: ResourceStatus.Activated}));
+      store.dispatch(workersUpdateResourceState({ resources: [worker], status: ResourceActualStatus.Actual_Ready }));
+      store.dispatch(workersUpdateResourceState({ resources: [worker], status: ResourceActualStatus.Actual_Ready }));
 
-      expect(workersSelectById(store.getState(), worker.id)).toHaveProperty("state.status", ResourceStatus.Activated);
+      expect(workersSelectById(store.getState(), worker.id)?.state.actualStatus).toEqual(
+         ResourceActualStatus.Actual_Ready
+      );
    });
 
    test("Connection Dropped", () => {
-      store.dispatch(connectionsDropOne({id: connection.id}));
+      store.dispatch(connectionsDropOne({ id: connection.id }));
 
       expect(workersSelectAll(store.getState())).toHaveLength(0);
    });
@@ -136,8 +146,11 @@ describe("Single", () => {
       });
 
       test("Remove Segment", () => {
-         segments.forEach((s) => store.dispatch(
-                              segmentInstancesUpdateResourceState({resource: s, status: ResourceStatus.Destroyed})));
+         segments.forEach((s) =>
+            store.dispatch(
+               segmentInstancesUpdateResourceActualState({ resource: s, status: ResourceActualStatus.Actual_Destroyed })
+            )
+         );
          segments.forEach((s) => store.dispatch(segmentInstancesRemove(s)));
 
          const found = workersSelectById(store.getState(), worker.id);

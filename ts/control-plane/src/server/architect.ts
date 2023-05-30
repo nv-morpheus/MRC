@@ -4,11 +4,11 @@ import {ServerDuplexStream} from "@grpc/grpc-js";
 import {IConnection, IWorker} from "@mrc/common/entities";
 import {
    segmentInstancesSelectById,
-   segmentInstancesUpdateResourceState,
+   segmentInstancesUpdateResourceActualState,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
 import {systemStartRequest, systemStopRequest} from "@mrc/server/store/slices/systemSlice";
 import {as, AsyncSink, merge} from "ix/asynciterable";
-import {tap, withAbort} from "ix/asynciterable/operators";
+import {withAbort} from "ix/asynciterable/operators";
 import {CallContext} from "nice-grpc";
 import {firstValueFrom, Subject} from "rxjs";
 
@@ -36,14 +36,14 @@ import {
    StateUpdate,
    TaggedInstance,
 } from "../proto/mrc/protos/architect";
-import {ControlPlaneState, ResourceStatus} from "../proto/mrc/protos/architect_state";
+import {ControlPlaneState, ResourceActualStatus, ResourceRequestedStatus, ResourceStatus} from "../proto/mrc/protos/architect_state";
 import {DeepPartial, messageTypeRegistry} from "../proto/typeRegistry";
 
 import {connectionsAdd, connectionsDropOne} from "./store/slices/connectionsSlice";
 import {
    pipelineInstancesAssign,
    pipelineInstancesSelectById,
-   pipelineInstancesUpdateResourceState,
+   pipelineInstancesUpdateResourceActualState,
 } from "./store/slices/pipelineInstancesSlice";
 import {
    workersAddMany,
@@ -60,6 +60,7 @@ interface IncomingData
    msg: Event, stream?: ServerDuplexStream<Event, Event>, machineId: string,
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function unaryResponse<MessageDataT>(event: IncomingData|undefined, message_class: any, data: MessageDataT): Event
 {
    // Lookup message type
@@ -205,6 +206,7 @@ class Architect implements ArchitectServiceImplementation
          peerInfo: context.peer,
          workerIds: [],
          assignedPipelineIds: [],
+         refCounts: {}
       };
 
       context.metadata.set("mrc-machine-id", connection.id.toString());
@@ -344,7 +346,8 @@ class Architect implements ArchitectServiceImplementation
                   machineId: event.machineId,
                   workerAddress: value,
                   state: {
-                     status: ResourceStatus.Registered,
+                     requestedStatus: ResourceRequestedStatus.Requested_Initialized,
+                     actualStatus: ResourceActualStatus.Actual_Unknown,
                      refCount: 0,
                   },
                   assignedSegmentIds: [],
@@ -377,7 +380,7 @@ class Architect implements ArchitectServiceImplementation
                return w;
             });
 
-            this._store.dispatch(workersUpdateResourceState({resources: workers, status: ResourceStatus.Activated}));
+            this._store.dispatch(workersUpdateResourceState({resources: workers, status: ResourceActualStatus.Actual_Ready}));
 
             yield unaryResponse(event, Ack, {});
 
@@ -452,7 +455,7 @@ class Architect implements ArchitectServiceImplementation
                   throw new Error(`Could not find PipelineInstance for ID: ${payload.resourceId}`);
                }
 
-               this._store.dispatch(pipelineInstancesUpdateResourceState({
+               this._store.dispatch(pipelineInstancesUpdateResourceActualState({
                   resource: found,
                   status: payload.status,
                }));
@@ -467,7 +470,7 @@ class Architect implements ArchitectServiceImplementation
                   throw new Error(`Could not find SegmentInstance for ID: ${payload.resourceId}`);
                }
 
-               this._store.dispatch(segmentInstancesUpdateResourceState({
+               this._store.dispatch(segmentInstancesUpdateResourceActualState({
                   resource: found,
                   status: payload.status,
                }));

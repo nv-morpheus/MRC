@@ -1,19 +1,25 @@
-import {createSelector, createSlice, PayloadAction} from "@reduxjs/toolkit";
+import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import {createWrappedEntityAdapter} from "../../utils";
+import { createWrappedEntityAdapter } from "../../utils";
 
-import type {RootState} from "../store";
-import {connectionsRemove} from "@mrc/server/store/slices/connectionsSlice";
+import type { RootState } from "../store";
+import { connectionsRemove } from "@mrc/server/store/slices/connectionsSlice";
 import {
    pipelineInstancesRemove,
-   pipelineInstancesUpdateResourceState,
+   pipelineInstancesUpdateResourceActualState,
 } from "@mrc/server/store/slices/pipelineInstancesSlice";
-import {workersRemove, workersSelectByMachineId} from "@mrc/server/store/slices/workersSlice";
-import {ISegmentInstance} from "@mrc/common/entities";
-import {ResourceStatus, SegmentMappingPolicies, SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
-import {pipelineDefinitionsSelectById} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
-import {startAppListening} from "@mrc/server/store/listener_middleware";
-import {generateSegmentHash} from "@mrc/common/utils";
+import { workersRemove, workersSelectByMachineId } from "@mrc/server/store/slices/workersSlice";
+import { ISegmentInstance } from "@mrc/common/entities";
+import {
+   ResourceActualStatus,
+   resourceActualStatusToNumber,
+   resourceRequestedStatusToNumber,
+   SegmentMappingPolicies,
+} from "@mrc/proto/mrc/protos/architect_state";
+import { pipelineDefinitionsSelectById } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
+import { startAppListening } from "@mrc/server/store/listener_middleware";
+import { generateSegmentHash } from "@mrc/common/utils";
+import { ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
 
 const segmentInstancesAdapter = createWrappedEntityAdapter<ISegmentInstance>({
    selectId: (w) => w.id,
@@ -24,8 +30,7 @@ export const segmentInstancesSlice = createSlice({
    initialState: segmentInstancesAdapter.getInitialState(),
    reducers: {
       add: (state, action: PayloadAction<ISegmentInstance>) => {
-         if (segmentInstancesAdapter.getOne(state, action.payload.id))
-         {
+         if (segmentInstancesAdapter.getOne(state, action.payload.id)) {
             throw new Error(`Segment Instance with ID: ${action.payload.id} already exists`);
          }
          segmentInstancesAdapter.addOne(state, action.payload);
@@ -36,34 +41,58 @@ export const segmentInstancesSlice = createSlice({
       remove: (state, action: PayloadAction<ISegmentInstance>) => {
          const found = segmentInstancesAdapter.getOne(state, action.payload.id);
 
-         if (!found)
-         {
+         if (!found) {
             throw new Error(`Segment Instance with ID: ${action.payload.id} not found`);
          }
 
-         if (found.state?.status != ResourceStatus.Destroyed)
-         {
-            throw new Error(`Attempting to delete Segment Instance with ID: ${
-                action.payload.id} while it has not finished. Stop SegmentInstance first!`)
+         if (found.state?.actualStatus != ResourceActualStatus.Actual_Destroyed) {
+            throw new Error(
+               `Attempting to delete Segment Instance with ID: ${action.payload.id} while it has not finished. Stop SegmentInstance first!`
+            );
          }
 
          segmentInstancesAdapter.removeOne(state, action.payload.id);
       },
-      updateResourceState: (state, action: PayloadAction<{resource: ISegmentInstance, status: ResourceStatus}>) => {
+      updateResourceRequestedState: (
+         state,
+         action: PayloadAction<{ resource: ISegmentInstance; status: ResourceRequestedStatus }>
+      ) => {
          const found = segmentInstancesAdapter.getOne(state, action.payload.resource.id);
 
-         if (!found)
-         {
+         if (!found) {
             throw new Error(`Segment Instance with ID: ${action.payload.resource.id} not found`);
          }
 
-         if (found.state.status > action.payload.status)
-         {
-            throw new Error(`Cannot update state of Instance with ID: ${action.payload.resource.id}. Current state ${
-                found.state} is greater than requested state ${action.payload.status}`);
+         if (
+            resourceRequestedStatusToNumber(found.state.requestedStatus) >
+            resourceRequestedStatusToNumber(action.payload.status)
+         ) {
+            throw new Error(
+               `Cannot update state of Instance with ID: ${action.payload.resource.id}. Current state ${found.state} is greater than requested state ${action.payload.status}`
+            );
          }
 
-         found.state.status = action.payload.status;
+         found.state.requestedStatus = action.payload.status;
+      },
+      updateResourceActualState: (
+         state,
+         action: PayloadAction<{ resource: ISegmentInstance; status: ResourceActualStatus }>
+      ) => {
+         const found = segmentInstancesAdapter.getOne(state, action.payload.resource.id);
+
+         if (!found) {
+            throw new Error(`Segment Instance with ID: ${action.payload.resource.id} not found`);
+         }
+
+         if (
+            resourceActualStatusToNumber(found.state.actualStatus) > resourceActualStatusToNumber(action.payload.status)
+         ) {
+            throw new Error(
+               `Cannot update state of Instance with ID: ${action.payload.resource.id}. Current state ${found.state.actualStatus} is greater than requested state ${action.payload.status}`
+            );
+         }
+
+         found.state.actualStatus = action.payload.status;
       },
    },
    extraReducers: (builder) => {
@@ -71,22 +100,30 @@ export const segmentInstancesSlice = createSlice({
          // Need to delete any segments associated with the worker
          const instances = selectByWorkerId(state, action.payload.id);
 
-         segmentInstancesAdapter.removeMany(state, instances.map((x) => x.id));
+         segmentInstancesAdapter.removeMany(
+            state,
+            instances.map((x) => x.id)
+         );
       });
       builder.addCase(workersRemove, (state, action) => {
          // Need to delete any segments associated with the worker
          const instances = selectByWorkerId(state, action.payload.id);
 
-         segmentInstancesAdapter.removeMany(state, instances.map((x) => x.id));
+         segmentInstancesAdapter.removeMany(
+            state,
+            instances.map((x) => x.id)
+         );
       });
       builder.addCase(pipelineInstancesRemove, (state, action) => {
          // Need to delete any segments associated with the pipeline
          const instances = selectByPipelineId(state, action.payload.id);
 
-         segmentInstancesAdapter.removeMany(state, instances.map((x) => x.id));
+         segmentInstancesAdapter.removeMany(
+            state,
+            instances.map((x) => x.id)
+         );
       });
    },
-
 });
 
 type SegmentInstancesStateType = ReturnType<typeof segmentInstancesSlice.getInitialState>;
@@ -95,7 +132,8 @@ export const {
    add: segmentInstancesAdd,
    addMany: segmentInstancesAddMany,
    remove: segmentInstancesRemove,
-   updateResourceState: segmentInstancesUpdateResourceState,
+   updateResourceRequestedState: segmentInstancesUpdateResourceRequestedState,
+   updateResourceActualState: segmentInstancesUpdateResourceActualState,
 } = segmentInstancesSlice.actions;
 
 export const {
@@ -108,44 +146,43 @@ export const {
 } = segmentInstancesAdapter.getSelectors((state: RootState) => state.segmentInstances);
 
 const selectByWorkerId = createSelector(
-    [segmentInstancesAdapter.getAll, (state: SegmentInstancesStateType, worker_id: string) => worker_id],
-    (segmentInstances, worker_id) => segmentInstances.filter((x) => x.workerId === worker_id));
+   [segmentInstancesAdapter.getAll, (state: SegmentInstancesStateType, worker_id: string) => worker_id],
+   (segmentInstances, worker_id) => segmentInstances.filter((x) => x.workerId === worker_id)
+);
 
-export const segmentInstancesSelectByWorkerId = (state: RootState, worker_id: string) => selectByWorkerId(
-    state.segmentInstances,
-    worker_id);
+export const segmentInstancesSelectByWorkerId = (state: RootState, worker_id: string) =>
+   selectByWorkerId(state.segmentInstances, worker_id);
 
 const selectByPipelineId = createSelector(
-    [segmentInstancesAdapter.getAll, (state: SegmentInstancesStateType, pipeline_id: string) => pipeline_id],
-    (segmentInstances, pipeline_id) => segmentInstances.filter((x) => x.pipelineInstanceId === pipeline_id));
+   [segmentInstancesAdapter.getAll, (state: SegmentInstancesStateType, pipeline_id: string) => pipeline_id],
+   (segmentInstances, pipeline_id) => segmentInstances.filter((x) => x.pipelineInstanceId === pipeline_id)
+);
 
-export const segmentInstancesSelectByPipelineId = (state: RootState, pipeline_id: string) => selectByPipelineId(
-    state.segmentInstances,
-    pipeline_id);
+export const segmentInstancesSelectByPipelineId = (state: RootState, pipeline_id: string) =>
+   selectByPipelineId(state.segmentInstances, pipeline_id);
 
-export function segmentInstancesConfigureListeners()
-{
+export function segmentInstancesConfigureListeners() {
    startAppListening({
-      actionCreator: pipelineInstancesUpdateResourceState,
+      actionCreator: pipelineInstancesUpdateResourceActualState,
       effect: (action, listenerApi) => {
-         if (action.payload.status == ResourceStatus.Ready)
-         {
+         if (action.payload.status == ResourceActualStatus.Actual_Ready) {
             // Pipeline has been marked as ready. Update segment instances based on the pipeline config
-            const pipeline_def = pipelineDefinitionsSelectById(listenerApi.getState(),
-                                                               action.payload.resource.definitionId);
+            const pipeline_def = pipelineDefinitionsSelectById(
+               listenerApi.getState(),
+               action.payload.resource.definitionId
+            );
 
-            if (!pipeline_def)
-            {
-               throw new Error(`Could not find Pipeline Definition ID: ${
-                   action.payload.resource.definitionId}, for Pipeline Instance: ${action.payload.resource.id}`);
+            if (!pipeline_def) {
+               throw new Error(
+                  `Could not find Pipeline Definition ID: ${action.payload.resource.definitionId}, for Pipeline Instance: ${action.payload.resource.id}`
+               );
             }
 
             // Get the mapping for this machine ID
-            if (!(action.payload.resource.machineId in pipeline_def.mappings))
-            {
-               throw new Error(`Could not find Mapping for Machine: ${
-                   action.payload.resource.machineId}, for Pipeline Definition: ${
-                   action.payload.resource.definitionId}`);
+            if (!(action.payload.resource.machineId in pipeline_def.mappings)) {
+               throw new Error(
+                  `Could not find Mapping for Machine: ${action.payload.resource.machineId}, for Pipeline Definition: ${action.payload.resource.definitionId}`
+               );
             }
 
             // Get the workers for this machine
@@ -154,31 +191,25 @@ export function segmentInstancesConfigureListeners()
             const mapping = pipeline_def.mappings[action.payload.resource.machineId];
 
             // Now determine the segment instances that should be created
-            const seg_to_workers = Object.fromEntries(Object.entries(mapping.segments).map(([seg_name, seg_map]) => {
-               let workerIds: string[] = [];
+            const seg_to_workers = Object.fromEntries(
+               Object.entries(mapping.segments).map(([seg_name, seg_map]) => {
+                  let workerIds: string[] = [];
 
-               if (seg_map.byPolicy)
-               {
-                  if (seg_map.byPolicy.value == SegmentMappingPolicies.OnePerWorker)
-                  {
-                     workerIds = workers.map((x) => x.id);
+                  if (seg_map.byPolicy) {
+                     if (seg_map.byPolicy.value == SegmentMappingPolicies.OnePerWorker) {
+                        workerIds = workers.map((x) => x.id);
+                     } else {
+                        throw new Error(`Unsupported policy: ${seg_map.byPolicy.value}`);
+                     }
+                  } else if (seg_map.byWorker) {
+                     workerIds = seg_map.byWorker.workerIds;
+                  } else {
+                     throw new Error(`Invalid SegmentMap for ${seg_name}. No option set`);
                   }
-                  else
-                  {
-                     throw new Error(`Unsupported policy: ${seg_map.byPolicy.value}`);
-                  }
-               }
-               else if (seg_map.byWorker)
-               {
-                  workerIds = seg_map.byWorker.workerIds;
-               }
-               else
-               {
-                  throw new Error(`Invalid SegmentMap for ${seg_name}. No option set`);
-               }
 
-               return [seg_name, workerIds];
-            }));
+                  return [seg_name, workerIds];
+               })
+            );
 
             // Now generate the segments that would need to be created
             const segments = Object.entries(seg_to_workers).flatMap(([seg_name, seg_assignment]) => {
@@ -195,7 +226,8 @@ export function segmentInstancesConfigureListeners()
                      workerId: wid,
                      state: {
                         refCount: 0,
-                        status: ResourceStatus.Registered,
+                        requestedStatus: ResourceRequestedStatus.Requested_Created,
+                        actualStatus: ResourceActualStatus.Actual_Unknown,
                      },
                   } as ISegmentInstance;
                });

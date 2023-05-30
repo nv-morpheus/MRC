@@ -1,30 +1,25 @@
-import {expect} from "@jest/globals";
-import {ResourceStatus, SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
-import {pipelineDefinitionsAdd} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
+import { expect } from "@jest/globals";
+import { ResourceActualStatus, ResourceStatus } from "@mrc/proto/mrc/protos/architect_state";
+import { pipelineDefinitionsAdd } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 import {
    pipelineInstancesAdd,
    pipelineInstancesRemove,
    pipelineInstancesSelectAll,
    pipelineInstancesSelectById,
    pipelineInstancesSelectTotal,
-   pipelineInstancesUpdateResourceState,
+   pipelineInstancesUpdateResourceActualState,
 } from "@mrc/server/store/slices/pipelineInstancesSlice";
 import {
    segmentInstancesRemove,
-   segmentInstancesUpdateResourceState,
+   segmentInstancesUpdateResourceActualState,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
-import {connection, pipeline, pipeline_def, segments, worker} from "@mrc/tests/defaultObjects";
+import { connection, pipeline, pipeline_def, segments, worker } from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
-import {RootStore, setupStore} from "../store";
+import { RootStore, setupStore } from "../store";
 
-import {
-   connectionsAdd,
-   connectionsDropOne,
-} from "./connectionsSlice";
-import {
-   workersAdd,
-} from "./workersSlice";
+import { connectionsAdd, connectionsDropOne } from "./connectionsSlice";
+import { workersAdd } from "./workersSlice";
 
 let store: RootStore;
 
@@ -105,21 +100,29 @@ describe("Single", () => {
    });
 
    test("Remove Unknown ID", () => {
-      assert.throws(() => store.dispatch(pipelineInstancesRemove({
-         ...pipeline,
-         id: "9999",
-      })));
+      assert.throws(() =>
+         store.dispatch(
+            pipelineInstancesRemove({
+               ...pipeline,
+               id: "9999",
+            })
+         )
+      );
    });
 
    test("Remove Incorrect Machine ID", () => {
-      assert.throws(() => store.dispatch(pipelineInstancesRemove({
-         ...pipeline,
-         machineId: "1",
-      })));
+      assert.throws(() =>
+         store.dispatch(
+            pipelineInstancesRemove({
+               ...pipeline,
+               machineId: "1",
+            })
+         )
+      );
    });
 
    test("Drop Connection", () => {
-      store.dispatch(connectionsDropOne({id: connection.id}));
+      store.dispatch(connectionsDropOne({ id: connection.id }));
 
       expect(pipelineInstancesSelectAll(store.getState())).toHaveLength(0);
    });
@@ -130,7 +133,12 @@ describe("Single", () => {
          store.dispatch(workersAdd(worker));
 
          // Update the instance state to ready and the instances should auto assign
-         store.dispatch(pipelineInstancesUpdateResourceState({resource: pipeline, status: ResourceStatus.Ready}));
+         store.dispatch(
+            pipelineInstancesUpdateResourceActualState({
+               resource: pipeline,
+               status: ResourceActualStatus.Actual_Ready,
+            })
+         );
       });
 
       test("Contains Instance", () => {
@@ -140,8 +148,11 @@ describe("Single", () => {
       });
 
       test("Remove Segment", () => {
-         segments.forEach((s) => store.dispatch(
-                              segmentInstancesUpdateResourceState({resource: s, status: ResourceStatus.Destroyed})));
+         segments.forEach((s) =>
+            store.dispatch(
+               segmentInstancesUpdateResourceActualState({ resource: s, status: ResourceActualStatus.Actual_Destroyed })
+            )
+         );
          segments.forEach((s) => store.dispatch(segmentInstancesRemove(s)));
 
          const found = pipelineInstancesSelectById(store.getState(), pipeline.id);

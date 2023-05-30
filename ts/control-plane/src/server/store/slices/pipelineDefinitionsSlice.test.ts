@@ -1,6 +1,6 @@
-import {expect} from "@jest/globals";
-import {ResourceStatus, SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
-import {connectionsAdd} from "@mrc/server/store/slices/connectionsSlice";
+import { expect } from "@jest/globals";
+import { ResourceActualStatus, ResourceStatus } from "@mrc/proto/mrc/protos/architect_state";
+import { connectionsAdd } from "@mrc/server/store/slices/connectionsSlice";
 import {
    pipelineDefinitionsAdd,
    pipelineDefinitionsCreateOrUpdate,
@@ -9,13 +9,13 @@ import {
    pipelineDefinitionsSelectById,
    pipelineDefinitionsSelectTotal,
 } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
-import {pipelineInstancesAdd, pipelineInstancesRemove} from "@mrc/server/store/slices/pipelineInstancesSlice";
+import { pipelineInstancesAdd, pipelineInstancesRemove } from "@mrc/server/store/slices/pipelineInstancesSlice";
 import {
    segmentInstancesAddMany,
    segmentInstancesRemove,
-   segmentInstancesUpdateResourceState,
+   segmentInstancesUpdateResourceActualState,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
-import {workersAdd} from "@mrc/server/store/slices/workersSlice";
+import { workersAdd } from "@mrc/server/store/slices/workersSlice";
 import {
    connection,
    pipeline,
@@ -27,7 +27,7 @@ import {
 } from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
-import {RootStore, setupStore} from "../store";
+import { RootStore, setupStore } from "../store";
 
 let store: RootStore;
 
@@ -54,8 +54,9 @@ describe("From Config", () => {
    let created_def_id: string;
 
    beforeEach(() => {
-      created_def_id =
-          store.dispatch(pipelineDefinitionsCreateOrUpdate(pipeline_config, pipeline_mappings[connection.id])).pipeline;
+      created_def_id = store.dispatch(
+         pipelineDefinitionsCreateOrUpdate(pipeline_config, pipeline_mappings[connection.id])
+      ).pipeline;
    });
 
    test("Select One", () => {
@@ -66,6 +67,8 @@ describe("From Config", () => {
       expect(found).toHaveProperty("id", pipeline_def.id);
       expect(found?.config).toEqual(pipeline_config);
       expect(found?.instanceIds).toEqual([]);
+
+      expect(found?.segments).toBeDefined();
 
       expect(Object.keys(found?.segments!)).toEqual(Object.keys(pipeline_def.segments));
 
@@ -126,10 +129,14 @@ describe("Single", () => {
    });
 
    test("Remove Unknown ID", () => {
-      assert.throws(() => store.dispatch(pipelineDefinitionsRemove({
-         ...pipeline_def,
-         id: "9999",
-      })));
+      assert.throws(() =>
+         store.dispatch(
+            pipelineDefinitionsRemove({
+               ...pipeline_def,
+               id: "9999",
+            })
+         )
+      );
    });
 
    describe("With PipelineInstance", () => {
@@ -186,7 +193,12 @@ describe("Single", () => {
          test("Remove Instance", () => {
             segments.forEach((x) => {
                // Need to set the state first
-               store.dispatch(segmentInstancesUpdateResourceState({resource: x, status: ResourceStatus.Destroyed}));
+               store.dispatch(
+                  segmentInstancesUpdateResourceActualState({
+                     resource: x,
+                     status: ResourceActualStatus.Actual_Destroyed,
+                  })
+               );
 
                store.dispatch(segmentInstancesRemove(x));
             });

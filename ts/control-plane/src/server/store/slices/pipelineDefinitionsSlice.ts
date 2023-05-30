@@ -1,12 +1,13 @@
-import {createSlice, PayloadAction} from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import type {AppDispatch, AppGetState, RootState} from "../store";
+import type { AppDispatch, AppGetState, RootState } from "../store";
 import {
    PipelineConfiguration,
+   PipelineConfiguration_ManifoldConfiguration,
    PipelineConfiguration_SegmentConfiguration,
 } from "@mrc/proto/mrc/protos/architect_state";
-import {createWrappedEntityAdapter} from "@mrc/server/utils";
-import {hashProtoMessage} from "@mrc/common/utils";
+import { createWrappedEntityAdapter } from "@mrc/server/utils";
+import { hashProtoMessage } from "@mrc/common/utils";
 import {
    segmentInstancesAdd,
    segmentInstancesAddMany,
@@ -17,6 +18,7 @@ import {
    pipelineInstancesRemove,
 } from "@mrc/server/store/slices/pipelineInstancesSlice";
 import {
+   IManifoldDefinition,
    IPipelineConfiguration,
    IPipelineDefinition,
    IPipelineInstance,
@@ -30,40 +32,31 @@ const pipelineDefinitionsAdapter = createWrappedEntityAdapter<IPipelineDefinitio
 });
 
 function pipelineInstanceAdded(state: PipelineDefinitionsStateType,
-                               instance: Pick<IPipelineInstance, "id"|"definitionId">)
-{
+   instance: Pick<IPipelineInstance, "id" | "definitionId">) {
    // Handle synchronizing a new added instance
    const found = pipelineDefinitionsAdapter.getOne(state, instance.definitionId);
 
-   if (found)
-   {
+   if (found) {
       found.instanceIds.push(instance.id);
    }
-   else
-   {
+   else {
       throw new Error("Must add a PipelineDefinition before creating a PipelineInstance!");
    }
 }
 
-function segmentInstanceAdded(state: PipelineDefinitionsStateType, instance: ISegmentInstance)
-{
+function segmentInstanceAdded(state: PipelineDefinitionsStateType, instance: ISegmentInstance) {
    // Handle synchronizing a new added instance
    const found = pipelineDefinitionsAdapter.getOne(state, instance.pipelineDefinitionId);
 
-   if (found)
-   {
+   if (found) {
       // Find the segment in the definition
-      if (!Object.keys(found.segments).includes(instance.name))
-      {
-         throw new Error(`Attempting to create SegmentInstance with Pipeline Definition with ID: ${
-             instance.pipelineDefinitionId} but the segment name, ${
-             instance.name} does not exist in the PipelineDefinition.`);
+      if (!Object.keys(found.segments).includes(instance.name)) {
+         throw new Error(`Attempting to create SegmentInstance with Pipeline Definition with ID: ${instance.pipelineDefinitionId} but the segment name, ${instance.name} does not exist in the PipelineDefinition.`);
       }
 
       found.segments[instance.name].instanceIds.push(instance.id);
    }
-   else
-   {
+   else {
       throw new Error("Must add a PipelineDefinition before creating a SegmentInstance!");
    }
 }
@@ -73,8 +66,7 @@ export const pipelineDefinitionsSlice = createSlice({
    initialState: pipelineDefinitionsAdapter.getInitialState(),
    reducers: {
       add: (state, action: PayloadAction<IPipelineDefinition>) => {
-         if (pipelineDefinitionsAdapter.getOne(state, action.payload.id))
-         {
+         if (pipelineDefinitionsAdapter.getOne(state, action.payload.id)) {
             throw new Error(`Pipeline Definition with ID: ${action.payload.id} already exists`);
          }
          pipelineDefinitionsAdapter.addOne(state, action.payload);
@@ -82,30 +74,24 @@ export const pipelineDefinitionsSlice = createSlice({
       remove: (state, action: PayloadAction<IPipelineDefinition>) => {
          const found = pipelineDefinitionsAdapter.getOne(state, action.payload.id);
 
-         if (!found)
-         {
+         if (!found) {
             throw new Error(`Pipeline Definition with ID: ${action.payload.id} not found`);
          }
 
-         if (found.instanceIds.length > 0)
-         {
-            throw new Error(`Attempting to delete PipelineDefinition with ID: ${
-                action.payload.id} while there are running instances. Stop PipelineInstances first!`)
+         if (found.instanceIds.length > 0) {
+            throw new Error(`Attempting to delete PipelineDefinition with ID: ${action.payload.id} while there are running instances. Stop PipelineInstances first!`);
          }
 
-         if (Object.values(found.segments).reduce((accum: number, curr) => accum + curr.instanceIds.length, 0) > 0)
-         {
-            throw new Error(`Attempting to delete PipelineDefinition with ID: ${
-                action.payload.id} with running segment instance. Remove segment instances first!`)
+         if (Object.values(found.segments).reduce((accum: number, curr) => accum + curr.instanceIds.length, 0) > 0) {
+            throw new Error(`Attempting to delete PipelineDefinition with ID: ${action.payload.id} with running segment instance. Remove segment instances first!`);
          }
 
          pipelineDefinitionsAdapter.removeOne(state, action.payload.id);
       },
-      setMapping: (state, action: PayloadAction<{definition_id: string, mapping: IPipelineMapping}>) => {
+      setMapping: (state, action: PayloadAction<{ definition_id: string, mapping: IPipelineMapping; }>) => {
          const found = pipelineDefinitionsAdapter.getOne(state, action.payload.definition_id);
 
-         if (!found)
-         {
+         if (!found) {
             throw new Error(`Pipeline Definition with ID: ${action.payload.definition_id} not found`);
          }
 
@@ -117,23 +103,20 @@ export const pipelineDefinitionsSlice = createSlice({
          pipelineInstanceAdded(state, action.payload);
       });
       builder.addCase(pipelineInstancesRemove,
-                      (state, action) => {
-                         const found = pipelineDefinitionsAdapter.getOne(state, action.payload.definitionId);
+         (state, action) => {
+            const found = pipelineDefinitionsAdapter.getOne(state, action.payload.definitionId);
 
-                         if (found)
-                         {
-                            const index = found.instanceIds.findIndex(x => x === action.payload.id);
+            if (found) {
+               const index = found.instanceIds.findIndex(x => x === action.payload.id);
 
-                            if (index !== -1)
-                            {
-                               found.instanceIds.splice(index, 1);
-                            }
-                         }
-                         else
-                         {
-                            throw new Error(`PipelineDefinition with ID: ${action.payload.definitionId}, not found. Must drop all Pipeline before removing a PipelineDefinition.`);
-                         }
-                      });
+               if (index !== -1) {
+                  found.instanceIds.splice(index, 1);
+               }
+            }
+            else {
+               throw new Error(`PipelineDefinition with ID: ${action.payload.definitionId}, not found. Must drop all Pipeline before removing a PipelineDefinition.`);
+            }
+         });
 
       builder.addCase(segmentInstancesAdd, (state, action) => {
          segmentInstanceAdded(state, action.payload);
@@ -146,27 +129,21 @@ export const pipelineDefinitionsSlice = createSlice({
       builder.addCase(segmentInstancesRemove, (state, action) => {
          const found = pipelineDefinitionsAdapter.getOne(state, action.payload.pipelineDefinitionId);
 
-         if (found)
-         {
+         if (found) {
             // Find the segment in the definition
-            if (!Object.keys(found.segments).includes(action.payload.name))
-            {
-               throw new Error(`Attempting to remove SegmentInstance with PipelineDefinition ID: ${
-                   action.payload.pipelineDefinitionId} but the segment name, ${
-                   action.payload.name} does not exist in the PipelineDefinition.`);
+            if (!Object.keys(found.segments).includes(action.payload.name)) {
+               throw new Error(`Attempting to remove SegmentInstance with PipelineDefinition ID: ${action.payload.pipelineDefinitionId} but the segment name, ${action.payload.name} does not exist in the PipelineDefinition.`);
             }
 
             const foundSegment = found.segments[action.payload.name];
 
             const index = foundSegment.instanceIds.findIndex(x => x === action.payload.id);
 
-            if (index !== -1)
-            {
+            if (index !== -1) {
                foundSegment.instanceIds.splice(index, 1);
             }
          }
-         else
-         {
+         else {
             throw new Error(`PipelineDefinition with ID: ${action.payload.pipelineDefinitionId}, not found. Must drop all SegmentInstances before removing a PipelineDefinition`);
          }
       });
@@ -174,8 +151,7 @@ export const pipelineDefinitionsSlice = createSlice({
 });
 
 export function pipelineDefinitionsCreateOrUpdate(pipeline_config: IPipelineConfiguration,
-                                                  pipeline_mapping: IPipelineMapping)
-{
+   pipeline_mapping: IPipelineMapping) {
    return (dispatch: AppDispatch, getState: AppGetState) => {
       // Compute the hash of the pipeline
       const pipeline_hash = hashProtoMessage(PipelineConfiguration.create(pipeline_config));
@@ -183,10 +159,11 @@ export function pipelineDefinitionsCreateOrUpdate(pipeline_config: IPipelineConf
       // Check if this already exists
       let pipeline_def = pipelineDefinitionsSelectById(getState(), pipeline_hash);
 
-      if (!pipeline_def)
-      {
+      if (!pipeline_def) {
          // Generate a full pipeline definition with the ID as the hash
-         pipeline_def = {id: pipeline_hash, config: pipeline_config, instanceIds: [], segments: {}, mappings: {}};
+         pipeline_def = {
+            id: pipeline_hash, config: pipeline_config, instanceIds: [], segments: {}, mappings: {}, manifolds: {}
+         };
 
          const segs = Object.fromEntries(Object.entries(pipeline_config.segments).map(([seg_name, seg_config]) => {
             // Compute the hash of the segment
@@ -200,20 +177,35 @@ export function pipelineDefinitionsCreateOrUpdate(pipeline_config: IPipelineConf
                   name: seg_name,
                   instanceIds: [],
                } as ISegmentDefinition,
-            ]
+            ];
          }));
 
          pipeline_def.segments = segs;
 
+         const manifolds = Object.fromEntries(Object.entries(pipeline_config.manifolds).map(([man_name, man_config]) => {
+            // Compute the hash of the segment
+            const segment_hash = hashProtoMessage(PipelineConfiguration_ManifoldConfiguration.create(man_config));
+
+            return [
+               man_name,
+               {
+                  id: segment_hash,
+                  parentId: pipeline_def?.id,
+                  portName: man_name,
+                  instanceIds: [],
+               } as IManifoldDefinition,
+            ];
+         }));
+
+         pipeline_def.segments = segs;
+         pipeline_def.manifolds = manifolds;
+
          dispatch(pipelineDefinitionsAdd(pipeline_def));
       }
-      else
-      {
+      else {
          // Check to make sure we dont already have a matching mapping
-         if (pipeline_mapping.machineId in pipeline_def.mappings)
-         {
-            throw new Error(`PipelineDefinition with ID: ${pipeline_hash}, already contains a mapping for machine ID: ${
-                pipeline_mapping.machineId}`);
+         if (pipeline_mapping.machineId in pipeline_def.mappings) {
+            throw new Error(`PipelineDefinition with ID: ${pipeline_hash}, already contains a mapping for machine ID: ${pipeline_mapping.machineId}`);
          }
       }
 
@@ -231,7 +223,7 @@ export function pipelineDefinitionsCreateOrUpdate(pipeline_config: IPipelineConf
 
 type PipelineDefinitionsStateType = ReturnType<typeof pipelineDefinitionsSlice.getInitialState>;
 
-export const {add: pipelineDefinitionsAdd, remove: pipelineDefinitionsRemove} = pipelineDefinitionsSlice.actions;
+export const { add: pipelineDefinitionsAdd, remove: pipelineDefinitionsRemove } = pipelineDefinitionsSlice.actions;
 
 export const {
    selectAll: pipelineDefinitionsSelectAll,

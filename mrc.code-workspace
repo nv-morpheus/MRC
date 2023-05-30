@@ -201,8 +201,13 @@
             "editor.formatOnSave": true,
             "editor.tabSize": 4
         },
+        "[javascript]": {
+            "editor.defaultFormatter": "esbenp.prettier-vscode",
+            "editor.formatOnSave": true,
+            "editor.wordWrapColumn": 120
+        },
         "[typescript]": {
-            "editor.defaultFormatter": "xaver.clang-format",
+            "editor.defaultFormatter": "esbenp.prettier-vscode",
             "editor.formatOnSave": true,
             "editor.wordWrapColumn": 120
         },

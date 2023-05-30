@@ -6,7 +6,7 @@ import type {RootState} from "../store";
 import {connectionsRemove} from "./connectionsSlice";
 import {segmentInstancesAdd, segmentInstancesAddMany, segmentInstancesRemove} from "./segmentInstancesSlice";
 import {IWorker} from "@mrc/common/entities";
-import {ResourceStatus} from "@mrc/proto/mrc/protos/architect_state";
+import {ResourceActualStatus, ResourceStatus} from "@mrc/proto/mrc/protos/architect_state";
 
 const workersAdapter = createWrappedEntityAdapter<IWorker>({
    // sortComparer: (a, b) => b.id.localeCompare(a.date),
@@ -44,7 +44,7 @@ export const workersSlice = createSlice({
 
          workersAdapter.removeOne(state, action.payload.id);
       },
-      updateResourceState: (state, action: PayloadAction<{resources: IWorker[], status: ResourceStatus}>) => {
+      updateResourceState: (state, action: PayloadAction<{resources: IWorker[], status: ResourceActualStatus}>) => {
          // Check for incorrect IDs
          action.payload.resources.forEach((w) => {
             if (!workersAdapter.getOne(state, w.id))
@@ -54,7 +54,7 @@ export const workersSlice = createSlice({
          });
 
          workersAdapter.getMany(state, action.payload.resources.map((w) => w.id))
-             .forEach((w) => w.state.status = action.payload.status);
+             .forEach((w) => w.state.actualStatus = action.payload.status);
       },
    },
    extraReducers: (builder) => {

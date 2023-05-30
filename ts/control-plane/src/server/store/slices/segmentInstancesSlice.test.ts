@@ -1,9 +1,7 @@
-import {expect} from "@jest/globals";
-import {ResourceStatus, resourceStatusFromJSON, SegmentStates} from "@mrc/proto/mrc/protos/architect_state";
-import {pipelineDefinitionsAdd} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
-import {
-   pipelineInstancesAdd,
-} from "@mrc/server/store/slices/pipelineInstancesSlice";
+import { expect } from "@jest/globals";
+import { ResourceActualStatus } from "@mrc/proto/mrc/protos/architect_state";
+import { pipelineDefinitionsAdd } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
+import { pipelineInstancesAdd } from "@mrc/server/store/slices/pipelineInstancesSlice";
 import {
    segmentInstancesAdd,
    segmentInstancesAddMany,
@@ -11,18 +9,15 @@ import {
    segmentInstancesSelectAll,
    segmentInstancesSelectById,
    segmentInstancesSelectTotal,
-   segmentInstancesUpdateResourceState,
+   segmentInstancesUpdateResourceActualState,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
-import {workersAdd} from "@mrc/server/store/slices/workersSlice";
-import {connection, pipeline, pipeline_def, segments, segments_map, worker} from "@mrc/tests/defaultObjects";
+import { workersAdd } from "@mrc/server/store/slices/workersSlice";
+import { connection, pipeline, pipeline_def, segments, segments_map, worker } from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
-import {RootStore, setupStore} from "../store";
+import { RootStore, setupStore } from "../store";
 
-import {
-   connectionsAdd,
-   connectionsDropOne,
-} from "./connectionsSlice";
+import { connectionsAdd, connectionsDropOne } from "./connectionsSlice";
 
 let store: RootStore;
 
@@ -93,7 +88,7 @@ describe("Single", () => {
          expect(s.name).toEqual(segments_map[s.name].name);
          expect(s.pipelineDefinitionId).toEqual(pipeline_def.id);
          expect(s.pipelineInstanceId).toEqual(pipeline.id);
-         expect(s.state.status).toEqual(ResourceStatus.Registered);
+         expect(s.state.actualStatus).toEqual(ResourceActualStatus.Actual_Unknown);
          expect(s.workerId).toEqual(worker.id);
       });
    });
@@ -107,28 +102,46 @@ describe("Single", () => {
    });
 
    test("Update State", () => {
-      for (const s of [1, 2, 3, 4, 5, 6])
-      {
-         const status = resourceStatusFromJSON(s);
+      for (const s of [
+         ResourceActualStatus.Actual_Creating,
+         ResourceActualStatus.Actual_Created,
+         ResourceActualStatus.Actual_Ready,
+         ResourceActualStatus.Actual_Stopping,
+         ResourceActualStatus.Actual_Stopped,
+         ResourceActualStatus.Actual_Destroying,
+         ResourceActualStatus.Actual_Destroyed,
+      ]) {
+         store.dispatch(segmentInstancesUpdateResourceActualState({ resource: segments[0], status: s }));
 
-         store.dispatch(segmentInstancesUpdateResourceState({resource: segments[0], status: status}));
-
-         expect(segmentInstancesSelectById(store.getState(), segments[0].id)?.state.status).toBe(status);
+         expect(segmentInstancesSelectById(store.getState(), segments[0].id)?.state.actualStatus).toBe(s);
       }
    });
 
    test("Update State Backwards", () => {
       // Set the state running first
-      store.dispatch(segmentInstancesUpdateResourceState({resource: segments[0], status: ResourceStatus.Ready}));
+      store.dispatch(
+         segmentInstancesUpdateResourceActualState({ resource: segments[0], status: ResourceActualStatus.Actual_Ready })
+      );
 
       // Try to set it back to initialized
-      assert.throws(() => store.dispatch(segmentInstancesUpdateResourceState(
-                        {resource: segments[0], status: ResourceStatus.Registered})));
+      assert.throws(() =>
+         store.dispatch(
+            segmentInstancesUpdateResourceActualState({
+               resource: segments[0],
+               status: ResourceActualStatus.Actual_Creating,
+            })
+         )
+      );
    });
 
    it("Remove Valid ID", () => {
       // Set the instance to completed first
-      store.dispatch(segmentInstancesUpdateResourceState({resource: segments[0], status: ResourceStatus.Destroyed}));
+      store.dispatch(
+         segmentInstancesUpdateResourceActualState({
+            resource: segments[0],
+            status: ResourceActualStatus.Actual_Destroyed,
+         })
+      );
 
       store.dispatch(segmentInstancesRemove(segments[0]));
 
@@ -137,16 +150,25 @@ describe("Single", () => {
 
    test("Remove Unknown ID", () => {
       // Set the instance to completed first
-      store.dispatch(segmentInstancesUpdateResourceState({resource: segments[0], status: ResourceStatus.Destroyed}));
+      store.dispatch(
+         segmentInstancesUpdateResourceActualState({
+            resource: segments[0],
+            status: ResourceActualStatus.Actual_Destroyed,
+         })
+      );
 
-      assert.throws(() => store.dispatch(segmentInstancesRemove({
-         ...segments[0],
-         id: "9999",
-      })));
+      assert.throws(() =>
+         store.dispatch(
+            segmentInstancesRemove({
+               ...segments[0],
+               id: "9999",
+            })
+         )
+      );
    });
 
    test("Drop Connection", () => {
-      store.dispatch(connectionsDropOne({id: connection.id}));
+      store.dispatch(connectionsDropOne({ id: connection.id }));
 
       expect(segmentInstancesSelectAll(store.getState())).toHaveLength(0);
    });

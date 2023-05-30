@@ -8,42 +8,45 @@ import {
   EgressPolicy,
   PipelineConfiguration,
   PipelineMapping,
-  ResourceStatus,
-  resourceStatusFromJSON,
-  resourceStatusToJSON,
+  ResourceActualStatus,
+  resourceActualStatusFromJSON,
+  resourceActualStatusToJSON,
+  resourceActualStatusToNumber,
   SegmentDefinition,
 } from "./architect_state";
 
 export const protobufPackage = "mrc.protos";
 
 export enum EventType {
-  Unused = 0,
-  Response = 1,
-  ControlStop = 2,
+  Unused = "Unused",
+  Response = "Response",
+  ControlStop = "ControlStop",
   /** ClientEventPing - Meta Events */
-  ClientEventPing = 10,
+  ClientEventPing = "ClientEventPing",
   /** ClientEventRequestStateUpdate - Client Events - No Response */
-  ClientEventRequestStateUpdate = 100,
-  ClientEventStreamConnected = 101,
+  ClientEventRequestStateUpdate = "ClientEventRequestStateUpdate",
+  ClientEventStreamConnected = "ClientEventStreamConnected",
   /** ClientUnaryRegisterWorkers - Connection Management */
-  ClientUnaryRegisterWorkers = 201,
-  ClientUnaryActivateStream = 202,
-  ClientUnaryLookupWorkerAddresses = 203,
-  ClientUnaryDropWorker = 204,
+  ClientUnaryRegisterWorkers = "ClientUnaryRegisterWorkers",
+  ClientUnaryActivateStream = "ClientUnaryActivateStream",
+  ClientUnaryLookupWorkerAddresses = "ClientUnaryLookupWorkerAddresses",
+  ClientUnaryDropWorker = "ClientUnaryDropWorker",
   /** ClientUnaryCreateSubscriptionService - SubscriptionService */
-  ClientUnaryCreateSubscriptionService = 301,
-  ClientUnaryRegisterSubscriptionService = 302,
-  ClientUnaryActivateSubscriptionService = 303,
-  ClientUnaryDropSubscriptionService = 304,
-  ClientEventUpdateSubscriptionService = 305,
+  ClientUnaryCreateSubscriptionService = "ClientUnaryCreateSubscriptionService",
+  ClientUnaryRegisterSubscriptionService = "ClientUnaryRegisterSubscriptionService",
+  ClientUnaryActivateSubscriptionService = "ClientUnaryActivateSubscriptionService",
+  ClientUnaryDropSubscriptionService = "ClientUnaryDropSubscriptionService",
+  ClientEventUpdateSubscriptionService = "ClientEventUpdateSubscriptionService",
   /** ClientUnaryRequestPipelineAssignment - Pipeline Management */
-  ClientUnaryRequestPipelineAssignment = 401,
+  ClientUnaryRequestPipelineAssignment = "ClientUnaryRequestPipelineAssignment",
   /** ClientUnaryResourceUpdateStatus - Resource Management */
-  ClientUnaryResourceUpdateStatus = 501,
+  ClientUnaryResourceUpdateStatus = "ClientUnaryResourceUpdateStatus",
+  ClientUnaryResourceIncrementRef = "ClientUnaryResourceIncrementRef",
+  ClientUnaryResourceDecrementRef = "ClientUnaryResourceDecrementRef",
   /** ServerEvent - Server Event issues to Client(s) */
-  ServerEvent = 1000,
-  ServerStateUpdate = 1001,
-  UNRECOGNIZED = -1,
+  ServerEvent = "ServerEvent",
+  ServerStateUpdate = "ServerStateUpdate",
+  UNRECOGNIZED = "UNRECOGNIZED",
 }
 
 export function eventTypeFromJSON(object: any): EventType {
@@ -99,6 +102,12 @@ export function eventTypeFromJSON(object: any): EventType {
     case 501:
     case "ClientUnaryResourceUpdateStatus":
       return EventType.ClientUnaryResourceUpdateStatus;
+    case 502:
+    case "ClientUnaryResourceIncrementRef":
+      return EventType.ClientUnaryResourceIncrementRef;
+    case 503:
+    case "ClientUnaryResourceDecrementRef":
+      return EventType.ClientUnaryResourceDecrementRef;
     case 1000:
     case "ServerEvent":
       return EventType.ServerEvent;
@@ -148,6 +157,10 @@ export function eventTypeToJSON(object: EventType): string {
       return "ClientUnaryRequestPipelineAssignment";
     case EventType.ClientUnaryResourceUpdateStatus:
       return "ClientUnaryResourceUpdateStatus";
+    case EventType.ClientUnaryResourceIncrementRef:
+      return "ClientUnaryResourceIncrementRef";
+    case EventType.ClientUnaryResourceDecrementRef:
+      return "ClientUnaryResourceDecrementRef";
     case EventType.ServerEvent:
       return "ServerEvent";
     case EventType.ServerStateUpdate:
@@ -158,12 +171,62 @@ export function eventTypeToJSON(object: EventType): string {
   }
 }
 
+export function eventTypeToNumber(object: EventType): number {
+  switch (object) {
+    case EventType.Unused:
+      return 0;
+    case EventType.Response:
+      return 1;
+    case EventType.ControlStop:
+      return 2;
+    case EventType.ClientEventPing:
+      return 10;
+    case EventType.ClientEventRequestStateUpdate:
+      return 100;
+    case EventType.ClientEventStreamConnected:
+      return 101;
+    case EventType.ClientUnaryRegisterWorkers:
+      return 201;
+    case EventType.ClientUnaryActivateStream:
+      return 202;
+    case EventType.ClientUnaryLookupWorkerAddresses:
+      return 203;
+    case EventType.ClientUnaryDropWorker:
+      return 204;
+    case EventType.ClientUnaryCreateSubscriptionService:
+      return 301;
+    case EventType.ClientUnaryRegisterSubscriptionService:
+      return 302;
+    case EventType.ClientUnaryActivateSubscriptionService:
+      return 303;
+    case EventType.ClientUnaryDropSubscriptionService:
+      return 304;
+    case EventType.ClientEventUpdateSubscriptionService:
+      return 305;
+    case EventType.ClientUnaryRequestPipelineAssignment:
+      return 401;
+    case EventType.ClientUnaryResourceUpdateStatus:
+      return 501;
+    case EventType.ClientUnaryResourceIncrementRef:
+      return 502;
+    case EventType.ClientUnaryResourceDecrementRef:
+      return 503;
+    case EventType.ServerEvent:
+      return 1000;
+    case EventType.ServerStateUpdate:
+      return 1001;
+    case EventType.UNRECOGNIZED:
+    default:
+      return -1;
+  }
+}
+
 export enum ErrorCode {
-  Success = 0,
-  ServerError = 1,
-  ClientError = 2,
-  InstanceError = 3,
-  UNRECOGNIZED = -1,
+  Success = "Success",
+  ServerError = "ServerError",
+  ClientError = "ClientError",
+  InstanceError = "InstanceError",
+  UNRECOGNIZED = "UNRECOGNIZED",
 }
 
 export function errorCodeFromJSON(object: any): ErrorCode {
@@ -200,6 +263,22 @@ export function errorCodeToJSON(object: ErrorCode): string {
     case ErrorCode.UNRECOGNIZED:
     default:
       return "UNRECOGNIZED";
+  }
+}
+
+export function errorCodeToNumber(object: ErrorCode): number {
+  switch (object) {
+    case ErrorCode.Success:
+      return 0;
+    case ErrorCode.ServerError:
+      return 1;
+    case ErrorCode.ClientError:
+      return 2;
+    case ErrorCode.InstanceError:
+      return 3;
+    case ErrorCode.UNRECOGNIZED:
+    default:
+      return -1;
   }
 }
 
@@ -262,11 +341,33 @@ export interface ResourceUpdateStatusRequest {
   $type: "mrc.protos.ResourceUpdateStatusRequest";
   resourceType: string;
   resourceId: string;
-  status: ResourceStatus;
+  status: ResourceActualStatus;
 }
 
 export interface ResourceUpdateStatusResponse {
   $type: "mrc.protos.ResourceUpdateStatusResponse";
+  ok: boolean;
+}
+
+export interface ResourceIncrementRefRequest {
+  $type: "mrc.protos.ResourceIncrementRefRequest";
+  resourceType: string;
+  resourceId: string;
+}
+
+export interface ResourceIncrementRefResponse {
+  $type: "mrc.protos.ResourceIncrementRefResponse";
+  ok: boolean;
+}
+
+export interface ResourceDecrementRefRequest {
+  $type: "mrc.protos.ResourceDecrementRefRequest";
+  resourceType: string;
+  resourceId: string;
+}
+
+export interface ResourceDecrementRefResponse {
+  $type: "mrc.protos.ResourceDecrementRefResponse";
   ok: boolean;
 }
 
@@ -691,15 +792,15 @@ export const ShutdownResponse = {
 messageTypeRegistry.set(ShutdownResponse.$type, ShutdownResponse);
 
 function createBaseEvent(): Event {
-  return { $type: "mrc.protos.Event", event: 0, tag: "0", message: undefined, error: undefined };
+  return { $type: "mrc.protos.Event", event: EventType.Unused, tag: "0", message: undefined, error: undefined };
 }
 
 export const Event = {
   $type: "mrc.protos.Event" as const,
 
   encode(message: Event, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.event !== 0) {
-      writer.uint32(8).int32(message.event);
+    if (message.event !== EventType.Unused) {
+      writer.uint32(8).int32(eventTypeToNumber(message.event));
     }
     if (message.tag !== "0") {
       writer.uint32(16).uint64(message.tag);
@@ -721,7 +822,7 @@ export const Event = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.event = reader.int32() as any;
+          message.event = eventTypeFromJSON(reader.int32());
           break;
         case 2:
           message.tag = longToString(reader.uint64() as Long);
@@ -743,7 +844,7 @@ export const Event = {
   fromJSON(object: any): Event {
     return {
       $type: Event.$type,
-      event: isSet(object.event) ? eventTypeFromJSON(object.event) : 0,
+      event: isSet(object.event) ? eventTypeFromJSON(object.event) : EventType.Unused,
       tag: isSet(object.tag) ? String(object.tag) : "0",
       message: isSet(object.message) ? Any.fromJSON(object.message) : undefined,
       error: isSet(object.error) ? Error.fromJSON(object.error) : undefined,
@@ -765,7 +866,7 @@ export const Event = {
 
   fromPartial(object: DeepPartial<Event>): Event {
     const message = createBaseEvent();
-    message.event = object.event ?? 0;
+    message.event = object.event ?? EventType.Unused;
     message.tag = object.tag ?? "0";
     message.message = (object.message !== undefined && object.message !== null)
       ? Any.fromPartial(object.message)
@@ -778,15 +879,15 @@ export const Event = {
 messageTypeRegistry.set(Event.$type, Event);
 
 function createBaseError(): Error {
-  return { $type: "mrc.protos.Error", code: 0, message: "" };
+  return { $type: "mrc.protos.Error", code: ErrorCode.Success, message: "" };
 }
 
 export const Error = {
   $type: "mrc.protos.Error" as const,
 
   encode(message: Error, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.code !== 0) {
-      writer.uint32(8).int32(message.code);
+    if (message.code !== ErrorCode.Success) {
+      writer.uint32(8).int32(errorCodeToNumber(message.code));
     }
     if (message.message !== "") {
       writer.uint32(18).string(message.message);
@@ -802,7 +903,7 @@ export const Error = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.code = reader.int32() as any;
+          message.code = errorCodeFromJSON(reader.int32());
           break;
         case 2:
           message.message = reader.string();
@@ -818,7 +919,7 @@ export const Error = {
   fromJSON(object: any): Error {
     return {
       $type: Error.$type,
-      code: isSet(object.code) ? errorCodeFromJSON(object.code) : 0,
+      code: isSet(object.code) ? errorCodeFromJSON(object.code) : ErrorCode.Success,
       message: isSet(object.message) ? String(object.message) : "",
     };
   },
@@ -836,7 +937,7 @@ export const Error = {
 
   fromPartial(object: DeepPartial<Error>): Error {
     const message = createBaseError();
-    message.code = object.code ?? 0;
+    message.code = object.code ?? ErrorCode.Success;
     message.message = object.message ?? "";
     return message;
   },
@@ -1107,7 +1208,12 @@ export const RegisterWorkersResponse = {
 messageTypeRegistry.set(RegisterWorkersResponse.$type, RegisterWorkersResponse);
 
 function createBaseResourceUpdateStatusRequest(): ResourceUpdateStatusRequest {
-  return { $type: "mrc.protos.ResourceUpdateStatusRequest", resourceType: "", resourceId: "0", status: 0 };
+  return {
+    $type: "mrc.protos.ResourceUpdateStatusRequest",
+    resourceType: "",
+    resourceId: "0",
+    status: ResourceActualStatus.Actual_Unknown,
+  };
 }
 
 export const ResourceUpdateStatusRequest = {
@@ -1120,8 +1226,8 @@ export const ResourceUpdateStatusRequest = {
     if (message.resourceId !== "0") {
       writer.uint32(16).uint64(message.resourceId);
     }
-    if (message.status !== 0) {
-      writer.uint32(24).int32(message.status);
+    if (message.status !== ResourceActualStatus.Actual_Unknown) {
+      writer.uint32(24).int32(resourceActualStatusToNumber(message.status));
     }
     return writer;
   },
@@ -1140,7 +1246,7 @@ export const ResourceUpdateStatusRequest = {
           message.resourceId = longToString(reader.uint64() as Long);
           break;
         case 3:
-          message.status = reader.int32() as any;
+          message.status = resourceActualStatusFromJSON(reader.int32());
           break;
         default:
           reader.skipType(tag & 7);
@@ -1155,7 +1261,7 @@ export const ResourceUpdateStatusRequest = {
       $type: ResourceUpdateStatusRequest.$type,
       resourceType: isSet(object.resourceType) ? String(object.resourceType) : "",
       resourceId: isSet(object.resourceId) ? String(object.resourceId) : "0",
-      status: isSet(object.status) ? resourceStatusFromJSON(object.status) : 0,
+      status: isSet(object.status) ? resourceActualStatusFromJSON(object.status) : ResourceActualStatus.Actual_Unknown,
     };
   },
 
@@ -1163,7 +1269,7 @@ export const ResourceUpdateStatusRequest = {
     const obj: any = {};
     message.resourceType !== undefined && (obj.resourceType = message.resourceType);
     message.resourceId !== undefined && (obj.resourceId = message.resourceId);
-    message.status !== undefined && (obj.status = resourceStatusToJSON(message.status));
+    message.status !== undefined && (obj.status = resourceActualStatusToJSON(message.status));
     return obj;
   },
 
@@ -1175,7 +1281,7 @@ export const ResourceUpdateStatusRequest = {
     const message = createBaseResourceUpdateStatusRequest();
     message.resourceType = object.resourceType ?? "";
     message.resourceId = object.resourceId ?? "0";
-    message.status = object.status ?? 0;
+    message.status = object.status ?? ResourceActualStatus.Actual_Unknown;
     return message;
   },
 };
@@ -1236,6 +1342,250 @@ export const ResourceUpdateStatusResponse = {
 };
 
 messageTypeRegistry.set(ResourceUpdateStatusResponse.$type, ResourceUpdateStatusResponse);
+
+function createBaseResourceIncrementRefRequest(): ResourceIncrementRefRequest {
+  return { $type: "mrc.protos.ResourceIncrementRefRequest", resourceType: "", resourceId: "0" };
+}
+
+export const ResourceIncrementRefRequest = {
+  $type: "mrc.protos.ResourceIncrementRefRequest" as const,
+
+  encode(message: ResourceIncrementRefRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.resourceType !== "") {
+      writer.uint32(10).string(message.resourceType);
+    }
+    if (message.resourceId !== "0") {
+      writer.uint32(16).uint64(message.resourceId);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): ResourceIncrementRefRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseResourceIncrementRefRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.resourceType = reader.string();
+          break;
+        case 2:
+          message.resourceId = longToString(reader.uint64() as Long);
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ResourceIncrementRefRequest {
+    return {
+      $type: ResourceIncrementRefRequest.$type,
+      resourceType: isSet(object.resourceType) ? String(object.resourceType) : "",
+      resourceId: isSet(object.resourceId) ? String(object.resourceId) : "0",
+    };
+  },
+
+  toJSON(message: ResourceIncrementRefRequest): unknown {
+    const obj: any = {};
+    message.resourceType !== undefined && (obj.resourceType = message.resourceType);
+    message.resourceId !== undefined && (obj.resourceId = message.resourceId);
+    return obj;
+  },
+
+  create(base?: DeepPartial<ResourceIncrementRefRequest>): ResourceIncrementRefRequest {
+    return ResourceIncrementRefRequest.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<ResourceIncrementRefRequest>): ResourceIncrementRefRequest {
+    const message = createBaseResourceIncrementRefRequest();
+    message.resourceType = object.resourceType ?? "";
+    message.resourceId = object.resourceId ?? "0";
+    return message;
+  },
+};
+
+messageTypeRegistry.set(ResourceIncrementRefRequest.$type, ResourceIncrementRefRequest);
+
+function createBaseResourceIncrementRefResponse(): ResourceIncrementRefResponse {
+  return { $type: "mrc.protos.ResourceIncrementRefResponse", ok: false };
+}
+
+export const ResourceIncrementRefResponse = {
+  $type: "mrc.protos.ResourceIncrementRefResponse" as const,
+
+  encode(message: ResourceIncrementRefResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.ok === true) {
+      writer.uint32(8).bool(message.ok);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): ResourceIncrementRefResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseResourceIncrementRefResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.ok = reader.bool();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ResourceIncrementRefResponse {
+    return { $type: ResourceIncrementRefResponse.$type, ok: isSet(object.ok) ? Boolean(object.ok) : false };
+  },
+
+  toJSON(message: ResourceIncrementRefResponse): unknown {
+    const obj: any = {};
+    message.ok !== undefined && (obj.ok = message.ok);
+    return obj;
+  },
+
+  create(base?: DeepPartial<ResourceIncrementRefResponse>): ResourceIncrementRefResponse {
+    return ResourceIncrementRefResponse.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<ResourceIncrementRefResponse>): ResourceIncrementRefResponse {
+    const message = createBaseResourceIncrementRefResponse();
+    message.ok = object.ok ?? false;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(ResourceIncrementRefResponse.$type, ResourceIncrementRefResponse);
+
+function createBaseResourceDecrementRefRequest(): ResourceDecrementRefRequest {
+  return { $type: "mrc.protos.ResourceDecrementRefRequest", resourceType: "", resourceId: "0" };
+}
+
+export const ResourceDecrementRefRequest = {
+  $type: "mrc.protos.ResourceDecrementRefRequest" as const,
+
+  encode(message: ResourceDecrementRefRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.resourceType !== "") {
+      writer.uint32(10).string(message.resourceType);
+    }
+    if (message.resourceId !== "0") {
+      writer.uint32(16).uint64(message.resourceId);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): ResourceDecrementRefRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseResourceDecrementRefRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.resourceType = reader.string();
+          break;
+        case 2:
+          message.resourceId = longToString(reader.uint64() as Long);
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ResourceDecrementRefRequest {
+    return {
+      $type: ResourceDecrementRefRequest.$type,
+      resourceType: isSet(object.resourceType) ? String(object.resourceType) : "",
+      resourceId: isSet(object.resourceId) ? String(object.resourceId) : "0",
+    };
+  },
+
+  toJSON(message: ResourceDecrementRefRequest): unknown {
+    const obj: any = {};
+    message.resourceType !== undefined && (obj.resourceType = message.resourceType);
+    message.resourceId !== undefined && (obj.resourceId = message.resourceId);
+    return obj;
+  },
+
+  create(base?: DeepPartial<ResourceDecrementRefRequest>): ResourceDecrementRefRequest {
+    return ResourceDecrementRefRequest.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<ResourceDecrementRefRequest>): ResourceDecrementRefRequest {
+    const message = createBaseResourceDecrementRefRequest();
+    message.resourceType = object.resourceType ?? "";
+    message.resourceId = object.resourceId ?? "0";
+    return message;
+  },
+};
+
+messageTypeRegistry.set(ResourceDecrementRefRequest.$type, ResourceDecrementRefRequest);
+
+function createBaseResourceDecrementRefResponse(): ResourceDecrementRefResponse {
+  return { $type: "mrc.protos.ResourceDecrementRefResponse", ok: false };
+}
+
+export const ResourceDecrementRefResponse = {
+  $type: "mrc.protos.ResourceDecrementRefResponse" as const,
+
+  encode(message: ResourceDecrementRefResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.ok === true) {
+      writer.uint32(8).bool(message.ok);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): ResourceDecrementRefResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseResourceDecrementRefResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.ok = reader.bool();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ResourceDecrementRefResponse {
+    return { $type: ResourceDecrementRefResponse.$type, ok: isSet(object.ok) ? Boolean(object.ok) : false };
+  },
+
+  toJSON(message: ResourceDecrementRefResponse): unknown {
+    const obj: any = {};
+    message.ok !== undefined && (obj.ok = message.ok);
+    return obj;
+  },
+
+  create(base?: DeepPartial<ResourceDecrementRefResponse>): ResourceDecrementRefResponse {
+    return ResourceDecrementRefResponse.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<ResourceDecrementRefResponse>): ResourceDecrementRefResponse {
+    const message = createBaseResourceDecrementRefResponse();
+    message.ok = object.ok ?? false;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(ResourceDecrementRefResponse.$type, ResourceDecrementRefResponse);
 
 function createBaseLookupWorkersRequest(): LookupWorkersRequest {
   return { $type: "mrc.protos.LookupWorkersRequest", instanceIds: [] };

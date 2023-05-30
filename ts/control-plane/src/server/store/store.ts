@@ -12,10 +12,9 @@ import {
 
 import connectionsReducer from "./slices/connectionsSlice";
 import pipelineDefinitionsReducer from "./slices/pipelineDefinitionsSlice";
-// import devToolsReducer from "./slices/devToolsSlice";
 import pipelineInstancesReducer from "./slices/pipelineInstancesSlice";
-// import segmentDefinitionsReducer from "./slices/segmentDefinitionsSlice";
 import segmentInstancesReducer, {segmentInstancesConfigureListeners} from "./slices/segmentInstancesSlice";
+import manifoldInstancesReducer from "./slices/manifoldInstancesSlice";
 import systemReducer, {systemStartRequest, systemStopRequest} from "./slices/systemSlice";
 import workersReducer from "./slices/workersSlice";
 
@@ -26,8 +25,8 @@ const slicesReducer = combineReducers({
    workers: workersReducer,
    pipelineDefinitions: pipelineDefinitionsReducer,
    pipelineInstances: pipelineInstancesReducer,
-   // segmentDefinitions: segmentDefinitionsReducer,
    segmentInstances: segmentInstancesReducer,
+   manifoldInstances: manifoldInstancesReducer,
 });
 
 // Configure all of the listeners
@@ -40,16 +39,16 @@ export const startBatch = createAction("startBatch");
 export const stopBatch  = createAction("stopBatch");
 
 const rootReducer = createReducer({} as RootState, (builder) => {
-   builder.addCase(startAction, (state, action) => {
+   builder.addCase(startAction, (state) => {
       console.log("Starting");
       return state;
    });
-   builder.addCase(stopAction, (state, action) => {
+   builder.addCase(stopAction, (state) => {
       console.log("Stopping");
       return state;
    });
 
-   builder.addCase(startBatch, (state, action) => {
+   builder.addCase(startBatch, (state) => {
       console.log("Starting batch");
 
       return state;
@@ -163,7 +162,7 @@ export function customBatcherEnhancer(options: CustomBatcherOptions): StoreEnhan
    };
 }
 
-export const setupStore = (preloadedState?: PreloadedState<RootState>, addDevTools: boolean = false) => {
+export const setupStore = (preloadedState?: PreloadedState<RootState>, addDevTools = false) => {
    let enhancers = undefined;
 
    if (addDevTools)

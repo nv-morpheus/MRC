@@ -77,6 +77,8 @@ enum EventType
 
     // Resource Management
     ClientUnaryResourceUpdateStatus = 501;
+    ClientUnaryResourceIncrementRef = 502;
+    ClientUnaryResourceDecrementRef = 503;
 
     // Server Event issues to Client(s)
     ServerEvent = 1000;
@@ -136,10 +138,32 @@ message ResourceUpdateStatusRequest
 {
     string resource_type = 1;
     uint64 resource_id = 2;
-    ResourceStatus status = 3;
+    ResourceActualStatus status = 3;
 }
 
 message ResourceUpdateStatusResponse
+{
+    bool ok = 1;
+}
+
+message ResourceIncrementRefRequest
+{
+    string resource_type = 1;
+    uint64 resource_id = 2;
+}
+
+message ResourceIncrementRefResponse
+{
+    bool ok = 1;
+}
+
+message ResourceDecrementRefRequest
+{
+    string resource_type = 1;
+    uint64 resource_id = 2;
+}
+
+message ResourceDecrementRefResponse
 {
     bool ok = 1;
 }

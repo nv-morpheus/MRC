@@ -39,6 +39,44 @@ enum ResourceStatus
    Destroyed = 6;
 }
 
+enum ResourceRequestedStatus
+{
+   // Should never be used. Must start with 0
+   Requested_Unknown = 0;
+   // Requested that a placeholder be reserved for this resource
+   Requested_Initialized = 1;
+   // Requested that the resource be created but not started
+   Requested_Created = 3;
+   // Requested that the resource be started and marked ready
+   Requested_Ready = 4;
+   // Requested that the resource be stopped (by any party)
+   Requested_Stopped = 6;
+   // Requested that the resource be destroyed (and removed from the control plane)
+   Requested_Destroyed = 8;
+}
+
+enum ResourceActualStatus
+{
+   // Resource has not informed its status
+   Actual_Unknown = 0;
+   // Owner of resource has acknowledged it should be created
+   Actual_Initialized = 1;
+   // Resource has acknowledged it should be created and has begun the process
+   Actual_Creating = 2;
+   // Resource is created and can be moved to ready when requested
+   Actual_Created = 3;
+   // Resource is ready and can be used by other resources
+   Actual_Ready = 4;
+   // Resource has acknowledged it should be stopped and has begun the process
+   Actual_Stopping = 5;
+   // Resource has completed the stopped process
+   Actual_Stopped = 6;
+   // Owner of resource has begun destroying the object
+   Actual_Destroying = 7;
+   // Owner of resource has destroyed the object. Can be removed from control plane
+   Actual_Destroyed = 8;
+}
+
 enum SegmentStates
 {
    Initialized = 0;
@@ -48,10 +86,17 @@ enum SegmentStates
 }
 
 message ResourceState {
-   // Current status of the resource
-   ResourceStatus status = 1;
+   // // Current status of the resource
+   // ResourceStatus status = 1;
+
+   // What the control plane would like the resource to be
+   ResourceRequestedStatus requested_status = 2;
+
+   // What the local resource has reported its state as
+   ResourceActualStatus actual_status = 3;
+
    // Number of users besides the owner of this resource
-   int32 ref_count = 2;
+   int32 ref_count = 4;
 }
 
 message Connection {
@@ -65,6 +110,9 @@ message Connection {
 
    // The pipeline instances that are assigned to this machine
    repeated uint64 assigned_pipeline_ids = 4;
+
+   // The ref counts owned by this connection. If the connection is dropped, the ref counts will be decremented
+   map<string, int32> ref_counts = 5;
 }
 
 message Worker {
@@ -90,16 +138,25 @@ message PipelineConfiguration{
       string name = 1;
 
       // Ingress ports for this segment
-      repeated IngressPort ingress_ports = 2;
+      map<string, PortInfo> ingress_ports = 2;
 
       // Egress ports for this segment
-      repeated EgressPort egress_ports = 3;
+      map<string, PortInfo> egress_ports = 3;
 
       // Segment options
       SegmentOptions options = 4;
    }
 
+   message ManifoldConfiguration{
+      // Name of the manifold
+      string name = 1;
+
+      // All options for this config
+      ManifoldOptions options = 2;
+   }
+
    map<string, SegmentConfiguration> segments = 1;
+   map<string, ManifoldConfiguration> manifolds = 2;
 }
 
 enum SegmentMappingPolicies
@@ -155,6 +212,21 @@ message PipelineDefinition {
       repeated uint64 instance_ids = 4;
    }
 
+   message ManifoldDefinition {
+
+      // Generated ID of the definition
+      uint64 id = 1;
+
+      // ID of the parent for back referencing
+      uint64 parent_id = 2;
+
+      // Port name for matching ingress/egress nodes
+      string port_name = 3;
+
+      // Running ManifoldInstance IDs
+      repeated uint64 instance_ids = 4;
+   }
+
    // Generated ID of the definition (int64 because the hash algorithms can give negative values)
    int64 id = 1;
 
@@ -169,6 +241,9 @@ message PipelineDefinition {
 
    // Running Segment Info
    map<string, SegmentDefinition> segments = 5;
+
+   // Running Manifold Info
+   map<string, ManifoldDefinition> manifolds = 6;
 }
 
 message PipelineInstance {
@@ -185,6 +260,9 @@ message PipelineInstance {
 
    // Running Segment Instance IDs
    repeated uint64 segment_ids = 5;
+
+   // Running Manifold Instance IDs
+   repeated uint64 manifold_ids = 6;
 }
 
 message SegmentDefinition {
@@ -237,30 +315,35 @@ message SegmentInstance {
    ResourceState state = 7;
 }
 
-message ManifoldDefinition {
+message ManifoldInstance {
    uint64 id = 1;
 
    // Pipeline Deinition this belongs to
    int64 pipeline_definition_id = 2;
 
-   // Port name for matching ingress/egress nodes
+   // Port name (Lookup manifold config from pipeline def ID and name)
    string port_name = 3;
 
-   // Running Segment Instance IDs
-   repeated uint64 instance_ids = 4;
-}
-
-message ManifoldInstance {
-   uint64 id = 1;
-
-   // Deinition this belongs to
-   int64 definition_id = 2;
-
    // The machine this instance is running on
-   uint64 machine_id = 3;
+   uint64 machine_id = 4;
+
+   // The running pipeline instance id
+   uint64 pipeline_instance_id = 5;
 
    // The current state of this resource
-   ResourceState state = 4;
+   ResourceState state = 6;
+
+   // The requested ingress connections. True = Local, False = Remote
+   map<uint32, bool> requested_ingress_segments = 7;
+
+   // The requested egress connections. True = Local, False = Remote
+   map<uint32, bool> requested_egress_segments = 8;
+
+   // The actual ingress connections. True = Local, False = Remote
+   map<uint32, bool> actual_ingress_segments = 9;
+
+   // The actual egress connections. True = Local, False = Remote
+   map<uint32, bool> actual_egress_segments = 10;
 }
 
 message ControlPlaneState {
@@ -294,12 +377,18 @@ message ControlPlaneState {
       map<uint64, SegmentInstance> entities = 2;
    }
 
+   message ManifoldInstancesState {
+      repeated uint64 ids = 1;
+      map<uint64, ManifoldInstance> entities = 2;
+   }
+
    ConnectionsState connections = 1;
    WorkerssState workers = 2;
    PipelineDefinitionsState pipeline_definitions = 3;
    PipelineInstancesState pipeline_instances = 4;
    SegmentDefinitionsState segment_definitions = 5;
    SegmentInstancesState segment_instances = 6;
+   ManifoldInstancesState manifold_instances = 7;
 }
 
 
@@ -307,26 +396,37 @@ message ControlPlaneState {
 
 message SegmentOptions
 {
-    enum PlacementStrategy
-    {
-        ResourceGroup = 0;
-        PhysicalMachine = 1;
-        Global = 2;
-    }
+   enum PlacementStrategy
+   {
+      ResourceGroup = 0;
+      PhysicalMachine = 1;
+      Global = 2;
+   }
 
-    PlacementStrategy placement_strategy = 1;
-    ScalingOptions scaling_options = 2;
+   PlacementStrategy placement_strategy = 1;
+   ScalingOptions scaling_options = 2;
 }
 
 message ScalingOptions
 {
-    enum ScalingStrategy
-    {
-        Static = 0;
-    }
+   enum ScalingStrategy
+   {
+      Static = 0;
+   }
 
-    ScalingStrategy strategy = 1;
-    uint32 initial_count = 2;
+   ScalingStrategy strategy = 1;
+   uint32 initial_count = 2;
+}
+
+message ManifoldOptions
+{
+   enum Policy
+   {
+       LoadBalance = 0;
+       Broadcast = 1;
+   }
+
+   Policy policy = 1;
 }
 
 // for ingress and egress ports
@@ -340,40 +440,47 @@ message ScalingOptions
 // objects AND on_complete will always trigger a blocking architect
 // event
 
+message PortInfo
+{
+   string port_name = 1;
+   uint32 type_id = 2;
+   string type_string = 3;
+}
+
 message IngressPort
 {
-    string name = 1;
-    uint32 id = 2;
+   string name = 1;
+   uint32 id = 2;
 }
 
 message EgressPort
 {
-    string name = 1;
-    uint32 id = 2;
+   string name = 1;
+   uint32 id = 2;
 
-    enum PolicyType
-    {
-        PolicyDefined = 0;
-        UserDefined = 1;
-    }
+   enum PolicyType
+   {
+      PolicyDefined = 0;
+      UserDefined = 1;
+   }
 
-    PolicyType policy_type = 3;
+   PolicyType policy_type = 3;
 }
 
 message IngressPolicy
 {
-    bool network_enabled = 1;
+   bool network_enabled = 1;
 }
 
 message EgressPolicy
 {
-    enum Policy
-    {
-        LoadBalance = 0;
-        Broadcast = 1;
-    }
-    Policy policy = 3;
+   enum Policy
+   {
+      LoadBalance = 0;
+      Broadcast = 1;
+   }
+   Policy policy = 3;
 
-    // list of allowed pol
-    repeated uint32 segment_addresses = 4; // segment_address, not port_address
+   // list of allowed pol
+   repeated uint32 segment_addresses = 4; // segment_address, not port_address
 }
