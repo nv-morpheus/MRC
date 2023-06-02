@@ -28,6 +28,7 @@
 #include "mrc/node/operators/combine_latest.hpp"
 #include "mrc/node/operators/node_component.hpp"
 #include "mrc/node/operators/router.hpp"
+#include "mrc/node/operators/zip.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/sink_channel_owner.hpp"
 #include "mrc/node/sink_properties.hpp"
@@ -47,6 +48,7 @@
 #include <string>
 #include <tuple>
 #include <utility>
+#include <vector>
 
 // IWYU pragma: no_forward_declare mrc::channel::Channel
 
@@ -121,18 +123,22 @@ template <typename T>
 class TestSource : public WritableAcceptor<T>, public ReadableProvider<T>, public SourceChannelOwner<T>
 {
   public:
-    TestSource()
+    TestSource(std::vector<T> values) : m_values(std::move(values))
     {
         this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
     }
+
+    TestSource(size_t count) : TestSource(gen_values(count)) {}
+
+    TestSource() : TestSource(3) {}
 
     void run()
     {
         auto output = this->get_writable_edge();
 
-        for (int i = 0; i < 3; i++)
+        for (auto& i : m_values)
         {
-            if (output->await_write(T(i)) != channel::Status::success)
+            if (output->await_write(std::move(i)) != channel::Status::success)
             {
                 break;
             }
@@ -140,6 +146,21 @@ class TestSource : public WritableAcceptor<T>, public ReadableProvider<T>, publi
 
         this->release_edge_connection();
     }
+
+  private:
+    static std::vector<T> gen_values(size_t count)
+    {
+        std::vector<T> values;
+
+        for (size_t i = 0; i < count; ++i)
+        {
+            values.emplace_back(i);
+        }
+
+        return values;
+    }
+
+    std::vector<T> m_values;
 };
 
 template <typename T>
@@ -203,12 +224,21 @@ class TestSink : public WritableProvider<T>, public ReadableAcceptor<T>, public 
         while (input->await_read(t) == channel::Status::success)
         {
             VLOG(10) << "Sink got value";
+            m_values.emplace_back(std::move(t));
         }
 
         VLOG(10) << "Sink exited run";
 
         this->release_edge_connection();
     }
+
+    const std::vector<T>& get_values()
+    {
+        return m_values;
+    }
+
+  private:
+    std::vector<T> m_values;
 };
 
 template <typename T>
@@ -824,6 +854,39 @@ TEST_F(TestEdges, CombineLatest)
     source2->run();
 
     sink->run();
+
+    EXPECT_EQ(sink->get_values(),
+              (std::vector<std::tuple<int, float>>{
+                  std::tuple<int, float>{2, 0},
+                  std::tuple<int, float>{2, 1},
+                  std::tuple<int, float>{2, 2},
+              }));
+}
+
+TEST_F(TestEdges, Zip)
+{
+    auto source1 = std::make_shared<node::TestSource<int>>();
+    auto source2 = std::make_shared<node::TestSource<float>>();
+
+    auto zip = std::make_shared<node::Zip<int, float>>();
+
+    auto sink = std::make_shared<node::TestSink<std::tuple<int, float>>>();
+
+    mrc::make_edge(*source1, *zip->get_sink<0>());
+    mrc::make_edge(*source2, *zip->get_sink<1>());
+    mrc::make_edge(*zip, *sink);
+
+    source1->run();
+    source2->run();
+
+    sink->run();
+
+    EXPECT_EQ(sink->get_values(),
+              (std::vector<std::tuple<int, float>>{
+                  std::tuple<int, float>{0, 0},
+                  std::tuple<int, float>{1, 1},
+                  std::tuple<int, float>{2, 2},
+              }));
 }
 
 TEST_F(TestEdges, SourceToNull)
