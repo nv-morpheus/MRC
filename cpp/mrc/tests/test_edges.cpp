@@ -19,7 +19,6 @@
 
 #include "mrc/channel/buffered_channel.hpp"  // IWYU pragma: keep
 #include "mrc/channel/forward.hpp"
-#include "mrc/core/utils.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/edge/edge_channel.hpp"
 #include "mrc/edge/edge_readable.hpp"
@@ -55,7 +54,6 @@
 #include <string>
 #include <tuple>
 #include <utility>
-#include <vector>
 
 // IWYU pragma: no_forward_declare mrc::channel::Channel
 

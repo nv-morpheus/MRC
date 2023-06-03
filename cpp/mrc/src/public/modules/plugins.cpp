@@ -17,9 +17,9 @@
 
 #include "mrc/modules/plugins.hpp"
 
+#include <boost/filesystem/detail/path_traits.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
-#include <boost/filesystem/path_traits.hpp>
 #include <dlfcn.h>
 #include <glog/logging.h>
 
