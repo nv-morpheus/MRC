@@ -20,6 +20,7 @@
 #include "mrc/channel/status.hpp"
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
+#include "mrc/utils/tuple_utils.hpp"
 #include "mrc/utils/type_utils.hpp"
 
 #include <boost/fiber/mutex.hpp>
@@ -30,20 +31,6 @@
 #include <utility>
 
 namespace mrc::node {
-
-template <typename StdTuple, std::size_t... Is>
-auto surely(const StdTuple& stdTuple, std::index_sequence<Is...>)
-{
-    return std::tuple<typename std::tuple_element_t<Is, std::decay_t<StdTuple>>::value_type...>(
-        (std::get<Is>(stdTuple).value())...);
-}
-
-// Converts a std::tuple<std::optional<T1>, std::optional<T2>, ...> to std::tuple<T1, T1, ...>
-template <typename StdTuple>
-auto surely(const StdTuple& stdTuple)
-{
-    return surely(stdTuple, std::make_index_sequence<std::tuple_size<std::decay_t<StdTuple>>::value>());
-}
 
 template <typename... TypesT>
 class CombineLatest : public WritableAcceptor<std::tuple<TypesT...>>
@@ -120,7 +107,7 @@ class CombineLatest : public WritableAcceptor<std::tuple<TypesT...>>
         // Check if we should push the new value
         if (m_values_set == sizeof...(TypesT))
         {
-            std::tuple<TypesT...> new_val = surely(m_state);
+            std::tuple<TypesT...> new_val = utils::tuple_surely(m_state);
 
             status = this->get_writable_edge()->await_write(std::move(new_val));
         }

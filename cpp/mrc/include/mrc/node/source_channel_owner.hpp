@@ -40,13 +40,13 @@ class SourceChannelOwner : public virtual SourceProperties<T>
     {
         edge::EdgeChannel<T> edge_channel(std::move(channel));
 
-        this->do_set_channel(edge_channel);
+        this->do_set_channel(std::move(edge_channel));
     }
 
   protected:
     SourceChannelOwner() = default;
 
-    void do_set_channel(edge::EdgeChannel<T>& edge_channel)
+    void do_set_channel(edge::EdgeChannel<T> edge_channel)
     {
         // Create 2 edges, one for reading and writing. On connection, persist the other to allow the node to still use
         // get_writable_edge
