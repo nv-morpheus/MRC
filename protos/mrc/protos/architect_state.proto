@@ -47,12 +47,12 @@ enum ResourceRequestedStatus
    Requested_Initialized = 1;
    // Requested that the resource be created but not started
    Requested_Created = 3;
-   // Requested that the resource be started and marked ready
-   Requested_Ready = 4;
-   // Requested that the resource be stopped (by any party)
-   Requested_Stopped = 6;
+   // Requested that the resource run to completion
+   Requested_Completed = 5;
+   // Requested that the resource be stopped
+   Requested_Stopped = 7;
    // Requested that the resource be destroyed (and removed from the control plane)
-   Requested_Destroyed = 8;
+   Requested_Destroyed = 9;
 }
 
 enum ResourceActualStatus
@@ -65,16 +65,18 @@ enum ResourceActualStatus
    Actual_Creating = 2;
    // Resource is created and can be moved to ready when requested
    Actual_Created = 3;
-   // Resource is ready and can be used by other resources
-   Actual_Ready = 4;
+   // Resource is running and will be moved to completed when finished
+   Actual_Running = 4;
+   // Resource is done running and ready to be torn down
+   Actual_Completed = 5;
    // Resource has acknowledged it should be stopped and has begun the process
-   Actual_Stopping = 5;
+   Actual_Stopping = 6;
    // Resource has completed the stopped process
-   Actual_Stopped = 6;
+   Actual_Stopped = 7;
    // Owner of resource has begun destroying the object
-   Actual_Destroying = 7;
+   Actual_Destroying = 8;
    // Owner of resource has destroyed the object. Can be removed from control plane
-   Actual_Destroyed = 8;
+   Actual_Destroyed = 9;
 }
 
 enum SegmentStates

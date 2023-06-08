@@ -106,19 +106,19 @@ describe("Single", () => {
    });
 
    test("Activate", () => {
-      store.dispatch(workersUpdateResourceState({ resources: [worker], status: ResourceActualStatus.Actual_Ready }));
+      store.dispatch(workersUpdateResourceState({ resources: [worker], status: ResourceActualStatus.Actual_Running }));
 
       expect(workersSelectById(store.getState(), worker.id)?.state.actualStatus).toEqual(
-         ResourceActualStatus.Actual_Ready
+         ResourceActualStatus.Actual_Running
       );
    });
 
    test("Activate Twice", () => {
-      store.dispatch(workersUpdateResourceState({ resources: [worker], status: ResourceActualStatus.Actual_Ready }));
-      store.dispatch(workersUpdateResourceState({ resources: [worker], status: ResourceActualStatus.Actual_Ready }));
+      store.dispatch(workersUpdateResourceState({ resources: [worker], status: ResourceActualStatus.Actual_Running }));
+      store.dispatch(workersUpdateResourceState({ resources: [worker], status: ResourceActualStatus.Actual_Running }));
 
       expect(workersSelectById(store.getState(), worker.id)?.state.actualStatus).toEqual(
-         ResourceActualStatus.Actual_Ready
+         ResourceActualStatus.Actual_Running
       );
    });
 

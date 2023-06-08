@@ -136,7 +136,7 @@ describe("Single", () => {
          store.dispatch(
             pipelineInstancesUpdateResourceActualState({
                resource: pipeline,
-               status: ResourceActualStatus.Actual_Ready,
+               status: ResourceActualStatus.Actual_Running,
             })
          );
       });

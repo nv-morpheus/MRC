@@ -18,6 +18,7 @@
 #include "internal/segment/segment_instance.hpp"
 
 #include "internal/control_plane/state/root_state.hpp"
+#include "internal/pipeline/manifold_instance.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/system_resources.hpp"
 #include "internal/runnable/runnable_resources.hpp"
@@ -27,6 +28,7 @@
 #include "internal/segment/segment_definition.hpp"
 
 #include "mrc/core/addresses.hpp"
+#include "mrc/core/async_service.hpp"
 #include "mrc/core/task_queue.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/manifold/interface.hpp"
@@ -101,8 +103,8 @@ void SegmentInstance::service_start_impl()
 
     // prepare launchers from m_builder
     std::map<std::string, std::unique_ptr<mrc::runnable::Launcher>> launchers;
-    std::map<std::string, std::unique_ptr<mrc::runnable::Launcher>> egress_launchers;
-    std::map<std::string, std::unique_ptr<mrc::runnable::Launcher>> ingress_launchers;
+    // std::map<std::string, std::unique_ptr<mrc::runnable::Launcher>> egress_launchers;
+    // std::map<std::string, std::unique_ptr<mrc::runnable::Launcher>> ingress_launchers;
 
     auto apply_callback = [this](std::unique_ptr<mrc::runnable::Launcher>& launcher, std::string name) {
         launcher->apply([this, n = std::move(name)](mrc::runnable::Runner& runner) {
@@ -112,9 +114,30 @@ void SegmentInstance::service_start_impl()
                     DVLOG(10) << info() << ": detected a failure in node " << n << "; issuing service_kill()";
                     service_kill();
                 }
+
+                // Now remove the runner
+                CHECK_EQ(m_runners.erase(n), 1) << "Erased wrong number of runners";
+
+                if (m_runners.empty())
+                {
+                    // We are shut down, call stop on the service
+                    this->service_stop();
+                }
             });
         });
     };
+
+    for (const auto& [name, node] : m_builder->egress_ports())
+    {
+        DVLOG(10) << info() << " constructing launcher egress port " << name;
+
+        pipeline_instance.get_manifold_instance(name).register_local_egress(m_address, node.get());
+
+        // node->connect_to_manifold(pipeline_instance.get_manifold(name));
+
+        launchers[name] = node->prepare_launcher(m_runtime.resources().runnable().launch_control());
+        apply_callback(launchers[name], name);
+    }
 
     for (const auto& [name, node] : m_builder->nodes())
     {
@@ -123,33 +146,23 @@ void SegmentInstance::service_start_impl()
         apply_callback(launchers[name], name);
     }
 
-    for (const auto& [name, node] : m_builder->egress_ports())
-    {
-        DVLOG(10) << info() << " constructing launcher egress port " << name;
-
-        node->connect_to_manifold(pipeline_instance.get_manifold(name));
-
-        egress_launchers[name] = node->prepare_launcher(m_runtime.resources().runnable().launch_control());
-        apply_callback(egress_launchers[name], name);
-    }
-
     for (const auto& [name, node] : m_builder->ingress_ports())
     {
         DVLOG(10) << info() << " constructing launcher ingress port " << name;
 
         node->connect_to_manifold(pipeline_instance.get_manifold(name));
 
-        ingress_launchers[name] = node->prepare_launcher(m_runtime.resources().runnable().launch_control());
-        apply_callback(ingress_launchers[name], name);
+        launchers[name] = node->prepare_launcher(m_runtime.resources().runnable().launch_control());
+        apply_callback(launchers[name], name);
     }
 
     DVLOG(10) << info() << " issuing start request";
 
-    for (const auto& [name, launcher] : egress_launchers)
-    {
-        DVLOG(10) << info() << " launching egress port " << name;
-        m_egress_runners[name] = launcher->ignition();
-    }
+    // for (const auto& [name, launcher] : egress_launchers)
+    // {
+    //     DVLOG(10) << info() << " launching egress port " << name;
+    //     m_egress_runners[name] = launcher->ignition();
+    // }
 
     for (const auto& [name, launcher] : launchers)
     {
@@ -157,15 +170,15 @@ void SegmentInstance::service_start_impl()
         m_runners[name] = launcher->ignition();
     }
 
-    for (const auto& [name, launcher] : ingress_launchers)
-    {
-        DVLOG(10) << info() << " launching ingress port " << name;
-        m_ingress_runners[name] = launcher->ignition();
-    }
+    // for (const auto& [name, launcher] : ingress_launchers)
+    // {
+    //     DVLOG(10) << info() << " launching ingress port " << name;
+    //     m_ingress_runners[name] = launcher->ignition();
+    // }
 
-    egress_launchers.clear();
-    launchers.clear();
-    ingress_launchers.clear();
+    // egress_launchers.clear();
+    // launchers.clear();
+    // ingress_launchers.clear();
 
     DVLOG(10) << info() << " start has been initiated; use the is_running future to await on startup";
 }
@@ -331,6 +344,23 @@ void SegmentInstance::do_service_start(std::stop_token stop_token)
 {
     Promise<void> completed_promise;
 
+    std::stop_callback stop_callback(stop_token, [this]() {
+        if (m_local_status >= control_plane::state::ResourceStatus::Registered &&
+            m_local_status < control_plane::state::ResourceStatus::Deactivated)
+        {
+            // Issue a resource state update to the control plane
+            auto request = protos::ResourceUpdateStatusRequest();
+
+            request.set_resource_type("SegmentInstances");
+            request.set_resource_id(this->m_instance_id);
+            request.set_status(protos::ResourceStatus::Deactivating);
+
+            auto response = m_runtime.control_plane().await_unary<protos::ResourceUpdateStatusResponse>(
+                protos::EventType::ClientUnaryResourceUpdateStatus,
+                request);
+        }
+    });
+
     // Now, subscribe to the control plane state updates and filter only on updates to this instance ID
     m_runtime.control_plane()
         .state_update_obs()
@@ -411,7 +441,14 @@ void SegmentInstance::process_state_update(control_plane::state::SegmentInstance
         break;
     }
     case control_plane::state::ResourceStatus::Deactivating:
+        break;
     case control_plane::state::ResourceStatus::Deactivated:
+        if (m_local_status <= control_plane::state::ResourceStatus::Deactivated)
+        {
+            // Drop the manifold connections
+
+            m_local_status = control_plane::state::ResourceStatus::Deactivated;
+        }
     case control_plane::state::ResourceStatus::Unregistered:
     case control_plane::state::ResourceStatus::Destroyed:
     default:

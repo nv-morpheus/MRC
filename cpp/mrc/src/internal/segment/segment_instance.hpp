@@ -93,8 +93,8 @@ class SegmentInstance final : public AsyncService, public runnable::RunnableReso
     control_plane::state::ResourceStatus m_local_status{control_plane::state::ResourceStatus::Registered};
 
     std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_runners;
-    std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_egress_runners;
-    std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_ingress_runners;
+    // std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_egress_runners;
+    // std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_ingress_runners;
 
     mutable std::mutex m_mutex;
 };

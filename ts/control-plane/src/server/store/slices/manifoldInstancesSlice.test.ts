@@ -109,7 +109,7 @@ describe("Single", () => {
       for (const s of [
          ResourceActualStatus.Actual_Creating,
          ResourceActualStatus.Actual_Created,
-         ResourceActualStatus.Actual_Ready,
+         ResourceActualStatus.Actual_Running,
          ResourceActualStatus.Actual_Stopping,
          ResourceActualStatus.Actual_Stopped,
          ResourceActualStatus.Actual_Destroying,
@@ -126,7 +126,7 @@ describe("Single", () => {
       store.dispatch(
          manifoldInstancesUpdateResourceActualState({
             resource: manifolds[0],
-            status: ResourceActualStatus.Actual_Ready,
+            status: ResourceActualStatus.Actual_Running,
          })
       );
 

@@ -15,6 +15,7 @@ import {
 } from "@mrc/proto/mrc/protos/architect_state";
 import { startAppListening } from "@mrc/server/store/listener_middleware";
 import { ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
+import { segmentInstancesUpdateResourceRequestedState } from "@mrc/server/store/slices/segmentInstancesSlice";
 
 const manifoldInstancesAdapter = createWrappedEntityAdapter<IManifoldInstance>({
    selectId: (w) => w.id,
@@ -132,9 +133,18 @@ export const manifoldInstancesSelectByPipelineId = (state: RootState, pipeline_i
 
 export function manifoldInstancesConfigureListeners() {
    startAppListening({
+      actionCreator: segmentInstancesUpdateResourceRequestedState,
+      effect: (action, listenerApi) => {
+         if (action.payload.status == ResourceRequestedStatus.Requested_Created) {
+         }
+      },
+   });
+
+
+   startAppListening({
       actionCreator: pipelineInstancesUpdateResourceActualState,
       effect: (action, listenerApi) => {
-         if (action.payload.status == ResourceActualStatus.Actual_Ready) {
+         if (action.payload.status == ResourceActualStatus.Actual_Running) {
          }
       },
    });

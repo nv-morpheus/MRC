@@ -52,7 +52,8 @@ class PipelineInstance final : public AsyncService, public runnable::RunnableRes
                      uint64_t instance_id);
     ~PipelineInstance() override;
 
-    std::shared_ptr<manifold::Interface> get_manifold(const PortName& port_name);
+    ManifoldInstance& get_manifold_instance(const PortName& port_name) const;
+    std::shared_ptr<manifold::Interface> get_manifold(const PortName& port_name) const;
 
     // currently we are passing the instance back to the executor
     // we should own the instance here in the pipeline instance

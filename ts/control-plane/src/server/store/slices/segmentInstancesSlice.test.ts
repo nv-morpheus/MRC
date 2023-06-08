@@ -105,7 +105,7 @@ describe("Single", () => {
       for (const s of [
          ResourceActualStatus.Actual_Creating,
          ResourceActualStatus.Actual_Created,
-         ResourceActualStatus.Actual_Ready,
+         ResourceActualStatus.Actual_Running,
          ResourceActualStatus.Actual_Stopping,
          ResourceActualStatus.Actual_Stopped,
          ResourceActualStatus.Actual_Destroying,
@@ -120,7 +120,7 @@ describe("Single", () => {
    test("Update State Backwards", () => {
       // Set the state running first
       store.dispatch(
-         segmentInstancesUpdateResourceActualState({ resource: segments[0], status: ResourceActualStatus.Actual_Ready })
+         segmentInstancesUpdateResourceActualState({ resource: segments[0], status: ResourceActualStatus.Actual_Running })
       );
 
       // Try to set it back to initialized

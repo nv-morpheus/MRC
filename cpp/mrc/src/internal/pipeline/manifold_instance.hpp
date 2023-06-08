@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "internal/control_plane/state/root_state.hpp"
+
 #include "mrc/core/async_service.hpp"
 #include "mrc/types.hpp"
 
@@ -31,6 +33,11 @@ namespace mrc::manifold {
 struct Interface;
 }  // namespace mrc::manifold
 
+namespace mrc::segment {
+class EgressPortBase;
+class IngressPortBase;
+}  // namespace mrc::segment
+
 namespace mrc::pipeline {
 class ManifoldDefinition;
 
@@ -42,10 +49,17 @@ class ManifoldInstance final : public AsyncService, public runnable::RunnableRes
                      uint64_t instance_id);
     ~ManifoldInstance() override;
 
+    void register_local_ingress(SegmentAddress address, std::shared_ptr<segment::EgressPortBase> ingress_port);
+    void register_local_egress(SegmentAddress address, std::shared_ptr<segment::EgressPortBase> egress_port);
+
+    void unregister_local_ingress(SegmentAddress address);
+    void unregister_local_egress(SegmentAddress address);
+
     std::shared_ptr<manifold::Interface> get_interface() const;
 
   private:
     void do_service_start(std::stop_token stop_token) final;
+    void process_state_update(control_plane::state::SegmentInstance& instance);
 
     runtime::Runtime& m_runtime;
 

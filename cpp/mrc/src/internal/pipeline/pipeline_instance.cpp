@@ -63,24 +63,32 @@ PipelineInstance::PipelineInstance(runtime::Runtime& runtime,
 
 PipelineInstance::~PipelineInstance() = default;
 
-std::shared_ptr<manifold::Interface> PipelineInstance::get_manifold(const PortName& port_name)
+ManifoldInstance& PipelineInstance::get_manifold_instance(const PortName& port_name) const
 {
     if (!m_manifold_instances.contains(port_name))
     {
+        // Since these are created lazily, cast the constness away
+        auto* mutable_this = const_cast<PipelineInstance*>(this);
+
         auto manifold_def = m_definition->find_manifold(port_name);
 
         // Create a new manifold
-        auto [added_iterator, did_add] = m_manifold_instances.emplace(
+        auto [added_iterator, did_add] = mutable_this->m_manifold_instances.emplace(
             port_name,
             std::make_shared<ManifoldInstance>(m_runtime, manifold_def, 0));
 
-        this->child_service_start(*added_iterator->second);
+        mutable_this->child_service_start(*added_iterator->second);
 
         // Need to wait for it to be live before continuing
         added_iterator->second->service_await_live();
     }
 
-    return m_manifold_instances.at(port_name)->get_interface();
+    return *m_manifold_instances.at(port_name);
+}
+
+std::shared_ptr<manifold::Interface> PipelineInstance::get_manifold(const PortName& port_name) const
+{
+    return this->get_manifold_instance(port_name).get_interface();
 }
 
 void PipelineInstance::update()

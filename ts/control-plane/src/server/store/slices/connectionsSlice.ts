@@ -144,7 +144,7 @@ export function connectionsDropOne(payload: Pick<IConnection, "id">) {
       // Remove them all in reverse order
       try {
          // Start a batch to avoid many notifications
-         dispatch(systemStartRequest());
+         dispatch(systemStartRequest(`Dropping Connection: ${payload.id}`));
 
          segments.forEach((x) => {
             // Need to set the state first
@@ -161,7 +161,7 @@ export function connectionsDropOne(payload: Pick<IConnection, "id">) {
 
          dispatch(connectionsRemove(connection));
       } finally {
-         dispatch(systemStopRequest());
+         dispatch(systemStopRequest(`Dropping Connection: ${payload.id}`));
       }
    };
 }

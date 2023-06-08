@@ -1,19 +1,17 @@
-
-
-import {ServerDuplexStream} from "@grpc/grpc-js";
-import {IConnection, IWorker} from "@mrc/common/entities";
+import { ServerDuplexStream } from "@grpc/grpc-js";
+import { IConnection, IWorker } from "@mrc/common/entities";
 import {
    segmentInstancesSelectById,
    segmentInstancesUpdateResourceActualState,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
-import {systemStartRequest, systemStopRequest} from "@mrc/server/store/slices/systemSlice";
-import {as, AsyncSink, merge} from "ix/asynciterable";
-import {withAbort} from "ix/asynciterable/operators";
-import {CallContext} from "nice-grpc";
-import {firstValueFrom, Subject} from "rxjs";
+import { systemStartRequest, systemStopRequest } from "@mrc/server/store/slices/systemSlice";
+import { as, AsyncSink, merge } from "ix/asynciterable";
+import { batch, withAbort } from "ix/asynciterable/operators";
+import { CallContext } from "nice-grpc";
+import { firstValueFrom, Subject } from "rxjs";
 
-import {pack, packEvent, unpackEvent} from "../common/utils";
-import {Any} from "../proto/google/protobuf/any";
+import { pack, packEvent, sleep, unpackEvent } from "../common/utils";
+import { Any } from "../proto/google/protobuf/any";
 import {
    Ack,
    ArchitectServiceImplementation,
@@ -36,10 +34,15 @@ import {
    StateUpdate,
    TaggedInstance,
 } from "../proto/mrc/protos/architect";
-import {ControlPlaneState, ResourceActualStatus, ResourceRequestedStatus, ResourceStatus} from "../proto/mrc/protos/architect_state";
-import {DeepPartial, messageTypeRegistry} from "../proto/typeRegistry";
+import {
+   ControlPlaneState,
+   ResourceActualStatus,
+   ResourceRequestedStatus,
+   ResourceStatus,
+} from "../proto/mrc/protos/architect_state";
+import { DeepPartial, messageTypeRegistry } from "../proto/typeRegistry";
 
-import {connectionsAdd, connectionsDropOne} from "./store/slices/connectionsSlice";
+import { connectionsAdd, connectionsDropOne } from "./store/slices/connectionsSlice";
 import {
    pipelineInstancesAssign,
    pipelineInstancesSelectById,
@@ -52,17 +55,17 @@ import {
    workersSelectByMachineId,
    workersUpdateResourceState,
 } from "./store/slices/workersSlice";
-import {getRootStore, RootStore, stopAction} from "./store/store";
-import {generateId} from "./utils";
+import { getRootStore, RootStore, stopAction } from "./store/store";
+import { generateId } from "./utils";
 
-interface IncomingData
-{
-   msg: Event, stream?: ServerDuplexStream<Event, Event>, machineId: string,
+interface IncomingData {
+   msg: Event;
+   stream?: ServerDuplexStream<Event, Event>;
+   machineId: string;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function unaryResponse<MessageDataT>(event: IncomingData|undefined, message_class: any, data: MessageDataT): Event
-{
+function unaryResponse<MessageDataT>(event: IncomingData | undefined, message_class: any, data: MessageDataT): Event {
    // Lookup message type
    const type_registry = messageTypeRegistry.get(message_class.$type);
 
@@ -129,8 +132,7 @@ function unaryResponse<MessageDataT>(event: IncomingData|undefined, message_clas
 //    event.stream.write(message);
 // }
 
-class Architect implements ArchitectServiceImplementation
-{
+class Architect implements ArchitectServiceImplementation {
    public service: ArchitectServiceImplementation;
 
    private _store: RootStore;
@@ -138,11 +140,9 @@ class Architect implements ArchitectServiceImplementation
    private shutdown_subject: Subject<void> = new Subject<void>();
    private _stop_controller: AbortController;
 
-   constructor(store?: RootStore)
-   {
+   constructor(store?: RootStore) {
       // Use the default store if not supplied
-      if (!store)
-      {
+      if (!store) {
          store = getRootStore();
       }
 
@@ -157,48 +157,51 @@ class Architect implements ArchitectServiceImplementation
          eventStream: (request, context) => {
             return this.do_eventStream(request, context);
          },
-         ping: async(request, context): Promise<DeepPartial<PingResponse>> => {
+         ping: async (request, context): Promise<DeepPartial<PingResponse>> => {
             return await this.do_ping(request, context);
          },
-         shutdown: async(request, context): Promise<DeepPartial<ShutdownResponse>> => {
+         shutdown: async (request, context): Promise<DeepPartial<ShutdownResponse>> => {
             return await this.do_shutdown(request, context);
          },
       };
    }
 
-   public stop()
-   {
+   public async stop() {
+      this._store.dispatch(stopAction());
+
+      // Sleep here to allow any pending timeouts to be processed before continuing
+      await sleep(0);
+
       // Trigger a stop cancellation for any connected streams
       this._stop_controller.abort("Stop signaled");
-
-      this._store.dispatch(stopAction());
    }
 
-   public eventStream(request: AsyncIterable<Event>, context: CallContext): ServerStreamingMethodResult<{
+   public eventStream(
+      request: AsyncIterable<Event>,
+      context: CallContext
+   ): ServerStreamingMethodResult<{
       event?: EventType | undefined;
       tag?: string | undefined;
-      message?: {value?: Uint8Array | undefined; typeUrl?: string | undefined;} | undefined;
-      error?: {message?: string | undefined; code?: ErrorCode | undefined;} | undefined;
-   }>
-   {
+      message?: { value?: Uint8Array | undefined; typeUrl?: string | undefined } | undefined;
+      error?: { message?: string | undefined; code?: ErrorCode | undefined } | undefined;
+   }> {
       return this.do_eventStream(request, context);
    }
-   public ping(request: PingRequest, context: CallContext): Promise<{tag?: string | undefined;}>
-   {
+   public ping(request: PingRequest, context: CallContext): Promise<{ tag?: string | undefined }> {
       return this.do_ping(request, context);
    }
-   public shutdown(request: ShutdownRequest, context: CallContext): Promise<{tag?: string | undefined;}>
-   {
+   public shutdown(request: ShutdownRequest, context: CallContext): Promise<{ tag?: string | undefined }> {
       return this.do_shutdown(request, context);
    }
 
-   public onShutdownSignaled()
-   {
+   public onShutdownSignaled() {
       return firstValueFrom(this.shutdown_subject);
    }
 
-   private async * do_eventStream(stream: AsyncIterable<Event>, context: CallContext): AsyncIterable<DeepPartial<Event>>
-   {
+   private async *do_eventStream(
+      stream: AsyncIterable<Event>,
+      context: CallContext
+   ): AsyncIterable<DeepPartial<Event>> {
       console.log(`Event stream created for ${context.peer}`);
 
       const connection: IConnection = {
@@ -206,7 +209,7 @@ class Architect implements ArchitectServiceImplementation
          peerInfo: context.peer,
          workerIds: [],
          assignedPipelineIds: [],
-         refCounts: {}
+         refCounts: {},
       };
 
       context.metadata.set("mrc-machine-id", connection.id.toString());
@@ -218,15 +221,21 @@ class Architect implements ArchitectServiceImplementation
          const state = this._store.getState();
 
          // Remove the system object from the state
-         const {system: _, ...out_state} = {...state, system: {extra: true}};
+         const { system: _, ...out_state } = { ...state, system: { extra: true } };
 
-         console.log("Pushing state update");
+         if (state.system.requestRunning) {
+            console.log("Request is still running!");
+         }
+         console.log(`Pushing state update: ${state.system.requestRunningNonce.toString()}`);
 
          // Push out the state update
          store_update_sink.write(
-             packEvent<ControlPlaneState>(EventType.ServerStateUpdate,
-                                          "0",
-                                          ControlPlaneState.create(out_state as ControlPlaneState)));
+            packEvent<ControlPlaneState>(
+               EventType.ServerStateUpdate,
+               state.system.requestRunningNonce.toString(),
+               ControlPlaneState.create(out_state as ControlPlaneState)
+            )
+         );
       });
 
       // Create a new connection
@@ -238,41 +247,58 @@ class Architect implements ArchitectServiceImplementation
       // Yield a connected even
       yield Event.create({
          event: EventType.ClientEventStreamConnected,
-         message: pack(ClientConnectedResponse.create({
-            machineId: connection.id,
-         })),
+         message: pack(
+            ClientConnectedResponse.create({
+               machineId: connection.id,
+            })
+         ),
       });
 
-      const event_stream = async function*() {
-         try
-         {
-            for await (const req of stream)
-            {
-               try
-               {
-                  console.log(
-                      `Event stream start for ${connection.peerInfo} with message: ${eventTypeToJSON(req.event)}`);
+      const event_stream = async function* () {
+         try {
+            for await (const req of stream) {
+               const request_identifier = `Peer:${connection.peerInfo},Event:${eventTypeToJSON(req.event)},Tag:${
+                  req.tag
+               }`;
 
-                  self._store.dispatch(systemStartRequest());
+               const yeilded_events: Event[] = [];
 
-                  yield* self.do_handle_event({
-                     msg: req,
-                     machineId: connection.id,
-                  },
-                                              context);
-               } finally
-               {
-                  self._store.dispatch(systemStopRequest());
+               try {
+                  console.log(`--- Start Request for '${request_identifier}' ---`);
 
-                  console.log(
-                      `Event stream end for ${connection.peerInfo} with message: ${eventTypeToJSON(req.event)}`);
+                  self._store.dispatch(systemStartRequest(request_identifier));
+
+                  // Cache any yielded events to send after systemStopRequest
+                  for await (const event of self.do_handle_event(
+                     {
+                        msg: req,
+                        machineId: connection.id,
+                     },
+                     context
+                  )) {
+                     yeilded_events.push(event);
+                  }
+                  // yield* self.do_handle_event(
+                  //    {
+                  //       msg: req,
+                  //       machineId: connection.id,
+                  //    },
+                  //    context
+                  // );
+               } finally {
+                  // Now yield any generated events, after systemStopRequest
+                  for (const event of yeilded_events) {
+                     yield event;
+                  }
+
+                  self._store.dispatch(systemStopRequest(request_identifier));
+
+                  console.log(`--- End Request for '${request_identifier}' ---`);
                }
             }
-         } catch (error)
-         {
+         } catch (error) {
             console.log(`Error occurred in stream. Error: ${error}`);
-         } finally
-         {
+         } finally {
             console.log(`Event stream closed for ${connection.peerInfo}.`);
 
             // Input stream has completed so stop pushing events
@@ -282,23 +308,24 @@ class Architect implements ArchitectServiceImplementation
          }
       };
 
-      try
-      {
+      try {
          // Make the combined async iterable
-         const combined_iterable =
-             merge(as<Event>(event_stream()).pipe(withAbort(this._stop_controller.signal)), as<Event>(store_update_sink));
+         const combined_iterable = merge(
+            as<Event>(event_stream()).pipe(withAbort(this._stop_controller.signal)),
+            as<Event>(store_update_sink)
+         );
 
-         for await (const out_event of combined_iterable)
-         {
-            console.log(`Sending event to ${connection.peerInfo}. EventID: ${eventTypeToJSON(out_event.event)}, Tag: ${out_event.tag}`);
+         for await (const out_event of combined_iterable) {
+            console.log(
+               `Sending event to ${connection.peerInfo}. EventID: ${eventTypeToJSON(out_event.event)}, Tag: ${
+                  out_event.tag
+               }`
+            );
             yield out_event;
          }
-
-      } catch (error)
-      {
+      } catch (error) {
          console.log(`Error occurred in stream. Error: ${error}`);
-      } finally
-      {
+      } finally {
          console.log(`All streams closed for ${connection.peerInfo}. Deleting connection.`);
 
          // Ensure the other streams are cleaned up
@@ -311,191 +338,191 @@ class Architect implements ArchitectServiceImplementation
       }
    }
 
-   private async * do_handle_event(event: IncomingData, context: CallContext)
-   {
-      try
-      {
-         switch (event.msg.event)
-         {
-         case EventType.ClientEventPing:{
-            const payload = unpackEvent<PingRequest>(event.msg);
+   private async *do_handle_event(event: IncomingData, context: CallContext) {
+      try {
+         switch (event.msg.event) {
+            case EventType.ClientEventPing: {
+               const payload = unpackEvent<PingRequest>(event.msg);
 
-            console.log(`Ping from ${context.peer}. Tag: ${payload.tag}.`);
+               console.log(`Ping from ${context.peer}. Tag: ${payload.tag}.`);
 
-            yield unaryResponse(event, PingResponse, PingResponse.create({
-               tag: payload.tag,
-            }));
-
-            break;
-         }
-         case EventType.ClientEventRequestStateUpdate:
-
-            yield unaryResponse(event,
-                                StateUpdate,
-                                StateUpdate.create({
-
-                                }));
-
-            break;
-         case EventType.ClientUnaryRegisterWorkers: {
-            const payload = unpackEvent<RegisterWorkersRequest>(event.msg);
-
-            const workers: IWorker[] = payload.ucxWorkerAddresses.map((value): IWorker => {
-               return {
-                  id: generateId(),
-                  machineId: event.machineId,
-                  workerAddress: value,
-                  state: {
-                     requestedStatus: ResourceRequestedStatus.Requested_Initialized,
-                     actualStatus: ResourceActualStatus.Actual_Unknown,
-                     refCount: 0,
-                  },
-                  assignedSegmentIds: [],
-               };
-            });
-
-            // Add the workers
-            this._store.dispatch(workersAddMany(workers));
-
-            const resp = RegisterWorkersResponse.create({
-               machineId: event.machineId,
-               instanceIds: workersSelectByMachineId(this._store.getState(), event.machineId).map((worker) => worker.id)
-            });
-
-            yield unaryResponse(event, RegisterWorkersResponse, resp);
-
-            break;
-         }
-         case EventType.ClientUnaryActivateStream: {
-            const payload = unpackEvent<RegisterWorkersResponse>(event.msg);
-
-            const workers = payload.instanceIds.map((id) => {
-               const w = workersSelectById(this._store.getState(), id);
-
-               if (!w)
-               {
-                  throw new Error(`Cannot activate Worker ${id}. ID does not exist`);
-               }
-
-               return w;
-            });
-
-            this._store.dispatch(workersUpdateResourceState({resources: workers, status: ResourceActualStatus.Actual_Ready}));
-
-            yield unaryResponse(event, Ack, {});
-
-            break;
-         }
-         case EventType.ClientUnaryDropWorker: {
-            const payload = unpackEvent<TaggedInstance>(event.msg);
-
-            const found_worker = workersSelectById(this._store.getState(), payload.instanceId);
-
-            if (found_worker)
-            {
-               this._store.dispatch(workersRemove(found_worker));
-            }
-
-            yield unaryResponse(event, Ack, {});
-
-            break;
-         }
-         case EventType.ClientUnaryRequestPipelineAssignment: {
-            const payload = unpackEvent<PipelineRequestAssignmentRequest>(event.msg);
-
-            // Check to make sure its not null
-            if (!payload.pipeline)
-            {
-               throw new Error("`pipeline` cannot be undefined");
-               // Use default values for now since the pipeline def is empty
-               // payload.pipeline = PipelineDefinition.create({
-               //    id: 0,
-               //    instanceIds: [],
-               //    segmentIds: [],
-               // });
-            }
-
-            if (!payload.mapping)
-            {
-               throw new Error("`mapping` cannot be undefined");
-            }
-
-            if (payload.mapping.machineId == "0")
-            {
-               payload.mapping.machineId = event.machineId;
-            }
-            else if (payload.mapping.machineId != event.machineId)
-            {
-               throw new Error("Incorrect machineId");
-            }
-
-            // Add a pipeline assignment to the machine
-            const addedInstances = this._store.dispatch(pipelineInstancesAssign({
-               pipeline: payload.pipeline,
-               mapping: payload.mapping,
-            }));
-
-            yield unaryResponse(event,
-                                PipelineRequestAssignmentResponse,
-                                PipelineRequestAssignmentResponse.create(addedInstances));
-
-            break;
-         }
-         case EventType.ClientUnaryResourceUpdateStatus: {
-            const payload = unpackEvent<ResourceUpdateStatusRequest>(event.msg);
-
-            // Check to make sure its not null
-            switch (payload.resourceType)
-            {
-            case "PipelineInstances": {
-               const found = pipelineInstancesSelectById(this._store.getState(), payload.resourceId);
-
-               if (!found)
-               {
-                  throw new Error(`Could not find PipelineInstance for ID: ${payload.resourceId}`);
-               }
-
-               this._store.dispatch(pipelineInstancesUpdateResourceActualState({
-                  resource: found,
-                  status: payload.status,
-               }));
+               yield unaryResponse(
+                  event,
+                  PingResponse,
+                  PingResponse.create({
+                     tag: payload.tag,
+                  })
+               );
 
                break;
             }
-            case "SegmentInstances": {
-               const found = segmentInstancesSelectById(this._store.getState(), payload.resourceId);
+            case EventType.ClientEventRequestStateUpdate:
+               yield unaryResponse(event, StateUpdate, StateUpdate.create({}));
 
-               if (!found)
-               {
-                  throw new Error(`Could not find SegmentInstance for ID: ${payload.resourceId}`);
+               break;
+            case EventType.ClientUnaryRegisterWorkers: {
+               const payload = unpackEvent<RegisterWorkersRequest>(event.msg);
+
+               const workers: IWorker[] = payload.ucxWorkerAddresses.map((value): IWorker => {
+                  return {
+                     id: generateId(),
+                     machineId: event.machineId,
+                     workerAddress: value,
+                     state: {
+                        requestedStatus: ResourceRequestedStatus.Requested_Initialized,
+                        actualStatus: ResourceActualStatus.Actual_Unknown,
+                        refCount: 0,
+                     },
+                     assignedSegmentIds: [],
+                  };
+               });
+
+               // Add the workers
+               this._store.dispatch(workersAddMany(workers));
+
+               const resp = RegisterWorkersResponse.create({
+                  machineId: event.machineId,
+                  instanceIds: workersSelectByMachineId(this._store.getState(), event.machineId).map(
+                     (worker) => worker.id
+                  ),
+               });
+
+               yield unaryResponse(event, RegisterWorkersResponse, resp);
+
+               break;
+            }
+            case EventType.ClientUnaryActivateStream: {
+               const payload = unpackEvent<RegisterWorkersResponse>(event.msg);
+
+               const workers = payload.instanceIds.map((id) => {
+                  const w = workersSelectById(this._store.getState(), id);
+
+                  if (!w) {
+                     throw new Error(`Cannot activate Worker ${id}. ID does not exist`);
+                  }
+
+                  return w;
+               });
+
+               this._store.dispatch(
+                  workersUpdateResourceState({ resources: workers, status: ResourceActualStatus.Actual_Running })
+               );
+
+               yield unaryResponse(event, Ack, {});
+
+               break;
+            }
+            case EventType.ClientUnaryDropWorker: {
+               const payload = unpackEvent<TaggedInstance>(event.msg);
+
+               const found_worker = workersSelectById(this._store.getState(), payload.instanceId);
+
+               if (found_worker) {
+                  this._store.dispatch(workersRemove(found_worker));
                }
 
-               this._store.dispatch(segmentInstancesUpdateResourceActualState({
-                  resource: found,
-                  status: payload.status,
-               }));
+               yield unaryResponse(event, Ack, {});
+
+               break;
+            }
+            case EventType.ClientUnaryRequestPipelineAssignment: {
+               const payload = unpackEvent<PipelineRequestAssignmentRequest>(event.msg);
+
+               // Check to make sure its not null
+               if (!payload.pipeline) {
+                  throw new Error("`pipeline` cannot be undefined");
+                  // Use default values for now since the pipeline def is empty
+                  // payload.pipeline = PipelineDefinition.create({
+                  //    id: 0,
+                  //    instanceIds: [],
+                  //    segmentIds: [],
+                  // });
+               }
+
+               if (!payload.mapping) {
+                  throw new Error("`mapping` cannot be undefined");
+               }
+
+               if (payload.mapping.machineId == "0") {
+                  payload.mapping.machineId = event.machineId;
+               } else if (payload.mapping.machineId != event.machineId) {
+                  throw new Error("Incorrect machineId");
+               }
+
+               // Add a pipeline assignment to the machine
+               const addedInstances = this._store.dispatch(
+                  pipelineInstancesAssign({
+                     pipeline: payload.pipeline,
+                     mapping: payload.mapping,
+                  })
+               );
+
+               yield unaryResponse(
+                  event,
+                  PipelineRequestAssignmentResponse,
+                  PipelineRequestAssignmentResponse.create(addedInstances)
+               );
+
+               break;
+            }
+            case EventType.ClientUnaryResourceUpdateStatus: {
+               const payload = unpackEvent<ResourceUpdateStatusRequest>(event.msg);
+
+               // Check to make sure its not null
+               switch (payload.resourceType) {
+                  case "PipelineInstances": {
+                     const found = pipelineInstancesSelectById(this._store.getState(), payload.resourceId);
+
+                     if (!found) {
+                        throw new Error(`Could not find PipelineInstance for ID: ${payload.resourceId}`);
+                     }
+
+                     this._store.dispatch(
+                        pipelineInstancesUpdateResourceActualState({
+                           resource: found,
+                           status: payload.status,
+                        })
+                     );
+
+                     break;
+                  }
+                  case "SegmentInstances": {
+                     const found = segmentInstancesSelectById(this._store.getState(), payload.resourceId);
+
+                     if (!found) {
+                        throw new Error(`Could not find SegmentInstance for ID: ${payload.resourceId}`);
+                     }
+
+                     this._store.dispatch(
+                        segmentInstancesUpdateResourceActualState({
+                           resource: found,
+                           status: payload.status,
+                        })
+                     );
+
+                     break;
+                  }
+                  default:
+                     throw new Error("Unsupported resource type");
+               }
+
+               yield unaryResponse(
+                  event,
+                  ResourceUpdateStatusResponse,
+                  ResourceUpdateStatusResponse.create({ ok: true })
+               );
 
                break;
             }
             default:
-               throw new Error("Unsupported resource type");
-            }
-
-            yield unaryResponse(event, ResourceUpdateStatusResponse, ResourceUpdateStatusResponse.create({ok: true}));
-
-            break;
+               break;
          }
-         default:
-            break;
-         }
-      } catch (error)
-      {
+      } catch (error) {
          console.log(`Error occurred handing event. Error: ${error}`);
       }
    }
 
-   private async do_shutdown(req: ShutdownRequest, context: CallContext): Promise<DeepPartial<ShutdownResponse>>
-   {
+   private async do_shutdown(req: ShutdownRequest, context: CallContext): Promise<DeepPartial<ShutdownResponse>> {
       console.log(`Issuing shutdown promise from ${context.peer}`);
 
       // Signal that shutdown was requested
@@ -504,8 +531,7 @@ class Architect implements ArchitectServiceImplementation
       return ShutdownResponse.create();
    }
 
-   private async do_ping(req: PingRequest, context: CallContext): Promise<DeepPartial<PingResponse>>
-   {
+   private async do_ping(req: PingRequest, context: CallContext): Promise<DeepPartial<PingResponse>> {
       console.log(`Ping from ${context.peer}`);
 
       return PingResponse.create({
@@ -566,6 +592,4 @@ class Architect implements ArchitectServiceImplementation
 
 // }
 
-export {
-   Architect,
-};
+export { Architect };

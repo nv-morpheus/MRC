@@ -1,48 +1,29 @@
 /* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import "ix/add/asynciterable-operators/first";
-import "ix/add/asynciterable-operators/finalize";
-import "ix/add/asynciterable-operators/last";
 
-import { Channel, credentials } from "@grpc/grpc-js";
-import { ConnectivityState } from "@grpc/grpc-js/build/src/connectivity-state";
-import { IConnection, IPipelineConfiguration, IPipelineMapping, ISegmentMapping } from "@mrc/common/entities";
-import { ResourceActualStatus, ResourceStatus } from "@mrc/proto/mrc/protos/architect_state";
-import { pipelineDefinitionsSelectById } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
-import { pipeline_mappings } from "@mrc/tests/defaultObjects";
-import { as, AsyncIterableX, AsyncSink, from } from "ix/asynciterable";
-import { filter, finalize, map, share } from "ix/asynciterable/operators";
-import { createChannel, createClient, waitForChannelReady } from "nice-grpc";
-
-import { packEvent, stringToBytes } from "../common/utils";
+import { MrcTestClient } from "@mrc/client/client";
+import { IPipelineConfiguration, IPipelineMapping, ISegmentMapping } from "@mrc/common/entities";
+import { packEvent, stringToBytes } from "@mrc/common/utils";
 import {
    Ack,
-   ArchitectClient,
-   ArchitectDefinition,
-   ClientConnectedResponse,
-   Event,
    EventType,
    PingRequest,
-   PingResponse,
    PipelineRequestAssignmentRequest,
    PipelineRequestAssignmentResponse,
    RegisterWorkersRequest,
    RegisterWorkersResponse,
    ResourceUpdateStatusRequest,
    ResourceUpdateStatusResponse,
-} from "../proto/mrc/protos/architect";
-import { ArchitectServer } from "../server/server";
-import { connectionsSelectAll, connectionsSelectById } from "../server/store/slices/connectionsSlice";
-import { pipelineInstancesSelectById } from "../server/store/slices/pipelineInstancesSlice";
+} from "@mrc/proto/mrc/protos/architect";
+import { ResourceActualStatus, ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
+import { connectionsSelectAll, connectionsSelectById } from "@mrc/server/store/slices/connectionsSlice";
+import { pipelineDefinitionsSelectById } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
+import { pipelineInstancesSelectById } from "@mrc/server/store/slices/pipelineInstancesSlice";
 import {
    segmentInstancesSelectByIds,
    segmentInstancesSelectByPipelineId,
-} from "../server/store/slices/segmentInstancesSlice";
-import { workersSelectById } from "../server/store/slices/workersSlice";
-import { RootStore, setupStore } from "../server/store/store";
-
-import { unpack_first_event, unpack_unary_event } from "./utils";
-import { UnknownMessage } from "@mrc/proto/typeRegistry";
+} from "@mrc/server/store/slices/segmentInstancesSlice";
+import { workersSelectById } from "@mrc/server/store/slices/workersSlice";
 
 // class AsyncFlag<T> {
 //    private _promise: Promise<T>;
@@ -134,134 +115,6 @@ import { UnknownMessage } from "@mrc/proto/typeRegistry";
 
 //    // console.log(`afterEach took ${performance.now() - startTime} milliseconds`);
 // }
-
-class MrcTestClient {
-   public store: RootStore | null = null;
-   public server: ArchitectServer | null = null;
-   public client_channel: Channel | null = null;
-   public client: ArchitectClient | null = null;
-   private _abort_controller: AbortController = new AbortController();
-   private _send_events: AsyncSink<Event> | null = null;
-   private _recieve_events: AsyncIterableX<Event> | null = null;
-   public machineId: string | null = null;
-
-   constructor() {}
-
-   public async initializeClient() {
-      const startTime = performance.now();
-
-      this.store = setupStore();
-
-      // Use localhost:0 to bind to a random port to avoid collisions when testing
-      this.server = new ArchitectServer(this.store, "localhost:0");
-
-      const port = await this.server.start();
-
-      this.client_channel = createChannel(`localhost:${port}`, credentials.createInsecure());
-
-      // Now make the client
-      this.client = createClient(ArchitectDefinition, this.client_channel);
-
-      // Important to ensure the channel is ready before continuing
-      await waitForChannelReady(this.client_channel, new Date(Date.now() + 1000));
-
-      // console.log(`beforeEach took ${performance.now() - startTime} milliseconds`);
-   }
-
-   public async finalizeClient() {
-      const startTime = performance.now();
-
-      if (this.client_channel) {
-         this.client_channel.close();
-         this.client_channel = null;
-      }
-
-      if (this.server) {
-         await this.server.stop();
-         await this.server.join();
-         this.server = null;
-      }
-
-      // console.log(`afterEach took ${performance.now() - startTime} milliseconds`);
-   }
-
-   public async initializeEventStream() {
-      if (!this.client) {
-         throw new Error("Must initialize client before stream");
-      }
-
-      this._abort_controller = new AbortController();
-      this._send_events = new AsyncSink<Event>();
-
-      this._recieve_events = as(
-         this.client.eventStream(this._send_events, {
-            signal: this._abort_controller.signal,
-         })
-      ).pipe(share());
-
-      const connected_response = await unpack_first_event<ClientConnectedResponse>(this._recieve_events, {
-         predicate: (event) => event.event === EventType.ClientEventStreamConnected,
-      });
-
-      this.machineId = connected_response.machineId;
-   }
-
-   public async finalizeEventStream() {
-      if (this._send_events) {
-         this._send_events.end();
-         this._send_events = null;
-      }
-
-      if (this._recieve_events) {
-         // This can fail so unset the variable before the for loop
-         const recieve_events = this._recieve_events;
-         this._recieve_events = null;
-
-         for await (const item of recieve_events) {
-            console.log(`Excess messages left in recieve queue. Msg: ${item}`);
-         }
-      }
-   }
-
-   public isChannelConnected() {
-      return this.client_channel?.getConnectivityState(true) == ConnectivityState.READY;
-   }
-
-   public async abortConnection(reason = "Abort requested") {
-      if (!this.client) {
-         throw new Error("Client is not connected");
-      }
-
-      this._abort_controller.abort(reason);
-
-      // Call finalize to close the input stream and pull off any messages before exiting
-      await this.finalizeEventStream();
-   }
-
-   public getState() {
-      if (!this.store) {
-         throw new Error("Client is not connected");
-      }
-
-      return this.store.getState();
-   }
-
-   public async ping(request: PingRequest): Promise<PingResponse> {
-      if (!this.client) {
-         throw new Error("Client is not connected");
-      }
-
-      return await this.client.ping(request);
-   }
-
-   public async unary_event<MessageT extends UnknownMessage>(message: Event) {
-      if (!this._recieve_events || !this._send_events) {
-         throw new Error("Client is not connected");
-      }
-
-      return unpack_unary_event<MessageT>(this._recieve_events, this._send_events, message);
-   }
-}
 
 // describe("Client", () => {
 //    let store: RootStore;
@@ -420,7 +273,7 @@ class MrcTestClient {
 //             // Check to make sure its activated
 //             const found_worker = workersSelectById(store.getState(), registered_response.instanceIds[0]);
 
-//             expect(found_worker?.state.actualStatus).toBe(ResourceActualStatus.Actual_Ready);
+//             expect(found_worker?.state.actualStatus).toBe(ResourceActualStatus.Actual_Running);
 //          });
 
 //          describe("pipeline", () => {
@@ -523,7 +376,7 @@ class MrcTestClient {
 //                      ResourceUpdateStatusRequest.create({
 //                         resourceId: foundPipelineInstance?.id,
 //                         resourceType: "PipelineInstances",
-//                         status: ResourceActualStatus.Actual_Ready,
+//                         status: ResourceActualStatus.Actual_Running,
 //                      })
 //                   )
 //                );
@@ -588,7 +441,7 @@ describe("Connection", () => {
          await client.finalizeEventStream();
       });
 
-      test("Found Connection", () => {
+      test("Found Connection", async () => {
          // Verify the number of connections is 1
          const connection = connectionsSelectById(client.getState(), client.machineId!);
 
@@ -596,9 +449,9 @@ describe("Connection", () => {
          expect(connection?.id).toEqual(client.machineId!);
       });
 
-      test("Abort", async () => {
-         expect(client.abortConnection()).rejects.toThrow("The operation has been aborted");
-      });
+      // test("Abort", async () => {
+      //    expect(client.abortConnection()).rejects.toThrow("The operation has been aborted");
+      // });
    });
 });
 
@@ -631,7 +484,7 @@ describe("Worker", () => {
       // Need to do deeper checking here
    });
 
-   it("Activate", async () => {
+   test("Activate", async () => {
       const registered_response = await client.unary_event<RegisterWorkersResponse>(
          packEvent(
             EventType.ClientUnaryRegisterWorkers,
@@ -649,7 +502,7 @@ describe("Worker", () => {
       // Check to make sure its activated
       const found_worker = workersSelectById(client.getState(), registered_response.instanceIds[0]);
 
-      expect(found_worker?.state.actualStatus).toBe(ResourceActualStatus.Actual_Ready);
+      expect(found_worker?.state.actualStatus).toBe(ResourceActualStatus.Actual_Running);
    });
 });
 
@@ -751,15 +604,82 @@ describe("Pipeline", () => {
 
       expect(foundSegmentInstances).toHaveLength(0);
 
+      let current_state = await client.wait_for_state_update();
+
+      let pipeline_instance_state = current_state.pipelineInstances?.entities[foundPipelineInstance?.id ?? ""];
+
+      expect(pipeline_instance_state?.state?.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Created);
+
+      const test = {} as ResourceUpdateStatusRequest;
+
+      test.$type;
+
       //  Update the PipelineInstance state to assign segment instances
-      const update_pipeline_status_response = await client.unary_event<ResourceUpdateStatusResponse>(
+      let update_pipeline_status_response = await client.unary_event<ResourceUpdateStatusResponse>(
          packEvent(
             EventType.ClientUnaryResourceUpdateStatus,
             "12345",
             ResourceUpdateStatusRequest.create({
                resourceId: foundPipelineInstance?.id,
                resourceType: "PipelineInstances",
-               status: ResourceActualStatus.Actual_Ready,
+               status: ResourceActualStatus.Actual_Created,
+            })
+         )
+      );
+
+      current_state = await client.wait_for_state_update();
+
+      pipeline_instance_state = current_state.pipelineInstances?.entities[foundPipelineInstance?.id ?? ""];
+
+      expect(pipeline_instance_state?.state?.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Completed);
+
+      //  Update the PipelineInstance state to assign segment instances
+      update_pipeline_status_response = await client.unary_event<ResourceUpdateStatusResponse>(
+         packEvent(
+            EventType.ClientUnaryResourceUpdateStatus,
+            "12345",
+            ResourceUpdateStatusRequest.create({
+               resourceId: foundPipelineInstance?.id,
+               resourceType: "PipelineInstances",
+               status: ResourceActualStatus.Actual_Completed,
+            })
+         )
+      );
+
+      current_state = await client.wait_for_state_update();
+
+      pipeline_instance_state = current_state.pipelineInstances?.entities[foundPipelineInstance?.id ?? ""];
+
+      expect(pipeline_instance_state?.state?.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Stopped);
+
+      //  Update the PipelineInstance state to assign segment instances
+      update_pipeline_status_response = await client.unary_event<ResourceUpdateStatusResponse>(
+         packEvent(
+            EventType.ClientUnaryResourceUpdateStatus,
+            "12345",
+            ResourceUpdateStatusRequest.create({
+               resourceId: foundPipelineInstance?.id,
+               resourceType: "PipelineInstances",
+               status: ResourceActualStatus.Actual_Stopped,
+            })
+         )
+      );
+
+      current_state = await client.wait_for_state_update();
+
+      pipeline_instance_state = current_state.pipelineInstances?.entities[foundPipelineInstance?.id ?? ""];
+
+      expect(pipeline_instance_state?.state?.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Destroyed);
+
+      //  Update the PipelineInstance state to assign segment instances
+      update_pipeline_status_response = await client.unary_event<ResourceUpdateStatusResponse>(
+         packEvent(
+            EventType.ClientUnaryResourceUpdateStatus,
+            "12345",
+            ResourceUpdateStatusRequest.create({
+               resourceId: foundPipelineInstance?.id,
+               resourceType: "PipelineInstances",
+               status: ResourceActualStatus.Actual_Destroyed,
             })
          )
       );

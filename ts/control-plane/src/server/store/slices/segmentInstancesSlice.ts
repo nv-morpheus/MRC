@@ -165,7 +165,7 @@ export function segmentInstancesConfigureListeners() {
    startAppListening({
       actionCreator: pipelineInstancesUpdateResourceActualState,
       effect: (action, listenerApi) => {
-         if (action.payload.status == ResourceActualStatus.Actual_Ready) {
+         if (action.payload.status == ResourceActualStatus.Actual_Running) {
             // Pipeline has been marked as ready. Update segment instances based on the pipeline config
             const pipeline_def = pipelineDefinitionsSelectById(
                listenerApi.getState(),

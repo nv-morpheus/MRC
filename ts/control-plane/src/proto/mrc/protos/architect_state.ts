@@ -107,9 +107,9 @@ export enum ResourceRequestedStatus {
   Requested_Initialized = "Requested_Initialized",
   /** Requested_Created - Requested that the resource be created but not started */
   Requested_Created = "Requested_Created",
-  /** Requested_Ready - Requested that the resource be started and marked ready */
-  Requested_Ready = "Requested_Ready",
-  /** Requested_Stopped - Requested that the resource be stopped (by any party) */
+  /** Requested_Completed - Requested that the resource run to completion */
+  Requested_Completed = "Requested_Completed",
+  /** Requested_Stopped - Requested that the resource be stopped */
   Requested_Stopped = "Requested_Stopped",
   /** Requested_Destroyed - Requested that the resource be destroyed (and removed from the control plane) */
   Requested_Destroyed = "Requested_Destroyed",
@@ -127,13 +127,13 @@ export function resourceRequestedStatusFromJSON(object: any): ResourceRequestedS
     case 3:
     case "Requested_Created":
       return ResourceRequestedStatus.Requested_Created;
-    case 4:
-    case "Requested_Ready":
-      return ResourceRequestedStatus.Requested_Ready;
-    case 6:
+    case 5:
+    case "Requested_Completed":
+      return ResourceRequestedStatus.Requested_Completed;
+    case 7:
     case "Requested_Stopped":
       return ResourceRequestedStatus.Requested_Stopped;
-    case 8:
+    case 9:
     case "Requested_Destroyed":
       return ResourceRequestedStatus.Requested_Destroyed;
     case -1:
@@ -151,8 +151,8 @@ export function resourceRequestedStatusToJSON(object: ResourceRequestedStatus): 
       return "Requested_Initialized";
     case ResourceRequestedStatus.Requested_Created:
       return "Requested_Created";
-    case ResourceRequestedStatus.Requested_Ready:
-      return "Requested_Ready";
+    case ResourceRequestedStatus.Requested_Completed:
+      return "Requested_Completed";
     case ResourceRequestedStatus.Requested_Stopped:
       return "Requested_Stopped";
     case ResourceRequestedStatus.Requested_Destroyed:
@@ -171,12 +171,12 @@ export function resourceRequestedStatusToNumber(object: ResourceRequestedStatus)
       return 1;
     case ResourceRequestedStatus.Requested_Created:
       return 3;
-    case ResourceRequestedStatus.Requested_Ready:
-      return 4;
+    case ResourceRequestedStatus.Requested_Completed:
+      return 5;
     case ResourceRequestedStatus.Requested_Stopped:
-      return 6;
+      return 7;
     case ResourceRequestedStatus.Requested_Destroyed:
-      return 8;
+      return 9;
     case ResourceRequestedStatus.UNRECOGNIZED:
     default:
       return -1;
@@ -192,8 +192,10 @@ export enum ResourceActualStatus {
   Actual_Creating = "Actual_Creating",
   /** Actual_Created - Resource is created and can be moved to ready when requested */
   Actual_Created = "Actual_Created",
-  /** Actual_Ready - Resource is ready and can be used by other resources */
-  Actual_Ready = "Actual_Ready",
+  /** Actual_Running - Resource is running and will be moved to completed when finished */
+  Actual_Running = "Actual_Running",
+  /** Actual_Completed - Resource is done running and ready to be torn down */
+  Actual_Completed = "Actual_Completed",
   /** Actual_Stopping - Resource has acknowledged it should be stopped and has begun the process */
   Actual_Stopping = "Actual_Stopping",
   /** Actual_Stopped - Resource has completed the stopped process */
@@ -220,18 +222,21 @@ export function resourceActualStatusFromJSON(object: any): ResourceActualStatus 
     case "Actual_Created":
       return ResourceActualStatus.Actual_Created;
     case 4:
-    case "Actual_Ready":
-      return ResourceActualStatus.Actual_Ready;
+    case "Actual_Running":
+      return ResourceActualStatus.Actual_Running;
     case 5:
+    case "Actual_Completed":
+      return ResourceActualStatus.Actual_Completed;
+    case 6:
     case "Actual_Stopping":
       return ResourceActualStatus.Actual_Stopping;
-    case 6:
+    case 7:
     case "Actual_Stopped":
       return ResourceActualStatus.Actual_Stopped;
-    case 7:
+    case 8:
     case "Actual_Destroying":
       return ResourceActualStatus.Actual_Destroying;
-    case 8:
+    case 9:
     case "Actual_Destroyed":
       return ResourceActualStatus.Actual_Destroyed;
     case -1:
@@ -251,8 +256,10 @@ export function resourceActualStatusToJSON(object: ResourceActualStatus): string
       return "Actual_Creating";
     case ResourceActualStatus.Actual_Created:
       return "Actual_Created";
-    case ResourceActualStatus.Actual_Ready:
-      return "Actual_Ready";
+    case ResourceActualStatus.Actual_Running:
+      return "Actual_Running";
+    case ResourceActualStatus.Actual_Completed:
+      return "Actual_Completed";
     case ResourceActualStatus.Actual_Stopping:
       return "Actual_Stopping";
     case ResourceActualStatus.Actual_Stopped:
@@ -277,16 +284,18 @@ export function resourceActualStatusToNumber(object: ResourceActualStatus): numb
       return 2;
     case ResourceActualStatus.Actual_Created:
       return 3;
-    case ResourceActualStatus.Actual_Ready:
+    case ResourceActualStatus.Actual_Running:
       return 4;
-    case ResourceActualStatus.Actual_Stopping:
+    case ResourceActualStatus.Actual_Completed:
       return 5;
-    case ResourceActualStatus.Actual_Stopped:
+    case ResourceActualStatus.Actual_Stopping:
       return 6;
-    case ResourceActualStatus.Actual_Destroying:
+    case ResourceActualStatus.Actual_Stopped:
       return 7;
-    case ResourceActualStatus.Actual_Destroyed:
+    case ResourceActualStatus.Actual_Destroying:
       return 8;
+    case ResourceActualStatus.Actual_Destroyed:
+      return 9;
     case ResourceActualStatus.UNRECOGNIZED:
     default:
       return -1;
