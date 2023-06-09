@@ -2,14 +2,15 @@ import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { createWrappedEntityAdapter } from "../../utils";
 
-import type { RootState } from "../store";
+import type { AppDispatch, AppGetState, RootState } from "../store";
 import { connectionsRemove } from "@mrc/server/store/slices/connectionsSlice";
 import {
    pipelineInstancesRemove,
+   pipelineInstancesSelectById,
    pipelineInstancesUpdateResourceActualState,
 } from "@mrc/server/store/slices/pipelineInstancesSlice";
 import { workersRemove, workersSelectByMachineId } from "@mrc/server/store/slices/workersSlice";
-import { ISegmentInstance } from "@mrc/common/entities";
+import { IManifoldInstance, ISegmentInstance } from "@mrc/common/entities";
 import {
    ResourceActualStatus,
    resourceActualStatusToNumber,
@@ -17,9 +18,15 @@ import {
    SegmentMappingPolicies,
 } from "@mrc/proto/mrc/protos/architect_state";
 import { pipelineDefinitionsSelectById } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
-import { startAppListening } from "@mrc/server/store/listener_middleware";
-import { generateSegmentHash } from "@mrc/common/utils";
+import { AppListenerAPI, startAppListening } from "@mrc/server/store/listener_middleware";
+import { generateId, generateSegmentHash } from "@mrc/common/utils";
 import { ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
+import {
+   manifoldInstancesAdd,
+   manifoldInstancesAddMany,
+   manifoldInstancesAttachLocalSegment,
+   manifoldInstancesSelectByPipelineId,
+} from "@mrc/server/store/slices/manifoldInstancesSlice";
 
 const segmentInstancesAdapter = createWrappedEntityAdapter<ISegmentInstance>({
    selectId: (w) => w.id,
@@ -34,9 +41,6 @@ export const segmentInstancesSlice = createSlice({
             throw new Error(`Segment Instance with ID: ${action.payload.id} already exists`);
          }
          segmentInstancesAdapter.addOne(state, action.payload);
-      },
-      addMany: (state, action: PayloadAction<ISegmentInstance[]>) => {
-         segmentInstancesAdapter.addMany(state, action.payload);
       },
       remove: (state, action: PayloadAction<ISegmentInstance>) => {
          const found = segmentInstancesAdapter.getOne(state, action.payload.id);
@@ -130,7 +134,7 @@ type SegmentInstancesStateType = ReturnType<typeof segmentInstancesSlice.getInit
 
 export const {
    add: segmentInstancesAdd,
-   addMany: segmentInstancesAddMany,
+   // addMany: segmentInstancesAddMany,
    remove: segmentInstancesRemove,
    updateResourceRequestedState: segmentInstancesUpdateResourceRequestedState,
    updateResourceActualState: segmentInstancesUpdateResourceActualState,
@@ -161,83 +165,188 @@ const selectByPipelineId = createSelector(
 export const segmentInstancesSelectByPipelineId = (state: RootState, pipeline_id: string) =>
    selectByPipelineId(state.segmentInstances, pipeline_id);
 
+export function segmentInstancesAddMany(instances: ISegmentInstance[]) {
+   // To allow the watchers to work, we need to add all segments individually
+   return (dispatch: AppDispatch, getState: AppGetState) => {
+      // Loop and dispatch each segment individually
+      instances.forEach((s) => {
+         dispatch(segmentInstancesAdd(s));
+      });
+   };
+}
+
+function syncManifolds(listenerApi: AppListenerAPI, instance: ISegmentInstance) {
+   const state = listenerApi.getState();
+
+   const pipeline_def = pipelineDefinitionsSelectById(state, instance.pipelineDefinitionId);
+
+   if (!pipeline_def) {
+      throw new Error(
+         `Could not find Pipeline Definition ID: ${instance.pipelineDefinitionId}, for Segment Instance: ${instance.id}`
+      );
+   }
+
+   const pipeline_instance = pipelineInstancesSelectById(state, instance.pipelineInstanceId);
+
+   if (!pipeline_instance) {
+      throw new Error(
+         `Could not find Pipeline Instance ID: ${instance.pipelineInstanceId}, for Segment Instance: ${instance.id}`
+      );
+   }
+
+   // Find our definition
+   if (!(instance.name in pipeline_def.segments)) {
+      throw new Error(
+         `Could not find Segment: ${instance.name} in for Pipeline Definition: ${instance.pipelineDefinitionId}`
+      );
+   }
+
+   const seg_def = pipeline_def.segments[instance.name];
+
+   // Loop over the ingress ports and egress ports to get all names
+   // const manifold_names = new Set<string>(Object.entries(seg_def.egressPorts).map(([port_name]) => port_name));
+   // Object.entries(seg_def.ingressPorts).forEach(([port_name]) => manifold_names.add(port_name));
+
+   const manifold_names = [
+      ...new Set(
+         Object.entries(seg_def.egressPorts)
+            .map(([port_name]) => port_name)
+            .concat(Object.entries(seg_def.ingressPorts).map(([port_name]) => port_name))
+      ),
+   ];
+
+   const running_manifolds = manifoldInstancesSelectByPipelineId(state, instance.pipelineInstanceId);
+
+   const manifolds: IManifoldInstance[] = manifold_names.map((port_name) => {
+      const manifold_idx = running_manifolds.findIndex((value) => value.portName === port_name);
+
+      // See if the manifold already exists
+      if (manifold_idx === -1) {
+         // Dispatch a new manifold
+         return listenerApi.dispatch(
+            manifoldInstancesAdd({
+               id: generateId(),
+               actualEgressSegments: {},
+               actualIngressSegments: {},
+               machineId: pipeline_instance.machineId,
+               pipelineDefinitionId: pipeline_def.id,
+               pipelineInstanceId: pipeline_instance.id,
+               portName: port_name,
+               requestedEgressSegments: {},
+               requestedIngressSegments: {},
+               state: {
+                  refCount: 0,
+                  requestedStatus: ResourceRequestedStatus.Requested_Created,
+                  actualStatus: ResourceActualStatus.Actual_Unknown,
+               },
+            })
+         ).payload;
+      } else {
+         return running_manifolds[manifold_idx];
+      }
+   });
+
+   // Dispatch events to add the requested ports for this segment
+
+   return manifolds;
+}
+
 export function segmentInstancesConfigureListeners() {
    startAppListening({
-      actionCreator: pipelineInstancesUpdateResourceActualState,
-      effect: (action, listenerApi) => {
-         if (action.payload.status == ResourceActualStatus.Actual_Running) {
-            // Pipeline has been marked as ready. Update segment instances based on the pipeline config
-            const pipeline_def = pipelineDefinitionsSelectById(
-               listenerApi.getState(),
-               action.payload.resource.definitionId
-            );
+      actionCreator: segmentInstancesAdd,
+      effect: async (action, listenerApi) => {
+         const segment_id = action.payload.id;
 
-            if (!pipeline_def) {
-               throw new Error(
-                  `Could not find Pipeline Definition ID: ${action.payload.resource.definitionId}, for Pipeline Instance: ${action.payload.resource.id}`
-               );
-            }
+         const instance = segmentInstancesSelectById(listenerApi.getState(), segment_id);
 
-            // Get the mapping for this machine ID
-            if (!(action.payload.resource.machineId in pipeline_def.mappings)) {
-               throw new Error(
-                  `Could not find Mapping for Machine: ${action.payload.resource.machineId}, for Pipeline Definition: ${action.payload.resource.definitionId}`
-               );
-            }
-
-            // Get the workers for this machine
-            const workers = workersSelectByMachineId(listenerApi.getState(), action.payload.resource.machineId);
-
-            const mapping = pipeline_def.mappings[action.payload.resource.machineId];
-
-            // Now determine the segment instances that should be created
-            const seg_to_workers = Object.fromEntries(
-               Object.entries(mapping.segments).map(([seg_name, seg_map]) => {
-                  let workerIds: string[] = [];
-
-                  if (seg_map.byPolicy) {
-                     if (seg_map.byPolicy.value == SegmentMappingPolicies.OnePerWorker) {
-                        workerIds = workers.map((x) => x.id);
-                     } else {
-                        throw new Error(`Unsupported policy: ${seg_map.byPolicy.value}`);
-                     }
-                  } else if (seg_map.byWorker) {
-                     workerIds = seg_map.byWorker.workerIds;
-                  } else {
-                     throw new Error(`Invalid SegmentMap for ${seg_name}. No option set`);
-                  }
-
-                  return [seg_name, workerIds];
-               })
-            );
-
-            // Now generate the segments that would need to be created
-            const segments = Object.entries(seg_to_workers).flatMap(([seg_name, seg_assignment]) => {
-               // For each assignment, create a segment instance
-               return seg_assignment.map((wid) => {
-                  const address = generateSegmentHash(seg_name, wid);
-
-                  return {
-                     id: address.toString(),
-                     pipelineDefinitionId: pipeline_def.id,
-                     pipelineInstanceId: action.payload.resource.id,
-                     name: seg_name,
-                     address: address,
-                     workerId: wid,
-                     state: {
-                        refCount: 0,
-                        requestedStatus: ResourceRequestedStatus.Requested_Created,
-                        actualStatus: ResourceActualStatus.Actual_Unknown,
-                     },
-                  } as ISegmentInstance;
-               });
-            });
-
-            // Filter out any running ones
-
-            // Then dispatch the segment instances update
-            listenerApi.dispatch(segmentInstancesAddMany(segments));
+         if (!instance) {
+            throw new Error("Could not find segment instance");
          }
+
+         // Now that the object has been created, set the requested status to Created
+         listenerApi.dispatch(
+            segmentInstancesSlice.actions.updateResourceRequestedState({
+               resource: instance,
+               status: ResourceRequestedStatus.Requested_Created,
+            })
+         );
+
+         const monitor_instance = listenerApi.fork(async (forkApi) => {
+            while (true) {
+               // Wait for the next update
+               const [update_action, current_state] = await listenerApi.take((action) => {
+                  return (
+                     segmentInstancesUpdateResourceActualState.match(action) &&
+                     action.payload.resource.id === segment_id
+                  );
+               });
+
+               if (!current_state.system.requestRunning) {
+                  console.warn("Updating resource outside of a request will lead to undefined behavior!");
+               }
+
+               // Get the status of this instance
+               const instance = segmentInstancesSelectById(listenerApi.getState(), segment_id);
+
+               if (!instance) {
+                  throw new Error("Could not find instance");
+               }
+
+               if (instance.state.actualStatus === ResourceActualStatus.Actual_Created) {
+                  // Before moving to RunUntilComplete, perform a few actions
+
+                  // Increment the ref count on our pipeline instance
+
+                  // Create any missing manifolds
+                  const manifolds = syncManifolds(listenerApi, instance);
+
+                  // Increment the ref count on our manifolds
+
+                  // Now attach the segment to its local manifolds
+                  manifolds.forEach((m) => {
+                     listenerApi.dispatch(manifoldInstancesAttachLocalSegment(m, instance!));
+                  });
+
+                  // Tell it to move running/completed
+                  listenerApi.dispatch(
+                     segmentInstancesSlice.actions.updateResourceRequestedState({
+                        resource: instance,
+                        status: ResourceRequestedStatus.Requested_Completed,
+                     })
+                  );
+               } else if (instance.state.actualStatus === ResourceActualStatus.Actual_Completed) {
+                  // Before we can move to Stopped, all ref counts must be 0
+
+                  // Tell it to move to stopped
+                  listenerApi.dispatch(
+                     segmentInstancesSlice.actions.updateResourceRequestedState({
+                        resource: instance,
+                        status: ResourceRequestedStatus.Requested_Stopped,
+                     })
+                  );
+               } else if (instance.state.actualStatus === ResourceActualStatus.Actual_Stopped) {
+                  // Tell it to move to stopped
+                  listenerApi.dispatch(
+                     segmentInstancesSlice.actions.updateResourceRequestedState({
+                        resource: instance,
+                        status: ResourceRequestedStatus.Requested_Destroyed,
+                     })
+                  );
+               } else if (instance.state.actualStatus === ResourceActualStatus.Actual_Destroyed) {
+                  // Now we can actually just remove the object
+                  listenerApi.dispatch(segmentInstancesRemove(instance));
+
+                  break;
+               } else {
+                  throw new Error("Unknow state type");
+               }
+            }
+         });
+
+         await listenerApi.condition((action) => {
+            return segmentInstancesRemove.match(action) && action.payload.id === segment_id;
+         });
+         monitor_instance.cancel();
       },
    });
 }

@@ -183,11 +183,6 @@ class DevToolsEnhancer<S, A extends Action<unknown>> {
    paused?: boolean;
    locked?: boolean;
 
-   connectListener?: any;
-   disconnectListener?: any;
-   errorListener?: any;
-   subscribeListener?: any;
-
    getLiftedStateRaw() {
       return this.store.liftedStore.getState();
    }
@@ -370,15 +365,10 @@ class DevToolsEnhancer<S, A extends Action<unknown>> {
             const channelName = (await this.socket!.invoke("login", "master")) as string;
             this.channel = channelName;
 
-            // const liftedState = this.getLiftedStateRaw();
-
-            this.subscribeListener = this.socket!.subscribe(channelName).createConsumer() as any;
-
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-            for await (const data of this.subscribeListener) {
+            for await (const data of this.socket!.subscribe(channelName)) {
                this.handleMessages(data as Message<S, A>);
             }
-            console.log("Exited subscribe");
          } catch (error) {
             console.log(error);
          }
@@ -433,10 +423,8 @@ class DevToolsEnhancer<S, A extends Action<unknown>> {
       this.socket = socketClusterClient.create(this.socketOptions);
 
       void (async () => {
-         this.errorListener = this.socket!.listener("error").createConsumer() as any;
-
          // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-         for await (const data of this.errorListener) {
+         for await (const data of this.socket!.listener("error")) {
             // if we've already had this error before, increment it's counter, otherwise assign it '1' since we've had the error once.
             // eslint-disable-next-line no-prototype-builtins,@typescript-eslint/no-unsafe-argument
             this.errorCounts[data.error.name] = this.errorCounts.hasOwnProperty(data.error.name)
@@ -456,29 +444,22 @@ class DevToolsEnhancer<S, A extends Action<unknown>> {
                console.log(data.error);
             }
          }
-         console.log("Exited error");
       })();
 
       void (async () => {
-         this.connectListener = this.socket!.listener("connect").createConsumer() as any;
-
          // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-         for await (const data of this.connectListener) {
+         for await (const data of this.socket!.listener("connect")) {
             console.log("connected to remotedev-server");
             this.errorCounts = {}; // clear the errorCounts object, so that we'll log any new errors in the event of a disconnect
             this.login();
          }
-         console.log("Exited connect");
       })();
       void (async () => {
-         this.disconnectListener = this.socket!.listener("disconnect").createConsumer() as any;
-
          // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-         for await (const data of this.disconnectListener) {
+         for await (const data of this.socket!.listener("disconnect")) {
             console.log("disconnected to remotedev-server");
             this.stop(true);
          }
-         console.log("Exited disconnect");
       })();
    };
 

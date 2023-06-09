@@ -6,12 +6,12 @@ import {
 } from "@mrc/server/store/slices/segmentInstancesSlice";
 import { systemStartRequest, systemStopRequest } from "@mrc/server/store/slices/systemSlice";
 import { as, AsyncSink, merge } from "ix/asynciterable";
-import { batch, withAbort } from "ix/asynciterable/operators";
+import { withAbort } from "ix/asynciterable/operators";
 import { CallContext } from "nice-grpc";
 import { firstValueFrom, Subject } from "rxjs";
 
-import { pack, packEvent, sleep, unpackEvent } from "../common/utils";
-import { Any } from "../proto/google/protobuf/any";
+import { ensureError, generateId, pack, packEvent, sleep, unpackEvent } from "@mrc/common/utils";
+import { Any } from "@mrc/proto/google/protobuf/any";
 import {
    Ack,
    ArchitectServiceImplementation,
@@ -40,7 +40,7 @@ import {
    ResourceRequestedStatus,
    ResourceStatus,
 } from "../proto/mrc/protos/architect_state";
-import { DeepPartial, messageTypeRegistry } from "../proto/typeRegistry";
+import { DeepPartial, messageTypeRegistry } from "@mrc/proto/typeRegistry";
 
 import { connectionsAdd, connectionsDropOne } from "./store/slices/connectionsSlice";
 import {
@@ -56,7 +56,10 @@ import {
    workersUpdateResourceState,
 } from "./store/slices/workersSlice";
 import { getRootStore, RootStore, stopAction } from "./store/store";
-import { generateId } from "./utils";
+import {
+   manifoldInstancesSelectById,
+   manifoldInstancesUpdateResourceActualState,
+} from "@mrc/server/store/slices/manifoldInstancesSlice";
 
 interface IncomingData {
    msg: Event;
@@ -230,7 +233,7 @@ class Architect implements ArchitectServiceImplementation {
 
          // Push out the state update
          store_update_sink.write(
-            packEvent<ControlPlaneState>(
+            packEvent(
                EventType.ServerStateUpdate,
                state.system.requestRunningNonce.toString(),
                ControlPlaneState.create(out_state as ControlPlaneState)
@@ -286,12 +289,16 @@ class Architect implements ArchitectServiceImplementation {
                   //    context
                   // );
                } finally {
+                  // sleep for 0 to ensure all scheduled async tasks have been run before ending the request (very
+                  // important for listeners)
+                  await sleep(0);
+
+                  self._store.dispatch(systemStopRequest(request_identifier));
+
                   // Now yield any generated events, after systemStopRequest
                   for (const event of yeilded_events) {
                      yield event;
                   }
-
-                  self._store.dispatch(systemStopRequest(request_identifier));
 
                   console.log(`--- End Request for '${request_identifier}' ---`);
                }
@@ -502,6 +509,22 @@ class Architect implements ArchitectServiceImplementation {
 
                      break;
                   }
+                  case "ManifoldInstances": {
+                     const found = manifoldInstancesSelectById(this._store.getState(), payload.resourceId);
+
+                     if (!found) {
+                        throw new Error(`Could not find ManifoldInstance for ID: ${payload.resourceId}`);
+                     }
+
+                     this._store.dispatch(
+                        manifoldInstancesUpdateResourceActualState({
+                           resource: found,
+                           status: payload.status,
+                        })
+                     );
+
+                     break;
+                  }
                   default:
                      throw new Error("Unsupported resource type");
                }
@@ -517,8 +540,19 @@ class Architect implements ArchitectServiceImplementation {
             default:
                break;
          }
-      } catch (error) {
+      } catch (err) {
+         const error = ensureError(err);
+
          console.log(`Error occurred handing event. Error: ${error}`);
+
+         // Now yield an error message to pass back to the client
+         yield Event.create({
+            error: {
+               message: error.message,
+            },
+            event: EventType.Response,
+            tag: event.msg.tag,
+         });
       }
    }
 

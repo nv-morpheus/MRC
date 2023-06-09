@@ -210,8 +210,17 @@ message PipelineDefinition {
       // Name of the segment
       string name = 3;
 
+      // Ingress ports for this segment
+      map<string, PortInfo> ingress_ports = 4;
+
+      // Egress ports for this segment
+      map<string, PortInfo> egress_ports = 5;
+
+      // Segment options
+      SegmentOptions options = 6;
+
       // Running Segment Instance IDs
-      repeated uint64 instance_ids = 4;
+      repeated uint64 instance_ids = 7;
    }
 
    message ManifoldDefinition {
@@ -225,8 +234,11 @@ message PipelineDefinition {
       // Port name for matching ingress/egress nodes
       string port_name = 3;
 
+      // All options for this config
+      ManifoldOptions options = 4;
+
       // Running ManifoldInstance IDs
-      repeated uint64 instance_ids = 4;
+      repeated uint64 instance_ids = 5;
    }
 
    // Generated ID of the definition (int64 because the hash algorithms can give negative values)
@@ -241,10 +253,10 @@ message PipelineDefinition {
    // Running Pipeline Instance IDs
    repeated uint64 instance_ids = 4;
 
-   // Running Segment Info
+   // Segment Info
    map<string, SegmentDefinition> segments = 5;
 
-   // Running Manifold Info
+   // Manifold Info
    map<string, ManifoldDefinition> manifolds = 6;
 }
 
@@ -315,6 +327,12 @@ message SegmentInstance {
 
    // The current state of this resource
    ResourceState state = 7;
+
+   // Local running manifold instance IDs for egress ports
+   repeated uint64 egress_manifold_instance_ids = 8;
+
+   // Local running manifold instance IDs for ingress ports
+   repeated uint64 ingress_manifold_instance_ids = 9;
 }
 
 message ManifoldInstance {

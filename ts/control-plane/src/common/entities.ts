@@ -26,7 +26,7 @@ export type IResourceState = Omit<ResourceState, "$type">;
 export type IConnection = Omit<Connection, "$type">;
 
 export type IWorker = Omit<Worker, "$type" | "state"> & {
-   state: IResourceState,
+   state: IResourceState;
 };
 
 export type IPortInfo = Omit<PortInfo, "$type">;
@@ -34,55 +34,66 @@ export type IIngressPort = Omit<IngressPort, "$type">;
 export type IEgressPort = Omit<EgressPort, "$type">;
 export type IScalingOptions = Omit<ScalingOptions, "$type">;
 export type ISegmentOptions = Omit<SegmentOptions, "$type"> & {
-   scalingOptions?: IScalingOptions,
+   scalingOptions?: IScalingOptions;
 };
 
-export type ISegmentConfiguration =
-   Omit<PipelineConfiguration_SegmentConfiguration, "$type" | "ingressPorts" | "egressPorts" | "options"> & {
-      ingressPorts:  { [key: string]: IPortInfo; },
-      egressPorts: { [key: string]: IPortInfo; },
-      options?: ISegmentOptions,
-   };
+export type ISegmentConfiguration = Omit<
+   PipelineConfiguration_SegmentConfiguration,
+   "$type" | "ingressPorts" | "egressPorts" | "options"
+> & {
+   ingressPorts: { [key: string]: IPortInfo };
+   egressPorts: { [key: string]: IPortInfo };
+   options?: ISegmentOptions;
+};
 
-   export type IManifoldOptions = Omit<ManifoldOptions, "$type">;
+export type IManifoldOptions = Omit<ManifoldOptions, "$type">;
 
-export type IManifoldConfiguration =
-   Omit<PipelineConfiguration_ManifoldConfiguration, "$type"| "options"> &{
-      options?: IManifoldOptions,
-   };
+export type IManifoldConfiguration = Omit<PipelineConfiguration_ManifoldConfiguration, "$type" | "options"> & {
+   options?: IManifoldOptions;
+};
 
 export type ISegmentMapping = Omit<PipelineMapping_SegmentMapping, "$type">;
 
-export type IPipelineMapping = Omit<PipelineMapping, "$type" | "segments"> &
-{
-   segments: { [key: string]: ISegmentMapping; },
+export type IPipelineMapping = Omit<PipelineMapping, "$type" | "segments"> & {
+   segments: { [key: string]: ISegmentMapping };
 };
 
 export type IPipelineConfiguration = Omit<PipelineConfiguration, "$type" | "segments" | "manifolds"> & {
-   segments: { [key: string]: ISegmentConfiguration; },
-   manifolds: { [key: string]: IManifoldConfiguration; },
+   segments: { [key: string]: ISegmentConfiguration };
+   manifolds: { [key: string]: IManifoldConfiguration };
 };
 
-export type ISegmentDefinition = Omit<PipelineDefinition_SegmentDefinition, "$type">;
+export type ISegmentDefinition = Omit<
+   PipelineDefinition_SegmentDefinition,
+   "$type" | "ingressPorts" | "egressPorts" | "options"
+> & {
+   ingressPorts: { [key: string]: IPortInfo };
+   egressPorts: { [key: string]: IPortInfo };
+   options: ISegmentOptions;
+};
 
-export type IManifoldDefinition = Omit<PipelineDefinition_ManifoldDefinition, "$type">;
+export type IManifoldDefinition = Omit<PipelineDefinition_ManifoldDefinition, "$type" | "options"> & {
+   options?: IManifoldOptions;
+};
 
-
-export type IPipelineDefinition = Omit<PipelineDefinition, "$type" | "config" | "mappings" | "segments" | "manifolds"> & {
-   config: IPipelineConfiguration,
-   mappings: { [key: string]: IPipelineMapping; },
-   segments: { [key: string]: ISegmentDefinition; },
-   manifolds: { [key: string]: IManifoldDefinition; },
+export type IPipelineDefinition = Omit<
+   PipelineDefinition,
+   "$type" | "config" | "mappings" | "segments" | "manifolds"
+> & {
+   config: IPipelineConfiguration;
+   mappings: { [key: string]: IPipelineMapping };
+   segments: { [key: string]: ISegmentDefinition };
+   manifolds: { [key: string]: IManifoldDefinition };
 };
 
 export type IPipelineInstance = Omit<PipelineInstance, "$type" | "state"> & {
-   state: IResourceState,
+   state: IResourceState;
 };
 
 export type ISegmentInstance = Omit<SegmentInstance, "$type" | "state"> & {
-   state: IResourceState,
+   state: IResourceState;
 };
 
 export type IManifoldInstance = Omit<ManifoldInstance, "$type" | "state"> & {
-   state: IResourceState,
+   state: IResourceState;
 };

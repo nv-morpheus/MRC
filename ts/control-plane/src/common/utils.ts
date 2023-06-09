@@ -5,6 +5,10 @@ import { Any } from "../proto/google/protobuf/any";
 import { Event, EventType } from "../proto/mrc/protos/architect";
 import { messageTypeRegistry, UnknownMessage } from "../proto/typeRegistry";
 
+export function generateId(max = 4294967295): string {
+   return Math.floor(Math.random() * max).toString();
+}
+
 export function sleep(ms: number) {
    return new Promise((r) => setTimeout(r, ms));
 }
@@ -29,7 +33,7 @@ export function bytesToString(value: Uint8Array | Uint8Array[]) {
    return new TextDecoder().decode(value);
 }
 
-export function pack<MessageDataT extends UnknownMessage>(data: MessageDataT): Any {
+export function pack(data: UnknownMessage): Any {
    // Load the type from the registry
    const message_type = messageTypeRegistry.get(data.$type);
 
@@ -60,12 +64,8 @@ export function unpack<MessageT extends UnknownMessage>(message: Any) {
    return decoded;
 }
 
-export function packEvent<MessageDataT extends UnknownMessage>(
-   event_type: EventType,
-   event_tag: string,
-   data: MessageDataT
-): Event {
-   const any_msg = pack<MessageDataT>(data);
+export function packEvent(event_type: EventType, event_tag: string, data: UnknownMessage): Event {
+   const any_msg = pack(data);
 
    return Event.create({
       event: event_type,
@@ -82,11 +82,8 @@ export function unpackEvent<MessageT extends UnknownMessage>(message: Event): Me
    return unpack<MessageT>(message.message);
 }
 
-export function packEventResponse<MessageDataT extends UnknownMessage>(
-   incoming_event: Event,
-   data: MessageDataT
-): Event {
-   const any_msg = pack<MessageDataT>(data);
+export function packEventResponse(incoming_event: Event, data: UnknownMessage): Event {
+   const any_msg = pack(data);
 
    return Event.create({
       event: EventType.Response,
@@ -148,4 +145,20 @@ export function hashProtoMessage<MessageDataT extends UnknownMessage>(data: Mess
    message_type.encode(data, buffer);
 
    return hashObject(buffer.finish());
+}
+
+export function ensureError(value: unknown): Error {
+   if (value instanceof Error) {
+      return value;
+   }
+
+   let stringified = "[Unable to stringify the thrown value]";
+   try {
+      stringified = JSON.stringify(value);
+   } catch {
+      /* empty */
+   }
+
+   const error = new Error(`This value was thrown as is, not through an Error: ${stringified}`);
+   return error;
 }
