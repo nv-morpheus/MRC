@@ -28,6 +28,7 @@
 #include "mrc/node/operators/combine_latest.hpp"
 #include "mrc/node/operators/node_component.hpp"
 #include "mrc/node/operators/router.hpp"
+#include "mrc/node/rx_node.hpp"
 #include "mrc/node/sink_channel_owner.hpp"
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_channel_owner.hpp"
@@ -36,6 +37,7 @@
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <gtest/internal/gtest-internal.h>
+#include <rxcpp/rx.hpp>  // for observable_member
 
 #include <functional>
 #include <map>
@@ -279,6 +281,25 @@ class TestNodeComponent : public NodeComponent<T, T>
 };
 
 template <typename T>
+class TestRxNodeComponent : public RxNodeComponent<T, T>
+{
+    using base_t = node::RxNodeComponent<T, T>;
+
+  public:
+    using typename base_t::stream_fn_t;
+
+    void make_stream(stream_fn_t fn)
+    {
+        return base_t::make_stream([this, fn](auto&&... args) {
+            stream_fn_called = true;
+            return fn(std::forward<decltype(args)>(args)...);
+        });
+    }
+
+    bool stream_fn_called = false;
+};
+
+template <typename T>
 class TestSinkComponent : public WritableProvider<T>
 {
   public:
@@ -515,6 +536,26 @@ TEST_F(TestEdges, SourceToNodeComponentToSinkComponent)
     mrc::make_edge(*node, *sink);
 
     source->run();
+}
+
+TEST_F(TestEdges, SourceToRxNodeComponentToSinkComponent)
+{
+    auto source = std::make_shared<node::TestSource<int>>();
+    auto node   = std::make_shared<node::TestRxNodeComponent<int>>();
+    auto sink   = std::make_shared<node::TestSinkComponent<int>>();
+
+    mrc::make_edge(*source, *node);
+    mrc::make_edge(*node, *sink);
+
+    node->make_stream([=](rxcpp::observable<int> input) {
+        return input.map([](int i) {
+            return i * 2;
+        });
+    });
+
+    source->run();
+
+    EXPECT_TRUE(node->stream_fn_called);
 }
 
 TEST_F(TestEdges, SourceComponentToNodeToSinkComponent)
@@ -826,6 +867,10 @@ TEST_F(TestEdges, CreateAndDestroy)
     }
 
     {
+        auto x = std::make_shared<node::TestRxNodeComponent<int>>();
+    }
+
+    {
         auto x = std::make_shared<node::TestSinkComponent<int>>();
     }
 
@@ -926,5 +971,29 @@ TEST_F(TestEdges, EdgeTapWithSpliceComponent)
 
     source->run();
     sink->run();
+}
+
+TEST_F(TestEdges, EdgeTapWithSpliceRxComponent)
+{
+    auto source = std::make_shared<node::TestSource<int>>();
+    auto node   = std::make_shared<node::TestRxNodeComponent<int>>();
+    auto sink   = std::make_shared<node::TestSink<int>>();
+
+    // Original edge
+    mrc::make_edge(*source, *sink);
+
+    node->make_stream([=](rxcpp::observable<int> input) {
+        return input.map([](int i) {
+            return i * 2;
+        });
+    });
+
+    // Tap edge
+    mrc::edge::EdgeBuilder::splice_edge<int>(*source, *sink, *node, *node);
+
+    source->run();
+    sink->run();
+
+    EXPECT_TRUE(node->stream_fn_called);
 }
 }  // namespace mrc

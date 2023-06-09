@@ -17,6 +17,7 @@
 
 #include "test_mrc.hpp"
 
+#include "mrc/channel/status.hpp"  // for Status
 #include "mrc/core/executor.hpp"
 #include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/node/rx_node.hpp"
@@ -45,6 +46,7 @@
 #include <mutex>
 #include <set>
 #include <sstream>
+#include <stdexcept>  // for runtime_error
 #include <string>
 #include <thread>
 #include <utility>
@@ -483,6 +485,54 @@ TEST_F(TestNode, NodePrologueEpilogue)
     EXPECT_EQ(complete_count, 1);
     EXPECT_EQ(prologue_tap_sum, 10);
     EXPECT_EQ(epilogue_tap_sum, 20);
+}
+
+TEST_F(TestNode, RxNodeComponentThrows)
+{
+    auto p                           = pipeline::make_pipeline();
+    std::atomic<int> throw_count     = 0;
+    std::atomic<int> sink_call_count = 0;
+    std::atomic<int> complete_count  = 0;
+
+    auto my_segment = p->make_segment("test_segment", [&](segment::Builder& seg) {
+        auto source = seg.make_source<int>("source", [&](rxcpp::subscriber<int>& s) {
+            s.on_next(1);
+            s.on_next(2);
+            s.on_next(3);
+            s.on_completed();
+        });
+
+        auto node_comp = seg.make_node_component<int, int>("node", rxcpp::operators::map([&](int i) -> int {
+                                                               ++throw_count;
+                                                               throw std::runtime_error("test");
+                                                               return 0;
+                                                           }));
+
+        auto sink = seg.make_sink<int>(
+            "sinkInt",
+            [&](const int& x) {
+                ++sink_call_count;
+            },
+            [&]() {
+                ++complete_count;
+            });
+
+        seg.make_edge(source, node_comp);
+        seg.make_edge(node_comp, sink);
+    });
+
+    auto options = std::make_unique<Options>();
+    options->topology().user_cpuset("0");
+
+    Executor exec(std::move(options));
+    exec.register_pipeline(std::move(p));
+    exec.start();
+
+    EXPECT_THROW(exec.join(), std::runtime_error);
+
+    EXPECT_EQ(throw_count, 1);
+    EXPECT_EQ(sink_call_count, 0);
+    EXPECT_EQ(complete_count, 0);
 }
 
 // the parallel tests:

@@ -110,46 +110,46 @@ Installing via source is for more advanced users and is necessary to try MRC fea
 <!-- omit in toc -->
 #### Clone MRC repository
 ```bash
-export MRC_HOME=$(pwd)/mrc
-git clone --recurse-submodules git@github.com:nv-morpheus/mrc.git $MRC_HOME
-cd $MRC_HOME
+export MRC_ROOT=$(pwd)/mrc
+git clone --recurse-submodules git@github.com:nv-morpheus/mrc.git $MRC_ROOT
+cd $MRC_ROOT
 ```
 <!-- omit in toc -->
 #### Create MRC Conda Environment
 ```bash
 # note: `mamba` may be used in place of `conda` for better performance.
-conda env create -n mrc-dev --file $MRC_HOME/ci/conda/environments/dev_env.yml
+conda env create -n mrc-dev --file $MRC_ROOT/ci/conda/environments/dev_env.yml
 conda activate mrc-dev
 ```
 <!-- omit in toc -->
 #### Build MRC
 ```bash
-mkdir $MRC_HOME/build
-cd $MRC_HOME/build
+mkdir $MRC_ROOT/build
+cd $MRC_ROOT/build
 cmake ..
 make -j $(nproc)
 ```
 <!-- omit in toc -->
 #### Run MRC C++ Tests
 ```bash
-export MRC_TEST_INTERNAL_DATA_PATH=$MRC_HOME/src/tests
-$MRC_HOME/build/src/tests/test_mrc_private.x
-$MRC_HOME/build/tests/test_mrc.x
-$MRC_HOME/build/tests/logging/test_mrc_logging.x
+export MRC_TEST_INTERNAL_DATA_PATH=$MRC_ROOT/cpp/mrc/src/tests
+$MRC_ROOT/build/cpp/mrc/src/tests/test_mrc_private.x
+$MRC_ROOT/build/cpp/mrc/tests/test_mrc.x
+$MRC_ROOT/build/cpp/mrc/tests/logging/test_mrc_logging.x
 ```
 <!-- omit in toc -->
 #### Install MRC Python Bindings
 ```bash
-pip install -e $MRC_HOME/build/python
+pip install -e $MRC_ROOT/build/python
 ```
 <!-- omit in toc -->
 #### Run MRC Python Tests
 ```bash
-pytest $MRC_HOME/python
+pytest $MRC_ROOT/python
 ```
 
 ### Docker Installation
-A Dockerfile is provided at `$MRC_HOME` and can be built with
+A Dockerfile is provided at `$MRC_ROOT` and can be built with
 ```bash
 docker build -t mrc:latest .
 ```

@@ -234,6 +234,10 @@ class RxNodeComponent : public WritableProvider<InputT>, public WritableAcceptor
                 // Forward to the writable edge
                 this->get_writable_edge()->await_write(std::move(message));
             },
+            [this](std::exception_ptr ptr) {
+                WritableAcceptor<OutputT>::release_edge_connection();
+                runnable::Context::get_runtime_context().set_exception(std::move(ptr));
+            },
             [this]() {
                 // On completion, release connections
                 WritableAcceptor<OutputT>::release_edge_connection();
