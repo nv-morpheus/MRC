@@ -19,7 +19,7 @@ find_package(CUDAToolkit REQUIRED)
 
 
 # Ensure python is configured
-morpheus_utils_python_ensure_loaded()
+morpheus_utils_python_configure()
 
 
 morpheus_utils_print_python_info()
