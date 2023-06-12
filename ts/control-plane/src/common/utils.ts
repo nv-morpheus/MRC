@@ -162,3 +162,16 @@ export function ensureError(value: unknown): Error {
    const error = new Error(`This value was thrown as is, not through an Error: ${stringified}`);
    return error;
 }
+
+/**
+ * Utility function for throwing errors in null coalescing operators. i.e. `some_value ?? throwExpression("Error
+ * message")`
+ * @date 6/9/2023 - 5:16:28 PM
+ *
+ * @export
+ * @param {string} errorMessage The message to pass into the Error constructor
+ * @returns {never}
+ */
+export function throwExpression(errorMessage: string): never {
+   throw new Error(errorMessage);
+}

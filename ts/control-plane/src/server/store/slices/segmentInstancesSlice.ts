@@ -1,29 +1,24 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { createWrappedEntityAdapter } from "../../utils";
 
-import type { AppDispatch, AppGetState, RootState } from "../store";
+import type { AppDispatch, RootState } from "../store";
 import { connectionsRemove } from "@mrc/server/store/slices/connectionsSlice";
-import {
-   pipelineInstancesRemove,
-   pipelineInstancesSelectById,
-   pipelineInstancesUpdateResourceActualState,
-} from "@mrc/server/store/slices/pipelineInstancesSlice";
-import { workersRemove, workersSelectByMachineId } from "@mrc/server/store/slices/workersSlice";
+import { pipelineInstancesRemove, pipelineInstancesSelectById } from "@mrc/server/store/slices/pipelineInstancesSlice";
+import { workersRemove } from "@mrc/server/store/slices/workersSlice";
 import { IManifoldInstance, ISegmentInstance } from "@mrc/common/entities";
 import {
    ResourceActualStatus,
    resourceActualStatusToNumber,
    resourceRequestedStatusToNumber,
-   SegmentMappingPolicies,
 } from "@mrc/proto/mrc/protos/architect_state";
 import { pipelineDefinitionsSelectById } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 import { AppListenerAPI, startAppListening } from "@mrc/server/store/listener_middleware";
-import { generateId, generateSegmentHash } from "@mrc/common/utils";
+import { generateId } from "@mrc/common/utils";
 import { ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
 import {
    manifoldInstancesAdd,
-   manifoldInstancesAddMany,
    manifoldInstancesAttachLocalSegment,
    manifoldInstancesSelectByPipelineId,
 } from "@mrc/server/store/slices/manifoldInstancesSlice";
@@ -72,7 +67,7 @@ export const segmentInstancesSlice = createSlice({
             resourceRequestedStatusToNumber(action.payload.status)
          ) {
             throw new Error(
-               `Cannot update state of Instance with ID: ${action.payload.resource.id}. Current state ${found.state} is greater than requested state ${action.payload.status}`
+               `Cannot update state of Instance with ID: ${action.payload.resource.id}. Current state ${found.state.requestedStatus} is greater than requested state ${action.payload.status}`
             );
          }
 
@@ -130,6 +125,16 @@ export const segmentInstancesSlice = createSlice({
    },
 });
 
+export function segmentInstancesAddMany(instances: ISegmentInstance[]) {
+   // To allow the watchers to work, we need to add all segments individually
+   return (dispatch: AppDispatch) => {
+      // Loop and dispatch each segment individually
+      instances.forEach((s) => {
+         dispatch(segmentInstancesAdd(s));
+      });
+   };
+}
+
 type SegmentInstancesStateType = ReturnType<typeof segmentInstancesSlice.getInitialState>;
 
 export const {
@@ -164,16 +169,6 @@ const selectByPipelineId = createSelector(
 
 export const segmentInstancesSelectByPipelineId = (state: RootState, pipeline_id: string) =>
    selectByPipelineId(state.segmentInstances, pipeline_id);
-
-export function segmentInstancesAddMany(instances: ISegmentInstance[]) {
-   // To allow the watchers to work, we need to add all segments individually
-   return (dispatch: AppDispatch, getState: AppGetState) => {
-      // Loop and dispatch each segment individually
-      instances.forEach((s) => {
-         dispatch(segmentInstancesAdd(s));
-      });
-   };
-}
 
 function syncManifolds(listenerApi: AppListenerAPI, instance: ISegmentInstance) {
    const state = listenerApi.getState();
@@ -271,10 +266,10 @@ export function segmentInstancesConfigureListeners() {
             })
          );
 
-         const monitor_instance = listenerApi.fork(async (forkApi) => {
+         const monitor_instance = listenerApi.fork(async () => {
             while (true) {
                // Wait for the next update
-               const [update_action, current_state] = await listenerApi.take((action) => {
+               const [, current_state] = await listenerApi.take((action) => {
                   return (
                      segmentInstancesUpdateResourceActualState.match(action) &&
                      action.payload.resource.id === segment_id
@@ -304,7 +299,7 @@ export function segmentInstancesConfigureListeners() {
 
                   // Now attach the segment to its local manifolds
                   manifolds.forEach((m) => {
-                     listenerApi.dispatch(manifoldInstancesAttachLocalSegment(m, instance!));
+                     listenerApi.dispatch(manifoldInstancesAttachLocalSegment(m, instance));
                   });
 
                   // Tell it to move running/completed

@@ -40,7 +40,7 @@ import {
    ResourceRequestedStatus,
    ResourceStatus,
 } from "../proto/mrc/protos/architect_state";
-import { DeepPartial, messageTypeRegistry } from "@mrc/proto/typeRegistry";
+import { DeepPartial, UnknownMessage, messageTypeRegistry } from "@mrc/proto/typeRegistry";
 
 import { connectionsAdd, connectionsDropOne } from "./store/slices/connectionsSlice";
 import {
@@ -68,19 +68,22 @@ interface IncomingData {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function unaryResponse<MessageDataT>(event: IncomingData | undefined, message_class: any, data: MessageDataT): Event {
+function unaryResponse<MessageDataT extends UnknownMessage>(
+   event: IncomingData | undefined,
+   data: MessageDataT
+): Event {
    // Lookup message type
-   const type_registry = messageTypeRegistry.get(message_class.$type);
+   const type_registry = messageTypeRegistry.get(data.$type);
 
-   const response = message_class.create(data);
+   if (!type_registry) {
+      throw new Error("Unknown type");
+   }
 
-   // const writer = new BufferWriter();
-
-   // RegisterWorkersResponse.encode(response, writer);
+   const response = type_registry.fromPartial(data);
 
    const any_msg = Any.create({
-      typeUrl: `type.googleapis.com/${message_class.$type}`,
-      value: message_class.encode(response).finish(),
+      typeUrl: `type.googleapis.com/${data.$type}`,
+      value: type_registry.encode(response).finish(),
    });
 
    return Event.create({
@@ -303,8 +306,9 @@ class Architect implements ArchitectServiceImplementation {
                   console.log(`--- End Request for '${request_identifier}' ---`);
                }
             }
-         } catch (error) {
-            console.log(`Error occurred in stream. Error: ${error}`);
+         } catch (err) {
+            const error = ensureError(err);
+            console.log(`Error occurred in stream. Error: ${error.message}`);
          } finally {
             console.log(`Event stream closed for ${connection.peerInfo}.`);
 
@@ -330,8 +334,9 @@ class Architect implements ArchitectServiceImplementation {
             );
             yield out_event;
          }
-      } catch (error) {
-         console.log(`Error occurred in stream. Error: ${error}`);
+      } catch (err) {
+         const error = ensureError(err);
+         console.log(`Error occurred in stream. Error: ${error.message}`);
       } finally {
          console.log(`All streams closed for ${connection.peerInfo}. Deleting connection.`);
 
@@ -341,7 +346,7 @@ class Architect implements ArchitectServiceImplementation {
          store_update_sink.end();
 
          // Use the Lost Connection action to force all child objects to be removed too
-         this._store.dispatch(connectionsDropOne(connection));
+         await this._store.dispatch(connectionsDropOne(connection));
       }
    }
 
@@ -355,7 +360,6 @@ class Architect implements ArchitectServiceImplementation {
 
                yield unaryResponse(
                   event,
-                  PingResponse,
                   PingResponse.create({
                      tag: payload.tag,
                   })
@@ -364,7 +368,7 @@ class Architect implements ArchitectServiceImplementation {
                break;
             }
             case EventType.ClientEventRequestStateUpdate:
-               yield unaryResponse(event, StateUpdate, StateUpdate.create({}));
+               yield unaryResponse(event, StateUpdate.create({}));
 
                break;
             case EventType.ClientUnaryRegisterWorkers: {
@@ -394,7 +398,7 @@ class Architect implements ArchitectServiceImplementation {
                   ),
                });
 
-               yield unaryResponse(event, RegisterWorkersResponse, resp);
+               yield unaryResponse(event, resp);
 
                break;
             }
@@ -415,7 +419,7 @@ class Architect implements ArchitectServiceImplementation {
                   workersUpdateResourceState({ resources: workers, status: ResourceActualStatus.Actual_Running })
                );
 
-               yield unaryResponse(event, Ack, {});
+               yield unaryResponse(event, Ack.create());
 
                break;
             }
@@ -428,7 +432,7 @@ class Architect implements ArchitectServiceImplementation {
                   this._store.dispatch(workersRemove(found_worker));
                }
 
-               yield unaryResponse(event, Ack, {});
+               yield unaryResponse(event, Ack.create());
 
                break;
             }
@@ -464,11 +468,7 @@ class Architect implements ArchitectServiceImplementation {
                   })
                );
 
-               yield unaryResponse(
-                  event,
-                  PipelineRequestAssignmentResponse,
-                  PipelineRequestAssignmentResponse.create(addedInstances)
-               );
+               yield unaryResponse(event, PipelineRequestAssignmentResponse.create(addedInstances));
 
                break;
             }
@@ -529,11 +529,7 @@ class Architect implements ArchitectServiceImplementation {
                      throw new Error("Unsupported resource type");
                }
 
-               yield unaryResponse(
-                  event,
-                  ResourceUpdateStatusResponse,
-                  ResourceUpdateStatusResponse.create({ ok: true })
-               );
+               yield unaryResponse(event, ResourceUpdateStatusResponse.create({ ok: true }));
 
                break;
             }
@@ -543,7 +539,7 @@ class Architect implements ArchitectServiceImplementation {
       } catch (err) {
          const error = ensureError(err);
 
-         console.log(`Error occurred handing event. Error: ${error}`);
+         console.log(`Error occurred handing event. Error: ${error.message}`);
 
          // Now yield an error message to pass back to the client
          yield Event.create({

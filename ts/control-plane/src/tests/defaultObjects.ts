@@ -12,7 +12,7 @@ import {
    ISegmentMapping,
    IWorker,
 } from "@mrc/common/entities";
-import { generateSegmentHash, hashProtoMessage, stringToBytes } from "@mrc/common/utils";
+import { generateId, generateSegmentHash, hashProtoMessage, stringToBytes } from "@mrc/common/utils";
 import {
    ManifoldOptions_Policy,
    PipelineConfiguration,
@@ -21,7 +21,6 @@ import {
    ResourceActualStatus,
    ResourceRequestedStatus,
 } from "@mrc/proto/mrc/protos/architect_state";
-import { generateId } from "@mrc/server/utils";
 
 const default_resource_state: IResourceState = {
    requestedStatus: ResourceRequestedStatus.Requested_Initialized,
@@ -93,7 +92,7 @@ export const pipeline_mappings = Object.fromEntries(
          {
             machineId: w.machineId,
             segments: Object.fromEntries(
-               Object.entries(pipeline_config.segments).map(([seg_name, seg_config]) => {
+               Object.entries(pipeline_config.segments).map(([seg_name]) => {
                   return [seg_name, { segmentName: seg_name, byWorker: { workerIds: [worker.id] } } as ISegmentMapping];
                })
             ),
@@ -116,6 +115,8 @@ export const pipeline_def: IPipelineDefinition = {
                parentId: pipeline_config_hash,
                name: seg_name,
                instanceIds: [],
+               egressPorts: {},
+               ingressPorts: {},
             } as ISegmentDefinition,
          ];
       })
@@ -160,6 +161,8 @@ export const segments: ISegmentInstance[] = Object.entries(pipeline_def.segments
       state: {
          ...default_resource_state,
       },
+      egressManifoldInstanceIds: [],
+      ingressManifoldInstanceIds: [],
    } as ISegmentInstance;
 });
 

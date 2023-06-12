@@ -31,9 +31,9 @@ export class ArchitectServer {
          this._completed_signal = resolve;
       });
 
-      this._architect.onShutdownSignaled().then(() => {
+      void this._architect.onShutdownSignaled().then(async () => {
          // Call stop
-         this.stop();
+         await this.stop();
       });
 
       return port;

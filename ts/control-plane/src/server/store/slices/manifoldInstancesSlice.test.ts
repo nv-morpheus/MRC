@@ -1,6 +1,9 @@
 import { expect } from "@jest/globals";
 import { ResourceActualStatus } from "@mrc/proto/mrc/protos/architect_state";
-import { pipelineDefinitionsAdd, pipelineDefinitionsSelectById } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
+import {
+   pipelineDefinitionsAdd,
+   pipelineDefinitionsSelectById,
+} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 import { pipelineInstancesAdd } from "@mrc/server/store/slices/pipelineInstancesSlice";
 import { workersAdd } from "@mrc/server/store/slices/workersSlice";
 import {
@@ -174,8 +177,8 @@ describe("Single", () => {
       );
    });
 
-   test("Drop Connection", () => {
-      store.dispatch(connectionsDropOne({ id: connection.id }));
+   test("Drop Connection", async () => {
+      await store.dispatch(connectionsDropOne({ id: connection.id }));
 
       expect(manifoldInstancesSelectAll(store.getState())).toHaveLength(0);
    });
@@ -191,6 +194,5 @@ describe("Single", () => {
 
          expect(found?.instanceIds).toContain(pipeline.id);
       });
-
    });
 });

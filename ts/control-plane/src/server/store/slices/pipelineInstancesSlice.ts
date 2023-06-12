@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import {
    IManifoldInstance,
    IPipelineConfiguration,
@@ -21,15 +22,10 @@ import { AppDispatch, AppGetState, RootState } from "@mrc/server/store/store";
 import { createWrappedEntityAdapter } from "@mrc/server/utils";
 import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import {
-   segmentInstancesAdd,
-   segmentInstancesAddMany,
-   segmentInstancesRemove,
-   segmentInstancesSelectById,
-} from "./segmentInstancesSlice";
+import { segmentInstancesAdd, segmentInstancesRemove, segmentInstancesSelectById } from "./segmentInstancesSlice";
 import { AppListenerAPI, startAppListening } from "@mrc/server/store/listener_middleware";
 import { generateId, generateSegmentHash } from "@mrc/common/utils";
-import { workersSelectById, workersSelectByMachineId } from "@mrc/server/store/slices/workersSlice";
+import { workersSelectByMachineId } from "@mrc/server/store/slices/workersSlice";
 import {
    manifoldInstancesAdd,
    manifoldInstancesRemove,
@@ -423,6 +419,24 @@ export function pipelineInstancesConfigureListeners() {
 
             if (!pipeline_instance) {
                throw new Error("Could not find instance");
+            }
+
+            switch (pipeline_instance.state.actualStatus) {
+               case ResourceActualStatus.Actual_Created: {
+                  break;
+               }
+               case ResourceActualStatus.Actual_Completed: {
+                  break;
+               }
+               case ResourceActualStatus.Actual_Stopped: {
+                  break;
+               }
+               case ResourceActualStatus.Actual_Destroyed: {
+                  break;
+               }
+
+               default:
+                  throw new Error("Unknown state type");
             }
 
             if (pipeline_instance.state.actualStatus === ResourceActualStatus.Actual_Created) {

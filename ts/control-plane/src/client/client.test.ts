@@ -1,7 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { MrcTestClient } from "@mrc/client/client";
+import { ConnectionManager } from "@mrc/client/connection_manager";
+import { PipelineManager } from "@mrc/client/pipeline_manager";
+import { WorkersManager } from "@mrc/client/workers_manager";
 import { IPipelineConfiguration, IPipelineMapping, ISegmentMapping } from "@mrc/common/entities";
 import { packEvent, stringToBytes } from "@mrc/common/utils";
 import {
@@ -433,8 +438,8 @@ describe("Connection", () => {
 
    test("No Connections After Disconnect", async () => {
       // Connect then disconnect
-      await client.initializeEventStream();
-      await client.finalizeEventStream();
+      await client.registerConnection();
+      await client.unregisterConnection();
 
       // Should have 0 connections in the state
       expect(connectionsSelectAll(client.getServerState())).toHaveLength(0);
@@ -442,11 +447,11 @@ describe("Connection", () => {
 
    describe("With EventStream", () => {
       beforeEach(async () => {
-         await client.initializeEventStream();
+         await client.registerConnection();
       });
 
       afterEach(async () => {
-         await client.finalizeEventStream();
+         await client.unregisterConnection();
       });
 
       test("Found Connection", async () => {
@@ -468,27 +473,31 @@ describe("Worker", () => {
 
    beforeEach(async () => {
       await client.initializeClient();
-      await client.initializeEventStream();
+      await client.registerConnection();
    });
 
    afterEach(async () => {
-      await client.finalizeEventStream();
+      await client.unregisterConnection();
       await client.finalizeClient();
    });
 
    test("Add One", async () => {
-      const response = await client.register_workers(["test data"]);
+      const manager = WorkersManager.create(["test data"], client);
 
-      expect(response.machineId).toBe(client.machineId);
+      await manager.register();
+
+      expect(manager.machineId).toBe(client.machineId);
 
       // Need to do deeper checking here
    });
 
    test("Activate", async () => {
-      const registered_response = await client.register_and_activate_workers(["test data"]);
+      const manager = WorkersManager.create(["test data"], client);
+
+      await manager.createResources();
 
       // Check to make sure its activated
-      const found_worker = workersSelectById(client.getServerState(), registered_response.instanceIds[0]);
+      const found_worker = workersSelectById(client.getServerState(), manager.workerIds[0]);
 
       expect(found_worker?.state.actualStatus).toBe(ResourceActualStatus.Actual_Running);
    });
@@ -496,18 +505,15 @@ describe("Worker", () => {
 
 describe("Pipeline", () => {
    const client: MrcTestClient = new MrcTestClient();
-   let workerIds: string[] = [];
+   const workersManager = WorkersManager.create(["test data", "test data 2"], client);
 
    beforeEach(async () => {
-      await client.initializeClient();
-      await client.initializeEventStream();
-
-      // Also register 2 workers before starting any pipeline activities
-      workerIds = (await client.register_and_activate_workers(["test data", "test data 2"])).instanceIds;
+      // Ensure everything up to the workers is ready to go
+      await workersManager.ensureResourcesCreated();
    });
 
    afterEach(async () => {
-      await client.finalizeEventStream();
+      await client.unregisterConnection();
       await client.finalizeClient();
    });
 
@@ -528,74 +534,62 @@ describe("Pipeline", () => {
          manifolds: {},
       };
 
+      const manager = new PipelineManager(workersManager, pipeline_config);
+
       // Now request to run a pipeline
-      const request_pipeline_response = await client.register_pipeline_config(pipeline_config);
+      await manager.register();
 
       // Check the pipeline definition
       const foundPipelineDefinition = pipelineDefinitionsSelectById(
          client.getServerState(),
-         request_pipeline_response.pipelineDefinitionId
+         manager.pipelineDefinitionId
       );
 
-      expect(foundPipelineDefinition?.id).toBe(request_pipeline_response.pipelineDefinitionId);
+      expect(foundPipelineDefinition?.id).toBe(manager.pipelineDefinitionId);
 
       // Check pipeline instances
-      const foundPipelineInstance = pipelineInstancesSelectById(
-         client.getServerState(),
-         request_pipeline_response.pipelineInstanceId
-      );
+      const foundPipelineInstance = pipelineInstancesSelectById(client.getServerState(), manager.pipelineInstanceId);
 
       expect(foundPipelineInstance).toBeDefined();
 
       expect(foundPipelineInstance?.machineId).toEqual(client.machineId);
-      expect(foundPipelineInstance?.segmentIds).toEqual(request_pipeline_response.segmentInstanceIds);
 
-      // Check segments exist in state
-      const foundSegmentInstances = segmentInstancesSelectByIds(
-         client.getServerState(),
-         request_pipeline_response.segmentInstanceIds
-      );
-
-      expect(foundSegmentInstances).toHaveLength(0);
+      // Should be no segments to start
+      expect(foundPipelineInstance?.segmentIds).toHaveLength(0);
    });
 
    describe("Config", () => {
-      let pipelineDefinitionId = "";
-      let pipelineInstanceId = "";
+      const pipelineManager = new PipelineManager(workersManager, {
+         segments: {
+            my_seg1: {
+               egressPorts: {},
+               ingressPorts: {},
+               name: "my_seg",
+            },
+            my_seg2: {
+               egressPorts: {},
+               ingressPorts: {},
+               name: "my_seg2",
+            },
+         },
+         manifolds: {},
+      });
 
       beforeEach(async () => {
-         const pipeline_config: IPipelineConfiguration = {
-            segments: {
-               my_seg1: {
-                  egressPorts: {},
-                  ingressPorts: {},
-                  name: "my_seg",
-               },
-               my_seg2: {
-                  egressPorts: {},
-                  ingressPorts: {},
-                  name: "my_seg2",
-               },
-            },
-            manifolds: {},
-         };
-
-         // Now request to run a pipeline
-         const response = await client.register_pipeline_config(pipeline_config);
-
-         pipelineDefinitionId = response.pipelineDefinitionId;
-         pipelineInstanceId = response.pipelineInstanceId;
+         await pipelineManager.ensureRegistered();
       });
 
       test("Resource States", async () => {
          let pipeline_instance_state: PipelineInstance | null =
-            client.getClientState().pipelineInstances!.entities[pipelineInstanceId];
+            workersManager.connectionManager.getClientState().pipelineInstances!.entities[
+               pipelineManager.pipelineInstanceId
+            ];
 
          expect(pipeline_instance_state?.state?.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Created);
 
          //  Update the PipelineInstance state to assign segment instances
-         pipeline_instance_state = await client.update_resource_status(
-            pipelineInstanceId,
+         pipeline_instance_state = await workersManager.connectionManager.update_resource_status(
+            pipelineManager.pipelineInstanceId,
             "PipelineInstances",
             ResourceActualStatus.Actual_Created
          );
@@ -603,15 +597,19 @@ describe("Pipeline", () => {
          // For each segment, set it to created
          const segments = await Promise.all(
             pipeline_instance_state!.segmentIds.map(async (s) => {
-               return await client.update_resource_status(s, "SegmentInstances", ResourceActualStatus.Actual_Created)!;
+               return await workersManager.connectionManager.update_resource_status(
+                  s,
+                  "SegmentInstances",
+                  ResourceActualStatus.Actual_Created
+               )!;
             })
          );
 
          expect(pipeline_instance_state?.state?.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Completed);
 
          //  Update the PipelineInstance state to assign segment instances
-         pipeline_instance_state = await client.update_resource_status(
-            pipelineInstanceId,
+         pipeline_instance_state = await workersManager.connectionManager.update_resource_status(
+            pipelineManager.pipelineInstanceId,
             "PipelineInstances",
             ResourceActualStatus.Actual_Completed
          );
@@ -619,8 +617,8 @@ describe("Pipeline", () => {
          expect(pipeline_instance_state?.state?.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Stopped);
 
          //  Update the PipelineInstance state to assign segment instances
-         pipeline_instance_state = await client.update_resource_status(
-            pipelineInstanceId,
+         pipeline_instance_state = await workersManager.connectionManager.update_resource_status(
+            pipelineManager.pipelineInstanceId,
             "PipelineInstances",
             ResourceActualStatus.Actual_Stopped
          );
@@ -628,8 +626,8 @@ describe("Pipeline", () => {
          expect(pipeline_instance_state?.state?.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Destroyed);
 
          //  Update the PipelineInstance state to assign segment instances
-         pipeline_instance_state = await client.update_resource_status(
-            pipelineInstanceId,
+         pipeline_instance_state = await workersManager.connectionManager.update_resource_status(
+            pipelineManager.pipelineInstanceId,
             "PipelineInstances",
             ResourceActualStatus.Actual_Destroyed
          );
@@ -640,14 +638,16 @@ describe("Pipeline", () => {
 
       test("Resource State Handle Errors", async () => {
          const pipeline_instance_state: PipelineInstance | null =
-            client.getClientState().pipelineInstances!.entities[pipelineInstanceId];
+            workersManager.connectionManager.getClientState().pipelineInstances!.entities[
+               pipelineManager.pipelineInstanceId
+            ];
 
          expect(pipeline_instance_state?.state?.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Created);
 
          // Move to completed before marking as created
-         expect(
-            client.update_resource_status(
-               pipelineInstanceId,
+         void expect(
+            workersManager.connectionManager.update_resource_status(
+               pipelineManager.pipelineInstanceId,
                "PipelineInstances",
                ResourceActualStatus.Actual_Completed
             )
@@ -657,72 +657,57 @@ describe("Pipeline", () => {
 });
 
 describe("Manifold", () => {
+   const pipeline_config: IPipelineConfiguration = {
+      segments: {
+         my_seg1: {
+            ingressPorts: {},
+            egressPorts: {
+               port1: {
+                  portName: "port1",
+                  typeId: 1234,
+                  typeString: "int",
+               },
+            },
+            name: "my_seg1",
+         },
+         my_seg2: {
+            ingressPorts: {
+               port1: {
+                  portName: "port1",
+                  typeId: 1234,
+                  typeString: "int",
+               },
+            },
+            egressPorts: {},
+            name: "my_seg2",
+         },
+      },
+      manifolds: {
+         port1: {
+            name: "port1",
+            options: {
+               policy: ManifoldOptions_Policy.LoadBalance,
+            },
+         },
+      },
+   };
+
    const client: MrcTestClient = new MrcTestClient();
-   let workerIds: string[] = [];
-   let pipelineDefinitionId = "";
-   let pipelineInstanceId = "";
+   const pipelineManager = PipelineManager.create(pipeline_config, ["test data"], client);
 
    beforeEach(async () => {
-      await client.initializeClient();
-      await client.initializeEventStream();
-
-      // Also register 2 workers before starting any pipeline activities
-      workerIds = (await client.register_and_activate_workers(["test data", "test data 2"])).instanceIds;
-
-      const pipeline_config: IPipelineConfiguration = {
-         segments: {
-            my_seg1: {
-               ingressPorts: {},
-               egressPorts: {
-                  port1: {
-                     portName: "port1",
-                     typeId: 1234,
-                     typeString: "int",
-                  },
-               },
-               name: "my_seg1",
-            },
-            my_seg2: {
-               ingressPorts: {
-                  port1: {
-                     portName: "port1",
-                     typeId: 1234,
-                     typeString: "int",
-                  },
-               },
-               egressPorts: {},
-               name: "my_seg2",
-            },
-         },
-         manifolds: {
-            port1: {
-               name: "port1",
-               options: {
-                  policy: ManifoldOptions_Policy.LoadBalance,
-               },
-            },
-         },
-      };
-
-      // Now request to run a pipeline
-      const response = await client.register_pipeline_config(pipeline_config);
-
-      pipelineDefinitionId = response.pipelineDefinitionId;
-      pipelineInstanceId = response.pipelineInstanceId;
-
-      // Finally, indicate the pipeline has been created
-      await client.update_resource_status(pipelineInstanceId, "PipelineInstances", ResourceActualStatus.Actual_Created);
+      await pipelineManager.ensureResourcesCreated();
    });
 
    afterEach(async () => {
-      await client.finalizeEventStream();
+      await client.unregisterConnection();
       await client.finalizeClient();
    });
 
    test("Resource States", async () => {
       //  Update the PipelineInstance state to assign segment instances
-      const pipeline_instance_state = await client.update_resource_status(
-         pipelineInstanceId,
+      const pipeline_instance_state = await pipelineManager.connectionManager.update_resource_status(
+         pipelineManager.pipelineInstanceId,
          "PipelineInstances",
          ResourceActualStatus.Actual_Created
       );
@@ -730,18 +715,37 @@ describe("Manifold", () => {
       // For each manifold, set it to created
       const manifolds = await Promise.all(
          pipeline_instance_state!.manifoldIds.map(async (s) => {
-            return await client.update_resource_status(s, "ManifoldInstances", ResourceActualStatus.Actual_Created)!;
+            return await pipelineManager.connectionManager.update_resource_status(
+               s,
+               "ManifoldInstances",
+               ResourceActualStatus.Actual_Created
+            )!;
          })
       );
 
       // For each segment, set it to created
       const segments = await Promise.all(
-         client.getClientState().pipelineInstances!.entities[pipelineInstanceId].segmentIds.map(async (s) => {
-            return await client.update_resource_status(s, "SegmentInstances", ResourceActualStatus.Actual_Created)!;
-         })
+         pipelineManager.connectionManager
+            .getClientState()
+            .pipelineInstances!.entities[pipelineManager.pipelineInstanceId].segmentIds.map(async (s) => {
+               return await pipelineManager.connectionManager.update_resource_status(
+                  s,
+                  "SegmentInstances",
+                  ResourceActualStatus.Actual_Created
+               )!;
+            })
       );
 
       // Now update the attached manifolds for each segment
+   });
+
+   test("Second Connection", async () => {
+      const pipelineManager2 = PipelineManager.create(pipeline_config, ["test data2"], client);
+
+      await pipelineManager2.ensureResourcesCreated();
+
+      // Now see what the state is
+      const state = pipelineManager2.connectionManager.getClientState();
    });
 });
 

@@ -1,4 +1,4 @@
-import { ResourceActualStatus, ResourceStatus } from "@mrc/proto/mrc/protos/architect_state";
+import { ResourceActualStatus } from "@mrc/proto/mrc/protos/architect_state";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { createWrappedEntityAdapter } from "../../utils";
@@ -6,13 +6,10 @@ import { createWrappedEntityAdapter } from "../../utils";
 import type { AppDispatch, AppGetState, RootState } from "../store";
 import { pipelineInstancesAdd, pipelineInstancesRemove, pipelineInstancesSelectByIds } from "./pipelineInstancesSlice";
 import { workersAdd, workersAddMany, workersRemove, workersSelectByIds } from "./workersSlice";
-import {
-   segmentInstancesRemove,
-   segmentInstancesSelectByIds,
-   segmentInstancesUpdateResourceActualState,
-} from "@mrc/server/store/slices/segmentInstancesSlice";
+import { segmentInstancesSelectByIds } from "@mrc/server/store/slices/segmentInstancesSlice";
 import { systemStartRequest, systemStopRequest } from "@mrc/server/store/slices/systemSlice";
 import { IConnection, IWorker } from "@mrc/common/entities";
+import { updateResourceActualState } from "@mrc/server/store/slices/resourceActions";
 
 const connectionsAdapter = createWrappedEntityAdapter<IConnection>({
    selectId: (x) => x.id,
@@ -53,13 +50,21 @@ export const connectionsSlice = createSlice({
 
          if (found.workerIds.length > 0) {
             throw new Error(
-               `Attempting to delete Connection with ID: ${action.payload.id} while it still has active workers. Active workers: ${found.workerIds}. Delete workers first`
+               `Attempting to delete Connection with ID: ${
+                  action.payload.id
+               } while it still has active workers. Active workers: ${JSON.stringify(
+                  found.workerIds
+               )}. Delete workers first`
             );
          }
 
          if (found.assignedPipelineIds.length > 0) {
             throw new Error(
-               `Attempting to delete Connection with ID: ${action.payload.id} while it still has active pipeline instances. Active PipelineInstances: ${found.assignedPipelineIds}. Delete PipelineInstances first`
+               `Attempting to delete Connection with ID: ${
+                  action.payload.id
+               } while it still has active pipeline instances. Active PipelineInstances: ${JSON.stringify(
+                  found.assignedPipelineIds
+               )}. Delete PipelineInstances first`
             );
          }
 
@@ -118,7 +123,7 @@ export const connectionsSlice = createSlice({
 });
 
 export function connectionsDropOne(payload: Pick<IConnection, "id">) {
-   return (dispatch: AppDispatch, getState: AppGetState) => {
+   return async (dispatch: AppDispatch, getState: AppGetState) => {
       // Get the state once and use that to make sure we are consistent
       const state_snapshot = getState();
 
@@ -146,14 +151,12 @@ export function connectionsDropOne(payload: Pick<IConnection, "id">) {
          // Start a batch to avoid many notifications
          dispatch(systemStartRequest(`Dropping Connection: ${payload.id}`));
 
-         segments.forEach((x) => {
+         for (const x of segments) {
             // Need to set the state first
-            dispatch(
-               segmentInstancesUpdateResourceActualState({ resource: x, status: ResourceActualStatus.Actual_Destroyed })
-            );
+            await dispatch(updateResourceActualState("SegmentInstances", x.id, ResourceActualStatus.Actual_Destroyed));
 
-            dispatch(segmentInstancesRemove(x));
-         });
+            // dispatch(segmentInstancesRemove(x));
+         }
 
          pipelines.forEach((x) => dispatch(pipelineInstancesRemove(x)));
 

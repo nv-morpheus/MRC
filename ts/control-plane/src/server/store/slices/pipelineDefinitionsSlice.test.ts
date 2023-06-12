@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { expect } from "@jest/globals";
 import { ResourceActualStatus, ResourceStatus } from "@mrc/proto/mrc/protos/architect_state";
 import { connectionsAdd } from "@mrc/server/store/slices/connectionsSlice";
@@ -70,9 +71,9 @@ describe("From Config", () => {
 
       expect(found?.segments).toBeDefined();
 
-      expect(Object.keys(found?.segments!)).toEqual(Object.keys(pipeline_def.segments));
+      expect(Object.keys(found!.segments)).toEqual(Object.keys(pipeline_def.segments));
 
-      Object.entries(found?.segments!).forEach(([seg_name, seg_def]) => {
+      Object.entries(found!.segments).forEach(([seg_name, seg_def]) => {
          expect(seg_def.id).toBe(pipeline_def.segments[seg_name].id);
          expect(seg_def.parentId).toBe(found?.id);
       });
@@ -106,9 +107,9 @@ describe("Single", () => {
       expect(found?.id).toEqual(pipeline_def.id);
       expect(found?.instanceIds).toEqual([]);
 
-      expect(Object.keys(found?.segments!)).toEqual(Object.keys(pipeline_config.segments));
+      expect(Object.keys(found!.segments)).toEqual(Object.keys(pipeline_config.segments));
 
-      Object.entries(found?.segments!).forEach(([seg_name, seg_def]) => {
+      Object.entries(found!.segments).forEach(([seg_name, seg_def]) => {
          expect(seg_def.id).toBe(pipeline_def.segments[seg_name].id);
          expect(seg_def.parentId).toBe(found?.id);
       });

@@ -13,13 +13,14 @@ import {
    segmentInstancesRemove,
    segmentInstancesUpdateResourceActualState,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
-import { connection, pipeline, pipeline_def, segments, worker } from "@mrc/tests/defaultObjects";
+import { connection, manifolds, pipeline, pipeline_def, segments, worker } from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
 import { RootStore, setupStore } from "../store";
 
 import { connectionsAdd, connectionsDropOne } from "./connectionsSlice";
 import { workersAdd } from "./workersSlice";
+import { updateResourceActualState } from "@mrc/server/store/slices/resourceActions";
 
 let store: RootStore;
 
@@ -121,30 +122,34 @@ describe("Single", () => {
       );
    });
 
-   test("Drop Connection", () => {
-      store.dispatch(connectionsDropOne({ id: connection.id }));
+   test("Drop Connection", async () => {
+      await store.dispatch(connectionsDropOne({ id: connection.id }));
 
       expect(pipelineInstancesSelectAll(store.getState())).toHaveLength(0);
    });
 
    describe("With Segment Instance", () => {
-      beforeEach(() => {
+      beforeEach(async () => {
          // Add a worker first, then a segment
          store.dispatch(workersAdd(worker));
 
          // Update the instance state to ready and the instances should auto assign
-         store.dispatch(
-            pipelineInstancesUpdateResourceActualState({
-               resource: pipeline,
-               status: ResourceActualStatus.Actual_Running,
-            })
+         await store.dispatch(
+            updateResourceActualState("PipelineInstances", pipeline.id, ResourceActualStatus.Actual_Running)
          );
+
+         // Update all manifold states as well
+         for (const m of manifolds) {
+            await store.dispatch(
+               updateResourceActualState("ManifoldInstances", m.id, ResourceActualStatus.Actual_Running)
+            );
+         }
       });
 
       test("Contains Instance", () => {
          const found = pipelineInstancesSelectById(store.getState(), pipeline.id);
 
-         segments.forEach((s) => expect(found?.segmentIds).toContain(s.id));
+         segments.forEach((s) => expect(found!.segmentIds).toContain(s.id));
       });
 
       test("Remove Segment", () => {

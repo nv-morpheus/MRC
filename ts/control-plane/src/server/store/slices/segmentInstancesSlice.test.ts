@@ -120,7 +120,10 @@ describe("Single", () => {
    test("Update State Backwards", () => {
       // Set the state running first
       store.dispatch(
-         segmentInstancesUpdateResourceActualState({ resource: segments[0], status: ResourceActualStatus.Actual_Running })
+         segmentInstancesUpdateResourceActualState({
+            resource: segments[0],
+            status: ResourceActualStatus.Actual_Running,
+         })
       );
 
       // Try to set it back to initialized
@@ -167,8 +170,8 @@ describe("Single", () => {
       );
    });
 
-   test("Drop Connection", () => {
-      store.dispatch(connectionsDropOne({ id: connection.id }));
+   test("Drop Connection", async () => {
+      await store.dispatch(connectionsDropOne({ id: connection.id }));
 
       expect(segmentInstancesSelectAll(store.getState())).toHaveLength(0);
    });

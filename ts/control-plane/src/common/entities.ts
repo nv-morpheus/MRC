@@ -69,7 +69,7 @@ export type ISegmentDefinition = Omit<
 > & {
    ingressPorts: { [key: string]: IPortInfo };
    egressPorts: { [key: string]: IPortInfo };
-   options: ISegmentOptions;
+   options?: ISegmentOptions;
 };
 
 export type IManifoldDefinition = Omit<PipelineDefinition_ManifoldDefinition, "$type" | "options"> & {

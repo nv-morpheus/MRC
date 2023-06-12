@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, current, PayloadAction } from "@reduxjs/toolkit";
 
 import type { AppDispatch, AppGetState, RootState } from "../store";
 import {
@@ -8,11 +8,7 @@ import {
 } from "@mrc/proto/mrc/protos/architect_state";
 import { createWrappedEntityAdapter } from "@mrc/server/utils";
 import { hashProtoMessage } from "@mrc/common/utils";
-import {
-   segmentInstancesAdd,
-   segmentInstancesAddMany,
-   segmentInstancesRemove,
-} from "@mrc/server/store/slices/segmentInstancesSlice";
+import { segmentInstancesAdd, segmentInstancesRemove } from "@mrc/server/store/slices/segmentInstancesSlice";
 import { pipelineInstancesAdd, pipelineInstancesRemove } from "@mrc/server/store/slices/pipelineInstancesSlice";
 import {
    IManifoldDefinition,
@@ -183,12 +179,12 @@ export const pipelineDefinitionsSlice = createSlice({
                );
             }
 
-            const foundSegment = found.segments[action.payload.portName];
+            const foundManifold = found.manifolds[action.payload.portName];
 
-            const index = foundSegment.instanceIds.findIndex((x) => x === action.payload.id);
+            const index = foundManifold.instanceIds.findIndex((x) => x === action.payload.id);
 
             if (index !== -1) {
-               foundSegment.instanceIds.splice(index, 1);
+               foundManifold.instanceIds.splice(index, 1);
             }
          } else {
             throw new Error(

@@ -1,3 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { stringify, parse } from "jsan";
 import socketClusterClient, { AGClientSocket } from "socketcluster-client";
 import configureStore from "./configureStore";
@@ -383,7 +389,7 @@ class DevToolsEnhancer<S, A extends Action<unknown>> {
       if (!this.socket) {
          return;
       }
-      this.socket.unsubscribe(this.channel!);
+      void this.socket.unsubscribe(this.channel!);
       this.socket.closeChannel(this.channel!);
       if (!keepConnected) {
          this.socket.disconnect();

@@ -65,16 +65,21 @@ export class MrcTestClient {
 
    private _debugger_attached: boolean;
    private _response_stream$: Observable<Event> | null = null;
-   private _receive_events_complete: Promise<Event> | null = null;
+   private _receive_events_complete: Promise<void> | null = null;
+
+   private _clientInitialized = false;
+   private _connectionRegistered = false;
 
    constructor() {
       this._debugger_attached = inspectorUrl() !== undefined;
 
+      if ("MRC_DEBUG_CLIENT" in process.env) {
+         this._debugger_attached = process.env["MRC_DEBUG_CLIENT"] === "0" ? false : true;
+      }
+
       if (this._debugger_attached) {
          console.log("Debugger attached. Creating dev tools connection");
       }
-
-      // this._debugger_attached = false;
    }
 
    public async initializeClient() {
@@ -100,6 +105,14 @@ export class MrcTestClient {
       // console.log("Sleeping done");
 
       // console.log(`beforeEach took ${performance.now() - startTime} milliseconds`);
+
+      this._clientInitialized = true;
+   }
+
+   public async ensureClientInitialized() {
+      if (!this._clientInitialized) {
+         await this.initializeClient();
+      }
    }
 
    public async finalizeClient() {
@@ -134,9 +147,11 @@ export class MrcTestClient {
       }
 
       // console.log(`afterEach took ${performance.now() - startTime} milliseconds`);
+
+      this._clientInitialized = false;
    }
 
-   public async initializeEventStream() {
+   public async registerConnection() {
       if (!this.client) {
          throw new Error("Must initialize client before stream");
       }
@@ -158,12 +173,8 @@ export class MrcTestClient {
          share()
       );
 
-      this._receive_events_complete = lastValueFrom(this._receive_events$, {
-         defaultValue: Event.create({}),
-      });
-
       // Subscribe permenantly to keep the stream hot
-      this._receive_events$
+      this._receive_events_complete = this._receive_events$
          .pipe(
             filter((value) => {
                return value.event === EventType.ServerStateUpdate;
@@ -199,9 +210,20 @@ export class MrcTestClient {
       //    });
 
       this.machineId = connected_response.machineId;
+
+      this._connectionRegistered = true;
    }
 
-   public async finalizeEventStream() {
+   public async ensureConnectionRegistered() {
+      // Ensure the client is initialized too
+      await this.ensureClientInitialized();
+
+      if (!this._connectionRegistered) {
+         await this.registerConnection();
+      }
+   }
+
+   public async unregisterConnection() {
       if (this._send_events) {
          this._send_events.end();
          this._send_events = null;
@@ -222,6 +244,8 @@ export class MrcTestClient {
       //       console.log(`Excess messages left in recieve queue. Msg: ${item}`);
       //    }
       // }
+
+      this._connectionRegistered = false;
    }
 
    public isChannelConnected() {
@@ -236,7 +260,7 @@ export class MrcTestClient {
       this._abort_controller.abort(reason);
 
       // Call finalize to close the input stream and pull off any messages before exiting
-      await this.finalizeEventStream();
+      await this.unregisterConnection();
    }
 
    public getServerState() {
@@ -247,13 +271,13 @@ export class MrcTestClient {
       return this.store.getState();
    }
 
-   public getClientState() {
-      if (this._state_updates.length === 0) {
-         throw new Error("Cant get client state. No state updates have been received");
-      }
+   // public getClientState() {
+   //    if (this._state_updates.length === 0) {
+   //       throw new Error("Cant get client state. No state updates have been received");
+   //    }
 
-      return this._state_updates[this._state_updates.length - 1];
-   }
+   //    return this._state_updates[this._state_updates.length - 1];
+   // }
 
    public async ping(request: PingRequest): Promise<PingResponse> {
       if (!this.client) {
@@ -263,16 +287,16 @@ export class MrcTestClient {
       return await this.client.ping(request);
    }
 
-   public async send_request<ResponseT extends UnknownMessage>(event_type: EventType, request: UnknownMessage) {
-      if (!this._response_stream$ || !this._send_events) {
-         throw new Error("Client is not connected");
-      }
+   // public async send_request<ResponseT extends UnknownMessage>(event_type: EventType, request: UnknownMessage) {
+   //    if (!this._response_stream$ || !this._send_events) {
+   //       throw new Error("Client is not connected");
+   //    }
 
-      // Pack message with random tag
-      const message = packEvent(event_type, generateId().toString(), request);
+   //    // Pack message with random tag
+   //    const message = packEvent(event_type, generateId().toString(), request);
 
-      return await unpack_unary_event<ResponseT>(this._response_stream$, this._send_events, message);
-   }
+   //    return await unpack_unary_event<ResponseT>(this._response_stream$, this._send_events, message);
+   // }
 
    // public async unary_event<MessageT extends UnknownMessage>(message: Event) {
    //    if (!this._response_stream$ || !this._send_events) {
@@ -282,116 +306,62 @@ export class MrcTestClient {
    //    return await unpack_unary_event<MessageT>(this._response_stream$, this._send_events, message);
    // }
 
-   public async register_workers(addresses: string[]) {
-      const response = await this.send_request<RegisterWorkersResponse>(
-         EventType.ClientUnaryRegisterWorkers,
-         RegisterWorkersRequest.create({
-            ucxWorkerAddresses: stringToBytes(addresses),
-         })
-      );
+   // public async update_resource_status(
+   //    id: string,
+   //    resource_type: "PipelineInstances",
+   //    status: ResourceActualStatus
+   // ): Promise<PipelineInstance | null>;
+   // public async update_resource_status(
+   //    id: string,
+   //    resource_type: "SegmentInstances",
+   //    status: ResourceActualStatus
+   // ): Promise<SegmentInstance | null>;
+   // public async update_resource_status(
+   //    id: string,
+   //    resource_type: "ManifoldInstances",
+   //    status: ResourceActualStatus
+   // ): Promise<ManifoldInstance | null>;
+   // public async update_resource_status(
+   //    id: string,
+   //    resource_type: "PipelineInstances" | "SegmentInstances" | "ManifoldInstances",
+   //    status: ResourceActualStatus
+   // ) {
+   //    const response = await this.send_request<ResourceUpdateStatusResponse>(
+   //       EventType.ClientUnaryResourceUpdateStatus,
+   //       ResourceUpdateStatusRequest.create({
+   //          resourceId: id,
+   //          resourceType: resource_type,
+   //          status: status,
+   //       })
+   //    );
 
-      return response;
-   }
+   //    // Now return the correct instance from the updated state
+   //    if (resource_type === "PipelineInstances") {
+   //       const entities = this.getClientState().pipelineInstances!.entities;
 
-   public async activate_workers(response: RegisterWorkersResponse) {
-      await this.send_request<Ack>(EventType.ClientUnaryActivateStream, response);
+   //       if (!(id in entities)) {
+   //          return null;
+   //       }
 
-      return true;
-   }
+   //       return entities[id];
+   //    } else if (resource_type === "SegmentInstances") {
+   //       const entities = this.getClientState().segmentInstances!.entities;
 
-   public async register_and_activate_workers(addresses: string[]) {
-      const response = await this.register_workers(addresses);
+   //       if (!(id in entities)) {
+   //          return null;
+   //       }
 
-      await this.activate_workers(response);
+   //       return entities[id];
+   //    } else if (resource_type === "ManifoldInstances") {
+   //       const entities = this.getClientState().manifoldInstances!.entities;
 
-      return response;
-   }
+   //       if (!(id in entities)) {
+   //          return null;
+   //       }
 
-   public async register_pipeline_config(config: IPipelineConfiguration) {
-      const mapping: IPipelineMapping = {
-         machineId: this.machineId!,
-         segments: Object.fromEntries(
-            Object.entries(config.segments).map(([seg_name]) => {
-               return [
-                  seg_name,
-                  {
-                     segmentName: seg_name,
-                     byPolicy: { value: SegmentMappingPolicies.OnePerWorker },
-                  } as ISegmentMapping,
-               ];
-            })
-         ),
-      };
-
-      // Now request to run a pipeline
-      const response = await this.send_request<PipelineRequestAssignmentResponse>(
-         EventType.ClientUnaryRequestPipelineAssignment,
-
-         PipelineRequestAssignmentRequest.create({
-            pipeline: config,
-            mapping: mapping,
-         })
-      );
-
-      return response;
-   }
-
-   public async update_resource_status(
-      id: string,
-      resource_type: "PipelineInstances",
-      status: ResourceActualStatus
-   ): Promise<PipelineInstance | null>;
-   public async update_resource_status(
-      id: string,
-      resource_type: "SegmentInstances",
-      status: ResourceActualStatus
-   ): Promise<SegmentInstance | null>;
-   public async update_resource_status(
-      id: string,
-      resource_type: "ManifoldInstances",
-      status: ResourceActualStatus
-   ): Promise<ManifoldInstance | null>;
-   public async update_resource_status(
-      id: string,
-      resource_type: "PipelineInstances" | "SegmentInstances" | "ManifoldInstances",
-      status: ResourceActualStatus
-   ) {
-      const response = await this.send_request<ResourceUpdateStatusResponse>(
-         EventType.ClientUnaryResourceUpdateStatus,
-         ResourceUpdateStatusRequest.create({
-            resourceId: id,
-            resourceType: resource_type,
-            status: status,
-         })
-      );
-
-      // Now return the correct instance from the updated state
-      if (resource_type === "PipelineInstances") {
-         const entities = this.getClientState().pipelineInstances!.entities;
-
-         if (!(id in entities)) {
-            return null;
-         }
-
-         return entities[id];
-      } else if (resource_type === "SegmentInstances") {
-         const entities = this.getClientState().segmentInstances!.entities;
-
-         if (!(id in entities)) {
-            return null;
-         }
-
-         return entities[id];
-      } else if (resource_type === "ManifoldInstances") {
-         const entities = this.getClientState().manifoldInstances!.entities;
-
-         if (!(id in entities)) {
-            return null;
-         }
-
-         return entities[id];
-      } else {
-         throw new Error("Unknow resource type");
-      }
-   }
+   //       return entities[id];
+   //    } else {
+   //       throw new Error("Unknow resource type");
+   //    }
+   // }
 }

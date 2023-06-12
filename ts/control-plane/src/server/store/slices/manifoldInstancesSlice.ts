@@ -1,21 +1,17 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { createWrappedEntityAdapter } from "../../utils";
 
 import type { AppDispatch, AppGetState, RootState } from "../store";
-import {
-   pipelineInstancesRemove,
-   pipelineInstancesUpdateResourceActualState,
-} from "@mrc/server/store/slices/pipelineInstancesSlice";
+import { pipelineInstancesRemove } from "@mrc/server/store/slices/pipelineInstancesSlice";
 import { IManifoldInstance, ISegmentInstance } from "@mrc/common/entities";
 import {
    ResourceActualStatus,
    resourceActualStatusToNumber,
    resourceRequestedStatusToNumber,
 } from "@mrc/proto/mrc/protos/architect_state";
-import { startAppListening } from "@mrc/server/store/listener_middleware";
 import { ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
-import { segmentInstancesUpdateResourceRequestedState } from "@mrc/server/store/slices/segmentInstancesSlice";
 import { workersSelectById } from "@mrc/server/store/slices/workersSlice";
 import { pipelineDefinitionsSelectById } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 
@@ -33,9 +29,6 @@ export const manifoldInstancesSlice = createSlice({
          }
          manifoldInstancesAdapter.addOne(state, action.payload);
       },
-      addMany: (state, action: PayloadAction<IManifoldInstance[]>) => {
-         manifoldInstancesAdapter.addMany(state, action.payload);
-      },
       remove: (state, action: PayloadAction<IManifoldInstance>) => {
          const found = manifoldInstancesAdapter.getOne(state, action.payload.id);
 
@@ -43,7 +36,7 @@ export const manifoldInstancesSlice = createSlice({
             throw new Error(`Manifold Instance with ID: ${action.payload.id} not found`);
          }
 
-         if (found.state?.actualStatus != ResourceActualStatus.Actual_Destroyed) {
+         if (found.state.actualStatus != ResourceActualStatus.Actual_Destroyed) {
             throw new Error(
                `Attempting to delete Manifold Instance with ID: ${action.payload.id} while it has not finished. Stop ManifoldInstance first!`
             );
@@ -66,7 +59,7 @@ export const manifoldInstancesSlice = createSlice({
             resourceRequestedStatusToNumber(action.payload.status)
          ) {
             throw new Error(
-               `Cannot update state of Instance with ID: ${action.payload.resource.id}. Current state ${found.state} is greater than requested state ${action.payload.status}`
+               `Cannot update state of Instance with ID: ${action.payload.resource.id}. Current state ${found.state.requestedStatus} is greater than requested state ${action.payload.status}`
             );
          }
 
@@ -86,7 +79,7 @@ export const manifoldInstancesSlice = createSlice({
             resourceActualStatusToNumber(found.state.actualStatus) > resourceActualStatusToNumber(action.payload.status)
          ) {
             throw new Error(
-               `Cannot update state of Instance with ID: ${action.payload.resource.id}. Current state ${found.state} is greater than requested state ${action.payload.status}`
+               `Cannot update state of Instance with ID: ${action.payload.resource.id}. Current state ${found.state.actualStatus} is greater than requested state ${action.payload.status}`
             );
          }
 
@@ -237,11 +230,20 @@ export function manifoldInstancesAttachLocalSegment(manifold: IManifoldInstance,
    };
 }
 
+export function manifoldInstancesAddMany(instances: IManifoldInstance[]) {
+   // To allow the watchers to work, we need to add all individually
+   return (dispatch: AppDispatch) => {
+      // Loop and dispatch each individually
+      instances.forEach((m) => {
+         dispatch(manifoldInstancesAdd(m));
+      });
+   };
+}
+
 type ManifoldInstancesStateType = ReturnType<typeof manifoldInstancesSlice.getInitialState>;
 
 export const {
    add: manifoldInstancesAdd,
-   addMany: manifoldInstancesAddMany,
    remove: manifoldInstancesRemove,
    updateResourceRequestedState: manifoldInstancesUpdateResourceRequestedState,
    updateResourceActualState: manifoldInstancesUpdateResourceActualState,
@@ -263,23 +265,5 @@ const selectByPipelineId = createSelector(
 
 export const manifoldInstancesSelectByPipelineId = (state: RootState, pipeline_id: string) =>
    selectByPipelineId(state.manifoldInstances, pipeline_id);
-
-export function manifoldInstancesConfigureListeners() {
-   startAppListening({
-      actionCreator: segmentInstancesUpdateResourceRequestedState,
-      effect: (action, listenerApi) => {
-         if (action.payload.status == ResourceRequestedStatus.Requested_Created) {
-         }
-      },
-   });
-
-   startAppListening({
-      actionCreator: pipelineInstancesUpdateResourceActualState,
-      effect: (action, listenerApi) => {
-         if (action.payload.status == ResourceActualStatus.Actual_Running) {
-         }
-      },
-   });
-}
 
 export default manifoldInstancesSlice.reducer;
