@@ -23,11 +23,13 @@ import {
 
 export type IResourceState = Omit<ResourceState, "$type">;
 
+export interface IResourceInstance {
+   state: IResourceState;
+}
+
 export type IConnection = Omit<Connection, "$type">;
 
-export type IWorker = Omit<Worker, "$type" | "state"> & {
-   state: IResourceState;
-};
+export type IWorker = Omit<Worker, "$type" | "state"> & IResourceInstance;
 
 export type IPortInfo = Omit<PortInfo, "$type">;
 export type IIngressPort = Omit<IngressPort, "$type">;
@@ -86,14 +88,8 @@ export type IPipelineDefinition = Omit<
    manifolds: { [key: string]: IManifoldDefinition };
 };
 
-export type IPipelineInstance = Omit<PipelineInstance, "$type" | "state"> & {
-   state: IResourceState;
-};
+export type IPipelineInstance = Omit<PipelineInstance, "$type" | "state"> & IResourceInstance;
 
-export type ISegmentInstance = Omit<SegmentInstance, "$type" | "state"> & {
-   state: IResourceState;
-};
+export type ISegmentInstance = Omit<SegmentInstance, "$type" | "state"> & IResourceInstance;
 
-export type IManifoldInstance = Omit<ManifoldInstance, "$type" | "state"> & {
-   state: IResourceState;
-};
+export type IManifoldInstance = Omit<ManifoldInstance, "$type" | "state"> & IResourceInstance;
