@@ -64,7 +64,13 @@ py::bytes PythonSharedMemoryInterface::get_bytes() const
         throw std::runtime_error("Shared memory object is none!");
     }
 
-    return m_shmem.attr("buf").attr("tobytes")();
+    auto buf = m_shmem.attr("buf");
+    if (buf.is_none())
+    {
+        throw std::runtime_error("Shared memory buffer is none!");
+    }
+
+    return buf.attr("tobytes")();
 }
 
 pybind11::memoryview PythonSharedMemoryInterface::get_memoryview() const
