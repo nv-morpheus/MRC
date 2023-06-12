@@ -12,7 +12,7 @@ import connectionsReducer from "./slices/connectionsSlice";
 import pipelineDefinitionsReducer from "./slices/pipelineDefinitionsSlice";
 import pipelineInstancesReducer, { pipelineInstancesConfigureListeners } from "./slices/pipelineInstancesSlice";
 import segmentInstancesReducer, { segmentInstancesConfigureListeners } from "./slices/segmentInstancesSlice";
-import manifoldInstancesReducer from "./slices/manifoldInstancesSlice";
+import manifoldInstancesReducer, { manifoldInstancesConfigureListeners } from "./slices/manifoldInstancesSlice";
 import systemReducer, { systemStartRequest, systemStopRequest } from "./slices/systemSlice";
 import workersReducer from "./slices/workersSlice";
 import { customBatcherEnhancer } from "./custom_batcher_enhancer";
@@ -31,6 +31,7 @@ const slicesReducer = combineReducers({
 
 // Configure all of the listeners
 pipelineInstancesConfigureListeners();
+manifoldInstancesConfigureListeners();
 segmentInstancesConfigureListeners();
 
 export const startAction = createAction("start");

@@ -39,12 +39,7 @@ export type ISegmentOptions = Omit<SegmentOptions, "$type"> & {
    scalingOptions?: IScalingOptions;
 };
 
-export type ISegmentConfiguration = Omit<
-   PipelineConfiguration_SegmentConfiguration,
-   "$type" | "ingressPorts" | "egressPorts" | "options"
-> & {
-   ingressPorts: { [key: string]: IPortInfo };
-   egressPorts: { [key: string]: IPortInfo };
+export type ISegmentConfiguration = Omit<PipelineConfiguration_SegmentConfiguration, "$type" | "options"> & {
    options?: ISegmentOptions;
 };
 
@@ -65,12 +60,7 @@ export type IPipelineConfiguration = Omit<PipelineConfiguration, "$type" | "segm
    manifolds: { [key: string]: IManifoldConfiguration };
 };
 
-export type ISegmentDefinition = Omit<
-   PipelineDefinition_SegmentDefinition,
-   "$type" | "ingressPorts" | "egressPorts" | "options"
-> & {
-   ingressPorts: { [key: string]: IPortInfo };
-   egressPorts: { [key: string]: IPortInfo };
+export type ISegmentDefinition = Omit<PipelineDefinition_SegmentDefinition, "$type" | "options"> & {
    options?: ISegmentOptions;
 };
 

@@ -59,7 +59,7 @@ export function unpack<MessageT extends UnknownMessage>(message: Any) {
       throw new Error(`Could not unpack message with type: ${message.typeUrl}`);
    }
 
-   const decoded = message_type.decode(message.value as Uint8Array) as MessageT;
+   const decoded = message_type.decode(message.value) as MessageT;
 
    return decoded;
 }
@@ -174,4 +174,12 @@ export function ensureError(value: unknown): Error {
  */
 export function throwExpression(errorMessage: string): never {
    throw new Error(errorMessage);
+}
+
+export function compareDifference<T>(currSet: Array<T>, newSet: Array<T>): [Array<T>, Array<T>] {
+   const toRemove = currSet.filter((i) => !newSet.includes(i));
+
+   const toAdd = newSet.filter((i) => !currSet.includes(i));
+
+   return [toAdd, toRemove];
 }

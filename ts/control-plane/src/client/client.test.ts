@@ -521,14 +521,14 @@ describe("Pipeline", () => {
       const pipeline_config: IPipelineConfiguration = {
          segments: {
             my_seg1: {
-               egressPorts: {},
-               ingressPorts: {},
                name: "my_seg",
+               egressPorts: [],
+               ingressPorts: [],
             },
             my_seg2: {
-               egressPorts: {},
-               ingressPorts: {},
                name: "my_seg2",
+               egressPorts: [],
+               ingressPorts: [],
             },
          },
          manifolds: {},
@@ -562,13 +562,13 @@ describe("Pipeline", () => {
       const pipelineManager = new PipelineManager(workersManager, {
          segments: {
             my_seg1: {
-               egressPorts: {},
-               ingressPorts: {},
+               egressPorts: [],
+               ingressPorts: [],
                name: "my_seg",
             },
             my_seg2: {
-               egressPorts: {},
-               ingressPorts: {},
+               egressPorts: [],
+               ingressPorts: [],
                name: "my_seg2",
             },
          },
@@ -660,31 +660,21 @@ describe("Manifold", () => {
    const pipeline_config: IPipelineConfiguration = {
       segments: {
          my_seg1: {
-            ingressPorts: {},
-            egressPorts: {
-               port1: {
-                  portName: "port1",
-                  typeId: 1234,
-                  typeString: "int",
-               },
-            },
+            ingressPorts: [],
+            egressPorts: ["port1"],
             name: "my_seg1",
          },
          my_seg2: {
-            ingressPorts: {
-               port1: {
-                  portName: "port1",
-                  typeId: 1234,
-                  typeString: "int",
-               },
-            },
-            egressPorts: {},
+            ingressPorts: ["port1"],
+            egressPorts: [],
             name: "my_seg2",
          },
       },
       manifolds: {
          port1: {
             name: "port1",
+            typeId: 1234,
+            typeString: "int",
             options: {
                policy: ManifoldOptions_Policy.LoadBalance,
             },
@@ -746,52 +736,7 @@ describe("Manifold", () => {
 
       // Now see what the state is
       const state = pipelineManager2.connectionManager.getClientState();
+
+      console.log("Multiple connected");
    });
 });
-
-// Disabling this for now since it causes jest to crash when importing a ESM module
-
-// describe("ClientWithDevTools", () => {
-//    let store: RootStore;
-//    let server: ArchitectServer;
-//    let client_channel: Channel;
-//    let client: ArchitectClient;
-
-//    beforeEach(async () => {
-//       // First create the dev server
-//       await launchDevtoolsCli();
-
-//       // Start the store with dev tools enabled
-//       store = setupStore(undefined, true);
-
-//       server = new ArchitectServer(store);
-
-//       const port = await server.start();
-
-//       client_channel = createChannel(`localhost:${port}`, credentials.createInsecure());
-
-//       // Now make the client
-//       client = createClient(ArchitectDefinition, client_channel);
-
-//       // Important to ensure the channel is ready before continuing
-//       await waitForChannelReady(client_channel, new Date(Date.now() + 1000));
-//    });
-
-//    it("ping", async () => {
-//       const req = PingRequest.create({
-//          tag: 1234,
-//       });
-
-//       const resp = await client.ping(req);
-
-//       expect(resp.tag).toBe(req.tag);
-
-//       await new Promise(r => setTimeout(r, 2000));
-//    });
-
-//    afterEach(async () => {
-//       client_channel.close();
-//       await server.stop();
-//       await server.join();
-//    });
-// });

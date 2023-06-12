@@ -140,10 +140,10 @@ message PipelineConfiguration{
       string name = 1;
 
       // Ingress ports for this segment
-      map<string, PortInfo> ingress_ports = 2;
+      repeated string ingress_ports = 2;
 
       // Egress ports for this segment
-      map<string, PortInfo> egress_ports = 3;
+      repeated string egress_ports = 3;
 
       // Segment options
       SegmentOptions options = 4;
@@ -153,8 +153,14 @@ message PipelineConfiguration{
       // Name of the manifold
       string name = 1;
 
+      // TypeID for this manifold
+      uint32 type_id = 2;
+
+      // Friendly type string
+      string type_string = 3;
+
       // All options for this config
-      ManifoldOptions options = 2;
+      ManifoldOptions options = 4;
    }
 
    map<string, SegmentConfiguration> segments = 1;
@@ -210,11 +216,11 @@ message PipelineDefinition {
       // Name of the segment
       string name = 3;
 
-      // Ingress ports for this segment
-      map<string, PortInfo> ingress_ports = 4;
+      // Manifold definition IDs for attached ingress ports. Manifold Name/ID pair for cross referencing
+      map<string, uint64> ingress_manifold_ids = 4;
 
-      // Egress ports for this segment
-      map<string, PortInfo> egress_ports = 5;
+      // Manifold definition IDs for attached egress ports. Manifold Name/ID pair for cross referencing
+      map<string, uint64> egress_manifold_ids = 5;
 
       // Segment options
       SegmentOptions options = 6;
@@ -234,11 +240,17 @@ message PipelineDefinition {
       // Port name for matching ingress/egress nodes
       string port_name = 3;
 
+      // Segment definition IDs for attached ingress segments. Segment Name/ID pair for cross referencing
+      map<string, uint64> ingress_segment_ids = 4;
+
+      // Segment definition IDs for attached egress segments. Segment Name/ID pair for cross referencing
+      map<string, uint64> egress_segment_ids = 5;
+
       // All options for this config
-      ManifoldOptions options = 4;
+      ManifoldOptions options = 6;
 
       // Running ManifoldInstance IDs
-      repeated uint64 instance_ids = 5;
+      repeated uint64 instance_ids = 7;
    }
 
    // Generated ID of the definition (int64 because the hash algorithms can give negative values)

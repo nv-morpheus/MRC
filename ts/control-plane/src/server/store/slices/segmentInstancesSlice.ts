@@ -19,8 +19,9 @@ import { generateId } from "@mrc/common/utils";
 import { ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
 import {
    manifoldInstancesAdd,
-   manifoldInstancesAttachLocalSegment,
+   manifoldInstancesSelectByNameAndPipelineDef,
    manifoldInstancesSelectByPipelineId,
+   manifoldInstancesSyncSegments,
 } from "@mrc/server/store/slices/manifoldInstancesSlice";
 
 const segmentInstancesAdapter = createWrappedEntityAdapter<ISegmentInstance>({
@@ -170,6 +171,22 @@ const selectByPipelineId = createSelector(
 export const segmentInstancesSelectByPipelineId = (state: RootState, pipeline_id: string) =>
    selectByPipelineId(state.segmentInstances, pipeline_id);
 
+const selectByNameAndPipelineDef = createSelector(
+   [
+      segmentInstancesAdapter.getAll,
+      (state: SegmentInstancesStateType, segmentName: string) => segmentName,
+      (state: SegmentInstancesStateType, segmentName: string, pipelineDefinitionId: string) => pipelineDefinitionId,
+   ],
+   (segmentInstances, segmentName, pipelineDefinitionId) =>
+      segmentInstances.filter((x) => x.name === segmentName && x.pipelineDefinitionId === pipelineDefinitionId)
+);
+
+export const segmentInstancesSelectByNameAndPipelineDef = (
+   state: RootState,
+   segmentName: string,
+   pipelineDefinitionId: string
+) => selectByNameAndPipelineDef(state.segmentInstances, segmentName, pipelineDefinitionId);
+
 function syncManifolds(listenerApi: AppListenerAPI, instance: ISegmentInstance) {
    const state = listenerApi.getState();
 
@@ -203,11 +220,7 @@ function syncManifolds(listenerApi: AppListenerAPI, instance: ISegmentInstance) 
    // Object.entries(seg_def.ingressPorts).forEach(([port_name]) => manifold_names.add(port_name));
 
    const manifold_names = [
-      ...new Set(
-         Object.entries(seg_def.egressPorts)
-            .map(([port_name]) => port_name)
-            .concat(Object.entries(seg_def.ingressPorts).map(([port_name]) => port_name))
-      ),
+      ...new Set(Object.keys(seg_def.egressManifoldIds).concat(Object.keys(seg_def.ingressManifoldIds))),
    ];
 
    const running_manifolds = manifoldInstancesSelectByPipelineId(state, instance.pipelineInstanceId);
@@ -241,7 +254,15 @@ function syncManifolds(listenerApi: AppListenerAPI, instance: ISegmentInstance) 
       }
    });
 
-   // Dispatch events to add the requested ports for this segment
+   // Sync all possibly connected manifolds
+   manifold_names.forEach((manifoldName) => {
+      const allManifolds = manifoldInstancesSelectByNameAndPipelineDef(state, manifoldName, pipeline_def.id);
+
+      // Now attach the segment to its local manifolds
+      allManifolds.forEach((m) => {
+         listenerApi.dispatch(manifoldInstancesSyncSegments(m.id));
+      });
+   });
 
    return manifolds;
 }
@@ -406,11 +427,6 @@ export function segmentInstancesConfigureListeners() {
                   const manifolds = syncManifolds(listenerApi, instance);
 
                   // Increment the ref count on our manifolds
-
-                  // Now attach the segment to its local manifolds
-                  manifolds.forEach((m) => {
-                     listenerApi.dispatch(manifoldInstancesAttachLocalSegment(m, instance));
-                  });
 
                   // Tell it to move running/completed
                   listenerApi.dispatch(

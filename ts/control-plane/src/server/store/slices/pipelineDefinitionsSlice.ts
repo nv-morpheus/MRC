@@ -217,40 +217,56 @@ export function pipelineDefinitionsCreateOrUpdate(
             manifolds: {},
          };
 
-         const segs = Object.fromEntries(
-            Object.entries(pipeline_config.segments).map(([seg_name, seg_config]) => {
-               // Compute the hash of the segment
-               const segment_hash = hashProtoMessage(PipelineConfiguration_SegmentConfiguration.create(seg_config));
-
-               return [
-                  seg_name,
-                  {
-                     id: segment_hash,
-                     parentId: pipeline_def?.id,
-                     name: seg_name,
-                     ingressPorts: seg_config.ingressPorts,
-                     egressPorts: seg_config.egressPorts,
-                     options: seg_config.options,
-                     instanceIds: [],
-                  } as ISegmentDefinition,
-               ];
-            })
-         );
-
          const manifolds = Object.fromEntries(
             Object.entries(pipeline_config.manifolds).map(([man_name, man_config]) => {
                // Compute the hash of the segment
-               const segment_hash = hashProtoMessage(PipelineConfiguration_ManifoldConfiguration.create(man_config));
+               const config_hash = hashProtoMessage(PipelineConfiguration_ManifoldConfiguration.create(man_config));
 
                return [
                   man_name,
                   {
-                     id: segment_hash,
+                     id: config_hash,
                      parentId: pipeline_def?.id,
                      portName: man_name,
                      options: man_config.options,
                      instanceIds: [],
+                     egressSegmentIds: {},
+                     ingressSegmentIds: {},
                   } as IManifoldDefinition,
+               ];
+            })
+         );
+
+         const segs = Object.fromEntries(
+            Object.entries(pipeline_config.segments).map(([seg_name, seg_config]) => {
+               // Compute the hash of the segment
+               const config_hash = hashProtoMessage(PipelineConfiguration_SegmentConfiguration.create(seg_config));
+
+               const egressManifolds = seg_config.egressPorts.map((p) => manifolds[p]);
+
+               // Cross reference the egress ports (i.e. ingress on the manifold)
+               egressManifolds.forEach((p) => {
+                  p.ingressSegmentIds[seg_name] = config_hash;
+               });
+
+               const ingressManifolds = seg_config.ingressPorts.map((p) => manifolds[p]);
+
+               // Cross reference the ingress ports (i.e. egress on the manifold)
+               ingressManifolds.forEach((p) => {
+                  p.egressSegmentIds[seg_name] = config_hash;
+               });
+
+               return [
+                  seg_name,
+                  {
+                     id: config_hash,
+                     parentId: pipeline_def?.id,
+                     name: seg_name,
+                     options: seg_config.options,
+                     instanceIds: [],
+                     egressManifoldIds: Object.fromEntries(egressManifolds.map((p) => [p.portName, p.id])),
+                     ingressManifoldIds: Object.fromEntries(ingressManifolds.map((p) => [p.portName, p.id])),
+                  } as ISegmentDefinition,
                ];
             })
          );
