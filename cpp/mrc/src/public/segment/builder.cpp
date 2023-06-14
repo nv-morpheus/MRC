@@ -49,7 +49,6 @@ void Builder::init_module(std::shared_ptr<mrc::modules::SegmentModule> smodule)
     VLOG(2) << "Initializing module: " << m_namespace_prefix;
     smodule->m_module_instance_registered_namespace = m_namespace_prefix;
     smodule->initialize(*this);
-    ns_pop();
 
     // TODO(Devin): Maybe a better way to do this with compile time type ledger.
     if (std::dynamic_pointer_cast<modules::PersistentModule>(smodule) != nullptr)
@@ -57,6 +56,7 @@ void Builder::init_module(std::shared_ptr<mrc::modules::SegmentModule> smodule)
         VLOG(2) << "Registering persistent module -> '" << smodule->component_prefix() << "'";
         m_backend.add_module(m_namespace_prefix, smodule);
     }
+    ns_pop();
 }
 
 std::shared_ptr<ObjectProperties> Builder::get_ingress(std::string name, std::type_index type_index)

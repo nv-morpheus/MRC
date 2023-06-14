@@ -21,7 +21,7 @@
 #include "segment/module_definitions/segment_module_registry.hpp"
 #include "segment/module_definitions/segment_modules.hpp"
 
-#include "pymrc/node.hpp"  // IWYU pragma: keep
+#include "pymrc/node.hpp"                         // IWYU pragma: keep
 #include "pymrc/types.hpp"
 #include "pymrc/utilities/function_wrappers.hpp"  // IWYU pragma: keep
 #include "pymrc/utils.hpp"

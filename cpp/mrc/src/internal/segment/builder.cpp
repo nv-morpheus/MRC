@@ -141,7 +141,7 @@ void Builder::add_module(const std::string& name, std::shared_ptr<mrc::modules::
         LOG(ERROR) << "A Module named " << name << " is already registered";
         throw exceptions::MrcRuntimeError("duplicate name detected - name owned by a module");
     }
-    m_modules[name] = smodule;
+    m_modules[name] = std::move(smodule);
 }
 
 void Builder::add_runnable(const std::string& name, std::shared_ptr<mrc::runnable::Launchable> runnable)

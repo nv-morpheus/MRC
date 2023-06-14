@@ -59,7 +59,7 @@ void IBuilder::add_object(const std::string& name, std::shared_ptr<::mrc::segmen
 void IBuilder::add_module(const std::string& name, std::shared_ptr<mrc::modules::SegmentModule> smodule)
 {
     CHECK(m_impl);
-    return m_impl->add_module(name, smodule);
+    return m_impl->add_module(name, std::move(smodule));
 }
 
 void IBuilder::add_runnable(const std::string& name, std::shared_ptr<mrc::runnable::Launchable> runnable)
