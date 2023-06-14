@@ -57,6 +57,7 @@ def test_py_end_to_end():
     #
 
     def init_wrapper(builder: mrc.Builder):
+
         global packets_1, packets_2, packets_3
         packets_1, packets_2, packets_3 = 0, 0, 0
 
@@ -144,6 +145,7 @@ def test_py_module_initialization():
         yield True
 
     def init_wrapper(builder: mrc.Builder):
+
         def on_next(input):
             pass
 
