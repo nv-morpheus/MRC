@@ -466,12 +466,7 @@ std::shared_ptr<mrc::modules::SegmentModule> BuilderProxy::load_module_from_regi
 {
     auto json_config = cast_from_pyobject(config);
 
-    auto loaded_module =
-        self.load_module_from_registry(module_id, registry_namespace, std::move(module_name), std::move(json_config));
-
-    VLOG(30) << "Returning module with use_count == " << loaded_module.use_count();
-
-    return loaded_module;
+    return self.load_module_from_registry(module_id, registry_namespace, std::move(module_name), std::move(json_config));
 }
 
 void BuilderProxy::init_module(mrc::segment::Builder& self, std::shared_ptr<mrc::modules::SegmentModule> smodule)

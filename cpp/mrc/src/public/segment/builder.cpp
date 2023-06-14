@@ -53,7 +53,7 @@ void Builder::init_module(std::shared_ptr<mrc::modules::SegmentModule> smodule)
     // TODO(Devin): Maybe a better way to do this with compile time type ledger.
     if (std::dynamic_pointer_cast<modules::PersistentModule>(smodule) != nullptr)
     {
-        VLOG(2) << "Registering persistent module -> '" << smodule->component_prefix() << "'";
+        VLOG(2) << "Registering persistent module -> '" << m_namespace_prefix << "'";
         m_backend.add_module(m_namespace_prefix, smodule);
     }
     ns_pop();

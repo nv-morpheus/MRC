@@ -27,7 +27,6 @@ packets_3 = 0
 
 
 def test_py_end_to_end():
-
     def gen_data_1():
         yield True
         yield False
@@ -117,7 +116,6 @@ def test_py_end_to_end():
 
 
 def test_py_constructor():
-
     config = {"config_key_1": True}
 
     registry = mrc.ModuleRegistry
@@ -136,7 +134,6 @@ def test_py_constructor():
 
 
 def test_py_module_initialization():
-
     def gen_data():
         yield True
         yield False
@@ -144,7 +141,6 @@ def test_py_module_initialization():
         yield True
 
     def init_wrapper(builder: mrc.Builder):
-
         def on_next(input):
             pass
 
@@ -203,7 +199,6 @@ def test_py_module_initialization():
 
 
 def test_py_module_as_source():
-
     def init_wrapper(builder: mrc.Builder):
         global packet_count
         packet_count = 0
@@ -240,7 +235,6 @@ def test_py_module_as_source():
 
 
 def test_py_module_as_sink():
-
     def gen_data():
         for i in range(0, 43):
             yield True
@@ -271,7 +265,6 @@ def test_py_module_as_sink():
 
 
 def test_py_module_chaining():
-
     def init_wrapper(builder: mrc.Builder):
         global packet_count
         packet_count = 0
@@ -311,13 +304,6 @@ def test_py_module_chaining():
 
 
 def test_py_module_nesting():
-
-    def gen_data():
-        for i in range(0, 43):
-            yield True
-            global packet_count
-            packet_count += 1
-
     def init_wrapper(builder: mrc.Builder):
         global packet_count
         packet_count = 0
@@ -352,7 +338,51 @@ def test_py_module_nesting():
     assert packet_count == 4
 
 
-if (__name__ in ("__main__", )):
+def test_py_modules_dont_overwrite():
+    def init_wrapper(builder: mrc.Builder):
+        global packet_count
+        packet_count = 0
+
+        def on_next(input):
+            global packet_count
+            packet_count += 1
+            logging.info("Sinking {}".format(input))
+
+        def on_error():
+            pass
+
+        def on_complete():
+            pass
+
+        nested_mod = builder.load_module("NestedModule", "mrc_unittest", "ModuleNestingTest_mod1", {})
+
+        # Make sure we can't re-register the same name
+        with pytest.raises(RuntimeError):
+            this_should_fail = builder.load_module("NestedModule", "mrc_unittest", "ModuleNestingTest_mod1",
+                                                   {})  # NOLINT
+
+        nested_mod2 = builder.load_module("NestedModule", "mrc_unittest", "ModuleNestingTest_mod2", {})
+        nested_sink = builder.make_sink("nested_sink", on_next, on_error, on_complete)
+        nested_sink2 = builder.make_sink("nested_sink2", on_next, on_error, on_complete)
+
+        builder.make_edge(nested_mod.output_port("nested_module_output"), nested_sink)
+        builder.make_edge(nested_mod2.output_port("nested_module_output"), nested_sink2)
+
+    pipeline = mrc.Pipeline()
+    pipeline.make_segment("ModuleNesting_Segment", init_wrapper)
+
+    options = mrc.Options()
+    options.topology.user_cpuset = "0-1"
+
+    executor = mrc.Executor(options)
+    executor.register_pipeline(pipeline)
+    executor.start()
+    executor.join()
+
+    assert packet_count == 8
+
+
+if (__name__ in ("__main__",)):
     test_py_end_to_end()
     test_py_module_as_source()
     test_py_module_as_sink()
