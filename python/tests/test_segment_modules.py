@@ -369,7 +369,7 @@ def test_py_modules_dont_overwrite():
         # Make sure we can't re-register the same name
         with pytest.raises(RuntimeError):
             this_should_fail = builder.load_module("NestedModule", "mrc_unittest", "ModuleNestingTest_mod1",
-                                                   {})  # NOLINT
+                                                   {})  # noqa: E841
 
         nested_mod2 = builder.load_module("NestedModule", "mrc_unittest", "ModuleNestingTest_mod2", {})
         nested_sink = builder.make_sink("nested_sink", on_next, on_error, on_complete)
