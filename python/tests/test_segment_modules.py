@@ -27,6 +27,7 @@ packets_3 = 0
 
 
 def test_py_end_to_end():
+
     def gen_data_1():
         yield True
         yield False
@@ -116,6 +117,7 @@ def test_py_end_to_end():
 
 
 def test_py_constructor():
+
     config = {"config_key_1": True}
 
     registry = mrc.ModuleRegistry
@@ -134,6 +136,7 @@ def test_py_constructor():
 
 
 def test_py_module_initialization():
+
     def gen_data():
         yield True
         yield False
@@ -199,6 +202,7 @@ def test_py_module_initialization():
 
 
 def test_py_module_as_source():
+
     def init_wrapper(builder: mrc.Builder):
         global packet_count
         packet_count = 0
@@ -235,6 +239,7 @@ def test_py_module_as_source():
 
 
 def test_py_module_as_sink():
+
     def gen_data():
         for i in range(0, 43):
             yield True
@@ -265,6 +270,7 @@ def test_py_module_as_sink():
 
 
 def test_py_module_chaining():
+
     def init_wrapper(builder: mrc.Builder):
         global packet_count
         packet_count = 0
@@ -304,6 +310,7 @@ def test_py_module_chaining():
 
 
 def test_py_module_nesting():
+
     def init_wrapper(builder: mrc.Builder):
         global packet_count
         packet_count = 0
@@ -339,6 +346,7 @@ def test_py_module_nesting():
 
 
 def test_py_modules_dont_overwrite():
+
     def init_wrapper(builder: mrc.Builder):
         global packet_count
         packet_count = 0
@@ -382,11 +390,12 @@ def test_py_modules_dont_overwrite():
     assert packet_count == 8
 
 
-if (__name__ in ("__main__",)):
+if (__name__ in ("__main__", )):
     test_py_end_to_end()
     test_py_module_as_source()
     test_py_module_as_sink()
     test_py_module_chaining()
     test_py_module_nesting()
+    test_py_modules_dont_overwrite()
     test_py_constructor()
     test_py_module_initialization()
