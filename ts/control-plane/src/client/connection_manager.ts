@@ -12,6 +12,7 @@ import {
    PipelineInstance,
    ResourceActualStatus,
    SegmentInstance,
+   Worker,
 } from "@mrc/proto/mrc/protos/architect_state";
 import { as, AsyncSink } from "ix/asynciterable";
 
@@ -27,9 +28,9 @@ import {
 import { unpack_first_event, unpack_unary_event } from "@mrc/client/utils";
 import { UnknownMessage } from "@mrc/proto/typeRegistry";
 import { Observable, filter, from, share, tap } from "rxjs";
+import { ResourceStateTypeStrings } from "@mrc/server/store/slices/resourceActions";
 
 export class ConnectionManager {
-   private _client: MrcTestClient;
    private _isCreated = false;
    private _isRegistered = false;
 
@@ -44,16 +45,14 @@ export class ConnectionManager {
    private _response_stream$: Observable<Event> | null = null;
    private _receive_events_complete: Promise<void> | null = null;
 
-   constructor(client?: MrcTestClient) {
+   constructor(public readonly client: MrcTestClient) {}
+
+   public static create(client?: MrcTestClient): ConnectionManager {
       if (!client) {
          client = new MrcTestClient();
       }
 
-      this._client = client;
-   }
-
-   get client() {
-      return this._client;
+      return new ConnectionManager(client);
    }
 
    get isRegistered() {
@@ -81,13 +80,13 @@ export class ConnectionManager {
          throw new Error("Already registered");
       }
 
-      await this._client.ensureClientInitialized();
+      await this.client.ensureClientInitialized();
 
       this._abort_controller = new AbortController();
       this._send_events = new AsyncSink<Event>();
 
       const receive_events = as(
-         this._client.client!.eventStream(this._send_events, {
+         this.client.client!.eventStream(this._send_events, {
             signal: this._abort_controller.signal,
          })
       );
@@ -181,6 +180,11 @@ export class ConnectionManager {
 
    public async update_resource_status(
       id: string,
+      resource_type: "Workers",
+      status: ResourceActualStatus
+   ): Promise<Worker | null>;
+   public async update_resource_status(
+      id: string,
       resource_type: "PipelineInstances",
       status: ResourceActualStatus
    ): Promise<PipelineInstance | null>;
@@ -196,7 +200,7 @@ export class ConnectionManager {
    ): Promise<ManifoldInstance | null>;
    public async update_resource_status(
       id: string,
-      resource_type: "PipelineInstances" | "SegmentInstances" | "ManifoldInstances",
+      resource_type: ResourceStateTypeStrings,
       status: ResourceActualStatus
    ) {
       const response = await this.send_request<ResourceUpdateStatusResponse>(
@@ -209,7 +213,15 @@ export class ConnectionManager {
       );
 
       // Now return the correct instance from the updated state
-      if (resource_type === "PipelineInstances") {
+      if (resource_type === "Workers") {
+         const entities = this.getClientState().workers!.entities;
+
+         if (!(id in entities)) {
+            return null;
+         }
+
+         return entities[id];
+      } else if (resource_type === "PipelineInstances") {
          const entities = this.getClientState().pipelineInstances!.entities;
 
          if (!(id in entities)) {

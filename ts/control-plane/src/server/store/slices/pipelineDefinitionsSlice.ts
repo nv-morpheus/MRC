@@ -21,6 +21,7 @@ import {
    ISegmentInstance,
 } from "@mrc/common/entities";
 import { manifoldInstancesAdd, manifoldInstancesRemove } from "@mrc/server/store/slices/manifoldInstancesSlice";
+import { PipelineDefinitionWrapper } from "@mrc/common/pipelineDefinition";
 
 const pipelineDefinitionsAdapter = createWrappedEntityAdapter<IPipelineDefinition>({
    selectId: (w) => w.id,
@@ -114,6 +115,15 @@ export const pipelineDefinitionsSlice = createSlice({
             throw new Error(`Pipeline Definition with ID: ${action.payload.definition_id} not found`);
          }
 
+         const mapping = action.payload.mapping;
+
+         // Check to make sure we dont already have a matching mapping
+         if (mapping.machineId in found.mappings) {
+            throw new Error(
+               `PipelineDefinition with ID: ${action.payload.definition_id}, already contains a mapping for machine ID: ${mapping.machineId}`
+            );
+         }
+
          found.mappings[action.payload.mapping.machineId] = action.payload.mapping;
       },
    },
@@ -195,10 +205,7 @@ export const pipelineDefinitionsSlice = createSlice({
    },
 });
 
-export function pipelineDefinitionsCreateOrUpdate(
-   pipeline_config: IPipelineConfiguration,
-   pipeline_mapping: IPipelineMapping
-) {
+export function pipelineDefinitionsCreateOrUpdate(pipeline_config: IPipelineConfiguration) {
    return (dispatch: AppDispatch, getState: AppGetState) => {
       // Compute the hash of the pipeline
       const pipeline_hash = hashProtoMessage(PipelineConfiguration.create(pipeline_config));
@@ -208,99 +215,61 @@ export function pipelineDefinitionsCreateOrUpdate(
 
       if (!pipeline_def) {
          // Generate a full pipeline definition with the ID as the hash
-         pipeline_def = {
-            id: pipeline_hash,
-            config: pipeline_config,
-            instanceIds: [],
-            segments: {},
-            mappings: {},
-            manifolds: {},
-         };
-
-         const manifolds = Object.fromEntries(
-            Object.entries(pipeline_config.manifolds).map(([man_name, man_config]) => {
-               // Compute the hash of the segment
-               const config_hash = hashProtoMessage(PipelineConfiguration_ManifoldConfiguration.create(man_config));
-
-               return [
-                  man_name,
-                  {
-                     id: config_hash,
-                     parentId: pipeline_def?.id,
-                     portName: man_name,
-                     options: man_config.options,
-                     instanceIds: [],
-                     egressSegmentIds: {},
-                     ingressSegmentIds: {},
-                  } as IManifoldDefinition,
-               ];
-            })
-         );
-
-         const segs = Object.fromEntries(
-            Object.entries(pipeline_config.segments).map(([seg_name, seg_config]) => {
-               // Compute the hash of the segment
-               const config_hash = hashProtoMessage(PipelineConfiguration_SegmentConfiguration.create(seg_config));
-
-               const egressManifolds = seg_config.egressPorts.map((p) => manifolds[p]);
-
-               // Cross reference the egress ports (i.e. ingress on the manifold)
-               egressManifolds.forEach((p) => {
-                  p.ingressSegmentIds[seg_name] = config_hash;
-               });
-
-               const ingressManifolds = seg_config.ingressPorts.map((p) => manifolds[p]);
-
-               // Cross reference the ingress ports (i.e. egress on the manifold)
-               ingressManifolds.forEach((p) => {
-                  p.egressSegmentIds[seg_name] = config_hash;
-               });
-
-               return [
-                  seg_name,
-                  {
-                     id: config_hash,
-                     parentId: pipeline_def?.id,
-                     name: seg_name,
-                     options: seg_config.options,
-                     instanceIds: [],
-                     egressManifoldIds: Object.fromEntries(egressManifolds.map((p) => [p.portName, p.id])),
-                     ingressManifoldIds: Object.fromEntries(ingressManifolds.map((p) => [p.portName, p.id])),
-                  } as ISegmentDefinition,
-               ];
-            })
-         );
-
-         pipeline_def.segments = segs;
-         pipeline_def.manifolds = manifolds;
+         pipeline_def = PipelineDefinitionWrapper.from(pipeline_config);
 
          dispatch(pipelineDefinitionsAdd(pipeline_def));
-      } else {
-         // Check to make sure we dont already have a matching mapping
-         if (pipeline_mapping.machineId in pipeline_def.mappings) {
-            throw new Error(
-               `PipelineDefinition with ID: ${pipeline_hash}, already contains a mapping for machine ID: ${pipeline_mapping.machineId}`
-            );
-         }
       }
 
-      // Add the mapping to the pipeline config
-      dispatch(
-         pipelineDefinitionsSlice.actions.setMapping({
-            definition_id: pipeline_hash,
-            mapping: pipeline_mapping,
-         })
-      );
-
-      return {
-         pipeline: pipeline_def.id,
-      };
+      return pipeline_def;
    };
 }
 
+// export function pipelineDefinitionsCreateOrUpdate(
+//    pipeline_config: IPipelineConfiguration,
+//    pipeline_mapping: IPipelineMapping
+// ) {
+//    return (dispatch: AppDispatch, getState: AppGetState) => {
+//       // Compute the hash of the pipeline
+//       const pipeline_hash = hashProtoMessage(PipelineConfiguration.create(pipeline_config));
+
+//       // Check if this already exists
+//       let pipeline_def = pipelineDefinitionsSelectById(getState(), pipeline_hash);
+
+//       if (!pipeline_def) {
+//          // Generate a full pipeline definition with the ID as the hash
+//          pipeline_def = PipelineDefinitionWrapper.from(pipeline_config);
+
+//          dispatch(pipelineDefinitionsAdd(pipeline_def));
+//       } else {
+//          // Check to make sure we dont already have a matching mapping
+//          if (pipeline_mapping.machineId in pipeline_def.mappings) {
+//             throw new Error(
+//                `PipelineDefinition with ID: ${pipeline_hash}, already contains a mapping for machine ID: ${pipeline_mapping.machineId}`
+//             );
+//          }
+//       }
+
+//       // Add the mapping to the pipeline config
+//       dispatch(
+//          pipelineDefinitionsSlice.actions.setMapping({
+//             definition_id: pipeline_hash,
+//             mapping: pipeline_mapping,
+//          })
+//       );
+
+//       return {
+//          pipeline: pipeline_def.id,
+//       };
+//    };
+// }
+
 type PipelineDefinitionsStateType = ReturnType<typeof pipelineDefinitionsSlice.getInitialState>;
 
-export const { add: pipelineDefinitionsAdd, remove: pipelineDefinitionsRemove } = pipelineDefinitionsSlice.actions;
+export const {
+   add: pipelineDefinitionsAdd,
+   remove: pipelineDefinitionsRemove,
+   setMapping: pipelineDefinitionsSetMapping,
+} = pipelineDefinitionsSlice.actions;
 
 export const {
    selectAll: pipelineDefinitionsSelectAll,

@@ -88,7 +88,7 @@ std::map<InstanceID, std::unique_ptr<client::Instance>> ConnectionsManager::regi
     }
 
     // issue activate event - connection events from the server will
-    client().await_unary<protos::Ack>(protos::ClientUnaryActivateStream, std::move(*resp));
+    // client().await_unary<protos::Ack>(protos::ClientUnaryActivateStream, std::move(*resp));
 
     DVLOG(10) << "client - machine_id: " << m_machine_id;
     return instances;

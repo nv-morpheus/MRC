@@ -7,7 +7,7 @@ import type { AppDispatch, RootState } from "../store";
 import { connectionsRemove } from "@mrc/server/store/slices/connectionsSlice";
 import { pipelineInstancesRemove, pipelineInstancesSelectById } from "@mrc/server/store/slices/pipelineInstancesSlice";
 import { workersRemove } from "@mrc/server/store/slices/workersSlice";
-import { IManifoldInstance, IResourceInstance, ISegmentInstance } from "@mrc/common/entities";
+import { IManifoldInstance, ISegmentInstance } from "@mrc/common/entities";
 import {
    ResourceActualStatus,
    resourceActualStatusToNumber,
@@ -187,7 +187,7 @@ export const segmentInstancesSelectByNameAndPipelineDef = (
    pipelineDefinitionId: string
 ) => selectByNameAndPipelineDef(state.segmentInstances, segmentName, pipelineDefinitionId);
 
-function syncManifolds(listenerApi: AppListenerAPI, instance: ISegmentInstance) {
+export function syncManifolds(listenerApi: AppListenerAPI, instance: ISegmentInstance) {
    const state = listenerApi.getState();
 
    const pipeline_def = pipelineDefinitionsSelectById(state, instance.pipelineDefinitionId);
@@ -266,116 +266,6 @@ function syncManifolds(listenerApi: AppListenerAPI, instance: ISegmentInstance) 
 
    return manifolds;
 }
-
-// export abstract class ResourceStateWatcher<ResourceT extends IResourceInstance>{
-
-//    public configureListener(){
-//       startAppListening({
-//          actionCreator: segmentInstancesAdd,
-//          effect: async (action, listenerApi) => {
-//             const segment_id = action.payload.id;
-
-//             const instance = segmentInstancesSelectById(listenerApi.getState(), segment_id);
-
-//             if (!instance) {
-//                throw new Error("Could not find segment instance");
-//             }
-
-//             // Now that the object has been created, set the requested status to Created
-//             listenerApi.dispatch(
-//                segmentInstancesSlice.actions.updateResourceRequestedState({
-//                   resource: instance,
-//                   status: ResourceRequestedStatus.Requested_Created,
-//                })
-//             );
-
-//             const monitor_instance = listenerApi.fork(async () => {
-//                while (true) {
-//                   // Wait for the next update
-//                   const [, current_state] = await listenerApi.take((action) => {
-//                      return (
-//                         segmentInstancesUpdateResourceActualState.match(action) &&
-//                         action.payload.resource.id === segment_id
-//                      );
-//                   });
-
-//                   if (!current_state.system.requestRunning) {
-//                      console.warn("Updating resource outside of a request will lead to undefined behavior!");
-//                   }
-
-//                   // Get the status of this instance
-//                   const instance = segmentInstancesSelectById(listenerApi.getState(), segment_id);
-
-//                   if (!instance) {
-//                      throw new Error("Could not find instance");
-//                   }
-
-//                   if (instance.state.actualStatus === ResourceActualStatus.Actual_Created) {
-//                      // Before moving to RunUntilComplete, perform a few actions
-
-//                      // Increment the ref count on our pipeline instance
-
-//                      // Create any missing manifolds
-//                      const manifolds = syncManifolds(listenerApi, instance);
-
-//                      // Increment the ref count on our manifolds
-
-//                      // Now attach the segment to its local manifolds
-//                      manifolds.forEach((m) => {
-//                         listenerApi.dispatch(manifoldInstancesAttachLocalSegment(m, instance));
-//                      });
-
-//                      // Tell it to move running/completed
-//                      listenerApi.dispatch(
-//                         segmentInstancesSlice.actions.updateResourceRequestedState({
-//                            resource: instance,
-//                            status: ResourceRequestedStatus.Requested_Completed,
-//                         })
-//                      );
-//                   } else if (instance.state.actualStatus === ResourceActualStatus.Actual_Completed) {
-//                      // Before we can move to Stopped, all ref counts must be 0
-
-//                      // Tell it to move to stopped
-//                      listenerApi.dispatch(
-//                         segmentInstancesSlice.actions.updateResourceRequestedState({
-//                            resource: instance,
-//                            status: ResourceRequestedStatus.Requested_Stopped,
-//                         })
-//                      );
-//                   } else if (instance.state.actualStatus === ResourceActualStatus.Actual_Stopped) {
-//                      // Tell it to move to stopped
-//                      listenerApi.dispatch(
-//                         segmentInstancesSlice.actions.updateResourceRequestedState({
-//                            resource: instance,
-//                            status: ResourceRequestedStatus.Requested_Destroyed,
-//                         })
-//                      );
-//                   } else if (instance.state.actualStatus === ResourceActualStatus.Actual_Destroyed) {
-//                      // Now we can actually just remove the object
-//                      listenerApi.dispatch(segmentInstancesRemove(instance));
-
-//                      break;
-//                   } else {
-//                      throw new Error("Unknow state type");
-//                   }
-//                }
-//             });
-
-//             await listenerApi.condition((action) => {
-//                return segmentInstancesRemove.match(action) && action.payload.id === segment_id;
-//             });
-//             monitor_instance.cancel();
-//          },
-//       });
-//    }
-
-//    protected abstract _getResourceInstance(state: RootState, id: string): ResourceT;
-
-//    protected abstract _onCreated(): Promise<ResourceT>;
-//    protected abstract _onCompleted(): Promise<ResourceT>;
-//    protected abstract _onStopped(): Promise<ResourceT>;
-//    protected abstract _onDestroyed(): Promise<ResourceT>;
-// }
 
 export function segmentInstancesConfigureListeners() {
    startAppListening({

@@ -59,11 +59,8 @@ enum EventType
 
     // Connection Management
     ClientUnaryRegisterWorkers = 201;
-    ClientUnaryActivateStream = 202;
     ClientUnaryLookupWorkerAddresses = 203;
     ClientUnaryDropWorker = 204;
-
-
 
     // SubscriptionService
     ClientUnaryCreateSubscriptionService = 301;
@@ -73,7 +70,8 @@ enum EventType
     ClientEventUpdateSubscriptionService = 305;
 
     // Pipeline Management
-    ClientUnaryRequestPipelineAssignment = 401;
+    ClientUnaryPipelineRegisterConfig = 401;
+    ClientUnaryPipelineAddMapping = 402;
 
     // Resource Management
     ClientUnaryResourceUpdateStatus = 501;
@@ -242,27 +240,26 @@ message TaggedInstance
     uint64 tag = 2;
 }
 
-message PipelineRequestAssignmentRequest
+message PipelineRegisterConfigRequest
 {
     // The pipeline definition object
-    PipelineConfiguration pipeline = 1;
+    PipelineConfiguration config = 1;
+}
+
+message PipelineRegisterConfigResponse
+{
+    // The pipeline definition that was added (since its generated)
+    uint64 pipeline_definition_id = 1;
+}
+
+message PipelineAddMappingRequest
+{
+    // The pipeline definition that this belongs to
+    uint64 definition_id = 1;
 
     // The mapping of segment definitions to assigned workers
     PipelineMapping mapping = 2;
 }
-
-message PipelineRequestAssignmentResponse
-{
-    // The pipeline definition that was added (since its generated)
-    uint64 pipeline_definition_id = 1;
-
-    // The pipeline instance that was added
-    uint64 pipeline_instance_id = 2;
-
-    // The segment instance that was added
-    repeated uint64 segment_instance_ids = 3;
-}
-
 
 // message sent by an UpdateManager
 message StateUpdate

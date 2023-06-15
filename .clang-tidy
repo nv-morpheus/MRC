@@ -7,6 +7,7 @@
 # Disable modernize-use-nodiscard (why isnt [[nodiscard]] the default?)
 # Disable converting macros to enums since this is rarely used that way
 # Enable identifier in TODO comments
+# Enable checking for catch by reference issues
 Checks: >
   -*,
   readability-*,
@@ -18,7 +19,8 @@ Checks: >
   -modernize-use-trailing-return-type,
   -modernize-use-nodiscard,
   -modernize-macro-to-enum,
-  google-readability-todo
+  google-readability-todo,
+  misc-throw-by-value-catch-by-reference
 
 #WarningsAsErrors: '*'
 HeaderFilterRegex: '.*\/include\/mrc\/.*'

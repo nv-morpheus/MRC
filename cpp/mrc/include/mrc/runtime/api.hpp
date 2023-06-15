@@ -40,10 +40,10 @@ class IRemoteDescriptorManager;
  * Most resources are specific to a partition. Each Runnable's Context will have a runtime discoverable default
  * partition id which is the suggestion set of resources to be used with that runnable.
  */
-class IRuntime
+class ISystemRuntime
 {
   public:
-    virtual ~IRuntime() = default;
+    virtual ~ISystemRuntime() = default;
 
     /**
      * @brief Number of partitions constructed by the runtime.

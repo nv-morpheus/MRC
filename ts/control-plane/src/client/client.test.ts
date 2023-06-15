@@ -7,35 +7,17 @@ import { MrcTestClient } from "@mrc/client/client";
 import { ConnectionManager } from "@mrc/client/connection_manager";
 import { PipelineManager } from "@mrc/client/pipeline_manager";
 import { WorkersManager } from "@mrc/client/workers_manager";
-import { IPipelineConfiguration, IPipelineMapping, ISegmentMapping } from "@mrc/common/entities";
-import { packEvent, stringToBytes } from "@mrc/common/utils";
-import {
-   Ack,
-   EventType,
-   PingRequest,
-   PipelineRequestAssignmentRequest,
-   PipelineRequestAssignmentResponse,
-   RegisterWorkersRequest,
-   RegisterWorkersResponse,
-   ResourceUpdateStatusRequest,
-   ResourceUpdateStatusResponse,
-} from "@mrc/proto/mrc/protos/architect";
+import { IPipelineConfiguration } from "@mrc/common/entities";
+import { PingRequest } from "@mrc/proto/mrc/protos/architect";
 import {
    ManifoldOptions_Policy,
    PipelineInstance,
-   PipelineMapping_SegmentMapping_ByPolicy,
    ResourceActualStatus,
    ResourceRequestedStatus,
-   SegmentInstance,
-   SegmentMappingPolicies,
 } from "@mrc/proto/mrc/protos/architect_state";
 import { connectionsSelectAll, connectionsSelectById } from "@mrc/server/store/slices/connectionsSlice";
 import { pipelineDefinitionsSelectById } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 import { pipelineInstancesSelectById } from "@mrc/server/store/slices/pipelineInstancesSlice";
-import {
-   segmentInstancesSelectByIds,
-   segmentInstancesSelectByPipelineId,
-} from "@mrc/server/store/slices/segmentInstancesSlice";
 import { workersSelectById } from "@mrc/server/store/slices/workersSlice";
 
 // class AsyncFlag<T> {
@@ -438,20 +420,23 @@ describe("Connection", () => {
 
    test("No Connections After Disconnect", async () => {
       // Connect then disconnect
-      await client.registerConnection();
-      await client.unregisterConnection();
+      const manager = ConnectionManager.create(client);
+      await manager.register();
+      await manager.unregister();
 
       // Should have 0 connections in the state
       expect(connectionsSelectAll(client.getServerState())).toHaveLength(0);
    });
 
    describe("With EventStream", () => {
+      const connectionManager = ConnectionManager.create(client);
+
       beforeEach(async () => {
-         await client.registerConnection();
+         await connectionManager.ensureResourcesCreated();
       });
 
       afterEach(async () => {
-         await client.unregisterConnection();
+         await connectionManager.unregister();
       });
 
       test("Found Connection", async () => {
@@ -470,19 +455,19 @@ describe("Connection", () => {
 
 describe("Worker", () => {
    const client: MrcTestClient = new MrcTestClient();
+   const connectionManager = ConnectionManager.create(client);
 
    beforeEach(async () => {
-      await client.initializeClient();
-      await client.registerConnection();
+      await connectionManager.ensureResourcesCreated();
    });
 
    afterEach(async () => {
-      await client.unregisterConnection();
+      await connectionManager.unregister();
       await client.finalizeClient();
    });
 
    test("Add One", async () => {
-      const manager = WorkersManager.create(["test data"], client);
+      const manager = new WorkersManager(connectionManager, ["test data"]);
 
       await manager.register();
 
@@ -492,12 +477,20 @@ describe("Worker", () => {
    });
 
    test("Activate", async () => {
-      const manager = WorkersManager.create(["test data"], client);
+      const manager = new WorkersManager(connectionManager, ["test data"]);
 
       await manager.createResources();
 
       // Check to make sure its activated
-      const found_worker = workersSelectById(client.getServerState(), manager.workerIds[0]);
+      let found_worker = workersSelectById(client.getServerState(), manager.workerIds[0]);
+
+      expect(found_worker?.state.actualStatus).toBe(ResourceActualStatus.Actual_Created);
+
+      // Now set it as running
+      await manager.runResources();
+
+      // Ensure its running
+      found_worker = workersSelectById(client.getServerState(), manager.workerIds[0]);
 
       expect(found_worker?.state.actualStatus).toBe(ResourceActualStatus.Actual_Running);
    });
@@ -513,7 +506,7 @@ describe("Pipeline", () => {
    });
 
    afterEach(async () => {
-      await client.unregisterConnection();
+      await workersManager.connectionManager.unregister();
       await client.finalizeClient();
    });
 
@@ -690,7 +683,7 @@ describe("Manifold", () => {
    });
 
    afterEach(async () => {
-      await client.unregisterConnection();
+      await pipelineManager.connectionManager.unregister();
       await client.finalizeClient();
    });
 

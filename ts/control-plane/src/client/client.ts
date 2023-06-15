@@ -6,21 +6,12 @@ import "ix/add/asynciterable-operators/last";
 import { url as inspectorUrl } from "node:inspector";
 import { Channel, credentials } from "@grpc/grpc-js";
 import { ConnectivityState } from "@grpc/grpc-js/build/src/connectivity-state";
-import {
-   ControlPlaneState,
-   ManifoldInstance,
-   PipelineInstance,
-   ResourceActualStatus,
-   SegmentInstance,
-   SegmentMappingPolicies,
-} from "@mrc/proto/mrc/protos/architect_state";
-import { as, AsyncIterableX, AsyncSink } from "ix/asynciterable";
-import { filter as filter_ix, share as share_ix, tap as tax_ix } from "ix/asynciterable/operators";
+import { ControlPlaneState } from "@mrc/proto/mrc/protos/architect_state";
+import { as, AsyncSink } from "ix/asynciterable";
 import { createChannel, createClient, waitForChannelReady } from "nice-grpc";
 
-import { generateId, packEvent, sleep, stringToBytes, unpackEvent } from "@mrc/common/utils";
+import { sleep, unpackEvent } from "@mrc/common/utils";
 import {
-   Ack,
    ArchitectClient,
    ArchitectDefinition,
    ClientConnectedResponse,
@@ -28,47 +19,33 @@ import {
    EventType,
    PingRequest,
    PingResponse,
-   PipelineRequestAssignmentRequest,
-   PipelineRequestAssignmentResponse,
-   RegisterWorkersRequest,
-   RegisterWorkersResponse,
-   ResourceUpdateStatusRequest,
-   ResourceUpdateStatusResponse,
 } from "@mrc/proto/mrc/protos/architect";
 import { ArchitectServer } from "@mrc/server/server";
 import { RootStore, setupStore } from "@mrc/server/store/store";
 
-import { unpack_first_event, unpack_unary_event } from "@mrc/client/utils";
-import { UnknownMessage } from "@mrc/proto/typeRegistry";
-import { Observable, filter, firstValueFrom, from, lastValueFrom, share, tap } from "rxjs";
-import {
-   IPipelineConfiguration,
-   IPipelineInstance,
-   IPipelineMapping,
-   ISegmentInstance,
-   ISegmentMapping,
-} from "@mrc/common/entities";
+import { unpack_first_event } from "@mrc/client/utils";
+import { Observable, filter, from, share, tap } from "rxjs";
 
 export class MrcTestClient {
    public store: RootStore | null = null;
    public server: ArchitectServer | null = null;
    public client_channel: Channel | null = null;
    public client: ArchitectClient | null = null;
-   private _abort_controller: AbortController = new AbortController();
-   private _send_events: AsyncSink<Event> | null = null;
-   private _receive_events$: Observable<Event> | null = null;
+   // private _abort_controller: AbortController = new AbortController();
+   // private _send_events: AsyncSink<Event> | null = null;
+   // private _receive_events$: Observable<Event> | null = null;
    public machineId: string | null = null;
 
-   private _state_updates: Array<ControlPlaneState> = [];
-   private _message_history: Array<Event> = [];
+   // private _state_updates: Array<ControlPlaneState> = [];
+   // private _message_history: Array<Event> = [];
    // private _response_messages: Array<Event> = [];
 
    private _debugger_attached: boolean;
-   private _response_stream$: Observable<Event> | null = null;
-   private _receive_events_complete: Promise<void> | null = null;
+   // private _response_stream$: Observable<Event> | null = null;
+   // private _receive_events_complete: Promise<void> | null = null;
 
    private _clientInitialized = false;
-   private _connectionRegistered = false;
+   // private _connectionRegistered = false;
 
    constructor() {
       this._debugger_attached = inspectorUrl() !== undefined;
@@ -151,117 +128,117 @@ export class MrcTestClient {
       this._clientInitialized = false;
    }
 
-   public async registerConnection() {
-      if (!this.client) {
-         throw new Error("Must initialize client before stream");
-      }
+   // public async registerConnection() {
+   //    if (!this.client) {
+   //       throw new Error("Must initialize client before stream");
+   //    }
 
-      this._abort_controller = new AbortController();
-      this._send_events = new AsyncSink<Event>();
+   //    this._abort_controller = new AbortController();
+   //    this._send_events = new AsyncSink<Event>();
 
-      const receive_events = as(
-         this.client.eventStream(this._send_events, {
-            signal: this._abort_controller.signal,
-         })
-      );
+   //    const receive_events = as(
+   //       this.client.eventStream(this._send_events, {
+   //          signal: this._abort_controller.signal,
+   //       })
+   //    );
 
-      this._receive_events$ = from(receive_events).pipe(
-         tap((event) => {
-            // Save a history of the messages to help with debugging
-            this._message_history.push(event);
-         }),
-         share()
-      );
+   //    this._receive_events$ = from(receive_events).pipe(
+   //       tap((event) => {
+   //          // Save a history of the messages to help with debugging
+   //          this._message_history.push(event);
+   //       }),
+   //       share()
+   //    );
 
-      // Subscribe permenantly to keep the stream hot
-      this._receive_events_complete = this._receive_events$
-         .pipe(
-            filter((value) => {
-               return value.event === EventType.ServerStateUpdate;
-            })
-         )
-         .forEach((value: Event) => {
-            // Save all of the server state updates
-            this._state_updates.push(unpackEvent<ControlPlaneState>(value));
-         });
+   //    // Subscribe permenantly to keep the stream hot
+   //    this._receive_events_complete = this._receive_events$
+   //       .pipe(
+   //          filter((value) => {
+   //             return value.event === EventType.ServerStateUpdate;
+   //          })
+   //       )
+   //       .forEach((value: Event) => {
+   //          // Save all of the server state updates
+   //          this._state_updates.push(unpackEvent<ControlPlaneState>(value));
+   //       });
 
-      // Wait for the connected response before filtering off the state update
-      const connected_response = await unpack_first_event<ClientConnectedResponse>(
-         this._receive_events$,
-         (event) => event.event === EventType.ClientEventStreamConnected
-      );
+   //    // Wait for the connected response before filtering off the state update
+   //    const connected_response = await unpack_first_event<ClientConnectedResponse>(
+   //       this._receive_events$,
+   //       (event) => event.event === EventType.ClientEventStreamConnected
+   //    );
 
-      // this._response_stream = this._recieve_events.pipe(
-      //    filter((value) => {
-      //       return value.event !== EventType.ServerStateUpdate;
-      //    })
-      // );
-      this._response_stream$ = this._receive_events$;
+   //    // this._response_stream = this._recieve_events.pipe(
+   //    //    filter((value) => {
+   //    //       return value.event !== EventType.ServerStateUpdate;
+   //    //    })
+   //    // );
+   //    this._response_stream$ = this._receive_events$;
 
-      // this._recieve_events
-      //    .pipe(
-      //       filter((value) => {
-      //          return value.event !== EventType.ServerStateUpdate;
-      //       })
-      //    )
-      //    .forEach((value: Event, index, signal) => {
-      //       // Save all of the server state updates
-      //       this._response_messages.push(value);
-      //    });
+   //    // this._recieve_events
+   //    //    .pipe(
+   //    //       filter((value) => {
+   //    //          return value.event !== EventType.ServerStateUpdate;
+   //    //       })
+   //    //    )
+   //    //    .forEach((value: Event, index, signal) => {
+   //    //       // Save all of the server state updates
+   //    //       this._response_messages.push(value);
+   //    //    });
 
-      this.machineId = connected_response.machineId;
+   //    this.machineId = connected_response.machineId;
 
-      this._connectionRegistered = true;
-   }
+   //    this._connectionRegistered = true;
+   // }
 
-   public async ensureConnectionRegistered() {
-      // Ensure the client is initialized too
-      await this.ensureClientInitialized();
+   // public async ensureConnectionRegistered() {
+   //    // Ensure the client is initialized too
+   //    await this.ensureClientInitialized();
 
-      if (!this._connectionRegistered) {
-         await this.registerConnection();
-      }
-   }
+   //    if (!this._connectionRegistered) {
+   //       await this.registerConnection();
+   //    }
+   // }
 
-   public async unregisterConnection() {
-      if (this._send_events) {
-         this._send_events.end();
-         this._send_events = null;
-      }
+   // public async unregisterConnection() {
+   //    if (this._send_events) {
+   //       this._send_events.end();
+   //       this._send_events = null;
+   //    }
 
-      // Need to await for all events to flush through
-      if (this._receive_events_complete) {
-         await this._receive_events_complete;
-         this._receive_events_complete = null;
-      }
+   //    // Need to await for all events to flush through
+   //    if (this._receive_events_complete) {
+   //       await this._receive_events_complete;
+   //       this._receive_events_complete = null;
+   //    }
 
-      // if (this._recieve_events) {
-      //    // This can fail so unset the variable before the for loop
-      //    const recieve_events = this._recieve_events;
-      //    this._recieve_events = null;
+   //    // if (this._recieve_events) {
+   //    //    // This can fail so unset the variable before the for loop
+   //    //    const recieve_events = this._recieve_events;
+   //    //    this._recieve_events = null;
 
-      //    for await (const item of recieve_events) {
-      //       console.log(`Excess messages left in recieve queue. Msg: ${item}`);
-      //    }
-      // }
+   //    //    for await (const item of recieve_events) {
+   //    //       console.log(`Excess messages left in recieve queue. Msg: ${item}`);
+   //    //    }
+   //    // }
 
-      this._connectionRegistered = false;
-   }
+   //    this._connectionRegistered = false;
+   // }
 
    public isChannelConnected() {
       return this.client_channel?.getConnectivityState(true) == ConnectivityState.READY;
    }
 
-   public async abortConnection(reason = "Abort requested") {
-      if (!this.client) {
-         throw new Error("Client is not connected");
-      }
+   // public async abortConnection(reason = "Abort requested") {
+   //    if (!this.client) {
+   //       throw new Error("Client is not connected");
+   //    }
 
-      this._abort_controller.abort(reason);
+   //    this._abort_controller.abort(reason);
 
-      // Call finalize to close the input stream and pull off any messages before exiting
-      await this.unregisterConnection();
-   }
+   //    // Call finalize to close the input stream and pull off any messages before exiting
+   //    await this.unregisterConnection();
+   // }
 
    public getServerState() {
       if (!this.store) {

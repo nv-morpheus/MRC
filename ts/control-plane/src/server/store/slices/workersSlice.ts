@@ -1,12 +1,18 @@
-import {createSelector, createSlice, PayloadAction} from "@reduxjs/toolkit";
+import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import {createWrappedEntityAdapter} from "../../utils";
+import { createWrappedEntityAdapter } from "../../utils";
 
-import type {RootState} from "../store";
-import {connectionsRemove} from "./connectionsSlice";
-import {segmentInstancesAdd, segmentInstancesAddMany, segmentInstancesRemove} from "./segmentInstancesSlice";
-import {IWorker} from "@mrc/common/entities";
-import {ResourceActualStatus, ResourceStatus} from "@mrc/proto/mrc/protos/architect_state";
+import type { AppDispatch, RootState } from "../store";
+import { connectionsRemove } from "./connectionsSlice";
+import { segmentInstancesAdd, segmentInstancesRemove } from "./segmentInstancesSlice";
+import { IWorker } from "@mrc/common/entities";
+import {
+   ResourceActualStatus,
+   resourceActualStatusToNumber,
+   ResourceRequestedStatus,
+   resourceRequestedStatusToNumber,
+} from "@mrc/proto/mrc/protos/architect_state";
+import { ResourceStateWatcherLambda } from "@mrc/server/store/resourceStateWatcher";
 
 const workersAdapter = createWrappedEntityAdapter<IWorker>({
    // sortComparer: (a, b) => b.id.localeCompare(a.date),
@@ -18,43 +24,55 @@ export const workersSlice = createSlice({
    initialState: workersAdapter.getInitialState(),
    reducers: {
       add: (state, action: PayloadAction<IWorker>) => {
-         if (workersAdapter.getOne(state, action.payload.id))
-         {
+         if (workersAdapter.getOne(state, action.payload.id)) {
             throw new Error(`Worker with ID: ${action.payload.id} already exists`);
          }
          workersAdapter.addOne(state, action.payload);
       },
-      addMany: (state, action: PayloadAction<IWorker[]>) => {
-         workersAdapter.addMany(state, action.payload);
-      },
       remove: (state, action: PayloadAction<IWorker>) => {
          const found = workersAdapter.getOne(state, action.payload.id);
 
-         if (!found)
-         {
+         if (!found) {
             throw new Error(`Worker with ID: ${action.payload.id} not found`);
          }
 
-         if (found.assignedSegmentIds.length > 0)
-         {
-            throw new Error(`Attempting to delete Worker with ID: ${
-                action.payload.id} while it still has active SegmentInstances. Active SegmentInstances: ${
-                found.assignedSegmentIds}. Delete SegmentInstances first`);
+         if (found.assignedSegmentIds.length > 0) {
+            throw new Error(
+               `Attempting to delete Worker with ID: ${
+                  action.payload.id
+               } while it still has active SegmentInstances. Active SegmentInstances: ${JSON.stringify(
+                  found.assignedSegmentIds
+               )}. Delete SegmentInstances first`
+            );
          }
 
          workersAdapter.removeOne(state, action.payload.id);
       },
-      updateResourceState: (state, action: PayloadAction<{resources: IWorker[], status: ResourceActualStatus}>) => {
-         // Check for incorrect IDs
-         action.payload.resources.forEach((w) => {
-            if (!workersAdapter.getOne(state, w.id))
-            {
-               throw new Error(`Worker with ID: ${w.id} not found`);
-            }
-         });
+      updateResourceRequestedState: (
+         state,
+         action: PayloadAction<{ resource: IWorker; status: ResourceRequestedStatus }>
+      ) => {
+         const found = workersAdapter.getOne(state, action.payload.resource.id);
 
-         workersAdapter.getMany(state, action.payload.resources.map((w) => w.id))
-             .forEach((w) => w.state.actualStatus = action.payload.status);
+         if (!found) {
+            throw new Error(`Worker with ID: ${action.payload.resource.id} not found`);
+         }
+
+         // Set value without checking since thats handled elsewhere
+         found.state.requestedStatus = action.payload.status;
+      },
+      updateResourceActualState: (
+         state,
+         action: PayloadAction<{ resource: IWorker; status: ResourceActualStatus }>
+      ) => {
+         const found = workersAdapter.getOne(state, action.payload.resource.id);
+
+         if (!found) {
+            throw new Error(`Worker with ID: ${action.payload.resource.id} not found`);
+         }
+
+         // Set value without checking since thats handled elsewhere
+         found.state.actualStatus = action.payload.status;
       },
    },
    extraReducers: (builder) => {
@@ -62,59 +80,54 @@ export const workersSlice = createSlice({
          // Need to delete any workers associated with that connection
          const connection_workers = selectByMachineId(state, action.payload.id);
 
-         workersAdapter.removeMany(state, connection_workers.map((w) => w.id));
+         workersAdapter.removeMany(
+            state,
+            connection_workers.map((w) => w.id)
+         );
       });
       builder.addCase(segmentInstancesAdd, (state, action) => {
          // For each, update the worker with the new running instance
          const found = workersAdapter.getOne(state, action.payload.workerId);
 
-         if (!found)
-         {
+         if (!found) {
             throw new Error("No matching worker ID found");
          }
 
          found.assignedSegmentIds.push(action.payload.id);
       });
-      builder.addCase(segmentInstancesAddMany, (state, action) => {
-         // For each, update the worker with the new running instance
-         action.payload.forEach((instance) => {
-            const foundWorker = workersAdapter.getOne(state, instance.workerId);
-
-            if (!foundWorker)
-            {
-               throw new Error("No matching worker ID found");
-            }
-
-            foundWorker.assignedSegmentIds.push(instance.id);
-         });
-      });
       builder.addCase(segmentInstancesRemove, (state, action) => {
          const found = workersAdapter.getOne(state, action.payload.workerId);
 
-         if (found)
-         {
-            const index = found.assignedSegmentIds.findIndex(x => x === action.payload.id);
+         if (found) {
+            const index = found.assignedSegmentIds.findIndex((x) => x === action.payload.id);
 
-            if (index !== -1)
-            {
+            if (index !== -1) {
                found.assignedSegmentIds.splice(index, 1);
             }
-         }
-         else
-         {
+         } else {
             throw new Error("Must drop all SegmentInstances before removing a Worker");
          }
       });
    },
 });
 
+export function workersAddMany(workers: IWorker[]) {
+   // To allow the watchers to work, we need to add all segments individually
+   return (dispatch: AppDispatch) => {
+      // Loop and dispatch each segment individually
+      workers.forEach((s) => {
+         dispatch(workersAdd(s));
+      });
+   };
+}
+
 type WorkersStateType = ReturnType<typeof workersSlice.getInitialState>;
 
 export const {
    add: workersAdd,
-   addMany: workersAddMany,
    remove: workersRemove,
-   updateResourceState: workersUpdateResourceState,
+   updateResourceRequestedState: workersUpdateResourceRequestedState,
+   updateResourceActualState: workersUpdateResourceActualState,
 } = workersSlice.actions;
 
 export const {
@@ -127,33 +140,27 @@ export const {
 } = workersAdapter.getSelectors((state: RootState) => state.workers);
 
 const selectByMachineId = createSelector(
-    [workersAdapter.getAll, (state: WorkersStateType, machine_id: string) => machine_id],
-    (workers, machine_id) => workers.filter((w) => w.machineId === machine_id));
+   [
+      (state: WorkersStateType) => workersAdapter.getAll(state),
+      (state: WorkersStateType, machine_id: string) => machine_id,
+   ],
+   (workers, machine_id) => workers.filter((w) => w.machineId === machine_id)
+);
 
-export const workersSelectByMachineId = (state: RootState, machine_id: string) => selectByMachineId(state.workers,
-                                                                                                    machine_id);
+export const workersSelectByMachineId = (state: RootState, machine_id: string) =>
+   selectByMachineId(state.workers, machine_id);
 
-// // Other code such as selectors can use the imported `RootState` type
-// export const findWorker = (state: RootState, id: number) => {
+const watcher = new ResourceStateWatcherLambda<IWorker, "workers/add">(
+   "Workers",
+   workersAdd,
+   workersSelectById,
+   async (instance) => {},
+   async (instance) => {},
+   async (instance) => {},
+   async (instance) => {},
+   async (instance) => {}
+);
 
-//    // if (id in state.workers) {
-//    //    return state.workers[id];
-//    // }
-
-//    return null;
-// };
-
-// export const findWorkers = (state: RootState, machine_id: number) => {
-
-//    const connection = findConnection(state, machine_id);
-
-//    if (!connection) {
-//       return null;
-//    }
-
-//    workersAdapter.;
-
-//    return null;
-// };
+watcher.configureListener();
 
 export default workersSlice.reducer;

@@ -18,9 +18,10 @@ class Worker;
 class PipelineConfiguration;
 class PipelineDefinition;
 class PipelineDefinition_SegmentDefinition;
+class PipelineDefinition_ManifoldDefinition;
 class PipelineInstance;
-// class SegmentDefinition;
 class SegmentInstance;
+class ManifoldInstance;
 }  // namespace mrc::protos
 
 namespace mrc::control_plane::state {
@@ -45,6 +46,46 @@ enum class ResourceStatus : int
     Destroyed = 6,
 };
 
+enum class ResourceRequestedStatus : int
+{
+    // Should never be used. Must start with 0
+    Unknown = 0,
+    // Requested that a placeholder be reserved for this resource
+    Initialized = 1,
+    // Requested that the resource be created but not started
+    Created = 3,
+    // Requested that the resource run to completion
+    Completed = 5,
+    // Requested that the resource be stopped
+    Stopped = 7,
+    // Requested that the resource be destroyed (and removed from the control plane)
+    Destroyed = 9,
+};
+
+enum ResourceActualStatus : int
+{
+    // Resource has not informed its status
+    Unknown = 0,
+    // Owner of resource has acknowledged it should be created
+    Initialized = 1,
+    // Resource has acknowledged it should be created and has begun the process
+    Creating = 2,
+    // Resource is created and can be moved to ready when requested
+    Created = 3,
+    // Resource is running and will be moved to completed when finished
+    Running = 4,
+    // Resource is done running and ready to be torn down
+    Completed = 5,
+    // Resource has acknowledged it should be stopped and has begun the process
+    Stopping = 6,
+    // Resource has completed the stopped process
+    Stopped = 7,
+    // Owner of resource has begun destroying the object
+    Destroying = 8,
+    // Owner of resource has destroyed the object. Can be removed from control plane
+    Destroyed = 9,
+};
+
 enum class SegmentStates : int
 {
     Initialized = 0,
@@ -59,7 +100,7 @@ struct Worker;
 struct PipelineConfiguration;
 struct PipelineDefinition;
 struct PipelineInstance;
-// struct SegmentDefinition;
+struct ManifoldInstance;
 struct SegmentInstance;
 
 struct ControlPlaneStateBase
@@ -89,7 +130,7 @@ struct ControlPlaneNormalizedState : public std::enable_shared_from_this<Control
     std::map<uint64_t, Worker> workers;
     std::map<uint64_t, PipelineDefinition> pipeline_definitions;
     std::map<uint64_t, PipelineInstance> pipeline_instances;
-    // std::map<uint64_t, SegmentDefinition> segment_definitions;
+    std::map<uint64_t, ManifoldInstance> manifold_instances;
     std::map<uint64_t, SegmentInstance> segment_instances;
 
     friend struct ControlPlaneState;
@@ -107,7 +148,7 @@ struct ControlPlaneState
 
     const std::map<uint64_t, PipelineInstance>& pipeline_instances() const;
 
-    // const std::map<uint64_t, SegmentDefinition>& segment_definitions() const;
+    const std::map<uint64_t, ManifoldInstance>& manifold_instances() const;
 
     const std::map<uint64_t, SegmentInstance>& segment_instances() const;
 
@@ -116,11 +157,27 @@ struct ControlPlaneState
     std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
 };
 
+template <typename ProtoT>
+struct ControlPlaneTopLevelMessage : public ControlPlaneStateBase
+{
+    ControlPlaneTopLevelMessage(std::shared_ptr<ControlPlaneNormalizedState> state, const ProtoT& message) :
+      ControlPlaneStateBase(message),
+      m_root_state(std::move(state)),
+      m_message(message)
+    {}
+
+  protected:
+    std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
+    const ProtoT& m_message;
+};
+
 struct ResourceState : public ControlPlaneStateBase
 {
     ResourceState(const protos::ResourceState& message);
 
-    ResourceStatus status() const;
+    ResourceRequestedStatus requested_status() const;
+
+    ResourceActualStatus actual_status() const;
 
     int32_t ref_count() const;
 
@@ -128,9 +185,27 @@ struct ResourceState : public ControlPlaneStateBase
     const protos::ResourceState& m_message;
 };
 
-struct Connection : public ControlPlaneStateBase
+template <typename ProtoT>
+struct ResourceTopLevelMessage : public ControlPlaneTopLevelMessage<ProtoT>
 {
-    Connection(std::shared_ptr<ControlPlaneNormalizedState> state, const protos::Connection& message);
+    ResourceTopLevelMessage(std::shared_ptr<ControlPlaneNormalizedState> state, const ProtoT& message) :
+      ControlPlaneTopLevelMessage<ProtoT>(std::move(state), message),
+      m_state(message.state())
+    {}
+
+    const ResourceState& state() const
+    {
+        return m_state;
+    }
+
+  private:
+    ResourceState m_state;
+};
+
+struct Connection : public ControlPlaneTopLevelMessage<protos::Connection>
+{
+    using ControlPlaneTopLevelMessage::ControlPlaneTopLevelMessage;
+    // Connection(std::shared_ptr<ControlPlaneNormalizedState> state, const protos::Connection& message);
 
     uint64_t id() const;
 
@@ -140,14 +215,15 @@ struct Connection : public ControlPlaneStateBase
 
     std::map<uint64_t, const PipelineInstance&> assigned_pipelines() const;
 
-  private:
-    std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
-    const protos::Connection& m_message;
+    //   private:
+    //     std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
+    //     const protos::Connection& m_message;
 };
 
-struct Worker : public ControlPlaneStateBase
+struct Worker : public ResourceTopLevelMessage<protos::Worker>
 {
-    Worker(std::shared_ptr<ControlPlaneNormalizedState> state, const protos::Worker& message);
+    using ResourceTopLevelMessage::ResourceTopLevelMessage;
+    // Worker(std::shared_ptr<ControlPlaneNormalizedState> state, const protos::Worker& message);
 
     uint64_t id() const;
 
@@ -155,15 +231,7 @@ struct Worker : public ControlPlaneStateBase
 
     uint64_t machine_id() const;
 
-    const ResourceState& state() const;
-
     std::map<uint64_t, const SegmentInstance&> assigned_segments() const;
-
-  private:
-    std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
-    const protos::Worker& m_message;
-
-    ResourceState m_state;
 };
 
 struct PipelineConfiguration : public ControlPlaneStateBase
@@ -174,8 +242,26 @@ struct PipelineConfiguration : public ControlPlaneStateBase
     const protos::PipelineConfiguration& m_message;
 };
 
-struct PipelineDefinition : public ControlPlaneStateBase
+struct PipelineDefinition : public ControlPlaneTopLevelMessage<protos::PipelineDefinition>
 {
+    struct ManifoldDefinition : public ControlPlaneStateBase
+    {
+        ManifoldDefinition(std::shared_ptr<ControlPlaneNormalizedState> state,
+                           const protos::PipelineDefinition_ManifoldDefinition& message);
+
+        uint64_t id() const;
+
+        const PipelineDefinition& parent() const;
+
+        std::string port_name() const;
+
+        std::map<uint64_t, std::reference_wrapper<const ManifoldInstance>> instances() const;
+
+      private:
+        std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
+        const protos::PipelineDefinition_ManifoldDefinition& m_message;
+    };
+
     struct SegmentDefinition : public ControlPlaneStateBase
     {
         SegmentDefinition(std::shared_ptr<ControlPlaneNormalizedState> state,
@@ -202,20 +288,23 @@ struct PipelineDefinition : public ControlPlaneStateBase
 
     std::map<uint64_t, std::reference_wrapper<const PipelineInstance>> instances() const;
 
-    const std::map<uint64_t, SegmentDefinition>& segments() const;
+    const std::map<std::string, ManifoldDefinition>& manifolds() const;
+    const std::map<std::string, SegmentDefinition>& segments() const;
 
   private:
-    std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
-    const protos::PipelineDefinition& m_message;
+    // std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
+    // const protos::PipelineDefinition& m_message;
 
     // Child messages
     PipelineConfiguration m_config;
-    std::map<uint64_t, SegmentDefinition> m_segments;
+    std::map<std::string, ManifoldDefinition> m_manifolds;
+    std::map<std::string, SegmentDefinition> m_segments;
 };
 
-struct PipelineInstance : public ControlPlaneStateBase
+struct PipelineInstance : public ResourceTopLevelMessage<protos::PipelineInstance>
 {
-    PipelineInstance(std::shared_ptr<ControlPlaneNormalizedState> state, const protos::PipelineInstance& message);
+    using ResourceTopLevelMessage::ResourceTopLevelMessage;
+    // PipelineInstance(std::shared_ptr<ControlPlaneNormalizedState> state, const protos::PipelineInstance& message);
 
     uint64_t id() const;
 
@@ -223,41 +312,48 @@ struct PipelineInstance : public ControlPlaneStateBase
 
     uint64_t machine_id() const;
 
-    const ResourceState& state() const;
-
+    std::map<uint64_t, std::reference_wrapper<const ManifoldInstance>> manifolds() const;
     std::map<uint64_t, std::reference_wrapper<const SegmentInstance>> segments() const;
 
   private:
-    std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
-    const protos::PipelineInstance& m_message;
+    // std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
+    // const protos::PipelineInstance& m_message;
 
-    ResourceState m_state;
+    // ResourceState m_state;
 };
 
-// struct SegmentDefinition : public ControlPlaneStateBase
-// {
-//     SegmentDefinition(std::shared_ptr<ControlPlaneNormalizedState> state, const protos::SegmentDefinition& message);
-
-//     uint64_t id() const;
-
-//     std::string name() const;
-
-//     const PipelineDefinition& pipeline() const;
-
-//     std::map<uint64_t, std::reference_wrapper<const SegmentInstance>> instances() const;
-
-//     // TBD on ingress_ports
-//     // TBD on egress_ports
-//     // TBD on options
-
-//   private:
-//     std::shared_ptr<ControlPlaneNormalizedState> m_state;
-//     const protos::SegmentDefinition& m_message;
-// };
-
-struct SegmentInstance : public ControlPlaneStateBase
+struct ManifoldInstance : public ResourceTopLevelMessage<protos::ManifoldInstance>
 {
-    SegmentInstance(std::shared_ptr<ControlPlaneNormalizedState> state, const protos::SegmentInstance& message);
+    using ResourceTopLevelMessage::ResourceTopLevelMessage;
+
+    // ManifoldInstance(std::shared_ptr<ControlPlaneNormalizedState> state, const protos::ManifoldInstance& message);
+
+    uint64_t id() const;
+
+    const PipelineDefinition& pipeline_definition() const;
+
+    std::string port_name() const;
+
+    uint64_t machine_id() const;
+
+    const PipelineInstance& pipeline_instance() const;
+
+    std::map<uint32_t, bool> requested_ingress_segments() const;
+
+    std::map<uint32_t, bool> requested_egress_segments() const;
+
+  private:
+    // std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
+    // const protos::ManifoldInstance& m_message;
+
+    // ResourceState m_state;
+};
+
+struct SegmentInstance : public ResourceTopLevelMessage<protos::SegmentInstance>
+{
+    using ResourceTopLevelMessage::ResourceTopLevelMessage;
+
+    // SegmentInstance(std::shared_ptr<ControlPlaneNormalizedState> state, const protos::SegmentInstance& message);
 
     uint64_t id() const;
 
@@ -271,13 +367,9 @@ struct SegmentInstance : public ControlPlaneStateBase
 
     const PipelineInstance& pipeline_instance() const;
 
-    const ResourceState& state() const;
-
   private:
-    std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
-    const protos::SegmentInstance& m_message;
-
-    ResourceState m_state;
+    // std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
+    // const protos::SegmentInstance& m_message;
 };
 
 }  // namespace mrc::control_plane::state

@@ -12,6 +12,7 @@ import {
    ISegmentMapping,
    IWorker,
 } from "@mrc/common/entities";
+import { PipelineDefinitionWrapper } from "@mrc/common/pipelineDefinition";
 import { generateId, generateSegmentHash, hashProtoMessage, stringToBytes } from "@mrc/common/utils";
 import {
    ManifoldOptions_Policy,
@@ -52,30 +53,20 @@ export const pipeline_config: IPipelineConfiguration = {
    segments: {
       seg1: {
          name: "seg1",
-         egressPorts: {
-            int_port: {
-               portName: "int_port",
-               typeId: 0,
-               typeString: "int",
-            },
-         },
-         ingressPorts: {},
+         egressPorts: ["int_port"],
+         ingressPorts: [],
       },
       seg2: {
          name: "seg2",
-         egressPorts: {},
-         ingressPorts: {
-            int_port: {
-               portName: "int_port",
-               typeId: 0,
-               typeString: "int",
-            },
-         },
+         egressPorts: [],
+         ingressPorts: ["int_port"],
       },
    },
    manifolds: {
       int_port: {
          name: "int_port",
+         typeId: 0,
+         typeString: "int",
          options: {
             policy: ManifoldOptions_Policy.LoadBalance,
          },
@@ -101,40 +92,47 @@ export const pipeline_mappings = Object.fromEntries(
    })
 );
 
-export const pipeline_def: IPipelineDefinition = {
-   id: pipeline_config_hash,
-   config: pipeline_config,
-   mappings: pipeline_mappings,
-   instanceIds: [],
-   segments: Object.fromEntries(
-      Object.entries(pipeline_config.segments).map(([seg_name, seg_config]) => {
-         return [
-            seg_name,
-            {
-               id: hashProtoMessage(PipelineConfiguration_SegmentConfiguration.create(seg_config)),
-               parentId: pipeline_config_hash,
-               name: seg_name,
-               instanceIds: [],
-               egressPorts: {},
-               ingressPorts: {},
-            } as ISegmentDefinition,
-         ];
-      })
-   ),
-   manifolds: Object.fromEntries(
-      Object.entries(pipeline_config.manifolds).map(([man_name, man_config]) => {
-         return [
-            man_name,
-            {
-               id: hashProtoMessage(PipelineConfiguration_ManifoldConfiguration.create(man_config)),
-               parentId: pipeline_config_hash,
-               portName: man_name,
-               instanceIds: [],
-            } as IManifoldDefinition,
-         ];
-      })
-   ),
-};
+export const pipeline_def: IPipelineDefinition = PipelineDefinitionWrapper.from(
+   pipeline_config,
+   Object.values(pipeline_mappings)
+);
+
+// {
+//    id: pipeline_config_hash,
+//    config: pipeline_config,
+//    mappings: pipeline_mappings,
+//    instanceIds: [],
+//    segments: Object.fromEntries(
+//       Object.entries(pipeline_config.segments).map(([seg_name, seg_config]) => {
+//          return [
+//             seg_name,
+//             {
+//                id: hashProtoMessage(PipelineConfiguration_SegmentConfiguration.create(seg_config)),
+//                parentId: pipeline_config_hash,
+//                name: seg_name,
+//                instanceIds: [],
+//                egressPorts: {},
+//                ingressPorts: {},
+//                egressManifoldIds: {},
+//                ingressManifoldIds: {},
+//             } as ISegmentDefinition,
+//          ];
+//       })
+//    ),
+//    manifolds: Object.fromEntries(
+//       Object.entries(pipeline_config.manifolds).map(([man_name, man_config]) => {
+//          return [
+//             man_name,
+//             {
+//                id: hashProtoMessage(PipelineConfiguration_ManifoldConfiguration.create(man_config)),
+//                parentId: pipeline_config_hash,
+//                portName: man_name,
+//                instanceIds: [],
+//             } as IManifoldDefinition,
+//          ];
+//       })
+//    ),
+// };
 
 export const pipeline: IPipelineInstance = {
    id: generateId(),

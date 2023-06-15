@@ -20,7 +20,7 @@ import { RootStore, setupStore } from "../store";
 
 import { connectionsAdd, connectionsDropOne } from "./connectionsSlice";
 import { workersAdd } from "./workersSlice";
-import { updateResourceActualState } from "@mrc/server/store/slices/resourceActions";
+import { resourceUpdateActualState } from "@mrc/server/store/slices/resourceActions";
 
 let store: RootStore;
 
@@ -135,13 +135,13 @@ describe("Single", () => {
 
          // Update the instance state to ready and the instances should auto assign
          await store.dispatch(
-            updateResourceActualState("PipelineInstances", pipeline.id, ResourceActualStatus.Actual_Running)
+            resourceUpdateActualState("PipelineInstances", pipeline.id, ResourceActualStatus.Actual_Running)
          );
 
          // Update all manifold states as well
          for (const m of manifolds) {
             await store.dispatch(
-               updateResourceActualState("ManifoldInstances", m.id, ResourceActualStatus.Actual_Running)
+               resourceUpdateActualState("ManifoldInstances", m.id, ResourceActualStatus.Actual_Running)
             );
          }
       });

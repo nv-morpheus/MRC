@@ -11,9 +11,11 @@ import { IPipelineConfiguration, IPipelineMapping, ISegmentMapping } from "@mrc/
 import { MrcTestClient } from "@mrc/client/client";
 import { WorkersManager } from "@mrc/client/workers_manager";
 import {
+   Ack,
    EventType,
-   PipelineRequestAssignmentRequest,
-   PipelineRequestAssignmentResponse,
+   PipelineAddMappingRequest,
+   PipelineRegisterConfigRequest,
+   PipelineRegisterConfigResponse,
 } from "@mrc/proto/mrc/protos/architect";
 import { ConnectionManager } from "@mrc/client/connection_manager";
 
@@ -87,14 +89,13 @@ export class PipelineManager {
       };
 
       // Now request to run a pipeline
-      const response = await PipelineManager.sendRegisterPipelineConfigRequest(
+      const response = await PipelineManager.sendPipelineRegisterConfigAndAddMapping(
          this.connectionManager,
          this.config,
          mapping
       );
 
       this._pipelineDefinitionId = response.pipelineDefinitionId;
-      this._pipelineInstanceId = response.pipelineInstanceId;
    }
 
    public async ensureRegistered() {
@@ -152,20 +153,42 @@ export class PipelineManager {
       }
    }
 
-   public static async sendRegisterPipelineConfigRequest(
+   public static async sendPipelineRegisterConfig(
       connectionManager: ConnectionManager,
-      config: IPipelineConfiguration,
-      mapping: IPipelineMapping
+      config: IPipelineConfiguration
    ) {
       // Now request to run a pipeline
-      const response = await connectionManager.send_request<PipelineRequestAssignmentResponse>(
-         EventType.ClientUnaryRequestPipelineAssignment,
-         PipelineRequestAssignmentRequest.create({
-            pipeline: config,
+      const response = await connectionManager.send_request<PipelineRegisterConfigResponse>(
+         EventType.ClientUnaryPipelineRegisterConfig,
+         PipelineRegisterConfigRequest.create({
+            config: config,
+         })
+      );
+
+      return response;
+   }
+
+   public static async sendPipelineAddMapping(connectionManager: ConnectionManager, mapping: IPipelineMapping) {
+      // Now request to run a pipeline
+      const response = await connectionManager.send_request<Ack>(
+         EventType.ClientUnaryPipelineAddMapping,
+         PipelineAddMappingRequest.create({
             mapping: mapping,
          })
       );
 
       return response;
+   }
+
+   public static async sendPipelineRegisterConfigAndAddMapping(
+      connectionManager: ConnectionManager,
+      config: IPipelineConfiguration,
+      mapping: IPipelineMapping
+   ) {
+      const configResponse = await PipelineManager.sendPipelineRegisterConfig(connectionManager, config);
+
+      await PipelineManager.sendPipelineAddMapping(connectionManager, mapping);
+
+      return configResponse;
    }
 }

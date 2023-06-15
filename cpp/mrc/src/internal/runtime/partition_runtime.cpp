@@ -18,6 +18,7 @@
 #include "internal/runtime/partition_runtime.hpp"
 
 #include "internal/codable/codable_storage.hpp"
+#include "internal/memory/device_resources.hpp"
 #include "internal/network/network_resources.hpp"
 #include "internal/pubsub/publisher_round_robin.hpp"
 #include "internal/pubsub/subscriber_service.hpp"
@@ -25,6 +26,7 @@
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/system_resources.hpp"
 #include "internal/runtime/segments_manager.hpp"
+#include "internal/ucx/worker.hpp"
 
 #include "mrc/core/async_service.hpp"
 #include "mrc/pubsub/api.hpp"
@@ -34,6 +36,7 @@
 
 #include <optional>
 #include <ostream>
+#include <stdexcept>
 
 namespace mrc::runtime {
 
@@ -64,9 +67,19 @@ size_t PartitionRuntime::partition_id() const
     return m_partition_id;
 }
 
+std::size_t PartitionRuntime::gpu_count() const
+{
+    throw std::runtime_error("Not implemented");
+}
+
 resources::PartitionResources& PartitionRuntime::resources()
 {
     return m_resources;
+}
+
+runnable::RunnableResources& PartitionRuntime::runnable()
+{
+    return m_resources.runnable();
 }
 
 control_plane::Client& PartitionRuntime::control_plane() const
@@ -84,6 +97,11 @@ metrics::Registry& PartitionRuntime::metrics_registry() const
     return m_system_runtime.metrics_registry();
 }
 
+IInternalRuntime& PartitionRuntime::runtime()
+{
+    return *this;
+}
+
 remote_descriptor::Manager& PartitionRuntime::remote_descriptor_manager()
 {
     CHECK(m_remote_descriptor_manager);
@@ -95,14 +113,21 @@ std::unique_ptr<mrc::codable::ICodableStorage> PartitionRuntime::make_codable_st
     return std::make_unique<codable::CodableStorage>(m_resources);
 }
 
-runnable::RunnableResources& PartitionRuntime::runnable()
-{
-    return m_resources.runnable();
-}
-
 void PartitionRuntime::do_service_start(std::stop_token stop_token)
 {
-    m_segments_manager = std::make_unique<SegmentsManager>(*this);
+    // First thing, need to register this worker with the control plane
+    protos::RegisterWorkersRequest req;
+
+    req.add_ucx_worker_addresses(this->resources().ucx()->worker().address());
+
+    auto resp = this->control_plane().await_unary<protos::RegisterWorkersResponse>(protos::ClientUnaryRegisterWorkers,
+                                                                                   std::move(req));
+
+    CHECK_EQ(resp->instance_ids_size(), 1);
+
+    auto worker_id = resp->instance_ids(0);
+
+    m_segments_manager = std::make_unique<SegmentsManager>(*this, worker_id);
 
     // Start the child service
     this->child_service_start(*m_segments_manager);

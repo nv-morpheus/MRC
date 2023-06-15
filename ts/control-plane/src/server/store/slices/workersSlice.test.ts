@@ -19,7 +19,7 @@ import {
    workersSelectAll,
    workersSelectById,
    workersSelectTotal,
-   workersUpdateResourceState,
+   workersUpdateResourceActualState,
 } from "./workersSlice";
 
 let store: RootStore;
@@ -106,7 +106,9 @@ describe("Single", () => {
    });
 
    test("Activate", () => {
-      store.dispatch(workersUpdateResourceState({ resources: [worker], status: ResourceActualStatus.Actual_Running }));
+      store.dispatch(
+         workersUpdateResourceActualState({ resource: worker, status: ResourceActualStatus.Actual_Running })
+      );
 
       expect(workersSelectById(store.getState(), worker.id)?.state.actualStatus).toEqual(
          ResourceActualStatus.Actual_Running
@@ -114,16 +116,20 @@ describe("Single", () => {
    });
 
    test("Activate Twice", () => {
-      store.dispatch(workersUpdateResourceState({ resources: [worker], status: ResourceActualStatus.Actual_Running }));
-      store.dispatch(workersUpdateResourceState({ resources: [worker], status: ResourceActualStatus.Actual_Running }));
+      store.dispatch(
+         workersUpdateResourceActualState({ resource: worker, status: ResourceActualStatus.Actual_Running })
+      );
+      store.dispatch(
+         workersUpdateResourceActualState({ resource: worker, status: ResourceActualStatus.Actual_Running })
+      );
 
       expect(workersSelectById(store.getState(), worker.id)?.state.actualStatus).toEqual(
          ResourceActualStatus.Actual_Running
       );
    });
 
-   test("Connection Dropped", () => {
-      store.dispatch(connectionsDropOne({ id: connection.id }));
+   test("Connection Dropped", async () => {
+      await store.dispatch(connectionsDropOne({ id: connection.id }));
 
       expect(workersSelectAll(store.getState())).toHaveLength(0);
    });

@@ -27,6 +27,7 @@
 #include "internal/system/system_provider.hpp"
 
 #include "mrc/core/async_service.hpp"
+#include "mrc/metrics/registry.hpp"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/types.hpp"
 
@@ -44,6 +45,7 @@ Runtime::Runtime(std::unique_ptr<resources::SystemResources> resources) :
   m_sys_resources(std::move(resources))
 {
     CHECK(m_sys_resources) << "resources cannot be null";
+
     // for (int i = 0; i < m_sys_resources->partition_count(); i++)
     // {
     //     m_partitions.push_back(std::make_unique<Partition>(m_sys_resources->partition(i)));
@@ -91,6 +93,11 @@ PartitionRuntime& Runtime::partition(std::size_t partition_id)
     return *m_partitions.at(partition_id);
 }
 
+runnable::IRunnableResources& Runtime::runnable()
+{
+    return m_sys_resources->runnable();
+}
+
 control_plane::Client& Runtime::control_plane() const
 {
     return *m_control_plane_client;
@@ -106,9 +113,9 @@ metrics::Registry& Runtime::metrics_registry() const
     return *m_metrics_registry;
 }
 
-runnable::RunnableResources& Runtime::runnable()
+IInternalRuntime& Runtime::runtime()
 {
-    return m_sys_resources->runnable();
+    return *this;
 }
 
 void Runtime::do_service_start(std::stop_token stop_token)

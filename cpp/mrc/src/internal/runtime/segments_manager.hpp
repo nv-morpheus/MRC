@@ -23,6 +23,7 @@
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/runnable/runnable_resources.hpp"
+#include "internal/runtime/resource_manager_base.hpp"
 #include "internal/segment/segment_instance.hpp"
 #include "internal/ucx/ucx_resources.hpp"
 
@@ -51,10 +52,10 @@ namespace mrc::runtime {
  * This class does not own the actual resources, that honor is bestowed on the resources::Manager. This class is
  * constructed and owned by the resources::Manager to ensure validity of the references.
  */
-class SegmentsManager : public AsyncService, public runnable::RunnableResourcesProvider
+class SegmentsManager : public ResourceManagerBase<control_plane::state::Worker>
 {
   public:
-    SegmentsManager(PartitionRuntime& runtime);
+    SegmentsManager(PartitionRuntime& runtime, InstanceID worker_id);
     ~SegmentsManager() override;
     // SegmentsManager(runnable::RunnableResources& runnable_resources,
     //                  std::size_t partition_id,
@@ -67,18 +68,25 @@ class SegmentsManager : public AsyncService, public runnable::RunnableResourcesP
     // std::optional<network::NetworkResources>& network();
 
   private:
-    void do_service_start(std::stop_token stop_token) final;
-    // void do_service_stop() final;
-    // void do_service_kill() final;
-    // void do_service_await_live() final;
-    // void do_service_await_join() final;
+    control_plane::state::Worker filter_resource(const control_plane::state::ControlPlaneState& state) const override
+    {
+        return state.workers().at(this->id());
+    }
 
-    void process_state_update(control_plane::state::Worker& worker);
+    void on_created_requested(control_plane::state::Worker& instance) override;
+
+    void on_completed_requested(control_plane::state::Worker& instance) override;
+
+    void on_running_state_updated(control_plane::state::Worker& instance) override;
+
+    void on_stopped_requested(control_plane::state::Worker& instance) override;
+
+    // void process_state_update(control_plane::state::Worker& instance);
 
     void create_segment(const control_plane::state::SegmentInstance& instance);
     void erase_segment(SegmentAddress address);
 
-    PartitionRuntime& m_runtime;
+    // PartitionRuntime& m_runtime;
 
     size_t m_partition_id{0};
     InstanceID m_worker_id{0};
@@ -88,6 +96,8 @@ class SegmentsManager : public AsyncService, public runnable::RunnableResourcesP
 
     // Running segment instances
     std::map<SegmentAddress, std::unique_ptr<segment::SegmentInstance>> m_instances;
+
+    // control_plane::state::ResourceActualStatus m_local_status{control_plane::state::ResourceActualStatus::Unknown};
 
     // memory::HostResources& m_host;
     // std::optional<memory::DeviceResources>& m_device;

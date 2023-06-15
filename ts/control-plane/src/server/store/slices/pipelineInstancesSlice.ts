@@ -167,34 +167,35 @@ export const pipelineInstancesSlice = createSlice({
    },
 });
 
-export function pipelineInstancesAssign(payload: { pipeline: IPipelineConfiguration; mapping: IPipelineMapping }) {
-   return (dispatch: AppDispatch, getState: AppGetState) => {
-      // Dispatch the definition to get the definition IDs
-      const definition_ids = dispatch(pipelineDefinitionsCreateOrUpdate(payload.pipeline, payload.mapping));
+// export function pipelineInstancesAssign(payload: { pipeline: IPipelineConfiguration; mapping: IPipelineMapping }) {
+//    return (dispatch: AppDispatch, getState: AppGetState) => {
+//       // Dispatch the definition to get the definition IDs
+//       const definition_ids = dispatch(pipelineDefinitionsCreateOrUpdate(payload.pipeline, payload.mapping));
 
-      const pipeline_id = generateId();
+//       const pipeline_id = generateId();
 
-      // First dispatch the pipeline instance update
-      dispatch(
-         pipelineInstancesAdd({
-            id: pipeline_id,
-            definitionId: definition_ids.pipeline,
-            machineId: payload.mapping.machineId,
-         })
-      );
+//       // First dispatch the pipeline instance update
+//       dispatch(
+//          pipelineInstancesAdd({
+//             id: pipeline_id,
+//             definitionId: definition_ids.pipeline,
+//             machineId: payload.mapping.machineId,
+//          })
+//       );
 
-      return {
-         pipelineDefinitionId: definition_ids.pipeline,
-         pipelineInstanceId: pipeline_id,
-      };
-   };
-}
+//       return {
+//          pipelineDefinitionId: definition_ids.pipeline,
+//          pipelineInstanceId: pipeline_id,
+//       };
+//    };
+// }
 
 type PipelineInstancesStateType = ReturnType<typeof pipelineInstancesSlice.getInitialState>;
 
 export const {
    add: pipelineInstancesAdd,
    remove: pipelineInstancesRemove,
+   updateResourceRequestedState: pipelineInstancesUpdateResourceRequestedState,
    updateResourceActualState: pipelineInstancesUpdateResourceActualState,
 } = pipelineInstancesSlice.actions;
 

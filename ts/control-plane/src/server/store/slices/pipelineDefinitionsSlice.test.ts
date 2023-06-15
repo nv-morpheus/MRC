@@ -55,9 +55,7 @@ describe("From Config", () => {
    let created_def_id: string;
 
    beforeEach(() => {
-      created_def_id = store.dispatch(
-         pipelineDefinitionsCreateOrUpdate(pipeline_config, pipeline_mappings[connection.id])
-      ).pipeline;
+      created_def_id = store.dispatch(pipelineDefinitionsCreateOrUpdate(pipeline_config)).id;
    });
 
    test("Select One", () => {

@@ -22,6 +22,7 @@
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/pipelines_manager.hpp"
+#include "internal/runtime/runtime_provider.hpp"
 #include "internal/runtime/segments_manager.hpp"
 #include "internal/service.hpp"
 #include "internal/system/threading_resources.hpp"
@@ -44,7 +45,11 @@ namespace mrc::runtime {
  * manager which are built on partition resources. The Runtime object is responsible for bringing up and tearing down
  * core resources manager.
  */
-class Runtime final : public mrc::runtime::IRuntime, public AsyncService, public system::SystemProvider
+class Runtime final : public mrc::runtime::ISystemRuntime,
+                      public AsyncService,
+                      public system::SystemProvider,
+                      public IInternalRuntime,
+                      public IInternalRuntimeProvider
 {
   public:
     Runtime(const system::SystemProvider& system);
@@ -64,15 +69,17 @@ class Runtime final : public mrc::runtime::IRuntime, public AsyncService, public
     // access the full set of internal resources
     resources::SystemResources& resources() const;
 
-    control_plane::Client& control_plane() const;
+    runnable::IRunnableResources& runnable() override;
 
-    PipelinesManager& pipelines_manager() const;
+    control_plane::Client& control_plane() const override;
 
-    metrics::Registry& metrics_registry() const;
+    PipelinesManager& pipelines_manager() const override;
+
+    metrics::Registry& metrics_registry() const override;
+
+    IInternalRuntime& runtime() override;
 
   protected:
-    runnable::RunnableResources& runnable() override;
-
   private:
     void do_service_start(std::stop_token stop_token) final;
     // void do_service_start() final;

@@ -9,7 +9,7 @@ import { workersAdd, workersAddMany, workersRemove, workersSelectByIds } from ".
 import { segmentInstancesSelectByIds } from "@mrc/server/store/slices/segmentInstancesSlice";
 import { systemStartRequest, systemStopRequest } from "@mrc/server/store/slices/systemSlice";
 import { IConnection, IWorker } from "@mrc/common/entities";
-import { updateResourceActualState } from "@mrc/server/store/slices/resourceActions";
+import { resourceUpdateActualState } from "@mrc/server/store/slices/resourceActions";
 
 const connectionsAdapter = createWrappedEntityAdapter<IConnection>({
    selectId: (x) => x.id,
@@ -74,12 +74,6 @@ export const connectionsSlice = createSlice({
    extraReducers: (builder) => {
       builder.addCase(workersAdd, (state, action) => {
          workerAdded(state, action.payload);
-      });
-      builder.addCase(workersAddMany, (state, action) => {
-         // Handle synchronizing a new added worker
-         action.payload.forEach((p) => {
-            workerAdded(state, p);
-         });
       });
       builder.addCase(workersRemove, (state, action) => {
          // Handle removing a worker
@@ -153,7 +147,7 @@ export function connectionsDropOne(payload: Pick<IConnection, "id">) {
 
          for (const x of segments) {
             // Need to set the state first
-            await dispatch(updateResourceActualState("SegmentInstances", x.id, ResourceActualStatus.Actual_Destroyed));
+            await dispatch(resourceUpdateActualState("SegmentInstances", x.id, ResourceActualStatus.Actual_Destroyed));
 
             // dispatch(segmentInstancesRemove(x));
          }

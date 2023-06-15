@@ -22,8 +22,9 @@ import {
    eventTypeToJSON,
    PingRequest,
    PingResponse,
-   PipelineRequestAssignmentRequest,
-   PipelineRequestAssignmentResponse,
+   PipelineAddMappingRequest,
+   PipelineRegisterConfigRequest,
+   PipelineRegisterConfigResponse,
    RegisterWorkersRequest,
    RegisterWorkersResponse,
    ResourceUpdateStatusRequest,
@@ -34,17 +35,12 @@ import {
    StateUpdate,
    TaggedInstance,
 } from "../proto/mrc/protos/architect";
-import {
-   ControlPlaneState,
-   ResourceActualStatus,
-   ResourceRequestedStatus,
-   ResourceStatus,
-} from "../proto/mrc/protos/architect_state";
+import { ControlPlaneState, ResourceActualStatus, ResourceRequestedStatus } from "../proto/mrc/protos/architect_state";
 import { DeepPartial, UnknownMessage, messageTypeRegistry } from "@mrc/proto/typeRegistry";
 
 import { connectionsAdd, connectionsDropOne } from "./store/slices/connectionsSlice";
 import {
-   pipelineInstancesAssign,
+   pipelineInstancesAdd,
    pipelineInstancesSelectById,
    pipelineInstancesUpdateResourceActualState,
 } from "./store/slices/pipelineInstancesSlice";
@@ -53,13 +49,17 @@ import {
    workersRemove,
    workersSelectById,
    workersSelectByMachineId,
-   workersUpdateResourceState,
+   workersUpdateResourceActualState,
 } from "./store/slices/workersSlice";
 import { getRootStore, RootStore, stopAction } from "./store/store";
 import {
    manifoldInstancesSelectById,
    manifoldInstancesUpdateResourceActualState,
 } from "@mrc/server/store/slices/manifoldInstancesSlice";
+import {
+   pipelineDefinitionsCreateOrUpdate,
+   pipelineDefinitionsSetMapping,
+} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 
 interface IncomingData {
    msg: Event;
@@ -232,7 +232,6 @@ class Architect implements ArchitectServiceImplementation {
          if (state.system.requestRunning) {
             console.log("Request is still running!");
          }
-         console.log(`Pushing state update: ${state.system.requestRunningNonce.toString()}`);
 
          // Push out the state update
          store_update_sink.write(
@@ -402,27 +401,6 @@ class Architect implements ArchitectServiceImplementation {
 
                break;
             }
-            case EventType.ClientUnaryActivateStream: {
-               const payload = unpackEvent<RegisterWorkersResponse>(event.msg);
-
-               const workers = payload.instanceIds.map((id) => {
-                  const w = workersSelectById(this._store.getState(), id);
-
-                  if (!w) {
-                     throw new Error(`Cannot activate Worker ${id}. ID does not exist`);
-                  }
-
-                  return w;
-               });
-
-               this._store.dispatch(
-                  workersUpdateResourceState({ resources: workers, status: ResourceActualStatus.Actual_Running })
-               );
-
-               yield unaryResponse(event, Ack.create());
-
-               break;
-            }
             case EventType.ClientUnaryDropWorker: {
                const payload = unpackEvent<TaggedInstance>(event.msg);
 
@@ -436,20 +414,48 @@ class Architect implements ArchitectServiceImplementation {
 
                break;
             }
-            case EventType.ClientUnaryRequestPipelineAssignment: {
-               const payload = unpackEvent<PipelineRequestAssignmentRequest>(event.msg);
+            case EventType.ClientUnaryPipelineRegisterConfig: {
+               const payload = unpackEvent<PipelineRegisterConfigRequest>(event.msg);
 
                // Check to make sure its not null
-               if (!payload.pipeline) {
+               if (!payload.config) {
                   throw new Error("`pipeline` cannot be undefined");
-                  // Use default values for now since the pipeline def is empty
-                  // payload.pipeline = PipelineDefinition.create({
-                  //    id: 0,
-                  //    instanceIds: [],
-                  //    segmentIds: [],
-                  // });
                }
 
+               // Issue the create or update action
+               const definition = this._store.dispatch(pipelineDefinitionsCreateOrUpdate(payload.config));
+
+               // if (!payload.mapping) {
+               //    throw new Error("`mapping` cannot be undefined");
+               // }
+
+               // if (payload.mapping.machineId == "0") {
+               //    payload.mapping.machineId = event.machineId;
+               // } else if (payload.mapping.machineId != event.machineId) {
+               //    throw new Error("Incorrect machineId");
+               // }
+
+               // // Add a pipeline assignment to the machine
+               // const addedInstances = this._store.dispatch(
+               //    pipelineInstancesAssign({
+               //       pipeline: payload.pipeline,
+               //       mapping: payload.mapping,
+               //    })
+               // );
+
+               yield unaryResponse(
+                  event,
+                  PipelineRegisterConfigResponse.create({
+                     pipelineDefinitionId: definition.id,
+                  })
+               );
+
+               break;
+            }
+            case EventType.ClientUnaryPipelineAddMapping: {
+               const payload = unpackEvent<PipelineAddMappingRequest>(event.msg);
+
+               // Check to make sure its not null
                if (!payload.mapping) {
                   throw new Error("`mapping` cannot be undefined");
                }
@@ -460,15 +466,34 @@ class Architect implements ArchitectServiceImplementation {
                   throw new Error("Incorrect machineId");
                }
 
-               // Add a pipeline assignment to the machine
-               const addedInstances = this._store.dispatch(
-                  pipelineInstancesAssign({
-                     pipeline: payload.pipeline,
+               // Issue the create or update action
+               this._store.dispatch(
+                  pipelineDefinitionsSetMapping({
+                     definition_id: payload.definitionId,
                      mapping: payload.mapping,
                   })
                );
 
-               yield unaryResponse(event, PipelineRequestAssignmentResponse.create(addedInstances));
+               const pipeline_id = generateId();
+
+               // Create a pipeline instance with this mapping (Should be moved elsewhere eventually)
+               this._store.dispatch(
+                  pipelineInstancesAdd({
+                     id: pipeline_id,
+                     definitionId: payload.definitionId,
+                     machineId: payload.mapping.machineId,
+                  })
+               );
+
+               // // Add a pipeline assignment to the machine
+               // const addedInstances = this._store.dispatch(
+               //    pipelineInstancesAssign({
+               //       pipeline: payload.pipeline,
+               //       mapping: payload.mapping,
+               //    })
+               // );
+
+               yield unaryResponse(event, Ack.create());
 
                break;
             }
@@ -477,6 +502,22 @@ class Architect implements ArchitectServiceImplementation {
 
                // Check to make sure its not null
                switch (payload.resourceType) {
+                  case "Workers": {
+                     const found = workersSelectById(this._store.getState(), payload.resourceId);
+
+                     if (!found) {
+                        throw new Error(`Could not find Workers for ID: ${payload.resourceId}`);
+                     }
+
+                     this._store.dispatch(
+                        workersUpdateResourceActualState({
+                           resource: found,
+                           status: payload.status,
+                        })
+                     );
+
+                     break;
+                  }
                   case "PipelineInstances": {
                      const found = pipelineInstancesSelectById(this._store.getState(), payload.resourceId);
 
@@ -526,7 +567,7 @@ class Architect implements ArchitectServiceImplementation {
                      break;
                   }
                   default:
-                     throw new Error("Unsupported resource type");
+                     throw new Error(`Unsupported resource type: ${payload.resourceType}`);
                }
 
                yield unaryResponse(event, ResourceUpdateStatusResponse.create({ ok: true }));

@@ -18,6 +18,7 @@
 #include "internal/segment/builder_definition.hpp"
 
 #include "internal/pipeline/pipeline_resources.hpp"
+#include "internal/runtime/runtime_provider.hpp"
 #include "internal/segment/segment_definition.hpp"
 
 #include "mrc/core/addresses.hpp"
@@ -75,10 +76,10 @@ void validate_name(const std::string& name)
 
 namespace mrc::segment {
 
-BuilderDefinition::BuilderDefinition(runtime::PartitionRuntime& runtime,
+BuilderDefinition::BuilderDefinition(runtime::IInternalRuntimeProvider& runtime,
                                      std::shared_ptr<const SegmentDefinition> definition,
                                      SegmentAddress address) :
-  m_runtime(runtime),
+  runtime::InternalRuntimeProvider(runtime),
   m_definition(std::move(definition)),
   m_address(address)
 {}
@@ -393,7 +394,7 @@ std::function<void(std::int64_t)> BuilderDefinition::make_throughput_counter(con
 {
     auto [global_name, local_name] = this->normalize_name(name);
 
-    auto counter = m_runtime.metrics_registry().make_throughput_counter(global_name);
+    auto counter = this->runtime().metrics_registry().make_throughput_counter(global_name);
     return [counter](std::int64_t ticks) mutable {
         counter.increment(ticks);
     };

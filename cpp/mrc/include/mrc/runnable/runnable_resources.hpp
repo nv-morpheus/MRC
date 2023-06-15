@@ -17,22 +17,23 @@
 
 #pragma once
 
-#include "mrc/core/fiber_meta_data.hpp"
-#include "mrc/core/task_queue.hpp"
-#include "mrc/metrics/registry.hpp"
-#include "mrc/runnable/launch_control.hpp"
+namespace mrc::core {
+class FiberTaskQueue;
+}
 
 namespace mrc::runnable {
+class LaunchControl;
 
 struct IRunnableResources
 {
     virtual ~IRunnableResources() = default;
 
-    virtual core::FiberTaskQueue& main()              = 0;
-    virtual runnable::LaunchControl& launch_control() = 0;
-    // virtual std::shared_ptr<metrics::Registry> metrics_registry() = 0;
+    virtual core::FiberTaskQueue& main() = 0;
+    const core::FiberTaskQueue& main() const;
 
-    const mrc::core::FiberTaskQueue& main() const;
+    virtual runnable::LaunchControl& launch_control() = 0;
+
+    // virtual std::shared_ptr<metrics::Registry> metrics_registry() = 0;
 };
 
 class IRunnableResourcesProvider

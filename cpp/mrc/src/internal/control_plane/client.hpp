@@ -218,11 +218,12 @@ class Client final : public AsyncService, public virtual runnable::RunnableResou
 
     // update channel
     size_t m_state_update_count{0};
-    rxcpp::subjects::behavior<state::ControlPlaneState> m_state_update_sub{
-        state::ControlPlaneState{std::make_unique<protos::ControlPlaneState>()}};
+    // rxcpp::subjects::behavior<state::ControlPlaneState> m_state_update_sub{
+    //     state::ControlPlaneState{std::make_unique<protos::ControlPlaneState>()}};
     // rxcpp::subjects::replay<state::ControlPlaneState, rxcpp::identity_one_worker> m_state_update_sub{
     //     1,
     //     rxcpp::identity_current_thread()};
+    rxcpp::subjects::subject<state::ControlPlaneState> m_state_update_sub;
     // std::unique_ptr<mrc::node::WritableEntrypoint<const protos::StateUpdate>> m_connections_update_channel;
     // std::unique_ptr<mrc::node::WritableEntrypoint<const protos::ControlPlaneState>> m_state_update_entrypoint;
     // std::unique_ptr<mrc::node::Broadcast<const protos::ControlPlaneState>> m_state_update_stream;

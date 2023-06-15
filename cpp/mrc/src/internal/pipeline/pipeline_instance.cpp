@@ -25,6 +25,7 @@
 #include "internal/resources/system_resources.hpp"
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/runtime.hpp"
+#include "internal/runtime/runtime_provider.hpp"
 #include "internal/segment/segment_definition.hpp"
 #include "internal/segment/segment_instance.hpp"
 
@@ -32,6 +33,7 @@
 #include "mrc/core/async_service.hpp"
 #include "mrc/core/task_queue.hpp"
 #include "mrc/manifold/interface.hpp"
+#include "mrc/protos/architect_state.pb.h"
 #include "mrc/segment/utils.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/string_utils.hpp"
@@ -48,14 +50,11 @@
 
 namespace mrc::pipeline {
 
-PipelineInstance::PipelineInstance(runtime::Runtime& runtime,
+PipelineInstance::PipelineInstance(runtime::IInternalRuntimeProvider& runtime,
                                    std::shared_ptr<const PipelineDefinition> definition,
-                                   uint64_t instance_id) :
-  AsyncService(MRC_CONCAT_STR("PipelineInstance[" << instance_id << "]")),
-  runnable::RunnableResourcesProvider(runtime),
-  m_runtime(runtime),
-  m_definition(std::move(definition)),
-  m_instance_id(instance_id)
+                                   InstanceID instance_id) :
+  ResourceManagerBase(runtime, instance_id, MRC_CONCAT_STR("PipelineInstance[" << instance_id << "]")),
+  m_definition(std::move(definition))
 {
     CHECK(m_definition);
     m_joinable_future = m_joinable_promise.get_future().share();
@@ -75,7 +74,7 @@ ManifoldInstance& PipelineInstance::get_manifold_instance(const PortName& port_n
         // Create a new manifold
         auto [added_iterator, did_add] = mutable_this->m_manifold_instances.emplace(
             port_name,
-            std::make_shared<ManifoldInstance>(m_runtime, manifold_def, 0));
+            std::make_shared<ManifoldInstance>(*mutable_this, manifold_def, 0));
 
         mutable_this->child_service_start(*added_iterator->second);
 
@@ -91,100 +90,126 @@ std::shared_ptr<manifold::Interface> PipelineInstance::get_manifold(const PortNa
     return this->get_manifold_instance(port_name).get_interface();
 }
 
-void PipelineInstance::update()
+// void PipelineInstance::update()
+// {
+//     // for (const auto& [name, manifold] : m_manifold_instances)
+//     // {
+//     //     manifold->update_inputs();
+//     //     manifold->update_outputs();
+//     //     manifold->start();
+//     // }
+//     for (const auto& [address, segment] : m_segments)
+//     {
+//         segment->service_start();
+//         segment->service_await_live();
+//     }
+//     mark_joinable();
+// }
+
+// void PipelineInstance::remove_segment(const SegmentAddress& address)
+// {
+//     auto search = m_segments.find(address);
+//     CHECK(search != m_segments.end());
+//     m_segments.erase(search);
+// }
+
+// void PipelineInstance::join_segment(const SegmentAddress& address)
+// {
+//     auto search = m_segments.find(address);
+//     CHECK(search != m_segments.end());
+//     search->second->service_await_join();
+// }
+
+// void PipelineInstance::stop_segment(const SegmentAddress& address)
+// {
+//     auto search = m_segments.find(address);
+//     CHECK(search != m_segments.end());
+
+//     auto [id, rank]    = segment_address_decode(address);
+//     const auto& segdef = m_definition->find_segment(id);
+
+//     for (const auto& name : segdef->ingress_port_names())
+//     {
+//         DVLOG(3) << "Dropping IngressPort for " << ::mrc::segment::info(address) << " on manifold " << name;
+//         // manifold(name).drop_output(address);
+//     }
+
+//     search->second->service_stop();
+// }
+
+// void PipelineInstance::create_segment(const SegmentAddress& address, std::uint32_t partition_id)
+// {
+//     // perform our allocations on the numa domain of the intended target
+//     // CHECK_LT(partition_id, m_resources->host_resources().size());
+//     CHECK_LT(partition_id, m_runtime.partition_count());
+//     m_runtime.partition(partition_id)
+//         .resources()
+//         .runnable()
+//         .main()
+//         .enqueue([this, address, partition_id] {
+//             auto search = m_segments.find(address);
+//             CHECK(search == m_segments.end());
+
+//             auto [id, rank] = segment_address_decode(address);
+//             auto definition = m_definition->find_segment(id);
+//             auto segment =
+//                 std::make_unique<segment::SegmentInstance>(m_runtime.partition(partition_id), definition, rank, 0);
+
+//             for (const auto& name : definition->egress_port_names())
+//             {
+//                 VLOG(10) << ::mrc::segment::info(address) << " configuring manifold for egress port " << name;
+//                 std::shared_ptr<manifold::Interface> manifold = get_manifold(name);
+//                 if (!manifold)
+//                 {
+//                     VLOG(10) << ::mrc::segment::info(address) << " creating manifold for egress port " << name;
+//                     manifold = segment->create_manifold(name);
+//                     // m_manifold_instances[name] = manifold;
+//                 }
+//                 segment->attach_manifold(manifold);
+//             }
+
+//             for (const auto& name : definition->ingress_port_names())
+//             {
+//                 VLOG(10) << ::mrc::segment::info(address) << " configuring manifold for ingress port " << name;
+//                 std::shared_ptr<manifold::Interface> manifold = get_manifold(name);
+//                 if (!manifold)
+//                 {
+//                     VLOG(10) << ::mrc::segment::info(address) << " creating manifold for ingress port " << name;
+//                     manifold = segment->create_manifold(name);
+//                     // m_manifold_instances[name] = manifold;
+//                 }
+//                 segment->attach_manifold(manifold);
+//             }
+
+//             m_segments[address] = std::move(segment);
+//         })
+//         .get();
+// }
+
+control_plane::state::PipelineInstance PipelineInstance::filter_resource(
+    const control_plane::state::ControlPlaneState& state) const
 {
-    // for (const auto& [name, manifold] : m_manifold_instances)
-    // {
-    //     manifold->update_inputs();
-    //     manifold->update_outputs();
-    //     manifold->start();
-    // }
-    for (const auto& [address, segment] : m_segments)
-    {
-        segment->service_start();
-        segment->service_await_live();
-    }
-    mark_joinable();
+    return state.pipeline_instances().at(this->id());
 }
 
-void PipelineInstance::remove_segment(const SegmentAddress& address)
+void PipelineInstance::on_created_requested(control_plane::state::PipelineInstance& instance) {}
+
+void PipelineInstance::on_completed_requested(control_plane::state::PipelineInstance& instance)
 {
-    auto search = m_segments.find(address);
-    CHECK(search != m_segments.end());
-    m_segments.erase(search);
+    // // Activate our worker
+    // protos::RegisterWorkersResponse resp;
+    // resp.set_machine_id(0);
+    // resp.add_instance_ids(m_worker_id);
+
+    // // Need to activate our worker
+    // this->runtime().control_plane().await_unary<protos::Ack>(protos::ClientUnaryActivateStream, std::move(resp));
 }
 
-void PipelineInstance::join_segment(const SegmentAddress& address)
+void PipelineInstance::on_running_state_updated(control_plane::state::PipelineInstance& instance) {}
+
+void PipelineInstance::on_stopped_requested(control_plane::state::PipelineInstance& instance)
 {
-    auto search = m_segments.find(address);
-    CHECK(search != m_segments.end());
-    search->second->service_await_join();
-}
-
-void PipelineInstance::stop_segment(const SegmentAddress& address)
-{
-    auto search = m_segments.find(address);
-    CHECK(search != m_segments.end());
-
-    auto [id, rank]    = segment_address_decode(address);
-    const auto& segdef = m_definition->find_segment(id);
-
-    for (const auto& name : segdef->ingress_port_names())
-    {
-        DVLOG(3) << "Dropping IngressPort for " << ::mrc::segment::info(address) << " on manifold " << name;
-        // manifold(name).drop_output(address);
-    }
-
-    search->second->service_stop();
-}
-
-void PipelineInstance::create_segment(const SegmentAddress& address, std::uint32_t partition_id)
-{
-    // perform our allocations on the numa domain of the intended target
-    // CHECK_LT(partition_id, m_resources->host_resources().size());
-    CHECK_LT(partition_id, m_runtime.partition_count());
-    m_runtime.partition(partition_id)
-        .resources()
-        .runnable()
-        .main()
-        .enqueue([this, address, partition_id] {
-            auto search = m_segments.find(address);
-            CHECK(search == m_segments.end());
-
-            auto [id, rank] = segment_address_decode(address);
-            auto definition = m_definition->find_segment(id);
-            auto segment =
-                std::make_unique<segment::SegmentInstance>(m_runtime.partition(partition_id), definition, rank, 0);
-
-            for (const auto& name : definition->egress_port_names())
-            {
-                VLOG(10) << ::mrc::segment::info(address) << " configuring manifold for egress port " << name;
-                std::shared_ptr<manifold::Interface> manifold = get_manifold(name);
-                if (!manifold)
-                {
-                    VLOG(10) << ::mrc::segment::info(address) << " creating manifold for egress port " << name;
-                    manifold = segment->create_manifold(name);
-                    // m_manifold_instances[name] = manifold;
-                }
-                segment->attach_manifold(manifold);
-            }
-
-            for (const auto& name : definition->ingress_port_names())
-            {
-                VLOG(10) << ::mrc::segment::info(address) << " configuring manifold for ingress port " << name;
-                std::shared_ptr<manifold::Interface> manifold = get_manifold(name);
-                if (!manifold)
-                {
-                    VLOG(10) << ::mrc::segment::info(address) << " creating manifold for ingress port " << name;
-                    manifold = segment->create_manifold(name);
-                    // m_manifold_instances[name] = manifold;
-                }
-                segment->attach_manifold(manifold);
-            }
-
-            m_segments[address] = std::move(segment);
-        })
-        .get();
+    this->service_stop();
 }
 
 manifold::Interface& PipelineInstance::manifold(const PortName& port_name)
@@ -203,65 +228,65 @@ void PipelineInstance::mark_joinable()
     }
 }
 
-void PipelineInstance::do_service_start(std::stop_token stop_token)
-{
-    Promise<void> completed_promise;
+// void PipelineInstance::do_service_start(std::stop_token stop_token)
+// {
+//     Promise<void> completed_promise;
 
-    // Now, subscribe to the control plane state updates and filter only on updates to this instance ID
-    m_runtime.control_plane()
-        .state_update_obs()
-        .tap([this](const control_plane::state::ControlPlaneState& state) {
-            VLOG(10) << "State Update: PipelineInstance[" << m_instance_id << "]";
-        })
-        .map([this](control_plane::state::ControlPlaneState state) -> control_plane::state::PipelineInstance {
-            return state.pipeline_instances().at(m_instance_id);
-        })
-        .take_while([](control_plane::state::PipelineInstance& state) {
-            // Process events until the worker is indicated to be destroyed
-            return state.state().status() < control_plane::state::ResourceStatus::Destroyed;
-        })
-        .subscribe(
-            [this](control_plane::state::PipelineInstance state) {
-                // Handle updates to the worker
-                this->process_state_update(state);
-            },
-            [this](std::exception_ptr ex_ptr) {
-                try
-                {
-                    std::rethrow_exception(ex_ptr);
-                } catch (std::exception ex)
-                {
-                    LOG(ERROR) << "Error in " << this->debug_prefix() << ex.what();
-                }
-            },
-            [&completed_promise] {
-                completed_promise.set_value();
-            });
+//     // Now, subscribe to the control plane state updates and filter only on updates to this instance ID
+//     m_runtime.control_plane()
+//         .state_update_obs()
+//         .tap([this](const control_plane::state::ControlPlaneState& state) {
+//             VLOG(10) << "State Update: PipelineInstance[" << m_instance_id << "]";
+//         })
+//         .map([this](control_plane::state::ControlPlaneState state) -> control_plane::state::PipelineInstance {
+//             return state.pipeline_instances().at(m_instance_id);
+//         })
+//         .take_while([](control_plane::state::PipelineInstance& state) {
+//             // Process events until the worker is indicated to be destroyed
+//             return state.state().actual_status() < control_plane::state::ResourceActualStatus::Destroyed;
+//         })
+//         .subscribe(
+//             [this](control_plane::state::PipelineInstance state) {
+//                 // Handle updates to the worker
+//                 this->process_state_update(state);
+//             },
+//             [this](std::exception_ptr ex_ptr) {
+//                 try
+//                 {
+//                     std::rethrow_exception(ex_ptr);
+//                 } catch (const std::exception& ex)
+//                 {
+//                     LOG(ERROR) << "Error in " << this->debug_prefix() << ex.what();
+//                 }
+//             },
+//             [&completed_promise] {
+//                 completed_promise.set_value();
+//             });
 
-    // Yield until the observable is finished
-    completed_promise.get_future().get();
-}
+//     // Yield until the observable is finished
+//     completed_promise.get_future().get();
+// }
 
-void PipelineInstance::process_state_update(control_plane::state::PipelineInstance& instance)
-{
-    if (instance.state().status() == control_plane::state::ResourceStatus::Activated)
-    {
-        // If we are activated, we need to setup the instance and then inform the control plane we are ready
-        // Create the manifold objects
+// void PipelineInstance::process_state_update(control_plane::state::PipelineInstance& instance)
+// {
+//     if (instance.state().requested_status() == control_plane::state::ResourceRequestedStatus::Completed)
+//     {
+//         // If we are activated, we need to setup the instance and then inform the control plane we are ready
+//         // Create the manifold objects
 
-        auto request = protos::ResourceUpdateStatusRequest();
+//         auto request = protos::ResourceUpdateStatusRequest();
 
-        request.set_resource_type("PipelineInstances");
-        request.set_resource_id(instance.id());
-        request.set_status(protos::ResourceStatus::Ready);
+//         request.set_resource_type("PipelineInstances");
+//         request.set_resource_id(instance.id());
+//         request.set_status(protos::ResourceActualStatus::Actual_Running);
 
-        auto response = m_runtime.control_plane().await_unary<protos::ResourceUpdateStatusResponse>(
-            protos::EventType::ClientUnaryResourceUpdateStatus,
-            request);
+//         auto response = m_runtime.control_plane().await_unary<protos::ResourceUpdateStatusResponse>(
+//             protos::EventType::ClientUnaryResourceUpdateStatus,
+//             request);
 
-        CHECK(response->ok()) << "Failed to set PipelineInstance to Ready";
-    }
-}
+//         CHECK(response->ok()) << "Failed to set PipelineInstance to Ready";
+//     }
+// }
 
 // void PipelineInstance::do_service_start() {}
 

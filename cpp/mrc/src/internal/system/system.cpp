@@ -32,8 +32,24 @@
 
 namespace mrc::system {
 
+std::unique_ptr<const Options> prepare_options(const Options& options)
+{
+    // Run the copy constructor to prevent changes to the original
+    auto final_options = std::make_unique<Options>(options);
+
+    // Check for any environmental overrides to options
+    auto env_architect_url = std::getenv("MRC_ARCHITECT_URL");
+
+    if (env_architect_url != nullptr)
+    {
+        final_options->architect_url(env_architect_url);
+    }
+
+    return final_options;
+}
+
 SystemDefinition::SystemDefinition(const Options& options) :
-  m_options(std::make_unique<Options>(options)),  // Run the copy constructor to make a copy
+  m_options(prepare_options(options)),  // Run the copy constructor to make a copy
   m_topology(Topology::Create(m_options->topology())),
   m_partitions(std::make_shared<Partitions>(*this))
 {}

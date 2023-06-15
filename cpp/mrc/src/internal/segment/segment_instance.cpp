@@ -24,6 +24,7 @@
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/pipelines_manager.hpp"
+#include "internal/runtime/runtime_provider.hpp"
 #include "internal/segment/builder_definition.hpp"
 #include "internal/segment/segment_definition.hpp"
 
@@ -32,6 +33,7 @@
 #include "mrc/core/task_queue.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/manifold/interface.hpp"
+#include "mrc/protos/architect_state.pb.h"
 #include "mrc/runnable/launchable.hpp"
 #include "mrc/runnable/launcher.hpp"
 #include "mrc/runnable/runner.hpp"
@@ -54,13 +56,12 @@
 
 namespace mrc::segment {
 
-SegmentInstance::SegmentInstance(runtime::PartitionRuntime& runtime,
+SegmentInstance::SegmentInstance(runtime::IInternalRuntimeProvider& runtime,
                                  std::shared_ptr<const SegmentDefinition> definition,
                                  SegmentAddress instance_id,
                                  uint64_t pipeline_instance_id) :
   AsyncService(MRC_CONCAT_STR("SegmentInstance[" << instance_id << "]")),
-  runnable::RunnableResourcesProvider(runtime),
-  m_runtime(runtime),
+  runtime::InternalRuntimeProvider(runtime),
   m_definition(std::move(definition)),
   m_instance_id(instance_id),
   m_pipeline_instance_id(pipeline_instance_id),
@@ -94,12 +95,12 @@ SegmentAddress SegmentInstance::address() const
 void SegmentInstance::service_start_impl()
 {
     // We construct the builder resources here since we are on the correct numa node
-    m_builder = std::make_unique<BuilderDefinition>(m_runtime, m_definition, m_address);
+    m_builder = std::make_unique<BuilderDefinition>(*this, m_definition, m_address);
 
     m_builder->initialize();
 
     // Get a reference to the pipeline instance
-    auto& pipeline_instance = m_runtime.pipelines_manager().get_instance(m_pipeline_instance_id);
+    auto& pipeline_instance = this->runtime().pipelines_manager().get_instance(m_pipeline_instance_id);
 
     // prepare launchers from m_builder
     std::map<std::string, std::unique_ptr<mrc::runnable::Launcher>> launchers;
@@ -131,18 +132,18 @@ void SegmentInstance::service_start_impl()
     {
         DVLOG(10) << info() << " constructing launcher egress port " << name;
 
-        pipeline_instance.get_manifold_instance(name).register_local_egress(m_address, node.get());
+        pipeline_instance.get_manifold_instance(name).register_local_egress(m_address, node);
 
         // node->connect_to_manifold(pipeline_instance.get_manifold(name));
 
-        launchers[name] = node->prepare_launcher(m_runtime.resources().runnable().launch_control());
+        launchers[name] = node->prepare_launcher(this->runnable().launch_control());
         apply_callback(launchers[name], name);
     }
 
     for (const auto& [name, node] : m_builder->nodes())
     {
         DVLOG(10) << info() << " constructing launcher for " << name;
-        launchers[name] = node->prepare_launcher(m_runtime.resources().runnable().launch_control());
+        launchers[name] = node->prepare_launcher(this->runnable().launch_control());
         apply_callback(launchers[name], name);
     }
 
@@ -150,9 +151,11 @@ void SegmentInstance::service_start_impl()
     {
         DVLOG(10) << info() << " constructing launcher ingress port " << name;
 
+        pipeline_instance.get_manifold_instance(name).register_local_ingress(m_address, node);
+
         node->connect_to_manifold(pipeline_instance.get_manifold(name));
 
-        launchers[name] = node->prepare_launcher(m_runtime.resources().runnable().launch_control());
+        launchers[name] = node->prepare_launcher(this->runnable().launch_control());
         apply_callback(launchers[name], name);
     }
 
@@ -326,14 +329,14 @@ std::shared_ptr<manifold::Interface> SegmentInstance::create_manifold(const Port
         auto search = m_builder->egress_ports().find(name);
         if (search != m_builder->egress_ports().end())
         {
-            return search->second->make_manifold(m_runtime.resources().runnable());
+            return search->second->make_manifold(this->runnable());
         }
     }
     {
         auto search = m_builder->ingress_ports().find(name);
         if (search != m_builder->ingress_ports().end())
         {
-            return search->second->make_manifold(m_runtime.resources().runnable());
+            return search->second->make_manifold(this->runnable());
         }
     }
     LOG(FATAL) << info() << " unable to match ingress or egress port name";
@@ -345,24 +348,16 @@ void SegmentInstance::do_service_start(std::stop_token stop_token)
     Promise<void> completed_promise;
 
     std::stop_callback stop_callback(stop_token, [this]() {
-        if (m_local_status >= control_plane::state::ResourceStatus::Registered &&
-            m_local_status < control_plane::state::ResourceStatus::Deactivated)
+        if (m_local_status >= control_plane::state::ResourceActualStatus::Creating &&
+            m_local_status < control_plane::state::ResourceActualStatus::Stopping)
         {
-            // Issue a resource state update to the control plane
-            auto request = protos::ResourceUpdateStatusRequest();
-
-            request.set_resource_type("SegmentInstances");
-            request.set_resource_id(this->m_instance_id);
-            request.set_status(protos::ResourceStatus::Deactivating);
-
-            auto response = m_runtime.control_plane().await_unary<protos::ResourceUpdateStatusResponse>(
-                protos::EventType::ClientUnaryResourceUpdateStatus,
-                request);
+            this->set_local_status(control_plane::state::ResourceActualStatus::Stopping);
         }
     });
 
     // Now, subscribe to the control plane state updates and filter only on updates to this instance ID
-    m_runtime.control_plane()
+    this->runtime()
+        .control_plane()
         .state_update_obs()
         .tap([this](const control_plane::state::ControlPlaneState& state) {
             VLOG(10) << "State Update: SegmentInstance[" << m_address << "/" << m_definition->name() << "]";
@@ -372,7 +367,7 @@ void SegmentInstance::do_service_start(std::stop_token stop_token)
         })
         .take_while([](control_plane::state::SegmentInstance& state) {
             // Process events until the worker is indicated to be destroyed
-            return state.state().status() < control_plane::state::ResourceStatus::Destroyed;
+            return state.state().actual_status() < control_plane::state::ResourceActualStatus::Destroyed;
         })
         .subscribe(
             [this](control_plane::state::SegmentInstance state) {
@@ -383,7 +378,7 @@ void SegmentInstance::do_service_start(std::stop_token stop_token)
                 try
                 {
                     std::rethrow_exception(ex_ptr);
-                } catch (std::exception ex)
+                } catch (const std::exception& ex)
                 {
                     LOG(ERROR) << "Error in " << this->debug_prefix() << ex.what();
                 }
@@ -392,67 +387,77 @@ void SegmentInstance::do_service_start(std::stop_token stop_token)
                 completed_promise.set_value();
             });
 
+    // Set that we are now created
+    this->set_local_status(control_plane::state::ResourceActualStatus::Created);
+
     // Yield until the observable is finished
     completed_promise.get_future().get();
 }
 
 void SegmentInstance::process_state_update(control_plane::state::SegmentInstance& instance)
 {
-    switch (instance.state().status())
+    switch (instance.state().requested_status())
     {
-    case control_plane::state::ResourceStatus::Registered: {
-        LOG_IF(WARNING, m_local_status != control_plane::state::ResourceStatus::Registered) << "Got Registered status "
-                                                                                               "after Segment has "
-                                                                                               "started";
+    case control_plane::state::ResourceRequestedStatus::Initialized:
+    case control_plane::state::ResourceRequestedStatus::Created: {
+        if (m_local_status < control_plane::state::ResourceActualStatus::Creating)
+        {
+            // If were not created, finish any initialization
+        }
+
         break;
     }
-    case control_plane::state::ResourceStatus::Activated: {
-        if (m_local_status == control_plane::state::ResourceStatus::Registered)
+    case control_plane::state::ResourceRequestedStatus::Completed: {
+        if (m_local_status < control_plane::state::ResourceActualStatus::Running)
         {
-            // Set local status
-            m_local_status = control_plane::state::ResourceStatus::Activated;
-
             // If we are activated, we need to setup the instance and then inform the control plane we are ready
             this->service_start_impl();
 
-            auto request = protos::ResourceUpdateStatusRequest();
+            // Set us as running
+            this->set_local_status(control_plane::state::ResourceActualStatus::Running);
 
-            request.set_resource_type("SegmentInstances");
-            request.set_resource_id(instance.id());
-            request.set_status(protos::ResourceStatus::Ready);
-
-            auto response = m_runtime.control_plane().await_unary<protos::ResourceUpdateStatusResponse>(
-                protos::EventType::ClientUnaryResourceUpdateStatus,
-                request);
-
-            CHECK(response->ok()) << "Failed to set PipelineInstance to Ready";
-
-            // Set the local status to ready now so we dont run this again
-            m_local_status = control_plane::state::ResourceStatus::Ready;
-
-            // Finally, mark this as started for any awaiters
+            // Indicate we have started
             this->mark_started();
         }
 
         break;
     }
-    case control_plane::state::ResourceStatus::Ready: {
-        // Nothing for Ready
+    case control_plane::state::ResourceRequestedStatus::Stopped: {
         break;
     }
-    case control_plane::state::ResourceStatus::Deactivating:
+    case control_plane::state::ResourceRequestedStatus::Destroyed: {
         break;
-    case control_plane::state::ResourceStatus::Deactivated:
-        if (m_local_status <= control_plane::state::ResourceStatus::Deactivated)
-        {
-            // Drop the manifold connections
+    }
+    case control_plane::state::ResourceRequestedStatus::Unknown:
+    default: {
+        CHECK(false) << "Unknown worker state: " << static_cast<int>(instance.state().requested_status());
+    }
+    }
+}
 
-            m_local_status = control_plane::state::ResourceStatus::Deactivated;
-        }
-    case control_plane::state::ResourceStatus::Unregistered:
-    case control_plane::state::ResourceStatus::Destroyed:
-    default:
-        LOG(ERROR) << "State not handled yet";
+bool SegmentInstance::set_local_status(control_plane::state::ResourceActualStatus status)
+{
+    CHECK_GE(status, m_local_status) << "Cannot set status backwards!";
+
+    // If we are advancing the status, send the update
+    if (status > m_local_status)
+    {
+        // Issue a resource state update to the control plane
+        auto request = protos::ResourceUpdateStatusRequest();
+
+        request.set_resource_type("SegmentInstances");
+        request.set_resource_id(this->m_instance_id);
+        request.set_status(static_cast<protos::ResourceActualStatus>(status));
+
+        auto response = this->runtime().control_plane().await_unary<protos::ResourceUpdateStatusResponse>(
+            protos::EventType::ClientUnaryResourceUpdateStatus,
+            request);
+
+        m_local_status = status;
+
+        return true;
     }
+
+    return false;
 }
 }  // namespace mrc::segment

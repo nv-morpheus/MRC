@@ -18,6 +18,7 @@
 #include "mrc/manifold/manifold.hpp"
 
 #include "mrc/edge/edge_builder.hpp"
+#include "mrc/runnable/launch_control.hpp"
 #include "mrc/segment/utils.hpp"
 #include "mrc/types.hpp"
 

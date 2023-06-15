@@ -8,15 +8,14 @@ import { Ack, EventType, RegisterWorkersRequest, RegisterWorkersResponse } from 
 
 import { MrcTestClient } from "@mrc/client/client";
 import { ConnectionManager } from "@mrc/client/connection_manager";
+import { ResourceActualStatus } from "@mrc/proto/mrc/protos/architect_state";
 
 export class WorkersManager {
-   private _client: MrcTestClient;
    private _registerResponse: RegisterWorkersResponse | undefined;
    private _isCreated = false;
+   private _isRunning = false;
 
-   constructor(public readonly connectionManager: ConnectionManager, public addresses: string[]) {
-      this._client = connectionManager.client;
-   }
+   constructor(public readonly connectionManager: ConnectionManager, public addresses: string[]) {}
 
    public static create(workerAddresses: string[], client?: MrcTestClient): WorkersManager {
       if (!client) {
@@ -38,6 +37,10 @@ export class WorkersManager {
 
    get isCreated() {
       return this._isCreated;
+   }
+
+   get isRunning() {
+      return this._isRunning;
    }
 
    get machineId() {
@@ -74,12 +77,36 @@ export class WorkersManager {
 
       const registerResponse = await this.ensureRegistered();
 
-      await WorkersManager.sendActivateWorkersRequest(this.connectionManager, registerResponse);
+      for (const workerId of registerResponse.instanceIds) {
+         await WorkersManager.sendWorkerCreated(this.connectionManager, workerId);
+      }
 
       this._isCreated = true;
    }
 
    public async ensureResourcesCreated() {
+      await this.ensureRegistered();
+
+      if (!this.isCreated) {
+         await this.createResources();
+      }
+   }
+
+   public async runResources() {
+      if (this.isRunning) {
+         throw new Error("Already running");
+      }
+
+      await this.ensureResourcesCreated();
+
+      for (const workerId of this.workerIds) {
+         await WorkersManager.sendWorkerRunning(this.connectionManager, workerId);
+      }
+
+      this._isCreated = true;
+   }
+
+   public async ensureResourcesRunning() {
       await this.ensureRegistered();
 
       if (!this.isCreated) {
@@ -98,23 +125,15 @@ export class WorkersManager {
       return response;
    }
 
-   public static async sendActivateWorkersRequest(
-      connectionManager: ConnectionManager,
-      response: RegisterWorkersResponse
-   ) {
-      await connectionManager.send_request<Ack>(EventType.ClientUnaryActivateStream, response);
+   public static async sendWorkerCreated(connectionManager: ConnectionManager, workerId: string) {
+      await connectionManager.update_resource_status(workerId, "Workers", ResourceActualStatus.Actual_Created);
 
       return true;
    }
 
-   public static async sendRegisterAndActivateWorkersRequest(
-      connectionManager: ConnectionManager,
-      addresses: string[]
-   ) {
-      const response = await WorkersManager.sendRegisterWorkersRequest(connectionManager, addresses);
+   public static async sendWorkerRunning(connectionManager: ConnectionManager, workerId: string) {
+      await connectionManager.update_resource_status(workerId, "Workers", ResourceActualStatus.Actual_Running);
 
-      await WorkersManager.sendActivateWorkersRequest(connectionManager, response);
-
-      return response;
+      return true;
    }
 }

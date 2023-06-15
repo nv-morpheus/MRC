@@ -18,7 +18,7 @@
 #pragma once
 
 #include "internal/remote_descriptor/manager.hpp"
-#include "internal/runtime/segments_manager.hpp"
+#include "internal/runtime/runtime_provider.hpp"
 
 #include "mrc/core/async_service.hpp"
 #include "mrc/runtime/api.hpp"
@@ -50,8 +50,12 @@ namespace mrc::runtime {
 
 class Runtime;
 class PipelinesManager;
+class SegmentsManager;
 
-class PartitionRuntime final : public mrc::runtime::IPartitionRuntime, public AsyncService
+class PartitionRuntime final : public mrc::runtime::IPartitionRuntime,
+                               public AsyncService,
+                               public IInternalRuntime,
+                               public IInternalRuntimeProvider
 {
   public:
     PartitionRuntime(Runtime& system_runtime, size_t partition_id);
@@ -62,21 +66,24 @@ class PartitionRuntime final : public mrc::runtime::IPartitionRuntime, public As
 
     size_t partition_id() const;
 
+    std::size_t gpu_count() const override;
+
     resources::PartitionResources& resources();
 
-    control_plane::Client& control_plane() const;
+    runnable::RunnableResources& runnable() override;
 
-    PipelinesManager& pipelines_manager() const;
+    control_plane::Client& control_plane() const override;
 
-    metrics::Registry& metrics_registry() const;
+    PipelinesManager& pipelines_manager() const override;
+
+    metrics::Registry& metrics_registry() const override;
+
+    IInternalRuntime& runtime() override;
 
     // IPartition -> IRemoteDescriptorManager& is covariant
     remote_descriptor::Manager& remote_descriptor_manager() final;
 
     std::unique_ptr<mrc::codable::ICodableStorage> make_codable_storage() final;
-
-  protected:
-    runnable::RunnableResources& runnable() override;
 
   private:
     void do_service_start(std::stop_token stop_token) final;

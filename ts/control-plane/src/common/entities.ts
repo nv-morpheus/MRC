@@ -24,6 +24,7 @@ import {
 export type IResourceState = Omit<ResourceState, "$type">;
 
 export interface IResourceInstance {
+   id: string;
    state: IResourceState;
 }
 

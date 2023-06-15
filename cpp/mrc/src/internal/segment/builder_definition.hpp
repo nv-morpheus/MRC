@@ -18,6 +18,7 @@
 #pragma once
 
 #include "internal/runtime/partition_runtime.hpp"
+#include "internal/runtime/runtime_provider.hpp"
 
 #include "mrc/segment/builder.hpp"
 #include "mrc/types.hpp"
@@ -56,10 +57,10 @@ struct ObjectProperties;
 namespace mrc::segment {
 class SegmentDefinition;
 
-class BuilderDefinition : public IBuilder
+class BuilderDefinition : public IBuilder, public runtime::InternalRuntimeProvider
 {
   public:
-    BuilderDefinition(runtime::PartitionRuntime& runtime,
+    BuilderDefinition(runtime::IInternalRuntimeProvider& runtime,
                       std::shared_ptr<const SegmentDefinition> definition,
                       SegmentAddress address);
 
@@ -138,9 +139,6 @@ class BuilderDefinition : public IBuilder
 
     void ns_push(std::shared_ptr<mrc::modules::SegmentModule> smodule);
     void ns_pop();
-
-    // Resource info
-    runtime::PartitionRuntime& m_runtime;
 
     // definition
     std::shared_ptr<const SegmentDefinition> m_definition;

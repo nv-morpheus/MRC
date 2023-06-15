@@ -19,11 +19,15 @@
 
 #include "internal/control_plane/state/root_state.hpp"
 #include "internal/remote_descriptor/manager.hpp"
+#include "internal/runtime/runtime_provider.hpp"
 #include "internal/service.hpp"
 
 #include "mrc/core/async_service.hpp"
+#include "mrc/protos/architect_state.pb.h"
 #include "mrc/runnable/runner.hpp"
 #include "mrc/types.hpp"
+
+#include <glog/logging.h>
 
 #include <cstddef>
 #include <map>
@@ -47,10 +51,10 @@ class SegmentDefinition;
 class BuilderDefinition;
 
 // todo(ryan) - inherit from service
-class SegmentInstance final : public AsyncService, public runnable::RunnableResourcesProvider
+class SegmentInstance final : public AsyncService, public runtime::InternalRuntimeProvider
 {
   public:
-    SegmentInstance(runtime::PartitionRuntime& runtime,
+    SegmentInstance(runtime::IInternalRuntimeProvider& runtime,
                     std::shared_ptr<const SegmentDefinition> definition,
                     SegmentAddress instance_id,
                     uint64_t pipeline_instance_id);
@@ -79,6 +83,8 @@ class SegmentInstance final : public AsyncService, public runnable::RunnableReso
 
     void callback_on_state_change(const std::string& name, const mrc::runnable::Runner::State& new_state);
 
+    bool set_local_status(control_plane::state::ResourceActualStatus status);
+
     std::shared_ptr<const SegmentDefinition> m_definition;
     SegmentAddress m_instance_id;
     uint64_t m_pipeline_instance_id;
@@ -88,9 +94,8 @@ class SegmentInstance final : public AsyncService, public runnable::RunnableReso
     std::string m_info;
 
     std::unique_ptr<BuilderDefinition> m_builder;
-    runtime::PartitionRuntime& m_runtime;
 
-    control_plane::state::ResourceStatus m_local_status{control_plane::state::ResourceStatus::Registered};
+    control_plane::state::ResourceActualStatus m_local_status{control_plane::state::ResourceActualStatus::Unknown};
 
     std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_runners;
     // std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_egress_runners;

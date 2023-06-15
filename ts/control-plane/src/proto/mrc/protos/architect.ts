@@ -28,7 +28,6 @@ export enum EventType {
   ClientEventStreamConnected = "ClientEventStreamConnected",
   /** ClientUnaryRegisterWorkers - Connection Management */
   ClientUnaryRegisterWorkers = "ClientUnaryRegisterWorkers",
-  ClientUnaryActivateStream = "ClientUnaryActivateStream",
   ClientUnaryLookupWorkerAddresses = "ClientUnaryLookupWorkerAddresses",
   ClientUnaryDropWorker = "ClientUnaryDropWorker",
   /** ClientUnaryCreateSubscriptionService - SubscriptionService */
@@ -37,8 +36,9 @@ export enum EventType {
   ClientUnaryActivateSubscriptionService = "ClientUnaryActivateSubscriptionService",
   ClientUnaryDropSubscriptionService = "ClientUnaryDropSubscriptionService",
   ClientEventUpdateSubscriptionService = "ClientEventUpdateSubscriptionService",
-  /** ClientUnaryRequestPipelineAssignment - Pipeline Management */
-  ClientUnaryRequestPipelineAssignment = "ClientUnaryRequestPipelineAssignment",
+  /** ClientUnaryPipelineRegisterConfig - Pipeline Management */
+  ClientUnaryPipelineRegisterConfig = "ClientUnaryPipelineRegisterConfig",
+  ClientUnaryPipelineAddMapping = "ClientUnaryPipelineAddMapping",
   /** ClientUnaryResourceUpdateStatus - Resource Management */
   ClientUnaryResourceUpdateStatus = "ClientUnaryResourceUpdateStatus",
   ClientUnaryResourceIncrementRef = "ClientUnaryResourceIncrementRef",
@@ -72,9 +72,6 @@ export function eventTypeFromJSON(object: any): EventType {
     case 201:
     case "ClientUnaryRegisterWorkers":
       return EventType.ClientUnaryRegisterWorkers;
-    case 202:
-    case "ClientUnaryActivateStream":
-      return EventType.ClientUnaryActivateStream;
     case 203:
     case "ClientUnaryLookupWorkerAddresses":
       return EventType.ClientUnaryLookupWorkerAddresses;
@@ -97,8 +94,11 @@ export function eventTypeFromJSON(object: any): EventType {
     case "ClientEventUpdateSubscriptionService":
       return EventType.ClientEventUpdateSubscriptionService;
     case 401:
-    case "ClientUnaryRequestPipelineAssignment":
-      return EventType.ClientUnaryRequestPipelineAssignment;
+    case "ClientUnaryPipelineRegisterConfig":
+      return EventType.ClientUnaryPipelineRegisterConfig;
+    case 402:
+    case "ClientUnaryPipelineAddMapping":
+      return EventType.ClientUnaryPipelineAddMapping;
     case 501:
     case "ClientUnaryResourceUpdateStatus":
       return EventType.ClientUnaryResourceUpdateStatus;
@@ -137,8 +137,6 @@ export function eventTypeToJSON(object: EventType): string {
       return "ClientEventStreamConnected";
     case EventType.ClientUnaryRegisterWorkers:
       return "ClientUnaryRegisterWorkers";
-    case EventType.ClientUnaryActivateStream:
-      return "ClientUnaryActivateStream";
     case EventType.ClientUnaryLookupWorkerAddresses:
       return "ClientUnaryLookupWorkerAddresses";
     case EventType.ClientUnaryDropWorker:
@@ -153,8 +151,10 @@ export function eventTypeToJSON(object: EventType): string {
       return "ClientUnaryDropSubscriptionService";
     case EventType.ClientEventUpdateSubscriptionService:
       return "ClientEventUpdateSubscriptionService";
-    case EventType.ClientUnaryRequestPipelineAssignment:
-      return "ClientUnaryRequestPipelineAssignment";
+    case EventType.ClientUnaryPipelineRegisterConfig:
+      return "ClientUnaryPipelineRegisterConfig";
+    case EventType.ClientUnaryPipelineAddMapping:
+      return "ClientUnaryPipelineAddMapping";
     case EventType.ClientUnaryResourceUpdateStatus:
       return "ClientUnaryResourceUpdateStatus";
     case EventType.ClientUnaryResourceIncrementRef:
@@ -187,8 +187,6 @@ export function eventTypeToNumber(object: EventType): number {
       return 101;
     case EventType.ClientUnaryRegisterWorkers:
       return 201;
-    case EventType.ClientUnaryActivateStream:
-      return 202;
     case EventType.ClientUnaryLookupWorkerAddresses:
       return 203;
     case EventType.ClientUnaryDropWorker:
@@ -203,8 +201,10 @@ export function eventTypeToNumber(object: EventType): number {
       return 304;
     case EventType.ClientEventUpdateSubscriptionService:
       return 305;
-    case EventType.ClientUnaryRequestPipelineAssignment:
+    case EventType.ClientUnaryPipelineRegisterConfig:
       return 401;
+    case EventType.ClientUnaryPipelineAddMapping:
+      return 402;
     case EventType.ClientUnaryResourceUpdateStatus:
       return 501;
     case EventType.ClientUnaryResourceIncrementRef:
@@ -432,24 +432,24 @@ export interface TaggedInstance {
   tag: string;
 }
 
-export interface PipelineRequestAssignmentRequest {
-  $type: "mrc.protos.PipelineRequestAssignmentRequest";
+export interface PipelineRegisterConfigRequest {
+  $type: "mrc.protos.PipelineRegisterConfigRequest";
   /** The pipeline definition object */
-  pipeline:
-    | PipelineConfiguration
-    | undefined;
-  /** The mapping of segment definitions to assigned workers */
-  mapping: PipelineMapping | undefined;
+  config: PipelineConfiguration | undefined;
 }
 
-export interface PipelineRequestAssignmentResponse {
-  $type: "mrc.protos.PipelineRequestAssignmentResponse";
+export interface PipelineRegisterConfigResponse {
+  $type: "mrc.protos.PipelineRegisterConfigResponse";
   /** The pipeline definition that was added (since its generated) */
   pipelineDefinitionId: string;
-  /** The pipeline instance that was added */
-  pipelineInstanceId: string;
-  /** The segment instance that was added */
-  segmentInstanceIds: string[];
+}
+
+export interface PipelineAddMappingRequest {
+  $type: "mrc.protos.PipelineAddMappingRequest";
+  /** The pipeline definition that this belongs to */
+  definitionId: string;
+  /** The mapping of segment definitions to assigned workers */
+  mapping: PipelineMapping | undefined;
 }
 
 /** message sent by an UpdateManager */
@@ -2314,16 +2314,135 @@ export const TaggedInstance = {
 
 messageTypeRegistry.set(TaggedInstance.$type, TaggedInstance);
 
-function createBasePipelineRequestAssignmentRequest(): PipelineRequestAssignmentRequest {
-  return { $type: "mrc.protos.PipelineRequestAssignmentRequest", pipeline: undefined, mapping: undefined };
+function createBasePipelineRegisterConfigRequest(): PipelineRegisterConfigRequest {
+  return { $type: "mrc.protos.PipelineRegisterConfigRequest", config: undefined };
 }
 
-export const PipelineRequestAssignmentRequest = {
-  $type: "mrc.protos.PipelineRequestAssignmentRequest" as const,
+export const PipelineRegisterConfigRequest = {
+  $type: "mrc.protos.PipelineRegisterConfigRequest" as const,
 
-  encode(message: PipelineRequestAssignmentRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.pipeline !== undefined) {
-      PipelineConfiguration.encode(message.pipeline, writer.uint32(10).fork()).ldelim();
+  encode(message: PipelineRegisterConfigRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.config !== undefined) {
+      PipelineConfiguration.encode(message.config, writer.uint32(10).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): PipelineRegisterConfigRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePipelineRegisterConfigRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.config = PipelineConfiguration.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PipelineRegisterConfigRequest {
+    return {
+      $type: PipelineRegisterConfigRequest.$type,
+      config: isSet(object.config) ? PipelineConfiguration.fromJSON(object.config) : undefined,
+    };
+  },
+
+  toJSON(message: PipelineRegisterConfigRequest): unknown {
+    const obj: any = {};
+    message.config !== undefined &&
+      (obj.config = message.config ? PipelineConfiguration.toJSON(message.config) : undefined);
+    return obj;
+  },
+
+  create(base?: DeepPartial<PipelineRegisterConfigRequest>): PipelineRegisterConfigRequest {
+    return PipelineRegisterConfigRequest.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<PipelineRegisterConfigRequest>): PipelineRegisterConfigRequest {
+    const message = createBasePipelineRegisterConfigRequest();
+    message.config = (object.config !== undefined && object.config !== null)
+      ? PipelineConfiguration.fromPartial(object.config)
+      : undefined;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(PipelineRegisterConfigRequest.$type, PipelineRegisterConfigRequest);
+
+function createBasePipelineRegisterConfigResponse(): PipelineRegisterConfigResponse {
+  return { $type: "mrc.protos.PipelineRegisterConfigResponse", pipelineDefinitionId: "0" };
+}
+
+export const PipelineRegisterConfigResponse = {
+  $type: "mrc.protos.PipelineRegisterConfigResponse" as const,
+
+  encode(message: PipelineRegisterConfigResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.pipelineDefinitionId !== "0") {
+      writer.uint32(8).uint64(message.pipelineDefinitionId);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): PipelineRegisterConfigResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePipelineRegisterConfigResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.pipelineDefinitionId = longToString(reader.uint64() as Long);
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PipelineRegisterConfigResponse {
+    return {
+      $type: PipelineRegisterConfigResponse.$type,
+      pipelineDefinitionId: isSet(object.pipelineDefinitionId) ? String(object.pipelineDefinitionId) : "0",
+    };
+  },
+
+  toJSON(message: PipelineRegisterConfigResponse): unknown {
+    const obj: any = {};
+    message.pipelineDefinitionId !== undefined && (obj.pipelineDefinitionId = message.pipelineDefinitionId);
+    return obj;
+  },
+
+  create(base?: DeepPartial<PipelineRegisterConfigResponse>): PipelineRegisterConfigResponse {
+    return PipelineRegisterConfigResponse.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<PipelineRegisterConfigResponse>): PipelineRegisterConfigResponse {
+    const message = createBasePipelineRegisterConfigResponse();
+    message.pipelineDefinitionId = object.pipelineDefinitionId ?? "0";
+    return message;
+  },
+};
+
+messageTypeRegistry.set(PipelineRegisterConfigResponse.$type, PipelineRegisterConfigResponse);
+
+function createBasePipelineAddMappingRequest(): PipelineAddMappingRequest {
+  return { $type: "mrc.protos.PipelineAddMappingRequest", definitionId: "0", mapping: undefined };
+}
+
+export const PipelineAddMappingRequest = {
+  $type: "mrc.protos.PipelineAddMappingRequest" as const,
+
+  encode(message: PipelineAddMappingRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.definitionId !== "0") {
+      writer.uint32(8).uint64(message.definitionId);
     }
     if (message.mapping !== undefined) {
       PipelineMapping.encode(message.mapping, writer.uint32(18).fork()).ldelim();
@@ -2331,15 +2450,15 @@ export const PipelineRequestAssignmentRequest = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): PipelineRequestAssignmentRequest {
+  decode(input: _m0.Reader | Uint8Array, length?: number): PipelineAddMappingRequest {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBasePipelineRequestAssignmentRequest();
+    const message = createBasePipelineAddMappingRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.pipeline = PipelineConfiguration.decode(reader, reader.uint32());
+          message.definitionId = longToString(reader.uint64() as Long);
           break;
         case 2:
           message.mapping = PipelineMapping.decode(reader, reader.uint32());
@@ -2352,32 +2471,29 @@ export const PipelineRequestAssignmentRequest = {
     return message;
   },
 
-  fromJSON(object: any): PipelineRequestAssignmentRequest {
+  fromJSON(object: any): PipelineAddMappingRequest {
     return {
-      $type: PipelineRequestAssignmentRequest.$type,
-      pipeline: isSet(object.pipeline) ? PipelineConfiguration.fromJSON(object.pipeline) : undefined,
+      $type: PipelineAddMappingRequest.$type,
+      definitionId: isSet(object.definitionId) ? String(object.definitionId) : "0",
       mapping: isSet(object.mapping) ? PipelineMapping.fromJSON(object.mapping) : undefined,
     };
   },
 
-  toJSON(message: PipelineRequestAssignmentRequest): unknown {
+  toJSON(message: PipelineAddMappingRequest): unknown {
     const obj: any = {};
-    message.pipeline !== undefined &&
-      (obj.pipeline = message.pipeline ? PipelineConfiguration.toJSON(message.pipeline) : undefined);
+    message.definitionId !== undefined && (obj.definitionId = message.definitionId);
     message.mapping !== undefined &&
       (obj.mapping = message.mapping ? PipelineMapping.toJSON(message.mapping) : undefined);
     return obj;
   },
 
-  create(base?: DeepPartial<PipelineRequestAssignmentRequest>): PipelineRequestAssignmentRequest {
-    return PipelineRequestAssignmentRequest.fromPartial(base ?? {});
+  create(base?: DeepPartial<PipelineAddMappingRequest>): PipelineAddMappingRequest {
+    return PipelineAddMappingRequest.fromPartial(base ?? {});
   },
 
-  fromPartial(object: DeepPartial<PipelineRequestAssignmentRequest>): PipelineRequestAssignmentRequest {
-    const message = createBasePipelineRequestAssignmentRequest();
-    message.pipeline = (object.pipeline !== undefined && object.pipeline !== null)
-      ? PipelineConfiguration.fromPartial(object.pipeline)
-      : undefined;
+  fromPartial(object: DeepPartial<PipelineAddMappingRequest>): PipelineAddMappingRequest {
+    const message = createBasePipelineAddMappingRequest();
+    message.definitionId = object.definitionId ?? "0";
     message.mapping = (object.mapping !== undefined && object.mapping !== null)
       ? PipelineMapping.fromPartial(object.mapping)
       : undefined;
@@ -2385,103 +2501,7 @@ export const PipelineRequestAssignmentRequest = {
   },
 };
 
-messageTypeRegistry.set(PipelineRequestAssignmentRequest.$type, PipelineRequestAssignmentRequest);
-
-function createBasePipelineRequestAssignmentResponse(): PipelineRequestAssignmentResponse {
-  return {
-    $type: "mrc.protos.PipelineRequestAssignmentResponse",
-    pipelineDefinitionId: "0",
-    pipelineInstanceId: "0",
-    segmentInstanceIds: [],
-  };
-}
-
-export const PipelineRequestAssignmentResponse = {
-  $type: "mrc.protos.PipelineRequestAssignmentResponse" as const,
-
-  encode(message: PipelineRequestAssignmentResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.pipelineDefinitionId !== "0") {
-      writer.uint32(8).uint64(message.pipelineDefinitionId);
-    }
-    if (message.pipelineInstanceId !== "0") {
-      writer.uint32(16).uint64(message.pipelineInstanceId);
-    }
-    writer.uint32(26).fork();
-    for (const v of message.segmentInstanceIds) {
-      writer.uint64(v);
-    }
-    writer.ldelim();
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): PipelineRequestAssignmentResponse {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBasePipelineRequestAssignmentResponse();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          message.pipelineDefinitionId = longToString(reader.uint64() as Long);
-          break;
-        case 2:
-          message.pipelineInstanceId = longToString(reader.uint64() as Long);
-          break;
-        case 3:
-          if ((tag & 7) === 2) {
-            const end2 = reader.uint32() + reader.pos;
-            while (reader.pos < end2) {
-              message.segmentInstanceIds.push(longToString(reader.uint64() as Long));
-            }
-          } else {
-            message.segmentInstanceIds.push(longToString(reader.uint64() as Long));
-          }
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-    return message;
-  },
-
-  fromJSON(object: any): PipelineRequestAssignmentResponse {
-    return {
-      $type: PipelineRequestAssignmentResponse.$type,
-      pipelineDefinitionId: isSet(object.pipelineDefinitionId) ? String(object.pipelineDefinitionId) : "0",
-      pipelineInstanceId: isSet(object.pipelineInstanceId) ? String(object.pipelineInstanceId) : "0",
-      segmentInstanceIds: Array.isArray(object?.segmentInstanceIds)
-        ? object.segmentInstanceIds.map((e: any) => String(e))
-        : [],
-    };
-  },
-
-  toJSON(message: PipelineRequestAssignmentResponse): unknown {
-    const obj: any = {};
-    message.pipelineDefinitionId !== undefined && (obj.pipelineDefinitionId = message.pipelineDefinitionId);
-    message.pipelineInstanceId !== undefined && (obj.pipelineInstanceId = message.pipelineInstanceId);
-    if (message.segmentInstanceIds) {
-      obj.segmentInstanceIds = message.segmentInstanceIds.map((e) => e);
-    } else {
-      obj.segmentInstanceIds = [];
-    }
-    return obj;
-  },
-
-  create(base?: DeepPartial<PipelineRequestAssignmentResponse>): PipelineRequestAssignmentResponse {
-    return PipelineRequestAssignmentResponse.fromPartial(base ?? {});
-  },
-
-  fromPartial(object: DeepPartial<PipelineRequestAssignmentResponse>): PipelineRequestAssignmentResponse {
-    const message = createBasePipelineRequestAssignmentResponse();
-    message.pipelineDefinitionId = object.pipelineDefinitionId ?? "0";
-    message.pipelineInstanceId = object.pipelineInstanceId ?? "0";
-    message.segmentInstanceIds = object.segmentInstanceIds?.map((e) => e) || [];
-    return message;
-  },
-};
-
-messageTypeRegistry.set(PipelineRequestAssignmentResponse.$type, PipelineRequestAssignmentResponse);
+messageTypeRegistry.set(PipelineAddMappingRequest.$type, PipelineAddMappingRequest);
 
 function createBaseStateUpdate(): StateUpdate {
   return {

@@ -26,6 +26,7 @@
 
 #include <glog/logging.h>
 
+#include <cstdlib>
 #include <utility>  // for move
 
 namespace mrc {

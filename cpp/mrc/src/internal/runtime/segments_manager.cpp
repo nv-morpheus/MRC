@@ -21,6 +21,7 @@
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/pipelines_manager.hpp"
+#include "internal/runtime/resource_manager_base.hpp"
 #include "internal/segment/segment_definition.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/ucx/worker.hpp"
@@ -29,6 +30,7 @@
 #include "mrc/core/addresses.hpp"
 #include "mrc/core/async_service.hpp"
 #include "mrc/protos/architect.pb.h"
+#include "mrc/protos/architect_state.pb.h"
 #include "mrc/types.hpp"
 #include "mrc/utils/string_utils.hpp"
 
@@ -40,80 +42,79 @@
 
 namespace mrc::runtime {
 
-SegmentsManager::SegmentsManager(PartitionRuntime& runtime) :
-  AsyncService(MRC_CONCAT_STR("SegmentsManager[" << runtime.partition_id() << "]")),
-  runnable::RunnableResourcesProvider(runtime.resources().runnable()),
-  m_runtime(runtime),
-  m_partition_id(runtime.partition_id())
+SegmentsManager::SegmentsManager(PartitionRuntime& runtime, InstanceID worker_id) :
+  ResourceManagerBase(runtime, worker_id, MRC_CONCAT_STR("SegmentsManager[" << runtime.partition_id() << "]")),
+  m_partition_id(runtime.partition_id()),
+  m_worker_id(worker_id)
 {}
 
 SegmentsManager::~SegmentsManager() = default;
 
-void SegmentsManager::do_service_start(std::stop_token stop_token)
-{
-    // First thing, need to register this worker with the control plane
-    protos::RegisterWorkersRequest req;
+// void SegmentsManager::do_service_start(std::stop_token stop_token)
+// {
+//     // First thing, need to register this worker with the control plane
+//     protos::RegisterWorkersRequest req;
 
-    req.add_ucx_worker_addresses(m_runtime.resources().ucx()->worker().address());
+//     req.add_ucx_worker_addresses(m_runtime.resources().ucx()->worker().address());
 
-    auto resp = m_runtime.control_plane().await_unary<protos::RegisterWorkersResponse>(
-        protos::ClientUnaryRegisterWorkers,
-        std::move(req));
+//     auto resp = m_runtime.control_plane().await_unary<protos::RegisterWorkersResponse>(
+//         protos::ClientUnaryRegisterWorkers,
+//         std::move(req));
 
-    CHECK_EQ(resp->instance_ids_size(), 1);
+//     CHECK_EQ(resp->instance_ids_size(), 1);
 
-    m_worker_id = resp->instance_ids(0);
+//     m_worker_id = resp->instance_ids(0);
 
-    Promise<void> completed_promise;
+//     Promise<void> completed_promise;
 
-    // Now, subscribe to the control plane state updates and filter only on updates to this instance ID
-    m_runtime.control_plane()
-        .state_update_obs()
-        .tap([](const control_plane::state::ControlPlaneState& state) {
-            VLOG(10) << "State Update: SegmentsManager";
-        })
-        .filter([this](const control_plane::state::ControlPlaneState& state) {
-            return state.workers().contains(m_worker_id);
-        })
-        .map([this](control_plane::state::ControlPlaneState state) -> control_plane::state::Worker {
-            return state.workers().at(m_worker_id);
-        })
-        .take_while([stop_token](control_plane::state::Worker& worker) {
-            // Process events until the worker is indicated to be destroyed
-            return worker.state().status() < control_plane::state::ResourceStatus::Destroyed &&
-                   !stop_token.stop_requested();
-        })
-        // .distinct_until_changed([](const control_plane::state::Worker& curr, const control_plane::state::Worker&
-        // prev) {
-        //     return curr == prev;
-        // })
-        .subscribe(
-            [this](control_plane::state::Worker worker) {
-                // Handle updates to the worker
-                this->process_state_update(worker);
-            },
-            [this](std::exception_ptr ex_ptr) {
-                try
-                {
-                    std::rethrow_exception(ex_ptr);
-                } catch (std::exception ex)
-                {
-                    LOG(ERROR) << "Error in " << this->debug_prefix() << ex.what();
-                }
-            },
-            [&completed_promise] {
-                completed_promise.set_value();
-            });
+//     // Now, subscribe to the control plane state updates and filter only on updates to this instance ID
+//     m_runtime.control_plane()
+//         .state_update_obs()
+//         .tap([](const control_plane::state::ControlPlaneState& state) {
+//             VLOG(10) << "State Update: SegmentsManager";
+//         })
+//         .filter([this](const control_plane::state::ControlPlaneState& state) {
+//             return state.workers().contains(m_worker_id);
+//         })
+//         .map([this](control_plane::state::ControlPlaneState state) -> control_plane::state::Worker {
+//             return state.workers().at(m_worker_id);
+//         })
+//         .take_while([stop_token](control_plane::state::Worker& worker) {
+//             // Process events until the worker is indicated to be destroyed
+//             return worker.state().actual_status() < control_plane::state::ResourceActualStatus::Destroyed &&
+//                    !stop_token.stop_requested();
+//         })
+//         // .distinct_until_changed([](const control_plane::state::Worker& curr, const control_plane::state::Worker&
+//         // prev) {
+//         //     return curr == prev;
+//         // })
+//         .subscribe(
+//             [this](control_plane::state::Worker worker) {
+//                 // Handle updates to the worker
+//                 this->process_state_update(worker);
+//             },
+//             [this](std::exception_ptr ex_ptr) {
+//                 try
+//                 {
+//                     std::rethrow_exception(ex_ptr);
+//                 } catch (const std::exception& ex)
+//                 {
+//                     LOG(ERROR) << "Error in " << this->debug_prefix() << ex.what();
+//                 }
+//             },
+//             [&completed_promise] {
+//                 completed_promise.set_value();
+//             });
 
-    // Yield until the observable is finished
-    completed_promise.get_future().get();
+//     // Yield until the observable is finished
+//     completed_promise.get_future().get();
 
-    // Now that we are unsubscribed, drop the worker
-    protos::TaggedInstance msg;
-    msg.set_instance_id(m_worker_id);
+//     // Now that we are unsubscribed, drop the worker
+//     protos::TaggedInstance msg;
+//     msg.set_instance_id(m_worker_id);
 
-    CHECK(m_runtime.control_plane().await_unary<protos::Ack>(protos::ClientUnaryDropWorker, std::move(msg)));
-}
+//     CHECK(m_runtime.control_plane().await_unary<protos::Ack>(protos::ClientUnaryDropWorker, std::move(msg)));
+// }
 
 // void SegmentsManager::do_service_stop() {}
 
@@ -129,73 +130,141 @@ void SegmentsManager::do_service_start(std::stop_token stop_token)
 //     m_shutdown_future.get();
 // }
 
-void SegmentsManager::process_state_update(mrc::control_plane::state::Worker& worker)
+void SegmentsManager::on_created_requested(control_plane::state::Worker& instance) {}
+
+void SegmentsManager::on_completed_requested(control_plane::state::Worker& instance)
 {
-    auto status = worker.state().status();
+    // // Activate our worker
+    // protos::RegisterWorkersResponse resp;
+    // resp.set_machine_id(0);
+    // resp.add_instance_ids(m_worker_id);
 
-    if (status == control_plane::state::ResourceStatus::Registered)
+    // // Need to activate our worker
+    // this->runtime().control_plane().await_unary<protos::Ack>(protos::ClientUnaryActivateStream, std::move(resp));
+}
+
+void SegmentsManager::on_running_state_updated(control_plane::state::Worker& instance)
+{
+    // Check for assignments
+    auto cur_segments = extract_keys(m_instances);
+    auto new_segments = extract_keys(instance.assigned_segments());
+
+    // auto [create_segments, remove_segments] = compare_difference(cur_segments, new_segments);
+
+    // set of segments to remove
+    std::set<SegmentAddress> create_segments;
+    std::set_difference(new_segments.begin(),
+                        new_segments.end(),
+                        cur_segments.begin(),
+                        cur_segments.end(),
+                        std::inserter(create_segments, create_segments.end()));
+    DVLOG(10) << create_segments.size() << " segments will be created";
+
+    // set of segments to remove
+    std::set<SegmentAddress> remove_segments;
+    std::set_difference(cur_segments.begin(),
+                        cur_segments.end(),
+                        new_segments.begin(),
+                        new_segments.end(),
+                        std::inserter(remove_segments, remove_segments.end()));
+    DVLOG(10) << remove_segments.size() << " segments marked for removal";
+
+    // construct new segments and attach to manifold
+    for (const auto& address : create_segments)
     {
-        protos::RegisterWorkersResponse resp;
-        resp.set_machine_id(0);
-        resp.add_instance_ids(m_worker_id);
-
-        // Need to activate our worker
-        m_runtime.control_plane().await_unary<protos::Ack>(protos::ClientUnaryActivateStream, std::move(resp));
-
-        // Indicate this is now live
-        this->mark_started();
+        // auto partition_id = new_segments_map.at(address);
+        // DVLOG(10) << info() << ": create segment for address " << ::mrc::segment::info(address)
+        //           << " on resource partition: " << partition_id;
+        this->create_segment(instance.assigned_segments().at(address));
     }
-    else if (status == control_plane::state::ResourceStatus::Activated)
+
+    // detach from manifold or stop old segments
+    for (const auto& address : remove_segments)
     {
-        // Check for assignments
-        auto cur_segments = extract_keys(m_instances);
-        auto new_segments = extract_keys(worker.assigned_segments());
-
-        // auto [create_segments, remove_segments] = compare_difference(cur_segments, new_segments);
-
-        // set of segments to remove
-        std::set<SegmentAddress> create_segments;
-        std::set_difference(new_segments.begin(),
-                            new_segments.end(),
-                            cur_segments.begin(),
-                            cur_segments.end(),
-                            std::inserter(create_segments, create_segments.end()));
-        DVLOG(10) << create_segments.size() << " segments will be created";
-
-        // set of segments to remove
-        std::set<SegmentAddress> remove_segments;
-        std::set_difference(cur_segments.begin(),
-                            cur_segments.end(),
-                            new_segments.begin(),
-                            new_segments.end(),
-                            std::inserter(remove_segments, remove_segments.end()));
-        DVLOG(10) << remove_segments.size() << " segments marked for removal";
-
-        // construct new segments and attach to manifold
-        for (const auto& address : create_segments)
-        {
-            // auto partition_id = new_segments_map.at(address);
-            // DVLOG(10) << info() << ": create segment for address " << ::mrc::segment::info(address)
-            //           << " on resource partition: " << partition_id;
-            this->create_segment(worker.assigned_segments().at(address));
-        }
-
-        // detach from manifold or stop old segments
-        for (const auto& address : remove_segments)
-        {
-            // DVLOG(10) << info() << ": stop segment for address " << ::mrc::segment::info(address);
-            this->erase_segment(address);
-        }
-    }
-    else if (status == control_plane::state::ResourceStatus::Deactivated)
-    {
-        // Handle deactivation
-    }
-    else
-    {
-        CHECK(false) << "Unknown worker state: " << static_cast<int>(status);
+        // DVLOG(10) << info() << ": stop segment for address " << ::mrc::segment::info(address);
+        this->erase_segment(address);
     }
 }
+
+void SegmentsManager::on_stopped_requested(control_plane::state::Worker& instance)
+{
+    this->service_stop();
+}
+
+// void SegmentsManager::process_state_update(mrc::control_plane::state::Worker& instance)
+// {
+//     switch (worker.state().requested_status())
+//     {
+//     case control_plane::state::ResourceRequestedStatus::Initialized:
+//     case control_plane::state::ResourceRequestedStatus::Created: {
+//         // Activate our worker
+//         protos::RegisterWorkersResponse resp;
+//         resp.set_machine_id(0);
+//         resp.add_instance_ids(m_worker_id);
+
+//         // Need to activate our worker
+//         m_runtime.control_plane().await_unary<protos::Ack>(protos::ClientUnaryActivateStream, std::move(resp));
+
+//         // Indicate this is now live
+//         this->mark_started();
+//         break;
+//     }
+//     case control_plane::state::ResourceRequestedStatus::Completed: {
+//         // Check for assignments
+//         auto cur_segments = extract_keys(m_instances);
+//         auto new_segments = extract_keys(worker.assigned_segments());
+
+//         // auto [create_segments, remove_segments] = compare_difference(cur_segments, new_segments);
+
+//         // set of segments to remove
+//         std::set<SegmentAddress> create_segments;
+//         std::set_difference(new_segments.begin(),
+//                             new_segments.end(),
+//                             cur_segments.begin(),
+//                             cur_segments.end(),
+//                             std::inserter(create_segments, create_segments.end()));
+//         DVLOG(10) << create_segments.size() << " segments will be created";
+
+//         // set of segments to remove
+//         std::set<SegmentAddress> remove_segments;
+//         std::set_difference(cur_segments.begin(),
+//                             cur_segments.end(),
+//                             new_segments.begin(),
+//                             new_segments.end(),
+//                             std::inserter(remove_segments, remove_segments.end()));
+//         DVLOG(10) << remove_segments.size() << " segments marked for removal";
+
+//         // construct new segments and attach to manifold
+//         for (const auto& address : create_segments)
+//         {
+//             // auto partition_id = new_segments_map.at(address);
+//             // DVLOG(10) << info() << ": create segment for address " << ::mrc::segment::info(address)
+//             //           << " on resource partition: " << partition_id;
+//             this->create_segment(worker.assigned_segments().at(address));
+//         }
+
+//         // detach from manifold or stop old segments
+//         for (const auto& address : remove_segments)
+//         {
+//             // DVLOG(10) << info() << ": stop segment for address " << ::mrc::segment::info(address);
+//             this->erase_segment(address);
+//         }
+
+//         break;
+//     }
+//     case control_plane::state::ResourceRequestedStatus::Stopped: {
+//         break;
+//     }
+//     case control_plane::state::ResourceRequestedStatus::Destroyed: {
+//         break;
+//     }
+//     case control_plane::state::ResourceRequestedStatus::Unknown:
+//     default: {
+//         CHECK(false) << "Unknown worker state: " << static_cast<int>(worker.state().requested_status());
+//     }
+//     }
+// }
+
 void SegmentsManager::create_segment(const mrc::control_plane::state::SegmentInstance& instance_state)
 {
     // First, double check if this still needs to be created by trying to activate it
@@ -203,9 +272,9 @@ void SegmentsManager::create_segment(const mrc::control_plane::state::SegmentIns
 
     request.set_resource_type("SegmentInstances");
     request.set_resource_id(instance_state.address());
-    request.set_status(protos::ResourceStatus::Activated);
+    request.set_status(protos::ResourceActualStatus::Actual_Creating);
 
-    auto response = m_runtime.control_plane().await_unary<protos::ResourceUpdateStatusResponse>(
+    auto response = this->runtime().control_plane().await_unary<protos::ResourceUpdateStatusResponse>(
         protos::EventType::ClientUnaryResourceUpdateStatus,
         request);
 
@@ -217,14 +286,14 @@ void SegmentsManager::create_segment(const mrc::control_plane::state::SegmentIns
     }
 
     // Get a reference to the pipeline we are creating the segment in
-    auto& pipeline_def = m_runtime.pipelines_manager().get_definition(instance_state.pipeline_definition().id());
+    auto& pipeline_def = this->runtime().pipelines_manager().get_definition(instance_state.pipeline_definition().id());
 
     auto [id, rank] = segment_address_decode(instance_state.address());
     auto definition = pipeline_def.find_segment(id);
 
     auto [added_iterator, did_add] = m_instances.emplace(
         instance_state.address(),
-        std::make_unique<segment::SegmentInstance>(m_runtime,
+        std::make_unique<segment::SegmentInstance>(*this,
                                                    definition,
                                                    instance_state.address(),
                                                    instance_state.pipeline_instance().id()));

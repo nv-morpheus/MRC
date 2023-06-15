@@ -28,17 +28,38 @@
 
 namespace mrc::pipeline {
 
-ManifoldInstance::ManifoldInstance(runtime::Runtime& runtime,
+ManifoldInstance::ManifoldInstance(runtime::IInternalRuntimeProvider& runtime,
                                    std::shared_ptr<const ManifoldDefinition> definition,
                                    uint64_t instance_id) :
   AsyncService(MRC_CONCAT_STR("Manifold[" << definition->name() << "]")),
-  runnable::RunnableResourcesProvider(runtime),
-  m_runtime(runtime),
+  runtime::InternalRuntimeProvider(runtime),
   m_definition(std::move(definition)),
   m_instance_id(instance_id)
 {}
 
 ManifoldInstance::~ManifoldInstance() = default;
+
+void ManifoldInstance::register_local_ingress(SegmentAddress address,
+                                              std::shared_ptr<segment::IngressPortBase> ingress_port)
+{
+    throw std::runtime_error("Not implemented");
+}
+
+void ManifoldInstance::register_local_egress(SegmentAddress address,
+                                             std::shared_ptr<segment::EgressPortBase> egress_port)
+{
+    throw std::runtime_error("Not implemented");
+}
+
+void ManifoldInstance::unregister_local_ingress(SegmentAddress address)
+{
+    throw std::runtime_error("Not implemented");
+}
+
+void ManifoldInstance::unregister_local_egress(SegmentAddress address)
+{
+    throw std::runtime_error("Not implemented");
+}
 
 std::shared_ptr<manifold::Interface> ManifoldInstance::get_interface() const
 {
@@ -49,7 +70,7 @@ std::shared_ptr<manifold::Interface> ManifoldInstance::get_interface() const
 
 void ManifoldInstance::do_service_start(std::stop_token stop_token)
 {
-    m_interface = m_definition->build(m_runtime.resources().runnable());
+    m_interface = m_definition->build(this->runnable());
 
     m_interface->start();
 

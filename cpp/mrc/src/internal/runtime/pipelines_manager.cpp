@@ -47,10 +47,11 @@ void PipelinesManager::register_defs(std::vector<std::shared_ptr<pipeline::Pipel
     // Now loop over all and register with the control plane
     for (const auto& pipeline : pipeline_defs)
     {
-        auto request = protos::PipelineRequestAssignmentRequest();
+        protos::PipelineRegisterConfigRequest request;
+        protos::PipelineAddMappingRequest mapping_request;
 
-        auto* config  = request.mutable_pipeline();
-        auto* mapping = request.mutable_mapping();
+        auto* config  = request.mutable_config();
+        auto* mapping = mapping_request.mutable_mapping();
 
         for (const auto& [segment_id, segment] : pipeline->segments())
         {
@@ -58,16 +59,42 @@ void PipelinesManager::register_defs(std::vector<std::shared_ptr<pipeline::Pipel
 
             seg_config.set_name(segment->name());
 
-            for (const auto& egress_port_name : segment->egress_port_names())
+            for (const auto& [egress_port_name, egress_port_info] : segment->egress_port_infos())
             {
-                auto* egress = seg_config.mutable_egress_ports()->Add();
-                egress->set_name(egress_port_name);
+                // Add it to the list of ports
+                (*seg_config.mutable_egress_ports()->Add()) = egress_port_name;
+
+                // See if this manifold has been created already
+                if (!config->manifolds().contains(egress_port_name))
+                {
+                    // Add the manifold
+                    protos::PipelineConfiguration_ManifoldConfiguration manifold;
+
+                    manifold.set_name(egress_port_name);
+                    manifold.set_type_id(egress_port_info->type_index.hash_code());
+                    manifold.set_type_string(type_name(egress_port_info->type_index));
+
+                    config->mutable_manifolds()->emplace(egress_port_name, std::move(manifold));
+                }
             }
 
-            for (const auto& ingress_port_name : segment->ingress_port_names())
+            for (const auto& [ingress_port_name, ingress_port_info] : segment->ingress_port_infos())
             {
-                auto* ingress = seg_config.mutable_ingress_ports()->Add();
-                ingress->set_name(ingress_port_name);
+                // Add it to the list of ports
+                (*seg_config.mutable_ingress_ports()->Add()) = ingress_port_name;
+
+                // See if this manifold has been created already
+                if (!config->manifolds().contains(ingress_port_name))
+                {
+                    // Add the manifold
+                    protos::PipelineConfiguration_ManifoldConfiguration manifold;
+
+                    manifold.set_name(ingress_port_name);
+                    manifold.set_type_id(ingress_port_info->type_index.hash_code());
+                    manifold.set_type_string(type_name(ingress_port_info->type_index));
+
+                    config->mutable_manifolds()->emplace(ingress_port_name, std::move(manifold));
+                }
             }
 
             config->mutable_segments()->emplace(segment->name(), std::move(seg_config));
@@ -81,11 +108,17 @@ void PipelinesManager::register_defs(std::vector<std::shared_ptr<pipeline::Pipel
             mapping->mutable_segments()->emplace(segment->name(), std::move(seg_mapping));
         }
 
-        auto response = m_system_runtime.control_plane().await_unary<protos::PipelineRequestAssignmentResponse>(
-            protos::EventType::ClientUnaryRequestPipelineAssignment,
+        auto response = m_system_runtime.control_plane().await_unary<protos::PipelineRegisterConfigResponse>(
+            protos::EventType::ClientUnaryPipelineRegisterConfig,
             request);
 
         m_definitions[response->pipeline_definition_id()] = pipeline;
+
+        mapping_request.set_definition_id(response->pipeline_definition_id());
+
+        // Now add a mapping to create some pipeline instances
+        m_system_runtime.control_plane().await_unary<protos::Ack>(protos::EventType::ClientUnaryPipelineAddMapping,
+                                                                  mapping_request);
     }
 }
 
@@ -124,7 +157,7 @@ void PipelinesManager::do_service_start(std::stop_token stop_token)
                 try
                 {
                     std::rethrow_exception(ex_ptr);
-                } catch (std::exception ex)
+                } catch (const std::exception& ex)
                 {
                     LOG(ERROR) << "Error in " << this->debug_prefix() << ex.what();
                 }
@@ -148,7 +181,7 @@ void PipelinesManager::process_state_update(control_plane::state::ControlPlaneSt
         // TODO(MDD): Need to filter based on our machine ID
 
         // Check to see if this was newly created
-        if (pipe_instance.state().status() == control_plane::state::ResourceStatus::Registered)
+        if (pipe_instance.state().requested_status() == control_plane::state::ResourceRequestedStatus::Created)
         {
             // Get the definition for this instance
             auto def_id = pipe_instance.definition().id();
@@ -162,7 +195,7 @@ void PipelinesManager::process_state_update(control_plane::state::ControlPlaneSt
 
             request.set_resource_type("PipelineInstances");
             request.set_resource_id(pipe_instance_id);
-            request.set_status(protos::ResourceStatus::Activated);
+            request.set_status(protos::ResourceActualStatus::Actual_Creating);
 
             auto response = m_system_runtime.control_plane().await_unary<protos::ResourceUpdateStatusResponse>(
                 protos::EventType::ClientUnaryResourceUpdateStatus,
