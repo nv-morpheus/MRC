@@ -41,7 +41,7 @@ class Role;
 class ClientInstance;
 
 /**
- * @brief A specialize TaggedManager to synchronize tag and instance_id information across between a collection of
+ * @brief A specialized TaggedIssuer to synchronize tag and instance_id information across between a collection of
  * client-side objects with common linkages, e.g. the Publisher/Subscriber services which form the building blocks for
  * Ingress/EgressPorts use instances of SubscriptionService for Publishers to get control plane updates to the list of
  * Subscribers.
