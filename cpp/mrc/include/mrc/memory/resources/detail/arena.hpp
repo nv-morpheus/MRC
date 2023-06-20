@@ -23,7 +23,7 @@
 #include <rmm/detail/error.hpp>
 #include <rmm/logger.hpp>
 #include <spdlog/common.h>
-#include <spdlog/fmt/bundled/ostream.h>
+#include <fmt/ostream.h>
 
 #include <algorithm>
 #include <cstddef>
