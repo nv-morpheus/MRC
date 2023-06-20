@@ -21,11 +21,11 @@
 #include "mrc/utils/bytes_to_string.hpp"
 
 #include <cuda_runtime_api.h>
+#include <fmt/ostream.h>
 #include <glog/logging.h>
 #include <rmm/detail/error.hpp>
 #include <rmm/logger.hpp>
 #include <spdlog/common.h>
-#include <fmt/ostream.h>
 
 #include <cstddef>
 #include <map>

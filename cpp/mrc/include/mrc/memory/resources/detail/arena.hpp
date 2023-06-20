@@ -18,12 +18,12 @@
 #pragma once
 
 #include <cuda_runtime_api.h>
+#include <fmt/ostream.h>
 #include <rmm/cuda_stream_view.hpp>
 #include <rmm/detail/aligned.hpp>
 #include <rmm/detail/error.hpp>
 #include <rmm/logger.hpp>
 #include <spdlog/common.h>
-#include <fmt/ostream.h>
 
 #include <algorithm>
 #include <cstddef>
