@@ -1,17 +1,16 @@
-import {
-   IManifoldInstance,
-   IPipelineInstance,
-   IResourceInstance,
-   ISegmentInstance,
-   IWorker,
-} from "@mrc/common/entities";
-import { sleep } from "@mrc/common/utils";
+import { IResourceInstance, ResourceStateTypeStrings } from "@mrc/common/entities";
+import { sleep, yield_, yield_timeout } from "@mrc/common/utils";
 import {
    ResourceActualStatus,
    ResourceRequestedStatus,
    resourceActualStatusToNumber,
    resourceRequestedStatusToNumber,
 } from "@mrc/proto/mrc/protos/architect_state";
+import {
+   connectionsSelectById,
+   connectionsUpdateResourceActualState,
+   connectionsUpdateResourceRequestedState,
+} from "@mrc/server/store/slices/connectionsSlice";
 import {
    manifoldInstancesSelectById,
    manifoldInstancesUpdateResourceActualState,
@@ -34,9 +33,6 @@ import {
    workersUpdateResourceRequestedState,
 } from "@mrc/server/store/slices/workersSlice";
 import { AppDispatch, AppGetState } from "@mrc/server/store/store";
-
-export type ResourceStateTypes = IWorker | IPipelineInstance | ISegmentInstance | IManifoldInstance;
-export type ResourceStateTypeStrings = "Workers" | "PipelineInstances" | "SegmentInstances" | "ManifoldInstances";
 
 export function resourceUpdateRequestedState(
    resourceType: ResourceStateTypeStrings,
@@ -87,7 +83,11 @@ export function resourceUpdateRequestedState(
             dispatch(systemStartRequest("resourceUpdateRequestedState"));
          }
 
-         if (resourceType === "Workers") {
+         if (resourceType === "Connections") {
+            const found = checkUpdate(connectionsSelectById(state, resourceId));
+
+            dispatch(connectionsUpdateResourceRequestedState({ resource: found, status: status }));
+         } else if (resourceType === "Workers") {
             const found = checkUpdate(workersSelectById(state, resourceId));
 
             dispatch(workersUpdateResourceRequestedState({ resource: found, status: status }));
@@ -107,12 +107,12 @@ export function resourceUpdateRequestedState(
             throw new Error("Unknow resource type");
          }
       } finally {
+         // Finally, we need to yield_ here to allow any listeners to run (Dont use sleep())
+         await yield_("resourceUpdateRequestedState");
+
          if (did_start_request) {
             dispatch(systemStopRequest("resourceUpdateRequestedState"));
          }
-
-         // Finally, we need to await here to allow any listeners to run
-         await sleep(0);
       }
    };
 }
@@ -144,7 +144,7 @@ export function resourceUpdateActualState(
          );
       }
 
-      if (desiredActualStatusNumber > trueRequestedStatusNumber + 1) {
+      if (desiredActualStatusNumber > trueRequestedStatusNumber) {
          throw new Error(
             `${errorPrefix()} Desired actual state Current actual state, ${status}, beyond the allowed value for the current requested state, ${
                instance.state.requestedStatus
@@ -166,7 +166,11 @@ export function resourceUpdateActualState(
             dispatch(systemStartRequest("resourceUpdateActualState"));
          }
 
-         if (resourceType === "Workers") {
+         if (resourceType === "Connections") {
+            const found = checkUpdate(connectionsSelectById(state, resourceId));
+
+            dispatch(connectionsUpdateResourceActualState({ resource: found, status: status }));
+         } else if (resourceType === "Workers") {
             const found = checkUpdate(workersSelectById(state, resourceId));
 
             dispatch(workersUpdateResourceActualState({ resource: found, status: status }));
@@ -186,12 +190,12 @@ export function resourceUpdateActualState(
             throw new Error("Unknow resource type");
          }
       } finally {
+         // Finally, we need to await here to allow any listeners to run. Dont use sleep
+         await yield_timeout("resourceUpdateActualState");
+
          if (did_start_request) {
             dispatch(systemStopRequest("resourceUpdateActualState"));
          }
-
-         // Finally, we need to await here to allow any listeners to run
-         await sleep(0);
       }
    };
 }

@@ -9,6 +9,7 @@ import {
    pipelineDefinitionsSelectAll,
    pipelineDefinitionsSelectById,
    pipelineDefinitionsSelectTotal,
+   pipelineDefinitionsSetMapping,
 } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 import { pipelineInstancesAdd, pipelineInstancesRemove } from "@mrc/server/store/slices/pipelineInstancesSlice";
 import {
@@ -16,7 +17,7 @@ import {
    segmentInstancesRemove,
    segmentInstancesUpdateResourceActualState,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
-import { workersAdd } from "@mrc/server/store/slices/workersSlice";
+import { workersAdd, workersAddMany, workersRemove } from "@mrc/server/store/slices/workersSlice";
 import {
    connection,
    pipeline,
@@ -25,10 +26,12 @@ import {
    pipeline_mappings,
    segments,
    worker,
+   workers,
 } from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
 import { RootStore, setupStore } from "../store";
+import { expectDefined } from "@mrc/tests/utils";
 
 let store: RootStore;
 
@@ -136,6 +139,40 @@ describe("Single", () => {
             })
          )
       );
+   });
+
+   describe("With Mapping", () => {
+      beforeEach(() => {
+         // Add a connection and workers
+         store.dispatch(connectionsAdd(connection));
+         store.dispatch(workersAddMany(workers));
+
+         // Now add a mapping
+         store.dispatch(
+            pipelineDefinitionsSetMapping({
+               definition_id: pipeline_def.id,
+               mapping: pipeline_mappings[workers[0].machineId],
+            })
+         );
+      });
+
+      test("Contains Mapping", () => {
+         const found = pipelineDefinitionsSelectById(store.getState(), pipeline_def.id);
+
+         expectDefined(found);
+
+         expect(found?.mappings).toHaveProperty(workers[0].machineId);
+      });
+
+      test("Delete Worker", () => {
+         store.dispatch(workersRemove(workers[0]));
+
+         const found = pipelineDefinitionsSelectById(store.getState(), pipeline_def.id);
+
+         expectDefined(found);
+
+         expect(found?.mappings).not.toHaveProperty(workers[0].machineId);
+      });
    });
 
    describe("With PipelineInstance", () => {

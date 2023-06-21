@@ -3,7 +3,7 @@ import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { createWrappedEntityAdapter } from "../../utils";
 
-import type { AppDispatch, RootState } from "../store";
+import type { AppDispatch, AppGetState, RootState } from "../store";
 import { connectionsRemove } from "@mrc/server/store/slices/connectionsSlice";
 import { pipelineInstancesRemove, pipelineInstancesSelectById } from "@mrc/server/store/slices/pipelineInstancesSlice";
 import { workersRemove } from "@mrc/server/store/slices/workersSlice";
@@ -15,7 +15,7 @@ import {
 } from "@mrc/proto/mrc/protos/architect_state";
 import { pipelineDefinitionsSelectById } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 import { AppListenerAPI, startAppListening } from "@mrc/server/store/listener_middleware";
-import { generateId } from "@mrc/common/utils";
+import { generateId, sleep, yield_, yield_immediate } from "@mrc/common/utils";
 import { ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
 import {
    manifoldInstancesAdd,
@@ -23,6 +23,7 @@ import {
    manifoldInstancesSelectByPipelineId,
    manifoldInstancesSyncSegments,
 } from "@mrc/server/store/slices/manifoldInstancesSlice";
+import { createWatcher, ResourceStateWatcherLambda } from "@mrc/server/store/resourceStateWatcher";
 
 const segmentInstancesAdapter = createWrappedEntityAdapter<ISegmentInstance>({
    selectId: (w) => w.id,
@@ -133,6 +134,46 @@ export function segmentInstancesAddMany(instances: ISegmentInstance[]) {
       instances.forEach((s) => {
          dispatch(segmentInstancesAdd(s));
       });
+   };
+}
+
+export function segmentInstancesDestroy(instance: ISegmentInstance) {
+   // To allow the watchers to work, we need to add all segments individually
+   return async (dispatch: AppDispatch, getState: AppGetState) => {
+      const state_snapshot = getState();
+
+      // For any found workers, set the requested and actual states to avoid errors
+      const found = segmentInstancesSelectById(getState(), instance.id);
+
+      if (found) {
+         // Set the requested to destroyed
+         dispatch(
+            segmentInstancesUpdateResourceRequestedState({
+               resource: instance,
+               status: ResourceRequestedStatus.Requested_Destroyed,
+            })
+         );
+
+         // Yield here to allow listeners to run
+         await yield_immediate();
+
+         // Set the actual to destroyed
+         dispatch(
+            segmentInstancesUpdateResourceActualState({
+               resource: instance,
+               status: ResourceActualStatus.Actual_Destroyed,
+            })
+         );
+
+         // Yield here to allow listeners to run
+         await yield_immediate();
+
+         // Finally, run the remove segment action just to be sure
+         if (segmentInstancesSelectById(getState(), instance.id)) {
+            console.warn("SegmentInstances watcher did not correctly destroy instance. Manually destroying.");
+            dispatch(segmentInstancesRemove(instance));
+         }
+      }
    };
 }
 
@@ -267,99 +308,119 @@ export function syncManifolds(listenerApi: AppListenerAPI, instance: ISegmentIns
    return manifolds;
 }
 
-export function segmentInstancesConfigureListeners() {
-   startAppListening({
-      actionCreator: segmentInstancesAdd,
-      effect: async (action, listenerApi) => {
-         const segment_id = action.payload.id;
+// export function segmentInstancesConfigureListeners() {
+//    startAppListening({
+//       actionCreator: segmentInstancesAdd,
+//       effect: async (action, listenerApi) => {
+//          const segment_id = action.payload.id;
 
-         const instance = segmentInstancesSelectById(listenerApi.getState(), segment_id);
+//          const instance = segmentInstancesSelectById(listenerApi.getState(), segment_id);
 
-         if (!instance) {
-            throw new Error("Could not find segment instance");
-         }
+//          if (!instance) {
+//             throw new Error("Could not find segment instance");
+//          }
 
-         // Now that the object has been created, set the requested status to Created
-         listenerApi.dispatch(
-            segmentInstancesSlice.actions.updateResourceRequestedState({
-               resource: instance,
-               status: ResourceRequestedStatus.Requested_Created,
-            })
-         );
+//          // Now that the object has been created, set the requested status to Created
+//          listenerApi.dispatch(
+//             segmentInstancesSlice.actions.updateResourceRequestedState({
+//                resource: instance,
+//                status: ResourceRequestedStatus.Requested_Created,
+//             })
+//          );
 
-         const monitor_instance = listenerApi.fork(async () => {
-            while (true) {
-               // Wait for the next update
-               const [, current_state] = await listenerApi.take((action) => {
-                  return (
-                     segmentInstancesUpdateResourceActualState.match(action) &&
-                     action.payload.resource.id === segment_id
-                  );
-               });
+//          const monitor_instance = listenerApi.fork(async () => {
+//             while (true) {
+//                // Wait for the next update
+//                const [, current_state] = await listenerApi.take((action) => {
+//                   return (
+//                      segmentInstancesUpdateResourceActualState.match(action) &&
+//                      action.payload.resource.id === segment_id
+//                   );
+//                });
 
-               if (!current_state.system.requestRunning) {
-                  console.warn("Updating resource outside of a request will lead to undefined behavior!");
-               }
+//                if (!current_state.system.requestRunning) {
+//                   console.warn("Updating resource outside of a request will lead to undefined behavior!");
+//                }
 
-               // Get the status of this instance
-               const instance = segmentInstancesSelectById(listenerApi.getState(), segment_id);
+//                // Get the status of this instance
+//                const instance = segmentInstancesSelectById(listenerApi.getState(), segment_id);
 
-               if (!instance) {
-                  throw new Error("Could not find instance");
-               }
+//                if (!instance) {
+//                   throw new Error("Could not find instance");
+//                }
 
-               if (instance.state.actualStatus === ResourceActualStatus.Actual_Created) {
-                  // Before moving to RunUntilComplete, perform a few actions
+//                if (instance.state.actualStatus === ResourceActualStatus.Actual_Created) {
+//                   // Before moving to RunUntilComplete, perform a few actions
 
-                  // Increment the ref count on our pipeline instance
+//                   // Increment the ref count on our pipeline instance
 
-                  // Create any missing manifolds
-                  const manifolds = syncManifolds(listenerApi, instance);
+//                   // Create any missing manifolds
+//                   const manifolds = syncManifolds(listenerApi, instance);
 
-                  // Increment the ref count on our manifolds
+//                   // Increment the ref count on our manifolds
 
-                  // Tell it to move running/completed
-                  listenerApi.dispatch(
-                     segmentInstancesSlice.actions.updateResourceRequestedState({
-                        resource: instance,
-                        status: ResourceRequestedStatus.Requested_Completed,
-                     })
-                  );
-               } else if (instance.state.actualStatus === ResourceActualStatus.Actual_Completed) {
-                  // Before we can move to Stopped, all ref counts must be 0
+//                   // Tell it to move running/completed
+//                   listenerApi.dispatch(
+//                      segmentInstancesSlice.actions.updateResourceRequestedState({
+//                         resource: instance,
+//                         status: ResourceRequestedStatus.Requested_Completed,
+//                      })
+//                   );
+//                } else if (instance.state.actualStatus === ResourceActualStatus.Actual_Completed) {
+//                   // Before we can move to Stopped, all ref counts must be 0
 
-                  // Tell it to move to stopped
-                  listenerApi.dispatch(
-                     segmentInstancesSlice.actions.updateResourceRequestedState({
-                        resource: instance,
-                        status: ResourceRequestedStatus.Requested_Stopped,
-                     })
-                  );
-               } else if (instance.state.actualStatus === ResourceActualStatus.Actual_Stopped) {
-                  // Tell it to move to stopped
-                  listenerApi.dispatch(
-                     segmentInstancesSlice.actions.updateResourceRequestedState({
-                        resource: instance,
-                        status: ResourceRequestedStatus.Requested_Destroyed,
-                     })
-                  );
-               } else if (instance.state.actualStatus === ResourceActualStatus.Actual_Destroyed) {
-                  // Now we can actually just remove the object
-                  listenerApi.dispatch(segmentInstancesRemove(instance));
+//                   // Tell it to move to stopped
+//                   listenerApi.dispatch(
+//                      segmentInstancesSlice.actions.updateResourceRequestedState({
+//                         resource: instance,
+//                         status: ResourceRequestedStatus.Requested_Stopped,
+//                      })
+//                   );
+//                } else if (instance.state.actualStatus === ResourceActualStatus.Actual_Stopped) {
+//                   // Tell it to move to stopped
+//                   listenerApi.dispatch(
+//                      segmentInstancesSlice.actions.updateResourceRequestedState({
+//                         resource: instance,
+//                         status: ResourceRequestedStatus.Requested_Destroyed,
+//                      })
+//                   );
+//                } else if (instance.state.actualStatus === ResourceActualStatus.Actual_Destroyed) {
+//                   // Now we can actually just remove the object
+//                   listenerApi.dispatch(segmentInstancesRemove(instance));
 
-                  break;
-               } else {
-                  throw new Error("Unknow state type");
-               }
-            }
-         });
+//                   break;
+//                } else {
+//                   throw new Error("Unknow state type");
+//                }
+//             }
+//          });
 
-         await listenerApi.condition((action) => {
-            return segmentInstancesRemove.match(action) && action.payload.id === segment_id;
-         });
-         monitor_instance.cancel();
+//          await listenerApi.condition((action) => {
+//             return segmentInstancesRemove.match(action) && action.payload.id === segment_id;
+//          });
+//          monitor_instance.cancel();
+//       },
+//    });
+// }
+
+export function segmentInstancesConfigureSlice() {
+   createWatcher(
+      "SegmentInstances",
+      segmentInstancesAdd,
+      segmentInstancesSelectById,
+      async (instance, listenerApi) => {
+         // Create any missing manifolds
+         const manifolds = syncManifolds(listenerApi, instance);
+
+         // Increment the ref count on our manifolds
       },
-   });
-}
+      async (instance) => {},
+      async (instance) => {},
+      async (instance) => {},
+      async (instance, listenerApi) => {
+         listenerApi.dispatch(segmentInstancesRemove(instance));
+      }
+   );
 
-export default segmentInstancesSlice.reducer;
+   return segmentInstancesSlice.reducer;
+}

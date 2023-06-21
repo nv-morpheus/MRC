@@ -82,7 +82,6 @@ const Client::State& Client::state() const
 
 MachineID Client::machine_id() const
 {
-    throw exceptions::MrcRuntimeError("Not implemented: machine_id()");
     return m_machine_id;
 }
 
@@ -254,8 +253,6 @@ void Client::do_service_start(std::stop_token stop_token)
         }
     });
 
-    this->mark_started();
-
     auto status = m_stream->await_fini();
     // m_event_handler->await_join();
     // m_connections_update_channel.reset();
@@ -339,6 +336,7 @@ void Client::do_handle_event(event_t& event)
 
         // Set the connected promise to indicate we are live
         m_connected_promise.set_value();
+        this->mark_started();
 
         break;
     }

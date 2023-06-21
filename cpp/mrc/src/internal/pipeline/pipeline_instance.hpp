@@ -81,13 +81,19 @@ class PipelineInstance final : public runtime::ResourceManagerBase<control_plane
     control_plane::state::PipelineInstance filter_resource(
         const control_plane::state::ControlPlaneState& state) const override;
 
-    void on_created_requested(control_plane::state::PipelineInstance& instance) override;
+    bool on_created_requested(control_plane::state::PipelineInstance& instance, bool needs_local_update) override;
 
     void on_completed_requested(control_plane::state::PipelineInstance& instance) override;
 
     void on_running_state_updated(control_plane::state::PipelineInstance& instance) override;
 
     void on_stopped_requested(control_plane::state::PipelineInstance& instance) override;
+
+    void sync_manifolds(const control_plane::state::PipelineInstance& instance);
+
+    void create_manifold(const control_plane::state::ManifoldInstance& instance);
+
+    void destroy_manifold(InstanceID manifold_id);
 
     void mark_joinable();
 
@@ -100,7 +106,8 @@ class PipelineInstance final : public runtime::ResourceManagerBase<control_plane
     // uint64_t m_instance_id;
 
     std::map<SegmentAddress, std::unique_ptr<segment::SegmentInstance>> m_segments;
-    std::map<PortName, std::shared_ptr<ManifoldInstance>> m_manifold_instances;
+    std::map<PortName, std::shared_ptr<ManifoldInstance>> m_manifold_instances_by_name;
+    std::map<uint64_t, std::shared_ptr<ManifoldInstance>> m_manifold_instances;
 
     bool m_joinable{false};
     Promise<void> m_joinable_promise;

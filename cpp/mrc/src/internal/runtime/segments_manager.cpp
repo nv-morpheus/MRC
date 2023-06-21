@@ -29,6 +29,7 @@
 
 #include "mrc/core/addresses.hpp"
 #include "mrc/core/async_service.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/protos/architect_state.pb.h"
 #include "mrc/types.hpp"
@@ -49,6 +50,15 @@ SegmentsManager::SegmentsManager(PartitionRuntime& runtime, InstanceID worker_id
 {}
 
 SegmentsManager::~SegmentsManager() = default;
+
+control_plane::state::Worker SegmentsManager::filter_resource(const control_plane::state::ControlPlaneState& state) const
+{
+    if (!state.workers().contains(this->id()))
+    {
+        throw exceptions::MrcRuntimeError(MRC_CONCAT_STR("Could not find Worker with ID: " << this->id()));
+    }
+    return state.workers().at(this->id());
+}
 
 // void SegmentsManager::do_service_start(std::stop_token stop_token)
 // {
@@ -130,7 +140,10 @@ SegmentsManager::~SegmentsManager() = default;
 //     m_shutdown_future.get();
 // }
 
-void SegmentsManager::on_created_requested(control_plane::state::Worker& instance) {}
+bool SegmentsManager::on_created_requested(control_plane::state::Worker& instance, bool needs_local_update)
+{
+    return true;
+}
 
 void SegmentsManager::on_completed_requested(control_plane::state::Worker& instance)
 {
@@ -267,24 +280,6 @@ void SegmentsManager::on_stopped_requested(control_plane::state::Worker& instanc
 
 void SegmentsManager::create_segment(const mrc::control_plane::state::SegmentInstance& instance_state)
 {
-    // First, double check if this still needs to be created by trying to activate it
-    auto request = protos::ResourceUpdateStatusRequest();
-
-    request.set_resource_type("SegmentInstances");
-    request.set_resource_id(instance_state.address());
-    request.set_status(protos::ResourceActualStatus::Actual_Creating);
-
-    auto response = this->runtime().control_plane().await_unary<protos::ResourceUpdateStatusResponse>(
-        protos::EventType::ClientUnaryResourceUpdateStatus,
-        request);
-
-    if (!response->ok())
-    {
-        LOG(WARNING) << "Declined to make resource of type: " << request.resource_type()
-                     << ", and id: " << request.resource_id();
-        return;
-    }
-
     // Get a reference to the pipeline we are creating the segment in
     auto& pipeline_def = this->runtime().pipelines_manager().get_definition(instance_state.pipeline_definition().id());
 

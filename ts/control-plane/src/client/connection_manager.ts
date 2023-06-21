@@ -7,6 +7,7 @@ import { throwExpression } from "@mrc/common/utils";
 
 import { MrcTestClient } from "@mrc/client/client";
 import {
+   Connection,
    ControlPlaneState,
    ManifoldInstance,
    PipelineInstance,
@@ -28,7 +29,7 @@ import {
 import { unpack_first_event, unpack_unary_event } from "@mrc/client/utils";
 import { UnknownMessage } from "@mrc/proto/typeRegistry";
 import { Observable, filter, from, share, tap } from "rxjs";
-import { ResourceStateTypeStrings } from "@mrc/server/store/slices/resourceActions";
+import { ResourceStateTypeStrings } from "@mrc/common/entities";
 
 export class ConnectionManager {
    private _isCreated = false;
@@ -178,6 +179,66 @@ export class ConnectionManager {
       return await unpack_unary_event<ResponseT>(this._response_stream$, this._send_events, message);
    }
 
+   public getResource(id: string, resource_type: "Connections"): Connection | null;
+   public getResource(id: string, resource_type: "Workers"): Worker | null;
+   public getResource(id: string, resource_type: "PipelineInstances"): PipelineInstance | null;
+   public getResource(id: string, resource_type: "SegmentInstances"): SegmentInstance | null;
+   public getResource(id: string, resource_type: "ManifoldInstances"): ManifoldInstance | null;
+   public getResource(
+      id: string,
+      resource_type: ResourceStateTypeStrings
+   ): Connection | Worker | PipelineInstance | SegmentInstance | ManifoldInstance | null {
+      // Now return the correct instance from the updated state
+      if (resource_type === "Connections") {
+         const entities = this.getClientState().connections!.entities;
+
+         if (!(id in entities)) {
+            return null;
+         }
+
+         return entities[id];
+      } else if (resource_type === "Workers") {
+         const entities = this.getClientState().workers!.entities;
+
+         if (!(id in entities)) {
+            return null;
+         }
+
+         return entities[id];
+      } else if (resource_type === "PipelineInstances") {
+         const entities = this.getClientState().pipelineInstances!.entities;
+
+         if (!(id in entities)) {
+            return null;
+         }
+
+         return entities[id];
+      } else if (resource_type === "SegmentInstances") {
+         const entities = this.getClientState().segmentInstances!.entities;
+
+         if (!(id in entities)) {
+            return null;
+         }
+
+         return entities[id];
+      } else if (resource_type === "ManifoldInstances") {
+         const entities = this.getClientState().manifoldInstances!.entities;
+
+         if (!(id in entities)) {
+            return null;
+         }
+
+         return entities[id];
+      } else {
+         throw new Error("Unknow resource type");
+      }
+   }
+
+   public async update_resource_status(
+      id: string,
+      resource_type: "Connections",
+      status: ResourceActualStatus
+   ): Promise<Connection | null>;
    public async update_resource_status(
       id: string,
       resource_type: "Workers",
@@ -213,38 +274,17 @@ export class ConnectionManager {
       );
 
       // Now return the correct instance from the updated state
-      if (resource_type === "Workers") {
-         const entities = this.getClientState().workers!.entities;
-
-         if (!(id in entities)) {
-            return null;
-         }
-
-         return entities[id];
+      // Have to branch for all types to get around TSC issue here: https://github.com/microsoft/TypeScript/issues/14107
+      if (resource_type === "Connections") {
+         return this.getResource(id, "Connections");
+      } else if (resource_type === "Workers") {
+         return this.getResource(id, "Workers");
       } else if (resource_type === "PipelineInstances") {
-         const entities = this.getClientState().pipelineInstances!.entities;
-
-         if (!(id in entities)) {
-            return null;
-         }
-
-         return entities[id];
+         return this.getResource(id, "PipelineInstances");
       } else if (resource_type === "SegmentInstances") {
-         const entities = this.getClientState().segmentInstances!.entities;
-
-         if (!(id in entities)) {
-            return null;
-         }
-
-         return entities[id];
+         return this.getResource(id, "SegmentInstances");
       } else if (resource_type === "ManifoldInstances") {
-         const entities = this.getClientState().manifoldInstances!.entities;
-
-         if (!(id in entities)) {
-            return null;
-         }
-
-         return entities[id];
+         return this.getResource(id, "ManifoldInstances");
       } else {
          throw new Error("Unknow resource type");
       }

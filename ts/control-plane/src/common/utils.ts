@@ -9,8 +9,43 @@ export function generateId(max = 4294967295): string {
    return Math.floor(Math.random() * max).toString();
 }
 
-export function sleep(ms: number) {
-   return new Promise((r) => setTimeout(r, ms));
+export function yield_(name = "") {
+   // console.log(`Yield start. Name: ${name}`);
+
+   // Yield uses setImmediate to allow other promises to finish before setTimeout is run
+   // return new Promise((r) => setImmediate(r));
+   return Promise.resolve().then(() => {
+      // console.log(`Yield done. Name: ${name}`);
+   });
+}
+
+export function yield_immediate(name = "") {
+   // console.log(`Yield_immediate start. Name: ${name}`);
+
+   // Yield uses setImmediate to allow other promises to finish before setTimeout is run
+   // return new Promise((r) => setImmediate(r));
+   return new Promise((r) => setImmediate(r)).then(() => {
+      // console.log(`Yield_immediate done. Name: ${name}`);
+   });
+}
+
+export function yield_timeout(name = "") {
+   // console.log(`yield_timeout start. Name: ${name}`);
+
+   // Yield uses setImmediate to allow other promises to finish before setTimeout is run
+   // return new Promise((r) => setImmediate(r));
+   return new Promise((r) => setTimeout(r)).then(() => {
+      // console.log(`yield_timeout done. Name: ${name}`);
+   });
+}
+
+export function sleep(ms: number, name = "") {
+   // console.log(`Sleep start. Name: ${name}`);
+
+   // Stronger than yield_. Forces full loop
+   return new Promise((r) => setTimeout(r, ms)).then(() => {
+      // console.log(`Sleep done. Name: ${name}`);
+   });
 }
 
 export function stringToBytes(value: string[]): Uint8Array[];

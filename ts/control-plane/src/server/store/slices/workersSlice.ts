@@ -1,18 +1,12 @@
 import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { createWrappedEntityAdapter } from "../../utils";
-
-import type { AppDispatch, RootState } from "../store";
-import { connectionsRemove } from "./connectionsSlice";
-import { segmentInstancesAdd, segmentInstancesRemove } from "./segmentInstancesSlice";
 import { IWorker } from "@mrc/common/entities";
-import {
-   ResourceActualStatus,
-   resourceActualStatusToNumber,
-   ResourceRequestedStatus,
-   resourceRequestedStatusToNumber,
-} from "@mrc/proto/mrc/protos/architect_state";
-import { ResourceStateWatcherLambda } from "@mrc/server/store/resourceStateWatcher";
+import { ResourceActualStatus, ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
+import { createWatcher } from "@mrc/server/store/resourceStateWatcher";
+import { createWrappedEntityAdapter } from "@mrc/server/utils";
+import { connectionsRemove } from "@mrc/server/store/slices/connectionsSlice";
+import { segmentInstancesAdd, segmentInstancesRemove } from "@mrc/server/store/slices/segmentInstancesSlice";
+import { AppDispatch, RootState } from "@mrc/server/store/store";
 
 const workersAdapter = createWrappedEntityAdapter<IWorker>({
    // sortComparer: (a, b) => b.id.localeCompare(a.date),
@@ -150,17 +144,8 @@ const selectByMachineId = createSelector(
 export const workersSelectByMachineId = (state: RootState, machine_id: string) =>
    selectByMachineId(state.workers, machine_id);
 
-const watcher = new ResourceStateWatcherLambda<IWorker, "workers/add">(
-   "Workers",
-   workersAdd,
-   workersSelectById,
-   async (instance) => {},
-   async (instance) => {},
-   async (instance) => {},
-   async (instance) => {},
-   async (instance) => {}
-);
+export function workersConfigureSlice() {
+   createWatcher("Workers", workersAdd, workersSelectById, async () => {}, undefined, undefined, undefined, undefined);
 
-watcher.configureListener();
-
-export default workersSlice.reducer;
+   return workersSlice.reducer;
+}

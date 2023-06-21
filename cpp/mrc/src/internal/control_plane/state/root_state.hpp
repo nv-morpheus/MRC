@@ -126,6 +126,7 @@ struct ControlPlaneNormalizedState : public std::enable_shared_from_this<Control
   public:
     std::unique_ptr<protos::ControlPlaneState> root_message;
 
+    uint64_t nonce;
     std::map<uint64_t, Connection> connections;
     std::map<uint64_t, Worker> workers;
     std::map<uint64_t, PipelineDefinition> pipeline_definitions;
@@ -202,9 +203,9 @@ struct ResourceTopLevelMessage : public ControlPlaneTopLevelMessage<ProtoT>
     ResourceState m_state;
 };
 
-struct Connection : public ControlPlaneTopLevelMessage<protos::Connection>
+struct Connection : public ResourceTopLevelMessage<protos::Connection>
 {
-    using ControlPlaneTopLevelMessage::ControlPlaneTopLevelMessage;
+    using ResourceTopLevelMessage::ResourceTopLevelMessage;
     // Connection(std::shared_ptr<ControlPlaneNormalizedState> state, const protos::Connection& message);
 
     uint64_t id() const;

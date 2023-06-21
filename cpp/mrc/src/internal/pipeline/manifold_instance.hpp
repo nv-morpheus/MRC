@@ -18,6 +18,7 @@
 #pragma once
 
 #include "internal/control_plane/state/root_state.hpp"
+#include "internal/runtime/resource_manager_base.hpp"
 #include "internal/runtime/runtime_provider.hpp"
 
 #include "mrc/core/async_service.hpp"
@@ -42,12 +43,12 @@ class IngressPortBase;
 namespace mrc::pipeline {
 class ManifoldDefinition;
 
-class ManifoldInstance final : public AsyncService, public runtime::InternalRuntimeProvider
+class ManifoldInstance final : public runtime::ResourceManagerBase<control_plane::state::ManifoldInstance>
 {
   public:
     ManifoldInstance(runtime::IInternalRuntimeProvider& runtime,
                      std::shared_ptr<const ManifoldDefinition> definition,
-                     uint64_t instance_id);
+                     InstanceID instance_id);
     ~ManifoldInstance() override;
 
     void register_local_ingress(SegmentAddress address, std::shared_ptr<segment::IngressPortBase> ingress_port);
@@ -59,14 +60,32 @@ class ManifoldInstance final : public AsyncService, public runtime::InternalRunt
     std::shared_ptr<manifold::Interface> get_interface() const;
 
   private:
-    void do_service_start(std::stop_token stop_token) final;
-    void process_state_update(control_plane::state::SegmentInstance& instance);
+    control_plane::state::ManifoldInstance filter_resource(
+        const control_plane::state::ControlPlaneState& state) const override;
+
+    bool on_created_requested(control_plane::state::ManifoldInstance& instance, bool needs_local_update) override;
+
+    void on_completed_requested(control_plane::state::ManifoldInstance& instance) override;
+
+    void on_running_state_updated(control_plane::state::ManifoldInstance& instance) override;
+
+    void add_ingress(SegmentAddress address, bool is_local);
+    void add_egress(SegmentAddress address, bool is_local);
+
+    void remove_ingress(SegmentAddress address);
+    void remove_egress(SegmentAddress address);
 
     std::shared_ptr<const ManifoldDefinition> m_definition;
 
     uint64_t m_instance_id;
 
     std::shared_ptr<manifold::Interface> m_interface;
+
+    std::map<SegmentAddress, std::shared_ptr<segment::IngressPortBase>> m_local_output;
+    std::map<SegmentAddress, std::shared_ptr<segment::EgressPortBase>> m_local_input;
+
+    std::map<SegmentAddress, bool> m_actual_ingress_segments;
+    std::map<SegmentAddress, bool> m_actual_egress_segments;
 };
 
 }  // namespace mrc::pipeline

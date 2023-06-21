@@ -1,13 +1,11 @@
 import {
    IConnection,
-   IManifoldDefinition,
    IManifoldInstance,
    IPipelineConfiguration,
    IPipelineDefinition,
    IPipelineInstance,
    IPipelineMapping,
    IResourceState,
-   ISegmentDefinition,
    ISegmentInstance,
    ISegmentMapping,
    IWorker,
@@ -17,8 +15,6 @@ import { generateId, generateSegmentHash, hashProtoMessage, stringToBytes } from
 import {
    ManifoldOptions_Policy,
    PipelineConfiguration,
-   PipelineConfiguration_ManifoldConfiguration,
-   PipelineConfiguration_SegmentConfiguration,
    ResourceActualStatus,
    ResourceRequestedStatus,
 } from "@mrc/proto/mrc/protos/architect_state";
@@ -34,7 +30,11 @@ export const connection: IConnection = {
    peerInfo: "localhost:1234",
    workerIds: [],
    assignedPipelineIds: [],
-   refCounts: {},
+   state: {
+      actualStatus: ResourceActualStatus.Actual_Created,
+      refCount: 0,
+      requestedStatus: ResourceRequestedStatus.Requested_Completed,
+   },
 };
 
 export const worker: IWorker = {
@@ -77,11 +77,11 @@ export const pipeline_config: IPipelineConfiguration = {
 const pipeline_config_hash = hashProtoMessage(PipelineConfiguration.create(pipeline_config));
 
 export const pipeline_mappings = Object.fromEntries(
-   workers.map((w) => {
+   [connection].map((c) => {
       return [
-         w.machineId,
+         c.id,
          {
-            machineId: w.machineId,
+            machineId: c.id,
             segments: Object.fromEntries(
                Object.entries(pipeline_config.segments).map(([seg_name]) => {
                   return [seg_name, { segmentName: seg_name, byWorker: { workerIds: [worker.id] } } as ISegmentMapping];

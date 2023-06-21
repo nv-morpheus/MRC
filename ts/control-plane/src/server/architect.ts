@@ -10,7 +10,16 @@ import { withAbort } from "ix/asynciterable/operators";
 import { CallContext } from "nice-grpc";
 import { firstValueFrom, Subject } from "rxjs";
 
-import { ensureError, generateId, pack, packEvent, sleep, unpackEvent } from "@mrc/common/utils";
+import {
+   ensureError,
+   generateId,
+   pack,
+   packEvent,
+   sleep,
+   unpackEvent,
+   yield_immediate,
+   yield_timeout,
+} from "@mrc/common/utils";
 import { Any } from "@mrc/proto/google/protobuf/any";
 import {
    Ack,
@@ -23,6 +32,7 @@ import {
    PingRequest,
    PingResponse,
    PipelineAddMappingRequest,
+   PipelineAddMappingResponse,
    PipelineRegisterConfigRequest,
    PipelineRegisterConfigResponse,
    RegisterWorkersRequest,
@@ -38,7 +48,12 @@ import {
 import { ControlPlaneState, ResourceActualStatus, ResourceRequestedStatus } from "../proto/mrc/protos/architect_state";
 import { DeepPartial, UnknownMessage, messageTypeRegistry } from "@mrc/proto/typeRegistry";
 
-import { connectionsAdd, connectionsDropOne } from "./store/slices/connectionsSlice";
+import {
+   connectionsAdd,
+   connectionsDropOne,
+   connectionsSelectById,
+   connectionsUpdateResourceActualState,
+} from "./store/slices/connectionsSlice";
 import {
    pipelineInstancesAdd,
    pipelineInstancesSelectById,
@@ -215,7 +230,11 @@ class Architect implements ArchitectServiceImplementation {
          peerInfo: context.peer,
          workerIds: [],
          assignedPipelineIds: [],
-         refCounts: {},
+         state: {
+            actualStatus: ResourceActualStatus.Actual_Created,
+            refCount: 0,
+            requestedStatus: ResourceRequestedStatus.Requested_Completed,
+         },
       };
 
       context.metadata.set("mrc-machine-id", connection.id.toString());
@@ -227,7 +246,11 @@ class Architect implements ArchitectServiceImplementation {
          const state = this._store.getState();
 
          // Remove the system object from the state
-         const { system: _, ...out_state } = { ...state, system: { extra: true } };
+         const { system: _, ...out_state } = {
+            ...state,
+            nonce: state.system.requestRunningNonce.toString(),
+            system: { extra: true },
+         };
 
          if (state.system.requestRunning) {
             console.log("Request is still running!");
@@ -293,7 +316,7 @@ class Architect implements ArchitectServiceImplementation {
                } finally {
                   // sleep for 0 to ensure all scheduled async tasks have been run before ending the request (very
                   // important for listeners)
-                  await sleep(0);
+                  await yield_immediate("event_stream");
 
                   self._store.dispatch(systemStopRequest(request_identifier));
 
@@ -493,7 +516,12 @@ class Architect implements ArchitectServiceImplementation {
                //    })
                // );
 
-               yield unaryResponse(event, Ack.create());
+               yield unaryResponse(
+                  event,
+                  PipelineAddMappingResponse.create({
+                     pipelineInstanceId: pipeline_id,
+                  })
+               );
 
                break;
             }
@@ -502,6 +530,22 @@ class Architect implements ArchitectServiceImplementation {
 
                // Check to make sure its not null
                switch (payload.resourceType) {
+                  case "Connections": {
+                     const found = connectionsSelectById(this._store.getState(), payload.resourceId);
+
+                     if (!found) {
+                        throw new Error(`Could not find Workers for ID: ${payload.resourceId}`);
+                     }
+
+                     this._store.dispatch(
+                        connectionsUpdateResourceActualState({
+                           resource: found,
+                           status: payload.status,
+                        })
+                     );
+
+                     break;
+                  }
                   case "Workers": {
                      const found = workersSelectById(this._store.getState(), payload.resourceId);
 

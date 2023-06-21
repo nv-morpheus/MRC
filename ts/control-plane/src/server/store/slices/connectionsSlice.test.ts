@@ -1,13 +1,10 @@
-import {expect} from "@jest/globals";
-import {pipelineDefinitionsAdd} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
-import {
-   pipelineInstancesAdd,
-   pipelineInstancesRemove,
-} from "@mrc/server/store/slices/pipelineInstancesSlice";
-import {connection, pipeline, pipeline_def, worker} from "@mrc/tests/defaultObjects";
+import { expect } from "@jest/globals";
+import { pipelineDefinitionsAdd } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
+import { pipelineInstancesAdd, pipelineInstancesRemove } from "@mrc/server/store/slices/pipelineInstancesSlice";
+import { connection, pipeline, pipeline_def, worker } from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
-import {RootStore, setupStore} from "../store";
+import { RootStore, setupStore } from "../store";
 
 import {
    connectionsAdd,
@@ -16,10 +13,8 @@ import {
    connectionsSelectById,
    connectionsSelectTotal,
 } from "./connectionsSlice";
-import {
-   workersAdd,
-   workersRemove,
-} from "./workersSlice";
+import { workersAdd, workersRemove } from "./workersSlice";
+import { ResourceActualStatus, ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
 
 let store: RootStore;
 
@@ -72,10 +67,21 @@ describe("Single", () => {
    });
 
    test("Add Duplicate", () => {
-      assert.throws(() => store.dispatch(connectionsAdd({
-         id: connection.id,
-         peerInfo: connection.peerInfo,
-      })));
+      assert.throws(() =>
+         store.dispatch(
+            connectionsAdd({
+               id: connection.id,
+               peerInfo: connection.peerInfo,
+               assignedPipelineIds: [],
+               workerIds: [],
+               state: {
+                  actualStatus: ResourceActualStatus.Actual_Created,
+                  refCount: 0,
+                  requestedStatus: ResourceRequestedStatus.Requested_Completed,
+               },
+            })
+         )
+      );
    });
 
    it("Remove Valid ID", () => {
@@ -85,10 +91,14 @@ describe("Single", () => {
    });
 
    test("Remove Unknown ID", () => {
-      assert.throws(() => store.dispatch(connectionsRemove({
-         ...connection,
-         id: "9999",
-      })));
+      assert.throws(() =>
+         store.dispatch(
+            connectionsRemove({
+               ...connection,
+               id: "9999",
+            })
+         )
+      );
    });
 
    describe("With Worker", () => {

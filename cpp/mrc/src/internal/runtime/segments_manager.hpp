@@ -68,12 +68,9 @@ class SegmentsManager : public ResourceManagerBase<control_plane::state::Worker>
     // std::optional<network::NetworkResources>& network();
 
   private:
-    control_plane::state::Worker filter_resource(const control_plane::state::ControlPlaneState& state) const override
-    {
-        return state.workers().at(this->id());
-    }
+    control_plane::state::Worker filter_resource(const control_plane::state::ControlPlaneState& state) const override;
 
-    void on_created_requested(control_plane::state::Worker& instance) override;
+    bool on_created_requested(control_plane::state::Worker& instance, bool needs_local_update) override;
 
     void on_completed_requested(control_plane::state::Worker& instance) override;
 

@@ -261,6 +261,12 @@ message PipelineAddMappingRequest
     PipelineMapping mapping = 2;
 }
 
+message PipelineAddMappingResponse
+{
+    // The pipeline instance ID that was created
+    uint64 pipeline_instance_id = 1;
+}
+
 // message sent by an UpdateManager
 message StateUpdate
 {

@@ -24,6 +24,7 @@
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/runtime.hpp"
 #include "internal/segment/segment_definition.hpp"
+#include "internal/utils/ranges.hpp"
 
 #include "mrc/core/addresses.hpp"
 #include "mrc/core/async_service.hpp"
@@ -31,13 +32,12 @@
 #include "mrc/protos/architect_state.pb.h"
 
 #include <memory>
+#include <stdexcept>
 
 namespace mrc::runtime {
 
-PipelinesManager::PipelinesManager(Runtime& system_runtime) :
-  AsyncService("PipelinesManager"),
-  runnable::RunnableResourcesProvider(system_runtime),
-  m_system_runtime(system_runtime)
+PipelinesManager::PipelinesManager(Runtime& runtime, InstanceID connection_id) :
+  ResourceManagerBase(runtime, connection_id, MRC_CONCAT_STR("PipelinesManager[" << connection_id << "]"))
 {}
 
 PipelinesManager::~PipelinesManager() = default;
@@ -108,7 +108,7 @@ void PipelinesManager::register_defs(std::vector<std::shared_ptr<pipeline::Pipel
             mapping->mutable_segments()->emplace(segment->name(), std::move(seg_mapping));
         }
 
-        auto response = m_system_runtime.control_plane().await_unary<protos::PipelineRegisterConfigResponse>(
+        auto response = this->runtime().control_plane().await_unary<protos::PipelineRegisterConfigResponse>(
             protos::EventType::ClientUnaryPipelineRegisterConfig,
             request);
 
@@ -117,8 +117,9 @@ void PipelinesManager::register_defs(std::vector<std::shared_ptr<pipeline::Pipel
         mapping_request.set_definition_id(response->pipeline_definition_id());
 
         // Now add a mapping to create some pipeline instances
-        m_system_runtime.control_plane().await_unary<protos::Ack>(protos::EventType::ClientUnaryPipelineAddMapping,
-                                                                  mapping_request);
+        this->runtime().control_plane().await_unary<protos::PipelineAddMappingResponse>(
+            protos::EventType::ClientUnaryPipelineAddMapping,
+            mapping_request);
     }
 }
 
@@ -138,78 +139,107 @@ pipeline::PipelineInstance& PipelinesManager::get_instance(uint64_t instance_id)
     return *m_instances[instance_id];
 }
 
-void PipelinesManager::do_service_start(std::stop_token stop_token)
+control_plane::state::Connection PipelinesManager::filter_resource(
+    const control_plane::state::ControlPlaneState& state) const
 {
-    Promise<void> completed_promise;
-
-    // Now, subscribe to the control plane state updates and filter only on updates to this instance ID
-    m_system_runtime.control_plane()
-        .state_update_obs()
-        .tap([](const control_plane::state::ControlPlaneState& state) {
-            VLOG(10) << "State Update: PipelinesManager";
-        })
-        .subscribe(
-            [this](control_plane::state::ControlPlaneState state) {
-                // Handle updates to the worker
-                this->process_state_update(state);
-            },
-            [this](std::exception_ptr ex_ptr) {
-                try
-                {
-                    std::rethrow_exception(ex_ptr);
-                } catch (const std::exception& ex)
-                {
-                    LOG(ERROR) << "Error in " << this->debug_prefix() << ex.what();
-                }
-            },
-            [&completed_promise] {
-                completed_promise.set_value();
-            });
-
-    // Need to mark this started before waiting
-    this->mark_started();
-
-    // Yield until the observable is finished
-    completed_promise.get_future().get();
+    if (!state.connections().contains(this->id()))
+    {
+        throw exceptions::MrcRuntimeError(MRC_CONCAT_STR("Could not Connection with ID: " << this->id()));
+    }
+    return state.connections().at(this->id());
 }
 
-void PipelinesManager::process_state_update(control_plane::state::ControlPlaneState& state)
+void PipelinesManager::on_running_state_updated(control_plane::state::Connection& instance)
 {
-    // Loop over all pipeline instances
-    for (const auto& [pipe_instance_id, pipe_instance] : state.pipeline_instances())
+    // Check for assignments
+    auto cur_pipelines = extract_keys(m_instances);
+    auto new_pipelines = extract_keys(instance.assigned_pipelines());
+
+    auto [create_pipelines, remove_pipelines] = compare_difference(cur_pipelines, new_pipelines);
+
+    // construct new segments and attach to manifold
+    for (const auto& id : create_pipelines)
     {
-        // TODO(MDD): Need to filter based on our machine ID
+        // auto partition_id = new_segments_map.at(address);
+        // DVLOG(10) << info() << ": create segment for address " << ::mrc::segment::info(address)
+        //           << " on resource partition: " << partition_id;
+        this->create_pipeline(instance.assigned_pipelines().at(id));
+    }
 
-        // Check to see if this was newly created
-        if (pipe_instance.state().requested_status() == control_plane::state::ResourceRequestedStatus::Created)
-        {
-            // Get the definition for this instance
-            auto def_id = pipe_instance.definition().id();
-
-            CHECK(m_definitions.contains(def_id)) << "Unknown definition ID: " << def_id;
-
-            auto definition = m_definitions[def_id];
-
-            // First, double check if this still needs to be created by trying to activate it
-            auto request = protos::ResourceUpdateStatusRequest();
-
-            request.set_resource_type("PipelineInstances");
-            request.set_resource_id(pipe_instance_id);
-            request.set_status(protos::ResourceActualStatus::Actual_Creating);
-
-            auto response = m_system_runtime.control_plane().await_unary<protos::ResourceUpdateStatusResponse>(
-                protos::EventType::ClientUnaryResourceUpdateStatus,
-                request);
-
-            // Resource was activated, lets now create the object
-            auto [added_iterator, did_add] = m_instances.emplace(
-                pipe_instance_id,
-                std::make_unique<pipeline::PipelineInstance>(m_system_runtime, definition, pipe_instance_id));
-
-            // Now start as a child service
-            this->child_service_start(*added_iterator->second);
-        }
+    // detach from manifold or stop old segments
+    for (const auto& id : remove_pipelines)
+    {
+        // DVLOG(10) << info() << ": stop segment for address " << ::mrc::segment::info(address);
+        this->erase_pipeline(id);
     }
 }
 
+// void PipelinesManager::do_service_start(std::stop_token stop_token)
+// {
+//     Promise<void> completed_promise;
+
+//     // Now, subscribe to the control plane state updates and filter only on updates to this instance ID
+//     m_system_runtime.control_plane()
+//         .state_update_obs()
+//         .tap([](const control_plane::state::ControlPlaneState& state) {
+//             VLOG(10) << "State Update: PipelinesManager";
+//         })
+//         .subscribe(
+//             [this](control_plane::state::ControlPlaneState state) {
+//                 // Handle updates to the worker
+//                 this->process_state_update(state);
+//             },
+//             [this](std::exception_ptr ex_ptr) {
+//                 try
+//                 {
+//                     std::rethrow_exception(ex_ptr);
+//                 } catch (const std::exception& ex)
+//                 {
+//                     LOG(ERROR) << "Error in " << this->debug_prefix() << ex.what();
+//                 }
+//             },
+//             [&completed_promise] {
+//                 completed_promise.set_value();
+//             });
+
+//     // Need to mark this started before waiting
+//     this->mark_started();
+
+//     // Yield until the observable is finished
+//     completed_promise.get_future().get();
+// }
+
+void PipelinesManager::create_pipeline(const control_plane::state::PipelineInstance& instance)
+{
+    // Get the definition for this instance
+    auto def_id = instance.definition().id();
+
+    CHECK(m_definitions.contains(def_id)) << "Unknown definition ID: " << def_id;
+
+    auto definition = m_definitions[def_id];
+
+    // // First, double check if this still needs to be created by trying to activate it
+    // auto request = protos::ResourceUpdateStatusRequest();
+
+    // request.set_resource_type("PipelineInstances");
+    // request.set_resource_id(pipe_instance_id);
+    // request.set_status(protos::ResourceActualStatus::Actual_Creating);
+
+    // auto response = this->runtime().control_plane().await_unary<protos::ResourceUpdateStatusResponse>(
+    //     protos::EventType::ClientUnaryResourceUpdateStatus,
+    //     request);
+
+    // Resource was activated, lets now create the object
+    auto [added_iterator, did_add] = m_instances.emplace(
+        instance.id(),
+        std::make_unique<pipeline::PipelineInstance>(*this, definition, instance.id()));
+
+    // Now start as a child service
+    this->child_service_start(*added_iterator->second);
+}
+
+void PipelinesManager::erase_pipeline(InstanceID pipeline_id)
+{
+    throw std::runtime_error("Not implemented");
+}
 }  // namespace mrc::runtime

@@ -14,6 +14,7 @@ import {
    Ack,
    EventType,
    PipelineAddMappingRequest,
+   PipelineAddMappingResponse,
    PipelineRegisterConfigRequest,
    PipelineRegisterConfigResponse,
 } from "@mrc/proto/mrc/protos/architect";
@@ -89,13 +90,16 @@ export class PipelineManager {
       };
 
       // Now request to run a pipeline
-      const response = await PipelineManager.sendPipelineRegisterConfigAndAddMapping(
+      const configResponse = await PipelineManager.sendPipelineRegisterConfig(this.connectionManager, this.config);
+
+      const mappingResponse = await PipelineManager.sendPipelineAddMapping(
          this.connectionManager,
-         this.config,
+         configResponse.pipelineDefinitionId,
          mapping
       );
 
-      this._pipelineDefinitionId = response.pipelineDefinitionId;
+      this._pipelineDefinitionId = configResponse.pipelineDefinitionId;
+      this._pipelineInstanceId = mappingResponse.pipelineInstanceId;
    }
 
    public async ensureRegistered() {
@@ -168,27 +172,20 @@ export class PipelineManager {
       return response;
    }
 
-   public static async sendPipelineAddMapping(connectionManager: ConnectionManager, mapping: IPipelineMapping) {
+   public static async sendPipelineAddMapping(
+      connectionManager: ConnectionManager,
+      pipelineDefinitionId: string,
+      mapping: IPipelineMapping
+   ) {
       // Now request to run a pipeline
-      const response = await connectionManager.send_request<Ack>(
+      const response = await connectionManager.send_request<PipelineAddMappingResponse>(
          EventType.ClientUnaryPipelineAddMapping,
          PipelineAddMappingRequest.create({
+            definitionId: pipelineDefinitionId,
             mapping: mapping,
          })
       );
 
       return response;
-   }
-
-   public static async sendPipelineRegisterConfigAndAddMapping(
-      connectionManager: ConnectionManager,
-      config: IPipelineConfiguration,
-      mapping: IPipelineMapping
-   ) {
-      const configResponse = await PipelineManager.sendPipelineRegisterConfig(connectionManager, config);
-
-      await PipelineManager.sendPipelineAddMapping(connectionManager, mapping);
-
-      return configResponse;
    }
 }

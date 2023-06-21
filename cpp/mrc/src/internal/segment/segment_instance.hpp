@@ -19,8 +19,8 @@
 
 #include "internal/control_plane/state/root_state.hpp"
 #include "internal/remote_descriptor/manager.hpp"
+#include "internal/runtime/resource_manager_base.hpp"
 #include "internal/runtime/runtime_provider.hpp"
-#include "internal/service.hpp"
 
 #include "mrc/core/async_service.hpp"
 #include "mrc/protos/architect_state.pb.h"
@@ -51,7 +51,7 @@ class SegmentDefinition;
 class BuilderDefinition;
 
 // todo(ryan) - inherit from service
-class SegmentInstance final : public AsyncService, public runtime::InternalRuntimeProvider
+class SegmentInstance final : public runtime::ResourceManagerBase<control_plane::state::SegmentInstance>
 {
   public:
     SegmentInstance(runtime::IInternalRuntimeProvider& runtime,
@@ -61,7 +61,6 @@ class SegmentInstance final : public AsyncService, public runtime::InternalRunti
     ~SegmentInstance() override;
 
     const std::string& name() const;
-    SegmentID id() const;
     SegmentRank rank() const;
     SegmentAddress address() const;
 
@@ -72,8 +71,12 @@ class SegmentInstance final : public AsyncService, public runtime::InternalRunti
     const std::string& info() const;
 
   private:
-    void do_service_start(std::stop_token stop_token) final;
-    void process_state_update(control_plane::state::SegmentInstance& instance);
+    control_plane::state::SegmentInstance filter_resource(
+        const control_plane::state::ControlPlaneState& state) const override;
+
+    bool on_created_requested(control_plane::state::SegmentInstance& instance, bool needs_local_update) override;
+
+    void on_completed_requested(control_plane::state::SegmentInstance& instance) override;
 
     void service_start_impl();
     // void do_service_await_live() final;
@@ -83,10 +86,9 @@ class SegmentInstance final : public AsyncService, public runtime::InternalRunti
 
     void callback_on_state_change(const std::string& name, const mrc::runnable::Runner::State& new_state);
 
-    bool set_local_status(control_plane::state::ResourceActualStatus status);
+    // bool set_local_status(control_plane::state::ResourceActualStatus status);
 
     std::shared_ptr<const SegmentDefinition> m_definition;
-    SegmentAddress m_instance_id;
     uint64_t m_pipeline_instance_id;
 
     SegmentRank m_rank;
@@ -97,6 +99,7 @@ class SegmentInstance final : public AsyncService, public runtime::InternalRunti
 
     control_plane::state::ResourceActualStatus m_local_status{control_plane::state::ResourceActualStatus::Unknown};
 
+    std::map<std::string, std::unique_ptr<mrc::runnable::Launcher>> m_launchers;
     std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_runners;
     // std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_egress_runners;
     // std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_ingress_runners;

@@ -13,7 +13,7 @@ import {
    segmentInstancesRemove,
    segmentInstancesUpdateResourceActualState,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
-import { connection, manifolds, pipeline, pipeline_def, segments, worker } from "@mrc/tests/defaultObjects";
+import { connection, pipeline, pipeline_def, segments, worker, pipeline_mappings } from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
 import { RootStore, setupStore } from "../store";
@@ -21,6 +21,8 @@ import { RootStore, setupStore } from "../store";
 import { connectionsAdd, connectionsDropOne } from "./connectionsSlice";
 import { workersAdd } from "./workersSlice";
 import { resourceUpdateActualState } from "@mrc/server/store/slices/resourceActions";
+import { manifoldInstancesSelectByPipelineId } from "@mrc/server/store/slices/manifoldInstancesSlice";
+import { pipelineDefinitionsSetMapping } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 
 let store: RootStore;
 
@@ -58,12 +60,34 @@ describe("Empty", () => {
 });
 
 describe("Single", () => {
-   beforeEach(() => {
+   beforeEach(async () => {
       store.dispatch(connectionsAdd(connection));
 
       store.dispatch(pipelineDefinitionsAdd(pipeline_def));
 
+      store.dispatch(
+         pipelineDefinitionsSetMapping({
+            definition_id: pipeline_def.id,
+            mapping: pipeline_mappings[connection.id],
+         })
+      );
+
       store.dispatch(pipelineInstancesAdd(pipeline));
+
+      // // Make sure they are all indicated as created
+      // await store.dispatch(
+      //    resourceUpdateActualState("PipelineInstances", pipeline.id, ResourceActualStatus.Actual_Created)
+      // );
+
+      // for (const m of manifolds) {
+      //    await store.dispatch(
+      //       resourceUpdateActualState("ManifoldInstances", m.id, ResourceActualStatus.Actual_Created)
+      //    );
+      // }
+
+      // for (const s of segments) {
+      //    await store.dispatch(resourceUpdateActualState("SegmentInstances", s.id, ResourceActualStatus.Actual_Created));
+      // }
    });
 
    test("Select All", () => {
@@ -135,13 +159,15 @@ describe("Single", () => {
 
          // Update the instance state to ready and the instances should auto assign
          await store.dispatch(
-            resourceUpdateActualState("PipelineInstances", pipeline.id, ResourceActualStatus.Actual_Running)
+            resourceUpdateActualState("PipelineInstances", pipeline.id, ResourceActualStatus.Actual_Created)
          );
+
+         const manifolds = manifoldInstancesSelectByPipelineId(store.getState(), pipeline.id);
 
          // Update all manifold states as well
          for (const m of manifolds) {
             await store.dispatch(
-               resourceUpdateActualState("ManifoldInstances", m.id, ResourceActualStatus.Actual_Running)
+               resourceUpdateActualState("ManifoldInstances", m.id, ResourceActualStatus.Actual_Created)
             );
          }
       });

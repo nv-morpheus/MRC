@@ -441,10 +441,10 @@ describe("Connection", () => {
 
       test("Found Connection", async () => {
          // Verify the number of connections is 1
-         const connection = connectionsSelectById(client.getServerState(), client.machineId!);
+         const connection = connectionsSelectById(client.getServerState(), connectionManager.machineId!);
 
          expect(connection).toBeDefined();
-         expect(connection?.id).toEqual(client.machineId!);
+         expect(connection?.id).toEqual(connectionManager.machineId!);
       });
 
       // test("Abort", async () => {
@@ -471,7 +471,7 @@ describe("Worker", () => {
 
       await manager.register();
 
-      expect(manager.machineId).toBe(client.machineId);
+      expect(manager.machineId).toBe(connectionManager.machineId);
 
       // Need to do deeper checking here
    });
@@ -545,7 +545,7 @@ describe("Pipeline", () => {
 
       expect(foundPipelineInstance).toBeDefined();
 
-      expect(foundPipelineInstance?.machineId).toEqual(client.machineId);
+      expect(foundPipelineInstance?.machineId).toEqual(workersManager.connectionManager.machineId);
 
       // Should be no segments to start
       expect(foundPipelineInstance?.segmentIds).toHaveLength(0);
@@ -555,17 +555,23 @@ describe("Pipeline", () => {
       const pipelineManager = new PipelineManager(workersManager, {
          segments: {
             my_seg1: {
-               egressPorts: [],
+               egressPorts: ["port1"],
                ingressPorts: [],
                name: "my_seg",
             },
             my_seg2: {
                egressPorts: [],
-               ingressPorts: [],
+               ingressPorts: ["port1"],
                name: "my_seg2",
             },
          },
-         manifolds: {},
+         manifolds: {
+            port1: {
+               name: "port1",
+               typeId: 0,
+               typeString: "int",
+            },
+         },
       });
 
       beforeEach(async () => {
@@ -587,6 +593,23 @@ describe("Pipeline", () => {
             ResourceActualStatus.Actual_Created
          );
 
+         // For each manifold, set it to created
+         const manifolds = await Promise.all(
+            pipeline_instance_state!.manifoldIds.map(async (m) => {
+               return await workersManager.connectionManager.update_resource_status(
+                  m,
+                  "ManifoldInstances",
+                  ResourceActualStatus.Actual_Created
+               )!;
+            })
+         );
+
+         // Update the resource to get the assigned segments
+         pipeline_instance_state = workersManager.connectionManager.getResource(
+            pipelineManager.pipelineInstanceId,
+            "PipelineInstances"
+         );
+
          // For each segment, set it to created
          const segments = await Promise.all(
             pipeline_instance_state!.segmentIds.map(async (s) => {
@@ -598,7 +621,42 @@ describe("Pipeline", () => {
             })
          );
 
+         // Update the resource to get the assigned segments
+         pipeline_instance_state = workersManager.connectionManager.getResource(
+            pipelineManager.pipelineInstanceId,
+            "PipelineInstances"
+         );
+
          expect(pipeline_instance_state?.state?.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Completed);
+
+         // Set both the segments and the manifolds to stopped to allow the pipeline to shutdown
+         await Promise.all(
+            segments.map(async (s) => {
+               if (!s) {
+                  throw new Error("Segment should not be undefined");
+               }
+
+               return await workersManager.connectionManager.update_resource_status(
+                  s.id,
+                  "SegmentInstances",
+                  ResourceActualStatus.Actual_Destroyed
+               )!;
+            })
+         );
+
+         await Promise.all(
+            manifolds.map(async (m) => {
+               if (!m) {
+                  throw new Error("Manifold should not be undefined");
+               }
+
+               return await workersManager.connectionManager.update_resource_status(
+                  m.id,
+                  "ManifoldInstances",
+                  ResourceActualStatus.Actual_Destroyed
+               )!;
+            })
+         );
 
          //  Update the PipelineInstance state to assign segment instances
          pipeline_instance_state = await workersManager.connectionManager.update_resource_status(

@@ -51,9 +51,25 @@ class ResourceManagerBase : public AsyncService, public runtime::InternalRuntime
       runtime::InternalRuntimeProvider(runtime),
       m_id(id)
     {
-        if constexpr (std::is_same_v<ResourceT, control_plane::state::Worker>)
+        if constexpr (std::is_same_v<ResourceT, control_plane::state::Connection>)
+        {
+            m_resource_type = "Connections";
+        }
+        else if constexpr (std::is_same_v<ResourceT, control_plane::state::Worker>)
         {
             m_resource_type = "Workers";
+        }
+        else if constexpr (std::is_same_v<ResourceT, control_plane::state::PipelineInstance>)
+        {
+            m_resource_type = "PipelineInstances";
+        }
+        else if constexpr (std::is_same_v<ResourceT, control_plane::state::ManifoldInstance>)
+        {
+            m_resource_type = "ManifoldInstances";
+        }
+        else if constexpr (std::is_same_v<ResourceT, control_plane::state::SegmentInstance>)
+        {
+            m_resource_type = "SegmentInstances";
         }
         else
         {
@@ -65,6 +81,22 @@ class ResourceManagerBase : public AsyncService, public runtime::InternalRuntime
     uint64_t id() const
     {
         return m_id;
+    }
+
+  protected:
+    void mark_completed()
+    {
+        CHECK_EQ(m_local_status, control_plane::state::ResourceActualStatus::Running) << "Can only mark completed "
+                                                                                         "while running. Use "
+                                                                                         "mark_errored() if an issue "
+                                                                                         "occurred";
+
+        this->set_local_actual_status(control_plane::state::ResourceActualStatus::Completed);
+    }
+
+    void mark_errored()
+    {
+        throw std::runtime_error("Not implemented: mark_errored");
     }
 
   private:
@@ -108,7 +140,7 @@ class ResourceManagerBase : public AsyncService, public runtime::InternalRuntime
                         std::rethrow_exception(ex_ptr);
                     } catch (const std::exception& ex)
                     {
-                        LOG(ERROR) << "Error in " << this->debug_prefix() << ex.what();
+                        LOG(ERROR) << this->debug_prefix() << " Error in subscription. Message: " << ex.what();
                     }
 
                     this->service_kill();
@@ -146,10 +178,15 @@ class ResourceManagerBase : public AsyncService, public runtime::InternalRuntime
             {
                 // Set our local status to Creating to prevent reentries
                 this->set_local_actual_status(control_plane::state::ResourceActualStatus::Creating, false);
+            }
 
-                // Call the resource created function
-                this->on_created_requested(instance);
+            bool needs_local_update = m_local_status < control_plane::state::ResourceActualStatus::Created;
 
+            // Call the resource created function
+            bool should_update_local = this->on_created_requested(instance, needs_local_update);
+
+            if (needs_local_update && should_update_local)
+            {
                 this->set_local_actual_status(control_plane::state::ResourceActualStatus::Created);
             }
 
@@ -241,7 +278,10 @@ class ResourceManagerBase : public AsyncService, public runtime::InternalRuntime
         return false;
     }
 
-    virtual void on_created_requested(ResourceT& instance) {}
+    virtual bool on_created_requested(ResourceT& instance, bool needs_local_update)
+    {
+        return needs_local_update;
+    }
 
     virtual void on_completed_requested(ResourceT& instance) {}
 

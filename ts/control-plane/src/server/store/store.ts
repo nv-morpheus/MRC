@@ -8,31 +8,26 @@ import {
    PreloadedState,
 } from "@reduxjs/toolkit";
 
-import connectionsReducer from "./slices/connectionsSlice";
-import pipelineDefinitionsReducer from "./slices/pipelineDefinitionsSlice";
-import pipelineInstancesReducer, { pipelineInstancesConfigureListeners } from "./slices/pipelineInstancesSlice";
-import segmentInstancesReducer, { segmentInstancesConfigureListeners } from "./slices/segmentInstancesSlice";
-import manifoldInstancesReducer, { manifoldInstancesConfigureListeners } from "./slices/manifoldInstancesSlice";
-import systemReducer, { systemStartRequest, systemStopRequest } from "./slices/systemSlice";
-import workersReducer from "./slices/workersSlice";
-import { customBatcherEnhancer } from "./custom_batcher_enhancer";
 import { devToolsEnhancer } from "@mrc/server/devTools";
+import { systemConfigureSlice, systemStartRequest, systemStopRequest } from "@mrc/server/store/slices/systemSlice";
+import { customBatcherEnhancer } from "@mrc/server/store/custom_batcher_enhancer";
+import { connectionsConfigureSlice } from "@mrc/server/store/slices/connectionsSlice";
+import { manifoldInstancesConfigureSlice } from "@mrc/server/store/slices/manifoldInstancesSlice";
+import { pipelineDefinitionsConfigureSlice } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
+import { pipelineInstancesConfigureSlice } from "@mrc/server/store/slices/pipelineInstancesSlice";
+import { segmentInstancesConfigureSlice } from "@mrc/server/store/slices/segmentInstancesSlice";
+import { workersConfigureSlice } from "@mrc/server/store/slices/workersSlice";
 
 // Create the root reducer separately so we can extract the RootState type
 const slicesReducer = combineReducers({
-   system: systemReducer,
-   connections: connectionsReducer,
-   workers: workersReducer,
-   pipelineDefinitions: pipelineDefinitionsReducer,
-   pipelineInstances: pipelineInstancesReducer,
-   segmentInstances: segmentInstancesReducer,
-   manifoldInstances: manifoldInstancesReducer,
+   system: systemConfigureSlice(),
+   connections: connectionsConfigureSlice(),
+   workers: workersConfigureSlice(),
+   pipelineDefinitions: pipelineDefinitionsConfigureSlice(),
+   pipelineInstances: pipelineInstancesConfigureSlice(),
+   segmentInstances: segmentInstancesConfigureSlice(),
+   manifoldInstances: manifoldInstancesConfigureSlice(),
 });
-
-// Configure all of the listeners
-pipelineInstancesConfigureListeners();
-manifoldInstancesConfigureListeners();
-segmentInstancesConfigureListeners();
 
 export const startAction = createAction("start");
 export const stopAction = createAction("stop");

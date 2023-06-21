@@ -1,15 +1,20 @@
-import { ResourceActualStatus } from "@mrc/proto/mrc/protos/architect_state";
+import { ResourceActualStatus, ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { createWrappedEntityAdapter } from "../../utils";
 
 import type { AppDispatch, AppGetState, RootState } from "../store";
 import { pipelineInstancesAdd, pipelineInstancesRemove, pipelineInstancesSelectByIds } from "./pipelineInstancesSlice";
-import { workersAdd, workersAddMany, workersRemove, workersSelectByIds } from "./workersSlice";
-import { segmentInstancesSelectByIds } from "@mrc/server/store/slices/segmentInstancesSlice";
+import { workersAdd, workersRemove, workersSelectByIds } from "./workersSlice";
+import {
+   segmentInstancesDestroy,
+   segmentInstancesRemove,
+   segmentInstancesSelectByIds,
+} from "@mrc/server/store/slices/segmentInstancesSlice";
 import { systemStartRequest, systemStopRequest } from "@mrc/server/store/slices/systemSlice";
 import { IConnection, IWorker } from "@mrc/common/entities";
 import { resourceUpdateActualState } from "@mrc/server/store/slices/resourceActions";
+import { createWatcher } from "@mrc/server/store/resourceStateWatcher";
 
 const connectionsAdapter = createWrappedEntityAdapter<IConnection>({
    selectId: (x) => x.id,
@@ -30,7 +35,7 @@ export const connectionsSlice = createSlice({
    name: "connections",
    initialState: connectionsAdapter.getInitialState(),
    reducers: {
-      add: (state, action: PayloadAction<Pick<IConnection, "id" | "peerInfo">>) => {
+      add: (state, action: PayloadAction<IConnection>) => {
          if (connectionsAdapter.getOne(state, action.payload.id)) {
             throw new Error(`Connection with ID: ${action.payload.id} already exists`);
          }
@@ -38,7 +43,11 @@ export const connectionsSlice = createSlice({
             ...action.payload,
             workerIds: [],
             assignedPipelineIds: [],
-            refCounts: {},
+            state: {
+               actualStatus: ResourceActualStatus.Actual_Created,
+               refCount: 0,
+               requestedStatus: ResourceRequestedStatus.Requested_Completed,
+            },
          });
       },
       remove: (state, action: PayloadAction<IConnection>) => {
@@ -69,6 +78,32 @@ export const connectionsSlice = createSlice({
          }
 
          connectionsAdapter.removeOne(state, action.payload.id);
+      },
+      updateResourceRequestedState: (
+         state,
+         action: PayloadAction<{ resource: IConnection; status: ResourceRequestedStatus }>
+      ) => {
+         const found = connectionsAdapter.getOne(state, action.payload.resource.id);
+
+         if (!found) {
+            throw new Error(`Connection with ID: ${action.payload.resource.id} not found`);
+         }
+
+         // Set value without checking since thats handled elsewhere
+         found.state.requestedStatus = action.payload.status;
+      },
+      updateResourceActualState: (
+         state,
+         action: PayloadAction<{ resource: IConnection; status: ResourceActualStatus }>
+      ) => {
+         const found = connectionsAdapter.getOne(state, action.payload.resource.id);
+
+         if (!found) {
+            throw new Error(`Connection with ID: ${action.payload.resource.id} not found`);
+         }
+
+         // Set value without checking since thats handled elsewhere
+         found.state.actualStatus = action.payload.status;
       },
    },
    extraReducers: (builder) => {
@@ -147,9 +182,7 @@ export function connectionsDropOne(payload: Pick<IConnection, "id">) {
 
          for (const x of segments) {
             // Need to set the state first
-            await dispatch(resourceUpdateActualState("SegmentInstances", x.id, ResourceActualStatus.Actual_Destroyed));
-
-            // dispatch(segmentInstancesRemove(x));
+            await dispatch(segmentInstancesDestroy(x));
          }
 
          pipelines.forEach((x) => dispatch(pipelineInstancesRemove(x)));
@@ -165,7 +198,12 @@ export function connectionsDropOne(payload: Pick<IConnection, "id">) {
 
 type ConnectionsStateType = ReturnType<typeof connectionsSlice.getInitialState>;
 
-export const { add: connectionsAdd, remove: connectionsRemove } = connectionsSlice.actions;
+export const {
+   add: connectionsAdd,
+   remove: connectionsRemove,
+   updateResourceRequestedState: connectionsUpdateResourceRequestedState,
+   updateResourceActualState: connectionsUpdateResourceActualState,
+} = connectionsSlice.actions;
 
 export const {
    selectAll: connectionsSelectAll,
@@ -176,4 +214,17 @@ export const {
    selectTotal: connectionsSelectTotal,
 } = connectionsAdapter.getSelectors((state: RootState) => state.connections);
 
-export default connectionsSlice.reducer;
+export function connectionsConfigureSlice() {
+   createWatcher(
+      "Connections",
+      connectionsAdd,
+      connectionsSelectById,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined
+   );
+
+   return connectionsSlice.reducer;
+}

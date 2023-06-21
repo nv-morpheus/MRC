@@ -18,6 +18,7 @@ import {
    segmentInstancesSelectByNameAndPipelineDef,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
 import { startAppListening } from "@mrc/server/store/listener_middleware";
+import { createWatcher } from "@mrc/server/store/resourceStateWatcher";
 
 const manifoldInstancesAdapter = createWrappedEntityAdapter<IManifoldInstance>({
    selectId: (w) => w.id,
@@ -397,90 +398,108 @@ export const manifoldInstancesSelectByNameAndPipelineDef = (
    pipelineDefinitionId: string
 ) => selectByNameAndPipelineDef(state.manifoldInstances, name, pipelineDefinitionId);
 
-export function manifoldInstancesConfigureListeners() {
-   startAppListening({
-      actionCreator: manifoldInstancesAdd,
-      effect: async (action, listenerApi) => {
-         const id = action.payload.id;
+// export function manifoldInstancesConfigureListeners() {
+//    startAppListening({
+//       actionCreator: manifoldInstancesAdd,
+//       effect: async (action, listenerApi) => {
+//          const id = action.payload.id;
 
-         const instance = manifoldInstancesSelectById(listenerApi.getState(), id);
+//          const instance = manifoldInstancesSelectById(listenerApi.getState(), id);
 
-         if (!instance) {
-            throw new Error("Could not find segment instance");
-         }
+//          if (!instance) {
+//             throw new Error("Could not find segment instance");
+//          }
 
-         // Now that the object has been created, set the requested status to Created
-         listenerApi.dispatch(
-            manifoldInstancesSlice.actions.updateResourceRequestedState({
-               resource: instance,
-               status: ResourceRequestedStatus.Requested_Created,
-            })
-         );
+//          // Now that the object has been created, set the requested status to Created
+//          listenerApi.dispatch(
+//             manifoldInstancesSlice.actions.updateResourceRequestedState({
+//                resource: instance,
+//                status: ResourceRequestedStatus.Requested_Created,
+//             })
+//          );
 
-         const monitor_instance = listenerApi.fork(async () => {
-            while (true) {
-               // Wait for the next update
-               const [, current_state] = await listenerApi.take((action) => {
-                  return manifoldInstancesUpdateResourceActualState.match(action) && action.payload.resource.id === id;
-               });
+//          const monitor_instance = listenerApi.fork(async () => {
+//             while (true) {
+//                // Wait for the next update
+//                const [, current_state] = await listenerApi.take((action) => {
+//                   return manifoldInstancesUpdateResourceActualState.match(action) && action.payload.resource.id === id;
+//                });
 
-               if (!current_state.system.requestRunning) {
-                  console.warn("Updating resource outside of a request will lead to undefined behavior!");
-               }
+//                if (!current_state.system.requestRunning) {
+//                   console.warn("Updating resource outside of a request will lead to undefined behavior!");
+//                }
 
-               // Get the status of this instance
-               const instance = manifoldInstancesSelectById(listenerApi.getState(), id);
+//                // Get the status of this instance
+//                const instance = manifoldInstancesSelectById(listenerApi.getState(), id);
 
-               if (!instance) {
-                  throw new Error("Could not find instance");
-               }
+//                if (!instance) {
+//                   throw new Error("Could not find instance");
+//                }
 
-               if (instance.state.actualStatus === ResourceActualStatus.Actual_Created) {
-                  // Now that its created, sync our segments
-                  listenerApi.dispatch(manifoldInstancesSyncSegments(id));
+//                if (instance.state.actualStatus === ResourceActualStatus.Actual_Created) {
+//                   // Now that its created, sync our segments
+//                   listenerApi.dispatch(manifoldInstancesSyncSegments(id));
 
-                  // Tell it to move running/completed
-                  listenerApi.dispatch(
-                     manifoldInstancesSlice.actions.updateResourceRequestedState({
-                        resource: instance,
-                        status: ResourceRequestedStatus.Requested_Completed,
-                     })
-                  );
-               } else if (instance.state.actualStatus === ResourceActualStatus.Actual_Completed) {
-                  // Before we can move to Stopped, all ref counts must be 0
+//                   // Tell it to move running/completed
+//                   listenerApi.dispatch(
+//                      manifoldInstancesSlice.actions.updateResourceRequestedState({
+//                         resource: instance,
+//                         status: ResourceRequestedStatus.Requested_Completed,
+//                      })
+//                   );
+//                } else if (instance.state.actualStatus === ResourceActualStatus.Actual_Completed) {
+//                   // Before we can move to Stopped, all ref counts must be 0
 
-                  // Tell it to move to stopped
-                  listenerApi.dispatch(
-                     manifoldInstancesSlice.actions.updateResourceRequestedState({
-                        resource: instance,
-                        status: ResourceRequestedStatus.Requested_Stopped,
-                     })
-                  );
-               } else if (instance.state.actualStatus === ResourceActualStatus.Actual_Stopped) {
-                  // Tell it to move to stopped
-                  listenerApi.dispatch(
-                     manifoldInstancesSlice.actions.updateResourceRequestedState({
-                        resource: instance,
-                        status: ResourceRequestedStatus.Requested_Destroyed,
-                     })
-                  );
-               } else if (instance.state.actualStatus === ResourceActualStatus.Actual_Destroyed) {
-                  // Now we can actually just remove the object
-                  listenerApi.dispatch(manifoldInstancesRemove(instance));
+//                   // Tell it to move to stopped
+//                   listenerApi.dispatch(
+//                      manifoldInstancesSlice.actions.updateResourceRequestedState({
+//                         resource: instance,
+//                         status: ResourceRequestedStatus.Requested_Stopped,
+//                      })
+//                   );
+//                } else if (instance.state.actualStatus === ResourceActualStatus.Actual_Stopped) {
+//                   // Tell it to move to stopped
+//                   listenerApi.dispatch(
+//                      manifoldInstancesSlice.actions.updateResourceRequestedState({
+//                         resource: instance,
+//                         status: ResourceRequestedStatus.Requested_Destroyed,
+//                      })
+//                   );
+//                } else if (instance.state.actualStatus === ResourceActualStatus.Actual_Destroyed) {
+//                   // Now we can actually just remove the object
+//                   listenerApi.dispatch(manifoldInstancesRemove(instance));
 
-                  break;
-               } else {
-                  throw new Error("Unknow state type");
-               }
-            }
-         });
+//                   break;
+//                } else {
+//                   throw new Error("Unknow state type");
+//                }
+//             }
+//          });
 
-         await listenerApi.condition((action) => {
-            return manifoldInstancesRemove.match(action) && action.payload.id === id;
-         });
-         monitor_instance.cancel();
+//          await listenerApi.condition((action) => {
+//             return manifoldInstancesRemove.match(action) && action.payload.id === id;
+//          });
+//          monitor_instance.cancel();
+//       },
+//    });
+// }
+
+export function manifoldInstancesConfigureSlice() {
+   createWatcher(
+      "ManifoldInstances",
+      manifoldInstancesAdd,
+      manifoldInstancesSelectById,
+      async (instance, listenerApi) => {
+         // Now that its created, sync our segments
+         listenerApi.dispatch(manifoldInstancesSyncSegments(instance.id));
       },
-   });
-}
+      undefined,
+      undefined,
+      undefined,
+      async (instance, listenerApi) => {
+         listenerApi.dispatch(manifoldInstancesRemove(instance));
+      }
+   );
 
-export default manifoldInstancesSlice.reducer;
+   return manifoldInstancesSlice.reducer;
+}

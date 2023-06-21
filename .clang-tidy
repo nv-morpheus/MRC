@@ -20,7 +20,8 @@ Checks: >
   -modernize-use-nodiscard,
   -modernize-macro-to-enum,
   google-readability-todo,
-  misc-throw-by-value-catch-by-reference
+  misc-throw-by-value-catch-by-reference,
+  misc-include-cleaner
 
 #WarningsAsErrors: '*'
 HeaderFilterRegex: '.*\/include\/mrc\/.*'

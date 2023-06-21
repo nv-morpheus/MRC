@@ -24,14 +24,17 @@
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/system_resources.hpp"
 #include "internal/runnable/runnable_resources.hpp"
+#include "internal/runtime/resource_manager_base.hpp"
 #include "internal/runtime/runtime.hpp"
 #include "internal/runtime/runtime_provider.hpp"
 #include "internal/segment/segment_definition.hpp"
 #include "internal/segment/segment_instance.hpp"
+#include "internal/utils/ranges.hpp"
 
 #include "mrc/core/addresses.hpp"
 #include "mrc/core/async_service.hpp"
 #include "mrc/core/task_queue.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/manifold/interface.hpp"
 #include "mrc/protos/architect_state.pb.h"
 #include "mrc/segment/utils.hpp"
@@ -60,29 +63,20 @@ PipelineInstance::PipelineInstance(runtime::IInternalRuntimeProvider& runtime,
     m_joinable_future = m_joinable_promise.get_future().share();
 }
 
-PipelineInstance::~PipelineInstance() = default;
+PipelineInstance::~PipelineInstance()
+{
+    AsyncService::call_in_destructor();
+}
 
 ManifoldInstance& PipelineInstance::get_manifold_instance(const PortName& port_name) const
 {
-    if (!m_manifold_instances.contains(port_name))
+    if (!m_manifold_instances_by_name.contains(port_name))
     {
-        // Since these are created lazily, cast the constness away
-        auto* mutable_this = const_cast<PipelineInstance*>(this);
-
-        auto manifold_def = m_definition->find_manifold(port_name);
-
-        // Create a new manifold
-        auto [added_iterator, did_add] = mutable_this->m_manifold_instances.emplace(
-            port_name,
-            std::make_shared<ManifoldInstance>(*mutable_this, manifold_def, 0));
-
-        mutable_this->child_service_start(*added_iterator->second);
-
-        // Need to wait for it to be live before continuing
-        added_iterator->second->service_await_live();
+        throw exceptions::MrcRuntimeError(
+            MRC_CONCAT_STR("Invalid port name: '" << port_name << "'. Manifold not found"));
     }
 
-    return *m_manifold_instances.at(port_name);
+    return *m_manifold_instances_by_name.at(port_name);
 }
 
 std::shared_ptr<manifold::Interface> PipelineInstance::get_manifold(const PortName& port_name) const
@@ -189,10 +183,21 @@ std::shared_ptr<manifold::Interface> PipelineInstance::get_manifold(const PortNa
 control_plane::state::PipelineInstance PipelineInstance::filter_resource(
     const control_plane::state::ControlPlaneState& state) const
 {
+    if (!state.pipeline_instances().contains(this->id()))
+    {
+        throw exceptions::MrcRuntimeError(MRC_CONCAT_STR("Could not find Pipeline Instance with ID: " << this->id()));
+    }
     return state.pipeline_instances().at(this->id());
 }
 
-void PipelineInstance::on_created_requested(control_plane::state::PipelineInstance& instance) {}
+bool PipelineInstance::on_created_requested(control_plane::state::PipelineInstance& instance, bool needs_local_update)
+{
+    LOG(INFO) << "PipelineInstance: on_created_requested";
+
+    this->sync_manifolds(instance);
+
+    return true;
+}
 
 void PipelineInstance::on_completed_requested(control_plane::state::PipelineInstance& instance)
 {
@@ -203,13 +208,67 @@ void PipelineInstance::on_completed_requested(control_plane::state::PipelineInst
 
     // // Need to activate our worker
     // this->runtime().control_plane().await_unary<protos::Ack>(protos::ClientUnaryActivateStream, std::move(resp));
+    LOG(INFO) << "PipelineInstance: on_created_requested";
 }
 
-void PipelineInstance::on_running_state_updated(control_plane::state::PipelineInstance& instance) {}
+void PipelineInstance::on_running_state_updated(control_plane::state::PipelineInstance& instance)
+{
+    this->sync_manifolds(instance);
+}
 
 void PipelineInstance::on_stopped_requested(control_plane::state::PipelineInstance& instance)
 {
     this->service_stop();
+}
+
+void PipelineInstance::sync_manifolds(const control_plane::state::PipelineInstance& instance)
+{
+    // Check for assignments
+    auto cur_manifolds = extract_keys(m_manifold_instances);
+    auto new_manifolds = extract_keys(instance.manifolds());
+
+    auto [create_manifolds, remove_manifolds] = compare_difference(cur_manifolds, new_manifolds);
+
+    // construct new segments and attach to manifold
+    for (const auto& id : create_manifolds)
+    {
+        // auto partition_id = new_segments_map.at(address);
+        // DVLOG(10) << info() << ": create segment for address " << ::mrc::segment::info(address)
+        //           << " on resource partition: " << partition_id;
+        this->create_manifold(instance.manifolds().at(id));
+    }
+
+    // detach from manifold or stop old segments
+    for (const auto& id : remove_manifolds)
+    {
+        // DVLOG(10) << info() << ": stop segment for address " << ::mrc::segment::info(address);
+        this->destroy_manifold(id);
+    }
+}
+
+void PipelineInstance::create_manifold(const control_plane::state::ManifoldInstance& instance)
+{
+    // Since these are created lazily, cast the constness away
+    auto manifold_id = instance.id();
+    auto port_name   = instance.port_name();
+
+    auto manifold_def = m_definition->find_manifold(port_name);
+
+    // Create a new manifold
+    auto [added_iterator, did_add] = this->m_manifold_instances.emplace(
+        manifold_id,
+        std::make_shared<ManifoldInstance>(*this, manifold_def, manifold_id));
+
+    // Save it to reference by name
+    m_manifold_instances_by_name[port_name] = added_iterator->second;
+
+    // Need to wait for it to be live before continuing
+    this->child_service_start(*added_iterator->second);
+}
+
+void PipelineInstance::destroy_manifold(InstanceID manifold_id)
+{
+    throw std::runtime_error("Not implemented");
 }
 
 manifold::Interface& PipelineInstance::manifold(const PortName& port_name)

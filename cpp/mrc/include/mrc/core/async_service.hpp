@@ -25,6 +25,7 @@
 #include "mrc/types.hpp"
 #include "mrc/utils/string_utils.hpp"
 
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -101,7 +102,7 @@ class AsyncService : public virtual runnable::IRunnableResourcesProvider
     void service_await_live();
     void service_stop();
     void service_kill();
-    void service_await_join();
+    bool service_await_join(std::chrono::milliseconds wait_duration = std::chrono::milliseconds::max());
 
   protected:
     std::string debug_prefix() const;
@@ -110,8 +111,8 @@ class AsyncService : public virtual runnable::IRunnableResourcesProvider
     void service_set_description(std::string description);
     void mark_started();
 
-    void child_service_start(AsyncService& child);
-    void child_service_start(std::unique_ptr<AsyncService> child);
+    void child_service_start(AsyncService& child, bool await_live = false);
+    void child_service_start(std::unique_ptr<AsyncService> child, bool await_live = false);
 
     template <typename RunnableT, typename... ContextArgsT>
     void child_runnable_start(std::string name,
@@ -119,8 +120,16 @@ class AsyncService : public virtual runnable::IRunnableResourcesProvider
                               std::unique_ptr<RunnableT> runnable,
                               ContextArgsT&&... context_args);
 
+    SharedFuture<void> completed_future() const;
+
   private:
+    // Advances the state. New state value must be greater than or equal to current state. Using a value less than the
+    // current state will generate an error
     bool forward_state(AsyncServiceState new_state, bool assert_forward = false);
+
+    // Ensures the state is at least the current value or higher. Does not change the state if the value is less than or
+    // equal the current state
+    bool ensure_state(AsyncServiceState ensure_state);
 
     virtual void do_service_start(std::stop_token stop_token) = 0;
     // virtual void do_service_await_live()                      = 0;
@@ -130,6 +139,7 @@ class AsyncService : public virtual runnable::IRunnableResourcesProvider
 
     AsyncServiceState m_state{AsyncServiceState::Initialized};
     std::string m_service_name{"mrc::AsyncService"};
+    SharedPromise<void> m_live_promise;
     SharedFuture<void> m_completed_future;
     bool m_service_await_join_called{false};
     bool m_call_in_destructor_called{false};
@@ -140,7 +150,7 @@ class AsyncService : public virtual runnable::IRunnableResourcesProvider
 
     std::map<std::string, std::unique_ptr<AsyncService>> m_owned_children;
     std::vector<std::reference_wrapper<AsyncService>> m_children;
-    std::vector<SharedFuture<void>> m_child_futures;
+    // std::vector<SharedFuture<void>> m_child_futures;
 };
 
 class AsyncServiceRunnerWrapper : public AsyncService, public runnable::RunnableResourcesProvider

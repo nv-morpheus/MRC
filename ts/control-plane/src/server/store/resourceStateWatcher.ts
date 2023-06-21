@@ -1,21 +1,21 @@
 import type { RootState } from "./store";
-import { IResourceInstance } from "@mrc/common/entities";
+import { IResourceInstance, ResourceStateTypeStrings } from "@mrc/common/entities";
 import {
    ResourceActualStatus,
    resourceActualStatusToNumber,
    resourceRequestedStatusToNumber,
 } from "@mrc/proto/mrc/protos/architect_state";
-import { startAppListening } from "@mrc/server/store/listener_middleware";
+import { AppListenerAPI, startAppListening } from "@mrc/server/store/listener_middleware";
 import { ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
 import { ActionCreatorWithPayload } from "@reduxjs/toolkit";
-import { ResourceStateTypeStrings, resourceUpdateRequestedState } from "@mrc/server/store/slices/resourceActions";
+import { resourceUpdateRequestedState } from "@mrc/server/store/slices/resourceActions";
 
-type ResourceEvent<ResourceT> = (instance: ResourceT) => Promise<void>;
+type ResourceEvent<ResourceT> = (instance: ResourceT, listenerApi: AppListenerAPI) => Promise<void>;
 
-export abstract class ResourceStateWatcher<ResourceT extends IResourceInstance, ActionCreatorNameT extends string> {
+export abstract class ResourceStateWatcher<ResourceT extends IResourceInstance, PayloadT extends { id: string }> {
    constructor(
       protected resourceType: ResourceStateTypeStrings,
-      protected actionCreator: ActionCreatorWithPayload<ResourceT, ActionCreatorNameT>
+      protected actionCreator: ActionCreatorWithPayload<PayloadT>
    ) {}
 
    public configureListener() {
@@ -30,10 +30,10 @@ export abstract class ResourceStateWatcher<ResourceT extends IResourceInstance, 
                throw new Error("Could not find segment instance");
             }
 
-            // Now that the object has been created, set the requested status to Created
-            await listenerApi.dispatch(
-               resourceUpdateRequestedState(this.resourceType, instanceId, ResourceRequestedStatus.Requested_Created)
-            );
+            // // Now that the object has been created, set the requested status to Created
+            // await listenerApi.dispatch(
+            //    resourceUpdateRequestedState(this.resourceType, instanceId, ResourceRequestedStatus.Requested_Created)
+            // );
 
             const monitor_instance = listenerApi.fork(async () => {
                while (true) {
@@ -89,7 +89,7 @@ export abstract class ResourceStateWatcher<ResourceT extends IResourceInstance, 
                            resourceRequestedStatusToNumber(ResourceRequestedStatus.Requested_Completed)
                         ) {
                            // Perform any processing
-                           await this._onCreated(instance);
+                           await this._onCreated(instance, listenerApi);
 
                            // Tell it to move running/completed
                            await listenerApi.dispatch(
@@ -104,7 +104,7 @@ export abstract class ResourceStateWatcher<ResourceT extends IResourceInstance, 
                      case ResourceActualStatus.Actual_Running:
                         {
                            // Perform any processing
-                           await this._onRunning(instance);
+                           await this._onRunning(instance, listenerApi);
                         }
                         break;
                      case ResourceActualStatus.Actual_Completed:
@@ -115,7 +115,7 @@ export abstract class ResourceStateWatcher<ResourceT extends IResourceInstance, 
                            // TODO(MDD): Before we can move to Stopped, all ref counts must be 0
 
                            // Perform any processing
-                           await this._onCompleted(instance);
+                           await this._onCompleted(instance, listenerApi);
 
                            // Tell it to move to stopped
                            await listenerApi.dispatch(
@@ -134,7 +134,7 @@ export abstract class ResourceStateWatcher<ResourceT extends IResourceInstance, 
                            resourceRequestedStatusToNumber(ResourceRequestedStatus.Requested_Destroyed)
                         ) {
                            // Perform any processing
-                           await this._onStopped(instance);
+                           await this._onStopped(instance, listenerApi);
 
                            // Tell it to move to stopped
                            await listenerApi.dispatch(
@@ -151,7 +151,7 @@ export abstract class ResourceStateWatcher<ResourceT extends IResourceInstance, 
                         break;
                      case ResourceActualStatus.Actual_Destroyed:
                         // Now we can actually just remove the object
-                        await this._onDestroyed(instance);
+                        await this._onDestroyed(instance, listenerApi);
 
                         break;
                      default:
@@ -171,20 +171,20 @@ export abstract class ResourceStateWatcher<ResourceT extends IResourceInstance, 
 
    protected abstract _getResourceInstance(state: RootState, id: string): ResourceT | undefined;
 
-   protected abstract _onCreated(instance: ResourceT): Promise<void>;
-   protected abstract _onRunning(instance: ResourceT): Promise<void>;
-   protected abstract _onCompleted(instance: ResourceT): Promise<void>;
-   protected abstract _onStopped(instance: ResourceT): Promise<void>;
-   protected abstract _onDestroyed(instance: ResourceT): Promise<void>;
+   protected abstract _onCreated(instance: ResourceT, listenerApi: AppListenerAPI): Promise<void>;
+   protected abstract _onRunning(instance: ResourceT, listenerApi: AppListenerAPI): Promise<void>;
+   protected abstract _onCompleted(instance: ResourceT, listenerApi: AppListenerAPI): Promise<void>;
+   protected abstract _onStopped(instance: ResourceT, listenerApi: AppListenerAPI): Promise<void>;
+   protected abstract _onDestroyed(instance: ResourceT, listenerApi: AppListenerAPI): Promise<void>;
 }
 
 export class ResourceStateWatcherLambda<
    ResourceT extends IResourceInstance,
-   ActionCreatorNameT extends string
-> extends ResourceStateWatcher<ResourceT, ActionCreatorNameT> {
+   PayloadT extends { id: string }
+> extends ResourceStateWatcher<ResourceT, PayloadT> {
    constructor(
       resourceType: ResourceStateTypeStrings,
-      actionCreator: ActionCreatorWithPayload<ResourceT, ActionCreatorNameT>,
+      actionCreator: ActionCreatorWithPayload<PayloadT>,
       private getResourceInstance: (state: RootState, id: string) => ResourceT | undefined,
       private onCreated?: ResourceEvent<ResourceT>,
       private onRunning?: ResourceEvent<ResourceT>,
@@ -198,41 +198,67 @@ export class ResourceStateWatcherLambda<
    protected _getResourceInstance(state: RootState, id: string): ResourceT | undefined {
       return this.getResourceInstance(state, id);
    }
-   protected _onCreated(instance: ResourceT): Promise<void> {
+   protected _onCreated(instance: ResourceT, listenerApi: AppListenerAPI): Promise<void> {
       if (!this.onCreated) {
          return Promise.resolve();
       }
 
-      return this.onCreated(instance);
+      return this.onCreated(instance, listenerApi);
    }
 
-   protected _onRunning(instance: ResourceT): Promise<void> {
+   protected _onRunning(instance: ResourceT, listenerApi: AppListenerAPI): Promise<void> {
       if (!this.onRunning) {
          return Promise.resolve();
       }
 
-      return this.onRunning(instance);
+      return this.onRunning(instance, listenerApi);
    }
 
-   protected _onCompleted(instance: ResourceT): Promise<void> {
+   protected _onCompleted(instance: ResourceT, listenerApi: AppListenerAPI): Promise<void> {
       if (!this.onCompleted) {
          return Promise.resolve();
       }
 
-      return this.onCompleted(instance);
+      return this.onCompleted(instance, listenerApi);
    }
-   protected _onStopped(instance: ResourceT): Promise<void> {
+   protected _onStopped(instance: ResourceT, listenerApi: AppListenerAPI): Promise<void> {
       if (!this.onStopped) {
          return Promise.resolve();
       }
 
-      return this.onStopped(instance);
+      return this.onStopped(instance, listenerApi);
    }
-   protected _onDestroyed(instance: ResourceT): Promise<void> {
+   protected _onDestroyed(instance: ResourceT, listenerApi: AppListenerAPI): Promise<void> {
       if (!this.onDestroyed) {
          return Promise.resolve();
       }
 
-      return this.onDestroyed(instance);
+      return this.onDestroyed(instance, listenerApi);
    }
+}
+
+export function createWatcher<ResourceT extends IResourceInstance, PayloadT extends { id: string }>(
+   resourceTypeString: ResourceStateTypeStrings,
+   actionCreator: ActionCreatorWithPayload<PayloadT>,
+   getResourceInstance: (state: RootState, id: string) => ResourceT | undefined,
+   onCreated?: ResourceEvent<ResourceT>,
+   onRunning?: ResourceEvent<ResourceT>,
+   onCompleted?: ResourceEvent<ResourceT>,
+   onStopped?: ResourceEvent<ResourceT>,
+   onDestroyed?: ResourceEvent<ResourceT>
+) {
+   const watcher = new ResourceStateWatcherLambda<ResourceT, PayloadT>(
+      resourceTypeString,
+      actionCreator,
+      getResourceInstance,
+      onCreated,
+      onRunning,
+      onCompleted,
+      onStopped,
+      onDestroyed
+   );
+
+   watcher.configureListener();
+
+   return watcher;
 }

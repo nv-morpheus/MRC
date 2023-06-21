@@ -36,4 +36,6 @@ export const systemSlice = createSlice({
 
 export const { startRequest: systemStartRequest, stopRequest: systemStopRequest } = systemSlice.actions;
 
-export default systemSlice.reducer;
+export function systemConfigureSlice() {
+   return systemSlice.reducer;
+}

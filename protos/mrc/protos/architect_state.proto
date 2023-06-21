@@ -113,8 +113,8 @@ message Connection {
    // The pipeline instances that are assigned to this machine
    repeated uint64 assigned_pipeline_ids = 4;
 
-   // The ref counts owned by this connection. If the connection is dropped, the ref counts will be decremented
-   map<string, int32> ref_counts = 5;
+   // Current state
+   ResourceState state = 5;
 }
 
 message Worker {
@@ -414,13 +414,14 @@ message ControlPlaneState {
       map<uint64, ManifoldInstance> entities = 2;
    }
 
-   ConnectionsState connections = 1;
-   WorkerssState workers = 2;
-   PipelineDefinitionsState pipeline_definitions = 3;
-   PipelineInstancesState pipeline_instances = 4;
-   SegmentDefinitionsState segment_definitions = 5;
-   SegmentInstancesState segment_instances = 6;
-   ManifoldInstancesState manifold_instances = 7;
+   uint64 nonce = 1;
+   ConnectionsState connections = 2;
+   WorkerssState workers = 3;
+   PipelineDefinitionsState pipeline_definitions = 4;
+   PipelineInstancesState pipeline_instances = 5;
+   SegmentDefinitionsState segment_definitions = 6;
+   SegmentInstancesState segment_instances = 7;
+   ManifoldInstancesState manifold_instances = 8;
 }
 
 

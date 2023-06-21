@@ -1,11 +1,5 @@
 /* eslint-disable @typescript-eslint/unbound-method */
-import {
-   IManifoldInstance,
-   IPipelineConfiguration,
-   IPipelineInstance,
-   IPipelineMapping,
-   ISegmentInstance,
-} from "@mrc/common/entities";
+import { IManifoldInstance, IPipelineInstance, ISegmentInstance } from "@mrc/common/entities";
 import {
    ResourceActualStatus,
    ResourceRequestedStatus,
@@ -14,16 +8,13 @@ import {
    resourceRequestedStatusToNumber,
 } from "@mrc/proto/mrc/protos/architect_state";
 import { connectionsRemove } from "@mrc/server/store/slices/connectionsSlice";
-import {
-   pipelineDefinitionsCreateOrUpdate,
-   pipelineDefinitionsSelectById,
-} from "@mrc/server/store/slices/pipelineDefinitionsSlice";
-import { AppDispatch, AppGetState, RootState } from "@mrc/server/store/store";
+import { pipelineDefinitionsSelectById } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
+import { RootState } from "@mrc/server/store/store";
 import { createWrappedEntityAdapter } from "@mrc/server/utils";
 import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { segmentInstancesAdd, segmentInstancesRemove, segmentInstancesSelectById } from "./segmentInstancesSlice";
-import { AppListenerAPI, startAppListening } from "@mrc/server/store/listener_middleware";
+import { AppListenerAPI } from "@mrc/server/store/listener_middleware";
 import { generateId, generateSegmentHash } from "@mrc/common/utils";
 import { workersSelectByMachineId } from "@mrc/server/store/slices/workersSlice";
 import {
@@ -31,6 +22,7 @@ import {
    manifoldInstancesRemove,
    manifoldInstancesSelectById,
 } from "@mrc/server/store/slices/manifoldInstancesSlice";
+import { createWatcher } from "@mrc/server/store/resourceStateWatcher";
 
 const pipelineInstancesAdapter = createWrappedEntityAdapter<IPipelineInstance>({
    selectId: (w) => w.id,
@@ -166,29 +158,6 @@ export const pipelineInstancesSlice = createSlice({
       });
    },
 });
-
-// export function pipelineInstancesAssign(payload: { pipeline: IPipelineConfiguration; mapping: IPipelineMapping }) {
-//    return (dispatch: AppDispatch, getState: AppGetState) => {
-//       // Dispatch the definition to get the definition IDs
-//       const definition_ids = dispatch(pipelineDefinitionsCreateOrUpdate(payload.pipeline, payload.mapping));
-
-//       const pipeline_id = generateId();
-
-//       // First dispatch the pipeline instance update
-//       dispatch(
-//          pipelineInstancesAdd({
-//             id: pipeline_id,
-//             definitionId: definition_ids.pipeline,
-//             machineId: payload.mapping.machineId,
-//          })
-//       );
-
-//       return {
-//          pipelineDefinitionId: definition_ids.pipeline,
-//          pipelineInstanceId: pipeline_id,
-//       };
-//    };
-// }
 
 type PipelineInstancesStateType = ReturnType<typeof pipelineInstancesSlice.getInitialState>;
 
@@ -383,106 +352,44 @@ async function segmentsFromInstance(listenerApi: AppListenerAPI, pipelineInstanc
    return segments;
 }
 
-export function pipelineInstancesConfigureListeners() {
-   startAppListening({
-      actionCreator: pipelineInstancesAdd,
-      effect: async (action, listenerApi) => {
-         const pipeline_id = action.payload.id;
-
-         let pipeline_instance = pipelineInstancesSelectById(listenerApi.getState(), pipeline_id);
-
-         if (!pipeline_instance) {
-            throw new Error("Could not find instance");
-         }
-
-         // Now that the object has been created, set the requested status to Created
-         listenerApi.dispatch(
-            pipelineInstancesSlice.actions.updateResourceRequestedState({
-               resource: pipeline_instance,
-               status: ResourceRequestedStatus.Requested_Created,
-            })
-         );
-
-         while (pipeline_instance.state.actualStatus !== ResourceActualStatus.Actual_Destroyed) {
-            // Wait for the next update
-            const [update_action, current_state] = await listenerApi.take((action) => {
-               return (
-                  pipelineInstancesUpdateResourceActualState.match(action) && action.payload.resource.id === pipeline_id
-               );
-            });
-
-            if (!current_state.system.requestRunning) {
-               console.warn("Updating resource outside of a request will lead to undefined behavior!");
-            }
-
-            // Get the status of this instance
-            pipeline_instance = pipelineInstancesSelectById(listenerApi.getState(), pipeline_id);
-
-            if (!pipeline_instance) {
-               throw new Error("Could not find instance");
-            }
-
-            switch (pipeline_instance.state.actualStatus) {
-               case ResourceActualStatus.Actual_Created: {
-                  break;
-               }
-               case ResourceActualStatus.Actual_Completed: {
-                  break;
-               }
-               case ResourceActualStatus.Actual_Stopped: {
-                  break;
-               }
-               case ResourceActualStatus.Actual_Destroyed: {
-                  break;
-               }
-
-               default:
-                  throw new Error("Unknown state type");
-            }
-
-            if (pipeline_instance.state.actualStatus === ResourceActualStatus.Actual_Created) {
-               // Create all of the manifold instances
-               const manifolds = await manifoldsFromInstance(listenerApi, pipeline_instance);
-
-               // Before moving to RunUntilComplete, create the segment instances
-               const segments = await segmentsFromInstance(listenerApi, pipeline_instance);
-
-               // Tell it to move running/completed
-               listenerApi.dispatch(
-                  pipelineInstancesSlice.actions.updateResourceRequestedState({
-                     resource: pipeline_instance,
-                     status: ResourceRequestedStatus.Requested_Completed,
-                  })
-               );
-            } else if (pipeline_instance.state.actualStatus === ResourceActualStatus.Actual_Completed) {
-               // Before we can move to Stopped, all ref counts must be 0
-
-               // Tell it to move to stopped
-               listenerApi.dispatch(
-                  pipelineInstancesSlice.actions.updateResourceRequestedState({
-                     resource: pipeline_instance,
-                     status: ResourceRequestedStatus.Requested_Stopped,
-                  })
-               );
-            } else if (pipeline_instance.state.actualStatus === ResourceActualStatus.Actual_Stopped) {
-               // Tell it to move to stopped
-               listenerApi.dispatch(
-                  pipelineInstancesSlice.actions.updateResourceRequestedState({
-                     resource: pipeline_instance,
-                     status: ResourceRequestedStatus.Requested_Destroyed,
-                  })
-               );
-            } else if (pipeline_instance.state.actualStatus === ResourceActualStatus.Actual_Destroyed) {
-               // Now we can actually just remove the object
-               listenerApi.dispatch(pipelineInstancesRemove(pipeline_instance));
-
-               break;
-            } else {
-               throw new Error("Unknow state type");
-            }
-         }
+export function pipelineInstancesConfigureSlice() {
+   createWatcher(
+      "PipelineInstances",
+      pipelineInstancesAdd,
+      (state, id) => {
+         return pipelineInstancesSelectById(state, id);
       },
-   });
-}
+      async (instance, listenerApi) => {
+         // Create all of the manifold instances
+         const manifolds = await manifoldsFromInstance(listenerApi, instance);
 
-export default pipelineInstancesSlice.reducer;
+         // Before moving to RunUntilComplete, create the segment instances
+         const segments = await segmentsFromInstance(listenerApi, instance);
+      },
+      undefined,
+      undefined,
+      undefined,
+      async (instance, listenerApi) => {
+         const is_ready = (p: IPipelineInstance | undefined) => {
+            if (!p) {
+               // Handled elsewhere
+               return true;
+            }
+
+            return p.manifoldIds.length === 0 && p.segmentIds.length === 0;
+         };
+
+         // Only await here if we arent ready to delete right await
+         if (!is_ready(instance)) {
+            await listenerApi.condition((_, currentState) => {
+               return is_ready(pipelineInstancesSelectById(currentState, instance.id));
+            });
+         }
+
+         // Now we can actually just remove the object
+         listenerApi.dispatch(pipelineInstancesRemove(instance));
+      }
+   );
+
+   return pipelineInstancesSlice.reducer;
+}

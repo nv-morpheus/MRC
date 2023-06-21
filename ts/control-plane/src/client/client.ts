@@ -34,7 +34,6 @@ export class MrcTestClient {
    // private _abort_controller: AbortController = new AbortController();
    // private _send_events: AsyncSink<Event> | null = null;
    // private _receive_events$: Observable<Event> | null = null;
-   public machineId: string | null = null;
 
    // private _state_updates: Array<ControlPlaneState> = [];
    // private _message_history: Array<Event> = [];

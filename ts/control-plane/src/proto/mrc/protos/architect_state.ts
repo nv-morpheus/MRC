@@ -423,14 +423,8 @@ export interface Connection {
   workerIds: string[];
   /** The pipeline instances that are assigned to this machine */
   assignedPipelineIds: string[];
-  /** The ref counts owned by this connection. If the connection is dropped, the ref counts will be decremented */
-  refCounts: { [key: string]: number };
-}
-
-export interface Connection_RefCountsEntry {
-  $type: "mrc.protos.Connection.RefCountsEntry";
-  key: string;
-  value: number;
+  /** Current state */
+  state: ResourceState | undefined;
 }
 
 export interface Worker {
@@ -730,6 +724,7 @@ export interface ManifoldInstance_ActualEgressSegmentsEntry {
 
 export interface ControlPlaneState {
   $type: "mrc.protos.ControlPlaneState";
+  nonce: string;
   connections: ControlPlaneState_ConnectionsState | undefined;
   workers: ControlPlaneState_WorkerssState | undefined;
   pipelineDefinitions: ControlPlaneState_PipelineDefinitionsState | undefined;
@@ -1190,7 +1185,7 @@ function createBaseConnection(): Connection {
     peerInfo: "",
     workerIds: [],
     assignedPipelineIds: [],
-    refCounts: {},
+    state: undefined,
   };
 }
 
@@ -1214,12 +1209,9 @@ export const Connection = {
       writer.uint64(v);
     }
     writer.ldelim();
-    Object.entries(message.refCounts).forEach(([key, value]) => {
-      Connection_RefCountsEntry.encode(
-        { $type: "mrc.protos.Connection.RefCountsEntry", key: key as any, value },
-        writer.uint32(42).fork(),
-      ).ldelim();
-    });
+    if (message.state !== undefined) {
+      ResourceState.encode(message.state, writer.uint32(42).fork()).ldelim();
+    }
     return writer;
   },
 
@@ -1257,10 +1249,7 @@ export const Connection = {
           }
           break;
         case 5:
-          const entry5 = Connection_RefCountsEntry.decode(reader, reader.uint32());
-          if (entry5.value !== undefined) {
-            message.refCounts[entry5.key] = entry5.value;
-          }
+          message.state = ResourceState.decode(reader, reader.uint32());
           break;
         default:
           reader.skipType(tag & 7);
@@ -1279,12 +1268,7 @@ export const Connection = {
       assignedPipelineIds: Array.isArray(object?.assignedPipelineIds)
         ? object.assignedPipelineIds.map((e: any) => String(e))
         : [],
-      refCounts: isObject(object.refCounts)
-        ? Object.entries(object.refCounts).reduce<{ [key: string]: number }>((acc, [key, value]) => {
-          acc[key] = Number(value);
-          return acc;
-        }, {})
-        : {},
+      state: isSet(object.state) ? ResourceState.fromJSON(object.state) : undefined,
     };
   },
 
@@ -1302,12 +1286,7 @@ export const Connection = {
     } else {
       obj.assignedPipelineIds = [];
     }
-    obj.refCounts = {};
-    if (message.refCounts) {
-      Object.entries(message.refCounts).forEach(([k, v]) => {
-        obj.refCounts[k] = Math.round(v);
-      });
-    }
+    message.state !== undefined && (obj.state = message.state ? ResourceState.toJSON(message.state) : undefined);
     return obj;
   },
 
@@ -1321,87 +1300,14 @@ export const Connection = {
     message.peerInfo = object.peerInfo ?? "";
     message.workerIds = object.workerIds?.map((e) => e) || [];
     message.assignedPipelineIds = object.assignedPipelineIds?.map((e) => e) || [];
-    message.refCounts = Object.entries(object.refCounts ?? {}).reduce<{ [key: string]: number }>(
-      (acc, [key, value]) => {
-        if (value !== undefined) {
-          acc[key] = Number(value);
-        }
-        return acc;
-      },
-      {},
-    );
+    message.state = (object.state !== undefined && object.state !== null)
+      ? ResourceState.fromPartial(object.state)
+      : undefined;
     return message;
   },
 };
 
 messageTypeRegistry.set(Connection.$type, Connection);
-
-function createBaseConnection_RefCountsEntry(): Connection_RefCountsEntry {
-  return { $type: "mrc.protos.Connection.RefCountsEntry", key: "", value: 0 };
-}
-
-export const Connection_RefCountsEntry = {
-  $type: "mrc.protos.Connection.RefCountsEntry" as const,
-
-  encode(message: Connection_RefCountsEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.key !== "") {
-      writer.uint32(10).string(message.key);
-    }
-    if (message.value !== 0) {
-      writer.uint32(16).int32(message.value);
-    }
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): Connection_RefCountsEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseConnection_RefCountsEntry();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          message.key = reader.string();
-          break;
-        case 2:
-          message.value = reader.int32();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-    return message;
-  },
-
-  fromJSON(object: any): Connection_RefCountsEntry {
-    return {
-      $type: Connection_RefCountsEntry.$type,
-      key: isSet(object.key) ? String(object.key) : "",
-      value: isSet(object.value) ? Number(object.value) : 0,
-    };
-  },
-
-  toJSON(message: Connection_RefCountsEntry): unknown {
-    const obj: any = {};
-    message.key !== undefined && (obj.key = message.key);
-    message.value !== undefined && (obj.value = Math.round(message.value));
-    return obj;
-  },
-
-  create(base?: DeepPartial<Connection_RefCountsEntry>): Connection_RefCountsEntry {
-    return Connection_RefCountsEntry.fromPartial(base ?? {});
-  },
-
-  fromPartial(object: DeepPartial<Connection_RefCountsEntry>): Connection_RefCountsEntry {
-    const message = createBaseConnection_RefCountsEntry();
-    message.key = object.key ?? "";
-    message.value = object.value ?? 0;
-    return message;
-  },
-};
-
-messageTypeRegistry.set(Connection_RefCountsEntry.$type, Connection_RefCountsEntry);
 
 function createBaseWorker(): Worker {
   return {
@@ -4403,6 +4309,7 @@ messageTypeRegistry.set(ManifoldInstance_ActualEgressSegmentsEntry.$type, Manifo
 function createBaseControlPlaneState(): ControlPlaneState {
   return {
     $type: "mrc.protos.ControlPlaneState",
+    nonce: "0",
     connections: undefined,
     workers: undefined,
     pipelineDefinitions: undefined,
@@ -4417,26 +4324,29 @@ export const ControlPlaneState = {
   $type: "mrc.protos.ControlPlaneState" as const,
 
   encode(message: ControlPlaneState, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.nonce !== "0") {
+      writer.uint32(8).uint64(message.nonce);
+    }
     if (message.connections !== undefined) {
-      ControlPlaneState_ConnectionsState.encode(message.connections, writer.uint32(10).fork()).ldelim();
+      ControlPlaneState_ConnectionsState.encode(message.connections, writer.uint32(18).fork()).ldelim();
     }
     if (message.workers !== undefined) {
-      ControlPlaneState_WorkerssState.encode(message.workers, writer.uint32(18).fork()).ldelim();
+      ControlPlaneState_WorkerssState.encode(message.workers, writer.uint32(26).fork()).ldelim();
     }
     if (message.pipelineDefinitions !== undefined) {
-      ControlPlaneState_PipelineDefinitionsState.encode(message.pipelineDefinitions, writer.uint32(26).fork()).ldelim();
+      ControlPlaneState_PipelineDefinitionsState.encode(message.pipelineDefinitions, writer.uint32(34).fork()).ldelim();
     }
     if (message.pipelineInstances !== undefined) {
-      ControlPlaneState_PipelineInstancesState.encode(message.pipelineInstances, writer.uint32(34).fork()).ldelim();
+      ControlPlaneState_PipelineInstancesState.encode(message.pipelineInstances, writer.uint32(42).fork()).ldelim();
     }
     if (message.segmentDefinitions !== undefined) {
-      ControlPlaneState_SegmentDefinitionsState.encode(message.segmentDefinitions, writer.uint32(42).fork()).ldelim();
+      ControlPlaneState_SegmentDefinitionsState.encode(message.segmentDefinitions, writer.uint32(50).fork()).ldelim();
     }
     if (message.segmentInstances !== undefined) {
-      ControlPlaneState_SegmentInstancesState.encode(message.segmentInstances, writer.uint32(50).fork()).ldelim();
+      ControlPlaneState_SegmentInstancesState.encode(message.segmentInstances, writer.uint32(58).fork()).ldelim();
     }
     if (message.manifoldInstances !== undefined) {
-      ControlPlaneState_ManifoldInstancesState.encode(message.manifoldInstances, writer.uint32(58).fork()).ldelim();
+      ControlPlaneState_ManifoldInstancesState.encode(message.manifoldInstances, writer.uint32(66).fork()).ldelim();
     }
     return writer;
   },
@@ -4449,24 +4359,27 @@ export const ControlPlaneState = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.connections = ControlPlaneState_ConnectionsState.decode(reader, reader.uint32());
+          message.nonce = longToString(reader.uint64() as Long);
           break;
         case 2:
-          message.workers = ControlPlaneState_WorkerssState.decode(reader, reader.uint32());
+          message.connections = ControlPlaneState_ConnectionsState.decode(reader, reader.uint32());
           break;
         case 3:
-          message.pipelineDefinitions = ControlPlaneState_PipelineDefinitionsState.decode(reader, reader.uint32());
+          message.workers = ControlPlaneState_WorkerssState.decode(reader, reader.uint32());
           break;
         case 4:
-          message.pipelineInstances = ControlPlaneState_PipelineInstancesState.decode(reader, reader.uint32());
+          message.pipelineDefinitions = ControlPlaneState_PipelineDefinitionsState.decode(reader, reader.uint32());
           break;
         case 5:
-          message.segmentDefinitions = ControlPlaneState_SegmentDefinitionsState.decode(reader, reader.uint32());
+          message.pipelineInstances = ControlPlaneState_PipelineInstancesState.decode(reader, reader.uint32());
           break;
         case 6:
-          message.segmentInstances = ControlPlaneState_SegmentInstancesState.decode(reader, reader.uint32());
+          message.segmentDefinitions = ControlPlaneState_SegmentDefinitionsState.decode(reader, reader.uint32());
           break;
         case 7:
+          message.segmentInstances = ControlPlaneState_SegmentInstancesState.decode(reader, reader.uint32());
+          break;
+        case 8:
           message.manifoldInstances = ControlPlaneState_ManifoldInstancesState.decode(reader, reader.uint32());
           break;
         default:
@@ -4480,6 +4393,7 @@ export const ControlPlaneState = {
   fromJSON(object: any): ControlPlaneState {
     return {
       $type: ControlPlaneState.$type,
+      nonce: isSet(object.nonce) ? String(object.nonce) : "0",
       connections: isSet(object.connections)
         ? ControlPlaneState_ConnectionsState.fromJSON(object.connections)
         : undefined,
@@ -4504,6 +4418,7 @@ export const ControlPlaneState = {
 
   toJSON(message: ControlPlaneState): unknown {
     const obj: any = {};
+    message.nonce !== undefined && (obj.nonce = message.nonce);
     message.connections !== undefined && (obj.connections = message.connections
       ? ControlPlaneState_ConnectionsState.toJSON(message.connections)
       : undefined);
@@ -4533,6 +4448,7 @@ export const ControlPlaneState = {
 
   fromPartial(object: DeepPartial<ControlPlaneState>): ControlPlaneState {
     const message = createBaseControlPlaneState();
+    message.nonce = object.nonce ?? "0";
     message.connections = (object.connections !== undefined && object.connections !== null)
       ? ControlPlaneState_ConnectionsState.fromPartial(object.connections)
       : undefined;

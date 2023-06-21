@@ -1,27 +1,22 @@
-import { createSlice, current, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import type { AppDispatch, AppGetState, RootState } from "../store";
-import {
-   PipelineConfiguration,
-   PipelineConfiguration_ManifoldConfiguration,
-   PipelineConfiguration_SegmentConfiguration,
-} from "@mrc/proto/mrc/protos/architect_state";
+import { PipelineConfiguration } from "@mrc/proto/mrc/protos/architect_state";
 import { createWrappedEntityAdapter } from "@mrc/server/utils";
 import { hashProtoMessage } from "@mrc/common/utils";
 import { segmentInstancesAdd, segmentInstancesRemove } from "@mrc/server/store/slices/segmentInstancesSlice";
 import { pipelineInstancesAdd, pipelineInstancesRemove } from "@mrc/server/store/slices/pipelineInstancesSlice";
 import {
-   IManifoldDefinition,
    IManifoldInstance,
    IPipelineConfiguration,
    IPipelineDefinition,
    IPipelineInstance,
    IPipelineMapping,
-   ISegmentDefinition,
    ISegmentInstance,
 } from "@mrc/common/entities";
 import { manifoldInstancesAdd, manifoldInstancesRemove } from "@mrc/server/store/slices/manifoldInstancesSlice";
 import { PipelineDefinitionWrapper } from "@mrc/common/pipelineDefinition";
+import { workersRemove } from "@mrc/server/store/slices/workersSlice";
 
 const pipelineDefinitionsAdapter = createWrappedEntityAdapter<IPipelineDefinition>({
    selectId: (w) => w.id,
@@ -81,11 +76,14 @@ export const pipelineDefinitionsSlice = createSlice({
    name: "pipelineDefinitions",
    initialState: pipelineDefinitionsAdapter.getInitialState(),
    reducers: {
-      add: (state, action: PayloadAction<IPipelineDefinition>) => {
+      add: (state, action: PayloadAction<Omit<IPipelineDefinition, "mappings">>) => {
          if (pipelineDefinitionsAdapter.getOne(state, action.payload.id)) {
             throw new Error(`Pipeline Definition with ID: ${action.payload.id} already exists`);
          }
-         pipelineDefinitionsAdapter.addOne(state, action.payload);
+         pipelineDefinitionsAdapter.addOne(state, {
+            ...action.payload,
+            mappings: {},
+         });
       },
       remove: (state, action: PayloadAction<IPipelineDefinition>) => {
          const found = pipelineDefinitionsAdapter.getOne(state, action.payload.id);
@@ -128,6 +126,17 @@ export const pipelineDefinitionsSlice = createSlice({
       },
    },
    extraReducers: (builder) => {
+      builder.addCase(workersRemove, (state, action) => {
+         const allDefinitions = pipelineDefinitionsAdapter.getAll(state);
+
+         // Delete all mappings for this worker
+         allDefinitions.forEach((d) => {
+            if (action.payload.machineId in d.mappings) {
+               delete d.mappings[action.payload.machineId];
+            }
+         });
+      });
+
       builder.addCase(pipelineInstancesAdd, (state, action) => {
          pipelineInstanceAdded(state, action.payload);
       });
@@ -280,4 +289,6 @@ export const {
    selectByIds: pipelineDefinitionsSelectByIds,
 } = pipelineDefinitionsAdapter.getSelectors((state: RootState) => state.pipelineDefinitions);
 
-export default pipelineDefinitionsSlice.reducer;
+export function pipelineDefinitionsConfigureSlice() {
+   return pipelineDefinitionsSlice.reducer;
+}

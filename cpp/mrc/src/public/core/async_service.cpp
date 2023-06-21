@@ -20,10 +20,13 @@
 #include "mrc/channel/status.hpp"
 #include "mrc/core/utils.hpp"
 #include "mrc/runnable/runner.hpp"
+#include "mrc/types.hpp"
 
+#include <boost/fiber/future/future_status.hpp>
 #include <glog/logging.h>
 
 #include <chrono>
+#include <exception>
 #include <memory>
 #include <mutex>
 #include <ostream>
@@ -38,7 +41,7 @@ AsyncService::~AsyncService()
 {
     if (!m_call_in_destructor_called)
     {
-        LOG(FATAL) << "Must call AsyncService::call_in_destructor to ensure service is cleaned up before being "
+        LOG(ERROR) << "Must call AsyncService::call_in_destructor to ensure service is cleaned up before being "
                       "destroyed";
     }
 }
@@ -66,7 +69,7 @@ SharedFuture<void> AsyncService::service_start(std::stop_source stop_source)
     std::unique_lock<decltype(m_mutex)> lock(m_mutex);
 
     // This throws if we are already started
-    forward_state(AsyncServiceState::Starting, true);
+    this->forward_state(AsyncServiceState::Starting, true);
 
     // Copy the stop_source state (either it was passed in or created)
     m_stop_source = stop_source;
@@ -75,35 +78,102 @@ SharedFuture<void> AsyncService::service_start(std::stop_source stop_source)
     m_completed_future = this->runnable().main().enqueue([this]() {
         Unwinder ensure_completed([this]() {
             // Ensure that the state gets set to completed even if we error
-            LOG_IF(ERROR, !forward_state(AsyncServiceState::Completed))
+            LOG_IF(ERROR, !this->forward_state(AsyncServiceState::Completed))
                 << this->debug_prefix() << " Inconsistent state. Could not set to Completed";
         });
 
         // Add a stop callback to notify the cv anytime a stop is requested
         std::stop_callback stop_callback(m_stop_source.get_token(), [this]() {
+            std::unique_lock<decltype(m_mutex)> lock(m_mutex);
+
+            // Ensure that our state is set to stopping
+            this->ensure_state(AsyncServiceState::Stopping);
+
             m_cv.notify_all();
         });
 
-        do_service_start(m_stop_source.get_token());
-
+        try
         {
-            // Get the mutex to prevent changes to m_child_futures
+            do_service_start(m_stop_source.get_token());
+        } catch (const std::exception& ex)
+        {
+            AsyncServiceState current_state;
+
+            {
+                // Only temporarily hold the lock here to get the current state and prevent changes to the children
+                std::unique_lock<decltype(m_mutex)> lock(m_mutex);
+
+                // Save the state so we can release the lock
+                current_state = m_state;
+
+                // Set the state to awaiting children. This prevents any changes to m_child_futures
+                this->ensure_state(AsyncServiceState::AwaitingChildren);
+            }
+
+            // Log the error
+            LOG(ERROR) << this->debug_prefix() << " error occurred in service. Error message: " << ex.what();
+
+            // Give the children a chance to stop gracefully
+            for (auto& child : m_children)
+            {
+                child.get().service_stop();
+            }
+
+            // Wait a small amount of time for the children to stop gracefully
+            for (auto& child : m_children)
+            {
+                auto child_future = child.get().completed_future();
+
+                // Only wait() here. Dont care about child errors since we already have an exception
+                if (child_future.wait_for(std::chrono::milliseconds(100)) == boost::fibers::future_status::timeout)
+                {
+                    // Didnt stop in time. Kill the service
+                    child.get().service_kill();
+
+                    // Try and wait one more time (just in case)
+                    if (child_future.wait_for(std::chrono::milliseconds(100)) == boost::fibers::future_status::timeout)
+                    {
+                        LOG(ERROR) << this->debug_prefix()
+                                   << " could not shut down child in 200 ms. Child: " << child.get().debug_prefix();
+                    }
+                }
+            }
+
+            // Set the error in the live exception if we didnt fully start
+            if (current_state < AsyncServiceState::Running)
+            {
+                m_live_promise.set_exception(std::current_exception());
+            }
+
+            // Rethrow to set the exception in the completed future
+            throw;
+        }
+
+        // Stopped without any errors.
+        {
+            // Get the mutex to prevent changes to m_child_futures. Must release the lock before working with m_children
             std::unique_lock<decltype(m_mutex)> lock(m_mutex);
 
             CHECK(m_state >= AsyncServiceState::Running) << this->debug_prefix()
                                                          << " did not start up properly. Must call mark_started() "
-                                                            "inside "
-                                                            "of do_service_start()";
+                                                            "inside of do_service_start()";
 
-            // Set the state to awaiting children to prevent any changes while we wait for children.
-            DCHECK(forward_state(AsyncServiceState::AwaitingChildren));
+            // Set the state to awaiting children to prevent any changes while we wait for children. Only use
+            // ensure_state here in case we were stopped or killed
+            this->ensure_state(AsyncServiceState::AwaitingChildren);
         }
 
-        // Wait for all children to have completed. Make sure not to hold the lock when waiting on children.
-        // m_child_futures cant be changed after the state is set to stopping
-        for (auto& f : m_child_futures)
+        // Wait for all children to have completed (only wait() to make sure they all stopped before pulling any
+        // exceptions)
+        for (auto& child : m_children)
         {
-            f.get();
+            child.get().completed_future().wait();
+        }
+
+        // Now join them to pull any exceptions
+        for (auto& child : m_children)
+        {
+            child.get().service_await_join();
         }
     });
 
@@ -122,6 +192,9 @@ void AsyncService::service_await_live()
     });
 
     // DVLOG(20) << this->debug_prefix() << " leaving service_await_live(). State: " << m_state;
+
+    // Call get() on the live future to throw any error that occurred during startup
+    m_live_promise.get_future().get();
 }
 
 void AsyncService::service_stop()
@@ -129,7 +202,7 @@ void AsyncService::service_stop()
     std::unique_lock<decltype(m_mutex)> lock(m_mutex);
 
     // Ensures this only gets executed once
-    if (forward_state(AsyncServiceState::Stopping))
+    if (this->forward_state(AsyncServiceState::Stopping))
     {
         DCHECK(m_stop_source.stop_possible()) << this->debug_prefix() << " Invalid state. Cannot request a stop";
 
@@ -143,7 +216,7 @@ void AsyncService::service_kill()
     this->service_stop();
 
     // Ensures this only gets executed once
-    if (forward_state(AsyncServiceState::Killing))
+    if (this->forward_state(AsyncServiceState::Killing))
     {
         // Kill all children first
         for (auto& child : m_children)
@@ -152,11 +225,11 @@ void AsyncService::service_kill()
         }
 
         // Attempt the service specific kill operation
-        do_service_kill();
+        this->do_service_kill();
     }
 }
 
-void AsyncService::service_await_join()
+bool AsyncService::service_await_join(std::chrono::milliseconds wait_duration)
 {
     // Guarantee that we set the flag that this was called
     Unwinder ensure_flag([this]() {
@@ -171,13 +244,31 @@ void AsyncService::service_await_join()
             << this->debug_prefix() << " Must call service_start() before calling service_await_join()";
     }
 
-    // Wait on the completed future
-    m_completed_future.get();
+    // Wait on the completed future (only wait, dont want to throw any exceptions yet)
+    if (wait_duration == std::chrono::milliseconds::max())
+    {
+        m_completed_future.wait();
+    }
+    else
+    {
+        if (m_completed_future.wait_for(wait_duration) == boost::fibers::future_status::timeout)
+        {
+            // Ran out of time. Disarm the unwinder and return false
+            ensure_flag.detach();
+
+            return false;
+        }
+    }
 
     std::unique_lock<decltype(m_mutex)> lock(m_mutex);
 
     CHECK(m_state >= AsyncServiceState::Completed)
         << this->debug_prefix() << " Invalid state. Was not set to Completed before exiting";
+
+    // Finally, call get() here to rethrow any exceptions in th promise
+    m_completed_future.get();
+
+    return true;
 }
 
 std::string AsyncService::debug_prefix() const
@@ -200,7 +291,7 @@ void AsyncService::call_in_destructor()
         {
             LOG(ERROR) << this->debug_prefix()
                        << " service was not stopped/killed before being destructed; issuing kill";
-            service_kill();
+            this->service_kill();
         }
 
         if (state != AsyncServiceState::Completed)
@@ -246,35 +337,63 @@ void AsyncService::mark_started()
         child.get().service_await_live();
     }
 
+    // Set the live promise before updating the state so it is ready when the CV is released
+    m_live_promise.set_value();
+
     forward_state(AsyncServiceState::Running, true);
 }
 
-void AsyncService::child_service_start(AsyncService& child)
+void AsyncService::child_service_start(AsyncService& child, bool await_live)
 {
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    {
+        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-    // The state must be running
-    CHECK(m_state == AsyncServiceState::Starting || m_state == AsyncServiceState::Running) << "Can only start child "
-                                                                                              "service in Starting or "
-                                                                                              "Running state";
+        // The state must be running
+        CHECK(m_state == AsyncServiceState::Starting || m_state == AsyncServiceState::Running) << "Can only start "
+                                                                                                  "child "
+                                                                                                  "service in Starting "
+                                                                                                  "or "
+                                                                                                  "Running state";
 
-    m_children.emplace_back(child);
-    m_child_futures.emplace_back(child.service_start(m_stop_source));
+        m_children.emplace_back(child);
+        child.service_start(m_stop_source);
+    }
+
+    if (await_live)
+    {
+        child.service_await_live();
+    }
 }
 
-void AsyncService::child_service_start(std::unique_ptr<AsyncService> child)
+void AsyncService::child_service_start(std::unique_ptr<AsyncService> child, bool await_live)
 {
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    CHECK(child) << this->debug_prefix() << " cannot start null child";
 
-    const auto& name = child->service_name();
+    auto* saved_child_ptr = child.get();
 
-    CHECK(!m_owned_children.contains(name)) << "Child service with name '" << name << "' already added!";
+    {
+        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-    // Save it to the owned children list
-    auto [added_iterator, did_add] = m_owned_children.emplace(name, std::move(child));
+        const auto& name = child->service_name();
 
-    // Now add the child reference
-    this->child_service_start(*added_iterator->second);
+        CHECK(!m_owned_children.contains(name)) << "Child service with name '" << name << "' already added!";
+
+        // Save it to the owned children list
+        auto [added_iterator, did_add] = m_owned_children.emplace(name, std::move(child));
+
+        // Now add the child reference
+        this->child_service_start(*added_iterator->second);
+    }
+
+    if (await_live)
+    {
+        saved_child_ptr->service_await_live();
+    }
+}
+
+SharedFuture<void> AsyncService::completed_future() const
+{
+    return m_completed_future;
 }
 
 // void AsyncService::child_runnable_start(const mrc::runnable::LaunchOptions& options,
@@ -304,12 +423,11 @@ bool AsyncService::forward_state(AsyncServiceState new_state, bool assert_forwar
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-    if (assert_forward)
-    {
-        CHECK(m_state <= new_state) << this->debug_prefix()
-                                    << " invalid AsyncServiceState requested; AsyncServiceState is only allowed to "
-                                       "advance";
-    }
+    // State needs to always be moving foward or the same
+    CHECK_GE(new_state, m_state) << this->debug_prefix()
+                                 << " invalid AsyncServiceState requested; AsyncServiceState is only allowed to "
+                                    "advance. Current: "
+                                 << m_state << ", Requested: " << new_state;
 
     if (m_state < new_state)
     {
@@ -322,6 +440,24 @@ bool AsyncService::forward_state(AsyncServiceState new_state, bool assert_forwar
 
         return true;
     }
+
+    CHECK(!assert_forward) << this->debug_prefix()
+                           << " invalid AsyncServiceState requested; AsyncServiceState was required to move forward "
+                              "but the state was already set to "
+                           << m_state;
+
+    return false;
+}
+
+bool AsyncService::ensure_state(AsyncServiceState ensure_state)
+{
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+
+    if (ensure_state > m_state)
+    {
+        return forward_state(ensure_state);
+    }
+
     return false;
 }
 

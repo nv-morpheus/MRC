@@ -2,13 +2,32 @@
 
 #include "mrc/protos/architect_state.pb.h"
 
+#include <glog/logging.h>
 #include <google/protobuf/util/json_util.h>
 #include <google/protobuf/util/message_differencer.h>
 
+#include <cstdint>
 #include <memory>
 #include <utility>
 
 namespace mrc::control_plane::state {
+
+// auto __map_at_with_check(auto map_obj, auto id, const std::string& filename)
+// {
+//     return map_obj.at(id);
+// }
+
+// #define MAP_AT_WITH_CHECK(map_obj, id)                                                                  \
+//     ({                                                                                                  \
+//         DCHECK(map_obj.contains(id)) << "Inconsistent state! " << #map_obj << " is missing ID: " << id; \
+//         const auto& __x = map_obj.at(id);                                                               \
+//         __x;                                                                                            \
+//     })
+
+// template <typename T>
+// const T& get_and_check(const std::map<uint64_t, T>)
+
+#define MAP_AT_WITH_CHECK(map_obj, id) map_obj.at(id)
 
 ControlPlaneStateBase::ControlPlaneStateBase(const google::protobuf::Message& message) : m_internal_message(message) {}
 
@@ -35,6 +54,8 @@ ControlPlaneNormalizedState::ControlPlaneNormalizedState(std::unique_ptr<protos:
 
 void ControlPlaneNormalizedState::initialize()
 {
+    this->nonce = root_message->nonce();
+
     // For each message type, create a wrapper
     for (const auto& id : root_message->connections().ids())
     {
@@ -60,12 +81,12 @@ void ControlPlaneNormalizedState::initialize()
             PipelineInstance(this->shared_from_this(), root_message->pipeline_instances().entities().at(id)));
     }
 
-    // for (const auto& id : root_message->segment_definitions().ids())
-    // {
-    //     segment_definitions.emplace(
-    //         id,
-    //         SegmentDefinition(this->shared_from_this(), root_message->segment_definitions().entities().at(id)));
-    // }
+    for (const auto& id : root_message->manifold_instances().ids())
+    {
+        manifold_instances.emplace(
+            id,
+            ManifoldInstance(this->shared_from_this(), root_message->manifold_instances().entities().at(id)));
+    }
 
     for (const auto& id : root_message->segment_instances().ids())
     {
@@ -111,10 +132,10 @@ const std::map<uint64_t, PipelineInstance>& ControlPlaneState::pipeline_instance
     return m_root_state->pipeline_instances;
 }
 
-// const std::map<uint64_t, SegmentDefinition>& ControlPlaneState::segment_definitions() const
-// {
-//     return m_state->segment_definitions;
-// }
+const std::map<uint64_t, ManifoldInstance>& ControlPlaneState::manifold_instances() const
+{
+    return m_root_state->manifold_instances;
+}
 
 const std::map<uint64_t, SegmentInstance>& ControlPlaneState::segment_instances() const
 {
@@ -161,7 +182,7 @@ std::map<uint64_t, const Worker&> Connection::workers() const
 
     for (const auto& id : m_message.worker_ids())
     {
-        child_objs.emplace(id, m_root_state->workers.at(id));
+        child_objs.emplace(id, MAP_AT_WITH_CHECK(m_root_state->workers, id));
     }
 
     return child_objs;
@@ -173,7 +194,7 @@ std::map<uint64_t, const PipelineInstance&> Connection::assigned_pipelines() con
 
     for (const auto& id : m_message.assigned_pipeline_ids())
     {
-        child_objs.emplace(id, m_root_state->pipeline_instances.at(id));
+        child_objs.emplace(id, MAP_AT_WITH_CHECK(m_root_state->pipeline_instances, id));
     }
 
     return child_objs;
@@ -212,7 +233,7 @@ std::map<uint64_t, const SegmentInstance&> Worker::assigned_segments() const
 
     for (const auto& id : m_message.assigned_segment_ids())
     {
-        child_objs.emplace(id, m_root_state->segment_instances.at(id));
+        child_objs.emplace(id, MAP_AT_WITH_CHECK(m_root_state->segment_instances, id));
     }
 
     return child_objs;
@@ -237,7 +258,7 @@ uint64_t PipelineDefinition::ManifoldDefinition::id() const
 
 const PipelineDefinition& PipelineDefinition::ManifoldDefinition::parent() const
 {
-    return m_root_state->pipeline_definitions.at(m_message.parent_id());
+    return MAP_AT_WITH_CHECK(m_root_state->pipeline_definitions, m_message.parent_id());
 }
 
 std::string PipelineDefinition::ManifoldDefinition::port_name() const
@@ -252,7 +273,7 @@ std::map<uint64_t, std::reference_wrapper<const ManifoldInstance>> PipelineDefin
 
     for (const auto& id : m_message.instance_ids())
     {
-        child_objs.emplace(id, m_root_state->manifold_instances.at(id));
+        child_objs.emplace(id, MAP_AT_WITH_CHECK(m_root_state->manifold_instances, id));
     }
 
     return child_objs;
@@ -271,7 +292,7 @@ uint64_t PipelineDefinition::SegmentDefinition::id() const
 
 const PipelineDefinition& PipelineDefinition::SegmentDefinition::parent() const
 {
-    return m_root_state->pipeline_definitions.at(m_message.parent_id());
+    return MAP_AT_WITH_CHECK(m_root_state->pipeline_definitions, m_message.parent_id());
 }
 
 std::string PipelineDefinition::SegmentDefinition::name() const
@@ -286,7 +307,7 @@ std::map<uint64_t, std::reference_wrapper<const SegmentInstance>> PipelineDefini
 
     for (const auto& id : m_message.instance_ids())
     {
-        child_objs.emplace(id, m_root_state->segment_instances.at(id));
+        child_objs.emplace(id, MAP_AT_WITH_CHECK(m_root_state->segment_instances, id));
     }
 
     return child_objs;
@@ -326,7 +347,7 @@ std::map<uint64_t, std::reference_wrapper<const PipelineInstance>> PipelineDefin
 
     for (const auto& id : m_message.instance_ids())
     {
-        child_objs.emplace(id, m_root_state->pipeline_instances.at(id));
+        child_objs.emplace(id, MAP_AT_WITH_CHECK(m_root_state->pipeline_instances, id));
     }
 
     return child_objs;
@@ -357,7 +378,7 @@ uint64_t PipelineInstance::id() const
 
 const PipelineDefinition& PipelineInstance::definition() const
 {
-    return m_root_state->pipeline_definitions.at(m_message.definition_id());
+    return MAP_AT_WITH_CHECK(m_root_state->pipeline_definitions, m_message.definition_id());
 }
 
 uint64_t PipelineInstance::machine_id() const
@@ -371,7 +392,7 @@ std::map<uint64_t, std::reference_wrapper<const ManifoldInstance>> PipelineInsta
 
     for (const auto& id : m_message.manifold_ids())
     {
-        child_objs.emplace(id, m_root_state->manifold_instances.at(id));
+        child_objs.emplace(id, MAP_AT_WITH_CHECK(m_root_state->manifold_instances, id));
     }
 
     return child_objs;
@@ -383,7 +404,7 @@ std::map<uint64_t, std::reference_wrapper<const SegmentInstance>> PipelineInstan
 
     for (const auto& id : m_message.segment_ids())
     {
-        child_objs.emplace(id, m_root_state->segment_instances.at(id));
+        child_objs.emplace(id, MAP_AT_WITH_CHECK(m_root_state->segment_instances, id));
     }
 
     return child_objs;
@@ -396,7 +417,7 @@ uint64_t ManifoldInstance::id() const
 
 const PipelineDefinition& ManifoldInstance::pipeline_definition() const
 {
-    return m_root_state->pipeline_definitions.at(m_message.pipeline_definition_id());
+    return MAP_AT_WITH_CHECK(m_root_state->pipeline_definitions, m_message.pipeline_definition_id());
 }
 
 std::string ManifoldInstance::port_name() const
@@ -411,7 +432,7 @@ uint64_t ManifoldInstance::machine_id() const
 
 const PipelineInstance& ManifoldInstance::pipeline_instance() const
 {
-    return m_root_state->pipeline_instances.at(m_message.pipeline_instance_id());
+    return MAP_AT_WITH_CHECK(m_root_state->pipeline_instances, m_message.pipeline_instance_id());
 }
 
 std::map<uint32_t, bool> ManifoldInstance::requested_ingress_segments() const
@@ -443,7 +464,7 @@ uint64_t SegmentInstance::id() const
 
 const PipelineDefinition& SegmentInstance::pipeline_definition() const
 {
-    return m_root_state->pipeline_definitions.at(m_message.pipeline_definition_id());
+    return MAP_AT_WITH_CHECK(m_root_state->pipeline_definitions, m_message.pipeline_definition_id());
 }
 
 std::string SegmentInstance::name() const
@@ -458,12 +479,12 @@ uint32_t SegmentInstance::address() const
 
 const Worker& SegmentInstance::worker() const
 {
-    return m_root_state->workers.at(m_message.worker_id());
+    return MAP_AT_WITH_CHECK(m_root_state->workers, m_message.worker_id());
 }
 
 const PipelineInstance& SegmentInstance::pipeline_instance() const
 {
-    return m_root_state->pipeline_instances.at(m_message.pipeline_instance_id());
+    return MAP_AT_WITH_CHECK(m_root_state->pipeline_instances, m_message.pipeline_instance_id());
 }
 
 // const ResourceState& SegmentInstance::state() const

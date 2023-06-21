@@ -452,6 +452,12 @@ export interface PipelineAddMappingRequest {
   mapping: PipelineMapping | undefined;
 }
 
+export interface PipelineAddMappingResponse {
+  $type: "mrc.protos.PipelineAddMappingResponse";
+  /** The pipeline instance ID that was created */
+  pipelineInstanceId: string;
+}
+
 /** message sent by an UpdateManager */
 export interface StateUpdate {
   $type: "mrc.protos.StateUpdate";
@@ -2502,6 +2508,64 @@ export const PipelineAddMappingRequest = {
 };
 
 messageTypeRegistry.set(PipelineAddMappingRequest.$type, PipelineAddMappingRequest);
+
+function createBasePipelineAddMappingResponse(): PipelineAddMappingResponse {
+  return { $type: "mrc.protos.PipelineAddMappingResponse", pipelineInstanceId: "0" };
+}
+
+export const PipelineAddMappingResponse = {
+  $type: "mrc.protos.PipelineAddMappingResponse" as const,
+
+  encode(message: PipelineAddMappingResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.pipelineInstanceId !== "0") {
+      writer.uint32(8).uint64(message.pipelineInstanceId);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): PipelineAddMappingResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePipelineAddMappingResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.pipelineInstanceId = longToString(reader.uint64() as Long);
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PipelineAddMappingResponse {
+    return {
+      $type: PipelineAddMappingResponse.$type,
+      pipelineInstanceId: isSet(object.pipelineInstanceId) ? String(object.pipelineInstanceId) : "0",
+    };
+  },
+
+  toJSON(message: PipelineAddMappingResponse): unknown {
+    const obj: any = {};
+    message.pipelineInstanceId !== undefined && (obj.pipelineInstanceId = message.pipelineInstanceId);
+    return obj;
+  },
+
+  create(base?: DeepPartial<PipelineAddMappingResponse>): PipelineAddMappingResponse {
+    return PipelineAddMappingResponse.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<PipelineAddMappingResponse>): PipelineAddMappingResponse {
+    const message = createBasePipelineAddMappingResponse();
+    message.pipelineInstanceId = object.pipelineInstanceId ?? "0";
+    return message;
+  },
+};
+
+messageTypeRegistry.set(PipelineAddMappingResponse.$type, PipelineAddMappingResponse);
 
 function createBaseStateUpdate(): StateUpdate {
   return {

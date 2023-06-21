@@ -127,7 +127,7 @@ void Runtime::do_service_start(std::stop_token stop_token)
         {
             m_control_plane_server = std::make_unique<control_plane::Server>(*m_sys_resources);
 
-            this->child_service_start(*m_control_plane_server);
+            this->child_service_start(*m_control_plane_server, true);
         }
         else
         {
@@ -145,17 +145,15 @@ void Runtime::do_service_start(std::stop_token stop_token)
 
     m_control_plane_client = std::make_unique<control_plane::Client>(*m_sys_resources);
 
-    this->child_service_start(*m_control_plane_client);
-
-    // Before continuing, make sure that we are started
-    m_control_plane_client->service_await_live();
+    // Start the client and wait for it to be ready
+    this->child_service_start(*m_control_plane_client, true);
 
     // // Create/Initialize the runtime resources object (Could go before the control plane client)
     // m_sys_resources = std::make_unique<resources::SystemResources>(std::move(sys_resources));
     // m_sys_resources->initialize();
 
     // Before creating the partitions, create the pipelines manager
-    m_pipelines_manager = std::make_unique<PipelinesManager>(*this);
+    m_pipelines_manager = std::make_unique<PipelinesManager>(*this, m_control_plane_client->machine_id());
 
     this->child_service_start(*m_pipelines_manager);
 
