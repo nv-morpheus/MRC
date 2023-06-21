@@ -168,16 +168,16 @@ void BuilderDefinition::init_module(std::shared_ptr<mrc::modules::SegmentModule>
     VLOG(2) << "Initializing module: " << m_namespace_prefix;
     smodule->m_module_instance_registered_namespace = m_namespace_prefix;
     smodule->initialize(*this);
-    this->ns_pop();
 
     // TODO(Devin): Maybe a better way to do this with compile time type ledger.
     if (auto persist = std::dynamic_pointer_cast<modules::PersistentModule>(smodule))
     {
-        VLOG(2) << "Registering persistent module -> '" << smodule->component_prefix() << "'";
+        VLOG(2) << "Registering persistent module -> '" << m_namespace_prefix << "'";
 
         // Just save to a vector to keep it alive
         m_modules.push_back(persist);
     }
+    this->ns_pop();
 }
 
 void BuilderDefinition::register_module_input(std::string input_name, std::shared_ptr<segment::ObjectProperties> object)

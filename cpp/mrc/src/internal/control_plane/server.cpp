@@ -204,7 +204,7 @@ void Server::do_service_await_join()
 /**
  * @brief Stream Acceptor
  *
- * The while loop of this method says active as long as the grpc server is still accepting connections.
+ * The while loop of this method stays active as long as the grpc server is still accepting connections.
  * There are multiple way this can be implemented depending the service requirements, one might choose
  * to preallocate N number of streams and issues them all to the CQ. This is an alternative method which
  * creates a single stream and waits for it to get initialized, then creates another. The current implementation is
