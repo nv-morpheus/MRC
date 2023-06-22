@@ -71,11 +71,9 @@ export class WorkersManager {
    }
 
    public async unregister() {
-      if (!this.isRegistered) {
-         throw new Error("Must be registered first");
+      if (this.connectionManager.isRegistered) {
+         await this.connectionManager.unregister();
       }
-
-      await this.connectionManager.unregister();
 
       this._registerResponse = undefined;
    }
