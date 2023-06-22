@@ -745,7 +745,7 @@ describe("Manifold", () => {
    });
 
    afterEach(async () => {
-      await pipelineManager.connectionManager.unregister();
+      await pipelineManager.unregister();
       await client.finalizeClient();
    });
 
@@ -793,5 +793,6 @@ describe("Manifold", () => {
       const state = pipelineManager2.connectionManager.getClientState();
 
       console.log("Multiple connected");
+      await pipelineManager2.unregister();
    });
 });
