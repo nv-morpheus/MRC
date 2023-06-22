@@ -498,7 +498,7 @@ describe("Worker", () => {
 
 describe("Pipeline", () => {
    const client: MrcTestClient = new MrcTestClient();
-   const workersManager = WorkersManager.create(["test data", "test data 2"], client);
+   const workersManager: WorkersManager = WorkersManager.create(["test data", "test data 2"], client);
 
    beforeEach(async () => {
       // Ensure everything up to the workers is ready to go
@@ -506,7 +506,7 @@ describe("Pipeline", () => {
    });
 
    afterEach(async () => {
-      await workersManager.connectionManager.unregister();
+      await workersManager.unregister();
       await client.finalizeClient();
    });
 
@@ -576,6 +576,10 @@ describe("Pipeline", () => {
 
       beforeEach(async () => {
          await pipelineManager.ensureRegistered();
+      });
+
+      afterEach(async () => {
+         await pipelineManager.unregister();
       });
 
       test("Resource States", async () => {
