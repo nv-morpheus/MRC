@@ -108,6 +108,15 @@ export class PipelineManager {
       }
    }
 
+   public async unregister() {
+      if (this.workersManager.isRegistered) {
+         await this.workersManager.unregister();
+      }
+
+      this._pipelineDefinitionId = undefined;
+      this._pipelineInstanceId = undefined;
+   }
+
    public async createResources() {
       if (!this.isRegistered) {
          throw new Error("Must be registered first");
