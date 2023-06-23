@@ -33,6 +33,9 @@ module.exports = {
       {
          "utf-8-validate": "commonjs utf-8-validate",
          "bufferutil": "commonjs bufferutil",
+         "sqlite3": "commonjs sqlite3",
+         "knex": "commonjs knex",
+         "@redux-devtools/cli": "import @redux-devtools/cli",
       },
    ],
    module: getLoaders(),

@@ -16,13 +16,12 @@ import {
 import { connection, pipeline, pipeline_def, segments, worker, pipeline_mappings } from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
-import { RootStore, setupStore } from "../store";
-
-import { connectionsAdd, connectionsDropOne } from "./connectionsSlice";
-import { workersAdd } from "./workersSlice";
 import { resourceUpdateActualState } from "@mrc/server/store/slices/resourceActions";
 import { manifoldInstancesSelectByPipelineId } from "@mrc/server/store/slices/manifoldInstancesSlice";
 import { pipelineDefinitionsSetMapping } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
+import { connectionsAdd, connectionsDropOne } from "@mrc/server/store/slices/connectionsSlice";
+import { workersAdd } from "@mrc/server/store/slices/workersSlice";
+import { RootStore, setupStore } from "@mrc/server/store/store";
 
 let store: RootStore;
 

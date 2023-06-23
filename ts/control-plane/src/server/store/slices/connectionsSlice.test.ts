@@ -4,17 +4,16 @@ import { pipelineInstancesAdd, pipelineInstancesRemove } from "@mrc/server/store
 import { connection, pipeline, pipeline_def, worker } from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
-import { RootStore, setupStore } from "../store";
-
-import {
-   connectionsAdd,
-   connectionsRemove,
-   connectionsSelectAll,
-   connectionsSelectById,
-   connectionsSelectTotal,
-} from "./connectionsSlice";
-import { workersAdd, workersRemove } from "./workersSlice";
 import { ResourceActualStatus, ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
+import {
+   connectionsSelectAll,
+   connectionsSelectTotal,
+   connectionsRemove,
+   connectionsAdd,
+   connectionsSelectById,
+} from "@mrc/server/store/slices/connectionsSlice";
+import { workersAdd, workersRemove } from "@mrc/server/store/slices/workersSlice";
+import { RootStore, setupStore } from "@mrc/server/store/store";
 
 let store: RootStore;
 

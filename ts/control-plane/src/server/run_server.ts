@@ -1,8 +1,7 @@
 import { launchDevtoolsCli } from "@mrc/common/dev_tools";
-
-import { ArchitectServer } from "./server";
-import { setupStore } from "./store/store";
 import { sleep } from "@mrc/common/utils";
+import { ArchitectServer } from "@mrc/server/server";
+import { setupStore } from "@mrc/server/store/store";
 
 async function main() {
    console.log("Sleeping...");

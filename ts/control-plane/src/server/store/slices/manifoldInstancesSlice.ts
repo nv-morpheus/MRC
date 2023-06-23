@@ -1,9 +1,6 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { createWrappedEntityAdapter } from "../../utils";
-
-import type { AppDispatch, AppGetState, RootState } from "../store";
 import { pipelineInstancesRemove } from "@mrc/server/store/slices/pipelineInstancesSlice";
 import { IManifoldInstance, ISegmentInstance } from "@mrc/common/entities";
 import {
@@ -19,6 +16,8 @@ import {
 } from "@mrc/server/store/slices/segmentInstancesSlice";
 import { startAppListening } from "@mrc/server/store/listener_middleware";
 import { createWatcher } from "@mrc/server/store/resourceStateWatcher";
+import { createWrappedEntityAdapter } from "@mrc/server/utils";
+import { AppDispatch, RootState, AppGetState } from "@mrc/server/store/store";
 
 const manifoldInstancesAdapter = createWrappedEntityAdapter<IManifoldInstance>({
    selectId: (w) => w.id,

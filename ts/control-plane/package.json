@@ -1,17 +1,18 @@
 {
-  "name": "control-plane",
+  "name": "@mrc/control-plane",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build:webpack": "webpack ${OUT_DIR:+ -o ${OUT_DIR}}",
+    "build:webpack": "webpack --mode development ${OUT_DIR:+ -o ${OUT_DIR}}",
+    "build:webpack:watch": "webpack --watch --mode development ${OUT_DIR:+ -o ${OUT_DIR}}",
     "build:server": "rimraf ${OUT_DIR:-dist} && tsc --outDir ${OUT_DIR:-dist} && tsc-alias --dir ${OUT_DIR:-dist}",
     "build:server:watch": "rimraf ${OUT_DIR:-dist} && tsc --outDir ${OUT_DIR:-dist} && (concurrently \"tsc -w --outDir ${OUT_DIR:-dist}\" \"tsc-alias -w --dir ${OUT_DIR:-dist}\")",
     "start:server": "ts-node src/server/run_server.ts",
     "start:server:debug:ts": "ts-node-dev --respawn --inspect -r tsconfig-paths/register -- src/server/run_server.ts",
     "start:server:debug": "webpack --watch --mode development",
     "start:client": "nodemon src/client/index.ts --watch src/client",
-    "build:proto": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_opt=outputServices=nice-grpc,outputServices=generic-definitions,useOptionals=none,exportCommonSymbols=true,esModuleInterop=true,outputTypeRegistry=true,useExactTypes=false,forceLong=string,outputSchema=false,useMapType=false,stringEnums=true --ts_proto_out=./src/proto/ -I ../../protos/ ../../protos/mrc/protos/architect.proto",
+    "build:proto": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_opt=outputServices=nice-grpc,outputServices=generic-definitions,useOptionals=none,exportCommonSymbols=true,esModuleInterop=true,outputTypeRegistry=true,useExactTypes=false,forceLong=string,outputSchema=false,useMapType=false,stringEnums=true,importSuffix=.js --ts_proto_out=./src/proto/ -I ../../protos/ ../../protos/mrc/protos/architect.proto",
     "codegen:buf": "cd proto; buf generate; cd ..",
     "test": "jest",
     "start:devtools": "redux-devtools --port=9000"

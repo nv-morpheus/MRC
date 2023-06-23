@@ -1,9 +1,6 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { createWrappedEntityAdapter } from "../../utils";
-
-import type { AppDispatch, AppGetState, RootState } from "../store";
 import { connectionsRemove } from "@mrc/server/store/slices/connectionsSlice";
 import { pipelineInstancesRemove, pipelineInstancesSelectById } from "@mrc/server/store/slices/pipelineInstancesSlice";
 import { workersRemove } from "@mrc/server/store/slices/workersSlice";
@@ -24,6 +21,8 @@ import {
    manifoldInstancesSyncSegments,
 } from "@mrc/server/store/slices/manifoldInstancesSlice";
 import { createWatcher, ResourceStateWatcherLambda } from "@mrc/server/store/resourceStateWatcher";
+import { AppDispatch, AppGetState, RootState } from "@mrc/server/store/store";
+import { createWrappedEntityAdapter } from "@mrc/server/utils";
 
 const segmentInstancesAdapter = createWrappedEntityAdapter<ISegmentInstance>({
    selectId: (w) => w.id,

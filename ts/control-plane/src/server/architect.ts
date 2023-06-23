@@ -44,8 +44,12 @@ import {
    ShutdownResponse,
    StateUpdate,
    TaggedInstance,
-} from "../proto/mrc/protos/architect";
-import { ControlPlaneState, ResourceActualStatus, ResourceRequestedStatus } from "../proto/mrc/protos/architect_state";
+} from "@mrc/proto/mrc/protos/architect";
+import {
+   ControlPlaneState,
+   ResourceActualStatus,
+   ResourceRequestedStatus,
+} from "@mrc/proto/mrc/protos/architect_state";
 import { DeepPartial, UnknownMessage, messageTypeRegistry } from "@mrc/proto/typeRegistry";
 
 import {
@@ -53,20 +57,20 @@ import {
    connectionsDropOne,
    connectionsSelectById,
    connectionsUpdateResourceActualState,
-} from "./store/slices/connectionsSlice";
+} from "@mrc/server/store/slices/connectionsSlice";
 import {
    pipelineInstancesAdd,
    pipelineInstancesSelectById,
    pipelineInstancesUpdateResourceActualState,
-} from "./store/slices/pipelineInstancesSlice";
+} from "@mrc/server/store/slices/pipelineInstancesSlice";
 import {
    workersAddMany,
    workersRemove,
    workersSelectById,
    workersSelectByMachineId,
    workersUpdateResourceActualState,
-} from "./store/slices/workersSlice";
-import { getRootStore, RootStore, stopAction } from "./store/store";
+} from "@mrc/server/store/slices/workersSlice";
+import { getRootStore, RootStore, stopAction } from "@mrc/server/store/store";
 import {
    manifoldInstancesSelectById,
    manifoldInstancesUpdateResourceActualState,

@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { CustomBatcherOptions } from "@mrc/server/store/store";
 import { StoreEnhancer } from "@reduxjs/toolkit";
-import { CustomBatcherOptions } from "./store";
 
 export function customBatcherEnhancer(options: CustomBatcherOptions): StoreEnhancer {
    return (next) =>

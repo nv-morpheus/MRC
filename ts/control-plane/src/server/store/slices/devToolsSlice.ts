@@ -1,25 +1,6 @@
-import {
-   createEntityAdapter,
-   createReducer,
-   createSlice,
-   current,
-   EntityState,
-   EntityStateAdapter,
-   PayloadAction,
-} from "@reduxjs/toolkit";
-import {EntityAdapter, EntityId, PreventAny} from "@reduxjs/toolkit/dist/entities/models";
+import { createReducer } from "@reduxjs/toolkit";
 
-import {Connection} from "../../../proto/mrc/protos/architect_state";
-import {createWrappedEntityAdapter} from "../../utils";
-
-import type {RootState} from "../store";
-import {pipelineInstancesAdd} from "./pipelineInstancesSlice";
-import {workersAdd, workersAddMany, workersRemove} from "./workersSlice";
-
-export const devToolsReducer = createReducer({},
-                                             (builder) => {
-
-                                             });
+export const devToolsReducer = createReducer({}, (builder) => {});
 
 // export type IConnection = Omit<Connection, "$type">;
 

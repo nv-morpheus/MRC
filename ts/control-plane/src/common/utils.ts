@@ -1,9 +1,9 @@
 import { BinaryLike, createHash } from "node:crypto";
 import { BufferWriter } from "protobufjs";
 
-import { Any } from "../proto/google/protobuf/any";
-import { Event, EventType } from "../proto/mrc/protos/architect";
-import { messageTypeRegistry, UnknownMessage } from "../proto/typeRegistry";
+import { Any } from "@mrc/proto/google/protobuf/any";
+import { Event, EventType } from "@mrc/proto/mrc/protos/architect";
+import { messageTypeRegistry, UnknownMessage } from "@mrc/proto/typeRegistry";
 
 export function generateId(max = 4294967295): string {
    return Math.floor(Math.random() * max).toString();

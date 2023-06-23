@@ -1,11 +1,8 @@
 import { ServerCredentials } from "@grpc/grpc-js";
+import { ArchitectDefinition } from "@mrc/proto/mrc/protos/architect";
+import { Architect } from "@mrc/server/architect";
+import { RootStore } from "@mrc/server/store/store";
 import { createServer } from "nice-grpc";
-import { ArrowFunction } from "typescript";
-
-import { ArchitectDefinition } from "../proto/mrc/protos/architect";
-
-import { Architect } from "./architect";
-import { RootStore } from "./store/store";
 
 export class ArchitectServer {
    private _server = createServer();
@@ -24,7 +21,7 @@ export class ArchitectServer {
    public async start() {
       const port = await this._server.listen(this.hostname, ServerCredentials.createInsecure());
 
-      console.log(`server is running on ${this.hostname}:${port}`);
+      console.log(`server is running on ${this.hostname}`);
 
       this._completed_promise = new Promise<void>((resolve, reject) => {
          // Save the resolve function to signal this outside of this function

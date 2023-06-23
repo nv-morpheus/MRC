@@ -6,8 +6,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { stringify, parse } from "jsan";
 import socketClusterClient, { AGClientSocket } from "socketcluster-client";
-import configureStore from "./configureStore";
-import { defaultSocketOptions } from "./constants";
+import configureStore from "./configureStore.js";
+import { defaultSocketOptions } from "./constants.js";
 import getHostForRN from "rn-host-detect";
 import { Action, ActionCreator, PreloadedState, Reducer, StoreEnhancer, StoreEnhancerStoreCreator } from "redux";
 import { EnhancedStore, LiftedAction, LiftedState, PerformAction } from "@redux-devtools/instrument";
@@ -24,7 +24,7 @@ import {
    LocalFilter,
    State,
 } from "@redux-devtools/utils";
-import { ClientOptions } from "socketcluster-client/lib/clientsocket";
+import { ClientOptions } from "socketcluster-client/lib/clientsocket.js";
 
 function async(fn: () => unknown) {
    setTimeout(fn, 0);

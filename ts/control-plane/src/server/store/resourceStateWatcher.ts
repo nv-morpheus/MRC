@@ -1,4 +1,3 @@
-import type { RootState } from "./store";
 import { IResourceInstance, ResourceStateTypeStrings } from "@mrc/common/entities";
 import {
    ResourceActualStatus,
@@ -9,6 +8,7 @@ import { AppListenerAPI, startAppListening } from "@mrc/server/store/listener_mi
 import { ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
 import { ActionCreatorWithPayload } from "@reduxjs/toolkit";
 import { resourceUpdateRequestedState } from "@mrc/server/store/slices/resourceActions";
+import { RootState } from "@mrc/server/store/store";
 
 type ResourceEvent<ResourceT> = (instance: ResourceT, listenerApi: AppListenerAPI) => Promise<void>;
 

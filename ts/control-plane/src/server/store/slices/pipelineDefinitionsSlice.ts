@@ -1,6 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import type { AppDispatch, AppGetState, RootState } from "../store";
 import { PipelineConfiguration } from "@mrc/proto/mrc/protos/architect_state";
 import { createWrappedEntityAdapter } from "@mrc/server/utils";
 import { hashProtoMessage } from "@mrc/common/utils";
@@ -17,6 +16,7 @@ import {
 import { manifoldInstancesAdd, manifoldInstancesRemove } from "@mrc/server/store/slices/manifoldInstancesSlice";
 import { PipelineDefinitionWrapper } from "@mrc/common/pipelineDefinition";
 import { workersRemove } from "@mrc/server/store/slices/workersSlice";
+import { AppDispatch, AppGetState, RootState } from "@mrc/server/store/store";
 
 const pipelineDefinitionsAdapter = createWrappedEntityAdapter<IPipelineDefinition>({
    selectId: (w) => w.id,

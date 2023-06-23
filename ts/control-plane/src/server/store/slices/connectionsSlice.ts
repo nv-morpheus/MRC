@@ -1,19 +1,18 @@
 import { ResourceActualStatus, ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { createWrappedEntityAdapter } from "../../utils";
+import { createWrappedEntityAdapter } from "../../utils.js";
 
-import type { AppDispatch, AppGetState, RootState } from "../store";
-import { pipelineInstancesAdd, pipelineInstancesRemove, pipelineInstancesSelectByIds } from "./pipelineInstancesSlice";
-import { workersAdd, workersRemove, workersSelectByIds } from "./workersSlice";
+import type { AppDispatch, AppGetState, RootState } from "../store.js";
 import {
-   segmentInstancesDestroy,
-   segmentInstancesRemove,
-   segmentInstancesSelectByIds,
-} from "@mrc/server/store/slices/segmentInstancesSlice";
+   pipelineInstancesAdd,
+   pipelineInstancesRemove,
+   pipelineInstancesSelectByIds,
+} from "./pipelineInstancesSlice.js";
+import { workersAdd, workersRemove, workersSelectByIds } from "./workersSlice.js";
+import { segmentInstancesDestroy, segmentInstancesSelectByIds } from "@mrc/server/store/slices/segmentInstancesSlice";
 import { systemStartRequest, systemStopRequest } from "@mrc/server/store/slices/systemSlice";
 import { IConnection, IWorker } from "@mrc/common/entities";
-import { resourceUpdateActualState } from "@mrc/server/store/slices/resourceActions";
 import { createWatcher } from "@mrc/server/store/resourceStateWatcher";
 
 const connectionsAdapter = createWrappedEntityAdapter<IConnection>({

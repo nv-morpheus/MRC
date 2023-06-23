@@ -13,7 +13,6 @@ import { RootState } from "@mrc/server/store/store";
 import { createWrappedEntityAdapter } from "@mrc/server/utils";
 import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { segmentInstancesAdd, segmentInstancesRemove, segmentInstancesSelectById } from "./segmentInstancesSlice";
 import { AppListenerAPI } from "@mrc/server/store/listener_middleware";
 import { generateId, generateSegmentHash } from "@mrc/common/utils";
 import { workersSelectByMachineId } from "@mrc/server/store/slices/workersSlice";
@@ -23,6 +22,11 @@ import {
    manifoldInstancesSelectById,
 } from "@mrc/server/store/slices/manifoldInstancesSlice";
 import { createWatcher } from "@mrc/server/store/resourceStateWatcher";
+import {
+   segmentInstancesAdd,
+   segmentInstancesRemove,
+   segmentInstancesSelectById,
+} from "@mrc/server/store/slices/segmentInstancesSlice";
 
 const pipelineInstancesAdapter = createWrappedEntityAdapter<IPipelineInstance>({
    selectId: (w) => w.id,

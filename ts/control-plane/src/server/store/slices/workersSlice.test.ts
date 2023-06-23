@@ -1,5 +1,6 @@
 import { expect } from "@jest/globals";
 import { ResourceActualStatus } from "@mrc/proto/mrc/protos/architect_state";
+import { connectionsAdd, connectionsDropOne } from "@mrc/server/store/slices/connectionsSlice";
 import { pipelineDefinitionsAdd } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 import { pipelineInstancesAdd } from "@mrc/server/store/slices/pipelineInstancesSlice";
 import {
@@ -7,20 +8,17 @@ import {
    segmentInstancesRemove,
    segmentInstancesUpdateResourceActualState,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
+import {
+   workersSelectAll,
+   workersSelectTotal,
+   workersRemove,
+   workersAdd,
+   workersSelectById,
+   workersUpdateResourceActualState,
+} from "@mrc/server/store/slices/workersSlice";
+import { RootStore, setupStore } from "@mrc/server/store/store";
 import { connection, pipeline, pipeline_def, segments, worker } from "@mrc/tests/defaultObjects";
 import assert from "assert";
-
-import { RootStore, setupStore } from "../store";
-
-import { connectionsAdd, connectionsDropOne } from "./connectionsSlice";
-import {
-   workersAdd,
-   workersRemove,
-   workersSelectAll,
-   workersSelectById,
-   workersSelectTotal,
-   workersUpdateResourceActualState,
-} from "./workersSlice";
 
 let store: RootStore;
 

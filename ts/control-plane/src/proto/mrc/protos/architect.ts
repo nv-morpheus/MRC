@@ -1,9 +1,9 @@
 /* eslint-disable */
 import Long from "long";
 import type { CallContext, CallOptions } from "nice-grpc-common";
-import _m0 from "protobufjs/minimal";
-import { Any } from "../../google/protobuf/any";
-import { messageTypeRegistry } from "../../typeRegistry";
+import _m0 from "protobufjs/minimal.js";
+import { Any } from "../../google/protobuf/any.js";
+import { messageTypeRegistry } from "../../typeRegistry.js";
 import {
   EgressPolicy,
   PipelineConfiguration,
@@ -13,7 +13,7 @@ import {
   resourceActualStatusToJSON,
   resourceActualStatusToNumber,
   SegmentDefinition,
-} from "./architect_state";
+} from "./architect_state.js";
 
 export const protobufPackage = "mrc.protos";
 

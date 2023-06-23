@@ -5,26 +5,13 @@ import "ix/add/asynciterable-operators/last";
 
 import { url as inspectorUrl } from "node:inspector";
 import { Channel, credentials } from "@grpc/grpc-js";
-import { ConnectivityState } from "@grpc/grpc-js/build/src/connectivity-state";
-import { ControlPlaneState } from "@mrc/proto/mrc/protos/architect_state";
-import { as, AsyncSink } from "ix/asynciterable";
 import { createChannel, createClient, waitForChannelReady } from "nice-grpc";
 
-import { sleep, unpackEvent } from "@mrc/common/utils";
-import {
-   ArchitectClient,
-   ArchitectDefinition,
-   ClientConnectedResponse,
-   Event,
-   EventType,
-   PingRequest,
-   PingResponse,
-} from "@mrc/proto/mrc/protos/architect";
+import { sleep } from "@mrc/common/utils";
+import { ArchitectClient, ArchitectDefinition, PingRequest, PingResponse } from "@mrc/proto/mrc/protos/architect";
 import { ArchitectServer } from "@mrc/server/server";
 import { RootStore, setupStore } from "@mrc/server/store/store";
-
-import { unpack_first_event } from "@mrc/client/utils";
-import { Observable, filter, from, share, tap } from "rxjs";
+import { ConnectivityState } from "@grpc/grpc-js/build/src/connectivity-state.js";
 
 export class MrcTestClient {
    public store: RootStore | null = null;

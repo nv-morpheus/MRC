@@ -17,9 +17,6 @@ import {
 } from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
-import { RootStore, setupStore } from "../store";
-
-import { connectionsAdd, connectionsDropOne } from "./connectionsSlice";
 import {
    manifoldInstancesAdd,
    manifoldInstancesAddMany,
@@ -30,6 +27,8 @@ import {
    manifoldInstancesUpdateResourceActualState,
 } from "@mrc/server/store/slices/manifoldInstancesSlice";
 import { segmentInstancesAddMany } from "@mrc/server/store/slices/segmentInstancesSlice";
+import { connectionsAdd, connectionsDropOne } from "@mrc/server/store/slices/connectionsSlice";
+import { RootStore, setupStore } from "@mrc/server/store/store";
 
 let store: RootStore;
 

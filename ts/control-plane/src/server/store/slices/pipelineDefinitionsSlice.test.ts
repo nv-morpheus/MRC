@@ -30,8 +30,8 @@ import {
 } from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
-import { RootStore, setupStore } from "../store";
 import { expectDefined } from "@mrc/tests/utils";
+import { RootStore, setupStore } from "@mrc/server/store/store";
 
 let store: RootStore;
 
