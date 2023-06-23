@@ -20,6 +20,7 @@
 #include <dlfcn.h>
 #include <glog/logging.h>
 
+#include <chrono>
 #include <exception>
 #include <filesystem>
 #include <memory>
